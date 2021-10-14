@@ -108,34 +108,37 @@ end
 
 ### Spring and damper
 ## Forces for dynamics
-@inline function springforcea(joint::Rotational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+@inline function springforcea(joint::Rotational, x2b::AbstractVector, q2b::UnitQuaternion,
+    x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt)
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     qoffset = joint.qoffset
 
-    distance = A * g(joint, xa, qa, xb, qb)
+    distance = A * g(joint, x2a, q2a, x2b, q2b)
 
-    force = 4 * VLᵀmat(qb)*Rmat(qoffset)*LVᵀmat(qa) * Aᵀ * A * Diagonal(joint.spring) * Aᵀ * distance # Currently assumes same spring constant in all directions
+    force = 4 * VLᵀmat(q2b)*Rmat(qoffset)*LVᵀmat(q2a) * Aᵀ * A * Diagonal(joint.spring) * Aᵀ * distance # Currently assumes same spring constant in all directions
     return [szeros(3);force]
 end
-@inline function springforceb(joint::Rotational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+@inline function springforceb(joint::Rotational, x2b::AbstractVector, q2b::UnitQuaternion,
+    x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt)
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     qoffset = joint.qoffset
 
-    distance = A * g(joint, xa, qa, xb, qb)
+    distance = A * g(joint, x2a, q2a, x2b, q2b)
 
-    force = 4 * VLᵀmat(qa)*Tmat()*Rᵀmat(qb)*RVᵀmat(qoffset) * Aᵀ * A * Diagonal(joint.spring) * Aᵀ * distance # Currently assumes same spring constant in all directions
+    force = 4 * VLᵀmat(q2a)*Tmat()*Rᵀmat(q2b)*RVᵀmat(qoffset) * Aᵀ * A * Diagonal(joint.spring) * Aᵀ * distance # Currently assumes same spring constant in all directions
     return [szeros(3);force]
 end
-@inline function springforceb(joint::Rotational, xb::AbstractVector, qb::UnitQuaternion)
+@inline function springforceb(joint::Rotational, x2b::AbstractVector, q2b::UnitQuaternion,
+    x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt)
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     qoffset = joint.qoffset
 
-    distance = A * g(joint, xb, qb)
+    distance = A * g(joint, x2b, q2b)
 
-    force = 4 * Vmat()*Tmat()*Rᵀmat(qb)*RVᵀmat(qoffset) * Aᵀ * A * Diagonal(joint.spring) * Aᵀ * distance # Currently assumes same spring constant in all directions
+    force = 4 * Vmat()*Tmat()*Rᵀmat(q2b)*RVᵀmat(qoffset) * Aᵀ * A * Diagonal(joint.spring) * Aᵀ * distance # Currently assumes same spring constant in all directions
     return [szeros(3);force]
 end
 
@@ -168,6 +171,30 @@ end
     force = -2 * Aᵀ * A * Diagonal(joint.damper) * Aᵀ * velocity # Currently assumes same damper constant in all directions
     force = vrotate(force,inv(q2b)) # in body2's frame
     return [szeros(3);force]
+end
+
+## Spring derivatives
+@inline function diagonal∂spring∂ʳvel(joint::Rotational{T}) where T
+    A = nullspacemat(joint)
+    AᵀA = zerodimstaticadjoint(A) * A
+    Z = szeros(T, 3, 3)
+    return [[Z; Z] [Z; -2 * AᵀA * Diagonal(joint.spring) * AᵀA]]
+end
+@inline function offdiagonal∂spring∂ʳvel(joint::Rotational{T}, x2a::AbstractVector, q2a::UnitQuaternion, x2b::AbstractVector, q2b::UnitQuaternion,
+    x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector, x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt) where T
+    invqbqa = q2b\q2a
+    A = nullspacemat(joint)
+    AᵀA = zerodimstaticadjoint(A) * A
+    Z = szeros(T, 3, 3)
+    return [[Z; Z] [Z; 2*VLmat(invqbqa)*RVᵀmat(invqbqa)* AᵀA * Diagonal(joint.spring) * AᵀA]]
+end
+@inline function offdiagonal∂spring∂ʳvel(joint::Rotational{T}, x2b::AbstractVector, q2b::UnitQuaternion,
+    x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt) where T
+    invqb = inv(q2b)
+    A = nullspacemat(joint)
+    AᵀA = zerodimstaticadjoint(A) * A
+    Z = szeros(T, 3, 3)
+    return [[Z; Z] [Z; 2*VLmat(invqb)*RVᵀmat(invqb)* AᵀA * Diagonal(joint.spring) * AᵀA]]
 end
 
 ## Damper velocity derivatives

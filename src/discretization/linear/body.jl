@@ -42,30 +42,9 @@ end
 
     for connectionid in connections(mechanism.system, body.id)
         connectionid > Ne && continue # not eqc
+        springToD!(mechanism, body, geteqconstraint(mechanism, connectionid))
         damperToD!(mechanism, body, geteqconstraint(mechanism, connectionid))
-    end
 
-    return state.D
-end
-
-# dynamics derivates wrt to current v and ω
-@inline function ∂g∂ʳself_current(mechanism::Mechanism{T,Nn,Ne}, body::Body{T}) where {T,Nn,Ne}
-    state = body.state
-    Δt = mechanism.Δt
-    J = body.J
-    ω1 = state.ωc
-    sq = sqrt(4 / Δt^2 - ω1' * ω1)
-
-    dynT = -I * body.m
-    dynR = -Δt * (skewplusdiag(ω1, sq) * J + J * ω1 * (ω1' / sq) + skew(J * ω1))
-
-    Z = szeros(T, 3, 3)
-
-    state.D = [[dynT; Z] [Z; dynR]]
-
-    for connectionid in connections(mechanism.system, body.id)
-        connectionid > Ne && continue # not eqc
-        damperToD!(mechanism, body, geteqconstraint(mechanism, connectionid))
     end
 
     return state.D

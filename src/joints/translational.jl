@@ -116,24 +116,27 @@ end
 
 ### Spring and damper
 ## Forces for dynamics
-@inline function springforcea(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+@inline function springforcea(joint::Translational, x2a::AbstractVector, q2a::UnitQuaternion, x2b::AbstractVector, q2b::UnitQuaternion,
+    x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector, x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt)
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    distance = A * g(joint, xa, qa, xb, qb)
+    distance = A * g(joint, x2a, q2a, x2b, q2b)
     force = Aᵀ * A * Diagonal(Diagonal(joint.spring)) * Aᵀ * distance  # Currently assumes same spring constant in all directions
     return [force;szeros(3)]
 end
-@inline function springforceb(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+@inline function springforceb(joint::Translational, x2a::AbstractVector, q2a::UnitQuaternion, x2b::AbstractVector, q2b::UnitQuaternion,
+    x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector, x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt)
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    distance = A * g(joint, xa, qa, xb, qb)
+    distance = A * g(joint, x2a, q2a, x2b, q2b)
     force = - Aᵀ * A * Diagonal(joint.spring) * Aᵀ * distance  # Currently assumes same spring constant in all directions
     return [force;szeros(3)]
 end
-@inline function springforceb(joint::Translational, xb::AbstractVector, qb::UnitQuaternion)
+@inline function springforceb(joint::Translational, x2b::AbstractVector, q2b::UnitQuaternion,
+    x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt)
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    distance = A * g(joint, xb, qb)
+    distance = A * g(joint, x2b, q2b)
     force = - Aᵀ * A * Diagonal(joint.spring) * Aᵀ * distance  # Currently assumes same spring constant in all directions
     return [force;szeros(3)]
 end
@@ -161,6 +164,28 @@ end
     velocity = A * v1b
     force = - Aᵀ * A * Diagonal(joint.damper) * Aᵀ * velocity  # Currently assumes same damper constant in all directions
     return [force;szeros(3)]
+end
+
+## Spring derivatives
+@inline function diagonal∂spring∂ʳvel(joint::Translational{T}) where T
+    A = nullspacemat(joint)
+    AᵀA = zerodimstaticadjoint(A) * A
+    Z = szeros(T, 3, 3)
+    return [[-AᵀA * Diagonal(joint.spring) * AᵀA; Z] [Z; Z]]
+end
+@inline function offdiagonal∂spring∂ʳvel(joint::Translational{T}, x2a::AbstractVector, q2a::UnitQuaternion, x2b::AbstractVector, q2b::UnitQuaternion,
+    x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector, x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt) where T
+    A = nullspacemat(joint)
+    AᵀA = zerodimstaticadjoint(A) * A
+    Z = szeros(T, 3, 3)
+    return [[AᵀA * Diagonal(joint.spring) * AᵀA; Z] [Z; Z]]
+end
+@inline function offdiagonal∂spring∂ʳvel(joint::Translational{T}, x2b::AbstractVector, q2b::UnitQuaternion,
+    x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt) where T
+    A = nullspacemat(joint)
+    AᵀA = zerodimstaticadjoint(A) * A
+    Z = szeros(T, 3, 3)
+    return [[AᵀA * Diagonal(joint.spring) * AᵀA; Z] [Z; Z]]
 end
 
 ## Damper velocity derivatives
