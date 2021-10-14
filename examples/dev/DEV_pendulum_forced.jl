@@ -16,6 +16,9 @@ open(vis)
 mech = getmechanism(:pendulum, Δt = 0.01, g = -9.81)
 initialize!(mech, :pendulum, ϕ1 = 0.7)
 
+
+
+
 jointid = mech.eqconstraints[1].id
 angles = zeros(1)
 function controller!(mechanism, k)
@@ -27,8 +30,25 @@ function controller!(mechanism, k)
     return
 end
 
-storage = simulate!(mech, 4.0, record = true, solver = :mehrotra!)
-forcedstorage = simulate!(mech, 4.0, controller!, record = true, solver = :mehrotra!)
+jt1 = mech.eqconstraints[1].constraints[1]
+jr1 = mech.eqconstraints[1].constraints[2]
+nullspacemat(jt1)
+nullspacemat(jr1)
+
+eqc = mech.eqconstraints[1]
+eqc.isdamper = true
+eqc.isspring = true
+
+jt1.spring = 1e3
+jt1.damper = 1e3
+jr1.spring = 1e3
+jr1.damper = 1e3
+mech.eqconstraints[1].constraints[2].damper
+
+
+
+storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!)
+forcedstorage = simulate!(mech, 0.1, controller!, record = true, solver = :mehrotra!)
 plot(hcat(Vector.(storage.x[1])...)')
 plot(hcat(Vector.(forcedstorage.x[1])...)')
 plot(hcat([[q.w, q.x, q.y, q.z] for q in storage.q[1]]...)')
@@ -44,8 +64,6 @@ visualize(mech, forcedstorage, vis = vis)
 ################################################################################
 # Differentiation
 ################################################################################
-
-include(joinpath(module_dir(), "examples", "dev", "diff_tools_control.jl"))
 
 # Set data
 data = getdata(mech)
@@ -69,8 +87,10 @@ fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
 @test norm(fd_solmat + solmat, Inf) < 1e-8
 plot(Gray.(abs.(solmat)))
 plot(Gray.(abs.(fd_solmat)))
+norm(fd_solmat + solmat, Inf)
 
-fd_sensi = finitediff_sensitivity(mech, data, δ = 1e-5, ϵ = 1e-14) * attjac
+
+fd_sensi = finitediff_sensitivity(mech, data, δ = 1e-5, ϵr = 1e-14, ϵb = 1e-14) * attjac
 @test norm(fd_sensi - sensi) / norm(fd_sensi) < 3e-3
 plot(Gray.(sensi))
 plot(Gray.(fd_sensi))
