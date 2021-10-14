@@ -16,7 +16,7 @@ using FiniteDiff
 using Plots
 using Random
 using MeshCat
-using geometryBasics
+using GeometryBasics
 
 using DocStringExtensions
 
