@@ -241,7 +241,7 @@ end
     id = body.id
     for i=1:Nc
         if id == eqc.parentid || id == eqc.childids[i]
-            D += diagonal∂damper∂ʳvel(eqc.constraints[i], mechanism.Δt)
+            D += diagonal∂damper∂ʳvel(eqc.constraints[i])
         end
     end
     return D
@@ -272,14 +272,14 @@ end
 @inline function damperforcea(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += damperforcea(eqc.constraints[i], body, getbody(mechanism, eqc.childids[i]), eqc.childids[i])
+        vec += damperforcea(eqc.constraints[i], body, getbody(mechanism, eqc.childids[i]), eqc.childids[i], mechanism.Δt)
     end
     return vec
 end
 @inline function damperforceb(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += damperforceb(eqc.constraints[i], getbody(mechanism, eqc.parentid), body, eqc.childids[i])
+        vec += damperforceb(eqc.constraints[i], getbody(mechanism, eqc.parentid), body, eqc.childids[i], mechanism.Δt)
     end
     return vec
 end

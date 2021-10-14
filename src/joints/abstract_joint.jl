@@ -203,25 +203,25 @@ end
     end
 end
 
-@inline function damperforcea(joint::AbstractJoint, body1::Body, body2::Body, childid)
+@inline function damperforcea(joint::AbstractJoint, body1::Body, body2::Body, childid, Δt)
     if body2.id == childid
-        return damperforcea(joint, body1.state, body2.state)
+        return damperforcea(joint, body1.state, body2.state, Δt)
     else
-        return damperforce(joint)
+        return damperforce(joint, Δt)
     end
 end
-@inline function damperforceb(joint::AbstractJoint, body1::Body, body2::Body, childid)
+@inline function damperforceb(joint::AbstractJoint, body1::Body, body2::Body, childid, Δt)
     if body2.id == childid
-        return damperforceb(joint, body1.state, body2.state)
+        return damperforceb(joint, body1.state, body2.state, Δt)
     else
-        return damperforce(joint)
+        return damperforce(joint, Δt)
     end
 end
-@inline function damperforceb(joint::AbstractJoint, body1::Origin, body2::Body, childid)
+@inline function damperforceb(joint::AbstractJoint, body1::Origin, body2::Body, childid, Δt)
     if body2.id == childid
-        return damperforceb(joint, body2.state)
+        return damperforceb(joint, body2.state, Δt)
     else
-        return damperforce(joint)
+        return damperforce(joint, Δt)
     end
 end
 
@@ -232,9 +232,9 @@ springforceb(joint::AbstractJoint, statea::State, stateb::State) = springforceb(
 springforceb(joint::AbstractJoint, stateb::State) = springforceb(joint, posargsk(stateb)...)
 
 @inline damperforce(joint::AbstractJoint{T}) where {T} = szeros(T, 6) # TODO zero function?
-damperforcea(joint::AbstractJoint, statea::State, stateb::State) = damperforcea(joint, fullargssol(statea)..., fullargssol(stateb)...)
-damperforceb(joint::AbstractJoint, statea::State, stateb::State) = damperforceb(joint, fullargssol(statea)..., fullargssol(stateb)...)
-damperforceb(joint::AbstractJoint, stateb::State) = damperforceb(joint, fullargssol(stateb)...)
+damperforcea(joint::AbstractJoint, statea::State, stateb::State, Δt) = damperforcea(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)..., fullargssol(statea)..., fullargssol(stateb)..., Δt)
+damperforceb(joint::AbstractJoint, statea::State, stateb::State, Δt) = damperforceb(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)..., fullargssol(statea)..., fullargssol(stateb)..., Δt)
+damperforceb(joint::AbstractJoint, stateb::State, Δt) = damperforceb(joint, posargsnext(stateb, Δt)..., fullargssol(stateb)..., Δt)
 
 
 ### Forcing (for dynamics)

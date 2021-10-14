@@ -9,8 +9,8 @@ Pkg.activate(module_dir())
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 # Open visualizer
-vis = Visualizer()
-open(vis)
+# vis = Visualizer()
+# open(vis)
 
 # Build mechanism
 mech = getmechanism(:pendulum, Δt = 0.01, g = -9.81)
@@ -33,12 +33,10 @@ jr1 = j1.constraints[2]
 j1.isdamper = true
 j1.isspring = true
 
-jr1.spring = 1e4
-jr1.damper = 1e4
+jr1.spring = 0.0 * sones(3)# 1e4
+jr1.damper = 0.0 * sones(3)# 1e4
 mech.eqconstraints[1].isdamper
 mech.eqconstraints[1].constraints[2].damper
-
-
 
 storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!)
 forcedstorage = simulate!(mech, 0.1, controller!, record = true, solver = :mehrotra!)
