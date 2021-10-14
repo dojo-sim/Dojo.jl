@@ -90,16 +90,16 @@ end
     end
 end
 
-@inline function offdiagonal∂damper∂ʳvel(joint::AbstractJoint, body1::Body, body2::Body, childid)
+@inline function offdiagonal∂damper∂ʳvel(joint::AbstractJoint, body1::Body, body2::Body, childid, Δt)
     if body2.id == childid
-        return offdiagonal∂damper∂ʳvel(joint, body1.state, body2.state)
+        return offdiagonal∂damper∂ʳvel(joint, body1.state, body2.state, Δt)
     else
         return zero(body2)
     end
 end
-@inline function offdiagonal∂damper∂ʳvel(joint::AbstractJoint, body1::Origin, body2::Body, childid)
+@inline function offdiagonal∂damper∂ʳvel(joint::AbstractJoint, body1::Origin, body2::Body, childid, Δt)
     if body2.id == childid
-        return offdiagonal∂damper∂ʳvel(joint, body2.state)
+        return offdiagonal∂damper∂ʳvel(joint, body2.state, Δt)
     else
         return zero(body2)
     end
@@ -112,8 +112,8 @@ end
 ∂g∂ʳvela(joint::AbstractJoint, statea::State, stateb::State, Δt) = ∂g∂ʳvela(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)..., fullargssol(statea)..., Δt)
 ∂g∂ʳvelb(joint::AbstractJoint, statea::State, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)..., fullargssol(stateb)..., Δt)
 ∂g∂ʳvelb(joint::AbstractJoint, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargsnext(stateb, Δt)..., fullargssol(stateb)..., Δt)
-offdiagonal∂damper∂ʳvel(joint::AbstractJoint, statea::State, stateb::State) = offdiagonal∂damper∂ʳvel(joint, posargsk(statea)..., posargsk(stateb)...)
-offdiagonal∂damper∂ʳvel(joint::AbstractJoint, stateb::State) = offdiagonal∂damper∂ʳvel(joint, posargsk(stateb)...)
+offdiagonal∂damper∂ʳvel(joint::AbstractJoint, statea::State, stateb::State, Δt) = offdiagonal∂damper∂ʳvel(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)..., fullargssol(statea)..., fullargssol(stateb)..., Δt)
+offdiagonal∂damper∂ʳvel(joint::AbstractJoint, stateb::State, Δt) = offdiagonal∂damper∂ʳvel(joint, posargsnext(stateb, Δt)..., fullargssol(stateb)..., Δt)
 
 # Derivatives accounting for quaternion specialness
 @inline function ∂g∂ʳvela(joint::AbstractJoint, x2a::AbstractVector, q2a::UnitQuaternion, x2b::AbstractVector, q2b::UnitQuaternion,

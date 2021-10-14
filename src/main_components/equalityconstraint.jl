@@ -241,7 +241,7 @@ end
     id = body.id
     for i=1:Nc
         if id == eqc.parentid || id == eqc.childids[i]
-            D += diagonal∂damper∂ʳvel(eqc.constraints[i])
+            D += diagonal∂damper∂ʳvel(eqc.constraints[i], mechanism.Δt)
         end
     end
     return D
@@ -249,7 +249,7 @@ end
 @inline function offdiagonal∂damper∂ʳvel(mechanism, eqc::EqualityConstraint{T,N,Nc}, body1::Body, body2::Body) where {T,N,Nc}
     D = szeros(T, 6, 6)
     for i=1:Nc
-        D += offdiagonal∂damper∂ʳvel(eqc.constraints[i], body1, body2, eqc.childids[i])
+        D += offdiagonal∂damper∂ʳvel(eqc.constraints[i], body1, body2, eqc.childids[i], mechanism.Δt)
     end
     return D
 end
