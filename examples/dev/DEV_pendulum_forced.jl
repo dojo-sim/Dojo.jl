@@ -16,9 +16,6 @@ open(vis)
 mech = getmechanism(:pendulum, Δt = 0.01, g = -9.81)
 initialize!(mech, :pendulum, ϕ1 = 0.7)
 
-
-
-
 jointid = mech.eqconstraints[1].id
 angles = zeros(1)
 function controller!(mechanism, k)
@@ -30,19 +27,15 @@ function controller!(mechanism, k)
     return
 end
 
-jt1 = mech.eqconstraints[1].constraints[1]
-jr1 = mech.eqconstraints[1].constraints[2]
-nullspacemat(jt1)
-nullspacemat(jr1)
+j1 = mech.eqconstraints[1]
+jt1 = j1.constraints[1]
+jr1 = j1.constraints[2]
+j1.isdamper = true
+j1.isspring = true
 
-eqc = mech.eqconstraints[1]
-eqc.isdamper = true
-eqc.isspring = true
-
-jt1.spring = 1e3
-jt1.damper = 1e3
-jr1.spring = 1e3
-jr1.damper = 1e3
+jr1.spring = 1e4
+jr1.damper = 1e4
+mech.eqconstraints[1].isdamper
 mech.eqconstraints[1].constraints[2].damper
 
 
@@ -59,7 +52,7 @@ plot(hcat(Vector.(storage.ω[1])...)')
 plot(hcat(Vector.(forcedstorage.ω[1])...)')
 
 visualize(mech, storage, vis = vis)
-visualize(mech, forcedstorage, vis = vis)
+# visualize(mech, forcedstorage, vis = vis)
 
 ################################################################################
 # Differentiation
