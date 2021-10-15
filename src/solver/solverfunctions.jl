@@ -263,25 +263,23 @@ function polynomial_step_length(ω::AbstractVector{T}, Δ::AbstractVector{T}, β
 end
 
 
-Random.seed!(100)
-a = rand()
-b = 10rand()
-c = rand()
-f.(polynomialsolution(a, b, c), a, b, c)
-
-
-Random.seed!(100)
-for i = 1:1000
-    ω = 10*rand(3)
-    Δω = -100*rand(3)
-    Δt = 0.05
-    β = 1/Δt
-    τ = 0.99
-    αω = polynomial_step_length(ω, Δω, β*τ)
-    β - norm(ω + αω * Δω)
-    mrg = 1 / Δt - norm(ω + αω * Δω)
-    @show scn(αω)
-    @assert mrg > 0
-end
-
-0.99*1/0.05
+# Random.seed!(100)
+# a = rand()
+# b = 10rand()
+# c = rand()
+# f.(polynomialsolution(a, b, c), a, b, c)
+#
+#
+# Random.seed!(100)
+# for i = 1:1000
+#     ω = 10*rand(3)
+#     Δω = -100*rand(3)
+#     Δt = 0.05
+#     β = 1/Δt
+#     τ = 0.99
+#     αω = polynomial_step_length(ω, Δω, β*τ)
+#     β - norm(ω + αω * Δω)
+#     mrg = 1 / Δt - norm(ω + αω * Δω)
+#     @show scn(αω)
+#     @assert mrg > 0
+# end

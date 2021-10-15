@@ -33,8 +33,8 @@ jr1 = j1.constraints[2]
 j1.isdamper = true
 j1.isspring = true
 
-jr1.spring = 0.0 * sones(3)# 1e4
-jr1.damper = 0.0 * sones(3)# 1e4
+jr1.spring = 1e1 .* sones(3)# 1e4
+jr1.damper = 1e1 .* sones(3)# 1e4
 mech.eqconstraints[1].isdamper
 mech.eqconstraints[1].constraints[2].damper
 
@@ -51,6 +51,34 @@ plot(hcat(Vector.(forcedstorage.ω[1])...)')
 
 visualize(mech, storage, vis = vis)
 # visualize(mech, forcedstorage, vis = vis)
+
+################################################################################
+# Damper Jacobian
+################################################################################
+
+j0 = mech.eqconstraints[1]
+jt0 = j0.constraints[1]
+jr0 = j0.constraints[2]
+origin0 = mech.origin
+body0 = mech.bodies[2]
+childid0 = 2
+Δt0 = mech.Δt
+damperforceb(jt0, origin0, body0, childid0, Δt0)
+damperforceb(jr0, origin0, body0, childid0, Δt0)
+
+damperforcea(joint::AbstractJoint, statea::State, stateb::State, Δt) = damperforcea(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)..., fullargssol(statea)..., fullargssol(stateb)..., Δt)
+damperforceb(joint::AbstractJoint, statea::State, stateb::State, Δt) = damperforceb(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)..., fullargssol(statea)..., fullargssol(stateb)..., Δt)
+damperforceb(joint::AbstractJoint, stateb::State, Δt) = damperforceb(joint, posargsnext(stateb, Δt)..., fullargssol(stateb)..., Δt)
+
+x2a0, q2a0 = posargsnext(statea, Δt)
+x2b0, q2b0 = posargsnext(stateb, Δt)
+x1a0, v1a0, q1a0, ω1a0 = fullargssol(statea)
+x1b0, v1b0, q1b0, ω1b0 = fullargssol(stateb)
+
+damperforcea(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, Δt0)
+damperforceb(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, Δt0)
+damperforceb(jt0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, Δt0)
+
 
 ################################################################################
 # Differentiation
