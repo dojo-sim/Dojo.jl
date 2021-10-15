@@ -138,13 +138,13 @@ plot(hcat(Vector.(storage.v[1])...)')
 plot(hcat(Vector.(storage.ω[1])...)')
 
 
-# using FFMPEG
-# using MeshCat
-# filename = "atlas_drop"
-# MeshCat.convert_frames_to_video(
-#     "/home/simon/Downloads/$filename.tar",
-#     "/home/simon/Documents/video/$filename.mp4", overwrite=true)
-#
-# convert_video_to_gif(
-#     "/home/simon/Documents/video/$filename.mp4",
-#     "/home/simon/Documents/video/$filename.gif", overwrite=true)
+using FFMPEG
+using MeshCat
+filename = "atlas_rigid"
+MeshCat.convert_frames_to_video(
+    "/home/simon/Downloads/$filename.tar",
+    "/home/simon/Documents/video/$filename.mp4", overwrite=true)
+
+convert_video_to_gif(
+    "/home/simon/Documents/video/$filename.mp4",
+    "/home/simon/Documents/video/$filename.gif", overwrite=true)

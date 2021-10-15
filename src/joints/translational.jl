@@ -203,19 +203,29 @@ end
 # Damper velocity derivatives
 @inline function diagonal∂damper∂ʳvel(joint::Translational{T}, x2a::AbstractVector, q2a::UnitQuaternion, x2b::AbstractVector, q2b::UnitQuaternion,
     x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector, x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt) where T
+    A = nullspacemat(joint)
+    AᵀA = zerodimstaticadjoint(A) * A
     Z = szeros(T, 3, 3)
-    return [[Z; Z] [Z; Z]]
+    # return [[-AᵀA * Diagonal(joint.damper) * AᵀA; Z] [Z; Z]]
+    return [[AᵀA * Diagonal(joint.damper) * AᵀA; Z] [Z; Z]]
 end
 @inline function offdiagonal∂damper∂ʳvel(joint::Translational{T}, x2a::AbstractVector, q2a::UnitQuaternion, x2b::AbstractVector, q2b::UnitQuaternion,
     x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector, x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt) where T
+    A = nullspacemat(joint)
+    AᵀA = zerodimstaticadjoint(A) * A
     Z = szeros(T, 3, 3)
-    return [[Z; Z] [Z; Z]]
+    # return [[AᵀA * Diagonal(joint.damper) * AᵀA; Z] [Z; Z]]
+    return [[AᵀA * Diagonal(joint.damper) * AᵀA; Z] [Z; Z]]
 end
 @inline function offdiagonal∂damper∂ʳvel(joint::Translational{T}, x2b::AbstractVector, q2b::UnitQuaternion,
     x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt) where T
+    A = nullspacemat(joint)
+    AᵀA = zerodimstaticadjoint(A) * A
     Z = szeros(T, 3, 3)
-    return [[Z; Z] [Z; Z]]
+    # return [[AᵀA * Diagonal(joint.damper) * AᵀA; Z] [Z; Z]]
+    return [[AᵀA * Diagonal(joint.damper) * AᵀA; Z] [Z; Z]]
 end
+
 
 ### Forcing
 ## Application of joint forces (for dynamics)
