@@ -13,42 +13,24 @@ vis = Visualizer()
 open(vis)
 
 # Build mechanism
-joint_axis = [1.0; 0; 0]
-length1 = 1.0
-width, depth = 0.1, 0.1
-p2 = [0; 0; length1/2] # joint connection point
-
-# Links
-origin = Origin{Float64}()
-link1 = Box(width, depth, length1, length1)
-
-# Constraints
-joint_between_origin_and_link1 = EqualityConstraint(Prismatic(origin, link1, joint_axis; p2=p2))
-links = [link1]
-eqcs = [joint_between_origin_and_link1]
-
-mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.01)
-mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.01)
-
 include("mechanism_zoo.jl")
-# mech = getmechanism(:npendulum, Δt = 0.01, g = -9.81, Nlink = 2)
 mech = getmechanism(:slider, Δt = 0.01, g = -9.81)
 
 
-# initialize!(mech, :npendulum, ϕ1 = 1.3)
+initialize!(mech, :slider, z1 = 3.3)
 
 for (i,joint) in enumerate(mech.eqconstraints)
     if i ∈ (1,2)
         jt = joint.constraints[1]
         jr = joint.constraints[2]
         joint.isdamper = true #false
-        joint.isspring = false #false
+        joint.isspring = true #false
 
-        jt.spring = 1/i * 0.0 * 1e-0 .* sones(3)# 1e4
-        jt.damper = 1/i * 3.1 * 1e+3 .* sones(3)# 1e4
-        jr.spring = 1/i * 0.0 * 1e-0 .* sones(3)# 1e4
-        # jr.damper = 1/i * 2.2 * 1e+3 .* sones(3)# 1e4
-        jr.damper = 1/1 * 2.2 * 1e-0 .* sones(3)# 1e4
+        @show jt.spring
+        jt.spring = 1/i * 1.5 * 1e-0 .* sones(3)[1]# 1e4
+        jt.damper = 1/i * 3.1 * 1e-0 .* sones(3)[1]# 1e4
+        jr.spring = 1/i * 2.7 * 1e-0 .* sones(3)[1]# 1e4
+        jr.damper = 1/1 * 2.2 * 1e-0 .* sones(3)[1]# 1e4
 
         mech.eqconstraints[1].isspring
         mech.eqconstraints[1].isdamper

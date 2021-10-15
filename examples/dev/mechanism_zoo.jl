@@ -279,10 +279,8 @@ function initializependulum!(mechanism::Mechanism; ϕ1::T = 0.7) where {T}
     setPosition!(mechanism.origin, body, p2 = p2, Δq = q1)
 end
 
-function initializeslider!(mechanism::Mechanism; ϕ1::T = 0.7) where {T}
+function initializeslider!(mechanism::Mechanism; z1::T = 0.7) where {T}
     body = collect(mechanism.bodies)[1]
-    eqc = collect(mechanism.eqconstraints)[1]
-    p2 = eqc.constraints[1].vertices[2]
-    q1 = UnitQuaternion(RotX(ϕ1))
-    setPosition!(mechanism.origin, body, p2 = p2, Δq = q1)
+    q1 = UnitQuaternion(RotX(0.0))
+    setPosition!(mechanism.origin, body, p2 = [0, 0, -z1], Δq = q1)
 end
