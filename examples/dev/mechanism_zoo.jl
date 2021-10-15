@@ -211,6 +211,32 @@ function getnpendulum(; Δt::T = 0.01, g::T = -9.81, Nlink::Int = 5) where {T}
     return mech
 end
 
+function getnslider(; Δt::T = 0.01, g::T = -9.81, Nlink::Int = 5) where {T}
+    # Parameters
+    ex = [0; 0; 1.0]
+    h = 1.
+    r = .05
+    vert11 = [0; r; h/2]
+    vert12 = -vert11
+
+    # Links
+    origin = Origin{T}()
+    links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
+
+    # Constraints
+    jointb1 = EqualityConstraint(Prismatic(origin, links[1], ex; p2 = vert11))
+    if Nlink > 1
+        eqcs = [
+            jointb1;
+            [EqualityConstraint(Prismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11)) for i = 2:Nlink]
+            ]
+    else
+        eqcs = [jointb1]
+    end
+    mech = Mechanism(origin, links, eqcs, g = g, Δt = Δt)
+    return mech
+end
+
 """
      Mechanism initialization method. Provides a simple way to set the initial
      conditions (pose and velocity) of the mechanism.
@@ -279,8 +305,22 @@ function initializependulum!(mechanism::Mechanism; ϕ1::T = 0.7) where {T}
     setPosition!(mechanism.origin, body, p2 = p2, Δq = q1)
 end
 
-function initializeslider!(mechanism::Mechanism; z1::T = 0.7) where {T}
+function initializeslider!(mechanism::Mechanism; ϕ1::T = 0.7) where {T}
     body = collect(mechanism.bodies)[1]
-    q1 = UnitQuaternion(RotX(0.0))
-    setPosition!(mechanism.origin, body, p2 = [0, 0, -z1], Δq = q1)
+    eqc = collect(mechanism.eqconstraints)[1]
+    p2 = eqc.constraints[1].vertices[2]
+    q1 = UnitQuaternion(RotX(ϕ1))
+    setPosition!(mechanism.origin, body, p2 = p2, Δq = q1)
+end
+
+function initializenslider!(mechanism::Mechanism; z1::T = 0.7, Δz = 1.2) where {T}
+    link1 = collect(mechanism.bodies)[1]
+    # set position and velocities
+    setPosition!(mechanism.origin, link1, p1 = [0, 0, z1])
+
+    previd = link1.id
+    for (i,body) in enumerate(Iterators.drop(mechanism.bodies, 1))
+        setPosition!(getbody(mechanism, previd), body, p1 = [0.1i, 0, Δz])
+        previd = body.id
+    end
 end

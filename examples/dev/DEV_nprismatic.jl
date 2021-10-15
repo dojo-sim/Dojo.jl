@@ -14,25 +14,20 @@ open(vis)
 
 # Build mechanism
 include("mechanism_zoo.jl")
-mech = getmechanism(:slider, Δt = 0.01, g = -9.81)
-initialize!(mech, :slider, ϕ1 = 0.7)
+mech = getmechanism(:nslider, Δt = 0.01, g = -2.0)
+initialize!(mech, :nslider, z1 = 0.0, Δz = 1.1)
 
 for (i,joint) in enumerate(mech.eqconstraints)
-    if i ∈ (1,2)
+    if i ∈ (1:10)
         jt = joint.constraints[1]
         jr = joint.constraints[2]
         joint.isdamper = true #false
         joint.isspring = true #false
 
-        @show jt.spring
-        jt.spring = 1/i * 1.5 * 1e-0 .* sones(3)[1]# 1e4
-        jt.damper = 1/i * 3.1 * 1e-0 .* sones(3)[1]# 1e4
-        jr.spring = 1/i * 2.7 * 1e-0 .* sones(3)[1]# 1e4
-        jr.damper = 1/i * 2.2 * 1e-0 .* sones(3)[1]# 1e4
-
-        mech.eqconstraints[1].isspring
-        mech.eqconstraints[1].isdamper
-        mech.eqconstraints[1].constraints[2].damper
+        jt.spring = 1/1 * 1.5 * 1e-1 .* sones(3)[1]# 1e4
+        jt.damper = 1/1 * 3.1 * 1e-1 .* sones(3)[1]# 1e4
+        jr.spring = 1/1 * 2.7 * 1e-1 .* sones(3)[1]# 1e4
+        jr.damper = 1/1 * 2.2 * 1e-1 .* sones(3)[1]# 1e4
     end
 end
 
