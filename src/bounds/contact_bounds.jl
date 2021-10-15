@@ -120,10 +120,6 @@ end
     return X, Q
 end
 
-# @inline function ∂gab∂ʳba(impact::Impact, cone::ContactBound{T}) where T
-#     SA{T}[0 0 0 0 0 0; 0 0 0 0.0 0 0], SA{T}[0 0; 0 0; 0 0; 0 cone.cf; 0 0; 0 0]
-# end
-
 ## Complementarity
 function complementarity(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
     return [ineqc.γsol[2][1] * ineqc.ssol[2][1]; cone_product(ineqc.γsol[2][2:4], ineqc.ssol[2][2:4])]

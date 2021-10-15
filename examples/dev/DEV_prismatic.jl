@@ -9,12 +9,13 @@ Pkg.activate(module_dir())
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 # Open visualizer
-# vis = Visualizer()
-# open(vis)
+vis = Visualizer()
+open(vis)
 
 # Build mechanism
-mech = getmechanism(:npendulum, Δt = 0.01, g = -9.81, Nlink = 2)
-initialize!(mech, :npendulum, ϕ1 = 1.3)
+include("mechanism_zoo.jl")
+mech = getmechanism(:slider, Δt = 0.01, g = -9.81)
+initialize!(mech, :slider, ϕ1 = 0.7)
 
 for (i,joint) in enumerate(mech.eqconstraints)
     if i ∈ (1,2)
@@ -23,11 +24,11 @@ for (i,joint) in enumerate(mech.eqconstraints)
         joint.isdamper = true #false
         joint.isspring = true #false
 
-        jt.spring = 1/i * 0.0 * 1e-0 .* sones(3)# 1e4
-        jt.damper = 1/i * 3.1 * 1e+3 .* sones(3)# 1e4
-        jr.spring = 1/i * 0.0 * 1e-0 .* sones(3)# 1e4
-        # jr.damper = 1/i * 2.2 * 1e+3 .* sones(3)# 1e4
-        jr.damper = 1/1 * 2.2 * 1e-1 .* sones(3)# 1e4
+        @show jt.spring
+        jt.spring = 1/i * 1.5 * 1e-0 .* sones(3)[1]# 1e4
+        jt.damper = 1/i * 3.1 * 1e-0 .* sones(3)[1]# 1e4
+        jr.spring = 1/i * 2.7 * 1e-0 .* sones(3)[1]# 1e4
+        jr.damper = 1/i * 2.2 * 1e-0 .* sones(3)[1]# 1e4
 
         mech.eqconstraints[1].isspring
         mech.eqconstraints[1].isdamper
@@ -36,13 +37,13 @@ for (i,joint) in enumerate(mech.eqconstraints)
 end
 
 storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!)
-# visstorage = simulate!(mech, 4.0, record = true, solver = :mehrotra!)
+visstorage = simulate!(mech, 4.0, record = true, solver = :mehrotra!)
 # plot(hcat(Vector.(storage.x[1])...)')
 # plot(hcat([[q.w, q.x, q.y, q.z] for q in storage.q[1]]...)')
 # plot(hcat(Vector.(storage.v[1])...)')
 # plot(hcat(Vector.(storage.ω[1])...)')
 
-# visualize(mech, visstorage, vis = vis)
+visualize(mech, visstorage, vis = vis)
 
 
 ################################################################################
@@ -56,8 +57,6 @@ sol = getsolution(mech)
 Nb = length(collect(mech.bodies))
 attjac = attitudejacobian(data, Nb)
 
-
-setentries!(mech)
 # IFT
 setentries!(mech)
 datamat = full_data_matrix(deepcopy(mech))
@@ -67,14 +66,15 @@ sensi = - (solmat \ datamat)
 # finite diff
 fd_datamat = finitediff_data_matrix(deepcopy(mech), data, sol, δ = 1e-5) * attjac
 @test norm(fd_datamat + datamat, Inf) < 1e-8
-# plot(Gray.(abs.(datamat)))
-# plot(Gray.(abs.(fd_datamat)))
+plot(Gray.(abs.(datamat)))
+plot(Gray.(abs.(fd_datamat)))
 
 fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
 @test norm(fd_solmat + solmat, Inf) < 1e-8
-# plot(Gray.(abs.(solmat)))
-# plot(Gray.(abs.(fd_solmat)))
+plot(Gray.(abs.(solmat)))
+plot(Gray.(abs.(fd_solmat)))
 norm(fd_solmat + solmat, Inf)
+
 
 norm((fd_solmat + solmat)[1:10, 1:10], Inf)
 norm((fd_solmat + solmat)[1:10, 11:22], Inf)
@@ -140,7 +140,7 @@ diagonal∂damper∂ʳvel(mech, mech.eqconstraints[1], mech.bodies[2])
 offdiagonal∂damper∂ʳvel(mech.eqconstraints[1].constraints[1], mech.origin, mech.bodies[2], mech.bodies[2].id, mech.Δt)
 offdiagonal∂damper∂ʳvel(mech.eqconstraints[1].constraints[2], mech.origin, mech.bodies[2], mech.bodies[2].id, mech.Δt)
 
-mech.bodies
+
 
 ################################################################################
 # Damper Jacobian

@@ -52,6 +52,8 @@ function fd_diagonal∂spring∂ʳvel(j::Joint{T}, x2a::AbstractVector, q2a::Uni
     function f(vω1a)
         v1a = vω1a[1:3]
         ω1a = vω1a[4:6]
+        x2a = getx3(x1a, v1a, Δt)
+        q2a = getq3([q1a.w, q1a.x, q1a.y, q1a.z], ω1a, Δt)
         Fτa = springforcea(j, x2a, q2a, x2b, q2b, x1a, v1a, q1a, ω1a, x1b, v1b, q1b, ω1b, Δt)
         return Fτa
     end
@@ -63,6 +65,8 @@ function fd_offdiagonal∂spring∂ʳvel(j::Joint{T}, x2a::AbstractVector, q2a::
     function f(vω1b)
         v1b = vω1b[1:3]
         ω1b = vω1b[4:6]
+        x2b = getx3(x1b, v1b, Δt)
+        q2b = getq3([q1b.w, q1b.x, q1b.y, q1b.z], ω1b, Δt)
         Fτb = springforceb(j, x2a, q2a, x2b, q2b, x1a, v1a, q1a, ω1a, x1b, v1b, q1b, ω1b, Δt)
         return Fτb
     end
