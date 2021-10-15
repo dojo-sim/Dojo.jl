@@ -9,8 +9,8 @@ Pkg.activate(module_dir())
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 # Open visualizer
-vis = Visualizer()
-open(vis)
+# vis = Visualizer()
+# open(vis)
 
 # Build mechanism
 mech = getmechanism(:npendulum, Δt = 0.01, g = -9.81, Nlink = 2)
@@ -21,12 +21,12 @@ for (i,joint) in enumerate(mech.eqconstraints)
         jt = joint.constraints[1]
         jr = joint.constraints[2]
         joint.isdamper = true #false
-        joint.isspring = false #false
+        joint.isspring = true #false
 
-        jt.spring = 1/i * 0.0 * 1e-0 .* sones(3)# 1e4
-        jt.damper = 1/i * 3.3 * 1e+3 .* sones(3)# 1e4
-        jr.spring = 1/i * 0.0 * 1e-0 .* sones(3)# 1e4
-        jr.damper = 1/i * 3.3 * 1e+3 .* sones(3)# 1e4
+        jt.spring = 1/i * 0.0 * 1e-0# 1e4
+        jt.damper = 1/i * 3.3 * 1e+3# 1e4
+        jr.spring = 1/i * 0.0 * 1e-0# 1e4
+        jr.damper = 1/i * 3.3 * 1e+3# 1e4
 
         mech.eqconstraints[1].isspring
         mech.eqconstraints[1].isdamper
@@ -35,13 +35,13 @@ for (i,joint) in enumerate(mech.eqconstraints)
 end
 
 storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!)
-visstorage = simulate!(mech, 4.0, record = true, solver = :mehrotra!)
+# visstorage = simulate!(mech, 4.0, record = true, solver = :mehrotra!)
 # plot(hcat(Vector.(storage.x[1])...)')
 # plot(hcat([[q.w, q.x, q.y, q.z] for q in storage.q[1]]...)')
 # plot(hcat(Vector.(storage.v[1])...)')
 # plot(hcat(Vector.(storage.ω[1])...)')
 
-visualize(mech, visstorage, vis = vis)
+# visualize(mech, visstorage, vis = vis)
 
 
 ################################################################################
@@ -55,6 +55,8 @@ sol = getsolution(mech)
 Nb = length(collect(mech.bodies))
 attjac = attitudejacobian(data, Nb)
 
+
+setentries!(mech)
 # IFT
 datamat = full_data_matrix(deepcopy(mech))
 solmat = full_matrix(mech.system)
@@ -63,36 +65,49 @@ sensi = - (solmat \ datamat)
 # finite diff
 fd_datamat = finitediff_data_matrix(deepcopy(mech), data, sol, δ = 1e-5) * attjac
 @test norm(fd_datamat + datamat, Inf) < 1e-8
-plot(Gray.(abs.(datamat)))
-plot(Gray.(abs.(fd_datamat)))
+# plot(Gray.(abs.(datamat)))
+# plot(Gray.(abs.(fd_datamat)))
 
 fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
 @test norm(fd_solmat + solmat, Inf) < 1e-8
-plot(Gray.(abs.(solmat)))
-plot(Gray.(abs.(fd_solmat)))
+# plot(Gray.(abs.(solmat)))
+# plot(Gray.(abs.(fd_solmat)))
 norm(fd_solmat + solmat, Inf)
-
 
 norm((fd_solmat + solmat)[1:10, 1:10], Inf)
 norm((fd_solmat + solmat)[1:10, 11:22], Inf)
 
-norm((fd_solmat + solmat)[11:17, 11:17], Inf)
-norm((fd_solmat + solmat)[11:17, 18:22], Inf)
+norm((fd_solmat + solmat)[11:16, 11:16], Inf)
+norm((fd_solmat + solmat)[11:16, 17:22], Inf)
 
-norm((fd_solmat + solmat)[18:22, 11:17], Inf)
-norm((fd_solmat + solmat)[18:22, 18:22], Inf)
-
+norm((fd_solmat + solmat)[17:22, 11:16], Inf)
+norm((fd_solmat + solmat)[17:22, 17:22], Inf)
 
 norm((fd_solmat + solmat)[11:22, 1:10], Inf)
 norm((fd_solmat + solmat)[11:22, 11:22], Inf)
 
-solmat[1:5, 1:5]
+
+mech.eqconstraints[1].constraints[1] 
+mech.eqconstraints[1].constraints[2] 
+
+
+solmat[11:16, 17:22]
+fd_solmat[11:16, 17:22]
+
+solmat[17:22, 11:16]
+fd_solmat[17:22, 11:16]
+
+∂gab∂ʳba(mech, mech.bodies[3], mech.bodies[4])[2]
+
+offdiagonal∂damper∂ʳvel(mech.eqconstraints[1].constraints[2], mech.bodies[3].state.xsol[1], mech.bodies[3].state.qsol[1], mech.bodies[4].state.xsol[1], mech.bodies[4].state.qsol[1])
+offdiagonal∂damper∂ʳvel(mech, mech.eqconstraints[1], mech.bodies[4], mech.bodies[3])
+
 solmat[1:5, 6:11]
 solmat[6:11, 1:5]
 solmat[6:11, 6:11]
 solmat[9:11, 9:11]
 
-
+setentries!(mech) 
 
 fd_solmat[1:5, 1:5]
 fd_solmat[1:5, 6:11]
@@ -121,7 +136,7 @@ diagonal∂damper∂ʳvel(mech, mech.eqconstraints[1], mech.bodies[2])
 offdiagonal∂damper∂ʳvel(mech.eqconstraints[1].constraints[1], mech.origin, mech.bodies[2], mech.bodies[2].id, mech.Δt)
 offdiagonal∂damper∂ʳvel(mech.eqconstraints[1].constraints[2], mech.origin, mech.bodies[2], mech.bodies[2].id, mech.Δt)
 
-
+mech.bodies
 
 ################################################################################
 # Damper Jacobian

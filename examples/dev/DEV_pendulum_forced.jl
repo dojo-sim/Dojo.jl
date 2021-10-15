@@ -30,8 +30,8 @@ end
 j1 = mech.eqconstraints[1]
 jt1 = j1.constraints[1]
 jr1 = j1.constraints[2]
-j1.isdamper = true
-j1.isspring = true
+j1.isdamper = false
+j1.isspring = false
 
 jr1.spring = 1e4
 jr1.damper = 1e4
@@ -85,3 +85,11 @@ fd_sensi = finitediff_sensitivity(mech, data, δ = 1e-5, ϵr = 1e-14, ϵb = 1e-1
 @test norm(fd_sensi - sensi) / norm(fd_sensi) < 3e-3
 plot(Gray.(sensi))
 plot(Gray.(fd_sensi))
+
+diagonal∂damper∂ʳvel(jr1)
+offdiagonal∂damper∂ʳvel(jr1, mech.bodies[2].state.xsol[1], mech.bodies[2].state.qsol[1])
+
+# solmat1 = solmat
+solmat[6:11, :]
+
+solmat1[6:11, :]
