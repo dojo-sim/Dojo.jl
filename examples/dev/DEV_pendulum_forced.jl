@@ -33,23 +33,23 @@ jr1 = j1.constraints[2]
 j1.isdamper = true
 j1.isspring = true
 
-jr1.spring = 0.00001 * sones(3)# 1e4
-jr1.damper = 0.00001 * sones(3)# 1e4
+jr1.spring = 1e4
+jr1.damper = 1e4
 mech.eqconstraints[1].isdamper
 mech.eqconstraints[1].constraints[2].damper
 
 storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!)
-forcedstorage = simulate!(mech, 0.1, controller!, record = true, solver = :mehrotra!)
-plot(hcat(Vector.(storage.x[1])...)')
-plot(hcat(Vector.(forcedstorage.x[1])...)')
-plot(hcat([[q.w, q.x, q.y, q.z] for q in storage.q[1]]...)')
-plot(hcat([[q.w, q.x, q.y, q.z] for q in forcedstorage.q[1]]...)')
-plot(hcat(Vector.(storage.v[1])...)')
-plot(hcat(Vector.(forcedstorage.v[1])...)')
-plot(hcat(Vector.(storage.ω[1])...)')
-plot(hcat(Vector.(forcedstorage.ω[1])...)')
+# forcedstorage = simulate!(mech, 0.1, controller!, record = true, solver = :mehrotra!)
+# plot(hcat(Vector.(storage.x[1])...)')
+# plot(hcat(Vector.(forcedstorage.x[1])...)')
+# plot(hcat([[q.w, q.x, q.y, q.z] for q in storage.q[1]]...)')
+# plot(hcat([[q.w, q.x, q.y, q.z] for q in forcedstorage.q[1]]...)')
+# plot(hcat(Vector.(storage.v[1])...)')
+# plot(hcat(Vector.(forcedstorage.v[1])...)')
+# plot(hcat(Vector.(storage.ω[1])...)')
+# plot(hcat(Vector.(forcedstorage.ω[1])...)')
 
-visualize(mech, storage, vis = vis)
+# visualize(mech, storage, vis = vis)
 # visualize(mech, forcedstorage, vis = vis)
 
 ################################################################################
@@ -71,13 +71,13 @@ sensi = - (solmat \ datamat)
 # finite diff
 fd_datamat = finitediff_data_matrix(deepcopy(mech), data, sol, δ = 1e-5) * attjac
 @test norm(fd_datamat + datamat, Inf) < 1e-8
-plot(Gray.(abs.(datamat)))
-plot(Gray.(abs.(fd_datamat)))
+# plot(Gray.(abs.(datamat)))
+# plot(Gray.(abs.(fd_datamat)))
 
 fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
 @test norm(fd_solmat + solmat, Inf) < 1e-8
-plot(Gray.(abs.(solmat)))
-plot(Gray.(abs.(fd_solmat)))
+# plot(Gray.(abs.(solmat)))
+# plot(Gray.(abs.(fd_solmat)))
 norm(fd_solmat + solmat, Inf)
 
 
