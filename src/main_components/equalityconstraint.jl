@@ -37,7 +37,7 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: AbstractConstraint{T,N}
             end
         end
 
-        T = getT(jointdata[1][1])# .T
+        T = getT(jointdata[1][1])
 
         isspring = false
         isdamper = false
@@ -246,11 +246,13 @@ end
     id = body.id
     for i=1:Nc
         if id == eqc.parentid || id == eqc.childids[i]
-            D += diagonal∂spring∂ʳvel(eqc.constraints[i])
+            D += diagonal∂spring∂ʳvel(eqc.constraints[i], body, getbody(mechanism, eqc.childids[i]), eqc.childids[i], mechanism.Δt)
         end
     end
     return D
 end
+
+
 @inline function offdiagonal∂spring∂ʳvel(mechanism, eqc::EqualityConstraint{T,N,Nc}, body1::Body, body2::Body) where {T,N,Nc}
     D = szeros(T, 6, 6)
     for i=1:Nc
@@ -265,7 +267,7 @@ end
     id = body.id
     for i=1:Nc
         if id == eqc.parentid || id == eqc.childids[i]
-            D += diagonal∂damper∂ʳvel(eqc.constraints[i])
+            D += diagonal∂damper∂ʳvel(eqc.constraints[i], body, getbody(mechanism, eqc.childids[i]), eqc.childids[i], mechanism.Δt)
         end
     end
     return D

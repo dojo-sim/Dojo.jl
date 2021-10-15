@@ -33,8 +33,8 @@ jr1 = j1.constraints[2]
 j1.isdamper = true
 j1.isspring = true
 
-jr1.spring = 0.0 * sones(3)# 1e4
-jr1.damper = 0.0 * sones(3)# 1e4
+jr1.spring = 0.00001 * sones(3)# 1e4
+jr1.damper = 0.00001 * sones(3)# 1e4
 mech.eqconstraints[1].isdamper
 mech.eqconstraints[1].constraints[2].damper
 
