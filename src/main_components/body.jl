@@ -104,10 +104,11 @@ Base.zero(::Body{T}) where T = szeros(T,6,6)
 
 @inline getM(body::Body{T}) where T = [[I*body.m;szeros(T,3,3)] [szeros(T,3,3);body.J]]
 
-
 @inline function ∂gab∂ʳba(mechanism, body1::Body, body2::Body)
     eqc = geteqconstraint(mechanism, parents(mechanism.system, body2.id)[1]) # TODO This only works for acyclic damped systems
-    D = -offdiagonal∂damper∂ʳvel(mechanism, eqc, body1, body2, mechanism.Δt)
+    Dspring = -offdiagonal∂spring∂ʳvel(mechanism, eqc, body1, body2, mechanism.Δt)
+    Ddamp = -offdiagonal∂damper∂ʳvel(mechanism, eqc, body1, body2, mechanism.Δt)
+    D = Dspring + Ddamp
     return D, D'
 end
 

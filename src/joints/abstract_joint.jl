@@ -89,7 +89,48 @@ end
         return zero(joint)
     end
 end
-
+@inline function diagonal∂spring∂ʳvel(joint::AbstractJoint, body1::Body, body2::Body, childid, Δt)
+    if body2.id == childid
+        return diagonal∂spring∂ʳvel(joint, body1.state, body2.state, Δt)
+    else
+        return zero(body2)
+    end
+end
+@inline function diagonal∂spring∂ʳvel(joint::AbstractJoint, body1::Origin, body2::Body, childid, Δt)
+    if body2.id == childid
+        return diagonal∂spring∂ʳvel(joint, body2.state, Δt)
+    else
+        return zero(body2)
+    end
+end
+@inline function offdiagonal∂spring∂ʳvel(joint::AbstractJoint, body1::Body, body2::Body, childid, Δt)
+    if body2.id == childid
+        return offdiagonal∂spring∂ʳvel(joint, body1.state, body2.state, Δt)
+    else
+        return zero(body2)
+    end
+end
+@inline function offdiagonal∂spring∂ʳvel(joint::AbstractJoint, body1::Origin, body2::Body, childid, Δt)
+    if body2.id == childid
+        return offdiagonal∂spring∂ʳvel(joint, body2.state, Δt)
+    else
+        return zero(body2)
+    end
+end
+@inline function diagonal∂damper∂ʳvel(joint::AbstractJoint, body1::Body, body2::Body, childid, Δt)
+    if body2.id == childid
+        return diagonal∂damper∂ʳvel(joint, body1.state, body2.state, Δt)
+    else
+        return zero(body2)
+    end
+end
+@inline function diagonal∂damper∂ʳvel(joint::AbstractJoint, body1::Origin, body2::Body, childid, Δt)
+    if body2.id == childid
+        return diagonal∂damper∂ʳvel(joint, body2.state, Δt)
+    else
+        return zero(body2)
+    end
+end
 @inline function offdiagonal∂damper∂ʳvel(joint::AbstractJoint, body1::Body, body2::Body, childid, Δt)
     if body2.id == childid
         return offdiagonal∂damper∂ʳvel(joint, body1.state, body2.state, Δt)
@@ -112,6 +153,11 @@ end
 ∂g∂ʳvela(joint::AbstractJoint, statea::State, stateb::State, Δt) = ∂g∂ʳvela(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)..., fullargssol(statea)..., Δt)
 ∂g∂ʳvelb(joint::AbstractJoint, statea::State, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)..., fullargssol(stateb)..., Δt)
 ∂g∂ʳvelb(joint::AbstractJoint, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargsnext(stateb, Δt)..., fullargssol(stateb)..., Δt)
+
+diagonal∂spring∂ʳvel(joint::AbstractJoint, statea::State, stateb::State, Δt) = diagonal∂spring∂ʳvel(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)..., fullargssol(statea)..., fullargssol(stateb)..., Δt)
+offdiagonal∂spring∂ʳvel(joint::AbstractJoint, statea::State, stateb::State, Δt) = offdiagonal∂spring∂ʳvel(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)..., fullargssol(statea)..., fullargssol(stateb)..., Δt)
+offdiagonal∂spring∂ʳvel(joint::AbstractJoint, stateb::State, Δt) = offdiagonal∂spring∂ʳvel(joint, posargsnext(stateb, Δt)..., fullargssol(stateb)..., Δt)
+diagonal∂damper∂ʳvel(joint::AbstractJoint, statea::State, stateb::State, Δt) = diagonal∂damper∂ʳvel(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)..., fullargssol(statea)..., fullargssol(stateb)..., Δt)
 offdiagonal∂damper∂ʳvel(joint::AbstractJoint, statea::State, stateb::State, Δt) = offdiagonal∂damper∂ʳvel(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)..., fullargssol(statea)..., fullargssol(stateb)..., Δt)
 offdiagonal∂damper∂ʳvel(joint::AbstractJoint, stateb::State, Δt) = offdiagonal∂damper∂ʳvel(joint, posargsnext(stateb, Δt)..., fullargssol(stateb)..., Δt)
 
@@ -181,25 +227,25 @@ end
 
 ### Springs and Dampers (for dynamics)
 ## Wrappers 1
-@inline function springforcea(joint::AbstractJoint, body1::Body, body2::Body, childid)
+@inline function springforcea(joint::AbstractJoint, body1::Body, body2::Body, childid, Δt)
     if body2.id == childid
-        return springforcea(joint, body1.state, body2.state)
+        return springforcea(joint, body1.state, body2.state, Δt)
     else
-        return springforce(joint)
+        return springforce(joint, Δt)
     end
 end
-@inline function springforceb(joint::AbstractJoint, body1::Body, body2::Body, childid)
+@inline function springforceb(joint::AbstractJoint, body1::Body, body2::Body, childid, Δt)
     if body2.id == childid
-        return springforceb(joint, body1.state, body2.state)
+        return springforceb(joint, body1.state, body2.state, Δt)
     else
-        return springforce(joint)
+        return springforce(joint, Δt)
     end
 end
-@inline function springforceb(joint::AbstractJoint, body1::Origin, body2::Body, childid)
+@inline function springforceb(joint::AbstractJoint, body1::Origin, body2::Body, childid, Δt)
     if body2.id == childid
-        return springforceb(joint, body2.state)
+        return springforceb(joint, body2.state, Δt)
     else
-        return springforce(joint)
+        return springforce(joint, Δt)
     end
 end
 
@@ -226,10 +272,10 @@ end
 end
 
 ## Wrappers 2
-@inline springforce(joint::AbstractJoint{T}) where {T} = szeros(T, 6) # TODO zero function?
-springforcea(joint::AbstractJoint, statea::State, stateb::State) = springforcea(joint, posargsk(statea)..., posargsk(stateb)...)
-springforceb(joint::AbstractJoint, statea::State, stateb::State) = springforceb(joint, posargsk(statea)..., posargsk(stateb)...)
-springforceb(joint::AbstractJoint, stateb::State) = springforceb(joint, posargsk(stateb)...)
+@inline springforce(joint::AbstractJoint{T}, Δt) where {T} = szeros(T, 6) # TODO zero function?
+springforcea(joint::AbstractJoint, statea::State, stateb::State, Δt) = springforcea(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)..., fullargssol(statea)..., fullargssol(stateb)..., Δt)
+springforceb(joint::AbstractJoint, statea::State, stateb::State, Δt) = springforceb(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)..., fullargssol(statea)..., fullargssol(stateb)..., Δt)
+springforceb(joint::AbstractJoint, stateb::State, Δt) = springforceb(joint, posargsnext(stateb, Δt)..., fullargssol(stateb)..., Δt)
 
 @inline damperforce(joint::AbstractJoint{T}) where {T} = szeros(T, 6) # TODO zero function?
 damperforcea(joint::AbstractJoint, statea::State, stateb::State, Δt) = damperforcea(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)..., fullargssol(statea)..., fullargssol(stateb)..., Δt)
