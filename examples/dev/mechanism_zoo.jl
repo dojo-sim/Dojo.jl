@@ -165,6 +165,26 @@ function getpendulum(; Δt::T = 0.01, g::T = -9.81) where {T}
     return mech
 end
 
+function getslider(; Δt::T = 0.01, g::T = -9.81) where {T}
+    # Parameters
+    joint_axis = [0; 0; 1.0]
+    length1 = 1.0
+    width, depth = 0.1, 0.1
+    p2 = [0; 0; length1/2] # joint connection point
+
+    # Links
+    origin = Origin{T}()
+    link1 = Box(width, depth, length1, length1)
+
+    # Constraints
+    joint_between_origin_and_link1 = EqualityConstraint(Prismatic(origin, link1, joint_axis; p2=p2))
+    links = [link1]
+    eqcs = [joint_between_origin_and_link1]
+
+    mech = Mechanism(origin, links, eqcs, g = g, Δt = Δt)
+    return mech
+end
+
 function getnpendulum(; Δt::T = 0.01, g::T = -9.81, Nlink::Int = 5) where {T}
     # Parameters
     ex = [1.; 0; 0]
@@ -252,6 +272,14 @@ function initializenpendulum!(mechanism::Mechanism; ϕ1::T = pi/4) where {T}
 end
 
 function initializependulum!(mechanism::Mechanism; ϕ1::T = 0.7) where {T}
+    body = collect(mechanism.bodies)[1]
+    eqc = collect(mechanism.eqconstraints)[1]
+    p2 = eqc.constraints[1].vertices[2]
+    q1 = UnitQuaternion(RotX(ϕ1))
+    setPosition!(mechanism.origin, body, p2 = p2, Δq = q1)
+end
+
+function initializeslider!(mechanism::Mechanism; ϕ1::T = 0.7) where {T}
     body = collect(mechanism.bodies)[1]
     eqc = collect(mechanism.eqconstraints)[1]
     p2 = eqc.constraints[1].vertices[2]

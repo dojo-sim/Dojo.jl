@@ -152,6 +152,7 @@ end
     velocity = A * ((vrotate(ω1b,q2a\q2b) - ω1a) - joint.q̇ref) # in body1's frame
     force = 2 * Aᵀ * A * Diagonal(joint.damper) * Aᵀ * velocity # Currently assumes same damper constant in all directions
     return [szeros(3);force]
+    # return [szeros(3);szeros(3)]
 end
 @inline function damperforceb(joint::Rotational, x2a::AbstractVector, q2a::UnitQuaternion, x2b::AbstractVector, q2b::UnitQuaternion,
     x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector, x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt)
@@ -163,6 +164,7 @@ end
     force = -2 * Aᵀ * A * Diagonal(joint.damper) * Aᵀ * velocity # Currently assumes same damper constant in all directions
     force = vrotate(force,q2b\q2a) # in body2's frame
     return [szeros(3);force]
+    # return [szeros(3);szeros(3)]
 end
 @inline function damperforceb(joint::Rotational, x2b::AbstractVector, q2b::UnitQuaternion,
     x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt)
@@ -174,6 +176,7 @@ end
     force = -2 * Aᵀ * A * Diagonal(joint.damper) * Aᵀ * velocity # Currently assumes same damper constant in all directions
     force = vrotate(force,inv(q2b)) # in body2's frame
     return [szeros(3);force]
+    # return [szeros(3);szeros(3)]
 end
 
 # Spring derivatives
@@ -200,6 +203,7 @@ end
     AᵀA = zerodimstaticadjoint(A) * A
     Z = szeros(T, 3, 3)
     return [[Z; Z] [Z; -2 * AᵀA * Diagonal(joint.damper) * AᵀA]]
+    # return [[Z; Z] [Z; Z]]
 end
 @inline function offdiagonal∂damper∂ʳvel(joint::Rotational{T}, x2a::AbstractVector, q2a::UnitQuaternion, x2b::AbstractVector, q2b::UnitQuaternion,
     x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector, x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt) where T
@@ -215,6 +219,7 @@ end
     invδq = q2b \ q2a
     Z = szeros(T, 3, 3)
     return [[Z; Z] [Z; VRᵀmat(invδq) * LVᵀmat(invδq) * C * VRᵀmat(δq) * LVᵀmat(δq)]]
+    # return [[Z; Z] [Z; Z]]
 end
 @inline function offdiagonal∂damper∂ʳvel(joint::Rotational{T}, x2b::AbstractVector, q2b::UnitQuaternion,
     x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt) where T
@@ -230,6 +235,7 @@ end
     invq = inv(q2b)
     Z = szeros(T, 3, 3)
     return [[Z; Z] [Z; VRᵀmat(invq) * LVᵀmat(invq) * C * VRᵀmat(q) * LVᵀmat(q)]]
+    # return [[Z; Z] [Z; Z]]
 end
 
 

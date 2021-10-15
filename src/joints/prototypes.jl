@@ -13,7 +13,7 @@ Fixed(body1::AbstractBody{T}, body2; p1 = szeros(T, 3), p2 = szeros(T, 3), qoffs
 
 A prismatic joint between two bodies.
 """
-Prismatic(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T)) where T =
+Prismatic(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}), spring = szeros(T, 3), damper = szeros(T, 3)) where T =
     Translational2{T}(body1, body2; p1, p2, axis, spring, damper), Rotational3{T}(body1, body2; qoffset, spring, damper)
 
 # t1r3
@@ -49,7 +49,7 @@ Revolute(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 
 
 A cylindrical joint between two bodies.
 """
-Cylindrical(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}), spring = szeros(T3), damper = szeros(T,3)) where T =
+Cylindrical(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}), spring = szeros(T, 3), damper = szeros(T,3)) where T =
     Translational2{T}(body1, body2; p1, p2, axis, spring, damper), Rotational2{T}(body1, body2; axis, qoffset, spring, damper)
 
 # t1r2
