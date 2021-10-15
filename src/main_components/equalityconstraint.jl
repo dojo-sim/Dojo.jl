@@ -37,7 +37,7 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: AbstractConstraint{T,N}
             end
         end
 
-        T = getT(jointdata[1][1])
+        T = getT(jointdata[1][1])# .T
 
         isspring = false
         isdamper = false
@@ -192,11 +192,6 @@ end
     return
 end
 
-@inline function springToD!(mechanism, body::Body, eqc::EqualityConstraint)
-    eqc.isspring && (body.state.D -= diagonal∂spring∂ʳvel(mechanism, eqc, body))
-    return
-end
-
 @inline function damperToD!(mechanism, body::Body, eqc::EqualityConstraint)
     eqc.isdamper && (body.state.D -= diagonal∂damper∂ʳvel(mechanism, eqc, body))
     return
@@ -241,33 +236,12 @@ end
 end
 
 # Currently assumes no coupling between translational and rotational velocities
-@inline function diagonal∂spring∂ʳvel(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    D = szeros(T, 6, 6)
-    id = body.id
-    for i=1:Nc
-        if id == eqc.parentid || id == eqc.childids[i]
-            D += diagonal∂spring∂ʳvel(eqc.constraints[i], body, getbody(mechanism, eqc.childids[i]), eqc.childids[i], mechanism.Δt)
-        end
-    end
-    return D
-end
-
-
-@inline function offdiagonal∂spring∂ʳvel(mechanism, eqc::EqualityConstraint{T,N,Nc}, body1::Body, body2::Body) where {T,N,Nc}
-    D = szeros(T, 6, 6)
-    for i=1:Nc
-        D += offdiagonal∂spring∂ʳvel(eqc.constraints[i], body1, body2, eqc.childids[i], mechanism.Δt)
-    end
-    return D
-end
-
-# Currently assumes no coupling between translational and rotational velocities
 @inline function diagonal∂damper∂ʳvel(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     D = szeros(T, 6, 6)
     id = body.id
     for i=1:Nc
         if id == eqc.parentid || id == eqc.childids[i]
-            D += diagonal∂damper∂ʳvel(eqc.constraints[i], body, getbody(mechanism, eqc.childids[i]), eqc.childids[i], mechanism.Δt)
+            D += diagonal∂damper∂ʳvel(eqc.constraints[i])
         end
     end
     return D
@@ -275,7 +249,7 @@ end
 @inline function offdiagonal∂damper∂ʳvel(mechanism, eqc::EqualityConstraint{T,N,Nc}, body1::Body, body2::Body) where {T,N,Nc}
     D = szeros(T, 6, 6)
     for i=1:Nc
-        D += offdiagonal∂damper∂ʳvel(eqc.constraints[i], body1, body2, eqc.childids[i], mechanism.Δt)
+        D += offdiagonal∂damper∂ʳvel(eqc.constraints[i], body1, body2, eqc.childids[i])
     end
     return D
 end
@@ -283,14 +257,14 @@ end
 @inline function springforcea(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += springforcea(eqc.constraints[i], body, getbody(mechanism, eqc.childids[i]), eqc.childids[i], mechanism.Δt)
+        vec += springforcea(eqc.constraints[i], body, getbody(mechanism, eqc.childids[i]), eqc.childids[i])
     end
     return vec
 end
 @inline function springforceb(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += springforceb(eqc.constraints[i], getbody(mechanism, eqc.parentid), body, eqc.childids[i], mechanism.Δt)
+        vec += springforceb(eqc.constraints[i], getbody(mechanism, eqc.parentid), body, eqc.childids[i])
     end
     return vec
 end
@@ -298,14 +272,14 @@ end
 @inline function damperforcea(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += damperforcea(eqc.constraints[i], body, getbody(mechanism, eqc.childids[i]), eqc.childids[i], mechanism.Δt)
+        vec += damperforcea(eqc.constraints[i], body, getbody(mechanism, eqc.childids[i]), eqc.childids[i])
     end
     return vec
 end
 @inline function damperforceb(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += damperforceb(eqc.constraints[i], getbody(mechanism, eqc.parentid), body, eqc.childids[i], mechanism.Δt)
+        vec += damperforceb(eqc.constraints[i], getbody(mechanism, eqc.parentid), body, eqc.childids[i])
     end
     return vec
 end
