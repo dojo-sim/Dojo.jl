@@ -5,13 +5,13 @@ mutable struct Translational{T,N} <: Joint{T,N}
 
     spring::T
     damper::T
-    
+
     Fτ::SVector{3,T}
 
     function Translational{T,N}(body1::AbstractBody, body2::AbstractBody;
             p1::AbstractVector = szeros(T,3), p2::AbstractVector = szeros(T,3), axis::AbstractVector = szeros(T,3), spring = zero(T), damper = zero(T)
         ) where {T,N}
-        
+
         vertices = (p1, p2)
         V1, V2, V3 = orthogonalrows(axis)
         V12 = [V1;V2]
@@ -249,7 +249,7 @@ end
     return [BFb; Bτb]
 end
 
-# Position derivatives 
+# Position derivatives
 @inline function ∂Fτ∂posa(joint::Translational{T}, statea::State, stateb::State) where T
     _, qa = posargsk(statea)
     _, qb = posargsk(stateb)
@@ -288,7 +288,7 @@ end
     xb, qb = posargsk(stateb)
     F = joint.Fτ
     vertices = joint.vertices
-    
+
     FaXb = szeros(T,3,3)
     FaQb = szeros(T,3,3)
     τaXb = szeros(T,3,3)
@@ -303,7 +303,7 @@ end
 
 
 ### Minimal coordinates
-## Position and velocity offsets 
+## Position and velocity offsets
 @inline function getPositionDelta(joint::Translational, body1::AbstractBody, body2::Body, x::SVector)
     Δx = zerodimstaticadjoint(nullspacemat(joint)) * x # in body1 frame
     return Δx

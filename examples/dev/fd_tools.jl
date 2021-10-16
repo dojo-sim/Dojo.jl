@@ -13,73 +13,186 @@ function fdjac(f, x; δ = 1e-5)
     return jac
 end
 
-function fd_diagonal∂damper∂ʳvel(j::Joint{T}, x2a::AbstractVector, q2a::UnitQuaternion, x2b::AbstractVector, q2b::UnitQuaternion,
-    x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector, x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt) where T
+function fd_diagonal∂damper∂ʳvel(j::Joint{T}, x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector,
+    x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector) where T
     function f(vω1a)
         v1a = vω1a[1:3]
         ω1a = vω1a[4:6]
-        Fτa = damperforcea(j, x2a, q2a, x2b, q2b, x1a, v1a, q1a, ω1a, x1b, v1b, q1b, ω1b, Δt)
+        Fτa = damperforcea(j, x1a, v1a, q1a, ω1a, x1b, v1b, q1b, ω1b)
         return Fτa
     end
     return fdjac(vω1a -> f(vω1a), Vector([v1a; ω1a]))
 end
 
-function fd_offdiagonal∂damper∂ʳvel(j::Joint{T}, x2a::AbstractVector, q2a::UnitQuaternion, x2b::AbstractVector, q2b::UnitQuaternion,
-    x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector, x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt) where T
+function fd_offdiagonal∂damper∂ʳvel(j::Joint{T}, x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector,
+    x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector) where T
     function f(vω1b)
         v1b = vω1b[1:3]
         ω1b = vω1b[4:6]
-        Fτb = damperforceb(j, x2a, q2a, x2b, q2b, x1a, v1a, q1a, ω1a, x1b, v1b, q1b, ω1b, Δt)
+        Fτb = damperforcea(j, x1a, v1a, q1a, ω1a, x1b, v1b, q1b, ω1b)
         return Fτb
     end
     return fdjac(vω1b -> f(vω1b), Vector([v1b; ω1b]))
 end
 
-function fd_offdiagonal∂damper∂ʳvel(j::Joint{T}, x2b::AbstractVector, q2b::UnitQuaternion,
-    x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt) where T
+function fd_offdiagonal∂damper∂ʳvel(j::Joint{T}, x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector) where T
     function f(vω1b)
         v1b = vω1b[1:3]
         ω1b = vω1b[4:6]
-        Fτb = damperforceb(j, x2b, q2b, x1b, v1b, q1b, ω1b, Δt)
+        Fτb = -1.0 * damperforceb(j, x1b, v1b, q1b, ω1b)
         return Fτb
     end
     return fdjac(vω1b -> f(vω1b), Vector([v1b; ω1b]))
 end
 
 
-function fd_diagonal∂spring∂ʳvel(j::Joint{T}, x2a::AbstractVector, q2a::UnitQuaternion, x2b::AbstractVector, q2b::UnitQuaternion,
-    x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector, x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt) where T
+function fd_diagonal∂spring∂ʳvel(j::Joint{T}, x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector,
+    x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector) where T
     function f(vω1a)
         v1a = vω1a[1:3]
         ω1a = vω1a[4:6]
-        x2a = getx3(x1a, v1a, Δt)
-        q2a = getq3([q1a.w, q1a.x, q1a.y, q1a.z], ω1a, Δt)
-        Fτa = springforcea(j, x2a, q2a, x2b, q2b, x1a, v1a, q1a, ω1a, x1b, v1b, q1b, ω1b, Δt)
+        Fτa = springforcea(j, x1a, q1a, x1b, q1b)
         return Fτa
     end
     return fdjac(vω1a -> f(vω1a), Vector([v1a; ω1a]))
 end
 
-function fd_offdiagonal∂spring∂ʳvel(j::Joint{T}, x2a::AbstractVector, q2a::UnitQuaternion, x2b::AbstractVector, q2b::UnitQuaternion,
-    x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector, x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt) where T
+function fd_offdiagonal∂spring∂ʳvel(j::Joint{T}, x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector,
+    x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector) where T
     function f(vω1b)
         v1b = vω1b[1:3]
         ω1b = vω1b[4:6]
-        x2b = getx3(x1b, v1b, Δt)
-        q2b = getq3([q1b.w, q1b.x, q1b.y, q1b.z], ω1b, Δt)
-        Fτb = springforceb(j, x2a, q2a, x2b, q2b, x1a, v1a, q1a, ω1a, x1b, v1b, q1b, ω1b, Δt)
+        Fτb = springforceb(j, x1a, q1a, x1b, q1b)
         return Fτb
     end
     return fdjac(vω1b -> f(vω1b), Vector([v1b; ω1b]))
 end
 
-function fd_offdiagonal∂spring∂ʳvel(j::Joint{T}, x2b::AbstractVector, q2b::UnitQuaternion,
-    x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt) where T
+function fd_offdiagonal∂spring∂ʳvel(j::Joint{T}, x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector) where T
     function f(vω1b)
         v1b = vω1b[1:3]
         ω1b = vω1b[4:6]
-        Fτb = springforceb(j, x2b, q2b, x1b, v1b, q1b, ω1b, Δt)
+        Fτb = springforceb(j, x1b, q1b)
         return Fτb
     end
     return fdjac(vω1b -> f(vω1b), Vector([v1b; ω1b]))
+end
+
+
+#
+# @inline function springforcea(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+#     A = nullspacemat(joint)
+#     Aᵀ = zerodimstaticadjoint(A)
+#     distance = A * g(joint, xa, qa, xb, qb)
+#     force = Aᵀ * A * joint.spring * Aᵀ * distance  # Currently assumes same spring constant in all directions
+#     return [force;szeros(3)]
+# end
+# @inline function springforceb(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+#     A = nullspacemat(joint)
+#     Aᵀ = zerodimstaticadjoint(A)
+#     distance = A * g(joint, xa, qa, xb, qb)
+#     force = - Aᵀ * A * joint.spring * Aᵀ * distance  # Currently assumes same spring constant in all directions
+#     return [force;szeros(3)]
+# end
+# @inline function springforceb(joint::Translational, xb::AbstractVector, qb::UnitQuaternion)
+#     A = nullspacemat(joint)
+#     Aᵀ = zerodimstaticadjoint(A)
+#     distance = A * g(joint, xb, qb)
+#     force = - Aᵀ * A * joint.spring * Aᵀ * distance  # Currently assumes same spring constant in all directions
+#     return [force;szeros(3)]
+# end
+#
+# @inline function damperforcea(joint::Translational, xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
+#         xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector)
+#     A = nullspacemat(joint)
+#     Aᵀ = zerodimstaticadjoint(A)
+#     velocity = A * (vb - va)
+#     force = Aᵀ * A * joint.damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
+#     return [force;szeros(3)]
+# end
+# @inline function damperforceb(joint::Translational, xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
+#     xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector)
+#     A = nullspacemat(joint)
+#     Aᵀ = zerodimstaticadjoint(A)
+#     velocity = A * (vb - va)
+#     force = - Aᵀ * A * joint.damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
+#     return [force;szeros(3)]
+# end
+# @inline function damperforceb(joint::Translational, xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector)
+#     A = nullspacemat(joint)
+#     Aᵀ = zerodimstaticadjoint(A)
+#     velocity = A * vb
+#     force = - Aᵀ * A * joint.damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
+#     return [force;szeros(3)]
+# end
+
+
+## Spring velocity derivatives
+@inline function diagonal∂spring∂ʳvel(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
+    # A = nullspacemat(joint)
+    # AᵀA = zerodimstaticadjoint(A) * A
+    # X, Q = ∂g∂ʳposa(joint, xa, qa, xb, qb)
+    # Fv = AᵀA * joint.spring * AᵀA * X
+    # Fω = AᵀA * joint.spring * AᵀA * Q
+    Z = szeros(T, 3, 3)
+    # return [[Fv; Z] [Fω; Z]]
+    return [[Z; Z] [Z; Z]]
+end
+@inline function offdiagonal∂spring∂ʳvel(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
+    # A = nullspacemat(joint)
+    # AᵀA = zerodimstaticadjoint(A) * A
+    Z = szeros(T, 3, 3)
+    # return [[AᵀA * joint.spring * AᵀA; Z] [Z; Z]]
+    return [[Z; Z] [Z; Z]]
+end
+@inline function offdiagonal∂spring∂ʳvel(joint::Translational{T}, xb::AbstractVector, qb::UnitQuaternion) where T
+    # A = nullspacemat(joint)
+    # AᵀA = zerodimstaticadjoint(A) * A
+    Z = szeros(T, 3, 3)
+    # return [[AᵀA * joint.spring * AᵀA; Z] [Z; Z]]
+    return [[Z; Z] [Z; Z]]
+end
+
+
+
+
+
+## Damper velocity derivatives
+@inline function diagonal∂damper∂ʳvel(joint::Rotational{T}) where T # never used
+    A = nullspacemat(joint)
+    AᵀA = zerodimstaticadjoint(A) * A
+    Z = szeros(T, 3, 3)
+    return [[Z; Z] [Z; -2 * AᵀA * joint.damper * AᵀA]]
+end
+
+@inline function offdiagonal∂damper∂ʳvel(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
+    # invqbqa = q2b\q2a
+    # A = nullspacemat(joint)
+    # AᵀA = zerodimstaticadjoint(A) * A
+    # Z = szeros(T, 3, 3)
+    # return [[Z; Z] [Z; 2*VLmat(invqbqa)*RVᵀmat(invqbqa)* AᵀA * Diagonal(joint.damper) * AᵀA]]
+    A = nullspacemat(joint)
+    Aᵀ = zerodimstaticadjoint(A)
+    C = 2 * Aᵀ * A * joint.damper * Aᵀ * A
+    δq = qa \ qb
+    # invδq = qb \ qa
+    Z = szeros(T, 3, 3)
+    # return [[Z; Z] [Z; VRᵀmat(invδq) * LVᵀmat(invδq) * C * VRᵀmat(δq) * LVᵀmat(δq)]]
+    return [[Z; Z] [Z; C * VRᵀmat(δq) * LVᵀmat(δq)]]
+    # offdiagonal∂damper∂ʳvel(joint, xb, qa \ qb)
+end
+@inline function offdiagonal∂damper∂ʳvel(joint::Rotational{T}, xb::AbstractVector, qb::UnitQuaternion) where T
+    # invqb = inv(q2b)
+    # A = nullspacemat(joint)
+    # AᵀA = zerodimstaticadjoint(A) * A
+    # Z = szeros(T, 3, 3)
+    # return [[Z; Z] [Z; 2*VLmat(invqb)*RVᵀmat(invqb)* AᵀA * Diagonal(joint.damper) * AᵀA]]
+    A = nullspacemat(joint)
+    Aᵀ = zerodimstaticadjoint(A)
+    C = 2 * Aᵀ * A * joint.damper * Aᵀ * A
+    q = qb
+    invq = inv(qb)
+    Z = szeros(T, 3, 3)
+    return [[Z; Z] [Z; VRᵀmat(invq) * LVᵀmat(invq) * C * VRᵀmat(q) * LVᵀmat(q)]]
+    # offdiagonal∂damper∂ʳvel(joint, zeros(3), UnitQuaternion(1,0,0,0.0), xb, qb)
 end
