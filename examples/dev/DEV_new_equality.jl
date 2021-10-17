@@ -79,3 +79,8 @@ damperforce(forcepri1, body1.state)
 damperforce(forcepri1, body1.state, body2.state)
 
 storage = simulate!(mech, 0.01, record = true, solver = :mehrotra!)
+
+eqc1.inds
+eqc2.inds
+
+Vector(SUnitRange(eqc1.inds[2][1], eqc1.inds[2][2]))

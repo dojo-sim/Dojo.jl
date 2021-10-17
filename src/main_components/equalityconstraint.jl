@@ -1,16 +1,16 @@
 """
 $(TYPEDEF)
 
-An `EqualityConstraint` is a component of a [`Mechanism`](@ref) and is used to describe the kinematic relation between two or more [`Body`](@ref)s. 
-Typically, an `EqualityConstraint` should not be created directly. Use the joint prototypes instead, for example: 
+An `EqualityConstraint` is a component of a [`Mechanism`](@ref) and is used to describe the kinematic relation between two or more [`Body`](@ref)s.
+Typically, an `EqualityConstraint` should not be created directly. Use the joint prototypes instead, for example:
 ```julia
 EqualityConstraint(Revolute(body1, body2, rotation_axis)).
 ```
 # Important attributes
-* `id`:       The unique ID of a constraint. Assigned when added to a `Mechanism`.  
+* `id`:       The unique ID of a constraint. Assigned when added to a `Mechanism`.
 * `name`:     The name of a constraint. The name is taken from a URDF or can be assigned by the user.
-* `parentid`: The ID of the parent body.  
-* `childids`: The IDs of the child bodies.  
+* `parentid`: The ID of the parent body.
+* `childids`: The IDs of the child bodies.
 """
 mutable struct EqualityConstraint{T,N,Nc,Cs} <: AbstractConstraint{T,N}
     id::Int64
@@ -49,7 +49,7 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: AbstractConstraint{T,N}
         for set in jointdata
             set[1].spring != 0 && (isspring = true)
             set[1].damper != 0 && (isdamper = true)
-            
+
             push!(constraints, set[1])
             @assert set[2] == parentid
             push!(childids, set[3])
@@ -64,7 +64,7 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: AbstractConstraint{T,N}
         end
         constraints = Tuple(constraints)
         Nc = length(constraints)
-        
+
 
         λsol = [zeros(T, N) for i=1:2]
 
@@ -76,7 +76,7 @@ end
 """
     setPosition!(mechanism, eqconstraint, xθ)
 
-Sets the minimal coordinates (vector) of joint `eqconstraint`. 
+Sets the minimal coordinates (vector) of joint `eqconstraint`.
 
 Revolute joint example:
     setPosition!(mechanism, geteqconstraint(mechanism, "joint_name"), [pi/2])
@@ -106,9 +106,9 @@ function _setPosition!(mechanism, eqc::EqualityConstraint{T,N,Nc}, xθ) where {T
     body1 = getbody(mechanism, eqc.parentid)
     for i = 1:n
         body2 = getbody(mechanism, eqc.childids[i])
-        Δx = getPositionDelta(eqc.constraints[i], body1, body2, xθ[SUnitRange(eqc.inds[i][1],eqc.inds[i][2])]) 
+        Δx = getPositionDelta(eqc.constraints[i], body1, body2, xθ[SUnitRange(eqc.inds[i][1],eqc.inds[i][2])])
         Δq = getPositionDelta(eqc.constraints[i+1], body1, body2, xθ[SUnitRange(eqc.inds[i+1][1],eqc.inds[i+1][2])])
-        
+
         p1, p2 = eqc.constraints[i].vertices
         setPosition!(body1, body2; p1 = p1, p2 = p2, Δx = Δx, Δq = Δq)
     end
@@ -133,7 +133,7 @@ function setVelocity!(mechanism, eqc::EqualityConstraint{T,N,Nc}, vω) where {T,
         body2 = getbody(mechanism, eqc.childids[i])
         Δv = getVelocityDelta(eqc.constraints[i], body1, body2, vω[SUnitRange(eqc.inds[i][1],eqc.inds[i][2])])
         Δω = getVelocityDelta(eqc.constraints[i+1], body1, body2, vω[SUnitRange(eqc.inds[i+1][1],eqc.inds[i+1][2])])
-        
+
         p1, p2 = eqc.constraints[i].vertices
         setVelocity!(body1, body2; p1 = p1, p2 = p2, Δv = Δv, Δω = Δω)
     end
@@ -207,6 +207,8 @@ end
 end
 
 @inline function springforce(mechanism, eqc::EqualityConstraint, body::Body)
+
+
     body.id == eqc.parentid ? (return springforcea(mechanism, eqc, body)) : (return springforceb(mechanism, eqc, body))
 end
 @inline function damperforce(mechanism, eqc::EqualityConstraint, body::Body)
@@ -318,7 +320,7 @@ end
 function Base.cat(eqc1::EqualityConstraint{T,N1,Nc1}, eqc2::EqualityConstraint{T,N2,Nc2}) where {T,N1,N2,Nc1,Nc2}
     @assert eqc1.parentid == eqc2.parentid "Can only concatenate constraints with the same parentid"
     parentid = eqc1.parentid
-    if parentid === nothing 
+    if parentid === nothing
         parentid = -1
         nothingflag = true
     else

@@ -40,7 +40,7 @@ visstorage = simulate!(mech, 4.0, record = true, solver = :mehrotra!)
 
 visualize(mech, visstorage, vis = vis)
 
-
+λsol[2]
 
 
 ################################################################################

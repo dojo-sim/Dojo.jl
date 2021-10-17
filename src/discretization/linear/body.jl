@@ -17,6 +17,7 @@
 
     state.d = [dynT;dynR]
 
+    # WHY are the forces updated AFTER we compute the dynamics
     for connectionid in connections(mechanism.system, body.id)
         Ne < connectionid <= Ne+Nb && continue # body
         constraintForceMapping!(mechanism, body, getcomponent(mechanism, connectionid))

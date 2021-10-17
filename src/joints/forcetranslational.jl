@@ -214,26 +214,6 @@ end
     return XX, XQ, QX, QQ
 end
 
-#
-# ## Damper velocity derivatives
-# @inline function diagonal∂damper∂ʳvel(joint::ForceTranslational12{T}) where T
-#     A = nullspacemat(joint)
-#     AᵀA = zerodimstaticadjoint(A) * A
-#     Z = szeros(T, 3, 3)
-#     return [[-AᵀA * joint.damper * AᵀA; Z] [Z; Z]]
-# end
-# @inline function offdiagonal∂damper∂ʳvel(joint::ForceTranslational12{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
-#     A = nullspacemat(joint)
-#     AᵀA = zerodimstaticadjoint(A) * A
-#     Z = szeros(T, 3, 3)
-#     return [[AᵀA * joint.damper * AᵀA; Z] [Z; Z]]
-# end
-# @inline function offdiagonal∂damper∂ʳvel(joint::ForceTranslational12{T}, xb::AbstractVector, qb::UnitQuaternion) where T
-#     A = nullspacemat(joint)
-#     AᵀA = zerodimstaticadjoint(A) * A
-#     Z = szeros(T, 3, 3)
-#     return [[AᵀA * joint.damper * AᵀA; Z] [Z; Z]]
-# end
 
 ### Forcing
 ## Application of joint forces (for dynamics)
