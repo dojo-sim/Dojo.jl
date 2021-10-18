@@ -10,13 +10,6 @@ Base.length(joint::AbstractJoint{T,N}) where {T,N} = N
 Base.zero(joint::AbstractJoint{T,N}) where {T,N} = szeros(T, N, 6)
 
 
-### Constraints and derivatives
-## Position level constraint wrappers
-@inline g(joint::AbstractJoint, body1::Body, body2::Body, Δt) = constraintmat(joint) * g(joint, body1.state, body2.state, Δt)
-@inline g(joint::AbstractJoint, body1::Origin, body2::Body, Δt) = constraintmat(joint) * g(joint, body2.state, Δt)
-@inline g(joint::AbstractJoint, body1::Body, body2::Body) = constraintmat(joint) * g(joint, body1.state, body2.state)
-@inline g(joint::AbstractJoint, body1::Origin, body2::Body) = constraintmat(joint) * g(joint, body2.state)
-
 ## Discrete-time position derivatives (for dynamics)
 # Wrappers 1
 @inline function ∂g∂ʳposa(joint::AbstractJoint, body1::Body, body2::Body, childid)

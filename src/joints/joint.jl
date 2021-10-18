@@ -18,6 +18,12 @@ Base.show(io::IO, joint::Joint) = summary(io, joint)
 @inline constraintmat(::Joint3{T}) where T = SMatrix{3,3,T,9}(I)
 @inline nullspacemat(::Joint3{T}) where T = szeros(T,0,3)
 
+### Constraints and derivatives
+## Position level constraint wrappers
+@inline g(joint::Joint, body1::Body, body2::Body, Δt, λ::AbstractVector) = constraintmat(joint) * g(joint, body1.state, body2.state, Δt)
+@inline g(joint::Joint, body1::Origin, body2::Body, Δt, λ::AbstractVector) = constraintmat(joint) * g(joint, body2.state, Δt)
+@inline g(joint::Joint, body1::Body, body2::Body, λ::AbstractVector) = constraintmat(joint) * g(joint, body1.state, body2.state)
+@inline g(joint::Joint, body1::Origin, body2::Body, λ::AbstractVector) = constraintmat(joint) * g(joint, body2.state)
 
 ### Constraints and derivatives
 ## Discrete-time position wrappers (for dynamics)
@@ -68,10 +74,3 @@ end
 
 ### Minimal coordinates
 @inline minimalCoordinates(joint::Joint{T,N}) where {T,N} = szeros(T, 3 - N)
-
-
-
-
-
-
-

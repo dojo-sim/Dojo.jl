@@ -134,5 +134,7 @@ include(joinpath(module_dir(), "src", "ui", "urdf.jl"))
 
 include(joinpath(module_dir(), "examples", "dev", "diff_tools_control_contact.jl"))
 include(joinpath(module_dir(), "examples", "dev", "mechanism_zoo.jl"))
+include(joinpath(module_dir(), "src", "joints", "fjoint.jl"))
+include(joinpath(module_dir(), "src", "joints", "force.jl"))
 include(joinpath(module_dir(), "src", "vis", "convertshape.jl"))
 include(joinpath(module_dir(), "src", "vis", "visualize.jl"))

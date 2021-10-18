@@ -84,6 +84,32 @@ eqc1.inds
 eqc2.inds
 
 Vector(SUnitRange(eqc1.inds[2][1], eqc1.inds[2][2]))
-jointb1.inds
 
+
+# t2r3
+function ForcePrismatic(body1::AbstractBody{T}, body2, axis;
+        p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}),
+        spring = zero(T), damper = zero(T)) where T
+    Translational2{T}(body1, body2; p1, p2, axis, spring, damper),
+    Force121{T}(body1, body2; p1, p2, axis, spring, damper),
+    Rotational3{T}(body1, body2; qoffset, spring, damper)
+end
+
+tra, ftr, rot = ForcePrismatic(origin, links[1], ex; p2 = vert11, spring = spring0, damper = damper0)
+tra = tra[1]
+ftr = ftr[1]
+rot = rot[1]
+
+constraintmat(tra)
+constraintmat(ftr)
+constraintmat(rot)
+nullspacemat(tra)
+nullspacemat(ftr)
+nullspacemat(rot)
+
+
+
+
+jointb1.inds
+eqcs[1].inds
 eqcs[2].inds

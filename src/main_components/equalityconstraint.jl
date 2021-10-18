@@ -21,7 +21,8 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: AbstractConstraint{T,N}
     constraints::Cs
     parentid::Union{Int64,Nothing}
     childids::SVector{Nc,Int64}
-    inds::SVector{Nc,SVector{2,Int64}} # indices for minimal coordinates, assumes joints
+    inds::SVector{2,SVector{2,Int64}} # indices for minimal coordinates, assumes joints # Nc = 2 THIS IS SPECIAL CASED
+    λinds::SVector{Nc,SVector{2,Int64}} # indices for splitting the equality constraint own variable λsol[2] between AbtractJoints
 
     λsol::Vector{SVector{N,T}}
 
@@ -45,8 +46,10 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: AbstractConstraint{T,N}
         childids = Int64[]
         constraints = AbstractJoint{T}[]
         inds = Vector{Int64}[]
+        λinds = Vector{Int64}[]
         N = 0
         for set in jointdata
+            @show typeof(set)
             set[1].spring != 0 && (isspring = true)
             set[1].damper != 0 && (isdamper = true)
 
@@ -58,17 +61,21 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: AbstractConstraint{T,N}
             if isempty(inds)
                 push!(inds, [1;3-Nset])
             else
-                push!(inds, [last(inds)[2]+1;last(inds)[2]+3-Nset])
+                if typeof(set[1]) <: Joint # ignore the FJoint
+                    push!(inds, [last(inds)[2]+1;last(inds)[2]+3-Nset])
+                end
+            end
+            if isempty(λinds)
+                push!(λinds, [1;Nset])
+            else
+                push!(λinds, [last(λinds)[2]+1;last(λinds)[2]+Nset])
             end
             N += Nset
         end
         constraints = Tuple(constraints)
         Nc = length(constraints)
-
-
         λsol = [zeros(T, N) for i=1:2]
-
-        return new{T,N,Nc,typeof(constraints)}(getGlobalID(), name, isspring, isdamper, constraints, parentid, childids, inds, λsol)
+        return new{T,N,Nc,typeof(constraints)}(getGlobalID(), name, isspring, isdamper, constraints, parentid, childids, inds, λinds, λsol)
     end
 end
 
@@ -198,11 +205,11 @@ end
 end
 
 @generated function g(mechanism, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
-    vec = [:(g(eqc.constraints[$i], getbody(mechanism, eqc.parentid), getbody(mechanism, eqc.childids[$i]), mechanism.Δt)) for i = 1:Nc]
+    vec = [:(g(eqc.constraints[$i], getbody(mechanism, eqc.parentid), getbody(mechanism, eqc.childids[$i]), mechanism.Δt, eqc.λsol[2][eqc.λinds[$i][1]:eqc.λinds[$i][2]])) for i = 1:Nc]
     return :(svcat($(vec...)))
 end
 @generated function gc(mechanism, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
-    vec = [:(g(eqc.constraints[$i], getbody(mechanism, eqc.parentid), getbody(mechanism, eqc.childids[$i]))) for i = 1:Nc]
+    vec = [:(g(eqc.constraints[$i], getbody(mechanism, eqc.parentid), getbody(mechanism, eqc.childids[$i]), eqc.λsol[2][eqc.λinds[$i][1]:eqc.λinds[$i][2]])) for i = 1:Nc]
     return :(svcat($(vec...)))
 end
 
