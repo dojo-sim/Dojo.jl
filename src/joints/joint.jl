@@ -32,8 +32,6 @@ g(joint::Joint, stateb::State, Δt) = g(joint, posargsnext(stateb, Δt)...)
 g(joint::Joint, statea::State, stateb::State) = g(joint, posargsc(statea)..., posargsc(stateb)...)
 g(joint::Joint, stateb::State) = g(joint, posargsc(stateb)...)
 
-@inline g(joint::Joint{T,N}) where {T,N} = szeros(T, N)
-
 @inline function ∂g∂ʳself(joint::Joint{T,N}) where {T,N}
     return 1e-10 * sones(T,N)
 end

@@ -193,8 +193,8 @@ end
 
 @inline function constraintForceMapping!(mechanism, body::Body, eqc::EqualityConstraint)
     body.state.d -= zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
-    eqc.isspring && (body.state.d -= springforce(mechanism, eqc, body))
-    eqc.isdamper && (body.state.d -= damperforce(mechanism, eqc, body))
+    # eqc.isspring && (body.state.d -= springforce(mechanism, eqc, body))
+    # eqc.isdamper && (body.state.d -= damperforce(mechanism, eqc, body))
     return
 end
 

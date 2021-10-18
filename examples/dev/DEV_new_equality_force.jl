@@ -50,20 +50,24 @@ origin = Origin{Float64}()
 links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
 # Constraints
-jointb1 = EqualityConstraint(Prismatic(origin, links[1], ex; p2 = vert11, spring = spring0, damper = damper0))
+jointb1 = EqualityConstraint(ForcePrismatic(origin, links[1], ex; p2 = vert11, spring = spring0, damper = damper0))
 if Nlink > 1
     eqcs = [
         jointb1;
-        [EqualityConstraint(Prismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = spring0, damper = damper0)) for i = 2:Nlink]
+        [EqualityConstraint(ForcePrismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = spring0, damper = damper0)) for i = 2:Nlink]
         ]
 else
     eqcs = [jointb1]
 end
 mech = Mechanism(origin, links, eqcs, g = 9.81, Δt = 0.01)
-storage = simulate!(mech, 1.0, record = true, solver = :mehrotra!)
+# storage = simulate!(mech, 1.0, record = true, solver = :mehrotra!)
+storage = simulate!(mech, 0.01, record = true, solver = :mehrotra!)
 
 
-
+∂g∂ʳvelb(mech, eqc1, body1)
+∂g∂ʳvelb(tra1, body1, body2, body2.id, mech.Δt)
+∂g∂ʳvelb(force1, body1, body2, body2.id, mech.Δt)
+∂g∂ʳvelb(rot1, body1, body2, body2.id, mech.Δt)
 
 eqc1 = mech.eqconstraints[1]
 eqc2 = mech.eqconstraints[2]
@@ -78,6 +82,10 @@ body2
 
 eqc1.λinds
 
+∂g∂ʳself(mech, eqc1)
+∂g∂ʳself(tra1)
+∂g∂ʳself(force1)
+∂g∂ʳself(rot1)
 g(mech, eqc1)
 g(mech, eqc2)
 gc(mech, eqc2)

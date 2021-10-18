@@ -108,6 +108,59 @@ end
     return force
 end
 
+
+
+## Discrete-time position derivatives (for dynamics)
+# Wrappers 1
+@inline function ∂g∂ʳposa(joint::Joint, body1::Body, body2::Body, childid)
+    if body2.id == childid
+        return constraintmat(joint) * ∂g∂ʳposa(joint, body1.state, body2.state)
+    else
+        return zero(joint)
+    end
+end
+@inline function ∂g∂ʳposb(joint::Joint, body1::Body, body2::Body, childid)
+    if body2.id == childid
+        return constraintmat(joint) * ∂g∂ʳposb(joint, body1.state, body2.state)
+    else
+        return zero(joint)
+    end
+end
+@inline function ∂g∂ʳposb(joint::Joint, body1::Origin, body2::Body, childid)
+    if body2.id == childid
+        return constraintmat(joint) * ∂g∂ʳposb(joint, body2.state)
+    else
+        return zero(joint)
+    end
+end
+
+# Wrappers 2
+∂g∂ʳposa(joint::Joint, statea::State, stateb::State) = ∂g∂ʳposa(joint, posargsk(statea)..., posargsk(stateb)...)
+∂g∂ʳposb(joint::Joint, statea::State, stateb::State) = ∂g∂ʳposb(joint, posargsk(statea)..., posargsk(stateb)...)
+∂g∂ʳposb(joint::Joint, stateb::State) = ∂g∂ʳposb(joint, posargsk(stateb)...)
+
+# Derivatives accounting for quaternion specialness
+@inline function ∂g∂ʳposa(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+    X, Q = ∂g∂posa(joint, xa, qa, xb, qb)
+    Q = Q * LVᵀmat(qa)
+
+    return [X Q]
+end
+@inline function ∂g∂ʳposb(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+    X, Q = ∂g∂posb(joint, xa, qa, xb, qb)
+    Q = Q * LVᵀmat(qb)
+
+    return [X Q]
+end
+@inline function ∂g∂ʳposb(joint::Joint, xb::AbstractVector, qb::UnitQuaternion)
+    X, Q = ∂g∂posb(joint, xb, qb)
+    Q = Q * LVᵀmat(qb)
+
+    return [X Q]
+end
+
+
+
 # Wrappers 2
 ∂g∂ʳvela(joint::Force12, statea::State, stateb::State, Δt) = ∂g∂ʳvela(joint, posargsc(statea)..., statea.vsol[2], posargsc(stateb)..., stateb.vsol[2])
 ∂g∂ʳvelb(joint::Force12, statea::State, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargsc(statea)..., statea.vsol[2], posargsc(stateb)..., stateb.vsol[2])
@@ -142,11 +195,6 @@ end
     Ω = szeros(T, 3, 3)
     return [V Ω]
 end
-
-
-
-
-
 
 
 

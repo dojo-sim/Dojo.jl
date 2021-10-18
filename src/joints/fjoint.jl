@@ -28,8 +28,6 @@ Base.show(io::IO, joint::FJoint) = summary(io, joint)
 
 ### Constraints and derivatives
 ## Discrete-time position wrappers (for dynamics)
-@inline g(joint::FJoint{T,N}) where {T,N} = szeros(T, N)
-
 @inline function ∂g∂ʳself(joint::FJoint{T,N}) where {T,N}
     return -1.0 * sones(T,N)
 end
