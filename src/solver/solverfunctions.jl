@@ -192,10 +192,6 @@ function setentries!(mechanism::Mechanism)
         setDandΔs!(mechanism, getentry(system, id, id), getentry(system, id), component)
 
         for childid in children(system,id)
-            # @show typeof(component)
-            # @show typeof(getcomponent(mechanism, childid))
-            # @show id
-            # @show childid
             setLU!(mechanism, getentry(system, id, childid), getentry(system, childid, id), component, getcomponent(mechanism, childid))
         end
     end

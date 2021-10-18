@@ -34,6 +34,129 @@ g(joint::Joint, stateb::State) = g(joint, posargsc(stateb)...)
 
 @inline g(joint::Joint{T,N}) where {T,N} = szeros(T, N)
 
+@inline function ∂g∂ʳself(joint::Joint{T,N}) where {T,N}
+    return 1e-10 * sones(T,N)
+end
+
+## Discrete-time position derivatives (for dynamics)
+# Wrappers 1
+@inline function ∂g∂ʳposa(joint::Joint, body1::Body, body2::Body, childid)
+    if body2.id == childid
+        return constraintmat(joint) * ∂g∂ʳposa(joint, body1.state, body2.state)
+    else
+        return zero(joint)
+    end
+end
+@inline function ∂g∂ʳposb(joint::Joint, body1::Body, body2::Body, childid)
+    if body2.id == childid
+        return constraintmat(joint) * ∂g∂ʳposb(joint, body1.state, body2.state)
+    else
+        return zero(joint)
+    end
+end
+@inline function ∂g∂ʳposb(joint::Joint, body1::Origin, body2::Body, childid)
+    if body2.id == childid
+        return constraintmat(joint) * ∂g∂ʳposb(joint, body2.state)
+    else
+        return zero(joint)
+    end
+end
+
+# Wrappers 2
+∂g∂ʳposa(joint::Joint, statea::State, stateb::State) = ∂g∂ʳposa(joint, posargsk(statea)..., posargsk(stateb)...)
+∂g∂ʳposb(joint::Joint, statea::State, stateb::State) = ∂g∂ʳposb(joint, posargsk(statea)..., posargsk(stateb)...)
+∂g∂ʳposb(joint::Joint, stateb::State) = ∂g∂ʳposb(joint, posargsk(stateb)...)
+
+# Derivatives accounting for quaternion specialness
+@inline function ∂g∂ʳposa(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+    X, Q = ∂g∂posa(joint, xa, qa, xb, qb)
+    Q = Q * LVᵀmat(qa)
+
+    return [X Q]
+end
+@inline function ∂g∂ʳposb(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+    X, Q = ∂g∂posb(joint, xa, qa, xb, qb)
+    Q = Q * LVᵀmat(qb)
+
+    return [X Q]
+end
+@inline function ∂g∂ʳposb(joint::Joint, xb::AbstractVector, qb::UnitQuaternion)
+    X, Q = ∂g∂posb(joint, xb, qb)
+    Q = Q * LVᵀmat(qb)
+
+    return [X Q]
+end
+
+# Wrappers 2
+∂g∂ʳvela(joint::Joint, statea::State, stateb::State, Δt) = ∂g∂ʳvela(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)..., fullargssol(statea)..., Δt)
+∂g∂ʳvelb(joint::Joint, statea::State, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)..., fullargssol(stateb)..., Δt)
+∂g∂ʳvelb(joint::Joint, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargsnext(stateb, Δt)..., fullargssol(stateb)..., Δt)
+offdiagonal∂damper∂ʳvel(joint::Joint, statea::State, stateb::State) = offdiagonal∂damper∂ʳvel(joint, posargsk(statea)..., posargsk(stateb)...)
+offdiagonal∂damper∂ʳvel(joint::Joint, stateb::State) = offdiagonal∂damper∂ʳvel(joint, posargsk(stateb)...)
+
+# Derivatives accounting for quaternion specialness
+@inline function ∂g∂ʳvela(joint::Joint, x2a::AbstractVector, q2a::UnitQuaternion, x2b::AbstractVector, q2b::UnitQuaternion,
+        x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector, Δt
+    )
+
+    X, Q = ∂g∂posa(joint, x2a, q2a, x2b, q2b)
+    V = X * Δt
+    Ω = Q * Lmat(q1a) * derivωbar(ω1a, Δt) * Δt / 2
+
+    return [V Ω]
+end
+@inline function ∂g∂ʳvelb(joint::Joint, x2a::AbstractVector, q2a::UnitQuaternion, x2b::AbstractVector, q2b::UnitQuaternion,
+        x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt
+    )
+
+    X, Q = ∂g∂posb(joint, x2a, q2a, x2b, q2b)
+    V = X * Δt
+    Ω = Q * Lmat(q1b) * derivωbar(ω1b, Δt) * Δt / 2
+
+    return [V Ω]
+end
+@inline function ∂g∂ʳvelb(joint::Joint, x2b::AbstractVector, q2b::UnitQuaternion,
+        x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt
+    )
+
+    X, Q = ∂g∂posb(joint, x2b, q2b)
+    V = X * Δt
+    Ω = Q * Lmat(q1b) * derivωbar(ω1b, Δt) * Δt / 2
+
+    return [V Ω]
+end
+
+
+## Continuous-time position derivatives (for constraint solver)
+# Wrappers 1
+@inline function ∂g∂posac(joint::AbstractJoint, body1::Body, body2::Body, childid)
+    if body2.id == childid
+        return constraintmat(joint) * ∂g∂posac(joint, body1.state, body2.state)
+    else
+        return ∂g∂posac(joint)
+    end
+end
+@inline function ∂g∂posbc(joint::AbstractJoint, body1::Body, body2::Body, childid)
+    if body2.id == childid
+        return constraintmat(joint) * ∂g∂posbc(joint, body1.state, body2.state)
+    else
+        return ∂g∂posbc(joint)
+    end
+end
+@inline function ∂g∂posbc(joint::AbstractJoint, body1::Origin, body2::Body, childid)
+    if body2.id == childid
+        return constraintmat(joint) * ∂g∂posbc(joint, body2.state)
+    else
+        return ∂g∂posbc(joint)
+    end
+end
+
+# Wrappers 2
+@inline ∂g∂posac(joint::AbstractJoint{T,N}) where {T,N} = szeros(T, N, 7) # TODO zero function?
+@inline ∂g∂posbc(joint::AbstractJoint{T,N}) where {T,N} = szeros(T, N, 7)
+∂g∂posac(joint::AbstractJoint, statea::State, stateb::State) = hcat(∂g∂posa(joint, posargsc(statea)..., posargsc(stateb)...)...)
+∂g∂posbc(joint::AbstractJoint, statea::State, stateb::State) = hcat(∂g∂posb(joint, posargsc(statea)..., posargsc(stateb)...)...)
+∂g∂posbc(joint::AbstractJoint, stateb::State) = hcat(∂g∂posb(joint, posargsc(stateb)...)...)
 
 ### Force derivatives (for linearization)
 ## Forcing

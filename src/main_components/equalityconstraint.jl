@@ -49,7 +49,6 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: AbstractConstraint{T,N}
         λinds = Vector{Int64}[]
         N = 0
         for set in jointdata
-            @show typeof(set)
             set[1].spring != 0 && (isspring = true)
             set[1].damper != 0 && (isdamper = true)
 
@@ -214,8 +213,6 @@ end
 end
 
 @inline function springforce(mechanism, eqc::EqualityConstraint, body::Body)
-
-
     body.id == eqc.parentid ? (return springforcea(mechanism, eqc, body)) : (return springforceb(mechanism, eqc, body))
 end
 @inline function damperforce(mechanism, eqc::EqualityConstraint, body::Body)
@@ -234,7 +231,11 @@ end
     return :(vcat($(vec...)))
 end
 
-@inline ∂g∂ʳself(mechanism, eqc::EqualityConstraint) = I*1e-10 # 0 for no regularization
+# @inline ∂g∂ʳself(mechanism, eqc::EqualityConstraint) = I*1e-10 # 0 for no regularization
+@generated function ∂g∂ʳself(mechanism, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
+    vec = [:(∂g∂ʳself(eqc.constraints[$i])) for i = 1:Nc]
+    return :(Diagonal(vcat($(vec...))))
+end
 @generated function ∂g∂ʳvela(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     vec = [:(∂g∂ʳvela(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
