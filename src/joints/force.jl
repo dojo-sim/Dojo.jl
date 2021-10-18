@@ -68,8 +68,6 @@ end
 ## Discrete-time position wrappers (for dynamics)
 springforce(joint::Force12, statea::State, stateb::State, Δt) = springforce(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)...)
 springforce(joint::Force12, stateb::State, Δt) = springforce(joint, posargsnext(stateb, Δt)...)
-# springforce(joint::Force12, statea::State, stateb::State) = springforce(joint, posargsc(statea)..., posargsc(stateb)...)
-# springforce(joint::Force12, stateb::State) = springforce(joint, posargsc(stateb)...)
 
 damperforce(joint::Force12, statea::State, stateb::State) = damperforce(joint, statea.vsol[2], stateb.vsol[2])
 damperforce(joint::Force12, stateb::State) = damperforce(joint, stateb.vsol[2])
@@ -309,7 +307,8 @@ end
     _, qa = posargsk(statea)
     _, qb = posargsk(stateb)
 
-    Fa = vrotate(-F, qa)
+    # Fa = vrotate(-F, qa)
+    Fa = - F
     Fb = -Fa
 
     τa = vrotate(torqueFromForce(Fa, vrotate(vertices[1], qa)),inv(qa)) # in local coordinates
@@ -342,7 +341,8 @@ end
     vertices = joint.vertices
     _, qa = posargsk(statea)
 
-    BFa = -VLmat(qa) * RᵀVᵀmat(qa)
+    # BFa = -VLmat(qa) * RᵀVᵀmat(qa)
+    BFa = -I(3)
     Bτa = -skew(vertices[1])
 
     return [BFa; Bτa]
@@ -421,33 +421,34 @@ end
 end
 
 
-### Minimal coordinates
-## Position and velocity offsets
-@inline function getPositionDelta(joint::Force12, body1::AbstractBody, body2::Body, x::SVector)
-    Δx = zerodimstaticadjoint(nullspacemat(joint)) * x # in body1 frame
-    return Δx
-end
-@inline function getVelocityDelta(joint::Force12, body1::AbstractBody, body2::Body, v::SVector)
-    Δv = zerodimstaticadjoint(nullspacemat(joint)) * v # in body1 frame
-    return Δv
-end
+# ### Minimal coordinates
+# ## Position and velocity offsets
+# @inline function getPositionDelta(joint::Force12, body1::AbstractBody, body2::Body, x::SVector)
+#     Δx = zerodimstaticadjoint(nullspacemat(joint)) * x # in body1 frame
+#     return Δx
+# end
+# @inline function getVelocityDelta(joint::Force12, body1::AbstractBody, body2::Body, v::SVector)
+#     Δv = zerodimstaticadjoint(nullspacemat(joint)) * v # in body1 frame
+#     return Δv
+# end
 
-## Minimal coordinate calculation
-@inline function minimalCoordinates(joint::Force12, body1::Body, body2::Body)
-    statea = body1.state
-    stateb = body2.state
-    return nullspacemat(joint) * g(joint, statea.xc, statea.qc, stateb.xc, stateb.qc)
-end
-@inline function minimalCoordinates(joint::Force12, body1::Origin, body2::Body)
-    stateb = body2.state
-    return nullspacemat(joint) * g(joint, stateb.xc, stateb.qc)
-end
-@inline function minimalVelocities(joint::Force12, body1::Body, body2::Body)
-    statea = body1.state
-    stateb = body2.state
-    return nullspacemat(joint) * (stateb.vc - statea.vc)
-end
-@inline function minimalVelocities(joint::Force12, body1::Origin, body2::Body)
-    stateb = body2.state
-    return nullspacemat(joint) * stateb.vc
-end
+# ## Minimal coordinate calculation
+# @inline function minimalCoordinates(joint::Force12, body1::Body, body2::Body)
+#     statea = body1.state
+#     stateb = body2.state
+#     return nullspacemat(joint) * g(joint, statea.xc, statea.qc, stateb.xc, stateb.qc)
+# end
+# @inline function minimalCoordinates(joint::Force12, body1::Origin, body2::Body)
+#     stateb = body2.state
+#     return nullspacemat(joint) * g(joint, stateb.xc, stateb.qc)
+# end
+# @inline function minimalVelocities(joint::Force12, body1::Body, body2::Body)
+#     statea = body1.state
+#     stateb = body2.state
+#     return nullspacemat(joint) * (stateb.vc - statea.vc)
+# end
+# @inline function minimalVelocities(joint::Force12, body1::Origin, body2::Body)
+#     stateb = body2.state
+#     return nullspacemat(joint) * stateb.vc
+# end
+# nullspacemat(force1)
