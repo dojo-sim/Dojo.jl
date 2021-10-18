@@ -192,6 +192,10 @@ Gets the minimal coordinate velocities of joint `eqconstraint`.
 end
 
 @inline function constraintForceMapping!(mechanism, body::Body, eqc::EqualityConstraint)
+    # @show size(body.state.d)
+    # @show size(∂g∂ʳpos(mechanism, eqc, body))
+    # @show size(zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)))
+    # @show size(eqc.λsol[2])
     body.state.d -= zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
     # eqc.isspring && (body.state.d -= springforce(mechanism, eqc, body))
     # eqc.isdamper && (body.state.d -= damperforce(mechanism, eqc, body))

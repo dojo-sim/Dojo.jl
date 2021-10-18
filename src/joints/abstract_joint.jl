@@ -8,7 +8,7 @@ end
 getT(joint::AbstractJoint{T}) where T = T
 Base.length(joint::AbstractJoint{T,N}) where {T,N} = N
 Base.zero(joint::AbstractJoint{T,N}) where {T,N} = szeros(T, N, 6)
-@inline g(joint::FJoint{T,N}) where {T,N} = szeros(T, N)
+@inline g(joint::AbstractJoint{T,N}) where {T,N} = szeros(T, N)
 
 
 ## Discrete-time position derivatives (for dynamics)

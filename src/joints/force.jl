@@ -40,7 +40,7 @@ end
 @inline function g(joint::Force12, body1::Body, body2::Body)
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    Fτ = springforce(joint, body1.state, body1.state) + damperforce(joint, body1.state, body2.state)
+    Fτ = springforce(joint, body1.state, body2.state) + damperforce(joint, body1.state, body2.state)
     return Aᵀ * A * Fτ
 end
 
@@ -112,31 +112,32 @@ end
 
 
 # Wrappers 2
-∂g∂ʳposa(joint::Joint, statea::State, stateb::State) = ∂g∂ʳposa(joint, posargsk(statea)..., posargsk(stateb)...)
-∂g∂ʳposb(joint::Joint, statea::State, stateb::State) = ∂g∂ʳposb(joint, posargsk(statea)..., posargsk(stateb)...)
-∂g∂ʳposb(joint::Joint, stateb::State) = ∂g∂ʳposb(joint, posargsk(stateb)...)
+∂g∂ʳposa(joint::Force12, statea::State, stateb::State) = ∂g∂ʳposa(joint, posargsk(statea)..., posargsk(stateb)...)
+∂g∂ʳposb(joint::Force12, statea::State, stateb::State) = ∂g∂ʳposb(joint, posargsk(statea)..., posargsk(stateb)...)
+∂g∂ʳposb(joint::Force12, stateb::State) = ∂g∂ʳposb(joint, posargsk(stateb)...)
 
 # Derivatives accounting for quaternion specialness
-@inline function ∂g∂ʳposa(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-    X, Q = ∂g∂posa(joint, xa, qa, xb, qb)
-    Q = Q * LVᵀmat(qa)
-
+@inline function ∂g∂ʳposa(joint::Force12{T,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T,N}
+    A = constraintmat(joint)
+    Aᵀ = zerodimstaticadjoint(A)
+    X = Aᵀ * A
+    Q = szeros(T, 3, 3)
     return [X Q]
 end
-@inline function ∂g∂ʳposb(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-    X, Q = ∂g∂posb(joint, xa, qa, xb, qb)
-    Q = Q * LVᵀmat(qb)
-
+@inline function ∂g∂ʳposb(joint::Force12{T,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T,N}
+    A = constraintmat(joint)
+    Aᵀ = zerodimstaticadjoint(A)
+    X = Aᵀ * A
+    Q = szeros(T, 3, 3)
     return [X Q]
 end
-@inline function ∂g∂ʳposb(joint::Joint, xb::AbstractVector, qb::UnitQuaternion)
-    X, Q = ∂g∂posb(joint, xb, qb)
-    Q = Q * LVᵀmat(qb)
-
+@inline function ∂g∂ʳposb(joint::Force12{T,N}, xb::AbstractVector, qb::UnitQuaternion) where {T,N}
+    A = constraintmat(joint)
+    Aᵀ = zerodimstaticadjoint(A)
+    X = Aᵀ * A
+    Q = szeros(T, 3, 3)
     return [X Q]
 end
-
-
 
 # Wrappers 2
 ∂g∂ʳvela(joint::Force12, statea::State, stateb::State, Δt) = ∂g∂ʳvela(joint, posargsc(statea)..., statea.vsol[2], posargsc(stateb)..., stateb.vsol[2])
@@ -160,9 +161,6 @@ end
     Aᵀ = zerodimstaticadjoint(A)
     V = - joint.damper * Aᵀ * A
     Ω = szeros(T, 3, 3)
-    @show size(V)
-    @show size(Ω)
-    @show size([V Ω])
     return [V Ω]
 end
 @inline function ∂g∂ʳvelb(joint::Force12{T,N}, xb::AbstractVector, qb::UnitQuaternion, vb::AbstractVector) where {T,N}
