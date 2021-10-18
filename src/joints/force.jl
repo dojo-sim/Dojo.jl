@@ -110,29 +110,6 @@ end
 
 
 
-## Discrete-time position derivatives (for dynamics)
-# Wrappers 1
-@inline function ∂g∂ʳposa(joint::Joint, body1::Body, body2::Body, childid)
-    if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳposa(joint, body1.state, body2.state)
-    else
-        return zero(joint)
-    end
-end
-@inline function ∂g∂ʳposb(joint::Joint, body1::Body, body2::Body, childid)
-    if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳposb(joint, body1.state, body2.state)
-    else
-        return zero(joint)
-    end
-end
-@inline function ∂g∂ʳposb(joint::Joint, body1::Origin, body2::Body, childid)
-    if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳposb(joint, body2.state)
-    else
-        return zero(joint)
-    end
-end
 
 # Wrappers 2
 ∂g∂ʳposa(joint::Joint, statea::State, stateb::State) = ∂g∂ʳposa(joint, posargsk(statea)..., posargsk(stateb)...)

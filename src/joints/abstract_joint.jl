@@ -10,6 +10,34 @@ Base.length(joint::AbstractJoint{T,N}) where {T,N} = N
 Base.zero(joint::AbstractJoint{T,N}) where {T,N} = szeros(T, N, 6)
 @inline g(joint::FJoint{T,N}) where {T,N} = szeros(T, N)
 
+
+## Discrete-time position derivatives (for dynamics)
+# Wrappers 1
+@inline function ∂g∂ʳposa(joint::AbstractJoint, body1::Body, body2::Body, childid)
+    if body2.id == childid
+        return constraintmat(joint) * ∂g∂ʳposa(joint, body1.state, body2.state)
+    else
+        return zero(joint)
+    end
+end
+@inline function ∂g∂ʳposb(joint::AbstractJoint, body1::Body, body2::Body, childid)
+    if body2.id == childid
+        return constraintmat(joint) * ∂g∂ʳposb(joint, body1.state, body2.state)
+    else
+        return zero(joint)
+    end
+end
+@inline function ∂g∂ʳposb(joint::AbstractJoint, body1::Origin, body2::Body, childid)
+    if body2.id == childid
+        return constraintmat(joint) * ∂g∂ʳposb(joint, body2.state)
+    else
+        return zero(joint)
+    end
+end
+
+
+
+
 ## Discrete-time velocity derivatives (for dynamics)
 # Wrappers 1
 @inline function ∂g∂ʳvela(joint::AbstractJoint, body1::Body, body2::Body, childid, Δt)
@@ -33,7 +61,6 @@ end
         return zero(joint)
     end
 end
-
 
 
 
