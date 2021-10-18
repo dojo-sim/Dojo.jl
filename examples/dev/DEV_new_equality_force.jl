@@ -39,7 +39,7 @@ h = 1.
 r = .05
 vert11 = [0; r; 0.0]
 vert12 = -vert11
-Nlink = 2
+Nlink = 5
 
 # Links
 origin = Origin{Float64}()
@@ -50,7 +50,7 @@ jointb1 = EqualityConstraint(Fixed(origin, links[1]; p1 = zeros(3), p2 = zeros(3
 if Nlink > 1
     eqcs = [
         jointb1;
-        [EqualityConstraint(ForcePrismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = 0.0, damper = 0.1)) for i = 2:Nlink]
+        [EqualityConstraint(ForcePrismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = 200.0, damper = 10.0)) for i = 2:Nlink]
         ]
 else
     eqcs = [jointb1]

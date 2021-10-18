@@ -42,7 +42,7 @@ end
 
     for connectionid in connections(mechanism.system, body.id)
         connectionid > Ne && continue # not eqc
-        damperToD!(mechanism, body, geteqconstraint(mechanism, connectionid))
+        # damperToD!(mechanism, body, geteqconstraint(mechanism, connectionid))
     end
 
     return state.D
