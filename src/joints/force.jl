@@ -120,7 +120,7 @@ end
 @inline function ∂g∂ʳposa(joint::Force12{T,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T,N}
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    X = Aᵀ * A
+    X = - Aᵀ * A # accounts for the fact that λsol[2] holds the force applied by body a on body b.
     Q = szeros(T, 3, 3)
     return [X Q]
 end

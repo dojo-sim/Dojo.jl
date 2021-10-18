@@ -216,7 +216,7 @@ function getnslider(; Δt::T = 0.01, g::T = -9.81, Nlink::Int = 5) where {T}
     ex = [0; 0; 1.0]
     h = 1.
     r = .05
-    vert11 = [0; r; h/2]
+    vert11 = [0; r; 0.0]
     vert12 = -vert11
 
     # Links
@@ -224,11 +224,13 @@ function getnslider(; Δt::T = 0.01, g::T = -9.81, Nlink::Int = 5) where {T}
     links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
     # Constraints
-    jointb1 = EqualityConstraint(Prismatic(origin, links[1], ex; p2 = vert11))
+    # jointb1 = EqualityConstraint(Prismatic(origin, links[1], ex; p2 = vert11))
+    # setPosition!(mechanism.origin, link1, p1 = [0, -0.05, 0.0])
+    jointb1 = EqualityConstraint(Fixed(origin, links[1]; p1 = 0*vert11, p2 = 0*vert11))
     if Nlink > 1
         eqcs = [
             jointb1;
-            [EqualityConstraint(Prismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11)) for i = 2:Nlink]
+            [EqualityConstraint(ForcePrismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = 1.0, damper = 1.0)) for i = 2:Nlink]
             ]
     else
         eqcs = [jointb1]
@@ -313,14 +315,14 @@ function initializeslider!(mechanism::Mechanism; ϕ1::T = 0.7) where {T}
     setPosition!(mechanism.origin, body, p2 = p2, Δq = q1)
 end
 
-function initializenslider!(mechanism::Mechanism; z1::T = 0.7, Δz = 1.2) where {T}
+function initializenslider!(mechanism::Mechanism; z1::T = 0.2, Δz = 0.0) where {T}
     link1 = collect(mechanism.bodies)[1]
     # set position and velocities
-    setPosition!(mechanism.origin, link1, p1 = [0, 0, z1])
+    setPosition!(mechanism.origin, link1, p1 = 0*[0, -0.05, z1])
 
     previd = link1.id
     for (i,body) in enumerate(Iterators.drop(mechanism.bodies, 1))
-        setPosition!(getbody(mechanism, previd), body, p1 = [0.1i, 0, Δz])
+        setPosition!(getbody(mechanism, previd), body, p1 = [0, -0.1i, Δz])
         previd = body.id
     end
 end

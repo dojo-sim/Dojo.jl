@@ -9,8 +9,8 @@ Pkg.activate(module_dir())
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 # Open visualizer
-# vis = Visualizer()
-# open(vis)
+vis = Visualizer()
+open(vis)
 
 # Build mechanism
 include("mechanism_zoo.jl")
@@ -33,41 +33,48 @@ end
 # DEVELOPMENT NEW EQUALITY CONSTRAINT
 ################################################################################
 
-
-
 # Parameters
 ex = [0; 0; 1.0]
 h = 1.
 r = .05
-vert11 = [0; r; h/2]
+vert11 = [0; r; 0.0]
 vert12 = -vert11
 Nlink = 2
-spring0 = 0.12
-damper0 = 0.31
 
 # Links
 origin = Origin{Float64}()
 links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
 # Constraints
-jointb1 = EqualityConstraint(ForcePrismatic(origin, links[1], ex; p2 = vert11, spring = spring0, damper = damper0))
+jointb1 = EqualityConstraint(Fixed(origin, links[1]; p1 = zeros(3), p2 = zeros(3)))
 if Nlink > 1
     eqcs = [
         jointb1;
-        [EqualityConstraint(ForcePrismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = spring0, damper = damper0)) for i = 2:Nlink]
+        [EqualityConstraint(ForcePrismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = 0.0, damper = 0.1)) for i = 2:Nlink]
         ]
 else
     eqcs = [jointb1]
 end
-mech = Mechanism(origin, links, eqcs, g = 9.81, Δt = 0.01)
+mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.01)
+
+# mech.eqconstraints[1]
+# eqc2 = mech.eqconstraints[2]
+# eqc2.λsol
+# tra2 = eqc2.constraints[1]
+# force2 = eqc2.constraints[2]
+# rot2 = eqc2.constraints[3]
+# springforce(force2, body1.state, body2.state)
+# springforce()
+
+# mech = getmechanism(:nslider, Nlink = 5)
+initialize!(mech, :nslider)
 # storage = simulate!(mech, 1.0, record = true, solver = :mehrotra!)
-storage = simulate!(mech, 0.01, record = true, solver = :mehrotra!)
+storage = simulate!(mech, 10.0, record = true, solver = :mehrotra!)
+
+visualize(mech, storage, vis = vis)
 
 
-∂g∂ʳvelb(mech, eqc1, body1)
-∂g∂ʳvelb(tra1, body1, body2, body2.id, mech.Δt)
-∂g∂ʳvelb(force1, body1, body2, body2.id, mech.Δt)
-∂g∂ʳvelb(rot1, body1, body2, body2.id, mech.Δt)
+
 
 eqc1 = mech.eqconstraints[1]
 eqc2 = mech.eqconstraints[2]
@@ -81,6 +88,22 @@ body1
 body2
 
 eqc1.λinds
+∂g∂ʳposa(tra1, body1, body2, body2.id)
+
+
+constraintmat(tra1)
+A = constraintmat(force1)
+Aᵀ = zerodimstaticadjoint(A)
+Aᵀ * A * ([0.1] * A)
+
+([0.1] * A)
+∂g∂ʳvelb(mech, eqc1, body1)
+∂g∂ʳvelb(tra1, body1, body2, body2.id, mech.Δt)
+∂g∂ʳvelb(force1, body1, body2, body2.id, mech.Δt)
+∂g∂ʳvelb(rot1, body1, body2, body2.id, mech.Δt)
+
+
+
 
 ∂g∂ʳself(mech, eqc1)
 ∂g∂ʳself(tra1)
