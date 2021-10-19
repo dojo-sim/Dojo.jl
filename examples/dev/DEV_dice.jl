@@ -1,9 +1,6 @@
 ################################################################################
 # Development
 ################################################################################
-using ConstrainedDynamics
-using ConstrainedDynamicsVis
-
 # Utils
 function module_dir()
     return joinpath(@__DIR__, "..", "..")
@@ -16,11 +13,13 @@ Pkg.activate(module_dir())
 # Load packages
 using Plots
 using Random
-using StaticArrays
-using LinearAlgebra
-using Test
+using MeshCat
 
-# Include dev files
+# Open visualizer
+vis = Visualizer()
+open(vis)
+
+# Include new files
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 mech = getmechanism(:dice, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, conetype = :soc)

@@ -1,9 +1,6 @@
 ################################################################################
 # Development
 ################################################################################
-using ConstrainedDynamics
-using ConstrainedDynamicsVis
-
 # Utils
 function module_dir()
     return joinpath(@__DIR__, "..", "..")
@@ -16,12 +13,13 @@ Pkg.activate(module_dir())
 # Load packages
 using Plots
 using Random
-using StaticArrays
-using LinearAlgebra
-using Test
+using MeshCat
 
+# Open visualizer
+vis = Visualizer()
+open(vis)
 
-# Include dev files
+# Include new files
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 

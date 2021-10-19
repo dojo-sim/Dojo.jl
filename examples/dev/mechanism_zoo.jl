@@ -266,10 +266,9 @@ function initializesnake!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{T}
         ϕ1::T = pi/2) where {T,Nn,Ne,Nb}
 
     link1 = collect(mechanism.bodies)[1]
-    eqc = collect(mechanism.eqconstraints)[1]
-    vert11 = eqc.constraints[1].vertices[2]
-    vert12 = - vert11
-
+    h = link1.shape.rh[2]
+    vert11 = [0.;0.;h / 2]
+    vert12 = -vert11
     # set position and velocities
     setPosition!(mechanism.origin, link1, p2 = x, Δq = UnitQuaternion(RotX(ϕ1)))
     setVelocity!(link1, v = v, ω = ω)

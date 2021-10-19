@@ -11,7 +11,7 @@ using GraphBasedSystems
 using GraphBasedSystems: Entry
 using SparseArrays
 using Symbolics
-using FiniteDiff
+# using FiniteDiff
 
 using Plots
 using Random
@@ -132,7 +132,7 @@ include(joinpath(module_dir(), "src", "ui", "simulate.jl"))
 include(joinpath(module_dir(), "src", "ui", "initialize.jl"))
 include(joinpath(module_dir(), "src", "ui", "urdf.jl"))
 
-include(joinpath(module_dir(), "examples", "dev", "diff_tools_control_contact.jl"))
+include(joinpath(module_dir(), "examples", "dev", "diff_tools.jl"))
 include(joinpath(module_dir(), "examples", "dev", "mechanism_zoo.jl"))
 include(joinpath(module_dir(), "src", "joints", "fjoint.jl"))
 include(joinpath(module_dir(), "src", "joints", "force.jl"))
