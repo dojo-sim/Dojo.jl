@@ -132,7 +132,7 @@ function linearconstraintmapping2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,
                 Aba = zeros(T,13,13)
                 Abb = zeros(T,13,13)
 
-                kronproduct = -kron(λ'*constraintmat(constraint),E)*K
+                kronproduct = -kron(λ'*Array(constraintmat(constraint)),E)*K
 
                 XX, XQ, QX, QQ = ∂2g∂posaa(constraint, state1.xc, state1.qc, state2.xc, state2.qc)
                 Aaa[4:6,1:3] = kronproduct*XX
@@ -182,7 +182,7 @@ function linearconstraintmapping2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,
 
                 Abb = zeros(T,13,13)
 
-                kronproduct = -kron(λ'*constraintmat(constraint),E)*K
+                kronproduct = -kron(λ'*Array(constraintmat(constraint)),E)*K
 
                 XX, XQ, QX, QQ = ∂2g∂posbb(constraint, state2.xc, state2.qc)
                 Abb[4:6,1:3] = kronproduct*XX
@@ -211,7 +211,7 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
     nu = 0
     for id in eqcids
         eqc = geteqconstraint(mechanism, id)
-        nu += 6-length(eqc)
+        nu += getcontroldim(eqc)
     end
 
 
@@ -246,12 +246,18 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
 
     for id in eqcids
         eqc = geteqconstraint(mechanism, id)
-        n2 += 6-length(eqc)
+        n2 += getcontroldim(eqc)
 
         parentid = eqc.parentid
         if parentid !== nothing
             parentind = parentid - Ne
             col6 = offsetrange(parentind,6)
+            @show col6 
+            @show n1 
+            @show n2
+            @show ∂Fτ∂ua(mechanism, eqc, getbody(mechanism, parentid))
+            @show size(∂Fτ∂ua(mechanism, eqc, getbody(mechanism, parentid)))
+            @show constraintmat(eqc)
             Bcontrol[col6,n1:n2] = ∂Fτ∂ua(mechanism, eqc, getbody(mechanism, parentid))
         end
         for childid in eqc.childids
@@ -421,7 +427,7 @@ function getBcontrol(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     nu = 0
     for id in eqcids
         eqc = geteqconstraint(mechanism, id)
-        nu += 6-length(eqc)
+        nu += getcontroldim(eqc)
     end
 
     Bcontrol = zeros(T, Nb*6, nu)
@@ -430,7 +436,7 @@ function getBcontrol(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     n2 = 0
     for id in eqcids
         eqc = geteqconstraint(mechanism, id)
-        n2 += 6-length(eqc)
+        n2 += getcontroldim(eqc)
 
         parentid = eqc.parentid
         if parentid !== nothing
@@ -481,7 +487,16 @@ end
 
 function getcontroldim(eqc::EqualityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
     (N == 0) && return 0
-    return 6 - N
+
+    cnt = 0
+    for joint in eqc.constraints
+        # @show joint
+        if !(typeof(joint) <: FJoint)
+            cnt += length(joint) 
+        end
+    end
+    # @show cnt
+    return 6 - cnt
 end
 
 function G(q::AbstractVector)
@@ -533,7 +548,9 @@ function setdata!(mechanism::Mechanism, data::AbstractVector)
     end
     for eqc in mechanism.eqconstraints
         dim = getcontroldim(eqc)
+        @show dim
         if dim > 0
+            @show size(data)
             u = data[off .+ (1:dim)]; off += dim
             setForce!(mechanism, eqc, u)
         end
@@ -554,8 +571,10 @@ function getdata(mechanism::Mechanism{T}) where T
     end
     for eqc in mechanism.eqconstraints
         if getcontroldim(eqc) > 0
-            tra = eqc.constraints[1]
-            rot = eqc.constraints[2]
+            # tra = eqc.constraints[1]
+            # rot = eqc.constraints[2]
+            tra = eqc.constraints[findfirst(x -> typeof(x) <: Translational, eqc.constraints)]
+            rot = eqc.constraints[findfirst(x -> typeof(x) <: Rotational, eqc.constraints)]
             F = tra.Fτ
             τ = rot.Fτ
             u = [nullspacemat(tra) * F; nullspacemat(rot) * τ]

@@ -50,7 +50,7 @@ jointb1 = EqualityConstraint(Fixed(origin, links[1]; p1 = zeros(3), p2 = zeros(3
 if Nlink > 1
     eqcs = [
         jointb1;
-        [EqualityConstraint(ForcePrismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = 1.0, damper = 0.1)) for i = 2:Nlink]
+        [EqualityConstraint(ForcePrismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = 200.0, damper = 10.0)) for i = 2:Nlink]
         ]
 else
     eqcs = [jointb1]
@@ -74,14 +74,64 @@ storage = simulate!(mech, 10.0, record = true, solver = :mehrotra!)
 visualize(mech, storage, vis = vis)
 
 
+################################################################################
+# Differentiation
+################################################################################
+eqcs[2].λinds
+eqcs[2].inds
+
+include(joinpath(module_dir(), "examples", "dev", "diff_tools_control_contact.jl"))
+# Set data
+Nb = length(mech.bodies)
+# Random.seed!(10)
+# ndata = datadim(mech, quat = true)
+# data = rand(ndata)*0.05
+data = getdata(mech)
+setdata!(mech, data)
+mehrotra!(mech, opts = InteriorPointOptions(rtol = 1e-6, btol = 1e-1, undercut=1.2, verbose=true))
+sol = getsolution(mech)
+attjac = attitudejacobian(data, Nb)
+
+
+# IFT
+setentries!(mech)
+datamat = full_data_matrix(mech)
+solmat = full_matrix(mech.system)
+sensi = - (solmat \ datamat)
+@show cond(solmat)
+@show rank(solmat)
+@show norm(full_vector(mech.system), Inf)
+
+# finite diff
+fd_datamat = finitediff_data_matrix(mech, data, sol) * attjac
+@test norm(fd_datamat + datamat, Inf) < 1e-7
+plot(Gray.(abs.(datamat)))
+plot(Gray.(abs.(fd_datamat)))
+
+fd_solmat = finitediff_sol_matrix(mech, data, sol)
+@test norm(fd_solmat + solmat, Inf) < 1e-7
+plot(Gray.(abs.(solmat)))
+plot(Gray.(abs.(fd_solmat)))
+
+fd_sensi = finitediff_sensitivity(mech, data) * attjac
+@test norm(fd_sensi - sensi) / norm(fd_sensi) < 5e-3
+plot(Gray.(sensi))
+plot(Gray.(fd_sensi))
+norm(fd_sensi - sensi, Inf)
+norm(fd_sensi, Inf)
+
+∂2g∂posbb(force2, posargsc(body2.state)...)[4]
+
+
+
+
 
 
 eqc1 = mech.eqconstraints[1]
 eqc2 = mech.eqconstraints[2]
-tra1 = eqc1.constraints[1]
-force1 = eqc1.constraints[2]
-rot1 = eqc1.constraints[3]
+tra2 = eqc2.constraints[1]
 force2 = eqc2.constraints[2]
+rot2 = eqc2.constraints[3]
 body1, body2 = mech.bodies
 origin
 body1

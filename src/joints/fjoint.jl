@@ -21,10 +21,10 @@ Base.show(io::IO, joint::FJoint) = summary(io, joint)
 
 ### Constraints and derivatives
 ## Position level constraint wrappers
-@inline g(joint::FJoint{T,N}, body1::Body, body2::Body, Δt, λ::AbstractVector) where{T,N} = constraintmat(joint) * g(joint, body1, body2) .- SVector{N}(λ)
-@inline g(joint::FJoint{T,N}, body1::Origin, body2::Body, Δt, λ::AbstractVector) where{T,N} = constraintmat(joint) * g(joint, body1, body2) .- SVector{N}(λ)
-@inline g(joint::FJoint{T,N}, body1::Body, body2::Body, λ::AbstractVector) where{T,N} = constraintmat(joint) * g(joint, body1, body2) .- SVector{N}(λ)
-@inline g(joint::FJoint{T,N}, body1::Origin, body2::Body, λ::AbstractVector) where{T,N} = constraintmat(joint) * g(joint, body1, body2) .- SVector{N}(λ)
+@inline g(joint::FJoint{T,N}, body1::Body, body2::Body, Δt, λ::AbstractVector) where{T,N} = constraintmat(joint) * g(joint, body1, body2, Δt) * Δt .- SVector{N}(λ)
+@inline g(joint::FJoint{T,N}, body1::Origin, body2::Body, Δt, λ::AbstractVector) where{T,N} = constraintmat(joint) * g(joint, body1, body2, Δt) * Δt .- SVector{N}(λ)
+# @inline g(joint::FJoint{T,N}, body1::Body, body2::Body, λ::AbstractVector) where{T,N} = constraintmat(joint) * g(joint, body1, body2) .- SVector{N}(λ)
+# @inline g(joint::FJoint{T,N}, body1::Origin, body2::Body, λ::AbstractVector) where{T,N} = constraintmat(joint) * g(joint, body1, body2) .- SVector{N}(λ)
 
 ### Constraints and derivatives
 ## Discrete-time position wrappers (for dynamics)

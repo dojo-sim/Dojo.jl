@@ -72,7 +72,7 @@ function lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,Nn,Ne
     nu = 0
     for id in eqcids
         eqc = geteqconstraint(mechanism, id)
-        nu += 6-length(eqc)
+        nu += getcontroldim(eqc)
     end
 
 
@@ -114,7 +114,7 @@ function lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,Nn,Ne
 
     for id in eqcids
         eqc = geteqconstraint(mechanism, id)
-        n2 += 6-length(eqc)
+        n2 += getcontroldim(eqc)
 
         parentid = eqc.parentid
         if parentid !== nothing
@@ -306,7 +306,7 @@ function linearconstraintmapping(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,N
                 Aba = zeros(T,13,13)
                 Abb = zeros(T,13,13)                
 
-                kronproduct = -kron(λ'*constraintmat(constraint),E)*K
+                kronproduct = -kron(λ'*Array(constraintmat(constraint)),E)*K
 
                 XX, XQ, QX, QQ = ∂2g∂posaa(constraint, state1.xsol[2], state1.qsol[2], state2.xsol[2], state2.qsol[2])
                 Aaa[4:6,1:3] = kronproduct*XX

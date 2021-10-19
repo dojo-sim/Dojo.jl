@@ -21,7 +21,7 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: AbstractConstraint{T,N}
     constraints::Cs
     parentid::Union{Int64,Nothing}
     childids::SVector{Nc,Int64}
-    inds::SVector{2,SVector{2,Int64}} # indices for minimal coordinates, assumes joints # Nc = 2 THIS IS SPECIAL CASED
+    inds::SVector{Nc,SVector{2,Int64}} # indices for minimal coordinates, assumes joints # Nc = 2 THIS IS SPECIAL CASED
     λinds::SVector{Nc,SVector{2,Int64}} # indices for splitting the equality constraint own variable λsol[2] between AbtractJoints
 
     λsol::Vector{SVector{N,T}}
@@ -62,6 +62,8 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: AbstractConstraint{T,N}
             else
                 if typeof(set[1]) <: Joint # ignore the FJoint
                     push!(inds, [last(inds)[2]+1;last(inds)[2]+3-Nset])
+                else
+                    push!(inds, [last(inds)[2];last(inds)[2] - 1])
                 end
             end
             if isempty(λinds)
@@ -156,15 +158,16 @@ Prismatic joint example:
     setVelocity!(mechanism, geteqconstraint(mechanism, jointid), [-1.0])
 """
 function setForce!(mechanism, eqc::EqualityConstraint{T,N,Nc}, Fτ::AbstractVector) where {T,N,Nc}
-    @assert length(Fτ)==3*Nc-N
+    @assert length(Fτ)==getcontroldim(eqc)
     for i = 1:Nc
-        setForce!(eqc.constraints[i], Fτ[SUnitRange(eqc.inds[i][1], eqc.inds[i][2])])
+        f = Fτ[SUnitRange(eqc.inds[i][1], eqc.inds[i][2])]
+        !isempty(f) && setForce!(eqc.constraints[i], f)
     end
     return
 end
 
 function addForce!(mechanism, eqc::EqualityConstraint{T,N,Nc}, Fτ::AbstractVector) where {T,N,Nc}
-    @assert length(Fτ)==3*Nc-N
+    @assert length(Fτ)==getcontroldim(eqc)
     for i = 1:Nc
         addForce!(eqc.constraints[i], Fτ[SUnitRange(eqc.inds[i][1], eqc.inds[i][2])])
     end

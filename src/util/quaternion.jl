@@ -9,6 +9,9 @@ qrotate(q1::UnitQuaternion,q2::UnitQuaternion) = q2 * q1 / q2
 vrotate(v::Vector,q::UnitQuaternion) = imag(qrotate(pure_quaternion(v), q))
 vrotate(v::StaticVector,q::UnitQuaternion) = q*v
 
+@inline ∂vrotate∂p(p::AbstractVector, q::UnitQuaternion) = error("not implemented")
+@inline ∂vrotate∂q(p::AbstractVector, q::UnitQuaternion) = VLmat(q) * Lmat(UnitQuaternion(p)) * Tmat() + VRᵀmat(q) * Rmat(UnitQuaternion(p))
+
 rotation_vector(q::UnitQuaternion) = rotation_angle(q) * rotation_axis(q)
 
 Lmat(q) = lmult(q)
@@ -105,7 +108,7 @@ function ∂L∂qsplit(::Type{T}) where T
         0 0 0 -1
         1 0 0 0
         0 1 0 0
-        
+
         0 0 0 -1
         0 0 1 0
         0 -1 0 0
@@ -118,17 +121,17 @@ function ∂Lᵀ∂qsplit(::Type{T}) where T
         0 -1 0 0
         0 0 -1 0
         0 0 0 -1
-        
+
         0 1 0 0
         1 0 0 0
         0 0 0 -1
         0 0 1 0
-        
+
         0 0 1 0
         0 0 0 1
         1 0 0 0
         0 -1 0 0
-        
+
         0 0 0 1
         0 0 -1 0
         0 1 0 0
@@ -141,17 +144,17 @@ function ∂R∂qsplit(::Type{T}) where T
         0 1 0 0
         0 0 1 0
         0 0 0 1
-        
+
         0 -1 0 0
         1 0 0 0
         0 0 0 -1
         0 0 1 0
-        
+
         0 0 -1 0
         0 0 0 1
         1 0 0 0
         0 -1 0 0
-        
+
         0 0 0 -1
         0 0 -1 0
         0 1 0 0
@@ -164,17 +167,17 @@ function ∂Rᵀ∂qsplit(::Type{T}) where T
         0 -1 0 0
         0 0 -1 0
         0 0 0 -1
-        
+
         0 1 0 0
         1 0 0 0
         0 0 0 1
         0 0 -1 0
-        
+
         0 0 1 0
         0 0 0 -1
         1 0 0 0
         0 1 0 0
-        
+
         0 0 0 1
         0 0 1 0
         0 -1 0 0
@@ -190,10 +193,10 @@ function slerp(q1,q2,h)
     end
 
     qdiff = q1\q2
-    φdiff = rotation_angle(qdiff) 
+    φdiff = rotation_angle(qdiff)
     udiff = rotation_axis(qdiff)
     φint = φdiff*h
     qint = UnitQuaternion(cos(φint/2),udiff*sin(φint/2),false)
-    
+
     return q1*qint
 end

@@ -37,17 +37,17 @@ end
 
 ### Constraints and derivatives
 ## Position level constraint wrappers
-@inline function g(joint::Force12, body1::Body, body2::Body)
+@inline function g(joint::Force12, body1::Body, body2::Body, Δt)
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    Fτ = springforce(joint, body1.state, body2.state) + damperforce(joint, body1.state, body2.state)
+    Fτ = springforce(joint, body1.state, body2.state, Δt) + damperforce(joint, body1.state, body2.state)
     return Aᵀ * A * Fτ
 end
 
-@inline function g(joint::Force12, body1::Origin, body2::Body)
+@inline function g(joint::Force12, body1::Origin, body2::Body, Δt)
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    Fτ = springforce(joint, body2.state) + damperforce(joint, body2.state)
+    Fτ = springforce(joint, body2.state, Δt) + damperforce(joint, body2.state)
     return Aᵀ * A * Fτ
 end
 
@@ -66,8 +66,8 @@ end
 ### Spring and damper
 ## Forces for dynamics
 ## Discrete-time position wrappers (for dynamics)
-springforce(joint::Force12, statea::State, stateb::State) = springforce(joint, posargsc(statea)..., posargsc(stateb)...)
-springforce(joint::Force12, stateb::State) = springforce(joint, posargsc(stateb)...)
+springforce(joint::Force12, statea::State, stateb::State, Δt) = springforce(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)...)
+springforce(joint::Force12, stateb::State, Δt) = springforce(joint, posargsnext(stateb, Δt)...)
 
 damperforce(joint::Force12, statea::State, stateb::State) = damperforce(joint, statea.vsol[2], stateb.vsol[2])
 damperforce(joint::Force12, stateb::State) = damperforce(joint, stateb.vsol[2])
@@ -108,9 +108,6 @@ end
     return force
 end
 
-
-
-
 # Wrappers 2
 ∂g∂ʳposa(joint::Force12, statea::State, stateb::State) = ∂g∂ʳposa(joint, posargsk(statea)..., posargsk(stateb)...)
 ∂g∂ʳposb(joint::Force12, statea::State, stateb::State) = ∂g∂ʳposb(joint, posargsk(statea)..., posargsk(stateb)...)
@@ -140,34 +137,49 @@ end
 end
 
 # Wrappers 2
-∂g∂ʳvela(joint::Force12, statea::State, stateb::State, Δt) = ∂g∂ʳvela(joint, posargsc(statea)..., statea.vsol[2], posargsc(stateb)..., stateb.vsol[2])
-∂g∂ʳvelb(joint::Force12, statea::State, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargsc(statea)..., statea.vsol[2], posargsc(stateb)..., stateb.vsol[2])
-∂g∂ʳvelb(joint::Force12, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargsc(stateb)..., stateb.vsol[2])
-# offdiagonal∂damper∂ʳvel(joint::Force12, statea::State, stateb::State) = offdiagonal∂damper∂ʳvel(joint, posargsk(statea)..., posargsk(stateb)...)
-# offdiagonal∂damper∂ʳvel(joint::Force12, stateb::State) = offdiagonal∂damper∂ʳvel(joint, posargsk(stateb)...)
+∂g∂ʳvela(joint::Force12, statea::State, stateb::State, Δt) = ∂g∂ʳvela(joint, posargsc(statea)[2], posargsnext(statea, Δt)..., statea.vsol[2], statea.ωsol[2], posargsc(stateb)[2], posargsnext(stateb, Δt)..., stateb.vsol[2], stateb.ωsol[2], Δt)
+∂g∂ʳvelb(joint::Force12, statea::State, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargsc(statea)[2], posargsnext(statea, Δt)..., statea.vsol[2], statea.ωsol[2], posargsc(stateb)[2], posargsnext(stateb, Δt)..., stateb.vsol[2], stateb.ωsol[2], Δt)
+∂g∂ʳvelb(joint::Force12, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargsc(stateb)[2], posargsnext(stateb, Δt)..., stateb.vsol[2], stateb.ωsol[2], Δt)
 
 # Derivatives accounting for quaternion specialness
-@inline function ∂g∂ʳvela(joint::Force12{T,N}, xa::AbstractVector, qa::UnitQuaternion, va::AbstractVector,
-        xb::AbstractVector, qb::UnitQuaternion, vb::AbstractVector) where {T,N}
+@inline function ∂g∂ʳvela(joint::Force12{T,N}, q1a::UnitQuaternion, xa::AbstractVector,
+        qa::UnitQuaternion, va::AbstractVector, ωa::AbstractVector,
+        q1b::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion,
+        vb::AbstractVector, ωb::AbstractVector, Δt) where {T,N}
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    V = joint.damper * Aᵀ * A
-    Ω = szeros(T, 3, 3)
+    D = joint.damper * Aᵀ * A# damper
+    S = Aᵀ * A * joint.spring * Aᵀ * A # spring
+    V = D + S * Δt
+    Ω = S * ∂vrotate∂q(joint.vertices[1], qa) * Lmat(q1a) * derivωbar(ωa, Δt) * Δt/2
+    V *= Δt
+    Ω *= Δt
     return [V Ω]
 end
-@inline function ∂g∂ʳvelb(joint::Force12{T,N}, xa::AbstractVector, qa::UnitQuaternion, va::AbstractVector,
-        xb::AbstractVector, qb::UnitQuaternion, vb::AbstractVector) where {T,N}
+@inline function ∂g∂ʳvelb(joint::Force12{T,N}, q1a::UnitQuaternion, xa::AbstractVector,
+        qa::UnitQuaternion, va::AbstractVector, ωa::AbstractVector,
+        q1b::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion,
+        vb::AbstractVector, ωb::AbstractVector, Δt) where {T,N}
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    V = - joint.damper * Aᵀ * A
-    Ω = szeros(T, 3, 3)
+    D = - joint.damper * Aᵀ * A# damper
+    S = - Aᵀ * A * joint.spring * Aᵀ * A # spring
+    V = D + S * Δt
+    Ω = S * ∂vrotate∂q(joint.vertices[2], qb) * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
+    V *= Δt
+    Ω *= Δt
     return [V Ω]
 end
-@inline function ∂g∂ʳvelb(joint::Force12{T,N}, xb::AbstractVector, qb::UnitQuaternion, vb::AbstractVector) where {T,N}
+@inline function ∂g∂ʳvelb(joint::Force12{T,N}, q1b::UnitQuaternion, xb::AbstractVector,
+        qb::UnitQuaternion, vb::AbstractVector,  ωb::AbstractVector, Δt) where {T,N}
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    V = - joint.damper * Aᵀ * A
-    Ω = szeros(T, 3, 3)
+    D = - joint.damper * Aᵀ * A# damper
+    S = - Aᵀ * A * joint.spring * Aᵀ * A # spring
+    V = D + S * Δt
+    Ω = S * ∂vrotate∂q(joint.vertices[2], qb) * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
+    V *= Δt
+    Ω *= Δt
     return [V Ω]
 end
 
@@ -270,7 +282,7 @@ end
     BFb = I(3)
     Bτb = skew(vertices[2]) * VLmat(qb) * RᵀVᵀmat(qb)
 
-    return [BFb; Bτb]
+    return [BFb; Bτb] 
 end
 @inline function ∂Fτ∂ub(joint::Force12, stateb::State)
     vertices = joint.vertices
@@ -335,33 +347,34 @@ end
 end
 
 
-### Minimal coordinates
-## Position and velocity offsets
-@inline function getPositionDelta(joint::Force12, body1::AbstractBody, body2::Body, x::SVector)
-    Δx = zerodimstaticadjoint(nullspacemat(joint)) * x # in body1 frame
-    return Δx
-end
-@inline function getVelocityDelta(joint::Force12, body1::AbstractBody, body2::Body, v::SVector)
-    Δv = zerodimstaticadjoint(nullspacemat(joint)) * v # in body1 frame
-    return Δv
-end
+# ### Minimal coordinates
+# ## Position and velocity offsets
+# @inline function getPositionDelta(joint::Force12, body1::AbstractBody, body2::Body, x::SVector)
+#     Δx = zerodimstaticadjoint(nullspacemat(joint)) * x # in body1 frame
+#     return Δx
+# end
+# @inline function getVelocityDelta(joint::Force12, body1::AbstractBody, body2::Body, v::SVector)
+#     Δv = zerodimstaticadjoint(nullspacemat(joint)) * v # in body1 frame
+#     return Δv
+# end
 
-## Minimal coordinate calculation
-@inline function minimalCoordinates(joint::Force12, body1::Body, body2::Body)
-    statea = body1.state
-    stateb = body2.state
-    return nullspacemat(joint) * g(joint, statea.xc, statea.qc, stateb.xc, stateb.qc)
-end
-@inline function minimalCoordinates(joint::Force12, body1::Origin, body2::Body)
-    stateb = body2.state
-    return nullspacemat(joint) * g(joint, stateb.xc, stateb.qc)
-end
-@inline function minimalVelocities(joint::Force12, body1::Body, body2::Body)
-    statea = body1.state
-    stateb = body2.state
-    return nullspacemat(joint) * (stateb.vc - statea.vc)
-end
-@inline function minimalVelocities(joint::Force12, body1::Origin, body2::Body)
-    stateb = body2.state
-    return nullspacemat(joint) * stateb.vc
-end
+# ## Minimal coordinate calculation
+# @inline function minimalCoordinates(joint::Force12, body1::Body, body2::Body)
+#     statea = body1.state
+#     stateb = body2.state
+#     return nullspacemat(joint) * g(joint, statea.xc, statea.qc, stateb.xc, stateb.qc)
+# end
+# @inline function minimalCoordinates(joint::Force12, body1::Origin, body2::Body)
+#     stateb = body2.state
+#     return nullspacemat(joint) * g(joint, stateb.xc, stateb.qc)
+# end
+# @inline function minimalVelocities(joint::Force12, body1::Body, body2::Body)
+#     statea = body1.state
+#     stateb = body2.state
+#     return nullspacemat(joint) * (stateb.vc - statea.vc)
+# end
+# @inline function minimalVelocities(joint::Force12, body1::Origin, body2::Body)
+#     stateb = body2.state
+#     return nullspacemat(joint) * stateb.vc
+# end
+# nullspacemat(force1)
