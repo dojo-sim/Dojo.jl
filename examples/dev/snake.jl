@@ -1,6 +1,3 @@
-using ConstrainedDynamics
-using ConstrainedDynamicsVis
-
 # Utils
 function module_dir()
     return joinpath(@__DIR__, "..", "..")
@@ -13,22 +10,30 @@ Pkg.activate(module_dir())
 # Load packages
 using Plots
 using Random
+using MeshCat
+
+# Open visualizer
+vis = Visualizer()
+open(vis)
 
 # Include new files
-include(joinpath(module_dir(), "examples", "loader.jl"))
+include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
-linmech = getmechanism(:snake, Nlink = 5, Δt = 0.01, g = -9.81, cf = 0.2, contact = false, conetype = :linear)
-socmech = getmechanism(:snake, Nlink = 5, Δt = 0.01, g = -9.81, cf = 0.2, contact = false, conetype = :soc)
+linmech = getmechanism(:snake, Nlink = 5, Δt = 0.02, g = -9.81, cf = 0.2, contact = true, conetype = :linear)
+socmech = getmechanism(:snake, Nlink = 5, Δt = 0.02, g = -9.81, cf = 0.2, contact = true, conetype = :soc)
 
-x = [0,-0.5,0]
+x = [0,-1.0,0]
 v = [1,.3,4]
 ω = [.1,.8,0]
 ϕ1 = π/2
 initialize!(linmech, :snake, x = x, v = v, ω = ω, ϕ1 = ϕ1)
 initialize!(socmech, :snake, x = x, v = v, ω = ω, ϕ1 = ϕ1)
 
-linstorage = simulate!(linmech, 0.5, record = true, solver = :mehrotra!)
-socstorage = simulate!(socmech, 0.5, record = true, solver = :mehrotra!)
+@elapsed linstorage = simulate!(linmech, 1.5, record = true, solver = :mehrotra!)
+@elapsed socstorage = simulate!(socmech, 1.5, record = true, solver = :mehrotra!)
+
+visualize(linmech, linstorage, vis = vis)
+visualize(socmech, socstorage, vis = vis)
 
 ################################################################################
 # Differentiation

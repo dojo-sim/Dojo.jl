@@ -6,11 +6,18 @@ end
 # Activate package
 using Pkg
 Pkg.activate(module_dir())
-include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
+
+# Load packages
+using Plots
+using Random
+using MeshCat
 
 # Open visualizer
 vis = Visualizer()
 open(vis)
+
+# Include new files
+include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 # Build mechanism
 include("mechanism_zoo.jl")

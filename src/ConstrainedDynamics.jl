@@ -13,7 +13,7 @@ using GraphBasedSystems: Entry
 using Parameters
 using SparseArrays
 using Symbolics
-using FiniteDiff
+# using FiniteDiff
 
 using Plots
 using Random
@@ -139,7 +139,7 @@ include(joinpath("ui", "initialize.jl"))
 include(joinpath("ui", "urdf.jl"))
 
 include(joinpath("..", "examples", "dev", "mechanism_zoo.jl"))
-include(joinpath("..", "examples", "dev", "diff_tools_control_contact.jl"))
+include(joinpath("..", "examples", "dev", "diff_tools.jl"))
 include(joinpath("joints", "fjoint.jl"))
 include(joinpath("joints", "force.jl"))
 include(joinpath("vis", "convertshape.jl"))

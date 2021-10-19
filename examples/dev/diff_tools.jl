@@ -38,24 +38,35 @@ function linearconstraints2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 ccol3c12 = offsetrange(childind,3,12,3)
                 ccol3d12 = offsetrange(childind,3,12,4)
 
-                pXl, pQl = ∂g∂posa(eqc.constraints[i], posargsnext(pstate, Δt)..., posargsnext(cstate, Δt)...) # x3
-                cXl, cQl =  ∂g∂posb(eqc.constraints[i], posargsnext(pstate, Δt)..., posargsnext(cstate, Δt)...) # x3
+                # pXl, pQl = ∂g∂posa(eqc.constraints[i], posargsnext(pstate, Δt)..., posargsnext(cstate, Δt)...) # x3
+                # cXl, cQl = ∂g∂posb(eqc.constraints[i], posargsnext(pstate, Δt)..., posargsnext(cstate, Δt)...) # x3
+
+                pXl, pQl = ∂g∂posa(eqc.constraints[i], pbody, cbody, Δt) # x3
+                cXl, cQl = ∂g∂posb(eqc.constraints[i], pbody, cbody, Δt) # x3
+
+                @show typeof(eqc.constraints[i])
+                @show pXl
+                @show pQl
+                @show cXl
+                @show cQl
+
 
                 mat = constraintmat(eqc.constraints[i])
+                @show mat
                 pGlx = mat * pXl
                 pGlq = mat * pQl
                 cGlx = mat * cXl
                 cGlq = mat * cQl
+                @show pGlx
+                @show pGlq
+                @show cGlx
+                @show cGlq
 
                 Gl[range,pcol3a12] = pGlx
-                # Gl[range,pcol3b12] = pGlx*Δt
-                Gl[range,pcol3c12] = pGlq*Rmat(ωbar(pstate.ωc, Δt)*Δt/2)*LVᵀmat(pstate.qc) #taylor
-                # Gl[range,pcol3d12] = pGlq*Lmat(pstate.qsol[2])*derivωbar(pstate.ωsol[2],Δt)*Δt/2
+                Gl[range,pcol3c12] = pGlq*Rmat(ωbar(pstate.ωc, Δt)*Δt/2)*LVᵀmat(pstate.qc)
 
                 Gl[range,ccol3a12] = cGlx
-                # Gl[range,ccol3b12] = cGlx*Δt
-                Gl[range,ccol3c12] = cGlq*Rmat(ωbar(cstate.ωc, Δt)*Δt/2)*LVᵀmat(cstate.qc) #taylor
-                # Gl[range,ccol3d12] = cGlq*Lmat(cstate.qsol[2])*derivωbar(cstate.ωsol[2],Δt)*Δt/2
+                Gl[range,ccol3c12] = cGlq*Rmat(ωbar(cstate.ωc, Δt)*Δt/2)*LVᵀmat(cstate.qc)
 
                 ind1 = ind2+1
             end
@@ -81,10 +92,7 @@ function linearconstraints2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 cGlq = mat * cQl
 
                 Gl[range,ccol3a12] = cGlx
-                # Gl[range,ccol3b12] = cGlx*Δt
-                Gl[range,ccol3c12] = cGlq*Rmat(ωbar(cstate.ωc, Δt)*Δt/2)*LVᵀmat(cstate.qc) #taylor
-                # Gl[range,ccol3d12] = cGlq*Lmat(cstate.qsol[2])*derivωbar(cstate.ωsol[2],Δt)*Δt/2
-
+                Gl[range,ccol3c12] = cGlq*Rmat(ωbar(cstate.ωc, Δt)*Δt/2)*LVᵀmat(cstate.qc)
                 ind1 = ind2+1
             end
         end
@@ -252,12 +260,6 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
         if parentid !== nothing
             parentind = parentid - Ne
             col6 = offsetrange(parentind,6)
-            @show col6 
-            @show n1 
-            @show n2
-            @show ∂Fτ∂ua(mechanism, eqc, getbody(mechanism, parentid))
-            @show size(∂Fτ∂ua(mechanism, eqc, getbody(mechanism, parentid)))
-            @show constraintmat(eqc)
             Bcontrol[col6,n1:n2] = ∂Fτ∂ua(mechanism, eqc, getbody(mechanism, parentid))
         end
         for childid in eqc.childids
@@ -405,7 +407,6 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
         x2, v2, q2, ω2 = fullargssol(body.state)
         x2, q2 = posargsk(body.state)
         x3, q3 = posargsnext(body.state, Δt)
-        @show sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1)
         ibody = findfirst(x -> x == body.id, mechanism.bodies.keys)
         A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)] = cont.ainv3 # ∇x2ϕ 1x3
         A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (7:9)] = cont.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(cont.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(cont.p))) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)
@@ -490,12 +491,10 @@ function getcontroldim(eqc::EqualityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
 
     cnt = 0
     for joint in eqc.constraints
-        # @show joint
         if !(typeof(joint) <: FJoint)
-            cnt += length(joint) 
+            cnt += length(joint)
         end
     end
-    # @show cnt
     return 6 - cnt
 end
 
@@ -548,9 +547,7 @@ function setdata!(mechanism::Mechanism, data::AbstractVector)
     end
     for eqc in mechanism.eqconstraints
         dim = getcontroldim(eqc)
-        @show dim
         if dim > 0
-            @show size(data)
             u = data[off .+ (1:dim)]; off += dim
             setForce!(mechanism, eqc, u)
         end
@@ -673,7 +670,7 @@ function finitediff_sensitivity(mechanism::Mechanism, data::AbstractVector; ϵr 
         setdata!(mechanismm, deepcopy(datam))
         mehrotra!(mechanismm, opts = InteriorPointOptions(rtol = ϵr, btol = ϵb, undercut=1.2, verbose=true))
         solm = getsolution(mechanismm)
-        
+
         jac[:,i] = (solp - solm) / (2δ)
     end
     return jac
@@ -764,9 +761,9 @@ function ∂sr∂ω(q2, ω2, Δt)
     return Δt / 2 * L * [- ω2' / sqrt(4 / Δt^2  - ω2' * ω2); I(3)]
 end
 
-function sensitivities(mech, sol, data) 
+function sensitivities(mech, sol, data)
     setdata!(mech, data)
-    setsolution!(mech, sol) 
+    setsolution!(mech, sol)
     setentries!(mech)
     datamat = full_data_matrix(mech)
     solmat = full_matrix(mech.system)
@@ -774,7 +771,7 @@ function sensitivities(mech, sol, data)
     return sensi
 end
 
-function jvp(mech, sol, data, v) 
+function jvp(mech, sol, data, v)
     sensi = sensitivities(mech, sol, data)
-    return sensi * v 
+    return sensi * v
 end

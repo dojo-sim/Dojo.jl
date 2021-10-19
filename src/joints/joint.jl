@@ -38,6 +38,11 @@ end
 
 ## Discrete-time position derivatives (for dynamics)
 # Wrappers 1
+
+@inline ∂g∂posa(joint::Joint, body1::Body, body2::Body, Δt) = ∂g∂posa(joint, posargsnext(body1.state, Δt)..., posargsnext(body2.state, Δt)...) # the Δt factor comes from g(joint::FJoint, for the minus sign I don't know
+@inline ∂g∂posb(joint::Joint, body1::Body, body2::Body, Δt) = ∂g∂posb(joint, posargsnext(body1.state, Δt)..., posargsnext(body2.state, Δt)...) # the Δt factor comes from g(joint::FJoint, for the minus sign I don't know
+@inline ∂g∂posb(joint::Joint, body1::Origin, body2::Body, Δt) = ∂g∂posb(joint, posargsnext(body2.state, Δt)...) # the Δt factor comes from g(joint::FJoint, for the minus sign I don't know
+
 @inline function ∂g∂ʳposa(joint::Joint, body1::Body, body2::Body, childid)
     if body2.id == childid
         return constraintmat(joint) * ∂g∂ʳposa(joint, body1.state, body2.state)
