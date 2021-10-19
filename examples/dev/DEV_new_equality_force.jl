@@ -50,7 +50,7 @@ jointb1 = EqualityConstraint(Fixed(origin, links[1]; p1 = zeros(3), p2 = zeros(3
 if Nlink > 1
     eqcs = [
         jointb1;
-        [EqualityConstraint(ForcePrismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = 200.0, damper = 10.0)) for i = 2:Nlink]
+        [EqualityConstraint(ForcePrismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = 30.0, damper = 0.5)) for i = 2:Nlink]
         ]
 else
     eqcs = [jointb1]
@@ -69,7 +69,7 @@ mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.01)
 # mech = getmechanism(:nslider, Nlink = 5)
 initialize!(mech, :nslider)
 # storage = simulate!(mech, 1.0, record = true, solver = :mehrotra!)
-storage = simulate!(mech, 10.0, record = true, solver = :mehrotra!)
+storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!)
 
 visualize(mech, storage, vis = vis)
 
@@ -83,9 +83,6 @@ eqcs[2].inds
 include(joinpath(module_dir(), "examples", "dev", "diff_tools_control_contact.jl"))
 # Set data
 Nb = length(mech.bodies)
-# Random.seed!(10)
-# ndata = datadim(mech, quat = true)
-# data = rand(ndata)*0.05
 data = getdata(mech)
 setdata!(mech, data)
 mehrotra!(mech, opts = InteriorPointOptions(rtol = 1e-6, btol = 1e-1, undercut=1.2, verbose=true))
@@ -107,6 +104,35 @@ fd_datamat = finitediff_data_matrix(mech, data, sol) * attjac
 @test norm(fd_datamat + datamat, Inf) < 1e-7
 plot(Gray.(abs.(datamat)))
 plot(Gray.(abs.(fd_datamat)))
+
+norm(fd_datamat + datamat, Inf)
+norm((fd_datamat + datamat)[1:6,1:25], Inf)
+norm((fd_datamat + datamat)[7:8,1:25], Inf)
+norm((fd_datamat + datamat)[9:9,1:25], Inf)
+fd_datamat[9:9,1:6]
+fd_datamat[9:9,7:12]
+fd_datamat[9:9,13:18]
+fd_datamat[9:9,19:24]
+
+datamat[9:9,1:6]
+datamat[9:9,7:12]
+datamat[9:9,13:18]
+datamat[9:9,19:24]
+
+(fd_datamat + datamat)[9:9,1:6] # body1 x2z
+(fd_datamat + datamat)[9:9,7:12] # body1 q2x
+(fd_datamat + datamat)[9:9,13:18] # body2 x2z
+(fd_datamat + datamat)[9:9,19:24] # body2 q2x
+
+norm((fd_datamat + datamat)[10:12,1:25], Inf)
+norm((fd_datamat + datamat)[13:18,1:25], Inf)
+norm((fd_datamat + datamat)[19:20,1:25], Inf)
+norm((fd_datamat + datamat)[21:21,1:25], Inf)
+norm((fd_datamat + datamat)[22:24,1:25], Inf)
+
+fd_datamat[21:21,1:25]
+datamat[21:21,1:25]
+
 
 fd_solmat = finitediff_sol_matrix(mech, data, sol)
 @test norm(fd_solmat + solmat, Inf) < 1e-7
@@ -133,9 +159,11 @@ tra2 = eqc2.constraints[1]
 force2 = eqc2.constraints[2]
 rot2 = eqc2.constraints[3]
 body1, body2 = mech.bodies
-origin
-body1
-body2
+
+
+∂Fτ∂ua(mech, eqc1, getbody(mech, eqc2.parentid))
+∂Fτ∂ua(mech, eqc2, getbody(mech, eqc2.parentid))
+∂Fτ∂ua(force2, body1, body2, body2.id)
 
 eqc1.λinds
 ∂g∂ʳposa(tra1, body1, body2, body2.id)

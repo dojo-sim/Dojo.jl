@@ -114,6 +114,7 @@ end
 ∂g∂ʳposb(joint::Force12, stateb::State) = ∂g∂ʳposb(joint, posargsk(stateb)...)
 
 # Derivatives accounting for quaternion specialness
+# THIS IS USED TO INJECT THE SPRING-DAMPER FORCE INTO THE DYNAMICS, IT DOESN'T HAVE TO BE THE DERIVATIVE OF g WRT THE POS VARIABLES
 @inline function ∂g∂ʳposa(joint::Force12{T,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T,N}
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
@@ -134,6 +135,33 @@ end
     X = Aᵀ * A
     Q = szeros(T, 3, 3)
     return [X Q]
+end
+
+## Derivatives NOT accounting for quaternion specialness
+# THIS IS USED IN DATAMAT, IT HAS TO BE THE DERIVATIVE OF g WRT THE POS VARIABLES
+@inline function ∂g∂posa(joint::Force12{T,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T,N}
+    A = constraintmat(joint)
+    Aᵀ = zerodimstaticadjoint(A)
+    C = - Aᵀ * A * joint.spring * Aᵀ * A
+    X = - C # xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa))
+    Q = - C * ∂vrotate∂q(joint.vertices[1], qa) # xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa))
+    return X, Q
+end
+@inline function ∂g∂posb(joint::Force12{T,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T,N}
+    A = constraintmat(joint)
+    Aᵀ = zerodimstaticadjoint(A)
+    C = - Aᵀ * A * joint.spring * Aᵀ * A
+    X = C # xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa))
+    Q = C * ∂vrotate∂q(joint.vertices[2], qb) # xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa))
+    return X, Q
+end
+@inline function ∂g∂posb(joint::Force12{T,N}, xb::AbstractVector, qb::UnitQuaternion) where {T,N}
+    A = constraintmat(joint)
+    Aᵀ = zerodimstaticadjoint(A)
+    C = - Aᵀ * A * joint.spring * Aᵀ * A
+    X = C # xb + vrotate(vertices[2], qb)
+    Q = C * ∂vrotate∂q(joint.vertices[2], qb) # xb + vrotate(vertices[2], qb)
+    return X, Q
 end
 
 # Wrappers 2
@@ -189,7 +217,7 @@ end
     Ltpos = Lᵀmat(UnitQuaternion(xb + vrotate(joint.vertices[2], qb) - xa))
 
     XX = szeros(T, 9, 3)
-    XQ = szeros(T, 9, 4) 
+    XQ = szeros(T, 9, 4)
     QX = szeros(T, 9, 3)
     QQ = szeros(T, 9, 4)
 
@@ -282,7 +310,7 @@ end
     BFb = I(3)
     Bτb = skew(vertices[2]) * VLmat(qb) * RᵀVᵀmat(qb)
 
-    return [BFb; Bτb] 
+    return [BFb; Bτb]
 end
 @inline function ∂Fτ∂ub(joint::Force12, stateb::State)
     vertices = joint.vertices

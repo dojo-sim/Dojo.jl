@@ -23,8 +23,19 @@ Base.show(io::IO, joint::FJoint) = summary(io, joint)
 ## Position level constraint wrappers
 @inline g(joint::FJoint{T,N}, body1::Body, body2::Body, Δt, λ::AbstractVector) where{T,N} = constraintmat(joint) * g(joint, body1, body2, Δt) * Δt .- SVector{N}(λ)
 @inline g(joint::FJoint{T,N}, body1::Origin, body2::Body, Δt, λ::AbstractVector) where{T,N} = constraintmat(joint) * g(joint, body1, body2, Δt) * Δt .- SVector{N}(λ)
-# @inline g(joint::FJoint{T,N}, body1::Body, body2::Body, λ::AbstractVector) where{T,N} = constraintmat(joint) * g(joint, body1, body2) .- SVector{N}(λ)
-# @inline g(joint::FJoint{T,N}, body1::Origin, body2::Body, λ::AbstractVector) where{T,N} = constraintmat(joint) * g(joint, body1, body2) .- SVector{N}(λ)
+
+@inline function ∂g∂posa(joint::FJoint, body1::Body, body2::Body, Δt)
+    X, Q = ∂g∂posa(joint, posargsnext(body1.state, Δt)..., posargsnext(body2.state, Δt)...) # the Δt factor comes from g(joint::FJoint
+    return Δt * X, Δt * Q
+end
+@inline function ∂g∂posb(joint::FJoint, body1::Body, body2::Body, Δt)
+    X, Q = ∂g∂posb(joint, posargsnext(body1.state, Δt)..., posargsnext(body2.state, Δt)...) # the Δt factor comes from g(joint::FJoint
+    return Δt * X, Δt * Q
+end
+@inline function ∂g∂posb(joint::FJoint, body1::Origin, body2::Body, Δt)
+    X, Q = ∂g∂posb(joint, posargsnext(body2.state, Δt)...) # the Δt factor comes from g(joint::FJoint
+    return Δt * X, Δt * Q
+end
 
 ### Constraints and derivatives
 ## Discrete-time position wrappers (for dynamics)
@@ -48,25 +59,29 @@ end
 @inline addForce!(joint::FJoint) = return
 
 ## Derivative wrappers
-@inline function ∂Fτ∂ua(joint::FJoint, body1::Body, body2::Body, childid)
-    return ∂Fτ∂ua(joint, body1.state, body2.state) * zerodimstaticadjoint(nullspacemat(joint))
+@inline function ∂Fτ∂ua(joint::FJoint{T,N}, body1::Body, body2::Body, childid) where {T,N}
+    # return ∂Fτ∂ua(joint, body1.state, body2.state) * zerodimstaticadjoint(nullspacemat(joint))
+    return ∂Fτ∂ua(joint, body1.state, body2.state) * zerodimstaticadjoint(szeros(T,0,3)) # TODO this is because there is no control on the nullspacedims of the FJoint
 end
-@inline function ∂Fτ∂ub(joint::FJoint, body1::Body, body2::Body, childid)
+@inline function ∂Fτ∂ub(joint::FJoint{T,N}, body1::Body, body2::Body, childid) where {T,N}
     if body2.id == childid
-        return ∂Fτ∂ub(joint, body1.state, body2.state) * zerodimstaticadjoint(nullspacemat(joint))
+        # return ∂Fτ∂ub(joint, body1.state, body2.state) * zerodimstaticadjoint(nullspacemat(joint))
+        return ∂Fτ∂ub(joint, body1.state, body2.state) * zerodimstaticadjoint(szeros(T,0,3)) # TODO this is because there is no control on the nullspacedims of the FJoint
     else
         return ∂Fτ∂ub(joint)
     end
 end
-@inline function ∂Fτ∂ub(joint::FJoint, body1::Origin, body2::Body, childid)
+@inline function ∂Fτ∂ub(joint::FJoint{T,N}, body1::Origin, body2::Body, childid) where {T,N}
     if body2.id == childid
-        return return ∂Fτ∂ub(joint, body2.state) * zerodimstaticadjoint(nullspacemat(joint))
+        # return return ∂Fτ∂ub(joint, body2.state) * zerodimstaticadjoint(nullspacemat(joint))
+        return return ∂Fτ∂ub(joint, body2.state) * zerodimstaticadjoint(szeros(T,0,3)) # TODO this is because there is no control on the nullspacedims of the FJoint
     else
         return ∂Fτ∂ub(joint)
     end
 end
 
-@inline ∂Fτ∂ub(joint::FJoint{T,N}) where {T,N} = szeros(T, 6, 3 - N) # TODO zero function?
+# @inline ∂Fτ∂ub(joint::FJoint{T,N}) where {T,N} = szeros(T, 6, 3 - N) # TODO zero function?
+@inline ∂Fτ∂ub(joint::FJoint{T,N}) where {T,N} = szeros(T, 6, 0) # TODO zero function? # TODO this is because there is no control on the nullspacedims of the FJoint
 
 
 ### Minimal coordinates

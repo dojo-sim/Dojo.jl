@@ -82,7 +82,7 @@ function lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,Nn,Ne
     foreach(applyFτ!, eqcs, mechanism, false)
     newton!(mechanism)
 
-    # get state linearization 
+    # get state linearization
     Fz = zeros(T,Nb*13,Nb*12)
     Fu = zeros(T,Nb*13,Nb*6)
     Fλ = zeros(T,Nb*13,nc)
@@ -163,7 +163,7 @@ function linearconstraints(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
             parentind = parentid - Ne
             pbody = getbody(mechanism,parentid)
             pstate = pbody.state
-            
+
             for (i,childid) in enumerate(eqc.childids)
                 childind = childid - Ne
                 cbody = getbody(mechanism,childid)
@@ -304,7 +304,7 @@ function linearconstraintmapping(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,N
                 Aaa = zeros(T,13,13)
                 Aab = zeros(T,13,13)
                 Aba = zeros(T,13,13)
-                Abb = zeros(T,13,13)                
+                Abb = zeros(T,13,13)
 
                 kronproduct = -kron(λ'*Array(constraintmat(constraint)),E)*K
 
@@ -406,7 +406,7 @@ function linearforcemapping(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 colb6 = offsetrange(childind,6)
                 rowbv = offsetrange(childind,3,13,2)
                 rowbω = offsetrange(childind,3,13,4).+1
-                
+
                 Fzu[rowbv,colb6] = [FbXb FbQb]
                 Fzu[rowbω,colb6] = [τbXb τbQb]
             end
