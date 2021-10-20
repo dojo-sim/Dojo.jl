@@ -59,11 +59,11 @@ origin = Origin{T}()
 links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
 # Constraints
-jointb1 = EqualityConstraint(TorqueRevolute(origin, links[1], ex; spring=1000.0, damper=0.0, p2 = vert11))
+jointb1 = EqualityConstraint(TorqueRevolute(origin, links[1], ex; spring=0.0, damper=10.0, p2 = vert11))
 if Nlink > 1
     eqcs = [
         jointb1;
-        [EqualityConstraint(TorqueRevolute(links[i - 1], links[i], ex; spring=1000.0,damper=0.0, p1=vert12, p2=vert11)) for i = 2:Nlink]
+        [EqualityConstraint(TorqueRevolute(links[i - 1], links[i], ex; spring=0.0,damper=10.0, p1=vert12, p2=vert11)) for i = 2:Nlink]
         ]
 else
     eqcs = [jointb1]
