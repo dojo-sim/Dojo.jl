@@ -30,7 +30,7 @@ include("mechanism_zoo.jl")
 
 # t2r3
 function TorqueRevolute(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T)) where T
-    return Translational3{T}(body1, body2; p1, p2, spring, damper), 
+    return Translational3{T}(body1, body2; p1, p2, spring, damper),
     Rotational2{T}(body1, body2; axis, qoffset, spring, damper),
     Torque1{T}(body1, body2; axis=axis, qoffset=qoffset, spring=spring, damper=damper)
 end
@@ -39,13 +39,6 @@ end
 # DEVELOPMENT NEW EQUALITY CONSTRAINT
 ################################################################################
 T = Float64
-# Parameters
-ex = [0; 0; 1.0]
-h = 1.
-r = .05
-vert11 = [0; r; 0.0]
-vert12 = -vert11
-Nlink = 10
 
 # Parameters
 ex = [1.; 0; 0]
@@ -53,30 +46,27 @@ h = 1.
 r = .05
 vert11 = [0; 0; h/2]
 vert12 = -vert11
+Nlink = 1
 
 # Links
 origin = Origin{T}()
 links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
 # Constraints
-jointb1 = EqualityConstraint(TorqueRevolute(origin, links[1], ex; spring=0.0, damper=10.0, p2 = vert11))
+spring0 = 1.0 * 1e3
+damper0 = 0.0 * 1e2
+spring1 = 1.0 * 1e3
+damper1 = 0.0 * 1e2
+jointb1 = EqualityConstraint(TorqueRevolute(origin, links[1], ex; spring=spring0, damper=damper0, p2 = vert11))
 if Nlink > 1
     eqcs = [
         jointb1;
-        [EqualityConstraint(TorqueRevolute(links[i - 1], links[i], ex; spring=0.0,damper=10.0, p1=vert12, p2=vert11)) for i = 2:Nlink]
+        [EqualityConstraint(TorqueRevolute(links[i - 1], links[i], ex; spring=spring1, damper=damper1, p1=vert12, p2=vert11)) for i = 2:Nlink]
         ]
 else
     eqcs = [jointb1]
 end
 mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.01)
-# mech.eqconstraints[1]
-# eqc2 = mech.eqconstraints[2]
-# eqc2.λsol
-# tra2 = eqc2.constraints[1]
-# force2 = eqc2.constraints[2]
-# rot2 = eqc2.constraints[3]
-# springforce(force2, body1.state, body2.state)
-# springforce()
 
 # mech = getmechanism(:nslider, Nlink = 5)
 initialize!(mech, :npendulum)
@@ -89,9 +79,6 @@ visualize(mech, storage, vis = vis)
 ################################################################################
 # Differentiation
 ################################################################################
-eqcs[2].λinds
-eqcs[2].inds
-
 include(joinpath(module_dir(), "examples", "dev", "diff_tools.jl"))
 # Set data
 Nb = length(mech.bodies)
@@ -101,14 +88,28 @@ mehrotra!(mech, opts = InteriorPointOptions(rtol = 1e-6, btol = 1e-1, undercut=1
 sol = getsolution(mech)
 attjac = attitudejacobian(data, Nb)
 
+eqc1 = collect(mech.eqconstraints)[1]
+eqc2 = collect(mech.eqconstraints)[1]
+tra1 = eqc1.constraints[1]
+rot1 = eqc1.constraints[2]
+torque1 = eqc1.constraints[3]
+tra2 = eqc2.constraints[1]
+rot2 = eqc2.constraints[2]
+torque2 = eqc2.constraints[3]
+constraintmat(tra1)
+constraintmat(rot1)
+constraintmat(torque1)
+constraintmat(tra2)
+constraintmat(rot2)
+constraintmat(torque2)
+
+
 
 # IFT
 setentries!(mech)
 datamat = full_data_matrix(mech)
 solmat = full_matrix(mech.system)
 sensi = - (solmat \ datamat)
-@show cond(solmat)
-@show rank(solmat)
 @show norm(full_vector(mech.system), Inf)
 
 # finite diff

@@ -65,15 +65,6 @@ else
 end
 mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.01)
 
-# mech.eqconstraints[1]
-# eqc2 = mech.eqconstraints[2]
-# eqc2.λsol
-# tra2 = eqc2.constraints[1]
-# force2 = eqc2.constraints[2]
-# rot2 = eqc2.constraints[3]
-# springforce(force2, body1.state, body2.state)
-# springforce()
-
 # mech = getmechanism(:nslider, Nlink = 5)
 initialize!(mech, :nslider)
 # storage = simulate!(mech, 1.0, record = true, solver = :mehrotra!)
@@ -103,8 +94,6 @@ setentries!(mech)
 datamat = full_data_matrix(mech)
 solmat = full_matrix(mech.system)
 sensi = - (solmat \ datamat)
-@show cond(solmat)
-@show rank(solmat)
 @show norm(full_vector(mech.system), Inf)
 
 # finite diff
@@ -138,10 +127,6 @@ norm((fd_datamat + datamat)[19:20,1:25], Inf)
 norm((fd_datamat + datamat)[21:21,1:25], Inf)
 norm((fd_datamat + datamat)[22:24,1:25], Inf)
 
-fd_datamat[21:21,1:25]
-datamat[21:21,1:25]
-
-
 fd_solmat = finitediff_sol_matrix(mech, data, sol)
 @test norm(fd_solmat + solmat, Inf) < 1e-7
 plot(Gray.(abs.(solmat)))
@@ -153,10 +138,6 @@ plot(Gray.(sensi))
 plot(Gray.(fd_sensi))
 norm(fd_sensi - sensi, Inf)
 norm(fd_sensi, Inf)
-
-∂2g∂posbb(force2, posargsc(body2.state)...)[4]
-
-
 
 
 

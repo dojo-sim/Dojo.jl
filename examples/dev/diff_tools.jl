@@ -85,7 +85,8 @@ function linearconstraints2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 ccol3d12 = offsetrange(childind,3,12,4)
 
 
-                cXl, cQl =  ∂g∂posb(eqc.constraints[i], posargsnext(cstate, Δt)...) # x3
+                # cXl, cQl =  ∂g∂posb(eqc.constraints[i], posargsnext(cstate, Δt)...) # x3
+                cXl, cQl =  ∂g∂posb(eqc.constraints[i], mechanism.origin, cbody, Δt) # x3
                 # cXl, cQl =  ∂g∂posb(eqc.constraints[i], cstate, Δt) # x3
 
                 mat = constraintmat(eqc.constraints[i])
@@ -93,10 +94,21 @@ function linearconstraints2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 cGlq = mat * cQl
 
                 Gl[range,ccol3a12] = cGlx
+                @show size(range)
+                @show size(ccol3c12)
+                @show size(cGlq)
+                @show size(cGlq*Rmat(ωbar(cstate.ωc, Δt)*Δt/2)*LVᵀmat(cstate.qc))
                 Gl[range,ccol3c12] = cGlq*Rmat(ωbar(cstate.ωc, Δt)*Δt/2)*LVᵀmat(cstate.qc)
 
                 if typeof(eqc.constraints[i]) <: Torque
-                    cQl1 = ∂g∂posb1(eqc.constraints[i], cstate, Δt) # x3
+                    cXl1, cQl1 = ∂g∂posb1(eqc.constraints[i], mechanism.origin, cbody, Δt)
+                    @show range
+                    @show ccol3c12
+                    @show cQl1
+                    @show size(range)
+                    @show size(ccol3c12)
+                    @show size(cQl1)
+
                     Gl[range,ccol3c12] += cQl1
                 end
                 ind1 = ind2+1
@@ -277,7 +289,7 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
         n1 = n2+1
     end
 
-    G, Fλ = linearconstraints(mechanism)
+    G = linearconstraints2(mechanism)
 
     # F contains the following
     # F = [x3 - v2 Δt;
@@ -285,7 +297,7 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
     #      q3 - Δt/2 L(q2) [...];
     #      Jω2
     #      ] ∈ R13
-    return Fz, Fu * Bcontrol, Fλ, G
+    return Fz, Fu * Bcontrol, G
 end
 
 function dBqω(q, ω, p)
@@ -369,7 +381,7 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     eqcdims = getdim.(eqcs)
     ineqcdims = getdim.(ineqcs)
     bodydims = 6 * ones(Int, nbodies)
-    Fz, Fu, Fλ, G = data_lineardynamics(mechanism, eqcids)
+    Fz, Fu, G = data_lineardynamics(mechanism, eqcids)
     data = getdata(mechanism)
 
     A = zeros(sum(resdims), datadim(mechanism))

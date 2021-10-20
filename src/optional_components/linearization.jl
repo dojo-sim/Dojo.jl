@@ -356,7 +356,11 @@ function linearconstraintmapping(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,N
 
                 Abb = zeros(T,13,13)
 
-                kronproduct = -kron(λ'*constraintmat(constraint),E)*K
+                @show typeof(λ')
+                @show typeof(constraintmat(constraint))
+                @show size(λ')
+                @show size(constraintmat(constraint))
+                kronproduct = -kron(λ'*Array(constraintmat(constraint)),E)*K
 
                 XX, XQ, QX, QQ = ∂2g∂posbb(constraint, state2.xsol[2], state2.qsol[2])
                 Abb[4:6,1:3] = kronproduct*XX
