@@ -39,6 +39,8 @@ end
 @inline function g(joint::Rotational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
     return Vmat(qa \ qb / joint.qoffset)
 end
+
+
 @inline function g(joint::Rotational, xb::AbstractVector, qb::UnitQuaternion)
     return Vmat(qb / joint.qoffset)
 end

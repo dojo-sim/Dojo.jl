@@ -29,42 +29,46 @@ include("mechanism_zoo.jl")
 ################################################################################
 
 # t2r3
-function ForcePrismatic(body1::AbstractBody{T}, body2, axis;
-        p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}),
-        spring = zero(T), damper = zero(T)) where T
-    Translational2{T}(body1, body2; p1, p2, axis, spring, damper),
-    Force121{T}(body1, body2; p1, p2, axis, spring, damper),
-    Rotational3{T}(body1, body2; qoffset, spring, damper)
+function TorqueRevolute(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T)) where T
+    return Translational3{T}(body1, body2; p1, p2, spring, damper), 
+    Rotational2{T}(body1, body2; axis, qoffset, spring, damper),
+    Torque1{T}(body1, body2; axis=axis, qoffset=qoffset, spring=spring, damper=damper)
 end
 
 ################################################################################
 # DEVELOPMENT NEW EQUALITY CONSTRAINT
 ################################################################################
-
+T = Float64
 # Parameters
 ex = [0; 0; 1.0]
 h = 1.
 r = .05
 vert11 = [0; r; 0.0]
 vert12 = -vert11
-Nlink = 2
+Nlink = 10
+
+# Parameters
+ex = [1.; 0; 0]
+h = 1.
+r = .05
+vert11 = [0; 0; h/2]
+vert12 = -vert11
 
 # Links
-origin = Origin{Float64}()
+origin = Origin{T}()
 links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
 # Constraints
-jointb1 = EqualityConstraint(Fixed(origin, links[1]; p1 = zeros(3), p2 = zeros(3)))
+jointb1 = EqualityConstraint(TorqueRevolute(origin, links[1], ex; spring=1000.0, damper=0.0, p2 = vert11))
 if Nlink > 1
     eqcs = [
         jointb1;
-        [EqualityConstraint(ForcePrismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = 30.0, damper = 0.5)) for i = 2:Nlink]
+        [EqualityConstraint(TorqueRevolute(links[i - 1], links[i], ex; spring=1000.0,damper=0.0, p1=vert12, p2=vert11)) for i = 2:Nlink]
         ]
 else
     eqcs = [jointb1]
 end
 mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.01)
-
 # mech.eqconstraints[1]
 # eqc2 = mech.eqconstraints[2]
 # eqc2.λsol
@@ -75,9 +79,9 @@ mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.01)
 # springforce()
 
 # mech = getmechanism(:nslider, Nlink = 5)
-initialize!(mech, :nslider)
+initialize!(mech, :npendulum)
 # storage = simulate!(mech, 1.0, record = true, solver = :mehrotra!)
-storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!)
+storage = simulate!(mech, 10.0, record = true, solver = :mehrotra!)
 
 visualize(mech, storage, vis = vis)
 
