@@ -44,14 +44,14 @@ plot(hcat(Vector.(forcedstorage.v[1])...)')
 plot(hcat(Vector.(storage.ω[1])...)')
 plot(hcat(Vector.(forcedstorage.ω[1])...)')
 
-visualize(mech, storage)
-visualize(mech, forcedstorage)
+visualize(mech, storage, vis = vis)
+visualize(mech, forcedstorage, vis = vis)
 
 ################################################################################
 # Differentiation
 ################################################################################
 
-include(joinpath(module_dir(), "examples", "dev", "diff_tools_control.jl"))
+include(joinpath(module_dir(), "examples", "dev", "diff_tools.jl"))
 
 # Set data
 data = getdata(mech)
@@ -77,7 +77,7 @@ fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
 plot(Gray.(abs.(solmat)))
 plot(Gray.(abs.(fd_solmat)))
 
-fd_sensi = finitediff_sensitivity(mech, data, δ = 1e-5, ϵ = 1e-14) * attjac
+fd_sensi = finitediff_sensitivity(mech, data, δ = 1e-5, ϵr = 1e-14, ϵb = 1e-14) * attjac
 @test norm(fd_sensi - sensi) / norm(fd_sensi) < 3e-3
 plot(Gray.(sensi))
 plot(Gray.(fd_sensi))

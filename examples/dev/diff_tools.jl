@@ -44,23 +44,23 @@ function linearconstraints2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 pXl, pQl = ∂g∂posa(eqc.constraints[i], pbody, cbody, Δt) # x3
                 cXl, cQl = ∂g∂posb(eqc.constraints[i], pbody, cbody, Δt) # x3
 
-                @show typeof(eqc.constraints[i])
-                @show pXl
-                @show pQl
-                @show cXl
-                @show cQl
+                # @show typeof(eqc.constraints[i])
+                # @show pXl
+                # @show pQl
+                # @show cXl
+                # @show cQl
 
 
                 mat = constraintmat(eqc.constraints[i])
-                @show mat
+                # @show mat
                 pGlx = mat * pXl
                 pGlq = mat * pQl
                 cGlx = mat * cXl
                 cGlq = mat * cQl
-                @show pGlx
-                @show pGlq
-                @show cGlx
-                @show cGlq
+                # @show pGlx
+                # @show pGlq
+                # @show cGlx
+                # @show cGlq
 
                 Gl[range,pcol3a12] = pGlx
                 Gl[range,pcol3c12] = pGlq*Rmat(ωbar(pstate.ωc, Δt)*Δt/2)*LVᵀmat(pstate.qc)
@@ -254,6 +254,8 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
 
     for id in eqcids
         eqc = geteqconstraint(mechanism, id)
+        @show n1, n2
+        (getcontroldim(eqc) == 0) && continue
         n2 += getcontroldim(eqc)
 
         parentid = eqc.parentid
@@ -392,7 +394,7 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
         nu = getcontroldim(eqc)
         if nu > 0
             # A[sum(eqcdims) + 1:end, 12Nb + offu .+ (1:nu)] = Fu[Fz_indices(Nb), offe .+ (1:nu)]
-            A[sum(eqcdims) .+ (1:6Nb), 12Nb + offu .+ (1:nu)] = Fu[Fz_indices(Nb), offe .+ (1:nu)]
+            A[sum(eqcdims) .+ (1:6Nb), 12Nb + offu .+ (1:nu)] = Fu[Fz_indices(Nb), offu .+ (1:nu)]
         end
         offe += 6 - ne
         offu += nu

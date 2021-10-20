@@ -19,17 +19,15 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
-# mech = getmechanism(:pendulum, Δt = 0.01, g = -9.81)
-mech = getmechanism(:npendulum, Δt = 0.01, g = -9.81, Nlink = 1)
-# initialize!(mech, :pendulum, ϕ1 = 0.7)
-initialize!(mech, :npendulum, ϕ1 = 0.0)
+mech = getmechanism(:pendulum, Δt = 0.01, g = -9.81)
+initialize!(mech, :pendulum, ϕ1 = 0.7)
 storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!)
 
 ################################################################################
 # Differentiation
 ################################################################################
 
-include(joinpath(module_dir(), "examples", "dev", "diff_tools_control.jl"))
+include(joinpath(module_dir(), "examples", "dev", "diff_tools.jl"))
 # Set data
 Nb = length(mech.bodies)
 data = getdata(mech)
@@ -37,8 +35,6 @@ setdata!(mech, data)
 sol = getsolution(mech)
 attjac = attitudejacobian(data, Nb)
 
-resvec = full_vector(mech.system)
-norm(resvec, Inf)
 # IFT
 datamat = full_data_matrix(mech)
 solmat = full_matrix(mech.system)
@@ -61,7 +57,7 @@ fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
 plot(Gray.(abs.(solmat)))
 plot(Gray.(abs.(fd_solmat)))
 
-fd_sensi = finitediff_sensitivity(mech, data, δ = 1e-5, ϵ=1.0e-12) * attjac
+fd_sensi = finitediff_sensitivity(mech, data, δ = 1e-5, ϵr=1.0e-12, ϵb=1.0e-12) * attjac
 @test norm(fd_sensi - sensi) / norm(fd_sensi) < 1e-3
 plot(Gray.(sensi))
 plot(Gray.(fd_sensi))

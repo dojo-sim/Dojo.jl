@@ -19,8 +19,8 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
-linmech = getmechanism(:snake, Nlink = 5, Δt = 0.02, g = -9.81, cf = 0.2, contact = true, conetype = :linear)
-socmech = getmechanism(:snake, Nlink = 5, Δt = 0.02, g = -9.81, cf = 0.2, contact = true, conetype = :soc)
+linmech = getmechanism(:snake, Nlink = 5, Δt = 0.02, g = -9.81, cf = 0.2, contact = false, conetype = :linear)
+socmech = getmechanism(:snake, Nlink = 5, Δt = 0.02, g = -9.81, cf = 0.2, contact = false, conetype = :soc)
 
 x = [0,-1.0,0]
 v = [1,.3,4]
@@ -39,7 +39,7 @@ visualize(socmech, socstorage, vis = vis)
 # Differentiation
 ################################################################################
 
-include(joinpath(module_dir(), "examples", "dev", "diff_tools_control.jl"))
+include(joinpath(module_dir(), "examples", "dev", "diff_tools.jl"))
 # Set data
 Nb = length(socmech.bodies)
 data = getdata(socmech)
@@ -63,7 +63,16 @@ fd_solmat = finitediff_sol_matrix(socmech, data, sol, δ = 1e-5)
 plot(Gray.(abs.(solmat)))
 plot(Gray.(abs.(fd_solmat)))
 
-fd_sensi = finitediff_sensitivity(socmech, data, δ = 1e-5, ϵ = 1e-14) * attjac
+fd_sensi = finitediff_sensitivity(socmech, data, δ = 1e-5, ϵb = 1e-14, ϵr = 1e-14) * attjac
 @test norm(fd_sensi - sensi) / norm(fd_sensi) < 2e-3
 plot(Gray.(sensi))
 plot(Gray.(fd_sensi))
+
+
+q0 = UnitQuaternion(rand(4)...)
+q1 = UnitQuaternion(rand(4)...)
+p0 = rand(3)
+r0 = vrotate(vrotate(p0, q1), q0)
+r1 = vrotate(p0, q0*q1)
+
+r0 - r1

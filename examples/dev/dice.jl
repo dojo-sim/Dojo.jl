@@ -44,7 +44,7 @@ socstorage = simulate!(socmech, 0.5, record = true, solver = :mehrotra!)
 # Differentiation
 ################################################################################
 
-include(joinpath(module_dir(), "examples", "dev", "diff_tools_control.jl"))
+include(joinpath(module_dir(), "examples", "dev", "diff_tools.jl"))
 # Set data
 Nb = length(socmech.bodies)
 Random.seed!(10)
