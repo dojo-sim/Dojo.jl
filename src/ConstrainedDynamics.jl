@@ -142,6 +142,7 @@ include(joinpath("..", "examples", "dev", "mechanism_zoo.jl"))
 include(joinpath("..", "examples", "dev", "diff_tools.jl"))
 include(joinpath("joints", "fjoint.jl"))
 include(joinpath("joints", "force.jl"))
+include(joinpath("joints", "torque.jl"))
 include(joinpath("vis", "convertshape.jl"))
 include(joinpath("vis", "visualize.jl"))
 
