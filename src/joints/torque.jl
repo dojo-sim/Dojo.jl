@@ -167,9 +167,9 @@ end
     qoffset = joint.qoffset
     Xdamp = szeros(T, 3, 3)
     Qdamp = ∂vrotate∂p(τ_damp, qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qa \ qb / qoffset) * Rmat(qb * inv(qoffset)) * Tmat()
-    Qdamp += ∂vrotate∂q(τ_damp, qa * qoffset) * Rmat(qoffet)
+    Qdamp += ∂vrotate∂q(τ_damp, qa * qoffset) * Rmat(qoffset)
     Xspring = szeros(T, 3, 3)
-    Qspring = ∂vrotate∂p(τ_spring, qa * qoffset) * -Aᵀ * A * joint.spring * Aᵀ * A * VRmat(qb * inv(qoffset)) * Tmat() 
+    Qspring = ∂vrotate∂p(τ_spring, qa * qoffset) * -Aᵀ * A * joint.spring * Aᵀ * A * VRmat(qb * inv(qoffset)) * Tmat()
     Qspring += ∂vrotate∂q(τ_spring, qa * qoffset) * Rmat(qoffset)
     X = Xdamp + Xspring
     Q = Qdamp + Qspring
@@ -229,9 +229,9 @@ end
     Qdamp += ∂vrotate∂q(τ_damp, qa * qoffset) * Rmat(qoffset)
     Ωdamp = Qdamp * Lmat(q1a) * derivωbar(ωa, Δt) * Δt/2
     Ωdamp += ∂vrotate∂p(τ_damp, qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * -1.0 * ∂vrotate∂p(ωa, inv(qoffset))
-    
+
     Vspring = szeros(T, 3, 3)
-    Qspring = ∂vrotate∂p(τ_spring, qa * qoffset) * -Aᵀ * A * joint.spring * Aᵀ * A * VRmat(qb * inv(qoffset)) * Tmat() 
+    Qspring = ∂vrotate∂p(τ_spring, qa * qoffset) * -Aᵀ * A * joint.spring * Aᵀ * A * VRmat(qb * inv(qoffset)) * Tmat()
     Qspring += ∂vrotate∂q(τ_spring, qa * qoffset) * Rmat(qoffset)
     Ωspring = Qspring * Lmat(q1a) * derivωbar(ωa, Δt) * Δt/2
     # Ωspring += nothing
@@ -250,14 +250,14 @@ end
 
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    τ_spring = springtorque(joint, q1a, qa, qb)
-    τ_damp = dampertorque(joint, q1a, ωa, q1b, ωb)
+    τ_spring = springtorque(joint, qa, qb)
+    τ_damp = dampertorque(joint, qa, ωa, qb, ωb)
     qoffset = joint.qoffset
     Vdamp = szeros(T, 3, 3)
     Qdamp = ∂vrotate∂p(τ_damp, qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qa \ qb / qoffset) * Rmat(inv(qoffset)) * Lmat(inv(qa))
-    Ωdamp = Q_damp * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
+    Ωdamp = Qdamp * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
     Ωdamp += ∂vrotate∂p(τ_damp, qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂p(ωb, qa \ qb / qoffset)
-    
+
     Vspring = szeros(T, 3, 3)
     Qspring = ∂vrotate∂p(τ_spring, qa * qoffset) * -Aᵀ * A * joint.spring * Aᵀ * A * VRmat(inv(qoffset)) * Lmat(inv(qa))
     Ωspring = Qspring * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
@@ -275,17 +275,17 @@ qb::UnitQuaternion, vb::AbstractVector,  ωb::AbstractVector, Δt) where {T,N}
         A = constraintmat(joint)
         Aᵀ = zerodimstaticadjoint(A)
         τ_spring = springtorque(joint, qb)
-        τ_damp = dampertorque(joint, q1b, ωb)
+        τ_damp = dampertorque(joint, qb, ωb)
         qoffset = joint.qoffset
         Vdamp = szeros(T, 3, 3)
         Qdamp = ∂vrotate∂p(τ_damp, qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qb / qoffset) * Rmat(inv(qoffset))
-        Ωdamp = Qdamp * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2 
-        Ωdamp += ∂vrotate∂p(τ_damp, qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂p(ωb, qb / qoffset) 
-        
+        Ωdamp = Qdamp * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
+        Ωdamp += ∂vrotate∂p(τ_damp, qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂p(ωb, qb / qoffset)
+
         Vspring = szeros(T, 3, 3)
         Qspring = -1.0 * ∂vrotate∂p(τ_spring, qoffset) * Aᵀ * A * joint.spring * Aᵀ * A * VRmat(inv(qoffset))
-        Ωspring = Qspring * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2 
-        # Ωspring += nothing 
+        Ωspring = Qspring * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
+        # Ωspring += nothing
 
         V = Vspring + Vdamp
         Ω = Ωspring + Ωdamp
@@ -306,7 +306,7 @@ end
     f = q -> ∂g∂posa(tor, xa, UnitQuaternion(q...), xb, qb, Δt)[2] * LVᵀmat(UnitQuaternion(q...))
     df = ForwardDiff.jacobian(fg, [qa.w; qa.x; qa.y; qa.z])
 
-    QQ = df#szeros(T, 9, 4) 
+    QQ = df#szeros(T, 9, 4)
 
     return XX, XQ, QX, QQ
 end
@@ -318,7 +318,7 @@ end
     f = q -> ∂g∂posa(tor, xa, qa, xb, UnitQuaternion(q...), Δt)[2] * LVᵀmat(UnitQuaternion(q...))
     df = ForwardDiff.jacobian(fg, [qb.w; qb.x; qb.y; qb.z])
 
-    QQ = df#szeros(T, 9, 4) 
+    QQ = df#szeros(T, 9, 4)
 
     return XX, XQ, QX, QQ
 end
@@ -331,7 +331,7 @@ end
     df = ForwardDiff.jacobian(fg, [qa.w; qa.x; qa.y; qa.z])
 
     QQ = df#szeros(T, 9, 4)
-    
+
     return XX, XQ, QX, QQ
 end
 @inline function ∂2g∂posbb(joint::Torque{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
