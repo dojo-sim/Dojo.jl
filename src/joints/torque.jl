@@ -43,14 +43,14 @@ end
 @inline function g(joint::Torque, body1::Body, body2::Body, Δt)
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    Fτ = springtorque(joint, body1.state, body2.state, Δt) + dampertorque(joint, body1.state, body2.state)
+    Fτ = springtorque(joint, body1.state, body2.state, Δt) + dampertorque(joint, body1.state, body2.state, Δt)
     return Aᵀ * A * Fτ
 end
 
 @inline function g(joint::Torque, body1::Origin, body2::Body, Δt)
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    Fτ = springtorque(joint, body2.state, Δt) + dampertorque(joint, body2.state)
+    Fτ = springtorque(joint, body2.state, Δt) + dampertorque(joint, body2.state, Δt)
     return Aᵀ * A * Fτ
 end
 
@@ -66,21 +66,21 @@ end
 
 ### Spring and damper
 ## Discrete-time position wrappers (for dynamics)
-springtorque(joint::Torque, statea::State, stateb::State, Δt) = springtorque(joint, posargsk(statea)[2], posargsnext(statea, Δt)[2], posargsnext(stateb, Δt)[2])
+springtorque(joint::Torque, statea::State, stateb::State, Δt) = springtorque(joint, posargsnext(statea, Δt)[2], posargsnext(stateb, Δt)[2])
 springtorque(joint::Torque, stateb::State, Δt) = springtorque(joint, posargsnext(stateb, Δt)[2])
 
-dampertorque(joint::Torque, statea::State, stateb::State) = dampertorque(joint, posargsk(statea)[2], statea.ωsol[2], posargsk(stateb)[2], stateb.ωsol[2])
-dampertorque(joint::Torque, stateb::State) = dampertorque(joint, posargsk(stateb)[2], stateb.ωsol[2])
+dampertorque(joint::Torque, statea::State, stateb::State, Δt) = dampertorque(joint, posargsnext(statea, Δt)[2], statea.ωsol[2], posargsnext(stateb, Δt)[2], stateb.ωsol[2])
+dampertorque(joint::Torque, stateb::State, Δt) = dampertorque(joint, posargsnext(stateb, Δt)[2], stateb.ωsol[2])
 
 ### Spring and damper
 # Force applied by body a on body b expressed in world frame
-@inline function springtorque(joint::Torque, q1a::UnitQuaternion, qa::UnitQuaternion, qb::UnitQuaternion)
+@inline function springtorque(joint::Torque, qa::UnitQuaternion, qb::UnitQuaternion)
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     distance = A * gc(joint, qa, qb)
     force = -Aᵀ * A * joint.spring * Aᵀ * distance # force in offset frame
 
-    force = vrotate(force, q1a * joint.qoffset) # rotate back to world frame
+    force = vrotate(force, qa * joint.qoffset) # rotate back to world frame
     return force
 end
 # Force applied by origin on body b expressed in world frame
@@ -93,21 +93,21 @@ end
     return force
 end
 # Force applied by body a on body b expressed in world frame
-@inline function dampertorque(joint::Torque, q1a::UnitQuaternion, ωa::AbstractVector, q1b::UnitQuaternion, ωb::AbstractVector)
+@inline function dampertorque(joint::Torque, qa::UnitQuaternion, ωa::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector)
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     qoffset = joint.qoffset
-    velocity = A * (vrotate(ωb, q1a \ q1b / qoffset) - vrotate(ωa, inv(qoffset))) # in offset frame
+    velocity = A * (vrotate(ωb, qa \ qb / qoffset) - vrotate(ωa, inv(qoffset))) # in offset frame
     force = -2 * Aᵀ * A * joint.damper * Aᵀ * velocity # Currently assumes same damper constant in all directions
-    force = vrotate(force, q1a * qoffset) # rotate back to world frame
+    force = vrotate(force, qa * qoffset) # rotate back to world frame
     return force
 end
 # Force applied by origin on body b expressed in world frame
-@inline function dampertorque(joint::Torque, q1b::UnitQuaternion, ωb::AbstractVector)
+@inline function dampertorque(joint::Torque, qb::UnitQuaternion, ωb::AbstractVector)
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     qoffset = joint.qoffset
-    velocity = A * vrotate(ωb, q1b / qoffset) # in offset frame
+    velocity = A * vrotate(ωb, qb / qoffset) # in offset frame
     force = -2 * Aᵀ * A * joint.damper * Aᵀ * velocity # Currently assumes same damper constant in all directions
     force = vrotate(force, qoffset) # rotate back to world frame
     return force
@@ -148,157 +148,105 @@ end
 ## Derivatives NOT accounting for quaternion specialness
 # THIS IS USED IN DATAMAT, IT HAS TO BE THE DERIVATIVE OF g WRT THE POS VARIABLES (X3, Q3)
 @inline function ∂g∂posa(joint::Torque, body1::Body, body2::Body, Δt)
-    X, Q = ∂g∂posa(posargsk(body1.state)[2], posargsnext(body1.state, Δt)[2], body1.state.ωsol[2], posargsk(body2.state)[2], posargsnext(body2.state, Δt)[2], body2.state.ωsol[2], Δt) # the Δt factor comes from g(joint::FJoint
-    return Δt * X, Δt * Q
-end
-@inline function ∂g∂posa1(joint::Torque, body1::Body, body2::Body, Δt)
-    X, Q = ∂g∂posa1(posargsk(body1.state)[2], posargsnext(body1.state, Δt)[2], body1.state.ωsol[2], posargsk(body2.state)[2], posargsnext(body2.state, Δt)[2], body2.state.ωsol[2], Δt) # the Δt factor comes from g(joint::FJoint
+    X, Q = ∂g∂posa(joint, posargsnext(body1.state, Δt)[2], body1.state.ωsol[2], posargsnext(body2.state, Δt)[2], body2.state.ωsol[2], Δt) # the Δt factor comes from g(joint::FJoint
     return Δt * X, Δt * Q
 end
 @inline function ∂g∂posb(joint::Torque, body1::Body, body2::Body, Δt)
-    X, Q = ∂g∂posb(joint, posargsk(body1.state)[2], posargsnext(body1.state, Δt)[2], body1.state.ωsol[2], posargsk(body2.state)[2], posargsnext(body2.state, Δt)[2], body2.state.ωsol[2], Δt) # the Δt factor comes from g(joint::FJoint
-    return Δt * X, Δt * Q
-end
-@inline function ∂g∂posb1(joint::Torque, body1::Body, body2::Body, Δt)
-    X, Q = ∂g∂posb1(joint, posargsk(body1.state)[2], posargsnext(body1.state, Δt)[2], body1.state.ωsol[2], posargsk(body2.state)[2], posargsnext(body2.state, Δt)[2], body2.state.ωsol[2], Δt) # the Δt factor comes from g(joint::FJoint
+    X, Q = ∂g∂posb(joint, posargsnext(body1.state, Δt)[2], body1.state.ωsol[2], posargsnext(body2.state, Δt)[2], body2.state.ωsol[2], Δt) # the Δt factor comes from g(joint::FJoint
     return Δt * X, Δt * Q
 end
 @inline function ∂g∂posb(joint::Torque, body1::Origin, body2::Body, Δt)
-    X, Q = ∂g∂posb(joint, posargsk(body2.state)[2], posargsnext(body2.state, Δt)[2], body2.state.ωsol[2], Δt) # the Δt factor comes from g(joint::FJoint
+    X, Q = ∂g∂posb(joint, posargsnext(body2.state, Δt)[2], body2.state.ωsol[2], Δt) # the Δt factor comes from g(joint::FJoint
     return Δt * X, Δt * Q
 end
-@inline function ∂g∂posb1(joint::Torque, body1::Origin, body2::Body, Δt)
-    X, Q = ∂g∂posb1(joint, posargsk(body2.state)[2], posargsnext(body2.state, Δt)[2], body2.state.ωsol[2], Δt) # the Δt factor comes from g(joint::FJoint
-    return Δt * X, Δt * Q
-end
-@inline function ∂g∂posa(joint::Torque{T,N}, q1a::UnitQuaternion, qa::UnitQuaternion, ωa::AbstractVector, q1b::UnitQuaternion, qb::UnitQuaternion, ωb::AbstractVector, Δt) where {T,N}
+@inline function ∂g∂posa(joint::Torque{T,N}, qa::UnitQuaternion, ωa::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector, Δt) where {T,N}
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    τ_spring = springtorque(joint, q1a, qa, qb)
-    τ_damp = dampertorque(joint, q1a, ωa, q1b, ωb)
+    τ_spring = springtorque(joint, qa, qb)
+    τ_damp = dampertorque(joint, qa, ωa, qb, ωb)
     qoffset = joint.qoffset
     Xdamp = szeros(T, 3, 3)
-    Qdamp = szeros(T, 3, 3)
+    Qdamp = ∂vrotate∂p(τ_damp, qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qa \ qb / qoffset) * Rmat(qb * inv(qoffset)) * Tmat()
+    Qdamp += ∂vrotate∂q(τ_damp, qa * qoffset) * Rmat(qoffet)
     Xspring = szeros(T, 3, 3)
-    Qspring = -∂vrotate∂p(τ_spring, q1a * joint.qoffset) * Aᵀ * A * joint.spring * Aᵀ * A * Rmat(qb * inv(qoffset)) * Tmat()
+    Qspring = ∂vrotate∂p(τ_spring, qa * qoffset) * -Aᵀ * A * joint.spring * Aᵀ * A * VRmat(qb * inv(qoffset)) * Tmat() 
+    Qspring += ∂vrotate∂q(τ_spring, qa * qoffset) * Rmat(qoffset)
     X = Xdamp + Xspring
     Q = Qdamp + Qspring
 
-    return X, Q
+    return Aᵀ * A * X, Aᵀ * A * Q
 end
-@inline function ∂g∂posa1(joint::Torque{T,N}, q1a::UnitQuaternion, qa::UnitQuaternion, ωa::AbstractVector, q1b::UnitQuaternion, qb::UnitQuaternion, ωb::AbstractVector, Δt) where {T,N}
+
+@inline function ∂g∂posb(joint::Torque{T,N}, qa::UnitQuaternion, ωa::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector, Δt) where {T,N}
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    τ_spring = springtorque(joint, q1a, qa, qb)
-    τ_damp = dampertorque(joint, q1a, ωa, q1b, ωb)
+    τ_spring = springtorque(joint, qa, qb)
+    τ_damp = dampertorque(joint, qa, ωa, qb, ωb)
     qoffset = joint.qoffset
 
     Xdamp = szeros(T, 3, 3)
-    Qdamp = ∂vrotate∂q(τ_damp, q1a * qoffset) * Rmat(qoffset)
-    Qdamp += -2.0 * ∂vrotate∂p(τ_damp, q1a * qoffset) * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, q1a \ q1b / qoffset) * Rmat(q1b * inv(qoffset)) * Tmat()
+    Qdamp = ∂vrotate∂p(τ_damp, qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qa \ qb / qoffset) * Rmat(inv(qoffset)) * Lmat(inv(qa))
     Xspring = szeros(T, 3, 3)
-    Qspring = ∂vrotate∂q(τ_spring, q1a * qoffset) * Rmat(qoffset)
+    Qspring = ∂vrotate∂p(τ_spring, qa * qoffset) * -Aᵀ * A * joint.spring * Aᵀ * A * VRmat(inv(qoffset)) * Lmat(inv(qa))
     X = Xdamp + Xspring
     Q = Qdamp + Qspring
 
-    return X, Q
+    return Aᵀ * A * X, Aᵀ * A * Q
 end
-@inline function ∂g∂posb(joint::Torque{T,N}, q1a::UnitQuaternion, qa::UnitQuaternion, ωa::AbstractVector, q1b::UnitQuaternion, qb::UnitQuaternion, ωb::AbstractVector, Δt) where {T,N}
-    A = constraintmat(joint)
-    Aᵀ = zerodimstaticadjoint(A)
-    τ_spring = springtorque(joint, q1a, qa, qb)
-    τ_damp = dampertorque(joint, q1a, ωa, q1b, ωb)
-    qoffset = joint.qoffset
-
-    Xdamp = szeros(T, 3, 3)
-    Qdamp = szeros(T, 3, 3)
-    Xspring = szeros(T, 3, 3)
-    Qspring = -1.0 * ∂vrotate∂p(τ_spring, q1a * qoffset) * Aᵀ * A * joint.spring * Aᵀ * A * Lmat(inv(qa)) * Rmat(inv(qoffset))
-    X = Xdamp + Xspring
-    Q = Qdamp + Qspring
-
-    return X, Q
-end
-@inline function ∂g∂posb1(joint::Torque{T,N}, q1a::UnitQuaternion, qa::UnitQuaternion, ωa::AbstractVector, q1b::UnitQuaternion, qb::UnitQuaternion, ωb::AbstractVector, Δt) where {T,N}
-    A = constraintmat(joint)
-    Aᵀ = zerodimstaticadjoint(A)
-    τ_spring = springtorque(joint, q1a, qa, qb)
-    τ_damp = dampertorque(joint, q1a, ωa, q1b, ωb)
-    qoffset = joint.qoffset
-
-    Xdamp = szeros(T, 3, 3)
-    Qdamp = ∂vrotate∂p(τ_damp, q1a * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, q1a \ q1b / qoffset) * Lmat(inv(q1a)) * Rmat(inv(qoffset))
-    Xspring = szeros(T, 3, 3)
-    Qspring = szeros(T, 3, 3)
-    X = Xdamp + Xspring
-    Q = Qdamp + Qspring
-
-    return X, Q
-end
-@inline function ∂g∂posb(joint::Torque{T,N}, q1b::UnitQuaternion, qb::UnitQuaternion, ωb::AbstractVector, Δt) where {T,N}
+@inline function ∂g∂posb(joint::Torque{T,N}, qb::UnitQuaternion, ωb::AbstractVector, Δt) where {T,N}
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     τ_spring = springtorque(joint, qb)
-    τ_damp = dampertorque(joint, q1b, ωb)
+    τ_damp = dampertorque(joint, qb, ωb)
     qoffset = joint.qoffset
 
     Xdamp = szeros(T, 3, 3)
-    Qdamp = szeros(T, 3, 4)
+    Qdamp = ∂vrotate∂p(τ_damp, qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qb / qoffset) * Rmat(inv(qoffset))
     Xspring = szeros(T, 3, 3)
     Qspring = -1.0 * ∂vrotate∂p(τ_spring, qoffset) * Aᵀ * A * joint.spring * Aᵀ * A * VRmat(inv(qoffset))
     X = Xdamp + Xspring
     Q = Qdamp + Qspring
 
-    return X, Q
-end
-@inline function ∂g∂posb1(joint::Torque{T,N}, q1b::UnitQuaternion, qb::UnitQuaternion, ωb::AbstractVector, Δt) where {T,N}
-    A = constraintmat(joint)
-    Aᵀ = zerodimstaticadjoint(A)
-    τ_spring = springtorque(joint, qb)
-    τ_damp = dampertorque(joint, q1b, ωb)
-    qoffset = joint.qoffset
-
-    Xdamp = szeros(T, 3, 3)
-    Qdamp = -2 * ∂vrotate∂p(τ_damp, qoffset) * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, q1b / qoffset) * Rmat(inv(qoffset))
-    Xspring = szeros(T, 3, 3)
-    Qspring = szeros(T, 3, 4)
-    X = Xdamp + Xspring
-    Q = Qdamp + Qspring
-    return X, Q
+    return Aᵀ * A * X, Aᵀ * A * Q
 end
 
 # Wrappers 2
 ∂g∂ʳvela(joint::Torque, statea::State, stateb::State, Δt) = ∂g∂ʳvela(joint, posargsc(statea)[2], posargsnext(statea, Δt)..., statea.vsol[2], statea.ωsol[2], posargsc(stateb)[2], posargsnext(stateb, Δt)..., stateb.vsol[2], stateb.ωsol[2], Δt)
 ∂g∂ʳvelb(joint::Torque, statea::State, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargsc(statea)[2], posargsnext(statea, Δt)..., statea.vsol[2], statea.ωsol[2], posargsc(stateb)[2], posargsnext(stateb, Δt)..., stateb.vsol[2], stateb.ωsol[2], Δt)
 ∂g∂ʳvelb(joint::Torque, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargsc(stateb)[2], posargsnext(stateb, Δt)..., stateb.vsol[2], stateb.ωsol[2], Δt)
-
 # Derivatives accounting for quaternion specialness
 @inline function ∂g∂ʳvela(joint::Torque{T,N}, q1a::UnitQuaternion, xa::AbstractVector,
-        qa::UnitQuaternion, va::AbstractVector, ωa::AbstractVector,
-        q1b::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion,
-        vb::AbstractVector, ωb::AbstractVector, Δt) where {T,N}
+    qa::UnitQuaternion, va::AbstractVector, ωa::AbstractVector,
+    q1b::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion,
+    vb::AbstractVector, ωb::AbstractVector, Δt) where {T,N}
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    τ_spring = springtorque(joint, q1a, qa, qb)
-    τ_damp = dampertorque(joint, q1a, ωa, q1b, ωb)
+    τ_spring = springtorque(joint, qa, qb)
+    τ_damp = dampertorque(joint, qa, ωa, qb, ωb)
     qoffset = joint.qoffset
     Vdamp = szeros(T, 3, 3)
-    Ωdamp = 2.0 * ∂vrotate∂p(τ_damp, q1a * qoffset) * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωa, inv(qoffset)) * Lmat(q1a) * derivωbar(ωa, Δt) * Δt/2
+    Qdamp = ∂vrotate∂p(τ_damp, qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qa \ qb / qoffset) * Rmat(qb * inv(qoffset)) * Tmat()
+    Qdamp += ∂vrotate∂q(τ_damp, qa * qoffset) * Rmat(qoffset)
+    Ωdamp = Qdamp * Lmat(q1a) * derivωbar(ωa, Δt) * Δt/2
+    Ωdamp += ∂vrotate∂p(τ_damp, qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * -1.0 * ∂vrotate∂p(ωa, inv(qoffset))
+    
     Vspring = szeros(T, 3, 3)
-
-    Ωspring = -1.0 * ∂vrotate∂p(τ_spring, q1a * joint.qoffset) * Aᵀ * A * joint.spring * Aᵀ * A * VRmat(qb * inv(qoffset)) * Tmat() * Lmat(q1a) * derivωbar(ωa, Δt) * Δt/2
+    Qspring = ∂vrotate∂p(τ_spring, qa * qoffset) * -Aᵀ * A * joint.spring * Aᵀ * A * VRmat(qb * inv(qoffset)) * Tmat() 
+    Qspring += ∂vrotate∂q(τ_spring, qa * qoffset) * Rmat(qoffset)
+    Ωspring = Qspring * Lmat(q1a) * derivωbar(ωa, Δt) * Δt/2
+    # Ωspring += nothing
 
     V = Vspring + Vdamp
     Ω = Ωspring + Ωdamp
     V *= Δt
     Ω *= Δt
 
-    return [V Ω]
+    return [Aᵀ * A * V Aᵀ * A * Ω]
 end
 @inline function ∂g∂ʳvelb(joint::Torque{T,N}, q1a::UnitQuaternion, xa::AbstractVector,
-        qa::UnitQuaternion, va::AbstractVector, ωa::AbstractVector,
-        q1b::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion,
-        vb::AbstractVector, ωb::AbstractVector, Δt) where {T,N}
+    qa::UnitQuaternion, va::AbstractVector, ωa::AbstractVector,
+    q1b::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion,
+    vb::AbstractVector, ωb::AbstractVector, Δt) where {T,N}
 
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
@@ -306,34 +254,44 @@ end
     τ_damp = dampertorque(joint, q1a, ωa, q1b, ωb)
     qoffset = joint.qoffset
     Vdamp = szeros(T, 3, 3)
-    Ωdamp = -2.0 * ∂vrotate∂p(τ_damp, q1a * qoffset) * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂p(ωb, q1a \ q1b / qoffset)
+    Qdamp = ∂vrotate∂p(τ_damp, qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qa \ qb / qoffset) * Rmat(inv(qoffset)) * Lmat(inv(qa))
+    Ωdamp = Q_damp * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
+    Ωdamp += ∂vrotate∂p(τ_damp, qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂p(ωb, qa \ qb / qoffset)
+    
     Vspring = szeros(T, 3, 3)
-    Ωspring = -1.0 * ∂vrotate∂p(τ_spring, q1a * qoffset) * Aᵀ * A * joint.spring * Aᵀ * A * VLmat(inv(qa)) * Rmat(inv(qoffset)) * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
+    Qspring = ∂vrotate∂p(τ_spring, qa * qoffset) * -Aᵀ * A * joint.spring * Aᵀ * A * VRmat(inv(qoffset)) * Lmat(inv(qa))
+    Ωspring = Qspring * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
+    # Ωspring += nothing
 
     V = Vspring + Vdamp
     Ω = Ωspring + Ωdamp
     V *= Δt
     Ω *= Δt
 
-    return [V Ω]
+    return [Aᵀ * A * V Aᵀ * A * Ω]
 end
 @inline function ∂g∂ʳvelb(joint::Torque{T,N}, q1b::UnitQuaternion, xb::AbstractVector,
-        qb::UnitQuaternion, vb::AbstractVector,  ωb::AbstractVector, Δt) where {T,N}
+qb::UnitQuaternion, vb::AbstractVector,  ωb::AbstractVector, Δt) where {T,N}
         A = constraintmat(joint)
         Aᵀ = zerodimstaticadjoint(A)
         τ_spring = springtorque(joint, qb)
         τ_damp = dampertorque(joint, q1b, ωb)
         qoffset = joint.qoffset
         Vdamp = szeros(T, 3, 3)
-        Ωdamp = -2.0 * ∂vrotate∂p(τ_damp, qoffset) * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂p(ωb, q1b / qoffset)
+        Qdamp = ∂vrotate∂p(τ_damp, qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qb / qoffset) * Rmat(inv(qoffset))
+        Ωdamp = Qdamp * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2 
+        Ωdamp += ∂vrotate∂p(τ_damp, qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂p(ωb, qb / qoffset) 
+        
         Vspring = szeros(T, 3, 3)
-        Ωspring = -1.0 * ∂vrotate∂p(τ_spring, qoffset) * Aᵀ * A * joint.spring * Aᵀ * A * VRmat(inv(qoffset)) * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
+        Qspring = -1.0 * ∂vrotate∂p(τ_spring, qoffset) * Aᵀ * A * joint.spring * Aᵀ * A * VRmat(inv(qoffset))
+        Ωspring = Qspring * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2 
+        # Ωspring += nothing 
 
         V = Vspring + Vdamp
         Ω = Ωspring + Ωdamp
         V *= Δt
         Ω *= Δt
-    return [V Ω]
+    return [Aᵀ * A * V Aᵀ * A * Ω]
 end
 
 ## vec(G) Jacobian (also NOT accounting for quaternion specialness in the second derivative: ∂(∂ʳg∂posx)∂y)
@@ -341,43 +299,62 @@ end
     Lpos = Lmat(UnitQuaternion(xb + vrotate(joint.vertices[2], qb) - xa))
     Ltpos = Lᵀmat(UnitQuaternion(xb + vrotate(joint.vertices[2], qb) - xa))
 
-    XX = szeros(T, 9, 3)
-    XQ = szeros(T, 9, 4) # fix
-    QX = szeros(T, 9, 3) # fix
-    QQ = szeros(T, 9, 4) # fix
+    XX = szeros(T, 9, 3) # empty
+    XQ = szeros(T, 9, 4) # empty
+    QX = szeros(T, 9, 3) # empty
+
+    f = q -> ∂g∂posa(tor, xa, UnitQuaternion(q...), xb, qb, Δt)[2] * LVᵀmat(UnitQuaternion(q...))
+    df = ForwardDiff.jacobian(fg, [qa.w; qa.x; qa.y; qa.z])
+
+    QQ = df#szeros(T, 9, 4) 
 
     return XX, XQ, QX, QQ
 end
 @inline function ∂2g∂posab(joint::Torque{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
-    XX = szeros(T, 9, 3)
-    XQ = szeros(T, 9, 4)
-    QX = szeros(T, 9, 3)
-    QQ = szeros(T, 9, 4)
+    XX = szeros(T, 9, 3) # empty
+    XQ = szeros(T, 9, 4) # empty
+    QX = szeros(T, 9, 3) # empty
+
+    f = q -> ∂g∂posa(tor, xa, qa, xb, UnitQuaternion(q...), Δt)[2] * LVᵀmat(UnitQuaternion(q...))
+    df = ForwardDiff.jacobian(fg, [qb.w; qb.x; qb.y; qb.z])
+
+    QQ = df#szeros(T, 9, 4) 
 
     return XX, XQ, QX, QQ
 end
 @inline function ∂2g∂posba(joint::Torque{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
-    XX = szeros(T, 9, 3)
-    XQ = szeros(T, 9, 4)
-    QX = szeros(T, 9, 3)
-    QQ = szeros(T, 9, 4)
+    XX = szeros(T, 9, 3) # empty
+    XQ = szeros(T, 9, 4) # empty
+    QX = szeros(T, 9, 3) # empty
 
+    f = q -> ∂g∂posb(tor, xa, UnitQuaternion(q...), xb, qb, Δt)[2] * LVᵀmat(UnitQuaternion(q...))
+    df = ForwardDiff.jacobian(fg, [qa.w; qa.x; qa.y; qa.z])
+
+    QQ = df#szeros(T, 9, 4)
+    
     return XX, XQ, QX, QQ
 end
 @inline function ∂2g∂posbb(joint::Torque{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
-    XX = szeros(T, 9, 3)
-    XQ = szeros(T, 9, 4)
-    QX = szeros(T, 9, 3)
-    QQ = szeros(T, 9, 4)
+    XX = szeros(T, 9, 3) # empty
+    XQ = szeros(T, 9, 4) # empty
+    QX = szeros(T, 9, 3) #empty
+
+    f = q -> ∂g∂posb(tor, xa, qa, xb, UnitQuaternion(q...), Δt)[2] * LVᵀmat(UnitQuaternion(q...))
+    df = ForwardDiff.jacobian(fg, [qb.w; qb.x; qb.y; qb.z])
+
+    QQ = df#szeros(T, 9, 4)
 
     return XX, XQ, QX, QQ
 end
 @inline function ∂2g∂posbb(joint::Torque{T}, xb::AbstractVector, qb::UnitQuaternion) where T
-    XX = szeros(T, 9, 3)
-    XQ = szeros(T, 9, 4)
-    QX = szeros(T, 9, 3)
-    QQ = szeros(T, 9, 4)
+    XX = szeros(T, 9, 3) # empty
+    XQ = szeros(T, 9, 4) # empty
+    QX = szeros(T, 9, 3) # empty
 
+    f = q -> ∂g∂posb(tor, xb, UnitQuaternion(q...), Δt)[2] * LVᵀmat(UnitQuaternion(q...))
+    df = ForwardDiff.jacobian(fg, [qb.w; qb.x; qb.y; qb.z])
+
+    QQ = df#szeros(T, 9, 4)
     return XX, XQ, QX, QQ
 end
 

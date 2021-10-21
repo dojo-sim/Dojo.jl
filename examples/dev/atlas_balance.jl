@@ -20,7 +20,7 @@ open(vis)
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 # Build mechanism
-mech = getmechanism(:atlas, Δt = 0.05, g = -9.81, cf = 0.8, contact = true)
+mech = getmechanism(:atlas, Δt = 0.01, g = -9.81, cf = 0.8, contact = true)
 initialize!(mech, :atlas, tran = [0,0,0.99], rot = [0.,0,0])
 for (i,joint) in enumerate(mech.eqconstraints)
     jt = joint.constraints[1]
@@ -28,10 +28,10 @@ for (i,joint) in enumerate(mech.eqconstraints)
     joint.isdamper = true #false
     joint.isspring = false #false
 
-    jt.spring = 1/i * 0.0 * 1e-0 .* sones(3)# 1e4
-    jt.damper = 1/i * 0.0 * 1e-0 .* sones(3)# 1e4
-    jr.spring = 1/i * 0.0 * 1e-0 .* sones(3)# 1e4
-    jr.damper = 1/i * 1.0 * 1e+2 .* sones(3)# 1e4
+    jt.spring = 1/i * 0.0 * 1e-0 .* sones(3)[1]# 1e4
+    jt.damper = 1/i * 0.0 * 1e-0 .* sones(3)[1]# 1e4
+    jr.spring = 1/i * 0.0 * 1e-0 .* sones(3)[1]# 1e4
+    jr.damper = 1/i * 1.0 * 1e+2 .* sones(3)[1]# 1e4
 
     mech.eqconstraints[1].isspring
     mech.eqconstraints[1].isdamper
@@ -52,13 +52,13 @@ function controller!(mechanism, k)
         if getcontroldim(joint) == 1
             θ = minimalCoordinates(mechanism, joint)[1]
             dθ = minimalVelocities(mechanism, joint)[1]
-            u = 2e+2 * (angles[i] - θ) #+ 5e-2 * (0 - dθ)
+            u = 3e+2 * (angles[i] - θ) #+ 5e-2 * (0 - dθ)
             u = clamp(u, -150.0, 150.0) * mechanism.Δt
             # if joint.name ∈ ("r_leg_akx", "r_leg_aky", "l_leg_akx", "l_leg_aky", "back_bkx", "back_bky", "back_bkz")
             #     u = 1e+2 * (angles[i] - θ) #+ 5e-2 * (0 - dθ)
             #     u = clamp(u, -100.0, 100.0) * mechanism.Δt
             # end
-            # u = 0.0
+            u = 0.0
             setForce!(mechanism, joint, SA[u])
         end
     end
@@ -67,8 +67,13 @@ end
 
 mech.bodies[33].state.vsol
 
-forcedstorage = simulate!(mech, 2.5, controller!, record = true, solver = :mehrotra!)
+# forcedstorage = simulate!(mech, 2.5, controller!, record = true, solver = :mehrotra!)
+# @elapsed forcedstorage = simulate!(mech, 0.5, controller!, record = true, solver = :mehrotra!)
+@profiler forcedstorage = simulate!(mech, 0.5, controller!, record = true, solver = :mehrotra!)
 visualize(mech, forcedstorage, vis = vis)
+
+mech.op.verbose = false
+
 
 gains = zeros(30, 2)
 gains[23,:] = [1e-1, 5e-2]
