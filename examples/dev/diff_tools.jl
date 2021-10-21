@@ -106,7 +106,8 @@ function linearconstraints2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
 
                 if typeof(eqc.constraints[i]) <: Torque
                     cXl1, cQl1 = ∂g∂posb1(eqc.constraints[i], mechanism.origin, cbody, Δt)
-                    cQlq1 = mat * cQl1
+                    cGlx1 = mat * cXl1
+                    cGlq1 = mat * cQl1
 
                     # @show range
                     # @show ccol3c12
@@ -116,7 +117,8 @@ function linearconstraints2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                     # @show size(cQl1)
                     # @show size(cQlq1)
 
-                    Gl[range,ccol3c12] += cQlq1 * LVᵀmat(cstate.qc)
+                    Gl[range,ccol3a12] += cGlx1
+                    Gl[range,ccol3c12] += cGlq1 * LVᵀmat(cstate.qc)
                 end
                 ind1 = ind2+1
             end

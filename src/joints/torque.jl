@@ -181,8 +181,8 @@ end
     Qdamp = szeros(T, 3, 4)
     Xspring = szeros(T, 3, 3)
     Qspring = -∂vrotate∂p(τ_spring, q1a * joint.qoffset) * Aᵀ * A * joint.spring * Aᵀ * A * VRmat(qb * inv(qoffset)) * Tmat()
-    X = Xdamp + Xspring
-    Q = Qdamp + Qspring
+    X = Aᵀ*A * (Xdamp + Xspring)
+    Q = Aᵀ*A * (Qdamp + Qspring)
 
     return X, Q
 end
@@ -198,8 +198,8 @@ end
     Qdamp += -2.0 * ∂vrotate∂p(τ_damp, q1a * qoffset) * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, q1a \ q1b / qoffset) * Rmat(q1b * inv(qoffset)) * Tmat()
     Xspring = szeros(T, 3, 3)
     Qspring = ∂vrotate∂q(τ_spring, q1a * qoffset) * Rmat(qoffset)
-    X = Xdamp + Xspring
-    Q = Qdamp + Qspring
+    X = Aᵀ*A * (Xdamp + Xspring)
+    Q = Aᵀ*A * (Qdamp + Qspring)
 
     return X, Q
 end
@@ -214,8 +214,8 @@ end
     Qdamp = szeros(T, 3, 4)
     Xspring = szeros(T, 3, 3)
     Qspring = -1.0 * ∂vrotate∂p(τ_spring, q1a * qoffset) * Aᵀ * A * joint.spring * Aᵀ * A * VLmat(inv(qa)) * Rmat(inv(qoffset))
-    X = Xdamp + Xspring
-    Q = Qdamp + Qspring
+    X = Aᵀ*A * (Xdamp + Xspring)
+    Q = Aᵀ*A * (Qdamp + Qspring)
 
     return X, Q
 end
@@ -230,8 +230,8 @@ end
     Qdamp = ∂vrotate∂p(τ_damp, q1a * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, q1a \ q1b / qoffset) * Lmat(inv(q1a)) * Rmat(inv(qoffset))
     Xspring = szeros(T, 3, 3)
     Qspring = szeros(T, 3, 4)
-    X = Xdamp + Xspring
-    Q = Qdamp + Qspring
+    X = Aᵀ*A * (Xdamp + Xspring)
+    Q = Aᵀ*A * (Qdamp + Qspring)
 
     return X, Q
 end
@@ -246,9 +246,8 @@ end
     Qdamp = szeros(T, 3, 4)
     Xspring = szeros(T, 3, 3)
     Qspring = -1.0 * ∂vrotate∂p(τ_spring, qoffset) * Aᵀ * A * joint.spring * Aᵀ * A * VRmat(inv(qoffset))
-    X = Xdamp + Xspring
-    Q = Qdamp + Qspring
-
+    X = Aᵀ*A * (Xdamp + Xspring)
+    Q = Aᵀ*A * (Qdamp + Qspring)
     return X, Q
 end
 @inline function ∂g∂posb1(joint::Torque{T,N}, q1b::UnitQuaternion, qb::UnitQuaternion, ωb::AbstractVector, Δt) where {T,N}
@@ -262,8 +261,8 @@ end
     Qdamp = -2 * ∂vrotate∂p(τ_damp, qoffset) * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, q1b / qoffset) * Rmat(inv(qoffset))
     Xspring = szeros(T, 3, 3)
     Qspring = szeros(T, 3, 4)
-    X = Xdamp + Xspring
-    Q = Qdamp + Qspring
+    X = Aᵀ*A * (Xdamp + Xspring)
+    Q = Aᵀ*A * (Qdamp + Qspring)
     return X, Q
 end
 
