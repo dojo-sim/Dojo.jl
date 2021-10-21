@@ -74,42 +74,41 @@ dampertorque(joint::Torque, stateb::State, Δt) = dampertorque(joint, posargsnex
 
 ### Spring and damper
 # Force applied by body a on body b expressed in world frame
-@inline function springtorque(joint::Torque, qa::UnitQuaternion, qb::UnitQuaternion)
+@inline function springtorque(joint::Torque, qa::UnitQuaternion, qb::UnitQuaternion; rotate::Bool = true)
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     distance = A * gc(joint, qa, qb)
     force = -Aᵀ * A * joint.spring * Aᵀ * distance # force in offset frame
-
-    force = vrotate(force, qa * joint.qoffset) # rotate back to world frame
+    rotate && (force = vrotate(force, qa * joint.qoffset)) # rotate back to world frame
     return force
 end
 # Force applied by origin on body b expressed in world frame
-@inline function springtorque(joint::Torque, qb::UnitQuaternion)
+@inline function springtorque(joint::Torque, qb::UnitQuaternion; rotate::Bool = true)
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     distance = A * gc(joint, qb)
     force = -Aᵀ * A * joint.spring * Aᵀ * distance
-    force = vrotate(force, joint.qoffset) # rotate back to world frame
+    rotate && (force = vrotate(force, joint.qoffset)) # rotate back to world frame
     return force
 end
 # Force applied by body a on body b expressed in world frame
-@inline function dampertorque(joint::Torque, qa::UnitQuaternion, ωa::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector)
+@inline function dampertorque(joint::Torque, qa::UnitQuaternion, ωa::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector; rotate::Bool = true)
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     qoffset = joint.qoffset
     velocity = A * (vrotate(ωb, qa \ qb / qoffset) - vrotate(ωa, inv(qoffset))) # in offset frame
     force = -2 * Aᵀ * A * joint.damper * Aᵀ * velocity # Currently assumes same damper constant in all directions
-    force = vrotate(force, qa * qoffset) # rotate back to world frame
+    rotate && (force = vrotate(force, qa * qoffset)) # rotate back to world frame
     return force
 end
 # Force applied by origin on body b expressed in world frame
-@inline function dampertorque(joint::Torque, qb::UnitQuaternion, ωb::AbstractVector)
+@inline function dampertorque(joint::Torque, qb::UnitQuaternion, ωb::AbstractVector; rotate::Bool = true)
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     qoffset = joint.qoffset
     velocity = A * vrotate(ωb, qb / qoffset) # in offset frame
     force = -2 * Aᵀ * A * joint.damper * Aᵀ * velocity # Currently assumes same damper constant in all directions
-    force = vrotate(force, qoffset) # rotate back to world frame
+    rotate && (force = vrotate(force, qoffset)) # rotate back to world frame
     return force
 end
 
@@ -162,9 +161,10 @@ end
 @inline function ∂g∂posa(joint::Torque{T,N}, qa::UnitQuaternion, ωa::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector, Δt) where {T,N}
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    τ_spring = springtorque(joint, qa, qb)
-    τ_damp = dampertorque(joint, qa, ωa, qb, ωb)
     qoffset = joint.qoffset
+    τ_spring = springtorque(joint, qa, qb, rotate = false)
+    τ_damp = dampertorque(joint, qa, ωa, qb, ωb, rotate = false)
+
     Xdamp = szeros(T, 3, 3)
     Qdamp = ∂vrotate∂p(τ_damp, qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qa \ qb / qoffset) * Rmat(qb * inv(qoffset)) * Tmat()
     Qdamp += ∂vrotate∂q(τ_damp, qa * qoffset) * Rmat(qoffset)
@@ -173,7 +173,6 @@ end
     Qspring += ∂vrotate∂q(τ_spring, qa * qoffset) * Rmat(qoffset)
     X = Xdamp + Xspring
     Q = Qdamp + Qspring
-    @show scn.(Q, digits=2)
 
     return Aᵀ * A * X, Aᵀ * A * Q
 end
@@ -181,8 +180,8 @@ end
 @inline function ∂g∂posb(joint::Torque{T,N}, qa::UnitQuaternion, ωa::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector, Δt) where {T,N}
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    τ_spring = springtorque(joint, qa, qb)
-    τ_damp = dampertorque(joint, qa, ωa, qb, ωb)
+    τ_spring = springtorque(joint, qa, qb, rotate = false)
+    τ_damp = dampertorque(joint, qa, ωa, qb, ωb, rotate = false)
     qoffset = joint.qoffset
 
     Xdamp = szeros(T, 3, 3)
@@ -197,8 +196,8 @@ end
 @inline function ∂g∂posb(joint::Torque{T,N}, qb::UnitQuaternion, ωb::AbstractVector, Δt) where {T,N}
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    τ_spring = springtorque(joint, qb)
-    τ_damp = dampertorque(joint, qb, ωb)
+    τ_spring = springtorque(joint, qb, rotate = false)
+    τ_damp = dampertorque(joint, qb, ωb, rotate = false)
     qoffset = joint.qoffset
 
     Xdamp = szeros(T, 3, 3)
@@ -308,7 +307,7 @@ end
     df = ForwardDiff.jacobian(f, [qa.w; qa.x; qa.y; qa.z])
     @show df
 
-    QQ = szeros(T, 9, 4) 
+    QQ = szeros(T, 9, 4)
 
     return XX, XQ, QX, QQ
 end
@@ -320,7 +319,7 @@ end
     f = q -> ∂g∂ʳposa(joint, xa, qa, xb, UnitQuaternion(q...))[1:3, 4:6]
     df = ForwardDiff.jacobian(f, [qb.w; qb.x; qb.y; qb.z])
     @show df
-    QQ = szeros(T, 9, 4) 
+    QQ = szeros(T, 9, 4)
 
     return XX, XQ, QX, QQ
 end
@@ -334,7 +333,7 @@ end
     @show df
 
     QQ = szeros(T, 9, 4)
-    
+
     return XX, XQ, QX, QQ
 end
 @inline function ∂2g∂posbb(joint::Torque{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
