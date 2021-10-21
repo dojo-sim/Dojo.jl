@@ -307,7 +307,7 @@ end
     df = ForwardDiff.jacobian(f, [qa.w; qa.x; qa.y; qa.z])
     @show df
 
-    QQ = szeros(T, 9, 4) 
+    QQ = df#szeros(T, 9, 4) 
 
     return XX, XQ, QX, QQ
 end
@@ -319,7 +319,7 @@ end
     f = q -> ∂g∂ʳposa(joint, xa, qa, xb, UnitQuaternion(q...))[1:3, 4:6]
     df = ForwardDiff.jacobian(f, [qb.w; qb.x; qb.y; qb.z])
     @show df
-    QQ = szeros(T, 9, 4) 
+    QQ = df#szeros(T, 9, 4) 
 
     return XX, XQ, QX, QQ
 end
@@ -332,7 +332,7 @@ end
     df = ForwardDiff.jacobian(f, [qa.w; qa.x; qa.y; qa.z])
     @show df
 
-    QQ = szeros(T, 9, 4)
+    QQ = df#szeros(T, 9, 4)
     
     return XX, XQ, QX, QQ
 end
@@ -345,7 +345,7 @@ end
     df = ForwardDiff.jacobian(f, [qb.w; qb.x; qb.y; qb.z])
     @show df
 
-    QQ = szeros(T, 9, 4)
+    QQ = df#szeros(T, 9, 4)
 
 
     return XX, XQ, QX, QQ
@@ -359,7 +359,7 @@ end
     df = ForwardDiff.jacobian(f, [qb.w; qb.x; qb.y; qb.z])
 
     @show df
-    QQ = szeros(T, 9, 4)
+    QQ = df#szeros(T, 9, 4)
 
     return XX, XQ, QX, QQ
 end

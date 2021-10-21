@@ -46,18 +46,18 @@ h = 1.
 r = .05
 vert11 = [0; 0; h/2]
 vert12 = -vert11
-Nlink = 2
+Nlink = 3
 
 # Links
 origin = Origin{T}()
 links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
 # Constraints
-spring0 = 0.0 * 1e1
-damper0 = 0.0 * 1e2
-spring1 = 0.0 * 1e1
-damper1 = 0.0 * 1e2
-jointb1 = EqualityConstraint(TorqueRevolute(origin, links[1], ex; spring=spring0, damper=damper0, p2 = vert11))
+spring0 = 1.0 * 1e1
+damper0 = 1.0 * 1e2
+spring1 = 1.0 * 1e1
+damper1 = 1.0 * 1e2
+jointb1 = EqualityConstraint(Revolute(origin, links[1], ex; spring=spring0, damper=damper0, p2 = vert11))
 if Nlink > 1
     eqcs = [
         jointb1;
@@ -157,8 +157,8 @@ datamat[10:12, 7:10]
 
 fd_solmat = finitediff_sol_matrix(mech, data, sol)
 @test norm(fd_solmat + solmat, Inf) < 1e-7
-# plot(Gray.(abs.(solmat)))
-# plot(Gray.(abs.(fd_solmat)))
+plot(Gray.(abs.(solmat)))
+plot(Gray.(abs.(fd_solmat)))
 
 fd_sensi = finitediff_sensitivity(mech, data) * attjac
 @test norm(fd_sensi - sensi) / norm(fd_sensi) < 5e-3
