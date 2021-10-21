@@ -38,11 +38,11 @@ function linearconstraints2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 ccol3c12 = offsetrange(childind,3,12,3)
                 ccol3d12 = offsetrange(childind,3,12,4)
 
-                # pXl, pQl = ∂g∂posa(eqc.constraints[i], posargsnext(pstate, Δt)..., posargsnext(cstate, Δt)...) # x3
-                # cXl, cQl = ∂g∂posb(eqc.constraints[i], posargsnext(pstate, Δt)..., posargsnext(cstate, Δt)...) # x3
+                pXl, pQl = ∂g∂posa(eqc.constraints[i], posargsnext(pstate, Δt)..., posargsnext(cstate, Δt)...) # x3
+                cXl, cQl = ∂g∂posb(eqc.constraints[i], posargsnext(pstate, Δt)..., posargsnext(cstate, Δt)...) # x3
 
-                pXl, pQl = ∂g∂posa(eqc.constraints[i], pbody, cbody, Δt) # x3
-                cXl, cQl = ∂g∂posb(eqc.constraints[i], pbody, cbody, Δt) # x3
+                # pXl, pQl = ∂g∂posa(eqc.constraints[i], pbody, cbody, Δt) # x3
+                # cXl, cQl = ∂g∂posb(eqc.constraints[i], pbody, cbody, Δt) # x3
 
                 mat = constraintmat(eqc.constraints[i])
                 @show mat
@@ -85,8 +85,8 @@ function linearconstraints2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 ccol3d12 = offsetrange(childind,3,12,4)
 
 
-                # cXl, cQl =  ∂g∂posb(eqc.constraints[i], posargsnext(cstate, Δt)...) # x3
-                cXl, cQl =  ∂g∂posb(eqc.constraints[i], mechanism.origin, cbody, Δt) # x3
+                cXl, cQl =  ∂g∂posb(eqc.constraints[i], posargsnext(cstate, Δt)...) # x3
+                # cXl, cQl =  ∂g∂posb(eqc.constraints[i], mechanism.origin, cbody, Δt) # x3
                 # cXl, cQl =  ∂g∂posb(eqc.constraints[i], cstate, Δt) # x3
 
                 mat = constraintmat(eqc.constraints[i])
@@ -108,8 +108,9 @@ function linearconstraints2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                     @show size(range)
                     @show size(ccol3c12)
                     @show size(cQl1)
+                    cGlq1 = mat * cQl1 * LVᵀmat(cbody.state.qc)
 
-                    Gl[range,ccol3c12] += cQl1
+                    Gl[range,ccol3c12] += cGlq1
                 end
                 ind1 = ind2+1
             end

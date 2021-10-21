@@ -53,15 +53,24 @@ origin = Origin{T}()
 links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
 # Constraints
-spring0 = 1.0 * 1e3
+spring0 = 0.0 * 1e3
 damper0 = 0.0 * 1e2
-spring1 = 1.0 * 1e3
+spring1 = 0.0 * 1e3
 damper1 = 0.0 * 1e2
-jointb1 = EqualityConstraint(TorqueRevolute(origin, links[1], ex; spring=spring0, damper=damper0, p2 = vert11))
+# jointb1 = EqualityConstraint(TorqueRevolute(origin, links[1], ex; spring=spring0, damper=damper0, p2 = vert11))
+# if Nlink > 1
+#     eqcs = [
+#         jointb1;
+#         [EqualityConstraint(TorqueRevolute(links[i - 1], links[i], ex; spring=spring1, damper=damper1, p1=vert12, p2=vert11)) for i = 2:Nlink]
+#         ]
+# else
+#     eqcs = [jointb1]
+# end
+jointb1 = EqualityConstraint(Revolute(origin, links[1], ex; spring=spring0, damper=damper0, p2 = vert11))
 if Nlink > 1
     eqcs = [
         jointb1;
-        [EqualityConstraint(TorqueRevolute(links[i - 1], links[i], ex; spring=spring1, damper=damper1, p1=vert12, p2=vert11)) for i = 2:Nlink]
+        [EqualityConstraint(Revolute(links[i - 1], links[i], ex; spring=spring1, damper=damper1, p1=vert12, p2=vert11)) for i = 2:Nlink]
         ]
 else
     eqcs = [jointb1]
@@ -71,9 +80,9 @@ mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.01)
 # mech = getmechanism(:nslider, Nlink = 5)
 initialize!(mech, :npendulum)
 # storage = simulate!(mech, 1.0, record = true, solver = :mehrotra!)
-storage = simulate!(mech, 10.0, record = true, solver = :mehrotra!)
+storage = simulate!(mech, 0.05, record = true, solver = :mehrotra!)
 
-visualize(mech, storage, vis = vis)
+# visualize(mech, storage, vis = vis)
 
 
 ################################################################################
@@ -119,8 +128,17 @@ plot(Gray.(abs.(datamat)))
 plot(Gray.(abs.(fd_datamat)))
 
 norm(fd_datamat + datamat, Inf)
-norm((fd_datamat + datamat)[1:6,1:25], Inf)
-norm((fd_datamat + datamat)[7:8,1:25], Inf)
+norm((fd_datamat + datamat)[1:6,:], Inf)
+norm((fd_datamat + datamat)[1:6,1:6], Inf)
+norm((fd_datamat + datamat)[1:5,7:10], Inf)
+norm((fd_datamat + datamat)[6:6,7:10], Inf)
+
+norm((fd_datamat + datamat)[1:6,11:13], Inf)
+
+norm((fd_datamat + datamat)[7:12,:], Inf)
+norm((fd_datamat + datamat)[7:12,1:6], Inf)
+norm((fd_datamat + datamat)[10:12,7:10], Inf)
+
 norm((fd_datamat + datamat)[9:9,1:25], Inf)
 fd_datamat[9:9,1:6]
 fd_datamat[9:9,7:12]

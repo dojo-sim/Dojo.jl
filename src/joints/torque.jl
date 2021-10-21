@@ -342,9 +342,9 @@ end
     Ltpos = Lᵀmat(UnitQuaternion(xb + vrotate(joint.vertices[2], qb) - xa))
 
     XX = szeros(T, 9, 3)
-    XQ = szeros(T, 9, 4)
-    QX = szeros(T, 9, 3)
-    QQ = szeros(T, 9, 4)
+    XQ = szeros(T, 9, 4) # fix
+    QX = szeros(T, 9, 3) # fix
+    QQ = szeros(T, 9, 4) # fix
 
     return XX, XQ, QX, QQ
 end
