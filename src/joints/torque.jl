@@ -167,7 +167,7 @@ end
     qoffset = joint.qoffset
     Xdamp = szeros(T, 3, 3)
     Qdamp = ∂vrotate∂p(τ_damp, qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qa \ qb / qoffset) * Rmat(qb * inv(qoffset)) * Tmat()
-    Qdamp += ∂vrotate∂q(τ_damp, qa * qoffset) * Rmat(qoffet)
+    Qdamp += ∂vrotate∂q(τ_damp, qa * qoffset) * Rmat(qoffset)
     Xspring = szeros(T, 3, 3)
     Qspring = ∂vrotate∂p(τ_spring, qa * qoffset) * -Aᵀ * A * joint.spring * Aᵀ * A * VRmat(qb * inv(qoffset)) * Tmat() 
     Qspring += ∂vrotate∂q(τ_spring, qa * qoffset) * Rmat(qoffset)
@@ -250,12 +250,12 @@ end
 
     A = constraintmat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    τ_spring = springtorque(joint, q1a, qa, qb)
-    τ_damp = dampertorque(joint, q1a, ωa, q1b, ωb)
+    τ_spring = springtorque(joint, qa, qb)
+    τ_damp = dampertorque(joint, qa, ωa, qb, ωb)
     qoffset = joint.qoffset
     Vdamp = szeros(T, 3, 3)
     Qdamp = ∂vrotate∂p(τ_damp, qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qa \ qb / qoffset) * Rmat(inv(qoffset)) * Lmat(inv(qa))
-    Ωdamp = Q_damp * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
+    Ωdamp = Qdamp * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
     Ωdamp += ∂vrotate∂p(τ_damp, qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂p(ωb, qa \ qb / qoffset)
     
     Vspring = szeros(T, 3, 3)
@@ -275,7 +275,7 @@ qb::UnitQuaternion, vb::AbstractVector,  ωb::AbstractVector, Δt) where {T,N}
         A = constraintmat(joint)
         Aᵀ = zerodimstaticadjoint(A)
         τ_spring = springtorque(joint, qb)
-        τ_damp = dampertorque(joint, q1b, ωb)
+        τ_damp = dampertorque(joint, qb, ωb)
         qoffset = joint.qoffset
         Vdamp = szeros(T, 3, 3)
         Qdamp = ∂vrotate∂p(τ_damp, qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qb / qoffset) * Rmat(inv(qoffset))
@@ -303,10 +303,11 @@ end
     XQ = szeros(T, 9, 4) # empty
     QX = szeros(T, 9, 3) # empty
 
-    f = q -> ∂g∂posa(tor, xa, UnitQuaternion(q...), xb, qb, Δt)[2] * LVᵀmat(UnitQuaternion(q...))
-    df = ForwardDiff.jacobian(fg, [qa.w; qa.x; qa.y; qa.z])
+    f = q -> ∂g∂ʳposa(joint, xa, UnitQuaternion(q...), xb, qb)[1:3, 4:6]
+    df = ForwardDiff.jacobian(f, [qa.w; qa.x; qa.y; qa.z])
+    @show df
 
-    QQ = df#szeros(T, 9, 4) 
+    QQ = szeros(T, 9, 4) 
 
     return XX, XQ, QX, QQ
 end
@@ -315,10 +316,10 @@ end
     XQ = szeros(T, 9, 4) # empty
     QX = szeros(T, 9, 3) # empty
 
-    f = q -> ∂g∂posa(tor, xa, qa, xb, UnitQuaternion(q...), Δt)[2] * LVᵀmat(UnitQuaternion(q...))
-    df = ForwardDiff.jacobian(fg, [qb.w; qb.x; qb.y; qb.z])
-
-    QQ = df#szeros(T, 9, 4) 
+    f = q -> ∂g∂ʳposa(joint, xa, qa, xb, UnitQuaternion(q...))[1:3, 4:6]
+    df = ForwardDiff.jacobian(f, [qb.w; qb.x; qb.y; qb.z])
+    @show df
+    QQ = szeros(T, 9, 4) 
 
     return XX, XQ, QX, QQ
 end
@@ -327,10 +328,11 @@ end
     XQ = szeros(T, 9, 4) # empty
     QX = szeros(T, 9, 3) # empty
 
-    f = q -> ∂g∂posb(tor, xa, UnitQuaternion(q...), xb, qb, Δt)[2] * LVᵀmat(UnitQuaternion(q...))
-    df = ForwardDiff.jacobian(fg, [qa.w; qa.x; qa.y; qa.z])
+    f = q -> ∂g∂ʳposb(joint, xa, UnitQuaternion(q...), xb, qb)[1:3, 4:6]
+    df = ForwardDiff.jacobian(f, [qa.w; qa.x; qa.y; qa.z])
+    @show df
 
-    QQ = df#szeros(T, 9, 4)
+    QQ = szeros(T, 9, 4)
     
     return XX, XQ, QX, QQ
 end
@@ -339,10 +341,12 @@ end
     XQ = szeros(T, 9, 4) # empty
     QX = szeros(T, 9, 3) #empty
 
-    f = q -> ∂g∂posb(tor, xa, qa, xb, UnitQuaternion(q...), Δt)[2] * LVᵀmat(UnitQuaternion(q...))
-    df = ForwardDiff.jacobian(fg, [qb.w; qb.x; qb.y; qb.z])
+    f = q -> ∂g∂ʳposb(joint, xa, qa, xb, UnitQuaternion(q...))[1:3, 4:6]
+    df = ForwardDiff.jacobian(f, [qb.w; qb.x; qb.y; qb.z])
+    @show df
 
-    QQ = df#szeros(T, 9, 4)
+    QQ = szeros(T, 9, 4)
+
 
     return XX, XQ, QX, QQ
 end
@@ -351,10 +355,12 @@ end
     XQ = szeros(T, 9, 4) # empty
     QX = szeros(T, 9, 3) # empty
 
-    f = q -> ∂g∂posb(tor, xb, UnitQuaternion(q...), Δt)[2] * LVᵀmat(UnitQuaternion(q...))
-    df = ForwardDiff.jacobian(fg, [qb.w; qb.x; qb.y; qb.z])
+    f = q -> ∂g∂ʳposb(joint, xb, UnitQuaternion(q...))[1:3, 4:6]
+    df = ForwardDiff.jacobian(f, [qb.w; qb.x; qb.y; qb.z])
 
-    QQ = df#szeros(T, 9, 4)
+    @show df
+    QQ = szeros(T, 9, 4)
+
     return XX, XQ, QX, QQ
 end
 

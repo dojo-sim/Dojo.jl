@@ -61,16 +61,16 @@ function linearconstraints2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 Gl[range,ccol3a12] = cGlx
                 Gl[range,ccol3c12] = cGlq*Rmat(ωbar(cstate.ωc, Δt)*Δt/2)*LVᵀmat(cstate.qc)
 
-                if typeof(eqc.constraints[i]) <: Torque
-                    pXl1, pQl1 = ∂g∂posa1(eqc.constraints[i], pbody, cbody, Δt) # x3
-                    cXl1, cQl1 = ∂g∂posb1(eqc.constraints[i], pbody, cbody, Δt) # x3
-                    @show typeof(pQl1)
-                    @show typeof(cQl1)
-                    pGlq1 = mat * pQl1
-                    cGlq1 = mat * cQl1
-                    Gl[range,pcol3c12] += pGlq1 * LVᵀmat(pstate.qc)
-                    Gl[range,ccol3c12] += cGlq1 * LVᵀmat(cstate.qc)
-                end
+                # if typeof(eqc.constraints[i]) <: Torque
+                #     pXl1, pQl1 = ∂g∂posa1(eqc.constraints[i], pbody, cbody, Δt) # x3
+                #     cXl1, cQl1 = ∂g∂posb1(eqc.constraints[i], pbody, cbody, Δt) # x3
+                #     @show typeof(pQl1)
+                #     @show typeof(cQl1)
+                #     pGlq1 = mat * pQl1
+                #     cGlq1 = mat * cQl1
+                #     Gl[range,pcol3c12] += pGlq1 * LVᵀmat(pstate.qc)
+                #     Gl[range,ccol3c12] += cGlq1 * LVᵀmat(cstate.qc)
+                # end
 
                 ind1 = ind2+1
             end
