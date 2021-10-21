@@ -173,6 +173,7 @@ end
     Qspring += ∂vrotate∂q(τ_spring, qa * qoffset) * Rmat(qoffset)
     X = Xdamp + Xspring
     Q = Qdamp + Qspring
+    @show scn.(Q, digits=2)
 
     return Aᵀ * A * X, Aᵀ * A * Q
 end
