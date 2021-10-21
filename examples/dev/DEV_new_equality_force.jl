@@ -67,21 +67,9 @@ mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.01)
 
 # mech = getmechanism(:nslider, Nlink = 5)
 initialize!(mech, :nslider)
-# storage = simulate!(mech, 1.0, record = true, solver = :mehrotra!)
 storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!)
 
 # visualize(mech, storage, vis = vis)
-
-forc = eqcs[2].constraints[2]
-xb = mech.bodies[4].state.xc
-qb = mech.bodies[4].state.qc
-ωb = mech.bodies[4].state.ωc
-Δt = mech.Δt
-∂g∂posb(forc, xb, qb)
-fg = q -> ∂g∂posb(forc, xb, UnitQuaternion(q...))[2] * LVᵀmat(UnitQuaternion(q...))
-fg(qb)
-ForwardDiff.jacobian(fg, [qb.w; qb.x; qb.y; qb.z])
-
 
 ################################################################################
 # Differentiation
@@ -92,10 +80,10 @@ include(joinpath(module_dir(), "examples", "dev", "diff_tools.jl"))
 Nb = length(mech.bodies)
 data = getdata(mech)
 setdata!(mech, data)
+
 mehrotra!(mech, opts = InteriorPointOptions(rtol = 1e-6, btol = 1e-1, undercut=1.2, verbose=true))
 sol = getsolution(mech)
 attjac = attitudejacobian(data, Nb)
-
 
 # IFT
 setentries!(mech)
@@ -107,6 +95,8 @@ sensi = - (solmat \ datamat)
 # finite diff
 fd_datamat = finitediff_data_matrix(mech, data, sol) * attjac
 @test norm(fd_datamat + datamat, Inf) < 1e-7
+@test norm((fd_datamat + datamat)[:, 1:end-2], Inf) < 1e-7
+
 plot(Gray.(abs.(datamat)))
 plot(Gray.(abs.(fd_datamat)))
 

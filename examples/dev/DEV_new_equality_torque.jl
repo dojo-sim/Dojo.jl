@@ -30,9 +30,9 @@ include("mechanism_zoo.jl")
 
 # t2r3
 function TorqueRevolute(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T)) where T
-    return Translational3{T}(body1, body2; p1, p2, spring, damper),
-    Rotational2{T}(body1, body2; axis, qoffset, spring, damper),
-    Torque1{T}(body1, body2; axis=axis, qoffset=qoffset, spring=spring, damper=damper)
+    return Translational3{T}(body1, body2, p1=p1, p2=p2),
+        Torque1{T}(body1, body2; axis=axis, qoffset=qoffset, spring=spring, damper=damper),
+        Rotational2{T}(body1, body2, axis=axis, qoffset=qoffset)
 end
 
 ################################################################################
@@ -53,10 +53,10 @@ origin = Origin{T}()
 links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
 # Constraints
-spring0 = 0.0 * 1e1
-damper0 = 0.0 * 1e2
-spring1 = 0.0 * 1e1
-damper1 = 0.0 * 1e2
+spring0 = 1.0 * 1e1
+damper0 = 2.0 * 1e2
+spring1 = 3.0 * 1e1
+damper1 = 1.0 * 1e2
 jointb1 = EqualityConstraint(TorqueRevolute(origin, links[1], ex; spring=spring0, damper=damper0, p2 = vert11))
 if Nlink > 1
     eqcs = [
@@ -110,6 +110,7 @@ sensi = - (solmat \ datamat)
 # finite diff
 fd_datamat = finitediff_data_matrix(mech, data, sol) * attjac
 @test norm(fd_datamat + datamat, Inf) < 1e-7
+@test norm((fd_datamat + datamat)[:, 1:24], Inf) < 1e-7
 # plot(Gray.(abs.(datamat)))
 # plot(Gray.(abs.(fd_datamat)))
 norm((fd_datamat + datamat)[1:6, 1:13], Inf)
@@ -133,6 +134,11 @@ norm((fd_datamat + datamat)[19:24, 14:26], Inf)
 datamat[19:24, 24:26]
 -fd_datamat[19:24, 24:26]
 
+datamat[12:22, 24:26]
+-fd_datamat[12:22, 24:26]
+
+datamat
+
 fd_solmat = finitediff_sol_matrix(mech, data, sol)
 @test norm(fd_solmat + solmat, Inf) < 1e-7
 plot(Gray.(abs.(solmat)))
@@ -146,9 +152,10 @@ fd_sensi = finitediff_sensitivity(mech, data) * attjac
 # norm(fd_sensi, Inf)
 # norm(fd_sensi - sensi) / norm(fd_sensi)
 
-
-
-
+linearconstraintmapping2(mech)
+linearconstraints2(mech)
+fd_datamat[13:24, :]
+datamat[13:24, :]
 ################################################################################
 # Finite Diff
 ################################################################################

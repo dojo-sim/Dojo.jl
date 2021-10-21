@@ -63,7 +63,7 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: AbstractConstraint{T,N}
                 if typeof(set[1]) <: Joint # ignore the FJoint
                     push!(inds, [last(inds)[2]+1;last(inds)[2]+3-Nset])
                 else
-                    push!(inds, [last(inds)[2];last(inds)[2] - 1])
+                    push!(inds, [last(inds)[2]+1;last(inds)[2]])
                 end
             end
             if isempty(λinds)
@@ -160,8 +160,9 @@ Prismatic joint example:
 function setForce!(mechanism, eqc::EqualityConstraint{T,N,Nc}, Fτ::AbstractVector) where {T,N,Nc}
     @assert length(Fτ)==getcontroldim(eqc)
     for i = 1:Nc
-        f = Fτ[SUnitRange(eqc.inds[i][1], eqc.inds[i][2])]
-        !isempty(f) && setForce!(eqc.constraints[i], f)
+        r_idx = SUnitRange(eqc.inds[i][1], eqc.inds[i][2])
+        length(r_idx) == 0 && continue
+        setForce!(eqc.constraints[i], Fτ[r_idx])
     end
     return
 end

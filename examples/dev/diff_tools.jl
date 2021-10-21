@@ -573,8 +573,12 @@ function setdata!(mechanism::Mechanism, data::AbstractVector)
     end
     for eqc in mechanism.eqconstraints
         dim = getcontroldim(eqc)
+        @show eqc 
+        @show dim
         if dim > 0
             u = data[off .+ (1:dim)]; off += dim
+            @show eqc 
+            @show u
             setForce!(mechanism, eqc, u)
         end
     end

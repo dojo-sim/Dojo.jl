@@ -219,15 +219,23 @@ end
     XX = szeros(T, 9, 3)
     XQ = szeros(T, 9, 4)
     QX = szeros(T, 9, 3)
-    QQ = szeros(T, 9, 4)
 
+    f = q -> ∂g∂ʳposa(joint, xa, UnitQuaternion(q...), xb, qb)[1:3, 4:6]
+    df = ForwardDiff.jacobian(f, [qa.w; qa.x; qa.y; qa.z])
+    # @show df
+
+    QQ = df#szeros(T, 9, 4) 
     return XX, XQ, QX, QQ
 end
 @inline function ∂2g∂posab(joint::Force12{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
     XX = szeros(T, 9, 3)
     XQ = szeros(T, 9, 4)
     QX = szeros(T, 9, 3)
-    QQ = szeros(T, 9, 4)
+
+    f = q -> ∂g∂ʳposa(joint, xa, qa, xb, UnitQuaternion(q...))[1:3, 4:6]
+    df = ForwardDiff.jacobian(f, [qb.w; qb.x; qb.y; qb.z])
+    # @show df
+    QQ = df#szeros(T, 9, 4) 
 
     return XX, XQ, QX, QQ
 end
@@ -235,15 +243,24 @@ end
     XX = szeros(T, 9, 3)
     XQ = szeros(T, 9, 4)
     QX = szeros(T, 9, 3)
-    QQ = szeros(T, 9, 4)
 
+    f = q -> ∂g∂ʳposb(joint, xa, UnitQuaternion(q...), xb, qb)[1:3, 4:6]
+    df = ForwardDiff.jacobian(f, [qa.w; qa.x; qa.y; qa.z])
+    # @show df
+
+    QQ = df#szeros(T, 9, 4)
     return XX, XQ, QX, QQ
 end
 @inline function ∂2g∂posbb(joint::Force12{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
     XX = szeros(T, 9, 3)
     XQ = szeros(T, 9, 4)
     QX = szeros(T, 9, 3)
-    QQ = szeros(T, 9, 4)
+
+    f = q -> ∂g∂ʳposb(joint, xa, qa, xb, UnitQuaternion(q...))[1:3, 4:6]
+    df = ForwardDiff.jacobian(f, [qb.w; qb.x; qb.y; qb.z])
+    # @show df
+
+    QQ = df#szeros(T, 9, 4)
 
     return XX, XQ, QX, QQ
 end
@@ -251,8 +268,12 @@ end
     XX = szeros(T, 9, 3)
     XQ = szeros(T, 9, 4)
     QX = szeros(T, 9, 3)
-    QQ = szeros(T, 9, 4)
+    
+    f = q -> ∂g∂ʳposb(joint, xb, UnitQuaternion(q...))[1:3, 4:6]
+    df = ForwardDiff.jacobian(f, [qb.w; qb.x; qb.y; qb.z])
 
+    # @show df
+    QQ = df#szeros(T, 9, 4)
     return XX, XQ, QX, QQ
 end
 
