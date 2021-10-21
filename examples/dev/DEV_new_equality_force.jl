@@ -47,7 +47,7 @@ h = 1.
 r = .05
 vert11 = [0; r; 0.0]
 vert12 = -vert11
-Nlink = 2
+Nlink = 3
 
 # Links
 origin = Origin{Float64}()
@@ -58,7 +58,7 @@ jointb1 = EqualityConstraint(Fixed(origin, links[1]; p1 = zeros(3), p2 = zeros(3
 if Nlink > 1
     eqcs = [
         jointb1;
-        [EqualityConstraint(ForcePrismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = 30.0, damper = 0.5)) for i = 2:Nlink]
+        [EqualityConstraint(ForcePrismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = 1.0, damper = 1.0)) for i = 2:Nlink]
         ]
 else
     eqcs = [jointb1]
@@ -70,14 +70,22 @@ initialize!(mech, :nslider)
 # storage = simulate!(mech, 1.0, record = true, solver = :mehrotra!)
 storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!)
 
-visualize(mech, storage, vis = vis)
+# visualize(mech, storage, vis = vis)
+
+forc = eqcs[2].constraints[2]
+xb = mech.bodies[4].state.xc
+qb = mech.bodies[4].state.qc
+ωb = mech.bodies[4].state.ωc
+Δt = mech.Δt
+∂g∂posb(forc, xb, qb)
+fg = q -> ∂g∂posb(forc, xb, UnitQuaternion(q...))[2] * LVᵀmat(UnitQuaternion(q...))
+fg(qb)
+ForwardDiff.jacobian(fg, [qb.w; qb.x; qb.y; qb.z])
 
 
 ################################################################################
 # Differentiation
 ################################################################################
-eqcs[2].λinds
-eqcs[2].inds
 
 include(joinpath(module_dir(), "examples", "dev", "diff_tools.jl"))
 # Set data

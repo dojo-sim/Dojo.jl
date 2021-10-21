@@ -53,7 +53,7 @@ origin = Origin{T}()
 links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
 # Constraints
-spring0 = 1.0 * 1e1
+spring0 = 0.0 * 1e1
 damper0 = 0.0 * 1e2
 spring1 = 0.0 * 1e1
 damper1 = 0.0 * 1e2
@@ -66,7 +66,7 @@ if Nlink > 1
 else
     eqcs = [jointb1]
 end
-# jointb1 = EqualityConstraint(Revolute(origin, links[1], ex; spring=spring0, damper=damper0, p2 = vert11))
+# jointb1 = EqualityConstraint(TorqueRevolute(origin, links[1], ex; spring=spring0, damper=damper0, p2 = vert11))
 # if Nlink > 1
 #     eqcs = [
 #         jointb1;
@@ -80,12 +80,13 @@ mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.01)
 initialize!(mech, :npendulum)
 storage = simulate!(mech, 1.0, record = true, solver = :mehrotra!)
 
-# # visualize(mech, storage, vis = vis)
+# visualize(mech, storage, vis = vis)
 # tor = jointb1.constraints[3]
+# xb = mech.bodies[2].state.xc
 # qb = mech.bodies[2].state.qc
 # ωb = mech.bodies[2].state.ωc
 # Δt = mech.Δt
-# fg = q -> ∂g∂posb(tor, UnitQuaternion(q...), ωb, Δt)[2] * LVᵀmat(UnitQuaternion(q...))
+# fg = q -> ∂g∂ʳposb(tor, xb, UnitQuaternion(q...))[1:3, 4:6]# #* LVᵀmat(UnitQuaternion(q...))
 # fg(qb)
 # ForwardDiff.jacobian(fg, [qb.w; qb.x; qb.y; qb.z])
 
@@ -124,6 +125,7 @@ sensi = - (solmat \ datamat)
 
 # finite diff
 fd_datamat = finitediff_data_matrix(mech, data, sol) * attjac
+-datamat
 @test norm(fd_datamat + datamat, Inf) < 1e-7
 # plot(Gray.(abs.(datamat)))
 # plot(Gray.(abs.(fd_datamat)))
@@ -136,6 +138,19 @@ norm((fd_datamat + datamat)[7:9, 7:10], Inf)
 norm((fd_datamat + datamat)[10:12, 7:10], Inf)
 norm((fd_datamat + datamat)[7:12, 11:13], Inf)
 
+norm((fd_datamat + datamat)[1:12, 1:26], Inf)
+norm((fd_datamat + datamat)[13:18, 1:13], Inf)
+norm((fd_datamat + datamat)[13:18, 14:26], Inf)
+datamat[13:18, 24:26]
+-fd_datamat[13:18, 24:26]
+
+norm((fd_datamat + datamat)[19:24, 1:26], Inf)
+norm((fd_datamat + datamat)[19:24, 1:13], Inf)
+norm((fd_datamat + datamat)[19:24, 14:26], Inf)
+datamat[19:24, 24:26]
+-fd_datamat[19:24, 24:26]
+
+
 (fd_datamat + datamat)[10:12, 7:10]
 fd_datamat[10:12, 7:10]
 datamat[10:12, 7:10]
@@ -145,8 +160,6 @@ fd_solmat = finitediff_sol_matrix(mech, data, sol)
 # plot(Gray.(abs.(solmat)))
 # plot(Gray.(abs.(fd_solmat)))
 
-
-
 fd_sensi = finitediff_sensitivity(mech, data) * attjac
 @test norm(fd_sensi - sensi) / norm(fd_sensi) < 5e-3
 # plot(Gray.(sensi))
@@ -154,79 +167,3 @@ fd_sensi = finitediff_sensitivity(mech, data) * attjac
 # norm(fd_sensi - sensi, Inf)
 # norm(fd_sensi, Inf)
 # norm(fd_sensi - sensi) / norm(fd_sensi)
-
-
-
-
-################################################################################
-# Finite Diff
-################################################################################
-
-function fdjac(f, x; δ = 1e-5)
-    n = length(f(x))
-    m = length(x)
-    jac = zeros(n, m)
-    for i = 1:m
-        xp = deepcopy(x)
-        xm = deepcopy(x)
-        xp[i] += δ
-        xm[i] -= δ
-        jac[:,i] = (f(xp) - f(xm)) / (2δ)
-    end
-    return jac
-end
-
-eqc1 = collect(mech.eqconstraints)[1]
-eqc2 = collect(mech.eqconstraints)[2]
-tra1 = eqc1.constraints[1]
-rot1 = eqc1.constraints[2]
-torque1 = eqc1.constraints[3]
-tra2 = eqc2.constraints[1]
-rot2 = eqc2.constraints[2]
-torque2 = eqc2.constraints[3]
-A1 = constraintmat(torque1)
-A1ᵀ = zerodimstaticadjoint(A1)
-A2 = constraintmat(torque2)
-A2ᵀ = zerodimstaticadjoint(A2)
-
-
-
-qa = UnitQuaternion(rand(4)...)
-ωa = rand(3)
-qb = UnitQuaternion(rand(4)...)
-ωb = rand(3)
-Δt = 0.01
-
-Xb, Qb = ∂g∂posb(torque2, qb, ωb, Δt)
-Xb
-Qb
-
-Qb_fd = fdjac(
-    qb -> A1ᵀ * A1 * (springtorque(torque2, UnitQuaternion(qb..., false)) + dampertorque(torque1, UnitQuaternion(qb..., false), ωb)),
-    [qb.w, qb.x, qb.y, qb.z])
-@test norm(Qb - Qb_fd, Inf) < 1e-8
-
-
-Xb, Qb = ∂g∂posb(torque2, qa, ωa, qb, ωb, Δt)
-Xb
-Qb
-
-Qb_fd = fdjac(
-    qb -> A2ᵀ * A2 * (springtorque(torque2, qa, UnitQuaternion(qb..., false)) + dampertorque(torque1, qa, ωa, UnitQuaternion(qb..., false), ωb)),
-    [qb.w, qb.x, qb.y, qb.z])
-@test norm(Qb - Qb_fd, Inf) < 1e-8
-
-
-Xa, Qa = ∂g∂posa(torque2, qa, ωa, qb, ωb, Δt)
-Xa
-Qa
-
-Qa_fd = fdjac(
-    qa -> A2ᵀ * A2 * (springtorque(torque2, UnitQuaternion(qa..., false), qb) + dampertorque(torque1, UnitQuaternion(qa..., false), ωa, qb, ωb)),
-    [qa.w, qa.x, qa.y, qa.z])
-norm(Qa - Qa_fd, Inf) < 1e-9
-
-norm(Qa - Qa_fd, Inf)
-
-torque2.spring
-torque2.damper
