@@ -148,11 +148,11 @@ end
 ## Derivatives NOT accounting for quaternion specialness
 # THIS IS USED IN DATAMAT, IT HAS TO BE THE DERIVATIVE OF g WRT THE POS VARIABLES (X3, Q3)
 @inline function ∂g∂posa(joint::Torque, body1::Body, body2::Body, Δt)
-    X, Q = ∂g∂posa(posargsk(body1.state)[2], posargsnext(body1.state, Δt)[2], body1.state.ωsol[2], posargsk(body2.state)[2], posargsnext(body2.state, Δt)[2], body2.state.ωsol[2], Δt) # the Δt factor comes from g(joint::FJoint
+    X, Q = ∂g∂posa(joint, posargsk(body1.state)[2], posargsnext(body1.state, Δt)[2], body1.state.ωsol[2], posargsk(body2.state)[2], posargsnext(body2.state, Δt)[2], body2.state.ωsol[2], Δt) # the Δt factor comes from g(joint::FJoint
     return Δt * X, Δt * Q
 end
 @inline function ∂g∂posa1(joint::Torque, body1::Body, body2::Body, Δt)
-    X, Q = ∂g∂posa1(posargsk(body1.state)[2], posargsnext(body1.state, Δt)[2], body1.state.ωsol[2], posargsk(body2.state)[2], posargsnext(body2.state, Δt)[2], body2.state.ωsol[2], Δt) # the Δt factor comes from g(joint::FJoint
+    X, Q = ∂g∂posa1(joint, posargsk(body1.state)[2], posargsnext(body1.state, Δt)[2], body1.state.ωsol[2], posargsk(body2.state)[2], posargsnext(body2.state, Δt)[2], body2.state.ωsol[2], Δt) # the Δt factor comes from g(joint::FJoint
     return Δt * X, Δt * Q
 end
 @inline function ∂g∂posb(joint::Torque, body1::Body, body2::Body, Δt)
@@ -178,9 +178,9 @@ end
     τ_damp = dampertorque(joint, q1a, ωa, q1b, ωb)
     qoffset = joint.qoffset
     Xdamp = szeros(T, 3, 3)
-    Qdamp = szeros(T, 3, 3)
+    Qdamp = szeros(T, 3, 4)
     Xspring = szeros(T, 3, 3)
-    Qspring = -∂vrotate∂p(τ_spring, q1a * joint.qoffset) * Aᵀ * A * joint.spring * Aᵀ * A * Rmat(qb * inv(qoffset)) * Tmat()
+    Qspring = -∂vrotate∂p(τ_spring, q1a * joint.qoffset) * Aᵀ * A * joint.spring * Aᵀ * A * VRmat(qb * inv(qoffset)) * Tmat()
     X = Xdamp + Xspring
     Q = Qdamp + Qspring
 
@@ -211,9 +211,9 @@ end
     qoffset = joint.qoffset
 
     Xdamp = szeros(T, 3, 3)
-    Qdamp = szeros(T, 3, 3)
+    Qdamp = szeros(T, 3, 4)
     Xspring = szeros(T, 3, 3)
-    Qspring = -1.0 * ∂vrotate∂p(τ_spring, q1a * qoffset) * Aᵀ * A * joint.spring * Aᵀ * A * Lmat(inv(qa)) * Rmat(inv(qoffset))
+    Qspring = -1.0 * ∂vrotate∂p(τ_spring, q1a * qoffset) * Aᵀ * A * joint.spring * Aᵀ * A * VLmat(inv(qa)) * Rmat(inv(qoffset))
     X = Xdamp + Xspring
     Q = Qdamp + Qspring
 
@@ -229,7 +229,7 @@ end
     Xdamp = szeros(T, 3, 3)
     Qdamp = ∂vrotate∂p(τ_damp, q1a * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, q1a \ q1b / qoffset) * Lmat(inv(q1a)) * Rmat(inv(qoffset))
     Xspring = szeros(T, 3, 3)
-    Qspring = szeros(T, 3, 3)
+    Qspring = szeros(T, 3, 4)
     X = Xdamp + Xspring
     Q = Qdamp + Qspring
 
