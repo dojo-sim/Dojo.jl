@@ -268,9 +268,9 @@ end
 end
 
 # Wrappers 2
-∂g∂ʳvela(joint::Torque, statea::State, stateb::State, Δt) = ∂g∂ʳvela(joint, posargsc(statea)[2], posargsnext(statea, Δt)..., statea.vsol[2], statea.ωsol[2], posargsc(stateb)[2], posargsnext(stateb, Δt)..., stateb.vsol[2], stateb.ωsol[2], Δt)
-∂g∂ʳvelb(joint::Torque, statea::State, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargsc(statea)[2], posargsnext(statea, Δt)..., statea.vsol[2], statea.ωsol[2], posargsc(stateb)[2], posargsnext(stateb, Δt)..., stateb.vsol[2], stateb.ωsol[2], Δt)
-∂g∂ʳvelb(joint::Torque, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargsc(stateb)[2], posargsnext(stateb, Δt)..., stateb.vsol[2], stateb.ωsol[2], Δt)
+∂g∂ʳvela(joint::Torque, statea::State, stateb::State, Δt) = ∂g∂ʳvela(joint, posargsk(statea)[2], posargsnext(statea, Δt)..., statea.vsol[2], statea.ωsol[2], posargsk(stateb)[2], posargsnext(stateb, Δt)..., stateb.vsol[2], stateb.ωsol[2], Δt)
+∂g∂ʳvelb(joint::Torque, statea::State, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargsk(statea)[2], posargsnext(statea, Δt)..., statea.vsol[2], statea.ωsol[2], posargsk(stateb)[2], posargsnext(stateb, Δt)..., stateb.vsol[2], stateb.ωsol[2], Δt)
+∂g∂ʳvelb(joint::Torque, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargsk(stateb)[2], posargsnext(stateb, Δt)..., stateb.vsol[2], stateb.ωsol[2], Δt)
 
 # Derivatives accounting for quaternion specialness
 @inline function ∂g∂ʳvela(joint::Torque{T,N}, q1a::UnitQuaternion, xa::AbstractVector,
@@ -283,7 +283,7 @@ end
     τ_damp = dampertorque(joint, q1a, ωa, q1b, ωb)
     qoffset = joint.qoffset
     Vdamp = szeros(T, 3, 3)
-    Ωdamp = 2.0 * ∂vrotate∂p(τ_damp, q1a * qoffset) * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωa, inv(qoffset)) * Lmat(q1a) * derivωbar(ωa, Δt) * Δt/2
+    Ωdamp = 2.0 * ∂vrotate∂p(τ_damp, q1a * qoffset) * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂p(ωa, inv(qoffset))
     Vspring = szeros(T, 3, 3)
 
     Ωspring = -1.0 * ∂vrotate∂p(τ_spring, q1a * joint.qoffset) * Aᵀ * A * joint.spring * Aᵀ * A * VRmat(qb * inv(qoffset)) * Tmat() * Lmat(q1a) * derivωbar(ωa, Δt) * Δt/2

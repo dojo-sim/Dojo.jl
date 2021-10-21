@@ -45,15 +45,15 @@ function linearconstraints2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 cXl, cQl = ∂g∂posb(eqc.constraints[i], pbody, cbody, Δt) # x3
 
                 mat = constraintmat(eqc.constraints[i])
-                @show mat
+                # @show mat
                 pGlx = mat * pXl
                 pGlq = mat * pQl
                 cGlx = mat * cXl
                 cGlq = mat * cQl
-                @show pGlx
-                @show pGlq
-                @show cGlx
-                @show cGlq
+                # @show pGlx
+                # @show pGlq
+                # @show cGlx
+                # @show cGlq
 
                 Gl[range,pcol3a12] = pGlx
                 Gl[range,pcol3c12] = pGlq*Rmat(ωbar(pstate.ωc, Δt)*Δt/2)*LVᵀmat(pstate.qc)
@@ -94,22 +94,25 @@ function linearconstraints2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 cGlq = mat * cQl
 
                 Gl[range,ccol3a12] = cGlx
-                @show size(range)
-                @show size(ccol3c12)
-                @show size(cGlq)
-                @show size(cGlq*Rmat(ωbar(cstate.ωc, Δt)*Δt/2)*LVᵀmat(cstate.qc))
+                # @show range
+                # @show ccol3c12
+                # @show size(cGlq)
+                # @show size(cGlq*Rmat(ωbar(cstate.ωc, Δt)*Δt/2)*LVᵀmat(cstate.qc))
                 Gl[range,ccol3c12] = cGlq*Rmat(ωbar(cstate.ωc, Δt)*Δt/2)*LVᵀmat(cstate.qc)
 
                 if typeof(eqc.constraints[i]) <: Torque
                     cXl1, cQl1 = ∂g∂posb1(eqc.constraints[i], mechanism.origin, cbody, Δt)
-                    @show range
-                    @show ccol3c12
-                    @show cQl1
-                    @show size(range)
-                    @show size(ccol3c12)
-                    @show size(cQl1)
+                    cQlq1 = mat * cQl1
 
-                    Gl[range,ccol3c12] += cQl1
+                    # @show range
+                    # @show ccol3c12
+                    # @show cQl1
+                    # @show range
+                    # @show ccol3c12
+                    # @show size(cQl1)
+                    # @show size(cQlq1)
+
+                    Gl[range,ccol3c12] += cQlq1 * LVᵀmat(q)
                 end
                 ind1 = ind2+1
             end
@@ -290,6 +293,7 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
     end
 
     G = linearconstraints2(mechanism)
+    # G, Fλ = linearconstraints(mechanism)
 
     # F contains the following
     # F = [x3 - v2 Δt;

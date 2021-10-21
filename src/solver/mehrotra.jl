@@ -26,10 +26,10 @@ end
 
 function mehrotra!(mechanism::Mechanism;
         opts = InteriorPointOptions(
-            btol = 1e-6, 
-            rtol = 1e-6, 
+            btol = 1e-6,
+            rtol = 1e-6,
             undercut = Inf,
-			breg = 0.0, max_iter = 40, verbose=true),
+			breg = 0.0, max_iter = 40, verbose = true),
         ε = nothing, newtonIter = nothing, lineIter = nothing, warning::Bool = false)
 
 
@@ -65,13 +65,13 @@ function mehrotra!(mechanism::Mechanism;
         if opts.verbose
             setentries!(mechanism)
             ##################
-            Δvar = norm(full_vector(mechanism.system), Inf)
-            fv = full_vector(mechanism.system)
+			fv = full_vector(mechanism.system)
+			Δvar = norm(fv, Inf)
             fM = full_matrix(mechanism.system)
             fΔ = fM \ fv
             Δalt = norm(fΔ, Inf)
             ##################
-            res = norm(full_vector(mechanism.system), Inf)
+            res = norm(fv, Inf)
             println("n ", n, "   bvio", scn(bvio), "   rvio", scn(rvio), "   α", scn(mechanism.α),
                     "   μ", scn(μtarget), "   |res|∞", scn(res), "   |Δ|∞", scn(Δvar))
         end
