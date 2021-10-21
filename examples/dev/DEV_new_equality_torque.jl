@@ -125,6 +125,7 @@ sensi = - (solmat \ datamat)
 
 # finite diff
 fd_datamat = finitediff_data_matrix(mech, data, sol) * attjac
+-datamat
 @test norm(fd_datamat + datamat, Inf) < 1e-7
 # plot(Gray.(abs.(datamat)))
 # plot(Gray.(abs.(fd_datamat)))
@@ -146,8 +147,8 @@ datamat[13:18, 24:26]
 norm((fd_datamat + datamat)[19:24, 1:26], Inf)
 norm((fd_datamat + datamat)[19:24, 1:13], Inf)
 norm((fd_datamat + datamat)[19:24, 14:26], Inf)
-datamat[13:18, 24:26]
--fd_datamat[13:18, 24:26]
+datamat[19:24, 24:26]
+-fd_datamat[19:24, 24:26]
 
 
 (fd_datamat + datamat)[10:12, 7:10]
