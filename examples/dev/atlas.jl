@@ -23,6 +23,7 @@ mech = getmechanism(:atlas, Δt = 0.01, g = -9.81, cf = 0.8, contact = true)
 initialize!(mech, :atlas, tran = [0,0,1.2], rot = [0.1,0,0])
 storage = simulate!(mech, 0.2, record = true, solver = :mehrotra!)
 
+mech.ineqconstraints
 
 # Set data
 Nb = length(mech.bodies)
@@ -47,7 +48,7 @@ fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
 plot(Gray.(abs.(1e10 * solmat)))
 plot(Gray.(abs.(fd_solmat)))
 
-fd_sensi = finitediff_sensitivity(mech, data, δ = 1e-5, ϵ = 1e-14) * attjac
+fd_sensi = finitediff_sensitivity(mech, data) * attjac
 @test norm(fd_sensi - sensi) / norm(fd_sensi) < 8e-3
 plot(Gray.(1e10 .* sensi))
 plot(Gray.(fd_sensi))

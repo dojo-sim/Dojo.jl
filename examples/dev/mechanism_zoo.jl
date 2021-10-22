@@ -27,20 +27,22 @@ function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
         normal = [[0;0;1.0] for i = 1:n]
         cf = cf * ones(T, n)
 
-        conineqcs1, impineqcs1 = splitcontactconstraint(getbody(mech, "l_foot"), normal, cf, p = contacts)
-        conineqcs2, impineqcs2 = splitcontactconstraint(getbody(mech, "r_foot"), normal, cf, p = contacts)
-        # contineqcs1 = contactconstraint(getbody(mech, "l_foot"), normal, cf, p = contacts)
-        # contineqcs2 = contactconstraint(getbody(mech, "r_foot"), normal, cf, p = contacts)
+        # conineqcs1, impineqcs1 = splitcontactconstraint(getbody(mech, "l_foot"), normal, cf, p = contacts)
+        # conineqcs2, impineqcs2 = splitcontactconstraint(getbody(mech, "r_foot"), normal, cf, p = contacts)
+        contineqcs1 = contactconstraint(getbody(mech, "l_foot"), normal, cf, p = contacts)
+        contineqcs2 = contactconstraint(getbody(mech, "r_foot"), normal, cf, p = contacts)
 
         setPosition!(mech, geteqconstraint(mech, "auto_generated_floating_joint"), [0;0;1.2;0.1;0.;0.])
-        mech = Mechanism(origin, bodies, eqs, [impineqcs1; impineqcs2; conineqcs1; conineqcs2], g = g, Δt = Δt)
-        # mech = Mechanism(origin, bodies, eqs, [contineqcs1; contineqcs2], g = g, Δt = Δt)
+        # mech = Mechanism(origin, bodies, eqs, [impineqcs1; impineqcs2; conineqcs1; conineqcs2], g = g, Δt = Δt)
+        mech = Mechanism(origin, bodies, eqs, [contineqcs1; contineqcs2], g = g, Δt = Δt)
     end
     return mech
 end
 
-function getdice(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = true,
-        conetype = :soc)  where {T}
+function getdice(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, 
+        contact::Bool = true,
+        conetype = :soc,
+        mode=:particle)  where {T}
     # Parameters
     joint_axis = [1.0;0.0;0.0]
     length1 = 0.5
@@ -54,17 +56,32 @@ function getdice(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tru
 
     if contact
         # Corner vectors
-        corners = [
-            [[0 ; 0; 0.]]
-            # [[length1 / 2;length1 / 2;-length1 / 2]]
-            # [[length1 / 2;-length1 / 2;-length1 / 2]]
-            # [[-length1 / 2;length1 / 2;-length1 / 2]]
-            # [[-length1 / 2;-length1 / 2;-length1 / 2]]
-            # [[length1 / 2;length1 / 2;length1 / 2]]
-            # [[length1 / 2;-length1 / 2;length1 / 2]]
-            # [[-length1 / 2;length1 / 2;length1 / 2]]
-            # [[-length1 / 2;-length1 / 2;length1 / 2]]
-        ]
+        if mode == :particle
+            corners = [
+                [[0 ; 0; 0.]]
+                # [[length1 / 2;length1 / 2;-length1 / 2]]
+                # [[length1 / 2;-length1 / 2;-length1 / 2]]
+                # [[-length1 / 2;length1 / 2;-length1 / 2]]
+                # [[-length1 / 2;-length1 / 2;-length1 / 2]]
+                # [[length1 / 2;length1 / 2;length1 / 2]]
+                # [[length1 / 2;-length1 / 2;length1 / 2]]
+                # [[-length1 / 2;length1 / 2;length1 / 2]]
+                # [[-length1 / 2;-length1 / 2;length1 / 2]]
+            ]
+        elseif mode == :box 
+            corners = [
+                [[length1 / 2;length1 / 2;-length1 / 2]]
+                [[length1 / 2;-length1 / 2;-length1 / 2]]
+                [[-length1 / 2;length1 / 2;-length1 / 2]]
+                [[-length1 / 2;-length1 / 2;-length1 / 2]]
+                [[length1 / 2;length1 / 2;length1 / 2]]
+                [[length1 / 2;-length1 / 2;length1 / 2]]
+                [[-length1 / 2;length1 / 2;length1 / 2]]
+                [[-length1 / 2;-length1 / 2;length1 / 2]]
+            ]
+        else 
+            @error "incorrect mode specified, try :particle or :box" 
+        end
         n = length(corners)
         normal = [[0;0;1.0] for i = 1:n]
         cf = cf * ones(n)

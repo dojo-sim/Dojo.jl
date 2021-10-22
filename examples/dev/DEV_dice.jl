@@ -22,30 +22,27 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
-mech = getmechanism(:dice, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, conetype = :soc)
+mech = getmechanism(:dice, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, mode=:box, conetype = :soc)
 
 Random.seed!(100)
 ω = 0.0 * (rand(3) .- 0.5) * 1
 x = [0, 0, 1.0]
 v = 0.0 * [1, 0.3, 0.2]
 initialize!(mech, :dice, x = x, v = v, ω = ω)
-storage = simulate!(mech, 0.01, record = true, solver = :mehrotra!)
+storage = simulate!(mech, 1.0, record = true, solver = :mehrotra!)
 
 ################################################################################
 # Differentiation
 ################################################################################
 
-include(joinpath(module_dir(), "examples", "dev", "diff_tools_control_contact.jl"))
+include(joinpath(module_dir(), "examples", "dev", "diff_tools.jl"))
 # Set data
-Nb = length(mech.bodies)
-# Random.seed!(10)
-# ndata = datadim(mech, quat = true)
-# data = rand(ndata)*0.05
 data = getdata(mech)
 setdata!(mech, data)
-mehrotra!(mech, opts = InteriorPointOptions(rtol = 1e-6, btol = 1e-1, undercut=1.2, verbose=true))
 sol = getsolution(mech)
+Nb = length(collect(mech.bodies))
 attjac = attitudejacobian(data, Nb)
+
 
 # IFT
 setentries!(mech)

@@ -290,6 +290,10 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
         for childid in eqc.childids
             childind = childid - Ne
             col6 = offsetrange(childind,6)
+            @show col6 
+            @show n1 
+            @show n2 
+            @show size(∂Fτ∂ub(mechanism, eqc, getbody(mechanism, childid)))
             Bcontrol[col6,n1:n2] = ∂Fτ∂ub(mechanism, eqc, getbody(mechanism, childid))
         end
 
@@ -404,6 +408,7 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
             cont = ineqc.constraints[1]
             p = cont.p
             x2, q2 = posargsk(body.state)
+            @show typeof(ineqc)
             A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= dB(x2, [q2.w, q2.x, q2.y, q2.z], ineqc.γsol[2][2:4], p)
             A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= dN(x2, [q2.w, q2.x, q2.y, q2.z], ineqc.γsol[2][1:1], p)
         end
@@ -515,8 +520,7 @@ function getdim(ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½
 end
 
 function getcontroldim(eqc::EqualityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
-    (N == 0) && return 0
-
+    # (N == 0) && return 0
     cnt = 0
     for joint in eqc.constraints
         if !(typeof(joint) <: FJoint)
@@ -575,12 +579,8 @@ function setdata!(mechanism::Mechanism, data::AbstractVector)
     end
     for eqc in mechanism.eqconstraints
         dim = getcontroldim(eqc)
-        @show eqc
-        @show dim
         if dim > 0
             u = data[off .+ (1:dim)]; off += dim
-            @show eqc
-            @show u
             setForce!(mechanism, eqc, u)
         end
     end

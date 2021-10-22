@@ -95,28 +95,30 @@ function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:
 
     # transforms the velocities of the origin of the link into velocities along all 4 axes of the friction pyramid
     Bxmat = cont.Bx
-    # transforms the velocities of the contact point attached to the link into velocities along all 4 axes of the friction pyramid
-    Bqmat = Bq(Bxmat, cont.p, q)
+    Bqmat = Bxmat * ∂vrotate∂q(cont.p, q3) * LVᵀmat(q3)
     SVector{4,T}(
         cont.ainv3 * (x3 + vrotate(cont.p,q3) - cont.offset) - ineqc.ssol[2][1],
         cont.cf * ineqc.γsol[2][1] - ineqc.γsol[2][2],
-        (Bxmat*v + Bqmat*ω - ineqc.ssol[2][3:4])...)
+        (Bxmat * v + Bqmat * ω - ineqc.ssol[2][3:4])...)
 end
 
 
 ## Derivatives accounting for quaternion specialness
+## maps contact forces into the dynamics
 @inline function ∂g∂pos(cont::ContactBound, x::AbstractVector, q::UnitQuaternion)
     Bxmat = cont.Bx
     p = cont.p
     nx = size(x)[1]
     nq = nx
 
+    drot = ∂vrotate∂q(cont.p, q) * LVᵀmat(q)
+
     X = [cont.ainv3;
          szeros(1,nx);
          Bxmat]
-    Q = [(cont.ainv3 * (VLmat(q) * Lmat(UnitQuaternion(cont.p)) * Tmat() + VRᵀmat(q) * Rmat(UnitQuaternion(cont.p)))) * LVᵀmat(q)
+    Q = [cont.ainv3 * drot;
          szeros(1,nq);
-         Bxmat*VRᵀmat(q)*LVᵀmat(q)*skew(-cont.p)*2.0]
+         Bxmat * drot]
     return X, Q
 end
 
@@ -150,15 +152,15 @@ end
 ∂g∂ʳpos(bound::ContactBound, state::State) = ∂g∂ʳpos(bound, posargsk(state)...)
 
 # Derivatives accounting for quaternion specialness
-@inline function ∂g∂ʳpos(bound::ContactBound, x::AbstractVector, q::UnitQuaternion)
-    X, Q = ∂g∂pos(bound, x, q)
-    Q = Q * LVᵀmat(q)
-    return [X Q]
-end
+# @inline function ∂g∂ʳpos(bound::ContactBound, x::AbstractVector, q::UnitQuaternion)
+#     X, Q = ∂g∂pos(bound, x, q)
+#     Q = Q * LVᵀmat(q)
+#     return [X Q]
+# end
 
 @inline function ∂g∂ʳpos(bound::ContactBound, x::AbstractVector, q::UnitQuaternion)
     X, Q = ∂g∂pos(bound, x, q)
-    Q = Q# * LVᵀmat(q)
+    Q = Q# * LVᵀmat(q) # we account for quaternion specialness in ∂g∂pos
     return [X Q]
 end
 
@@ -170,17 +172,17 @@ end
     nx = size(x2)[1]
     nq = nx
 
-    # X, Q = ∂g∂pos(bound, x2, q2)
-    # V = X #* Δt
-    # Ω = Q #* Lmat(q1) * derivωbar(ω1, Δt) * Δt / 2
+    
     X = [cont.ainv3 * Δt;
          szeros(1,nx);
          Bxmat]
-    # Q = [(cont.ainv3 * (VLmat(q1) * Lmat(UnitQuaternion(cont.p)) * Tmat() + VRᵀmat(q1) * Rmat(UnitQuaternion(cont.p)))) * Lmat(q1) * derivωbar(ω1, Δt) * Δt / 2
+
+    B(q) = Bxmat * ∂vrotate∂q(cont.p, UnitQuaternion(q...)) * LVᵀmat(UnitQuaternion(q...))
+
     Q = [(cont.ainv3 * (VLmat(q2) * Lmat(UnitQuaternion(cont.p)) * Tmat() + VRᵀmat(q2) * Rmat(UnitQuaternion(cont.p)))) * Lmat(q1) * derivωbar(ω1, Δt) * Δt / 2
          szeros(1,nq);
-         Bxmat*VRᵀmat(q1)*LVᵀmat(q1)*skew(-cont.p)*2.0]
-         # Bxmat*VRᵀmat(q2)*LVᵀmat(q2)*skew(-cont.p)*2.0]
+         B(q2) + ForwardDiff.jacobian(q -> B(q) * ω1, [q2.w; q2.x; q2.y; q2.z]) * Lmat(q1) * derivωbar(ω1, Δt) * Δt / 2]
+
     V = X
     Ω = Q
     return [V Ω]
