@@ -46,7 +46,7 @@ h = 1.
 r = .05
 vert11 = [0; 0; h/2]
 vert12 = -vert11
-Nlink = 2
+Nlink = 10
 
 # Links
 origin = Origin{T}()
@@ -138,6 +138,19 @@ datamat[12:22, 24:26]
 -fd_datamat[12:22, 24:26]
 
 datamat
+
+norm((fd_datamat + datamat)[1:24, 1:24], Inf)
+norm((fd_datamat + datamat)[1:24, 25:26], Inf)
+(fd_datamat + datamat)[1:12, 25:26]
+(fd_datamat + datamat)[13:24, 25:26]
+fd_datamat[13:24, 25:26]
+datamat[13:24, 25:26]
+
+eqcids = getfield.(mech.eqconstraints, :id)
+Fz_, Fu_, G_ = data_lineardynamics(mech, eqcids)
+Fu_[1:13,:]
+Fu_[14:26, :]
+Fu_[Fz_indices(2), :]
 
 fd_solmat = finitediff_sol_matrix(mech, data, sol)
 @test norm(fd_solmat + solmat, Inf) < 1e-7

@@ -411,18 +411,20 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
         offc += 12
     end
 
-    offe = 0
-    offu = 0
-    for eqc in eqcs
-        ne = getdim(eqc)
-        nu = getcontroldim(eqc)
-        if nu > 0
-            # A[sum(eqcdims) + 1:end, 12Nb + offu .+ (1:nu)] = Fu[Fz_indices(Nb), offe .+ (1:nu)]
-            A[sum(eqcdims) .+ (1:6Nb), 12Nb + offu .+ (1:nu)] = Fu[Fz_indices(Nb), offe .+ (1:nu)]
-        end
-        offe += 6 - ne
-        offu += nu
-    end
+    # offe = 0
+    # offu = 0
+    # for eqc in eqcs
+    #     ne = getdim(eqc)
+    #     nu = getcontroldim(eqc)
+    #     if nu > 0
+    #         # A[sum(eqcdims) + 1:end, 12Nb + offu .+ (1:nu)] = Fu[Fz_indices(Nb), offe .+ (1:nu)]
+    #         A[sum(eqcdims) .+ (1:6Nb), 12Nb + offu .+ (1:nu)] = Fu[Fz_indices(Nb), offe .+ (1:nu)]
+    #     end
+    #     offe += 6 - ne
+    #     offu += nu
+    # end
+    nu = isempty(eqcs) ? 0 : sum(getcontroldim.(eqcs))
+    A[sum(eqcdims) .+ (1:6Nb), 12Nb .+ (1:nu)] = Fu[Fz_indices(Nb), :]
 
     offr = 0
     for ineqc in ineqcs
@@ -573,11 +575,11 @@ function setdata!(mechanism::Mechanism, data::AbstractVector)
     end
     for eqc in mechanism.eqconstraints
         dim = getcontroldim(eqc)
-        @show eqc 
+        @show eqc
         @show dim
         if dim > 0
             u = data[off .+ (1:dim)]; off += dim
-            @show eqc 
+            @show eqc
             @show u
             setForce!(mechanism, eqc, u)
         end
