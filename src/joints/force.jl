@@ -109,9 +109,9 @@ end
 end
 
 # Wrappers 2
-∂g∂ʳposa(joint::Force12, statea::State, stateb::State) = ∂g∂ʳposa(joint, posargsk(statea)..., posargsk(stateb)...)
-∂g∂ʳposb(joint::Force12, statea::State, stateb::State) = ∂g∂ʳposb(joint, posargsk(statea)..., posargsk(stateb)...)
-∂g∂ʳposb(joint::Force12, stateb::State) = ∂g∂ʳposb(joint, posargsk(stateb)...)
+∂g∂ʳposa(joint::Force12, statea::State, stateb::State, Δt) = ∂g∂ʳposa(joint, posargsk(statea)..., posargsk(stateb)...)
+∂g∂ʳposb(joint::Force12, statea::State, stateb::State, Δt) = ∂g∂ʳposb(joint, posargsk(statea)..., posargsk(stateb)...)
+∂g∂ʳposb(joint::Force12, stateb::State, Δt) = ∂g∂ʳposb(joint, posargsk(stateb)...)
 
 # Derivatives accounting for quaternion specialness
 # THIS IS USED TO INJECT THE SPRING-DAMPER FORCE INTO THE DYNAMICS, IT DOESN'T HAVE TO BE THE DERIVATIVE OF g WRT THE POS VARIABLES

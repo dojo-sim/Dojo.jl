@@ -13,23 +13,23 @@ Base.zero(joint::AbstractJoint{T,N}) where {T,N} = szeros(T, N, 6)
 
 ## Discrete-time position derivatives (for dynamics)
 # Wrappers 1
-@inline function ∂g∂ʳposa(joint::AbstractJoint, body1::Body, body2::Body, childid)
+@inline function ∂g∂ʳposa(joint::AbstractJoint, body1::Body, body2::Body, childid, Δt)
     if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳposa(joint, body1.state, body2.state)
+        return constraintmat(joint) * ∂g∂ʳposa(joint, body1.state, body2.state, Δt)
     else
         return zero(joint)
     end
 end
-@inline function ∂g∂ʳposb(joint::AbstractJoint, body1::Body, body2::Body, childid)
+@inline function ∂g∂ʳposb(joint::AbstractJoint, body1::Body, body2::Body, childid, Δt)
     if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳposb(joint, body1.state, body2.state)
+        return constraintmat(joint) * ∂g∂ʳposb(joint, body1.state, body2.state, Δt)
     else
         return zero(joint)
     end
 end
-@inline function ∂g∂ʳposb(joint::AbstractJoint, body1::Origin, body2::Body, childid)
+@inline function ∂g∂ʳposb(joint::AbstractJoint, body1::Origin, body2::Body, childid, Δt)
     if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳposb(joint, body2.state)
+        return constraintmat(joint) * ∂g∂ʳposb(joint, body2.state, Δt)
     else
         return zero(joint)
     end

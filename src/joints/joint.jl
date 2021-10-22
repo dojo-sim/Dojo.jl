@@ -22,15 +22,15 @@ Base.show(io::IO, joint::Joint) = summary(io, joint)
 ## Position level constraint wrappers
 @inline g(joint::Joint, body1::Body, body2::Body, Δt, λ::AbstractVector) = constraintmat(joint) * g(joint, body1.state, body2.state, Δt)
 @inline g(joint::Joint, body1::Origin, body2::Body, Δt, λ::AbstractVector) = constraintmat(joint) * g(joint, body2.state, Δt)
-@inline g(joint::Joint, body1::Body, body2::Body, λ::AbstractVector) = constraintmat(joint) * g(joint, body1.state, body2.state)
-@inline g(joint::Joint, body1::Origin, body2::Body, λ::AbstractVector) = constraintmat(joint) * g(joint, body2.state)
+# @inline g(joint::Joint, body1::Body, body2::Body, λ::AbstractVector) = constraintmat(joint) * g(joint, body1.state, body2.state)
+# @inline g(joint::Joint, body1::Origin, body2::Body, λ::AbstractVector) = constraintmat(joint) * g(joint, body2.state)
 
 ### Constraints and derivatives
 ## Discrete-time position wrappers (for dynamics)
 g(joint::Joint, statea::State, stateb::State, Δt) = g(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)...)
 g(joint::Joint, stateb::State, Δt) = g(joint, posargsnext(stateb, Δt)...)
-g(joint::Joint, statea::State, stateb::State) = g(joint, posargsc(statea)..., posargsc(stateb)...)
-g(joint::Joint, stateb::State) = g(joint, posargsc(stateb)...)
+# g(joint::Joint, statea::State, stateb::State) = g(joint, posargsc(statea)..., posargsc(stateb)...)
+# g(joint::Joint, stateb::State) = g(joint, posargsc(stateb)...)
 
 @inline function ∂g∂ʳself(joint::Joint{T,N}) where {T,N}
     return 1e-10 * sones(T,N)
@@ -43,32 +43,32 @@ end
 @inline ∂g∂posb(joint::Joint, body1::Body, body2::Body, Δt) = ∂g∂posb(joint, posargsnext(body1.state, Δt)..., posargsnext(body2.state, Δt)...) # the Δt factor comes from g(joint::FJoint, for the minus sign I don't know
 @inline ∂g∂posb(joint::Joint, body1::Origin, body2::Body, Δt) = ∂g∂posb(joint, posargsnext(body2.state, Δt)...) # the Δt factor comes from g(joint::FJoint, for the minus sign I don't know
 
-@inline function ∂g∂ʳposa(joint::Joint, body1::Body, body2::Body, childid)
+@inline function ∂g∂ʳposa(joint::Joint, body1::Body, body2::Body, childid, Δt)
     if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳposa(joint, body1.state, body2.state)
+        return constraintmat(joint) * ∂g∂ʳposa(joint, body1.state, body2.state, Δt)
     else
         return zero(joint)
     end
 end
-@inline function ∂g∂ʳposb(joint::Joint, body1::Body, body2::Body, childid)
+@inline function ∂g∂ʳposb(joint::Joint, body1::Body, body2::Body, childid, Δt)
     if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳposb(joint, body1.state, body2.state)
+        return constraintmat(joint) * ∂g∂ʳposb(joint, body1.state, body2.state, Δt)
     else
         return zero(joint)
     end
 end
-@inline function ∂g∂ʳposb(joint::Joint, body1::Origin, body2::Body, childid)
+@inline function ∂g∂ʳposb(joint::Joint, body1::Origin, body2::Body, childid, Δt)
     if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳposb(joint, body2.state)
+        return constraintmat(joint) * ∂g∂ʳposb(joint, body2.state, Δt)
     else
         return zero(joint)
     end
 end
 
 # Wrappers 2
-∂g∂ʳposa(joint::Joint, statea::State, stateb::State) = ∂g∂ʳposa(joint, posargsk(statea)..., posargsk(stateb)...)
-∂g∂ʳposb(joint::Joint, statea::State, stateb::State) = ∂g∂ʳposb(joint, posargsk(statea)..., posargsk(stateb)...)
-∂g∂ʳposb(joint::Joint, stateb::State) = ∂g∂ʳposb(joint, posargsk(stateb)...)
+∂g∂ʳposa(joint::Joint, statea::State, stateb::State, Δt) = ∂g∂ʳposa(joint, posargsk(statea)..., posargsk(stateb)...)
+∂g∂ʳposb(joint::Joint, statea::State, stateb::State, Δt) = ∂g∂ʳposb(joint, posargsk(statea)..., posargsk(stateb)...)
+∂g∂ʳposb(joint::Joint, stateb::State, Δt) = ∂g∂ʳposb(joint, posargsk(stateb)...)
 
 # Derivatives accounting for quaternion specialness
 @inline function ∂g∂ʳposa(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)

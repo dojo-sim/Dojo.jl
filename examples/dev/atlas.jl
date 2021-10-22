@@ -23,8 +23,6 @@ mech = getmechanism(:atlas, Δt = 0.01, g = -9.81, cf = 0.8, contact = true)
 initialize!(mech, :atlas, tran = [0,0,1.2], rot = [0.1,0,0])
 storage = simulate!(mech, 0.2, record = true, solver = :mehrotra!)
 
-mech.ineqconstraints
-
 # Set data
 Nb = length(mech.bodies)
 data = getdata(mech)

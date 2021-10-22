@@ -63,6 +63,24 @@ end
     return
 end
 
+# contribution of the inequality constraint (impact or friction) to the dynamics equation d = 0
+@inline function ∂constraintForceMapping!(mechanism, body::Body, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+    Δt = mechanism.Δt
+    x3, q3 = posargsnext(body.state, Δt)
+    x2, v2, q2, ω2 = fullargssol(body.state)
+
+    for i=1:Nc
+        bnd = ineqc.constraints[i]
+        if typeof(ineqc.constraints[i]) <: ContactBound
+            # @show "bound!"
+            M = [Δt * I zeros(3,3); zeros(4,3) Lmat(q2)*derivωbar(ω2, Δt)*Δt/2]
+            body.state.D -= _dN(x3, [q3.w; q3.x; q3.y; q3.z], ineqc.γsol[2][1:1], bnd.p) * M
+            body.state.D -= _dB(x3, [q3.w; q3.x; q3.y; q3.z], ineqc.γsol[2][2:4], bnd.p) * M
+        end
+    end
+    return
+end
+
 function g(mechanism, ineqc::InequalityConstraint)
     # this is the incomplete residual (we are missing -1 * slacks) of the equality constraint in the friction problem
     # specialized function in friction and beta_bounds
@@ -87,7 +105,7 @@ end
 end
 
 function ∂g∂ʳposa(mechanism, ineqc::InequalityConstraint, body::Body)
-    return ∂g∂ʳposa(ineqc.constraints[1], body, nothing)
+    return ∂g∂ʳposa(ineqc.constraints[1], body, nothing, mechanism.Δt)
 end
 # function ∂g∂ʳposb(mechanism, ineqc::InequalityConstraint, body::Body)
 #     return ∂g∂ʳposb(ineqc.constraints[1], body, nothing)

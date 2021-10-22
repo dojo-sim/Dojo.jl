@@ -206,6 +206,18 @@ end
     return
 end
 
+@inline function ∂constraintForceMapping!(mechanism, body::Body, eqc::EqualityConstraint)
+    # @show size(body.state.d)
+    # @show size(∂g∂ʳpos(mechanism, eqc, body))
+    # @show size(zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)))
+    # @show size(eqc.λsol[2])
+    # body.state.d -= zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
+    body.state.D
+    # eqc.isspring && (body.state.d -= springforce(mechanism, eqc, body))
+    # eqc.isdamper && (body.state.d -= damperforce(mechanism, eqc, body))
+    return
+end
+
 @inline function damperToD!(mechanism, body::Body, eqc::EqualityConstraint)
     eqc.isdamper && (body.state.D -= diagonal∂damper∂ʳvel(mechanism, eqc, body))
     return
@@ -231,11 +243,11 @@ end
 @inline ∂gab∂ʳba(mechanism, eqc::EqualityConstraint, body::Body) = ∂g∂ʳvel(mechanism, eqc, body), -∂g∂ʳpos(mechanism, eqc, body)'
 
 @generated function ∂g∂ʳposa(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(∂g∂ʳposa(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i])) for i = 1:Nc]
+    vec = [:(∂g∂ʳposa(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 @generated function ∂g∂ʳposb(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(∂g∂ʳposb(eqc.constraints[$i], getbody(mechanism, eqc.parentid), body, eqc.childids[$i])) for i = 1:Nc]
+    vec = [:(∂g∂ʳposb(eqc.constraints[$i], getbody(mechanism, eqc.parentid), body, eqc.childids[$i], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 

@@ -312,25 +312,28 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
     return Fz, Fu * Bcontrol, G
 end
 
-function dBqω(q, ω, p)
-    q₁, q₂, q₃, q₄ = q
-    ω₁, ω₂, ω₃ = ω
-    p₁, p₂, p₃ = p
-    dB = zeros(2, 3)
+function dBω(q, ω, p)
+    q₁, q₂, q₃, q₄ = q 
+    ω₁, ω₂, ω₃ = ω 
+    p₁, p₂, p₃ = p 
+    dB = zeros(2, 4)
 
-    dB[1, 1] = q₁*(ω₁*(4.0p₂*q₄ - (4.0p₃*q₃)) + ω₂*(4.0p₃*q₂ - (4.0p₁*q₄)) + ω₃*(4.0p₁*q₃ - (4.0p₂*q₂))) + q₄*(ω₁*(4.0p₂*q₁ - (4.0p₃*q₂)) + ω₂*(-4.0p₁*q₁ - (4.0p₃*q₃)) + ω₃*(4.0p₁*q₂ + 4.0p₂*q₃)) - (q₂*(ω₁*(4.0p₂*q₃ + 4.0p₃*q₄) + ω₂*(4.0p₃*q₁ - (4.0p₁*q₃)) + ω₃*(-4.0p₁*q₄ - (4.0p₂*q₁)))) - (q₃*(ω₁*(4.0p₂*q₂ + 4.0p₃*q₁) + ω₂*(-4.0p₁*q₂ - (4.0p₃*q₄)) + ω₃*(4.0p₂*q₄ - (4.0p₁*q₁))))
-    dB[2, 1] = q₁*(ω₁*(4.0p₃*q₂ - (4.0p₂*q₁)) + ω₂*(4.0p₁*q₁ + 4.0p₃*q₃) + ω₃*(-4.0p₁*q₂ - (4.0p₂*q₃))) + q₄*(ω₁*(4.0p₂*q₄ - (4.0p₃*q₃)) + ω₂*(4.0p₃*q₂ - (4.0p₁*q₄)) + ω₃*(4.0p₁*q₃ - (4.0p₂*q₂))) - (q₂*(ω₁*(-4.0p₂*q₂ - (4.0p₃*q₁)) + ω₂*(4.0p₁*q₂ + 4.0p₃*q₄) + ω₃*(4.0p₁*q₁ - (4.0p₂*q₄)))) - (q₃*(ω₁*(4.0p₂*q₃ + 4.0p₃*q₄) + ω₂*(4.0p₃*q₁ - (4.0p₁*q₃)) + ω₃*(-4.0p₁*q₄ - (4.0p₂*q₁))))
+    dB[1, 1] = ω₁*(4.0p₂*q₃ + 4.0p₃*q₄) + ω₂*(4.0p₃*q₁ - (4.0p₁*q₃)) + ω₃*(-4.0p₁*q₄ - (4.0p₂*q₁))
+    dB[2, 1] = ω₁*(-4.0p₂*q₂ - (4.0p₃*q₁)) + ω₂*(4.0p₁*q₂ + 4.0p₃*q₄) + ω₃*(4.0p₁*q₁ - (4.0p₂*q₄))
 
-    dB[1, 2] = q₁*(ω₁*(4.0p₂*q₁ - (4.0p₃*q₂)) + ω₂*(-4.0p₁*q₁ - (4.0p₃*q₃)) + ω₃*(4.0p₁*q₂ + 4.0p₂*q₃)) + q₂*(ω₁*(4.0p₂*q₂ + 4.0p₃*q₁) + ω₂*(-4.0p₁*q₂ - (4.0p₃*q₄)) + ω₃*(4.0p₂*q₄ - (4.0p₁*q₁))) - (q₃*(ω₁*(4.0p₂*q₃ + 4.0p₃*q₄) + ω₂*(4.0p₃*q₁ - (4.0p₁*q₃)) + ω₃*(-4.0p₁*q₄ - (4.0p₂*q₁)))) - (q₄*(ω₁*(4.0p₂*q₄ - (4.0p₃*q₃)) + ω₂*(4.0p₃*q₂ - (4.0p₁*q₄)) + ω₃*(4.0p₁*q₃ - (4.0p₂*q₂))))
-    dB[2, 2] = q₁*(ω₁*(4.0p₂*q₄ - (4.0p₃*q₃)) + ω₂*(4.0p₃*q₂ - (4.0p₁*q₄)) + ω₃*(4.0p₁*q₃ - (4.0p₂*q₂))) + q₂*(ω₁*(4.0p₂*q₃ + 4.0p₃*q₄) + ω₂*(4.0p₃*q₁ - (4.0p₁*q₃)) + ω₃*(-4.0p₁*q₄ - (4.0p₂*q₁))) - (q₃*(ω₁*(-4.0p₂*q₂ - (4.0p₃*q₁)) + ω₂*(4.0p₁*q₂ + 4.0p₃*q₄) + ω₃*(4.0p₁*q₁ - (4.0p₂*q₄)))) - (q₄*(ω₁*(4.0p₃*q₂ - (4.0p₂*q₁)) + ω₂*(4.0p₁*q₁ + 4.0p₃*q₃) + ω₃*(-4.0p₁*q₂ - (4.0p₂*q₃))))
+    dB[1, 2] = ω₁*(4.0p₂*q₄ - (4.0p₃*q₃)) + ω₂*(4.0p₃*q₂ - (4.0p₁*q₄)) + ω₃*(4.0p₁*q₃ - (4.0p₂*q₂))
+    dB[2, 2] = ω₁*(4.0p₃*q₂ - (4.0p₂*q₁)) + ω₂*(4.0p₁*q₁ + 4.0p₃*q₃) + ω₃*(-4.0p₁*q₂ - (4.0p₂*q₃))
 
-    dB[1, 3] = q₁*(ω₁*(4.0p₂*q₂ + 4.0p₃*q₁) + ω₂*(-4.0p₁*q₂ - (4.0p₃*q₄)) + ω₃*(4.0p₂*q₄ - (4.0p₁*q₁))) + q₃*(ω₁*(4.0p₂*q₄ - (4.0p₃*q₃)) + ω₂*(4.0p₃*q₂ - (4.0p₁*q₄)) + ω₃*(4.0p₁*q₃ - (4.0p₂*q₂))) - (q₂*(ω₁*(4.0p₂*q₁ - (4.0p₃*q₂)) + ω₂*(-4.0p₁*q₁ - (4.0p₃*q₃)) + ω₃*(4.0p₁*q₂ + 4.0p₂*q₃))) - (q₄*(ω₁*(4.0p₂*q₃ + 4.0p₃*q₄) + ω₂*(4.0p₃*q₁ - (4.0p₁*q₃)) + ω₃*(-4.0p₁*q₄ - (4.0p₂*q₁))))
-    dB[2, 3] = q₁*(ω₁*(4.0p₂*q₃ + 4.0p₃*q₄) + ω₂*(4.0p₃*q₁ - (4.0p₁*q₃)) + ω₃*(-4.0p₁*q₄ - (4.0p₂*q₁))) + q₃*(ω₁*(4.0p₃*q₂ - (4.0p₂*q₁)) + ω₂*(4.0p₁*q₁ + 4.0p₃*q₃) + ω₃*(-4.0p₁*q₂ - (4.0p₂*q₃))) - (q₂*(ω₁*(4.0p₂*q₄ - (4.0p₃*q₃)) + ω₂*(4.0p₃*q₂ - (4.0p₁*q₄)) + ω₃*(4.0p₁*q₃ - (4.0p₂*q₂)))) - (q₄*(ω₁*(-4.0p₂*q₂ - (4.0p₃*q₁)) + ω₂*(4.0p₁*q₂ + 4.0p₃*q₄) + ω₃*(4.0p₁*q₁ - (4.0p₂*q₄))))
+    dB[1, 3] = ω₁*(4.0p₂*q₁ - (4.0p₃*q₂)) + ω₂*(-4.0p₁*q₁ - (4.0p₃*q₃)) + ω₃*(4.0p₁*q₂ + 4.0p₂*q₃)
+    dB[2, 3] = ω₁*(4.0p₂*q₄ - (4.0p₃*q₃)) + ω₂*(4.0p₃*q₂ - (4.0p₁*q₄)) + ω₃*(4.0p₁*q₃ - (4.0p₂*q₂))
+
+    dB[1, 4] = ω₁*(4.0p₂*q₂ + 4.0p₃*q₁) + ω₂*(-4.0p₁*q₂ - (4.0p₃*q₄)) + ω₃*(4.0p₂*q₄ - (4.0p₁*q₁))
+    dB[2, 4] = ω₁*(4.0p₂*q₃ + 4.0p₃*q₄) + ω₂*(4.0p₃*q₁ - (4.0p₁*q₃)) + ω₃*(-4.0p₁*q₄ - (4.0p₂*q₁))
 
     return dB
 end
 
-function dB(x, q, b, p)
+function _dB(x, q, b, p)
     p₁, p₂, p₃ = p
     z₁, z₂, z₃ = x
     z₄, z₅, z₆, z₇ = q
@@ -352,10 +355,12 @@ function dB(x, q, b, p)
     dBb[6,6] = b₂*(4.0p₁*z₅ + 4.0p₂*z₆) + b₃*(4.0p₁*z₆ - (4.0p₂*z₅))
     dBb[6,7] = b₂*(4.0p₂*z₇ - (4.0p₁*z₄)) + b₃*(-4.0p₁*z₇ - (4.0p₂*z₄))
 
-    return dBb * [I zeros(3,3); zeros(4,3) G(q)]
+    return dBb 
 end
 
-function dN(x, q, γ, p)
+dB(x, q, b, p) = _dB(x, q, b, p) * [I zeros(3,3); zeros(4,3) G(q)]
+
+function _dN(x, q, γ, p)
     p₁, p₂, p₃ = p
     z₁, z₂, z₃ = x
     γ₁ = γ[1]
@@ -377,8 +382,10 @@ function dN(x, q, γ, p)
     dNγ[6,6] = γ₁*(4.0p₁*z₇ + 4.0p₂*z₄)
     dNγ[6,7] = γ₁*(4.0p₁*z₆ - (4.0p₂*z₅))
 
-    return dNγ * [I zeros(3,3); zeros(4,3) G(q)]
+    return dNγ
 end
+
+dN(x, q, γ, p) = _dN(x, q, γ, p) * [I zeros(3,3); zeros(4,3) G(q)]
 
 function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     mechanism = deepcopy(mechanism)
@@ -407,27 +414,19 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
         for ineqc in ineqcs
             cont = ineqc.constraints[1]
             p = cont.p
-            x2, q2 = posargsk(body.state)
+            Δt = mechanism.Δt
+            x3, q3 = posargsnext(body.state, Δt)
+            x2, v2, q2, ω2 = fullargssol(body.state)
             @show typeof(ineqc)
-            A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= dB(x2, [q2.w, q2.x, q2.y, q2.z], ineqc.γsol[2][2:4], p)
-            A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= dN(x2, [q2.w, q2.x, q2.y, q2.z], ineqc.γsol[2][1:1], p)
+            M = [I zeros(3,3); zeros(4,3) Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)]
+
+            A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dB(x3, [q3.w, q3.x, q3.y, q3.z], ineqc.γsol[2][2:4], p) * M
+            A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dN(x3, [q3.w, q3.x, q3.y, q3.z], ineqc.γsol[2][1:1], p) * M
         end
         offr += 6
         offc += 12
     end
 
-    # offe = 0
-    # offu = 0
-    # for eqc in eqcs
-    #     ne = getdim(eqc)
-    #     nu = getcontroldim(eqc)
-    #     if nu > 0
-    #         # A[sum(eqcdims) + 1:end, 12Nb + offu .+ (1:nu)] = Fu[Fz_indices(Nb), offe .+ (1:nu)]
-    #         A[sum(eqcdims) .+ (1:6Nb), 12Nb + offu .+ (1:nu)] = Fu[Fz_indices(Nb), offe .+ (1:nu)]
-    #     end
-    #     offe += 6 - ne
-    #     offu += nu
-    # end
     nu = isempty(eqcs) ? 0 : sum(getcontroldim.(eqcs))
     A[sum(eqcdims) .+ (1:6Nb), 12Nb .+ (1:nu)] = Fu[Fz_indices(Nb), :]
 
@@ -441,9 +440,9 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
         x2, q2 = posargsk(body.state)
         x3, q3 = posargsnext(body.state, Δt)
         ibody = findfirst(x -> x == body.id, mechanism.bodies.keys)
-        A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)] = cont.ainv3 # ∇x2ϕ 1x3
+        A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)] = cont.ainv3 
         A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (7:9)] = cont.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(cont.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(cont.p))) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)
-        A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (3:4), (ibody-1)*12 .+ (7:9)] = dBqω([q2.w, q2.x, q2.y, q2.z], ω2, cont.p) # ∇q2B 2x3
+        A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (3:4), (ibody-1)*12 .+ (7:9)] = dBω([q3.w, q3.x, q3.y, q3.z], ω2, cont.p) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2) # ∇q3B 2x3
         offr += getdim(ineqc)
     end
     return A

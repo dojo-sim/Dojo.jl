@@ -146,11 +146,11 @@ norm((fd_datamat + datamat)[1:24, 25:26], Inf)
 fd_datamat[13:24, 25:26]
 datamat[13:24, 25:26]
 
-eqcids = getfield.(mech.eqconstraints, :id)
-Fz_, Fu_, G_ = data_lineardynamics(mech, eqcids)
-Fu_[1:13,:]
-Fu_[14:26, :]
-Fu_[Fz_indices(2), :]
+# eqcids = getfield.(mech.eqconstraints, :id)
+# Fz_, Fu_, G_ = data_lineardynamics(mech, eqcids)
+# Fu_[1:13,:]
+# Fu_[14:26, :]
+# Fu_[Fz_indices(2), :]
 
 fd_solmat = finitediff_sol_matrix(mech, data, sol)
 @test norm(fd_solmat + solmat, Inf) < 1e-7

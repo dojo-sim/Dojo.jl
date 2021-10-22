@@ -113,9 +113,9 @@ end
 end
 
 # Wrappers 2
-∂g∂ʳposa(joint::Torque, statea::State, stateb::State) = ∂g∂ʳposa(joint, posargsk(statea)..., posargsk(stateb)...)
-∂g∂ʳposb(joint::Torque, statea::State, stateb::State) = ∂g∂ʳposb(joint, posargsk(statea)..., posargsk(stateb)...)
-∂g∂ʳposb(joint::Torque, stateb::State) = ∂g∂ʳposb(joint, posargsk(stateb)...)
+∂g∂ʳposa(joint::Torque, statea::State, stateb::State, Δt) = ∂g∂ʳposa(joint, posargsk(statea)..., posargsk(stateb)...)
+∂g∂ʳposb(joint::Torque, statea::State, stateb::State, Δt) = ∂g∂ʳposb(joint, posargsk(statea)..., posargsk(stateb)...)
+∂g∂ʳposb(joint::Torque, stateb::State, Δt) = ∂g∂ʳposb(joint, posargsk(stateb)...)
 
 # Derivatives accounting for quaternion specialness
 @inline function ∂g∂ʳposa(joint::Torque{T,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T,N}

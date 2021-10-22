@@ -25,7 +25,7 @@
     return state.d
 end
 
-@inline function ∂g∂ʳself(mechanism::Mechanism{T,Nn,Ne}, body::Body{T}) where {T,Nn,Ne}
+@inline function ∂g∂ʳself(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn,Ne,Nb}
     state = body.state
     Δt = mechanism.Δt
     J = body.J
@@ -39,6 +39,11 @@ end
     Z = szeros(T, 3, 3)
 
     state.D = [[dynT; Z] [Z; dynR]]
+
+    for connectionid in connections(mechanism.system, body.id)
+        Ne < connectionid <= Ne+Nb && continue # body
+        ∂constraintForceMapping!(mechanism, body, getcomponent(mechanism, connectionid))
+    end
 
     return state.D
 end

@@ -149,7 +149,7 @@ function neutral_vector(bound::ContactBound{T,N}) where {T,N}
     return [sones(T, 2); szeros(T, N½-2)]
 end
 
-∂g∂ʳpos(bound::ContactBound, state::State) = ∂g∂ʳpos(bound, posargsk(state)...)
+∂g∂ʳpos(bound::ContactBound, state::State, Δt) = ∂g∂ʳpos(bound, posargsnext(state, Δt)...)
 
 # Derivatives accounting for quaternion specialness
 # @inline function ∂g∂ʳpos(bound::ContactBound, x::AbstractVector, q::UnitQuaternion)
@@ -164,8 +164,8 @@ end
     return [X Q]
 end
 
-@inline function ∂g∂ʳvel(cont::ContactBound, x2::AbstractVector, q2::UnitQuaternion,
-    x1::AbstractVector, v1::AbstractVector, q1::UnitQuaternion, ω1::AbstractVector, Δt
+@inline function ∂g∂ʳvel(cont::ContactBound, x3::AbstractVector, q3::UnitQuaternion,
+    x2::AbstractVector, v2::AbstractVector, q2::UnitQuaternion, ω2::AbstractVector, Δt
     )
     Bxmat = cont.Bx
     p = cont.p
@@ -179,9 +179,9 @@ end
 
     B(q) = Bxmat * ∂vrotate∂q(cont.p, UnitQuaternion(q...)) * LVᵀmat(UnitQuaternion(q...))
 
-    Q = [(cont.ainv3 * (VLmat(q2) * Lmat(UnitQuaternion(cont.p)) * Tmat() + VRᵀmat(q2) * Rmat(UnitQuaternion(cont.p)))) * Lmat(q1) * derivωbar(ω1, Δt) * Δt / 2
+    Q = [(cont.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(cont.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(cont.p)))) * Lmat(q2) * derivωbar(ω2, Δt) * Δt / 2
          szeros(1,nq);
-         B(q2) + ForwardDiff.jacobian(q -> B(q) * ω1, [q2.w; q2.x; q2.y; q2.z]) * Lmat(q1) * derivωbar(ω1, Δt) * Δt / 2]
+         B(q3) + ForwardDiff.jacobian(q -> B(q) * ω2, [q3.w; q3.x; q3.y; q3.z]) * Lmat(q2) * derivωbar(ω2, Δt) * Δt / 2]
 
     V = X
     Ω = Q

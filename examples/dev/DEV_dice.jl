@@ -23,7 +23,6 @@ open(vis)
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 mech = getmechanism(:dice, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, mode=:box, conetype = :soc)
-
 Random.seed!(100)
 ω = 0.0 * (rand(3) .- 0.5) * 1
 x = [0, 0, 1.0]
@@ -42,7 +41,6 @@ setdata!(mech, data)
 sol = getsolution(mech)
 Nb = length(collect(mech.bodies))
 attjac = attitudejacobian(data, Nb)
-
 
 # IFT
 setentries!(mech)

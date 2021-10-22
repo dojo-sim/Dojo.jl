@@ -63,8 +63,6 @@ sol = getsolution(mech)
 Nb = length(collect(mech.bodies))
 attjac = attitudejacobian(data, Nb)
 
-
-setentries!(mech)
 # IFT
 setentries!(mech)
 datamat = full_data_matrix(deepcopy(mech))
