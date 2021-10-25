@@ -207,34 +207,10 @@ end
 end
 
 @inline function ∂constraintForceMapping!(mechanism, body::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
-    # @show size(body.state.d)
-    # @show size(∂g∂ʳpos(mechanism, eqc, body))
-    # @show size(zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)))
-    # @show size(eqc.λsol[2])
-    # body.state.d -= zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
-    # body.state.D
-    # eqc.isspring && (body.state.d -= springforce(mechanism, eqc, body))
-    # eqc.isdamper && (body.state.d -= damperforce(mechanism, eqc, body))
-    # Δt = mechanism.Δt
-    # x3, q3 = posargsnext(body.state, Δt)
-    # x2, v2, q2, ω2 = fullargssol(body.state)
-    #
-    # M = [Δt * I zeros(3,3); zeros(4,3) Lmat(q2)*derivωbar(ω2, Δt)*Δt/2]
-
     if body.id == eqc.parentid
         _dGa!(mechanism, body, eqc)
-        #
-        # for i in 1:length(eqc.childids)
-        #     body.state.D -= _dGa(mechanism, body, getbody(mechanism, eqc.childids[i]), eqc.constraints[i]) * M
-        # end
     elseif body.id ∈ eqc.childids
         _dGb!(mechanism, body, eqc)
-
-        # for i in 1:length(eqc.childids)
-        #     if i == body.id
-        #         body.state.D -= _dGb(mechanism, getbody(mechanism, eqc.parentid), body, eqc.constraints[i]) * M
-        #     end
-        # end
     else
         error()
     end
