@@ -12,14 +12,14 @@ using LightXML
 # using GraphBasedSystems: Entry
 using Parameters
 using SparseArrays
-using Symbolics
+# using Symbolics
 # using FiniteDiff
 
 using Plots
 using Random
 using MeshCat
 using GeometryBasics
-
+using LightGraphs
 using DocStringExtensions
 
 
@@ -92,6 +92,11 @@ include(joinpath("util", "util.jl"))
 include(joinpath("util", "custom_static.jl"))
 include(joinpath("util", "customdict.jl"))
 include(joinpath("util", "quaternion.jl"))
+
+include(joinpath(module_dir(), "src", "graph", "entry.jl"))
+include(joinpath(module_dir(), "src", "graph", "system.jl"))
+include(joinpath(module_dir(), "src", "graph", "setup_functions.jl"))
+include(joinpath(module_dir(), "src", "graph", "ldu.jl"))
 
 include(joinpath("optional_components", "shapes.jl"))
 include(joinpath("optional_components", "storage.jl"))

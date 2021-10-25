@@ -10,14 +10,14 @@ using LightXML
 # using GraphBasedSystems
 # using GraphBasedSystems: Entry
 using SparseArrays
-using Symbolics
+# using Symbolics
 # using FiniteDiff
 
 using Plots
 using Random
 using MeshCat
 using GeometryBasics
-
+using LightGraphs
 using DocStringExtensions
 
 export Origin,
@@ -87,6 +87,12 @@ include(joinpath(module_dir(), "src", "util", "custom_static.jl"))
 include(joinpath(module_dir(), "src", "util", "customdict.jl"))
 include(joinpath(module_dir(), "src", "util", "quaternion.jl"))
 
+include(joinpath(module_dir(), "src", "graph", "entry.jl"))
+include(joinpath(module_dir(), "src", "graph", "system.jl"))
+include(joinpath(module_dir(), "src", "graph", "setup_functions.jl"))
+include(joinpath(module_dir(), "src", "graph", "ldu.jl"))
+
+
 include(joinpath(module_dir(), "src", "optional_components", "shapes.jl"))
 include(joinpath(module_dir(), "src", "optional_components", "storage.jl"))
 
@@ -139,9 +145,3 @@ include(joinpath(module_dir(), "src", "joints", "force.jl"))
 include(joinpath(module_dir(), "src", "joints", "torque.jl"))
 include(joinpath(module_dir(), "src", "vis", "convertshape.jl"))
 include(joinpath(module_dir(), "src", "vis", "visualize.jl"))
-
-
-include(joinpath(module_dir(), "src", "graph", "entry.jl"))
-include(joinpath(module_dir(), "src", "graph", "system.jl"))
-include(joinpath(module_dir(), "src", "graph", "setup_functions.jl"))
-include(joinpath(module_dir(), "src", "graph", "ldu.jl"))

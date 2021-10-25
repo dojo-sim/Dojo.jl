@@ -206,17 +206,183 @@ end
     return
 end
 
-@inline function ∂constraintForceMapping!(mechanism, body::Body, eqc::EqualityConstraint)
+@inline function ∂constraintForceMapping!(mechanism, body::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
     # @show size(body.state.d)
     # @show size(∂g∂ʳpos(mechanism, eqc, body))
     # @show size(zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)))
     # @show size(eqc.λsol[2])
     # body.state.d -= zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
-    body.state.D
+    # body.state.D
     # eqc.isspring && (body.state.d -= springforce(mechanism, eqc, body))
     # eqc.isdamper && (body.state.d -= damperforce(mechanism, eqc, body))
+    # Δt = mechanism.Δt
+    # x3, q3 = posargsnext(body.state, Δt)
+    # x2, v2, q2, ω2 = fullargssol(body.state)
+    #
+    # M = [Δt * I zeros(3,3); zeros(4,3) Lmat(q2)*derivωbar(ω2, Δt)*Δt/2]
+
+    if body.id == eqc.parentid
+        _dGa!(mechanism, body, eqc)
+        #
+        # for i in 1:length(eqc.childids)
+        #     body.state.D -= _dGa(mechanism, body, getbody(mechanism, eqc.childids[i]), eqc.constraints[i]) * M
+        # end
+    elseif body.id ∈ eqc.childids
+        _dGb!(mechanism, body, eqc)
+
+        # for i in 1:length(eqc.childids)
+        #     if i == body.id
+        #         body.state.D -= _dGb(mechanism, getbody(mechanism, eqc.parentid), body, eqc.constraints[i]) * M
+        #     end
+        # end
+    else
+        error()
+    end
     return
 end
+
+function _dGa!(mechanism, pbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc} # 6 x 7
+    Δt = mechanism.Δt
+    x2, v2, q2, ω2 = fullargssol(pbody.state)
+    M = [Δt * I zeros(3,3); zeros(4,3) Lmat(q2)*derivωbar(ω2, Δt)*Δt/2]
+
+    off = 0
+    for i in 1:Nc
+        joint = eqc.constraints[i]
+        Nj = length(joint)
+        pbody.state.D -= _dGa(joint, pbody, getbody(mechanism, eqc.childids[i]), eqc.λsol[2][off .+ (1:Nj)], Δt) * M
+        off += Nj
+    end
+    return nothing
+end
+
+function _dGb!(mechanism, cbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc} # 6 x 7
+    Δt = mechanism.Δt
+    x2, v2, q2, ω2 = fullargssol(cbody.state)
+    M = [Δt * I zeros(3,3); zeros(4,3) Lmat(q2)*derivωbar(ω2, Δt)*Δt/2]
+
+    off = 0
+    for i in 1:Nc
+        if eqc.childids[i] == cbody.id
+            joint = eqc.constraints[i]
+            Nj = length(joint)
+            cbody.state.D -= _dGb(joint, getbody(mechanism, eqc.parentid), cbody, eqc.λsol[2][off .+ (1:Nj)], Δt) * M
+        end
+    end
+    return nothing
+end
+
+function _dGa(joint::Joint, pbody::Body, cbody::Body, λ, Δt)
+    xa, qa = posargsnext(pbody.state, Δt)
+    xb, qb = posargsnext(cbody.state, Δt)
+    _dGaa(joint, xa, qa, xb, qb, λ)
+end
+
+function _dGb(joint::Joint, pbody::Body, cbody::Body, λ, Δt)
+    xa, qa = posargsnext(pbody.state, Δt)
+    xb, qb = posargsnext(cbody.state, Δt)
+    _dGbb(joint, xa, qa, xb, qb, λ)
+end
+
+function _dGb(joint::Joint, pbody::Origin, cbody::Body, λ, Δt)
+    xb, qb = posargsnext(cbody.state, Δt)
+    _dGb(joint, xb, qb, λ)
+end
+
+#
+# eqc2.parentid
+# eqc2.constraints
+#
+#
+# eqc2.childids
+# #
+# function _dGa(mechanism, pbody::Body, cbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc} # 6 x 7
+#     Δt = mechanism.Δt
+#     dG = zeros(6,7)
+#
+#     off = 0
+#     for i = 1:Nc
+#         joint = eqc.constraints[i]
+#         Nj = length(joint)
+#         dG += _dG(joint, pbody, cbody, eqc.λsol[2][off .+ (1:Nj)], Δt) # 6 * 7 = ∂(6 x d * d)/∂(7)
+#         off += Nj
+#     end
+#     return dG
+# end
+
+function _dG(joint::AbstactJoint, pbody::Body, cbody::Body, λ::AbtractVector, Δt)
+    A = constraintmat(joint)
+    Aᵀ = zerodimstaticadjoint(A)
+    x3a, q3a = posargsnext(pbody.state, Δt)
+    x3b, q3b = posargsnext(cbody.state, Δt)
+    _dG(joint, x3a, q3a, x3b, q3b, Aᵀ * λ)
+    return dG
+end
+
+@inline function _dG(mechanism, bodya::Body, bodyb::Body)
+    body.id == constraint.parentid ? (return _dGaa(mechanism, constraint, body)) : (return _dGbb(mechanism, constraint, body))
+end
+
+
+
+using Symbolics
+
+@variables x3a[1:3], q3a[1:4], x3b[1:3], q3b[1:4], λ[1:3], qoff[1:4]
+
+function Gatλ_rot(x3a, q3a, x3b, q3b, qoff, λ)
+    T = eltype(x3a)
+    q3a_ = UnitQuaternion(q3a..., false)
+    q3b_ = UnitQuaternion(q3b..., false)
+    qoff_ = UnitQuaternion(qoff..., false)
+
+    X = szeros(T, 3, 3)
+    Q = VRᵀmat(qoff_) * Rmat(q3b_) * Tmat() * LVᵀmat(q3a_)
+    return [X'; Q']* λ
+end
+
+function Gbtλ_rot(x3a, q3a, x3b, q3b, qoff, λ)
+    T = eltype(x3a)
+    q3a_ = UnitQuaternion(q3a..., false)
+    q3b_ = UnitQuaternion(q3b..., false)
+    qoff_ = UnitQuaternion(qoff..., false)
+
+    X = szeros(T, 3, 3)
+    Q = VRᵀmat(qoff_) * Lᵀmat(q3a_) * LVᵀmat(q3b_)
+
+    return [X'; Q']* λ
+end
+
+@show jac = Symbolics.jacobian(Gbtλ_rot(x3a, q3a, x3b, q3b, qoff, λ), [x3a; q3a])
+for i = 4:6
+    for j = 1:7
+        # @show i j
+        println("dG[$i, $j] = ", jac[i,j])
+    end
+end
+
+x3a = rand(3)
+q3a = rand(4) #UnitQuaternion(rand(4)...)
+x3b = rand(3)
+q3b = rand(4) #UnitQuaternion(rand(4)...)
+qoff = rand(4) #UnitQuaternion(rand(4)...)
+λ = rand(3)
+
+Gbtλ_rot(x3a, q3a, x3b, q3b, qoff, λ)
+rot1.qoffset = UnitQuaternion(qoff..., false)
+fd = ForwardDiff.jacobian(vars -> Gbtλ_rot(vars[1:3], vars[4:7], x3b, q3b, qoff, λ), [x3a; q3a])
+sb = _dGba(rot1, x3a, UnitQuaternion(q3a..., false), x3b, UnitQuaternion(q3b..., false), λ)
+norm(fd - sb)
+
+fd
+
+sb
+tra = 2 .* ones(3, 7)
+rot = zeros(2, 7)
+tor = ones(1, 7)
+
+vv = [tra, rot, tor]
+vcat(vv...)
+∂gab∂ʳba
 
 @inline function damperToD!(mechanism, body::Body, eqc::EqualityConstraint)
     eqc.isdamper && (body.state.D -= diagonal∂damper∂ʳvel(mechanism, eqc, body))
@@ -241,6 +407,7 @@ end
 
 @inline ∂gab∂ʳba(mechanism, body::Body, eqc::EqualityConstraint) = -∂g∂ʳpos(mechanism, eqc, body)', ∂g∂ʳvel(mechanism, eqc, body)
 @inline ∂gab∂ʳba(mechanism, eqc::EqualityConstraint, body::Body) = ∂g∂ʳvel(mechanism, eqc, body), -∂g∂ʳpos(mechanism, eqc, body)'
+
 
 @generated function ∂g∂ʳposa(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     vec = [:(∂g∂ʳposa(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i], mechanism.Δt)) for i = 1:Nc]

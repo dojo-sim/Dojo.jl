@@ -1,5 +1,5 @@
 struct System{N}
-    matrix_entries::SparseMatrixCSC{GraphBasedSystems.Entry, Int64}
+    matrix_entries::SparseMatrixCSC{Entry, Int64}
     vector_entries::Vector{Entry}
     diagonal_inverses::Vector{Entry}
     acyclic_children::Vector{Vector{Int64}} # Contains direct children that are not part of a cycle

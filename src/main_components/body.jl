@@ -110,8 +110,9 @@ Base.zero(::Body{T}) where T = szeros(T,6,6)
 
 # @inline function ∂gab∂ʳba(mechanism, body1::Body, body2::Body)
 #     eqc = geteqconstraint(mechanism, parents(mechanism.system, body2.id)[1]) # TODO This only works for acyclic damped systems
-#     D = -offdiagonal∂damper∂ʳvel(mechanism, eqc, body1, body2)
-#     return D, D'
+#     Da = ∂g∂vela(mechanism, ...)
+#     Db = ∂g∂velb(mechanism, ...)
+#     return Da, ∂g∂velb
 # end
 
 # Derivatives for linearizations
@@ -142,7 +143,7 @@ function ∂F∂z(body::Body{T}, Δt) where T
     AvelR = [Z3 ω1func*Δt] # solving for impulses
 
 
-    return [[AposT;AvelT] Z6; 
+    return [[AposT;AvelT] Z6;
              Z76 [AposR;AvelR]]
 end
 

@@ -387,6 +387,64 @@ end
 
 dN(x, q, γ, p) = _dN(x, q, γ, p) * [I zeros(3,3); zeros(4,3) G(q)]
 
+function _dG(joint::Rotational{T,N}, x, q, γ, p) where {T,N}
+    p₁, p₂, p₃ = p
+    z₁, z₂, z₃ = x
+    γ₁ = γ[1]
+    z₄, z₅, z₆, z₇ = q
+    dGγ = zeros(N, 7)
+
+    dGγ[4,4] = γ₁*(4.0p₂*z₄ - (4.0p₃*z₅))
+    dGγ[4,5] = γ₁*(-4.0p₂*z₅ - (4.0p₃*z₄))
+    dGγ[4,6] = γ₁*(-4.0p₂*z₆ - (4.0p₃*z₇))
+    dGγ[4,7] = γ₁*(4.0p₂*z₇ - (4.0p₃*z₆))
+
+    dGγ[5,4] = γ₁*(-4.0p₁*z₄ - (4.0p₃*z₆))
+    dGγ[5,5] = γ₁*(4.0p₁*z₅ + 4.0p₃*z₇)
+    dGγ[5,6] = γ₁*(4.0p₁*z₆ - (4.0p₃*z₄))
+    dGγ[5,7] = γ₁*(4.0p₃*z₅ - (4.0p₁*z₇))
+
+    dGγ[6,4] = γ₁*(4.0p₁*z₅ + 4.0p₂*z₆)
+    dGγ[6,5] = γ₁*(4.0p₁*z₄ - (4.0p₂*z₇))
+    dGγ[6,6] = γ₁*(4.0p₁*z₇ + 4.0p₂*z₄)
+    dGγ[6,7] = γ₁*(4.0p₁*z₆ - (4.0p₂*z₅))
+
+    return dGγ
+end
+
+function _dG(joint::Translational{T,N}, x, q, γ, p) where {T,N}
+    p₁, p₂, p₃ = p
+    z₁, z₂, z₃ = x
+    γ₁ = γ[1]
+    z₄, z₅, z₆, z₇ = q
+    dGγ = zeros(N, 7)
+
+    dGγ[4,4] = γ₁*(4.0p₂*z₄ - (4.0p₃*z₅))
+    dGγ[4,5] = γ₁*(-4.0p₂*z₅ - (4.0p₃*z₄))
+    dGγ[4,6] = γ₁*(-4.0p₂*z₆ - (4.0p₃*z₇))
+    dGγ[4,7] = γ₁*(4.0p₂*z₇ - (4.0p₃*z₆))
+
+    dGγ[5,4] = γ₁*(-4.0p₁*z₄ - (4.0p₃*z₆))
+    dGγ[5,5] = γ₁*(4.0p₁*z₅ + 4.0p₃*z₇)
+    dGγ[5,6] = γ₁*(4.0p₁*z₆ - (4.0p₃*z₄))
+    dGγ[5,7] = γ₁*(4.0p₃*z₅ - (4.0p₁*z₇))
+
+    dGγ[6,4] = γ₁*(4.0p₁*z₅ + 4.0p₂*z₆)
+    dGγ[6,5] = γ₁*(4.0p₁*z₄ - (4.0p₂*z₇))
+    dGγ[6,6] = γ₁*(4.0p₁*z₇ + 4.0p₂*z₄)
+    dGγ[6,7] = γ₁*(4.0p₁*z₆ - (4.0p₂*z₅))
+
+    return dGγ
+end
+
+dG(joint::Joint, x, q, γ, p) = _dG(joint::Joint, x, q, γ, p) * [I zeros(3,3); zeros(4,3) G(q)]
+
+
+using Symbolics
+
+
+
+
 function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     mechanism = deepcopy(mechanism)
     system = mechanism.system

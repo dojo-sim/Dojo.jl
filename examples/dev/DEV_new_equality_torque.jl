@@ -184,17 +184,21 @@ begin
     eqc1 = collect(mech.eqconstraints)[1]
     eqc2 = collect(mech.eqconstraints)[2]
     tra1 = eqc1.constraints[1]
-    rot1 = eqc1.constraints[2]
-    torque1 = eqc1.constraints[3]
+    rot1 = eqc1.constraints[3]
+    torque1 = eqc1.constraints[2]
     tra2 = eqc2.constraints[1]
-    rot2 = eqc2.constraints[2]
-    torque2 = eqc2.constraints[3]
+    rot2 = eqc2.constraints[3]
+    torque2 = eqc2.constraints[2]
     A1 = constraintmat(torque1)
     A1ᵀ = zerodimstaticadjoint(A1)
     A2 = constraintmat(torque2)
     A2ᵀ = zerodimstaticadjoint(A2)
 end
-
+torque1
+tra1
+constraintmat(tra1)
+rot1
+zerodimstaticadjoint(constraintmat(rot1)) * srand(1)
 
 qa = UnitQuaternion(rand(4)...)
 ωa = rand(3)
@@ -248,3 +252,26 @@ torque1.qoffset
 torque2.qoffset
 
 A2ᵀ * A2
+
+#
+#
+# x3a = rand(3)
+# q3a = rand(4) #UnitQuaternion(rand(4)...)
+# x3b = rand(3)
+# q3b = rand(4) #UnitQuaternion(rand(4)...)
+# qoff = rand(4) #UnitQuaternion(rand(4)...)
+# λ = rand(3)
+#
+# Gtλ_rot(x3a, q3a, x3b, q3b, qoff, λ)
+# rot1.qoffset = UnitQuaternion(qoff..., false)
+# fd = ForwardDiff.jacobian(vars -> Gtλ_rot(vars[1:3], vars[4:7], x3b, q3b, qoff, λ), [x3a; q3a])
+# sb = _dG(rot1, x3a, UnitQuaternion(q3a..., false), x3b, UnitQuaternion(q3b..., false), λ)
+# norm(fd - sb)
+#
+#
+# tra = 2 .* ones(3, 7)
+# rot = zeros(2, 7)
+# tor = ones(1, 7)
+#
+# vv = [tra, rot, tor]
+# vcat(vv...)
