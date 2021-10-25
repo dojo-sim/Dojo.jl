@@ -8,18 +8,18 @@ using Rotations
 using Rotations: RotationError, pure_quaternion, params, lmult, rmult, tmat, vmat, hmat, skew
 using Colors: RGBA, RGB
 using LightXML
-using GraphBasedSystems
-using GraphBasedSystems: Entry
+# using GraphBasedSystems
+# using GraphBasedSystems: Entry
 using Parameters
 using SparseArrays
-using Symbolics
+# using Symbolics
 # using FiniteDiff
 
 using Plots
 using Random
 using MeshCat
 using GeometryBasics
-
+using LightGraphs
 using DocStringExtensions
 
 
@@ -93,6 +93,11 @@ include(joinpath("util", "custom_static.jl"))
 include(joinpath("util", "customdict.jl"))
 include(joinpath("util", "quaternion.jl"))
 
+include(joinpath(module_dir(), "src", "graph", "entry.jl"))
+include(joinpath(module_dir(), "src", "graph", "system.jl"))
+include(joinpath(module_dir(), "src", "graph", "setup_functions.jl"))
+include(joinpath(module_dir(), "src", "graph", "ldu.jl"))
+
 include(joinpath("optional_components", "shapes.jl"))
 include(joinpath("optional_components", "storage.jl"))
 
@@ -145,5 +150,10 @@ include(joinpath("joints", "force.jl"))
 include(joinpath("joints", "torque.jl"))
 include(joinpath("vis", "convertshape.jl"))
 include(joinpath("vis", "visualize.jl"))
+
+include(joinpath("graph", "entry.jl"))
+include(joinpath("graph", "system.jl"))
+include(joinpath("graph", "setup_functions.jl"))
+include(joinpath("graph", "ldu.jl"))
 
 end

@@ -71,7 +71,7 @@ storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!)
 
 # visualize(mech, storage, vis = vis)
 
-mech.eqconstraints[1].parentid
+mech.eqconstraints[1].constraints[1]
 ################################################################################
 # Differentiation
 ################################################################################

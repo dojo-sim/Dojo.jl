@@ -206,20 +206,67 @@ end
     return
 end
 
-@inline function ∂constraintForceMapping!(mechanism, body::Body, eqc::EqualityConstraint)
-    # @show size(body.state.d)
-    # @show size(∂g∂ʳpos(mechanism, eqc, body))
-    # @show size(zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)))
-    # @show size(eqc.λsol[2])
-    # body.state.d -= zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
-    body.state.D
-    # eqc.isspring && (body.state.d -= springforce(mechanism, eqc, body))
-    # eqc.isdamper && (body.state.d -= damperforce(mechanism, eqc, body))
+@inline function ∂constraintForceMapping!(mechanism, body::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
+    if body.id == eqc.parentid
+        _dGa!(mechanism, body, eqc)
+    elseif body.id ∈ eqc.childids
+        _dGb!(mechanism, body, eqc)
+    else
+        error()
+    end
     return
 end
 
-using BenchmarkTools
-@benchmark _dG($tra1, $x3a, UnitQuaternion($q3a..., false), $x3b, UnitQuaternion($q3b..., false), $λ1)
+function _dGa!(mechanism, pbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc} # 6 x 7
+    Δt = mechanism.Δt
+    x2, v2, q2, ω2 = fullargssol(pbody.state)
+    M = [Δt * I zeros(3,3); zeros(4,3) Lmat(q2)*derivωbar(ω2, Δt)*Δt/2]
+
+    off = 0
+    for i in 1:Nc
+        joint = eqc.constraints[i]
+        Aᵀ = zerodimstaticadjoint(constraintmat(joint))
+        Nj = length(joint)
+        pbody.state.D -= _dGa(joint, pbody, getbody(mechanism, eqc.childids[i]), Aᵀ * eqc.λsol[2][off .+ (1:Nj)], Δt) * M
+        off += Nj
+    end
+    return nothing
+end
+
+function _dGb!(mechanism, cbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc} # 6 x 7
+    Δt = mechanism.Δt
+    x2, v2, q2, ω2 = fullargssol(cbody.state)
+    M = [Δt * I zeros(3,3); zeros(4,3) Lmat(q2)*derivωbar(ω2, Δt)*Δt/2]
+
+    off = 0
+    for i in 1:Nc
+        if eqc.childids[i] == cbody.id
+            joint = eqc.constraints[i]
+            Aᵀ = zerodimstaticadjoint(constraintmat(joint))
+            Nj = length(joint)
+            cbody.state.D -= _dGb(joint, getbody(mechanism, eqc.parentid), cbody, Aᵀ * eqc.λsol[2][off .+ (1:Nj)], Δt) * M
+        end
+    end
+    return nothing
+end
+
+function _dGa(joint::Joint, pbody::Body, cbody::Body, λ, Δt)
+    xa, qa = posargsnext(pbody.state, Δt)
+    xb, qb = posargsnext(cbody.state, Δt)
+    _dGaa(joint, xa, qa, xb, qb, λ)
+end
+
+function _dGb(joint::Joint, pbody::Body, cbody::Body, λ, Δt)
+    xa, qa = posargsnext(pbody.state, Δt)
+    xb, qb = posargsnext(cbody.state, Δt)
+    _dGbb(joint, xa, qa, xb, qb, λ)
+end
+
+function _dGb(joint::Joint, pbody::Origin, cbody::Body, λ, Δt)
+    xb, qb = posargsnext(cbody.state, Δt)
+    _dGb(joint, xb, qb, λ)
+end
+
 
 @inline function damperToD!(mechanism, body::Body, eqc::EqualityConstraint)
     eqc.isdamper && (body.state.D -= diagonal∂damper∂ʳvel(mechanism, eqc, body))
@@ -244,6 +291,7 @@ end
 
 @inline ∂gab∂ʳba(mechanism, body::Body, eqc::EqualityConstraint) = -∂g∂ʳpos(mechanism, eqc, body)', ∂g∂ʳvel(mechanism, eqc, body)
 @inline ∂gab∂ʳba(mechanism, eqc::EqualityConstraint, body::Body) = ∂g∂ʳvel(mechanism, eqc, body), -∂g∂ʳpos(mechanism, eqc, body)'
+
 
 @generated function ∂g∂ʳposa(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     vec = [:(∂g∂ʳposa(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i], mechanism.Δt)) for i = 1:Nc]

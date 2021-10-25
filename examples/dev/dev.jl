@@ -240,3 +240,54 @@ end
 q2v = [q2.w, q2.x, q2.y, q2.z]
 fdjac(q -> Bv(UnitQuaternion(q, false), ω2), q2v) * G(q2v)
 dBqω(q2v, ω2, cont.p)
+
+
+
+
+
+function link_sizes(vertices::Vector{Int}, links::Vector{V}, vsizes::Vector{Int}) where {V}
+    lsizes = Vector{Vector{Int}}()
+    for l in links
+        s1 = vsizes[vertices[findfirst(x -> x == l[1], vertices)]]
+        s2 = vsizes[vertices[findfirst(x -> x == l[2], vertices)]]
+        push!(lsizes, [s1, s2])
+    end
+    return lsizes
+end
+
+function complete_matrix(vertices, links, vsizes, lsizes, Mvertices, Mlinks)
+    nv = length(vertices)
+    nl = length(links)
+    n = sum(vsizes)
+    M = zeros(n, n)
+
+    off = 0
+    for i = 1:nv
+        ni = vsizes[i]
+        M[off .+ (1:ni), off .+ (1:ni)] = Mvertices[i]
+        off += ni
+    end
+    off = 0
+    for i = 1:nl
+        ni = vsizes[i]
+        n1, n2 = lsizes[i]
+        @show n1, n2
+        M[off + ni .+ (1:n2), off .+ (1:n1)] = Mlinks[i][1]
+        M[off .+ (1:n1), off + ni .+ (1:n2)] = Mlinks[i][2]
+        off += ni
+    end
+    return M
+end
+
+
+
+vertices = [1, 2, 3, 4]
+links = [[1,2], [2,3], [3,4]]
+vsizes = [3, 5, 6, 2]
+lsizes = link_sizes(vertices, links, vsizes)
+Mvertices = [0.0*rand(s,s) for s in vsizes]
+Mlinks = [[rand(s[2], s[1]), rand(s[1], s[2])] for s in lsizes]
+M = complete_matrix(vertices, links, vsizes, lsizes, Mvertices, Mlinks)
+plot(Gray.(1e10 .* abs.(M)))
+
+Mlinks

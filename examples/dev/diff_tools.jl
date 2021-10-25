@@ -290,9 +290,9 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
         for childid in eqc.childids
             childind = childid - Ne
             col6 = offsetrange(childind,6)
-            @show col6 
-            @show n1 
-            @show n2 
+            @show col6
+            @show n1
+            @show n2
             @show size(∂Fτ∂ub(mechanism, eqc, getbody(mechanism, childid)))
             Bcontrol[col6,n1:n2] = ∂Fτ∂ub(mechanism, eqc, getbody(mechanism, childid))
         end
@@ -313,9 +313,9 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
 end
 
 function dBω(q, ω, p)
-    q₁, q₂, q₃, q₄ = q 
-    ω₁, ω₂, ω₃ = ω 
-    p₁, p₂, p₃ = p 
+    q₁, q₂, q₃, q₄ = q
+    ω₁, ω₂, ω₃ = ω
+    p₁, p₂, p₃ = p
     dB = zeros(2, 4)
 
     dB[1, 1] = ω₁*(4.0p₂*q₃ + 4.0p₃*q₄) + ω₂*(4.0p₃*q₁ - (4.0p₁*q₃)) + ω₃*(-4.0p₁*q₄ - (4.0p₂*q₁))
@@ -355,7 +355,7 @@ function _dB(x, q, b, p)
     dBb[6,6] = b₂*(4.0p₁*z₅ + 4.0p₂*z₆) + b₃*(4.0p₁*z₆ - (4.0p₂*z₅))
     dBb[6,7] = b₂*(4.0p₂*z₇ - (4.0p₁*z₄)) + b₃*(-4.0p₁*z₇ - (4.0p₂*z₄))
 
-    return dBb 
+    return dBb
 end
 
 dB(x, q, b, p) = _dB(x, q, b, p) * [I zeros(3,3); zeros(4,3) G(q)]
@@ -386,6 +386,64 @@ function _dN(x, q, γ, p)
 end
 
 dN(x, q, γ, p) = _dN(x, q, γ, p) * [I zeros(3,3); zeros(4,3) G(q)]
+
+function _dG(joint::Rotational{T,N}, x, q, γ, p) where {T,N}
+    p₁, p₂, p₃ = p
+    z₁, z₂, z₃ = x
+    γ₁ = γ[1]
+    z₄, z₅, z₆, z₇ = q
+    dGγ = zeros(N, 7)
+
+    dGγ[4,4] = γ₁*(4.0p₂*z₄ - (4.0p₃*z₅))
+    dGγ[4,5] = γ₁*(-4.0p₂*z₅ - (4.0p₃*z₄))
+    dGγ[4,6] = γ₁*(-4.0p₂*z₆ - (4.0p₃*z₇))
+    dGγ[4,7] = γ₁*(4.0p₂*z₇ - (4.0p₃*z₆))
+
+    dGγ[5,4] = γ₁*(-4.0p₁*z₄ - (4.0p₃*z₆))
+    dGγ[5,5] = γ₁*(4.0p₁*z₅ + 4.0p₃*z₇)
+    dGγ[5,6] = γ₁*(4.0p₁*z₆ - (4.0p₃*z₄))
+    dGγ[5,7] = γ₁*(4.0p₃*z₅ - (4.0p₁*z₇))
+
+    dGγ[6,4] = γ₁*(4.0p₁*z₅ + 4.0p₂*z₆)
+    dGγ[6,5] = γ₁*(4.0p₁*z₄ - (4.0p₂*z₇))
+    dGγ[6,6] = γ₁*(4.0p₁*z₇ + 4.0p₂*z₄)
+    dGγ[6,7] = γ₁*(4.0p₁*z₆ - (4.0p₂*z₅))
+
+    return dGγ
+end
+
+function _dG(joint::Translational{T,N}, x, q, γ, p) where {T,N}
+    p₁, p₂, p₃ = p
+    z₁, z₂, z₃ = x
+    γ₁ = γ[1]
+    z₄, z₅, z₆, z₇ = q
+    dGγ = zeros(N, 7)
+
+    dGγ[4,4] = γ₁*(4.0p₂*z₄ - (4.0p₃*z₅))
+    dGγ[4,5] = γ₁*(-4.0p₂*z₅ - (4.0p₃*z₄))
+    dGγ[4,6] = γ₁*(-4.0p₂*z₆ - (4.0p₃*z₇))
+    dGγ[4,7] = γ₁*(4.0p₂*z₇ - (4.0p₃*z₆))
+
+    dGγ[5,4] = γ₁*(-4.0p₁*z₄ - (4.0p₃*z₆))
+    dGγ[5,5] = γ₁*(4.0p₁*z₅ + 4.0p₃*z₇)
+    dGγ[5,6] = γ₁*(4.0p₁*z₆ - (4.0p₃*z₄))
+    dGγ[5,7] = γ₁*(4.0p₃*z₅ - (4.0p₁*z₇))
+
+    dGγ[6,4] = γ₁*(4.0p₁*z₅ + 4.0p₂*z₆)
+    dGγ[6,5] = γ₁*(4.0p₁*z₄ - (4.0p₂*z₇))
+    dGγ[6,6] = γ₁*(4.0p₁*z₇ + 4.0p₂*z₄)
+    dGγ[6,7] = γ₁*(4.0p₁*z₆ - (4.0p₂*z₅))
+
+    return dGγ
+end
+
+dG(joint::Joint, x, q, γ, p) = _dG(joint::Joint, x, q, γ, p) * [I zeros(3,3); zeros(4,3) G(q)]
+
+
+using Symbolics
+
+
+
 
 function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     mechanism = deepcopy(mechanism)
@@ -440,7 +498,7 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
         x2, q2 = posargsk(body.state)
         x3, q3 = posargsnext(body.state, Δt)
         ibody = findfirst(x -> x == body.id, mechanism.bodies.keys)
-        A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)] = cont.ainv3 
+        A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)] = cont.ainv3
         A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (7:9)] = cont.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(cont.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(cont.p))) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)
         A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (3:4), (ibody-1)*12 .+ (7:9)] = dBω([q3.w, q3.x, q3.y, q3.z], ω2, cont.p) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2) # ∇q3B 2x3
         offr += getdim(ineqc)
@@ -518,8 +576,8 @@ function getdim(ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½
     return N
 end
 
-function getcontroldim(eqc::EqualityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
-    # (N == 0) && return 0
+function getcontroldim(eqc::EqualityConstraint{T,N,Nc,Cs}; floatingbase::Bool = true) where {T,N,Nc,Cs}
+    !floatingbase && (N == 0) && return 0
     cnt = 0
     for joint in eqc.constraints
         if !(typeof(joint) <: FJoint)

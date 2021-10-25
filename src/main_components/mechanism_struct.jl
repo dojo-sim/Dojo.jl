@@ -23,7 +23,7 @@ mutable struct Mechanism{T,Nn,Ne,Nb,Nf,Ni} <: AbstractMechanism{T,Nn,Ne,Nb,Nf,Ni
 
     system::System{Nn}
     residual_entries::Vector{Entry}
-    matrix_entries::SparseMatrixCSC{GraphBasedSystems.Entry, Int64}
+    matrix_entries::SparseMatrixCSC{Entry, Int64}
     diagonal_inverses::Vector{Entry}
 
     # TODO remove once EqualityConstraint is homogenous

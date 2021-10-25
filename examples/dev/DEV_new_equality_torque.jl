@@ -57,37 +57,24 @@ spring0 = 1.0 * 1e1
 damper0 = 2.0 * 1e2
 spring1 = 3.0 * 1e1
 damper1 = 1.0 * 1e2
-jointb1 = EqualityConstraint(TorqueRevolute(origin, links[1], ex; spring=spring0, damper=damper0, p2 = vert11))
+# jointb1 = EqualityConstraint(TorqueRevolute(origin, links[1], ex; spring=spring0, damper=damper0, p2 = vert11))
+jointb1 = EqualityConstraint(Revolute(origin, links[1], ex; spring=spring0, damper=damper0, p2 = vert11))
 if Nlink > 1
     eqcs = [
         jointb1;
-        [EqualityConstraint(TorqueRevolute(links[i - 1], links[i], ex; spring=spring1, damper=damper1, p1=vert12, p2=vert11)) for i = 2:Nlink]
+        # [EqualityConstraint(TorqueRevolute(links[i - 1], links[i], ex; spring=spring1, damper=damper1, p1=vert12, p2=vert11)) for i = 2:Nlink]
+        [EqualityConstraint(Revolute(links[i - 1], links[i], ex; spring=spring1, damper=damper1, p1=vert12, p2=vert11)) for i = 2:Nlink]
         ]
 else
     eqcs = [jointb1]
 end
-# jointb1 = EqualityConstraint(Revolute(origin, links[1], ex; spring=spring0, damper=damper0, p2 = vert11))
-# if Nlink > 1
-#     eqcs = [
-#         jointb1;
-#         [EqualityConstraint(Revolute(links[i - 1], links[i], ex; spring=spring1, damper=damper1, p1=vert12, p2=vert11)) for i = 2:Nlink]
-#         ]
-# else
-#     eqcs = [jointb1]
-# end
+
 mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.01)
 
 initialize!(mech, :npendulum)
 storage = simulate!(mech, 1.0, record = true, solver = :mehrotra!)
 
-# # visualize(mech, storage, vis = vis)
-# tor = jointb1.constraints[3]
-# qb = mech.bodies[2].state.qc
-# ωb = mech.bodies[2].state.ωc
-# Δt = mech.Δt
-# fg = q -> ∂g∂posb(tor, UnitQuaternion(q...), ωb, Δt)[2] * LVᵀmat(UnitQuaternion(q...))
-# fg(qb)
-# ForwardDiff.jacobian(fg, [qb.w; qb.x; qb.y; qb.z])
+visualize(mech, storage, vis = vis)
 
 ################################################################################
 # Differentiation
@@ -191,17 +178,21 @@ begin
     eqc1 = collect(mech.eqconstraints)[1]
     eqc2 = collect(mech.eqconstraints)[2]
     tra1 = eqc1.constraints[1]
-    rot1 = eqc1.constraints[2]
-    torque1 = eqc1.constraints[3]
+    rot1 = eqc1.constraints[3]
+    torque1 = eqc1.constraints[2]
     tra2 = eqc2.constraints[1]
-    rot2 = eqc2.constraints[2]
-    torque2 = eqc2.constraints[3]
+    rot2 = eqc2.constraints[3]
+    torque2 = eqc2.constraints[2]
     A1 = constraintmat(torque1)
     A1ᵀ = zerodimstaticadjoint(A1)
     A2 = constraintmat(torque2)
     A2ᵀ = zerodimstaticadjoint(A2)
 end
-
+torque1
+tra1
+constraintmat(tra1)
+rot1
+zerodimstaticadjoint(constraintmat(rot1)) * srand(1)
 
 qa = UnitQuaternion(rand(4)...)
 ωa = rand(3)
@@ -255,3 +246,125 @@ torque1.qoffset
 torque2.qoffset
 
 A2ᵀ * A2
+
+#
+#
+# x3a = rand(3)
+# q3a = rand(4) #UnitQuaternion(rand(4)...)
+# x3b = rand(3)
+# q3b = rand(4) #UnitQuaternion(rand(4)...)
+# qoff = rand(4) #UnitQuaternion(rand(4)...)
+# λ = rand(3)
+#
+# Gtλ_rot(x3a, q3a, x3b, q3b, qoff, λ)
+# rot1.qoffset = UnitQuaternion(qoff..., false)
+# fd = ForwardDiff.jacobian(vars -> Gtλ_rot(vars[1:3], vars[4:7], x3b, q3b, qoff, λ), [x3a; q3a])
+# sb = _dG(rot1, x3a, UnitQuaternion(q3a..., false), x3b, UnitQuaternion(q3b..., false), λ)
+# norm(fd - sb)
+#
+#
+# tra = 2 .* ones(3, 7)
+# rot = zeros(2, 7)
+# tor = ones(1, 7)
+#
+# vv = [tra, rot, tor]
+# vcat(vv...)
+
+
+
+
+
+#
+# eqc2.parentid
+# eqc2.constraints
+#
+#
+# eqc2.childids
+# #
+# function _dGa(mechanism, pbody::Body, cbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc} # 6 x 7
+#     Δt = mechanism.Δt
+#     dG = zeros(6,7)
+#
+#     off = 0
+#     for i = 1:Nc
+#         joint = eqc.constraints[i]
+#         Nj = length(joint)
+#         dG += _dG(joint, pbody, cbody, eqc.λsol[2][off .+ (1:Nj)], Δt) # 6 * 7 = ∂(6 x d * d)/∂(7)
+#         off += Nj
+#     end
+#     return dG
+# end
+#
+# function _dG(joint::AbstactJoint, pbody::Body, cbody::Body, λ::AbtractVector, Δt)
+#     A = constraintmat(joint)
+#     Aᵀ = zerodimstaticadjoint(A)
+#     x3a, q3a = posargsnext(pbody.state, Δt)
+#     x3b, q3b = posargsnext(cbody.state, Δt)
+#     _dG(joint, x3a, q3a, x3b, q3b, Aᵀ * λ)
+#     return dG
+# end
+#
+# @inline function _dG(mechanism, bodya::Body, bodyb::Body)
+#     body.id == constraint.parentid ? (return _dGaa(mechanism, constraint, body)) : (return _dGbb(mechanism, constraint, body))
+# end
+#
+
+#
+# using Symbolics
+#
+# @variables x3a[1:3], q3a[1:4], x3b[1:3], q3b[1:4], λ[1:3], qoff[1:4]
+#
+# function Gatλ_rot(x3a, q3a, x3b, q3b, qoff, λ)
+#     T = eltype(x3a)
+#     q3a_ = UnitQuaternion(q3a..., false)
+#     q3b_ = UnitQuaternion(q3b..., false)
+#     qoff_ = UnitQuaternion(qoff..., false)
+#
+#     X = szeros(T, 3, 3)
+#     Q = VRᵀmat(qoff_) * Rmat(q3b_) * Tmat() * LVᵀmat(q3a_)
+#     return [X'; Q']* λ
+# end
+#
+# function Gbtλ_rot(x3a, q3a, x3b, q3b, qoff, λ)
+#     T = eltype(x3a)
+#     q3a_ = UnitQuaternion(q3a..., false)
+#     q3b_ = UnitQuaternion(q3b..., false)
+#     qoff_ = UnitQuaternion(qoff..., false)
+#
+#     X = szeros(T, 3, 3)
+#     Q = VRᵀmat(qoff_) * Lᵀmat(q3a_) * LVᵀmat(q3b_)
+#
+#     return [X'; Q']* λ
+# end
+#
+# @show jac = Symbolics.jacobian(Gbtλ_rot(x3a, q3a, x3b, q3b, qoff, λ), [x3a; q3a])
+# for i = 4:6
+#     for j = 1:7
+#         # @show i j
+#         println("dG[$i, $j] = ", jac[i,j])
+#     end
+# end
+#
+# x3a = rand(3)
+# q3a = rand(4) #UnitQuaternion(rand(4)...)
+# x3b = rand(3)
+# q3b = rand(4) #UnitQuaternion(rand(4)...)
+# qoff = rand(4) #UnitQuaternion(rand(4)...)
+# λ = rand(3)
+#
+# Gbtλ_rot(x3a, q3a, x3b, q3b, qoff, λ)
+# rot1.qoffset = UnitQuaternion(qoff..., false)
+# fd = ForwardDiff.jacobian(vars -> Gbtλ_rot(vars[1:3], vars[4:7], x3b, q3b, qoff, λ), [x3a; q3a])
+# sb = _dGba(rot1, x3a, UnitQuaternion(q3a..., false), x3b, UnitQuaternion(q3b..., false), λ)
+# norm(fd - sb)
+#
+# fd
+#
+# sb
+# tra = 2 .* ones(3, 7)
+# rot = zeros(2, 7)
+# tor = ones(1, 7)
+#
+# vv = [tra, rot, tor]
+# vcat(vv...)
+# ∂gab∂ʳba

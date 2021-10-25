@@ -88,9 +88,9 @@ function mehrotra!(mechanism::Mechanism;
 
 		pullresidual!(mechanism) # store the residual inside mechanism.residual_entries
 
-        GraphBasedSystems.ldu_factorization!(mechanism.system) # factorize system
+        ldu_factorization!(mechanism.system) # factorize system
         pullmatrix!(mechanism)
-        GraphBasedSystems.ldu_backsubstitution!(mechanism.system) # solve system
+        ldu_backsubstitution!(mechanism.system) # solve system
 
         feasibilityStepLength!(mechanism; τort = 0.95, τsoc = 0.95)
 		αaff = copy(mechanism.α)
@@ -108,7 +108,7 @@ function mehrotra!(mechanism::Mechanism;
 		pushresidual!(mechanism)
 
         pushmatrix!(mechanism) # restore matrix
-        GraphBasedSystems.ldu_backsubstitution!(mechanism.system) # solve system
+        ldu_backsubstitution!(mechanism.system) # solve system
 
 		# τ = max(0.95, 1 - max(rvio, bvio)^2)
 		τ = 0.95
