@@ -218,6 +218,9 @@ end
     return
 end
 
+using BenchmarkTools
+@benchmark _dG($tra1, $x3a, UnitQuaternion($q3a..., false), $x3b, UnitQuaternion($q3b..., false), $λ1)
+
 @inline function damperToD!(mechanism, body::Body, eqc::EqualityConstraint)
     eqc.isdamper && (body.state.D -= diagonal∂damper∂ʳvel(mechanism, eqc, body))
     return
