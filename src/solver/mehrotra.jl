@@ -29,7 +29,7 @@ function mehrotra!(mechanism::Mechanism;
             btol = 1e-6,
             rtol = 1e-6,
             undercut = Inf,
-			breg = 0.0, max_iter = 40, verbose = false),
+			breg = 0.0, max_iter = 40, verbose = true),
         ε = nothing, newtonIter = nothing, lineIter = nothing, warning::Bool = false)
 
 
