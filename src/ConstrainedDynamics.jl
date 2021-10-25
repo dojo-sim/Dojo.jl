@@ -8,8 +8,8 @@ using Rotations
 using Rotations: RotationError, pure_quaternion, params, lmult, rmult, tmat, vmat, hmat, skew
 using Colors: RGBA, RGB
 using LightXML
-using GraphBasedSystems
-using GraphBasedSystems: Entry
+# using GraphBasedSystems
+# using GraphBasedSystems: Entry
 using Parameters
 using SparseArrays
 using Symbolics
@@ -145,5 +145,10 @@ include(joinpath("joints", "force.jl"))
 include(joinpath("joints", "torque.jl"))
 include(joinpath("vis", "convertshape.jl"))
 include(joinpath("vis", "visualize.jl"))
+
+include(joinpath("graph", "entry.jl"))
+include(joinpath("graph", "system.jl"))
+include(joinpath("graph", "setup_functions.jl"))
+include(joinpath("graph", "ldu.jl"))
 
 end
