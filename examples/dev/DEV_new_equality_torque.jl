@@ -80,14 +80,7 @@ mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.01)
 initialize!(mech, :npendulum)
 storage = simulate!(mech, 1.0, record = true, solver = :mehrotra!)
 
-# # visualize(mech, storage, vis = vis)
-# tor = jointb1.constraints[3]
-# qb = mech.bodies[2].state.qc
-# ωb = mech.bodies[2].state.ωc
-# Δt = mech.Δt
-# fg = q -> ∂g∂posb(tor, UnitQuaternion(q...), ωb, Δt)[2] * LVᵀmat(UnitQuaternion(q...))
-# fg(qb)
-# ForwardDiff.jacobian(fg, [qb.w; qb.x; qb.y; qb.z])
+visualize(mech, storage, vis = vis)
 
 ################################################################################
 # Differentiation
