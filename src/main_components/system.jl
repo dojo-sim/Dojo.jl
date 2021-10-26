@@ -27,12 +27,22 @@ function adjacencyMatrix(eqcs::Vector{<:EqualityConstraint}, bodies::Vector{<:Bo
                 node2.id in node1.childids && (A[node1.id,node2.id] = 1)
             elseif typeof(node2) <: Union{AbstractConstraint, Friction}
                 node1.id == node2.parentid && (A[node1.id,node2.id] = 1)
+            elseif typeof(node1) <: Body && typeof(node2) <: Body 
+                for eqc in eqcs 
+                    if node1.id == eqc.parentid && node2.id ∈ eqc.childids 
+                        A[node1.id, node2.id] = 1
+                    end
+                    if node2.id == eqc.parentid && node1.id ∈ eqc.childids 
+                        A[node2.id, node1.id] = 1
+                    end
+                end
             end
         end
     end
 
     A = convert(Matrix{Int64}, A .| A')
 
+    @show A
     return A, dims
 end
 

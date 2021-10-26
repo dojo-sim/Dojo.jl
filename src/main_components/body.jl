@@ -108,7 +108,7 @@ Base.zero(::Body{T}) where T = szeros(T,6,6)
 @inline getM(body::Body{T}) where T = [[I*body.m;szeros(T,3,3)] [szeros(T,3,3);body.J]]
 
 
-@inline function ∂gab∂ʳba(mechanism, body1::Body, body2::Body)
+@inline function ∂gab∂ʳba(mechanism::Mechanism{T,Nn,Ne,Nb,Nf,Ni}, body1::Body, body2::Body) where {T,Nn,Ne,Nb,Nf,Ni}
     Δt = mechanism.Δt
     _, _, q1, ω1 = fullargssol(body1.state)
     _, _, q2, ω2 = fullargssol(body2.state)
@@ -118,8 +118,8 @@ Base.zero(::Body{T}) where T = szeros(T,6,6)
     x1, q1 = posargsnext(body1.state, Δt)
     x2, q2 = posargsnext(body2.state, Δt)
 
-    dGab = zeros(6,7)
-    dGba = zeros(6,7)
+    dGab = zeros(6,6)
+    dGba = zeros(6,6)
 
     for connectionid in connections(mechanism.system, body1.id)
         !(connectionid <= Ne) && continue # body
@@ -132,8 +132,8 @@ Base.zero(::Body{T}) where T = szeros(T,6,6)
                 Nj = length(joint)
                 if body2.id == eqc.childids[i]
                     Aᵀ = zerodimstaticadjoint(constraintmat(joint))
-                    dGab += _dGab(joint, x1, q1, x2, q2, Aᵀ * λ[off .+ (1:Nj)]) * M2
-                    dGba += _dGba(joint, x1, q1, x2, q2, Aᵀ * λ[off .+ (1:Nj)]) * M1
+                    dGab -= _dGab(joint, x1, q1, x2, q2, Aᵀ * eqc.λsol[2][off .+ (1:Nj)]) * M2
+                    dGba -= _dGba(joint, x1, q1, x2, q2, Aᵀ * eqc.λsol[2][off .+ (1:Nj)]) * M1
                 end
                 off += Nj
             end
@@ -143,15 +143,16 @@ Base.zero(::Body{T}) where T = szeros(T,6,6)
                 Nj = length(joint)
                 if body1.id == eqc.childids[i]
                     Aᵀ = zerodimstaticadjoint(constraintmat(joint))
-                    dGab += _dGab(joint, x2, q2, x1, q1, Aᵀ * λ[off .+ (1:Nj)]) * M1
-                    dGba += _dGba(joint, x2, q2, x1, q1, Aᵀ * λ[off .+ (1:Nj)]) * M2
+                    dGab -= _dGab(joint, x2, q2, x1, q1, Aᵀ * eqc.λsol[2][off .+ (1:Nj)]) * M1
+                    dGba -= _dGba(joint, x2, q2, x1, q1, Aᵀ * eqc.λsol[2][off .+ (1:Nj)]) * M2
                 end
                 off += Nj
             end
         else
-            error()
+            # error()
         end
     end
+    return dGab, dGba
 end
 
 # Derivatives for linearizations

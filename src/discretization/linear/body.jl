@@ -47,5 +47,3 @@ end
 
     return state.D
 end
-
-connections(mech.system, body1.id)

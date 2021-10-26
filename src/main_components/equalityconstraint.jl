@@ -250,22 +250,6 @@ function _dGb!(mechanism, cbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T
     return nothing
 end
 
-function _dGa(joint::Joint, pbody::Body, cbody::Body, λ, Δt)
-    xa, qa = posargsnext(pbody.state, Δt)
-    xb, qb = posargsnext(cbody.state, Δt)
-    _dGaa(joint, xa, qa, xb, qb, λ)
-end
-
-function _dGb(joint::Joint, pbody::Body, cbody::Body, λ, Δt)
-    xa, qa = posargsnext(pbody.state, Δt)
-    xb, qb = posargsnext(cbody.state, Δt)
-    _dGbb(joint, xa, qa, xb, qb, λ)
-end
-
-function _dGb(joint::Joint, pbody::Origin, cbody::Body, λ, Δt)
-    xb, qb = posargsnext(cbody.state, Δt)
-    _dGb(joint, xb, qb, λ)
-end
 
 
 @inline function damperToD!(mechanism, body::Body, eqc::EqualityConstraint)
