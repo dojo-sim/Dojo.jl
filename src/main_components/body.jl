@@ -112,8 +112,9 @@ Base.zero(::Body{T}) where T = szeros(T,6,6)
     Δt = mechanism.Δt
     _, _, q1, ω1 = fullargssol(body1.state)
     _, _, q2, ω2 = fullargssol(body2.state)
-    M1 = [Δt * I zeros(3,3); zeros(4,3) Lmat(q1)*derivωbar(ω1, Δt)*Δt/2]
-    M2 = [Δt * I zeros(3,3); zeros(4,3) Lmat(q2)*derivωbar(ω2, Δt)*Δt/2]
+    M1 = ∂integration(q1, ω1, Δt)
+    M2 = ∂integration(q2, ω2, Δt)
+
 
     x1, q1 = posargsnext(body1.state, Δt)
     x2, q2 = posargsnext(body2.state, Δt)
@@ -148,8 +149,6 @@ Base.zero(::Body{T}) where T = szeros(T,6,6)
                 end
                 off += Nj
             end
-        else
-            # error()
         end
     end
     return dGab, dGba

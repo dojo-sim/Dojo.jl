@@ -89,10 +89,13 @@ function controller!(mechanism, k)
 end
 
 # forcedstorage = simulate!(tmech, 2.5, controller!, record = true, solver = :mehrotra!)
-@elapsed forcedstorage = simulate!(tmech, 2.5, controller!, record = true, solver = :mehrotra!)
+# @elapsed forcedstorage = simulate!(tmech, 2.5, controller!, record = true, solver = :mehrotra!)
 # @elapsed forcedstorage = simulate!(mech, 1.5, controller!, record = true, solver = :mehrotra!)
-@profiler forcedstorage = simulate!(tmech, 0.5, controller!, record = true, solver = :mehrotra!)
-visualize(tmech, forcedstorage, vis = vis)
+# @profiler forcedstorage = simulate!(tmech, 0.5, controller!, record = true, solver = :mehrotra!)
+# visualize(tmech, forcedstorage, vis = vis)
+
+@elapsed forcedstorage = simulate!(mech, 0.5, controller!, record = true, solver = :mehrotra!, verbose = true)
+visualize(mech, forcedstorage, vis = vis)
 
 
 

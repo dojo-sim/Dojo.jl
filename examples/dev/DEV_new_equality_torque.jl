@@ -72,7 +72,7 @@ end
 mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.01)
 
 initialize!(mech, :npendulum)
-@elapsed storage = simulate!(mech, 0.3, record = true, solver = :mehrotra!, verbose = false)
+@elapsed storage = simulate!(mech, 0.3, record = true, solver = :mehrotra!, verbose = true)
 @profiler storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!, verbose = false)
 
 visualize(mech, storage, vis = vis)
@@ -374,3 +374,54 @@ A2ᵀ * A2
 # vv = [tra, rot, tor]
 # vcat(vv...)
 # ∂gab∂ʳba
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#
+#
+#
+#
+#
+#
+# using BenchmarkTools
+# function ∂integration(q2::UnitQuaternion{T}, ω2::SVector{3,T}, Δt::T) where {T}
+#     Δ = Δt * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
+#     X = hcat(Δ, szeros(T,3,3))
+#     Q = hcat(szeros(T,4,3), Lmat(q2)*derivωbar(ω2, Δt)*Δt/2)
+#     return svcat(X, Q)
+# end
+#
+# function NNN()
+#     return ∂integration(q2_, ω2_, Δt_)
+# end
+#
+# ω2_ = srand(3)
+# q2_ = UnitQuaternion(rand(4)...)
+# Δt_ = 0.1
+#
+# ∂integration(q2_, ω2_, Δt_)
+# NNN()
+# @benchmark ∂integration(q2_, ω2_, Δt_)
+# @benchmark NNN()
+#
+# aa = sones(3,3)
+# aa = SMatrix{}Diagonal(sones(3))
+# bb = szeros(4,3)
+# cc = szeros(3,4)
+# svcat(aa, bb)
+# hcat(aa, cc)
+# svcat(aa, bb)
+#
+# a = 10
+# a = 10

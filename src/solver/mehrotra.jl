@@ -64,7 +64,7 @@ function mehrotra!(mechanism::Mechanism;
     for n = Base.OneTo(opts.max_iter)
 
         if opts.verbose
-            setentries!(mechanism)
+            # @warn "useless"; setentries!(mechanism)
             ##################
 			fv = full_vector(mechanism.system)
 			Δvar = norm(fv, Inf)
@@ -258,25 +258,34 @@ end
 
 function pullresidual!(mechanism::Mechanism)
 	for i in eachindex(mechanism.residual_entries)
-		mechanism.residual_entries[i] = deepcopy(mechanism.system.vector_entries[i])
+		# mechanism.residual_entries[i] = deepcopy(mechanism.system.vector_entries[i])
+		# @warn "removed deepcopy"
+		mechanism.residual_entries[i].value = mechanism.system.vector_entries[i].value
 	end
 	return
 end
+mech.residual_entries[1].value
 
 function pushresidual!(mechanism::Mechanism)
 	for i in eachindex(mechanism.residual_entries)
-		mechanism.system.vector_entries[i] = deepcopy(mechanism.residual_entries[i])
+		# mechanism.system.vector_entries[i] = deepcopy(mechanism.residual_entries[i])
+		# @warn "removed deepcopy"
+		mechanism.system.vector_entries[i].value = mechanism.residual_entries[i].value
 	end
 	return
 end
 
 function pullmatrix!(mechanism::Mechanism)
-	mechanism.matrix_entries.nzval .= deepcopy(mechanism.system.matrix_entries.nzval) #TODO: make allocation free
+	# mechanism.matrix_entries.nzval .= deepcopy(mechanism.system.matrix_entries.nzval) #TODO: make allocation free
+	# @warn "removed deepcopy"
+	mechanism.matrix_entries.nzval .= mechanism.system.matrix_entries.nzval #TODO: make allocation free
 	return
 end
 
 function pushmatrix!(mechanism::Mechanism)
-	mechanism.system.matrix_entries.nzval .= deepcopy(mechanism.matrix_entries.nzval) #TODO: make allocation free
+	# mechanism.system.matrix_entries.nzval .= deepcopy(mechanism.matrix_entries.nzval) #TODO: make allocation free
+	# @warn "removed deepcopy"
+	mechanism.system.matrix_entries.nzval .= mechanism.matrix_entries.nzval #TODO: make allocation free
 	return
 end
 
