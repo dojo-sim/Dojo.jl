@@ -1,9 +1,9 @@
 function transform(x, q, shape)
-    scale_transform = LinearMap(diagm(shape.scale))
-    x_transform = Translation(x + vrotate(shape.xoffset, q))
-    q_transform = LinearMap(q * shape.qoffset)
+    scale_transform = MeshCat.LinearMap(diagm(shape.scale))
+    x_transform = MeshCat.Translation(x + vrotate(shape.xoffset, q))
+    q_transform = MeshCat.LinearMap(q * shape.qoffset)
 
-    return compose(x_transform, q_transform, scale_transform)
+    return MeshCat.compose(x_transform, q_transform, scale_transform)
 end
 
 MeshCat.js_scaling(s::AbstractVector) = s

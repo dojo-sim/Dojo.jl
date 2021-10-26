@@ -27,10 +27,14 @@ end
 function mehrotra!(mechanism::Mechanism;
 		verbose::Bool = true,
         opts = InteriorPointOptions(
-            btol = 1e-6,
+			btol = 1e-6,
+            # btol = 1e-2, # this is to showcase the smoothness
             rtol = 1e-6,
-            undercut = Inf,
-			breg = 0.0, max_iter = 40, verbose = verbose),
+			undercut = Inf,
+            # undercut = 4.0, # this is to showcase the smoothness
+			breg = 0.0,
+			max_iter = 40,
+			verbose = verbose),
         ε = nothing, newtonIter = nothing, lineIter = nothing, warning::Bool = false)
 
 
@@ -48,23 +52,21 @@ function mehrotra!(mechanism::Mechanism;
 	# 	body.state.ωsol[2] *= 0.0
 	# end
 
-    foreach(resetVars!, ineqcs)
+    foreach(resetVars!, ineqcs) # resets the values of s and γ to the neutral vector, this might be improved
     mechanism.μ = 0.0
 	μtarget = 0.0
 
-    # setentries!(mechanism) # compute the residual, maybe not useful
-	# @warn "removed init"
-	initial_state!.(ineqcs.values)
+	initial_state!.(ineqcs.values) # this makes sure we are far enough away from the complementarity boundary (tweaks s and γ) this is not really consistnt with resetVars! done just above
     setentries!(mechanism) # compute the residual
 
-    bvio = bilinear_violation(mechanism)
-    rvio = residual_violation(mechanism)
+    bvio = bilinear_violation(mechanism) # does not require to apply setentries!
+    rvio = residual_violation(mechanism) # does not require to apply setentries!
 
-	verbose && println("-----------------------------------------------------------------")
+	opts.verbose && println("-----------------------------------------------------------------")
     for n = Base.OneTo(opts.max_iter)
 
         if opts.verbose
-            setentries!(mechanism)
+            # @warn "useless"; setentries!(mechanism)
             ##################
 			fv = full_vector(mechanism.system)
 			Δvar = norm(fv, Inf)
@@ -86,14 +88,12 @@ function mehrotra!(mechanism::Mechanism;
         # reg_val = bvio < opts.breg ? bvio * γreg : 0.0 #useless for now
 
 		mechanism.μ = 0.0
-
 		pullresidual!(mechanism) # store the residual inside mechanism.residual_entries
+        ldu_factorization!(mechanism.system) # factorize system, modifies the matrix in place
+        pullmatrix!(mechanism) # store the factorized matrix inside mechanism.matrix_entries
+        ldu_backsubstitution!(mechanism.system) # solve system, modifies the vector in place
 
-        ldu_factorization!(mechanism.system) # factorize system
-        pullmatrix!(mechanism)
-        ldu_backsubstitution!(mechanism.system) # solve system
-
-        feasibilityStepLength!(mechanism; τort = 0.95, τsoc = 0.95)
+        feasibilityStepLength!(mechanism; τort = 0.95, τsoc = 0.95) # uses system.vector_entries which holds the search drection
 		αaff = copy(mechanism.α)
 		centering!(mechanism, mechanism.α)
 		σcentering = clamp(mechanism.νaff / (mechanism.ν + 1e-20), 0.0, 1.0)^3
@@ -101,20 +101,18 @@ function mehrotra!(mechanism::Mechanism;
 		# Compute corrector residual
 		μtarget = max(σcentering * mechanism.ν, opts.btol/opts.undercut)
 		mechanism.μ = μtarget
-
 		correction!(mechanism) # update the residual in mechanism.residual_entries
-		###############
 		mechanism.μ = 0.0
-		setentries!(mechanism) # to make sure that the Jacobian is the same as the first one
-		pushresidual!(mechanism)
 
-        pushmatrix!(mechanism) # restore matrix
+		# @warn "should be useless"
+		# @warn "useless"; setentries!(mechanism) # to make sure that the Jacobian is the same as the first one # SHOULD BE USELESS
+		pushresidual!(mechanism) # we push the residual + correction
+        pushmatrix!(mechanism) # restore the facorized matrix
         ldu_backsubstitution!(mechanism.system) # solve system
 
 		# τ = max(0.95, 1 - max(rvio, bvio)^2)
 		τ = 0.95
-		# @show "corrector"
-		feasibilityStepLength!(mechanism; τort = τ, τsoc = min(τ, 0.95))
+		feasibilityStepLength!(mechanism; τort = τ, τsoc = min(τ, 0.95)) # uses system.vector_entries which holds the corrected search drection
 		rvio, bvio = lineSearch!(mechanism, rvio, bvio, opts; warning = false)
 
         foreach(updatesolution!, bodies)
@@ -262,25 +260,33 @@ end
 
 function pullresidual!(mechanism::Mechanism)
 	for i in eachindex(mechanism.residual_entries)
-		mechanism.residual_entries[i] = deepcopy(mechanism.system.vector_entries[i])
+		# mechanism.residual_entries[i] = deepcopy(mechanism.system.vector_entries[i])
+		# @warn "removed deepcopy"
+		mechanism.residual_entries[i].value = mechanism.system.vector_entries[i].value
 	end
 	return
 end
 
 function pushresidual!(mechanism::Mechanism)
 	for i in eachindex(mechanism.residual_entries)
-		mechanism.system.vector_entries[i] = deepcopy(mechanism.residual_entries[i])
+		# mechanism.system.vector_entries[i] = deepcopy(mechanism.residual_entries[i])
+		# @warn "removed deepcopy"
+		mechanism.system.vector_entries[i].value = mechanism.residual_entries[i].value
 	end
 	return
 end
 
 function pullmatrix!(mechanism::Mechanism)
-	mechanism.matrix_entries.nzval .= deepcopy(mechanism.system.matrix_entries.nzval) #TODO: make allocation free
+	# mechanism.matrix_entries.nzval .= deepcopy(mechanism.system.matrix_entries.nzval) #TODO: make allocation free
+	# @warn "removed deepcopy"
+	mechanism.matrix_entries.nzval .= mechanism.system.matrix_entries.nzval #TODO: make allocation free
 	return
 end
 
 function pushmatrix!(mechanism::Mechanism)
-	mechanism.system.matrix_entries.nzval .= deepcopy(mechanism.matrix_entries.nzval) #TODO: make allocation free
+	# mechanism.system.matrix_entries.nzval .= deepcopy(mechanism.matrix_entries.nzval) #TODO: make allocation free
+	# @warn "removed deepcopy"
+	mechanism.system.matrix_entries.nzval .= mechanism.matrix_entries.nzval #TODO: make allocation free
 	return
 end
 

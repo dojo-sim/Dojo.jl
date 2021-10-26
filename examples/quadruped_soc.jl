@@ -17,7 +17,7 @@ Pkg.activate(module_dir())
 # using ConstrainedDynamicsVis
 using Plots
 using Random
-
+using MeshCat
 
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
@@ -54,6 +54,7 @@ begin
     impactids = getfield.(impactbounds, :id)
     conebounds = [InequalityConstraint((cb, getbody(mech, calves[i]).id, impactids[i])) for (i,cb) in enumerate(conebounds)]
 end
+mech
 
 Δt_ = 0.001
 # mech2 = Mechanism(origin, bodies, eqcs, ineqcs, frics, g = -9.81, Δt = Δt_)
@@ -130,7 +131,7 @@ end
 storage = simulate!(mech2, storage, controller!, record = true,
     debug=false, ε = 1e-3,
     solver = :mehrotra!)
-visualize(mech2, storage, showframes = false)
+visualize(mech2, storage, showframes = false, vis = vis)
 
 plot(hcat(Vector.(storage.x[1])...)')
 plot(hcat([[q.w, q.x, q.y, q.z] for q in storage.q[1]]...)')

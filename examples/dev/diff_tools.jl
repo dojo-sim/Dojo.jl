@@ -394,10 +394,6 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
         for childid in eqc.childids
             childind = childid - Ne
             col6 = offsetrange(childind,6)
-            @show col6
-            @show n1
-            @show n2
-            @show size(∂Fτ∂ub(mechanism, eqc, getbody(mechanism, childid)))
             Bcontrol[col6,n1:n2] = ∂Fτ∂ub(mechanism, eqc, getbody(mechanism, childid))
         end
 
@@ -573,7 +569,6 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
             Δt = mechanism.Δt
             x3, q3 = posargsnext(body.state, Δt)
             x2, v2, q2, ω2 = fullargssol(body.state)
-            @show typeof(ineqc)
             M = [I zeros(3,3); zeros(4,3) Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)]
 
             A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dB(x3, [q3.w, q3.x, q3.y, q3.z], ineqc.γsol[2][2:4], p) * M
@@ -840,34 +835,26 @@ function evaluate_residual!(mechanism::Mechanism, data::AbstractVector, sol::Abs
     return full_vector(system)
 end
 
-function finitediff_sensitivity(mechanism::Mechanism, data::AbstractVector; ϵr = 1e-8, ϵb=1.0e-8, δ = 1e-5)
-    # setdata!(mechanism, data)
-    # mehrotra!(mechanism, opts = InteriorPointOptions(rtol = ϵr, btol = ϵb, undercut=1.2, verbose=true))
-    # sol = getsolution(mechanism)
-
-    # return 0
+function finitediff_sensitivity(mechanism::Mechanism, data::AbstractVector; ϵr = 1e-8, ϵb=1.0e-8, δ = 1e-5, verbose = false)
     ndata = datadim(mechanism, quat = true)
     nsol = soldim(mechanism)
     jac = zeros(nsol, ndata)
 
     for i = 1:ndata
+        verbose && println("$i / $ndata")
         datap = deepcopy(data)
         datam = deepcopy(data)
         datap[i] += δ
         datam[i] -= δ
 
-        # # setsolution!(mechanism, ones(length(sol)))
-        # solp = evaluate_solution!(deepcopy(mechanism), deepcopy(datap), ϵr=ϵr, ϵb=ϵb)
-        # # setsolution!(mechanism, ones(length(sol)))
-        # solm = evaluate_solution!(deepcopy(mechanism), deepcopy(datam), ϵr=ϵr, ϵb=ϵb)
         mechanismp = deepcopy(mechanism)
         setdata!(mechanismp, deepcopy(datap))
-        mehrotra!(mechanismp, opts = InteriorPointOptions(rtol = ϵr, btol = ϵb, undercut=1.2, verbose=true))
+        mehrotra!(mechanismp, opts = InteriorPointOptions(rtol = ϵr, btol = ϵb, undercut = 1.2, verbose = false))
         solp = getsolution(mechanismp)
 
         mechanismm = deepcopy(mechanism)
         setdata!(mechanismm, deepcopy(datam))
-        mehrotra!(mechanismm, opts = InteriorPointOptions(rtol = ϵr, btol = ϵb, undercut=1.2, verbose=true))
+        mehrotra!(mechanismm, opts = InteriorPointOptions(rtol = ϵr, btol = ϵb, undercut = 1.2, verbose = false))
         solm = getsolution(mechanismm)
 
         jac[:,i] = (solp - solm) / (2δ)
@@ -876,7 +863,7 @@ function finitediff_sensitivity(mechanism::Mechanism, data::AbstractVector; ϵr 
 end
 
 function finitediff_data_matrix(mechanism::Mechanism, data::AbstractVector,
-        sol::AbstractVector; δ = 1e-8)
+        sol::AbstractVector; δ = 1e-8, verbose = false)
     nsol = soldim(mechanism)
     ndata = datadim(mechanism, quat = true)
     jac = zeros(nsol, ndata)
@@ -885,6 +872,7 @@ function finitediff_data_matrix(mechanism::Mechanism, data::AbstractVector,
     setsolution!(mechanism, deepcopy(sol))
 
     for i = 1:ndata
+        verbose && println("$i / $ndata")
         datap = deepcopy(data)
         datam = deepcopy(data)
         datap[i] += δ
@@ -897,7 +885,7 @@ function finitediff_data_matrix(mechanism::Mechanism, data::AbstractVector,
 end
 
 function finitediff_sol_matrix(mechanism::Mechanism, data::AbstractVector,
-        sol::AbstractVector; δ = 1e-8)
+        sol::AbstractVector; δ = 1e-8, verbose = false)
     nsol = soldim(mechanism)
     jac = zeros(nsol, nsol)
 
@@ -905,6 +893,7 @@ function finitediff_sol_matrix(mechanism::Mechanism, data::AbstractVector,
     setsolution!(mechanism, sol)
 
     for i = 1:nsol
+        verbose && println("$i / $nsol")
         solp = deepcopy(sol)
         solm = deepcopy(sol)
         solp[i] += δ

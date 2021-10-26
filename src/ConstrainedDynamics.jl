@@ -86,7 +86,19 @@ export Origin,
     getmechanism,
     initialize!,
     getdim,
-    getcontroldim
+    getcontroldim,
+
+    getmechanism,
+    initialize!,
+    getdata,
+    setdata!,
+    getsolution,
+    attitudejacobian,
+    finitediff_sol_matrix,
+    full_matrix,
+    full_data_matrix,
+    finitediff_data_matrix,
+    finitediff_sensitivity
 
 include(joinpath("util", "util.jl"))
 include(joinpath("util", "custom_static.jl"))

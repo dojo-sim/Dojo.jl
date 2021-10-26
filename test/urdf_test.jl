@@ -1,7 +1,8 @@
 using ConstrainedDynamics
 
-Mechanism("urdf_test.urdf", floating=false)
+path = "urdf_test.urdf"
+Mechanism(joinpath(@__DIR__, path), floating=false)
 @test true
 
-Mechanism("urdf_test.urdf", floating=true)
+Mechanism(joinpath(@__DIR__, path), floating=true)
 @test true

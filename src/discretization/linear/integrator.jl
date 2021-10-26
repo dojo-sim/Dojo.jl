@@ -47,7 +47,7 @@ end
     ωc = state.ωc
 
     state.xk[1] = xc + vc*Δt
-    state.qk[1] = qc * ωbar(ωc,Δt) * Δt / 2 
+    state.qk[1] = qc * ωbar(ωc,Δt) * Δt / 2
 
     state.Fk[1] = szeros(T,3)
     state.τk[1] = szeros(T,3)
@@ -107,4 +107,11 @@ end
     state.d = d
 
     return stateold
+end
+
+function ∂integration(q2::UnitQuaternion{T}, ω2::SVector{3,T}, Δt::T) where {T}
+    Δ = Δt * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
+    X = hcat(Δ, szeros(T,3,3))
+    Q = hcat(szeros(T,4,3), Lmat(q2)*derivωbar(ω2, Δt)*Δt/2)
+    return svcat(X, Q) # 7x6
 end

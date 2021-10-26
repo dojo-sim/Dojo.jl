@@ -219,8 +219,9 @@ end
 
 function _dGa!(mechanism, pbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc} # 6 x 7
     Δt = mechanism.Δt
-    x2, v2, q2, ω2 = fullargssol(pbody.state)
-    M = [Δt * I zeros(3,3); zeros(4,3) Lmat(q2)*derivωbar(ω2, Δt)*Δt/2]
+    _, _, q2, ω2 = fullargssol(pbody.state)
+    # M = [Δt * I(3) szeros(3,3); szeros(4,3) Lmat(q2)*derivωbar(ω2, Δt)*Δt/2]
+    M = ∂integration(q2, ω2, Δt)
 
     off = 0
     for i in 1:Nc
@@ -236,7 +237,8 @@ end
 function _dGb!(mechanism, cbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc} # 6 x 7
     Δt = mechanism.Δt
     x2, v2, q2, ω2 = fullargssol(cbody.state)
-    M = [Δt * I zeros(3,3); zeros(4,3) Lmat(q2)*derivωbar(ω2, Δt)*Δt/2]
+    # M = [Δt * I zeros(3,3); zeros(4,3) Lmat(q2)*derivωbar(ω2, Δt)*Δt/2]
+    M = ∂integration(q2, ω2, Δt)
 
     off = 0
     for i in 1:Nc
