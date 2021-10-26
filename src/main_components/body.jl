@@ -108,51 +108,6 @@ Base.zero(::Body{T}) where T = szeros(T,6,6)
 @inline getM(body::Body{T}) where T = [[I*body.m;szeros(T,3,3)] [szeros(T,3,3);body.J]]
 
 
-@inline function ∂gab∂ʳba(mechanism::Mechanism{T,Nn,Ne,Nb,Nf,Ni}, body1::Body, body2::Body) where {T,Nn,Ne,Nb,Nf,Ni}
-    Δt = mechanism.Δt
-    _, _, q1, ω1 = fullargssol(body1.state)
-    _, _, q2, ω2 = fullargssol(body2.state)
-    M1 = ∂integration(q1, ω1, Δt)
-    M2 = ∂integration(q2, ω2, Δt)
-
-
-    x1, q1 = posargsnext(body1.state, Δt)
-    x2, q2 = posargsnext(body2.state, Δt)
-
-    dGab = zeros(6,6)
-    dGba = zeros(6,6)
-
-    for connectionid in connections(mechanism.system, body1.id)
-        !(connectionid <= Ne) && continue # body
-        eqc = getcomponent(mechanism, connectionid)
-        Nc = length(eqc.childids)
-        off = 0
-        if body1.id == eqc.parentid
-            for i in 1:Nc
-                joint = eqc.constraints[i]
-                Nj = length(joint)
-                if body2.id == eqc.childids[i]
-                    Aᵀ = zerodimstaticadjoint(constraintmat(joint))
-                    dGab -= _dGab(joint, x1, q1, x2, q2, Aᵀ * eqc.λsol[2][off .+ (1:Nj)]) * M2
-                    dGba -= _dGba(joint, x1, q1, x2, q2, Aᵀ * eqc.λsol[2][off .+ (1:Nj)]) * M1
-                end
-                off += Nj
-            end
-        elseif body2.id == eqc.parentid
-            for i = 1:Nc
-                joint = eqc.constraints[i]
-                Nj = length(joint)
-                if body1.id == eqc.childids[i]
-                    Aᵀ = zerodimstaticadjoint(constraintmat(joint))
-                    dGab -= _dGab(joint, x2, q2, x1, q1, Aᵀ * eqc.λsol[2][off .+ (1:Nj)]) * M1
-                    dGba -= _dGba(joint, x2, q2, x1, q1, Aᵀ * eqc.λsol[2][off .+ (1:Nj)]) * M2
-                end
-                off += Nj
-            end
-        end
-    end
-    return dGab, dGba
-end
 
 # Derivatives for linearizations
 function ∂F∂z(body::Body{T}, Δt) where T

@@ -19,6 +19,65 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
+
+mech = getmechanism(:quadruped, Δt = 0.01, g = -9.81, cf = 0.8, contact = true)
+initialize!(mech, :quadruped, tran = [0,0,0.56], rot = [0.,0,0], initangle = 0.95)
+@elapsed storage = simulate!(mech, 0.5, record = true, solver = :mehrotra!, verbose = true)
+visualize(mech, storage, vis = vis)
+
+Δt_ = 0.001
+begin
+    N = 100
+    steps = Base.OneTo(N)
+    storage = Storage(steps,length(bodies))
+
+    traj21 = [initangle*(cos(i*0.001*2*pi)*0.1+0.9) for i=1:N]
+    traj21 = [[initangle for i=1:500];traj21]
+    traj21 = SA[traj21...]
+    traj31 = [-2*initangle-sin(i*0.001*2*pi)*0.1 for i=1:N]
+    traj31 = [[-2*initangle for i=1:500];traj31]
+    traj31 = SA[traj31...]
+
+    traj22 = [initangle*(cos(i*0.001*2*pi+pi)*0.1+0.9) for i=1:N]
+    traj22 = [[initangle*0.9 for i=1:500];traj22]
+    traj22 = SA[traj22...]
+    traj32 = [-2*initangle-sin(i*0.001*2*pi+pi)*0.1 for i=1:N]
+    traj32 = [[-2*initangle for i=1:500];traj32]
+    traj32 = SA[traj32...]
+
+
+
+    function singleleg(mechanism, leg, angles)
+        j1 = geteqconstraint(mechanism, leg*"_hip_joint")
+        j2 = geteqconstraint(mechanism, leg*"_thigh_joint")
+        j3 = geteqconstraint(mechanism, leg*"_calf_joint")
+
+        θ1 = minimalCoordinates(mechanism, j1)[1]
+        θ2 = minimalCoordinates(mechanism, j2)[1]
+        θ3 = minimalCoordinates(mechanism, j3)[1]
+        dθ1 = minimalVelocities(mechanism, j1)[1]
+        dθ2 = minimalVelocities(mechanism, j2)[1]
+        dθ3 = minimalVelocities(mechanism, j3)[1]
+
+        u1 = (100.0*(angles[1]-θ1) + 5.0*(0-dθ1)) * Δt_ #* 0.17
+        u2 = (80.0*(angles[2]-θ2) + 4.0*(0-dθ2)) * Δt_ #* 0.17
+        u3 = (60.0*(angles[3]-θ3) + 3.0*(0-dθ3)) * Δt_ #* 0.17
+
+        setForce!(mechanism, j1, SA[u1])
+        setForce!(mechanism, j2, SA[u2])
+        setForce!(mechanism, j3, SA[u3])
+    end
+
+    function controller!(mechanism, k)
+        singleleg(mechanism, "FR", SA[0.0;traj21[k];traj31[k]])
+        singleleg(mechanism, "FL", SA[0.0;traj22[k];traj32[k]])
+        singleleg(mechanism, "RR", SA[0.0;traj22[k];traj32[k]])
+        singleleg(mechanism, "RL", SA[0.0;traj21[k];traj31[k]])
+    end
+end
+
+
+
 # Build mechanism
 mech = getmechanism(:atlas, Δt = 0.01, g = -9.81, cf = 0.8, contact = true)
 initialize!(mech, :atlas, tran = [0,0,0.99], rot = [0.,0,0])
@@ -94,7 +153,7 @@ end
 # @profiler forcedstorage = simulate!(tmech, 0.5, controller!, record = true, solver = :mehrotra!)
 # visualize(tmech, forcedstorage, vis = vis)
 
-@elapsed forcedstorage = simulate!(mech, 0.4, controller!, record = true, solver = :mehrotra!, verbose = true)
+@elapsed forcedstorage = simulate!(mech, 0.5, controller!, record = true, solver = :mehrotra!, verbose = true)
 visualize(mech, forcedstorage, vis = vis)
 
 

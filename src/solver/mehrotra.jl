@@ -27,9 +27,11 @@ end
 function mehrotra!(mechanism::Mechanism;
 		verbose::Bool = true,
         opts = InteriorPointOptions(
-            btol = 1e-6,
+			btol = 1e-6,
+            # btol = 1e-2, # this is to showcase the smoothness
             rtol = 1e-6,
-            undercut = Inf,
+			undercut = Inf,
+            # undercut = 4.0, # this is to showcase the smoothness
 			breg = 0.0,
 			max_iter = 40,
 			verbose = verbose),
@@ -264,7 +266,6 @@ function pullresidual!(mechanism::Mechanism)
 	end
 	return
 end
-mech.residual_entries[1].value
 
 function pushresidual!(mechanism::Mechanism)
 	for i in eachindex(mechanism.residual_entries)

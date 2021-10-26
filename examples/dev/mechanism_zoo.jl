@@ -8,8 +8,8 @@ function getmechanism(model::Symbol; kwargs...)
 end
 
 function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = true) where {T}
-    # path = "examples/examples_files/atlas_simple.urdf"
-    path = "examples/examples_files/atlas_ones.urdf"
+    path = "examples/examples_files/atlas_simple.urdf"
+    # path = "examples/examples_files/atlas_ones.urdf"
     mech = Mechanism(joinpath(module_dir(), path), floating=true, g = g)
     if contact
         origin = Origin{T}()
@@ -39,7 +39,34 @@ function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
     return mech
 end
 
-function getdice(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, 
+function getquadruped(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = true) where {T}
+    path = "examples/examples_files/quadruped_simple.urdf"
+    mech = Mechanism(joinpath(module_dir(), path), floating = false, g = g)
+    if contact
+        origin = Origin{T}()
+        bodies = Vector{Body{T}}(collect(mech.bodies))
+        eqs = Vector{EqualityConstraint{T}}(collect(mech.eqconstraints))
+
+        # Foot contact
+        contact = [0.0;0;-0.1]
+        normal = [0;0;1.0]
+        cf = 0.2
+
+        contineqcs1 = contactconstraint(getbody(mech,"FR_calf"), normal, cf; p = contact)
+        contineqcs2 = contactconstraint(getbody(mech,"FL_calf"), normal, cf; p = contact)
+        contineqcs3 = contactconstraint(getbody(mech,"RR_calf"), normal, cf; p = contact)
+        contineqcs4 = contactconstraint(getbody(mech,"RL_calf"), normal, cf; p = contact)
+
+        # contineqcs1 = contactconstraint(getbody(mech, "l_foot"), normal, cf, p = contacts)
+        # contineqcs2 = contactconstraint(getbody(mech, "r_foot"), normal, cf, p = contacts)
+
+        setPosition!(mech, geteqconstraint(mech, "floating_base"), [0;0;1.2;0.1;0.;0.])
+        mech = Mechanism(origin, bodies, eqs, [contineqcs1; contineqcs2; contineqcs3; contineqcs4], g = g, Δt = Δt)
+    end
+    return mech
+end
+
+function getdice(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8,
         contact::Bool = true,
         conetype = :soc,
         mode=:particle)  where {T}
@@ -68,7 +95,7 @@ function getdice(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8,
                 # [[-length1 / 2;length1 / 2;length1 / 2]]
                 # [[-length1 / 2;-length1 / 2;length1 / 2]]
             ]
-        elseif mode == :box 
+        elseif mode == :box
             corners = [
                 [[length1 / 2;length1 / 2;-length1 / 2]]
                 [[length1 / 2;-length1 / 2;-length1 / 2]]
@@ -79,8 +106,8 @@ function getdice(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8,
                 [[-length1 / 2;length1 / 2;length1 / 2]]
                 [[-length1 / 2;-length1 / 2;length1 / 2]]
             ]
-        else 
-            @error "incorrect mode specified, try :particle or :box" 
+        else
+            @error "incorrect mode specified, try :particle or :box"
         end
         n = length(corners)
         normal = [[0;0;1.0] for i = 1:n]
@@ -269,6 +296,24 @@ function initializeatlas!(mechanism::Mechanism; tran::AbstractVector{T} = [0,0,1
     setPosition!(mechanism,
                  geteqconstraint(mechanism, "auto_generated_floating_joint"),
                  [tran; rot])
+end
+
+function initializequadruped!(mechanism::Mechanism; tran::AbstractVector{T} = [0,0,0.23],
+        rot::AbstractVector{T} = [0,0,0.0], initangle::T = 0.95) where {T}
+    setPosition!(mechanism,
+                 geteqconstraint(mechanism, "floating_base"),
+                 [tran; rot])
+    setPosition!(mechanism, geteqconstraint(mechanism, "FR_thigh_joint"), [initangle])
+    setPosition!(mechanism, geteqconstraint(mechanism, "FR_calf_joint"), [-2*initangle])
+
+    setPosition!(mechanism, geteqconstraint(mechanism, "FL_thigh_joint"), [initangle*0.9])
+    setPosition!(mechanism, geteqconstraint(mechanism, "FL_calf_joint"), [-2*initangle])
+
+    setPosition!(mechanism, geteqconstraint(mechanism, "RR_thigh_joint"), [initangle*0.9])
+    setPosition!(mechanism, geteqconstraint(mechanism, "RR_calf_joint"), [-2*initangle])
+
+    setPosition!(mechanism, geteqconstraint(mechanism, "RL_thigh_joint"), [initangle])
+    setPosition!(mechanism, geteqconstraint(mechanism, "RL_calf_joint"), [-2*initangle])
 end
 
 function initializedice!(mechanism::Mechanism; x::AbstractVector{T} = [0,0,1.],
