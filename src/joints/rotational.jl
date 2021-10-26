@@ -198,8 +198,8 @@ end
 ## Application of joint forces (for dynamics)
 @inline function applyFτ!(joint::Rotational{T}, statea::State, stateb::State, Δt::T, clear::Bool) where T
     τ = joint.Fτ
-    _, qa = posargsk(statea)
-    _, qb = posargsk(stateb)
+    _, qa = posargsnext(statea, Δt)
+    _, qb = posargsnext(stateb, Δt)
 
     τa = vrotate(-τ, qa) # in world coordinates
     τb = -τa # in world coordinates
@@ -214,7 +214,7 @@ end
 end
 @inline function applyFτ!(joint::Rotational{T}, stateb::State, Δt::T, clear::Bool) where T
     τ = joint.Fτ
-    _, qb =  (stateb)
+    _, qb = posargsnext(stateb, Δt)
 
     τa = -τ # in world coordinates
     τb = -τa # in world coordinates
@@ -228,24 +228,24 @@ end
 
 ## Forcing derivatives (for linearization)
 # Control derivatives
-@inline function ∂Fτ∂ua(joint::Rotational{T}, statea::State, stateb::State) where T
+@inline function ∂Fτ∂ua(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
     BFa = (szeros(T, 3, 3))
     Bτa = -I
 
     return [BFa; Bτa]
 end
-@inline function ∂Fτ∂ub(joint::Rotational{T}, statea::State, stateb::State) where T
-    _, qa = posargsk(statea)
-    _, qb = posargsk(stateb)
-    qbinvqa = qb\qa
+@inline function ∂Fτ∂ub(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
+    _, qa = posargsnext(statea, Δt)
+    _, qb = posargsnext(stateb, Δt)
+    qbinvqa = qb \ qa
 
     BFb = (szeros(T, 3, 3))
     Bτb = VLmat(qbinvqa) * RᵀVᵀmat(qbinvqa)
 
     return [BFb; Bτb]
 end
-@inline function ∂Fτ∂ub(joint::Rotational{T}, stateb::State) where T
-    _, qb = posargsk(stateb)
+@inline function ∂Fτ∂ub(joint::Rotational{T}, stateb::State, Δt::T) where T
+    _, qb = posargsnext(stateb, Δt)
 
     BFb = (szeros(T, 3, 3))
     Bτb = VLᵀmat(qb) * RVᵀmat(qb)
@@ -254,50 +254,50 @@ end
 end
 
 # Position derivatives
-@inline function ∂Fτ∂posa(joint::Rotational{T}, statea::State, stateb::State) where T
-    _, qa = posargsk(statea)
-    _, qb = posargsk(stateb)
+@inline function ∂Fτ∂posa(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
+    _, qa = posargsnext(statea, Δt)
+    _, qb = posargsnext(stateb, Δt)
     τ = joint.Fτ
 
     FaXa = szeros(T,3,3)
-    FaQa = szeros(T,3,3)
+    FaQa = szeros(T,3,4)
     τaXa = szeros(T,3,3)
-    τaQa = szeros(T,3,3)
+    τaQa = szeros(T,3,4)
     FbXa = szeros(T,3,3)
-    FbQa = szeros(T,3,3)
+    FbQa = szeros(T,3,4)
     τbXa = szeros(T,3,3)
-    τbQa = 2*VLᵀmat(qb)*Rmat(qb)*Rᵀmat(qa)*Rmat(UnitQuaternion(τ))*LVᵀmat(qa)
+    τbQa = 2*VLᵀmat(qb)*Rmat(qb)*Rᵀmat(qa)*Rmat(UnitQuaternion(τ))#*LVᵀmat(qa)
 
     return FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa
 end
-@inline function ∂Fτ∂posb(joint::Rotational{T}, statea::State, stateb::State) where T
-    _, qa = posargsk(statea)
-    _, qb = posargsk(stateb)
+@inline function ∂Fτ∂posb(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
+    _, qa = posargsnext(statea, Δt)
+    _, qb = posargsnext(stateb, Δt)
     τ = joint.Fτ
 
     FaXb = szeros(T,3,3)
-    FaQb = szeros(T,3,3)
+    FaQb = szeros(T,3,4)
     τaXb = szeros(T,3,3)
-    τaQb = szeros(T,3,3)
+    τaQb = szeros(T,3,4)
     FbXb = szeros(T,3,3)
-    FbQb = szeros(T,3,3)
+    FbQb = szeros(T,3,4)
     τbXb = szeros(T,3,3)
-    τbQb = 2*VLᵀmat(qb)*Lmat(qa)*Lmat(UnitQuaternion(τ))*Lᵀmat(qa)*LVᵀmat(qb)
+    τbQb = 2*VLᵀmat(qb)*Lmat(qa)*Lmat(UnitQuaternion(τ))*Lᵀmat(qa)#*LVᵀmat(qb)
 
     return FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb
 end
-@inline function ∂Fτ∂posb(joint::Rotational{T}, stateb::State) where T
-    _, qb = posargsk(stateb)
+@inline function ∂Fτ∂posb(joint::Rotational{T}, stateb::State, Δt::T) where T
+    _, qb = posargsnext(stateb, Δt)
     τ = joint.Fτ
 
     FaXb = szeros(T,3,3)
-    FaQb = szeros(T,3,3)
+    FaQb = szeros(T,3,4)
     τaXb = szeros(T,3,3)
-    τaQb = szeros(T,3,3)
+    τaQb = szeros(T,3,4)
     FbXb = szeros(T,3,3)
-    FbQb = szeros(T,3,3)
+    FbQb = szeros(T,3,4)
     τbXb = szeros(T,3,3)
-    τbQb = 2*VLᵀmat(qb)*Lmat(UnitQuaternion(τ))*LVᵀmat(qb)
+    τbQb = 2*VLᵀmat(qb)*Lmat(UnitQuaternion(τ))#*LVᵀmat(qb)
 
     return FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb
 end

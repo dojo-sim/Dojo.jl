@@ -40,12 +40,12 @@ sensi = - (solmat \ datamat)
 fd_datamat = finitediff_data_matrix(mech, data, sol, δ = 1e-5) * attjac
 @test norm(fd_datamat + datamat, Inf) < 1e-6
 plot(Gray.(abs.(1e10 .* datamat)))
-plot(Gray.(abs.(fd_datamat)))
+plot(Gray.(abs.(1e10 .* fd_datamat)))
 
 fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
 @test norm(fd_solmat + solmat, Inf) < 1e-8
 plot(Gray.(abs.(1e10 * solmat)))
-plot(Gray.(abs.(fd_solmat)))
+plot(Gray.(abs.(1e10 * fd_solmat)))
 
 fd_sensi = finitediff_sensitivity(mech, data) * attjac
 @test norm(fd_sensi - sensi) / norm(fd_sensi) < 8e-3

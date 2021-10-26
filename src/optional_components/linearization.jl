@@ -385,8 +385,8 @@ function linearforcemapping(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
             childind = childid - Ne
             if parentid !== nothing
                 parentind = parentid - Ne
-                FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa = ∂Fτ∂posa(eqc.constraints[i], getbody(mechanism, parentid).state, getbody(mechanism, childid).state)
-                FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb = ∂Fτ∂posb(eqc.constraints[i], getbody(mechanism, parentid).state, getbody(mechanism, childid).state)
+                FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa = ∂Fτ∂posa(eqc.constraints[i], getbody(mechanism, parentid).state, getbody(mechanism, childid).state, mechanism.Δt)
+                FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb = ∂Fτ∂posb(eqc.constraints[i], getbody(mechanism, parentid).state, getbody(mechanism, childid).state, mechanism.Δt)
 
                 cola6 = offsetrange(parentind,6)
                 colb6 = offsetrange(childind,6)
@@ -405,7 +405,7 @@ function linearforcemapping(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 Fzu[rowbv,colb6] = [FbXb FbQb]
                 Fzu[rowbω,colb6] = [τbXb τbQb]
             else
-                FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb = ∂Fτ∂posb(eqc.constraints[i], getbody(mechanism, childid).state)
+                FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb = ∂Fτ∂posb(eqc.constraints[i], getbody(mechanism, childid).state, mechanism.Δt)
 
                 colb6 = offsetrange(childind,6)
                 rowbv = offsetrange(childind,3,13,2)

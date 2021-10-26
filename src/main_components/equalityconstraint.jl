@@ -228,7 +228,10 @@ function _dGa!(mechanism, pbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T
         joint = eqc.constraints[i]
         Aᵀ = zerodimstaticadjoint(constraintmat(joint))
         Nj = length(joint)
-        pbody.state.D -= _dGa(joint, pbody, getbody(mechanism, eqc.childids[i]), Aᵀ * eqc.λsol[2][off .+ (1:Nj)], Δt) * M
+        cbody = getbody(mechanism, eqc.childids[i])
+        pbody.state.D -= _dGa(joint, pbody, cbody, Aᵀ * eqc.λsol[2][off .+ (1:Nj)], Δt) * M
+        FaXa, FaQa, τaXa, τaQa, = ∂Fτ∂posa(joint, pbody.state, cbody.state, Δt)
+        pbody.state.D -= [FaXa FaQa; τaXa τaQa] * M
         off += Nj
     end
     return nothing
@@ -246,7 +249,10 @@ function _dGb!(mechanism, cbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T
             joint = eqc.constraints[i]
             Aᵀ = zerodimstaticadjoint(constraintmat(joint))
             Nj = length(joint)
-            cbody.state.D -= _dGb(joint, getbody(mechanism, eqc.parentid), cbody, Aᵀ * eqc.λsol[2][off .+ (1:Nj)], Δt) * M
+            pbody = getbody(mechanism, eqc.parentid)
+            cbody.state.D -= _dGb(joint, pbody, cbody, Aᵀ * eqc.λsol[2][off .+ (1:Nj)], Δt) * M
+            _, _, _, _, FbXb, FbQb, τbXb, τbQb = typeof(pbody) <: Origin ? ∂Fτ∂posb(joint, cbody.state, Δt) : ∂Fτ∂posb(joint, pbody.state, cbody.state, Δt)
+            cbody.state.D -= [FbXb FbQb; τbXb τbQb] * M
         end
     end
     return nothing
@@ -352,11 +358,11 @@ end
 end
 
 @generated function ∂Fτ∂ua(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(∂Fτ∂ua(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i])) for i = 1:Nc]
+    vec = [:(∂Fτ∂ua(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), mechanism.Δt, eqc.childids[$i])) for i = 1:Nc]
     return :(hcat($(vec...)))
 end
 @generated function ∂Fτ∂ub(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(∂Fτ∂ub(eqc.constraints[$i], getbody(mechanism, eqc.parentid), body, eqc.childids[$i])) for i = 1:Nc]
+    vec = [:(∂Fτ∂ub(eqc.constraints[$i], getbody(mechanism, eqc.parentid), body, mechanism.Δt, eqc.childids[$i])) for i = 1:Nc]
     return :(hcat($(vec...)))
 end
 

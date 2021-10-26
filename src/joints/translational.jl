@@ -184,11 +184,11 @@ end
 
 ### Forcing
 ## Application of joint forces (for dynamics)
-@inline function applyFτ!(joint::Translational{T}, statea::State, stateb::State, Δ::T, clear::Bool) where T
+@inline function applyFτ!(joint::Translational{T}, statea::State, stateb::State, Δt::T, clear::Bool) where T
     F = joint.Fτ
     vertices = joint.vertices
-    _, qa = posargsk(statea)
-    _, qb = posargsk(stateb)
+    _, qa = posargsnext(statea, Δt)
+    _, qb = posargsnext(stateb, Δt)
 
     Fa = vrotate(-F, qa)
     Fb = -Fa
@@ -206,7 +206,7 @@ end
 @inline function applyFτ!(joint::Translational{T}, stateb::State, Δt::T, clear::Bool) where T
     F = joint.Fτ
     vertices = joint.vertices
-    _, qb = posargsk(stateb)
+    _, qb = posargsnext(stateb, Δt)
 
     Fb = F
     τb = vrotate(torqueFromForce(Fb, vrotate(vertices[2], qb)),inv(qb)) # in local coordinates
@@ -219,19 +219,19 @@ end
 
 ## Forcing derivatives (for linearization)
 # Control derivatives
-@inline function ∂Fτ∂ua(joint::Translational, statea::State, stateb::State)
+@inline function ∂Fτ∂ua(joint::Translational, statea::State, stateb::State, Δt::T) where T
     vertices = joint.vertices
-    _, qa = posargsk(statea)
+    _, qa = posargsnext(statea, Δt)
 
     BFa = -VLmat(qa) * RᵀVᵀmat(qa)
     Bτa = -skew(vertices[1])
 
     return [BFa; Bτa]
 end
-@inline function ∂Fτ∂ub(joint::Translational, statea::State, stateb::State)
+@inline function ∂Fτ∂ub(joint::Translational, statea::State, stateb::State, Δt::T) where T
     vertices = joint.vertices
-    xa, qa = posargsk(statea)
-    xb, qb = posargsk(stateb)
+    xa, qa = posargsnext(statea, Δt)
+    xb, qb = posargsnext(stateb, Δt)
     qbinvqa = qb\qa
 
     BFb = VLmat(qa) * RᵀVᵀmat(qa)
@@ -239,9 +239,9 @@ end
 
     return [BFb; Bτb]
 end
-@inline function ∂Fτ∂ub(joint::Translational, stateb::State)
+@inline function ∂Fτ∂ub(joint::Translational, stateb::State, Δt::T) where T
     vertices = joint.vertices
-    _, qb = posargsk(stateb)
+    _, qb = posargsnext(stateb, Δt)
 
     BFb = I
     Bτb = skew(vertices[2]) * VLᵀmat(qb) * RVᵀmat(qb)
@@ -250,53 +250,53 @@ end
 end
 
 # Position derivatives
-@inline function ∂Fτ∂posa(joint::Translational{T}, statea::State, stateb::State) where T
-    _, qa = posargsk(statea)
-    _, qb = posargsk(stateb)
+@inline function ∂Fτ∂posa(joint::Translational{T}, statea::State, stateb::State, Δt::T) where T
+    _, qa = posargsnext(statea, Δt)
+    _, qb = posargsnext(stateb, Δt)
     F = joint.Fτ
     vertices = joint.vertices
 
     FaXa = szeros(T,3,3)
-    FaQa = -2*VRᵀmat(qa)*Rmat(UnitQuaternion(F))*LVᵀmat(qa)
+    FaQa = -2*VRᵀmat(qa)*Rmat(UnitQuaternion(F))#*LVᵀmat(qa)
     τaXa = szeros(T,3,3)
-    τaQa = szeros(T,3,3)
+    τaQa = szeros(T,3,4)
     FbXa = szeros(T,3,3)
-    FbQa = 2*VRᵀmat(qa)*Rmat(UnitQuaternion(F))*LVᵀmat(qa)
+    FbQa = 2*VRᵀmat(qa)*Rmat(UnitQuaternion(F))#*LVᵀmat(qa)
     τbXa = szeros(T,3,3)
-    τbQa = 2*skew(vertices[2])*VLᵀmat(qb)*Rmat(qb)*Rᵀmat(qa)*Rmat(UnitQuaternion(F))*LVᵀmat(qa)
+    τbQa = 2*skew(vertices[2])*VLᵀmat(qb)*Rmat(qb)*Rᵀmat(qa)*Rmat(UnitQuaternion(F))#*LVᵀmat(qa)
 
     return FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa
 end
-@inline function ∂Fτ∂posb(joint::Translational{T}, statea::State, stateb::State) where T
-    _, qa = posargsk(statea)
-    _, qb = posargsk(stateb)
+@inline function ∂Fτ∂posb(joint::Translational{T}, statea::State, stateb::State, Δt::T) where T
+    _, qa = posargsnext(statea, Δt)
+    _, qb = posargsnext(stateb, Δt)
     F = joint.Fτ
     vertices = joint.vertices
 
     FaXb = szeros(T,3,3)
-    FaQb = szeros(T,3,3)
+    FaQb = szeros(T,3,4)
     τaXb = szeros(T,3,3)
-    τaQb = szeros(T,3,3)
+    τaQb = szeros(T,3,4)
     FbXb = szeros(T,3,3)
-    FbQb = szeros(T,3,3)
+    FbQb = szeros(T,3,4)
     τbXb = szeros(T,3,3)
-    τbQb = 2*skew(vertices[2])*VLᵀmat(qb)*Lmat(qa)*Lmat(UnitQuaternion(F))*Lᵀmat(qa)*LVᵀmat(qb)
+    τbQb = 2*skew(vertices[2])*VLᵀmat(qb)*Lmat(qa)*Lmat(UnitQuaternion(F))*Lᵀmat(qa)#*LVᵀmat(qb)
 
     return FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb
 end
-@inline function ∂Fτ∂posb(joint::Translational{T}, stateb::State) where T
-    xb, qb = posargsk(stateb)
+@inline function ∂Fτ∂posb(joint::Translational{T}, stateb::State, Δt::T) where T
+    xb, qb = posargsnext(stateb, Δt)
     F = joint.Fτ
     vertices = joint.vertices
 
     FaXb = szeros(T,3,3)
-    FaQb = szeros(T,3,3)
+    FaQb = szeros(T,3,4)
     τaXb = szeros(T,3,3)
-    τaQb = szeros(T,3,3)
+    τaQb = szeros(T,3,4)
     FbXb = szeros(T,3,3)
-    FbQb = szeros(T,3,3)
+    FbQb = szeros(T,3,4)
     τbXb = szeros(T,3,3)
-    τbQb = 2*skew(vertices[2])*VLᵀmat(qb)*Lmat(UnitQuaternion(F))*LVᵀmat(qb)
+    τbQb = 2*skew(vertices[2])*VLᵀmat(qb)*Lmat(UnitQuaternion(F))#*LVᵀmat(qb)
 
     return FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb
 end

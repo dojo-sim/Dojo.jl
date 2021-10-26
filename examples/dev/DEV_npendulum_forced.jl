@@ -88,10 +88,9 @@ norm((datamat + fd_datamat)[17:22, 11:13], Inf)
 
 fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
 @test norm(fd_solmat + solmat, Inf) < 1e-8
-plot(Gray.(abs.(solmat)))
-plot(Gray.(abs.(fd_solmat)))
+plot(Gray.(10e8 * abs.(solmat)))
+plot(Gray.(10e8 * abs.(fd_solmat)))
 norm(fd_solmat + solmat, Inf)
-
 norm((fd_solmat + solmat)[1:10, 1:10], Inf)
 norm((fd_solmat + solmat)[1:10, 11:22], Inf)
 norm((fd_solmat + solmat)[11:22, 1:10], Inf)
@@ -148,8 +147,6 @@ norm(solmat, Inf)
 # (solmat + fd_solmat)[6:11, 1:5]
 # (solmat + fd_solmat)[6:11, 6:11]
 # (solmat + fd_solmat)[9:11, 9:11]
-
-
 
 fd_sensi = finitediff_sensitivity(mech, data, δ = 1e-5, ϵr = 1e-14, ϵb = 1e-14) * attjac
 @test norm(fd_sensi - sensi) / norm(fd_sensi) < 3e-3

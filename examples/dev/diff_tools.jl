@@ -335,6 +335,70 @@ function linearconstraintmapping3(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,
     return FfzG
 end
 
+function linearforcemapping2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
+    Fzu = zeros(T,Nb*13,Nb*12)
+    Δt = mechanism.Δt
+    for eqc in mechanism.eqconstraints
+        parentid = eqc.parentid
+        for (i,childid) in enumerate(eqc.childids)
+            childind = childid - Ne
+            if parentid !== nothing
+                parentind = parentid - Ne
+                pbody = getbody(mechanism, parentid)
+                cbody = getbody(mechanism, childid)
+
+                FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa = ∂Fτ∂posa(eqc.constraints[i], pbody.state, cbody.state, mechanism.Δt)
+                FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb = ∂Fτ∂posb(eqc.constraints[i], pbody.state, cbody.state, mechanism.Δt)
+
+                xa, va, qa, ωa = fullargssol(pbody.state)
+                Ma = [I zeros(3,3); zeros(4,3) Rmat(ωbar(ωa, Δt)*Δt/2)*LVᵀmat(qa)]
+
+                xb, vb, qb, ωb = fullargssol(cbody.state)
+                Mb = [I zeros(3,3); zeros(4,3) Rmat(ωbar(ωb, Δt)*Δt/2)*LVᵀmat(qb)]
+
+                cola6 = offsetrange(parentind,6)
+                colb6 = offsetrange(childind,6)
+                rowav = offsetrange(parentind,3,13,2)
+                rowaω = offsetrange(parentind,3,13,4).+1
+                rowbv = offsetrange(childind,3,13,2)
+                rowbω = offsetrange(childind,3,13,4).+1
+
+                # Fzu[rowav,cola6] = [FaXa FaQa]
+                # Fzu[rowaω,cola6] = [τaXa τaQa]
+                Fzu[[rowav; rowaω],cola6] = [FaXa FaQa; τaXa τaQa] * Ma
+                
+                # Fzu[rowbv,cola6] = [FbXa FbQa]
+                # Fzu[rowbω,cola6] = [τbXa τbQa]
+                Fzu[[rowbv; rowbω],cola6] = [FbXa FbQa; τbXa τbQa] * Ma
+
+                # Fzu[rowav,colb6] = [FaXb FaQb]
+                # Fzu[rowaω,colb6] = [τaXb τaQb]
+                Fzu[[rowav; rowaω] ,colb6] = [FaXb FaQb; τaXb τaQb] * Mb
+
+                # Fzu[rowbv,colb6] = [FbXb FbQb]
+                # Fzu[rowbω,colb6] = [τbXb τbQb]
+                Fzu[[rowbv; rowbω],colb6] = [FbXb FbQb; τbXb τbQb] * Mb
+            else
+                cbody = getbody(mechanism, childid)
+                FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb = ∂Fτ∂posb(eqc.constraints[i], cbody.state, mechanism.Δt)
+
+                colb6 = offsetrange(childind,6)
+                rowbv = offsetrange(childind,3,13,2)
+                rowbω = offsetrange(childind,3,13,4).+1
+
+                x2, v2, q2, ω2 = fullargssol(cbody.state)
+                M = [I zeros(3,3); zeros(4,3) Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)]
+                Fzu[[rowbv; rowbω], colb6] = [FbXb FbQb; τbXb τbQb] * M
+                # Fzu[rowbv,colb6] = [FbXb FbQb] 
+                # Fzu[rowbω,colb6] = [τbXb τbQb]
+            end
+
+        end
+    end
+
+    return Fzu
+end
+
 function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,Nn,Ne,Nb}
     Δt = mechanism.Δt
     bodies = mechanism.bodies
@@ -376,7 +440,7 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
     end
 
     Ffz += linearconstraintmapping(mechanism)
-    Fz += linearforcemapping(mechanism)
+    Fz += linearforcemapping2(mechanism)
 
     n1 = 1
     n2 = 0

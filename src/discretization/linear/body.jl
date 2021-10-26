@@ -44,6 +44,7 @@ end
         Ne < connectionid <= Ne+Nb && continue # body
         ∂constraintForceMapping!(mechanism, body, getcomponent(mechanism, connectionid))
     end
+    
 
     return state.D
 end
