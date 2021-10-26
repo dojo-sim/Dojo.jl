@@ -490,3 +490,27 @@ end
 #     return nullspacemat(joint) * stateb.vc
 # end
 # nullspacemat(force1)
+
+function ∂springtorquea∂posa(joint::Rotational, body1::Body, body2::Body, Δt::T) where T 
+
+end
+
+function ∂dampertorquea∂posa(joint::Rotational, body1::Body, body2::Body, Δt::T) where T 
+
+end
+
+function ∂springtorqueb∂posb(joint::Rotational, body1::Body, body2::Body, Δt::T) where T 
+
+end
+
+function ∂dampertorqueb∂posb(joint::Rotational, body1::Body, body2::Body, Δt::T) where T 
+     
+end
+
+function ∂springtorqueb∂posb(joint::Rotational, body1::Origin, body2::Body, Δt::T) where T 
+
+end
+
+function ∂dampertorqueb∂posb(joint::Rotational, body1::Origin, body2::Body, Δt::T) where T 
+     
+end

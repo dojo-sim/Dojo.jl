@@ -201,8 +201,8 @@ end
     # @show size(zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)))
     # @show size(eqc.λsol[2])
     body.state.d -= zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
-    # eqc.isspring && (body.state.d -= springforce(mechanism, eqc, body))
-    # eqc.isdamper && (body.state.d -= damperforce(mechanism, eqc, body))
+    eqc.isspring && (body.state.d -= springforce(mechanism, eqc, body))
+    eqc.isdamper && (body.state.d -= damperforce(mechanism, eqc, body))
     return
 end
 
@@ -232,6 +232,8 @@ function _dGa!(mechanism, pbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T
         pbody.state.D -= _dGa(joint, pbody, cbody, Aᵀ * eqc.λsol[2][off .+ (1:Nj)], Δt) * M
         FaXa, FaQa, τaXa, τaQa, = ∂Fτ∂posa(joint, pbody.state, cbody.state, Δt)
         pbody.state.D -= [FaXa FaQa; τaXa τaQa] * M
+        eqc.isspring && (body.state.D -= ∂springforcea∂posa(joint, pbody, cbody, Δt) * M)
+        eqc.isdamper && (body.state.D -= ∂damperforcea∂posa(joint, pbody, cbody, Δt) * M)
         off += Nj
     end
     return nothing
@@ -253,6 +255,8 @@ function _dGb!(mechanism, cbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T
             cbody.state.D -= _dGb(joint, pbody, cbody, Aᵀ * eqc.λsol[2][off .+ (1:Nj)], Δt) * M
             _, _, _, _, FbXb, FbQb, τbXb, τbQb = typeof(pbody) <: Origin ? ∂Fτ∂posb(joint, cbody.state, Δt) : ∂Fτ∂posb(joint, pbody.state, cbody.state, Δt)
             cbody.state.D -= [FbXb FbQb; τbXb τbQb] * M
+            eqc.isspring && (body.state.D -= ∂springforceb∂posb(joint, pbody, cbody, Δt) * M)
+            eqc.isdamper && (body.state.D -= ∂damperforceb∂posb(joint, pbody, cbody, Δt) * M)
         end
     end
     return nothing
