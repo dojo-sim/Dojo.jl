@@ -21,6 +21,78 @@ getGlobalOrder() = (global METHODORDER; return METHODORDER)
 @inline posargssol(state::State) = (state.xsol[2], state.qsol[2])
 @inline fullargssol(state::State) = (state.xsol[2], state.vsol[2], state.qsol[2], state.ωsol[2])
 @inline posargsnext(state::State, Δt) = (getx3(state, Δt), getq3(state, Δt))
+@inline posargshalf(state::State, Δt) = (state.xk[1] + state.vsol[2]*Δt/2, getq3(state, Δt))
+
+
+
+q0 = UnitQuaternion(rand(4)...)
+ω0 = [20., 0, 0]
+Δt = 0.0999
+q1 = q0 * ωbar(ω0, Δt) * Δt / 2
+qh = q0 * ωbar(ω0/2, Δt) * Δt / 2
+qh1 = q0 * ωbar(ω0, Δt/2) * Δt / 4
+
+qh_ = UnitQuaternion(midpoint([q0.w, q0.x, q0.y, q0.z], [q1.w, q1.x, q1.y, q1.z])..., false)
+norm([qh.w, qh.x, qh.y, qh.z])
+norm([qh.w, qh.x, qh.y, qh.z] - [qh_.w, qh_.x, qh_.y, qh_.z])
+norm([qh1.w, qh1.x, qh1.y, qh1.z] - [qh_.w, qh_.x, qh_.y, qh_.z])
+δq = (qh_ * qh')
+[δq.w, δq.x, δq.y, δq.z]
+
+2π / 0.23
+
+Lmat(sδq)
+# Square root of quaternion: https://www.johndcook.com/blog/2021/01/06/quaternion-square-roots/
+function sqrt_quat(q; ϵ=1e-16)
+	r = norm(q)
+	# Angle
+	theta = acos(q[1]/r)
+	# Axis
+	u = q[2:4]
+	u ./= norm(u) + ϵ
+	# Half axis-angle rotation
+	x = [cos(theta/2);  sin(theta/2)*u]
+	# Sqrt on the norm of the quaternion
+	x .*= r^0.5 # useless for unit quaternion
+	return x
+end
+
+function midpoint(q0, q1)
+	# Small delta rotation
+	qψ = R_multiply(q0)' * q1
+	# Divide delta in two
+	sqψ = sqrt_quat(qψ)
+	# Apply small rotation
+	qmid = L_multiply(sqψ) * q0
+	return qmid
+end
+
+function L_multiply(q)
+	s = q[1]
+	v = q[2:4]
+
+	SMatrix{4,4}([s -transpose(v);
+	              v s * I + skew(v)])
+end
+
+function R_multiply(q)
+	s = q[1]
+	v = q[2:4]
+
+	SMatrix{4,4}([s -transpose(v);
+	              v s * I - skew(v)])
+end
+
+
+
+
+
+
+
+
+
+
+
 
 
 @inline function derivωbar(ω::SVector{3}, Δt)
