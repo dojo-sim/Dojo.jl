@@ -20,7 +20,7 @@ open(vis)
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 # Build mechanism
-mech = getmechanism(:npendulum, Δt = 0.01, g = -9.81, Nlink = 5)
+mech = getmechanism(:npendulum, Δt = 0.01, g = -9.81, Nlink = 2)
 initialize!(mech, :npendulum, ϕ1 = 1.3)
 
 # for (i,joint) in enumerate(mech.eqconstraints)
@@ -72,8 +72,19 @@ sensi = - (solmat \ datamat)
 # finite diff
 fd_datamat = finitediff_data_matrix(deepcopy(mech), data, sol, δ = 1e-5) * attjac
 @test norm(fd_datamat + datamat, Inf) < 1e-8
-# plot(Gray.(abs.(datamat)))
-# plot(Gray.(abs.(fd_datamat)))
+plot(Gray.(abs.(datamat)))
+plot(Gray.(abs.(fd_datamat)))
+
+norm((datamat + fd_datamat)[1:10, 1:26], Inf)
+norm((datamat + fd_datamat)[11:16, 1:3], Inf)
+norm((datamat + fd_datamat)[11:16, 4:6], Inf)
+norm((datamat + fd_datamat)[11:16, 7:10], Inf)
+norm((datamat + fd_datamat)[11:16, 11:13], Inf)
+
+norm((datamat + fd_datamat)[17:22, 1:3], Inf)
+norm((datamat + fd_datamat)[17:22, 4:6], Inf)
+norm((datamat + fd_datamat)[17:22, 7:10], Inf)
+norm((datamat + fd_datamat)[17:22, 11:13], Inf)
 
 fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
 @test norm(fd_solmat + solmat, Inf) < 1e-8
