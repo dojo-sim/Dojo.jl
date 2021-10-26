@@ -145,11 +145,11 @@ damperforceb(joint::AbstractJoint, stateb::State) = damperforceb(joint, fullargs
 
 ### Forcing (for dynamics)
 ## Wrappers
-@inline function applyFτ!(joint::AbstractJoint, body1::Body, body2::Body, clear::Bool)
-    applyFτ!(joint, body1.state, body2.state, clear)
+@inline function applyFτ!(joint::AbstractJoint, body1::Body, body2::Body, Δt::T, clear::Bool) where T
+    applyFτ!(joint, body1.state, body2.state, Δt, clear)
     return
 end
-@inline function applyFτ!(joint::AbstractJoint, ::Origin, body2::Body, clear::Bool)
-    applyFτ!(joint, body2.state, clear)
+@inline function applyFτ!(joint::AbstractJoint, ::Origin, body2::Body, Δt::T, clear::Bool) where T
+    applyFτ!(joint, body2.state, Δt, clear)
     return
 end

@@ -196,7 +196,7 @@ end
 
 ### Forcing
 ## Application of joint forces (for dynamics)
-@inline function applyFτ!(joint::Rotational{T}, statea::State, stateb::State, clear::Bool) where T
+@inline function applyFτ!(joint::Rotational{T}, statea::State, stateb::State, Δt::T, clear::Bool) where T
     τ = joint.Fτ
     _, qa = posargsk(statea)
     _, qb = posargsk(stateb)
@@ -212,9 +212,9 @@ end
     clear && (joint.Fτ = szeros(T,3))
     return
 end
-@inline function applyFτ!(joint::Rotational{T}, stateb::State, clear::Bool) where T
+@inline function applyFτ!(joint::Rotational{T}, stateb::State, Δt::T, clear::Bool) where T
     τ = joint.Fτ
-    _, qb = posargsk(stateb)
+    _, qb =  (stateb)
 
     τa = -τ # in world coordinates
     τb = -τa # in world coordinates

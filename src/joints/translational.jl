@@ -184,7 +184,7 @@ end
 
 ### Forcing
 ## Application of joint forces (for dynamics)
-@inline function applyFτ!(joint::Translational{T}, statea::State, stateb::State, clear::Bool) where T
+@inline function applyFτ!(joint::Translational{T}, statea::State, stateb::State, Δ::T, clear::Bool) where T
     F = joint.Fτ
     vertices = joint.vertices
     _, qa = posargsk(statea)
@@ -203,7 +203,7 @@ end
     clear && (joint.Fτ = szeros(T,3))
     return
 end
-@inline function applyFτ!(joint::Translational{T}, stateb::State, clear::Bool) where T
+@inline function applyFτ!(joint::Translational{T}, stateb::State, Δt::T, clear::Bool) where T
     F = joint.Fτ
     vertices = joint.vertices
     _, qb = posargsk(stateb)
