@@ -135,35 +135,3 @@ fd_sensi = finitediff_sensitivity(mech, data, δ = 1e-5, ϵ = 1e-14) * attjac
 @test norm(fd_sensi - sensi) / norm(fd_sensi) < 8e-3
 plot(Gray.(1e10 .* sensi))
 plot(Gray.(fd_sensi))
-
-
-setentries!(mech)
-function f(mechanism::Mechanism; M = 1000)
-    for i = 1:M
-        # ldu_factorization!(mechanism.system)
-        # ldu_backsubstitution!(mechanism.system)
-        # setentries!(mechanism)
-        threadsetentries!(mechanism)
-    end
-end
-using BenchmarkTools
-@benchmark f(mech, M = 1000)
-
-function threadsetentries!(mechanism::Mechanism)
-    system = mechanism.system
-
-    Threads.@threads for id in reverse(system.dfs_list)
-        for childid in system.cyclic_children[id]
-            zeroLU!(getentry(system, id, childid), getentry(system, childid, id))
-        end
-
-        component = getcomponent(mechanism, id)
-        setDandΔs!(mechanism, getentry(system, id, id), getentry(system, id), component)
-
-        for childid in children(system,id)
-            setLU!(mechanism, getentry(system, id, childid), getentry(system, childid, id), component, getcomponent(mechanism, childid))
-        end
-    end
-
-    return
-end

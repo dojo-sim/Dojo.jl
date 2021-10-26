@@ -139,12 +139,6 @@ norm((fd_datamat + datamat)[1:24, 25:26], Inf)
 fd_datamat[13:24, 25:26]
 datamat[13:24, 25:26]
 
-# eqcids = getfield.(mech.eqconstraints, :id)
-# Fz_, Fu_, G_ = data_lineardynamics(mech, eqcids)
-# Fu_[1:13,:]
-# Fu_[14:26, :]
-# Fu_[Fz_indices(2), :]
-
 fd_solmat = finitediff_sol_matrix(mech, data, sol)
 @test norm(fd_solmat + solmat, Inf) < 1e-7
 plot(Gray.(abs.(solmat)))
@@ -158,10 +152,6 @@ fd_sensi = finitediff_sensitivity(mech, data) * attjac
 # norm(fd_sensi, Inf)
 # norm(fd_sensi - sensi) / norm(fd_sensi)
 
-linearconstraintmapping2(mech)
-linearconstraints2(mech)
-fd_datamat[13:24, :]
-datamat[13:24, :]
 ################################################################################
 # Finite Diff
 ################################################################################

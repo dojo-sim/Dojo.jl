@@ -39,7 +39,7 @@ mutable struct Body{T} <: AbstractBody{T}
     end
 
     function Body{T}(contents...) where T
-        new{T}(getGlobalID(), contents..., 0, 0)
+        new{T}(getGlobalID(), contents...)
     end
 end
 

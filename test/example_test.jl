@@ -7,7 +7,7 @@ for file in files
     if file ∈ controlled
         storage = simulate!(mech, 10., eval(Meta.parse(file*"_control!")), record = true)
     else
-        storage = simulate!(mech, 10., record = true)
+        storage = simulate!(mech, 10., record = true, solver = :mehrotra!, verbose = false)
     end
     n = length(storage.x)
     for i=1:n

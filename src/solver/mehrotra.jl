@@ -62,7 +62,7 @@ function mehrotra!(mechanism::Mechanism;
     bvio = bilinear_violation(mechanism) # does not require to apply setentries!
     rvio = residual_violation(mechanism) # does not require to apply setentries!
 
-	verbose && println("-----------------------------------------------------------------")
+	opts.verbose && println("-----------------------------------------------------------------")
     for n = Base.OneTo(opts.max_iter)
 
         if opts.verbose
