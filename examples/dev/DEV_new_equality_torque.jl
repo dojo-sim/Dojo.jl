@@ -72,9 +72,15 @@ end
 mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.01)
 
 initialize!(mech, :npendulum)
-storage = simulate!(mech, 1.0, record = true, solver = :mehrotra!)
+@elapsed storage = simulate!(mech, 0.3, record = true, solver = :mehrotra!, verbose = false)
+@profiler storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!, verbose = false)
 
 visualize(mech, storage, vis = vis)
+
+
+
+
+
 
 ################################################################################
 # Differentiation

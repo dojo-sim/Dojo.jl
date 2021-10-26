@@ -193,18 +193,18 @@ end
 
 @inline function residual_violation!(component::Component, mechanism::Mechanism)
     res = g(mechanism, component)
-    if norm(res, Inf) > 7e-1
+    # if norm(res, Inf) > 7e-1
         # println("res:", scn.(abs.(res), digits = 6), typeof(component).name)
-    end
+    # end
     mechanism.rvio = max(mechanism.rvio, norm(res, Inf))
     return nothing
 end
 
 @inline function residual_violation!(ineqc::InequalityConstraint, mechanism::Mechanism)
     res = gs(mechanism, ineqc)
-    if norm(res, Inf) > 7e-1
+    # if norm(res, Inf) > 7e-1
         # println("res:", scn.(abs.(res), digits = 6), typeof(ineqc.constraints[1]).name)
-    end
+    # end
     mechanism.rvio = max(mechanism.rvio, norm(res, Inf))
     return nothing
 end
