@@ -25,11 +25,12 @@
 end
 
 function mehrotra!(mechanism::Mechanism;
+		verbose::Bool = true,
         opts = InteriorPointOptions(
             btol = 1e-6,
             rtol = 1e-6,
             undercut = Inf,
-			breg = 0.0, max_iter = 40, verbose = true),
+			breg = 0.0, max_iter = 40, verbose = verbose),
         ε = nothing, newtonIter = nothing, lineIter = nothing, warning::Bool = false)
 
 
@@ -59,7 +60,7 @@ function mehrotra!(mechanism::Mechanism;
     bvio = bilinear_violation(mechanism)
     rvio = residual_violation(mechanism)
 
-	println("-----------------------------------------------------------------")
+	verbose && println("-----------------------------------------------------------------")
     for n = Base.OneTo(opts.max_iter)
 
         if opts.verbose

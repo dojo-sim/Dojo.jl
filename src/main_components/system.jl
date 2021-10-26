@@ -27,12 +27,12 @@ function adjacencyMatrix(eqcs::Vector{<:EqualityConstraint}, bodies::Vector{<:Bo
                 node2.id in node1.childids && (A[node1.id,node2.id] = 1)
             elseif typeof(node2) <: Union{AbstractConstraint, Friction}
                 node1.id == node2.parentid && (A[node1.id,node2.id] = 1)
-            elseif typeof(node1) <: Body && typeof(node2) <: Body 
-                for eqc in eqcs 
-                    if node1.id == eqc.parentid && node2.id ∈ eqc.childids 
+            elseif typeof(node1) <: Body && typeof(node2) <: Body
+                for eqc in eqcs
+                    if node1.id == eqc.parentid && node2.id ∈ eqc.childids
                         A[node1.id, node2.id] = 1
                     end
-                    if node2.id == eqc.parentid && node1.id ∈ eqc.childids 
+                    if node2.id == eqc.parentid && node1.id ∈ eqc.childids
                         A[node2.id, node1.id] = 1
                     end
                 end
@@ -42,7 +42,6 @@ function adjacencyMatrix(eqcs::Vector{<:EqualityConstraint}, bodies::Vector{<:Bo
 
     A = convert(Matrix{Int64}, A .| A')
 
-    @show A
     return A, dims
 end
 
@@ -73,7 +72,7 @@ function densesystem(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     A = zeros(T,n,n)
     x = zeros(T,n)
     b = zeros(T,n)
-    
+
     rangeDict = Dict{Int64,UnitRange}()
     ind1 = 1
     ind2 = 0
@@ -122,7 +121,7 @@ function densesystem(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
 
 
         ind1 = ind2+1
-    end    
-    
+    end
+
     return A, x, b
 end
