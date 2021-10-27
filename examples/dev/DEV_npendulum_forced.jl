@@ -24,7 +24,7 @@ mech = getmechanism(:npendulum, Δt = 0.01, g = -9.81, Nlink = 2)
 initialize!(mech, :npendulum, ϕ1 = 1.3)
 
 for (i,joint) in enumerate(mech.eqconstraints)
-    if i ∈ (1,,2)
+    if i ∈ (1,2)
         jt = joint.constraints[1]
         jr = joint.constraints[2]
         joint.isdamper = true #false
@@ -67,6 +67,9 @@ datamat = full_data_matrix(deepcopy(mech))
 solmat = full_matrix(mech.system)
 sensi = - (solmat \ datamat)
 
+linearconstraintmapping4(mech)
+
+
 # finite diff
 fd_datamat = finitediff_data_matrix(deepcopy(mech), data, sol, δ = 1e-5) * attjac
 @test norm(fd_datamat + datamat, Inf) < 1e-8
@@ -74,15 +77,39 @@ plot(Gray.(abs.(datamat)))
 plot(Gray.(abs.(fd_datamat)))
 
 norm((datamat + fd_datamat)[1:10, 1:26], Inf)
-norm((datamat + fd_datamat)[11:16, 1:3], Inf)
-norm((datamat + fd_datamat)[11:16, 4:6], Inf)
-norm((datamat + fd_datamat)[11:16, 7:10], Inf)
-norm((datamat + fd_datamat)[11:16, 11:13], Inf)
 
-norm((datamat + fd_datamat)[17:22, 1:3], Inf)
+norm((datamat + fd_datamat)[11:16, 1:6], Inf)
+norm((datamat + fd_datamat)[11:16, 4:6], Inf)
+norm((datamat + fd_datamat)[11:16, 7:9], Inf)
+norm((datamat + fd_datamat)[11:16, 10:12], Inf)
+
+norm((datamat + fd_datamat)[11:16, 13:15], Inf)
+norm((datamat + fd_datamat)[11:16, 16:18], Inf)
+norm((datamat + fd_datamat)[11:16, 19:21], Inf)
+norm((datamat + fd_datamat)[11:16, 22:24], Inf)
+norm((datamat + fd_datamat)[11:16, 25:26], Inf)
+
+norm((datamat + fd_datamat)[17:22, 1:6], Inf)
 norm((datamat + fd_datamat)[17:22, 4:6], Inf)
+norm((datamat + fd_datamat)[17:22, 7:9], Inf)
+norm((datamat + fd_datamat)[17:22, 10:12], Inf)
+
+norm((datamat + fd_datamat)[17:22, 13:15], Inf)
+norm((datamat + fd_datamat)[17:22, 16:18], Inf)
+norm((datamat + fd_datamat)[17:22, 19:21], Inf)
+norm((datamat + fd_datamat)[17:22, 22:24], Inf)
+norm((datamat + fd_datamat)[17:22, 25:26], Inf)
+
+norm((datamat + fd_datamat)
+- datamat[20:22, 4:10]
+
+
+
+fd_datamat[20:22, 4:10]
+
 norm((datamat + fd_datamat)[17:22, 7:10], Inf)
-norm((datamat + fd_datamat)[17:22, 11:13], Inf)
+
+
 
 fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
 @test norm(fd_solmat + solmat, Inf) < 1e-8
@@ -134,7 +161,7 @@ norm(solmat, Inf)
 ################################################################################
 # Finite Diff
 ################################################################################
-
+include(joinpath(@__DIR__, "finite_diff.jl"))
 
 Δt = 0.01
 rot1 = mech.eqconstraints[1].constraints[2]

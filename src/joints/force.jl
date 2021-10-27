@@ -1,57 +1,3 @@
-# mutable struct Translational{T,N} <: FJoint{T,N}
-#     V3::Adjoint{T,SVector{3,T}} # in body1's frame
-#     V12::SMatrix{2,3,T,6} # in body1's frame
-#     vertices::NTuple{2,SVector{3,T}} # in body1's & body2's frames
-#
-#     spring::T
-#     damper::T
-#
-#     Fτ::SVector{3,T}
-#
-#     function Translational{T,N}(body1::AbstractBody, body2::AbstractBody;
-#             p1::AbstractVector = szeros(T,3), p2::AbstractVector = szeros(T,3), axis::AbstractVector = szeros(T,3), spring = zero(T), damper = zero(T)
-#         ) where {T,N}
-#
-#         vertices = (p1, p2)
-#         V1, V2, V3 = orthogonalrows(axis)
-#         V12 = [V1;V2]
-#
-#         Fτ = zeros(T,3)
-#
-#         new{T,N}(V3, V12, vertices, spring, damper, Fτ), body1.id, body2.id
-#     end
-# end
-#
-# Translational0 = Translational{T,0} where T
-# Translational1 = Translational{T,1} where T
-# Translational2 = Translational{T,2} where T
-# Translational3 = Translational{T,3} where T
-#
-# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::Translational{T,N}) where {T,N}
-#     summary(io, constraint)
-#     println(io,"")
-#     println(io, " V3:       "*string(constraint.V3))
-#     println(io, " V12:      "*string(constraint.V12))
-#     println(io, " vertices: "*string(constraint.vertices))
-# end
-
-# ### Constraints and derivatives
-# ## Position level constraint wrappers
-# @inline function g(joint::Translational, body1::Body, body2::Body, Δt)
-#     A = nullspacemat(joint)
-#     Aᵀ = zerodimstaticadjoint(A)
-#     Fτ = springforce(joint, body1.state, body2.state, Δt) + damperforce(joint, body1.state, body2.state)
-#     return Aᵀ * A * Fτ
-# end
-
-# @inline function g(joint::Translational, body1::Origin, body2::Body, Δt)
-#     A = nullspacemat(joint)
-#     Aᵀ = zerodimstaticadjoint(A)
-#     Fτ = springforce(joint, body2.state, Δt) + damperforce(joint, body2.state)
-#     return Aᵀ * A * Fτ
-# end
-
-
 ## Position level constraints (for dynamics) in world frame
 @inline function gc(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
     vertices = joint.vertices
@@ -65,12 +11,19 @@ end
 ### Spring and damper
 ## Forces for dynamics
 ## Discrete-time position wrappers (for dynamics)
-springforcea(joint::Translational, statea::State, stateb::State, Δt) = springforcea(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)...)
-springforceb(joint::Translational, statea::State, stateb::State, Δt) = springforceb(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)...)
-springforceb(joint::Translational, stateb::State, Δt) = springforceb(joint, posargsnext(stateb, Δt)...)
-damperforcea(joint::Translational, statea::State, stateb::State, Δt) = damperforcea(joint, statea.vsol[2], stateb.vsol[2])
-damperforceb(joint::Translational, statea::State, stateb::State, Δt) = damperforceb(joint, statea.vsol[2], stateb.vsol[2])
-damperforceb(joint::Translational, stateb::State, Δt) = damperforceb(joint, stateb.vsol[2])
+# springforcea(joint::Translational, statea::State, stateb::State, Δt) = Δt * springforcea(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)...)
+# springforceb(joint::Translational, statea::State, stateb::State, Δt) = Δt * springforceb(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)...)
+# springforceb(joint::Translational, stateb::State, Δt) = Δt * springforceb(joint, posargsnext(stateb, Δt)...)
+# damperforcea(joint::Translational, statea::State, stateb::State, Δt) = Δt * damperforcea(joint, statea.vsol[2], stateb.vsol[2])
+# damperforceb(joint::Translational, statea::State, stateb::State, Δt) = Δt * damperforceb(joint, statea.vsol[2], stateb.vsol[2])
+# damperforceb(joint::Translational, stateb::State, Δt) = Δt * damperforceb(joint, stateb.vsol[2])
+
+springforcea(joint::Translational, statea::State, stateb::State, Δt) = Δt * springforcea(joint, posargshalf(statea, Δt)..., posargshalf(stateb, Δt)...)
+springforceb(joint::Translational, statea::State, stateb::State, Δt) = Δt * springforceb(joint, posargshalf(statea, Δt)..., posargshalf(stateb, Δt)...)
+springforceb(joint::Translational, stateb::State, Δt) = Δt * springforceb(joint, posargshalf(stateb, Δt)...)
+damperforcea(joint::Translational, statea::State, stateb::State, Δt) = Δt * damperforcea(joint, statea.vsol[2], stateb.vsol[2])
+damperforceb(joint::Translational, statea::State, stateb::State, Δt) = Δt * damperforceb(joint, statea.vsol[2], stateb.vsol[2])
+damperforceb(joint::Translational, stateb::State, Δt) = Δt * damperforceb(joint, stateb.vsol[2])
 
 springforcea(joint::Translational{T,3}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
 springforceb(joint::Translational{T,3}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
@@ -162,14 +115,15 @@ function ∂springforcea∂posa(joint::Translational, body1::Body, body2::Body, 
     x1a, q1a = posargsk(body1.state)
     _, _, _, ωa = fullargssol(body1.state)
     xa, qa = posargsnext(body1.state, Δt)
+    xa, qa = posargshalf(body1.state, Δt)
     X = - Aᵀ * A * joint.spring * Aᵀ * A
     Q = - Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[1], qa) * Rmat(ωbar(ωa, Δt)*Δt/2) * LVᵀmat(q1a)
-    return [X Q; szeros(T, 3, 6)]
+    return Δt * [X Q; szeros(T, 3, 6)]
 end
 function ∂damperforcea∂posa(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     X = szeros(T, 3, 3)
     Q = szeros(T, 3, 3)
-    return [X Q; szeros(T, 3, 6)]
+    return Δt * [X Q; szeros(T, 3, 6)]
 end
 function ∂springforcea∂posb(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
@@ -177,14 +131,15 @@ function ∂springforcea∂posb(joint::Translational, body1::Body, body2::Body, 
     x1b, q1b = posargsk(body2.state)
     _, _, _, ωb = fullargssol(body2.state)
     xb, qb = posargsnext(body2.state, Δt)
+    xb, qb = posargshalf(body2.state, Δt)
     X = Aᵀ * A * joint.spring * Aᵀ * A
     Q = Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[2], qb) * Rmat(ωbar(ωb, Δt)*Δt/2) * LVᵀmat(q1b)
-    return [X Q; szeros(T, 3, 6)]
+    return Δt * [X Q; szeros(T, 3, 6)]
 end
 function ∂damperforcea∂posb(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     X = szeros(T, 3, 3)
     Q = szeros(T, 3, 3)
-    return [X Q; szeros(T, 3, 6)]
+    return Δt * [X Q; szeros(T, 3, 6)]
 end
 function ∂springforceb∂posb(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
@@ -192,14 +147,15 @@ function ∂springforceb∂posb(joint::Translational, body1::Body, body2::Body, 
     x1b, q1b = posargsk(body2.state)
     _, _, _, ωb = fullargssol(body2.state)
     xb, qb = posargsnext(body2.state, Δt)
+    xb, qb = posargshalf(body2.state, Δt)
     X = - Aᵀ * A * joint.spring * Aᵀ * A
     Q = - Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[2], qb) * Rmat(ωbar(ωb, Δt)*Δt/2) * LVᵀmat(q1b)
-    return [X Q; szeros(T, 3, 6)]
+    return Δt * [X Q; szeros(T, 3, 6)]
 end
 function ∂damperforceb∂posb(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     X = szeros(T, 3, 3)
     Q = szeros(T, 3, 3)
-    return [X Q; szeros(T, 3, 6)]
+    return Δt * [X Q; szeros(T, 3, 6)]
 end
 function ∂springforceb∂posa(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
@@ -207,14 +163,15 @@ function ∂springforceb∂posa(joint::Translational, body1::Body, body2::Body, 
     x1a, q1a = posargsk(body1.state)
     _, _, _, ωa = fullargssol(body1.state)
     xa, qa = posargsnext(body1.state, Δt)
+    xa, qa = posargshalf(body1.state, Δt)
     X = Aᵀ * A * joint.spring * Aᵀ * A
     Q = Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[1], qa) * Rmat(ωbar(ωa, Δt)*Δt/2) * LVᵀmat(q1a)
-    return [X Q; szeros(T, 3, 6)]
+    return Δt * [X Q; szeros(T, 3, 6)]
 end
 function ∂damperforceb∂posa(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     X = szeros(T, 3, 3)
     Q = szeros(T, 3, 3)
-    return [X Q; szeros(T, 3, 6)]
+    return Δt * [X Q; szeros(T, 3, 6)]
 end
 function ∂springforceb∂posb(joint::Translational, body1::Origin, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
@@ -222,14 +179,15 @@ function ∂springforceb∂posb(joint::Translational, body1::Origin, body2::Body
     x1b, q1b = posargsk(body2.state)
     _, _, _, ωb = fullargssol(body2.state)
     xb, qb = posargsnext(body2.state, Δt)
+    xb, qb = posargshalf(body2.state, Δt)
     X = - Aᵀ * A * joint.spring * Aᵀ * A
     Q = - Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[2], qb) * Rmat(ωbar(ωb, Δt)*Δt/2) * LVᵀmat(q1b)
-    return [X Q; szeros(T, 3, 6)]
+    return Δt * [X Q; szeros(T, 3, 6)]
 end
 function ∂damperforceb∂posb(joint::Translational, body1::Origin, body2::Body, Δt::T) where T
     X = szeros(T, 3, 3)
     Q = szeros(T, 3, 3)
-    return [X Q; szeros(T, 3, 6)]
+    return Δt * [X Q; szeros(T, 3, 6)]
 end
 
 function ∂springforcea∂vela(joint::Translational, body1::Body, body2::Body, Δt::T) where T
@@ -237,85 +195,95 @@ function ∂springforcea∂vela(joint::Translational, body1::Body, body2::Body, 
     Aᵀ = zerodimstaticadjoint(A)
     x1a, q1a = posargsk(body1.state)
     _, _, _, ωa = fullargssol(body1.state)
-    xa, qa = posargsnext(body1.state, Δt)
-    V = - Aᵀ * A * joint.spring * Aᵀ * A * Δt
+    # xa, qa = posargsnext(body1.state, Δt)
+    xa, qa = posargshalf(body1.state, Δt)
+    # V = - Aᵀ * A * joint.spring * Aᵀ * A * Δt
+    V = - Aᵀ * A * joint.spring * Aᵀ * A * Δt/2
     Ω = - Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[1], qa) * Lmat(q1a) * derivωbar(ωa, Δt) * Δt/2
-    return [V Ω; szeros(T, 3, 6)]
+    return Δt * [V Ω; szeros(T, 3, 6)]
 end
 function ∂damperforcea∂vela(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     V = - Aᵀ * A * joint.damper * Aᵀ * A
     Ω = szeros(T, 3, 3)
-    return [V Ω; szeros(T, 3, 6)]
+    return Δt * [V Ω; szeros(T, 3, 6)]
 end
 function ∂springforcea∂velb(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     x1b, q1b = posargsk(body2.state)
     _, _, _, ωb = fullargssol(body2.state)
-    xb, qb = posargsnext(body2.state, Δt)
-    V = Aᵀ * A * joint.spring * Aᵀ * A * Δt
+    # xb, qb = posargsnext(body2.state, Δt)
+    xb, qb = posargshalf(body2.state, Δt)
+    # V = Aᵀ * A * joint.spring * Aᵀ * A * Δt
+    V = Aᵀ * A * joint.spring * Aᵀ * A * Δt/2
     Ω = Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[2], qb) * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
-    return [V Ω; szeros(T, 3, 6)]
+    return Δt * [V Ω; szeros(T, 3, 6)]
 end
 function ∂damperforcea∂velb(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     V = Aᵀ * A * joint.damper * Aᵀ * A
     Ω = szeros(T, 3, 3)
-    return [V Ω; szeros(T, 3, 6)]
+    return Δt * [V Ω; szeros(T, 3, 6)]
 end
 function ∂springforceb∂velb(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     x1b, q1b = posargsk(body2.state)
     _, _, _, ωb = fullargssol(body2.state)
-    xb, qb = posargsnext(body2.state, Δt)
-    V = - Aᵀ * A * joint.spring * Aᵀ * A * Δt
+    # xb, qb = posargsnext(body2.state, Δt)
+    xb, qb = posargshalf(body2.state, Δt)
+    # V = - Aᵀ * A * joint.spring * Aᵀ * A * Δt
+    V = - Aᵀ * A * joint.spring * Aᵀ * A * Δt/2
     Ω = - Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[2], qb) * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
-    return [V Ω; szeros(T, 3, 6)]
+    return Δt * [V Ω; szeros(T, 3, 6)]
 end
 function ∂damperforceb∂velb(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     V = - Aᵀ * A * joint.damper * Aᵀ * A
     Ω = szeros(T, 3, 3)
-    return [V Ω; szeros(T, 3, 6)]
+    return Δt * [V Ω; szeros(T, 3, 6)]
 end
 function ∂springforceb∂vela(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     x1a, q1a = posargsk(body1.state)
     _, _, _, ωa = fullargssol(body1.state)
-    xa, qa = posargsnext(body1.state, Δt)
-    V = Aᵀ * A * joint.spring * Aᵀ * A * Δt
+    # xa, qa = posargsnext(body1.state, Δt)
+    xa, qa = posargshalf(body1.state, Δt)
+    # V = Aᵀ * A * joint.spring * Aᵀ * A * Δt
+    V = Aᵀ * A * joint.spring * Aᵀ * A * Δt/2
     Ω = Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[1], qa) * Lmat(q1a) * derivωbar(ωa, Δt) * Δt/2
-    return [V Ω; szeros(T, 3, 6)]
+    return Δt * [V Ω; szeros(T, 3, 6)]
 end
 function ∂damperforceb∂vela(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     V = Aᵀ * A * joint.damper * Aᵀ * A
     Ω = szeros(T, 3, 3)
-    return [V Ω; szeros(T, 3, 6)]
+    return Δt * [V Ω; szeros(T, 3, 6)]
 end
 function ∂springforceb∂velb(joint::Translational, body1::Origin, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     x1b, q1b = posargsk(body2.state)
     _, _, _, ωb = fullargssol(body2.state)
-    xb, qb = posargsnext(body2.state, Δt)
-    V = - Aᵀ * A * joint.spring * Aᵀ * A * Δt
+    # xb, qb = posargsnext(body2.state, Δt)
+    xb, qb = posargshalf(body2.state, Δt)
+    # V = - Aᵀ * A * joint.spring * Aᵀ * A * Δt
+    V = - Aᵀ * A * joint.spring * Aᵀ * A * Δt/2
     Ω = - Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[2], qb) * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
-    return [V Ω; szeros(T, 3, 6)]
+    return Δt * [V Ω; szeros(T, 3, 6)]
 end
 function ∂damperforceb∂velb(joint::Translational, body1::Origin, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     V = - Aᵀ * A * joint.damper * Aᵀ * A
     Ω = szeros(T, 3, 3)
-    return [V Ω; szeros(T, 3, 6)]
+    return Δt * [V Ω; szeros(T, 3, 6)]
 end
 
 # # Wrappers 2

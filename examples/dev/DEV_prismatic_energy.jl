@@ -24,18 +24,6 @@ include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 include("mechanism_zoo.jl")
 
 
-###############################################################################
-# METHODS NEW EQUALITY CONSTRAINT
-################################################################################
-
-# t2r3
-function ForcePrismatic(body1::AbstractBody{T}, body2, axis;
-        p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}),
-        spring = zero(T), damper = zero(T)) where T
-    Translational2{T}(body1, body2; p1, p2, axis, spring, damper),
-    Rotational3{T}(body1, body2; qoffset, spring, damper)
-end
-
 ################################################################################
 # DEVELOPMENT NEW EQUALITY CONSTRAINT
 ################################################################################
@@ -46,7 +34,7 @@ h = 1.
 r = .05
 vert11 = [0; r; 0.0]
 vert12 = -vert11
-Nlink = 3
+Nlink = 2
 
 # Links
 origin = Origin{Float64}()
@@ -57,17 +45,16 @@ jointb1 = EqualityConstraint(Fixed(origin, links[1]; p1 = zeros(3), p2 = zeros(3
 if Nlink > 1
     eqcs = [
         jointb1;
-        # [EqualityConstraint(ForcePrismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = 1.0, damper = 1.0)) for i = 2:Nlink]
-        [EqualityConstraint(Prismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = 1.0, damper = 2.0)) for i = 2:Nlink]
+        [EqualityConstraint(Prismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = 100.0, damper = 0.0)) for i = 2:Nlink]
         ]
 else
     eqcs = [jointb1]
 end
-mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.01)
+mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.1)
 
 # mech = getmechanism(:nslider, Nlink = 5)
 initialize!(mech, :nslider)
-storage = simulate!(mech, 0.5, record = true, solver = :mehrotra!)
+storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!)
 visualize(mech, storage, vis = vis)
 
 ################################################################################

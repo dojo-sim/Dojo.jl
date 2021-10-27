@@ -336,6 +336,125 @@ function linearconstraintmapping3(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,
     return FfzG
 end
 
+function linearconstraintmapping4(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
+    Δt = mechanism.Δt
+    FfzG = zeros(T,Nb*13,Nb*12)
+
+    K = zeros(T,9,9)
+    K[1,1] = K[2,4] = K[3,7] = K[4,2] = K[5,5] = K[6,8] = K[7,3] = K[8,6] = K[9,9] = 1
+    E = SMatrix{3,3,T,9}(I)
+
+    for eqc in mechanism.eqconstraints
+        parentid = eqc.parentid
+
+        if parentid !== nothing
+            parentind = parentid - Ne
+            body1 = getbody(mechanism, parentid)
+            state1 = body1.state
+            pcol12 = offsetrange(parentind,12)
+            pcol13 = offsetrange(parentind,13)
+
+            for (i, childid) in enumerate(eqc.childids)
+                childind = childid - Ne
+                body2 = getbody(mechanism, childid)
+                state2 = body2.state
+                constraint = eqc.constraints[i]
+                ccol12 = offsetrange(childind,12)
+                ccol13 = offsetrange(childind,13)
+
+                n1 = 1
+                n2 = 0
+                for j=1:i-1
+                    n1 += length(eqc.constraints[j])
+                    n2 += length(eqc.constraints[j])
+                end
+                n2 += length(eqc.constraints[i])
+                λ = eqc.λsol[2][n1:n2]
+
+                Aaa = zeros(T,13,12)
+                Aab = zeros(T,13,12)
+                Aba = zeros(T,13,12)
+                Abb = zeros(T,13,12)
+
+                kronproduct = -kron(λ'*Array(constraintmat(constraint)),E)*K
+
+                # XX, XQ, QX, QQ = ∂2g∂posaa(constraint, posargsnext(state1, Δt)..., posargsnext(state2, Δt)...)
+                # Aaa[4:6,1:3] = kronproduct*XX
+                # Aaa[4:6,7:9] = kronproduct*XQ
+                # Aaa[11:13,1:3] = kronproduct*QX
+                # Aaa[11:13,7:9] = kronproduct*QQ
+                Aaa[[4:6; 11:13], [1:3; 7:9]] -= ∂springforcea∂posa(constraint, body1, body2, Δt)
+                Aaa[[4:6; 11:13], [1:3; 7:9]] -= ∂damperforcea∂posa(constraint, body1, body2, Δt)
+
+                # XX, XQ, QX, QQ = ∂2g∂posab(constraint, posargsnext(state1, Δt)..., posargsnext(state2, Δt)...)
+                # Aab[4:6,1:3] = kronproduct*XX
+                # Aab[4:6,7:9] = kronproduct*XQ
+                # Aab[11:13,1:3] = kronproduct*QX
+                # Aab[11:13,7:9] = kronproduct*QQ
+                Aab[[4:6; 11:13], [1:3; 7:9]] -= ∂springforcea∂posb(constraint, body1, body2, Δt)
+                Aab[[4:6; 11:13], [1:3; 7:9]] -= ∂damperforcea∂posb(constraint, body1, body2, Δt)
+
+                # XX, XQ, QX, QQ = ∂2g∂posba(constraint, posargsnext(state1, Δt)..., posargsnext(state2, Δt)...)
+                # Aba[4:6,1:3] = kronproduct*XX
+                # Aba[4:6,7:9] = kronproduct*XQ
+                # Aba[11:13,1:3] = kronproduct*QX
+                # Aba[11:13,7:9] = kronproduct*QQ
+                Aba[[4:6; 11:13], [1:3; 7:9]] -= ∂springforceb∂posa(constraint, body1, body2, Δt)
+                Aba[[4:6; 11:13], [1:3; 7:9]] -= ∂damperforceb∂posa(constraint, body1, body2, Δt)
+
+                # XX, XQ, QX, QQ = ∂2g∂posbb(constraint, posargsnext(state1, Δt)..., posargsnext(state2, Δt)...)
+                # Abb[4:6,1:3] = kronproduct*XX
+                # Abb[4:6,7:9] = kronproduct*XQ
+                # Abb[11:13,1:3] = kronproduct*QX
+                # Abb[11:13,7:9] = kronproduct*QQ
+                Abb[[4:6; 11:13], [1:3; 7:9]] -= ∂springforceb∂posb(constraint, body1, body2, Δt)
+                Abb[[4:6; 11:13], [1:3; 7:9]] -= ∂damperforceb∂posb(constraint, body1, body2, Δt)
+
+                FfzG[pcol13,pcol12] += Aaa
+                FfzG[pcol13,ccol12] += Aab
+                FfzG[ccol13,pcol12] += Aba
+                FfzG[ccol13,ccol12] += Abb
+            end
+        else
+            for (i, childid) in enumerate(eqc.childids)
+                body1 = mechanism.origin
+                childind = childid - Ne
+                body2 = getbody(mechanism, childid)
+                state2 = body2.state
+                constraint = eqc.constraints[i]
+                ccol12 = offsetrange(childind,12)
+                ccol13 = offsetrange(childind,13)
+
+                n1 = 1
+                n2 = 0
+                for i=1:i-1
+                    n1 += length(eqc.constraints[i])
+                    n2 += length(eqc.constraints[i])
+                end
+                n2 += length(eqc.constraints[i])
+                λ = eqc.λsol[2][n1:n2]
+
+                Abb = zeros(T,13,12)
+
+                kronproduct = -kron(λ'*Array(constraintmat(constraint)),E)*K
+
+                # XX, XQ, QX, QQ = ∂2g∂posbb(constraint, posargsnext(state2, Δt)...)
+                # Abb[4:6,1:3] = kronproduct*XX
+                # Abb[4:6,7:10] = kronproduct*XQ
+                # Abb[11:13,1:3] = kronproduct*QX
+                # Abb[11:13,7:10] = kronproduct*QQ
+                Abb[[4:6; 11:13], [1:3; 7:9]] -= ∂springforceb∂posb(constraint, body1, body2, Δt)
+                Abb[[4:6; 11:13], [1:3; 7:9]] -= ∂damperforceb∂posb(constraint, body1, body2, Δt)
+
+                FfzG[ccol13,ccol12] += Abb
+            end
+        end
+    end
+
+    return FfzG
+end
+
+
 function linearforcemapping2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     Fzu = zeros(T,Nb*13,Nb*12)
     Δt = mechanism.Δt
@@ -343,13 +462,14 @@ function linearforcemapping2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb
         parentid = eqc.parentid
         for (i,childid) in enumerate(eqc.childids)
             childind = childid - Ne
+            joint = eqc.constraints[i]
             if parentid !== nothing
                 parentind = parentid - Ne
                 pbody = getbody(mechanism, parentid)
                 cbody = getbody(mechanism, childid)
 
-                FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa = ∂Fτ∂posa(eqc.constraints[i], pbody.state, cbody.state, mechanism.Δt)
-                FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb = ∂Fτ∂posb(eqc.constraints[i], pbody.state, cbody.state, mechanism.Δt)
+                FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa = ∂Fτ∂posa(joint, pbody.state, cbody.state, mechanism.Δt)
+                FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb = ∂Fτ∂posb(joint, pbody.state, cbody.state, mechanism.Δt)
 
                 xa, va, qa, ωa = fullargssol(pbody.state)
                 Ma = [I zeros(3,3); zeros(4,3) Rmat(ωbar(ωa, Δt)*Δt/2)*LVᵀmat(qa)]
@@ -367,21 +487,30 @@ function linearforcemapping2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb
                 # Fzu[rowav,cola6] = [FaXa FaQa]
                 # Fzu[rowaω,cola6] = [τaXa τaQa]
                 Fzu[[rowav; rowaω],cola6] = [FaXa FaQa; τaXa τaQa] * Ma
-                
+                # Fzu[[rowav; rowaω],cola6] -= ∂springforcea∂posa(joint, pbody, cbody, Δt)
+                # Fzu[[rowav; rowaω],cola6] -= ∂damperforcea∂posa(joint, pbody, cbody, Δt)
+
                 # Fzu[rowbv,cola6] = [FbXa FbQa]
                 # Fzu[rowbω,cola6] = [τbXa τbQa]
                 Fzu[[rowbv; rowbω],cola6] = [FbXa FbQa; τbXa τbQa] * Ma
+                # Fzu[[rowbv; rowbω],cola6] -= ∂springforceb∂posa(joint, pbody, cbody, Δt)
+                # Fzu[[rowbv; rowbω],cola6] -= ∂damperforceb∂posa(joint, pbody, cbody, Δt)
 
                 # Fzu[rowav,colb6] = [FaXb FaQb]
                 # Fzu[rowaω,colb6] = [τaXb τaQb]
                 Fzu[[rowav; rowaω],colb6] = [FaXb FaQb; τaXb τaQb] * Mb
+                # Fzu[[rowav; rowaω],colb6] -= ∂springforcea∂posb(joint, pbody, cbody, Δt)
+                # Fzu[[rowav; rowaω],colb6] -= ∂damperforcea∂posb(joint, pbody, cbody, Δt)
 
                 # Fzu[rowbv,colb6] = [FbXb FbQb]
                 # Fzu[rowbω,colb6] = [τbXb τbQb]
                 Fzu[[rowbv; rowbω],colb6] = [FbXb FbQb; τbXb τbQb] * Mb
+                # Fzu[[rowbv; rowbω],colb6] -= ∂springforceb∂posb(joint, pbody, cbody, Δt)
+                # Fzu[[rowbv; rowbω],colb6] -= ∂damperforceb∂posb(joint, pbody, cbody, Δt)
             else
+                pbody = mech.origin
                 cbody = getbody(mechanism, childid)
-                FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb = ∂Fτ∂posb(eqc.constraints[i], cbody.state, mechanism.Δt)
+                FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb = ∂Fτ∂posb(joint, cbody.state, mechanism.Δt)
 
                 colb6 = offsetrange(childind,6)
                 rowbv = offsetrange(childind,3,13,2)
@@ -389,9 +518,11 @@ function linearforcemapping2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb
 
                 x2, v2, q2, ω2 = fullargssol(cbody.state)
                 M = [I zeros(3,3); zeros(4,3) Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)]
-                Fzu[[rowbv; rowbω], colb6] = [FbXb FbQb; τbXb τbQb] * M
-                # Fzu[rowbv,colb6] = [FbXb FbQb] 
+                # Fzu[rowbv,colb6] = [FbXb FbQb]
                 # Fzu[rowbω,colb6] = [τbXb τbQb]
+                Fzu[[rowbv; rowbω], colb6] = [FbXb FbQb; τbXb τbQb] * M
+                # Fzu[[rowbv; rowbω], colb6] -= ∂springforceb∂posb(joint, pbody, cbody, Δt)
+                # Fzu[[rowbv; rowbω], colb6] -= ∂damperforceb∂posb(joint, pbody, cbody, Δt)
             end
 
         end
@@ -624,6 +755,7 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     A[1:sum(eqcdims), 1:12Nb] += linearconstraints2(mechanism)
     A[sum(eqcdims) .+ (1:sum(bodydims)), 1:12Nb] += Fz[Fz_indices(length(bodies)),:]
     A[sum(eqcdims) .+ (1:sum(bodydims)), 1:12Nb] += linearconstraintmapping3(mechanism)[Fz_indices(length(bodies)), :] * attitudejacobian_chain(data, mechanism.Δt, Nb)[1:13Nb,1:12Nb]
+    A[sum(eqcdims) .+ (1:sum(bodydims)), 1:12Nb] += linearconstraintmapping4(mechanism)[Fz_indices(length(bodies)), :]
 
     offr = 0
     offc = 0

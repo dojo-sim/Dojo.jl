@@ -13,7 +13,9 @@ getGlobalOrder() = (global METHODORDER; return METHODORDER)
 
 # Convenience functions
 @inline getx3(state::State, Δt) = state.xk[1] + state.vsol[2]*Δt
+@inline getx25(state::State, Δt) = state.xk[1] + state.vsol[2] * Δt/2
 @inline getq3(state::State, Δt) = state.qk[1] * ωbar(state.ωsol[2],Δt) * Δt / 2
+@inline getq25(state::State, Δt) = state.qk[1] * ωbar(state.ωsol[2]/2,Δt) * Δt / 2
 
 @inline posargsc(state::State) = (state.xc, state.qc)
 @inline fullargsc(state::State) = (state.xc, state.vc, state.qc, state.ωc)
@@ -21,7 +23,7 @@ getGlobalOrder() = (global METHODORDER; return METHODORDER)
 @inline posargssol(state::State) = (state.xsol[2], state.qsol[2])
 @inline fullargssol(state::State) = (state.xsol[2], state.vsol[2], state.qsol[2], state.ωsol[2])
 @inline posargsnext(state::State, Δt) = (getx3(state, Δt), getq3(state, Δt))
-@inline posargshalf(state::State, Δt) = (state.xk[1] + state.vsol[2]*Δt/2, getq3(state, Δt))
+@inline posargshalf(state::State, Δt) = (getx25(state, Δt), getq3(state, Δt))
 
 
 
