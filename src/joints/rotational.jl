@@ -26,13 +26,13 @@ Rotational1 = Rotational{T,1} where T
 Rotational2 = Rotational{T,2} where T
 Rotational3 = Rotational{T,3} where T
 
-springtorquea(joint::Rotational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
-springtorqueb(joint::Rotational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
-springtorqueb(joint::Rotational{T,3}, body1::Origin, body2::Body, Δt::T, childid) where T = szeros(T, 6)
+springforcea(joint::Rotational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
+springforceb(joint::Rotational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
+springforceb(joint::Rotational{T,3}, body1::Origin, body2::Body, Δt::T, childid) where T = szeros(T, 6)
 
-dampertorquea(joint::Rotational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
-dampertorqueb(joint::Rotational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
-dampertorqueb(joint::Rotational{T,3}, body1::Origin, body2::Body, Δt::T, childid) where T = szeros(T, 6)
+damperforcea(joint::Rotational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
+damperforceb(joint::Rotational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
+damperforceb(joint::Rotational{T,3}, body1::Origin, body2::Body, Δt::T, childid) where T = szeros(T, 6)
 
 
 function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::Rotational{T,N}) where {T,N}
