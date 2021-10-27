@@ -220,7 +220,6 @@ end
 function _dGa!(mechanism, pbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc} # 6 x 7
     Δt = mechanism.Δt
     _, _, q2, ω2 = fullargssol(pbody.state)
-    # M = [Δt * I(3) szeros(3,3); szeros(4,3) Lmat(q2)*derivωbar(ω2, Δt)*Δt/2]
     M = ∂integration(q2, ω2, Δt)
 
     off = 0
@@ -232,10 +231,9 @@ function _dGa!(mechanism, pbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T
         pbody.state.D -= _dGa(joint, pbody, cbody, Aᵀ * eqc.λsol[2][off .+ (1:Nj)], Δt) * M
         FaXa, FaQa, τaXa, τaQa, = ∂Fτ∂posa(joint, pbody.state, cbody.state, Δt)
         pbody.state.D -= [FaXa FaQa; τaXa τaQa] * M
-        # eqc.isspring && (pbody.state.D -= ∂springforcea∂vela(joint, pbody, cbody, Δt) * M)
-        # eqc.isdamper && (pbody.state.D -= ∂damperforcea∂vela(joint, pbody, cbody, Δt) * M)
-        # eqc.isspring && (pbody.state.D -= ∂springtorquea∂vela(joint, pbody, cbody, Δt) * M)
-        # eqc.isdamper && (pbody.state.D -= ∂dampertorquea∂vela(joint, pbody, cbody, Δt) * M)
+        # @warn "not sure why commenting this fixes solmat"
+        eqc.isspring && (pbody.state.D -= ∂springforcea∂vela(joint, pbody, cbody, Δt)) # * M)
+        eqc.isdamper && (pbody.state.D -= ∂damperforcea∂vela(joint, pbody, cbody, Δt)) # * M)
         off += Nj
     end
     return nothing
@@ -244,7 +242,6 @@ end
 function _dGb!(mechanism, cbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc} # 6 x 7
     Δt = mechanism.Δt
     x2, v2, q2, ω2 = fullargssol(cbody.state)
-    # M = [Δt * I zeros(3,3); zeros(4,3) Lmat(q2)*derivωbar(ω2, Δt)*Δt/2]
     M = ∂integration(q2, ω2, Δt)
 
     off = 0
@@ -257,10 +254,9 @@ function _dGb!(mechanism, cbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T
             cbody.state.D -= _dGb(joint, pbody, cbody, Aᵀ * eqc.λsol[2][off .+ (1:Nj)], Δt) * M
             _, _, _, _, FbXb, FbQb, τbXb, τbQb = typeof(pbody) <: Origin ? ∂Fτ∂posb(joint, cbody.state, Δt) : ∂Fτ∂posb(joint, pbody.state, cbody.state, Δt)
             cbody.state.D -= [FbXb FbQb; τbXb τbQb] * M
-            # eqc.isspring && (cbody.state.D -= ∂springforceb∂velb(joint, pbody, cbody, Δt) * M)
-            # eqc.isdamper && (cbody.state.D -= ∂damperforceb∂velb(joint, pbody, cbody, Δt) * M)
-            # eqc.isspring && (cbody.state.D -= ∂springtorqueb∂velb(joint, pbody, cbody, Δt) * M)
-            # eqc.isdamper && (cbody.state.D -= ∂dampertorqueb∂velb(joint, pbody, cbody, Δt) * M)
+            # @warn "not sure why commenting this fixes solmat"
+            eqc.isspring && (cbody.state.D -= ∂springforceb∂velb(joint, pbody, cbody, Δt)) # * M)
+            eqc.isdamper && (cbody.state.D -= ∂damperforceb∂velb(joint, pbody, cbody, Δt)) # * M)
         end
     end
     return nothing
@@ -336,14 +332,14 @@ end
 @inline function springforcea(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += springforcea(eqc.constraints[i], body, getbody(mechanism, eqc.childids[i]), eqc.childids[i])
+        vec += springforcea(eqc.constraints[i], body, getbody(mechanism, eqc.childids[i]), mechanism.Δt, eqc.childids[i])
     end
     return vec
 end
 @inline function springforceb(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += springforceb(eqc.constraints[i], getbody(mechanism, eqc.parentid), body, eqc.childids[i])
+        vec += springforceb(eqc.constraints[i], getbody(mechanism, eqc.parentid), body, mechanism.Δt, eqc.childids[i])
     end
     return vec
 end
@@ -351,14 +347,14 @@ end
 @inline function damperforcea(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += damperforcea(eqc.constraints[i], body, getbody(mechanism, eqc.childids[i]), eqc.childids[i])
+        vec += damperforcea(eqc.constraints[i], body, getbody(mechanism, eqc.childids[i]), mechanism.Δt, eqc.childids[i])
     end
     return vec
 end
 @inline function damperforceb(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += damperforceb(eqc.constraints[i], getbody(mechanism, eqc.parentid), body, eqc.childids[i])
+        vec += damperforceb(eqc.constraints[i], getbody(mechanism, eqc.parentid), body, mechanism.Δt, eqc.childids[i])
     end
     return vec
 end

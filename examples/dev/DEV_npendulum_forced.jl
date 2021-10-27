@@ -20,29 +20,32 @@ open(vis)
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 # Build mechanism
-mech = getmechanism(:npendulum, Δt = 0.01, g = -9.81, Nlink = 5)
+mech = getmechanism(:npendulum, Δt = 0.01, g = -9.81, Nlink = 2)
 initialize!(mech, :npendulum, ϕ1 = 1.3)
 
 for (i,joint) in enumerate(mech.eqconstraints)
-    if i ∈ (1,2)
+    if i ∈ (1,)
         jt = joint.constraints[1]
         jr = joint.constraints[2]
         joint.isdamper = true #false
         joint.isspring = true #false
 
-        jt.spring = 1/i * 0.0 * 1e-0 .* sones(3)[1]# 1e4
-        jt.damper = 1/i * 3.1 * 1e+3 .* sones(3)[1]# 1e4
-        jr.spring = 1/i * 0.0 * 1e-0 .* sones(3)[1]# 1e4
-        # jr.damper = 1/i * 2.2 * 1e+3 .* sones(3)[1]# 1e4
-        jr.damper = 1/1 * 2.2 * 1e-1 .* sones(3)[1]# 1e4
+        jt.spring = 1/i * 1.0 * 1e+4 .* sones(3)[1]# 1e4
+        jt.damper = 1/i * 1.0 * 1e+4 .* sones(3)[1]# 1e4
+        jr.spring = 1/i * 0.0 * 1e+0 .* sones(3)[1]# 1e4
+        jr.damper = 1/i * 1.0 * 1e+0 .* sones(3)[1]# 1e4
 
-        mech.eqconstraints[1].isspring
-        mech.eqconstraints[1].isdamper
-        mech.eqconstraints[1].constraints[2].damper
     end
 end
+mech.eqconstraints[1].isspring
+mech.eqconstraints[1].isdamper
+mech.eqconstraints[1].constraints[1].spring
+mech.eqconstraints[1].constraints[1].damper
+mech.eqconstraints[1].constraints[2].spring
+mech.eqconstraints[1].constraints[2].damper
 
-storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!)
+
+storage = simulate!(mech, 3.0, record = true, solver = :mehrotra!)
 # visstorage = simulate!(mech, 4.0, record = true, solver = :mehrotra!)
 # plot(hcat(Vector.(storage.x[1])...)')
 # plot(hcat([[q.w, q.x, q.y, q.z] for q in storage.q[1]]...)')
@@ -109,7 +112,8 @@ norm((fd_solmat + solmat)[17:22, 11:16], Inf)
 norm((fd_solmat + solmat)[17:22, 17:22], Inf)
 
 (fd_solmat + solmat)[11:16, 11:16]
-(fd_solmat + solmat)[11:16, 17:22]
+(fd_solmat + solmat)[11:16, 11:16][4:6,4:6]
+(fd_solmat + solmat)[11:16, 17:22][4:6,4:6]
 (fd_solmat + solmat)[17:22, 11:16]
 (fd_solmat + solmat)[17:22, 17:22]
 

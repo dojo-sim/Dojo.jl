@@ -27,13 +27,13 @@ Translational1 = Translational{T,1} where T
 Translational2 = Translational{T,2} where T
 Translational3 = Translational{T,3} where T
 
-springforcea(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6)
-springforceb(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6)
-springforceb(joint::Translational{T,3}, body1::Origin, body2::Body, childid) where T = szeros(T, 6)
+springforcea(joint::Translational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
+springforceb(joint::Translational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
+springforceb(joint::Translational{T,3}, body1::Origin, body2::Body, Δt::T, childid) where T = szeros(T, 6)
 
-damperforcea(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6)
-damperforceb(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6)
-damperforceb(joint::Translational{T,3}, body1::Origin, body2::Body, childid) where T = szeros(T, 6)
+damperforcea(joint::Translational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
+damperforceb(joint::Translational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
+damperforceb(joint::Translational{T,3}, body1::Origin, body2::Body, Δt::T, childid) where T = szeros(T, 6)
 
 
 function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::Translational{T,N}) where {T,N}

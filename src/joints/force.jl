@@ -76,8 +76,8 @@ damperforceb(joint::Translational, stateb::State) = damperforceb(joint, stateb.v
 ### Spring and damper
 ## Forces for dynamics
 # Force applied by body b on body a expressed in world frame
-@inline function springforcea(joint::Translational, xa::AbstractVector, qa::UnitQuaternion,
-    xb::AbstractVector, qb::UnitQuaternion)
+@inline function springforcea(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion,
+    xb::AbstractVector, qb::UnitQuaternion) where {T}
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     distance = A * gc(joint, xa, qa, xb, qb)
@@ -85,8 +85,8 @@ damperforceb(joint::Translational, stateb::State) = damperforceb(joint, stateb.v
     return [force; szeros(T, 3)]
 end
 # Force applied by body a on body b expressed in world frame
-@inline function springforceb(joint::Translational, xa::AbstractVector, qa::UnitQuaternion,
-        xb::AbstractVector, qb::UnitQuaternion)
+@inline function springforceb(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion,
+        xb::AbstractVector, qb::UnitQuaternion) where {T}
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     distance = A * gc(joint, xa, qa, xb, qb)
@@ -94,16 +94,16 @@ end
     return [force; szeros(T, 3)]
 end
 # Force applied by origin on body b expressed in world frame
-@inline function springforceb(joint::Translational, xb::AbstractVector, qb::UnitQuaternion)
+@inline function springforceb(joint::Translational{T}, xb::AbstractVector, qb::UnitQuaternion) where {T}
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     distance = A * gc(joint, xb, qb)
-    force = -Aᵀ * A * joint.spring * Aᵀ * distance  # Currently assumes same spring constant in all directions
+    force = - Aᵀ * A * joint.spring * Aᵀ * distance  # Currently assumes same spring constant in all directions
     return [force; szeros(T, 3)]
 end
 
 # Force applied by body b on body a expressed in world frame
-@inline function damperforcea(joint::Translational, va::AbstractVector, vb::AbstractVector)
+@inline function damperforcea(joint::Translational{T}, va::AbstractVector, vb::AbstractVector) where {T}
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     velocity = A * (vb - va)
@@ -111,7 +111,7 @@ end
     return [force; szeros(T, 3)]
 end
 # Force applied by body a on body b expressed in world frame
-@inline function damperforceb(joint::Translational, va::AbstractVector, vb::AbstractVector)
+@inline function damperforceb(joint::Translational{T}, va::AbstractVector, vb::AbstractVector) where {T}
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     velocity = A * (vb - va)
@@ -119,7 +119,7 @@ end
     return [force; szeros(T, 3)]
 end
 # Force applied by origin on body b expressed in world frame
-@inline function damperforceb(joint::Translational, vb::AbstractVector)
+@inline function damperforceb(joint::Translational{T}, vb::AbstractVector) where {T}
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     velocity = A * vb
@@ -127,6 +127,27 @@ end
     return [force; szeros(T, 3)]
 end
 
+∂springforcea∂posa(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6, 6)
+∂damperforcea∂posa(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6, 6)
+∂springforcea∂posb(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6, 6)
+∂damperforcea∂posb(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6, 6)
+∂springforceb∂posb(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6, 6)
+∂damperforceb∂posb(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6, 6)
+∂springforceb∂posa(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6, 6)
+∂damperforceb∂posa(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6, 6)
+∂springforceb∂posb(joint::Translational{T,3}, body1::Origin, body2::Body, childid) where T = szeros(T, 6, 6)
+∂damperforceb∂posb(joint::Translational{T,3}, body1::Origin, body2::Body, childid) where T = szeros(T, 6, 6)
+
+∂springforcea∂vela(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6, 6)
+∂damperforcea∂vela(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6, 6)
+∂springforcea∂velb(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6, 6)
+∂damperforcea∂velb(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6, 6)
+∂springforceb∂velb(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6, 6)
+∂damperforceb∂velb(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6, 6)
+∂springforceb∂vela(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6, 6)
+∂damperforceb∂vela(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6, 6)
+∂springforceb∂velb(joint::Translational{T,3}, body1::Origin, body2::Body, childid) where T = szeros(T, 6, 6)
+∂damperforceb∂velb(joint::Translational{T,3}, body1::Origin, body2::Body, childid) where T = szeros(T, 6, 6)
 
 function ∂springforcea∂posa(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)

@@ -87,21 +87,21 @@ end
 
 ### Springs and Dampers (for dynamics)
 ## Wrappers 1
-@inline function springforcea(joint::AbstractJoint, body1::Body, body2::Body, childid)
+@inline function springforcea(joint::AbstractJoint, body1::Body, body2::Body, Δt, childid)
     if body2.id == childid
-        return springforcea(joint, body1.state, body2.state)
+        return springforcea(joint, body1.state, body2.state, Δt)
     else
         return springforce(joint)
     end
 end
-@inline function springforceb(joint::AbstractJoint, body1::Body, body2::Body, childid)
+@inline function springforceb(joint::AbstractJoint, body1::Body, body2::Body, Δt, childid)
     if body2.id == childid
-        return springforceb(joint, body1.state, body2.state)
+        return springforceb(joint, body1.state, body2.state, Δt)
     else
         return springforce(joint)
     end
 end
-@inline function springforceb(joint::AbstractJoint, body1::Origin, body2::Body, childid)
+@inline function springforceb(joint::AbstractJoint, body1::Origin, body2::Body, Δt, childid)
     if body2.id == childid
         return springforceb(joint, body2.state)
     else
@@ -109,23 +109,23 @@ end
     end
 end
 
-@inline function damperforcea(joint::AbstractJoint, body1::Body, body2::Body, childid)
+@inline function damperforcea(joint::AbstractJoint, body1::Body, body2::Body, Δt, childid)
     if body2.id == childid
-        return damperforcea(joint, body1.state, body2.state)
+        return damperforcea(joint, body1.state, body2.state, Δt)
     else
         return damperforce(joint)
     end
 end
-@inline function damperforceb(joint::AbstractJoint, body1::Body, body2::Body, childid)
+@inline function damperforceb(joint::AbstractJoint, body1::Body, body2::Body, Δt, childid)
     if body2.id == childid
-        return damperforceb(joint, body1.state, body2.state)
+        return damperforceb(joint, body1.state, body2.state, Δt)
     else
         return damperforce(joint)
     end
 end
-@inline function damperforceb(joint::AbstractJoint, body1::Origin, body2::Body, childid)
+@inline function damperforceb(joint::AbstractJoint, body1::Origin, body2::Body, Δt, childid)
     if body2.id == childid
-        return damperforceb(joint, body2.state)
+        return damperforceb(joint, body2.state, Δt)
     else
         return damperforce(joint)
     end
