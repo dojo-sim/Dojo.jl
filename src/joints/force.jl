@@ -68,10 +68,17 @@ end
 springforcea(joint::Translational, statea::State, stateb::State, Δt) = springforcea(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)...)
 springforceb(joint::Translational, statea::State, stateb::State, Δt) = springforceb(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)...)
 springforceb(joint::Translational, stateb::State, Δt) = springforceb(joint, posargsnext(stateb, Δt)...)
-
 damperforcea(joint::Translational, statea::State, stateb::State, Δt) = damperforcea(joint, statea.vsol[2], stateb.vsol[2])
 damperforceb(joint::Translational, statea::State, stateb::State, Δt) = damperforceb(joint, statea.vsol[2], stateb.vsol[2])
 damperforceb(joint::Translational, stateb::State, Δt) = damperforceb(joint, stateb.vsol[2])
+
+springforcea(joint::Translational{T,3}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
+springforceb(joint::Translational{T,3}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
+springforceb(joint::Translational{T,3}, stateb::State, Δt) where {T} = szeros(T, 6)
+damperforcea(joint::Translational{T,3}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
+damperforceb(joint::Translational{T,3}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
+damperforceb(joint::Translational{T,3}, stateb::State, Δt) where {T} = szeros(T, 6)
+
 
 ### Spring and damper
 ## Forces for dynamics
