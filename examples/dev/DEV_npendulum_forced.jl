@@ -24,16 +24,16 @@ mech = getmechanism(:npendulum, Δt = 0.01, g = -9.81, Nlink = 2)
 initialize!(mech, :npendulum, ϕ1 = 1.3)
 
 for (i,joint) in enumerate(mech.eqconstraints)
-    if i ∈ (2)
+    if i ∈ (1,,2)
         jt = joint.constraints[1]
         jr = joint.constraints[2]
         joint.isdamper = true #false
         joint.isspring = true #false
 
-        jt.spring = 1/i * 2.0 * 1e+4 .* sones(3)[1]# 1e4
-        jt.damper = 1/i * 1.0 * 1e+4 .* sones(3)[1]# 1e4
-        jr.spring = 1/i * 1.0 * 1e+0 .* sones(3)[1]# 1e4
-        jr.damper = 1/i * 1.0 * 1e+0 .* sones(3)[1]# 1e4
+        jt.spring = 1/i * 1.0 * 1e+4 .* sones(3)[1]# 1e4
+        jt.damper = 1/i * 2.0 * 1e+4 .* sones(3)[1]# 1e4
+        jr.spring = 1/i * 3.0 * 1e+0 .* sones(3)[1]# 1e4
+        jr.damper = 1/i * 4.0 * 1e+0 .* sones(3)[1]# 1e4
 
     end
 end
@@ -111,11 +111,13 @@ norm((fd_solmat + solmat)[17:22, 17:22], Inf)
 (fd_solmat + solmat)[17:22, 11:16]
 (fd_solmat + solmat)[17:22, 17:22]
 
+fd_solmat[11:16, 11:16]
 fd_solmat[11:16, 11:16][4:6, 4:6]
 fd_solmat[11:16, 17:22]
 fd_solmat[17:22, 11:16]
 fd_solmat[17:22, 17:22]
 
+solmat[11:16, 11:16]
 solmat[11:16, 11:16][4:6, 4:6]
 solmat[11:16, 17:22]
 solmat[17:22, 11:16]

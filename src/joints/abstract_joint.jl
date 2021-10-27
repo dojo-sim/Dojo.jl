@@ -103,7 +103,7 @@ end
 end
 @inline function springforceb(joint::AbstractJoint, body1::Origin, body2::Body, Δt, childid)
     if body2.id == childid
-        return springforceb(joint, body2.state)
+        return springforceb(joint, body2.state, Δt)
     else
         return springforce(joint)
     end
@@ -133,14 +133,14 @@ end
 
 ## Wrappers 2
 @inline springforce(joint::AbstractJoint{T}) where {T} = szeros(T, 6) # TODO zero function?
-springforcea(joint::AbstractJoint, statea::State, stateb::State) = springforcea(joint, posargsk(statea)..., posargsk(stateb)...)
-springforceb(joint::AbstractJoint, statea::State, stateb::State) = springforceb(joint, posargsk(statea)..., posargsk(stateb)...)
-springforceb(joint::AbstractJoint, stateb::State) = springforceb(joint, posargsk(stateb)...)
+# springforcea(joint::AbstractJoint, statea::State, stateb::State) = springforcea(joint, posargsk(statea)..., posargsk(stateb)...)
+# springforceb(joint::AbstractJoint, statea::State, stateb::State) = springforceb(joint, posargsk(statea)..., posargsk(stateb)...)
+# springforceb(joint::AbstractJoint, stateb::State) = springforceb(joint, posargsk(stateb)...)
 
 @inline damperforce(joint::AbstractJoint{T}) where {T} = szeros(T, 6) # TODO zero function?
-damperforcea(joint::AbstractJoint, statea::State, stateb::State) = damperforcea(joint, fullargssol(statea)..., fullargssol(stateb)...)
-damperforceb(joint::AbstractJoint, statea::State, stateb::State) = damperforceb(joint, fullargssol(statea)..., fullargssol(stateb)...)
-damperforceb(joint::AbstractJoint, stateb::State) = damperforceb(joint, fullargssol(stateb)...)
+# damperforcea(joint::AbstractJoint, statea::State, stateb::State) = damperforcea(joint, fullargssol(statea)..., fullargssol(stateb)...)
+# damperforceb(joint::AbstractJoint, statea::State, stateb::State) = damperforceb(joint, fullargssol(statea)..., fullargssol(stateb)...)
+# damperforceb(joint::AbstractJoint, stateb::State) = damperforceb(joint, fullargssol(stateb)...)
 
 
 ### Forcing (for dynamics)
