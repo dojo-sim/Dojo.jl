@@ -123,57 +123,57 @@ end
 end
 
 
-### Spring and damper
-## Forces for dynamics
-# Force applied by body b on body a expressed in world frame
-@inline function springforcea(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-    A = nullspacemat(joint)
-    Aᵀ = zerodimstaticadjoint(A)
-    distance = A * g(joint, xa, qa, xb, qb)
-    force = Aᵀ * A * joint.spring * Aᵀ * distance  # Currently assumes same spring constant in all directions
-    return [force;szeros(3)]
-end
-# Force applied by body a on body b expressed in world frame
-@inline function springforceb(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-    A = nullspacemat(joint)
-    Aᵀ = zerodimstaticadjoint(A)
-    distance = A * g(joint, xa, qa, xb, qb)
-    force = - Aᵀ * A * joint.spring * Aᵀ * distance  # Currently assumes same spring constant in all directions
-    return [force;szeros(3)]
-end
-# Force applied by origin on body b expressed in world frame
-@inline function springforceb(joint::Translational, xb::AbstractVector, qb::UnitQuaternion)
-    A = nullspacemat(joint)
-    Aᵀ = zerodimstaticadjoint(A)
-    distance = A * g(joint, xb, qb)
-    force = - Aᵀ * A * joint.spring * Aᵀ * distance  # Currently assumes same spring constant in all directions
-    return [force;szeros(3)]
-end
-
-# Force applied by body b on body a expressed in world frame
-@inline function damperforcea(joint::Translational, va::AbstractVector, vb::AbstractVector)
-    A = nullspacemat(joint)
-    Aᵀ = zerodimstaticadjoint(A)
-    velocity = A * (vb - va)
-    force = Aᵀ * A * joint.damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
-    return [force;szeros(3)]
-end
-# Force applied by body a on body b expressed in world frame
-@inline function damperforceb(joint::Translational, va::AbstractVector, vb::AbstractVector)
-    A = nullspacemat(joint)
-    Aᵀ = zerodimstaticadjoint(A)
-    velocity = A * (vb - va)
-    force = - Aᵀ * A * joint.damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
-    return [force;szeros(3)]
-end
-# Force applied by origin on body b expressed in world frame
-@inline function damperforceb(joint::Translational, vb::AbstractVector)
-    A = nullspacemat(joint)
-    Aᵀ = zerodimstaticadjoint(A)
-    velocity = A * vb
-    force = - Aᵀ * A * joint.damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
-    return [force;szeros(3)]
-end
+# ### Spring and damper
+# ## Forces for dynamics
+# # Force applied by body b on body a expressed in world frame
+# @inline function springforcea(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+#     A = nullspacemat(joint)
+#     Aᵀ = zerodimstaticadjoint(A)
+#     distance = A * g(joint, xa, qa, xb, qb)
+#     force = Aᵀ * A * joint.spring * Aᵀ * distance  # Currently assumes same spring constant in all directions
+#     return [force;szeros(3)]
+# end
+# # Force applied by body a on body b expressed in world frame
+# @inline function springforceb(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+#     A = nullspacemat(joint)
+#     Aᵀ = zerodimstaticadjoint(A)
+#     distance = A * g(joint, xa, qa, xb, qb)
+#     force = - Aᵀ * A * joint.spring * Aᵀ * distance  # Currently assumes same spring constant in all directions
+#     return [force;szeros(3)]
+# end
+# # Force applied by origin on body b expressed in world frame
+# @inline function springforceb(joint::Translational, xb::AbstractVector, qb::UnitQuaternion)
+#     A = nullspacemat(joint)
+#     Aᵀ = zerodimstaticadjoint(A)
+#     distance = A * g(joint, xb, qb)
+#     force = - Aᵀ * A * joint.spring * Aᵀ * distance  # Currently assumes same spring constant in all directions
+#     return [force;szeros(3)]
+# end
+#
+# # Force applied by body b on body a expressed in world frame
+# @inline function damperforcea(joint::Translational, va::AbstractVector, vb::AbstractVector)
+#     A = nullspacemat(joint)
+#     Aᵀ = zerodimstaticadjoint(A)
+#     velocity = A * (vb - va)
+#     force = Aᵀ * A * joint.damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
+#     return [force;szeros(3)]
+# end
+# # Force applied by body a on body b expressed in world frame
+# @inline function damperforceb(joint::Translational, va::AbstractVector, vb::AbstractVector)
+#     A = nullspacemat(joint)
+#     Aᵀ = zerodimstaticadjoint(A)
+#     velocity = A * (vb - va)
+#     force = - Aᵀ * A * joint.damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
+#     return [force;szeros(3)]
+# end
+# # Force applied by origin on body b expressed in world frame
+# @inline function damperforceb(joint::Translational, vb::AbstractVector)
+#     A = nullspacemat(joint)
+#     Aᵀ = zerodimstaticadjoint(A)
+#     velocity = A * vb
+#     force = - Aᵀ * A * joint.damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
+#     return [force;szeros(3)]
+# end
 
 # ### Spring and damper
 # ## Forces for dynamics
