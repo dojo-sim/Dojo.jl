@@ -289,8 +289,16 @@ end
 function ∂dampertorquea∂vela(joint::Rotational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    V = - Aᵀ * A * joint.damper * Aᵀ * A
-    Ω = szeros(T, 3, 3)
+    x1a, q1a = posargsk(body1.state)
+    _, _, _, ωa = fullargssol(body1.state)
+    _, _, _, ωb = fullargssol(body2.state)
+    xa, qa = posargsnext(body1.state, Δt)
+    xb, qb = posargsnext(body2.state, Δt)
+    qoffset = joint.qoffset
+    force = dampertorquea(joint, qa, ωa, qb, ωb; rotate = false)
+    V = szeros(T, 3, 3)
+    Ω = ∂vrotate∂p(force, qoffset) * 2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qa \ qb / qoffset) * Rmat(qb * inv(qoffset)) * Tmat() * Lmat(q1a) * derivωbar(ωa, Δt) * Δt/2
+    Ω += ∂vrotate∂p(force, qoffset) * 2 * Aᵀ * A * joint.damper * Aᵀ * A * -1.0 * ∂vrotate∂p(ωa, inv(qoffset))
     return [szeros(T, 3, 6); V Ω]
 end
 function ∂springtorquea∂velb(joint::Rotational, body1::Body, body2::Body, Δt::T) where T
@@ -310,8 +318,16 @@ end
 function ∂dampertorquea∂velb(joint::Rotational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    V = Aᵀ * A * joint.damper * Aᵀ * A
-    Ω = szeros(T, 3, 3)
+    x1b, q1b = posargsk(body2.state)
+    _, _, _, ωa = fullargssol(body1.state)
+    _, _, _, ωb = fullargssol(body2.state)
+    xa, qa = posargsnext(body1.state, Δt)
+    xb, qb = posargsnext(body2.state, Δt)
+    qoffset = joint.qoffset
+    force = dampertorquea(joint, qa, ωa, qb, ωb; rotate = false)
+    V = szeros(T, 3, 3)
+    Ω = ∂vrotate∂p(force, qoffset) * 2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qa \ qb / qoffset) * Rmat(inv(qoffset)) * Lmat(inv(qa)) * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
+    Ω += ∂vrotate∂p(force, qoffset) * 2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂p(ωb, qa \ qb / qoffset)
     return [szeros(T, 3, 6); V Ω]
 end
 function ∂springtorqueb∂velb(joint::Rotational, body1::Body, body2::Body, Δt::T) where T
@@ -332,8 +348,16 @@ end
 function ∂dampertorqueb∂velb(joint::Rotational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    V = - Aᵀ * A * joint.damper * Aᵀ * A
-    Ω = szeros(T, 3, 3)
+    x1b, q1b = posargsk(body2.state)
+    _, _, _, ωa = fullargssol(body1.state)
+    _, _, _, ωb = fullargssol(body2.state)
+    xa, qa = posargsnext(body1.state, Δt)
+    xb, qb = posargsnext(body2.state, Δt)
+    qoffset = joint.qoffset
+    force = dampertorqueb(joint, qa, ωa, qb, ωb; rotate = false)
+    V = szeros(T, 3, 3)
+    Ω = ∂vrotate∂p(force, inv(qb) * qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qa \ qb / qoffset) * Rmat(inv(qoffset)) * Lmat(inv(qa)) * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
+    Ω += ∂vrotate∂p(force, inv(qb) * qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂p(ωb, qa \ qb / qoffset)
     return [szeros(T, 3, 6); V Ω]
 end
 function ∂springtorqueb∂vela(joint::Rotational, body1::Body, body2::Body, Δt::T) where T
@@ -354,8 +378,16 @@ end
 function ∂dampertorqueb∂vela(joint::Rotational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    V = Aᵀ * A * joint.damper * Aᵀ * A
-    Ω = szeros(T, 3, 3)
+    x1a, q1a = posargsk(body1.state)
+    _, _, _, ωa = fullargssol(body1.state)
+    _, _, _, ωb = fullargssol(body2.state)
+    xa, qa = posargsnext(body1.state, Δt)
+    xb, qb = posargsnext(body2.state, Δt)
+    qoffset = joint.qoffset
+    force = dampertorqueb(joint, qa, ωa, qb, ωb; rotate = false)
+    V = szeros(T, 3, 3)
+    Ω = ∂vrotate∂p(force, inv(qb) * qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qa \ qb / qoffset) * Rmat(qb * inv(qoffset)) * Tmat() * Lmat(q1a) * derivωbar(ωa, Δt) * Δt/2
+    Ω += ∂vrotate∂p(force, inv(qb) * qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * -1.0 * ∂vrotate∂p(ωa, inv(qoffset))
     return [szeros(T, 3, 6); V Ω]
 end
 function ∂springtorqueb∂velb(joint::Rotational, body1::Origin, body2::Body, Δt::T) where T
@@ -374,11 +406,23 @@ end
 function ∂dampertorqueb∂velb(joint::Rotational, body1::Origin, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    V = - Aᵀ * A * joint.damper * Aᵀ * A
-    Ω = szeros(T, 3, 3)
+    qoffset = joint.qoffset
+    velocity = A * vrotate(ωb, qb / qoffset) # in offset frame
+    force = - 2 * Aᵀ * A * joint.damper * Aᵀ * velocity # Currently assumes same damper constant in all directions
+    rotate && (force = vrotate(force, inv(qb) * qoffset)) # rotate back to frame b
+
+    A = nullspacemat(joint)
+    Aᵀ = zerodimstaticadjoint(A)
+    x1b, q1b = posargsk(body2.state)
+    _, _, _, ωb = fullargssol(body2.state)
+    xb, qb = posargsnext(body2.state, Δt)
+    qoffset = joint.qoffset
+    force = dampertorqueb(joint, qb, ωb; rotate = false)
+    V = szeros(T, 3, 3)
+    Ω = ∂vrotate∂p(force, inv(qb) * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qb / qoffset) * Rmat(inv(qoffset)) * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
+    Ω += ∂vrotate∂p(force, inv(qb) * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂p(ωb, qb / qoffset)
     return [szeros(T, 3, 6); V Ω]
 end
-
 
 
 # # Wrappers 2
