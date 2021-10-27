@@ -23,24 +23,24 @@ include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 mech = getmechanism(:npendulum, Δt = 0.01, g = -9.81, Nlink = 5)
 initialize!(mech, :npendulum, ϕ1 = 1.3)
 
-# for (i,joint) in enumerate(mech.eqconstraints)
-#     if i ∈ (1,2)
-#         jt = joint.constraints[1]
-#         jr = joint.constraints[2]
-#         joint.isdamper = true #false
-#         joint.isspring = true #false
-#
-#         jt.spring = 1/i * 0.0 * 1e-0 .* sones(3)[1]# 1e4
-#         jt.damper = 1/i * 3.1 * 1e+3 .* sones(3)[1]# 1e4
-#         jr.spring = 1/i * 0.0 * 1e-0 .* sones(3)[1]# 1e4
-#         # jr.damper = 1/i * 2.2 * 1e+3 .* sones(3)[1]# 1e4
-#         jr.damper = 1/1 * 2.2 * 1e-1 .* sones(3)[1]# 1e4
-#
-#         mech.eqconstraints[1].isspring
-#         mech.eqconstraints[1].isdamper
-#         mech.eqconstraints[1].constraints[2].damper
-#     end
-# end
+for (i,joint) in enumerate(mech.eqconstraints)
+    if i ∈ (1,2)
+        jt = joint.constraints[1]
+        jr = joint.constraints[2]
+        joint.isdamper = true #false
+        joint.isspring = true #false
+
+        jt.spring = 1/i * 0.0 * 1e-0 .* sones(3)[1]# 1e4
+        jt.damper = 1/i * 3.1 * 1e+3 .* sones(3)[1]# 1e4
+        jr.spring = 1/i * 0.0 * 1e-0 .* sones(3)[1]# 1e4
+        # jr.damper = 1/i * 2.2 * 1e+3 .* sones(3)[1]# 1e4
+        jr.damper = 1/1 * 2.2 * 1e-1 .* sones(3)[1]# 1e4
+
+        mech.eqconstraints[1].isspring
+        mech.eqconstraints[1].isdamper
+        mech.eqconstraints[1].constraints[2].damper
+    end
+end
 
 storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!)
 # visstorage = simulate!(mech, 4.0, record = true, solver = :mehrotra!)

@@ -98,7 +98,7 @@ end
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     distance = A * gc(joint, xb, qb)
-    force = - Aᵀ * A * joint.spring * Aᵀ * distance  # Currently assumes same spring constant in all directions
+    force = -Aᵀ * A * joint.spring * Aᵀ * distance  # Currently assumes same spring constant in all directions
     return [force; szeros(T, 3)]
 end
 

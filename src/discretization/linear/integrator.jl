@@ -25,23 +25,23 @@ getGlobalOrder() = (global METHODORDER; return METHODORDER)
 
 
 
-q0 = UnitQuaternion(rand(4)...)
-ω0 = [20., 0, 0]
-Δt = 0.0999
-q1 = q0 * ωbar(ω0, Δt) * Δt / 2
-qh = q0 * ωbar(ω0/2, Δt) * Δt / 2
-qh1 = q0 * ωbar(ω0, Δt/2) * Δt / 4
+# q0 = UnitQuaternion(rand(4)...)
+# ω0 = [20., 0, 0]
+# Δt = 0.0999
+# q1 = q0 * ωbar(ω0, Δt) * Δt / 2
+# qh = q0 * ωbar(ω0/2, Δt) * Δt / 2
+# qh1 = q0 * ωbar(ω0, Δt/2) * Δt / 4
 
-qh_ = UnitQuaternion(midpoint([q0.w, q0.x, q0.y, q0.z], [q1.w, q1.x, q1.y, q1.z])..., false)
-norm([qh.w, qh.x, qh.y, qh.z])
-norm([qh.w, qh.x, qh.y, qh.z] - [qh_.w, qh_.x, qh_.y, qh_.z])
-norm([qh1.w, qh1.x, qh1.y, qh1.z] - [qh_.w, qh_.x, qh_.y, qh_.z])
-δq = (qh_ * qh')
-[δq.w, δq.x, δq.y, δq.z]
+# qh_ = UnitQuaternion(midpoint([q0.w, q0.x, q0.y, q0.z], [q1.w, q1.x, q1.y, q1.z])..., false)
+# norm([qh.w, qh.x, qh.y, qh.z])
+# norm([qh.w, qh.x, qh.y, qh.z] - [qh_.w, qh_.x, qh_.y, qh_.z])
+# norm([qh1.w, qh1.x, qh1.y, qh1.z] - [qh_.w, qh_.x, qh_.y, qh_.z])
+# δq = (qh_ * qh')
+# [δq.w, δq.x, δq.y, δq.z]
 
-2π / 0.23
+# 2π / 0.23
 
-Lmat(sδq)
+# Lmat(sδq)
 # Square root of quaternion: https://www.johndcook.com/blog/2021/01/06/quaternion-square-roots/
 function sqrt_quat(q; ϵ=1e-16)
 	r = norm(q)

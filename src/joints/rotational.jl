@@ -26,6 +26,15 @@ Rotational1 = Rotational{T,1} where T
 Rotational2 = Rotational{T,2} where T
 Rotational3 = Rotational{T,3} where T
 
+springtorquea(joint::Rotational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6)
+springtorqueb(joint::Rotational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6)
+springtorqueb(joint::Rotational{T,3}, body1::Origin, body2::Body, childid) where T = szeros(T, 6)
+
+dampertorquea(joint::Rotational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6)
+dampertorqueb(joint::Rotational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6)
+dampertorqueb(joint::Rotational{T,3}, body1::Origin, body2::Body, childid) where T = szeros(T, 6)
+
+
 function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::Rotational{T,N}) where {T,N}
     summary(io, constraint)
     println(io,"")

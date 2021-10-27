@@ -27,6 +27,15 @@ Translational1 = Translational{T,1} where T
 Translational2 = Translational{T,2} where T
 Translational3 = Translational{T,3} where T
 
+springforcea(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6)
+springforceb(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6)
+springforceb(joint::Translational{T,3}, body1::Origin, body2::Body, childid) where T = szeros(T, 6)
+
+damperforcea(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6)
+damperforceb(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6)
+damperforceb(joint::Translational{T,3}, body1::Origin, body2::Body, childid) where T = szeros(T, 6)
+
+
 function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::Translational{T,N}) where {T,N}
     summary(io, constraint)
     println(io,"")
@@ -168,41 +177,41 @@ end
     return [force;szeros(3)]
 end
 
-### Spring and damper
-## Forces for dynamics
-# Force applied by body a on body b expressed in world frame
-@inline function springforce(joint::Force12, xa::AbstractVector, qa::UnitQuaternion,
-        xb::AbstractVector, qb::UnitQuaternion)
-    A = constraintmat(joint)
-    Aᵀ = zerodimstaticadjoint(A)
-    distance = A * gc(joint, xa, qa, xb, qb)
-    force = - Aᵀ * A * joint.spring * Aᵀ * distance  # Currently assumes same spring constant in all directions
-    return force
-end
-# Force applied by origin on body b expressed in world frame
-@inline function springforce(joint::Force12, xb::AbstractVector, qb::UnitQuaternion)
-    A = constraintmat(joint)
-    Aᵀ = zerodimstaticadjoint(A)
-    distance = A * gc(joint, xb, qb)
-    force = - Aᵀ * A * joint.spring * Aᵀ * distance  # Currently assumes same spring constant in all directions
-    return force
-end
-# Force applied by body a on body b expressed in world frame
-@inline function damperforce(joint::Force12, va::AbstractVector, vb::AbstractVector)
-    A = constraintmat(joint)
-    Aᵀ = zerodimstaticadjoint(A)
-    velocity = A * (vb - va)
-    force = - Aᵀ * A * joint.damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
-    return force
-end
-# Force applied by origin on body b expressed in world frame
-@inline function damperforce(joint::Force12, vb::AbstractVector)
-    A = constraintmat(joint)
-    Aᵀ = zerodimstaticadjoint(A)
-    velocity = A * vb
-    force = - Aᵀ * A * joint.damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
-    return force
-end
+# ### Spring and damper
+# ## Forces for dynamics
+# # Force applied by body a on body b expressed in world frame
+# @inline function springforce(joint::Force12, xa::AbstractVector, qa::UnitQuaternion,
+#         xb::AbstractVector, qb::UnitQuaternion)
+#     A = constraintmat(joint)
+#     Aᵀ = zerodimstaticadjoint(A)
+#     distance = A * gc(joint, xa, qa, xb, qb)
+#     force = - Aᵀ * A * joint.spring * Aᵀ * distance  # Currently assumes same spring constant in all directions
+#     return force
+# end
+# # Force applied by origin on body b expressed in world frame
+# @inline function springforce(joint::Force12, xb::AbstractVector, qb::UnitQuaternion)
+#     A = constraintmat(joint)
+#     Aᵀ = zerodimstaticadjoint(A)
+#     distance = A * gc(joint, xb, qb)
+#     force = - Aᵀ * A * joint.spring * Aᵀ * distance  # Currently assumes same spring constant in all directions
+#     return force
+# end
+# # Force applied by body a on body b expressed in world frame
+# @inline function damperforce(joint::Force12, va::AbstractVector, vb::AbstractVector)
+#     A = constraintmat(joint)
+#     Aᵀ = zerodimstaticadjoint(A)
+#     velocity = A * (vb - va)
+#     force = - Aᵀ * A * joint.damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
+#     return force
+# end
+# # Force applied by origin on body b expressed in world frame
+# @inline function damperforce(joint::Force12, vb::AbstractVector)
+#     A = constraintmat(joint)
+#     Aᵀ = zerodimstaticadjoint(A)
+#     velocity = A * vb
+#     force = - Aᵀ * A * joint.damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
+#     return force
+# end
 
 
 #
