@@ -58,7 +58,7 @@ if Nlink > 1
     eqcs = [
         jointb1;
         # [EqualityConstraint(ForcePrismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = 1.0, damper = 1.0)) for i = 2:Nlink]
-        [EqualityConstraint(Prismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = 1.0, damper = 1.0)) for i = 2:Nlink]
+        [EqualityConstraint(Prismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = 1.0, damper = 2.0)) for i = 2:Nlink]
         ]
 else
     eqcs = [jointb1]
@@ -67,11 +67,9 @@ mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.01)
 
 # mech = getmechanism(:nslider, Nlink = 5)
 initialize!(mech, :nslider)
-storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!)
+storage = simulate!(mech, 0.5, record = true, solver = :mehrotra!)
+visualize(mech, storage, vis = vis)
 
-# visualize(mech, storage, vis = vis)
-
-mech.eqconstraints[1].constraints[1]
 ################################################################################
 # Differentiation
 ################################################################################
