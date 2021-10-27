@@ -24,16 +24,16 @@ mech = getmechanism(:npendulum, Δt = 0.01, g = -9.81, Nlink = 2)
 initialize!(mech, :npendulum, ϕ1 = 1.3)
 
 for (i,joint) in enumerate(mech.eqconstraints)
-    if i ∈ (1,)
+    if i ∈ (1,2)
         jt = joint.constraints[1]
         jr = joint.constraints[2]
         joint.isdamper = true #false
         joint.isspring = true #false
 
         jt.spring = 1/i * 1.0 * 1e+4 .* sones(3)[1]# 1e4
-        jt.damper = 1/i * 1.0 * 1e+4 .* sones(3)[1]# 1e4
-        jr.spring = 1/i * 0.0 * 1e+0 .* sones(3)[1]# 1e4
-        jr.damper = 1/i * 1.0 * 1e+0 .* sones(3)[1]# 1e4
+        jt.damper = 1/i * 2.0 * 1e+4 .* sones(3)[1]# 1e4
+        jr.spring = 1/i * 3.0 * 1e+0 .* sones(3)[1]# 1e4
+        jr.damper = 1/i * 5.0 * 1e+0 .* sones(3)[1]# 1e4
 
     end
 end
@@ -45,13 +45,8 @@ mech.eqconstraints[1].constraints[2].spring
 mech.eqconstraints[1].constraints[2].damper
 
 
-storage = simulate!(mech, 3.0, record = true, solver = :mehrotra!)
-# visstorage = simulate!(mech, 4.0, record = true, solver = :mehrotra!)
-# plot(hcat(Vector.(storage.x[1])...)')
-# plot(hcat([[q.w, q.x, q.y, q.z] for q in storage.q[1]]...)')
-# plot(hcat(Vector.(storage.v[1])...)')
-# plot(hcat(Vector.(storage.ω[1])...)')
-
+storage = simulate!(mech, 0.03, record = true, solver = :mehrotra!)
+# storage = simulate!(mech, 3.0, record = true, solver = :mehrotra!)
 visualize(mech, storage, vis = vis)
 
 
@@ -128,6 +123,99 @@ solmat[17:22, 11:16]
 solmat[17:22, 17:22]
 
 norm(solmat, Inf)
+
+
+
+
+
+
+
+################################################################################
+# Finite Diff
+################################################################################
+function fdjac(f, x; δ = 1e-5)
+    x = Vector(x)
+    n = length(f(x))
+    m = length(x)
+    jac = zeros(n, m)
+    for i = 1:m
+        xp = deepcopy(x)
+        xm = deepcopy(x)
+        xp[i] += δ
+        xm[i] -= δ
+        jac[:,i] = (f(xp) - f(xm)) / (2δ)
+    end
+    return jac
+end
+
+function finitediff_helper(joint::AbstractJoint, pbody::AbstractBody, cbody::AbstractBody, Δt::T,
+        evalf, jacf; diff_body::Symbol = :child) where {T}
+
+    jac0 = jacf(joint, pbody, cbody, Δt)
+    function f(x)
+        v2 = x[1:3]
+        ω2 = x[4:6]
+        if diff_body == :parent
+            cstate = deepcopy(cbody.state)
+            pstate = deepcopy(pbody.state)
+            pstate.vsol[2] = v2
+            pstate.ωsol[2] = ω2
+        elseif diff_body == :child
+            cstate = deepcopy(cbody.state)
+            cstate.vsol[2] = v2
+            cstate.ωsol[2] = ω2
+            if typeof(pbody) <: Origin
+                return evalf(joint, cstate, Δt)
+            else
+                pstate = deepcopy(pbody.state)
+            end
+        end
+        return evalf(joint, pstate, cstate, Δt)
+    end
+
+    if diff_body == :child
+        v2 = cbody.state.vsol[2]
+        ω2 = cbody.state.ωsol[2]
+        x = [v2; ω2]
+    elseif diff_body == :parent
+        v2 = pbody.state.vsol[2]
+        ω2 = pbody.state.ωsol[2]
+        x = [v2; ω2]
+    else
+        error("invalid diff_body")
+    end
+    jac1 = fdjac(f, x)
+    return jac0, jac1
+end
+
+Δt = 0.01
+rot1 = mech.eqconstraints[1].constraints[2]
+rot2 = mech.eqconstraints[2].constraints[2]
+origin = mech.origin
+body1 = collect(mech.bodies)[1]
+body2 = collect(mech.bodies)[2]
+
+
+jac0, jac1 = finitediff_helper(rot2, body1, body2, Δt, springforcea, ∂springforcea∂vela, diff_body = :parent)
+norm(jac0 - jac1, Inf)
+jac0, jac1 = finitediff_helper(rot2, body1, body2, Δt, damperforcea, ∂damperforcea∂vela, diff_body = :parent)
+norm(jac0 - jac1, Inf)
+jac0, jac1 = finitediff_helper(rot2, body1, body2, Δt, springforcea, ∂springforcea∂velb, diff_body = :child)
+norm(jac0 - jac1, Inf)
+jac0, jac1 = finitediff_helper(rot2, body1, body2, Δt, damperforcea, ∂damperforcea∂velb, diff_body = :child)
+norm(jac0 - jac1, Inf)
+jac0, jac1 = finitediff_helper(rot2, body1, body2, Δt, springforceb, ∂springforceb∂velb, diff_body = :child)
+norm(jac0 - jac1, Inf)
+jac0, jac1 = finitediff_helper(rot2, body1, body2, Δt, damperforceb, ∂damperforceb∂velb, diff_body = :child)
+norm(jac0 - jac1, Inf)
+jac0, jac1 = finitediff_helper(rot2, body1, body2, Δt, springforceb, ∂springforceb∂vela, diff_body = :parent)
+norm(jac0 - jac1, Inf)
+jac0, jac1 = finitediff_helper(rot2, body1, body2, Δt, damperforceb, ∂damperforceb∂vela, diff_body = :parent)
+norm(jac0 - jac1, Inf)
+jac0, jac1 = finitediff_helper(rot1, origin, body1, Δt, springforceb, ∂springforceb∂velb, diff_body = :child)
+norm(jac0 - jac1, Inf)
+jac0, jac1 = finitediff_helper(rot1, origin, body1, Δt, damperforceb, ∂damperforceb∂velb, diff_body = :child)
+norm(jac0 - jac1, Inf)
 
 
 # solmat[1:5, 1:5]

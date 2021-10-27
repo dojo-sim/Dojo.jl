@@ -231,7 +231,6 @@ function _dGa!(mechanism, pbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T
         pbody.state.D -= _dGa(joint, pbody, cbody, Aᵀ * eqc.λsol[2][off .+ (1:Nj)], Δt) * M
         FaXa, FaQa, τaXa, τaQa, = ∂Fτ∂posa(joint, pbody.state, cbody.state, Δt)
         pbody.state.D -= [FaXa FaQa; τaXa τaQa] * M
-        # @warn "not sure why commenting this fixes solmat"
         eqc.isspring && (pbody.state.D -= ∂springforcea∂vela(joint, pbody, cbody, Δt)) # * M)
         eqc.isdamper && (pbody.state.D -= ∂damperforcea∂vela(joint, pbody, cbody, Δt)) # * M)
         off += Nj
@@ -254,7 +253,6 @@ function _dGb!(mechanism, cbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T
             cbody.state.D -= _dGb(joint, pbody, cbody, Aᵀ * eqc.λsol[2][off .+ (1:Nj)], Δt) * M
             _, _, _, _, FbXb, FbQb, τbXb, τbQb = typeof(pbody) <: Origin ? ∂Fτ∂posb(joint, cbody.state, Δt) : ∂Fτ∂posb(joint, pbody.state, cbody.state, Δt)
             cbody.state.D -= [FbXb FbQb; τbXb τbQb] * M
-            # @warn "not sure why commenting this fixes solmat"
             eqc.isspring && (cbody.state.D -= ∂springforceb∂velb(joint, pbody, cbody, Δt)) # * M)
             eqc.isdamper && (cbody.state.D -= ∂damperforceb∂velb(joint, pbody, cbody, Δt)) # * M)
         end
