@@ -172,6 +172,7 @@ function finitediff_helper(joint::AbstractJoint, pbody::AbstractBody, cbody::Abs
             cstate.vsol[2] = v2
             cstate.ωsol[2] = ω2
             if typeof(pbody) <: Origin
+                @show "hi"
                 return evalf(joint, cstate, Δt)
             else
                 pstate = deepcopy(pbody.state)

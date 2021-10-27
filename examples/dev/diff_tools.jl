@@ -322,6 +322,7 @@ function linearconstraintmapping3(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,
                 kronproduct = -kron(λ'*Array(constraintmat(constraint)),E)*K
 
                 XX, XQ, QX, QQ = ∂2g∂posbb(constraint, posargsnext(state2, Δt)...)
+
                 Abb[4:6,1:3] = kronproduct*XX
                 Abb[4:6,7:10] = kronproduct*XQ
                 Abb[11:13,1:3] = kronproduct*QX
@@ -373,7 +374,7 @@ function linearforcemapping2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb
 
                 # Fzu[rowav,colb6] = [FaXb FaQb]
                 # Fzu[rowaω,colb6] = [τaXb τaQb]
-                Fzu[[rowav; rowaω] ,colb6] = [FaXb FaQb; τaXb τaQb] * Mb
+                Fzu[[rowav; rowaω],colb6] = [FaXb FaQb; τaXb τaQb] * Mb
 
                 # Fzu[rowbv,colb6] = [FbXb FbQb]
                 # Fzu[rowbω,colb6] = [τbXb τbQb]

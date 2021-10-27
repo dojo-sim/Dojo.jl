@@ -132,15 +132,15 @@ end
 end
 
 ## Wrappers 2
-@inline springforce(joint::AbstractJoint{T}) where {T} = szeros(T, 6) # TODO zero function?
-springforcea(joint::AbstractJoint, statea::State, stateb::State) = springforcea(joint, posargsk(statea)..., posargsk(stateb)...)
-springforceb(joint::AbstractJoint, statea::State, stateb::State) = springforceb(joint, posargsk(statea)..., posargsk(stateb)...)
-springforceb(joint::AbstractJoint, stateb::State) = springforceb(joint, posargsk(stateb)...)
+# @inline springforce(joint::AbstractJoint{T}) where {T} = szeros(T, 6) # TODO zero function?
+# springforcea(joint::AbstractJoint, statea::State, stateb::State) = springforcea(joint, posargsk(statea)..., posargsk(stateb)...)
+# springforceb(joint::AbstractJoint, statea::State, stateb::State) = springforceb(joint, posargsk(statea)..., posargsk(stateb)...)
+# springforceb(joint::AbstractJoint, stateb::State) = springforceb(joint, posargsk(stateb)...)
 
-@inline damperforce(joint::AbstractJoint{T}) where {T} = szeros(T, 6) # TODO zero function?
-damperforcea(joint::AbstractJoint, statea::State, stateb::State) = damperforcea(joint, fullargssol(statea)..., fullargssol(stateb)...)
-damperforceb(joint::AbstractJoint, statea::State, stateb::State) = damperforceb(joint, fullargssol(statea)..., fullargssol(stateb)...)
-damperforceb(joint::AbstractJoint, stateb::State) = damperforceb(joint, fullargssol(stateb)...)
+# @inline damperforce(joint::AbstractJoint{T}) where {T} = szeros(T, 6) # TODO zero function?
+# damperforcea(joint::AbstractJoint, statea::State, stateb::State) = damperforcea(joint, fullargssol(statea)..., fullargssol(stateb)...)
+# damperforceb(joint::AbstractJoint, statea::State, stateb::State) = damperforceb(joint, fullargssol(statea)..., fullargssol(stateb)...)
+# damperforceb(joint::AbstractJoint, stateb::State) = damperforceb(joint, fullargssol(stateb)...)
 
 
 ### Forcing (for dynamics)
