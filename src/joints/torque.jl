@@ -69,10 +69,16 @@ end
 springforcea(joint::Rotational, statea::State, stateb::State, Δt) = springforcea(joint, posargsnext(statea, Δt)[2], posargsnext(stateb, Δt)[2])
 springforceb(joint::Rotational, statea::State, stateb::State, Δt) = springforceb(joint, posargsnext(statea, Δt)[2], posargsnext(stateb, Δt)[2])
 springforceb(joint::Rotational, stateb::State, Δt) = springforceb(joint, posargsnext(stateb, Δt)[2])
-
 damperforcea(joint::Rotational, statea::State, stateb::State, Δt) = damperforcea(joint, posargsnext(statea, Δt)[2], statea.ωsol[2], posargsnext(stateb, Δt)[2], stateb.ωsol[2])
 damperforceb(joint::Rotational, statea::State, stateb::State, Δt) = damperforceb(joint, posargsnext(statea, Δt)[2], statea.ωsol[2], posargsnext(stateb, Δt)[2], stateb.ωsol[2])
 damperforceb(joint::Rotational, stateb::State, Δt) = damperforceb(joint, posargsnext(stateb, Δt)[2], stateb.ωsol[2])
+
+springforcea(joint::Rotational{T,3}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
+springforceb(joint::Rotational{T,3}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
+springforceb(joint::Rotational{T,3}, stateb::State, Δt) where {T} = szeros(T, 6)
+damperforcea(joint::Rotational{T,3}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
+damperforceb(joint::Rotational{T,3}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
+damperforceb(joint::Rotational{T,3}, stateb::State, Δt) where {T} = szeros(T, 6)
 
 ### Spring and damper
 # Force applied by body b on body a expressed in frame a

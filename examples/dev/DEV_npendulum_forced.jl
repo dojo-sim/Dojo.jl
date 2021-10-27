@@ -24,7 +24,7 @@ mech = getmechanism(:npendulum, Δt = 0.01, g = -9.81, Nlink = 2)
 initialize!(mech, :npendulum, ϕ1 = 1.3)
 
 for (i,joint) in enumerate(mech.eqconstraints)
-    if i ∈ (1,2)
+    if i ∈ (1,,2)
         jt = joint.constraints[1]
         jr = joint.constraints[2]
         joint.isdamper = true #false
@@ -33,7 +33,7 @@ for (i,joint) in enumerate(mech.eqconstraints)
         jt.spring = 1/i * 1.0 * 1e+4 .* sones(3)[1]# 1e4
         jt.damper = 1/i * 2.0 * 1e+4 .* sones(3)[1]# 1e4
         jr.spring = 1/i * 3.0 * 1e+0 .* sones(3)[1]# 1e4
-        jr.damper = 1/i * 5.0 * 1e+0 .* sones(3)[1]# 1e4
+        jr.damper = 1/i * 4.0 * 1e+0 .* sones(3)[1]# 1e4
 
     end
 end
@@ -108,16 +108,17 @@ norm((fd_solmat + solmat)[17:22, 17:22], Inf)
 
 (fd_solmat + solmat)[11:16, 11:16]
 (fd_solmat + solmat)[11:16, 11:16][4:6,4:6]
-(fd_solmat + solmat)[11:16, 17:22][4:6,4:6]
 (fd_solmat + solmat)[17:22, 11:16]
 (fd_solmat + solmat)[17:22, 17:22]
 
 fd_solmat[11:16, 11:16]
+fd_solmat[11:16, 11:16][4:6, 4:6]
 fd_solmat[11:16, 17:22]
 fd_solmat[17:22, 11:16]
 fd_solmat[17:22, 17:22]
 
 solmat[11:16, 11:16]
+solmat[11:16, 11:16][4:6, 4:6]
 solmat[11:16, 17:22]
 solmat[17:22, 11:16]
 solmat[17:22, 17:22]
@@ -133,101 +134,7 @@ norm(solmat, Inf)
 ################################################################################
 # Finite Diff
 ################################################################################
-function fdjac(f, x; δ = 1e-5)
-    x = Vector(x)
-    n = length(f(x))
-    m = length(x)
-    jac = zeros(n, m)
-    for i = 1:m
-        xp = deepcopy(x)
-        xm = deepcopy(x)
-        xp[i] += δ
-        xm[i] -= δ
-        jac[:,i] = (f(xp) - f(xm)) / (2δ)
-    end
-    return jac
-end
 
-function finitediff_vel(joint::AbstractJoint, pbody::AbstractBody, cbody::AbstractBody, Δt::T,
-        evalf, jacf; diff_body::Symbol = :child) where {T}
-
-    jac0 = jacf(joint, pbody, cbody, Δt)
-    function f(x)
-        v2 = x[1:3]
-        ω2 = x[4:6]
-        if diff_body == :parent
-            cstate = deepcopy(cbody.state)
-            pstate = deepcopy(pbody.state)
-            pstate.vsol[2] = v2
-            pstate.ωsol[2] = ω2
-        elseif diff_body == :child
-            cstate = deepcopy(cbody.state)
-            cstate.vsol[2] = v2
-            cstate.ωsol[2] = ω2
-            if typeof(pbody) <: Origin
-                return evalf(joint, cstate, Δt)
-            else
-                pstate = deepcopy(pbody.state)
-            end
-        end
-        return evalf(joint, pstate, cstate, Δt)
-    end
-
-    if diff_body == :child
-        v2 = cbody.state.vsol[2]
-        ω2 = cbody.state.ωsol[2]
-        x = [v2; ω2]
-    elseif diff_body == :parent
-        v2 = pbody.state.vsol[2]
-        ω2 = pbody.state.ωsol[2]
-        x = [v2; ω2]
-    else
-        error("invalid diff_body")
-    end
-    jac1 = fdjac(f, x)
-    return jac0, jac1
-end
-
-function finitediff_pos(joint::AbstractJoint, pbody::AbstractBody, cbody::AbstractBody, Δt::T,
-        evalf, jacf; diff_body::Symbol = :child) where {T}
-
-    jac0 = jacf(joint, pbody, cbody, Δt)
-    function f(x)
-        x2 = x[1:3]
-        q2 = x[4:7]
-        if diff_body == :parent
-            cstate = deepcopy(cbody.state)
-            pstate = deepcopy(pbody.state)
-            pstate.xk[1] = x2
-            pstate.qk[1] = UnitQuaternion(q2...)
-        elseif diff_body == :child
-            cstate = deepcopy(cbody.state)
-            cstate.xk[1] = x2
-            cstate.qk[1] = UnitQuaternion(q2...)
-            if typeof(pbody) <: Origin
-                return evalf(joint, cstate, Δt)
-            else
-                pstate = deepcopy(pbody.state)
-            end
-        end
-        return evalf(joint, pstate, cstate, Δt)
-    end
-
-    if diff_body == :child
-        x2 = cbody.state.xk[1]
-        q2 = cbody.state.qk[1]
-        x = [x2; [q2.w, q2.x, q2.y, q2.z]]
-    elseif diff_body == :parent
-        x2 = pbody.state.xk[1]
-        q2 = pbody.state.qk[1]
-        x = [x2; [q2.w, q2.x, q2.y, q2.z]]
-    else
-        error("invalid diff_body")
-    end
-    M = [I zeros(3,3); zeros(4,3) LVᵀmat(q2)]
-    jac1 = fdjac(f, x) * M
-    return jac0, jac1
-end
 
 Δt = 0.01
 rot1 = mech.eqconstraints[1].constraints[2]
