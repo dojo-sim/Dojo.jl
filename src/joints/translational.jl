@@ -151,8 +151,7 @@ end
 end
 
 # Force applied by body b on body a expressed in world frame
-@inline function damperforcea(joint::Translational, xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
-        xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector)
+@inline function damperforcea(joint::Translational, va::AbstractVector, vb::AbstractVector)
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     velocity = A * (vb - va)
@@ -160,8 +159,7 @@ end
     return [force;szeros(3)]
 end
 # Force applied by body a on body b expressed in world frame
-@inline function damperforceb(joint::Translational, xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
-    xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector)
+@inline function damperforceb(joint::Translational, va::AbstractVector, vb::AbstractVector)
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     velocity = A * (vb - va)
@@ -169,7 +167,7 @@ end
     return [force;szeros(3)]
 end
 # Force applied by origin on body b expressed in world frame
-@inline function damperforceb(joint::Translational, xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector)
+@inline function damperforceb(joint::Translational, vb::AbstractVector)
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     velocity = A * vb

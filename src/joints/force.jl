@@ -69,9 +69,9 @@ springforcea(joint::Translational, statea::State, stateb::State, Δt) = springfo
 springforceb(joint::Translational, statea::State, stateb::State, Δt) = springforceb(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)...)
 springforceb(joint::Translational, stateb::State, Δt) = springforceb(joint, posargsnext(stateb, Δt)...)
 
-damperforcea(joint::Translational, statea::State, stateb::State) = damperforcea(joint, statea.vsol[2], stateb.vsol[2])
-damperforceb(joint::Translational, statea::State, stateb::State) = damperforceb(joint, statea.vsol[2], stateb.vsol[2])
-damperforceb(joint::Translational, stateb::State) = damperforceb(joint, stateb.vsol[2])
+damperforcea(joint::Translational, statea::State, stateb::State, Δt) = damperforcea(joint, statea.vsol[2], stateb.vsol[2])
+damperforceb(joint::Translational, statea::State, stateb::State, Δt) = damperforceb(joint, statea.vsol[2], stateb.vsol[2])
+damperforceb(joint::Translational, stateb::State, Δt) = damperforceb(joint, stateb.vsol[2])
 
 ### Spring and damper
 ## Forces for dynamics
