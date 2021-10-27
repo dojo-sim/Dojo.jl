@@ -29,33 +29,26 @@ include("mechanism_zoo.jl")
 ################################################################################
 
 # Parameters
-ex = [0; 0; 1.0]
-h = 1.
-r = .05
-vert11 = [0; r; 0.0]
-vert12 = -vert11
-Nlink = 2
+joint_axis = [1.0;0.0;0.0]
+length1 = 0.5
+width, depth = 0.5, 0.5
 
-# Links
 origin = Origin{Float64}()
-links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
+link1 = Box(width, depth, length1, 1., color = RGBA(1., 1., 0.))
+joint0to1 = EqualityConstraint(Floating(origin, link1, spring = 100.0, damper = 0.0))
+links = [link1]
+eqcs = [joint0to1]
+mech = Mechanism(origin, links, eqcs, g = 0.0, Δt = 0.01)
 
-# Constraints
-jointb1 = EqualityConstraint(Fixed(origin, links[1]; p1 = zeros(3), p2 = zeros(3)))
-if Nlink > 1
-    eqcs = [
-        jointb1;
-        [EqualityConstraint(Prismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = 1e4, damper = 1e0)) for i = 2:Nlink]
-        ]
-else
-    eqcs = [jointb1]
-end
-mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.02)
+body1 = collect(mech.bodies)[1]
+setPosition!(body1, x = [1, 0, 0.])
+setVelocity!(body1, v = [0, 0, 0.], ω = [0, 0, 0.])
 
-# mech = getmechanism(:nslider, Nlink = 5)
-initialize!(mech, :nslider)
-storage = simulate!(mech, 10.1, record = true, solver = :mehrotra!)
+storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!)
 visualize(mech, storage, vis = vis)
+
+plot([x[1] for x in storage.x[1]])
+
 
 ################################################################################
 # Differentiation
