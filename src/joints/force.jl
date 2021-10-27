@@ -18,9 +18,16 @@ end
 # damperforceb(joint::Translational, statea::State, stateb::State, Δt) = Δt * damperforceb(joint, statea.vsol[2], stateb.vsol[2])
 # damperforceb(joint::Translational, stateb::State, Δt) = Δt * damperforceb(joint, stateb.vsol[2])
 
-springforcea(joint::Translational, statea::State, stateb::State, Δt) = Δt * springforcea(joint, posargshalf(statea, Δt)..., posargshalf(stateb, Δt)...)
-springforceb(joint::Translational, statea::State, stateb::State, Δt) = Δt * springforceb(joint, posargshalf(statea, Δt)..., posargshalf(stateb, Δt)...)
-springforceb(joint::Translational, stateb::State, Δt) = Δt * springforceb(joint, posargshalf(stateb, Δt)...)
+# springforcea(joint::Translational, statea::State, stateb::State, Δt) = Δt * springforcea(joint, posargshalf(statea, Δt)..., posargshalf(stateb, Δt)...)
+# springforceb(joint::Translational, statea::State, stateb::State, Δt) = Δt * springforceb(joint, posargshalf(statea, Δt)..., posargshalf(stateb, Δt)...)
+# springforceb(joint::Translational, stateb::State, Δt) = Δt * springforceb(joint, posargshalf(stateb, Δt)...)
+# damperforcea(joint::Translational, statea::State, stateb::State, Δt) = Δt * damperforcea(joint, statea.vsol[2], stateb.vsol[2])
+# damperforceb(joint::Translational, statea::State, stateb::State, Δt) = Δt * damperforceb(joint, statea.vsol[2], stateb.vsol[2])
+# damperforceb(joint::Translational, stateb::State, Δt) = Δt * damperforceb(joint, stateb.vsol[2])
+
+springforcea(joint::Translational, statea::State, stateb::State, Δt) = Δt * springforcea(joint, posargsk(statea)..., posargsk(stateb)...)
+springforceb(joint::Translational, statea::State, stateb::State, Δt) = Δt * springforceb(joint, posargsk(statea)..., posargsk(stateb)...)
+springforceb(joint::Translational, stateb::State, Δt) = Δt * springforceb(joint, posargsk(stateb)...)
 damperforcea(joint::Translational, statea::State, stateb::State, Δt) = Δt * damperforcea(joint, statea.vsol[2], stateb.vsol[2])
 damperforceb(joint::Translational, statea::State, stateb::State, Δt) = Δt * damperforceb(joint, statea.vsol[2], stateb.vsol[2])
 damperforceb(joint::Translational, stateb::State, Δt) = Δt * damperforceb(joint, stateb.vsol[2])
@@ -114,7 +121,7 @@ function ∂springforcea∂posa(joint::Translational, body1::Body, body2::Body, 
     Aᵀ = zerodimstaticadjoint(A)
     x1a, q1a = posargsk(body1.state)
     _, _, _, ωa = fullargssol(body1.state)
-    xa, qa = posargsnext(body1.state, Δt)
+    # xa, qa = posargsnext(body1.state, Δt)
     xa, qa = posargshalf(body1.state, Δt)
     X = - Aᵀ * A * joint.spring * Aᵀ * A
     Q = - Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[1], qa) * Rmat(ωbar(ωa, Δt)*Δt/2) * LVᵀmat(q1a)
@@ -130,7 +137,7 @@ function ∂springforcea∂posb(joint::Translational, body1::Body, body2::Body, 
     Aᵀ = zerodimstaticadjoint(A)
     x1b, q1b = posargsk(body2.state)
     _, _, _, ωb = fullargssol(body2.state)
-    xb, qb = posargsnext(body2.state, Δt)
+    # xb, qb = posargsnext(body2.state, Δt)
     xb, qb = posargshalf(body2.state, Δt)
     X = Aᵀ * A * joint.spring * Aᵀ * A
     Q = Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[2], qb) * Rmat(ωbar(ωb, Δt)*Δt/2) * LVᵀmat(q1b)
@@ -146,7 +153,7 @@ function ∂springforceb∂posb(joint::Translational, body1::Body, body2::Body, 
     Aᵀ = zerodimstaticadjoint(A)
     x1b, q1b = posargsk(body2.state)
     _, _, _, ωb = fullargssol(body2.state)
-    xb, qb = posargsnext(body2.state, Δt)
+    # xb, qb = posargsnext(body2.state, Δt)
     xb, qb = posargshalf(body2.state, Δt)
     X = - Aᵀ * A * joint.spring * Aᵀ * A
     Q = - Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[2], qb) * Rmat(ωbar(ωb, Δt)*Δt/2) * LVᵀmat(q1b)
@@ -162,7 +169,7 @@ function ∂springforceb∂posa(joint::Translational, body1::Body, body2::Body, 
     Aᵀ = zerodimstaticadjoint(A)
     x1a, q1a = posargsk(body1.state)
     _, _, _, ωa = fullargssol(body1.state)
-    xa, qa = posargsnext(body1.state, Δt)
+    # xa, qa = posargsnext(body1.state, Δt)
     xa, qa = posargshalf(body1.state, Δt)
     X = Aᵀ * A * joint.spring * Aᵀ * A
     Q = Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[1], qa) * Rmat(ωbar(ωa, Δt)*Δt/2) * LVᵀmat(q1a)
@@ -178,7 +185,7 @@ function ∂springforceb∂posb(joint::Translational, body1::Origin, body2::Body
     Aᵀ = zerodimstaticadjoint(A)
     x1b, q1b = posargsk(body2.state)
     _, _, _, ωb = fullargssol(body2.state)
-    xb, qb = posargsnext(body2.state, Δt)
+    # xb, qb = posargsnext(body2.state, Δt)
     xb, qb = posargshalf(body2.state, Δt)
     X = - Aᵀ * A * joint.spring * Aᵀ * A
     Q = - Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[2], qb) * Rmat(ωbar(ωb, Δt)*Δt/2) * LVᵀmat(q1b)
@@ -200,7 +207,8 @@ function ∂springforcea∂vela(joint::Translational, body1::Body, body2::Body, 
     # V = - Aᵀ * A * joint.spring * Aᵀ * A * Δt
     V = - Aᵀ * A * joint.spring * Aᵀ * A * Δt/2
     Ω = - Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[1], qa) * Lmat(q1a) * derivωbar(ωa, Δt) * Δt/2
-    return Δt * [V Ω; szeros(T, 3, 6)]
+    # return Δt * [V Ω; szeros(T, 3, 6)]
+    return Δt * szeros(T, 6, 6)
 end
 function ∂damperforcea∂vela(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
@@ -219,7 +227,8 @@ function ∂springforcea∂velb(joint::Translational, body1::Body, body2::Body, 
     # V = Aᵀ * A * joint.spring * Aᵀ * A * Δt
     V = Aᵀ * A * joint.spring * Aᵀ * A * Δt/2
     Ω = Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[2], qb) * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
-    return Δt * [V Ω; szeros(T, 3, 6)]
+    # return Δt * [V Ω; szeros(T, 3, 6)]
+    return Δt * szeros(T, 6, 6)
 end
 function ∂damperforcea∂velb(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
@@ -238,7 +247,8 @@ function ∂springforceb∂velb(joint::Translational, body1::Body, body2::Body, 
     # V = - Aᵀ * A * joint.spring * Aᵀ * A * Δt
     V = - Aᵀ * A * joint.spring * Aᵀ * A * Δt/2
     Ω = - Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[2], qb) * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
-    return Δt * [V Ω; szeros(T, 3, 6)]
+    # return Δt * [V Ω; szeros(T, 3, 6)]
+    return Δt * szeros(T, 6, 6)
 end
 function ∂damperforceb∂velb(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
@@ -257,7 +267,8 @@ function ∂springforceb∂vela(joint::Translational, body1::Body, body2::Body, 
     # V = Aᵀ * A * joint.spring * Aᵀ * A * Δt
     V = Aᵀ * A * joint.spring * Aᵀ * A * Δt/2
     Ω = Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[1], qa) * Lmat(q1a) * derivωbar(ωa, Δt) * Δt/2
-    return Δt * [V Ω; szeros(T, 3, 6)]
+    # return Δt * [V Ω; szeros(T, 3, 6)]
+    return Δt * szeros(T, 6, 6)
 end
 function ∂damperforceb∂vela(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
@@ -276,7 +287,8 @@ function ∂springforceb∂velb(joint::Translational, body1::Origin, body2::Body
     # V = - Aᵀ * A * joint.spring * Aᵀ * A * Δt
     V = - Aᵀ * A * joint.spring * Aᵀ * A * Δt/2
     Ω = - Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[2], qb) * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
-    return Δt * [V Ω; szeros(T, 3, 6)]
+    # return Δt * [V Ω; szeros(T, 3, 6)]
+    return Δt * szeros(T, 6, 6)
 end
 function ∂damperforceb∂velb(joint::Translational, body1::Origin, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
