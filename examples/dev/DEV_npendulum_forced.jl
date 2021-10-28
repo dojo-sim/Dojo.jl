@@ -20,7 +20,7 @@ open(vis)
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 # Build mechanism
-mech = getmechanism(:npendulum, Δt = 0.05, g = -9.81, Nlink = 1)
+mech = getmechanism(:npendulum, Δt = 0.05, g = -9.81, Nlink = 2)
 initialize!(mech, :npendulum, ϕ1 = 0.1*pi)
 
 for (i,joint) in enumerate(mech.eqconstraints)

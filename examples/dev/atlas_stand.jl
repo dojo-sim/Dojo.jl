@@ -23,7 +23,7 @@ open(vis)
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 ################################################################################
-# Build mechanism
+# Build mechanism and Identify A and B
 ################################################################################
 
 mech = getmechanism(:atlas, Δt = 0.01, g = -9.81, cf = 0.8, contact = true)
@@ -53,6 +53,48 @@ for (i,ineqc) in enumerate(ineqcs)
     sdf = cont.ainv3 * (x3 + vrotate(cont.p,q3) - cont.offset)
     println("sdf $i:", sdf)
 end
+
+#################################################################################
+# get control matrices
+
+# Set data
+Nb = length(mech.bodies)
+data = getdata(mech)
+setdata!(mech, data)
+sol = getsolution(mech)
+attjac = attitudejacobian(data, Nb)
+
+# IFT
+datamat = full_data_matrix(mech)
+solmat = full_matrix(mech.system)
+sensi = - (solmat \ datamat)
+
+# finite diff
+fd_datamat = finitediff_data_matrix(mech, data, sol, δ = 1e-5) * attjac
+@test norm(fd_datamat + datamat, Inf) < 1e-6
+plot(Gray.(abs.(1e10 .* datamat)))
+plot(Gray.(abs.(fd_datamat)))
+
+fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
+@test norm(fd_solmat + solmat, Inf) < 1e-8
+plot(Gray.(abs.(1e10 * solmat)))
+plot(Gray.(abs.(fd_solmat)))
+
+solmat = full_matrix(mech.system)
+indx2 = vcat([12i .+ [1,2,3,7,8,9] for i = 1:31]...)
+indx3 = 30 * 5 .+ (1:31*6)
+indu = 31*12 + 6 .+ (1:30)
+A = - (solmat \ datamat[:,indx2])[indx3,:]
+B = - (solmat \ datamat[:,indu])[indx3,:]
+# size data 31 * 12 + 6 +  30 * 1
+# size residual 30 * 5 + 31 * 6 + 8 * 8
+Q = 10 * Matrix(Diagonal(ones(31*6)))
+R = 1 * Matrix(Diagonal(ones(30)))
+P = dare(A, B, Q, R)
+K = R \ B' * P
+cond(K)
+
+plot(Gray.(abs.(K ./ 1e14)))
 
 # PD control law
 nu = sum([getcontroldim(eqc, floatingbase = false) for eqc in collect(mech.eqconstraints)])
@@ -131,13 +173,6 @@ plot(Gray.(fd_sensi))
 
 
 function dare(A, B, Q, R)
-    if !issemiposdef(Q)
-        error("Q must be positive-semidefinite.");
-    end
-    if (!isposdef(R))
-        error("R must be positive definite.");
-    end
-
     n = size(A, 1);
 
     E = [
