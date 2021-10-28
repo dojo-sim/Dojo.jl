@@ -20,7 +20,7 @@ open(vis)
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 # Build mechanism
-mech = getmechanism(:npendulum, Δt = 0.01, g = 0.0 * -9.81, Nlink = 1)
+mech = getmechanism(:npendulum, Δt = 0.01, g = 0.0 * -9.81, Nlink = 2)
 initialize!(mech, :npendulum, ϕ1 = 0.5 * π)
 
 for (i,joint) in enumerate(mech.eqconstraints)
@@ -74,8 +74,9 @@ plot(Gray.(abs.(fd_datamat)))
 norm((datamat + fd_datamat)[1:5, 1:13], Inf)
 norm((datamat + fd_datamat)[6:11, 1:3], Inf)
 norm((datamat + fd_datamat)[6:11, 4:6], Inf)
-norm((datamat + fd_datamat)[6:11, 7:10], Inf)
-norm((datamat + fd_datamat)[6:11, 11:13], Inf)
+norm((datamat + fd_datamat)[6:11, 7:9], Inf)
+norm((datamat + fd_datamat)[6:11, 10:12], Inf)
+norm((datamat + fd_datamat)[6:11, 13:13], Inf)
 
 norm((datamat + fd_datamat)[1:10, 1:26], Inf)
 
@@ -155,7 +156,7 @@ norm(solmat, Inf)
 ################################################################################
 include(joinpath(@__DIR__, "finite_diff.jl"))
 
-Δt = 0.01
+Δt = mech.Δt
 rot1 = mech.eqconstraints[1].constraints[2]
 rot2 = mech.eqconstraints[2].constraints[2]
 origin = mech.origin

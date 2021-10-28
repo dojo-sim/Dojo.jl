@@ -20,7 +20,7 @@ open(vis)
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 # Build mechanism
-mech = getmechanism(:npendulum, Δt = 0.05, g = -9.81, Nlink = 2)
+mech = getmechanism(:npendulum, Δt = 0.05, g = -9.81, Nlink = 5)
 initialize!(mech, :npendulum, ϕ1 = 0.1*pi)
 
 for (i,joint) in enumerate(mech.eqconstraints)
@@ -30,10 +30,10 @@ for (i,joint) in enumerate(mech.eqconstraints)
         joint.isdamper = true #false
         joint.isspring = true #false
 
-        jt.spring = 1/i * 0.0 * 1e+4 .* sones(3)[1]# 1e4
-        jt.damper = 1/i * 0.0 * 1e+4 .* sones(3)[1]# 1e4
-        jr.spring = 1/i * 0.0 * 1e+0 .* sones(3)[1]# 1e4
-        jr.damper = 1/i * 0.0 * 1e+0 .* sones(3)[1]# 1e4
+        jt.spring = 1/i * 1.0 * 1e+4 .* sones(3)[1]# 1e4
+        jt.damper = 1/i * 1.0 * 1e+4 .* sones(3)[1]# 1e4
+        jr.spring = 1/i * 1.0 * 1e+0 .* sones(3)[1]# 1e4
+        jr.damper = 1/i * 1.0 * 1e+0 .* sones(3)[1]# 1e4
 
     end
 end
@@ -69,9 +69,6 @@ datamat = full_data_matrix(deepcopy(mech))
 solmat = full_matrix(mech.system)
 sensi = - (solmat \ datamat)
 
-linearconstraintmapping4(mech)
-
-
 # finite diff
 fd_datamat = finitediff_data_matrix(deepcopy(mech), data, sol, δ = 1e-5) * attjac
 @test norm(fd_datamat + datamat, Inf) < 1e-8
@@ -101,8 +98,6 @@ norm((datamat + fd_datamat)[17:22, 16:18], Inf)
 norm((datamat + fd_datamat)[17:22, 19:21], Inf)
 norm((datamat + fd_datamat)[17:22, 22:24], Inf)
 norm((datamat + fd_datamat)[17:22, 25:26], Inf)
-
-
 
 fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
 @test norm(fd_solmat + solmat, Inf) < 1e-8
