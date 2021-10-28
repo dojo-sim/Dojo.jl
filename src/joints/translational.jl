@@ -128,8 +128,10 @@ end
 @inline function applyFτ!(joint::Translational{T}, statea::State, stateb::State, Δt::T, clear::Bool) where T
     F = joint.Fτ
     vertices = joint.vertices
-    _, qa = posargsnext(statea, Δt)
-    _, qb = posargsnext(stateb, Δt)
+    # _, qa = posargsnext(statea, Δt)
+    _, qa = posargsk(statea)
+    # _, qb = posargsnext(stateb, Δt)
+    _, qb = posargsk(stateb)
 
     Fa = vrotate(-F, qa)
     Fb = -Fa
@@ -147,7 +149,8 @@ end
 @inline function applyFτ!(joint::Translational{T}, stateb::State, Δt::T, clear::Bool) where T
     F = joint.Fτ
     vertices = joint.vertices
-    _, qb = posargsnext(stateb, Δt)
+    # _, qb = posargsnext(stateb, Δt)
+    _, qb = posargsk(stateb)
 
     Fb = F
     τb = vrotate(torqueFromForce(Fb, vrotate(vertices[2], qb)),inv(qb)) # in local coordinates

@@ -121,8 +121,10 @@ end
 ## Application of joint forces (for dynamics)
 @inline function applyFτ!(joint::Rotational{T}, statea::State, stateb::State, Δt::T, clear::Bool) where T
     τ = joint.Fτ
-    _, qa = posargsnext(statea, Δt)
-    _, qb = posargsnext(stateb, Δt)
+    # _, qa = posargsnext(statea, Δt)
+    _, qa = posargsk(statea)
+    # _, qb = posargsnext(stateb, Δt)
+    _, qb = posargsk(stateb)
 
     τa = vrotate(-τ, qa) # in world coordinates
     τb = -τa # in world coordinates
@@ -137,7 +139,8 @@ end
 end
 @inline function applyFτ!(joint::Rotational{T}, stateb::State, Δt::T, clear::Bool) where T
     τ = joint.Fτ
-    _, qb = posargsnext(stateb, Δt)
+    # _, qb = posargsnext(stateb, Δt)
+    _, qb = posargsk(stateb)
 
     τa = -τ # in world coordinates
     τb = -τa # in world coordinates

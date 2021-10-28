@@ -22,8 +22,8 @@ include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 mech = getmechanism(:snake, Nlink = 2, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, conetype = :soc)
 
 x = [0,-0.5,0]
-v = 0.0*[1,.3,4]
-ω = 0.0*[.1,.8,0]
+v = 0.1*[1,.3,4]
+ω = 0.2*[.1,.8,0]
 ϕ1 = π/1.5
 initialize!(mech, :snake, x = x, v = v, ω = ω, ϕ1 = ϕ1)
 
@@ -74,9 +74,12 @@ norm((fd_datamat + datamat)[6:8,25:30], Inf)
 norm((fd_datamat + datamat)[12:17,25:31], Inf)
 
 
-(fd_datamat + datamat)[9:11,25:31]
-fd_datamat[9:11,25:31]
--datamat[9:11,25:31]
+(fd_datamat + datamat)[9:11,25:30]
+fd_datamat[9:11,25:30]
+-datamat[9:11,25:30]
+(fd_datamat + datamat)[12:17,31:31]
+fd_datamat[12:17,31:31]
+-datamat[12:17,31:31]
 
 (fd_datamat + datamat)[12:17,19:21]
 fd_datamat[12:17,19:21]
