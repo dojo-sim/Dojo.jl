@@ -64,7 +64,7 @@ setPosition!(body1, x = [0, 0, -r])
 q0 = UnitQuaternion(RotX(pi/2))
 setPosition!(origin, body1, p2 = [0, 0, r], Δq = q0)
 
-@elapsed storage = simulate!(mech, 10.10, record = true, solver = :mehrotra!, verbose = false)
+@elapsed storage = simulate!(mech, 10.10, record = true, solver = :mehrotra!, verbose = true)
 visualize(mech, storage, vis = vis)
 plot([q.w for q in storage.q[1]])
 

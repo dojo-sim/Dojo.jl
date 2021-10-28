@@ -162,7 +162,8 @@ end
 # Control derivatives
 @inline function ∂Fτ∂ua(joint::Translational, statea::State, stateb::State, Δt::T) where T
     vertices = joint.vertices
-    _, qa = posargsnext(statea, Δt)
+    # _, qa = posargsnext(statea, Δt)
+    _, qa = posargsk(statea)
 
     BFa = -VLmat(qa) * RᵀVᵀmat(qa)
     Bτa = -skew(vertices[1])
@@ -171,8 +172,10 @@ end
 end
 @inline function ∂Fτ∂ub(joint::Translational, statea::State, stateb::State, Δt::T) where T
     vertices = joint.vertices
-    xa, qa = posargsnext(statea, Δt)
-    xb, qb = posargsnext(stateb, Δt)
+    # xa, qa = posargsnext(statea, Δt)
+    xa, qa = posargsk(statea)
+    # xb, qb = posargsnext(stateb, Δt)
+    xb, qb = posargsk(stateb)
     qbinvqa = qb\qa
 
     BFb = VLmat(qa) * RᵀVᵀmat(qa)
@@ -182,7 +185,8 @@ end
 end
 @inline function ∂Fτ∂ub(joint::Translational, stateb::State, Δt::T) where T
     vertices = joint.vertices
-    _, qb = posargsnext(stateb, Δt)
+    # _, qb = posargsnext(stateb, Δt)
+    _, qb = posargsk(stateb)
 
     BFb = I
     Bτb = skew(vertices[2]) * VLᵀmat(qb) * RVᵀmat(qb)
@@ -192,8 +196,10 @@ end
 
 # Position derivatives
 @inline function ∂Fτ∂posa(joint::Translational{T}, statea::State, stateb::State, Δt::T) where T
-    _, qa = posargsnext(statea, Δt)
-    _, qb = posargsnext(stateb, Δt)
+    # _, qa = posargsnext(statea, Δt)
+    _, qa = posargsk(statea)
+    # _, qb = posargsnext(stateb, Δt)
+    _, qb = posargsk(stateb)
     F = joint.Fτ
     vertices = joint.vertices
 
@@ -209,8 +215,10 @@ end
     return FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa
 end
 @inline function ∂Fτ∂posb(joint::Translational{T}, statea::State, stateb::State, Δt::T) where T
-    _, qa = posargsnext(statea, Δt)
-    _, qb = posargsnext(stateb, Δt)
+    # _, qa = posargsnext(statea, Δt)
+    _, qa = posargsk(statea)
+    # _, qb = posargsnext(stateb, Δt)
+    _, qb = posargsk(stateb)
     F = joint.Fτ
     vertices = joint.vertices
 
@@ -226,7 +234,8 @@ end
     return FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb
 end
 @inline function ∂Fτ∂posb(joint::Translational{T}, stateb::State, Δt::T) where T
-    xb, qb = posargsnext(stateb, Δt)
+    # xb, qb = posargsnext(stateb, Δt)
+    xb, qb = posargsk(stateb)
     F = joint.Fτ
     vertices = joint.vertices
 

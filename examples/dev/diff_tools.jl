@@ -475,11 +475,15 @@ function linearforcemapping2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb
                 FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa = ∂Fτ∂posa(joint, pbody.state, cbody.state, mechanism.Δt)
                 FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb = ∂Fτ∂posb(joint, pbody.state, cbody.state, mechanism.Δt)
 
-                xa, va, qa, ωa = fullargssol(pbody.state)
-                Ma = [I zeros(3,3); zeros(4,3) Rmat(ωbar(ωa, Δt)*Δt/2)*LVᵀmat(qa)]
+                # xa, va, qa, ωa = fullargssol(pbody.state)
+                # Ma = [I zeros(3,3); zeros(4,3) Rmat(ωbar(ωa, Δt)*Δt/2)*LVᵀmat(qa)]
+                xa, qa = posargsk(pbody.state)
+                Ma = [I zeros(3,3); zeros(4,3) LVᵀmat(qa)]
 
-                xb, vb, qb, ωb = fullargssol(cbody.state)
-                Mb = [I zeros(3,3); zeros(4,3) Rmat(ωbar(ωb, Δt)*Δt/2)*LVᵀmat(qb)]
+                # xb, vb, qb, ωb = fullargssol(cbody.state)
+                # Mb = [I zeros(3,3); zeros(4,3) Rmat(ωbar(ωb, Δt)*Δt/2)*LVᵀmat(qb)]
+                xb, qb = posargsk(cbody.state)
+                Mb = [I zeros(3,3); zeros(4,3) LVᵀmat(qb)]
 
                 cola6 = offsetrange(parentind,6)
                 colb6 = offsetrange(childind,6)
@@ -520,18 +524,18 @@ function linearforcemapping2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb
                 rowbv = offsetrange(childind,3,13,2)
                 rowbω = offsetrange(childind,3,13,4).+1
 
-                x2, v2, q2, ω2 = fullargssol(cbody.state)
-                M = [I zeros(3,3); zeros(4,3) Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)]
+                # x2, v2, q2, ω2 = fullargssol(cbody.state)
+                # M = [I zeros(3,3); zeros(4,3) Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)]
+                x2, q2 = posargsk(cbody.state)
+                M = [I zeros(3,3); zeros(4,3) LVᵀmat(q2)]
                 # Fzu[rowbv,colb6] = [FbXb FbQb]
                 # Fzu[rowbω,colb6] = [τbXb τbQb]
                 Fzu[[rowbv; rowbω], colb6] = [FbXb FbQb; τbXb τbQb] * M
                 # Fzu[[rowbv; rowbω], colb6] -= ∂springforceb∂posb(joint, pbody, cbody, Δt)
                 # Fzu[[rowbv; rowbω], colb6] -= ∂damperforceb∂posb(joint, pbody, cbody, Δt)
             end
-
         end
     end
-
     return Fzu
 end
 

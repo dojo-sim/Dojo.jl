@@ -158,8 +158,10 @@ end
     return [BFa; Bτa]
 end
 @inline function ∂Fτ∂ub(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
-    _, qa = posargsnext(statea, Δt)
-    _, qb = posargsnext(stateb, Δt)
+    # _, qa = posargsnext(statea, Δt)
+    _, qa = posargsk(statea)
+    # _, qb = posargsnext(stateb, Δt)
+    _, qb = posargsk(stateb)
     qbinvqa = qb \ qa
 
     BFb = (szeros(T, 3, 3))
@@ -168,7 +170,8 @@ end
     return [BFb; Bτb]
 end
 @inline function ∂Fτ∂ub(joint::Rotational{T}, stateb::State, Δt::T) where T
-    _, qb = posargsnext(stateb, Δt)
+    # _, qb = posargsnext(stateb, Δt)
+    _, qb = posargsk(stateb)
 
     BFb = (szeros(T, 3, 3))
     Bτb = VLᵀmat(qb) * RVᵀmat(qb)
@@ -178,8 +181,10 @@ end
 
 # Position derivatives
 @inline function ∂Fτ∂posa(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
-    _, qa = posargsnext(statea, Δt)
-    _, qb = posargsnext(stateb, Δt)
+    # _, qa = posargsnext(statea, Δt)
+    _, qa = posargsk(statea)
+    # _, qb = posargsnext(stateb, Δt)
+    _, qb = posargsk(stateb)
     τ = joint.Fτ
 
     FaXa = szeros(T,3,3)
@@ -194,8 +199,10 @@ end
     return FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa
 end
 @inline function ∂Fτ∂posb(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
-    _, qa = posargsnext(statea, Δt)
-    _, qb = posargsnext(stateb, Δt)
+    # _, qa = posargsnext(statea, Δt)
+    _, qa = posargsk(statea)
+    # _, qb = posargsnext(stateb, Δt)
+    _, qb = posargsk(stateb)
     τ = joint.Fτ
 
     FaXb = szeros(T,3,3)
@@ -210,7 +217,8 @@ end
     return FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb
 end
 @inline function ∂Fτ∂posb(joint::Rotational{T}, stateb::State, Δt::T) where T
-    _, qb = posargsnext(stateb, Δt)
+    # _, qb = posargsnext(stateb, Δt)
+    _, qb = posargsk(stateb)
     τ = joint.Fτ
 
     FaXb = szeros(T,3,3)
