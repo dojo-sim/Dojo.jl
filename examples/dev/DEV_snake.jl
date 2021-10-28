@@ -54,7 +54,35 @@ plot(Gray.(abs.(1e10 .* datamat)))
 plot(Gray.(abs.(1e10 .* fd_datamat)))
 
 norm((fd_datamat + datamat)[1:5,1:31], Inf)
-norm((fd_datamat + datamat)[6:,:], Inf)
+norm((fd_datamat + datamat)[6:17,1:31], Inf)
+norm((fd_datamat + datamat)[18:49,1:31], Inf)
+
+norm((fd_datamat + datamat)[6:17,1:12], Inf)
+norm((fd_datamat + datamat)[6:17,13:24], Inf)
+norm((fd_datamat + datamat)[6:17,25:30], Inf)
+
+norm((fd_datamat + datamat)[6:11,13:24], Inf)
+norm((fd_datamat + datamat)[12:17,13:24], Inf)
+norm((fd_datamat + datamat)[12:17,13:15], Inf)
+norm((fd_datamat + datamat)[12:17,16:18], Inf)
+norm((fd_datamat + datamat)[12:17,19:21], Inf)
+norm((fd_datamat + datamat)[12:17,22:24], Inf)
+
+norm((fd_datamat + datamat)[6:11,25:30], Inf)
+norm((fd_datamat + datamat)[6:8,25:30], Inf)
+
+norm((fd_datamat + datamat)[12:17,25:31], Inf)
+
+
+(fd_datamat + datamat)[9:11,25:31]
+fd_datamat[9:11,25:31]
+-datamat[9:11,25:31]
+
+(fd_datamat + datamat)[12:17,19:21]
+fd_datamat[12:17,19:21]
+-datamat[12:17,19:21]
+
+
 
 
 collect(mech.eqconstraints)
