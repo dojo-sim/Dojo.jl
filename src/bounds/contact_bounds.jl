@@ -65,13 +65,6 @@ function contactconstraint(body::Body{T}, normal::AbstractVector{T}, cf::T;
         p::AbstractVector{T} = szeros(T, 3),
         offset::AbstractVector{T} = szeros(T, 3)) where {T}
 
-    #     tmp = ConeBound(body, normal, cf; p = p)
-    # conbound = getindex(tmp,1)
-    # impineqc = getindex(tmp,2)
-    # impid = getfield(impineqc, :id)
-    # conineqc = InequalityConstraint((conbound, body.id, impid))
-    # return conineqc, impineqc
-
     contbound = ContactBound(body, normal, cf, p = p)
     contineqcs = InequalityConstraint((contbound, body.id, nothing))
     return contineqcs
@@ -79,7 +72,6 @@ end
 
 function gs(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
     # this is the residual with substracted slacks
-    # error()
     # we remove the - ineqc.ssol[2] because this is not true for ContactBound
     # we already account for the - ψ and - sβ in g
     return g(mechanism, ineqc)# - ineqc.ssol[2]
@@ -89,8 +81,6 @@ function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:
     cont = ineqc.constraints[1]
     body = getbody(mechanism, ineqc.parentid)
     x, v, q, ω = fullargssol(body.state)
-    # x, q = posargsk(body.state)
-    # x, v, q, ω = fullargsc(body.state)
     x3, q3 = posargsnext(body.state, mechanism.Δt)
 
     # transforms the velocities of the origin of the link into velocities along all 4 axes of the friction pyramid
@@ -172,7 +162,7 @@ end
     nx = size(x2)[1]
     nq = nx
 
-    
+
     X = [cont.ainv3 * Δt;
          szeros(1,nx);
          Bxmat]

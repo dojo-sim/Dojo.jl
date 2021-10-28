@@ -768,24 +768,25 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
 
     offr = 0
     offc = 0
-    for body in mechanism.bodies
+    for body in collect(bodies)
         for ineqc in ineqcs
-            cont = ineqc.constraints[1]
-            p = cont.p
-            Δt = mechanism.Δt
-            x3, q3 = posargsnext(body.state, Δt)
-            x2, v2, q2, ω2 = fullargssol(body.state)
-            M = [I zeros(3,3); zeros(4,3) Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)]
-
-            A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dB(x3, [q3.w, q3.x, q3.y, q3.z], ineqc.γsol[2][2:4], p) * M
-            A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dN(x3, [q3.w, q3.x, q3.y, q3.z], ineqc.γsol[2][1:1], p) * M
+            if ineqc.parentid == body.id
+                cont = ineqc.constraints[1]
+                p = cont.p
+                Δt = mechanism.Δt
+                x3, q3 = posargsnext(body.state, Δt)
+                x2, v2, q2, ω2 = fullargssol(body.state)
+                M = [I zeros(3,3); zeros(4,3) Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)]
+                A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dN(x3, [q3.w, q3.x, q3.y, q3.z], ineqc.γsol[2][1:1], p) * M
+                A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dB(x3, [q3.w, q3.x, q3.y, q3.z], ineqc.γsol[2][2:4], p) * M
+            end
         end
         offr += 6
         offc += 12
     end
 
     nu = isempty(eqcs) ? 0 : sum(getcontroldim.(eqcs))
-    A[sum(eqcdims) .+ (1:6Nb), 12Nb .+ (1:nu)] = Fu[Fz_indices(Nb), :]
+    A[sum(eqcdims) .+ (1:6Nb), 12Nb .+ (1:nu)] += Fu[Fz_indices(Nb), :]
 
     offr = 0
     for ineqc in ineqcs
