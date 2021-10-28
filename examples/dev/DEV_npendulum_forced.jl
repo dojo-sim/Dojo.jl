@@ -20,8 +20,8 @@ open(vis)
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 # Build mechanism
-mech = getmechanism(:npendulum, Δt = 0.01, g = -9.81, Nlink = 2)
-initialize!(mech, :npendulum, ϕ1 = 1.3)
+mech = getmechanism(:npendulum, Δt = 0.05, g = -9.81, Nlink = 1)
+initialize!(mech, :npendulum, ϕ1 = 0.1*pi)
 
 for (i,joint) in enumerate(mech.eqconstraints)
     if i ∈ (1,2)
@@ -30,10 +30,10 @@ for (i,joint) in enumerate(mech.eqconstraints)
         joint.isdamper = true #false
         joint.isspring = true #false
 
-        jt.spring = 1/i * 1.0 * 1e+4 .* sones(3)[1]# 1e4
-        jt.damper = 1/i * 2.0 * 1e+4 .* sones(3)[1]# 1e4
-        jr.spring = 1/i * 3.0 * 1e+0 .* sones(3)[1]# 1e4
-        jr.damper = 1/i * 4.0 * 1e+0 .* sones(3)[1]# 1e4
+        jt.spring = 1/i * 0.0 * 1e+4 .* sones(3)[1]# 1e4
+        jt.damper = 1/i * 0.0 * 1e+4 .* sones(3)[1]# 1e4
+        jr.spring = 1/i * 0.0 * 1e+0 .* sones(3)[1]# 1e4
+        jr.damper = 1/i * 0.0 * 1e+0 .* sones(3)[1]# 1e4
 
     end
 end
@@ -45,9 +45,11 @@ mech.eqconstraints[1].constraints[2].spring
 mech.eqconstraints[1].constraints[2].damper
 
 
-storage = simulate!(mech, 0.03, record = true, solver = :mehrotra!)
+storage = simulate!(mech, 10.03, record = true, solver = :mehrotra!)
 # storage = simulate!(mech, 3.0, record = true, solver = :mehrotra!)
 visualize(mech, storage, vis = vis)
+plot([q.x for q in storage.q[1]])
+
 
 
 ################################################################################
@@ -99,15 +101,6 @@ norm((datamat + fd_datamat)[17:22, 16:18], Inf)
 norm((datamat + fd_datamat)[17:22, 19:21], Inf)
 norm((datamat + fd_datamat)[17:22, 22:24], Inf)
 norm((datamat + fd_datamat)[17:22, 25:26], Inf)
-
-norm((datamat + fd_datamat)
-- datamat[20:22, 4:10]
-
-
-
-fd_datamat[20:22, 4:10]
-
-norm((datamat + fd_datamat)[17:22, 7:10], Inf)
 
 
 
