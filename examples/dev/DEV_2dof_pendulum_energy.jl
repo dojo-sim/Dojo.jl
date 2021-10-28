@@ -29,33 +29,40 @@ include("mechanism_zoo.jl")
 ################################################################################
 
 # Parameters
-ex = [0; 0; 1.0]
-h = 1.
-r = .05
-vert11 = [0; r; 0.0]
-vert12 = -vert11
-Nlink = 2
+joint_axis = [1.0; 0; 0]
+length1 = 1.0
+width, depth = 0.1, 0.1
+p2 = [0; 0; length1/2] # joint connection point
 
 # Links
 origin = Origin{Float64}()
-links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
+link1 = Box(width, depth, length1, length1)
 
 # Constraints
-jointb1 = EqualityConstraint(Fixed(origin, links[1]; p1 = zeros(3), p2 = zeros(3)))
-if Nlink > 1
-    eqcs = [
-        jointb1;
-        [EqualityConstraint(Prismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = 1e4, damper = 1e0)) for i = 2:Nlink]
-        ]
-else
-    eqcs = [jointb1]
-end
-mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.02)
+# joint_between_origin_and_link1 = EqualityConstraint(Revolute(origin, link1, joint_axis; p2=p2))
+joint_between_origin_and_link1 = EqualityConstraint(Spherical(origin, link1; p2=p2, spring = 100.0))
+links = [link1]
+eqcs = [joint_between_origin_and_link1]
 
-# mech = getmechanism(:nslider, Nlink = 5)
-initialize!(mech, :nslider)
-storage = simulate!(mech, 10.1, record = true, solver = :mehrotra!)
+mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.01)
+
+eqc1 = collect(mech.eqconstraints)[1]
+tra1 = eqc1.constraints[1]
+rot1 = eqc1.constraints[2]
+origin = mech.origin
+body1 = collect(mech.bodies)[1]
+minimalCoordinates(rot1, origin, body1)
+
+# initialize!(mech, :pendulum)
+ω0 = 10.0
+r = 0.5
+setPosition!(body1, x = [0, 0, -r])
+# setVelocity!(body1, v = [0, ω0*r, 0.], ω = [ω0, 0, 0.])
+# setVelocity!(body1, v = [ω0*r, 0, 0.], ω = [0, -ω0, 0.])
+setVelocity!(body1, v = [ω0*r, ω0*r, 0.], ω = [ω0, -ω0, 0.])
+storage = simulate!(mech, 10.10, record = true, solver = :mehrotra!)
 visualize(mech, storage, vis = vis)
+
 
 ################################################################################
 # Differentiation
