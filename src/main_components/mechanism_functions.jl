@@ -250,11 +250,11 @@ end
                 Nj = length(joint)
                 if body2.id == eqc.childids[i]
                     Aᵀ = zerodimstaticadjoint(constraintmat(joint))
-                    dGab -= _dGab(joint, x1, q1, x2, q2, Aᵀ * eqc.λsol[2][off .+ (1:Nj)]) * M2
-                    dGba -= _dGba(joint, x1, q1, x2, q2, Aᵀ * eqc.λsol[2][off .+ (1:Nj)]) * M1
-                    eqc.isspring && (dGab -= ∂springforcea∂velb(joint, body1, body2, Δt))
+                    # dGab -= _dGab(joint, x1, q1, x2, q2, Aᵀ * eqc.λsol[2][off .+ (1:Nj)]) * M2
+                    # dGba -= _dGba(joint, x1, q1, x2, q2, Aᵀ * eqc.λsol[2][off .+ (1:Nj)]) * M1
+                    eqc.isspring && (dGab -= ∂springforcea∂velb(joint, body1, body2, Δt)) #should be useless
                     eqc.isdamper && (dGab -= ∂damperforcea∂velb(joint, body1, body2, Δt))
-                    eqc.isspring && (dGba -= ∂springforceb∂vela(joint, body1, body2, Δt))
+                    eqc.isspring && (dGba -= ∂springforceb∂vela(joint, body1, body2, Δt)) #should be useless
                     eqc.isdamper && (dGba -= ∂damperforceb∂vela(joint, body1, body2, Δt))
                 end
                 off += Nj
@@ -265,11 +265,11 @@ end
                 Nj = length(joint)
                 if body1.id == eqc.childids[i]
                     Aᵀ = zerodimstaticadjoint(constraintmat(joint))
-                    dGab -= _dGab(joint, x2, q2, x1, q1, Aᵀ * eqc.λsol[2][off .+ (1:Nj)]) * M1
-                    dGba -= _dGba(joint, x2, q2, x1, q1, Aᵀ * eqc.λsol[2][off .+ (1:Nj)]) * M2
-                    eqc.isspring && (dGab -= ∂springforcea∂velb(joint, body2, body1, Δt))
+                    # dGab -= _dGab(joint, x2, q2, x1, q1, Aᵀ * eqc.λsol[2][off .+ (1:Nj)]) * M1
+                    # dGba -= _dGba(joint, x2, q2, x1, q1, Aᵀ * eqc.λsol[2][off .+ (1:Nj)]) * M2
+                    eqc.isspring && (dGab -= ∂springforcea∂velb(joint, body2, body1, Δt)) #should be useless
                     eqc.isdamper && (dGab -= ∂damperforcea∂velb(joint, body2, body1, Δt))
-                    eqc.isspring && (dGba -= ∂springforceb∂vela(joint, body2, body1, Δt))
+                    eqc.isspring && (dGba -= ∂springforceb∂vela(joint, body2, body1, Δt)) #should be useless
                     eqc.isdamper && (dGba -= ∂damperforceb∂vela(joint, body2, body1, Δt))
                 end
                 off += Nj

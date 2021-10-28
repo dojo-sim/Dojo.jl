@@ -55,11 +55,15 @@ minimalCoordinates(rot1, origin, body1)
 
 # initialize!(mech, :pendulum)
 ω0 = 10.0
+ω1 = 1.0
 r = 0.5
 setPosition!(body1, x = [0, 0, -r])
 # setVelocity!(body1, v = [0, ω0*r, 0.], ω = [ω0, 0, 0.])
-# setVelocity!(body1, v = [ω0*r, 0, 0.], ω = [0, -ω0, 0.])
-setVelocity!(body1, v = [ω0*r, ω0*r, 0.], ω = [ω0, -ω0, 0.])
+# setVelocity!(body1, v = [ω1*r, 0, 0.], ω = [0, -ω1, 0.])
+# setVelocity!(body1, v = [ω1*r, ω0*r, 0.], ω = [ω0, -ω1, 0.])
+q0 = UnitQuaternion(RotX(pi/2))
+setPosition!(origin, body1, p2 = [0, 0, r], Δq = q0)
+
 storage = simulate!(mech, 10.10, record = true, solver = :mehrotra!)
 visualize(mech, storage, vis = vis)
 

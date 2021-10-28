@@ -271,25 +271,29 @@ function linearconstraintmapping3(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,
 
                 kronproduct = -kron(λ'*Array(constraintmat(constraint)),E)*K
 
-                XX, XQ, QX, QQ = ∂2g∂posaa(constraint, posargsnext(state1, Δt)..., posargsnext(state2, Δt)...)
+                # XX, XQ, QX, QQ = ∂2g∂posaa(constraint, posargsnext(state1, Δt)..., posargsnext(state2, Δt)...)
+                XX, XQ, QX, QQ = ∂2g∂posaa(constraint, posargsk(state1)..., posargsk(state2)...)
                 Aaa[4:6,1:3] = kronproduct*XX
                 Aaa[4:6,7:10] = kronproduct*XQ
                 Aaa[11:13,1:3] = kronproduct*QX
                 Aaa[11:13,7:10] = kronproduct*QQ
 
-                XX, XQ, QX, QQ = ∂2g∂posab(constraint, posargsnext(state1, Δt)..., posargsnext(state2, Δt)...)
+                # XX, XQ, QX, QQ = ∂2g∂posab(constraint, posargsnext(state1, Δt)..., posargsnext(state2, Δt)...)
+                XX, XQ, QX, QQ = ∂2g∂posab(constraint, posargsk(state1)..., posargsk(state2)...)
                 Aab[4:6,1:3] = kronproduct*XX
                 Aab[4:6,7:10] = kronproduct*XQ
                 Aab[11:13,1:3] = kronproduct*QX
                 Aab[11:13,7:10] = kronproduct*QQ
 
-                XX, XQ, QX, QQ = ∂2g∂posba(constraint, posargsnext(state1, Δt)..., posargsnext(state2, Δt)...)
+                # XX, XQ, QX, QQ = ∂2g∂posba(constraint, posargsnext(state1, Δt)..., posargsnext(state2, Δt)...)
+                XX, XQ, QX, QQ = ∂2g∂posba(constraint, posargsk(state1)..., posargsk(state2)...)
                 Aba[4:6,1:3] = kronproduct*XX
                 Aba[4:6,7:10] = kronproduct*XQ
                 Aba[11:13,1:3] = kronproduct*QX
                 Aba[11:13,7:10] = kronproduct*QQ
 
-                XX, XQ, QX, QQ = ∂2g∂posbb(constraint, posargsnext(state1, Δt)..., posargsnext(state2, Δt)...)
+                # XX, XQ, QX, QQ = ∂2g∂posbb(constraint, posargsnext(state1, Δt)..., posargsnext(state2, Δt)...)
+                XX, XQ, QX, QQ = ∂2g∂posbb(constraint, posargsk(state1)..., posargsk(state2)...)
                 Abb[4:6,1:3] = kronproduct*XX
                 Abb[4:6,7:10] = kronproduct*XQ
                 Abb[11:13,1:3] = kronproduct*QX
@@ -321,8 +325,8 @@ function linearconstraintmapping3(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,
 
                 kronproduct = -kron(λ'*Array(constraintmat(constraint)),E)*K
 
-                XX, XQ, QX, QQ = ∂2g∂posbb(constraint, posargsnext(state2, Δt)...)
-
+                # XX, XQ, QX, QQ = ∂2g∂posbb(constraint, posargsnext(state2, Δt)...)
+                XX, XQ, QX, QQ = ∂2g∂posbb(constraint, posargsk(state2)...)
                 Abb[4:6,1:3] = kronproduct*XX
                 Abb[4:6,7:10] = kronproduct*XQ
                 Abb[11:13,1:3] = kronproduct*QX
@@ -754,7 +758,8 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     A = zeros(sum(resdims), datadim(mechanism))
     A[1:sum(eqcdims), 1:12Nb] += linearconstraints2(mechanism)
     A[sum(eqcdims) .+ (1:sum(bodydims)), 1:12Nb] += Fz[Fz_indices(length(bodies)),:]
-    A[sum(eqcdims) .+ (1:sum(bodydims)), 1:12Nb] += linearconstraintmapping3(mechanism)[Fz_indices(length(bodies)), :] * attitudejacobian_chain(data, mechanism.Δt, Nb)[1:13Nb,1:12Nb]
+    # A[sum(eqcdims) .+ (1:sum(bodydims)), 1:12Nb] += linearconstraintmapping3(mechanism)[Fz_indices(length(bodies)), :] * attitudejacobian_chain(data, mechanism.Δt, Nb)[1:13Nb,1:12Nb]
+    A[sum(eqcdims) .+ (1:sum(bodydims)), 1:12Nb] += linearconstraintmapping3(mechanism)[Fz_indices(length(bodies)), :] * attitudejacobian(data, Nb)[1:13Nb,1:12Nb]
     A[sum(eqcdims) .+ (1:sum(bodydims)), 1:12Nb] += linearconstraintmapping4(mechanism)[Fz_indices(length(bodies)), :]
 
     offr = 0

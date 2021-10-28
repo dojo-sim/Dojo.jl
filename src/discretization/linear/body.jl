@@ -45,6 +45,5 @@ end
         ∂constraintForceMapping!(mechanism, body, getcomponent(mechanism, connectionid))
     end
     
-
     return state.D
 end
