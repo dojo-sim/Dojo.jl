@@ -1,4 +1,4 @@
-abstract type AbstractMechanism{T,Nn,Ne,Nb,Nf,Ni} end
+abstract type AbstractMechanism{T,Nn,Ne,Nb,Ni} end
 
 abstract type Component{T} end
 abstract type AbstractBody{T} <: Component{T} end

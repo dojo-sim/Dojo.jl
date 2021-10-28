@@ -86,7 +86,6 @@ function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, system::System{N}) 
     SparseArrays._show_with_braille_patterns(io, system.matrix_entries)
 end
 
-
 @inline children(system, v) = outneighbors(system.dfs_graph, v)
 @inline connections(system, v) = neighbors(system.graph, v)
 @inline parents(system, v) = inneighbors(system.dfs_graph, v)

@@ -236,23 +236,13 @@ end
 
 
 function ∂springforcea∂vela(joint::Rotational, body1::Body, body2::Body, Δt::T) where T
-    # A = nullspacemat(joint)
-    # Aᵀ = zerodimstaticadjoint(A)
-    # x1a, q1a = posargsk(body1.state)
-    # _, _, _, ωa = fullargssol(body1.state)
-    # _, _, _, ωb = fullargssol(body2.state)
-    # xa, qa = posargsnext(body1.state, Δt)
-    # xb, qb = posargsnext(body2.state, Δt)
-    # qoffset = joint.qoffset
-    # force = springforcea(joint, qa, qb; rotate = false)[SVector{3,Int}(4,5,6)]
     V = szeros(T, 3, 3)
-    Ω = szeros(T, 3, 3) #∂vrotate∂p(force, qoffset) * Aᵀ * A * joint.spring * Aᵀ * A * VRmat(qb * inv(qoffset)) * Tmat() * Lmat(q1a) * derivωbar(ωa, Δt) * Δt/2
+    Ω = szeros(T, 3, 3)
     return Δt * [szeros(T, 3, 6); V Ω]
 end
 function ∂damperforcea∂vela(joint::Rotational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    # x1a, q1a = posargsk(body1.state)
     _, _, _, ωa = fullargssol(body1.state)
     _, _, _, ωb = fullargssol(body2.state)
     xa, qa = posargsk(body1.state)
@@ -260,28 +250,17 @@ function ∂damperforcea∂vela(joint::Rotational, body1::Body, body2::Body, Δt
     qoffset = joint.qoffset
     force = damperforcea(joint, qa, ωa, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
     V = szeros(T, 3, 3)
-    # Ω = ∂vrotate∂p(force, qoffset) * 2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qa \ qb / qoffset) * Rmat(qb * inv(qoffset)) * Tmat() * Lmat(q1a) * derivωbar(ωa, Δt) * Δt/2
     Ω = ∂vrotate∂p(force, qoffset) * 2 * Aᵀ * A * joint.damper * Aᵀ * A * -1.0 * ∂vrotate∂p(ωa, inv(qoffset))
     return Δt * [szeros(T, 3, 6); V Ω]
 end
 function ∂springforcea∂velb(joint::Rotational, body1::Body, body2::Body, Δt::T) where T
-    # A = nullspacemat(joint)
-    # Aᵀ = zerodimstaticadjoint(A)
-    # x1b, q1b = posargsk(body2.state)
-    # _, _, _, ωa = fullargssol(body1.state)
-    # _, _, _, ωb = fullargssol(body2.state)
-    # xa, qa = posargsk(body1.state)
-    # xb, qb = posargsk(body2.state)
-    # qoffset = joint.qoffset
-    # force = springforcea(joint, qa, qb; rotate = false)[SVector{3,Int}(4,5,6)]
     V = szeros(T, 3, 3)
-    Ω = szeros(T, 3, 3) #∂vrotate∂p(force, qoffset) * Aᵀ * A * joint.spring * Aᵀ * A * VRmat(inv(qoffset)) * Lmat(inv(qa)) * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
+    Ω = szeros(T, 3, 3)
     return Δt * [szeros(T, 3, 6); V Ω]
 end
 function ∂damperforcea∂velb(joint::Rotational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    # x1b, q1b = posargsk(body2.state)
     _, _, _, ωa = fullargssol(body1.state)
     _, _, _, ωb = fullargssol(body2.state)
     xa, qa = posargsk(body1.state)
@@ -289,30 +268,17 @@ function ∂damperforcea∂velb(joint::Rotational, body1::Body, body2::Body, Δt
     qoffset = joint.qoffset
     force = damperforcea(joint, qa, ωa, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
     V = szeros(T, 3, 3)
-    # Ω = ∂vrotate∂p(force, qoffset) * 2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qa \ qb / qoffset) * Rmat(inv(qoffset)) * Lmat(inv(qa)) * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
     Ω = ∂vrotate∂p(force, qoffset) * 2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂p(ωb, qa \ qb / qoffset)
     return Δt * [szeros(T, 3, 6); V Ω]
 end
 function ∂springforceb∂velb(joint::Rotational, body1::Body, body2::Body, Δt::T) where T
-    # A = nullspacemat(joint)
-    # Aᵀ = zerodimstaticadjoint(A)
-    # x1b, q1b = posargsk(body2.state)
-    # _, _, _, ωa = fullargssol(body1.state)
-    # _, _, _, ωb = fullargssol(body2.state)
-    # xa, qa = posargsnext(body1.state, Δt)
-    # xb, qb = posargsnext(body2.state, Δt)
-    # qoffset = joint.qoffset
-    # force = springforceb(joint, qa, qb; rotate = false)[SVector{3,Int}(4,5,6)]
     V = szeros(T, 3, 3)
     Ω = szeros(T, 3, 3)
-    # Ω = ∂vrotate∂p(force, inv(qb) * qa * qoffset) * -1.0 * Aᵀ * A * joint.spring * Aᵀ * A * VRmat(inv(qoffset)) * Lmat(inv(qa)) * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
-    # Ω += ∂vrotate∂q(force, inv(qb) * qa * qoffset) * Rmat(qa * qoffset) * Tmat() * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
     return Δt * [szeros(T, 3, 6); V Ω]
 end
 function ∂damperforceb∂velb(joint::Rotational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    # x1b, q1b = posargsk(body2.state)
     _, _, _, ωa = fullargssol(body1.state)
     _, _, _, ωb = fullargssol(body2.state)
     xa, qa = posargsk(body1.state)
@@ -320,31 +286,17 @@ function ∂damperforceb∂velb(joint::Rotational, body1::Body, body2::Body, Δt
     qoffset = joint.qoffset
     force = damperforceb(joint, qa, ωa, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
     V = szeros(T, 3, 3)
-    # Ω = ∂vrotate∂p(force, inv(qb) * qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qa \ qb / qoffset) * Rmat(inv(qoffset)) * Lmat(inv(qa)) * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
     Ω = ∂vrotate∂p(force, inv(qb) * qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂p(ωb, qa \ qb / qoffset)
-    # Ω += ∂vrotate∂q(force, inv(qb) * qa * qoffset) * Rmat(qa * qoffset) * Tmat() * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
     return Δt * [szeros(T, 3, 6); V Ω]
 end
 function ∂springforceb∂vela(joint::Rotational, body1::Body, body2::Body, Δt::T) where T
-    # A = nullspacemat(joint)
-    # Aᵀ = zerodimstaticadjoint(A)
-    # x1a, q1a = posargsk(body1.state)
-    # _, _, _, ωa = fullargssol(body1.state)
-    # _, _, _, ωb = fullargssol(body2.state)
-    # xa, qa = posargsnext(body1.state, Δt)
-    # xb, qb = posargsnext(body2.state, Δt)
-    # qoffset = joint.qoffset
-    # force = springforceb(joint, qa, qb; rotate = false)[SVector{3,Int}(4,5,6)]
     V = szeros(T, 3, 3)
     Ω = szeros(T, 3, 3)
-    # Ω = ∂vrotate∂p(force, inv(qb) * qa * qoffset) * -1.0 * Aᵀ * A * joint.spring * Aᵀ * A * VRmat(qb * inv(qoffset)) * Tmat() * Lmat(q1a) * derivωbar(ωa, Δt) * Δt/2
-    # Ω += ∂vrotate∂q(force, inv(qb) * qa * qoffset) * Rmat(qoffset) * Lmat(inv(qb)) * Lmat(q1a) * derivωbar(ωa, Δt) * Δt/2
     return Δt * [szeros(T, 3, 6); V Ω]
 end
 function ∂damperforceb∂vela(joint::Rotational, body1::Body, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    # x1a, q1a = posargsk(body1.state)
     _, _, _, ωa = fullargssol(body1.state)
     _, _, _, ωb = fullargssol(body2.state)
     xa, qa = posargsk(body1.state)
@@ -352,36 +304,22 @@ function ∂damperforceb∂vela(joint::Rotational, body1::Body, body2::Body, Δt
     qoffset = joint.qoffset
     force = damperforceb(joint, qa, ωa, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
     V = szeros(T, 3, 3)
-    # Ω = ∂vrotate∂p(force, inv(qb) * qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qa \ qb / qoffset) * Rmat(qb * inv(qoffset)) * Tmat() * Lmat(q1a) * derivωbar(ωa, Δt) * Δt/2
     Ω = ∂vrotate∂p(force, inv(qb) * qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * -1.0 * ∂vrotate∂p(ωa, inv(qoffset))
-    # Ω += ∂vrotate∂q(force, inv(qb) * qa * qoffset) * Lmat(inv(qb)) * Rmat(qoffset) * Lmat(q1a) * derivωbar(ωa, Δt) * Δt/2
     return Δt * [szeros(T, 3, 6); V Ω]
 end
 function ∂springforceb∂velb(joint::Rotational, body1::Origin, body2::Body, Δt::T) where T
-    # A = nullspacemat(joint)
-    # Aᵀ = zerodimstaticadjoint(A)
-    # x1b, q1b = posargsk(body2.state)
-    # _, _, _, ωb = fullargssol(body2.state)
-    # xb, qb = posargsnext(body2.state, Δt)
-    # qoffset = joint.qoffset
-    # force = springforceb(joint, qb; rotate = false)[SVector{3,Int}(4,5,6)]
     V = szeros(T, 3, 3)
     Ω = szeros(T, 3, 3)
-    # Ω = ∂vrotate∂p(force, inv(qb) * qoffset) * -1.0 * Aᵀ * A * joint.spring * Aᵀ * A * VRmat(inv(qoffset)) * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
-    # Ω += ∂vrotate∂q(force, inv(qb) * qoffset) * Rmat(qoffset) * Tmat() * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
     return Δt * [szeros(T, 3, 6); V Ω]
 end
 function ∂damperforceb∂velb(joint::Rotational, body1::Origin, body2::Body, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    # x1b, q1b = posargsk(body2.state)
     _, _, _, ωb = fullargssol(body2.state)
     xb, qb = posargsk(body2.state)
     qoffset = joint.qoffset
     force = damperforceb(joint, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
     V = szeros(T, 3, 3)
-    # Ω = ∂vrotate∂p(force, inv(qb) * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qb / qoffset) * Rmat(inv(qoffset)) * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
     Ω = ∂vrotate∂p(force, inv(qb) * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂p(ωb, qb / qoffset)
-    # Ω += ∂vrotate∂q(force, inv(qb) * qoffset) * Rmat(qoffset) * Tmat() * Lmat(q1b) * derivωbar(ωb, Δt) * Δt/2
     return Δt * [szeros(T, 3, 6); V Ω]
 end

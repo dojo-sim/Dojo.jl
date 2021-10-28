@@ -561,7 +561,7 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
     Fz = zeros(T,Nb*13,Nb*12)
     Fu = zeros(T,Nb*13,Nb*6)
     Fλ = zeros(T,Nb*13,nc)
-    Ffz = zeros(T,Nb*13,Nb*13)
+    # Ffz = zeros(T,Nb*13,Nb*13)
 
     Bcontrol = zeros(T,Nb*6,nu)
 
@@ -572,14 +572,14 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
 
         Fzi = ∂F∂z(body, Δt)
         Fui = ∂F∂u(body, Δt)
-        Ffzi, invFfzquati = ∂F∂fz(body, Δt)
+        # Ffzi, invFfzquati = ∂F∂fz(body, Δt)
 
         Fz[col13,col12] = Fzi
         Fu[col13,col6] = Fui
-        Ffz[col13,col13] = Ffzi
+        # Ffz[col13,col13] = Ffzi
     end
 
-    Ffz += linearconstraintmapping(mechanism)
+    # Ffz += linearconstraintmapping(mechanism)
     Fz += linearforcemapping2(mechanism)
 
     n1 = 1
@@ -768,24 +768,25 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
 
     offr = 0
     offc = 0
-    for body in mechanism.bodies
+    for body in collect(bodies)
         for ineqc in ineqcs
-            cont = ineqc.constraints[1]
-            p = cont.p
-            Δt = mechanism.Δt
-            x3, q3 = posargsnext(body.state, Δt)
-            x2, v2, q2, ω2 = fullargssol(body.state)
-            M = [I zeros(3,3); zeros(4,3) Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)]
-
-            A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dB(x3, [q3.w, q3.x, q3.y, q3.z], ineqc.γsol[2][2:4], p) * M
-            A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dN(x3, [q3.w, q3.x, q3.y, q3.z], ineqc.γsol[2][1:1], p) * M
+            if ineqc.parentid == body.id
+                cont = ineqc.constraints[1]
+                p = cont.p
+                Δt = mechanism.Δt
+                x3, q3 = posargsnext(body.state, Δt)
+                x2, v2, q2, ω2 = fullargssol(body.state)
+                M = [I zeros(3,3); zeros(4,3) Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)]
+                A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dN(x3, [q3.w, q3.x, q3.y, q3.z], ineqc.γsol[2][1:1], p) * M
+                A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dB(x3, [q3.w, q3.x, q3.y, q3.z], ineqc.γsol[2][2:4], p) * M
+            end
         end
         offr += 6
         offc += 12
     end
 
     nu = isempty(eqcs) ? 0 : sum(getcontroldim.(eqcs))
-    A[sum(eqcdims) .+ (1:6Nb), 12Nb .+ (1:nu)] = Fu[Fz_indices(Nb), :]
+    A[sum(eqcdims) .+ (1:6Nb), 12Nb .+ (1:nu)] += Fu[Fz_indices(Nb), :]
 
     offr = 0
     for ineqc in ineqcs
@@ -879,9 +880,7 @@ function getcontroldim(eqc::EqualityConstraint{T,N,Nc,Cs}; floatingbase::Bool = 
     !floatingbase && (N == 0) && return 0
     cnt = 0
     for joint in eqc.constraints
-        if !(typeof(joint) <: FJoint)
-            cnt += length(joint)
-        end
+        cnt += length(joint)
     end
     return 6 - cnt
 end

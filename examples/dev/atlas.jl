@@ -20,8 +20,9 @@ open(vis)
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 mech = getmechanism(:atlas, Δt = 0.01, g = -9.81, cf = 0.8, contact = true)
+
 initialize!(mech, :atlas, tran = [0,0,1.2], rot = [0.1,0,0])
-storage = simulate!(mech, 0.10, record = true, solver = :mehrotra!)
+storage = simulate!(mech, 0.50, record = true, solver = :mehrotra!)
 visualize(mech, storage, vis = vis)
 
 # Set data
@@ -51,7 +52,6 @@ fd_sensi = finitediff_sensitivity(mech, data) * attjac
 @test norm(fd_sensi - sensi) / norm(fd_sensi) < 8e-3
 plot(Gray.(1e10 .* sensi))
 plot(Gray.(fd_sensi))
-
 
 
 test_solmat(:atlas, ϵ = 1e-8)

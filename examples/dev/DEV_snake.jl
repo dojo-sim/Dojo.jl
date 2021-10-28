@@ -19,15 +19,16 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
-mech = getmechanism(:snake, Nlink = 2, Δt = 0.01, g = -9.81, cf = 0.2, contact = false, conetype = :soc)
 
-x = [0,-0.5,0]
+mech = getmechanism(:snake, Nlink = 5, Δt = 0.01, g = -9.81, cf = 0.0, contact = true, conetype = :soc)
+
+x = [0,-0.5,.1]
 v = 0.1*[1,.3,4]
-ω = 0.2*[.1,.8,0]
+ω = 1.5*[.1,.8,0]
 ϕ1 = π/1.5
 initialize!(mech, :snake, x = x, v = v, ω = ω, ϕ1 = ϕ1)
 
-@elapsed storage = simulate!(mech, .35, record = true, solver = :mehrotra!)
+@elapsed storage = simulate!(mech, .28, record = true, solver = :mehrotra!)
 
 visualize(mech, storage, vis = vis)
 
@@ -52,10 +53,22 @@ fd_datamat = finitediff_data_matrix(mech, data, sol, δ = 1e-5) * attjac
 @test norm(fd_datamat + datamat, Inf) < 1e-6
 plot(Gray.(abs.(1e10 .* datamat)))
 plot(Gray.(abs.(1e10 .* fd_datamat)))
+norm(fd_datamat + datamat, Inf)
+
+# norm((fd_datamat + datamat)[1:10,1:44], Inf)
+# norm((fd_datamat + datamat)[11:16,1:44], Inf)
+# norm((fd_datamat + datamat)[17:22,1:44], Inf)
+# norm((fd_datamat + datamat)[23:28,1:44], Inf)
+# norm((fd_datamat + datamat)[29:end,1:44], Inf)
+#
+# norm((fd_datamat + datamat)[17:22,13:24], Inf)
+# norm((fd_datamat + datamat)[23:28,25:36], Inf)
+# norm((fd_datamat + datamat)[23:28,25:36], Inf)
+
+
 
 norm((fd_datamat + datamat)[1:5,1:31], Inf)
 norm((fd_datamat + datamat)[6:17,1:31], Inf)
-norm((fd_datamat + datamat)[18:49,1:31], Inf)
 
 norm((fd_datamat + datamat)[6:17,1:12], Inf)
 norm((fd_datamat + datamat)[6:17,13:24], Inf)
@@ -74,18 +87,17 @@ norm((fd_datamat + datamat)[6:8,25:30], Inf)
 norm((fd_datamat + datamat)[12:17,25:31], Inf)
 
 
-(fd_datamat + datamat)[9:11,25:30]
-fd_datamat[9:11,25:30]
--datamat[9:11,25:30]
-(fd_datamat + datamat)[12:17,31:31]
-fd_datamat[12:17,31:31]
--datamat[12:17,31:31]
+(fd_datamat + datamat)[6:11,7:9]
+(fd_datamat + datamat)[15:17,19:21]
+fd_datamat[15:17,19:21]
+-datamat[15:17,19:21]
 
-(fd_datamat + datamat)[12:17,19:21]
-fd_datamat[12:17,19:21]
--datamat[12:17,19:21]
-
-
+ineqcs = collect(mech.ineqconstraints)
+ineqcs[1].parentid
+mech.bodies
+ineqcs[2].parentid
+ineqcs[3].parentid
+ineqcs[4].parentid
 
 
 collect(mech.eqconstraints)

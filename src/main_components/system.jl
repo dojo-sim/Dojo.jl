@@ -1,8 +1,8 @@
 function create_system(origin::Origin{T}, eqconstraints::Vector{<:EqualityConstraint}, bodies::Vector{<:Body},
-        frictions::Vector{<:Friction}, ineqconstraints::Vector{<:InequalityConstraint}
+        ineqconstraints::Vector{<:InequalityConstraint}
     ) where T
 
-    adjacency, dims = adjacencyMatrix(eqconstraints, bodies, frictions, ineqconstraints)
+    adjacency, dims = adjacencyMatrix(eqconstraints, bodies, ineqconstraints)
     system = System{T}(adjacency, dims)
 
     for eqc in eqconstraints
@@ -13,8 +13,8 @@ function create_system(origin::Origin{T}, eqconstraints::Vector{<:EqualityConstr
     return system
 end
 
-function adjacencyMatrix(eqcs::Vector{<:EqualityConstraint}, bodies::Vector{<:Body}, frics::Vector{<:Friction}, ineqcs::Vector{<:InequalityConstraint})
-    nodes = [eqcs;bodies;frics;ineqcs]
+function adjacencyMatrix(eqcs::Vector{<:EqualityConstraint}, bodies::Vector{<:Body}, ineqcs::Vector{<:InequalityConstraint})
+    nodes = [eqcs;bodies;ineqcs]
     n = length(nodes)
     A = zeros(Bool, n, n)
     dims = zeros(Int64, n)
@@ -23,9 +23,9 @@ function adjacencyMatrix(eqcs::Vector{<:EqualityConstraint}, bodies::Vector{<:Bo
         dims[node1.id] = length(node1)
 
         for node2 in nodes
-            if typeof(node1) <: Union{AbstractConstraint, Friction}
+            if typeof(node1) <: AbstractConstraint
                 node2.id in node1.childids && (A[node1.id,node2.id] = 1)
-            elseif typeof(node2) <: Union{AbstractConstraint, Friction}
+            elseif typeof(node2) <: AbstractConstraint
                 node1.id == node2.parentid && (A[node1.id,node2.id] = 1)
             elseif typeof(node1) <: Body && typeof(node2) <: Body
                 for eqc in eqcs

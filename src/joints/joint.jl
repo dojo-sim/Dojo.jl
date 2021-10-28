@@ -22,15 +22,11 @@ Base.show(io::IO, joint::Joint) = summary(io, joint)
 ## Position level constraint wrappers
 @inline g(joint::Joint, body1::Body, body2::Body, Δt, λ::AbstractVector) = constraintmat(joint) * g(joint, body1.state, body2.state, Δt)
 @inline g(joint::Joint, body1::Origin, body2::Body, Δt, λ::AbstractVector) = constraintmat(joint) * g(joint, body2.state, Δt)
-# @inline g(joint::Joint, body1::Body, body2::Body, λ::AbstractVector) = constraintmat(joint) * g(joint, body1.state, body2.state)
-# @inline g(joint::Joint, body1::Origin, body2::Body, λ::AbstractVector) = constraintmat(joint) * g(joint, body2.state)
 
 ### Constraints and derivatives
 ## Discrete-time position wrappers (for dynamics)
 g(joint::Joint, statea::State, stateb::State, Δt) = g(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)...)
 g(joint::Joint, stateb::State, Δt) = g(joint, posargsnext(stateb, Δt)...)
-# g(joint::Joint, statea::State, stateb::State) = g(joint, posargsc(statea)..., posargsc(stateb)...)
-# g(joint::Joint, stateb::State) = g(joint, posargsc(stateb)...)
 
 @inline function ∂g∂ʳself(joint::Joint{T,N}) where {T,N}
     return 1e-10 * sones(T,N)
@@ -39,9 +35,9 @@ end
 ## Discrete-time position derivatives (for dynamics)
 # Wrappers 1
 
-@inline ∂g∂posa(joint::Joint, body1::Body, body2::Body, Δt) = ∂g∂posa(joint, posargsnext(body1.state, Δt)..., posargsnext(body2.state, Δt)...) # the Δt factor comes from g(joint::FJoint, for the minus sign I don't know
-@inline ∂g∂posb(joint::Joint, body1::Body, body2::Body, Δt) = ∂g∂posb(joint, posargsnext(body1.state, Δt)..., posargsnext(body2.state, Δt)...) # the Δt factor comes from g(joint::FJoint, for the minus sign I don't know
-@inline ∂g∂posb(joint::Joint, body1::Origin, body2::Body, Δt) = ∂g∂posb(joint, posargsnext(body2.state, Δt)...) # the Δt factor comes from g(joint::FJoint, for the minus sign I don't know
+@inline ∂g∂posa(joint::Joint, body1::Body, body2::Body, Δt) = ∂g∂posa(joint, posargsnext(body1.state, Δt)..., posargsnext(body2.state, Δt)...) 
+@inline ∂g∂posb(joint::Joint, body1::Body, body2::Body, Δt) = ∂g∂posb(joint, posargsnext(body1.state, Δt)..., posargsnext(body2.state, Δt)...)
+@inline ∂g∂posb(joint::Joint, body1::Origin, body2::Body, Δt) = ∂g∂posb(joint, posargsnext(body2.state, Δt)...)
 
 @inline function ∂g∂ʳposa(joint::Joint, body1::Body, body2::Body, childid, Δt)
     if body2.id == childid
@@ -66,10 +62,6 @@ end
 end
 
 # Wrappers 2
-# ∂g∂ʳposa(joint::Joint, statea::State, stateb::State, Δt) = ∂g∂ʳposa(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)...)
-# ∂g∂ʳposb(joint::Joint, statea::State, stateb::State, Δt) = ∂g∂ʳposb(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)...)
-# ∂g∂ʳposb(joint::Joint, stateb::State, Δt) = ∂g∂ʳposb(joint, posargsnext(stateb, Δt)...)
-
 ∂g∂ʳposa(joint::Joint, statea::State, stateb::State, Δt) = ∂g∂ʳposa(joint, posargsk(statea)..., posargsk(stateb)...)
 ∂g∂ʳposb(joint::Joint, statea::State, stateb::State, Δt) = ∂g∂ʳposb(joint, posargsk(statea)..., posargsk(stateb)...)
 ∂g∂ʳposb(joint::Joint, stateb::State, Δt) = ∂g∂ʳposb(joint, posargsk(stateb)...)
@@ -133,38 +125,6 @@ end
     return [V Ω]
 end
 
-
-## Continuous-time position derivatives (for constraint solver)
-# Wrappers 1
-@inline function ∂g∂posac(joint::AbstractJoint, body1::Body, body2::Body, childid)
-    if body2.id == childid
-        return constraintmat(joint) * ∂g∂posac(joint, body1.state, body2.state)
-    else
-        return ∂g∂posac(joint)
-    end
-end
-@inline function ∂g∂posbc(joint::AbstractJoint, body1::Body, body2::Body, childid)
-    if body2.id == childid
-        return constraintmat(joint) * ∂g∂posbc(joint, body1.state, body2.state)
-    else
-        return ∂g∂posbc(joint)
-    end
-end
-@inline function ∂g∂posbc(joint::AbstractJoint, body1::Origin, body2::Body, childid)
-    if body2.id == childid
-        return constraintmat(joint) * ∂g∂posbc(joint, body2.state)
-    else
-        return ∂g∂posbc(joint)
-    end
-end
-
-# Wrappers 2
-@inline ∂g∂posac(joint::AbstractJoint{T,N}) where {T,N} = szeros(T, N, 7) # TODO zero function?
-@inline ∂g∂posbc(joint::AbstractJoint{T,N}) where {T,N} = szeros(T, N, 7)
-∂g∂posac(joint::AbstractJoint, statea::State, stateb::State) = hcat(∂g∂posa(joint, posargsc(statea)..., posargsc(stateb)...)...)
-∂g∂posbc(joint::AbstractJoint, statea::State, stateb::State) = hcat(∂g∂posb(joint, posargsc(statea)..., posargsc(stateb)...)...)
-∂g∂posbc(joint::AbstractJoint, stateb::State) = hcat(∂g∂posb(joint, posargsc(stateb)...)...)
-
 ### Force derivatives (for linearization)
 ## Forcing
 @inline function setForce!(joint::Joint, Fτ::SVector)
@@ -204,20 +164,3 @@ end
 
 ### Minimal coordinates
 @inline minimalCoordinates(joint::Joint{T,N}) where {T,N} = szeros(T, 3 - N)
-
-function _dGa(joint::Joint, pbody::Body, cbody::Body, λ, Δt)
-    xa, qa = posargsnext(pbody.state, Δt)
-    xb, qb = posargsnext(cbody.state, Δt)
-    _dGaa(joint, xa, qa, xb, qb, λ)
-end
-
-function _dGb(joint::Joint, pbody::Body, cbody::Body, λ, Δt)
-    xa, qa = posargsnext(pbody.state, Δt)
-    xb, qb = posargsnext(cbody.state, Δt)
-    _dGbb(joint, xa, qa, xb, qb, λ)
-end
-
-function _dGb(joint::Joint, pbody::Origin, cbody::Body, λ, Δt)
-    xb, qb = posargsnext(cbody.state, Δt)
-    _dGb(joint, xb, qb, λ)
-end

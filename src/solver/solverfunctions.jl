@@ -4,21 +4,7 @@
     return
 end
 
-@inline function setDandΔs!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry, ineqc::InequalityConstraint)
-    # -∇ssol[-γsol .* ssol + μ; -g + s] = [diag(γsol); -I]
-    # -∇γsol[-γsol .* ssol + μ; -g + s] = [diag(ssol);  0] this is zero because
-    # (cf γ - sum(β)) independent of ψ = γsol[2]
-    # β independent of η = γsol[2]
-    # ϕ(z) independent of γ = γsol[2]
-    matrix_entry.value = [[diagm(ineqc.γsol[2]);-I] [diagm(ineqc.ssol[2]);I*0]]
-    # [-γsol .* ssol + μ; -g + s]
-    vector_entry.value = [-complementarityμ(mechanism, ineqc);-gs(mechanism, ineqc)]
-    return
-end
-
 @inline function setLU!(mechanism::Mechanism, matrix_entry_L::Entry, matrix_entry_U::Entry, componenta::Component, componentb::Component)
-    # @show typeof(componenta)
-    # @show typeof(componentb)
     L, U = ∂gab∂ʳba(mechanism, componenta, componentb)
     matrix_entry_L.value = L
     matrix_entry_U.value = U
@@ -40,9 +26,7 @@ function feasibilityStepLength!(mechanism::Mechanism; τort::T = 0.95, τsoc::T 
     for ineqc in mechanism.ineqconstraints
         feasibilityStepLength!(mechanism, ineqc, getentry(system, ineqc.id), τort, τsoc)
     end
-    # for body in mechanism.bodies
-    #     feasibilityStepLength!(mechanism, body, getentry(system, body.id), τ = 0.99)
-    # end
+
     return
 end
 
@@ -50,50 +34,10 @@ function feasibilityStepLength!(mechanism::Mechanism{T}, body::Body{T}, vector_e
     Δt = mechanism.Δt
     Δω = vector_entry.value[SA[4; 5; 6]]
     ω = body.state.ωsol[2]
-    # @assert 1/Δt > norm(ω)
-    # α = polynomial_step_length(ω, Δω, 2/Δt * τ)
+   
     α = polynomial_step_length(ω, Δω, τ * 1/Δt)
-    # println("mech.α:", scn(mechanism.α),"   α:", scn(α),
-    #     "   ω:", scn(1 / Δt - norm(ω)),
-    #     "   ω+αΔω:", scn(1 / Δt - norm(ω + α * Δω)))
+   
     (α < mechanism.α) && (mechanism.α = α)
-    return
-end
-
-function feasibilityStepLength!(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
-        vector_entry::Entry, τort, τsoc) where {T,N,Nc,Cs,N½}
-    s = ineqc.ssol[2]
-    γ = ineqc.γsol[2]
-    Δs = vector_entry.value[1:N½]
-    Δγ = vector_entry.value[N½+1:N]
-    αs = 1.0
-    αγ = 1.0
-    for i = 1:N½
-        if Δs[i] < 0 # safer
-            αs = min(αs, - τort * s[i] / Δs[i])
-        end
-        if Δγ[i] < 0 # safer
-            αγ = min(αγ, - τort * γ[i] / Δγ[i])
-        end
-    end
-    α = min(αs, αγ)
-    (α > 0) && (α < mechanism.α) && (mechanism.α = α)
-    return
-end
-
-function feasibilityStepLength!(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
-        vector_entry::Entry, τort, τsoc) where {T,N,Nc,Cs<:Tuple{ConeBound{T,N}},N½}
-    s = ineqc.ssol[2]
-    γ = ineqc.γsol[2]
-    Δs = vector_entry.value[1:N½]
-    Δγ = vector_entry.value[N½ .+ (1:N½)]
-
-    αs = soc_step_length(s, Δs; τ = τsoc)
-    αγ = soc_step_length(γ, Δγ; τ = τsoc)
-    αγ < 1e-6 && println("γ: ", scn.(γ))
-    αγ < 1e-6 && println("Δγ:", scn.(Δγ))
-    α = min(αs, αγ)
-    (α > 0) && (α < mechanism.α) && (mechanism.α = α)
     return
 end
 
@@ -216,11 +160,6 @@ end
     return
 end
 
-@inline function updatesolution!(fric::Friction)
-    fric.βsol[1] = fric.βsol[2]
-    return
-end
-
 @inline function normΔs(body::Body)
     d1 = body.state.vsol[2] - body.state.vsol[1]
     d2 = body.state.ωsol[2] - body.state.ωsol[1]
@@ -257,25 +196,3 @@ function polynomial_step_length(ω::AbstractVector{T}, Δ::AbstractVector{T}, β
     α = clamp(α, 0.0, 1.0)
     return α
 end
-
-
-# Random.seed!(100)
-# a = rand()
-# b = 10rand()
-# c = rand()
-# f.(polynomialsolution(a, b, c), a, b, c)
-#
-#
-# Random.seed!(100)
-# for i = 1:1000
-#     ω = 10*rand(3)
-#     Δω = -100*rand(3)
-#     Δt = 0.05
-#     β = 1/Δt
-#     τ = 0.99
-#     αω = polynomial_step_length(ω, Δω, β*τ)
-#     β - norm(ω + αω * Δω)
-#     mrg = 1 / Δt - norm(ω + αω * Δω)
-#     @show scn(αω)
-#     @assert mrg > 0
-# end

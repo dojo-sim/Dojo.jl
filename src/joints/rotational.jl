@@ -121,9 +121,7 @@ end
 ## Application of joint forces (for dynamics)
 @inline function applyFτ!(joint::Rotational{T}, statea::State, stateb::State, Δt::T, clear::Bool) where T
     τ = joint.Fτ
-    # _, qa = posargsnext(statea, Δt)
     _, qa = posargsk(statea)
-    # _, qb = posargsnext(stateb, Δt)
     _, qb = posargsk(stateb)
 
     τa = vrotate(-τ, qa) # in world coordinates
@@ -139,7 +137,6 @@ end
 end
 @inline function applyFτ!(joint::Rotational{T}, stateb::State, Δt::T, clear::Bool) where T
     τ = joint.Fτ
-    # _, qb = posargsnext(stateb, Δt)
     _, qb = posargsk(stateb)
 
     τa = -τ # in world coordinates
@@ -161,9 +158,7 @@ end
     return [BFa; Bτa]
 end
 @inline function ∂Fτ∂ub(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
-    # _, qa = posargsnext(statea, Δt)
     _, qa = posargsk(statea)
-    # _, qb = posargsnext(stateb, Δt)
     _, qb = posargsk(stateb)
     qbinvqa = qb \ qa
 
@@ -173,7 +168,6 @@ end
     return [BFb; Bτb]
 end
 @inline function ∂Fτ∂ub(joint::Rotational{T}, stateb::State, Δt::T) where T
-    # _, qb = posargsnext(stateb, Δt)
     _, qb = posargsk(stateb)
 
     BFb = (szeros(T, 3, 3))
@@ -184,9 +178,7 @@ end
 
 # Position derivatives
 @inline function ∂Fτ∂posa(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
-    # _, qa = posargsnext(statea, Δt)
     _, qa = posargsk(statea)
-    # _, qb = posargsnext(stateb, Δt)
     _, qb = posargsk(stateb)
     τ = joint.Fτ
 
@@ -202,9 +194,7 @@ end
     return FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa
 end
 @inline function ∂Fτ∂posb(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
-    # _, qa = posargsnext(statea, Δt)
     _, qa = posargsk(statea)
-    # _, qb = posargsnext(stateb, Δt)
     _, qb = posargsk(stateb)
     τ = joint.Fτ
 
@@ -220,7 +210,6 @@ end
     return FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb
 end
 @inline function ∂Fτ∂posb(joint::Rotational{T}, stateb::State, Δt::T) where T
-    # _, qb = posargsnext(stateb, Δt)
     _, qb = posargsk(stateb)
     τ = joint.Fτ
 
@@ -267,13 +256,11 @@ end
 @inline function minimalCoordinates(joint::Rotational, body1::Body, body2::Body)
     statea = body1.state
     stateb = body2.state
-    # q = g(joint, statea.xc, statea.qc, stateb.xc, stateb.qc)
     q = statea.qc \ stateb.qc / joint.qoffset
     return nullspacemat(joint) * rotation_vector(q)
 end
 @inline function minimalCoordinates(joint::Rotational, body1::Origin, body2::Body)
     stateb = body2.state
-    # q = g(joint, stateb.xc, stateb.qc)
     q = stateb.qc / joint.qoffset
     return nullspacemat(joint) * rotation_vector(q)
 end
@@ -285,114 +272,4 @@ end
 @inline function minimalVelocities(joint::Rotational, body1::Origin, body2::Body)
     stateb = body2.state
     return nullspacemat(joint) * vrotate(stateb.ωc,stateb.qc) # in body1's frame
-end
-
-
-function _dGaa(joint::Rotational{T,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ::AbstractVector) where {T,N}
-    qo = joint.qoffset
-    dG = zeros(6, 7)
-
-    # qa₁, qa₂, qa₃, qa₄ = (qa.w, qa.x, qa.y, qa.z)
-    qb₁, qb₂, qb₃, qb₄ = (qb.w, qb.x, qb.y, qb.z)
-    qo₁, qo₂, qo₃, qo₄ = (qo.w, qo.x, qo.y, qo.z)
-    λ₁, λ₂, λ₃ = λ
-
-    # dG[4, 1] = 0
-    # dG[4, 2] = 0
-    # dG[4, 3] = 0
-    dG[4, 4] = λ₁*(-qb₁*qo₁ - (qb₂*qo₂) - (qb₃*qo₃) - (qb₄*qo₄)) + λ₂*(qb₃*qo₂ + qb₄*qo₁ - (qb₁*qo₄) - (qb₂*qo₃)) + λ₃*(qb₁*qo₃ + qb₄*qo₂ - (qb₂*qo₄) - (qb₃*qo₁))
-    dG[4, 5] = λ₁*(qb₁*qo₂ + qb₃*qo₄ - (qb₂*qo₁) - (qb₄*qo₃)) + λ₂*(qb₁*qo₃ + qb₄*qo₂ - (qb₂*qo₄) - (qb₃*qo₁)) + λ₃*(qb₁*qo₄ + qb₂*qo₃ - (qb₃*qo₂) - (qb₄*qo₁))
-    dG[4, 6] = λ₁*(qb₁*qo₃ + qb₄*qo₂ - (qb₂*qo₄) - (qb₃*qo₁)) + λ₂*(qb₂*qo₁ + qb₄*qo₃ - (qb₁*qo₂) - (qb₃*qo₄)) + λ₃*(qb₁*qo₁ + qb₂*qo₂ + qb₃*qo₃ + qb₄*qo₄)
-    dG[4, 7] = λ₁*(qb₁*qo₄ + qb₂*qo₃ - (qb₃*qo₂) - (qb₄*qo₁)) + λ₂*(-qb₁*qo₁ - (qb₂*qo₂) - (qb₃*qo₃) - (qb₄*qo₄)) + λ₃*(qb₂*qo₁ + qb₄*qo₃ - (qb₁*qo₂) - (qb₃*qo₄))
-    # # dG[5, 1] = 0
-    # # dG[5, 2] = 0
-    # # dG[5, 3] = 0
-    dG[5, 4] = λ₁*(qb₁*qo₄ + qb₂*qo₃ - (qb₃*qo₂) - (qb₄*qo₁)) + λ₂*(-qb₁*qo₁ - (qb₂*qo₂) - (qb₃*qo₃) - (qb₄*qo₄)) + λ₃*(qb₂*qo₁ + qb₄*qo₃ - (qb₁*qo₂) - (qb₃*qo₄))
-    dG[5, 5] = λ₁*(qb₂*qo₄ + qb₃*qo₁ - (qb₁*qo₃) - (qb₄*qo₂)) + λ₂*(qb₁*qo₂ + qb₃*qo₄ - (qb₂*qo₁) - (qb₄*qo₃)) + λ₃*(-qb₁*qo₁ - (qb₂*qo₂) - (qb₃*qo₃) - (qb₄*qo₄))
-    dG[5, 6] = λ₁*(qb₁*qo₂ + qb₃*qo₄ - (qb₂*qo₁) - (qb₄*qo₃)) + λ₂*(qb₁*qo₃ + qb₄*qo₂ - (qb₂*qo₄) - (qb₃*qo₁)) + λ₃*(qb₁*qo₄ + qb₂*qo₃ - (qb₃*qo₂) - (qb₄*qo₁))
-    dG[5, 7] = λ₁*(qb₁*qo₁ + qb₂*qo₂ + qb₃*qo₃ + qb₄*qo₄) + λ₂*(qb₁*qo₄ + qb₂*qo₃ - (qb₃*qo₂) - (qb₄*qo₁)) + λ₃*(qb₂*qo₄ + qb₃*qo₁ - (qb₁*qo₃) - (qb₄*qo₂))
-    # # dG[6, 1] = 0
-    # # dG[6, 2] = 0
-    # # dG[6, 3] = 0
-    dG[6, 4] = λ₁*(qb₂*qo₄ + qb₃*qo₁ - (qb₁*qo₃) - (qb₄*qo₂)) + λ₂*(qb₁*qo₂ + qb₃*qo₄ - (qb₂*qo₁) - (qb₄*qo₃)) + λ₃*(-qb₁*qo₁ - (qb₂*qo₂) - (qb₃*qo₃) - (qb₄*qo₄))
-    dG[6, 5] = λ₁*(qb₃*qo₂ + qb₄*qo₁ - (qb₁*qo₄) - (qb₂*qo₃)) + λ₂*(qb₁*qo₁ + qb₂*qo₂ + qb₃*qo₃ + qb₄*qo₄) + λ₃*(qb₁*qo₂ + qb₃*qo₄ - (qb₂*qo₁) - (qb₄*qo₃))
-    dG[6, 6] = λ₁*(-qb₁*qo₁ - (qb₂*qo₂) - (qb₃*qo₃) - (qb₄*qo₄)) + λ₂*(qb₃*qo₂ + qb₄*qo₁ - (qb₁*qo₄) - (qb₂*qo₃)) + λ₃*(qb₁*qo₃ + qb₄*qo₂ - (qb₂*qo₄) - (qb₃*qo₁))
-    dG[6, 7] = λ₁*(qb₁*qo₂ + qb₃*qo₄ - (qb₂*qo₁) - (qb₄*qo₃)) + λ₂*(qb₁*qo₃ + qb₄*qo₂ - (qb₂*qo₄) - (qb₃*qo₁)) + λ₃*(qb₁*qo₄ + qb₂*qo₃ - (qb₃*qo₂) - (qb₄*qo₁))
-    return dG
-end
-
-function _dGbb(joint::Rotational{T,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ::AbstractVector) where {T,N}
-    dG = zeros(6, 7)
-    return dG
-end
-
-function _dGb(joint::Rotational{T,N}, xb::AbstractVector, qb::UnitQuaternion, λ::AbstractVector) where {T,N}
-    dG = zeros(6, 7)
-    return dG
-end
-
-function _dGab(joint::Rotational{T,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ::AbstractVector) where {T,N}
-    qo = joint.qoffset
-    dG = zeros(6, 7)
-
-    qa₁, qa₂, qa₃, qa₄ = (qa.w, qa.x, qa.y, qa.z)
-    # qb₁, qb₂, qb₃, qb₄ = (qb.w, qb.x, qb.y, qb.z)
-    qo₁, qo₂, qo₃, qo₄ = (qo.w, qo.x, qo.y, qo.z)
-    λ₁, λ₂, λ₃ = λ
-
-    # dG[4, 1] = 0
-    # dG[4, 2] = 0
-    # dG[4, 3] = 0
-    dG[4, 4] = λ₁*(qa₂*qo₂ + qa₃*qo₃ + qa₄*qo₄ - (qa₁*qo₁)) + λ₂*(qa₂*qo₃ - (qa₁*qo₄) - (qa₃*qo₂) - (qa₄*qo₁)) + λ₃*(qa₁*qo₃ + qa₂*qo₄ + qa₃*qo₁ - (qa₄*qo₂))
-    dG[4, 5] = λ₁*(qa₄*qo₃ - (qa₁*qo₂) - (qa₂*qo₁) - (qa₃*qo₄)) + λ₂*(qa₃*qo₁ - (qa₁*qo₃) - (qa₂*qo₄) - (qa₄*qo₂)) + λ₃*(qa₂*qo₃ + qa₃*qo₂ + qa₄*qo₁ - (qa₁*qo₄))
-    dG[4, 6] = λ₁*(qa₂*qo₄ - (qa₁*qo₃) - (qa₃*qo₁) - (qa₄*qo₂)) + λ₂*(qa₁*qo₂ - (qa₂*qo₁) - (qa₃*qo₄) - (qa₄*qo₃)) + λ₃*(qa₃*qo₃ - (qa₁*qo₁) - (qa₂*qo₂) - (qa₄*qo₄))
-    dG[4, 7] = λ₁*(qa₃*qo₂ - (qa₁*qo₄) - (qa₂*qo₃) - (qa₄*qo₁)) + λ₂*(qa₁*qo₁ + qa₂*qo₂ + qa₃*qo₃ - (qa₄*qo₄)) + λ₃*(qa₁*qo₂ + qa₃*qo₄ + qa₄*qo₃ - (qa₂*qo₁))
-    # dG[5, 1] = 0
-    # dG[5, 2] = 0
-    # dG[5, 3] = 0
-    dG[5, 4] = λ₁*(qa₁*qo₄ + qa₃*qo₂ + qa₄*qo₁ - (qa₂*qo₃)) + λ₂*(qa₂*qo₂ + qa₃*qo₃ + qa₄*qo₄ - (qa₁*qo₁)) + λ₃*(qa₃*qo₄ - (qa₁*qo₂) - (qa₂*qo₁) - (qa₄*qo₃))
-    dG[5, 5] = λ₁*(qa₁*qo₃ + qa₂*qo₄ + qa₄*qo₂ - (qa₃*qo₁)) + λ₂*(qa₄*qo₃ - (qa₁*qo₂) - (qa₂*qo₁) - (qa₃*qo₄)) + λ₃*(qa₁*qo₁ + qa₃*qo₃ + qa₄*qo₄ - (qa₂*qo₂))
-    dG[5, 6] = λ₁*(qa₂*qo₁ + qa₃*qo₄ + qa₄*qo₃ - (qa₁*qo₂)) + λ₂*(qa₂*qo₄ - (qa₁*qo₃) - (qa₃*qo₁) - (qa₄*qo₂)) + λ₃*(qa₄*qo₁ - (qa₁*qo₄) - (qa₂*qo₃) - (qa₃*qo₂))
-    dG[5, 7] = λ₁*(qa₄*qo₄ - (qa₁*qo₁) - (qa₂*qo₂) - (qa₃*qo₃)) + λ₂*(qa₃*qo₂ - (qa₁*qo₄) - (qa₂*qo₃) - (qa₄*qo₁)) + λ₃*(qa₁*qo₃ - (qa₂*qo₄) - (qa₃*qo₁) - (qa₄*qo₂))
-    # dG[6, 1] = 0
-    # dG[6, 2] = 0
-    # dG[6, 3] = 0
-    dG[6, 4] = λ₁*(qa₄*qo₂ - (qa₁*qo₃) - (qa₂*qo₄) - (qa₃*qo₁)) + λ₂*(qa₁*qo₂ + qa₂*qo₁ + qa₄*qo₃ - (qa₃*qo₄)) + λ₃*(qa₂*qo₂ + qa₃*qo₃ + qa₄*qo₄ - (qa₁*qo₁))
-    dG[6, 5] = λ₁*(qa₁*qo₄ - (qa₂*qo₃) - (qa₃*qo₂) - (qa₄*qo₁)) + λ₂*(qa₂*qo₂ - (qa₁*qo₁) - (qa₃*qo₃) - (qa₄*qo₄)) + λ₃*(qa₄*qo₃ - (qa₁*qo₂) - (qa₂*qo₁) - (qa₃*qo₄))
-    dG[6, 6] = λ₁*(qa₁*qo₁ + qa₂*qo₂ + qa₄*qo₄ - (qa₃*qo₃)) + λ₂*(qa₁*qo₄ + qa₂*qo₃ + qa₃*qo₂ - (qa₄*qo₁)) + λ₃*(qa₂*qo₄ - (qa₁*qo₃) - (qa₃*qo₁) - (qa₄*qo₂))
-    dG[6, 7] = λ₁*(qa₂*qo₁ - (qa₁*qo₂) - (qa₃*qo₄) - (qa₄*qo₃)) + λ₂*(qa₂*qo₄ + qa₃*qo₁ + qa₄*qo₂ - (qa₁*qo₃)) + λ₃*(qa₃*qo₂ - (qa₁*qo₄) - (qa₂*qo₃) - (qa₄*qo₁))
-    return dG
-end
-
-function _dGba(joint::Rotational{T,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ::AbstractVector) where {T,N}
-    qo = joint.qoffset
-    dG = zeros(6, 7)
-
-    # qa₁, qa₂, qa₃, qa₄ = (qa.w, qa.x, qa.y, qa.z)
-    qb₁, qb₂, qb₃, qb₄ = (qb.w, qb.x, qb.y, qb.z)
-    qo₁, qo₂, qo₃, qo₄ = (qo.w, qo.x, qo.y, qo.z)
-    λ₁, λ₂, λ₃ = λ
-
-    # dG[4, 1] = 0
-    # dG[4, 2] = 0
-    # dG[4, 3] = 0
-    dG[4, 4] = λ₁*(qb₁*qo₁ + qb₂*qo₂ - (qb₃*qo₃) - (qb₄*qo₄)) + λ₂*(qb₁*qo₄ + qb₂*qo₃ + qb₃*qo₂ + qb₄*qo₁) + λ₃*(qb₂*qo₄ + qb₄*qo₂ - (qb₁*qo₃) - (qb₃*qo₁))
-    dG[4, 5] = λ₁*(qb₂*qo₁ + qb₃*qo₄ - (qb₁*qo₂) - (qb₄*qo₃)) + λ₂*(qb₂*qo₄ + qb₄*qo₂ - (qb₁*qo₃) - (qb₃*qo₁)) + λ₃*(-qb₁*qo₄ - (qb₂*qo₃) - (qb₃*qo₂) - (qb₄*qo₁))
-    dG[4, 6] = λ₁*(qb₁*qo₃ + qb₃*qo₁ - (qb₂*qo₄) - (qb₄*qo₂)) + λ₂*(qb₂*qo₁ + qb₃*qo₄ - (qb₁*qo₂) - (qb₄*qo₃)) + λ₃*(qb₁*qo₁ + qb₂*qo₂ - (qb₃*qo₃) - (qb₄*qo₄))
-    dG[4, 7] = λ₁*(qb₁*qo₄ + qb₂*qo₃ + qb₃*qo₂ + qb₄*qo₁) + λ₂*(qb₃*qo₃ + qb₄*qo₄ - (qb₁*qo₁) - (qb₂*qo₂)) + λ₃*(qb₂*qo₁ + qb₃*qo₄ - (qb₁*qo₂) - (qb₄*qo₃))
-    # dG[5, 1] = 0
-    # dG[5, 2] = 0
-    # dG[5, 3] = 0
-    dG[5, 4] = λ₁*(qb₂*qo₃ + qb₃*qo₂ - (qb₁*qo₄) - (qb₄*qo₁)) + λ₂*(qb₁*qo₁ + qb₃*qo₃ - (qb₂*qo₂) - (qb₄*qo₄)) + λ₃*(qb₁*qo₂ + qb₂*qo₁ + qb₃*qo₄ + qb₄*qo₃)
-    dG[5, 5] = λ₁*(qb₃*qo₁ + qb₄*qo₂ - (qb₁*qo₃) - (qb₂*qo₄)) + λ₂*(qb₁*qo₂ + qb₂*qo₁ + qb₃*qo₄ + qb₄*qo₃) + λ₃*(qb₂*qo₂ + qb₄*qo₄ - (qb₁*qo₁) - (qb₃*qo₃))
-    dG[5, 6] = λ₁*(-qb₁*qo₂ - (qb₂*qo₁) - (qb₃*qo₄) - (qb₄*qo₃)) + λ₂*(qb₃*qo₁ + qb₄*qo₂ - (qb₁*qo₃) - (qb₂*qo₄)) + λ₃*(qb₂*qo₃ + qb₃*qo₂ - (qb₁*qo₄) - (qb₄*qo₁))
-    dG[5, 7] = λ₁*(qb₁*qo₁ + qb₃*qo₃ - (qb₂*qo₂) - (qb₄*qo₄)) + λ₂*(qb₁*qo₄ + qb₄*qo₁ - (qb₂*qo₃) - (qb₃*qo₂)) + λ₃*(qb₃*qo₁ + qb₄*qo₂ - (qb₁*qo₃) - (qb₂*qo₄))
-    # dG[6, 1] = 0
-    # dG[6, 2] = 0
-    # dG[6, 3] = 0
-    dG[6, 4] = λ₁*(qb₁*qo₃ + qb₂*qo₄ + qb₃*qo₁ + qb₄*qo₂) + λ₂*(qb₃*qo₄ + qb₄*qo₃ - (qb₁*qo₂) - (qb₂*qo₁)) + λ₃*(qb₁*qo₁ + qb₄*qo₄ - (qb₂*qo₂) - (qb₃*qo₃))
-    dG[6, 5] = λ₁*(qb₂*qo₃ + qb₄*qo₁ - (qb₁*qo₄) - (qb₃*qo₂)) + λ₂*(qb₁*qo₁ + qb₄*qo₄ - (qb₂*qo₂) - (qb₃*qo₃)) + λ₃*(qb₁*qo₂ + qb₂*qo₁ - (qb₃*qo₄) - (qb₄*qo₃))
-    dG[6, 6] = λ₁*(qb₂*qo₂ + qb₃*qo₃ - (qb₁*qo₁) - (qb₄*qo₄)) + λ₂*(qb₂*qo₃ + qb₄*qo₁ - (qb₁*qo₄) - (qb₃*qo₂)) + λ₃*(qb₁*qo₃ + qb₂*qo₄ + qb₃*qo₁ + qb₄*qo₂)
-    dG[6, 7] = λ₁*(qb₃*qo₄ + qb₄*qo₃ - (qb₁*qo₂) - (qb₂*qo₁)) + λ₂*(-qb₁*qo₃ - (qb₂*qo₄) - (qb₃*qo₁) - (qb₄*qo₂)) + λ₃*(qb₂*qo₃ + qb₄*qo₁ - (qb₁*qo₄) - (qb₃*qo₂))
-    return dG
 end

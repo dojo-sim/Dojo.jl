@@ -21,34 +21,6 @@ function gc(mechanism::Mechanism{T}) where T
     return gval
 end   
 
-# Derivatives
-function ∂g∂posc(mechanism::Mechanism{T,Nn,Ne,Nb}, freeids) where {T,Nn,Ne,Nb}
-    freebodies = mechanism.bodies[freeids]
-
-    rangeDict = Dict{Int64,UnitRange}()
-    ind1 = 1
-    ind2 = 0
-
-    for (i,eqc) in enumerate(mechanism.eqconstraints)
-        ind2 += length(eqc)
-        range = ind1:ind2
-        rangeDict[i] = range
-
-        ind1 = ind2+1
-    end
-    Nfb=length(freebodies)
-    G = zeros(ind2,Nfb*7)
-    
-    for (i,eqc) in enumerate(mechanism.eqconstraints)
-        for (j,body) in enumerate(freebodies)
-             G[rangeDict[i],offsetrange(j,7)] = ∂g∂posc(mechanism, eqc, body)
-        end
-    end
-        
-    return G
-end
-
-
 function constraintstep!(mechanism::Mechanism{T,Nn,Ne,Nb},freeids) where {T,Nn,Ne,Nb}
     freebodies = mechanism.bodies[freeids]
 

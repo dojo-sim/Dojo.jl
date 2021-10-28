@@ -32,7 +32,7 @@ function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
         contineqcs1 = contactconstraint(getbody(mech, "l_foot"), normal, cf, p = contacts)
         contineqcs2 = contactconstraint(getbody(mech, "r_foot"), normal, cf, p = contacts)
 
-        setPosition!(mech, geteqconstraint(mech, "auto_generated_floating_joint"), [0;0;1.2;0.1;0.;0.])
+        # setPosition!(mech, geteqconstraint(mech, "auto_generated_floating_joint"), [0;0;1.2;0.1;0.;0.])
         # mech = Mechanism(origin, bodies, eqs, [impineqcs1; impineqcs2; conineqcs1; conineqcs2], g = g, Δt = Δt)
         mech = Mechanism(origin, bodies, eqs, [contineqcs1; contineqcs2], g = g, Δt = Δt)
     end
@@ -119,10 +119,7 @@ function getdice(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8,
             contineqcs = contactconstraint(link1, normal, cf, p = corners)
             mech = Mechanism(origin, links, eqcs, contineqcs, g = g, Δt = Δt)
         elseif conetype == :linear
-            fricsandineqs = [Friction(link1, normal[1], cf[1]; p = corners[i]) for i=1:n]
-            frics = getindex.(fricsandineqs,1)
-            ineqcs = vcat(getindex.(fricsandineqs,2)...)
-            mech = Mechanism(origin, links, eqcs, ineqcs, frics, g = g, Δt = Δt)
+           @error "linear contact not implemented"
         else
             error("Unknown conetype")
         end
@@ -172,14 +169,7 @@ function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
             mech = Mechanism(origin, links, eqcs, [contineqcs1; contineqcs2], g = g, Δt = Δt)
 
         elseif conetype == :linear
-            fricsandineqs1 = [Friction(links[i], normal[i], cf[i]; p = vert11) for i=1:Nlink]
-            frics1 = getindex.(fricsandineqs1,1)
-            ineqcs1 = vcat(getindex.(fricsandineqs1,2)...)
-            fricsandineqs2 = [Friction(links[i], normal[i], cf[i]; p = vert12) for i=1:Nlink]
-            frics2 = getindex.(fricsandineqs2,1)
-            ineqcs2 = vcat(getindex.(fricsandineqs2,2)...)
-            mech = Mechanism(origin, links, eqcs, [ineqcs1;ineqcs2], [frics1;frics2], g = g, Δt = Δt)
-
+            @error "linear contact not implemented"
         else
             error("Unknown conetype")
         end

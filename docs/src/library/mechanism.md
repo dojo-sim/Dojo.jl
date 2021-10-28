@@ -1,7 +1,0 @@
-# Mechanism
-
-## `Mechanism`
-
-```@docs
-Mechanism
-```

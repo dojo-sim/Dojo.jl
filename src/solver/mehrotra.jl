@@ -41,16 +41,7 @@ function mehrotra!(mechanism::Mechanism;
     system = mechanism.system
     eqcs = mechanism.eqconstraints
     bodies = mechanism.bodies
-    frics = mechanism.frictions
     ineqcs = mechanism.ineqconstraints
-
-	# @warn "zeroing v2 ω2"
-	# for body in bodies
-	# 	body.state.vsol[1] *= 0.0
-	# 	body.state.ωsol[1] *= 0.0
-	# 	body.state.vsol[2] *= 0.0
-	# 	body.state.ωsol[2] *= 0.0
-	# end
 
     foreach(resetVars!, ineqcs) # resets the values of s and γ to the neutral vector, this might be improved
     mechanism.μ = 0.0
@@ -84,9 +75,7 @@ function mehrotra!(mechanism::Mechanism;
         end
 		(n == opts.max_iter) && (@warn "failed mehrotra")
         # Compute regularization level
-        # bvio = bilinear_violation(mechanism)
-        # reg_val = bvio < opts.breg ? bvio * γreg : 0.0 #useless for now
-
+       
 		mechanism.μ = 0.0
 		pullresidual!(mechanism) # store the residual inside mechanism.residual_entries
         ldu_factorization!(mechanism.system) # factorize system, modifies the matrix in place
@@ -104,8 +93,6 @@ function mehrotra!(mechanism::Mechanism;
 		correction!(mechanism) # update the residual in mechanism.residual_entries
 		mechanism.μ = 0.0
 
-		# @warn "should be useless"
-		# @warn "useless"; setentries!(mechanism) # to make sure that the Jacobian is the same as the first one # SHOULD BE USELESS
 		pushresidual!(mechanism) # we push the residual + correction
         pushmatrix!(mechanism) # restore the facorized matrix
         ldu_backsubstitution!(mechanism.system) # solve system
@@ -118,24 +105,17 @@ function mehrotra!(mechanism::Mechanism;
         foreach(updatesolution!, bodies)
         foreach(updatesolution!, eqcs)
         foreach(updatesolution!, ineqcs)
-        foreach(updatesolution!, frics)
 
         setentries!(mechanism)
     end
 
-    warning && (@info string("newton! did not converge. n = ", newtonIter, ", tol = ", normf(mechanism), "."))
+    warning && (@info string("newton! did not converge. n = ", newtonIter, ", tol = ", max(norm(rvio, bvio)), "."))
     return
 end
 
 function initial_state!(ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
     initial_state_ort!(ineqc.γsol[1], ineqc.ssol[1])
     initial_state_ort!(ineqc.γsol[2], ineqc.ssol[2])
-    return nothing
-end
-
-function initial_state!(ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{ConeBound{T,N}}}
-    initial_state_soc!(ineqc.γsol[1], ineqc.ssol[1])
-    initial_state_soc!(ineqc.γsol[2], ineqc.ssol[2])
     return nothing
 end
 
@@ -239,16 +219,6 @@ end
 end
 
 @inline function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry,
-		ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ConeBound{T,N}},N½}
-	cone = ineqc.constraints[1]
-	μ = mechanism.μ
-	Δs = step_entry.value[1:N½]
-    Δγ = step_entry.value[N½ .+ (1:N½)]
-	residual_entry.value += [- cone_product(Δs, Δγ) + μ * neutral_vector(cone); szeros(N½)]
-    return
-end
-
-@inline function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry,
 		ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
 	cont = ineqc.constraints[1]
 	μ = mechanism.μ
@@ -260,8 +230,6 @@ end
 
 function pullresidual!(mechanism::Mechanism)
 	for i in eachindex(mechanism.residual_entries)
-		# mechanism.residual_entries[i] = deepcopy(mechanism.system.vector_entries[i])
-		# @warn "removed deepcopy"
 		mechanism.residual_entries[i].value = mechanism.system.vector_entries[i].value
 	end
 	return
@@ -269,23 +237,17 @@ end
 
 function pushresidual!(mechanism::Mechanism)
 	for i in eachindex(mechanism.residual_entries)
-		# mechanism.system.vector_entries[i] = deepcopy(mechanism.residual_entries[i])
-		# @warn "removed deepcopy"
 		mechanism.system.vector_entries[i].value = mechanism.residual_entries[i].value
 	end
 	return
 end
 
 function pullmatrix!(mechanism::Mechanism)
-	# mechanism.matrix_entries.nzval .= deepcopy(mechanism.system.matrix_entries.nzval) #TODO: make allocation free
-	# @warn "removed deepcopy"
 	mechanism.matrix_entries.nzval .= mechanism.system.matrix_entries.nzval #TODO: make allocation free
 	return
 end
 
 function pushmatrix!(mechanism::Mechanism)
-	# mechanism.system.matrix_entries.nzval .= deepcopy(mechanism.matrix_entries.nzval) #TODO: make allocation free
-	# @warn "removed deepcopy"
 	mechanism.system.matrix_entries.nzval .= mechanism.matrix_entries.nzval #TODO: make allocation free
 	return
 end

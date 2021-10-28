@@ -61,20 +61,6 @@ A planar joint between two bodies with a rotation axis perpendicular to the plan
 PlanarAxis(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T)) where T = 
     Translational1{T}(body1, body2; p1, p2, axis, spring, damper), Rotational2{T}(body1, body2; axis, qoffset, spring, damper)
 
-# t0r2: something like a gyro?
-# ?
-
-# What is r1?
-# t3r1: universal?
-# ?
-# t2r1: ?
-# ?
-# t1r1: ?
-# ?
-# t0r1: ?
-# ?
-
-# t3r0
 """
     Spherical(body1, body2; p1, p2, spring, damper)
 

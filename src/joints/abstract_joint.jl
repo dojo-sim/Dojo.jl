@@ -35,9 +35,6 @@ end
     end
 end
 
-
-
-
 ## Discrete-time velocity derivatives (for dynamics)
 # Wrappers 1
 @inline function ∂g∂ʳvela(joint::AbstractJoint, body1::Body, body2::Body, childid, Δt)
@@ -62,12 +59,6 @@ end
     end
 end
 
-
-
-
-
-
-
 @inline function offdiagonal∂damper∂ʳvel(joint::AbstractJoint, body1::Body, body2::Body, childid)
     if body2.id == childid
         return offdiagonal∂damper∂ʳvel(joint, body1.state, body2.state)
@@ -82,8 +73,6 @@ end
         return zero(body2)
     end
 end
-
-
 
 ### Springs and Dampers (for dynamics)
 ## Wrappers 1
@@ -133,15 +122,8 @@ end
 
 ## Wrappers 2
 @inline springforce(joint::AbstractJoint{T}) where {T} = szeros(T, 6) # TODO zero function?
-# springforcea(joint::AbstractJoint, statea::State, stateb::State) = springforcea(joint, posargsk(statea)..., posargsk(stateb)...)
-# springforceb(joint::AbstractJoint, statea::State, stateb::State) = springforceb(joint, posargsk(statea)..., posargsk(stateb)...)
-# springforceb(joint::AbstractJoint, stateb::State) = springforceb(joint, posargsk(stateb)...)
 
 @inline damperforce(joint::AbstractJoint{T}) where {T} = szeros(T, 6) # TODO zero function?
-# damperforcea(joint::AbstractJoint, statea::State, stateb::State) = damperforcea(joint, fullargssol(statea)..., fullargssol(stateb)...)
-# damperforceb(joint::AbstractJoint, statea::State, stateb::State) = damperforceb(joint, fullargssol(statea)..., fullargssol(stateb)...)
-# damperforceb(joint::AbstractJoint, stateb::State) = damperforceb(joint, fullargssol(stateb)...)
-
 
 ### Forcing (for dynamics)
 ## Wrappers
@@ -149,6 +131,7 @@ end
     applyFτ!(joint, body1.state, body2.state, Δt, clear)
     return
 end
+
 @inline function applyFτ!(joint::AbstractJoint, ::Origin, body2::Body, Δt::T, clear::Bool) where T
     applyFτ!(joint, body2.state, Δt, clear)
     return

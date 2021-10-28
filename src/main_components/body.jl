@@ -118,10 +118,8 @@ function ∂F∂z(body::Body{T}, Δt) where T
     E3 = SMatrix{3,3,T,9}(I)
 
 
-    AposT = [-I Z3] # TODO is there a UniformScaling way for this instead of E3?
-    # NOTE: **^^ was previously incorrect**
+    AposT = [-I Z3]
 
-    # AvelT = [Z3 -I*body.m/Δt]
     AvelT = [Z3 -I*body.m] # solving for impulses
 
     AposR = [-Rmat(ωbar(state.ωc, Δt)*Δt/2)*LVᵀmat(state.qc) -Lmat(state.qc)*derivωbar(state.ωc, Δt)*Δt/2]
@@ -129,11 +127,8 @@ function ∂F∂z(body::Body{T}, Δt) where T
     J = body.J
     ω1 = state.ωc
     sq1 = sqrt(4 / Δt^2 - ω1' * ω1)
-    # ω1func = skewplusdiag(ω1, -sq1) * J + J * ω1 * (ω1' / sq1) - skew(J * ω1)
     ω1func = -skewplusdiag(ω1, sq1) * J + J * ω1 * (ω1' / sq1) + skew(J * ω1)
-    # NOTE: **^^ was previously incorrect**
 
-    # AvelR = [Z3 ω1func]
     AvelR = [Z3 ω1func*Δt] # solving for impulses
 
 

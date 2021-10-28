@@ -6,10 +6,6 @@ mutable struct ContactBound{T,N} <: Bound{T,N}
     offset::SVector{3,T}
 
     function ContactBound(body::Body{T}, normal::AbstractVector, cf; p = szeros(T, 3), offset::AbstractVector = szeros(T, 3)) where T
-        # Derived from plane equation a*v1 + b*v2 + distance*v3 = p - offset
-        # p is the 3d location of the contact point attached to the link in the link's frame
-        # offset is the 3d location of the point on the surface closest to the contact point
-        # v3 is the normal of
         V1, V2, V3 = orthogonalcols(normal) # gives two plane vectors and the original normal axis
         A = [V1 V2 V3]
         Ainv = inv(A)
@@ -65,32 +61,19 @@ function contactconstraint(body::Body{T}, normal::AbstractVector{T}, cf::T;
         p::AbstractVector{T} = szeros(T, 3),
         offset::AbstractVector{T} = szeros(T, 3)) where {T}
 
-    #     tmp = ConeBound(body, normal, cf; p = p)
-    # conbound = getindex(tmp,1)
-    # impineqc = getindex(tmp,2)
-    # impid = getfield(impineqc, :id)
-    # conineqc = InequalityConstraint((conbound, body.id, impid))
-    # return conineqc, impineqc
-
     contbound = ContactBound(body, normal, cf, p = p)
     contineqcs = InequalityConstraint((contbound, body.id, nothing))
     return contineqcs
 end
 
 function gs(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
-    # this is the residual with substracted slacks
-    # error()
-    # we remove the - ineqc.ssol[2] because this is not true for ContactBound
-    # we already account for the - ψ and - sβ in g
-    return g(mechanism, ineqc)# - ineqc.ssol[2]
+    return g(mechanism, ineqc)
 end
 
 function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}}}
     cont = ineqc.constraints[1]
     body = getbody(mechanism, ineqc.parentid)
     x, v, q, ω = fullargssol(body.state)
-    # x, q = posargsk(body.state)
-    # x, v, q, ω = fullargsc(body.state)
     x3, q3 = posargsnext(body.state, mechanism.Δt)
 
     # transforms the velocities of the origin of the link into velocities along all 4 axes of the friction pyramid
@@ -151,16 +134,9 @@ end
 
 ∂g∂ʳpos(bound::ContactBound, state::State, Δt) = ∂g∂ʳpos(bound, posargsnext(state, Δt)...)
 
-# Derivatives accounting for quaternion specialness
-# @inline function ∂g∂ʳpos(bound::ContactBound, x::AbstractVector, q::UnitQuaternion)
-#     X, Q = ∂g∂pos(bound, x, q)
-#     Q = Q * LVᵀmat(q)
-#     return [X Q]
-# end
-
 @inline function ∂g∂ʳpos(bound::ContactBound, x::AbstractVector, q::UnitQuaternion)
     X, Q = ∂g∂pos(bound, x, q)
-    Q = Q# * LVᵀmat(q) # we account for quaternion specialness in ∂g∂pos
+    Q = Q # we account for quaternion specialness in ∂g∂pos
     return [X Q]
 end
 
@@ -172,7 +148,7 @@ end
     nx = size(x2)[1]
     nq = nx
 
-    
+
     X = [cont.ainv3 * Δt;
          szeros(1,nx);
          Bxmat]
@@ -199,14 +175,7 @@ end
     ∇γ = [ineqc.ssol[2][1] zeros(1,3); zeros(3,1) ∇cone_product(ineqc.ssol[2][2:4]); zeros(1,4); cf -1 0 0; zeros(2,4)]
     # matrix_entry.value = [∇s ∇γ]
     matrix_entry.value = [[ineqc.γsol[2][1] zeros(1,3); zeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])] [ineqc.ssol[2][1] zeros(1,3); zeros(3,1) ∇cone_product(ineqc.ssol[2][2:4]); zeros(1,4); cf -1 0 0; zeros(2,4)]]
-    # plt = plot()
-    # # plot!(plt, Gray.(abs.(1.0e10 .* ∇s)))
-    # plot!(plt, Gray.(abs.(1.0e10 .* [[ineqc.γsol[2][1] zeros(1,3); zeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])] [ineqc.ssol[2][1] zeros(1,3); zeros(3,1) ∇cone_product(ineqc.ssol[2][2:4]); zeros(1,4); cf -1 0 0; zeros(2,4)]])))
-    #
-    # display(plt)
-    # plt = plot()
-    # plot!(plt, Gray.(abs.(1.0e10 .* ∇γ)))
-    # display(plt)
+    
     # [-γsol .* ssol + μ; -g + s]
     vector_entry.value = [-complementarityμ(mechanism, ineqc);-gs(mechanism, ineqc)]
     return

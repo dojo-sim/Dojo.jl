@@ -90,15 +90,6 @@ function get_sdf(mechanism, storage)
     return sdf
 end
 
-function get_impact_index(mechansim)
-    k = collect(mechansim.ineqconstraints.keys)
-    v = collect(mechansim.ineqconstraints.values)
-    n = length(k)
-    l = [[k[i], v[i]] for i = 1:n]
-	inds = findall(x -> typeof(x[2].constraints[1]) <: Impact, l)
-    return k[inds]
-end
-
 function convert_video_to_gif(video_file_path::AbstractString, output_path::AbstractString="output.gif";
     framerate::Int=30, start_time=0., duration=1e3, overwrite=false, width::Int=1080, height::Int=-2, hq_colors::Bool=false)
     output_path = abspath(output_path)
