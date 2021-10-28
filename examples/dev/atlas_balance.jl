@@ -1,6 +1,3 @@
-################################################################################
-# Setup
-################################################################################
 # Utils
 function module_dir()
     return joinpath(@__DIR__, "..", "..")
@@ -22,37 +19,48 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
-################################################################################
 # Build mechanism
-################################################################################
-
 mech = getmechanism(:atlas, Δt = 0.01, g = -9.81, cf = 0.8, contact = true)
-initialize!(mech, :atlas, tran = [0,0,1.9291], rot = [0.,0,0])
+initialize!(mech, :atlas, tran = [0,0,0.99], rot = [0.,0,0])
 for (i,joint) in enumerate(mech.eqconstraints)
     jt = joint.constraints[1]
     jr = joint.constraints[2]
     joint.isdamper = true #false
     joint.isspring = false #false
 
-    jt.spring = 1 * 1.0 * 1e-0 .* sones(3)[1]# 1e4
-    jt.damper = 1 * 1.0 * 1e-0 .* sones(3)[1]# 1e4
-    jr.spring = 1 * 1.0 * 1e-0 .* sones(3)[1]# 1e4
-    jr.damper = 1 * 1.0 * 1e+3 .* sones(3)[1]# 1e4
+    jt.spring = 1/i * 0.0 * 1e-0 .* sones(3)[1]# 1e4
+    jt.damper = 1/i * 0.0 * 1e-0 .* sones(3)[1]# 1e4
+    jr.spring = 1/i * 0.0 * 1e-0 .* sones(3)[1]# 1e4
+    jr.damper = 1/i * 1.0 * 1e+2 .* sones(3)[1]# 1e4
+
+    mech.eqconstraints[1].isspring
+    mech.eqconstraints[1].isdamper
+    mech.eqconstraints[1].constraints[2].damper
 end
 
-@elapsed storage = simulate!(mech, 0.1, controller!, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
+bodies = collect(Body, mech.bodies)
+eqcs = collect(EqualityConstraint, mech.eqconstraints)
+ineqcs = collect(InequalityConstraint, mech.ineqconstraints)
+bodies = [mech.bodies[i] for i = 32:62]
+eqcs = [mech.eqconstraints[i] for i = 1:31]
+teqcs = [eqcs[1]; [addtorque(mech, eqc, spring = 1e2, damper = 1e2) for eqc in eqcs[2:end]]]
+ineqcs = [mech.ineqconstraints[i] for i = 63:70]
 
-# show sign distance function
-ineqcs = collect(mech.ineqconstraints)
-for (i,ineqc) in enumerate(ineqcs)
-    ineqc = ineqcs[1]
-    cont = ineqc.constraints[1]
-    body = getbody(mech, ineqc.parentid)
-    x3, q3 = posargsk(body.state)
-    sdf = cont.ainv3 * (x3 + vrotate(cont.p,q3) - cont.offset)
-    println("sdf $i:", sdf)
+tmech = Mechanism(mech.origin, bodies, teqcs, ineqcs, Δt = 0.01, g = -9.81)
+
+function addtorque(mech::Mechanism, eqc::EqualityConstraint; spring = 0.0, damper = 0.0)
+    pbody = getbody(mech, eqc.parentid)
+    cbody = getbody(mech, eqc.childids[1]) # TODO assume onyly one children
+    tid = findfirst(x -> typeof(x) <: Translational, eqc.constraints)
+    rid = findfirst(x -> typeof(x) <: Rotational, eqc.constraints)
+    tra = eqc.constraints[tid] # get translational joint
+    rot = eqc.constraints[rid] # get rotational joint
+    p1, p2 = tra.vertices
+    axis = [rot.V3[1], rot.V3[2], rot.V3[3]]
+    eqct = EqualityConstraint(TorqueRevolute(pbody, cbody, axis; spring = spring, damper = damper, p1 = p1, p2 = p2))
+    return eqct
 end
+
 
 # PD control law
 nu = sum([getcontroldim(eqc, floatingbase = false) for eqc in collect(mech.eqconstraints)])
@@ -65,14 +73,14 @@ angles += δangles
 function controller!(mechanism, k)
     for (i,joint) in enumerate(collect(mechanism.eqconstraints)[2:end])
         if getcontroldim(joint) == 1
-            θ = minimalCoordinates(mechanism, joint)[1]
-            dθ = minimalVelocities(mechanism, joint)[1]
-            u = 3e+2 * (angles[i] - θ) #+ 5e-2 * (0 - dθ)
-            u = clamp(u, -150.0, 150.0) * mechanism.Δt
-            if joint.name ∈ ("r_leg_akx", "r_leg_aky", "l_leg_akx", "l_leg_aky", "back_bkx", "back_bky", "back_bkz")
-                u = 1e+2 * (angles[i] - θ) #+ 5e-2 * (0 - dθ)
-                u = clamp(u, -100.0, 100.0) * mechanism.Δt
-            end
+            # θ = minimalCoordinates(mechanism, joint)[1]
+            # dθ = minimalVelocities(mechanism, joint)[1]
+            # u = 3e+2 * (angles[i] - θ) #+ 5e-2 * (0 - dθ)
+            # u = clamp(u, -150.0, 150.0) * mechanism.Δt
+            # if joint.name ∈ ("r_leg_akx", "r_leg_aky", "l_leg_akx", "l_leg_aky", "back_bkx", "back_bky", "back_bkz")
+            #     u = 1e+2 * (angles[i] - θ) #+ 5e-2 * (0 - dθ)
+            #     u = clamp(u, -100.0, 100.0) * mechanism.Δt
+            # end
             u = 0.0
             setForce!(mechanism, joint, SA[u])
         end
@@ -86,8 +94,8 @@ end
 # @profiler forcedstorage = simulate!(tmech, 0.5, controller!, record = true, solver = :mehrotra!)
 # visualize(tmech, forcedstorage, vis = vis)
 
-@elapsed storage = simulate!(mech, 0.5, controller!, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
+@elapsed forcedstorage = simulate!(mech, 0.4, controller!, record = true, solver = :mehrotra!, verbose = true)
+visualize(mech, forcedstorage, vis = vis)
 
 
 
@@ -115,10 +123,6 @@ sensi = - (solmat \ datamat)
 # finite diff
 fd_datamat = finitediff_data_matrix(mech, data, sol, δ = 1e-5) * attjac
 @test norm(fd_datamat + datamat, Inf) < 1e-6
-norm((fd_datamat + datamat)[1:5*30,:], Inf)
-5*30 + 6*31 + 8*8
-norm((fd_datamat + datamat)[5*30+6*31 .+ (1:8*8),:], Inf)
-norm((fd_datamat + datamat)[5*30+6*31 .+ (1:8*8),:], Inf)
 plot(Gray.(abs.(1e10 .* datamat)))
 plot(Gray.(abs.(fd_datamat)))
 

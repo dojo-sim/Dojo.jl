@@ -19,7 +19,7 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
-mech = getmechanism(:snake, Nlink = 1, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, conetype = :soc)
+mech = getmechanism(:snake, Nlink = 2, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, conetype = :soc)
 
 x = [0,-0.5,0]
 v = 0.0*[1,.3,4]
@@ -27,7 +27,7 @@ v = 0.0*[1,.3,4]
 ϕ1 = π/1.5
 initialize!(mech, :snake, x = x, v = v, ω = ω, ϕ1 = ϕ1)
 
-@elapsed storage = simulate!(mech, .3, record = true, solver = :mehrotra!)
+@elapsed storage = simulate!(mech, .35, record = true, solver = :mehrotra!)
 
 visualize(mech, storage, vis = vis)
 
@@ -52,6 +52,16 @@ fd_datamat = finitediff_data_matrix(mech, data, sol, δ = 1e-5) * attjac
 @test norm(fd_datamat + datamat, Inf) < 1e-6
 plot(Gray.(abs.(1e10 .* datamat)))
 plot(Gray.(abs.(1e10 .* fd_datamat)))
+
+norm((fd_datamat + datamat)[1:5,1:31], Inf)
+norm((fd_datamat + datamat)[6:,:], Inf)
+
+
+collect(mech.eqconstraints)
+collect(mech.bodies)
+collect(mech.ineqconstraints)
+5 + 2 * 6 + 4 * 8
+12 * 2 + 6 + 1
 
 fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
 @test norm(fd_solmat + solmat, Inf) < 1e-8
