@@ -19,7 +19,7 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
-mech = getmechanism(:snake, Nlink = 2, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, conetype = :soc)
+mech = getmechanism(:snake, Nlink = 2, Δt = 0.01, g = -9.81, cf = 0.2, contact = false, conetype = :soc)
 
 x = [0,-0.5,0]
 v = 0.1*[1,.3,4]
