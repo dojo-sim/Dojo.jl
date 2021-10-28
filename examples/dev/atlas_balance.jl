@@ -86,7 +86,7 @@ end
 # @profiler forcedstorage = simulate!(tmech, 0.5, controller!, record = true, solver = :mehrotra!)
 # visualize(tmech, forcedstorage, vis = vis)
 
-@elapsed storage = simulate!(mech, 4, controller!, record = true, solver = :mehrotra!, verbose = false)
+@elapsed storage = simulate!(mech, 0.5, controller!, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
 
@@ -115,6 +115,10 @@ sensi = - (solmat \ datamat)
 # finite diff
 fd_datamat = finitediff_data_matrix(mech, data, sol, δ = 1e-5) * attjac
 @test norm(fd_datamat + datamat, Inf) < 1e-6
+norm((fd_datamat + datamat)[1:5*30,:], Inf)
+5*30 + 6*31 + 8*8
+norm((fd_datamat + datamat)[5*30+6*31 .+ (1:8*8),:], Inf)
+norm((fd_datamat + datamat)[5*30+6*31 .+ (1:8*8),:], Inf)
 plot(Gray.(abs.(1e10 .* datamat)))
 plot(Gray.(abs.(fd_datamat)))
 
@@ -127,30 +131,3 @@ fd_sensi = finitediff_sensitivity(mech, data, δ = 1e-5, ϵ = 1e-14) * attjac
 @test norm(fd_sensi - sensi) / norm(fd_sensi) < 8e-3
 plot(Gray.(1e10 .* sensi))
 plot(Gray.(fd_sensi))
-
-
-
-function dare(A, B, Q, R)
-    if !issemiposdef(Q)
-        error("Q must be positive-semidefinite.");
-    end
-    if (!isposdef(R))
-        error("R must be positive definite.");
-    end
-
-    n = size(A, 1);
-
-    E = [
-        Matrix{Float64}(I, n, n) B*(R\B');
-        zeros(size(A)) A'
-    ];
-    F = [
-        A zeros(size(A));
-        -Q Matrix{Float64}(I, n, n)
-    ];
-
-    QZ = schur(F, E);
-    QZ = ordschur(QZ, abs.(QZ.alpha./QZ.beta) .< 1);
-
-    return QZ.Z[(n+1):end, 1:n]/QZ.Z[1:n, 1:n];
-end
