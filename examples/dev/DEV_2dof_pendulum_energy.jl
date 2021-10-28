@@ -40,11 +40,11 @@ link1 = Box(width, depth, length1, length1)
 
 # Constraints
 # joint_between_origin_and_link1 = EqualityConstraint(Revolute(origin, link1, joint_axis; p2=p2))
-joint_between_origin_and_link1 = EqualityConstraint(Spherical(origin, link1; p2=p2, spring = 100.0))
+joint_between_origin_and_link1 = EqualityConstraint(Spherical(origin, link1; p2=p2, spring = 20.0))
 links = [link1]
 eqcs = [joint_between_origin_and_link1]
 
-mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.01)
+mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.04)
 
 eqc1 = collect(mech.eqconstraints)[1]
 tra1 = eqc1.constraints[1]
@@ -64,9 +64,9 @@ setPosition!(body1, x = [0, 0, -r])
 q0 = UnitQuaternion(RotX(pi/2))
 setPosition!(origin, body1, p2 = [0, 0, r], Δq = q0)
 
-storage = simulate!(mech, 10.10, record = true, solver = :mehrotra!)
+@elapsed storage = simulate!(mech, 10.10, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
-
+plot([q.w for q in storage.q[1]])
 
 ################################################################################
 # Differentiation
