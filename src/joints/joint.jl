@@ -20,8 +20,8 @@ Base.show(io::IO, joint::Joint) = summary(io, joint)
 
 ### Constraints and derivatives
 ## Position level constraint wrappers
-@inline g(joint::Joint, body1::Body, body2::Body, Δt, λ::AbstractVector) = constraintmat(joint) * g(joint, body1.state, body2.state, Δt)
-@inline g(joint::Joint, body1::Origin, body2::Body, Δt, λ::AbstractVector) = constraintmat(joint) * g(joint, body2.state, Δt)
+@inline g(joint::Joint, body1::Body, body2::Body, Δt) = constraintmat(joint) * g(joint, body1.state, body2.state, Δt)
+@inline g(joint::Joint, body1::Origin, body2::Body, Δt) = constraintmat(joint) * g(joint, body2.state, Δt)
 
 ### Constraints and derivatives
 ## Discrete-time position wrappers (for dynamics)

@@ -7,10 +7,22 @@ function getmechanism(model::Symbol; kwargs...)
     return mech
 end
 
-function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = true) where {T}
+function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0, damper::T = 0.0, contact::Bool = true) where {T}
     path = "examples/examples_files/atlas_simple.urdf"
     # path = "examples/examples_files/atlas_ones.urdf"
     mech = Mechanism(joinpath(module_dir(), path), floating=true, g = g)
+
+    # Adding springs and dampers
+    for (i,eqc) in enumerate(mech.eqconstraints)
+        (getcontroldim(eqc) != 1) && continue
+        eqc.isdamper = true
+        eqc.isspring = true
+        for joint in eqc.constraints
+            joint.spring = spring
+            joint.damper = damper
+        end
+    end
+
     if contact
         origin = Origin{T}()
         bodies = Vector{Body{T}}(collect(mech.bodies))
@@ -32,7 +44,7 @@ function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
         contineqcs1 = contactconstraint(getbody(mech, "l_foot"), normal, cf, p = contacts)
         contineqcs2 = contactconstraint(getbody(mech, "r_foot"), normal, cf, p = contacts)
 
-        # setPosition!(mech, geteqconstraint(mech, "auto_generated_floating_joint"), [0;0;1.2;0.1;0.;0.])
+        setPosition!(mech, geteqconstraint(mech, "auto_generated_floating_joint"), [0;0;1.2;0.1;0.;0.])
         # mech = Mechanism(origin, bodies, eqs, [impineqcs1; impineqcs2; conineqcs1; conineqcs2], g = g, Δt = Δt)
         mech = Mechanism(origin, bodies, eqs, [contineqcs1; contineqcs2], g = g, Δt = Δt)
     end
@@ -57,9 +69,6 @@ function getquadruped(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool 
         contineqcs3 = contactconstraint(getbody(mech,"RR_calf"), normal, cf; p = contact)
         contineqcs4 = contactconstraint(getbody(mech,"RL_calf"), normal, cf; p = contact)
 
-        # contineqcs1 = contactconstraint(getbody(mech, "l_foot"), normal, cf, p = contacts)
-        # contineqcs2 = contactconstraint(getbody(mech, "r_foot"), normal, cf, p = contacts)
-
         setPosition!(mech, geteqconstraint(mech, "floating_base"), [0;0;1.2;0.1;0.;0.])
         mech = Mechanism(origin, bodies, eqs, [contineqcs1; contineqcs2; contineqcs3; contineqcs4], g = g, Δt = Δt)
     end
@@ -69,7 +78,7 @@ end
 function getdice(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8,
         contact::Bool = true,
         conetype = :soc,
-        mode=:particle)  where {T}
+        mode=:box)  where {T}
     # Parameters
     joint_axis = [1.0;0.0;0.0]
     length1 = 0.5
@@ -84,17 +93,7 @@ function getdice(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8,
     if contact
         # Corner vectors
         if mode == :particle
-            corners = [
-                [[0 ; 0; 0.]]
-                # [[length1 / 2;length1 / 2;-length1 / 2]]
-                # [[length1 / 2;-length1 / 2;-length1 / 2]]
-                # [[-length1 / 2;length1 / 2;-length1 / 2]]
-                # [[-length1 / 2;-length1 / 2;-length1 / 2]]
-                # [[length1 / 2;length1 / 2;length1 / 2]]
-                # [[length1 / 2;-length1 / 2;length1 / 2]]
-                # [[-length1 / 2;length1 / 2;length1 / 2]]
-                # [[-length1 / 2;-length1 / 2;length1 / 2]]
-            ]
+            corners = [[0 ; 0; 0.]]
         elseif mode == :box
             corners = [
                 [[length1 / 2;length1 / 2;-length1 / 2]]
@@ -130,7 +129,7 @@ function getdice(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8,
 end
 
 function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = true,
-        conetype = :soc, Nlink::Int = 5) where {T}
+        conetype = :soc, spring = 0.0, damper = 0.0, Nlink::Int = 5) where {T}
 
     # Parameters
     ex = [1.;0.;0.]
@@ -145,11 +144,12 @@ function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
     links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
     # Constraints
-    jointb1 = EqualityConstraint(Floating(origin, links[1]))
+    # jointb1 = EqualityConstraint(Floating(origin, links[1]))
+    jointb1 = EqualityConstraint(Floating(origin, links[1], spring = spring, damper = damper)) # TODO remove the spring and damper from floating base
     if Nlink > 1
         eqcs = [
             jointb1;
-            [EqualityConstraint(Revolute(links[i - 1], links[i], ex; p1=vert12, p2=vert11)) for i = 2:Nlink]
+            [EqualityConstraint(Revolute(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink]
             ]
     else
         eqcs = [jointb1]
@@ -164,7 +164,7 @@ function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
             # conineqcs1, impineqcs1 = splitcontactconstraint(links, normal, cf, p = fill(vert11, n))
             # conineqcs2, impineqcs2 = splitcontactconstraint(links, normal, cf, p = fill(vert12, n))
             # mech = Mechanism(origin, links, eqcs, [impineqcs1; impineqcs2; conineqcs1; conineqcs2], g = g, Δt = Δt)
-            contineqcs1 = contactconstraint(links, normal, cf, p = fill(vert11, n))
+            contineqcs1 = contactconstraint(links[1], normal[1], cf[1], p = vert11) # to avoid duplicating the contact points
             contineqcs2 = contactconstraint(links, normal, cf, p = fill(vert12, n))
             mech = Mechanism(origin, links, eqcs, [contineqcs1; contineqcs2], g = g, Δt = Δt)
 
@@ -179,7 +179,7 @@ function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
     return mech
 end
 
-function getpendulum(; Δt::T = 0.01, g::T = -9.81) where {T}
+function getpendulum(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 0.0) where {T}
     # Parameters
     joint_axis = [1.0; 0; 0]
     length1 = 1.0
@@ -191,7 +191,7 @@ function getpendulum(; Δt::T = 0.01, g::T = -9.81) where {T}
     link1 = Box(width, depth, length1, length1)
 
     # Constraints
-    joint_between_origin_and_link1 = EqualityConstraint(Revolute(origin, link1, joint_axis; p2=p2))
+    joint_between_origin_and_link1 = EqualityConstraint(Revolute(origin, link1, joint_axis; p2=p2, spring = spring, damper = damper))
     links = [link1]
     eqcs = [joint_between_origin_and_link1]
 
@@ -199,7 +199,7 @@ function getpendulum(; Δt::T = 0.01, g::T = -9.81) where {T}
     return mech
 end
 
-function getslider(; Δt::T = 0.01, g::T = -9.81) where {T}
+function getslider(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 0.0) where {T}
     # Parameters
     joint_axis = [0; 0; 1.0]
     length1 = 1.0
@@ -211,7 +211,7 @@ function getslider(; Δt::T = 0.01, g::T = -9.81) where {T}
     link1 = Box(width, depth, length1, length1)
 
     # Constraints
-    joint_between_origin_and_link1 = EqualityConstraint(Prismatic(origin, link1, joint_axis; p2=p2))
+    joint_between_origin_and_link1 = EqualityConstraint(Prismatic(origin, link1, joint_axis; p2=p2, spring = spring, damper = damper))
     links = [link1]
     eqcs = [joint_between_origin_and_link1]
 
@@ -219,7 +219,7 @@ function getslider(; Δt::T = 0.01, g::T = -9.81) where {T}
     return mech
 end
 
-function getnpendulum(; Δt::T = 0.01, g::T = -9.81, Nlink::Int = 5) where {T}
+function getnpendulum(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 0.0, Nlink::Int = 5) where {T}
     # Parameters
     ex = [1.; 0; 0]
     h = 1.
@@ -232,11 +232,11 @@ function getnpendulum(; Δt::T = 0.01, g::T = -9.81, Nlink::Int = 5) where {T}
     links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
     # Constraints
-    jointb1 = EqualityConstraint(Revolute(origin, links[1], ex; p2 = vert11))
+    jointb1 = EqualityConstraint(Revolute(origin, links[1], ex; p2 = vert11, spring = spring, damper = damper))
     if Nlink > 1
         eqcs = [
             jointb1;
-            [EqualityConstraint(Revolute(links[i - 1], links[i], ex; p1=vert12, p2=vert11)) for i = 2:Nlink]
+            [EqualityConstraint(Revolute(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink]
             ]
     else
         eqcs = [jointb1]
@@ -245,7 +245,7 @@ function getnpendulum(; Δt::T = 0.01, g::T = -9.81, Nlink::Int = 5) where {T}
     return mech
 end
 
-function getnslider(; Δt::T = 0.01, g::T = -9.81, Nlink::Int = 5) where {T}
+function getnslider(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 0.0, Nlink::Int = 5) where {T}
     # Parameters
     ex = [0; 0; 1.0]
     h = 1.
@@ -258,13 +258,11 @@ function getnslider(; Δt::T = 0.01, g::T = -9.81, Nlink::Int = 5) where {T}
     links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
     # Constraints
-    # jointb1 = EqualityConstraint(Prismatic(origin, links[1], ex; p2 = vert11))
-    # setPosition!(mechanism.origin, link1, p1 = [0, -0.05, 0.0])
     jointb1 = EqualityConstraint(Fixed(origin, links[1]; p1 = 0*vert11, p2 = 0*vert11))
     if Nlink > 1
         eqcs = [
             jointb1;
-            [EqualityConstraint(ForcePrismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = 1.0, damper = 1.0)) for i = 2:Nlink]
+            [EqualityConstraint(Prismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink]
             ]
     else
         eqcs = [jointb1]
@@ -314,10 +312,12 @@ function initializedice!(mechanism::Mechanism; x::AbstractVector{T} = [0,0,1.],
 end
 
 function initializesnake!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{T} = [0,-0.5,0],
-        v::AbstractVector{T} = [1,.3,4], ω::AbstractVector{T} = [.1,.8,0],
+        v::AbstractVector{T} = 0.0*[1,0.3,4], ω::AbstractVector{T} = 0.0*[.1,.8,0],
+        Δω::AbstractVector{T} = [0.4, 0.0, -0.0], Δv::AbstractVector{T} = [0, 0, 1.],
         ϕ1::T = pi/2) where {T,Nn,Ne,Nb}
 
-    link1 = collect(mechanism.bodies)[1]
+    bodies = collect(mechanism.bodies)
+    link1 = bodies[1]
     h = link1.shape.rh[2]
     vert11 = [0.;0.;h / 2]
     vert12 = -vert11
@@ -326,9 +326,10 @@ function initializesnake!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{T}
     setVelocity!(link1, v = v, ω = ω)
 
     previd = link1.id
-    for body in Iterators.drop(mechanism.bodies, 1)
+    for (i,body) in enumerate(Iterators.drop(mechanism.bodies, 1))
         setPosition!(getbody(mechanism, previd), body, p1 = vert12, p2 = vert11)
-        setVelocity!(body, v = [0.3, 0.4, 0.8], ω = [0.05, 0.02, 0.01])
+        setVelocity!(getbody(mechanism, previd), body, p1 = vert12, p2 = vert11,
+                Δv = Δv, Δω = 1/i*Δω)
         previd = body.id
     end
 end
@@ -358,22 +359,21 @@ function initializependulum!(mechanism::Mechanism; ϕ1::T = 0.7) where {T}
     setPosition!(mechanism.origin, body, p2 = p2, Δq = q1)
 end
 
-function initializeslider!(mechanism::Mechanism; ϕ1::T = 0.7) where {T}
+function initializeslider!(mechanism::Mechanism; z1::T = 0.0) where {T}
     body = collect(mechanism.bodies)[1]
     eqc = collect(mechanism.eqconstraints)[1]
     p2 = eqc.constraints[1].vertices[2]
-    q1 = UnitQuaternion(RotX(ϕ1))
-    setPosition!(mechanism.origin, body, p2 = p2, Δq = q1)
+    setPosition!(mechanism.origin, body, p2 = p2 - [0, 0, z1])
 end
 
 function initializenslider!(mechanism::Mechanism; z1::T = 0.2, Δz = 0.0) where {T}
     link1 = collect(mechanism.bodies)[1]
     # set position and velocities
-    setPosition!(mechanism.origin, link1, p1 = 0*[0, -0.05, z1])
+    setPosition!(mechanism.origin, link1, p1 = [0, 0, z1])
 
     previd = link1.id
     for (i,body) in enumerate(Iterators.drop(mechanism.bodies, 1))
-        setPosition!(getbody(mechanism, previd), body, p1 = [0, -0.1i, Δz])
+        setPosition!(getbody(mechanism, previd), body, p1 = [0, -0.1, Δz])
         previd = body.id
     end
 end
