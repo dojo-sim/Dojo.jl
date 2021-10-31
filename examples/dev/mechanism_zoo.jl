@@ -8,13 +8,14 @@ function getmechanism(model::Symbol; kwargs...)
 end
 
 function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0, damper::T = 0.0, contact::Bool = true) where {T}
-    path = "examples/examples_files/atlas_simple.urdf"
+    path = "examples/examples_files/atlas_armless.urdf"
+    # path = "examples/examples_files/atlas_fast.urdf"
+    # path = "examples/examples_files/atlas_simple.urdf"
     # path = "examples/examples_files/atlas_ones.urdf"
     mech = Mechanism(joinpath(module_dir(), path), floating=true, g = g)
 
     # Adding springs and dampers
-    for (i,eqc) in enumerate(mech.eqconstraints)
-        (getcontroldim(eqc) != 1) && continue
+    for (i,eqc) in enumerate(collect(mech.eqconstraints)[2:end])
         eqc.isdamper = true
         eqc.isspring = true
         for joint in eqc.constraints
