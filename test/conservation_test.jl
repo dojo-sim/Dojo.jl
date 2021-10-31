@@ -21,19 +21,19 @@ function momentum(mechanism::Mechanism{T}, body::Body{T}) where {T}
         if body.id == eqc.parentid
             for (i,joint) in enumerate(eqc.constraints)
                 cbody = getbody(mechanism, eqc.childids[i])
-                p1 += 0.5 * springforcea(joint, body.state, cbody.state, Δt)
-                p1 += 0.5 * damperforcea(joint, body.state, cbody.state, Δt)
+                eqc.isspring && (p1 += 0.5 * springforcea(joint, body.state, cbody.state, Δt))
+                eqc.isdamper && (p1 += 0.5 * damperforcea(joint, body.state, cbody.state, Δt))
             end
         end
         for (i,joint) in enumerate(eqc.constraints)
             if eqc.childids[i] == body.id
                 if eqc.parentid != nothing
                     pbody = getbody(mechanism, eqc.parentid)
-                    p1 += 0.5 * springforceb(joint, pbody.state, body.state, Δt)
-                    p1 += 0.5 * damperforceb(joint, pbody.state, body.state, Δt)
+                    eqc.isspring && (p1 += 0.5 * springforceb(joint, pbody.state, body.state, Δt))
+                    eqc.isdamper && (p1 += 0.5 * damperforceb(joint, pbody.state, body.state, Δt))
                 else
-                    p1 += 0.5 * springforceb(joint, body.state, Δt)
-                    p1 += 0.5 * damperforceb(joint, body.state, Δt)
+                    eqc.isspring && (p1 += 0.5 * springforceb(joint, body.state, Δt))
+                    eqc.isdamper && (p1 += 0.5 * damperforceb(joint, body.state, Δt))
                 end
             end
         end

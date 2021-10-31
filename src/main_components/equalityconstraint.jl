@@ -48,6 +48,7 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: AbstractConstraint{T,N}
         N = 0
         for set in jointdata
             set[1].spring != 0 && (isspring = true)
+            @show set[1].damper
             set[1].damper != 0 && (isdamper = true)
 
             push!(constraints, set[1])
@@ -202,7 +203,7 @@ end
     return
 end
 
-function _dGa!(mechanism, pbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc} 
+function _dGa!(mechanism, pbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
     Δt = mechanism.Δt
     _, _, q2, ω2 = fullargssol(pbody.state)
     M = ∂integration(q2, ω2, Δt)
@@ -213,14 +214,14 @@ function _dGa!(mechanism, pbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T
         Aᵀ = zerodimstaticadjoint(constraintmat(joint))
         Nj = length(joint)
         cbody = getbody(mechanism, eqc.childids[i])
-        eqc.isspring && (pbody.state.D -= ∂springforcea∂vela(joint, pbody, cbody, Δt)) 
+        eqc.isspring && (pbody.state.D -= ∂springforcea∂vela(joint, pbody, cbody, Δt))
         eqc.isdamper && (pbody.state.D -= ∂damperforcea∂vela(joint, pbody, cbody, Δt))
         off += Nj
     end
     return nothing
 end
 
-function _dGb!(mechanism, cbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc} 
+function _dGb!(mechanism, cbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
     Δt = mechanism.Δt
     x2, v2, q2, ω2 = fullargssol(cbody.state)
     M = ∂integration(q2, ω2, Δt)

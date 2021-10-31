@@ -677,7 +677,7 @@
     <dynamics damping="0.1" friction="0"/>
     <limit effort="840" lower="-1.61234" upper="0.65764" velocity="12"/>
     <safety_controller k_position="100" k_velocity="100" soft_lower_limit="-11.6123" soft_upper_limit="10.6576"/>
-  </joint> 
+  </joint>
   <joint name="r_leg_hpz" type="revolute">
     <origin rpy="0 0 0" xyz="0 -0.089 0"/>
     <axis xyz="0 0 1"/>

@@ -5,7 +5,7 @@ unsafeattribute(x::LightXML.XMLElement, name::Core.AbstractString) = attribute(x
 
 function parse_scalar(xel, name::String, T; default::Union{String,Nothing}=nothing)
     scalarstr = unsafeattribute(xel, name)
-    if scalarstr === nothing 
+    if scalarstr === nothing
         if default === nothing
             @error "no parsable scalar found"
         else
@@ -18,7 +18,7 @@ end
 
 function parse_vector(xel, name::String, T; default::Union{String,Nothing}=nothing)
     vectorstr = unsafeattribute(xel, name)
-    if vectorstr === nothing 
+    if vectorstr === nothing
         if default === nothing
             @error "no parsable vector found"
         else
@@ -125,7 +125,7 @@ function parse_shape(xvisual, materialdict, T)
 
         if length(shapenodes) == 0
             shape = nothing
-        else 
+        else
             if length(shapenodes) > 1
                 @info "Multiple geometries."
             end
@@ -150,12 +150,12 @@ function parse_shape(xvisual, materialdict, T)
                 scale = parse_vector(shapenode, "scale", T, default = "1 1 1")
                 shape = Mesh(path, zero(T), zeros(T, 3, 3), scale=scale, color = color, xoffset = x, qoffset = q)
             else
-                @info "Unkown geometry."
+                @info "Unknown geometry."
                 shape = nothing
             end
         end
 
-        
+
     end
 
     return shape
@@ -175,9 +175,9 @@ function parse_link(xlink, materialdict, T)
         link.name = name
     end
 
-    link.state.xc = x 
+    link.state.xc = x
     link.state.qc = q
-    
+
 
     return link
 end
@@ -193,7 +193,7 @@ function parse_links(xlinks, materialdict, T)
     return ldict
 end
 
-function joint_selector(jointtype, link1, link2, T; 
+function joint_selector(jointtype, link1, link2, T;
         axis = SA{T}[1;0;0], p1 = szeros(T,3), p2 = szeros(T,3), qoffset = one(UnitQuaternion{T}), name = ""
     )
 
@@ -248,7 +248,7 @@ function parse_loop_joint(xjoint, link1, link2, T)
     p1 = x1
     p2 = x2
     name = attribute(xjoint, "name")
-    
+
     return joint_selector(jointtype, link1, link2, T, axis = axis, p1 = p1, p2 = p2, qoffset = q1, name = name)
 end
 
@@ -361,7 +361,7 @@ function parse_loop_joints(xloopjoints, origin, joints, ldict, T)
                     break
                 end
             end
-            foundflag && break            
+            foundflag && break
         end
 
         # Find and remove joints to combine them
@@ -383,7 +383,7 @@ function parse_loop_joints(xloopjoints, origin, joints, ldict, T)
                 break
             end
         end
-        
+
         joint = cat(joint1,joint2)
         push!(joints,joint)
         loopjoint = parse_loop_joint(xloopjoint, link1, link2, T)
@@ -391,7 +391,7 @@ function parse_loop_joints(xloopjoints, origin, joints, ldict, T)
     end
 
     return joints, loopjoints
-end 
+end
 
 function parse_urdf(filename, floating, ::Type{T}) where T
     xdoc = LightXML.parse_file(filename)

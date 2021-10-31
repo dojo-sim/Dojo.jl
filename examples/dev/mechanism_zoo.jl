@@ -51,6 +51,49 @@ function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0, d
     return mech
 end
 
+function gethumanoid(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0, damper::T = 0.0, contact::Bool = true) where {T}
+    # TODO new feature: visualize capsule instead of cylinders
+    # TODO new feature: visualize multiple shapes for a single body
+    # TODO new feature: define a new joint with 0 translational DoFs and 2 rotational DoFs
+    # TODO fix: fix the angles of rotation of the joint and the type of joints in the URDF
+    path = "examples/examples_files/humanoid.urdf"
+    mech = Mechanism(joinpath(module_dir(), path), floating=true, g = g)
+
+    # Adding springs and dampers
+    for (i,eqc) in enumerate(collect(mech.eqconstraints[2:end]))
+        eqc.isdamper = true
+        eqc.isspring = true
+        for joint in eqc.constraints
+            joint.spring = spring
+            joint.damper = damper
+        end
+    end
+
+    if contact
+        origin = Origin{T}()
+        bodies = Vector{Body{T}}(collect(mech.bodies))
+        eqs = Vector{EqualityConstraint{T}}(collect(mech.eqconstraints))
+
+        # Foot contact
+        contacts = [
+            [-0.1; -0.05; 0.0],
+            [+0.1; -0.05; 0.0],
+            [-0.1; +0.05; 0.0],
+            [+0.1; +0.05; 0.0],
+            ]
+        n = length(contacts)
+        normal = [[0;0;1.0] for i = 1:n]
+        cf = cf * ones(T, n)
+
+        contineqcs1 = contactconstraint(getbody(mech, "left_foot"), normal, cf, p = contacts)
+        contineqcs2 = contactconstraint(getbody(mech, "right_foot"), normal, cf, p = contacts)
+
+        setPosition!(mech, geteqconstraint(mech, "auto_generated_floating_joint"), [0;0;1.2;0.1;0.;0.])
+        mech = Mechanism(origin, bodies, eqs, [contineqcs1; contineqcs2], g = g, Δt = Δt)
+    end
+    return mech
+end
+
 function getquadruped(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = true) where {T}
     path = "examples/examples_files/quadruped_simple.urdf"
     mech = Mechanism(joinpath(module_dir(), path), floating = false, g = g)
@@ -145,7 +188,7 @@ function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
 
     # Constraints
     # jointb1 = EqualityConstraint(Floating(origin, links[1]))
-    jointb1 = EqualityConstraint(Floating(origin, links[1], spring = spring, damper = damper)) # TODO remove the spring and damper from floating base
+    jointb1 = EqualityConstraint(Floating(origin, links[1], spring = 0.0, damper = 0.0)) # TODO remove the spring and damper from floating base
     if Nlink > 1
         eqcs = [
             jointb1;
@@ -223,7 +266,7 @@ function getnpendulum(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T 
     # Parameters
     ex = [1.; 0; 0]
     h = 1.
-    r = .05
+    r = 0.05
     vert11 = [0; 0; h/2]
     vert12 = -vert11
 
@@ -232,7 +275,8 @@ function getnpendulum(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T 
     links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
     # Constraints
-    jointb1 = EqualityConstraint(Revolute(origin, links[1], ex; p2 = vert11, spring = spring, damper = damper))
+    jointb1 = EqualityConstraint(Fixed(origin, links[1]; p2 = vert11))
+    # jointb1 = EqualityConstraint(Revolute(origin, links[1], ex; p2 = vert11, spring = spring, damper = damper))
     if Nlink > 1
         eqcs = [
             jointb1;
@@ -280,6 +324,13 @@ function initialize!(mechanism::Mechanism, model::Symbol; kwargs...)
 end
 
 function initializeatlas!(mechanism::Mechanism; tran::AbstractVector{T} = [0,0,1.2],
+        rot::AbstractVector{T} = [0.0,0,0]) where {T}
+    setPosition!(mechanism,
+                 geteqconstraint(mechanism, "auto_generated_floating_joint"),
+                 [tran; rot])
+end
+
+function initializehumanoid!(mechanism::Mechanism; tran::AbstractVector{T} = [0,0,1.2],
         rot::AbstractVector{T} = [0.1,0,0]) where {T}
     setPosition!(mechanism,
                  geteqconstraint(mechanism, "auto_generated_floating_joint"),

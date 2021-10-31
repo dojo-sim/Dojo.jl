@@ -80,26 +80,224 @@ EV = potentialEnergy(mech, body1)
 potentialEnergy(mech, body1) + m * gv * z
 
 
-
+################################################################################
+# atlas
+################################################################################
 
 include("conservation_test.jl")
+Random.seed!(100)
 Δt_ = 0.01
-mech = getmechanism(:atlas, Δt = Δt_, g = 0.0, spring = 000.0, damper = 400.0, contact = false)
+mech = getmechanism(:atlas, Δt = Δt_, g = 0.0, spring = 0.0, damper = 0.05, contact = false)
 initialize!(mech, :atlas, tran = [0, 0, 2.])
 
 function controller!(mechanism, k)
-    for (i,joint) in enumerate(collect(mechanism.eqconstraints)[2:end])
+    for (i,joint) in enumerate(mechanism.eqconstraints)
         if getcontroldim(joint) == 1
-            u = 5e-1 * (rand() - 0.5) * Δt_ * (k < 100)
-            @show u
+            if k ∈ (1:50)
+                u = 1e0 * (1.0 - 0.5) * Δt_
+            elseif k ∈ (51:100)
+                u = -1e0 * (1.0 - 0.5) * Δt_
+            else
+                u = 0.0
+            end
             setForce!(mechanism, joint, SA[u])
         end
     end
     return
 end
 
-storage = simulate!(mech, 10.0, controller!, record = true, solver = :mehrotra!, verbose = false)
+storage = simulate!(mech, 1.0, controller!, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
+# mech.eqconstraints[1].constraints[1].spring
+# mech.eqconstraints[1].constraints[2].spring
+# mech.eqconstraints[1].constraints[1].damper
+# mech.eqconstraints[1].constraints[2].damper
+momentum(mech)
+
+[eqc.name for eqc in mech.eqconstraints]
+[(body.name, body.m) for body in mech.bodies]
+
+################################################################################
+# snake
+################################################################################
+include("conservation_test.jl")
+n = 1000
+Δt_ = 0.1 / n
+Nlink_ = 2
+mech = getmechanism(:snake, Δt = Δt_, g = 0.0, spring = 0.0, damper = 0.0, contact = false, Nlink = Nlink_)
+initialize!(mech, :snake, Δv = zeros(3), Δω = zeros(3))
+
+function controller!(mechanism, k)
+    for (i,joint) in enumerate(collect(mechanism.eqconstraints)[2:end])
+        if  i == Nlink_-1
+            if getcontroldim(joint) == 1
+                # u = 5e-1 * (rand() - 0.5) * Δt_ * (k < 100)
+                if k ∈ (1:n)
+                    u = 1e-0 * Δt_
+                elseif k ∈ (n+1:2n)
+                    u = -1e-0 * Δt_
+                else
+                    u = 0.0
+                end
+                setForce!(mechanism, joint, SA[u])
+            end
+        end
+    end
+    return
+end
+
+storage = simulate!(mech, 1.0, controller!, record = true, solver = :mehrotra!, verbose = true)
+visualize(mech, storage, vis = vis)
+
+momentum(mech, collect(mech.bodies)[1])[4]
+momentum(mech, collect(mech.bodies)[2])[4]
+momentum(mech)[4]
+
+plot([ω[1] for ω in storage.ω[1]])
+plot([ω[1] for ω in storage.ω[2]])
+
+collect(mech.bodies)[1].m
+
+bodies = collect(mech.bodies)
+eqcs = collect(mech.eqconstraints)
+body1 = bodies[1]
+eqc1 = eqcs[1]
+tra1 = eqc1.constraints[1]
+rot1 = eqc1.constraints[2]
+eqc2 = eqcs[2]
+tra2 = eqc2.constraints[1]
+rot2 = eqc2.constraints[2]
+
+rot1.qoffset
+rot2.qoffset
+
+
+################################################################################
+# slider
+################################################################################
+include("conservation_test.jl")
+Δt_ = 0.001
+mech = getmechanism(:slider, Δt = Δt_, g = 0.0, spring = 0.0, damper = 0.0)
+initialize!(mech, :slider)
+
+function controller!(mechanism, k)
+    for (i,joint) in enumerate(collect(mechanism.eqconstraints)[1:end])
+        if getcontroldim(joint) == 1
+            # u = 5e-1 * (rand() - 0.5) * Δt_ * (k < 100)
+            if k ∈ (1:500)
+                u = 5e-1 * Δt_
+            elseif k ∈ (501:1000)
+                u = -5e-1 * Δt_
+            else
+                u = 0.0
+            end
+            setForce!(mechanism, joint, SA[u])
+        end
+    end
+    return
+end
+
+storage = simulate!(mech, 1.0, controller!, record = true, solver = :mehrotra!, verbose = false)
+visualize(mech, storage, vis = vis)
 
 momentum(mech)
+
+plot([x[3] for x in storage.x[1]])
+plot([ω[1] for ω in storage.ω[1]])
+
+################################################################################
+# snake
+################################################################################
+include("conservation_test.jl")
+Δt_ = 0.01
+Nlink_ = 5
+mech = getmechanism(:snake, Δt = Δt_, g = 0.0, spring = 0.0, damper = 10.0, contact = false, Nlink = Nlink_)
+initialize!(mech, :snake, Δv = zeros(3), Δω = zeros(3))
+
+function controller!(mechanism, k)
+    for (i,joint) in enumerate(collect(mechanism.eqconstraints)[2:end])
+        if k ∈ (1:500)
+            u = 5e0 * Δt_
+        elseif k ∈ (501:1000)
+            u = 5e0 * Δt_
+        else
+            u = 0.0
+        end
+        # setForce!(mechanism, joint, SA[0, 0, 0, u, 0, 0])
+        setForce!(mechanism, joint, SA[u])
+    end
+    return
+end
+
+storage = simulate!(mech, 1.0, controller!, record = true, solver = :mehrotra!, verbose = false)
+visualize(mech, storage, vis = vis)
+
+momentum(mech)[4]
+
+plot([ω[1] for ω in storage.ω[1]])
+
+
+################################################################################
+# npendulum
+################################################################################
+include("conservation_test.jl")
+Δt_ = 0.01
+Nlink_ = 2
+mech = getmechanism(:npendulum, Δt = Δt_, g = 0.0, spring = 0.0, damper = 0.0, Nlink = Nlink_)
+initialize!(mech, :npendulum, ϕ1 = 0.)#, Δv = zeros(3), Δω = zeros(3))
+
+function controller!(mechanism, k)
+    n = 50
+    for (i,joint) in enumerate(collect(mechanism.eqconstraints)[2:end])
+        if  i == Nlink_-1
+            if getcontroldim(joint) == 1
+                # u = 5e-1 * (rand() - 0.5) * Δt_ * (k < 100)
+                if k ∈ (1:n)
+                    u = 1e1 * Δt_
+                elseif k ∈ (n+1:2n)
+                    u = -1e1 * Δt_
+                else
+                    u = 0.0
+                end
+                setForce!(mechanism, joint, SA[u])
+            end
+        end
+    end
+    return
+end
+
+qq = UnitQuaternion(rand(4)...)
+τ0 = rand(3)
+τ1 = vrotate(vrotate(τ0, qq), inv(qq))
+τ0 - τ1
+
+
+# storage = simulate!(mech, 50*2Δt_, controller!, record = true, solver = :mehrotra!, verbose = true)
+storage = simulate!(mech, 2.0, controller!, record = true, solver = :mehrotra!, verbose = true)
+visualize(mech, storage, vis = vis)
+
+momentum(mech, collect(mech.bodies)[1])[4]
+momentum(mech, collect(mech.bodies)[2])[4]
+
+plot([ω[1] for ω in storage.ω[1]])
+plot([ω[1] for ω in storage.ω[2]])
+
+bodies = collect(mech.bodies)
+eqcs = collect(mech.eqconstraints)
+body1 = bodies[1]
+eqc1 = eqcs[1]
+tra1 = eqc1.constraints[1]
+rot1 = eqc1.constraints[2]
+eqc2 = eqcs[2]
+tra2 = eqc2.constraints[1]
+rot2 = eqc2.constraints[2]
+
+rot1.qoffset
+rot2.qoffset
+
+
+
+
+vis = Visualizer()
+open(vis)

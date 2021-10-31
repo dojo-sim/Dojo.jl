@@ -75,7 +75,7 @@ function mehrotra!(mechanism::Mechanism;
         end
 		(n == opts.max_iter) && (@warn "failed mehrotra")
         # Compute regularization level
-       
+
 		mechanism.μ = 0.0
 		pullresidual!(mechanism) # store the residual inside mechanism.residual_entries
         ldu_factorization!(mechanism.system) # factorize system, modifies the matrix in place

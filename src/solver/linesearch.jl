@@ -15,7 +15,7 @@ function lineSearch!(mechanism::Mechanism, rvio, bvio, opts; warning::Bool = fal
             lineStep!(body, getentry(system, body.id), scale, mechanism)
             # if norm(body.state.ωsol[2]) > 1/mechanism.Δt
             if norm(body.state.ωsol[2]) > 1.9/mechanism.Δt
-                error("Excessive angular velocity. Body-ID: "*string(body.id)*", ω: "*string(body.state.ωsol[2])*".")
+                error("Excessive angular velocity. Body-ID: $(string(body.name)) "*string(body.id)*", ω: "*string(body.state.ωsol[2])*".")
             end
         end
         for ineqc in ineqcs
