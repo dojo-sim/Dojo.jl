@@ -21,9 +21,9 @@ include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 
 
-Δt_ = 0.01
-mech = getmechanism(:humanoid, contact = true, Δt = Δt_, g = -9.81, spring = 100.0, damper = 10.)
-initialize!(mech, :humanoid, rot = [0,0,0.1], tran = [0,0,1.3])
+Δt_ = 0.10
+mech = getmechanism(:humanoid, contact = true, Δt = Δt_, g = -9.81, spring = 1000.0, damper = 50.)
+initialize!(mech, :humanoid, rot = [0.1,0,0], tran = [0,0,1.5])
 eqcs = collect(mech.eqconstraints)
 
 function controller!(mechanism, k)
@@ -41,16 +41,10 @@ function controller!(mechanism, k)
     return
 end
 
-@elapsed storage = simulate!(mech, 1.5, controller!, record = true, solver = :mehrotra!, verbose = false)
+@elapsed storage = simulate!(mech, 2.5, controller!, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
-collect(mech.eqconstraints)[1]
-collect(mech.eqconstraints)[1].isdamper
-collect(mech.eqconstraints)[2]
-collect(mech.eqconstraints)[2].isdamper
-collect(mech.eqconstraints)[2].constraints[1].damper
-
-# filename = "humanoid_mujoco"
+# filename = "humanoid_10hz"
 # MeshCat.convert_frames_to_video(
 #     "/home/simon/Downloads/$filename.tar",
 #     "/home/simon/Documents/video/$filename.mp4", overwrite=true)

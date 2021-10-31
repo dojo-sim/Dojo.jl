@@ -329,12 +329,12 @@
 	</link>
 
 
-	<joint name="abdomen_yz" type="continuous">
+	<joint name="abdomen_yz" type="orbital">
 		<parent link="torso"/>
 		<child link="lwaist"/>
 		<dynamics damping="1.0" friction="0.0001"/>
 		<origin rpy="0.00000 -0.00400 0.00000" xyz="-0.01026 0.00000 -0.25500"/>
-		<axis xyz="0.00000 0.00000 1.00000"/>
+		<axis xyz="1.00000 0.00000 0.00000"/>
 	</joint>
 	<joint name="abdomen_x" type="continuous">
 		<parent link="lwaist"/>
@@ -363,7 +363,7 @@
 		<child link="right_foot"/>
 		<dynamics damping="1.0" friction="0.0001"/>
 		<origin rpy="0.00000 -0.00000 0.00000" xyz="0.00000 0.00000 -0.43000"/>
-		<axis xyz="0.00000 1.00000 0.00000"/>
+		<axis xyz="-0.44721 0.00000 0.89442"/>
 	</joint>
 
 	<joint name="left_hip_xyz" type="ball">
@@ -385,15 +385,15 @@
 		<child link="left_foot"/>
 		<dynamics damping="1.0" friction="0.0001"/>
 		<origin rpy="0.00000 -0.00000 0.00000" xyz="0.00000 0.00000 -0.43000"/>
-		<axis xyz="0.00000 1.00000 0.00000"/>
+		<axis xyz="-0.44721 0.00000 0.89442"/>
 	</joint>
 
-	<joint name="right_shoulder1" type="ball">
+	<joint name="right_shoulder1" type="orbital">
 		<parent link="torso"/>
 		<child link="right_upper_arm"/>
 		<dynamics damping="1.0" friction="0.0001"/>
 		<origin rpy="0.00000 -0.00000 0.00000" xyz="0.00000 -0.17000 0.06000"/>
-		<axis xyz="2.00000 1.00000 1.00000"/>
+		<axis xyz="-0.57735 0.57735 0.57735"/>
 	</joint>
 	<joint name="right_elbow" type="continuous">
 		<parent link="right_upper_arm"/>
@@ -403,12 +403,12 @@
 		<axis xyz="0.00000 -1.00000 1.00000"/>
 	</joint>
 
-	<joint name="left_shoulder1" type="ball">
+	<joint name="left_shoulder1" type="orbital">
 		<parent link="torso"/>
 		<child link="left_upper_arm"/>
 		<dynamics damping="1.0" friction="0.0001"/>
 		<origin rpy="0.00000 -0.00000 0.00000" xyz="0.00000 0.17000 0.06000"/>
-		<axis xyz="2.00000 -1.00000 1.00000"/>
+		<axis xyz="0.57735 0.57735 -0.57735"/>
 	</joint>
 	<joint name="left_elbow" type="continuous">
 		<parent link="left_upper_arm"/>

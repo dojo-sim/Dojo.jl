@@ -48,7 +48,6 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: AbstractConstraint{T,N}
         N = 0
         for set in jointdata
             set[1].spring != 0 && (isspring = true)
-            @show set[1].damper
             set[1].damper != 0 && (isdamper = true)
 
             push!(constraints, set[1])

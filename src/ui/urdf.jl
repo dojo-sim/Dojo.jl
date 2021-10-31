@@ -210,6 +210,8 @@ function joint_selector(jointtype, link1, link2, T;
         joint = EqualityConstraint(Fixed(link1, link2; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "floating"
         joint = EqualityConstraint(Floating(link1, link2), name=name)
+    elseif jointtype == "orbital"
+        joint = EqualityConstraint(Orbital(link1, link2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "ball"
         joint = EqualityConstraint(Spherical(link1, link2; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "fixedorientation"
