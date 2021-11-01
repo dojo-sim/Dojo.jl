@@ -20,7 +20,7 @@ open(vis)
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 Δt_ = 0.01
-mech = getmechanism(:atlas, Δt = Δt_, g = -2.0, cf = 0.8, contact = true, spring = 1000.0, damper = 500.0, model_type = :simple)
+mech = getmechanism(:atlas, Δt = Δt_, g = -2.0, cf = 0.8, contact = true, spring = 1000.0, damper = 500.0, model_type = :fast)
 initialize!(mech, :atlas, tran = [0,0,1.1], rot = [0.1,0.05,0])
 
 function controller!(mechanism, k)

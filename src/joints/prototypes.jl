@@ -72,8 +72,6 @@ A rotational between two bodies with a 2 rotational degrees of freedom (skull-ey
 Orbital(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T)) where T =
     Translational3{T}(body1, body2; p1, p2, axis, spring, damper), Rotational1{T}(body1, body2; axis, qoffset, spring, damper)
 
-
-
 #TODO t2r1
 #TODO t1r1
 #TODO t0r1
