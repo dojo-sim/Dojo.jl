@@ -19,8 +19,9 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
-mech = getmechanism(:atlas, Δt = 0.01, g = -2.0, cf = 0.8, contact = true, spring = 1000.0, damper = 50.0)
-initialize!(mech, :atlas, tran = [0,0,1.0], rot = [0.0,0,0])
+Δt_ = 0.01
+mech = getmechanism(:atlas, Δt = Δt_, g = -2.0, cf = 0.8, contact = true, spring = 1000.0, damper = 500.0, model_type = :simple)
+initialize!(mech, :atlas, tran = [0,0,1.1], rot = [0.1,0.05,0])
 
 function controller!(mechanism, k)
     for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])
@@ -37,10 +38,11 @@ function controller!(mechanism, k)
     return
 end
 
-@profiler storage = simulate!(mech, 1.50, controller!, record = true, solver = :mehrotra!, verbose = false)
+# @profiler storage = simulate!(mech, 2.50, controller!, record = true, solver = :mehrotra!, verbose = false)
+
+@elapsed storage = simulate!(mech, 2.50, controller!, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
-[eqc.isspring for eqc in collect(mech.eqconstraints)]
 
 # Set data
 Nb = length(mech.bodies)

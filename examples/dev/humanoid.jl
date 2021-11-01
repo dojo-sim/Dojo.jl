@@ -21,8 +21,8 @@ include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 
 
-Δt_ = 0.10
-mech = getmechanism(:humanoid, contact = true, Δt = Δt_, g = -9.81, spring = 1000.0, damper = 50.)
+Δt_ = 0.05
+mech = getmechanism(:humanoid, contact = true, Δt = Δt_, g = -9.81, spring = 500.0, damper = 50.)
 initialize!(mech, :humanoid, rot = [0.1,0,0], tran = [0,0,1.5])
 eqcs = collect(mech.eqconstraints)
 
@@ -41,7 +41,7 @@ function controller!(mechanism, k)
     return
 end
 
-@elapsed storage = simulate!(mech, 2.5, controller!, record = true, solver = :mehrotra!, verbose = false)
+@elapsed storage = simulate!(mech, 2.3, controller!, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
 # filename = "humanoid_10hz"

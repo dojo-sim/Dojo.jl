@@ -49,7 +49,7 @@ end
     for i=1:Nc
         bnd = ineqc.constraints[i]
         if typeof(ineqc.constraints[i]) <: ContactBound
-            M = [Δt * I zeros(3,3); zeros(4,3) Lmat(q2)*derivωbar(ω2, Δt)*Δt/2]
+            M = ∂integration(q2, ω2, Δt)
             body.state.D -= _dN(x3, [q3.w; q3.x; q3.y; q3.z], ineqc.γsol[2][1:1], bnd.p) * M
             body.state.D -= _dB(x3, [q3.w; q3.x; q3.y; q3.z], ineqc.γsol[2][2:4], bnd.p) * M
         end
@@ -81,4 +81,3 @@ end
 function ∂g∂ʳvela(mechanism, ineqc::InequalityConstraint, body::Body)
     return ∂g∂ʳvela(ineqc.constraints[1], body, nothing, mechanism.Δt)
 end
-

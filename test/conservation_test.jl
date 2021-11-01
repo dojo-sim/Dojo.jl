@@ -17,7 +17,11 @@ function momentum(mechanism::Mechanism{T}, body::Body{T}) where {T}
     x2, v2, q2, ω2 = fullargssol(body.state)
     p1 = [body.m * v2; body.J * ω2] # linear momentum, angular momentum
     p1 += 0.5 * SVector{6,T}(0, 0, body.m * mechanism.g * Δt, 0, 0, 0) # gravity
-    for eqc in mechanism.eqconstraints
+    for (i,eqc) in enumerate(mechanism.eqconstraints)
+        p1 += 0.5 * zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
+        pp1 = 1.0 * zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
+        println(i, scn.(pp1[5], digits = 8))
+
         if body.id == eqc.parentid
             for (i,joint) in enumerate(eqc.constraints)
                 cbody = getbody(mechanism, eqc.childids[i])

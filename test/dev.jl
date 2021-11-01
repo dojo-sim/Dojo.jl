@@ -2,18 +2,11 @@
 vis = Visualizer()
 open(vis)
 
-# mech = getmechanism(:snake, contact = false, spring = 000.0)
-# initialize!(mech, :snake)
-# storage = simulate!(mech, 10.1, record = true, solver = :mehrotra!, verbose = false)
-# visualize(mech, storage, vis = vis)
+mech = getmechanism(:snake, contact = false, spring = 000.0, g = 0.0)
+initialize!(mech, :snake, v = zeros(3), Δv = zeros(3), Δω = zeros(3))
+storage = simulate!(mech, 10.1, record = true, solver = :mehrotra!, verbose = false)
+visualize(mech, storage, vis = vis)
 
-
-# body1 = collect(mech.bodies)[1]
-# eqc1 = collect(mech.eqconstraints)[1]
-# eqc2 = collect(mech.eqconstraints)[2]
-# eqc1.parentid
-# eqc2.parentid
-# eqc2.constraints[1].spring
 include("conservation_test.jl")
 
 potentialEnergy(mech)
@@ -33,7 +26,7 @@ function get_energy(tsim, Δt)
     return [ET, EV, EM, tsim / telap]
 end
 
-ts = [0.11 * i for i = 1:50]
+ts = [0.10 * i for i = 1:50]
 energies = [get_energy(t, 0.02) for t in ts]
 plt = plot()
 plot!(ts, hcat(energies...)[1,:], linewidth = 3.0, label = "kinetic")
@@ -206,37 +199,6 @@ momentum(mech)
 plot([x[3] for x in storage.x[1]])
 plot([ω[1] for ω in storage.ω[1]])
 
-################################################################################
-# snake
-################################################################################
-include("conservation_test.jl")
-Δt_ = 0.01
-Nlink_ = 5
-mech = getmechanism(:snake, Δt = Δt_, g = 0.0, spring = 0.0, damper = 10.0, contact = false, Nlink = Nlink_)
-initialize!(mech, :snake, Δv = zeros(3), Δω = zeros(3))
-
-function controller!(mechanism, k)
-    for (i,joint) in enumerate(collect(mechanism.eqconstraints)[2:end])
-        if k ∈ (1:500)
-            u = 5e0 * Δt_
-        elseif k ∈ (501:1000)
-            u = 5e0 * Δt_
-        else
-            u = 0.0
-        end
-        # setForce!(mechanism, joint, SA[0, 0, 0, u, 0, 0])
-        setForce!(mechanism, joint, SA[u])
-    end
-    return
-end
-
-storage = simulate!(mech, 1.0, controller!, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
-
-momentum(mech)[4]
-
-plot([ω[1] for ω in storage.ω[1]])
-
 
 ################################################################################
 # npendulum
@@ -301,3 +263,67 @@ rot2.qoffset
 
 vis = Visualizer()
 open(vis)
+
+
+
+
+
+################################################################################
+# atlas
+################################################################################
+
+include("conservation_test.jl")
+Random.seed!(100)
+Δt_ = 0.01
+mech = getmechanism(:humanoid, Δt = Δt_, g = 0.0, spring = 0.0, damper = 0.5, contact = false)
+initialize!(mech, :atlas, tran = [0, 0, 2.])
+
+function controller!(mechanism, k)
+    for (i,joint) in enumerate(mechanism.eqconstraints)
+        if getcontroldim(joint) == 1
+            if k ∈ (1:100)
+                u = 1e0 * (1.0 - 0.5) * Δt_
+            else
+                u = 0.0
+            end
+            setForce!(mechanism, joint, SA[u])
+        end
+    end
+    return
+end
+
+storage = simulate!(mech, 1.0, controller!, record = true, solver = :mehrotra!, verbose = false)
+visualize(mech, storage, vis = vis)
+
+momentum(mech)
+
+[eqc.name for eqc in mech.eqconstraints]
+[(body.name, body.m) for body in mech.bodies]
+
+
+
+################################################################################
+# snake
+################################################################################
+include("conservation_test.jl")
+Δt_ = 0.01
+Nlink_ = 2
+
+Random.seed!(100)
+ω_ = 1.0*rand(3)
+v_ = 1.0*rand(3)
+Δv_ = 1.0*rand(3)
+Δω_ = 1.0*rand(3)
+mech = getmechanism(:snake, Δt = Δt_, g = 0.0, spring = 0.0, damper = 0.0, contact = false, Nlink = Nlink_)
+initialize!(mech, :snake, ω = ω_, v = v_, Δv = Δv_, Δω = Δω_)
+storage = simulate!(mech, 0.05, record = true, solver = :mehrotra!, verbose = true)
+m0 = momentum(mech)
+
+mech = getmechanism(:snake, Δt = Δt_, g = 0.0, spring = 0.0, damper = 0.0, contact = false, Nlink = Nlink_)
+initialize!(mech, :snake, ω = ω_, v = v_, Δv = Δv_, Δω = Δω_)
+storage = simulate!(mech, 1.00, record = true, solver = :mehrotra!, verbose = true)
+m1 = momentum(mech)
+norm(m1 - m0)
+(m1 - m0)[5]
+m1 - m0
+visualize(mech, storage, vis = vis)

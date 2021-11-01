@@ -82,7 +82,7 @@ function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:
     SVector{4,T}(
         cont.ainv3 * (x3 + vrotate(cont.p,q3) - cont.offset) - ineqc.ssol[2][1],
         cont.cf * ineqc.γsol[2][1] - ineqc.γsol[2][2],
-        (Bxmat * v + Bqmat * ω - ineqc.ssol[2][3:4])...)
+        (Bxmat * v + Bqmat * ω - ineqc.ssol[2][@SVector [3,4]])...)
 end
 
 
@@ -107,11 +107,17 @@ end
 
 ## Complementarity
 function complementarity(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
-    return [ineqc.γsol[2][1] * ineqc.ssol[2][1]; cone_product(ineqc.γsol[2][2:4], ineqc.ssol[2][2:4])]
+    γ = ineqc.γsol[2]
+    s = ineqc.ssol[2]
+    return vcat(γ[1] * s[1], cone_product(γ[@SVector [2,3,4]], s[@SVector [2,3,4]]))
+    # return [ineqc.γsol[2][1] * ineqc.ssol[2][1]; cone_product(ineqc.γsol[2][@SVector [2,3,4]], ineqc.ssol[2][@SVector [2,3,4]])]
 end
 
 function complementarityμ(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
-    return [ineqc.γsol[2][1] * ineqc.ssol[2][1]; cone_product(ineqc.γsol[2][2:4], ineqc.ssol[2][2:4])] - mechanism.μ * neutral_vector(ineqc.constraints[1])
+    γ = ineqc.γsol[2]
+    s = ineqc.ssol[2]
+    return vcat(γ[1] * s[1], cone_product(γ[@SVector [2,3,4]], s[@SVector [2,3,4]])) - mechanism.μ * neutral_vector(ineqc.constraints[1])
+    # return [ineqc.γsol[2][1] * ineqc.ssol[2][1]; cone_product(ineqc.γsol[2][@SVector [2,3,4]], ineqc.ssol[2][@SVector [2,3,4]])] - mechanism.μ * neutral_vector(ineqc.constraints[1])
 end
 
 function ∇cone_product(u::AbstractVector{T}) where {T}
@@ -123,8 +129,16 @@ function ∇cone_product(u::AbstractVector{T}) where {T}
     return U
 end
 
+@inline function ∇cone_product(u::SVector{3,T}) where {T}
+    SMatrix{3,3,T,9}(u[1], u[2], u[3], u[2], u[1], 0, u[3], 0, u[1])
+end
+
 function cone_product(u::AbstractVector{T}, v::AbstractVector{T}) where {T}
     [u'*v; u[1] * v[2:end] + v[1] * u[2:end]]
+end
+
+function cone_product(u::SVector{N,T}, v::SVector{N,T}) where {N,T}
+    vcat(u'*v, u[1] * v[SVector{N-1}(2:end)] + v[1] * u[SVector{N-1}(2:end)])
 end
 
 function neutral_vector(bound::ContactBound{T,N}) where {T,N}
@@ -164,6 +178,22 @@ end
     return [V Ω]
 end
 
+# @inline function setDandΔs_old!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
+#     ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
+#     # ∇ssol[γsol .* ssol - μ; g - s] = [diag(γsol); -diag(0,1,1)]
+#     # ∇γsol[γsol .* ssol - μ; g - s] = [diag(ssol); -diag(1,0,0)]
+#     # (cf γ - ψ) dependent of ψ = γsol[2][1:1]
+#     # B(z) * zdot - sβ dependent of sβ = ssol[2][2:end]
+#     cf = ineqc.constraints[1].cf
+#     ∇s = [ineqc.γsol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])]
+#     ∇γ = [ineqc.ssol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.ssol[2][2:4]); szeros(1,4); cf -1 0 0; szeros(2,4)]
+#     # matrix_entry.value = [∇s ∇γ]
+#     matrix_entry.value = [[ineqc.γsol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])] [ineqc.ssol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.ssol[2][2:4]); szeros(1,4); cf -1 0 0; szeros(2,4)]]
+#
+#     # [-γsol .* ssol + μ; -g + s]
+#     vector_entry.value = [-complementarityμ(mechanism, ineqc);-gs(mechanism, ineqc)]
+#     return
+# end
 @inline function setDandΔs!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
     ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
     # ∇ssol[γsol .* ssol - μ; g - s] = [diag(γsol); -diag(0,1,1)]
@@ -171,12 +201,28 @@ end
     # (cf γ - ψ) dependent of ψ = γsol[2][1:1]
     # B(z) * zdot - sβ dependent of sβ = ssol[2][2:end]
     cf = ineqc.constraints[1].cf
-    ∇s = [ineqc.γsol[2][1] zeros(1,3); zeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])]
-    ∇γ = [ineqc.ssol[2][1] zeros(1,3); zeros(3,1) ∇cone_product(ineqc.ssol[2][2:4]); zeros(1,4); cf -1 0 0; zeros(2,4)]
-    # matrix_entry.value = [∇s ∇γ]
-    matrix_entry.value = [[ineqc.γsol[2][1] zeros(1,3); zeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])] [ineqc.ssol[2][1] zeros(1,3); zeros(3,1) ∇cone_product(ineqc.ssol[2][2:4]); zeros(1,4); cf -1 0 0; zeros(2,4)]]
-    
+    γ = ineqc.γsol[2]
+    s = ineqc.ssol[2]
+
+    # ∇s = [ineqc.γsol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])]
+    ∇s1 = hcat(γ[1], szeros(1,3))
+    ∇s2 = hcat(szeros(3,1), ∇cone_product(γ[@SVector [2,3,4]]))
+    ∇s3 = Diagonal(SVector{4,T}(-1, 0, -1, -1))
+    ∇s = vcat(∇s1, ∇s2, ∇s3)
+
+    # ∇γ = [ineqc.ssol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.ssol[2][2:4]); szeros(1,4); cf -1 0 0; szeros(2,4)]
+    ∇γ1 = hcat(s[1], szeros(1,3))
+    ∇γ2 = hcat(szeros(3,1), ∇cone_product(s[@SVector [2,3,4]]))
+    ∇γ3 = @SMatrix[0   0 0 0;
+                   cf -1 0 0;
+                   0   0 0 0;
+                   0   0 0 0;]
+    ∇γ = vcat(∇γ1, ∇γ2, ∇γ3)
+
+    # matrix_entry.value = [[ineqc.γsol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])] [ineqc.ssol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.ssol[2][2:4]); szeros(1,4); cf -1 0 0; szeros(2,4)]]
+    matrix_entry.value = hcat(∇s, ∇γ)
+
     # [-γsol .* ssol + μ; -g + s]
-    vector_entry.value = [-complementarityμ(mechanism, ineqc);-gs(mechanism, ineqc)]
+    vector_entry.value = vcat(-complementarityμ(mechanism, ineqc), -gs(mechanism, ineqc))
     return
 end

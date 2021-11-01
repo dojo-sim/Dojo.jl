@@ -7,11 +7,8 @@ function getmechanism(model::Symbol; kwargs...)
     return mech
 end
 
-function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0, damper::T = 0.0, contact::Bool = true) where {T}
-    path = "examples/examples_files/atlas_armless.urdf"
-    # path = "examples/examples_files/atlas_fast.urdf"
-    # path = "examples/examples_files/atlas_simple.urdf"
-    # path = "examples/examples_files/atlas_ones.urdf"
+function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0, damper::T = 0.0, contact::Bool = true, model_type::Symbol = :simple) where {T}
+    path = "examples/examples_files/atlas_$(string(model_type)).urdf"
     mech = Mechanism(joinpath(module_dir(), path), floating=true, g = g)
 
     # Adding springs and dampers
@@ -191,7 +188,12 @@ function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
     if Nlink > 1
         eqcs = [
             jointb1;
-            [EqualityConstraint(Revolute(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink]
+            # [EqualityConstraint(Revolute(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink]
+            [EqualityConstraint(Orbital(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink]
+            # [EqualityConstraint(Spherical(links[i - 1], links[i]; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink]
+            # [EqualityConstraint(FixedOrientation(links[i - 1], links[i]; qoffset = UnitQuaternion(RotX(0.0)), spring = spring, damper = damper)) for i = 2:Nlink]
+            # [EqualityConstraint(Floating(links[i - 1], links[i]; spring = spring, damper = damper)) for i = 2:Nlink]
+            # [EqualityConstraint(Fixed(links[i - 1], links[i])) for i = 2:Nlink]
             ]
     else
         eqcs = [jointb1]
