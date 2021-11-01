@@ -26,7 +26,7 @@ include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 ################################################################################
 include("conservation_test.jl")
 Δt_ = 0.01
-Nlink_ = 2
+Nlink_ = 1
 
 function controller!(mechanism, k)
     for (i,joint) in enumerate(mechanism.eqconstraints)
@@ -44,20 +44,20 @@ function controller!(mechanism, k)
 end
 
 Random.seed!(100)
-ω_ = 0.0*rand(3)
-v_ = 0.0*rand(3)
-Δv_ = 0.0*rand(3)
-Δω_ = 0.0*rand(3)
-ϕ1_ = pi/2
-jointtype = :Fixed
-mech = getmechanism(:snake, Δt = Δt_, g = 0.00, contact = false, spring = 0.0, damper = 0.3, Nlink = Nlink_, jointtype = jointtype)
-initialize!(mech, :snake, ϕ1 = ϕ1_, Δv = Δv_, Δω = Δω_)
-storage = simulate!(mech, 1.00, controller!, record = true, solver = :mehrotra!, verbose = false)
+ω_ = 1.0*[1.0; 0.0; 0.0]#rand(3)
+v_ = 0.0*[0.0; 0.0; 0.0]#rand(3)
+Δv_ = 0.0*[1.0; 0.0; 0.0]#rand(3)
+Δω_ = 0.0*[1.0; 0.0; 0.0]#rand(3)
+ϕ1_ = 0.0
+jointtype = :Revolute
+mech = getmechanism(:snake, Δt = Δt_, g = 0.00, contact = false, spring = 0.0, damper = 0.0, Nlink = Nlink_, jointtype = jointtype)
+initialize!(mech, :snake, ϕ1 = ϕ1_, v=v_, ω=ω_, Δv = Δv_, Δω = Δω_)
+storage = simulate!(mech, 10.00, record = true, solver = :mehrotra!, verbose = false)
 m0 = momentum(mech)
 
-mech = getmechanism(:snake, Δt = Δt_, g = 0.00, contact = false, spring = 0.0, damper = 0.3, Nlink = Nlink_, jointtype = jointtype)
-initialize!(mech, :snake, ϕ1 = ϕ1_, Δv = Δv_, Δω = Δω_)
-storage = simulate!(mech, 60.00, controller!, record = true, solver = :mehrotra!, verbose = false)
+mech = getmechanism(:snake, Δt = Δt_, g = 0.00, contact = false, spring = 0.0, damper = 0.0, Nlink = Nlink_, jointtype = jointtype)
+initialize!(mech, :snake, ϕ1 = ϕ1_, v=v_, ω=ω_, Δv = Δv_, Δω = Δω_)
+storage = simulate!(mech, 60.00, record = true, solver = :mehrotra!, verbose = false)
 m1 = momentum(mech)
 norm((m1 - m0)[4:6], Inf)
 (m1 - m0)[5]
