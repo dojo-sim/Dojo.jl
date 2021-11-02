@@ -15,47 +15,40 @@ end
 function momentum(mechanism::Mechanism{T}, body::Body{T}) where {T}
     Δt = mechanism.Δt
     x2, v2, q2, ω2 = fullargssol(body.state)
-    # @show [q2.w, q2.x, q2.y, q2.z]
-    # p1 = [body.m * v2; vrotate(body.J * ω2, UnitQuaternion(q2))] # linear momentum, angular momentum
-    # p1 = [body.m * v2; body.J * ω2 * sqrt(4/Δt^2 - ω2'*ω2) + cross(ω2, body.J*ω2) - body.state.τk[1]] # linear momentum, angular momentum
-    sq2 = sqrt(4 / Δt^2 - ω2' * ω2)
-    @show scn.(ω2)
-    @show scn(sq2)
-    # @show scn(sq2)
-    # p1 = [body.m * v2; Δt * skewplusdiag(ω2, sq2) * (body.J * ω2) - body.state.τk[1]] # linear momentum, angular momentum
-    p1 = [body.m * v2; Δt * skewplusdiag(ω2, sq2) * (body.J * ω2)] # linear momentum, angular momentum
-    # p1 += 0.5 * SVector{6,T}(0, 0, body.m * mechanism.g * Δt, 0, 0, 0) # gravity
+    p1 = [body.m * v2 - 0.5 * body.state.Fk[1]; Δt * skewplusdiag(ω2, sqrt(4 / Δt^2 - ω2' * ω2)) * (body.J * ω2) - body.state.τk[1]] # linear momentum, angular momentum
+    p1 -= 0.5 * SVector{6,T}(0, 0, body.m * mechanism.g * Δt, 0, 0, 0) # gravity
     for (i,eqc) in enumerate(mechanism.eqconstraints)
-        # p1_eqc = 0.5 * zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
-        # p1_eqc = [p1_eqc[1:3]; vrotate(p1_eqc[4:6], q2)]
-        # p1 += p1_eqc
-        # p1 = p1_eqc
-        # pp1 = 1.0 * zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
-        # println(i, scn.(pp1[5], digits = 8))
+        @show eqc.λsol[2]
+        @show zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
+        p1 -= 0.5 * zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
+        pp1 = -1.0 * zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
+        println(i, scn.(pp1[5], digits = 8))
 
-        # if body.id == eqc.parentid
-        #     for (i,joint) in enumerate(eqc.constraints)
-        #         cbody = getbody(mechanism, eqc.childids[i])
-        #         eqc.isspring && (p1 += 0.5 * springforcea(joint, body.state, cbody.state, Δt))
-        #         eqc.isdamper && (p1 += 0.5 * damperforcea(joint, body.state, cbody.state, Δt))
-        #     end
-        # end
-        # for (i,joint) in enumerate(eqc.constraints)
-        #     if eqc.childids[i] == body.id
-        #         if eqc.parentid != nothing
-        #             pbody = getbody(mechanism, eqc.parentid)
-        #             eqc.isspring && (p1 += 0.5 * springforceb(joint, pbody.state, body.state, Δt))
-        #             eqc.isdamper && (p1 += 0.5 * damperforceb(joint, pbody.state, body.state, Δt))
-        #         else
-        #             eqc.isspring && (p1 += 0.5 * springforceb(joint, body.state, Δt))
-        #             eqc.isdamper && (p1 += 0.5 * damperforceb(joint, body.state, Δt))
-        #         end
-        #     end
-        # end
+        if body.id == eqc.parentid
+            for (i,joint) in enumerate(eqc.constraints)
+                cbody = getbody(mechanism, eqc.childids[i])
+                eqc.isspring && (p1 += 0.5 * springforcea(joint, body.state, cbody.state, Δt))
+                eqc.isdamper && (p1 += 0.5 * damperforcea(joint, body.state, cbody.state, Δt))
+            end
+        end
+        for (i,joint) in enumerate(eqc.constraints)
+            if eqc.childids[i] == body.id
+                if eqc.parentid != nothing
+                    pbody = getbody(mechanism, eqc.parentid)
+                    eqc.isspring && (p1 += 0.5 * springforceb(joint, pbody.state, body.state, Δt))
+                    eqc.isdamper && (p1 += 0.5 * damperforceb(joint, pbody.state, body.state, Δt))
+                else
+                    eqc.isspring && (p1 += 0.5 * springforceb(joint, body.state, Δt))
+                    eqc.isdamper && (p1 += 0.5 * damperforceb(joint, body.state, Δt))
+                end
+            end
+        end
     end
-    # p1 = [p1[1:3]; vrotate(p1[4:6], q2)]
-    return p1
+    # return p1
+
+    return [p1[1:3]; vrotate(p1[4:6], q2)]
 end
+
 
 """
     Total mechanical energy of a mechanism.
