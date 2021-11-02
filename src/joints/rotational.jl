@@ -45,32 +45,58 @@ end
 ### Constraints and derivatives
 ## Position level constraints (for dynamics)
 @inline function g(joint::Rotational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-    return Vmat(qa \ qb / joint.qoffset)
+    q = qa * joint.qoffset
+    return vrotate(Vmat(qa \ qb / joint.qoffset), q)
 end
 
-
 @inline function g(joint::Rotational, xb::AbstractVector, qb::UnitQuaternion)
-    return Vmat(qb / joint.qoffset)
+    q = joint.qoffset
+    return vrotate(Vmat(qb / joint.qoffset), q)
 end
 
 ## Derivatives NOT accounting for quaternion specialness
 @inline function ∂g∂posa(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
     X = szeros(T, 3, 3)
-    Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
-
+    q = qa * joint.qoffset
+    p = Vmat(qa \ qb / joint.qoffset)
+    Q = ∂vrotate∂p(p, q) * VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
+    Q += ∂vrotate∂q(p, q) * Rmat(joint.qoffset)
     return X, Q
 end
 @inline function ∂g∂posb(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
     X = szeros(T, 3, 3)
-    Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa)
+    q = qa * joint.qoffset
+    p = Vmat(qa \ qb / joint.qoffset)
+    Q = ∂vrotate∂p(p, q) * VRᵀmat(joint.qoffset) * Lᵀmat(qa)
 
     return X, Q
 end
 @inline function ∂g∂posb(joint::Rotational{T}, xb::AbstractVector, qb::UnitQuaternion) where T
     X = szeros(T, 3, 3)
-    Q = VRᵀmat(joint.qoffset)
+    q = joint.qoffset
+    p = Vmat(qb / joint.qoffset)
+    Q = ∂vrotate∂p(p, q) * VRᵀmat(joint.qoffset)
 
     return X, Q
+end
+
+@inline function ∂g∂ʳposa(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
+    X, Q = ∂g∂posa(joint, xa, qa, xb, qb)
+    Q = Q * LVᵀmat(qa)
+
+    return [X Q]
+end
+@inline function ∂g∂ʳposb(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
+    X, Q = ∂g∂posb(joint, xa, qa, xb, qb)
+    Q = Q * LVᵀmat(qb)
+
+    return [X Q]
+end
+@inline function ∂g∂ʳposb(joint::Rotational{T}, xb::AbstractVector, qb::UnitQuaternion) where T
+    X, Q = ∂g∂posb(joint, xb, qb)
+    Q = Q * LVᵀmat(qb)
+
+    return [X Q]
 end
 
 ## vec(G) Jacobian (also NOT accounting for quaternion specialness in the second derivative: ∂(∂ʳg∂posx)∂y)
