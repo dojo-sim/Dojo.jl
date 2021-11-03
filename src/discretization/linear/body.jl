@@ -8,9 +8,7 @@
     J = body.J
     ω1 = state.ωc
     ω2 = state.ωsol[2]
-    sq1 = sqrt(4 / Δt^2 - ω1' * ω1)
-    sq2 = sqrt(4 / Δt^2 - ω2' * ω2)
-    dynR = Δt * skewplusdiag(ω2, sq2) * (J * ω2) - Δt * skewplusdiag(ω1, sq1) * (J * ω1) - 2 * state.τk[1]
+    dynR = sqrt(1.0 - ω2' * ω2) * J * ω2 + cross(ω2, J * ω2) - (sqrt(1.0 - ω1' * ω1) * J * ω1 + cross(ω1, J * ω1)) + 0.5 * Δt^2.0 * state.τk[1]
 
     state.d = [dynT;dynR]
 
@@ -30,7 +28,7 @@ end
     sq = sqrt(4 / Δt^2 - ω2' * ω2)
 
     dynT = I * body.m
-    dynR = Δt * (skewplusdiag(ω2, sq) * J - J * ω2 * (ω2' / sq) - skew(J * ω2))
+    dynR = 2.0 / Δt * (sqrt(1.0 - ω2' * ω2) * J - (J * ω2 * ω2') / sqrt(1.0 - ω2' * ω2) + skew(ω2) * J - skew(J * ω2))
 
     Z = szeros(T, 3, 3)
 
