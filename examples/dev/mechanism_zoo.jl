@@ -269,7 +269,7 @@ function getslider(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 0
 end
 
 function getnpendulum(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 0.0,
-        Nlink::Int = 5, basetype::Symbol = :Revolute) where {T}
+        Nlink::Int = 5, basetype::Symbol = :Revolute, jointtype::Symbol = :Revolute) where {T}
     # Parameters
     ex = [1.; 0; 0]
     h = 1.
@@ -283,11 +283,23 @@ function getnpendulum(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T 
 
     # Constraints
     (basetype == :Revolute) && (jointb1 = EqualityConstraint(Revolute(origin, links[1], ex; p2 = vert11, spring = spring, damper = damper)))
+    (basetype == :Orbital) && (jointb1 = EqualityConstraint(Orbital(origin, links[1], ex; p1 = vert12, p2 = vert11, spring = spring, damper = damper)))
+    (basetype == :Spherical) && (jointb1 = EqualityConstraint(Spherical(origin, links[1]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)))
+    (basetype == :Prismatic) && (jointb1 = EqualityConstraint(Prismatic(origin, links[1], ez; p1 = vert12, p2 = vert11, spring = spring, damper = damper)))
+    (basetype == :Planar) && (jointb1 = EqualityConstraint(Planar(origin, links[1], ez; p1 = vert12, p2 = vert11, spring = spring, damper = damper)))
+    (basetype == :FixedOrientation) && (jointb1 = EqualityConstraint(FixedOrientation(origin, links[1]; qoffset = UnitQuaternion(RotX(0.0)), spring = spring, damper = damper)))
     (basetype == :Fixed) && (jointb1 = EqualityConstraint(Fixed(origin, links[1]; p2 = vert11)))
     if Nlink > 1
+        (jointtype == :Revolute) && (eqcs = [EqualityConstraint(Revolute(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink])
+        (jointtype == :Orbital) && (eqcs = [EqualityConstraint(Orbital(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink])
+        (jointtype == :Spherical) && (eqcs = [EqualityConstraint(Spherical(links[i - 1], links[i]; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink])
+        (jointtype == :Prismatic) && (eqcs = [EqualityConstraint(Prismatic(links[i - 1], links[i], ez; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink])
+        (jointtype == :Planar) && (eqcs = [EqualityConstraint(Planar(links[i - 1], links[i], ez; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink])
+        (jointtype == :FixedOrientation) && (eqcs = [EqualityConstraint(FixedOrientation(links[i - 1], links[i]; qoffset = UnitQuaternion(RotX(0.0)), spring = spring, damper = damper)) for i = 2:Nlink])
+        (jointtype == :Fixed) && (eqcs = [EqualityConstraint(Fixed(links[i - 1], links[i])) for i = 2:Nlink])
         eqcs = [
             jointb1;
-            [EqualityConstraint(Revolute(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink]
+            eqcs
             ]
     else
         eqcs = [jointb1]

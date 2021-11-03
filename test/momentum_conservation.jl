@@ -80,7 +80,7 @@ plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum" 
 
 
 ################################################################################
-# DOUBLE PENDULUM
+# DOUBLE PENDULUM SPHERICAL
 ################################################################################
 # multiple bodies
 # initial linear and angular velocity
@@ -93,17 +93,17 @@ include("conservation_test.jl")
 Δt0 = 0.01
 g0 = 0.0
 Nlink0 = 2
-mech = getmechanism(:npendulum, Δt = Δt0, g = g0, Nlink = Nlink0)
+mech = getmechanism(:npendulum, Δt = Δt0, g = g0, Nlink = Nlink0, basetype = :Spherical, jointtype = :Spherical)
 
 ϕ0 = 0.7
-ω0 = 5.0
+ω0 = 0.4
 initialize!(mech, :npendulum, ϕ1 = ϕ0, Δω = [ω0, 0, 0])
 
 storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
 function getmomentum(t::T) where T
-    mechanism = getmechanism(:npendulum, Δt = Δt0, g = g0, Nlink = Nlink0)
+    mechanism = getmechanism(:npendulum, Δt = Δt0, g = g0, Nlink = Nlink0, basetype = :Spherical, jointtype = :Spherical)
     initialize!(mechanism, :npendulum, ϕ1 = ϕ0, Δω = [ω0, 0, 0])
     storage = simulate!(mechanism, t, record = true, solver = :mehrotra!, verbose = false)
     return momentum(mechanism)
