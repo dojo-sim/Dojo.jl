@@ -13,22 +13,14 @@ function momentum(mechanism::Mechanism{T}) where {T}
 
     p_linear = sum([p[1:3] for p in p_body])
     p_angular = zeros(T, 3)
-    pang = [zeros(3), zeros(3)]
     v_com = p_linear ./ mass
     for (i, body) in enumerate(mechanism.bodies)
         r = body.state.xk[1] - com
         p_angular += p_body[i][4:6]
-        println("xi", i, scn.(body.state.xk[1]))
-        println("com", i, scn.(com))
-        println("r", i, scn.(r))
-        # println(i, "v_com",  scn.(v_com))
-        # println(i, "p_body",  scn.(p_body[i][1:3]))
-        println("moment", i, scn.(cross(r, body.m * (p_body[i][1:3] ./ body.m - 1.0 * v_com)), digits = 6))
         p_angular += cross(r, body.m * (p_body[i][1:3] ./ body.m - 1.0 * v_com))
-        pang[i] = cross(r, body.m * (p_body[i][1:3] ./ body.m - 1.0 * v_com))
     end
 
-    return [p_linear; p_angular; pang[1]; pang[2]]
+    return [p_linear; p_angular]
 end
 
 """
