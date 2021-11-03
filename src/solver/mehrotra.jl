@@ -29,7 +29,7 @@ function mehrotra!(mechanism::Mechanism;
         opts = InteriorPointOptions(
 			btol = 1e-13,
             # btol = 1e-2, # this is to showcase the smoothness
-            rtol = 1e-10,
+            rtol = 1e-13,
 			undercut = Inf,
             # undercut = 4.0, # this is to showcase the smoothness
 			breg = 0.0,

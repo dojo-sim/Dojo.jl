@@ -184,7 +184,8 @@ function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
     # Links
     origin = Origin{T}()
     # links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
-    links = [Box(r, r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
+    links = [Box(h, h, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
+    # links = [Sphere(r, r, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
     # Constraints
     # jointb1 = EqualityConstraint(Floating(origin, links[1]))

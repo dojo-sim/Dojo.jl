@@ -2,51 +2,85 @@
     Total linear and angular momentum of a mechanism.
 """
 function momentum(mechanism::Mechanism{T}) where {T}
-    p = zeros(T,6)
+    p = zeros(T, 6)
+    com = center_of_mass(mechanism)
+    mass = total_mass(mechanism)
+    p_body = Vector{T}[]
+
     for body in mechanism.bodies
-        p += momentum(mechanism, body)
+        push!(p_body, momentum_body(mechanism, body))
     end
-    return p
+
+    p_linear = sum([p[1:3] for p in p_body])
+    p_angular = zeros(T, 3)
+    v_com = p_linear ./ mass
+    for (i, body) in enumerate(mechanism.bodies)
+        r = body.state.xk[1] - com
+        p_angular += p_body[i][4:6]
+        p_angular += cross(r, body.m * (p_body[i][1:3] ./ body.m - 1.0 * v_com))
+    end
+
+    return [p_linear; p_angular]
+end
+
+"""
+    center of mass of a mechanism.
+"""
+function center_of_mass(mechanism::Mechanism{T}) where T
+    r = zeros(T, 3)
+    for body in mechanism.bodies
+        r += body.m * body.state.xk[1]
+    end
+    return r ./ total_mass(mechanism)
+end
+
+function total_mass(mechanism::Mechanism{T}) where T
+    w = 0.0
+    for body in mechanism.bodies
+        w += body.m
+    end
+    return w
 end
 
 """
     Linear and angular momentum of a body using Legendre transform.
 """
-function momentum(mechanism::Mechanism{T}, body::Body{T}) where {T}
+function momentum_body(mechanism::Mechanism{T}, body::Body{T}) where {T}
     Δt = mechanism.Δt
     x2, v2, q2, ω2 = fullargssol(body.state)
-    p1 = [body.m * v2 - 0.5 * body.state.Fk[1]; Δt * skewplusdiag(ω2, sqrt(4 / Δt^2 - ω2' * ω2)) * (body.J * ω2) - body.state.τk[1]] # linear momentum, angular momentum
-    p1 -= 0.5 * SVector{6,T}(0, 0, body.m * mechanism.g * Δt, 0, 0, 0) # gravity
-    for (i,eqc) in enumerate(mechanism.eqconstraints)
-        @show eqc.λsol[2]
-        @show zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
-        p1 -= 0.5 * zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
-        pp1 = -1.0 * zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
-        println(i, scn.(pp1[5], digits = 8))
+
+    p_linear_body = body.m * v2  - 0.5 * [0; 0; body.m * mechanism.g * Δt] - 0.5 * body.state.Fk[1]
+    p_angular_body = rotation_matrix(q2) * (Δt * skewplusdiag(ω2, sqrt(4 / Δt^2 - ω2' * ω2)) * (body.J * ω2)) - body.state.τk[1]
+
+    p1 = [p_linear_body; p_angular_body]
+    for (i, eqc) in enumerate(mechanism.eqconstraints)
+        # f_joint = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
+        # p_linear_body -= 0.5 * f_joint[1:3]
+        # p_angular_body -= 0.5 * f_joint[4:6]
 
         if body.id == eqc.parentid
             for (i,joint) in enumerate(eqc.constraints)
                 cbody = getbody(mechanism, eqc.childids[i])
-                eqc.isspring && (p1 += 0.5 * springforcea(joint, body.state, cbody.state, Δt))
-                eqc.isdamper && (p1 += 0.5 * damperforcea(joint, body.state, cbody.state, Δt))
+                # eqc.isspring && (p1 += 0.5 * springforcea(joint, body.state, cbody.state, Δt))
+                # eqc.isdamper && (p1 += 0.5 * damperforcea(joint, body.state, cbody.state, Δt))
             end
         end
         for (i,joint) in enumerate(eqc.constraints)
             if eqc.childids[i] == body.id
                 if eqc.parentid != nothing
                     pbody = getbody(mechanism, eqc.parentid)
-                    eqc.isspring && (p1 += 0.5 * springforceb(joint, pbody.state, body.state, Δt))
-                    eqc.isdamper && (p1 += 0.5 * damperforceb(joint, pbody.state, body.state, Δt))
+                    # eqc.isspring && (p1 += 0.5 * springforceb(joint, pbody.state, body.state, Δt))
+                    # eqc.isdamper && (p1 += 0.5 * damperforceb(joint, pbody.state, body.state, Δt))
                 else
-                    eqc.isspring && (p1 += 0.5 * springforceb(joint, body.state, Δt))
-                    eqc.isdamper && (p1 += 0.5 * damperforceb(joint, body.state, Δt))
+                    # eqc.isspring && (p1 += 0.5 * springforceb(joint, body.state, Δt))
+                    # eqc.isdamper && (p1 += 0.5 * damperforceb(joint, body.state, Δt))
                 end
             end
         end
     end
-    # return p1
 
-    return [p1[1:3]; vrotate(p1[4:6], q2)]
+    # return [p_linear_body; p_angular_body]
+    return p1
 end
 
 
@@ -66,8 +100,9 @@ end
 function kineticEnergy(mechanism::Mechanism)
     Δt = mechanism.Δt
     ET = 0.0
+    com = center_of_mass(mechanism)
     for body in mechanism.bodies
-        p1 = momentum(mechanism, body)
+        p1 = momentum_body(mechanism, body)
         M = [body.m * I szeros(3,3); szeros(3,3) body.J]
         v1 = M \ p1
         ET += 0.5 * v1'* M * v1

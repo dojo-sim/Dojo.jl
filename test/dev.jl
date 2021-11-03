@@ -292,7 +292,7 @@ function controller!(mechanism, k)
     return
 end
 
-storage = simulate!(mech, 2500.0, controller!, record = true, solver = :mehrotra!, verbose = false)
+storage = simulate!(mech, 50.0, controller!, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, downsample(storage, 100), vis = vis)
 
 # storage2500 = deepcopy(storage)
@@ -354,49 +354,49 @@ n = 1
 Nlink_ = 2
 
 Random.seed!(100)
-ω_ = -1.0*2.0*[0,0,1.0] #* 100 * Δt_
+ω_ = -1e-1*[1,1,1.0] #* 100 * Δt_
 v_ = 0.0*rand(3)
 Δv_ = 0.0*rand(3)
-Δω_ = 1.0*4.0*[0,0,1.0] #* 100 * Δt_
+Δω_ = 0.0*4.0*[0,0,1.0] #* 100 * Δt_
 
 function controller!(mechanism, k)
     for (i,joint) in enumerate(mechanism.eqconstraints)
         nu = getcontroldim(joint)
         if nu <= 5
-            if k ∈ (10:10 + 100n)
-                u = 3e-2 * Δt_ * [1.0, 0.0, 0.0] #[0.0; 1.0; zeros(nu-2)]
-            elseif k ∈ (10 + 100n:10 + 200n)
-                u = -3e-2 * Δt_ * [1.0, 0.0, 0.0] #[0.0; 1.0; zeros(nu-2)]
+            if k ∈ (10:10 + 1000n)
+                u = 1.0 * 3e-1 * Δt_ * [0.1, 1.0, 1.0] #[0.0; 1.0; zeros(nu-2)]
+            elseif k ∈ (10 + 1000n:10 + 2000n)
+                u = 0.0 * -3e-1 * Δt_ * [1.0, 0.0, 1.0] #[0.0; 1.0; zeros(nu-2)]
+            else
+                u = zeros(3)
             end
             setForce!(mechanism, joint, SA[u...])
         end
     end
     return
 end
-mech = getmechanism(:snake, Δt = Δt_, g = 0.0, spring = 0.0, damper = 0.00, contact = false, Nlink = Nlink_, jointtype = :Spherical)
+mech = getmechanism(:snake, Δt = Δt_, g = -0.05, spring = 0.0, damper = 1.00, contact = false, Nlink = Nlink_, jointtype = :Spherical)
 initialize!(mech, :snake, ω = ω_, v = v_, Δv = Δv_, Δω = Δω_, ϕ1 = 0.0)
 storage = simulate!(mech, 100.00, controller!, record = true, solver = :mehrotra!, verbose = false)
 m0 = momentum(mech)
+visualize(mech, downsample(storage, 10), vis = vis)
+
+function get_momentum(h)
+    mech = getmechanism(:snake, Δt = Δt_, g = -0.05, spring = 0.0, damper = 1., contact = false, Nlink = Nlink_, jointtype = :Spherical)
+    initialize!(mech, :snake, ω = ω_, v = v_, Δv = Δv_, Δω = Δω_, ϕ1 = 0.0)
+    storage = simulate!(mech, h, controller!, record = true, solver = :mehrotra!, verbose = false)
+    m0 = momentum(mech)
+    return m0[4:6]
+end
+mm = [get_momentum(0.1+0.5i) for i = 1:2]
+tt = [0.1+0.5i for i = 1:2]
+mm = [i .- mm[1] for i in mm]
+plot(tt, hcat(mm...)')
+
 
 eqc2 = collect(mech.eqconstraints)[2]
 tra2 = eqc2.constraints[1]
 tra2.vertices
-
-bodya = collect(mech.bodies)[1]
-bodyb = collect(mech.bodies)[2]
-xa, qa = posargsk(bodya.state)
-xb, qb = posargsk(bodyb.state)
-rotation_matrix(qa) * tra2.vertices[1]
-rotation_matrix(qb) * tra2.vertices[2]
-tra2.vertices[1]
-tra2.vertices[2]
-qa
-qb
-
-
-
-
-visualize(mech, downsample(storage, 10), vis = vis)
 
 eqc = mech.eqconstraints[2]
 f1 = (zerodimstaticadjoint(∂g∂ʳpos(mech, eqc, mech.bodies[3])) * eqc.λsol[2])[1:3]
@@ -408,7 +408,19 @@ norm(t1 + t2)
 t1
 t2
 
+bodya.J
+bodya = collect(mech.bodies)[1]
+bodyb = collect(mech.bodies)[2]
+xa, qa = posargsk(bodya.state)
+xb, qb = posargsk(bodyb.state)
+rotation_matrix(qa) * tra2.vertices[1]
+rotation_matrix(qb) * tra2.vertices[2]
+tra2.vertices[1]
+tra2.vertices[2]
+qa
+qb
 
+rotation_matrix(qa) * (10*I) * rotation_matrix(inv(qa))
 
 ################################################################################
 # pendulum
