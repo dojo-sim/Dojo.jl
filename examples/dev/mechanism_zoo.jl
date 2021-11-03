@@ -152,8 +152,6 @@ function getdice(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8,
         cf = cf * ones(n)
 
         if conetype == :soc
-            # conineqcs, impineqcs = splitcontactconstraint(link1, normal, cf, p = corners)
-            # mech = Mechanism(origin, links, eqcs, [impineqcs; conineqcs], g = g, Δt = Δt)
             contineqcs = contactconstraint(link1, normal, cf, p = corners)
             mech = Mechanism(origin, links, eqcs, contineqcs, g = g, Δt = Δt)
         elseif conetype == :linear
@@ -270,7 +268,8 @@ function getslider(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 0
     return mech
 end
 
-function getnpendulum(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 0.0, Nlink::Int = 5) where {T}
+function getnpendulum(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 0.0,
+        Nlink::Int = 5, basetype::Symbol = :Revolute) where {T}
     # Parameters
     ex = [1.; 0; 0]
     h = 1.
@@ -283,8 +282,8 @@ function getnpendulum(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T 
     links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
     # Constraints
-    jointb1 = EqualityConstraint(Revolute(origin, links[1], ex; p2 = vert11, spring = spring, damper = damper))
-    # jointb1 = EqualityConstraint(Fixed(origin, links[1]; p2 = vert11))
+    (basetype == :Revolute) && (jointb1 = EqualityConstraint(Revolute(origin, links[1], ex; p2 = vert11, spring = spring, damper = damper)))
+    (basetype == :Fixed) && (jointb1 = EqualityConstraint(Fixed(origin, links[1]; p2 = vert11)))
     if Nlink > 1
         eqcs = [
             jointb1;
@@ -398,8 +397,8 @@ function initializedice!(mechanism::Mechanism; x::AbstractVector{T} = [0,0,1.],
 end
 
 function initializesnake!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{T} = [0,-0.5,0],
-        v::AbstractVector{T} = 0.0*[1,0.3,4], ω::AbstractVector{T} = 0.0*[.1,.8,0],
-        Δω::AbstractVector{T} = [0.4, 0.0, -0.0], Δv::AbstractVector{T} = [0, 0, 1.],
+        v::AbstractVector{T} = zeros(3), ω::AbstractVector{T} = zeros(3),
+        Δω::AbstractVector{T} = zeros(3), Δv::AbstractVector{T} = zeros(3),
         ϕ1::T = pi/2) where {T,Nn,Ne,Nb}
 
     bodies = collect(mechanism.bodies)
@@ -422,9 +421,8 @@ function initializesnake!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{T}
     end
 end
 
-function initializenpendulum!(mechanism::Mechanism; ϕ1::T = pi/4,
-        v = [0.0, 0.0, 0.0], ω = [0.0, 0.0, 0.0],
-        Δω::AbstractVector{T} = [0.4, 0.0, -0.0], Δv::AbstractVector{T} = [0, 0, 1.],
+function initializenpendulum!(mechanism::Mechanism; ϕ1::T = pi/4, ω = [0.0, 0.0, 0.0],
+        Δv::AbstractVector{T} = [0, 0, 0.], Δω::AbstractVector{T} = [0, 0, 0.],
         ) where {T}
 
     link1 = collect(mechanism.bodies)[1]
@@ -434,7 +432,7 @@ function initializenpendulum!(mechanism::Mechanism; ϕ1::T = pi/4,
 
     # set position and velocities
     setPosition!(mechanism.origin, link1, p2 = vert11, Δq = UnitQuaternion(RotX(ϕ1)))
-    setVelocity!(link1, v = v, ω = ω)
+    setVelocity!(link1, ω = ω)
 
     previd = link1.id
     for (i,body) in enumerate(Iterators.drop(mechanism.bodies, 1))
@@ -445,12 +443,14 @@ function initializenpendulum!(mechanism::Mechanism; ϕ1::T = pi/4,
     end
 end
 
-function initializependulum!(mechanism::Mechanism; ϕ1::T = 0.7) where {T}
+function initializependulum!(mechanism::Mechanism; ϕ1::T = 0.7, ω1::T = 0.0) where {T}
     body = collect(mechanism.bodies)[1]
     eqc = collect(mechanism.eqconstraints)[1]
     p2 = eqc.constraints[1].vertices[2]
+    p1 = eqc.constraints[1].vertices[1]
     q1 = UnitQuaternion(RotX(ϕ1))
-    setPosition!(mechanism.origin, body, p2 = p2, Δq = q1)
+    setPosition!(mechanism.origin, body, p1 = p1, p2 = p2, Δq = q1)
+    setVelocity!(mechanism.origin, body, p1 = p1, p2 = p2, Δω = [ω1,0,0])
 end
 
 function initializeslider!(mechanism::Mechanism; z1::T = 0.0) where {T}
