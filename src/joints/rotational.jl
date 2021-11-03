@@ -71,6 +71,10 @@ end
     return X, Q
 end
 
+# ∂g∂ʳposb(joint::Rotational{T}, statea::State, stateb::State, Δt) where T = -1.0 * ∂g∂ʳposb(joint, posargsk(statea)..., posargsk(stateb)...)
+# ∂g∂ʳposb(joint::Rotational{T}, stateb::State, Δt) where T = -1.0 * ∂g∂ʳposb(joint, posargsk(stateb)...)
+
+
 ## vec(G) Jacobian (also NOT accounting for quaternion specialness in the second derivative: ∂(∂ʳg∂posx)∂y)
 @inline function ∂2g∂posaa(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
     XX = szeros(T, 9, 3)
