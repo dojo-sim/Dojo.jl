@@ -27,7 +27,7 @@ end
 function mehrotra!(mechanism::Mechanism;
 		verbose::Bool = true,
         opts = InteriorPointOptions(
-			btol = 1e-10,
+			btol = 1e-13,
             # btol = 1e-2, # this is to showcase the smoothness
             rtol = 1e-10,
 			undercut = Inf,

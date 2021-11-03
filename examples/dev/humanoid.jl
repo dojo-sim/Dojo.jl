@@ -44,12 +44,12 @@ end
 @elapsed storage = simulate!(mech, 2.3, controller!, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
-# filename = "humanoid_10hz"
-# MeshCat.convert_frames_to_video(
-#     "/home/simon/Downloads/$filename.tar",
-#     "/home/simon/Documents/video/$filename.mp4", overwrite=true)
-#
-# using FFMPEG
-# convert_video_to_gif(
-#     "/home/simon/Documents/video/$filename.mp4",
-#     "/home/simon/Documents/video/$filename.gif", overwrite=true)
+filename = "humanoid500"
+MeshCat.convert_frames_to_video(
+    "/home/simon/Downloads/$filename.tar",
+    "/home/simon/Documents/video/$filename.mp4", overwrite=true)
+
+using FFMPEG
+convert_video_to_gif(
+    "/home/simon/Documents/video/$filename.mp4",
+    "/home/simon/Documents/video/$filename.gif", overwrite=true)

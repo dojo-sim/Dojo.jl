@@ -1,4 +1,73 @@
-<?xml version="0.0" ?>
+<?xml version="1.0" ?>
+<robot name="walker2d">
+	<!-- <link name="base">
+		<inertial>
+			<origin rpy="0.00000 -0.00000 0.00000" xyz="0.00000 0.00000 0.00000"/>
+			<mass value="1.00000"/>
+			<inertia ixx="1.00000" ixy="0" ixz="0" iyy="1.00000" iyz="0" izz="1.00000"/>
+		</inertial>
+	</link> -->
+	<link name="torso">
+		<inertial>
+			<origin rpy="0.00000 -0.00000 0.00000" xyz="0.00000 0.00000 1.25000"/>
+			<mass value="3.66519"/>
+			<inertia ixx="0.07941" ixy="0" ixz="0" iyy="0.07941" iyz="0" izz="0.00611"/>
+		</inertial>
+		<collision>
+			<origin rpy="3.14159 -0.00000 3.14159" xyz="0.00000 0.00000 1.25000"/>
+			<geometry>
+				<capsule length="0.40000" radius="0.05000"/>
+			</geometry>
+		</collision>
+		<visual>
+			<origin rpy="3.14159 -0.00000 3.14159" xyz="0.00000 0.00000 1.25000"/>
+			<geometry>
+				<cylinder length="0.40000" radius="0.05000"/>
+			</geometry>
+		</visual>
+	</link>
+	<link name="thigh">
+		<inertial>
+			<origin rpy="0.00000 -0.00000 0.00000" xyz="0.00000 0.00000 0.82500"/>
+			<mass value="4.05789"/>
+			<inertia ixx="0.10567" ixy="0" ixz="0" iyy="0.10567" iyz="0" izz="0.00676"/>
+		</inertial>
+		<collision>
+			<origin rpy="3.14159 -0.00000 3.14159" xyz="0.00000 0.00000 0.82500"/>
+			<geometry>
+				<capsule length="0.45000" radius="0.05000"/>
+			</geometry>
+		</collision>
+		<visual>
+			<origin rpy="3.14159 -0.00000 3.14159" xyz="0.00000 0.00000 0.82500"/>
+			<geometry>
+				<cylinder length="0.45000" radius="0.05000"/>
+			</geometry>
+		</visual>
+	</link>
+
+	<!-- <joint name="base_joint" type="planaraxis">
+		<origin rpy="0 0 0" xyz="0 0.08505 0"/>
+		<parent link="base"/>
+		<child link="torso"/>
+		<axis xyz="0 1 0"/>
+	</joint> -->
+
+	<joint name="thigh_joint" type="revolute">
+		<parent link="torso"/>
+		<child link="thigh"/>
+		<dynamics damping="1.0" friction="0.0001"/>
+		<origin rpy="0.00000 -0.00000 0.00000" xyz="0.00000 0.00000 0.82500"/>
+		<axis xyz="0.00000 -1.00000 0.00000"/>
+	</joint>
+</robot>
+
+
+
+
+
+
+<!-- <?xml version="0.0" ?>
 <robot name="walker2d">
 	<link name="link0_1">
 		<inertial>
@@ -161,6 +230,9 @@
 			</geometry>
 		</collision>
 	</link>
+
+
+
 	<joint name="ignorex" type="prismatic">
 		<parent link="link0_1"/>
 		<child link="link0_2"/>
@@ -273,4 +345,4 @@
 		<origin rpy="0.00000 -0.00000 0.00000" xyz="0.00000 0.00000 -0.10000"/>
 		<axis xyz="0.00000 0.00000 0.00000"/>
 	</joint>
-</robot>
+</robot> -->

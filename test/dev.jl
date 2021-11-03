@@ -269,20 +269,20 @@ open(vis)
 
 
 ################################################################################
-# atlas
+# humanoid
 ################################################################################
 
 include("conservation_test.jl")
 Random.seed!(100)
 Δt_ = 0.01
-mech = getmechanism(:humanoid, Δt = Δt_, g = 0.0, spring = 0.0, damper = 0.5, contact = false)
-initialize!(mech, :atlas, tran = [0, 0, 2.])
+mech = getmechanism(:humanoid, Δt = Δt_, g = 0.0, spring = 0.0, damper = 3., contact = false)
+initialize!(mech, :humanoid, tran = [0, 0, 2.])
 
 function controller!(mechanism, k)
     for (i,joint) in enumerate(mechanism.eqconstraints)
         if getcontroldim(joint) == 1
-            if k ∈ (1:100)
-                u = 1e0 * (1.0 - 0.5) * Δt_
+            if k ∈ (50:150)
+                u = 2e0 * (1.0 - 0.5) * Δt_
             else
                 u = 0.0
             end
@@ -292,13 +292,14 @@ function controller!(mechanism, k)
     return
 end
 
-storage = simulate!(mech, 1.0, controller!, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
+storage = simulate!(mech, 2500.0, controller!, record = true, solver = :mehrotra!, verbose = false)
+visualize(mech, downsample(storage, 100), vis = vis)
 
+# storage2500 = deepcopy(storage)
+# storage500 = deepcopy(storage)
+
+norm(momentum(mech)[4:6])
 momentum(mech)
-
-[eqc.name for eqc in mech.eqconstraints]
-[(body.name, body.m) for body in mech.bodies]
 
 
 
@@ -310,23 +311,102 @@ include("conservation_test.jl")
 Nlink_ = 2
 
 Random.seed!(100)
-ω_ = 1.0*rand(3)
-v_ = 1.0*rand(3)
-Δv_ = 1.0*rand(3)
-Δω_ = 1.0*rand(3)
-mech = getmechanism(:snake, Δt = Δt_, g = 0.0, spring = 0.0, damper = 0.0, contact = false, Nlink = Nlink_)
+ω_ = 0.0*rand(3)
+v_ = 0.0*rand(3)
+Δv_ = 0.0*rand(3)
+Δω_ = 0.0*rand(3)
+
+function controller!(mechanism, k)
+    for (i,joint) in enumerate(mechanism.eqconstraints)
+        nu = getcontroldim(joint)
+        if nu <= 5
+            if k ∈ (50:150)
+                u = 2e0 * (1.0 - 0.5) * Δt_ * [1.0, 0.0, 1.0] #[0.0; 1.0; zeros(nu-2)]
+            else
+                u = zeros(nu)
+            end
+            setForce!(mechanism, joint, SA[u...])
+        end
+    end
+    return
+end
+mech.eqconstraints[1]
+mech.eqconstraints[2]
+mech = getmechanism(:snake, Δt = Δt_, g = 0.0, spring = 0.0, damper = 1.0, contact = false, Nlink = Nlink_, jointtype = :Spherical)
 initialize!(mech, :snake, ω = ω_, v = v_, Δv = Δv_, Δω = Δω_)
-storage = simulate!(mech, 0.05, record = true, solver = :mehrotra!, verbose = true)
+storage = simulate!(mech, 10.0, controller!, record = true, solver = :mehrotra!, verbose = false)
 m0 = momentum(mech)
 
-mech = getmechanism(:snake, Δt = Δt_, g = 0.0, spring = 0.0, damper = 0.0, contact = false, Nlink = Nlink_)
-initialize!(mech, :snake, ω = ω_, v = v_, Δv = Δv_, Δω = Δω_)
-storage = simulate!(mech, 1.00, record = true, solver = :mehrotra!, verbose = true)
-m1 = momentum(mech)
-norm(m1 - m0)
-(m1 - m0)[5]
-m1 - m0
-visualize(mech, storage, vis = vis)
+
+visualize(mech, downsample(storage, 1), vis = vis)
+
+
+################################################################################
+# snake initial velocity
+################################################################################
+vis = Visualizer()
+open(vis)
+
+include("conservation_test.jl")
+n = 1
+Δt_ = 0.01
+Δt_ /= n
+Nlink_ = 2
+
+Random.seed!(100)
+ω_ = -1.0*2.0*[0,0,1.0] #* 100 * Δt_
+v_ = 0.0*rand(3)
+Δv_ = 0.0*rand(3)
+Δω_ = 1.0*4.0*[0,0,1.0] #* 100 * Δt_
+
+function controller!(mechanism, k)
+    for (i,joint) in enumerate(mechanism.eqconstraints)
+        nu = getcontroldim(joint)
+        if nu <= 5
+            if k ∈ (10:10 + 100n)
+                u = 3e-2 * Δt_ * [1.0, 0.0, 0.0] #[0.0; 1.0; zeros(nu-2)]
+            elseif k ∈ (10 + 100n:10 + 200n)
+                u = -3e-2 * Δt_ * [1.0, 0.0, 0.0] #[0.0; 1.0; zeros(nu-2)]
+            end
+            setForce!(mechanism, joint, SA[u...])
+        end
+    end
+    return
+end
+mech = getmechanism(:snake, Δt = Δt_, g = 0.0, spring = 0.0, damper = 0.00, contact = false, Nlink = Nlink_, jointtype = :Spherical)
+initialize!(mech, :snake, ω = ω_, v = v_, Δv = Δv_, Δω = Δω_, ϕ1 = 0.0)
+storage = simulate!(mech, 100.00, controller!, record = true, solver = :mehrotra!, verbose = false)
+m0 = momentum(mech)
+
+eqc2 = collect(mech.eqconstraints)[2]
+tra2 = eqc2.constraints[1]
+tra2.vertices
+
+bodya = collect(mech.bodies)[1]
+bodyb = collect(mech.bodies)[2]
+xa, qa = posargsk(bodya.state)
+xb, qb = posargsk(bodyb.state)
+rotation_matrix(qa) * tra2.vertices[1]
+rotation_matrix(qb) * tra2.vertices[2]
+tra2.vertices[1]
+tra2.vertices[2]
+qa
+qb
+
+
+
+
+visualize(mech, downsample(storage, 10), vis = vis)
+
+eqc = mech.eqconstraints[2]
+f1 = (zerodimstaticadjoint(∂g∂ʳpos(mech, eqc, mech.bodies[3])) * eqc.λsol[2])[1:3]
+f2 = (zerodimstaticadjoint(∂g∂ʳpos(mech, eqc, mech.bodies[4])) * eqc.λsol[2])[1:3]
+norm(f1 + f2)
+t1 = vrotate((zerodimstaticadjoint(∂g∂ʳpos(mech, eqc, mech.bodies[3])) * eqc.λsol[2])[4:6], mech.bodies[3].state.qk[1])
+t2 = vrotate((zerodimstaticadjoint(∂g∂ʳpos(mech, eqc, mech.bodies[4])) * eqc.λsol[2])[4:6], mech.bodies[4].state.qk[1])
+norm(t1 + t2)
+t1
+t2
 
 
 
@@ -421,3 +501,93 @@ norm((m1 - m0)[4:6], Inf)
 (m1 - m0)[5]
 m1 - m0
 visualize(mech, storage, vis = vis)
+
+
+
+
+vis = Visualizer()
+open(vis)
+
+
+
+
+function getwalker2d(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0, damper::T = 0.0, contact::Bool = true) where {T}
+    # TODO new feature: visualize capsule instead of cylinders
+    # TODO new feature: visualize multiple shapes for a single body
+    path = "examples/examples_files/walker2d.urdf"
+    mech = Mechanism(joinpath(module_dir(), path), floating=true, g = g)
+
+    # Adding springs and dampers
+    for (i,eqc) in enumerate(collect(mech.eqconstraints[2:end]))
+        eqc.isdamper = true
+        eqc.isspring = true
+        for joint in eqc.constraints
+            joint.spring = spring
+            joint.damper = damper
+        end
+    end
+
+    # if contact
+    #     origin = Origin{T}()
+    #     bodies = Vector{Body{T}}(collect(mech.bodies))
+    #     eqs = Vector{EqualityConstraint{T}}(collect(mech.eqconstraints))
+    #
+    #     # Foot contact
+    #     contacts = [
+    #         [-0.1; -0.05; 0.0],
+    #         [+0.1; -0.05; 0.0],
+    #         [-0.1; +0.05; 0.0],
+    #         [+0.1; +0.05; 0.0],
+    #         ]
+    #     n = length(contacts)
+    #     normal = [[0;0;1.0] for i = 1:n]
+    #     cf = cf * ones(T, n)
+    #
+    #     contineqcs1 = contactconstraint(getbody(mech, "left_foot"), normal, cf, p = contacts)
+    #     contineqcs2 = contactconstraint(getbody(mech, "right_foot"), normal, cf, p = contacts)
+    #
+    #     setPosition!(mech, geteqconstraint(mech, "auto_generated_floating_joint"), [0;0;1.2;0.1;0.;0.])
+    #     mech = Mechanism(origin, bodies, eqs, [contineqcs1; contineqcs2], g = g, Δt = Δt)
+    # end
+    return mech
+end
+
+# function initializewalker2d!(mechanism::Mechanism; x::T = 0.0, z::T = 0.0, θ::T = 0.0) where {T}
+#     setPosition!(mechanism,
+#                  geteqconstraint(mechanism, "base_joint"),
+#                  [x, z, θ])
+# end
+function initializewalker2d!(mechanism::Mechanism; tran::AbstractVector{T} = [0,0,1.2],
+        rot::AbstractVector{T} = [0.1,0,0]) where {T}
+    setPosition!(mechanism,
+                 geteqconstraint(mechanism, "auto_generated_floating_joint"),
+                 [tran; rot])
+end
+################################################################################
+# walker2d
+################################################################################
+
+include("conservation_test.jl")
+Random.seed!(100)
+Δt_ = 0.01
+mech = getmechanism(:walker2d, Δt = Δt_, g = 0.0, spring = 0.0, damper = 0.0, contact = false)
+# initialize!(mech, :walker2d, x = 0.0, z = 0.0, θ = 0.0)
+initialize!(mech, :walker2d, tran = [0, 0, 1.25], rot = zeros(3))
+getfield.(collect(mech.eqconstraints), :name)
+function controller!(mechanism, k)
+    for (i,joint) in enumerate(mechanism.eqconstraints)
+        if getcontroldim(joint) == 1
+            if k ∈ (1:100)
+                u = 1e0 * (1.0 - 0.5) * Δt_
+            else
+                u = 0.0
+            end
+            setForce!(mechanism, joint, SA[u])
+        end
+    end
+    return
+end
+
+storage = simulate!(mech, 1.0, controller!, record = true, solver = :mehrotra!, verbose = false)
+visualize(mech, storage, vis = vis)
+getfield.(collect(mech.bodies), :name)

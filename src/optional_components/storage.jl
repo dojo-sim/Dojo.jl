@@ -52,3 +52,16 @@ end
 function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, storage::Storage{T,N}) where {T,N}
     summary(io, storage)
 end
+
+function downsample(storage::Storage{T,N}, n::Int) where {T,N}
+    steps = N ÷ n
+    nbodies = length(storage.x)
+    s = Storage(steps, nbodies)
+    for i = 1:nbodies
+        s.x[i] = storage.x[i][1:n:end]
+        s.q[i] = storage.q[i][1:n:end]
+        s.v[i] = storage.v[i][1:n:end]
+        s.ω[i] = storage.ω[i][1:n:end]
+    end
+    return s
+end

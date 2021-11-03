@@ -9,6 +9,7 @@ qrotate(q1::UnitQuaternion,q2::UnitQuaternion) = q2 * q1 / q2
 vrotate(v::Vector,q::UnitQuaternion) = imag(qrotate(pure_quaternion(v), q))
 vrotate(v::StaticVector,q::UnitQuaternion) = q*v
 
+@inline rotation_matrix(q::UnitQuaternion) = VRᵀmat(q) * LVᵀmat(q)
 @inline ∂vrotate∂p(p::AbstractVector, q::UnitQuaternion) = VRᵀmat(q) * LVᵀmat(q)
 @inline ∂vrotate∂q(p::AbstractVector, q::UnitQuaternion) = VLmat(q) * Lmat(UnitQuaternion(p)) * Tmat() + VRᵀmat(q) * Rmat(UnitQuaternion(p))
 

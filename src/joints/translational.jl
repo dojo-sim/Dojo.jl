@@ -2,40 +2,29 @@ mutable struct Translational{T,N} <: Joint{T,N}
     V3::Adjoint{T,SVector{3,T}} # in body1's frame
     V12::SMatrix{2,3,T,6} # in body1's frame
     vertices::NTuple{2,SVector{3,T}} # in body1's & body2's frames
-
     spring::T
     damper::T
-
     Fτ::SVector{3,T}
-
     function Translational{T,N}(body1::AbstractBody, body2::AbstractBody;
             p1::AbstractVector = szeros(T,3), p2::AbstractVector = szeros(T,3), axis::AbstractVector = szeros(T,3), spring = zero(T), damper = zero(T)
         ) where {T,N}
-
         vertices = (p1, p2)
         V1, V2, V3 = orthogonalrows(axis)
         V12 = [V1;V2]
-
         Fτ = zeros(T,3)
-
         new{T,N}(V3, V12, vertices, spring, damper, Fτ), body1.id, body2.id
     end
 end
-
 Translational0 = Translational{T,0} where T
 Translational1 = Translational{T,1} where T
 Translational2 = Translational{T,2} where T
 Translational3 = Translational{T,3} where T
-
 springforcea(joint::Translational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
 springforceb(joint::Translational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
 springforceb(joint::Translational{T,3}, body1::Origin, body2::Body, Δt::T, childid) where T = szeros(T, 6)
-
 damperforcea(joint::Translational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
 damperforceb(joint::Translational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
 damperforceb(joint::Translational{T,3}, body1::Origin, body2::Body, Δt::T, childid) where T = szeros(T, 6)
-
-
 function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::Translational{T,N}) where {T,N}
     summary(io, constraint)
     println(io,"")
@@ -43,40 +32,57 @@ function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::Transla
     println(io, " V12:      "*string(constraint.V12))
     println(io, " vertices: "*string(constraint.vertices))
 end
-
 ### Constraints and derivatives
 ## Position level constraints (for dynamics)
 @inline function g(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
     vertices = joint.vertices
-    return vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
+    return xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa))
 end
 @inline function g(joint::Translational, xb::AbstractVector, qb::UnitQuaternion)
     vertices = joint.vertices
     return xb + vrotate(vertices[2], qb) - vertices[1]
 end
-
 ## Derivatives NOT accounting for quaternion specialness
 @inline function ∂g∂posa(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-    point2 = xb + vrotate(joint.vertices[2], qb)
-
-    X = -VLᵀmat(qa) * RVᵀmat(qa)
-    Q = 2 * VLᵀmat(qa) * (Lmat(UnitQuaternion(point2)) - Lmat(UnitQuaternion(xa)))
-
+    X = -I(3)
+    Q = -∂vrotate∂q(joint.vertices[1], qa)
     return X, Q
 end
 @inline function ∂g∂posb(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-    X = VLᵀmat(qa) * RVᵀmat(qa)
-    Q = 2 * VLᵀmat(qa) * Rmat(qa) * Rᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
-
+    X = I(3)
+    Q = ∂vrotate∂q(joint.vertices[2], qb)
     return X, Q
 end
 @inline function ∂g∂posb(joint::Translational, xb::AbstractVector, qb::UnitQuaternion)
-    X = I
-    Q = 2 * VRᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
-
+    X = I(3)
+    Q = ∂vrotate∂q(joint.vertices[2], qb)
     return X, Q
 end
-
+function ∂g∂ʳposa(joint::Translational{T}, statea::State, stateb::State, Δt) where T
+    xa, qa = posargsk(statea)
+    xb, qb = posargsk(stateb)
+    X = -I(3)
+    # Q = -∂vrotate∂q(joint.vertices[1], qa) * LVᵀmat(qa)
+    Q = transpose(-1.0 * rotation_matrix(inv(qa)) * skew(rotation_matrix(qa) * joint.vertices[1]))
+    return [X Q]
+end
+function ∂g∂ʳposb(joint::Translational{T}, statea::State, stateb::State, Δt) where T
+    # vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qb))
+    xa, qa = posargsk(statea)
+    xb, qb = posargsk(stateb)
+    X = I(3)
+    # Q = ∂vrotate∂q(joint.vertices[2], qb) * LVᵀmat(qb)
+    Q = transpose(rotation_matrix(inv(qb)) * skew(rotation_matrix(qb) * joint.vertices[2]))
+    return [X Q]
+end
+function ∂g∂ʳposb(joint::Translational{T}, stateb::State, Δt) where T
+    # vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qb))
+    xb, qb = posargsk(stateb)
+    X = I(3)
+    # Q = ∂vrotate∂q(joint.vertices[2], qb) * LVᵀmat(qb)
+    Q = transpose(rotation_matrix(inv(qb)) * skew(rotation_matrix(qb) * joint.vertices[2]))
+    return [X Q]
+end
 ## vec(G) Jacobian (also NOT accounting for quaternion specialness in the second derivative: ∂(∂ʳg∂posx)∂y)
 @inline function ∂2g∂posaa(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
     Lpos = Lmat(UnitQuaternion(xb + vrotate(joint.vertices[2], qb) - xa))
