@@ -182,6 +182,7 @@ function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
     # Links
     origin = Origin{T}()
     # links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
+    # links = [Box(r, r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
     links = [Box(h, h, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
     # links = [Sphere(r, r, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
@@ -279,12 +280,13 @@ function getnpendulum(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T 
 
     # Links
     origin = Origin{T}()
-    links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
+    # links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
+    links = [Box(h, h, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
     # Constraints
     (basetype == :Revolute) && (jointb1 = EqualityConstraint(Revolute(origin, links[1], ex; p2 = vert11, spring = spring, damper = damper)))
     (basetype == :Orbital) && (jointb1 = EqualityConstraint(Orbital(origin, links[1], ex; p1 = vert12, p2 = vert11, spring = spring, damper = damper)))
-    (basetype == :Spherical) && (jointb1 = EqualityConstraint(Spherical(origin, links[1]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)))
+    (basetype == :Spherical) && (jointb1 = EqualityConstraint(Spherical(origin, links[1]; p2 = vert11, spring = spring, damper = damper)))
     (basetype == :Prismatic) && (jointb1 = EqualityConstraint(Prismatic(origin, links[1], ez; p1 = vert12, p2 = vert11, spring = spring, damper = damper)))
     (basetype == :Planar) && (jointb1 = EqualityConstraint(Planar(origin, links[1], ez; p1 = vert12, p2 = vert11, spring = spring, damper = damper)))
     (basetype == :FixedOrientation) && (jointb1 = EqualityConstraint(FixedOrientation(origin, links[1]; qoffset = UnitQuaternion(RotX(0.0)), spring = spring, damper = damper)))
