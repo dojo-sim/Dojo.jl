@@ -17,7 +17,7 @@ function momentum(mechanism::Mechanism{T}) where {T}
     for (i, body) in enumerate(mechanism.bodies)
         r = body.state.xk[1] - com
         p_angular += p_body[i][4:6]
-        p_angular += cross(r, body.m * (p_body[i][1:3] ./ body.m - 1.0 * v_com))
+        # p_angular += cross(r, body.m * (p_body[i][1:3] ./ body.m - 1.0 * v_com))
     end
 
     return [p_linear; p_angular]
@@ -50,7 +50,9 @@ function momentum_body(mechanism::Mechanism{T}, body::Body{T}) where {T}
     x2, v2, q2, ω2 = fullargssol(body.state)
 
     p_linear_body = body.m * v2  - 0.5 * [0; 0; body.m * mechanism.g * Δt] - 0.5 * body.state.Fk[1]
-    p_angular_body = rotation_matrix(q2) * (Δt * skewplusdiag(ω2, sqrt(4 / Δt^2 - ω2' * ω2)) * body.J * ω2) - body.state.τk[1]
+    p_angular_body = rotation_matrix(q2) * (Δt * skewplusdiag(ω2, sqrt(4 / Δt^2 - ω2' * ω2)) * body.J * ω2)# - body.state.τk[1]
+    # p_angular_body = (Δt * skewplusdiag(ω2, sqrt(4 / Δt^2 - ω2' * ω2)) * body.J * ω2)# - body.state.τk[1]
+    # p_angular_body = (Δt * skewplusdiag(ω2, sqrt(4 / Δt^2 - ω2' * ω2)) * body.J * ω2)# - body.state.τk[1]
 
     p1 = [p_linear_body; p_angular_body]
     for (i, eqc) in enumerate(mechanism.eqconstraints)
