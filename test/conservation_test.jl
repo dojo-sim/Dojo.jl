@@ -17,8 +17,7 @@ function momentum(mechanism::Mechanism{T}) where {T}
     for (i, body) in enumerate(mechanism.bodies)
         r = body.state.xk[1] - com
         p_angular += p_body[i][4:6]
-        @show cross(r, body.m * (p_body[i][1:3] ./ body.m - 1.0 * v_com))
-        p_angular += cross(r, body.m * (p_body[i][1:3] ./ body.m - 1.0 * v_com))
+        # p_angular += cross(r, body.m * (p_body[i][1:3] ./ body.m - 1.0 * v_com))
     end
 
     return [p_linear; p_angular]
