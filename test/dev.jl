@@ -292,7 +292,7 @@ function controller!(mechanism, k)
     return
 end
 
-storage = simulate!(mech, 50.0, controller!, record = true, solver = :mehrotra!, verbose = false)
+storage = simulate!(mech, 100.0, controller!, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, downsample(storage, 100), vis = vis)
 
 # storage2500 = deepcopy(storage)
