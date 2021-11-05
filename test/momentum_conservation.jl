@@ -88,6 +88,7 @@ plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum" 
 ################################################################################
 include("conservation_test.jl")
 
+
 Δt0 = 0.01
 g0 = 0.0
 Nlink0 = 1
@@ -109,7 +110,7 @@ v0 = 0.0*[-0.1,0.5,0.2]
 Δω0 = [3,1,0.0] / Nlink0
 initialize!(mech, :snake, v = v0, ω = ω0, Δv = Δv0, Δω = Δω0)
 
-storage = simulate!(mech, 25.0, record = true, solver = :mehrotra!, verbose = false)
+storage = simulate!(mech, 3.50, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
 function getmomentum(t::T) where T
@@ -117,10 +118,12 @@ function getmomentum(t::T) where T
         jointtype = :Spherical, contact = false)
     initialize!(mechanism, :snake, v = v0, ω = ω0, Δv = Δv0, Δω = Δω0)
     storage = simulate!(mechanism, t, record = true, solver = :mehrotra!, verbose = false)
-    return momentum(mechanism)
+    return momentum_body(mechanism, mechanism.bodies[2])
 end
 
-ts = [1.0 + 0.2 * i for i = 1:20]
+
+
+ts = [1.0 + 0.05 * i for i = 1:50]
 ms = getmomentum.(ts)
 ms = [m .- ms[1] for m in ms]
 plot(ts, hcat(ms...)'[:,1:3], label = ["x" "y" "z"], title = "linear momentum" )
@@ -129,8 +132,8 @@ plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum" 
 plot([q.w for q in storage.q[1]])
 plot([q.w for q in storage.q[2]])
 plot([w[1] for w in storage.ω[1]])
-plot([w[2] for w in storage.ω[1]])
-plot([w[3] for w in storage.ω[1]])
+plot!([w[2] for w in storage.ω[1]])
+plot!([w[3] for w in storage.ω[1]])
 
 
 mech.bodies[2].J

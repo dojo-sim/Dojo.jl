@@ -10,7 +10,9 @@
     ω2 = state.ωsol[2]
     sq1 = sqrt(4 / Δt^2 - ω1' * ω1)
     sq2 = sqrt(4 / Δt^2 - ω2' * ω2)
-    dynR = Δt * skewplusdiag(ω2, sq2) * (J * ω2) - Δt * skewplusdiag(ω1, sq1) * (J * ω1) - 2 * state.τk[1]
+    # dynR = Δt * skewplusdiag(ω2, sq2) * (J * ω2) - Δt * skewplusdiag(ω1, sq1) * (J * ω1) - 2 * state.τk[1]
+    # dynR = Δt * skewplusdiag(ω2, sq2) * (J * ω2) - Δt * skewplusdiag(-ω1, sq1) * (J * ω1) - 2 * state.τk[1]
+    dynR = Δt * (J * ω2 * sq2 + skew(ω2) * J * ω2) - Δt * (J * ω1 * sq1 - skew(ω1) * J * ω1) - 2 * state.τk[1]
 
     state.d = [dynT;dynR]
 

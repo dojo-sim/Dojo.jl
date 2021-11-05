@@ -50,39 +50,41 @@ function momentum_body(mechanism::Mechanism{T}, body::Body{T}) where {T}
     x2, v2, q2, ω2 = fullargssol(body.state)
 
     p_linear_body = body.m * v2  - 0.5 * [0; 0; body.m * mechanism.g * Δt] - 0.5 * body.state.Fk[1]
-    p_angular_body = rotation_matrix(q2) * (Δt * skewplusdiag(ω2, sqrt(4 / Δt^2 - ω2' * ω2)) * body.J * ω2)# - body.state.τk[1]
+    # p_angular_body = rotation_matrix(q2) * (Δt * skewplusdiag(ω2, sqrt(4 / Δt^2 - ω2' * ω2)) * body.J * ω2)# - body.state.τk[1]
+    p_angular_body = qrot([q2.w, q2.x, q2.y, q2.z], (Δt * sqrt(4/dt^2 - ω2'*ω2) * body.J * ω2 - skew(ω2) * body.J * ω2))
+
     # p_angular_body = (Δt * skewplusdiag(ω2, sqrt(4 / Δt^2 - ω2' * ω2)) * body.J * ω2)# - body.state.τk[1]
     # p_angular_body = (Δt * skewplusdiag(ω2, sqrt(4 / Δt^2 - ω2' * ω2)) * body.J * ω2)# - body.state.τk[1]
 
-    p1 = [p_linear_body; p_angular_body]
-    for (i, eqc) in enumerate(mechanism.eqconstraints)
-        # f_joint = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
-        # p_linear_body -= 0.5 * f_joint[1:3]
-        # p_angular_body -= 0.5 * f_joint[4:6]
+    # p1 = [p_linear_body; p_angular_body]
+    # for (i, eqc) in enumerate(mechanism.eqconstraints)
+    #     # f_joint = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
+    #     # p_linear_body -= 0.5 * f_joint[1:3]
+    #     # p_angular_body -= 0.5 * f_joint[4:6]
+    #
+    #     if body.id == eqc.parentid
+    #         for (i,joint) in enumerate(eqc.constraints)
+    #             cbody = getbody(mechanism, eqc.childids[i])
+    #             # eqc.isspring && (p1 += 0.5 * springforcea(joint, body.state, cbody.state, Δt))
+    #             # eqc.isdamper && (p1 += 0.5 * damperforcea(joint, body.state, cbody.state, Δt))
+    #         end
+    #     end
+    #     for (i,joint) in enumerate(eqc.constraints)
+    #         if eqc.childids[i] == body.id
+    #             if eqc.parentid != nothing
+    #                 pbody = getbody(mechanism, eqc.parentid)
+    #                 # eqc.isspring && (p1 += 0.5 * springforceb(joint, pbody.state, body.state, Δt))
+    #                 # eqc.isdamper && (p1 += 0.5 * damperforceb(joint, pbody.state, body.state, Δt))
+    #             else
+    #                 # eqc.isspring && (p1 += 0.5 * springforceb(joint, body.state, Δt))
+    #                 # eqc.isdamper && (p1 += 0.5 * damperforceb(joint, body.state, Δt))
+    #             end
+    #         end
+    #     end
+    # end
 
-        if body.id == eqc.parentid
-            for (i,joint) in enumerate(eqc.constraints)
-                cbody = getbody(mechanism, eqc.childids[i])
-                # eqc.isspring && (p1 += 0.5 * springforcea(joint, body.state, cbody.state, Δt))
-                # eqc.isdamper && (p1 += 0.5 * damperforcea(joint, body.state, cbody.state, Δt))
-            end
-        end
-        for (i,joint) in enumerate(eqc.constraints)
-            if eqc.childids[i] == body.id
-                if eqc.parentid != nothing
-                    pbody = getbody(mechanism, eqc.parentid)
-                    # eqc.isspring && (p1 += 0.5 * springforceb(joint, pbody.state, body.state, Δt))
-                    # eqc.isdamper && (p1 += 0.5 * damperforceb(joint, pbody.state, body.state, Δt))
-                else
-                    # eqc.isspring && (p1 += 0.5 * springforceb(joint, body.state, Δt))
-                    # eqc.isdamper && (p1 += 0.5 * damperforceb(joint, body.state, Δt))
-                end
-            end
-        end
-    end
-
-    # return [p_linear_body; p_angular_body]
-    return p1
+    return [p_linear_body; p_angular_body]
+    # return p1
 end
 
 

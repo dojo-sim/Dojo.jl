@@ -53,3 +53,8 @@ using FFMPEG
 convert_video_to_gif(
     "/home/simon/Documents/video/$filename.mp4",
     "/home/simon/Documents/video/$filename.gif", overwrite=true)
+
+using FFMPEG
+convert_video_to_gif(
+    "/home/simon/Downloads/dairoutput.mp4",
+    "/home/simon/Documents/video/dair.gif", width = 720, overwrite=true)
