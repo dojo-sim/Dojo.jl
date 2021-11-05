@@ -104,10 +104,10 @@ mech = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0
 v0 = 0.0*[-0.1,0.5,0.2]
 ω0 = 1.0 * [2.0, 1.0, 3.0]
 Δv0 = zeros(3)
-Δω0 = 0.0 * [0,0,0.] / Nlink0
+Δω0 = 1.0 * [1,2,-1.2] / Nlink0
 initialize!(mech, :snake, v = v0, ω = ω0)#, Δv = Δv0, Δω = Δω0)
-# mech.bodies[3].J = Array(Diagonal([2.0, 2.9, 1.0]))
-# mech.bodies[4].J = Array(Diagonal([1.0, 2.0, 3.0]))
+mech.bodies[3].J = Array(Diagonal([2.0, 2.9, 1.0]))
+mech.bodies[4].J = Array(Diagonal([1.0, 2.0, 3.0]))
 
 storage = simulate!(mech, 25.0, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
@@ -115,7 +115,7 @@ visualize(mech, storage, vis = vis)
 function getmomentum(t::T) where T
     mechanism = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
         jointtype = :Spherical, contact = false)
-    initialize!(mechanism, :snake, v = v0, ω = ω0, Δv = Δv0, Δω = Δω0)
+    initialize!(mechanism, :snake, v = v0, ω = ω0)#, Δv = Δv0, Δω = Δω0)
     storage = simulate!(mechanism, t, record = true, solver = :mehrotra!, verbose = false)
     return momentum(mechanism)
 end

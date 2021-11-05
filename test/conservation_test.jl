@@ -35,8 +35,6 @@ function center_of_mass(mechanism::Mechanism{T}) where T
     return r ./ total_mass(mechanism)
 end
 
-center_of_mass(mech)
-
 function total_mass(mechanism::Mechanism{T}) where T
     w = 0.0
     for body in mechanism.bodies
@@ -54,12 +52,12 @@ function momentum_body(mechanism::Mechanism{T}, body::Body{T}) where {T}
     x2, v2, q2, ω2 = fullargssol(body.state)
     ω2 = body.state.ωsol[2]
     p_linear_body = body.m * v2  - 0.5 * [0; 0; body.m * mechanism.g * Δt] - 0.5 * body.state.Fk[1]
-    p_angular_body = (Δt * sqrt(4 / Δt^2.0 - ω2' * ω2) * body.J * ω2 - Δt * hat(ω2) * (body.J * ω2) - body.state.τk[1])
+    p_angular_body = (Δt * sqrt(4 / Δt^2.0 - ω2' * ω2) * body.J * ω2 - Δt * skew(ω2) * (body.J * ω2) - body.state.τk[1])
 
     for (i, eqc) in enumerate(mechanism.eqconstraints)
         f_joint = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
-        p_linear_body -= 0.0 * f_joint[1:3]
-        p_angular_body -= 0.0 * f_joint[4:6]
+        p_linear_body -= 0.5 * f_joint[1:3]
+        p_angular_body -= 0.5 * f_joint[4:6]
         # if body.id == eqc.parentid
         #     for (i,joint) in enumerate(eqc.constraints)
         #         cbody = getbody(mechanism, eqc.childids[i])
