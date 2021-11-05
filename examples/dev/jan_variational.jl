@@ -41,9 +41,7 @@ function L_multiply(q)
      v s * I + hat(v)]
 end
 
-
-
-function newton(x, p)
+function newton(x, p, J, dt)
 	x⁺ = copy(x)
 	_r(phi) = p - (sqrt(4 / dt^2.0 - phi' * phi) * J * phi - hat(phi) * (J*phi))
 
@@ -99,7 +97,7 @@ dt = 0.01
 phi = w0#*dt/2
 N = 1000
 
-phi = newton(phi, p)
+phi = newton(phi, p, J, dt)
 # phi = w0
 for k = 1:N
     # gg = .5*dt*p
@@ -117,5 +115,5 @@ for k = 1:N
     push!(w, p)
 end
 
-h = [qrot(q[t], w[t]) - qrot(q[1], w[1]) for t = 1:length(q)-1]
+h = [qrot(q[t], w[t]) - qrot(q[1], w[1]) for t = 1:length(q)]
 plot(hcat(h...)')

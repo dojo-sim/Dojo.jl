@@ -3,11 +3,7 @@ getGlobalOrder() = (global METHODORDER; return METHODORDER)
 
 # Convenience functions
 @inline getx3(state::State, Δt) = state.xk[1] + state.vsol[2]*Δt
-function getq3(state::State, Δt) 
-    ϕ = state.ωsol[2]
-    f = [ϕ; sqrt(1.0 - ϕ' * ϕ)]
-    state.qk[1] * UnitQuaternion(f...) 
-end
+@inline getq3(state::State, Δt) = state.qk[1] * ωbar(state.ωsol[2],Δt) * Δt / 2
 
 @inline posargsc(state::State) = (state.xc, state.qc)
 @inline fullargsc(state::State) = (state.xc, state.vc, state.qc, state.ωc)
