@@ -10,9 +10,7 @@
     ω2 = state.ωsol[2]
     sq1 = sqrt(4 / Δt^2 - ω1' * ω1)
     sq2 = sqrt(4 / Δt^2 - ω2' * ω2)
-    # dynR = Δt * skewplusdiag(ω2, sq2) * (J * ω2) - Δt * skewplusdiag(ω1, sq1) * (J * ω1) - 2 * state.τk[1]
-    # dynR = Δt * skewplusdiag(ω2, sq2) * (J * ω2) - Δt * skewplusdiag(-ω1, sq1) * (J * ω1) - 2 * state.τk[1]
-    dynR = Δt * (J * ω2 * sq2 + skew(ω2) * J * ω2) - Δt * (J * ω1 * sq1 - skew(ω1) * J * ω1) - 2 * state.τk[1]
+    dynR = Δt * skewplusdiag(ω2, sq2) * (J * ω2) - Δt * skewplusdiag(-1.0 * ω1, sq1) * (J * ω1) - 2 * state.τk[1]
 
     state.d = [dynT;dynR]
 
@@ -42,34 +40,6 @@ end
         Ne < connectionid <= Ne+Nb && continue # body
         ∂constraintForceMapping!(mechanism, body, getcomponent(mechanism, connectionid))
     end
-
+    
     return state.D
 end
-
-# Random.seed!(100)
-# Δt = 0.01
-# ω2 = rand(3)
-# ω1 = rand(3)
-# q2 = UnitQuaternion(rand(4)...)
-# q1 = Δt/2 * Lmat(q2) * [sqrt(4/Δt^2 - ω1'*ω1); -ω1]
-# q3 = Δt/2 * Lmat(q2) * [sqrt(4/Δt^2 - ω2'*ω2); ω2]
-#
-# q21_ = Δt/2 * Lmat(q1) * [sqrt(4/Δt^2 - ω1'*ω1); ω1]
-# q23_ = Δt/2 * Lmat(q3) * [sqrt(4/Δt^2 - ω2'*ω2); -ω2]
-#
-# q2_ = [q2.w, q2.x, q2.y, q2.z]
-# norm(q2_ - q21_)
-# norm(q2_ - q23_)
-#
-#
-#
-# sq2 = sqrt(4 / Δt^2 - ω2' * ω2)
-# D2 = Δt * skewplusdiag(ω2, sq2) * (body2.J * ω2)
-# D2_ = body2.J * ω2 * sq2 + skew(ω2) * body2.J * ω2
-# norm(D2_ * Δt - D2)
-#
-#
-# Vmat(UnitQuaternion(q2_, false) \ UnitQuaternion(q3..., false))
-# ω2 * Δt_
-#
-# mech.eqconstraints[2].constraints[2].qoffset

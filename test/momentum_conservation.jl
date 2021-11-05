@@ -2,7 +2,6 @@
 vis = Visualizer()
 open(vis)
 
-
 ################################################################################
 # DICE
 ################################################################################
@@ -19,7 +18,7 @@ g0 = 0.0
 mech = getmechanism(:dice, Δt = Δt0, g = g0, contact = false)
 
 v0 = [1,2,3.0]
-ω0 = [3,4,5.0]
+ω0 = [1,1,1.0]
 initialize!(mech, :dice, v = v0, ω = ω0)
 
 storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!, verbose = false)
@@ -87,11 +86,9 @@ plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum" 
 # with control
 ################################################################################
 include("conservation_test.jl")
-
-
 Δt0 = 0.01
 g0 = 0.0
-Nlink0 = 1
+Nlink0 = 2
 spring0 = 0.0
 damper0 = 0.0
 mech = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
@@ -105,12 +102,14 @@ mech = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0
 
 ϕ0 = 0.7
 v0 = 0.0*[-0.1,0.5,0.2]
-ω0 = [0.01,10,0.01]
+ω0 = 1.0 * [2.0, 1.0, 3.0]
 Δv0 = zeros(3)
-Δω0 = [3,1,0.0] / Nlink0
-initialize!(mech, :snake, v = v0, ω = ω0, Δv = Δv0, Δω = Δω0)
+Δω0 = 0.0 * [0,0,0.] / Nlink0
+initialize!(mech, :snake, v = v0, ω = ω0)#, Δv = Δv0, Δω = Δω0)
+# mech.bodies[3].J = Array(Diagonal([2.0, 2.9, 1.0]))
+# mech.bodies[4].J = Array(Diagonal([1.0, 2.0, 3.0]))
 
-storage = simulate!(mech, 3.50, record = true, solver = :mehrotra!, verbose = false)
+storage = simulate!(mech, 25.0, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
 function getmomentum(t::T) where T
@@ -118,22 +117,17 @@ function getmomentum(t::T) where T
         jointtype = :Spherical, contact = false)
     initialize!(mechanism, :snake, v = v0, ω = ω0, Δv = Δv0, Δω = Δω0)
     storage = simulate!(mechanism, t, record = true, solver = :mehrotra!, verbose = false)
-    return momentum_body(mechanism, mechanism.bodies[2])
+    return momentum(mechanism)
 end
 
-
-
-ts = [1.0 + 0.05 * i for i = 1:50]
+ts = [1.0 + 0.2 * i for i = 1:20]
 ms = getmomentum.(ts)
-ms = [m .- ms[1] for m in ms]
+ms = [m .- ms[5] for m in ms]
 plot(ts, hcat(ms...)'[:,1:3], label = ["x" "y" "z"], title = "linear momentum" )
 plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum" )
 @test all(norm.([m[4:6] for m in ms], Inf) .< 1e-11)
 plot([q.w for q in storage.q[1]])
 plot([q.w for q in storage.q[2]])
 plot([w[1] for w in storage.ω[1]])
-plot!([w[2] for w in storage.ω[1]])
-plot!([w[3] for w in storage.ω[1]])
-
-
-mech.bodies[2].J
+plot([w[2] for w in storage.ω[1]])
+plot([w[3] for w in storage.ω[1]])
