@@ -71,6 +71,7 @@ end
     return X, Q
 end
 
+
 # ∂g∂ʳposb(joint::Rotational{T}, statea::State, stateb::State, Δt) where T = -1.0 * ∂g∂ʳposb(joint, posargsk(statea)..., posargsk(stateb)...)
 # ∂g∂ʳposb(joint::Rotational{T}, stateb::State, Δt) where T = -1.0 * ∂g∂ʳposb(joint, posargsk(stateb)...)
 

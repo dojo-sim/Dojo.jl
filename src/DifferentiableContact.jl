@@ -149,4 +149,6 @@ include(joinpath("graph", "system.jl"))
 include(joinpath("graph", "setup_functions.jl"))
 include(joinpath("graph", "ldu.jl"))
 
+include(joinpath("optional_components", "energy.jl"))
+
 end
