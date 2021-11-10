@@ -68,7 +68,7 @@ PlanarAxis(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T
 A joint between two bodies with free translation and rotation along one axis.
 """
 FreeRevolute(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T)) where T =
-    Translational0{T}(body1, body2; p1, p2, spring, damper), Rotational2{T}(body1, body2; axis, qoffset, spring, damper)
+    Translational0{T}(body1, body2; spring, damper), Rotational2{T}(body1, body2; axis, qoffset, spring, damper)
 
 #t3r1
 """
@@ -104,7 +104,7 @@ PlanarOrbital(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szero
 A free joint between two bodies with a 2 rotational degrees of freedom (skull-eye joint).
 """
 FreeOrbital(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T)) where T =
-    Translational0{T}(body1, body2; p1, p2, spring, damper), Rotational1{T}(body1, body2; axis, qoffset, spring, damper)
+    Translational0{T}(body1, body2; spring, damper), Rotational1{T}(body1, body2; axis, qoffset, spring, damper)
 
 #t3r0
 """

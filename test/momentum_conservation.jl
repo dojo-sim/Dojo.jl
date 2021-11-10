@@ -89,61 +89,61 @@ plot(ts, hcat(ms...)'[:,1:3], label = ["x" "y" "z"], title = "linear momentum")
 plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
 @test all(norm.([m[4:6] for m in ms], Inf) .< 1e-12)
 
-
-################################################################################
-# 5-lINK SNAKE
-################################################################################
-# multiple bodies
-# initial linear and angular velocity
-# no gravity
-# with spring and damper
-# with control
-################################################################################
-Δt0 = 0.01
-g0 = 0.0
-Nlink0 = 5
-spring0 = 0.1
-damper0 = 2e-1
-mech = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
-    jointtype = :Prismatic, contact = false)
-
-v0 = 0.0 * [-0.1,0.5,0.2]
-ω0 = 1.0 * [2.0, 1.0, 3.0]
-Δv0 = zeros(3)
-Δω0 = 0.0 * [1,2,-1.2] / Nlink0
-initialize!(mech, :snake, v = v0, ω = ω0, Δv = Δv0, Δω = Δω0)
-
-
-storage = simulate!(mech, 25.0, controller!, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
-
-function getmomentum(t::T, jointtype::Symbol) where T
-    mechanism = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
-        jointtype = jointtype, contact = false)
-    initialize!(mechanism, :snake, v = v0, ω = ω0, Δv = Δv0, Δω = Δω0)
-    storage = simulate!(mechanism, t, controller!, record = true, solver = :mehrotra!, verbose = false)
-    return momentum(mechanism)
-end
-
-for jointtype in (:Revolute, :Orbital, :Spherical, :Fixed)#, :Prismatic, :Planar, :FixedOrientation)
-# for jointtype in (:Prismatic, :Planar)#, :FixedOrientation, :Fixed)
-    ts = [1.0 + 0.2 * i for i = 1:10]
-    ms = getmomentum.(ts, jointtype)
-    ms = [m .- ms[1] for m in ms]
-    plot(ts, hcat(ms...)'[:,1:3], label = ["x" "y" "z"], title = "linear momentum")
-    plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
-    @test all(norm.(ms, Inf) .< 1e-11)
-end
-
-
-ts = [1.0 + 0.2 * i for i = 1:10]
-ms = getmomentum.(ts, :Prismatic)
-# ms = getmomentum.(ts, :Prismatic)
-# ms = getmomentum.(ts, :FixedOrientation)
-ms = [m .- ms[1] for m in ms]
-plot(ts, hcat(ms...)'[:,1:3], label = ["x" "y" "z"], title = "linear momentum")
-plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
-@test all(norm.(ms, Inf) .< 1e-11)
+#
+# ################################################################################
+# # 5-lINK SNAKE
+# ################################################################################
+# # multiple bodies
+# # initial linear and angular velocity
+# # no gravity
+# # with spring and damper
+# # with control
+# ################################################################################
+# Δt0 = 0.01
+# g0 = 0.0
+# Nlink0 = 5
+# spring0 = 0.1
+# damper0 = 2e-1
+# mech = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
+#     jointtype = :Prismatic, contact = false)
+#
+# v0 = 0.0 * [-0.1,0.5,0.2]
+# ω0 = 1.0 * [2.0, 1.0, 3.0]
+# Δv0 = zeros(3)
+# Δω0 = 0.0 * [1,2,-1.2] / Nlink0
+# initialize!(mech, :snake, v = v0, ω = ω0, Δv = Δv0, Δω = Δω0)
+#
+#
+# storage = simulate!(mech, 25.0, controller!, record = true, solver = :mehrotra!, verbose = false)
+# visualize(mech, storage, vis = vis)
+#
+# function getmomentum(t::T, jointtype::Symbol) where T
+#     mechanism = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
+#         jointtype = jointtype, contact = false)
+#     initialize!(mechanism, :snake, v = v0, ω = ω0, Δv = Δv0, Δω = Δω0)
+#     storage = simulate!(mechanism, t, controller!, record = true, solver = :mehrotra!, verbose = false)
+#     return momentum(mechanism)
+# end
+#
+# for jointtype in (:Revolute, :Orbital, :Spherical, :Fixed)#, :Prismatic, :Planar, :FixedOrientation)
+# # for jointtype in (:Prismatic, :Planar)#, :FixedOrientation, :Fixed)
+#     ts = [1.0 + 0.2 * i for i = 1:10]
+#     ms = getmomentum.(ts, jointtype)
+#     ms = [m .- ms[1] for m in ms]
+#     plot(ts, hcat(ms...)'[:,1:3], label = ["x" "y" "z"], title = "linear momentum")
+#     plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
+#     @test all(norm.(ms, Inf) .< 1e-11)
+# end
+#
+#
+# ts = [1.0 + 0.2 * i for i = 1:10]
+# # ms = getmomentum.(ts, :Prismatic)
+# ms = getmomentum.(ts, :Revolute)
+# # ms = getmomentum.(ts, :FixedOrientation)
+# ms = [m .- ms[1] for m in ms]
+# plot(ts, hcat(ms...)'[:,1:3], label = ["x" "y" "z"], title = "linear momentum")
+# plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
+# @test all(norm.(ms, Inf) .< 1e-11)
 
 ################################################################################
 #  HUMANOID
@@ -156,10 +156,27 @@ plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
 ################################################################################
 Δt0 = 0.01
 g0 = 0.0
-spring0 = 0.1
+spring0 = 10.0
 damper0 = 0.1
 mech = getmechanism(:humanoid, Δt = Δt0, g = g0, spring = spring0, damper = damper0, contact = false)
 initialize!(mech, :humanoid)
+
+function controller!(mechanism, k)
+    for (i,joint) in enumerate(mechanism.eqconstraints)
+        nu = getcontroldim(joint)
+        if nu <= 5
+            if k ∈ (1:100)
+                u = 0.5 * Δt0 * sones(nu)
+            else
+                u = szeros(nu)
+            end
+            setForce!(mechanism, joint, u)
+        end
+    end
+    return
+end
+
+
 storage = simulate!(mech, 5.0, controller!, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
@@ -189,7 +206,7 @@ plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
 ################################################################################
 Δt0 = 0.01
 g0 = 0.0
-spring0 = 0.1
+spring0 = 10.0
 damper0 = 0.1
 mech = getmechanism(:atlas, Δt = Δt0, g = g0, spring = spring0, damper = damper0, contact = false)
 initialize!(mech, :atlas)
@@ -222,7 +239,7 @@ plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
 ################################################################################
 Δt0 = 0.01
 g0 = 0.0
-spring0 = 0.1
+spring0 = 10.0
 damper0 = 0.1
 mech = getmechanism(:quadruped, Δt = Δt0, g = g0, spring = spring0, damper = damper0, contact = false)
 initialize!(mech, :quadruped)
@@ -371,15 +388,14 @@ damper0 = 0.0 * 3e0
 mech = getmechanism(:twister, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
     jointtype = :Prismatic, contact = false)
 
-v0 = 1.0 * [0.5π, 1, 0.0] * Δt0
+v0 = 1.0 * [0.5π, 10, 20] * Δt0
 ω0 = 1.0 * [0, 0, 0.0] * Δt0
 Δv0 = 1.0 * [0, 0, 0.0] * Δt0
-Δω0 = 1.0 * [0, 1*2π, 0.0] * Δt0
-q10x = UnitQuaternion(RotY(π/2))
-q10y = UnitQuaternion(RotX(π/2))
+Δω0 = 1.0 * [2π, 1*2π, π] * Δt0
 q10 = UnitQuaternion(RotX(π))
 
-initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0, Δv = Δv0, Δω = Δω0)
+# initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0, Δv = Δv0, Δω = Δω0)
+initialize!(mech, :twister)#, q1 = q10, v = v0, ω = ω0, Δv = Δv0, Δω = Δω0)
 
 function controller!(mechanism, k)
     for (i,joint) in enumerate(mechanism.eqconstraints)
@@ -416,11 +432,14 @@ for jointtype in (
     :Revolute,
     :Cylindrical,
     :PlanarAxis,
+    :FreeRevolute,
     :Orbital,
+    :PrismaticOrbital,
+    :PlanarOrbital,
+    :FreeOrbital,
     :Spherical,
     :CylindricalFree,
     :PlanarFree,
-    :Floating,
     )
 
     ts = [1.0 + 0.2 * i for i = 1:10]
@@ -454,3 +473,47 @@ plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
 # eqcs2.axis
 # zerodimstaticadjoint(constraintmat(tra2)) * constraintmat(tra2)
 # constraintmat(rot2)
+
+
+
+
+
+Δt0 = 0.01
+g0 = -9.81
+ϵ0 = 1e-8
+tsim0 = 1.10
+
+mechanism = getmechanism(:twister, Δt = Δt0, g = g0, contact = true, jointtype = :Prismatic)
+initialize!(mechanism, :twister, q1 = UnitQuaternion(RotX(0.6 * π)))
+
+storage = simulate!(mechanism, tsim0, record = true, solver = :mehrotra!, verbose = false, ϵ = 1e-6)
+visualize(mech, storage, vis = vis)
+
+
+
+
+Δt0 = 0.01
+g0 = -9.81
+ϵ0 = 1e-8
+tsim0 = 1.10
+
+mechanism = getmechanism(:snake, Δt = Δt0, g = g0, contact = true, jointtype = :Revolute)
+initialize!(mechanism, :snake, q1 = UnitQuaternion(RotX(0.6 * π)))
+
+storage = simulate!(mechanism, tsim0, record = true, solver = :mehrotra!, verbose = false, ϵ = 1e-6)
+visualize(mech, storage, vis = vis)
+
+
+
+# Set data
+Nb = length(mechanism.bodies)
+data = getdata(mechanism)
+setdata!(mechanism, data)
+sol = getsolution(mechanism)
+attjac = attitudejacobian(data, Nb)
+
+# IFT
+solmat = full_matrix(mechanism.system)
+# finite diff
+fd_solmat = finitediff_sol_matrix(mechanism, data, sol, δ = 1e-5, verbose = verbose)
+@test norm(fd_solmat + solmat, Inf) < ϵ0
