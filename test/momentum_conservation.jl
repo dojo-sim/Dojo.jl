@@ -276,8 +276,8 @@ plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
 Δt0 = 0.01
 g0 = 0.0
 Nlink0 = 2
-spring0 = 1.0 * 3e0
-damper0 = 1.0 * 2e-1
+spring0 = 0.0 * 3e0
+damper0 = 0.0 * 2e-1
 mech = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
     jointtype = :Prismatic, contact = false)
 
@@ -331,7 +331,7 @@ end
 ts = [1.0 + 0.2 * i for i = 1:10]
 # ms = getmomentum.(ts, :Planar)
 # ms = getmomentum.(ts, :Prismatic)
-ms = getmomentum.(ts, :Prismatic)
+ms = getmomentum.(ts, :Planar)
 ms = [m .- ms[1] for m in ms]
 plot(ts, hcat(ms...)'[:,1:3], label = ["x" "y" "z"], title = "linear momentum")
 plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
@@ -365,16 +365,16 @@ open(vis)
 ################################################################################
 Δt0 = 0.01
 g0 = 0.0
-Nlink0 = 2
-spring0 = 1.0 * 3e0
-damper0 = 1.0 * 3e0
+Nlink0 = 5
+spring0 = 0.0 * 3e0
+damper0 = 0.0 * 3e0
 mech = getmechanism(:twister, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
     jointtype = :Prismatic, contact = false)
 
-v0 = 1.0 * [25π, 0, 0.0] * Δt0
+v0 = 1.0 * [0.5π, 1, 0.0] * Δt0
 ω0 = 1.0 * [0, 0, 0.0] * Δt0
 Δv0 = 1.0 * [0, 0, 0.0] * Δt0
-Δω0 = 1.0 * [0, 50*2π, 0.0] * Δt0
+Δω0 = 1.0 * [0, 1*2π, 0.0] * Δt0
 q10x = UnitQuaternion(RotY(π/2))
 q10y = UnitQuaternion(RotX(π/2))
 q10 = UnitQuaternion(RotX(π))
@@ -396,9 +396,8 @@ function controller!(mechanism, k)
     return
 end
 
-storage = simulate!(mech, 550, controller!, record = true, solver = :mehrotra!, verbose = false)
+storage = simulate!(mech, 10, controller!, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, downsample(storage, 10), vis = vis)
-plot([ω[2] for ω in storage.ω[1]])
 
 function getmomentum(t::T, jointtype::Symbol) where T
     mechanism = getmechanism(:twister, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
@@ -408,8 +407,34 @@ function getmomentum(t::T, jointtype::Symbol) where T
     return momentum(mechanism)
 end
 
-ts = [1.0 + 5.2 * i for i = 1:10]
-ms = getmomentum.(ts, :Prismatic)
+
+for jointtype in (
+    :Fixed,
+    :Prismatic,
+    :Planar,
+    :FixedOrientation,
+    :Revolute,
+    :Cylindrical,
+    :PlanarAxis,
+    :Orbital,
+    :Spherical,
+    :CylindricalFree,
+    :PlanarFree,
+    :Floating,
+    )
+
+    ts = [1.0 + 0.2 * i for i = 1:10]
+    @show jointtype
+    ms = getmomentum.(ts, jointtype)
+    ms = [m .- ms[1] for m in ms]
+    plot(ts, hcat(ms...)'[:,1:3], label = ["x" "y" "z"], title = "linear momentum")
+    plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
+    @test all(norm.(ms, Inf) .< 1e-11)
+end
+
+
+ts = [1.0 + 0.2 * i for i = 1:10]
+ms = getmomentum.(ts, :Planar)
 ms = [m .- ms[1] for m in ms]
 plot(ts, hcat(ms...)'[:,1:3], label = ["x" "y" "z"], title = "linear momentum")
 plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
