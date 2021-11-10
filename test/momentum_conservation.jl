@@ -276,10 +276,10 @@ plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
 Δt0 = 0.01
 g0 = 0.0
 Nlink0 = 2
-spring0 = 1.0 * 3e0
-damper0 = 1.0 * 2e-1
+spring0 = 0.0 * 3e0
+damper0 = 0.0 * 2e-1
 mech = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
-    jointtype = :Prismatic, contact = false)
+    jointtype = :Planar, contact = false)
 
 eqc2 = collect(mech.eqconstraints)[2]
 tra2 = eqc2.constraints[1]
@@ -304,7 +304,7 @@ function controller!(mechanism, k)
         @show nu
         if nu <= 5
             if k ∈ (1:100)
-                u = -0.0 * Δt0 * sones(nu)
+                u = -1.0 * Δt0 * sones(nu)
             else
                 u = szeros(nu)
             end
@@ -329,9 +329,9 @@ end
 # for jointtype in (:Revolute, :Orbital, :Spherical, :Fixed)#, :Prismatic, :Planar, :FixedOrientation)
 
 ts = [1.0 + 0.2 * i for i = 1:10]
-# ms = getmomentum.(ts, :Planar)
+ms = getmomentum.(ts, :Planar)
 # ms = getmomentum.(ts, :Prismatic)
-ms = getmomentum.(ts, :Prismatic)
+# ms = getmomentum.(ts, :Prismatic)
 ms = [m .- ms[1] for m in ms]
 plot(ts, hcat(ms...)'[:,1:3], label = ["x" "y" "z"], title = "linear momentum")
 plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
