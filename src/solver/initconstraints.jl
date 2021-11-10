@@ -4,7 +4,7 @@ function gc(mechanism::Mechanism{T}) where T
     ind2 = 0
 
     for (i,eqc) in enumerate(mechanism.eqconstraints)
-        
+
         ind2 += length(eqc)
         range = ind1:ind2
         rangeDict[i] = range
@@ -12,14 +12,14 @@ function gc(mechanism::Mechanism{T}) where T
     end
 
     gval = zeros(T,ind2)
-    
+
     for (i,eqc) in enumerate(mechanism.eqconstraints)
 
         gval[rangeDict[i]] = gc(mechanism, eqc)
-        
-    end 
+
+    end
     return gval
-end   
+end
 
 function constraintstep!(mechanism::Mechanism{T,Nn,Ne,Nb},freeids) where {T,Nn,Ne,Nb}
     freebodies = mechanism.bodies[freeids]
@@ -38,13 +38,13 @@ function constraintstep!(mechanism::Mechanism{T,Nn,Ne,Nb},freeids) where {T,Nn,N
                 Δstemp = Δstemp/norm(Δstemp)
             end
             body.state.ωsol[1] = Δstemp
-        
+
     end
 
     return
 end
 
-function initializeConstraints!(mechanism::Mechanism{T,Nn,Ne,Nb}; fixedids = Int64[], freeids = Int64[], ε = 1e-5, newtonIter = 100, lineIter = 10) where {T,Nn,Ne,Nb}
+function initializeConstraints!(mechanism::Mechanism{T,Nn,Ne,Nb}; fixedids = Int64[], freeids = Int64[], ϵ = 1e-5, newtonIter = 100, lineIter = 10) where {T,Nn,Ne,Nb}
     freebodies = Body[]
     if !isempty(fixedids) && !isempty(freeids)
         error("Specify either free or fixed bodies, not both.")
@@ -57,7 +57,7 @@ function initializeConstraints!(mechanism::Mechanism{T,Nn,Ne,Nb}; fixedids = Int
         freeids = getid.(mechanism.bodies)
         freebodies = mechanism.bodies[freeids]
     end
-    
+
 
     norm0 = norm(gc(mechanism))
     norm1 = norm0
@@ -68,27 +68,27 @@ function initializeConstraints!(mechanism::Mechanism{T,Nn,Ne,Nb}; fixedids = Int
             body.state.qk[1] = body.state.qc
         end
 
-        constraintstep!(mechanism,freeids) 
-    
+        constraintstep!(mechanism,freeids)
+
         # Line search
         for j = Base.OneTo(lineIter)
 
             for body in freebodies
-                
+
                 body.state.xc = body.state.xk[1] + body.state.vsol[1]/(2^(j-1))
-                
+
                 w = sqrt(1-norm(body.state.ωsol[1]/(2^(j-1)))^2)
                 body.state.qc = body.state.qk[1] * UnitQuaternion(w,body.state.ωsol[1]/(2^(j-1))...,false)
             end
-            
+
             norm1 = norm(gc(mechanism))
 
-            if norm1 < norm0 
+            if norm1 < norm0
                 break
             end
         end
 
-        if norm1 < ε
+        if norm1 < ϵ
             return
         else
             norm0 = norm1
@@ -96,5 +96,5 @@ function initializeConstraints!(mechanism::Mechanism{T,Nn,Ne,Nb}; fixedids = Int
     end
 
     display("Constraint initialization did not converge! Tolerance: "*string(norm1))
-    return 
+    return
 end

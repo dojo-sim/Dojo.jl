@@ -26,17 +26,17 @@ end
 
 function mehrotra!(mechanism::Mechanism;
 		verbose::Bool = true,
+		ϵ = 1e-6,
         opts = InteriorPointOptions(
-			btol = 1e-13,
+			btol = ϵ,
             # btol = 1e-2, # this is to showcase the smoothness
-            rtol = 1e-13,
+            rtol = ϵ,
 			undercut = Inf,
             # undercut = 4.0, # this is to showcase the smoothness
 			breg = 0.0,
 			max_iter = 40,
 			verbose = verbose),
-        ε = nothing, newtonIter = nothing, lineIter = nothing, warning::Bool = false)
-
+		newtonIter = nothing, lineIter = nothing, warning::Bool = false)
 
     system = mechanism.system
     eqcs = mechanism.eqconstraints
@@ -57,7 +57,6 @@ function mehrotra!(mechanism::Mechanism;
     for n = Base.OneTo(opts.max_iter)
 
         if opts.verbose
-            # @warn "useless"; setentries!(mechanism)
             ##################
 			fv = full_vector(mechanism.system)
 			Δvar = norm(fv, Inf)

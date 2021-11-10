@@ -38,6 +38,7 @@ damperforceb(joint::Translational{T,3}, stateb::State, Δt) where {T} = szeros(T
     distance = A * gc(joint, xa, qa, xb, qb)
     force = joint.spring * Aᵀ * distance # Currently assumes same spring constant in all directions
     rotate && (force = vrotate(force, qa)) # rotate back to world frame
+    # return 0.0 * [force; szeros(T, 3)]
     return [force; szeros(T, 3)]
 end
 # Force applied by body a on body b expressed in world frame
@@ -48,6 +49,7 @@ end
     distance = A * gc(joint, xa, qa, xb, qb)
     force = - joint.spring * Aᵀ * distance  # Currently assumes same spring constant in all directions
     rotate && (force = vrotate(force, qa)) # rotate back to world frame
+    # return 0.0 * [force; szeros(T, 3)]
     return [force; szeros(T, 3)]
 end
 # Force applied by origin on body b expressed in world frame
@@ -56,7 +58,7 @@ end
     Aᵀ = zerodimstaticadjoint(A)
     distance = A * gc(joint, xb, qb)
     force = - Aᵀ * A * joint.spring * Aᵀ * distance  # Currently assumes same spring constant in all directions
-    return [force; szeros(T, 3)]
+    return 0.0 * [force; szeros(T, 3)]
 end
 
 # Force applied by body b on body a expressed in world frame
@@ -64,26 +66,26 @@ end
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     velocity = A * vrotate(vb - va, inv(qa))
-    force = joint.damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
+    force = Aᵀ * A * joint.damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
     rotate && (force = vrotate(force, qa)) # rotate back to world frame
-    return [force; szeros(T, 3)]
+    return 0.0 * [force; szeros(T, 3)]
 end
 # Force applied by body a on body b expressed in world frame
 @inline function damperforceb(joint::Translational{T}, qa::UnitQuaternion, va::AbstractVector, vb::AbstractVector; rotate::Bool = true) where {T}
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     velocity = A * vrotate(vb - va, inv(qa))
-    force = - joint.damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
+    force = - Aᵀ * A * joint.damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
     rotate && (force = vrotate(force, qa)) # rotate back to world frame
-    return [force; szeros(T, 3)]
+    return 0.0 * [force; szeros(T, 3)]
 end
 # Force applied by origin on body b expressed in world frame
 @inline function damperforceb(joint::Translational{T}, vb::AbstractVector) where {T}
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     velocity = A * vb
-    force = - joint.damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
-    return [force; szeros(T, 3)]
+    force = - Aᵀ * A * joint.damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
+    return 0.0 * [force; szeros(T, 3)]
 end
 
 ∂springforcea∂posa(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6, 6)

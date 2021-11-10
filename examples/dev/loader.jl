@@ -119,7 +119,7 @@ include(joinpath(module_dir(), "src", "ui", "initialize.jl"))
 include(joinpath(module_dir(), "src", "ui", "urdf.jl"))
 
 include(joinpath(module_dir(), "examples", "dev", "diff_tools.jl"))
-include(joinpath(module_dir(), "examples", "dev", "mechanism_zoo.jl"))
+include(joinpath(module_dir(), "examples", "mechanism_zoo.jl"))
 include(joinpath(module_dir(), "src", "joints", "force.jl"))
 include(joinpath(module_dir(), "src", "joints", "torque.jl"))
 include(joinpath(module_dir(), "src", "vis", "convertshape.jl"))

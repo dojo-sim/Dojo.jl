@@ -18,7 +18,7 @@ end
 
 ## with control function
 function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Storage, control!::Function;
-        ε = 1e-10, newtonIter = 100, lineIter = 10, solver::Symbol = :newton_original!,
+        ϵ = 1e-6, newtonIter = 100, lineIter = 10, solver::Symbol = :newton_original!,
         record::Bool = false, debug::Bool = false, verbose::Bool = true,
     )
 
@@ -31,7 +31,7 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
         record && saveToStorage!(mechanism, storage, k)
         control!(mechanism, k)
         foreach(applyFτ!, eqcs, mechanism)
-        eval(solver)(mechanism, ε = ε, newtonIter = newtonIter, lineIter = lineIter, warning = debug, verbose = verbose)
+        eval(solver)(mechanism, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter, warning = debug, verbose = verbose)
         foreach(updatestate!, bodies, Δt)
     end
     record ? (return storage) : (return)
@@ -39,7 +39,7 @@ end
 
 ## with controller
 function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Storage, controller::Controller;
-        ε = 1e-10, newtonIter = 100, lineIter = 10, solver::Symbol = :newton_original!,
+        ϵ = 1e-6, newtonIter = 100, lineIter = 10, solver::Symbol = :newton_original!,
         record::Bool = false, debug::Bool = false, verbose::Bool = true,
     )
 
@@ -54,7 +54,7 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
         record && saveToStorage!(mechanism, storage, k)
         control!(mechanism, controller, k)
         foreach(applyFτ!, eqcs, mechanism)
-        eval(solver)(mechanism, ε = ε, newtonIter = newtonIter, lineIter = lineIter, warning = debug, verbose = verbose)
+        eval(solver)(mechanism, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter, warning = debug, verbose = verbose)
         foreach(updatestate!, bodies, Δt)
     end
     record ? (return storage) : (return)
@@ -62,7 +62,7 @@ end
 
 ## without control
 function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Storage;
-        ε = 1e-10, newtonIter = 100, lineIter = 10, solver::Symbol = :newton_original!,
+        ϵ = 1e-6, newtonIter = 100, lineIter = 10, solver::Symbol = :newton_original!,
         record::Bool = false, debug::Bool = false, verbose::Bool = true,
     )
 
@@ -72,7 +72,7 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
 
     for k = steps
         record && saveToStorage!(mechanism, storage, k)
-        eval(solver)(mechanism, ε = ε, newtonIter = newtonIter, lineIter = lineIter, warning = debug, verbose = verbose)
+        eval(solver)(mechanism, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter, warning = debug, verbose = verbose)
         foreach(updatestate!, bodies, Δt)
     end
     record ? (return storage) : (return)
@@ -87,16 +87,16 @@ A controller or control function (see [`Controller`](@ref)) can be passed in wit
 
 Available kwargs:
 * `record`:     Specify if the state trajectory should be stored (`true`) or not (`false`).
-* `ε`:          Solver tolerance.
+* `ϵ`:          Solver tolerance.
 """
 function simulate!(mechanism::AbstractMechanism{T}, tend::Real, args...;
-        ε = 1e-10, newtonIter = 100, lineIter = 10, solver::Symbol = :newton_original!,
+        ϵ = 1e-6, newtonIter = 100, lineIter = 10, solver::Symbol = :newton_original!,
         record::Bool = false, debug::Bool = false, verbose::Bool = true,
     ) where T
 
     steps = Base.OneTo(Int64(ceil(tend / mechanism.Δt)))
     record ? storage = Storage{T}(steps,length(mechanism.bodies)) : storage = Storage{T}()
-    storage = simulate!(mechanism, steps, storage, args...; solver = solver, ε = ε,
+    storage = simulate!(mechanism, steps, storage, args...; solver = solver, ϵ = ϵ,
         newtonIter = newtonIter, lineIter = lineIter, record = record, debug = debug, verbose = verbose)
     return storage # can be "nothing"
 end
@@ -112,15 +112,15 @@ A controller or control function (see [`Controller`](@ref)) can be passed in wit
 
 Available kwargs:
 * `record`:     Specify if the state trajectory should be stored (`true`) or not (`false`).
-* `ε`:          Solver tolerance.
+* `ϵ`:          Solver tolerance.
 """
 function simulate!(mechanism::AbstractMechanism, storage::Storage{T,N}, args...;
-        ε = 1e-10, newtonIter = 100, lineIter = 10, solver::Symbol = :newton_original!,
+        ϵ = 1e-6, newtonIter = 100, lineIter = 10, solver::Symbol = :newton_original!,
         record::Bool = true, debug::Bool = false, verbose::Bool = true,
     ) where {T,N}
 
     steps = Base.OneTo(N)
-    storage = simulate!(mechanism, steps, storage, args...; solver = solver, ε = ε,
+    storage = simulate!(mechanism, steps, storage, args...; solver = solver, ϵ = ϵ,
         newtonIter = newtonIter, lineIter = lineIter, record = record, debug = debug, verbose = verbose)
     return storage
 end

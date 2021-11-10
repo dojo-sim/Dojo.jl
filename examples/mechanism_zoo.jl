@@ -37,13 +37,10 @@ function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0, d
         normal = [[0;0;1.0] for i = 1:n]
         cf = cf * ones(T, n)
 
-        # conineqcs1, impineqcs1 = splitcontactconstraint(getbody(mech, "l_foot"), normal, cf, p = contacts)
-        # conineqcs2, impineqcs2 = splitcontactconstraint(getbody(mech, "r_foot"), normal, cf, p = contacts)
         contineqcs1 = contactconstraint(getbody(mech, "l_foot"), normal, cf, p = contacts)
         contineqcs2 = contactconstraint(getbody(mech, "r_foot"), normal, cf, p = contacts)
 
         setPosition!(mech, geteqconstraint(mech, "auto_generated_floating_joint"), [0;0;1.2;0.1;0.;0.])
-        # mech = Mechanism(origin, bodies, eqs, [impineqcs1; impineqcs2; conineqcs1; conineqcs2], g = g, Δt = Δt)
         mech = Mechanism(origin, bodies, eqs, [contineqcs1; contineqcs2], g = g, Δt = Δt)
     end
     return mech
@@ -182,11 +179,8 @@ function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
 
     # Parameters
     ex = [1.;0.;0.]
-    ey = [0.;1.;0.]
-    ez = [0.;0.;1.]
     h = 1.0
     r = 0.05
-    # r = 0.25
 
     vert11 = [0.;0.;h / 2]
     vert12 = -vert11
@@ -194,26 +188,13 @@ function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
     # Links
     origin = Origin{T}()
     # links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
-    # links = [Box(r, r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
     links = [Box(3r, 2r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
-    # links = [Sphere(r, r, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
     # Constraints
     jointb1 = EqualityConstraint(Floating(origin, links[1], spring = 0.0, damper = 0.0)) # TODO remove the spring and damper from floating base
     if Nlink > 1
-        (jointtype == :Revolute) && (eqcs = [EqualityConstraint(Revolute(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink])
-        (jointtype == :Orbital) && (eqcs = [EqualityConstraint(Orbital(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink])
-        (jointtype == :Spherical) && (eqcs = [EqualityConstraint(Spherical(links[i - 1], links[i]; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink])
-        (jointtype == :Prismatic) && (eqcs = [EqualityConstraint(Prismatic(links[i - 1], links[i], ez; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink])
-        (jointtype == :Planar) && (eqcs = [EqualityConstraint(Planar(links[i - 1], links[i], ez; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink])
-        (jointtype == :PlanarAxis) && (eqcs = [EqualityConstraint(PlanarAxis(links[i - 1], links[i], ez; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink])
-        (jointtype == :FixedOrientation) && (eqcs = [EqualityConstraint(FixedOrientation(links[i - 1], links[i]; qoffset = UnitQuaternion(RotX(0.0)), spring = spring, damper = damper)) for i = 2:Nlink])
-        (jointtype == :Fixed) && (eqcs = [EqualityConstraint(Fixed(links[i - 1], links[i])) for i = 2:Nlink])
-        # (jointtype == :Floating) && (eqcs = [EqualityConstraint(Floating(links[i - 1], links[i], spring = spring, damper = damper)) for i = 2:Nlink])
-        eqcs = [
-            jointb1;
-            eqcs
-            ]
+        eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], ex; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
+        eqcs = [jointb1; eqcs]
     else
         eqcs = [jointb1]
     end
@@ -290,29 +271,13 @@ function getnpendulum(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T 
 
     # Links
     origin = Origin{T}()
-    # links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
     links = [Box(h, h, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
     # Constraints
-    (basetype == :Revolute) && (jointb1 = EqualityConstraint(Revolute(origin, links[1], ex; p2 = vert11, spring = spring, damper = damper)))
-    (basetype == :Orbital) && (jointb1 = EqualityConstraint(Orbital(origin, links[1], ex; p1 = vert12, p2 = vert11, spring = spring, damper = damper)))
-    (basetype == :Spherical) && (jointb1 = EqualityConstraint(Spherical(origin, links[1]; p2 = vert11, spring = spring, damper = damper)))
-    (basetype == :Prismatic) && (jointb1 = EqualityConstraint(Prismatic(origin, links[1], ez; p1 = vert12, p2 = vert11, spring = spring, damper = damper)))
-    (basetype == :Planar) && (jointb1 = EqualityConstraint(Planar(origin, links[1], ez; p1 = vert12, p2 = vert11, spring = spring, damper = damper)))
-    (basetype == :FixedOrientation) && (jointb1 = EqualityConstraint(FixedOrientation(origin, links[1]; qoffset = UnitQuaternion(RotX(0.0)), spring = spring, damper = damper)))
-    (basetype == :Fixed) && (jointb1 = EqualityConstraint(Fixed(origin, links[1]; p2 = vert11)))
+    jointb1 = EqualityConstraint(Prototype(basetype, origin, links[1], ex; p1 = vert12, p2 = vert11, spring = spring, damper = damper))
     if Nlink > 1
-        (jointtype == :Revolute) && (eqcs = [EqualityConstraint(Revolute(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink])
-        (jointtype == :Orbital) && (eqcs = [EqualityConstraint(Orbital(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink])
-        (jointtype == :Spherical) && (eqcs = [EqualityConstraint(Spherical(links[i - 1], links[i]; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink])
-        (jointtype == :Prismatic) && (eqcs = [EqualityConstraint(Prismatic(links[i - 1], links[i], ez; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink])
-        (jointtype == :Planar) && (eqcs = [EqualityConstraint(Planar(links[i - 1], links[i], ez; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink])
-        (jointtype == :FixedOrientation) && (eqcs = [EqualityConstraint(FixedOrientation(links[i - 1], links[i]; qoffset = UnitQuaternion(RotX(0.0)), spring = spring, damper = damper)) for i = 2:Nlink])
-        (jointtype == :Fixed) && (eqcs = [EqualityConstraint(Fixed(links[i - 1], links[i])) for i = 2:Nlink])
-        eqcs = [
-            jointb1;
-            eqcs
-            ]
+        eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], ex; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
+        eqcs = [jointb1; eqcs]
     else
         eqcs = [jointb1]
     end
@@ -373,6 +338,55 @@ function getorbital(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 
     return mech
 end
 
+function gettwister(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = true,
+        conetype = :soc, spring = 1.0, damper = 1.0, Nlink::Int = 5, jointtype::Symbol = :Prismatic) where {T}
+    # Parameters
+    ex = [1.;0.;0.]
+    ey = [0.;1.;0.]
+    ez = [0.;0.;1.]
+    axes = [ex, ey, ez]
+    h = 1.0
+    r = 0.05
+
+    vert11 = [0.;0.;h / 2]
+    vert12 = -vert11
+    vert = h/2
+
+    # Links
+    origin = Origin{T}()
+    links = [Box(3r, 2r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
+
+    # Constraints
+    jointb1 = EqualityConstraint(Floating(origin, links[1], spring = 0.0, damper = 0.0)) # TODO remove the spring and damper from floating base
+    if Nlink > 1
+        eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], axes[i%3+1]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
+        eqcs = [jointb1; eqcs]
+    else
+        eqcs = [jointb1]
+    end
+
+    if contact
+        n = Nlink
+        normal = [[0;0;1.0] for i = 1:n]
+        cf = cf * ones(n)
+
+        if conetype == :soc
+            contineqcs1 = contactconstraint(links[1], normal[1], cf[1], p = vert11) # to avoid duplicating the contact points
+            contineqcs2 = contactconstraint(links, normal, cf, p = fill(vert12, n))
+            mech = Mechanism(origin, links, eqcs, [contineqcs1; contineqcs2], g = g, Δt = Δt)
+
+        elseif conetype == :linear
+            @error "linear contact not implemented"
+        else
+            error("Unknown conetype")
+        end
+    else
+        mech = Mechanism(origin, links, eqcs, g = g, Δt = Δt)
+    end
+    return mech
+end
+
+
 """
      Mechanism initialization method. Provides a simple way to set the initial
      conditions (pose and velocity) of the mechanism.
@@ -423,16 +437,16 @@ end
 function initializesnake!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{T} = [0,-0.5,0],
         v::AbstractVector{T} = zeros(3), ω::AbstractVector{T} = zeros(3),
         Δω::AbstractVector{T} = zeros(3), Δv::AbstractVector{T} = zeros(3),
-        ϕ1::T = pi/2) where {T,Nn,Ne,Nb}
+        q1::UnitQuaternion{T} = UnitQuaternion(RotX(0.6 * π))) where {T,Nn,Ne,Nb}
 
     bodies = collect(mechanism.bodies)
     link1 = bodies[1]
     # h = link1.shape.rh[2]
-    # vert11 = [0.;0.;h / 2]
-    vert11 = [0.;0.;1.0 / 2]
+    h = 1.0
+    vert11 = [0.;0.; h/2]
     vert12 = -vert11
     # set position and velocities
-    setPosition!(mechanism.origin, link1, p2 = x, Δq = UnitQuaternion(RotX(ϕ1)))
+    setPosition!(mechanism.origin, link1, p2 = x, Δq = q1)
     setVelocity!(link1, v = v, ω = ω)
 
     previd = link1.id
@@ -440,7 +454,6 @@ function initializesnake!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{T}
         setPosition!(getbody(mechanism, previd), body, p1 = vert12, p2 = vert11)
         setVelocity!(getbody(mechanism, previd), body, p1 = vert12, p2 = vert11,
                 Δv = Δv, Δω = Δω)
-                # Δv = Δv, Δω = 1/i*Δω)
         previd = body.id
     end
 end
@@ -511,83 +524,15 @@ function initializeorbital!(mechanism::Mechanism; ϕx::T = pi/4, ϕy::T = pi/8) 
     setPosition!(mechanism, collect(mechanism.eqconstraints)[2], [ϕx, ϕy])
 end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function gettwister(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = true,
-        conetype = :soc, spring = 1.0, damper = 1.0, Nlink::Int = 5, jointtype::Symbol = :Prismatic) where {T}
-    # Parameters
-    ex = [1.;0.;0.]
-    ey = [0.;1.;0.]
-    ez = [0.;0.;1.]
-    axes = [ex, ey, ez]
-    h = 1.0
-    r = 0.05
-
-    vert11 = [0.;0.;h / 2]
-    vert12 = -vert11
-
-    # Links
-    origin = Origin{T}()
-    links = [Box(3r, 2r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
-
-    # Constraints
-    jointb1 = EqualityConstraint(Floating(origin, links[1], spring = 0.0, damper = 0.0)) # TODO remove the spring and damper from floating base
-    if Nlink > 1
-        eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], axes[(i-1+1)%3+1]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
-        eqcs = [jointb1; eqcs]
-    else
-        eqcs = [jointb1]
-    end
-
-    if contact
-        n = Nlink
-        normal = [[0;0;1.0] for i = 1:n]
-        cf = cf * ones(n)
-
-        if conetype == :soc
-            contineqcs1 = contactconstraint(links[1], normal[1], cf[1], p = vert11) # to avoid duplicating the contact points
-            contineqcs2 = contactconstraint(links, normal, cf, p = fill(vert12, n))
-            mech = Mechanism(origin, links, eqcs, [contineqcs1; contineqcs2], g = g, Δt = Δt)
-
-        elseif conetype == :linear
-            @error "linear contact not implemented"
-        else
-            error("Unknown conetype")
-        end
-    else
-        mech = Mechanism(origin, links, eqcs, g = g, Δt = Δt)
-    end
-    return mech
-end
-
-function initializetwister!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{T} = [0,-0.5,0],
+function initializetwister!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{T} = [0,-1.,0],
         v::AbstractVector{T} = zeros(3), ω::AbstractVector{T} = zeros(3),
         Δω::AbstractVector{T} = zeros(3), Δv::AbstractVector{T} = zeros(3),
-        q1::UnitQuaternion{T} = ones(UnitQuaternion{T})) where {T,Nn,Ne,Nb}
+        q1::UnitQuaternion{T} = UnitQuaternion(RotX(0.6 * π))) where {T,Nn,Ne,Nb}
 
     bodies = collect(mechanism.bodies)
     link1 = bodies[1]
     h = 1.0
-    vert11 = [0.;0.;1.0 / 2]
+    vert11 = [0.;0.; h/2]
     vert12 = -vert11
     # set position and velocities
     setPosition!(mechanism.origin, link1, p2 = x, Δq = q1)
