@@ -66,92 +66,96 @@ end
 end
 
 
-# Derivatives accounting for quaternion specialness
-@inline function ∂g∂ʳposa(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-    X, Q = ∂g∂posa(joint, xa, qa, xb, qb)
-    Q = Q * LVᵀmat(qa)
-
-    return [X Q]
-end
-@inline function ∂g∂ʳposb(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-    X, Q = ∂g∂posb(joint, xa, qa, xb, qb)
-    Q = Q * LVᵀmat(qb)
-
-    return [X Q]
-end
-@inline function ∂g∂ʳposb(joint::Translational, xb::AbstractVector, qb::UnitQuaternion)
-    X, Q = ∂g∂posb(joint, xb, qb)
-    Q = Q * LVᵀmat(qb)
-
-    return [X Q]
-end
-
-# # @inline function g(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-# #     vertices = joint.vertices
-# #     return xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa))
-# # end
-# # @inline function g(joint::Translational, xb::AbstractVector, qb::UnitQuaternion)
-# #     vertices = joint.vertices
-# #     return xb + vrotate(vertices[2], qb) - vertices[1]
-# # end
-# # ## Derivatives NOT accounting for quaternion specialness
-# # @inline function ∂g∂posa(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-# #     X = -I(3)
-# #     Q = -∂vrotate∂q(joint.vertices[1], qa)
-# #     return X, Q
-# # end
-# # @inline function ∂g∂posb(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-# #     X = I(3)
-# #     Q = ∂vrotate∂q(joint.vertices[2], qb)
-# #     return X, Q
-# # end
-# # @inline function ∂g∂posb(joint::Translational, xb::AbstractVector, qb::UnitQuaternion)
-# #     X = I(3)
-# #     Q = ∂vrotate∂q(joint.vertices[2], qb)
-# #     return X, Q
-# # end
-# function ∂g∂ʳposa(joint::Translational{T}, statea::State, stateb::State, Δt) where T
-#     vertices = joint.vertices
-#     xa, qa = posargsk(statea)
-#     xb, qb = posargsk(stateb)
-#     gw = xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa))
-#     # ga = vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
+# # Derivatives accounting for quaternion specialness
+# @inline function ∂g∂ʳposa(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+#     X, Q = ∂g∂posa(joint, xa, qa, xb, qb)
+#     Q = Q * LVᵀmat(qa)
 #
+#     return [X Q]
+# end
+# @inline function ∂g∂ʳposb(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+#     X, Q = ∂g∂posb(joint, xa, qa, xb, qb)
+#     Q = Q * LVᵀmat(qb)
+#
+#     return [X Q]
+# end
+# @inline function ∂g∂ʳposb(joint::Translational, xb::AbstractVector, qb::UnitQuaternion)
+#     X, Q = ∂g∂posb(joint, xb, qb)
+#     Q = Q * LVᵀmat(qb)
+#
+#     return [X Q]
+# end
+
+# @inline function g(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+#     vertices = joint.vertices
+#     return xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa))
+# end
+# @inline function g(joint::Translational, xb::AbstractVector, qb::UnitQuaternion)
+#     vertices = joint.vertices
+#     return xb + vrotate(vertices[2], qb) - vertices[1]
+# end
+# ## Derivatives NOT accounting for quaternion specialness
+# @inline function ∂g∂posa(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
 #     X = -I(3)
-#     Q = rotation_matrix(qa) * (∂vrotate∂p(gw, inv(qa)) * -1.0 * ∂vrotate∂q(vertices[1], qa) + ∂vrotate∂q(gw, inv(qa)) * Tmat()) * LVᵀmat(qa)
-#     # Q = -rotation_matrix(inv(qa)) * ∂vrotate∂q(joint.vertices[1], qa) * LVᵀmat(qa)
-#     # Q = transpose(-1.0 * rotation_matrix(inv(qa)) * skew(rotation_matrix(qa) * joint.vertices[1]))
-#     # @show scn.(Q0 - Q)
-#     return [X Q]
+#     Q = -∂vrotate∂q(joint.vertices[1], qa)
+#     return X, Q
 # end
-# function ∂g∂ʳposb(joint::Translational{T}, statea::State, stateb::State, Δt) where T
-#     # vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qb))
-#     vertices = joint.vertices
-#     xa, qa = posargsk(statea)
-#     xb, qb = posargsk(stateb)
-#     gw = xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa))
-#     # ga = vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
-#
+# @inline function ∂g∂posb(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
 #     X = I(3)
-#     Q = rotation_matrix(qa) * ∂vrotate∂p(gw, inv(qa)) * ∂vrotate∂q(vertices[2], qb) * LVᵀmat(qb)
-#     # Q = rotation_matrix(inv(qa)) * ∂vrotate∂q(joint.vertices[2], qb) * LVᵀmat(qb)
-#     # Q = transpose(rotation_matrix(inv(qb)) * skew(rotation_matrix(qb) * joint.vertices[2]))
-#     # @show scn.(Q0 - Q)
-#     return [X Q]
+#     Q = ∂vrotate∂q(joint.vertices[2], qb)
+#     return X, Q
 # end
-# function ∂g∂ʳposb(joint::Translational{T}, stateb::State, Δt) where T
-#     # vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qb))
-#     vertices = joint.vertices
-#     xb, qb = posargsk(stateb)
-#     # gw = xb + vrotate(vertices[2], qb) - vertices[1]
-#
+# @inline function ∂g∂posb(joint::Translational, xb::AbstractVector, qb::UnitQuaternion)
 #     X = I(3)
-#     Q = ∂vrotate∂q(vertices[2], qb) * LVᵀmat(qb)
-#     # Q = ∂vrotate∂q(joint.vertices[2], qb) * LVᵀmat(qb)
-#     # Q = transpose(rotation_matrix(inv(qb)) * skew(rotation_matrix(qb) * joint.vertices[2]))
-#     # @show scn.(Q0 - Q)
-#     return [X Q]
+#     Q = ∂vrotate∂q(joint.vertices[2], qb)
+#     return X, Q
 # end
+function ∂g∂ʳposa(joint::Translational{T}, statea::State, stateb::State, Δt) where T
+    vertices = joint.vertices
+    xa, qa = posargsk(statea)
+    xb, qb = posargsk(stateb)
+    gw = xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa))
+    # ga = vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
+
+    # X = -I(3)
+    # Q = rotation_matrix(qa) * (∂vrotate∂p(gw, inv(qa)) * -1.0 * ∂vrotate∂q(vertices[1], qa) + ∂vrotate∂q(gw, inv(qa)) * Tmat()) * LVᵀmat(qa)
+    # Q = -rotation_matrix(inv(qa)) * ∂vrotate∂q(joint.vertices[1], qa) * LVᵀmat(qa)
+    # Q = transpose(-1.0 * rotation_matrix(inv(qa)) * skew(rotation_matrix(qa) * joint.vertices[1]))
+    X = - rotation_matrix(inv(qa))
+    Q = skew(vertices[1])
+    # @show scn.(Q0 - Q)
+    return [X Q]
+end
+function ∂g∂ʳposb(joint::Translational{T}, statea::State, stateb::State, Δt) where T
+    # vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qb))
+    vertices = joint.vertices
+    xa, qa = posargsk(statea)
+    xb, qb = posargsk(stateb)
+    gw = xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa))
+    # ga = vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
+
+    # X = I(3)
+    # Q = rotation_matrix(qa) * ∂vrotate∂p(gw, inv(qa)) * ∂vrotate∂q(vertices[2], qb) * LVᵀmat(qb)
+    # Q = rotation_matrix(inv(qa)) * ∂vrotate∂q(joint.vertices[2], qb) * LVᵀmat(qb)
+    # Q = transpose(rotation_matrix(inv(qb)) * skew(rotation_matrix(qb) * joint.vertices[2]))
+    # @show scn.(Q0 - Q)
+    X = - rotation_matrix(inv(qa)) * rotation_matrix(qb) * skew(vertices[2]apu)
+    Q = skew(vertices[1])
+    return [X Q]
+end
+function ∂g∂ʳposb(joint::Translational{T}, stateb::State, Δt) where T
+    # vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qb))
+    vertices = joint.vertices
+    xb, qb = posargsk(stateb)
+    # gw = xb + vrotate(vertices[2], qb) - vertices[1]
+
+    X = I(3)
+    Q = ∂vrotate∂q(vertices[2], qb) * LVᵀmat(qb)
+    # Q = ∂vrotate∂q(joint.vertices[2], qb) * LVᵀmat(qb)
+    # Q = transpose(rotation_matrix(inv(qb)) * skew(rotation_matrix(qb) * joint.vertices[2]))
+    # @show scn.(Q0 - Q)
+    return [X Q]
+end
 ## vec(G) Jacobian (also NOT accounting for quaternion specialness in the second derivative: ∂(∂ʳg∂posx)∂y)
 @inline function ∂2g∂posaa(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
     Lpos = Lmat(UnitQuaternion(xb + vrotate(joint.vertices[2], qb) - xa))

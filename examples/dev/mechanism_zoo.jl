@@ -533,12 +533,12 @@ end
 
 
 function gettwister(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = true,
-        conetype = :soc, spring = 0.0, damper = 0.0, Nlink::Int = 5, jointtype::Symbol = :Prismatic) where {T}
+        conetype = :soc, spring = 1.0, damper = 1.0, Nlink::Int = 5, jointtype::Symbol = :Prismatic) where {T}
     # Parameters
     ex = [1.;0.;0.]
     ey = [0.;1.;0.]
     ez = [0.;0.;1.]
-    axes = vcat([[ex, ey, ez] for i = 1:Nlink]...)
+    axes = [ex, ey, ez]
     h = 1.0
     r = 0.05
 
@@ -552,7 +552,7 @@ function gettwister(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = 
     # Constraints
     jointb1 = EqualityConstraint(Floating(origin, links[1], spring = 0.0, damper = 0.0)) # TODO remove the spring and damper from floating base
     if Nlink > 1
-        eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], axes[(i-1)%3+1]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
+        eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], axes[(i-1+1)%3+1]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
         eqcs = [jointb1; eqcs]
     else
         eqcs = [jointb1]
@@ -582,7 +582,7 @@ end
 function initializetwister!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{T} = [0,-0.5,0],
         v::AbstractVector{T} = zeros(3), ω::AbstractVector{T} = zeros(3),
         Δω::AbstractVector{T} = zeros(3), Δv::AbstractVector{T} = zeros(3),
-        ϕ1::T = pi/2) where {T,Nn,Ne,Nb}
+        q1::UnitQuaternion{T} = ones(UnitQuaternion{T})) where {T,Nn,Ne,Nb}
 
     bodies = collect(mechanism.bodies)
     link1 = bodies[1]
@@ -590,7 +590,7 @@ function initializetwister!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{
     vert11 = [0.;0.;1.0 / 2]
     vert12 = -vert11
     # set position and velocities
-    setPosition!(mechanism.origin, link1, p2 = x, Δq = UnitQuaternion(RotX(ϕ1)))
+    setPosition!(mechanism.origin, link1, p2 = x, Δq = q1)
     setVelocity!(link1, v = v, ω = ω)
 
     previd = link1.id

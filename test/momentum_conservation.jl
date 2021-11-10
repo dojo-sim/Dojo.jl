@@ -276,8 +276,8 @@ plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
 Δt0 = 0.01
 g0 = 0.0
 Nlink0 = 2
-spring0 = 0.0 * 1e4
-damper0 = 0.0 * 1e4
+spring0 = 1.0 * 3e0
+damper0 = 1.0 * 2e-1
 mech = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
     jointtype = :Prismatic, contact = false)
 
@@ -293,7 +293,7 @@ eqc2.isspring
 eqc2.isdamper
 
 v0 = 0.0 * [-0.1,0.5,0.2]
-ω0 = 0.0 * [2.0, 1.0, 3.0]
+ω0 = 1.0 * [2.0, 1.0, 3.0]
 Δv0 = zeros(3)
 Δω0 = 0.0 * [1,2,-1.2] / Nlink0
 initialize!(mech, :snake, v = v0, ω = ω0, Δv = Δv0, Δω = Δω0)
@@ -304,7 +304,7 @@ function controller!(mechanism, k)
         @show nu
         if nu <= 5
             if k ∈ (1:100)
-                u = 1.0 * Δt0 * sones(nu)
+                u = -0.0 * Δt0 * sones(nu)
             else
                 u = szeros(nu)
             end
@@ -317,14 +317,6 @@ end
 
 storage = simulate!(mech, 3.3, controller!, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
-
-eqc = collect(mech.eqconstraints)
-eqc1 = eqc[1]
-eqc2 = eqc[2]
-tra2 = eqc2.constraints[1]
-rot2 = eqc2.constraints[2]
-constraintmat(tra2)'
-
 
 function getmomentum(t::T, jointtype::Symbol) where T
     mechanism = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
@@ -344,3 +336,96 @@ ms = [m .- ms[1] for m in ms]
 plot(ts, hcat(ms...)'[:,1:3], label = ["x" "y" "z"], title = "linear momentum")
 plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
 @test all(norm.(ms, Inf) .< 1e-11)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+vis = Visualizer()
+open(vis)
+
+
+################################################################################
+# 5-lINK TWISTER
+################################################################################
+# multiple bodies
+# initial linear and angular velocity
+# no gravity
+# with spring and damper
+# with control
+################################################################################
+Δt0 = 0.01
+g0 = 0.0
+Nlink0 = 2
+spring0 = 1.0 * 3e0
+damper0 = 1.0 * 3e0
+mech = getmechanism(:twister, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
+    jointtype = :Prismatic, contact = false)
+
+v0 = 1.0 * [25π, 0, 0.0] * Δt0
+ω0 = 1.0 * [0, 0, 0.0] * Δt0
+Δv0 = 1.0 * [0, 0, 0.0] * Δt0
+Δω0 = 1.0 * [0, 50*2π, 0.0] * Δt0
+q10x = UnitQuaternion(RotY(π/2))
+q10y = UnitQuaternion(RotX(π/2))
+q10 = UnitQuaternion(RotX(π))
+
+initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0, Δv = Δv0, Δω = Δω0)
+
+function controller!(mechanism, k)
+    for (i,joint) in enumerate(mechanism.eqconstraints)
+        nu = getcontroldim(joint)
+        if nu <= 5
+            if k ∈ (1:100)
+                u = 0.0 * Δt0 * sones(nu)
+            else
+                u = szeros(nu)
+            end
+            setForce!(mechanism, joint, u)
+        end
+    end
+    return
+end
+
+storage = simulate!(mech, 550, controller!, record = true, solver = :mehrotra!, verbose = false)
+visualize(mech, downsample(storage, 10), vis = vis)
+plot([ω[2] for ω in storage.ω[1]])
+
+function getmomentum(t::T, jointtype::Symbol) where T
+    mechanism = getmechanism(:twister, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
+        jointtype = jointtype, contact = false)
+    initialize!(mechanism, :twister, q1 = q10, v = v0, ω = ω0, Δv = Δv0, Δω = Δω0)
+    storage = simulate!(mechanism, t, controller!, record = true, solver = :mehrotra!, verbose = false)
+    return momentum(mechanism)
+end
+
+ts = [1.0 + 5.2 * i for i = 1:10]
+ms = getmomentum.(ts, :Prismatic)
+ms = [m .- ms[1] for m in ms]
+plot(ts, hcat(ms...)'[:,1:3], label = ["x" "y" "z"], title = "linear momentum")
+plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
+@test all(norm.(ms, Inf) .< 1e-11)
+
+eqc2 = collect(mech.eqconstraints)[2]
+tra2 = eqc2.constraints[1]
+tra2.spring
+tra2.damper
+rot2 = eqc2.constraints[2]
+rot2.spring
+rot2.damper
+
+eqc2.isspring
+eqc2.isdamper
+
+eqcs2.axis
+zerodimstaticadjoint(constraintmat(tra2)) * constraintmat(tra2)
+constraintmat(rot2)

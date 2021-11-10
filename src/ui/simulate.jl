@@ -28,7 +28,6 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
     eqcs = mechanism.eqconstraints
 
     for k = steps
-        @show k
         record && saveToStorage!(mechanism, storage, k)
         control!(mechanism, k)
         foreach(applyFτ!, eqcs, mechanism)
