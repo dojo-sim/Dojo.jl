@@ -23,7 +23,7 @@ Prismatic(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T,
 A planar joint between two bodies.
 """
 Planar(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T)) where T =
-    Rotational3{T}(body1, body2; qoffset, spring, damper), Translational1{T}(body1, body2; p1, p2, axis, spring, damper)
+    Translational1{T}(body1, body2; p1, p2, axis, spring, damper), Rotational3{T}(body1, body2; qoffset, spring, damper)
 
 # t0r3
 """
