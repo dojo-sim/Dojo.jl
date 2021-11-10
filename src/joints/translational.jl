@@ -156,17 +156,12 @@ end
     Faa = vrotate(Faw, inv(qa)) # in local frame
     Fbb = vrotate(Fbw, inv(qb)) # in local frame
 
-
-    # τa = vrotate(torqueFromForce(Fa, vrotate(vertices[1], qa)),inv(qa)) # in local coordinates
-    # τb = vrotate(torqueFromForce(Fb, vrotate(vertices[2], qb)),inv(qb)) # in local coordinates
-    # τb = vrotate(torqueFromForce(Fb, vrotate(vertices[2], qb)),inv(qb)) # in local coordinates
-
-
     pa_b = rotation_matrix(inv(qb)) * (xa + rotation_matrix(qa) * joint.vertices[1]) # body a kinematics point in b frame
     cb_b = rotation_matrix(inv(qb)) * (xb) # body b com in b frame
     rb = pa_b - cb_b
     τaa = torqueFromForce(Faa, vertices[1]) # in local coordinates
     τbb = torqueFromForce(Fbb, rb) # in local coordinates
+    # τbb = torqueFromForce(Fbb, vertices[2]) # TODO this should work, apparently does not work with Planar
 
     statea.Fk[end] += Faw
     statea.τk[end] += τaa/2
@@ -187,6 +182,7 @@ end
     cb_b = vrotate(xb, inv(qb)) # body b com in b frame
     rb = pa_b - cb_b
     τbb = torqueFromForce(Fbb, rb) # in local coordinates
+    # τbb = torqueFromForce(Fbb, vertices[2]) # TODO this should work, apparently does not work with Planar
 
     stateb.Fk[end] += Fbw
     stateb.τk[end] += τbb/2

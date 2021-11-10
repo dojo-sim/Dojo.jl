@@ -372,14 +372,14 @@ open(vis)
 ϵ0 = 1e-14
 Δt0 = 0.01
 g0 = 0.0
-Nlink0 = 3
-spring0 = 1.0 * 3e0
-damper0 = 3.0 * 3e0
+Nlink0 = 4
+spring0 = 1.0 * 4e0
+damper0 = 1.0 * 4e-1
 mech = getmechanism(:twister, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
-    jointtype = :Prismatic, contact = false)
+    jointtype = :PrismaticOrbital, contact = false)
 
-v0 = 1.0 * [0.5π, 1, 2] * Δt0
-ω0 = 1.0 * [30, 32, 3.0] * Δt0
+v0 = 1.0 * [1, 2, 3] * Δt0
+ω0 = 1.0 * [1, 2, 3.0] * Δt0
 Δv0 = 0.0 * [0, 0, 0.0] * Δt0
 Δω0 = 0.0 * [2π, 1*2π, π] * Δt0
 q10 = UnitQuaternion(RotX(π))
@@ -391,7 +391,7 @@ function controller!(mechanism, k)
         nu = getcontroldim(joint)
         if nu <= 5
             if k ∈ (1:100)
-                u = -3.0 * Δt0 * sones(nu)
+                u = -1.0 * Δt0 * sones(nu)
             else
                 u = szeros(nu)
             end
@@ -414,20 +414,42 @@ end
 
 
 ts = [0.5 + 0.2 * i for i = 1:10]
-ms = getmomentum.(ts, :Prismatic)
+ms = getmomentum.(ts, :PrismaticOrbital)
 ms = [m .- ms[1] for m in ms]
 plot(ts, hcat(ms...)'[:,1:3], label = ["x" "y" "z"], title = "linear momentum")
 plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
 @test all(norm.(ms, Inf) .< 1e-11)
 
 
+jointtypes = [
+    :Fixed,
+    :Prismatic,
+    :Planar,
+    :FixedOrientation,
+    :Revolute,
+    :Cylindrical,
+    :PlanarAxis,
+    :FreeRevolute,
+    :Orbital,
+    :PrismaticOrbital,
+    :PlanarOrbital,
+    :FreeOrbital,
+    :Spherical,
+    :CylindricalFree,
+    :PlanarFree
+    ]
 
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
+@testset "Twister" begin
+    for jointtype in jointtypes
+        ts = [0.5 + 0.2 * i for i = 1:10]
+        ms = getmomentum.(ts, jointtype)
+        ms = [m .- ms[1] for m in ms]
+        plot(ts, hcat(ms...)'[:,1:3], label = ["x" "y" "z"], title = "linear momentum")
+        plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
+        @test all(norm.(ms, Inf) .< 1e-11)
+    end
+end
+
 
 for jointtype in (
     :Fixed,
