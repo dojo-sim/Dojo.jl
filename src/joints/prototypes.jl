@@ -111,3 +111,21 @@ An unconstrained connection between two bodies (connection between floating base
 """
 Floating(body1::AbstractBody{T}, body2; spring = zero(T), damper = zero(T)) where T =
     Translational0{T}(body1, body2; spring, damper), Rotational0{T}(body1, body2; spring, damper)
+
+
+
+function Prototype(jointtype::Symbol, body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
+        qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T)) where T
+    (jointtype == :Fixed)            && (return            Fixed(body1, body2;       p1 = p1, p2 = p2, qoffset = qoffset))
+    (jointtype == :Prismatic)        && (return        Prismatic(body1, body2, axis; p1 = p1, p2 = p2, qoffset = qoffset, spring = spring, damper = damper))
+    (jointtype == :Planar)           && (return           Planar(body1, body2, axis; p1 = p1, p2 = p2, qoffset = qoffset, spring = spring, damper = damper))
+    (jointtype == :FixedOrientation) && (return FixedOrientation(body1, body2;                         qoffset = qoffset, spring = spring, damper = damper))
+    (jointtype == :Revolute)         && (return         Revolute(body1, body2, axis; p1 = p1, p2 = p2, qoffset = qoffset, spring = spring, damper = damper))
+    (jointtype == :Cylindrical)      && (return      Cylindrical(body1, body2, axis; p1 = p1, p2 = p2, qoffset = qoffset, spring = spring, damper = damper))
+    (jointtype == :PlanarAxis)       && (return       PlanarAxis(body1, body2, axis; p1 = p1, p2 = p2, qoffset = qoffset, spring = spring, damper = damper))
+    (jointtype == :Orbital)          && (return          Orbital(body1, body2, axis; p1 = p1, p2 = p2, qoffset = qoffset, spring = spring, damper = damper))
+    (jointtype == :Spherical)        && (return        Spherical(body1, body2;       p1 = p1, p2 = p2, qoffset = qoffset, spring = spring, damper = damper))
+    (jointtype == :CylindricalFree)  && (return  CylindricalFree(body1, body2, axis; p1 = p1, p2 = p2,                    spring = spring, damper = damper))
+    (jointtype == :PlanarFree)       && (return       PlanarFree(body1, body2, axis; p1 = p1, p2 = p2,                    spring = spring, damper = damper))
+    (jointtype == :Floating)         && (return         Floating(body1, body2;                                            spring = spring, damper = damper))
+end

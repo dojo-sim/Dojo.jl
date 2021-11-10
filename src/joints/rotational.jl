@@ -71,36 +71,6 @@ end
     return X, Q
 end
 
-function ∂g∂ʳposa(joint::Rotational{T}, statea::State, stateb::State, Δt) where T
-    xa, qa = posargsk(statea)
-    xb, qb = posargsk(stateb)
-    # X = szeros(T, 3, 3)
-    # Q = -1.0 * transpose(rotation_matrix(joint.qoffset))
-    # return [X Q]
-    X = szeros(T, 3, 3)
-    Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T) 
-    return [X Q * LVᵀmat(qa)]
-end
-function ∂g∂ʳposb(joint::Rotational{T}, statea::State, stateb::State, Δt) where T
-    xa, qa = posargsk(statea)
-    xb, qb = posargsk(stateb)
-    # X = szeros(T, 3, 3)
-    # Q = transpose(rotation_matrix(inv(joint.qoffset) * inv(qa) * qb))
-    # return [X Q]
-    X = szeros(T, 3, 3)
-    Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa) 
-    return [X Q * LVᵀmat(qb)]
-end
-function ∂g∂ʳposb(joint::Rotational{T}, stateb::State, Δt) where T
-    xb, qb = posargsk(stateb)
-    # X = szeros(T, 3, 3)
-    # Q = transpose(rotation_matrix(inv(joint.qoffset) * qb))
-    # return [X Q] 
-    X = szeros(T, 3, 3)
-    Q = VRᵀmat(joint.qoffset) 
-    return [X Q * LVᵀmat(qb)]
-end
-
 
 # ∂g∂ʳposb(joint::Rotational{T}, statea::State, stateb::State, Δt) where T = -1.0 * ∂g∂ʳposb(joint, posargsk(statea)..., posargsk(stateb)...)
 # ∂g∂ʳposb(joint::Rotational{T}, stateb::State, Δt) where T = -1.0 * ∂g∂ʳposb(joint, posargsk(stateb)...)

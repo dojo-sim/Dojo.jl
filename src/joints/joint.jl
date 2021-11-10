@@ -35,31 +35,9 @@ end
 ## Discrete-time position derivatives (for dynamics)
 # Wrappers 1
 
-@inline ∂g∂posa(joint::Joint, body1::Body, body2::Body, Δt) = ∂g∂posa(joint, posargsnext(body1.state, Δt)..., posargsnext(body2.state, Δt)...) 
+@inline ∂g∂posa(joint::Joint, body1::Body, body2::Body, Δt) = ∂g∂posa(joint, posargsnext(body1.state, Δt)..., posargsnext(body2.state, Δt)...)
 @inline ∂g∂posb(joint::Joint, body1::Body, body2::Body, Δt) = ∂g∂posb(joint, posargsnext(body1.state, Δt)..., posargsnext(body2.state, Δt)...)
 @inline ∂g∂posb(joint::Joint, body1::Origin, body2::Body, Δt) = ∂g∂posb(joint, posargsnext(body2.state, Δt)...)
-
-@inline function ∂g∂ʳposa(joint::Joint, body1::Body, body2::Body, childid, Δt)
-    if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳposa(joint, body1.state, body2.state, Δt)
-    else
-        return zero(joint)
-    end
-end
-@inline function ∂g∂ʳposb(joint::Joint, body1::Body, body2::Body, childid, Δt)
-    if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳposb(joint, body1.state, body2.state, Δt)
-    else
-        return zero(joint)
-    end
-end
-@inline function ∂g∂ʳposb(joint::Joint, body1::Origin, body2::Body, childid, Δt)
-    if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳposb(joint, body2.state, Δt)
-    else
-        return zero(joint)
-    end
-end
 
 # Wrappers 2
 ∂g∂ʳposa(joint::Joint, statea::State, stateb::State, Δt) = ∂g∂ʳposa(joint, posargsk(statea)..., posargsk(stateb)...)
