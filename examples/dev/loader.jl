@@ -15,6 +15,7 @@ using MeshCat
 using GeometryBasics
 using LightGraphs
 using DocStringExtensions
+using FiniteDiff
 
 export Origin,
     Body,

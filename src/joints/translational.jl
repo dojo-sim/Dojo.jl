@@ -143,38 +143,53 @@ end
     return XX, XQ, QX, QQ
 end
 
-
 ### Forcing
 ## Application of joint forces (for dynamics)
 @inline function applyFτ!(joint::Translational{T}, statea::State, stateb::State, Δt::T, clear::Bool) where T
     F = joint.Fτ
     vertices = joint.vertices
-    _, qa = posargsk(statea)
-    _, qb = posargsk(stateb)
+    xa, qa = posargsk(statea)
+    xb, qb = posargsk(stateb)
 
-    Fa = vrotate(-F, qa)
-    Fb = -Fa
+    Faw = vrotate(-F, qa) # in the world frame
+    Fbw = -Faw # in the world frame
+    Faa = vrotate(Faw, inv(qa)) # in local frame
+    Fbb = vrotate(Fbw, inv(qb)) # in local frame
 
-    τa = vrotate(torqueFromForce(Fa, vrotate(vertices[1], qa)),inv(qa)) # in local coordinates
-    τb = vrotate(torqueFromForce(Fb, vrotate(vertices[2], qb)),inv(qb)) # in local coordinates
 
-    statea.Fk[end] += Fa
-    statea.τk[end] += τa
-    stateb.Fk[end] += Fb
-    stateb.τk[end] += τb
+    # τa = vrotate(torqueFromForce(Fa, vrotate(vertices[1], qa)),inv(qa)) # in local coordinates
+    # τb = vrotate(torqueFromForce(Fb, vrotate(vertices[2], qb)),inv(qb)) # in local coordinates
+    # τb = vrotate(torqueFromForce(Fb, vrotate(vertices[2], qb)),inv(qb)) # in local coordinates
+
+
+    pa_b = rotation_matrix(inv(qb)) * (xa + rotation_matrix(qa) * joint.vertices[1]) # body a kinematics point in b frame
+    cb_b = rotation_matrix(inv(qb)) * (xb) # body b com in b frame
+    rb = pa_b - cb_b
+    τaa = torqueFromForce(Faa, vertices[1]) # in local coordinates
+    τbb = torqueFromForce(Fbb, rb) # in local coordinates
+
+    statea.Fk[end] += Faw
+    statea.τk[end] += τaa/2
+    stateb.Fk[end] += Fbw
+    stateb.τk[end] += τbb/2
     clear && (joint.Fτ = szeros(T,3))
     return
 end
 @inline function applyFτ!(joint::Translational{T}, stateb::State, Δt::T, clear::Bool) where T
     F = joint.Fτ
     vertices = joint.vertices
-    _, qb = posargsk(stateb)
+    xb, qb = posargsk(stateb)
 
-    Fb = F
-    τb = vrotate(torqueFromForce(Fb, vrotate(vertices[2], qb)),inv(qb)) # in local coordinates
+    Fbw = F # in world frame
+    Fbb = vrotate(Fbw, inv(qb)) # in b frame
 
-    stateb.Fk[end] += Fb
-    stateb.τk[end] += τb
+    pa_b = rotation_matrix(inv(qb)) * joint.vertices[1] # body a kinematics point in b frame
+    cb_b = vrotate(xb, inv(qb)) # body b com in b frame
+    rb = pa_b - cb_b
+    τbb = torqueFromForce(Fbb, rb) # in local coordinates
+
+    stateb.Fk[end] += Fbw
+    stateb.τk[end] += τbb/2
     clear && (joint.Fτ = szeros(T,3))
     return
 end
