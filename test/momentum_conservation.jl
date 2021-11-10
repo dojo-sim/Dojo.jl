@@ -380,11 +380,12 @@ open(vis)
 # with spring and damper
 # with control
 ################################################################################
+ϵ0 = 1e-14
 Δt0 = 0.01
 g0 = 0.0
 Nlink0 = 5
-spring0 = 0.0 * 3e0
-damper0 = 0.0 * 3e0
+spring0 = 1.0 * 3e0
+damper0 = 1.0 * 3e0
 mech = getmechanism(:twister, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
     jointtype = :Prismatic, contact = false)
 
@@ -394,15 +395,14 @@ v0 = 1.0 * [0.5π, 10, 20] * Δt0
 Δω0 = 1.0 * [2π, 1*2π, π] * Δt0
 q10 = UnitQuaternion(RotX(π))
 
-# initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0, Δv = Δv0, Δω = Δω0)
-initialize!(mech, :twister)#, q1 = q10, v = v0, ω = ω0, Δv = Δv0, Δω = Δω0)
+initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0, Δv = Δv0, Δω = Δω0)
 
 function controller!(mechanism, k)
     for (i,joint) in enumerate(mechanism.eqconstraints)
         nu = getcontroldim(joint)
         if nu <= 5
             if k ∈ (1:100)
-                u = 0.0 * Δt0 * sones(nu)
+                u = 0.1 * Δt0 * sones(nu)
             else
                 u = szeros(nu)
             end
@@ -412,17 +412,33 @@ function controller!(mechanism, k)
     return
 end
 
-storage = simulate!(mech, 10, controller!, record = true, solver = :mehrotra!, verbose = false)
+storage = simulate!(mech, 10, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 visualize(mech, downsample(storage, 10), vis = vis)
 
 function getmomentum(t::T, jointtype::Symbol) where T
     mechanism = getmechanism(:twister, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
         jointtype = jointtype, contact = false)
     initialize!(mechanism, :twister, q1 = q10, v = v0, ω = ω0, Δv = Δv0, Δω = Δω0)
-    storage = simulate!(mechanism, t, controller!, record = true, solver = :mehrotra!, verbose = false)
+    storage = simulate!(mechanism, t, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
     return momentum(mechanism)
 end
 
+
+ts = [1.0 + 0.2 * i for i = 1:10]
+ms = getmomentum.(ts, :Prismatic)
+ms = [m .- ms[1] for m in ms]
+plot(ts, hcat(ms...)'[:,1:3], label = ["x" "y" "z"], title = "linear momentum")
+plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
+@test all(norm.(ms, Inf) .< 1e-11)
+
+
+
+a = 10
+a = 10
+a = 10
+a = 10
+a = 10
+a = 10
 
 for jointtype in (
     :Fixed,
@@ -452,24 +468,26 @@ for jointtype in (
 end
 
 
-ts = [1.0 + 0.2 * i for i = 1:10]
-ms = getmomentum.(ts, :Planar)
-ms = [m .- ms[1] for m in ms]
-plot(ts, hcat(ms...)'[:,1:3], label = ["x" "y" "z"], title = "linear momentum")
-plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
-@test all(norm.(ms, Inf) .< 1e-11)
 
-# eqc2 = collect(mech.eqconstraints)[2]
-# tra2 = eqc2.constraints[1]
-# tra2.spring
-# tra2.damper
-# rot2 = eqc2.constraints[2]
-# rot2.spring
-# rot2.damper
-#
-# eqc2.isspring
-# eqc2.isdamper
-#
-# eqcs2.axis
-# zerodimstaticadjoint(constraintmat(tra2)) * constraintmat(tra2)
-# constraintmat(rot2)
+
+
+
+
+eqc2 = collect(mech.eqconstraints)[2]
+tra2 = eqc2.constraints[1]
+tra2.spring
+tra2.damper
+rot2 = eqc2.constraints[2]
+rot2.spring
+rot2.damper
+
+eqc2.isspring
+eqc2.isdamper
+A = nullspacemat(tra2)
+At = zerodimstaticadjoint(nullspacemat(tra2))
+
+At * A
+
+eqcs2.axis
+zerodimstaticadjoint(constraintmat(tra2)) * constraintmat(tra2)
+constraintmat(rot2)
