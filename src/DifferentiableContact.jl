@@ -137,7 +137,7 @@ include(joinpath("ui", "simulate.jl"))
 include(joinpath("ui", "initialize.jl"))
 include(joinpath("ui", "urdf.jl"))
 
-include(joinpath("..", "examples", "dev", "mechanism_zoo.jl"))
+include(joinpath("..", "examples", "mechanism_zoo.jl"))
 include(joinpath("..", "examples", "dev", "diff_tools.jl"))
 include(joinpath("joints", "force.jl"))
 include(joinpath("joints", "torque.jl"))

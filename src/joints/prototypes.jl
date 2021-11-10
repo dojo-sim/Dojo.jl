@@ -61,7 +61,14 @@ A planar joint between two bodies with a rotation axis perpendicular to the plan
 PlanarAxis(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T)) where T =
     Translational1{T}(body1, body2; p1, p2, axis, spring, damper), Rotational2{T}(body1, body2; axis, qoffset, spring, damper)
 
-#TODO t0r2
+# t0r2
+"""
+    FreeRevolute(body1, body2, axis; p1, p2, qoffset, spring, damper)
+
+A joint between two bodies with free translation and rotation along one axis.
+"""
+FreeRevolute(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T)) where T =
+    Translational0{T}(body1, body2; p1, p2, spring, damper), Rotational2{T}(body1, body2; axis, qoffset, spring, damper)
 
 #t3r1
 """
@@ -72,9 +79,32 @@ A rotational between two bodies with a 2 rotational degrees of freedom (skull-ey
 Orbital(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T)) where T =
     Translational3{T}(body1, body2; p1, p2, axis, spring, damper), Rotational1{T}(body1, body2; axis, qoffset, spring, damper)
 
-#TODO t2r1
-#TODO t1r1
-#TODO t0r1
+#t2r1
+"""
+    PrismaticOrbital(body1, body2, axis; p1, p2, qoffset, spring, damper)
+
+A prismatic joint between two bodies with a 2 rotational degrees of freedom (skull-eye joint).
+"""
+PrismaticOrbital(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T)) where T =
+    Translational2{T}(body1, body2; p1, p2, axis, spring, damper), Rotational1{T}(body1, body2; axis, qoffset, spring, damper)
+
+#t1r1
+"""
+    PlanarOrbital(body1, body2, axis; p1, p2, qoffset, spring, damper)
+
+A planar joint between two bodies with a 2 rotational degrees of freedom (skull-eye joint).
+"""
+PlanarOrbital(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T)) where T =
+    Translational1{T}(body1, body2; p1, p2, axis, spring, damper), Rotational1{T}(body1, body2; axis, qoffset, spring, damper)
+
+#t0r1
+"""
+    FreeOrbital(body1, body2, axis; p1, p2, qoffset, spring, damper)
+
+A free joint between two bodies with a 2 rotational degrees of freedom (skull-eye joint).
+"""
+FreeOrbital(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T)) where T =
+    Translational0{T}(body1, body2; p1, p2, spring, damper), Rotational1{T}(body1, body2; axis, qoffset, spring, damper)
 
 #t3r0
 """
@@ -123,7 +153,11 @@ function Prototype(jointtype::Symbol, body1::AbstractBody{T}, body2, axis; p1 = 
     (jointtype == :Revolute)         && (return         Revolute(body1, body2, axis; p1 = p1, p2 = p2, qoffset = qoffset, spring = spring, damper = damper))
     (jointtype == :Cylindrical)      && (return      Cylindrical(body1, body2, axis; p1 = p1, p2 = p2, qoffset = qoffset, spring = spring, damper = damper))
     (jointtype == :PlanarAxis)       && (return       PlanarAxis(body1, body2, axis; p1 = p1, p2 = p2, qoffset = qoffset, spring = spring, damper = damper))
+    (jointtype == :FreeRevolute)     && (return     FreeRevolute(body1, body2, axis; p1 = p1, p2 = p2, qoffset = qoffset, spring = spring, damper = damper))
     (jointtype == :Orbital)          && (return          Orbital(body1, body2, axis; p1 = p1, p2 = p2, qoffset = qoffset, spring = spring, damper = damper))
+    (jointtype == :PrismaticOrbital) && (return PrismaticOrbital(body1, body2, axis; p1 = p1, p2 = p2, qoffset = qoffset, spring = spring, damper = damper))
+    (jointtype == :PlanarOrbital)    && (return    PlanarOrbital(body1, body2, axis; p1 = p1, p2 = p2, qoffset = qoffset, spring = spring, damper = damper))
+    (jointtype == :FreeOrbital)      && (return      FreeOrbital(body1, body2, axis; p1 = p1, p2 = p2, qoffset = qoffset, spring = spring, damper = damper))
     (jointtype == :Spherical)        && (return        Spherical(body1, body2;       p1 = p1, p2 = p2, qoffset = qoffset, spring = spring, damper = damper))
     (jointtype == :CylindricalFree)  && (return  CylindricalFree(body1, body2, axis; p1 = p1, p2 = p2,                    spring = spring, damper = damper))
     (jointtype == :PlanarFree)       && (return       PlanarFree(body1, body2, axis; p1 = p1, p2 = p2,                    spring = spring, damper = damper))

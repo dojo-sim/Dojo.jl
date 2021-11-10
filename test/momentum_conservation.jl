@@ -440,17 +440,17 @@ plot(ts, hcat(ms...)'[:,1:3], label = ["x" "y" "z"], title = "linear momentum")
 plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
 @test all(norm.(ms, Inf) .< 1e-11)
 
-eqc2 = collect(mech.eqconstraints)[2]
-tra2 = eqc2.constraints[1]
-tra2.spring
-tra2.damper
-rot2 = eqc2.constraints[2]
-rot2.spring
-rot2.damper
-
-eqc2.isspring
-eqc2.isdamper
-
-eqcs2.axis
-zerodimstaticadjoint(constraintmat(tra2)) * constraintmat(tra2)
-constraintmat(rot2)
+# eqc2 = collect(mech.eqconstraints)[2]
+# tra2 = eqc2.constraints[1]
+# tra2.spring
+# tra2.damper
+# rot2 = eqc2.constraints[2]
+# rot2.spring
+# rot2.damper
+#
+# eqc2.isspring
+# eqc2.isdamper
+#
+# eqcs2.axis
+# zerodimstaticadjoint(constraintmat(tra2)) * constraintmat(tra2)
+# constraintmat(rot2)
