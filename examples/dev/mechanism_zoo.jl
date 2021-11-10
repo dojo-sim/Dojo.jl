@@ -166,7 +166,7 @@ function getdice(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8,
 end
 
 function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = true,
-        conetype = :soc, spring = 0.0, damper = 0.0, Nlink::Int = 5, jointtype::Symbol = :Revolute) where {T}
+        conetype = :soc, spring = 0.0, damper = 0.0, Nlink::Int = 5, jointtype::Symbol = :Planar) where {T}
 
     # Parameters
     ex = [1.;0.;0.]
@@ -190,10 +190,10 @@ function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
     # jointb1 = EqualityConstraint(Floating(origin, links[1]))
     jointb1 = EqualityConstraint(Floating(origin, links[1], spring = 0.0, damper = 0.0)) # TODO remove the spring and damper from floating base
     if Nlink > 1
-        (jointtype == :Revolute) && (eqcs = [EqualityConstraint(Revolute(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink])
+        (jointtype == :Revolute) && (eqcs = [EqualityConstraint(Revolute(links[i - 1], links[i], ex; p1=szeros(T,3), p2=szeros(T,3), spring = spring, damper = damper)) for i = 2:Nlink])
         (jointtype == :Orbital) && (eqcs = [EqualityConstraint(Orbital(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink])
         (jointtype == :Spherical) && (eqcs = [EqualityConstraint(Spherical(links[i - 1], links[i]; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink])
-        (jointtype == :Prismatic) && (eqcs = [EqualityConstraint(Prismatic(links[i - 1], links[i], ez; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink])
+        (jointtype == :Prismatic) && (eqcs = [EqualityConstraint(Prismatic(links[i - 1], links[i], ez; p1=szeros(T,3), p2=szeros(T,3), spring = spring, damper = damper)) for i = 2:Nlink])
         (jointtype == :Planar) && (eqcs = [EqualityConstraint(Planar(links[i - 1], links[i], ez; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink])
         (jointtype == :FixedOrientation) && (eqcs = [EqualityConstraint(FixedOrientation(links[i - 1], links[i]; qoffset = UnitQuaternion(RotX(0.0)), spring = spring, damper = damper)) for i = 2:Nlink])
         (jointtype == :Fixed) && (eqcs = [EqualityConstraint(Fixed(links[i - 1], links[i])) for i = 2:Nlink])
@@ -419,8 +419,8 @@ function initializesnake!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{T}
     link1 = bodies[1]
     # h = link1.shape.rh[2]
     # vert11 = [0.;0.;h / 2]
-    vert11 = [0.;0.;1.0 / 2]
-    vert12 = -vert11
+    vert11 = zeros(3)#[0.;0.;1.0 / 2]
+    vert12 = zeros(3)-vert11
     # set position and velocities
     setPosition!(mechanism.origin, link1, p2 = x, Δq = UnitQuaternion(RotX(ϕ1)))
     setVelocity!(link1, v = v, ω = ω)
