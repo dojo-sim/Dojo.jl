@@ -39,7 +39,7 @@ for (i,joint) in enumerate(mech.eqconstraints)
 end
 
 storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!)
-visstorage = simulate!(mech, 4.0, record = true, solver = :mehrotra!)
+# visstorage = simulate!(mech, 4.0, record = true, solver = :mehrotra!)
 # plot(hcat(Vector.(storage.x[1])...)')
 # plot(hcat([[q.w, q.x, q.y, q.z] for q in storage.q[1]]...)')
 # plot(hcat(Vector.(storage.v[1])...)')
