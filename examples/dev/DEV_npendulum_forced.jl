@@ -20,20 +20,20 @@ open(vis)
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 # Build mechanism
-mech = getmechanism(:npendulum, Δt = 0.05, g = -9.81, Nlink = 5)
+mech = getmechanism(:npendulum, Δt = 0.05, g = -9.81, Nlink = 1)
 initialize!(mech, :npendulum, ϕ1 = 0.1*pi)
 
 for (i,joint) in enumerate(mech.eqconstraints)
     if i ∈ (1,2)
         jt = joint.constraints[1]
         jr = joint.constraints[2]
-        joint.isdamper = true #false
-        joint.isspring = true #false
+        joint.isdamper = false #false
+        joint.isspring = false #false
 
-        jt.spring = 1/i * 1.0 * 1e+4 .* sones(3)[1]# 1e4
-        jt.damper = 1/i * 1.0 * 1e+4 .* sones(3)[1]# 1e4
-        jr.spring = 1/i * 1.0 * 1e+0 .* sones(3)[1]# 1e4
-        jr.damper = 1/i * 1.0 * 1e+0 .* sones(3)[1]# 1e4
+        jt.spring = 1/i * 0.0 * 1e+4 .* sones(3)[1]# 1e4
+        jt.damper = 1/i * 0.0 * 1e+4 .* sones(3)[1]# 1e4
+        jr.spring = 1/i * 0.0 * 1e+0 .* sones(3)[1]# 1e4
+        jr.damper = 1/i * 0.0 * 1e+0 .* sones(3)[1]# 1e4
 
     end
 end
@@ -74,6 +74,10 @@ fd_datamat = finitediff_data_matrix(deepcopy(mech), data, sol, δ = 1e-5) * attj
 @test norm(fd_datamat + datamat, Inf) < 1e-8
 plot(Gray.(abs.(datamat)))
 plot(Gray.(abs.(fd_datamat)))
+
+norm((datamat + fd_datamat)[1:5, 1:13], Inf)
+norm((datamat + fd_datamat)[6:11, 10:13], Inf)
+
 
 norm((datamat + fd_datamat)[1:10, 1:26], Inf)
 
