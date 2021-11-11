@@ -69,12 +69,19 @@ sensi = - (solmat \ datamat)
 
 # finite diff
 fd_datamat = finitediff_data_matrix(deepcopy(mech), data, sol, δ = 1e-5) * attjac
-@test norm(fd_datamat + datamat, Inf) < 1e-8
-plot(Gray.(abs.(datamat)))
-plot(Gray.(abs.(fd_datamat)))
+@test norm(fd_datamat + datamat, Inf) < 1e-7
+plot(Gray.(abs.(1e8 * datamat)))
+plot(Gray.(abs.(1e8*fd_datamat)))
 
-norm((datamat + fd_datamat)[1:5, 1:26], Inf)
-norm((datamat + fd_datamat)[6:10, 1:26], Inf)
+norm((datamat + fd_datamat)[1:3, 1:15], Inf)
+norm((datamat + fd_datamat)[4:9, 1:12], Inf)
+norm((datamat + fd_datamat)[4:9, 13:15], Inf)
+
+# norm((datamat + fd_datamat)[6:10, 13], Inf)
+
+datamat[4:9, 13:15]
+-fd_datamat[4:9, 13:15]
+
 norm((datamat + fd_datamat)[11:16, 1:26], Inf)
 norm((datamat + fd_datamat)[17:22, 1:26], Inf)
 

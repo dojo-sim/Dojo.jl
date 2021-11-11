@@ -71,55 +71,6 @@ end
     return X, Q
 end
 
-
-# ∂g∂ʳposb(joint::Rotational{T}, statea::State, stateb::State, Δt) where T = -1.0 * ∂g∂ʳposb(joint, posargsk(statea)..., posargsk(stateb)...)
-# ∂g∂ʳposb(joint::Rotational{T}, stateb::State, Δt) where T = -1.0 * ∂g∂ʳposb(joint, posargsk(stateb)...)
-
-
-## vec(G) Jacobian (also NOT accounting for quaternion specialness in the second derivative: ∂(∂ʳg∂posx)∂y)
-@inline function ∂2g∂posaa(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
-    XX = szeros(T, 9, 3)
-    XQ = szeros(T, 9, 4)
-    QX = szeros(T, 9, 3)
-    QQ = kron(Vmat(T),VRᵀmat(joint.qoffset)*Rmat(qb)*Tmat(T))*∂L∂qsplit(T)
-
-    return XX, XQ, QX, QQ
-end
-@inline function ∂2g∂posab(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
-    XX = szeros(T, 9, 3)
-    XQ = szeros(T, 9, 4)
-    QX = szeros(T, 9, 3)
-    QQ = kron(VLᵀmat(qa)*Tmat(T),VRᵀmat(joint.qoffset))*∂R∂qsplit(T)
-
-    return XX, XQ, QX, QQ
-end
-@inline function ∂2g∂posba(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
-    XX = szeros(T, 9, 3)
-    XQ = szeros(T, 9, 4)
-    QX = szeros(T, 9, 3)
-    QQ = kron(VLᵀmat(qb),VRᵀmat(joint.qoffset))*∂Lᵀ∂qsplit(T)
-
-    return XX, XQ, QX, QQ
-end
-@inline function ∂2g∂posbb(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
-    XX = szeros(T, 9, 3)
-    XQ = szeros(T, 9, 4)
-    QX = szeros(T, 9, 3)
-    QQ = kron(Vmat(T),VRᵀmat(joint.qoffset)*Lᵀmat(qa))*∂L∂qsplit(T)
-
-    return XX, XQ, QX, QQ
-end
-@inline function ∂2g∂posbb(joint::Rotational{T}, xb::AbstractVector, qb::UnitQuaternion) where T
-    XX = szeros(T, 9, 3)
-    XQ = szeros(T, 9, 4)
-    QX = szeros(T, 9, 3)
-    QQ = kron(Vmat(T),VRᵀmat(joint.qoffset))*∂L∂qsplit(T)
-
-    return XX, XQ, QX, QQ
-end
-
-
-
 ### Forcing
 ## Application of joint forces (for dynamics)
 @inline function applyFτ!(joint::Rotational{T}, statea::State, stateb::State, Δt::T, clear::Bool) where T
@@ -228,9 +179,8 @@ end
     return FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb
 end
 
-
 ### Minimal coordinates
-## Position and velocity offsets
+## Position and velocity offsets 
 @inline function getPositionDelta(joint::Rotational, body1::AbstractBody, body2::Body, θ::SVector{N,T}) where {T,N}
     # axis angle representation
     θ = zerodimstaticadjoint(nullspacemat(joint)) * θ
@@ -240,7 +190,7 @@ end
     else
         q = UnitQuaternion(cos(nθ/2),(θ/nθ*sin(nθ/2))..., false)
     end
-
+    
     Δq = q * joint.qoffset # in body1 frame
     return Δq
 end
@@ -259,11 +209,13 @@ end
 @inline function minimalCoordinates(joint::Rotational, body1::Body, body2::Body)
     statea = body1.state
     stateb = body2.state
+    # q = g(joint, statea.xc, statea.qc, stateb.xc, stateb.qc)
     q = statea.qc \ stateb.qc / joint.qoffset
     return nullspacemat(joint) * rotation_vector(q)
 end
 @inline function minimalCoordinates(joint::Rotational, body1::Origin, body2::Body)
     stateb = body2.state
+    # q = g(joint, stateb.xc, stateb.qc)
     q = stateb.qc / joint.qoffset
     return nullspacemat(joint) * rotation_vector(q)
 end

@@ -110,51 +110,6 @@ function ∂g∂ʳposb(joint::Translational{T}, xb::AbstractVector, qb::UnitQuat
     return [X Q]
 end
 
-## vec(G) Jacobian (also NOT accounting for quaternion specialness in the second derivative: ∂(∂ʳg∂posx)∂y)
-@inline function ∂2g∂posaa(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
-    Lpos = Lmat(UnitQuaternion(xb + vrotate(joint.vertices[2], qb) - xa))
-    Ltpos = Lᵀmat(UnitQuaternion(xb + vrotate(joint.vertices[2], qb) - xa))
-
-    XX = szeros(T, 9, 3)
-    XQ = -kron(Vmat(T),VLᵀmat(qa))*∂R∂qsplit(T) - kron(VRᵀmat(qa),Vmat(T))*∂Lᵀ∂qsplit(T)
-    QX = -kron(VLᵀmat(qa),2*VLᵀmat(qa))*∂L∂qsplit(T)[:,SA[2; 3; 4]]
-    QQ = kron(Vmat(T),2*VLᵀmat(qa)*Lpos)*∂L∂qsplit(T) + kron(VLᵀmat(qa)*Ltpos,2*Vmat(T))*∂Lᵀ∂qsplit(T)
-
-    return XX, XQ, QX, QQ
-end
-@inline function ∂2g∂posab(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
-    XX = szeros(T, 9, 3)
-    XQ = szeros(T, 9, 4)
-    QX = kron(VLᵀmat(qa),2*VLᵀmat(qa))*∂L∂qsplit(T)[:,SA[2; 3; 4]]
-    QQ = kron(VLᵀmat(qa),2*VLᵀmat(qa)*Lmat(qb)*Lmat(UnitQuaternion(joint.vertices[2])))*∂Lᵀ∂qsplit(T) + kron(VLᵀmat(qa)*Lmat(qb)*Lᵀmat(UnitQuaternion(joint.vertices[2])),2*VLᵀmat(qa))*∂L∂qsplit(T)
-
-    return XX, XQ, QX, QQ
-end
-@inline function ∂2g∂posba(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
-    XX = szeros(T, 9, 3)
-    XQ = kron(Vmat(T),VLᵀmat(qa))*∂R∂qsplit(T) + kron(VRᵀmat(qa),Vmat(T))*∂Lᵀ∂qsplit(T)
-    QX = szeros(T, 9, 3)
-    QQ = kron(VLᵀmat(qb)*Rᵀmat(UnitQuaternion(joint.vertices[2]))*Rmat(qb),2*VLᵀmat(qa))*∂R∂qsplit(T) + kron(VLᵀmat(qb)*Rᵀmat(UnitQuaternion(joint.vertices[2]))*Rmat(qb)*Rᵀmat(qa),2*Vmat(T))*∂Lᵀ∂qsplit(T)
-
-    return XX, XQ, QX, QQ
-end
-@inline function ∂2g∂posbb(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
-    XX = szeros(T, 9, 3)
-    XQ = szeros(T, 9, 4)
-    QX = szeros(T, 9, 3)
-    QQ = kron(Vmat(T),2*VLᵀmat(qa)*Rmat(qa)*Rᵀmat(qb)*Rmat(UnitQuaternion(joint.vertices[2])))*∂L∂qsplit(T) + kron(VLᵀmat(qb)*Rᵀmat(UnitQuaternion(joint.vertices[2])),2*VLᵀmat(qa)*Rmat(qa))*∂Rᵀ∂qsplit(T)
-
-    return XX, XQ, QX, QQ
-end
-@inline function ∂2g∂posbb(joint::Translational{T}, xb::AbstractVector, qb::UnitQuaternion) where T
-    XX = szeros(T, 9, 3)
-    XQ = szeros(T, 9, 4)
-    QX = szeros(T, 9, 3)
-    QQ = kron(Vmat(T),2*VRᵀmat(qb)*Rmat(UnitQuaternion(joint.vertices[2])))*∂L∂qsplit(T) + kron(VLᵀmat(qb)*Rᵀmat(UnitQuaternion(joint.vertices[2])),2*Vmat(T))*∂Rᵀ∂qsplit(T)
-
-    return XX, XQ, QX, QQ
-end
-
 ### Forcing
 ## Application of joint forces (for dynamics)
 @inline function applyFτ!(joint::Translational{T}, statea::State, stateb::State, Δt::T, clear::Bool) where T
@@ -163,9 +118,9 @@ end
 
     Faw, τaa, Fbw, τbb = applyFτ(joint, joint.Fτ, xa, qa, xb, qb)
     statea.Fk[end] += Faw
-    statea.τk[end] += τaa
+    statea.τk[end] += τaa/2
     stateb.Fk[end] += Fbw
-    stateb.τk[end] += τbb
+    stateb.τk[end] += τbb/2
     clear && (joint.Fτ = szeros(T,3))
     return
 end
@@ -185,6 +140,7 @@ end
     # τbb = torqueFromForce(Fbb, vertices[2]) # TODO this should work, apparently does not work with Planar
     return Faw, τaa/2, Fbw, τbb/2
 end
+
 @inline function applyFτ!(joint::Translational{T}, stateb::State, Δt::T, clear::Bool) where T
     xb, qb = posargsk(stateb)
 
@@ -194,6 +150,7 @@ end
     clear && (joint.Fτ = szeros(T,3))
     return
 end
+
 @inline function applyFτ(joint::Translational{T}, F::AbstractVector, xb::AbstractVector, qb::UnitQuaternion) where T
     vertices = joint.vertices
 
@@ -213,10 +170,12 @@ end
 # Control derivatives
 @inline function ∂Fτ∂ua(joint::Translational, statea::State, stateb::State, Δt::T) where T
     vertices = joint.vertices
-    _, qa = posargsk(statea)
+    xa, qa = posargsk(statea)
+    xb, qb = posargsk(stateb)
 
-    BFa = -VLmat(qa) * RᵀVᵀmat(qa)
-    Bτa = -skew(vertices[1])
+
+    BFa = FiniteDiff.finite_difference_jacobian(F -> applyFτ(joint, F, xa, qa, xb, qb)[1], joint.Fτ)
+    Bτa = 0.5 * FiniteDiff.finite_difference_jacobian(F -> applyFτ(joint, F, xa, qa, xb, qb)[2], joint.Fτ)
 
     return [BFa; Bτa]
 end
@@ -226,12 +185,8 @@ end
     xb, qb = posargsk(stateb)
 
     BFb = FiniteDiff.finite_difference_jacobian(F -> applyFτ(joint, F, xa, qa, xb, qb)[3], joint.Fτ)
-    Bτb = FiniteDiff.finite_difference_jacobian(F -> applyFτ(joint, F, xa, qa, xb, qb)[4], joint.Fτ)
+    Bτb = 0.5 * FiniteDiff.finite_difference_jacobian(F -> applyFτ(joint, F, xa, qa, xb, qb)[4], joint.Fτ)
 
-    # qbinvqa = qb\qa
-    #
-    # BFb = VLmat(qa) * RᵀVᵀmat(qa)
-    # Bτb = skew(vertices[2]) * VLmat(qbinvqa) * RᵀVᵀmat(qbinvqa)
     return [BFb; Bτb]
 end
 @inline function ∂Fτ∂ub(joint::Translational, stateb::State, Δt::T) where T
@@ -239,67 +194,43 @@ end
     xb, qb = posargsk(stateb)
 
     BFb = FiniteDiff.finite_difference_jacobian(F -> applyFτ(joint, F, xb, qb)[1], joint.Fτ)
-    Bτb = FiniteDiff.finite_difference_jacobian(F -> applyFτ(joint, F, xb, qb)[2], joint.Fτ)
+    Bτb = 0.5 * FiniteDiff.finite_difference_jacobian(F -> applyFτ(joint, F, xb, qb)[2], joint.Fτ)
 
-    # BFb = I
-    # Bτb = skew(vertices[2]) * VLᵀmat(qb) * RVᵀmat(qb)
     return [BFb; Bτb]
 end
 
 # Position derivatives
 @inline function ∂Fτ∂posa(joint::Translational{T}, statea::State, stateb::State, Δt::T) where T
-    _, qa = posargsk(statea)
-    _, qb = posargsk(stateb)
+    xa, qa = posargsk(statea)
+    xb, qb = posargsk(stateb)
     F = joint.Fτ
     vertices = joint.vertices
 
-    # FaXa = szeros(T,3,3)
-    # FaQa = -2*VRᵀmat(qa)*Rmat(UnitQuaternion(F))
-    # τaXa = szeros(T,3,3)
-    # τaQa = szeros(T,3,4)
-    # FbXa = szeros(T,3,3)
-    # FbQa = 2*VRᵀmat(qa)*Rmat(UnitQuaternion(F))
-    # τbXa = szeros(T,3,3)
-    # τbQa = 2*skew(vertices[2])*VLᵀmat(qb)*Rmat(qb)*Rᵀmat(qa)*Rmat(UnitQuaternion(F))
-
-    # Faw, τaa, Fbw, τbb = applyFτ(joint, joint.Fτ, xa, qa, xb, qb)
-
     FaXa = FiniteDiff.finite_difference_jacobian(xa -> applyFτ(joint, F, xa, qa, xb, qb)[1], xa)
     FaQa = FiniteDiff.finite_difference_jacobian(qa -> applyFτ(joint, F, xa, UnitQuaternion(qa..., false), xb, qb)[1], [qa.w, qa.x, qa.y, qa.z])
-    τaXa = FiniteDiff.finite_difference_jacobian(xa -> applyFτ(joint, F, xa, qa, xb, qb)[2], xa)
-    τaQa = FiniteDiff.finite_difference_jacobian(qa -> applyFτ(joint, F, xa, UnitQuaternion(qa..., false), xb, qb)[2], [qa.w, qa.x, qa.y, qa.z])
+    τaXa = 0.5 * FiniteDiff.finite_difference_jacobian(xa -> applyFτ(joint, F, xa, qa, xb, qb)[2], xa)
+    τaQa = 0.5 * FiniteDiff.finite_difference_jacobian(qa -> applyFτ(joint, F, xa, UnitQuaternion(qa..., false), xb, qb)[2], [qa.w, qa.x, qa.y, qa.z])
     FbXa = FiniteDiff.finite_difference_jacobian(xa -> applyFτ(joint, F, xa, qa, xb, qb)[3], xa)
     FbQa = FiniteDiff.finite_difference_jacobian(qa -> applyFτ(joint, F, xa, UnitQuaternion(qa..., false), xb, qb)[3], [qa.w, qa.x, qa.y, qa.z])
-    τbXa = FiniteDiff.finite_difference_jacobian(xa -> applyFτ(joint, F, xa, qa, xb, qb)[4], xa)
-    τbQa = FiniteDiff.finite_difference_jacobian(qa -> applyFτ(joint, F, xa, UnitQuaternion(qa..., false), xb, qb)[4], [qa.w, qa.x, qa.y, qa.z])
+    τbXa = 0.5 * FiniteDiff.finite_difference_jacobian(xa -> applyFτ(joint, F, xa, qa, xb, qb)[4], xa)
+    τbQa = 0.5 * FiniteDiff.finite_difference_jacobian(qa -> applyFτ(joint, F, xa, UnitQuaternion(qa..., false), xb, qb)[4], [qa.w, qa.x, qa.y, qa.z])
 
     return FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa
 end
 @inline function ∂Fτ∂posb(joint::Translational{T}, statea::State, stateb::State, Δt::T) where T
-    _, qa = posargsk(statea)
-    _, qb = posargsk(stateb)
+    xa, qa = posargsk(statea)
+    xb, qb = posargsk(stateb)
     F = joint.Fτ
     vertices = joint.vertices
 
-    # FaXb = szeros(T,3,3)
-    # FaQb = szeros(T,3,4)
-    # τaXb = szeros(T,3,3)
-    # τaQb = szeros(T,3,4)
-    # FbXb = szeros(T,3,3)
-    # FbQb = szeros(T,3,4)
-    # τbXb = szeros(T,3,3)
-    # τbQb = 2*skew(vertices[2])*VLᵀmat(qb)*Lmat(qa)*Lmat(UnitQuaternion(F))*Lᵀmat(qa)#*LVᵀmat(qb)
-
-    # Faw, τaa, Fbw, τbb = applyFτ(joint, joint.Fτ, xa, qa, xb, qb)
-
     FaXb = FiniteDiff.finite_difference_jacobian(xb -> applyFτ(joint, F, xa, qa, xb, qb)[1], xb)
     FaQb = FiniteDiff.finite_difference_jacobian(qb -> applyFτ(joint, F, xa, qa, xb, UnitQuaternion(qb..., false))[1], [qb.w, qb.x, qb.y, qb.z])
-    τaXb = FiniteDiff.finite_difference_jacobian(xb -> applyFτ(joint, F, xa, qa, xb, qb)[2], xb)
-    τaQb = FiniteDiff.finite_difference_jacobian(qb -> applyFτ(joint, F, xa, qa, xb, UnitQuaternion(qb..., false))[2], [qb.w, qb.x, qb.y, qb.z])
+    τaXb = 0.5 * FiniteDiff.finite_difference_jacobian(xb -> applyFτ(joint, F, xa, qa, xb, qb)[2], xb)
+    τaQb = 0.5 * FiniteDiff.finite_difference_jacobian(qb -> applyFτ(joint, F, xa, qa, xb, UnitQuaternion(qb..., false))[2], [qb.w, qb.x, qb.y, qb.z])
     FbXb = FiniteDiff.finite_difference_jacobian(xb -> applyFτ(joint, F, xa, qa, xb, qb)[3], xb)
     FbQb = FiniteDiff.finite_difference_jacobian(qb -> applyFτ(joint, F, xa, qa, xb, UnitQuaternion(qb..., false))[3], [qb.w, qb.x, qb.y, qb.z])
-    τbXb = FiniteDiff.finite_difference_jacobian(xb -> applyFτ(joint, F, xa, qa, xb, qb)[4], xb)
-    τbQb = FiniteDiff.finite_difference_jacobian(qb -> applyFτ(joint, F, xa, qa, xb, UnitQuaternion(qb..., false))[4], [qb.w, qb.x, qb.y, qb.z])
+    τbXb = 0.5 * FiniteDiff.finite_difference_jacobian(xb -> applyFτ(joint, F, xa, qa, xb, qb)[4], xb)
+    τbQb = 0.5 * FiniteDiff.finite_difference_jacobian(qb -> applyFτ(joint, F, xa, qa, xb, UnitQuaternion(qb..., false))[4], [qb.w, qb.x, qb.y, qb.z])
 
     return FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb
 end
@@ -308,33 +239,20 @@ end
     F = joint.Fτ
     vertices = joint.vertices
 
-    # FaXb = szeros(T,3,3)
-    # FaQb = szeros(T,3,4)
-    # τaXb = szeros(T,3,3)
-    # τaQb = szeros(T,3,4)
-    # FbXb = szeros(T,3,3)
-    # FbQb = szeros(T,3,4)
-    # τbXb = szeros(T,3,3)
-    # τbQb = 2*skew(vertices[2])*VLᵀmat(qb)*Lmat(UnitQuaternion(F))#*LVᵀmat(qb)
-
-
-    # Fbw, τbb = applyFτ(joint, joint.Fτ, xb, qb)
-
     FaXb = szeros(T,3,3)
     FaQb = szeros(T,3,4)
-    τaXb = szeros(T,3,3)
-    τaQb = szeros(T,3,4)
+    τaXb = 0.5 * szeros(T,3,3)
+    τaQb = 0.5 * szeros(T,3,4)
     FbXb = FiniteDiff.finite_difference_jacobian(xb -> applyFτ(joint, F, xb, qb)[1], xb)
     FbQb = FiniteDiff.finite_difference_jacobian(qb -> applyFτ(joint, F, xb, UnitQuaternion(qb..., false))[1], [qb.w, qb.x, qb.y, qb.z])
-    τbXb = FiniteDiff.finite_difference_jacobian(xb -> applyFτ(joint, F, xb, qb)[2], xb)
-    τbQb = FiniteDiff.finite_difference_jacobian(qb -> applyFτ(joint, F, xb, UnitQuaternion(qb..., false))[2], [qb.w, qb.x, qb.y, qb.z])
+    τbXb = 0.5 * FiniteDiff.finite_difference_jacobian(xb -> applyFτ(joint, F, xb, qb)[2], xb)
+    τbQb = 0.5 * FiniteDiff.finite_difference_jacobian(qb -> applyFτ(joint, F, xb, UnitQuaternion(qb..., false))[2], [qb.w, qb.x, qb.y, qb.z])
 
     return FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb
 end
 
-
 ### Minimal coordinates
-## Position and velocity offsets
+## Position and velocity offsets 
 @inline function getPositionDelta(joint::Translational, body1::AbstractBody, body2::Body, x::SVector)
     Δx = zerodimstaticadjoint(nullspacemat(joint)) * x # in body1 frame
     return Δx

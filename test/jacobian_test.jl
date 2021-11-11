@@ -36,11 +36,14 @@ function test_datamat(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, Δt::T = 0.01
         sol = getsolution(mechanism)
         attjac = attitudejacobian(data, Nb)
 
+        # @show nu = isempty(mechanism.eqconstraints) ? 0 : sum(getcontroldim.(mechanism.eqconstraints))
+
         # IFT
         datamat = full_data_matrix(mechanism)
         # finite diff
         fd_datamat = finitediff_data_matrix(mechanism, data, sol, δ = 1e-5, verbose = verbose) * attjac
-        @test norm(fd_datamat + datamat, Inf) < ϵ
+        
+        @test norm((fd_datamat + datamat)[:, :], Inf) < ϵ
     end
     return nothing
 end
@@ -112,4 +115,4 @@ test_datamat(:slider, tsim = 0.40, ϵ = 1e-8)
 test_datamat(:pendulum, tsim = 0.40, ϵ = 1e-8)
 test_datamat(:npendulum, tsim = 0.40, ϵ = 1e-8)
 test_datamat(:nslider, tsim = 0.40, ϵ = 1e-8)
-test_datamat(:twister, tsim = 0.40, ϵ = 1e-8)
+test_datamat(:twister, tsim = 0.40, ϵ = 1e-7)

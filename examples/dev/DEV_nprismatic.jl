@@ -21,7 +21,7 @@ include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 # Build mechanism
 include("mechanism_zoo.jl")
-mech = getmechanism(:nslider, Δt = 0.01, g = -2.0, Nlink = 1)
+mech = getmechanism(:nslider, Δt = 0.01, g = -2.0, Nlink = 5)
 initialize!(mech, :nslider, z1 = 0.0, Δz = 1.1)
 
 for (i,joint) in enumerate(mech.eqconstraints)
@@ -69,6 +69,12 @@ fd_datamat = finitediff_data_matrix(deepcopy(mech), data, sol, δ = 1e-5) * attj
 @test norm(fd_datamat + datamat, Inf) < 1e-8
 plot(Gray.(abs.(datamat)))
 plot(Gray.(abs.(fd_datamat)))
+
+norm((datamat + fd_datamat)[11:16, 25:26], Inf)
+norm((datamat + fd_datamat)[17:22, 25:26], Inf)
+
+(datamat)[11:16, 25:26]
+(-fd_datamat)[11:16, 25:26]
 
 fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
 @test norm(fd_solmat + solmat, Inf) < 1e-8
