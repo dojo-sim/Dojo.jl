@@ -3,6 +3,7 @@ module DifferentiableContact
 using LinearAlgebra
 using StaticArrays
 using ForwardDiff
+using FiniteDiff
 using StaticArrays: SUnitRange
 using Rotations
 using Rotations: RotationError, pure_quaternion, params, lmult, rmult, tmat, vmat, hmat, skew
@@ -27,6 +28,8 @@ export Origin,
     Controller,
     Storage,
     UnitQuaternion,
+    Rotational,
+    Translational,
 
     Box,
     Cylinder,
@@ -89,15 +92,16 @@ export Origin,
     finitediff_data_matrix,
     finitediff_sensitivity
 
+
 include(joinpath("util", "util.jl"))
 include(joinpath("util", "custom_static.jl"))
 include(joinpath("util", "customdict.jl"))
 include(joinpath("util", "quaternion.jl"))
 
-include(joinpath(module_dir(), "src", "graph", "entry.jl"))
-include(joinpath(module_dir(), "src", "graph", "system.jl"))
-include(joinpath(module_dir(), "src", "graph", "setup_functions.jl"))
-include(joinpath(module_dir(), "src", "graph", "ldu.jl"))
+include(joinpath("graph", "entry.jl"))
+include(joinpath("graph", "system.jl"))
+include(joinpath("graph", "setup_functions.jl"))
+include(joinpath("graph", "ldu.jl"))
 
 include(joinpath("optional_components", "shapes.jl"))
 include(joinpath("optional_components", "storage.jl"))
@@ -128,7 +132,6 @@ include(joinpath("solver", "solverfunctions.jl"))
 include(joinpath("solver", "initconstraints.jl"))
 include(joinpath("solver", "mehrotra.jl"))
 include(joinpath("solver", "linesearch.jl"))
-include(joinpath("optional_components", "linearization.jl"))
 
 include(joinpath("discretization", "Linear.jl"))
 
@@ -138,16 +141,11 @@ include(joinpath("ui", "initialize.jl"))
 include(joinpath("ui", "urdf.jl"))
 
 include(joinpath("..", "examples", "mechanism_zoo.jl"))
-include(joinpath("..", "examples", "dev", "diff_tools.jl"))
+include(joinpath("..", "examples", "diff_tools.jl"))
 include(joinpath("joints", "force.jl"))
 include(joinpath("joints", "torque.jl"))
 include(joinpath("vis", "convertshape.jl"))
 include(joinpath("vis", "visualize.jl"))
-
-include(joinpath("graph", "entry.jl"))
-include(joinpath("graph", "system.jl"))
-include(joinpath("graph", "setup_functions.jl"))
-include(joinpath("graph", "ldu.jl"))
 
 include(joinpath("optional_components", "energy.jl"))
 

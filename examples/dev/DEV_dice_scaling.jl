@@ -20,7 +20,7 @@ vis = Visualizer()
 open(vis)
 
 # Include new files
-include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
+include(joinpath(module_dir(), "examples", "loader.jl"))
 
 <<<<<<< HEAD
 mech = getmechanism(:dice, Δt = 1.0, g = -1.0, cf = 1.0, contact = false, conetype = :contact)
@@ -44,7 +44,7 @@ storage = simulate!(mech, 0.01, record = true, solver = :mehrotra!)
 # Differentiation
 ################################################################################
 
-include(joinpath(module_dir(), "examples", "dev", "diff_tools_control_contact.jl"))
+include(joinpath(module_dir(), "examples", "diff_tools_control_contact.jl"))
 # Set data
 Nb = length(mech.bodies)
 # Random.seed!(10)

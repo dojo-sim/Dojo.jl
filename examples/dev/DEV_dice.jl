@@ -20,7 +20,7 @@ vis = Visualizer()
 open(vis)
 
 # Include new files
-include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
+include(joinpath(module_dir(), "examples", "loader.jl"))
 
 mech = getmechanism(:dice, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, mode=:box, conetype = :soc)
 Random.seed!(100)
@@ -35,7 +35,7 @@ visualize(mech, storage, vis = vis)
 # Differentiation
 ################################################################################
 
-include(joinpath(module_dir(), "examples", "dev", "diff_tools.jl"))
+include(joinpath(module_dir(), "examples", "diff_tools.jl"))
 # Set data
 data = getdata(mech)
 setdata!(mech, data)

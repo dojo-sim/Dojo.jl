@@ -17,7 +17,7 @@ vis = Visualizer()
 open(vis)
 
 # Include new files
-include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
+include(joinpath(module_dir(), "examples", "loader.jl"))
 
 # Build mechanism
 mech = getmechanism(:atlas, Δt = 0.01, g = -9.81, cf = 0.8, contact = true)

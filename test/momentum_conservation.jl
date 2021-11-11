@@ -15,7 +15,7 @@ function getmomentum(model::Symbol, t::T, Δt::T, g::T, ϵ::T, controller!::Any;
     initialize!(mechanism, model; init_kwargs...)
     storage = simulate!(mechanism, t, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ)
     # visualize(mechanism, storage, vis = vis)
-    return momentum(mechanism)
+    return DifferentiableContact.momentum(mechanism)
 end
 
 

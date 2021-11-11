@@ -17,7 +17,7 @@ vis = Visualizer()
 open(vis)
 
 # Include new files
-include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
+include(joinpath(module_dir(), "examples", "loader.jl"))
 
 Δt_ = 0.01
 mech = getmechanism(:atlas, Δt = Δt_, g = -2.0, cf = 0.8, contact = true, spring = 1000.0, damper = 500.0, model_type = :fast)

@@ -17,7 +17,7 @@ vis = Visualizer()
 open(vis)
 
 # Include new files
-include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
+include(joinpath(module_dir(), "examples", "loader.jl"))
 
 # Build mechanism
 mech = getmechanism(:npendulum, Δt = 0.05, g = -9.81, Nlink = 5)

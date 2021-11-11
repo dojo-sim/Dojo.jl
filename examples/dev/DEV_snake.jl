@@ -17,7 +17,7 @@ vis = Visualizer()
 open(vis)
 
 # Include new files
-include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
+include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
 mech = getmechanism(:snake, Nlink = 5, Δt = 0.01, g = -9.81, cf = 0.0, contact = true, conetype = :soc)

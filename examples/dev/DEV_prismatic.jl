@@ -6,7 +6,7 @@ end
 # Activate package
 using Pkg
 Pkg.activate(module_dir())
-include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
+include(joinpath(module_dir(), "examples", "loader.jl"))
 
 # Open visualizer
 vis = Visualizer()
