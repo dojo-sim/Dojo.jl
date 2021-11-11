@@ -1,0 +1,34 @@
+name: CI
+on:
+  push:
+    branches:
+      - main
+    tags: '*' 
+  pull_request:
+#   schedule:
+#     - cron: '42 10,22 * * *'
+jobs:
+  test:
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    if: ${{ contains(github.event.head_commit.message, 'run_ci') }}
+    strategy:
+      matrix:
+        version:
+          - '1.6'
+        os:
+          - ubuntu-latest
+#           - macOS-latest
+#           - windows-latest
+        arch:
+          - x64
+    steps:
+      - uses: actions/checkout@v1
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+      - uses: julia-actions/julia-runtest@latest
+      - uses: julia-actions/julia-uploadcodecov@latest
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
