@@ -359,7 +359,9 @@ function gettwister(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = 
     # Constraints
     jointb1 = EqualityConstraint(Floating(origin, links[1], spring = 0.0, damper = 0.0)) # TODO remove the spring and damper from floating base
     if Nlink > 1
-        eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], axes[i%3+1]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
+        # eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], axes[i%3+1]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
+        # eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], axes[1]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
+        eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], axes[3]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
         eqcs = [jointb1; eqcs]
     else
         eqcs = [jointb1]

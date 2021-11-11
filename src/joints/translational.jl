@@ -15,16 +15,19 @@ mutable struct Translational{T,N} <: Joint{T,N}
         new{T,N}(V3, V12, vertices, spring, damper, Fτ), body1.id, body2.id
     end
 end
+
 Translational0 = Translational{T,0} where T
 Translational1 = Translational{T,1} where T
 Translational2 = Translational{T,2} where T
 Translational3 = Translational{T,3} where T
+
 springforcea(joint::Translational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
 springforceb(joint::Translational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
 springforceb(joint::Translational{T,3}, body1::Origin, body2::Body, Δt::T, childid) where T = szeros(T, 6)
 damperforcea(joint::Translational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
 damperforceb(joint::Translational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
 damperforceb(joint::Translational{T,3}, body1::Origin, body2::Body, Δt::T, childid) where T = szeros(T, 6)
+
 function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::Translational{T,N}) where {T,N}
     summary(io, constraint)
     println(io,"")
@@ -66,30 +69,6 @@ end
     return X, Q
 end
 
-# @inline function g(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-#     vertices = joint.vertices
-#     return xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa))
-# end
-# @inline function g(joint::Translational, xb::AbstractVector, qb::UnitQuaternion)
-#     vertices = joint.vertices
-#     return xb + vrotate(vertices[2], qb) - vertices[1]
-# end
-# ## Derivatives NOT accounting for quaternion specialness
-# @inline function ∂g∂posa(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-#     X = -I(3)
-#     Q = -∂vrotate∂q(joint.vertices[1], qa)
-#     return X, Q
-# end
-# @inline function ∂g∂posb(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-#     X = I(3)
-#     Q = ∂vrotate∂q(joint.vertices[2], qb)
-#     return X, Q
-# end
-# @inline function ∂g∂posb(joint::Translational, xb::AbstractVector, qb::UnitQuaternion)
-#     X = I(3)
-#     Q = ∂vrotate∂q(joint.vertices[2], qb)
-#     return X, Q
-# end
 function ∂g∂ʳposa(joint::Translational{T}, statea::State, stateb::State, Δt) where T
     xa, qa = posargsk(statea)
     xb, qb = posargsk(stateb)
@@ -176,38 +155,49 @@ end
     return XX, XQ, QX, QQ
 end
 
-
 ### Forcing
 ## Application of joint forces (for dynamics)
 @inline function applyFτ!(joint::Translational{T}, statea::State, stateb::State, Δt::T, clear::Bool) where T
     F = joint.Fτ
     vertices = joint.vertices
-    _, qa = posargsk(statea)
-    _, qb = posargsk(stateb)
+    xa, qa = posargsk(statea)
+    xb, qb = posargsk(stateb)
 
-    Fa = vrotate(-F, qa)
-    Fb = -Fa
+    Faw = vrotate(-F, qa) # in the world frame
+    Fbw = -Faw # in the world frame
+    Faa = vrotate(Faw, inv(qa)) # in local frame
+    Fbb = vrotate(Fbw, inv(qb)) # in local frame
 
-    τa = vrotate(torqueFromForce(Fa, vrotate(vertices[1], qa)),inv(qa)) # in local coordinates
-    τb = vrotate(torqueFromForce(Fb, vrotate(vertices[2], qb)),inv(qb)) # in local coordinates
+    pa_b = rotation_matrix(inv(qb)) * (xa + rotation_matrix(qa) * joint.vertices[1]) # body a kinematics point in b frame
+    cb_b = rotation_matrix(inv(qb)) * (xb) # body b com in b frame
+    rb = pa_b - cb_b
+    τaa = torqueFromForce(Faa, vertices[1]) # in local coordinates
+    τbb = torqueFromForce(Fbb, rb) # in local coordinates
+    # τbb = torqueFromForce(Fbb, vertices[2]) # TODO this should work, apparently does not work with Planar
 
-    statea.Fk[end] += Fa
-    statea.τk[end] += τa
-    stateb.Fk[end] += Fb
-    stateb.τk[end] += τb
+    statea.Fk[end] += Faw
+    statea.τk[end] += τaa/2
+    stateb.Fk[end] += Fbw
+    stateb.τk[end] += τbb/2
     clear && (joint.Fτ = szeros(T,3))
     return
 end
 @inline function applyFτ!(joint::Translational{T}, stateb::State, Δt::T, clear::Bool) where T
     F = joint.Fτ
     vertices = joint.vertices
-    _, qb = posargsk(stateb)
+    xb, qb = posargsk(stateb)
 
-    Fb = F
-    τb = vrotate(torqueFromForce(Fb, vrotate(vertices[2], qb)),inv(qb)) # in local coordinates
+    Fbw = F # in world frame
+    Fbb = vrotate(Fbw, inv(qb)) # in b frame
 
-    stateb.Fk[end] += Fb
-    stateb.τk[end] += τb
+    pa_b = rotation_matrix(inv(qb)) * joint.vertices[1] # body a kinematics point in b frame
+    cb_b = vrotate(xb, inv(qb)) # body b com in b frame
+    rb = pa_b - cb_b
+    τbb = torqueFromForce(Fbb, rb) # in local coordinates
+    # τbb = torqueFromForce(Fbb, vertices[2]) # TODO this should work, apparently does not work with Planar
+
+    stateb.Fk[end] += Fbw
+    stateb.τk[end] += τbb/2
     clear && (joint.Fτ = szeros(T,3))
     return
 end
