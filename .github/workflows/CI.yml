@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - master
-    tags: '*' 
+    tags: '*'
   pull_request:
 #   schedule:
 #     - cron: '42 10,22 * * *'
