@@ -20,7 +20,7 @@ open(vis)
 include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 # Build mechanism
-mech = getmechanism(:npendulum, Δt = 0.05, g = -9.81, Nlink = 1)
+mech = getmechanism(:npendulum, Δt = 0.05, g = -9.81, Nlink = 5)
 initialize!(mech, :npendulum, ϕ1 = 0.1*pi)
 
 for (i,joint) in enumerate(mech.eqconstraints)
@@ -44,12 +44,10 @@ mech.eqconstraints[1].constraints[1].damper
 mech.eqconstraints[1].constraints[2].spring
 mech.eqconstraints[1].constraints[2].damper
 
-
-storage = simulate!(mech, 10.03, record = true, solver = :mehrotra!)
-# storage = simulate!(mech, 3.0, record = true, solver = :mehrotra!)
+# storage = simulate!(mech, 10.03, record = true, solver = :mehrotra!)
+storage = simulate!(mech, 10.0, record = true, solver = :mehrotra!)
 visualize(mech, storage, vis = vis)
 plot([q.x for q in storage.q[1]])
-
 
 
 ################################################################################
@@ -75,12 +73,38 @@ fd_datamat = finitediff_data_matrix(deepcopy(mech), data, sol, δ = 1e-5) * attj
 plot(Gray.(abs.(datamat)))
 plot(Gray.(abs.(fd_datamat)))
 
-norm((datamat + fd_datamat)[1:5, 1:13], Inf)
-norm((datamat + fd_datamat)[6:11, 10:13], Inf)
+norm((datamat + fd_datamat)[1:5, 1:26], Inf)
+norm((datamat + fd_datamat)[6:10, 1:26], Inf)
+norm((datamat + fd_datamat)[11:16, 1:26], Inf)
+norm((datamat + fd_datamat)[17:22, 1:26], Inf)
 
+norm((datamat + fd_datamat)[6:11, 1:13], Inf)
+
+norm((datamat + fd_datamat)[6:11, 1:3], Inf)
+norm((datamat + fd_datamat)[6:11, 4:6], Inf)
+norm((datamat + fd_datamat)[6:11, 7:9], Inf)
+norm((datamat + fd_datamat)[6:11, 10:12], Inf)
+norm((datamat + fd_datamat)[6:11, 13:13], Inf)
+
+datamat[6:11, 1:3]
+-fd_datamat[6:11, 1:3]
+
+joint = mech.eqconstraints[1].constraints[1]
+xb = mech.bodies[2].state.xk[1]
+qb = mech.bodies[2].state.qk[1]
+
+length(mech.eqconstraints[1])
+length(joint)
+fw = w -> transpose(∂g∂ʳposb(joint, w, qb)[1:3, 4:6]) * constraintmat(joint)' * mech.eqconstraints[1].λsol[2][1:3]
+ForwardDiff.jacobian(fw, xb)
+
+using FiniteDiff
+fz = z -> -transpose(∂g∂ʳposb(joint, xb, UnitQuaternion(z..., false))[1:3, 1:3]) * constraintmat(joint)' * mech.eqconstraints[1].λsol[2][1:3]
+FiniteDiff.finite_difference_jacobian(fz, [qb.w, qb.x, qb.y, qb.z]) * LVᵀmat(qb)
+ForwardDiff.jacobian(fz, [qb.w, qb.x, qb.y, qb.z]) #* LVᵀmat(qb)
+fdjac(fz, [qb.w, qb.x, qb.y, qb.z]) #* LVᵀmat(qb)
 
 norm((datamat + fd_datamat)[1:10, 1:26], Inf)
-
 norm((datamat + fd_datamat)[11:16, 1:6], Inf)
 norm((datamat + fd_datamat)[11:16, 4:6], Inf)
 norm((datamat + fd_datamat)[11:16, 7:9], Inf)

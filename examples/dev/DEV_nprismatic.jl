@@ -21,34 +21,31 @@ include(joinpath(module_dir(), "examples", "dev", "loader.jl"))
 
 # Build mechanism
 include("mechanism_zoo.jl")
-mech = getmechanism(:nslider, Δt = 0.01, g = -2.0, Nlink = 2)
+mech = getmechanism(:nslider, Δt = 0.01, g = -2.0, Nlink = 1)
 initialize!(mech, :nslider, z1 = 0.0, Δz = 1.1)
 
 for (i,joint) in enumerate(mech.eqconstraints)
     if i ∈ (1:10)
         jt = joint.constraints[1]
         jr = joint.constraints[2]
-        joint.isdamper = true #false
-        joint.isspring = true #false
+        joint.isdamper = false #false
+        joint.isspring = false #false
 
-        jt.spring = 1/1 * 1.5 * 1e-1 .* sones(3)[1]# 1e4
-        jt.damper = 1/1 * 3.1 * 1e-1 .* sones(3)[1]# 1e4
-        jr.spring = 1/1 * 2.7 * 1e-1 .* sones(3)[1]# 1e4
-        jr.damper = 1/1 * 2.2 * 1e-1 .* sones(3)[1]# 1e4
+        jt.spring = 0.0 * 1/1 * 1.5 * 1e-1 .* sones(3)[1]# 1e4
+        jt.damper = 0.0 * 1/1 * 3.1 * 1e-1 .* sones(3)[1]# 1e4
+        jr.spring = 0.0 * 1/1 * 2.7 * 1e-1 .* sones(3)[1]# 1e4
+        jr.damper = 0.0 * 1/1 * 2.2 * 1e-1 .* sones(3)[1]# 1e4
     end
 end
 
-storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!)
+storage = simulate!(mech, 1.0, record = true, solver = :mehrotra!)
 # visstorage = simulate!(mech, 4.0, record = true, solver = :mehrotra!)
 # plot(hcat(Vector.(storage.x[1])...)')
 # plot(hcat([[q.w, q.x, q.y, q.z] for q in storage.q[1]]...)')
 # plot(hcat(Vector.(storage.v[1])...)')
 # plot(hcat(Vector.(storage.ω[1])...)')
 
-visualize(mech, visstorage, vis = vis)
-
-λsol[2]
-
+visualize(mech, storage, vis = vis)
 
 ################################################################################
 # Differentiation

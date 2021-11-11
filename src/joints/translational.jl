@@ -93,45 +93,42 @@ end
 function ∂g∂ʳposa(joint::Translational{T}, statea::State, stateb::State, Δt) where T
     xa, qa = posargsk(statea)
     xb, qb = posargsk(stateb)
+    ∂g∂ʳposa(joint, xa, qa, xb, qb)
+end
+
+function ∂g∂ʳposa(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
     X = -1.0 * transpose(rotation_matrix(qa))
     Q = -1.0 * transpose(skew(joint.vertices[1]))
     return [X Q]
-    # point2 = xb + vrotate(joint.vertices[2], qb)
-    # Q = 2 * VLᵀmat(qa) * (Lmat(UnitQuaternion(point2)) - Lmat(UnitQuaternion(xa)))
-
-    # return [X Q * LVᵀmat(qa)]
 end
 
 function ∂g∂ʳposb(joint::Translational{T}, statea::State, stateb::State, Δt) where T
-    # vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qb))
     xa, qa = posargsk(statea)
     xb, qb = posargsk(stateb)
+    ∂g∂ʳposb(joint, xa, qa, xb, qb)
+end
+
+function ∂g∂ʳposb(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
     X = transpose(rotation_matrix(qa))
     pa_a = rotation_matrix(inv(qa)) * (xa + rotation_matrix(qa) * joint.vertices[1]) # body a kinematics point
     cb_a = rotation_matrix(inv(qa)) * (xb) # body b com
     ra = pa_a - cb_a
     Q = transpose(rotation_matrix(inv(qb) * qa) * skew(ra))
-    # ra = rotation_matrix(inv(qa)) * (rotation_matrix(qb) * joint.vertices[2])
-    # Q = transpose(rotation_matrix(inv(qb) * qa) * skew(ra))
-    # Q = rotation_matrix(inv(qa) * qb) * transpose(skew(joint.vertices[2]))
     return [X Q]
-    # Q = 2 * VLᵀmat(qa) * Rmat(qa) * Rᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
-    # return [X rotation_matrix(inv(qa) * qb) * Q * LVᵀmat(qb)]
 end
 
 function ∂g∂ʳposb(joint::Translational{T}, stateb::State, Δt) where T
     xb, qb = posargsk(stateb)
+    ∂g∂ʳposb(joint, xb, qb)
+end
+
+function ∂g∂ʳposb(joint::Translational{T}, xb::AbstractVector, qb::UnitQuaternion) where T
     X = transpose(I(3))
-    # ra = rotation_matrix(qb) * joint.vertices[2]
-    # Q = transpose(rotation_matrix(inv(qb)) * skew(ra))
-    # Q = rotation_matrix(qb) * transpose(skew(joint.vertices[2]))
     pa_a = joint.vertices[1] # body a kinematics point
     cb_a = xb # body b com
     ra = pa_a - cb_a
     Q = transpose(rotation_matrix(inv(qb)) * skew(ra))
     return [X Q]
-    # Q = 2 * VRᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
-    # return [X Q * LVᵀmat(qb)]
 end
 
 ## vec(G) Jacobian (also NOT accounting for quaternion specialness in the second derivative: ∂(∂ʳg∂posx)∂y)
