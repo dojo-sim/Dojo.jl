@@ -42,7 +42,7 @@ function test_datamat(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, Δt::T = 0.01
         datamat = full_data_matrix(mechanism)
         # finite diff
         fd_datamat = finitediff_data_matrix(mechanism, data, sol, δ = 1e-5, verbose = verbose) * attjac
-        
+
         @test norm((fd_datamat + datamat)[:, :], Inf) < ϵ
     end
     return nothing

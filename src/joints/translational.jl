@@ -138,7 +138,7 @@ end
     τaa = torqueFromForce(Faa, vertices[1]) # in local coordinates
     τbb = torqueFromForce(Fbb, rb) # in local coordinates
     # τbb = torqueFromForce(Fbb, vertices[2]) # TODO this should work, apparently does not work with Planar
-    return Faw, τaa/2, Fbw, τbb/2
+    return Faw, τaa, Fbw, τbb
 end
 
 @inline function applyFτ!(joint::Translational{T}, stateb::State, Δt::T, clear::Bool) where T
@@ -162,7 +162,7 @@ end
     rb = pa_b - cb_b
     τbb = torqueFromForce(Fbb, rb) # in local coordinates
     # τbb = torqueFromForce(Fbb, vertices[2]) # TODO this should work, apparently does not work with Planar
-    return Fbw, τbb/2
+    return Fbw, τbb
 end
 
 
@@ -252,7 +252,7 @@ end
 end
 
 ### Minimal coordinates
-## Position and velocity offsets 
+## Position and velocity offsets
 @inline function getPositionDelta(joint::Translational, body1::AbstractBody, body2::Body, x::SVector)
     Δx = zerodimstaticadjoint(nullspacemat(joint)) * x # in body1 frame
     return Δx
