@@ -339,7 +339,7 @@ function getorbital(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 
 end
 
 function gettwister(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = true,
-        conetype = :soc, spring = 1.0, damper = 1.0, Nlink::Int = 5, jointtype::Symbol = :Prismatic) where {T}
+        conetype = :soc, spring = 0.0, damper = 0.0, Nlink::Int = 5, jointtype::Symbol = :Prismatic) where {T}
     # Parameters
     ex = [1.;0.;0.]
     ey = [0.;1.;0.]

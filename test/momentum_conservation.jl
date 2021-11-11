@@ -4,7 +4,6 @@ open(vis)
 
 include(joinpath("..", "src", "optional_components", "energy.jl"))
 
-
 function controller!(mechanism, k)
     for (i,joint) in enumerate(mechanism.eqconstraints)
         nu = getcontroldim(joint)

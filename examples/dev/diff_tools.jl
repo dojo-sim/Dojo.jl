@@ -1,4 +1,4 @@
-function linearconstraints2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
+function joint_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     Δt = mechanism.Δt
     eqcs = mechanism.eqconstraints
 
@@ -38,40 +38,20 @@ function linearconstraints2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 ccol3c12 = offsetrange(childind,3,12,3)
                 ccol3d12 = offsetrange(childind,3,12,4)
 
-                # pXl, pQl = ∂g∂posa(eqc.constraints[i], posargsnext(pstate, Δt)..., posargsnext(cstate, Δt)...) # x3
-                # cXl, cQl = ∂g∂posb(eqc.constraints[i], posargsnext(pstate, Δt)..., posargsnext(cstate, Δt)...) # x3
-
                 pXl, pQl = ∂g∂posa(eqc.constraints[i], pbody, cbody, Δt) # x3
                 cXl, cQl = ∂g∂posb(eqc.constraints[i], pbody, cbody, Δt) # x3
 
                 mat = constraintmat(eqc.constraints[i])
-                # @show mat
                 pGlx = mat * pXl
                 pGlq = mat * pQl
                 cGlx = mat * cXl
                 cGlq = mat * cQl
-                # @show pGlx
-                # @show pGlq
-                # @show cGlx
-                # @show cGlq
-
+            
                 Gl[range,pcol3a12] = pGlx
                 Gl[range,pcol3c12] = pGlq*Rmat(ωbar(pstate.ωc, Δt)*Δt/2)*LVᵀmat(pstate.qc)
 
                 Gl[range,ccol3a12] = cGlx
                 Gl[range,ccol3c12] = cGlq*Rmat(ωbar(cstate.ωc, Δt)*Δt/2)*LVᵀmat(cstate.qc)
-
-                # if typeof(eqc.constraints[i]) <: Torque
-                #     pXl1, pQl1 = ∂g∂posa1(eqc.constraints[i], pbody, cbody, Δt) # x3
-                #     cXl1, cQl1 = ∂g∂posb1(eqc.constraints[i], pbody, cbody, Δt) # x3
-                #     @show typeof(pQl1)
-                #     @show typeof(cQl1)
-                #     pGlq1 = mat * pQl1
-                #     cGlq1 = mat * cQl1
-                #     Gl[range,pcol3c12] += pGlq1 * LVᵀmat(pstate.qc)
-                #     Gl[range,ccol3c12] += cGlq1 * LVᵀmat(cstate.qc)
-                # end
-
                 ind1 = ind2+1
             end
         else
@@ -88,36 +68,13 @@ function linearconstraints2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 ccol3c12 = offsetrange(childind,3,12,3)
                 ccol3d12 = offsetrange(childind,3,12,4)
 
-
-                # cXl, cQl =  ∂g∂posb(eqc.constraints[i], posargsnext(cstate, Δt)...) # x3
                 cXl, cQl =  ∂g∂posb(eqc.constraints[i], mechanism.origin, cbody, Δt) # x3
-                # cXl, cQl =  ∂g∂posb(eqc.constraints[i], cstate, Δt) # x3
-
                 mat = constraintmat(eqc.constraints[i])
                 cGlx = mat * cXl
                 cGlq = mat * cQl
 
                 Gl[range,ccol3a12] = cGlx
-                # @show range
-                # @show ccol3c12
-                # @show size(cGlq)
-                # @show size(cGlq*Rmat(ωbar(cstate.ωc, Δt)*Δt/2)*LVᵀmat(cstate.qc))
                 Gl[range,ccol3c12] = cGlq*Rmat(ωbar(cstate.ωc, Δt)*Δt/2)*LVᵀmat(cstate.qc)
-
-                # if typeof(eqc.constraints[i]) <: Torque
-                #     cXl1, cQl1 = ∂g∂posb1(eqc.constraints[i], mechanism.origin, cbody, Δt)
-                #     cQlq1 = mat * cQl1
-
-                #     # @show range
-                #     # @show ccol3c12
-                #     # @show cQl1
-                #     # @show range
-                #     # @show ccol3c12
-                #     # @show size(cQl1)
-                #     # @show size(cQlq1)
-
-                #     Gl[range,ccol3c12] += cQlq1 * LVᵀmat(cstate.qc)
-                # end
                 ind1 = ind2+1
             end
         end
@@ -128,110 +85,7 @@ function linearconstraints2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     return Gl
 end
 
-function linearconstraintmapping2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
-    FfzG = zeros(T,Nb*13,Nb*13)
-
-    K = zeros(T,9,9)
-    K[1,1] = K[2,4] = K[3,7] = K[4,2] = K[5,5] = K[6,8] = K[7,3] = K[8,6] = K[9,9] = 1
-    E = SMatrix{3,3,T,9}(I)
-
-    for eqc in mechanism.eqconstraints
-        parentid = eqc.parentid
-
-        if parentid !== nothing
-            parentind = parentid - Ne
-            body1 = getbody(mechanism, parentid)
-            state1 = body1.state
-            pcol13 = offsetrange(parentind,13)
-
-            for (i, childid) in enumerate(eqc.childids)
-                childind = childid - Ne
-                body2 = getbody(mechanism, childid)
-                state2 = body2.state
-                constraint = eqc.constraints[i]
-                ccol13 = offsetrange(childind,13)
-
-                n1 = 1
-                n2 = 0
-                for j=1:i-1
-                    n1 += length(eqc.constraints[j])
-                    n2 += length(eqc.constraints[j])
-                end
-                n2 += length(eqc.constraints[i])
-                λ = eqc.λsol[2][n1:n2]
-
-                Aaa = zeros(T,13,13)
-                Aab = zeros(T,13,13)
-                Aba = zeros(T,13,13)
-                Abb = zeros(T,13,13)
-
-                kronproduct = -kron(λ'*Array(constraintmat(constraint)),E)*K
-
-                XX, XQ, QX, QQ = ∂2g∂posaa(constraint, state1.xc, state1.qc, state2.xc, state2.qc)
-                Aaa[4:6,1:3] = kronproduct*XX
-                Aaa[4:6,7:10] = kronproduct*XQ
-                Aaa[11:13,1:3] = kronproduct*QX
-                Aaa[11:13,7:10] = kronproduct*QQ
-
-                XX, XQ, QX, QQ = ∂2g∂posab(constraint, state1.xc, state1.qc, state2.xc, state2.qc)
-                Aab[4:6,1:3] = kronproduct*XX
-                Aab[4:6,7:10] = kronproduct*XQ
-                Aab[11:13,1:3] = kronproduct*QX
-                Aab[11:13,7:10] = kronproduct*QQ
-
-                XX, XQ, QX, QQ = ∂2g∂posba(constraint, state1.xc, state1.qc, state2.xc, state2.qc)
-                Aba[4:6,1:3] = kronproduct*XX
-                Aba[4:6,7:10] = kronproduct*XQ
-                Aba[11:13,1:3] = kronproduct*QX
-                Aba[11:13,7:10] = kronproduct*QQ
-
-                XX, XQ, QX, QQ = ∂2g∂posbb(constraint, state1.xc, state1.qc, state2.xc, state2.qc)
-                Abb[4:6,1:3] = kronproduct*XX
-                Abb[4:6,7:10] = kronproduct*XQ
-                Abb[11:13,1:3] = kronproduct*QX
-                Abb[11:13,7:10] = kronproduct*QQ
-
-                FfzG[pcol13,pcol13] += Aaa
-                FfzG[pcol13,ccol13] += Aab
-                FfzG[ccol13,pcol13] += Aba
-                FfzG[ccol13,ccol13] += Abb
-            end
-        else
-            for (i, childid) in enumerate(eqc.childids)
-                childind = childid - Ne
-                body2 = getbody(mechanism, childid)
-                state2 = body2.state
-                constraint = eqc.constraints[i]
-                ccol13 = offsetrange(childind,13)
-
-                n1 = 1
-                n2 = 0
-                for i=1:i-1
-                    n1 += length(eqc.constraints[i])
-                    n2 += length(eqc.constraints[i])
-                end
-                n2 += length(eqc.constraints[i])
-                λ = eqc.λsol[2][n1:n2]
-
-                Abb = zeros(T,13,13)
-
-                kronproduct = -kron(λ'*Array(constraintmat(constraint)),E)*K
-
-                XX, XQ, QX, QQ = ∂2g∂posbb(constraint, state2.xc, state2.qc)
-                Abb[4:6,1:3] = kronproduct*XX
-                Abb[4:6,7:10] = kronproduct*XQ
-                Abb[11:13,1:3] = kronproduct*QX
-                Abb[11:13,7:10] = kronproduct*QQ
-
-                FfzG[ccol13,ccol13] += Abb
-            end
-        end
-    end
-
-    return FfzG
-end
-
-function linearconstraintmapping3(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
+function joint_jacobian_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     Δt = mechanism.Δt
     FfzG = zeros(T,Nb*13,Nb*13)
 
@@ -269,35 +123,56 @@ function linearconstraintmapping3(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,
                 Aba = zeros(T,13,13)
                 Abb = zeros(T,13,13)
 
-                kronproduct = -kron(λ'*Array(constraintmat(constraint)),E)*K
+                xa, qa = posargsk(state1) 
+                xb, qb = posargsk(state2)
 
-                # XX, XQ, QX, QQ = ∂2g∂posaa(constraint, posargsnext(state1, Δt)..., posargsnext(state2, Δt)...)
-                XX, XQ, QX, QQ = ∂2g∂posaa(constraint, posargsk(state1)..., posargsk(state2)...)
-                Aaa[4:6,1:3] = kronproduct*XX
-                Aaa[4:6,7:10] = kronproduct*XQ
-                Aaa[11:13,1:3] = kronproduct*QX
-                Aaa[11:13,7:10] = kronproduct*QQ
+                # XX, XQ, QX, QQ = ∂2g∂posaa(constraint, posargsk(state1)..., posargsk(state2)...)
 
-                # XX, XQ, QX, QQ = ∂2g∂posab(constraint, posargsnext(state1, Δt)..., posargsnext(state2, Δt)...)
-                XX, XQ, QX, QQ = ∂2g∂posab(constraint, posargsk(state1)..., posargsk(state2)...)
-                Aab[4:6,1:3] = kronproduct*XX
-                Aab[4:6,7:10] = kronproduct*XQ
-                Aab[11:13,1:3] = kronproduct*QX
-                Aab[11:13,7:10] = kronproduct*QQ
+                XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposa(constraint, w, qa, xb, qb)[1:3, 1:3]) * constraintmat(constraint)' * λ, xa)
+                XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposa(constraint, xa, UnitQuaternion(w..., false), xb, qb)[1:3, 1:3]) * constraintmat(constraint)' * λ, [qa.w; qa.x; qa.y; qa.z])
+                QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposa(constraint, w, qa, xb, qb)[1:3, 4:6]) * constraintmat(constraint)' * λ, xa)
+                QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposa(constraint, xa, UnitQuaternion(w..., false), xb, qb)[1:3, 4:6]) * constraintmat(constraint)' * λ, [qa.w; qa.x; qa.y; qa.z])
 
-                # XX, XQ, QX, QQ = ∂2g∂posba(constraint, posargsnext(state1, Δt)..., posargsnext(state2, Δt)...)
-                XX, XQ, QX, QQ = ∂2g∂posba(constraint, posargsk(state1)..., posargsk(state2)...)
-                Aba[4:6,1:3] = kronproduct*XX
-                Aba[4:6,7:10] = kronproduct*XQ
-                Aba[11:13,1:3] = kronproduct*QX
-                Aba[11:13,7:10] = kronproduct*QQ
+                Aaa[4:6,1:3] = XX
+                Aaa[4:6,7:10] = XQ
+                Aaa[11:13,1:3] = QX
+                Aaa[11:13,7:10] = QQ
 
-                # XX, XQ, QX, QQ = ∂2g∂posbb(constraint, posargsnext(state1, Δt)..., posargsnext(state2, Δt)...)
-                XX, XQ, QX, QQ = ∂2g∂posbb(constraint, posargsk(state1)..., posargsk(state2)...)
-                Abb[4:6,1:3] = kronproduct*XX
-                Abb[4:6,7:10] = kronproduct*XQ
-                Abb[11:13,1:3] = kronproduct*QX
-                Abb[11:13,7:10] = kronproduct*QQ
+                # XX, XQ, QX, QQ = ∂2g∂posab(constraint, posargsk(state1)..., posargsk(state2)...)
+
+                XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposa(constraint, xa, qa, w, qb)[1:3, 1:3]) * constraintmat(constraint)' * λ, xb)
+                XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposa(constraint, xa, qa, xb, UnitQuaternion(w..., false))[1:3, 1:3]) * constraintmat(constraint)' * λ, [qb.w; qb.x; qb.y; qb.z])
+                QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposa(constraint, xa, qa, w, qb)[1:3, 4:6]) * constraintmat(constraint)' * λ, xb)
+                QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposa(constraint, xa, qa, xb, UnitQuaternion(w..., false))[1:3, 4:6]) * constraintmat(constraint)' * λ, [qb.w; qb.x; qb.y; qb.z])
+
+                Aab[4:6,1:3] = XX
+                Aab[4:6,7:10] = XQ
+                Aab[11:13,1:3] = QX
+                Aab[11:13,7:10] = QQ
+
+                # XX, XQ, QX, QQ = ∂2g∂posba(constraint, posargsk(state1)..., posargsk(state2)...)
+                
+                XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(constraint, w, qa, xb, qb)[1:3, 1:3]) * constraintmat(constraint)' * λ, xa)
+                XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(constraint, xa, UnitQuaternion(w..., false), xb, qb)[1:3, 1:3]) * constraintmat(constraint)' * λ, [qa.w; qa.x; qa.y; qa.z])
+                QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(constraint, w, qa, xb, qb)[1:3, 4:6]) * constraintmat(constraint)' * λ, xa)
+                QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(constraint, xa, UnitQuaternion(w..., false), xb, qb)[1:3, 4:6]) * constraintmat(constraint)' * λ, [qa.w; qa.x; qa.y; qa.z])
+
+                Aba[4:6,1:3] = XX
+                Aba[4:6,7:10] = XQ
+                Aba[11:13,1:3] = QX
+                Aba[11:13,7:10] = QQ
+
+                # XX, XQ, QX, QQ = ∂2g∂posbb(constraint, posargsk(state1)..., posargsk(state2)...)
+
+                XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(constraint, xa, qa, w, qb)[1:3, 1:3]) * constraintmat(constraint)' * λ, xb)
+                XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(constraint, xa, qa, xb, UnitQuaternion(w..., false))[1:3, 1:3]) * constraintmat(constraint)' * λ, [qb.w; qb.x; qb.y; qb.z])
+                QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(constraint, xa, qa, w, qb)[1:3, 4:6]) * constraintmat(constraint)' * λ, xb)
+                QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(constraint, xa, qa, xb, UnitQuaternion(w..., false))[1:3, 4:6]) * constraintmat(constraint)' * λ, [qb.w; qb.x; qb.y; qb.z])
+
+                Abb[4:6,1:3] = XX
+                Abb[4:6,7:10] = XQ
+                Abb[11:13,1:3] = QX
+                Abb[11:13,7:10] = QQ
 
                 FfzG[pcol13,pcol13] += Aaa
                 FfzG[pcol13,ccol13] += Aab
@@ -322,15 +197,24 @@ function linearconstraintmapping3(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,
                 λ = eqc.λsol[2][n1:n2]
 
                 Abb = zeros(T,13,13)
+                
+                xb, qb = posargsk(state2)
 
-                kronproduct = -kron(λ'*Array(constraintmat(constraint)),E)*K
+                if typeof(∂g∂ʳposb(constraint, xb, qb)) <: AbstractArray && length(constraint) > 0
+                    # transpose(∂g∂ʳposb(constraint, xb, qb)) * constraintmat(constraint)' * λ
+                    # @show constraintmat(constraint)
+                    # @show λ
+                    # @show 
+                    XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(constraint, w, qb)[1:3, 1:3]) * constraintmat(constraint)' * λ, xb)
+                    XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(constraint, xb, UnitQuaternion(w..., false))[1:3, 1:3]) * constraintmat(constraint)' * λ, [qb.w; qb.x; qb.y; qb.z])
+                    QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(constraint, w, qb)[1:3, 4:6]) * constraintmat(constraint)' * λ, xb)
+                    QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(constraint, xb, UnitQuaternion(w..., false))[1:3, 4:6]) * constraintmat(constraint)' * λ, [qb.w; qb.x; qb.y; qb.z])
 
-                # XX, XQ, QX, QQ = ∂2g∂posbb(constraint, posargsnext(state2, Δt)...)
-                XX, XQ, QX, QQ = ∂2g∂posbb(constraint, posargsk(state2)...)
-                Abb[4:6,1:3] = kronproduct*XX
-                Abb[4:6,7:10] = kronproduct*XQ
-                Abb[11:13,1:3] = kronproduct*QX
-                Abb[11:13,7:10] = kronproduct*QQ
+                    Abb[4:6,1:3] = XX 
+                    Abb[4:6,7:10] = XQ 
+                    Abb[11:13,1:3] = QX
+                    Abb[11:13,7:10] = QQ 
+                end
 
                 FfzG[ccol13,ccol13] += Abb
             end
@@ -340,7 +224,7 @@ function linearconstraintmapping3(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,
     return FfzG
 end
 
-function linearconstraintmapping4(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
+function spring_damper_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     Δt = mechanism.Δt
     FfzG = zeros(T,Nb*13,Nb*12)
 
@@ -382,35 +266,15 @@ function linearconstraintmapping4(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,
 
                 kronproduct = -kron(λ'*Array(constraintmat(constraint)),E)*K
 
-                # XX, XQ, QX, QQ = ∂2g∂posaa(constraint, posargsnext(state1, Δt)..., posargsnext(state2, Δt)...)
-                # Aaa[4:6,1:3] = kronproduct*XX
-                # Aaa[4:6,7:9] = kronproduct*XQ
-                # Aaa[11:13,1:3] = kronproduct*QX
-                # Aaa[11:13,7:9] = kronproduct*QQ
                 Aaa[[4:6; 11:13], [1:3; 7:9]] -= ∂springforcea∂posa(constraint, body1, body2, Δt)
                 Aaa[[4:6; 11:13], [1:3; 7:9]] -= ∂damperforcea∂posa(constraint, body1, body2, Δt)
 
-                # XX, XQ, QX, QQ = ∂2g∂posab(constraint, posargsnext(state1, Δt)..., posargsnext(state2, Δt)...)
-                # Aab[4:6,1:3] = kronproduct*XX
-                # Aab[4:6,7:9] = kronproduct*XQ
-                # Aab[11:13,1:3] = kronproduct*QX
-                # Aab[11:13,7:9] = kronproduct*QQ
                 Aab[[4:6; 11:13], [1:3; 7:9]] -= ∂springforcea∂posb(constraint, body1, body2, Δt)
                 Aab[[4:6; 11:13], [1:3; 7:9]] -= ∂damperforcea∂posb(constraint, body1, body2, Δt)
 
-                # XX, XQ, QX, QQ = ∂2g∂posba(constraint, posargsnext(state1, Δt)..., posargsnext(state2, Δt)...)
-                # Aba[4:6,1:3] = kronproduct*XX
-                # Aba[4:6,7:9] = kronproduct*XQ
-                # Aba[11:13,1:3] = kronproduct*QX
-                # Aba[11:13,7:9] = kronproduct*QQ
                 Aba[[4:6; 11:13], [1:3; 7:9]] -= ∂springforceb∂posa(constraint, body1, body2, Δt)
                 Aba[[4:6; 11:13], [1:3; 7:9]] -= ∂damperforceb∂posa(constraint, body1, body2, Δt)
 
-                # XX, XQ, QX, QQ = ∂2g∂posbb(constraint, posargsnext(state1, Δt)..., posargsnext(state2, Δt)...)
-                # Abb[4:6,1:3] = kronproduct*XX
-                # Abb[4:6,7:9] = kronproduct*XQ
-                # Abb[11:13,1:3] = kronproduct*QX
-                # Abb[11:13,7:9] = kronproduct*QQ
                 Abb[[4:6; 11:13], [1:3; 7:9]] -= ∂springforceb∂posb(constraint, body1, body2, Δt)
                 Abb[[4:6; 11:13], [1:3; 7:9]] -= ∂damperforceb∂posb(constraint, body1, body2, Δt)
 
@@ -442,11 +306,6 @@ function linearconstraintmapping4(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,
 
                 kronproduct = -kron(λ'*Array(constraintmat(constraint)),E)*K
 
-                # XX, XQ, QX, QQ = ∂2g∂posbb(constraint, posargsnext(state2, Δt)...)
-                # Abb[4:6,1:3] = kronproduct*XX
-                # Abb[4:6,7:10] = kronproduct*XQ
-                # Abb[11:13,1:3] = kronproduct*QX
-                # Abb[11:13,7:10] = kronproduct*QQ
                 Abb[[4:6; 11:13], [1:3; 7:9]] -= ∂springforceb∂posb(constraint, body1, body2, Δt)
                 Abb[[4:6; 11:13], [1:3; 7:9]] -= ∂damperforceb∂posb(constraint, body1, body2, Δt)
 
@@ -459,7 +318,7 @@ function linearconstraintmapping4(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,
 end
 
 
-function linearforcemapping2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
+function control_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     Fzu = zeros(T,Nb*13,Nb*12)
     Δt = mechanism.Δt
     for eqc in mechanism.eqconstraints
@@ -516,7 +375,7 @@ function linearforcemapping2(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb
                 # Fzu[[rowbv; rowbω],colb6] -= ∂springforceb∂posb(joint, pbody, cbody, Δt)
                 # Fzu[[rowbv; rowbω],colb6] -= ∂damperforceb∂posb(joint, pbody, cbody, Δt)
             else
-                pbody = mech.origin
+                pbody = mechanism.origin
                 cbody = getbody(mechanism, childid)
                 FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb = ∂Fτ∂posb(joint, cbody.state, mechanism.Δt)
 
@@ -579,8 +438,7 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
         # Ffz[col13,col13] = Ffzi
     end
 
-    # Ffz += linearconstraintmapping(mechanism)
-    Fz += linearforcemapping2(mechanism)
+    Fz += control_datamat(mechanism)
 
     n1 = 1
     n2 = 0
@@ -604,7 +462,7 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
         n1 = n2+1
     end
 
-    G = linearconstraints2(mechanism)
+    G = joint_datamat(mechanism)
     # G, Fλ = linearconstraints(mechanism)
 
     # F contains the following
@@ -760,11 +618,10 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     data = getdata(mechanism)
 
     A = zeros(sum(resdims), datadim(mechanism))
-    A[1:sum(eqcdims), 1:12Nb] += linearconstraints2(mechanism)
+    A[1:sum(eqcdims), 1:12Nb] += joint_datamat(mechanism)
     A[sum(eqcdims) .+ (1:sum(bodydims)), 1:12Nb] += Fz[Fz_indices(length(bodies)),:]
-    # A[sum(eqcdims) .+ (1:sum(bodydims)), 1:12Nb] += linearconstraintmapping3(mechanism)[Fz_indices(length(bodies)), :] * attitudejacobian_chain(data, mechanism.Δt, Nb)[1:13Nb,1:12Nb]
-    A[sum(eqcdims) .+ (1:sum(bodydims)), 1:12Nb] += linearconstraintmapping3(mechanism)[Fz_indices(length(bodies)), :] * attitudejacobian(data, Nb)[1:13Nb,1:12Nb]
-    A[sum(eqcdims) .+ (1:sum(bodydims)), 1:12Nb] += linearconstraintmapping4(mechanism)[Fz_indices(length(bodies)), :]
+    A[sum(eqcdims) .+ (1:sum(bodydims)), 1:12Nb] += joint_jacobian_datamat(mechanism)[Fz_indices(length(bodies)), :] * attitudejacobian(data, Nb)[1:13Nb,1:12Nb]
+    # A[sum(eqcdims) .+ (1:sum(bodydims)), 1:12Nb] += spring_damper_datamat(mechanism)[Fz_indices(length(bodies)), :]
 
     offr = 0
     offc = 0

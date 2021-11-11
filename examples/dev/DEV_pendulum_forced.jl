@@ -40,14 +40,14 @@ jr1 = j1.constraints[2]
 j1.isdamper = false
 j1.isspring = false
 
-jr1.spring = 1e4
-jr1.damper = 1e4
+jr1.spring = 0.0 * 1e4
+jr1.damper = 0.0 * 1e4
 mech.eqconstraints[1].isdamper
 mech.eqconstraints[1].constraints[2].damper
 
-storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!)
+storage = simulate!(mech, 10.0, record = true, solver = :mehrotra!)
 # forcedstorage = simulate!(mech, 0.1, controller!, record = true, solver = :mehrotra!)
-# plot(hcat(Vector.(storage.x[1])...)')
+plot(hcat(Vector.(storage.x[1])...)')
 # plot(hcat(Vector.(forcedstorage.x[1])...)')
 # plot(hcat([[q.w, q.x, q.y, q.z] for q in storage.q[1]]...)')
 # plot(hcat([[q.w, q.x, q.y, q.z] for q in forcedstorage.q[1]]...)')
@@ -56,7 +56,7 @@ storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!)
 # plot(hcat(Vector.(storage.ω[1])...)')
 # plot(hcat(Vector.(forcedstorage.ω[1])...)')
 
-# visualize(mech, storage, vis = vis)
+visualize(mech, storage, vis = vis)
 # visualize(mech, forcedstorage, vis = vis)
 
 ################################################################################
@@ -81,6 +81,17 @@ fd_datamat = finitediff_data_matrix(deepcopy(mech), data, sol, δ = 1e-5) * attj
 # plot(Gray.(abs.(datamat)))
 # plot(Gray.(abs.(fd_datamat)))
 
+norm(datamat[1:5, 1:13] + fd_datamat[1:5, 1:13])
+
+datamat[6:11, 1:13]
+-fd_datamat[6:11, 1:13]
+norm(datamat[6:11, 1:3] + fd_datamat[6:11, 1:3])
+norm(datamat[6:11, 4:6] + fd_datamat[6:11, 4:6])
+norm(datamat[6:11, 7:9] + fd_datamat[6:11, 7:9])
+norm(datamat[6:11, 10:12] + fd_datamat[6:11, 10:12])
+norm(datamat[6:11, 13] + fd_datamat[6:11, 13])
+
+
 fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
 @test norm(fd_solmat + solmat, Inf) < 1e-8
 # plot(Gray.(abs.(solmat)))
@@ -92,11 +103,3 @@ fd_sensi = finitediff_sensitivity(mech, data, δ = 1e-5, ϵr = 1e-14, ϵb = 1e-1
 @test norm(fd_sensi - sensi) / norm(fd_sensi) < 3e-3
 plot(Gray.(sensi))
 plot(Gray.(fd_sensi))
-
-diagonal∂damper∂ʳvel(jr1)
-offdiagonal∂damper∂ʳvel(jr1, mech.bodies[2].state.xsol[1], mech.bodies[2].state.qsol[1])
-
-# solmat1 = solmat
-solmat[6:11, :]
-
-solmat1[6:11, :]

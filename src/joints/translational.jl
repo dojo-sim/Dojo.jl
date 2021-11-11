@@ -72,6 +72,10 @@ end
 function ∂g∂ʳposa(joint::Translational{T}, statea::State, stateb::State, Δt) where T
     xa, qa = posargsk(statea)
     xb, qb = posargsk(stateb)
+    ∂g∂ʳposa(joint, xa, qa, xb, qb)
+end
+
+function ∂g∂ʳposa(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
     X = -1.0 * transpose(rotation_matrix(qa))
     Q = -1.0 * transpose(skew(joint.vertices[1]))
     return [X Q]
@@ -80,6 +84,10 @@ end
 function ∂g∂ʳposb(joint::Translational{T}, statea::State, stateb::State, Δt) where T
     xa, qa = posargsk(statea)
     xb, qb = posargsk(stateb)
+    ∂g∂ʳposb(joint, xa, qa, xb, qb)
+end
+
+function ∂g∂ʳposb(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
     X = transpose(rotation_matrix(qa))
     pa_a = rotation_matrix(inv(qa)) * (xa + rotation_matrix(qa) * joint.vertices[1]) # body a kinematics point
     cb_a = rotation_matrix(inv(qa)) * (xb) # body b com
@@ -90,6 +98,10 @@ end
 
 function ∂g∂ʳposb(joint::Translational{T}, stateb::State, Δt) where T
     xb, qb = posargsk(stateb)
+    ∂g∂ʳposb(joint, xb, qb)
+end
+
+function ∂g∂ʳposb(joint::Translational{T}, xb::AbstractVector, qb::UnitQuaternion) where T
     X = transpose(I(3))
     pa_a = joint.vertices[1] # body a kinematics point
     cb_a = xb # body b com

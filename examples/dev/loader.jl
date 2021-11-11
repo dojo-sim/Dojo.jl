@@ -2,6 +2,7 @@ using LinearAlgebra
 using Parameters
 using StaticArrays
 using ForwardDiff
+using FiniteDiff
 using StaticArrays: SUnitRange
 using Rotations
 using Rotations: RotationError, pure_quaternion, params, lmult, rmult, tmat, vmat, hmat, skew

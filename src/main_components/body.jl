@@ -127,7 +127,7 @@ function ∂F∂z(body::Body{T}, Δt) where T
     J = body.J
     ω1 = state.ωc
     sq1 = sqrt(4 / Δt^2 - ω1' * ω1)
-    ω1func = -skewplusdiag(ω1, sq1) * J + J * ω1 * (ω1' / sq1) + skew(J * ω1)
+    ω1func = -skewplusdiag(-ω1, sq1) * J + J * ω1 * (ω1' / sq1) - skew(J * ω1)
 
     AvelR = [Z3 ω1func*Δt] # solving for impulses
 
