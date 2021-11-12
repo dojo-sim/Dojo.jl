@@ -123,7 +123,7 @@ storage = simulate!(mech, 5.0, controller!, record = true, solver = :mehrotra!, 
 visualize(mech, storage, vis = vis)
 
 
-tss = 0:0.5:10
+tss = 0:0.5:6
 ms = getenergy.(:humanoid, tss, Δt0, g0, ϵ0, controller!;
     mech_kwargs = Dict(:contact => false, :spring => spring0, :damper => damper0))
 # ms = ms .- ms[1]
@@ -300,7 +300,7 @@ v0 = 1.0 * [1, 2, 3] * Δt0
 # v0 = 400.0 * [1/2, 0, 0.0] * Δt0
 # ω0 = 400.0 * [0, 1.0, 0.0] * Δt0
 
-v0 = 5000.0 * [1/2, 0, -1/2] * Δt0
+v0 = 100.0 * [1/2, 0, -1/2] * Δt0
 ω0 = 5000.0 * [1, 1.0, 1.0] * Δt0
 
 q10 = UnitQuaternion(RotX(0.5*π))
@@ -328,7 +328,8 @@ plot(ts, [m[2]-ms[1][2] for m in ms], label = "energy", title = "potential energ
 plot(ts, [m[3]-ms[1][3] for m in ms], label = "energy", title = "kinetic energy", linewidth = 5)
 plot(ts, hcat([m[4:6] .- ms[1][4:6] for m in ms]...)', label = ["x" "y" "z"], title = "linear momentum", linewidth = 5)
 plot(ts, hcat([m[7:9] .- ms[1][7:9] for m in ms]...)', label = ["x" "y" "z"], title = "angular momentum", linewidth = 5)
-
+body1.state.τk
+body1.state.Fk
 
 
 

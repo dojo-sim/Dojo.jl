@@ -118,8 +118,8 @@ storage = simulate!(mech, 5.0, controller!, record = true, solver = :mehrotra!, 
 ms = getmomentum.(:humanoid, ts, Δt0, g0, ϵ0, controller!;
     mech_kwargs = Dict(:contact => false, :spring => spring0, :damper => damper0))
 ms = [m .- ms[1] for m in ms]
-# plot(ts, hcat(ms...)'[:,1:3], label = ["x" "y" "z"], title = "linear momentum")
-# plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
+plot(ts, hcat(ms...)'[:,1:3], label = ["x" "y" "z"], title = "linear momentum")
+plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
 @testset "Humanoid" begin @test all(norm.([m[4:6] for m in ms], Inf) .< 1e-11) end
 
 
@@ -238,3 +238,28 @@ storage = simulate!(mech, 5.0, controller!, record = true, solver = :mehrotra!, 
         @test all(norm.(ms, Inf) .< 1e-11)
     end
 end
+
+
+#
+#
+# Nlink0 = 1
+# spring0 = 0.0 * 4e0
+# damper0 = 0.0 * 4e0
+# mech = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
+#     jointtype = :Prismatic, contact = false)
+#
+# v0 = 1.0 * [1, 2, 3] * Δt0
+# ω0 = 100.0 * [1, 2, 3.0] * Δt0
+# q10 = UnitQuaternion(RotX(0.6*π))
+# initialize!(mech, :snake, q1 = q10, v = v0, ω = ω0)
+# storage = simulate!(mech, 5.0, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+# # visualize(mech, storage, vis = vis)
+#
+# ts = [0.5 + 0.2 * i for i = 1:15]
+# ms = getmomentum.(:snake, ts, Δt0, g0, ϵ0, controller!;
+#     mech_kwargs = Dict(:Nlink => Nlink0, :contact => false, :spring => spring0, :damper => damper0, :jointtype => :Fixed),
+#     init_kwargs = Dict(:q1 => q10, :v => v0, :ω => ω0))
+# ms = [m .- ms[1] for m in ms]
+# plot(ts, hcat(ms...)'[:,1:3], label = ["x" "y" "z"], title = "linear momentum")
+# plot(ts, hcat(ms...)'[:,4:6], label = ["x" "y" "z"], title = "angular momentum")
+# @test all(norm.(ms, Inf) .< 1e-11)
