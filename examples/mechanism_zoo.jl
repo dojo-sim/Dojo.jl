@@ -175,12 +175,10 @@ function getdice(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8,
 end
 
 function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = true,
-        conetype = :soc, spring = 0.0, damper = 0.0, Nlink::Int = 2, jointtype::Symbol = :Spherical) where {T}
+        conetype = :soc, spring = 0.0, damper = 0.0, Nlink::Int = 2, jointtype::Symbol = :Spherical, h::T = 1.0, r::T = 0.05) where {T}
 
     # Parameters
     ex = [1.;0.;0.]
-    h = 1.0
-    r = 0.05
 
     vert11 = [0.;0.;h / 2]
     vert12 = -vert11
@@ -189,6 +187,7 @@ function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
     origin = Origin{T}()
     # links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
     links = [Box(3r, 2r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
+    # links = [Box(h, h, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
     # Constraints
     jointb1 = EqualityConstraint(Floating(origin, links[1], spring = 0.0, damper = 0.0)) # TODO remove the spring and damper from floating base
@@ -444,7 +443,7 @@ function initializesnake!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{T}
     bodies = collect(mechanism.bodies)
     link1 = bodies[1]
     # h = link1.shape.rh[2]
-    h = 1.0
+    h = link1.shape.xyz[3]
     vert11 = [0.;0.; h/2]
     vert12 = -vert11
     # set position and velocities

@@ -18,7 +18,8 @@ function momentum(mechanism::Mechanism{T}) where {T}
         r = body.state.xk[1] - com
         v_body = p_body[i][1:3] ./ body.m
         p_angular += p_body[i][4:6]
-        p_angular += cross(r, body.m * (v_body - v_com))
+        # p_angular += cross(r, body.m * (v_body - v_com))
+        p_angular += cross(r, body.m * (v_body - v_com))/2 #TODO maybe there is cleaner way to handle the factor 2
     end
 
     return [p_linear; p_angular]
@@ -56,8 +57,8 @@ function momentum_body(mechanism::Mechanism{T}, body::Body{T}) where {T}
 
     for (i, eqc) in enumerate(mechanism.eqconstraints)
         f_joint = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
-        p_linear_body -= 0.5 * f_joint[1:3]
-        p_angular_body -= 0.5 * f_joint[4:6]
+        p_linear_body += 0.5 * f_joint[1:3]
+        p_angular_body += 0.5 * f_joint[4:6]
         if body.id == eqc.parentid
             for (i,joint) in enumerate(eqc.constraints)
                 cbody = getbody(mechanism, eqc.childids[i])
@@ -85,7 +86,8 @@ function momentum_body(mechanism::Mechanism{T}, body::Body{T}) where {T}
         end
     end
 
-    p1 = [p_linear_body; rotation_matrix(q2) * p_angular_body]
+    p1 = [p_linear_body; rotation_matrix(q2) * p_angular_body / 2] # TODO maybe this is the solution
+    # p1 = [p_linear_body; rotation_matrix(q2) * p_angular_body]
 
     return p1
 end
@@ -104,15 +106,31 @@ end
 """
     Kinetic energy of a mechanism due to translation and rotation velocities.
 """
-function kineticEnergy(mechanism::Mechanism)
+function kineticEnergy(mechanism::Mechanism; linear::Bool = true, angular::Bool = true)
     Δt = mechanism.Δt
     ET = 0.0
     com = center_of_mass(mechanism)
     for body in mechanism.bodies
-        p1 = momentum_body(mechanism, body)
-        M = [body.m * I szeros(3,3); szeros(3,3) body.J]
-        v1 = M \ p1
-        ET += 0.5 * v1'* M * v1
+        x2, v2, q2, ω2 = fullargssol(body.state)
+        # M = [body.m * I szeros(3,3); szeros(3,3) body.J]
+        p1 = momentum_body(mechanism, body) # in world frame
+        p_linear_body = rotation_matrix(inv(q2)) * p1[1:3] # in body frame             , because we need to multiply by m which in world frame
+        p_angular_body = rotation_matrix(inv(q2)) * p1[4:6] # in body frame, because we need to multiply by J which in body frame
+        # @show scn.(p_linear_body)
+        # @show scn.(p_angular_body)
+        # ET += 0.5 * p_linear_body' * p_linear_body / body.m
+        # ET += 0.5 * p_angular_body' * (body.J \ p_angular_body)
+        v1 = p_linear_body ./ body.m
+        # @show scn.(v1)
+        ω1 = body.J \ p_angular_body
+        # @show scn.(ω1)
+        linear && (ET += 0.5 * body.m * v1' * v1)
+        # @show norm(0.5 * body.m * v1' * v1 - 0.5 * p_linear_body' * p_linear_body / body.m)
+        # @show norm(0.5 * ω1' * body.J * ω1 - 0.5 * p_angular_body' * (body.J \ p_angular_body))
+        # @show 0.5 * body.m * v1' * v1
+        # @show 0.5 * ω1' * body.J * ω1
+        angular && (ET += 0.5 * ω1' * body.J * ω1)
+        # @show scn.(ω1, digits = 5)
     end
     return ET
 end
