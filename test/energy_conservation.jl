@@ -125,26 +125,29 @@ plot([(i-1)*Δt0 for i in 1:length(m0)], ke0 .- ke0[1])
 # with spring and damper
 # with control
 ################################################################################
-function controller!(mechanism, k; U = 4.8, Δt = 0.01)
+function controller!(mechanism, k; U = 0.00, Δt = 0.01)
     for (i,joint) in enumerate(mechanism.eqconstraints)
         nu = getcontroldim(joint)
-        u = (nu <= 5 && k ∈ (1:100)) * U * Δt * sones(nu)
+        u = (nu <= 5 && k ∈ (26:50)) * U * Δt * sones(nu)
         setForce!(mechanism, joint, u)
     end
     return
 end
 spring0 = 00.0
-damper0 = 1.0
+damper0 = 0.0
 mech = getmechanism(:humanoid, Δt = Δt0, g = g0, spring = spring0, damper = damper0, contact = false)
 initialize!(mech, :humanoid)
+bodies = collect(mech.bodies)
+setVelocity!.(bodies, ω = 1e-0rand(3))
 
-storage = simulate!(mech, 30.0, controller!, record = true, solver = :mehrotra!, verbose = false)
+
+storage = simulate!(mech, 10.0, controller!, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, downsample(storage, 10), vis = vis)
 
-m0 = momentum(mech, storage)[5:end]
+m0 = momentum(mech, storage)[1:end]
 mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
 mang0 = [Vector(m-m0[1])[4:6] for m in m0]
-ke0 = kineticEnergy(mech, storage)[5:end]
+ke0 = kineticEnergy(mech, storage)[1:end]
 plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
 plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
 plot([(i-1)*Δt0 for i in 1:length(m0)], ke0 .- ke0[1])
@@ -313,7 +316,7 @@ end
 
 
 ################################################################################
-# 5-lINK SNAKE
+# 2-lINK SNAKE
 ################################################################################
 # multiple bodies
 # initial linear and angular velocity
@@ -321,27 +324,30 @@ end
 # with spring and damper
 # with control
 ################################################################################
-Nlink0 = 2
-spring0 = 0.0 * 4e0
-damper0 = 0.0 * 4e0
+function controller!(mechanism, k; U = 0.5, Δt = 0.01)
+    for (i,joint) in enumerate(mechanism.eqconstraints)
+        nu = getcontroldim(joint)
+        u = (nu <= 5 && k ∈ (1:50)) * U * Δt * sones(nu)
+        setForce!(mechanism, joint, u)
+    end
+    return
+end
+
+Nlink0 = 13
+spring0 = 1.0 * 4e0
+damper0 = 1.0 * 2e+1
+
 mech = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
-    jointtype = :Fixed, contact = false, r = 0.005)
+    jointtype = :Revolute, contact = false, r = 0.05)
 
-v0 = 1.0 * [1, 2, 3] * Δt0
+v0 = 100.0 * [1, 2, 3] * Δt0
 ω0 = 100.0 * [1, 2, 3.0] * Δt0
-
-# v0 = 400.0 * [0, 0, -1/2] * Δt0
-# ω0 = 400.0 * [1, 0, 0.0] * Δt0
-
-# v0 = 400.0 * [1/2, 0, 0.0] * Δt0
-# ω0 = 400.0 * [0, 1.0, 0.0] * Δt0
-
-v0 = 100.0 * [1/2, 0, -1/2] * Δt0
-ω0 = 3000.0 * [1, 1.0, 1.0] * Δt0
+# v0 = 50.0 * [1/2, 0, -1/2] * Δt0
+# ω0 = 100.0 * [1, 1.0, 1.0] * Δt0
 
 q10 = UnitQuaternion(RotX(0.5*π))
 initialize!(mech, :snake, q1 = q10, v = v0, ω = ω0)
-storage = simulate!(mech, 1.50, nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+storage = simulate!(mech, 1.50, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 visualize(mech, storage, vis = vis)
 
 
@@ -351,11 +357,33 @@ mang0 = [Vector(m-m0[1])[4:6] for m in m0]
 ke0 = kineticEnergy(mech, storage)[5:end]
 plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
 plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
-plot([(i-1)*Δt0 for i in 1:length(m0)], ke0 .- ke0[1])
+# plot([(i-1)*Δt0 for i in 1:length(m0)], ke0 .- ke0[1])
 @test all(norm.(mlin0, Inf) .< 1e-11)
 @test all(norm.(mang0, Inf) .< 1e-11)
-@test norm(ke0 .- ke0[1], Inf) < 1e-11
+# @test norm(ke0 .- ke0[1], Inf) < 1e-11
 
+for jointtype in jointtypes
+    @show jointtype
+    mech = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
+        jointtype = jointtype, contact = false, r = 0.05)
+
+    v0 = 100.0 * [1, 2, 3] * Δt0
+    ω0 = 100.0 * [1, 2, 3.0] * Δt0
+    q10 = UnitQuaternion(RotX(0.5*π))
+    initialize!(mech, :snake, q1 = q10, v = v0, ω = ω0)
+    storage = simulate!(mech, 1.50, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+    visualize(mech, storage, vis = vis)
+
+    m0 = momentum(mech, storage)[5:end]
+    mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
+    mang0 = [Vector(m-m0[1])[4:6] for m in m0]
+    plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
+    plt = plot()
+    plot!([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
+    display(plt)
+    @test all(norm.(mlin0, Inf) .< 1e-11)
+    @test all(norm.(mang0, Inf) .< 1e-11)
+end
 
 
 

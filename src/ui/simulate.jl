@@ -25,7 +25,7 @@ function saveToStorage!(mechanism::Mechanism, storage::Storage, i::Int)
         storage.q[ind][i] = state.qk[1] # q1
         storage.v[ind][i] = state.vc # v0.5
         storage.ω[ind][i] = state.ωc # ω0.5
-        p1 = momentum_body(mechanism, body) # p1 in world frame
+        p1 = momentum_body_new(mechanism, body) # p1 in world frame
         px1 = p1[SVector{3,Int}(1,2,3)] # px1 in world frame
         pq1 = p1[SVector{3,Int}(4,5,6)] # pq1 in world frame
         v1 = px1 ./ body.m # in world frame
