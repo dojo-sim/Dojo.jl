@@ -66,25 +66,35 @@ jointtypes = [
 # no spring and damper
 # no control
 ################################################################################
+Δt0 = 0.01
+g0 = 00.0
 mech = getmechanism(:dice, Δt = Δt0, g = g0, contact = false)
 v0 = [1,2,3.0]
 ω0 = [1,1,1.0]
 initialize!(mech, :dice, v = v0, ω = ω0)
 
-ts = [0.1 + 0.2 * i for i = 1:5]
-storage = simulate!(mech, 5.0, nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+ts = [0.1 + 0.04 * i for i = 1:5]
+
+storage = simulate!(mech, 0.10, nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 visualize(mech, storage, vis = vis)
 
-m0 = momentum(mech, storage)[5:end]
-mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
-mang0 = [Vector(m-m0[1])[4:6] for m in m0]
-ke0 = kineticEnergy(mech, storage)[5:end]
-plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
-plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
+# ms = getenergy.(:dice, ts, Δt0, g0, ϵ0, nocontrol!,
+#     init_kwargs = Dict(:v => v0, :ω => ω0))
+# ms = ms .- ms[1]
+# plot(ts, ms, label = "energy", title = "mechanical energy")
+# @testset "Dice" begin @test all(norm.(ms, Inf) .< 1e-11) end
+
+storage.v
+storage.x
+
+
+
+m0 = momentum(mech, storage)
+ke0 = kineticEnergy(mech, storage)
+m0 = [m-m0[1] for m in m0]
+plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(m0...)'[:,1:3])
+plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(m0...)'[:,4:6])
 plot([(i-1)*Δt0 for i in 1:length(m0)], ke0 .- ke0[1])
-@test all(norm.(mlin0, Inf) .< 1e-11)
-@test all(norm.(mang0, Inf) .< 1e-11)
-@test norm(ke0 .- ke0[1], Inf) < 1e-11
 
 ################################################################################
 # SINGLE PENDULUM
@@ -103,17 +113,11 @@ initialize!(mech, :pendulum, ϕ1 = ϕ0, ω1 = ω0)
 storage = simulate!(mech, 5.0, nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 visualize(mech, storage, vis = vis)
 
-m0 = momentum(mech, storage)[5:end]
-mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
-mang0 = [Vector(m-m0[1])[4:6] for m in m0]
-ke0 = kineticEnergy(mech, storage)[5:end]
-plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
-plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
-plot([(i-1)*Δt0 for i in 1:length(m0)], ke0 .- ke0[1])
-# @test all(norm.(mlin0, Inf) .< 1e-11)
-@test all(norm.(mang0, Inf) .< 1e-11)
-@test norm(ke0 .- ke0[1], Inf) < 1e-11
-
+ms = getenergy.(:pendulum, ts, Δt0, g0, ϵ0, nocontrol!;
+    init_kwargs = Dict(:ϕ1 => ϕ0, :ω1 => ω0))
+ms = ms .- ms[1]
+plot(ts, ms, label = "energy", title = "mechanical energy")
+@testset "Pendulum" begin @test all(norm.(ms, Inf) .< 1e-11) end
 
 
 ################################################################################
@@ -125,39 +129,14 @@ plot([(i-1)*Δt0 for i in 1:length(m0)], ke0 .- ke0[1])
 # with spring and damper
 # with control
 ################################################################################
-function controller!(mechanism, k; U = 4.8, Δt = 0.01)
-    for (i,joint) in enumerate(mechanism.eqconstraints)
-        nu = getcontroldim(joint)
-        u = (nu <= 5 && k ∈ (1:100)) * U * Δt * sones(nu)
-        setForce!(mechanism, joint, u)
-    end
-    return
-end
-spring0 = 00.0
-damper0 = 1.0
+spring0 = 10.0
+damper0 = 0.0
 mech = getmechanism(:humanoid, Δt = Δt0, g = g0, spring = spring0, damper = damper0, contact = false)
 initialize!(mech, :humanoid)
 
-storage = simulate!(mech, 30.0, controller!, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, downsample(storage, 10), vis = vis)
+storage = simulate!(mech, 5.0, controller!, record = true, solver = :mehrotra!, verbose = false)
+visualize(mech, storage, vis = vis)
 
-m0 = momentum(mech, storage)[5:end]
-mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
-mang0 = [Vector(m-m0[1])[4:6] for m in m0]
-ke0 = kineticEnergy(mech, storage)[5:end]
-plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
-plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
-plot([(i-1)*Δt0 for i in 1:length(m0)], ke0 .- ke0[1])
-@test all(norm.(mlin0, Inf) .< 1e-11)
-@test all(norm.(mang0, Inf) .< 1e-11)
-@test norm(ke0 .- ke0[1], Inf) < 1e-11
-
-nbodies = length(collect(mech.bodies))
-plt = plot()
-for i = 1:nbodies
-    plot!(hcat([Vector(storage.x[i][t] .- storage.x[i][1500]) for t = 1500:3000]...)')
-end
-display(plt)
 
 tss = 0:0.5:6
 ms = getenergy.(:humanoid, tss, Δt0, g0, ϵ0, controller!;
@@ -343,25 +322,6 @@ q10 = UnitQuaternion(RotX(0.5*π))
 initialize!(mech, :snake, q1 = q10, v = v0, ω = ω0)
 storage = simulate!(mech, 1.50, nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 visualize(mech, storage, vis = vis)
-
-
-m0 = momentum(mech, storage)[5:end]
-mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
-mang0 = [Vector(m-m0[1])[4:6] for m in m0]
-ke0 = kineticEnergy(mech, storage)[5:end]
-plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
-plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
-plot([(i-1)*Δt0 for i in 1:length(m0)], ke0 .- ke0[1])
-@test all(norm.(mlin0, Inf) .< 1e-11)
-@test all(norm.(mang0, Inf) .< 1e-11)
-@test norm(ke0 .- ke0[1], Inf) < 1e-11
-
-
-
-
-
-
-
 
 kineticEnergy(mech)
 body1 = collect(mech.bodies)[1]

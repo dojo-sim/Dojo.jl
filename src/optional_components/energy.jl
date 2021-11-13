@@ -36,6 +36,14 @@ function center_of_mass(mechanism::Mechanism{T}) where T
     return r ./ total_mass(mechanism)
 end
 
+function center_of_mass(mechanism::Mechanism{T}, storage::Storage{T,N}, t::Int) where {T,N}
+    r = zeros(T, 3)
+    for (i,body) in enumerate(mechanism.bodies)
+        r += body.m * storage.x[i][t]
+    end
+    return r ./ total_mass(mechanism)
+end
+
 function total_mass(mechanism::Mechanism{T}) where T
     w = 0.0
     for body in mechanism.bodies
@@ -50,25 +58,30 @@ end
 function momentum_body(mechanism::Mechanism{T}, body::Body{T}) where {T}
     Δt = mechanism.Δt
     J = body.J
-    x2, v2, q2, ω2 = fullargssol(body.state)
-    ω2 = body.state.ωsol[2]
-    ω1 = body.state.ωc
-    p_linear_body = body.m * v2  - 0.5 * [0; 0; body.m * mechanism.g * Δt] - 0.5 * body.state.Fk[1]
-    # p_angular_body = Δt * sqrt(4 / Δt^2.0 - ω2' * ω2) * body.J * ω2 + Δt * skew(ω2) * (body.J * ω2) - body.state.τk[1]
-    # p_angular_body = Δt * sqrt(4 / Δt^2.0 - ω1' * ω1) * body.J * ω1 - Δt * skew(ω1) * (body.J * ω1) + body.state.τk[1]
-    p_angular_body = Δt * sqrt(4 / Δt^2.0 - ω2' * ω2) * body.J * ω2 - Δt * skew(ω2) * (body.J * ω2) - body.state.τk[1]
+    x1 = body.state.xk[1]
+    q1 = body.state.qk[1]
+    v05 = body.state.vc
+    ω05 = body.state.ωc
+    v15 = body.state.vsol[2]
+    ω15 = body.state.ωsol[2]
 
+    p_linear_body = body.m * v15  - 0.5 * [0; 0; body.m * mechanism.g * Δt] - 0.5 * body.state.Fk[1]
+    # p_angular_body = Δt * sqrt(4 / Δt^2.0 - ω05' * ω05) * body.J * ω05 - Δt * skew(ω05) * (body.J * ω05) + body.state.τk[1]
+    # @show body.state.Fk[1]
+    # @show body.state.τk[1]
+    # p_angular_body = Δt * sqrt(4 / Δt^2.0 - ω15' * ω15) * body.J * ω15 + Δt * skew(ω15) * (body.J * ω15) - 0.5*body.state.τk[1]
+    p_angular_body = Δt * sqrt(4 / Δt^2.0 - ω15' * ω15) * body.J * ω15 - Δt * skew(ω15) * (body.J * ω15) - body.state.τk[1]
 
     α = -1.0
     for (i, eqc) in enumerate(mechanism.eqconstraints)
-        f_joint = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
-        # eqc.isspring && (f_joint += springforce(mechanism, eqc, body))
-        # eqc.isdamper && (f_joint += damperforce(mechanism, eqc, body))
 
-        # f_joint = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
+        f_joint = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2] # computed at 1.5
+        eqc.isspring && (f_joint += springforce(mechanism, eqc, body)) # computed at 1.5
+        eqc.isdamper && (f_joint += damperforce(mechanism, eqc, body)) # computed at 1.5
+
         p_linear_body += α * 0.5 * f_joint[1:3]
         p_angular_body += α * 0.5 * f_joint[4:6]
-        #
+
         # if body.id == eqc.parentid
         #     for (i,joint) in enumerate(eqc.constraints)
         #         cbody = getbody(mechanism, eqc.childids[i])
@@ -96,12 +109,73 @@ function momentum_body(mechanism::Mechanism{T}, body::Body{T}) where {T}
         # end
     end
 
-    p1 = [p_linear_body; rotation_matrix(q2) * p_angular_body / 2] # TODO maybe this is the solution
+    p1 = [p_linear_body; rotation_matrix(q1) * p_angular_body/2] # everything in the world frame, TODO maybe this is the solution
     # p1 = [p_linear_body; rotation_matrix(q2) * p_angular_body]
-
     return p1
 end
 
+"""
+    Linear and angular momentum of a body using Legendre transform.
+"""
+function momentum_body_new(mechanism::Mechanism{T}, body::Body{T}) where {T}
+    Δt = mechanism.Δt
+    J = body.J
+    x1 = body.state.xk[1]
+    q1 = body.state.qk[1]
+    v05 = body.state.vc
+    ω05 = body.state.ωc
+    v15 = body.state.vsol[2]
+    ω15 = body.state.ωsol[2]
+
+    p_linear_body = body.m * v15  - 0.5 * [0; 0; body.m * mechanism.g * Δt] - 0.5 * body.state.Fk[1]
+    # p_angular_body = Δt * sqrt(4 / Δt^2.0 - ω15' * ω15) * body.J * ω15 + Δt * skew(ω15) * (body.J * ω15) - 0.5*body.state.τk[1]
+    p_angular_body = Δt * sqrt(4 / Δt^2.0 - ω15' * ω15) * body.J * ω15 + Δt * skew(ω15) * (body.J * ω15) - body.state.τk[1]
+
+    α = -1.0
+    for (i, eqc) in enumerate(mechanism.eqconstraints)
+
+        f_joint = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2] # computed at 1.5
+        eqc.isspring && (f_joint += springforce(mechanism, eqc, body)) # computed at 1.5
+        eqc.isdamper && (f_joint += damperforce(mechanism, eqc, body)) # computed at 1.5
+
+        p_linear_body += α * 0.5 * f_joint[1:3]
+        p_angular_body += α * 0.5 * f_joint[4:6]
+    end
+
+    p1 = [p_linear_body; rotation_matrix(q1) * p_angular_body/2] # everything in the world frame, TODO maybe this is the solution
+    # p1 = [p_linear_body; rotation_matrix(q2) * p_angular_body]
+    return p1
+end
+
+
+function momentum(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, storage::Storage{T,Ns}, t::Int) where {T,Nn,Ne,Nb,Ni,Ns}
+    p = zeros(T, 6)
+    com = center_of_mass(mechanism, storage, t)
+    mass = total_mass(mechanism)
+    p_linear_body = [storage.px[i][t] for i = 1:Nb] # in world frame
+    p_angular_body = [storage.pq[i][t] for i = 1:Nb] # in world frame
+
+    p_linear = sum(p_linear_body)
+    p_angular = zeros(T, 3)
+    v_com = p_linear ./ mass
+    for (i, body) in enumerate(mechanism.bodies)
+        r = storage.x[i][t] - com
+        v_body = p_linear_body[i] ./ body.m
+        p_angular += p_angular_body[i]
+        # p_angular += cross(r, body.m * (v_body - v_com))
+        p_angular += cross(r, body.m * (v_body - v_com))/2 #TODO maybe there is cleaner way to handle the factor 2
+    end
+
+    return [p_linear; p_angular] # in world frame
+end
+
+function momentum(mechanism::Mechanism, storage::Storage{T,N}) where {T,N}
+    m = [szeros(T,6) for i = 1:N]
+    for i = 1:N
+        m[i] = momentum(mechanism, storage, i)
+    end
+    return m # in world frame
+end
 
 """
     Total mechanical energy of a mechanism.
@@ -144,6 +218,28 @@ function kineticEnergy(mechanism::Mechanism; linear::Bool = true, angular::Bool 
     end
     return ET
 end
+
+function kineticEnergy(mechanism::Mechanism, storage::Storage{T,N}) where {T,N}
+    ke = zeros(T,N)
+    for i = 1:N
+        ke[i] = kineticEnergy(mechanism, storage, i)
+    end
+    return ke
+end
+
+function kineticEnergy(mechanism::Mechanism, storage::Storage{T,N}, t::Int) where {T,N}
+    Δt = mechanism.Δt
+    com = center_of_mass(mechanism)
+    ke = 0.0
+    for (i,body) in enumerate(mechanism.bodies)
+        vl = storage.vl[i][t]
+        ωl = storage.ωl[i][t]
+        ke += 0.5 * body.m * vl' * vl
+        ke += 0.5 * ωl' * body.J * ωl
+    end
+    return ke
+end
+
 
 """
     Potential energy of a mechanism due to gravity and springs in the joints.

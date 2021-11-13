@@ -43,3 +43,12 @@ end
 
     return state.D
 end
+
+# J0 = rand(3,3)
+# J0 = J0' * J0
+# Δt0 = 0.01
+# ω20 = rand(3)
+# sq20 = sqrt(4 / Δt0^2 - ω20' * ω20)
+#
+# skewplusdiag(ω20, sq20) * (J0 * ω20) - (J0 * ω20 * sq20 + skew(ω20) * (J0 * ω20))
+#

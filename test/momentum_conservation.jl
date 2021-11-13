@@ -113,7 +113,7 @@ mech = getmechanism(:humanoid, Δt = Δt0, g = g0, spring = spring0, damper = da
 initialize!(mech, :humanoid)
 
 storage = simulate!(mech, 5.0, controller!, record = true, solver = :mehrotra!, verbose = false)
-# visualize(mech, storage, vis = vis)
+visualize(mech, storage, vis = vis)
 
 ms = getmomentum.(:humanoid, ts, Δt0, g0, ϵ0, controller!;
     mech_kwargs = Dict(:contact => false, :spring => spring0, :damper => damper0))

@@ -11,6 +11,10 @@ Indexing example:
 * `q`: Contains the orientation for each body and each time step.
 * `v`: Contains the velocity for each body and each time step.
 * `ω`: Contains the angular velocity for each body and each time step.
+* `px`: Contains the linear momentum for each body and each time step.
+* `pq`: Contains the angular momentum for each body and each time step.
+* `vl`: Contains the velocity for each body and each time step.
+* `ωl`: Contains the angular velocity for each body and each time step.
 
 # Constructors
     Storage{T}(step_range, nbodies)
@@ -23,13 +27,21 @@ struct Storage{T,N}
     q::Vector{Vector{UnitQuaternion{T}}}
     v::Vector{Vector{SVector{3,T}}}
     ω::Vector{Vector{SVector{3,T}}}
+    px::Vector{Vector{SVector{3,T}}}
+    pq::Vector{Vector{SVector{3,T}}}
+    vl::Vector{Vector{SVector{3,T}}}
+    ωl::Vector{Vector{SVector{3,T}}}
 
     function Storage{T}(steps, nbodies) where T
         x = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
         q = [[one(UnitQuaternion{T}) for i = steps] for j = 1:nbodies]
         v = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
         ω = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
-        new{T,length(steps)}(x, q, v, ω)
+        px = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
+        pq = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
+        vl = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
+        ωl = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
+        new{T,length(steps)}(x, q, v, ω, px, pq, vl, ωl)
     end
 
     Storage(steps, nbodies) = Storage{Float64}(steps, nbodies)
@@ -42,8 +54,12 @@ struct Storage{T,N}
 
         v = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
         ω = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
+        px = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
+        pq = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
+        vl = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
+        ωl = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
 
-        new{T,length(steps)}(x, q, v, ω)
+        new{T,length(steps)}(x, q, v, ω, px, pq, vl, ωl)
     end
 
     Storage{T}() where T = Storage{T}(Base.OneTo(0),0)
@@ -62,6 +78,10 @@ function downsample(storage::Storage{T,N}, n::Int) where {T,N}
         s.q[i] = storage.q[i][1:n:end]
         s.v[i] = storage.v[i][1:n:end]
         s.ω[i] = storage.ω[i][1:n:end]
+        s.px[i] = storage.px[i][1:n:end]
+        s.pq[i] = storage.pq[i][1:n:end]
+        s.vl[i] = storage.vl[i][1:n:end]
+        s.ωl[i] = storage.ωl[i][1:n:end]
     end
     return s
 end
