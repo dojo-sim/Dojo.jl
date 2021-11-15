@@ -27,6 +27,10 @@ damperforcea(joint::Translational{T,3}, statea::State, stateb::State, Δt) where
 damperforceb(joint::Translational{T,3}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
 damperforceb(joint::Translational{T,3}, stateb::State, Δt) where {T} = szeros(T, 6)
 
+# Used in energy computation
+springforcea(joint::Translational{T,3}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; rotate::Bool = true) where {T} = szeros(T, 6)
+springforceb(joint::Translational{T,3}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; rotate::Bool = true) where {T} = szeros(T, 6)
+springforceb(joint::Translational{T,3}, xb::AbstractVector, qb::UnitQuaternion; rotate::Bool = true) where {T} = szeros(T, 6)
 
 ### Spring and damper
 ## Forces for dynamics

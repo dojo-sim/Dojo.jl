@@ -23,6 +23,11 @@ damperforcea(joint::Rotational{T,3}, statea::State, stateb::State, Δt) where {T
 damperforceb(joint::Rotational{T,3}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
 damperforceb(joint::Rotational{T,3}, stateb::State, Δt) where {T} = szeros(T, 6)
 
+# Used in energy computation
+springforcea(joint::Rotational{T,3}, qa::UnitQuaternion, qb::UnitQuaternion; rotate::Bool = true) where {T} = szeros(T, 6)
+springforceb(joint::Rotational{T,3}, qa::UnitQuaternion, qb::UnitQuaternion; rotate::Bool = true) where {T} = szeros(T, 6)
+springforceb(joint::Rotational{T,3}, qb::UnitQuaternion; rotate::Bool = true) where {T} = szeros(T, 6)
+
 ### Spring and damper
 # Force applied by body b on body a expressed in frame a
 @inline function springforcea(joint::Rotational{T}, qa::UnitQuaternion, qb::UnitQuaternion; rotate::Bool = true) where {T}

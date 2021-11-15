@@ -1,35 +1,16 @@
 function saveToStorage!(mechanism::Mechanism, storage::Storage, i::Int)
     for (ind, body) in enumerate(mechanism.bodies)
-        # state = body.state
-        # storage.x[ind][i] = state.xc # x0
-        # storage.q[ind][i] = state.qc # q0
-        # storage.v[ind][i] = state.vc # v-0.5
-        # storage.ω[ind][i] = state.ωc # ω-0.5
-        # p0 = momentum_body(mechanism, body) # in world frame
-        # px0 = p0[SVector{3,Int}(1,2,3)] # in world frame
-        # pq0 = p0[SVector{3,Int}(4,5,6)] # in world frame
-        # v0 = px0 ./ body.m # in world frame
-        # ω0 = body.J \ (rotation_matrix(inv(state.qc)) * pq0) # in body frame #TODO verify that state.qc is the right quaternion
-        # x2, q2 = posargsk(state)
-        # ω0 = body.J \ (rotation_matrix(inv(q2)) * pq0) # in body frame #TODO verify that state.qc is the right quaternion
-        # qc = state.qc
-        # # @show norm([q2.w, q2.x, q2.y, q2.z] - [qc.w, qc.x, qc.y, qc.z])
-        # @show norm(state.ωc - state.ωsol[1])
-        # @show norm(state.ωc - state.ωsol[2])
-        # storage.px[ind][i] = px0 # px0
-        # storage.pq[ind][i] = pq0 # pq0
-        # storage.vl[ind][i] = v0 # v0
-        # storage.ωl[ind][i] = ω0 # ω0
         state = body.state
         storage.x[ind][i] = state.xk[1] # x1
         storage.q[ind][i] = state.qk[1] # q1
         storage.v[ind][i] = state.vc # v0.5
         storage.ω[ind][i] = state.ωc # ω0.5
+        q1 = state.qk[1]
         p1 = momentum_body_new(mechanism, body) # p1 in world frame
         px1 = p1[SVector{3,Int}(1,2,3)] # px1 in world frame
         pq1 = p1[SVector{3,Int}(4,5,6)] # pq1 in world frame
         v1 = px1 ./ body.m # in world frame
-        ω1 = body.J \ (rotation_matrix(inv(state.qk[1])) * pq1) # in body frame, we rotate using the current quaternion q1 = state.qk[1]
+        ω1 = body.J \ (rotation_matrix(inv(q1)) * pq1) # in body frame, we rotate using the current quaternion q1 = state.qk[1]
         storage.px[ind][i] = px1 # px0
         storage.pq[ind][i] = pq1 # pq0
         storage.vl[ind][i] = v1 # v0
