@@ -92,7 +92,7 @@ test_datamat(:dice, tsim = 0.10, ϵ = 1e-8)
 test_datamat(:snake, tsim = 0.10, ϵ = 1e-8)
 test_datamat(:slider, tsim = 0.10, ϵ = 1e-8)
 test_datamat(:pendulum, tsim = 0.10, ϵ = 1e-8)
-test_datamat(:npendulum, tsim = 1.0, ϵ = 10e-8) # always ~1e-8
+test_datamat(:npendulum, tsim = 1.0, ϵ = 1e-6) # always ~1e-8
 test_datamat(:nslider, tsim = 0.10, ϵ = 1e-8)
 test_datamat(:twister, tsim = 0.10, ϵ = 1e-8)
 
@@ -113,6 +113,6 @@ test_datamat(:dice, tsim = 0.40, ϵ = 1e-8)
 test_datamat(:snake, tsim = 0.40, ϵ = 1e-8)
 test_datamat(:slider, tsim = 0.40, ϵ = 1e-8)
 test_datamat(:pendulum, tsim = 0.40, ϵ = 1e-8)
-test_datamat(:npendulum, tsim = 0.40, ϵ = 1e-8)
+test_datamat(:npendulum, tsim = 0.40, ϵ = 1e-7)
 test_datamat(:nslider, tsim = 0.40, ϵ = 1e-8)
 test_datamat(:twister, tsim = 0.40, ϵ = 1e-7)
