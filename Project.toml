@@ -1,6 +1,7 @@
-name = "DifferentiableContact"
-uuid = "81c734ad-35d7-4af4-932b-2c23769b5a3f"
+name = "Dojo"
+uuid = "ac60b53e-8d92-4c83-b960-e78698fa1916"
 authors = ["simonlc <simonlc@stanford.edu>", "thowell <thowell@stanford.edu>", "Jan Bruedigam"]
+authors = ["simon-lc <simonlc@stanford.edu>"]
 version = "0.1.0"
 
 [deps]
