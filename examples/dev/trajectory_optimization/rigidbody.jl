@@ -23,61 +23,47 @@ open(vis)
 include(joinpath(@__DIR__, "..", "..", "loader.jl"))
 
 # System 
-gravity = -9.81 
+gravity = 0.0#-9.81 
 Δt = 0.1
 
 # Parameters
-pendulum_axis = [1.0; 0.0; 0.0]
-pendulum_length = 1.0
-width, depth, height = 0.1, 0.1, 0.1
-pendulum_mass = 1.0 
+width, depth, height = 1.0, 1.0, 1.0
+mass = 1.0 
 
 # Float type 
 T = Float64 
 
 # Links
 origin = Origin{T}()
-pendulum = Box(width, depth, pendulum_length, pendulum_mass)
-links = [pendulum]
+rigidbody = Box(width, depth, height, mass)
+links = [rigidbody]
 
 # Joint Constraints
-joint_slider_pendulum = EqualityConstraint(Revolute(origin, pendulum, pendulum_axis; p1=zeros(3), p2=[0.0; 0.0; 0.5 * pendulum_length]))
-eqcs = [joint_slider_pendulum]
+pin_joint = EqualityConstraint(Spherical(origin, rigidbody; p1=zeros(3), p2=[0.0; 0.0; 0.0]))
+eqcs = [pin_joint]
 
 # Mechanism
 mech = Mechanism(origin, links, eqcs, g=gravity, Δt=Δt)
 
 # origin to pendulum
-setPosition!(mech.origin, mech.bodies[2], Δx=[0.0; 0.0; -0.5 * pendulum_length])
-setVelocity!(mech.bodies[2], v = [0.0; 0.0; 0.0], ω = zeros(3))
+setPosition!(mech.origin, mech.bodies[2], Δq=UnitQuaternion(RotX(0.2 * π)))
+setVelocity!(mech.bodies[2], v = [0.0; 0.0; 0.0], ω = [0.0; 0.0; 0.0])
 
-setPosition!(mech.origin, mech.bodies[2], Δx=[0.0; 0.0; 0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
-setVelocity!(mech.bodies[2], v = zeros(3), ω = zeros(3))
-
-u_control = 0.0
+u_control = [0.0; 0.0; 0.1]
 
 # controller
 function controller!(mech, k)
     j1 = geteqconstraint(mech, mech.eqconstraints[1].id)
 
-    u1 = u_control
-
-    setForce!(mech, j1, [u1])
+    setForce!(mech, j1, mech.Δt * u_control)
 
     return
 end 
 
 # simulate
-storage = simulate!(mech, 1 * mech.Δt, controller!, record = true, solver = :mehrotra!)
+storage = simulate!(mech, 10 * mech.Δt, controller!, record = true, solver = :mehrotra!)
 
-# x2 = mech.bodies[2].state.xc
-# v1 = mech.bodies[2].state.vc
-# qc = mech.bodies[2].state.qc
-# q2 = [qc.w; qc.x; qc.y; qc.z]
-# ω1 = mech.bodies[2].state.ωc
-# [x2; v1; q2; ω1]
-
-plot(hcat(storage.x[1]...)', color=:black, width=2.0)
+# plot(hcat(storage.q[1]...)', color=:black, width=2.0)
 
 # visualize
 visualize(mech, storage, vis = vis)
