@@ -51,8 +51,8 @@ mech = Mechanism(origin, links, eqcs, g=gravity, Δt=Δt)
 setPosition!(mech.origin, mech.bodies[2], Δx=[0.0; 0.0; -0.5 * pendulum_length])
 setVelocity!(mech.bodies[2], v = [0.0; 0.0; 0.0], ω = zeros(3))
 
-# setPosition!(mech.origin, mech.bodies[2], Δx=[0.0; 0.0; 0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
-# setVelocity!(mech.bodies[2], v = zeros(3), ω = zeros(3))
+setPosition!(mech.origin, mech.bodies[2], Δx=[0.0; 0.0; 0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
+setVelocity!(mech.bodies[2], v = zeros(3), ω = zeros(3))
 
 u_control = 0.0
 
@@ -68,19 +68,19 @@ function controller!(mech, k)
 end 
 
 # simulate
-storage = simulate!(mech, 5 * mech.Δt, controller!, record = true, solver = :mehrotra!)
+storage = simulate!(mech, 1 * mech.Δt, controller!, record = true, solver = :mehrotra!)
 
-x2 = mech.bodies[2].state.xc
-v1 = mech.bodies[2].state.vc
-qc = mech.bodies[2].state.qc
-q2 = [qc.w; qc.x; qc.y; qc.z]
-ω1 = mech.bodies[2].state.ωc
-[x2; v1; q2; ω1]
+# x2 = mech.bodies[2].state.xc
+# v1 = mech.bodies[2].state.vc
+# qc = mech.bodies[2].state.qc
+# q2 = [qc.w; qc.x; qc.y; qc.z]
+# ω1 = mech.bodies[2].state.ωc
+# [x2; v1; q2; ω1]
 
 plot(hcat(storage.x[1]...)', color=:black, width=2.0)
 
 # visualize
-DifferentiableContact.visualize(mech, storage, vis = vis)
+visualize(mech, storage, vis = vis)
 
 ## state space 
 n = 13 * length(mech.bodies)
@@ -125,7 +125,7 @@ m = isempty(mech.eqconstraints) ? 0 : sum(getcontroldim.(mech.eqconstraints))
 #     return nextstate
 # end
 
-function step!(mech::Mechanism, z::Vector{T}, u::Vector{T}) 
+function step1!(mech::Mechanism, z, u)
     # set data
     data = [z; u] 
 
@@ -149,9 +149,10 @@ function step!(mech::Mechanism, z::Vector{T}, u::Vector{T})
     storage = simulate!(mech, mech.Δt, 
         controller!, 
         record=true, solver=:mehrotra!)
-
+    
     # next state
-    nextstate = Vector{T}()  
+    nextstate = []#Vector{Float64}()  
+
     for body in mech.bodies
         x3 = body.state.xk[1]
         v25 = body.state.vsol[2]
@@ -161,12 +162,12 @@ function step!(mech::Mechanism, z::Vector{T}, u::Vector{T})
         push!(nextstate, [x3; v25; q3; ω25]...)
     end
 
-    # gradient 
-    data = getdata(deepcopy(mech))
-    sol = getsolution(deepcopy(mech))
-    δ = sensitivities(deepcopy(mech), sol, data)
+    # # gradient 
+    # data = getdata(deepcopy(mech))
+    # sol = getsolution(deepcopy(mech))
+    # δ = sensitivities(deepcopy(mech), sol, data)
 
-    return nextstate, δ
+    return nextstate#, δ
 end
 
 # initial state 
@@ -184,84 +185,218 @@ qT = [0.0; 1.0; 0.0; 0.0]
 zT = [xT; vT; qT; ωT]
 
 z = [copy(z1)]
-δz = Matrix{T}[]
+# δz = Matrix{T}[]
 for t = 1:5
-    znext, δznext = step!(mech, z[end], [u_control]) 
+    # znext, δznext = step!(mech, z[end], [u_control]) 
+    znext = step1!(mech, z[end], [u_control]) 
     push!(z, znext)
-    push!(δz, δznext)
+    # push!(δz, δznext)
 end 
 
-plot!(hcat(z...)[1:3, :]')
+# plot!(hcat(z...)[1:3, :]')
 
-# sensi = -1.0 * (full_matrix(mech.system) \ (full_data_matrix(mech) * transpose(attitudejacobian([z[end-1]; u_control], 1))))[6:11, :]
-sensi = (δz[end] * transpose(attitudejacobian([z[end-1]; u_control], 1)))[6:11, :]
-attitudejacobian([z[end-1]; u_control], 1)
+# # sensi = -1.0 * (full_matrix(mech.system) \ (full_data_matrix(mech) * transpose(attitudejacobian([z[end-1]; u_control], 1))))[6:11, :]
+# data = getdata(deepcopy(mech))
+# sol = getsolution(deepcopy(mech))
+# δ = sensitivities(deepcopy(mech), sol, data)
+# sensi = (δ * transpose(attitudejacobian([z[end-1]; u_control], 1)))[6:11, :]
+# # attitudejacobian([z[end-1]; u_control], 1)
 
-# idx 
-idx_x = collect(1:3) 
-idx_v = collect(4:6) 
-idx_q = collect(7:10) 
-idx_ω = collect(11:13)
-idx_u = collect(14:14) 
+# # idx 
+# idx_x = collect(1:3) 
+# idx_v = collect(4:6) 
+# idx_q = collect(7:10) 
+# idx_ω = collect(11:13)
+# idx_u = collect(14:14) 
 
-idx_vsol = collect(1:3) 
-idx_ωsol = collect(4:6) 
+# idx_vsol = collect(1:3) 
+# idx_ωsol = collect(4:6) 
 
-# var
-x3 = z[end][idx_x]
-v2 = z[end][idx_v]
-q3 = z[end][idx_q]
-ω2 = z[end][idx_ω]
+# # var
+# x3 = z[end][idx_x]
+# v2 = z[end][idx_v]
+# q3 = z[end][idx_q]
+# ω2 = z[end][idx_ω]
 
-# data
-x2 = z[end-1][idx_x]
-v1 = z[end-1][idx_v]
-q2 = z[end-1][idx_q]
-ω1 = z[end-1][idx_ω]
+# # data
+# x2 = z[end-1][idx_x]
+# v1 = z[end-1][idx_v]
+# q2 = z[end-1][idx_q]
+# ω1 = z[end-1][idx_ω]
 
-∂v2∂x2 = sensi[idx_vsol, idx_x]
-∂v2∂v1 = sensi[idx_vsol, idx_v]
-∂v2∂q2 = sensi[idx_vsol, idx_q]
-∂v2∂ω1 = sensi[idx_vsol, idx_ω]
-∂v2∂u1 = sensi[idx_vsol, idx_u]
+# ∂v2∂x2 = sensi[idx_vsol, idx_x]
+# ∂v2∂v1 = sensi[idx_vsol, idx_v]
+# ∂v2∂q2 = sensi[idx_vsol, idx_q]
+# ∂v2∂ω1 = sensi[idx_vsol, idx_ω]
+# ∂v2∂u1 = sensi[idx_vsol, idx_u]
 
-∂ω2∂x2 = sensi[idx_ωsol, idx_x]
-∂ω2∂v1 = sensi[idx_ωsol, idx_v]
-∂ω2∂q2 = sensi[idx_ωsol, idx_q]
-∂ω2∂ω1 = sensi[idx_ωsol, idx_ω]
-∂ω2∂u1 = sensi[idx_ωsol, idx_u]
+# ∂ω2∂x2 = sensi[idx_ωsol, idx_x]
+# ∂ω2∂v1 = sensi[idx_ωsol, idx_v]
+# ∂ω2∂q2 = sensi[idx_ωsol, idx_q]
+# ∂ω2∂ω1 = sensi[idx_ωsol, idx_ω]
+# ∂ω2∂u1 = sensi[idx_ωsol, idx_u]
 
-∂x3∂x2 = I(3) + ∂v2∂x2 .* mech.Δt
-∂x3∂v1 = ∂v2∂v1 .* mech.Δt
-∂x3∂q2 = ∂v2∂q2 .* mech.Δt
-∂x3∂ω1 = ∂v2∂ω1 .* mech.Δt
-∂x3∂u1 = ∂v2∂u1 .* mech.Δt
+# ∂x3∂x2 = I(3) + ∂v2∂x2 .* mech.Δt
+# ∂x3∂v1 = ∂v2∂v1 .* mech.Δt
+# ∂x3∂q2 = ∂v2∂q2 .* mech.Δt
+# ∂x3∂ω1 = ∂v2∂ω1 .* mech.Δt
+# ∂x3∂u1 = ∂v2∂u1 .* mech.Δt
 
-∂q3∂ω2 = Lmat(UnitQuaternion(q2...)) * derivωbar(SVector{3}(ω2), mech.Δt) * mech.Δt / 2
+# ∂q3∂ω2 = Lmat(UnitQuaternion(q2...)) * derivωbar(SVector{3}(ω2), mech.Δt) * mech.Δt / 2
 
-∂q3∂x2 = ∂q3∂ω2 * ∂ω2∂x2
-∂q3∂v1 = ∂q3∂ω2 * ∂ω2∂v1
-∂q3∂q2 = Rmat(ωbar(ω2, mech.Δt) * mech.Δt / 2) + ∂q3∂ω2 * ∂ω2∂q2
-∂q3∂ω1 = ∂q3∂ω2 * ∂ω2∂ω1
-∂q3∂u1 = ∂q3∂ω2 * ∂ω2∂u1
+# ∂q3∂x2 = ∂q3∂ω2 * ∂ω2∂x2
+# ∂q3∂v1 = ∂q3∂ω2 * ∂ω2∂v1
+# ∂q3∂q2 = Rmat(ωbar(ω2, mech.Δt) * mech.Δt / 2) + ∂q3∂ω2 * ∂ω2∂q2
+# ∂q3∂ω1 = ∂q3∂ω2 * ∂ω2∂ω1
+# ∂q3∂u1 = ∂q3∂ω2 * ∂ω2∂u1
 
-jac = [∂x3∂x2 ∂x3∂v1 ∂x3∂q2 ∂x3∂ω1 ∂x3∂u1;
-       ∂v2∂x2 ∂v2∂v1 ∂v2∂q2 ∂v2∂ω1 ∂v2∂u1;
-       ∂q3∂x2 ∂q3∂v1 ∂q3∂q2 ∂q3∂ω1 ∂q3∂u1;
-       ∂ω2∂x2 ∂ω2∂v1 ∂ω2∂q2 ∂ω2∂ω1 ∂ω2∂u1]
+# jac = [∂x3∂x2 ∂x3∂v1 ∂x3∂q2 ∂x3∂ω1 ∂x3∂u1;
+#        ∂v2∂x2 ∂v2∂v1 ∂v2∂q2 ∂v2∂ω1 ∂v2∂u1;
+#        ∂q3∂x2 ∂q3∂v1 ∂q3∂q2 ∂q3∂ω1 ∂q3∂u1;
+#        ∂ω2∂x2 ∂ω2∂v1 ∂ω2∂q2 ∂ω2∂ω1 ∂ω2∂u1]
 
-function mystep(w) 
-    znext, _ = step!(mech, w[1:end-1], w[end:end]) 
-    return znext
+
+# norm(z[end] - mystep([z[end-1]; u_control])) < 1.0e-8
+# norm((FiniteDiff.finite_difference_jacobian(mystep, [z[end-1]; u_control]) - jac)[7:10, 7:10], Inf)
+# norm((FiniteDiff.finite_difference_jacobian(mystep, [z[end-1]; u_control]) - jac)[11:13, 7:10], Inf)
+# norm((FiniteDiff.finite_difference_jacobian(mystep, [z[end-1]; u_control]) - jac)[[collect(1:6); collect(11:13)], 7:10], Inf)
+
+# (FiniteDiff.finite_difference_jacobian(mystep, [z[end-1]; u_control]))[7:10, 7:10]
+# (jac)[7:10, 7:10]
+
+# (FiniteDiff.finite_difference_jacobian(mystep, [z[1]; u_control]))[1:3, 7:10]
+# (jac)[1:3, 7:10]
+
+
+# Rmat(ωbar(ω2, mech.Δt) * mech.Δt / 2) + ∂q3∂ω2 * ∂ω2∂q2
+
+
+using Colors
+using GeometryBasics
+using Rotations
+using Parameters
+using Symbolics
+using Random
+
+## get motion_planning.jl and set path
+path_mp = "/home/taylor/Research/motion_planning"
+include(joinpath(path_mp, "src/utils.jl"))
+include(joinpath(path_mp, "src/time.jl"))
+include(joinpath(path_mp, "src/model.jl"))
+include(joinpath(path_mp, "src/integration.jl"))
+
+include(joinpath(path_mp, "src/objective.jl"))
+
+include(joinpath(path_mp, "src/constraints.jl"))
+
+# differential dynamic programming
+include(joinpath(path_mp, "src/differential_dynamic_programming/ddp.jl"))
+
+using Random, LinearAlgebra, ForwardDiff
+Random.seed!(0)
+
+# Model
+function grad(mech, x, u)
+    FiniteDiff.finite_difference_jacobian(w -> mystep(mech, w), [x; u])
+end 
+
+function gradx(mech, x, u)
+      # FiniteDiff.finite_difference_jacobian(w -> mystep(mech, w), [x; u])[:, 1:end-1]
+    return fdjac(w -> step1!(mech, w[1:end-1], w[end:end]), [x; u])[:, 1:end-1]
+end 
+function gradu(mech, x, u)
+    # FiniteDiff.finite_difference_jacobian(w -> mystep(mech, w), [x; u])[:, end:end]
+    return fdjac(w -> step1!(mech, w[1:end-1], w[end:end]), [x; u])[:, end:end]
+end 
+
+struct PendulumMax{I, T} <: Model{I, T}
+    n::Int
+    m::Int
+    d::Int
+    mech::Mechanism
 end
 
-norm(z[end] - mystep([z[end-1]; u_control])) < 1.0e-8
-norm((FiniteDiff.finite_difference_jacobian(mystep, [z[end-1]; u_control]) - jac)[7:10, 7:10], Inf)
-norm((FiniteDiff.finite_difference_jacobian(mystep, [z[end-1]; u_control]) - jac)[11:13, 7:10], Inf)
-norm((FiniteDiff.finite_difference_jacobian(mystep, [z[end-1]; u_control]) - jac)[[collect(1:6); collect(11:13)], 7:10], Inf)
+function fd(model::PendulumMax{Midpoint, FixedTime}, x, u, w, h, t)
+	return step1!(model.mech, x, u)
+end
 
-(FiniteDiff.finite_difference_jacobian(mystep, [z[end-1]; u_control]))[7:10, 7:10]
-(jac)[7:10, 7:10]
+function fdx(model::PendulumMax{Midpoint, FixedTime}, x, u, w, h, t)
+	return gradx(model.mech, x, u)
+end
 
+function fdu(model::PendulumMax{Midpoint, FixedTime}, x, u, w, h, t)
+	return gradu(model.mech, x, u)
+end
 
-Rmat(ωbar(ω2, mech.Δt) * mech.Δt / 2) + ∂q3∂ω2 * ∂ω2∂q2
+n, m, d = 13, 1, 0
+model = PendulumMax{Midpoint, FixedTime}(n, m, d, mech)
+
+# Time
+T = 11
+h = mech.Δt
+
+# Initial conditions, controls, disturbances
+ū = [0.0 * rand(model.m) for t = 1:T-1]
+w = [zeros(model.d) for t = 1:T-1]
+
+# Rollout
+x̄ = rollout(model, z1, ū, w, h, T)
+
+# Objective
+Q = [(t < T ? Diagonal(1.0e-1 * ones(model.n))
+        : Diagonal(1000.0 * ones(model.n))) for t = 1:T]
+q = [-2.0 * Q[t] * zT for t = 1:T]
+
+R = [Diagonal(1.0e-4 * ones(model.m)) for t = 1:T-1]
+r = [zeros(model.m) for t = 1:T-1]
+
+obj = StageCosts([QuadraticCost(Q[t], q[t],
+	t < T ? R[t] : nothing, t < T ? r[t] : nothing) for t = 1:T], T)
+
+function g(obj::StageCosts, x, u, t)
+	T = obj.T
+    if t < T
+		Q = obj.cost[t].Q
+		q = obj.cost[t].q
+	    R = obj.cost[t].R
+		r = obj.cost[t].r
+        return x' * Q * x + q' * x + u' * R * u + r' * u
+    elseif t == T
+		Q = obj.cost[T].Q
+		q = obj.cost[T].q
+        return x' * Q * x + q' * x
+    else
+        return 0.0
+    end
+end
+
+# Problem
+prob = problem_data(model, obj, copy(x̄), copy(ū), w, h, T, 
+    analytical_dynamics_derivatives = true)
+
+# Solve
+@time ddp_solve!(prob,
+    max_iter = 10, verbose = true, linesearch = :armijo)
+
+x, u = current_trajectory(prob)
+x̄, ū = nominal_trajectory(prob)
+
+function generate_storage(x) 
+    steps = length(x) 
+    nbodies = 1
+    storage = Storage{Float64}(steps, nbodies)
+
+    for t = 1:steps 
+        storage.x[1][t] = x[t][1:3]
+        storage.v[1][t] = x[t][4:6]
+        storage.q[1][t] = UnitQuaternion(x[t][7:10]...)
+        storage.ω[1][t] = x[t][11:13]
+    end
+
+    return storage
+end
+
+storage = generate_storage(x) 
+@show x̄[end]
+
+visualize(mech, storage, vis = vis)
