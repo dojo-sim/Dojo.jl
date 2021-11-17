@@ -8,8 +8,9 @@ using SparseArrays
 using BenchmarkTools
 using DifferentiableContact
 
-include("momentum_conservation.jl")
 include("jacobian.jl")
+include("momentum_conservation.jl")
+include("energy_conservation.jl")
 
 
 # @safetestset "Quaternion Tests" begin

@@ -77,7 +77,11 @@ end
 
 function ∂g∂ʳposa(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
     X = -1.0 * transpose(rotation_matrix(qa))
-    Q = -1.0 * transpose(skew(joint.vertices[1]))
+    # Q = -1.0 * transpose(skew(joint.vertices[1]))
+    pb_a = rotation_matrix(inv(qa)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
+    ca_a = rotation_matrix(inv(qa)) * (xa) # body a com
+    capb_a = pb_a - ca_a
+    Q = - 1.0 * transpose(skew(capb_a))
     return [X Q]
 end
 
@@ -89,10 +93,17 @@ end
 
 function ∂g∂ʳposb(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
     X = transpose(rotation_matrix(qa))
-    pa_a = rotation_matrix(inv(qa)) * (xa + rotation_matrix(qa) * joint.vertices[1]) # body a kinematics point
-    cb_a = rotation_matrix(inv(qa)) * (xb) # body b com
-    ra = pa_a - cb_a
-    Q = transpose(rotation_matrix(inv(qb) * qa) * skew(ra))
+    # pa_a = rotation_matrix(inv(qa)) * (xa + rotation_matrix(qa) * joint.vertices[1]) # body a kinematics point
+    # cb_a = rotation_matrix(inv(qa)) * (xb) # body b com
+    # ra = pa_a - cb_a
+    # Q = transpose(rotation_matrix(inv(qb) * qa) * skew(ra))
+    # println("∂g∂ʳposb")
+    # println("Q = ", scn.(Q))
+    # println(scn.(ra))
+    pb_b = rotation_matrix(inv(qb)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
+    cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
+    cbpb_b = pb_b - cb_b
+    Q = transpose(skew(cbpb_b) * rotation_matrix(inv(qb) * qa))
     return [X Q]
 end
 
@@ -103,10 +114,14 @@ end
 
 function ∂g∂ʳposb(joint::Translational{T}, xb::AbstractVector, qb::UnitQuaternion) where T
     X = transpose(I(3))
-    pa_a = joint.vertices[1] # body a kinematics point
-    cb_a = xb # body b com
-    ra = pa_a - cb_a
-    Q = transpose(rotation_matrix(inv(qb)) * skew(ra))
+    # pa_a = joint.vertices[1] # body a kinematics point
+    # cb_a = xb # body b com
+    # ra = pa_a - cb_a
+    # Q = transpose(rotation_matrix(inv(qb)) * skew(ra))
+    pb_b = rotation_matrix(inv(qb)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
+    cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
+    cbpb_b = pb_b - cb_b
+    Q = transpose(skew(cbpb_b) * rotation_matrix(inv(qb)))
     return [X Q]
 end
 
@@ -132,12 +147,18 @@ end
     Faa = vrotate(Faw, inv(qa)) # in local frame
     Fbb = vrotate(Fbw, inv(qb)) # in local frame
 
-    pa_b = rotation_matrix(inv(qb)) * (xa + rotation_matrix(qa) * joint.vertices[1]) # body a kinematics point in b frame
-    cb_b = rotation_matrix(inv(qb)) * (xb) # body b com in b frame
-    rb = pa_b - cb_b
-    τaa = torqueFromForce(Faa, vertices[1]) # in local coordinates
-    τbb = torqueFromForce(Fbb, rb) # in local coordinates
-    # τbb = torqueFromForce(Fbb, vertices[2]) # TODO this should work, apparently does not work with Planar
+    # pa_b = rotation_matrix(inv(qb)) * (xa + rotation_matrix(qa) * joint.vertices[1]) # body a kinematics point in b frame
+    # cb_b = rotation_matrix(inv(qb)) * (xb) # body b com in b frame
+    # rb = pa_b - cb_b
+    # τaa = torqueFromForce(Faa, vertices[1]) # in local coordinates
+    # τbb = torqueFromForce(Fbb, rb) # in local coordinates
+    # # τbb = torqueFromForce(Fbb, vertices[2]) # TODO this should work, apparently does not work with Planar
+
+    pb_a = rotation_matrix(inv(qa)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point in b frame
+    ca_a = rotation_matrix(inv(qa)) * (xa) # body a com in a frame
+    ra = pb_a - ca_a
+    τaa = torqueFromForce(Faa, ra) # in local coordinates
+    τbb = torqueFromForce(Fbb, vertices[2]) # in local coordinates
     return Faw, τaa, Fbw, τbb
 end
 
@@ -157,11 +178,13 @@ end
     Fbw = F # in world frame
     Fbb = vrotate(Fbw, inv(qb)) # in b frame
 
-    pa_b = rotation_matrix(inv(qb)) * joint.vertices[1] # body a kinematics point in b frame
-    cb_b = vrotate(xb, inv(qb)) # body b com in b frame
-    rb = pa_b - cb_b
-    τbb = torqueFromForce(Fbb, rb) # in local coordinates
-    # τbb = torqueFromForce(Fbb, vertices[2]) # TODO this should work, apparently does not work with Planar
+    # pa_b = rotation_matrix(inv(qb)) * joint.vertices[1] # body a kinematics point in b frame
+    # cb_b = vrotate(xb, inv(qb)) # body b com in b frame
+    # rb = pa_b - cb_b
+    # τbb = torqueFromForce(Fbb, rb) # in local coordinates
+    # # τbb = torqueFromForce(Fbb, vertices[2]) # TODO this should work, apparently does not work with Planar
+
+    τbb = torqueFromForce(Fbb, vertices[2]) # in local coordinates
     return Fbw, τbb
 end
 

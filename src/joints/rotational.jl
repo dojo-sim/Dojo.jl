@@ -45,10 +45,12 @@ end
 ### Constraints and derivatives
 ## Position level constraints (for dynamics)
 @inline function g(joint::Rotational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+    # typeof(joint) <: Rotational{Float64,1} && println(scn.(Vmat(qa \ qb / joint.qoffset)))
     return Vmat(qa \ qb / joint.qoffset)
 end
 
 @inline function g(joint::Rotational, xb::AbstractVector, qb::UnitQuaternion)
+    # typeof(joint) <: Rotational{Float64,1} && println(scn.(Vmat(qb / joint.qoffset)))
     return Vmat(qb / joint.qoffset)
 end
 
@@ -180,7 +182,7 @@ end
 end
 
 ### Minimal coordinates
-## Position and velocity offsets 
+## Position and velocity offsets
 @inline function getPositionDelta(joint::Rotational, body1::AbstractBody, body2::Body, θ::SVector{N,T}) where {T,N}
     # axis angle representation
     θ = zerodimstaticadjoint(nullspacemat(joint)) * θ
@@ -190,7 +192,7 @@ end
     else
         q = UnitQuaternion(cos(nθ/2),(θ/nθ*sin(nθ/2))..., false)
     end
-    
+
     Δq = q * joint.qoffset # in body1 frame
     return Δq
 end

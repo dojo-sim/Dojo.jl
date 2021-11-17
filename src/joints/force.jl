@@ -27,6 +27,10 @@ damperforcea(joint::Translational{T,3}, statea::State, stateb::State, Δt) where
 damperforceb(joint::Translational{T,3}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
 damperforceb(joint::Translational{T,3}, stateb::State, Δt) where {T} = szeros(T, 6)
 
+# Used in energy computation
+springforcea(joint::Translational{T,3}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; rotate::Bool = true) where {T} = szeros(T, 6)
+springforceb(joint::Translational{T,3}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; rotate::Bool = true) where {T} = szeros(T, 6)
+springforceb(joint::Translational{T,3}, xb::AbstractVector, qb::UnitQuaternion; rotate::Bool = true) where {T} = szeros(T, 6)
 
 ### Spring and damper
 ## Forces for dynamics
@@ -41,8 +45,7 @@ damperforceb(joint::Translational{T,3}, stateb::State, Δt) where {T} = szeros(T
     rotate && (force = vrotate(force, qa)) # rotate back to world frame
 
     torque = skew(joint.vertices[1]) * forceA
-    # return 0.0 * [force; torque]
-    return 1.0 * [force; torque]
+    return [force; torque]
 end
 
 # Force applied by body a on body b expressed in world frame
@@ -59,8 +62,7 @@ end
     cb_a = rotation_matrix(inv(qa)) * (xb) # body b com
     ra = pa_a - cb_a
     torque = rotation_matrix(inv(qb) * qa) * skew(ra) * forceA
-    # return 0.0 * [force; torque]
-    return 1.0 * [force; torque]
+    return [force; torque]
 end
 # Force applied by origin on body b expressed in world frame
 @inline function springforceb(joint::Translational{T}, xb::AbstractVector, qb::UnitQuaternion) where {T}
@@ -74,8 +76,7 @@ end
     cb_a = xb # body b com
     ra = pa_a - cb_a
     torque = rotation_matrix(inv(qb)) * skew(ra) * forceA
-    # return 0.0 * [force; torque]
-    return 1.0 * [force; torque]
+    return [force; torque]
 end
 
 # Force applied by body b on body a expressed in world frame
@@ -97,9 +98,7 @@ end
     rotate && (force = vrotate(force, qa)) # rotate back to world frame
 
     torque = skew(joint.vertices[1]) * forceA
-    # return 0.0 * [force; torque]
     return [force; torque]
-    # return [force; zeros(T, 3)]
 end
 # Force applied by body a on body b expressed in world frame
 @inline function damperforceb(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, va::AbstractVector, ωa::AbstractVector,
@@ -123,9 +122,7 @@ end
     cb_a = rotation_matrix(inv(qa)) * (xb) # body b com
     ra = pa_a - cb_a
     torque = rotation_matrix(inv(qb) * qa) * skew(ra) * forceA
-    # return 0.0 * [force; torque]
     return [force; torque]
-    # return [force; zeros(T, 3)]
 end
 # Force applied by origin on body b expressed in world frame
 @inline function damperforceb(joint::Translational{T}, xb::AbstractVector, qb::UnitQuaternion, vb::AbstractVector, ωb::AbstractVector; rotate::Bool = true) where {T}
@@ -146,9 +143,7 @@ end
     cb_a = xb # body b com
     ra = pa_a - cb_a
     torque = rotation_matrix(inv(qb)) * skew(ra) * forceA
-    # return 0.0 * [force; torque]
     return [force; torque]
-    # return [force; zeros(T, 3)]
 end
 
 ∂springforcea∂posa(joint::Translational{T,3}, body1::Body, body2::Body, childid) where T = szeros(T, 6, 6)

@@ -9,7 +9,7 @@ end
 
 function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0, damper::T = 0.0, contact::Bool = true, model_type::Symbol = :simple) where {T}
     path = "examples/examples_files/atlas_$(string(model_type)).urdf"
-    mech = Mechanism(joinpath(module_dir(), path), floating=true, g = g)
+    mech = Mechanism(joinpath(module_dir(), path), floating=true, g = g, Δt = Δt)
 
     # Adding springs and dampers
     for (i,eqc) in enumerate(collect(mech.eqconstraints)[2:end])
@@ -50,7 +50,7 @@ function gethumanoid(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0
     # TODO new feature: visualize capsule instead of cylinders
     # TODO new feature: visualize multiple shapes for a single body
     path = "examples/examples_files/humanoid.urdf"
-    mech = Mechanism(joinpath(module_dir(), path), floating=true, g = g)
+    mech = Mechanism(joinpath(module_dir(), path), floating=true, g = g, Δt = Δt)
 
     # Adding springs and dampers
     for (i,eqc) in enumerate(collect(mech.eqconstraints[2:end]))
@@ -90,7 +90,7 @@ end
 function getquadruped(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0,
         damper::T = 0.0, contact::Bool = true) where {T}
     path = "examples/examples_files/quadruped_simple.urdf"
-    mech = Mechanism(joinpath(module_dir(), path), floating = false, g = g)
+    mech = Mechanism(joinpath(module_dir(), path), floating = false, g = g, Δt = Δt)
 
     # Adding springs and dampers
     for (i,eqc) in enumerate(collect(mech.eqconstraints)[2:end])
@@ -338,14 +338,12 @@ function getorbital(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 
 end
 
 function gettwister(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = true,
-        conetype = :soc, spring = 0.0, damper = 0.0, Nlink::Int = 5, jointtype::Symbol = :Prismatic) where {T}
+        conetype = :soc, spring = 0.0, damper = 0.0, Nlink::Int = 5, jointtype::Symbol = :Prismatic, h::T = 1.0, r::T = 0.05) where {T}
     # Parameters
     ex = [1.;0.;0.]
     ey = [0.;1.;0.]
     ez = [0.;0.;1.]
     axes = [ex, ey, ez]
-    h = 1.0
-    r = 0.05
 
     vert11 = [0.;0.;h / 2]
     vert12 = -vert11
@@ -358,9 +356,9 @@ function gettwister(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = 
     # Constraints
     jointb1 = EqualityConstraint(Floating(origin, links[1], spring = 0.0, damper = 0.0)) # TODO remove the spring and damper from floating base
     if Nlink > 1
-        # eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], axes[i%3+1]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
+        eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], axes[i%3+1]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
         # eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], axes[1]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
-        eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], axes[3]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
+        # eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], axes[3]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
         eqcs = [jointb1; eqcs]
     else
         eqcs = [jointb1]

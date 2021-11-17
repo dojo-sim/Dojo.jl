@@ -186,6 +186,15 @@ end
 
 @inline function constraintForceMapping!(mechanism, body::Body, eqc::EqualityConstraint)
     body.state.d -= zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
+    # println(scn.(zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]))
+    # @show length(eqc.λsol[2])
+    if length(eqc.λsol[2]) == 3 && body.id ∈ eqc.childids
+        # println(scn.(eqc.λsol[2]))
+        Fτ = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
+        # println(scn.(Fτ[1:3]))
+        # println("∂g∂ʳpos ", scn.(∂g∂ʳpos(mechanism, eqc, body)[1:2, 4:6]))
+        # println("Fτ      ", scn.(norm(Fτ[4:6])))
+    end
     eqc.isspring && (body.state.d -= springforce(mechanism, eqc, body))
     eqc.isdamper && (body.state.d -= damperforce(mechanism, eqc, body))
     return

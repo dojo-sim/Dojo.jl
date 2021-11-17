@@ -51,6 +51,7 @@ A cylindrical joint between two bodies.
 """
 Cylindrical(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T)) where T =
     Translational2{T}(body1, body2; p1, p2, axis, spring, damper), Rotational2{T}(body1, body2; axis, qoffset, spring, damper)
+    # Translational2{T}(body1, body2; p1 = p1, p2 = p2, axis = [0,0,1.0], spring = spring, damper = damper), Rotational2{T}(body1, body2; axis = SVector{3,T}(0,1.0,0), qoffset = qoffset, spring = spring, damper = damper)
 
 # t1r2
 """
