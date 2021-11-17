@@ -6,7 +6,6 @@ using LinearAlgebra
 using Random
 using SparseArrays
 using BenchmarkTools
-using SafeTestsets
 using DifferentiableContact
 
 include("jacobian.jl")

@@ -799,6 +799,14 @@ function getnextstate(mechanism::Mechanism{T}) where T
         ω1 = body.state.ωsol[2]
         push!(data, [x2; v1; q2; ω1]...)
     end
+    # for body in mechanism.bodies
+    #     x2 = body.state.xc
+    #     v1 = body.state.vc
+    #     qc = body.state.qc
+    #     q2 = [qc.w, qc.x, qc.y, qc.z]
+    #     ω1 = body.state.ωc
+    #     push!(data, [x2; v1; q2; ω1]...)
+    # end
     return data
 end
 

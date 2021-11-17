@@ -9,6 +9,7 @@ using Rotations: RotationError, pure_quaternion, params, lmult, rmult, tmat, vma
 using Colors: RGBA, RGB
 using LightXML
 using SparseArrays
+using Parameters
 
 using Plots
 using Random
