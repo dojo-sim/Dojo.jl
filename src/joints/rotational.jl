@@ -91,14 +91,14 @@ end
     clear && (joint.Fτ = szeros(T,3))
     return
 end
+
+# for joints with origin as parent, torque is computed in child frame
 @inline function applyFτ!(joint::Rotational{T}, stateb::State, Δt::T, clear::Bool) where T
     τ = joint.Fτ
     _, qb = posargsk(stateb)
 
-    τa = -τ # in world coordinates
-    τb = -τa # in world coordinates
-
-    τb = vrotate(τb,inv(qb)) # in local coordinates
+    τb = τ
+    τa = vrotate(-τb, qb) # from b frame to world coordinates
 
     stateb.τk[end] += τb
     clear && (joint.Fτ = szeros(T,3))
@@ -127,7 +127,7 @@ end
     _, qb = posargsk(stateb)
 
     BFb = (szeros(T, 3, 3))
-    Bτb = VLᵀmat(qb) * RVᵀmat(qb)
+    Bτb = I(3) # VLᵀmat(qb) * RVᵀmat(qb)
 
     return [BFb; Bτb]
 end
@@ -172,11 +172,11 @@ end
     FaXb = szeros(T,3,3)
     FaQb = szeros(T,3,4)
     τaXb = szeros(T,3,3)
-    τaQb = szeros(T,3,4)
+    τaQb = ∂vrotate∂q(-τ, qb)
     FbXb = szeros(T,3,3)
     FbQb = szeros(T,3,4)
     τbXb = szeros(T,3,3)
-    τbQb = 2*VLᵀmat(qb)*Lmat(UnitQuaternion(τ))#*LVᵀmat(qb)
+    τbQb = szeros(T,3,4)#2*VLᵀmat(qb)*Lmat(UnitQuaternion(τ))#*LVᵀmat(qb)
 
     return FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb
 end
