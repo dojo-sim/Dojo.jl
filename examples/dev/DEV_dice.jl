@@ -37,6 +37,7 @@ visualize(mech, storage, vis = vis)
 
 
 
+
 ineqc1 = collect(mech.ineqconstraints)[1]
 cont = ineqc1.constraints[1]
 body = getbody(mech, ineqc1.parentid)
