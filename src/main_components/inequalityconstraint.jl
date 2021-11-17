@@ -48,18 +48,25 @@ end
 
     for i=1:Nc
         bnd = ineqc.constraints[i]
-        if typeof(ineqc.constraints[i]) <: ContactBound
-            M = ∂integration(q2, ω2, Δt)
+        bnd_type = typeof(ineqc.constraints[i])
+
+        M = ∂integration(q2, ω2, Δt)
+        function d(vars)
+            x = vars[1:3]
+            q = UnitQuaternion(vars[4:7]..., false)
+            return ∂g∂ʳpos(bnd, x, q)' * ineqc.γsol[2]
+        end
+
+        if bnd_type <: ContactBound
             body.state.D -= _dN(x3, [q3.w; q3.x; q3.y; q3.z], ineqc.γsol[2][1:1], bnd.p) * M
             body.state.D -= _dB(x3, [q3.w; q3.x; q3.y; q3.z], ineqc.γsol[2][2:4], bnd.p) * M
+        elseif bnd_type <: ImpactBound11
+            body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
+        elseif bnd_type <: LinearContactBound11
+            body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
         end
     end
     return
-end
-
-function gs(mechanism, ineqc::InequalityConstraint)
-    # this is the residual with substracted slacks
-    return g(mechanism, ineqc) - ineqc.ssol[2]
 end
 
 

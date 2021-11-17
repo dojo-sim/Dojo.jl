@@ -66,10 +66,6 @@ function contactconstraint(body::Body{T}, normal::AbstractVector{T}, cf::T;
     return contineqcs
 end
 
-function gs(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
-    return g(mechanism, ineqc)
-end
-
 function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}}}
     cont = ineqc.constraints[1]
     body = getbody(mechanism, ineqc.parentid)
@@ -178,22 +174,6 @@ end
     return [V Ω]
 end
 
-# @inline function setDandΔs_old!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
-#     ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
-#     # ∇ssol[γsol .* ssol - μ; g - s] = [diag(γsol); -diag(0,1,1)]
-#     # ∇γsol[γsol .* ssol - μ; g - s] = [diag(ssol); -diag(1,0,0)]
-#     # (cf γ - ψ) dependent of ψ = γsol[2][1:1]
-#     # B(z) * zdot - sβ dependent of sβ = ssol[2][2:end]
-#     cf = ineqc.constraints[1].cf
-#     ∇s = [ineqc.γsol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])]
-#     ∇γ = [ineqc.ssol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.ssol[2][2:4]); szeros(1,4); cf -1 0 0; szeros(2,4)]
-#     # matrix_entry.value = [∇s ∇γ]
-#     matrix_entry.value = [[ineqc.γsol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])] [ineqc.ssol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.ssol[2][2:4]); szeros(1,4); cf -1 0 0; szeros(2,4)]]
-#
-#     # [-γsol .* ssol + μ; -g + s]
-#     vector_entry.value = [-complementarityμ(mechanism, ineqc);-gs(mechanism, ineqc)]
-#     return
-# end
 @inline function setDandΔs!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
     ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
     # ∇ssol[γsol .* ssol - μ; g - s] = [diag(γsol); -diag(0,1,1)]
@@ -223,6 +203,6 @@ end
     matrix_entry.value = hcat(∇s, ∇γ)
 
     # [-γsol .* ssol + μ; -g + s]
-    vector_entry.value = vcat(-complementarityμ(mechanism, ineqc), -gs(mechanism, ineqc))
+    vector_entry.value = vcat(-complementarityμ(mechanism, ineqc), -g(mechanism, ineqc))
     return
 end

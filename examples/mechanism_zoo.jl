@@ -125,7 +125,9 @@ end
 
 function getdice(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8,
         contact::Bool = true,
-        conetype = :soc,
+        # conetype = :soc,
+        # conetype = :impact,
+        conetype = :linear,
         mode = :box)  where {T}
     # Parameters
     joint_axis = [1.0;0.0;0.0]
@@ -163,8 +165,12 @@ function getdice(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8,
         if conetype == :soc
             contineqcs = contactconstraint(link1, normal, cf, p = corners)
             mech = Mechanism(origin, links, eqcs, contineqcs, g = g, Δt = Δt)
+        elseif conetype == :impact
+            impineqcs = impactconstraint(link1, normal, p = corners)
+            mech = Mechanism(origin, links, eqcs, impineqcs, g = g, Δt = Δt)
         elseif conetype == :linear
-           @error "linear contact not implemented"
+            linineqcs = linearcontactconstraint(link1, normal, cf, p = corners)
+            mech = Mechanism(origin, links, eqcs, linineqcs, g = g, Δt = Δt)
         else
             error("Unknown conetype")
         end
