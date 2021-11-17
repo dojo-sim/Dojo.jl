@@ -89,7 +89,7 @@ plt = plot(xaxis = :log, yaxis = :log, yflip = true, ylims = (1e-10, 1e-0),
     xlabel = "Faster than real-time multiplier",
     ylabel = "Energy Drift",
     )
-scatter!(plt, dojo_tratios, dojo_drifts, label = "dojo")
+scatter!(plt, dojo_tratios, dojo_drifts, label = "Dojo")
 scatter!(plt, mujoco_tratios, mujoco_drifts, label = "MuJoCo")
 
 
@@ -168,7 +168,7 @@ plt = plot(xaxis = :log, yaxis = :log, yflip = true, ylims = (1e-17, 1e-0),
     xlabel = "Faster than real-time multiplier",
     ylabel = "Linear Momentum Drift",
     )
-scatter!(plt, dojo_tratios, dojo_linear_drifts, label = "dojo")
+scatter!(plt, dojo_tratios, dojo_linear_drifts, label = "Dojo")
 scatter!(plt, physx_tratios, physx_linear_drifts, label = "PhysX")
 
 
@@ -178,5 +178,108 @@ plt = plot(xaxis = :log, yaxis = :log, yflip = true, ylims = (1e-17, 1e-0),
     xlabel = "Faster than real-time multiplier",
     ylabel = "Angular Momentum Drift",
     )
-scatter!(plt, dojo_tratios, dojo_angular_drifts, label = "dojo")
+scatter!(plt, dojo_tratios, dojo_angular_drifts, label = "Dojo")
 scatter!(plt, brax_tratios, brax_angular_drifts, label = "Brax")
+
+
+
+
+################################################################################
+#  ENERGY DRIFT: HUMANOID
+################################################################################
+# multiple bodies
+# initial linear velocities
+# no gravity
+# no spring and damper
+# no control
+################################################################################
+
+function energy_drift(vis::Visualizer; Δt = 1e-2, tsim = 1.0, g = 0.0,
+        spring = 0.0, damper = 0.0, seed::Int = 100, ϵ = 1e-14, display::Bool = true)
+    start = Int(floor(1/Δt)) + 1
+    # Test mechanical energy conservation after one second of simulation
+    Random.seed!(seed)
+    mech = getmechanism(:humanoid, Δt = Δt, g = g, spring = spring, damper = damper, contact = false)
+    initialize!(mech, :humanoid)
+    # Initialize bodies with random 1m/s velocities
+    for body in mech.bodies
+        v = rand(3) .- 0.5
+        v ./= norm(v)
+        setVelocity!(body, v = v)
+    end
+
+    tcompute = @elapsed storage = simulate!(mech, tsim + 1.0, nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ)
+    display && visualize(mech, downsample(storage, 1), vis = vis)
+
+    ke = DifferentiableContact.kineticEnergy(mech, storage)[start:end]
+    pe = DifferentiableContact.potentialEnergy(mech, storage)[start:end]
+    me = DifferentiableContact.mechanicalEnergy(mech, storage)[start:end]
+
+    display && plot([(i-1)*Δt for i in 1:length(ke)], ke .- ke[1])
+    display && plot([(i-1)*Δt for i in 1:length(pe)], pe .- pe[1])
+    display && plot([(i-1)*Δt for i in 1:length(me)], me .- me[1])
+
+    return ke, pe, me, (tsim + 1.0)/tcompute
+end
+
+
+function energy_drift_experiment(vis::Visualizer; Δts = exp.(Vector(-1.4:-0.2:-4.0) .* log(10)))
+    N = length(Δts)
+    tratios = zeros(N)
+    drifts = zeros(N)
+    for (i,Δt) ∈ enumerate(Δts)
+        println("$i/$N")
+        ke, pe, me, tratio = energy_drift(vis, Δt = Δt, display = false)
+        drift = abs(me[end] .- me[1]) / mean(me)
+        tratios[i] = tratio
+        drifts[i] = drift
+    end
+    return tratios, drifts
+end
+
+ke, pe, me, tratio = energy_drift(vis, Δt = 1e-2)
+norm((me .- me[1]) ./ mean(me), Inf)
+abs(me[end] .- me[1]) / mean(me)
+tratio
+
+
+dojo_tratios, dojo_drifts = energy_drift_experiment(vis)
+mujoco_tratios = [0.5, 10, 100, 500]
+mujoco_drifts = [2e-9, 1e-6, 1e-4, 2e-3]
+
+plt = plot(xaxis = :log, yaxis = :log, yflip = true, ylims = (1e-10, 1e-0),
+    title = "Energy Drift",
+    xlabel = "Faster than real-time multiplier",
+    ylabel = "Energy Drift",
+    )
+scatter!(plt, dojo_tratios, dojo_drifts, label = "Dojo")
+scatter!(plt, mujoco_tratios, mujoco_drifts, label = "MuJoCo")
+
+################################################################################
+# LONG TERM ENERGY BEHAVIOR: DRIFT VS OSCILLATIONS
+################################################################################
+
+function long_term_experiment(vis::Visualizer; tsim = 300.0, Δts = exp.(Vector(-1.2:-0.4:-2.0) .* log(10)))
+    N = length(Δts)
+    mes = []
+    for (i,Δt) ∈ enumerate(Δts)
+        println("$i/$N")
+        ke, pe, me, tratio = energy_drift(vis, tsim = tsim, Δt = Δt, display = false)
+        push!(mes, me)
+    end
+    return Δts, mes
+end
+
+# Δts, mes = long_term_experiment(vis)
+N = length(Δts)
+
+plt = plot(ylims = (0.0, Inf),
+    title = "Energy",
+    layout = (1,N),
+    )
+
+for j = 1:N
+    plot!(plt[1,j], [(i-1)*Δts[j] for i = 1:length(mes[j])], mes[j] ./ mean(mes[j]),
+        label = "Dojo", xlabel = "Freq. " * string(Int(floor(1/Δts[j]))) * "Hz")
+end
+display(plt)
