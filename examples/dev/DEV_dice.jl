@@ -85,6 +85,7 @@ plot(hcat([[q.w, q.x, q.y, q.z] for q in storage.q[1]]...)')
 plot(hcat(Vector.(storage.v[1])...)')
 plot(hcat(Vector.(storage.ω[1])...)')
 
+
 sdf = get_sdf(mech, storage)
 plot(hcat(sdf[1]...)', ylims = (-0.01,0.01))
 plot(hcat(sdf[2]...)', ylims = (-0.01,0.01))
