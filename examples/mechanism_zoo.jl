@@ -415,6 +415,67 @@ function getdzhanibekov(; Δt::T = 0.01, g::T = -9.81, h::T = 1.0, r::T = 0.05) 
     return mech
 end
 
+function gethopper(; Δt::T = 0.05, g::T = -9.81) where {T}
+    #TODO: make customizable
+
+    # Parameters
+    leg_axis = [0.0; 0.0; 1.0]
+    leg_length_nominal = 0.5
+    body_radius = 0.1
+    foot_radius = 0.05
+    body_mass = 1.0 
+    foot_mass = 0.1 
+
+    # Links
+    origin = Origin{Float64}()
+    body = Sphere(body_radius, body_mass)
+    foot = Sphere(foot_radius, foot_mass)
+    links = [body, foot]
+
+    # Joint Constraints
+    joint_origin_body = EqualityConstraint(Floating(origin, body))
+    joint_body_foot = EqualityConstraint(Prismatic(body, foot, leg_axis; p1=szeros(Float64, 3), p2=szeros(Float64, 3), damper=0.1) )
+    eqcs = [joint_origin_body, joint_body_foot]
+
+    # Contact 
+    contact_normal = [0.0; 0.0; 1.0]
+    friction_coefficient = 0.5
+    contineqcs = contactconstraint(foot, contact_normal, friction_coefficient, p = [0.0; 0.0; 0.0])
+
+    # Mechanism
+    mech = Mechanism(origin, links, eqcs, [contineqcs], g=g, Δt=Δt)
+
+    return mech
+end
+
+function getcartpole(; Δt::T = 0.1, g::T = -9.81) where {T}
+    #TODO: make customizable
+    # Parameters
+    slider_axis = [0.0; 1.0; 0.0]
+    pendulum_axis = [1.0; 0.0; 0.0]
+    slider_length = 1.0
+    pendulum_length = 1.0
+    width, depth, height = 0.1, 0.1, 0.1
+    slider_mass = 1.0 
+    pendulum_mass = 1.0 
+
+    # Links
+    origin = Origin{Float64}()
+    slider = Box(width, slider_length, height, slider_mass)
+    pendulum = Box(width, depth, pendulum_length, pendulum_mass)
+    links = [slider, pendulum]
+
+    # Joint Constraints
+    joint_origin_slider = EqualityConstraint(Prismatic(origin, slider, slider_axis; p1=szeros(Float64, 3), p2=szeros(Float64, 3)))
+    joint_slider_pendulum = EqualityConstraint(Revolute(slider, pendulum, pendulum_axis; p1=szeros(Float64, 3), p2=[0.0; 0.0; 0.5 * pendulum_length]))
+    eqcs = [joint_origin_slider, joint_slider_pendulum]
+
+    # Mechanism
+    mech = Mechanism(origin, links, eqcs, g=g, Δt=Δt)
+
+    return mech
+end
+
 """
      Mechanism initialization method. Provides a simple way to set the initial
      conditions (pose and velocity) of the mechanism.
@@ -595,3 +656,65 @@ function initializedzhanibekov!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVec
     setPosition!(link1, link2, p1 = p1, p2 = p2, Δq = qoffset)
     setVelocity!(link1, link2, p1 = p1, p2 = p2)
 end
+
+function initializehopper!(mech::Mechanism{T,Nn,Ne,Nb}; leg_length_nominal=0.5) where {T,Nn,Ne,Nb}
+    # origin to body
+    setPosition!(mech.origin, mech.bodies[3], Δx=[0.0; 0.0; leg_length_nominal])
+    setVelocity!(mech.bodies[3], v = [0.0; 0.0; 0.0], ω = [0.0; 0.0; 0.0])
+    # mech.bodies[3].state.xc
+    # mech.bodies[3].state.vc
+    # mech.bodies[3].state.qc
+    # mech.bodies[3].state.ωc
+
+    # body to foot
+    setPosition!(mech.bodies[3], mech.bodies[4], Δx=[0.0; 0.0; -leg_length_nominal], Δq=UnitQuaternion(RotX(0.0)))
+    setVelocity!(mech.bodies[4], v = zeros(3), ω = zeros(3))
+    # mech.bodies[4].state.xc
+    # mech.bodies[4].state.vc
+    # mech.bodies[4].state.qc
+    # mech.bodies[4].state.ωc
+end
+
+function initializecartpole!(mech::Mechanism{T,Nn,Ne,Nb}; mode=:down, pendulum_length=1.0) where {T,Nn,Ne,Nb}
+    # origin to slider
+    setPosition!(mech.origin, mech.bodies[3])
+    setVelocity!(mech.bodies[3], v = [0.0; 0.0; 0.0], ω = zeros(3))
+    # mech.bodies[3].state.xc
+    # mech.bodies[3].state.vc
+    # mech.bodies[3].state.qc
+    # mech.bodies[3].state.ωc
+
+    # slider to pendulum
+    if mode == :down
+        setPosition!(mech.bodies[3], mech.bodies[4], Δx=[0.0; 0.0; -0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
+        setVelocity!(mech.bodies[4], v = zeros(3), ω = zeros(3))
+    elseif mode == :up
+        setPosition!(mech.bodies[3], mech.bodies[4], Δx=[0.0; 0.0; 0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
+        setVelocity!(mech.bodies[4], v = zeros(3), ω = zeros(3))
+    end
+    # mech.bodies[4].state.xc
+    # mech.bodies[4].state.vc
+    # mech.bodies[4].state.qc
+    # mech.bodies[4].state.ωc
+end
+
+## System Inputs 
+function hopper_inputs!(mech, k, u)
+    j1 = geteqconstraint(mech, mech.eqconstraints[1].id)
+    j2 = geteqconstraint(mech, mech.eqconstraints[2].id)
+
+    setForce!(mech, j1, [0.0; 0.0; 0.0; u[1]; u[2]; 0.0])
+    setForce!(mech, j2, SA[u[3]])
+
+    return
+end
+
+function cartpole_inputs!(mech, k, u) 
+    # actuate slider 
+    j1 = geteqconstraint(mech, mech.eqconstraints[1].id)
+    # j2 = geteqconstraint(mech, mech.eqconstraints[2].id)
+
+    setForce!(mech, j1, SVector{1}(u[1]))
+    # setForce!(mech, j2, SA[u2])
+end
+    

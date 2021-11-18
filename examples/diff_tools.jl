@@ -603,6 +603,7 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     offc = 0
     for body in collect(bodies)
         for ineqc in ineqcs
+            
             if ineqc.parentid == body.id
                 bnd = ineqc.constraints[1]
                 bnd_type = typeof(bnd)
