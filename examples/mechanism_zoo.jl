@@ -125,9 +125,9 @@ end
 
 function getdice(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8,
         contact::Bool = true,
-        # conetype = :soc,
+        conetype = :soc,
         # conetype = :impact,
-        conetype = :linear,
+        # conetype = :linear,
         mode = :box)  where {T}
     # Parameters
     joint_axis = [1.0;0.0;0.0]

@@ -70,7 +70,7 @@ function feasibilityStepLength!(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs
 end
 
 function feasibilityStepLength!(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
-        vector_entry::Entry, τort, τsoc) where {T,N,Nc,Cs<:Tuple{Union{ImpactBound11{T,N},LinearContactBound11{T,N}}},N½}
+        vector_entry::Entry, τort, τsoc) where {T,N,Nc,Cs<:Tuple{Union{ImpactBound{T,N},LinearContactBound{T,N}}},N½}
     s = ineqc.ssol[2]
     γ = ineqc.γsol[2]
     Δs = vector_entry.value[1:N½]

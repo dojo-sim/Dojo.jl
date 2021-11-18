@@ -61,7 +61,7 @@ function contactconstraint(body::Body{T}, normal::AbstractVector{T}, cf::T;
         p::AbstractVector{T} = szeros(T, 3),
         offset::AbstractVector{T} = szeros(T, 3)) where {T}
 
-    contbound = ContactBound(body, normal, cf, p = p)
+    contbound = ContactBound(body, normal, cf, p = p, offset = offset)
     contineqcs = InequalityConstraint((contbound, body.id, nothing))
     return contineqcs
 end
