@@ -1,11 +1,11 @@
-mutable struct LinearContactBound11{T,N} <: Bound{T,N}
+mutable struct LinearContactBound{T,N} <: Bound{T,N}
     cf::T
     Bx::SMatrix{4,3,T,12}
     ainv3::Adjoint{T,SVector{3,T}} # inverse matrix
     p::SVector{3,T}
     offset::SVector{3,T}
 
-    function LinearContactBound11(body::Body{T}, normal::AbstractVector, cf; p = szeros(T, 3), offset::AbstractVector = szeros(T, 3)) where T
+    function LinearContactBound(body::Body{T}, normal::AbstractVector, cf; p = szeros(T, 3), offset::AbstractVector = szeros(T, 3)) where T
         V1, V2, V3 = orthogonalcols(normal) # gives two plane vectors and the original normal axis
         A = [V1 V2 V3]
         Ainv = inv(A)
@@ -61,7 +61,7 @@ function linearcontactconstraint(body::Body{T}, normal::AbstractVector{T}, cf::T
         p::AbstractVector{T} = szeros(T, 3),
         offset::AbstractVector{T} = szeros(T, 3)) where {T}
 
-    linbound = LinearContactBound11(body, normal, cf, p = p)
+    linbound = LinearContactBound(body, normal, cf, p = p, offset = offset)
     linineqcs = InequalityConstraint((linbound, body.id, nothing))
     return linineqcs
 end
@@ -76,7 +76,7 @@ end
 #
 # Bqmat0 - 2Bqmat1
 
-function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{LinearContactBound11{T,N}}}
+function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{LinearContactBound{T,N}}}
     cont = ineqc.constraints[1]
     body = getbody(mechanism, ineqc.parentid)
     x, v, q, ω = fullargssol(body.state)
@@ -89,18 +89,32 @@ function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:
     sγ = ineqc.ssol[2][1]
     ψ = ineqc.γsol[2][2]
     sψ = ineqc.ssol[2][2]
-    η = ineqc.γsol[2][@SVector [3,4,5,6]]
-    sη = ineqc.ssol[2][@SVector [3,4,5,6]]
+    # η = ineqc.γsol[2][@SVector [3,4,5,6]]
+    # sη = ineqc.ssol[2][@SVector [3,4,5,6]]
+    β = ineqc.γsol[2][@SVector [3,4,5,6]]
+    sβ = ineqc.ssol[2][@SVector [3,4,5,6]]
+    # @show scn.(γ)
+    # @show scn.(ψ)
+    # @show scn.(η)
+    # @show scn.(sγ)
+    # @show scn.(sψ)
+    # @show scn.(sη)
+    # @show scn.(Bxmat * v + Bqmat * ω)
+    # @show scn.(ψ * sones(4))
+    # @show scn.(ψ * sones(4) - η)
+    # @show scn.(Bxmat * v + Bqmat * ω + ψ * sones(4) - η)
     SVector{6,T}(
         cont.ainv3 * (x3 + vrotate(cont.p,q3) - cont.offset) - sγ,
-        cont.cf * γ - sum(sη) - sψ,
-        (Bxmat * v + Bqmat * ω + ψ * sones(4) - η)...)
+        # cont.cf * γ - sum(sη) - sψ,
+        cont.cf * γ - sum(β) - sψ,
+        # (Bxmat * v + Bqmat * ω + ψ * sones(4) - η)...)
+        (Bxmat * v + Bqmat * ω + ψ * sones(4) - sβ)...)
 end
 
 
 ## Derivatives accounting for quaternion specialness
 ## maps contact forces into the dynamics
-@inline function ∂g∂pos(cont::LinearContactBound11, x::AbstractVector, q::UnitQuaternion)
+@inline function ∂g∂pos(cont::LinearContactBound, x::AbstractVector, q::UnitQuaternion)
     Bxmat = cont.Bx
     p = cont.p
     nx = size(x)[1]
@@ -119,32 +133,32 @@ end
 
 
 ## Complementarity
-function complementarity(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{LinearContactBound11{T,N}},N½}
+function complementarity(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{LinearContactBound{T,N}},N½}
     γ = ineqc.γsol[2]
     s = ineqc.ssol[2]
     return γ .* s
 end
 
-function complementarityμ(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{LinearContactBound11{T,N}},N½}
+function complementarityμ(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{LinearContactBound{T,N}},N½}
     γ = ineqc.γsol[2]
     s = ineqc.ssol[2]
     return γ .* s - mechanism.μ * neutral_vector(ineqc.constraints[1])
 end
 
-function neutral_vector(bound::LinearContactBound11{T,N}) where {T,N}
+function neutral_vector(bound::LinearContactBound{T,N}) where {T,N}
     N½ = Int(N/2)
     return sones(T, N½)
 end
 
-∂g∂ʳpos(bound::LinearContactBound11, state::State, Δt) = ∂g∂ʳpos(bound, posargsnext(state, Δt)...)
+∂g∂ʳpos(bound::LinearContactBound, state::State, Δt) = ∂g∂ʳpos(bound, posargsnext(state, Δt)...)
 
-@inline function ∂g∂ʳpos(bound::LinearContactBound11, x::AbstractVector, q::UnitQuaternion)
+@inline function ∂g∂ʳpos(bound::LinearContactBound, x::AbstractVector, q::UnitQuaternion)
     X, Q = ∂g∂pos(bound, x, q)
     Q = Q # we account for quaternion specialness in ∂g∂pos
     return [X Q]
 end
 
-@inline function ∂g∂ʳvel(cont::LinearContactBound11, x3::AbstractVector, q3::UnitQuaternion,
+@inline function ∂g∂ʳvel(cont::LinearContactBound, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v2::AbstractVector, q2::UnitQuaternion, ω2::AbstractVector, Δt
     )
     Bxmat = cont.Bx
@@ -169,7 +183,7 @@ end
 end
 
 @inline function setDandΔs!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
-    ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{LinearContactBound11{T,N}},N½}
+    ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{LinearContactBound{T,N}},N½}
     # ∇ssol[γsol .* ssol - μ; g - s] = [diag(γsol); -diag(0,1,1)]
     # ∇γsol[γsol .* ssol - μ; g - s] = [diag(ssol); -diag(1,0,0)]
     # (cf γ - ψ) dependent of ψ = γsol[2][1:1]
@@ -179,21 +193,28 @@ end
     s = ineqc.ssol[2]
 
     ∇s1 = Diagonal(γ) # 6x6
-    ∇s2 = @SMatrix[-1  0  0  0  0  0;
-                    0 -1 -1 -1 -1 -1;
-                    0  0  0  0  0  0;
-                    0  0  0  0  0  0;
-                    0  0  0  0  0  0;
-                    0  0  0  0  0  0;]
+    ∇s2 = Diagonal(-sones(T,6))
+    # ∇s2 = @SMatrix[-1  0  0  0  0  0;
+    #                 0 -1 -1 -1 -1 -1;
+    #                 0  0  0  0  0  0;
+    #                 0  0  0  0  0  0;
+    #                 0  0  0  0  0  0;
+    #                 0  0  0  0  0  0;]
     ∇s = vcat(∇s1, ∇s2) # 12x6
 
     ∇γ1 = Diagonal(s) # 6x6
+    # ∇γ2 = @SMatrix[ 0  0  0  0  0  0;
+    #                cf  0  0  0  0  0;
+    #                 0  1 -1  0  0  0;
+    #                 0  1  0 -1  0  0;
+    #                 0  1  0  0 -1  0;
+    #                 0  1  0  0  0 -1;]
     ∇γ2 = @SMatrix[ 0  0  0  0  0  0;
-                   cf  0  0  0  0  0;
-                    0  1 -1  0  0  0;
-                    0  1  0 -1  0  0;
-                    0  1  0  0 -1  0;
-                    0  1  0  0  0 -1;]
+                   cf  0 -1 -1 -1 -1;
+                    0  1  0  0  0  0;
+                    0  1  0  0  0  0;
+                    0  1  0  0  0  0;
+                    0  1  0  0  0  0;]
     ∇γ = vcat(∇γ1, ∇γ2) # 12x6
 
     matrix_entry.value = hcat(∇s, ∇γ)

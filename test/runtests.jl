@@ -8,6 +8,8 @@ using SparseArrays
 using BenchmarkTools
 using Dojo
 
+# const Dojo = Main
+
 include("jacobian.jl")
 include("momentum_conservation.jl")
 include("energy_conservation.jl")

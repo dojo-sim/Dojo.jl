@@ -1,9 +1,9 @@
-mutable struct ImpactBound11{T,N} <: Bound{T,N}
+mutable struct ImpactBound{T,N} <: Bound{T,N}
     ainv3::Adjoint{T,SVector{3,T}} # inverse matrix
     p::SVector{3,T}
     offset::SVector{3,T}
 
-    function ImpactBound11(body::Body{T}, normal::AbstractVector; p = szeros(T, 3), offset::AbstractVector = szeros(T, 3)) where T
+    function ImpactBound(body::Body{T}, normal::AbstractVector; p = szeros(T, 3), offset::AbstractVector = szeros(T, 3)) where T
         V1, V2, V3 = orthogonalcols(normal) # gives two plane vectors and the original normal axis
         A = [V1 V2 V3]
         Ainv = inv(A)
@@ -53,12 +53,12 @@ function impactconstraint(body::Body{T}, normal::AbstractVector{T};
         p::AbstractVector{T} = szeros(T, 3),
         offset::AbstractVector{T} = szeros(T, 3)) where {T}
 
-    impbound = ImpactBound11(body, normal, p = p)
+    impbound = ImpactBound(body, normal, p = p, offset = offset)
     impineqcs = InequalityConstraint((impbound, body.id, nothing))
     return impineqcs
 end
 
-function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{ImpactBound11{T,N}}}
+function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{ImpactBound{T,N}}}
     imp = ineqc.constraints[1]
     body = getbody(mechanism, ineqc.parentid)
     x, v, q, ω = fullargssol(body.state)
@@ -71,7 +71,7 @@ end
 
 ## Derivatives accounting for quaternion specialness
 ## maps contact forces into the dynamics
-@inline function ∂g∂pos(imp::ImpactBound11, x::AbstractVector, q::UnitQuaternion)
+@inline function ∂g∂pos(imp::ImpactBound, x::AbstractVector, q::UnitQuaternion)
     drot = ∂vrotate∂q(imp.p, q) * LVᵀmat(q)
     X = imp.ainv3
     Q = imp.ainv3 * drot
@@ -79,32 +79,32 @@ end
 end
 
 ## Complementarity
-function complementarity(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ImpactBound11{T,N}},N½}
+function complementarity(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ImpactBound{T,N}},N½}
     γ = ineqc.γsol[2]
     s = ineqc.ssol[2]
     return γ .* s
 end
 
-function complementarityμ(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ImpactBound11{T,N}},N½}
+function complementarityμ(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ImpactBound{T,N}},N½}
     γ = ineqc.γsol[2]
     s = ineqc.ssol[2]
     return γ .* s - mechanism.μ * neutral_vector(ineqc.constraints[1])
 end
 
-function neutral_vector(bound::ImpactBound11{T,N}) where {T,N}
+function neutral_vector(bound::ImpactBound{T,N}) where {T,N}
     N½ = Int(N/2)
     return sones(T, N½)
 end
 
-∂g∂ʳpos(bound::ImpactBound11, state::State, Δt) = ∂g∂ʳpos(bound, posargsnext(state, Δt)...)
+∂g∂ʳpos(bound::ImpactBound, state::State, Δt) = ∂g∂ʳpos(bound, posargsnext(state, Δt)...)
 
-@inline function ∂g∂ʳpos(bound::ImpactBound11, x::AbstractVector, q::UnitQuaternion)
+@inline function ∂g∂ʳpos(bound::ImpactBound, x::AbstractVector, q::UnitQuaternion)
     X, Q = ∂g∂pos(bound, x, q)
     Q = Q # we account for quaternion specialness in ∂g∂pos
     return [X Q]
 end
 
-@inline function ∂g∂ʳvel(imp::ImpactBound11, x3::AbstractVector, q3::UnitQuaternion,
+@inline function ∂g∂ʳvel(imp::ImpactBound, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v2::AbstractVector, q2::UnitQuaternion, ω2::AbstractVector, Δt
     )
     X = imp.ainv3 * Δt
@@ -115,7 +115,7 @@ end
 end
 
 @inline function setDandΔs!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
-    ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ImpactBound11{T,N}},N½}
+    ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ImpactBound{T,N}},N½}
     # ∇ssol[γsol .* ssol - μ; g - s] = [diag(γsol); -diag(0,1,1)]
     # ∇γsol[γsol .* ssol - μ; g - s] = [diag(ssol); -diag(1,0,0)]
     γ = ineqc.γsol[2]

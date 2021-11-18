@@ -103,6 +103,7 @@ include(joinpath(module_dir(), "src", "joints", "abstract_joint.jl"))
 include(joinpath(module_dir(), "src", "bounds", "bound.jl"))
 include(joinpath(module_dir(), "src", "bounds", "contact_bounds.jl"))
 include(joinpath(module_dir(), "src", "bounds", "impact_bounds.jl"))
+include(joinpath(module_dir(), "src", "bounds", "linear_contact_bounds.jl"))
 
 include(joinpath(module_dir(), "src", "joints", "joint.jl"))
 include(joinpath(module_dir(), "src", "joints", "translational.jl"))
