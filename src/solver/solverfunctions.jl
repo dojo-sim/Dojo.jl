@@ -34,9 +34,9 @@ function feasibilityStepLength!(mechanism::Mechanism{T}, body::Body{T}, vector_e
     Δt = mechanism.Δt
     Δω = vector_entry.value[SA[4; 5; 6]]
     ω = body.state.ωsol[2]
-   
+
     α = polynomial_step_length(ω, Δω, τ * 1/Δt)
-   
+
     (α < mechanism.α) && (mechanism.α = α)
     return
 end
@@ -65,6 +65,28 @@ function feasibilityStepLength!(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs
     αγ < 1e-6 && println("γ: ", scn.(γ[2:4]))
     αγ < 1e-6 && println("Δγ:", scn.(Δγ[2:4]))
     α = min(αs, αγ, αs_ort, αγ_ort)
+    (α > 0) && (α < mechanism.α) && (mechanism.α = α)
+    return
+end
+
+function feasibilityStepLength!(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
+        vector_entry::Entry, τort, τsoc) where {T,N,Nc,Cs<:Tuple{Union{ImpactBound11{T,N},LinearContactBound11{T,N}}},N½}
+    s = ineqc.ssol[2]
+    γ = ineqc.γsol[2]
+    Δs = vector_entry.value[1:N½]
+    Δγ = vector_entry.value[N½ .+ (1:N½)]
+
+    αs_ort = 1.0
+    αγ_ort = 1.0
+    for i = 1:N½
+        if Δs[i] < 0 # safer
+            αs_ort = min(αs_ort, - τort * s[i] / Δs[i])
+        end
+        if Δγ[i] < 0 # safer
+            αγ_ort = min(αγ_ort, - τort * γ[i] / Δγ[i])
+        end
+    end
+    α = min(αs_ort, αγ_ort)
     (α > 0) && (α < mechanism.α) && (mechanism.α = α)
     return
 end

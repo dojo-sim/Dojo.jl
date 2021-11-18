@@ -2,7 +2,7 @@
 vis = Visualizer()
 open(vis)
 
-const DifferentiableContact = Main
+const Dojo = Main
 
 # Data
 ϵ0 = 1e-14
@@ -48,9 +48,9 @@ function energy_drift(vis::Visualizer; Δt = 1e-2, tsim = 1.0, g = 0.0,
     tcompute = @elapsed storage = simulate!(mech, tsim + 1.0, nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ)
     display && visualize(mech, downsample(storage, 1), vis = vis)
 
-    ke = DifferentiableContact.kineticEnergy(mech, storage)[start:end]
-    pe = DifferentiableContact.potentialEnergy(mech, storage)[start:end]
-    me = DifferentiableContact.mechanicalEnergy(mech, storage)[start:end]
+    ke = Dojo.kineticEnergy(mech, storage)[start:end]
+    pe = Dojo.potentialEnergy(mech, storage)[start:end]
+    me = Dojo.mechanicalEnergy(mech, storage)[start:end]
 
     display && plot([(i-1)*Δt for i in 1:length(ke)], ke .- ke[1])
     display && plot([(i-1)*Δt for i in 1:length(pe)], pe .- pe[1])
@@ -121,7 +121,7 @@ function momentum_drift(vis::Visualizer; Δt = 1e-2, tsim = 1.0, g = 0.0,
     tcompute = @elapsed storage = simulate!(mech, tsim + 1.0, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ)
     display && visualize(mech, downsample(storage, 1), vis = vis)
 
-    m = DifferentiableContact.momentum(mech, storage)[1:end]
+    m = Dojo.momentum(mech, storage)[1:end]
     mlin = [Vector(mi)[1:3] for mi in m]
     mang = [Vector(mi)[4:6] for mi in m]
 
@@ -211,9 +211,9 @@ function energy_drift(vis::Visualizer; Δt = 1e-2, tsim = 1.0, g = 0.0,
     tcompute = @elapsed storage = simulate!(mech, tsim + 1.0, nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ)
     display && visualize(mech, downsample(storage, 1), vis = vis)
 
-    ke = DifferentiableContact.kineticEnergy(mech, storage)[start:end]
-    pe = DifferentiableContact.potentialEnergy(mech, storage)[start:end]
-    me = DifferentiableContact.mechanicalEnergy(mech, storage)[start:end]
+    ke = Dojo.kineticEnergy(mech, storage)[start:end]
+    pe = Dojo.potentialEnergy(mech, storage)[start:end]
+    me = Dojo.mechanicalEnergy(mech, storage)[start:end]
 
     display && plot([(i-1)*Δt for i in 1:length(ke)], ke .- ke[1])
     display && plot([(i-1)*Δt for i in 1:length(pe)], pe .- pe[1])

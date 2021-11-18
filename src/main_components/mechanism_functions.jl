@@ -109,7 +109,7 @@ end
 end
 
 @inline function residual_violation!(ineqc::InequalityConstraint, mechanism::Mechanism)
-    res = gs(mechanism, ineqc)
+    res = g(mechanism, ineqc)
     mechanism.rvio = max(mechanism.rvio, norm(res, Inf))
     return nothing
 end

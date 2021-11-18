@@ -6,7 +6,7 @@ using LinearAlgebra
 using Random
 using SparseArrays
 using BenchmarkTools
-using DifferentiableContact
+using Dojo
 
 include("jacobian.jl")
 include("momentum_conservation.jl")

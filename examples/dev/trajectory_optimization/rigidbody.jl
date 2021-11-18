@@ -1,4 +1,4 @@
-using DifferentiableContact 
+using Dojo 
 using StaticArrays
 
 # Utils
