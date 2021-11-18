@@ -46,7 +46,7 @@ function joint_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 pGlq = mat * pQl
                 cGlx = mat * cXl
                 cGlq = mat * cQl
-            
+
                 Gl[range,pcol3a12] = pGlx
                 Gl[range,pcol3c12] = pGlq*Rmat(ωbar(pstate.ωc, Δt)*Δt/2)*LVᵀmat(pstate.qc)
 
@@ -123,11 +123,11 @@ function joint_jacobian_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne
                 Aba = zeros(T,13,13)
                 Abb = zeros(T,13,13)
 
-                xa, qa = posargsk(state1) 
+                xa, qa = posargsk(state1)
                 xb, qb = posargsk(state2)
 
                 # XX, XQ, QX, QQ = ∂2g∂posaa(constraint, posargsk(state1)..., posargsk(state2)...)
-                
+
                 if typeof(∂g∂ʳposa(constraint, xa, qa, xb, qb)) <: AbstractArray && length(constraint) > 0
                     XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposa(constraint, w, qa, xb, qb)[1:3, 1:3]) * constraintmat(constraint)' * λ, xa)
                     XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposa(constraint, xa, UnitQuaternion(w..., false), xb, qb)[1:3, 1:3]) * constraintmat(constraint)' * λ, [qa.w; qa.x; qa.y; qa.z])
@@ -155,7 +155,7 @@ function joint_jacobian_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne
                 end
 
                 # XX, XQ, QX, QQ = ∂2g∂posba(constraint, posargsk(state1)..., posargsk(state2)...)
-                
+
                 if typeof(∂g∂ʳposb(constraint, xa, qa, xb, qb)) <: AbstractArray && length(constraint) > 0
                     XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(constraint, w, qa, xb, qb)[1:3, 1:3]) * constraintmat(constraint)' * λ, xa)
                     XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(constraint, xa, UnitQuaternion(w..., false), xb, qb)[1:3, 1:3]) * constraintmat(constraint)' * λ, [qa.w; qa.x; qa.y; qa.z])
@@ -205,20 +205,20 @@ function joint_jacobian_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne
                 λ = eqc.λsol[2][n1:n2]
 
                 Abb = zeros(T,13,13)
-                
+
                 xb, qb = posargsk(state2)
 
                 if typeof(∂g∂ʳposb(constraint, xb, qb)) <: AbstractArray && length(constraint) > 0
-                 
+
                     XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(constraint, w, qb)[1:3, 1:3]) * constraintmat(constraint)' * λ, xb)
                     XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(constraint, xb, UnitQuaternion(w..., false))[1:3, 1:3]) * constraintmat(constraint)' * λ, [qb.w; qb.x; qb.y; qb.z])
                     QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(constraint, w, qb)[1:3, 4:6]) * constraintmat(constraint)' * λ, xb)
                     QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(constraint, xb, UnitQuaternion(w..., false))[1:3, 4:6]) * constraintmat(constraint)' * λ, [qb.w; qb.x; qb.y; qb.z])
 
-                    Abb[4:6,1:3] = XX 
-                    Abb[4:6,7:10] = XQ 
+                    Abb[4:6,1:3] = XX
+                    Abb[4:6,7:10] = XQ
                     Abb[11:13,1:3] = QX
-                    Abb[11:13,7:10] = QQ 
+                    Abb[11:13,7:10] = QQ
                 end
 
                 FfzG[ccol13,ccol13] += Abb
@@ -339,7 +339,7 @@ function control_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa = ∂Fτ∂posa(joint, pbody.state, cbody.state, mechanism.Δt)
                 FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb = ∂Fτ∂posb(joint, pbody.state, cbody.state, mechanism.Δt)
 
-               
+
                 xa, qa = posargsk(pbody.state)
                 Ma = [I zeros(3,3); zeros(4,3) LVᵀmat(qa)]
 
@@ -354,13 +354,13 @@ function control_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 rowbω = offsetrange(childind,3,13,4).+1
 
                 Fzu[[rowav; rowaω],cola6] = [FaXa FaQa; τaXa τaQa] * Ma
-                
+
                 Fzu[[rowbv; rowbω],cola6] = [FbXa FbQa; τbXa τbQa] * Ma
-               
+
                 Fzu[[rowav; rowaω],colb6] = [FaXb FaQb; τaXb τaQb] * Mb
-               
+
                 Fzu[[rowbv; rowbω],colb6] = [FbXb FbQb; τbXb τbQb] * Mb
-              
+
             else
                 pbody = mechanism.origin
                 cbody = getbody(mechanism, childid)
@@ -372,9 +372,9 @@ function control_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
 
                 x2, q2 = posargsk(cbody.state)
                 M = [I zeros(3,3); zeros(4,3) LVᵀmat(q2)]
-                
+
                 Fzu[[rowbv; rowbω], colb6] = [FbXb FbQb; τbXb τbQb] * M
-                
+
             end
         end
     end
@@ -446,7 +446,7 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
     end
 
     G = joint_datamat(mechanism)
-  
+
     return Fz, Fu * Bcontrol, G
 end
 
@@ -604,14 +604,28 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     for body in collect(bodies)
         for ineqc in ineqcs
             if ineqc.parentid == body.id
-                cont = ineqc.constraints[1]
-                p = cont.p
+                bnd = ineqc.constraints[1]
+                bnd_type = typeof(bnd)
                 Δt = mechanism.Δt
                 x3, q3 = posargsnext(body.state, Δt)
                 x2, v2, q2, ω2 = fullargssol(body.state)
                 M = [I zeros(3,3); zeros(4,3) Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)]
-                A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dN(x3, [q3.w, q3.x, q3.y, q3.z], ineqc.γsol[2][1:1], p) * M
-                A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dB(x3, [q3.w, q3.x, q3.y, q3.z], ineqc.γsol[2][2:4], p) * M
+
+                function d(vars)
+                    x = vars[1:3]
+                    q = UnitQuaternion(vars[4:7]..., false)
+                    return ∂g∂ʳpos(bnd, x, q)' * ineqc.γsol[2]
+                end
+
+                if bnd_type <: ContactBound
+                    p = bnd.p
+                    A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dN(x3, [q3.w, q3.x, q3.y, q3.z], ineqc.γsol[2][1:1], p) * M
+                    A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dB(x3, [q3.w, q3.x, q3.y, q3.z], ineqc.γsol[2][2:4], p) * M
+                elseif bnd_type <: LinearContactBound
+                    A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
+                elseif bnd_type <: ImpactBound
+                    A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
+                end
             end
         end
         offr += 6

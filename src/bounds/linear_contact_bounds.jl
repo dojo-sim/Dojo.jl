@@ -176,6 +176,7 @@ end
     Q = [(cont.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(cont.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(cont.p)))) * Lmat(q2) * derivωbar(ω2, Δt) * Δt / 2
          szeros(1,nq);
          B(q3) + ForwardDiff.jacobian(q -> B(q) * ω2, [q3.w; q3.x; q3.y; q3.z]) * Lmat(q2) * derivωbar(ω2, Δt) * Δt / 2]
+         # B(q3) + FiniteDiff.finite_difference_jacobian(q -> B(q) * ω2, [q3.w; q3.x; q3.y; q3.z]) * Lmat(q2) * derivωbar(ω2, Δt) * Δt / 2]
 
     V = X
     Ω = Q
@@ -216,7 +217,8 @@ end
                     0  1  0  0  0  0;
                     0  1  0  0  0  0;]
     ∇γ = vcat(∇γ1, ∇γ2) # 12x6
-
+    @show size(matrix_entry.value)
+    @show size(hcat(∇s, ∇γ))
     matrix_entry.value = hcat(∇s, ∇γ)
 
     # [-γsol .* ssol + μ; -g + s]
