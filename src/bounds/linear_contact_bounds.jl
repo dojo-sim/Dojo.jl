@@ -66,6 +66,16 @@ function linearcontactconstraint(body::Body{T}, normal::AbstractVector{T}, cf::T
     return linineqcs
 end
 
+# @inline Bq(Bxmat, p, q) = Bxmat*VRᵀmat(q)*LVᵀmat(q)*skew(-p)
+# @inline Bmat(Bxmat, p, q) = [Bxmat Bq(Bxmat, p, q)]
+# p = rand(3)
+# q = UnitQuaternion(rand(4)...)
+# cont.Bx
+# Bqmat1 = Bq(Bxmat, p, q)
+# Bqmat0 = Bxmat * ∂vrotate∂q(p, q) * LVᵀmat(q)
+#
+# Bqmat0 - 2Bqmat1
+
 function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{LinearContactBound11{T,N}}}
     cont = ineqc.constraints[1]
     body = getbody(mechanism, ineqc.parentid)
@@ -106,6 +116,7 @@ end
          Bxmat * drot]
     return X, Q
 end
+
 
 ## Complementarity
 function complementarity(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{LinearContactBound11{T,N}},N½}
@@ -193,52 +204,52 @@ end
 end
 
 
-γ = SVector(2,3,4,5,6,7)
-s = SVector(20,30,40,50,60,70)
-
-∇s1 = Diagonal(γ) # 6x6
-∇s2 = @SMatrix[-1  0  0  0  0  0;
-                0 -1 -1 -1 -1 -1;
-                0  0  0  0  0  0;
-                0  0  0  0  0  0;
-                0  0  0  0  0  0;
-                0  0  0  0  0  0;]
-∇s = vcat(∇s1, ∇s2) # 12x6
-
-∇γ1 = Diagonal(s) # 6x6
-∇γ2 = @SMatrix[ 0  0  0  0  0  0;
-               cf  0  0  0  0  0;
-                0  1 -1  0  0  0;
-                0  1  0 -1  0  0;
-                0  1  0  0 -1  0;
-                0  1  0  0  0 -1;]
-∇γ = vcat(∇γ1, ∇γ2) # 12x6
-
-rank(hcat(∇s, ∇γ))
-
-
-
-
-
-
-cf = 0.2
-γ = SVector(2,3,4,5)
-s = SVector(20,30,40,50)
-
-# ∇s = [ineqc.γsol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])]
-∇s1 = hcat(γ[1], szeros(1,3))
-∇s2 = hcat(szeros(3,1), ∇cone_product(γ[@SVector [2,3,4]]))
-∇s3 = Diagonal(SVector{4,Float64}(-1, 0, -1, -1))
-∇s = vcat(∇s1, ∇s2, ∇s3)
-
-# ∇γ = [ineqc.ssol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.ssol[2][2:4]); szeros(1,4); cf -1 0 0; szeros(2,4)]
-∇γ1 = hcat(s[1], szeros(1,3))
-∇γ2 = hcat(szeros(3,1), ∇cone_product(s[@SVector [2,3,4]]))
-∇γ3 = @SMatrix[0   0 0 0;
-               cf -1 0 0;
-               0   0 0 0;
-               0   0 0 0;]
-∇γ = vcat(∇γ1, ∇γ2, ∇γ3)
-
-# matrix_entry.value = [[ineqc.γsol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])] [ineqc.ssol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.ssol[2][2:4]); szeros(1,4); cf -1 0 0; szeros(2,4)]]
-rank(hcat(∇s, ∇γ))
+# γ = SVector(2,3,4,5,6,7)
+# s = SVector(20,30,40,50,60,70)
+#
+# ∇s1 = Diagonal(γ) # 6x6
+# ∇s2 = @SMatrix[-1  0  0  0  0  0;
+#                 0 -1 -1 -1 -1 -1;
+#                 0  0  0  0  0  0;
+#                 0  0  0  0  0  0;
+#                 0  0  0  0  0  0;
+#                 0  0  0  0  0  0;]
+# ∇s = vcat(∇s1, ∇s2) # 12x6
+#
+# ∇γ1 = Diagonal(s) # 6x6
+# ∇γ2 = @SMatrix[ 0  0  0  0  0  0;
+#                cf  0  0  0  0  0;
+#                 0  1 -1  0  0  0;
+#                 0  1  0 -1  0  0;
+#                 0  1  0  0 -1  0;
+#                 0  1  0  0  0 -1;]
+# ∇γ = vcat(∇γ1, ∇γ2) # 12x6
+#
+# rank(hcat(∇s, ∇γ))
+#
+#
+#
+#
+#
+#
+# cf = 0.2
+# γ = SVector(2,3,4,5)
+# s = SVector(20,30,40,50)
+#
+# # ∇s = [ineqc.γsol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])]
+# ∇s1 = hcat(γ[1], szeros(1,3))
+# ∇s2 = hcat(szeros(3,1), ∇cone_product(γ[@SVector [2,3,4]]))
+# ∇s3 = Diagonal(SVector{4,Float64}(-1, 0, -1, -1))
+# ∇s = vcat(∇s1, ∇s2, ∇s3)
+#
+# # ∇γ = [ineqc.ssol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.ssol[2][2:4]); szeros(1,4); cf -1 0 0; szeros(2,4)]
+# ∇γ1 = hcat(s[1], szeros(1,3))
+# ∇γ2 = hcat(szeros(3,1), ∇cone_product(s[@SVector [2,3,4]]))
+# ∇γ3 = @SMatrix[0   0 0 0;
+#                cf -1 0 0;
+#                0   0 0 0;
+#                0   0 0 0;]
+# ∇γ = vcat(∇γ1, ∇γ2, ∇γ3)
+#
+# # matrix_entry.value = [[ineqc.γsol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])] [ineqc.ssol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.ssol[2][2:4]); szeros(1,4); cf -1 0 0; szeros(2,4)]]
+# rank(hcat(∇s, ∇γ))

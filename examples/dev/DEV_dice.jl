@@ -22,18 +22,25 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
-# mech = getmechanism(:dice, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, mode=:box, conetype = :soc)
-mech = getmechanism(:dice, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, mode=:box, conetype = :linear)
+# mech = getmechanism(:dice, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, mode=:particle, conetype = :soc)
+mech = getmechanism(:dice, Δt = 0.01, g = -9.81, cf = 1.0, contact = true, mode=:particle, conetype = :linear)
 # mech = getmechanism(:dice, Δt = 0.01, g = -9.81, contact = true, mode=:box, conetype = :impact)
 Random.seed!(100)
-ω = 5.0 * (rand(3) .- 0.5) * 1
+ω = 0.0 * (rand(3) .- 0.5) * 1
 x = [0, 0, 1.0]
-v = 100.0 * [1, 0.3, 0.0]
+v = 10.0 * [1, 0.3, 0.2]
 initialize!(mech, :dice, x = x, v = v, ω = ω)
-storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!, verbose = false)
+storage = simulate!(mech, 5.1, record = true, solver = :mehrotra!, verbose = true)
 visualize(mech, storage, vis = vis)
 
+plot([Vector(x)[1] for x in storage.x[1]])
+plot([Vector(x)[2] for x in storage.x[1]])
+plot([Vector(x)[3] for x in storage.x[1][111:end]])
 
+plot([x.w for x in storage.q[1]])
+plot([x.x for x in storage.q[1]])
+plot([x.y for x in storage.q[1]])
+plot([x.z for x in storage.q[1]])
 
 
 

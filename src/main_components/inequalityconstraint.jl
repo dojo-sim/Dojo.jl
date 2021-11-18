@@ -54,7 +54,8 @@ end
         function d(vars)
             x = vars[1:3]
             q = UnitQuaternion(vars[4:7]..., false)
-            return ∂g∂ʳpos(bnd, x, q)' * ineqc.γsol[2]
+            # return ∂g∂ʳpos(bnd, x, q)' * ineqc.γsol[2]
+            return norm(vars) * ones(6)
         end
 
         if bnd_type <: ContactBound
@@ -63,6 +64,9 @@ end
         elseif bnd_type <: ImpactBound11
             body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
         elseif bnd_type <: LinearContactBound11
+            # @show "gere"
+            # aaa = FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
+            # @show aaa
             body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
         end
     end
