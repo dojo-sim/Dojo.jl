@@ -150,15 +150,15 @@ end
 
 
 ## Damper velocity derivatives
-@inline function data_diagonal∂damper∂ʳvel(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
-    A = nullspacemat(joint)
-    AᵀA = zerodimstaticadjoint(A) * A
-    C = 2 * AᵀA * joint.damper * AᵀA
-    Fq = C * ∂vrot∂q(ωb, qa \ qb) *
+# @inline function data_diagonal∂damper∂ʳvel(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
+#     A = nullspacemat(joint)
+#     AᵀA = zerodimstaticadjoint(A) * A
+#     C = 2 * AᵀA * joint.damper * AᵀA
+#     Fq = C * ∂vrot∂q(ωb, qa \ qb) *
 
-    Z = szeros(T, 3, 3)
-    return [[Z; Z] [Fq; Z]]
-end
+#     Z = szeros(T, 3, 3)
+#     return [[Z; Z] [Fq; Z]]
+# end
 @inline function data_offdiagonal∂damper∂ʳvel(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
     Z = szeros(T, 3, 3)
     return [[Z; Z] [Z; Z]]
@@ -206,47 +206,47 @@ end
 end
 
 
-## Damper velocity derivatives
-@inline function data_diagonal∂damper∂ʳvel(joint::Rotational{T}) where T # never used
-    A = nullspacemat(joint)
-    AᵀA = zerodimstaticadjoint(A) * A
-    Z = szeros(T, 3, 3)
-    Fqa = C * ...
-    C = 2 * AᵀA joint.damper * AᵀA *
-    return [[Z; Z] [Z; Fqa]]
-end
+# ## Damper velocity derivatives
+# @inline function data_diagonal∂damper∂ʳvel(joint::Rotational{T}) where T # never used
+#     A = nullspacemat(joint)
+#     AᵀA = zerodimstaticadjoint(A) * A
+#     Z = szeros(T, 3, 3)
+#     Fqa = C * ...
+#     C = 2 * AᵀA joint.damper * AᵀA *
+#     return [[Z; Z] [Z; Fqa]]
+# end
 
-@inline function data_offdiagonal∂damper∂ʳvel(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
-    # invqbqa = q2b\q2a
-    # A = nullspacemat(joint)
-    # AᵀA = zerodimstaticadjoint(A) * A
-    # Z = szeros(T, 3, 3)
-    # return [[Z; Z] [Z; 2*VLmat(invqbqa)*RVᵀmat(invqbqa)* AᵀA * Diagonal(joint.damper) * AᵀA]]
-    A = nullspacemat(joint)
-    Aᵀ = zerodimstaticadjoint(A)
-    C = 2 * Aᵀ * A * joint.damper * Aᵀ * A
-    δq = qa \ qb
-    # invδq = qb \ qa
-    Z = szeros(T, 3, 3)
-    # return [[Z; Z] [Z; VRᵀmat(invδq) * LVᵀmat(invδq) * C * VRᵀmat(δq) * LVᵀmat(δq)]]
-    return [[Z; Z] [Z; C * VRᵀmat(δq) * LVᵀmat(δq)]]
-    # offdiagonal∂damper∂ʳvel(joint, xb, qa \ qb)
-end
-@inline function data_offdiagonal∂damper∂ʳvel(joint::Rotational{T}, xb::AbstractVector, qb::UnitQuaternion) where T
-    # invqb = inv(q2b)
-    # A = nullspacemat(joint)
-    # AᵀA = zerodimstaticadjoint(A) * A
-    # Z = szeros(T, 3, 3)
-    # return [[Z; Z] [Z; 2*VLmat(invqb)*RVᵀmat(invqb)* AᵀA * Diagonal(joint.damper) * AᵀA]]
-    A = nullspacemat(joint)
-    Aᵀ = zerodimstaticadjoint(A)
-    C = 2 * Aᵀ * A * joint.damper * Aᵀ * A
-    q = qb
-    invq = inv(qb)
-    Z = szeros(T, 3, 3)
-    return [[Z; Z] [Z; VRᵀmat(invq) * LVᵀmat(invq) * C * VRᵀmat(q) * LVᵀmat(q)]]
-    # offdiagonal∂damper∂ʳvel(joint, zeros(3), UnitQuaternion(1,0,0,0.0), xb, qb)
-end
+# @inline function data_offdiagonal∂damper∂ʳvel(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
+#     # invqbqa = q2b\q2a
+#     # A = nullspacemat(joint)
+#     # AᵀA = zerodimstaticadjoint(A) * A
+#     # Z = szeros(T, 3, 3)
+#     # return [[Z; Z] [Z; 2*VLmat(invqbqa)*RVᵀmat(invqbqa)* AᵀA * Diagonal(joint.damper) * AᵀA]]
+#     A = nullspacemat(joint)
+#     Aᵀ = zerodimstaticadjoint(A)
+#     C = 2 * Aᵀ * A * joint.damper * Aᵀ * A
+#     δq = qa \ qb
+#     # invδq = qb \ qa
+#     Z = szeros(T, 3, 3)
+#     # return [[Z; Z] [Z; VRᵀmat(invδq) * LVᵀmat(invδq) * C * VRᵀmat(δq) * LVᵀmat(δq)]]
+#     return [[Z; Z] [Z; C * VRᵀmat(δq) * LVᵀmat(δq)]]
+#     # offdiagonal∂damper∂ʳvel(joint, xb, qa \ qb)
+# end
+# @inline function data_offdiagonal∂damper∂ʳvel(joint::Rotational{T}, xb::AbstractVector, qb::UnitQuaternion) where T
+#     # invqb = inv(q2b)
+#     # A = nullspacemat(joint)
+#     # AᵀA = zerodimstaticadjoint(A) * A
+#     # Z = szeros(T, 3, 3)
+#     # return [[Z; Z] [Z; 2*VLmat(invqb)*RVᵀmat(invqb)* AᵀA * Diagonal(joint.damper) * AᵀA]]
+#     A = nullspacemat(joint)
+#     Aᵀ = zerodimstaticadjoint(A)
+#     C = 2 * Aᵀ * A * joint.damper * Aᵀ * A
+#     q = qb
+#     invq = inv(qb)
+#     Z = szeros(T, 3, 3)
+#     return [[Z; Z] [Z; VRᵀmat(invq) * LVᵀmat(invq) * C * VRᵀmat(q) * LVᵀmat(q)]]
+#     # offdiagonal∂damper∂ʳvel(joint, zeros(3), UnitQuaternion(1,0,0,0.0), xb, qb)
+# end
 
 
 
