@@ -22,8 +22,8 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
-# mech = getmechanism(:dice, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, mode=:particle, conetype = :soc)
-mech = getmechanism(:dice, Δt = 0.05, g = -9.81, cf = 0.2, contact = true, mode=:box, conetype = :linear)
+# mech = getmechanism(:dice, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, mode=:box, conetype = :soc)
+mech = getmechanism(:dice, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, mode=:box, conetype = :linear)
 # mech = getmechanism(:dice, Δt = 0.01, g = -9.81, contact = true, mode=:box, conetype = :impact)
 Random.seed!(100)
 ω = 0.0 * (rand(3) .- 0.5) * 1
@@ -33,6 +33,9 @@ initialize!(mech, :dice, x = x, v = v, ω = ω)
 storage = simulate!(mech, 3.3, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
+
+getdim(collect(mech.ineqconstraints)[1])
+getdim(collect(mech.ineqconstraints)[1])
 
 ################################################################################
 # Differentiation
@@ -63,8 +66,8 @@ plot(Gray.(abs.(fd_datamat)))
 
 fd_solmat = finitediff_sol_matrix(mech, data, sol)
 @test norm(fd_solmat + solmat, Inf) < 1e-7
-plot(Gray.(abs.(1e10 .* fd_solmat)))
-plot(Gray.(abs.(1e13 .* solmat)))
+plot(Gray.(abs.(fd_solmat)))
+plot(Gray.(abs.(solmat)))
 
 fd_sensi = finitediff_sensitivity(mech, data) * attjac
 @test norm(fd_sensi - sensi) / norm(fd_sensi) < 5e-3

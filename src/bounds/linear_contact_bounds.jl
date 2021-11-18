@@ -66,16 +66,6 @@ function linearcontactconstraint(body::Body{T}, normal::AbstractVector{T}, cf::T
     return linineqcs
 end
 
-# @inline Bq(Bxmat, p, q) = Bxmat*VRᵀmat(q)*LVᵀmat(q)*skew(-p)
-# @inline Bmat(Bxmat, p, q) = [Bxmat Bq(Bxmat, p, q)]
-# p = rand(3)
-# q = UnitQuaternion(rand(4)...)
-# cont.Bx
-# Bqmat1 = Bq(Bxmat, p, q)
-# Bqmat0 = Bxmat * ∂vrotate∂q(p, q) * LVᵀmat(q)
-#
-# Bqmat0 - 2Bqmat1
-
 function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{LinearContactBound{T,N}}}
     cont = ineqc.constraints[1]
     body = getbody(mechanism, ineqc.parentid)
@@ -89,25 +79,11 @@ function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:
     sγ = ineqc.ssol[2][1]
     ψ = ineqc.γsol[2][2]
     sψ = ineqc.ssol[2][2]
-    # η = ineqc.γsol[2][@SVector [3,4,5,6]]
-    # sη = ineqc.ssol[2][@SVector [3,4,5,6]]
     β = ineqc.γsol[2][@SVector [3,4,5,6]]
     sβ = ineqc.ssol[2][@SVector [3,4,5,6]]
-    # @show scn.(γ)
-    # @show scn.(ψ)
-    # @show scn.(η)
-    # @show scn.(sγ)
-    # @show scn.(sψ)
-    # @show scn.(sη)
-    # @show scn.(Bxmat * v + Bqmat * ω)
-    # @show scn.(ψ * sones(4))
-    # @show scn.(ψ * sones(4) - η)
-    # @show scn.(Bxmat * v + Bqmat * ω + ψ * sones(4) - η)
     SVector{6,T}(
         cont.ainv3 * (x3 + vrotate(cont.p,q3) - cont.offset) - sγ,
-        # cont.cf * γ - sum(sη) - sψ,
         cont.cf * γ - sum(β) - sψ,
-        # (Bxmat * v + Bqmat * ω + ψ * sones(4) - η)...)
         (Bxmat * v + Bqmat * ω + ψ * sones(4) - sβ)...)
 end
 
@@ -195,21 +171,9 @@ end
 
     ∇s1 = Diagonal(γ) # 6x6
     ∇s2 = Diagonal(-sones(T,6))
-    # ∇s2 = @SMatrix[-1  0  0  0  0  0;
-    #                 0 -1 -1 -1 -1 -1;
-    #                 0  0  0  0  0  0;
-    #                 0  0  0  0  0  0;
-    #                 0  0  0  0  0  0;
-    #                 0  0  0  0  0  0;]
     ∇s = vcat(∇s1, ∇s2) # 12x6
 
     ∇γ1 = Diagonal(s) # 6x6
-    # ∇γ2 = @SMatrix[ 0  0  0  0  0  0;
-    #                cf  0  0  0  0  0;
-    #                 0  1 -1  0  0  0;
-    #                 0  1  0 -1  0  0;
-    #                 0  1  0  0 -1  0;
-    #                 0  1  0  0  0 -1;]
     ∇γ2 = @SMatrix[ 0  0  0  0  0  0;
                    cf  0 -1 -1 -1 -1;
                     0  1  0  0  0  0;
@@ -217,62 +181,9 @@ end
                     0  1  0  0  0  0;
                     0  1  0  0  0  0;]
     ∇γ = vcat(∇γ1, ∇γ2) # 12x6
-    @show size(matrix_entry.value)
-    @show size(hcat(∇s, ∇γ))
     matrix_entry.value = hcat(∇s, ∇γ)
 
     # [-γsol .* ssol + μ; -g + s]
     vector_entry.value = vcat(-complementarityμ(mechanism, ineqc), -g(mechanism, ineqc))
     return
 end
-
-
-# γ = SVector(2,3,4,5,6,7)
-# s = SVector(20,30,40,50,60,70)
-#
-# ∇s1 = Diagonal(γ) # 6x6
-# ∇s2 = @SMatrix[-1  0  0  0  0  0;
-#                 0 -1 -1 -1 -1 -1;
-#                 0  0  0  0  0  0;
-#                 0  0  0  0  0  0;
-#                 0  0  0  0  0  0;
-#                 0  0  0  0  0  0;]
-# ∇s = vcat(∇s1, ∇s2) # 12x6
-#
-# ∇γ1 = Diagonal(s) # 6x6
-# ∇γ2 = @SMatrix[ 0  0  0  0  0  0;
-#                cf  0  0  0  0  0;
-#                 0  1 -1  0  0  0;
-#                 0  1  0 -1  0  0;
-#                 0  1  0  0 -1  0;
-#                 0  1  0  0  0 -1;]
-# ∇γ = vcat(∇γ1, ∇γ2) # 12x6
-#
-# rank(hcat(∇s, ∇γ))
-#
-#
-#
-#
-#
-#
-# cf = 0.2
-# γ = SVector(2,3,4,5)
-# s = SVector(20,30,40,50)
-#
-# # ∇s = [ineqc.γsol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])]
-# ∇s1 = hcat(γ[1], szeros(1,3))
-# ∇s2 = hcat(szeros(3,1), ∇cone_product(γ[@SVector [2,3,4]]))
-# ∇s3 = Diagonal(SVector{4,Float64}(-1, 0, -1, -1))
-# ∇s = vcat(∇s1, ∇s2, ∇s3)
-#
-# # ∇γ = [ineqc.ssol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.ssol[2][2:4]); szeros(1,4); cf -1 0 0; szeros(2,4)]
-# ∇γ1 = hcat(s[1], szeros(1,3))
-# ∇γ2 = hcat(szeros(3,1), ∇cone_product(s[@SVector [2,3,4]]))
-# ∇γ3 = @SMatrix[0   0 0 0;
-#                cf -1 0 0;
-#                0   0 0 0;
-#                0   0 0 0;]
-# ∇γ = vcat(∇γ1, ∇γ2, ∇γ3)
-#
-# # matrix_entry.value = [[ineqc.γsol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])] [ineqc.ssol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.ssol[2][2:4]); szeros(1,4); cf -1 0 0; szeros(2,4)]]
-# rank(hcat(∇s, ∇γ))

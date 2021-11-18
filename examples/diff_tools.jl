@@ -618,11 +618,11 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 end
 
                 if bnd_type <: ContactBound
-                    p = bnd.p
-                    A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dN(x3, [q3.w, q3.x, q3.y, q3.z], ineqc.γsol[2][1:1], p) * M
-                    A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dB(x3, [q3.w, q3.x, q3.y, q3.z], ineqc.γsol[2][2:4], p) * M
+                    A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dN(x3, [q3.w, q3.x, q3.y, q3.z], ineqc.γsol[2][1:1], bnd.p) * M
+                    A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dB(x3, [q3.w, q3.x, q3.y, q3.z], ineqc.γsol[2][2:4], bnd.p) * M
                 elseif bnd_type <: LinearContactBound
                     A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
+                    @show sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]
                 elseif bnd_type <: ImpactBound
                     A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
                 end
@@ -637,7 +637,7 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
 
     offr = 0
     for ineqc in ineqcs
-        cont = ineqc.constraints[1]
+        bnd = ineqc.constraints[1]
         body = getbody(mechanism, ineqc.parentid)
         Δt = mechanism.Δt
         N½ = Int(getdim(ineqc)/2)
@@ -645,9 +645,30 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
         x2, q2 = posargsk(body.state)
         x3, q3 = posargsnext(body.state, Δt)
         ibody = findfirst(x -> x == body.id, mechanism.bodies.keys)
-        A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)] = cont.ainv3
-        A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (7:9)] = cont.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(cont.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(cont.p))) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)
-        A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (3:4), (ibody-1)*12 .+ (7:9)] = dBω([q3.w, q3.x, q3.y, q3.z], ω2, cont.p) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2) # ∇q3B 2x3
+        bnd_type = typeof(bnd)
+        if bnd_type <: ContactBound
+            A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)] = bnd.ainv3
+            A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (7:9)] = bnd.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bnd.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bnd.p))) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)
+            A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (3:4), (ibody-1)*12 .+ (7:9)] = dBω([q3.w, q3.x, q3.y, q3.z], ω2, bnd.p) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2) # ∇q3B 2x3
+        elseif bnd_type <: LinearContactBound
+            function d(vars)
+                # transforms the velocities of the origin of the link into velocities along all 4 axes of the friction pyramid
+                q = UnitQuaternion(vars..., false)
+                Bxmat = bnd.Bx
+                Bqmat = Bxmat * ∂vrotate∂q(bnd.p, q) * LVᵀmat(q)
+                return Bqmat * ω2
+            end
+
+            # FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
+            # A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)]
+            #
+            A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)] = bnd.ainv3
+            A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (7:9)] = bnd.ainv3 * ∂vrotate∂q(bnd.p,q3) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)
+            A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (3:6), (ibody-1)*12 .+ (7:9)] = FiniteDiff.finite_difference_jacobian(d, [q3.w, q3.x, q3.y, q3.z]) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)
+        elseif bnd_type <: ImpactBound
+            A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)] = bnd.ainv3
+            A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (7:9)] = bnd.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bnd.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bnd.p))) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)
+        end
         offr += getdim(ineqc)
     end
     return A

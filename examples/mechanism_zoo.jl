@@ -143,7 +143,7 @@ function getdice(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8,
     if contact
         # Corner vectors
         if mode == :particle
-            corners = [[0 ; 0; 0.]]
+            corners = [[0 ; 0; 0.1]]
         elseif mode == :box
             corners = [
                 [[length1 / 2;length1 / 2;-length1 / 2]]
