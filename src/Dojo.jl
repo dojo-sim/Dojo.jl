@@ -1,4 +1,4 @@
-module DifferentiableContact
+module Dojo
 
 using LinearAlgebra
 using StaticArrays

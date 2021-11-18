@@ -30,7 +30,7 @@ Random.seed!(100)
 x = [0, 0, 1.0]
 v = 100.0 * [1, 0.3, 0.0]
 initialize!(mech, :dice, x = x, v = v, ω = ω)
-storage = simulate!(mech, 15.1, record = true, solver = :mehrotra!, verbose = false)
+storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
 
