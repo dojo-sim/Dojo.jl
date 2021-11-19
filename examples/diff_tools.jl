@@ -603,7 +603,7 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     offc = 0
     for body in collect(bodies)
         for ineqc in ineqcs
-            
+
             if ineqc.parentid == body.id
                 bnd = ineqc.constraints[1]
                 bnd_type = typeof(bnd)
@@ -611,6 +611,7 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 x3, q3 = posargsnext(body.state, Δt)
                 x2, v2, q2, ω2 = fullargssol(body.state)
                 M = [I zeros(3,3); zeros(4,3) Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)]
+                G = [I zeros(3,3); zeros(4,3) LVᵀmat(q2)]
 
                 function d(vars)
                     x = vars[1:3]
@@ -619,13 +620,13 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 end
 
                 if bnd_type <: ContactBound
-                    A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dN(x3, [q3.w, q3.x, q3.y, q3.z], ineqc.γsol[2][1:1], bnd.p) * M
-                    A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dB(x3, [q3.w, q3.x, q3.y, q3.z], ineqc.γsol[2][2:4], bnd.p) * M
+                    @warn "need q2"
+                    A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dN(x2, [q2.w, q2.x, q2.y, q2.z], ineqc.γsol[2][1:1], bnd.p) * G
+                    A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dB(x2, [q2.w, q2.x, q2.y, q2.z], ineqc.γsol[2][2:4], bnd.p) * G
                 elseif bnd_type <: LinearContactBound
-                    A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
-                    @show sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]
+                    A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= FiniteDiff.finite_difference_jacobian(d, [x2; q2.w; q2.x; q2.y; q2.z]) * G
                 elseif bnd_type <: ImpactBound
-                    A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
+                    A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= FiniteDiff.finite_difference_jacobian(d, [x2; q2.w; q2.x; q2.y; q2.z]) * G
                 end
             end
         end
@@ -659,16 +660,12 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 Bqmat = Bxmat * ∂vrotate∂q(bnd.p, q) * LVᵀmat(q)
                 return Bqmat * ω2
             end
-
-            # FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
-            # A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)]
-            #
             A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)] = bnd.ainv3
             A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (7:9)] = bnd.ainv3 * ∂vrotate∂q(bnd.p,q3) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)
             A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (3:6), (ibody-1)*12 .+ (7:9)] = FiniteDiff.finite_difference_jacobian(d, [q3.w, q3.x, q3.y, q3.z]) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)
         elseif bnd_type <: ImpactBound
             A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)] = bnd.ainv3
-            A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (7:9)] = bnd.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bnd.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bnd.p))) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)
+            A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (7:9)] = bnd.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bnd.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bnd.p))) * LVᵀmat(q2)
         end
         offr += getdim(ineqc)
     end

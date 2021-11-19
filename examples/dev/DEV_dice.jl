@@ -22,15 +22,15 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
-# mech = getmechanism(:dice, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, mode=:box, conetype = :soc)
+mech = getmechanism(:dice, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, mode=:box, conetype = :soc)
 mech = getmechanism(:dice, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, mode=:box, conetype = :linear)
-# mech = getmechanism(:dice, Δt = 0.01, g = -9.81, contact = true, mode=:box, conetype = :impact)
+mech = getmechanism(:dice, Δt = 0.01, g = -9.81, contact = true, mode=:box, conetype = :impact)
 Random.seed!(100)
 ω = 0.0 * (rand(3) .- 0.5) * 1
 x = [0, 0, 1.0]
 v = 1.0 * [4, 1, 0.0]
 initialize!(mech, :dice, x = x, v = v, ω = ω)
-storage = simulate!(mech, 3.3, record = true, solver = :mehrotra!, verbose = false)
+storage = simulate!(mech, 1.3, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
 
@@ -64,10 +64,55 @@ fd_datamat = finitediff_data_matrix(mech, data, sol) * attjac
 plot(Gray.(abs.(datamat)))
 plot(Gray.(abs.(fd_datamat)))
 
+# norm((datamat + fd_datamat)[1:6,:], Inf)
+# norm((datamat + fd_datamat)[1:6,1:6], Inf)
+# norm((datamat + fd_datamat)[1:6,7:12], Inf)
+# norm((datamat + fd_datamat)[1:6,13:18], Inf)
+# norm((datamat + fd_datamat)[7:12,:], Inf)
+# # norm((datamat + fd_datamat)[13:18,:], Inf)
+# norm((datamat + fd_datamat)[13:18,1:6], Inf)
+# # norm((datamat + fd_datamat)[13:18,7:12], Inf)
+# norm((datamat + fd_datamat)[13:18,13:18], Inf)
+#
+# norm((datamat + fd_datamat)[1:6,7:12], Inf)
+# norm((datamat + fd_datamat)[1:3,7:12], Inf)
+# norm((datamat + fd_datamat)[4:6,7:12], Inf)
+# norm((datamat + fd_datamat)[4:6,7:9], Inf)
+# norm((datamat + fd_datamat)[4:6,10:12], Inf)
+#
+# # norm((datamat + fd_datamat)[13:18,7:12], Inf)
+# # norm((datamat + fd_datamat)[13:15,7:12], Inf)
+# # norm((datamat + fd_datamat)[13:15,7:9], Inf)
+# norm((datamat + fd_datamat)[13:15,10:12], Inf)
+# norm((datamat + fd_datamat)[16:18,10:12], Inf)
+#
+# # norm((datamat + fd_datamat)[4:6,7:9], Inf)
+# norm((datamat + fd_datamat)[13:15,7:9], Inf)
+#
+# datamat[13:15,7:9] + fd_datamat[13:15,7:9]
+# datamat[13:15,7:9]
+# fd_datamat[13:15,7:9]
+
+
 fd_solmat = finitediff_sol_matrix(mech, data, sol)
 @test norm(fd_solmat + solmat, Inf) < 1e-7
 plot(Gray.(abs.(fd_solmat)))
 plot(Gray.(abs.(solmat)))
+
+# plot(Gray.(abs.(1e13 * fd_solmat)))
+# plot(Gray.(abs.(1e13 * solmat)))
+# plot(Gray.(abs.(1e13 * (solmat + fd_solmat))))
+#
+# norm((solmat + fd_solmat)[1:3,:], Inf)
+# norm((solmat + fd_solmat)[3:6,:], Inf)
+# norm((solmat + fd_solmat)[4:6,1:3], Inf)
+# norm((solmat + fd_solmat)[4:6,4:6], Inf)
+# norm((solmat + fd_solmat)[4:6,7:8], Inf)
+# norm((solmat + fd_solmat)[7:8,:], Inf)
+#
+# norm((solmat + fd_solmat)[4:6,4:6], Inf)
+# fd_solmat[4:6,4:6]
+# solmat[4:6,4:6]
 
 fd_sensi = finitediff_sensitivity(mech, data) * attjac
 @test norm(fd_sensi - sensi) / norm(fd_sensi) < 5e-3

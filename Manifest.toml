@@ -857,10 +857,12 @@ uuid = "f50d1b31-88e8-58de-be2c-1cc44531875f"
 version = "0.3.0+0"
 
 [[Rotations]]
-deps = ["LinearAlgebra", "Random", "StaticArrays", "Statistics"]
-git-tree-sha1 = "3313a251b7af2c616534e6f3764d444782cb84d7"
+deps = ["LinearAlgebra", "StaticArrays", "Statistics"]
+git-tree-sha1 = "2ed8d8a16d703f900168822d83699b8c3c1a5cd8"
+repo-rev = "v1.0.2"
+repo-url = "https://github.com/JuliaGeometry/Rotations.jl.git"
 uuid = "6038ab10-8711-5258-84ad-4b1120ba62dc"
-version = "1.0.3"
+version = "1.0.2"
 
 [[RuntimeGeneratedFunctions]]
 deps = ["ExprTools", "SHA", "Serialization"]
