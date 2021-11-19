@@ -126,6 +126,8 @@ function neutral_vector(bound::LinearContactBound{T,N}) where {T,N}
     return sones(T, N½)
 end
 
+∂g∂ʳpos(bound::LinearContactBound, state::State, Δt) = ∂g∂ʳpos(bound, posargsnext(state, Δt)...)
+
 @inline function ∂g∂ʳpos(bound::LinearContactBound, x::AbstractVector, q::UnitQuaternion)
     X, Q = ∂g∂pos(bound, x, q)
     Q = Q # we account for quaternion specialness in ∂g∂pos

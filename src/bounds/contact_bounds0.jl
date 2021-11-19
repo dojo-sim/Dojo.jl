@@ -106,12 +106,14 @@ function complementarity(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) 
     γ = ineqc.γsol[2]
     s = ineqc.ssol[2]
     return vcat(γ[1] * s[1], cone_product(γ[@SVector [2,3,4]], s[@SVector [2,3,4]]))
+    # return [ineqc.γsol[2][1] * ineqc.ssol[2][1]; cone_product(ineqc.γsol[2][@SVector [2,3,4]], ineqc.ssol[2][@SVector [2,3,4]])]
 end
 
 function complementarityμ(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
     γ = ineqc.γsol[2]
     s = ineqc.ssol[2]
     return vcat(γ[1] * s[1], cone_product(γ[@SVector [2,3,4]], s[@SVector [2,3,4]])) - mechanism.μ * neutral_vector(ineqc.constraints[1])
+    # return [ineqc.γsol[2][1] * ineqc.ssol[2][1]; cone_product(ineqc.γsol[2][@SVector [2,3,4]], ineqc.ssol[2][@SVector [2,3,4]])] - mechanism.μ * neutral_vector(ineqc.constraints[1])
 end
 
 function ∇cone_product(u::AbstractVector{T}) where {T}
@@ -139,6 +141,8 @@ function neutral_vector(bound::ContactBound{T,N}) where {T,N}
     N½ = Int(N/2)
     return [sones(T, 2); szeros(T, N½-2)]
 end
+
+∂g∂ʳpos(bound::ContactBound, state::State, Δt) = ∂g∂ʳpos(bound, posargsnext(state, Δt)...)
 
 @inline function ∂g∂ʳpos(bound::ContactBound, x::AbstractVector, q::UnitQuaternion)
     X, Q = ∂g∂pos(bound, x, q)
