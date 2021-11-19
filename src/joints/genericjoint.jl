@@ -28,10 +28,10 @@
 #
 # ### Constraints and derivatives
 # ## Discrete-time position wrappers (for dynamics)
-# # g(joint::GenericJoint, statea::State, stateb::State, Δt) = joint.g(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)...)
-# # g(joint::GenericJoint, stateb::State, Δt) = joint.g(joint, posargsnext(stateb, Δt)...)
-# # g(joint::GenericJoint, statea::State, stateb::State) = joint.g(joint, posargsc(statea)..., posargsc(stateb)...)
-# # g(joint::GenericJoint, stateb::State) = joint.g(joint, posargsc(stateb)...)
+# # g(joint::GenericJoint, statea::State, stateb::State, Δt) = joint.g(joint, posargs3(statea, Δt)..., posargs3(stateb, Δt)...)
+# # g(joint::GenericJoint, stateb::State, Δt) = joint.g(joint, posargs3(stateb, Δt)...)
+# # g(joint::GenericJoint, statea::State, stateb::State) = joint.g(joint, posargs1(statea)..., posargs1(stateb)...)
+# # g(joint::GenericJoint, stateb::State) = joint.g(joint, posargs1(stateb)...)
 #
 # ## Derivatives NOT accounting for quaternion specialness
 # @inline function ∂g∂posa(joint::GenericJoint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)

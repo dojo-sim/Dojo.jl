@@ -88,8 +88,8 @@ zerodimstaticadjoint(∂g∂ʳpos(mech, eqc, mech.bodies[3])) * eqc.λsol[2]
 
 ∂g∂ʳpos(mech, eqc, mech.bodies[3])
 ∂g∂ʳpos(mech, eqc, mech.bodies[4])
-mech.bodies[3].state.qk[1]
-mech.bodies[4].state.qk[1]
+mech.bodies[3].state.q2[1]
+mech.bodies[4].state.q2[1]
 
 visualize(mech, storage, vis = vis)
 

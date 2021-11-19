@@ -1,4 +1,4 @@
-using Dojo 
+using Dojo
 using StaticArrays
 
 # Utils
@@ -22,18 +22,18 @@ open(vis)
 # Include new files
 include(joinpath(@__DIR__, "..", "..", "loader.jl"))
 
-# System 
-gravity = -9.81 
+# System
+gravity = -9.81
 Δt = 0.1
 
 # Parameters
 pendulum_axis = [1.0; 0.0; 0.0]
 pendulum_length = 1.0
 width, depth, height = 0.1, 0.1, 0.1
-pendulum_mass = 1.0 
+pendulum_mass = 1.0
 
-# Float type 
-T = Float64 
+# Float type
+T = Float64
 
 # Links
 origin = Origin{T}()
@@ -65,60 +65,53 @@ function controller!(mech, k)
     setForce!(mech, j1, [u1])
 
     return
-end 
+end
 
 # simulate
 storage = simulate!(mech, 1 * mech.Δt, controller!, record = true, solver = :mehrotra!)
-
-# x2 = mech.bodies[2].state.xc
-# v1 = mech.bodies[2].state.vc
-# qc = mech.bodies[2].state.qc
-# q2 = [qc.w; qc.x; qc.y; qc.z]
-# ω1 = mech.bodies[2].state.ωc
-# [x2; v1; q2; ω1]
 
 plot(hcat(storage.x[1]...)', color=:black, width=2.0)
 
 # visualize
 visualize(mech, storage, vis = vis)
 
-## state space 
+## state space
 n = 13 * length(mech.bodies)
 m = isempty(mech.eqconstraints) ? 0 : sum(getcontroldim.(mech.eqconstraints))
 
-# function step!(mech::Mechanism, z::Vector{T}, u::Vector{T}) 
+# function step!(mech::Mechanism, z::Vector{T}, u::Vector{T})
 #     # set data
-#     data = [z; u] 
+#     data = [z; u]
 
 #     off = 0
-  
+
 #     for body in mech.bodies
 #         x2, v15, q2, ω15 = unpackdata(data[off+1:end]); off += 13
-#         body.state.xc = x2 - v15 * mech.Δt
-#         body.state.vc = v15
-#         body.state.qc = UnitQuaternion(q2...) * ωbar(-ω15, mech.Δt) * mech.Δt / 2.0
-#         body.state.ωc = ω15
+#         body.state.x1 = x2 - v15 * mech.Δt
+#         body.state.v15 = v15
+#         body.state.q1 = UnitQuaternion(q2...) * ωbar(-ω15, mech.Δt) * mech.Δt / 2.0
+#         body.state.ϕ15 = ω15
 #     end
 
 #     function controller!(mech, k)
 #         j1 = geteqconstraint(mech, mech.eqconstraints[1].id)
 #         setForce!(mech, j1, SVector{1}(u))
 #         return
-#     end 
+#     end
 
-#     # simulate  
-#     storage = simulate!(mech, mech.Δt, 
-#         controller!, 
+#     # simulate
+#     storage = simulate!(mech, mech.Δt,
+#         controller!,
 #         record=true, solver=:mehrotra!)
 
 #     # next state
-#     nextstate = Vector{T}()  
+#     nextstate = Vector{T}()
 #     for body in mech.bodies
-#         x3 = body.state.xk[1]
+#         x3 = body.state.x2[1]
 #         v25 = body.state.vsol[2]
-#         _q3 = body.state.qk[1]
+#         _q3 = body.state.q2[1]
 #         q3 = [_q3.w; _q3.x; _q3.y; _q3.z]
-#         ω25 = body.state.ωsol[2]
+#         ω25 = body.state.ϕsol[2]
 #         push!(nextstate, [x3; v25; q3; ω25]...)
 #     end
 
@@ -127,42 +120,42 @@ m = isempty(mech.eqconstraints) ? 0 : sum(getcontroldim.(mech.eqconstraints))
 
 function step1!(mech::Mechanism, z, u)
     # set data
-    data = [z; u] 
+    data = [z; u]
 
     off = 0
-  
+
     for body in mech.bodies
         x2, v15, q2, ω15 = unpackdata(data[off+1:end]); off += 13
-        body.state.xc = x2 - v15 * mech.Δt
-        body.state.vc = v15
-        body.state.qc = UnitQuaternion(q2...) * ωbar(-ω15, mech.Δt) * mech.Δt / 2.0
-        body.state.ωc = ω15
+        body.state.x1 = x2 - v15 * mech.Δt
+        body.state.v15 = v15
+        body.state.q1 = UnitQuaternion(q2...) * ωbar(-ω15, mech.Δt) * mech.Δt / 2.0
+        body.state.ϕ15 = ω15
     end
 
     function controller!(mech, k)
         j1 = geteqconstraint(mech, mech.eqconstraints[1].id)
         setForce!(mech, j1, SVector{1}(u))
         return
-    end 
+    end
 
-    # simulate  
-    storage = simulate!(mech, mech.Δt, 
-        controller!, 
+    # simulate
+    storage = simulate!(mech, mech.Δt,
+        controller!,
         record=true, verbose=false, solver=:mehrotra!)
-    
+
     # next state
-    nextstate = []#Vector{Float64}()  
+    nextstate = []#Vector{Float64}()
 
     for body in mech.bodies
-        x3 = body.state.xk[1]
+        x3 = body.state.x2[1]
         v25 = body.state.vsol[2]
-        _q3 = body.state.qk[1]
+        _q3 = body.state.q2[1]
         q3 = [_q3.w; _q3.x; _q3.y; _q3.z]
-        ω25 = body.state.ωsol[2]
+        ω25 = body.state.ϕsol[2]
         push!(nextstate, [x3; v25; q3; ω25]...)
     end
 
-    # # gradient 
+    # # gradient
     # data = getdata(deepcopy(mech))
     # sol = getsolution(deepcopy(mech))
     # δ = sensitivities(deepcopy(mech), sol, data)
@@ -170,16 +163,16 @@ function step1!(mech::Mechanism, z, u)
     return nextstate#, δ
 end
 
-# initial state 
-x1 = [0.0; 0.0; -0.5 * pendulum_length] 
-v1 = [0.0; 0.0; 0.0] 
+# initial state
+x1 = [0.0; 0.0; -0.5 * pendulum_length]
+v1 = [0.0; 0.0; 0.0]
 q1 = [1.0; 0.0; 0.0; 0.0]
-ω1 = [0.0; 0.0; 0.0] 
+ω1 = [0.0; 0.0; 0.0]
 z1 = [x1; v1; q1; ω1]
 
-# target state 
+# target state
 xT = [0.0; 0.0; 0.5 * pendulum_length]
-vT = [0.0; 0.0; 0.0] 
+vT = [0.0; 0.0; 0.0]
 qT = [0.0; 1.0; 0.0; 0.0]
 ωT = [0.0; 0.0; 0.0]
 zT = [xT; vT; qT; ωT]
@@ -187,11 +180,11 @@ zT = [xT; vT; qT; ωT]
 z = [copy(z1)]
 # δz = Matrix{T}[]
 for t = 1:5
-    # znext, δznext = step!(mech, z[end], [u_control]) 
-    znext = step1!(mech, z[end], [u_control]) 
+    # znext, δznext = step!(mech, z[end], [u_control])
+    znext = step1!(mech, z[end], [u_control])
     push!(z, znext)
     # push!(δz, δznext)
-end 
+end
 
 # plot!(hcat(z...)[1:3, :]')
 
@@ -202,15 +195,15 @@ end
 # sensi = (δ * transpose(attitudejacobian([z[end-1]; u_control], 1)))[6:11, :]
 # # attitudejacobian([z[end-1]; u_control], 1)
 
-# # idx 
-# idx_x = collect(1:3) 
-# idx_v = collect(4:6) 
-# idx_q = collect(7:10) 
+# # idx
+# idx_x = collect(1:3)
+# idx_v = collect(4:6)
+# idx_q = collect(7:10)
 # idx_ω = collect(11:13)
-# idx_u = collect(14:14) 
+# idx_u = collect(14:14)
 
-# idx_vsol = collect(1:3) 
-# idx_ωsol = collect(4:6) 
+# idx_vsol = collect(1:3)
+# idx_ϕsol = collect(4:6)
 
 # # var
 # x3 = z[end][idx_x]
@@ -230,11 +223,11 @@ end
 # ∂v2∂ω1 = sensi[idx_vsol, idx_ω]
 # ∂v2∂u1 = sensi[idx_vsol, idx_u]
 
-# ∂ω2∂x2 = sensi[idx_ωsol, idx_x]
-# ∂ω2∂v1 = sensi[idx_ωsol, idx_v]
-# ∂ω2∂q2 = sensi[idx_ωsol, idx_q]
-# ∂ω2∂ω1 = sensi[idx_ωsol, idx_ω]
-# ∂ω2∂u1 = sensi[idx_ωsol, idx_u]
+# ∂ω2∂x2 = sensi[idx_ϕsol, idx_x]
+# ∂ω2∂v1 = sensi[idx_ϕsol, idx_v]
+# ∂ω2∂q2 = sensi[idx_ϕsol, idx_q]
+# ∂ω2∂ω1 = sensi[idx_ϕsol, idx_ω]
+# ∂ω2∂u1 = sensi[idx_ϕsol, idx_u]
 
 # ∂x3∂x2 = I(3) + ∂v2∂x2 .* mech.Δt
 # ∂x3∂v1 = ∂v2∂v1 .* mech.Δt
@@ -358,7 +351,7 @@ function g(obj::StageCosts, x, u, t)
 end
 
 # Problem
-prob = problem_data(model, obj, copy(x̄), copy(ū), w, h, T, 
+prob = problem_data(model, obj, copy(x̄), copy(ū), w, h, T,
     analytical_dynamics_derivatives = true)
 
 # Solve
@@ -368,12 +361,12 @@ prob = problem_data(model, obj, copy(x̄), copy(ū), w, h, T,
 x, u = current_trajectory(prob)
 x̄, ū = nominal_trajectory(prob)
 
-function generate_storage(x) 
-    steps = length(x) 
+function generate_storage(x)
+    steps = length(x)
     nbodies = 1
     storage = Storage{Float64}(steps, nbodies)
 
-    for t = 1:steps 
+    for t = 1:steps
         storage.x[1][t] = x[t][1:3]
         storage.v[1][t] = x[t][4:6]
         storage.q[1][t] = UnitQuaternion(x[t][7:10]...)
@@ -383,7 +376,7 @@ function generate_storage(x)
     return storage
 end
 
-storage = generate_storage(x) 
+storage = generate_storage(x)
 @show x̄[end]
 
 visualize(mech, storage, vis = vis)

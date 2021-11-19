@@ -97,8 +97,8 @@ datamat[6:11, 1:3]
 -fd_datamat[6:11, 1:3]
 
 joint = mech.eqconstraints[1].constraints[1]
-xb = mech.bodies[2].state.xk[1]
-qb = mech.bodies[2].state.qk[1]
+xb = mech.bodies[2].state.x2[1]
+qb = mech.bodies[2].state.q2[1]
 
 length(mech.eqconstraints[1])
 length(joint)
@@ -298,8 +298,8 @@ plot(Gray.(fd_sensi))
 # damperforceb(jt0, bodya0, bodyb0, childidb0, Δt0)
 # damperforceb(jr0, origin0, bodya0, childida0, Δt0)
 
-# x2a0, q2a0 = posargsnext(bodya0.state, Δt0)
-# x2b0, q2b0 = posargsnext(bodyb0.state, Δt0)
+# x2a0, q2a0 = posargs3(bodya0.state, Δt0)
+# x2b0, q2b0 = posargs3(bodyb0.state, Δt0)
 # x1a0, v1a0, q1a0, ω1a0 = fullargssol(bodya0.state)
 # x1b0, v1b0, q1b0, ω1b0 = fullargssol(bodyb0.state)
 

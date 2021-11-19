@@ -49,7 +49,7 @@ for (i,ineqc) in enumerate(ineqcs)
     ineqc = ineqcs[1]
     cont = ineqc.constraints[1]
     body = getbody(mech, ineqc.parentid)
-    x3, q3 = posargsk(body.state)
+    x3, q3 = posargs2(body.state)
     sdf = cont.ainv3 * (x3 + vrotate(cont.p,q3) - cont.offset)
     println("sdf $i:", sdf)
 end

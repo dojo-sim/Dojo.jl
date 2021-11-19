@@ -40,9 +40,6 @@ end
 visualize(mech, storage, vis = vis)
 
 
-q0 = UnitQuaternion(rand(4)...)
-Vmat() * Lmat(q0)' * vector(q0)
-
 # Set data
 Nb = length(mech.bodies)
 data = getdata(mech)
@@ -79,3 +76,4 @@ test_sensitivity(:atlas, ϵ = 8e-3)
 test_solmat(:quadruped, ϵ = 1e-8)
 test_datamat(:quadruped, ϵ = 1e-6)
 test_sensitivity(:quadruped, ϵ = 8e-3)
+ϕ15

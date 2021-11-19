@@ -1,15 +1,15 @@
 using ConstrainedDynamics
-using ConstrainedDynamics: posargsk, fullargssol, Lmat, VLᵀmat, Lᵀmat, ωbar
+using ConstrainedDynamics: posargs2, fullargssol, Lmat, VLᵀmat, Lᵀmat, ωbar
 using Rotations
 using Rotations: params
 using StaticArrays
 
 
 
-function getxqkvector(state)
-    x, q = posargsk(state)
+function getxq2vector(state)
+    x, q = posargs2(state)
     q = params(q)
-    
+
     return [x;q]
 end
 
@@ -20,8 +20,8 @@ function getsolestimate(state)
     return [x;v;q;ω]
 end
 
-getxk(state) = posargsk(state)[1]
-getqk(state) = posargsk(state)[2]
+getx2(state) = posargs2(state)[1]
+getq2(state) = posargs2(state)[2]
 
 
 
@@ -177,7 +177,7 @@ function rotfunc2vel(vars)
     g = rotfuncvel(vars)
     V1 = vars[31:33]
     V2 = vars[34:36]
-    V12 = [V1';V2']    
+    V12 = [V1';V2']
 
     return V12 * g
 end

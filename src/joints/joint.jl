@@ -25,8 +25,8 @@ Base.show(io::IO, joint::Joint) = summary(io, joint)
 
 ### Constraints and derivatives
 ## Discrete-time position wrappers (for dynamics)
-g(joint::Joint, statea::State, stateb::State, Δt) = g(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)...)
-g(joint::Joint, stateb::State, Δt) = g(joint, posargsnext(stateb, Δt)...)
+g(joint::Joint, statea::State, stateb::State, Δt) = g(joint, posargs3(statea, Δt)..., posargs3(stateb, Δt)...)
+g(joint::Joint, stateb::State, Δt) = g(joint, posargs3(stateb, Δt)...)
 
 @inline function ∂g∂ʳself(joint::Joint{T,N}) where {T,N}
     return 1e-10 * sones(T,N)
@@ -35,14 +35,14 @@ end
 ## Discrete-time position derivatives (for dynamics)
 # Wrappers 1
 
-@inline ∂g∂posa(joint::Joint, body1::Body, body2::Body, Δt) = ∂g∂posa(joint, posargsnext(body1.state, Δt)..., posargsnext(body2.state, Δt)...)
-@inline ∂g∂posb(joint::Joint, body1::Body, body2::Body, Δt) = ∂g∂posb(joint, posargsnext(body1.state, Δt)..., posargsnext(body2.state, Δt)...)
-@inline ∂g∂posb(joint::Joint, body1::Origin, body2::Body, Δt) = ∂g∂posb(joint, posargsnext(body2.state, Δt)...)
+@inline ∂g∂posa(joint::Joint, body1::Body, body2::Body, Δt) = ∂g∂posa(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)...)
+@inline ∂g∂posb(joint::Joint, body1::Body, body2::Body, Δt) = ∂g∂posb(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)...)
+@inline ∂g∂posb(joint::Joint, body1::Origin, body2::Body, Δt) = ∂g∂posb(joint, posargs3(body2.state, Δt)...)
 
 # Wrappers 2
-∂g∂ʳposa(joint::Joint, statea::State, stateb::State, Δt) = ∂g∂ʳposa(joint, posargsk(statea)..., posargsk(stateb)...)
-∂g∂ʳposb(joint::Joint, statea::State, stateb::State, Δt) = ∂g∂ʳposb(joint, posargsk(statea)..., posargsk(stateb)...)
-∂g∂ʳposb(joint::Joint, stateb::State, Δt) = ∂g∂ʳposb(joint, posargsk(stateb)...)
+∂g∂ʳposa(joint::Joint, statea::State, stateb::State, Δt) = ∂g∂ʳposa(joint, posargs2(statea)..., posargs2(stateb)...)
+∂g∂ʳposb(joint::Joint, statea::State, stateb::State, Δt) = ∂g∂ʳposb(joint, posargs2(statea)..., posargs2(stateb)...)
+∂g∂ʳposb(joint::Joint, stateb::State, Δt) = ∂g∂ʳposb(joint, posargs2(stateb)...)
 
 # Derivatives accounting for quaternion specialness
 @inline function ∂g∂ʳposa(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
@@ -65,11 +65,11 @@ end
 end
 
 # Wrappers 2
-∂g∂ʳvela(joint::Joint, statea::State, stateb::State, Δt) = ∂g∂ʳvela(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)..., fullargssol(statea)..., Δt)
-∂g∂ʳvelb(joint::Joint, statea::State, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargsnext(statea, Δt)..., posargsnext(stateb, Δt)..., fullargssol(stateb)..., Δt)
-∂g∂ʳvelb(joint::Joint, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargsnext(stateb, Δt)..., fullargssol(stateb)..., Δt)
-offdiagonal∂damper∂ʳvel(joint::Joint, statea::State, stateb::State) = offdiagonal∂damper∂ʳvel(joint, posargsk(statea)..., posargsk(stateb)...)
-offdiagonal∂damper∂ʳvel(joint::Joint, stateb::State) = offdiagonal∂damper∂ʳvel(joint, posargsk(stateb)...)
+∂g∂ʳvela(joint::Joint, statea::State, stateb::State, Δt) = ∂g∂ʳvela(joint, posargs3(statea, Δt)..., posargs3(stateb, Δt)..., fullargssol(statea)..., Δt)
+∂g∂ʳvelb(joint::Joint, statea::State, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargs3(statea, Δt)..., posargs3(stateb, Δt)..., fullargssol(stateb)..., Δt)
+∂g∂ʳvelb(joint::Joint, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargs3(stateb, Δt)..., fullargssol(stateb)..., Δt)
+offdiagonal∂damper∂ʳvel(joint::Joint, statea::State, stateb::State) = offdiagonal∂damper∂ʳvel(joint, posargs2(statea)..., posargs2(stateb)...)
+offdiagonal∂damper∂ʳvel(joint::Joint, stateb::State) = offdiagonal∂damper∂ʳvel(joint, posargs2(stateb)...)
 
 # Derivatives accounting for quaternion specialness
 @inline function ∂g∂ʳvela(joint::Joint, x2a::AbstractVector, q2a::UnitQuaternion, x2b::AbstractVector, q2b::UnitQuaternion,

@@ -15,7 +15,7 @@ g(bound::Bound, body::Body, Δt) = g(bound, body.state, Δt)
 
 
 ## Discrete-time position wrappers (for dynamics)
-@inline g(bound::Bound, state::State, Δt) = g(bound, posargsnext(state, Δt)...)
+@inline g(bound::Bound, state::State, Δt) = g(bound, posargs3(state, Δt)...)
 
 ## Discrete-time position derivatives (for dynamics)
 # Wrappers 1
@@ -24,7 +24,7 @@ g(bound::Bound, body::Body, Δt) = g(bound, body.state, Δt)
 end
 
 # Wrappers 2
-∂g∂ʳpos(bound::Bound, state::State, Δt) = ∂g∂ʳpos(bound, posargsk(state)...)
+∂g∂ʳpos(bound::Bound, state::State, Δt) = ∂g∂ʳpos(bound, posargs2(state)...)
 
 # Derivatives accounting for quaternion specialness
 @inline function ∂g∂ʳpos(bound::Bound, x::AbstractVector, q::UnitQuaternion)
@@ -40,7 +40,7 @@ end
 end
 
 # Wrappers 2
-∂g∂ʳvel(bound::Bound, state::State, Δt) = ∂g∂ʳvel(bound, posargsnext(state, Δt)..., fullargssol(state)..., Δt)
+∂g∂ʳvel(bound::Bound, state::State, Δt) = ∂g∂ʳvel(bound, posargs3(state, Δt)..., fullargssol(state)..., Δt)
 
 # Derivatives accounting for quaternion specialness
 @inline function ∂g∂ʳvel(bound::Bound, x2::AbstractVector, q2::UnitQuaternion,

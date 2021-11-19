@@ -41,7 +41,7 @@ end
 # contribution of the inequality constraint (impact or friction) to the dynamics equation d = 0
 @inline function ∂constraintForceMapping!(mechanism, body::Body, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
     # Δt = mechanism.Δt
-    # x3, q3 = posargsnext(body.state, Δt)
+    # x3, q3 = posargs3(body.state, Δt)
     # x2, v2, q2, ω2 = fullargssol(body.state)
 
     # for i=1:Nc

@@ -13,12 +13,12 @@ end
 ### Spring and damper
 ## Forces for dynamics
 ## Discrete-time position wrappers (for dynamics)
-springforcea(joint::Translational, statea::State, stateb::State, Δt) = Δt * springforcea(joint, posargsk(statea)..., posargsk(stateb)...)
-springforceb(joint::Translational, statea::State, stateb::State, Δt) = Δt * springforceb(joint, posargsk(statea)..., posargsk(stateb)...)
-springforceb(joint::Translational, stateb::State, Δt) = Δt * springforceb(joint, posargsk(stateb)...)
-damperforcea(joint::Translational, statea::State, stateb::State, Δt) = Δt * damperforcea(joint, posargsk(statea)..., statea.vsol[2], statea.ωsol[2], posargsk(stateb)..., stateb.vsol[2], stateb.ωsol[2])
-damperforceb(joint::Translational, statea::State, stateb::State, Δt) = Δt * damperforceb(joint, posargsk(statea)..., statea.vsol[2], statea.ωsol[2], posargsk(stateb)..., stateb.vsol[2], stateb.ωsol[2])
-damperforceb(joint::Translational, stateb::State, Δt) = Δt * damperforceb(joint, posargsk(stateb)..., stateb.vsol[2], stateb.ωsol[2])
+springforcea(joint::Translational, statea::State, stateb::State, Δt) = Δt * springforcea(joint, posargs2(statea)..., posargs2(stateb)...)
+springforceb(joint::Translational, statea::State, stateb::State, Δt) = Δt * springforceb(joint, posargs2(statea)..., posargs2(stateb)...)
+springforceb(joint::Translational, stateb::State, Δt) = Δt * springforceb(joint, posargs2(stateb)...)
+damperforcea(joint::Translational, statea::State, stateb::State, Δt) = Δt * damperforcea(joint, posargs2(statea)..., statea.vsol[2], statea.ϕsol[2], posargs2(stateb)..., stateb.vsol[2], stateb.ϕsol[2])
+damperforceb(joint::Translational, statea::State, stateb::State, Δt) = Δt * damperforceb(joint, posargs2(statea)..., statea.vsol[2], statea.ϕsol[2], posargs2(stateb)..., stateb.vsol[2], stateb.ϕsol[2])
+damperforceb(joint::Translational, stateb::State, Δt) = Δt * damperforceb(joint, posargs2(stateb)..., stateb.vsol[2], stateb.ϕsol[2])
 
 springforcea(joint::Translational{T,3}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
 springforceb(joint::Translational{T,3}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
@@ -169,16 +169,16 @@ end
 ∂damperforceb∂velb(joint::Translational{T,3}, body1::Origin, body2::Body, childid) where T = szeros(T, 6, 6)
 
 function ∂springforcea∂posa(joint::Translational, body1::Body, body2::Body, Δt::T) where T
-    xa, qa = posargsk(body1.state)
-    xb, qb = posargsk(body2.state)
+    xa, qa = posargs2(body1.state)
+    xb, qb = posargs2(body2.state)
 
     X = FiniteDiff.finite_difference_jacobian(xa -> springforcea(joint, xa, qa, xb, qb)[SVector{3,Int}(1,2,3)], xa)
     Q = FiniteDiff.finite_difference_jacobian(qa -> springforcea(joint, xa, UnitQuaternion(qa..., false), xb, qb)[SVector{3,Int}(1,2,3)], [qa.w, qa.x, qa.y, qa.z]) * LVᵀmat(qa)
     return Δt * [X Q; szeros(T, 3, 6)]
 end
 function ∂damperforcea∂posa(joint::Translational, body1::Body, body2::Body, Δt::T) where T
-    xa, qa = posargsk(body1.state)
-    xb, qb = posargsk(body2.state)
+    xa, qa = posargs2(body1.state)
+    xb, qb = posargs2(body2.state)
     va = body1.state.vsol[2]
     vb = body2.state.vsol[2]
 
@@ -189,11 +189,11 @@ end
 function ∂springforcea∂posb(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     # A = nullspacemat(joint)
     # Aᵀ = zerodimstaticadjoint(A)
-    # xb, qb = posargsk(body2.state)
+    # xb, qb = posargs2(body2.state)
     # X = Aᵀ * A * joint.spring * Aᵀ * A
     # Q = Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[2], qb) * LVᵀmat(qb)
-    xa, qa = posargsk(body1.state)
-    xb, qb = posargsk(body2.state)
+    xa, qa = posargs2(body1.state)
+    xb, qb = posargs2(body2.state)
 
     X = FiniteDiff.finite_difference_jacobian(xb -> springforcea(joint, xa, qa, xb, qb)[SVector{3,Int}(1,2,3)], xb)
     Q = FiniteDiff.finite_difference_jacobian(qb -> springforcea(joint, xa, qa, xb, UnitQuaternion(qb..., false))[SVector{3,Int}(1,2,3)], [qb.w, qb.x, qb.y, qb.z]) * LVᵀmat(qb)
@@ -207,11 +207,11 @@ end
 function ∂springforceb∂posb(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     # A = nullspacemat(joint)
     # Aᵀ = zerodimstaticadjoint(A)
-    # xb, qb = posargsk(body2.state)
+    # xb, qb = posargs2(body2.state)
     # X = - Aᵀ * A * joint.spring * Aᵀ * A
     # Q = - Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[2], qb) * LVᵀmat(qb)
-    xa, qa = posargsk(body1.state)
-    xb, qb = posargsk(body2.state)
+    xa, qa = posargs2(body1.state)
+    xb, qb = posargs2(body2.state)
 
     X = FiniteDiff.finite_difference_jacobian(xb -> springforceb(joint, xa, qa, xb, qb)[SVector{3,Int}(1,2,3)], xb)
     Q = FiniteDiff.finite_difference_jacobian(qb -> springforceb(joint, xa, qa, xb, UnitQuaternion(qb..., false))[SVector{3,Int}(1,2,3)], [qb.w, qb.x, qb.y, qb.z]) * LVᵀmat(qb)
@@ -225,11 +225,11 @@ end
 function ∂springforceb∂posa(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     # A = nullspacemat(joint)
     # Aᵀ = zerodimstaticadjoint(A)
-    # xa, qa = posargsk(body1.state)
+    # xa, qa = posargs2(body1.state)
     # X = Aᵀ * A * joint.spring * Aᵀ * A
     # Q = Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[1], qa) * LVᵀmat(qa)
-    xa, qa = posargsk(body1.state)
-    xb, qb = posargsk(body2.state)
+    xa, qa = posargs2(body1.state)
+    xb, qb = posargs2(body2.state)
 
     X = FiniteDiff.finite_difference_jacobian(xa -> springforceb(joint, xa, qa, xb, qb)[SVector{3,Int}(1,2,3)], xa)
     Q = FiniteDiff.finite_difference_jacobian(qa -> springforceb(joint, xa, UnitQuaternion(qa..., false), xb, qb)[SVector{3,Int}(1,2,3)], [qa.w, qa.x, qa.y, qa.z]) * LVᵀmat(qa)
@@ -238,8 +238,8 @@ end
 function ∂damperforceb∂posa(joint::Translational, body1::Body, body2::Body, Δt::T) where T
     # X = szeros(T, 3, 3)
     # Q = szeros(T, 3, 3)
-    xa, qa = posargsk(body1.state)
-    xb, qb = posargsk(body2.state)
+    xa, qa = posargs2(body1.state)
+    xb, qb = posargs2(body2.state)
     va = body1.state.vsol[2]
     vb = body2.state.vsol[2]
 
@@ -250,10 +250,10 @@ end
 function ∂springforceb∂posb(joint::Translational, body1::Origin, body2::Body, Δt::T) where T
     # A = nullspacemat(joint)
     # Aᵀ = zerodimstaticadjoint(A)
-    # xb, qb = posargsk(body2.state)
+    # xb, qb = posargs2(body2.state)
     # X = - Aᵀ * A * joint.spring * Aᵀ * A
     # Q = - Aᵀ * A * joint.spring * Aᵀ * A * ∂vrotate∂q(joint.vertices[2], qb) * LVᵀmat(qb)
-    xb, qb = posargsk(body2.state)
+    xb, qb = posargs2(body2.state)
 
     X = FiniteDiff.finite_difference_jacobian(xb -> springforceb(joint, xb, qb)[SVector{3,Int}(1,2,3)], xb)
     Q = FiniteDiff.finite_difference_jacobian(qb -> springforceb(joint, xb, UnitQuaternion(qb..., false))[SVector{3,Int}(1,2,3)], [qb.w, qb.x, qb.y, qb.z]) * LVᵀmat(qb)
@@ -273,12 +273,12 @@ function ∂damperforcea∂vela(joint::Translational, body1::Body, body2::Body, 
     # Aᵀ = zerodimstaticadjoint(A)
     # V = - Aᵀ * A * joint.damper * Aᵀ * A
     # Ω = szeros(T, 3, 3)
-    xa, qa = posargsk(body1.state)
-    xb, qb = posargsk(body2.state)
+    xa, qa = posargs2(body1.state)
+    xb, qb = posargs2(body2.state)
     va = body1.state.vsol[2]
-    ωa = body1.state.ωsol[2]
+    ωa = body1.state.ϕsol[2]
     vb = body2.state.vsol[2]
-    ωb = body2.state.ωsol[2]
+    ωb = body2.state.ϕsol[2]
 
     V = FiniteDiff.finite_difference_jacobian(va -> damperforcea(joint, xa, qa, va, ωa, xb, qb, vb, ωb)[SVector{3,Int}(1,2,3)], va)
     Ω = szeros(T, 3, 3)
@@ -292,12 +292,12 @@ function ∂damperforcea∂velb(joint::Translational, body1::Body, body2::Body, 
     # Aᵀ = zerodimstaticadjoint(A)
     # V = Aᵀ * A * joint.damper * Aᵀ * A
     # Ω = szeros(T, 3, 3)
-    xa, qa = posargsk(body1.state)
-    xb, qb = posargsk(body2.state)
+    xa, qa = posargs2(body1.state)
+    xb, qb = posargs2(body2.state)
     va = body1.state.vsol[2]
-    ωa = body1.state.ωsol[2]
+    ωa = body1.state.ϕsol[2]
     vb = body2.state.vsol[2]
-    ωb = body2.state.ωsol[2]
+    ωb = body2.state.ϕsol[2]
 
     V = FiniteDiff.finite_difference_jacobian(vb -> damperforcea(joint, xa, qa, va, ωa, xb, qb, vb, ωb)[SVector{3,Int}(1,2,3)], vb)
     Ω = szeros(T, 3, 3)
@@ -311,12 +311,12 @@ function ∂damperforceb∂velb(joint::Translational, body1::Body, body2::Body, 
     # Aᵀ = zerodimstaticadjoint(A)
     # V = - Aᵀ * A * joint.damper * Aᵀ * A
     # Ω = szeros(T, 3, 3)
-    xa, qa = posargsk(body1.state)
-    xb, qb = posargsk(body2.state)
+    xa, qa = posargs2(body1.state)
+    xb, qb = posargs2(body2.state)
     va = body1.state.vsol[2]
-    ωa = body1.state.ωsol[2]
+    ωa = body1.state.ϕsol[2]
     vb = body2.state.vsol[2]
-    ωb = body2.state.ωsol[2]
+    ωb = body2.state.ϕsol[2]
 
     V = FiniteDiff.finite_difference_jacobian(vb -> damperforceb(joint, xa, qa, va, ωa, xb, qb, vb, ωb)[SVector{3,Int}(1,2,3)], vb)
     Ω = szeros(T, 3, 3)
@@ -330,12 +330,12 @@ function ∂damperforceb∂vela(joint::Translational, body1::Body, body2::Body, 
     # Aᵀ = zerodimstaticadjoint(A)
     # V = Aᵀ * A * joint.damper * Aᵀ * A
     # Ω = szeros(T, 3, 3)
-    xa, qa = posargsk(body1.state)
-    xb, qb = posargsk(body2.state)
+    xa, qa = posargs2(body1.state)
+    xb, qb = posargs2(body2.state)
     va = body1.state.vsol[2]
-    ωa = body1.state.ωsol[2]
+    ωa = body1.state.ϕsol[2]
     vb = body2.state.vsol[2]
-    ωb = body2.state.ωsol[2]
+    ωb = body2.state.ϕsol[2]
 
     V = FiniteDiff.finite_difference_jacobian(va -> damperforceb(joint, xa, qa, va, ωa, xb, qb, vb, ωb)[SVector{3,Int}(1,2,3)], va)
     Ω = szeros(T, 3, 3)
@@ -349,9 +349,9 @@ function ∂damperforceb∂velb(joint::Translational, body1::Origin, body2::Body
     # Aᵀ = zerodimstaticadjoint(A)
     # V = - Aᵀ * A * joint.damper * Aᵀ * A
     # Ω = szeros(T, 3, 3)
-    xb, qb = posargsk(body2.state)
+    xb, qb = posargs2(body2.state)
     vb = body2.state.vsol[2]
-    ωb = body2.state.ωsol[2]
+    ωb = body2.state.ϕsol[2]
 
     V = FiniteDiff.finite_difference_jacobian(vb -> damperforceb(joint, xb, qb, vb, ωb)[SVector{3,Int}(1,2,3)], vb)
     Ω = szeros(T, 3, 3)

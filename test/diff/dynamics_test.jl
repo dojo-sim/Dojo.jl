@@ -30,7 +30,7 @@ function dyntestT()
     discretizestate!(body1,x1,q1,v1,v2,ω1,ω2,Δt)
 
 
-    res = ForwardDiff.jacobian(dynTvel, [body1.state.vc;body1.state.vsol[2]])
+    res = ForwardDiff.jacobian(dynTvel, [body1.state.v15;body1.state.vsol[2]])
     V2 = res[1:3,4:6]
 
     n = norm(V2 - ∂g∂ʳself(mech, body1)[1:3,1:3])
@@ -63,7 +63,7 @@ function dyntestR()
     discretizestate!(body1,x1,q1,v1,v2,ω1,ω2,Δt)
 
 
-    res = ForwardDiff.jacobian(dynRvel, [body1.state.ωc;body1.state.ωsol[2]])
+    res = ForwardDiff.jacobian(dynRvel, [body1.state.ϕ15;body1.state.ϕsol[2]])
     W2 = res[1:3,4:6]
 
     n = norm(W2 - ∂g∂ʳself(mech, body1)[4:6,4:6])

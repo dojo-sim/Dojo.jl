@@ -70,7 +70,7 @@ function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:
     cont = ineqc.constraints[1]
     body = getbody(mechanism, ineqc.parentid)
     x, v, q, ω = fullargssol(body.state)
-    x3, q3 = posargsnext(body.state, mechanism.Δt)
+    x3, q3 = posargs3(body.state, mechanism.Δt)
 
     # transforms the velocities of the origin of the link into velocities along all 4 axes of the friction pyramid
     Bxmat = cont.Bx
@@ -142,7 +142,7 @@ function neutral_vector(bound::ContactBound{T,N}) where {T,N}
     return [sones(T, 2); szeros(T, N½-2)]
 end
 
-∂g∂ʳpos(bound::ContactBound, state::State, Δt) = ∂g∂ʳpos(bound, posargsnext(state, Δt)...)
+∂g∂ʳpos(bound::ContactBound, state::State, Δt) = ∂g∂ʳpos(bound, posargs3(state, Δt)...)
 
 @inline function ∂g∂ʳpos(bound::ContactBound, x::AbstractVector, q::UnitQuaternion)
     X, Q = ∂g∂pos(bound, x, q)

@@ -2,15 +2,15 @@ METHODORDER = 1 # This refers to the interpolating spline
 getGlobalOrder() = (global METHODORDER; return METHODORDER)
 
 # Convenience functions
-@inline getx3(state::State, Δt) = state.xk[1] + state.vsol[2]*Δt
-@inline getq3(state::State, Δt) = state.qk[1] * ωbar(state.ωsol[2],Δt) * Δt / 2
+@inline getx3(state::State, Δt) = state.x2[1] + state.vsol[2]*Δt
+@inline getq3(state::State, Δt) = state.q2[1] * ωbar(state.ϕsol[2],Δt) * Δt / 2
 
-@inline posargsc(state::State) = (state.xc, state.qc)
-@inline fullargsc(state::State) = (state.xc, state.vc, state.qc, state.ωc)
-@inline posargsk(state::State; k=1) = (state.xk[k], state.qk[k])
+@inline posargs1(state::State) = (state.x1, state.q1)
+@inline fullargs1(state::State) = (state.x1, state.v15, state.q1, state.ϕ15)
+@inline posargs2(state::State; k=1) = (state.x2[k], state.q2[k])
 @inline posargssol(state::State) = (state.xsol[2], state.qsol[2])
-@inline fullargssol(state::State) = (state.xsol[2], state.vsol[2], state.qsol[2], state.ωsol[2])
-@inline posargsnext(state::State, Δt) = (getx3(state, Δt), getq3(state, Δt))
+@inline fullargssol(state::State) = (state.xsol[2], state.vsol[2], state.qsol[2], state.ϕsol[2])
+@inline posargs3(state::State, Δt) = (getx3(state, Δt), getq3(state, Δt))
 
 @inline function derivωbar(ω::SVector{3}, Δt)
     msq = -sqrt(4 / Δt^2 - dot(ω, ω))
@@ -22,23 +22,23 @@ end
 end
 
 @inline function setForce!(state::State, F, τ)
-    state.Fk[1] = F
-    state.τk[1] = τ
+    state.F2[1] = F
+    state.τ2[1] = τ
     return
 end
 
 @inline function discretizestate!(body::Body{T}, Δt) where T
     state = body.state
-    xc = state.xc
-    qc = state.qc
-    vc = state.vc
-    ωc = state.ωc
+    x1 = state.x1
+    q1 = state.q1
+    v15 = state.v15
+    ϕ15 = state.ϕ15
 
-    state.xk[1] = xc + vc*Δt
-    state.qk[1] = qc * ωbar(ωc,Δt) * Δt / 2
+    state.x2[1] = x1 + v15*Δt
+    state.q2[1] = q1 * ωbar(ϕ15,Δt) * Δt / 2
 
-    state.Fk[1] = szeros(T,3)
-    state.τk[1] = szeros(T,3)
+    state.F2[1] = szeros(T,3)
+    state.τ2[1] = szeros(T,3)
 
     return
 end
@@ -46,8 +46,8 @@ end
 @inline function currentasknot!(body::Body)
     state = body.state
 
-    state.xk[1] = state.xc
-    state.qk[1] = state.qc
+    state.x2[1] = state.x1
+    state.q2[1] = state.q1
 
     return
 end
@@ -55,30 +55,30 @@ end
 @inline function updatestate!(body::Body{T}, Δt) where T
     state = body.state
 
-    state.xc = state.xsol[2]
-    state.qc = state.qsol[2]
-    state.vc = state.vsol[2]
-    state.ωc = state.ωsol[2]
+    state.x1 = state.xsol[2]
+    state.q1 = state.qsol[2]
+    state.v15 = state.vsol[2]
+    state.ϕ15 = state.ϕsol[2]
 
-    state.xk[1] = state.xk[1] + state.vsol[2]*Δt
-    state.qk[1] = state.qk[1] * ωbar(state.ωsol[2],Δt) * Δt / 2
+    state.x2[1] = state.x2[1] + state.vsol[2]*Δt
+    state.q2[1] = state.q2[1] * ωbar(state.ϕsol[2],Δt) * Δt / 2
 
-    state.xsol[2] = state.xk[1]
-    state.qsol[2] = state.qk[1]
+    state.xsol[2] = state.x2[1]
+    state.qsol[2] = state.q2[1]
 
-    state.Fk[1] = szeros(T,3)
-    state.τk[1] = szeros(T,3)
+    state.F2[1] = szeros(T,3)
+    state.τ2[1] = szeros(T,3)
     return
 end
 
 @inline function setsolution!(body::Body)
     state = body.state
-    state.xsol[2] = state.xk[1]
-    state.qsol[2] = state.qk[1]
-    state.vsol[1] = state.vc
-    state.vsol[2] = state.vc
-    state.ωsol[1] = state.ωc
-    state.ωsol[2] = state.ωc
+    state.xsol[2] = state.x2[1]
+    state.qsol[2] = state.q2[1]
+    state.vsol[1] = state.v15
+    state.vsol[2] = state.v15
+    state.ϕsol[1] = state.ϕ15
+    state.ϕsol[2] = state.ϕ15
     return
 end
 
@@ -86,12 +86,12 @@ end
     state = body.state
     stateold = deepcopy(state)
 
-    state.xc = x
-    state.qc = q
-    state.vc = v
-    state.ωc = ω
-    state.Fk[1] = F
-    state.τk[1] = τ
+    state.x1 = x
+    state.q1 = q
+    state.v15 = v
+    state.ϕ15 = ω
+    state.F2[1] = F
+    state.τ2[1] = τ
     state.d = d
 
     return stateold

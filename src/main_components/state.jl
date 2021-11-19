@@ -3,75 +3,75 @@ $(TYPEDEF)
 
 The `State` contains the position and velocity information of a [`Body`](@ref).
 # Important attributes
-* `xc`: Continuous-time position (vector)
-* `qc`: Continuous-time oritentation (quaternion)
-* `vc`: Continuous-time velocity (vector)
-* `ωc`: Continuous-time angular velocity (vector)
-* `xk`: Knot-point positions (vector of vectors)
-* `qk`: Knot-point orientations (vector of vectors)
+* `x1`: Continuous-time position (vector)
+* `q1`: Continuous-time oritentation (quaternion)
+* `v15`: Continuous-time velocity (vector)
+* `ϕ15`: Continuous-time angular velocity (vector)
+* `x2`: Knot-point positions (vector of vectors)
+* `q2`: Knot-point orientations (vector of vectors)
 """
 mutable struct State{T}
     order::Integer
 
     # Continuous states
-    xc::SVector{3,T}
-    qc::UnitQuaternion{T}
-    vc::SVector{3,T}
-    ωc::SVector{3,T}
+    x1::SVector{3,T}
+    q1::UnitQuaternion{T}
+    v15::SVector{3,T}
+    ϕ15::SVector{3,T}
 
     # Knot points
-    xk::Vector{SVector{3,T}}
-    qk::Vector{UnitQuaternion{T}}
-    Fk::Vector{SVector{3,T}}
-    τk::Vector{SVector{3,T}}
+    x2::Vector{SVector{3,T}}
+    q2::Vector{UnitQuaternion{T}}
+    F2::Vector{SVector{3,T}}
+    τ2::Vector{SVector{3,T}}
 
     # Current solution estimate [before step;after step]
     xsol::Vector{SVector{3,T}}
     qsol::Vector{UnitQuaternion{T}}
     vsol::Vector{SVector{3,T}}
-    ωsol::Vector{SVector{3,T}}
-    
+    ϕsol::Vector{SVector{3,T}}
+
     # Current equations of motion and derivative evaluation
     d::SVector{6,T}
     D::SMatrix{6,6,T,36}
 
     function State{T}() where T
-        xc = szeros(T, 3)
-        qc = one(UnitQuaternion{T})
-        vc = szeros(T, 3)
-        ωc = szeros(T, 3)
+        x1 = szeros(T, 3)
+        q1 = one(UnitQuaternion{T})
+        v15 = szeros(T, 3)
+        ϕ15 = szeros(T, 3)
 
-        xk = [szeros(T, 3)]
-        qk = [one(UnitQuaternion{T})]
-        Fk = [szeros(T, 3)]
-        τk = [szeros(T, 3)]
+        x2 = [szeros(T, 3)]
+        q2 = [one(UnitQuaternion{T})]
+        F2 = [szeros(T, 3)]
+        τ2 = [szeros(T, 3)]
 
         xsol = [szeros(T, 3) for i=1:2]
         qsol = [one(UnitQuaternion{T}) for i=1:2]
         vsol = [szeros(T, 3) for i=1:2]
-        ωsol = [szeros(T, 3) for i=1:2]
+        ϕsol = [szeros(T, 3) for i=1:2]
 
         d = szeros(T, 6)
         D = szeros(T, 6, 6)
 
-        new{T}(0, xc, qc, vc, ωc, xk, qk, Fk, τk, xsol, qsol, vsol, ωsol, d, D)
+        new{T}(0, x1, q1, v15, ϕ15, x2, q2, F2, τ2, xsol, qsol, vsol, ϕsol, d, D)
     end
 end
 
 function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, state::State{T}) where {T}
     summary(io, state)
     println(io,"")
-    println(io,"xc:   "*string(state.xc))
-    println(io,"qc:   "*string(state.qc))
-    println(io,"ωc:   "*string(state.ωc))
-    println(io,"xk:   "*string(state.xk))
-    println(io,"qk:   "*string(state.qk))
-    println(io,"Fk:   "*string(state.Fk))
-    println(io,"τk:   "*string(state.τk))
+    println(io,"x1:   "*string(state.x1))
+    println(io,"q1:   "*string(state.q1))
+    println(io,"ϕ15:   "*string(state.ϕ15))
+    println(io,"x2:   "*string(state.x2))
+    println(io,"q2:   "*string(state.q2))
+    println(io,"F2:   "*string(state.F2))
+    println(io,"τ2:   "*string(state.τ2))
     println(io,"xsol: "*string(state.xsol))
     println(io,"qsol: "*string(state.qsol))
     println(io,"vsol: "*string(state.vsol))
-    println(io,"ωsol: "*string(state.ωsol))
+    println(io,"ϕsol: "*string(state.ϕsol))
     println(io,"d:    "*string(state.d))
 end
 
@@ -79,10 +79,10 @@ end
 function initknotpoints!(state::State, order)
     state.order = order
 
-    state.xk = [state.xk[1] for i = 1:order]
-    state.qk = [state.qk[1] for i = 1:order]
-    state.Fk = [state.Fk[1] for i = 1:order]
-    state.τk = [state.τk[1] for i = 1:order]
+    state.x2 = [state.x2[1] for i = 1:order]
+    state.q2 = [state.q2[1] for i = 1:order]
+    state.F2 = [state.F2[1] for i = 1:order]
+    state.τ2 = [state.τ2[1] for i = 1:order]
 
     return
 end

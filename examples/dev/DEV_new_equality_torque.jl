@@ -294,8 +294,8 @@ A2ᵀ * A2
 # function _dG(joint::AbstactJoint, pbody::Body, cbody::Body, λ::AbtractVector, Δt)
 #     A = constraintmat(joint)
 #     Aᵀ = zerodimstaticadjoint(A)
-#     x3a, q3a = posargsnext(pbody.state, Δt)
-#     x3b, q3b = posargsnext(cbody.state, Δt)
+#     x3a, q3a = posargs3(pbody.state, Δt)
+#     x3b, q3b = posargs3(cbody.state, Δt)
 #     _dG(joint, x3a, q3a, x3b, q3b, Aᵀ * λ)
 #     return dG
 # end

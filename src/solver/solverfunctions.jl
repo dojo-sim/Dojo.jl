@@ -33,7 +33,7 @@ end
 function feasibilityStepLength!(mechanism::Mechanism{T}, body::Body{T}, vector_entry::Entry; τ::T = 0.99) where {T}
     Δt = mechanism.Δt
     Δω = vector_entry.value[SA[4; 5; 6]]
-    ω = body.state.ωsol[2]
+    ω = body.state.ϕsol[2]
 
     α = polynomial_step_length(ω, Δω, τ * 1/Δt)
 
@@ -167,7 +167,7 @@ end
 
 @inline function updatesolution!(body::Body)
     body.state.vsol[1] = body.state.vsol[2]
-    body.state.ωsol[1] = body.state.ωsol[2]
+    body.state.ϕsol[1] = body.state.ϕsol[2]
     return
 end
 
@@ -184,7 +184,7 @@ end
 
 @inline function normΔs(body::Body)
     d1 = body.state.vsol[2] - body.state.vsol[1]
-    d2 = body.state.ωsol[2] - body.state.ωsol[1]
+    d2 = body.state.ϕsol[2] - body.state.ϕsol[1]
     return dot(d1, d1) + dot(d2, d2)
 end
 

@@ -1,16 +1,16 @@
 function saveToStorage!(mechanism::Mechanism, storage::Storage, i::Int)
     for (ind, body) in enumerate(mechanism.bodies)
         state = body.state
-        storage.x[ind][i] = state.xk[1] # x1
-        storage.q[ind][i] = state.qk[1] # q1
-        storage.v[ind][i] = state.vc # v0.5
-        storage.ω[ind][i] = state.ωc # ω0.5
-        q1 = state.qk[1]
+        storage.x[ind][i] = state.x2[1] # x1
+        storage.q[ind][i] = state.q2[1] # q1
+        storage.v[ind][i] = state.v15 # v0.5
+        storage.ω[ind][i] = state.ϕ15 # ω0.5
+        q1 = state.q2[1]
         p1 = momentum_body_new(mechanism, body) # p1 in world frame
         px1 = p1[SVector{3,Int}(1,2,3)] # px1 in world frame
         pq1 = p1[SVector{3,Int}(4,5,6)] # pq1 in world frame
         v1 = px1 ./ body.m # in world frame
-        ω1 = body.J \ (rotation_matrix(inv(q1)) * pq1) # in body frame, we rotate using the current quaternion q1 = state.qk[1]
+        ω1 = body.J \ (rotation_matrix(inv(q1)) * pq1) # in body frame, we rotate using the current quaternion q1 = state.q2[1]
         storage.px[ind][i] = px1 # px0
         storage.pq[ind][i] = pq1 # pq0
         storage.vl[ind][i] = v1 # v0
