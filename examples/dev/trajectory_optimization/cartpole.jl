@@ -28,26 +28,25 @@ mech = getcartpole(Δt=Δt, g=gravity)
 
 initializecartpole!(mech)
 
+# # controller 
+# function controller!(mech, k)
+#     j1 = geteqconstraint(mech, mech.eqconstraints[1].id)
+#     j2 = geteqconstraint(mech, mech.eqconstraints[2].id)
 
-# controller 
-function controller!(mech, k)
-    j1 = geteqconstraint(mech, mech.eqconstraints[1].id)
-    j2 = geteqconstraint(mech, mech.eqconstraints[2].id)
+#     u1 = 0.2
+#     u2 = 0.0
 
-    u1 = 0.2
-    u2 = 0.0
+#     setForce!(mech, j1, SA[u1])
+#     setForce!(mech, j2, SA[u2])
 
-    setForce!(mech, j1, SA[u1])
-    setForce!(mech, j2, SA[u2])
+#     return
+# end 
 
-    return
-end 
+# # simulate
+# storage = simulate!(mech, mech.Δt, controller!, record = true, verbose=true, solver = :mehrotra!)
 
-# simulate
-storage = simulate!(mech, mech.Δt, controller!, record = true, verbose=true, solver = :mehrotra!)
-
-# visualize
-visualize(mech, storage, vis = vis)
+# # visualize
+# visualize(mech, storage, vis = vis)
 
 ## state space 
 n = 13 * 2 
@@ -197,7 +196,7 @@ step_grad_u!(mech, z1, ū[1], control_inputs=cartpole_inputs!)
 
 x̄, ū = nominal_trajectory(prob)
 
-storage = generate_storage(mech, x̄) 
+storage = generate_storage(mech, z) 
 
 visualize(mech, storage, vis = vis)
 
