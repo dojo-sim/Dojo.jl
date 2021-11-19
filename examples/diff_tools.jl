@@ -127,7 +127,7 @@ function joint_jacobian_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne
                 xb, qb = posargsk(state2)
 
                 # XX, XQ, QX, QQ = ∂2g∂posaa(constraint, posargsk(state1)..., posargsk(state2)...)
-
+                λ = SVector{length(λ)}(λ)
                 if typeof(∂g∂ʳposa(constraint, xa, qa, xb, qb)) <: AbstractArray && length(constraint) > 0
                     XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposa(constraint, w, qa, xb, qb)[1:3, 1:3]) * constraintmat(constraint)' * λ, xa)
                     XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposa(constraint, xa, UnitQuaternion(w..., false), xb, qb)[1:3, 1:3]) * constraintmat(constraint)' * λ, [qa.w; qa.x; qa.y; qa.z])
@@ -620,7 +620,6 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 end
 
                 if bnd_type <: ContactBound
-                    @warn "need q2"
                     A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dN(x2, [q2.w, q2.x, q2.y, q2.z], ineqc.γsol[2][1:1], bnd.p) * G
                     A[sum(eqcdims) + offr .+ (1:6), offc .+ [1:3; 7:9]] -= _dB(x2, [q2.w, q2.x, q2.y, q2.z], ineqc.γsol[2][2:4], bnd.p) * G
                 elseif bnd_type <: LinearContactBound

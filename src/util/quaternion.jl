@@ -31,6 +31,8 @@ Vmat(::Type{T}=Float64) where T = vmat(T)
 Vᵀmat(::Type{T}=Float64) where T = hmat(T)
 Vmat(q::UnitQuaternion) = imag(q)
 
+vector(q::UnitQuaternion) = SA[q.w, q.x, q.y, q.z]
+
 function VLmat(q::UnitQuaternion)
     SA[
         q.x  q.w -q.z  q.y;
