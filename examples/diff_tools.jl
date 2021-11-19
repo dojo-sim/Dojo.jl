@@ -597,7 +597,7 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     A[1:sum(eqcdims), 1:12Nb] += joint_datamat(mechanism)
     A[sum(eqcdims) .+ (1:sum(bodydims)), 1:12Nb] += Fz[Fz_indices(length(bodies)),:]
     A[sum(eqcdims) .+ (1:sum(bodydims)), 1:12Nb] += joint_jacobian_datamat(mechanism)[Fz_indices(length(bodies)), :] * attitudejacobian(data, Nb)[1:13Nb,1:12Nb]
-    # A[sum(eqcdims) .+ (1:sum(bodydims)), 1:12Nb] += spring_damper_datamat(mechanism)[Fz_indices(length(bodies)), :]
+    A[sum(eqcdims) .+ (1:sum(bodydims)), 1:12Nb] += spring_damper_datamat(mechanism)[Fz_indices(length(bodies)), :]
 
     offr = 0
     offc = 0

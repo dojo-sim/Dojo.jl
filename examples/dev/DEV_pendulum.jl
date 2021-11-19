@@ -22,20 +22,12 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
-mech = getmechanism(:dice, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, mode=:box, conetype = :soc)
-# mech = getmechanism(:dice, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, mode=:box, conetype = :linear)
-# mech = getmechanism(:dice, Δt = 0.01, g = -9.81, contact = true, mode=:box, conetype = :impact)
+mech = getmechanism(:pendulum, Δt = 0.01, g = -9.81, spring = 100.0, damper = 5.0)
 Random.seed!(100)
-ω = 0.0 * (rand(3) .- 0.5) * 1
-x = [0, 0, 1.0]
-v = 1.0 * [4, 1, 0.0]
-initialize!(mech, :dice, x = x, v = v, ω = ω)
-storage = simulate!(mech, 1.3, record = true, solver = :mehrotra!, verbose = false)
+ϕ1 = 0.3π
+initialize!(mech, :pendulum, ϕ1 = ϕ1)
+storage = simulate!(mech, 0.3, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
-
-
-getdim(collect(mech.ineqconstraints)[1])
-getdim(collect(mech.ineqconstraints)[1])
 
 ################################################################################
 # Differentiation
@@ -63,6 +55,20 @@ fd_datamat = finitediff_data_matrix(mech, data, sol) * attjac
 @test norm(fd_datamat + datamat, Inf) < 1e-7
 plot(Gray.(abs.(datamat)))
 plot(Gray.(abs.(fd_datamat)))
+
+norm((datamat + fd_datamat)[1:5,:], Inf)
+norm((datamat + fd_datamat)[6:11,:], Inf)
+norm((datamat + fd_datamat)[6:11,1:6], Inf)
+norm((datamat + fd_datamat)[6:11,7:9], Inf)
+norm((datamat + fd_datamat)[6:11,10:13], Inf)
+
+norm((datamat + fd_datamat)[9:11,7:9], Inf)
+
+- fd_datamat[9:11,7:9]
+datamat[9:11,7:9]
+(fd_datamat + datamat)[9:11,7:9]
+
+
 
 # norm((datamat + fd_datamat)[1:6,:], Inf)
 # norm((datamat + fd_datamat)[1:6,1:6], Inf)
