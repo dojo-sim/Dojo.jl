@@ -7,6 +7,8 @@ end
 using Pkg
 Pkg.activate(module_dir())
 
+using MeshCat
+
 # Open visualizer
 vis = Visualizer()
 open(vis)
@@ -34,11 +36,12 @@ function controller!(mechanism, k)
     return
 end
 
-# @profiler storage = simulate!(mech, 2.50, controller!, record = true, solver = :mehrotra!, verbose = false)
-
-@elapsed storage = simulate!(mech, 2.50, controller!, record = true, solver = :mehrotra!, verbose = false)
+@elapsed storage = simulate!(mech, 2.10, controller!, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
+
+q0 = UnitQuaternion(rand(4)...)
+Vmat() * Lmat(q0)' * vector(q0)
 
 # Set data
 Nb = length(mech.bodies)

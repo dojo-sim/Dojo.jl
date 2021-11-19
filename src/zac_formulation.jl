@@ -12,18 +12,35 @@ end
 
 Q0 = rand(4)
 Q0 ./= norm(Q0)
-L(Q0)
 q0 = UnitQuaternion(Q0...)
+
+Q1 = rand(4)
+Q1 ./= norm(Q1)
+q1 = UnitQuaternion(Q1...)
+
+L(Q0)
 Lmat(q0)
 norm(L(Q0) - Lmat(q0))
 
+Lmat(q1)' * [q0.w, q0.x, q0.y, q0.z] - L(Q1)' * Q0
+Lmat(q1)
+Vmat() * Lmat(q1)' * Q0 - LVᵀmat(q1)' * Q0
+
+
+
+
 R(Q0)
-q0 = UnitQuaternion(Q0...)
 Rmat(q0)
 norm(R(Q0) - Rmat(q0))
 
+G(Q0)
+LVᵀmat(q0)
+norm(G(Q0) - LVᵀmat(q0))
+
 Tmat() - T
 Vᵀmat() - H
+
+
 function R(Q) #Rmat
     [Q[1] -Q[2:4]'; Q[2:4] Q[1]*I - hat(Q[2:4])]
 end
@@ -32,7 +49,7 @@ H = [zeros(1,3); I]; #Vᵀmat
 
 T = Diagonal([1.0; -1; -1; -1]) #Tmat
 
-function G(Q)
+function G(Q) # LVᵀmat
     return L(Q)*H
 end
 
