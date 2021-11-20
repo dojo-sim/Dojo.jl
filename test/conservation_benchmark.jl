@@ -13,7 +13,7 @@ start0 = Int(floor(1/Δt0)) + 1
 function controller!(mechanism, k; U = 0.10, Δt = Δt0)
     N = Int(floor(1/Δt))
     for (i,joint) in enumerate(mechanism.eqconstraints)
-        nu = getcontroldim(joint)
+        nu = controldim(joint)
         u = (nu <= 5 && k ∈ (1:N)) * U * Δt * sones(nu)
         setForce!(mechanism, joint, u)
     end

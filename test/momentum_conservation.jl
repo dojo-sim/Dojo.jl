@@ -7,7 +7,7 @@
 # Controller
 function controller!(mechanism, k; U = 0.5, Δt = 0.01)
     for (i,joint) in enumerate(mechanism.eqconstraints)
-        nu = getcontroldim(joint)
+        nu = controldim(joint)
         u = (nu <= 5 && k ∈ (1:100)) * U * Δt * sones(nu)
         setForce!(mechanism, joint, u)
     end

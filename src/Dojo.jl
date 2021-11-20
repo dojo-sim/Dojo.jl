@@ -83,7 +83,7 @@ export Origin,
     getmechanism,
     initialize!,
     getdim,
-    getcontroldim,
+    controldim,
 
     getmechanism,
     initialize!,

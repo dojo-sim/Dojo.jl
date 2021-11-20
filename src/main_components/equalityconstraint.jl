@@ -147,7 +147,7 @@ Prismatic joint example:
     setVelocity!(mechanism, geteqconstraint(mechanism, jointid), [-1.0])
 """
 function setForce!(mechanism, eqc::EqualityConstraint{T,N,Nc}, Fτ::AbstractVector) where {T,N,Nc}
-    @assert length(Fτ)==getcontroldim(eqc)
+    @assert length(Fτ)==controldim(eqc)
     for i = 1:Nc
         r_idx = SUnitRange(eqc.inds[i][1], eqc.inds[i][2])
         length(r_idx) == 0 && continue
@@ -157,7 +157,7 @@ function setForce!(mechanism, eqc::EqualityConstraint{T,N,Nc}, Fτ::AbstractVect
 end
 
 function addForce!(mechanism, eqc::EqualityConstraint{T,N,Nc}, Fτ::AbstractVector) where {T,N,Nc}
-    @assert length(Fτ)==getcontroldim(eqc)
+    @assert length(Fτ)==controldim(eqc)
     for i = 1:Nc
         addForce!(eqc.constraints[i], Fτ[SUnitRange(eqc.inds[i][1], eqc.inds[i][2])])
     end

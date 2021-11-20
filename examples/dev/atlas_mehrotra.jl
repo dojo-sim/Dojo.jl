@@ -30,7 +30,7 @@ function controller!(mechanism, k)
             cbody = getbody(mech, eqc.childids[i])
             minJ = min(minJ, minimum(diag(cbody.J)))
         end
-        nu = getcontroldim(eqc)
+        nu = controldim(eqc)
         u = 1 * minJ * (rand(nu) .- 0.2) * Δt0 * 0.0
         setForce!(mechanism, eqc, SVector{nu}(u))
     end

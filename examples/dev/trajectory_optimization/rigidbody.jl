@@ -69,7 +69,7 @@ visualize(mech, storage, vis = vis)
 
 ## state space
 n = 13 * length(mech.bodies)
-m = isempty(mech.eqconstraints) ? 0 : sum(getcontroldim.(mech.eqconstraints))
+m = isempty(mech.eqconstraints) ? 0 : sum(controldim.(mech.eqconstraints))
 
 
 function step1!(mech::Mechanism, z, u)

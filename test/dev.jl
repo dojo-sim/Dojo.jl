@@ -85,7 +85,7 @@ initialize!(mech, :atlas, tran = [0, 0, 2.])
 
 function controller!(mechanism, k)
     for (i,joint) in enumerate(mechanism.eqconstraints)
-        if getcontroldim(joint) == 1
+        if controldim(joint) == 1
             if k ∈ (1:50)
                 u = 1e0 * (1.0 - 0.5) * Δt_
             elseif k ∈ (51:100)
@@ -124,7 +124,7 @@ initialize!(mech, :snake, Δv = zeros(3), Δω = zeros(3))
 function controller!(mechanism, k)
     for (i,joint) in enumerate(collect(mechanism.eqconstraints)[2:end])
         if  i == Nlink_-1
-            if getcontroldim(joint) == 1
+            if controldim(joint) == 1
                 # u = 5e-1 * (rand() - 0.5) * Δt_ * (k < 100)
                 if k ∈ (1:n)
                     u = 1e-0 * Δt_
@@ -176,7 +176,7 @@ initialize!(mech, :slider)
 
 function controller!(mechanism, k)
     for (i,joint) in enumerate(collect(mechanism.eqconstraints)[1:end])
-        if getcontroldim(joint) == 1
+        if controldim(joint) == 1
             # u = 5e-1 * (rand() - 0.5) * Δt_ * (k < 100)
             if k ∈ (1:500)
                 u = 5e-1 * Δt_
@@ -213,7 +213,7 @@ function controller!(mechanism, k)
     n = 50
     for (i,joint) in enumerate(collect(mechanism.eqconstraints)[2:end])
         if  i == Nlink_-1
-            if getcontroldim(joint) == 1
+            if controldim(joint) == 1
                 # u = 5e-1 * (rand() - 0.5) * Δt_ * (k < 100)
                 if k ∈ (1:n)
                     u = 1e1 * Δt_
@@ -280,7 +280,7 @@ initialize!(mech, :humanoid, tran = [0, 0, 2.])
 
 function controller!(mechanism, k)
     for (i,joint) in enumerate(mechanism.eqconstraints)
-        if getcontroldim(joint) == 1
+        if controldim(joint) == 1
             if k ∈ (50:150)
                 u = 2e0 * (1.0 - 0.5) * Δt_
             else
@@ -318,7 +318,7 @@ v_ = 0.0*rand(3)
 
 function controller!(mechanism, k)
     for (i,joint) in enumerate(mechanism.eqconstraints)
-        nu = getcontroldim(joint)
+        nu = controldim(joint)
         if nu <= 5
             if k ∈ (50:150)
                 u = 2e0 * (1.0 - 0.5) * Δt_ * [1.0, 0.0, 1.0] #[0.0; 1.0; zeros(nu-2)]
@@ -361,7 +361,7 @@ v_ = 0.0*rand(3)
 
 function controller!(mechanism, k)
     for (i,joint) in enumerate(mechanism.eqconstraints)
-        nu = getcontroldim(joint)
+        nu = controldim(joint)
         if nu <= 5
             if k ∈ (10:10 + 1000n)
                 u = 1.0 * 3e-1 * Δt_ * [0.1, 1.0, 1.0] #[0.0; 1.0; zeros(nu-2)]
@@ -431,7 +431,7 @@ Nlink_ = 2
 
 function controller!(mechanism, k)
     for (i,joint) in enumerate(mechanism.eqconstraints)
-        if getcontroldim(joint) == 1
+        if controldim(joint) == 1
             if k ∈ (1:10)
                 u = 1e0 * Δt_
             else
@@ -480,7 +480,7 @@ Nlink_ = 2
 
 function controller!(mechanism, k)
     for (i,joint) in enumerate(mechanism.eqconstraints)
-        nu = getcontroldim(joint)
+        nu = controldim(joint)
         if 5 >= nu >= 1
             if k ∈ (1:40)
                 u = 3e-0 * Δt_ * [1.0; zeros(nu-1)]
@@ -588,7 +588,7 @@ initialize!(mech, :walker2d, tran = [0, 0, 1.25], rot = zeros(3))
 getfield.(collect(mech.eqconstraints), :name)
 function controller!(mechanism, k)
     for (i,joint) in enumerate(mechanism.eqconstraints)
-        if getcontroldim(joint) == 1
+        if controldim(joint) == 1
             if k ∈ (1:100)
                 u = 1e0 * (1.0 - 0.5) * Δt_
             else

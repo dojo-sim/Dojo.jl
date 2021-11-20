@@ -1,8 +1,13 @@
 function joint_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     Δt = mechanism.Δt
     eqcs = mechanism.eqconstraints
-    nc = sum(length.(eqcs))
-    Gl = zeros(T,nc,12Nb)
+
+    nc = 0
+    for eqc in eqcs
+        nc += length(eqc)
+    end
+
+    Gl = zeros(T,nc,Nb*12)
 
     oneindc = 0
     for eqc in eqcs
@@ -19,31 +24,34 @@ function joint_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 childind = childid - Ne
                 cbody = getbody(mechanism,childid)
                 cstate = cbody.state
-                joint = eqc.constraints[i]
 
-                ind2 += length(joint)
+                ind2 += length(eqc.constraints[i])
                 range = oneindc+ind1:oneindc+ind2
 
                 pcol3a12 = offsetrange(parentind,3,12,1)
+                pcol3b12 = offsetrange(parentind,3,12,2)
                 pcol3c12 = offsetrange(parentind,3,12,3)
+                pcol3d12 = offsetrange(parentind,3,12,4)
 
                 ccol3a12 = offsetrange(childind,3,12,1)
+                ccol3b12 = offsetrange(childind,3,12,2)
                 ccol3c12 = offsetrange(childind,3,12,3)
+                ccol3d12 = offsetrange(childind,3,12,4)
 
-                pXl, pQl = ∂g∂posa(joint, pbody, cbody, Δt) # x3
-                cXl, cQl = ∂g∂posb(joint, pbody, cbody, Δt) # x3
+                pXl, pQl = ∂g∂posa(eqc.constraints[i], pbody, cbody, Δt) # x3
+                cXl, cQl = ∂g∂posb(eqc.constraints[i], pbody, cbody, Δt) # x3
 
-                A = constraintmat(joint)
-                pGlx = A * pXl
-                pGlq = A * pQl
-                cGlx = A * cXl
-                cGlq = A * cQl
+                mat = constraintmat(eqc.constraints[i])
+                pGlx = mat * pXl
+                pGlq = mat * pQl
+                cGlx = mat * cXl
+                cGlq = mat * cQl
 
                 Gl[range,pcol3a12] = pGlx
-                Gl[range,pcol3c12] = pGlq * Rmat(ωbar(pstate.ϕsol[2], Δt)*Δt/2) * LVᵀmat(pstate.qsol[2])
+                Gl[range,pcol3c12] = pGlq*Rmat(ωbar(pstate.ϕ15, Δt)*Δt/2)*LVᵀmat(pstate.q1)
 
                 Gl[range,ccol3a12] = cGlx
-                Gl[range,ccol3c12] = cGlq * Rmat(ωbar(cstate.ϕsol[2], Δt)*Δt/2) * LVᵀmat(cstate.qsol[2])
+                Gl[range,ccol3c12] = cGlq*Rmat(ωbar(cstate.ϕ15, Δt)*Δt/2)*LVᵀmat(cstate.q1)
                 ind1 = ind2+1
             end
         else
@@ -66,7 +74,7 @@ function joint_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 cGlq = mat * cQl
 
                 Gl[range,ccol3a12] = cGlx
-                Gl[range,ccol3c12] = cGlq*Rmat(ωbar(cstate.ϕsol[2], Δt)*Δt/2)*LVᵀmat(cstate.qsol[2])
+                Gl[range,ccol3c12] = cGlq*Rmat(ωbar(cstate.ϕ15, Δt)*Δt/2)*LVᵀmat(cstate.q1)
                 ind1 = ind2+1
             end
         end
@@ -76,25 +84,6 @@ function joint_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
 
     return Gl
 end
-
-function ∂integrator∂x()
-    return I(3)
-end
-
-function ∂integrator∂v(Δt::T) where {T}
-    return Δt * I(3)
-end
-
-function ∂integrator∂q(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T; attjac::Bool = true) where {T}
-    M = Rmat(ωbar(ϕ25, Δt) * Δt/2)
-    attjac && (M *= LVᵀmat(q2))
-    return M
-end
-
-function ∂integrator∂ϕ(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T) where {T}
-    return Lmat(q2) * derivωbar(ϕ25, Δt) * Δt/2
-end
-
 
 function joint_jacobian_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     Δt = mechanism.Δt
@@ -454,7 +443,10 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
 
         n1 = n2+1
     end
-    return Fz, Fu * Bcontrol
+
+    G = joint_datamat(mechanism)
+
+    return Fz, Fu * Bcontrol, G
 end
 
 function dBω(q, ω, p)
@@ -594,10 +586,10 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     nbodies = length(bodies)
 
     resdims = [length(system.vector_entries[i].value) for i=1:Nn]
-    eqcdims = length.(eqcs)
-    ineqcdims = length.(ineqcs)
+    eqcdims = getdim.(eqcs)
+    ineqcdims = getdim.(ineqcs)
     bodydims = 6 * ones(Int, nbodies)
-    Fz, Fu = data_lineardynamics(mechanism, eqcids)
+    Fz, Fu, G = data_lineardynamics(mechanism, eqcids)
     data = getdata(mechanism)
 
     A = zeros(sum(resdims), datadim(mechanism))
@@ -648,7 +640,7 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
         bnd = ineqc.constraints[1]
         body = getbody(mechanism, ineqc.parentid)
         Δt = mechanism.Δt
-        N½ = Int(length(ineqc)/2)
+        N½ = Int(getdim(ineqc)/2)
         x2, v2, q2, ω2 = fullargssol(body.state)
         x2, q2 = posargs2(body.state)
         x3, q3 = posargs3(body.state, Δt)
@@ -673,9 +665,88 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
             A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)] = bnd.ainv3
             A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (7:9)] = bnd.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bnd.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bnd.p))) * LVᵀmat(q2)
         end
-        offr += length(ineqc)
+        offr += getdim(ineqc)
     end
     return A
+end
+
+function Fz_indices(Nb::Int)
+    return vcat([13*(i-1) .+ [4:6; 11:13] for i = 1:Nb]...)
+end
+
+function getBcontrol(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
+    bodies = mechanism.bodies
+    eqcs = mechanism.eqconstraints
+    eqcids = getfield.(eqcs, :id)
+
+    nu = 0
+    for id in eqcids
+        eqc = geteqconstraint(mechanism, id)
+        nu += controldim(eqc)
+    end
+
+    Bcontrol = zeros(T, Nb*6, nu)
+
+    n1 = 1
+    n2 = 0
+    for id in eqcids
+        eqc = geteqconstraint(mechanism, id)
+        n2 += controldim(eqc)
+
+        parentid = eqc.parentid
+        if parentid !== nothing
+            parentind = parentid - Ne
+            col6 = offsetrange(parentind,6)
+            Bcontrol[col6,n1:n2] = ∂Fτ∂ua(mechanism, eqc, getbody(mechanism, parentid))
+        end
+        for childid in eqc.childids
+            childind = childid - Ne
+            col6 = offsetrange(childind,6)
+            Bcontrol[col6,n1:n2] = ∂Fτ∂ub(mechanism, eqc, getbody(mechanism, childid))
+        end
+
+        n1 = n2+1
+    end
+    return Bcontrol
+end
+
+function datadim(mechanism::Mechanism; quat::Bool = false)
+    d = 0
+    bodies = mechanism.bodies
+    for body in bodies
+        d += 6 * 2
+        quat && (d += 1)
+    end
+    eqcs = mechanism.eqconstraints
+    for eqc in eqcs
+        d += controldim(eqc)
+    end
+    return d
+end
+
+function soldim(mechanism::Mechanism)
+    d = 0
+    d += 6 * length(mechanism.bodies)
+    d += sum(getdim.(mechanism.eqconstraints))
+    !isempty(mechanism.ineqconstraints) && (d += sum(getdim.(mechanism.ineqconstraints)))
+    return d
+end
+
+function getdim(eqc::EqualityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
+    return N
+end
+
+function getdim(ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+    return N
+end
+
+function controldim(eqc::EqualityConstraint{T,N,Nc,Cs}; floatingbase::Bool = true) where {T,N,Nc,Cs}
+    !floatingbase && (N == 0) && return 0
+    cnt = 0
+    for joint in eqc.constraints
+        cnt += length(joint)
+    end
+    return 6 - cnt
 end
 
 function G(q::AbstractVector)
@@ -709,21 +780,6 @@ function attitudejacobian_chain(data::AbstractVector, Δt, Nb::Int)
     nu = ndata - size(attjac)[1]
     attjac = cat(attjac, I(nu), dims = (1,2))
     return attjac
-end
-
-function sensitivities(mech, sol, data)
-    setdata!(mech, data)
-    setsolution!(mech, sol)
-    setentries!(mech)
-    datamat = full_data_matrix(mech)
-    solmat = full_matrix(mech.system)
-    sensi = -1.0 * (solmat \ datamat)
-    return sensi
-end
-
-function jvp(mech, sol, data, v)
-    sensi = sensitivities(mech, sol, data)
-    return sensi * v
 end
 
 ################################################################################
@@ -789,7 +845,7 @@ end
 function setsolution!(mechanism::Mechanism{T}, sol::AbstractVector) where T
     off = 0
     for (i,eqc) in enumerate(mechanism.eqconstraints)
-        nλ = length(eqc)
+        nλ = getdim(eqc)
         λ = sol[off .+ (1:nλ)]; off += nλ
         eqc.λsol[2] = λ
     end
@@ -802,7 +858,7 @@ function setsolution!(mechanism::Mechanism{T}, sol::AbstractVector) where T
         body.state.ϕsol[2] = ω2
     end
     for (i,ineqc) in enumerate(mechanism.ineqconstraints)
-        N = length(ineqc)
+        N = getdim(ineqc)
         N½ = Int(N/2)
         s = sol[off .+ (1:N½)]; off += N½
         γ = sol[off .+ (1:N½)]; off += N½
@@ -916,58 +972,59 @@ function finitediff_sol_matrix(mechanism::Mechanism, data::AbstractVector,
     return jac
 end
 
-
 ################################################################################
-# Index and Dimensions
+# Integration Scheme
 ################################################################################
+using Test
 
-function Fz_indices(Nb::Int)
-    return vcat([13*(i-1) .+ [4:6; 11:13] for i = 1:Nb]...)
+getx3(x2, v2, Δt) = x2 + v2 * Δt
+getq3(q2, ω2, Δt) = UnitQuaternion(q2, false) * ωbar(ω2, Δt) * Δt / 2
+
+function st(x2, v2, Δt)
+    x3 = x2 + Δt * v2
+    return x3
 end
 
-function datadim(mechanism::Mechanism; quat::Bool = false)
-    d = 0
-    bodies = mechanism.bodies
-    for body in bodies
-        d += 6 * 2
-        quat && (d += 1)
-    end
-    eqcs = mechanism.eqconstraints
-    for eqc in eqcs
-        d += controldim(eqc)
-    end
-    return d
+function sr(q2, ω2, Δt; normalize::Bool = false)
+    L = Lmat(UnitQuaternion(q2..., normalize))
+    q3 = Δt / 2 * L * [sqrt(4 / Δt^2  - ω2' * ω2); ω2]
+    return q3
 end
 
-function soldim(mechanism::Mechanism)
-    d = 0
-    d += 6 * length(mechanism.bodies)
-    d += sum(length.(mechanism.eqconstraints))
-    !isempty(mechanism.ineqconstraints) && (d += sum(length.(mechanism.ineqconstraints)))
-    return d
+function ∂st∂x(x2, v2, Δt)
+    return I(3)
 end
 
-function controldim(eqc::EqualityConstraint{T,N,Nc,Cs}; ignore_floating_base::Bool = false) where {T,N,Nc,Cs}
-    ignore_floating_base && (N == 0) && return 0
-    return 6 - N
+function ∂st∂v(x2, v2, Δt)
+    return Δt * I(3)
 end
 
-function getcontroldim(eqc::EqualityConstraint{T,N,Nc,Cs}; ignore_floating_base::Bool = false) where {T,N,Nc,Cs}
-    ignore_floating_base && (N == 0) && return 0
-    return 6 - N
+function ∂sr∂q(q2, ω2, Δt)
+    x = Δt / 2 * [sqrt(4 / Δt^2  - ω2' * ω2); ω2]
+    return SA[
+            x[1]  -x[2]  -x[3]  -x[4];
+            x[2]   x[1]   x[4]  -x[3];
+            x[3]  -x[4]   x[1]   x[2];
+            x[4]   x[3]  -x[2]   x[1];
+    ]
 end
 
-#
-# mech = getmechanism(:hopper)
-# eqc1 = collect(mech.eqconstraints)[1]
-# eqc2 = collect(mech.eqconstraints)[2]
-# length(eqc1)
-# length(eqc1.constraints[1])
-# length(eqc1.constraints[2])
-# length(eqc2)
-# length(eqc2.constraints[1])
-# length(eqc2.constraints[2])
-#
-#
-# controldim(eqc1, ignore_floating_base = false)
-# controldim(eqc2, ignore_floating_base = false)
+function ∂sr∂ω(q2, ω2, Δt)
+    L = Lmat(UnitQuaternion(q2...))
+    return Δt / 2 * L * [- ω2' / sqrt(4 / Δt^2  - ω2' * ω2); I(3)]
+end
+
+function sensitivities(mech, sol, data)
+    setdata!(mech, data)
+    setsolution!(mech, sol)
+    setentries!(mech)
+    datamat = full_data_matrix(mech)
+    solmat = full_matrix(mech.system)
+    sensi = -1.0 * (solmat \ datamat)
+    return sensi
+end
+
+function jvp(mech, sol, data, v)
+    sensi = sensitivities(mech, sol, data)
+    return sensi * v
+end

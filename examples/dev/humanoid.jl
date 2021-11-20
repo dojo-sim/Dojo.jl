@@ -34,7 +34,7 @@ function controller!(mechanism, k)
             cbody = getbody(mech, eqc.childids[i])
             minJ = min(minJ, minimum(diag(cbody.J)))
         end
-        nu = getcontroldim(eqc)
+        nu = controldim(eqc)
         u = 10 * minJ * (ones(nu) .- 0.2) * Δt_
         setForce!(mechanism, eqc, SVector{nu}(u))
     end

@@ -102,9 +102,9 @@ function fast_grad_u!(mech::Mechanism{T,Nn,Ne,Nb}, x, u; btol=1.0e-3, undercut=1
 end
 
 
-
-using BenchmarkTools
-# @benchmark
-full_data_matrix(mech)
-@benchmark step_grad_x!(mech, z[1], u_control)
-@benchmark fast_grad_x!(mech, z[1], u_control)
+#
+# using BenchmarkTools
+# # @benchmark
+# full_data_matrix(mech)
+# @benchmark step_grad_x!(mech, z[1], u_control)
+# @benchmark fast_grad_x!(mech, z[1], u_control)

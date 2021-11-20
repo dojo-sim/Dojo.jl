@@ -1,8 +1,5 @@
 function test_solmat(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, Δt::T = 0.01, g::T = -9.81, verbose::Bool = false, kwargs...) where {T}
 
-    @show typeof(kwargs)
-    # @show typeof.(kwargs...)
-
     @testset "solmat: $(string(model))" begin
         mechanism = getmechanism(model, Δt = Δt, g = g; kwargs...)
         initialize!(mechanism, model)
@@ -38,8 +35,6 @@ function test_datamat(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, Δt::T = 0.01
         setdata!(mechanism, data)
         sol = getsolution(mechanism)
         attjac = attitudejacobian(data, Nb)
-
-        # @show nu = isempty(mechanism.eqconstraints) ? 0 : sum(getcontroldim.(mechanism.eqconstraints))
 
         # IFT
         datamat = full_data_matrix(mechanism)
@@ -103,7 +98,7 @@ test_datamat(:nslider,   tsim = tsim, ϵ = 1e-8, spring = 1.0, damper = 0.2)
 test_datamat(:twister,   tsim = tsim, ϵ = 1e-8, spring = 1.0, damper = 0.2)
 
 # In contact with the ground after 0.4 sec simulation
-tsim = 0.1
+tsim = 0.4
 test_solmat(:atlas,     tsim = tsim, ϵ = 1e-8)
 test_solmat(:atlas,     tsim = tsim, ϵ = 1e-8, spring = 1e3, damper = 5e2)
 test_solmat(:quadruped, tsim = tsim, ϵ = 1e-8, spring = 1.0, damper = 0.2)
