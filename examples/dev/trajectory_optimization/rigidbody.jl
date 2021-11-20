@@ -20,7 +20,6 @@ open(vis)
 
 # Include new files
 include(joinpath(@__DIR__, "..", "..", "loader.jl"))
-include(joinpath(module_dir(), "examples/dev/fd_tools.jl"))
 
 # System
 gravity = 0.0#-9.81

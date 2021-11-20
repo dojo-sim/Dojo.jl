@@ -35,14 +35,13 @@ include(joinpath(path_mp, "src/differential_dynamic_programming/ddp.jl"))
 
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
-include(joinpath(module_dir(), "examples", "dev", "fd_tools.jl"))
 include(joinpath(module_dir(), "examples", "dev", "trajectory_optimization", "utils.jl"))
 
 
 # System
 gravity = -9.81
 Δt = 0.05
-mech = gethopper(Δt=Δt, g=gravity)
+mech = gethopper(Δt = Δt, g = gravity)
 initializehopper!(mech)
 
 ## state space
@@ -71,7 +70,6 @@ function hopper_offset_state(x_shift, y_shift, z_shift)
     shift = [x_shift; y_shift; z_shift]
     z[1:3] += shift
     z[13 .+ (1:3)] += shift
-
     return z
 end
 
@@ -85,11 +83,12 @@ for t = 1:5
     znext = step!(mech, z[end], u_control, control_inputs=hopper_inputs!)
     push!(z, znext)
 end
+storage = generate_storage(mech, z)
+visualize(mech, storage; vis = vis)
 
 
 # Set random seed
 Random.seed!(0)
-
 # Model
 struct HopperMax{I, T} <: Model{I, T}
     n::Int
@@ -112,14 +111,14 @@ function fdx(model::HopperMax{Midpoint, FixedTime}, x, u, w, h, t)
 	# return fdjac(w -> step!(mech, w[1:(end-model.m)], w[(end-model.m+1):end],
     #     btol=grad_btol, undercut=grad_undercut, control_inputs=hopper_inputs!),
     #     [x; u])[:, 1:(end-model.m)]
-    step_grad_x!(model.mech, x, u, control_inputs=hopper_inputs!, btol = 1e-4)
+    step_grad_x!(model.mech, x, u, control_inputs=hopper_inputs!)
 end
 
 function fdu(model::HopperMax{Midpoint, FixedTime}, x, u, w, h, t)
 	# return fdjac(w -> step!(mech, w[1:(end-model.m)], w[(end-model.m+1):end],
     #     btol=grad_btol, undercut=grad_undercut, control_inputs=hopper_inputs!),
     #     [x; u])[:, (end-model.m+1):end]
-    return step_grad_u!(model.mech, x, u, control_inputs=hopper_inputs!, btol = 1e-4)
+    return step_grad_u!(model.mech, x, u, control_inputs=hopper_inputs!)
 end
 
 n, m, d = 26, 3, 0
@@ -148,7 +147,8 @@ Q = [(t < T ? h * Diagonal([qt1; qt2])
 q = [-2.0 * Q[t] * (t < 11 ? zM : zT) for t = 1:T]
 
 R = [h * Diagonal([0.1; 0.1; 0.01]) for t = 1:T-1]
-r = [zeros(model.m) for t = 1:T-1]
+# r = [zeros(model.m) for t = 1:T-1]
+r = [-2.0 * R[t] * u_control for t = 1:T-1]
 
 obj = StageCosts([QuadraticCost(Q[t], q[t],
 	t < T ? R[t] : nothing, t < T ? r[t] : nothing) for t = 1:T], T)
@@ -194,7 +194,7 @@ prob.m_data;
 prob.m_data.dyn_deriv.fu[4]
 
 # Solve
-@time stats = constrained_ddp_solve!(prob,
+@profiler stats = constrained_ddp_solve!(prob,
     verbose = true,
     grad_tol = 1.0e-3,
 	max_iter = 100,

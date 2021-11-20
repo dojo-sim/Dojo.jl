@@ -18,7 +18,6 @@ open(vis)
 
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
-include(joinpath(module_dir(), "examples", "dev", "fd_tools.jl"))
 include(joinpath(module_dir(), "examples", "dev", "trajectory_optimization", "utils.jl"))
 
 # System

@@ -128,3 +128,17 @@ end
 function mean(x)
 	return sum(x) / length(x)
 end
+
+function fdjac(f, x; δ = 1e-5)
+    n = length(f(x))
+    m = length(x)
+    jac = zeros(n, m)
+    for i = 1:m
+        xp = deepcopy(x)
+        xm = deepcopy(x)
+        xp[i] += δ
+        xm[i] -= δ
+        jac[:,i] = (f(xp) - f(xm)) / (2δ)
+    end
+    return jac
+end
