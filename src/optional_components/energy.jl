@@ -20,15 +20,15 @@ end
 function momentum_body_new(mechanism::Mechanism{T}, body::Body{T}) where {T}
     Δt = mechanism.Δt
     J = body.J
-    x1 = body.state.xk[1]
-    q1 = body.state.qk[1]
-    v05 = body.state.vc # v0.5
-    ω05 = body.state.ωc # ω0.5
+    x1 = body.state.x2[1]
+    q1 = body.state.q2[1]
+    v05 = body.state.v15 # v0.5
+    ω05 = body.state.ϕ15 # ω0.5
     v15 = body.state.vsol[2] # v1.5
-    ω15 = body.state.ωsol[2] # ω1.5
+    ω15 = body.state.ϕsol[2] # ω1.5
 
-    p_linear_body = body.m * v15  - 0.5 * [0; 0; body.m * mechanism.g * Δt] - 0.5 * body.state.Fk[1] #BEST TODO should't we divide F by Δt to get a force instead of a force impulse
-    p_angular_body = Δt * sqrt(4 / Δt^2.0 - ω15' * ω15) * body.J * ω15 + Δt * skew(ω15) * (body.J * ω15) - body.state.τk[1] # TODO should't we divide tau by Δt to get a torque instead of a torque impulse
+    p_linear_body = body.m * v15  - 0.5 * [0; 0; body.m * mechanism.g * Δt] - 0.5 * body.state.F2[1] #BEST TODO should't we divide F by Δt to get a force instead of a force impulse
+    p_angular_body = Δt * sqrt(4 / Δt^2.0 - ω15' * ω15) * body.J * ω15 + Δt * skew(ω15) * (body.J * ω15) - body.state.τ2[1] # TODO should't we divide tau by Δt to get a torque instead of a torque impulse
 
     α = -1.0
     for (i, eqc) in enumerate(mechanism.eqconstraints)
@@ -209,7 +209,7 @@ end
 #     p_angular = zeros(T, 3)
 #     v_com = p_linear ./ mass
 #     for (i, body) in enumerate(mechanism.bodies)
-#         r = body.state.xk[1] - com
+#         r = body.state.x2[1] - com
 #         v_body = p_body[i][1:3] ./ body.m
 #         p_angular += p_body[i][4:6]
 #         # p_angular += cross(r, body.m * (v_body - v_com))
@@ -225,7 +225,7 @@ end
 # function center_of_mass(mechanism::Mechanism{T}) where T
 #     r = zeros(T, 3)
 #     for body in mechanism.bodies
-#         r += body.m * body.state.xk[1]
+#         r += body.m * body.state.x2[1]
 #     end
 #     return r ./ total_mass(mechanism)
 # end
@@ -236,19 +236,19 @@ end
 # function momentum_body(mechanism::Mechanism{T}, body::Body{T}) where {T}
 #     Δt = mechanism.Δt
 #     J = body.J
-#     x1 = body.state.xk[1]
-#     q1 = body.state.qk[1]
-#     v05 = body.state.vc
-#     ω05 = body.state.ωc
+#     x1 = body.state.x2[1]
+#     q1 = body.state.q2[1]
+#     v05 = body.state.v15
+#     ω05 = body.state.ϕ15
 #     v15 = body.state.vsol[2]
-#     ω15 = body.state.ωsol[2]
+#     ω15 = body.state.ϕsol[2]
 #
-#     p_linear_body = body.m * v15  - 0.5 * [0; 0; body.m * mechanism.g * Δt] - 0.5 * body.state.Fk[1]
-#     # p_angular_body = Δt * sqrt(4 / Δt^2.0 - ω05' * ω05) * body.J * ω05 - Δt * skew(ω05) * (body.J * ω05) + body.state.τk[1]
-#     # @show body.state.Fk[1]
-#     # @show body.state.τk[1]
-#     # p_angular_body = Δt * sqrt(4 / Δt^2.0 - ω15' * ω15) * body.J * ω15 + Δt * skew(ω15) * (body.J * ω15) - 0.5*body.state.τk[1]
-#     p_angular_body = Δt * sqrt(4 / Δt^2.0 - ω15' * ω15) * body.J * ω15 - Δt * skew(ω15) * (body.J * ω15) - body.state.τk[1]
+#     p_linear_body = body.m * v15  - 0.5 * [0; 0; body.m * mechanism.g * Δt] - 0.5 * body.state.F2[1]
+#     # p_angular_body = Δt * sqrt(4 / Δt^2.0 - ω05' * ω05) * body.J * ω05 - Δt * skew(ω05) * (body.J * ω05) + body.state.τ2[1]
+#     # @show body.state.F2[1]
+#     # @show body.state.τ2[1]
+#     # p_angular_body = Δt * sqrt(4 / Δt^2.0 - ω15' * ω15) * body.J * ω15 + Δt * skew(ω15) * (body.J * ω15) - 0.5*body.state.τ2[1]
+#     p_angular_body = Δt * sqrt(4 / Δt^2.0 - ω15' * ω15) * body.J * ω15 - Δt * skew(ω15) * (body.J * ω15) - body.state.τ2[1]
 #
 #     α = -1.0
 #     for (i, eqc) in enumerate(mechanism.eqconstraints)
@@ -318,7 +318,7 @@ end
 #     Potential energy of one body due to gravity.
 # """
 # function potentialEnergy(mechanism::Mechanism, body::Body)
-#     x, q = posargsk(body.state)
+#     x, q = posargs2(body.state)
 #     z = x[3]
 #     V = - body.m * mechanism.g * z
 #     return V

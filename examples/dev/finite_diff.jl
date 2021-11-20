@@ -24,11 +24,11 @@ function finitediff_vel(joint::AbstractJoint, pbody::AbstractBody, cbody::Abstra
             cstate = deepcopy(cbody.state)
             pstate = deepcopy(pbody.state)
             pstate.vsol[2] = v2
-            pstate.ωsol[2] = ω2
+            pstate.ϕsol[2] = ω2
         elseif diff_body == :child
             cstate = deepcopy(cbody.state)
             cstate.vsol[2] = v2
-            cstate.ωsol[2] = ω2
+            cstate.ϕsol[2] = ω2
             if typeof(pbody) <: Origin
                 return evalf(joint, cstate, Δt)
             else
@@ -40,11 +40,11 @@ function finitediff_vel(joint::AbstractJoint, pbody::AbstractBody, cbody::Abstra
 
     if diff_body == :child
         v2 = cbody.state.vsol[2]
-        ω2 = cbody.state.ωsol[2]
+        ω2 = cbody.state.ϕsol[2]
         x = [v2; ω2]
     elseif diff_body == :parent
         v2 = pbody.state.vsol[2]
-        ω2 = pbody.state.ωsol[2]
+        ω2 = pbody.state.ϕsol[2]
         x = [v2; ω2]
     else
         error("invalid diff_body")
@@ -63,12 +63,12 @@ function finitediff_pos(joint::AbstractJoint, pbody::AbstractBody, cbody::Abstra
         if diff_body == :parent
             cstate = deepcopy(cbody.state)
             pstate = deepcopy(pbody.state)
-            pstate.xk[1] = x2
-            pstate.qk[1] = UnitQuaternion(q2...)
+            pstate.x2[1] = x2
+            pstate.q2[1] = UnitQuaternion(q2...)
         elseif diff_body == :child
             cstate = deepcopy(cbody.state)
-            cstate.xk[1] = x2
-            cstate.qk[1] = UnitQuaternion(q2...)
+            cstate.x2[1] = x2
+            cstate.q2[1] = UnitQuaternion(q2...)
             if typeof(pbody) <: Origin
                 return evalf(joint, cstate, Δt)
             else
@@ -79,12 +79,12 @@ function finitediff_pos(joint::AbstractJoint, pbody::AbstractBody, cbody::Abstra
     end
 
     if diff_body == :child
-        x2 = cbody.state.xk[1]
-        q2 = cbody.state.qk[1]
+        x2 = cbody.state.x2[1]
+        q2 = cbody.state.q2[1]
         x = [x2; [q2.w, q2.x, q2.y, q2.z]]
     elseif diff_body == :parent
-        x2 = pbody.state.xk[1]
-        q2 = pbody.state.qk[1]
+        x2 = pbody.state.x2[1]
+        q2 = pbody.state.q2[1]
         x = [x2; [q2.w, q2.x, q2.y, q2.z]]
     else
         error("invalid diff_body")

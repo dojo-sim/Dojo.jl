@@ -18,7 +18,7 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 Δt_ = 0.01
-mech = getmechanism(:atlas, Δt = Δt_, g = -2.0, cf = 0.8, contact = true, spring = 1000.0, damper = 500.0, model_type = :fast)
+mech = getmechanism(:atlas, Δt = Δt_, g = -2.0, cf = 0.8, contact = true, spring = 100.0, damper = 50.0, model_type = :fast)
 initialize!(mech, :atlas, tran = [0,0,1.1], rot = [0.1,0.05,0])
 
 function controller!(mechanism, k)
@@ -39,9 +39,6 @@ end
 @elapsed storage = simulate!(mech, 2.10, controller!, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
-
-q0 = UnitQuaternion(rand(4)...)
-Vmat() * Lmat(q0)' * vector(q0)
 
 # Set data
 Nb = length(mech.bodies)
@@ -68,7 +65,7 @@ plot(Gray.(abs.(1e10 * fd_solmat)))
 
 fd_sensi = finitediff_sensitivity(mech, data) * attjac
 @test norm(fd_sensi - sensi) / norm(fd_sensi) < 8e-3
-plot(Gray.(1e10 .* sensi))
+plot(Gray.(sensi))
 plot(Gray.(fd_sensi))
 
 

@@ -40,11 +40,11 @@ function transtest3()
     discretizestate!(body1,xa1,qa1,va1,va2,ωa1,ωa2,Δt)
     discretizestate!(body2,xb1,qb1,vb1,vb2,ωb1,ωb2,Δt)
 
-    res = ForwardDiff.jacobian(transfunc3pos, [getxqkvector(body1.state);getxqkvector(body2.state);pa;pb])
+    res = ForwardDiff.jacobian(transfunc3pos, [getxq2vector(body1.state);getxq2vector(body2.state);pa;pb])
     X1 = res[1:3,1:3]
-    Q1 = res[1:3,4:7] * LVᵀmat(getqk(body1.state))
+    Q1 = res[1:3,4:7] * LVᵀmat(getq2(body1.state))
     X2 = res[1:3,8:10]
-    Q2 = res[1:3,11:14] * LVᵀmat(getqk(body2.state))
+    Q2 = res[1:3,11:14] * LVᵀmat(getq2(body2.state))
 
     n11 = norm(X1 - ∂g∂ʳpos(mech, joint1, body1)[1:3,1:3])
     n12 = norm(Q1 - ∂g∂ʳpos(mech, joint1, body1)[1:3,4:6])
@@ -104,11 +104,11 @@ function transtest2()
     discretizestate!(body1,xa1,qa1,va1,va2,ωa1,ωa2,Δt)
     discretizestate!(body2,xb1,qb1,vb1,vb2,ωb1,ωb2,Δt)
 
-    res = ForwardDiff.jacobian(transfunc2pos, [getxqkvector(body1.state);getxqkvector(body2.state);pa;pb;V12[1,:];V12[2,:]])
+    res = ForwardDiff.jacobian(transfunc2pos, [getxq2vector(body1.state);getxq2vector(body2.state);pa;pb;V12[1,:];V12[2,:]])
     X1 = res[1:2,1:3]
-    Q1 = res[1:2,4:7] * LVᵀmat(getqk(body1.state))
+    Q1 = res[1:2,4:7] * LVᵀmat(getq2(body1.state))
     X2 = res[1:2,8:10]
-    Q2 = res[1:2,11:14] * LVᵀmat(getqk(body2.state))
+    Q2 = res[1:2,11:14] * LVᵀmat(getq2(body2.state))
 
     n11 = norm(X1 - ∂g∂ʳpos(mech, joint1, body1)[1:2,1:3])
     n12 = norm(Q1 - ∂g∂ʳpos(mech, joint1, body1)[1:2,4:6])
@@ -168,11 +168,11 @@ function transtest1()
     discretizestate!(body1,xa1,qa1,va1,va2,ωa1,ωa2,Δt)
     discretizestate!(body2,xb1,qb1,vb1,vb2,ωb1,ωb2,Δt)
 
-    res = ForwardDiff.gradient(transfunc1pos, [getxqkvector(body1.state);getxqkvector(body2.state);pa;pb;v])
+    res = ForwardDiff.gradient(transfunc1pos, [getxq2vector(body1.state);getxq2vector(body2.state);pa;pb;v])
     X1 = res[1:3]'
-    Q1 = res[4:7]' * LVᵀmat(getqk(body1.state))
+    Q1 = res[4:7]' * LVᵀmat(getq2(body1.state))
     X2 = res[8:10]'
-    Q2 = res[11:14]' * LVᵀmat(getqk(body2.state))
+    Q2 = res[11:14]' * LVᵀmat(getq2(body2.state))
 
     n11 = norm(X1 - ∂g∂ʳpos(mech, joint1, body1)[1:3]')
     n12 = norm(Q1 - ∂g∂ʳpos(mech, joint1, body1)[4:6]')
@@ -229,11 +229,11 @@ function rottest3()
     discretizestate!(body1,xa1,qa1,va1,va2,ωa1,ωa2,Δt)
     discretizestate!(body2,xb1,qb1,vb1,vb2,ωb1,ωb2,Δt)
 
-    res = ForwardDiff.jacobian(rotfunc3pos, [getxqkvector(body1.state);getxqkvector(body2.state);params(qoffset)])
+    res = ForwardDiff.jacobian(rotfunc3pos, [getxq2vector(body1.state);getxq2vector(body2.state);params(qoffset)])
     X1 = res[1:3,1:3]
-    Q1 = res[1:3,4:7] * LVᵀmat(getqk(body1.state))
+    Q1 = res[1:3,4:7] * LVᵀmat(getq2(body1.state))
     X2 = res[1:3,8:10]
-    Q2 = res[1:3,11:14] * LVᵀmat(getqk(body2.state))
+    Q2 = res[1:3,11:14] * LVᵀmat(getq2(body2.state))
 
     n11 = norm(X1 - ∂g∂ʳpos(mech, joint1, body1)[1:3,1:3])
     n12 = norm(Q1 - ∂g∂ʳpos(mech, joint1, body1)[1:3,4:6])
@@ -292,11 +292,11 @@ function rottest2()
     discretizestate!(body1,xa1,qa1,va1,va2,ωa1,ωa2,Δt)
     discretizestate!(body2,xb1,qb1,vb1,vb2,ωb1,ωb2,Δt)
 
-    res = ForwardDiff.jacobian(rotfunc2pos, [getxqkvector(body1.state);getxqkvector(body2.state);params(qoffset);V12[1,:];V12[2,:]])
+    res = ForwardDiff.jacobian(rotfunc2pos, [getxq2vector(body1.state);getxq2vector(body2.state);params(qoffset);V12[1,:];V12[2,:]])
     X1 = res[1:2,1:3]
-    Q1 = res[1:2,4:7] * LVᵀmat(getqk(body1.state))
+    Q1 = res[1:2,4:7] * LVᵀmat(getq2(body1.state))
     X2 = res[1:2,8:10]
-    Q2 = res[1:2,11:14] * LVᵀmat(getqk(body2.state))
+    Q2 = res[1:2,11:14] * LVᵀmat(getq2(body2.state))
 
     n11 = norm(X1 - ∂g∂ʳpos(mech, joint1, body1)[1:2,1:3])
     n12 = norm(Q1 - ∂g∂ʳpos(mech, joint1, body1)[1:2,4:6])
@@ -355,11 +355,11 @@ function rottest1()
     discretizestate!(body1,xa1,qa1,va1,va2,ωa1,ωa2,Δt)
     discretizestate!(body2,xb1,qb1,vb1,vb2,ωb1,ωb2,Δt)
 
-    res = ForwardDiff.gradient(rotfunc1pos, [getxqkvector(body1.state);getxqkvector(body2.state);params(qoffset);V3])
+    res = ForwardDiff.gradient(rotfunc1pos, [getxq2vector(body1.state);getxq2vector(body2.state);params(qoffset);V3])
     X1 = res[1:3]'
-    Q1 = res[4:7]' * LVᵀmat(getqk(body1.state))
+    Q1 = res[4:7]' * LVᵀmat(getq2(body1.state))
     X2 = res[8:10]'
-    Q2 = res[11:14]' * LVᵀmat(getqk(body2.state))
+    Q2 = res[11:14]' * LVᵀmat(getq2(body2.state))
 
     n11 = norm(X1 - ∂g∂ʳpos(mech, joint1, body1)[1:3]')
     n12 = norm(Q1 - ∂g∂ʳpos(mech, joint1, body1)[4:6]')

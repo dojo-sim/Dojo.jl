@@ -185,8 +185,8 @@ damperforcea(jt0, bodya0, bodyb0, childidb0)
 damperforceb(jt0, bodya0, bodyb0, childidb0)
 damperforceb(jr0, origin0, bodya0, childida0)
 
-x2a0, q2a0 = posargsnext(bodya0.state, Δt0)
-x2b0, q2b0 = posargsnext(bodyb0.state, Δt0)
+x2a0, q2a0 = posargs3(bodya0.state, Δt0)
+x2b0, q2b0 = posargs3(bodyb0.state, Δt0)
 x1a0, v1a0, q1a0, ω1a0 = fullargssol(bodya0.state)
 x1b0, v1b0, q1b0, ω1b0 = fullargssol(bodyb0.state)
 

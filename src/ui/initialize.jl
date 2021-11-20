@@ -4,8 +4,8 @@
 Set the position and orientation of a body.
 """
 function setPosition!(body::Body; x::AbstractVector = SA[0;0;0], q::UnitQuaternion = one(UnitQuaternion))
-    body.state.xc = x
-    body.state.qc = q
+    body.state.x1 = x
+    body.state.q1 = q
     return
 end
 
@@ -19,9 +19,9 @@ function setPosition!(body1::Body, body2::Body;
         Δx::AbstractVector = SA[0;0;0], Δq::UnitQuaternion = one(UnitQuaternion)
     )
 
-    q1 = body1.state.qc
-    q2 = body1.state.qc * Δq
-    x2 = body1.state.xc + vrotate(p1 + Δx, q1) - vrotate(p2, q2)
+    q1 = body1.state.q1
+    q2 = body1.state.q1 * Δq
+    x2 = body1.state.x1 + vrotate(p1 + Δx, q1) - vrotate(p2, q2)
     setPosition!(body2;x = x2,q = q2)
     return
 end
@@ -49,8 +49,8 @@ end
 Set the translational and angular velocity of a body.
 """
 function setVelocity!(body::Body; v::AbstractVector = SA[0;0;0], ω::AbstractVector = SA[0;0;0])
-    body.state.vc = v
-    body.state.ωc = ω
+    body.state.v15 = v
+    body.state.ϕ15 = ω
     return
 end
 
@@ -64,11 +64,11 @@ function setVelocity!(body1::Body, body2::Body;
         Δv::AbstractVector = SA[0;0;0], Δω::AbstractVector = SA[0;0;0]
     )
 
-    q1 = body1.state.qc
-    q2 = body2.state.qc
+    q1 = body1.state.q1
+    q2 = body2.state.q1
     
-    v1 = body1.state.vc
-    ω1 = body1.state.ωc # in local coordinates
+    v1 = body1.state.v15
+    ω1 = body1.state.ϕ15 # in local coordinates
     
     vp1 = v1 + vrotate(cross(ω1,p1),q1)
     ωp1 = vrotate(ω1,q1) # in world coordinates
@@ -93,7 +93,7 @@ function setVelocity!(body1::Origin, body2::Body;
         Δv::AbstractVector = SA[0;0;0], Δω::AbstractVector = SA[0;0;0]
     )
     
-    q2 = body2.state.qc
+    q2 = body2.state.q1
 
     vp2 = Δv
     ωp2 = vrotate(Δω,q2) # in world coordinates
@@ -111,7 +111,7 @@ function setForce!(body::Body;
     )
     # F and p in local coordinates
     τ += torqueFromForce(F, p) # in local coordinates
-    setForce!(body.state, vrotate(F,body.state.qc), τ)
+    setForce!(body.state, vrotate(F,body.state.q1), τ)
     return 
 end
 

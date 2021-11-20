@@ -122,10 +122,10 @@ function ∂F∂z(body::Body{T}, Δt) where T
 
     AvelT = [Z3 -I*body.m] # solving for impulses
 
-    AposR = [-Rmat(ωbar(state.ωc, Δt)*Δt/2)*LVᵀmat(state.qc) -Lmat(state.qc)*derivωbar(state.ωc, Δt)*Δt/2]
+    AposR = [-Rmat(ωbar(state.ϕ15, Δt)*Δt/2)*LVᵀmat(state.q1) -Lmat(state.q1)*derivωbar(state.ϕ15, Δt)*Δt/2]
 
     J = body.J
-    ω1 = state.ωc
+    ω1 = state.ϕ15
     sq1 = sqrt(4 / Δt^2 - ω1' * ω1)
     ω1func = -skewplusdiag(-ω1, sq1) * J + J * ω1 * (ω1' / sq1) - skew(J * ω1)
 
@@ -169,7 +169,7 @@ function ∂F∂fz(body::Body{T}, Δt) where T
     AposR = [I Z43]
 
     J = body.J
-    ω2 = state.ωsol[2]
+    ω2 = state.ϕsol[2]
     sq2 = sqrt(4 / Δt^2 - ω2' * ω2)
     ω2func = skewplusdiag(ω2, sq2) * J - J * ω2 * (ω2' / sq2) - skew(J * ω2)
     AvelR = [Z34 ω2func]

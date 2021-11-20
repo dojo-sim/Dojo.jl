@@ -70,8 +70,8 @@ end
 end
 
 function ∂g∂ʳposa(joint::Translational{T}, statea::State, stateb::State, Δt) where T
-    xa, qa = posargsk(statea)
-    xb, qb = posargsk(stateb)
+    xa, qa = posargs2(statea)
+    xb, qb = posargs2(stateb)
     ∂g∂ʳposa(joint, xa, qa, xb, qb)
 end
 
@@ -86,8 +86,8 @@ function ∂g∂ʳposa(joint::Translational{T}, xa::AbstractVector, qa::UnitQuat
 end
 
 function ∂g∂ʳposb(joint::Translational{T}, statea::State, stateb::State, Δt) where T
-    xa, qa = posargsk(statea)
-    xb, qb = posargsk(stateb)
+    xa, qa = posargs2(statea)
+    xb, qb = posargs2(stateb)
     ∂g∂ʳposb(joint, xa, qa, xb, qb)
 end
 
@@ -108,7 +108,7 @@ function ∂g∂ʳposb(joint::Translational{T}, xa::AbstractVector, qa::UnitQuat
 end
 
 function ∂g∂ʳposb(joint::Translational{T}, stateb::State, Δt) where T
-    xb, qb = posargsk(stateb)
+    xb, qb = posargs2(stateb)
     ∂g∂ʳposb(joint, xb, qb)
 end
 
@@ -128,14 +128,14 @@ end
 ### Forcing
 ## Application of joint forces (for dynamics)
 @inline function applyFτ!(joint::Translational{T}, statea::State, stateb::State, Δt::T, clear::Bool) where T
-    xa, qa = posargsk(statea)
-    xb, qb = posargsk(stateb)
+    xa, qa = posargs2(statea)
+    xb, qb = posargs2(stateb)
 
     Faw, τaa, Fbw, τbb = applyFτ(joint, joint.Fτ, xa, qa, xb, qb)
-    statea.Fk[end] += Faw
-    statea.τk[end] += τaa/2
-    stateb.Fk[end] += Fbw
-    stateb.τk[end] += τbb/2
+    statea.F2[end] += Faw
+    statea.τ2[end] += τaa/2
+    stateb.F2[end] += Fbw
+    stateb.τ2[end] += τbb/2
     clear && (joint.Fτ = szeros(T,3))
     return
 end
@@ -163,11 +163,11 @@ end
 end
 
 @inline function applyFτ!(joint::Translational{T}, stateb::State, Δt::T, clear::Bool) where T
-    xb, qb = posargsk(stateb)
+    xb, qb = posargs2(stateb)
 
     Fbw, τbb = applyFτ(joint, joint.Fτ, xb, qb)
-    stateb.Fk[end] += Fbw
-    stateb.τk[end] += τbb/2
+    stateb.F2[end] += Fbw
+    stateb.τ2[end] += τbb/2
     clear && (joint.Fτ = szeros(T,3))
     return
 end
@@ -193,8 +193,8 @@ end
 # Control derivatives
 @inline function ∂Fτ∂ua(joint::Translational, statea::State, stateb::State, Δt::T) where T
     vertices = joint.vertices
-    xa, qa = posargsk(statea)
-    xb, qb = posargsk(stateb)
+    xa, qa = posargs2(statea)
+    xb, qb = posargs2(stateb)
 
 
     BFa = FiniteDiff.finite_difference_jacobian(F -> applyFτ(joint, F, xa, qa, xb, qb)[1], joint.Fτ)
@@ -204,8 +204,8 @@ end
 end
 @inline function ∂Fτ∂ub(joint::Translational, statea::State, stateb::State, Δt::T) where T
     vertices = joint.vertices
-    xa, qa = posargsk(statea)
-    xb, qb = posargsk(stateb)
+    xa, qa = posargs2(statea)
+    xb, qb = posargs2(stateb)
 
     BFb = FiniteDiff.finite_difference_jacobian(F -> applyFτ(joint, F, xa, qa, xb, qb)[3], joint.Fτ)
     Bτb = 0.5 * FiniteDiff.finite_difference_jacobian(F -> applyFτ(joint, F, xa, qa, xb, qb)[4], joint.Fτ)
@@ -214,7 +214,7 @@ end
 end
 @inline function ∂Fτ∂ub(joint::Translational, stateb::State, Δt::T) where T
     vertices = joint.vertices
-    xb, qb = posargsk(stateb)
+    xb, qb = posargs2(stateb)
 
     BFb = FiniteDiff.finite_difference_jacobian(F -> applyFτ(joint, F, xb, qb)[1], joint.Fτ)
     Bτb = 0.5 * FiniteDiff.finite_difference_jacobian(F -> applyFτ(joint, F, xb, qb)[2], joint.Fτ)
@@ -224,8 +224,8 @@ end
 
 # Position derivatives
 @inline function ∂Fτ∂posa(joint::Translational{T}, statea::State, stateb::State, Δt::T) where T
-    xa, qa = posargsk(statea)
-    xb, qb = posargsk(stateb)
+    xa, qa = posargs2(statea)
+    xb, qb = posargs2(stateb)
     F = joint.Fτ
     vertices = joint.vertices
 
@@ -241,8 +241,8 @@ end
     return FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa
 end
 @inline function ∂Fτ∂posb(joint::Translational{T}, statea::State, stateb::State, Δt::T) where T
-    xa, qa = posargsk(statea)
-    xb, qb = posargsk(stateb)
+    xa, qa = posargs2(statea)
+    xb, qb = posargs2(stateb)
     F = joint.Fτ
     vertices = joint.vertices
 
@@ -258,7 +258,7 @@ end
     return FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb
 end
 @inline function ∂Fτ∂posb(joint::Translational{T}, stateb::State, Δt::T) where T
-    xb, qb = posargsk(stateb)
+    xb, qb = posargs2(stateb)
     F = joint.Fτ
     vertices = joint.vertices
 
@@ -289,18 +289,18 @@ end
 @inline function minimalCoordinates(joint::Translational, body1::Body, body2::Body)
     statea = body1.state
     stateb = body2.state
-    return nullspacemat(joint) * g(joint, statea.xc, statea.qc, stateb.xc, stateb.qc)
+    return nullspacemat(joint) * g(joint, statea.x1, statea.q1, stateb.x1, stateb.q1)
 end
 @inline function minimalCoordinates(joint::Translational, body1::Origin, body2::Body)
     stateb = body2.state
-    return nullspacemat(joint) * g(joint, stateb.xc, stateb.qc)
+    return nullspacemat(joint) * g(joint, stateb.x1, stateb.q1)
 end
 @inline function minimalVelocities(joint::Translational, body1::Body, body2::Body)
     statea = body1.state
     stateb = body2.state
-    return nullspacemat(joint) * (stateb.vc - statea.vc)
+    return nullspacemat(joint) * (stateb.v15 - statea.v15)
 end
 @inline function minimalVelocities(joint::Translational, body1::Origin, body2::Body)
     stateb = body2.state
-    return nullspacemat(joint) * stateb.vc
+    return nullspacemat(joint) * stateb.v15
 end

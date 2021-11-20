@@ -62,7 +62,7 @@ function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:
     imp = ineqc.constraints[1]
     body = getbody(mechanism, ineqc.parentid)
     x, v, q, ω = fullargssol(body.state)
-    x3, q3 = posargsnext(body.state, mechanism.Δt)
+    x3, q3 = posargs3(body.state, mechanism.Δt)
     SVector{1,T}(
         imp.ainv3 * (x3 + vrotate(imp.p,q3) - imp.offset) - ineqc.ssol[2][1],
         )

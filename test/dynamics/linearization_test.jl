@@ -42,8 +42,8 @@ setPosition!(origin,link1,p2 = p2,Δq = UnitQuaternion(RotX(ang01)))
 setPosition!(link1,link2,p1=-p2,p2 = p2,Δq = UnitQuaternion(RotX(ang02)))
 state1 = link1.state
 state2 = link2.state
-q01=[state1.xc-xd[1]; 0;0;0; ConstrainedDynamics.Vmat() * Rotations.params(state1.qc); 0;0;0]
-q02=[state2.xc-xd[2]; 0;0;0; ConstrainedDynamics.Vmat() * Rotations.params(state2.qc); 0;0;0]
+q01=[state1.x1-xd[1]; 0;0;0; ConstrainedDynamics.Vmat() * Rotations.params(state1.q1); 0;0;0]
+q02=[state2.x1-xd[2]; 0;0;0; ConstrainedDynamics.Vmat() * Rotations.params(state2.q1); 0;0;0]
 q0=[q01;q02]
 simulate!(mech,storage,record = true)
 

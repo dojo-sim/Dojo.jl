@@ -13,9 +13,9 @@ function lineSearch!(mechanism::Mechanism, rvio, bvio, opts; warning::Bool = fal
         end
         for body in bodies
             lineStep!(body, getentry(system, body.id), scale, mechanism)
-            # if norm(body.state.ωsol[2]) > 1/mechanism.Δt
-            if norm(body.state.ωsol[2]) > 1.9/mechanism.Δt
-                error("Excessive angular velocity. Body-ID: $(string(body.name)) "*string(body.id)*", ω: "*string(body.state.ωsol[2])*".")
+            # if norm(body.state.ϕsol[2]) > 1/mechanism.Δt
+            if norm(body.state.ϕsol[2]) > 1.9/mechanism.Δt
+                error("Excessive angular velocity. Body-ID: $(string(body.name)) "*string(body.id)*", ω: "*string(body.state.ϕsol[2])*".")
             end
         end
         for ineqc in ineqcs
@@ -38,7 +38,7 @@ end
 
 @inline function lineStep!(body::Body, vector_entry::Entry, scale)
     body.state.vsol[2] = body.state.vsol[1] + 1 / (2^scale) * vector_entry.value[SA[1; 2; 3]]
-    body.state.ωsol[2] = body.state.ωsol[1] + 1 / (2^scale) * vector_entry.value[SA[4; 5; 6]]
+    body.state.ϕsol[2] = body.state.ϕsol[1] + 1 / (2^scale) * vector_entry.value[SA[4; 5; 6]]
     return
 end
 
@@ -49,7 +49,7 @@ end
 
 @inline function lineStep!(body::Body, vector_entry::Entry, scale, mechanism)
     body.state.vsol[2] = body.state.vsol[1] + 1 / (2^scale) * mechanism.α * vector_entry.value[SA[1; 2; 3]]
-    body.state.ωsol[2] = body.state.ωsol[1] + 1 / (2^scale) * mechanism.α * vector_entry.value[SA[4; 5; 6]]
+    body.state.ϕsol[2] = body.state.ϕsol[1] + 1 / (2^scale) * mechanism.α * vector_entry.value[SA[4; 5; 6]]
     return
 end
 

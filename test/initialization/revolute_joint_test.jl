@@ -49,7 +49,7 @@ for i=1:10
     minresult = mod(minimalCoordinates(mech, joint1)[1],2pi)
 
     @test isapprox(norm(minresult - angend), 0.0; atol = 1e-3)
-    @test isapprox(norm(link1.state.xc), 0.0; atol = 1e-3) 
-    @test isapprox(norm(Vmat(link1.state.qc/qend)), 0.0; atol = 1e-3)
+    @test isapprox(norm(link1.state.x1), 0.0; atol = 1e-3) 
+    @test isapprox(norm(Vmat(link1.state.q1/qend)), 0.0; atol = 1e-3)
 end
 

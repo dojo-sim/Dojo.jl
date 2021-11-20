@@ -9,10 +9,10 @@ function step!(mech::Mechanism, x, u;
   
     for body in mech.bodies
         x2, v15, q2, ω15 = unpackdata(data[off+1:end]); off += 13
-        body.state.xc = x2 - v15 * mech.Δt
-        body.state.vc = v15
-        body.state.qc = UnitQuaternion(q2...) * ωbar(-ω15, mech.Δt) * mech.Δt / 2.0
-        body.state.ωc = ω15
+        body.state.x1 = x2 - v15 * mech.Δt
+        body.state.v15 = v15
+        body.state.q1 = UnitQuaternion(q2...) * ωbar(-ω15, mech.Δt) * mech.Δt / 2.0
+        body.state.ϕ15 = ω15
     end
 
     # controller 
@@ -26,11 +26,11 @@ function step!(mech::Mechanism, x, u;
     x_next = []
 
     for body in mech.bodies
-        x3 = body.state.xk[1]
+        x3 = body.state.x2[1]
         v25 = body.state.vsol[2]
-        _q3 = body.state.qk[1]
+        _q3 = body.state.q2[1]
         q3 = [_q3.w; _q3.x; _q3.y; _q3.z]
-        ω25 = body.state.ωsol[2]
+        ω25 = body.state.ϕsol[2]
         push!(x_next, [x3; v25; q3; ω25]...)
     end
 

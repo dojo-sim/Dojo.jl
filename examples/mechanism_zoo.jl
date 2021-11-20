@@ -661,28 +661,28 @@ function initializehopper!(mech::Mechanism{T,Nn,Ne,Nb}; leg_length_nominal=0.5) 
     # origin to body
     setPosition!(mech.origin, mech.bodies[3], Δx=[0.0; 0.0; leg_length_nominal])
     setVelocity!(mech.bodies[3], v = [0.0; 0.0; 0.0], ω = [0.0; 0.0; 0.0])
-    # mech.bodies[3].state.xc
-    # mech.bodies[3].state.vc
-    # mech.bodies[3].state.qc
-    # mech.bodies[3].state.ωc
+    # mech.bodies[3].state.x1
+    # mech.bodies[3].state.v15
+    # mech.bodies[3].state.q1
+    # mech.bodies[3].state.ϕ15
 
     # body to foot
     setPosition!(mech.bodies[3], mech.bodies[4], Δx=[0.0; 0.0; -leg_length_nominal], Δq=UnitQuaternion(RotX(0.0)))
     setVelocity!(mech.bodies[4], v = zeros(3), ω = zeros(3))
-    # mech.bodies[4].state.xc
-    # mech.bodies[4].state.vc
-    # mech.bodies[4].state.qc
-    # mech.bodies[4].state.ωc
+    # mech.bodies[4].state.x1
+    # mech.bodies[4].state.v15
+    # mech.bodies[4].state.q1
+    # mech.bodies[4].state.ϕ15
 end
 
 function initializecartpole!(mech::Mechanism{T,Nn,Ne,Nb}; mode=:down, pendulum_length=1.0) where {T,Nn,Ne,Nb}
     # origin to slider
     setPosition!(mech.origin, mech.bodies[3])
     setVelocity!(mech.bodies[3], v = [0.0; 0.0; 0.0], ω = zeros(3))
-    # mech.bodies[3].state.xc
-    # mech.bodies[3].state.vc
-    # mech.bodies[3].state.qc
-    # mech.bodies[3].state.ωc
+    # mech.bodies[3].state.x1
+    # mech.bodies[3].state.v15
+    # mech.bodies[3].state.q1
+    # mech.bodies[3].state.ϕ15
 
     # slider to pendulum
     if mode == :down
@@ -692,10 +692,10 @@ function initializecartpole!(mech::Mechanism{T,Nn,Ne,Nb}; mode=:down, pendulum_l
         setPosition!(mech.bodies[3], mech.bodies[4], Δx=[0.0; 0.0; 0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
         setVelocity!(mech.bodies[4], v = zeros(3), ω = zeros(3))
     end
-    # mech.bodies[4].state.xc
-    # mech.bodies[4].state.vc
-    # mech.bodies[4].state.qc
-    # mech.bodies[4].state.ωc
+    # mech.bodies[4].state.x1
+    # mech.bodies[4].state.v15
+    # mech.bodies[4].state.q1
+    # mech.bodies[4].state.ϕ15
 end
 
 ## System Inputs 

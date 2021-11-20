@@ -33,11 +33,11 @@ function constraintstep!(mechanism::Mechanism{T,Nn,Ne,Nb},freeids) where {T,Nn,N
 
             # Limit quaternion step to feasible length
             range = offsetrange(i, 3, 7, 2)
-            Δstemp = VLᵀmat(body.state.qk[1]) * stepvec[first(range):(last(range)+1)]
+            Δstemp = VLᵀmat(body.state.q2[1]) * stepvec[first(range):(last(range)+1)]
             if norm(Δstemp) > 1
                 Δstemp = Δstemp/norm(Δstemp)
             end
-            body.state.ωsol[1] = Δstemp
+            body.state.ϕsol[1] = Δstemp
 
     end
 
@@ -64,8 +64,8 @@ function initializeConstraints!(mechanism::Mechanism{T,Nn,Ne,Nb}; fixedids = Int
     for n = Base.OneTo(newtonIter)
 
         for body in freebodies
-            body.state.xk[1] = body.state.xc
-            body.state.qk[1] = body.state.qc
+            body.state.x2[1] = body.state.x1
+            body.state.q2[1] = body.state.q1
         end
 
         constraintstep!(mechanism,freeids)
@@ -75,10 +75,10 @@ function initializeConstraints!(mechanism::Mechanism{T,Nn,Ne,Nb}; fixedids = Int
 
             for body in freebodies
 
-                body.state.xc = body.state.xk[1] + body.state.vsol[1]/(2^(j-1))
+                body.state.x1 = body.state.x2[1] + body.state.vsol[1]/(2^(j-1))
 
-                w = sqrt(1-norm(body.state.ωsol[1]/(2^(j-1)))^2)
-                body.state.qc = body.state.qk[1] * UnitQuaternion(w,body.state.ωsol[1]/(2^(j-1))...,false)
+                w = sqrt(1-norm(body.state.ϕsol[1]/(2^(j-1)))^2)
+                body.state.q1 = body.state.q2[1] * UnitQuaternion(w,body.state.ϕsol[1]/(2^(j-1))...,false)
             end
 
             norm1 = norm(gc(mechanism))

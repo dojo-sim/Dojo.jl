@@ -67,7 +67,7 @@ potentialEnergy(mech, eqc1)
 
 gv = mech.g
 m = body1.m
-x, q = posargsk(body1.state)
+x, q = posargs2(body1.state)
 z = x[3]
 EV = potentialEnergy(mech, body1)
 potentialEnergy(mech, body1) + m * gv * z
@@ -402,8 +402,8 @@ eqc = mech.eqconstraints[2]
 f1 = (zerodimstaticadjoint(∂g∂ʳpos(mech, eqc, mech.bodies[3])) * eqc.λsol[2])[1:3]
 f2 = (zerodimstaticadjoint(∂g∂ʳpos(mech, eqc, mech.bodies[4])) * eqc.λsol[2])[1:3]
 norm(f1 + f2)
-t1 = vrotate((zerodimstaticadjoint(∂g∂ʳpos(mech, eqc, mech.bodies[3])) * eqc.λsol[2])[4:6], mech.bodies[3].state.qk[1])
-t2 = vrotate((zerodimstaticadjoint(∂g∂ʳpos(mech, eqc, mech.bodies[4])) * eqc.λsol[2])[4:6], mech.bodies[4].state.qk[1])
+t1 = vrotate((zerodimstaticadjoint(∂g∂ʳpos(mech, eqc, mech.bodies[3])) * eqc.λsol[2])[4:6], mech.bodies[3].state.q2[1])
+t2 = vrotate((zerodimstaticadjoint(∂g∂ʳpos(mech, eqc, mech.bodies[4])) * eqc.λsol[2])[4:6], mech.bodies[4].state.q2[1])
 norm(t1 + t2)
 t1
 t2
@@ -411,8 +411,8 @@ t2
 bodya.J
 bodya = collect(mech.bodies)[1]
 bodyb = collect(mech.bodies)[2]
-xa, qa = posargsk(bodya.state)
-xb, qb = posargsk(bodyb.state)
+xa, qa = posargs2(bodya.state)
+xb, qb = posargs2(bodyb.state)
 rotation_matrix(qa) * tra2.vertices[1]
 rotation_matrix(qb) * tra2.vertices[2]
 tra2.vertices[1]

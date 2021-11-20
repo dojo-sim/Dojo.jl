@@ -135,8 +135,8 @@ end
     _, _, q1, ω1 = fullargssol(body1.state)
     _, _, q2, ω2 = fullargssol(body2.state)
 
-    x1, q1 = posargsnext(body1.state, Δt)
-    x2, q2 = posargsnext(body2.state, Δt)
+    x1, q1 = posargs3(body1.state, Δt)
+    x2, q2 = posargs3(body2.state, Δt)
 
     dGab = zeros(6,6)
     dGba = zeros(6,6)

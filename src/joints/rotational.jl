@@ -77,8 +77,8 @@ end
 ## Application of joint forces (for dynamics)
 @inline function applyFτ!(joint::Rotational{T}, statea::State, stateb::State, Δt::T, clear::Bool) where T
     τ = joint.Fτ
-    _, qa = posargsk(statea)
-    _, qb = posargsk(stateb)
+    _, qa = posargs2(statea)
+    _, qb = posargs2(stateb)
 
     τa = vrotate(-τ, qa) # in world coordinates
     τb = -τa # in world coordinates
@@ -86,8 +86,8 @@ end
     τa = vrotate(τa,inv(qa)) # in local coordinates
     τb = vrotate(τb,inv(qb)) # in local coordinates
 
-    statea.τk[end] += τa
-    stateb.τk[end] += τb
+    statea.τ2[end] += τa
+    stateb.τ2[end] += τb
     clear && (joint.Fτ = szeros(T,3))
     return
 end
@@ -95,12 +95,12 @@ end
 # for joints with origin as parent, torque is computed in child frame
 @inline function applyFτ!(joint::Rotational{T}, stateb::State, Δt::T, clear::Bool) where T
     τ = joint.Fτ
-    _, qb = posargsk(stateb)
+    _, qb = posargs2(stateb)
 
     τb = τ
     τa = vrotate(-τb, qb) # from b frame to world coordinates
 
-    stateb.τk[end] += τb
+    stateb.τ2[end] += τb
     clear && (joint.Fτ = szeros(T,3))
     return
 end
@@ -114,8 +114,8 @@ end
     return [BFa; Bτa]
 end
 @inline function ∂Fτ∂ub(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
-    _, qa = posargsk(statea)
-    _, qb = posargsk(stateb)
+    _, qa = posargs2(statea)
+    _, qb = posargs2(stateb)
     qbinvqa = qb \ qa
 
     BFb = (szeros(T, 3, 3))
@@ -124,7 +124,7 @@ end
     return [BFb; Bτb]
 end
 @inline function ∂Fτ∂ub(joint::Rotational{T}, stateb::State, Δt::T) where T
-    _, qb = posargsk(stateb)
+    _, qb = posargs2(stateb)
 
     BFb = (szeros(T, 3, 3))
     Bτb = I(3) # VLᵀmat(qb) * RVᵀmat(qb)
@@ -134,8 +134,8 @@ end
 
 # Position derivatives
 @inline function ∂Fτ∂posa(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
-    _, qa = posargsk(statea)
-    _, qb = posargsk(stateb)
+    _, qa = posargs2(statea)
+    _, qb = posargs2(stateb)
     τ = joint.Fτ
 
     FaXa = szeros(T,3,3)
@@ -150,8 +150,8 @@ end
     return FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa
 end
 @inline function ∂Fτ∂posb(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
-    _, qa = posargsk(statea)
-    _, qb = posargsk(stateb)
+    _, qa = posargs2(statea)
+    _, qb = posargs2(stateb)
     τ = joint.Fτ
 
     FaXb = szeros(T,3,3)
@@ -166,7 +166,7 @@ end
     return FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb
 end
 @inline function ∂Fτ∂posb(joint::Rotational{T}, stateb::State, Δt::T) where T
-    _, qb = posargsk(stateb)
+    _, qb = posargs2(stateb)
     τ = joint.Fτ
 
     FaXb = szeros(T,3,3)
@@ -198,12 +198,12 @@ end
 end
 @inline function getVelocityDelta(joint::Rotational, body1::Body, body2::Body, ω::SVector)
     ω = zerodimstaticadjoint(nullspacemat(joint)) * ω
-    Δω = vrotate(ω, inv(body2.state.qc)*body1.state.qc) # in body2 frame
+    Δω = vrotate(ω, inv(body2.state.q1)*body1.state.q1) # in body2 frame
     return Δω
 end
 @inline function getVelocityDelta(joint::Rotational, body1::Origin, body2::Body, ω::SVector)
     ω = zerodimstaticadjoint(nullspacemat(joint)) * ω
-    Δω = vrotate(ω, inv(body2.state.qc)) # in body2 frame
+    Δω = vrotate(ω, inv(body2.state.q1)) # in body2 frame
     return Δω
 end
 
@@ -211,22 +211,22 @@ end
 @inline function minimalCoordinates(joint::Rotational, body1::Body, body2::Body)
     statea = body1.state
     stateb = body2.state
-    # q = g(joint, statea.xc, statea.qc, stateb.xc, stateb.qc)
-    q = statea.qc \ stateb.qc / joint.qoffset
+    # q = g(joint, statea.x1, statea.q1, stateb.x1, stateb.q1)
+    q = statea.q1 \ stateb.q1 / joint.qoffset
     return nullspacemat(joint) * rotation_vector(q)
 end
 @inline function minimalCoordinates(joint::Rotational, body1::Origin, body2::Body)
     stateb = body2.state
-    # q = g(joint, stateb.xc, stateb.qc)
-    q = stateb.qc / joint.qoffset
+    # q = g(joint, stateb.x1, stateb.q1)
+    q = stateb.q1 / joint.qoffset
     return nullspacemat(joint) * rotation_vector(q)
 end
 @inline function minimalVelocities(joint::Rotational, body1::Body, body2::Body)
     statea = body1.state
     stateb = body2.state
-    return nullspacemat(joint) * (vrotate(stateb.ωc,statea.qc\stateb.qc) - statea.ωc) # in body1's frame
+    return nullspacemat(joint) * (vrotate(stateb.ϕ15,statea.q1\stateb.q1) - statea.ϕ15) # in body1's frame
 end
 @inline function minimalVelocities(joint::Rotational, body1::Origin, body2::Body)
     stateb = body2.state
-    return nullspacemat(joint) * vrotate(stateb.ωc,stateb.qc) # in body1's frame
+    return nullspacemat(joint) * vrotate(stateb.ϕ15,stateb.q1) # in body1's frame
 end
