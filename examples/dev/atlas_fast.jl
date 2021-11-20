@@ -40,6 +40,7 @@ end
 visualize(mech, storage, vis = vis)
 
 
+
 # Set data
 Nb = length(mech.bodies)
 data = getdata(mech)
