@@ -24,7 +24,7 @@ g(bound::Bound, body::Body, Δt) = g(bound, body.state, Δt)
 end
 
 # Wrappers 2
-∂g∂ʳpos(bound::Bound, state::State, Δt) = ∂g∂ʳpos(bound, posargs2(state)...)
+∂g∂ʳpos(bound::Bound, state::State, Δt) = ∂g∂ʳpos(bound, posargs3(state, Δt)...)
 
 # Derivatives accounting for quaternion specialness
 @inline function ∂g∂ʳpos(bound::Bound, x::AbstractVector, q::UnitQuaternion)
@@ -53,4 +53,3 @@ end
 
     return [V Ω]
 end
-

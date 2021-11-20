@@ -56,17 +56,17 @@ fd_datamat = finitediff_data_matrix(mech, data, sol) * attjac
 plot(Gray.(abs.(datamat)))
 plot(Gray.(abs.(fd_datamat)))
 
-norm((datamat + fd_datamat)[1:5,:], Inf)
-norm((datamat + fd_datamat)[6:11,:], Inf)
-norm((datamat + fd_datamat)[6:11,1:6], Inf)
-norm((datamat + fd_datamat)[6:11,7:9], Inf)
-norm((datamat + fd_datamat)[6:11,10:13], Inf)
-
-norm((datamat + fd_datamat)[9:11,7:9], Inf)
-
-- fd_datamat[9:11,7:9]
-datamat[9:11,7:9]
-(fd_datamat + datamat)[9:11,7:9]
+# norm((datamat + fd_datamat)[1:5,:], Inf)
+# norm((datamat + fd_datamat)[6:11,:], Inf)
+# norm((datamat + fd_datamat)[6:11,1:6], Inf)
+# norm((datamat + fd_datamat)[6:11,7:9], Inf)
+# norm((datamat + fd_datamat)[6:11,10:13], Inf)
+#
+# norm((datamat + fd_datamat)[9:11,7:9], Inf)
+#
+# - fd_datamat[9:11,7:9]
+# datamat[9:11,7:9]
+# (fd_datamat + datamat)[9:11,7:9]
 
 
 
