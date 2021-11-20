@@ -21,15 +21,15 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 include(joinpath(module_dir(), "examples", "dev", "fd_tools.jl"))
 include(joinpath(module_dir(), "examples", "dev", "trajectory_optimization", "utils.jl"))
 
-# System 
-gravity = -9.81 
+# System
+gravity = -9.81
 Δt = 0.1
-mech = getcartpole(Δt=Δt, g=gravity) 
+mech = getcartpole(Δt=Δt, g=gravity)
 
 initializecartpole!(mech)
 
 
-# controller 
+# controller
 function controller!(mech, k)
     j1 = geteqconstraint(mech, mech.eqconstraints[1].id)
     j2 = geteqconstraint(mech, mech.eqconstraints[2].id)
@@ -41,7 +41,7 @@ function controller!(mech, k)
     setForce!(mech, j2, SA[u2])
 
     return
-end 
+end
 
 # simulate
 storage = simulate!(mech, mech.Δt, controller!, record = true, verbose=true, solver = :mehrotra!)
@@ -49,42 +49,42 @@ storage = simulate!(mech, mech.Δt, controller!, record = true, verbose=true, so
 # visualize
 visualize(mech, storage, vis = vis)
 
-## state space 
-n = 13 * 2 
+## state space
+n = 13 * 2
 m = 1
 
 function cartpole_initial_state(;pendulum_length=1.0)
     # initial state
-    x1b1 = [0.0; 0.0; 0.0] 
-    v1b1 = [0.0; 0.0; 0.0] 
+    x1b1 = [0.0; 0.0; 0.0]
+    v1b1 = [0.0; 0.0; 0.0]
     q1b1 = [1.0; 0.0; 0.0; 0.0]
-    ω1b1 = [0.0; 0.0; 0.0] 
+    ω1b1 = [0.0; 0.0; 0.0]
     z1b1 = [x1b1; v1b1; q1b1; ω1b1]
 
-    x1b2 = [0.0; 0.0; -0.5 * pendulum_length] 
-    v1b2 = [0.0; 0.0; 0.0] 
+    x1b2 = [0.0; 0.0; -0.5 * pendulum_length]
+    v1b2 = [0.0; 0.0; 0.0]
     q1b2 = [1.0; 0.0; 0.0; 0.0]
-    ω1b2 = [0.0; 0.0; 0.0] 
+    ω1b2 = [0.0; 0.0; 0.0]
     z1b2 = [x1b2; v1b2; q1b2; ω1b2]
 
-    z1 = [z1b1; z1b2] 
+    z1 = [z1b1; z1b2]
 end
 
 function cartpole_goal_state(;pendulum_length=1.0)
-    # target state 
+    # target state
     xTb1 = [0.0; 0.0; 0.0]
-    vTb1 = [0.0; 0.0; 0.0] 
+    vTb1 = [0.0; 0.0; 0.0]
     qTb1 = [1.0; 0.0; 0.0; 0.0]
     ωTb1 = [0.0; 0.0; 0.0]
     zTb1 = [xTb1; vTb1; qTb1; ωTb1]
 
     xTb2 = [0.0; 0.0; 0.5 * pendulum_length]
-    vTb2 = [0.0; 0.0; 0.0] 
+    vTb2 = [0.0; 0.0; 0.0]
     qTb2 = [0.0; 1.0; 0.0; 0.0]
     ωTb2 = [0.0; 0.0; 0.0]
     zTb2 = [xTb2; vTb2; qTb2; ωTb2]
 
-    zT = [zTb1; zTb2] 
+    zT = [zTb1; zTb2]
 end
 
 z1 = cartpole_initial_state()
@@ -93,9 +93,9 @@ zT = cartpole_goal_state()
 u_control = 0.0
 z = [copy(z1)]
 for t = 1:5
-    znext = step!(mech, z[end], [u_control], control_inputs=cartpole_inputs!) 
+    znext = step!(mech, z[end], [u_control], control_inputs=cartpole_inputs!)
     push!(z, znext)
-end 
+end
 
 using Colors
 using GeometryBasics
@@ -105,7 +105,8 @@ using Symbolics
 using Random
 
 ## get motion_planning.jl and set path
-path_mp = "/home/taylor/Research/motion_planning"
+# path_mp = "/home/taylor/Research/motion_planning"
+path_mp = joinpath(module_dir(), "..", "motion_planning")
 include(joinpath(path_mp, "src/utils.jl"))
 include(joinpath(path_mp, "src/time.jl"))
 include(joinpath(path_mp, "src/model.jl"))
@@ -183,27 +184,20 @@ function g(obj::StageCosts, x, u, t)
 end
 
 # Problem
-prob = problem_data(model, obj, copy(x̄), copy(ū), w, h, T, 
+prob = problem_data(model, obj, copy(x̄), copy(ū), w, h, T,
     analytical_dynamics_derivatives = true);
 
 step!(mech, z1, ū[1], control_inputs=cartpole_inputs!)
 step_grad_x!(mech, z1, ū[1], control_inputs=cartpole_inputs!)
 step_grad_u!(mech, z1, ū[1], control_inputs=cartpole_inputs!)
-    
-    
+
+
 # Solve
 @time ddp_solve!(prob,
     max_iter = 100, verbose = true, linesearch = :armijo)
 
 x̄, ū = nominal_trajectory(prob)
 
-storage = generate_storage(mech, x̄) 
+storage = generate_storage(mech, x̄)
 
 visualize(mech, storage, vis = vis)
-
-
-
-
-
-
-

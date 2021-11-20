@@ -272,7 +272,8 @@ using Symbolics
 using Random
 
 ## get motion_planning.jl and set path
-path_mp = "/home/taylor/Research/motion_planning"
+# path_mp = "/home/taylor/Research/motion_planning"
+path_mp = joinpath(module_dir(), "..", "motion_planning")
 include(joinpath(path_mp, "src/utils.jl"))
 include(joinpath(path_mp, "src/time.jl"))
 include(joinpath(path_mp, "src/model.jl"))

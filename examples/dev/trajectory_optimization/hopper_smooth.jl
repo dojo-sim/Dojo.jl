@@ -2,24 +2,42 @@
 function module_dir()
     return joinpath(@__DIR__, "..", "..", "..")
 end
-# module_dir
-# # Activate package
-# using Pkg
-# Pkg.activate(module_dir())
+# Activate package
+using Pkg
+Pkg.activate(module_dir())
 
 # Load packages
-using Plots
-using Random
 using MeshCat
+using Colors
+using GeometryBasics
+using Rotations
+using Parameters
+using Symbolics
+using Random
+using LinearAlgebra
+using ForwardDiff
 
 # Open visualizer
 vis = Visualizer()
 open(vis)
 
+## get motion_planning.jl and set path
+# path_mp = "/home/taylor/Research/motion_planning"
+path_mp = joinpath(module_dir(), "..", "motion_planning")
+include(joinpath(path_mp, "src/utils.jl"))
+include(joinpath(path_mp, "src/time.jl"))
+include(joinpath(path_mp, "src/model.jl"))
+include(joinpath(path_mp, "src/integration.jl"))
+include(joinpath(path_mp, "src/objective.jl"))
+include(joinpath(path_mp, "src/constraints.jl"))
+# differential dynamic programming
+include(joinpath(path_mp, "src/differential_dynamic_programming/ddp.jl"))
+
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 include(joinpath(module_dir(), "examples", "dev", "fd_tools.jl"))
 include(joinpath(module_dir(), "examples", "dev", "trajectory_optimization", "utils.jl"))
+
 
 # System
 gravity = -9.81
@@ -68,27 +86,8 @@ for t = 1:5
     push!(z, znext)
 end
 
-using Colors
-using GeometryBasics
-using Rotations
-using Parameters
-using Symbolics
-using Random
 
-## get motion_planning.jl and set path
-# path_mp = "/home/taylor/Research/motion_planning"
-path_mp = joinpath(module_dir(), "..", "motion_planning")
-include(joinpath(path_mp, "src/utils.jl"))
-include(joinpath(path_mp, "src/time.jl"))
-include(joinpath(path_mp, "src/model.jl"))
-include(joinpath(path_mp, "src/integration.jl"))
-include(joinpath(path_mp, "src/objective.jl"))
-include(joinpath(path_mp, "src/constraints.jl"))
-
-# differential dynamic programming
-include(joinpath(path_mp, "src/differential_dynamic_programming/ddp.jl"))
-
-using Random, LinearAlgebra, ForwardDiff
+# Set random seed
 Random.seed!(0)
 
 # Model
@@ -113,14 +112,14 @@ function fdx(model::HopperMax{Midpoint, FixedTime}, x, u, w, h, t)
 	# return fdjac(w -> step!(mech, w[1:(end-model.m)], w[(end-model.m+1):end],
     #     btol=grad_btol, undercut=grad_undercut, control_inputs=hopper_inputs!),
     #     [x; u])[:, 1:(end-model.m)]
-    step_grad_x!(model.mech, x, u, control_inputs=hopper_inputs!)
+    step_grad_x!(model.mech, x, u, control_inputs=hopper_inputs!, btol = 1e-4)
 end
 
 function fdu(model::HopperMax{Midpoint, FixedTime}, x, u, w, h, t)
 	# return fdjac(w -> step!(mech, w[1:(end-model.m)], w[(end-model.m+1):end],
     #     btol=grad_btol, undercut=grad_undercut, control_inputs=hopper_inputs!),
     #     [x; u])[:, (end-model.m+1):end]
-    return step_grad_u!(model.mech, x, u, control_inputs=hopper_inputs!)
+    return step_grad_u!(model.mech, x, u, control_inputs=hopper_inputs!, btol = 1e-4)
 end
 
 n, m, d = 26, 3, 0

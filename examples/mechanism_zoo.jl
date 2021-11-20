@@ -423,8 +423,8 @@ function gethopper(; Δt::T = 0.05, g::T = -9.81) where {T}
     leg_length_nominal = 0.5
     body_radius = 0.1
     foot_radius = 0.05
-    body_mass = 1.0 
-    foot_mass = 0.1 
+    body_mass = 1.0
+    foot_mass = 0.1
 
     # Links
     origin = Origin{Float64}()
@@ -437,7 +437,7 @@ function gethopper(; Δt::T = 0.05, g::T = -9.81) where {T}
     joint_body_foot = EqualityConstraint(Prismatic(body, foot, leg_axis; p1=szeros(Float64, 3), p2=szeros(Float64, 3), damper=0.1) )
     eqcs = [joint_origin_body, joint_body_foot]
 
-    # Contact 
+    # Contact
     contact_normal = [0.0; 0.0; 1.0]
     friction_coefficient = 0.5
     contineqcs = contactconstraint(foot, contact_normal, friction_coefficient, p = [0.0; 0.0; 0.0])
@@ -456,8 +456,8 @@ function getcartpole(; Δt::T = 0.1, g::T = -9.81) where {T}
     slider_length = 1.0
     pendulum_length = 1.0
     width, depth, height = 0.1, 0.1, 0.1
-    slider_mass = 1.0 
-    pendulum_mass = 1.0 
+    slider_mass = 1.0
+    pendulum_mass = 1.0
 
     # Links
     origin = Origin{Float64}()
@@ -698,7 +698,7 @@ function initializecartpole!(mech::Mechanism{T,Nn,Ne,Nb}; mode=:down, pendulum_l
     # mech.bodies[4].state.ϕ15
 end
 
-## System Inputs 
+## System Inputs
 function hopper_inputs!(mech, k, u)
     j1 = geteqconstraint(mech, mech.eqconstraints[1].id)
     j2 = geteqconstraint(mech, mech.eqconstraints[2].id)
@@ -709,12 +709,11 @@ function hopper_inputs!(mech, k, u)
     return
 end
 
-function cartpole_inputs!(mech, k, u) 
-    # actuate slider 
+function cartpole_inputs!(mech, k, u)
+    # actuate slider
     j1 = geteqconstraint(mech, mech.eqconstraints[1].id)
     # j2 = geteqconstraint(mech, mech.eqconstraints[2].id)
 
     setForce!(mech, j1, SVector{1}(u[1]))
     # setForce!(mech, j2, SA[u2])
 end
-    
