@@ -10,6 +10,7 @@ using Colors: RGBA, RGB
 using LightXML
 using SparseArrays
 using Parameters
+using Test
 
 using Plots
 using Random
