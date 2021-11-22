@@ -45,7 +45,7 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
         eval(solver)(mechanism, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter, warning = debug, verbose = verbose,
             opts=InteriorPointOptions(rtol=ϵ, max_iter=newtonIter, btol=btol, undercut=undercut, verbose=verbose))
         record && saveToStorage!(mechanism, storage, k)
-        foreach(updatestate!, bodies, Δt)
+        (k != steps[end]) && foreach(updatestate!, bodies, Δt)
     end
     record ? (return storage) : (return)
 end
@@ -72,7 +72,7 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
             opts=InteriorPointOptions(rtol=ϵ, max_iter=newtonIter, btol=btol, undercut=undercut, verbose=verbose))
 
         record && saveToStorage!(mechanism, storage, k)
-        foreach(updatestate!, bodies, Δt)
+        (k != steps[end]) && foreach(updatestate!, bodies, Δt)
     end
     record ? (return storage) : (return)
 end
@@ -93,7 +93,7 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
         eval(solver)(mechanism, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter, warning = debug, verbose = verbose,
             opts=InteriorPointOptions(rtol=ϵ, max_iter=newtonIter, btol=btol, undercut=undercut, verbose=verbose))
             # (k != steps[end]) && foreach(updatestate!, bodies, Δt)
-        foreach(updatestate!, bodies, Δt)
+        (k != steps[end]) && foreach(updatestate!, bodies, Δt)
     end
     record ? (return storage) : (return)
 end
