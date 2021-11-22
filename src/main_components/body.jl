@@ -112,6 +112,8 @@ Base.zero(::Body{T}) where T = szeros(T,6,6)
 # Derivatives for linearizations
 function ∂F∂z(body::Body{T}, Δt::T; attjac::Bool = true) where T
     state = body.state
+    q2 = state.q2[1]
+    ϕ25 = state.ϕsol[2]
     Z3 = szeros(T,3,3)
     Z34 = szeros(T,3,4)
     ZT = attjac ? szeros(T,6,6) : szeros(T,6,7)
@@ -120,15 +122,14 @@ function ∂F∂z(body::Body{T}, Δt::T; attjac::Bool = true) where T
     AposT = [-I Z3]
     AvelT = [Z3 -I*body.m] # solving for impulses
 
-    AposR = attjac ?
-        [-Rmat(ωbar(state.ϕ15, Δt)*Δt/2)*LVᵀmat(state.q1) -Lmat(state.q1)*derivωbar(state.ϕ15, Δt)*Δt/2] :
-        [-Rmat(ωbar(state.ϕ15, Δt)*Δt/2)                  -Lmat(state.q1)*derivωbar(state.ϕ15, Δt)*Δt/2]
+    # AposR = [-∂integrator∂q(q2, ϕ25, Δt, attjac = attjac) -∂integrator∂ϕ(q2, ϕ25, Δt)]
+    AposR = [-∂integrator∂q(q2, ϕ25, Δt, attjac = attjac) szeros(4,3)]
 
     J = body.J
-    ω1 = state.ϕ15
-    sq1 = sqrt(4 / Δt^2 - ω1' * ω1)
-    ω1func = -skewplusdiag(-ω1, sq1) * J + J * ω1 * (ω1' / sq1) - skew(J * ω1)
-    AvelR = attjac ? [Z3 ω1func*Δt] : [Z34 ω1func*Δt] # solving for impulses
+    ϕ15 = state.ϕ15
+    sq15 = sqrt(4 / Δt^2 - ϕ15' * ϕ15)
+    ϕ15func = -skewplusdiag(-ϕ15, sq15) * J + J * ϕ15 * (ϕ15' / sq15) - skew(J * ϕ15)
+    AvelR = attjac ? [Z3 ϕ15func*Δt] : [Z34 ϕ15func*Δt] # solving for impulses
 
     return [[AposT;AvelT] ZT;
              ZR [AposR;AvelR]]
