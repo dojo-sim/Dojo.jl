@@ -202,7 +202,6 @@ function spring_damper_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,
             parentind = parentid - Ne
             pbody = getbody(mechanism, parentid)
             pstate = pbody.state
-            # pcol12 = offsetrange(parentind,12)
             pcol13 = offsetrange(parentind,13)
 
             for (i, childid) in enumerate(eqc.childids)
@@ -210,18 +209,8 @@ function spring_damper_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,
                 cbody = getbody(mechanism, childid)
                 cstate = cbody.state
                 joint = eqc.constraints[i]
-                # ccol12 = offsetrange(childind,12)
                 ccol13 = offsetrange(childind,13)
                 λ = getλJoint(eqc, i)
-
-                # n1 = 1
-                # n2 = 0
-                # for j=1:i-1
-                #     n1 += length(eqc.constraints[j])
-                #     n2 += length(eqc.constraints[j])
-                # end
-                # n2 += length(joint)
-                # λ = eqc.λsol[2][n1:n2]
 
                 Aaa = zeros(T,13,13)
                 Aab = zeros(T,13,13)
@@ -252,18 +241,8 @@ function spring_damper_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,
                 cbody = getbody(mechanism, childid)
                 cstate = cbody.state
                 joint = eqc.constraints[i]
-                # ccol12 = offsetrange(childind,12)
                 ccol13 = offsetrange(childind,13)
                 λ = getλJoint(eqc, i)
-
-                # n1 = 1
-                # n2 = 0
-                # for i=1:i-1
-                #     n1 += length(eqc.constraints[i])
-                #     n2 += length(eqc.constraints[i])
-                # end
-                # n2 += length(joint)
-                # λ = eqc.λsol[2][n1:n2]
 
                 Abb = zeros(T,13,13)
 
