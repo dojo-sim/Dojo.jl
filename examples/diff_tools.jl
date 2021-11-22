@@ -37,9 +37,9 @@ function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
                 cGlq = A * cQl
 
                 Gl[range, pcol13[1:3]] = pGlx
-                Gl[range, pcol13[7:10]] = pGlq * ∂integrator∂q(pstate.qsol[2], pstate.ϕsol[2], Δt, attjac = false)
+                Gl[range, pcol13[7:10]] = pGlq * ∂integrator∂q(pstate.q2[1], pstate.ϕsol[2], Δt, attjac = false)
                 Gl[range,ccol13[1:3]] = cGlx
-                Gl[range,ccol13[7:10]] = cGlq * ∂integrator∂q(cstate.qsol[2], cstate.ϕsol[2], Δt, attjac = false)
+                Gl[range,ccol13[7:10]] = cGlq * ∂integrator∂q(cstate.q2[1], cstate.ϕsol[2], Δt, attjac = false)
                 ind1 = ind2+1
             end
         else
@@ -59,7 +59,7 @@ function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
                 cGlq = mat * cQl
 
                 Gl[range,ccol13[1:3]] = cGlx
-                Gl[range,ccol13[7:10]] = cGlq * ∂integrator∂q(cstate.qsol[2], cstate.ϕsol[2], Δt, attjac = false)
+                Gl[range,ccol13[7:10]] = cGlq * ∂integrator∂q(cstate.q2[1], cstate.ϕsol[2], Δt, attjac = false)
                 ind1 = ind2+1
             end
         end
