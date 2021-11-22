@@ -150,24 +150,24 @@ function ∂F∂u(body::Body{T}, Δt) where T
 
     return [BposT;BvelT;BposR;BvelR]
 end
-
-mech = getmechanism(:hopper)
-Δt = mech.Δt
-body1 = collect(mech.bodies)[1]
-∂F∂z(body1, Δt)
-∂F∂z(body1, Δt, attjac = true)
-∂F∂z(body1, Δt, attjac = false)
-
-
-A = ones(3,7)
-B = zeros(4,7)
-[A; B]
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
+#
+# mech = getmechanism(:hopper)
+# Δt = mech.Δt
+# body1 = collect(mech.bodies)[1]
+# ∂F∂z(body1, Δt)
+# ∂F∂z(body1, Δt, attjac = true)
+# ∂F∂z(body1, Δt, attjac = false)
+#
+#
+# A = ones(3,7)
+# B = zeros(4,7)
+# [A; B]
+# a = 10
+# a = 10
+# a = 10
+# a = 10
+# a = 10
+# a = 10
 
 function ∂F∂fz(body::Body{T}, Δt) where T
     state = body.state

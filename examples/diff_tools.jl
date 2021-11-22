@@ -257,8 +257,10 @@ function spring_damper_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,
 end
 
 function control_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
-    Fzu = zeros(T,Nb*13,Nb*12)
     Δt = mechanism.Δt
+    Fzu = zeros(T,13Nb,12Nb)
+    # Fzu = zeros(T,13Nb,13Nb)
+
     for eqc in mechanism.eqconstraints
         parentid = eqc.parentid
         for (i,childid) in enumerate(eqc.childids)
@@ -269,8 +271,8 @@ function control_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 pbody = getbody(mechanism, parentid)
                 cbody = getbody(mechanism, childid)
 
-                FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa = ∂Fτ∂posa(joint, pbody.state, cbody.state, mechanism.Δt)
-                FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb = ∂Fτ∂posb(joint, pbody.state, cbody.state, mechanism.Δt)
+                FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa = ∂Fτ∂posa(joint, pbody.state, cbody.state, Δt)
+                FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb = ∂Fτ∂posb(joint, pbody.state, cbody.state, Δt)
 
 
                 xa, qa = posargs2(pbody.state)
@@ -297,16 +299,16 @@ function control_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
             else
                 pbody = mechanism.origin
                 cbody = getbody(mechanism, childid)
-                FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb = ∂Fτ∂posb(joint, cbody.state, mechanism.Δt)
+                FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb = ∂Fτ∂posb(joint, cbody.state, Δt)
 
                 colb6 = offsetrange(childind,6)
                 rowbv = offsetrange(childind,3,13,2)
                 rowbω = offsetrange(childind,3,13,4).+1
 
-                x2, q2 = posargs2(cbody.state)
-                M = [I zeros(3,3); zeros(4,3) LVᵀmat(q2)]
+                xb, qb = posargs2(cbody.state)
+                Mb = [I zeros(3,3); zeros(4,3) LVᵀmat(qb)]
 
-                Fzu[[rowbv; rowbω], colb6] = [FbXb FbQb; τbXb τbQb] * M
+                Fzu[[rowbv; rowbω], colb6] = [FbXb FbQb; τbXb τbQb] * Mb
 
             end
         end
@@ -326,7 +328,6 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
 
     for (i, body) in enumerate(mechanism.bodies)
         col6 = offsetrange(i,6)
-        # col12 = offsetrange(i,12)
         col13 = offsetrange(i,13)
 
         Fzi = ∂F∂z(body, Δt, attjac = false)
@@ -335,8 +336,7 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
         Fz[col13,col13] = Fzi
         Fu[col13,col6] = Fui
     end
-    @show size(Fz)
-    @show size(attitudejacobian(getdata(mechanism), Nb)[1:13Nb,1:12Nb])
+
     Fz = Fz * attitudejacobian(getdata(mechanism), Nb)[1:13Nb,1:12Nb]
     Fz += control_datamat(mechanism)
 
@@ -348,7 +348,7 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
         n2 += controldim(eqc)
 
         parentid = eqc.parentid
-        if parentid !== nothing
+        if parentid != nothing
             parentind = parentid - Ne
             col6 = offsetrange(parentind,6)
             Bcontrol[col6,n1:n2] = ∂Fτ∂ua(mechanism, eqc, getbody(mechanism, parentid))

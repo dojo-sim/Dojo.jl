@@ -1,4 +1,4 @@
-function test_solmat(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, controller::Any=c!(m,k) = nothing,
+function test_solmat(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, controller::Any=(m,k)->nothing,
         Δt::T = 0.01, g::T = -9.81, verbose::Bool = false, kwargs...) where {T}
 
     @testset "solmat: $(string(model))" begin
@@ -25,7 +25,7 @@ function test_solmat(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, controller::An
     return nothing
 end
 
-function test_datamat(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, controller::Any=c!(m,k) = nothing,
+function test_datamat(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, controller::Any=(m,k)->nothing,
         Δt::T = 0.01, g::T = -9.81, verbose::Bool = false, kwargs...) where {T}
 
     @testset "datamat: $(string(model))" begin
@@ -50,7 +50,7 @@ function test_datamat(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, controller::A
     return nothing
 end
 
-function test_sensitivity(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, controller::Any=c!(m,k) = nothing,
+function test_sensitivity(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, controller::Any=(m,k)->nothing,
         Δt::T = 0.01, g::T = -9.81, cf::T = 0.8,
         contact::Bool = true, verbose::Bool = false) where {T}
 
@@ -77,7 +77,6 @@ function test_sensitivity(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, controlle
     end
     return nothing
 end
-
 
 function cont!(mechanism, k; u = 0.0)
     for (i, eqc) in enumerate(mechanism.eqconstraints)
