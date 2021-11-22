@@ -684,25 +684,19 @@ function Fz_indices(Nb::Int)
     return vcat([13*(i-1) .+ [4:6; 11:13] for i = 1:Nb]...)
 end
 
-function datadim(mechanism::Mechanism; quat::Bool = false)
+function datadim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}; quat::Bool = false) where {T,Nn,Ne,Nb,Ni}
     d = 0
-    bodies = mechanism.bodies
-    for body in bodies
-        d += 6 * 2
-        quat && (d += 1)
-    end
-    eqcs = mechanism.eqconstraints
-    for eqc in eqcs
-        d += controldim(eqc)
-    end
+    d += 6Nb
+    quat && (d += Nb)
+    d += controldim(mechanism)
     return d
 end
 
-function soldim(mechanism::Mechanism)
+function soldim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
     d = 0
-    d += 6 * length(mechanism.bodies)
-    d += sum(length.(mechanism.eqconstraints))
-    !isempty(mechanism.ineqconstraints) && (d += sum(length.(mechanism.ineqconstraints)))
+    d += 6Nb
+    d += eqcdim(mechanism)
+    d += ineqcdim(mechanism)
     return d
 end
 
