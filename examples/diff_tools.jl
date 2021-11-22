@@ -68,16 +68,6 @@ function joint_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     return Gl
 end
 
-offsetrange(2,12)
-offsetrange(2,3,12,1)
-offsetrange(2,3,12,2)
-offsetrange(2,3,12,3)
-offsetrange(2,3,12,4)
-a =10
-a =10
-a =10
-a =10
-
 function joint_jacobian_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     Δt = mechanism.Δt
     FfzG = zeros(T,Nb*13,Nb*13)
@@ -97,15 +87,7 @@ function joint_jacobian_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne
                 cstate = cbody.state
                 joint = eqc.constraints[i]
                 ccol13 = offsetrange(childind,13)
-
-                n1 = 1
-                n2 = 0
-                for j=1:i-1
-                    n1 += length(eqc.constraints[j])
-                    n2 += length(eqc.constraints[j])
-                end
-                n2 += length(joint)
-                λ = eqc.λsol[2][n1:n2]
+                λ = getλJoint(eqc, i)
 
                 Aaa = zeros(T,13,13)
                 Aab = zeros(T,13,13)
@@ -116,7 +98,6 @@ function joint_jacobian_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne
                 xb, qb = posargs2(cstate)
 
                 # XX, XQ, QX, QQ = ∂2g∂posaa(joint, posargs2(pstate)..., posargs2(cstate)...)
-                λ = SVector{length(λ)}(λ)
                 if typeof(∂g∂ʳposa(joint, xa, qa, xb, qb)) <: AbstractArray && length(joint) > 0
                     XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposa(joint, w, qa, xb, qb)[1:3, 1:3]) * constraintmat(joint)' * λ, xa)
                     XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposa(joint, xa, UnitQuaternion(w..., false), xb, qb)[1:3, 1:3]) * constraintmat(joint)' * λ, [qa.w; qa.x; qa.y; qa.z])
@@ -183,15 +164,7 @@ function joint_jacobian_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne
                 cstate = cbody.state
                 joint = eqc.constraints[i]
                 ccol13 = offsetrange(childind,13)
-
-                n1 = 1
-                n2 = 0
-                for i=1:i-1
-                    n1 += length(eqc.constraints[i])
-                    n2 += length(eqc.constraints[i])
-                end
-                n2 += length(joint)
-                λ = eqc.λsol[2][n1:n2]
+                λ = getλJoint(eqc, i)
 
                 Abb = zeros(T,13,13)
 
@@ -216,6 +189,17 @@ function joint_jacobian_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne
     end
 
     return FfzG
+end
+
+function getλJoint(eqc::EqualityConstraint{T,N,Nc}, i::Int) where {T,N,Nc}
+    n1 = 1
+    for j = 1:i-1
+        n1 += length(eqc.constraints[j])
+    end
+    n2 = n1 - 1 + length(eqc.constraints[i])
+
+    λi = SVector{n2-n1+1,T}(eqc.λsol[2][n1:n2])
+    return λi
 end
 
 function spring_damper_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
@@ -561,20 +545,21 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     eqcs = mechanism.eqconstraints
     ineqcs = mechanism.ineqconstraints
     eqcids = getfield.(eqcs, :id)
-    nbodies = length(bodies)
 
     resdims = [length(system.vector_entries[i].value) for i=1:Nn]
     eqcdims = length.(eqcs)
     ineqcdims = length.(ineqcs)
-    bodydims = 6 * ones(Int, nbodies)
+    bodydims = 6 * ones(Int, Nb)
     Fz, Fu = data_lineardynamics(mechanism, eqcids)
     data = getdata(mechanism)
 
     A = zeros(sum(resdims), datadim(mechanism))
+    @show size(attitudejacobian(data, Nb))
+    @show size(attitudejacobian(data, Nb)[1:13Nb,1:12Nb])
     A[1:sum(eqcdims), 1:12Nb] += joint_datamat(mechanism) * attitudejacobian(data, Nb)[1:13Nb,1:12Nb]
-    A[sum(eqcdims) .+ (1:sum(bodydims)), 1:12Nb] += Fz[Fz_indices(length(bodies)),:]
-    A[sum(eqcdims) .+ (1:sum(bodydims)), 1:12Nb] += joint_jacobian_datamat(mechanism)[Fz_indices(length(bodies)), :] * attitudejacobian(data, Nb)[1:13Nb,1:12Nb]
-    A[sum(eqcdims) .+ (1:sum(bodydims)), 1:12Nb] += spring_damper_datamat(mechanism)[Fz_indices(length(bodies)), :]
+    A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += Fz[Fz_indices(Nb),:]
+    A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += joint_jacobian_datamat(mechanism)[Fz_indices(Nb), :] * attitudejacobian(data, Nb)[1:13Nb,1:12Nb]
+    A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += spring_damper_datamat(mechanism)[Fz_indices(Nb), :]
 
     offr = 0
     offc = 0

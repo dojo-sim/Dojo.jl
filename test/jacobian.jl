@@ -86,6 +86,7 @@ test_solmat(:npendulum, tsim = tsim, ϵ = 1e-8, spring = 1.0, damper = 0.2)
 test_solmat(:nslider,   tsim = tsim, ϵ = 1e-8, spring = 1.0, damper = 0.2)
 test_solmat(:twister,   tsim = tsim, ϵ = 1e-8, spring = 1.0, damper = 0.2)
 
+tsim = 0.1
 test_datamat(:atlas,     tsim = tsim, ϵ = 1e-8)
 test_datamat(:atlas,     tsim = tsim, ϵ = 1e-8, spring = 1e3, damper = 5e2)
 test_datamat(:quadruped, tsim = tsim, ϵ = 1e-8, spring = 1.0, damper = 0.2)
@@ -110,6 +111,7 @@ test_solmat(:npendulum, tsim = tsim, ϵ = 1e-8, spring = 1.0, damper = 0.2)
 test_solmat(:nslider,   tsim = tsim, ϵ = 1e-8, spring = 1.0, damper = 0.2)
 test_solmat(:twister,   tsim = tsim, ϵ = 1e-8, spring = 1.0, damper = 0.2)
 
+tsim = 0.4
 test_datamat(:atlas,     tsim = tsim, ϵ = 1e-7)
 test_datamat(:atlas,     tsim = tsim, ϵ = 1e-6, spring = 1e3, damper = 5e2)
 test_datamat(:quadruped, tsim = tsim, ϵ = 1e-7, spring = 1.0, damper = 0.2)
