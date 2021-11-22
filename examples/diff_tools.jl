@@ -277,7 +277,7 @@ function control_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
 
                 xa, qa = posargs2(pbody.state)
                 Ma = [I zeros(3,3); zeros(4,3) LVᵀmat(qa)]
-                @show size(Ma)
+                # @show size(Ma)
                 xb, qb = posargs2(cbody.state)
                 Mb = [I zeros(3,3); zeros(4,3) LVᵀmat(qb)]
 
