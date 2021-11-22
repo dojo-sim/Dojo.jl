@@ -37,9 +37,9 @@ function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
                 cGlq = A * cQl
 
                 Gl[range, pcol13[1:3]] = pGlx
-                Gl[range, pcol13[7:10]] = pGlq * ∂integrator∂q(pstate.q2[1], pstate.ϕsol[2], Δt, attjac = false)
+                Gl[range, pcol13[7:10]] = pGlq
                 Gl[range,ccol13[1:3]] = cGlx
-                Gl[range,ccol13[7:10]] = cGlq * ∂integrator∂q(cstate.q2[1], cstate.ϕsol[2], Δt, attjac = false)
+                Gl[range,ccol13[7:10]] = cGlq
                 ind1 = ind2+1
             end
         else
@@ -59,7 +59,7 @@ function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
                 cGlq = mat * cQl
 
                 Gl[range,ccol13[1:3]] = cGlx
-                Gl[range,ccol13[7:10]] = cGlq * ∂integrator∂q(cstate.q2[1], cstate.ϕsol[2], Δt, attjac = false)
+                Gl[range,ccol13[7:10]] = cGlq
                 ind1 = ind2+1
             end
         end
@@ -601,13 +601,12 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}; attjac::Bool = true)
     G = attitudejacobian(data, Nb)[1:13Nb,1:12Nb]
     H = integratorjacobian(data, solution, Δt, Nb, neqcs, attjac = attjac)[1:13Nb,1:nic]
 
-    B = joint_constraint_jacobian(mechanism)
+    B = joint_constraint_jacobian(mechanism) * H
     C = Fz + joint_dynamics_jacobian(mechanism) +
         spring_damper_jacobian(mechanism)
     D = contact_dynamics_jacobian(mechanism) * H
     E = contact_constraint_jacobian(mechanism) * H
     if attjac
-        B = B * G
         C = C * G
     end
 
