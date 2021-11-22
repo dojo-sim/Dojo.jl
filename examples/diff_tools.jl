@@ -316,44 +316,28 @@ end
 
 function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,Nn,Ne,Nb}
     Δt = mechanism.Δt
-    bodies = mechanism.bodies
-    eqcs = mechanism.eqconstraints
-
-    nc = 0
-    for eqc in eqcs
-        nc += length(eqc)
-    end
-
-    nu = 0
-    for id in eqcids
-        eqc = geteqconstraint(mechanism, id)
-        nu += controldim(eqc)
-    end
-
-
+    nu = controldim(mechanism)
 
     # get state linearization
-    Fz = zeros(T,Nb*13,Nb*12)
-    Fu = zeros(T,Nb*13,Nb*6)
-    Fλ = zeros(T,Nb*13,nc)
-    # Ffz = zeros(T,Nb*13,Nb*13)
+    Fz = zeros(T,13Nb,13Nb)
+    Fu = zeros(T,13Nb,6Nb)
 
-    Bcontrol = zeros(T,Nb*6,nu)
+    Bcontrol = zeros(T,6Nb,nu)
 
-    for (ind,body) in enumerate(bodies)
-        col6 = offsetrange(ind,6)
-        col12 = offsetrange(ind,12)
-        col13 = offsetrange(ind,13)
+    for (i, body) in enumerate(mechanism.bodies)
+        col6 = offsetrange(i,6)
+        # col12 = offsetrange(i,12)
+        col13 = offsetrange(i,13)
 
-        Fzi = ∂F∂z(body, Δt)
+        Fzi = ∂F∂z(body, Δt, attjac = false)
         Fui = ∂F∂u(body, Δt)
-        # Ffzi, invFfzquati = ∂F∂fz(body, Δt)
 
-        Fz[col13,col12] = Fzi
+        Fz[col13,col13] = Fzi
         Fu[col13,col6] = Fui
-        # Ffz[col13,col13] = Ffzi
     end
-
+    @show size(Fz)
+    @show size(attitudejacobian(getdata(mechanism), Nb)[1:13Nb,1:12Nb])
+    Fz = Fz * attitudejacobian(getdata(mechanism), Nb)[1:13Nb,1:12Nb]
     Fz += control_datamat(mechanism)
 
     n1 = 1
@@ -510,27 +494,25 @@ dG(joint::Joint, x, q, γ, p) = _dG(joint::Joint, x, q, γ, p) * [I zeros(3,3); 
 function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     mechanism = deepcopy(mechanism)
     system = mechanism.system
-    bodies = mechanism.bodies
     eqcs = mechanism.eqconstraints
     ineqcs = mechanism.ineqconstraints
     eqcids = getfield.(eqcs, :id)
 
     resdims = [length(system.vector_entries[i].value) for i=1:Nn]
     eqcdims = length.(eqcs)
-    ineqcdims = length.(ineqcs)
-    bodydims = 6 * ones(Int, Nb)
+    nu = controldim(mechanism)
     Fz, Fu = data_lineardynamics(mechanism, eqcids)
     data = getdata(mechanism)
 
     A = zeros(sum(resdims), datadim(mechanism))
     A[1:sum(eqcdims), 1:12Nb] += joint_datamat(mechanism) * attitudejacobian(data, Nb)[1:13Nb,1:12Nb]
-    A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += Fz[Fz_indices(Nb),:]
+    A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += Fz[Fz_indices(Nb),:]# * attitudejacobian(data, Nb)[1:13Nb,1:12Nb]
     A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += joint_jacobian_datamat(mechanism)[Fz_indices(Nb), :] * attitudejacobian(data, Nb)[1:13Nb,1:12Nb]
     A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += spring_damper_datamat(mechanism)[Fz_indices(Nb), :] * attitudejacobian(data, Nb)[1:13Nb,1:12Nb]
 
     offr = 0
     offc = 0
-    for body in collect(bodies)
+    for body in mechanism.bodies
         for ineqc in ineqcs
 
             if ineqc.parentid == body.id
@@ -562,7 +544,6 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
         offc += 12
     end
 
-    nu = isempty(eqcs) ? 0 : sum(controldim.(eqcs))
     A[sum(eqcdims) .+ (1:6Nb), 12Nb .+ (1:nu)] += Fu[Fz_indices(Nb), :]
 
     offr = 0
@@ -577,9 +558,9 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
         ibody = findfirst(x -> x == body.id, mechanism.bodies.keys)
         bnd_type = typeof(bnd)
         if bnd_type <: ContactBound
-            A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)] = bnd.ainv3
-            A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (7:9)] = bnd.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bnd.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bnd.p))) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)
-            A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (3:4), (ibody-1)*12 .+ (7:9)] = dBω([q3.w, q3.x, q3.y, q3.z], ω2, bnd.p) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2) # ∇q3B 2x3
+            A[sum(eqcdims) + 6Nb + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)] = bnd.ainv3
+            A[sum(eqcdims) + 6Nb + offr + N½ .+ (1:1), (ibody-1)*12 .+ (7:9)] = bnd.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bnd.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bnd.p))) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)
+            A[sum(eqcdims) + 6Nb + offr + N½ .+ (3:4), (ibody-1)*12 .+ (7:9)] = dBω([q3.w, q3.x, q3.y, q3.z], ω2, bnd.p) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2) # ∇q3B 2x3
         elseif bnd_type <: LinearContactBound
             function d(vars)
                 # transforms the velocities of the origin of the link into velocities along all 4 axes of the friction pyramid
@@ -588,12 +569,12 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 Bqmat = Bxmat * ∂vrotate∂q(bnd.p, q) * LVᵀmat(q)
                 return Bqmat * ω2
             end
-            A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)] = bnd.ainv3
-            A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (7:9)] = bnd.ainv3 * ∂vrotate∂q(bnd.p,q3) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)
-            A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (3:6), (ibody-1)*12 .+ (7:9)] = FiniteDiff.finite_difference_jacobian(d, [q3.w, q3.x, q3.y, q3.z]) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)
+            A[sum(eqcdims) + 6Nb + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)] = bnd.ainv3
+            A[sum(eqcdims) + 6Nb + offr + N½ .+ (1:1), (ibody-1)*12 .+ (7:9)] = bnd.ainv3 * ∂vrotate∂q(bnd.p,q3) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)
+            A[sum(eqcdims) + 6Nb + offr + N½ .+ (3:6), (ibody-1)*12 .+ (7:9)] = FiniteDiff.finite_difference_jacobian(d, [q3.w, q3.x, q3.y, q3.z]) * Rmat(ωbar(ω2, Δt)*Δt/2)*LVᵀmat(q2)
         elseif bnd_type <: ImpactBound
-            A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)] = bnd.ainv3
-            A[sum(eqcdims) + sum(bodydims) + offr + N½ .+ (1:1), (ibody-1)*12 .+ (7:9)] = bnd.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bnd.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bnd.p))) * LVᵀmat(q2)
+            A[sum(eqcdims) + 6Nb + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)] = bnd.ainv3
+            A[sum(eqcdims) + 6Nb + offr + N½ .+ (1:1), (ibody-1)*12 .+ (7:9)] = bnd.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bnd.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bnd.p))) * LVᵀmat(q2)
         end
         offr += length(ineqc)
     end
@@ -699,12 +680,11 @@ end
 function getdata(mechanism::Mechanism{T}) where T
     data = Vector{T}()
     for body in mechanism.bodies
-        x2 = body.state.x1
-        v1 = body.state.v15
-        qc = body.state.q1
-        q2 = [qc.w, qc.x, qc.y, qc.z]
-        ω1 = body.state.ϕ15
-        push!(data, [x2; v1; q2; ω1]...)
+        x1 = body.state.x1
+        v15 = body.state.v15
+        q1 = vector(body.state.q1)
+        ϕ15 = body.state.ϕ15
+        push!(data, [x1; v15; q1; ϕ15]...)
     end
     for eqc in mechanism.eqconstraints
         if controldim(eqc) > 0
@@ -883,6 +863,14 @@ end
 function controldim(eqc::EqualityConstraint{T,N,Nc,Cs}; ignore_floating_base::Bool = false) where {T,N,Nc,Cs}
     ignore_floating_base && (N == 0) && return 0
     return 6 - N
+end
+
+function controldim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}; ignore_floating_base::Bool = false) where {T,Nn,Ne,Nb,Ni}
+    nu = 0
+    for eqc in mechanism.eqconstraints
+        nu += controldim(eqc, ignore_floating_base = ignore_floating_base)
+    end
+    return nu
 end
 
 
