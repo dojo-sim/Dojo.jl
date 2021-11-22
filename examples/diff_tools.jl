@@ -373,7 +373,7 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
     return Fz, Fu * Bcontrol
 end
 
-function contact_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
+function contact_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     Δt = mechanism.Δt
     J = zeros(6Nb, 13Nb)
 
@@ -410,6 +410,47 @@ function contact_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     return J
 end
 
+
+function contact_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
+    Δt = mechanism.Δt
+    ineqcs = mechanism.ineqconstraints
+    nineqcs = (length(ineqcs) == 0) ? 0 : sum(length.(ineqcs))
+    J = zeros(nineqcs, 13Nb)
+
+    offr = 0
+    for ineqc in ineqcs
+        bound = ineqc.constraints[1]
+        body = getbody(mechanism, ineqc.parentid)
+        N½ = Int(length(ineqc)/2)
+        x2, v25, q2, ϕ25 = fullargssol(body.state)
+        x2, q2 = posargs2(body.state)
+        x3, q3 = posargs3(body.state, Δt)
+        ibody = findfirst(x -> x == body.id, mechanism.bodies.keys)
+        bound_type = typeof(bound)
+
+        if bound_type <: ContactBound
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  bound.ainv3
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = bound.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bound.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bound.p)))#) * Rmat(ωbar(ϕ25, Δt)*Δt/2)*LVᵀmat(q2)
+            J[offr + N½ .+ (3:4), (ibody-1)*13 .+ (7:10)] = dBω([q3.w, q3.x, q3.y, q3.z], ϕ25, bound.p) #* Rmat(ωbar(ϕ25, Δt)*Δt/2)*LVᵀmat(q2) # ∇q3B 2x3
+        elseif bound_type <: LinearContactBound
+            function d(vars)
+                # transforms the velocities of the origin of the link into velocities along all 4 axes of the friction pyramid
+                q = UnitQuaternion(vars..., false)
+                Bxmat = bound.Bx
+                Bqmat = Bxmat * ∂vrotate∂q(bound.p, q) * LVᵀmat(q)
+                return Bqmat * ϕ25
+            end
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  bound.ainv3
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = bound.ainv3 * ∂vrotate∂q(bound.p,q3)# * Rmat(ωbar(ϕ25, Δt)*Δt/2)*LVᵀmat(q2)
+            J[offr + N½ .+ (3:6), (ibody-1)*13 .+ (7:10)] = FiniteDiff.finite_difference_jacobian(d, [q3.w, q3.x, q3.y, q3.z])# * Rmat(ωbar(ϕ25, Δt)*Δt/2)*LVᵀmat(q2)
+        elseif bound_type <: ImpactBound
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  bound.ainv3
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = bound.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bound.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bound.p)))#) * Rmat(ωbar(ϕ25, Δt)*Δt/2)*LVᵀmat(q2)
+        end
+        offr += length(ineqc)
+    end
+    return J
+end
 
 function dBω(q, ω, p)
     q₁, q₂, q₃, q₄ = q
@@ -548,7 +589,9 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
 
     resdims = [length(system.vector_entries[i].value) for i=1:Nn]
     eqcdims = length.(eqcs)
+    ineqcdims = length.(ineqcs)
     nu = controldim(mechanism)
+    nineqcs = (length(ineqcs) == 0) ? 0 : sum(length.(ineqcs))
 
     Fz, Fu = data_lineardynamics(mechanism, eqcids)
     data = getdata(mechanism)
@@ -560,43 +603,9 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += Fz[Fz_indices(Nb),:] * G
     A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += joint_jacobian_datamat(mechanism)[Fz_indices(Nb), :] * G
     A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += spring_damper_datamat(mechanism)[Fz_indices(Nb), :] * G
-    A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += contact_jacobian(mechanism) * H
+    A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += contact_dynamics_jacobian(mechanism) * H
     A[sum(eqcdims) .+ (1:6Nb), 12Nb .+ (1:nu)] += Fu[Fz_indices(Nb), :]
-
-    A[sum(eqcdims) + 6Nb + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)]
-
-    offr = 0
-    for ineqc in ineqcs
-        bound = ineqc.constraints[1]
-        body = getbody(mechanism, ineqc.parentid)
-        Δt = mechanism.Δt
-        N½ = Int(length(ineqc)/2)
-        x2, v25, q2, ϕ25 = fullargssol(body.state)
-        x2, q2 = posargs2(body.state)
-        x3, q3 = posargs3(body.state, Δt)
-        ibody = findfirst(x -> x == body.id, mechanism.bodies.keys)
-        bound_type = typeof(bound)
-        if bound_type <: ContactBound
-            A[sum(eqcdims) + 6Nb + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)] = bound.ainv3
-            A[sum(eqcdims) + 6Nb + offr + N½ .+ (1:1), (ibody-1)*12 .+ (7:9)] = bound.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bound.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bound.p))) * Rmat(ωbar(ϕ25, Δt)*Δt/2)*LVᵀmat(q2)
-            A[sum(eqcdims) + 6Nb + offr + N½ .+ (3:4), (ibody-1)*12 .+ (7:9)] = dBω([q3.w, q3.x, q3.y, q3.z], ϕ25, bound.p) * Rmat(ωbar(ϕ25, Δt)*Δt/2)*LVᵀmat(q2) # ∇q3B 2x3
-        elseif bound_type <: LinearContactBound
-            function d(vars)
-                # transforms the velocities of the origin of the link into velocities along all 4 axes of the friction pyramid
-                q = UnitQuaternion(vars..., false)
-                Bxmat = bound.Bx
-                Bqmat = Bxmat * ∂vrotate∂q(bound.p, q) * LVᵀmat(q)
-                return Bqmat * ϕ25
-            end
-            A[sum(eqcdims) + 6Nb + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)] = bound.ainv3
-            A[sum(eqcdims) + 6Nb + offr + N½ .+ (1:1), (ibody-1)*12 .+ (7:9)] = bound.ainv3 * ∂vrotate∂q(bound.p,q3) * Rmat(ωbar(ϕ25, Δt)*Δt/2)*LVᵀmat(q2)
-            A[sum(eqcdims) + 6Nb + offr + N½ .+ (3:6), (ibody-1)*12 .+ (7:9)] = FiniteDiff.finite_difference_jacobian(d, [q3.w, q3.x, q3.y, q3.z]) * Rmat(ωbar(ϕ25, Δt)*Δt/2)*LVᵀmat(q2)
-        elseif bound_type <: ImpactBound
-            A[sum(eqcdims) + 6Nb + offr + N½ .+ (1:1), (ibody-1)*12 .+ (1:3)] = bound.ainv3
-            A[sum(eqcdims) + 6Nb + offr + N½ .+ (1:1), (ibody-1)*12 .+ (7:9)] = bound.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bound.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bound.p))) * LVᵀmat(q2)
-        end
-        offr += length(ineqc)
-    end
+    A[sum(eqcdims) + 6Nb .+ (1:nineqcs), 1:12Nb] += contact_constraint_jacobian(mechanism) * H
     return A
 end
 
