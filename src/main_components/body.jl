@@ -167,5 +167,5 @@ function ∂F∂fz(body::Body{T}, Δt) where T
     AvelR = [Z34 ω2func]
 
 
-    return [[AposT;AvelT] Z67;Z76 [AposR;AvelR]], [I Z3 Z34 Z3;Z3 I Z34 Z3;Z3 Z3 VLᵀmat(state.qsol[2]) Z3;Z3 Z3 Z34 I]
+    return [[AposT;AvelT] Z67;Z76 [AposR;AvelR]], [I Z3 Z34 Z3;Z3 I Z34 Z3;Z3 Z3 VLᵀmat(state.q2[1]) Z3;Z3 Z3 Z34 I]
 end
