@@ -2,28 +2,46 @@
 function module_dir()
     return joinpath(@__DIR__, "..", "..", "..")
 end
-# module_dir
-# # Activate package
-# using Pkg
-# Pkg.activate(module_dir())
+# Activate package
+using Pkg
+Pkg.activate(module_dir())
 
 # Load packages
-using Plots
-using Random
 using MeshCat
+using Colors
+using GeometryBasics
+using Rotations
+using Parameters
+using Symbolics
+using Random
+using LinearAlgebra
+using ForwardDiff
 
 # Open visualizer
 vis = Visualizer()
 open(vis)
 
+## get motion_planning.jl and set path
+# path_mp = "/home/taylor/Research/motion_planning"
+path_mp = joinpath(module_dir(), "..", "motion_planning")
+include(joinpath(path_mp, "src/utils.jl"))
+include(joinpath(path_mp, "src/time.jl"))
+include(joinpath(path_mp, "src/model.jl"))
+include(joinpath(path_mp, "src/integration.jl"))
+include(joinpath(path_mp, "src/objective.jl"))
+include(joinpath(path_mp, "src/constraints.jl"))
+# differential dynamic programming
+include(joinpath(path_mp, "src/differential_dynamic_programming/ddp.jl"))
+
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 include(joinpath(module_dir(), "examples", "dev", "trajectory_optimization", "utils.jl"))
 
+
 # System
 gravity = -9.81
 Δt = 0.05
-mech = gethopper(Δt=Δt, g=gravity)
+mech = gethopper(Δt = Δt, g = gravity)
 initializehopper!(mech)
 
 ## state space
@@ -52,7 +70,6 @@ function hopper_offset_state(x_shift, y_shift, z_shift)
     shift = [x_shift; y_shift; z_shift]
     z[1:3] += shift
     z[13 .+ (1:3)] += shift
-
     return z
 end
 
@@ -66,30 +83,12 @@ for t = 1:5
     znext = step!(mech, z[end], u_control, control_inputs=hopper_inputs!)
     push!(z, znext)
 end
+storage = generate_storage(mech, z)
+visualize(mech, storage; vis = vis)
 
-using Colors
-using GeometryBasics
-using Rotations
-using Parameters
-using Symbolics
-using Random
 
-## get motion_planning.jl and set path
-# path_mp = "/home/taylor/Research/motion_planning"
-path_mp = joinpath(module_dir(), "..", "motion_planning")
-include(joinpath(path_mp, "src/utils.jl"))
-include(joinpath(path_mp, "src/time.jl"))
-include(joinpath(path_mp, "src/model.jl"))
-include(joinpath(path_mp, "src/integration.jl"))
-include(joinpath(path_mp, "src/objective.jl"))
-include(joinpath(path_mp, "src/constraints.jl"))
-
-# differential dynamic programming
-include(joinpath(path_mp, "src/differential_dynamic_programming/ddp.jl"))
-
-using Random, LinearAlgebra, ForwardDiff
+# Set random seed
 Random.seed!(0)
-
 # Model
 struct HopperMax{I, T} <: Model{I, T}
     n::Int
@@ -148,7 +147,8 @@ Q = [(t < T ? h * Diagonal([qt1; qt2])
 q = [-2.0 * Q[t] * (t < 11 ? zM : zT) for t = 1:T]
 
 R = [h * Diagonal([0.1; 0.1; 0.01]) for t = 1:T-1]
-r = [zeros(model.m) for t = 1:T-1]
+# r = [zeros(model.m) for t = 1:T-1]
+r = [-2.0 * R[t] * u_control for t = 1:T-1]
 
 obj = StageCosts([QuadraticCost(Q[t], q[t],
 	t < T ? R[t] : nothing, t < T ? r[t] : nothing) for t = 1:T], T)
@@ -194,7 +194,7 @@ prob.m_data;
 prob.m_data.dyn_deriv.fu[4]
 
 # Solve
-@time stats = constrained_ddp_solve!(prob,
+@profiler stats = constrained_ddp_solve!(prob,
     verbose = true,
     grad_tol = 1.0e-3,
 	max_iter = 100,

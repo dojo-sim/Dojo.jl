@@ -28,7 +28,7 @@ Nlink_ = 2
 
 function controller!(mechanism, k)
     for (i,joint) in enumerate(mechanism.eqconstraints)
-        nu = getcontroldim(joint)
+        nu = controldim(joint)
         if 5 >= nu >= 1
             if k ∈ (1:1)
                 u = 0.0e-0 * Δt_ * [1.0; zeros(nu-1)]
@@ -141,7 +141,7 @@ v_ = 0.0*rand(3)
 
 function controller!(mechanism, k)
     for (i,joint) in enumerate(mechanism.eqconstraints)
-        nu = getcontroldim(joint)
+        nu = controldim(joint)
         if nu <= 5
             if k ∈ (10:10 + 100n)
                 u = 1.0 * 3e-2 * Δt_ * [1.0, 0.0, 0.0] #[0.0; 1.0; zeros(nu-2)]

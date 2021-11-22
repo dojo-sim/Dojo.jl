@@ -1,11 +1,11 @@
-function test_solmat(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, Δt::T = 0.01, g::T = -9.81, verbose::Bool = false, kwargs...) where {T}
+function test_solmat(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, ctrl::Any=(m,k)->nothing,
+        Δt::T = 0.01, g::T = -9.81, verbose::Bool = false, kwargs...) where {T}
 
     @testset "solmat: $(string(model))" begin
-        mechanism = getmechanism(model, Δt = Δt, g = g, kwargs...)
+        mechanism = getmechanism(model, Δt = Δt, g = g; kwargs...)
         initialize!(mechanism, model)
 
-        storage = simulate!(mechanism, tsim, record = true, solver = :mehrotra!, verbose = false)
-
+        storage = simulate!(mechanism, tsim, ctrl, record = true, solver = :mehrotra!, verbose = false)
         # Set data
         Nb = length(mechanism.bodies)
         data = getdata(mechanism)
@@ -22,12 +22,13 @@ function test_solmat(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, Δt::T = 0.01,
     return nothing
 end
 
-function test_datamat(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, Δt::T = 0.01, g::T = -9.81, verbose::Bool = false, kwargs...) where {T}
+function test_datamat(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, ctrl::Any=(m,k)->nothing,
+        Δt::T = 0.01, g::T = -9.81, verbose::Bool = false, kwargs...) where {T}
 
     @testset "datamat: $(string(model))" begin
-        mechanism = getmechanism(model, Δt = Δt, g = g, kwargs...)
+        mechanism = getmechanism(model, Δt = Δt, g = g; kwargs...)
         initialize!(mechanism, model)
-        storage = simulate!(mechanism, tsim, record = true, solver = :mehrotra!, verbose = false)
+        storage = simulate!(mechanism, tsim, ctrl, record = true, solver = :mehrotra!, verbose = false)
 
         # Set data
         Nb = length(mechanism.bodies)
@@ -35,8 +36,6 @@ function test_datamat(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, Δt::T = 0.01
         setdata!(mechanism, data)
         sol = getsolution(mechanism)
         attjac = attitudejacobian(data, Nb)
-
-        # @show nu = isempty(mechanism.eqconstraints) ? 0 : sum(getcontroldim.(mechanism.eqconstraints))
 
         # IFT
         datamat = full_data_matrix(mechanism)
@@ -48,13 +47,14 @@ function test_datamat(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, Δt::T = 0.01
     return nothing
 end
 
-function test_sensitivity(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, Δt::T = 0.01, g::T = -9.81, cf::T = 0.8,
+function test_sensitivity(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, ctrl::Any=(m,k)->nothing,
+        Δt::T = 0.01, g::T = -9.81, cf::T = 0.8,
         contact::Bool = true, verbose::Bool = false) where {T}
 
     @testset "sensitivity: $(string(model))" begin
         mechanism = getmechanism(model, Δt = Δt, g = g, cf = cf, contact = contact)
         initialize!(mechanism, model)
-        storage = simulate!(mechanism, tsim, record = true, solver = :mehrotra!, verbose = false)
+        storage = simulate!(mechanism, tsim, ctrl, record = true, solver = :mehrotra!, verbose = false)
 
         # Set data
         Nb = length(mechanism.bodies)
@@ -75,44 +75,63 @@ function test_sensitivity(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, Δt::T = 
     return nothing
 end
 
-# Flying after 0.1 sec simulation
-test_solmat(:atlas, tsim = 0.10, ϵ = 1e-8)
-test_solmat(:quadruped, tsim = 0.10, ϵ = 1e-8)
-test_solmat(:dice, tsim = 0.10, ϵ = 1e-8)
-test_solmat(:snake, tsim = 0.02, ϵ = 1e-8)
-test_solmat(:slider, tsim = 0.10, ϵ = 1e-8)
-test_solmat(:pendulum, tsim = 0.10, ϵ = 1e-8)
-test_solmat(:npendulum, tsim = 0.10, ϵ = 1e-8)
-test_solmat(:nslider, tsim = 0.10, ϵ = 1e-8)
-test_solmat(:twister, tsim = 0.10, ϵ = 1e-8)
+function cont!(mechanism, k; u = 0.1)
+    for (i, eqc) in enumerate(mechanism.eqconstraints)
+        nu = controldim(eqc, ignore_floating_base = false)
+        su = mechanism.Δt * u * sones(nu)
+        setForce!(mechanism, eqc, su)
+    end
+    return
+end
 
-test_datamat(:atlas, tsim = 0.10, ϵ = 1e-8)
-test_datamat(:quadruped, tsim = 0.10, ϵ = 1e-8)
-test_datamat(:dice, tsim = 0.10, ϵ = 1e-8)
-test_datamat(:snake, tsim = 0.10, ϵ = 1e-8)
-test_datamat(:slider, tsim = 0.10, ϵ = 1e-8)
-test_datamat(:pendulum, tsim = 0.10, ϵ = 1e-8)
-test_datamat(:npendulum, tsim = 1.0, ϵ = 1e-6) # always ~1e-8
-test_datamat(:nslider, tsim = 0.10, ϵ = 1e-8)
-test_datamat(:twister, tsim = 0.10, ϵ = 1e-8)
+
+# Flying after 0.1 sec simulation
+tsim = 0.1
+test_solmat(:atlas,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8)
+test_solmat(:atlas,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8)
+test_solmat(:atlas,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1e3, damper = 5e2)
+test_solmat(:quadruped, tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
+test_solmat(:dice,      tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8)
+test_solmat(:snake,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
+test_solmat(:slider,    tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
+test_solmat(:pendulum,  tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
+test_solmat(:npendulum, tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
+test_solmat(:nslider,   tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
+test_solmat(:twister,   tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
+
+tsim = 0.1
+test_datamat(:atlas,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8)
+test_datamat(:atlas,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1e3, damper = 5e2)
+test_datamat(:quadruped, tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
+test_datamat(:dice,      tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8)
+test_datamat(:snake,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
+test_datamat(:slider,    tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
+test_datamat(:pendulum,  tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
+test_datamat(:npendulum, tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7, spring = 1.0, damper = 0.2) # always ~1e-8
+test_datamat(:nslider,   tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
+test_datamat(:twister,   tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
 
 # In contact with the ground after 0.4 sec simulation
-test_solmat(:atlas, tsim = 0.40, ϵ = 1e-8)
-test_solmat(:quadruped, tsim = 0.40, ϵ = 1e-8)
-test_solmat(:dice, tsim = 0.40, ϵ = 1e-8)
-test_solmat(:snake, tsim = 0.40, ϵ = 1e-8)
-test_solmat(:slider, tsim = 0.40, ϵ = 1e-8)
-test_solmat(:pendulum, tsim = 0.40, ϵ = 1e-8)
-test_solmat(:npendulum, tsim = 0.40, ϵ = 1e-8)
-test_solmat(:nslider, tsim = 0.40, ϵ = 1e-8)
-test_solmat(:twister, tsim = 0.40, ϵ = 1e-8)
+tsim = 0.4
+test_solmat(:atlas,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8)
+test_solmat(:atlas,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1e3, damper = 5e2)
+test_solmat(:quadruped, tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
+test_solmat(:dice,      tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8)
+test_solmat(:snake,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
+test_solmat(:slider,    tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
+test_solmat(:pendulum,  tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
+test_solmat(:npendulum, tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
+test_solmat(:nslider,   tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
+test_solmat(:twister,   tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
 
-test_datamat(:atlas, tsim = 0.40, ϵ = 1e-7)
-test_datamat(:quadruped, tsim = 0.40, ϵ = 1e-7)
-test_datamat(:dice, tsim = 0.40, ϵ = 1e-8)
-test_datamat(:snake, tsim = 0.40, ϵ = 1e-8)
-test_datamat(:slider, tsim = 0.40, ϵ = 1e-8)
-test_datamat(:pendulum, tsim = 0.40, ϵ = 1e-8)
-test_datamat(:npendulum, tsim = 0.40, ϵ = 1e-7)
-test_datamat(:nslider, tsim = 0.40, ϵ = 1e-8)
-test_datamat(:twister, tsim = 0.40, ϵ = 1e-7)
+tsim = 0.4
+test_datamat(:atlas,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7)
+test_datamat(:atlas,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6, spring = 1e3, damper = 5e2)
+test_datamat(:quadruped, tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7, spring = 1.0, damper = 0.2)
+test_datamat(:dice,      tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8)
+test_datamat(:snake,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
+test_datamat(:slider,    tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
+test_datamat(:pendulum,  tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
+test_datamat(:npendulum, tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7, spring = 1.0, damper = 0.2) # always ~1e-8
+test_datamat(:nslider,   tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)
+test_datamat(:twister,   tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-8, spring = 1.0, damper = 0.2)

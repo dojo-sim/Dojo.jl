@@ -97,7 +97,7 @@ cond(K)
 plot(Gray.(abs.(K ./ 1e14)))
 
 # PD control law
-nu = sum([getcontroldim(eqc, floatingbase = false) for eqc in collect(mech.eqconstraints)])
+nu = sum([controldim(eqc, floatingbase = false) for eqc in collect(mech.eqconstraints)])
 angles = [minimalCoordinates(mech, joint)[1] for joint in collect(mech.eqconstraints)[2:end]]
 δangles = zeros(nu)
 ind = 23
@@ -106,7 +106,7 @@ angles += δangles
 
 function controller!(mechanism, k)
     for (i,joint) in enumerate(collect(mechanism.eqconstraints)[2:end])
-        if getcontroldim(joint) == 1
+        if controldim(joint) == 1
             θ = minimalCoordinates(mechanism, joint)[1]
             dθ = minimalVelocities(mechanism, joint)[1]
             u = 3e+2 * (angles[i] - θ) #+ 5e-2 * (0 - dθ)

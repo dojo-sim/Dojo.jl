@@ -110,46 +110,38 @@ Base.zero(::Body{T}) where T = szeros(T,6,6)
 
 
 # Derivatives for linearizations
-function ∂F∂z(body::Body{T}, Δt) where T
+function ∂F∂z(body::Body{T}, Δt::T; attjac::Bool = true) where T
     state = body.state
     Z3 = szeros(T,3,3)
-    Z76 = szeros(T,7,6)
-    Z6 = szeros(T,6,6)
-    E3 = SMatrix{3,3,T,9}(I)
-
+    Z34 = szeros(T,3,4)
+    ZT = attjac ? szeros(T,6,6) : szeros(T,6,7)
+    ZR = szeros(T,7,6)
 
     AposT = [-I Z3]
-
     AvelT = [Z3 -I*body.m] # solving for impulses
 
-    AposR = [-Rmat(ωbar(state.ϕ15, Δt)*Δt/2)*LVᵀmat(state.q1) -Lmat(state.q1)*derivωbar(state.ϕ15, Δt)*Δt/2]
+    AposR = attjac ?
+        [-Rmat(ωbar(state.ϕ15, Δt)*Δt/2)*LVᵀmat(state.q1) -Lmat(state.q1)*derivωbar(state.ϕ15, Δt)*Δt/2] :
+        [-Rmat(ωbar(state.ϕ15, Δt)*Δt/2)                  -Lmat(state.q1)*derivωbar(state.ϕ15, Δt)*Δt/2]
 
     J = body.J
     ω1 = state.ϕ15
     sq1 = sqrt(4 / Δt^2 - ω1' * ω1)
     ω1func = -skewplusdiag(-ω1, sq1) * J + J * ω1 * (ω1' / sq1) - skew(J * ω1)
+    AvelR = attjac ? [Z3 ω1func*Δt] : [Z34 ω1func*Δt] # solving for impulses
 
-    AvelR = [Z3 ω1func*Δt] # solving for impulses
-
-
-    return [[AposT;AvelT] Z6;
-             Z76 [AposR;AvelR]]
+    return [[AposT;AvelT] ZT;
+             ZR [AposR;AvelR]]
 end
 
 function ∂F∂u(body::Body{T}, Δt) where T
     Z3 = szeros(T,3,3)
     Z43 = szeros(T,4,3)
 
-
     BposT = [Z3 Z3] # TODO is there a UniformScaling way for this instead of E3?
-
     BvelT = [-I Z3]
-
     BposR = [Z43 Z43]
-
     BvelR = [Z3 -2.0*I]
-
-
     return [BposT;BvelT;BposR;BvelR]
 end
 

@@ -10,6 +10,7 @@ using Colors: RGBA, RGB
 using LightXML
 using SparseArrays
 using Parameters
+using Test
 
 using Plots
 using Random
@@ -124,6 +125,7 @@ include(joinpath(module_dir(), "src", "ui", "initialize.jl"))
 include(joinpath(module_dir(), "src", "ui", "urdf.jl"))
 
 include(joinpath(module_dir(), "examples", "diff_tools.jl"))
+include(joinpath(module_dir(), "examples", "finitediff_tools.jl"))
 include(joinpath(module_dir(), "examples", "mechanism_zoo.jl"))
 include(joinpath(module_dir(), "src", "joints", "force.jl"))
 include(joinpath(module_dir(), "src", "joints", "torque.jl"))

@@ -39,34 +39,61 @@ end
 end
 
 # contribution of the inequality constraint (impact or friction) to the dynamics equation d = 0
-@inline function ∂constraintForceMapping!(mechanism, body::Body, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
-    # Δt = mechanism.Δt
-    # x3, q3 = posargs3(body.state, Δt)
-    # x2, v2, q2, ω2 = fullargssol(body.state)
 
-    # for i=1:Nc
-    #     bnd = ineqc.constraints[i]
-    #     bnd_type = typeof(ineqc.constraints[i])
-    #
-    #     G = [I(3) zeros(3,3); zeros(4,3) LVᵀmat(q2)]
-    #     function d(vars)
-    #         x = vars[1:3]
-    #         q = UnitQuaternion(vars[4:7]..., false)
-    #         return ∂g∂ʳpos(bnd, x, q)' * ineqc.γsol[2]
-    #     end
-    #
-    #     if bnd_type <: ContactBound
-    #         # body.state.D -= _dN(x2, [q2.w; q2.x; q2.y; q2.z], ineqc.γsol[2][1:1], bnd.p) * G
-    #         # body.state.D -= _dB(x2, [q2.w; q2.x; q2.y; q2.z], ineqc.γsol[2][2:4], bnd.p) * G
-    #     elseif bnd_type <: ImpactBound
-    #         nothing
-    #     elseif bnd_type <: LinearContactBound
-    #         # body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x2; q2.w; q2.x; q2.y; q2.z]) * G
-    #     end
-    # end
+# @inline function ∂constraintForceMapping!(mechanism, body::Body, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+#     Δt = mechanism.Δt
+#     x3, q3 = posargs3(body.state, Δt)
+#     x2, v2, q2, ω2 = fullargssol(body.state)
+#
+#     for i=1:Nc
+#         bnd = ineqc.constraints[i]
+#         bnd_type = typeof(ineqc.constraints[i])
+#
+#         G = [I(3) zeros(3,3); zeros(4,3) LVᵀmat(q2)]
+#         function d(vars)
+#             x = vars[1:3]
+#             q = UnitQuaternion(vars[4:7]..., false)
+#             return ∂g∂ʳpos(bnd, x, q)' * ineqc.γsol[2]
+#         end
+#
+#         if bnd_type <: ContactBound
+#             body.state.D -= _dN(x2, [q2.w; q2.x; q2.y; q2.z], ineqc.γsol[2][1:1], bnd.p) * G
+#             body.state.D -= _dB(x2, [q2.w; q2.x; q2.y; q2.z], ineqc.γsol[2][2:4], bnd.p) * G
+#         elseif bnd_type <: ImpactBound
+#             nothing
+#         elseif bnd_type <: LinearContactBound
+#             # body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x2; q2.w; q2.x; q2.y; q2.z]) * G
+#         end
+#     end
+#     return
+# end
+@inline function ∂constraintForceMapping!(mechanism, body::Body, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+    Δt = mechanism.Δt
+    x3, q3 = posargs3(body.state, Δt)
+    x2, v2, q2, ω2 = fullargssol(body.state)
+
+    for i=1:Nc
+        bnd = ineqc.constraints[i]
+        bnd_type = typeof(ineqc.constraints[i])
+
+        M = ∂integration(q2, ω2, Δt)
+        function d(vars)
+            x = vars[1:3]
+            q = UnitQuaternion(vars[4:7]..., false)
+            return ∂g∂ʳpos(bnd, x, q)' * ineqc.γsol[2]
+        end
+
+        if bnd_type <: ContactBound
+            body.state.D -= _dN(x3, [q3.w; q3.x; q3.y; q3.z], ineqc.γsol[2][1:1], bnd.p) * M
+            body.state.D -= _dB(x3, [q3.w; q3.x; q3.y; q3.z], ineqc.γsol[2][2:4], bnd.p) * M
+        elseif bnd_type <: ImpactBound
+            body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
+        elseif bnd_type <: LinearContactBound
+            body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
+        end
+    end
     return
 end
-
 
 @inline function ∂gab∂ʳba(mechanism, body::Body, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
     # derivative of gs and complementarity constraints wrt pos and vel

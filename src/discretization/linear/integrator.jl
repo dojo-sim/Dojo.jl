@@ -2,6 +2,9 @@ METHODORDER = 1 # This refers to the interpolating spline
 getGlobalOrder() = (global METHODORDER; return METHODORDER)
 
 # Convenience functions
+@inline getx3(x2::SVector{3,T}, v25::SVector{3,T}, Δt::T) where {T} = x2 + v25 * Δt
+@inline getq3(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T) where {T} = q2 * ωbar(ϕ25, Δt) * Δt / 2
+
 @inline getx3(state::State, Δt) = state.x2[1] + state.vsol[2]*Δt
 @inline getq3(state::State, Δt) = state.q2[1] * ωbar(state.ϕsol[2],Δt) * Δt / 2
 
@@ -97,9 +100,27 @@ end
     return stateold
 end
 
-function ∂integration(q2::UnitQuaternion{T}, ω2::SVector{3,T}, Δt::T) where {T}
+function ∂integration(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T) where {T}
     Δ = Δt * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
     X = hcat(Δ, szeros(T,3,3))
-    Q = hcat(szeros(T,4,3), Lmat(q2)*derivωbar(ω2, Δt)*Δt/2)
+    Q = hcat(szeros(T,4,3), Lmat(q2)*derivωbar(ϕ25, Δt) * Δt/2)
     return svcat(X, Q) # 7x6
+end
+
+function ∂integrator∂x()
+    return I(3)
+end
+
+function ∂integrator∂v(Δt::T) where {T}
+    return Δt * I(3)
+end
+
+function ∂integrator∂q(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T; attjac::Bool = true) where {T}
+    M = Rmat(ωbar(ϕ25, Δt) * Δt/2)
+    attjac && (M *= LVᵀmat(q2))
+    return M
+end
+
+function ∂integrator∂ϕ(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T) where {T}
+    return Lmat(q2) * derivωbar(ϕ25, Δt) * Δt/2
 end

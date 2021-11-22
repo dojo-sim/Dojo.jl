@@ -1,4 +1,4 @@
-using Dojo 
+using Dojo
 using StaticArrays
 
 # Utils
@@ -20,18 +20,17 @@ open(vis)
 
 # Include new files
 include(joinpath(@__DIR__, "..", "..", "loader.jl"))
-include(joinpath(module_dir(), "examples/dev/fd_tools.jl"))
 
-# System 
-gravity = 0.0#-9.81 
+# System
+gravity = 0.0#-9.81
 Δt = 0.1
 
 # Parameters
 width, depth, height = 1.0, 1.0, 1.0
-mass = 1.0 
+mass = 1.0
 
-# Float type 
-T = Float64 
+# Float type
+T = Float64
 
 # Links
 origin = Origin{T}()
@@ -58,7 +57,7 @@ function controller!(mech, k)
     setForce!(mech, j1, mech.Δt * u_control)
 
     return
-end 
+end
 
 # simulate
 storage = simulate!(mech, 10 * mech.Δt, controller!, record = true, solver = :mehrotra!)
@@ -68,17 +67,17 @@ storage = simulate!(mech, 10 * mech.Δt, controller!, record = true, solver = :m
 # visualize
 visualize(mech, storage, vis = vis)
 
-## state space 
+## state space
 n = 13 * length(mech.bodies)
-m = isempty(mech.eqconstraints) ? 0 : sum(getcontroldim.(mech.eqconstraints))
+m = isempty(mech.eqconstraints) ? 0 : sum(controldim.(mech.eqconstraints))
 
 
 function step1!(mech::Mechanism, z, u)
     # set data
-    data = [z; u] 
+    data = [z; u]
 
     off = 0
-  
+
     for body in mech.bodies
         x2, v15, q2, ω15 = unpackdata(data[off+1:end]); off += 13
         body.state.x1 = x2 - v15 * mech.Δt
@@ -91,15 +90,15 @@ function step1!(mech::Mechanism, z, u)
         j1 = geteqconstraint(mech, mech.eqconstraints[1].id)
         setForce!(mech, j1, SVector{3}(u))
         return
-    end 
+    end
 
-    # simulate  
-    storage = simulate!(mech, mech.Δt, 
-        controller!, 
+    # simulate
+    storage = simulate!(mech, mech.Δt,
+        controller!,
         record=true, verbose=false, solver=:mehrotra!)
-    
+
     # next state
-    nextstate = []#Vector{Float64}()  
+    nextstate = []#Vector{Float64}()
 
     for body in mech.bodies
         x3 = body.state.x2[1]
@@ -113,16 +112,16 @@ function step1!(mech::Mechanism, z, u)
     return nextstate
 end
 
-# initial state 
-x1 = [0.0; 0.0; 0.0] 
-v1 = [0.0; 0.0; 0.0] 
+# initial state
+x1 = [0.0; 0.0; 0.0]
+v1 = [0.0; 0.0; 0.0]
 q1 = [1.0; 0.0; 0.0; 0.0]
-ω1 = [0.0; 0.0; 0.0] 
+ω1 = [0.0; 0.0; 0.0]
 z1 = [x1; v1; q1; ω1]
 
-# target state 
+# target state
 xT = [0.0; 0.0; 0.0]
-vT = [0.0; 0.0; 0.0] 
+vT = [0.0; 0.0; 0.0]
 _qT = rand(UnitQuaternion)
 qT = [_qT.w; _qT.x; _qT.y; _qT.z]
 ωT = [0.0; 0.0; 0.0]
@@ -130,9 +129,9 @@ zT = [xT; vT; qT; ωT]
 
 z = [copy(z1)]
 for t = 1:5
-    znext = step1!(mech, z[end], u_control) 
+    znext = step1!(mech, z[end], u_control)
     push!(z, znext)
-end 
+end
 
 using Colors
 using GeometryBasics
@@ -142,7 +141,8 @@ using Symbolics
 using Random
 
 ## get motion_planning.jl and set path
-path_mp = "/home/taylor/Research/motion_planning"
+# path_mp = "/home/taylor/Research/motion_planning"
+path_mp = joinpath(module_dir(), "..", "motion_planning")
 include(joinpath(path_mp, "src/utils.jl"))
 include(joinpath(path_mp, "src/time.jl"))
 include(joinpath(path_mp, "src/model.jl"))
@@ -219,7 +219,7 @@ function g(obj::StageCosts, x, u, t)
 end
 
 # Problem
-prob = problem_data(model, obj, copy(x̄), copy(ū), w, h, T, 
+prob = problem_data(model, obj, copy(x̄), copy(ū), w, h, T,
     analytical_dynamics_derivatives = true)
 
 # Solve
@@ -229,12 +229,12 @@ prob = problem_data(model, obj, copy(x̄), copy(ū), w, h, T,
 x, u = current_trajectory(prob)
 x̄, ū = nominal_trajectory(prob)
 
-function generate_storage(x) 
-    steps = length(x) 
+function generate_storage(x)
+    steps = length(x)
     nbodies = 1
     storage = Storage{Float64}(steps, nbodies)
 
-    for t = 1:steps 
+    for t = 1:steps
         storage.x[1][t] = x[t][1:3]
         storage.v[1][t] = x[t][4:6]
         storage.q[1][t] = UnitQuaternion(x[t][7:10]...)
@@ -244,7 +244,7 @@ function generate_storage(x)
     return storage
 end
 
-storage = generate_storage(x) 
+storage = generate_storage(x)
 @show x̄[end]
 
 visualize(mech, storage, vis = vis)

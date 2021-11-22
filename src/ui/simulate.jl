@@ -1,20 +1,20 @@
 function saveToStorage!(mechanism::Mechanism, storage::Storage, i::Int)
     for (ind, body) in enumerate(mechanism.bodies)
         state = body.state
-        storage.x[ind][i] = state.x2[1] # x1
-        storage.q[ind][i] = state.q2[1] # q1
-        storage.v[ind][i] = state.v15 # v0.5
-        storage.ω[ind][i] = state.ϕ15 # ω0.5
-        q1 = state.q2[1]
-        p1 = momentum_body_new(mechanism, body) # p1 in world frame
-        px1 = p1[SVector{3,Int}(1,2,3)] # px1 in world frame
-        pq1 = p1[SVector{3,Int}(4,5,6)] # pq1 in world frame
-        v1 = px1 ./ body.m # in world frame
-        ω1 = body.J \ (rotation_matrix(inv(q1)) * pq1) # in body frame, we rotate using the current quaternion q1 = state.q2[1]
-        storage.px[ind][i] = px1 # px0
-        storage.pq[ind][i] = pq1 # pq0
-        storage.vl[ind][i] = v1 # v0
-        storage.ωl[ind][i] = ω1 # ω0
+        storage.x[ind][i] = state.x2[1] # x2
+        storage.q[ind][i] = state.q2[1] # q2
+        storage.v[ind][i] = state.v15 # v1.5
+        storage.ω[ind][i] = state.ϕ15 # ω1.5
+        q2 = state.q2[1]
+        p2 = momentum_body_new(mechanism, body) # p1 in world frame
+        px2 = p2[SVector{3,Int}(1,2,3)] # px1 in world frame
+        pq2 = p2[SVector{3,Int}(4,5,6)] # pq1 in world frame
+        v2 = px2 ./ body.m # in world frame
+        ω2 = body.J \ (rotation_matrix(inv(q2)) * pq2) # in body frame, we rotate using the current quaternion q2 = state.q2[1]
+        storage.px[ind][i] = px2 # px2
+        storage.pq[ind][i] = pq2 # pq2
+        storage.vl[ind][i] = v2 # v2
+        storage.ωl[ind][i] = ω2 # ω2
     end
     return
 end
@@ -70,7 +70,7 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
         foreach(applyFτ!, eqcs, mechanism)
         eval(solver)(mechanism, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter, warning = debug, verbose = verbose,
             opts=InteriorPointOptions(rtol=ϵ, max_iter=newtonIter, btol=btol, undercut=undercut, verbose=verbose))
-        
+
         record && saveToStorage!(mechanism, storage, k)
         foreach(updatestate!, bodies, Δt)
     end
