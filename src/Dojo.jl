@@ -149,6 +149,7 @@ include(joinpath("ui", "urdf.jl"))
 
 include(joinpath("..", "examples", "mechanism_zoo.jl"))
 include(joinpath("..", "examples", "diff_tools.jl"))
+include(joinpath("..", "examples", "finitediff_tools.jl"))
 include(joinpath("joints", "force.jl"))
 include(joinpath("joints", "torque.jl"))
 include(joinpath("vis", "convertshape.jl"))

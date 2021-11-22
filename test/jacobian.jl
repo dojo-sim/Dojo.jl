@@ -6,9 +6,6 @@ function test_solmat(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, ctrl::Any=(m,k
         initialize!(mechanism, model)
 
         storage = simulate!(mechanism, tsim, ctrl, record = true, solver = :mehrotra!, verbose = false)
-        # vis = Visualizer()
-        # open(vis)
-        # visualize(mechanism, storage, vis = vis)
         # Set data
         Nb = length(mechanism.bodies)
         data = getdata(mechanism)
