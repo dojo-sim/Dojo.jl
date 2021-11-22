@@ -289,11 +289,11 @@ end
 @inline function minimalCoordinates(joint::Translational, body1::Body, body2::Body)
     statea = body1.state
     stateb = body2.state
-    return nullspacemat(joint) * g(joint, statea.q2[1], statea.q2[1], stateb.q2[1], stateb.q2[1])
+    return nullspacemat(joint) * g(joint, statea.x2[1], statea.q2[1], stateb.x2[1], stateb.q2[1])
 end
 @inline function minimalCoordinates(joint::Translational, body1::Origin, body2::Body)
     stateb = body2.state
-    return nullspacemat(joint) * g(joint, stateb.q2[1], stateb.q2[1])
+    return nullspacemat(joint) * g(joint, stateb.x2[1], stateb.q2[1])
 end
 @inline function minimalVelocities(joint::Translational, body1::Body, body2::Body)
     statea = body1.state
