@@ -92,7 +92,7 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
         record && saveToStorage!(mechanism, storage, k)
         eval(solver)(mechanism, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter, warning = debug, verbose = verbose,
             opts=InteriorPointOptions(rtol=ϵ, max_iter=newtonIter, btol=btol, undercut=undercut, verbose=verbose))
-
+            # (k != steps[end]) && foreach(updatestate!, bodies, Δt)
         foreach(updatestate!, bodies, Δt)
     end
     record ? (return storage) : (return)
