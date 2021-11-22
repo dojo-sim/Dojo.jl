@@ -596,6 +596,7 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     eqcdims = length.(eqcs)
     ineqcdims = length.(ineqcs)
     nu = controldim(mechanism)
+    neqcs = eqcdim(mechanism)
     nineqcs = ineqcdim(mechanism)
 
     Fz, Fu = dynamics_jacobian(mechanism, eqcids)
@@ -604,13 +605,13 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     H = integrator_attitudejacobian(data, Δt, Nb)[1:13Nb,1:12Nb]
 
     A = zeros(sum(resdims), datadim(mechanism))
-    A[1:sum(eqcdims), 1:12Nb] += joint_constraint_jacobian(mechanism) * G
-    A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += Fz * G
-    A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += joint_dynamics_jacobian(mechanism) * G
-    A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += spring_damper_jacobian(mechanism) * G
-    A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += contact_dynamics_jacobian(mechanism) * H
-    A[sum(eqcdims) .+ (1:6Nb), 12Nb .+ (1:nu)] += Fu
-    A[sum(eqcdims) + 6Nb .+ (1:nineqcs), 1:12Nb] += contact_constraint_jacobian(mechanism) * H
+    A[1:neqcs, 1:12Nb] += joint_constraint_jacobian(mechanism) * G
+    A[neqcs .+ (1:6Nb), 1:12Nb] += Fz * G
+    A[neqcs .+ (1:6Nb), 1:12Nb] += joint_dynamics_jacobian(mechanism) * G
+    A[neqcs .+ (1:6Nb), 1:12Nb] += spring_damper_jacobian(mechanism) * G
+    A[neqcs .+ (1:6Nb), 1:12Nb] += contact_dynamics_jacobian(mechanism) * H
+    A[neqcs .+ (1:6Nb), 12Nb .+ (1:nu)] += Fu
+    A[neqcs + 6Nb .+ (1:nineqcs), 1:12Nb] += contact_constraint_jacobian(mechanism) * H
     return A
 end
 
@@ -686,7 +687,7 @@ end
 
 function datadim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}; quat::Bool = false) where {T,Nn,Ne,Nb,Ni}
     d = 0
-    d += 6Nb
+    d += 12Nb
     quat && (d += Nb)
     d += controldim(mechanism)
     return d
