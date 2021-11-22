@@ -189,19 +189,3 @@ function finitediff_sol_matrix(mechanism::Mechanism, data::AbstractVector,
     end
     return jac
 end
-
-
-
-# mech = getmechanism(:hopper)
-# eqc1 = collect(mech.eqconstraints)[1]
-# eqc2 = collect(mech.eqconstraints)[2]
-# length(eqc1)
-# length(eqc1.constraints[1])
-# length(eqc1.constraints[2])
-# length(eqc2)
-# length(eqc2.constraints[1])
-# length(eqc2.constraints[2])
-#
-#
-# controldim(eqc1, ignore_floating_base = false)
-# controldim(eqc2, ignore_floating_base = false)
