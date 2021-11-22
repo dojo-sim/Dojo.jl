@@ -266,7 +266,7 @@ function control_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
         for (i,childid) in enumerate(eqc.childids)
             childind = childid - Ne
             joint = eqc.constraints[i]
-            if parentid !== nothing
+            if parentid != nothing
                 parentind = parentid - Ne
                 pbody = getbody(mechanism, parentid)
                 cbody = getbody(mechanism, childid)
@@ -277,31 +277,34 @@ function control_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
 
                 xa, qa = posargs2(pbody.state)
                 Ma = [I zeros(3,3); zeros(4,3) LVᵀmat(qa)]
-
+                @show size(Ma)
                 xb, qb = posargs2(cbody.state)
                 Mb = [I zeros(3,3); zeros(4,3) LVᵀmat(qb)]
 
                 cola6 = offsetrange(parentind,6)
                 colb6 = offsetrange(childind,6)
+                # @show cola6
+                # @show colb6
                 rowav = offsetrange(parentind,3,13,2)
                 rowaω = offsetrange(parentind,3,13,4).+1
                 rowbv = offsetrange(childind,3,13,2)
                 rowbω = offsetrange(childind,3,13,4).+1
 
                 Fzu[[rowav; rowaω],cola6] = [FaXa FaQa; τaXa τaQa] * Ma
-
+                # @show [FaXa FaQa; τaXa τaQa]
                 Fzu[[rowbv; rowbω],cola6] = [FbXa FbQa; τbXa τbQa] * Ma
-
+                # @show [FbXa FbQa; τbXa τbQa]
                 Fzu[[rowav; rowaω],colb6] = [FaXb FaQb; τaXb τaQb] * Mb
-
+                # @show [FaXb FaQb; τaXb τaQb]
                 Fzu[[rowbv; rowbω],colb6] = [FbXb FbQb; τbXb τbQb] * Mb
-
+                # @show [FbXb FbQb; τbXb τbQb]
             else
                 pbody = mechanism.origin
                 cbody = getbody(mechanism, childid)
                 FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb = ∂Fτ∂posb(joint, cbody.state, Δt)
 
                 colb6 = offsetrange(childind,6)
+                @show colb6
                 rowbv = offsetrange(childind,3,13,2)
                 rowbω = offsetrange(childind,3,13,4).+1
 
@@ -309,6 +312,7 @@ function control_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 Mb = [I zeros(3,3); zeros(4,3) LVᵀmat(qb)]
 
                 Fzu[[rowbv; rowbω], colb6] = [FbXb FbQb; τbXb τbQb] * Mb
+                # @show [FbXb FbQb; τbXb τbQb]
 
             end
         end
@@ -339,6 +343,7 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
 
     Fz = Fz * attitudejacobian(getdata(mechanism), Nb)[1:13Nb,1:12Nb]
     Fz += control_datamat(mechanism)
+    @show norm(control_datamat(mechanism))
 
     n1 = 1
     n2 = 0

@@ -23,32 +23,19 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 mech = getmechanism(:npendulum, Δt = 0.05, g = -9.81, Nlink = 5)
 initialize!(mech, :npendulum, ϕ1 = 0.1*pi)
 
-for (i,joint) in enumerate(mech.eqconstraints)
-    if i ∈ (1,2)
-        jt = joint.constraints[1]
-        jr = joint.constraints[2]
-        joint.isdamper = false #false
-        joint.isspring = false #false
-
-        jt.spring = 1/i * 0.0 * 1e+4 .* sones(3)[1]# 1e4
-        jt.damper = 1/i * 0.0 * 1e+4 .* sones(3)[1]# 1e4
-        jr.spring = 1/i * 0.0 * 1e+0 .* sones(3)[1]# 1e4
-        jr.damper = 1/i * 0.0 * 1e+0 .* sones(3)[1]# 1e4
-
+function cont!(mechanism, k; u = 1.0)
+    for (i, eqc) in enumerate(mechanism.eqconstraints)
+        nu = controldim(eqc, ignore_floating_base = false)
+        su = mechanism.Δt * u * sones(nu)
+        setForce!(mechanism, eqc, su)
     end
+    return
 end
-mech.eqconstraints[1].isspring
-mech.eqconstraints[1].isdamper
-mech.eqconstraints[1].constraints[1].spring
-mech.eqconstraints[1].constraints[1].damper
-mech.eqconstraints[1].constraints[2].spring
-mech.eqconstraints[1].constraints[2].damper
 
-# storage = simulate!(mech, 10.03, record = true, solver = :mehrotra!)
-storage = simulate!(mech, 10.0, record = true, solver = :mehrotra!)
+storage = simulate!(mech, 10.0, cont!, record = true, solver = :mehrotra!)
 visualize(mech, storage, vis = vis)
 plot([q.x for q in storage.q[1]])
-
+control_datamat(mech)
 
 ################################################################################
 # Differentiation

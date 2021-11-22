@@ -26,7 +26,17 @@ mech = getmechanism(:pendulum, Δt = 0.01, g = -9.81, spring = 100.0, damper = 5
 Random.seed!(100)
 ϕ1 = 0.3π
 initialize!(mech, :pendulum, ϕ1 = ϕ1)
-storage = simulate!(mech, 0.3, record = true, solver = :mehrotra!, verbose = false)
+
+function cont!(mechanism, k; u = 30.1)
+    for (i, eqc) in enumerate(mechanism.eqconstraints)
+        nu = controldim(eqc, ignore_floating_base = false)
+        su = mechanism.Δt * u * sones(nu)
+        setForce!(mechanism, eqc, su)
+    end
+    return
+end
+
+storage = simulate!(mech, 0.3, cont!, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
 ################################################################################
