@@ -189,49 +189,6 @@ function finitediff_sol_matrix(mechanism::Mechanism, data::AbstractVector,
 end
 
 
-################################################################################
-# Index and Dimensions
-################################################################################
-
-function Fz_indices(Nb::Int)
-    return vcat([13*(i-1) .+ [4:6; 11:13] for i = 1:Nb]...)
-end
-
-function datadim(mechanism::Mechanism; quat::Bool = false)
-    d = 0
-    bodies = mechanism.bodies
-    for body in bodies
-        d += 6 * 2
-        quat && (d += 1)
-    end
-    eqcs = mechanism.eqconstraints
-    for eqc in eqcs
-        d += controldim(eqc)
-    end
-    return d
-end
-
-function soldim(mechanism::Mechanism)
-    d = 0
-    d += 6 * length(mechanism.bodies)
-    d += sum(length.(mechanism.eqconstraints))
-    !isempty(mechanism.ineqconstraints) && (d += sum(length.(mechanism.ineqconstraints)))
-    return d
-end
-
-function controldim(eqc::EqualityConstraint{T,N,Nc,Cs}; ignore_floating_base::Bool = false) where {T,N,Nc,Cs}
-    ignore_floating_base && (N == 0) && return 0
-    return 6 - N
-end
-
-function controldim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}; ignore_floating_base::Bool = false) where {T,Nn,Ne,Nb,Ni}
-    nu = 0
-    for eqc in mechanism.eqconstraints
-        nu += controldim(eqc, ignore_floating_base = ignore_floating_base)
-    end
-    return nu
-end
-
 
 # mech = getmechanism(:hopper)
 # eqc1 = collect(mech.eqconstraints)[1]

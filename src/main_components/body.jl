@@ -138,36 +138,12 @@ function ∂F∂u(body::Body{T}, Δt) where T
     Z3 = szeros(T,3,3)
     Z43 = szeros(T,4,3)
 
-
     BposT = [Z3 Z3] # TODO is there a UniformScaling way for this instead of E3?
-
     BvelT = [-I Z3]
-
     BposR = [Z43 Z43]
-
     BvelR = [Z3 -2.0*I]
-
-
     return [BposT;BvelT;BposR;BvelR]
 end
-#
-# mech = getmechanism(:hopper)
-# Δt = mech.Δt
-# body1 = collect(mech.bodies)[1]
-# ∂F∂z(body1, Δt)
-# ∂F∂z(body1, Δt, attjac = true)
-# ∂F∂z(body1, Δt, attjac = false)
-#
-#
-# A = ones(3,7)
-# B = zeros(4,7)
-# [A; B]
-# a = 10
-# a = 10
-# a = 10
-# a = 10
-# a = 10
-# a = 10
 
 function ∂F∂fz(body::Body{T}, Δt) where T
     state = body.state

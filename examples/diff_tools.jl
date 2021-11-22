@@ -1,4 +1,4 @@
-function joint_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
+function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     Δt = mechanism.Δt
     eqcs = mechanism.eqconstraints
     nc = sum(length.(eqcs))
@@ -68,9 +68,9 @@ function joint_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     return Gl
 end
 
-function joint_jacobian_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
+function joint_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     Δt = mechanism.Δt
-    FfzG = zeros(T,13Nb,13Nb)
+    J = zeros(T,6Nb,13Nb)
 
     for eqc in mechanism.eqconstraints
         parentid = eqc.parentid
@@ -79,6 +79,7 @@ function joint_jacobian_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne
             parentind = parentid - Ne
             pbody = getbody(mechanism, parentid)
             pstate = pbody.state
+            prow6 = offsetrange(parentind,6)
             pcol13 = offsetrange(parentind,13)
 
             for (i, childid) in enumerate(eqc.childids)
@@ -86,13 +87,14 @@ function joint_jacobian_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne
                 cbody = getbody(mechanism, childid)
                 cstate = cbody.state
                 joint = eqc.constraints[i]
+                crow6 = offsetrange(childind,6)
                 ccol13 = offsetrange(childind,13)
                 λ = getλJoint(eqc, i)
 
-                Aaa = zeros(T,13,13)
-                Aab = zeros(T,13,13)
-                Aba = zeros(T,13,13)
-                Abb = zeros(T,13,13)
+                Aaa = zeros(T,6,13)
+                Aab = zeros(T,6,13)
+                Aba = zeros(T,6,13)
+                Abb = zeros(T,6,13)
 
                 xa, qa = posargs2(pstate)
                 xb, qb = posargs2(cstate)
@@ -104,10 +106,10 @@ function joint_jacobian_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne
                     QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposa(joint, w, qa, xb, qb)[1:3, 4:6]) * constraintmat(joint)' * λ, xa)
                     QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposa(joint, xa, UnitQuaternion(w..., false), xb, qb)[1:3, 4:6]) * constraintmat(joint)' * λ, [qa.w; qa.x; qa.y; qa.z])
 
-                    Aaa[4:6,1:3] = XX
-                    Aaa[4:6,7:10] = XQ
-                    Aaa[11:13,1:3] = QX
-                    Aaa[11:13,7:10] = QQ
+                    Aaa[1:3,1:3] = XX
+                    Aaa[1:3,7:10] = XQ
+                    Aaa[4:6,1:3] = QX
+                    Aaa[4:6,7:10] = QQ
                 end
 
                 # XX, XQ, QX, QQ = ∂2g∂posab(joint, posargs2(pstate)..., posargs2(cstate)...)
@@ -118,10 +120,10 @@ function joint_jacobian_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne
                     QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposa(joint, xa, qa, w, qb)[1:3, 4:6]) * constraintmat(joint)' * λ, xb)
                     QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposa(joint, xa, qa, xb, UnitQuaternion(w..., false))[1:3, 4:6]) * constraintmat(joint)' * λ, [qb.w; qb.x; qb.y; qb.z])
 
-                    Aab[4:6,1:3] = XX
-                    Aab[4:6,7:10] = XQ
-                    Aab[11:13,1:3] = QX
-                    Aab[11:13,7:10] = QQ
+                    Aab[1:3,1:3] = XX
+                    Aab[1:3,7:10] = XQ
+                    Aab[4:6,1:3] = QX
+                    Aab[4:6,7:10] = QQ
                 end
 
                 # XX, XQ, QX, QQ = ∂2g∂posba(joint, posargs2(pstate)..., posargs2(cstate)...)
@@ -132,10 +134,10 @@ function joint_jacobian_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne
                     QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(joint, w, qa, xb, qb)[1:3, 4:6]) * constraintmat(joint)' * λ, xa)
                     QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(joint, xa, UnitQuaternion(w..., false), xb, qb)[1:3, 4:6]) * constraintmat(joint)' * λ, [qa.w; qa.x; qa.y; qa.z])
 
-                    Aba[4:6,1:3] = XX
-                    Aba[4:6,7:10] = XQ
-                    Aba[11:13,1:3] = QX
-                    Aba[11:13,7:10] = QQ
+                    Aba[1:3,1:3] = XX
+                    Aba[1:3,7:10] = XQ
+                    Aba[4:6,1:3] = QX
+                    Aba[4:6,7:10] = QQ
                 end
 
                 # XX, XQ, QX, QQ = ∂2g∂posbb(joint, posargs2(pstate)..., posargs2(cstate)...)
@@ -146,16 +148,16 @@ function joint_jacobian_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne
                     QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(joint, xa, qa, w, qb)[1:3, 4:6]) * constraintmat(joint)' * λ, xb)
                     QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(joint, xa, qa, xb, UnitQuaternion(w..., false))[1:3, 4:6]) * constraintmat(joint)' * λ, [qb.w; qb.x; qb.y; qb.z])
 
-                    Abb[4:6,1:3] = XX
-                    Abb[4:6,7:10] = XQ
-                    Abb[11:13,1:3] = QX
-                    Abb[11:13,7:10] = QQ
+                    Abb[1:3,1:3] = XX
+                    Abb[1:3,7:10] = XQ
+                    Abb[4:6,1:3] = QX
+                    Abb[4:6,7:10] = QQ
                 end
 
-                FfzG[pcol13,pcol13] += Aaa
-                FfzG[pcol13,ccol13] += Aab
-                FfzG[ccol13,pcol13] += Aba
-                FfzG[ccol13,ccol13] += Abb
+                J[prow6,pcol13] += Aaa
+                J[prow6,ccol13] += Aab
+                J[crow6,pcol13] += Aba
+                J[crow6,ccol13] += Abb
             end
         else
             for (i, childid) in enumerate(eqc.childids)
@@ -163,10 +165,11 @@ function joint_jacobian_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne
                 cbody = getbody(mechanism, childid)
                 cstate = cbody.state
                 joint = eqc.constraints[i]
+                crow6 = offsetrange(childind,6)
                 ccol13 = offsetrange(childind,13)
                 λ = getλJoint(eqc, i)
 
-                Abb = zeros(T,13,13)
+                Abb = zeros(T,6,13)
 
                 xb, qb = posargs2(cstate)
 
@@ -177,23 +180,23 @@ function joint_jacobian_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne
                     QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(joint, w, qb)[1:3, 4:6]) * constraintmat(joint)' * λ, xb)
                     QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(∂g∂ʳposb(joint, xb, UnitQuaternion(w..., false))[1:3, 4:6]) * constraintmat(joint)' * λ, [qb.w; qb.x; qb.y; qb.z])
 
-                    Abb[4:6,1:3] = XX
-                    Abb[4:6,7:10] = XQ
-                    Abb[11:13,1:3] = QX
-                    Abb[11:13,7:10] = QQ
+                    Abb[1:3,1:3] = XX
+                    Abb[1:3,7:10] = XQ
+                    Abb[4:6,1:3] = QX
+                    Abb[4:6,7:10] = QQ
                 end
 
-                FfzG[ccol13,ccol13] += Abb
+                J[crow6,ccol13] += Abb
             end
         end
     end
 
-    return FfzG
+    return J
 end
 
-function spring_damper_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
+function spring_damper_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     Δt = mechanism.Δt
-    FfzG = zeros(T,13Nb,13Nb)
+    J = zeros(T,6Nb,13Nb)
 
     for eqc in mechanism.eqconstraints
         parentid = eqc.parentid
@@ -202,6 +205,7 @@ function spring_damper_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,
             parentind = parentid - Ne
             pbody = getbody(mechanism, parentid)
             pstate = pbody.state
+            prow6 = offsetrange(parentind,6)
             pcol13 = offsetrange(parentind,13)
 
             for (i, childid) in enumerate(eqc.childids)
@@ -209,30 +213,31 @@ function spring_damper_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,
                 cbody = getbody(mechanism, childid)
                 cstate = cbody.state
                 joint = eqc.constraints[i]
+                crow6 = offsetrange(childind,6)
                 ccol13 = offsetrange(childind,13)
                 λ = getλJoint(eqc, i)
 
-                Aaa = zeros(T,13,13)
-                Aab = zeros(T,13,13)
-                Aba = zeros(T,13,13)
-                Abb = zeros(T,13,13)
+                Aaa = zeros(T,6,13)
+                Aab = zeros(T,6,13)
+                Aba = zeros(T,6,13)
+                Abb = zeros(T,6,13)
 
-                Aaa[[4:6; 11:13], [1:3; 7:10]] -= ∂springforcea∂posa(joint, pbody, cbody, Δt, attjac = false)
-                Aaa[[4:6; 11:13], [1:3; 7:10]] -= ∂damperforcea∂posa(joint, pbody, cbody, Δt, attjac = false)
+                Aaa[:, [1:3; 7:10]] -= ∂springforcea∂posa(joint, pbody, cbody, Δt, attjac = false)
+                Aaa[:, [1:3; 7:10]] -= ∂damperforcea∂posa(joint, pbody, cbody, Δt, attjac = false)
 
-                Aab[[4:6; 11:13], [1:3; 7:10]] -= ∂springforcea∂posb(joint, pbody, cbody, Δt, attjac = false)
-                Aab[[4:6; 11:13], [1:3; 7:10]] -= ∂damperforcea∂posb(joint, pbody, cbody, Δt, attjac = false)
+                Aab[:, [1:3; 7:10]] -= ∂springforcea∂posb(joint, pbody, cbody, Δt, attjac = false)
+                Aab[:, [1:3; 7:10]] -= ∂damperforcea∂posb(joint, pbody, cbody, Δt, attjac = false)
 
-                Aba[[4:6; 11:13], [1:3; 7:10]] -= ∂springforceb∂posa(joint, pbody, cbody, Δt, attjac = false)
-                Aba[[4:6; 11:13], [1:3; 7:10]] -= ∂damperforceb∂posa(joint, pbody, cbody, Δt, attjac = false)
+                Aba[:, [1:3; 7:10]] -= ∂springforceb∂posa(joint, pbody, cbody, Δt, attjac = false)
+                Aba[:, [1:3; 7:10]] -= ∂damperforceb∂posa(joint, pbody, cbody, Δt, attjac = false)
 
-                Abb[[4:6; 11:13], [1:3; 7:10]] -= ∂springforceb∂posb(joint, pbody, cbody, Δt, attjac = false)
-                Abb[[4:6; 11:13], [1:3; 7:10]] -= ∂damperforceb∂posb(joint, pbody, cbody, Δt, attjac = false)
+                Abb[:, [1:3; 7:10]] -= ∂springforceb∂posb(joint, pbody, cbody, Δt, attjac = false)
+                Abb[:, [1:3; 7:10]] -= ∂damperforceb∂posb(joint, pbody, cbody, Δt, attjac = false)
 
-                FfzG[pcol13,pcol13] += Aaa
-                FfzG[pcol13,ccol13] += Aab
-                FfzG[ccol13,pcol13] += Aba
-                FfzG[ccol13,ccol13] += Abb
+                J[prow6,pcol13] += Aaa
+                J[prow6,ccol13] += Aab
+                J[crow6,pcol13] += Aba
+                J[crow6,ccol13] += Abb
             end
         else
             for (i, childid) in enumerate(eqc.childids)
@@ -241,19 +246,20 @@ function spring_damper_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,
                 cbody = getbody(mechanism, childid)
                 cstate = cbody.state
                 joint = eqc.constraints[i]
+                crow6 = offsetrange(childind,6)
                 ccol13 = offsetrange(childind,13)
                 λ = getλJoint(eqc, i)
 
-                Abb = zeros(T,13,13)
+                Abb = zeros(T,6,13)
 
-                Abb[[4:6; 11:13], [1:3; 7:10]] -= ∂springforceb∂posb(joint, pbody, cbody, Δt, attjac = false)
-                Abb[[4:6; 11:13], [1:3; 7:10]] -= ∂damperforceb∂posb(joint, pbody, cbody, Δt, attjac = false)
+                Abb[:, [1:3; 7:10]] -= ∂springforceb∂posb(joint, pbody, cbody, Δt, attjac = false)
+                Abb[:, [1:3; 7:10]] -= ∂damperforceb∂posb(joint, pbody, cbody, Δt, attjac = false)
 
-                FfzG[ccol13,ccol13] += Abb
+                J[crow6,ccol13] += Abb
             end
         end
     end
-    return FfzG
+    return J
 end
 
 function control_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
@@ -320,13 +326,13 @@ function control_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     return Fzu
 end
 
-function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,Nn,Ne,Nb}
+function dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,Nn,Ne,Nb}
     Δt = mechanism.Δt
     nu = controldim(mechanism)
 
     # get state linearization
-    Fz = zeros(T,13Nb,13Nb)
-    Fu = zeros(T,13Nb,6Nb)
+    Fz = zeros(T,6Nb,13Nb)
+    Fu = zeros(T,6Nb,6Nb)
 
     Bcontrol = zeros(T,6Nb,nu)
 
@@ -334,11 +340,11 @@ function data_lineardynamics(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,
         col6 = offsetrange(i,6)
         col13 = offsetrange(i,13)
 
-        Fzi = ∂F∂z(body, Δt, attjac = false)
-        Fui = ∂F∂u(body, Δt)
+        Fzi = ∂F∂z(body, Δt, attjac = false)[[4:6; 11:13],:]
+        Fui = ∂F∂u(body, Δt)[[4:6; 11:13],:]
 
-        Fz[col13,col13] = Fzi
-        Fu[col13,col6] = Fui
+        Fz[col6,col13] = Fzi
+        Fu[col6,col6] = Fui
     end
 
     ############################################################################
@@ -410,11 +416,10 @@ function contact_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
     return J
 end
 
-
 function contact_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     Δt = mechanism.Δt
     ineqcs = mechanism.ineqconstraints
-    nineqcs = (length(ineqcs) == 0) ? 0 : sum(length.(ineqcs))
+    nineqcs = ineqcdim(mechanism)
     J = zeros(nineqcs, 13Nb)
 
     offr = 0
@@ -591,20 +596,20 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     eqcdims = length.(eqcs)
     ineqcdims = length.(ineqcs)
     nu = controldim(mechanism)
-    nineqcs = (length(ineqcs) == 0) ? 0 : sum(length.(ineqcs))
+    nineqcs = ineqcdim(mechanism)
 
-    Fz, Fu = data_lineardynamics(mechanism, eqcids)
+    Fz, Fu = dynamics_jacobian(mechanism, eqcids)
     data = getdata(mechanism)
     G = attitudejacobian(data, Nb)[1:13Nb,1:12Nb]
     H = integrator_attitudejacobian(data, Δt, Nb)[1:13Nb,1:12Nb]
 
     A = zeros(sum(resdims), datadim(mechanism))
-    A[1:sum(eqcdims), 1:12Nb] += joint_datamat(mechanism) * G
-    A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += Fz[Fz_indices(Nb),:] * G
-    A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += joint_jacobian_datamat(mechanism)[Fz_indices(Nb), :] * G
-    A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += spring_damper_datamat(mechanism)[Fz_indices(Nb), :] * G
+    A[1:sum(eqcdims), 1:12Nb] += joint_constraint_jacobian(mechanism) * G
+    A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += Fz * G
+    A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += joint_dynamics_jacobian(mechanism) * G
+    A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += spring_damper_jacobian(mechanism) * G
     A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += contact_dynamics_jacobian(mechanism) * H
-    A[sum(eqcdims) .+ (1:6Nb), 12Nb .+ (1:nu)] += Fu[Fz_indices(Nb), :]
+    A[sum(eqcdims) .+ (1:6Nb), 12Nb .+ (1:nu)] += Fu
     A[sum(eqcdims) + 6Nb .+ (1:nineqcs), 1:12Nb] += contact_constraint_jacobian(mechanism) * H
     return A
 end
@@ -668,4 +673,64 @@ end
 function jvp(mech, sol, data, v)
     sensi = sensitivities(mech, sol, data)
     return sensi * v
+end
+
+
+################################################################################
+# Index and Dimensions
+################################################################################
+
+function Fz_indices(Nb::Int)
+    return vcat([13*(i-1) .+ [4:6; 11:13] for i = 1:Nb]...)
+end
+
+function datadim(mechanism::Mechanism; quat::Bool = false)
+    d = 0
+    bodies = mechanism.bodies
+    for body in bodies
+        d += 6 * 2
+        quat && (d += 1)
+    end
+    eqcs = mechanism.eqconstraints
+    for eqc in eqcs
+        d += controldim(eqc)
+    end
+    return d
+end
+
+function soldim(mechanism::Mechanism)
+    d = 0
+    d += 6 * length(mechanism.bodies)
+    d += sum(length.(mechanism.eqconstraints))
+    !isempty(mechanism.ineqconstraints) && (d += sum(length.(mechanism.ineqconstraints)))
+    return d
+end
+
+function controldim(eqc::EqualityConstraint{T,N,Nc,Cs}; ignore_floating_base::Bool = false) where {T,N,Nc,Cs}
+    ignore_floating_base && (N == 0) && return 0
+    return 6 - N
+end
+
+function controldim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}; ignore_floating_base::Bool = false) where {T,Nn,Ne,Nb,Ni}
+    nu = 0
+    for eqc in mechanism.eqconstraints
+        nu += controldim(eqc, ignore_floating_base = ignore_floating_base)
+    end
+    return nu
+end
+
+function ineqcdim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
+    nineqcs = 0
+    for ineqc in mechanism.ineqconstraints
+        nineqcs += length(ineqc)
+    end
+    return nineqcs
+end
+
+function eqcdim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
+    neqcs = 0
+    for eqc in mechanism.eqconstraints
+        neqcs += length(eqc)
+    end
+    return neqcs
 end
