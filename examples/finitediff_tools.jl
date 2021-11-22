@@ -119,7 +119,7 @@ function evaluate_residual!(mechanism::Mechanism, data::AbstractVector, sol::Abs
 end
 
 function finitediff_sensitivity(mechanism::Mechanism, data::AbstractVector; ϵr = 1e-8, ϵb=1.0e-8, δ = 1e-5, verbose = false)
-    ndata = datadim(mechanism, quat = true)
+    ndata = datadim(mechanism, attjac = false)
     nsol = soldim(mechanism)
     jac = zeros(nsol, ndata)
 
@@ -148,7 +148,7 @@ end
 function finitediff_data_matrix(mechanism::Mechanism, data::AbstractVector,
         sol::AbstractVector; δ = 1e-8, verbose = false)
     nsol = soldim(mechanism)
-    ndata = datadim(mechanism, quat = true)
+    ndata = datadim(mechanism, attjac = false)
     jac = zeros(nsol, ndata)
 
     setdata!(mechanism, deepcopy(data))

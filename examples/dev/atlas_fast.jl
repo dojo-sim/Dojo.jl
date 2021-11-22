@@ -18,8 +18,9 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 Δt_ = 0.01
-mech = getmechanism(:atlas, Δt = Δt_, g = -2.0, cf = 0.8, contact = true, spring = 100.0, damper = 50.0, model_type = :fast)
-initialize!(mech, :atlas, tran = [0,0,1.1], rot = [0.1,0.05,0])
+mech = getmechanism(:atlas, Δt = Δt_, g = -2.0, cf = 0.8, contact = true, spring = 100.0, damper = 20.0, model_type = :complex)
+# initialize!(mech, :atlas, tran = [0,0,1.1], rot = [0.1,0.05,0])
+initialize!(mech, :atlas, tran = [0,0,0.], rot = [0,0,0.])
 
 function controller!(mechanism, k)
     for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])
@@ -36,7 +37,19 @@ function controller!(mechanism, k)
     return
 end
 
-@elapsed storage = simulate!(mech, 2.10, controller!, record = true, solver = :mehrotra!, verbose = false)
+nbodies = length(mech.bodies)
+sto1 = Storage(1, nbodies)
+sto2 = Storage(1, nbodies)
+for (i,body) in enumerate(mech.bodies)
+    sto1.x[i][1] = body.state.x1
+    sto1.q[i][1] = body.state.q1
+    sto2.x[i][1] = body.state.x2[1]
+    sto2.q[i][1] = body.state.q2[1]
+end
+visualize(mech, sto1, vis = vis)
+visualize(mech, sto2, vis = vis)
+
+@elapsed storage = simulate!(mech, 2.01, controller!, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
 

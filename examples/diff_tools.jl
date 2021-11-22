@@ -280,7 +280,6 @@ function control_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
                 FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa = ∂Fτ∂posa(joint, pbody.state, cbody.state, Δt)
                 FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb = ∂Fτ∂posb(joint, pbody.state, cbody.state, Δt)
 
-
                 xa, qa = posargs2(pbody.state)
                 Ma = [I zeros(3,3); zeros(4,3) LVᵀmat(qa)]
                 # @show size(Ma)
@@ -584,7 +583,7 @@ end
 
 dG(joint::Joint, x, q, γ, p) = _dG(joint::Joint, x, q, γ, p) * [I zeros(3,3); zeros(4,3) G(q)]
 
-function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
+function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}; attjac::Bool = true) where {T,Nn,Ne,Nb}
     mechanism = deepcopy(mechanism)
     Δt = mechanism.Δt
     system = mechanism.system
@@ -598,20 +597,29 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     nu = controldim(mechanism)
     neqcs = eqcdim(mechanism)
     nineqcs = ineqcdim(mechanism)
+    nic = attjac ? 12Nb : 13Nb # initial conditions x2, v1, q2, ϕ15
 
     Fz, Fu = dynamics_jacobian(mechanism, eqcids)
     data = getdata(mechanism)
     G = attitudejacobian(data, Nb)[1:13Nb,1:12Nb]
-    H = integrator_attitudejacobian(data, Δt, Nb)[1:13Nb,1:12Nb]
+    H = integratorjacobian(data, Δt, Nb, attjac = attjac)[1:13Nb,1:nic]
 
-    A = zeros(sum(resdims), datadim(mechanism))
-    A[1:neqcs, 1:12Nb] += joint_constraint_jacobian(mechanism) * G
-    A[neqcs .+ (1:6Nb), 1:12Nb] += Fz * G
-    A[neqcs .+ (1:6Nb), 1:12Nb] += joint_dynamics_jacobian(mechanism) * G
-    A[neqcs .+ (1:6Nb), 1:12Nb] += spring_damper_jacobian(mechanism) * G
-    A[neqcs .+ (1:6Nb), 1:12Nb] += contact_dynamics_jacobian(mechanism) * H
-    A[neqcs .+ (1:6Nb), 12Nb .+ (1:nu)] += Fu
-    A[neqcs + 6Nb .+ (1:nineqcs), 1:12Nb] += contact_constraint_jacobian(mechanism) * H
+    B = joint_constraint_jacobian(mechanism)
+    C = Fz + joint_dynamics_jacobian(mechanism) +
+        spring_damper_jacobian(mechanism)
+    D = contact_dynamics_jacobian(mechanism) * H
+    E = contact_constraint_jacobian(mechanism) * H
+    if attjac
+        B = B * G
+        C = C * G
+    end
+
+    A = zeros(sum(resdims), datadim(mechanism, attjac = attjac))
+    A[1:neqcs, 1:nic] += B
+    A[neqcs .+ (1:6Nb), 1:nic] += C
+    A[neqcs .+ (1:6Nb), 1:nic] += D
+    A[neqcs .+ (1:6Nb), nic .+ (1:nu)] += Fu
+    A[neqcs + 6Nb .+ (1:nineqcs), 1:nic] += E
     return A
 end
 
@@ -625,29 +633,29 @@ function G(q::AbstractVector)
 end
 
 function attitudejacobian(data::AbstractVector, Nb::Int)
-    attjac = zeros(0,0)
-    for i = 1:Nb
-        x2, v15, q2, ϕ15 = unpackdata(data[13*(i-1) .+ (1:13)])
-        attjac = cat(attjac, I(6), G(q2), I(3), dims = (1,2))
-    end
-    ndata = length(data)
-    nu = ndata - size(attjac)[1]
-    attjac = cat(attjac, I(nu), dims = (1,2))
-    return attjac
-end
-
-function integrator_attitudejacobian(data::AbstractVector, Δt, Nb::Int)
-    attjac = zeros(0,0)
+    G = zeros(0,0)
     for i = 1:Nb
         x2, v15, q2, ϕ15 = unpackdata(data[13*(i-1) .+ (1:13)])
         q2 = UnitQuaternion(q2..., false)
-        # attjac = cat(attjac, I(6),Rmat(ωbar(ω1, Δt)*Δt/2)*LVᵀmat(UnitQuaternion(q2...)), I(3), dims = (1,2))
-        attjac = cat(attjac, I(6), ∂integrator∂q(q2, ϕ15, Δt, attjac = true), I(3), dims = (1,2))
+        G = cat(G, I(6), LVᵀmat(q2), I(3), dims = (1,2))
     end
     ndata = length(data)
-    nu = ndata - size(attjac)[1]
-    attjac = cat(attjac, I(nu), dims = (1,2))
-    return attjac
+    nu = ndata - size(G)[1]
+    G = cat(G, I(nu), dims = (1,2))
+    return G
+end
+
+function integratorjacobian(data::AbstractVector, Δt, Nb::Int; attjac::Bool = true)
+    H = zeros(0,0)
+    for i = 1:Nb
+        x2, v15, q2, ϕ15 = unpackdata(data[13*(i-1) .+ (1:13)])
+        q2 = UnitQuaternion(q2..., false)
+        H = cat(H, I(6), ∂integrator∂q(q2, ϕ15, Δt, attjac = attjac), I(3), dims = (1,2))
+    end
+    ndata = length(data)
+    nu = ndata - size(H)[1]
+    H = cat(H, I(nu), dims = (1,2))
+    return H
 end
 
 function getλJoint(eqc::EqualityConstraint{T,N,Nc}, i::Int) where {T,N,Nc}
@@ -685,10 +693,10 @@ function Fz_indices(Nb::Int)
     return vcat([13*(i-1) .+ [4:6; 11:13] for i = 1:Nb]...)
 end
 
-function datadim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}; quat::Bool = false) where {T,Nn,Ne,Nb,Ni}
+function datadim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}; attjac::Bool = true) where {T,Nn,Ne,Nb,Ni}
     d = 0
     d += 12Nb
-    quat && (d += Nb)
+    !attjac && (d += Nb)
     d += controldim(mechanism)
     return d
 end

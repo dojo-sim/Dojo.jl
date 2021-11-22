@@ -199,12 +199,12 @@ end
 end
 @inline function getVelocityDelta(joint::Rotational, body1::Body, body2::Body, ω::SVector)
     ω = zerodimstaticadjoint(nullspacemat(joint)) * ω
-    Δω = vrotate(ω, inv(body2.state.q1)*body1.state.q1) # in body2 frame
+    Δω = vrotate(ω, inv(body2.state.q2[1])*body1.state.q2[1]) # in body2 frame
     return Δω
 end
 @inline function getVelocityDelta(joint::Rotational, body1::Origin, body2::Body, ω::SVector)
     ω = zerodimstaticadjoint(nullspacemat(joint)) * ω
-    Δω = vrotate(ω, inv(body2.state.q1)) # in body2 frame
+    Δω = vrotate(ω, inv(body2.state.q2[1])) # in body2 frame
     return Δω
 end
 
@@ -212,22 +212,22 @@ end
 @inline function minimalCoordinates(joint::Rotational, body1::Body, body2::Body)
     statea = body1.state
     stateb = body2.state
-    # q = g(joint, statea.x1, statea.q1, stateb.x1, stateb.q1)
-    q = statea.q1 \ stateb.q1 / joint.qoffset
+    # q = g(joint, statea.x2[1], statea.q2[1], stateb.x2[1], stateb.q2[1])
+    q = statea.q2[1] \ stateb.q2[1] / joint.qoffset
     return nullspacemat(joint) * rotation_vector(q)
 end
 @inline function minimalCoordinates(joint::Rotational, body1::Origin, body2::Body)
     stateb = body2.state
-    # q = g(joint, stateb.x1, stateb.q1)
-    q = stateb.q1 / joint.qoffset
+    # q = g(joint, stateb.x2[1], stateb.q2[1])
+    q = stateb.q2[1] / joint.qoffset
     return nullspacemat(joint) * rotation_vector(q)
 end
 @inline function minimalVelocities(joint::Rotational, body1::Body, body2::Body)
     statea = body1.state
     stateb = body2.state
-    return nullspacemat(joint) * (vrotate(stateb.ϕ15,statea.q1\stateb.q1) - statea.ϕ15) # in body1's frame
+    return nullspacemat(joint) * (vrotate(stateb.ϕ15,statea.q2[1]\stateb.q2[1]) - statea.ϕ15) # in body1's frame
 end
 @inline function minimalVelocities(joint::Rotational, body1::Origin, body2::Body)
     stateb = body2.state
-    return nullspacemat(joint) * vrotate(stateb.ϕ15,stateb.q1) # in body1's frame
+    return nullspacemat(joint) * vrotate(stateb.ϕ15,stateb.q2[1]) # in body1's frame
 end
