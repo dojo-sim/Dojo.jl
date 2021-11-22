@@ -70,7 +70,7 @@ end
 
 function joint_jacobian_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     Δt = mechanism.Δt
-    FfzG = zeros(T,Nb*13,Nb*13)
+    FfzG = zeros(T,13Nb,13Nb)
 
     for eqc in mechanism.eqconstraints
         parentid = eqc.parentid
@@ -191,20 +191,9 @@ function joint_jacobian_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne
     return FfzG
 end
 
-function getλJoint(eqc::EqualityConstraint{T,N,Nc}, i::Int) where {T,N,Nc}
-    n1 = 1
-    for j = 1:i-1
-        n1 += length(eqc.constraints[j])
-    end
-    n2 = n1 - 1 + length(eqc.constraints[i])
-
-    λi = SVector{n2-n1+1,T}(eqc.λsol[2][n1:n2])
-    return λi
-end
-
 function spring_damper_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     Δt = mechanism.Δt
-    FfzG = zeros(T,13Nb,12Nb)
+    FfzG = zeros(T,13Nb,13Nb)
 
     for eqc in mechanism.eqconstraints
         parentid = eqc.parentid
@@ -213,7 +202,7 @@ function spring_damper_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,
             parentind = parentid - Ne
             pbody = getbody(mechanism, parentid)
             pstate = pbody.state
-            pcol12 = offsetrange(parentind,12)
+            # pcol12 = offsetrange(parentind,12)
             pcol13 = offsetrange(parentind,13)
 
             for (i, childid) in enumerate(eqc.childids)
@@ -221,39 +210,40 @@ function spring_damper_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,
                 cbody = getbody(mechanism, childid)
                 cstate = cbody.state
                 joint = eqc.constraints[i]
-                ccol12 = offsetrange(childind,12)
+                # ccol12 = offsetrange(childind,12)
                 ccol13 = offsetrange(childind,13)
+                λ = getλJoint(eqc, i)
 
-                n1 = 1
-                n2 = 0
-                for j=1:i-1
-                    n1 += length(eqc.constraints[j])
-                    n2 += length(eqc.constraints[j])
-                end
-                n2 += length(joint)
-                λ = eqc.λsol[2][n1:n2]
+                # n1 = 1
+                # n2 = 0
+                # for j=1:i-1
+                #     n1 += length(eqc.constraints[j])
+                #     n2 += length(eqc.constraints[j])
+                # end
+                # n2 += length(joint)
+                # λ = eqc.λsol[2][n1:n2]
 
-                Aaa = zeros(T,13,12)
-                Aab = zeros(T,13,12)
-                Aba = zeros(T,13,12)
-                Abb = zeros(T,13,12)
+                Aaa = zeros(T,13,13)
+                Aab = zeros(T,13,13)
+                Aba = zeros(T,13,13)
+                Abb = zeros(T,13,13)
 
-                Aaa[[4:6; 11:13], [1:3; 7:9]] -= ∂springforcea∂posa(joint, pbody, cbody, Δt)
-                Aaa[[4:6; 11:13], [1:3; 7:9]] -= ∂damperforcea∂posa(joint, pbody, cbody, Δt)
+                Aaa[[4:6; 11:13], [1:3; 7:10]] -= ∂springforcea∂posa(joint, pbody, cbody, Δt, attjac = false)
+                Aaa[[4:6; 11:13], [1:3; 7:10]] -= ∂damperforcea∂posa(joint, pbody, cbody, Δt, attjac = false)
 
-                Aab[[4:6; 11:13], [1:3; 7:9]] -= ∂springforcea∂posb(joint, pbody, cbody, Δt)
-                Aab[[4:6; 11:13], [1:3; 7:9]] -= ∂damperforcea∂posb(joint, pbody, cbody, Δt)
+                Aab[[4:6; 11:13], [1:3; 7:10]] -= ∂springforcea∂posb(joint, pbody, cbody, Δt, attjac = false)
+                Aab[[4:6; 11:13], [1:3; 7:10]] -= ∂damperforcea∂posb(joint, pbody, cbody, Δt, attjac = false)
 
-                Aba[[4:6; 11:13], [1:3; 7:9]] -= ∂springforceb∂posa(joint, pbody, cbody, Δt)
-                Aba[[4:6; 11:13], [1:3; 7:9]] -= ∂damperforceb∂posa(joint, pbody, cbody, Δt)
+                Aba[[4:6; 11:13], [1:3; 7:10]] -= ∂springforceb∂posa(joint, pbody, cbody, Δt, attjac = false)
+                Aba[[4:6; 11:13], [1:3; 7:10]] -= ∂damperforceb∂posa(joint, pbody, cbody, Δt, attjac = false)
 
-                Abb[[4:6; 11:13], [1:3; 7:9]] -= ∂springforceb∂posb(joint, pbody, cbody, Δt)
-                Abb[[4:6; 11:13], [1:3; 7:9]] -= ∂damperforceb∂posb(joint, pbody, cbody, Δt)
+                Abb[[4:6; 11:13], [1:3; 7:10]] -= ∂springforceb∂posb(joint, pbody, cbody, Δt, attjac = false)
+                Abb[[4:6; 11:13], [1:3; 7:10]] -= ∂damperforceb∂posb(joint, pbody, cbody, Δt, attjac = false)
 
-                FfzG[pcol13,pcol12] += Aaa
-                FfzG[pcol13,ccol12] += Aab
-                FfzG[ccol13,pcol12] += Aba
-                FfzG[ccol13,ccol12] += Abb
+                FfzG[pcol13,pcol13] += Aaa
+                FfzG[pcol13,ccol13] += Aab
+                FfzG[ccol13,pcol13] += Aba
+                FfzG[ccol13,ccol13] += Abb
             end
         else
             for (i, childid) in enumerate(eqc.childids)
@@ -262,28 +252,28 @@ function spring_damper_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,
                 cbody = getbody(mechanism, childid)
                 cstate = cbody.state
                 joint = eqc.constraints[i]
-                ccol12 = offsetrange(childind,12)
+                # ccol12 = offsetrange(childind,12)
                 ccol13 = offsetrange(childind,13)
+                λ = getλJoint(eqc, i)
 
-                n1 = 1
-                n2 = 0
-                for i=1:i-1
-                    n1 += length(eqc.constraints[i])
-                    n2 += length(eqc.constraints[i])
-                end
-                n2 += length(joint)
-                λ = eqc.λsol[2][n1:n2]
+                # n1 = 1
+                # n2 = 0
+                # for i=1:i-1
+                #     n1 += length(eqc.constraints[i])
+                #     n2 += length(eqc.constraints[i])
+                # end
+                # n2 += length(joint)
+                # λ = eqc.λsol[2][n1:n2]
 
-                Abb = zeros(T,13,12)
+                Abb = zeros(T,13,13)
 
-                Abb[[4:6; 11:13], [1:3; 7:9]] -= ∂springforceb∂posb(joint, pbody, cbody, Δt)
-                Abb[[4:6; 11:13], [1:3; 7:9]] -= ∂damperforceb∂posb(joint, pbody, cbody, Δt)
+                Abb[[4:6; 11:13], [1:3; 7:10]] -= ∂springforceb∂posb(joint, pbody, cbody, Δt, attjac = false)
+                Abb[[4:6; 11:13], [1:3; 7:10]] -= ∂damperforceb∂posb(joint, pbody, cbody, Δt, attjac = false)
 
-                FfzG[ccol13,ccol12] += Abb
+                FfzG[ccol13,ccol13] += Abb
             end
         end
     end
-
     return FfzG
 end
 
@@ -554,12 +544,10 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     data = getdata(mechanism)
 
     A = zeros(sum(resdims), datadim(mechanism))
-    @show size(attitudejacobian(data, Nb))
-    @show size(attitudejacobian(data, Nb)[1:13Nb,1:12Nb])
     A[1:sum(eqcdims), 1:12Nb] += joint_datamat(mechanism) * attitudejacobian(data, Nb)[1:13Nb,1:12Nb]
     A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += Fz[Fz_indices(Nb),:]
     A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += joint_jacobian_datamat(mechanism)[Fz_indices(Nb), :] * attitudejacobian(data, Nb)[1:13Nb,1:12Nb]
-    A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += spring_damper_datamat(mechanism)[Fz_indices(Nb), :]
+    A[sum(eqcdims) .+ (1:6Nb), 1:12Nb] += spring_damper_datamat(mechanism)[Fz_indices(Nb), :] * attitudejacobian(data, Nb)[1:13Nb,1:12Nb]
 
     offr = 0
     offc = 0
@@ -645,7 +633,7 @@ end
 function attitudejacobian(data::AbstractVector, Nb::Int)
     attjac = zeros(0,0)
     for i = 1:Nb
-        x2, v1, q2, ω1 = unpackdata(data[13*(i-1) .+ (1:13)])
+        x2, v15, q2, ϕ15 = unpackdata(data[13*(i-1) .+ (1:13)])
         attjac = cat(attjac, I(6), G(q2), I(3), dims = (1,2))
     end
     ndata = length(data)
@@ -664,6 +652,17 @@ function attitudejacobian_chain(data::AbstractVector, Δt, Nb::Int)
     nu = ndata - size(attjac)[1]
     attjac = cat(attjac, I(nu), dims = (1,2))
     return attjac
+end
+
+function getλJoint(eqc::EqualityConstraint{T,N,Nc}, i::Int) where {T,N,Nc}
+    n1 = 1
+    for j = 1:i-1
+        n1 += length(eqc.constraints[j])
+    end
+    n2 = n1 - 1 + length(eqc.constraints[i])
+
+    λi = SVector{n2-n1+1,T}(eqc.λsol[2][n1:n2])
+    return λi
 end
 
 function sensitivities(mech, sol, data)
