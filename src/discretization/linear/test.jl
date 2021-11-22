@@ -11,8 +11,5 @@
     state.x2[1] = x1 + v1*Δt
     state.q2[1] = q1 * ωbar(ω1,Δt) * Δt / 2
 
-    state.xsol[2] = state.x2[1]
-    state.qsol[2] = state.q2[1]
-
     return
 end

@@ -26,8 +26,6 @@ mutable struct State{T}
     τ2::Vector{SVector{3,T}}
 
     # Current solution estimate [before step;after step]
-    xsol::Vector{SVector{3,T}}
-    qsol::Vector{UnitQuaternion{T}}
     vsol::Vector{SVector{3,T}}
     ϕsol::Vector{SVector{3,T}}
 
@@ -46,15 +44,13 @@ mutable struct State{T}
         F2 = [szeros(T, 3)]
         τ2 = [szeros(T, 3)]
 
-        xsol = [szeros(T, 3) for i=1:2]
-        qsol = [one(UnitQuaternion{T}) for i=1:2]
         vsol = [szeros(T, 3) for i=1:2]
         ϕsol = [szeros(T, 3) for i=1:2]
 
         d = szeros(T, 6)
         D = szeros(T, 6, 6)
 
-        new{T}(0, x1, q1, v15, ϕ15, x2, q2, F2, τ2, xsol, qsol, vsol, ϕsol, d, D)
+        new{T}(0, x1, q1, v15, ϕ15, x2, q2, F2, τ2, vsol, ϕsol, d, D)
     end
 end
 
@@ -68,8 +64,6 @@ function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, state::State{T}) wh
     println(io,"q2:   "*string(state.q2))
     println(io,"F2:   "*string(state.F2))
     println(io,"τ2:   "*string(state.τ2))
-    println(io,"xsol: "*string(state.xsol))
-    println(io,"qsol: "*string(state.qsol))
     println(io,"vsol: "*string(state.vsol))
     println(io,"ϕsol: "*string(state.ϕsol))
     println(io,"d:    "*string(state.d))

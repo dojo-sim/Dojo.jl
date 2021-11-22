@@ -57,9 +57,6 @@ sol = getsolution(mech)
 v25 = sol[6:8]
 norm(v15 - v25)
 
-v15
-v25
-
 # IFT
 setentries!(mech)
 datamat = full_data_matrix(mech, attjac = true)
@@ -79,8 +76,6 @@ fd_datamat1 = finitediff_data_matrix(mech, data, sol)
 @test norm(fd_datamat + datamat2, Inf) < 1e-7
 plot(Gray.(abs.(datamat)))
 plot(Gray.(abs.(fd_datamat)))
-plot(Gray.(abs.(datamat_)))
-plot(Gray.(abs.(fd_datamat_)))
 
 
 fd_solmat = finitediff_sol_matrix(mech, data, sol)

@@ -11,7 +11,6 @@ getGlobalOrder() = (global METHODORDER; return METHODORDER)
 @inline posargs1(state::State) = (state.x1, state.q1)
 @inline fullargs1(state::State) = (state.x1, state.v15, state.q1, state.ϕ15)
 @inline posargs2(state::State; k=1) = (state.x2[k], state.q2[k])
-# @inline posargssol(state::State) = (state.xsol[2], state.qsol[2])
 @inline fullargssol(state::State) = (state.x2[1], state.vsol[2], state.q2[1], state.ϕsol[2])
 @inline posargs3(state::State, Δt) = (getx3(state, Δt), getq3(state, Δt))
 
@@ -62,16 +61,11 @@ end
 @inline function updatestate!(body::Body{T}, Δt) where T
     state = body.state
 
-    # state.x1 = state.xsol[2]
-    # state.q1 = state.qsol[2]
     state.v15 = state.vsol[2]
     state.ϕ15 = state.ϕsol[2]
 
     state.x2[1] = state.x2[1] + state.vsol[2]*Δt
     state.q2[1] = state.q2[1] * ωbar(state.ϕsol[2],Δt) * Δt / 2
-
-    # state.xsol[2] = state.x2[1]
-    # state.qsol[2] = state.q2[1]
 
     state.F2[1] = szeros(T,3)
     state.τ2[1] = szeros(T,3)
