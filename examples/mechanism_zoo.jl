@@ -276,7 +276,7 @@ function getnpendulum(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T 
 
     # Links
     origin = Origin{T}()
-    links = [Box(h, h, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
+    links = [Box(r, r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
     # Constraints
     jointb1 = EqualityConstraint(Prototype(basetype, origin, links[1], ex; p2 = vert11, spring = spring, damper = damper))

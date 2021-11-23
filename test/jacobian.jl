@@ -47,7 +47,7 @@ function test_datamat(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, ctrl::Any=(m,
 
         @test norm((fd_datamat0 + datamat0), Inf) < ϵ
         @test norm((fd_datamat0 + datamat2), Inf) < ϵ
-        # @test norm((fd_datamat1 + datamat1), Inf) < ϵ
+        @test norm((fd_datamat1 + datamat1), Inf) < ϵ
         @test norm((fd_datamat1 * attjac + datamat1 * attjac), Inf) < ϵ
     end
     return nothing
