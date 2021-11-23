@@ -5,7 +5,7 @@
 # const Dojo = Main
 
 # Data
-ϵ0 = 1e-14
+ϵ0 = 1e-12
 Δt0 = 1e-2
 start0 = Int(floor(1/Δt0)) + 1
 jointtypes = [
@@ -149,9 +149,8 @@ me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
     # Test mechanical energy conservation
     # With spring the error is or the order of Δt, but there is no drift
     @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-3
-    norm((me0 .- me0[1]) ./ mean(me0), Inf)
+    @show norm((me0 .- me0[1]) ./ mean(me0), Inf)
 end
-
 
 ################################################################################
 # SLIDER

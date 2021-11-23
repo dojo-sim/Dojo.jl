@@ -17,7 +17,7 @@ nocontrol!(mechanism, k) = controller!(mechanism, k, U = 0.0)
 
 
 # Data
-ϵ0 = 1e-14
+ϵ0 = 1e-12
 Δt0 = 0.01
 g0 = 0.0
 jointtypes = [
@@ -183,10 +183,9 @@ end
 # with spring and damper
 # with control
 ################################################################################
-Nlink0 = 5
+Nlink0 = 2
 spring0 = 1.0 * 4e0
 damper0 = 1.0 * 2e+1
-
 
 mech = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
     jointtype = :Revolute, contact = false, r = 0.05)
@@ -196,9 +195,8 @@ v0 = 100.0 * [1, 2, 3] * Δt0
 q10 = UnitQuaternion(RotX(0.5*π))
 
 initialize!(mech, :snake, q1 = q10, v = v0, ω = ω0)
-storage = simulate!(mech, 1.50, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+storage = simulate!(mech, 1.50, record = true, solver = :mehrotra!, verbose = false, ϵ = 1.0e-12)
 # visualize(mech, storage, vis = vis)
-
 
 m0 = Dojo.momentum(mech, storage)[5:end]
 mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
