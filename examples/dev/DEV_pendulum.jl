@@ -62,6 +62,8 @@ setentries!(mech)
 datamat = full_data_matrix(mech, attjac = true)
 datamat1 = full_data_matrix(mech, attjac = false)
 datamat2 = full_data_matrix(mech, attjac = false) * attjac
+plot(Gray.(attjac))
+
 solmat = full_matrix(mech.system)
 sensi = - (solmat \ datamat)
 @show cond(solmat)

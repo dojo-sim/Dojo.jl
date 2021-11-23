@@ -52,20 +52,38 @@ end
     point2 = xb + vrotate(joint.vertices[2], qb)
 
     X = -VLᵀmat(qa) * RVᵀmat(qa)
-    Q = 2 * VLᵀmat(qa) * (Lmat(UnitQuaternion(point2)) - Lmat(UnitQuaternion(xa)))
+    Q = ∂vrotate∂q(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * Tmat()
+    Q += ∂vrotate∂p(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * -∂vrotate∂q(joint.vertices[1], qa)
 
+    # X = FiniteDiff.finite_difference_jacobian(xa -> g(joint, xa, qa, xb, qb), xa)
+    # Q = FiniteDiff.finite_difference_jacobian(qa -> g(joint, xa, UnitQuaternion(qa...,false), xb, qb), vector(qa))
+    # @show Q
+    # @show Q0
+    # @show "∂g∂posa AB"
+    # @show scn(norm(X0 - X))
+    # @show scn(norm(Q0 - Q))
+    # @show scn(norm(Q0 - Q00))
     return X, Q
 end
+
 @inline function ∂g∂posb(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
     X = VLᵀmat(qa) * RVᵀmat(qa)
     Q = 2 * VLᵀmat(qa) * Rmat(qa) * Rᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
-
+    # X = FiniteDiff.finite_difference_jacobian(xb -> g(joint, xa, qa, xb, qb), xb)
+    # Q = FiniteDiff.finite_difference_jacobian(qb -> g(joint, xa, qa, xb, UnitQuaternion(qb...,false)), vector(qb))
+    # @show "∂g∂posb AB"
+    # @show scn(norm(X0 - X))
+    # @show scn(norm(Q0 - Q))
     return X, Q
 end
 @inline function ∂g∂posb(joint::Translational, xb::AbstractVector, qb::UnitQuaternion)
     X = I
     Q = 2 * VRᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
-
+    # X = FiniteDiff.finite_difference_jacobian(xb -> g(joint, xb, qb), xb)
+    # Q = FiniteDiff.finite_difference_jacobian(qb -> g(joint, xb, UnitQuaternion(qb...,false)), vector(qb))
+    # @show "∂g∂posb B"
+    # @show scn(norm(X0 - X))
+    # @show scn(norm(Q0 - Q))
     return X, Q
 end
 

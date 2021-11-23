@@ -35,11 +35,17 @@ function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
                 pGlq = A * pQl
                 cGlx = A * cXl
                 cGlq = A * cQl
-
+                # if typeof(joint) <: Translational
+                #     @show A
+                #     # @show pGlx
+                #     @show pGlq
+                #     # @show cGlx
+                #     @show cGlq
+                # end
                 Gl[range, pcol13[1:3]] = pGlx
-                Gl[range, pcol13[7:10]] = pGlq * ∂integrator∂q(pstate.q2[1], pstate.ϕsol[2], Δt, attjac = false)
+                Gl[range, pcol13[7:10]] = pGlq
                 Gl[range,ccol13[1:3]] = cGlx
-                Gl[range,ccol13[7:10]] = cGlq * ∂integrator∂q(cstate.q2[1], cstate.ϕsol[2], Δt, attjac = false)
+                Gl[range,ccol13[7:10]] = cGlq
                 ind1 = ind2+1
             end
         else
@@ -47,19 +53,24 @@ function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
                 childind = childid - Ne
                 cbody = getbody(mechanism,childid)
                 cstate = cbody.state
-
-                ind2 += length(eqc.constraints[i])
+                joint = eqc.constraints[i]
+                ind2 += length(joint)
                 range = oneindc+ind1:oneindc+ind2
 
                 ccol13 = offsetrange(childind,13)
 
-                cXl, cQl =  ∂g∂posb(eqc.constraints[i], mechanism.origin, cbody, Δt) # x3
-                mat = constraintmat(eqc.constraints[i])
-                cGlx = mat * cXl
-                cGlq = mat * cQl
+                cXl, cQl = ∂g∂posb(joint, mechanism.origin, cbody, Δt) # x3
 
+                A = constraintmat(joint)
+                cGlx = A * cXl
+                cGlq = A * cQl
+                # if typeof(joint) <: Translational
+                #     @show A
+                #     # @show cGlx
+                #     @show cGlq
+                # end
                 Gl[range,ccol13[1:3]] = cGlx
-                Gl[range,ccol13[7:10]] = cGlq * ∂integrator∂q(cstate.q2[1], cstate.ϕsol[2], Δt, attjac = false)
+                Gl[range,ccol13[7:10]] = cGlq
                 ind1 = ind2+1
             end
         end
@@ -601,15 +612,12 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}; attjac::Bool = true)
     G = attitudejacobian(data, Nb)[1:13Nb,1:12Nb]
     H = integratorjacobian(data, solution, Δt, Nb, neqcs, attjac = attjac)[1:13Nb,1:nic]
 
-    B = joint_constraint_jacobian(mechanism)
-    C = Fz + joint_dynamics_jacobian(mechanism) +
-        spring_damper_jacobian(mechanism)
+    B = joint_constraint_jacobian(mechanism) * H
     D = contact_dynamics_jacobian(mechanism) * H
     E = contact_constraint_jacobian(mechanism) * H
-    if attjac
-        B = B * G
-        C = C * G
-    end
+
+    C = Fz + joint_dynamics_jacobian(mechanism) + spring_damper_jacobian(mechanism)
+    attjac && (C = C * G)
 
     A = zeros(sum(resdims), datadim(mechanism, attjac = attjac))
     A[1:neqcs, 1:nic] += B

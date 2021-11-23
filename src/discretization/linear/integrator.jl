@@ -40,7 +40,7 @@ end
 
     # state.x2[1] = x1 + v15*Δt
     # state.q2[1] = q1 * ωbar(ϕ15,Δt) * Δt / 2
-    state.x1 = x2 + -v15*Δt
+    state.x1 = x2 - v15*Δt
     state.q1 = q2 * ωbar(-ϕ15,Δt) * Δt / 2
 
     state.F2[1] = szeros(T,3)
@@ -60,6 +60,9 @@ end
 
 @inline function updatestate!(body::Body{T}, Δt) where T
     state = body.state
+
+    state.x1 = state.x2[1]
+    state.q1 = state.q2[1]
 
     state.v15 = state.vsol[2]
     state.ϕ15 = state.ϕsol[2]
