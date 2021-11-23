@@ -279,7 +279,7 @@ function getnpendulum(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T 
     links = [Box(h, h, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
     # Constraints
-    jointb1 = EqualityConstraint(Prototype(basetype, origin, links[1], ex; p1 = vert12, p2 = vert11, spring = spring, damper = damper))
+    jointb1 = EqualityConstraint(Prototype(basetype, origin, links[1], ex; p2 = vert11, spring = spring, damper = damper))
     if Nlink > 1
         eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], ex; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
         eqcs = [jointb1; eqcs]
@@ -303,7 +303,7 @@ function getnslider(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 
     links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
 
     # Constraints
-    jointb1 = EqualityConstraint(Prismatic(origin, links[1], ex; p1 = 0*vert11, p2 = 0*vert11))
+    jointb1 = EqualityConstraint(Prismatic(origin, links[1], ex; p2 = 0*vert11))
     if Nlink > 1
         eqcs = [
             jointb1;

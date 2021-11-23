@@ -599,16 +599,17 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}; attjac::Bool = true)
     data = getdata(mechanism)
     solution = getsolution(mechanism)
     G = attitudejacobian(data, Nb)[1:13Nb,1:12Nb]
+    # plt = plot()
+    # plot!(plt, Gray.(attitudejacobian(data, Nb)))
+    # display(plt)
     H = integratorjacobian(data, solution, Δt, Nb, neqcs, attjac = attjac)[1:13Nb,1:nic]
 
     B = joint_constraint_jacobian(mechanism) * H
-    C = Fz + joint_dynamics_jacobian(mechanism) +
-        spring_damper_jacobian(mechanism)
     D = contact_dynamics_jacobian(mechanism) * H
     E = contact_constraint_jacobian(mechanism) * H
-    if attjac
-        C = C * G
-    end
+
+    C = Fz + joint_dynamics_jacobian(mechanism) + spring_damper_jacobian(mechanism)
+    attjac && (C = C * G)
 
     A = zeros(sum(resdims), datadim(mechanism, attjac = attjac))
     A[1:neqcs, 1:nic] += B

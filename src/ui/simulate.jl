@@ -39,12 +39,12 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
     eqcs = mechanism.eqconstraints
 
     for k = steps
-        # record && saveToStorage!(mechanism, storage, k)
         control!(mechanism, k)
         foreach(applyFτ!, eqcs, mechanism)
         eval(solver)(mechanism, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter, warning = debug, verbose = verbose,
             opts=InteriorPointOptions(rtol=ϵ, max_iter=newtonIter, btol=btol, undercut=undercut, verbose=verbose))
         record && saveToStorage!(mechanism, storage, k)
+
         (k != steps[end]) && foreach(updatestate!, bodies, Δt)
     end
     record ? (return storage) : (return)
@@ -72,6 +72,10 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
             opts=InteriorPointOptions(rtol=ϵ, max_iter=newtonIter, btol=btol, undercut=undercut, verbose=verbose))
 
         record && saveToStorage!(mechanism, storage, k)
+
+        @show collect(mech.bodies)[1].state.q1
+        @show collect(mech.bodies)[1].state.q2[1]
+
         (k != steps[end]) && foreach(updatestate!, bodies, Δt)
     end
     record ? (return storage) : (return)
@@ -90,9 +94,38 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
 
     for k = steps
         record && saveToStorage!(mechanism, storage, k)
+        # @show k
+        # @show "before"
+        # println("body1 x1 = ", collect(mech.bodies)[1].state.x1)
+        # println("body1 x2 = ", collect(mech.bodies)[1].state.x2[1])
+        # println("body1 q1 = ", collect(mech.bodies)[1].state.q1)
+        # println("body1 q2 = ", collect(mech.bodies)[1].state.q2[1])
+        #
+        # tra1 = collect(mechanism.eqconstraints)[1].constraints[1]
+        # rot1 = collect(mechanism.eqconstraints)[1].constraints[2]
+        # tra2 = collect(mechanism.eqconstraints)[2].constraints[1]
+        # rot2 = collect(mechanism.eqconstraints)[2].constraints[2]
+
+        # @show g(tra1, mech.origin, body1, Δt)
+        # @show g(tra2, body1, body2, Δt)
+        # @show posargs3(body1.state, Δt)
+        # @show g(tra1, posargs3(body1.state, Δt)...)
+        # # println("body2 q1 = ", collect(mech.bodies)[2].state.q1)
+        # # println("body2 q2 = ", collect(mech.bodies)[2].state.q2[1])
+
+
         eval(solver)(mechanism, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter, warning = debug, verbose = verbose,
             opts=InteriorPointOptions(rtol=ϵ, max_iter=newtonIter, btol=btol, undercut=undercut, verbose=verbose))
-            # (k != steps[end]) && foreach(updatestate!, bodies, Δt)
+
+        # @show "after"
+        # println("body1 x1 = ", collect(mech.bodies)[1].state.x1)
+        # println("body1 x2 = ", collect(mech.bodies)[1].state.x2[1])
+        # println("body1 q1 = ", collect(mech.bodies)[1].state.q1)
+        # println("body1 q2 = ", collect(mech.bodies)[1].state.q2[1])
+        #
+        # # println("body2 q1 = ", collect(mech.bodies)[2].state.q1)
+        # # println("body2 q2 = ", collect(mech.bodies)[2].state.q2[1])
+
         (k != steps[end]) && foreach(updatestate!, bodies, Δt)
     end
     record ? (return storage) : (return)
