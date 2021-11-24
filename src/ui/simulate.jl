@@ -19,7 +19,7 @@ function saveToStorage!(mechanism::Mechanism, storage::Storage, i::Int)
     return
 end
 
-function initializeSimulation!(mechanism::Mechanism, debug::Bool)
+function initializeSimulation!(mechanism::Mechanism)
     discretizestate!(mechanism)
     foreach(setsolution!, mechanism.bodies)
     return
@@ -33,7 +33,7 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
         btol=ϵ, undercut=Inf,
     )
 
-    initializeSimulation!(mechanism, debug)
+    initializeSimulation!(mechanism)
     Δt = mechanism.Δt
     bodies = mechanism.bodies
     eqcs = mechanism.eqconstraints
@@ -57,7 +57,7 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
         btol=ϵ, undercut=Inf,
     )
 
-    initializeSimulation!(mechanism, debug)
+    initializeSimulation!(mechanism)
     Δt = mechanism.Δt
     bodies = mechanism.bodies
     eqcs = mechanism.eqconstraints
@@ -88,7 +88,7 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
         btol=ϵ, undercut=Inf,
     )
 
-    initializeSimulation!(mechanism, debug)
+    initializeSimulation!(mechanism)
     Δt = mechanism.Δt
     bodies = mechanism.bodies
 

@@ -78,13 +78,15 @@ zM = hopper_offset_state(0.5, 0.5, 0.5)
 zT = hopper_offset_state(0.5, 0.5, 0.0)
 
 u_control = [0.0; 0.0; mech.g * mech.Δt]
+u_mask = [0 0 0 1 0 0 0;
+		  0 0 0 0 1 0 0;
+		  0 0 0 0 0 0 1]
+
 z = [copy(z1)]
 for t = 1:5
-    znext = step!(mech, z[end], u_control, control_inputs=hopper_inputs!)
+    znext = simon_step!(mech, z[end], u_mask'*u_control)
     push!(z, znext)
 end
-storage = generate_storage(mech, z)
-visualize(mech, storage; vis = vis)
 
 
 # Set random seed
@@ -99,9 +101,9 @@ end
 
 # eval_btol = 1.0e-4
 # eval_undercut = Inf
-
 function fd(model::HopperMax{Midpoint, FixedTime}, x, u, w, h, t)
-	return step!(model.mech, x, u, control_inputs=hopper_inputs!)
+	# return step!(model.mech, x, u, control_inputs=hopper_inputs!)
+	return simon_step!(model.mech, x, u_mask'*u, ϵ = 1e-4, btol = 1e-3, undercut = 1.5, verbose = false)
 end
 
 # grad_btol = 1.0e-3
@@ -111,14 +113,19 @@ function fdx(model::HopperMax{Midpoint, FixedTime}, x, u, w, h, t)
 	# return fdjac(w -> step!(mech, w[1:(end-model.m)], w[(end-model.m+1):end],
     #     btol=grad_btol, undercut=grad_undercut, control_inputs=hopper_inputs!),
     #     [x; u])[:, 1:(end-model.m)]
-    step_grad_x!(model.mech, x, u, control_inputs=hopper_inputs!)
+    # step_grad_x!(model.mech, x, u, control_inputs=hopper_inputs!)
+
+	∇x, ∇u = getGradients!(model.mech, x, u_mask'*u, ϵ = 1e-4, btol = 1e-3, undercut = 1.5, verbose = false)
+	return ∇x
 end
 
 function fdu(model::HopperMax{Midpoint, FixedTime}, x, u, w, h, t)
 	# return fdjac(w -> step!(mech, w[1:(end-model.m)], w[(end-model.m+1):end],
     #     btol=grad_btol, undercut=grad_undercut, control_inputs=hopper_inputs!),
     #     [x; u])[:, (end-model.m+1):end]
-    return step_grad_u!(model.mech, x, u, control_inputs=hopper_inputs!)
+	# step_grad_u!(model.mech, x, u, control_inputs=hopper_inputs!)
+	∇x, ∇u = getGradients!(model.mech, x, u_mask'*u, ϵ = 1e-4, btol = 1e-3, undercut = 1.5, verbose = false)
+	return ∇u * u_mask'
 end
 
 n, m, d = 26, 3, 0
@@ -137,6 +144,8 @@ x̄ = rollout(model, z1, ū, w, h, T)
 step!(mech, z1, ū[1], control_inputs=hopper_inputs!)
 step_grad_x!(mech, z1, ū[1], control_inputs=hopper_inputs!)
 step_grad_u!(mech, z1, ū[1], control_inputs=hopper_inputs!)
+storage = generate_storage(mech, x̄)
+visualize(mech, storage; vis = vis)
 
 
 # Objective
@@ -194,7 +203,7 @@ prob.m_data;
 prob.m_data.dyn_deriv.fu[4]
 
 # Solve
-@profiler stats = constrained_ddp_solve!(prob,
+stats = constrained_ddp_solve!(prob,
     verbose = true,
     grad_tol = 1.0e-3,
 	max_iter = 100,

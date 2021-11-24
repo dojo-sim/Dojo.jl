@@ -33,13 +33,9 @@ end
     state = body.state
     x2 = state.x2[1]
     q2 = state.q2[1]
-    # x1 = state.x1
-    # q1 = state.q1
     v15 = state.v15
     ϕ15 = state.ϕ15
 
-    # state.x2[1] = x1 + v15*Δt
-    # state.q2[1] = q1 * ωbar(ϕ15,Δt) * Δt / 2
     state.x1 = x2 - v15*Δt
     state.q1 = q2 * ωbar(-ϕ15,Δt) * Δt / 2
 
@@ -77,8 +73,6 @@ end
 
 @inline function setsolution!(body::Body)
     state = body.state
-    # state.xsol[2] = state.x2[1]
-    # state.qsol[2] = state.q2[1]
     state.vsol[1] = state.v15
     state.vsol[2] = state.v15
     state.ϕsol[1] = state.ϕ15

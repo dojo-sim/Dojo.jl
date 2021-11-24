@@ -357,7 +357,7 @@ function dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,Nn
     end
 
     ############################################################################
-    @warn "control datamat seems wrong"
+    # @warn "control datamat seems wrong"
     # control datamat is always zero and seems to be filled only for the first half
     # Fz = Fz * attitudejacobian(getdata(mechanism), Nb)[1:13Nb,1:12Nb]
     # Fz += control_datamat(mechanism)

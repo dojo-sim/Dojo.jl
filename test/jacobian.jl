@@ -40,15 +40,12 @@ function test_datamat(model::Symbol; ϵ::T = 1e-6, tsim::T = 0.10, ctrl::Any=(m,
         # IFT
         datamat0 = full_data_matrix(mechanism, attjac = true)
         datamat1 = full_data_matrix(mechanism, attjac = false)
-        datamat2 = full_data_matrix(mechanism, attjac = false) * attjac
         # finite diff
         fd_datamat1 = finitediff_data_matrix(mechanism, data, sol, δ = 1e-5, verbose = verbose)
         fd_datamat0 = fd_datamat1 * attjac
 
         @test norm((fd_datamat0 + datamat0), Inf) < ϵ
-        @test norm((fd_datamat0 + datamat2), Inf) < ϵ
         @test norm((fd_datamat1 + datamat1), Inf) < ϵ
-        @test norm((fd_datamat1 * attjac + datamat1 * attjac), Inf) < ϵ
     end
     return nothing
 end
