@@ -47,7 +47,7 @@ mech.eqconstraints[1].constraints[2].damper
 
 storage = simulate!(mech, 10.0, record = true, solver = :mehrotra!)
 # forcedstorage = simulate!(mech, 0.1, controller!, record = true, solver = :mehrotra!)
-plot(hcat(Vector.(storage.x[1])...)')
+# plot(hcat(Vector.(storage.x[1])...)')
 # plot(hcat(Vector.(forcedstorage.x[1])...)')
 # plot(hcat([[q.w, q.x, q.y, q.z] for q in storage.q[1]]...)')
 # plot(hcat([[q.w, q.x, q.y, q.z] for q in forcedstorage.q[1]]...)')
@@ -72,16 +72,32 @@ attjac = attitudejacobian(data, Nb)
 
 # IFT
 datamat = full_data_matrix(deepcopy(mech))
+datamat_ = full_data_matrix(deepcopy(mech), attjac=false)
 solmat = full_matrix(mech.system)
 sensi = - (solmat \ datamat)
 
 # finite diff
 fd_datamat = finitediff_data_matrix(deepcopy(mech), data, sol, δ = 1e-5) * attjac
+fd_datamat_ = finitediff_data_matrix(deepcopy(mech), data, sol, δ = 1e-5)
 @test norm(fd_datamat + datamat, Inf) < 1e-8
+@test norm(fd_datamat_ + datamat_, Inf) < 1e-8
+
+
+norm((fd_datamat_ + datamat_)[6:11, 1:3], Inf)
+norm((fd_datamat_ + datamat_)[6:11, 7:10], Inf)
+norm((fd_datamat_ + datamat_)[6:11, 11:13], Inf)
+norm((fd_datamat_ + datamat_)[6:11, 14:14], Inf)
+
+(fd_datamat_)[6:11, 7:10]
+-(datamat_)[6:11, 7:10]
+
 # plot(Gray.(abs.(datamat)))
 # plot(Gray.(abs.(fd_datamat)))
 
 norm(datamat[1:5, 1:13] + fd_datamat[1:5, 1:13])
+norm(datamat_[1:5, 1:14] + fd_datamat_[1:5, 1:14])
+
+norm(datamat_[6:11, 1:14] + fd_datamat_[6:11, 1:14])
 
 datamat[6:11, 1:13]
 -fd_datamat[6:11, 1:13]
@@ -91,6 +107,8 @@ norm(datamat[6:11, 7:9] + fd_datamat[6:11, 7:9])
 norm(datamat[6:11, 10:12] + fd_datamat[6:11, 10:12])
 norm(datamat[6:11, 13] + fd_datamat[6:11, 13])
 
+datamat[6:11, 10:12]
+fd_datamat[6:11, 10:12]
 
 fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
 @test norm(fd_solmat + solmat, Inf) < 1e-8
