@@ -18,70 +18,49 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
-mech = getmechanism(:halfcheetah, Nlink = 5, Δt = 0.01, g = -9.81, cf = 0.0, contact = true, conetype = :soc)
-
-x = [0,-0.5,.1]
-v = 0.1*[1,.3,4]
-ω = 1.5*[.1,.8,0]
-q1 = UnitQuaternion(RotX(π/1.5))
-initialize!(mech, :snake, x = x, v = v, ω = ω, q1 = q1)
-
-@elapsed storage = simulate!(mech, .28, record = true, solver = :mehrotra!)
-
-visualize(mech, storage, vis = vis)
-
-
-
-function gethalfcheetah(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0, damper::T = 0.0, contact::Bool = true) where {T}
-    # TODO new feature: visualize capsule instead of cylinders
-    # TODO new feature: visualize multiple shapes for a single body
-    path = "examples/examples_files/halfcheetah.urdf"
-    mech = Mechanism(joinpath(module_dir(), path), floating=false, g = g, Δt = Δt)
-
-    # Adding springs and dampers
-    for (i,eqc) in enumerate(collect(mech.eqconstraints[2:end]))
-        eqc.isdamper = true
-        eqc.isspring = true
-        for joint in eqc.constraints
-            joint.spring = spring
-            joint.damper = damper
+function gravity_compensation(mechanism::Mechanism)
+    # only works with revolute joints for now
+    nu = controldim(mechanism)
+    u = zeros(nu)
+    off  = 0
+    for eqc in mechanism.eqconstraints
+        nu = controldim(eqc)
+        if eqc.parentid != nothing
+            body = getbody(mechanism, eqc.parentid)
+            rot = eqc.constraints[2]
+            A = Matrix(nullspacemat(rot))
+            Fτ = springforce(mechanism, eqc, body)
+            F = Fτ[1:3]
+            τ = Fτ[4:6]
+            u[off .+ (1:nu)] = -A * τ
+        else
+            @warn "need to treat the joint to origin"
         end
+        off += nu
     end
-
-    if contact
-        origin = Origin{T}()
-        bodies = Vector{Body{T}}(collect(mech.bodies))
-        eqs = Vector{EqualityConstraint{T}}(collect(mech.eqconstraints))
-
-        # Foot contact
-        contact1 = [0.0; 0.0; -0.140]
-        contact2 = [0.0; 0.0; -0.188]
-        normal = [0;0;1.0]
-
-        contineqcs1 = contactconstraint(getbody(mech, "ffoot"), normal, cf, p = contact1)
-        contineqcs2 = contactconstraint(getbody(mech, "bfoot"), normal, cf, p = contact2)
-
-        setPosition!(mech, geteqconstraint(mech, "floating_joint"), [1.0,0,0])
-        mech = Mechanism(origin, bodies, eqs, [contineqcs1; contineqcs2], g = g, Δt = Δt)
-    end
-    return mech
+    return u
 end
 
-function initializehalfcheetah!(mechanism::Mechanism; x::T = 0.0, z::T = 1.2, θ::T = 0.1) where {T}
-    setPosition!(mechanism,
-                 geteqconstraint(mechanism, "floating_joint"),
-                 [z, -x, -θ])
-end
 
-mech = getmechanism(:halfcheetah, g = -9.81, damper = 5.0, spring = 300.0)
-initialize!(mech, :halfcheetah, x = 1.0, z = 1.0, θ = 0.2)
-
-@elapsed storage = simulate!(mech, 1.5, record = true, solver = :mehrotra!, verbose = false)
+mech = getmechanism(:halfcheetah, Δt = 0.01, g = -9.81, damper = 100.0, spring = 1000.0)
+initialize!(mech, :halfcheetah, x = 0.0, z = 0.00, θ = 0.0)
+@elapsed storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
+ugc = gravity_compensation(mech)
 
+function controller!(mechanism, k,)
+    u = ugc
+    off = 0
+    for (i,eqc) in enumerate(collect(mechanism.eqconstraints))
+        nu = controldim(eqc)
+        setForce!(mechanism, eqc, SVector{nu}(u[off .+ (1:nu)]))
+        off += nu
+    end
+    return
+end
 
-bodies = collect(mech.bodies)
-eqcs = collect(mech.eqconstraints)
+mech = getmechanism(:halfcheetah, Δt = 0.01, g = -9.81, damper = 10.0, spring = 0.0)
+initialize!(mech, :halfcheetah, x = 0.0, z = 0.00, θ = 0.0)
+@elapsed storage = simulate!(mech, 7.0, controller!, record = true, solver = :mehrotra!, verbose = false)
 
-bodies
-eqcs
+visualize(mech, storage, vis = vis)

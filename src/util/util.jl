@@ -80,16 +80,6 @@ function scn(a::Float64; digits::Int=1, exp_digits::Int=1)
     return "$sgn$(strm)e$sgne$(stre)"
 end
 
-function get_sdf(mechanism, storage)
-    sdf = []
-    impact_index = get_impact_index(mechanism)
-    for j in impact_index
-        impact = mechanism.ineqconstraints[j].constraints[1]
-        push!(sdf, [Vector(g(impact, storage.x[1][i], storage.q[1][i])) for i = 1:length(storage.x[1])])
-    end
-    return sdf
-end
-
 function convert_video_to_gif(video_file_path::AbstractString, output_path::AbstractString="output.gif";
     framerate::Int=30, start_time=0., duration=1e3, overwrite=false, width::Int=1080, height::Int=-2, hq_colors::Bool=false)
     output_path = abspath(output_path)

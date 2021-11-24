@@ -42,7 +42,7 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
         control!(mechanism, k)
         foreach(applyFτ!, eqcs, mechanism)
         eval(solver)(mechanism, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter, warning = debug, verbose = verbose,
-            opts=InteriorPointOptions(rtol=ϵ, max_iter=newtonIter, btol=btol, undercut=undercut, verbose=verbose))
+            opts = InteriorPointOptions(rtol=ϵ, max_iter=newtonIter, btol=btol, undercut=undercut, verbose=verbose))
         record && saveToStorage!(mechanism, storage, k)
 
         (k != steps[end]) && foreach(updatestate!, bodies, Δt)
@@ -69,7 +69,7 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
         control!(mechanism, controller, k)
         foreach(applyFτ!, eqcs, mechanism)
         eval(solver)(mechanism, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter, warning = debug, verbose = verbose,
-            opts=InteriorPointOptions(rtol=ϵ, max_iter=newtonIter, btol=btol, undercut=undercut, verbose=verbose))
+            opts = InteriorPointOptions(rtol=ϵ, max_iter=newtonIter, btol=btol, undercut=undercut, verbose=verbose))
 
         record && saveToStorage!(mechanism, storage, k)
 
@@ -96,7 +96,7 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
         record && saveToStorage!(mechanism, storage, k)
 
         eval(solver)(mechanism, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter, warning = debug, verbose = verbose,
-            opts=InteriorPointOptions(rtol=ϵ, max_iter=newtonIter, btol=btol, undercut=undercut, verbose=verbose))
+            opts = InteriorPointOptions(rtol=ϵ, max_iter=newtonIter, btol=btol, undercut=undercut, verbose=verbose))
 
         (k != steps[end]) && foreach(updatestate!, bodies, Δt)
     end

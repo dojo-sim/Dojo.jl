@@ -56,7 +56,7 @@
 			</geometry>
 		</collision>
     <visual>
-      <origin rpy="0.00000 0.0000 0.00000" xyz="0.00000 0.00000 -0.14500"/>
+      <origin rpy="3.14159 0.65841 3.14159" xyz="0.10000 0.00000 -0.13000"/>
       <geometry>
         <cylinder length="0.29000" radius="0.04600"/>
       </geometry>
@@ -75,9 +75,9 @@
 			</geometry>
 		</collision>
     <visual>
-      <origin rpy="0.0000 0.0000 0.0000" xyz="-0.000 0.00000 -0.14500"/>
+      <origin rpy="3.14159 -1.11159 3.14159" xyz="-0.14000 0.00000 -0.07000"/>
       <geometry>
-        <cylinder length="0.29000" radius="0.04600"/>
+        <cylinder length="0.30000" radius="0.04600"/>
       </geometry>
     </visual>
 	</link>
@@ -88,13 +88,13 @@
 			<inertia ixx="0.07928" ixy="0" ixz="0" iyy="0.09446" iyz="0" izz="0.02929"/>
 		</inertial>
 		<collision>
-			<origin rpy="0.00000 0.00000 0.00000" xyz="0.00000 0.00000 -0.09400"/>
+			<origin rpy="0.00000 -0.27000 0.00000" xyz="0.03000 0.00000 -0.09700"/>
 			<geometry>
 				<capsule length="0.18800" radius="0.04600"/>
 			</geometry>
 		</collision>
     <visual>
-      <origin rpy="0.00000 0.00000 0.00000" xyz="0.00000 0.00000 -0.09400"/>
+      <origin rpy="0.00000 -0.27000 0.00000" xyz="0.03000 0.00000 -0.09700"/>
       <geometry>
         <cylinder length="0.18800" radius="0.04600"/>
       </geometry>
@@ -113,7 +113,7 @@
 			</geometry>
 		</collision>
     <visual>
-      <origin rpy="0.00000 0.00000 0.00000" xyz="0.0000 0.00000 -0.13300"/>
+      <origin rpy="0.00000 0.52000 0.00000" xyz="-0.07000 0.00000 -0.12000"/>
       <geometry>
         <cylinder length="0.26600" radius="0.04600"/>
       </geometry>
@@ -132,7 +132,7 @@
 			</geometry>
 		</collision>
     <visual>
-      <origin rpy="0.00000 0.00000 0.00000" xyz="0.00000 0.00000 -0.10600"/>
+      <origin rpy="0.00000 -0.60000 0.00000" xyz="0.06500 0.00000 -0.09000"/>
       <geometry>
         <cylinder length="0.21200" radius="0.04600"/>
       </geometry>
@@ -151,7 +151,7 @@
 			</geometry>
 		</collision>
     <visual>
-      <origin rpy="0.00000 0.00000 0.00000" xyz="0.00000 0.00000 -0.07000"/>
+      <origin rpy="0.00000 -0.60000 0.00000" xyz="0.04500 0.00000 -0.07000"/>
       <geometry>
         <cylinder length="0.14000" radius="0.04600"/>
       </geometry>
@@ -169,42 +169,42 @@
 		<parent link="torso"/>
 		<child link="bthigh"/>
 		<dynamics damping="1.0" friction="0.0001"/>
-		<origin rpy="0.00000 -0.65800 0.00000" xyz="-0.50000 0.00000 0.00000"/>
+		<origin rpy="0.00000 -0.00000 0.00000" xyz="-0.50000 0.00000 0.00000"/>
 		<axis xyz="0.00000 1.00000 0.00000"/>
 	</joint>
 	<joint name="bshin" type="revolute">
 		<parent link="bthigh"/>
 		<child link="bshin"/>
 		<dynamics damping="1.0" friction="0.0001"/>
-		<origin rpy="0.00000 -0.00000 0.00000" xyz="0.0000 0.00000 -0.29000"/>
+		<origin rpy="0.00000 -0.00000 0.00000" xyz="0.16000 0.00000 -0.25000"/>
 		<axis xyz="0.00000 1.00000 0.00000"/>
 	</joint>
 	<joint name="bfoot" type="revolute">
 		<parent link="bshin"/>
 		<child link="bfoot"/>
 		<dynamics damping="1.0" friction="0.0001"/>
-		<origin rpy="0.00000 -0.00000 0.00000" xyz="-0.00000 0.00000 -0.29000"/>
+		<origin rpy="0.00000 -0.00000 0.00000" xyz="-0.28000 0.00000 -0.14000"/>
 		<axis xyz="0.00000 1.00000 0.00000"/>
 	</joint>
 	<joint name="fthigh" type="revolute">
 		<parent link="torso"/>
 		<child link="fthigh"/>
 		<dynamics damping="1.0" friction="0.0001"/>
-		<origin rpy="0.00000 0.52000 0.00000" xyz="0.50000 0.00000 0.00000"/>
+		<origin rpy="0.00000 -0.00000 0.00000" xyz="0.50000 0.00000 0.00000"/>
 		<axis xyz="0.00000 1.00000 0.00000"/>
 	</joint>
 	<joint name="fshin" type="revolute">
 		<parent link="fthigh"/>
 		<child link="fshin"/>
 		<dynamics damping="1.0" friction="0.0001"/>
-		<origin rpy="0.00000 -1.11159 0.00000" xyz="-0.00000 0.00000 -0.26600"/>
+		<origin rpy="0.00000 -0.00000 0.00000" xyz="-0.14000 0.00000 -0.24000"/>
 		<axis xyz="0.00000 1.00000 0.00000"/>
 	</joint>
 	<joint name="ffoot" type="revolute">
 		<parent link="fshin"/>
 		<child link="ffoot"/>
 		<dynamics damping="1.0" friction="0.0001"/>
-		<origin rpy="0.00000 -0.00000 0.00000" xyz="0.00000 0.00000 -0.21200"/>
+		<origin rpy="0.00000 -0.00000 0.00000" xyz="0.13000 0.00000 -0.18000"/>
 		<axis xyz="0.00000 1.00000 0.00000"/>
 	</joint>
 

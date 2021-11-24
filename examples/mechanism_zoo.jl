@@ -87,6 +87,43 @@ function gethumanoid(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0
     return mech
 end
 
+function gethalfcheetah(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0, damper::T = 0.0, contact::Bool = true) where {T}
+    # TODO new feature: visualize capsule instead of cylinders
+    # TODO new feature: visualize multiple shapes for a single body
+    path = "examples/examples_files/halfcheetah.urdf"
+    mech = Mechanism(joinpath(module_dir(), path), floating=false, g = g, Δt = Δt)
+
+    # Adding springs and dampers
+    # for (i,eqc) in enumerate(collect(mech.eqconstraints[2:end]))
+    @warn "damping on origin joint"
+    for (i,eqc) in enumerate(collect(mech.eqconstraints[1:end]))
+        eqc.isdamper = true
+        eqc.isspring = true
+        for joint in eqc.constraints
+            joint.spring = spring
+            joint.damper = damper
+        end
+    end
+
+    if contact
+        origin = Origin{T}()
+        bodies = Vector{Body{T}}(collect(mech.bodies))
+        eqs = Vector{EqualityConstraint{T}}(collect(mech.eqconstraints))
+
+        # Foot contact
+        contact1 = [0.0; 0.0; -0.140]
+        contact2 = [0.0; 0.0; -0.188]
+        normal = [0;0;1.0]
+
+        contineqcs1 = contactconstraint(getbody(mech, "ffoot"), normal, cf, p = contact1)
+        contineqcs2 = contactconstraint(getbody(mech, "bfoot"), normal, cf, p = contact2)
+
+        setPosition!(mech, geteqconstraint(mech, "floating_joint"), [0.567879,0,0.01622])
+        mech = Mechanism(origin, bodies, eqs, [contineqcs1; contineqcs2], g = g, Δt = Δt)
+    end
+    return mech
+end
+
 function getquadruped(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0,
         damper::T = 0.0, contact::Bool = true) where {T}
     path = "examples/examples_files/quadruped_simple.urdf"
@@ -498,6 +535,12 @@ function initializehumanoid!(mechanism::Mechanism; tran::AbstractVector{T} = [0,
                  [tran; rot])
 end
 
+function initializehalfcheetah!(mechanism::Mechanism; x::T = 0.0, z::T = 0.567879, θ::T = -0.01622) where {T}
+    setPosition!(mechanism,
+                 geteqconstraint(mechanism, "floating_joint"),
+                 [z + 0.567879, -x, -θ + 0.01622])
+end
+
 function initializequadruped!(mechanism::Mechanism; tran::AbstractVector{T} = [0,0,0.23],
         rot::AbstractVector{T} = [0,0,0.0], initangle::T = 0.95) where {T}
     setPosition!(mechanism,
@@ -716,4 +759,20 @@ function cartpole_inputs!(mech, k, u)
 
     setForce!(mech, j1, SVector{1}(u[1]))
     # setForce!(mech, j2, SA[u2])
+end
+
+# get initial state
+function halfcheetahState(;x::T = 0.0, z::T = 0.0, θ::T = 0.0) where {T}
+    mechanism = getmechanism(:halfcheetah)
+    initialize!(mechanism, :halfcheetah, x = x, z = z, θ = θ)
+    Nb = length(mechanism.bodies)
+    x = zeros(13Nb)
+    for (i, body) in enumerate(mechanism.bodies)
+        x2 = body.state.x2[1]
+        v15 = zeros(3)
+        q2 = body.state.q2[1]
+        ϕ15 = zeros(3)
+        x[13*(i-1) .+ (1:13)] = [x2;  v15;  vector(q2); ϕ15]
+    end
+    return x
 end

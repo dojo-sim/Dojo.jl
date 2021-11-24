@@ -53,3 +53,19 @@ end
 
     return [V Ω]
 end
+
+# signed distance function
+function sdf(ineqc::InequalityConstraint{T,N,Nc,Cs}, x::AbstractVector{T}, q::UnitQuaternion{T}) where {T,N,Nc,Cs<:Tuple{<:Bound{T,N}}}
+    cont = ineqc.constraints[1]
+    return cont.ainv3 * (x + vrotate(cont.p,q) - cont.offset)
+end
+
+function get_sdf(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, storage::Storage) where {T,Nn,Ne,Nb,Ni}
+    N = length(storage.x[1])
+    d = []
+    for ineqc in mechanism.ineqconstraints
+        ibody = getbody(mechanism, ineqc.parentid).id - Ne
+        push!(d, [sdf(ineqc, storage.x[ibody][i], storage.q[ibody][i]) for i = 1:length(storage.x[1])])
+    end
+    return d
+end
