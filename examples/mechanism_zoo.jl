@@ -698,16 +698,16 @@ function initializecartpole!(mech::Mechanism{T,Nn,Ne,Nb}; mode=:down, pendulum_l
     # mech.bodies[4].state.ϕ15
 end
 
-## System Inputs
-function hopper_inputs!(mech, k, u)
-    j1 = geteqconstraint(mech, mech.eqconstraints[1].id)
-    j2 = geteqconstraint(mech, mech.eqconstraints[2].id)
-
-    setForce!(mech, j1, [0.0; 0.0; 0.0; u[1]; u[2]; 0.0])
-    setForce!(mech, j2, SA[u[3]])
-
-    return
-end
+# ## System Inputs
+# function hopper_inputs!(mech, k, u)
+#     j1 = geteqconstraint(mech, mech.eqconstraints[1].id)
+#     j2 = geteqconstraint(mech, mech.eqconstraints[2].id)
+#
+#     setForce!(mech, j1, [0.0; 0.0; 0.0; u[1]; u[2]; 0.0])
+#     setForce!(mech, j2, SA[u[3]])
+#
+#     return
+# end
 
 function cartpole_inputs!(mech, k, u)
     # actuate slider

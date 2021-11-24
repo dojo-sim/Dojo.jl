@@ -13,6 +13,7 @@ using MeshCat
 vis = Visualizer()
 open(vis)
 
+using IterativeLQR
 
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
@@ -89,3 +90,36 @@ test_sensitivity(:atlas, ϵ = 8e-3)
 test_solmat(:quadruped, ϵ = 1e-8)
 test_datamat(:quadruped, ϵ = 1e-6)
 test_sensitivity(:quadruped, ϵ = 8e-3)
+
+
+
+
+
+################################################################################
+# Symbolics
+################################################################################
+using Symbolics
+
+function f1(x)
+    return x.^2
+end
+
+function f2(x)
+    return 3 .* x
+end
+
+n = 10
+@variables x[1:n]
+
+y = f2(f1(x))
+df1 = Symbolics.jacobian(f1(x), x)
+df2 = Symbolics.jacobian(f2(x), x)
+F = f2(f1(x))
+dF = Symbolics.jacobian(f2(f1(x)), x)
+
+F_fct = eval(build_function(F, x)[1])
+dF_fct = eval(build_function(dF, x)[1])
+
+x_var = 3*ones(n)
+F_fct(x_var)
+dF_fct(x_var)

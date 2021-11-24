@@ -209,6 +209,12 @@ git-tree-sha1 = "3f71217b538d7aaee0b69ab47d9b7724ca8afa0d"
 uuid = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
 version = "4.0.4"
 
+[[Dagger]]
+deps = ["Colors", "Distributed", "LinearAlgebra", "MemPool", "Profile", "Random", "Requires", "Serialization", "SharedArrays", "SparseArrays", "Statistics", "StatsBase", "TableOperations", "Tables", "UUIDs"]
+git-tree-sha1 = "3f3f322f81edff803759abb8e2c72f38eeda4086"
+uuid = "d58978e5-989f-55fb-8d15-ea34adc7bf54"
+version = "0.13.7"
+
 [[DataAPI]]
 git-tree-sha1 = "cc70b17275652eb47bc9e5f81635981f13cea5c8"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
@@ -516,10 +522,10 @@ uuid = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
 version = "1.3.0"
 
 [[IterativeLQR]]
-deps = ["BenchmarkTools", "ForwardDiff", "JLD2", "LinearAlgebra", "Parameters", "Scratch", "Symbolics"]
-git-tree-sha1 = "7cc2ff7672b3b60fad7bcd17d98435aa10885e2a"
+deps = ["BenchmarkTools", "ForwardDiff", "JLD2", "LinearAlgebra", "Parameters", "Scratch", "SparseArrays", "Symbolics"]
+git-tree-sha1 = "983820e845eb8638e5ca7adb055ce4357b8f921a"
 repo-rev = "main"
-repo-url = "https://github.com/thowell/IterativeLQR.jl"
+repo-url = "/home/simon/.julia/dev/IterativeLQR.jl"
 uuid = "605048dd-e178-462b-beb9-98a09398ef27"
 version = "0.1.0"
 
@@ -743,6 +749,12 @@ deps = ["MacroTools", "Test"]
 git-tree-sha1 = "75a54abd10709c01f1b86b84ec225d26e840ed58"
 uuid = "e89f7d12-3494-54d1-8411-f7d8b9ae1f27"
 version = "0.5.0"
+
+[[MemPool]]
+deps = ["DataStructures", "Distributed", "Mmap", "Random", "Serialization", "Sockets"]
+git-tree-sha1 = "b0bbcf9346ef0a60d2a63069dfc8b4d51d682153"
+uuid = "f9f48841-c794-520a-933b-121f7ba6ed94"
+version = "0.3.9"
 
 [[MeshCat]]
 deps = ["Base64", "BinDeps", "Blink", "Cassette", "Colors", "CoordinateTransformations", "DocStringExtensions", "FFMPEG", "GeometryBasics", "LinearAlgebra", "Logging", "MsgPack", "Mux", "Parameters", "Pkg", "Requires", "Rotations", "Sockets", "StaticArrays", "UUIDs", "WebSockets"]
@@ -1065,6 +1077,12 @@ git-tree-sha1 = "0b4b7f1393cff97c33891da2a0bf69c6ed241fda"
 uuid = "6c6a2e73-6563-6170-7368-637461726353"
 version = "1.1.0"
 
+[[SentinelArrays]]
+deps = ["Dates", "Random"]
+git-tree-sha1 = "f45b34656397a1f6e729901dc9ef679610bd12b5"
+uuid = "91c51154-3ec4-41a3-a24f-3f23e20d615c"
+version = "1.3.8"
+
 [[Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 
@@ -1167,6 +1185,12 @@ version = "0.1.29"
 [[TOML]]
 deps = ["Dates"]
 uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
+
+[[TableOperations]]
+deps = ["SentinelArrays", "Tables", "Test"]
+git-tree-sha1 = "e383c87cf2a1dc41fa30c093b2a19877c83e1bc1"
+uuid = "ab02a1b2-a7df-11e8-156e-fb1833f50b87"
+version = "1.2.0"
 
 [[TableTraits]]
 deps = ["IteratorInterfaceExtensions"]

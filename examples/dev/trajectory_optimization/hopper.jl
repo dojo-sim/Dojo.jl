@@ -2,28 +2,46 @@
 function module_dir()
     return joinpath(@__DIR__, "..", "..", "..")
 end
-# module_dir
-# # Activate package
-# using Pkg
-# Pkg.activate(module_dir())
+# Activate package
+using Pkg
+Pkg.activate(module_dir())
 
 # Load packages
-using Plots
-using Random
 using MeshCat
+using Colors
+using GeometryBasics
+using Rotations
+using Parameters
+using Symbolics
+using Random
+using LinearAlgebra
+using ForwardDiff
 
 # Open visualizer
 vis = Visualizer()
 open(vis)
 
+## get motion_planning.jl and set path
+# path_mp = "/home/taylor/Research/motion_planning"
+path_mp = joinpath(module_dir(), "..", "motion_planning")
+include(joinpath(path_mp, "src/utils.jl"))
+include(joinpath(path_mp, "src/time.jl"))
+include(joinpath(path_mp, "src/model.jl"))
+include(joinpath(path_mp, "src/integration.jl"))
+include(joinpath(path_mp, "src/objective.jl"))
+include(joinpath(path_mp, "src/constraints.jl"))
+# differential dynamic programming
+include(joinpath(path_mp, "src/differential_dynamic_programming/ddp.jl"))
+
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 include(joinpath(module_dir(), "examples", "dev", "trajectory_optimization", "utils.jl"))
 
+
 # System
 gravity = -9.81
 Δt = 0.05
-mech = gethopper(Δt=Δt, g=gravity)
+mech = gethopper(Δt = Δt, g = gravity)
 initializehopper!(mech)
 
 ## state space
@@ -52,7 +70,6 @@ function hopper_offset_state(x_shift, y_shift, z_shift)
     shift = [x_shift; y_shift; z_shift]
     z[1:3] += shift
     z[13 .+ (1:3)] += shift
-
     return z
 end
 
@@ -61,35 +78,19 @@ zM = hopper_offset_state(0.5, 0.5, 0.5)
 zT = hopper_offset_state(0.5, 0.5, 0.0)
 
 u_control = [0.0; 0.0; mech.g * mech.Δt]
+u_mask = [0 0 0 1 0 0 0;
+		  0 0 0 0 1 0 0;
+		  0 0 0 0 0 0 1]
+
 z = [copy(z1)]
 for t = 1:5
-    znext = step!(mech, z[end], u_control, control_inputs=hopper_inputs!)
+    znext = simon_step!(mech, z[end], u_mask'*u_control)
     push!(z, znext)
 end
 
-using Colors
-using GeometryBasics
-using Rotations
-using Parameters
-using Symbolics
-using Random
 
-## get motion_planning.jl and set path
-# path_mp = "/home/taylor/Research/motion_planning"
-path_mp = joinpath(module_dir(), "..", "motion_planning")
-include(joinpath(path_mp, "src/utils.jl"))
-include(joinpath(path_mp, "src/time.jl"))
-include(joinpath(path_mp, "src/model.jl"))
-include(joinpath(path_mp, "src/integration.jl"))
-include(joinpath(path_mp, "src/objective.jl"))
-include(joinpath(path_mp, "src/constraints.jl"))
-
-# differential dynamic programming
-include(joinpath(path_mp, "src/differential_dynamic_programming/ddp.jl"))
-
-using Random, LinearAlgebra, ForwardDiff
+# Set random seed
 Random.seed!(0)
-
 # Model
 struct HopperMax{I, T} <: Model{I, T}
     n::Int
@@ -98,28 +99,18 @@ struct HopperMax{I, T} <: Model{I, T}
     mech
 end
 
-# eval_btol = 1.0e-4
-# eval_undercut = Inf
-
 function fd(model::HopperMax{Midpoint, FixedTime}, x, u, w, h, t)
-	return step!(model.mech, x, u, control_inputs=hopper_inputs!)
+	return simon_step!(model.mech, x, u_mask'*u, ϵ = 1e-6, btol = 1e-6, undercut = 1.5, verbose = false)
 end
 
-# grad_btol = 1.0e-3
-# grad_undercut = 1.5
-
 function fdx(model::HopperMax{Midpoint, FixedTime}, x, u, w, h, t)
-	# return fdjac(w -> step!(mech, w[1:(end-model.m)], w[(end-model.m+1):end],
-    #     btol=grad_btol, undercut=grad_undercut, control_inputs=hopper_inputs!),
-    #     [x; u])[:, 1:(end-model.m)]
-    step_grad_x!(model.mech, x, u, control_inputs=hopper_inputs!)
+	∇x, ∇u = getGradients!(model.mech, x, u_mask'*u, ϵ = 1e-6, btol = 1e-3, undercut = 1.5, verbose = false)
+	return ∇x
 end
 
 function fdu(model::HopperMax{Midpoint, FixedTime}, x, u, w, h, t)
-	# return fdjac(w -> step!(mech, w[1:(end-model.m)], w[(end-model.m+1):end],
-    #     btol=grad_btol, undercut=grad_undercut, control_inputs=hopper_inputs!),
-    #     [x; u])[:, (end-model.m+1):end]
-    return step_grad_u!(model.mech, x, u, control_inputs=hopper_inputs!)
+	∇x, ∇u = getGradients!(model.mech, x, u_mask'*u, ϵ = 1e-6, btol = 1e-3, undercut = 1.5, verbose = false)
+	return ∇u * u_mask'
 end
 
 n, m, d = 26, 3, 0
@@ -138,6 +129,8 @@ x̄ = rollout(model, z1, ū, w, h, T)
 step!(mech, z1, ū[1], control_inputs=hopper_inputs!)
 step_grad_x!(mech, z1, ū[1], control_inputs=hopper_inputs!)
 step_grad_u!(mech, z1, ū[1], control_inputs=hopper_inputs!)
+storage = generate_storage(mech, x̄)
+visualize(mech, storage; vis = vis)
 
 
 # Objective
@@ -148,7 +141,8 @@ Q = [(t < T ? h * Diagonal([qt1; qt2])
 q = [-2.0 * Q[t] * (t < 11 ? zM : zT) for t = 1:T]
 
 R = [h * Diagonal([0.1; 0.1; 0.01]) for t = 1:T-1]
-r = [zeros(model.m) for t = 1:T-1]
+# r = [zeros(model.m) for t = 1:T-1]
+r = [-2.0 * R[t] * u_control for t = 1:T-1]
 
 obj = StageCosts([QuadraticCost(Q[t], q[t],
 	t < T ? R[t] : nothing, t < T ? r[t] : nothing) for t = 1:T], T)
@@ -194,7 +188,7 @@ prob.m_data;
 prob.m_data.dyn_deriv.fu[4]
 
 # Solve
-@time stats = constrained_ddp_solve!(prob,
+stats = constrained_ddp_solve!(prob,
     verbose = true,
     grad_tol = 1.0e-3,
 	max_iter = 100,
