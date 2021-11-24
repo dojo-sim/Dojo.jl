@@ -255,7 +255,7 @@ q10 = UnitQuaternion(RotX(0.5*π))
 
 initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0)
 storage = simulate!(mech, 1.25, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
-Dojo.visualize(mech, storage, vis = vis)
+# Dojo.visualize(mech, storage, vis = vis)
 
 m0 = Dojo.momentum(mech, storage)[5:end]
 mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
