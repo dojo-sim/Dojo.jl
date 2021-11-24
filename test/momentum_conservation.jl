@@ -247,16 +247,15 @@ spring0 = 1.0 * 4e0
 damper0 = 1.0 * 2e+1
 
 mech = getmechanism(:twister, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
-    jointtype = :Revolute, contact = false, r = 0.05)
+    jointtype = :FixedOrientation, contact = false, r = 0.05)
 
-v0 = 100.0 * [1, 2, 3] * Δt0
-ω0 = 100.0 * [1, 2, 3.0] * Δt0
+v0 = 10.0 * [1, 2, 3] * Δt0
+ω0 = 10.0 * [1, 2, 3.0] * Δt0
 q10 = UnitQuaternion(RotX(0.5*π))
 
 initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0)
-storage = simulate!(mech, 1.50, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
-# visualize(mech, storage, vis = vis)
-
+storage = simulate!(mech, 1.25, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+Dojo.visualize(mech, storage, vis = vis)
 
 m0 = Dojo.momentum(mech, storage)[5:end]
 mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
@@ -274,8 +273,8 @@ end
         mech = getmechanism(:twister, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
             jointtype = jointtype, contact = false, r = 0.05)
 
-        v0 = 100.0 * [1, 2, 3] * Δt0
-        ω0 = 100.0 * [1, 2, 3.0] * Δt0
+        v0 = 10.0 * [1, 2, 3] * Δt0
+        ω0 = 10.0 * [1, 2, 3.0] * Δt0
         q10 = UnitQuaternion(RotX(0.5*π))
         initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0)
         storage = simulate!(mech, 1.50, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)

@@ -62,12 +62,6 @@ version = "0.2.0"
 [[Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 
-[[BenchmarkTools]]
-deps = ["JSON", "Logging", "Printf", "Profile", "Statistics", "UUIDs"]
-git-tree-sha1 = "61adeb0823084487000600ef8b1c00cc2474cd47"
-uuid = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-version = "1.2.0"
-
 [[BinDeps]]
 deps = ["Libdl", "Pkg", "SHA", "URIParser", "Unicode"]
 git-tree-sha1 = "1289b57e8cf019aede076edab0587eb9644175bd"
@@ -520,14 +514,6 @@ version = "0.1.1"
 git-tree-sha1 = "05110a2ab1fc5f932622ffea2a003221f4782c18"
 uuid = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
 version = "1.3.0"
-
-[[IterativeLQR]]
-deps = ["BenchmarkTools", "ForwardDiff", "JLD2", "LinearAlgebra", "Parameters", "Scratch", "SparseArrays", "Symbolics"]
-git-tree-sha1 = "983820e845eb8638e5ca7adb055ce4357b8f921a"
-repo-rev = "main"
-repo-url = "/home/simon/.julia/dev/IterativeLQR.jl"
-uuid = "605048dd-e178-462b-beb9-98a09398ef27"
-version = "0.1.0"
 
 [[IteratorInterfaceExtensions]]
 git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
