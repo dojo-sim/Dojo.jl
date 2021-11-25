@@ -236,6 +236,8 @@ function getGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{T}
 	∇x_x̄, ∇u_x̄ = getGradients(mechanism)
 	return ∇x_x̄, ∇u_x̄
 end
+<<<<<<< HEAD
+=======
 
 
 function max2min(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) where {T,Nn,Ne,Nb,Ni,Tz}
@@ -359,3 +361,4 @@ norm(jac * pinv(jac) - I(18), Inf)
 #
 # gradx0[1:3,1:3]
 # gradx1[1:3,1:3]
+>>>>>>> 2f645dba0dffe51be953bce2df8ab6c69579cee9

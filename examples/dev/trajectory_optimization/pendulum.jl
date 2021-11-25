@@ -22,6 +22,8 @@ open(vis)
 # Include new files
 include(joinpath(@__DIR__, "..", "..", "loader.jl"))
 
+using IterativeLQR
+
 # System
 gravity = -9.81
 Δt = 0.1
