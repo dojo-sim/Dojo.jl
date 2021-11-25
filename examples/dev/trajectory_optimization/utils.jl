@@ -227,13 +227,6 @@ function getGradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	end
 	return ∇x_x̄, ∇u_x̄
 end
-q20 = UnitQuaternion(rand(4)...)
-ϕ250 = srand(3)
-∂integrator∂q(q20, ϕ250, Δt, attjac = false)
-[zeros(4,6) I(4) zeros(4,3)]
-
-
-
 
 function getGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{T}, u::AbstractVector{T};
 		ϵ::T = 1e-6, newtonIter::Int = 100, lineIter::Int = 10, verbose::Bool = true,
@@ -243,68 +236,3 @@ function getGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{T}
 	∇x_x̄, ∇u_x̄ = getGradients(mechanism)
 	return ∇x_x̄, ∇u_x̄
 end
-#
-# mech = gethopper(Δt = Δt, g = gravity)
-# x0 = hopper_initial_state()
-# u0 = [0.0; 0.0; mech.g * mech.Δt]
-# u0 = Δt*0.1*Vector(1:1.0:7)
-# simon_step!(mech, x0, u0, ϵ = 1e-6, btol = 1e-6, undercut = Inf, verbose = true)
-# @benchmark gradx0, gradu0 = getGradients(mech)
-# gradx0, gradu0 = getGradients!(mech, x0, u0, ϵ = 1e-6, btol = 1e-6, undercut = Inf, verbose = true)
-# using BenchmarkTools
-# @benchmark gradx1 = FiniteDiff.finite_difference_jacobian(
-# 	x -> simon_step!(mech, x, u0, ϵ = 1e-6, btol = 1e-6, undercut = Inf, verbose = false),
-# 	x0)
-# gradu1 = FiniteDiff.finite_difference_jacobian(
-# 	u -> simon_step!(mech, x0, u, ϵ = 1e-6, btol = 1e-6, undercut = Inf, verbose = false),
-# 	u0)
-# norm(gradx0 - gradx1, Inf) / norm(gradx1, Inf)
-# norm(gradu0 - gradu1, Inf) / norm(gradu1, Inf)
-#
-# plot(Gray.(abs.(gradx0)))
-# plot(Gray.(abs.(gradx1)))
-# plot(Gray.(abs.(gradu0)))
-# plot(Gray.(abs.(gradu1)))
-#
-#
-#
-#
-# mech = getmechanism(:pendulum, Δt = Δt, g = gravity)
-# x0 = [0;0;-0.5; zeros(3); vector(one(UnitQuaternion)); zeros(3)]
-# u0 = [0.01]
-# simon_step!(mech, x0, u0, ϵ = 1e-6, btol = 1e-6, undercut = Inf, verbose = true)
-# gradx0, gradu0 = getGradients(mech)
-# gradx0, gradu0 = getGradients!(mech, x0, u0, ϵ = 1e-6, btol = 1e-6, undercut = Inf, verbose = true)
-#
-# gradx1 = FiniteDiff.finite_difference_jacobian(
-# 	x -> simon_step!(mech, x, u0, ϵ = 1e-6, btol = 1e-6, undercut = Inf, verbose = true),
-# 	x0)
-# gradu1 = FiniteDiff.finite_difference_jacobian(
-# 	u -> simon_step!(mech, x0, u, ϵ = 1e-6, btol = 1e-6, undercut = Inf, verbose = true),
-# 	u0)
-#
-# plot(Gray.(abs.(gradx0)))
-# plot(Gray.(abs.(gradx1)))
-# plot(Gray.(abs.(gradu0)))
-# plot(Gray.(abs.(gradu1)))
-#
-# norm(gradx0 - gradx1) / norm(gradx1)
-# norm(gradu0 - gradu1) / norm(gradu1)
-#
-# round.(gradx1, digits=3)
-#
-# round.(gradx0, digits=3)
-# norm((gradx0 - gradx1)[1:3,:])
-# norm((gradx0 - gradx1)[4:6,:])
-# norm((gradx0 - gradx1)[7:10,:])
-# norm((gradx0 - gradx1)[11:13,:])
-#
-# norm((gradx0 - gradx1)[1:3,1:3])
-# norm((gradx0 - gradx1)[1:3,4:13])
-#
-# norm((gradx0 - gradx1)[7:10,1:6])
-# norm((gradx0 - gradx1)[7:10,7:10])
-# norm((gradx0 - gradx1)[7:10,11:13])
-#
-# gradx0[1:3,1:3]
-# gradx1[1:3,1:3]
