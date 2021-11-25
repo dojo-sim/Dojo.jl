@@ -32,7 +32,7 @@ function minimalCoordinatesDict(mechanism::Mechanism)
 end
 
 function minimalCoordinates(mechanism::Mechanism{T}) where {T}
-    N = controldim(mech)
+    N = controldim(mechanism)
     x = zeros(T,N)
     off = 0
     for eqc in mechanism.eqconstraints
