@@ -15,8 +15,8 @@
 	<link name="torso">
 		<inertial>
 			<origin rpy="0.00000 -0.00000 0.00000" xyz="0.00000 0.00000 0.00000"/>
-			<mass value="9.45733"/>
-			<inertia ixx="0.08894" ixy="0" ixz="0" iyy="1.46688" iyz="0" izz="1.39128"/>
+			<mass value="6.36031"/>
+			<inertia ixx="0.08944" ixy="0" ixz="0" iyy="0.8835" iyz="0" izz="1.0176"/>
 		</inertial>
 		<collision>
 			<origin rpy="0.00000 1.57080 -0.00000" xyz="0.00000 0.00000 0.00000"/>
@@ -46,8 +46,8 @@
 	<link name="bthigh">
 		<inertial>
 			<origin rpy="0.00000 -0.00000 0.00000" xyz="0.00000 0.00000 0.00000"/>
-			<mass value="2.33553"/>
-			<inertia ixx="0.02665" ixy="0" ixz="0" iyy="0.04329" iyz="0" izz="0.01993"/>
+			<mass value="1.5352"/>
+			<inertia ixx="0.01525" ixy="0" ixz="0" iyy="0.01525" iyz="0" izz="0.001624"/>
 		</inertial>
 		<collision>
 			<origin rpy="3.14159 0.65841 3.14159" xyz="0.10000 0.00000 -0.13000"/>
@@ -65,8 +65,8 @@
 	<link name="bshin">
 		<inertial>
 			<origin rpy="0.00000 -0.00000 0.00000" xyz="0.00000 0.00000 0.00000"/>
-			<mass value="2.40200"/>
-			<inertia ixx="0.01483" ixy="0" ixz="0" iyy="0.04393" iyz="0" izz="0.03248"/>
+			<mass value="1.5809"/>
+			<inertia ixx="0.01660" ixy="0" ixz="0" iyy="0.01660" iyz="0" izz="0.00167"/>
 		</inertial>
 		<collision>
 			<origin rpy="3.14159 -1.11159 3.14159" xyz="-0.14000 0.00000 -0.07000"/>
@@ -84,8 +84,8 @@
 	<link name="bfoot">
 		<inertial>
 			<origin rpy="0.00000 -0.00000 0.00000" xyz="0.00000 0.00000 0.00000"/>
-			<mass value="10.00000"/>
-			<inertia ixx="0.07928" ixy="0" ixz="0" iyy="0.09446" iyz="0" izz="0.02929"/>
+			<mass value="1.069"/>
+			<inertia ixx="0.005444" ixy="0" ixz="0" iyy="0.005444" iyz="0" izz="0.001131"/>
 		</inertial>
 		<collision>
 			<origin rpy="0.00000 0.00000 0.00000" xyz="0.00000 0.00000 -0.09400"/>
@@ -103,8 +103,8 @@
 	<link name="fthigh">
 		<inertial>
 			<origin rpy="0.00000 -0.00000 0.00000" xyz="0.00000 0.00000 0.00000"/>
-			<mass value="2.17598"/>
-			<inertia ixx="0.02457" ixy="0" ixz="0" iyy="0.03508" iyz="0" izz="0.01358"/>
+			<mass value="1.42558"/>
+			<inertia ixx="0.01231" ixy="0" ixz="0" iyy="0.01231" iyz="0" izz="0.001508"/>
 		</inertial>
 		<collision>
 			<origin rpy="0.00000 0.52000 0.00000" xyz="-0.07000 0.00000 -0.12000"/>
@@ -122,8 +122,8 @@
 	<link name="fshin">
 		<inertial>
 			<origin rpy="0.00000 -0.00000 0.00000" xyz="0.00000 0.00000 0.00000"/>
-			<mass value="1.81701"/>
-			<inertia ixx="0.01517" ixy="0" ixz="0" iyy="0.02317" iyz="0" izz="0.01056"/>
+			<mass value="1.17885"/>
+			<inertia ixx="0.00716" ixy="0" ixz="0" iyy="0.00716" iyz="0" izz="0.00124"/>
 		</inertial>
 		<collision>
 			<origin rpy="0.00000 -0.60000 0.00000" xyz="0.06500 0.00000 -0.09000"/>
@@ -141,8 +141,8 @@
 	<link name="ffoot">
 		<inertial>
 			<origin rpy="0.00000 -0.00000 0.00000" xyz="0.00000 0.00000 0.00000"/>
-			<mass value="10.00000"/>
-			<inertia ixx="0.05643" ixy="0" ixz="0" iyy="0.08506" iyz="0" izz="0.04274"/>
+			<mass value="0.84986"/>
+			<inertia ixx="0.002899" ixy="0" ixz="0" iyy="0.002899" iyz="0" izz="0.000899"/>
 		</inertial>
 		<collision>
 			<origin rpy="0.00000 -0.60000 0.00000" xyz="0.04500 0.00000 -0.07000"/>
@@ -151,7 +151,7 @@
 			</geometry>
 		</collision>
     <visual>
-      <origin rpy="0.00000 0.00000 0.00000" xyz="0.00000 0.00000 -0.07000"/>
+      <origin rpy="0.00000 -0.0000 0.00000" xyz="0.00000 0.00000 -0.07000"/>
       <geometry>
         <cylinder length="0.14000" radius="0.04600"/>
       </geometry>
@@ -176,14 +176,14 @@
 		<parent link="bthigh"/>
 		<child link="bshin"/>
 		<dynamics damping="1.0" friction="0.0001"/>
-		<origin rpy="0.00000 -0.00000 0.00000" xyz="0.0000 0.00000 -0.29000"/>
+		<origin rpy="0.00000 1.7 0.00000" xyz="0.0000 0.00000 -0.29000"/>
 		<axis xyz="0.00000 1.00000 0.00000"/>
 	</joint>
 	<joint name="bfoot" type="revolute">
 		<parent link="bshin"/>
 		<child link="bfoot"/>
 		<dynamics damping="1.0" friction="0.0001"/>
-		<origin rpy="0.00000 -0.00000 0.00000" xyz="-0.00000 0.00000 -0.29000"/>
+		<origin rpy="0.00000 -1.5 0.00000" xyz="-0.00000 0.00000 -0.29000"/>
 		<axis xyz="0.00000 1.00000 0.00000"/>
 	</joint>
 	<joint name="fthigh" type="revolute">
@@ -204,7 +204,7 @@
 		<parent link="fshin"/>
 		<child link="ffoot"/>
 		<dynamics damping="1.0" friction="0.0001"/>
-		<origin rpy="0.00000 -0.00000 0.00000" xyz="0.00000 0.00000 -0.21200"/>
+		<origin rpy="0.00000 -0.10000 0.00000" xyz="0.00000 0.00000 -0.21200"/>
 		<axis xyz="0.00000 1.00000 0.00000"/>
 	</joint>
 

@@ -19,7 +19,7 @@ function nameiddict(mechanism::Mechanism)
     return dict
 end
 
-function minimalCoordinates(mechanism::Mechanism)
+function minimalCoordinatesDict(mechanism::Mechanism)
     keys = mechanism.eqconstraints.keys
     values = Vector{SVector}()
 
@@ -29,6 +29,30 @@ function minimalCoordinates(mechanism::Mechanism)
 
     return UnitDict(keys, values)
 
+end
+
+function minimalCoordinates(mechanism::Mechanism{T}) where {T}
+    N = controldim(mech)
+    x = zeros(T,N)
+    off = 0
+    for eqc in mechanism.eqconstraints
+        n = controldim(eqc)
+        x[off .+ (1:n)] += minimalCoordinates(mechanism, eqc)
+        off += n
+    end
+    return x
+end
+
+function minimalVelocities(mechanism::Mechanism{T}) where {T}
+    N = controldim(mech)
+    x = zeros(T,N)
+    off = 0
+    for eqc in mechanism.eqconstraints
+        n = controldim(eqc)
+        x[off .+ (1:n)] += minimalVelocities(mechanism, eqc)
+        off += n
+    end
+    return x
 end
 
 function setPosition!(mechanism::Mechanism, dict::UnitDict)

@@ -307,18 +307,30 @@ end
 @inline function minimalCoordinates(joint::Translational, body1::Body, body2::Body)
     statea = body1.state
     stateb = body2.state
-    return nullspacemat(joint) * g(joint, statea.x2[1], statea.q2[1], stateb.x2[1], stateb.q2[1])
+    return minimalCoordinates(joint, statea.x2[1], statea.q2[1], stateb.x2[1], stateb.q2[1])
 end
 @inline function minimalCoordinates(joint::Translational, body1::Origin, body2::Body)
     stateb = body2.state
-    return nullspacemat(joint) * g(joint, stateb.x2[1], stateb.q2[1])
+    return minimalCoordinates(joint, stateb.x2[1], stateb.q2[1])
+end
+@inline function minimalCoordinates(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+    return nullspacemat(joint) * g(joint, xa, qa, xb, qb)
+end
+@inline function minimalCoordinates(joint::Translational, xb::AbstractVector, qb::UnitQuaternion)
+    return nullspacemat(joint) * g(joint, xb, qb)
 end
 @inline function minimalVelocities(joint::Translational, body1::Body, body2::Body)
     statea = body1.state
     stateb = body2.state
-    return nullspacemat(joint) * (stateb.v15 - statea.v15)
+    return minimalVelocities(joint, statea.v15, stateb.v15)
 end
 @inline function minimalVelocities(joint::Translational, body1::Origin, body2::Body)
     stateb = body2.state
-    return nullspacemat(joint) * stateb.v15
+    return minimalVelocities(joint, stateb.v15)
+end
+@inline function minimalVelocities(joint::Translational, va::AbstractVector, vb::AbstractVector)
+    return nullspacemat(joint) * (vb - va)
+end
+@inline function minimalVelocities(joint::Translational, vb::AbstractVector)
+    return nullspacemat(joint) * vb
 end

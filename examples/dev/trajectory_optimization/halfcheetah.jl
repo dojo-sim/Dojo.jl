@@ -30,7 +30,7 @@ m = 3
 
 z1 = halfcheetahState(x = 0.0, z = 0.00, θ = 0.0)
 zM = halfcheetahState(x = 0.0, z = 0.40, θ = 0.0)
-zT = halfcheetahState(x = 1.0, z = 0.00, θ = 0.0)
+zT = halfcheetahState(x = 0.5, z = 0.00, θ = 0.0)
 
 
 function gravity_compensation(mechanism::Mechanism)
@@ -61,6 +61,8 @@ initialize!(mech, :halfcheetah, x = 0.0, z = 0.0, θ = 0.0)
 @elapsed storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 ugc = gravity_compensation(mech)
+
+mech = getmechanism(:halfcheetah, Δt = Δt, g = gravity, damper = 10.0, spring = 1000.0)
 
 u_control = ugc
 u_mask = I(length(u_control))
@@ -111,7 +113,7 @@ visualize(mech, storage; vis = vis)
 # Objective
 qt1 = [0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]
 qt2 = [0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]
-body_scale = [1; ones(6)]
+body_scale = [1; 0.2ones(6)]
 qt = vcat([body_scale[i] * [0.1 * ones(3); 0.001 * ones(3); 0.1 * ones(4); 0.01 * ones(3)] for i = 1:Nb]...)
 
 ot1 = (x, u, w) -> transpose(x - zM) * Diagonal(Δt * qt) * (x - zM) + transpose(u) * Diagonal(Δt * 0.01 * ones(length(u_control))) * u
@@ -151,3 +153,6 @@ constrained_ilqr_solve!(prob,
 x_sol, u_sol = nominal_trajectory(prob)
 storage = generate_storage(mech, x_sol)
 visualize(mech, storage, vis = vis)
+
+
+minimalCoordinates(mechanism, eqc)

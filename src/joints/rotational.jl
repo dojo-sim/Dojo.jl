@@ -212,22 +212,35 @@ end
 @inline function minimalCoordinates(joint::Rotational, body1::Body, body2::Body)
     statea = body1.state
     stateb = body2.state
-    # q = g(joint, statea.x2[1], statea.q2[1], stateb.x2[1], stateb.q2[1])
-    q = statea.q2[1] \ stateb.q2[1] / joint.qoffset
-    return nullspacemat(joint) * rotation_vector(q)
+    return minimalCoordinates(joint, statea.q2[1], stateb.q2[1])
 end
 @inline function minimalCoordinates(joint::Rotational, body1::Origin, body2::Body)
     stateb = body2.state
-    # q = g(joint, stateb.x2[1], stateb.q2[1])
-    q = stateb.q2[1] / joint.qoffset
+    return minimalCoordinates(joint, stateb.q2[1])
+end
+# useful for minimal to maximal coordinate mapping
+@inline function minimalCoordinates(joint::Rotational, qa::UnitQuaternion, qb::UnitQuaternion)
+    q = qa \ qb / joint.qoffset
     return nullspacemat(joint) * rotation_vector(q)
 end
+@inline function minimalCoordinates(joint::Rotational, qb::UnitQuaternion)
+    q = qb / joint.qoffset
+    return nullspacemat(joint) * rotation_vector(q)
+end
+
 @inline function minimalVelocities(joint::Rotational, body1::Body, body2::Body)
     statea = body1.state
     stateb = body2.state
-    return nullspacemat(joint) * (vrotate(stateb.ϕ15,statea.q2[1]\stateb.q2[1]) - statea.ϕ15) # in body1's frame
+    return minimalVelocities(joint, statea.q2[1], statea.ϕ15, stateb.q2[1], stateb.ϕ15)
 end
 @inline function minimalVelocities(joint::Rotational, body1::Origin, body2::Body)
     stateb = body2.state
-    return nullspacemat(joint) * vrotate(stateb.ϕ15,stateb.q2[1]) # in body1's frame
+    return minimalVelocities(joint, stateb.q2[1], stateb.ϕ15)
+end
+@inline function minimalVelocities(joint::Rotational, qa::UnitQuaternion,
+        ϕa::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector)
+    return nullspacemat(joint) * (vrotate(ϕb, qa \ qb) - ϕa) # in body1's frame
+end
+@inline function minimalVelocities(joint::Rotational, qb::UnitQuaternion, ϕb::AbstractVector)
+    return nullspacemat(joint) * vrotate(ϕb, qb) # in body1's frame
 end

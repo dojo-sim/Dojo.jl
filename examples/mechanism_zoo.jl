@@ -94,9 +94,9 @@ function gethalfcheetah(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 
     mech = Mechanism(joinpath(module_dir(), path), floating=false, g = g, Δt = Δt)
 
     # Adding springs and dampers
-    # for (i,eqc) in enumerate(collect(mech.eqconstraints[2:end]))
-    @warn "damping on origin joint"
-    for (i,eqc) in enumerate(collect(mech.eqconstraints[1:end]))
+    for (i,eqc) in enumerate(collect(mech.eqconstraints[2:end]))
+    # @warn "damping on origin joint"
+    # for (i,eqc) in enumerate(collect(mech.eqconstraints[1:end]))
         eqc.isdamper = true
         eqc.isspring = true
         for joint in eqc.constraints
@@ -118,7 +118,7 @@ function gethalfcheetah(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 
         contineqcs1 = contactconstraint(getbody(mech, "ffoot"), normal, cf, p = contact1)
         contineqcs2 = contactconstraint(getbody(mech, "bfoot"), normal, cf, p = contact2)
 
-        setPosition!(mech, geteqconstraint(mech, "floating_joint"), [0.567879,0,0.01622])
+        setPosition!(mech, geteqconstraint(mech, "floating_joint"), [0.530509,0,0.02792])
         mech = Mechanism(origin, bodies, eqs, [contineqcs1; contineqcs2], g = g, Δt = Δt)
     end
     return mech
@@ -535,10 +535,11 @@ function initializehumanoid!(mechanism::Mechanism; tran::AbstractVector{T} = [0,
                  [tran; rot])
 end
 
-function initializehalfcheetah!(mechanism::Mechanism; x::T = 0.0, z::T = 0.567879, θ::T = -0.01622) where {T}
+function initializehalfcheetah!(mechanism::Mechanism; x::T = 0.0, z::T = 0.0, θ::T = 0.0) where {T}
     setPosition!(mechanism,
                  geteqconstraint(mechanism, "floating_joint"),
-                 [z + 0.567879, -x, -θ + 0.01622])
+                 [z + 0.530509, -x, -θ + 0.02792])
+
 end
 
 function initializequadruped!(mechanism::Mechanism; tran::AbstractVector{T} = [0,0,0.23],
