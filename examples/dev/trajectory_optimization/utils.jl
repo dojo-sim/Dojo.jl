@@ -59,25 +59,6 @@
 #     return ∂step∂u
 # end
 #
-function generate_storage(mech, x)
-    steps = length(x)
-    nbodies = length(mech.bodies)
-    storage = Storage{Float64}(steps, nbodies)
-
-    for t = 1:steps
-        off = 0
-        for (i, body) in enumerate(mech.bodies)
-            storage.x[i][t] = x[t][off .+ (1:3)]
-            storage.v[i][t] = x[t][off .+ (4:6)]
-            storage.q[i][t] = UnitQuaternion(x[t][off .+ (7:10)]...)
-            storage.ω[i][t] = x[t][off .+ (11:13)]
-            off += 13
-        end
-    end
-
-    return storage
-end
-
 
 #
 #
@@ -110,25 +91,24 @@ end
 # @benchmark fast_grad_x!(mech, z[1], u_control)
 
 
+function generate_storage(mech, x)
+    steps = length(x)
+    nbodies = length(mech.bodies)
+    storage = Storage{Float64}(steps, nbodies)
 
+    for t = 1:steps
+        off = 0
+        for (i, body) in enumerate(mech.bodies)
+            storage.x[i][t] = x[t][off .+ (1:3)]
+            storage.v[i][t] = x[t][off .+ (4:6)]
+            storage.q[i][t] = UnitQuaternion(x[t][off .+ (7:10)]...)
+            storage.ω[i][t] = x[t][off .+ (11:13)]
+            off += 13
+        end
+    end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return storage
+end
 
 function simon_step!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{T}, u::AbstractVector{T};
 		ϵ::T = 1e-6, newtonIter::Int = 100, lineIter::Int = 10, verbose::Bool = true,
@@ -236,18 +216,11 @@ function getGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{T}
 	∇x_x̄, ∇u_x̄ = getGradients(mechanism)
 	return ∇x_x̄, ∇u_x̄
 end
-<<<<<<< HEAD
-=======
-
 
 function max2min(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) where {T,Nn,Ne,Nb,Ni,Tz}
 	# z = [[x2, v15, q2, ϕ15]body1  [x2, v15, q2, ϕ15]body2 ....]
-	nu = controldim(mechanism)
-	x = zeros(Tz, 2nu)
-
-	off = 0
+	x = []
 	for eqc in mechanism.eqconstraints
-		nu = controldim(eqc)
 		c = zeros(Tz,0)
 		v = zeros(Tz,0)
 		for (i,joint) in enumerate(eqc.constraints)
@@ -273,12 +246,52 @@ function max2min(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) whe
 				end
 			end
 		end
-		x[off .+ (1:2nu)] = [c; v]
-		off += 2nu
+		@show c
+		@show v
+		push!(x, [c; v]...)
 	end
+	x = [x...]
 	return x
 end
 
+function min2max(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
+	# z = [[x2, v15, q2, ϕ15]body1  [x2, v15, q2, ϕ15]body2 ....]
+	z = zeros(Tx, 13Nb)
+	off = 0
+	for eqc in mechanism.eqconstraints
+		n = controldim(eqc)
+		if eqc.parentid != nothing
+			c = x[off .+ (1:n)]; off += n
+			v = x[off .+ (1:n)]; off += n
+			_setPosition!(mechanism, eqc, c)
+			setVelocity!(mechanism, eqc, v)
+		else
+			@assert length(Set(eqc.childids)) == 1 # only one body is linked to the origin
+			for ichild in Set(eqc.childids)
+				@warn "this is special cased for floating-base"
+				cv = x[off .+ (1:13)]; off += 13
+				x2 = cv[1:3]
+				@show cv[4:7]
+				q2 = UnitQuaternion(cv[4:7]...)
+				@show q2
+				c = [x2; rotation_vector(q2)]
+				v = cv[8:13]
+				_setPosition!(mechanism, eqc, c)
+				setVelocity!(mechanism, eqc, v)
+				@show c
+				@show v
+			end
+		end
+	end
+	for (i, body) in enumerate(mechanism.bodies)
+		x2 = body.state.x2[1]
+		v15 = body.state.v15
+		q2 = body.state.q2[1]
+		ϕ15 = body.state.ϕ15
+		setMaxState!(z, x2, v15, q2, ϕ15, i)
+	end
+	return z
+end
 
 function getMaxState(z::AbstractVector, i::Int)
 	zi = z[(i-1)*13 .+ (1:13)]
@@ -289,12 +302,44 @@ function getMaxState(z::AbstractVector, i::Int)
 	return x2, v15, q2, ϕ15
 end
 
-z0 = rand(13*7)
-max2min(mech, z0)
+function setMaxState!(z::AbstractVector, x2::AbstractVector, v15::AbstractVector,
+		q2::UnitQuaternion, ϕ15::AbstractVector, i::Int)
+	z[(i-1)*13 .+ (1:3)] = x2
+	z[(i-1)*13 .+ (4:6)] = v15
+	z[(i-1)*13 .+ (7:10)] = vector(q2)
+	z[(i-1)*13 .+ (11:13)] = ϕ15
+	return nothing
+end
+
+
+
+
+z0 = hopper_initial_state()
+x0 = max2min(mech, z0)
+z1 = min2max(mech, x0)
+z1[1:13]
+z1[14:26]
+norm(z1 - z0, Inf)
+
+
+
 
 jac = ForwardDiff.jacobian(z -> max2min(mech, z), z0)
 plot(Gray.(abs.(jac)))
 norm(jac * pinv(jac) - I(18), Inf)
+
+mech
+eqc1 = collect(mech.eqconstraints)[1]
+xθ = rand(6)
+_setPosition!(mech, eqc1, xθ)
+
+eqc1.childids
+a = 10
+a = 10
+a = 10
+a = 10
+a = 10
+a = 10
 
 #
 # mech = gethopper(Δt = Δt, g = gravity)
@@ -361,4 +406,3 @@ norm(jac * pinv(jac) - I(18), Inf)
 #
 # gradx0[1:3,1:3]
 # gradx1[1:3,1:3]
->>>>>>> 2f645dba0dffe51be953bce2df8ab6c69579cee9

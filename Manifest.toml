@@ -585,6 +585,14 @@ git-tree-sha1 = "05110a2ab1fc5f932622ffea2a003221f4782c18"
 uuid = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
 version = "1.3.0"
 
+[[IterativeLQR]]
+deps = ["BenchmarkTools", "ForwardDiff", "JLD2", "LinearAlgebra", "Parameters", "Scratch", "SparseArrays", "Symbolics"]
+git-tree-sha1 = "3370ecf34e406500e2a53fecdb66eebad800941b"
+repo-rev = "main"
+repo-url = "/home/simon/.julia/dev/IterativeLQR.jl"
+uuid = "605048dd-e178-462b-beb9-98a09398ef27"
+version = "0.1.0"
+
 [[IteratorInterfaceExtensions]]
 git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
 uuid = "82899510-4779-5014-852e-03e436cf321d"
@@ -1294,9 +1302,9 @@ version = "0.11.0"
 
 [[Symbolics]]
 deps = ["AbstractAlgebra", "DiffRules", "Distributions", "DocStringExtensions", "DomainSets", "IfElse", "Latexify", "Libdl", "LinearAlgebra", "MacroTools", "NaNMath", "RecipesBase", "Reexport", "Requires", "RuntimeGeneratedFunctions", "SciMLBase", "Setfield", "SparseArrays", "SpecialFunctions", "SymbolicUtils", "TreeViews"]
-git-tree-sha1 = "44db6849187df9c5124b3e0f4b27da6bdf287876"
+git-tree-sha1 = "70f3ab21af575c40a1d040e4e0a5f72d9292f14e"
 uuid = "0c5d862f-8b57-4792-8d23-62f2024744c7"
-version = "0.1.32"
+version = "0.1.29"
 
 [[TOML]]
 deps = ["Dates"]
@@ -1583,9 +1591,9 @@ version = "1.5.0+0"
 
 [[Zygote]]
 deps = ["AbstractFFTs", "ChainRules", "ChainRulesCore", "DiffRules", "Distributed", "FillArrays", "ForwardDiff", "IRTools", "InteractiveUtils", "LinearAlgebra", "MacroTools", "NaNMath", "Random", "Requires", "SpecialFunctions", "Statistics", "ZygoteRules"]
-git-tree-sha1 = "2c30f2df0ba43c17e88c8b55b5b22c401f7cde4e"
+git-tree-sha1 = "bb58f30c12c703eac7758455e3f937e709efdfbc"
 uuid = "e88e6eb3-aa80-5325-afca-941959d7151f"
-version = "0.6.30"
+version = "0.6.31"
 
 [[ZygoteRules]]
 deps = ["MacroTools"]

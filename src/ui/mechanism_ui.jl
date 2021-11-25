@@ -19,7 +19,7 @@ function nameiddict(mechanism::Mechanism)
     return dict
 end
 
-function minimalCoordinatesDict(mechanism::Mechanism)
+function minimalCoordinates(mechanism::Mechanism)
     keys = mechanism.eqconstraints.keys
     values = Vector{SVector}()
 
@@ -31,7 +31,7 @@ function minimalCoordinatesDict(mechanism::Mechanism)
 
 end
 
-function minimalCoordinates(mechanism::Mechanism{T}) where {T}
+function minimalCoordinatesVector(mechanism::Mechanism{T}) where {T}
     N = controldim(mechanism)
     x = zeros(T,N)
     off = 0
@@ -43,7 +43,7 @@ function minimalCoordinates(mechanism::Mechanism{T}) where {T}
     return x
 end
 
-function minimalVelocities(mechanism::Mechanism{T}) where {T}
+function minimalVelocitiesVector(mechanism::Mechanism{T}) where {T}
     N = controldim(mech)
     x = zeros(T,N)
     off = 0

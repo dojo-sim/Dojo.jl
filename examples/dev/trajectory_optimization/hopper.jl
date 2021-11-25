@@ -11,7 +11,7 @@ Pkg.activate(module_dir())
 vis = Visualizer()
 open(vis)
 
-using IterativeLQR 
+using IterativeLQR
 
 include(joinpath(module_dir(), "examples", "loader.jl"))
 include(joinpath(module_dir(), "examples", "dev", "trajectory_optimization", "utils.jl"))
@@ -23,7 +23,8 @@ mech = gethopper(Δt = Δt, g = gravity)
 initializehopper!(mech)
 
 ## state space
-n = 13 * length(mech.bodies)
+# n = 13 * length(mech.bodies)
+n = 15
 m = 3
 
 function hopper_initial_state()
@@ -51,9 +52,9 @@ function hopper_offset_state(x_shift, y_shift, z_shift)
     return z
 end
 
-z1 = hopper_initial_state()
-zM = hopper_offset_state(0.5, 0.5, 0.5)
-zT = hopper_offset_state(0.5, 0.5, 0.0)
+z1 = max2min(mech, hopper_initial_state())
+zM = max2min(mech, hopper_offset_state(0.5, 0.5, 0.5))
+zT = max2min(mech, hopper_offset_state(0.5, 0.5, 0.0))
 
 u_control = [0.0; 0.0; mech.g * mech.Δt]
 u_mask = [0 0 0 1 0 0 0;
@@ -83,19 +84,19 @@ h = mech.Δt
 
 n, m, d = 26, 3, 0
 dyn = Dynamics(fd, fdx, fdu, n, n, m, d)
-model = [dyn for t = 1:T-1] 
+model = [dyn for t = 1:T-1]
 
 # Initial conditions, controls, disturbances
 ū = [[0.0; 0.0; mech.g * mech.Δt + 0.0 * randn(1)[1]] for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
-x̄ = rollout(model, z1, ū, w)
+x̄ = IterativeLQR.rollout(model, z1, ū, w)
 storage = generate_storage(mech, x̄)
 visualize(mech, storage; vis = vis)
 
 # Objective
 ot1 = (x, u, w) -> transpose(x - zM) * Diagonal(Δt * [0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]) * (x - zM) + transpose(u) * Diagonal(Δt * [0.1; 0.1; 0.01]) * u
 ot2 = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * [0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]) * (x - zT) + transpose(u) * Diagonal(Δt * [0.1; 0.1; 0.01]) * u
-oT = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * [0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]) * (x - zT) 
+oT = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * [0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]) * (x - zT)
 
 ct1 = Cost(ot1, n, m, d)
 ct2 = Cost(ot2, n, m, d)
@@ -103,21 +104,21 @@ cT = Cost(oT, n, 0, 0)
 obj = [[ct1 for t = 1:10]..., [ct2 for t = 1:10]..., cT]
 
 # Constraints
-function goal(x, u, w) 
+function goal(x, u, w)
     Δ = x - zT
     return [Δ[collect(1:6)]; Δ[collect(13 .+ (1:6))]]
 end
 
 cont = Constraint()
 conT = Constraint(goal, n, 0)
-cons = [[cont for t = 1:T-1]..., conT] 
+cons = [[cont for t = 1:T-1]..., conT]
 
-prob = problem_data(model, obj, cons)
-initialize_controls!(prob, ū) 
-initialize_states!(prob, x̄)
+prob = IterativeLQR.problem_data(model, obj, cons)
+IterativeLQR.initialize_controls!(prob, ū)
+IterativeLQR.initialize_states!(prob, x̄)
 
 # Solve
-constrained_ilqr_solve!(prob, 
+IterativeLQR.constrained_ilqr_solve!(prob,
     linesearch=:armijo,
     α_min=1.0e-5,
     obj_tol=1.0e-3,
@@ -127,6 +128,6 @@ constrained_ilqr_solve!(prob,
     ρ_init=1.0,
     ρ_scale=10.0)
 
-x_sol, u_sol = nominal_trajectory(prob)
+x_sol, u_sol = IterativeLQR.nominal_trajectory(prob)
 storage = generate_storage(mech, x_sol)
 visualize(mech, storage, vis = vis)
