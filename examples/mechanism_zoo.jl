@@ -434,11 +434,8 @@ function getdzhanibekov(; Δt::T = 0.01, g::T = -9.81, h::T = 1.0, r::T = 0.05) 
     p2 = [0,0,-h/6]
     qoffset = UnitQuaternion(RotY(π/2))
 
-
     # Links
     origin = Origin{T}()
-    # links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
-    # links = [Box(h, h, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
     link1 = Box(3r, 2r, h, h, color = RGBA(1., 0., 0.))
     link2 = Box(3r/3, 2r/3, h/3, h/3, color = RGBA(1., 0., 0.))
     links = [link1, link2]
@@ -452,7 +449,7 @@ function getdzhanibekov(; Δt::T = 0.01, g::T = -9.81, h::T = 1.0, r::T = 0.05) 
     return mech
 end
 
-function gethopper(; Δt::T = 0.05, g::T = -9.81) where {T}
+function gethopper(; Δt::T = 0.05, g::T = -9.81, spring::T = 0.0, damper::T = 0.1) where {T}
     #TODO: make customizable
 
     # Parameters
@@ -471,7 +468,8 @@ function gethopper(; Δt::T = 0.05, g::T = -9.81) where {T}
 
     # Joint Constraints
     joint_origin_body = EqualityConstraint(Floating(origin, body))
-    joint_body_foot = EqualityConstraint(Prismatic(body, foot, leg_axis; p1=szeros(Float64, 3), p2=szeros(Float64, 3), damper=0.1) )
+    joint_body_foot = EqualityConstraint(Prismatic(body, foot, leg_axis;
+        p1=szeros(Float64, 3), p2=szeros(Float64, 3), spring = spring, damper = damper) )
     eqcs = [joint_origin_body, joint_body_foot]
 
     # Contact

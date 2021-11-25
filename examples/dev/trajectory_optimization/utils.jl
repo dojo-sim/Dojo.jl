@@ -1,96 +1,3 @@
-# function step!(mech::Mechanism, x, u;
-#     btol=1.0e-4, undercut=Inf,
-#     control_inputs = (a, b, c) -> nothing)
-#
-#     # set data
-#     data = [x; u]
-#
-#     off = 0
-#
-#     for body in mech.bodies
-#         x2, v15, q2, ω15 = unpackdata(data[off+1:end]); off += 13
-#         body.state.x1 = x2 - v15 * mech.Δt
-#         body.state.v15 = v15
-#         body.state.q1 = UnitQuaternion(q2...) * ωbar(-ω15, mech.Δt) * mech.Δt / 2.0
-#         body.state.ϕ15 = ω15
-#     end
-#
-#     # controller
-#     controller!(mech, k) = control_inputs(mech, k, u)
-#
-#     # simulate
-#     storage = simulate!(mech, mech.Δt,
-#         controller!, record=true, verbose=false, solver=:mehrotra!, btol=btol, undercut=undercut)
-#
-#     # next state
-#     x_next = []
-#
-#     for body in mech.bodies
-#         x3 = body.state.x2[1]
-#         v25 = body.state.vsol[2]
-#         _q3 = body.state.q2[1]
-#         q3 = [_q3.w; _q3.x; _q3.y; _q3.z]
-#         ω25 = body.state.ϕsol[2]
-#         push!(x_next, [x3; v25; q3; ω25]...)
-#     end
-#
-#     return x_next
-# end
-#
-# function step_grad_x!(mech::Mechanism, x, u;
-#     btol=1.0e-3, undercut=1.5,
-#     control_inputs = (a, b, c) -> nothing)
-#     m = length(u)
-#     ∂step∂x = fdjac(w -> step!(mech, w[1:(end-m)], w[(end-m+1):end],
-#         btol=btol, undercut=undercut, control_inputs=control_inputs),
-#         [x; u])[:, 1:(end-m)]
-#
-#     return ∂step∂x
-# end
-#
-# function step_grad_u!(mech::Mechanism, x, u;
-#     btol=1.0e-3, undercut=1.5,
-#     control_inputs = (a, b, c) -> nothing)
-#     m = length(u)
-#     ∂step∂u = fdjac(w -> step!(mech, w[1:(end-m)], w[(end-m+1):end],
-#         btol=btol, undercut=undercut, control_inputs=control_inputs),
-#         [x; u])[:, (end-m+1):end]
-#
-#     return ∂step∂u
-# end
-#
-
-#
-#
-#
-# function fast_grad_x!(mech::Mechanism{T,Nn,Ne,Nb}, x, u; btol=1.0e-3, undercut=1.5,
-#         control_inputs = (a, b, c) -> nothing) where {T,Nn,Ne,Nb}
-#
-#     step!(mech, x, u; btol = btol, undercut = undercut, control_inputs = control_inputs)
-#
-#     ∂step∂x = full_matrix(mech.system) * full_data_matrix(mech)[:,1:12Nb]
-#     return ∂step∂x
-# end
-#
-#
-# function fast_grad_u!(mech::Mechanism{T,Nn,Ne,Nb}, x, u; btol=1.0e-3, undercut=1.5,
-#         control_inputs = (a, b, c) -> nothing) where {T,Nn,Ne,Nb}
-#
-#     step!(mech, x, u; btol = btol, undercut = undercut, control_inputs = control_inputs)
-#
-#     ∂step∂u = full_matrix(mech.system) * full_data_matrix(mech)[:,1:12Nb]
-#     return ∂step∂u
-# end
-
-
-#
-# using BenchmarkTools
-# # @benchmark
-# full_data_matrix(mech)
-# @benchmark step_grad_x!(mech, z[1], u_control)
-# @benchmark fast_grad_x!(mech, z[1], u_control)
-
-
 function generate_storage(mech, x)
     steps = length(x)
     nbodies = length(mech.bodies)
@@ -246,8 +153,8 @@ function max2min(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) whe
 				end
 			end
 		end
-		@show c
-		@show v
+		# @show c
+		# @show v
 		push!(x, [c; v]...)
 	end
 	x = [x...]
@@ -271,15 +178,11 @@ function min2max(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) whe
 				@warn "this is special cased for floating-base"
 				cv = x[off .+ (1:13)]; off += 13
 				x2 = cv[1:3]
-				@show cv[4:7]
 				q2 = UnitQuaternion(cv[4:7]...)
-				@show q2
 				c = [x2; rotation_vector(q2)]
 				v = cv[8:13]
 				_setPosition!(mechanism, eqc, c)
 				setVelocity!(mechanism, eqc, v)
-				@show c
-				@show v
 			end
 		end
 	end
@@ -311,16 +214,103 @@ function setMaxState!(z::AbstractVector, x2::AbstractVector, v15::AbstractVector
 	return nothing
 end
 
+function hopper_initial_state()
+    # initial state
+    x2b1 = [0.0; 0.0; 0.5]
+    v15b1 = [0.0; 0.0; 0.0]
+    q2b1 = [1.0; 0.0; 0.0; 0.0]
+    ϕ15b1 = [0.0; 0.0; 0.0]
+    z1b1 = [x2b1; v15b1; q2b1; ϕ15b1]
 
+    x2b2 = [0.0; 0.0; 0.0]
+    v15b2 = [0.0; 0.0; 0.0]
+    q2b2 = [1.0; 0.0; 0.0; 0.0]
+    ϕ15b2 = [0.0; 0.0; 0.0]
+    z1b2 = [x2b2; v15b2; q2b2; ϕ15b2]
+    z1 = [z1b1; z1b2]
+end
 
+# # Open visualizer
+# vis = Visualizer()
+# open(vis)
+
+Δt0 = 0.01
+g0 = -0.81
+mech = getmechanism(:hopper, Δt = Δt0, g = g0, spring = 1.0, damper = 10.0)
+initialize!(mech, :hopper)
+function controller!(mechanism, k,)
+    for (i,eqc) in enumerate(collect(mechanism.eqconstraints))
+        nu = controldim(eqc)
+		@show nu
+        setForce!(mechanism, eqc, SVector{nu}(Δt0 * (rand(nu) .- 0.5) ))
+    end
+    return
+end
+@elapsed storage = simulate!(mech, 4.00, controller!, record = true, solver = :mehrotra!, verbose = false)
+visualize(mech, storage, vis = vis)
+
+Nb = length(storage.x)
+Nt = length(storage.x[1])
+err = []
+for t = 1:Nt
+	z0 = zeros(13Nb)
+	for i = 1:Nb
+		x2 = storage.x[i][t]
+		v15 = storage.v[i][t]
+		q2 = storage.q[i][t]
+		ϕ15 = storage.ω[i][t]
+		z0[13*(i-1) .+ (1:13)] = [x2; v15; vector(q2); ϕ15]
+	end
+	x0 = max2min(mech, z0)
+	z1 = min2max(mech, x0)
+	push!(err, norm(z0[1:3] - z1[1:3], Inf))
+	push!(err, norm(z0[13 .+ (1:3)] - z1[13 .+ (1:3)], Inf))
+
+	push!(err, norm(z0[4:6] - z1[4:6], Inf))
+	# push!(err, norm(z0[13 .+ (4:6)] - z1[13 .+ (4:6)], Inf))
+
+	qa0 = UnitQuaternion(z0[7:10]...)
+	qa1 = UnitQuaternion(z1[7:10]...)
+	δqa = qa0 * inv(qa1)
+	qb0 = UnitQuaternion(z0[13 .+ (7:10)]...)
+	qb1 = UnitQuaternion(z1[13 .+ (7:10)]...)
+	δqb = qa0 * inv(qb1)
+	push!(err, norm([δqa.x, δqa.y, δqa.z], Inf))
+	push!(err, norm([δqb.x, δqb.y, δqb.z], Inf))
+
+	# push!(err, norm(z0[11:13] - z1[11:13], Inf))
+	# push!(err, norm(z0[13 .+ (11:13)] - z1[13 .+ (11:13)], Inf))
+end
+norm(err, Inf)
+plot(err)
 
 z0 = hopper_initial_state()
+z0[1:3] = [0.1, 0.0, 0.5]
+z0[14:16] = [0.1, 0.0, 0.5]
 x0 = max2min(mech, z0)
 z1 = min2max(mech, x0)
-z1[1:13]
-z1[14:26]
 norm(z1 - z0, Inf)
 
+@show z0[1:6]
+@show z0[7:13]
+@show z0[14:19]
+@show z0[20:26]
+
+@test norm(x0[1:3] - z0[1:3], Inf) < 1e-10
+@test norm(x0[4:7] - z0[7:10], Inf) < 1e-10
+@test norm(x0[8:10] - z0[4:6], Inf) < 1e-10
+@test norm(x0[11:13] - z0[11:13], Inf) < 1e-10
+@show x0[14:15]
+
+@show z1[1:6]
+@show z1[7:13]
+@show z1[14:19]
+@show z1[20:26]
+
+@test norm((z0 - z1)[1:6], Inf) < 1e-10
+@test norm((z0 - z1)[7:13], Inf) < 1e-10
+@test norm((z0 - z1)[14:19], Inf) < 1e-10
+@test norm((z0 - z1)[20:26], Inf) < 1e-10
 
 
 
@@ -340,6 +330,11 @@ a = 10
 a = 10
 a = 10
 a = 10
+
+# ARS demo on hopper (3h)
+# fix min2max maxtomin (1h)
+# test hopper halfcheetah with minimal coordinates (1h)
+
 
 #
 # mech = gethopper(Δt = Δt, g = gravity)
