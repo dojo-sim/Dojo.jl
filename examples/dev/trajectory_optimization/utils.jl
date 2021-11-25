@@ -1,64 +1,64 @@
-function step!(mech::Mechanism, x, u;
-    btol=1.0e-4, undercut=Inf,
-    control_inputs = (a, b, c) -> nothing)
-
-    # set data
-    data = [x; u]
-
-    off = 0
-
-    for body in mech.bodies
-        x2, v15, q2, ω15 = unpackdata(data[off+1:end]); off += 13
-        body.state.x1 = x2 - v15 * mech.Δt
-        body.state.v15 = v15
-        body.state.q1 = UnitQuaternion(q2...) * ωbar(-ω15, mech.Δt) * mech.Δt / 2.0
-        body.state.ϕ15 = ω15
-    end
-
-    # controller
-    controller!(mech, k) = control_inputs(mech, k, u)
-
-    # simulate
-    storage = simulate!(mech, mech.Δt,
-        controller!, record=true, verbose=false, solver=:mehrotra!, btol=btol, undercut=undercut)
-
-    # next state
-    x_next = []
-
-    for body in mech.bodies
-        x3 = body.state.x2[1]
-        v25 = body.state.vsol[2]
-        _q3 = body.state.q2[1]
-        q3 = [_q3.w; _q3.x; _q3.y; _q3.z]
-        ω25 = body.state.ϕsol[2]
-        push!(x_next, [x3; v25; q3; ω25]...)
-    end
-
-    return x_next
-end
-
-function step_grad_x!(mech::Mechanism, x, u;
-    btol=1.0e-3, undercut=1.5,
-    control_inputs = (a, b, c) -> nothing)
-    m = length(u)
-    ∂step∂x = fdjac(w -> step!(mech, w[1:(end-m)], w[(end-m+1):end],
-        btol=btol, undercut=undercut, control_inputs=control_inputs),
-        [x; u])[:, 1:(end-m)]
-
-    return ∂step∂x
-end
-
-function step_grad_u!(mech::Mechanism, x, u;
-    btol=1.0e-3, undercut=1.5,
-    control_inputs = (a, b, c) -> nothing)
-    m = length(u)
-    ∂step∂u = fdjac(w -> step!(mech, w[1:(end-m)], w[(end-m+1):end],
-        btol=btol, undercut=undercut, control_inputs=control_inputs),
-        [x; u])[:, (end-m+1):end]
-
-    return ∂step∂u
-end
-
+# function step!(mech::Mechanism, x, u;
+#     btol=1.0e-4, undercut=Inf,
+#     control_inputs = (a, b, c) -> nothing)
+#
+#     # set data
+#     data = [x; u]
+#
+#     off = 0
+#
+#     for body in mech.bodies
+#         x2, v15, q2, ω15 = unpackdata(data[off+1:end]); off += 13
+#         body.state.x1 = x2 - v15 * mech.Δt
+#         body.state.v15 = v15
+#         body.state.q1 = UnitQuaternion(q2...) * ωbar(-ω15, mech.Δt) * mech.Δt / 2.0
+#         body.state.ϕ15 = ω15
+#     end
+#
+#     # controller
+#     controller!(mech, k) = control_inputs(mech, k, u)
+#
+#     # simulate
+#     storage = simulate!(mech, mech.Δt,
+#         controller!, record=true, verbose=false, solver=:mehrotra!, btol=btol, undercut=undercut)
+#
+#     # next state
+#     x_next = []
+#
+#     for body in mech.bodies
+#         x3 = body.state.x2[1]
+#         v25 = body.state.vsol[2]
+#         _q3 = body.state.q2[1]
+#         q3 = [_q3.w; _q3.x; _q3.y; _q3.z]
+#         ω25 = body.state.ϕsol[2]
+#         push!(x_next, [x3; v25; q3; ω25]...)
+#     end
+#
+#     return x_next
+# end
+#
+# function step_grad_x!(mech::Mechanism, x, u;
+#     btol=1.0e-3, undercut=1.5,
+#     control_inputs = (a, b, c) -> nothing)
+#     m = length(u)
+#     ∂step∂x = fdjac(w -> step!(mech, w[1:(end-m)], w[(end-m+1):end],
+#         btol=btol, undercut=undercut, control_inputs=control_inputs),
+#         [x; u])[:, 1:(end-m)]
+#
+#     return ∂step∂x
+# end
+#
+# function step_grad_u!(mech::Mechanism, x, u;
+#     btol=1.0e-3, undercut=1.5,
+#     control_inputs = (a, b, c) -> nothing)
+#     m = length(u)
+#     ∂step∂u = fdjac(w -> step!(mech, w[1:(end-m)], w[(end-m+1):end],
+#         btol=btol, undercut=undercut, control_inputs=control_inputs),
+#         [x; u])[:, (end-m+1):end]
+#
+#     return ∂step∂u
+# end
+#
 function generate_storage(mech, x)
     steps = length(x)
     nbodies = length(mech.bodies)
@@ -79,27 +79,27 @@ function generate_storage(mech, x)
 end
 
 
-
-
-
-function fast_grad_x!(mech::Mechanism{T,Nn,Ne,Nb}, x, u; btol=1.0e-3, undercut=1.5,
-        control_inputs = (a, b, c) -> nothing) where {T,Nn,Ne,Nb}
-
-    step!(mech, x, u; btol = btol, undercut = undercut, control_inputs = control_inputs)
-
-    ∂step∂x = full_matrix(mech.system) * full_data_matrix(mech)[:,1:12Nb]
-    return ∂step∂x
-end
-
-
-function fast_grad_u!(mech::Mechanism{T,Nn,Ne,Nb}, x, u; btol=1.0e-3, undercut=1.5,
-        control_inputs = (a, b, c) -> nothing) where {T,Nn,Ne,Nb}
-
-    step!(mech, x, u; btol = btol, undercut = undercut, control_inputs = control_inputs)
-
-    ∂step∂u = full_matrix(mech.system) * full_data_matrix(mech)[:,1:12Nb]
-    return ∂step∂u
-end
+#
+#
+#
+# function fast_grad_x!(mech::Mechanism{T,Nn,Ne,Nb}, x, u; btol=1.0e-3, undercut=1.5,
+#         control_inputs = (a, b, c) -> nothing) where {T,Nn,Ne,Nb}
+#
+#     step!(mech, x, u; btol = btol, undercut = undercut, control_inputs = control_inputs)
+#
+#     ∂step∂x = full_matrix(mech.system) * full_data_matrix(mech)[:,1:12Nb]
+#     return ∂step∂x
+# end
+#
+#
+# function fast_grad_u!(mech::Mechanism{T,Nn,Ne,Nb}, x, u; btol=1.0e-3, undercut=1.5,
+#         control_inputs = (a, b, c) -> nothing) where {T,Nn,Ne,Nb}
+#
+#     step!(mech, x, u; btol = btol, undercut = undercut, control_inputs = control_inputs)
+#
+#     ∂step∂u = full_matrix(mech.system) * full_data_matrix(mech)[:,1:12Nb]
+#     return ∂step∂u
+# end
 
 
 #
@@ -227,13 +227,6 @@ function getGradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	end
 	return ∇x_x̄, ∇u_x̄
 end
-q20 = UnitQuaternion(rand(4)...)
-ϕ250 = srand(3)
-∂integrator∂q(q20, ϕ250, Δt, attjac = false)
-[zeros(4,6) I(4) zeros(4,3)]
-
-
-
 
 function getGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{T}, u::AbstractVector{T};
 		ϵ::T = 1e-6, newtonIter::Int = 100, lineIter::Int = 10, verbose::Bool = true,
@@ -243,6 +236,64 @@ function getGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{T}
 	∇x_x̄, ∇u_x̄ = getGradients(mechanism)
 	return ∇x_x̄, ∇u_x̄
 end
+
+
+function max2min(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) where {T,Nn,Ne,Nb,Ni,Tz}
+	# z = [[x2, v15, q2, ϕ15]body1  [x2, v15, q2, ϕ15]body2 ....]
+	nu = controldim(mechanism)
+	x = zeros(Tz, 2nu)
+
+	off = 0
+	for eqc in mechanism.eqconstraints
+		nu = controldim(eqc)
+		c = zeros(Tz,0)
+		v = zeros(Tz,0)
+		for (i,joint) in enumerate(eqc.constraints)
+			ichild = eqc.childids[i] - Ne
+			xb, vb, qb, ϕb = getMaxState(z, ichild)
+			if eqc.parentid != nothing
+				iparent = eqc.parentid - Ne
+				xa, va, qa, ϕa = getMaxState(z, iparent)
+				if typeof(joint) <: Translational
+					push!(c, minimalCoordinates(joint, xa, qa, xb, qb)...)
+					push!(v, minimalVelocities(joint, va, vb)...)
+				elseif typeof(joint) <: Rotational
+					push!(c, minimalCoordinates(joint, qa, qb)...)
+					push!(v, minimalVelocities(joint, qa, ϕa, qb, ϕb)...)
+				end
+			else
+				if typeof(joint) <: Translational
+					push!(c, minimalCoordinates(joint, xb, qb)...)
+					push!(v, minimalVelocities(joint, vb)...)
+				elseif typeof(joint) <: Rotational
+					push!(c, minimalCoordinates(joint, qb)...)
+					push!(v, minimalVelocities(joint, qb, ϕb)...)
+				end
+			end
+		end
+		x[off .+ (1:2nu)] = [c; v]
+		off += 2nu
+	end
+	return x
+end
+
+
+function getMaxState(z::AbstractVector, i::Int)
+	zi = z[(i-1)*13 .+ (1:13)]
+	x2 = zi[1:3]
+	v15 = zi[4:6]
+	q2 = UnitQuaternion(zi[7:10]...)
+	ϕ15 = zi[4:6]
+	return x2, v15, q2, ϕ15
+end
+
+z0 = rand(13*7)
+max2min(mech, z0)
+
+jac = ForwardDiff.jacobian(z -> max2min(mech, z), z0)
+plot(Gray.(abs.(jac)))
+norm(jac * pinv(jac) - I(18), Inf)
+
 #
 # mech = gethopper(Δt = Δt, g = gravity)
 # x0 = hopper_initial_state()

@@ -41,11 +41,31 @@ function gravity_compensation(mechanism::Mechanism)
     return u
 end
 
+function controller!(mechanism, k,)
+    u = [zeros(3); 0.4; zeros(5)]
+    # u = [zeros(4); 0.4; zeros(5)]
+    # u = [zeros(5); 0.4; zeros(5)]
+    off = 0
+    for (i,eqc) in enumerate(collect(mechanism.eqconstraints))
+        nu = controldim(eqc)
+        setForce!(mechanism, eqc, SVector{nu}(u[off .+ (1:nu)]))
+        off += nu
+    end
+    return
+end
 
-mech = getmechanism(:halfcheetah, Δt = 0.01, g = -9.81, damper = 100.0, spring = 1000.0)
-initialize!(mech, :halfcheetah, x = 0.0, z = 0.00, θ = 0.0)
-@elapsed storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!, verbose = false)
+mech = getmechanism(:halfcheetah, Δt = 0.01, g = -9.81, damper = 1.0, spring = 00.0, contact = true)
+initialize!(mech, :halfcheetah, x = 0.0, z = 0.0, θ = -0.0)
+
+
+@elapsed storage = simulate!(mech, 10.05, controller!, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
+get_sdf(mech, storage)[1][1]
+get_sdf(mech, storage)[2][1]
+
+
+
+
 ugc = gravity_compensation(mech)
 
 function controller!(mechanism, k,)
@@ -58,6 +78,9 @@ function controller!(mechanism, k,)
     end
     return
 end
+
+getfield.(mech.bodies, :m)
+
 
 mech = getmechanism(:halfcheetah, Δt = 0.01, g = -9.81, damper = 10.0, spring = 0.0)
 initialize!(mech, :halfcheetah, x = 0.0, z = 0.00, θ = 0.0)

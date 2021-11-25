@@ -51,7 +51,7 @@ m = 3
 
 z1 = halfcheetahState(x = 0.0, z = 0.00, θ = 0.0)
 zM = halfcheetahState(x = 0.0, z = 0.40, θ = 0.0)
-zT = halfcheetahState(x = 1.0, z = 0.00, θ = 0.0)
+zT = halfcheetahState(x = 0.5, z = 0.00, θ = 0.0)
 
 
 function gravity_compensation(mechanism::Mechanism)
@@ -83,6 +83,8 @@ initialize!(mech, :halfcheetah, x = 0.0, z = 0.0, θ = 0.0)
 visualize(mech, storage, vis = vis)
 ugc = gravity_compensation(mech)
 
+mech = getmechanism(:halfcheetah, Δt = Δt, g = gravity, damper = 10.0, spring = 1000.0)
+
 
 u_control = ugc
 u_mask = I(length(u_control))
@@ -105,16 +107,16 @@ struct HopperMax{I, T} <: Model{I, T}
 end
 
 function fd(model::HopperMax{Midpoint, FixedTime}, x, u, w, h, t)
-	return simon_step!(model.mech, x, u_mask'*u, ϵ = 1e-6, btol = 1e-6, undercut = 1.5, verbose = false)
+	return simon_step!(model.mech, x, u_mask'*u, ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false)
 end
 
 function fdx(model::HopperMax{Midpoint, FixedTime}, x, u, w, h, t)
-	∇x, ∇u = getGradients!(model.mech, x, u_mask'*u, ϵ = 1e-6, btol = 1e-2, undercut = 1.5, verbose = false)
+	∇x, ∇u = getGradients!(model.mech, x, u_mask'*u, ϵ = 1e-4, btol = 1e-3, undercut = 1.5, verbose = false)
 	return ∇x
 end
 
 function fdu(model::HopperMax{Midpoint, FixedTime}, x, u, w, h, t)
-	∇x, ∇u = getGradients!(model.mech, x, u_mask'*u, ϵ = 1e-6, btol = 1e-2, undercut = 1.5, verbose = false)
+	∇x, ∇u = getGradients!(model.mech, x, u_mask'*u, ϵ = 1e-4, btol = 1e-3, undercut = 1.5, verbose = false)
 	return ∇u * u_mask'
 end
 
@@ -131,15 +133,15 @@ w = [zeros(model.d) for t = 1:T-1]
 
 # Rollout
 x̄ = rollout(model, z1, ū, w, h, T)
-simon_step!(model.mech, x, u_mask'*u_control, ϵ = 1e-6, btol = 1e-6, undercut = 1.5, verbose = false)
-getGradients!(model.mech, x, u_mask'*u_control, ϵ = 1e-6, btol = 1e-3, undercut = 1.5, verbose = false)
+simon_step!(model.mech, z1, u_mask'*u_control, ϵ = 1e-6, btol = 1e-6, undercut = 1.5, verbose = false)
+getGradients!(model.mech, z1, u_mask'*u_control, ϵ = 1e-6, btol = 1e-3, undercut = 1.5, verbose = false)
 storage = generate_storage(mech, x̄)
 visualize(mech, storage; vis = vis)
 
 # Objective
 qt1 = [0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]
 qt2 = [0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]
-body_scale = [1; ones(6)]
+body_scale = [1; 0.2ones(6)]
 qt = vcat([body_scale[i] * [0.1 * ones(3); 0.001 * ones(3); 0.1 * ones(4); 0.01 * ones(3)] for i = 1:Nb]...)
 Q = [(t < T ? h * Diagonal(qt)
         : h * Diagonal(qt)) for t = 1:T]
@@ -147,8 +149,8 @@ q = [-2.0 * Q[t] * (t < 11 ? zM : zT) for t = 1:T]
 
 # R = [h * Diagonal([0.1; 0.1; 0.01]) for t = 1:T-1]
 R = [h * Diagonal(0.01 * ones(length(u_control))) for t = 1:T-1]
-# r = [-2.0 * R[t] * u_control for t = 1:T-1]
-r = [-0.0 * R[t] * u_control for t = 1:T-1]
+r = [-2.0 * R[t] * u_control for t = 1:T-1]
+# r = [-0.0 * R[t] * u_control for t = 1:T-1]
 
 obj = StageCosts([QuadraticCost(Q[t], q[t],
 	t < T ? R[t] : nothing, t < T ? r[t] : nothing) for t = 1:T], T)
@@ -198,7 +200,7 @@ stats = constrained_ddp_solve!(prob,
     verbose = true,
     grad_tol = 1.0e-3,
 	max_iter = 100,
-    max_al_iter = 2,
+    max_al_iter = 5,
 	ρ_init = 1.0,
     ρ_scale = 10.0,
 	con_tol = 1.0e-3)
@@ -207,3 +209,6 @@ x̄, ū = nominal_trajectory(prob)
 
 storage = generate_storage(mech, x̄)
 visualize(mech, storage, vis = vis)
+
+
+minimalCoordinates(mechanism, eqc)

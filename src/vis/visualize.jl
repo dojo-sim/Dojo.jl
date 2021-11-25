@@ -1,3 +1,5 @@
+import LyceumMuJoCoViz.visualize
+
 function transform(x, q, shape)
     scale_transform = MeshCat.LinearMap(diagm(shape.scale))
     x_transform = MeshCat.Translation(x + vrotate(shape.xoffset, q))
