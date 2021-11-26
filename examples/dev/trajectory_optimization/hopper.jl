@@ -131,3 +131,5 @@ IterativeLQR.constrained_ilqr_solve!(prob,
 x_sol, u_sol = IterativeLQR.nominal_trajectory(prob)
 storage = generate_storage(mech, x_sol)
 visualize(mech, storage, vis = vis)
+
+storage_ref = deepcopy(storage)

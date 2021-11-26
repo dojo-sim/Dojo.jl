@@ -699,9 +699,9 @@ function initializedzhanibekov!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVec
     setVelocity!(link1, link2, p1 = p1, p2 = p2)
 end
 
-function initializehopper!(mech::Mechanism{T,Nn,Ne,Nb}; leg_length_nominal=0.5) where {T,Nn,Ne,Nb}
+function initializehopper!(mech::Mechanism{T,Nn,Ne,Nb}; leg_length_nominal=0.5, altitude = 0.0) where {T,Nn,Ne,Nb}
     # origin to body
-    setPosition!(mech.origin, mech.bodies[3], Δx=[0.0; 0.0; leg_length_nominal])
+    setPosition!(mech.origin, mech.bodies[3], Δx=[0.0; 0.0; leg_length_nominal + altitude])
     setVelocity!(mech.bodies[3], v = [0.0; 0.0; 0.0], ω = [0.0; 0.0; 0.0])
     # mech.bodies[3].state.x1
     # mech.bodies[3].state.v15

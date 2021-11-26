@@ -132,7 +132,7 @@ function max2min(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) whe
 		v = zeros(Tz,0)
 		for (i,joint) in enumerate(eqc.constraints)
 			ichild = eqc.childids[i] - Ne
-			xb, vb, qb, ϕb = getMaxState(z, ichild)
+			xb, vb, qb, ϕb = unpackMaxState(z, ichild)
 			if eqc.parentid != nothing
 				iparent = eqc.parentid - Ne
 				xa, va, qa, ϕa = getMaxState(z, iparent)
@@ -163,7 +163,6 @@ end
 
 function min2max(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
 	# z = [[x2, v15, q2, ϕ15]body1  [x2, v15, q2, ϕ15]body2 ....]
-	z = zeros(Tx, 13Nb)
 	off = 0
 	for eqc in mechanism.eqconstraints
 		n = controldim(eqc)
@@ -186,6 +185,12 @@ function min2max(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) whe
 			end
 		end
 	end
+	z = getMaxState(mechanism)
+	return z
+end
+
+function getMaxState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
+	z = zeros(T, 13Nb)
 	for (i, body) in enumerate(mechanism.bodies)
 		x2 = body.state.x2[1]
 		v15 = body.state.v15
@@ -196,7 +201,7 @@ function min2max(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) whe
 	return z
 end
 
-function getMaxState(z::AbstractVector, i::Int)
+function unpackMaxState(z::AbstractVector, i::Int)
 	zi = z[(i-1)*13 .+ (1:13)]
 	x2 = zi[1:3]
 	v15 = zi[4:6]

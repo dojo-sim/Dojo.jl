@@ -228,7 +228,7 @@ end
     return nullspacemat(joint) * rotation_vector(q)
 end
 @inline function minimalCoordinates(joint::Rotational{T,0}, qb::UnitQuaternion) where {T}
-    @warn "this is a hack"
+    # @warn "this is a hack"
     q = qb / joint.qoffset
     return vector(q)
 end
