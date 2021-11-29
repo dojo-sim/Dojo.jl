@@ -18,6 +18,7 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
+
 function gravity_compensation(mechanism::Mechanism)
     # only works with revolute joints for now
     nu = controldim(mechanism)
