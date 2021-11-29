@@ -96,7 +96,7 @@ h = mech.Δt
 
 n, m, d = 13Nb, 9, 0
 dyn = Dynamics(fd, fdx, fdu, n, n, m, d)
-model = [dyn for t = 1:T-1] 
+model = [dyn for t = 1:T-1]
 
 
 # Initial conditions, controls, disturbances
@@ -118,7 +118,7 @@ qt = vcat([body_scale[i] * [0.1 * ones(3); 0.001 * ones(3); 0.1 * ones(4); 0.01 
 
 ot1 = (x, u, w) -> transpose(x - zM) * Diagonal(Δt * qt) * (x - zM) + transpose(u) * Diagonal(Δt * 0.01 * ones(length(u_control))) * u
 ot2 = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * qt) * (x - zT) + transpose(u) * Diagonal(Δt * 0.01 * ones(length(u_control))) * u
-oT = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * qt) * (x - zT) 
+oT = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * qt) * (x - zT)
 
 ct1 = Cost(ot1, n, m, d)
 ct2 = Cost(ot2, n, m, d)
@@ -126,21 +126,21 @@ cT = Cost(oT, n, 0, 0)
 obj = [[ct1 for t = 1:10]..., [ct2 for t = 1:10]..., cT]
 
 # Constraints
-function goal(x, u, w) 
+function goal(x, u, w)
     Δ = x - zT
     return Δ[collect(1:6)]
 end
 
 cont = Constraint()
 conT = Constraint(goal, n, 0)
-cons = [[cont for t = 1:T-1]..., conT] 
+cons = [[cont for t = 1:T-1]..., conT]
 
 prob = problem_data(model, obj, cons)
-initialize_controls!(prob, ū) 
+initialize_controls!(prob, ū)
 initialize_states!(prob, x̄)
 
 # Solve
-constrained_ilqr_solve!(prob, 
+constrained_ilqr_solve!(prob,
     linesearch=:armijo,
     α_min=1.0e-5,
     obj_tol=1.0e-3,
@@ -153,6 +153,3 @@ constrained_ilqr_solve!(prob,
 x_sol, u_sol = nominal_trajectory(prob)
 storage = generate_storage(mech, x_sol)
 visualize(mech, storage, vis = vis)
-
-
-minimalCoordinates(mechanism, eqc)

@@ -1,15 +1,15 @@
-function generate_storage(mechanism, x)
-    steps = length(x)
+function generate_storage(mechanism, z)
+    steps = length(z)
     nbodies = length(mechanism.bodies)
     storage = Storage{Float64}(steps, nbodies)
 
     for t = 1:steps
         off = 0
         for (i, body) in enumerate(mechanism.bodies)
-            storage.x[i][t] = x[t][off .+ (1:3)]
-            storage.v[i][t] = x[t][off .+ (4:6)]
-            storage.q[i][t] = UnitQuaternion(x[t][off .+ (7:10)]...)
-            storage.ω[i][t] = x[t][off .+ (11:13)]
+            storage.x[i][t] = z[t][off .+ (1:3)]
+            storage.v[i][t] = z[t][off .+ (4:6)]
+            storage.q[i][t] = UnitQuaternion(z[t][off .+ (7:10)]...)
+            storage.ω[i][t] = z[t][off .+ (11:13)]
             off += 13
         end
     end
@@ -17,7 +17,7 @@ function generate_storage(mechanism, x)
     return storage
 end
 
-function simon_step!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{T}, u::AbstractVector{T};
+function simon_step!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
 		ϵ::T = 1e-6, newtonIter::Int = 100, lineIter::Int = 10, verbose::Bool = true,
 		btol::T = ϵ, undercut::T = Inf) where {T,Nn,Ne,Nb,Ni}
 
@@ -26,7 +26,7 @@ function simon_step!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{T}, 
 		# set x1, q1
 		# set F2 and τ2 to zero
 		# warm-start the solver
-	setState!(mechanism, x)
+	setState!(mechanism, z)
 
 	# set the controls in the equality constraints
 		# apply the controls to each body's state
@@ -37,15 +37,15 @@ function simon_step!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{T}, 
 		opts=InteriorPointOptions(rtol=ϵ, max_iter=newtonIter, btol=btol, undercut=undercut, verbose=verbose))
 
 	# extract the next state
-	x̄ = getNextState(mechanism)
-    return x̄
+	z̄ = getNextState(mechanism)
+    return z̄
 end
 
-function setState!(mechanism::Mechanism, x::AbstractVector)
+function setState!(mechanism::Mechanism, z::AbstractVector)
     Δt = mechanism.Δt
     off = 0
     for body in mechanism.bodies
-        x2, v15, q2, ϕ15 = unpackdata(x[off+1:end]); off += 13
+        x2, v15, q2, ϕ15 = unpackdata(z[off+1:end]); off += 13
         q2 = UnitQuaternion(q2..., false)
         body.state.v15 = v15
         body.state.ϕ15 = ϕ15
@@ -69,20 +69,32 @@ function setControl!(mechanism::Mechanism{T}, u::AbstractVector) where {T}
 	foreach(applyFτ!, eqcs, mechanism)
 end
 
+function getState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
+	z = zeros(T,13Nb)
+	for (i, body) in enumerate(mechanism.bodies)
+		v15 = body.state.v15
+		ϕ15 = body.state.ϕ15
+		x2 = body.state.x2[1]
+		q2 = body.state.q2[1]
+		z[13*(i-1) .+ (1:13)] = [x2; v15; vector(q2); ϕ15]
+	end
+	return z
+end
+
 function getNextState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	Δt = mechanism.Δt
-	x̄ = zeros(T,13Nb)
+	z̄ = zeros(T,13Nb)
 	for (i, body) in enumerate(mechanism.bodies)
 		v25 = body.state.vsol[2]
 		ϕ25 = body.state.ϕsol[2]
 		x3 = getx3(body.state, Δt)
 		q3 = getq3(body.state, Δt)
-		x̄[13*(i-1) .+ (1:13)] = [x3; v25; vector(q3); ϕ25]
+		z̄[13*(i-1) .+ (1:13)] = [x3; v25; vector(q3); ϕ25]
 	end
-	return x̄
+	return z̄
 end
 
-function getGradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
+function getMaxGradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	Δt = mechanism.Δt
 	nu = controldim(mechanism)
 	attjac = false
@@ -92,36 +104,37 @@ function getGradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	solmat = full_matrix(mechanism.system)
 
 	∇data_z = - solmat \ datamat
-	∇x_vϕ = ∇data_z[neqcs .+ (1:6Nb),1:nic]
+	∇z_vϕ = ∇data_z[neqcs .+ (1:6Nb),1:nic]
 	∇u_vϕ = ∇data_z[neqcs .+ (1:6Nb),nic .+ (1:nu)]
-	∇x_x̄ = zeros(13Nb,13Nb)
-	∇u_x̄ = zeros(13Nb,nu)
+	∇z_z̄ = zeros(13Nb,13Nb)
+	∇u_z̄ = zeros(13Nb,nu)
 	for (i, body) in enumerate(mechanism.bodies)
 		# Fill in gradients of v25, ϕ25
-		∇x_x̄[13*(i-1) .+ [4:6; 11:13],:] += ∇x_vϕ[6*(i-1) .+ (1:6),:]
-		∇u_x̄[13*(i-1) .+ [4:6; 11:13],:] += ∇u_vϕ[6*(i-1) .+ (1:6),:]
+		∇z_z̄[13*(i-1) .+ [4:6; 11:13],:] += ∇z_vϕ[6*(i-1) .+ (1:6),:]
+		∇u_z̄[13*(i-1) .+ [4:6; 11:13],:] += ∇u_vϕ[6*(i-1) .+ (1:6),:]
 
 		# Fill in gradients of x3, q3
 		q2 = body.state.q2[1]
 		ϕ25 = body.state.ϕsol[2]
-		∇x_x̄[13*(i-1) .+ (1:3),:] += ∂integrator∂v(Δt) * ∇x_vϕ[6*(i-1) .+ (1:3),:]
-		∇x_x̄[13*(i-1) .+ (1:3),13*(i-1) .+ (1:13)] += ∂integrator∂x() * [I(3) zeros(3,10)]
-		∇x_x̄[13*(i-1) .+ (7:10),:] += ∂integrator∂ϕ(q2, ϕ25, Δt) * ∇x_vϕ[6*(i-1) .+ (4:6),:]
-		∇x_x̄[13*(i-1) .+ (7:10),13*(i-1) .+ (1:13)] += ∂integrator∂q(q2, ϕ25, Δt, attjac = false) * [zeros(4,6) I(4) zeros(4,3)]
+		∇z_z̄[13*(i-1) .+ (1:3),:] += ∂integrator∂v(Δt) * ∇z_vϕ[6*(i-1) .+ (1:3),:]
+		∇z_z̄[13*(i-1) .+ (1:3),13*(i-1) .+ (1:13)] += ∂integrator∂x() * [I(3) zeros(3,10)]
+		∇z_z̄[13*(i-1) .+ (7:10),:] += ∂integrator∂ϕ(q2, ϕ25, Δt) * ∇z_vϕ[6*(i-1) .+ (4:6),:]
+		∇z_z̄[13*(i-1) .+ (7:10),13*(i-1) .+ (1:13)] += ∂integrator∂q(q2, ϕ25, Δt, attjac = false) * [zeros(4,6) I(4) zeros(4,3)]
 
-		∇u_x̄[13*(i-1) .+ (1:3),:] += ∂integrator∂v(Δt) * ∇u_vϕ[6*(i-1) .+ (1:3),:]
-		∇u_x̄[13*(i-1) .+ (7:10),:] += ∂integrator∂ϕ(q2, ϕ25, Δt) * ∇u_vϕ[6*(i-1) .+ (4:6),:]
+		∇u_z̄[13*(i-1) .+ (1:3),:] += ∂integrator∂v(Δt) * ∇u_vϕ[6*(i-1) .+ (1:3),:]
+		∇u_z̄[13*(i-1) .+ (7:10),:] += ∂integrator∂ϕ(q2, ϕ25, Δt) * ∇u_vϕ[6*(i-1) .+ (4:6),:]
 	end
-	return ∇x_x̄, ∇u_x̄
+	return ∇z_z̄, ∇u_z̄
 end
 
-function getGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{T}, u::AbstractVector{T};
+
+function getMaxGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
 		ϵ::T = 1e-6, newtonIter::Int = 100, lineIter::Int = 10, verbose::Bool = true,
 		btol::T = ϵ, undercut::T = Inf) where {T,Nn,Ne,Nb,Ni}
-	simon_step!(mechanism, x, u, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter,
+	simon_step!(mechanism, z, u, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter,
 		verbose = verbose, btol = btol, undercut = undercut)
-	∇x_x̄, ∇u_x̄ = getGradients(mechanism)
-	return ∇x_x̄, ∇u_x̄
+	∇z_z̄, ∇u_z̄ = getMaxGradients(mechanism)
+	return ∇z_z̄, ∇u_z̄
 end
 
 function max2min(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) where {T,Nn,Ne,Nb,Ni,Tz}
@@ -213,6 +226,36 @@ function min2max(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) whe
 	return z
 end
 
+function ∇min2max(mechanism::Mechanism, x)
+	FiniteDiff.finite_difference_jacobian(x -> min2max(mechanism, x), x)
+end
+
+
+function getMinGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
+		ϵ::T = 1e-6, newtonIter::Int = 100, lineIter::Int = 10, verbose::Bool = true,
+		btol::T = ϵ, undercut::T = Inf) where {T,Nn,Ne,Nb,Ni}
+
+	simon_step!(mechanism, z, u, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter,
+		verbose = verbose, btol = btol, undercut = undercut)
+	z = getState(mechanism)
+	z̄ = getNextState(mechanism)
+	x = max2min(mechanism, z)
+	x̄ = max2min(mechanism, z̄)
+	∇z_z̄, ∇u_z̄ = getMaxGradients(mechanism)
+
+	∇x = ∇min2max(mechanism, x)
+	∇x̄ = ∇min2max(mechanism, x̄)
+	# ∇x_x̄1 = pinv(∇x̄) * ∇z_z̄ * ∇x
+	# ∇u_x̄1 = pinv(∇x̄) * ∇u_z̄
+	∇x_x̄ = ∇x̄ \ ∇z_z̄ * ∇x
+	∇u_x̄ = ∇x̄ \ ∇u_z̄
+	# rr = rand(15)
+	# ru = rand(7)
+	# @show norm(∇x_x̄ * rr - ∇x_x̄1 * rr)
+	# @show norm(∇u_x̄ * ru - ∇u_x̄1 * ru)
+	return ∇x_x̄, ∇u_x̄
+end
+
 function getMaxState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	z = zeros(T, 13Nb)
 	for (i, body) in enumerate(mechanism.bodies)
@@ -256,3 +299,18 @@ function visualizeMaxCoord(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVecto
 	end
 	visualize(mechanism, storage, vis = vis)
 end
+
+
+
+
+#
+# mech = getmechanism(:hopper, damper = 1.0)
+# nx = minCoordDim(mech)
+# nu = controldim(mech)
+# initialize!(mech, :hopper)
+# z0 = getState(mech)
+# x0 = max2min(mech, z0)
+# ∇x0 = ∇min2max(mech, x0)
+# u0 = 0.1 * mech.Δt * ones(nu)
+# ∇x_z, ∇u_z = getMaxGradients!(mech, z0, u0)
+# ∇x_x, ∇u_x = getMinGradients!(mech, z0, u0)
