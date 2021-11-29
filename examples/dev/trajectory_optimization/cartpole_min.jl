@@ -29,7 +29,8 @@ mech = getcartpole(Δt=Δt, g=gravity)
 initializecartpole!(mech)
 
 ## state space
-n = 13 * 2
+# n = 13 * 2
+n = 4
 m = 1
 d = 0
 
@@ -67,22 +68,23 @@ function cartpole_goal_state(;pendulum_length=1.0)
     zT = [zTb1; zTb2]
 end
 
-z1 = cartpole_initial_state()
-zT = cartpole_goal_state()
+z1 = max2min(mech, cartpole_initial_state())
+zT = max2min(mech, cartpole_goal_state())
 
 u_control = [0.0]
 u_mask = [1 0]
 
 function fd(y, x, u, w)
-	y .= copy(simon_step!(mech, x, u_mask'*u, ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false))
+	z = simon_step!(mech, min2max(mech,x), u_mask'*u, ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false)
+	y .= copy(max2min(mech, z))
 end
 
 function fdx(fx, x, u, w)
-	fx .= copy(getMaxGradients!(mech, x, u_mask'*u, ϵ = 1e-5, btol = 1e-3, undercut = 1.5, verbose = false)[1])
+	fx .= copy(getMinGradients!(mech, min2max(mech,x), u_mask'*u, ϵ = 1e-5, btol = 1e-3, undercut = 1.5, verbose = false)[1])
 end
 
 function fdu(fu, x, u, w)
-	∇u = copy(getMaxGradients!(mech, x, u_mask'*u, ϵ = 1e-5, btol = 1e-3, undercut = 1.5, verbose = false)[2])
+	∇u = copy(getMinGradients!(mech, min2max(mech,x), u_mask'*u, ϵ = 1e-5, btol = 1e-3, undercut = 1.5, verbose = false)[2])
 	fu .= ∇u * u_mask'
 end
 
@@ -100,7 +102,7 @@ w = [zeros(d) for t = 1:T-1]
 
 # Rollout
 x̄ = rollout(model, z1, ū, w)
-storage = generate_storage(mech, x̄)
+storage = generate_storage(mech, [min2max(mech,x) for x in x̄])
 visualize(mech, storage; vis = vis)
 
 # Objective
@@ -125,7 +127,7 @@ IterativeLQR.ilqr_solve!(prob,
     max_iter=500)
 
 x_sol, u_sol = get_trajectory(prob)
-storage = generate_storage(mech, x_sol)
+storage = generate_storage(mech, [min2max(mech,x) for x in x_sol])
 visualize(mech, storage, vis = vis)
 
 fxx = prob.m_data.model_deriv.fx[1]
@@ -134,6 +136,7 @@ rank(fxx)
 indi = [1,2,3,4,5,6,11,12,13]
 indi = [1,2,3]
 ind = [indi; 13 .+ indi]
+cond(fxx)
 cond(fxx[indi, indi])
 cond(fxx[ind, ind])
 

@@ -23,8 +23,7 @@ mech = gethopper(Δt = Δt, g = gravity)
 initializehopper!(mech)
 
 ## state space
-# n = 13 * length(mech.bodies)
-n = 15
+n = 13 * length(mech.bodies)
 m = 3
 
 function hopper_initial_state()
@@ -52,9 +51,9 @@ function hopper_offset_state(x_shift, y_shift, z_shift)
     return z
 end
 
-z1 = max2min(mech, hopper_initial_state())
-zM = max2min(mech, hopper_offset_state(0.5, 0.5, 0.5))
-zT = max2min(mech, hopper_offset_state(0.5, 0.5, 0.0))
+z1 = hopper_initial_state()
+zM = hopper_offset_state(0.5, 0.5, 0.5)
+zT = hopper_offset_state(0.5, 0.5, 0.0)
 
 u_control = [0.0; 0.0; mech.g * mech.Δt]
 u_mask = [0 0 0 1 0 0 0;
@@ -70,11 +69,11 @@ function fd(y, x, u, w)
 end
 
 function fdx(fx, x, u, w)
-	fx .= copy(getGradients!(mech, x, u_mask'*u, ϵ = 1e-5, btol = 1e-3, undercut = 1.5, verbose = false)[1])
+	fx .= copy(getMaxGradients!(mech, x, u_mask'*u, ϵ = 1e-5, btol = 1e-3, undercut = 1.5, verbose = false)[1])
 end
 
 function fdu(fu, x, u, w)
-	∇u = copy(getGradients!(mech, x, u_mask'*u, ϵ = 1e-5, btol = 1e-3, undercut = 1.5, verbose = false)[2])
+	∇u = copy(getMaxGradients!(mech, x, u_mask'*u, ϵ = 1e-5, btol = 1e-3, undercut = 1.5, verbose = false)[2])
 	fu .= ∇u * u_mask'
 end
 
@@ -94,9 +93,9 @@ storage = generate_storage(mech, x̄)
 visualize(mech, storage; vis = vis)
 
 # Objective
-ot1 = (x, u, w) -> transpose(x - zM) * Diagonal(Δt * [0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]) * (x - zM) + transpose(u) * Diagonal(Δt * [0.1; 0.1; 0.01]) * u
-ot2 = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * [0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]) * (x - zT) + transpose(u) * Diagonal(Δt * [0.1; 0.1; 0.01]) * u
-oT = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * [0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]) * (x - zT)
+ot1 = (x, u, w) -> transpose(x - zM) * Diagonal(Δt * vcat([[0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)] for i=1:2]...)) * (x - zM) + transpose(u) * Diagonal(Δt * [0.1; 0.1; 0.01]) * u
+ot2 = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * vcat([[0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)] for i=1:2]...)) * (x - zT) + transpose(u) * Diagonal(Δt * [0.1; 0.1; 0.01]) * u
+oT = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * vcat([[0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)] for i=1:2]...)) * (x - zT)
 
 ct1 = Cost(ot1, n, m, d)
 ct2 = Cost(ot2, n, m, d)
@@ -128,8 +127,13 @@ IterativeLQR.constrained_ilqr_solve!(prob,
     ρ_init=1.0,
     ρ_scale=10.0)
 
-x_sol, u_sol = IterativeLQR.nominal_trajectory(prob)
+x_sol, u_sol = IterativeLQR.get_trajectory(prob)
 storage = generate_storage(mech, x_sol)
 visualize(mech, storage, vis = vis)
 
 storage_ref = deepcopy(storage)
+
+fxx = prob.m_data.model_deriv.fx[1]
+
+rank(fxx)
+cond(fxx)

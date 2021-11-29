@@ -8,7 +8,7 @@ function generate_storage(mechanism, z)
         for (i, body) in enumerate(mechanism.bodies)
             storage.x[i][t] = z[t][off .+ (1:3)]
             storage.v[i][t] = z[t][off .+ (4:6)]
-            storage.q[i][t] = UnitQuaternion(z[t][off .+ (7:10)]...)
+            storage.q[i][t] = UnitQuaternion(z[t][off .+ (7:10)]..., false)
             storage.ω[i][t] = z[t][off .+ (11:13)]
             off += 13
         end
@@ -163,16 +163,9 @@ function max2min(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) whe
 			else
 				# we need a special case: when the first link has free rotation wrt the origin Rotational0
 				#TODO @warn "this is special cased for floating-base"
-				if typeof(joint) <: Rotational0 #
+				if typeof(joint) <: Rotational
 					push!(c, minimalCoordinates(joint, qb)...) # Δq = q2 of body b
-					# ϕw = minimalVelocities(joint, qb, ϕb) # Δϕ = ϕ15 of bodyb in world's coordinates
-					# # @show ϕ
-					# @show ϕw
-					# push!(v, ϕw...) # Δϕ = ϕ15 of bodyb in origin = world's coordinates
-					push!(v,  minimalVelocities(joint, qb, ϕb)...) # Δϕ = ϕ15 of bodyb in origin = world's coordinates
-				elseif typeof(joint) <: Rotational
-					push!(c, minimalCoordinates(joint, qb)...) # Δq = q2 of body b
-					push!(v, minimalVelocities(joint, qb, ϕb)...) # Δϕ = ϕ15 of bodyb in bodyb's coordinates
+					push!(v, minimalVelocities(joint, qb, ϕb)...) # Δϕ = ϕ15 of bodyb in origin = world's coordinates
 				elseif typeof(joint) <: Translational
 					push!(c, minimalCoordinates(joint, xb, qb)...) # Δx = x2 of bodyb in world's coordinates
 					push!(v, minimalVelocities(joint, qb, vb, ϕb)...) # Δv = v15 of bodyb in world's coordinates
@@ -230,6 +223,9 @@ function ∇min2max(mechanism::Mechanism, x)
 	FiniteDiff.finite_difference_jacobian(x -> min2max(mechanism, x), x)
 end
 
+function ∇max2min(mechanism::Mechanism, z)
+	FiniteDiff.finite_difference_jacobian(z -> max2min(mechanism, z), z)
+end
 
 function getMinGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
 		ϵ::T = 1e-6, newtonIter::Int = 100, lineIter::Int = 10, verbose::Bool = true,
@@ -244,15 +240,14 @@ function getMinGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector
 	∇z_z̄, ∇u_z̄ = getMaxGradients(mechanism)
 
 	∇x = ∇min2max(mechanism, x)
-	∇x̄ = ∇min2max(mechanism, x̄)
-	# ∇x_x̄1 = pinv(∇x̄) * ∇z_z̄ * ∇x
-	# ∇u_x̄1 = pinv(∇x̄) * ∇u_z̄
-	∇x_x̄ = ∇x̄ \ (∇z_z̄ * ∇x)
-	∇u_x̄ = ∇x̄ \ ∇u_z̄
-	# rr = rand(15)
-	# ru = rand(7)
-	# @show norm(∇x_x̄ * rr - ∇x_x̄1 * rr)
-	# @show norm(∇u_x̄ * ru - ∇u_x̄1 * ru)
+	# ∇x̄ = ∇min2max(mechanism, x̄)
+	∇z̄ = ∇max2min(mechanism, z̄)
+	# ∇x_x̄ = pinv(∇x̄) * ∇z_z̄ * ∇x
+	# ∇u_x̄ = pinv(∇x̄) * ∇u_z̄
+	∇x_x̄ = ∇z̄ * ∇z_z̄ * ∇x
+	∇u_x̄ = ∇z̄ * ∇u_z̄
+	# ∇x_x̄ = ∇x̄ \ (∇z_z̄ * ∇x)
+	# ∇u_x̄ = ∇x̄ \ ∇u_z̄
 	return ∇x_x̄, ∇u_x̄
 end
 
@@ -272,7 +267,7 @@ function unpackMaxState(z::AbstractVector, i::Int)
 	zi = z[(i-1)*13 .+ (1:13)]
 	x2 = zi[1:3]
 	v15 = zi[4:6]
-	q2 = UnitQuaternion(zi[7:10]...)
+	q2 = UnitQuaternion(zi[7:10]..., false)
 	ϕ15 = zi[11:13]
 	return x2, v15, q2, ϕ15
 end
@@ -301,16 +296,121 @@ function visualizeMaxCoord(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVecto
 end
 
 
+################################################################################
+# Particle
+################################################################################
+
+mech = getmechanism(:dice, mode = :box, contact = true)
+initialize!(mech, :dice, x = [0,0,0.], q = one(UnitQuaternion), v = [0,0,0.], ω = [0,0,0.])
+initialize!(mech, :dice, x = rand(3), q = UnitQuaternion(1,0,0,0.), v = rand(3), ω = rand(3))
+initialize!(mech, :dice, x = 1 .+ rand(3), q = UnitQuaternion(rand(4)...), v = rand(3), ω = rand(3))
+
+nx = minCoordDim(mech)
+nz = maxCoordDim(mech)
+nu = controldim(mech)
+
+z0 = getMaxState(mech)
+x0 = max2min(mech, z0)
+u0 = mech.Δt * rand(nu)
+
+z1 = simon_step!(mech, z0, u0, ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false)
+x1 = max2min(mech, z1)
+
+∇x0 = ∇min2max(mech, x0) # dz(x)/dx
+∇z0 = ∇max2min(mech, z0) # dx(z)/dz
+norm(∇z0 * ∇x0 - I(nx))
 
 
-#
-# mech = getmechanism(:hopper, damper = 1.0)
-# nx = minCoordDim(mech)
-# nu = controldim(mech)
-# initialize!(mech, :hopper)
-# z0 = getState(mech)
-# x0 = max2min(mech, z0)
-# ∇x0 = ∇min2max(mech, x0)
-# u0 = 0.1 * mech.Δt * ones(nu)
-# ∇x_z, ∇u_z = getMaxGradients!(mech, z0, u0)
-# ∇x_x, ∇u_x = getMinGradients!(mech, z0, u0)
+	#max #min
+norm(∇x0[1:3, 1:3] - I(3), Inf) < 1e-8
+norm(∇x0[4:6, 8:10] - I(3), Inf) < 1e-8
+norm(∇x0[7:10, 4:7] - Diagonal([0,1,1,1]), Inf) < 1e-8
+norm(∇x0[11:13, 11:13] - I(3), Inf) < 1e-8
+
+∇z_z, ∇u_z = getMaxGradients!(mech, z0, u0)
+∇x_x, ∇u_x = getMinGradients!(mech, z0, u0)
+
+FDz_z = FiniteDiff.finite_difference_jacobian(z -> simon_step!(mech, z, u0,
+	ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false), z0)
+FDx_x = FiniteDiff.finite_difference_jacobian(x -> max2min(mech, simon_step!(mech, min2max(mech,x), u0,
+	ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false)), x0)
+
+FDu_z = FiniteDiff.finite_difference_jacobian(u -> simon_step!(mech, z0, u,
+	ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false), u0)
+FDu_x = FiniteDiff.finite_difference_jacobian(u -> max2min(mech, simon_step!(mech, min2max(mech,x0), u,
+	ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false)), u0)
+
+norm(FDz_z - ∇z_z, Inf)
+norm(FDx_x - ∇x_x, Inf)
+plot(Gray.(FDx_x))
+plot(Gray.(∇x_x))
+plot(Gray.(abs.(1e4(FDx_x - ∇x_x))))
+
+norm(FDu_z - ∇u_z, Inf)
+norm(FDu_x - ∇u_x, Inf)
+plot(Gray.(FDu_x))
+plot(Gray.(∇u_x))
+plot(Gray.(abs.(1e4(FDu_x - ∇u_x))))
+
+
+
+
+
+################################################################################
+# Hopper
+################################################################################
+
+mech = getmechanism(:hopper, contact = false)
+initialize!(mech, :hopper, altitude = 1.0)
+
+nx = minCoordDim(mech)
+nz = maxCoordDim(mech)
+nu = controldim(mech)
+
+z0 = getMaxState(mech)
+x0 = max2min(mech, z0)
+u0 = mech.Δt * rand(nu)
+
+z1 = simon_step!(mech, z0, u0, ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false)
+x1 = max2min(mech, z1)
+
+∇x0 = ∇min2max(mech, x0) # dz(x)/dx
+	#max #min
+norm(∇x0[1:3, 1:3] - I(3), Inf) < 1e-8
+norm(∇x0[4:6, 8:10] - I(3), Inf) < 1e-8
+norm(∇x0[7:10, 4:7] - Diagonal([0,1,1,1]), Inf) < 1e-8
+norm(∇x0[11:13, 11:13] - I(3), Inf) < 1e-8
+
+∇z_z, ∇u_z = getMaxGradients!(mech, z0, u0)
+∇x_x, ∇u_x = getMinGradients!(mech, z0, u0)
+
+FDz_z = FiniteDiff.finite_difference_jacobian(z -> simon_step!(mech, z, u0,
+	ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false), z0)
+FDx_x = FiniteDiff.finite_difference_jacobian(x -> max2min(mech, simon_step!(mech, min2max(mech,x), u0,
+	ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false)), x0)
+
+FDu_z = FiniteDiff.finite_difference_jacobian(u -> simon_step!(mech, z0, u,
+	ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false), u0)
+FDu_x = FiniteDiff.finite_difference_jacobian(u -> max2min(mech, simon_step!(mech, min2max(mech,x0), u,
+	ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false)), u0)
+
+norm(FDz_z - ∇z_z, Inf)
+norm(FDx_x - ∇x_x, Inf)
+plot(Gray.(FDx_x))
+plot(Gray.(∇x_x))
+plot(Gray.(abs.(FDx_x - ∇x_x)))
+FDx_x[11:13,4:7]
+∇x_x[11:13,4:7]
+(FDx_x - ∇x_x)[11:13,4:7]
+
+
+
+plot(Gray.(FDz_z))
+plot(Gray.(∇z_z))
+plot(Gray.(abs.(FDz_z - ∇z_z)))
+
+norm(FDu_z - ∇u_z, Inf)
+norm(FDu_x - ∇u_x, Inf)
+plot(Gray.(FDu_x))
+plot(Gray.(∇u_x))
+plot(Gray.(abs.(FDu_x - ∇u_x)))
