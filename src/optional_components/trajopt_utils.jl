@@ -166,8 +166,6 @@ function max2min(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) whe
 				end
 			end
 		end
-		# @show c
-		# @show v
 		push!(x, [c; v]...)
 	end
 	x = [x...]
