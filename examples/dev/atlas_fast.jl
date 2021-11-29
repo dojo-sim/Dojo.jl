@@ -37,18 +37,6 @@ function controller!(mechanism, k)
     return
 end
 
-nbodies = length(mech.bodies)
-sto1 = Storage(1, nbodies)
-sto2 = Storage(1, nbodies)
-for (i,body) in enumerate(mech.bodies)
-    sto1.x[i][1] = body.state.x1
-    sto1.q[i][1] = body.state.q1
-    sto2.x[i][1] = body.state.x2[1]
-    sto2.q[i][1] = body.state.q2[1]
-end
-visualize(mech, sto1, vis = vis)
-visualize(mech, sto2, vis = vis)
-
 @elapsed storage = simulate!(mech, 4.01, controller!, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 

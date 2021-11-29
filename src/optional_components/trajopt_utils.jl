@@ -247,7 +247,7 @@ function getMinGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector
 	∇x̄ = ∇min2max(mechanism, x̄)
 	# ∇x_x̄1 = pinv(∇x̄) * ∇z_z̄ * ∇x
 	# ∇u_x̄1 = pinv(∇x̄) * ∇u_z̄
-	∇x_x̄ = ∇x̄ \ ∇z_z̄ * ∇x
+	∇x_x̄ = ∇x̄ \ (∇z_z̄ * ∇x)
 	∇u_x̄ = ∇x̄ \ ∇u_z̄
 	# rr = rand(15)
 	# ru = rand(7)
