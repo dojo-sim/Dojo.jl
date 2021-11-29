@@ -6,7 +6,7 @@ using ForwardDiff
 using FiniteDiff
 using StaticArrays: SUnitRange
 using Rotations
-using Rotations: RotationError, pure_quaternion, params, lmult, rmult, tmat, vmat, hmat, skew
+using Rotations: RotationError, params, lmult, rmult, tmat, vmat, hmat, skew, pure_quaternion
 using Colors: RGBA, RGB
 using LightXML
 using Parameters

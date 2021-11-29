@@ -1,4 +1,4 @@
-import LyceumMuJoCoViz.visualize
+# import LyceumMuJoCoViz.visualize
 
 function transform(x, q, shape)
     scale_transform = MeshCat.LinearMap(diagm(shape.scale))
