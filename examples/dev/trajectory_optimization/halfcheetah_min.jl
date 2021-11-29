@@ -25,12 +25,13 @@ initialize!(mech, :halfcheetah)
 
 ## state space
 Nb = length(mech.bodies)
-n = 13 * Nb
+# n = 13 * Nb
+n = minCoordDim(mech)
 m = 6
 
-z1 = halfcheetahState(x = 0.00, z = 0.00, θ = 0.0)
-zM = halfcheetahState(x = 0.25, z = 0.40, θ = 0.0)
-zT = halfcheetahState(x = 0.50, z = 0.00, θ = 0.0)
+z1 = max2min(mech, halfcheetahState(x = 0.00, z = 0.00, θ = 0.0))
+zM = max2min(mech, halfcheetahState(x = 0.25, z = 0.40, θ = 0.0))
+zT = max2min(mech, halfcheetahState(x = 0.50, z = 0.00, θ = 0.0))
 
 
 function gravity_compensation(mechanism::Mechanism)
@@ -62,14 +63,14 @@ initialize!(mech, :halfcheetah, x = 0.0, z = 0.0, θ = 0.0)
 visualize(mech, storage, vis = vis)
 ugc = gravity_compensation(mech)
 
-mech = getmechanism(:halfcheetah, Δt = Δt, g = gravity, damper = 10.0, spring = 1000.0)
+mech = getmechanism(:halfcheetah, Δt = Δt, g = gravity, damper = 10.0, spring = 300.0)
 
 u_control = ugc[3 .+ (1:6)]
 u_mask = [zeros(6,3) I(m)]
 
 z = [copy(z1)]
 for t = 1:5
-    znext = simon_step!(mech, z[end], u_mask'*u_control)
+    znext = max2min(mech, simon_step!(mech, min2max(mech, z[end]), u_mask'*u_control))
     push!(z, znext)
 end
 
@@ -78,15 +79,16 @@ Random.seed!(0)
 
 # Model
 function fd(y, x, u, w)
-	y .= copy(simon_step!(mech, x, u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false))
+	z = simon_step!(mech, min2max(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
+	y .= copy(max2min(mech, z))
 end
 
 function fdx(fx, x, u, w)
-	fx .= copy(getMaxGradients!(mech, x, u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[1])
+	fx .= copy(getMinGradients!(mech, min2max(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[1])
 end
 
 function fdu(fu, x, u, w)
-	∇u = copy(getMaxGradients!(mech, x, u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[2])
+	∇u = copy(getMinGradients!(mech, min2max(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[2])
 	fu .= ∇u * u_mask'
 end
 
@@ -94,7 +96,7 @@ end
 T = 21
 h = mech.Δt
 
-n, m, d = 13Nb, 6, 0
+n, m, d = minCoordDim(mech), 6, 0
 dyn = Dynamics(fd, fdx, fdu, n, n, m, d)
 model = [dyn for t = 1:T-1]
 
@@ -107,14 +109,13 @@ w = [zeros(d) for t = 1:T-1]
 x̄ = rollout(model, z1, ū, w)
 # simon_step!(model.mech, x, u_mask'*u_control, ϵ = 1e-6, btol = 1e-6, undercut = 1.5, verbose = false)
 # getGradients!(model.mech, x, u_mask'*u_control, ϵ = 1e-6, btol = 1e-3, undercut = 1.5, verbose = false)
-storage = generate_storage(mech, x̄)
+storage = generate_storage(mech, [min2max(mech, x) for x in x̄])
 visualize(mech, storage; vis = vis)
 
 # Objective
-qt1 = [0.1; 0.1; 1.0; 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]
-qt2 = [0.1; 0.1; 1.0; 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]
-body_scale = [1; 0.2ones(6)]
-qt = vcat([body_scale[i] * [0.1 * ones(3); 0.001 * ones(3); 0.1 * ones(4); 0.01 * ones(3)] for i = 1:Nb]...)
+qt1 = [0.1; 0.1; 1.0; 0.01 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 0.001*(6)]
+qt2 = [0.1; 0.1; 1.0; 0.01 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 0.001*(6)]
+qt  = [0.1; 0.1; 1.0; 0.01 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 0.001*(6)]
 
 ot1 = (x, u, w) -> transpose(x - zM) * Diagonal(Δt * qt) * (x - zM) + transpose(u) * Diagonal(Δt * 0.01 * ones(m)) * u
 ot2 = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * qt) * (x - zT) + transpose(u) * Diagonal(Δt * 0.01 * ones(m)) * u
@@ -152,5 +153,5 @@ IterativeLQR.constrained_ilqr_solve!(prob,
     ρ_scale=10.0)
 
 x_sol, u_sol = get_trajectory(prob)
-storage = generate_storage(mech, x_sol)
+storage = generate_storage(mech, [min2max(mech, x) for x in x_sol])
 visualize(mech, storage, vis = vis)

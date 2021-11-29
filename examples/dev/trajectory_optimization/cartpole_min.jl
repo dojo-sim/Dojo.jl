@@ -75,16 +75,16 @@ u_control = [0.0]
 u_mask = [1 0]
 
 function fd(y, x, u, w)
-	z = simon_step!(mech, min2max(mech,x), u_mask'*u, ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false)
+	z = simon_step!(mech, min2max(mech,x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
 	y .= copy(max2min(mech, z))
 end
 
 function fdx(fx, x, u, w)
-	fx .= copy(getMinGradients!(mech, min2max(mech,x), u_mask'*u, ϵ = 1e-5, btol = 1e-3, undercut = 1.5, verbose = false)[1])
+	fx .= copy(getMinGradients!(mech, min2max(mech,x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[1])
 end
 
 function fdu(fu, x, u, w)
-	∇u = copy(getMinGradients!(mech, min2max(mech,x), u_mask'*u, ϵ = 1e-5, btol = 1e-3, undercut = 1.5, verbose = false)[2])
+	∇u = copy(getMinGradients!(mech, min2max(mech,x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[2])
 	fu .= ∇u * u_mask'
 end
 

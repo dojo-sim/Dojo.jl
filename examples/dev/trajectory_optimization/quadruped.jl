@@ -20,13 +20,17 @@ using IterativeLQR
 # System
 gravity = -9.81
 Δt = 0.05
-mech = getmechanism(:halfcheetah, Δt = Δt, g = gravity, damper = 1.0, spring = 0.0)
-initialize!(mech, :halfcheetah)
+mech = getmechanism(:quadruped, Δt = Δt, g = gravity, damper = 1.0, spring = 0.0)
+initialize!(mech, :quadruped)
 
 ## state space
 Nb = length(mech.bodies)
 n = 13 * Nb
 m = 6
+
+z1 = getMaxState(mech)
+
+visualizeMaxCoord(mech, z1, vis)
 
 z1 = halfcheetahState(x = 0.00, z = 0.00, θ = 0.0)
 zM = halfcheetahState(x = 0.25, z = 0.40, θ = 0.0)

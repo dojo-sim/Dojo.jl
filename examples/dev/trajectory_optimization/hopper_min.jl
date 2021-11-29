@@ -19,12 +19,12 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 # System
 gravity = -9.81
 Δt = 0.05
-mech = gethopper(Δt = Δt, g = gravity, contact = false)
+mech = gethopper(Δt = Δt, g = gravity, contact = true, damper = 1.0)
 initializehopper!(mech)
 
 ## state space
 # n = 13 * length(mech.bodies)
-n = 15
+n = minCoordDim(mech)
 m = 3
 
 function hopper_initial_state()
@@ -52,17 +52,15 @@ function hopper_offset_state(x_shift, y_shift, z_shift)
     return z
 end
 
-z1 = max2min(mech, hopper_initial_state())
+# z1 = max2min(mech, hopper_initial_state())
 # zM = max2min(mech, hopper_offset_state(0.5, 0.5, 0.5))
 # zT = max2min(mech, hopper_offset_state(0.5, 0.5, 0.0))
-zM = max2min(mech, hopper_offset_state(0.0, 0.0, 0.0))
-zT = max2min(mech, hopper_offset_state(0.0, 0.0, 0.5))
+z1 = max2min(mech, hopper_offset_state(0.0, 0.0, 0.0))
+zM = max2min(mech, hopper_offset_state(0.5, 0.5, 0.5))
+zT = max2min(mech, hopper_offset_state(0.5, 0.5, 0.0))
 
 u_control = [0.0; 0.0; mech.g * mech.Δt]
-# u_mask = [0 0 0 1 0 0 0;
-# 		  0 0 0 0 1 0 0;
-# 		  0 0 0 0 0 0 1]
-u_mask = [0 0 1 0 0 0 0;
+u_mask = [0 0 0 1 0 0 0;
 		  0 0 0 0 1 0 0;
 		  0 0 0 0 0 0 1]
 
@@ -71,16 +69,16 @@ Random.seed!(0)
 
 # Model
 function fd(y, x, u, w)
-	z = simon_step!(mech, min2max(mech, x), u_mask'*u, ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false)
+	z = simon_step!(mech, min2max(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
 	y .= copy(max2min(mech, z))
 end
 
 function fdx(fx, x, u, w)
-	fx .= copy(getMinGradients!(mech, min2max(mech, x), u_mask'*u, ϵ = 1e-5, btol = 1e-2, undercut = 1.5, verbose = false)[1])
+	fx .= copy(getMinGradients!(mech, min2max(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[1])
 end
 
 function fdu(fu, x, u, w)
-	∇u = copy(getMinGradients!(mech, min2max(mech, x), u_mask'*u, ϵ = 1e-5, btol = 1e-2, undercut = 1.5, verbose = false)[2])
+	∇u = copy(getMinGradients!(mech, min2max(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[2])
 	fu .= ∇u * u_mask'
 end
 
@@ -89,7 +87,7 @@ T = 21
 h = mech.Δt
 
 # n, m, d = 26, 3, 0
-n, m, d = 15, 3, 0
+n, m, d = minCoordDim(mech), 3, 0
 dyn = Dynamics(fd, fdx, fdu, n, n, m, d)
 model = [dyn for t = 1:T-1]
 
@@ -104,9 +102,9 @@ visualize(mech, storage; vis = vis)
 # ot1 = (x, u, w) -> transpose(x - zM) * Diagonal(Δt * [0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]) * (x - zM) + transpose(u) * Diagonal(Δt * [0.1; 0.1; 0.01]) * u
 # ot2 = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * [0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]) * (x - zT) + transpose(u) * Diagonal(Δt * [0.1; 0.1; 0.01]) * u
 # oT = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * [0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]) * (x - zT)
-ot1 = (x, u, w) -> transpose(x - zM) * Diagonal(Δt * [0.1; 0.1; 1.0; 0.001 * ones(4); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) * (x - zM) + transpose(u) * Diagonal(Δt * [0.01; 0.01; 0.01]) * u
-ot2 = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * [0.1; 0.1; 1.0; 0.001 * ones(4); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) * (x - zT) + transpose(u) * Diagonal(Δt * [0.01; 0.01; 0.01]) * u
-oT = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * [0.1; 0.1; 1.0; 0.001 * ones(4); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) * (x - zT)
+ot1 = (x, u, w) -> transpose(x - zM) * Diagonal(Δt * [0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) * (x - zM) + transpose(u) * Diagonal(Δt * [0.01; 0.01; 0.01]) * u
+ot2 = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * [0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) * (x - zT) + transpose(u) * Diagonal(Δt * [0.01; 0.01; 0.01]) * u
+oT = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * [0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) * (x - zT)
 
 ct1 = Cost(ot1, n, m, d)
 ct2 = Cost(ot2, n, m, d)
@@ -117,7 +115,8 @@ obj = [[ct1 for t = 1:10]..., [ct2 for t = 1:10]..., cT]
 function goal(x, u, w)
     Δ = x - zT
 	# return [Δ[collect(1:6)]; Δ[collect(13 .+ (1:6))]]
-    return [Δ[collect(1:6)]; Δ[collect(13 .+ (1:2))]]
+	# return [Δ[collect(1:6)]; Δ[collect(13 .+ (1:2))]]
+    return [Δ[collect(1:6)]; Δ[collect(12 .+ (1:2))]]
 end
 
 cont = Constraint()
@@ -127,6 +126,7 @@ cons = [[cont for t = 1:T-1]..., conT]
 prob = IterativeLQR.problem_data(model, obj, cons)
 IterativeLQR.initialize_controls!(prob, ū)
 IterativeLQR.initialize_states!(prob, x̄)
+
 
 # Solve
 IterativeLQR.constrained_ilqr_solve!(prob,
@@ -157,5 +157,6 @@ cond(fxx[ind, ind])
 
 plot(Gray.(fxx[indi, indi]))
 plot(Gray.(fxx[14:15, 14:15]))
+plot(Gray.(fxx))
 
 fxx[14:15, 14:15]

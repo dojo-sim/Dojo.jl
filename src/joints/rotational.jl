@@ -230,9 +230,11 @@ end
     return nullspacemat(joint) * rotation_vector(q)
 end
 @inline function minimalCoordinates(joint::Rotational{T,0}, qb::UnitQuaternion) where {T}
-    # @warn "this is a hack"
+    # @warn "removed 1st link quat"
+    # q = qb / joint.qoffset
+    # return vector(q)
     q = qb / joint.qoffset
-    return vector(q)
+    return nullspacemat(joint) * rotation_vector(q)
 end
 
 @inline function minimalVelocities(joint::Rotational, body1::Body, body2::Body)
