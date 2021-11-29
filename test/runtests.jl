@@ -8,7 +8,7 @@ using SparseArrays
 using BenchmarkTools
 using Dojo
 
-const Dojo = Main
+# const Dojo = Main
 
 include("integrator.jl")
 include("minimal_coordinates.jl")

@@ -586,10 +586,10 @@ uuid = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
 version = "1.3.0"
 
 [[IterativeLQR]]
-deps = ["BenchmarkTools", "ForwardDiff", "JLD2", "LinearAlgebra", "Parameters", "Scratch", "SparseArrays", "Symbolics"]
-git-tree-sha1 = "3370ecf34e406500e2a53fecdb66eebad800941b"
+deps = ["BenchmarkTools", "JLD2", "LinearAlgebra", "Parameters", "Scratch", "Symbolics"]
+git-tree-sha1 = "d841afd7a5a698feeb59e8e0502e8672389f72d0"
 repo-rev = "main"
-repo-url = "/home/simon/.julia/dev/IterativeLQR.jl"
+repo-url = "https://github.com/thowell/IterativeLQR.jl"
 uuid = "605048dd-e178-462b-beb9-98a09398ef27"
 version = "0.1.0"
 

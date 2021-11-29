@@ -60,7 +60,7 @@ mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
 mang0 = [Vector(m-m0[1])[4:6] for m in m0]
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
-@testset "Dice" begin
+@testset "Momentum: Dice" begin
     @test all(norm.(mlin0, Inf) .< 1e-11)
     @test all(norm.(mang0, Inf) .< 1e-11)
 end
@@ -88,7 +88,7 @@ mang0 = [Vector(m-m0[1])[4:6] for m in m0]
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
 # @test all(norm.(mlin0, Inf) .< 1e-11)
-@testset "Pendulum" begin
+@testset "Momentum: Pendulum" begin
     @test all(norm.(mang0, Inf) .< 1e-11)
 end
 
@@ -117,7 +117,7 @@ mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
 mang0 = [Vector(m-m0[1])[4:6] for m in m0]
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
-@testset "Humanoid" begin
+@testset "Momentum: Humanoid" begin
     @test all(norm.(mlin0, Inf) .< 1e-11)
     @test all(norm.(mang0, Inf) .< 1e-11)
 end
@@ -143,7 +143,7 @@ mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
 mang0 = [Vector(m-m0[1])[4:6] for m in m0]
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
-@testset "Atlas" begin
+@testset "Momentum: Atlas" begin
     @test all(norm.(mlin0, Inf) .< 1e-11)
     @test all(norm.(mang0, Inf) .< 1e-11)
 end
@@ -169,7 +169,7 @@ mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
 mang0 = [Vector(m-m0[1])[4:6] for m in m0]
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
-@testset "Quadruped" begin
+@testset "Momentum: Quadruped" begin
     @test all(norm.(mlin0, Inf) .< 1e-11)
     @test all(norm.(mang0, Inf) .< 1e-11)
 end
@@ -203,12 +203,12 @@ mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
 mang0 = [Vector(m-m0[1])[4:6] for m in m0]
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
-@testset "Snake" begin
+@testset "Momentum: Snake" begin
     @test all(norm.(mlin0, Inf) .< 1e-11)
     @test all(norm.(mang0, Inf) .< 1e-11)
 end
 
-@testset "Snake" begin
+@testset "Momentum: Snake" begin
     for jointtype in jointtypes
         # @show jointtype
         mech = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
@@ -262,12 +262,12 @@ mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
 mang0 = [Vector(m-m0[1])[4:6] for m in m0]
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
-@testset "Twister" begin
+@testset "Momentum: Twister" begin
     @test all(norm.(mlin0, Inf) .< 1e-11)
     @test all(norm.(mang0, Inf) .< 1e-11)
 end
 
-@testset "Twister" begin
+@testset "Momentum: Twister" begin
     for jointtype in jointtypes
         # @show jointtype
         mech = getmechanism(:twister, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,

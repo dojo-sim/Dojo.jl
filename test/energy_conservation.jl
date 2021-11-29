@@ -66,7 +66,7 @@ me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
 
 # Test mechanical energy conservation
 # With spring the error is or the order of Δt, but there is no drift
-@testset "Dice" begin
+@testset "Energy: Dice" begin
     @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-11
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
@@ -102,7 +102,7 @@ me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
 
 # Test mechanical energy conservation
 # With spring the error is or the order of Δt, but there is no drift
-@testset "Pendulum" begin
+@testset "Energy: Pendulum" begin
     @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-2
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
@@ -141,7 +141,7 @@ me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
 # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])
 # plot([(i-1)*Δt0 for i in 1:length(me0)], me0 .- me0[1])
 
-@testset "Slider" begin
+@testset "Energy: Slider" begin
     # Test maximum amplitude and velocity
     @test norm(maximum([x[3] for x in storage.x[1]]) - zmax + 0.5) < 1e-4
     @test norm(maximum([vl[3] for vl in storage.vl[1]]) - vmax) < 1e-4
@@ -181,7 +181,7 @@ me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
 
 # Test mechanical energy conservation
 # For gravity the conservation is perfect
-@testset "Slider" begin
+@testset "Energy: Slider" begin
     @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-2
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-9
@@ -215,7 +215,7 @@ me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
 # plot([(i-1)*Δt0 for i in 1:length(me0)], me0 .- me0[start0])
 
 # Test mechanical energy conservation
-@testset "Slider" begin
+@testset "Energy: Slider" begin
     @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-2
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
@@ -263,7 +263,7 @@ me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
 # plot([(i-1)*Δt0 for i in 1:length(me0)], me0 .- me0[1])
 
 # Test mechanical energy conservation
-@testset "Humanoid" begin
+@testset "Energy: Humanoid" begin
     @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-3
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
@@ -297,7 +297,7 @@ me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
 # plot([(i-1)*Δt0 for i in 1:length(me0)], me0 .- me0[1])
 
 # Test mechanical energy conservation
-@testset "Atlas" begin
+@testset "Energy: Atlas" begin
     @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 3e-3
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
@@ -339,7 +339,7 @@ me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
 # plot([(i-1)*Δt0 for i in 1:length(me0)], me0 .- me0[1])
 
 # Test mechanical energy conservation
-@testset "Quadruped" begin
+@testset "Energy: Quadruped" begin
     @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-3
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
@@ -387,12 +387,12 @@ me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
 # plot([(i-1)*Δt0 for i in 1:length(me0)], me0 .- me0[1])
 
 # Test mechanical energy conservation
-@testset "Snake" begin
+@testset "Energy: Snake" begin
     @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-3
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
 
-@testset "Snake" begin
+@testset "Energy: Snake" begin
     for jointtype in jointtypes
         # @show jointtype
         mech = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
@@ -452,12 +452,12 @@ me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
 # plot([(i-1)*Δt0 for i in 1:length(me0)], me0 .- me0[1])
 
 # Test mechanical energy conservation
-@testset "Twister" begin
+@testset "Energy: Twister" begin
     @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-3
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
 
-@testset "Twister" begin
+@testset "Energy: Twister" begin
     for jointtype in jointtypes
         # @show jointtype
         mech = getmechanism(:twister, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,

@@ -40,13 +40,13 @@ end
 	rot2 = eqc2.constraints[1]
 
 	x = srand(1)
-	Δx = zerodimstaticadjoint(Dojo.nullspacemat(tra2)) * x
+	Δx = Dojo.zerodimstaticadjoint(Dojo.nullspacemat(tra2)) * x
 	Δq = UnitQuaternion(rand(4)...)
 	Dojo.setPosition!(body1, body2; p1 = tra2.vertices[1], p2 = tra2.vertices[2], Δx = Δx, Δq = Δq)
 	@test norm(Dojo.minimalCoordinates(tra2, body1, body2) - x[1], Inf) < 1e-10
 
 	v = srand(1)
-	Δv = zerodimstaticadjoint(Dojo.nullspacemat(tra2)) * v
+	Δv = Dojo.zerodimstaticadjoint(Dojo.nullspacemat(tra2)) * v
 	Δω = rand(3)
 	Dojo.setVelocity!(body1, body2; p1 = tra2.vertices[1], p2 = tra2.vertices[2], Δv = Δv, Δω = Δω)
 	@test norm(Dojo.minimalVelocities(tra2, body1, body2) - v[1], Inf) < 1e-10
@@ -61,7 +61,7 @@ end
 	mech = Dojo.getmechanism(:hopper)
 	Random.seed!(100)
 	nx = Dojo.minCoordDim(mech)
-	x0 = [rand(3); vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(nx - 13)]
+	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(nx - 13)]
 	z0 = Dojo.min2max(mech, x0)
 	x1 = Dojo.max2min(mech, z0)
 	@test norm(x0[1:3] - x1[1:3], Inf) < 1e-10
@@ -76,7 +76,7 @@ end
 	mech = Dojo.getmechanism(:dice)
 	Random.seed!(100)
 	nx = Dojo.minCoordDim(mech)
-	x0 = [rand(3); vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(nx - 13)]
+	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(nx - 13)]
 	z0 = Dojo.min2max(mech, x0)
 	x1 = Dojo.max2min(mech, z0)
 	@test norm(x0[1:3] - x1[1:3], Inf) < 1e-10
@@ -132,7 +132,7 @@ end
 		mech = Dojo.getmechanism(:snake, Nlink = Nlink0, jointtype = jointtype)
 		Random.seed!(100)
 		nx = Dojo.minCoordDim(mech)
-		x0 = [rand(3); vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(nx - 13)]
+		x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(nx - 13)]
 		z0 = Dojo.min2max(mech, x0)
 		x1 = Dojo.max2min(mech, z0)
 		@test norm(x0[1:3] - x1[1:3], Inf) < 1e-10
@@ -151,7 +151,7 @@ end
 		mech = Dojo.getmechanism(:twister, Nlink = Nlink0, jointtype = jointtype)
 		Random.seed!(100)
 		nx = Dojo.minCoordDim(mech)
-		x0 = [rand(3); vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(nx - 13)]
+		x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(nx - 13)]
 		z0 = Dojo.min2max(mech, x0)
 		x1 = Dojo.max2min(mech, z0)
 		@test norm(x0[1:3] - x1[1:3], Inf) < 1e-10
@@ -167,7 +167,7 @@ end
 	mech = Dojo.getmechanism(:humanoid)
 	Random.seed!(100)
 	nx = Dojo.minCoordDim(mech)
-	x0 = [rand(3); vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(nx - 13)]
+	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(nx - 13)]
 	z0 = Dojo.min2max(mech, x0)
 	x1 = Dojo.max2min(mech, z0)
 	@test norm(x0[1:3] - x1[1:3], Inf) < 1e-10
@@ -182,7 +182,7 @@ end
 	mech = Dojo.getmechanism(:quadruped)
 	Random.seed!(100)
 	nx = Dojo.minCoordDim(mech)
-	x0 = [rand(3); vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(nx - 13)]
+	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(nx - 13)]
 	z0 = Dojo.min2max(mech, x0)
 	x1 = Dojo.max2min(mech, z0)
 	@test norm(x0[1:3] - x1[1:3], Inf) < 1e-10
@@ -197,7 +197,7 @@ end
 	mech = Dojo.getmechanism(:atlas, model_type = :simple, contact = true, damper = 10.0)
 	Random.seed!(100)
 	nx = Dojo.minCoordDim(mech)
-	x0 = [rand(3); vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(nx - 13)]
+	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(nx - 13)]
 	z0 = Dojo.min2max(mech, x0)
 	x1 = Dojo.max2min(mech, z0)
 	@test norm(x0[1:3] - x1[1:3], Inf) < 1e-10
