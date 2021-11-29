@@ -199,12 +199,14 @@ end
 end
 @inline function getVelocityDelta(joint::Rotational, body1::Body, body2::Body, ω::SVector)
     ω = zerodimstaticadjoint(nullspacemat(joint)) * ω
-    Δω = vrotate(ω, inv(body2.state.q2[1])*body1.state.q2[1]) # in body2 frame
+    Δω = ω # in body1 frame
+    # Δω = vrotate(ω, inv(body2.state.q2[1])*body1.state.q2[1]) # in body2 frame
     return Δω
 end
 @inline function getVelocityDelta(joint::Rotational, body1::Origin, body2::Body, ω::SVector)
     ω = zerodimstaticadjoint(nullspacemat(joint)) * ω
-    Δω = vrotate(ω, inv(body2.state.q2[1])) # in body2 frame
+    Δω = ω # in body1 frame
+    # Δω = vrotate(ω, inv(body2.state.q2[1])) # in body2 frame
     return Δω
 end
 

@@ -40,7 +40,7 @@ function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0, d
         contineqcs1 = contactconstraint(getbody(mech, "l_foot"), normal, cf, p = contacts)
         contineqcs2 = contactconstraint(getbody(mech, "r_foot"), normal, cf, p = contacts)
 
-        setPosition!(mech, geteqconstraint(mech, "auto_generated_floating_joint"), [0;0;1.2;0.1;0.;0.])
+        setPosition!(mech, geteqconstraint(mech, "auto_generated_floating_joint"), [0;0;1.2;0.;0.;0.])
         mech = Mechanism(origin, bodies, eqs, [contineqcs1; contineqcs2], g = g, Δt = Δt)
     end
     return mech
@@ -222,6 +222,8 @@ function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
 
     # Parameters
     ex = [1.;0.;0.]
+    ey = [0.;1.;0.]
+    ez = [0.;0.;1.]
 
     vert11 = [0.;0.;h / 2]
     vert12 = -vert11
@@ -236,6 +238,7 @@ function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
     jointb1 = EqualityConstraint(Floating(origin, links[1], spring = 0.0, damper = 0.0)) # TODO remove the spring and damper from floating base
     if Nlink > 1
         eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], ex; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
+        # eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], ez; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
         eqcs = [jointb1; eqcs]
     else
         eqcs = [jointb1]
@@ -247,7 +250,7 @@ function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
         cf = cf * ones(n)
 
         if conetype == :soc
-            contineqcs1 = contactconstraint(links[1], normal[1], cf[1], p = vert11) # to avoid duplicating the contact points
+            contineqcs1 = contactconstraint(links, normal, cf, p = fill(vert11, n)) # we need to duplicate point for prismatic joint for instance
             contineqcs2 = contactconstraint(links, normal, cf, p = fill(vert12, n))
             mech = Mechanism(origin, links, eqcs, [contineqcs1; contineqcs2], g = g, Δt = Δt)
 
@@ -449,7 +452,7 @@ function getdzhanibekov(; Δt::T = 0.01, g::T = -9.81, h::T = 1.0, r::T = 0.05) 
     return mech
 end
 
-function gethopper(; Δt::T = 0.05, g::T = -9.81, spring::T = 0.0, damper::T = 0.1) where {T}
+function gethopper(; Δt::T = 0.05, g::T = -9.81, spring::T = 0.0, damper::T = 0.1, contact::Bool = true) where {T}
     #TODO: make customizable
 
     # Parameters
@@ -478,8 +481,11 @@ function gethopper(; Δt::T = 0.05, g::T = -9.81, spring::T = 0.0, damper::T = 0
     contineqcs = contactconstraint(foot, contact_normal, friction_coefficient, p = [0.0; 0.0; 0.0])
 
     # Mechanism
-    mech = Mechanism(origin, links, eqcs, [contineqcs], g=g, Δt=Δt)
-
+    if contact
+        mech = Mechanism(origin, links, eqcs, [contineqcs], g=g, Δt=Δt)
+    else
+        mech = Mechanism(origin, links, eqcs, g=g, Δt=Δt)
+    end
     return mech
 end
 
@@ -699,22 +705,19 @@ function initializedzhanibekov!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVec
     setVelocity!(link1, link2, p1 = p1, p2 = p2)
 end
 
-function initializehopper!(mech::Mechanism{T,Nn,Ne,Nb}; leg_length_nominal=0.5, altitude = 0.0) where {T,Nn,Ne,Nb}
+function initializehopper!(mech::Mechanism{T,Nn,Ne,Nb}; leg_length_nominal=0.5, altitude = 0.0,
+        v = zeros(3), ω = zeros(3)) where {T,Nn,Ne,Nb}
+    body1 = collect(mech.bodies)[1]
+    body2 = collect(mech.bodies)[2]
+    eqc2 = collect(mech.eqconstraints)[2]
+    tra2 = eqc2.constraints[1]
     # origin to body
-    setPosition!(mech.origin, mech.bodies[3], Δx=[0.0; 0.0; leg_length_nominal + altitude])
-    setVelocity!(mech.bodies[3], v = [0.0; 0.0; 0.0], ω = [0.0; 0.0; 0.0])
-    # mech.bodies[3].state.x1
-    # mech.bodies[3].state.v15
-    # mech.bodies[3].state.q1
-    # mech.bodies[3].state.ϕ15
+    setPosition!(mech.origin, body1, Δx=[0.0; 0.0; leg_length_nominal + altitude])
+    setVelocity!(body1, v = v, ω = ω)
 
     # body to foot
-    setPosition!(mech.bodies[3], mech.bodies[4], Δx=[0.0; 0.0; -leg_length_nominal], Δq=UnitQuaternion(RotX(0.0)))
-    setVelocity!(mech.bodies[4], v = zeros(3), ω = zeros(3))
-    # mech.bodies[4].state.x1
-    # mech.bodies[4].state.v15
-    # mech.bodies[4].state.q1
-    # mech.bodies[4].state.ϕ15
+    setPosition!(body1, body2, Δx=[0.0; 0.0; -leg_length_nominal], Δq=UnitQuaternion(RotX(0.0)))
+    setVelocity!(body1, body2, p1 = tra2.vertices[1], p2 = tra2.vertices[2], Δv = zeros(3), Δω = zeros(3))
 end
 
 function initializecartpole!(mech::Mechanism{T,Nn,Ne,Nb}; mode=:down, pendulum_length=1.0) where {T,Nn,Ne,Nb}

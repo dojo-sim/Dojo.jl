@@ -719,6 +719,10 @@ function controldim(eqc::EqualityConstraint{T,N,Nc,Cs}; ignore_floating_base::Bo
     return 6 - N
 end
 
+function controldim(joint::Joint{T,N}) where {T,N}
+    return 3 - N
+end
+
 function controldim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}; ignore_floating_base::Bool = false) where {T,Nn,Ne,Nb,Ni}
     nu = 0
     for eqc in mechanism.eqconstraints
@@ -726,6 +730,25 @@ function controldim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}; ignore_floating_base::B
     end
     return nu
 end
+
+function minCoordDim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
+    nx = 0
+    free_rot_base = false # we are going to check if the link attached to the base has free orientation
+    for eqc in mech.eqconstraints
+        if eqc.parentid == nothing
+            for joint in eqc.constraints
+                if typeof(joint) <: Rotational0
+                    free_rot_base = true
+                end
+            end
+        end
+    end
+    nx = 2 * controldim(mech, ignore_floating_base = false)
+    free_rot_base && (nx += 1)
+    return nx
+end
+
+maxCoordDim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni} = 13Nb
 
 function ineqcdim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
     nineqcs = 0

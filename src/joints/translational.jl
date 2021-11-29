@@ -39,6 +39,7 @@ end
 # Position level constraints (for dynamics)
 @inline function g(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
     vertices = joint.vertices
+    g = vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
     return vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
 end
 
@@ -322,15 +323,34 @@ end
 @inline function minimalVelocities(joint::Translational, body1::Body, body2::Body)
     statea = body1.state
     stateb = body2.state
-    return minimalVelocities(joint, statea.v15, stateb.v15)
+    return minimalVelocities(joint, statea.q2[1], statea.v15, statea.ϕ15, stateb.q2[1], stateb.v15, stateb.ϕ15)
 end
 @inline function minimalVelocities(joint::Translational, body1::Origin, body2::Body)
     stateb = body2.state
     return minimalVelocities(joint, stateb.v15)
 end
-@inline function minimalVelocities(joint::Translational, va::AbstractVector, vb::AbstractVector)
-    return nullspacemat(joint) * (vb - va)
+@inline function minimalVelocities(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, va::AbstractVector, ωa::AbstractVector,
+        xb::AbstractVector, qb::UnitQuaternion, vb::AbstractVector, ωb::AbstractVector)
+    # we need to compute Δv, the one that we use to set the minimal coordinates in setVelocity!
+    # it is defined as
+    # Δv = V(pb,B/A)a velocity of pb attahced to body B wrt frame A expressed in frame A.
+        # with pb the vertex attached to body B join the A-B joint
+    # Δv = V(pb,B/W)a - V(pb,A/W)a
+    vertices = joint.vertices
+    pbcb_w = vrotate(-vertices[2], qb)
+    pbca_w = xa - (xb + vrotate(vertices[2], qb))
+    Δvw = vb + skew(pbcb_w) * vrotate(ωb, qb) - (va + skew(pbca_w) * vrotate(ωa, qa))
+    Δv = vrotate(Δvw, inv(qa))
+    return nullspacemat(joint) * Δv
+    # return nullspacemat(joint) * vrotate(vb - va, inv(qa))
 end
-@inline function minimalVelocities(joint::Translational, vb::AbstractVector)
-    return nullspacemat(joint) * vb
+@inline function minimalVelocities(joint::Translational, qb::UnitQuaternion, vb::AbstractVector, ωb::AbstractVector)
+    vertices = joint.vertices
+    pbcb_w = vrotate(-vertices[2], qb)
+    Δvw = vb + skew(pbcb_w) * vrotate(ωb, qb)
+    Δv = Δvw
+    return nullspacemat(joint) * Δv
+
+    #TODO most likely wrong
+    # return nullspacemat(joint) * vb
 end
