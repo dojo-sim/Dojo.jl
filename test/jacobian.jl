@@ -131,7 +131,7 @@ tsim = 0.4
 test_datamat(:atlas,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6)
 test_datamat(:atlas,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6, spring = 1e3, damper = 5e2)
 test_datamat(:quadruped, tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7, spring = 1.0, damper = 0.2)
-test_datamat(:dice,      tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7)
+test_datamat(:dice,      tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6)
 test_datamat(:snake,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6, spring = 1.0, damper = 0.2)
 test_datamat(:slider,    tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7, spring = 1.0, damper = 0.2)
 test_datamat(:pendulum,  tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7, spring = 1.0, damper = 0.2)

@@ -8,10 +8,10 @@ using SparseArrays
 using BenchmarkTools
 using Dojo
 
-# const Dojo = Main
+const Dojo = Main
 
 include("integrator.jl")
-
+include("minimal_coordinates.jl")
 include("jacobian.jl")
 include("momentum_conservation.jl")
 include("energy_conservation.jl")
