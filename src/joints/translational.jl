@@ -323,7 +323,7 @@ end
 @inline function minimalVelocities(joint::Translational, body1::Body, body2::Body)
     statea = body1.state
     stateb = body2.state
-    return minimalVelocities(joint, statea.q2[1], statea.v15, statea.ϕ15, stateb.q2[1], stateb.v15, stateb.ϕ15)
+    return minimalVelocities(joint, statea.x2[1], statea.q2[1], statea.v15, statea.ϕ15, stateb.x2[1], stateb.q2[1], stateb.v15, stateb.ϕ15)
 end
 @inline function minimalVelocities(joint::Translational, body1::Origin, body2::Body)
     stateb = body2.state

@@ -675,18 +675,18 @@ function getλJoint(eqc::EqualityConstraint{T,N,Nc}, i::Int) where {T,N,Nc}
     return λi
 end
 
-function sensitivities(mech, sol, data)
-    setdata!(mech, data)
-    setsolution!(mech, sol)
-    setentries!(mech)
-    datamat = full_data_matrix(mech)
-    solmat = full_matrix(mech.system)
+function sensitivities(mechanism, sol, data)
+    setdata!(mechanism, data)
+    setsolution!(mechanism, sol)
+    setentries!(mechanism)
+    datamat = full_data_matrix(mechanism)
+    solmat = full_matrix(mechanism.system)
     sensi = -1.0 * (solmat \ datamat)
     return sensi
 end
 
-function jvp(mech, sol, data, v)
-    sensi = sensitivities(mech, sol, data)
+function jvp(mechanism, sol, data, v)
+    sensi = sensitivities(mechanism, sol, data)
     return sensi * v
 end
 
@@ -734,7 +734,7 @@ end
 function minCoordDim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
     nx = 0
     free_rot_base = false # we are going to check if the link attached to the base has free orientation
-    for eqc in mech.eqconstraints
+    for eqc in mechanism.eqconstraints
         if eqc.parentid == nothing
             for joint in eqc.constraints
                 if typeof(joint) <: Rotational0
@@ -743,7 +743,7 @@ function minCoordDim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
             end
         end
     end
-    nx = 2 * controldim(mech, ignore_floating_base = false)
+    nx = 2 * controldim(mechanism, ignore_floating_base = false)
     free_rot_base && (nx += 1)
     return nx
 end
