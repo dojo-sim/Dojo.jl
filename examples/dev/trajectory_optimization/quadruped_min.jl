@@ -7,13 +7,13 @@ end
 using Pkg
 Pkg.activate(module_dir())
 
+using MeshCat
 # Open visualizer
 vis = Visualizer()
 open(vis)
 
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
-include(joinpath(module_dir(), "examples", "dev", "trajectory_optimization", "utils.jl"))
 
 using IterativeLQR
 
@@ -27,7 +27,7 @@ initialize!(mech, :quadruped, tran = [0,0,0.], v = [0.5,0,0.])
 visualize(mech, storage, vis = vis)
 
 T = 20
-xref = quadruped_trajectory(mech, 0.0, r = 0.10, z = 0.29; N = Int(T/2), Ncycles = 1)
+xref = quadruped_trajectory(mech, 0.0, r = 0.10, z = 0.29; N = Int(T/2), Ncycles = 5)
 zref = [min2max(mech, x) for x in xref]
 storage = generate_storage(mech, zref)
 visualize(mech, storage, vis = vis)

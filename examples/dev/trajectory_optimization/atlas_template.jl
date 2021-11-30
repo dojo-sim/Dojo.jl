@@ -38,66 +38,63 @@ function foot_trajectory(r::T, N::Int) where T
 	return traj
 end
 
-# Inverse kinematics: given the position of the trunk, finds the knee and hip angles that will put the foot
+# Inverse kinematics: given the position of the first link, finds the knee and hip angles that will put the foot
 # at the p_foot location
-function inverse_kinematics(mechanism::Mechanism, p_trunk, p_foot; leg::Symbol = :FR)
+function inverse_kinematics(mechanism::Mechanism, p_base, p_foot; leg::Symbol = :r)
 	# starting point of the local search
-	θ = [0.95, -1.5*0.95] # θhip, θknee
+	θ = [0.5, 1.0] # θhip, θknee
 	for k = 1:10
-		err = IKerror(mechanism, p_trunk, p_foot, θ; leg = leg)
+		err = IKerror(mechanism, p_base, p_foot, θ; leg = leg)
 		norm(err, Inf) < 1e-10 && continue
-		∇ = FiniteDiff.finite_difference_jacobian(θ -> IKerror(mechanism, p_trunk, p_foot, θ; leg = leg), θ)
+		∇ = FiniteDiff.finite_difference_jacobian(θ -> IKerror(mechanism, p_base, p_foot, θ; leg = leg), θ)
 		θ -= ∇ \ err
 	end
 	return θ
 end
 
-function IKerror(mechanism::Mechanism, p_trunk, p_foot, θ; leg::Symbol = :FR)
-	setPosition!(mechanism, geteqconstraint(mechanism, "auto_generated_floating_joint"), [p_trunk; zeros(3)])
-	setPosition!(mechanism, geteqconstraint(mechanism, String(leg)*"_thigh_joint"), [θ[1]])
-	setPosition!(mechanism, geteqconstraint(mechanism, String(leg)*"_calf_joint"), [θ[2]])
+function IKerror(mechanism::Mechanism, p_base, p_foot, θ; leg::Symbol = :r)
+	setPosition!(mechanism, geteqconstraint(mechanism, "auto_generated_floating_joint"), [p_base; zeros(3)])
+	setPosition!(mechanism, geteqconstraint(mechanism, String(leg)*"_leg_hpxyz"), [0.0, -θ[1], 0.0])
+	setPosition!(mechanism, geteqconstraint(mechanism, String(leg)*"_leg_kny"), [θ[2]])
+	setPosition!(mechanism, geteqconstraint(mechanism, String(leg)*"_leg_akxy"), [θ[1]-θ[2], 0.0])
 
-	foot = getbody(mechanism, String(leg)*"_calf")
+	foot = getbody(mechanism, String(leg)*"_foot")
 	ineqcs = collect(mechanism.ineqconstraints)
-	ineqc = ineqcs[findfirst(x -> x.parentid == foot.id, ineqcs)]
-	p = contact_location(ineqc, foot)
+	foot_ineqcs = ineqcs[findall(x -> x.parentid == foot.id, ineqcs)]
+	p = mean([contact_location(ineqc, foot) for ineqc in foot_ineqcs]) # average of all contact locations for one foot
 	err = p - p_foot
 	return err[[1,3]]
 end
 
-function quadruped_trajectory(mechanism::Mechanism{T}; Δt = 0.05, r = 0.10, z = 0.29, N = 8, Ncycles = 1) where T
-	pFR = [+ 0.13, - 0.13205, 0.]
-	pFL = [+ 0.13, + 0.13205, 0.]
-	pRR = [- 0.23, - 0.13205, 0.]
-	pRL = [- 0.23, + 0.13205, 0.]
+function altas_trajectory(mechanism::Mechanism{T}; Δt = 0.05, r = 0.10, z = 0.85, N = 12, Ncycles = 1) where T
+	pL = [0, + 0.1145, 0]
+	pR = [0, - 0.1145, 0]
 
 	t = reverse(foot_trajectory(r, N))
 	t_dephased = [t[N+1:2N]; t[1:N]]
 	# Foot positions
-	tFR = [pFR + ti for ti in t]
-	tFL = [pFL + ti for ti in t_dephased]
-	tRR = [pRR + ti for ti in t_dephased]
-	tRL = [pRL + ti for ti in t]
+	tL = [pL + ti for ti in t_dephased]
+	tR = [pR + ti for ti in t]
 
 	# Leg angles
-	p_trunk = [0,0,z]
-	θFR = [inverse_kinematics(mechanism, p_trunk, tFR[i], leg = :FR) for i = 1:2N]
-	θFL = [inverse_kinematics(mechanism, p_trunk, tFL[i], leg = :FL) for i = 1:2N]
-	θRR = [inverse_kinematics(mechanism, p_trunk, tRR[i], leg = :RR) for i = 1:2N]
-	θRL = [inverse_kinematics(mechanism, p_trunk, tRL[i], leg = :RL) for i = 1:2N]
+	p_base = [0,0,z]
+	θL = [inverse_kinematics(mechanism, p_base, tL[i], leg = :l) for i = 1:2N]
+	θR = [inverse_kinematics(mechanism, p_base, tR[i], leg = :r) for i = 1:2N]
 
 	# adding angular velocities
-	ωFR = [(θFR[i%10+1] - θFR[i]) / Δt for i = 1:2N]
-	ωFL = [(θFL[i%10+1] - θFL[i]) / Δt for i = 1:2N]
-	ωRR = [(θRR[i%10+1] - θRR[i]) / Δt for i = 1:2N]
-	ωRL = [(θRL[i%10+1] - θRL[i]) / Δt for i = 1:2N]
+	ωL = [(θL[i%10+1] - θL[i]) / Δt for i = 1:2N]
+	ωR = [(θR[i%10+1] - θR[i]) / Δt for i = 1:2N]
 
 	# Minimal Coordinates
-	X = [Vector{T}([p_trunk; zeros(3); zeros(3); zeros(3);
-		zeros(2); θFR[i][1]; ωFR[i][1]; θFR[i][2]; ωFR[i][2];
-		zeros(2); θFL[i][1]; ωFL[i][1]; θFL[i][2]; ωFL[i][2];
-		zeros(2); θRR[i][1]; ωRR[i][1]; θRR[i][2]; ωRR[i][2];
-		zeros(2); θRL[i][1]; ωRL[i][1]; θRL[i][2]; ωRL[i][2];
+	X = [Vector{T}([
+		p_base; zeros(3); zeros(3); zeros(3); # u_torso
+		zeros(3); zeros(3); # pelvis
+		[0, -θL[i][1], 0]; [0, -ωL[i][1], 0]; # l_uleg
+		θL[i][2]; ωL[i][2]; # l_lleg
+		[θL[i][1] - θL[i][2], 0]; [ωL[i][1] - ωL[i][2], 0]; # l_foot
+		[0, -θR[i][1], 0]; [0, -ωR[i][1], 0]; # R_uleg
+		θR[i][2]; ωR[i][2]; # R_lleg
+		[θR[i][1] - θR[i][2], 0]; [ωR[i][1] - ωR[i][2], 0]; # R_foot
 		]) for i = 1:2N]
 
 	X = vcat([deepcopy(X) for i = 1:Ncycles]...)
@@ -114,6 +111,46 @@ end
 # Compute trajectory
 ################################################################################
 
+mech = getmechanism(:atlas, Δt = 0.05, model_type = :armless, damper = 1000.0)
+initialize!(mech, :atlas, tran = [1,0,0.0], rot = [0,0,0.], αhip = 0.0, αknee = 0.0)
+
+@elapsed storage = simulate!(mech, 0.55, record = true, undercut = Inf,
+    solver = :mehrotra!, verbose = true)
+
+visualize(mech, storage, vis = vis)
+
+atlas_trajectory(mech; Δt = 0.05, r = 0.10, z = 0.85, N = 12, Ncycles = 1)
+
+
+
+
+x0 = [[0,0,0.9385]; zeros(9);
+	zeros(6);
+	zeros(6);
+	zeros(6);
+	zeros(18)]
+z0 = min2max(mech, x0)
+visualizeMaxCoord(mech, z0, vis)
+
+center_of_mass(mech, storage, 1)
+contact_location(mech)[1:4]
+
+bodies = collect(mech.bodies)
+eqcs = collect(mech.eqconstraints)
+ineqcs = collect(mech.ineqconstraints)
+getfield.(ineqcs, :parentid)
+getbody(mech, 15)
+nx = minCoordDim(mech)
+
+
+p_base = [0, 0, 0.9385]
+p_base = [0, 0, 0.88]
+p_foot = [0, 0, 0.00]
+θ = [0.4, 0.8]
+IKerror(mech, p_base, p_foot, θ; leg = :r)
+inverse_kinematics(mech, p_base, p_foot; leg = :r)
+
+
 # discretization
 N = 8 # half period of the 1-step loop
 
@@ -127,7 +164,7 @@ r = 0.10 # foot traj radius
 mech = getmechanism(:quadruped, Δt = 0.05)
 initialize!(mech, :quadruped, tran = [0,0,0.], v = [0,0,0.])
 
-X = quadruped_trajectory(mech, r = 0.10, z = 0.29; Δt = 0.05, N = N, Ncycles = 10)
+X = quadruped_trajectory(mech, 0.0, r = 0.10, z = 0.29; Δt = 0.05, N = N, Ncycles = 10)
 storage = generate_storage(mech, [min2max(mech, x) for x in X])
 visualize(mech, storage, vis = vis)
 

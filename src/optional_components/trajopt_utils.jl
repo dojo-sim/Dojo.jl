@@ -263,6 +263,43 @@ function getMaxState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	return z
 end
 
+function getMinState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
+	# z = [[x2, v15, q2, ϕ15]body1  [x2, v15, q2, ϕ15]body2 ....]
+	x = []
+	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
+	# Thus go through the eqconstraints in order, start from joint between robot and origin and go down the tree.
+	for id in reverse(mechanism.system.dfs_list)
+		(id > Ne) && continue # only treat eqconstraints
+		eqc = mechanism.eqconstraints[id]
+		c = zeros(T,0)
+		v = zeros(T,0)
+		for (i,joint) in enumerate(eqc.constraints)
+			cbody = getbody(mech, eqc.childids[i])
+			pbody = getbody(mech, eqc.parentid)
+			if eqc.parentid != nothing
+				if typeof(joint) <: Translational
+					push!(c, minimalCoordinates(joint, pbody, cbody)...) # Δx in bodya's coordinates projected on jointAB's nullspace
+					push!(v, minimalVelocities(joint, pbody, cbody)...) # Δv in bodya's coordinates projected on jointAB's nullspace
+				elseif typeof(joint) <: Rotational
+					push!(c, minimalCoordinates(joint, pbody, cbody)...) # Δq in bodya's coordinates projected on jointAB's nullspace
+					push!(v, minimalVelocities(joint, pbody, cbody)...) # Δϕ in bodya's coordinates projected on jointAB's nullspace
+				end
+			else
+				if typeof(joint) <: Rotational
+					push!(c, minimalCoordinates(joint, pbody, cbody)...) # Δq = q2 of body b
+					push!(v, minimalVelocities(joint, pbody, cbody)...) # Δϕ = ϕ15 of bodyb in origin = world's coordinates
+				elseif typeof(joint) <: Translational
+					push!(c, minimalCoordinates(joint, pbody, cbody)...) # Δx = x2 of bodyb in world's coordinates
+					push!(v, minimalVelocities(joint, pbody, cbody)...) # Δv = v15 of bodyb in world's coordinates
+				end
+			end
+		end
+		push!(x, [c; v]...)
+	end
+	x = [x...]
+	return x
+end
+
 function unpackMaxState(z::AbstractVector, i::Int)
 	zi = z[(i-1)*13 .+ (1:13)]
 	x2 = zi[1:3]
