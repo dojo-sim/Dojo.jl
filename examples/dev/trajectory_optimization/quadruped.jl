@@ -20,22 +20,61 @@ using IterativeLQR
 # System
 gravity = -9.81
 Δt = 0.05
-mech = getmechanism(:quadruped, Δt = Δt, g = gravity, damper = 1.0, spring = 0.0)
-initialize!(mech, :quadruped)
+mech = getmechanism(:quadruped, Δt = Δt, g = gravity, damper = 1.0, spring = 100.0)
+initialize!(mech, :quadruped, v = [0.5, 0, 0])
+# @elapsed storage = simulate!(mech, 0.5, record = true, solver = :mehrotra!, verbose = false)
+# visualize(mech, storage, vis = vis)
 
 ## state space
 Nb = length(mech.bodies)
 n = 13 * Nb
-m = 6
+m = 12
 
+function potato_dynamics(x, u, Δt, m, g)
+	# x = [x,y,z,ẋ,ẏ,ż]
+	gv = [0, 0, g]
+	ẋ = [x[4:6]; u ./ (m*Δt) + gv]
+	x̄ = x + ẋ * Δt
+	return x̄
+end
+
+trunk = getbody(mech, "trunk")
+x2_trunk = trunk.state.x2[1]
+v15_trunk = trunk.state.v15
+
+
+U_potato = [fill([0,0,8], 6); fill(zeros(3), 15)]
+x_potato = [x2_trunk; v15_trunk]
+X_potato = []
+for t = 1:21
+	mass = sum(getfield.(mech.bodies, :m))
+	alt = x_potato[3] - 0.40
+	if t > 13
+		u_potato = -[0, 0, mech.Δt * mass * mech.g + 20*alt + 10*x_potato[6]]
+	else
+		u_potato = U_potato[t]
+	end
+	push!(X_potato, x_potato)
+	x_potato = potato_dynamics(x_potato, u_potato, mech.Δt, mass, mech.g)
+end
+plot()
+plot!([x[1] for x in X_potato], linewidth = 5.0)
+plot!([x[2] for x in X_potato], linewidth = 5.0)
+plot!([x[3] for x in X_potato], linewidth = 5.0)
+
+
+zref = []
+for t = 1:21
+	initialize!(mech, :quadruped, tran = X_potato[t][1:3] - [0,0,0.23], v = X_potato[t][4:6], θ = 0.95)
+	push!(zref, getMaxState(mech))
+end
+storage = generate_storage(mech, zref)
+visualize(mech, storage, vis = vis)
+
+
+initialize!(mech, :quadruped, tran = [0.00,0,0.0], v = [0.5,0,0], θ = 0.95)
 z1 = getMaxState(mech)
-
 visualizeMaxCoord(mech, z1, vis)
-
-z1 = halfcheetahState(x = 0.00, z = 0.00, θ = 0.0)
-zM = halfcheetahState(x = 0.25, z = 0.40, θ = 0.0)
-zT = halfcheetahState(x = 0.50, z = 0.00, θ = 0.0)
-
 
 function gravity_compensation(mechanism::Mechanism)
     # only works with revolute joints for now
@@ -60,16 +99,16 @@ function gravity_compensation(mechanism::Mechanism)
     return u
 end
 
-mech = getmechanism(:halfcheetah, Δt = Δt, g = gravity, damper = 100.0, spring = 1000.0)
-initialize!(mech, :halfcheetah, x = 0.0, z = 0.0, θ = 0.0)
+mech = getmechanism(:quadruped, Δt = Δt, g = gravity, damper = 1000.0, spring = 30.0)
+initialize!(mech, :quadruped)
 @elapsed storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 ugc = gravity_compensation(mech)
 
-mech = getmechanism(:halfcheetah, Δt = Δt, g = gravity, damper = 10.0, spring = 1000.0)
+mech = getmechanism(:quadruped, Δt = Δt, g = gravity, damper = 10.0, spring = 30.0)
 
-u_control = ugc[3 .+ (1:6)]
-u_mask = [zeros(6,3) I(m)]
+u_control = ugc[6 .+ (1:12)]
+u_mask = [zeros(12,6) I(m)]
 
 z = [copy(z1)]
 for t = 1:5
@@ -98,7 +137,7 @@ end
 T = 21
 h = mech.Δt
 
-n, m, d = 13Nb, 6, 0
+n, m, d = 13Nb, 12, 0
 dyn = Dynamics(fd, fdx, fdu, n, n, m, d)
 model = [dyn for t = 1:T-1]
 
@@ -115,23 +154,29 @@ storage = generate_storage(mech, x̄)
 visualize(mech, storage; vis = vis)
 
 # Objective
-qt1 = [0.1; 0.1; 1.0; 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]
-qt2 = [0.1; 0.1; 1.0; 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]
-body_scale = [1; 0.2ones(6)]
+# qt1 = [0.1; 0.1; 1.0; 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]
+# qt2 = [0.1; 0.1; 1.0; 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]
+body_scale = [1; 0.1ones(12)]
 qt = vcat([body_scale[i] * [0.1 * ones(3); 0.001 * ones(3); 0.1 * ones(4); 0.01 * ones(3)] for i = 1:Nb]...)
 
-ot1 = (x, u, w) -> transpose(x - zM) * Diagonal(Δt * qt) * (x - zM) + transpose(u) * Diagonal(Δt * 0.01 * ones(m)) * u
-ot2 = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * qt) * (x - zT) + transpose(u) * Diagonal(Δt * 0.01 * ones(m)) * u
-oT = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * qt) * (x - zT)
+# ot1 = (x, u, w) -> transpose(x - zM) * Diagonal(Δt * qt) * (x - zM) + transpose(u) * Diagonal(Δt * 0.01 * ones(m)) * u
+# ot2 = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * qt) * (x - zT) + transpose(u) * Diagonal(Δt * 0.01 * ones(m)) * u
+# oT = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * qt) * (x - zT)
+ots = [(x, u, w) -> transpose(x - zref[t]) * Diagonal(Δt * qt) * (x - zref[t]) + transpose(u) * Diagonal(Δt * 0.01 * ones(m)) * u for t = 1:20]
+oT = (x, u, w) -> transpose(x - zref[end]) * Diagonal(Δt * qt) * (x - zref[end])
 
-ct1 = Cost(ot1, n, m, d)
-ct2 = Cost(ot2, n, m, d)
+# ct1 = Cost(ot1, n, m, d)
+# ct2 = Cost(ot2, n, m, d)
+# cT = Cost(oT, n, 0, 0)
+cts = Cost.(ots, n, m, d)
 cT = Cost(oT, n, 0, 0)
-obj = [[ct1 for t = 1:10]..., [ct2 for t = 1:10]..., cT]
+# obj = [[ct1 for t = 1:10]..., [ct2 for t = 1:10]..., cT]
+obj = [cts..., cT]
 
 # Constraints
 function goal(x, u, w)
-    Δ = x - zT
+	Δ = x - zT
+    Δ = x - zref[end]
     return Δ[collect(1:6)]
 end
 

@@ -60,6 +60,22 @@ function sdf(ineqc::InequalityConstraint{T,N,Nc,Cs}, x::AbstractVector{T}, q::Un
     return cont.ainv3 * (x + vrotate(cont.p,q) - cont.offset)
 end
 
+# contact location
+function contact_location(mechanism::Mechanism, ineqc::InequalityConstraint)
+    bodies = collect(mechanism.bodies)
+    body = bodies[findfirst(x -> x.id == ineqc.parentid, bodies)]
+    return contact_location(ineqc, body)
+end
+function contact_location(ineqc::InequalityConstraint{T,N,Nc,Cs}, body::Body) where {T,N,Nc,Cs<:Tuple{<:Bound{T,N}}}
+    x = body.state.x2[1]
+    q = body.state.q2[1]
+    return contact_location(ineqc, x, q)
+end
+function contact_location(ineqc::InequalityConstraint{T,N,Nc,Cs}, x::AbstractVector{T}, q::UnitQuaternion{T}) where {T,N,Nc,Cs<:Tuple{<:Bound{T,N}}}
+    cont = ineqc.constraints[1]
+    return x + vrotate(cont.p,q) - cont.offset
+end
+
 function get_sdf(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, storage::Storage) where {T,Nn,Ne,Nb,Ni}
     N = length(storage.x[1])
     d = []

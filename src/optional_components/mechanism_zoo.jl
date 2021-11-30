@@ -126,8 +126,8 @@ end
 
 function getquadruped(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0,
         damper::T = 0.0, contact::Bool = true) where {T}
-    path = "examples/examples_files/quadruped_simple.urdf"
-    mech = Mechanism(joinpath(module_dir(), path), floating = false, g = g, Δt = Δt)
+    path = "examples/examples_files/quadruped_simon.urdf"
+    mech = Mechanism(joinpath(module_dir(), path), floating = true, g = g, Δt = Δt)
 
     # Adding springs and dampers
     for (i,eqc) in enumerate(collect(mech.eqconstraints)[2:end])
@@ -149,12 +149,11 @@ function getquadruped(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.
         normal = [0;0;1.0]
         cf = 0.2
 
-        contineqcs1 = contactconstraint(getbody(mech,"FR_calf"), normal, cf; p = contact)
-        contineqcs2 = contactconstraint(getbody(mech,"FL_calf"), normal, cf; p = contact)
-        contineqcs3 = contactconstraint(getbody(mech,"RR_calf"), normal, cf; p = contact)
-        contineqcs4 = contactconstraint(getbody(mech,"RL_calf"), normal, cf; p = contact)
-
-        setPosition!(mech, geteqconstraint(mech, "floating_base"), [0;0;1.2;0.1;0.;0.])
+        contineqcs1 = contactconstraint(getbody(mech,"FR_calf"), normal, cf; p = contact, name = "FR_contact")
+        contineqcs2 = contactconstraint(getbody(mech,"FL_calf"), normal, cf; p = contact, name = "FL_contact")
+        contineqcs3 = contactconstraint(getbody(mech,"RR_calf"), normal, cf; p = contact, name = "RR_contact")
+        contineqcs4 = contactconstraint(getbody(mech,"RL_calf"), normal, cf; p = contact, name = "RL_contact")
+        setPosition!(mech, geteqconstraint(mech, "auto_generated_floating_joint"), [0;0;0.23;0.;0.;0.])
         mech = Mechanism(origin, bodies, eqs, [contineqcs1; contineqcs2; contineqcs3; contineqcs4], g = g, Δt = Δt)
     end
     return mech
@@ -546,22 +545,36 @@ function initializehalfcheetah!(mechanism::Mechanism; x::T = 0.0, z::T = 0.0, θ
 
 end
 
-function initializequadruped!(mechanism::Mechanism; tran::AbstractVector{T} = [0,0,0.23],
-        rot::AbstractVector{T} = [0,0,0.0], initangle::T = 0.95) where {T}
-    setPosition!(mechanism,
-                 geteqconstraint(mechanism, "floating_base"),
-                 [tran; rot])
-    setPosition!(mechanism, geteqconstraint(mechanism, "FR_thigh_joint"), [initangle])
-    setPosition!(mechanism, geteqconstraint(mechanism, "FR_calf_joint"), [-2*initangle])
+function initializequadruped!(mechanism::Mechanism; tran::AbstractVector{T} = [0,0,0.],
+        rot::AbstractVector{T} = [0,0,0.0], v::AbstractVector{T} = [0,0,0.0], θ::T = 0.95) where {T}
+    tran += [0,0,0.31]
+    setPosition!(mechanism, geteqconstraint(mechanism, "auto_generated_floating_joint"), [tran; rot])
 
-    setPosition!(mechanism, geteqconstraint(mechanism, "FL_thigh_joint"), [initangle*0.9])
-    setPosition!(mechanism, geteqconstraint(mechanism, "FL_calf_joint"), [-2*initangle])
+    setPosition!(mechanism, geteqconstraint(mechanism, "FR_thigh_joint"), [θ])
+    setPosition!(mechanism, geteqconstraint(mechanism, "FR_calf_joint"), [-1.5*θ])
 
-    setPosition!(mechanism, geteqconstraint(mechanism, "RR_thigh_joint"), [initangle*0.9])
-    setPosition!(mechanism, geteqconstraint(mechanism, "RR_calf_joint"), [-2*initangle])
+    setPosition!(mechanism, geteqconstraint(mechanism, "FL_thigh_joint"), [θ*0.9])
+    setPosition!(mechanism, geteqconstraint(mechanism, "FL_calf_joint"), [-1.5*θ])
 
-    setPosition!(mechanism, geteqconstraint(mechanism, "RL_thigh_joint"), [initangle])
-    setPosition!(mechanism, geteqconstraint(mechanism, "RL_calf_joint"), [-2*initangle])
+    setPosition!(mechanism, geteqconstraint(mechanism, "RR_thigh_joint"), [θ*0.9])
+    setPosition!(mechanism, geteqconstraint(mechanism, "RR_calf_joint"), [-1.5*θ])
+
+    setPosition!(mechanism, geteqconstraint(mechanism, "RL_thigh_joint"), [θ])
+    setPosition!(mechanism, geteqconstraint(mechanism, "RL_calf_joint"), [-1.5*θ])
+
+    setVelocity!(mechanism, geteqconstraint(mechanism, "auto_generated_floating_joint"), [v; zeros(3)])
+
+    setVelocity!(mechanism, geteqconstraint(mechanism, "FR_thigh_joint"), [0.])
+    setVelocity!(mechanism, geteqconstraint(mechanism, "FR_calf_joint"), [0.])
+
+    setVelocity!(mechanism, geteqconstraint(mechanism, "FL_thigh_joint"), [0.])
+    setVelocity!(mechanism, geteqconstraint(mechanism, "FL_calf_joint"), [0.])
+
+    setVelocity!(mechanism, geteqconstraint(mechanism, "RR_thigh_joint"), [0.])
+    setVelocity!(mechanism, geteqconstraint(mechanism, "RR_calf_joint"), [0.])
+
+    setVelocity!(mechanism, geteqconstraint(mechanism, "RL_thigh_joint"), [0.])
+    setVelocity!(mechanism, geteqconstraint(mechanism, "RL_calf_joint"), [0.])
 end
 
 function initializedice!(mechanism::Mechanism; x::AbstractVector{T} = [0,0,1.], q::UnitQuaternion{T} = UnitQuaternion(1.,0,0,0),
@@ -657,7 +670,6 @@ function initializeorbital!(mechanism::Mechanism; ϕx::T = pi/4, ϕy::T = pi/8) 
     setPosition!(mechanism.origin, link1, p2 = vert11, Δq = UnitQuaternion(RotX(0.0)))
 
     previd = link1.id
-    @show collect(mechanism.eqconstraints)[2]
     setPosition!(mechanism, collect(mechanism.eqconstraints)[2], [ϕx, ϕy])
 end
 

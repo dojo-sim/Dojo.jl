@@ -29,13 +29,14 @@ end
 """
 function contactconstraint(bodies::AbstractVector{<:Body{T}}, normal::AbstractVector{<:AbstractVector}, cf::AbstractVector{T};
         p::AbstractVector = [szeros(T, 3) for i=1:length(normal)],
-        offset::AbstractVector = [szeros(T, 3) for i=1:length(normal)]) where {T}
+        offset::AbstractVector = [szeros(T, 3) for i=1:length(normal)],
+        names::AbstractVector{String} = fill("", length(normal)) ) where {T}
 
     n = length(normal)
     @assert n == length(bodies) == length(normal) == length(cf) == length(p) == length(offset)
     contineqcs = Vector{InequalityConstraint}()
     for i = 1:n
-        contineqc = contactconstraint(bodies[i], normal[i], cf[i], p = p[i], offset = offset[i])
+        contineqc = contactconstraint(bodies[i], normal[i], cf[i], p = p[i], offset = offset[i], name = names[i])
         push!(contineqcs, contineqc)
     end
     contineqcs = [contineqcs...] # vector typing
@@ -44,10 +45,11 @@ end
 
 function contactconstraint(body::Body{T}, normal::AbstractVector{<:AbstractVector}, cf::AbstractVector{T};
         p::AbstractVector = [szeros(T, 3) for i=1:length(normal)],
-        offset::AbstractVector = [szeros(T, 3) for i=1:length(normal)]) where {T}
+        offset::AbstractVector = [szeros(T, 3) for i=1:length(normal)],
+        names::AbstractVector{String} = fill("", length(normal)) ) where {T}
     n = length(normal)
     @assert n == length(normal) == length(cf) == length(p) == length(offset)
-    return contactconstraint(fill(body, n), normal, cf, p = p, offset = offset)
+    return contactconstraint(fill(body, n), normal, cf, p = p, offset = offset, names = names)
 end
 
 """
@@ -59,10 +61,10 @@ end
 """
 function contactconstraint(body::Body{T}, normal::AbstractVector{T}, cf::T;
         p::AbstractVector{T} = szeros(T, 3),
-        offset::AbstractVector{T} = szeros(T, 3)) where {T}
+        offset::AbstractVector{T} = szeros(T, 3), name::String = "") where {T}
 
     contbound = ContactBound(body, normal, cf, p = p, offset = offset)
-    contineqcs = InequalityConstraint((contbound, body.id, nothing))
+    contineqcs = InequalityConstraint((contbound, body.id, nothing); name = name)
     return contineqcs
 end
 
@@ -72,8 +74,7 @@ function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:
     x, v, q, ω = fullargssol(body.state)
     x3, q3 = posargs3(body.state, mechanism.Δt)
 
-    # transforms the velocities of the origin of the link into velocities along all 4 axes of the friction pyramid
-    Bxmat = cont.Bx
+    # transforms the velocities of the origin of the link into velocities
     Bqmat = Bxmat * ∂vrotate∂q(cont.p, q3) * LVᵀmat(q3)
     SVector{4,T}(
         cont.ainv3 * (x3 + vrotate(cont.p,q3) - cont.offset) - ineqc.ssol[2][1],
