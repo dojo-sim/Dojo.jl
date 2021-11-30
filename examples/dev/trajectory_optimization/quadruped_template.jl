@@ -160,6 +160,11 @@ scatter!([p[1] for p in tRR], [p[3] for p in tRR])
 scatter!([p[1] for p in tRR], [p[3] for p in tRR])
 
 
+# contact_location(mech, ineqcs[1])
+# contact_location(mech, ineqcs[2])
+# contact_location(mech, ineqcs[3])
+# contact_location(mech, ineqcs[4])
+
 
 
 

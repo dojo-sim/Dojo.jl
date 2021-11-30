@@ -45,7 +45,7 @@ end
 visualize(mech, storage, vis = vis)
 
 using FFMEPG
-filename = "quadruped_first_trial"
+filename = "quadruped_okaygood"
 MeshCat.convert_frames_to_video(
     "/home/simon/Downloads/$filename.tar",
     "/home/simon/Documents/video/$filename.mp4", overwrite=true)

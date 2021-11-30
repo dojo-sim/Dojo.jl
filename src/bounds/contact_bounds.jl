@@ -74,7 +74,8 @@ function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:
     x, v, q, ω = fullargssol(body.state)
     x3, q3 = posargs3(body.state, mechanism.Δt)
 
-    # transforms the velocities of the origin of the link into velocities
+    # transforms the velocities of the origin of the link into velocities along all 4 axes of the friction pyramid
+    Bxmat = cont.Bx
     Bqmat = Bxmat * ∂vrotate∂q(cont.p, q3) * LVᵀmat(q3)
     SVector{4,T}(
         cont.ainv3 * (x3 + vrotate(cont.p,q3) - cont.offset) - ineqc.ssol[2][1],
