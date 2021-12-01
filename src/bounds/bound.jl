@@ -61,6 +61,9 @@ function sdf(ineqc::InequalityConstraint{T,N,Nc,Cs}, x::AbstractVector{T}, q::Un
 end
 
 # contact location
+function contact_location(mechanism::Mechanism)
+    return [contact_location(mech, ineqc) for ineqc in mechanism.ineqconstraints]
+end
 function contact_location(mechanism::Mechanism, ineqc::InequalityConstraint)
     bodies = collect(mechanism.bodies)
     body = bodies[findfirst(x -> x.id == ineqc.parentid, bodies)]
