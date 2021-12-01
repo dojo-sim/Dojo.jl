@@ -13,7 +13,7 @@ open(vis)
 
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
-include(joinpath(module_dir(), "examples", "dev", "trajectory_optimization", "utils.jl"))
+include(joinpath(module_dir(), "src", "optional_components", "trajopt_utils.jl"))
 
 using IterativeLQR
 
