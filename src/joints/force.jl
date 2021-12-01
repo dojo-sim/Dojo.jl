@@ -39,7 +39,7 @@ springforceb(joint::Translational{T,3}, xb::AbstractVector, qb::UnitQuaternion; 
     xb::AbstractVector, qb::UnitQuaternion; rotate::Bool = true) where {T}
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    distance = A * gc(joint, xa, qa, xb, qb)
+    distance = A * gc(joint, xa, qa, xb, qb) .- joint.spring_offset
     force = joint.spring * Aᵀ * distance # Currently assumes same spring constant in all directions
     forceA = force # in the A frame
     rotate && (force = vrotate(force, qa)) # rotate back to world frame
@@ -53,7 +53,7 @@ end
         xb::AbstractVector, qb::UnitQuaternion; rotate::Bool = true) where {T}
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    distance = A * gc(joint, xa, qa, xb, qb)
+    distance = A * gc(joint, xa, qa, xb, qb) .- joint.spring_offset
     force = - joint.spring * Aᵀ * distance  # Currently assumes same spring constant in all directions
     forceA = force
     rotate && (force = vrotate(force, qa)) # rotate back to world frame
@@ -68,7 +68,7 @@ end
 @inline function springforceb(joint::Translational{T}, xb::AbstractVector, qb::UnitQuaternion) where {T}
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    distance = A * gc(joint, xb, qb)
+    distance = A * gc(joint, xb, qb) .- joint.spring_offset
     force = - joint.spring * Aᵀ * distance  # Currently assumes same spring constant in all directions
     forceA = force
 

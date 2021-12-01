@@ -64,7 +64,7 @@ springforceb(joint::Rotational{T,3}, qb::UnitQuaternion; rotate::Bool = true) wh
 @inline function springforcea(joint::Rotational{T}, qa::UnitQuaternion, qb::UnitQuaternion; rotate::Bool = true) where {T}
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    distance = A * gc(joint, qa, qb)
+    distance = A * gc(joint, qa, qb) .- joint.spring_offset
     force = joint.spring * Aᵀ * distance # force in offset frame
     rotate && (force = vrotate(force, joint.qoffset)) # rotate back to a frame
     return [szeros(T, 3); force]
@@ -73,7 +73,7 @@ end
 @inline function springforceb(joint::Rotational{T}, qa::UnitQuaternion, qb::UnitQuaternion; rotate::Bool = true) where {T}
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    distance = A * gc(joint, qa, qb)
+    distance = A * gc(joint, qa, qb) .- joint.spring_offset
     force = - joint.spring * Aᵀ * distance # force in offset frame
     rotate && (force = vrotate(force, inv(qb) * qa * joint.qoffset)) # rotate back to b frame
     return [szeros(T, 3); force]
@@ -82,7 +82,7 @@ end
 @inline function springforceb(joint::Rotational{T}, qb::UnitQuaternion; rotate::Bool = true) where {T}
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    distance = A * gc(joint, qb)
+    distance = A * gc(joint, qb) .- joint.spring_offset
     force = - joint.spring * Aᵀ * distance # force in offset frame
     rotate && (force = vrotate(force, inv(qb) * joint.qoffset)) # rotate back to b frame
     return [szeros(T, 3); force]

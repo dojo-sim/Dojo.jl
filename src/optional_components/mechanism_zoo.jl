@@ -150,7 +150,6 @@ function getquadruped(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.
         # Foot contact
         contact = [0.0;0;-0.1]
         normal = [0;0;1.0]
-        cf = 0.2
 
         contineqcs1 = contactconstraint(getbody(mech,"FR_calf"), normal, cf; p = contact, name = "FR_contact")
         contineqcs2 = contactconstraint(getbody(mech,"FL_calf"), normal, cf; p = contact, name = "FL_contact")
@@ -533,13 +532,16 @@ function initializeatlas!(mechanism::Mechanism; tran::AbstractVector{T} = [0,0,0
     setPosition!(mechanism,
                  geteqconstraint(mechanism, "auto_generated_floating_joint"),
                  [tran; rot])
-
-    setPosition!(mech, geteqconstraint(mech, "l_leg_hpxyz"), [0.0, -αhip, 0.0])
-    setPosition!(mech, geteqconstraint(mech, "r_leg_hpxyz"), [0.0, -αhip, 0.0])
-    setPosition!(mech, geteqconstraint(mech, "l_leg_kny"), [αknee])
-    setPosition!(mech, geteqconstraint(mech, "r_leg_kny"), [αknee])
-    setPosition!(mech, geteqconstraint(mech, "l_leg_akxy"), [αhip-αknee, 0.0])
-    setPosition!(mech, geteqconstraint(mech, "r_leg_akxy"), [αhip-αknee, 0.0])
+    try
+        setPosition!(mechanism, geteqconstraint(mechanism, "l_leg_hpxyz"), [0.0, -αhip, 0.0])
+        setPosition!(mechanism, geteqconstraint(mechanism, "r_leg_hpxyz"), [0.0, -αhip, 0.0])
+        setPosition!(mechanism, geteqconstraint(mechanism, "l_leg_kny"), [αknee])
+        setPosition!(mechanism, geteqconstraint(mechanism, "r_leg_kny"), [αknee])
+        setPosition!(mechanism, geteqconstraint(mechanism, "l_leg_akxy"), [αhip-αknee, 0.0])
+        setPosition!(mechanism, geteqconstraint(mechanism, "r_leg_akxy"), [αhip-αknee, 0.0])
+    catch e
+        nothing
+    end
     return nothing
 end
 

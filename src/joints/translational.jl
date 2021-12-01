@@ -1,25 +1,28 @@
-mutable struct Translational{T,N} <: Joint{T,N}
+mutable struct Translational{T,N,N̄} <: Joint{T,N}
     V3::Adjoint{T,SVector{3,T}} # in body1's frame
     V12::SMatrix{2,3,T,6} # in body1's frame
     vertices::NTuple{2,SVector{3,T}} # in body1's & body2's frames
     spring::T
     damper::T
+    spring_offset::SVector{N̄,T}
     Fτ::SVector{3,T}
-    function Translational{T,N}(body1::AbstractBody, body2::AbstractBody;
-            p1::AbstractVector = szeros(T,3), p2::AbstractVector = szeros(T,3), axis::AbstractVector = szeros(T,3), spring = zero(T), damper = zero(T)
-        ) where {T,N}
+    function Translational{T,N,N̄}(body1::AbstractBody, body2::AbstractBody;
+            p1::AbstractVector = szeros(T,3), p2::AbstractVector = szeros(T,3), axis::AbstractVector = szeros(T,3),
+            spring = zero(T), damper = zero(T), spring_offset = szeros(T,N̄)
+        ) where {T,N,N̄}
         vertices = (p1, p2)
         V1, V2, V3 = orthogonalrows(axis)
         V12 = [V1;V2]
         Fτ = zeros(T,3)
-        new{T,N}(V3, V12, vertices, spring, damper, Fτ), body1.id, body2.id
+        new{T,N,N̄}(V3, V12, vertices, spring, damper, spring_offset, Fτ), body1.id, body2.id
     end
 end
+szeros(Float64, 1)
 
-Translational0 = Translational{T,0} where T
-Translational1 = Translational{T,1} where T
-Translational2 = Translational{T,2} where T
-Translational3 = Translational{T,3} where T
+Translational0 = Translational{T,0,3} where T
+Translational1 = Translational{T,1,2} where T
+Translational2 = Translational{T,2,1} where T
+Translational3 = Translational{T,3,0} where T
 
 springforcea(joint::Translational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
 springforceb(joint::Translational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
