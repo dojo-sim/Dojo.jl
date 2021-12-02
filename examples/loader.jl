@@ -135,3 +135,45 @@ include(joinpath(module_dir(), "src", "vis", "visualize.jl"))
 include(joinpath(module_dir(), "src", "optional_components", "energy.jl"))
 include(joinpath(module_dir(), "src", "optional_components", "atlas_template.jl"))
 include(joinpath(module_dir(), "src", "optional_components", "quadruped_template.jl"))
+
+
+
+
+
+# module IterativeLQR
+
+# using LinearAlgebra
+using Symbolics
+using Scratch
+using Parameters
+using JLD2
+
+include(joinpath(module_dir(), "IterativeLQR", "src", "objective.jl"))
+include(joinpath(module_dir(), "IterativeLQR", "src", "dynamics.jl"))
+include(joinpath(module_dir(), "IterativeLQR", "src", "constraints.jl"))
+include(joinpath(module_dir(), "IterativeLQR", "src", "data.jl"))
+include(joinpath(module_dir(), "IterativeLQR", "src", "rollout.jl"))
+include(joinpath(module_dir(), "IterativeLQR", "src", "augmented_lagrangian.jl"))
+include(joinpath(module_dir(), "IterativeLQR", "src", "derivatives.jl"))
+include(joinpath(module_dir(), "IterativeLQR", "src", "backward_pass.jl"))
+include(joinpath(module_dir(), "IterativeLQR", "src", "forward_pass.jl"))
+include(joinpath(module_dir(), "IterativeLQR", "src", "solve.jl"))
+
+# # objective
+# export Cost
+#
+# # constraints
+# export Constraint
+#
+# # dynamics
+# export Dynamics
+#
+# # solver
+# export rollout,
+#     step!,
+#     problem_data,
+#     initialize_controls!, initialize_states!,
+#     solve!,
+#     get_trajectory
+#
+# end # module

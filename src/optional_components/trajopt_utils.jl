@@ -361,3 +361,24 @@ function gravity_compensation(mechanism::Mechanism)
     end
     return u
 end
+
+function inverse_control(mechanism::Mechanism, x, x̄; ϵtol = 1e-5)
+	nu = controldim(mechanism)
+	u = zeros(nu)
+	# starting point of the local search
+	for k = 1:10
+		err = inverse_control_error(mechanism, x, x̄, u)
+		norm(err, Inf) < 1e-10 && continue
+		∇ = FiniteDiff.finite_difference_jacobian(u -> inverse_control_error(mechanism, x, x̄, u), u)
+		u -= ∇ \ err
+	end
+	return u
+end
+
+function inverse_control_error(mechanism, x, x̄, u)
+	z = min2max(mechanism, x)
+	z̄ = min2max(mechanism, x̄)
+	setState!(mechanism, z)
+	err = x̄ - max2min(mechanism, simon_step!(mechanism, min2max(mechanism, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose = false))
+	return err
+end

@@ -27,7 +27,7 @@ bodies[2].m
 bodies[1].J
 bodies[2].J
 
-initialize!(mech, :dzhanibekov, x = [0,0,0.], v = [0,0,0.], q = UnitQuaternion(1.,0,0,0), ω = [5,0.01,0.])
+initialize!(mech, :dzhanibekov, x = [0,0,0.], v = [0,0,0.], q = UnitQuaternion(1.,0,0,0), ω = [5,0.5,0.])
 
 storage = simulate!(mech, 10.0, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)

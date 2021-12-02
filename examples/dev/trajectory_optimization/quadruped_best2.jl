@@ -8,7 +8,7 @@ using Pkg
 Pkg.activate(module_dir())
 
 using MeshCat
-using IterativeLQR
+# using IterativeLQR
 
 # Open visualizer
 vis = Visualizer()
@@ -93,7 +93,7 @@ Usol = [usol]
 
 for iter = 1:1
 	# Model
-	ϵtol = 1e-5
+	ϵtol = 1e-2
 	function fd(y, x, u, w)
 		z = simon_step!(mech, min2max(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose = false)
 		y .= copy(max2min(mech, z))
@@ -136,7 +136,7 @@ for iter = 1:1
 	initialize_states!(prob, xsol)
 
 	# Solve
-	IterativeLQR.constrained_ilqr_solve!(prob,
+	constrained_ilqr_solve!(prob,
 	    verbose = true,
 		linesearch=:armijo,
 	    α_min=1.0e-5,
@@ -170,14 +170,52 @@ plot(hcat(Xsol[end]...)')
 ustar = deepcopy(Usol[end])
 
 
-mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = cf, damper = 5.0, spring = 0.0)
-initialize!(mech, :quadruped)
-setState!(mech, min2max(mech, xabs[1]))
+# mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = cf, damper = 5.0, spring = 0.0)
+# initialize!(mech, :quadruped)
+# setState!(mech, min2max(mech, xabs[1]))
+#
+# function controller!(mechanism, k)
+# 	@show k
+# 	setControl!(mechanism, u_mask' * u_mask * ustar[k])
+#     return
+# end
+# @elapsed storage = simulate!(mech, 0.95, controller!, record = true, solver = :mehrotra!, verbose = false)
+# visualize(mech, storage, vis = vis)
+# storage = generate_storage(mech, [min2max(mech, x) for x in Xsol[2]])
+# visualize(mech, storage, vis = vis)
 
-function controller!(mechanism, k)
-	@show k
-	setControl!(mechanism, u_mask' * u_mask * ustar[k])
-    return
+
+function inverse_control(mechanism::Mechanism, x, x̄; ϵtol = 1e-5)
+
+	function inverse_control_error(mechanism, x, x̄, u)
+		z = min2max(mechanism, x)
+		z̄ = min2max(mechanism, x̄)
+		setState!(mechanism, z)
+		err = z̄ - simon_step!(mechanism, min2max(mechanism, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose = false)
+
+	nu = controldim(mechanism)
+	u = zeros(nu)
+		# starting point of the local search
+		θ = [0.95, -1.5*0.95] # θhip, θknee
+		for k = 1:10
+			err = IKerror(mechanism, p_trunk, p_foot, θ; leg = leg)
+			norm(err, Inf) < 1e-10 && continue
+			∇ = FiniteDiff.finite_difference_jacobian(θ -> IKerror(mechanism, p_trunk, p_foot, θ; leg = leg), θ)
+			θ -= ∇ \ err
+		end
+		return θ
+	end
+
+	return u
 end
-@elapsed storage = simulate!(mech, 0.95, controller!, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
+
+
+x1 = xabs[10]
+x2 = xabs[11]
+
+inverse_control(mech, x1, x2)
+
+
+
+
+	
