@@ -12,7 +12,7 @@
     # axis = Vmat(q) ./ sqrt(1 - q.w*q.w)
     # return angle * axis
 
-    q = qa \ qb / joint.qoffset / qoff
+    q = qa \ qb / joint.qoffset# / qoff
     return Vmat(q) * q.w
 end
 """
@@ -27,7 +27,7 @@ end
     # axis = Vmat(q) ./ sqrt(1 - q.w*q.w)
     # return angle * axis
 
-    q = qb / joint.qoffset / qoff
+    q = qb / joint.qoffset# / qoff
     return Vmat(q) * q.w
 end
 # used to compute potential energy
@@ -71,7 +71,8 @@ springforceb(joint::Rotational{T,3}, qb::UnitQuaternion; rotate::Bool = true) wh
     qoff = UnitQuaternion(cos(θ/2), 1/2 * sinc(θ/(2π)) * aa) # quaternion
     # offset = Vmat(qoff) * qoff.w
     # distance = A * (gc(joint, qa, qb) .- offset)
-    distance = A * gc(joint, qa, qb, qoff = qoff)
+    # distance = A * gc(joint, qa, qb, qoff = qoff)
+    distance = A * gc(joint, qa, qb)
     force = joint.spring * Aᵀ * distance # force in offset frame
     rotate && (force = vrotate(force, joint.qoffset)) # rotate back to a frame
     return [szeros(T, 3); force]
@@ -87,7 +88,8 @@ end
     qoff = UnitQuaternion(cos(θ/2), 1/2 * sinc(θ/(2π)) * aa) # quaternion
     # offset = Vmat(qoff) * qoff.w
     # distance = A * (gc(joint, qa, qb) .- offset)
-    distance = A * gc(joint, qa, qb, qoff = qoff)
+    # distance = A * gc(joint, qa, qb, qoff = qoff)
+    distance = A * gc(joint, qa, qb)
     force = - joint.spring * Aᵀ * distance # force in offset frame
     rotate && (force = vrotate(force, inv(qb) * qa * joint.qoffset)) # rotate back to b frame
     return [szeros(T, 3); force]
@@ -103,7 +105,8 @@ end
     qoff = UnitQuaternion(cos(θ/2), 1/2 * sinc(θ/(2π)) * aa) # quaternion
     # offset = Vmat(qoff) * qoff.w
     # distance = A * (gc(joint, qb) .- offset)
-    distance = A * gc(joint, qb, qoff = qoff)
+    # distance = A * gc(joint, qb, qoff = qoff)
+    distance = A * gc(joint, qb)
     force = - joint.spring * Aᵀ * distance # force in offset frame
     rotate && (force = vrotate(force, inv(qb) * joint.qoffset)) # rotate back to b frame
     return [szeros(T, 3); force]
