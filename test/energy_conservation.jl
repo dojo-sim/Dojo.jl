@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "..", "src/optional_components/energy.jl"))
+
 # # visualizer
 # vis = Visualizer()
 # open(vis)
@@ -56,9 +58,9 @@ initialize!(mech, :dice, v = v0, ω = ω0)
 storage = simulate!(mech, 5.0, nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 # visualize(mech, storage, vis = vis)
 
-ke0 = Dojo.kineticEnergy(mech, storage)[start0:end]
-pe0 = Dojo.potentialEnergy(mech, storage)[start0:end]
-me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
+ke0 = kineticEnergy(mech, storage)[start0:end]
+pe0 = potentialEnergy(mech, storage)[start0:end]
+me0 = mechanicalEnergy(mech, storage)[start0:end]
 
 # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[1])
 # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])
@@ -92,9 +94,9 @@ initialize!(mech, :pendulum, ϕ1 = ϕ0, ω1 = ω0)
 storage = simulate!(mech, 5.0, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 # visualize(mech, storage, vis = vis)
 
-ke0 = Dojo.kineticEnergy(mech, storage)[start0:end]
-pe0 = Dojo.potentialEnergy(mech, storage)[start0:end]
-me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
+ke0 = kineticEnergy(mech, storage)[start0:end]
+pe0 = potentialEnergy(mech, storage)[start0:end]
+me0 = mechanicalEnergy(mech, storage)[start0:end]
 
 # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[1])
 # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])
@@ -133,9 +135,9 @@ ke_max = 0.5 * body1.m * vmax^2
 storage = simulate!(mech, 5.0,  nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 # visualize(mech, storage, vis = vis)
 
-ke0 = Dojo.kineticEnergy(mech, storage)[start0:end]
-pe0 = Dojo.potentialEnergy(mech, storage)[start0:end]
-me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
+ke0 = kineticEnergy(mech, storage)[start0:end]
+pe0 = potentialEnergy(mech, storage)[start0:end]
+me0 = mechanicalEnergy(mech, storage)[start0:end]
 
 # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[1])
 # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])
@@ -171,9 +173,9 @@ initialize!(mech, :slider, z1 = z0)
 storage = simulate!(mech, 1.5,  nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 # visualize(mech, storage, vis = vis)
 
-ke0 = Dojo.kineticEnergy(mech, storage)[start0:end]
-pe0 = Dojo.potentialEnergy(mech, storage)[start0:end]
-me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
+ke0 = kineticEnergy(mech, storage)[start0:end]
+pe0 = potentialEnergy(mech, storage)[start0:end]
+me0 = mechanicalEnergy(mech, storage)[start0:end]
 
 # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[1])
 # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])
@@ -206,9 +208,9 @@ initialize!(mech, :slider, z1 = z0)
 storage = simulate!(mech, 5.0,  nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 # visualize(mech, storage, vis = vis)
 
-ke0 = Dojo.kineticEnergy(mech, storage)[start0:end]
-pe0 = Dojo.potentialEnergy(mech, storage)[start0:end]
-me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
+ke0 = kineticEnergy(mech, storage)[start0:end]
+pe0 = potentialEnergy(mech, storage)[start0:end]
+me0 = mechanicalEnergy(mech, storage)[start0:end]
 
 # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[start0])
 # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[start0])
@@ -254,9 +256,9 @@ end
 storage = simulate!(mech, 3.0, humanoid_controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 # visualize(mech, downsample(storage, 1), vis = vis)
 
-ke0 = Dojo.kineticEnergy(mech, storage)[start0:end]
-pe0 = Dojo.potentialEnergy(mech, storage)[start0:end]
-me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
+ke0 = kineticEnergy(mech, storage)[start0:end]
+pe0 = potentialEnergy(mech, storage)[start0:end]
+me0 = mechanicalEnergy(mech, storage)[start0:end]
 
 # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[1])
 # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])
@@ -288,9 +290,9 @@ setVelocity!.(bodies, ω = 1.0*rand(3))
 storage = simulate!(mech, 5.0, humanoid_controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 # visualize(mech, storage, vis = vis)
 
-ke0 = Dojo.kineticEnergy(mech, storage)[start0:end]
-pe0 = Dojo.potentialEnergy(mech, storage)[start0:end]
-me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
+ke0 = kineticEnergy(mech, storage)[start0:end]
+pe0 = potentialEnergy(mech, storage)[start0:end]
+me0 = mechanicalEnergy(mech, storage)[start0:end]
 
 # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[1])
 # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])
@@ -330,9 +332,9 @@ initialize!(mech, :quadruped)
 storage = simulate!(mech, 5.0, quadruped_controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 # visualize(mech, storage, vis = vis)
 
-ke0 = Dojo.kineticEnergy(mech, storage)[start0:end]
-pe0 = Dojo.potentialEnergy(mech, storage)[start0:end]
-me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
+ke0 = kineticEnergy(mech, storage)[start0:end]
+pe0 = potentialEnergy(mech, storage)[start0:end]
+me0 = mechanicalEnergy(mech, storage)[start0:end]
 
 # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[1])
 # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])
@@ -378,9 +380,9 @@ initialize!(mech, :snake, q1 = q10, v = v0, ω = ω0)
 storage = simulate!(mech, 3.0, snake_controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 # visualize(mech, storage, vis = vis)
 
-ke0 = Dojo.kineticEnergy(mech, storage)[start0:end]
-pe0 = Dojo.potentialEnergy(mech, storage)[start0:end]
-me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
+ke0 = kineticEnergy(mech, storage)[start0:end]
+pe0 = potentialEnergy(mech, storage)[start0:end]
+me0 = mechanicalEnergy(mech, storage)[start0:end]
 
 # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[1])
 # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])
@@ -406,9 +408,9 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
         storage = simulate!(mech, 3.0, snake_controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
         # visualize(mech, storage, vis = vis)
 
-        ke0 = Dojo.kineticEnergy(mech, storage)[start0:end]
-        pe0 = Dojo.potentialEnergy(mech, storage)[start0:end]
-        me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
+        ke0 = kineticEnergy(mech, storage)[start0:end]
+        pe0 = potentialEnergy(mech, storage)[start0:end]
+        me0 = mechanicalEnergy(mech, storage)[start0:end]
 
         # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[1])
         # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])
@@ -443,9 +445,9 @@ initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0)
 storage = simulate!(mech, 3.0, snake_controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 # visualize(mech, storage, vis = vis)
 
-ke0 = Dojo.kineticEnergy(mech, storage)[start0:end]
-pe0 = Dojo.potentialEnergy(mech, storage)[start0:end]
-me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
+ke0 = kineticEnergy(mech, storage)[start0:end]
+pe0 = potentialEnergy(mech, storage)[start0:end]
+me0 = mechanicalEnergy(mech, storage)[start0:end]
 
 # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[1])
 # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])
@@ -471,9 +473,9 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
         storage = simulate!(mech, 3.0, snake_controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
         # visualize(mech, storage, vis = vis)
 
-        ke0 = Dojo.kineticEnergy(mech, storage)[start0:end]
-        pe0 = Dojo.potentialEnergy(mech, storage)[start0:end]
-        me0 = Dojo.mechanicalEnergy(mech, storage)[start0:end]
+        ke0 = kineticEnergy(mech, storage)[start0:end]
+        pe0 = potentialEnergy(mech, storage)[start0:end]
+        me0 = mechanicalEnergy(mech, storage)[start0:end]
 
         # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[1])
         # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])

@@ -529,10 +529,11 @@ end
 function initializeatlas!(mechanism::Mechanism; tran::AbstractVector{T} = [0,0,0.2],
         rot::AbstractVector{T} = [0,0,0.], αhip::T = 0.0, αknee::T = 0.0) where {T}
     tran += [0,0,0.9385]
-    setPosition!(mechanism,
+    
+    try
+        setPosition!(mechanism,
                  geteqconstraint(mechanism, "auto_generated_floating_joint"),
                  [tran; rot])
-    try
         setPosition!(mechanism, geteqconstraint(mechanism, "l_leg_hpxyz"), [0.0, -αhip, 0.0])
         setPosition!(mechanism, geteqconstraint(mechanism, "r_leg_hpxyz"), [0.0, -αhip, 0.0])
         setPosition!(mechanism, geteqconstraint(mechanism, "l_leg_kny"), [αknee])
