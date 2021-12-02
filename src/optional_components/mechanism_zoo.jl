@@ -266,7 +266,7 @@ function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
     return mech
 end
 
-function getpendulum(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 0.0) where {T}
+function getpendulum(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 0.0, spring_offset = szeros(T,1)) where {T}
     # Parameters
     joint_axis = [1.0; 0; 0]
     length1 = 1.0
@@ -278,7 +278,7 @@ function getpendulum(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T =
     link1 = Box(width, depth, length1, length1)
 
     # Constraints
-    joint_between_origin_and_link1 = EqualityConstraint(Revolute(origin, link1, joint_axis; p2=p2, spring = spring, damper = damper))
+    joint_between_origin_and_link1 = EqualityConstraint(Revolute(origin, link1, joint_axis; p2=p2, spring = spring, damper = damper, rot_spring_offset = spring_offset))
     links = [link1]
     eqcs = [joint_between_origin_and_link1]
 
@@ -526,7 +526,7 @@ function initialize!(mechanism::Mechanism, model::Symbol; kwargs...)
     eval(Symbol(:initialize, model, :!))(mechanism; kwargs...)
 end
 
-function initializeatlas!(mechanism::Mechanism; tran::AbstractVector{T} = [0,0,0.],
+function initializeatlas!(mechanism::Mechanism; tran::AbstractVector{T} = [0,0,0.2],
         rot::AbstractVector{T} = [0,0,0.], αhip::T = 0.0, αknee::T = 0.0) where {T}
     tran += [0,0,0.9385]
     setPosition!(mechanism,

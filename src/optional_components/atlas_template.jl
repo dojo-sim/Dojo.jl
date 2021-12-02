@@ -73,8 +73,8 @@ function atlas_trajectory(mechanism::Mechanism{T}; Δt = 0.05, r = 0.10, z = 0.8
 	θR = [IKatlas(mechanism, p_base, tR[i], leg = :r) for i = 1:2N]
 
 	# adding angular velocities
-	ωL = [(θL[i%10+1] - θL[i]) / Δt for i = 1:2N]
-	ωR = [(θR[i%10+1] - θR[i]) / Δt for i = 1:2N]
+	ωL = [(θL[i%(2N)+1] - θL[i]) / Δt for i = 1:2N]
+	ωR = [(θR[i%(2N)+1] - θR[i]) / Δt for i = 1:2N]
 
 	# Minimal Coordinates
 	nx = minCoordDim(mechanism)
@@ -110,34 +110,34 @@ function atlas_trajectory(mechanism::Mechanism{T}; Δt = 0.05, r = 0.10, z = 0.8
 end
 
 
-################################################################################
-# Compute trajectory
-################################################################################
-
-mech = getmechanism(:atlas, Δt = 0.05, model_type = :armless, damper = 1000.0)
-initialize!(mech, :atlas, tran = [1,0,0.0], rot = [0,0,0.], αhip = 0.0, αknee = 0.0)
-
-@elapsed storage = simulate!(mech, 0.55, record = true, undercut = Inf,
-    solver = :mehrotra!, verbose = true)
-visualize(mech, storage, vis = vis)
-
-X = atlas_trajectory(mech; Δt = 0.05, r = 0.10, z = 0.89, N = 12, Ncycles = 5)
-zref = [min2max(mech, x) for x in X]
-storage = generate_storage(mech, zref)
-visualize(mech, storage, vis = vis)
-
-
-bodies = collect(mech.bodies)
-eqcs = collect(mech.eqconstraints)
-ineqcs = collect(mech.ineqconstraints)
-getfield.(ineqcs, :parentid)
-getbody(mech, 15)
-nx = minCoordDim(mech)
-
-
-p_base = [0, 0, 0.9385]
-p_base = [0, 0, 0.88]
-p_foot = [0, 0, 0.00]
-θ = [0.4, 0.8]
-IKerror(mech, p_base, p_foot, θ; leg = :r)
-IKatlas(mech, p_base, p_foot; leg = :r)
+# ################################################################################
+# # Compute trajectory
+# ################################################################################
+#
+# mech = getmechanism(:atlas, Δt = 0.05, model_type = :armless, damper = 1000.0)
+# initialize!(mech, :atlas, tran = [1,0,0.0], rot = [0,0,0.], αhip = 0.0, αknee = 0.0)
+#
+# @elapsed storage = simulate!(mech, 0.55, record = true, undercut = Inf,
+#     solver = :mehrotra!, verbose = true)
+# visualize(mech, storage, vis = vis)
+#
+# X = atlas_trajectory(mech; Δt = 0.05, r = 0.10, z = 0.89, N = 12, Ncycles = 5)
+# zref = [min2max(mech, x) for x in X]
+# storage = generate_storage(mech, zref)
+# visualize(mech, storage, vis = vis)
+#
+#
+# bodies = collect(mech.bodies)
+# eqcs = collect(mech.eqconstraints)
+# ineqcs = collect(mech.ineqconstraints)
+# getfield.(ineqcs, :parentid)
+# getbody(mech, 15)
+# nx = minCoordDim(mech)
+#
+#
+# p_base = [0, 0, 0.9385]
+# p_base = [0, 0, 0.88]
+# p_foot = [0, 0, 0.00]
+# θ = [0.4, 0.8]
+# IKerror(mech, p_base, p_foot, θ; leg = :r)
+# IKatlas(mech, p_base, p_foot; leg = :r)

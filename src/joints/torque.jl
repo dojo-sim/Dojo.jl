@@ -4,7 +4,7 @@
     torque = 1/2 * spring * sin(θ) ≡≡ k * w * sqrt(1 - w^2)
     q = [sin(θ/2); r cos(θ/2)] = [w, x, y, z]
 """
-@inline function gc(joint::Rotational, qa::UnitQuaternion, qb::UnitQuaternion)
+@inline function gc(joint::Rotational, qa::UnitQuaternion, qb::UnitQuaternion; qoff::UnitQuaternion = one(UnitQuaternion))
     # return Vmat(qa \ qb / joint.qoffset)
 
     # q = qa \ qb / joint.qoffset
@@ -12,14 +12,14 @@
     # axis = Vmat(q) ./ sqrt(1 - q.w*q.w)
     # return angle * axis
 
-    q = qa \ qb / joint.qoffset
+    q = qa \ qb / joint.qoffset / qoff
     return Vmat(q) * q.w
 end
 """
     torque = 1/2 * spring * sin(θ) ≡≡ k * w * sqrt(1 - w^2)
     q = [sin(θ/2); r cos(θ/2)] = [w, x, y, z]
 """
-@inline function gc(joint::Rotational, qb::UnitQuaternion)
+@inline function gc(joint::Rotational, qb::UnitQuaternion; qoff::UnitQuaternion = one(UnitQuaternion))
     # return Vmat(qb / joint.qoffset)
 
     # q = qb / joint.qoffset
@@ -27,7 +27,7 @@ end
     # axis = Vmat(q) ./ sqrt(1 - q.w*q.w)
     # return angle * axis
 
-    q = qb / joint.qoffset
+    q = qb / joint.qoffset / qoff
     return Vmat(q) * q.w
 end
 # used to compute potential energy
@@ -64,7 +64,14 @@ springforceb(joint::Rotational{T,3}, qb::UnitQuaternion; rotate::Bool = true) wh
 @inline function springforcea(joint::Rotational{T}, qa::UnitQuaternion, qb::UnitQuaternion; rotate::Bool = true) where {T}
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    distance = A * gc(joint, qa, qb) .- joint.spring_offset
+    # We need to convert the joint.spring_offset which is some minimal coordinate representation of the joint. For us it's the axis angle reresentation.
+    # We convert it to the 'sinusoidal spring'
+    aa = Aᵀ * joint.spring_offset # axis angle
+    θ = norm(aa)
+    qoff = UnitQuaternion(cos(θ/2), 1/2 * sinc(θ/(2π)) * aa) # quaternion
+    # offset = Vmat(qoff) * qoff.w
+    # distance = A * (gc(joint, qa, qb) .- offset)
+    distance = A * gc(joint, qa, qb, qoff = qoff)
     force = joint.spring * Aᵀ * distance # force in offset frame
     rotate && (force = vrotate(force, joint.qoffset)) # rotate back to a frame
     return [szeros(T, 3); force]
@@ -73,7 +80,14 @@ end
 @inline function springforceb(joint::Rotational{T}, qa::UnitQuaternion, qb::UnitQuaternion; rotate::Bool = true) where {T}
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    distance = A * gc(joint, qa, qb) .- joint.spring_offset
+    # We need to convert the joint.spring_offset which is some minimal coordinate representation of the joint. For us it's the axis angle reresentation.
+    # We convert it to the 'sinusoidal spring'
+    aa = Aᵀ * joint.spring_offset # axis angle
+    θ = norm(aa)
+    qoff = UnitQuaternion(cos(θ/2), 1/2 * sinc(θ/(2π)) * aa) # quaternion
+    # offset = Vmat(qoff) * qoff.w
+    # distance = A * (gc(joint, qa, qb) .- offset)
+    distance = A * gc(joint, qa, qb, qoff = qoff)
     force = - joint.spring * Aᵀ * distance # force in offset frame
     rotate && (force = vrotate(force, inv(qb) * qa * joint.qoffset)) # rotate back to b frame
     return [szeros(T, 3); force]
@@ -82,7 +96,14 @@ end
 @inline function springforceb(joint::Rotational{T}, qb::UnitQuaternion; rotate::Bool = true) where {T}
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    distance = A * gc(joint, qb) .- joint.spring_offset
+    # We need to convert the joint.spring_offset which is some minimal coordinate representation of the joint. For us it's the axis angle reresentation.
+    # We convert it to the 'sinusoidal spring'
+    aa = Aᵀ * joint.spring_offset # axis angle
+    θ = norm(aa)
+    qoff = UnitQuaternion(cos(θ/2), 1/2 * sinc(θ/(2π)) * aa) # quaternion
+    # offset = Vmat(qoff) * qoff.w
+    # distance = A * (gc(joint, qb) .- offset)
+    distance = A * gc(joint, qb, qoff = qoff)
     force = - joint.spring * Aᵀ * distance # force in offset frame
     rotate && (force = vrotate(force, inv(qb) * joint.qoffset)) # rotate back to b frame
     return [szeros(T, 3); force]

@@ -169,8 +169,6 @@ end
 @inline function ∂Fτ∂posb(joint::Rotational{T}, stateb::State, Δt::T) where T
     _, qb = posargs2(stateb)
     τ = joint.Fτ
-    # @show "888888888888888888888888888888888888888888888888888888888888888"
-    # @show τ
     FaXb = szeros(T,3,3)
     FaQb = szeros(T,3,4)
     τaXb = szeros(T,3,3)

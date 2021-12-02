@@ -12,19 +12,20 @@ function low_foot_trajectory(r::T, N::Int) where T
 	return low_traj
 end
 
-function high_foot_trajectory(r::T, N::Int) where T
+function high_foot_trajectory(r::T, β::T, N::Int) where T
 	# high foot trajectory decomposed into N+1 steps (N+2 waypoints)
 	α = range(0, π, length = N+1)
 	θ = π * (1 .- cos.(α)) / 2
 	X = [r*cos(θi) for θi in θ]
-	Z = [r*sin(θi)/2 for θi in θ] # the factor 2 flattens the foot trajectory
+	Z = [β*r*sin(θi) for θi in θ] # the factor α flattens the foot trajectory
+	@show typeof(Z)
 	high_traj = [[X[i], 0.0, Z[i]] for i = 1:N+1]
 	return high_traj
 end
 
-function foot_trajectory(r::T, N::Int) where T
+function foot_trajectory(r::T, β::T, N::Int) where T
 	low_traj = low_foot_trajectory(r, N)
-	high_traj = high_foot_trajectory(r, N)
+	high_traj = high_foot_trajectory(r, β, N)
 	traj = [low_traj[1:end-1]; high_traj[1:end-1]]
 	return traj
 end
@@ -56,39 +57,43 @@ function IKerror(mechanism::Mechanism, p_trunk, p_foot, θ; leg::Symbol = :FR)
 	return err[[1,3]]
 end
 
-function quadruped_trajectory(mechanism::Mechanism{T}; Δt = 0.05, Δx = -0.04, r = 0.10, z = 0.29, N = 8, Ncycles = 1) where T
-	pFR = [+ 0.13 + Δx, - 0.13205, 0.]
-	pFL = [+ 0.13 + Δx, + 0.13205, 0.]
-	pRR = [- 0.23 + Δx, - 0.13205, 0.]
+function quadruped_trajectory(mechanism::Mechanism{T}; Δt = 0.05, Δx = -0.04, Δfront = 0.05, β = 0.5, r = 0.10, z = 0.29, N = 8, Ncycles = 1) where T
+	# pFR = [+ 0.13 + Δx, - 0.13205, 0.]
+	# pFL = [+ 0.13 + Δx, + 0.13205, 0.]
+	# pRR = [- 0.23 + Δx, - 0.13205, 0.]
+	# pRL = [- 0.23 + Δx, + 0.13205, 0.]
 	pRL = [- 0.23 + Δx, + 0.13205, 0.]
+	pRR = [- 0.23 + Δx, - 0.13205, 0.]
+	pFL = [+ 0.13 + Δx + Δfront, + 0.13205, 0.]
+	pFR = [+ 0.13 + Δx + Δfront, - 0.13205, 0.]
 
-	t = reverse(foot_trajectory(r, N))
+	t = reverse(foot_trajectory(r, β, N))
 	t_dephased = [t[N+1:2N]; t[1:N]]
 	# Foot positions
-	tFR = [pFR + ti for ti in t]
-	tFL = [pFL + ti for ti in t_dephased]
-	tRR = [pRR + ti for ti in t_dephased]
 	tRL = [pRL + ti for ti in t]
+	tRR = [pRR + ti for ti in t_dephased]
+	tFL = [pFL + ti for ti in t_dephased]
+	tFR = [pFR + ti for ti in t]
 
 	# Leg angles
 	p_trunk = [0,0,z]
-	θFR = [IKquadruped(mechanism, p_trunk, tFR[i], leg = :FR) for i = 1:2N]
-	θFL = [IKquadruped(mechanism, p_trunk, tFL[i], leg = :FL) for i = 1:2N]
-	θRR = [IKquadruped(mechanism, p_trunk, tRR[i], leg = :RR) for i = 1:2N]
 	θRL = [IKquadruped(mechanism, p_trunk, tRL[i], leg = :RL) for i = 1:2N]
+	θRR = [IKquadruped(mechanism, p_trunk, tRR[i], leg = :RR) for i = 1:2N]
+	θFL = [IKquadruped(mechanism, p_trunk, tFL[i], leg = :FL) for i = 1:2N]
+	θFR = [IKquadruped(mechanism, p_trunk, tFR[i], leg = :FR) for i = 1:2N]
 
 	# adding angular velocities
-	ωFR = [(θFR[i%10+1] - θFR[i]) / Δt for i = 1:2N]
-	ωFL = [(θFL[i%10+1] - θFL[i]) / Δt for i = 1:2N]
-	ωRR = [(θRR[i%10+1] - θRR[i]) / Δt for i = 1:2N]
-	ωRL = [(θRL[i%10+1] - θRL[i]) / Δt for i = 1:2N]
+	ωRL = [(θRL[i%(2N)+1] - θRL[i]) / Δt for i = 1:2N]
+	ωRR = [(θRR[i%(2N)+1] - θRR[i]) / Δt for i = 1:2N]
+	ωFL = [(θFL[i%(2N)+1] - θFL[i]) / Δt for i = 1:2N]
+	ωFR = [(θFR[i%(2N)+1] - θFR[i]) / Δt for i = 1:2N]
 
 	# Minimal Coordinates
 	X = [Vector{T}([p_trunk; zeros(3); zeros(3); zeros(3);
-		zeros(2); θFR[i][1]; ωFR[i][1]; θFR[i][2]; ωFR[i][2];
-		zeros(2); θFL[i][1]; ωFL[i][1]; θFL[i][2]; ωFL[i][2];
-		zeros(2); θRR[i][1]; ωRR[i][1]; θRR[i][2]; ωRR[i][2];
 		zeros(2); θRL[i][1]; ωRL[i][1]; θRL[i][2]; ωRL[i][2];
+		zeros(2); θRR[i][1]; ωRR[i][1]; θRR[i][2]; ωRR[i][2];
+		zeros(2); θFL[i][1]; ωFL[i][1]; θFL[i][2]; ωFL[i][2];
+		zeros(2); θFR[i][1]; ωFR[i][1]; θFR[i][2]; ωFR[i][2];
 		]) for i = 1:2N]
 
 	X = vcat([deepcopy(X) for i = 1:Ncycles]...)
@@ -101,65 +106,65 @@ function quadruped_trajectory(mechanism::Mechanism{T}; Δt = 0.05, Δx = -0.04, 
 end
 
 
-################################################################################
-# Compute trajectory
-################################################################################
-
-# discretization
-N = 9 # half period of the 1-step loop
-
-# trunk trajectory
-z = 0.29 # trunk height
-
-# Half disk foot trajectory
-r = 0.10 # foot traj radius
-
-# System
-mech = getmechanism(:quadruped, Δt = 0.05)
-initialize!(mech, :quadruped, tran = [0,0,0.], v = [0,0,0.])
-
-X = quadruped_trajectory(mech, r = 0.08, z = 0.27; Δt = 0.05, Δx = -0.03, N = 9, Ncycles = 10)
-storage = generate_storage(mech, [min2max(mech, x) for x in X])
-visualize(mech, storage, vis = vis)
-
-collect(mech.ineqconstraints)
-p_trunk = [0,0,0.31]
-p_foot = [0.2,.0,0]
-IKquadruped(mech, p_trunk, p_foot)
-
-N = 6
-low_traj = low_foot_trajectory(r, N)
-high_traj = high_foot_trajectory(r, N)
-traj = foot_trajectory(r, N)
-
-plot()
-scatter!([p[1] for p in low_traj], [p[3] for p in low_traj], )
-scatter!([p[1] for p in high_traj], [p[3] for p in high_traj], )
-scatter!([p[1] for p in traj], [p[3] for p in traj], )
-
-N = 6
-t = reverse(foot_trajectory(r, N))
-t_dephased = [t[N+1:2N]; t[1:N]]
-plt = plot(legend = false)
-for i = 1:2N
-	scatter!(plt, t[i][1:1], t[i][3:3], markersize = i+3)
-	scatter!(plt, t_dephased[i][1:1], t_dephased[i][3:3] .+ 0.10, markersize = i+3)
-	display(plt)
-end
-display(plt)
-
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
-
-plot()
-scatter!([p[1] for p in tFR], [p[3] for p in tFR])
-scatter!([p[1] for p in tFL], [p[3] for p in tFL])
-scatter!([p[1] for p in tRR], [p[3] for p in tRR])
-scatter!([p[1] for p in tRR], [p[3] for p in tRR])
+# ################################################################################
+# # Compute trajectory
+# ################################################################################
+#
+# # discretization
+# N = 9 # half period of the 1-step loop
+#
+# # trunk trajectory
+# z = 0.29 # trunk height
+#
+# # Half disk foot trajectory
+# r = 0.10 # foot traj radius
+#
+# # System
+# mech = getmechanism(:quadruped, Δt = 0.05)
+# initialize!(mech, :quadruped, tran = [0,0,0.], v = [0,0,0.])
+#
+# X = quadruped_trajectory(mech, r = 0.08, z = 0.27; Δt = 0.05, Δx = -0.03, N = 9, Ncycles = 10)
+# storage = generate_storage(mech, [min2max(mech, x) for x in X])
+# visualize(mech, storage, vis = vis)
+#
+# collect(mech.ineqconstraints)
+# p_trunk = [0,0,0.31]
+# p_foot = [0.2,.0,0]
+# IKquadruped(mech, p_trunk, p_foot)
+#
+# N = 6
+# low_traj = low_foot_trajectory(r, N)
+# high_traj = high_foot_trajectory(r, N)
+# traj = foot_trajectory(r, N)
+#
+# plot()
+# scatter!([p[1] for p in low_traj], [p[3] for p in low_traj], )
+# scatter!([p[1] for p in high_traj], [p[3] for p in high_traj], )
+# scatter!([p[1] for p in traj], [p[3] for p in traj], )
+#
+# N = 6
+# t = reverse(foot_trajectory(r, N))
+# t_dephased = [t[N+1:2N]; t[1:N]]
+# plt = plot(legend = false)
+# for i = 1:2N
+# 	scatter!(plt, t[i][1:1], t[i][3:3], markersize = i+3)
+# 	scatter!(plt, t_dephased[i][1:1], t_dephased[i][3:3] .+ 0.10, markersize = i+3)
+# 	display(plt)
+# end
+# display(plt)
+#
+# a = 10
+# a = 10
+# a = 10
+# a = 10
+# a = 10
+# a = 10
+#
+# plot()
+# scatter!([p[1] for p in tFR], [p[3] for p in tFR])
+# scatter!([p[1] for p in tFL], [p[3] for p in tFL])
+# scatter!([p[1] for p in tRR], [p[3] for p in tRR])
+# scatter!([p[1] for p in tRR], [p[3] for p in tRR])
 
 
 # contact_location(mech, ineqcs[1])

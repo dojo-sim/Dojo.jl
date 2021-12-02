@@ -14,6 +14,7 @@ open(vis)
 
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
+include(joinpath(module_dir(), "src", "optional_components", "trajopt_utils.jl"))
 
 using IterativeLQR
 
@@ -22,120 +23,23 @@ gravity = -9.81
 Δt = 0.05
 mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = 1.5, damper = 10.0, spring = 0.0)
 initialize!(mech, :quadruped, tran = [0,0,0.], v = [0.5,0,0.])
+
 @elapsed storage = simulate!(mech, 0.05, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
-
-eqcs = collect(mech.eqconstraints)
-eqcs
-rot1 = eqcs[1].constraints[1]
-rot1.spring_offset = srand(3)
-length(rot1)
-
-x0 = getMinState(mech)
-setSpringOffset!(mech, x0)
-
-# Dimensions
 T = 20
 n = minCoordDim(mech)
 m = 12
 d = 0
-# Ref trajectory
-xref = quadruped_trajectory(mech, r = 0.07, z = 0.26; Δx = -0.05, β = 1.0, N = Int(T/2), Ncycles = 40)
-xref = quadruped_trajectory(mech, r = 0.08, z = 0.27; Δx = -0.08, β = 1.0, Δfront = 0.15, N = Int(T/2), Ncycles = 40)
-
+xref = quadruped_trajectory(mech, r = 0.10, z = 0.29; N = Int(T/2), Ncycles = 1)
 zref = [min2max(mech, x) for x in xref]
 storage = generate_storage(mech, zref)
 visualize(mech, storage, vis = vis)
-# visualizeMaxCoord(mech, min2max(mech, xref[1]), vis)
+zref = [max2min(mech, z) for z in zref]
 
+z1 = zref[1]
+visualizeMaxCoord(mech, min2max(mech, z1), vis)
 
-
-# PID control
-Δt = 0.05
-mech = getmechanism(:quadruped, Δt = Δt, g = -9.0, cf = 0.5, contact = true, spring = 100.0, damper = 2.0)
-initialize!(mech, :quadruped)
-setState!(mech, zref[1])
-
-function controller!(mechanism, k)
-	setSpringOffset!(mechanism, xref[k])
-    return
-end
-
-@elapsed storage = simulate!(mech, 4.01, controller!, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
-
-
-mech = getmechanism(:pendulum, g = 0.0, spring = 20.0, damper = 1.0, spring_offset = -0.9*sones(1))
-initialize!(mech, :pendulum, ϕ1 = pi/8)
-function controller!(mechanism, k)
-	setSpringOffset!(mechanism, [π])
-    return
-end
-@elapsed storage = simulate!(mech, 8.0, controller!, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
-
-
-
-
-# qa = one(UnitQuaternion)
-# qb = UnitQuaternion(RotX(π/8))
-# joint = collect(mech.eqconstraints)[1].constraints[2]
-# A = nullspacemat(joint)
-# Aᵀ = zerodimstaticadjoint(A)
-# joint.spring_offset = pi/8 * sones(1)
-# distance = A * gc(joint, qa, qb) .- joint.spring_offset
-#
-# gc(joint, qa, qb)
-# θ = rotation_vector(qb * inv(qa))[1]
-# qr_ = UnitQuaternion(rand(4)...)
-# Δ0 = Vmat(qr_) * qr_.w
-# Δ1 = rotation_vector(qr_)
-#
-# aa = Aᵀ * joint.spring_offset # axis angle
-# θ = norm(aa)
-# qoff = UnitQuaternion(cos(θ/2), 1/2 * sinc(θ/(2π)) * aa) # quaternion
-# offset = Vmat(qoff) * qoff.w
-# distance = A * (gc(joint, qb) .- offset)
-# gc(joint, qb)
-
-
-
-# x0 = getMinState(mech)
-# x0[1:12]
-# x0[13:18]
-# x0[1:12]
-# x0[13:end] .= 0.0
-# x0[13] = pi/4
-# z0 = min2max(mech, x0)
-# mech = getmechanism(:quadruped, Δt = 0.01, g = 0.0, spring = 10.0, damper = 1.0, contact = false)
-# initialize!(mech, :quadruped)
-# x1 = getMinState(mech)
-
-mech = getmechanism(:quadruped, Δt = 0.01, g = 0.0, spring = 10.0, damper = 1.0, contact = true)
-initialize!(mech, :quadruped)
-z0 = min2max(mech, zref[1])
-setState!(mech, z0)
-
-visualizeMaxCoord(mech, z0, vis)
-function controller!(mechanism, k)
-	setSpringOffset!(mechanism, zref[1])
-    return
-end
-@elapsed storage = simulate!(mech, 4.01, controller!, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
-
-
-
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
-
-# Reference control
 function gravity_compensation(mechanism::Mechanism)
     # only works with revolute joints for now
     nu = controldim(mechanism)
@@ -161,17 +65,18 @@ end
 
 mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = 1.5, damper = 1000.0, spring = 30.0)
 initialize!(mech, :quadruped)
-@elapsed storage = simulate!(mech, 0.05, record = true, solver = :mehrotra!, verbose = false)
+@elapsed storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 ugc = gravity_compensation(mech)
 
 mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = 1.5, damper = 5.0, spring = 0.0)
+
 u_control = ugc[6 .+ (1:12)]
 u_mask = [zeros(12,6) I(m)]
 
 z = [copy(z1)]
 for t = 1:5
-    znext = max2min(mech, simon_step!(mech, min2max(mech, z[end]), 0u_mask'*u_control))
+    znext = max2min(mech, simon_step!(mech, min2max(mech, z[end]), u_mask'*u_control))
     push!(z, znext)
 end
 storage = generate_storage(mech, [min2max(mech, zi) for zi in z])
@@ -199,30 +104,46 @@ h = mech.Δt
 dyn = Dynamics(fd, fdx, fdu, n, n, m, d)
 model = [dyn for t = 1:T-1]
 
+
 # Initial conditions, controls, disturbances
-ū = [0.25u_control for t = 1:T-1]
+ū = [u_control for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 
 # Rollout
+
+
 x̄ = rollout(model, z1, ū, w)
+# simon_step!(model.mech, x, u_mask'*u_control, ϵ = 1e-6, btol = 1e-6, undercut = 1.5, verbose = false)
+# getGradients!(model.mech, x, u_mask'*u_control, ϵ = 1e-6, btol = 1e-3, undercut = 1.5, verbose = false)
 storage = generate_storage(mech, [min2max(mech, x) for x in x̄])
 visualize(mech, storage; vis = vis)
 
 # Objective
+# qt1 = [0.1; 0.1; 1.0; 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]
+# qt2 = [0.1; 0.1; 1.0; 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]
+# body_scale = [1; 0.1ones(12)]
+# qt = vcat([body_scale[i] * [0.1 * ones(3); 0.001 * ones(3); 0.1 * ones(4); 0.01 * ones(3)] for i = 1:Nb]...)
 qt = [0.3; 0.05; 0.05; 0.01 * ones(3); 0.01 * ones(3); 0.01 * ones(3); fill([0.2, 0.001], 12)...]
 
+# ot1 = (x, u, w) -> transpose(x - zM) * Diagonal(Δt * qt) * (x - zM) + transpose(u) * Diagonal(Δt * 0.01 * ones(m)) * u
+# ot2 = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * qt) * (x - zT) + transpose(u) * Diagonal(Δt * 0.01 * ones(m)) * u
+# oT = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * qt) * (x - zT)
 ots = [(x, u, w) -> transpose(x - zref[t]) * Diagonal(Δt * qt) * (x - zref[t]) + transpose(u) * Diagonal(Δt * 0.01 * ones(m)) * u for t = 1:T-1]
 oT = (x, u, w) -> transpose(x - zref[end]) * Diagonal(Δt * qt) * (x - zref[end])
 
+# ct1 = Cost(ot1, n, m, d)
+# ct2 = Cost(ot2, n, m, d)
+# cT = Cost(oT, n, 0, 0)
 cts = Cost.(ots, n, m, d)
 cT = Cost(oT, n, 0, 0)
+# obj = [[ct1 for t = 1:10]..., [ct2 for t = 1:10]..., cT]
 obj = [cts..., cT]
 
 # Constraints
 function goal(x, u, w)
 	# Δ = x - zT
     Δ = x - zref[end]
-    return Δ[[1:3; 12 .+ (1:2:24)]]
+    return Δ[collect(1:3)]
 end
 
 cont = Constraint()
@@ -243,20 +164,8 @@ IterativeLQR.constrained_ilqr_solve!(prob,
     max_iter=100,
     max_al_iter=5,
     ρ_init=1.0,
-    ρ_scale=3.0)
+    ρ_scale=10.0)
 
 x_sol, u_sol = get_trajectory(prob)
 storage = generate_storage(mech, [min2max(mech, x) for x in x_sol])
 visualize(mech, storage, vis = vis)
-
-
-
-
-
-eqcs = collect(mech.eqconstraints)
-rot1 = eqcs[1].constraints[2]
-rot2 = eqcs[2].constraints[2]
-A1 = nullspacemat(rot1)
-A2 = nullspacemat(rot2)
-A1 * srand(3)
-A2 * srand(3)

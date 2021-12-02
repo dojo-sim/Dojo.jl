@@ -17,59 +17,19 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 
 using IterativeLQR
 
-
-################################################################################
-################################################################################
-
-function addSlackForce!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, Fτ::AbstractVector{T}) where {T,Nn,Ne,Nb,Ni}
-    @assert length(Fτ) == 6Nb
-    for (i,body) in enumerate(mechanism.bodies)
-        addSlackForce!(body, Fτ[(i-1)*6 .+ (1:6)])
-    end
-    return
-end
-
-@inline function addSlackForce!(body::Body{T}, Fτ::Vector{T}) where {T}
-	body.state.F2[end] += Fτ[1:3]
-    body.state.τ2[end] += Fτ[4:6]
-    return
-end
-
-################################################################################
-
-
-
 # System
 gravity = -9.81
 Δt = 0.05
-mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = 0.8, damper = 0.1, spring = 0.0)
-initialize!(mech, :quadruped, tran = [0,0,0.], v = [0.0,0,0.])
-
-function controller!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, k) where {T,Nn,Ne,Nb,Ni}
-	ns = 6Nb
-	s = 0.5(rand(ns) .- 0.5) * mechanism.Δt
-	addSlackForce!(mechanism, s)
-    return
-end
-
-@elapsed storage = simulate!(mech, 1.5, controller!, record = true, solver = :mehrotra!, verbose = false)
+mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = 0.8, damper = 10.0, spring = 0.0)
+initialize!(mech, :quadruped, tran = [0,0,0.], v = [0.5,0,0.])
+# x0 = getMinState(mech)
+# x0[35] = 0.4
+# setState!(mech, min2max(mech, x0))
+@elapsed storage = simulate!(mech, 0.05, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
-# eqcs = collect(mech.eqconstraints)
-# tra1 = eqcs[1].constraints[1]
-# rot1 = eqcs[1].constraints[2]
-# tra2 = eqcs[2].constraints[1]
-# rot2 = eqcs[2].constraints[2]
-#
-# tra1.Fτ
-# tra2.Fτ
-# rot1.Fτ
-# rot2.Fτ
-
-
 n = minCoordDim(mech)
-Nb = length(mech.bodies)
-m = 12 + 6Nb
+m = 12 + n
 d = 0
 T = 18
 
@@ -108,7 +68,7 @@ mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = 0.8, damper = 100.0
 initialize!(mech, :quadruped)
 setState!(mech, z1)
 setSpringOffset!(mech, x1)
-@elapsed storage = simulate!(mech, 1.05, record = true, solver = :mehrotra!, verbose = false)
+@elapsed storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 ugc = gravity_compensation(mech)
 
@@ -128,42 +88,23 @@ visualize(mech, storage, vis = vis)
 # Model
 function fd(y, x, u, w)
     u_control = u[1:12]
-    s = u[12 .+ (1:6Nb)]
-	function ctrl!(mechanism)
-		addSlackForce!(mechanism, s*mechanism.Δt)
-	end
-	z = simon_step!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)
-	y .= copy(max2min(mech, z))
+    s = u[12 .+ (1:n)]
+	z = simon_step!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
+	yvio = copy(max2min(mech, z)) + s
+	y .= projectQuadruped!(mech, yvio)
 end
 
 function fdx(fx, x, u, w)
 	u_control = u[1:12]
-    s = u[12 .+ (1:6Nb)]
-	function ctrl!(mechanism)
-		addSlackForce!(mechanism, s*mechanism.Δt)
-	end
-	fx .= copy(getMinGradients!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)[1])
-	# fx .= FiniteDiff.finite_difference_jacobian(x -> max2min(mech, simon_step!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)), x)
+    s = u[12 .+ (1:n)]
+	fx .= copy(getMinGradients!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[1])
 end
 
 function fdu(fu, x, u, w)
 	u_control = u[1:12]
-    s = u[12 .+ (1:6Nb)]
-	function ctrl!(mechanism)
-		addSlackForce!(mechanism, s*mechanism.Δt)
-	end
-	∇u = copy(getMinGradients!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)[2])
-	# ∇s = zeros(36,6Nb)
-	∇s = FiniteDiff.finite_difference_jacobian(s -> max2min(mech, simon_step!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)), s)
-	fu .= [∇u * u_mask' ∇s]
-
-	# @show size(∇u)
-	# @show size(u_mask')
-	# @show size(∇u[:,1:18]*u_mask')
-	# @show size(∇u[:,19:end])
-	# @show size(fu)
-	# [∇u[:,1:18]*u_mask' ∇u[:,19:end]]
-	# fu .= ∇u #[∇u[:,1:18]*u_mask' ∇u[:,19:end]]
+    s = u[12 .+ (1:n)]
+	∇u = copy(getMinGradients!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[2])
+	fu .= [∇u * u_mask' I(n)]
 end
 
 
@@ -177,7 +118,7 @@ model = [dyn for t = 1:T-1]
 # ū = [[u_control; zeros(n)] for t = 1:T-1]
 # ū = [[u_control; xref[t+1] - xref[t]] for t = 1:T-1]
 # ū = [[zeros(12); xref[t+1] - xref[t]] for t = 1:T-1]
-ū = [[u_control; zeros(6Nb)] for t = 1:T-1]
+ū = [[u_control; xref[t+1] - xref[t]] for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 
 # Rollout
@@ -189,7 +130,7 @@ visualize(mech, storage; vis = vis)
 # Objective
 qt = [0.3; 0.1; 0.1; 0.01 * ones(3); 0.01 * ones(3); 0.01 * ones(3); fill([0.2, 0.001], 12)...]
 ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(Δt * qt) * (x - xref[t]) +
-	transpose(u) * Diagonal(Δt * [0.01*ones(12); 1*ones(6Nb)]) * u for t = 1:T-1]
+	transpose(u) * Diagonal(Δt * [0.01*ones(12); 10*ones(n)]) * u for t = 1:T-1]
 oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(Δt * qt) * (x - xref[end])
 
 cts = Cost.(ots, n, m, d)
@@ -202,7 +143,7 @@ function goal(x, u, w)
     return Δ[collect(1:3)]
 end
 function slack(x, u, w)
-    Δ = u[12 .+ (1:6Nb)]
+    Δ = u[12 .+ (1:n)]
     return 0.01*Δ
 end
 
@@ -231,27 +172,8 @@ x_sol, u_sol = get_trajectory(prob)
 storage = generate_storage(mech, [min2max(mech, x) for x in x_sol])
 visualize(mech, storage, vis = vis)
 
-norm([norm(u[12 .+ (1:Nb)], Inf) for u in u_sol], Inf)
+norm([norm(u[12 .+ (1:n)], Inf) for u in u_sol], Inf)
 
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
-################################################################################
-################################################################################
-################################################################################
 
 
 function projectQuadruped!(mechanism::Mechanism{T}, x::AbstractVector{T}) where {T}

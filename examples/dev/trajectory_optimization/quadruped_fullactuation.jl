@@ -69,7 +69,7 @@ visualize(mech, storage, vis = vis)
 
 n = minCoordDim(mech)
 Nb = length(mech.bodies)
-m = 12 + 6Nb
+m = 18
 d = 0
 T = 18
 
@@ -127,35 +127,38 @@ visualize(mech, storage, vis = vis)
 
 # Model
 function fd(y, x, u, w)
-    u_control = u[1:12]
-    s = u[12 .+ (1:6Nb)]
-	function ctrl!(mechanism)
-		addSlackForce!(mechanism, s*mechanism.Δt)
-	end
-	z = simon_step!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)
+    u_control = u[6 .+ (1:12)]
+    # s = u[12 .+ (1:6Nb)]
+	# function ctrl!(mechanism)
+	# 	addSlackForce!(mechanism, s*mechanism.Δt)
+	# end
+	# z = simon_step!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)
+	z = simon_step!(mech, min2max(mech, x), u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
 	y .= copy(max2min(mech, z))
 end
 
 function fdx(fx, x, u, w)
-	u_control = u[1:12]
-    s = u[12 .+ (1:6Nb)]
-	function ctrl!(mechanism)
-		addSlackForce!(mechanism, s*mechanism.Δt)
-	end
-	fx .= copy(getMinGradients!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)[1])
+	# u_control = u[6 .+ (1:12)]
+    # s = u[12 .+ (1:6Nb)]
+	# function ctrl!(mechanism)
+	# 	addSlackForce!(mechanism, s*mechanism.Δt)
+	# end
+	# fx .= copy(getMinGradients!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)[1])
+	fx .= copy(getMinGradients!(mech, min2max(mech, x), u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[1])
 	# fx .= FiniteDiff.finite_difference_jacobian(x -> max2min(mech, simon_step!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)), x)
 end
 
 function fdu(fu, x, u, w)
-	u_control = u[1:12]
-    s = u[12 .+ (1:6Nb)]
-	function ctrl!(mechanism)
-		addSlackForce!(mechanism, s*mechanism.Δt)
-	end
-	∇u = copy(getMinGradients!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)[2])
+	# u_control = u[6 .+ (1:12)]
+    # s = u[12 .+ (1:6Nb)]
+	# function ctrl!(mechanism)
+	# 	addSlackForce!(mechanism, s*mechanism.Δt)
+	# end
+	# ∇u = copy(getMinGradients!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)[2])
+	fu .= copy(getMinGradients!(mech, min2max(mech, x), u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[2])
 	# ∇s = zeros(36,6Nb)
-	∇s = FiniteDiff.finite_difference_jacobian(s -> max2min(mech, simon_step!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)), s)
-	fu .= [∇u * u_mask' ∇s]
+	# ∇s = FiniteDiff.finite_difference_jacobian(s -> max2min(mech, simon_step!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)), s)
+	# fu .= [∇u * u_mask' ∇s]
 
 	# @show size(∇u)
 	# @show size(u_mask')
@@ -177,7 +180,7 @@ model = [dyn for t = 1:T-1]
 # ū = [[u_control; zeros(n)] for t = 1:T-1]
 # ū = [[u_control; xref[t+1] - xref[t]] for t = 1:T-1]
 # ū = [[zeros(12); xref[t+1] - xref[t]] for t = 1:T-1]
-ū = [[u_control; zeros(6Nb)] for t = 1:T-1]
+ū = [[zeros(6); u_control] for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 
 # Rollout
@@ -189,7 +192,7 @@ visualize(mech, storage; vis = vis)
 # Objective
 qt = [0.3; 0.1; 0.1; 0.01 * ones(3); 0.01 * ones(3); 0.01 * ones(3); fill([0.2, 0.001], 12)...]
 ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(Δt * qt) * (x - xref[t]) +
-	transpose(u) * Diagonal(Δt * [0.01*ones(12); 1*ones(6Nb)]) * u for t = 1:T-1]
+	transpose(u) * Diagonal(Δt * [10.0*ones(6); 0.01*ones(12)]) * u for t = 1:T-1]
 oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(Δt * qt) * (x - xref[end])
 
 cts = Cost.(ots, n, m, d)

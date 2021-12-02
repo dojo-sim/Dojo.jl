@@ -19,7 +19,7 @@ end
 
 function simon_step!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
 		ϵ::T = 1e-6, newtonIter::Int = 100, lineIter::Int = 10, verbose::Bool = true,
-		btol::T = ϵ, undercut::T = Inf) where {T,Nn,Ne,Nb,Ni}
+		btol::T = ϵ, undercut::T = Inf, ctrl!::Any = (m) -> nothing) where {T,Nn,Ne,Nb,Ni}
 
 	# set the initial conditions: x1, v15, x2...
 		# set x2, v15, q2, ϕ15
@@ -31,6 +31,9 @@ function simon_step!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, 
 	# set the controls in the equality constraints
 		# apply the controls to each body's state
 	setControl!(mechanism, u)
+
+	# Apply a control policy, this is used to do puppet master control
+	ctrl!(mechanism)
 
 	# solve the 1 step simulation problem
 	mehrotra!(mechanism, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter, verbose = verbose,
@@ -229,10 +232,10 @@ end
 
 function getMinGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
 		ϵ::T = 1e-6, newtonIter::Int = 100, lineIter::Int = 10, verbose::Bool = true,
-		btol::T = ϵ, undercut::T = Inf) where {T,Nn,Ne,Nb,Ni}
+		btol::T = ϵ, undercut::T = Inf, ctrl!::Any = m -> nothing) where {T,Nn,Ne,Nb,Ni}
 
 	simon_step!(mechanism, z, u, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter,
-		verbose = verbose, btol = btol, undercut = undercut)
+		verbose = verbose, btol = btol, undercut = undercut, ctrl! = ctrl!)
 	z = getState(mechanism)
 	z̄ = getNextState(mechanism)
 	x = max2min(mechanism, z)
@@ -276,23 +279,8 @@ function getMinState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 		for (i,joint) in enumerate(eqc.constraints)
 			cbody = getbody(mech, eqc.childids[i])
 			pbody = getbody(mech, eqc.parentid)
-			if eqc.parentid != nothing
-				if typeof(joint) <: Translational
-					push!(c, minimalCoordinates(joint, pbody, cbody)...) # Δx in bodya's coordinates projected on jointAB's nullspace
-					push!(v, minimalVelocities(joint, pbody, cbody)...) # Δv in bodya's coordinates projected on jointAB's nullspace
-				elseif typeof(joint) <: Rotational
-					push!(c, minimalCoordinates(joint, pbody, cbody)...) # Δq in bodya's coordinates projected on jointAB's nullspace
-					push!(v, minimalVelocities(joint, pbody, cbody)...) # Δϕ in bodya's coordinates projected on jointAB's nullspace
-				end
-			else
-				if typeof(joint) <: Rotational
-					push!(c, minimalCoordinates(joint, pbody, cbody)...) # Δq = q2 of body b
-					push!(v, minimalVelocities(joint, pbody, cbody)...) # Δϕ = ϕ15 of bodyb in origin = world's coordinates
-				elseif typeof(joint) <: Translational
-					push!(c, minimalCoordinates(joint, pbody, cbody)...) # Δx = x2 of bodyb in world's coordinates
-					push!(v, minimalVelocities(joint, pbody, cbody)...) # Δv = v15 of bodyb in world's coordinates
-				end
-			end
+			push!(c, minimalCoordinates(joint, pbody, cbody)...)
+			push!(v, minimalVelocities(joint, pbody, cbody)...)
 		end
 		push!(x, [c; v]...)
 	end
@@ -330,4 +318,46 @@ function visualizeMaxCoord(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVecto
 		end
 	end
 	visualize(mechanism, storage, vis = vis)
+end
+
+function setSpringOffset!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector) where {T,Nn,Ne,Nb,Ni}
+	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
+	# Thus go through the eqconstraints in order, start from joint between robot and origin and go down the tree.
+	off = 0
+	for id in reverse(mechanism.system.dfs_list)
+		(id > Ne) && continue # only treat eqconstraints
+		eqc = mechanism.eqconstraints[id]
+		for (i,joint) in enumerate(eqc.constraints)
+			cbody = getbody(mech, eqc.childids[i])
+			pbody = getbody(mech, eqc.parentid)
+			N̄ = 3 - length(joint)
+			joint.spring_offset = x[off .+ (1:N̄)]
+			off += 2N̄
+		end
+	end
+	return nothing
+end
+
+
+function gravity_compensation(mechanism::Mechanism)
+    # only works with revolute joints for now
+    nu = controldim(mechanism)
+    u = zeros(nu)
+    off  = 0
+    for eqc in mechanism.eqconstraints
+        nu = controldim(eqc)
+        if eqc.parentid != nothing
+            body = getbody(mechanism, eqc.parentid)
+            rot = eqc.constraints[2]
+            A = Matrix(nullspacemat(rot))
+            Fτ = springforce(mechanism, eqc, body)
+            F = Fτ[1:3]
+            τ = Fτ[4:6]
+            u[off .+ (1:nu)] = -A * τ
+        else
+            @warn "need to treat the joint to origin"
+        end
+        off += nu
+    end
+    return u
 end

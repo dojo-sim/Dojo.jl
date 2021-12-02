@@ -157,5 +157,7 @@ include(joinpath("vis", "convertshape.jl"))
 include(joinpath("vis", "visualize.jl"))
 
 include(joinpath("optional_components", "energy.jl"))
+include(joinpath("optional_components", "atlas_template.jl"))
+include(joinpath("optional_components", "quadruped_template.jl"))
 
 end
