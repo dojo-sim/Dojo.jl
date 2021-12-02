@@ -44,6 +44,7 @@ mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = cf, damper = 0*10.0
 initialize!(mech, :quadruped)
 # setState!(mech, z1)
 # setSpringOffset!(mech, x1)
+
 @elapsed storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 ugc = gravity_compensation(mech)
