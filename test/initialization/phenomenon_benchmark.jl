@@ -11,6 +11,12 @@ Pkg.activate(module_dir())
 vis = Visualizer()
 open(vis)
 
+setvisible!(vis["/Background"], true)
+setprop!(vis["/Background"], "top_color", RGBA(1.0, 1.0, 1.0, 1.0))
+setprop!(vis["/Background"], "bottom_color", RGBA(1.0, 1.0, 1.0, 1.0))
+# setvisible!(vis["/Axes"], axes)
+# setvisible!(vis["/Grid"], grid)
+
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
@@ -27,11 +33,10 @@ bodies[2].m
 bodies[1].J
 bodies[2].J
 
-initialize!(mech, :dzhanibekov, x = [0,0,0.], v = [0,0,0.], q = UnitQuaternion(1.,0,0,0), ω = [5,0.01,0.])
+initialize!(mech, :dzhanibekov, x = [0,0,0.], v = [0,0,0.], q = UnitQuaternion(1.,0,0,0), ω = [5,0.0,0.01])
 
-storage = simulate!(mech, 10.0, record = true, solver = :mehrotra!, verbose = false)
+storage = simulate!(mech, 20.0, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
-
 
 ################################################################################
 # Full Friction Cone vs. Linearized Friction Cone

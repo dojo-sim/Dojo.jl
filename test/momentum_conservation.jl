@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "..", "src/optional_components/energy.jl"))
+
 # visualizer
 # vis = Visualizer()
 # open(vis)
@@ -55,7 +57,7 @@ initialize!(mech, :dice, v = v0, ω = ω0)
 storage = simulate!(mech, 5.0, nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 # visualize(mech, storage, vis = vis)
 
-m0 = Dojo.momentum(mech, storage)[5:end]
+m0 = momentum(mech, storage)[5:end]
 mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
 mang0 = [Vector(m-m0[1])[4:6] for m in m0]
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
@@ -82,7 +84,7 @@ initialize!(mech, :pendulum, ϕ1 = ϕ0, ω1 = ω0)
 storage = simulate!(mech, 5.0, nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 # visualize(mech, storage, vis = vis)
 
-m0 = Dojo.momentum(mech, storage)[10:end]
+m0 = momentum(mech, storage)[10:end]
 mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
 mang0 = [Vector(m-m0[1])[4:6] for m in m0]
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
@@ -112,7 +114,7 @@ setVelocity!.(bodies, ω = 1e-0rand(3))
 storage = simulate!(mech, 10.0, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 # visualize(mech, downsample(storage, 1), vis = vis)
 
-m0 = Dojo.momentum(mech, storage)[1:end]
+m0 = momentum(mech, storage)[1:end]
 mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
 mang0 = [Vector(m-m0[1])[4:6] for m in m0]
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
@@ -138,7 +140,7 @@ initialize!(mech, :atlas)
 storage = simulate!(mech, 5.0, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 # visualize(mech, storage, vis = vis)
 
-m0 = Dojo.momentum(mech, storage)[1:end]
+m0 = momentum(mech, storage)[1:end]
 mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
 mang0 = [Vector(m-m0[1])[4:6] for m in m0]
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
@@ -164,7 +166,7 @@ initialize!(mech, :quadruped)
 storage = simulate!(mech, 5.0, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 # visualize(mech, storage, vis = vis)
 
-m0 = Dojo.momentum(mech, storage)[1:end]
+m0 = momentum(mech, storage)[1:end]
 mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
 mang0 = [Vector(m-m0[1])[4:6] for m in m0]
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
@@ -198,7 +200,7 @@ initialize!(mech, :snake, q1 = q10, v = v0, ω = ω0)
 storage = simulate!(mech, 1.50, record = true, solver = :mehrotra!, verbose = false, ϵ = 1.0e-12)
 # visualize(mech, storage, vis = vis)
 
-m0 = Dojo.momentum(mech, storage)[5:end]
+m0 = momentum(mech, storage)[5:end]
 mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
 mang0 = [Vector(m-m0[1])[4:6] for m in m0]
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
@@ -221,7 +223,7 @@ end
         storage = simulate!(mech, 1.50, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
         # visualize(mech, storage, vis = vis)
 
-        m0 = Dojo.momentum(mech, storage)[5:end]
+        m0 = momentum(mech, storage)[5:end]
         mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
         mang0 = [Vector(m-m0[1])[4:6] for m in m0]
         # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
@@ -257,7 +259,7 @@ initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0)
 storage = simulate!(mech, 1.25, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 # visualize(mech, storage, vis = vis)
 
-m0 = Dojo.momentum(mech, storage)[5:end]
+m0 = momentum(mech, storage)[5:end]
 mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
 mang0 = [Vector(m-m0[1])[4:6] for m in m0]
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
@@ -280,7 +282,7 @@ end
         storage = simulate!(mech, 1.50, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
         # visualize(mech, storage, vis = vis)
 
-        m0 = Dojo.momentum(mech, storage)[5:end]
+        m0 = momentum(mech, storage)[5:end]
         mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
         mang0 = [Vector(m-m0[1])[4:6] for m in m0]
         # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
