@@ -8,13 +8,15 @@ function lineSearch!(mechanism::Mechanism, rvio, bvio, opts; warning::Bool = fal
     rvio_cand, bvio_cand = Inf * ones(2)
     for n = Base.OneTo(opts.max_ls)
         # println("ls: ", n)
+
         for eqc in eqcs
             lineStep!(eqc, getentry(system, eqc.id), scale, mechanism)
         end
         for body in bodies
-            lineStep!(body, getentry(system, body.id), scale, mechanism)
-            # if norm(body.state.ϕsol[2]) > 1/mechanism.Δt
-            if norm(body.state.ϕsol[2]) > 1.9/mechanism.Δt
+            ϕmax = 3.9/mechanism.Δt^2
+            lineStep!(body, getentry(system, body.id), scale, mechanism, ϕmax = ϕmax)
+            # println("ϕ: ", scn(norm(body.state.ϕsol[2])))
+            if dot(body.state.ϕsol[2], body.state.ϕsol[2]) > 3.91/mechanism.Δt^2
                 error("Excessive angular velocity. Body-ID: $(string(body.name)) "*string(body.id)*", ω: "*string(body.state.ϕsol[2])*".")
             end
         end
@@ -36,9 +38,15 @@ function lineSearch!(mechanism::Mechanism, rvio, bvio, opts; warning::Bool = fal
     return rvio_cand, bvio_cand
 end
 
-@inline function lineStep!(body::Body, vector_entry::Entry, scale)
+@inline function lineStep!(body::Body, vector_entry::Entry, scale; ϕmax = Inf)
     body.state.vsol[2] = body.state.vsol[1] + 1 / (2^scale) * vector_entry.value[SA[1; 2; 3]]
     body.state.ϕsol[2] = body.state.ϕsol[1] + 1 / (2^scale) * vector_entry.value[SA[4; 5; 6]]
+    # @warn "clipping ϕ might not be the best solution, we might add an IP constraints on this variable instead."
+    ϕ = body.state.ϕsol[2]
+    ϕnorm = dot(ϕ, ϕ)
+    if ϕnorm > ϕmax
+        body.state.ϕsol[2] *= ϕmax / ϕnorm
+    end
     return
 end
 
@@ -47,9 +55,14 @@ end
     return
 end
 
-@inline function lineStep!(body::Body, vector_entry::Entry, scale, mechanism)
+@inline function lineStep!(body::Body, vector_entry::Entry, scale, mechanism; ϕmax = Inf)
     body.state.vsol[2] = body.state.vsol[1] + 1 / (2^scale) * mechanism.α * vector_entry.value[SA[1; 2; 3]]
     body.state.ϕsol[2] = body.state.ϕsol[1] + 1 / (2^scale) * mechanism.α * vector_entry.value[SA[4; 5; 6]]
+    ϕ = body.state.ϕsol[2]
+    ϕnorm = dot(ϕ, ϕ)
+    if ϕnorm > ϕmax
+        body.state.ϕsol[2] *= ϕmax / ϕnorm
+    end
     return
 end
 

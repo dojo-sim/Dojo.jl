@@ -85,7 +85,6 @@ function get_sdf(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, storage::Storage) where {T
     for ineqc in mechanism.ineqconstraints
         ibody = getbody(mechanism, ineqc.parentid).id - Ne
         push!(d, [sdf(ineqc, storage.x[ibody][i], storage.q[ibody][i]) for i = 1:length(storage.x[1])])
-        @show d
     end
     return d
 end

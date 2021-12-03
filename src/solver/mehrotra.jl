@@ -43,9 +43,10 @@ function mehrotra!(mechanism::Mechanism;
     bodies = mechanism.bodies
     ineqcs = mechanism.ineqconstraints
 
-    foreach(resetVars!, ineqcs) # resets the values of s and γ to the neutral vector, this might be improved
+	resetVars!.(ineqcs, scaling = mechanism.Δt) # resets the values of s and γ to the scaled neutral vector, this might be improved
     mechanism.μ = 0.0
 	μtarget = 0.0
+	no_progress = 0
 
 	initial_state!.(ineqcs.values) # this makes sure we are far enough away from the complementarity boundary (tweaks s and γ) this is not really consistnt with resetVars! done just above
     setentries!(mechanism) # compute the residual
@@ -96,10 +97,15 @@ function mehrotra!(mechanism::Mechanism;
         pushmatrix!(mechanism) # restore the facorized matrix
         ldu_backsubstitution!(mechanism.system) # solve system
 
-		# τ = max(0.95, 1 - max(rvio, bvio)^2)
-		τ = 0.95
+		τ = max(0.95, 1 - max(rvio, bvio)^2)
+		# τ = 0.95
 		feasibilityStepLength!(mechanism; τort = τ, τsoc = min(τ, 0.95)) # uses system.vector_entries which holds the corrected search drection
-		rvio, bvio = lineSearch!(mechanism, rvio, bvio, opts; warning = false)
+		# Count the steps taken without making progress
+		rvio_, bvio_ = lineSearch!(mechanism, rvio, bvio, opts; warning = false)
+		made_progress = (!(rvio_ < opts.rtol) && (rvio_ < 0.8rvio)) || (!(bvio_ < opts.btol) && (bvio_ < 0.8bvio)) # we only care when progress is made while the tolerance is not met
+		made_progress ? no_progress = max(no_progress - 1, 0) : no_progress += 1
+		rvio, bvio = rvio_, bvio_
+		(no_progress >= 3) && (opts.undercut *= 10.0)
 
         foreach(updatesolution!, bodies)
         foreach(updatesolution!, eqcs)
@@ -113,8 +119,8 @@ function mehrotra!(mechanism::Mechanism;
 end
 
 function initial_state!(ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
-    initial_state_ort!(ineqc.γsol[1], ineqc.ssol[1])
-    initial_state_ort!(ineqc.γsol[2], ineqc.ssol[2])
+    initial_state_ort(ineqc.γsol[1], ineqc.ssol[1])
+    initial_state_ort(ineqc.γsol[2], ineqc.ssol[2])
     return nothing
 end
 
@@ -125,6 +131,18 @@ function initial_state!(ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs
 	ineqc.ssol[1] = [sort; ssoc]
 	γort, sort = initial_state_ort(ineqc.γsol[2][1:1], ineqc.ssol[2][1:1])
 	γsoc, ssoc = initial_state_soc(ineqc.γsol[2][2:4], ineqc.ssol[2][2:4])
+	ineqc.γsol[2] = [γort; γsoc]
+	ineqc.ssol[2] = [sort; ssoc]
+    return nothing
+end
+
+function initial_state!(ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{LinearContactBound{T,N}}}
+	γort, sort = initial_state_ort(ineqc.γsol[1][1:1], ineqc.ssol[1][1:1])
+	γsoc, ssoc = initial_state_soc(ineqc.γsol[1][2:6], ineqc.ssol[1][2:6])
+	ineqc.γsol[1] = [γort; γsoc]
+	ineqc.ssol[1] = [sort; ssoc]
+	γort, sort = initial_state_ort(ineqc.γsol[2][1:1], ineqc.ssol[2][1:1])
+	γsoc, ssoc = initial_state_soc(ineqc.γsol[2][2:6], ineqc.ssol[2][2:6])
 	ineqc.γsol[2] = [γort; γsoc]
 	ineqc.ssol[2] = [sort; ssoc]
     return nothing
@@ -143,6 +161,7 @@ function initial_state_ort!(γ::AbstractVector{T}, s::AbstractVector{T}; ϵ::T =
     γ0 = γh .+ δhγ
     s = s0
     γ = γ0
+	error()
     return nothing
 end
 
@@ -160,6 +179,7 @@ function initial_state_soc!(γ::AbstractVector{T}, s::AbstractVector{T}; ϵ::T =
     γ0 = γh + δhγ * e
     s = s0
     γ = γ0
+	error()
     return nothing
 end
 
@@ -171,7 +191,6 @@ function initial_state_ort(γ::AbstractVector{T}, s::AbstractVector{T}; ϵ::T = 
     γh = γ .+ δγ
     δhs = 0.5 * transpose(sh) * γh / (sum(γh) + ϵ)
     δhγ = 0.5 * transpose(sh) * γh / (sum(sh) + ϵ)
-
     s0 = sh .+ δhs
     γ0 = γh .+ δhγ
 	return γ0, s0

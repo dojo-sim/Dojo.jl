@@ -42,8 +42,8 @@ z1 = zref[1]
 # Gravity compensation
 mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = cf, damper = 0*10.0, spring = 0*300.0)
 initialize!(mech, :quadruped)
-# setState!(mech, z1)
-# setSpringOffset!(mech, x1)
+setState!(mech, z1)
+setSpringOffset!(mech, x1)
 
 @elapsed storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
@@ -64,7 +64,7 @@ ū = [inverse_control(no_contact_mech, xref[i], xref[i+1]) for i = 1:T-1]
 # Model
 ϵtol = 1e-5
 function fd(y, x, u, w)
-	z = simon_step!(mech, min2max(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose = false)
+	z = simon_step!(mech, min2max(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose = true)
 	y .= copy(max2min(mech, z))
 end
 function fdx(fx, x, u, w)
@@ -81,7 +81,9 @@ model = [dyn for t = 1:T-1]
 
 # Rollout
 x1 = xref[1]
-x̄ = rollout(model, x1, ū, w)
+Dmodel = [dyn for t = 1:5]
+x̄ = rollout(Dmodel, x1, ū, w)
+# x̄ = rollout(model, x1, ū, w)
 storage = generate_storage(mech, [min2max(mech, x) for x in x̄])
 visualize(mech, storage; vis = vis)
 

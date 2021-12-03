@@ -24,11 +24,11 @@ mutable struct InequalityConstraint{T,N,Nc,Cs,N½} <: AbstractConstraint{T,N}
     end
 end
 
-function resetVars!(ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
-    ineqc.ssol[1] = neutral_vector(ineqc.constraints[1])
-    ineqc.ssol[2] = neutral_vector(ineqc.constraints[1])
-    ineqc.γsol[1] = neutral_vector(ineqc.constraints[1])
-    ineqc.γsol[2] = neutral_vector(ineqc.constraints[1])
+function resetVars!(ineqc::InequalityConstraint{T,N,Nc,Cs,N½}; scaling::T = 1.0) where {T,N,Nc,Cs,N½}
+    ineqc.ssol[1] = scaling * neutral_vector(ineqc.constraints[1])
+    ineqc.ssol[2] = scaling * neutral_vector(ineqc.constraints[1])
+    ineqc.γsol[1] = scaling * neutral_vector(ineqc.constraints[1])
+    ineqc.γsol[2] = scaling * neutral_vector(ineqc.constraints[1])
     return
 end
 

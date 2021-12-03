@@ -155,6 +155,10 @@ function getquadruped(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.
         contineqcs2 = contactconstraint(getbody(mech,"FL_calf"), normal, cf; p = contact, name = "FL_contact")
         contineqcs3 = contactconstraint(getbody(mech,"RR_calf"), normal, cf; p = contact, name = "RR_contact")
         contineqcs4 = contactconstraint(getbody(mech,"RL_calf"), normal, cf; p = contact, name = "RL_contact")
+        # contineqcs1 = impactconstraint(getbody(mech,"FR_calf"), normal; p = contact,)
+        # contineqcs2 = impactconstraint(getbody(mech,"FL_calf"), normal; p = contact,)
+        # contineqcs3 = impactconstraint(getbody(mech,"RR_calf"), normal; p = contact,)
+        # contineqcs4 = impactconstraint(getbody(mech,"RL_calf"), normal; p = contact,)
         setPosition!(mech, geteqconstraint(mech, "auto_generated_floating_joint"), [0;0;0.23;0.;0.;0.])
         mech = Mechanism(origin, bodies, eqs, [contineqcs1; contineqcs2; contineqcs3; contineqcs4], g = g, Δt = Δt)
     end
@@ -529,7 +533,7 @@ end
 function initializeatlas!(mechanism::Mechanism; tran::AbstractVector{T} = [0,0,0.2],
         rot::AbstractVector{T} = [0,0,0.], αhip::T = 0.0, αknee::T = 0.0) where {T}
     tran += [0,0,0.9385]
-    
+
     try
         setPosition!(mechanism,
                  geteqconstraint(mechanism, "auto_generated_floating_joint"),

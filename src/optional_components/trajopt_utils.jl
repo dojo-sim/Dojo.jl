@@ -367,15 +367,15 @@ function inverse_control(mechanism::Mechanism, x, x̄; ϵtol = 1e-5)
 	u = zeros(nu)
 	# starting point of the local search
 	for k = 1:10
-		err = inverse_control_error(mechanism, x, x̄, u)
+		err = inverse_control_error(mechanism, x, x̄, u, ϵtol = ϵtol)
 		norm(err, Inf) < 1e-10 && continue
-		∇ = FiniteDiff.finite_difference_jacobian(u -> inverse_control_error(mechanism, x, x̄, u), u)
+		∇ = FiniteDiff.finite_difference_jacobian(u -> inverse_control_error(mechanism, x, x̄, u, ϵtol = ϵtol), u)
 		u -= ∇ \ err
 	end
 	return u
 end
 
-function inverse_control_error(mechanism, x, x̄, u)
+function inverse_control_error(mechanism, x, x̄, u; ϵtol = 1e-5)
 	z = min2max(mechanism, x)
 	z̄ = min2max(mechanism, x̄)
 	setState!(mechanism, z)
