@@ -104,16 +104,28 @@ end
 end
 
 ## Complementarity
-function complementarity(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
+function complementarity(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}; scaling::Bool = false) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
     γ = ineqc.γsol[2]
     s = ineqc.ssol[2]
-    return vcat(γ[1] * s[1], cone_product(γ[@SVector [2,3,4]], s[@SVector [2,3,4]]))
+    if scaling
+        W, Wi, λ = nt_scaling(ineqc)
+        c = vcat(λ[1] * λ[1], cone_product(λ[@SVector [2,3,4]], λ[@SVector [2,3,4]]))
+    else
+        c = vcat(γ[1] * s[1], cone_product(γ[@SVector [2,3,4]], s[@SVector [2,3,4]]))
+    end
+    return c
 end
 
-function complementarityμ(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
+function complementarityμ(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}; scaling::Bool = false) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
     γ = ineqc.γsol[2]
     s = ineqc.ssol[2]
-    return vcat(γ[1] * s[1], cone_product(γ[@SVector [2,3,4]], s[@SVector [2,3,4]])) - mechanism.μ * neutral_vector(ineqc.constraints[1])
+    if scaling
+        W, Wi, λ = nt_scaling(ineqc)
+        c = vcat(λ[1] * λ[1], cone_product(λ[@SVector [2,3,4]], λ[@SVector [2,3,4]])) - mechanism.μ * neutral_vector(ineqc.constraints[1])
+    else
+        c = vcat(γ[1] * s[1], cone_product(γ[@SVector [2,3,4]], s[@SVector [2,3,4]])) - mechanism.μ * neutral_vector(ineqc.constraints[1])
+    end
+    return c
 end
 
 function neutral_vector(bound::ContactBound{T,N}) where {T,N}

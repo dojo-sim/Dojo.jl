@@ -33,8 +33,6 @@ function ort_nt_scaling(s::AbstractVector{T}, z::AbstractVector{T}) where {T}
     return W, Wi, λ
 end
 
-
-
 function ∇cone_product(u::AbstractVector{T}) where {T}
     n = length(u)
     U = zeros(n,n)

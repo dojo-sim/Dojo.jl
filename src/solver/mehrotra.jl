@@ -77,8 +77,8 @@ function mehrotra!(mechanism::Mechanism;
             break
         end
 		(n == opts.max_iter) && (@warn "failed mehrotra")
-        # Compute regularization level
 
+		# Compute regularization level
 		mechanism.μ = 0.0
 		pullresidual!(mechanism) # store the residual inside mechanism.residual_entries
         ldu_factorization!(mechanism.system) # factorize system, modifies the matrix in place
@@ -86,15 +86,13 @@ function mehrotra!(mechanism::Mechanism;
         ldu_backsubstitution!(mechanism.system) # solve system, modifies the vector in place
 
 		# println("PREDICTOR")
-		feasibilityStepLength!(mechanism; τort = 0.95, τsoc = 0.95) # uses system.vector_entries which holds the search drection
+		feasibilityStepLength!(mechanism; τort = 0.95, τsoc = 0.95, scaling = false) # uses system.vector_entries which holds the search drection
 		αaff = copy(mechanism.α)
 		centering!(mechanism, mechanism.α)
 		σcentering = clamp(mechanism.νaff / (mechanism.ν + 1e-20), 0.0, 1.0)^3
 
 		# Compute corrector residual
 		μtarget = max(σcentering * mechanism.ν, opts.btol/opts.undercut)
-		# @show μtarget
-		# @warn "changing target"
 		mechanism.μ = μtarget
 		correction!(mechanism) # update the residual in mechanism.residual_entries
 		mechanism.μ = 0.0
@@ -106,7 +104,8 @@ function mehrotra!(mechanism::Mechanism;
 		# τ = max(0.95, 1 - max(rvio, bvio)^2)
 		τ = 0.95
 		# println("CORRECTOR")
-		feasibilityStepLength!(mechanism; τort = τ, τsoc = min(τ, 0.95)) # uses system.vector_entries which holds the corrected search drection
+		feasibilityStepLength!(mechanism; τort = τ, τsoc = min(τ, 0.95), scaling = false) # uses system.vector_entries which holds the corrected search drection
+
 		# Count the steps taken without making progress
 		rvio_, bvio_ = lineSearch!(mechanism, rvio, bvio, opts; warning = false)
 		made_progress = (!(rvio_ < opts.rtol) && (rvio_ < 0.8rvio)) || (!(bvio_ < opts.btol) && (bvio_ < 0.8bvio)) # we only care when progress is made while the tolerance is not met
@@ -114,10 +113,12 @@ function mehrotra!(mechanism::Mechanism;
 		rvio, bvio = rvio_, bvio_
 		(no_progress >= 3) && (opts.undercut *= 10.0)
 
+		# update solution
         foreach(updatesolution!, bodies)
         foreach(updatesolution!, eqcs)
         foreach(updatesolution!, ineqcs)
 
+		# Recompute Jacobin and Residual
         setentries!(mechanism)
     end
 

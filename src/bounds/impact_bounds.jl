@@ -79,16 +79,28 @@ end
 end
 
 ## Complementarity
-function complementarity(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ImpactBound{T,N}},N½}
+function complementarity(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}; scaling = false) where {T,N,Nc,Cs<:Tuple{ImpactBound{T,N}},N½}
     γ = ineqc.γsol[2]
     s = ineqc.ssol[2]
-    return γ .* s
+    if scaling
+        W, Wi, λ = nt_scaling(ineqc)
+        c = λ .* λ
+    else
+        c = γ .* s
+    end
+    return c
 end
 
-function complementarityμ(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ImpactBound{T,N}},N½}
+function complementarityμ(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}; scaling = false) where {T,N,Nc,Cs<:Tuple{ImpactBound{T,N}},N½}
     γ = ineqc.γsol[2]
     s = ineqc.ssol[2]
-    return γ .* s - mechanism.μ * neutral_vector(ineqc.constraints[1])
+    if scaling
+        W, Wi, λ = nt_scaling(ineqc)
+        c = λ .* λ - mechanism.μ * neutral_vector(ineqc.constraints[1])
+    else
+        c = γ .* s - mechanism.μ * neutral_vector(ineqc.constraints[1])
+    end
+    return c
 end
 
 function neutral_vector(bound::ImpactBound{T,N}) where {T,N}
@@ -127,7 +139,6 @@ end
     vector_entry.value = vcat(-complementarityμ(mechanism, ineqc), -g(mechanism, ineqc))
     return
 end
-
 
 function nt_scaling(ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ImpactBound{T,N}},N½}
     γ = ineqc.γsol[2]
