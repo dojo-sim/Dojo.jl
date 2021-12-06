@@ -43,7 +43,8 @@ function mehrotra!(mechanism::Mechanism;
     bodies = mechanism.bodies
     ineqcs = mechanism.ineqconstraints
 
-	resetVars!.(ineqcs, scaling = mechanism.Δt) # resets the values of s and γ to the scaled neutral vector, this might be improved
+	# resetVars!.(ineqcs, scaling = mechanism.Δt) # resets the values of s and γ to the scaled neutral vector, this might be improved
+	resetVars!.(ineqcs, scaling = 1.0) # resets the values of s and γ to the scaled neutral vector, this might be improved
     mechanism.μ = 0.0
 	μtarget = 0.0
 	no_progress = 0
@@ -67,7 +68,9 @@ function mehrotra!(mechanism::Mechanism;
             ##################
             res = norm(fv, Inf)
             println("n ", n, "   bvio", scn(bvio), "   rvio", scn(rvio), "   α", scn(mechanism.α),
-                    "   μ", scn(μtarget), "   |res|∞", scn(res), "   |Δ|∞", scn(Δvar))
+                    "   μ", scn(μtarget), "   |res|∞", scn(res), "   |Δ|∞", scn(Δvar),
+					"   ucut", scn(opts.undercut),
+					)
         end
 
         if (rvio < opts.rtol) && (bvio < opts.btol)
@@ -82,13 +85,16 @@ function mehrotra!(mechanism::Mechanism;
         pullmatrix!(mechanism) # store the factorized matrix inside mechanism.matrix_entries
         ldu_backsubstitution!(mechanism.system) # solve system, modifies the vector in place
 
-        feasibilityStepLength!(mechanism; τort = 0.95, τsoc = 0.95) # uses system.vector_entries which holds the search drection
+		# println("PREDICTOR")
+		feasibilityStepLength!(mechanism; τort = 0.95, τsoc = 0.95) # uses system.vector_entries which holds the search drection
 		αaff = copy(mechanism.α)
 		centering!(mechanism, mechanism.α)
 		σcentering = clamp(mechanism.νaff / (mechanism.ν + 1e-20), 0.0, 1.0)^3
 
 		# Compute corrector residual
 		μtarget = max(σcentering * mechanism.ν, opts.btol/opts.undercut)
+		# @show μtarget
+		# @warn "changing target"
 		mechanism.μ = μtarget
 		correction!(mechanism) # update the residual in mechanism.residual_entries
 		mechanism.μ = 0.0
@@ -97,8 +103,9 @@ function mehrotra!(mechanism::Mechanism;
         pushmatrix!(mechanism) # restore the facorized matrix
         ldu_backsubstitution!(mechanism.system) # solve system
 
-		τ = max(0.95, 1 - max(rvio, bvio)^2)
-		# τ = 0.95
+		# τ = max(0.95, 1 - max(rvio, bvio)^2)
+		τ = 0.95
+		# println("CORRECTOR")
 		feasibilityStepLength!(mechanism; τort = τ, τsoc = min(τ, 0.95)) # uses system.vector_entries which holds the corrected search drection
 		# Count the steps taken without making progress
 		rvio_, bvio_ = lineSearch!(mechanism, rvio, bvio, opts; warning = false)
@@ -131,18 +138,6 @@ function initial_state!(ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs
 	ineqc.ssol[1] = [sort; ssoc]
 	γort, sort = initial_state_ort(ineqc.γsol[2][1:1], ineqc.ssol[2][1:1])
 	γsoc, ssoc = initial_state_soc(ineqc.γsol[2][2:4], ineqc.ssol[2][2:4])
-	ineqc.γsol[2] = [γort; γsoc]
-	ineqc.ssol[2] = [sort; ssoc]
-    return nothing
-end
-
-function initial_state!(ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{LinearContactBound{T,N}}}
-	γort, sort = initial_state_ort(ineqc.γsol[1][1:1], ineqc.ssol[1][1:1])
-	γsoc, ssoc = initial_state_soc(ineqc.γsol[1][2:6], ineqc.ssol[1][2:6])
-	ineqc.γsol[1] = [γort; γsoc]
-	ineqc.ssol[1] = [sort; ssoc]
-	γort, sort = initial_state_ort(ineqc.γsol[2][1:1], ineqc.ssol[2][1:1])
-	γsoc, ssoc = initial_state_soc(ineqc.γsol[2][2:6], ineqc.ssol[2][2:6])
 	ineqc.γsol[2] = [γort; γsoc]
 	ineqc.ssol[2] = [sort; ssoc]
     return nothing

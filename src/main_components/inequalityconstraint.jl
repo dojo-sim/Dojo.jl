@@ -84,3 +84,7 @@ end
 function ∂g∂ʳvela(mechanism, ineqc::InequalityConstraint, body::Body)
     return ∂g∂ʳvela(ineqc.constraints[1], body, nothing, mechanism.Δt)
 end
+
+function cone_degree(ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+    return sum(cone_degree.(ineqc.constraints))
+end

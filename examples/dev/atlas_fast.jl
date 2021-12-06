@@ -37,7 +37,7 @@ function controller!(mechanism, k)
     return
 end
 
-@elapsed storage = simulate!(mech, 4.01, controller!, record = true, solver = :mehrotra!, verbose = false)
+@elapsed storage = simulate!(mech, 4.01, controller!, record = true, solver = :mehrotra!, verbose = true)
 visualize(mech, storage, vis = vis)
 
 

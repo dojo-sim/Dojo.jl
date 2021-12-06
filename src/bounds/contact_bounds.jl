@@ -116,27 +116,6 @@ function complementarityμ(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}
     return vcat(γ[1] * s[1], cone_product(γ[@SVector [2,3,4]], s[@SVector [2,3,4]])) - mechanism.μ * neutral_vector(ineqc.constraints[1])
 end
 
-function ∇cone_product(u::AbstractVector{T}) where {T}
-    n = length(u)
-    U = zeros(n,n)
-    U += u[1] * I(n)
-    U[1,2:end] += u[2:end]
-    U[2:end, 1] += u[2:end]
-    return U
-end
-
-@inline function ∇cone_product(u::SVector{3,T}) where {T}
-    SMatrix{3,3,T,9}(u[1], u[2], u[3], u[2], u[1], 0, u[3], 0, u[1])
-end
-
-function cone_product(u::AbstractVector{T}, v::AbstractVector{T}) where {T}
-    [u'*v; u[1] * v[2:end] + v[1] * u[2:end]]
-end
-
-function cone_product(u::SVector{N,T}, v::SVector{N,T}) where {N,T}
-    vcat(u'*v, u[1] * v[SVector{N-1}(2:end)] + v[1] * u[SVector{N-1}(2:end)])
-end
-
 function neutral_vector(bound::ContactBound{T,N}) where {T,N}
     N½ = Int(N/2)
     return [sones(T, 2); szeros(T, N½-2)]
@@ -203,4 +182,15 @@ end
     # [-γsol .* ssol + μ; -g + s]
     vector_entry.value = vcat(-complementarityμ(mechanism, ineqc), -g(mechanism, ineqc))
     return
+end
+
+function nt_scaling(ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
+    γ = ineqc.γsol[2]
+    s = ineqc.ssol[2]
+    W_ort, Wi_ort, λ_ort = ort_nt_scaling(s[1:1], γ[1:1])
+    W_soc, Wi_soc, λ_soc = soc_nt_scaling(s[2:4], γ[2:4])
+    W = cat(W_ort, W_soc, dims = (1,2))
+    Wi = cat(Wi_ort, Wi_soc, dims = (1,2))
+    λ = [λ_ort; λ_soc]
+    return W, Wi, λ
 end

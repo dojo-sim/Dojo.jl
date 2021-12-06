@@ -54,7 +54,11 @@ function scn(a::Float64; digits::Int=1, exp_digits::Int=1)
     if a == 0
         e = 0
         m = 0.0
-    else
+    elseif a == Inf
+		return " Inf"
+	elseif a == -Inf
+		return "-Inf"
+	else
         e = Int(floor(log(abs(a))/log(10)))
         m = a*exp(-e*log(10))
     end

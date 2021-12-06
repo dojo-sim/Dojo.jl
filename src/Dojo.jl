@@ -125,6 +125,7 @@ include(joinpath("main_components", "mechanism_functions.jl"))
 include(joinpath("joints", "abstract_joint.jl"))
 
 include(joinpath("bounds", "bound.jl"))
+include(joinpath("bounds", "cone.jl"))
 include(joinpath("bounds", "contact_bounds.jl"))
 include(joinpath("bounds", "impact_bounds.jl"))
 include(joinpath("bounds", "linear_contact_bounds.jl"))

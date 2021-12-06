@@ -127,3 +127,10 @@ end
     vector_entry.value = vcat(-complementarityμ(mechanism, ineqc), -g(mechanism, ineqc))
     return
 end
+
+
+function nt_scaling(ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ImpactBound{T,N}},N½}
+    γ = ineqc.γsol[2]
+    s = ineqc.ssol[2]
+    return ort_nt_scaling(s, γ)
+end

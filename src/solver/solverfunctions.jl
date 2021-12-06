@@ -23,6 +23,13 @@ function feasibilityStepLength!(mechanism::Mechanism; τort::T = 0.95, τsoc::T 
 
     mechanism.α = 1.0
 
+    # for (i,ineqc) in enumerate(mechanism.ineqconstraints)
+    #     if i == 3
+    #         γ = ineqc.γsol[2]
+    #         vector_entry = getentry(system, ineqc.id)
+    #         Δγ = vector_entry.value[4 .+ (1:4)]
+    #         # plot_cone(γ, Δγ)
+    #     end
     for ineqc in mechanism.ineqconstraints
         feasibilityStepLength!(mechanism, ineqc, getentry(system, ineqc.id), τort, τsoc)
     end
@@ -62,8 +69,16 @@ function feasibilityStepLength!(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs
 
     αs = soc_step_length(s[2:4], Δs[2:4]; τ = τsoc)
     αγ = soc_step_length(γ[2:4], Δγ[2:4]; τ = τsoc)
-    αγ < 1e-6 && println("γ: ", scn.(γ[2:4]))
-    αγ < 1e-6 && println("Δγ:", scn.(Δγ[2:4]))
+    # αγ < 1e-6 && println("Small step.")
+    # αγ < 1e-6 && println("γ: ", scn.(γ[2:4]))
+    # αγ < 1e-6 && println("Δγ:", scn.(Δγ[2:4]))
+    # println("s  ", scn.(s[2:4], digits=15), "   Δs ", scn.(Δs[2:4], digits=15))
+    # println("s  = ", scn.(s[2:4], digits=15))
+    # println("Δs = ", scn.(Δs[2:4], digits=15))
+
+    # println("γ  = ", γ[2:4])
+    # println("Δγ = ", Δγ[2:4])
+    # println("αs ", scn(αs), "   αγ ", scn(αγ), "   αs_ort ", scn(αs_ort), "   αγ_ort ", scn(αγ_ort))
     α = min(αs, αγ, αs_ort, αγ_ort)
     (α > 0) && (α < mechanism.α) && (mechanism.α = α)
     return
@@ -113,7 +128,7 @@ function centering!(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}, vecto
     Δγ = vector_entry.value[N½ .+ (1:N½)]
     mechanism.ν += dot(s, γ)
     mechanism.νaff += dot(s + αaff * Δs, γ + αaff * Δγ) # plus or minus
-    return N½
+    return cone_degree(ineqc)
 end
 
 function soc_step_length(λ::AbstractVector{T}, Δ::AbstractVector{T};
@@ -161,7 +176,6 @@ function setentries!(mechanism::Mechanism)
             setLU!(mechanism, getentry(system, id, childid), getentry(system, childid, id), component, getcomponent(mechanism, childid))
         end
     end
-
     return
 end
 
