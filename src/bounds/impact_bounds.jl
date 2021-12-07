@@ -146,6 +146,7 @@ function nt_scaling(ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs
     return ort_nt_scaling(s, γ)
 end
 
+# cone degree
 function cone_degree(bound::ImpactBound{T,N}) where {T,N}
     # http://www.seas.ucla.edu/~vandenbe/publications/coneprog.pdf
     # section 2
