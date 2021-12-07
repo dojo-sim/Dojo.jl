@@ -43,8 +43,7 @@ function mehrotra!(mechanism::Mechanism;
     bodies = mechanism.bodies
     ineqcs = mechanism.ineqconstraints
 
-	# resetVars!.(ineqcs, scaling = mechanism.Δt) # resets the values of s and γ to the scaled neutral vector, this might be improved
-	resetVars!.(ineqcs, scaling = 1.0) # resets the values of s and γ to the scaled neutral vector, this might be improved
+	resetVars!.(ineqcs, scale = 1.0) # resets the values of s and γ to the scaled neutral vector, this might be improved
     mechanism.μ = 0.0
 	μtarget = 0.0
 	no_progress = 0
