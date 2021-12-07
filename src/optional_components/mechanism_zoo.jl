@@ -270,7 +270,7 @@ function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
     return mech
 end
 
-function getpendulum(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 0.0, spring_offset = szeros(T,1)) where {T}
+function getpendulum(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 0.0, spring_offset = szeros(1)) where {T}
     # Parameters
     joint_axis = [1.0; 0; 0]
     length1 = 1.0
