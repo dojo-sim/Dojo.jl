@@ -1,4 +1,3 @@
-include(joinpath(@__DIR__, "..", "src/optional_components/energy.jl"))
 
 # visualizer
 # vis = Visualizer()
@@ -41,7 +40,7 @@ jointtypes = [
     ]
 
 ################################################################################
-# DICE
+# Box
 ################################################################################
 # single body
 # initial linear and angular velocity
@@ -49,10 +48,10 @@ jointtypes = [
 # no spring and damper
 # no control
 ################################################################################
-mech = getmechanism(:dice, Δt = Δt0, g = g0, contact = false)
+mech = getmechanism(:box, Δt = Δt0, g = g0, contact = false)
 v0 = [1,2,3.0]
 ω0 = [1,1,1.0]
-initialize!(mech, :dice, v = v0, ω = ω0)
+initialize!(mech, :box, v = v0, ω = ω0)
 
 storage = simulate!(mech, 5.0, nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 # visualize(mech, storage, vis = vis)
@@ -62,7 +61,7 @@ mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
 mang0 = [Vector(m-m0[1])[4:6] for m in m0]
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
-@testset "Momentum: Dice" begin
+@testset "Momentum: Box" begin
     @test all(norm.(mlin0, Inf) .< 1e-11)
     @test all(norm.(mang0, Inf) .< 1e-11)
 end

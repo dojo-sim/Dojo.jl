@@ -97,68 +97,73 @@ export Origin,
     finitediff_data_matrix,
     finitediff_sensitivity
 
-
+# Utilities
 include(joinpath("util", "util.jl"))
 include(joinpath("util", "custom_static.jl"))
 include(joinpath("util", "customdict.jl"))
 include(joinpath("util", "quaternion.jl"))
 
+# Graph system
 include(joinpath("graph", "entry.jl"))
 include(joinpath("graph", "system.jl"))
 include(joinpath("graph", "setup_functions.jl"))
 include(joinpath("graph", "ldu.jl"))
 
-include(joinpath("optional_components", "shapes.jl"))
-include(joinpath("optional_components", "storage.jl"))
+# Simulation
+include(joinpath("simulation", "controller.jl"))
+include(joinpath("simulation", "storage.jl"))
 
-include(joinpath("main_components", "component.jl"))
-include(joinpath("main_components", "state.jl"))
-include(joinpath("main_components", "body.jl"))
-include(joinpath("main_components", "abstractconstraint.jl"))
-include(joinpath("main_components", "equalityconstraint.jl"))
-include(joinpath("main_components", "inequalityconstraint.jl"))
-include(joinpath("main_components", "controller.jl"))
-include(joinpath("main_components", "mechanism_struct.jl"))
-include(joinpath("main_components", "system.jl"))
-include(joinpath("main_components", "mechanism_functions.jl"))
+# Mechanism
+include(joinpath("mechanism", "shapes.jl"))
+include(joinpath("mechanism", "component.jl"))
+include(joinpath("mechanism", "state.jl"))
+include(joinpath("mechanism", "body.jl"))
+include(joinpath("mechanism", "abstract_constraint.jl"))
+include(joinpath("mechanism", "equality_constraint.jl"))
+include(joinpath("mechanism", "inequality_constraint.jl"))
+include(joinpath("mechanism", "mechanism.jl"))
+include(joinpath("mechanism", "system.jl"))
+include(joinpath("mechanism", "methods.jl"))
+include(joinpath("mechanism", "energy.jl"))
 
+# Joints
 include(joinpath("joints", "abstract_joint.jl"))
-
-include(joinpath("bounds", "bound.jl"))
-include(joinpath("bounds", "cone.jl"))
-include(joinpath("bounds", "contact_bounds.jl"))
-include(joinpath("bounds", "impact_bounds.jl"))
-include(joinpath("bounds", "linear_contact_bounds.jl"))
-
 include(joinpath("joints", "joint.jl"))
 include(joinpath("joints", "translational.jl"))
 include(joinpath("joints", "rotational.jl"))
-include(joinpath("joints", "genericjoint.jl"))
+include(joinpath("joints", "generic_joint.jl"))
 include(joinpath("joints", "prototypes.jl"))
+include(joinpath("joints", "force.jl"))
+include(joinpath("joints", "torque.jl"))
 
-include(joinpath("solver", "solverfunctions.jl"))
-include(joinpath("solver", "initconstraints.jl"))
+# Inequality constraints
+include(joinpath("bounds", "bound.jl"))
+include(joinpath("bounds", "cone.jl"))
+include(joinpath("bounds", "contact.jl"))
+include(joinpath("bounds", "impact.jl"))
+include(joinpath("bounds", "linear_contact.jl"))
+
+# Solver
+include(joinpath("solver", "methods.jl"))
 include(joinpath("solver", "mehrotra.jl"))
 include(joinpath("solver", "linesearch.jl"))
 
-include(joinpath("discretization", "Linear.jl"))
+# Variational integrator
+include(joinpath("discretization", "integrator.jl"))
+include(joinpath("discretization", "body.jl"))
 
+# User interface
 include(joinpath("ui", "mechanism_ui.jl"))
 include(joinpath("ui", "simulate.jl"))
 include(joinpath("ui", "initialize.jl"))
 include(joinpath("ui", "urdf.jl"))
+include(joinpath("ui", "convert_shape.jl"))
+include(joinpath("ui", "visualize.jl"))
 
-include(joinpath("optional_components", "diff_tools.jl"))
-include(joinpath("optional_components", "finitediff_tools.jl"))
-include(joinpath("optional_components", "mechanism_zoo.jl"))
-include(joinpath("optional_components", "trajopt_utils.jl"))
-include(joinpath("joints", "force.jl"))
-include(joinpath("joints", "torque.jl"))
-include(joinpath("vis", "convertshape.jl"))
-include(joinpath("vis", "visualize.jl"))
+# Differentiation
+include(joinpath("diff", "diff_tools.jl"))
+include(joinpath("diff", "finitediff_tools.jl"))
 
-include(joinpath("optional_components", "energy.jl"))
-include(joinpath("optional_components", "atlas_template.jl"))
-include(joinpath("optional_components", "quadruped_template.jl"))
+# Environments
 
 end

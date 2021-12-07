@@ -3,6 +3,8 @@
 ################################################################################\
 
 # const Dojo = Main
+include("../env/mechanisms.jl")
+include("../examples/trajectory_optimization/utils.jl")
 
 jointtypes = [
     :Fixed,
@@ -73,9 +75,9 @@ end
 	@test norm(x0[14:nx] - x1[14:nx], Inf) < 1e-10
 end
 
-# dice
-@testset "min -> max -> min: dice" begin
-	mech = Dojo.getmechanism(:dice)
+# box
+@testset "min -> max -> min: box" begin
+	mech = Dojo.getmechanism(:box)
 	Random.seed!(100)
 	nx = Dojo.minCoordDim(mech)
 	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(abs(nx - 13))]

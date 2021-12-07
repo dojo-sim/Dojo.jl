@@ -94,7 +94,7 @@ test_solmat(:atlas,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7)
 test_solmat(:atlas,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7)
 test_solmat(:atlas,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7, spring = 1e3, damper = 5e2)
 test_solmat(:quadruped, tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7, spring = 1.0, damper = 0.2)
-test_solmat(:dice,      tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7)
+test_solmat(:box,      tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7)
 test_solmat(:snake,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7, spring = 1.0, damper = 0.2)
 test_solmat(:slider,    tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7, spring = 1.0, damper = 0.2)
 test_solmat(:pendulum,  tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7, spring = 1.0, damper = 0.2)
@@ -106,7 +106,7 @@ tsim = 0.1
 test_datamat(:atlas,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6)
 test_datamat(:atlas,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6, spring = 1e3, damper = 5e2)
 test_datamat(:quadruped, tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6, spring = 1.0, damper = 0.2)
-test_datamat(:dice,      tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6)
+test_datamat(:box,      tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6)
 test_datamat(:snake,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6, spring = 1.0, damper = 0.2)
 test_datamat(:slider,    tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6, spring = 1.0, damper = 0.2)
 test_datamat(:pendulum,  tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6, spring = 1.0, damper = 0.2)
@@ -119,7 +119,7 @@ tsim = 0.4
 test_solmat(:atlas,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7)
 test_solmat(:atlas,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7, spring = 1e3, damper = 5e2)
 test_solmat(:quadruped, tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7, spring = 1.0, damper = 0.2)
-test_solmat(:dice,      tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7)
+test_solmat(:box,      tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7)
 test_solmat(:snake,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7, spring = 1.0, damper = 0.2)
 test_solmat(:slider,    tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7, spring = 1.0, damper = 0.2)
 test_solmat(:pendulum,  tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-7, spring = 1.0, damper = 0.2)
@@ -131,15 +131,13 @@ tsim = 0.4
 test_datamat(:atlas,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6)
 test_datamat(:atlas,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6, spring = 1e3, damper = 5e2)
 test_datamat(:quadruped, tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6, spring = 1.0, damper = 0.2)
-test_datamat(:dice,      tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6)
+test_datamat(:box,      tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6)
 test_datamat(:snake,     tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6, spring = 1.0, damper = 0.2)
 test_datamat(:slider,    tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6, spring = 1.0, damper = 0.2)
 test_datamat(:pendulum,  tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6, spring = 1.0, damper = 0.2)
 test_datamat(:npendulum, tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6, spring = 1.0, damper = 0.2) # always ~1e-8
 test_datamat(:nslider,   tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6, spring = 1.0, damper = 0.2)
 test_datamat(:twister,   tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6, spring = 1.0, damper = 0.2)
-
-
 
 function cont!(mechanism, k; u = 0.1)
     for (i, eqc) in enumerate(mechanism.eqconstraints)
@@ -149,19 +147,6 @@ function cont!(mechanism, k; u = 0.1)
     end
     return
 end
-mech = getmechanism(:atlas, Δt = 0.01, g = -9.81)
-initialize!(mech, :atlas, tran = [0,0,0.05])
-getfield.(mech.eqconstraints, :name)
-setPosition!(mech, geteqconstraint(mech, "l_leg_akx"), [0.3])
-setPosition!(mech, geteqconstraint(mech, "r_leg_akx"), [0.3])
-setPosition!(mech, geteqconstraint(mech, "l_leg_aky"), [0.3])
-setPosition!(mech, geteqconstraint(mech, "r_leg_aky"), [0.3])
-
-ctrl = (m,k)->cont!(m,k,u=0.5)
-storage = simulate!(mech, 0.10, ctrl, record = true, solver = :mehrotra!, verbose = true)
-visualize(mech, storage, vis = vis)
-
-
 
 function plot_cone(s, Δs; plt = plot())
 	θ = 0:0.03:2π
@@ -179,8 +164,6 @@ function plot_cone(s, Δs; plt = plot())
 end
 
 
-collect(mech.ineqconstraints)[1].γsol[2]
-
 # s  = [1.001619650763305e+0, 1.737348210974044e-1, -1.316707656377632e-1]
 # Δs = [9.525076266034363e+2, 8.050194800248429e+0,  6.473898126907718e+0]
 # s  = [1.001619650763305e+0, 1.737348210974044e-1, -1.316707656377632e-1]
@@ -190,10 +173,10 @@ collect(mech.ineqconstraints)[1].γsol[2]
 # sc  =[ 1.001619650763305e+0,  1.737348210974044e-1, -1.316707656377632e-1]
 # Δsc =[ 8.945577700909580e+2,  7.678512219876204e+0,  5.985574831920998e+0]
 
-γp  = [2.0806866959138824e-15, -3.5160872884030105e-7, -4.196336237276323e-7]
-Δγp = [-2.93464026390496e-15, 0.0003347200444208716, 0.00039947752616968673]
-γc  = [2.0806866959138824e-15, -3.5160872884030105e-7, -4.196336237276323e-7]
-Δγc = [-1.681677547721007e-15, -0.3179934702225138, -0.3795149019007642]
-plt = plot()
-plot_cone(γp, Δγp, plt = plt)
-plot_cone(γc, Δγc, plt = plt)
+# γp  = [2.0806866959138824e-15, -3.5160872884030105e-7, -4.196336237276323e-7]
+# Δγp = [-2.93464026390496e-15, 0.0003347200444208716, 0.00039947752616968673]
+# γc  = [2.0806866959138824e-15, -3.5160872884030105e-7, -4.196336237276323e-7]
+# Δγc = [-1.681677547721007e-15, -0.3179934702225138, -0.3795149019007642]
+# plt = plot()
+# plot_cone(γp, Δγp, plt = plt)
+# plot_cone(γc, Δγc, plt = plt)
