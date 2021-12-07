@@ -206,3 +206,9 @@ function nt_scaling(ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs
     λ = [λ_ort; λ_soc]
     return W, Wi, λ
 end
+
+function cone_degree(bound::ContactBound{T,N}) where {T,N}
+    # http://www.seas.ucla.edu/~vandenbe/publications/coneprog.pdf
+    # section 2
+    return 1 + 1 # 1 for impact and 1 for the second order cone
+end

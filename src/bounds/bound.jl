@@ -89,21 +89,3 @@ function get_sdf(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, storage::Storage) where {T
     return d
 end
 
-# cone degree
-function cone_degree(bound::ImpactBound{T,N}) where {T,N}
-    # http://www.seas.ucla.edu/~vandenbe/publications/coneprog.pdf
-    # section 2
-    return Int(N/2)
-end
-
-function cone_degree(bound::LinearContactBound{T,N}) where {T,N}
-    # http://www.seas.ucla.edu/~vandenbe/publications/coneprog.pdf
-    # section 2
-    return Int(N/2)
-end
-
-function cone_degree(bound::ContactBound{T,N}) where {T,N}
-    # http://www.seas.ucla.edu/~vandenbe/publications/coneprog.pdf
-    # section 2
-    return 1 + 1 # 1 for impact and 1 for the second order cone
-end
