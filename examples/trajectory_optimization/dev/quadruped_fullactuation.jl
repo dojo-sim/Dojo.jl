@@ -118,7 +118,7 @@ u_mask = [zeros(12,6) I(12)]
 
 z = [copy(z1)]
 for t = 1:5
-    znext = simon_step!(mech, z[end], u_mask'*u_control)
+    znext = step!(mech, z[end], u_mask'*u_control)
     push!(z, znext)
 end
 storage = generate_storage(mech, z)
@@ -132,8 +132,8 @@ function fd(y, x, u, w)
 	# function ctrl!(mechanism)
 	# 	addSlackForce!(mechanism, s*mechanism.Δt)
 	# end
-	# z = simon_step!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)
-	z = simon_step!(mech, min2max(mech, x), u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
+	# z = step!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)
+	z = step!(mech, min2max(mech, x), u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
 	y .= copy(max2min(mech, z))
 end
 
@@ -145,7 +145,7 @@ function fdx(fx, x, u, w)
 	# end
 	# fx .= copy(getMinGradients!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)[1])
 	fx .= copy(getMinGradients!(mech, min2max(mech, x), u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[1])
-	# fx .= FiniteDiff.finite_difference_jacobian(x -> max2min(mech, simon_step!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)), x)
+	# fx .= FiniteDiff.finite_difference_jacobian(x -> max2min(mech, step!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)), x)
 end
 
 function fdu(fu, x, u, w)
@@ -157,7 +157,7 @@ function fdu(fu, x, u, w)
 	# ∇u = copy(getMinGradients!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)[2])
 	fu .= copy(getMinGradients!(mech, min2max(mech, x), u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[2])
 	# ∇s = zeros(36,6Nb)
-	# ∇s = FiniteDiff.finite_difference_jacobian(s -> max2min(mech, simon_step!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)), s)
+	# ∇s = FiniteDiff.finite_difference_jacobian(s -> max2min(mech, step!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)), s)
 	# fu .= [∇u * u_mask' ∇s]
 
 	# @show size(∇u)

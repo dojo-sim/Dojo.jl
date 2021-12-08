@@ -74,7 +74,7 @@ u_control = [0.0]
 u_mask = [1 0]
 
 function fd(y, x, u, w)
-	y .= copy(simon_step!(mech, x, u_mask'*u, ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false))
+	y .= copy(step!(mech, x, u_mask'*u, ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false))
 end
 
 function fdx(fx, x, u, w)

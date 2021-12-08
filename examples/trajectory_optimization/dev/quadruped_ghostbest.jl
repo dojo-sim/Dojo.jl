@@ -64,7 +64,7 @@ ughost = [inverse_control(no_contact_mech, xghost[i], xghost[i+1]) for i = 1:H-1
 # Model
 ϵtol = 1e-5
 function fd(y, x, u, w)
-	z = simon_step!(mech, min2max(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose = false)
+	z = step!(mech, min2max(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose = false)
 	y .= copy(max2min(mech, z))
 end
 function fdx(fx, x, u, w)
@@ -156,7 +156,7 @@ a = 10
 # 	ϵtol = 1e-8
 # 	undercut = Inf
 # 	function fd(y, x, u, w)
-# 		z = simon_step!(mech, min2max(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose = false)
+# 		z = step!(mech, min2max(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose = false)
 # 		y .= copy(max2min(mech, z))
 # 	end
 # 	function fdx(fx, x, u, w)
@@ -306,7 +306,7 @@ surface(x,y,z, linealpha = 0.3)
 
 ϵtol = 1e-5
 function fd(y, x, u, w)
-	z = simon_step!(mech, min2max(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose = false)
+	z = step!(mech, min2max(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose = false)
 	y .= copy(max2min(mech, z))
 end
 function fdx(fx, x, u, w)
@@ -367,7 +367,7 @@ function ghost_ilqr_solve!(prob::ProblemData;
 		ϵtol = ϵinit / 2^(i-1)
 		undercut = Inf
 		function fd(y, x, u, w)
-			z = simon_step!(mech, min2max(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose = false)
+			z = step!(mech, min2max(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose = false)
 			y .= copy(max2min(mech, z))
 		end
 		function fdx(fx, x, u, w)

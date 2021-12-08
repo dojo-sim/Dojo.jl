@@ -71,7 +71,7 @@ Random.seed!(0)
 function fd(y, x, u, w)
     u_control = u[1:m] 
     s = u[m .+ (1:n)]
-	z = simon_step!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
+	z = step!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
 	y .= copy(max2min(mech, z)) + s
 end
 

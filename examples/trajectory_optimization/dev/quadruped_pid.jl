@@ -171,7 +171,7 @@ u_mask = [zeros(12,6) I(m)]
 
 z = [copy(z1)]
 for t = 1:5
-    znext = max2min(mech, simon_step!(mech, min2max(mech, z[end]), 0u_mask'*u_control))
+    znext = max2min(mech, step!(mech, min2max(mech, z[end]), 0u_mask'*u_control))
     push!(z, znext)
 end
 storage = generate_storage(mech, [min2max(mech, zi) for zi in z])
@@ -180,7 +180,7 @@ visualize(mech, storage, vis = vis)
 
 # Model
 function fd(y, x, u, w)
-	z = simon_step!(mech, min2max(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
+	z = step!(mech, min2max(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
 	y .= copy(max2min(mech, z))
 end
 

@@ -17,7 +17,7 @@ function generate_storage(mechanism, z)
     return storage
 end
 
-function simon_step!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
+function step!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
 		ϵ::T = 1e-6, newtonIter::Int = 100, lineIter::Int = 10, verbose::Bool = true,
 		btol::T = ϵ, undercut::T = Inf, ctrl!::Any = (m) -> nothing) where {T,Nn,Ne,Nb,Ni}
 
@@ -134,7 +134,7 @@ end
 function getMaxGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
 		ϵ::T = 1e-6, newtonIter::Int = 100, lineIter::Int = 10, verbose::Bool = true,
 		btol::T = ϵ, undercut::T = Inf) where {T,Nn,Ne,Nb,Ni}
-	simon_step!(mechanism, z, u, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter,
+	step!(mechanism, z, u, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter,
 		verbose = verbose, btol = btol, undercut = undercut)
 	∇z_z̄, ∇u_z̄ = getMaxGradients(mechanism)
 	return ∇z_z̄, ∇u_z̄
@@ -234,7 +234,7 @@ function getMinGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector
 		ϵ::T = 1e-6, newtonIter::Int = 100, lineIter::Int = 10, verbose::Bool = true,
 		btol::T = ϵ, undercut::T = Inf, ctrl!::Any = m -> nothing) where {T,Nn,Ne,Nb,Ni}
 
-	simon_step!(mechanism, z, u, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter,
+	step!(mechanism, z, u, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter,
 		verbose = verbose, btol = btol, undercut = undercut, ctrl! = ctrl!)
 	z = getState(mechanism)
 	z̄ = getNextState(mechanism)
@@ -378,6 +378,6 @@ function inverse_control_error(mechanism, x, x̄, u; ϵtol = 1e-5)
 	z = min2max(mechanism, x)
 	z̄ = min2max(mechanism, x̄)
 	setState!(mechanism, z)
-	err = x̄ - max2min(mechanism, simon_step!(mechanism, min2max(mechanism, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose = false))
+	err = x̄ - max2min(mechanism, step!(mechanism, min2max(mechanism, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose = false))
 	return err
 end

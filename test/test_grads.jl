@@ -15,7 +15,7 @@ z0 = getMaxState(mech)
 x0 = max2min(mech, z0)
 u0 = mech.Δt * rand(nu)
 
-z1 = simon_step!(mech, z0, u0, ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false)
+z1 = step!(mech, z0, u0, ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false)
 x1 = max2min(mech, z1)
 
 ∇x0 = ∇min2max(mech, x0) # dz(x)/dx
@@ -25,14 +25,14 @@ x1 = max2min(mech, z1)
 ∇z_z, ∇u_z = getMaxGradients!(mech, z0, u0)
 ∇x_x, ∇u_x = getMinGradients!(mech, z0, u0)
 
-FDz_z = FiniteDiff.finite_difference_jacobian(z -> simon_step!(mech, z, u0,
+FDz_z = FiniteDiff.finite_difference_jacobian(z -> step!(mech, z, u0,
 	ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false), z0)
-FDx_x = FiniteDiff.finite_difference_jacobian(x -> max2min(mech, simon_step!(mech, min2max(mech,x), u0,
+FDx_x = FiniteDiff.finite_difference_jacobian(x -> max2min(mech, step!(mech, min2max(mech,x), u0,
 	ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false)), x0)
 
-FDu_z = FiniteDiff.finite_difference_jacobian(u -> simon_step!(mech, z0, u,
+FDu_z = FiniteDiff.finite_difference_jacobian(u -> step!(mech, z0, u,
 	ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false), u0)
-FDu_x = FiniteDiff.finite_difference_jacobian(u -> max2min(mech, simon_step!(mech, min2max(mech,x0), u,
+FDu_x = FiniteDiff.finite_difference_jacobian(u -> max2min(mech, step!(mech, min2max(mech,x0), u,
 	ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false)), u0)
 
 norm(FDz_z - ∇z_z, Inf)
@@ -66,7 +66,7 @@ z0 = getMaxState(mech)
 x0 = max2min(mech, z0)
 u0 = mech.Δt * rand(nu)
 
-z1 = simon_step!(mech, z0, u0, ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false)
+z1 = step!(mech, z0, u0, ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false)
 x1 = max2min(mech, z1)
 
 ∇x0 = ∇min2max(mech, x0) # dz(x)/dx
@@ -82,14 +82,14 @@ norm(∇x0[11:13, 11:13] - I(3), Inf) < 1e-8
 ∇z_z, ∇u_z = getMaxGradients!(mech, z0, u0)
 ∇x_x, ∇u_x = getMinGradients!(mech, z0, u0)
 
-FDz_z = FiniteDiff.finite_difference_jacobian(z -> simon_step!(mech, z, u0,
+FDz_z = FiniteDiff.finite_difference_jacobian(z -> step!(mech, z, u0,
 	ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false), z0)
-FDx_x = FiniteDiff.finite_difference_jacobian(x -> max2min(mech, simon_step!(mech, min2max(mech,x), u0,
+FDx_x = FiniteDiff.finite_difference_jacobian(x -> max2min(mech, step!(mech, min2max(mech,x), u0,
 	ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false)), x0)
 
-FDu_z = FiniteDiff.finite_difference_jacobian(u -> simon_step!(mech, z0, u,
+FDu_z = FiniteDiff.finite_difference_jacobian(u -> step!(mech, z0, u,
 	ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false), u0)
-FDu_x = FiniteDiff.finite_difference_jacobian(u -> max2min(mech, simon_step!(mech, min2max(mech,x0), u,
+FDu_x = FiniteDiff.finite_difference_jacobian(u -> max2min(mech, step!(mech, min2max(mech,x0), u,
 	ϵ = 1e-5, btol = 1e-5, undercut = 1.5, verbose = false)), u0)
 
 norm(FDz_z - ∇z_z, Inf)
