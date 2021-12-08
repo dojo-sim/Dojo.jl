@@ -136,9 +136,6 @@ function build_robot(vis::Visualizer, mechanism::AbstractMechanism) where {T,N}
 
     bodies = mechanism.bodies
     origin = mechanism.origin
-    if showframes
-        triads = [Triad(0.33) for i=1:length(bodies)]
-    end
 
     setprop!(vis["/Background"], "top_color", RGBA(1.0, 1.0, 1.0))
     setprop!(vis["/Background"], "bottom_color", RGBA(1.0, 1.0, 1.0))
@@ -156,10 +153,6 @@ function build_robot(vis::Visualizer, mechanism::AbstractMechanism) where {T,N}
             setobject!(subvisshape,visshape,shape)
             showshape = true
         end
-        if showframes
-            subvisframe = vis["frames/body:"*string(id)]
-            setobject!(subvisframe, triads[id])
-        end
     end
 
     id = origin.id
@@ -168,10 +161,6 @@ function build_robot(vis::Visualizer, mechanism::AbstractMechanism) where {T,N}
     if visshape !== nothing
         subvisshape = vis["bodies/origin:"*string(id)]
         setobject!(subvisshape,visshape,shape)
-    end
-    if showframes
-        subvisframe = vis["frames/origin:"*string(id)]
-        setobject!(subvisframe, Triad(0.5))
     end
 
    return vis
@@ -187,10 +176,10 @@ function set_robot(vis::Visualizer, mechanism::AbstractMechanism, z::Vector{T}) 
         shape = body.shape
         visshape = convertshape(shape)
         subvisshape = vis["bodies/body:"*string(id)]
-       
+
         x = z[(i-1) * 13 .+ (1:3)]
         q = UnitQuaternion(z[(i-1) * 13 + 6 .+ (1:4)]...)
-    
+
         if visshape !== nothing
             setprop!(subvisshape, "scale", MeshCat.js_scaling(shape.scale))
             setprop!(subvisshape, "position", MeshCat.js_position(x + vrotate(shape.xoffset, q)))
@@ -206,6 +195,6 @@ function set_robot(vis::Visualizer, mechanism::AbstractMechanism, z::Vector{T}) 
         shapetransform = transform(szeros(T,3), one(UnitQuaternion{T}), shape)
         settransform!(subvisshape, shapetransform)
     end
-   
+
     return vis
 end

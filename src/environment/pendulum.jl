@@ -23,7 +23,7 @@ mutable struct PendulumEnvironment{T,M,A,O} <: Environment{T,M,A,O}
     vis::Visualizer
 end
 
-function PendulumEnvironment(; max_speed::T = 8.0, max_torque::T = 2.0,
+function PendulumEnvironment(; max_speed::T = 8.0, max_torque::T = 8.0,
         dt::T = 0.05, g::T = -10.0, m::T = 1.0, l::T = 1.0, s::Int = 1, vis::Visualizer = Visualizer()) where {T}
     mechanism = getmechanism(:pendulum, Δt = dt, g = g, m = m, l = l, damper = 0.5)
     nx = minCoordDim(mechanism)
@@ -36,7 +36,7 @@ function PendulumEnvironment(; max_speed::T = 8.0, max_torque::T = 2.0,
     rng = MersenneTwister(s)
     x = Inf * ones(nx)
     last_u = Inf * ones(nu)
-    # build_robot(vis, mechanism)
+    build_robot(vis, mechanism)
 
     TYPES = [T, typeof(mechanism), typeof(aspace), typeof(ospace)]
     env = PendulumEnvironment{TYPES...}(mechanism, aspace, ospace, x, last_u, nx, nu, no,
@@ -56,8 +56,6 @@ function reset(env::PendulumEnvironment{T}; x = nothing) where {T}
     else
         high = [π, 1.0]
         low = -high
-        @show env.nx
-        @show size(rand(env.rng, env.nx))
         env.x = rand(env.rng, env.nx) .* (high .- low) .+ low
         env.last_u .= Inf
     end
@@ -128,22 +126,24 @@ end
 # Script
 ################################################################################
 
-env = make("Pendulum", dt = 0.05, g = -9.81);
+vis = Visualizer()
+env = make("Pendulum", dt = 0.05, g = -9.81, vis = vis);
 typeof(env)
 reset(env, x = [0.1,0.2])
 u = ones(1)
 step(env, u)
 minCoordDim(env.mechanism)
 
-env = make("Pendulum");
-for i = 1:20
+env = make("Pendulum", vis = vis);
+open(vis)
+
+for i = 1:1
     observation = reset(env)
     for t = 1:200
-        # render(env)
-        println(scn.(observation))
+        render(env)
+        sleep(0.05)
         u = sample(env.aspace)
-        @show u
-        @show env.x[2]
+        u = [4.0]
         observation, reward, done, info = step(env, u)
         if done
             println("Episode finished after $(t+1) timesteps")
