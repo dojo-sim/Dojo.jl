@@ -8,7 +8,7 @@ using IterativeLQR
 dt = 0.05
 gravity = -9.81
 env = make("Hopper", 
-    mode=:max, 
+    mode=:min, 
     dt=dt,
     g=gravity,
     vis=vis);
@@ -26,9 +26,9 @@ function hopper_offset_max(x_shift, y_shift, z_shift)
     return z
 end
 
-z1 = hopper_nominal_max()
-zM = hopper_offset_max(0.5, 0.5, 0.5)
-zT = hopper_offset_max(0.5, 0.5, 0.0)
+z1 = max2min(env.mechanism, hopper_nominal_max())
+zM = max2min(env.mechanism, hopper_offset_max(0.5, 0.5, 0.5))
+zT = max2min(env.mechanism, hopper_offset_max(0.5, 0.5, 0.0))
 
 # nominal control
 u_control = [0.0; 0.0; env.mechanism.g * env.mechanism.Δt]
@@ -37,6 +37,7 @@ u_control = [0.0; 0.0; env.mechanism.g * env.mechanism.Δt]
 T = 21
 h = env.mechanism.Δt
 
+# Model
 dyn = IterativeLQR.Dynamics(
     (y, x, u, w) -> f(y, env, x, u, w), 
     (dx, x, u, w) -> fx(dx, env, x, u, w),
@@ -49,13 +50,13 @@ model = [dyn for t = 1:T-1]
 ū = [[0.0; 0.0; env.mechanism.g * env.mechanism.Δt + 0.0 * randn(1)[1]] for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, z1, ū, w)
-storage = generate_storage(env.mechanism, x̄)
+storage = generate_storage(env.mechanism, [min2max(env.mechanism, x) for x in x̄])
 visualize(env.mechanism, storage; vis=vis)
 
 # Objective
-ot1 = (x, u, w) -> transpose(x - zM) * Diagonal(dt * vcat([[0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)] for i=1:2]...)) * (x - zM) + transpose(u) * Diagonal(dt * [0.1; 0.1; 0.01]) * u
-ot2 = (x, u, w) -> transpose(x - zT) * Diagonal(dt * vcat([[0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)] for i=1:2]...)) * (x - zT) + transpose(u) * Diagonal(dt * [0.1; 0.1; 0.01]) * u
-oT = (x, u, w) -> transpose(x - zT) * Diagonal(dt * vcat([[0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)] for i=1:2]...)) * (x - zT)
+ot1 = (x, u, w) -> transpose(x - zM) * Diagonal(dt * [0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) * (x - zM) + transpose(u) * Diagonal(dt * [0.01; 0.01; 0.01]) * u
+ot2 = (x, u, w) -> transpose(x - zT) * Diagonal(dt * [0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) * (x - zT) + transpose(u) * Diagonal(dt * [0.01; 0.01; 0.01]) * u
+oT = (x, u, w) -> transpose(x - zT) * Diagonal(dt * [0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) * (x - zT)
 
 ct1 = Cost(ot1, n, m, d)
 ct2 = Cost(ot2, n, m, d)
@@ -65,13 +66,14 @@ obj = [[ct1 for t = 1:10]..., [ct2 for t = 1:10]..., cT]
 # Constraints
 function goal(x, u, w)
     Δ = x - zT
-    return [Δ[collect(1:6)]; Δ[collect(13 .+ (1:6))]]
+    return  [Δ[collect(1:6)]; Δ[collect(12 .+ (1:2))]]
 end
 
 cont = Constraint()
 conT = Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
+# Problem
 prob = IterativeLQR.problem_data(model, obj, cons)
 IterativeLQR.initialize_controls!(prob, ū)
 IterativeLQR.initialize_states!(prob, x̄)
@@ -89,5 +91,5 @@ IterativeLQR.solve!(prob,
     verbose=true)
 
 x_sol, u_sol = IterativeLQR.get_trajectory(prob)
-storage = generate_storage(env.mechanism, x_sol)
+storage = generate_storage(env.mechanism, [min2max(env.mechanism, x) for x in x_sol])
 visualize(env.mechanism, storage, vis=vis)

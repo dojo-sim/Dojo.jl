@@ -41,14 +41,7 @@ include("snake/methods/initialize.jl")
 
 include("twister/methods/initialize.jl")
 
-# Utilities
-include("../examples/trajectory_optimization/utils.jl")
-
 # # Templates
 # include("atlas/methods/template.jl")
 # include("halfcheetah/methods/template.jl")
 # include("quadruped/methods/template.jl")
-
-
-
-

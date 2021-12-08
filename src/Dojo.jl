@@ -170,4 +170,7 @@ include(joinpath("diff", "finitediff_tools.jl"))
 include("../env/mechanisms.jl")
 include("../env/environment.jl")
 
+# Utilities
+include("../examples/trajectory_optimization/utils.jl")
+
 end

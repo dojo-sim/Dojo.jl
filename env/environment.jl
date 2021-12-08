@@ -46,6 +46,20 @@ end
 ################################################################################
 step(env::Environment, u) = step(env, env.x, u)
 
+function f(y, env::Environment, x, u, w)
+	y .= step(env, x, u)[1]
+end
+
+function fx(fx, env::Environment, x, u, w)
+	step(env, x, u, diff=true)
+    fx .= env.fx
+end
+
+function fu(fu, env::Environment, x, u, w)
+	step(env, x, u, diff=true)
+	fu .= env.fu
+end
+
 ################################################################################
 # Environments
 ################################################################################
