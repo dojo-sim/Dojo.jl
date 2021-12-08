@@ -60,6 +60,7 @@ end
 
 Visualize a `mechanism` with a trajectory stored in `storage`.
 
+
 # Available kwargs
 * `showframes`: Display the coordinate frames of the bodies.
 * `env`:        Choose the visualization environment ("blink", "browser", "editor").
@@ -75,7 +76,7 @@ function visualize(mechanism::AbstractMechanism, storage::Storage{T,N};
     end
 
     setprop!(vis["/Background"], "top_color", RGBA(1.0, 1.0, 1.0))
-    setprop!(vis["/Background"], "bottom_color", RGBA(0.5, 0.6, 0.7))
+    setprop!(vis["/Background"], "bottom_color", RGBA(1.0, 1.0, 1.0))
     # Somehow delete! doesn't work in a function call, so set axes to not visible for now
     setvisible!(vis["/Axes"],false)
     # delete!(vis["/Axes"])
@@ -129,4 +130,82 @@ function visualize(mechanism::AbstractMechanism, storage::Storage{T,N};
 
     setanimation!(vis, animation)
     env == "editor" ? (return render(vis)) : (return vis)
+end
+
+function build_robot(vis::Visualizer, mechanism::AbstractMechanism) where {T,N}
+
+    bodies = mechanism.bodies
+    origin = mechanism.origin
+    if showframes
+        triads = [Triad(0.33) for i=1:length(bodies)]
+    end
+
+    setprop!(vis["/Background"], "top_color", RGBA(1.0, 1.0, 1.0))
+    setprop!(vis["/Background"], "bottom_color", RGBA(1.0, 1.0, 1.0))
+    setvisible!(vis["/Axes"],false)
+
+    i = 1
+    for (id, body) in enumerate(bodies)
+        shape = body.shape
+        visshape = convertshape(shape)
+        subvisshape = nothing
+        subvisframe = nothing
+        showshape = false
+        if visshape !== nothing
+            subvisshape = vis["bodies/body:"*string(id)]
+            setobject!(subvisshape,visshape,shape)
+            showshape = true
+        end
+        if showframes
+            subvisframe = vis["frames/body:"*string(id)]
+            setobject!(subvisframe, triads[id])
+        end
+    end
+
+    id = origin.id
+    shape = origin.shape
+    visshape = convertshape(shape)
+    if visshape !== nothing
+        subvisshape = vis["bodies/origin:"*string(id)]
+        setobject!(subvisshape,visshape,shape)
+    end
+    if showframes
+        subvisframe = vis["frames/origin:"*string(id)]
+        setobject!(subvisframe, Triad(0.5))
+    end
+
+   return vis
+end
+
+function set_robot(vis::Visualizer, mechanism::AbstractMechanism, z::Vector{T}) where {T,N}
+
+    bodies = mechanism.bodies
+    origin = mechanism.origin
+
+    i = 1
+    for (id,body) in enumerate(bodies)
+        shape = body.shape
+        visshape = convertshape(shape)
+        subvisshape = vis["bodies/body:"*string(id)]
+       
+        x = z[(i-1) * 13 .+ (1:3)]
+        q = UnitQuaternion(z[(i-1) * 13 + 6 .+ (1:4)]...)
+    
+        if visshape !== nothing
+            setprop!(subvisshape, "scale", MeshCat.js_scaling(shape.scale))
+            setprop!(subvisshape, "position", MeshCat.js_position(x + vrotate(shape.xoffset, q)))
+            setprop!(subvisshape, "quaternion", MeshCat.js_quaternion(q * shape.qoffset))
+        end
+    end
+
+    id = origin.id
+    shape = origin.shape
+    visshape = convertshape(shape)
+    subvisshape = vis["bodies/origin:"*string(id)]
+    if visshape !== nothing
+        shapetransform = transform(szeros(T,3), one(UnitQuaternion{T}), shape)
+        settransform!(subvisshape, shapetransform)
+    end
+   
+    return vis
 end
