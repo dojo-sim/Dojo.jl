@@ -35,13 +35,13 @@ damperforcea(joint::Rotational{T,3}, body1::Body, body2::Body, Δt::T, childid) 
 damperforceb(joint::Rotational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
 damperforceb(joint::Rotational{T,3}, body1::Origin, body2::Body, Δt::T, childid) where T = szeros(T, 6)
 
-function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::Rotational{T,N}) where {T,N}
-    summary(io, constraint)
-    println(io,"")
-    println(io, " V3:      "*string(constraint.V3))
-    println(io, " V12:     "*string(constraint.V12))
-    println(io, " qoffset: "*string(constraint.qoffset))
-end
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::Rotational{T,N}) where {T,N}
+#     summary(io, constraint)
+#     println(io,"")
+#     println(io, " V3:      "*string(constraint.V3))
+#     println(io, " V12:     "*string(constraint.V12))
+#     println(io, " qoffset: "*string(constraint.qoffset))
+# end
 
 ### Constraints and derivatives
 ## Position level constraints (for dynamics)

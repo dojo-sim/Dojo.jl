@@ -54,20 +54,20 @@ mutable struct State{T}
     end
 end
 
-function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, state::State{T}) where {T}
-    summary(io, state)
-    println(io,"")
-    println(io,"x1:   "*string(state.x1))
-    println(io,"q1:   "*string(state.q1))
-    println(io,"ϕ15:   "*string(state.ϕ15))
-    println(io,"x2:   "*string(state.x2))
-    println(io,"q2:   "*string(state.q2))
-    println(io,"F2:   "*string(state.F2))
-    println(io,"τ2:   "*string(state.τ2))
-    println(io,"vsol: "*string(state.vsol))
-    println(io,"ϕsol: "*string(state.ϕsol))
-    println(io,"d:    "*string(state.d))
-end
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, state::State{T}) where {T}
+#     summary(io, state)
+#     println(io,"")
+#     println(io,"x1:   "*string(state.x1))
+#     println(io,"q1:   "*string(state.q1))
+#     println(io,"ϕ15:   "*string(state.ϕ15))
+#     println(io,"x2:   "*string(state.x2))
+#     println(io,"q2:   "*string(state.q2))
+#     println(io,"F2:   "*string(state.F2))
+#     println(io,"τ2:   "*string(state.τ2))
+#     println(io,"vsol: "*string(state.vsol))
+#     println(io,"ϕsol: "*string(state.ϕsol))
+#     println(io,"d:    "*string(state.d))
+# end
 
 
 function initknotpoints!(state::State, order)

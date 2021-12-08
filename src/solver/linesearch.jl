@@ -11,7 +11,7 @@ function lineSearch!(mechanism::Mechanism, rvio, bvio, opts; warning::Bool = fal
             lineStep!(eqc, getentry(system, eqc.id), scale, mechanism)
         end
         for body in bodies
-            ϕmax = 3.9/mechanism.Δt^2
+            ϕmax = 3.9 / mechanism.Δt^2
             lineStep!(body, getentry(system, body.id), scale, mechanism, ϕmax = ϕmax)
             if dot(body.state.ϕsol[2], body.state.ϕsol[2]) > 3.91/mechanism.Δt^2
                 error("Excessive angular velocity. Body-ID: $(string(body.name)) "*string(body.id)*", ω: "*string(body.state.ϕsol[2])*".")

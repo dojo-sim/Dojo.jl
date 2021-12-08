@@ -11,10 +11,92 @@ import Dojo.MeshCat.render
 # Environment
 ################################################################################
 
-abstract type Environment{T,M,A,O} end
-
 function make(model::String; kwargs...)
     return eval(Symbol(model))(; kwargs...)
+end
+
+struct Environment{X,T,M,A,O,I}
+    mechanism::M
+    mode::Symbol
+    aspace::A
+    ospace::O
+    x::Vector{T}
+    fx::Matrix{T} 
+    fu::Matrix{T}
+    u_prev::Vector{T}
+    nx::Int
+    nu::Int
+    no::Int
+    info::I
+    rng::Vector{MersenneTwister}
+    vis::Visualizer
+    opts_step::InteriorPointOptions{T} 
+    opts_grad::InteriorPointOptions{T}
+end
+
+function reset(env::Environment{X}; x=nothing) where X
+    initialize!(X, env.mechanism) 
+    if x != nothing
+        env.x = x
+    else
+        if env.mode == :min 
+            env.x .= getMinState(env.mechanism)
+        elseif env.mode == :max 
+            env.x .= getMaxState(env.mechanism)
+        end
+        env.u_prev .= 0.0
+    end
+    return _get_obs(env)
+end
+
+function _get_obs(env::Environment)
+    return env.x
+end
+
+function step(env::Environment, x, u; diff=false)
+    mechanism = env.mechanism
+    Δt = mechanism.Δt
+
+    x0 = x
+    env.u_prev .= u  # for rendering
+
+    z0 = env.mode == :min ? min2max(mechanism, x0) : x0
+    z1 = step!(mechanism, z0, env.control_mask' * u; ϵ=env.opts_step.r_tol, newtonIter=100,
+        lineIter=10, verbose=false, btol=1e-5, undercut=1.5)
+    env.x .= env.mode == :min ? max2min(mechanism, z1) : z1
+
+    # Compute cost function
+    costs = 0.0
+
+    # Gradients
+    if diff 
+        if env.mode == :min 
+            fx, fu = getMinGradients!(env.mechanism, z0, env.control_mask' * u, ϵ=1e-5, btol=1e-3, undercut=1.5, verbose=false)
+        elseif env.mode == :max 
+            fx, fu = getMaxGradients!(env.mechanism, z0, env.control_mask' * u, ϵ=1e-5, btol=1e-3, undercut=1.5, verbose=false)
+        end
+        env.fx .= fx
+        env.fu .= fu * env.control_mask'
+    end
+
+    info = Dict()
+
+    return _get_obs(env), -costs, false, info
+end
+
+function render(env::Environment, mode="human")
+    z = env.mode == :min ? min2max(env.mechanism, env.x) : env.x
+    set_robot(env.vis, env.mechanism, z)
+    return nothing
+end
+
+function seed(env::Environment; s=0)
+    env.rng[1] = MersenneTwister(s)
+    return nothing
+end
+
+function close(env::Environment; kwargs...) 
+    return nothing
 end
 
 ################################################################################
@@ -62,9 +144,11 @@ end
 
 ################################################################################
 # Environments
-################################################################################
-include("pendulum/methods/env.jl")
-include("hopper/methods/env.jl")
+# ##############################################################################
+# include("pendulum/methods/env.jl")
+# include("hopper/methods/env.jl")
+# include("quadruped/methods/env.jl")
+
 
 
 

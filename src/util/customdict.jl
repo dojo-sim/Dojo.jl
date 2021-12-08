@@ -22,12 +22,12 @@ struct UnitDict{R,T}
     end
 end
 
-function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, dict::UnitDict{R,T}) where {R,T}
-    summary(io, dict)
-    println(io,"")
-    println(io, " keys:   "*string(dict.keys))
-    println(io, " values: "*string(dict.values))
-end
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, dict::UnitDict{R,T}) where {R,T}
+#     summary(io, dict)
+#     println(io,"")
+#     println(io, " keys:   "*string(dict.keys))
+#     println(io, " values: "*string(dict.values))
+# end
 
 
 @inline Base.length(dict::UnitDict) = length(dict.values)

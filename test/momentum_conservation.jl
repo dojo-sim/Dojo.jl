@@ -53,7 +53,7 @@ v0 = [1,2,3.0]
 ω0 = [1,1,1.0]
 initialize!(mech, :box, v = v0, ω = ω0)
 
-storage = simulate!(mech, 5.0, nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+storage = simulate!(mech, 5.0, nocontrol!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 m0 = momentum(mech, storage)[5:end]
@@ -80,7 +80,7 @@ mech = getmechanism(:pendulum, Δt = Δt0, g = g0)
 ω0 = 5.0
 initialize!(mech, :pendulum, ϕ1 = ϕ0, ω1 = ω0)
 
-storage = simulate!(mech, 5.0, nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+storage = simulate!(mech, 5.0, nocontrol!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 m0 = momentum(mech, storage)[10:end]
@@ -110,7 +110,7 @@ bodies = collect(mech.bodies)
 setVelocity!.(bodies, ω = 1e-0rand(3))
 
 
-storage = simulate!(mech, 10.0, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+storage = simulate!(mech, 10.0, controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, downsample(storage, 1), vis = vis)
 
 m0 = momentum(mech, storage)[1:end]
@@ -136,7 +136,7 @@ spring0 = 10.0
 damper0 = 1.0
 mech = getmechanism(:atlas, Δt = Δt0, g = g0, spring = spring0, damper = damper0, contact = false)
 initialize!(mech, :atlas)
-storage = simulate!(mech, 5.0, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+storage = simulate!(mech, 5.0, controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 m0 = momentum(mech, storage)[1:end]
@@ -162,7 +162,7 @@ spring0 = 0.3
 damper0 = 0.1
 mech = getmechanism(:quadruped, Δt = Δt0, g = g0, spring = spring0, damper = damper0, contact = false)
 initialize!(mech, :quadruped)
-storage = simulate!(mech, 5.0, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+storage = simulate!(mech, 5.0, controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 m0 = momentum(mech, storage)[1:end]
@@ -196,7 +196,7 @@ v0 = 100.0 * [1, 2, 3] * Δt0
 q10 = UnitQuaternion(RotX(0.5*π))
 
 initialize!(mech, :snake, q1 = q10, v = v0, ω = ω0)
-storage = simulate!(mech, 1.50, record = true, solver = :mehrotra!, verbose = false, ϵ = 1.0e-12)
+storage = simulate!(mech, 1.50, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 m0 = momentum(mech, storage)[5:end]
@@ -219,7 +219,7 @@ end
         ω0 = 100.0 * [1, 2, 3.0] * Δt0
         q10 = UnitQuaternion(RotX(0.5*π))
         initialize!(mech, :snake, q1 = q10, v = v0, ω = ω0)
-        storage = simulate!(mech, 1.50, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+        storage = simulate!(mech, 1.50, controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
         # visualize(mech, storage, vis = vis)
 
         m0 = momentum(mech, storage)[5:end]
@@ -255,7 +255,7 @@ v0 = 10.0 * [1, 2, 3] * Δt0
 q10 = UnitQuaternion(RotX(0.5*π))
 
 initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0)
-storage = simulate!(mech, 1.25, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+storage = simulate!(mech, 1.25, controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 m0 = momentum(mech, storage)[5:end]
@@ -278,7 +278,7 @@ end
         ω0 = 10.0 * [1, 2, 3.0] * Δt0
         q10 = UnitQuaternion(RotX(0.5*π))
         initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0)
-        storage = simulate!(mech, 1.50, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+        storage = simulate!(mech, 1.50, controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
         # visualize(mech, storage, vis = vis)
 
         m0 = momentum(mech, storage)[5:end]

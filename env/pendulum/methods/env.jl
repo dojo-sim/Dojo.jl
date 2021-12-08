@@ -1,8 +1,9 @@
 ################################################################################
 # Pendulum
 ################################################################################
+struct Pendulum end 
 
-struct Pendulum{T,M,A,O} <: Environment{T,M,A,O} #TODO: make immutable
+struct Pendulum{T,M,A,O} <: Environment{X,T,M,A,O,I} #TODO: make immutable
     mechanism::M
     mode::Symbol
     aspace::A
@@ -14,8 +15,7 @@ struct Pendulum{T,M,A,O} <: Environment{T,M,A,O} #TODO: make immutable
     nx::Int
     nu::Int
     no::Int
-    max_speed::T # never used because we do not clip the pendulum angular velocity
-    max_torque::T
+    info::I
     rng::MersenneTwister
     vis::Visualizer
 end
@@ -54,7 +54,7 @@ function Pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
     return env
 end
 
-function reset(env::Pendulum; x=nothing)
+function reset(env::Environment{Pendulum}; x=nothing)
     initialize!(env.mechanism, :pendulum)
 
     if x != nothing
@@ -72,7 +72,7 @@ function reset(env::Pendulum; x=nothing)
     return _get_obs(env)
 end
 
-function _get_obs(env::Pendulum)
+function _get_obs(env::Environment{Pendulum})
     if env.mode == :min
         θ, ω = env.x
         return [cos(θ), sin(θ), ω]
@@ -126,6 +126,8 @@ function render(env::Pendulum, mode="human")
     set_robot(env.vis, env.mechanism, z)
     return nothing
 end
+
+function seed(env::Pendulum)
 
 function close(env::Pendulum; kwargs...) 
     return nothing

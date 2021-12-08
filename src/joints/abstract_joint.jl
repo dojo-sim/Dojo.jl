@@ -1,8 +1,8 @@
 abstract type AbstractJoint{T,N} end
 
-function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::AbstractJoint{T,N}) where {T,N}
-    summary(io, constraint)
-end
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::AbstractJoint{T,N}) where {T,N}
+#     summary(io, constraint)
+# end
 
 ### General functions
 getT(joint::AbstractJoint{T}) where T = T

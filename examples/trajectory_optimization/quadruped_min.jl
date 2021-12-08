@@ -1,26 +1,25 @@
-# Utils
-function module_dir()
-    return joinpath(@__DIR__, "..", "..", "..")
-end
-
-# Activate package
-using Pkg
-Pkg.activate(module_dir())
-
-using MeshCat
 # Open visualizer
 vis = Visualizer()
 open(vis)
-
-# Include new files
-include(joinpath(module_dir(), "examples", "loader.jl"))
-include(joinpath(module_dir(), "src", "optional_components", "trajopt_utils.jl"))
 
 using IterativeLQR
 
 # System
 gravity = -9.81
 Δt = 0.05
+cf = 0.8 
+damper = 10.0 
+spring = 0.0
+
+env = make("Quadruped", 
+    mode=:max, 
+    dt=dt,
+    g=gravity,
+    cf=cf, 
+    damper=damper,
+    spring=spring,
+    vis=vis)
+
 mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = 0.8, damper = 10.0, spring = 0.0)
 initialize!(mech, :quadruped, tran = [0,0,0.], v = [0,0,0.])
 @elapsed storage = simulate!(mech, 0.05, record = true, solver = :mehrotra!, verbose = false)

@@ -22,7 +22,7 @@ mutable struct Mechanism{T,Nn,Ne,Nb,Ni} <: AbstractMechanism{T,Nn,Ne,Nb,Ni}
 
     system::System{Nn}
     residual_entries::Vector{Entry}
-    matrix_entries::SparseMatrixCSC{Entry, Int64}
+    matrix_entries::SparseMatrixCSC{Entry,Int64}
     diagonal_inverses::Vector{Entry}
 
     # TODO remove once EqualityConstraint is homogenous
@@ -88,6 +88,7 @@ function Mechanism(origin::Origin{T},bodies::Vector{<:Body{T}},
 
     α = 1
     μ = 1
+
     Mechanism{T,Nn,Ne,Nb,Ni}(origin, eqcs, bodies, ineqcs, system, residual_entries, matrix_entries, diagonal_inverses,
         normf, normΔs, rvio, bvio, ν, νaff, Δt, g, α, μ)
 end

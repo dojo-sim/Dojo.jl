@@ -17,8 +17,7 @@ end
     return
 end
 
-
-function feasibilityStepLength!(mechanism::Mechanism; τort::T = 0.95, τsoc::T = 0.95, scaling::Bool = false) where {T}
+function feasibilityStepLength!(mechanism::Mechanism; τort::T=0.95, τsoc::T=0.95, scaling::Bool=false) where {T}
     system = mechanism.system
 
     mechanism.α = 1.0
@@ -37,7 +36,7 @@ function feasibilityStepLength!(mechanism::Mechanism; τort::T = 0.95, τsoc::T 
     return
 end
 
-function feasibilityStepLength!(mechanism::Mechanism{T}, body::Body{T}, vector_entry::Entry; τ::T = 0.99) where {T}
+function feasibilityStepLength!(mechanism::Mechanism{T}, body::Body{T}, vector_entry::Entry; τ::T=0.99) where {T}
     Δt = mechanism.Δt
     Δω = vector_entry.value[SA[4; 5; 6]]
     ω = body.state.ϕsol[2]
@@ -158,7 +157,7 @@ function ort_step_length(λ::AbstractVector{T}, Δ::AbstractVector{T}; τ::T = 0
 end
 
 function soc_step_length(λ::AbstractVector{T}, Δ::AbstractVector{T};
-        τ::T = 0.99, ϵ::T = 1e-14) where {T}
+        τ::T=0.99, ϵ::T=1e-14) where {T}
     # check Section 8.2 CVXOPT
     # The CVXOPT linear and quadratic cone program solvers
 

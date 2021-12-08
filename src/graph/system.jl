@@ -28,8 +28,8 @@ struct System{N}
             end
         end
 
-        vector_entries = [Entry{T}(dim, static = static) for dim in dims]
-        diagonal_inverses = [Entry{T}(dim, dim, static = static) for dim in dims]
+        vector_entries = [Entry{T}(dim, static = static) for dim in dims];
+        diagonal_inverses = [Entry{T}(dim, dim, static = static) for dim in dims];
 
         graphs, roots = split_adjacency(A)
         dfs_list = Int64[]
@@ -64,8 +64,8 @@ struct System{N}
 
                 acyclic_children[v] = setdiff(acyclic_children[v], cyclic_children)
                 for c in cyclic_children
-                    matrix_entries[v,c] = Entry{T}(dims[v], dims[c], static = static)
-                    matrix_entries[c,v] = Entry{T}(dims[c], dims[v], static = static)
+                    matrix_entries[v,c] = Entry{T}(dims[v], dims[c], static = static);
+                    matrix_entries[c,v] = Entry{T}(dims[c], dims[v], static = static);
 
                     v ∉ parents[c] && push!(parents[c],v)
                 end
@@ -75,16 +75,16 @@ struct System{N}
         full_dfs_graph = SimpleDiGraph(edgelist)
         cyclic_children = [unique(vcat(cycles[i]...)) for i=1:N]
 
-        new{N}(matrix_entries, vector_entries, diagonal_inverses, acyclic_children, cyclic_children, parents, dfs_list, full_graph, full_dfs_graph)
+        new{N}(matrix_entries, vector_entries, diagonal_inverses, acyclic_children, cyclic_children, parents, dfs_list, full_graph, full_dfs_graph);
     end
 
-    System(A, dims; force_static = false) = System{Float64}(A, dims; force_static = force_static)
+    System(A, dims; force_static = false) = System{Float64}(A, dims; force_static = force_static);
 end
 
-function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, system::System{N}) where {N}
-    println(io, "System with "*string(N)*" nodes.")
-    SparseArrays._show_with_braille_patterns(io, system.matrix_entries)
-end
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, system::System{N}) where {N}
+#     println(io, "System with "*string(N)*" nodes.")
+#     SparseArrays._show_with_braille_patterns(io, system.matrix_entries)
+# end
 
 @inline children(system, v) = outneighbors(system.dfs_graph, v)
 @inline connections(system, v) = neighbors(system.graph, v)
