@@ -61,19 +61,18 @@ function step(env::Environment, x, u; diff=false)
     env.u_prev .= u  # for rendering
 
     z0 = env.mode == :min ? min2max(mechanism, x0) : x0
-    z1 = step!(mechanism, z0, env.control_mask' * u; ϵ=env.opts_step.r_tol, newtonIter=100,
-        lineIter=10, verbose=false, btol=1e-5, undercut=1.5)
+    z1 = step!(mechanism, z0, env.control_mask' * u; opts=env.opts_step)
     env.x .= env.mode == :min ? max2min(mechanism, z1) : z1
 
-    # Compute cost function
-    costs = 0.0
+    # Compute cost
+    costs = reward(env, x, u)
 
     # Gradients
     if diff 
         if env.mode == :min 
-            fx, fu = getMinGradients!(env.mechanism, z0, env.control_mask' * u, ϵ=1e-5, btol=1e-3, undercut=1.5, verbose=false)
+            fx, fu = getMinGradients!(env.mechanism, z0, env.control_mask' * u, opts=env.opts_grad)
         elseif env.mode == :max 
-            fx, fu = getMaxGradients!(env.mechanism, z0, env.control_mask' * u, ϵ=1e-5, btol=1e-3, undercut=1.5, verbose=false)
+            fx, fu = getMaxGradients!(env.mechanism, z0, env.control_mask' * u, opts=env.opts_grad)
         end
         env.fx .= fx
         env.fu .= fu * env.control_mask'
@@ -94,6 +93,8 @@ function seed(env::Environment; s=0)
     env.rng[1] = MersenneTwister(s)
     return nothing
 end
+
+reward(env::Environment, x, u) = 0.0
 
 function close(env::Environment; kwargs...) 
     return nothing
@@ -138,7 +139,7 @@ function fx(fx, env::Environment, x, u, w)
 end
 
 function fu(fu, env::Environment, x, u, w)
-	step(env, x, u, diff=true)
+	# step(env, x, u, diff=true) # this is run in fx
 	fu .= env.fu
 end
 

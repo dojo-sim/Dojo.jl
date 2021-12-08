@@ -3,22 +3,22 @@
 ################################################################################
 struct Pendulum end 
 
-struct Pendulum{T,M,A,O} <: Environment{X,T,M,A,O,I} #TODO: make immutable
-    mechanism::M
-    mode::Symbol
-    aspace::A
-    ospace::O
-    x::Vector{T}
-    fx::Matrix{T} 
-    fu::Matrix{T}
-    u_prev::Vector{T}
-    nx::Int
-    nu::Int
-    no::Int
-    info::I
-    rng::MersenneTwister
-    vis::Visualizer
-end
+# struct Pendulum{T,M,A,O} <: Environment{X,T,M,A,O,I} #TODO: make immutable
+#     mechanism::M
+#     mode::Symbol
+#     aspace::A
+#     ospace::O
+#     x::Vector{T}
+#     fx::Matrix{T} 
+#     fu::Matrix{T}
+#     u_prev::Vector{T}
+#     nx::Int
+#     nu::Int
+#     no::Int
+#     info::I
+#     rng::MersenneTwister
+#     vis::Visualizer
+# end
 
 function Pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
         dt::T=0.05, g::T=-10.0, m::T=1.0, l::T=1.0, s::Int=1, vis::Visualizer=Visualizer()) where {T}
@@ -95,6 +95,7 @@ function step(env::Pendulum, x, u; diff=false)
     env.x .= env.mode == :min ? max2min(mechanism, z1) : z1
 
     # Compute cost function
+ 
     if env.mode == :min
         θ0, ω0 = x0
         costs = angle_normalize(θ0)^2 + 1e-1 * ω0^2 + 1e-3 * u[1]^2 # angle_normalize enforces angle ∈ [-π, π]
@@ -127,7 +128,6 @@ function render(env::Pendulum, mode="human")
     return nothing
 end
 
-function seed(env::Pendulum)
 
 function close(env::Pendulum; kwargs...) 
     return nothing
