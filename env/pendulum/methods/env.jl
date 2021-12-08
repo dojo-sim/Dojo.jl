@@ -30,6 +30,7 @@ function Pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
     fu = zeros(nx, nu)
 
     u_prev = Inf * ones(nu)
+    control_mask = ones(1,1)
     build_robot(vis, mechanism)
 
     info = Dict(:max_speed => max_speed, :max_torque => max_torque)
@@ -37,7 +38,7 @@ function Pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
     TYPES = [T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
     env = Environment{Pendulum, TYPES...}(mechanism, mode, aspace, ospace,
         x, fx, fu,
-        u_prev, nx, nu, no, info,
+        u_prev, control_mask, nx, nu, no, info,
         rng, vis, opts_step, opts_grad)
     return env
 end
@@ -72,9 +73,10 @@ end
 function step(env::Environment{Pendulum}, x, u; diff=false)
     mechanism = env.mechanism
     Δt = mechanism.Δt
+    max_torque = env.info[:max_torque]
 
     x0 = x
-    u0 = clamp.(u, -env.max_torque, env.max_torque)
+    u0 = clamp.(u, -max_torque, max_torque)
     env.u_prev .= u0  # for rendering
 
     z0 = env.mode == :min ? min2max(mechanism, x0) : x0
@@ -122,15 +124,20 @@ function cost(env, x, u)
 end
 
 
+# mech = getpendulum()
+# controldim(mech)
+#
+#
+# env = Pendulum(mode = :min)
+# obs = reset(env)
+# obs = _get_obs(env)
+# x = [0.1, 0.2]
+# u = [0.4]
+# o, r, done, info = step(env, x, u)
+# cost(env, x, u)
 
 
-env = Pendulum(mode = :min)
-obs = reset(env)
-obs = _get_obs(env)
-x = [0.1, 0.2]
-u = [0.4]
-o, r, done, info = step(env, x, u)
-
-a = 10
-a = 10
-a = 10
+# a = 10
+# a = 10
+# a = 10
+#
