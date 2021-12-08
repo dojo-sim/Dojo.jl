@@ -511,6 +511,14 @@ git-tree-sha1 = "05110a2ab1fc5f932622ffea2a003221f4782c18"
 uuid = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
 version = "1.3.0"
 
+[[IterativeLQR]]
+deps = ["BenchmarkTools", "JLD2", "LinearAlgebra", "Parameters", "Scratch", "Symbolics"]
+git-tree-sha1 = "d15904ba8f4c0e3245ae12a4a338a2842b20d836"
+repo-rev = "main"
+repo-url = "https://github.com/thowell/IterativeLQR.jl"
+uuid = "605048dd-e178-462b-beb9-98a09398ef27"
+version = "0.1.0"
+
 [[IteratorInterfaceExtensions]]
 git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
 uuid = "82899510-4779-5014-852e-03e436cf321d"

@@ -127,16 +127,18 @@ function Mechanism(filename::AbstractString; floating::Bool=false, type::Type{T}
     return mechanism
 end
 
-function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, mechanism::AbstractMechanism{T,Nn,Ne,Nb,0}) where {T,Nn,Ne,Nb}
-    summary(io, mechanism)
-    println(io, " with ", Nb, " bodies and ", Ne, " constraints")
-    println(io, " Δt: "*string(mechanism.Δt))
-    println(io, " g:  "*string(mechanism.g))
-end
+# TODO: these methods occasionally break...; fix
 
-function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, mechanism::AbstractMechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
-    summary(io, mechanism)
-    println(io, " with ", Nb, " bodies, ", Ne, " equality constraints, and ", Ni, " inequality constraints")
-    println(io, " Δt: "*string(mechanism.Δt))
-    println(io, " g:  "*string(mechanism.g))
-end
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, mechanism::AbstractMechanism{T,Nn,Ne,Nb,0}) where {T,Nn,Ne,Nb}
+#     summary(io, mechanism)
+#     println(io, " with ", Nb, " bodies and ", Ne, " constraints")
+#     println(io, " Δt: "*string(mechanism.Δt))
+#     println(io, " g:  "*string(mechanism.g))
+# end
+
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, mechanism::AbstractMechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
+#     summary(io, mechanism)
+#     println(io, " with ", Nb, " bodies, ", Ne, " equality constraints, and ", Ni, " inequality constraints")
+#     println(io, " Δt: "*string(mechanism.Δt))
+#     println(io, " g:  "*string(mechanism.g))
+# end

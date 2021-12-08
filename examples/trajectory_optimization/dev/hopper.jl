@@ -19,7 +19,7 @@ include(joinpath(module_dir(), "src", "optional_components", "trajopt_utils.jl")
 # System
 gravity = -9.81
 Δt = 0.05
-mech = gethopper(Δt = Δt, g = gravity)
+mech = gethopper(Δt = Δt, g = gravity);
 initializehopper!(mech)
 
 ## state space
@@ -82,7 +82,7 @@ T = 21
 h = mech.Δt
 
 n, m, d = 26, 3, 0
-dyn = Dynamics(fd, fdx, fdu, n, n, m, d)
+dyn = IterativeLQR.Dynamics(fd, fdx, fdu, n, n, m, d)
 model = [dyn for t = 1:T-1]
 
 # Initial conditions, controls, disturbances

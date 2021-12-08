@@ -126,6 +126,8 @@ include(joinpath("mechanism", "system.jl"))
 include(joinpath("mechanism", "methods.jl"))
 include(joinpath("mechanism", "energy.jl"))
 
+include(joinpath("simulation", "step.jl"))
+
 # Joints
 include(joinpath("joints", "abstract_joint.jl"))
 include(joinpath("joints", "joint.jl"))

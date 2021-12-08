@@ -23,21 +23,21 @@ end
 
 abstract type Space{T,N} end
 
-mutable struct BoxSpace{T,N} <: Space{T,N}
+struct BoxSpace{T,N} <: Space{T,N}
     n::Int # box dimension
-    low::AbstractVector{T} # minimum value
-    high::AbstractVector{T} # maximum value
+    low::Vector{T} # minimum value
+    high::Vector{T} # maximum value
 end
 
-function BoxSpace(n::Int; low::AbstractVector{T} = -ones(n), high::AbstractVector{T} = ones(n)) where {T}
+function BoxSpace(n::Int; low::Vector{T}=-ones(n), high::Vector{T}=ones(n)) where T
     return BoxSpace{T,n}(n, low, high)
 end
 
 function sample(s::BoxSpace{T,N}) where {T,N}
-    return rand(T,N) .* (s.high .- s.low) .+ s.low
+    return rand(T, N) .* (s.high .- s.low) .+ s.low
 end
 
-function contains(s::BoxSpace{T,N}, v::AbstractVector{T}) where {T,N}
+function contains(s::BoxSpace{T,N}, v::Vector{T}) where {T,N}
     all(v .>= s.low) && all(v .<= s.high)
 end
 
@@ -49,8 +49,9 @@ step(env::Environment, u) = step(env, env.x, u)
 ################################################################################
 # Environments
 ################################################################################
-
 include("pendulum/methods/env.jl")
+include("hopper/methods/env.jl")
+
 
 
 
