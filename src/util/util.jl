@@ -136,3 +136,6 @@ function fdjac(f, x; δ = 1e-5)
     end
     return jac
 end
+
+# useful for python visualizer
+wait_for_server = MeshCat.wait_for_server

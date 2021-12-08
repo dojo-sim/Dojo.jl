@@ -36,15 +36,15 @@ function IKquadruped(mechanism::Mechanism, p_trunk, p_foot; leg::Symbol = :FR)
 	# starting point of the local search
 	θ = [0.95, -1.5*0.95] # θhip, θknee
 	for k = 1:10
-		err = IKerror(mechanism, p_trunk, p_foot, θ; leg = leg)
+		err = QuadrupedIKerror(mechanism, p_trunk, p_foot, θ; leg = leg)
 		norm(err, Inf) < 1e-10 && continue
-		∇ = FiniteDiff.finite_difference_jacobian(θ -> IKerror(mechanism, p_trunk, p_foot, θ; leg = leg), θ)
+		∇ = FiniteDiff.finite_difference_jacobian(θ -> QuadrupedIKerror(mechanism, p_trunk, p_foot, θ; leg = leg), θ)
 		θ -= ∇ \ err
 	end
 	return θ
 end
 
-function IKerror(mechanism::Mechanism, p_trunk, p_foot, θ; leg::Symbol = :FR)
+function QuadrupedIKerror(mechanism::Mechanism, p_trunk, p_foot, θ; leg::Symbol = :FR)
 	setPosition!(mechanism, geteqconstraint(mechanism, "auto_generated_floating_joint"), [p_trunk; zeros(3)])
 	setPosition!(mechanism, geteqconstraint(mechanism, String(leg)*"_thigh_joint"), [θ[1]])
 	setPosition!(mechanism, geteqconstraint(mechanism, String(leg)*"_calf_joint"), [θ[2]])

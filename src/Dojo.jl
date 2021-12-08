@@ -166,8 +166,7 @@ include(joinpath("diff", "finitediff_tools.jl"))
 
 # Environments
 include("../env/mechanisms.jl")
-include("environment/environment.jl")
-include("environment/pendulum.jl")
+include("../env/simon_environment.jl")
 
 # Trajectory Optimization
 include("../examples/trajectory_optimization/utils.jl")

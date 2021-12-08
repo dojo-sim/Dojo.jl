@@ -35,15 +35,15 @@ function IKatlas(mechanism::Mechanism, p_base, p_foot; leg::Symbol = :r)
 	# starting point of the local search
 	θ = [0.5, 1.0] # θhip, θknee
 	for k = 1:10
-		err = IKerror(mechanism, p_base, p_foot, θ; leg = leg)
+		err = AtlasIKerror(mechanism, p_base, p_foot, θ; leg = leg)
 		norm(err, Inf) < 1e-10 && continue
-		∇ = FiniteDiff.finite_difference_jacobian(θ -> IKerror(mechanism, p_base, p_foot, θ; leg = leg), θ)
+		∇ = FiniteDiff.finite_difference_jacobian(θ -> AtlasIKerror(mechanism, p_base, p_foot, θ; leg = leg), θ)
 		θ -= ∇ \ err
 	end
 	return θ
 end
 
-function IKerror(mechanism::Mechanism, p_base, p_foot, θ; leg::Symbol = :r)
+function AtlasIKerror(mechanism::Mechanism, p_base, p_foot, θ; leg::Symbol = :r)
 	setPosition!(mechanism, geteqconstraint(mechanism, "auto_generated_floating_joint"), [p_base; zeros(3)])
 	setPosition!(mechanism, geteqconstraint(mechanism, String(leg)*"_leg_hpxyz"), [0.0, -θ[1], 0.0])
 	setPosition!(mechanism, geteqconstraint(mechanism, String(leg)*"_leg_kny"), [θ[2]])

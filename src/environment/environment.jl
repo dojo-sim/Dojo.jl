@@ -2,68 +2,68 @@
 # Imports
 ################################################################################
 
-import Base.contains
-import Base.reset
-import Base.step
-import Dojo.MeshCat.render
+# import Base.contains
+# import Base.reset
+# import Base.step
+# import Dojo.MeshCat.render
+#
+# ################################################################################
+# # Environment
+# ################################################################################
+#
+# abstract type Environment{T,M,A,O} end
+#
+# function make(model::String; kwargs...)
+#     return eval(Symbol(model))(; kwargs...)
+# end
 
-################################################################################
-# Environment
-################################################################################
+# ################################################################################
+# # Reward
+# ################################################################################
+#
+# """
+#      Reward constructor. Provides a simple way to construct a reward function
+#      for each envirionment: atlas, snake, dice, etc.
+# """
+# function getreward(model::Symbol; kwargs...)
+#     reward_fct = eval(Symbol(:getreward, model))(; kwargs...)
+#     return reward_fct
+# end
+#
+# function getrewarddice(;)
+#     reward_fct(s, a) = 0.0
+#     return reward_fct
+# end
+#
+# function getrewardpendulum(;)
+#     reward_fct(s, a) = 0.0
+#     return reward_fct
+# end
 
-abstract type Environment{T,M,A,O} end
-
-function make(model::String; kwargs...)
-    return eval(Symbol(model))(; kwargs...)
-end
-
-################################################################################
-# Reward
-################################################################################
-
-"""
-     Reward constructor. Provides a simple way to construct a reward function
-     for each envirionment: atlas, snake, dice, etc.
-"""
-function getreward(model::Symbol; kwargs...)
-    reward_fct = eval(Symbol(:getreward, model))(; kwargs...)
-    return reward_fct
-end
-
-function getrewarddice(;)
-    reward_fct(s, a) = 0.0
-    return reward_fct
-end
-
-function getrewardpendulum(;)
-    reward_fct(s, a) = 0.0
-    return reward_fct
-end
-
-################################################################################
-# Space
-################################################################################
-
-abstract type Space{T,N} end
-
-mutable struct BoxSpace{T,N} <: Space{T,N}
-    n::Int # box dimension
-    low::AbstractVector{T} # minimum value
-    high::AbstractVector{T} # maximum value
-end
-
-function BoxSpace(n::Int; low::AbstractVector{T} = -ones(n), high::AbstractVector{T} = ones(n)) where {T}
-    return BoxSpace{T,n}(n, low, high)
-end
-
-function sample(s::BoxSpace{T,N}) where {T,N}
-    return rand(T,N) .* (s.high .- s.low) .+ s.low
-end
-
-function contains(s::BoxSpace{T,N}, v::AbstractVector{T}) where {T,N}
-    all(v .>= s.low) && all(v .<= s.high)
-end
-
+# ################################################################################
+# # Space
+# ################################################################################
+#
+# abstract type Space{T,N} end
+#
+# mutable struct BoxSpace{T,N} <: Space{T,N}
+#     n::Int # box dimension
+#     low::AbstractVector{T} # minimum value
+#     high::AbstractVector{T} # maximum value
+# end
+#
+# function BoxSpace(n::Int; low::AbstractVector{T} = -ones(n), high::AbstractVector{T} = ones(n)) where {T}
+#     return BoxSpace{T,n}(n, low, high)
+# end
+#
+# function sample(s::BoxSpace{T,N}) where {T,N}
+#     return rand(T,N) .* (s.high .- s.low) .+ s.low
+# end
+#
+# function contains(s::BoxSpace{T,N}, v::AbstractVector{T}) where {T,N}
+#     all(v .>= s.low) && all(v .<= s.high)
+# end
+#
 
 
 
