@@ -1,6 +1,6 @@
-using ConstrainedDynamics
+using Dojo
 
-path = "urdf_test.urdf"
+path = "test.urdf"
 Mechanism(joinpath(@__DIR__, path), floating=false)
 @test true
 

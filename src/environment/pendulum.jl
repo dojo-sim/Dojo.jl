@@ -1,117 +1,177 @@
-abstract type Environment31{T,A,O} end
+# include("environment.jl")
 
-mutable struct PendulumEnvironment31{T,A,O} <: Environment31{T,A,O}
-    max_speed::T
+
+################################################################################
+# Reward
+################################################################################
+
+"""
+     Reward constructor. Provides a simple way to construct a reward function
+     for each envirionment: atlas, snake, dice, etc.
+"""
+function getreward(model::Symbol; kwargs...)
+    reward_fct = eval(Symbol(:getreward, model))(; kwargs...)
+    return reward_fct
+end
+
+function getrewarddice(;)
+    reward_fct(s, a) = 0.0
+    return reward_fct
+end
+
+function getrewardpendulum(;)
+    reward_fct(s, a) = 0.0
+    return reward_fct
+end
+
+
+################################################################################
+# Imports
+################################################################################
+
+import Base.contains
+import Base.reset
+import Base.step
+import Dojo.MeshCat.render
+
+################################################################################
+# Space
+################################################################################
+
+abstract type Space43{T,N} end
+
+mutable struct BoxSpace43{T,N} <: Space43{T,N}
+    n::Int # box dimension
+    low::AbstractVector{T} # minimum value
+    high::AbstractVector{T} # maximum value
+end
+
+function BoxSpace43(n::Int; low::AbstractVector{T} = -ones(n), high::AbstractVector{T} = ones(n)) where {T}
+    return BoxSpace43{T,n}(n, low, high)
+end
+
+function sample(s::BoxSpace43{T,N}) where {T,N}
+    return rand(T,N) .* (s.high .- s.low) .+ s.low
+end
+
+function contains(s::BoxSpace43{T,N}, v::AbstractVector{T}) where {T,N}
+    all(v .>= s.low) && all(v .<= s.high)
+end
+
+
+################################################################################
+# Pendulum
+################################################################################
+
+abstract type Environment43{T,M,A,O} end
+
+mutable struct PendulumEnvironment43{T,M,A,O} <: Environment43{T,M,A,O}
+    mechanism::M
+    aspace::A
+    ospace::O
+    x::AbstractVector{T}
+    last_u::AbstractVector{T}
+    nx::Int
+    nu::Int
+    no::Int
+    max_speed::T # never used because we do not clip the pendulum angular velocity
     max_torque::T
     dt::T
     g::T
     m::T
     l::T
-    viewer::Any
-    aspace::A
-    ospace::O
+    rng::MersenneTwister
+    vis::Visualizer
 end
 
-
-mech = getmechanism(:pendulum)
-minCoordDim(mech)
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
-
-
-function PendulumEnvironment31(; max_speed::T = 8.0, max_torque::T = 2.0, dt::0.05, g::T = -10.0, m::T = 1.0, l::T = 1.0)
-    # metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 30}
+function PendulumEnvironment43(; max_speed::T = 8.0, max_torque::T = 2.0,
+        dt::T = 0.05, g::T = -10.0, m::T = 1.0, l::T = 1.0, s::Int = 1, vis::Visualizer = Visualizer()) where {T}
     mechanism = getmechanism(:pendulum, Δt = dt, g = g, m = m, l = l)
+    nx = minCoordDim(mechanism)
+    nu = controldim(mechanism)
+    no = 3
 
     high = [1.0, 1.0, max_speed]
     aspace = BoxSpace27(controldim(mechanism), low = [-max_torque], high = [max_torque])
-    ospace = BoxSpace27(minCoordDim(mechanism), )
-    return PendulumEnvironment31{T}(max_speed, max_torque, dt, g, m, l, viewer, aspace, ospace)
-    #
-    # def __init__(self, g=10.0):
-    #     self.max_speed = 8
-    #     self.max_torque = 2.0
-    #     self.dt = 0.05
-    #     self.g = g
-    #     self.m = 1.0
-    #     self.l = 1.0
-    #     self.viewer = None
+    ospace = BoxSpace27(no, low = -high, high = high)
+    rng = MersenneTwister(s)
+    x = Inf * ones(nx)
+    last_u = Inf * ones(nu)
+    build_robot!(mechanism, vis)
 
-        high = np.array([1.0, 1.0, self.max_speed], dtype=np.float32)
-        self.action_space = spaces.Box(
-            low=-self.max_torque, high=self.max_torque, shape=(1,), dtype=np.float32
-        )
-        self.observation_space = spaces.Box(low=-high, high=high, dtype=np.float32)
+    TYPES = [T, typeof(mechanism), typeof(aspace), typeof(ospace)]
+    env = PendulumEnvironment43{TYPES...}(mechanism, aspace, ospace, x, last_u,
+        max_speed, nx, nu, no, max_torque, dt, g, m, l, rng, vis)
+    seed(env, s = s)
+    return env
+end
 
-        self.seed()
+function seed(env::PendulumEnvironment43{T}; s = 0) where {T}
+    env.rng = MersenneTwister(s)
+    return nothing
+end
 
-    def seed(self, seed=None):
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
+function reset(env::PendulumEnvironment43{T}) where {T}
+    high = [π, 1.0]
+    low = -high
 
-    def step(self, u):
-        th, thdot = self.state  # th := theta
+    env.x = rand(env.rng, env.nx) .* (high .- low) .+ low
+    env.last_u .= Inf
+    return _get_obs(env)
+end
 
-        g = self.g
-        m = self.m
-        l = self.l
-        dt = self.dt
+function _get_obs(env::PendulumEnvironment43{T}) where {T}
+    θ, ω = env.x
+    return [cos(θ), sin(θ), ω]
+end
 
-        u = np.clip(u, -self.max_torque, self.max_torque)[0]
-        self.last_u = u  # for rendering
-        costs = angle_normalize(th) ** 2 + 0.1 * thdot ** 2 + 0.001 * (u ** 2)
+function step(env::PendulumEnvironment43{T}, u::AbstractVector{T}) where {T}
+    mechanism = env.mechanism
+    x0 = env.x
 
-        newthdot = thdot + (3 * g / (2 * l) * np.sin(th) + 3.0 / (m * l ** 2) * u) * dt
-        newthdot = np.clip(newthdot, -self.max_speed, self.max_speed)
-        newth = th + newthdot * dt
+    u0 = clamp.(u, -env.max_torque, env.max_torque)
+    self.last_u = u0  # for rendering
 
-        self.state = np.array([newth, newthdot])
-        return self._get_obs(), -costs, False, {}
+    z0 = min2max(mechanism, x0)
+    z1 = simon_step!(mechanism, z0, u0; ϵ = 1e-6, newtonIter = 100,
+        lineIter = 10, verbose = false, btol = 1e-6, undercut = Inf)
+    env.x = max2min(mechanism, z1)
 
-    def reset(self):
-        high = np.array([np.pi, 1])
-        self.state = self.np_random.uniform(low=-high, high=high)
-        self.last_u = None
-        return self._get_obs()
+    # Compute cost function
+    θ0, ω0 = x0
+    costs = angle_normalize(θ0)^2 + 1e-1 * ω0^2 + 1e-3 * u[1]^2 # angle_normalize enforces angle ∈ [-π, π]
 
-    def _get_obs(self):
-        theta, thetadot = self.state
-        return np.array([np.cos(theta), np.sin(theta), thetadot], dtype=np.float32)
+    info = Dict()
+    return _get_obs(env), -costs, False, info
+end
 
-    def render(self, mode="human"):
-        if self.viewer is None:
-            from gym.envs.classic_control import rendering
+function angle_normalize(x)
+    return ((x + π) % (2 * π)) - π
+end
 
-            self.viewer = rendering.Viewer(500, 500)
-            self.viewer.set_bounds(-2.2, 2.2, -2.2, 2.2)
-            rod = rendering.make_capsule(1, 0.2)
-            rod.set_color(0.8, 0.3, 0.3)
-            self.pole_transform = rendering.Transform()
-            rod.add_attr(self.pole_transform)
-            self.viewer.add_geom(rod)
-            axle = rendering.make_circle(0.05)
-            axle.set_color(0, 0, 0)
-            self.viewer.add_geom(axle)
-            fname = path.join(path.dirname(__file__), "assets/clockwise.png")
-            self.img = rendering.Image(fname, 1.0, 1.0)
-            self.imgtrans = rendering.Transform()
-            self.img.add_attr(self.imgtrans)
+function render(env::PendulumEnvironment43, mode="human"):
+    z = min2max(env.mechanism, env.x)
+    setrobot!(env.mechanism, env.vis, z)
+    return nothing
+end
 
-        self.viewer.add_onetime(self.img)
-        self.pole_transform.set_rotation(self.state[0] + np.pi / 2)
-        if self.last_u is not None:
-            self.imgtrans.scale = (-self.last_u / 2, np.abs(self.last_u) / 2)
-
-        return self.viewer.render(return_rgb_array=mode == "rgb_array")
-
-    def close(self):
-        if self.viewer:
-            self.viewer.close()
-            self.viewer = None
+function close(env::PendulumEnvironment43{M}; kwargs...) where {M}
+    # visualizer stuff
+    # if env.vis:
+    #     env.vis.close()
+    #     env.vis = None
+    return nothing
+end
 
 
-def angle_normalize(x):
-    return ((x + np.pi) % (2 * np.pi)) - np.pi
+#
+# mech = getmechanism(:pendulum)
+# minCoordDim(mech)
+#
+# env = make("Pendulum", dt = 0.01)
+#
+#
+# reset(env)
+# reset(env)
+# reset(env)
+# reset(env)

@@ -1,5 +1,5 @@
-using ConstrainedDynamics
-using ConstrainedDynamics: params, pure_quaternion, Lmat, Lᵀmat, Rmat, Rᵀmat, Tmat, Tᵀmat, Vmat, Vᵀmat, VLmat, VLᵀmat, VRmat, VRᵀmat, LVᵀmat, LᵀVᵀmat, RVᵀmat, RᵀVᵀmat, slerp
+using Dojo
+using Dojo: params, pure_quaternion, Lmat, Lᵀmat, Rmat, Rᵀmat, Tmat, Tᵀmat, Vmat, Vᵀmat, VLmat, VLᵀmat, VRmat, VRᵀmat, LVᵀmat, LᵀVᵀmat, RVᵀmat, RᵀVᵀmat, slerp
 using StaticArrays
 using LinearAlgebra
 

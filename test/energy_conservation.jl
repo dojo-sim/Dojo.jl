@@ -1,5 +1,3 @@
-include(joinpath(@__DIR__, "..", "src/optional_components/energy.jl"))
-
 # # visualizer
 # vis = Visualizer()
 # open(vis)
@@ -50,10 +48,10 @@ nocontrol!(mechanism, k) = controller!(mechanism, k, U = 0.0)
 # no control
 ################################################################################
 g0 = -10.0
-mech = getmechanism(:dice, Δt = Δt0, g = g0, contact = false)
+mech = getmechanism(:box, Δt = Δt0, g = g0, contact = false)
 v0 = [1,2,3.0]
 ω0 = [1,1,1.0]
-initialize!(mech, :dice, v = v0, ω = ω0)
+initialize!(mech, :box, v = v0, ω = ω0)
 
 storage = simulate!(mech, 5.0, nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
 # visualize(mech, storage, vis = vis)

@@ -1,2 +1,2 @@
 # Dojo
-Differentiable contact simulator in maximal coordinates.
+Differentiable simulator for rigid-body systems in maximal coordinates.

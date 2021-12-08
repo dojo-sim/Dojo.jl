@@ -23,16 +23,16 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 <<<<<<< HEAD
-mech = getmechanism(:dice, Δt = 1.0, g = -1.0, cf = 1.0, contact = false, conetype = :contact)
+mech = getmechanism(:box, Δt = 1.0, g = -1.0, cf = 1.0, contact = false, conetype = :contact)
 =======
-mech = getmechanism(:dice, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, conetype = :soc)
+mech = getmechanism(:box, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, conetype = :soc)
 >>>>>>> 5675fe2e79622be7440f9fd2c6e43ea0f2940ce1
 
 Random.seed!(100)
 ω = 0.0 * (rand(3) .- 0.5) * 1
 x = [0, 0, 1.0]
 v = 0.0 * [1, 0.3, 0.2]
-initialize!(mech, :dice, x = x, v = v, ω = ω)
+initialize!(mech, :box, x = x, v = v, ω = ω)
 <<<<<<< HEAD
 storage = simulate!(mech, 0.1, record = false, solver = :mehrotra!)
 @show data

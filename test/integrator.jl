@@ -1,4 +1,3 @@
-
 @testset "Integrator" begin
     Random.seed!(100)
     x0 = srand(3)
