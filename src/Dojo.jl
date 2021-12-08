@@ -170,6 +170,6 @@ include(joinpath("..", "env", "mechanisms.jl")
 include(joinpath("..", "env", "environment.jl")
 
 # Utilities
-include("../examples/trajectory_optimization/utils.jl")
+include(joinpath("..", "examples", "trajectory_optimization", "utils.jl"))
 
 end

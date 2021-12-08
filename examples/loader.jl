@@ -117,12 +117,14 @@ include(joinpath(module_dir(), "src", "mechanism", "inequality_constraint.jl"))
 include(joinpath(module_dir(), "src", "mechanism", "mechanism.jl"))
 include(joinpath(module_dir(), "src", "mechanism", "system.jl"))
 include(joinpath(module_dir(), "src", "mechanism", "methods.jl"))
-include(joinpath(module_dir(), "src", "mechanism", "energy.jl"))
 
 # Simulation
 include(joinpath(module_dir(), "src", "simulation", "step.jl"))
 include(joinpath(module_dir(), "src", "simulation", "storage.jl"))
 include(joinpath(module_dir(), "src", "simulation", "simulate.jl"))
+
+# Energy
+include(joinpath(module_dir(), "src", "mechanism", "energy.jl"))
 
 # Joints
 include(joinpath(module_dir(), "src", "joints", "abstract_joint.jl"))
@@ -152,7 +154,6 @@ include(joinpath(module_dir(), "src", "discretization", "body.jl"))
 
 # User interface
 include(joinpath(module_dir(), "src", "ui", "mechanism_ui.jl"))
-include(joinpath(module_dir(), "src", "ui", "simulate.jl"))
 include(joinpath(module_dir(), "src", "ui", "initialize.jl"))
 include(joinpath(module_dir(), "src", "ui", "urdf.jl"))
 include(joinpath(module_dir(), "src", "ui", "convert_shape.jl"))
@@ -164,4 +165,7 @@ include(joinpath(module_dir(), "src", "diff", "finitediff_tools.jl"))
 
 # Environments
 include(joinpath(module_dir(), "env", "mechanisms.jl"))
-include(joinpath(module_dir(), "env", "environment.jl")
+include(joinpath(module_dir(), "env", "environment.jl"))
+
+# Utilities
+include(joinpath(module_dir(), "examples", "trajectory_optimization", "utils.jl"))

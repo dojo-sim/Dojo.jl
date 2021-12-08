@@ -1,56 +1,44 @@
 ################################################################################
 # Pendulum
 ################################################################################
-struct Pendulum end 
-
-# struct Pendulum{T,M,A,O} <: Environment{X,T,M,A,O,I} #TODO: make immutable
-#     mechanism::M
-#     mode::Symbol
-#     aspace::A
-#     ospace::O
-#     x::Vector{T}
-#     fx::Matrix{T} 
-#     fu::Matrix{T}
-#     u_prev::Vector{T}
-#     nx::Int
-#     nu::Int
-#     no::Int
-#     info::I
-#     rng::MersenneTwister
-#     vis::Visualizer
-# end
+struct Pendulum end
 
 function Pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
-        dt::T=0.05, g::T=-10.0, m::T=1.0, l::T=1.0, s::Int=1, vis::Visualizer=Visualizer()) where {T}
-    mechanism = getmechanism(:pendulum, Δt=dt, g=g, m=m, l=l, damper=0.5)
+        dt::T=0.05, g::T=-10.0, m::T=1.0, l::T=1.0, s::Int=1, vis::Visualizer=Visualizer(),
+        opts_step::InteriorPointOptions = InteriorPointOptions(),
+        opts_grad::InteriorPointOptions = InteriorPointOptions(),
+        ) where {T}
+    mechanism = getmechanism(:pendulum, Δt=dt, g=g, m=m, l=l, damper=5.0)
     initialize!(mechanism, :pendulum)
 
     if mode == :min
         nx = minCoordDim(mechanism)
         no = 3
-    elseif mode == :max 
-        nx = maxCoordDim(mechanism) 
-        no = 7
+    elseif mode == :max
+        nx = maxCoordDim(mechanism)
+        no = 13
     end
     nu = controldim(mechanism)
 
     high = [1.0, 1.0, max_speed]
     aspace = BoxSpace(controldim(mechanism), low=[-max_torque], high=[max_torque])
     ospace = BoxSpace(no, low=-high, high=high)
-    rng = MersenneTwister(s)
+    rng = [MersenneTwister(s),]
 
     x = Inf * ones(nx)
-    fx = zeros(nx, nx) 
-    fu = zeros(nx, nu) 
+    fx = zeros(nx, nx)
+    fu = zeros(nx, nu)
 
     u_prev = Inf * ones(nu)
     build_robot(vis, mechanism)
 
-    TYPES = [T, typeof(mechanism), typeof(aspace), typeof(ospace)]
-    env = Pendulum{TYPES...}(mechanism, mode, aspace, ospace, 
+    info = Dict(:max_speed => max_speed, :max_torque => max_torque)
+
+    TYPES = [T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
+    env = Environment{Pendulum, TYPES...}(mechanism, mode, aspace, ospace,
         x, fx, fu,
-        u_prev, nx, nu, no,
-        max_speed, max_torque, rng, vis)
+        u_prev, nx, nu, no, info,
+        rng, vis, opts_step, opts_grad)
     return env
 end
 
@@ -60,11 +48,11 @@ function reset(env::Environment{Pendulum}; x=nothing)
     if x != nothing
         env.x .= x
     else
-        if env.mode == :min 
+        if env.mode == :min
             high = [π, 1.0]
             low = -high
-            env.x .= rand(env.rng, env.nx) .* (high .- low) .+ low
-        elseif env.mode == :max 
+            env.x .= rand(env.rng[1], env.nx) .* (high .- low) .+ low
+        elseif env.mode == :max
             env.x .= pendulum_nominal_max()
         end
         env.u_prev .= Inf
@@ -76,8 +64,8 @@ function _get_obs(env::Environment{Pendulum})
     if env.mode == :min
         θ, ω = env.x
         return [cos(θ), sin(θ), ω]
-    else env.mode == :max 
-        return env.x 
+    else env.mode == :max
+        return env.x
     end
 end
 
@@ -90,28 +78,21 @@ function step(env::Pendulum, x, u; diff=false)
     env.u_prev .= u0  # for rendering
 
     z0 = env.mode == :min ? min2max(mechanism, x0) : x0
-    z1 = step!(mechanism, z0, Δt * u0; ϵ=1e-6, newtonIter=100,
-        lineIter=10, verbose=false, btol=1e-6, undercut=Inf)
+    z1 = step!(mechanism, z0, Δt * u0; opts = env.opts_step)
     env.x .= env.mode == :min ? max2min(mechanism, z1) : z1
 
     # Compute cost function
- 
-    if env.mode == :min
-        θ0, ω0 = x0
-        costs = angle_normalize(θ0)^2 + 1e-1 * ω0^2 + 1e-3 * u[1]^2 # angle_normalize enforces angle ∈ [-π, π]
-    else 
-        costs = Inf 
-    end
+    costs = cost(env, x0, u)
 
     # Gradients
-    if diff 
-        if env.mode == :min 
-            fx, fu = getMinGradients!(env.mechanism, z0, u, ϵ=3e-4, btol=3e-4, undercut=1.5, verbose=false)
-        elseif env.mode == :max 
-            fx, fu = getMaxGradients!(env.mechanism, z0, u, ϵ=3e-4, btol=3e-4, undercut=1.5, verbose=false)
+    if diff
+        if env.mode == :min
+            fx, fu = getMinGradients!(env.mechanism, z0, u, opts = env.opts_grad)
+        elseif env.mode == :max
+            fx, fu = getMaxGradients!(env.mechanism, z0, u, opts = env.opts_grad)
         end
         env.fx .= fx
-        env.fu .= fu 
+        env.fu .= fu
     end
 
     info = Dict()
@@ -122,17 +103,6 @@ function angle_normalize(x)
     return ((x + π) % (2 * π)) - π
 end
 
-function render(env::Pendulum, mode="human")
-    z = env.mode == :min ? min2max(env.mechanism, env.x) : env.x
-    set_robot(env.vis, env.mechanism, z)
-    return nothing
-end
-
-
-function close(env::Pendulum; kwargs...) 
-    return nothing
-end
-
 function pendulum_nominal_max()
     x1 = [0.0; 0.0; -0.5]
     v1 = [0.0; 0.0; 0.0]
@@ -140,3 +110,27 @@ function pendulum_nominal_max()
     ω1 = [0.0; 0.0; 0.0]
     z1 = [x1; v1; q1; ω1]
 end
+
+function cost(env, x, u)
+    if env.mode == :min
+        θ, ω = x
+        costs = angle_normalize(θ)^2 + 1e-1 * ω^2 + 1e-3 * u[1]^2 # angle_normalize enforces angle ∈ [-π, π]
+    else
+        costs = Inf
+    end
+    return -costs
+end
+
+
+
+
+env = Pendulum(mode = :min)
+obs = reset(env)
+obs = _get_obs(env)
+x = [0.1, 0.2]
+u = [0.4]
+o, r, done, info = step(env, x, u)
+
+a = 10
+a = 10
+a = 10
