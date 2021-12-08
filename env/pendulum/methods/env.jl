@@ -69,7 +69,7 @@ function _get_obs(env::Environment{Pendulum})
     end
 end
 
-function step(env::Pendulum, x, u; diff=false)
+function step(env::Environment{Pendulum}, x, u; diff=false)
     mechanism = env.mechanism
     Δt = mechanism.Δt
 
@@ -82,7 +82,7 @@ function step(env::Pendulum, x, u; diff=false)
     env.x .= env.mode == :min ? max2min(mechanism, z1) : z1
 
     # Compute cost function
-    costs = cost(env, x0, u)
+    costs = cost(env, x0, u0)
 
     # Gradients
     if diff
