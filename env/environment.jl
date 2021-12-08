@@ -24,6 +24,7 @@ struct Environment{X,T,M,A,O,I}
     fx::Matrix{T} 
     fu::Matrix{T}
     u_prev::Vector{T}
+    control_mask::Matrix{T}
     nx::Int
     nu::Int
     no::Int
@@ -146,8 +147,8 @@ end
 ################################################################################
 # Environments
 # ##############################################################################
-# include("pendulum/methods/env.jl")
-# include("hopper/methods/env.jl")
+include("pendulum/methods/env.jl")
+include("hopper/methods/env.jl")
 # include("quadruped/methods/env.jl")
 
 

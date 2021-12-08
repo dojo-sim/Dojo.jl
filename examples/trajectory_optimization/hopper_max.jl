@@ -7,7 +7,7 @@ using IterativeLQR
 # System
 dt = 0.05
 gravity = -9.81
-env = make("Hopper", 
+env = make("hopper", 
     mode=:max, 
     dt=dt,
     g=gravity,

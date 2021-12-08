@@ -3,25 +3,11 @@
 ################################################################################
 struct Pendulum end 
 
-# struct Pendulum{T,M,A,O} <: Environment{X,T,M,A,O,I} #TODO: make immutable
-#     mechanism::M
-#     mode::Symbol
-#     aspace::A
-#     ospace::O
-#     x::Vector{T}
-#     fx::Matrix{T} 
-#     fu::Matrix{T}
-#     u_prev::Vector{T}
-#     nx::Int
-#     nu::Int
-#     no::Int
-#     info::I
-#     rng::MersenneTwister
-#     vis::Visualizer
-# end
+function pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
+        dt::T=0.05, g::T=-10.0, m::T=1.0, l::T=1.0, s::Int=1, vis::Visualizer=Visualizer(),
+        info=nothing,
+        opts_step=InteriorPointOptions(), opts_grad=InteriorPointOptions()) where {T}
 
-function Pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
-        dt::T=0.05, g::T=-10.0, m::T=1.0, l::T=1.0, s::Int=1, vis::Visualizer=Visualizer()) where {T}
     mechanism = getmechanism(:pendulum, Δt=dt, g=g, m=m, l=l, damper=0.5)
     initialize!(mechanism, :pendulum)
 
@@ -30,7 +16,7 @@ function Pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
         no = 3
     elseif mode == :max 
         nx = maxCoordDim(mechanism) 
-        no = 7
+        no = 13
     end
     nu = controldim(mechanism)
 
@@ -46,11 +32,14 @@ function Pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
     u_prev = Inf * ones(nu)
     build_robot(vis, mechanism)
 
-    TYPES = [T, typeof(mechanism), typeof(aspace), typeof(ospace)]
-    env = Pendulum{TYPES...}(mechanism, mode, aspace, ospace, 
+    TYPES = [T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
+    env = Environment{Pendulum, TYPES...}(mechanism, mode, aspace, ospace, 
         x, fx, fu,
         u_prev, nx, nu, no,
-        max_speed, max_torque, rng, vis)
+        rng, vis,
+        info,
+        opts_step, opts_grad)
+
     return env
 end
 
@@ -81,7 +70,7 @@ function _get_obs(env::Environment{Pendulum})
     end
 end
 
-function step(env::Pendulum, x, u; diff=false)
+function step(env::Environment{Pendulum}, x, u; diff=false)
     mechanism = env.mechanism
     Δt = mechanism.Δt
 
@@ -90,25 +79,18 @@ function step(env::Pendulum, x, u; diff=false)
     env.u_prev .= u0  # for rendering
 
     z0 = env.mode == :min ? min2max(mechanism, x0) : x0
-    z1 = step!(mechanism, z0, Δt * u0; ϵ=1e-6, newtonIter=100,
-        lineIter=10, verbose=false, btol=1e-6, undercut=Inf)
+    z1 = step!(mechanism, z0, Δt * u0; opts=env.opts_step)
     env.x .= env.mode == :min ? max2min(mechanism, z1) : z1
 
-    # Compute cost function
- 
-    if env.mode == :min
-        θ0, ω0 = x0
-        costs = angle_normalize(θ0)^2 + 1e-1 * ω0^2 + 1e-3 * u[1]^2 # angle_normalize enforces angle ∈ [-π, π]
-    else 
-        costs = Inf 
-    end
+    # Compute costs
+    costs = reward(env, x0, u0)
 
     # Gradients
     if diff 
         if env.mode == :min 
-            fx, fu = getMinGradients!(env.mechanism, z0, u, ϵ=3e-4, btol=3e-4, undercut=1.5, verbose=false)
+            fx, fu = getMinGradients!(env.mechanism, z0, u, opts=env.opts_grad)
         elseif env.mode == :max 
-            fx, fu = getMaxGradients!(env.mechanism, z0, u, ϵ=3e-4, btol=3e-4, undercut=1.5, verbose=false)
+            fx, fu = getMaxGradients!(env.mechanism, z0, u, opts=env.opts_grad)
         end
         env.fx .= fx
         env.fu .= fu 
@@ -122,21 +104,9 @@ function angle_normalize(x)
     return ((x + π) % (2 * π)) - π
 end
 
-function render(env::Pendulum, mode="human")
-    z = env.mode == :min ? min2max(env.mechanism, env.x) : env.x
-    set_robot(env.vis, env.mechanism, z)
-    return nothing
-end
-
-
-function close(env::Pendulum; kwargs...) 
-    return nothing
-end
-
-function pendulum_nominal_max()
-    x1 = [0.0; 0.0; -0.5]
-    v1 = [0.0; 0.0; 0.0]
-    q1 = [1.0; 0.0; 0.0; 0.0]
-    ω1 = [0.0; 0.0; 0.0]
-    z1 = [x1; v1; q1; ω1]
+function reward(env::Environment{Pendulum}, x, u)
+    x0 = env.mode == :max ? max2min(env.mechanism, x) : x 
+    θ0, ω0 = x0
+    costs = angle_normalize(θ0)^2 + 1e-1 * ω0^2 + 1e-3 * u[1]^2 # angle_normalize enforces angle ∈ [-π, π]
+    return costs 
 end
