@@ -12,7 +12,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="examples/examples_files/atlas_mesh/pelvis.obj"/>
+        <mesh filename="env/atlas/deps/mesh/pelvis.obj"/>
       </geometry>
     </visual>
   </link>
@@ -24,7 +24,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="examples/examples_files/atlas_mesh/utorso.obj"/>
+        <mesh filename="env/atlas/deps/mesh/utorso.obj"/>
       </geometry>
     </visual>
   </link>
@@ -37,7 +37,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="examples/examples_files/atlas_mesh/head_chull.obj"/>
+        <mesh filename="env/atlas/deps/mesh/head_chull.obj"/>
       </geometry>
       <material name="">
         <color rgba="0.9098 0.44314 0.031373 1"/>
@@ -53,7 +53,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="examples/examples_files/atlas_mesh/l_uleg.obj"/>
+        <mesh filename="env/atlas/deps/mesh/l_uleg.obj"/>
       </geometry>
     </visual>
   </link>
@@ -65,7 +65,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="examples/examples_files/atlas_mesh/r_uleg.obj"/>
+        <mesh filename="env/atlas/deps/mesh/r_uleg.obj"/>
       </geometry>
     </visual>
   </link>
@@ -78,7 +78,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="examples/examples_files/atlas_mesh/l_lleg.obj"/>
+        <mesh filename="env/atlas/deps/mesh/l_lleg.obj"/>
       </geometry>
     </visual>
   </link>
@@ -90,7 +90,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="examples/examples_files/atlas_mesh/r_lleg.obj"/>
+        <mesh filename="env/atlas/deps/mesh/r_lleg.obj"/>
       </geometry>
     </visual>
   </link>
@@ -102,7 +102,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="examples/examples_files/atlas_mesh/l_foot.obj"/>
+        <mesh filename="env/atlas/deps/mesh/l_foot.obj"/>
       </geometry>
     </visual>
     <visual group="heel">
@@ -150,7 +150,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="examples/examples_files/atlas_mesh/r_foot.obj"/>
+        <mesh filename="env/atlas/deps/mesh/r_foot.obj"/>
       </geometry>
     </visual>
     <visual group="heel">
@@ -199,7 +199,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="examples/examples_files/atlas_mesh/r_clav.obj"/>
+        <mesh filename="env/atlas/deps/mesh/r_clav.obj"/>
       </geometry>
     </visual>
   </link>
@@ -211,7 +211,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="examples/examples_files/atlas_mesh/r_clav.obj"/>
+        <mesh filename="env/atlas/deps/mesh/r_clav.obj"/>
       </geometry>
     </visual>
   </link>
@@ -223,7 +223,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="examples/examples_files/atlas_mesh/r_scap.obj"/>
+        <mesh filename="env/atlas/deps/mesh/r_scap.obj"/>
       </geometry>
     </visual>
   </link>
@@ -235,7 +235,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="examples/examples_files/atlas_mesh/r_scap.obj"/>
+        <mesh filename="env/atlas/deps/mesh/r_scap.obj"/>
       </geometry>
     </visual>
   </link>
@@ -247,7 +247,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="examples/examples_files/atlas_mesh/r_uarm.obj"/>
+        <mesh filename="env/atlas/deps/mesh/r_uarm.obj"/>
       </geometry>
     </visual>
   </link>
@@ -259,7 +259,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="examples/examples_files/atlas_mesh/r_uarm.obj"/>
+        <mesh filename="env/atlas/deps/mesh/r_uarm.obj"/>
       </geometry>
     </visual>
   </link>
@@ -271,7 +271,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="examples/examples_files/atlas_mesh/r_larm.obj"/>
+        <mesh filename="env/atlas/deps/mesh/r_larm.obj"/>
       </geometry>
     </visual>
   </link>
@@ -283,7 +283,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="examples/examples_files/atlas_mesh/r_larm.obj"/>
+        <mesh filename="env/atlas/deps/mesh/r_larm.obj"/>
       </geometry>
     </visual>
   </link>
@@ -295,7 +295,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="examples/examples_files/atlas_mesh/r_farm.obj"/>
+        <mesh filename="env/atlas/deps/mesh/r_farm.obj"/>
       </geometry>
     </visual>
   </link>
@@ -307,7 +307,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="examples/examples_files/atlas_mesh/r_farm.obj"/>
+        <mesh filename="env/atlas/deps/mesh/r_farm.obj"/>
       </geometry>
     </visual>
   </link>
@@ -319,7 +319,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="examples/examples_files/atlas_mesh/r_hand.obj"/>
+        <mesh filename="env/atlas/deps/mesh/r_hand.obj"/>
       </geometry>
     </visual>
   </link>
@@ -331,7 +331,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="examples/examples_files/atlas_mesh/r_hand.obj"/>
+        <mesh filename="env/atlas/deps/mesh/r_hand.obj"/>
       </geometry>
     </visual>
   </link>

@@ -23,7 +23,6 @@ export Origin,
     EqualityConstraint,
     InequalityConstraint,
     Mechanism,
-    Controller,
     Storage,
     UnitQuaternion,
     Rotational,
@@ -107,10 +106,6 @@ include(joinpath(module_dir(), "src", "graph", "system.jl"))
 include(joinpath(module_dir(), "src", "graph", "setup_functions.jl"))
 include(joinpath(module_dir(), "src", "graph", "ldu.jl"))
 
-# Simulation
-include(joinpath(module_dir(), "src", "simulation", "controller.jl"))
-include(joinpath(module_dir(), "src", "simulation", "storage.jl"))
-
 # Mechanism
 include(joinpath(module_dir(), "src", "mechanism", "shapes.jl"))
 include(joinpath(module_dir(), "src", "mechanism", "component.jl"))
@@ -123,6 +118,11 @@ include(joinpath(module_dir(), "src", "mechanism", "mechanism.jl"))
 include(joinpath(module_dir(), "src", "mechanism", "system.jl"))
 include(joinpath(module_dir(), "src", "mechanism", "methods.jl"))
 include(joinpath(module_dir(), "src", "mechanism", "energy.jl"))
+
+# Simulation
+include(joinpath(module_dir(), "src", "simulation", "step.jl"))
+include(joinpath(module_dir(), "src", "simulation", "storage.jl"))
+include(joinpath(module_dir(), "src", "simulation", "simulate.jl"))
 
 # Joints
 include(joinpath(module_dir(), "src", "joints", "abstract_joint.jl"))

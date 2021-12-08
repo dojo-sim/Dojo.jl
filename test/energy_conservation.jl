@@ -27,8 +27,8 @@ jointtypes = [
     ]
 
 # Controller
-function controller!(mechanism, k; U = 0.5, Δt = Δt0)
-    N = Int(floor(1/Δt))
+function controller!(mechanism, k; U=0.5, Δt=Δt0)
+    N = Int(floor(1 / Δt))
     for (i,joint) in enumerate(mechanism.eqconstraints)
         nu = controldim(joint)
         u = (nu <= 5 && k ∈ (1:N)) * U * Δt * sones(nu)
@@ -48,12 +48,12 @@ nocontrol!(mechanism, k) = controller!(mechanism, k, U = 0.0)
 # no control
 ################################################################################
 g0 = -10.0
-mech = getmechanism(:box, Δt = Δt0, g = g0, contact = false)
+mech = getmechanism(:box, Δt=Δt0, g=g0, contact=false)
 v0 = [1,2,3.0]
 ω0 = [1,1,1.0]
-initialize!(mech, :box, v = v0, ω = ω0)
+initialize!(mech, :box, v=v0, ω=ω0)
 
-storage = simulate!(mech, 5.0, nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+storage = simulate!(mech, 5.0, nocontrol!, record=true, verbose=false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 ke0 = kineticEnergy(mech, storage)[start0:end]
@@ -84,12 +84,12 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 g0 = -10.0
 spring0 = 1.0
 damper0 = 0.0
-mech = getmechanism(:pendulum, Δt = Δt0, g = g0, spring = spring0, damper = damper0)
+mech = getmechanism(:pendulum, Δt=Δt0, g=g0, spring=spring0, damper=damper0)
 ϕ0 = 0.9π
 ω0 = 2π
 
-initialize!(mech, :pendulum, ϕ1 = ϕ0, ω1 = ω0)
-storage = simulate!(mech, 5.0, controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+initialize!(mech, :pendulum, ϕ1=ϕ0, ω1=ω0)
+storage = simulate!(mech, 5.0, controller!, record=true, verbose=false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 ke0 = kineticEnergy(mech, storage)[start0:end]
@@ -119,9 +119,9 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 g0 = -0.0
 spring0 = 10.0
 damper0 = 0.0
-mech = getmechanism(:slider, Δt = Δt0, g = g0, spring = spring0, damper = damper0)
+mech = getmechanism(:slider, Δt=Δt0, g=g0, spring=spring0, damper=damper0)
 z0 = 0.5
-initialize!(mech, :slider, z1 = z0)
+initialize!(mech, :slider, z1=z0)
 
 # Analytical
 body1 = collect(mech.bodies)[1]
@@ -130,7 +130,7 @@ vmax = z0 * sqrt(spring0 / body1.m)
 pe_max = 0.5 * spring0 * zmax^2
 ke_max = 0.5 * body1.m * vmax^2
 
-storage = simulate!(mech, 5.0,  nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+storage = simulate!(mech, 5.0,  nocontrol!, record=true, verbose=false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 ke0 = kineticEnergy(mech, storage)[start0:end]
@@ -164,11 +164,11 @@ end
 g0 = -9.81
 spring0 = 0.0
 damper0 = 0.0
-mech = getmechanism(:slider, Δt = Δt0, g = g0, spring = spring0, damper = damper0)
+mech = getmechanism(:slider, Δt=Δt0, g=g0, spring=spring0, damper=damper0)
 z0 = 0.5
 initialize!(mech, :slider, z1 = z0)
 
-storage = simulate!(mech, 1.5,  nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+storage = simulate!(mech, 1.5,  nocontrol!, record=true, verbose=false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 ke0 = kineticEnergy(mech, storage)[start0:end]
@@ -199,11 +199,11 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-9
 g0 = -9.81
 spring0 = 10.0
 damper0 = 0.0
-mech = getmechanism(:slider, Δt = Δt0, g = g0, spring = spring0, damper = damper0)
+mech = getmechanism(:slider, Δt=Δt0, g=g0, spring=spring0, damper=damper0)
 z0 = 0.5
 initialize!(mech, :slider, z1 = z0)
 
-storage = simulate!(mech, 5.0,  nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+storage = simulate!(mech, 5.0,  nocontrol!, record=true, verbose=false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 ke0 = kineticEnergy(mech, storage)[start0:end]
@@ -230,7 +230,7 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 # with spring and damper
 # with control
 ################################################################################
-function humanoid_controller!(mechanism, k; U = 0.05, Δt = Δt0)
+function humanoid_controller!(mechanism, k; U=0.05, Δt=Δt0)
     N = Int(floor(1/Δt))
     for (i,eqc) in enumerate(mechanism.eqconstraints)
         nu = controldim(eqc)
@@ -251,7 +251,7 @@ for body in mech.bodies
     # setVelocity!(body, v = 1.0*rand(3))
 end
 
-storage = simulate!(mech, 3.0, humanoid_controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+storage = simulate!(mech, 3.0, humanoid_controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, downsample(storage, 1), vis = vis)
 
 ke0 = kineticEnergy(mech, storage)[start0:end]
@@ -285,7 +285,7 @@ initialize!(mech, :atlas)
 bodies = collect(mech.bodies)
 setVelocity!.(bodies, ω = 1.0*rand(3))
 
-storage = simulate!(mech, 5.0, humanoid_controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+storage = simulate!(mech, 5.0, humanoid_controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 ke0 = kineticEnergy(mech, storage)[start0:end]
@@ -327,7 +327,7 @@ spring0 = 0.1
 damper0 = 0.0
 mech = getmechanism(:quadruped, Δt = Δt0, g = g0, spring = spring0, damper = damper0, contact = false)
 initialize!(mech, :quadruped)
-storage = simulate!(mech, 5.0, quadruped_controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+storage = simulate!(mech, 5.0, quadruped_controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 ke0 = kineticEnergy(mech, storage)[start0:end]
@@ -375,7 +375,7 @@ v0 = 10.0 * [1, 2, 3] * Δt0
 q10 = UnitQuaternion(RotX(0.5*π))
 
 initialize!(mech, :snake, q1 = q10, v = v0, ω = ω0)
-storage = simulate!(mech, 3.0, snake_controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+storage = simulate!(mech, 3.0, snake_controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 ke0 = kineticEnergy(mech, storage)[start0:end]
@@ -403,7 +403,7 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
         q10 = UnitQuaternion(RotX(0.5*π))
 
         initialize!(mech, :snake, q1 = q10, v = v0, ω = ω0)
-        storage = simulate!(mech, 3.0, snake_controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+        storage = simulate!(mech, 3.0, snake_controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
         # visualize(mech, storage, vis = vis)
 
         ke0 = kineticEnergy(mech, storage)[start0:end]
@@ -440,7 +440,7 @@ v0 = 10.0 * [1, 2, 3] * Δt0
 q10 = UnitQuaternion(RotX(0.5*π))
 
 initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0)
-storage = simulate!(mech, 3.0, snake_controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+storage = simulate!(mech, 3.0, snake_controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 ke0 = kineticEnergy(mech, storage)[start0:end]
@@ -468,7 +468,7 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
         q10 = UnitQuaternion(RotX(0.5*π))
 
         initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0)
-        storage = simulate!(mech, 3.0, snake_controller!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0)
+        storage = simulate!(mech, 3.0, snake_controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
         # visualize(mech, storage, vis = vis)
 
         ke0 = kineticEnergy(mech, storage)[start0:end]

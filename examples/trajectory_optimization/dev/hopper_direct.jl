@@ -73,7 +73,7 @@ nu += nx
 function f(d, y, x, u, w)
     u_ctrl = u[1:3] 
     s = u[3 .+ (1:nx)]
-    z = simon_step!(mech, min2max(mech, x), u_mask'*u_ctrl, ϵ = 1e-6, btol = 3e-4, undercut = 1.5, verbose = false)
+    z = step!(mech, min2max(mech, x), u_mask'*u_ctrl, ϵ = 1e-6, btol = 3e-4, undercut = 1.5, verbose = false)
 	d .= y - max2min(mech, z) + s
 end
 

@@ -78,7 +78,7 @@ u_mask = [zeros(12,6) I(12)]
 
 z = [copy(z1)]
 for t = 1:5
-    znext = simon_step!(mech, z[end], u_mask'*u_control)
+    znext = step!(mech, z[end], u_mask'*u_control)
     push!(z, znext)
 end
 storage = generate_storage(mech, z)
@@ -89,7 +89,7 @@ visualize(mech, storage, vis = vis)
 function fd(y, x, u, w)
     u_control = u[1:12]
     s = u[12 .+ (1:n)]
-	z = simon_step!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
+	z = step!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
 	yvio = copy(max2min(mech, z)) + s
 	y .= projectQuadruped!(mech, yvio)
 end

@@ -16,7 +16,6 @@ function initialize!(mechanism::Mechanism, model::Symbol; kwargs...)
 end
 
 include("atlas/methods/initialize.jl")
-include("atlas/methods/template.jl")
 
 include("box/methods/initialize.jl")
 
@@ -25,7 +24,6 @@ include("cartpole/methods/initialize.jl")
 include("dzhanibekov/methods/initialize.jl")
 
 include("halfcheetah/methods/initialize.jl")
-include("halfcheetah/methods/template.jl")
 
 include("hopper/methods/initialize.jl")
 
@@ -36,7 +34,6 @@ include("orbital/methods/initialize.jl")
 include("pendulum/methods/initialize.jl")
 
 include("quadruped/methods/initialize.jl")
-include("quadruped/methods/template.jl")
 
 include("slider/methods/initialize.jl")
 
@@ -44,4 +41,7 @@ include("snake/methods/initialize.jl")
 
 include("twister/methods/initialize.jl")
 
-include("../examples/trajectory_optimization/utils.jl")
+# # Templates
+# include("atlas/methods/template.jl")
+# include("halfcheetah/methods/template.jl")
+# include("quadruped/methods/template.jl")

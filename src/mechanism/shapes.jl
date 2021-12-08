@@ -189,16 +189,16 @@ mutable struct Pyramid{T} <: Shape{T}
     end
 end
 
-function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, shape::Shape{T}) where {T}
-    summary(io, shape)
-    println(io,"")
-    println(io," xoffset: "*string(shape.xoffset))
-    println(io," qoffset: "*string(shape.qoffset))
-    println(io," color:   "*string(shape.color))
-    println(io," scale:   "*string(shape.scale))
-end
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, shape::Shape{T}) where {T}
+#     summary(io, shape)
+#     println(io,"")
+#     println(io," xoffset: "*string(shape.xoffset))
+#     println(io," qoffset: "*string(shape.qoffset))
+#     println(io," color:   "*string(shape.color))
+#     println(io," scale:   "*string(shape.scale))
+# end
 
-function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, shape::EmptyShape{T}) where {T}
-    summary(io, shape)
-    println(io,"")
-end
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, shape::EmptyShape{T}) where {T}
+#     summary(io, shape)
+#     println(io,"")
+# end

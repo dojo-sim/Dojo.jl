@@ -141,7 +141,6 @@ function build_robot(vis::Visualizer, mechanism::AbstractMechanism) where {T,N}
     setprop!(vis["/Background"], "bottom_color", RGBA(1.0, 1.0, 1.0))
     setvisible!(vis["/Axes"],false)
 
-    i = 1
     for (id, body) in enumerate(bodies)
         shape = body.shape
         visshape = convertshape(shape)
@@ -185,6 +184,7 @@ function set_robot(vis::Visualizer, mechanism::AbstractMechanism, z::Vector{T}) 
             setprop!(subvisshape, "position", MeshCat.js_position(x + vrotate(shape.xoffset, q)))
             setprop!(subvisshape, "quaternion", MeshCat.js_quaternion(q * shape.qoffset))
         end
+        i += 1
     end
 
     id = origin.id

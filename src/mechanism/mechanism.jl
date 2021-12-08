@@ -22,7 +22,7 @@ mutable struct Mechanism{T,Nn,Ne,Nb,Ni} <: AbstractMechanism{T,Nn,Ne,Nb,Ni}
 
     system::System{Nn}
     residual_entries::Vector{Entry}
-    matrix_entries::SparseMatrixCSC{Entry, Int64}
+    matrix_entries::SparseMatrixCSC{Entry,Int64}
     diagonal_inverses::Vector{Entry}
 
     # TODO remove once EqualityConstraint is homogenous
@@ -88,6 +88,7 @@ function Mechanism(origin::Origin{T},bodies::Vector{<:Body{T}},
 
     α = 1
     μ = 1
+
     Mechanism{T,Nn,Ne,Nb,Ni}(origin, eqcs, bodies, ineqcs, system, residual_entries, matrix_entries, diagonal_inverses,
         normf, normΔs, rvio, bvio, ν, νaff, Δt, g, α, μ)
 end
@@ -127,16 +128,18 @@ function Mechanism(filename::AbstractString; floating::Bool=false, type::Type{T}
     return mechanism
 end
 
-function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, mechanism::AbstractMechanism{T,Nn,Ne,Nb,0}) where {T,Nn,Ne,Nb}
-    summary(io, mechanism)
-    println(io, " with ", Nb, " bodies and ", Ne, " constraints")
-    println(io, " Δt: "*string(mechanism.Δt))
-    println(io, " g:  "*string(mechanism.g))
-end
+# TODO: these methods occasionally break...; fix
 
-function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, mechanism::AbstractMechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
-    summary(io, mechanism)
-    println(io, " with ", Nb, " bodies, ", Ne, " equality constraints, and ", Ni, " inequality constraints")
-    println(io, " Δt: "*string(mechanism.Δt))
-    println(io, " g:  "*string(mechanism.g))
-end
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, mechanism::AbstractMechanism{T,Nn,Ne,Nb,0}) where {T,Nn,Ne,Nb}
+#     summary(io, mechanism)
+#     println(io, " with ", Nb, " bodies and ", Ne, " constraints")
+#     println(io, " Δt: "*string(mechanism.Δt))
+#     println(io, " g:  "*string(mechanism.g))
+# end
+
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, mechanism::AbstractMechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
+#     summary(io, mechanism)
+#     println(io, " with ", Nb, " bodies, ", Ne, " equality constraints, and ", Ni, " inequality constraints")
+#     println(io, " Δt: "*string(mechanism.Δt))
+#     println(io, " g:  "*string(mechanism.g))
+# end

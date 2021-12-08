@@ -112,7 +112,7 @@ u_mask = [zeros(12,6) I(m)]
 
 z = [copy(z1)]
 for t = 1:5
-    znext = simon_step!(mech, z[end], u_mask'*u_control)
+    znext = step!(mech, z[end], u_mask'*u_control)
     push!(z, znext)
 end
 
@@ -121,7 +121,7 @@ Random.seed!(0)
 
 # Model
 function fd(y, x, u, w)
-	y .= copy(simon_step!(mech, x, u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false))
+	y .= copy(step!(mech, x, u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false))
 end
 
 function fdx(fx, x, u, w)
@@ -148,7 +148,7 @@ w = [zeros(d) for t = 1:T-1]
 
 # Rollout
 x̄ = rollout(model, z1, ū, w)
-# simon_step!(model.mech, x, u_mask'*u_control, ϵ = 1e-6, btol = 1e-6, undercut = 1.5, verbose = false)
+# step!(model.mech, x, u_mask'*u_control, ϵ = 1e-6, btol = 1e-6, undercut = 1.5, verbose = false)
 # getGradients!(model.mech, x, u_mask'*u_control, ϵ = 1e-6, btol = 1e-3, undercut = 1.5, verbose = false)
 storage = generate_storage(mech, x̄)
 visualize(mech, storage; vis = vis)

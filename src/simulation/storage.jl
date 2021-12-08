@@ -65,9 +65,9 @@ struct Storage{T,N}
     Storage{T}() where T = Storage{T}(Base.OneTo(0),0)
 end
 
-function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, storage::Storage{T,N}) where {T,N}
-    summary(io, storage)
-end
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, storage::Storage{T,N}) where {T,N}
+#     summary(io, storage)
+# end
 
 function downsample(storage::Storage{T,N}, n::Int) where {T,N}
     steps = N ÷ n
@@ -84,4 +84,25 @@ function downsample(storage::Storage{T,N}, n::Int) where {T,N}
         s.ωl[i] = storage.ωl[i][1:n:end]
     end
     return s
+end
+
+function saveToStorage!(mechanism::Mechanism, storage::Storage, i::Int)
+    for (ind, body) in enumerate(mechanism.bodies)
+        state = body.state
+        storage.x[ind][i] = state.x2[1] # x2
+        storage.q[ind][i] = state.q2[1] # q2
+        storage.v[ind][i] = state.v15 # v1.5
+        storage.ω[ind][i] = state.ϕ15 # ω1.5
+        q2 = state.q2[1]
+        p2 = momentum_body_new(mechanism, body) # p1 in world frame
+        px2 = p2[SVector{3,Int}(1,2,3)] # px1 in world frame
+        pq2 = p2[SVector{3,Int}(4,5,6)] # pq1 in world frame
+        v2 = px2 ./ body.m # in world frame
+        ω2 = body.J \ (rotation_matrix(inv(q2)) * pq2) # in body frame, we rotate using the current quaternion q2 = state.q2[1]
+        storage.px[ind][i] = px2 # px2
+        storage.pq[ind][i] = pq2 # pq2
+        storage.vl[ind][i] = v2 # v2
+        storage.ωl[ind][i] = ω2 # ω2
+    end
+    return
 end

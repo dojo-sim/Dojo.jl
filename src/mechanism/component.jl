@@ -10,13 +10,13 @@ CURRENTID = -1
 getGlobalID() = (global CURRENTID -= 1; return CURRENTID + 1)
 resetGlobalID() = (global CURRENTID = -1; return)
 
-Base.show(io::IO, component::Component) = summary(io, component)
-function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::AbstractConstraint{T,N}) where {T,N}
-    summary(io, constraint)
-    println(io,"")
-    println(io, " id:     "*string(constraint.id))
-    println(io, " name:   "*string(constraint.name))
-end
+# Base.show(io::IO, component::Component) = summary(io, component)
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::AbstractConstraint{T,N}) where {T,N}
+#     summary(io, constraint)
+#     println(io,"")
+#     println(io, " id:     "*string(constraint.id))
+#     println(io, " name:   "*string(constraint.name))
+# end
 
 Base.eltype(::Type{<:Component{E}}) where {E} = @isdefined(E) ? E : Any
 Base.length(::AbstractConstraint{T,N}) where {T,N} = N

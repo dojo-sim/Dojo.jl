@@ -31,13 +31,13 @@ damperforcea(joint::Translational{T,3}, body1::Body, body2::Body, Δt::T, childi
 damperforceb(joint::Translational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
 damperforceb(joint::Translational{T,3}, body1::Origin, body2::Body, Δt::T, childid) where T = szeros(T, 6)
 
-function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::Translational{T,N}) where {T,N}
-    summary(io, constraint)
-    println(io,"")
-    println(io, " V3:       "*string(constraint.V3))
-    println(io, " V12:      "*string(constraint.V12))
-    println(io, " vertices: "*string(constraint.vertices))
-end
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::Translational{T,N}) where {T,N}
+#     summary(io, constraint)
+#     println(io,"")
+#     println(io, " V3:       "*string(constraint.V3))
+#     println(io, " V12:      "*string(constraint.V12))
+#     println(io, " vertices: "*string(constraint.vertices))
+# end
 ## Constraints and derivatives
 # Position level constraints (for dynamics)
 @inline function g(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)

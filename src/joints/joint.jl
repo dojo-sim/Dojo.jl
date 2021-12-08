@@ -6,7 +6,7 @@ Joint1 = Joint{T,1} where T
 Joint2 = Joint{T,2} where T
 Joint3 = Joint{T,3} where T
 
-Base.show(io::IO, joint::Joint) = summary(io, joint)
+# Base.show(io::IO, joint::Joint) = summary(io, joint)
 
 ### Constaint and nullspace matrices
 @inline constraintmat(::Joint0{T}) where T = szeros(T,0,3)

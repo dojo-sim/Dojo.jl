@@ -17,33 +17,6 @@ function generate_storage(mechanism, z)
     return storage
 end
 
-function simon_step!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
-		ϵ::T = 1e-6, newtonIter::Int = 100, lineIter::Int = 10, verbose::Bool = true,
-		btol::T = ϵ, undercut::T = Inf, ctrl!::Any = (m) -> nothing) where {T,Nn,Ne,Nb,Ni}
-
-	# set the initial conditions: x1, v15, x2...
-		# set x2, v15, q2, ϕ15
-		# set x1, q1
-		# set F2 and τ2 to zero
-		# warm-start the solver
-	setState!(mechanism, z)
-
-	# set the controls in the equality constraints
-		# apply the controls to each body's state
-	setControl!(mechanism, u)
-
-	# Apply a control policy, this is used to do puppet master control
-	ctrl!(mechanism)
-
-	# solve the 1 step simulation problem
-	mehrotra!(mechanism, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter, verbose = verbose,
-		opts=InteriorPointOptions(rtol=ϵ, max_iter=newtonIter, btol=btol, undercut=undercut, verbose=verbose))
-
-	# extract the next state
-	z̄ = getNextState(mechanism)
-    return z̄
-end
-
 function setState!(mechanism::Mechanism, z::AbstractVector)
     Δt = mechanism.Δt
     off = 0
@@ -134,7 +107,7 @@ end
 function getMaxGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
 		ϵ::T = 1e-6, newtonIter::Int = 100, lineIter::Int = 10, verbose::Bool = true,
 		btol::T = ϵ, undercut::T = Inf) where {T,Nn,Ne,Nb,Ni}
-	simon_step!(mechanism, z, u, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter,
+	step!(mechanism, z, u, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter,
 		verbose = verbose, btol = btol, undercut = undercut)
 	∇z_z̄, ∇u_z̄ = getMaxGradients(mechanism)
 	return ∇z_z̄, ∇u_z̄
@@ -234,7 +207,7 @@ function getMinGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector
 		ϵ::T = 1e-6, newtonIter::Int = 100, lineIter::Int = 10, verbose::Bool = true,
 		btol::T = ϵ, undercut::T = Inf, ctrl!::Any = m -> nothing) where {T,Nn,Ne,Nb,Ni}
 
-	simon_step!(mechanism, z, u, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter,
+	step!(mechanism, z, u, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter,
 		verbose = verbose, btol = btol, undercut = undercut, ctrl! = ctrl!)
 	z = getState(mechanism)
 	z̄ = getNextState(mechanism)
@@ -378,6 +351,6 @@ function inverse_control_error(mechanism, x, x̄, u; ϵtol = 1e-5)
 	z = min2max(mechanism, x)
 	z̄ = min2max(mechanism, x̄)
 	setState!(mechanism, z)
-	err = x̄ - max2min(mechanism, simon_step!(mechanism, min2max(mechanism, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose = false))
+	err = x̄ - max2min(mechanism, step!(mechanism, min2max(mechanism, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose = false))
 	return err
 end

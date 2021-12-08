@@ -1,8 +1,8 @@
 abstract type Bound{T,N} end
 
-function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::Bound{T,N}) where {T,N}
-    summary(io, constraint)
-end
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::Bound{T,N}) where {T,N}
+#     summary(io, constraint)
+# end
 
 ### General functions
 getT(bound::Bound{T}) where T = T

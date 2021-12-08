@@ -75,7 +75,7 @@ u_control = [0.0]
 u_mask = [1 0]
 
 function fd(y, x, u, w)
-	z = simon_step!(mech, min2max(mech,x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
+	z = step!(mech, min2max(mech,x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
 	y .= copy(max2min(mech, z))
 end
 
