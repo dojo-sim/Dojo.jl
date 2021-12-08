@@ -14,7 +14,7 @@ import Dojo.MeshCat.render
 abstract type Environment{T,M,A,O} end
 
 function make(model::String; kwargs...)
-    return eval(Symbol(model, Environment))(; kwargs...)
+    return eval(Symbol(model))(; kwargs...)
 end
 
 ################################################################################

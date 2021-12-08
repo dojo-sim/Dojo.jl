@@ -4,7 +4,7 @@ include("environment.jl")
 # Pendulum
 ################################################################################
 
-mutable struct PendulumEnvironment{T,M,A,O} <: Environment{T,M,A,O}
+mutable struct Pendulum{T,M,A,O} <: Environment{T,M,A,O}
     mechanism::M
     aspace::A
     ospace::O
@@ -23,7 +23,7 @@ mutable struct PendulumEnvironment{T,M,A,O} <: Environment{T,M,A,O}
     vis::Visualizer
 end
 
-function PendulumEnvironment(; max_speed::T = 8.0, max_torque::T = 8.0,
+function Pendulum(; max_speed::T = 8.0, max_torque::T = 8.0,
         dt::T = 0.05, g::T = -10.0, m::T = 1.0, l::T = 1.0, s::Int = 1, vis::Visualizer = Visualizer()) where {T}
     mechanism = getmechanism(:pendulum, Δt = dt, g = g, m = m, l = l, damper = 0.5)
     nx = minCoordDim(mechanism)
@@ -39,18 +39,18 @@ function PendulumEnvironment(; max_speed::T = 8.0, max_torque::T = 8.0,
     build_robot(vis, mechanism)
 
     TYPES = [T, typeof(mechanism), typeof(aspace), typeof(ospace)]
-    env = PendulumEnvironment{TYPES...}(mechanism, aspace, ospace, x, last_u, nx, nu, no,
+    env = Pendulum{TYPES...}(mechanism, aspace, ospace, x, last_u, nx, nu, no,
         max_speed, max_torque, dt, g, m, l, rng, vis)
     seed(env, s = s)
     return env
 end
 
-function seed(env::PendulumEnvironment{T}; s = 0) where {T}
+function seed(env::Pendulum{T}; s = 0) where {T}
     env.rng = MersenneTwister(s)
     return nothing
 end
 
-function reset(env::PendulumEnvironment{T}; x = nothing) where {T}
+function reset(env::Pendulum{T}; x = nothing) where {T}
     if x != nothing
         env.x = x
     else
@@ -62,12 +62,12 @@ function reset(env::PendulumEnvironment{T}; x = nothing) where {T}
     return _get_obs(env)
 end
 
-function _get_obs(env::PendulumEnvironment{T}) where {T}
+function _get_obs(env::Pendulum{T}) where {T}
     θ, ω = env.x
     return [cos(θ), sin(θ), ω]
 end
 
-function step(env::PendulumEnvironment{T}, u::AbstractVector{T}) where {T}
+function step(env::Pendulum{T}, u::AbstractVector{T}) where {T}
     mechanism = env.mechanism
     Δt = mechanism.Δt
     x0 = env.x
@@ -93,33 +93,15 @@ function angle_normalize(x)
     return ((x + π) % (2 * π)) - π
 end
 
-function render(env::PendulumEnvironment, mode="human")
+function render(env::Pendulum, mode="human")
     z = min2max(env.mechanism, env.x)
     set_robot(env.vis, env.mechanism, z)
     return nothing
 end
 
-function close(env::PendulumEnvironment{M}; kwargs...) where {M}
-    # visualizer stuff
-    # if env.vis:
-    #     env.vis.close()
-    #     env.vis = None
+function close(env::Pendulum{M}; kwargs...) where {M}
     return nothing
 end
-
-
-#
-# mech = getmechanism(:pendulum)
-# minCoordDim(mech)
-#
-# env = make("Pendulum", dt = 0.01)
-#
-#
-# reset(env)
-# reset(env)
-# reset(env)
-# reset(env)
-
 
 
 ################################################################################
