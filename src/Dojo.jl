@@ -166,8 +166,8 @@ include(joinpath("diff", "diff_tools.jl"))
 include(joinpath("diff", "finitediff_tools.jl"))
 
 # Environments
-include("../env/mechanisms.jl")
-include("../env/environment.jl")
+include(joinpath("..", "env", "mechanisms.jl")
+include(joinpath("..", "env", "environment.jl")
 
 # Utilities
 include("../examples/trajectory_optimization/utils.jl")
