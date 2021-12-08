@@ -1,27 +1,27 @@
 
-
-################################################################################
-# Pendulum
-################################################################################
-
-mutable struct Pendulum{T,M,A,O} <: Environment{T,M,A,O}
-    mechanism::M
-    aspace::A
-    ospace::O
-    x::AbstractVector{T}
-    last_u::AbstractVector{T}
-    nx::Int
-    nu::Int
-    no::Int
-    max_speed::T # never used because we do not clip the pendulum angular velocity
-    max_torque::T
-    dt::T
-    g::T
-    m::T
-    l::T
-    rng::MersenneTwister
-    vis::Visualizer
-end
+#
+# ################################################################################
+# # Pendulum
+# ################################################################################
+#
+# mutable struct Pendulum{T,M,A,O} <: Environment{T,M,A,O}
+#     mechanism::M
+#     aspace::A
+#     ospace::O
+#     x::AbstractVector{T}
+#     last_u::AbstractVector{T}
+#     nx::Int
+#     nu::Int
+#     no::Int
+#     max_speed::T # never used because we do not clip the pendulum angular velocity
+#     max_torque::T
+#     dt::T
+#     g::T
+#     m::T
+#     l::T
+#     rng::MersenneTwister
+#     vis::Visualizer
+# end
 
 function Pendulum(; max_speed::T = 8.0, max_torque::T = 40.0,
         dt::T = 0.05, g::T = -10.0, m::T = 1.0, l::T = 1.0, s::Int = 1, vis::Visualizer = Visualizer()) where {T}
