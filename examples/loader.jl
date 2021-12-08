@@ -164,4 +164,4 @@ include(joinpath(module_dir(), "src", "diff", "finitediff_tools.jl"))
 
 # Environments
 include(joinpath(module_dir(), "env", "mechanisms.jl"))
-include(joinpath(module_dir(), "env", "simon_environment.jl")
+include(joinpath(module_dir(), "env", "environment.jl")
