@@ -21,7 +21,7 @@ struct Environment{X,T,M,A,O,I}
     aspace::A
     ospace::O
     x::Vector{T}
-    fx::Matrix{T} 
+    fx::Matrix{T}
     fu::Matrix{T}
     u_prev::Vector{T}
     nx::Int
@@ -30,18 +30,18 @@ struct Environment{X,T,M,A,O,I}
     info::I
     rng::Vector{MersenneTwister}
     vis::Visualizer
-    opts_step::InteriorPointOptions{T} 
+    opts_step::InteriorPointOptions{T}
     opts_grad::InteriorPointOptions{T}
 end
 
 function reset(env::Environment{X}; x=nothing) where X
-    initialize!(X, env.mechanism) 
+    initialize!(X, env.mechanism)
     if x != nothing
         env.x = x
     else
-        if env.mode == :min 
+        if env.mode == :min
             env.x .= getMinState(env.mechanism)
-        elseif env.mode == :max 
+        elseif env.mode == :max
             env.x .= getMaxState(env.mechanism)
         end
         env.u_prev .= 0.0
@@ -68,10 +68,10 @@ function step(env::Environment, x, u; diff=false)
     costs = reward(env, x, u)
 
     # Gradients
-    if diff 
-        if env.mode == :min 
+    if diff
+        if env.mode == :min
             fx, fu = getMinGradients!(env.mechanism, z0, env.control_mask' * u, opts=env.opts_grad)
-        elseif env.mode == :max 
+        elseif env.mode == :max
             fx, fu = getMaxGradients!(env.mechanism, z0, env.control_mask' * u, opts=env.opts_grad)
         end
         env.fx .= fx
@@ -96,7 +96,7 @@ end
 
 reward(env::Environment, x, u) = 0.0
 
-function close(env::Environment; kwargs...) 
+function close(env::Environment; kwargs...)
     return nothing
 end
 
@@ -106,21 +106,23 @@ end
 
 abstract type Space{T,N} end
 
-struct BoxSpace{T,N} <: Space{T,N}
+mutable struct BoxSpace{T,N} <: Space{T,N,}
     n::Int # box dimension
-    low::Vector{T} # minimum value
-    high::Vector{T} # maximum value
+    low::AbstractVector{T} # minimum value
+    high::AbstractVector{T} # maximum value
+    shape::Tuple{Int} # this is always (n,), it's needed to interface with Stable-Baselines
+    dtype::DataType # this is always T, it's needed to interface with Stable-Baselines
 end
 
-function BoxSpace(n::Int; low::Vector{T}=-ones(n), high::Vector{T}=ones(n)) where T
-    return BoxSpace{T,n}(n, low, high)
+function BoxSpace(n::Int; low::AbstractVector{T} = -ones(n), high::AbstractVector{T} = ones(n)) where {T}
+    return BoxSpace{T,n}(n, low, high, (n,), T)
 end
 
 function sample(s::BoxSpace{T,N}) where {T,N}
-    return rand(T, N) .* (s.high .- s.low) .+ s.low
+    return rand(T,N) .* (s.high .- s.low) .+ s.low
 end
 
-function contains(s::BoxSpace{T,N}, v::Vector{T}) where {T,N}
+function contains(s::BoxSpace{T,N}, v::AbstractVector{T}) where {T,N}
     all(v .>= s.low) && all(v .<= s.high)
 end
 
@@ -149,17 +151,3 @@ end
 # include("pendulum/methods/env.jl")
 # include("hopper/methods/env.jl")
 # include("quadruped/methods/env.jl")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
