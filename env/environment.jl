@@ -5,7 +5,7 @@
 import Base.contains
 import Base.reset
 import Base.step
-import Dojo.MeshCat.render
+import MeshCat.render
 
 ################################################################################
 # Environment

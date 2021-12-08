@@ -45,11 +45,6 @@ function Pendulum(; max_speed::T = 8.0, max_torque::T = 40.0,
     return env
 end
 
-function seed(env::Pendulum{T}; s = 0) where {T}
-    env.rng = MersenneTwister(s)
-    return nothing
-end
-
 function reset(env::Pendulum{T}; x = nothing) where {T}
     if x != nothing
         env.x = x
@@ -87,18 +82,4 @@ function step(env::Pendulum{T}, u::AbstractVector{T}) where {T}
 
     info = Dict()
     return _get_obs(env), -costs, false, info
-end
-
-function angle_normalize(x)
-    return ((x + π) % (2 * π)) - π
-end
-
-function render(env::Pendulum, mode="human")
-    z = min2max(env.mechanism, env.x)
-    set_robot(env.vis, env.mechanism, z)
-    return nothing
-end
-
-function close(env::Pendulum{M}; kwargs...) where {M}
-    return nothing
 end
