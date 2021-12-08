@@ -47,7 +47,7 @@ function Mechanism(origin::Origin{T},bodies::Vector{<:Body{T}},
     order = getGlobalOrder()
 
     for body in bodies
-        initknotpoints!(body.state, order)
+        initialize!(body.state, order)
         if norm(body.m) == 0 || norm(body.J) == 0
             @info "Potentially bad inertial properties detected"
         end

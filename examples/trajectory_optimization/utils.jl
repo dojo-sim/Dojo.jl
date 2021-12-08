@@ -1,75 +1,3 @@
-function generate_storage(mechanism, z)
-    steps = length(z)
-    nbodies = length(mechanism.bodies)
-    storage = Storage{Float64}(steps, nbodies)
-
-    for t = 1:steps
-        off = 0
-        for (i, body) in enumerate(mechanism.bodies)
-            storage.x[i][t] = z[t][off .+ (1:3)]
-            storage.v[i][t] = z[t][off .+ (4:6)]
-            storage.q[i][t] = UnitQuaternion(z[t][off .+ (7:10)]..., false)
-            storage.ω[i][t] = z[t][off .+ (11:13)]
-            off += 13
-        end
-    end
-
-    return storage
-end
-
-function setState!(mechanism::Mechanism, z::AbstractVector)
-    Δt = mechanism.Δt
-    off = 0
-    for body in mechanism.bodies
-        x2, v15, q2, ϕ15 = unpackdata(z[off+1:end]); off += 13
-        q2 = UnitQuaternion(q2..., false)
-        body.state.v15 = v15
-        body.state.ϕ15 = ϕ15
-        body.state.x2[1] = x2
-        body.state.q2[1] = q2
-		discretizestate!(mechanism) #set x1, q1 and zeroes out F2 τ2
-    end
-	foreach(setsolution!, mechanism.bodies) # warm-start solver
-end
-
-function setControl!(mechanism::Mechanism{T}, u::AbstractVector) where {T}
-	eqcs = mechanism.eqconstraints
-	# set the controls in the equality constraints
-	off = 0
-	for eqc in eqcs
-		nu = controldim(eqc)
-		setForce!(mechanism, eqc, SVector{nu,T}(u[off .+ (1:nu)]))
-		off += nu
-	end
-	# apply the controls to each body's state
-	foreach(applyFτ!, eqcs, mechanism)
-end
-
-function getState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
-	z = zeros(T,13Nb)
-	for (i, body) in enumerate(mechanism.bodies)
-		v15 = body.state.v15
-		ϕ15 = body.state.ϕ15
-		x2 = body.state.x2[1]
-		q2 = body.state.q2[1]
-		z[13*(i-1) .+ (1:13)] = [x2; v15; vector(q2); ϕ15]
-	end
-	return z
-end
-
-function getNextState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
-	Δt = mechanism.Δt
-	z̄ = zeros(T,13Nb)
-	for (i, body) in enumerate(mechanism.bodies)
-		v25 = body.state.vsol[2]
-		ϕ25 = body.state.ϕsol[2]
-		x3 = getx3(body.state, Δt)
-		q3 = getq3(body.state, Δt)
-		z̄[13*(i-1) .+ (1:13)] = [x3; v25; vector(q3); ϕ25]
-	end
-	return z̄
-end
-
 function getMaxGradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	Δt = mechanism.Δt
 	nu = controldim(mechanism)
@@ -105,10 +33,8 @@ end
 
 
 function getMaxGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
-		ϵ::T = 1e-6, newtonIter::Int = 100, lineIter::Int = 10, verbose::Bool = true,
-		btol::T = ϵ, undercut::T = Inf) where {T,Nn,Ne,Nb,Ni}
-	step!(mechanism, z, u, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter,
-		verbose = verbose, btol = btol, undercut = undercut)
+		opts=InteriorPointOptions()) where {T,Nn,Ne,Nb,Ni}
+	step!(mechanism, z, u, opts=opts)
 	∇z_z̄, ∇u_z̄ = getMaxGradients(mechanism)
 	return ∇z_z̄, ∇u_z̄
 end
@@ -204,11 +130,9 @@ function ∇max2min(mechanism::Mechanism, z)
 end
 
 function getMinGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
-		ϵ::T = 1e-6, newtonIter::Int = 100, lineIter::Int = 10, verbose::Bool = true,
-		btol::T = ϵ, undercut::T = Inf, ctrl!::Any = m -> nothing) where {T,Nn,Ne,Nb,Ni}
+		opts=InteriorPointOptions()) where {T,Nn,Ne,Nb,Ni}
 
-	step!(mechanism, z, u, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter,
-		verbose = verbose, btol = btol, undercut = undercut, ctrl! = ctrl!)
+	step!(mechanism, z, u, opts=opts)
 	z = getState(mechanism)
 	z̄ = getNextState(mechanism)
 	x = max2min(mechanism, z)
@@ -351,6 +275,7 @@ function inverse_control_error(mechanism, x, x̄, u; ϵtol = 1e-5)
 	z = min2max(mechanism, x)
 	z̄ = min2max(mechanism, x̄)
 	setState!(mechanism, z)
-	err = x̄ - max2min(mechanism, step!(mechanism, min2max(mechanism, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose = false))
+	opts = InteriorPointOptions(rtol=ϵtol, btol=ϵtol, undercut=1.5)
+	err = x̄ - max2min(mechanism, step!(mechanism, min2max(mechanism, x), u, opts=opts))
 	return err
 end

@@ -106,3 +106,22 @@ function saveToStorage!(mechanism::Mechanism, storage::Storage, i::Int)
     end
     return
 end
+
+function generate_storage(mechanism, z)
+    steps = length(z)
+    nbodies = length(mechanism.bodies)
+    storage = Storage{Float64}(steps, nbodies)
+
+    for t = 1:steps
+        off = 0
+        for (i, body) in enumerate(mechanism.bodies)
+            storage.x[i][t] = z[t][off .+ (1:3)]
+            storage.v[i][t] = z[t][off .+ (4:6)]
+            storage.q[i][t] = UnitQuaternion(z[t][off .+ (7:10)]..., false)
+            storage.ω[i][t] = z[t][off .+ (11:13)]
+            off += 13
+        end
+    end
+
+    return storage
+end
