@@ -44,13 +44,4 @@ include("snake/methods/initialize.jl")
 
 include("twister/methods/initialize.jl")
 
-
-
-
-
-
-
-
-
-
-
+include("../examples/trajectory_optimization/utils.jl")
