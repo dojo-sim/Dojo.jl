@@ -1,21 +1,12 @@
-# Utils
-function module_dir()
-    return joinpath(@__DIR__, "..", "..")
-end
-
-# Activate package
-using Pkg
-Pkg.activate(module_dir())
-include(joinpath(module_dir(), "examples", "loader.jl"))
-
 # Open visualizer
 vis = Visualizer()
 open(vis)
 
 # Build mechanism
-include("mechanism_zoo.jl")
+include("../../env/mechanisms.jl")
+
 mech = getmechanism(:slider, Δt = 0.01, g = -9.81)
-initialize!(mech, :slider, ϕ1 = 0.7)
+initialize!(mech, :slider)
 
 for (i,joint) in enumerate(mech.eqconstraints)
     if i ∈ (1,2)
@@ -36,14 +27,14 @@ for (i,joint) in enumerate(mech.eqconstraints)
     end
 end
 
-storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!)
-visstorage = simulate!(mech, 4.0, record = true, solver = :mehrotra!)
+storage = simulate!(mech, 0.5, record = true, solver = :mehrotra!)
+# visstorage = simulate!(mech, 4.0, record = true, solver = :mehrotra!)
 # plot(hcat(Vector.(storage.x[1])...)')
 # plot(hcat([[q.w, q.x, q.y, q.z] for q in storage.q[1]]...)')
 # plot(hcat(Vector.(storage.v[1])...)')
 # plot(hcat(Vector.(storage.ω[1])...)')
 
-visualize(mech, visstorage, vis = vis)
+visualize(mech, storage, vis = vis)
 
 
 ################################################################################
