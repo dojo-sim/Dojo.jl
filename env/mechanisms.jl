@@ -37,6 +37,8 @@ include("quadruped/methods/initialize.jl")
 
 include("slider/methods/initialize.jl")
 
+include("sphere/methods/initialize.jl")
+
 include("snake/methods/initialize.jl")
 
 include("twister/methods/initialize.jl")
