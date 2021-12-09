@@ -1,18 +1,21 @@
-function gethalfcheetah(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, 
-    spring::T=0.0, damper::T=1.0, contact::Bool=true) where T 
+function gethalfcheetah(; Δt::T=0.01, g::T=-9.81, cf::T=0.8,
+    spring::T=0.0, damper::T=1.0, contact::Bool=true) where T
 
     # TODO new feature: visualize capsule instead of cylinders
     # TODO new feature: visualize multiple shapes for a single body
     path = joinpath(@__DIR__, "../deps/halfcheetah.urdf")
     mech = Mechanism(path, floating=false, g=g, Δt=Δt)
 
-    # Adding springs and dampers
-    for (i,eqc) in enumerate(collect(mech.eqconstraints[2:end]))
+    # Adding springs and dampers, values taken from Mujoco's halfcheetah model
+    eqcs = collect(mech.eqconstraints)
+    damper = [0, 6, 4.5, 3, 4.5, 3, 1.5]
+    spring = [0, 240, 180, 120, 180, 120, 60.]
+    for (i,eqc) in enumerate(eqcs)
         eqc.isdamper = true
         eqc.isspring = true
         for joint in eqc.constraints
-            joint.spring = spring
-            joint.damper = damper
+            joint.spring = spring[i]
+            joint.damper = damper[i]
         end
     end
 
@@ -22,8 +25,8 @@ function gethalfcheetah(; Δt::T=0.01, g::T=-9.81, cf::T=0.8,
         eqs = Vector{EqualityConstraint{T}}(collect(mech.eqconstraints))
 
         # Foot contact
-        contact1 = [0.0; 0.0; -0.140]
-        contact2 = [0.0; 0.0; -0.188]
+        contact1 = [0.0; 0.0; -0.070]
+        contact2 = [0.0; 0.0; -0.094]
         normal = [0.0; 0.0; 1.0]
 
         contineqcs1 = contactconstraint(getbody(mech, "ffoot"), normal, cf, p=contact1)
@@ -39,5 +42,8 @@ function initializehalfcheetah!(mechanism::Mechanism; x::T=0.0, z::T=0.0, θ::T=
     setPosition!(mechanism,
                  geteqconstraint(mechanism, "floating_joint"),
                  [z + 0.530509, -x, -θ + 0.02792])
+    for eqc in eqcs
+        (eqc.name != "floating_joint") && setPosition!(mechanism, eqc, zeros(controldim(eqc)))
+    end
     zeroVelocity!(mechanism)
 end
