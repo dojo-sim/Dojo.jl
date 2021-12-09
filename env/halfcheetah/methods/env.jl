@@ -4,19 +4,19 @@
 struct HalfCheetah end 
 
 function halfcheetah(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
-    s::Int=1, contact::Bool=true, vis::Visualizer=Visualizer(),
-    info=nothing,
+    cf::T=0.8, spring::T=0.0, damper::T=1.0, s::Int=1, contact::Bool=true, 
+    info=nothing, vis::Visualizer=Visualizer(),
     opts_step=InteriorPointOptions(), opts_grad=InteriorPointOptions()) where T
 
-    mechanism = gethopper(Δt=dt, g=g)
-    initializehopper!(mechanism)
+    mechanism = gethalfcheetah(Δt=dt, g=g, cf=cf, spring=spring, damper=damper)
+    initializehalfcheetah!(mechanism)
 
     if mode == :min
         nx = minCoordDim(mechanism)
     elseif mode == :max 
         nx = maxCoordDim(mechanism)
     end
-    nu = 3
+    nu = 6
     no = nx
 
     aspace = BoxSpace(nu, low=(-1.0e-3 * ones(nu)), high=(1.0e-3 * ones(nu)))
@@ -31,11 +31,11 @@ function halfcheetah(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     fu = zeros(nx, nu)
 
     u_prev = zeros(nu)
-    control_mask = hopper_control_mask() 
+    control_mask = [zeros(6, 3) I(nu)]
 
     build_robot(vis, mechanism)
 
-    TYPES = [Hopper, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
+    TYPES = [HalfCheetah, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
     env = Environment{TYPES...}(mechanism, mode, aspace, ospace, 
         x, fx, fu,
         u_prev, control_mask,
@@ -45,27 +45,4 @@ function halfcheetah(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
         opts_step, opts_grad)
         
     return env
-end
-
-function hopper_control_mask()
-    [0 0 0 1 0 0 0;
-	 0 0 0 0 1 0 0;
-	 0 0 0 0 0 0 1]
-end
-
-function hopper_nominal_max()
-    # initial state
-    x1b1 = [0.0; 0.0; 0.5]
-    v1b1 = [0.0; 0.0; 0.0]
-    q1b1 = [1.0; 0.0; 0.0; 0.0]
-    ω1b1 = [0.0; 0.0; 0.0]
-    z1b1 = [x1b1; v1b1; q1b1; ω1b1]
-
-    x1b2 = [0.0; 0.0; 0.0]
-    v1b2 = [0.0; 0.0; 0.0]
-    q1b2 = [1.0; 0.0; 0.0; 0.0]
-    ω1b2 = [0.0; 0.0; 0.0]
-    z1b2 = [x1b2; v1b2; q1b2; ω1b2]
-
-    z1 = [z1b1; z1b2]
 end

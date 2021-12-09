@@ -178,7 +178,7 @@ end
 #
 #
 #
-# ## state space
+# ## dimensions
 # Nb = length(mech.bodies)
 # n = minCoordDim(mech)
 # m = 12

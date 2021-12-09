@@ -11,7 +11,7 @@ env = make("cartpole",
 # ## visualizer 
 open(env.vis)
 
-# ## state space
+# ## dimensions
 n = env.nx
 m = env.nu
 d = 0

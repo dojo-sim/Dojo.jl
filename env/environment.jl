@@ -151,7 +151,10 @@ end
 # Environments
 # ##############################################################################
 include("pendulum/methods/env.jl")
+include("cartpole/methods/env.jl")
 include("hopper/methods/env.jl")
+include("halfcheetah/methods/env.jl")
+
 # include("quadruped/methods/env.jl")
 
 ################################################################################

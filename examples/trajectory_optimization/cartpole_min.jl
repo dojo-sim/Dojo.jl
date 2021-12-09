@@ -12,7 +12,7 @@ env = make("cartpole",
 open(env.vis)
 env.mechanism.bodies[4].state.x2
 
-# ## state space
+# ## dimensions
 n = env.nx
 m = env.nu
 d = 0

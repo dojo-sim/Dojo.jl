@@ -69,3 +69,11 @@ function hopper_nominal_max()
 
     z1 = [z1b1; z1b2]
 end
+
+function hopper_offset_max(x_shift, y_shift, z_shift)
+    z = hopper_nominal_max()
+    shift = [x_shift; y_shift; z_shift]
+    z[1:3] += shift
+    z[13 .+ (1:3)] += shift
+    return z
+end
