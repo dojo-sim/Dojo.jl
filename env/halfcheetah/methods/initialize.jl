@@ -39,5 +39,5 @@ function initializehalfcheetah!(mechanism::Mechanism; x::T = 0.0, z::T = 0.0, θ
     setPosition!(mechanism,
                  geteqconstraint(mechanism, "floating_joint"),
                  [z + 0.530509, -x, -θ + 0.02792])
-
+    zeroVelocity!(mechanism)
 end

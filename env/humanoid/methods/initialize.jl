@@ -1,4 +1,3 @@
-
 function gethumanoid(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0, damper::T = 0.0, contact::Bool = true) where {T}
     # TODO new feature: visualize capsule instead of cylinders
     # TODO new feature: visualize multiple shapes for a single body
@@ -40,12 +39,12 @@ function gethumanoid(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0
     return mech
 end
 
-gethumanoid()
-
 function initializehumanoid!(mechanism::Mechanism; tran::AbstractVector{T} = [0,0,1.2],
     rot::AbstractVector{T} = [0.1,0,0]) where {T}
     setPosition!(mechanism,
                 geteqconstraint(mechanism, "auto_generated_floating_joint"),
                 [tran; rot])
+
+    zeroVelocity!(mechanism)
 end
 
