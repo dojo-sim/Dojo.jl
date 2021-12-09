@@ -1,4 +1,4 @@
-function getcartpole(; Δt::T = 0.1, g::T = -9.81) where {T}
+function getcartpole(; Δt::T=0.1, g::T=-9.81) where {T}
     #TODO: make customizable
     # Parameters
     slider_axis = [0.0; 1.0; 0.0]
@@ -29,22 +29,14 @@ end
 function initializecartpole!(mech::Mechanism{T,Nn,Ne,Nb}; mode=:down, pendulum_length=1.0) where {T,Nn,Ne,Nb}
     # origin to slider
     setPosition!(mech.origin, mech.bodies[3])
-    setVelocity!(mech.bodies[3], v = [0.0; 0.0; 0.0], ω = zeros(3))
-    # mech.bodies[3].state.x1
-    # mech.bodies[3].state.v15
-    # mech.bodies[3].state.q1
-    # mech.bodies[3].state.ϕ15
+    setVelocity!(mech.bodies[3], v=[0.0; 0.0; 0.0],ω=zeros(3))
 
     # slider to pendulum
     if mode == :down
         setPosition!(mech.bodies[3], mech.bodies[4], Δx=[0.0; 0.0; -0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
-        setVelocity!(mech.bodies[4], v = zeros(3), ω = zeros(3))
+        setVelocity!(mech.bodies[4], v=zeros(3), ω=zeros(3))
     elseif mode == :up
         setPosition!(mech.bodies[3], mech.bodies[4], Δx=[0.0; 0.0; 0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
-        setVelocity!(mech.bodies[4], v = zeros(3), ω = zeros(3))
+        setVelocity!(mech.bodies[4], v=zeros(3), ω=zeros(3))
     end
-    # mech.bodies[4].state.x1
-    # mech.bodies[4].state.v15
-    # mech.bodies[4].state.q1
-    # mech.bodies[4].state.ϕ15
 end
