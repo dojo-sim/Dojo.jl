@@ -133,17 +133,18 @@ end
 step(env::Environment, u) = step(env, env.x, u)
 
 function f(y, env::Environment, x, u, w)
-	y .= step(env, x, u)[1]
+	step(env, x, u)[1]
+    y .= env.x
 end
 
-function fx(fx, env::Environment, x, u, w)
+function fx(dx, env::Environment, x, u, w)
 	step(env, x, u, diff=true)
-    fx .= env.fx
+    dx .= env.fx
 end
 
-function fu(fu, env::Environment, x, u, w)
+function fu(du, env::Environment, x, u, w)
 	# step(env, x, u, diff=true) # this is run in fx
-	fu .= env.fu
+	du .= env.fu
 end
 
 ################################################################################
@@ -152,3 +153,12 @@ end
 include("pendulum/methods/env.jl")
 include("hopper/methods/env.jl")
 # include("quadruped/methods/env.jl")
+
+################################################################################
+# Visualize Trajectories
+# ##############################################################################
+function visualize(env::Environment, traj::Vector{Vector{T}}) where T 
+    storage = generate_storage(env.mechanism, [env.mode == :min ? min2max(env.mechanism, x) : x for x in traj])
+    visualize(env.mechanism, storage, vis=env.vis)
+end
+

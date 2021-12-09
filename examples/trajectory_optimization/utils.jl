@@ -1,3 +1,56 @@
+function setState!(mechanism::Mechanism, z::AbstractVector)
+    Δt = mechanism.Δt
+    off = 0
+    for body in mechanism.bodies
+        x2, v15, q2, ϕ15 = unpackdata(z[off+1:end]); off += 13
+        q2 = UnitQuaternion(q2..., false)
+        body.state.v15 = v15
+        body.state.ϕ15 = ϕ15
+        body.state.x2[1] = x2
+        body.state.q2[1] = q2
+		discretizestate!(mechanism) #set x1, q1 and zeroes out F2 τ2
+    end
+	foreach(setsolution!, mechanism.bodies) # warm-start solver
+end
+
+function setControl!(mechanism::Mechanism{T}, u::AbstractVector) where {T}
+	eqcs = mechanism.eqconstraints
+	# set the controls in the equality constraints
+	off = 0
+	for eqc in eqcs
+		nu = controldim(eqc)
+		setForce!(mechanism, eqc, SVector{nu,T}(u[off .+ (1:nu)]))
+		off += nu
+	end
+	# apply the controls to each body's state
+	foreach(applyFτ!, eqcs, mechanism)
+end
+
+function getState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
+	z = zeros(T,13Nb)
+	for (i, body) in enumerate(mechanism.bodies)
+		v15 = body.state.v15
+		ϕ15 = body.state.ϕ15
+		x2 = body.state.x2[1]
+		q2 = body.state.q2[1]
+		z[13*(i-1) .+ (1:13)] = [x2; v15; vector(q2); ϕ15]
+	end
+	return z
+end
+
+function getNextState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
+	Δt = mechanism.Δt
+	z̄ = zeros(T,13Nb)
+	for (i, body) in enumerate(mechanism.bodies)
+		v25 = body.state.vsol[2]
+		ϕ25 = body.state.ϕsol[2]
+		x3 = getx3(body.state, Δt)
+		q3 = getq3(body.state, Δt)
+		z̄[13*(i-1) .+ (1:13)] = [x3; v25; vector(q3); ϕ25]
+	end
+	return z̄
+end
+
 function getMaxGradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	Δt = mechanism.Δt
 	nu = controldim(mechanism)
