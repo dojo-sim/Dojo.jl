@@ -18,12 +18,14 @@ include(joinpath(module_dir(), "src", "optional_components", "trajopt_utils.jl")
 
 using IterativeLQR
 
+vis = Visualizer() 
+open(vis)
 # System
 gravity = -9.81
 Δt = 0.05
 mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = 0.8, damper = 10.0, spring = 0.0)
 initialize!(mech, :quadruped, tran = [0,0,0.], v = [0,0,0.])
-@elapsed storage = simulate!(mech, 0.05, record = true, solver = :mehrotra!, verbose = false)
+@elapsed storage = simulate!(mech, 0.05, record = true, verbose = false)
 visualize(mech, storage, vis = vis)
 
 T = 20
@@ -64,7 +66,7 @@ end
 
 mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = 0.8, damper = 1000.0, spring = 30.0)
 initialize!(mech, :quadruped)
-@elapsed storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!, verbose = false)
+@elapsed storage = simulate!(mech, 5.0, record = true, verbose = false)
 visualize(mech, storage, vis = vis)
 ugc = gravity_compensation(mech)
 

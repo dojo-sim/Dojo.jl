@@ -1,5 +1,3 @@
-# import LyceumMuJoCoViz.visualize
-
 function transform(x, q, shape)
     scale_transform = MeshCat.LinearMap(diagm(shape.scale))
     x_transform = MeshCat.Translation(x + vrotate(shape.xoffset, q))
@@ -82,9 +80,7 @@ function visualize(mechanism::AbstractMechanism, storage::Storage{T,N};
     # delete!(vis["/Axes"])
 
     if openvis
-        if env == "blink"
-            open(vis, Blink.Window())
-        elseif env == "browser"
+        if env == "browser"
             open(vis)
         elseif env == "editor"
             # Needs to be returned to show. Is there a better way of doing this?
