@@ -3,7 +3,7 @@
 ################################################################################
 struct Pendulum end
 
-function Pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
+function pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
         dt::T=0.05, g::T=-10.0, m::T=1.0, l::T=1.0, s::Int=1, vis::Visualizer=Visualizer(),
         opts_step::InteriorPointOptions = InteriorPointOptions(),
         opts_grad::InteriorPointOptions = InteriorPointOptions(),
