@@ -4,11 +4,11 @@
 struct Pendulum end
 
 function pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
-        dt::T=0.05, g::T=-10.0, m::T=1.0, l::T=1.0, s::Int=1, vis::Visualizer=Visualizer(),
+        dt::T=0.05, g::T=-10.0, m::T=1.0, l::T=1.0, damper=0.0, s::Int=1, vis::Visualizer=Visualizer(),
         opts_step::InteriorPointOptions = InteriorPointOptions(),
-        opts_grad::InteriorPointOptions = InteriorPointOptions(),
-        ) where {T}
-    mechanism = getmechanism(:pendulum, Δt=dt, g=g, m=m, l=l, damper=5.0)
+        opts_grad::InteriorPointOptions = InteriorPointOptions()) where {T}
+
+    mechanism = getmechanism(:pendulum, Δt=dt, g=g, m=m, l=l, damper=damper)
     initialize!(mechanism, :pendulum)
 
     if mode == :min
@@ -89,12 +89,12 @@ function step(env::Environment{Pendulum}, x, u; diff=false)
     # Gradients
     if diff
         if env.mode == :min
-            fx, fu = getMinGradients!(env.mechanism, z0, u, opts = env.opts_grad)
+            fx, fu = getMinGradients!(env.mechanism, z0, Δt * u0, opts=env.opts_grad)
         elseif env.mode == :max
-            fx, fu = getMaxGradients!(env.mechanism, z0, u, opts = env.opts_grad)
+            fx, fu = getMaxGradients!(env.mechanism, z0, Δt * u0, opts=env.opts_grad)
         end
         env.fx .= fx
-        env.fu .= fu
+        env.fu .= Δt * fu
     end
 
     info = Dict()
@@ -113,6 +113,15 @@ function pendulum_nominal_max()
     z1 = [x1; v1; q1; ω1]
 end
 
+function pendulum_goal_max()
+    xT = [0.0; 0.0; 0.5]
+    vT = [0.0; 0.0; 0.0]
+    qT = [0.0; 1.0; 0.0; 0.0]
+    ωT = [0.0; 0.0; 0.0]
+    zT = [xT; vT; qT; ωT]
+end
+
+
 function cost(env, x, u)
     if env.mode == :min
         θ, ω = x
@@ -122,22 +131,3 @@ function cost(env, x, u)
     end
     return -costs
 end
-
-
-# mech = getpendulum()
-# controldim(mech)
-#
-#
-# env = Pendulum(mode = :min)
-# obs = reset(env)
-# obs = _get_obs(env)
-# x = [0.1, 0.2]
-# u = [0.4]
-# o, r, done, info = step(env, x, u)
-# cost(env, x, u)
-
-
-# a = 10
-# a = 10
-# a = 10
-#

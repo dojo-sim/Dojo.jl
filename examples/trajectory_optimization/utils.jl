@@ -1,22 +1,3 @@
-function generate_storage(mechanism, z)
-    steps = length(z)
-    nbodies = length(mechanism.bodies)
-    storage = Storage{Float64}(steps, nbodies)
-
-    for t = 1:steps
-        off = 0
-        for (i, body) in enumerate(mechanism.bodies)
-            storage.x[i][t] = z[t][off .+ (1:3)]
-            storage.v[i][t] = z[t][off .+ (4:6)]
-            storage.q[i][t] = UnitQuaternion(z[t][off .+ (7:10)]..., false)
-            storage.ω[i][t] = z[t][off .+ (11:13)]
-            off += 13
-        end
-    end
-
-    return storage
-end
-
 function setState!(mechanism::Mechanism, z::AbstractVector)
     Δt = mechanism.Δt
     off = 0
@@ -105,10 +86,8 @@ end
 
 
 function getMaxGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
-		ϵ::T = 1e-6, newtonIter::Int = 100, lineIter::Int = 10, verbose::Bool = true,
-		btol::T = ϵ, undercut::T = Inf) where {T,Nn,Ne,Nb,Ni}
-	step!(mechanism, z, u, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter,
-		verbose = verbose, btol = btol, undercut = undercut)
+		opts=InteriorPointOptions()) where {T,Nn,Ne,Nb,Ni}
+	step!(mechanism, z, u, opts=opts)
 	∇z_z̄, ∇u_z̄ = getMaxGradients(mechanism)
 	return ∇z_z̄, ∇u_z̄
 end
@@ -204,11 +183,9 @@ function ∇max2min(mechanism::Mechanism, z)
 end
 
 function getMinGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
-		ϵ::T = 1e-6, newtonIter::Int = 100, lineIter::Int = 10, verbose::Bool = true,
-		btol::T = ϵ, undercut::T = Inf, ctrl!::Any = m -> nothing) where {T,Nn,Ne,Nb,Ni}
+		opts=InteriorPointOptions()) where {T,Nn,Ne,Nb,Ni}
 
-	step!(mechanism, z, u, ϵ = ϵ, newtonIter = newtonIter, lineIter = lineIter,
-		verbose = verbose, btol = btol, undercut = undercut, ctrl! = ctrl!)
+	step!(mechanism, z, u, opts=opts)
 	z = getState(mechanism)
 	z̄ = getNextState(mechanism)
 	x = max2min(mechanism, z)
@@ -351,6 +328,7 @@ function inverse_control_error(mechanism, x, x̄, u; ϵtol = 1e-5)
 	z = min2max(mechanism, x)
 	z̄ = min2max(mechanism, x̄)
 	setState!(mechanism, z)
-	err = x̄ - max2min(mechanism, step!(mechanism, min2max(mechanism, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose = false))
+	opts = InteriorPointOptions(rtol=ϵtol, btol=ϵtol, undercut=1.5)
+	err = x̄ - max2min(mechanism, step!(mechanism, min2max(mechanism, x), u, opts=opts))
 	return err
 end

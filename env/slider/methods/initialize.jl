@@ -61,4 +61,6 @@ function initializenslider!(mechanism::Mechanism; z1::T = 0.2, Δz = 0.0) where 
         setPosition!(getbody(mechanism, previd), body, p1 = [0, -0.1, Δz])
         previd = body.id
     end
+
+    zeroVelocity!(mechanism)
 end

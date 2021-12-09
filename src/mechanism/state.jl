@@ -69,8 +69,7 @@ end
 #     println(io,"d:    "*string(state.d))
 # end
 
-
-function initknotpoints!(state::State, order)
+function initialize!(state::State, order)
     state.order = order
 
     state.x2 = [state.x2[1] for i = 1:order]

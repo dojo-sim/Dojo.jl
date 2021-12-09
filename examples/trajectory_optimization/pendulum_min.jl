@@ -7,15 +7,12 @@ using IterativeLQR
 # system
 dt = 0.05
 gravity = -9.81
-max_torque = 200.0
-max_speed = 8.0
+max_torque = 20.0
 env = make("pendulum", 
-    mode=:max, 
-    max_speed=max_speed, 
-    max_torque=max_torque,
-    damper=1.0,
+    mode=:min, 
     dt=dt,
     g=gravity,
+    max_torque=max_torque,
     vis=vis);
 
 ## state space
@@ -24,13 +21,13 @@ m = env.nu
 d = 0
 
 ## initial state
-z1 = pendulum_nominal_max()
+z1 = [0.0; 0.0]
 
 ## goal state 
-zT = pendulum_goal_max() 
+zT = [π; 0.0]
 
 ## horizon
-T = 51
+T = 21
 
 ## model
 dyn = IterativeLQR.Dynamics(
@@ -42,32 +39,25 @@ dyn = IterativeLQR.Dynamics(
 model = [dyn for t = 1:T-1]
 
 ## initial conditions, controls, disturbances
-ū = [1.0 * randn(m) for t = 1:T-1]
+ū = [0.1 * randn(m) for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, z1, ū, w)
 visualize(env, x̄) 
 
 # Objective
-ot = (x, u, w) -> transpose(x - zT) * Diagonal(1.0e-1 * ones(n)) * (x - zT) + transpose(u) * Diagonal(1.0e-2 * ones(m)) * u
-oT = (x, u, w) -> transpose(x - zT) * Diagonal(1.0e-1 * ones(n)) * (x - zT)
+ot = (x, u, w) -> transpose(x - zT) * Diagonal(1.0e-1 * ones(n)) * (x - zT) + transpose(u) * Diagonal(1.0e-3 * ones(m)) * u
+oT = (x, u, w) -> transpose(x - zT) * Diagonal(1.0 * ones(n)) * (x - zT)
 
 ct = Cost(ot, n, m, d)
 cT = Cost(oT, n, 0, 0)
 obj = [[ct for t = 1:T-1]..., cT]
 
-# Constraints 
-function ctrl_lmt(x, u, w) 
-    [
-     -max_torque - u[1]; 
-     u[1] - max_torque;
-    ]
-end 
-
+# Constraints
 function goal(x, u, w)
     x - zT
 end
 
-cont = Constraint(ctrl_lmt, n, m, idx_ineq=collect(1:2))
+cont = Constraint()
 conT = Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
@@ -90,8 +80,3 @@ IterativeLQR.solve!(prob,
 
 x_sol, u_sol = IterativeLQR.get_trajectory(prob)
 visualize(env, x_sol)
-
-plot(hcat(u_sol...)')
-
-
-

@@ -26,7 +26,6 @@ function getorbital(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 
 end
 
 function initializeorbital!(mechanism::Mechanism; ϕx::T = pi/4, ϕy::T = pi/8) where {T}
-
     link1 = collect(mechanism.bodies)[1]
     eqc = collect(mechanism.eqconstraints)[1]
     vert11 = eqc.constraints[1].vertices[2]
@@ -37,4 +36,6 @@ function initializeorbital!(mechanism::Mechanism; ϕx::T = pi/4, ϕy::T = pi/8) 
 
     previd = link1.id
     setPosition!(mechanism, collect(mechanism.eqconstraints)[2], [ϕx, ϕy])
+
+    zeroVelocity!(mechanism)
 end
