@@ -357,3 +357,20 @@ function Base.cat(eqc1::EqualityConstraint{T,N1,Nc1}, eqc2::EqualityConstraint{T
 
     return eqc
 end
+
+function set_spring_damper!(eqcs, spring, damper)
+    i = 1
+    for eqc in eqcs
+        eqc.parentid === nothing && continue 
+        k = (length(spring) > 1) ? spring[i] : spring 
+        b = (length(damper) > 1) ? damper[i] : damper
+        eqc.isspring = k > 0.0
+        eqc.isdamper = b > 0.0
+        for joint in eqc.constraints
+            joint.spring = max(0.0, k)
+            joint.damper = max(0.0, b)
+        end
+        i += 1
+    end
+    return eqcs
+end

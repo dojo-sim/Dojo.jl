@@ -1,4 +1,4 @@
-function getslider(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 0.0) where {T}
+function getslider(; Δt::T = 0.01, g::T = -9.81, spring = 0.0, damper = 0.0) where {T}
     # Parameters
     joint_axis = [0; 0; 1.0]
     length1 = 1.0
@@ -14,7 +14,7 @@ function getslider(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 0
     links = [link1]
     eqcs = [joint_between_origin_and_link1]
 
-    mech = Mechanism(origin, links, eqcs, g = g, Δt = Δt)
+    mech = Mechanism(origin, links, eqcs, g = g, Δt = Δt, spring=spring, damper=damper)
     return mech
 end
 

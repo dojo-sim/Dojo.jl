@@ -1,4 +1,4 @@
-function getcartpole(; Δt::T=0.1, g::T=-9.81) where {T}
+function getcartpole(; Δt::T=0.1, g::T=-9.81, spring=0.0, damper=0.0) where {T}
     #TODO: make customizable
     # Parameters
     slider_axis = [0.0; 1.0; 0.0]
@@ -21,7 +21,7 @@ function getcartpole(; Δt::T=0.1, g::T=-9.81) where {T}
     eqcs = [joint_origin_slider, joint_slider_pendulum]
 
     # Mechanism
-    mech = Mechanism(origin, links, eqcs, g=g, Δt=Δt)
+    mech = Mechanism(origin, links, eqcs, g=g, Δt=Δt, spring=spring, damper=damper)
 
     return mech
 end

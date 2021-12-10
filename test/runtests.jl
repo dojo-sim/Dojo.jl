@@ -8,7 +8,6 @@ using SparseArrays
 using BenchmarkTools
 using Dojo
 
-T = Float64 #TODO: remove global numerical type
 include("integrator.jl")
 include("minimal_coordinates.jl")
 include("jacobian.jl")

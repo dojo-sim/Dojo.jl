@@ -1,16 +1,13 @@
 using IterativeLQR
-include(joinpath(@__DIR__, "../../env/halfcheetah/methods/template.jl"))
 
 # ## system
+include(joinpath(@__DIR__, "../../env/halfcheetah/methods/template.jl"))
+
 dt = 0.05
 gravity = -9.81
-spring = 300.0 
-damper = 10.0
 env = make("halfcheetah", 
     mode=:min, 
     g=gravity,
-    spring=spring, 
-    damper=damper,
     dt=dt)
 
 # ## visualizer 

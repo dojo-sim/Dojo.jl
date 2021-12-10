@@ -1,8 +1,8 @@
-function gethumanoid(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0, damper::T = 0.0, contact::Bool = true) where {T}
+function gethumanoid(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring = 0.0, damper = 0.0, contact::Bool = true) where {T}
     # TODO new feature: visualize capsule instead of cylinders
     # TODO new feature: visualize multiple shapes for a single body
     path = joinpath(@__DIR__, "../deps/humanoid.urdf")
-    mech = Mechanism(path, floating=true, g = g, Δt = Δt)
+    mech = Mechanism(path, floating=true, g = g, Δt = Δt, spring=spring, damper=damper)
 
     # Adding springs and dampers
     for (i,eqc) in enumerate(collect(mech.eqconstraints[2:end]))
@@ -34,7 +34,7 @@ function gethumanoid(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0
         contineqcs2 = contactconstraint(getbody(mech, "right_foot"), normal, cf, p = contacts)
 
         setPosition!(mech, geteqconstraint(mech, "auto_generated_floating_joint"), [0;0;1.2;0.1;0.;0.])
-        mech = Mechanism(origin, bodies, eqs, [contineqcs1; contineqcs2], g = g, Δt = Δt)
+        mech = Mechanism(origin, bodies, eqs, [contineqcs1; contineqcs2], g = g, Δt = Δt, spring=spring, damper=damper)
     end
     return mech
 end

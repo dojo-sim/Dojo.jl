@@ -78,7 +78,7 @@ function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:
     Bxmat = cont.Bx
     Bqmat = Bxmat * ∂vrotate∂q(cont.p, q3) * LVᵀmat(q3)
     SVector{4,T}(
-        cont.ainv3 * (x3 + vrotate(cont.p,q3) - cont.offset) - ineqc.ssol[2][1],
+        cont.ainv3 * (x3 + vrotate(cont.p, q3) - cont.offset) - ineqc.ssol[2][1],
         cont.cf * ineqc.γsol[2][1] - ineqc.γsol[2][2],
         (Bxmat * v + Bqmat * ω - ineqc.ssol[2][@SVector [3,4]])...)
 end

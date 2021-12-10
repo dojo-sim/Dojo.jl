@@ -1,4 +1,4 @@
-function gethopper(; Δt::T=0.05, g::T=-9.81, spring::T=0.0, damper::T=0.1, contact::Bool=true) where T
+function gethopper(; Δt::T=0.05, g::T=-9.81, spring=0.0, damper=0.1, contact::Bool=true) where T
     #TODO: make customizable
 
     # Parameters
@@ -28,9 +28,9 @@ function gethopper(; Δt::T=0.05, g::T=-9.81, spring::T=0.0, damper::T=0.1, cont
 
     # Mechanism
     if contact
-        mech = Mechanism(origin, links, eqcs, [contineqcs], g=g, Δt=Δt)
+        mech = Mechanism(origin, links, eqcs, [contineqcs], g=g, Δt=Δt, spring=spring, damper=damper)
     else
-        mech = Mechanism(origin, links, eqcs, g=g, Δt=Δt)
+        mech = Mechanism(origin, links, eqcs, g=g, Δt=Δt, spring=spring, damper=damper)
     end
     return mech
 end

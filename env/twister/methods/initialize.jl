@@ -41,7 +41,7 @@ function gettwister(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = 
             error("Unknown conetype")
         end
     else
-        mech = Mechanism(origin, links, eqcs, g = g, Δt = Δt)
+        mech = Mechanism(origin, links, eqcs, g = g, Δt = Δt, spring=spring, damper=damper)
     end
     return mech
 end

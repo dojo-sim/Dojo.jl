@@ -99,3 +99,10 @@ IterativeLQR.solve!(prob,
 
 x_sol, u_sol = get_trajectory(prob)
 visualize(env, x_sol)
+
+
+# vector damper and spring 
+i = 0 
+for eqc in env.mechanism.eqconstraints
+    @show eqc 
+end

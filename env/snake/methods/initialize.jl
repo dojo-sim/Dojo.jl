@@ -33,7 +33,7 @@ function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
         if conetype == :soc
             contineqcs1 = contactconstraint(links, normal, cf, p = fill(vert11, n)) # we need to duplicate point for prismatic joint for instance
             contineqcs2 = contactconstraint(links, normal, cf, p = fill(vert12, n))
-            mech = Mechanism(origin, links, eqcs, [contineqcs1; contineqcs2], g = g, Δt = Δt)
+            mech = Mechanism(origin, links, eqcs, [contineqcs1; contineqcs2], g = g, Δt = Δt, spring=spring, damper=damper)
 
         elseif conetype == :linear
             @error "linear contact not implemented"
@@ -41,7 +41,7 @@ function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
             error("Unknown conetype")
         end
     else
-        mech = Mechanism(origin, links, eqcs, g = g, Δt = Δt)
+        mech = Mechanism(origin, links, eqcs, g = g, Δt = Δt, spring=spring, damper=damper)
     end
     return mech
 end
