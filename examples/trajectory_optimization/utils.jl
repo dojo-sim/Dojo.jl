@@ -1,34 +1,34 @@
-function setState!(meeechanism::Mechanism, z::AbstractVector)
-    Δt = meeechanism.Δt
+function setState!(mechanism::Mechanism, z::AbstractVector)
+    Δt = mechanism.Δt
     off = 0
-    for body in meeechanism.bodies
+    for body in mechanism.bodies
         x2, v15, q2, ϕ15 = unpackdata(z[off+1:end]); off += 13
         q2 = UnitQuaternion(q2..., false)
         body.state.v15 = v15
         body.state.ϕ15 = ϕ15
         body.state.x2[1] = x2
         body.state.q2[1] = q2
-		discretizestate!(meeechanism) #set x1, q1 and zeroes out F2 τ2
+		discretizestate!(mechanism) #set x1, q1 and zeroes out F2 τ2
     end
-	foreach(setsolution!, meeechanism.bodies) # warm-start solver
+	foreach(setsolution!, mechanism.bodies) # warm-start solver
 end
 
-function setControl!(meeechanism::Mechanism{T}, u::AbstractVector) where {T}
-	eqcs = meeechanism.eqconstraints
+function setControl!(mechanism::Mechanism{T}, u::AbstractVector) where {T}
+	eqcs = mechanism.eqconstraints
 	# set the controls in the equality constraints
 	off = 0
 	for eqc in eqcs
 		nu = controldim(eqc)
-		setForce!(meeechanism, eqc, SVector{nu,T}(u[off .+ (1:nu)]))
+		setForce!(mechanism, eqc, SVector{nu,T}(u[off .+ (1:nu)]))
 		off += nu
 	end
 	# apply the controls to each body's state
-	foreach(applyFτ!, eqcs, meeechanism)
+	foreach(applyFτ!, eqcs, mechanism)
 end
 
-function getState(meeechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
+function getState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	z = zeros(T,13Nb)
-	for (i, body) in enumerate(meeechanism.bodies)
+	for (i, body) in enumerate(mechanism.bodies)
 		v15 = body.state.v15
 		ϕ15 = body.state.ϕ15
 		x2 = body.state.x2[1]
@@ -38,10 +38,10 @@ function getState(meeechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	return z
 end
 
-function getNextState(meeechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
-	Δt = meeechanism.Δt
+function getNextState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
+	Δt = mechanism.Δt
 	z̄ = zeros(T,13Nb)
-	for (i, body) in enumerate(meeechanism.bodies)
+	for (i, body) in enumerate(mechanism.bodies)
 		v25 = body.state.vsol[2]
 		ϕ25 = body.state.ϕsol[2]
 		x3 = getx3(body.state, Δt)
@@ -51,21 +51,21 @@ function getNextState(meeechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,N
 	return z̄
 end
 
-function getMaxGradients(meeechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
-	Δt = meeechanism.Δt
-	nu = controldim(meeechanism)
+function getMaxGradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
+	Δt = mechanism.Δt
+	nu = controldim(mechanism)
 	attjac = false
 	nic = attjac ? 12Nb : 13Nb
-	neqcs = eqcdim(meeechanism)
-	datamat = full_data_matrix(meeechanism, attjac = attjac)
-	solmat = full_matrix(meeechanism.system)
+	neqcs = eqcdim(mechanism)
+	datamat = full_data_matrix(mechanism, attjac = attjac)
+	solmat = full_matrix(mechanism.system)
 
 	∇data_z = - solmat \ datamat
 	∇z_vϕ = ∇data_z[neqcs .+ (1:6Nb),1:nic]
 	∇u_vϕ = ∇data_z[neqcs .+ (1:6Nb),nic .+ (1:nu)]
 	∇z_z̄ = zeros(13Nb,13Nb)
 	∇u_z̄ = zeros(13Nb,nu)
-	for (i, body) in enumerate(meeechanism.bodies)
+	for (i, body) in enumerate(mechanism.bodies)
 		# Fill in gradients of v25, ϕ25
 		∇z_z̄[13*(i-1) .+ [4:6; 11:13],:] += ∇z_vϕ[6*(i-1) .+ (1:6),:]
 		∇u_z̄[13*(i-1) .+ [4:6; 11:13],:] += ∇u_vϕ[6*(i-1) .+ (1:6),:]
@@ -85,21 +85,21 @@ function getMaxGradients(meeechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,N
 end
 
 
-function getMaxGradients!(meeechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
+function getMaxGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
 		opts=InteriorPointOptions()) where {T,Nn,Ne,Nb,Ni}
-	step!(meeechanism, z, u, opts=opts)
-	∇z_z̄, ∇u_z̄ = getMaxGradients(meeechanism)
+	step!(mechanism, z, u, opts=opts)
+	∇z_z̄, ∇u_z̄ = getMaxGradients(mechanism)
 	return ∇z_z̄, ∇u_z̄
 end
 
-function max2min(meeechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) where {T,Nn,Ne,Nb,Ni,Tz}
+function max2min(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) where {T,Nn,Ne,Nb,Ni,Tz}
 	# z = [[x2, v15, q2, ϕ15]body1  [x2, v15, q2, ϕ15]body2 ....]
 	x = []
 	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
 	# Thus go through the eqconstraints in order, start from joint between robot and origin and go down the tree.
-	for id in reverse(meeechanism.system.dfs_list)
+	for id in reverse(mechanism.system.dfs_list)
 		(id > Ne) && continue # only treat eqconstraints
-		eqc = meeechanism.eqconstraints[id]
+		eqc = mechanism.eqconstraints[id]
 		c = zeros(Tz,0)
 		v = zeros(Tz,0)
 		for (i,joint) in enumerate(eqc.constraints)
@@ -131,21 +131,21 @@ function max2min(meeechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) w
 	return x
 end
 
-function min2max(meeechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
+function min2max(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
 	# x = [[x2, q2, v15, ϕ15]body1  θ_body1-body2 ....]
 	# z = [[x2, v15, q2, ϕ15]body1  [x2, v15, q2, ϕ15]body2 ....]
 	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
 	# Thus go through the eqconstraints in order, start from joint between robot and origin and go down the tree.
 	off = 0
-	for id in reverse(meeechanism.system.dfs_list)
+	for id in reverse(mechanism.system.dfs_list)
 		(id > Ne) && continue # only treat eqconstraints
-		eqc = meeechanism.eqconstraints[id]
+		eqc = mechanism.eqconstraints[id]
 		n = controldim(eqc)
 		if eqc.parentid != nothing
 			c = x[off .+ (1:n)]; off += n
 			v = x[off .+ (1:n)]; off += n#in body1
-			_setPosition!(meeechanism, eqc, c)
-			setVelocity!(meeechanism, eqc, v)#in body1
+			_setPosition!(mechanism, eqc, c)
+			setVelocity!(mechanism, eqc, v)#in body1
 		else
 			@assert length(Set(eqc.childids)) == 1 # only one body is linked to the origin
 			c = zeros(Tx,0)
@@ -166,35 +166,35 @@ function min2max(meeechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) w
 				push!(c, x[off .+ (1:nj)]...); off += nj
 			end
 			push!(v, x[off .+ (1:n)]...); off += n
-			_setPosition!(meeechanism, eqc, c)
-			setVelocity!(meeechanism, eqc, v) # assumes we provide v and ϕ in body1's coordinates i.e world coordinates
+			_setPosition!(mechanism, eqc, c)
+			setVelocity!(mechanism, eqc, v) # assumes we provide v and ϕ in body1's coordinates i.e world coordinates
 		end
 	end
-	z = getMaxState(meeechanism)
+	z = getMaxState(mechanism)
 	return z
 end
 
-function ∇min2max(meeechanism::Mechanism, x)
-	FiniteDiff.finite_difference_jacobian(x -> min2max(meeechanism, x), x)
+function ∇min2max(mechanism::Mechanism, x)
+	FiniteDiff.finite_difference_jacobian(x -> min2max(mechanism, x), x)
 end
 
-function ∇max2min(meeechanism::Mechanism, z)
-	FiniteDiff.finite_difference_jacobian(z -> max2min(meeechanism, z), z)
+function ∇max2min(mechanism::Mechanism, z)
+	FiniteDiff.finite_difference_jacobian(z -> max2min(mechanism, z), z)
 end
 
-function getMinGradients!(meeechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
+function getMinGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
 		opts=InteriorPointOptions()) where {T,Nn,Ne,Nb,Ni}
 
-	step!(meeechanism, z, u, opts=opts)
-	z = getState(meeechanism)
-	z̄ = getNextState(meeechanism)
-	x = max2min(meeechanism, z)
-	x̄ = max2min(meeechanism, z̄)
-	∇z_z̄, ∇u_z̄ = getMaxGradients(meeechanism)
+	step!(mechanism, z, u, opts=opts)
+	z = getState(mechanism)
+	z̄ = getNextState(mechanism)
+	x = max2min(mechanism, z)
+	x̄ = max2min(mechanism, z̄)
+	∇z_z̄, ∇u_z̄ = getMaxGradients(mechanism)
 
-	∇x = ∇min2max(meeechanism, x)
-	# ∇x̄ = ∇min2max(meeechanism, x̄)
-	∇z̄ = ∇max2min(meeechanism, z̄)
+	∇x = ∇min2max(mechanism, x)
+	# ∇x̄ = ∇min2max(mechanism, x̄)
+	∇z̄ = ∇max2min(mechanism, z̄)
 	# ∇x_x̄ = pinv(∇x̄) * ∇z_z̄ * ∇x
 	# ∇u_x̄ = pinv(∇x̄) * ∇u_z̄
 	∇x_x̄ = ∇z̄ * ∇z_z̄ * ∇x
@@ -204,9 +204,9 @@ function getMinGradients!(meeechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVect
 	return ∇x_x̄, ∇u_x̄
 end
 
-function getMaxState(meeechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
+function getMaxState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	z = zeros(T, 13Nb)
-	for (i, body) in enumerate(meeechanism.bodies)
+	for (i, body) in enumerate(mechanism.bodies)
 		x2 = body.state.x2[1]
 		v15 = body.state.v15
 		q2 = body.state.q2[1]
@@ -216,24 +216,22 @@ function getMaxState(meeechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni
 	return z
 end
 
-function getMinState(meeechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
+function getMinState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	# z = [[x2, v15, q2, ϕ15]body1  [x2, v15, q2, ϕ15]body2 ....]
 	x = []
 	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
 	# Thus go through the eqconstraints in order, start from joint between robot and origin and go down the tree.
-	for id in reverse(meeechanism.system.dfs_list)
+	for id in reverse(mechanism.system.dfs_list)
 		(id > Ne) && continue # only treat eqconstraints
-		eqc = meeechanism.eqconstraints[id]
+		eqc = mechanism.eqconstraints[id]
 		c = zeros(T,0)
 		v = zeros(T,0)
 		for (i,joint) in enumerate(eqc.constraints)
-			cbody = getbody(meeechanism, eqc.childids[i])
-			pbody = getbody(meeechanism, eqc.parentid)
+			cbody = getbody(mechanism, eqc.childids[i])
+			pbody = getbody(mechanism, eqc.parentid)
 			push!(c, minimalCoordinates(joint, pbody, cbody)...)
 			push!(v, minimalVelocities(joint, pbody, cbody)...)
 		end
-		@show cbody.state.x2
-		@show c
 		push!(x, [c; v]...)
 	end
 	x = [x...]
@@ -258,7 +256,7 @@ function setMaxState!(z::AbstractVector, x2::AbstractVector, v15::AbstractVector
 	return nothing
 end
 
-function visualizeMaxCoord(meeechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector, vis::Visualizer) where {T,Nn,Ne,Nb,Ni}
+function visualizeMaxCoord(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector, vis::Visualizer) where {T,Nn,Ne,Nb,Ni}
 	storage = Storage(1,Nb)
 	for t = 1:1
 		for b = 1:Nb
@@ -269,19 +267,19 @@ function visualizeMaxCoord(meeechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVec
 			storage.ω[b][t] = ϕ15
 		end
 	end
-	visualize(meeechanism, storage, vis = vis)
+	visualize(mechanism, storage, vis = vis)
 end
 
-function setSpringOffset!(meeechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector) where {T,Nn,Ne,Nb,Ni}
+function setSpringOffset!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector) where {T,Nn,Ne,Nb,Ni}
 	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
 	# Thus go through the eqconstraints in order, start from joint between robot and origin and go down the tree.
 	off = 0
-	for id in reverse(meeechanism.system.dfs_list)
+	for id in reverse(mechanism.system.dfs_list)
 		(id > Ne) && continue # only treat eqconstraints
-		eqc = meeechanism.eqconstraints[id]
+		eqc = mechanism.eqconstraints[id]
 		for (i,joint) in enumerate(eqc.constraints)
-			cbody = getbody(meeechanism, eqc.childids[i])
-			pbody = getbody(meeechanism, eqc.parentid)
+			cbody = getbody(mechanism, eqc.childids[i])
+			pbody = getbody(mechanism, eqc.parentid)
 			N̄ = 3 - length(joint)
 			joint.spring_offset = x[off .+ (1:N̄)]
 			off += 2N̄
@@ -290,18 +288,18 @@ function setSpringOffset!(meeechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVect
 	return nothing
 end
 
-function gravity_compensation(meeechanism::Mechanism)
+function gravity_compensation(mechanism::Mechanism)
     # only works with revolute joints for now
-    nu = controldim(meeechanism)
+    nu = controldim(mechanism)
     u = zeros(nu)
     off  = 0
-    for eqc in meeechanism.eqconstraints
+    for eqc in mechanism.eqconstraints
         nu = controldim(eqc)
         if eqc.parentid != nothing
-            body = getbody(meeechanism, eqc.parentid)
+            body = getbody(mechanism, eqc.parentid)
             rot = eqc.constraints[2]
             A = Matrix(nullspacemat(rot))
-            Fτ = springforce(meeechanism, eqc, body)
+            Fτ = springforce(mechanism, eqc, body)
             F = Fτ[1:3]
             τ = Fτ[4:6]
             u[off .+ (1:nu)] = -A * τ
@@ -313,24 +311,24 @@ function gravity_compensation(meeechanism::Mechanism)
     return u
 end
 
-function inverse_control(meeechanism::Mechanism, x, x̄; ϵtol = 1e-5)
-	nu = controldim(meeechanism)
+function inverse_control(mechanism::Mechanism, x, x̄; ϵtol = 1e-5)
+	nu = controldim(mechanism)
 	u = zeros(nu)
 	# starting point of the local search
 	for k = 1:10
-		err = inverse_control_error(meeechanism, x, x̄, u, ϵtol = ϵtol)
+		err = inverse_control_error(mechanism, x, x̄, u, ϵtol = ϵtol)
 		norm(err, Inf) < 1e-10 && continue
-		∇ = FiniteDiff.finite_difference_jacobian(u -> inverse_control_error(meeechanism, x, x̄, u, ϵtol = ϵtol), u)
+		∇ = FiniteDiff.finite_difference_jacobian(u -> inverse_control_error(mechanism, x, x̄, u, ϵtol = ϵtol), u)
 		u -= ∇ \ err
 	end
 	return u
 end
 
-function inverse_control_error(meeechanism, x, x̄, u; ϵtol = 1e-5)
-	z = min2max(meeechanism, x)
-	z̄ = min2max(meeechanism, x̄)
-	setState!(meeechanism, z)
+function inverse_control_error(mechanism, x, x̄, u; ϵtol = 1e-5)
+	z = min2max(mechanism, x)
+	z̄ = min2max(mechanism, x̄)
+	setState!(mechanism, z)
 	opts = InteriorPointOptions(rtol=ϵtol, btol=ϵtol, undercut=1.5)
-	err = x̄ - max2min(meeechanism, step!(meeechanism, min2max(meeechanism, x), u, opts=opts))
+	err = x̄ - max2min(mechanism, step!(mechanism, min2max(mechanism, x), u, opts=opts))
 	return err
 end

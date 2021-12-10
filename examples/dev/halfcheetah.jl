@@ -27,23 +27,8 @@ visualize(mech, storage, vis = vis)
 env = make("halfcheetah")
 open(env.vis)
 
-seed(env, s = 112)
+seed(env, s = 11)
 obs = reset(env)[2]
-render(env)
-
-initialize!(env.mechanism, :halfcheetah, z = 2.0)
-torso = getbody(env.mechanism, "torso")
-eqc1 = geteqconstraint(env.mechanism, "floating_joint")
-torso.state.x2
-orig = env.mechanism.origin
-minimalCoordinates(eqc1.constraints[1], orig, torso)
-minimalCoordinates(eqc1.constraints[2], orig, torso)
-
-
-getMinState(env.mechanism)
-
-
-env.x .= getMinState(env.mechanism)
 render(env)
 
 
@@ -61,9 +46,24 @@ end
 close(env)
 
 
-sample(env.aspace)
+# sample(env.aspace)
+#
 
 
+# initialize!(env.mechanism, :halfcheetah, z = 2.0)
+# torso = getbody(env.mechanism, "torso")
+# eqc1 = geteqconstraint(env.mechanism, "floating_joint")
+# torso.state.x2
+# orig = env.mechanism.origin
+# minimalCoordinates(eqc1.constraints[1], orig, torso)
+# minimalCoordinates(eqc1.constraints[2], orig, torso)
+
+
+getMinState(env.mechanism)
+
+
+env.x .= getMinState(env.mechanism)
+render(env)
 
 ################################################################################
 # Sparsify

@@ -48,7 +48,6 @@ function halfcheetah(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
 end
 
 function reset(env::Environment{HalfCheetah}; x=nothing, reset_noise_scale = 0.1)
-    @show "eee"
     if x != nothing
         env.x .= x
     else
@@ -61,13 +60,8 @@ function reset(env::Environment{HalfCheetah}; x=nothing, reset_noise_scale = 0.1
         low = -reset_noise_scale
         high = reset_noise_scale
         x = x0 + (high - low) .* rand(env.rng[1], nx) .+ low # we ignored the normla distribution on the velocities
-        @show "eee"
-        @show norm(x - x0)
-        @show x0[2]
-        @show x[2]
         z = min2max(env.mechanism, x)
         setState!(env.mechanism, z)
-        @show getMinState(env.mechanism)[2]
         if env.mode == :min
             env.x .= getMinState(env.mechanism)
         elseif env.mode == :max
@@ -88,7 +82,6 @@ function cost(env::Environment{HalfCheetah}, x, u;
         z_torso = x[(i_torso-1)*13 .+ (1:13)]
         x_velocity = z_torso[4]
     end
-    @show u
     c = ctrl_cost_weight * u'*u - x_velocity * forward_reward_weight
     return c
 end
