@@ -22,7 +22,7 @@ function gethalfcheetah(; Δt::T=0.01, g::T=-9.81, cf::T=0.8,
         contineqcs1 = contactconstraint(foot1, normal, cf, p=p1, offset=o1)
         contineqcs2 = contactconstraint(foot2, normal, cf, p=p2, offset=o2)
 
-        setPosition!(mech, geteqconstraint(mech, "floating_joint"), [0.530509, 0.0, 0.02792])
+        setPosition!(mech, geteqconstraint(mech, "floating_joint"), [0.576509, 0.0, 0.02792])
         mech = Mechanism(origin, bodies, eqs, [contineqcs1; contineqcs2], g=g, Δt=Δt, spring=spring, damper=damper)
     end
     return mech
