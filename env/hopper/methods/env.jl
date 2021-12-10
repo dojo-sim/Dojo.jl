@@ -53,15 +53,15 @@ function hopper_control_mask()
 	 0 0 0 0 0 0 1]
 end
 
-function hopper_nominal_max()
+function hopper_nominal_max(; foot_radius=0.05)
     # initial state
-    x1b1 = [0.0; 0.0; 0.5]
+    x1b1 = [0.0; 0.0; 0.5 + foot_radius]
     v1b1 = [0.0; 0.0; 0.0]
     q1b1 = [1.0; 0.0; 0.0; 0.0]
     ω1b1 = [0.0; 0.0; 0.0]
     z1b1 = [x1b1; v1b1; q1b1; ω1b1]
 
-    x1b2 = [0.0; 0.0; 0.0]
+    x1b2 = [0.0; 0.0; 0.0 + foot_radius]
     v1b2 = [0.0; 0.0; 0.0]
     q1b2 = [1.0; 0.0; 0.0; 0.0]
     ω1b2 = [0.0; 0.0; 0.0]

@@ -6,8 +6,10 @@ gravity = -9.81
 env = make("hopper", 
     mode=:min, 
     dt=dt,
-    g=gravity,
-    vis=vis);
+    g=gravity);
+
+# ## visualizer 
+open(env.vis)
 
 # ## dimensions
 n = env.nx
@@ -38,8 +40,7 @@ model = [dyn for t = 1:T-1]
 ū = [[0.0; 0.0; env.mechanism.g * env.mechanism.Δt + 0.0 * randn(1)[1]] for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, z1, ū, w)
-storage = generate_storage(env.mechanism, [min2max(env.mechanism, x) for x in x̄])
-visualize(env.mechanism, storage; vis=vis)
+visualize(env, x̄)
 
 # ## objective
 ot1 = (x, u, w) -> transpose(x - zM) * Diagonal(dt * [0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) * (x - zM) + transpose(u) * Diagonal(dt * [0.01; 0.01; 0.01]) * u

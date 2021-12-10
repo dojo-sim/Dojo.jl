@@ -1,4 +1,4 @@
-function gethopper(; Δt::T=0.05, g::T=-9.81, spring=0.0, damper=0.1, contact::Bool=true) where T
+function gethopper(; Δt::T=0.05, g::T=-9.81, spring=0.0, damper=0.1, contact::Bool=true, contact_body::Bool=true) where T
     #TODO: make customizable
 
     # Parameters
@@ -21,14 +21,26 @@ function gethopper(; Δt::T=0.05, g::T=-9.81, spring=0.0, damper=0.1, contact::B
         p1=szeros(Float64, 3), p2=szeros(Float64, 3), spring=spring, damper=damper) )
     eqcs = [joint_origin_body, joint_body_foot]
 
-    # Contact
-    contact_normal = [0.0; 0.0; 1.0]
-    friction_coefficient = 0.5
-    contineqcs = contactconstraint(foot, contact_normal, friction_coefficient, p=[0.0; 0.0; 0.0])
-
     # Mechanism
     if contact
-        mech = Mechanism(origin, links, eqcs, [contineqcs], g=g, Δt=Δt, spring=spring, damper=damper)
+         # Contact
+        contact_normal = [0.0; 0.0; 1.0]
+        friction_coefficient = 0.5
+
+        # foot 
+        contineqcs = contactconstraint(foot, contact_normal, friction_coefficient, 
+            p=[0.0; 0.0; 0.0], offset=[0.0; 0.0; foot_radius])
+        
+        ineqcs = [contineqcs]
+        
+        # body
+        if contact_body 
+            contineqcs_body = contactconstraint(body, contact_normal, friction_coefficient, 
+                p=[0.0; 0.0; 0.0], offset=[0.0; 0.0; body_radius])
+            push!(ineqcs, contineqcs_body)
+        end
+
+        mech = Mechanism(origin, links, eqcs, ineqcs, g=g, Δt=Δt, spring=spring, damper=damper)
     else
         mech = Mechanism(origin, links, eqcs, g=g, Δt=Δt, spring=spring, damper=damper)
     end
