@@ -33,13 +33,13 @@
     <visual>
       <origin rpy="0.00000 1.57080 -0.00000" xyz="0.00000 0.00000 0.00000"/>
       <geometry>
-        <cylinder length="1.00000" radius="0.04600"/>
+        <capsule length="1.00000" radius="0.04600"/>
       </geometry>
     </visual>
     <visual>
       <origin rpy="0.00000 0.87000 0.00000" xyz="0.60000 0.00000 0.10000"/>
       <geometry>
-        <cylinder length="0.30000" radius="0.04600"/>
+        <capsule length="0.30000" radius="0.04600"/>
       </geometry>
     </visual>
 	</link>
@@ -58,7 +58,7 @@
     <visual>
       <origin rpy="0.00000 0.0000 0.00000" xyz="0.00000 0.00000 -0.14500"/>
       <geometry>
-        <cylinder length="0.29000" radius="0.04600"/>
+        <capsule length="0.29000" radius="0.04600"/>
       </geometry>
     </visual>
 	</link>
@@ -77,7 +77,7 @@
     <visual>
       <origin rpy="0.0000 0.0000 0.0000" xyz="-0.000 0.00000 -0.14500"/>
       <geometry>
-        <cylinder length="0.29000" radius="0.04600"/>
+        <capsule length="0.29000" radius="0.04600"/>
       </geometry>
     </visual>
 	</link>
@@ -96,7 +96,7 @@
     <visual>
       <origin rpy="0.00000 0.00000 0.00000" xyz="0.00000 0.00000 -0.09400"/>
       <geometry>
-        <cylinder length="0.18800" radius="0.04600"/>
+        <capsule length="0.18800" radius="0.04600"/>
       </geometry>
     </visual>
 	</link>
@@ -115,7 +115,7 @@
     <visual>
       <origin rpy="0.00000 0.00000 0.00000" xyz="0.0000 0.00000 -0.13300"/>
       <geometry>
-        <cylinder length="0.26600" radius="0.04600"/>
+        <capsule length="0.26600" radius="0.04600"/>
       </geometry>
     </visual>
 	</link>
@@ -134,7 +134,7 @@
     <visual>
       <origin rpy="0.00000 0.00000 0.00000" xyz="0.00000 0.00000 -0.10600"/>
       <geometry>
-        <cylinder length="0.21200" radius="0.04600"/>
+        <capsule length="0.21200" radius="0.04600"/>
       </geometry>
     </visual>
 	</link>
@@ -153,11 +153,10 @@
     <visual>
       <origin rpy="0.00000 -0.0000 0.00000" xyz="0.00000 0.00000 -0.07000"/>
       <geometry>
-        <cylinder length="0.14000" radius="0.04600"/>
+        <capsule length="0.14000" radius="0.04600"/>
       </geometry>
     </visual>
 	</link>
-
 
 	<joint name="floating_joint" type="planaraxis">
 		<parent link="base"/>

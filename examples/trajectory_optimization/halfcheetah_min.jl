@@ -8,7 +8,7 @@ gravity = -9.81
 env = make("halfcheetah", 
     mode=:min, 
     g=gravity,
-    dt=dt)
+    dt=dt);
 
 # ## visualizer 
 open(env.vis)
@@ -26,7 +26,7 @@ zT = max2min(env.mechanism, halfcheetahState(x=0.50, z=0.00, θ=0.0))
 # ## gravity compensation control
 mech = getmechanism(:halfcheetah, Δt=dt, g=gravity, damper=100.0, spring=1000.0)
 initialize!(mech, :halfcheetah, x=0.0, z=0.0, θ=0.0)
-storage = simulate!(mech, 5.0, record=true, verbose=false)
+storage = simulate!(mech, 2.0, record=true, verbose=false)
 visualize(mech, storage, vis=env.vis)
 ugc = gravity_compensation(mech)
 u_control = ugc[3 .+ (1:6)]

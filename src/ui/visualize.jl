@@ -39,9 +39,14 @@ function preparevis!(storage::Storage{T,N}, id, shape, animation, shapevisualize
     return
 end
 
-
 function MeshCat.setobject!(subvisshape, visshape, shape::Shape)
     setobject!(subvisshape, visshape, MeshPhongMaterial(color=shape.color))
+end
+
+function MeshCat.setobject!(subvisshape, visshape::Vector, shape::Capsule)
+    setobject!(subvisshape["cylinder"], visshape[1], MeshPhongMaterial(color=shape.color))
+    setobject!(subvisshape["cap1"], visshape[2], MeshPhongMaterial(color=shape.color))
+    setobject!(subvisshape["cap2"], visshape[3], MeshPhongMaterial(color=shape.color))
 end
 
 function MeshCat.setobject!(subvisshape, visshape, shape::Mesh)

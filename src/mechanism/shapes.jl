@@ -149,12 +149,41 @@ mutable struct Capsule{T} <: Shape{T}
             scale::AbstractVector = sones(3), name::String="", color = RGBA(0.75, 0.75, 0.75)
         )
         T = promote_type(eltype.((r, h, m, xoffset, qoffset))...)
-        
-        J = m * diagm([1.0; 1.0; 1.0])
+
+        mass_cylinder = π * h * r^2.0
+        mass_hemisphere = π * 2.0 / 3.0 * r^3.0 
+        mass_total = mass_cylinder + 2 * mass_hemisphere
+        Ixx_cylinder = mass_cylinder * (1.0 / 12.0 * h^2.0 + 1.0 / 4.0 * r^2.0)
+        Ixx_hemisphere = 83.0 / 320 * mass_hemisphere * r^2
+        d = (3.0 / 8.0 * r + 0.5 * h)
+        Ixx = Ixx_cylinder + 2.0 * (Ixx_hemisphere + mass_hemisphere * d^2.0)
+        Izz = 0.5 * mass_cylinder * r^2.0 + mass_hemisphere * (2.0 * r^2.0) / 5.0 
+
+        J = m * diagm([Ixx; Ixx; Izz])
 
         return Body(m, J; name=name, shape=new{T}(xoffset, qoffset, [r; h], scale, color))
     end
 end
+
+# env = make("hopper");
+
+# vis = Visualizer() 
+# open(vis)
+
+# body = env.mechanism.bodies[3]
+# shape = body.shape
+# visshape = convertshape(shape)
+# subvisshape = nothing
+# subvisframe = nothing
+# showshape = false
+# subvisshape = vis["bodies/body:"*string(body.id)]
+# subvisshape["cyl"]
+# setobject!(subvisshape,visshape,shape)
+# showshape = true
+
+# capsule = Capsule(0.1, 0.2)
+# geom = convertshape(capsule)
+# setobject!(subvisshape,geom,capsule)
 
 """
 $(TYPEDEF)

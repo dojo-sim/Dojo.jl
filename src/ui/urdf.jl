@@ -149,15 +149,16 @@ function parse_shape(xvisual, materialdict, T)
                 path = attribute(shapenode, "filename")
                 scale = parse_vector(shapenode, "scale", T, default = "1 1 1")
                 shape = Mesh(path, zero(T), zeros(T, 3, 3), scale=scale, color = color, xoffset = x, qoffset = q)
+            elseif name(shapenode) == "capsule"
+                r = parse_scalar(shapenode, "radius", T, default = "0.5")
+                l = parse_scalar(shapenode, "length", T, default = "1")
+                shape = Capsule(r, l, zero(T), color = color, xoffset = x, qoffset = q)
             else
                 @info "Unknown geometry."
                 shape = nothing
             end
         end
-
-
     end
-
     return shape
 end
 

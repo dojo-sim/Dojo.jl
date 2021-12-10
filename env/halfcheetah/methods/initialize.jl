@@ -12,12 +12,15 @@ function gethalfcheetah(; Δt::T=0.01, g::T=-9.81, cf::T=0.8,
         eqs = Vector{EqualityConstraint{T}}(collect(mech.eqconstraints))
 
         # Foot contact
-        contact1 = [0.0; 0.0; -0.070]
-        contact2 = [0.0; 0.0; -0.094]
+        foot1 = getbody(mech, "ffoot")
+        foot2 = getbody(mech, "bfoot")
+        p1 = [0.0; 0.0; -0.5 * foot1.shape.rh[2]]
+        p2 = [0.0; 0.0; -0.5 * foot2.shape.rh[2]]
+        o1 = [0.0; 0.0; foot1.shape.rh[1]]
+        o2 = [0.0; 0.0; foot2.shape.rh[1]]
         normal = [0.0; 0.0; 1.0]
-
-        contineqcs1 = contactconstraint(getbody(mech, "ffoot"), normal, cf, p=contact1)
-        contineqcs2 = contactconstraint(getbody(mech, "bfoot"), normal, cf, p=contact2)
+        contineqcs1 = contactconstraint(foot1, normal, cf, p=p1, offset=o1)
+        contineqcs2 = contactconstraint(foot2, normal, cf, p=p2, offset=o2)
 
         setPosition!(mech, geteqconstraint(mech, "floating_joint"), [0.530509, 0.0, 0.02792])
         mech = Mechanism(origin, bodies, eqs, [contineqcs1; contineqcs2], g=g, Δt=Δt, spring=spring, damper=damper)
@@ -28,8 +31,8 @@ end
 function initializehalfcheetah!(mechanism::Mechanism; x::T=0.0, z::T=0.0, θ::T=0.0) where {T}
     setPosition!(mechanism,
                  geteqconstraint(mechanism, "floating_joint"),
-                 [z + 0.530509, -x, -θ + 0.02792])
-    for eqc in eqcs
+                 [z + 0.530509 + 0.25, -x, -θ + 0.02792])
+    for eqc in mechanism.eqconstraints
         (eqc.name != "floating_joint") && setPosition!(mechanism, eqc, zeros(controldim(eqc)))
     end
     zeroVelocity!(mechanism)
