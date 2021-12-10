@@ -19,7 +19,9 @@ function halfcheetah(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     nu = 6
     no = nx
 
-    aspace = BoxSpace(nu, low=(-1.0e-3 * ones(nu)), high=(1.0e-3 * ones(nu)))
+    # values taken from Mujoco's model, combining the control range -1, 1 and the motor gears.
+    ctrl_lims = [120, 90, 60, 120, 60, 30.]
+    aspace = BoxSpace(nu, low=(-dt * ctrl_lims), high=(dt * ctrl_lims))
     ospace = BoxSpace(no, low=(-Inf * ones(no)), high=(Inf * ones(no)))
 
     rng = MersenneTwister(s)
@@ -31,7 +33,7 @@ function halfcheetah(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     fu = zeros(nx, nu)
 
     u_prev = zeros(nu)
-    control_mask = [zeros(6, 3) I(nu)]
+    control_mask = [zeros(nu, 3) I(nu)]
 
     build_robot(vis, mechanism)
 

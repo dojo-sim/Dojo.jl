@@ -24,18 +24,23 @@ initialize!(mech, :halfcheetah, x = 0.0, z = 0.0, θ = -0.0)
     opts=InteriorPointOptions(verbose=false, btol = 1e-6))
 visualize(mech, storage, vis = vis)
 
+
+
 env = make("halfcheetah")
 open(env.vis)
 
+env.aspace
 seed(env, s = 11)
 obs = reset(env)[2]
 render(env)
 
-
+1000*sample(env.aspace)
 collect(env.mechanism.eqconstraints)[1]
-for i = 1:10
+for i = 1:25
     render(env)
-    action = 1000*sample(env.aspace) # your agent here (this takes random actions)
+    sleep(0.05)
+    # action = 120*env.mechanism.Δt*ones(6)#1000*sample(env.aspace) # your agent here (this takes random actions)
+    action = sample(env.aspace)#1000*sample(env.aspace) # your agent here (this takes random actions)
     obs, r, done, info = step(env, action)
     @show r
 
@@ -45,7 +50,9 @@ for i = 1:10
 end
 close(env)
 
-
+env.mechanism.eqconstraints
+controldim(env.mechanism)
+sample(env.aspace)
 # sample(env.aspace)
 #
 
