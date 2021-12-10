@@ -34,9 +34,10 @@ struct Environment{X,T,M,A,O,I}
     opts_step::InteriorPointOptions{T}
     opts_grad::InteriorPointOptions{T}
 end
-
 function reset(env::Environment{X}; x=nothing) where X
-    initialize!(X, env.mechanism)
+    system = Symbol(lowercase(split(string(X),'.')[2])) #TODO: something more elegant...
+    initialize!(env.mechanism, system)
+    
     if x != nothing
         env.x = x
     else

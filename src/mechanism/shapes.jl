@@ -165,26 +165,6 @@ mutable struct Capsule{T} <: Shape{T}
     end
 end
 
-# env = make("hopper");
-
-# vis = Visualizer() 
-# open(vis)
-
-# body = env.mechanism.bodies[3]
-# shape = body.shape
-# visshape = convertshape(shape)
-# subvisshape = nothing
-# subvisframe = nothing
-# showshape = false
-# subvisshape = vis["bodies/body:"*string(body.id)]
-# subvisshape["cyl"]
-# setobject!(subvisshape,visshape,shape)
-# showshape = true
-
-# capsule = Capsule(0.1, 0.2)
-# geom = convertshape(capsule)
-# setobject!(subvisshape,geom,capsule)
-
 """
 $(TYPEDEF)
 
