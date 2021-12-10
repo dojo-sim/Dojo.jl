@@ -15,6 +15,7 @@ using SparseArrays
 using Plots
 using Random
 using MeshCat
+using Meshing
 using GeometryBasics
 using LightGraphs
 using DocStringExtensions

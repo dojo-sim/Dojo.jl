@@ -32,7 +32,7 @@ function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
 
     for n = Base.OneTo(opts.max_iter)
 
-        opts.verbose && solver_status(mechanism, rvio, bvio, μtarget, undercut)
+        opts.verbose && solver_status(mechanism, rvio, bvio, n, μtarget, undercut)
             
         ((rvio < opts.rtol) && (bvio < opts.btol)) && break
 		(n == opts.max_iter) && (opts.verbose && (@warn "failed mehrotra"))
@@ -81,7 +81,7 @@ function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
     return
 end
 
-function solver_status(mechanism::Mechanism, rvio, bvio, μtarget, undercut) 
+function solver_status(mechanism::Mechanism, rvio, bvio, n, μtarget, undercut) 
     fv = full_vector(mechanism.system)
     Δvar = norm(fv, Inf)
     fM = full_matrix(mechanism.system)
