@@ -131,3 +131,63 @@ function cost(env, x, u)
     end
     return -costs
 end
+
+
+
+
+################################################################################
+# Sparsify
+################################################################################
+
+using LinearAlgebra
+
+nx = 5
+nr = 10
+nu = 5
+Δt = 0.1
+Rx0 = rand(nr, nx)
+Ru0 = rand(nr, nu)
+Rz1 = rand(nr, nr)
+A = (Rz1 \ Rx0)[1:nx,:]
+B = (Rz1 \ Ru0)[1:nx,:]
+
+function idynamics(x1, x0, u0)
+    return A*x0 + B*u0 - x1
+end
+
+function edynamics(x0, u0)
+    return A*x0 + B*u0
+end
+
+x0 = rand(nx)
+u0 = rand(nu)
+
+x1 = edynamics(x0, u0)
+
+M = [zeros(nr, nx+nu) inv(Rz1);
+     Rx0 Ru0          1*Diagonal(ones(nr));
+     ]
+#    x0 u0            r0                    z1
+M = [zeros(nr, nx+nu) zeros(nr, nr)         Diagonal(ones(nr)) ; # z1
+     Rx0 Ru0          1*Diagonal(ones(nr))  Rz1                ; # r1
+     ]
+
+M
+z1r1 = M \ [x0; u0; zeros(nr); z1]
+z1 = z1r1[1:nr]
+r1 = z1r1[nr .+ (1:nr)]
+x1 = z1[1:nx]
+norm(x1 - edynamics(x0, u0))
+
+M = zeros(10,10)
+for k = 1:10
+    M[k,k] += rand()
+end
+for k = 1:9
+    M[k+1,k] += rand()
+    M[k,k+1] += rand()
+end
+
+M
+
+inv(M)

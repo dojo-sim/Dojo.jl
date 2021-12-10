@@ -18,15 +18,19 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
-mech = getmechanism(:halfcheetah, Δt = 0.1, g = -9.81, damper = 1.0, spring = 0.0, contact = true);
+mech = getmechanism(:halfcheetah, Δt = 0.10, g = 0.00, contact = true);
 initialize!(mech, :halfcheetah, x = 0.0, z = 0.0, θ = -0.0)
-@elapsed storage = simulate!(mech, 5.0, record = true, verbose = false, opts=InteriorPointOptions(verbose=false, btol = 1e-6))
+@elapsed storage = simulate!(mech, 0.100, record = true, verbose = false,
+    opts=InteriorPointOptions(verbose=false, btol = 1e-6))
 visualize(mech, storage, vis = vis)
 
 
 
 sd = get_sdf(mech, storage)
 plot(hcat(sd...), yaxis = :log)
+
+env = halfcheetah()
+reset(env)
 
 function gravity_compensation(mechanism::Mechanism)
     # only works with revolute joints for now

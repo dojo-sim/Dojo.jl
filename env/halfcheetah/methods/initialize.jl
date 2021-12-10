@@ -31,7 +31,7 @@ end
 function initializehalfcheetah!(mechanism::Mechanism; x::T=0.0, z::T=0.0, θ::T=0.0) where {T}
     setPosition!(mechanism,
                  geteqconstraint(mechanism, "floating_joint"),
-                 [z + 0.530509 + 0.25, -x, -θ + 0.02792])
+                 [z + 0.576509, -x, -θ + 0.02792])
     for eqc in mechanism.eqconstraints
         (eqc.name != "floating_joint") && setPosition!(mechanism, eqc, zeros(controldim(eqc)))
     end
