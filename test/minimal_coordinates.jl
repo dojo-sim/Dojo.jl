@@ -2,10 +2,6 @@
 # Utils
 ################################################################################\
 
-# const Dojo = Main
-include("../env/mechanisms.jl")
-include("../examples/trajectory_optimization/utils.jl")
-
 jointtypes = [
     :Fixed,
     :Prismatic,

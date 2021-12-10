@@ -40,8 +40,10 @@ mutable struct Mechanism{T,Nn,Ne,Nb,Ni} <: AbstractMechanism{T,Nn,Ne,Nb,Ni}
     μ::T
 end
 
-function Mechanism(origin::Origin{T},bodies::Vector{<:Body{T}},
-    eqcs::Vector{<:EqualityConstraint{T}}, ineqcs::Vector{<:InequalityConstraint{T}}; Δt::Real = .01, g::Real = -9.81) where T
+function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}},
+    eqcs::Vector{<:EqualityConstraint{T}}, ineqcs::Vector{<:InequalityConstraint{T}}; 
+    spring=0.0, damper=0.0,
+    Δt::Real = .01, g::Real = -9.81) where T
 
     resetGlobalID()
     order = getGlobalOrder()
@@ -81,10 +83,12 @@ function Mechanism(origin::Origin{T},bodies::Vector{<:Body{T}},
     ν = 0
     νaff = 0
 
+    # springs and dampers 
+    eqcs = set_spring_damper!(eqcs, spring, damper)
+
     eqcs = UnitDict(eqcs)
     bodies = UnitDict((bodies[1].id):(bodies[Nb].id), bodies)
     Ni > 0 ? (ineqcs = UnitDict((ineqcs[1].id):(ineqcs[Ni].id), ineqcs)) : (ineqcs = UnitDict(0:0, ineqcs))
-
 
     α = 1
     μ = 1
@@ -94,35 +98,34 @@ function Mechanism(origin::Origin{T},bodies::Vector{<:Body{T}},
 end
 
 function Mechanism(origin::Origin{T},bodies::Vector{<:Body{T}},eqcs::Vector{<:EqualityConstraint{T}};
-    Δt::Real = .01, g::Real = -9.81) where T
-
+    Δt::Real = .01, g::Real = -9.81, spring=0.0, damper=0.0) where T
     ineqcs = InequalityConstraint{T}[]
-    return Mechanism(origin, bodies, eqcs, ineqcs, Δt = Δt, g = g)
+    return Mechanism(origin, bodies, eqcs, ineqcs, Δt = Δt, g = g, spring=spring, damper=damper)
 end
 
 function Mechanism(origin::Origin{T},bodies::Vector{<:Body{T}},ineqcs::Vector{<:InequalityConstraint{T}};
-    Δt::Real = .01, g::Real = -9.81) where T
+    Δt::Real = .01, g::Real = -9.81, spring::T=0.0, damper::T=0.0) where T
 
     eqc = EqualityConstraint{T}[]
     for body in bodies
         push!(eqc, EqualityConstraint(Floating(origin, body)))
     end
-    return Mechanism(origin, bodies, eqc, ineqcs, Δt = Δt, g = g)
+    return Mechanism(origin, bodies, eqc, ineqcs, Δt = Δt, g = g, spring=spring, damper=damper)
 end
 
 function Mechanism(origin::Origin{T},bodies::Vector{<:Body{T}};
-    Δt::Real = .01, g::Real = -9.81) where T
+    Δt::Real = .01, g::Real = -9.81, spring=0.0, damper=0.0) where T
 
     eqc = EqualityConstraint{T}[]
     for body in bodies
         push!(eqc, EqualityConstraint(Floating(origin, body)))
     end
-    return Mechanism(origin, bodies, eqc, Δt = Δt, g = g)
+    return Mechanism(origin, bodies, eqc, Δt = Δt, g = g, spring=spring, damper=damper)
 end
 
-function Mechanism(filename::AbstractString; floating::Bool=false, type::Type{T} = Float64, Δt::Real = .01, g::Real = -9.81) where T
+function Mechanism(filename::AbstractString; floating::Bool=false, type::Type{T} = Float64, Δt::Real = .01, g::Real = -9.81, spring=0.0, damper=0.0) where T
     origin, links, joints, loopjoints = parse_urdf(filename, floating, T)
-    mechanism = Mechanism(origin, links, [joints;loopjoints], Δt = Δt, g = g)
+    mechanism = Mechanism(origin, links, [joints;loopjoints], Δt = Δt, g = g, spring=spring, damper=damper)
     set_parsed_values!(mechanism, loopjoints)
 
     return mechanism
@@ -143,3 +146,4 @@ end
 #     println(io, " Δt: "*string(mechanism.Δt))
 #     println(io, " g:  "*string(mechanism.g))
 # end
+

@@ -1,15 +1,21 @@
+using Dojo
 using IterativeLQR
 
 # ## system
 dt = 0.05
 gravity = -9.81
 max_torque = 20.0
+max_speed = 8.0
+damping = 1.0
 env = make("pendulum", 
     mode=:min, 
     dt=dt,
     g=gravity,
-    max_torque=max_torque,
-    vis=vis);
+    max_speed=max_speed,
+    max_torque=max_torque)
+
+# ## visualizer
+open(env.vis) 
 
 # ## dimensions
 n = env.nx

@@ -94,7 +94,15 @@ export Origin,
     full_matrix,
     full_data_matrix,
     finitediff_data_matrix,
-    finitediff_sensitivity
+    finitediff_sensitivity,
+
+    momentum, 
+    kineticEnergy,
+    potentialEnergy,
+    mechanicalEnergy,
+
+    mehrotra!,
+    InteriorPointOptions
 
 # Utilities
 include(joinpath("util", "util.jl"))

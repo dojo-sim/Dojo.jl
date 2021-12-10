@@ -3,8 +3,6 @@
 # vis = Visualizer()
 # open(vis)
 
-# const Dojo = Main
-
 # Controller
 function controller!(mechanism, k; U = 0.5, Δt = 0.01)
     for (i,joint) in enumerate(mechanism.eqconstraints)

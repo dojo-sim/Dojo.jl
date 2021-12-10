@@ -29,7 +29,6 @@ Base.vcat(A::SMatrix{N1,N2,T,N1N2}, E::UniformScaling) where {T, N1, N2, N1N2} =
 
 Base.convert(::Type{SMatrix{N,N,T,N2}}, E::UniformScaling) where {T, N, N2} = SMatrix{N,N,T,N2}(E)
 
-
 @inline svcat(a::T) where T = SA[a]
 @inline svcat(a::StaticArray) = a
 @inline svcat(a::T, b::T) where T = SA[a; b]

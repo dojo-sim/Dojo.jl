@@ -1,4 +1,4 @@
-function getorbital(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 0.0, Nlink::Int = 5) where {T}
+function getorbital(; Δt::T = 0.01, g::T = -9.81, spring = 0.0, damper = 0.0, Nlink::Int = 5) where {T}
     # Parameters
     ex = [0; 0; 1]
     h = 1.
@@ -21,7 +21,7 @@ function getorbital(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 
     else
         eqcs = [jointb1]
     end
-    mech = Mechanism(origin, links, eqcs, g = g, Δt = Δt)
+    mech = Mechanism(origin, links, eqcs, g = g, Δt = Δt, spring=spring, damper=damper)
     return mech
 end
 
