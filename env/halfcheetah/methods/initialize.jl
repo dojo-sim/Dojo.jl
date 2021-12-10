@@ -1,5 +1,5 @@
 function gethalfcheetah(; Δt::T=0.01, g::T=-9.81, cf::T=0.8,
-    spring=[0., 6., 4.5, 3., 4.5, 3., 1.5], damper=[0., 240, 180, 120, 180, 120, 60.], contact::Bool=true) where T
+    spring=[240, 180, 120, 180, 120, 60.], damper=[6., 4.5, 3., 4.5, 3., 1.5], contact::Bool=true) where T
 
     # TODO new feature: visualize capsule instead of cylinders
     # TODO new feature: visualize multiple shapes for a single body

@@ -121,73 +121,12 @@ function pendulum_goal_max()
     zT = [xT; vT; qT; ωT]
 end
 
-
-function cost(env, x, u)
+function cost(env::Environment{Pendulum}, x, u)
     if env.mode == :min
         θ, ω = x
-        costs = angle_normalize(θ)^2 + 1e-1 * ω^2 + 1e-3 * u[1]^2 # angle_normalize enforces angle ∈ [-π, π]
+        c = angle_normalize(θ)^2 + 1e-1 * ω^2 + 1e-3 * u[1]^2 # angle_normalize enforces angle ∈ [-π, π]
     else
-        costs = Inf
+        c = Inf
     end
-    return -costs
+    return c
 end
-
-
-
-
-################################################################################
-# Sparsify
-################################################################################
-
-using LinearAlgebra
-
-nx = 5
-nr = 10
-nu = 5
-Δt = 0.1
-Rx0 = rand(nr, nx)
-Ru0 = rand(nr, nu)
-Rz1 = rand(nr, nr)
-A = (Rz1 \ Rx0)[1:nx,:]
-B = (Rz1 \ Ru0)[1:nx,:]
-
-function idynamics(x1, x0, u0)
-    return A*x0 + B*u0 - x1
-end
-
-function edynamics(x0, u0)
-    return A*x0 + B*u0
-end
-
-x0 = rand(nx)
-u0 = rand(nu)
-
-x1 = edynamics(x0, u0)
-
-M = [zeros(nr, nx+nu) inv(Rz1);
-     Rx0 Ru0          1*Diagonal(ones(nr));
-     ]
-#    x0 u0            r0                    z1
-M = [zeros(nr, nx+nu) zeros(nr, nr)         Diagonal(ones(nr)) ; # z1
-     Rx0 Ru0          1*Diagonal(ones(nr))  Rz1                ; # r1
-     ]
-
-M
-z1r1 = M \ [x0; u0; zeros(nr); z1]
-z1 = z1r1[1:nr]
-r1 = z1r1[nr .+ (1:nr)]
-x1 = z1[1:nx]
-norm(x1 - edynamics(x0, u0))
-
-M = zeros(10,10)
-for k = 1:10
-    M[k,k] += rand()
-end
-for k = 1:9
-    M[k+1,k] += rand()
-    M[k,k+1] += rand()
-end
-
-M
-
-inv(M)

@@ -18,86 +18,106 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
-mech = getmechanism(:halfcheetah, Δt = 0.10, g = 0.00, contact = true);
+mech = getmechanism(:halfcheetah, Δt = 0.10, g = -9.81, contact = true);
 initialize!(mech, :halfcheetah, x = 0.0, z = 0.0, θ = -0.0)
-@elapsed storage = simulate!(mech, 0.100, record = true, verbose = false,
+@elapsed storage = simulate!(mech, 0.30, record = true, verbose = false,
     opts=InteriorPointOptions(verbose=false, btol = 1e-6))
 visualize(mech, storage, vis = vis)
 
+env = make("halfcheetah")
+open(env.vis)
+
+seed(env, s = 112)
+obs = reset(env)[2]
+render(env)
+
+initialize!(env.mechanism, :halfcheetah, z = 2.0)
+torso = getbody(env.mechanism, "torso")
+eqc1 = geteqconstraint(env.mechanism, "floating_joint")
+torso.state.x2
+orig = env.mechanism.origin
+minimalCoordinates(eqc1.constraints[1], orig, torso)
+minimalCoordinates(eqc1.constraints[2], orig, torso)
 
 
-sd = get_sdf(mech, storage)
-plot(hcat(sd...), yaxis = :log)
+getMinState(env.mechanism)
 
-env = halfcheetah()
-reset(env)
 
-function gravity_compensation(mechanism::Mechanism)
-    # only works with revolute joints for now
-    nu = controldim(mechanism)
-    u = zeros(nu)
-    off  = 0
-    for eqc in mechanism.eqconstraints
-        nu = controldim(eqc)
-        if eqc.parentid != nothing
-            body = getbody(mechanism, eqc.parentid)
-            rot = eqc.constraints[2]
-            A = Matrix(nullspacemat(rot))
-            Fτ = springforce(mechanism, eqc, body)
-            F = Fτ[1:3]
-            τ = Fτ[4:6]
-            u[off .+ (1:nu)] = -A * τ
-        else
-            @warn "need to treat the joint to origin"
-        end
-        off += nu
+env.x .= getMinState(env.mechanism)
+render(env)
+
+
+collect(env.mechanism.eqconstraints)[1]
+for i = 1:10
+    render(env)
+    action = 1000*sample(env.aspace) # your agent here (this takes random actions)
+    obs, r, done, info = step(env, action)
+    @show r
+
+    if done
+        observation = reset(env)
     end
-    return u
+end
+close(env)
+
+
+sample(env.aspace)
+
+
+
+################################################################################
+# Sparsify
+################################################################################
+
+using LinearAlgebra
+
+nx = 5
+nr = 10
+nu = 5
+Δt = 0.1
+Rx0 = rand(nr, nx)
+Ru0 = rand(nr, nu)
+Rz1 = rand(nr, nr)
+A = (Rz1 \ Rx0)[1:nx,:]
+B = (Rz1 \ Ru0)[1:nx,:]
+
+function idynamics(x1, x0, u0)
+    return A*x0 + B*u0 - x1
 end
 
-function controller!(mechanism, k,)
-    u = [zeros(3); 0.4; zeros(5)]
-    # u = [zeros(4); 0.4; zeros(5)]
-    # u = [zeros(5); 0.4; zeros(5)]
-    off = 0
-    for (i,eqc) in enumerate(collect(mechanism.eqconstraints))
-        nu = controldim(eqc)
-        setForce!(mechanism, eqc, SVector{nu}(u[off .+ (1:nu)]))
-        off += nu
-    end
-    return
+function edynamics(x0, u0)
+    return A*x0 + B*u0
 end
 
-mech = getmechanism(:halfcheetah, Δt = 0.01, g = -9.81, damper = 1.0, spring = 00.0, contact = true)
-initialize!(mech, :halfcheetah, x = 0.0, z = 0.0, θ = -0.0)
+x0 = rand(nx)
+u0 = rand(nu)
 
+x1 = edynamics(x0, u0)
 
-@elapsed storage = simulate!(mech, 10.05, controller!, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
-get_sdf(mech, storage)[1][1]
-get_sdf(mech, storage)[2][1]
+M = [zeros(nr, nx+nu) inv(Rz1);
+     Rx0 Ru0          1*Diagonal(ones(nr));
+     ]
+#    x0 u0            r0                    z1
+M = [zeros(nr, nx+nu) zeros(nr, nr)         Diagonal(ones(nr)) ; # z1
+     Rx0 Ru0          1*Diagonal(ones(nr))  Rz1                ; # r1
+     ]
 
+M
+z1r1 = M \ [x0; u0; zeros(nr); z1]
+z1 = z1r1[1:nr]
+r1 = z1r1[nr .+ (1:nr)]
+x1 = z1[1:nx]
+norm(x1 - edynamics(x0, u0))
 
-
-
-ugc = gravity_compensation(mech)
-
-function controller!(mechanism, k,)
-    u = ugc
-    off = 0
-    for (i,eqc) in enumerate(collect(mechanism.eqconstraints))
-        nu = controldim(eqc)
-        setForce!(mechanism, eqc, SVector{nu}(u[off .+ (1:nu)]))
-        off += nu
-    end
-    return
+M = zeros(10,10)
+for k = 1:10
+    M[k,k] += rand()
+end
+for k = 1:9
+    M[k+1,k] += rand()
+    M[k,k+1] += rand()
 end
 
-getfield.(mech.bodies, :m)
+M
 
-
-mech = getmechanism(:halfcheetah, Δt = 0.01, g = -9.81, damper = 10.0, spring = 0.0)
-initialize!(mech, :halfcheetah, x = 0.0, z = 0.00, θ = 0.0)
-@elapsed storage = simulate!(mech, 7.0, controller!, record = true, solver = :mehrotra!, verbose = false)
-
-visualize(mech, storage, vis = vis)
+inv(M)

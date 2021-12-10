@@ -11,6 +11,8 @@ import MeshCat.render
 # Environment
 ################################################################################
 
+type2symbol(H) = Symbol(lowercase(String(H.name.name)))
+
 function make(model::String; kwargs...)
     return eval(Symbol(model))(; kwargs...)
 end
@@ -35,8 +37,9 @@ struct Environment{X,T,M,A,O,I}
     opts_grad::InteriorPointOptions{T}
 end
 
+
 function reset(env::Environment{X}; x=nothing) where X
-    initialize!(X, env.mechanism)
+    initialize!(env.mechanism, type2symbol(X))
     if x != nothing
         env.x = x
     else
@@ -66,7 +69,7 @@ function step(env::Environment, x, u; diff=false)
     env.x .= env.mode == :min ? max2min(mechanism, z1) : z1
 
     # Compute cost
-    costs = reward(env, x, u)
+    costs = cost(env, x, u)
 
     # Gradients
     if diff
@@ -95,7 +98,7 @@ function seed(env::Environment; s=0)
     return nothing
 end
 
-reward(env::Environment, x, u) = 0.0
+cost(env::Environment, x, u) = 0.0
 
 function close(env::Environment; kwargs...)
     return nothing
@@ -159,8 +162,7 @@ include("quadruped/methods/env.jl")
 ################################################################################
 # Visualize Trajectories
 # ##############################################################################
-function visualize(env::Environment, traj::Vector{Vector{T}}) where T 
+function visualize(env::Environment, traj::Vector{Vector{T}}) where T
     storage = generate_storage(env.mechanism, [env.mode == :min ? min2max(env.mechanism, x) : x for x in traj])
     visualize(env.mechanism, storage, vis=env.vis)
 end
-
