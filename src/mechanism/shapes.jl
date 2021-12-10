@@ -122,6 +122,43 @@ end
 """
 $(TYPEDEF)
 
+A `Capsule` along the z-axis.
+# Important attributes
+* `rh`: The cylinder radius and height (vector)
+"""
+mutable struct Capsule{T} <: Shape{T}
+    xoffset::SVector{3,T}
+    qoffset::UnitQuaternion{T}
+
+    rh::SVector{2,T}
+    scale::SVector{3,T}
+    color::RGBA
+
+    # Capsule points in the z direction
+    function Capsule(r::Real, h::Real;
+            xoffset::AbstractVector = szeros(3), qoffset::UnitQuaternion = one(UnitQuaternion),
+            scale::AbstractVector = sones(3), color = RGBA(0.75, 0.75, 0.75)
+        )
+        T = promote_type(eltype.((r, h, xoffset, qoffset))...)
+
+        new{T}(xoffset, qoffset, [r; h], scale, color)
+    end
+
+    function Capsule(r::Real, h::Real, m::Real;
+            xoffset::AbstractVector = szeros(3), qoffset::UnitQuaternion = one(UnitQuaternion),
+            scale::AbstractVector = sones(3), name::String="", color = RGBA(0.75, 0.75, 0.75)
+        )
+        T = promote_type(eltype.((r, h, m, xoffset, qoffset))...)
+        
+        J = m * diagm([1.0; 1.0; 1.0])
+
+        return Body(m, J; name=name, shape=new{T}(xoffset, qoffset, [r; h], scale, color))
+    end
+end
+
+"""
+$(TYPEDEF)
+
 A `Sphere`.
 # Important attributes
 * `r`: The sphere radius.  
