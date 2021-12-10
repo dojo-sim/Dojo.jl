@@ -121,13 +121,12 @@ function pendulum_goal_max()
     zT = [xT; vT; qT; ωT]
 end
 
-
-function cost(env, x, u)
+function cost(env::Environment{Pendulum}, x, u)
     if env.mode == :min
         θ, ω = x
-        costs = angle_normalize(θ)^2 + 1e-1 * ω^2 + 1e-3 * u[1]^2 # angle_normalize enforces angle ∈ [-π, π]
+        c = angle_normalize(θ)^2 + 1e-1 * ω^2 + 1e-3 * u[1]^2 # angle_normalize enforces angle ∈ [-π, π]
     else
-        costs = Inf
+        c = Inf
     end
-    return -costs
+    return c
 end

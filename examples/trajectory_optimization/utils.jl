@@ -227,8 +227,8 @@ function getMinState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 		c = zeros(T,0)
 		v = zeros(T,0)
 		for (i,joint) in enumerate(eqc.constraints)
-			cbody = getbody(mech, eqc.childids[i])
-			pbody = getbody(mech, eqc.parentid)
+			cbody = getbody(mechanism, eqc.childids[i])
+			pbody = getbody(mechanism, eqc.parentid)
 			push!(c, minimalCoordinates(joint, pbody, cbody)...)
 			push!(v, minimalVelocities(joint, pbody, cbody)...)
 		end
@@ -278,8 +278,8 @@ function setSpringOffset!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector
 		(id > Ne) && continue # only treat eqconstraints
 		eqc = mechanism.eqconstraints[id]
 		for (i,joint) in enumerate(eqc.constraints)
-			cbody = getbody(mech, eqc.childids[i])
-			pbody = getbody(mech, eqc.parentid)
+			cbody = getbody(mechanism, eqc.childids[i])
+			pbody = getbody(mechanism, eqc.parentid)
 			N̄ = 3 - length(joint)
 			joint.spring_offset = x[off .+ (1:N̄)]
 			off += 2N̄

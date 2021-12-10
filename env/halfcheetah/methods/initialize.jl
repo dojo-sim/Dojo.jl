@@ -1,5 +1,5 @@
 function gethalfcheetah(; Δt::T=0.01, g::T=-9.81, cf::T=0.8,
-    spring=[0., 6., 4.5, 3., 4.5, 3., 1.5], damper=[0., 240, 180, 120, 180, 120, 60.], contact::Bool=true) where T
+    spring=[240, 180, 120, 180, 120, 60.], damper=[6., 4.5, 3., 4.5, 3., 1.5], contact::Bool=true) where T
 
     path = joinpath(@__DIR__, "../deps/halfcheetah.urdf")
     mech = Mechanism(path, floating=false, g=g, Δt=Δt, spring=spring, damper=damper)
@@ -20,7 +20,7 @@ function gethalfcheetah(; Δt::T=0.01, g::T=-9.81, cf::T=0.8,
         contineqcs1 = contactconstraint(foot1, normal, cf, p=p1, offset=o1)
         contineqcs2 = contactconstraint(foot2, normal, cf, p=p2, offset=o2)
 
-        setPosition!(mech, geteqconstraint(mech, "floating_joint"), [0.530509, 0.0, 0.02792])
+        setPosition!(mech, geteqconstraint(mech, "floating_joint"), [0.576509, 0.0, 0.02792])
         mech = Mechanism(origin, bodies, eqs, [contineqcs1; contineqcs2], g=g, Δt=Δt, spring=spring, damper=damper)
     end
     return mech
@@ -29,7 +29,7 @@ end
 function initializehalfcheetah!(mechanism::Mechanism; x::T=0.0, z::T=0.0, θ::T=0.0) where {T}
     setPosition!(mechanism,
                  geteqconstraint(mechanism, "floating_joint"),
-                 [z + 0.530509, -x, -θ + 0.02792])
+                 [z + 0.576509, -x, -θ + 0.02792])
     for eqc in mechanism.eqconstraints
         (eqc.name != "floating_joint") && setPosition!(mechanism, eqc, zeros(controldim(eqc)))
     end
