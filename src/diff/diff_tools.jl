@@ -35,13 +35,6 @@ function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
                 pGlq = A * pQl
                 cGlx = A * cXl
                 cGlq = A * cQl
-                # if typeof(joint) <: Translational
-                #     @show A
-                #     # @show pGlx
-                #     @show pGlq
-                #     # @show cGlx
-                #     @show cGlq
-                # end
                 Gl[range, pcol13[1:3]] = pGlx
                 Gl[range, pcol13[7:10]] = pGlq
                 Gl[range,ccol13[1:3]] = cGlx
@@ -408,8 +401,9 @@ function contact_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
                 end
 
                 if bound_type <: ContactBound
-                    J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= _dN(x3, vector(q3), ineqc.γsol[2][1:1], bound.p)
-                    J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= _dB(x3, vector(q3), ineqc.γsol[2][2:4], bound.p)
+                    # J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= _dN(x3, vector(q3), ineqc.γsol[2][1:1], bound.p)
+                    # J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= _dB(x3, vector(q3), ineqc.γsol[2][2:4], bound.p)
+                    J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= FiniteDiff.finite_difference_jacobian(d, [x3; vector(q3)])
                 elseif bound_type <: LinearContactBound
                     J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= FiniteDiff.finite_difference_jacobian(d, [x3; vector(q3)])
                 elseif bound_type <: ImpactBound
@@ -439,21 +433,22 @@ function contact_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,
         ibody = findfirst(x -> x == body.id, mechanism.bodies.keys)
         bound_type = typeof(bound)
 
+        function d(vars)
+            q3 = UnitQuaternion(vars..., false)
+            # Bxmat = bound.Bx
+            # Bqmat = Bxmat * ∂vrotate∂q(bound.p, q) * LVᵀmat(q)
+            # return Bqmat * ϕ25
+            vp = v25 + skew(vrotate(ϕ25, q3)) * (vrotate(bound.p, q3) - bound.offset)
+            return bound.Bx * vp
+        end
         if bound_type <: ContactBound
             J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  bound.ainv3
             J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = bound.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bound.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bound.p)))#) * Rmat(ωbar(ϕ25, Δt)*Δt/2)*LVᵀmat(q2)
-            J[offr + N½ .+ (3:4), (ibody-1)*13 .+ (7:10)] = dBω(vector(q3), ϕ25, bound.p) #* Rmat(ωbar(ϕ25, Δt)*Δt/2)*LVᵀmat(q2) # ∇q3B 2x3
+            J[offr + N½ .+ (3:4), (ibody-1)*13 .+ (7:10)] = FiniteDiff.finite_difference_jacobian(d, vector(q3))#dBω(vector(q3), ϕ25, bound.p)
         elseif bound_type <: LinearContactBound
-            function d(vars)
-                # transforms the velocities of the origin of the link into velocities along all 4 axes of the friction pyramid
-                q = UnitQuaternion(vars..., false)
-                Bxmat = bound.Bx
-                Bqmat = Bxmat * ∂vrotate∂q(bound.p, q) * LVᵀmat(q)
-                return Bqmat * ϕ25
-            end
             J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  bound.ainv3
-            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = bound.ainv3 * ∂vrotate∂q(bound.p, q3)# * Rmat(ωbar(ϕ25, Δt)*Δt/2)*LVᵀmat(q2)
-            J[offr + N½ .+ (3:6), (ibody-1)*13 .+ (7:10)] = FiniteDiff.finite_difference_jacobian(d, vector(q3))# * Rmat(ωbar(ϕ25, Δt)*Δt/2)*LVᵀmat(q2)
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = bound.ainv3 * ∂vrotate∂q(bound.p, q3)
+            J[offr + N½ .+ (3:6), (ibody-1)*13 .+ (7:10)] = FiniteDiff.finite_difference_jacobian(d, vector(q3))
         elseif bound_type <: ImpactBound
             J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  bound.ainv3
             J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = bound.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bound.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bound.p)))#) * Rmat(ωbar(ϕ25, Δt)*Δt/2)*LVᵀmat(q2)

@@ -59,22 +59,21 @@ function impactconstraint(body::Body{T}, normal::AbstractVector{T};
 end
 
 function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{ImpactBound{T,N}}}
-    imp = ineqc.constraints[1]
+    bound = ineqc.constraints[1]
     body = getbody(mechanism, ineqc.parentid)
-    x, v, q, ω = fullargssol(body.state)
+    x2, v25, q2, ϕ25 = fullargssol(body.state)
     x3, q3 = posargs3(body.state, mechanism.Δt)
     SVector{1,T}(
-        imp.ainv3 * (x3 + vrotate(imp.p,q3) - imp.offset) - ineqc.ssol[2][1],
+        bound.ainv3 * (x3 + vrotate(bound.p,q3) - bound.offset) - ineqc.ssol[2][1],
         )
 end
 
 
 ## Derivatives accounting for quaternion specialness
 ## maps contact forces into the dynamics
-@inline function ∂g∂pos(imp::ImpactBound, x::AbstractVector, q::UnitQuaternion)
-    drot = ∂vrotate∂q(imp.p, q) * LVᵀmat(q)
-    X = imp.ainv3
-    Q = imp.ainv3 * drot
+@inline function ∂g∂pos(bound::ImpactBound, x::AbstractVector, q::UnitQuaternion)
+    X = bound.ainv3;
+    Q = - X * skew(vrotate(bound.p, q) - bound.offset)
     return X, Q
 end
 
@@ -110,17 +109,14 @@ end
 
 @inline function ∂g∂ʳpos(bound::ImpactBound, x::AbstractVector, q::UnitQuaternion)
     X, Q = ∂g∂pos(bound, x, q)
-    Q = Q # we account for quaternion specialness in ∂g∂pos
     return [X Q]
 end
 
-@inline function ∂g∂ʳvel(imp::ImpactBound, x3::AbstractVector, q3::UnitQuaternion,
-    x2::AbstractVector, v2::AbstractVector, q2::UnitQuaternion, ω2::AbstractVector, Δt
+@inline function ∂g∂ʳvel(bound::ImpactBound, x3::AbstractVector, q3::UnitQuaternion,
+    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, Δt
     )
-    X = imp.ainv3 * Δt
-    Q = (imp.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(imp.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(imp.p)))) * Lmat(q2) * derivωbar(ω2, Δt) * Δt / 2
-    V = X
-    Ω = Q
+    V = bound.ainv3 * Δt
+    Ω = bound.ainv3 * ∂vrotate∂q(bound.p, q3) * ∂integrator∂ϕ(q2, ϕ25, Δt)
     return [V Ω]
 end
 

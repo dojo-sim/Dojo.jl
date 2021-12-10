@@ -29,6 +29,11 @@ end
     return
 end
 
+# I think this is the inverse of getq3, we recover ϕ15 from q1, q2 and h
+function ω_finite_difference(q1::UnitQuaternion, q2::UnitQuaternion, Δt)
+    2.0 / Δt  * Vmat() * Lᵀmat(q1) * vector(q2)
+end
+
 @inline function discretizestate!(body::Body{T}, Δt) where T
     state = body.state
     x2 = state.x2[1]
