@@ -69,39 +69,38 @@ function contactconstraint(body::Body{T}, normal::AbstractVector{T}, cf::T;
 end
 
 function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}}}
-    cont = ineqc.constraints[1]
+    bound = ineqc.constraints[1]
     body = getbody(mechanism, ineqc.parentid)
-    x, v, q, ω = fullargssol(body.state)
+    x2, v25, q2, ϕ25 = fullargssol(body.state)
     x3, q3 = posargs3(body.state, mechanism.Δt)
 
+    g(bound, ineqc.ssol[2], ineqc.γsol[2], x3, q3, v25, ϕ25)
+end
+
+function g(bound::ContactBound, s::AbstractVector{T}, γ::AbstractVector{T},
+        x3::AbstractVector{T}, q3::UnitQuaternion{T}, v25::AbstractVector{T},
+        ϕ25::AbstractVector{T}) where {T}
+
     # transforms the velocities of the origin of the link into velocities along all 4 axes of the friction pyramid
-    Bxmat = cont.Bx
-    Bqmat = Bxmat * ∂vrotate∂q(cont.p, q3) * LVᵀmat(q3)
+    # vp = V(cp, B / W)_w velocity of the contact point cp, attached to body B wrt world frame, expressed in the world frame.
+    vp = v25 + skew(vrotate(ϕ25, q3)) * (vrotate(bound.p, q3) - bound.offset)
     SVector{4,T}(
-        cont.ainv3 * (x3 + vrotate(cont.p, q3) - cont.offset) - ineqc.ssol[2][1],
-        cont.cf * ineqc.γsol[2][1] - ineqc.γsol[2][2],
-        (Bxmat * v + Bqmat * ω - ineqc.ssol[2][@SVector [3,4]])...)
+        bound.ainv3 * (x3 + vrotate(bound.p,q3) - bound.offset) - s[1],
+        bound.cf * γ[1] - γ[2],
+        (bound.Bx * vp - s[@SVector [3,4]])...)
 end
 
 
 ## Derivatives accounting for quaternion specialness
 ## maps contact forces into the dynamics
-@inline function ∂g∂pos(cont::ContactBound, x::AbstractVector, q::UnitQuaternion)
-    Bxmat = cont.Bx
-    p = cont.p
-    nx = size(x)[1]
-    nq = nx
-
-    drot = ∂vrotate∂q(cont.p, q) * LVᵀmat(q)
-
-    X = [cont.ainv3;
-         szeros(1,nx);
-         Bxmat]
-    Q = [cont.ainv3 * drot;
-         szeros(1,nq);
-         Bxmat * drot]
+@inline function ∂g∂pos(bound::ContactBound, x::AbstractVector, q::UnitQuaternion)
+    X = [bound.ainv3;
+         szeros(1,3);
+         bound.Bx]
+    Q = - X * skew(vrotate(bound.p, q) - bound.offset)
     return X, Q
 end
+
 
 ## Complementarity
 function complementarity(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}; scaling::Bool = false) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
@@ -135,31 +134,40 @@ end
 
 @inline function ∂g∂ʳpos(bound::ContactBound, x::AbstractVector, q::UnitQuaternion)
     X, Q = ∂g∂pos(bound, x, q)
-    Q = Q # we account for quaternion specialness in ∂g∂pos
     return [X Q]
 end
 
-@inline function ∂g∂ʳvel(cont::ContactBound, x3::AbstractVector, q3::UnitQuaternion,
-    x2::AbstractVector, v2::AbstractVector, q2::UnitQuaternion, ω2::AbstractVector, Δt
+@inline function ∂g∂ʳvel(bound::ContactBound{T}, x3::AbstractVector{T}, q3::UnitQuaternion{T},
+        x2::AbstractVector{T}, v25::AbstractVector{T}, q2::UnitQuaternion{T}, ϕ25::AbstractVector{T}, Δt::T) where {T}
+    V = [bound.ainv3 * Δt;
+         szeros(1,3);
+         bound.Bx]
+    # Ω = FiniteDiff.finite_difference_jacobian(ϕ25 -> g(bound, s, γ, x2+Δt*v25, getq3(q2,ϕ25,Δt), v25, ϕ25), ϕ25)
+    ∂v∂q3 = skew(vrotate(ϕ25, q3)) * ∂vrotate∂q(bound.p, q3)
+    ∂v∂q3 += skew(bound.offset - vrotate(bound.p, q3)) * ∂vrotate∂q(ϕ25, q3)
+    ∂v∂ϕ25 = skew(bound.offset - vrotate(bound.p, q3)) * ∂vrotate∂p(ϕ25, q3)
+    Ω = [bound.ainv3 * ∂vrotate∂q(bound.p, q3) * ∂integrator∂ϕ(q2, ϕ25, Δt)
+        szeros(1,3);
+        bound.Bx * (∂v∂ϕ25 + ∂v∂q3 * ∂integrator∂ϕ(q2, ϕ25, Δt))]
+    return [V Ω]
+end
+
+
+@inline function ∂g∂ʳvel(bound::ContactBound, x3::AbstractVector, q3::UnitQuaternion,
+    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, Δt
     )
-    Bxmat = cont.Bx
-    p = cont.p
-    nx = size(x2)[1]
-    nq = nx
+    Bxmat = bound.Bx
+    p = bound.p
 
-
-    X = [cont.ainv3 * Δt;
-         szeros(1,nx);
+    V = [bound.ainv3 * Δt;
+         szeros(1,3);
          Bxmat]
 
-    B(q) = Bxmat * ∂vrotate∂q(cont.p, UnitQuaternion(q...)) * LVᵀmat(UnitQuaternion(q...))
-
-    Q = [(cont.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(cont.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(cont.p)))) * Lmat(q2) * derivωbar(ω2, Δt) * Δt / 2
-         szeros(1,nq);
-         B(q3) + ForwardDiff.jacobian(q -> B(q) * ω2, [q3.w; q3.x; q3.y; q3.z]) * Lmat(q2) * derivωbar(ω2, Δt) * Δt / 2]
-
-    V = X
-    Ω = Q
+    ∂v∂q3 = ∂vrotate∂q(-skew(p) * ϕ25, q3)
+    ∂v∂ϕ25 = ∂vrotate∂p(-skew(p) * ϕ25, q3) * -skew(p)
+    Ω = [bound.ainv3 * ∂vrotate∂q(p, q3) * ∂integrator∂ϕ(q2, ϕ25, Δt)
+        szeros(1,3);
+        Bxmat * (∂v∂ϕ25 + ∂v∂q3 * ∂integrator∂ϕ(q2, ϕ25, Δt))]
     return [V Ω]
 end
 
