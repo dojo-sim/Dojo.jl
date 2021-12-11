@@ -97,7 +97,7 @@ export Origin,
     finitediff_data_matrix,
     finitediff_sensitivity,
 
-    momentum, 
+    momentum,
     kineticEnergy,
     potentialEnergy,
     mechanicalEnergy,
@@ -180,5 +180,6 @@ include(joinpath("..", "env", "environment.jl"))
 
 # Utilities
 include(joinpath("..", "examples", "trajectory_optimization", "utils.jl"))
+include(joinpath("..", "examples", "reinforcement_learning", "ars.jl"))
 
 end

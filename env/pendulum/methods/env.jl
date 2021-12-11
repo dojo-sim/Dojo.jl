@@ -21,7 +21,7 @@ function pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
     nu = controldim(mechanism)
 
     high = [1.0, 1.0, max_speed]
-    aspace = BoxSpace(controldim(mechanism), low=[-max_torque], high=[max_torque])
+    aspace = BoxSpace(controldim(mechanism), low=[-dt*max_torque], high=[dt*max_torque])
     ospace = BoxSpace(no, low=-high, high=high)
     rng = [MersenneTwister(s),]
 
@@ -31,6 +31,7 @@ function pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
 
     u_prev = Inf * ones(nu)
     control_mask = ones(1,1)
+    control_scaling = Diagonal(ones(nu))
     build_robot(vis, mechanism)
 
     info = Dict(:max_speed => max_speed, :max_torque => max_torque)
@@ -38,7 +39,7 @@ function pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
     TYPES = [T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
     env = Environment{Pendulum, TYPES...}(mechanism, mode, aspace, ospace,
         x, fx, fu,
-        u_prev, control_mask, nx, nu, no, info,
+        u_prev, control_mask, control_scaling, nx, nu, no, info,
         rng, vis, opts_step, opts_grad)
     return env
 end
@@ -65,6 +66,7 @@ function _get_obs(env::Environment{Pendulum})
     if env.mode == :min
         θ, ω = env.x
         return [cos(θ), sin(θ), ω]
+        # return [θ, ω]
     else env.mode == :max
         return env.x
     end
@@ -102,7 +104,7 @@ function step(env::Environment{Pendulum}, x, u; diff=false)
 end
 
 function angle_normalize(x)
-    return ((x + π) % (2 * π)) - π
+    return ((x + 101π) % (2 * π)) - π
 end
 
 function pendulum_nominal_max()
@@ -124,9 +126,10 @@ end
 function cost(env::Environment{Pendulum}, x, u)
     if env.mode == :min
         θ, ω = x
-        c = angle_normalize(θ)^2 + 1e-1 * ω^2 + 1e-3 * u[1]^2 # angle_normalize enforces angle ∈ [-π, π]
+        c = angle_normalize(θ - π)^2 + 1e-1 * ω^2 + 1e-3 * (u[1])^2 # angle_normalize enforces angle ∈ [-π, π]
+        c = angle_normalize(θ - π)^2 + 1e-3 * ω^2 + 1e-3 * (env.mechanism.Δt * u[1])^2 # angle_normalize enforces angle ∈ [-π, π]
     else
         c = Inf
     end
-    return c
+    return c * 0.1
 end

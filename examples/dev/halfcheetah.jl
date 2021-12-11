@@ -18,12 +18,12 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
-mech = getmechanism(:halfcheetah, Δt = 0.10, g = -9.81, contact = true);
+mech = getmechanism(:halfcheetah, Δt = 0.01, g = -9.81, contact = true,
+    contact_body = true, spring = 10.0, damper = 0.3);
 initialize!(mech, :halfcheetah, x = 0.0, z = 0.0, θ = -0.0)
-@elapsed storage = simulate!(mech, 0.30, record = true, verbose = false,
+@elapsed storage = simulate!(mech, 4.30, record = true, verbose = false,
     opts=InteriorPointOptions(verbose=false, btol = 1e-6))
 visualize(mech, storage, vis = vis)
-
 
 
 env = make("halfcheetah")
