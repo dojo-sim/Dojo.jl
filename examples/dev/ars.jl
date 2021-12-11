@@ -186,31 +186,3 @@ function display_policy(env::Environment, policy::Policy13, normalizer::Normaliz
     close(env)
     return nothing
 end
-
-env0 = make("pendulum", g = -1.00, damper = 0.4, max_torque = 20.0)
-open(env0.vis)
-obs0 = reset(env0)
-render(env0)
-input_size0 = length(obs0)
-output_size0 = length(env0.u_prev)
-hp0 = Hp13(main_loop_size = 200, horizon = 100, n_directions = 4, b = 4, step_size = 0.1)
-normalizer0 = Normalizer13(input_size0)
-policy0 = Policy13(input_size0, output_size0, hp0)
-train(env0, policy0, normalizer0, hp0)
-display_policy(env0, policy0, normalizer0, hp0)
-policy0.θ * _get_obs(env)
-
-# policy0.θ = 1.5*[1.0 -0.3]
-
-obs0 = reset(env0, x = [-0.1,0.])
-render(env0)
-cost(env0, [-0.1, 0.], [0.])
-
-policy0.θ.= []
-cost(env, [0, 0.0], [0.0])
-
-
-angle_normalize( 0.1 * π)
-angle_normalize( 1.1 * π)
-angle_normalize(-0.9 * π)
-plot(-3:0.01:3, angle_normalize.(-pi .+ pi .* (-3:0.01:3)).^2)

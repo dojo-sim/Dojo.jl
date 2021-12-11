@@ -50,8 +50,7 @@ function reset(env::Environment{Pendulum}; x=nothing)
         env.x .= x
     else
         if env.mode == :min
-            # high = [π, 1.0]
-            high = [π, 0.0] # TODO
+            high = [π, 1.0]
             low = -high
             env.x .= rand(env.rng[1], env.nx) .* (high .- low) .+ low
         elseif env.mode == :max
@@ -126,10 +125,6 @@ end
 function cost(env::Environment{Pendulum}, x, u)
     if env.mode == :min
         θ, ω = x
-        # @show θ
-        # @show θ - π
-        # @show angle_normalize(θ)
-        # @show angle_normalize(θ - π)
         c = angle_normalize(θ - π)^2 + 1e-1 * ω^2 + 1e-3 * (u[1])^2 # angle_normalize enforces angle ∈ [-π, π]
         c = angle_normalize(θ - π)^2 + 1e-3 * ω^2 + 1e-3 * (env.mechanism.Δt * u[1])^2 # angle_normalize enforces angle ∈ [-π, π]
     else
