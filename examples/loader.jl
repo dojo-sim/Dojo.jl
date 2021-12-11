@@ -169,3 +169,4 @@ include(joinpath(module_dir(), "env", "environment.jl"))
 
 # Utilities
 include(joinpath(module_dir(), "examples", "trajectory_optimization", "utils.jl"))
+include(joinpath(module_dir(), "examples", "reinforcement_learning", "ars.jl"))

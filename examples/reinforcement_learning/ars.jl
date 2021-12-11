@@ -1,15 +1,15 @@
 ################################################################################
 # Augmented Random Search ARS
 ################################################################################
-
-import LinearAlgebra.normalize
-import GeometryBasics.update
 using LinearAlgebra
 using Statistics
 
+import LinearAlgebra.normalize
+import GeometryBasics.update
+
 
 # ARS options: hyper parameters
-@with_kw struct Hp13{T}
+@with_kw struct HyperParameters{T}
     main_loop_size::Int = 100
     horizon::Int = 200
     step_size::T = 0.02
@@ -21,24 +21,23 @@ using Statistics
 end
 # assert self.b<=self.n_directions, "b must be <= n_directions"
 
-
 # observation filter
-mutable struct Normalizer13{T}
+mutable struct Normalizer{T}
     n::Vector{T}
     mean::Vector{T}
     mean_diff::Vector{T}
     var::Vector{T}
 end
 
-function Normalizer13(num_inputs::Int)
+function Normalizer(num_inputs::Int)
     n = zeros(num_inputs)
     mean = zeros(num_inputs)
     mean_diff = zeros(num_inputs)
     var = zeros(num_inputs)
-    return Normalizer13{eltype(n)}(n, mean, mean_diff, var)
+    return Normalizer{eltype(n)}(n, mean, mean_diff, var)
 end
 
-function observe(normalizer::Normalizer13{T}, x::AbstractVector{T}) where {T}
+function observe(normalizer::Normalizer{T}, x::AbstractVector{T}) where {T}
     normalizer.n .+= 1
     last_mean = deepcopy(normalizer.mean)
     normalizer.mean .+= (x .- normalizer.mean) ./ normalizer.n
@@ -53,32 +52,32 @@ function normalize(normalizer, inputs)
 end
 
 # linear policy
-mutable struct Policy13{T}
-    hp::Hp13{T}
+mutable struct Policy{T}
+    hp::HyperParameters{T}
     θ::Matrix{T}
 end
 
-function Policy13(input_size::Int, output_size::Int, hp::Hp13{T}) where {T}
-    return Policy13{T}(hp, zeros(output_size, input_size))
+function Policy(input_size::Int, output_size::Int, hp::HyperParameters{T}) where {T}
+    return Policy{T}(hp, zeros(output_size, input_size))
 end
 
-function evaluate(policy::Policy13{T}, input::AbstractVector{T}) where {T}
+function evaluate(policy::Policy{T}, input::AbstractVector{T}) where {T}
     return policy.θ * input
 end
 
-function positive_perturbation(policy::Policy13{T}, input::AbstractVector{T}, δ::AbstractMatrix{T}) where {T}
+function positive_perturbation(policy::Policy{T}, input::AbstractVector{T}, δ::AbstractMatrix{T}) where {T}
     return (policy.θ + policy.hp.noise .* δ) * input
 end
 
-function negative_perturbation(policy::Policy13{T}, input::AbstractVector{T}, δ::AbstractMatrix{T}) where {T}
+function negative_perturbation(policy::Policy{T}, input::AbstractVector{T}, δ::AbstractMatrix{T}) where {T}
     return (policy.θ - policy.hp.noise .* δ) * input
 end
 
-function sample_δs(policy::Policy13{T}) where {T}
+function sample_δs(policy::Policy{T}) where {T}
     return [randn(size(policy.θ)) for i = 1:policy.hp.n_directions]
 end
 
-function update(policy::Policy13, rollouts, σ_r)
+function update(policy::Policy, rollouts, σ_r)
     stp = zeros(size(policy.θ))
     for (r_pos, r_neg, d) in rollouts
         stp += (r_pos - r_neg) * d
@@ -87,9 +86,8 @@ function update(policy::Policy13, rollouts, σ_r)
     return nothing
 end
 
-function train(env::Environment, policy::Policy13{T}, normalizer::Normalizer13{T}, hp::Hp13{T}) where T
+function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T}, hp::HyperParameters{T}) where T
     for episode = 1:hp.main_loop_size
-        @show episode
         # init deltas and rewards
         δs = sample_δs(policy)
         reward_positive = zeros(hp.n_directions)
@@ -97,7 +95,6 @@ function train(env::Environment, policy::Policy13{T}, normalizer::Normalizer13{T
 
         # positive directions
         for k = 1:hp.n_directions
-            # println("positive direction: k ", k)
             state = reset(env)
             done = false
             num_plays = 0.
@@ -110,12 +107,10 @@ function train(env::Environment, policy::Policy13{T}, normalizer::Normalizer13{T
                 reward_positive[k] += reward
                 num_plays += 1
             end
-            # @show reward_positive[k]
         end
 
         # negative directions
         for k = 1:hp.n_directions
-            # println("negative direction: k ", k)
             state = reset(env)
             done = false
             num_plays = 0.
@@ -140,10 +135,8 @@ function train(env::Environment, policy::Policy13{T}, normalizer::Normalizer13{T
         r_max = [max(reward_negative[k], reward_positive[k]) for k = 1:hp.n_directions]
         order = sortperm(r_max, rev = true)[1:hp.b]
         rollouts = [(reward_positive[k], reward_negative[k], δs[k]) for k = order]
-        # @show scn(rollouts[1][1]), scn(rollouts[1][2]), scn.(rollouts[1][3])
-        @show scn.(policy.θ)
-        # update policy:
         update(policy, rollouts, σ_r)
+        @show scn.(policy.θ)
 
         # evaluate
         state = reset(env)
@@ -168,7 +161,7 @@ end
 
 
 # display learned policy
-function display_policy(env::Environment, policy::Policy13, normalizer::Normalizer13, hp::Hp13)
+function display_policy(env::Environment, policy::Policy, normalizer::Normalizer, hp::HyperParameters)
     state = reset(env)
     done = false
     num_plays = 1.

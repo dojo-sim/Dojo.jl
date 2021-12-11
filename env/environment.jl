@@ -26,7 +26,8 @@ struct Environment{X,T,M,A,O,I}
     fx::Matrix{T}
     fu::Matrix{T}
     u_prev::Vector{T}
-    control_mask::Matrix{T}
+	control_mask::Matrix{T}
+    control_scaling::Diagonal{T, Vector{T}} # could be merged with control mask
     nx::Int
     nu::Int
     no::Int
@@ -73,12 +74,12 @@ function step(env::Environment, x, u; diff=false)
     # Gradients
     if diff
         if env.mode == :min
-            fx, fu = getMinGradients!(env.mechanism, z0, env.control_mask' * u, opts=env.opts_grad)
+            fx, fu = getMinGradients!(env.mechanism, z0, env.control_mask' * env.control_scaling * u, opts=env.opts_grad)
         elseif env.mode == :max
-            fx, fu = getMaxGradients!(env.mechanism, z0, env.control_mask' * u, opts=env.opts_grad)
+            fx, fu = getMaxGradients!(env.mechanism, z0, env.control_mask' * env.control_scaling * u, opts=env.opts_grad)
         end
         env.fx .= fx
-        env.fu .= fu * env.control_mask'
+        env.fu .= fu * env.control_mask' * env.control_scaling
     end
 
     info = Dict()
