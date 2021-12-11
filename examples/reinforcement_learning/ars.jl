@@ -165,6 +165,7 @@ end
 # display learned policy
 function display_policy(env::Environment, policy::Policy, normalizer::Normalizer, hp::HyperParameters)
     state = reset(env)
+    traj = [state]
     done = false
     num_plays = 1.
     reward_evaluation = 0
@@ -172,6 +173,7 @@ function display_policy(env::Environment, policy::Policy, normalizer::Normalizer
         render(env)
         sleep(env.mechanism.Δt)
         observe(normalizer, state)
+        push!(traj, copy(state))
         state = normalize(normalizer, state)
         action = evaluate(policy, state)
         state, reward, done, _ = step(env, action)
@@ -179,5 +181,6 @@ function display_policy(env::Environment, policy::Policy, normalizer::Normalizer
         num_plays += 1
     end
     close(env)
-    return nothing
+
+    return traj
 end

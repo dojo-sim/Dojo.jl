@@ -4,7 +4,8 @@
 struct HalfCheetah end
 
 function halfcheetah(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
-    cf::T=0.8, spring=[240, 180, 120, 180, 120, 60.], damper=[6., 4.5, 3., 4.5, 3., 1.5],
+    # cf::T=0.8, spring=[240, 180, 120, 180, 120, 60.], damper=[6., 4.5, 3., 4.5, 3., 1.5],
+    cf::T=0.4, spring=[240, 180, 120, 180, 120, 90.], damper=[6., 4.5, 3., 4.5, 3., 2.0],
     s::Int=1, contact::Bool=true, info=nothing, vis::Visualizer=Visualizer(),
     opts_step=InteriorPointOptions(), opts_grad=InteriorPointOptions()) where T
 
@@ -33,7 +34,7 @@ function halfcheetah(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
 
     u_prev = zeros(nu)
     control_mask = [zeros(nu, 3) I(nu)]
-    motor_gear = [120, 90, 60, 120, 60, 30.]*0.90000000000000000000000000000000 # TODO
+    motor_gear = [120, 90, 60, 120, 60, 30.]
     control_scaling = Diagonal(dt * motor_gear)
 
     build_robot(vis, mechanism)
