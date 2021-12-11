@@ -33,7 +33,7 @@ function halfcheetah(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
 
     u_prev = zeros(nu)
     control_mask = [zeros(nu, 3) I(nu)]
-    motor_gear = [120, 90, 60, 120, 60, 30.]
+    motor_gear = [120, 90, 60, 120, 60, 30.]*0.90000000000000000000000000000000 # TODO
     control_scaling = Diagonal(dt * motor_gear)
 
     build_robot(vis, mechanism)

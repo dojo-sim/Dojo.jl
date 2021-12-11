@@ -87,6 +87,7 @@ function update(policy::Policy, rollouts, σ_r)
 end
 
 function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T}, hp::HyperParameters{T}) where T
+    envs = [deepcopy(env) for i = 1:Threads.nthreads()]
     for episode = 1:hp.main_loop_size
         # init deltas and rewards
         δs = sample_δs(policy)
@@ -94,15 +95,15 @@ function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T}, h
         reward_negative = zeros(hp.n_directions)
 
         # positive directions
-        for k = 1:hp.n_directions
-            state = reset(env)
+        Threads.@threads for k = 1:hp.n_directions
+            state = reset(envs[Threads.threadid()])
             done = false
             num_plays = 0.
             while !done && num_plays < hp.horizon
                 observe(normalizer, state)
                 state = normalize(normalizer, state)
                 action = positive_perturbation(policy, state, δs[k])
-                state, reward, done, _ = step(env, action)
+                state, reward, done, _ = step(envs[Threads.threadid()], action)
                 reward = max(min(reward, 1), -1)
                 reward_positive[k] += reward
                 num_plays += 1
@@ -110,15 +111,15 @@ function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T}, h
         end
 
         # negative directions
-        for k = 1:hp.n_directions
-            state = reset(env)
+        Threads.@threads for k = 1:hp.n_directions
+            state = reset(envs[Threads.threadid()])
             done = false
             num_plays = 0.
             while !done && num_plays < hp.horizon
                 observe(normalizer, state)
                 state = normalize(normalizer, state)
                 action = negative_perturbation(policy, state, δs[k])
-                state, reward, done, _ = step(env, action)
+                state, reward, done, _ = step(envs[Threads.threadid()], action)
                 reward = max(min(reward, 1), -1)
                 reward_negative[k] += reward
                 num_plays += 1
@@ -136,21 +137,22 @@ function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T}, h
         order = sortperm(r_max, rev = true)[1:hp.b]
         rollouts = [(reward_positive[k], reward_negative[k], δs[k]) for k = order]
         update(policy, rollouts, σ_r)
-        @show scn.(policy.θ)
+        # @show scn.(policy.θ)
 
-        # evaluate
-        state = reset(env)
-        done = false
-        num_plays = 1.
-        reward_evaluation = 0
-        while !done && num_plays<hp.horizon
-            observe(normalizer, state)
-            state = normalize(normalizer, state)
-            action = evaluate(policy, state)
-            state, reward, done, _ = step(env, action)
-            reward_evaluation += reward
-            num_plays += 1
-        end
+        # # evaluate
+        # state = reset(envs[Threads.threadid()])
+        # done = false
+        # num_plays = 1.
+        # reward_evaluation = 0
+        # while !done && num_plays<hp.horizon
+        #     observe(normalizer, state)
+        #     state = normalize(normalizer, state)
+        #     action = evaluate(policy, state)
+        #     state, reward, done, _ = step(envs[Threads.threadid()], action)
+        #     reward_evaluation += reward
+        #     num_plays += 1
+        # end
+        reward_evaluation = mean(all_rewards)
 
         # finish, print:
         println("episode $episode reward_evaluation $reward_evaluation")
