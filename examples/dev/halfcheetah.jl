@@ -25,7 +25,6 @@ initialize!(mech, :halfcheetah, x = 0.0, z = 0.0, θ = -0.0)
 visualize(mech, storage, vis = vis)
 
 
-
 env = make("halfcheetah")
 open(env.vis)
 
