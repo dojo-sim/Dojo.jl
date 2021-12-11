@@ -37,7 +37,6 @@ struct Environment{X,T,M,A,O,I}
     opts_grad::InteriorPointOptions{T}
 end
 
-
 function reset(env::Environment{X}; x=nothing) where X
     initialize!(env.mechanism, type2symbol(X))
     if x != nothing

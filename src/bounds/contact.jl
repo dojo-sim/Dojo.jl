@@ -81,11 +81,10 @@ function g(bound::ContactBound, s::AbstractVector{T}, γ::AbstractVector{T},
         x3::AbstractVector{T}, q3::UnitQuaternion{T}, v25::AbstractVector{T},
         ϕ25::AbstractVector{T}) where {T}
 
-    # transforms the velocities of the origin of the link into velocities along all 4 axes of the friction pyramid
-    # vp = V(cp, B / W)_w velocity of the contact point cp, attached to body B wrt world frame, expressed in the world frame.
+    # transforms the velocities of the origin of the link into velocities 
     vp = v25 + skew(vrotate(ϕ25, q3)) * (vrotate(bound.p, q3) - bound.offset)
     SVector{4,T}(
-        bound.ainv3 * (x3 + vrotate(bound.p,q3) - bound.offset) - s[1],
+        bound.ainv3 * (x3 + vrotate(bound.p, q3) - bound.offset) - s[1],
         bound.cf * γ[1] - γ[2],
         (bound.Bx * vp - s[@SVector [3,4]])...)
 end

@@ -8,7 +8,7 @@ gravity = -9.81
 env = make("halfcheetah", 
     mode=:min, 
     g=gravity,
-    dt=dt);
+    dt=dt)
 
 # ## visualizer 
 open(env.vis)
