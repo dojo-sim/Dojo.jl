@@ -17,7 +17,6 @@ function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T}, h
 
     for episode = 1:hp.main_loop_size
         # Stem
-        seed(env, s = episode)
         state = reset(env)
         X = [copy(state),]
         A = []
@@ -46,7 +45,7 @@ function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T}, h
         ∂r∂x = [FiniteDiff.finite_difference_jacobian(x -> [-cost(env, x, A[k])], X[k]) for k = 1:num_plays]
         ∂r∂u = [FiniteDiff.finite_difference_jacobian(u -> [-cost(env, X[k], u)], A[k]) for k = 1:num_plays]
         for k = 2:num_plays
-            ∂x∂θ[k] = fx[k-1] * ∂x∂θ[k-1] + fu[k-1] * ∂u∂θ[k-1]
+            ∂x∂θ[k] = fx[k-1] * ∂x∂θ[k-1] + fu[k-1] * ∂u∂θ[k-1] #TODO
         end
         for k = 1:num_plays
             ∇θ += ∂r∂x[k] * ∂x∂θ[k] + ∂r∂u[k] * ∂u∂θ[k]
