@@ -62,7 +62,6 @@ mutable struct Box{T} <: Shape{T}
     scale::SVector{3,T}
     color::RGBA
 
-
     function Box(x::Real, y::Real, z::Real;
             xoffset::AbstractVector = szeros(3), qoffset::UnitQuaternion = one(UnitQuaternion),
             scale::AbstractVector = sones(3), color = RGBA(0.75, 0.75, 0.75)
@@ -162,6 +161,25 @@ mutable struct Capsule{T} <: Shape{T}
         J = m * diagm([Ixx; Ixx; Izz])
 
         return Body(m, J; name=name, shape=new{T}(xoffset, qoffset, [r; h], scale, color))
+    end
+end
+
+mutable struct Shapes14{T} <: Shape{T}
+    shape::Vector 
+    xoffset::SVector{3,T}
+    qoffset::UnitQuaternion{T}
+    scale::SVector{3,T}
+    color::RGBA
+
+    function Shapes14(shapes::Vector; 
+        xoffset::AbstractVector = szeros(3), qoffset::UnitQuaternion = one(UnitQuaternion),
+        scale::AbstractVector = sones(3), name::String="", color = RGBA(0.75, 0.75, 0.75)) where {T}
+        new{T}(shapes, xoffset, qoffset, scale, color)
+    end
+
+    function Shapes14(shapes::Vector, m::T, J; xoffset::AbstractVector = szeros(3), qoffset::UnitQuaternion = one(UnitQuaternion),
+        scale::AbstractVector = sones(3), name::String="", color = RGBA(0.75, 0.75, 0.75)) where T
+        Body(m, J; name=name, shape=new{T}(shapes, xoffset, qoffset, scale, color))
     end
 end
 

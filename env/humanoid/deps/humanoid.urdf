@@ -31,7 +31,7 @@
 		<visual>
 			<origin rpy="-1.57080 0.00000 0.00000" xyz="0.00000 0.00000 0.00000"/>
 			<geometry>
-				<cylinder length="0.14000" radius="0.07000"/>
+				<capsule length="0.14000" radius="0.07000"/>
 			</geometry>
 		</visual>
 		<visual>
@@ -43,7 +43,7 @@
 		<visual>
 			<origin rpy="-1.57080 0.00000 0.00000" xyz="-0.01000 0.00000 -0.12000"/>
 			<geometry>
-				<cylinder length="0.12000" radius="0.06000"/>
+				<capsule length="0.12000" radius="0.06000"/>
 			</geometry>
 		</visual>
 	</link>
@@ -62,7 +62,7 @@
 		<visual>
 			<origin rpy="-1.57080 0.00000 0.00000" xyz="0.00000 0.00000 0.00000"/>
 			<geometry>
-				<cylinder length="0.12000" radius="0.06000"/>
+				<capsule length="0.12000" radius="0.06000"/>
 			</geometry>
 		</visual>
 	</link>
@@ -81,7 +81,7 @@
 		<visual>
 			<origin rpy="-1.57080 0.00000 0.00000" xyz="-0.02000 0.00000 0.00000"/>
 			<geometry>
-				<cylinder length="0.14000" radius="0.09000"/>
+				<capsule length="0.14000" radius="0.09000"/>
 			</geometry>
 		</visual>
 	</link>
@@ -101,7 +101,7 @@
 		<visual>
 			<origin rpy="-3.11219 -0.00000 0.00000" xyz="0.00000 0.00500 -0.17000"/>
 			<geometry>
-				<cylinder length="0.34015" radius="0.06000"/>
+				<capsule length="0.34015" radius="0.06000"/>
 			</geometry>
 		</visual>
 	</link>
@@ -120,7 +120,7 @@
 		<visual>
 			<origin rpy="3.14159 -0.00000 3.14159" xyz="0.00000 0.00000 -0.15000"/>
 			<geometry>
-				<cylinder length="0.30000" radius="0.04900"/>
+				<capsule length="0.30000" radius="0.04900"/>
 			</geometry>
 		</visual>
 	</link>
@@ -145,13 +145,13 @@
 		<visual>
 			<origin rpy="1.57080 1.47585 1.47585" xyz="0.03500 -0.03000 0.00000"/>
 			<geometry>
-				<cylinder length="0.21095" radius="0.02700"/>
+				<capsule length="0.21095" radius="0.02700"/>
 			</geometry>
 		</visual>
 		<visual>
 			<origin rpy="-1.57080 1.47585 -1.47585" xyz="0.03500 0.01000 0.00000"/>
 			<geometry>
-				<cylinder length="0.21095" radius="0.02700"/>
+				<capsule length="0.21095" radius="0.02700"/>
 			</geometry>
 		</visual>
 	</link>
@@ -171,7 +171,7 @@
 		<visual>
 			<origin rpy="3.11219 -0.00000 0.00000" xyz="0.00000 -0.00500 -0.17000"/>
 			<geometry>
-				<cylinder length="0.34015" radius="0.06000"/>
+				<capsule length="0.34015" radius="0.06000"/>
 			</geometry>
 		</visual>
 	</link>
@@ -190,7 +190,7 @@
 		<visual>
 			<origin rpy="3.14159 -0.00000 3.14159" xyz="0.00000 0.00000 -0.15000"/>
 			<geometry>
-				<cylinder length="0.30000" radius="0.04900"/>
+				<capsule length="0.30000" radius="0.04900"/>
 			</geometry>
 		</visual>
 	</link>
@@ -215,13 +215,13 @@
 		<visual>
 			<origin rpy="-1.57080 1.47585 -1.47585" xyz="0.03500 0.03000 0.00000"/>
 			<geometry>
-				<cylinder length="0.21095" radius="0.02700"/>
+				<capsule length="0.21095" radius="0.02700"/>
 			</geometry>
 		</visual>
 		<visual>
 			<origin rpy="1.57080 1.47585 1.47585" xyz="0.03500 -0.01000 0.00000"/>
 			<geometry>
-				<cylinder length="0.21095" radius="0.02700"/>
+				<capsule length="0.21095" radius="0.02700"/>
 			</geometry>
 		</visual>
 	</link>
@@ -241,7 +241,7 @@
 		<visual>
 			<origin rpy="2.35619 0.61548 1.30900" xyz="0.08000 -0.08000 -0.08000"/>
 			<geometry>
-				<cylinder length="0.27713" radius="0.04000"/>
+				<capsule length="0.27713" radius="0.04000"/>
 			</geometry>
 		</visual>
 	</link>
@@ -266,7 +266,7 @@
 		<visual>
 			<origin rpy="-0.78540 0.61548 -0.26180" xyz="0.09000 0.09000 0.09000"/>
 			<geometry>
-				<cylinder length="0.27713" radius="0.03100"/>
+				<capsule length="0.27713" radius="0.03100"/>
 			</geometry>
 		</visual>
 		<visual>
@@ -292,7 +292,7 @@
 		<visual>
 			<origin rpy="-2.35619 0.61548 -1.30900" xyz="0.08000 0.08000 -0.08000"/>
 			<geometry>
-				<cylinder length="0.27713" radius="0.04000"/>
+				<capsule length="0.27713" radius="0.04000"/>
 			</geometry>
 		</visual>
 	</link>
@@ -317,7 +317,7 @@
 		<visual>
 			<origin rpy="0.78540 0.61548 0.26180" xyz="0.09000 -0.09000 0.09000"/>
 			<geometry>
-				<cylinder length="0.27713" radius="0.03100"/>
+				<capsule length="0.27713" radius="0.03100"/>
 			</geometry>
 		</visual>
 		<visual>

@@ -35,3 +35,11 @@ function convertshape(capsule::Capsule)
     cap2 = GeometryBasics.Sphere(p2, r)
     return [cyl, cap1, cap2] 
 end
+
+function convertshape(shapes::Shapes14) 
+    geom = []
+    for s in shapes.shape
+        push!(geom, convertshape(s))
+    end
+    return geom
+end

@@ -2,7 +2,6 @@ function transform(x, q, shape)
     scale_transform = MeshCat.LinearMap(diagm(shape.scale))
     x_transform = MeshCat.Translation(x + vrotate(shape.xoffset, q))
     q_transform = MeshCat.LinearMap(q * shape.qoffset)
-
     return MeshCat.compose(x_transform, q_transform, scale_transform)
 end
 
@@ -37,6 +36,18 @@ function preparevis!(storage::Storage{T,N}, id, shape, animation, shapevisualize
     end
 
     return
+end
+
+function MeshCat.setobject!(subvisshape, visshape, shapes::Shapes14)
+    for (i, s) in enumerate(shapes.shape)
+        v = subvisshape["component_$i"]
+        setobject!(v, visshape[i], s)
+        scale_transform = MeshCat.LinearMap(diagm(s.scale))
+        x_transform = MeshCat.Translation(s.xoffset)
+        q_transform = MeshCat.LinearMap(s.qoffset)
+        t = MeshCat.compose(x_transform, q_transform, scale_transform)
+        settransform!(v, t)
+    end
 end
 
 function MeshCat.setobject!(subvisshape, visshape, shape::Shape)

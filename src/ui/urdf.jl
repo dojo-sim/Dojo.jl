@@ -107,6 +107,7 @@ function parse_xmaterial(xmaterial, materialdict, T)
 end
 
 function parse_shape(xvisual, materialdict, T)
+
     if xvisual === nothing
         shape = nothing
     else
@@ -127,44 +128,57 @@ function parse_shape(xvisual, materialdict, T)
             shape = nothing
         else
             if length(shapenodes) > 1
-                @info "Multiple geometries."
+                @warn "Multiple geometries."
             end
 
             shapenode = shapenodes[1]
-            if name(shapenode) == "box"
-                xyz = parse_vector(shapenode, "size", T, default = "1 1 1")
-                shape = Box(xyz..., zero(T), color = color, xoffset = x, qoffset = q)
-            elseif name(shapenode) == "cylinder"
-                r = parse_scalar(shapenode, "radius", T, default = "0.5")
-                l = parse_scalar(shapenode, "length", T, default = "1")
-                shape = Cylinder(r, l, zero(T), color = color, xoffset = x, qoffset = q)
-            elseif name(shapenode) == "pyramid"
-                w = parse_scalar(shapenode, "width", T, default = "1")
-                h = parse_scalar(shapenode, "height", T, default = "1")
-                shape = Cylinder(w, h, zero(T), color = color, xoffset = x, qoffset = q)
-            elseif name(shapenode) == "sphere"
-                r = parse_scalar(shapenode, "radius", T, default = "0.5")
-                shape = Sphere(r, zero(T), color = color, xoffset = x, qoffset = q)
-            elseif name(shapenode) == "mesh"
-                path = attribute(shapenode, "filename")
-                scale = parse_vector(shapenode, "scale", T, default = "1 1 1")
-                shape = Mesh(path, zero(T), zeros(T, 3, 3), scale=scale, color = color, xoffset = x, qoffset = q)
-            elseif name(shapenode) == "capsule"
-                r = parse_scalar(shapenode, "radius", T, default = "0.5")
-                l = parse_scalar(shapenode, "length", T, default = "1")
-                shape = Capsule(r, l, zero(T), color = color, xoffset = x, qoffset = q)
-            else
-                @info "Unknown geometry."
-                shape = nothing
-            end
+            shape = get_shape(shapenode, x, q, color, T)
         end
     end
     return shape
 end
 
+function get_shape(shapenode, x, q, color, T) 
+    if name(shapenode) == "box"
+        xyz = parse_vector(shapenode, "size", T, default = "1 1 1")
+        shape = Box(xyz..., zero(T), color = color, xoffset = x, qoffset = q)
+    elseif name(shapenode) == "cylinder"
+        r = parse_scalar(shapenode, "radius", T, default = "0.5")
+        l = parse_scalar(shapenode, "length", T, default = "1")
+        shape = Cylinder(r, l, zero(T), color = color, xoffset = x, qoffset = q)
+    elseif name(shapenode) == "pyramid"
+        w = parse_scalar(shapenode, "width", T, default = "1")
+        h = parse_scalar(shapenode, "height", T, default = "1")
+        shape = Cylinder(w, h, zero(T), color = color, xoffset = x, qoffset = q)
+    elseif name(shapenode) == "sphere"
+        r = parse_scalar(shapenode, "radius", T, default = "0.5")
+        shape = Sphere(r, zero(T), color = color, xoffset = x, qoffset = q)
+    elseif name(shapenode) == "mesh"
+        path = attribute(shapenode, "filename")
+        scale = parse_vector(shapenode, "scale", T, default = "1 1 1")
+        shape = Mesh(path, zero(T), zeros(T, 3, 3), scale=scale, color = color, xoffset = x, qoffset = q)
+    elseif name(shapenode) == "capsule"
+        r = parse_scalar(shapenode, "radius", T, default = "0.5")
+        l = parse_scalar(shapenode, "length", T, default = "1")
+        shape = Capsule(r, l, zero(T), color = color, xoffset = x, qoffset = q)
+    else
+        @info "Unknown geometry."
+        shape = nothing
+    end 
+end
+
 function parse_link(xlink, materialdict, T)
     x, q, m, J = parse_inertia(find_element(xlink, "inertial"), T)
-    shape = parse_shape(find_element(xlink, "visual"), materialdict, T)
+    xvisuals = get_elements_by_tagname(xlink, "visual")
+    shapes = [parse_shape(xvisual, materialdict, T) for xvisual in xvisuals]
+    if length(shapes) == 0 
+        shape = nothing 
+    elseif length(shapes) > 1
+        s = [s.shape for s in shapes] 
+        shape = Shapes14(s, 0.0, diagm([0.0; 0.0; 0.0]))
+    else
+        shape = shapes[1]
+    end
     name = attribute(xlink, "name")
 
     if shape === nothing
@@ -536,7 +550,6 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
 
         ind1 = 1
         ind2 = ind1+1
-
 
         # urdf joint's x and q in parent's (parentbody) frame
         xjointlocal1 = vrotate(xparentjoint1 + vrotate(constraint.constraints[ind1].vertices[1], qparentjoint1) - xparentbody1, inv(qparentbody1))

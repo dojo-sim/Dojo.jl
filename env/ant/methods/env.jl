@@ -46,3 +46,11 @@ function ant(; mode::Symbol=:min, dt::T=0.01, g::T=-9.81,
         opts_step, opts_grad)
     return env
 end
+
+env = make("ant", damper=100.0)
+open(env.vis)
+storage = simulate!(env.mechanism, 1.0, record=true, verbose=false)
+visualize(env.mechanism, storage, vis=env.vis)
+
+reset(env)
+render(env)
