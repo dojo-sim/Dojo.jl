@@ -62,7 +62,7 @@ function step(env::Environment, x, u; diff=false)
     Δt = mechanism.Δt
 
     x0 = x
-    env.u_prev .= u  # for rendering
+    env.u_prev .= u  # for rendering in Gym
 	u_scaled = env.control_mask' * env.control_scaling * u
 
     z0 = env.mode == :min ? min2max(mechanism, x0) : x0
@@ -134,7 +134,7 @@ end
 ################################################################################
 # Step
 ################################################################################
-step(env::Environment, u) = step(env, env.x, u)
+step(env::Environment, u; diff::Bool=false) = step(env, env.x, u; diff=diff)
 
 function f(y, env::Environment, x, u, w)
 	step(env, x, u)[1]

@@ -35,16 +35,6 @@ traj = display_policy(env, policy, normalizer, hp)
 visualize(env, traj)
 
 
-env = make("halfcheetah", vis = vis, dt = 0.10, g = -9.81);
-seed(env, s = 0)
-obs = reset(env)
-render(env)
-traj = display_policy(env, policy, normalizer, hp)
-visualize(env, traj)
-
-
-
-
 # θbest005 = deepcopy(policy.θ)
 # θbest = deepcopy(policy.θ)
 # θgood = deepcopy(policy.θ)
