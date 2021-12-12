@@ -1,15 +1,3 @@
-"""
-$(TYPEDEF)
-
-The `State` contains the position and velocity information of a [`Body`](@ref).
-# Important attributes
-* `x1`: Continuous-time position (vector)
-* `q1`: Continuous-time oritentation (quaternion)
-* `v15`: Continuous-time velocity (vector)
-* `ϕ15`: Continuous-time angular velocity (vector)
-* `x2`: Knot-point positions (vector of vectors)
-* `q2`: Knot-point orientations (vector of vectors)
-"""
 mutable struct State{T}
     order::Integer
 
@@ -53,21 +41,6 @@ mutable struct State{T}
         new{T}(0, x1, q1, v15, ϕ15, x2, q2, F2, τ2, vsol, ϕsol, d, D)
     end
 end
-
-# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, state::State{T}) where {T}
-#     summary(io, state)
-#     println(io,"")
-#     println(io,"x1:   "*string(state.x1))
-#     println(io,"q1:   "*string(state.q1))
-#     println(io,"ϕ15:   "*string(state.ϕ15))
-#     println(io,"x2:   "*string(state.x2))
-#     println(io,"q2:   "*string(state.q2))
-#     println(io,"F2:   "*string(state.F2))
-#     println(io,"τ2:   "*string(state.τ2))
-#     println(io,"vsol: "*string(state.vsol))
-#     println(io,"ϕsol: "*string(state.ϕsol))
-#     println(io,"d:    "*string(state.d))
-# end
 
 function initialize!(state::State, order)
     state.order = order

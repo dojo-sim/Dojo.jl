@@ -47,7 +47,7 @@ function gethopper(; Δt::T=0.05, g::T=-9.81, spring=0.0, damper=0.1, contact::B
     return mech
 end
 
-function initializehopper!(mech::Mechanism{T,Nn,Ne,Nb}; leg_length_nominal=0.5, altitude=0.0,
+function initializehopper!(mech::Mechanism{T,Nn,Ne,Nb}; leg_length_nominal=0.5, altitude=0.05,
     v = zeros(3), ω = zeros(3)) where {T,Nn,Ne,Nb}
     body1 = collect(mech.bodies)[1]
     body2 = collect(mech.bodies)[2]

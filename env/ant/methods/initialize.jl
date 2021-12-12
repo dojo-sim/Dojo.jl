@@ -2,7 +2,7 @@ function getant(; Δt::T=0.01, g::T=-9.81, cf::T=0.5,
     spring=0.0, damper=1.0, contact::Bool=true, contact_body=true) where T
 
     path = joinpath(@__DIR__, "../deps/ant.urdf")
-    mech = Mechanism(path, floating=true, g=g, Δt=Δt, spring=spring, damper=damper)
+    mech = Mechanism(path, true, T, g=g, Δt=Δt, spring=spring, damper=damper)
 
     if contact
         origin = Origin{T}()

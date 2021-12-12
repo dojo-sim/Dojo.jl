@@ -122,6 +122,7 @@ include(joinpath("mechanism", "shapes.jl"))
 include(joinpath("mechanism", "component.jl"))
 include(joinpath("mechanism", "state.jl"))
 include(joinpath("mechanism", "body.jl"))
+include(joinpath("mechanism", "origin.jl"))
 include(joinpath("mechanism", "abstract_constraint.jl"))
 include(joinpath("mechanism", "equality_constraint.jl"))
 include(joinpath("mechanism", "inequality_constraint.jl"))
@@ -142,7 +143,6 @@ include(joinpath("joints", "abstract_joint.jl"))
 include(joinpath("joints", "joint.jl"))
 include(joinpath("joints", "translational.jl"))
 include(joinpath("joints", "rotational.jl"))
-include(joinpath("joints", "generic_joint.jl"))
 include(joinpath("joints", "prototypes.jl"))
 include(joinpath("joints", "force.jl"))
 include(joinpath("joints", "torque.jl"))
@@ -180,6 +180,6 @@ include(joinpath("..", "env", "environment.jl"))
 
 # Utilities
 include(joinpath("..", "examples", "trajectory_optimization", "utils.jl"))
-include(joinpath("..", "examples", "reinforcement_learning", "ars.jl"))
+# include(joinpath("..", "examples", "reinforcement_learning", "ars.jl"))
 
 end

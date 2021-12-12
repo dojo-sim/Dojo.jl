@@ -198,7 +198,7 @@ function parse_link(xlink, materialdict, T)
 end
 
 function parse_links(xlinks, materialdict, T)
-    ldict = Dict{String,AbstractBody{T}}()
+    ldict = Dict{String,Body{T}}()
 
     for xlink in xlinks
         link = parse_link(xlink, materialdict, T)

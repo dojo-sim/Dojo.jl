@@ -1,19 +1,9 @@
-"""
-    setPosition!(body; x, q)
-
-Set the position and orientation of a body.
-"""
 function setPosition!(body::Body; x::AbstractVector = SA[0;0;0], q::UnitQuaternion = one(UnitQuaternion))
     body.state.x2[1] = x
     body.state.q2[1] = q
     return
 end
 
-"""
-    setPosition!(body1, body2; p1, p2, Δx, Δq)
-
-Set the position and orientation of body2 relative to body1 at the connection points p1 and p2.
-"""
 function setPosition!(body1::Body, body2::Body;
         p1::AbstractVector = SA[0;0;0], p2::AbstractVector = SA[0;0;0],
         Δx::AbstractVector = SA[0;0;0], Δq::UnitQuaternion = one(UnitQuaternion)
@@ -27,11 +17,6 @@ function setPosition!(body1::Body, body2::Body;
     return
 end
 
-"""
-    setPosition!(origin, body2; p1, p2, Δx, Δq)
-
-Set the position and orientation of body2 relative to the origin at the connection points p1 and p2.
-"""
 function setPosition!(body1::Origin, body2::Body;
         p1::AbstractVector = SA[0;0;0], p2::AbstractVector = SA[0;0;0],
         Δx::AbstractVector = SA[0;0;0], Δq::UnitQuaternion = one(UnitQuaternion)
@@ -43,36 +28,18 @@ function setPosition!(body1::Origin, body2::Body;
     return
 end
 
-
-"""
-    setVelocity!(body; v, ω)
-
-Set the translational and angular velocity of a body.
-"""
 function setVelocity!(body::Body; v::AbstractVector = SA[0;0;0], ω::AbstractVector = SA[0;0;0])
     body.state.v15 = v
     body.state.ϕ15 = ω
     return
 end
 
-"""
-    setVelocity!(body1, body2; p1, p2 Δv, Δω)
-
-Set the translational and angular velocity of body2 relative to body1 at the connection points p1 and p2.
-"""
 function setVelocity!(body1::Body, body2::Body;
         p1::AbstractVector = SA[0;0;0], p2::AbstractVector = SA[0;0;0],
         Δv::AbstractVector = SA[0;0;0], Δω::AbstractVector = SA[0;0;0]
         # in body1's frame              in body1's frame
     )
-    # Δω = Ω(B/A)a "angular velocity" of frame B wrt frame A expressed in frame A
-    # Δv = V(pb,B/A)a velocity of pb attahced to body B wrt frame A expressed in frame A.
-        # with pb the vertex attached to body B join the A-B joint
 
-    # v1 = V(cA,A/W)w = velocity of the center of mass of bodya (ca) attached to the A frame with respect to the world frame, expressed in the world frame
-    # ϕ151 = Ω(A/W)a = "angular velocity" of bodya (ca) attached to the A frame with respect to the world frame, expressed in the A frame
-    # v2 = V(cb,B/W)w = velocity of the center of mass of bodyb (cb) attached to the B frame with respect to the world frame, expressed in the world frame
-    # ϕ152 = Ω(B/W)b = "angular velocity" of bodyb (cb) attached to the B frame with respect to the world frame, expressed in the B frame
     x1 = body1.state.x2[1]
     v1 = body1.state.v15
     q1 = body1.state.q2[1]
@@ -99,27 +66,10 @@ function setVelocity!(body1::Body, body2::Body;
     return
 end
 
-"""
-    setVelocity!(origin, body2; p1, p2 Δv, Δω)
-
-Set the translational and angular velocity of body2 relative to the origin at the connection points p1 and p2.
-"""
 function setVelocity!(body1::Origin, body2::Body;
         p1::AbstractVector = SA[0;0;0], p2::AbstractVector = SA[0;0;0],
         Δv::AbstractVector = SA[0;0;0], Δω::AbstractVector = SA[0;0;0]
     )
-    #TODO most likely wrong and inconsistent with the function above
-
-    # q2 = body2.state.q2[1]
-    #
-    # vp2 = Δv
-    # ωp2 = vrotate(Δω,q2) # in world coordinates
-    #
-    # v2 = vp2 + cross(ωp2,-p2)
-    # ω2 = vrotate(ωp2,inv(q2)) # in local coordinates
-    #
-    # setVelocity!(body2;v = v2,ω = ω2)
-    # return
 
     x2 = body2.state.x2[1]
     v2 = body2.state.v15
@@ -136,7 +86,6 @@ function setVelocity!(body1::Origin, body2::Body;
     setVelocity!(body2; v = v2, ω = ω2)
     return
 end
-
 
 function setForce!(body::Body;
         F::AbstractVector = SA[0;0;0], τ::AbstractVector = SA[0;0;0], p::AbstractVector = SA[0;0;0]

@@ -8,7 +8,7 @@ mutable struct Rotational{T,N,N̄} <: Joint{T,N}
     spring_offset::SVector{N̄,T}
     Fτ::SVector{3,T}
 
-    function Rotational{T,N,N̄}(body1::AbstractBody, body2::AbstractBody;
+    function Rotational{T,N,N̄}(body1::Body, body2::Body;
             axis::AbstractVector = szeros(T,3), qoffset::UnitQuaternion = one(UnitQuaternion{T}),
             spring = zero(T), damper = zero(T), spring_offset = szeros(T,N̄)
         ) where {T,N,N̄}
@@ -183,7 +183,7 @@ end
 
 ### Minimal coordinates
 ## Position and velocity offsets
-@inline function getPositionDelta(joint::Rotational, body1::AbstractBody, body2::Body, θ::SVector{N,T}) where {T,N}
+@inline function getPositionDelta(joint::Rotational, body1::Body, body2::Body, θ::SVector{N,T}) where {T,N}
     # axis angle representation
     θ = zerodimstaticadjoint(nullspacemat(joint)) * θ
     nθ = norm(θ)

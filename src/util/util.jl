@@ -84,7 +84,7 @@ function scn(a::Float64; digits::Int=1, exp_digits::Int=1)
     return "$sgn$(strm)e$sgne$(stre)"
 end
 
-function convert_video_to_gif(video_file_path::AbstractString, output_path::AbstractString="output.gif";
+function convert_video_to_gif(video_file_path::String, output_path::String="output.gif";
     framerate::Int=30, start_time=0., duration=1e3, overwrite=false, width::Int=1080, height::Int=-2, hq_colors::Bool=false)
     output_path = abspath(output_path)
 

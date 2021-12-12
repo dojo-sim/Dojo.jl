@@ -15,6 +15,8 @@ function initialize!(mechanism::Mechanism, model::Symbol; kwargs...)
     eval(Symbol(:initialize, model, :!))(mechanism; kwargs...)
 end
 
+include("ant/methods/initialize.jl")
+
 include("atlas/methods/initialize.jl")
 
 include("box/methods/initialize.jl")

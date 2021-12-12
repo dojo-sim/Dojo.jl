@@ -1,25 +1,9 @@
-"""
-$(TYPEDEF)
-
-A `Shape` is used for visualization of a [`Body`](@ref). All `Shape`s have an `xoffset` and a `qoffset` parameter to specify the position and orientation offset between the actual [`Body`](@ref) and the visualized `Shape`.
-# Important attributes
-* `xoffset`: The relative position offset (vector) between `Body` and `Shape`.  
-* `qoffset`: The relative orientation offset (quaternion) between `Body` and `Shape`.
-* `color`:   The color of the `Shape`.
-"""
 abstract type Shape{T} end
 
 struct EmptyShape{T} <: Shape{T}
     EmptyShape() = new{Float64}()
 end
 
-"""
-$(TYPEDEF)
-
-A `Mesh` can be used to visualize arbitrary geometries.
-# Important attributes
-* `path`: The path to the geometry file.  
-"""
 mutable struct Mesh{T} <: Shape{T}
     xoffset::SVector{3,T}
     qoffset::UnitQuaternion{T}
@@ -47,13 +31,6 @@ mutable struct Mesh{T} <: Shape{T}
     end
 end
 
-"""
-$(TYPEDEF)
-
-A `Box`.
-# Important attributes
-* `xyz`: The box size in x, y, and z direction (vector).  
-"""
 mutable struct Box{T} <: Shape{T}
     xoffset::SVector{3,T}
     qoffset::UnitQuaternion{T}
@@ -82,13 +59,6 @@ mutable struct Box{T} <: Shape{T}
     end
 end
 
-"""
-$(TYPEDEF)
-
-A `Cylinder` along the z-axis.
-# Important attributes
-* `rh`: The cylinder radius and height (vector).  
-"""
 mutable struct Cylinder{T} <: Shape{T}
     xoffset::SVector{3,T}
     qoffset::UnitQuaternion{T}
@@ -118,13 +88,6 @@ mutable struct Cylinder{T} <: Shape{T}
     end
 end
 
-"""
-$(TYPEDEF)
-
-A `Capsule` along the z-axis.
-# Important attributes
-* `rh`: The cylinder radius and height (vector)
-"""
 mutable struct Capsule{T} <: Shape{T}
     xoffset::SVector{3,T}
     qoffset::UnitQuaternion{T}
@@ -183,13 +146,6 @@ mutable struct Shapes14{T} <: Shape{T}
     end
 end
 
-"""
-$(TYPEDEF)
-
-A `Sphere`.
-# Important attributes
-* `r`: The sphere radius.  
-"""
 mutable struct Sphere{T} <: Shape{T}
     xoffset::SVector{3,T}
     qoffset::UnitQuaternion{T}
@@ -218,12 +174,6 @@ mutable struct Sphere{T} <: Shape{T}
     end
 end
 
-"""
-$(TYPEDEF)
-
-A square `Pyramid` with a base in the x-y-plane.
-* `wh`: The pyramid width and height (vector). 
-"""
 mutable struct Pyramid{T} <: Shape{T}
     xoffset::SVector{3,T}
     qoffset::UnitQuaternion{T}
@@ -252,17 +202,3 @@ mutable struct Pyramid{T} <: Shape{T}
         return Body(m, J; name=name, shape=new{T}(xoffset, qoffset, [w;h], scale, color))
     end
 end
-
-# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, shape::Shape{T}) where {T}
-#     summary(io, shape)
-#     println(io,"")
-#     println(io," xoffset: "*string(shape.xoffset))
-#     println(io," qoffset: "*string(shape.qoffset))
-#     println(io," color:   "*string(shape.color))
-#     println(io," scale:   "*string(shape.scale))
-# end
-
-# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, shape::EmptyShape{T}) where {T}
-#     summary(io, shape)
-#     println(io,"")
-# end

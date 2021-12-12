@@ -29,7 +29,7 @@ include("mechanism_zoo.jl")
 ################################################################################
 
 # t2r3
-function TorqueRevolute(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T)) where T
+function TorqueRevolute(body1::Body{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3), qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T)) where T
     return Translational3{T}(body1, body2, p1=p1, p2=p2),
         Torque1{T}(body1, body2; axis=axis, qoffset=qoffset, spring=spring, damper=damper),
         Rotational2{T}(body1, body2, axis=axis, qoffset=qoffset)

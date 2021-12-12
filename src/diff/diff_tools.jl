@@ -328,6 +328,47 @@ function control_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     return Fzu
 end
 
+function ∂body∂z(body::Body{T}, Δt::T; attjac::Bool = true) where T
+    state = body.state
+    q2 = state.q2[1]
+    ϕ25 = state.ϕsol[2]
+    Z3 = szeros(T,3,3)
+    Z34 = szeros(T,3,4)
+    ZT = attjac ? szeros(T,6,6) : szeros(T,6,7)
+    ZR = szeros(T,7,6)
+
+    x1, q1 = posargs1(state)
+    x2, q2 = posargs2(state)
+    x3, q3 = posargs3(state, Δt)
+
+    AposT = [-I Z3]
+    AvelT = [Z3 -I*body.m] # solving for impulses
+
+    AposR = [-∂integrator∂q(q2, ϕ25, Δt, attjac = attjac) szeros(4,3)]
+
+    J = body.J
+    
+    rot_q1(q) = 2/Δt * LVᵀmat(UnitQuaternion(q..., false))' * Tmat() * Rmat(q2)' * Vᵀmat() * body.J * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(q2)
+    rot_q2(q) = 2/Δt * LVᵀmat(getq3(UnitQuaternion(q..., false), state.ϕsol[2], Δt))' * Lmat(UnitQuaternion(q..., false)) * Vᵀmat() * body.J * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(getq3(UnitQuaternion(q..., false), state.ϕsol[2], Δt)) + 2/Δt * LVᵀmat(getq3(UnitQuaternion(q..., false), -state.ϕ15, Δt))' * Tmat() * Rmat(UnitQuaternion(q..., false))' * Vᵀmat() * body.J * Vmat() * Lmat(getq3(UnitQuaternion(q..., false), -state.ϕ15, Δt))' * q
+    dynR_ϕ15 = -1.0 * FiniteDiff.finite_difference_jacobian(rot_q1, vector(q1)) * ∂integrator∂ϕ(q2, -state.ϕ15, Δt)
+    dynR_q2 = FiniteDiff.finite_difference_jacobian(rot_q2, vector(q2))
+    AvelR = attjac ? [dynR_q2 * LVᵀmat(q2) dynR_ϕ15] : [dynR_q2 dynR_ϕ15]
+    
+    return [[AposT;AvelT] ZT;
+             ZR [AposR;AvelR]]
+end
+
+function ∂body∂u(body::Body{T}, Δt) where T
+    Z3 = szeros(T,3,3)
+    Z43 = szeros(T,4,3)
+
+    BposT = [Z3 Z3]
+    BvelT = [-I Z3]
+    BposR = [Z43 Z43]
+    BvelR = [Z3 -I]
+    return [BposT;BvelT;BposR;BvelR]
+end
+
 function dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,Nn,Ne,Nb}
     Δt = mechanism.Δt
     nu = controldim(mechanism)
@@ -342,8 +383,8 @@ function dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,Nn
         col6 = offsetrange(i,6)
         col13 = offsetrange(i,13)
 
-        Fzi = ∂F∂z(body, Δt, attjac = false)[[4:6; 11:13],:]
-        Fui = ∂F∂u(body, Δt)[[4:6; 11:13],:]
+        Fzi = ∂body∂z(body, Δt, attjac = false)[[4:6; 11:13],:]
+        Fui = ∂body∂u(body, Δt)[[4:6; 11:13],:]
 
         Fz[col6,col13] = Fzi
         Fu[col6,col6] = Fui

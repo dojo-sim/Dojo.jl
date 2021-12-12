@@ -6,8 +6,7 @@ gravity = -9.81
 env = make("hopper", 
     mode=:max, 
     dt=dt,
-    g=gravity,
-    vis=vis);
+    g=gravity);
 
 # ## visualizer 
 open(env.vis)

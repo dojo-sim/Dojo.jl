@@ -9,6 +9,7 @@
     verbose::Bool=false
 end
 
+
 # solver
 function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
     system = mechanism.system
@@ -21,6 +22,7 @@ function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
 	μtarget = 0.0
 	no_progress = 0
     undercut = opts.undercut
+    α = 1.0
 
 	initial_state!.(ineqcs.values) # TODO: redundant with resetVars--remove
     setentries!(mechanism) # compute the residual
@@ -32,25 +34,24 @@ function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
 
     for n = Base.OneTo(opts.max_iter)
 
-        opts.verbose && solver_status(mechanism, rvio, bvio, n, μtarget, undercut)
+        opts.verbose && solver_status(mechanism, α, rvio, bvio, n, μtarget, undercut)
             
         ((rvio < opts.rtol) && (bvio < opts.btol)) && break
 		(n == opts.max_iter) && (opts.verbose && (@warn "failed mehrotra"))
 
         # affine search direction 
-		mechanism.μ = 0.0
+		μ = 0.0
 		pullresidual!(mechanism)                # store the residual inside mechanism.residual_entries
         ldu_factorization!(mechanism.system)    # factorize system, modifies the matrix in place
         pullmatrix!(mechanism)                  # store the factorized matrix inside mechanism.matrix_entries
         ldu_backsubstitution!(mechanism.system) # solve system, modifies the vector in place
 
-		feasibilityStepLength!(mechanism; τort=0.95, τsoc=0.95, scaling=false) # uses system.vector_entries which holds the search drection
-		αaff = copy(mechanism.α)
-		centering!(mechanism, mechanism.α)
-		σcentering = clamp(mechanism.νaff / (mechanism.ν + 1e-20), 0.0, 1.0)^3
+		αaff = feasibilityStepLength!(mechanism; τort=0.95, τsoc=0.95, scaling=false) # uses system.vector_entries which holds the search drection
+		ν, νaff = centering!(mechanism, αaff)
+		σcentering = clamp(νaff / (ν + 1e-20), 0.0, 1.0)^3
 
 		# corrected search direction
-		μtarget = max(σcentering * mechanism.ν, opts.btol/undercut)
+		μtarget = max(σcentering * ν, opts.btol / undercut)
 		mechanism.μ = μtarget
 		correction!(mechanism) # update the residual in mechanism.residual_entries
 		mechanism.μ = 0.0
@@ -60,10 +61,10 @@ function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
         ldu_backsubstitution!(mechanism.system) # solve system
 
 		τ = max(0.95, 1 - max(rvio, bvio)^2) # τ = 0.95
-		feasibilityStepLength!(mechanism; τort=τ, τsoc=min(τ, 0.95), scaling=false) # uses system.vector_entries which holds the corrected search drection
+		α = feasibilityStepLength!(mechanism; τort=τ, τsoc=min(τ, 0.95), scaling=false) # uses system.vector_entries which holds the corrected search drection
 
 		# steps taken without making progress
-		rvio_, bvio_ = lineSearch!(mechanism, rvio, bvio, opts; warning=false)
+		rvio_, bvio_ = lineSearch!(mechanism, α, rvio, bvio, opts; warning=false)
 		made_progress = (!(rvio_ < opts.rtol) && (rvio_ < 0.8rvio)) || (!(bvio_ < opts.btol) && (bvio_ < 0.8bvio)) # we only care when progress is made while the tolerance is not met
 		made_progress ? no_progress = max(no_progress - 1, 0) : no_progress += 1
 		rvio, bvio = rvio_, bvio_
@@ -81,7 +82,7 @@ function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
     return
 end
 
-function solver_status(mechanism::Mechanism, rvio, bvio, n, μtarget, undercut) 
+function solver_status(mechanism::Mechanism, α, rvio, bvio, n, μtarget, undercut) 
     fv = full_vector(mechanism.system)
     Δvar = norm(fv, Inf)
     fM = full_matrix(mechanism.system)
@@ -93,7 +94,7 @@ function solver_status(mechanism::Mechanism, rvio, bvio, n, μtarget, undercut)
         "n ", n, 
         "   bvio", scn(bvio), 
         "   rvio", scn(rvio), 
-        "   α", scn(mechanism.α),
+        "   α", scn(α),
         "   μ", scn(μtarget), 
         "   |res|∞", scn(res), 
         "   |Δ|∞", scn(Δvar),
