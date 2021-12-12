@@ -58,7 +58,7 @@ end
     ϕ = body.state.ϕsol[2]
     ϕnorm = dot(ϕ, ϕ)
     if ϕnorm > ϕmax
-        @warn "clipping"
+        # @warn "clipping"
         body.state.ϕsol[2] *= ϕmax / ϕnorm
     end
     return

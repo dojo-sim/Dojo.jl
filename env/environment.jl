@@ -62,10 +62,11 @@ function step(env::Environment, x, u; diff=false)
     Δt = mechanism.Δt
 
     x0 = x
-    env.u_prev .= u  # for rendering
+    env.u_prev .= u  # for rendering in Gym
+	u_scaled = env.control_mask' * env.control_scaling * u
 
     z0 = env.mode == :min ? min2max(mechanism, x0) : x0
-    z1 = step!(mechanism, z0, env.control_mask' * u; opts=env.opts_step)
+    z1 = step!(mechanism, z0, u_scaled; opts=env.opts_step)
     env.x .= env.mode == :min ? max2min(mechanism, z1) : z1
 
     # Compute cost
@@ -74,9 +75,9 @@ function step(env::Environment, x, u; diff=false)
     # Gradients
     if diff
         if env.mode == :min
-            fx, fu = getMinGradients!(env.mechanism, z0, env.control_mask' * env.control_scaling * u, opts=env.opts_grad)
+            fx, fu = getMinGradients!(env.mechanism, z0, u_scaled, opts=env.opts_grad)
         elseif env.mode == :max
-            fx, fu = getMaxGradients!(env.mechanism, z0, env.control_mask' * env.control_scaling * u, opts=env.opts_grad)
+            fx, fu = getMaxGradients!(env.mechanism, z0, u_scaled, opts=env.opts_grad)
         end
         env.fx .= fx
         env.fu .= fu * env.control_mask' * env.control_scaling
@@ -133,7 +134,7 @@ end
 ################################################################################
 # Step
 ################################################################################
-step(env::Environment, u) = step(env, env.x, u)
+step(env::Environment, u; diff::Bool=false) = step(env, env.x, u; diff=diff)
 
 function f(y, env::Environment, x, u, w)
 	step(env, x, u)[1]

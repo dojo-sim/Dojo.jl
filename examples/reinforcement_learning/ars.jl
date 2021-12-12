@@ -96,6 +96,7 @@ function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T}, h
 
         # positive directions
         Threads.@threads for k = 1:hp.n_directions
+            seed(env, s = episode*k) #TODO I added this not sure if good or not
             state = reset(envs[Threads.threadid()])
             done = false
             num_plays = 0.
@@ -112,6 +113,7 @@ function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T}, h
 
         # negative directions
         Threads.@threads for k = 1:hp.n_directions
+            seed(env, s = episode*k) #TODO I added this not sure if good or not
             state = reset(envs[Threads.threadid()])
             done = false
             num_plays = 0.
@@ -163,14 +165,14 @@ end
 
 
 # display learned policy
-function display_policy(env::Environment, policy::Policy, normalizer::Normalizer, hp::HyperParameters)
+function display_policy(env::Environment, policy::Policy, normalizer::Normalizer, hp::HyperParameters; rendering = false)
     state = reset(env)
     traj = [state]
     done = false
     num_plays = 1.
     reward_evaluation = 0
     while !done && num_plays < hp.horizon
-        render(env)
+        rendering && render(env)
         sleep(env.mechanism.Δt)
         observe(normalizer, state)
         push!(traj, copy(state))

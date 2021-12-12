@@ -9,7 +9,7 @@ function halfcheetah(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     s::Int=1, contact::Bool=true, info=nothing, vis::Visualizer=Visualizer(),
     opts_step=InteriorPointOptions(), opts_grad=InteriorPointOptions()) where T
 
-    mechanism = gethalfcheetah(Δt=dt, g=g, cf=cf, spring=spring, damper=damper)
+    mechanism = gethalfcheetah(Δt=dt, g=g, cf=cf, spring=spring, damper=damper, contact=contact)
     initializehalfcheetah!(mechanism)
 
     if mode == :min
@@ -86,6 +86,7 @@ function cost(env::Environment{HalfCheetah}, x, u;
         z_torso = x[(i_torso-1)*13 .+ (1:13)]
         x_velocity = z_torso[4]
     end
+    # @show mean(abs.(u))
     c = ctrl_cost_weight * u'*u - x_velocity * forward_reward_weight
     return c
 end
