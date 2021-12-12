@@ -8,7 +8,7 @@ mutable struct Body{T} <: Component{T}
     parentid::Int64
     childid::Int64
 
-    function Body(m::T, J::SMatrix{3,3,T,9}; name::String="", shape::Shape=EmptyShape()) where T
+    function Body(m::T, J::AbstractMatrix; name::String="", shape::Shape=EmptyShape()) where T
         new{T}(getGlobalID(), name, m, J, State{T}(), shape, 0, 0)
     end
 

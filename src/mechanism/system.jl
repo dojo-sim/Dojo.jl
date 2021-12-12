@@ -1,6 +1,5 @@
-function create_system(origin::Origin{T}, eqconstraints::Vector{<:EqualityConstraint}, bodies::Vector{<:Body},
-        ineqconstraints::Vector{<:InequalityConstraint}
-    ) where T
+function create_system(origin::Origin{T}, eqconstraints::Vector{<:EqualityConstraint}, bodies::Vector{<:Body}, 
+    ineqconstraints::Vector{<:InequalityConstraint}) where T
 
     adjacency, dims = adjacencyMatrix(eqconstraints, bodies, ineqconstraints)
     system = System{T}(adjacency, dims)
@@ -14,7 +13,7 @@ function create_system(origin::Origin{T}, eqconstraints::Vector{<:EqualityConstr
 end
 
 function adjacencyMatrix(eqcs::Vector{<:EqualityConstraint}, bodies::Vector{<:Body}, ineqcs::Vector{<:InequalityConstraint})
-    nodes = [eqcs;bodies;ineqcs]
+    nodes = [eqcs;bodies; ineqcs]
     n = length(nodes)
     A = zeros(Bool, n, n)
     dims = zeros(Int64, n)
@@ -23,10 +22,10 @@ function adjacencyMatrix(eqcs::Vector{<:EqualityConstraint}, bodies::Vector{<:Bo
         dims[node1.id] = length(node1)
 
         for node2 in nodes
-            if typeof(node1) <: AbstractConstraint
-                node2.id in node1.childids && (A[node1.id,node2.id] = 1)
-            elseif typeof(node2) <: AbstractConstraint
-                node1.id == node2.parentid && (A[node1.id,node2.id] = 1)
+            if typeof(node1) <: Constraint
+                node2.id in node1.childids && (A[node1.id, node2.id] = 1)
+            elseif typeof(node2) <: Constraint
+                node1.id == node2.parentid && (A[node1.id, node2.id] = 1)
             elseif typeof(node1) <: Body && typeof(node2) <: Body
                 for eqc in eqcs
                     if node1.id == eqc.parentid && node2.id ∈ eqc.childids
@@ -57,7 +56,6 @@ function recursivedirectchildren!(system, id::Integer)
     return dirs
 end
 
-
 # TODO does not include ineqcs yet
 function densesystem(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     eqcs = mechanism.eqconstraints
@@ -69,9 +67,9 @@ function densesystem(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
         n += length(eqc)
     end
 
-    A = zeros(T,n,n)
-    x = zeros(T,n)
-    b = zeros(T,n)
+    A = zeros(T, n, n)
+    x = zeros(T, n)
+    b = zeros(T, n)
 
     rangeDict = Dict{Int64,UnitRange}()
     ind1 = 1
@@ -82,7 +80,6 @@ function densesystem(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
         ind2 += length(component)
         range = ind1:ind2
         rangeDict[id] = range
-
 
         # A
         diagonal = getentry(system,id,id)
@@ -104,8 +101,8 @@ function densesystem(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
             nc1 = first(rangeDict[childid])
             nc2 = last(rangeDict[childid])
 
-            A[range,nc1:nc2] = offdiagonal_L.value
-            A[nc1:nc2,range] = offdiagonal_U.value
+            A[range, nc1:nc2] = offdiagonal_L.value
+            A[nc1:nc2, range] = offdiagonal_U.value
         end
 
         # x
@@ -118,7 +115,6 @@ function densesystem(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
         else
             b[range] = -g(mechanism, component)
         end
-
 
         ind1 = ind2+1
     end

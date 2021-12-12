@@ -25,11 +25,11 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
     record ? (return storage) : (return)
 end
 
-function simulate!(mechanism::Mechanism{T}, tend::Real, args...;
+function simulate!(mechanism::Mechanism{T}, tend::T, args...;
         record::Bool=false, verbose::Bool=true, opts=InteriorPointOptions(verbose=verbose)) where T
 
     steps = Base.OneTo(Int64(ceil(tend / mechanism.Δt)))
-    record ? storage = Storage{T}(steps, length(mechanism.bodies)) : storage = Storage{T}()
+    record ? (storage = Storage{T}(steps, length(mechanism.bodies))) : (storage = Storage{T}())
     storage = simulate!(mechanism, steps, storage, args...; verbose=verbose, record=record, opts=opts)
     return storage
 end

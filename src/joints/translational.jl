@@ -6,7 +6,7 @@ mutable struct Translational{T,N,N̄} <: Joint{T,N}
     damper::T
     spring_offset::SVector{N̄,T}
     Fτ::SVector{3,T}
-    function Translational{T,N,N̄}(body1::Body, body2::Body;
+    function Translational{T,N,N̄}(body1::Component, body2::Component;
             p1::AbstractVector = szeros(T,3), p2::AbstractVector = szeros(T,3), axis::AbstractVector = szeros(T,3),
             spring = zero(T), damper = zero(T), spring_offset = szeros(T,N̄)
         ) where {T,N,N̄}
@@ -24,21 +24,6 @@ Translational1 = Translational{T,1,2} where T
 Translational2 = Translational{T,2,1} where T
 Translational3 = Translational{T,3,0} where T
 
-springforcea(joint::Translational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
-springforceb(joint::Translational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
-springforceb(joint::Translational{T,3}, body1::Origin, body2::Body, Δt::T, childid) where T = szeros(T, 6)
-damperforcea(joint::Translational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
-damperforceb(joint::Translational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
-damperforceb(joint::Translational{T,3}, body1::Origin, body2::Body, Δt::T, childid) where T = szeros(T, 6)
-
-# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::Translational{T,N}) where {T,N}
-#     summary(io, constraint)
-#     println(io,"")
-#     println(io, " V3:       "*string(constraint.V3))
-#     println(io, " V12:      "*string(constraint.V12))
-#     println(io, " vertices: "*string(constraint.vertices))
-# end
-## Constraints and derivatives
 # Position level constraints (for dynamics)
 @inline function g(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
     vertices = joint.vertices
@@ -54,40 +39,20 @@ end
 ## Derivatives NOT accounting for quaternion specialness
 @inline function ∂g∂posa(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
     point2 = xb + vrotate(joint.vertices[2], qb)
-
     X = -VLᵀmat(qa) * RVᵀmat(qa)
     Q = ∂vrotate∂q(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * Tmat()
     Q += ∂vrotate∂p(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * -∂vrotate∂q(joint.vertices[1], qa)
-
-    # X = FiniteDiff.finite_difference_jacobian(xa -> g(joint, xa, qa, xb, qb), xa)
-    # Q = FiniteDiff.finite_difference_jacobian(qa -> g(joint, xa, UnitQuaternion(qa...,false), xb, qb), vector(qa))
-    # @show Q
-    # @show Q0
-    # @show "∂g∂posa AB"
-    # @show scn(norm(X0 - X))
-    # @show scn(norm(Q0 - Q))
-    # @show scn(norm(Q0 - Q00))
     return X, Q
 end
 
 @inline function ∂g∂posb(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
     X = VLᵀmat(qa) * RVᵀmat(qa)
     Q = 2 * VLᵀmat(qa) * Rmat(qa) * Rᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
-    # X = FiniteDiff.finite_difference_jacobian(xb -> g(joint, xa, qa, xb, qb), xb)
-    # Q = FiniteDiff.finite_difference_jacobian(qb -> g(joint, xa, qa, xb, UnitQuaternion(qb...,false)), vector(qb))
-    # @show "∂g∂posb AB"
-    # @show scn(norm(X0 - X))
-    # @show scn(norm(Q0 - Q))
     return X, Q
 end
 @inline function ∂g∂posb(joint::Translational, xb::AbstractVector, qb::UnitQuaternion)
     X = I
     Q = 2 * VRᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
-    # X = FiniteDiff.finite_difference_jacobian(xb -> g(joint, xb, qb), xb)
-    # Q = FiniteDiff.finite_difference_jacobian(qb -> g(joint, xb, UnitQuaternion(qb...,false)), vector(qb))
-    # @show "∂g∂posb B"
-    # @show scn(norm(X0 - X))
-    # @show scn(norm(Q0 - Q))
     return X, Q
 end
 
@@ -99,7 +64,6 @@ end
 
 function ∂g∂ʳposa(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
     X = -1.0 * transpose(rotation_matrix(qa))
-    # Q = -1.0 * transpose(skew(joint.vertices[1]))
     pb_a = rotation_matrix(inv(qa)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
     ca_a = rotation_matrix(inv(qa)) * (xa) # body a com
     capb_a = pb_a - ca_a
@@ -115,13 +79,6 @@ end
 
 function ∂g∂ʳposb(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
     X = transpose(rotation_matrix(qa))
-    # pa_a = rotation_matrix(inv(qa)) * (xa + rotation_matrix(qa) * joint.vertices[1]) # body a kinematics point
-    # cb_a = rotation_matrix(inv(qa)) * (xb) # body b com
-    # ra = pa_a - cb_a
-    # Q = transpose(rotation_matrix(inv(qb) * qa) * skew(ra))
-    # println("∂g∂ʳposb")
-    # println("Q = ", scn.(Q))
-    # println(scn.(ra))
     pb_b = rotation_matrix(inv(qb)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
     cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
     cbpb_b = pb_b - cb_b
@@ -136,10 +93,6 @@ end
 
 function ∂g∂ʳposb(joint::Translational{T}, xb::AbstractVector, qb::UnitQuaternion) where T
     X = transpose(I(3))
-    # pa_a = joint.vertices[1] # body a kinematics point
-    # cb_a = xb # body b com
-    # ra = pa_a - cb_a
-    # Q = transpose(rotation_matrix(inv(qb)) * skew(ra))
     pb_b = rotation_matrix(inv(qb)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
     cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
     cbpb_b = pb_b - cb_b
@@ -169,13 +122,6 @@ end
     Faa = vrotate(Faw, inv(qa)) # in local frame
     Fbb = vrotate(Fbw, inv(qb)) # in local frame
 
-    # pa_b = rotation_matrix(inv(qb)) * (xa + rotation_matrix(qa) * joint.vertices[1]) # body a kinematics point in b frame
-    # cb_b = rotation_matrix(inv(qb)) * (xb) # body b com in b frame
-    # rb = pa_b - cb_b
-    # τaa = torqueFromForce(Faa, vertices[1]) # in local coordinates
-    # τbb = torqueFromForce(Fbb, rb) # in local coordinates
-    # # τbb = torqueFromForce(Fbb, vertices[2]) # TODO this should work, apparently does not work with Planar
-
     pb_a = rotation_matrix(inv(qa)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point in b frame
     ca_a = rotation_matrix(inv(qa)) * (xa) # body a com in a frame
     ra = pb_a - ca_a
@@ -199,12 +145,6 @@ end
 
     Fbw = F # in world frame
     Fbb = vrotate(Fbw, inv(qb)) # in b frame
-
-    # pa_b = rotation_matrix(inv(qb)) * joint.vertices[1] # body a kinematics point in b frame
-    # cb_b = vrotate(xb, inv(qb)) # body b com in b frame
-    # rb = pa_b - cb_b
-    # τbb = torqueFromForce(Fbb, rb) # in local coordinates
-    # # τbb = torqueFromForce(Fbb, vertices[2]) # TODO this should work, apparently does not work with Planar
 
     τbb = torqueFromForce(Fbb, vertices[2]) # in local coordinates
     return Fbw, τbb
@@ -296,24 +236,23 @@ end
     return FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb
 end
 
-### Minimal coordinates
 ## Position and velocity offsets
-@inline function getPositionDelta(joint::Translational, body1::Body, body2::Body, x::SVector)
+@inline function getPositionDelta(joint::Translational, body1::Component, body2::Component, x::SVector)
     Δx = zerodimstaticadjoint(nullspacemat(joint)) * x # in body1 frame
     return Δx
 end
-@inline function getVelocityDelta(joint::Translational, body1::Body, body2::Body, v::SVector)
+@inline function getVelocityDelta(joint::Translational, body1::Component, body2::Component, v::SVector)
     Δv = zerodimstaticadjoint(nullspacemat(joint)) * v # in body1 frame
     return Δv
 end
 
 ## Minimal coordinate calculation
-@inline function minimalCoordinates(joint::Translational, body1::Body, body2::Body)
+@inline function minimalCoordinates(joint::Translational, body1::Component, body2::Component)
     statea = body1.state
     stateb = body2.state
     return minimalCoordinates(joint, statea.x2[1], statea.q2[1], stateb.x2[1], stateb.q2[1])
 end
-@inline function minimalCoordinates(joint::Translational, body1::Origin, body2::Body)
+@inline function minimalCoordinates(joint::Translational, body1::Origin, body2::Component)
     stateb = body2.state
     return minimalCoordinates(joint, stateb.x2[1], stateb.q2[1])
 end
@@ -323,37 +262,31 @@ end
 @inline function minimalCoordinates(joint::Translational, xb::AbstractVector, qb::UnitQuaternion)
     return nullspacemat(joint) * g(joint, xb, qb)
 end
-@inline function minimalVelocities(joint::Translational, body1::Body, body2::Body)
+@inline function minimalVelocities(joint::Translational, body1::Component, body2::Component)
     statea = body1.state
     stateb = body2.state
     return minimalVelocities(joint, statea.x2[1], statea.q2[1], statea.v15, statea.ϕ15, stateb.x2[1], stateb.q2[1], stateb.v15, stateb.ϕ15)
 end
-@inline function minimalVelocities(joint::Translational, body1::Origin, body2::Body)
+
+@inline function minimalVelocities(joint::Translational, body1::Origin, body2::Component)
     stateb = body2.state
     return minimalVelocities(joint, stateb.q2[1], stateb.v15, stateb.ϕ15)
 end
+
 @inline function minimalVelocities(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, va::AbstractVector, ωa::AbstractVector,
         xb::AbstractVector, qb::UnitQuaternion, vb::AbstractVector, ωb::AbstractVector)
-    # we need to compute Δv, the one that we use to set the minimal coordinates in setVelocity!
-    # it is defined as
-    # Δv = V(pb,B/A)a velocity of pb attahced to body B wrt frame A expressed in frame A.
-        # with pb the vertex attached to body B join the A-B joint
-    # Δv = V(pb,B/W)a - V(pb,A/W)a
     vertices = joint.vertices
     pbcb_w = vrotate(-vertices[2], qb)
     pbca_w = xa - (xb + vrotate(vertices[2], qb))
     Δvw = vb + skew(pbcb_w) * vrotate(ωb, qb) - (va + skew(pbca_w) * vrotate(ωa, qa))
     Δv = vrotate(Δvw, inv(qa))
     return nullspacemat(joint) * Δv
-    # return nullspacemat(joint) * vrotate(vb - va, inv(qa))
 end
+
 @inline function minimalVelocities(joint::Translational, qb::UnitQuaternion, vb::AbstractVector, ωb::AbstractVector)
     vertices = joint.vertices
     pbcb_w = vrotate(-vertices[2], qb)
     Δvw = vb + skew(pbcb_w) * vrotate(ωb, qb)
     Δv = Δvw
     return nullspacemat(joint) * Δv
-
-    #TODO most likely wrong
-    # return nullspacemat(joint) * vb
 end

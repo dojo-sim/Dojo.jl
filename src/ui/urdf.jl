@@ -175,7 +175,7 @@ function parse_link(xlink, materialdict, T)
         shape = nothing 
     elseif length(shapes) > 1
         s = [s.shape for s in shapes] 
-        shape = Shapes14(s, 0.0, diagm([0.0; 0.0; 0.0]))
+        shape = Shapes(s, 0.0, diagm([0.0; 0.0; 0.0]))
     else
         shape = shapes[1]
     end

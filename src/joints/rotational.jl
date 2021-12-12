@@ -8,7 +8,7 @@ mutable struct Rotational{T,N,N̄} <: Joint{T,N}
     spring_offset::SVector{N̄,T}
     Fτ::SVector{3,T}
 
-    function Rotational{T,N,N̄}(body1::Body, body2::Body;
+    function Rotational{T,N,N̄}(body1::Component, body2::Component;
             axis::AbstractVector = szeros(T,3), qoffset::UnitQuaternion = one(UnitQuaternion{T}),
             spring = zero(T), damper = zero(T), spring_offset = szeros(T,N̄)
         ) where {T,N,N̄}
@@ -27,24 +27,7 @@ Rotational1 = Rotational{T,1,2} where T
 Rotational2 = Rotational{T,2,1} where T
 Rotational3 = Rotational{T,3,0} where T
 
-springforcea(joint::Rotational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
-springforceb(joint::Rotational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
-springforceb(joint::Rotational{T,3}, body1::Origin, body2::Body, Δt::T, childid) where T = szeros(T, 6)
-
-damperforcea(joint::Rotational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
-damperforceb(joint::Rotational{T,3}, body1::Body, body2::Body, Δt::T, childid) where T = szeros(T, 6)
-damperforceb(joint::Rotational{T,3}, body1::Origin, body2::Body, Δt::T, childid) where T = szeros(T, 6)
-
-# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::Rotational{T,N}) where {T,N}
-#     summary(io, constraint)
-#     println(io,"")
-#     println(io, " V3:      "*string(constraint.V3))
-#     println(io, " V12:     "*string(constraint.V12))
-#     println(io, " qoffset: "*string(constraint.qoffset))
-# end
-
-### Constraints and derivatives
-## Position level constraints (for dynamics)
+# Position level constraints (for dynamics)
 @inline function g(joint::Rotational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
     # typeof(joint) <: Rotational{Float64,1} && println(scn.(Vmat(qa \ qb / joint.qoffset)))
     return Vmat(qa \ qb / joint.qoffset)
@@ -183,7 +166,7 @@ end
 
 ### Minimal coordinates
 ## Position and velocity offsets
-@inline function getPositionDelta(joint::Rotational, body1::Body, body2::Body, θ::SVector{N,T}) where {T,N}
+@inline function getPositionDelta(joint::Rotational, body1::Component, body2::Component, θ::SVector{N,T}) where {T,N}
     # axis angle representation
     θ = zerodimstaticadjoint(nullspacemat(joint)) * θ
     nθ = norm(θ)
@@ -196,13 +179,13 @@ end
     Δq = q * joint.qoffset # in body1 frame
     return Δq
 end
-@inline function getVelocityDelta(joint::Rotational, body1::Body, body2::Body, ω::SVector)
+@inline function getVelocityDelta(joint::Rotational, body1::Component, body2::Component, ω::SVector)
     ω = zerodimstaticadjoint(nullspacemat(joint)) * ω
     Δω = ω # in body1 frame
     # Δω = vrotate(ω, inv(body2.state.q2[1])*body1.state.q2[1]) # in body2 frame
     return Δω
 end
-@inline function getVelocityDelta(joint::Rotational, body1::Origin, body2::Body, ω::SVector)
+@inline function getVelocityDelta(joint::Rotational, body1::Origin, body2::Component, ω::SVector)
     ω = zerodimstaticadjoint(nullspacemat(joint)) * ω
     Δω = ω # in body1 frame
     # Δω = vrotate(ω, inv(body2.state.q2[1])) # in body2 frame
@@ -210,12 +193,12 @@ end
 end
 
 ## Minimal coordinate calculation (This could be directly calculated from g, but the rotation requires some special treatment)
-@inline function minimalCoordinates(joint::Rotational, body1::Body, body2::Body)
+@inline function minimalCoordinates(joint::Rotational, body1::Component, body2::Component)
     statea = body1.state
     stateb = body2.state
     return minimalCoordinates(joint, statea.q2[1], stateb.q2[1])
 end
-@inline function minimalCoordinates(joint::Rotational, body1::Origin, body2::Body)
+@inline function minimalCoordinates(joint::Rotational, body1::Origin, body2::Component)
     stateb = body2.state
     return minimalCoordinates(joint, stateb.q2[1])
 end
@@ -229,19 +212,16 @@ end
     return nullspacemat(joint) * rotation_vector(q)
 end
 @inline function minimalCoordinates(joint::Rotational{T,0}, qb::UnitQuaternion) where {T}
-    # @warn "removed 1st link quat"
-    # q = qb / joint.qoffset
-    # return vector(q)
     q = qb / joint.qoffset
     return nullspacemat(joint) * rotation_vector(q)
 end
 
-@inline function minimalVelocities(joint::Rotational, body1::Body, body2::Body)
+@inline function minimalVelocities(joint::Rotational, body1::Component, body2::Component)
     statea = body1.state
     stateb = body2.state
     return minimalVelocities(joint, statea.q2[1], statea.ϕ15, stateb.q2[1], stateb.ϕ15)
 end
-@inline function minimalVelocities(joint::Rotational, body1::Origin, body2::Body)
+@inline function minimalVelocities(joint::Rotational, body1::Origin, body2::Component)
     stateb = body2.state
     return minimalVelocities(joint, stateb.q2[1], stateb.ϕ15)
 end
