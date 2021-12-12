@@ -21,7 +21,6 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 policy = Policy(input_size, output_size, hp)
 normalizer = Normalizer(input_size)
 
-
 env = make("halfcheetah", vis = vis, dt = 0.05)
 obs = reset(env)
 render(env)

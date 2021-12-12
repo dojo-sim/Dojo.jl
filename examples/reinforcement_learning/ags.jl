@@ -7,97 +7,15 @@ using Statistics
 import LinearAlgebra.normalize
 import GeometryBasics.update
 
-
-# ARS options: hyper parameters
-@with_kw struct HyperParameters{T}
-    main_loop_size::Int = 100
-    horizon::Int = 200
-    step_size::T = 0.02
-    n_directions::Int = 16
-    b::Int = 16
-    noise::T = 0.03
-    seed::Int = 1
-    env_name::String = "halfcheetah"
-end
-# assert self.b<=self.n_directions, "b must be <= n_directions"
-
-# observation filter
-mutable struct Normalizer{T}
-    n::Vector{T}
-    mean::Vector{T}
-    mean_diff::Vector{T}
-    var::Vector{T}
-end
-
-function Normalizer(num_inputs::Int)
-    n = zeros(num_inputs)
-    mean = zeros(num_inputs)
-    mean_diff = zeros(num_inputs)
-    var = zeros(num_inputs)
-    return Normalizer{eltype(n)}(n, mean, mean_diff, var)
-end
-
-function observe(normalizer::Normalizer{T}, x::AbstractVector{T}) where {T}
-    normalizer.n .+= 1
-    last_mean = deepcopy(normalizer.mean)
-    normalizer.mean .+= (x .- normalizer.mean) ./ normalizer.n
-    normalizer.mean_diff .+= (x .- last_mean) .* (x .- normalizer.mean)
-    normalizer.var .= max.(1e-2, normalizer.mean_diff ./ normalizer.n)
-end
-
-function normalize(normalizer, inputs)
-    obs_mean = normalizer.mean
-    obs_std = sqrt.(normalizer.var)
-    return (inputs .- obs_mean) ./ obs_std
-end
-
-# linear policy
-mutable struct Policy{T}
-    hp::HyperParameters{T}
-    θ::Matrix{T}
-end
-
-function Policy(input_size::Int, output_size::Int, hp::HyperParameters{T}) where {T}
-    return Policy{T}(hp, zeros(output_size, input_size))
-end
-
-function evaluate(policy::Policy{T}, input::AbstractVector{T}) where {T}
-    return policy.θ * input
-end
-
-function positive_perturbation(policy::Policy{T}, input::AbstractVector{T}, δ::AbstractMatrix{T}) where {T}
-    return (policy.θ + policy.hp.noise .* δ) * input
-end
-
-function negative_perturbation(policy::Policy{T}, input::AbstractVector{T}, δ::AbstractMatrix{T}) where {T}
-    return (policy.θ - policy.hp.noise .* δ) * input
-end
-
-function sample_δs(policy::Policy{T}) where {T}
-    return [randn(size(policy.θ)) for i = 1:policy.hp.n_directions]
-end
-
-function update(policy::Policy, rollouts, σ_r)
-    stp = zeros(size(policy.θ))
-    for (r_pos, r_neg, d) in rollouts
-        stp += (r_pos - r_neg) * d
-    end
-    policy.θ += policy.hp.step_size * stp ./ (σ_r * policy.hp.b)
-    return nothing
-end
-
 function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T}, hp::HyperParameters{T}) where T
     envs = [deepcopy(env) for i = 1:Threads.nthreads()]
 
     output_size, input_size = size(policy.θ)
-
+    nx = input_size
+    nu = output_size
+    nθ = output_size * input_size
 
     for episode = 1:hp.main_loop_size
-        # init deltas and rewards
-        δs = sample_δs(policy)
-        reward_positive = zeros(hp.n_directions)
-        reward_negative = zeros(hp.n_directions)
-
         # Stem
         seed(env, s = episode)
         state = reset(env)
@@ -106,7 +24,8 @@ function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T}, h
         fx = []
         fu = []
         done = false
-        num_plays = 0.
+        reward_evaluation = 0
+        num_plays = 0
         while !done && num_plays < hp.horizon
             observe(normalizer, state)
             state = normalize(normalizer, state)
@@ -117,84 +36,32 @@ function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T}, h
             push!(fx, copy(env.fx))
             push!(fu, copy(env.fu))
             reward = max(min(reward, 1), -1)
+            reward_evaluation += reward
             num_plays += 1
         end
-        # ∇ = zeros(size(policy.θ))
-        # for k = 1:num_plays
-        #     ∇ += ∂xi∂θ * ∇x_ri + 0-
-        # end
-        #
-        @show size(X)
-        @show size(A)
-        @show size(fx)
-        @show size(fu)
 
-        #
-        # # positive directions
-        # Threads.@threads for k = 1:hp.n_directions
-        #     seed(env, s = episode*k) #TODO I added this not sure if good or not
-        #     state = reset(envs[Threads.threadid()])
-        #     done = false
-        #     num_plays = 0.
-        #     while !done && num_plays < hp.horizon
-        #         observe(normalizer, state)
-        #         state = normalize(normalizer, state)
-        #         action = positive_perturbation(policy, state, δs[k])
-        #         state, reward, done, _ = step(envs[Threads.threadid()], action)
-        #         reward = max(min(reward, 1), -1)
-        #         reward_positive[k] += reward
-        #         num_plays += 1
-        #     end
-        # end
-        #
-        # # negative directions
-        # Threads.@threads for k = 1:hp.n_directions
-        #     seed(env, s = episode*k) #TODO I added this not sure if good or not
-        #     state = reset(envs[Threads.threadid()])
-        #     done = false
-        #     num_plays = 0.
-        #     while !done && num_plays < hp.horizon
-        #         observe(normalizer, state)
-        #         state = normalize(normalizer, state)
-        #         action = negative_perturbation(policy, state, δs[k])
-        #         state, reward, done, _ = step(envs[Threads.threadid()], action)
-        #         reward = max(min(reward, 1), -1)
-        #         reward_negative[k] += reward
-        #         num_plays += 1
-        #     end
-        # end
-        #
-        # all_rewards = [reward_negative; reward_positive]
-        # σ_r = std(all_rewards)
-        #
-        # # sort rollouts wrt max(r_pos, r_neg) and take (hp.b) best
-        # # scores = {k:max(r_pos, r_neg) for k,(r_pos,r_neg) in enumerate(zip(reward_positive,reward_negative))}
-        # # order = sorted(scores.keys(), key=lambda x:scores[x])[-hp.b:]
-        # # rollouts = [(reward_positive[k], reward_negative[k], deltas[k]) for k in order[::-1]]
-        # r_max = [max(reward_negative[k], reward_positive[k]) for k = 1:hp.n_directions]
-        # order = sortperm(r_max, rev = true)[1:hp.b]
-        # rollouts = [(reward_positive[k], reward_negative[k], δs[k]) for k = order]
-        # update(policy, rollouts, σ_r)
-        # # @show scn.(policy.θ)
-        #
-        # # # evaluate
-        # # state = reset(envs[Threads.threadid()])
-        # # done = false
-        # # num_plays = 1.
-        # # reward_evaluation = 0
-        # # while !done && num_plays<hp.horizon
-        # #     observe(normalizer, state)
-        # #     state = normalize(normalizer, state)
-        # #     action = evaluate(policy, state)
-        # #     state, reward, done, _ = step(envs[Threads.threadid()], action)
-        # #     reward_evaluation += reward
-        # #     num_plays += 1
-        # # end
-        # reward_evaluation = mean(all_rewards)
+        ∇θ = zeros(1,nθ)
+        ∂x∂θ = [zeros(nx, nθ) for k = 1:num_plays]
+        ∂u∂θ = [cat([X[k]' for i = 1:output_size]..., dims = (1,2)) for k = 1:num_plays]
+        ∂r∂x = [FiniteDiff.finite_difference_jacobian(x -> [-cost(env, x, A[k])], X[k]) for k = 1:num_plays]
+        ∂r∂u = [FiniteDiff.finite_difference_jacobian(u -> [-cost(env, X[k], u)], A[k]) for k = 1:num_plays]
+        for k = 2:num_plays
+            ∂x∂θ[k] = fx[k-1] * ∂x∂θ[k-1] + fu[k-1] * ∂u∂θ[k-1]
+        end
+        for k = 1:num_plays
+            ∇θ += ∂r∂x[k] * ∂x∂θ[k] + ∂r∂u[k] * ∂u∂θ[k]
+        end
+        ∇ = transpose(reshape(∇θ, (input_size, output_size)))
+        (norm(∇, Inf) < 1e3) && gradient_update(policy, ∇)
 
         # finish, print:
-        println("episode $episode reward_evaluation $reward_evaluation")
+        println("episode $episode ∇∞ $(scn(norm(∇, Inf))) r $reward_evaluation")
     end
+    return nothing
+end
 
+function gradient_update(policy::Policy, ∇)
+    @show "update"
+    policy.θ += policy.hp.step_size * ∇ ./ norm(∇, Inf)
     return nothing
 end
