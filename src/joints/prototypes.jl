@@ -1,10 +1,10 @@
 # t3r3
 """
-    Fixed(body1::AbstractBody, body2; p1, p2, qoffset)
+    Fixed(body1::Body, body2; p1, p2, qoffset)
 
 A fixed connection between two bodies.
 """
-Fixed(body1::AbstractBody{T}, body2; p1 = szeros(T, 3), p2 = szeros(T, 3),
+Fixed(body1::Body{T}, body2; p1 = szeros(T, 3), p2 = szeros(T, 3),
     qoffset = one(UnitQuaternion{T})) where T =
     Translational3{T}(body1, body2; p1, p2), Rotational3{T}(body1, body2; qoffset)
 
@@ -14,7 +14,7 @@ Fixed(body1::AbstractBody{T}, body2; p1 = szeros(T, 3), p2 = szeros(T, 3),
 
 A prismatic joint between two bodies.
 """
-Prismatic(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
+Prismatic(body1::Body{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
     qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T),
     tra_spring_offset = szeros(T,1)) where T =
 
@@ -27,7 +27,7 @@ Prismatic(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T,
 
 A planar joint between two bodies.
 """
-Planar(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
+Planar(body1::Body{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
     qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T),
     tra_spring_offset = szeros(T,2)) where T =
 
@@ -40,7 +40,7 @@ Planar(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3)
 
 Fixed orientation between two bodies (chicken's head).
 """
-FixedOrientation(body1::AbstractBody{T}, body2; qoffset = one(UnitQuaternion{T}),
+FixedOrientation(body1::Body{T}, body2; qoffset = one(UnitQuaternion{T}),
     spring = zero(T), damper = zero(T),
     tra_spring_offset = szeros(T,3)) where T =
 
@@ -53,7 +53,7 @@ FixedOrientation(body1::AbstractBody{T}, body2; qoffset = one(UnitQuaternion{T})
 
 A revolute joint between two bodies (pin, continuous, hinge joint).
 """
-Revolute(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
+Revolute(body1::Body{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
     qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T),
     rot_spring_offset = szeros(T,1)) where T =
 
@@ -66,7 +66,7 @@ Revolute(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 
 
 A cylindrical joint between two bodies.
 """
-Cylindrical(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
+Cylindrical(body1::Body{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
     qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T),
     tra_spring_offset = szeros(T,1), rot_spring_offset = szeros(T,1)) where T =
 
@@ -79,7 +79,7 @@ Cylindrical(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(
 
 A planar joint between two bodies with a rotation axis perpendicular to the plane (turtle bot).
 """
-PlanarAxis(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
+PlanarAxis(body1::Body{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
     qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T),
     tra_spring_offset = szeros(T,2), rot_spring_offset = szeros(T,1)) where T =
 
@@ -92,7 +92,7 @@ PlanarAxis(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T
 
 A joint between two bodies with free translation and rotation along one axis.
 """
-FreeRevolute(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
+FreeRevolute(body1::Body{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
     qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T),
     tra_spring_offset = szeros(T,3), rot_spring_offset = szeros(T,1)) where T =
 
@@ -105,7 +105,7 @@ FreeRevolute(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros
 
 A rotational between two bodies with a 2 rotational degrees of freedom (skull-eye joint).
 """
-Orbital(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
+Orbital(body1::Body{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
     qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T),
     rot_spring_offset = szeros(T,2)) where T =
 
@@ -118,7 +118,7 @@ Orbital(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3
 
 A prismatic joint between two bodies with a 2 rotational degrees of freedom (skull-eye joint).
 """
-PrismaticOrbital(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
+PrismaticOrbital(body1::Body{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
     qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T),
     tra_spring_offset = szeros(T,1), rot_spring_offset = szeros(T,2)) where T =
 
@@ -131,7 +131,7 @@ PrismaticOrbital(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = sz
 
 A planar joint between two bodies with a 2 rotational degrees of freedom (skull-eye joint).
 """
-PlanarOrbital(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
+PlanarOrbital(body1::Body{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
     qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T),
     tra_spring_offset = szeros(T,2), rot_spring_offset = szeros(T,2)) where T =
 
@@ -144,7 +144,7 @@ PlanarOrbital(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szero
 
 A free joint between two bodies with a 2 rotational degrees of freedom (skull-eye joint).
 """
-FreeOrbital(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
+FreeOrbital(body1::Body{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
     qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T),
     tra_spring_offset = szeros(T,3), rot_spring_offset = szeros(T,2)) where T =
 
@@ -157,7 +157,7 @@ FreeOrbital(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(
 
 A spherical joint between two bodies (ball-and-socket joint).
 """
-Spherical(body1::AbstractBody{T}, body2; p1 = szeros(T, 3), p2 = szeros(T, 3),
+Spherical(body1::Body{T}, body2; p1 = szeros(T, 3), p2 = szeros(T, 3),
     qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T),
     rot_spring_offset = szeros(T,3)) where T =
 
@@ -170,7 +170,7 @@ Spherical(body1::AbstractBody{T}, body2; p1 = szeros(T, 3), p2 = szeros(T, 3),
 
 A cylindrical joint between two bodies with unconstrained orientation (point-on-line).
 """
-CylindricalFree(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
+CylindricalFree(body1::Body{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
     spring = zero(T), damper = zero(T),
     tra_spring_offset = szeros(T,1), rot_spring_offset = szeros(T,3)) where T =
 
@@ -183,7 +183,7 @@ CylindricalFree(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = sze
 
 A planar joint between two bodies with unconstrained orientation.
 """
-PlanarFree(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
+PlanarFree(body1::Body{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
     spring = zero(T), damper = zero(T),
     tra_spring_offset = szeros(T,2), rot_spring_offset = szeros(T,3)) where T =
 
@@ -196,7 +196,7 @@ PlanarFree(body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T
 
 An unconstrained connection between two bodies (connection between floating base and origin).
 """
-Floating(body1::AbstractBody{T}, body2; spring = zero(T), damper = zero(T),
+Floating(body1::Body{T}, body2; spring = zero(T), damper = zero(T),
     tra_spring_offset = szeros(T,3), rot_spring_offset = szeros(T,3)) where T =
 
     Translational0{T}(body1, body2; spring, damper, spring_offset = tra_spring_offset),
@@ -204,7 +204,7 @@ Floating(body1::AbstractBody{T}, body2; spring = zero(T), damper = zero(T),
 
 
 
-function Prototype(jointtype::Symbol, body1::AbstractBody{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
+function Prototype(jointtype::Symbol, body1::Body{T}, body2, axis; p1 = szeros(T, 3), p2 = szeros(T, 3),
         qoffset = one(UnitQuaternion{T}), spring = zero(T), damper = zero(T),
         tra_spring_offset = nothing, rot_spring_offset = nothing) where T
     N̄tra, N̄rot = nullspacedims(jointtype)

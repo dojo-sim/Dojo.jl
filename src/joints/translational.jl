@@ -6,7 +6,7 @@ mutable struct Translational{T,N,N̄} <: Joint{T,N}
     damper::T
     spring_offset::SVector{N̄,T}
     Fτ::SVector{3,T}
-    function Translational{T,N,N̄}(body1::AbstractBody, body2::AbstractBody;
+    function Translational{T,N,N̄}(body1::Body, body2::Body;
             p1::AbstractVector = szeros(T,3), p2::AbstractVector = szeros(T,3), axis::AbstractVector = szeros(T,3),
             spring = zero(T), damper = zero(T), spring_offset = szeros(T,N̄)
         ) where {T,N,N̄}
@@ -298,11 +298,11 @@ end
 
 ### Minimal coordinates
 ## Position and velocity offsets
-@inline function getPositionDelta(joint::Translational, body1::AbstractBody, body2::Body, x::SVector)
+@inline function getPositionDelta(joint::Translational, body1::Body, body2::Body, x::SVector)
     Δx = zerodimstaticadjoint(nullspacemat(joint)) * x # in body1 frame
     return Δx
 end
-@inline function getVelocityDelta(joint::Translational, body1::AbstractBody, body2::Body, v::SVector)
+@inline function getVelocityDelta(joint::Translational, body1::Body, body2::Body, v::SVector)
     Δv = zerodimstaticadjoint(nullspacemat(joint)) * v # in body1 frame
     return Δv
 end
