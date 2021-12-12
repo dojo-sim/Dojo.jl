@@ -28,11 +28,15 @@ obs = reset(env)
 render(env)
 input_size = length(obs)
 output_size = length(env.u_prev)
-hp = HyperParameters(main_loop_size = 30, horizon = 80, n_directions = 6, b = 6, step_size = 0.005)
+hp = HyperParameters(main_loop_size = 30, horizon = 80, n_directions = 6, b = 6, step_size = 0.001)
 policy = Policy(input_size, output_size, hp)
 normalizer = Normalizer(input_size)
 
-hp = HyperParameters(main_loop_size = 30, horizon = 80, n_directions = 6, b = 6, step_size = 0.005)
+
+
+include("../ags.jl")
+hp = HyperParameters(main_loop_size = 30, horizon = 80, n_directions = 6, b = 6, step_size = 0.001)
 train(env, policy, normalizer, hp)
+seed(env, s = 11)
 traj = display_policy(env, policy, normalizer, hp)
 visualize(env, traj)

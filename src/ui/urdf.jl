@@ -138,7 +138,7 @@ function parse_shape(xvisual, materialdict, T)
     return shape
 end
 
-function get_shape(shapenode, x, q, color, T) 
+function get_shape(shapenode, x, q, color, T)
     if name(shapenode) == "box"
         xyz = parse_vector(shapenode, "size", T, default = "1 1 1")
         shape = Box(xyz..., zero(T), color = color, xoffset = x, qoffset = q)
@@ -164,17 +164,17 @@ function get_shape(shapenode, x, q, color, T)
     else
         @info "Unknown geometry."
         shape = nothing
-    end 
+    end
 end
 
 function parse_link(xlink, materialdict, T)
     x, q, m, J = parse_inertia(find_element(xlink, "inertial"), T)
     xvisuals = get_elements_by_tagname(xlink, "visual")
     shapes = [parse_shape(xvisual, materialdict, T) for xvisual in xvisuals]
-    if length(shapes) == 0 
-        shape = nothing 
+    if length(shapes) == 0
+        shape = nothing
     elseif length(shapes) > 1
-        s = [s.shape for s in shapes] 
+        s = [s.shape for s in shapes]
         shape = Shapes14(s, 0.0, diagm([0.0; 0.0; 0.0]))
     else
         shape = shapes[1]
