@@ -38,10 +38,10 @@ function preparevis!(storage::Storage{T,N}, id, shape, animation, shapevisualize
     return
 end
 
-function MeshCat.setobject!(subvisshape, visshape, shapes::Shapes14)
+function MeshCat.setobject!(subvisshape, visshape, shapes::Shapes14; transparent=false)
     for (i, s) in enumerate(shapes.shape)
         v = subvisshape["component_$i"]
-        setobject!(v, visshape[i], s)
+        setobject!(v, visshape[i], s, transparent=transparent)
         scale_transform = MeshCat.LinearMap(diagm(s.scale))
         x_transform = MeshCat.Translation(s.xoffset)
         q_transform = MeshCat.LinearMap(s.qoffset)
@@ -50,20 +50,20 @@ function MeshCat.setobject!(subvisshape, visshape, shapes::Shapes14)
     end
 end
 
-function MeshCat.setobject!(subvisshape, visshape, shape::Shape)
-    setobject!(subvisshape, visshape, MeshPhongMaterial(color=shape.color))
+function MeshCat.setobject!(subvisshape, visshape, shape::Shape; transparent=false)
+    setobject!(subvisshape, visshape, MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
 end
 
-function MeshCat.setobject!(subvisshape, visshape::Vector, shape::Capsule)
-    setobject!(subvisshape["cylinder"], visshape[1], MeshPhongMaterial(color=shape.color))
-    setobject!(subvisshape["cap1"], visshape[2], MeshPhongMaterial(color=shape.color))
-    setobject!(subvisshape["cap2"], visshape[3], MeshPhongMaterial(color=shape.color))
+function MeshCat.setobject!(subvisshape, visshape::Vector, shape::Capsule; transparent=false)
+    setobject!(subvisshape["cylinder"], visshape[1], MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
+    setobject!(subvisshape["cap1"], visshape[2], MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
+    setobject!(subvisshape["cap2"], visshape[3], MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
 end
 
-function MeshCat.setobject!(subvisshape, visshape, shape::Mesh)
+function MeshCat.setobject!(subvisshape, visshape, shape::Mesh; transparent=false)
     if visshape.mtl_library == ""
         visshape = MeshFileGeometry(visshape.contents, visshape.format)
-        setobject!(subvisshape, visshape, MeshPhongMaterial(color=shape.color))
+        setobject!(subvisshape, visshape, MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
     else
         setobject!(subvisshape, visshape)
     end
@@ -81,7 +81,9 @@ Visualize a `mechanism` with a trajectory stored in `storage`.
 """
 function visualize(mechanism::AbstractMechanism, storage::Storage{T,N};
         vis::Visualizer = Visualizer(), env::String = "browser",
-        showframes::Bool = false, openvis::Bool = false) where {T,N}
+        showframes::Bool = false, openvis::Bool = false,
+        show_contact=false) where {T,N}
+
     storage = deepcopy(storage)
     bodies = mechanism.bodies
     origin = mechanism.origin
@@ -116,14 +118,31 @@ function visualize(mechanism::AbstractMechanism, storage::Storage{T,N};
         showshape = false
         if visshape !== nothing
             subvisshape = vis["bodies/body:"*string(id)]
-            setobject!(subvisshape,visshape,shape)
+            setobject!(subvisshape,visshape,shape,transparent=show_contact)
             showshape = true
         end
-        if showframes
-            subvisframe = vis["frames/body:"*string(id)]
-            setobject!(subvisframe, triads[id])
-        end
+    
         preparevis!(storage, id, shape, animation, subvisshape, subvisframe, showshape, showframes)
+        
+        if show_contact
+            for (jd, ineq) in enumerate(mechanism.ineqconstraints) 
+                if ineq.parentid == body.id 
+                    shape = Sphere(abs(1.05 * ineq.constraints[1].offset[3]), 
+                        xoffset=(shape.xoffset + ineq.constraints[1].p), 
+                        qoffset=shape.qoffset, color=RGBA(1.0, 0.0, 0.0, 1.0)) 
+                    visshape = convertshape(shape)
+                    subvisshape = nothing
+                    subvisframe = nothing
+                    showshape = false
+                    if visshape !== nothing
+                        subvisshape = vis["bodies/contact:"*string(id)*"$jd"]
+                        setobject!(subvisshape,visshape,shape,transparent=false)
+                        showshape = true
+                    end
+                    preparevis!(storage, id, shape, animation, subvisshape, subvisframe, showshape, showframes)
+                end
+            end
+        end
     end
 
     id = origin.id
@@ -131,20 +150,16 @@ function visualize(mechanism::AbstractMechanism, storage::Storage{T,N};
     visshape = convertshape(shape)
     if visshape !== nothing
         subvisshape = vis["bodies/origin:"*string(id)]
-        setobject!(subvisshape,visshape,shape)
+        setobject!(subvisshape,visshape,shape,transparent=show_contact)
         shapetransform = transform(szeros(T,3), one(UnitQuaternion{T}), shape)
         settransform!(subvisshape, shapetransform)
-    end
-    if showframes
-        subvisframe = vis["frames/origin:"*string(id)]
-        setobject!(subvisframe, Triad(0.5))
     end
 
     setanimation!(vis, animation)
     env == "editor" ? (return render(vis)) : (return vis)
 end
 
-function build_robot(vis::Visualizer, mechanism::AbstractMechanism) where {T,N}
+function build_robot(vis::Visualizer, mechanism::AbstractMechanism; show_contact=false) where {T,N}
 
     bodies = mechanism.bodies
     origin = mechanism.origin
@@ -153,7 +168,7 @@ function build_robot(vis::Visualizer, mechanism::AbstractMechanism) where {T,N}
     setprop!(vis["/Background"], "bottom_color", RGBA(1.0, 1.0, 1.0))
     setvisible!(vis["/Axes"],false)
 
-    for (id, body) in enumerate(bodies)
+    for (id,body) in enumerate(bodies)
         shape = body.shape
         visshape = convertshape(shape)
         subvisshape = nothing
@@ -161,10 +176,33 @@ function build_robot(vis::Visualizer, mechanism::AbstractMechanism) where {T,N}
         showshape = false
         if visshape !== nothing
             subvisshape = vis["bodies/body:"*string(id)]
-            setobject!(subvisshape,visshape,shape)
+            setobject!(subvisshape,visshape,shape,transparent=show_contact)
             showshape = true
         end
+    
+        preparevis!(storage, id, shape, animation, subvisshape, subvisframe, showshape, showframes)
+        
+        if show_contact
+            for (jd, ineq) in enumerate(mechanism.ineqconstraints) 
+                if ineq.parentid == body.id 
+                    shape = Sphere(abs(1.0 * ineq.constraints[1].offset[3]), 
+                        xoffset=(shape.xoffset + ineq.constraints[1].p), 
+                        qoffset=shape.qoffset, color=RGBA(1.0, 0.0, 0.0, 1.0)) 
+                    visshape = convertshape(shape)
+                    subvisshape = nothing
+                    subvisframe = nothing
+                    showshape = false
+                    if visshape !== nothing
+                        subvisshape = vis["bodies/contact:"*string(id)*"$jd"]
+                        setobject!(subvisshape,visshape,shape,transparent=false)
+                        showshape = true
+                    end
+                    preparevis!(storage, id, shape, animation, subvisshape, subvisframe, showshape, showframes)
+                end
+            end
+        end
     end
+
 
     id = origin.id
     shape = origin.shape

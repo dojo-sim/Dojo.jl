@@ -16,11 +16,12 @@ function gethalfcheetah(; Δt::T=0.01, g::T=-9.81, cf::T=0.8,
         for name in names
             body = getbody(mech, name)
             if name == "torso" # need special case for torso
-                pf = [+0.5 * body.shape.rh[2];0;0]
-                pb = [-0.5 * body.shape.rh[2];0;0]
-                o = [0;0; body.shape.rh[1]]
-                push!(bounds, contactconstraint(body, normal, cf, p=pf, offset=o))
-                push!(bounds, contactconstraint(body, normal, cf, p=pb, offset=o))
+                # s = body.shape.shape[1]
+                # pf = 1.0 * [0.5 * s.rh[2];0;0]
+                # pb = 0.0 * [-0.5 * s.rh[2];0;0]
+                # o = [0;0; s.rh[1]]
+                # push!(bounds, contactconstraint(body, normal, cf, p=pf, offset=o))
+                # push!(bounds, contactconstraint(body, normal, cf, p=pf, offset=o))
             else
                 p = [0;0; -0.5 * body.shape.rh[2]]
                 o = [0;0; body.shape.rh[1]]
@@ -32,8 +33,6 @@ function gethalfcheetah(; Δt::T=0.01, g::T=-9.81, cf::T=0.8,
     end
     return mech
 end
-
-getfield.(env.mechanism.bodies, :name)
 
 function initializehalfcheetah!(mechanism::Mechanism; x::T=0.0, z::T=0.0, θ::T=0.0) where {T}
     setPosition!(mechanism,

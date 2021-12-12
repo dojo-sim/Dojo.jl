@@ -62,3 +62,11 @@ function initializehopper!(mech::Mechanism{T,Nn,Ne,Nb}; leg_length_nominal=0.5, 
     setPosition!(body1, body2, Δx=[0.0; 0.0; -leg_length_nominal], Δq=UnitQuaternion(RotX(0.0)))
     setVelocity!(body1, body2, p1 = tra2.vertices[1], p2 = tra2.vertices[2], Δv=zeros(3), Δω=zeros(3))
 end
+
+vis = Visualizer() 
+open(vis)
+
+model = getatlas()
+initializeatlas!(model)
+storage = simulate!(model, 0.1, record=true, verbose=false)
+visualize(model, storage, vis=vis, show_contact=true)
