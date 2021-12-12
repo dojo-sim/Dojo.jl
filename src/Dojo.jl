@@ -180,6 +180,6 @@ include(joinpath("..", "env", "environment.jl"))
 
 # Utilities
 include(joinpath("..", "examples", "trajectory_optimization", "utils.jl"))
-include(joinpath("..", "examples", "reinforcement_learning", "ars.jl"))
+# include(joinpath("..", "examples", "reinforcement_learning", "ars.jl"))
 
 end
