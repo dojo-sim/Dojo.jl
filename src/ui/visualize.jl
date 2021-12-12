@@ -69,17 +69,7 @@ function MeshCat.setobject!(subvisshape, visshape, shape::Mesh; transparent=fals
     end
 end
 
-"""
-    visualize(mechanism, storage; env, showframes)
-
-Visualize a `mechanism` with a trajectory stored in `storage`.
-
-
-# Available kwargs
-* `showframes`: Display the coordinate frames of the bodies.
-* `env`:        Choose the visualization environment ("blink", "browser", "editor").
-"""
-function visualize(mechanism::AbstractMechanism, storage::Storage{T,N};
+function visualize(mechanism::Mechanism, storage::Storage{T,N};
         vis::Visualizer = Visualizer(), env::String = "browser",
         showframes::Bool = false, openvis::Bool = false,
         show_contact=false) where {T,N}
@@ -159,7 +149,7 @@ function visualize(mechanism::AbstractMechanism, storage::Storage{T,N};
     env == "editor" ? (return render(vis)) : (return vis)
 end
 
-function build_robot(vis::Visualizer, mechanism::AbstractMechanism; show_contact=false) where {T,N}
+function build_robot(vis::Visualizer, mechanism::Mechanism) where {T,N}
 
     bodies = mechanism.bodies
     origin = mechanism.origin
@@ -176,33 +166,10 @@ function build_robot(vis::Visualizer, mechanism::AbstractMechanism; show_contact
         showshape = false
         if visshape !== nothing
             subvisshape = vis["bodies/body:"*string(id)]
-            setobject!(subvisshape,visshape,shape,transparent=show_contact)
+            setobject!(subvisshape,visshape,shape)
             showshape = true
         end
-    
-        preparevis!(storage, id, shape, animation, subvisshape, subvisframe, showshape, showframes)
-        
-        if show_contact
-            for (jd, ineq) in enumerate(mechanism.ineqconstraints) 
-                if ineq.parentid == body.id 
-                    shape = Sphere(abs(1.0 * ineq.constraints[1].offset[3]), 
-                        xoffset=(shape.xoffset + ineq.constraints[1].p), 
-                        qoffset=shape.qoffset, color=RGBA(1.0, 0.0, 0.0, 1.0)) 
-                    visshape = convertshape(shape)
-                    subvisshape = nothing
-                    subvisframe = nothing
-                    showshape = false
-                    if visshape !== nothing
-                        subvisshape = vis["bodies/contact:"*string(id)*"$jd"]
-                        setobject!(subvisshape,visshape,shape,transparent=false)
-                        showshape = true
-                    end
-                    preparevis!(storage, id, shape, animation, subvisshape, subvisframe, showshape, showframes)
-                end
-            end
-        end
     end
-
 
     id = origin.id
     shape = origin.shape
@@ -215,7 +182,7 @@ function build_robot(vis::Visualizer, mechanism::AbstractMechanism; show_contact
    return vis
 end
 
-function set_robot(vis::Visualizer, mechanism::AbstractMechanism, z::Vector{T}) where {T,N}
+function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T}) where {T,N}
 
     bodies = mechanism.bodies
     origin = mechanism.origin

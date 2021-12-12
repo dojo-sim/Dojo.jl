@@ -4,6 +4,7 @@
 struct Hopper end 
 
 function hopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
+    control_scaling=Diagonal(ones(3)),
     s::Int=1, contact::Bool=true, vis::Visualizer=Visualizer(),
     info=nothing,
     opts_step=InteriorPointOptions(), opts_grad=InteriorPointOptions()) where T
@@ -32,13 +33,12 @@ function hopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
 
     u_prev = zeros(nu)
     control_mask = hopper_control_mask() 
-
     build_robot(vis, mechanism)
 
     TYPES = [Hopper, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
     env = Environment{TYPES...}(mechanism, mode, aspace, ospace, 
         x, fx, fu,
-        u_prev, control_mask,
+        u_prev, control_mask, control_scaling,
         nx, nu, no,
         info,
         [rng], vis,

@@ -1,7 +1,7 @@
 function getquadruped(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring = 0.0,
     damper = 0.0, contact::Bool = true) where {T}
     path = joinpath(@__DIR__, "../deps/quadruped_simon.urdf")
-    mech = Mechanism(path, floating = true, g = g, Δt = Δt, spring=spring, damper=damper)
+    mech = Mechanism(path, true, T, g = g, Δt = Δt, spring=spring, damper=damper)
 
     # Adding springs and dampers
     for (i,eqc) in enumerate(collect(mech.eqconstraints)[2:end])

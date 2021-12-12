@@ -27,7 +27,7 @@ struct Environment{X,T,M,A,O,I}
     fu::Matrix{T}
     u_prev::Vector{T}
 	control_mask::Matrix{T}
-    control_scaling::Diagonal{T, Vector{T}} # could be merged with control mask
+    control_scaling::Diagonal{T,Vector{T}} # could be merged with control mask
     nx::Int
     nu::Int
     no::Int

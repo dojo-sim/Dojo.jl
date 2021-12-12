@@ -1,7 +1,7 @@
 
 function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0, damper::T = 0.0, contact::Bool = true, model_type::Symbol = :simple) where {T}
     path = joinpath(@__DIR__, "../deps/atlas_$(string(model_type)).urdf")
-    mech = Mechanism(path, floating=true, g = g, Δt = Δt, spring=spring, damper=damper)
+    mech = Mechanism(path, true, T, g = g, Δt = Δt, spring=spring, damper=damper)
 
     # Adding springs and dampers
     for (i,eqc) in enumerate(collect(mech.eqconstraints)[2:end])
@@ -68,11 +68,11 @@ function initializeatlas!(mechanism::Mechanism;
     return nothing
 end
 
-vis = Visualizer() 
-open(vis)
+# vis = Visualizer() 
+# open(vis)
 
-model = getatlas()
-initializeatlas!(model)
-storage = simulate!(model, 0.3, record=true, verbose=false)
-visualize(model, storage, vis=vis, show_contact=true)
+# model = getatlas()
+# initializeatlas!(model)
+# storage = simulate!(model, 0.3, record=true, verbose=false)
+# visualize(model, storage, vis=vis, show_contact=true)
 

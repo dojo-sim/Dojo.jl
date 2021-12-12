@@ -1,27 +1,3 @@
-"""
-$(TYPEDEF)
-
-A `Storage` can be used to store simulation results for a [`Mechanism`](@ref).
-
-Indexing example:
-    storage.x[body_id][time_step_number][2] # returns the y-position of the specified body at the specified time step.
-
-# Important attributes
-* `x`: Contains the position for each body and each time step.
-* `q`: Contains the orientation for each body and each time step.
-* `v`: Contains the velocity for each body and each time step.
-* `ω`: Contains the angular velocity for each body and each time step.
-* `px`: Contains the linear momentum for each body and each time step.
-* `pq`: Contains the angular momentum for each body and each time step.
-* `vl`: Contains the velocity for each body and each time step.
-* `ωl`: Contains the angular velocity for each body and each time step.
-
-# Constructors
-    Storage{T}(step_range, nbodies)
-    Storage(step_range, nbodies)
-    Storage{T}(nsteps, nbodies)
-    Storage(nsteps, nbodies)
-"""
 struct Storage{T,N}
     x::Vector{Vector{SVector{3,T}}}
     q::Vector{Vector{UnitQuaternion{T}}}
@@ -64,10 +40,6 @@ struct Storage{T,N}
 
     Storage{T}() where T = Storage{T}(Base.OneTo(0),0)
 end
-
-# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, storage::Storage{T,N}) where {T,N}
-#     summary(io, storage)
-# end
 
 function downsample(storage::Storage{T,N}, n::Int) where {T,N}
     steps = N ÷ n

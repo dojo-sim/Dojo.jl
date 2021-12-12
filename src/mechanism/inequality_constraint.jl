@@ -55,8 +55,6 @@ end
         end
 
         if bnd_type <: ContactBound
-            # body.state.D -= _dN(x3, [q3.w; q3.x; q3.y; q3.z], ineqc.γsol[2][1:1], bnd.p) * M
-            # body.state.D -= _dB(x3, [q3.w; q3.x; q3.y; q3.z], ineqc.γsol[2][2:4], bnd.p) * M
             body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
         elseif bnd_type <: ImpactBound
             body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
@@ -68,9 +66,7 @@ end
 end
 
 @inline function ∂gab∂ʳba(mechanism, body::Body, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
-    # derivative of gs and complementarity constraints wrt pos and vel
     Z = szeros(T,N½,6)
-    # derivative of complementarity constraints wrt to pos and vel are always zero because it's independent of pos and vel.
     return [Z;-∂g∂ʳpos(mechanism, ineqc, body)]', [Z;∂g∂ʳvel(mechanism, ineqc, body)]
 end
 @inline function ∂gab∂ʳba(mechanism, ineqc1::InequalityConstraint, ineqc2::InequalityConstraint)

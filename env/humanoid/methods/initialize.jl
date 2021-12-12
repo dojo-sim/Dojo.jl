@@ -1,6 +1,6 @@
 function gethumanoid(; Δt::T=0.01, g::T=-9.81, cf=0.8, spring=0.0, damper=0.0, contact::Bool=true, contact_body::Bool=false) where {T}
     path = joinpath(@__DIR__, "../deps/humanoid.urdf")
-    mech = Mechanism(path, floating=true, g=g, Δt=Δt, spring=spring, damper=damper)
+    mech = Mechanism(path, true, T, g=g, Δt=Δt, spring=spring, damper=damper)
 
     if contact
         origin = Origin{T}()

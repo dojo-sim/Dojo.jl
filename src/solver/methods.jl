@@ -20,130 +20,76 @@ end
 function feasibilityStepLength!(mechanism::Mechanism; τort::T=0.95, τsoc::T=0.95, scaling::Bool=false) where {T}
     system = mechanism.system
 
-    mechanism.α = 1.0
-
-    # for (i,ineqc) in enumerate(mechanism.ineqconstraints)
-    #     if i == 3
-    #         γ = ineqc.γsol[2]
-    #         vector_entry = getentry(system, ineqc.id)
-    #         Δγ = vector_entry.value[4 .+ (1:4)]
-    #         # plot_cone(γ, Δγ)
-    #     end
+    α = 1.0 
     for ineqc in mechanism.ineqconstraints
-        feasibilityStepLength!(mechanism, ineqc, getentry(system, ineqc.id), τort, τsoc; scaling = scaling)
+        α = feasibilityStepLength!(α, mechanism, ineqc, getentry(system, ineqc.id), τort, τsoc; scaling = scaling)
     end
 
-    return
+    return α
 end
 
-function feasibilityStepLength!(mechanism::Mechanism{T}, body::Body{T}, vector_entry::Entry; τ::T=0.99) where {T}
-    Δt = mechanism.Δt
-    Δω = vector_entry.value[SA[4; 5; 6]]
-    ω = body.state.ϕsol[2]
+# function feasibilityStepLength!(α, mechanism::Mechanism{T}, body::Body{T}, vector_entry::Entry; τ::T=0.99) where {T}
+#     Δt = mechanism.Δt
+#     Δω = vector_entry.value[SA[4; 5; 6]]
+#     ω = body.state.ϕsol[2]
 
-    α = polynomial_step_length(ω, Δω, τ * 1/Δt)
+#     α_poly = polynomial_step_length(ω, Δω, τ * 1/Δt)
 
-    (α < mechanism.α) && (mechanism.α = α)
-    return
-end
+#     return min(α, α_poly)
+# end
 
-function feasibilityStepLength!(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
+function feasibilityStepLength!(α, mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
         vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
+    
     s = ineqc.ssol[2]
     γ = ineqc.γsol[2]
     Δs = vector_entry.value[1:N½]
     Δγ = vector_entry.value[N½ .+ (1:N½)]
+    αs_ort = ort_step_length(s[1:1], Δs[1:1], τ = τort)
+    αγ_ort = ort_step_length(γ[1:1], Δγ[1:1], τ = τort)
+    αs_soc = soc_step_length(s[2:4], Δs[2:4]; τ = τsoc)
+    αγ_soc = soc_step_length(γ[2:4], Δγ[2:4]; τ = τsoc)
 
-    if scaling
-        W, Wi, λ = nt_scaling(ineqc)
-        αs_ort = ort_step_length(λ[1:1], Wi'[1:1, 1:1] * Δs[1:1]; τ = τort)
-        αγ_ort = ort_step_length(λ[1:1],   W[1:1, 1:1] * Δγ[1:1]; τ = τort)
-        αs_soc = soc_step_length(λ[2:4], Wi'[2:4, 2:4] * Δs[2:4]; τ = τsoc)
-        αγ_soc = soc_step_length(λ[2:4],   W[2:4, 2:4] * Δγ[2:4]; τ = τsoc)
-    else
-        αs_ort = ort_step_length(s[1:1], Δs[1:1], τ = τort)
-        αγ_ort = ort_step_length(γ[1:1], Δγ[1:1], τ = τort)
-        αs_soc = soc_step_length(s[2:4], Δs[2:4]; τ = τsoc)
-        αγ_soc = soc_step_length(γ[2:4], Δγ[2:4]; τ = τsoc)
-    end
-    # αs_ort = 1.0
-    # αγ_ort = 1.0
-    # for i = 1:1
-    #     if Δs[i] < 0 # safer
-    #         αs_ort = min(αs_ort, - τort * s[i] / Δs[i])
-    #     end
-    #     if Δγ[i] < 0 # safer
-    #         αγ_ort = min(αγ_ort, - τort * γ[i] / Δγ[i])
-    #     end
-    # end
-    # αγ < 1e-6 && println("Small step.")
-    # αγ < 1e-6 && println("γ: ", scn.(γ[2:4]))
-    # αγ < 1e-6 && println("Δγ:", scn.(Δγ[2:4]))
-    # println("s  ", scn.(s[2:4], digits=15), "   Δs ", scn.(Δs[2:4], digits=15))
-    # println("s  = ", scn.(s[2:4], digits=15))
-    # println("Δs = ", scn.(Δs[2:4], digits=15))
-    # println("γ  = ", γ[2:4])
-    # println("Δγ = ", Δγ[2:4])
-    # println("αs ", scn(αs), "   αγ ", scn(αγ), "   αs_ort ", scn(αs_ort), "   αγ_ort ", scn(αγ_ort))
-    α = min(αs_soc, αγ_soc, αs_ort, αγ_ort)
-    (α > 0) && (α < mechanism.α) && (mechanism.α = α)
-    return
+    return min(α, αs_soc, αγ_soc, αs_ort, αγ_ort)
 end
 
-function feasibilityStepLength!(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
+function feasibilityStepLength!(α, mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
         vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc,Cs<:Tuple{Union{ImpactBound{T,N},LinearContactBound{T,N}}},N½}
     s = ineqc.ssol[2]
     γ = ineqc.γsol[2]
     Δs = vector_entry.value[1:N½]
     Δγ = vector_entry.value[N½ .+ (1:N½)]
 
-    if scaling
-        W, Wi, λ = nt_scaling(ineqc)
-        αs_ort = ort_step_length(λ, Wi'*Δs, τ = τort)
-        αγ_ort = ort_step_length(λ,  W'*Δγ, τ = τort)
-    else
-        αs_ort = ort_step_length(s, Δs, τ = τort)
-        αγ_ort = ort_step_length(γ, Δγ, τ = τort)
-    end
 
-    # αs_ort = 1.0
-    # αγ_ort = 1.0
-    # for i = 1:N½
-    #     if Δs[i] < 0 # safer
-    #         αs_ort = min(αs_ort, - τort * s[i] / Δs[i])
-    #     end
-    #     if Δγ[i] < 0 # safer
-    #         αγ_ort = min(αγ_ort, - τort * γ[i] / Δγ[i])
-    #     end
-    # end
-    α = min(αs_ort, αγ_ort)
-    (α > 0) && (α < mechanism.α) && (mechanism.α = α)
-    return
+    αs_ort = ort_step_length(s, Δs, τ = τort)
+    αγ_ort = ort_step_length(γ, Δγ, τ = τort)
+
+    return min(α, αs_ort, αγ_ort)
 end
 
 function centering!(mechanism::Mechanism, αaff::T) where {T}
     system = mechanism.system
 
     n = 0
-    mechanism.ν = 0.0
-    mechanism.νaff = 0.0
+    ν = 0.0
+    νaff = 0.0
     for ineqc in mechanism.ineqconstraints
-        n += centering!(mechanism, ineqc, getentry(system, ineqc.id), αaff)
+        ν, νaff, n = centering!(ν, νaff, n, mechanism, ineqc, getentry(system, ineqc.id), αaff)
     end
 
-    mechanism.ν /= n
-    mechanism.νaff /= n
-    return
+    ν /= n
+    νaff /= n
+    return ν, νaff
 end
 
-function centering!(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}, vector_entry::Entry, αaff) where {T,N,Nc,Cs,N½}
+function centering!(ν, νaff, n, mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}, vector_entry::Entry, αaff) where {T,N,Nc,Cs,N½}
     s = ineqc.ssol[2]
     γ = ineqc.γsol[2]
     Δs = vector_entry.value[1:N½]
     Δγ = vector_entry.value[N½ .+ (1:N½)]
-    mechanism.ν += dot(s, γ)
-    mechanism.νaff += dot(s + αaff * Δs, γ + αaff * Δγ) # plus or minus
-    return cone_degree(ineqc)
+    ν += dot(s, γ)
+    νaff += dot(s + αaff * Δs, γ + αaff * Δγ) # plus or minus
+    return ν, νaff, cone_degree(ineqc)
 end
 
 function ort_step_length(λ::AbstractVector{T}, Δ::AbstractVector{T}; τ::T = 0.99) where {T}
@@ -159,9 +105,6 @@ end
 function soc_step_length(λ::AbstractVector{T}, Δ::AbstractVector{T};
         τ::T=0.99, ϵ::T=1e-14) where {T}
     # check Section 8.2 CVXOPT
-    # The CVXOPT linear and quadratic cone program solvers
-
-    # Adding to slack ϵ to make sure that we never get out of the cone
     λ0 = λ[1]
     λ_λ = max(λ0^2 - λ[2:end]' * λ[2:end], 1e-25)
     if λ_λ < 0.0
@@ -174,11 +117,6 @@ function soc_step_length(λ::AbstractVector{T}, Δ::AbstractVector{T};
     ρs = λ_Δ / λ_λ
     ρv = Δ[2:end] / sqrt(λ_λ)
     ρv -= (λ_Δ / sqrt(λ_λ) + Δ[1]) / (λ0 / sqrt(λ_λ) + 1) * λ[2:end] / λ_λ
-    # we make sre that the inverse always exists with ϵ,
-    # if norm(ρv) - ρs) is negative (Δ is pushing towards a more positive cone)
-        # the computation is ignored and we get the maximum value for α = 1.0
-    # else we have α = τ / norm(ρv) - ρs)
-    # we add ϵ to the denumerator to ensure strict positivity and avoid 1e-16 errors.
     α = 1.0
     if norm(ρv) - ρs > 0.0
         α = min(α, τ / (norm(ρv) - ρs))

@@ -3,7 +3,7 @@ function gethalfcheetah(; Δt::T=0.01, g::T=-9.81, cf::T=0.8,
     contact::Bool=true, contact_body::Bool=true) where T
 
     path = joinpath(@__DIR__, "../deps/halfcheetah.urdf")
-    mech = Mechanism(path, floating=false, g=g, Δt=Δt, spring=spring, damper=damper)
+    mech = Mechanism(path, false, T, g=g, Δt=Δt, spring=spring, damper=damper)
 
     if contact
         origin = Origin{T}()
