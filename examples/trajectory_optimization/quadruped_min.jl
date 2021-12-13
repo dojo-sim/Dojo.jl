@@ -35,14 +35,6 @@ xref = quadruped_trajectory(env.mechanism, r=0.05, z=0.29; Δx=-0.04, Δfront=0.
 zref = [min2max(env.mechanism, x) for x in xref]
 visualize(env, xref)
 
-# ## gravity compensation TODO: solve optimization problem instead
-mech = getmechanism(:quadruped, Δt=dt, g=gravity, cf=0.8, damper=1000.0, spring=30.0)
-initialize!(mech, :quadruped)
-storage = simulate!(mech, 5.0, record=true, verbose=false)
-visualize(mech, storage, vis=env.vis)
-ugc = gravity_compensation(mech)
-u_control = ugc[6 .+ (1:12)]
-
 # ## horizon 
 T = 21 
 
@@ -57,15 +49,15 @@ model = [dyn for t = 1:T-1]
 
 # ## rollout
 x1 = xref[1]
-ū = [u_control for t = 1:T-1]
+ū = [zeros(m) for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 x̄ = rollout(model, x1, ū, w)
 visualize(env, x̄)
 
 # Objective
 qt = [0.3; 0.05; 0.05; 0.01 * ones(3); 0.01 * ones(3); 0.01 * ones(3); fill([0.2, 0.001], 12)...]
-ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(Δt * qt) * (x - xref[t]) + transpose(u) * Diagonal(Δt * 0.01 * ones(m)) * u for t = 1:T-1]
-oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(Δt * qt) * (x - xref[end])
+ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(dt * qt) * (x - xref[t]) + transpose(u) * Diagonal(dt * 0.01 * ones(m)) * u for t = 1:T-1]
+oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(dt * qt) * (x - xref[end])
 
 cts = Cost.(ots, n, m, d)
 cT = Cost(oT, n, 0, 0)
@@ -77,13 +69,13 @@ function goal(x, u, w)
     return Δ[collect(1:3)]
 end
 
-cont = Constraint()
-conT = Constraint(goal, n, 0)
+cont = IterativeLQR.Constraint()
+conT = IterativeLQR.Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
-prob = problem_data(model, obj, cons)
-initialize_controls!(prob, ū)
-initialize_states!(prob, x̄)
+prob = IterativeLQR.problem_data(model, obj, cons)
+IterativeLQR.initialize_controls!(prob, ū)
+IterativeLQR.initialize_states!(prob, x̄)
 
 # Solve
 IterativeLQR.solve!(prob,
@@ -99,10 +91,3 @@ IterativeLQR.solve!(prob,
 
 x_sol, u_sol = get_trajectory(prob)
 visualize(env, x_sol)
-
-
-# vector damper and spring 
-i = 0 
-for eqc in env.mechanism.eqconstraints
-    @show eqc 
-end

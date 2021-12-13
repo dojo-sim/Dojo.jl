@@ -62,32 +62,6 @@ end
     return
 end
 
-@inline function residual_violation(mechanism::Mechanism)
-    violation = 0.0
-    for eq in mechanism.eqconstraints 
-        res = g(mechanism, eq)
-        violation = max(violation, norm(res, Inf))
-    end
-    for body in mechanism.bodies
-        res = g(mechanism, body)
-        violation = max(violation, norm(res, Inf))
-    end
-    for ineq in mechanism.ineqconstraints 
-        res = g(mechanism, ineq)
-        violation = max(violation, norm(res, Inf))
-    end
-    return violation
-end
-
-@inline function bilinear_violation(mechanism::Mechanism)
-    violation = 0.0
-    for ineq in mechanism.ineqconstraints 
-        comp = complementarity(mechanism, ineq)
-        violation = max(violation, norm(comp, Inf))
-    end
-    return violation
-end
-
 @inline function ∂gab∂ʳba(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, body1::Body, body2::Body) where {T,Nn,Ne,Nb,Ni}
     Δt = mechanism.Δt
     _, _, q1, ω1 = fullargssol(body1.state)

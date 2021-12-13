@@ -1,4 +1,4 @@
-mutable struct EqualityConstraint{T,N,Nc,Cs} <: AbstractConstraint{T,N}
+mutable struct EqualityConstraint{T,N,Nc,Cs} <: Constraint{T,N}
     id::Int64
     name::String
     isspring::Bool
@@ -12,9 +12,9 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: AbstractConstraint{T,N}
     λsol::Vector{SVector{N,T}}
 
     function EqualityConstraint(data...; name::String="")
-        jointdata = Tuple{AbstractJoint,Int64,Int64}[]
+        jointdata = Tuple{Joint,Int64,Int64}[]
         for info in data
-            if info[1] isa AbstractJoint
+            if info[1] isa Joint
                 push!(jointdata, info)
             else
                 for subinfo in info
@@ -29,7 +29,7 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: AbstractConstraint{T,N}
         isdamper = false
         parentid = jointdata[1][2]
         childids = Int64[]
-        constraints = AbstractJoint{T}[]
+        constraints = Joint{T}[]
         inds = Vector{Int64}[]
         N = 0
         for set in jointdata
@@ -44,7 +44,7 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: AbstractConstraint{T,N}
             if isempty(inds)
                 push!(inds, [1;3-Nset])
             else
-                push!(inds, [last(inds)[2]+1;last(inds)[2]+3-Nset])
+                push!(inds, [last(inds)[2]+1; last(inds)[2]+3-Nset])
             end
             N += Nset
         end
@@ -55,7 +55,7 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: AbstractConstraint{T,N}
     end
 end
 
-function setPosition!(mechanism, eqc::EqualityConstraint, xθ; iter::Bool = true)
+function setPosition!(mechanism, eqc::EqualityConstraint, xθ; iter::Bool=true)
     if !iter
         _setPosition!(mechanism, eqc, xθ)
     else
@@ -79,11 +79,11 @@ function _setPosition!(mechanism, eqc::EqualityConstraint{T,N,Nc}, xθ) where {T
     body1 = getbody(mechanism, eqc.parentid)
     for i = 1:n
         body2 = getbody(mechanism, eqc.childids[i])
-        Δx = getPositionDelta(eqc.constraints[i], body1, body2, xθ[SUnitRange(eqc.inds[i][1],eqc.inds[i][2])]) # in body1's frame
-        Δq = getPositionDelta(eqc.constraints[i+1], body1, body2, xθ[SUnitRange(eqc.inds[i+1][1],eqc.inds[i+1][2])]) # in body1's frame
+        Δx = getPositionDelta(eqc.constraints[i], body1, body2, xθ[SUnitRange(eqc.inds[i][1], eqc.inds[i][2])]) # in body1's frame
+        Δq = getPositionDelta(eqc.constraints[i+1], body1, body2, xθ[SUnitRange(eqc.inds[i+1][1], eqc.inds[i+1][2])]) # in body1's frame
 
         p1, p2 = eqc.constraints[i].vertices
-        setPosition!(body1, body2; p1 = p1, p2 = p2, Δx = Δx, Δq = Δq)
+        setPosition!(body1, body2; p1=p1, p2=p2, Δx=Δx, Δq=Δq)
     end
     return
 end
@@ -95,11 +95,10 @@ function setVelocity!(mechanism, eqc::EqualityConstraint{T,N,Nc}, vω) where {T,
     body1 = getbody(mechanism, eqc.parentid)
     for i = 1:n
         body2 = getbody(mechanism, eqc.childids[i])
-        Δv = getVelocityDelta(eqc.constraints[i], body1, body2, vω[SUnitRange(eqc.inds[i][1],eqc.inds[i][2])]) # projection in body1 frame
-        Δω = getVelocityDelta(eqc.constraints[i+1], body1, body2, vω[SUnitRange(eqc.inds[i+1][1],eqc.inds[i+1][2])]) # projection in body1 frame
-
+        Δv = getVelocityDelta(eqc.constraints[i], body1, body2, vω[SUnitRange(eqc.inds[i][1], eqc.inds[i][2])]) # projection in body1 frame
+        Δω = getVelocityDelta(eqc.constraints[i+1], body1, body2, vω[SUnitRange(eqc.inds[i+1][1], eqc.inds[i+1][2])]) # projection in body1 frame
         p1, p2 = eqc.constraints[i].vertices
-        setVelocity!(body1, body2; p1 = p1, p2 = p2, Δv = Δv, Δω = Δω)
+        setVelocity!(body1, body2; p1=p1, p2=p2, Δv=Δv, Δω=Δω)
     end
     return
 end
@@ -217,7 +216,6 @@ end
 @inline ∂gab∂ʳba(mechanism, body::Body, eqc::EqualityConstraint) = -∂g∂ʳpos(mechanism, eqc, body)', ∂g∂ʳvel(mechanism, eqc, body)
 @inline ∂gab∂ʳba(mechanism, eqc::EqualityConstraint, body::Body) = ∂g∂ʳvel(mechanism, eqc, body), -∂g∂ʳpos(mechanism, eqc, body)'
 
-
 @generated function ∂g∂ʳposa(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     vec = [:(∂g∂ʳposa(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
@@ -231,10 +229,12 @@ end
     vec = [:(∂g∂ʳself(eqc.constraints[$i])) for i = 1:Nc]
     return :(Diagonal(vcat($(vec...))))
 end
+
 @generated function ∂g∂ʳvela(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     vec = [:(∂g∂ʳvela(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
+
 @generated function ∂g∂ʳvelb(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     vec = [:(∂g∂ʳvelb(eqc.constraints[$i], getbody(mechanism, eqc.parentid), body, eqc.childids[$i], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
@@ -247,6 +247,7 @@ end
     end
     return vec
 end
+
 @inline function springforceb(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
@@ -274,6 +275,7 @@ end
     vec = [:(∂Fτ∂ua(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), mechanism.Δt, eqc.childids[$i])) for i = 1:Nc]
     return :(hcat($(vec...)))
 end
+
 @generated function ∂Fτ∂ub(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     vec = [:(∂Fτ∂ub(eqc.constraints[$i], getbody(mechanism, eqc.parentid), body, mechanism.Δt, eqc.childids[$i])) for i = 1:Nc]
     return :(hcat($(vec...)))
@@ -296,8 +298,8 @@ function Base.cat(eqc1::EqualityConstraint{T,N1,Nc1}, eqc2::EqualityConstraint{T
         nothingflag = false
     end
 
-    constraints = [[eqc1.constraints[i] for i=1:Nc1];[eqc2.constraints[i] for i=1:Nc2]]
-    childids = [[eqc1.childids[i] for i=1:Nc1];[eqc2.childids[i] for i=1:Nc2]]
+    constraints = [[eqc1.constraints[i] for i=1:Nc1]; [eqc2.constraints[i] for i=1:Nc2]]
+    childids = [[eqc1.childids[i] for i=1:Nc1]; [eqc2.childids[i] for i=1:Nc2]]
 
     eqc = EqualityConstraint([(constraints[i],parentid,childids[i]) for i=1:Nc1+Nc2]..., name="combined_"*eqc1.name*"_and_"*eqc2.name)
     nothingflag && (eqc.parentid = nothing)
@@ -320,4 +322,16 @@ function set_spring_damper!(eqcs, spring, damper)
         i += 1
     end
     return eqcs
+end
+
+@inline function ∂g∂ʳpos(mechanism, constraint::Constraint, body::Body)
+    if body.id == constraint.parentid 
+        return ∂g∂ʳposa(mechanism, constraint, body)
+    else
+        return ∂g∂ʳposb(mechanism, constraint, body)
+    end
+end
+
+@inline function ∂g∂ʳvel(mechanism, constraint::Constraint, body::Body)
+    body.id == constraint.parentid ? (return ∂g∂ʳvela(mechanism, constraint, body)) : (return ∂g∂ʳvelb(mechanism, constraint, body))
 end

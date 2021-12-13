@@ -1,5 +1,5 @@
 # Dojo
-A differentiable simulator for rigid-body systems in maximal coordinates.
+A differentiable rigid-body-dynamics simulator for robot motion planning.
 
 ## Simulation 
 
@@ -7,7 +7,7 @@ A differentiable simulator for rigid-body systems in maximal coordinates.
 
 ### Dzhanibekov Effect
 
-### Tippy Top
+### Tippe Top
 
 ## Trajectory Optimization 
 
@@ -22,3 +22,5 @@ A differentiable simulator for rigid-body systems in maximal coordinates.
 ### Quadruped 
 
 ## Reinforcement Learning 
+
+## Real-To-Sim

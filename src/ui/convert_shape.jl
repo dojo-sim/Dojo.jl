@@ -36,7 +36,7 @@ function convertshape(capsule::Capsule)
     return [cyl, cap1, cap2] 
 end
 
-function convertshape(shapes::Shapes14) 
+function convertshape(shapes::Shapes) 
     geom = []
     for s in shapes.shape
         push!(geom, convertshape(s))

@@ -28,16 +28,6 @@ function feasibilityStepLength!(mechanism::Mechanism; τort::T=0.95, τsoc::T=0.
     return α
 end
 
-# function feasibilityStepLength!(α, mechanism::Mechanism{T}, body::Body{T}, vector_entry::Entry; τ::T=0.99) where {T}
-#     Δt = mechanism.Δt
-#     Δω = vector_entry.value[SA[4; 5; 6]]
-#     ω = body.state.ϕsol[2]
-
-#     α_poly = polynomial_step_length(ω, Δω, τ * 1/Δt)
-
-#     return min(α, α_poly)
-# end
-
 function feasibilityStepLength!(α, mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
         vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
     
@@ -89,7 +79,8 @@ function centering!(ν, νaff, n, mechanism, ineqc::InequalityConstraint{T,N,Nc,
     Δγ = vector_entry.value[N½ .+ (1:N½)]
     ν += dot(s, γ)
     νaff += dot(s + αaff * Δs, γ + αaff * Δγ) # plus or minus
-    return ν, νaff, cone_degree(ineqc)
+    n += cone_degree(ineqc)
+    return ν, νaff, n
 end
 
 function ort_step_length(λ::AbstractVector{T}, Δ::AbstractVector{T}; τ::T = 0.99) where {T}
@@ -176,22 +167,29 @@ end
     return dot(d1, d1) + dot(d2, d2)
 end
 
-function f(x, a, b, c)
-    return a * x^2  + b * x + c
+@inline function residual_violation(mechanism::Mechanism)
+    violation = 0.0
+    for eq in mechanism.eqconstraints 
+        res = g(mechanism, eq)
+        violation = max(violation, norm(res, Inf))
+    end
+    for body in mechanism.bodies
+        res = g(mechanism, body)
+        violation = max(violation, norm(res, Inf))
+    end
+    for ineq in mechanism.ineqconstraints 
+        res = g(mechanism, ineq)
+        violation = max(violation, norm(res, Inf))
+    end
+    return violation
 end
 
-function polynomialsolution(a, b, c)
-    Δ = b^2 - 4a*c
-    xp = (-b + sqrt(Δ))/ (2a)
-    xm = (-b - sqrt(Δ))/ (2a)
-    return xp, xm
+@inline function bilinear_violation(mechanism::Mechanism)
+    violation = 0.0
+    for ineq in mechanism.ineqconstraints 
+        comp = complementarity(mechanism, ineq)
+        violation = max(violation, norm(comp, Inf))
+    end
+    return violation
 end
 
-function polynomial_step_length(ω::AbstractVector{T}, Δ::AbstractVector{T}, β::T) where {T}
-    a = Δ' * Δ
-    b = 2Δ' * ω
-    c = ω' * ω - β^2
-    α = maximum(polynomialsolution(a, b, c))
-    α = clamp(α, 0.0, 1.0)
-    return α
-end

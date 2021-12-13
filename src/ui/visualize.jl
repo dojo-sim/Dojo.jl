@@ -38,7 +38,7 @@ function preparevis!(storage::Storage{T,N}, id, shape, animation, shapevisualize
     return
 end
 
-function MeshCat.setobject!(subvisshape, visshape, shapes::Shapes14; transparent=false)
+function MeshCat.setobject!(subvisshape, visshape, shapes::Shapes; transparent=false)
     for (i, s) in enumerate(shapes.shape)
         v = subvisshape["component_$i"]
         setobject!(v, visshape[i], s, transparent=transparent)

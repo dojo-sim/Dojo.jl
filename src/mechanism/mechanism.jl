@@ -43,7 +43,7 @@ function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, eqcs::Vector{<:
 
     for node in nodes
         node.id = oldnewid[node.id]
-        if typeof(node) <: AbstractConstraint
+        if typeof(node) <: Constraint
             node.parentid = get(oldnewid, node.parentid, nothing)
             node.childids = [get(oldnewid, childid, nothing) for childid in node.childids]
         end
