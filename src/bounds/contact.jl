@@ -177,8 +177,8 @@ end
     # (cf γ - ψ) dependent of ψ = γsol[2][1:1]
     # B(z) * zdot - sβ dependent of sβ = ssol[2][2:end]
     cf = ineqc.constraints[1].cf
-    γ = ineqc.γsol[2] + SVector{4}([1e-10,0,0,0]) # TODO need to check this is legit
-    s = ineqc.ssol[2] + SVector{4}([1e-10,0,0,0]) # TODO need to check this is legit
+    γ = ineqc.γsol[2] + 1e-10*neutral_vector(ineqc.constraints[1]) # TODO need to check this is legit
+    s = ineqc.ssol[2] + 1e-10*neutral_vector(ineqc.constraints[1]) # TODO need to check this is legit
 
     # ∇s = [ineqc.γsol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])]
     ∇s1 = hcat(γ[1], szeros(1,3))
