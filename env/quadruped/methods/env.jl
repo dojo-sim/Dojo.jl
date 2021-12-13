@@ -30,13 +30,14 @@ function quadruped(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81, cf=0.8,
 
     u_prev = zeros(nu)
     control_mask = [zeros(nu, 6) I(nu)] 
+    control_scaling = Diagonal(ones(nu))
 
     build_robot(vis, mechanism)
 
     TYPES = [Quadruped, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
     Environment{TYPES...}(mechanism, mode, aspace, ospace, 
         x, fx, fu,
-        u_prev, control_mask,
+        u_prev, control_mask, control_scaling,
         nx, nu, no,
         info,
         [rng], vis,

@@ -38,17 +38,17 @@ end
 @inline function lineStep!(α::T, body::Body, vector_entry::Entry, scale; ϕmax = Inf) where T
     body.state.vsol[2] = body.state.vsol[1] + 1 / (2^scale) * α * vector_entry.value[SA[1; 2; 3]]
     body.state.ϕsol[2] = body.state.ϕsol[1] + 1 / (2^scale) * α * vector_entry.value[SA[4; 5; 6]]
-    # @warn "clipping ϕ might not be the best solution, we might add an IP constraints on this variable instead."
     ϕ = body.state.ϕsol[2]
     ϕnorm = dot(ϕ, ϕ)
     if ϕnorm > ϕmax
+        @warn "clipping"
         body.state.ϕsol[2] *= ϕmax / ϕnorm
     end
     return
 end
 
 @inline function lineStep!(α::T, eqc::EqualityConstraint, vector_entry::Entry, scale) where T
-    eqc.λsol[2] = eqc.λsol[1] + 1.0 / (2^scale) * vector_entry.value
+    eqc.λsol[2] = eqc.λsol[1] + 1.0 / (2^scale) * α * vector_entry.value
     return
 end
 
