@@ -8,19 +8,31 @@ function gethumanoid(; Δt::T=0.01, g::T=-9.81, cf=0.8, spring=0.0, damper=0.0, 
         eqs = Vector{EqualityConstraint{T}}(collect(mech.eqconstraints))
 
         # Foot contact
-        left_foot = getbody(mech, "left_foot") 
+        left_foot = getbody(mech, "left_foot")
 
-        pfl = [0.5 * left_foot.shape.shape[1].rh[2]; 0.0; 0.0]
-        ofl = [0.0; 0.0; left_foot.shape.shape[1].rh[1]]
-        pbl = [-0.5 * left_foot.shape.shape[1].rh[2]; 0.0; 0.0]
-        obl = [0.0; 0.0; left_foot.shape.shape[1].rh[1]]
+		aa = -0.43000 * [-0.44721, 0.00000, 0.89442]
+		ql = axisangle2quaternion(aa)
+        qll = ql * UnitQuaternion(RotXYZ(roll=-1.57080, pitch=1.47585, yaw=-1.47585)) # roll pitch yaw
+        qlr = ql * UnitQuaternion(RotXYZ(roll=+1.57080, pitch=1.47585, yaw=+1.47585)) # roll pitch yaw
+
+
+
+        pfll = vrotate([ 0.5 * left_foot.shape.shape[1].rh[2] + 0.03500; -0.03; 0.0], qll)
+        pbll = vrotate([-0.5 * left_foot.shape.shape[1].rh[2] + 0.03500; -0.03; 0.0], qll)
+        pflr = vrotate([ 0.5 * left_foot.shape.shape[1].rh[2] + 0.03500; +0.01; 0.0], qlr)
+        pblr = vrotate([-0.5 * left_foot.shape.shape[1].rh[2] + 0.03500; +0.01; 0.0], qlr)
+        o = [0.0; 0.0; left_foot.shape.shape[1].rh[1]]
         contacts = [
-                    pfl,
-                    pbl,
+                    pfll,
+                    pbll,
+                    pflr,
+                    pblr,
                    ]
         offsets = [
-                    ofl,
-                    obl,
+                    o,
+                    o,
+                    o,
+                    o,
                   ]
         n = length(contacts)
         normal = [[0;0;1.0] for i = 1:n]
@@ -28,7 +40,7 @@ function gethumanoid(; Δt::T=0.01, g::T=-9.81, cf=0.8, spring=0.0, damper=0.0, 
 
         contineqcs_left = contactconstraint(left_foot, normal, cfs, p = contacts, offset=offsets)
 
-        right_foot = getbody(mech, "right_foot") 
+        right_foot = getbody(mech, "right_foot")
 
         pfr = [0.5 * right_foot.shape.shape[1].rh[2]; 0.0; 0.0]
         ofr = [0.0; 0.0; right_foot.shape.shape[1].rh[1]]
@@ -49,7 +61,8 @@ function gethumanoid(; Δt::T=0.01, g::T=-9.81, cf=0.8, spring=0.0, damper=0.0, 
         contineqcs_right = contactconstraint(right_foot, normal, cfs, p = contacts, offset=offsets)
 
         setPosition!(mech, geteqconstraint(mech, "auto_generated_floating_joint"), [0;0;1.2;0.1;0.;0.])
-        mech = Mechanism(origin, bodies, eqs, [contineqcs_left; contineqcs_right], g = g, Δt = Δt, spring=spring, damper=damper)
+        # mech = Mechanism(origin, bodies, eqs, [contineqcs_left; contineqcs_right], g = g, Δt = Δt, spring=spring, damper=damper)
+        mech = Mechanism(origin, bodies, eqs, [contineqcs_left; ], g = g, Δt = Δt, spring=spring, damper=damper)
     end
     return mech
 end
@@ -60,3 +73,24 @@ function initializehumanoid!(mechanism::Mechanism; tran=[0,0,1.5], rot=[0.1,0,0]
 end
 
 
+
+# vis = Visualizer()
+# open(vis)
+
+gravity = -9.81
+dt = 0.05
+cf = 0.8
+damper = 5.0
+spring = 10.0
+mech = gethumanoid(g=gravity, Δt=dt, cf=cf, damper=damper, spring=spring)
+initialize!(mech, :humanoid, rot = [0,0,0.])
+storage = simulate!(mech, 0.3, record = true, verbose = false)
+visualize(mech, storage, vis=vis, show_contact = true)
+
+aa = [-1.57080, 1.47585, -1.47585]
+qq = axisangle2quaternion(aa)
+rotation_vector(qq)
+
+RotXYZ(roll=r, pitch=p, yaw=y)
+
+UnitQuaternion(RotXYZ(roll=-1.57080, pitch=1.47585, yaw=-1.47585))

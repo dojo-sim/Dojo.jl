@@ -14,6 +14,10 @@ vrotate(v::StaticVector,q::UnitQuaternion) = q*v
 @inline ∂vrotate∂q(p::AbstractVector, q::UnitQuaternion) = VLmat(q) * Lmat(UnitQuaternion(p)) * Tmat() + VRᵀmat(q) * Rmat(UnitQuaternion(p))
 
 rotation_vector(q::UnitQuaternion) = rotation_angle(q) * rotation_axis(q)
+@inline function axisangle2quaternion(v)
+    θ = norm(v)
+    q = UnitQuaternion(cos(θ/2), 1/2 * sinc(θ/(2π)) * v)
+end
 
 Lmat(q) = lmult(q)
 Lᵀmat(q) = lmult(q)'

@@ -20,9 +20,9 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
-mech = getmechanism(:quadruped, Δt = 0.01, g = -9.81, cf = 0.8, contact = true)
-initialize!(mech, :quadruped, tran = [0,0,0.56], rot = [0.10,0.05,0.03], initangle = 0.95)
-@elapsed storage = simulate!(mech, 0.5, record = true, solver = :mehrotra!, verbose = true)
+mech = getmechanism(:quadruped, Δt = 0.01, g = -9.81, cf = 0.8, contact = true, damper = 1.0, spring = 30.0)
+initialize!(mech, :quadruped, tran = [0,0,0.56], rot = [0.10,0.05,0.03], θ = 0.95)
+@elapsed storage = simulate!(mech, 0.5, record = true, verbose = false)
 visualize(mech, storage, vis = vis)
 
 Δt_ = 0.001

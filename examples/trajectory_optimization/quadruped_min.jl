@@ -3,31 +3,34 @@ using IterativeLQR
 # ## system
 include(joinpath(@__DIR__, "../../env/quadruped/methods/template.jl"))
 
+# ## visualizer
+vis = Visualizer()
+open(vis)
+
 gravity = -9.81
 dt = 0.05
-cf = 0.8 
-damper = 5.0 
-spring = 0.0
-env = make("quadruped", 
-    mode=:min, 
+cf = 0.8
+damper = 5.0
+spring = 10.0
+env = make("quadruped",
+    mode=:min,
     dt=dt,
     g=gravity,
-    cf=cf, 
-    damper=damper, 
-    spring=spring)
+    cf=cf,
+    damper=damper,
+    spring=spring,
+	vis = vis)
 
-# ## visualizer 
-open(env.vis) 
 
 # ## simulate (test)
-initialize!(env.mechanism, :quadruped)
-storage = simulate!(env.mechanism, 0.5, record=true, verbose=false)
+initialize!(env.mechanism, :quadruped, tran = [0,0,0.5])
+storage = simulate!(env.mechanism, 1.5, record=true, verbose=true)
 visualize(env.mechanism, storage, vis=env.vis)
 
-# ## dimensions 
-n = env.nx 
-m = env.nu 
-d = 0 
+# ## dimensions
+n = env.nx
+m = env.nu
+d = 0
 
 # ## reference trajectory
 initialize!(env.mechanism, :quadruped)
@@ -35,12 +38,12 @@ xref = quadruped_trajectory(env.mechanism, r=0.05, z=0.29; Δx=-0.04, Δfront=0.
 zref = [min2max(env.mechanism, x) for x in xref]
 visualize(env, xref)
 
-# ## horizon 
-T = 21 
+# ## horizon
+T = 21
 
-# ## model 
+# ## model
 dyn = IterativeLQR.Dynamics(
-    (y, x, u, w) -> f(y, env, x, u, w), 
+    (y, x, u, w) -> f(y, env, x, u, w),
     (dx, x, u, w) -> fx(dx, env, x, u, w),
     (du, x, u, w) -> fu(du, env, x, u, w),
     n, n, m, d)
