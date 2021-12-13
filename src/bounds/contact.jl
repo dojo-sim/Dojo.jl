@@ -81,7 +81,7 @@ function g(bound::ContactBound, s::AbstractVector{T}, γ::AbstractVector{T},
         x3::AbstractVector{T}, q3::UnitQuaternion{T}, v25::AbstractVector{T},
         ϕ25::AbstractVector{T}) where {T}
 
-    # transforms the velocities of the origin of the link into velocities 
+    # transforms the velocities of the origin of the link into velocities
     vp = v25 + skew(vrotate(ϕ25, q3)) * (vrotate(bound.p, q3) - bound.offset)
     SVector{4,T}(
         bound.ainv3 * (x3 + vrotate(bound.p, q3) - bound.offset) - s[1],
@@ -177,8 +177,8 @@ end
     # (cf γ - ψ) dependent of ψ = γsol[2][1:1]
     # B(z) * zdot - sβ dependent of sβ = ssol[2][2:end]
     cf = ineqc.constraints[1].cf
-    γ = ineqc.γsol[2]
-    s = ineqc.ssol[2]
+    γ = ineqc.γsol[2] + SVector{4}([1e-10,0,0,0]) # TODO need to check this is legit
+    s = ineqc.ssol[2] + SVector{4}([1e-10,0,0,0]) # TODO need to check this is legit
 
     # ∇s = [ineqc.γsol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])]
     ∇s1 = hcat(γ[1], szeros(1,3))
@@ -197,6 +197,9 @@ end
 
     # matrix_entry.value = [[ineqc.γsol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])] [ineqc.ssol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.ssol[2][2:4]); szeros(1,4); cf -1 0 0; szeros(2,4)]]
     matrix_entry.value = hcat(∇s, ∇γ)
+    # @show scn.(s)
+    # @show scn.(γ)
+    # @show hcat(∇s, ∇γ)
 
     # [-γsol .* ssol + μ; -g + s]
     vector_entry.value = vcat(-complementarityμ(mechanism, ineqc), -g(mechanism, ineqc))

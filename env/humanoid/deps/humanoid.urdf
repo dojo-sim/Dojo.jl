@@ -215,13 +215,15 @@
 		<visual>
 			<origin rpy="-1.57080 1.47585 -1.47585" xyz="0.03500 0.03000 0.00000"/>
 			<geometry>
-				<capsule length="0.21095" radius="0.02700"/>
+				<!-- <capsule length="0.21095" radius="0.02700"/> -->
+				<capsule length="0.000005" radius="0.02700"/>
 			</geometry>
 		</visual>
 		<visual>
 			<origin rpy="1.57080 1.47585 1.47585" xyz="0.03500 -0.01000 0.00000"/>
 			<geometry>
-				<capsule length="0.21095" radius="0.02700"/>
+				<!-- <capsule length="0.21095" radius="0.02700"/> -->
+				<capsule length="0.000005" radius="0.02700"/>
 			</geometry>
 		</visual>
 	</link>
