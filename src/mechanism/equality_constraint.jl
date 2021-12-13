@@ -10,7 +10,7 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: Constraint{T,N}
     inds::SVector{Nc,SVector{2,Int64}} # indices for minimal coordinates, assumes joints # Nc = 2 THIS IS SPECIAL CASED
 
     λsol::Vector{SVector{N,T}}
-
+    
     function EqualityConstraint(data...; name::String="")
         jointdata = Tuple{Joint,Int64,Int64}[]
         for info in data

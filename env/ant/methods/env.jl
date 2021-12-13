@@ -4,7 +4,7 @@
 struct Ant end 
 
 function ant(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
-    cf::T=1.0, spring::T=50.0, damper::T=50.0, s::Int=1, 
+    cf::T=0.5, spring::T=50.0, damper::T=50.0, s::Int=1, 
     contact::Bool=true, contact_body=true,
     info=nothing, vis::Visualizer=Visualizer(),
     opts_step=InteriorPointOptions(), opts_grad=InteriorPointOptions()) where T
@@ -67,7 +67,7 @@ function step(env::Environment{Ant}, x, u; diff=false)
     xposafter = env.x[1] 
 
     # forward reward 
-    forward_reward = (xposafter - xposbefore) / Δt 
+    forward_reward = 10.0 * (xposafter - xposbefore) / Δt 
 
     # control cost
     ctrl_cost = (0.5 * u' * u)[1]
@@ -80,7 +80,7 @@ function step(env::Environment{Ant}, x, u; diff=false)
     end
 
     # survive reward 
-    survive_reward = 1.0 
+    survive_reward = 0.1
 
     # total reward 
     reward = forward_reward - ctrl_cost - contact_cost + survive_reward
@@ -137,23 +137,23 @@ function _get_obs(env::Environment{Ant,T}) where T
     return [env.x; contact_force]
 end
 
-env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=25.0, spring=150.0, contact=true, contact_body=true)
-total_mass(env.mechanism)
+# env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=25.0, spring=25.0, contact=true, contact_body=true)
+# total_mass(env.mechanism)
 
-# initialize!(env.mechanism, :ant)
-open(env.vis)
-# storage = simulate!(env.mechanism, 1.0, record=true, verbose=false)
-# visualize(env.mechanism, storage, vis=env.vis)
+# # initialize!(env.mechanism, :ant)
+# open(env.vis)
+# # storage = simulate!(env.mechanism, 1.0, record=true, verbose=false)
+# # visualize(env.mechanism, storage, vis=env.vis)
 
-reset(env)
-render(env)
-x0 = getMinState(env.mechanism)
+# reset(env)
+# render(env)
+# x0 = getMinState(env.mechanism)
 
-for i = 1:100
-    u = 1.0 * rand(Distributions.Uniform(-1.0, 1.0), 8)
-    x0, r, _ = step(env, x0, u)
-    @show r
-    render(env)
-end
+# for i = 1:100
+#     u = 1.0 * rand(Distributions.Uniform(-1.0, 1.0), 8)
+#     x0, r, _ = step(env, x0, u)
+#     @show r
+#     render(env)
+# end
 
 

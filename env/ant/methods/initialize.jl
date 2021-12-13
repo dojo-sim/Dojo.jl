@@ -20,7 +20,7 @@ function getant(; Δt::T=0.05, g::T=-9.81, cf::T=1.0,
 
     for body in mech.bodies 
         body.m *= 10.0 
-        body.J *= 10.0^2 
+        body.J *= 10.0
     end
 
     if contact

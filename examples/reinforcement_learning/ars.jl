@@ -56,8 +56,8 @@ mutable struct Policy{T}
     θ::Matrix{T}
 end
 
-function Policy(input_size::Int, output_size::Int, hp::HyperParameters{T}) where {T}
-    return Policy{T}(hp, zeros(output_size, input_size))
+function Policy(input_size::Int, output_size::Int, hp::HyperParameters{T}; scale=1.0e-1) where {T}
+    return Policy{T}(hp, scale * randn(output_size, input_size))
 end
 
 function evaluate(policy::Policy{T}, input::AbstractVector{T}) where {T}
