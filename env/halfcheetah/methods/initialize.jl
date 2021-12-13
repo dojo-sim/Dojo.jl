@@ -17,14 +17,14 @@ function gethalfcheetah(; Δt::T=0.01, g::T=-9.81, cf::T=0.8,
             body = getbody(mech, name)
             if name == "torso" # need special case for torso
                 # torso
-                pf = [+0.5 * body.shape.shape[1].rh[2];0;0]
-                pb = [-0.5 * body.shape.shape[1].rh[2];0;0]
+                pf = [+0.5 * body.shape.shape[1].rh[2]; 0.0; 0.0]
+                pb = [-0.5 * body.shape.shape[1].rh[2]; 0.0; 0.0]
                 o = [0;0; body.shape.shape[1].rh[1]]
                 push!(bounds, contactconstraint(body, normal, cf, p=pf, offset=o))
                 push!(bounds, contactconstraint(body, normal, cf, p=pb, offset=o))
 
                 # head 
-                pf = [+0.5 * body.shape.shape[1].rh[2] + 0.214;0;0.1935]
+                pf = [+0.5 * body.shape.shape[1].rh[2] + 0.214; 0.0; 0.1935]
                 o = [0;0; body.shape.shape[2].rh[1]]
                 push!(bounds, contactconstraint(body, normal, cf, p=pf, offset=o))
             else

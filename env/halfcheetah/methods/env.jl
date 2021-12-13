@@ -63,7 +63,7 @@ function reset(env::Environment{HalfCheetah}; x=nothing, reset_noise_scale = 0.1
 
         low = -reset_noise_scale
         high = reset_noise_scale
-        x = x0 + (high - low) .* rand(env.rng[1], nx) .+ low # we ignored the normla distribution on the velocities
+        x = x0 + (high - low) .* rand(env.rng[1], nx) .+ low # we ignored the normal distribution on the velocities
         z = min2max(env.mechanism, x)
         setState!(env.mechanism, z)
         if env.mode == :min

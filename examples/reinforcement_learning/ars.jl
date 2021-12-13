@@ -7,7 +7,6 @@ using Statistics
 import LinearAlgebra.normalize
 import GeometryBasics.update
 
-
 # ARS options: hyper parameters
 @with_kw struct HyperParameters{T}
     main_loop_size::Int = 100

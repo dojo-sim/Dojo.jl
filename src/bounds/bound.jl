@@ -57,7 +57,7 @@ end
 # signed distance function
 function sdf(ineqc::InequalityConstraint{T,N,Nc,Cs}, x::AbstractVector{T}, q::UnitQuaternion{T}) where {T,N,Nc,Cs<:Tuple{<:Bound{T,N}}}
     cont = ineqc.constraints[1]
-    return cont.ainv3 * (x + vrotate(cont.p,q) - cont.offset)
+    return cont.ainv3 * (x + vrotate(cont.p, q) - cont.offset)
 end
 
 # contact location

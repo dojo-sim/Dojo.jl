@@ -119,9 +119,9 @@ function module_dir()
     return joinpath(@__DIR__, "..", "..")
 end
 
-function mean(x)
-	return sum(x) / length(x)
-end
+# function Dojo.mean(x)
+# 	return sum(x) / length(x)
+# end
 
 function fdjac(f, x; δ = 1e-5)
     n = length(f(x))

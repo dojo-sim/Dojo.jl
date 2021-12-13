@@ -216,7 +216,9 @@ function getMaxState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	return z
 end
 
-function getMinState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
+function getMinState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}; 
+	pos_noise=nothing, vel_noise=nothing, 
+	pos_noise_range=[-Inf, Inf], vel_noise_range=[-3.9 / mechanism.Δt^2, 3.9 / mechanism.Δt^2]) where {T,Nn,Ne,Nb,Ni}
 	# z = [[x2, v15, q2, ϕ15]body1  [x2, v15, q2, ϕ15]body2 ....]
 	x = []
 	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
@@ -229,8 +231,18 @@ function getMinState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 		for (i,joint) in enumerate(eqc.constraints)
 			cbody = getbody(mechanism, eqc.childids[i])
 			pbody = getbody(mechanism, eqc.parentid)
-			push!(c, minimalCoordinates(joint, pbody, cbody)...)
-			push!(v, minimalVelocities(joint, pbody, cbody)...)
+			# push!(c, minimalCoordinates(joint, pbody, cbody)...)
+			# push!(v, minimalVelocities(joint, pbody, cbody)...)
+			pos = minimalCoordinates(joint, pbody, cbody)
+			vel = minimalVelocities(joint, pbody, cbody)
+			if pos_noise != nothing
+				pos += clamp.(length(pos) == 1 ? rand(pos_noise, length(pos))[1] : rand(pos_noise, length(pos)), pos_noise_range...)
+			end
+			if vel_noise != nothing 
+				vel += clamp.(length(vel) == 1 ? rand(vel_noise, length(vel))[1] : rand(vel_noise, length(vel)), vel_noise_range...)
+			end
+			push!(c, pos...)
+			push!(v, vel...)
 		end
 		push!(x, [c; v]...)
 	end

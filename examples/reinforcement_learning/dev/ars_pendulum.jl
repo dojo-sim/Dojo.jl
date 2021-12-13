@@ -28,6 +28,7 @@ hp = HyperParameters(main_loop_size = 500, horizon = 100, n_directions = 4, b = 
 normalizer = Normalizer(input_size)
 policy = Policy(input_size, output_size, hp)
 train(env, policy, normalizer, hp)
-display_policy(env, policy, normalizer, hp)
+traj = display_policy(env, policy, normalizer, hp)
+visualize(env, traj)
 
 # policy.θ = 1.5*[1.0 -0.3]
