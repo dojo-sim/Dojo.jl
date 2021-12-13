@@ -80,26 +80,26 @@ end
 # vis = Visualizer()
 # open(vis)
 
-gravity = -1.0
-dt = 0.01
-cf = 0.8
-damper = 0.1
-spring = 0.0
-mech = gethumanoid(g=gravity, Δt=dt, cf=cf, damper=damper, spring=spring)
-initialize!(mech, :humanoid, rot = [0,0,0.3], tran = [0,0,2.0])
-storage = simulate!(mech, 8.0, record = true, verbose = true,
-	opts = InteriorPointOptions(rtol = 1e-10, btol = 1e-6, verbose = false))
+# gravity = -1.0
+# dt = 0.01
+# cf = 0.8
+# damper = 0.1
+# spring = 0.0
+# mech = gethumanoid(g=gravity, Δt=dt, cf=cf, damper=damper, spring=spring)
+# initialize!(mech, :humanoid, rot = [0,0,0.3], tran = [0,0,2.0])
+# storage = simulate!(mech, 8.0, record = true, verbose = true,
+# 	opts = InteriorPointOptions(rtol = 1e-10, btol = 1e-6, verbose = false))
 
 
-visualize(mech, storage, vis=vis, show_contact = true)
+# visualize(mech, storage, vis=vis, show_contact = true)
 
-aa = [-1.57080, 1.47585, -1.47585]
-qq = axisangle2quaternion(aa)
-rotation_vector(qq)
+# aa = [-1.57080, 1.47585, -1.47585]
+# qq = axisangle2quaternion(aa)
+# rotation_vector(qq)
 
-RotXYZ(roll=r, pitch=p, yaw=y)
+# RotXYZ(roll=r, pitch=p, yaw=y)
 
-UnitQuaternion(RotXYZ(roll=-1.57080, pitch=1.47585, yaw=-1.47585))
+# UnitQuaternion(RotXYZ(roll=-1.57080, pitch=1.47585, yaw=-1.47585))
 
 
 

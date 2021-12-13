@@ -20,6 +20,8 @@ using GeometryBasics
 using LightGraphs
 using DocStringExtensions
 
+using Statistics 
+using Distributions
 
 export Origin,
     Body,
@@ -178,6 +180,6 @@ include(joinpath("..", "env", "environment.jl"))
 
 # Utilities
 include(joinpath("..", "examples", "trajectory_optimization", "utils.jl"))
-# include(joinpath("..", "examples", "reinforcement_learning", "ars.jl"))
+include(joinpath("..", "examples", "reinforcement_learning", "ars.jl"))
 
 end
