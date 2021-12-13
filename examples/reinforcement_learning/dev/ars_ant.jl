@@ -25,7 +25,7 @@ initializeant!(env.mechanism, pos = [1.3,0,0], rot = [0,0,0.])
 env.x .= getMinState(env.mechanism)
 render(env)
 
-hp = HyperParameters(main_loop_size = 30, horizon = 120, n_directions = 6, b = 6, step_size = 0.02)
+hp = HyperParameters(main_loop_size = 30, horizon = 150, n_directions = 6, b = 6, step_size = 0.02)
 
 input_size = length(obs)
 output_size = length(env.u_prev)

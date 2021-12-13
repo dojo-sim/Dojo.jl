@@ -67,11 +67,11 @@ function step(env::Environment{Ant}, x, u; diff=false)
     xposafter = env.x[1]
 
     # forward reward
-    forward_reward = 10*(xposafter - xposbefore) / Δt
+    forward_reward = 2*(xposafter - xposbefore) / Δt
 
     # control cost
     # ctrl_cost = (0.5 * u' * u)[1]
-	ctrl_cost = (0.1 * u' * u)[1]
+	ctrl_cost = (0.05 * u' * u)[1]
 
     # contact cost
     contact_cost = 0.0
