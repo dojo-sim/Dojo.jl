@@ -1,10 +1,10 @@
 ################################################################################
 # Ant
 ################################################################################
-struct Ant end 
+struct Ant end
 
 function ant(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
-    cf::T=1.0, spring::T=50.0, damper::T=50.0, s::Int=1, 
+    cf::T=1.0, spring::T=50.0, damper::T=50.0, s::Int=1,
     contact::Bool=true, contact_body=true,
     info=nothing, vis::Visualizer=Visualizer(),
     opts_step=InteriorPointOptions(), opts_grad=InteriorPointOptions()) where T
@@ -14,7 +14,7 @@ function ant(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
 
     if mode == :min
         nx = minCoordDim(mechanism)
-    elseif mode == :max 
+    elseif mode == :max
         nx = maxCoordDim(mechanism)
     end
     nu = 8
@@ -28,7 +28,7 @@ function ant(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     z = getMaxState(mechanism)
     x = mode == :min ? max2min(mechanism, z) : z
 
-    fx = zeros(nx, nx) 
+    fx = zeros(nx, nx)
     fu = zeros(nx, nu)
 
     u_prev = zeros(nu)
@@ -38,7 +38,7 @@ function ant(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     build_robot(vis, mechanism)
 
     TYPES = [Ant, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
-    env = Environment{TYPES...}(mechanism, mode, aspace, ospace, 
+    env = Environment{TYPES...}(mechanism, mode, aspace, ospace,
         x, fx, fu,
         u_prev, control_mask, control_scaling,
         nx, nu, no,
@@ -62,29 +62,31 @@ function step(env::Environment{Ant}, x, u; diff=false)
     z0 = env.mode == :min ? min2max(mechanism, x0) : x0
     z1 = step!(mechanism, z0, u_scaled; opts=env.opts_step)
     env.x .= env.mode == :min ? max2min(mechanism, z1) : z1
-    
-    # x position (after)
-    xposafter = env.x[1] 
 
-    # forward reward 
-    forward_reward = (xposafter - xposbefore) / Δt 
+    # x position (after)
+    xposafter = env.x[1]
+
+    # forward reward
+    forward_reward = 10*(xposafter - xposbefore) / Δt
 
     # control cost
-    ctrl_cost = (0.5 * u' * u)[1]
+    # ctrl_cost = (0.5 * u' * u)[1]
+	ctrl_cost = (0.1 * u' * u)[1]
 
-    # contact cost 
-    contact_cost = 0.0 
+    # contact cost
+    contact_cost = 0.0
 
     for ineq in mechanism.ineqconstraints
         contact_cost += 0.5 * 1.0e-3 * max(-1.0, min(1.0, ineq.γsol[2][1]))^2.0
     end
 
-    # survive reward 
-    survive_reward = 1.0 
+    # survive reward
+	# survive_reward = 1.0
+    survive_reward = 0.05
 
-    # total reward 
+    # total reward
     reward = forward_reward - ctrl_cost - contact_cost + survive_reward
-    
+
     # done ?
     done = !(all(isfinite.(env.x)) && (env.x[3] >= 0.2) && (env.x[3] <= 1.0))
 
@@ -104,15 +106,15 @@ function step(env::Environment{Ant}, x, u; diff=false)
     return _get_obs(env), reward, done, info
 end
 
-function reset(env::Environment{Ant}; 
+function reset(env::Environment{Ant};
     x=nothing,
-    pos_noise=Distributions.Uniform(-0.1, 0.1), 
+    pos_noise=Distributions.Uniform(-0.1, 0.1),
     vel_noise=Distributions.Normal(0.0, 0.01))
 
     initialize!(env.mechanism, type2symbol(Ant))
 
     if x != nothing
-        env.x = x
+        env.x .= x
     else
         x = getMinState(env.mechanism, pos_noise=pos_noise, vel_noise=vel_noise)
         if env.mode == :min
@@ -136,24 +138,3 @@ function _get_obs(env::Environment{Ant,T}) where T
     end
     return [env.x; contact_force]
 end
-
-env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=25.0, spring=150.0, contact=true, contact_body=true)
-total_mass(env.mechanism)
-
-# initialize!(env.mechanism, :ant)
-open(env.vis)
-# storage = simulate!(env.mechanism, 1.0, record=true, verbose=false)
-# visualize(env.mechanism, storage, vis=env.vis)
-
-reset(env)
-render(env)
-x0 = getMinState(env.mechanism)
-
-for i = 1:100
-    u = 1.0 * rand(Distributions.Uniform(-1.0, 1.0), 8)
-    x0, r, _ = step(env, x0, u)
-    @show r
-    render(env)
-end
-
-

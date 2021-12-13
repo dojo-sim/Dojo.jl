@@ -185,3 +185,24 @@ function display_policy(env::Environment, policy::Policy, normalizer::Normalizer
 
     return traj
 end
+
+# display learned policy
+function display_random_policy(env::Environment, hp::HyperParameters; rendering = false)
+    state = reset(env)
+    traj = [state]
+    done = false
+    num_plays = 1.
+    reward_evaluation = 0
+    while !done && num_plays < hp.horizon
+        rendering && render(env)
+        sleep(env.mechanism.Δt)
+        push!(traj, copy(state))
+        action = sample(env.aspace)
+        state, reward, done, _ = step(env, action)
+        reward_evaluation += reward
+        num_plays += 1
+    end
+    close(env)
+
+    return traj
+end
