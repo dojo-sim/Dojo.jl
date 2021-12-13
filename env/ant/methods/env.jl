@@ -107,14 +107,14 @@ end
 function reset(env::Environment{Ant}; 
     x=nothing,
     pos_noise=Distributions.Uniform(-0.1, 0.1), 
-    vel_noise=Distributions.Normal(0.0, 0.1))
+    vel_noise=Distributions.Normal(0.0, 0.01))
 
     initialize!(env.mechanism, type2symbol(Ant))
 
     if x != nothing
         env.x = x
     else
-        x = getMinState(env.mechanism)#, pos_noise=pos_noise, vel_noise=vel_noise)
+        x = getMinState(env.mechanism, pos_noise=pos_noise, vel_noise=vel_noise)
         if env.mode == :min
             setState!(env.mechanism, min2max(env.mechanism, x))
             env.x .= x
@@ -137,21 +137,23 @@ function _get_obs(env::Environment{Ant,T}) where T
     return [env.x; contact_force]
 end
 
-# env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=25.0, spring=10.0, contact=true, contact_body=true)
-# # initialize!(env.mechanism, :ant)
-# open(env.vis)
-# # storage = simulate!(env.mechanism, 1.0, record=true, verbose=false)
-# # visualize(env.mechanism, storage, vis=env.vis)
+env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=25.0, spring=150.0, contact=true, contact_body=true)
+total_mass(env.mechanism)
 
-# reset(env)
-# render(env)
-# # env.x[3] += 0.1
-# x0 = getMinState(env.mechanism)
+# initialize!(env.mechanism, :ant)
+open(env.vis)
+# storage = simulate!(env.mechanism, 1.0, record=true, verbose=false)
+# visualize(env.mechanism, storage, vis=env.vis)
 
-# for i = 1:100
-#     u = rand(Distributions.Uniform(-1.0, 1.0), 8)
-#     x0, _ = step(env, x0, u)
-#     render(env)
-# end
+reset(env)
+render(env)
+x0 = getMinState(env.mechanism)
+
+for i = 1:100
+    u = 1.0 * rand(Distributions.Uniform(-1.0, 1.0), 8)
+    x0, r, _ = step(env, x0, u)
+    @show r
+    render(env)
+end
 
 
