@@ -107,6 +107,7 @@ function parse_xmaterial(xmaterial, materialdict, T)
 end
 
 function parse_shape(xvisual, materialdict, T)
+# function parse_shape(xvisual, materialdict, T, xb, qb)
 
     if xvisual === nothing
         shape = nothing
@@ -116,6 +117,8 @@ function parse_shape(xvisual, materialdict, T)
 
         color = parse_xmaterial(find_element(xvisual, "material"), materialdict, T)
         x, q = parse_pose(find_element(xvisual, "origin"), T)
+        # x = vrotate(x - xb, inv(qb))
+        # q = inv(qb) * q
 
         shapenodes = LightXML.XMLElement[]
         for node in child_nodes(xgeometry)  # node is an instance of XMLNode
@@ -138,7 +141,7 @@ function parse_shape(xvisual, materialdict, T)
     return shape
 end
 
-function get_shape(shapenode, x, q, color, T) 
+function get_shape(shapenode, x, q, color, T)
     if name(shapenode) == "box"
         xyz = parse_vector(shapenode, "size", T, default = "1 1 1")
         shape = Box(xyz..., zero(T), color = color, xoffset = x, qoffset = q)
@@ -164,17 +167,18 @@ function get_shape(shapenode, x, q, color, T)
     else
         @info "Unknown geometry."
         shape = nothing
-    end 
+    end
 end
 
 function parse_link(xlink, materialdict, T)
     x, q, m, J = parse_inertia(find_element(xlink, "inertial"), T)
     xvisuals = get_elements_by_tagname(xlink, "visual")
     shapes = [parse_shape(xvisual, materialdict, T) for xvisual in xvisuals]
-    if length(shapes) == 0 
-        shape = nothing 
+    # shapes = [parse_shape(xvisual, materialdict, T, x, q) for xvisual in xvisuals]
+    if length(shapes) == 0
+        shape = nothing
     elseif length(shapes) > 1
-        s = [s.shape for s in shapes] 
+        s = [s.shape for s in shapes]
         shape = Shapes(s, 0.0, diagm([0.0; 0.0; 0.0]))
     else
         shape = shapes[1]

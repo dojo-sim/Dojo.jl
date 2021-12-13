@@ -12,12 +12,20 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: Constraint{T,N}
     λsol::Vector{SVector{N,T}}
     
     function EqualityConstraint(data...; name::String="")
+        @show "here"
         jointdata = Tuple{Joint,Int64,Int64}[]
+        @show typeof(data)
         for info in data
+            @show typeof(info)
+            @show typeof(info[1])
+            @show typeof(info[1]) <: Joint
+
             if info[1] isa Joint
+                @show typeof(info[1])
                 push!(jointdata, info)
             else
                 for subinfo in info
+                    @show typeof(subinfo)
                     push!(jointdata, subinfo)
                 end
             end
@@ -310,8 +318,8 @@ end
 function set_spring_damper!(eqcs, spring, damper)
     i = 1
     for eqc in eqcs
-        eqc.parentid === nothing && continue 
-        k = (length(spring) > 1) ? spring[i] : spring 
+        eqc.parentid === nothing && continue
+        k = (length(spring) > 1) ? spring[i] : spring
         b = (length(damper) > 1) ? damper[i] : damper
         eqc.isspring = k > 0.0
         eqc.isdamper = b > 0.0
@@ -325,7 +333,7 @@ function set_spring_damper!(eqcs, spring, damper)
 end
 
 @inline function ∂g∂ʳpos(mechanism, constraint::Constraint, body::Body)
-    if body.id == constraint.parentid 
+    if body.id == constraint.parentid
         return ∂g∂ʳposa(mechanism, constraint, body)
     else
         return ∂g∂ʳposb(mechanism, constraint, body)

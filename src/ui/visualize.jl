@@ -117,10 +117,10 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N};
         if show_contact
             for (jd, ineq) in enumerate(mechanism.ineqconstraints)
                 if ineq.parentid == body.id
-                    @show shape.xoffset
-                    @show shape.qoffset
-                    @show ineq.constraints[1].offset[3]
-                    @show ineq.constraints[1].p
+                    # @show shape.xoffset
+                    # @show shape.qoffset
+                    # @show ineq.constraints[1].offset[3]
+                    # @show ineq.constraints[1].p
                     # contact_shape = Sphere(abs(1.0 * ineq.constraints[1].offset[3]),
                     #     xoffset=(shape.xoffset + ineq.constraints[1].p),
                     #     qoffset=copy(shape.qoffset), color=RGBA(1.0, 0.0, 0.0, 1.0))
@@ -132,8 +132,8 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N};
                     subvisframe = nothing
                     showshape = false
                     if visshape !== nothing
-                        subvisshape = vis["bodies/body:"*string(id)]
-                        # subvisshape = vis["bodies/contact:"*string(id)*"$jd"]
+                        # subvisshape = vis["bodies/body:"*string(id)]
+                        subvisshape = vis["bodies/contact:"*string(id)*"$jd"]
                         setobject!(subvisshape,visshape,contact_shape,transparent=false)
                         showshape = true
                     end
