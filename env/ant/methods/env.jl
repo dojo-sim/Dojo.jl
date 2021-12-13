@@ -4,11 +4,7 @@
 struct Ant end
 
 function ant(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
-<<<<<<< HEAD
-    cf::T=0.5, spring::T=50.0, damper::T=50.0, s::Int=1, 
-=======
-    cf::T=1.0, spring::T=50.0, damper::T=50.0, s::Int=1,
->>>>>>> 0ee8e9fb0e09cba1825d471db491f5d96843e894
+    cf::T=0.5, spring::T=50.0, damper::T=50.0, s::Int=1,
     contact::Bool=true, contact_body=true,
     info=nothing, vis::Visualizer=Visualizer(),
     opts_step=InteriorPointOptions(), opts_grad=InteriorPointOptions()) where T
@@ -70,13 +66,8 @@ function step(env::Environment{Ant}, x, u; diff=false)
     # x position (after)
     xposafter = env.x[1]
 
-<<<<<<< HEAD
-    # forward reward 
-    forward_reward = 10.0 * (xposafter - xposbefore) / Δt 
-=======
     # forward reward
     forward_reward = 2*(xposafter - xposbefore) / Δt
->>>>>>> 0ee8e9fb0e09cba1825d471db491f5d96843e894
 
     # control cost
     # ctrl_cost = (0.5 * u' * u)[1]
@@ -89,14 +80,9 @@ function step(env::Environment{Ant}, x, u; diff=false)
         contact_cost += 0.5 * 1.0e-3 * max(-1.0, min(1.0, ineq.γsol[2][1]))^2.0
     end
 
-<<<<<<< HEAD
-    # survive reward 
-    survive_reward = 0.1
-=======
     # survive reward
 	# survive_reward = 1.0
     survive_reward = 0.05
->>>>>>> 0ee8e9fb0e09cba1825d471db491f5d96843e894
 
     # total reward
     reward = forward_reward - ctrl_cost - contact_cost + survive_reward
@@ -171,5 +157,3 @@ end
 #     @show r
 #     render(env)
 # end
-
-

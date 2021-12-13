@@ -1,20 +1,22 @@
-mutable struct Translational{T,N,N̄} <: Joint{T,N}
+mutable struct Translational{T,N,N̄,Nl} <: Joint{T,N}
     V3::Adjoint{T,SVector{3,T}} # in body1's frame
     V12::SMatrix{2,3,T,6} # in body1's frame
     vertices::NTuple{2,SVector{3,T}} # in body1's & body2's frames
     spring::T
     damper::T
     spring_offset::SVector{N̄,T}
+    joint_limits::Vector{SVector{Nl,T}} # lower and upper limits on the joint minimal coordinate angles
     Fτ::SVector{3,T}
-    function Translational{T,N,N̄}(body1::Component, body2::Component;
+    function Translational{T,N,N̄,Nl}(body1::Component, body2::Component;
             p1::AbstractVector = szeros(T,3), p2::AbstractVector = szeros(T,3), axis::AbstractVector = szeros(T,3),
-            spring = zero(T), damper = zero(T), spring_offset = szeros(T,N̄)
-        ) where {T,N,N̄}
+            spring = zero(T), damper = zero(T), spring_offset = szeros(T,N̄),
+            joint_limits = [szeros(T,Nl), szeros(T,Nl)],
+        ) where {T,N,N̄,Nl}
         vertices = (p1, p2)
         V1, V2, V3 = orthogonalrows(axis)
         V12 = [V1;V2]
         Fτ = zeros(T,3)
-        new{T,N,N̄}(V3, V12, vertices, spring, damper, spring_offset, Fτ), body1.id, body2.id
+        new{T,N,N̄,Nl}(V3, V12, vertices, spring, damper, spring_offset, joint_limits, Fτ), body1.id, body2.id
     end
 end
 szeros(Float64, 1)
