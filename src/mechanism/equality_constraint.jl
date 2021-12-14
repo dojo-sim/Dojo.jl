@@ -41,7 +41,6 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: Constraint{T,N}
                 push!(inds, [last(inds)[2]+1; last(inds)[2]+3-Nset])
             end
             N += Nset
-            N += 4joint_limits_length(set[1])
         end
         constraints = Tuple(constraints)
         Nc = length(constraints)
