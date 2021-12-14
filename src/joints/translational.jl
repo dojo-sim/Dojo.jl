@@ -10,7 +10,7 @@ mutable struct Translational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N}
 
     function Translational{T,Nλ}(body1::Component, body2::Component;
             p1::AbstractVector = szeros(T,3), p2::AbstractVector = szeros(T,3), axis::AbstractVector = szeros(T,3),
-            spring = zero(T), damper = zero(T), spring_offset = szeros(T,N̄),
+            spring = zero(T), damper = zero(T), spring_offset = szeros(T,3-Nλ),
             joint_limits = [szeros(T,0), szeros(T,0)],
         ) where {T,Nλ}
         vertices = (p1, p2)

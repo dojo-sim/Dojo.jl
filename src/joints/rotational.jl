@@ -103,69 +103,59 @@ end
 
 
 ## Derivatives NOT accounting for quaternion specialness
-@inline function ∂g∂posa(joint::Rotational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η)
-    X = szeros(T, N + 2Nl, 3)
+@inline function ∂g∂posa(joint::Rotational{T,Nλ,Nb,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
+    X = szeros(T, N, 3)
     Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, UnitQuaternion(q..., false), xb, qb, η), vector(qa))
     return X, Q
 end
-@inline function ∂g∂posb(joint::Rotational{T,N,N̄,Nl}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,N,N̄,Nl}
-    X = szeros(T, N + 2Nl, 3)
+@inline function ∂g∂posb(joint::Rotational{T,Nλ,Nb,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
+    X = szeros(T, N, 3)
     Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, qa, xb, UnitQuaternion(q..., false), η), vector(qb))
     return X, Q
 end
-@inline function ∂g∂posb(joint::Rotational{T,N,N̄,Nl}, xb::AbstractVector, qb::UnitQuaternion, η) where {T,N,N̄,Nl}
-    X = szeros(T, N + 2Nl, 3)
+@inline function ∂g∂posb(joint::Rotational{T,Nλ,Nb,N}, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
+    X = szeros(T, N, 3)
     Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xb, UnitQuaternion(q..., false), η), vector(qb))
     return X, Q
 end
 
-@inline function ∂g∂ʳposa(joint::Rotational{T,N,N̄,Nl}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,N,N̄,Nl}
+@inline function ∂g∂ʳposa(joint::Rotational{T,Nλ,Nb,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
-    # @show "hello"
-    # @show X
-    # @show Q
-    # @show constraintmat(joint)
-    # @show Q * LVᵀmat(qa)
-    # return nothing
     return [
-            constraintmat(joint) * [X Q * LVᵀmat(qa)];
-            # zeros(2Nl, 6);
             -nullspacemat(joint) * [X Q * LVᵀmat(qa)];
              nullspacemat(joint) * [X Q * LVᵀmat(qa)];
+            constraintmat(joint) * [X Q * LVᵀmat(qa)];
            ]
 end
-@inline function ∂g∂ʳposb(joint::Rotational{T,N,N̄,Nl}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,N,N̄,Nl}
+@inline function ∂g∂ʳposb(joint::Rotational{T,Nλ,Nb,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa)
     return [
-            constraintmat(joint) * [X Q * LVᵀmat(qb)];
-            # zeros(2Nl, 6);
             -nullspacemat(joint) * [X Q * LVᵀmat(qb)];
              nullspacemat(joint) * [X Q * LVᵀmat(qb)];
+            constraintmat(joint) * [X Q * LVᵀmat(qb)];
            ]
 end
-@inline function ∂g∂ʳposb(joint::Rotational{T,N,N̄,Nl}, xb::AbstractVector, qb::UnitQuaternion, η) where {T,N,N̄,Nl}
+@inline function ∂g∂ʳposb(joint::Rotational{T,Nλ,Nb,N}, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset)
     return [
-            constraintmat(joint) * [X Q * LVᵀmat(qb)];
-            # zeros(2Nl, 6);
             -nullspacemat(joint) * [X Q * LVᵀmat(qb)];
              nullspacemat(joint) * [X Q * LVᵀmat(qb)];
+            constraintmat(joint) * [X Q * LVᵀmat(qb)];
            ]
 end
 
 
-@inline function ∂g∂ʳself(joint::Rotational{T,N,N̄,0}, η) where {T,N,N̄}
+@inline function ∂g∂ʳself(joint::Rotational{T,Nλ,0}, η) where {T,Nλ}
     return Diagonal(1e-10 * sones(T,N))
 end
 
-@inline function ∂g∂ʳself(joint::Rotational{T,N,N̄,Nl}, η) where {T,N,N̄,Nl}
-    # return 1e-10 * sones(T,N)
+@inline function ∂g∂ʳself(joint::Rotational{T,Nλ,Nb,N}, η) where {T,Nλ,Nb,N}
     [
-     zeros(N, N + 4Nl);
-     zeros(2Nl, N) Diagonal(ones(2Nl)) zeros(2Nl, 2Nl);
+     Diagonal(ones(Nb)) zeros(Nb,Nλ+Nb);
+     zeros(Nλ, N);
     ]
 end
 
