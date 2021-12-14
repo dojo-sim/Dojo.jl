@@ -252,7 +252,7 @@ end
 end
 
 @generated function ∂g∂ʳself(mechanism, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
-    vec = [:(∂g∂ʳself(eqc.constraints[$i], eqc.λsol[2])) for i = 1:Nc]
+    vec = [:(∂g∂ʳself(eqc.constraints[$i], eqc.λsol[2][λindex(eqc,$i)])) for i = 1:Nc]
     return :(cat($(vec...), dims=(1,2)))
 end
 

@@ -1,5 +1,6 @@
 @inline function setDandΔs!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry, component::Component)
     matrix_entry.value = ∂g∂ʳself(mechanism, component)
+    # @show ∂g∂ʳself(mechanism, component)
     vector_entry.value = -g(mechanism, component)
     return
 end
@@ -226,8 +227,8 @@ end
         res = g(mechanism, eq)
         @show res
         shift = 0
-        for (i, joint) in enumerate(eq.constraints) 
-            Nλ = λlength(joint) 
+        for (i, joint) in enumerate(eq.constraints)
+            Nλ = λlength(joint)
             Nb = blength(joint)
             subres = res[shift + 2Nb .+ (1:Nλ)]
             violation = max(violation, norm(subres, Inf))

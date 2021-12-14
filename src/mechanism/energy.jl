@@ -19,12 +19,12 @@ end
 """
 function momentum_body_new(mechanism::Mechanism{T}, body::Body{T}) where {T}
     Δt = mechanism.Δt
- 
+
     state = body.state
     x1, q1 = posargs1(state)
     x2, q2 = posargs2(state)
     x3, q3 = posargs3(state, Δt)
-    
+
     ezg = SA{T}[0; 0; -mechanism.g]
     D1x = - 1/Δt * body.m * (x2 - x1) + Δt/2 * body.m * ezg
     D2x =   1/Δt * body.m * (x3 - x2) + Δt/2 * body.m * ezg
@@ -39,6 +39,15 @@ function momentum_body_new(mechanism::Mechanism{T}, body::Body{T}) where {T}
     for (i, eqc) in enumerate(mechanism.eqconstraints)
         if body.id ∈ [eqc.parentid; eqc.childids]
 
+            # λ = []
+            # for (i, joint) in enumerate(eqc.constraints)
+            #     λi = eqc.λsol[2][λindex(eqc, i)]
+            #     si, γi = get_sγ(joint, λi)
+            #     push!(λ, λi[1:length(joint)])
+            #     push!(λ, γi)
+            # end
+
+            # f_joint = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * vcat(λ...)  # computed at 1.5
             f_joint = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]  # computed at 1.5
             eqc.isspring && (f_joint += springforce(mechanism, eqc, body)) # computed at 1.5
             eqc.isdamper && (f_joint += damperforce(mechanism, eqc, body)) # computed at 1.5
@@ -56,9 +65,9 @@ function momentum(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, storage::Storage{T,Ns}, t
     p = zeros(T, 6)
     com = center_of_mass(mechanism, storage, t)
     mass = total_mass(mechanism)
-    p_linear_body = [] 
-    p_angular_body = [] 
-    for body in mechanism.bodies 
+    p_linear_body = []
+    p_angular_body = []
+    for body in mechanism.bodies
         p = momentum_body_new(mechanism, body)
         push!(p_linear_body, p[1:3])
         push!(p_angular_body, p[4:6])
@@ -115,7 +124,7 @@ function kineticEnergy(mechanism::Mechanism, storage::Storage{T,N}, t::Int) wher
         vl = storage.vl[i][t]
         ωl = storage.ωl[i][t]
         ke += 0.5 * body.m * vl' * vl
-        ke += 0.5 * ωl' * body.J * ωl 
+        ke += 0.5 * ωl' * body.J * ωl
     end
     return ke
 end
