@@ -42,7 +42,7 @@ end
 
 
 
-mech = getmechanism(:pendulum, Δt = 0.01, g = -9.81)
+mech = getmechanism(:pendulum, Δt = 0.01, g = 9.81)
 initialize!(mech, :pendulum, ϕ1 = 0.1)
 resetVars!.(mech.eqconstraints)
 storage = simulate!(mech, 3.1, record = true, verbose = true)
