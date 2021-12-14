@@ -18,8 +18,15 @@ module_dir()
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 Δt_ = 0.01
-mech = getmechanism(:atlas, Δt = Δt_, g = -2.0, cf = 0.8, contact = true, spring = 0.0, damper = 50.0, model_type = :simple)
+mech = getmechanism(:atlas, Δt = Δt_, g = -2.0, cf = 0.8, contact = true,
+    spring = 0.0, damper = 50.0, model_type = :simple)
 initialize!(mech, :atlas, tran = [0,0,1.1], rot = [0.1,0.05,0])
+
+
+orig = Origin()
+body1 = Body(1.0, Diagonal([1,2,3.]))
+Fixed(orig, body1)
+
 
 function controller!(mechanism, k)
     for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])

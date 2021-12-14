@@ -9,25 +9,25 @@ mutable struct Rotational{T,N,N̄,Nl} <: Joint{T,N}
     joint_limits::Vector{SVector{Nl,T}} # lower and upper limits on the joint minimal coordinate angles
     Fτ::SVector{3,T}
 
-    function Rotational{T,N,N̄,Nl}(body1::Component, body2::Component;
+    function Rotational{T,N,N̄}(body1::Component, body2::Component;
             axis::AbstractVector = szeros(T,3), qoffset::UnitQuaternion = one(UnitQuaternion{T}),
             spring = zero(T), damper = zero(T), spring_offset = szeros(T,N̄),
-            joint_limits = [szeros(T,Nl), szeros(T,Nl)],
-        ) where {T,N,N̄,Nl}
+            joint_limits = [szeros(T,0), szeros(T,0)],
+        ) where {T,N,N̄}
 
         V1, V2, V3 = orthogonalrows(axis)
         V12 = [V1;V2]
 
         Fτ = zeros(T,3)
-
-        new{T,N,N̄,Nl}(V3, V12, qoffset, spring, damper, spring_offset, joint_limits, Fτ), body1.id, body2.id
+        nl = length(joint_limits[1])
+        new{T,N,N̄,nl}(V3, V12, qoffset, spring, damper, spring_offset, joint_limits, Fτ), body1.id, body2.id
     end
 end
 
-Rotational0 = Rotational{T,0,3} where T
-Rotational1 = Rotational{T,1,2} where T
-Rotational2 = Rotational{T,2,1} where T
-Rotational3 = Rotational{T,3,0} where T
+Rotational0{T,Nl} = Rotational{T,0,3,Nl} where {T,Nl}
+Rotational1{T,Nl} = Rotational{T,1,2,Nl} where {T,Nl}
+Rotational2{T,Nl} = Rotational{T,2,1,Nl} where {T,Nl}
+Rotational3{T,Nl} = Rotational{T,3,0,Nl} where {T,Nl}
 
 # Position level constraints (for dynamics)
 @inline function g(joint::Rotational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)

@@ -7,24 +7,24 @@ mutable struct Translational{T,N,N̄,Nl} <: Joint{T,N}
     spring_offset::SVector{N̄,T}
     joint_limits::Vector{SVector{Nl,T}} # lower and upper limits on the joint minimal coordinate angles
     Fτ::SVector{3,T}
-    function Translational{T,N,N̄,Nl}(body1::Component, body2::Component;
+    function Translational{T,N,N̄}(body1::Component, body2::Component;
             p1::AbstractVector = szeros(T,3), p2::AbstractVector = szeros(T,3), axis::AbstractVector = szeros(T,3),
             spring = zero(T), damper = zero(T), spring_offset = szeros(T,N̄),
-            joint_limits = [szeros(T,Nl), szeros(T,Nl)],
+            joint_limits = [szeros(T,0), szeros(T,0)],
         ) where {T,N,N̄,Nl}
         vertices = (p1, p2)
         V1, V2, V3 = orthogonalrows(axis)
         V12 = [V1;V2]
         Fτ = zeros(T,3)
-        new{T,N,N̄,Nl}(V3, V12, vertices, spring, damper, spring_offset, joint_limits, Fτ), body1.id, body2.id
+        nl = length(joint_limits[1])
+        new{T,N,N̄,nl}(V3, V12, vertices, spring, damper, spring_offset, joint_limits, Fτ), body1.id, body2.id
     end
 end
-szeros(Float64, 1)
 
-Translational0 = Translational{T,0,3} where T
-Translational1 = Translational{T,1,2} where T
-Translational2 = Translational{T,2,1} where T
-Translational3 = Translational{T,3,0} where T
+Translational0{T,Nl} = Translational{T,0,3,Nl} where {T,Nl}
+Translational1{T,Nl} = Translational{T,1,2,Nl} where {T,Nl}
+Translational2{T,Nl} = Translational{T,2,1,Nl} where {T,Nl}
+Translational3{T,Nl} = Translational{T,3,0,Nl} where {T,Nl}
 
 # Position level constraints (for dynamics)
 @inline function g(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
