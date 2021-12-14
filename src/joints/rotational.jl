@@ -34,94 +34,92 @@ Rotational3{T} = Rotational{T,3} where T
 
 
 # Position level constraints (for dynamics)
-@inline function g(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,Nλ}
+@inline function g(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     # typeof(joint) <: Rotational{Float64,1} && println(scn.(Vmat(qa \ qb / joint.qoffset)))
     return constraintmat(joint) *  Vmat(qa \ qb / joint.qoffset)
 end
 
-@inline function g(joint::Rotational{T,Nλ,0}, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,Nλ}
+@inline function g(joint::Rotational{T,Nλ,0}, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     # typeof(joint) <: Rotational{Float64,1} && println(scn.(Vmat(qb / joint.qoffset)))
     return constraintmat(joint) * Vmat(qb / joint.qoffset)
 end
 
 ## Derivatives NOT accounting for quaternion specialness
-@inline function ∂g∂posa(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,Nλ}
+@inline function ∂g∂posa(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
     return constraintmat(joint) * X, constraintmat(joint) * Q
 end
-@inline function ∂g∂posb(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,Nλ}
+@inline function ∂g∂posb(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa)
     return constraintmat(joint) * X, constraintmat(joint) * Q
 end
-@inline function ∂g∂posb(joint::Rotational{T,Nλ,0}, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,Nλ}
+@inline function ∂g∂posb(joint::Rotational{T,Nλ,0}, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset)
     return constraintmat(joint) * X, constraintmat(joint) * Q
 end
 
-@inline function ∂g∂ʳposa(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,Nλ}
-    X, Q = ∂g∂posa(joint, xa, qa, xb, qb, λ)
+@inline function ∂g∂ʳposa(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+    X, Q = ∂g∂posa(joint, xa, qa, xb, qb, η)
     Q = Q * LVᵀmat(qa)
     return [X Q]
 end
-@inline function ∂g∂ʳposb(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,Nλ}
-    X, Q = ∂g∂posb(joint, xa, qa, xb, qb, λ)
+@inline function ∂g∂ʳposb(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+    X, Q = ∂g∂posb(joint, xa, qa, xb, qb, η)
     Q = Q * LVᵀmat(qb)
     return [X Q]
 end
-@inline function ∂g∂ʳposb(joint::Rotational{T,Nλ,0}, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,Nλ}
-    X, Q = ∂g∂posb(joint, xb, qb, λ)
+@inline function ∂g∂ʳposb(joint::Rotational{T,Nλ,0}, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+    X, Q = ∂g∂posb(joint, xb, qb, η)
     Q = Q * LVᵀmat(qb)
     return [X Q]
 end
-
 
 ### w/ Limits
 # Position level constraints (for dynamics)
-@inline function g(joint::Rotational{T,N,N̄,Nl}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
+@inline function g(joint::Rotational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
     e1 = Vmat(qa \ qb / joint.qoffset)
     e2 = minimalCoordinates(joint, qa, qb)
-    s, γ = get_sγ(joint, λ)
+    s, γ = get_sγ(joint, η)
     return [
-            comp
-            s[1:Nl] - (joint.joint_limits[2] .- e2);
-            s[Nl .+ (1:Nl)] - (e2 .- joint.joint_limits[1]);
+            s[1:Nb½] - (joint.joint_limits[2] .- e2);
+            s[Nb½ .+ (1:Nb½)] - (e2 .- joint.joint_limits[1]);
             constraintmat(joint) * e1;
            ]
 end
 
-@inline function g(joint::Rotational{T,N,N̄,Nl}, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
+@inline function g(joint::Rotational{T,Nλ,Nb,N,Nb½}, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
     e1 = Vmat(qb / joint.qoffset)
     e2 = minimalCoordinates(joint, qb)
-    s, γ = get_sγ(joint, λ)
+    s, γ = get_sγ(joint, η)
     return [
-            s[1:Nl] - (joint.joint_limits[2] - e2);
-            s[Nl .+ (1:Nl)] - (e2 - joint.joint_limits[1]);
+            s[1:Nb½] - (joint.joint_limits[2] - e2);
+            s[Nb½ .+ (1:Nb½)] - (e2 - joint.joint_limits[1]);
             constraintmat(joint) * e1;
            ]
 end
 
 
 ## Derivatives NOT accounting for quaternion specialness
-@inline function ∂g∂posa(joint::Rotational{T,N,N̄,Nl}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
+@inline function ∂g∂posa(joint::Rotational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η)
     X = szeros(T, N + 2Nl, 3)
-    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, UnitQuaternion(q..., false), xb, qb, λ), vector(qa))
+    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, UnitQuaternion(q..., false), xb, qb, η), vector(qa))
     return X, Q
 end
-@inline function ∂g∂posb(joint::Rotational{T,N,N̄,Nl}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
+@inline function ∂g∂posb(joint::Rotational{T,N,N̄,Nl}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,N,N̄,Nl}
     X = szeros(T, N + 2Nl, 3)
-    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, qa, xb, UnitQuaternion(q..., false), λ), vector(qb))
+    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, qa, xb, UnitQuaternion(q..., false), η), vector(qb))
     return X, Q
 end
-@inline function ∂g∂posb(joint::Rotational{T,N,N̄,Nl}, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
+@inline function ∂g∂posb(joint::Rotational{T,N,N̄,Nl}, xb::AbstractVector, qb::UnitQuaternion, η) where {T,N,N̄,Nl}
     X = szeros(T, N + 2Nl, 3)
-    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xb, UnitQuaternion(q..., false), λ), vector(qb))
+    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xb, UnitQuaternion(q..., false), η), vector(qb))
     return X, Q
 end
 
-@inline function ∂g∂ʳposa(joint::Rotational{T,N,N̄,Nl}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
+@inline function ∂g∂ʳposa(joint::Rotational{T,N,N̄,Nl}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,N,N̄,Nl}
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
     # @show "hello"
@@ -137,7 +135,7 @@ end
              nullspacemat(joint) * [X Q * LVᵀmat(qa)];
            ]
 end
-@inline function ∂g∂ʳposb(joint::Rotational{T,N,N̄,Nl}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
+@inline function ∂g∂ʳposb(joint::Rotational{T,N,N̄,Nl}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,N,N̄,Nl}
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa)
     return [
@@ -147,7 +145,7 @@ end
              nullspacemat(joint) * [X Q * LVᵀmat(qb)];
            ]
 end
-@inline function ∂g∂ʳposb(joint::Rotational{T,N,N̄,Nl}, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
+@inline function ∂g∂ʳposb(joint::Rotational{T,N,N̄,Nl}, xb::AbstractVector, qb::UnitQuaternion, η) where {T,N,N̄,Nl}
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset)
     return [
@@ -159,11 +157,11 @@ end
 end
 
 
-@inline function ∂g∂ʳself(joint::Rotational{T,N,N̄,0}, λ) where {T,N,N̄}
+@inline function ∂g∂ʳself(joint::Rotational{T,N,N̄,0}, η) where {T,N,N̄}
     return Diagonal(1e-10 * sones(T,N))
 end
 
-@inline function ∂g∂ʳself(joint::Rotational{T,N,N̄,Nl}, λ) where {T,N,N̄,Nl}
+@inline function ∂g∂ʳself(joint::Rotational{T,N,N̄,Nl}, η) where {T,N,N̄,Nl}
     # return 1e-10 * sones(T,N)
     [
      zeros(N, N + 4Nl);

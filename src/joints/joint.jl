@@ -8,7 +8,7 @@ Base.zero(joint::Joint{T,Nλ}) where {T,Nλ} = szeros(T, Nλ, 6)
 
 λlength(joint::Joint{T,Nλ}) where {T,Nλ} = Nλ
 blength(joint::Joint{T,Nλ,Nb}) where {T,Nλ,Nb} = Nb
-ηlength(joint::Joint{T,Nλ,Nb,N}) where {T,Nλ,Nb,N} = N
+length(joint::Joint{T,Nλ,Nb,N}) where {T,Nλ,Nb,N} = N
 
 function get_sγ(joint::Joint{T,Nλ,Nb}, η) where {T,Nλ,Nb}
     s = η[1:Nb]
