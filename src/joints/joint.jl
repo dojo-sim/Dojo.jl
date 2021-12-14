@@ -204,7 +204,7 @@ end
 
 # Derivatives accounting for quaternion specialness
 @inline function ∂g∂ʳvela(joint::Joint, x2a::AbstractVector, q2a::UnitQuaternion, x2b::AbstractVector, q2b::UnitQuaternion,
-        x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector, λ, Δt, 
+        x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector, λ, Δt,
     )
 
     X, Q = ∂g∂posa(joint, x2a, q2a, x2b, q2b, λ)

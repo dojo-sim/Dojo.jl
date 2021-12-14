@@ -24,10 +24,13 @@ mutable struct Rotational{T,N,N̄,Nl} <: Joint{T,N}
     end
 end
 
+joint_limit_length(joint::Rotational{T,N,N̄,Nl}) where {T,N,N̄,Nl} = Nl
+
 Rotational0{T,Nl} = Rotational{T,0,3,Nl} where {T,Nl}
 Rotational1{T,Nl} = Rotational{T,1,2,Nl} where {T,Nl}
 Rotational2{T,Nl} = Rotational{T,2,1,Nl} where {T,Nl}
 Rotational3{T,Nl} = Rotational{T,3,0,Nl} where {T,Nl}
+
 
 # Position level constraints (for dynamics)
 @inline function g(joint::Rotational{T,N,N̄,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄}
@@ -65,7 +68,7 @@ end
     e2 = minimalCoordinates(joint, qa, qb)
     return [
             constraintmat(joint) * e1
-            s .* γ; 
+            s .* γ;
             joint.joint_limits[2] - e2;
             e2 - joint.joint_limits[1];
            ]
@@ -77,27 +80,27 @@ end
     s, γ = get_sγ(joint, λ)
     return [
             constraintmat(joint) * e1
-            s .* γ; 
+            s .* γ;
             s[1:Nl] - (joint.joint_limits[2] - e2);
             s[Nl .+ (1:Nl)] - (e2 - joint.joint_limits[1]);
            ]
 end
 
 function get_sγ(joint::Rotational{T,N,N̄,Nl}, λ) where {T,N,N̄,Nl}
-    s = λ[N .+ (1:(2 * Nl))] 
-    γ = λ[N + 2 * Nl .+ (1:(2 * Nl))] 
+    s = λ[N .+ (1:(2 * Nl))]
+    γ = λ[N + 2 * Nl .+ (1:(2 * Nl))]
     return s, γ
 end
 
 ## Derivatives NOT accounting for quaternion specialness
 @inline function ∂g∂posa(joint::Rotational{T,N,N̄,Nl}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
     X = szeros(T, N + 2Nl + 2Nl, 3)
-    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, q, xb, qb, λ), qa) 
+    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, q, xb, qb, λ), qa)
     return X, Q
 end
 @inline function ∂g∂posb(joint::Rotational{T,N,N̄,Nl}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
     X = szeros(T, N + 2Nl + 2Nl, 3)
-    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, qa, xb, q, λ), qb) 
+    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, qa, xb, q, λ), qb)
     return X, Q
 end
 @inline function ∂g∂posb(joint::Rotational{T,N,N̄,Nl}, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
