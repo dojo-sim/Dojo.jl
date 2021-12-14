@@ -91,6 +91,7 @@ function feasibilityStepLength!(α, mechanism, eqc::EqualityConstraint{T,N,Nc,Cs
         αγ_ort = ort_step_length(γ, Δγ, τ = τort)
         α = min(α, αs_ort, αγ_ort)
     end
+
     return α
 end
 
@@ -103,6 +104,7 @@ function centering!(mechanism::Mechanism, αaff::T) where {T}
     for ineqc in mechanism.ineqconstraints
         ν, νaff, n = centering!(ν, νaff, n, mechanism, ineqc, getentry(system, ineqc.id), αaff)
     end
+
     for eqc in mechanism.eqconstraints
         ν, νaff, n = centering!(ν, νaff, n, mechanism, eqc, getentry(system, eqc.id), αaff)
     end
@@ -222,6 +224,7 @@ end
     violation = 0.0
     for eq in mechanism.eqconstraints
         res = g(mechanism, eq)
+        @show res
         shift = 0
         for (i, joint) in enumerate(eq.constraints) 
             Nλ = λlength(joint) 

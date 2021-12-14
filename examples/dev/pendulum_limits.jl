@@ -43,7 +43,7 @@ end
 
 
 mech = getmechanism(:pendulum, Δt = 0.01, g = -9.81)
-initialize!(mech, :pendulum, ϕ1 = 0.1)
+initialize!(mech, :pendulum, ϕ1 = 0.0)
 storage = simulate!(mech, 3.1, record = true, verbose = true)
 visualize(mech, storage, vis=vis)
 

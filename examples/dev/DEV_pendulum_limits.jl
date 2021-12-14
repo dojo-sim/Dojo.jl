@@ -12,7 +12,7 @@ function getpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
     # Constraints
     joint_between_origin_and_link1 = EqualityConstraint(Revolute(origin, link1,
         joint_axis; p2=p2, spring = spring, damper = damper, rot_spring_offset = spring_offset,
-        rot_joint_limits = [SVector{1}([-0.25 * π]), SVector{1}([0.25 * π])]))
+        rot_joint_limits = [SVector{1}([-π]), SVector{1}([π])]))
     links = [link1]
     eqcs = [joint_between_origin_and_link1]
 
@@ -20,22 +20,16 @@ function getpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
     return mech
 end
 
+vis = Visualizer() 
+open(vis) 
 mech = getpendulum(Δt = 0.01, g = -9.81, spring = 0.0, damper = 0.0)
-length(mech.eqconstraints[1].constraints[1])
+mech.eqconstraints[1].λsol[2]
+resetVars!.(mech.eqconstraints)
 
-# Open visualizer
-vis = Visualizer()
-open(vis)
-
-# Include new files
-include(joinpath(module_dir(), "examples", "loader.jl"))
-
-# mech = getmechanism(:pendulum, Δt = 0.01, g = -9.81, spring = 100.0, damper = 5.0)
-Random.seed!(100)
 ϕ1 = 0.0 * π
 initialize!(mech, :pendulum, ϕ1 = ϕ1)
-storage = simulate!(mech, 1.0, record = true, verbose = false)
-visualize(mech, storage, vis = vis)
+storage = simulate!(mech, 0.01, record = true, verbose = true)
+visualize(mech, storage, vis=vis)
 
 ################################################################################
 # Differentiation
