@@ -326,7 +326,6 @@ end
     body.id == constraint.parentid ? (return ∂g∂ʳvela(mechanism, constraint, body)) : (return ∂g∂ʳvelb(mechanism, constraint, body))
 end
 
-
 function λindex(eqc::EqualityConstraint{T,N,Nc,Cs}, i::Int) where {T,N,Nc,Cs}
     i0 = 1
     i1 = 0
@@ -338,4 +337,17 @@ function λindex(eqc::EqualityConstraint{T,N,Nc,Cs}, i::Int) where {T,N,Nc,Cs}
 
     ind = SVector{i1-i0+1,Int}(i0:i1...)
     return ind
+end
+
+function resetVars!(eqc::EqualityConstraint{T,N,Nc,Cs}; scale::T=1.0) where {T,N,Nc,Cs}
+    λ = []
+    for (i, joint) in enumerate(eqc.constraints)
+        Nλ = length(joint)
+        Nl = joint_limits_length(joint)
+        # push!(λ, [szeros(Nλ); scale * sones(4Nl)])
+        push!(λ, [szeros(Nλ); scale * sones(4Nl)])
+    end
+    eqc.λsol[1] = vcat(λ...)
+    eqc.λsol[2] = vcat(λ...)
+    return
 end

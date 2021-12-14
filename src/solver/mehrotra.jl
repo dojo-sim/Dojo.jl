@@ -18,6 +18,7 @@ function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
     ineqcs = mechanism.ineqconstraints
 
 	resetVars!.(ineqcs, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
+	resetVars!.(eqcs, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
     mechanism.μ = 0.0
 	μtarget = 0.0
 	no_progress = 0
@@ -35,11 +36,11 @@ function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
     for n = Base.OneTo(opts.max_iter)
 
         opts.verbose && solver_status(mechanism, α, rvio, bvio, n, μtarget, undercut)
-            
+
         ((rvio < opts.rtol) && (bvio < opts.btol)) && break
 		(n == opts.max_iter) && (opts.verbose && (@warn "failed mehrotra"))
 
-        # affine search direction 
+        # affine search direction
 		μ = 0.0
 		pullresidual!(mechanism)                # store the residual inside mechanism.residual_entries
         ldu_factorization!(mechanism.system)    # factorize system, modifies the matrix in place
@@ -82,7 +83,7 @@ function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
     return
 end
 
-function solver_status(mechanism::Mechanism, α, rvio, bvio, n, μtarget, undercut) 
+function solver_status(mechanism::Mechanism, α, rvio, bvio, n, μtarget, undercut)
     fv = full_vector(mechanism.system)
     Δvar = norm(fv, Inf)
     fM = full_matrix(mechanism.system)
@@ -91,12 +92,12 @@ function solver_status(mechanism::Mechanism, α, rvio, bvio, n, μtarget, underc
     ##################
     res = norm(fv, Inf)
     println(
-        "n ", n, 
-        "   bvio", scn(bvio), 
-        "   rvio", scn(rvio), 
+        "n ", n,
+        "   bvio", scn(bvio),
+        "   rvio", scn(rvio),
         "   α", scn(α),
-        "   μ", scn(μtarget), 
-        "   |res|∞", scn(res), 
+        "   μ", scn(μtarget),
+        "   |res|∞", scn(res),
         "   |Δ|∞", scn(Δvar),
         "   ucut", scn(undercut))
 end
@@ -173,6 +174,19 @@ end
 end
 
 @inline function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry,
+		eqc::EqualityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
+	cor = []
+	for (i, joint) in enumerate(eqc.constraints)
+        Δs, Δγ = get_sγ(joint, step_entry.value[λindex(eqc,i)])
+		μ = mechanism.μ
+		push!(cor, [- Δs .* Δγ .+ μ; szeros(length(joint))])
+    end
+	cor = vcat(cor...)
+	residual_entry.value += cor
+    return
+end
+
+@inline function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry,
 		ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
 	cont = ineqc.constraints[1]
 	μ = mechanism.μ
@@ -219,5 +233,3 @@ function pushdiagonalinverses!(mechanism::Mechanism)
 	end
 	return
 end
-
-

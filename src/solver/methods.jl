@@ -9,15 +9,15 @@ end
     for (i, joint) in enumerate(eqc.constraints)
         Nli = joint_limits_length(joint)
         λi = eqc.λsol[2][λindex(eqc, i)]
-        si, γi = get_sγ(joint, λi) 
-        push!(a, [zeros(2Nli, length(joint)) Diagonal(γi) Diagonal(si)])
+        si, γi = get_sγ(joint, λi)
+        push!(comp_jac, [zeros(2Nli, length(joint)) Diagonal(γi) Diagonal(si)])
     end
 
     matrix_entry.value = [
                           cat(comp_jac..., dims=(1,2));
                           ∂g∂ʳself(mechanism, eqc);
                          ]
-    vector_entry.value = [-complementarityμ(mechanism, eqc); 
+    vector_entry.value = [-complementarityμ(mechanism, eqc);
                           -g(mechanism, eqc)]
     return
 end
@@ -27,14 +27,14 @@ function complementarity(mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}; scaling:
     c = []
     for (i, joint) in enumerate(eqc.constraints)
         λi = eqc.λsol[2][λindex(eqc, i)]
-        si, γi = get_sγ(joint, λi) 
+        si, γi = get_sγ(joint, λi)
         push!(c, si .* γi)
     end
     return vcat(c...)
 end
 
 function complementarityμ(mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}; scaling::Bool = false) where {T,N,Nc,Cs}
-    
+
     complementarity(mechanism, eqc; scaling=scaling) .- mechanism.μ
 end
 
@@ -54,17 +54,19 @@ end
 function feasibilityStepLength!(mechanism::Mechanism; τort::T=0.95, τsoc::T=0.95, scaling::Bool=false) where {T}
     system = mechanism.system
 
-    α = 1.0 
+    α = 1.0
     for ineqc in mechanism.ineqconstraints
         α = feasibilityStepLength!(α, mechanism, ineqc, getentry(system, ineqc.id), τort, τsoc; scaling = scaling)
     end
-
+    for eqc in mechanism.eqconstraints
+        α = feasibilityStepLength!(α, mechanism, eqc, getentry(system, eqc.id), τort, τsoc; scaling = scaling)
+    end
     return α
 end
 
 function feasibilityStepLength!(α, mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
         vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
-    
+
     s = ineqc.ssol[2]
     γ = ineqc.γsol[2]
     Δs = vector_entry.value[1:N½]
@@ -91,6 +93,20 @@ function feasibilityStepLength!(α, mechanism, ineqc::InequalityConstraint{T,N,N
     return min(α, αs_ort, αγ_ort)
 end
 
+function feasibilityStepLength!(α, mechanism, eqc::EqualityConstraint{T,N,Nc,Cs},
+        vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc,Cs}
+
+    for (i, joint) in enumerate(eqc.constraints)
+        s, γ = get_sγ(joint, eqc.λsol[2][λindex(eqc,i)])
+        Δs, Δγ = get_sγ(joint,  vector_entry.value[λindex(eqc,i)])
+
+        αs_ort = ort_step_length(s, Δs, τ = τort)
+        αγ_ort = ort_step_length(γ, Δγ, τ = τort)
+        α = min(α, αs_ort, αγ_ort)
+    end
+    return α
+end
+
 function centering!(mechanism::Mechanism, αaff::T) where {T}
     system = mechanism.system
 
@@ -99,6 +115,9 @@ function centering!(mechanism::Mechanism, αaff::T) where {T}
     νaff = 0.0
     for ineqc in mechanism.ineqconstraints
         ν, νaff, n = centering!(ν, νaff, n, mechanism, ineqc, getentry(system, ineqc.id), αaff)
+    end
+    for eqc in mechanism.eqconstraints
+        ν, νaff, n = centering!(ν, νaff, n, mechanism, eqc, getentry(system, eqc.id), αaff)
     end
 
     ν /= n
@@ -114,6 +133,17 @@ function centering!(ν, νaff, n, mechanism, ineqc::InequalityConstraint{T,N,Nc,
     ν += dot(s, γ)
     νaff += dot(s + αaff * Δs, γ + αaff * Δγ) # plus or minus
     n += cone_degree(ineqc)
+    return ν, νaff, n
+end
+
+function centering!(ν, νaff, n, mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}, vector_entry::Entry, αaff) where {T,N,Nc,Cs}
+    for (i, joint) in enumerate(eqc.constraints)
+        s, γ = get_sγ(joint, eqc.λsol[2][λindex(eqc,i)])
+        Δs, Δγ = get_sγ(joint, vector_entry.value[λindex(eqc,i)])
+        ν += dot(s, γ)
+        νaff += dot(s + αaff * Δs, γ + αaff * Δγ) # plus or minus
+        n += length(s)
+    end
     return ν, νaff, n
 end
 
@@ -203,7 +233,7 @@ end
 
 @inline function residual_violation(mechanism::Mechanism)
     violation = 0.0
-    for eq in mechanism.eqconstraints 
+    for eq in mechanism.eqconstraints
         res = g(mechanism, eq)
         violation = max(violation, norm(res, Inf))
     end
@@ -211,7 +241,7 @@ end
         res = g(mechanism, body)
         violation = max(violation, norm(res, Inf))
     end
-    for ineq in mechanism.ineqconstraints 
+    for ineq in mechanism.ineqconstraints
         res = g(mechanism, ineq)
         violation = max(violation, norm(res, Inf))
     end
@@ -220,10 +250,13 @@ end
 
 @inline function bilinear_violation(mechanism::Mechanism)
     violation = 0.0
-    for ineq in mechanism.ineqconstraints 
-        comp = complementarity(mechanism, ineq)
+    for ineqc in mechanism.ineqconstraints
+        comp = complementarity(mechanism, ineqc)
+        violation = max(violation, norm(comp, Inf))
+    end
+    for eqc in mechanism.eqconstraints
+        comp = complementarity(mechanism, eqc)
         violation = max(violation, norm(comp, Inf))
     end
     return violation
 end
-

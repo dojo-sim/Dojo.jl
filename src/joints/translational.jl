@@ -117,8 +117,8 @@ end
 
 ### w/ Limits
 function get_sγ(joint::Translational{T,N,N̄,Nl}, λ) where {T,N,N̄,Nl}
-    s = λ[N .+ (1:(2 * Nl))] 
-    γ = λ[N + 2 * Nl .+ (1:(2 * Nl))] 
+    s = λ[N .+ (1:(2 * Nl))]
+    γ = λ[N + 2 * Nl .+ (1:(2 * Nl))]
     return s, γ
 end
 
@@ -158,7 +158,7 @@ end
     # Q = ∂vrotate∂q(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * Tmat()
     # Q += ∂vrotate∂p(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * -∂vrotate∂q(joint.vertices[1], qa)
     X = FiniteDiff.finite_difference_jacobian(x -> g(joint, x, qa, xb, qb, λ), xa)
-    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, q, xb, qb, λ), qa)
+    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, UnitQuaternion(q..., false), xb, qb, λ), vector(qa))
     return X, Q
 end
 
@@ -166,14 +166,14 @@ end
     # X = VLᵀmat(qa) * RVᵀmat(qa)
     # Q = 2 * VLᵀmat(qa) * Rmat(qa) * Rᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
     X = FiniteDiff.finite_difference_jacobian(x -> g(joint, xa, qa, x, qb, λ), xb)
-    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, qa, xb, q, λ), qb)
+    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, qa, xb, UnitQuaternion(q..., false), λ), vector(qb))
     return X, Q
 end
 @inline function ∂g∂posb(joint::Translational{T,N,N̄,Nl}, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
     # X = I
     # Q = 2 * VRᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
     X = FiniteDiff.finite_difference_jacobian(x -> g(joint, x, qb, λ), xb)
-    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xb, q, λ), qb)
+    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xb, UnitQuaternion(q..., false), λ), vector(qb))
     return X, Q
 end
 
