@@ -17,8 +17,19 @@ end
                           cat(comp_jac..., dims=(1,2));
                           ∂g∂ʳself(mechanism, eqc);
                          ]
-    vector_entry.value = [-complementarityμ(mechanism, eqc);
-                          -g(mechanism, eqc)]
+    vec = []
+    comp = complementarityμ(mechanism, eqc)
+    res = g(mechanism, eqc)
+    offc = 0
+    offr = 0
+    for (i,joint) in enumerate(eqc.constraints)
+        Nl = joint_limits_length(joint)
+        compi = comp[offc .+ (1:2Nl)]; offc += 2Nl
+        push!(vec, v)
+    end
+    vector_entry.value = -vec
+    # vector_entry.value = [-complementarityμ(mechanism, eqc);
+    #                       -g(mechanism, eqc)]
     return
 end
 

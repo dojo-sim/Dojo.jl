@@ -1,11 +1,21 @@
-abstract type Joint{T,N} end
+abstract type Joint{T,Nλ,Nb,N} end
 
 ### General functions
 getT(joint::Joint{T}) where T = T
-Base.length(joint::Joint{T,N}) where {T,N} = N
-Base.zero(joint::Joint{T,N}) where {T,N} = szeros(T, N, 6)
-@inline g(joint::Joint{T,N}) where {T,N} = szeros(T, N)
-λlength(joint) = length(joint) + 4joint_limits_length(joint)
+Base.length(joint::Joint{T,Nλ}) where {T,Nλ} = Nλ
+Base.zero(joint::Joint{T,Nλ}) where {T,Nλ} = szeros(T, Nλ, 6)
+@inline g(joint::Joint{T,Nλ}) where {T,Nλ} = szeros(T, Nλ)
+
+λlength(joint::Joint{T,Nλ}) where {T,Nλ} = Nλ
+blength(joint::Joint{T,Nλ,Nb}) where {T,Nλ,Nb} = Nb
+ηlength(joint::Joint{T,Nλ,Nb,N}) where {T,Nλ,Nb,N} = N
+
+function get_sγ(joint::Joint{T,Nλ,Nb}, η) where {T,Nλ,Nb}
+    s = η[1:Nb]
+    γ = η[Nb .+ (1:Nb)]
+    return s, γ
+end
+
 
 ## Discrete-time position derivatives (for dynamics)
 # Wrappers 1
@@ -160,8 +170,8 @@ Joint3 = Joint{T,3} where T
 g(joint::Joint, statea::State, stateb::State, λ, Δt) = g(joint, posargs3(statea, Δt)..., posargs3(stateb, Δt)..., λ)
 g(joint::Joint, stateb::State, λ, Δt) = g(joint, posargs3(stateb, Δt)..., λ)
 
-@inline function ∂g∂ʳself(joint::Joint{T,N}, λ) where {T,N}
-    return Diagonal(1e-10 * sones(T,N))
+@inline function ∂g∂ʳself(joint::Joint{T,Nλ}, λ) where {T,Nλ}
+    return Diagonal(1e-10 * sones(T,Nλ))
 end
 
 ## Discrete-time position derivatives (for dynamics)
@@ -269,8 +279,8 @@ end
     end
 end
 
-@inline ∂Fτ∂ub(joint::Joint{T,N}) where {T,N} = szeros(T, 6, 3 - N) # TODO zero function?
+@inline ∂Fτ∂ub(joint::Joint{T,Nλ}) where {T,Nλ} = szeros(T, 6, 3 - Nλ) # TODO zero function?
 
 
 ### Minimal coordinates
-@inline minimalCoordinates(joint::Joint{T,N}) where {T,N} = szeros(T, 3 - N)
+@inline minimalCoordinates(joint::Joint{T,Nλ}) where {T,Nλ} = szeros(T, 3 - Nλ)
