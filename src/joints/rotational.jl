@@ -135,9 +135,9 @@ end
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
     # @show "hello"
-    # @show X 
+    # @show X
     # @show Q
-    # @show constraintmat(joint) 
+    # @show constraintmat(joint)
     # @show Q * LVᵀmat(qa)
     # return nothing
     return [

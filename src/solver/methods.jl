@@ -34,7 +34,6 @@ function complementarity(mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}; scaling:
 end
 
 function complementarityμ(mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}; scaling::Bool = false) where {T,N,Nc,Cs}
-
     complementarity(mechanism, eqc; scaling=scaling) .- mechanism.μ
 end
 

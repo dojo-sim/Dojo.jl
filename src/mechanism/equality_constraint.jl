@@ -146,7 +146,7 @@ end
         push!(λ, γi)
         # push!(comp_jac, [zeros(2Nli, length(joint)) Diagonal(γi) Diagonal(si)])
     end
-    
+
     body.state.d -= zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * vcat(λ...)
 
     # if length(eqc.λsol[2]) == 3 && body.id ∈ eqc.childids
@@ -218,18 +218,26 @@ end
     body.id == eqc.parentid ? (return damperforcea(mechanism, eqc, body)) : (return damperforceb(mechanism, eqc, body))
 end
 
-@inline function ∂gab∂ʳba(mechanism, body::Body{T}, eqc::EqualityConstraint{T}) where T
+@inline function ∂gab∂ʳba(mechanism, body::Body{T}, eqc::EqualityConstraint{T,N}) where {T,N}
     Nl = joint_limits_length(eqc)
     Z = szeros(T,2Nl,6)
-    # @warn "this is wrong we need to put zeros for the columsn correcponding to the si's"
+    @warn "this is wrong we need to put zeros for the columns correcponding to the si's"
+    ∇pos = zeros(T,N,6)
+    ∇vel = zeros(T,N,6)
+    @show "ffff"
     return [Z; -∂g∂ʳpos(mechanism, eqc, body)]', [Z; ∂g∂ʳvel(mechanism, eqc, body)]
+    # return ∇pos', ∇vel
 end
 
-@inline function ∂gab∂ʳba(mechanism, eqc::EqualityConstraint{T}, body::Body{T}) where T
+@inline function ∂gab∂ʳba(mechanism, eqc::EqualityConstraint{T,N}, body::Body{T}) where {T,N}
     Nl = joint_limits_length(eqc)
     Z = szeros(T,2Nl,6)
+    ∇pos = zeros(T,N,6)
+    ∇vel = zeros(T,N,6)
+    @show "gggg"
     # @warn "this is wrong we need to put zeros for the columsn correcponding to the si's"
-    return [Z; ∂g∂ʳvel(mechanism, eqc, body)], [Z; -∂g∂ʳpos(mechanism, eqc, body)]'
+    # return [Z; ∂g∂ʳvel(mechanism, eqc, body)], [Z; -∂g∂ʳpos(mechanism, eqc, body)]'
+    return ∇vel, ∇pos'
 end
 # @inline ∂gab∂ʳba(mechanism, body::Body, eqc::EqualityConstraint) = -∂g∂ʳpos(mechanism, eqc, body)', ∂g∂ʳvel(mechanism, eqc, body)
 # @inline ∂gab∂ʳba(mechanism, eqc::EqualityConstraint, body::Body) = ∂g∂ʳvel(mechanism, eqc, body), -∂g∂ʳpos(mechanism, eqc, body)'
