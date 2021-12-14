@@ -4,49 +4,26 @@
     return
 end
 
-@inline function setDandΔs!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry, eqc::EqualityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
-    comp_jac = []
-    for (i, joint) in enumerate(eqc.constraints)
-        Nli = joint_limits_length(joint)
-        λi = eqc.λsol[2][λindex(eqc, i)]
-        si, γi = get_sγ(joint, λi)
-        push!(comp_jac, [zeros(2Nli, length(joint)) Diagonal(γi) Diagonal(si)])
-    end
+# @inline function setDandΔs!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry, eqc::EqualityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
+#     matrix_entry.value = ∂g∂ʳself(mechanism, eqc);
+#     vector_entry.value = -g(mechanism, eqc)
+#     return
+# end
 
-    matrix_entry.value = [
-                          cat(comp_jac..., dims=(1,2));
-                          ∂g∂ʳself(mechanism, eqc);
-                         ]
-    vec = []
-    comp = complementarityμ(mechanism, eqc)
-    res = g(mechanism, eqc)
-    offc = 0
-    offr = 0
-    for (i,joint) in enumerate(eqc.constraints)
-        Nl = joint_limits_length(joint)
-        compi = comp[offc .+ (1:2Nl)]; offc += 2Nl
-        push!(vec, v)
-    end
-    vector_entry.value = -vec
-    # vector_entry.value = [-complementarityμ(mechanism, eqc);
-    #                       -g(mechanism, eqc)]
-    return
-end
+# ## Complementarity
+# function complementarity(mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}; scaling::Bool = false) where {T,N,Nc,Cs}
+#     c = []
+#     for (i, joint) in enumerate(eqc.constraints)
+#         λi = eqc.λsol[2][λindex(eqc, i)]
+#         si, γi = get_sγ(joint, λi)
+#         push!(c, si .* γi)
+#     end
+#     return vcat(c...)
+# end
 
-## Complementarity
-function complementarity(mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}; scaling::Bool = false) where {T,N,Nc,Cs}
-    c = []
-    for (i, joint) in enumerate(eqc.constraints)
-        λi = eqc.λsol[2][λindex(eqc, i)]
-        si, γi = get_sγ(joint, λi)
-        push!(c, si .* γi)
-    end
-    return vcat(c...)
-end
-
-function complementarityμ(mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}; scaling::Bool = false) where {T,N,Nc,Cs}
-    complementarity(mechanism, eqc; scaling=scaling) .- mechanism.μ
-end
+# function complementarityμ(mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}; scaling::Bool = false) where {T,N,Nc,Cs}
+#     complementarity(mechanism, eqc; scaling=scaling) .- mechanism.μ
+# end
 
 @inline function setLU!(mechanism::Mechanism, matrix_entry_L::Entry, matrix_entry_U::Entry, componenta::Component, componentb::Component)
     L, U = ∂gab∂ʳba(mechanism, componenta, componentb)

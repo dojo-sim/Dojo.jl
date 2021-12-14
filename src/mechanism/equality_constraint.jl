@@ -137,17 +137,17 @@ end
     # @show size(∂g∂ʳpos(mechanism, eqc, body))
     # @show size(eqc.λsol[2])
     # @warn "we have an issue here we need to filter out the si's that are inside λsol because they do not factor in the dynamics"
-    λ = []
-    for (i, joint) in enumerate(eqc.constraints)
-        # Nli = joint_limits_length(joint)
-        λi = eqc.λsol[2][λindex(eqc, i)]
-        si, γi = get_sγ(joint, λi)
-        push!(λ, λi[1:length(joint)])
-        push!(λ, γi)
-        # push!(comp_jac, [zeros(2Nli, length(joint)) Diagonal(γi) Diagonal(si)])
-    end
+    # λ = []
+    # for (i, joint) in enumerate(eqc.constraints)
+    #     # Nli = joint_limits_length(joint)
+    #     λi = eqc.λsol[2][λindex(eqc, i)]
+    #     si, γi = get_sγ(joint, λi)
+    #     push!(λ, λi[1:length(joint)])
+    #     push!(λ, γi)
+    #     # push!(comp_jac, [zeros(2Nli, length(joint)) Diagonal(γi) Diagonal(si)])
+    # end
 
-    body.state.d -= zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * vcat(λ...)
+    body.state.d -= zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
 
     # if length(eqc.λsol[2]) == 3 && body.id ∈ eqc.childids
     #     Fτ = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
@@ -219,25 +219,25 @@ end
 end
 
 @inline function ∂gab∂ʳba(mechanism, body::Body{T}, eqc::EqualityConstraint{T,N}) where {T,N}
-    Nl = joint_limits_length(eqc)
-    Z = szeros(T,2Nl,6)
-    @warn "this is wrong we need to put zeros for the columns correcponding to the si's"
-    ∇pos = zeros(T,N,6)
-    ∇vel = zeros(T,N,6)
-    @show "ffff"
-    return [Z; -∂g∂ʳpos(mechanism, eqc, body)]', [Z; ∂g∂ʳvel(mechanism, eqc, body)]
+    # Nl = joint_limits_length(eqc)
+    # Z = szeros(T,2Nl,6)
+    # @warn "this is wrong we need to put zeros for the columns correcponding to the si's"
+    # ∇pos = zeros(T,N,6)
+    # ∇vel = zeros(T,N,6)
+    # @show "ffff"
+    return -∂g∂ʳpos(mechanism, eqc, body)', ∂g∂ʳvel(mechanism, eqc, body)
     # return ∇pos', ∇vel
 end
 
 @inline function ∂gab∂ʳba(mechanism, eqc::EqualityConstraint{T,N}, body::Body{T}) where {T,N}
-    Nl = joint_limits_length(eqc)
-    Z = szeros(T,2Nl,6)
-    ∇pos = zeros(T,N,6)
-    ∇vel = zeros(T,N,6)
-    @show "gggg"
+    # Nl = joint_limits_length(eqc)
+    # Z = szeros(T,2Nl,6)
+    # ∇pos = zeros(T,N,6)
+    # ∇vel = zeros(T,N,6)
+    # @show "gggg"
     # @warn "this is wrong we need to put zeros for the columsn correcponding to the si's"
-    # return [Z; ∂g∂ʳvel(mechanism, eqc, body)], [Z; -∂g∂ʳpos(mechanism, eqc, body)]'
-    return ∇vel, ∇pos'
+    return ∂g∂ʳvel(mechanism, eqc, body), -∂g∂ʳpos(mechanism, eqc, body)'
+    # return ∇vel, ∇pos'
 end
 # @inline ∂gab∂ʳba(mechanism, body::Body, eqc::EqualityConstraint) = -∂g∂ʳpos(mechanism, eqc, body)', ∂g∂ʳvel(mechanism, eqc, body)
 # @inline ∂gab∂ʳba(mechanism, eqc::EqualityConstraint, body::Body) = ∂g∂ʳvel(mechanism, eqc, body), -∂g∂ʳpos(mechanism, eqc, body)'
