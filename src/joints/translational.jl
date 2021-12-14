@@ -128,6 +128,7 @@ end
     s, γ = get_sγ(joint, η)
 
     return [
+            s .* γ;
             s[1:Nb½] - (joint.joint_limits[2] - e2);
             s[Nb½ .+ (1:Nb½)] - (e2 - joint.joint_limits[1]);
             constraintmat(joint) * e1;
@@ -142,6 +143,7 @@ end
     s, γ = get_sγ(joint, η)
 
     return [
+            s .* γ;
             s[1:Nb½] - (joint.joint_limits[2] - e2);
             s[Nb½ .+ (1:Nb½)] - (e2 - joint.joint_limits[1]);
             constraintmat(joint) * e1;
@@ -180,14 +182,15 @@ function ∂g∂ʳposa(joint::Translational, statea::State, stateb::State, η, �
     ∂g∂ʳposa(joint, xa, qa, xb, qb, η)
 end
 
-function ∂g∂ʳposa(joint::Translational, xa::AbstractVector, qa::UnitQuaternion,
-        xb::AbstractVector, qb::UnitQuaternion, η)
+function ∂g∂ʳposa(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion,
+        xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
     X = -1.0 * transpose(rotation_matrix(qa))
     pb_a = rotation_matrix(inv(qa)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
     ca_a = rotation_matrix(inv(qa)) * (xa) # body a com
     capb_a = pb_a - ca_a
     Q = - 1.0 * transpose(skew(capb_a))
     return [
+            zeros(Nb, 6);
             -nullspacemat(joint) * [X Q];
             nullspacemat(joint) * [X Q];
             constraintmat(joint) * [X Q];
@@ -200,13 +203,14 @@ function ∂g∂ʳposb(joint::Translational, statea::State, stateb::State, η, �
     ∂g∂ʳposb(joint, xa, qa, xb, qb, η)
 end
 
-function ∂g∂ʳposb(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η)
+function ∂g∂ʳposb(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
     X = transpose(rotation_matrix(qa))
     pb_b = rotation_matrix(inv(qb)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
     cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
     cbpb_b = pb_b - cb_b
     Q = transpose(skew(cbpb_b) * rotation_matrix(inv(qb) * qa))
     return [
+            zeros(Nb, 6);
             -nullspacemat(joint) * [X Q];
             nullspacemat(joint) * [X Q];
             constraintmat(joint) * [X Q];
@@ -218,13 +222,14 @@ function ∂g∂ʳposb(joint::Translational, stateb::State, η, Δt)
     ∂g∂ʳposb(joint, xb, qb, η)
 end
 
-function ∂g∂ʳposb(joint::Translational, xb::AbstractVector, qb::UnitQuaternion, η)
+function ∂g∂ʳposb(joint::Translational{T,Nλ,Nb,N,Nb½}, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
     X = transpose(I(3))
     pb_b = rotation_matrix(inv(qb)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
     cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
     cbpb_b = pb_b - cb_b
     Q = transpose(skew(cbpb_b) * rotation_matrix(inv(qb)))
     return [
+            zeros(Nb, 6);
             -nullspacemat(joint) * [X Q];
             nullspacemat(joint) * [X Q];
             constraintmat(joint) * [X Q];
@@ -236,8 +241,11 @@ end
 end
 
 @inline function ∂g∂ʳself(joint::Translational{T,Nλ,Nb,N}, η) where {T,Nλ,Nb,N}
+    s, γ = get_sγ(joint, η)
+
     [
-     Diagonal(ones(Nb)) zeros(Nb,Nλ+Nb);
+     Diagonal(γ) Diagonal(s) zeros(Nb, Nλ);
+     Diagonal(ones(Nb)) zeros(Nb, Nb + Nλ);
      zeros(Nλ, N);
     ]
 end
