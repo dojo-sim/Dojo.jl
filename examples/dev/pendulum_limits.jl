@@ -44,21 +44,14 @@ end
 
 mech = getmechanism(:pendulum, Δt = 0.01, g = -9.81)
 initialize!(mech, :pendulum, ϕ1 = 0.1)
+resetVars!.(mech.eqconstraints)
 storage = simulate!(mech, 3.1, record = true, verbose = true)
 visualize(mech, storage, vis=vis)
 
 eqc1 = collect(mech.eqconstraints)[1]
 g(mech, eqc1)
 
-
-
-@generated function test1(a::T) where T
-    vec = [:(a * Diagonal(sones(2))) for i = 1:3]
-    return :(cat($(vec...), dims=(1,2)))
-end
-
-test1(1.0)
-
+λsol
 
 eqcs = collect(mech.eqconstraints)
 resetVars!.(eqcs)
@@ -88,6 +81,22 @@ attjac = attitudejacobian(data, Nb)
 # datamat = full_data_matrix(mech)
 setentries!(mech)
 solmat = full_matrix(mech.system)
+rank(solmat)
+rank(solmat[1:9,1:9])
+rank(solmat[1:9,1:9])
+rank(solmat[10:15,10:15])
+solmat[1:3,1:3]
+solmat[1:9,1:9]
+
+tra = eqc1.constraints[1]
+rot = eqc1.constraints[2]
+resetVars!(eqc1)
+ηtra = eqc1.λsol[2][1:3]
+ηrot = eqc1.λsol[2][3 .+ (1:6)]
+∂g∂ʳself(mech, eqc1)
+∂g∂ʳself(tra, ηtra)
+∂g∂ʳself(rot, ηrot)
+
 # sensi = - (solmat \ datamat)
 # sensi2 = sensitivities(mech, sol, data)
 #
@@ -104,9 +113,8 @@ solmat = full_matrix(mech.system)
 
 fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
 @test norm(fd_solmat + solmat, Inf) < 1e-8
-plot(Gray.(abs.(1e9 .* solmat)))
+plot(Gray.(abs.(1e11 .* solmat)))
 plot(Gray.(abs.(1e9 .* fd_solmat)))
-
 
 eqc1 = collect(mech.eqconstraints)[1]
 λindex(eqc1, 1)
