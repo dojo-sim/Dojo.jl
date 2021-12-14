@@ -11,24 +11,10 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: Constraint{T,N}
 
     λsol::Vector{SVector{N,T}}
     
-    function EqualityConstraint(data...; name::String="")
-        @show "here"
+    function EqualityConstraint(data; name::String="")
         jointdata = Tuple{Joint,Int64,Int64}[]
-        @show typeof(data)
         for info in data
-            @show typeof(info)
-            @show typeof(info[1])
-            @show typeof(info[1]) <: Joint
-
-            if info[1] isa Joint
-                @show typeof(info[1])
-                push!(jointdata, info)
-            else
-                for subinfo in info
-                    @show typeof(subinfo)
-                    push!(jointdata, subinfo)
-                end
-            end
+            push!(jointdata, info)
         end
 
         T = getT(jointdata[1][1])
@@ -204,12 +190,7 @@ function _dGb!(mechanism, cbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T
 end
 
 @generated function g(mechanism, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
-    vec = [:(g(eqc.constraints[$i], getbody(mechanism, eqc.parentid), getbody(mechanism, eqc.childids[$i]), mechanism.Δt)) for i = 1:Nc]
-    return :(svcat($(vec...)))
-end
-
-@generated function gc(mechanism, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
-    vec = [:(g(eqc.constraints[$i], getbody(mechanism, eqc.parentid), getbody(mechanism, eqc.childids[$i]))) for i = 1:Nc]
+    vec = [:(g(eqc.constraints[$i], getbody(mechanism, eqc.parentid), getbody(mechanism, eqc.childids[$i]), eqc.λsol[2], mechanism.Δt)) for i = 1:Nc]
     return :(svcat($(vec...)))
 end
 
@@ -225,26 +206,26 @@ end
 @inline ∂gab∂ʳba(mechanism, eqc::EqualityConstraint, body::Body) = ∂g∂ʳvel(mechanism, eqc, body), -∂g∂ʳpos(mechanism, eqc, body)'
 
 @generated function ∂g∂ʳposa(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(∂g∂ʳposa(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i], mechanism.Δt)) for i = 1:Nc]
+    vec = [:(∂g∂ʳposa(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i], eqc.λsol[2], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 @generated function ∂g∂ʳposb(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(∂g∂ʳposb(eqc.constraints[$i], getbody(mechanism, eqc.parentid), body, eqc.childids[$i], mechanism.Δt)) for i = 1:Nc]
+    vec = [:(∂g∂ʳposb(eqc.constraints[$i], getbody(mechanism, eqc.parentid), body, eqc.childids[$i], eqc.λsol[2], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 
 @generated function ∂g∂ʳself(mechanism, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
-    vec = [:(∂g∂ʳself(eqc.constraints[$i])) for i = 1:Nc]
+    vec = [:(∂g∂ʳself(eqc.constraints[$i], eqc.λsol[2])) for i = 1:Nc]
     return :(Diagonal(vcat($(vec...))))
 end
 
 @generated function ∂g∂ʳvela(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(∂g∂ʳvela(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i], mechanism.Δt)) for i = 1:Nc]
+    vec = [:(∂g∂ʳvela(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i], eqc.λsol[2], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 
 @generated function ∂g∂ʳvelb(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(∂g∂ʳvelb(eqc.constraints[$i], getbody(mechanism, eqc.parentid), body, eqc.childids[$i], mechanism.Δt)) for i = 1:Nc]
+    vec = [:(∂g∂ʳvelb(eqc.constraints[$i], getbody(mechanism, eqc.parentid), body, eqc.childids[$i], eqc.λsol[2], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 

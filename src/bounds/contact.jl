@@ -92,7 +92,7 @@ end
 
 ## Derivatives accounting for quaternion specialness
 ## maps contact forces into the dynamics
-@inline function ∂g∂pos(bound::ContactBound, x::AbstractVector, q::UnitQuaternion)
+@inline function ∂g∂pos(bound::ContactBound, x::AbstractVector, q::UnitQuaternion, λ)
     X = [bound.ainv3;
          szeros(1,3);
          bound.Bx]
@@ -131,13 +131,13 @@ function neutral_vector(bound::ContactBound{T,N}) where {T,N}
     return [sones(T, 2); szeros(T, N½-2)]
 end
 
-@inline function ∂g∂ʳpos(bound::ContactBound, x::AbstractVector, q::UnitQuaternion)
-    X, Q = ∂g∂pos(bound, x, q)
+@inline function ∂g∂ʳpos(bound::ContactBound, x::AbstractVector, q::UnitQuaternion, λ)
+    X, Q = ∂g∂pos(bound, x, q, λ)
     return [X Q]
 end
 
 @inline function ∂g∂ʳvel(bound::ContactBound{T}, x3::AbstractVector{T}, q3::UnitQuaternion{T},
-        x2::AbstractVector{T}, v25::AbstractVector{T}, q2::UnitQuaternion{T}, ϕ25::AbstractVector{T}, Δt::T) where {T}
+        x2::AbstractVector{T}, v25::AbstractVector{T}, q2::UnitQuaternion{T}, ϕ25::AbstractVector{T}, λ, Δt::T) where {T}
     V = [bound.ainv3 * Δt;
          szeros(1,3);
          bound.Bx]
@@ -153,7 +153,7 @@ end
 
 
 @inline function ∂g∂ʳvel(bound::ContactBound, x3::AbstractVector, q3::UnitQuaternion,
-    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, Δt
+    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, Δt
     )
     Bxmat = bound.Bx
     p = bound.p

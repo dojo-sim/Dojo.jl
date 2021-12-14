@@ -28,29 +28,29 @@ Rotational2 = Rotational{T,2,1} where T
 Rotational3 = Rotational{T,3,0} where T
 
 # Position level constraints (for dynamics)
-@inline function g(joint::Rotational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+@inline function g(joint::Rotational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
     # typeof(joint) <: Rotational{Float64,1} && println(scn.(Vmat(qa \ qb / joint.qoffset)))
     return Vmat(qa \ qb / joint.qoffset)
 end
 
-@inline function g(joint::Rotational, xb::AbstractVector, qb::UnitQuaternion)
+@inline function g(joint::Rotational, xb::AbstractVector, qb::UnitQuaternion, λ)
     # typeof(joint) <: Rotational{Float64,1} && println(scn.(Vmat(qb / joint.qoffset)))
     return Vmat(qb / joint.qoffset)
 end
 
 ## Derivatives NOT accounting for quaternion specialness
-@inline function ∂g∂posa(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
+@inline function ∂g∂posa(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where T
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
     return X, Q
 end
-@inline function ∂g∂posb(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
+@inline function ∂g∂posb(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where T
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa)
 
     return X, Q
 end
-@inline function ∂g∂posb(joint::Rotational{T}, xb::AbstractVector, qb::UnitQuaternion) where T
+@inline function ∂g∂posb(joint::Rotational{T}, xb::AbstractVector, qb::UnitQuaternion, λ) where T
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset)
 

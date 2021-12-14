@@ -51,7 +51,7 @@ end
         function d(vars)
             x = vars[1:3]
             q = UnitQuaternion(vars[4:7]..., false)
-            return ∂g∂ʳpos(bnd, x, q)' * ineqc.γsol[2]
+            return ∂g∂ʳpos(bnd, x, q, nothing)' * ineqc.γsol[2]
         end
 
         if bnd_type <: ContactBound
@@ -75,11 +75,11 @@ end
 end
 
 function ∂g∂ʳposa(mechanism, ineqc::InequalityConstraint, body::Body)
-    return ∂g∂ʳposa(ineqc.constraints[1], body, nothing, mechanism.Δt)
+    return ∂g∂ʳposa(ineqc.constraints[1], body, nothing, nothing, mechanism.Δt)
 end
 
 function ∂g∂ʳvela(mechanism, ineqc::InequalityConstraint, body::Body)
-    return ∂g∂ʳvela(ineqc.constraints[1], body, nothing, mechanism.Δt)
+    return ∂g∂ʳvela(ineqc.constraints[1], body, nothing, nothing, mechanism.Δt)
 end
 
 function cone_degree(ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}

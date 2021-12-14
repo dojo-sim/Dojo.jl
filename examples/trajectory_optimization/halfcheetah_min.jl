@@ -69,14 +69,14 @@ function goal(x, u, w)
     return Δ[collect(1:6)]
 end
 
-cont = Constraint()
-conT = Constraint(goal, n, 0)
+cont = IterativeLQR.Constraint()
+conT = IterativeLQR.Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
 # ## problem
-prob = problem_data(model, obj, cons)
-initialize_controls!(prob, ū)
-initialize_states!(prob, x̄)
+prob = IterativeLQR.problem_data(model, obj, cons)
+IterativeLQR.initialize_controls!(prob, ū)
+IterativeLQR.initialize_states!(prob, x̄)
 
 # ## solve
 IterativeLQR.solve!(prob,

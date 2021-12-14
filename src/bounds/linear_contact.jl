@@ -90,7 +90,7 @@ end
 
 ## Derivatives accounting for quaternion specialness
 ## maps boundact forces into the dynamics
-@inline function ∂g∂pos(bound::LinearContactBound, x::AbstractVector, q::UnitQuaternion)
+@inline function ∂g∂pos(bound::LinearContactBound, x::AbstractVector, q::UnitQuaternion, λ)
     # Bxmat = bound.Bx
     # p = bound.p
     # nx = size(x)[1]
@@ -142,13 +142,13 @@ function neutral_vector(bound::LinearContactBound{T,N}) where {T,N}
     return sones(T, N½)
 end
 
-@inline function ∂g∂ʳpos(bound::LinearContactBound, x::AbstractVector, q::UnitQuaternion)
-    X, Q = ∂g∂pos(bound, x, q)
+@inline function ∂g∂ʳpos(bound::LinearContactBound, x::AbstractVector, q::UnitQuaternion, λ)
+    X, Q = ∂g∂pos(bound, x, q, λ)
     return [X Q]
 end
 
 @inline function ∂g∂ʳvel(bound::LinearContactBound, x3::AbstractVector, q3::UnitQuaternion,
-    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, Δt
+    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, Δt
     )
     # Bxmat = bound.Bx
     # p = bound.p

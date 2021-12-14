@@ -8,23 +8,23 @@ Base.zero(joint::Joint{T,N}) where {T,N} = szeros(T, N, 6)
 
 ## Discrete-time position derivatives (for dynamics)
 # Wrappers 1
-@inline function ∂g∂ʳposa(joint::Joint, body1::Body, body2::Body, childid, Δt)
+@inline function ∂g∂ʳposa(joint::Joint, body1::Body, body2::Body, childid, λ, Δt)
     if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳposa(joint, body1.state, body2.state, Δt)
+        return constraintmat(joint) * ∂g∂ʳposa(joint, body1.state, body2.state, λ, Δt)
     else
         return zero(joint)
     end
 end
-@inline function ∂g∂ʳposb(joint::Joint, body1::Body, body2::Body, childid, Δt)
+@inline function ∂g∂ʳposb(joint::Joint, body1::Body, body2::Body, childid, λ, Δt)
     if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳposb(joint, body1.state, body2.state, Δt)
+        return constraintmat(joint) * ∂g∂ʳposb(joint, body1.state, body2.state, λ, Δt)
     else
         return zero(joint)
     end
 end
-@inline function ∂g∂ʳposb(joint::Joint, body1::Origin, body2::Body, childid, Δt)
+@inline function ∂g∂ʳposb(joint::Joint, body1::Origin, body2::Body, childid, λ, Δt)
     if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳposb(joint, body2.state, Δt)
+        return constraintmat(joint) * ∂g∂ʳposb(joint, body2.state, λ, Δt)
     else
         return zero(joint)
     end
@@ -32,42 +32,42 @@ end
 
 ## Discrete-time velocity derivatives (for dynamics)
 # Wrappers 1
-@inline function ∂g∂ʳvela(joint::Joint, body1::Body, body2::Body, childid, Δt)
+@inline function ∂g∂ʳvela(joint::Joint, body1::Body, body2::Body, childid, λ, Δt)
     if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳvela(joint, body1.state, body2.state, Δt)
+        return constraintmat(joint) * ∂g∂ʳvela(joint, body1.state, body2.state, λ, Δt)
     else
         return zero(joint)
     end
 end
-@inline function ∂g∂ʳvelb(joint::Joint, body1::Body, body2::Body, childid, Δt)
+@inline function ∂g∂ʳvelb(joint::Joint, body1::Body, body2::Body, childid, λ, Δt)
     if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳvelb(joint, body1.state, body2.state, Δt)
+        return constraintmat(joint) * ∂g∂ʳvelb(joint, body1.state, body2.state, λ, Δt)
     else
         return zero(joint)
     end
 end
-@inline function ∂g∂ʳvelb(joint::Joint, body1::Origin, body2::Body, childid, Δt)
+@inline function ∂g∂ʳvelb(joint::Joint, body1::Origin, body2::Body, childid, λ, Δt)
     if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳvelb(joint, body2.state, Δt)
+        return constraintmat(joint) * ∂g∂ʳvelb(joint, body2.state, λ, Δt)
     else
         return zero(joint)
     end
 end
 
-@inline function offdiagonal∂damper∂ʳvel(joint::Joint, body1::Body, body2::Body, childid)
-    if body2.id == childid
-        return offdiagonal∂damper∂ʳvel(joint, body1.state, body2.state)
-    else
-        return zero(body2)
-    end
-end
-@inline function offdiagonal∂damper∂ʳvel(joint::Joint, body1::Origin, body2::Body, childid)
-    if body2.id == childid
-        return offdiagonal∂damper∂ʳvel(joint, body2.state)
-    else
-        return zero(body2)
-    end
-end
+# @inline function offdiagonal∂damper∂ʳvel(joint::Joint, body1::Body, body2::Body, childid)
+#     if body2.id == childid
+#         return offdiagonal∂damper∂ʳvel(joint, body1.state, body2.state)
+#     else
+#         return zero(body2)
+#     end
+# end
+# @inline function offdiagonal∂damper∂ʳvel(joint::Joint, body1::Origin, body2::Body, childid)
+#     if body2.id == childid
+#         return offdiagonal∂damper∂ʳvel(joint, body2.state)
+#     else
+#         return zero(body2)
+#     end
+# end
 
 ### Springs and Dampers (for dynamics)
 ## Wrappers 1
@@ -151,83 +151,83 @@ Joint3 = Joint{T,3} where T
 
 ### Constraints and derivatives
 ## Position level constraint wrappers
-@inline g(joint::Joint, body1::Body, body2::Body, Δt) = constraintmat(joint) * g(joint, body1.state, body2.state, Δt)
-@inline g(joint::Joint, body1::Origin, body2::Body, Δt) = constraintmat(joint) * g(joint, body2.state, Δt)
+@inline g(joint::Joint, body1::Body, body2::Body, λ, Δt) = constraintmat(joint) * g(joint, body1.state, body2.state, λ, Δt)
+@inline g(joint::Joint, body1::Origin, body2::Body, λ, Δt) = constraintmat(joint) * g(joint, body2.state, λ, Δt)
 
 ### Constraints and derivatives
 ## Discrete-time position wrappers (for dynamics)
-g(joint::Joint, statea::State, stateb::State, Δt) = g(joint, posargs3(statea, Δt)..., posargs3(stateb, Δt)...)
-g(joint::Joint, stateb::State, Δt) = g(joint, posargs3(stateb, Δt)...)
+g(joint::Joint, statea::State, stateb::State, λ, Δt) = g(joint, posargs3(statea, Δt)..., posargs3(stateb, Δt)..., λ)
+g(joint::Joint, stateb::State, λ, Δt) = g(joint, posargs3(stateb, Δt)..., λ)
 
-@inline function ∂g∂ʳself(joint::Joint{T,N}) where {T,N}
+@inline function ∂g∂ʳself(joint::Joint{T,N}, λ) where {T,N}
     return 1e-10 * sones(T,N)
 end
 
 ## Discrete-time position derivatives (for dynamics)
 # Wrappers 1
 
-@inline ∂g∂posa(joint::Joint, body1::Body, body2::Body, Δt) = ∂g∂posa(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)...)
-@inline ∂g∂posb(joint::Joint, body1::Body, body2::Body, Δt) = ∂g∂posb(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)...)
-@inline ∂g∂posb(joint::Joint, body1::Origin, body2::Body, Δt) = ∂g∂posb(joint, posargs3(body2.state, Δt)...)
+@inline ∂g∂posa(joint::Joint, body1::Body, body2::Body, λ, Δt) = ∂g∂posa(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)..., λ)
+@inline ∂g∂posb(joint::Joint, body1::Body, body2::Body, λ, Δt) = ∂g∂posb(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)..., λ)
+@inline ∂g∂posb(joint::Joint, body1::Origin, body2::Body, λ, Δt) = ∂g∂posb(joint, posargs3(body2.state, Δt)..., λ)
 
 # Wrappers 2
-∂g∂ʳposa(joint::Joint, statea::State, stateb::State, Δt) = ∂g∂ʳposa(joint, posargs2(statea)..., posargs2(stateb)...)
-∂g∂ʳposb(joint::Joint, statea::State, stateb::State, Δt) = ∂g∂ʳposb(joint, posargs2(statea)..., posargs2(stateb)...)
-∂g∂ʳposb(joint::Joint, stateb::State, Δt) = ∂g∂ʳposb(joint, posargs2(stateb)...)
+∂g∂ʳposa(joint::Joint, statea::State, stateb::State, λ, Δt) = ∂g∂ʳposa(joint, posargs2(statea)..., posargs2(stateb)..., λ)
+∂g∂ʳposb(joint::Joint, statea::State, stateb::State, λ, Δt) = ∂g∂ʳposb(joint, posargs2(statea)..., posargs2(stateb)..., λ)
+∂g∂ʳposb(joint::Joint, stateb::State, λ, Δt) = ∂g∂ʳposb(joint, posargs2(stateb)..., λ)
 
 # Derivatives accounting for quaternion specialness
-@inline function ∂g∂ʳposa(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-    X, Q = ∂g∂posa(joint, xa, qa, xb, qb)
+@inline function ∂g∂ʳposa(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
+    X, Q = ∂g∂posa(joint, xa, qa, xb, qb, λ)
     Q = Q * LVᵀmat(qa)
 
     return [X Q]
 end
-@inline function ∂g∂ʳposb(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-    X, Q = ∂g∂posb(joint, xa, qa, xb, qb)
+@inline function ∂g∂ʳposb(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
+    X, Q = ∂g∂posb(joint, xa, qa, xb, qb, λ)
     Q = Q * LVᵀmat(qb)
 
     return [X Q]
 end
-@inline function ∂g∂ʳposb(joint::Joint, xb::AbstractVector, qb::UnitQuaternion)
-    X, Q = ∂g∂posb(joint, xb, qb)
+@inline function ∂g∂ʳposb(joint::Joint, xb::AbstractVector, qb::UnitQuaternion, λ)
+    X, Q = ∂g∂posb(joint, xb, qb, λ)
     Q = Q * LVᵀmat(qb)
 
     return [X Q]
 end
 
 # Wrappers 2
-∂g∂ʳvela(joint::Joint, statea::State, stateb::State, Δt) = ∂g∂ʳvela(joint, posargs3(statea, Δt)..., posargs3(stateb, Δt)..., fullargssol(statea)..., Δt)
-∂g∂ʳvelb(joint::Joint, statea::State, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargs3(statea, Δt)..., posargs3(stateb, Δt)..., fullargssol(stateb)..., Δt)
-∂g∂ʳvelb(joint::Joint, stateb::State, Δt) = ∂g∂ʳvelb(joint, posargs3(stateb, Δt)..., fullargssol(stateb)..., Δt)
-offdiagonal∂damper∂ʳvel(joint::Joint, statea::State, stateb::State) = offdiagonal∂damper∂ʳvel(joint, posargs2(statea)..., posargs2(stateb)...)
-offdiagonal∂damper∂ʳvel(joint::Joint, stateb::State) = offdiagonal∂damper∂ʳvel(joint, posargs2(stateb)...)
+∂g∂ʳvela(joint::Joint, statea::State, stateb::State, λ, Δt) = ∂g∂ʳvela(joint, posargs3(statea, Δt)..., posargs3(stateb, Δt)..., fullargssol(statea)..., λ, Δt)
+∂g∂ʳvelb(joint::Joint, statea::State, stateb::State, λ, Δt) = ∂g∂ʳvelb(joint, posargs3(statea, Δt)..., posargs3(stateb, Δt)..., fullargssol(stateb)..., λ, Δt)
+∂g∂ʳvelb(joint::Joint, stateb::State, λ, Δt) = ∂g∂ʳvelb(joint, posargs3(stateb, Δt)..., fullargssol(stateb)..., λ, Δt)
+# offdiagonal∂damper∂ʳvel(joint::Joint, statea::State, stateb::State) = offdiagonal∂damper∂ʳvel(joint, posargs2(statea)..., posargs2(stateb)..., λ)
+# offdiagonal∂damper∂ʳvel(joint::Joint, stateb::State) = offdiagonal∂damper∂ʳvel(joint, posargs2(stateb)..., λ)
 
 # Derivatives accounting for quaternion specialness
 @inline function ∂g∂ʳvela(joint::Joint, x2a::AbstractVector, q2a::UnitQuaternion, x2b::AbstractVector, q2b::UnitQuaternion,
-        x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector, Δt
+        x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector, λ, Δt, 
     )
 
-    X, Q = ∂g∂posa(joint, x2a, q2a, x2b, q2b)
+    X, Q = ∂g∂posa(joint, x2a, q2a, x2b, q2b, λ)
     V = X * Δt
     Ω = Q * Lmat(q1a) * derivωbar(ω1a, Δt) * Δt / 2
 
     return [V Ω]
 end
 @inline function ∂g∂ʳvelb(joint::Joint, x2a::AbstractVector, q2a::UnitQuaternion, x2b::AbstractVector, q2b::UnitQuaternion,
-        x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt
+        x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, λ, Δt
     )
 
-    X, Q = ∂g∂posb(joint, x2a, q2a, x2b, q2b)
+    X, Q = ∂g∂posb(joint, x2a, q2a, x2b, q2b, λ)
     V = X * Δt
     Ω = Q * Lmat(q1b) * derivωbar(ω1b, Δt) * Δt / 2
 
     return [V Ω]
 end
 @inline function ∂g∂ʳvelb(joint::Joint, x2b::AbstractVector, q2b::UnitQuaternion,
-        x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, Δt
+        x1b::AbstractVector, v1b::AbstractVector, q1b::UnitQuaternion, ω1b::AbstractVector, λ, Δt
     )
 
-    X, Q = ∂g∂posb(joint, x2b, q2b)
+    X, Q = ∂g∂posb(joint, x2b, q2b, λ)
     V = X * Δt
     Ω = Q * Lmat(q1b) * derivωbar(ω1b, Δt) * Δt / 2
 

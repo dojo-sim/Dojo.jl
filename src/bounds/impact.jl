@@ -71,7 +71,7 @@ end
 
 ## Derivatives accounting for quaternion specialness
 ## maps contact forces into the dynamics
-@inline function ∂g∂pos(bound::ImpactBound, x::AbstractVector, q::UnitQuaternion)
+@inline function ∂g∂pos(bound::ImpactBound, x::AbstractVector, q::UnitQuaternion, λ)
     X = bound.ainv3;
     Q = - X * skew(vrotate(bound.p, q) - bound.offset)
     return X, Q
@@ -107,13 +107,13 @@ function neutral_vector(bound::ImpactBound{T,N}) where {T,N}
     return sones(T, N½)
 end
 
-@inline function ∂g∂ʳpos(bound::ImpactBound, x::AbstractVector, q::UnitQuaternion)
-    X, Q = ∂g∂pos(bound, x, q)
+@inline function ∂g∂ʳpos(bound::ImpactBound, x::AbstractVector, q::UnitQuaternion, λ)
+    X, Q = ∂g∂pos(bound, x, q, λ)
     return [X Q]
 end
 
 @inline function ∂g∂ʳvel(bound::ImpactBound, x3::AbstractVector, q3::UnitQuaternion,
-    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, Δt
+    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, Δt
     )
     V = bound.ainv3 * Δt
     Ω = bound.ainv3 * ∂vrotate∂q(bound.p, q3) * ∂integrator∂ϕ(q2, ϕ25, Δt)
