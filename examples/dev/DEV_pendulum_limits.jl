@@ -11,7 +11,8 @@ function getpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
 
     # Constraints
     joint_between_origin_and_link1 = EqualityConstraint(Revolute(origin, link1,
-        joint_axis; p2=p2, spring = spring, damper = damper, rot_spring_offset = spring_offset))
+        joint_axis; p2=p2, spring = spring, damper = damper, rot_spring_offset = spring_offset,
+        rot_joint_limits = [SVector{1}([-0.25 * π]), SVector{1}([0.25 * π])]))
     links = [link1]
     eqcs = [joint_between_origin_and_link1]
 
@@ -19,8 +20,8 @@ function getpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
     return mech
 end
 
-mech = getpendulum(Δt = 0.01, g = -9.81, spring = 100.0, damper = 5.0)
-
+mech = getpendulum(Δt = 0.01, g = -9.81, spring = 0.0, damper = 0.0)
+length(mech.eqconstraints[1].constraints[1])
 
 # Open visualizer
 vis = Visualizer()
@@ -31,7 +32,7 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 
 # mech = getmechanism(:pendulum, Δt = 0.01, g = -9.81, spring = 100.0, damper = 5.0)
 Random.seed!(100)
-ϕ1 = 0.3π
+ϕ1 = 0.0 * π
 initialize!(mech, :pendulum, ϕ1 = ϕ1)
 
 function cont!(mechanism, k; u = 30.1)
@@ -43,7 +44,27 @@ function cont!(mechanism, k; u = 30.1)
     return
 end
 
-storage = simulate!(mech, 0.3, cont!, record = true, solver = :mehrotra!, verbose = false)
+∂g∂ʳvel(mech, [eq for eq in mech.eqconstraints][1], mech.bodies[2])
+∂gab∂ʳba(mech, mech.bodies[2], [eq for eq in mech.eqconstraints][1])
+∂g∂ʳposb(mech, [eq for eq in mech.eqconstraints][1], mech.bodies[2])
+∂gab∂ʳba(mech, [eq for eq in mech.eqconstraints][1], mech.bodies[2])
+
+function _∂g∂ʳposa(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
+    i = 2
+    @show "hi"
+    @show "yo yo"
+    @show eqc.constraints[i]
+    ∂g∂ʳposa(eqc.constraints[i], body, getbody(mechanism, eqc.childids[i]), eqc.childids[i], eqc.λsol[2][λindex(eqc,i)], mechanism.Δt)
+end
+
+
+_∂g∂ʳposa(mech, [eq for eq in mech.eqconstraints][1], mech.bodies[2])
+
+joint_limits_length(mech.eqconstraints[1].constraints[2])
+
+
+
+storage = simulate!(mech, 1.0, record = true, verbose = false)
 visualize(mech, storage, vis = vis)
 
 ################################################################################

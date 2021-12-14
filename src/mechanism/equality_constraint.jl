@@ -134,14 +134,24 @@ end
 end
 
 @inline function constraintForceMapping!(mechanism, body::Body, eqc::EqualityConstraint)
-    @show size(∂g∂ʳpos(mechanism, eqc, body))
-    @show size(eqc.λsol[2])
-    @warn "we have an issue here we need to filter out the si's that are inside λsol because they do not factor in the dynamics"
-    body.state.d -= zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
-
-    if length(eqc.λsol[2]) == 3 && body.id ∈ eqc.childids
-        Fτ = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
+    # @show size(∂g∂ʳpos(mechanism, eqc, body))
+    # @show size(eqc.λsol[2])
+    # @warn "we have an issue here we need to filter out the si's that are inside λsol because they do not factor in the dynamics"
+    λ = []
+    for (i, joint) in enumerate(eqc.constraints)
+        # Nli = joint_limits_length(joint)
+        λi = eqc.λsol[2][λindex(eqc, i)]
+        si, γi = get_sγ(joint, λi)
+        push!(λ, λi[1:length(joint)])
+        push!(λ, γi)
+        # push!(comp_jac, [zeros(2Nli, length(joint)) Diagonal(γi) Diagonal(si)])
     end
+    
+    body.state.d -= zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * vcat(λ...)
+
+    # if length(eqc.λsol[2]) == 3 && body.id ∈ eqc.childids
+    #     Fτ = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
+    # end
     eqc.isspring && (body.state.d -= springforce(mechanism, eqc, body))
     eqc.isdamper && (body.state.d -= damperforce(mechanism, eqc, body))
     return
@@ -211,16 +221,19 @@ end
 @inline function ∂gab∂ʳba(mechanism, body::Body{T}, eqc::EqualityConstraint{T}) where T
     Nl = joint_limits_length(eqc)
     Z = szeros(T,2Nl,6)
-    @warn "this is wrong we need to put zeros for the columsn correcponding to the si's"
+    # @warn "this is wrong we need to put zeros for the columsn correcponding to the si's"
     return [Z; -∂g∂ʳpos(mechanism, eqc, body)]', [Z; ∂g∂ʳvel(mechanism, eqc, body)]
 end
 
 @inline function ∂gab∂ʳba(mechanism, eqc::EqualityConstraint{T}, body::Body{T}) where T
     Nl = joint_limits_length(eqc)
     Z = szeros(T,2Nl,6)
-    @warn "this is wrong we need to put zeros for the columsn correcponding to the si's"
+    # @warn "this is wrong we need to put zeros for the columsn correcponding to the si's"
     return [Z; ∂g∂ʳvel(mechanism, eqc, body)], [Z; -∂g∂ʳpos(mechanism, eqc, body)]'
 end
+# @inline ∂gab∂ʳba(mechanism, body::Body, eqc::EqualityConstraint) = -∂g∂ʳpos(mechanism, eqc, body)', ∂g∂ʳvel(mechanism, eqc, body)
+# @inline ∂gab∂ʳba(mechanism, eqc::EqualityConstraint, body::Body) = ∂g∂ʳvel(mechanism, eqc, body), -∂g∂ʳpos(mechanism, eqc, body)'
+
 
 @generated function ∂g∂ʳposa(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     vec = [:(∂g∂ʳposa(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]

@@ -38,7 +38,16 @@ function momentum_body_new(mechanism::Mechanism{T}, body::Body{T}) where {T}
     α = -1.0
     for (i, eqc) in enumerate(mechanism.eqconstraints)
         if body.id ∈ [eqc.parentid; eqc.childids]
-            f_joint = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2] # computed at 1.5
+
+            λ = []
+            for (i, joint) in enumerate(eqc.constraints)
+                λi = eqc.λsol[2][λindex(eqc, i)]
+                si, γi = get_sγ(joint, λi)
+                push!(λ, λi[1:length(joint)])
+                push!(λ, γi)
+            end
+
+            f_joint = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * vcat(λ...)  # computed at 1.5
             eqc.isspring && (f_joint += springforce(mechanism, eqc, body)) # computed at 1.5
             eqc.isdamper && (f_joint += damperforce(mechanism, eqc, body)) # computed at 1.5
 

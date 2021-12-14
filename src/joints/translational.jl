@@ -140,7 +140,7 @@ end
 @inline function g(joint::Translational{T,N,N̄,Nl}, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
     vertices = joint.vertices
     e1 = xb + vrotate(vertices[2], qb) - vertices[1]
-    e2 = minimalCoordinates(joint, xa, qa, xb, qb)
+    e2 = minimalCoordinates(joint, xb, qb)
 
     s, γ = get_sγ(joint, λ)
 
@@ -192,9 +192,10 @@ function ∂g∂ʳposa(joint::Translational{T,N,N̄,Nl}, xa::AbstractVector, qa:
 
 
     return [
-            constraintmat(joint) * [X Q]
-            -nullspacemat(joint) * [X Q]
-            nullspacemat(joint) * [X Q]
+            constraintmat(joint) * [X Q];
+            # zeros(2Nl, 6);
+            -nullspacemat(joint) * [X Q];
+            nullspacemat(joint) * [X Q];
            ]
 end
 
@@ -211,9 +212,10 @@ function ∂g∂ʳposb(joint::Translational{T,N,N̄,Nl}, xa::AbstractVector, qa:
     cbpb_b = pb_b - cb_b
     Q = transpose(skew(cbpb_b) * rotation_matrix(inv(qb) * qa))
     return [
-            constraintmat(joint) * [X Q]
-            -nullspacemat(joint) * [X Q]
-            nullspacemat(joint) * [X Q]
+            constraintmat(joint) * [X Q];
+            # zeros(2Nl, 6);
+            -nullspacemat(joint) * [X Q];
+            nullspacemat(joint) * [X Q];
            ]
 end
 
@@ -229,9 +231,10 @@ function ∂g∂ʳposb(joint::Translational{T,N,N̄,Nl}, xb::AbstractVector, qb:
     cbpb_b = pb_b - cb_b
     Q = transpose(skew(cbpb_b) * rotation_matrix(inv(qb)))
     return [
-            constraintmat(joint) * [X Q]
-            -nullspacemat(joint) * [X Q]
-            nullspacemat(joint) * [X Q]
+            constraintmat(joint) * [X Q];
+            zeros(2Nl, 6);
+            -nullspacemat(joint) * [X Q];
+            nullspacemat(joint) * [X Q];
            ]
 end
 
