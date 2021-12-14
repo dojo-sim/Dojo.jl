@@ -802,3 +802,4 @@ function eqcdim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
     end
     return neqcs
 end
+using Pkg

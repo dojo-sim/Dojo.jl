@@ -44,7 +44,7 @@ end
 @elapsed storage = simulate!(mech, 2.3, controller!, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
-filename = "halfcheetah_first_gradient_run"
+filename = "ant_first_walk"
 MeshCat.convert_frames_to_video(
     "/home/simon/Downloads/$filename.tar",
     "/home/simon/Documents/video/$filename.mp4", overwrite=true)
