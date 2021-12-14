@@ -95,6 +95,7 @@ end
     e2 = minimalCoordinates(joint, qb)
     s, γ = get_sγ(joint, η)
     return [
+            s .* γ;
             s[1:Nb½] - (joint.joint_limits[2] - e2);
             s[Nb½ .+ (1:Nb½)] - (e2 - joint.joint_limits[1]);
             constraintmat(joint) * e1;
@@ -123,6 +124,7 @@ end
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
     return [
+            zeros(Nb, 6);
             -nullspacemat(joint) * [X Q * LVᵀmat(qa)];
              nullspacemat(joint) * [X Q * LVᵀmat(qa)];
             constraintmat(joint) * [X Q * LVᵀmat(qa)];
@@ -132,6 +134,7 @@ end
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa)
     return [
+            zeros(Nb, 6);
             -nullspacemat(joint) * [X Q * LVᵀmat(qb)];
              nullspacemat(joint) * [X Q * LVᵀmat(qb)];
             constraintmat(joint) * [X Q * LVᵀmat(qb)];
@@ -141,6 +144,7 @@ end
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset)
     return [
+            zeros(Nb, 6);
             -nullspacemat(joint) * [X Q * LVᵀmat(qb)];
              nullspacemat(joint) * [X Q * LVᵀmat(qb)];
             constraintmat(joint) * [X Q * LVᵀmat(qb)];
@@ -148,13 +152,16 @@ end
 end
 
 
-@inline function ∂g∂ʳself(joint::Rotational{T,Nλ,0}, η) where {T,Nλ}
+@inline function ∂g∂ʳself(joint::Rotational{T,Nλ,0,N}, η) where {T,Nλ,N}
     return Diagonal(1e-10 * sones(T,N))
 end
 
 @inline function ∂g∂ʳself(joint::Rotational{T,Nλ,Nb,N}, η) where {T,Nλ,Nb,N}
+    s, γ = get_sγ(joint, η)
+
     [
-     Diagonal(ones(Nb)) zeros(Nb,Nλ+Nb);
+     Diagonal(γ) Diagonal(s) zeros(Nb, Nλ);
+     Diagonal(ones(Nb)) zeros(Nb, Nb + Nλ);
      zeros(Nλ, N);
     ]
 end
