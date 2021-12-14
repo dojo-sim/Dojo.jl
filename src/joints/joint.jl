@@ -5,6 +5,7 @@ getT(joint::Joint{T}) where T = T
 Base.length(joint::Joint{T,N}) where {T,N} = N
 Base.zero(joint::Joint{T,N}) where {T,N} = szeros(T, N, 6)
 @inline g(joint::Joint{T,N}) where {T,N} = szeros(T, N)
+λlength(joint) = length(joint) + 4joint_limits_length(joint)
 
 ## Discrete-time position derivatives (for dynamics)
 # Wrappers 1

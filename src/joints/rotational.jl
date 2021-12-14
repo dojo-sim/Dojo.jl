@@ -24,7 +24,7 @@ mutable struct Rotational{T,N,N̄,Nl} <: Joint{T,N}
     end
 end
 
-joint_limit_length(joint::Rotational{T,N,N̄,Nl}) where {T,N,N̄,Nl} = Nl
+joint_limits_length(joint::Rotational{T,N,N̄,Nl}) where {T,N,N̄,Nl} = Nl
 
 Rotational0{T,Nl} = Rotational{T,0,3,Nl} where {T,Nl}
 Rotational1{T,Nl} = Rotational{T,1,2,Nl} where {T,Nl}

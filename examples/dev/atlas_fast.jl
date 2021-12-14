@@ -27,9 +27,28 @@ orig = Origin()
 body1 = Body(1.0, Diagonal([1,2,3.]))
 EqualityConstraint(Revolute(orig, body1, [0,0,1.0],
     rot_joint_limits = [-sones(0), sones(0)]))
-EqualityConstraint(Revolute(orig, body1, [0,0,1.0],
+eqc = EqualityConstraint(Revolute(orig, body1, [0,0,1.0],
     rot_joint_limits = [-sones(1), sones(1)]))
+function λindex(eqc::EqualityConstraint{T,N,Nc,Cs}, i::Int) where {T,N,Nc,Cs}
+    i0 = 1
+    i1 = 0
+    for j = 1:i
+        i0 = i1 + 1
+        joint = eqc.constraints[j]
+        i1 += λlength(joint)
+    end
 
+    ind = SVector{i1-i0+1,Int}(i0:i1...)
+    return ind
+end
+
+
+λindex(eqc, 1)
+λindex(eqc, 2)
+length(eqc.constraints[1]) + 4joint_limits_length(eqc.constraints[1])
+length(eqc.constraints[2]) + 4joint_limits_length(eqc.constraints[2])
+
+SVector{1,Int}([1,])
 function controller!(mechanism, k)
     for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])
         pbody = getbody(mech, eqc.parentid)
