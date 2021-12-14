@@ -5,6 +5,7 @@ getT(joint::Joint{T}) where T = T
 Base.length(joint::Joint{T,N}) where {T,N} = N
 Base.zero(joint::Joint{T,N}) where {T,N} = szeros(T, N, 6)
 @inline g(joint::Joint{T,N}) where {T,N} = szeros(T, N)
+λlength(joint) = length(joint) + 4joint_limits_length(joint)
 
 ## Discrete-time position derivatives (for dynamics)
 # Wrappers 1
@@ -204,7 +205,7 @@ end
 
 # Derivatives accounting for quaternion specialness
 @inline function ∂g∂ʳvela(joint::Joint, x2a::AbstractVector, q2a::UnitQuaternion, x2b::AbstractVector, q2b::UnitQuaternion,
-        x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector, λ, Δt, 
+        x1a::AbstractVector, v1a::AbstractVector, q1a::UnitQuaternion, ω1a::AbstractVector, λ, Δt,
     )
 
     X, Q = ∂g∂posa(joint, x2a, q2a, x2b, q2b, λ)

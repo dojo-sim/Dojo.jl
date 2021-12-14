@@ -5,8 +5,20 @@
 end
 
 @inline function setDandΔs!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry, eqc::EqualityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
-    matrix_entry.value = ∂g∂ʳself(mechanism, eqc)
-    vector_entry.value = [-complementarityμ(mechanism, eqc); -g(mechanism, eqc)]
+    comp_jac = []
+    for (i, joint) in enumerate(eqc.constraints)
+        Nli = joint_limits_length(joint)
+        λi = eqc.λsol[2][λindex(eqc, i)]
+        si, γi = get_sγ(joint, λi) 
+        push!(a, [zeros(2Nli, length(joint)) Diagonal(γi) Diagonal(si)])
+    end
+
+    matrix_entry.value = [
+                          cat(comp_jac..., dims=(1,2));
+                          ∂g∂ʳself(mechanism, eqc);
+                         ]
+    vector_entry.value = [-complementarityμ(mechanism, eqc); 
+                          -g(mechanism, eqc)]
     return
 end
 
@@ -18,10 +30,11 @@ function complementarity(mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}; scaling:
         si, γi = get_sγ(joint, λi) 
         push!(c, si .* γi)
     end
-    return vcat(c)
+    return vcat(c...)
 end
 
 function complementarityμ(mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}; scaling::Bool = false) where {T,N,Nc,Cs}
+    
     complementarity(mechanism, eqc; scaling=scaling) .- mechanism.μ
 end
 

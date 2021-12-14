@@ -24,10 +24,13 @@ mutable struct Rotational{T,N,N̄,Nl} <: Joint{T,N}
     end
 end
 
+joint_limits_length(joint::Rotational{T,N,N̄,Nl}) where {T,N,N̄,Nl} = Nl
+
 Rotational0{T,Nl} = Rotational{T,0,3,Nl} where {T,Nl}
 Rotational1{T,Nl} = Rotational{T,1,2,Nl} where {T,Nl}
 Rotational2{T,Nl} = Rotational{T,2,1,Nl} where {T,Nl}
 Rotational3{T,Nl} = Rotational{T,3,0,Nl} where {T,Nl}
+
 
 # Position level constraints (for dynamics)
 @inline function g(joint::Rotational{T,N,N̄,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄}

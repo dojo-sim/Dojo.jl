@@ -10,7 +10,7 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: Constraint{T,N}
     inds::SVector{Nc,SVector{2,Int64}} # indices for minimal coordinates, assumes joints # Nc = 2 THIS IS SPECIAL CASED
 
     λsol::Vector{SVector{N,T}}
-    
+
     function EqualityConstraint(data; name::String="")
         jointdata = Tuple{Joint,Int64,Int64}[]
         for info in data
@@ -41,6 +41,7 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: Constraint{T,N}
                 push!(inds, [last(inds)[2]+1; last(inds)[2]+3-Nset])
             end
             N += Nset
+            N += 4joint_limits_length(set[1])
         end
         constraints = Tuple(constraints)
         Nc = length(constraints)
@@ -190,7 +191,7 @@ function _dGb!(mechanism, cbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T
 end
 
 @generated function g(mechanism, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
-    vec = [:(g(eqc.constraints[$i], getbody(mechanism, eqc.parentid), getbody(mechanism, eqc.childids[$i]), eqc.λsol[2], mechanism.Δt)) for i = 1:Nc]
+    vec = [:(g(eqc.constraints[$i], getbody(mechanism, eqc.parentid), getbody(mechanism, eqc.childids[$i]), eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
     return :(svcat($(vec...)))
 end
 
@@ -206,11 +207,11 @@ end
 @inline ∂gab∂ʳba(mechanism, eqc::EqualityConstraint, body::Body) = ∂g∂ʳvel(mechanism, eqc, body), -∂g∂ʳpos(mechanism, eqc, body)'
 
 @generated function ∂g∂ʳposa(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(∂g∂ʳposa(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i], eqc.λsol[2], mechanism.Δt)) for i = 1:Nc]
+    vec = [:(∂g∂ʳposa(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 @generated function ∂g∂ʳposb(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(∂g∂ʳposb(eqc.constraints[$i], getbody(mechanism, eqc.parentid), body, eqc.childids[$i], eqc.λsol[2], mechanism.Δt)) for i = 1:Nc]
+    vec = [:(∂g∂ʳposb(eqc.constraints[$i], getbody(mechanism, eqc.parentid), body, eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 
@@ -220,12 +221,12 @@ end
 end
 
 @generated function ∂g∂ʳvela(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(∂g∂ʳvela(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i], eqc.λsol[2], mechanism.Δt)) for i = 1:Nc]
+    vec = [:(∂g∂ʳvela(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 
 @generated function ∂g∂ʳvelb(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(∂g∂ʳvelb(eqc.constraints[$i], getbody(mechanism, eqc.parentid), body, eqc.childids[$i], eqc.λsol[2], mechanism.Δt)) for i = 1:Nc]
+    vec = [:(∂g∂ʳvelb(eqc.constraints[$i], getbody(mechanism, eqc.parentid), body, eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 
@@ -323,4 +324,18 @@ end
 
 @inline function ∂g∂ʳvel(mechanism, constraint::Constraint, body::Body)
     body.id == constraint.parentid ? (return ∂g∂ʳvela(mechanism, constraint, body)) : (return ∂g∂ʳvelb(mechanism, constraint, body))
+end
+
+
+function λindex(eqc::EqualityConstraint{T,N,Nc,Cs}, i::Int) where {T,N,Nc,Cs}
+    i0 = 1
+    i1 = 0
+    for j = 1:i
+        i0 = i1 + 1
+        joint = eqc.constraints[j]
+        i1 += λlength(joint)
+    end
+
+    ind = SVector{i1-i0+1,Int}(i0:i1...)
+    return ind
 end

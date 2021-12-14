@@ -21,6 +21,8 @@ mutable struct Translational{T,N,N̄,Nl} <: Joint{T,N}
     end
 end
 
+joint_limits_length(joint::Translational{T,N,N̄,Nl}) where {T,N,N̄,Nl} = Nl
+
 Translational0{T,Nl} = Translational{T,0,3,Nl} where {T,Nl}
 Translational1{T,Nl} = Translational{T,1,2,Nl} where {T,Nl}
 Translational2{T,Nl} = Translational{T,2,1,Nl} where {T,Nl}
