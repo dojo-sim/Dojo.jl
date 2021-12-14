@@ -13,19 +13,19 @@ end
 ### Spring and damper
 ## Forces for dynamics
 ## Discrete-time position wrappers (for dynamics)
-springforcea(joint::Translational, statea::State, stateb::State, Δt) = Δt * springforcea(joint, posargs2(statea)..., posargs2(stateb)...)
-springforceb(joint::Translational, statea::State, stateb::State, Δt) = Δt * springforceb(joint, posargs2(statea)..., posargs2(stateb)...)
-springforceb(joint::Translational, stateb::State, Δt) = Δt * springforceb(joint, posargs2(stateb)...)
-damperforcea(joint::Translational, statea::State, stateb::State, Δt) = Δt * damperforcea(joint, posargs2(statea)..., statea.vsol[2], statea.ϕsol[2], posargs2(stateb)..., stateb.vsol[2], stateb.ϕsol[2])
-damperforceb(joint::Translational, statea::State, stateb::State, Δt) = Δt * damperforceb(joint, posargs2(statea)..., statea.vsol[2], statea.ϕsol[2], posargs2(stateb)..., stateb.vsol[2], stateb.ϕsol[2])
-damperforceb(joint::Translational, stateb::State, Δt) = Δt * damperforceb(joint, posargs2(stateb)..., stateb.vsol[2], stateb.ϕsol[2])
+springforcea(joint::Translational, bodya::Body, bodyb::Body, Δt) = Δt * springforcea(joint, posargs2(bodya.state)..., posargs2(bodyb.state)...)
+springforceb(joint::Translational, bodya::Body, bodyb::Body, Δt) = Δt * springforceb(joint, posargs2(bodya.state)..., posargs2(bodyb.state)...)
+springforceb(joint::Translational, bodyb::Body, Δt) = Δt * springforceb(joint, posargs2(bodyb.state)...)
+damperforcea(joint::Translational, bodya::Body, bodyb::Body, Δt) = Δt * damperforcea(joint, posargs2(statea)..., bodya.state.vsol[2], bodya.state.ϕsol[2], posargs2(bodyb.state)..., bodyb.state.vsol[2], bodyb.state.ϕsol[2])
+damperforceb(joint::Translational, bodya::Body, bodyb::Body, Δt) = Δt * damperforceb(joint, posargs2(bodya.state)..., bodya.state.vsol[2], bodya.state.ϕsol[2], posargs2(bodyb.state)..., bodyb.state.vsol[2], bodyb.state.ϕsol[2])
+damperforceb(joint::Translational, bodyb::Body, Δt) = Δt * damperforceb(joint, posargs2(bodyb.state)..., bodyb.state.vsol[2], bodyb.state.ϕsol[2])
 
-springforcea(joint::Translational3{T}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
-springforceb(joint::Translational3{T}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
-springforceb(joint::Translational3{T}, stateb::State, Δt) where {T} = szeros(T, 6)
-damperforcea(joint::Translational3{T}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
-damperforceb(joint::Translational3{T}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
-damperforceb(joint::Translational3{T}, stateb::State, Δt) where {T} = szeros(T, 6)
+springforcea(joint::Translational3{T}, bodya::Body, bodyb::Body, Δt) where {T} = szeros(T, 6)
+springforceb(joint::Translational3{T}, bodya::Body, bodyb::Body, Δt) where {T} = szeros(T, 6)
+springforceb(joint::Translational3{T}, bodyb::Body, Δt) where {T} = szeros(T, 6)
+damperforcea(joint::Translational3{T}, bodya::Body, bodyb::Body, Δt) where {T} = szeros(T, 6)
+damperforceb(joint::Translational3{T}, bodya::Body, bodyb::Body, Δt) where {T} = szeros(T, 6)
+damperforceb(joint::Translational3{T}, bodyb::Body, Δt) where {T} = szeros(T, 6)
 
 # Used in energy computation
 springforcea(joint::Translational3{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; rotate::Bool = true) where {T} = szeros(T, 6)
