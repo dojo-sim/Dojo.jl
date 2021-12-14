@@ -34,7 +34,7 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: Constraint{T,N}
             @assert set[2] == parentid
             push!(childids, set[3])
 
-            Nset = length(set[1])
+            Nset = ηlength(set[1])
             if isempty(inds)
                 push!(inds, [1;3-Nset])
             else
@@ -49,7 +49,7 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: Constraint{T,N}
     end
 end
 
-joint_limits_length(eqc::EqualityConstraint) = sum(joint_limits_length.(eqc.constraints))
+# joint_limits_length(eqc::EqualityConstraint) = sum(joint_limits_length.(eqc.constraints))
 
 function setPosition!(mechanism, eqc::EqualityConstraint, xθ; iter::Bool=true)
     if !iter
@@ -379,10 +379,11 @@ function resetVars!(eqc::EqualityConstraint{T,N,Nc,Cs}; scale::T=1.0) where {T,N
     λ = []
     for (i, joint) in enumerate(eqc.constraints)
         Nλ = length(joint)
-        Nl = joint_limits_length(joint)
-        # push!(λ, [szeros(Nλ); scale * sones(4Nl)])
-        push!(λ, [szeros(Nλ); scale * sones(4Nl)])
+        Nb = blength(joint)
+        push!(λ, [szeros(Nλ); scale * sones(2Nb)])
     end
+    @show size(vcat(λ...))
+    @show size(eqc.λsol[1])
     eqc.λsol[1] = vcat(λ...)
     eqc.λsol[2] = vcat(λ...)
     return

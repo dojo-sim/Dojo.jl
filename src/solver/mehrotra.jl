@@ -179,7 +179,7 @@ end
 	for (i, joint) in enumerate(eqc.constraints)
         Δs, Δγ = get_sγ(joint, step_entry.value[λindex(eqc,i)])
 		μ = mechanism.μ
-		push!(cor, [- Δs .* Δγ .+ μ; szeros(2 * joint_limits_length(joint) + length(joint))])
+		push!(cor, [- Δs .* Δγ .+ μ; szeros(blength(joint) + length(joint))])
     end
 	cor = vcat(cor...)
 	residual_entry.value += cor

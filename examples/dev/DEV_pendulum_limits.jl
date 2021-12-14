@@ -34,36 +34,6 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 Random.seed!(100)
 ϕ1 = 0.0 * π
 initialize!(mech, :pendulum, ϕ1 = ϕ1)
-
-function cont!(mechanism, k; u = 30.1)
-    for (i, eqc) in enumerate(mechanism.eqconstraints)
-        nu = controldim(eqc, ignore_floating_base = false)
-        su = mechanism.Δt * u * sones(nu)
-        setForce!(mechanism, eqc, su)
-    end
-    return
-end
-
-∂g∂ʳvel(mech, [eq for eq in mech.eqconstraints][1], mech.bodies[2])
-∂gab∂ʳba(mech, mech.bodies[2], [eq for eq in mech.eqconstraints][1])
-∂g∂ʳposb(mech, [eq for eq in mech.eqconstraints][1], mech.bodies[2])
-∂gab∂ʳba(mech, [eq for eq in mech.eqconstraints][1], mech.bodies[2])
-
-function _∂g∂ʳposa(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    i = 2
-    @show "hi"
-    @show "yo yo"
-    @show eqc.constraints[i]
-    ∂g∂ʳposa(eqc.constraints[i], body, getbody(mechanism, eqc.childids[i]), eqc.childids[i], eqc.λsol[2][λindex(eqc,i)], mechanism.Δt)
-end
-
-
-_∂g∂ʳposa(mech, [eq for eq in mech.eqconstraints][1], mech.bodies[2])
-
-joint_limits_length(mech.eqconstraints[1].constraints[2])
-
-
-
 storage = simulate!(mech, 1.0, record = true, verbose = false)
 visualize(mech, storage, vis = vis)
 
