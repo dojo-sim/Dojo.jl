@@ -236,7 +236,7 @@ function ∂g∂ʳposb(joint::Translational{T,Nλ,Nb,N,Nb½}, xb::AbstractVector
            ]
 end
 
-@inline function ∂g∂ʳself(joint::Translational{T,Nλ,0}, η) where {T,Nλ}
+@inline function ∂g∂ʳself(joint::Translational{T,Nλ,0,N}, η) where {T,Nλ,N}
     return Diagonal(1e-10 * sones(T,N))
 end
 
