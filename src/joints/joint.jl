@@ -83,21 +83,21 @@ end
 ## Wrappers 1
 @inline function springforcea(joint::Joint, body1::Body, body2::Body, Δt, childid)
     if body2.id == childid
-        return springforcea(joint, body1.state, body2.state, Δt)
+        return springforcea(joint, body1, body2, Δt)
     else
         return springforce(joint)
     end
 end
 @inline function springforceb(joint::Joint, body1::Body, body2::Body, Δt, childid)
     if body2.id == childid
-        return springforceb(joint, body1.state, body2.state, Δt)
+        return springforceb(joint, body1, body2, Δt)
     else
         return springforce(joint)
     end
 end
 @inline function springforceb(joint::Joint, body1::Origin, body2::Body, Δt, childid)
     if body2.id == childid
-        return springforceb(joint, body2.state, Δt)
+        return springforceb(joint, body2, Δt)
     else
         return springforce(joint)
     end
@@ -105,21 +105,21 @@ end
 
 @inline function damperforcea(joint::Joint, body1::Body, body2::Body, Δt, childid)
     if body2.id == childid
-        return damperforcea(joint, body1.state, body2.state, Δt)
+        return damperforcea(joint, body1, body2, Δt)
     else
         return damperforce(joint)
     end
 end
 @inline function damperforceb(joint::Joint, body1::Body, body2::Body, Δt, childid)
     if body2.id == childid
-        return damperforceb(joint, body1.state, body2.state, Δt)
+        return damperforceb(joint, body1, body2, Δt)
     else
         return damperforce(joint)
     end
 end
 @inline function damperforceb(joint::Joint, body1::Origin, body2::Body, Δt, childid)
     if body2.id == childid
-        return damperforceb(joint, body2.state, Δt)
+        return damperforceb(joint, body2, Δt)
     else
         return damperforce(joint)
     end
@@ -209,8 +209,6 @@ end
 ∂g∂ʳvela(joint::Joint, statea::State, stateb::State, λ, Δt) = ∂g∂ʳvela(joint, posargs3(statea, Δt)..., posargs3(stateb, Δt)..., fullargssol(statea)..., λ, Δt)
 ∂g∂ʳvelb(joint::Joint, statea::State, stateb::State, λ, Δt) = ∂g∂ʳvelb(joint, posargs3(statea, Δt)..., posargs3(stateb, Δt)..., fullargssol(stateb)..., λ, Δt)
 ∂g∂ʳvelb(joint::Joint, stateb::State, λ, Δt) = ∂g∂ʳvelb(joint, posargs3(stateb, Δt)..., fullargssol(stateb)..., λ, Δt)
-# offdiagonal∂damper∂ʳvel(joint::Joint, statea::State, stateb::State) = offdiagonal∂damper∂ʳvel(joint, posargs2(statea)..., posargs2(stateb)..., λ)
-# offdiagonal∂damper∂ʳvel(joint::Joint, stateb::State) = offdiagonal∂damper∂ʳvel(joint, posargs2(stateb)..., λ)
 
 # Derivatives accounting for quaternion specialness
 @inline function ∂g∂ʳvela(joint::Joint, x2a::AbstractVector, q2a::UnitQuaternion, x2b::AbstractVector, q2b::UnitQuaternion,

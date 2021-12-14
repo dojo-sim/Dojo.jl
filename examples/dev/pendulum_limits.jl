@@ -41,27 +41,10 @@ end
 
 
 
-
 mech = getmechanism(:pendulum, Δt = 0.01, g = 9.81)
 initialize!(mech, :pendulum, ϕ1 = 0.1)
-resetVars!.(mech.eqconstraints)
 storage = simulate!(mech, 3.1, record = true, verbose = true)
 visualize(mech, storage, vis=vis)
-
-eqc1 = collect(mech.eqconstraints)[1]
-g(mech, eqc1)
-
-λsol
-
-eqcs = collect(mech.eqconstraints)
-resetVars!.(eqcs)
-eqcs[1].λsol
-
-orig = mech.origin
-body1 = collect(mech.bodies)[1]
-eqc0 = EqualityConstraint(Revolute(orig, body1, [0,0,1.0], rot_joint_limits = [-sones(1), sones(1)]))
-
-const Dojo = Main
 
 
 
