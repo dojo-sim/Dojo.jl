@@ -380,6 +380,8 @@ function resetVars!(eqc::EqualityConstraint{T,N,Nc,Cs}; scale::T=1.0) where {T,N
         Nb = blength(joint)
         push!(λ, [scale * sones(2Nb); szeros(Nλ)])
     end
+    @show size(vcat(λ...))
+    @show size(eqc.λsol[1])
     eqc.λsol[1] = vcat(λ...)
     eqc.λsol[2] = vcat(λ...)
     return

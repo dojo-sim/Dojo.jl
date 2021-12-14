@@ -13,16 +13,16 @@ end
 #     return
 # end
 
-# ## Complementarity
-# function complementarity(mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}; scaling::Bool = false) where {T,N,Nc,Cs}
-#     c = []
-#     for (i, joint) in enumerate(eqc.constraints)
-#         λi = eqc.λsol[2][λindex(eqc, i)]
-#         si, γi = get_sγ(joint, λi)
-#         push!(c, si .* γi)
-#     end
-#     return vcat(c...)
-# end
+## Complementarity
+function complementarity(mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}; scaling::Bool = false) where {T,N,Nc,Cs}
+    c = []
+    for (i, joint) in enumerate(eqc.constraints)
+        λi = eqc.λsol[2][λindex(eqc, i)]
+        si, γi = get_sγ(joint, λi)
+        push!(c, si .* γi)
+    end
+    return vcat(c...)
+end
 
 # function complementarityμ(mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}; scaling::Bool = false) where {T,N,Nc,Cs}
 #     complementarity(mechanism, eqc; scaling=scaling) .- mechanism.μ
