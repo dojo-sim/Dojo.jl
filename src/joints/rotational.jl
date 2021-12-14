@@ -163,7 +163,7 @@ end
     [
      Diagonal(γ) Diagonal(s) zeros(Nb, Nλ);
      Diagonal(ones(Nb)) zeros(Nb, Nb + Nλ);
-     zeros(Nλ, N);
+     zeros(Nλ, 2Nb) Diagonal(1e-10 * sones(T,Nλ));
     ]
 end
 

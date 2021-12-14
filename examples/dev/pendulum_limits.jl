@@ -47,6 +47,17 @@ initialize!(mech, :pendulum, ϕ1 = 0.1)
 storage = simulate!(mech, 3.1, record = true, verbose = true)
 visualize(mech, storage, vis=vis)
 
+eqc1 = collect(mech.eqconstraints)[1]
+g(mech, eqc1)
+
+
+
+@generated function test1(a::T) where T
+    vec = [:(a * Diagonal(sones(2))) for i = 1:3]
+    return :(cat($(vec...), dims=(1,2)))
+end
+
+test1(1.0)
 
 
 eqcs = collect(mech.eqconstraints)
