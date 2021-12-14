@@ -34,7 +34,7 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: Constraint{T,N}
             @assert set[2] == parentid
             push!(childids, set[3])
 
-            Nset = length(set[1])
+            Nset = ηlength(set[1])
             if isempty(inds)
                 push!(inds, [1;3-Nset])
             else
@@ -48,8 +48,6 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: Constraint{T,N}
         return new{T,N,Nc,typeof(constraints)}(getGlobalID(), name, isspring, isdamper, constraints, parentid, childids, inds, λsol)
     end
 end
-
-joint_limits_length(eqc::EqualityConstraint) = sum(joint_limits_length.(eqc.constraints))
 
 function setPosition!(mechanism, eqc::EqualityConstraint, xθ; iter::Bool=true)
     if !iter
@@ -157,6 +155,7 @@ end
 end
 
 @inline function ∂constraintForceMapping!(mechanism, body::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
+    @warn "maybe need some work"
     if body.id == eqc.parentid
         _dGa!(mechanism, body, eqc)
     elseif body.id ∈ eqc.childids
@@ -368,9 +367,8 @@ function λindex(eqc::EqualityConstraint{T,N,Nc,Cs}, i::Int) where {T,N,Nc,Cs}
     for j = 1:i
         i0 = i1 + 1
         joint = eqc.constraints[j]
-        i1 += λlength(joint)
+        i1 += ηlength(joint)
     end
-
     ind = SVector{i1-i0+1,Int}(i0:i1...)
     return ind
 end
@@ -378,10 +376,9 @@ end
 function resetVars!(eqc::EqualityConstraint{T,N,Nc,Cs}; scale::T=1.0) where {T,N,Nc,Cs}
     λ = []
     for (i, joint) in enumerate(eqc.constraints)
-        Nλ = length(joint)
-        Nl = joint_limits_length(joint)
-        # push!(λ, [szeros(Nλ); scale * sones(4Nl)])
-        push!(λ, [szeros(Nλ); scale * sones(4Nl)])
+        Nλ = λlength(joint)
+        Nb = blength(joint)
+        push!(λ, [scale * sones(2Nb); szeros(Nλ)])
     end
     eqc.λsol[1] = vcat(λ...)
     eqc.λsol[2] = vcat(λ...)
