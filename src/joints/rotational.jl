@@ -79,8 +79,8 @@ end
     s, γ = get_sγ(joint, λ)
     return [
             constraintmat(joint) * e1;
-            s[1:Nl] - (joint.joint_limits[2] - e2);
-            s[Nl .+ (1:Nl)] - (e2 - joint.joint_limits[1]);
+            s[1:Nl] - (joint.joint_limits[2] .- e2);
+            s[Nl .+ (1:Nl)] - (e2 .- joint.joint_limits[1]);
            ]
 end
 
@@ -98,19 +98,19 @@ end
 
 ## Derivatives NOT accounting for quaternion specialness
 @inline function ∂g∂posa(joint::Rotational{T,N,N̄,Nl}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
-    X = szeros(T, N + 2Nl + 2Nl, 3)
+    X = szeros(T, N + 2Nl, 3)
     Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, UnitQuaternion(q..., false), xb, qb, λ), vector(qa))
-    return constraintmat(joint) * X, Q
+    return X, Q
 end
 @inline function ∂g∂posb(joint::Rotational{T,N,N̄,Nl}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
-    X = szeros(T, N + 2Nl + 2Nl, 3)
+    X = szeros(T, N + 2Nl, 3)
     Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, qa, xb, UnitQuaternion(q..., false), λ), vector(qb))
-    return constraintmat(joint) * X, Q
+    return X, Q
 end
 @inline function ∂g∂posb(joint::Rotational{T,N,N̄,Nl}, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
-    X = szeros(T, N + 2Nl + 2Nl, 3)
+    X = szeros(T, N + 2Nl, 3)
     Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xb, UnitQuaternion(q..., false), λ), vector(qb))
-    return constraintmat(joint) * X, Q
+    return X, Q
 end
 
 @inline function ∂g∂ʳself(joint::Rotational{T,N,N̄,0}, λ) where {T,N,N̄}

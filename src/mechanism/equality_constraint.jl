@@ -50,6 +50,8 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: Constraint{T,N}
     end
 end
 
+joint_limits_length(eqc::EqualityConstraint) = sum(joint_limits_length.(eqc.constraints))
+
 function setPosition!(mechanism, eqc::EqualityConstraint, xθ; iter::Bool=true)
     if !iter
         _setPosition!(mechanism, eqc, xθ)
@@ -132,6 +134,9 @@ end
 end
 
 @inline function constraintForceMapping!(mechanism, body::Body, eqc::EqualityConstraint)
+    @show size(∂g∂ʳpos(mechanism, eqc, body))
+    @show size(eqc.λsol[2])
+    @warn "we have an issue here we need to filter out the si's that are inside λsol because they do not factor in the dynamics"
     body.state.d -= zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
 
     if length(eqc.λsol[2]) == 3 && body.id ∈ eqc.childids
@@ -203,8 +208,19 @@ end
     body.id == eqc.parentid ? (return damperforcea(mechanism, eqc, body)) : (return damperforceb(mechanism, eqc, body))
 end
 
-@inline ∂gab∂ʳba(mechanism, body::Body, eqc::EqualityConstraint) = -∂g∂ʳpos(mechanism, eqc, body)', ∂g∂ʳvel(mechanism, eqc, body)
-@inline ∂gab∂ʳba(mechanism, eqc::EqualityConstraint, body::Body) = ∂g∂ʳvel(mechanism, eqc, body), -∂g∂ʳpos(mechanism, eqc, body)'
+@inline function ∂gab∂ʳba(mechanism, body::Body{T}, eqc::EqualityConstraint{T}) where T
+    Nl = joint_limits_length(eqc)
+    Z = szeros(T,2Nl,6)
+    @warn "this is wrong we need to put zeros for the columsn correcponding to the si's"
+    return [Z; -∂g∂ʳpos(mechanism, eqc, body)]', [Z; ∂g∂ʳvel(mechanism, eqc, body)]
+end
+
+@inline function ∂gab∂ʳba(mechanism, eqc::EqualityConstraint{T}, body::Body{T}) where T
+    Nl = joint_limits_length(eqc)
+    Z = szeros(T,2Nl,6)
+    @warn "this is wrong we need to put zeros for the columsn correcponding to the si's"
+    return [Z; ∂g∂ʳvel(mechanism, eqc, body)], [Z; -∂g∂ʳpos(mechanism, eqc, body)]'
+end
 
 @generated function ∂g∂ʳposa(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     vec = [:(∂g∂ʳposa(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
