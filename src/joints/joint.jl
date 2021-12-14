@@ -10,21 +10,21 @@ Base.zero(joint::Joint{T,N}) where {T,N} = szeros(T, N, 6)
 # Wrappers 1
 @inline function ∂g∂ʳposa(joint::Joint, body1::Body, body2::Body, childid, λ, Δt)
     if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳposa(joint, body1.state, body2.state, λ, Δt)
+        return ∂g∂ʳposa(joint, body1.state, body2.state, λ, Δt)
     else
         return zero(joint)
     end
 end
 @inline function ∂g∂ʳposb(joint::Joint, body1::Body, body2::Body, childid, λ, Δt)
     if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳposb(joint, body1.state, body2.state, λ, Δt)
+        return ∂g∂ʳposb(joint, body1.state, body2.state, λ, Δt)
     else
         return zero(joint)
     end
 end
 @inline function ∂g∂ʳposb(joint::Joint, body1::Origin, body2::Body, childid, λ, Δt)
     if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳposb(joint, body2.state, λ, Δt)
+        return ∂g∂ʳposb(joint, body2.state, λ, Δt)
     else
         return zero(joint)
     end
@@ -34,21 +34,21 @@ end
 # Wrappers 1
 @inline function ∂g∂ʳvela(joint::Joint, body1::Body, body2::Body, childid, λ, Δt)
     if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳvela(joint, body1.state, body2.state, λ, Δt)
+        return ∂g∂ʳvela(joint, body1.state, body2.state, λ, Δt)
     else
         return zero(joint)
     end
 end
 @inline function ∂g∂ʳvelb(joint::Joint, body1::Body, body2::Body, childid, λ, Δt)
     if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳvelb(joint, body1.state, body2.state, λ, Δt)
+        return ∂g∂ʳvelb(joint, body1.state, body2.state, λ, Δt)
     else
         return zero(joint)
     end
 end
 @inline function ∂g∂ʳvelb(joint::Joint, body1::Origin, body2::Body, childid, λ, Δt)
     if body2.id == childid
-        return constraintmat(joint) * ∂g∂ʳvelb(joint, body2.state, λ, Δt)
+        return ∂g∂ʳvelb(joint, body2.state, λ, Δt)
     else
         return zero(joint)
     end
@@ -151,8 +151,8 @@ Joint3 = Joint{T,3} where T
 
 ### Constraints and derivatives
 ## Position level constraint wrappers
-@inline g(joint::Joint, body1::Body, body2::Body, λ, Δt) = constraintmat(joint) * g(joint, body1.state, body2.state, λ, Δt)
-@inline g(joint::Joint, body1::Origin, body2::Body, λ, Δt) = constraintmat(joint) * g(joint, body2.state, λ, Δt)
+@inline g(joint::Joint, body1::Body, body2::Body, λ, Δt) = g(joint, body1.state, body2.state, λ, Δt)
+@inline g(joint::Joint, body1::Origin, body2::Body, λ, Δt) = g(joint, body2.state, λ, Δt)
 
 ### Constraints and derivatives
 ## Discrete-time position wrappers (for dynamics)
@@ -160,7 +160,7 @@ g(joint::Joint, statea::State, stateb::State, λ, Δt) = g(joint, posargs3(state
 g(joint::Joint, stateb::State, λ, Δt) = g(joint, posargs3(stateb, Δt)..., λ)
 
 @inline function ∂g∂ʳself(joint::Joint{T,N}, λ) where {T,N}
-    return 1e-10 * sones(T,N)
+    return Diagonal(1e-10 * sones(T,N))
 end
 
 ## Discrete-time position derivatives (for dynamics)

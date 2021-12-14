@@ -4,6 +4,27 @@
     return
 end
 
+@inline function setDandΔs!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry, eqc::EqualityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
+    matrix_entry.value = ∂g∂ʳself(mechanism, eqc)
+    vector_entry.value = [-complementarityμ(mechanism, eqc); -g(mechanism, eqc)]
+    return
+end
+
+## Complementarity
+function complementarity(mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}; scaling::Bool = false) where {T,N,Nc,Cs}
+    c = []
+    for (i, joint) in enumerate(eqc.constraints)
+        λi = eqc.λsol[2][λindex(eqc, i)]
+        si, γi = get_sγ(joint, λi) 
+        push!(c, si .* γi)
+    end
+    return vcat(c)
+end
+
+function complementarityμ(mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}; scaling::Bool = false) where {T,N,Nc,Cs}
+    complementarity(mechanism, eqc; scaling=scaling) .- mechanism.μ
+end
+
 @inline function setLU!(mechanism::Mechanism, matrix_entry_L::Entry, matrix_entry_U::Entry, componenta::Component, componentb::Component)
     L, U = ∂gab∂ʳba(mechanism, componenta, componentb)
     matrix_entry_L.value = L

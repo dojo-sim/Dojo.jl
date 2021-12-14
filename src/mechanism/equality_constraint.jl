@@ -216,7 +216,7 @@ end
 
 @generated function ∂g∂ʳself(mechanism, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
     vec = [:(∂g∂ʳself(eqc.constraints[$i], eqc.λsol[2])) for i = 1:Nc]
-    return :(Diagonal(vcat($(vec...))))
+    return :(cat($(vec...), dims=(1,2)))
 end
 
 @generated function ∂g∂ʳvela(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}

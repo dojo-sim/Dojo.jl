@@ -26,10 +26,8 @@ Translational1{T,Nl} = Translational{T,1,2,Nl} where {T,Nl}
 Translational2{T,Nl} = Translational{T,2,1,Nl} where {T,Nl}
 Translational3{T,Nl} = Translational{T,3,0,Nl} where {T,Nl}
 
-
 @inline function _g(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
     vertices = joint.vertices
-    g = vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
     return vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
 end
 
@@ -39,34 +37,141 @@ end
 end
 
 # Position level constraints (for dynamics)
-@inline function g(joint::Translational{T,N,N̄,Nl}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
+@inline function g(joint::Translational{T,N,N̄,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄}
     vertices = joint.vertices
-    g = vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
-    return vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
+    e = vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
+    return constraintmat(joint) * e
 end
 
-@inline function g(joint::Translational{T,N,N̄,Nl}, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
+@inline function g(joint::Translational{T,N,N̄,0}, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄}
     vertices = joint.vertices
-    return xb + vrotate(vertices[2], qb) - vertices[1]
+    e = xb + vrotate(vertices[2], qb) - vertices[1]
+    return constraintmat(joint) * e
 end
 
 ## Derivatives NOT accounting for quaternion specialness
-@inline function ∂g∂posa(joint::Translational{T,N,N̄,Nl}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
+@inline function ∂g∂posa(joint::Translational{T,N,N̄,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄}
     point2 = xb + vrotate(joint.vertices[2], qb)
     X = -VLᵀmat(qa) * RVᵀmat(qa)
     Q = ∂vrotate∂q(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * Tmat()
     Q += ∂vrotate∂p(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * -∂vrotate∂q(joint.vertices[1], qa)
+    return constraintmat(joint) * X, constraintmat(joint) * Q
+end
+
+@inline function ∂g∂posb(joint::Translational{T,N,N̄,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄}
+    X = VLᵀmat(qa) * RVᵀmat(qa)
+    Q = 2 * VLᵀmat(qa) * Rmat(qa) * Rᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
+    return constraintmat(joint) * X, constraintmat(joint) * Q
+end
+@inline function ∂g∂posb(joint::Translational{T,N,N̄,0}, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄}
+    X = I
+    Q = 2 * VRᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
+    return constraintmat(joint) * X, constraintmat(joint) * Q
+end
+
+function ∂g∂ʳposa(joint::Translational{T,N,N̄,0}, statea::State, stateb::State, λ, Δt) where {T,N,N̄}
+    xa, qa = posargs2(statea)
+    xb, qb = posargs2(stateb)
+    ∂g∂ʳposa(joint, xa, qa, xb, qb, λ)
+end
+
+function ∂g∂ʳposa(joint::Translational{T,N,N̄,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄}
+    X = -1.0 * transpose(rotation_matrix(qa))
+    pb_a = rotation_matrix(inv(qa)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
+    ca_a = rotation_matrix(inv(qa)) * (xa) # body a com
+    capb_a = pb_a - ca_a
+    Q = - 1.0 * transpose(skew(capb_a))
+    return constraintmat(joint) * [X Q]
+end
+
+function ∂g∂ʳposb(joint::Translational{T,N,N̄,0}, statea::State, stateb::State, λ, Δt) where {T,N,N̄}
+    xa, qa = posargs2(statea)
+    xb, qb = posargs2(stateb)
+    ∂g∂ʳposb(joint, xa, qa, xb, qb, λ)
+end
+
+function ∂g∂ʳposb(joint::Translational{T,N,N̄,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄}
+    X = transpose(rotation_matrix(qa))
+    pb_b = rotation_matrix(inv(qb)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
+    cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
+    cbpb_b = pb_b - cb_b
+    Q = transpose(skew(cbpb_b) * rotation_matrix(inv(qb) * qa))
+    return constraintmat(joint) * [X Q]
+end
+
+function ∂g∂ʳposb(joint::Translational{T,N,N̄,0}, stateb::State, λ, Δt) where {T,N,N̄}
+    xb, qb = posargs2(stateb)
+    ∂g∂ʳposb(joint, xb, qb, λ)
+end
+
+function ∂g∂ʳposb(joint::Translational{T,N,N̄,0}, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄}
+    X = transpose(I(3))
+    pb_b = rotation_matrix(inv(qb)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
+    cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
+    cbpb_b = pb_b - cb_b
+    Q = transpose(skew(cbpb_b) * rotation_matrix(inv(qb)))
+    return constraintmat(joint) * [X Q]
+end
+
+### w/ Limits
+function get_sγ(joint::Translational{T,N,N̄,Nl}, λ) where {T,N,N̄,Nl}
+    s = λ[N .+ (1:(2 * Nl))] 
+    γ = λ[N + 2 * Nl .+ (1:(2 * Nl))] 
+    return s, γ
+end
+
+# Position level constraints (for dynamics)
+@inline function g(joint::Translational{T,N,N̄,Nl}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
+    vertices = joint.vertices
+    e1 = vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
+    e2 = minimalCoordinates(joint, xa, qa, xb, qb)
+
+    s, γ = get_sγ(joint, λ)
+
+    return [
+            constraintmat(joint) * e1;
+            s[1:Nl] - (joint.joint_limits[2] - e2);
+            s[Nl .+ (1:Nl)] - (e2 - joint.joint_limits[1]);
+           ]
+end
+
+@inline function g(joint::Translational{T,N,N̄,Nl}, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
+    vertices = joint.vertices
+    e1 = xb + vrotate(vertices[2], qb) - vertices[1]
+    e2 = minimalCoordinates(joint, xa, qa, xb, qb)
+
+    s, γ = get_sγ(joint, λ)
+
+    return [
+            constraintmat(joint) * e1;
+            s[1:Nl] - (joint.joint_limits[2] - e2);
+            s[Nl .+ (1:Nl)] - (e2 - joint.joint_limits[1]);
+           ]
+end
+
+## Derivatives NOT accounting for quaternion specialness
+@inline function ∂g∂posa(joint::Translational{T,N,N̄,Nl}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
+    # point2 = xb + vrotate(joint.vertices[2], qb)
+    # X = -VLᵀmat(qa) * RVᵀmat(qa)
+    # Q = ∂vrotate∂q(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * Tmat()
+    # Q += ∂vrotate∂p(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * -∂vrotate∂q(joint.vertices[1], qa)
+    X = FiniteDiff.finite_difference_jacobian(x -> g(joint, x, qa, xb, qb, λ), xa)
+    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, q, xb, qb, λ), qa)
     return X, Q
 end
 
 @inline function ∂g∂posb(joint::Translational{T,N,N̄,Nl}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
-    X = VLᵀmat(qa) * RVᵀmat(qa)
-    Q = 2 * VLᵀmat(qa) * Rmat(qa) * Rᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
+    # X = VLᵀmat(qa) * RVᵀmat(qa)
+    # Q = 2 * VLᵀmat(qa) * Rmat(qa) * Rᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
+    X = FiniteDiff.finite_difference_jacobian(x -> g(joint, xa, qa, x, qb, λ), xb)
+    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, qa, xb, q, λ), qb)
     return X, Q
 end
 @inline function ∂g∂posb(joint::Translational{T,N,N̄,Nl}, xb::AbstractVector, qb::UnitQuaternion, λ) where {T,N,N̄,Nl}
-    X = I
-    Q = 2 * VRᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
+    # X = I
+    # Q = 2 * VRᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
+    X = FiniteDiff.finite_difference_jacobian(x -> g(joint, x, qb, λ), xb)
+    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xb, q, λ), qb)
     return X, Q
 end
 
@@ -82,7 +187,13 @@ function ∂g∂ʳposa(joint::Translational{T,N,N̄,Nl}, xa::AbstractVector, qa:
     ca_a = rotation_matrix(inv(qa)) * (xa) # body a com
     capb_a = pb_a - ca_a
     Q = - 1.0 * transpose(skew(capb_a))
-    return [X Q]
+
+
+    return [
+            constraintmat(joint) * [X Q]
+            -nullspacemat(joint) * [X Q]
+            nullspacemat(joint) * [X Q]
+           ]
 end
 
 function ∂g∂ʳposb(joint::Translational{T,N,N̄,Nl}, statea::State, stateb::State, λ, Δt) where {T,N,N̄,Nl}
@@ -97,7 +208,11 @@ function ∂g∂ʳposb(joint::Translational{T,N,N̄,Nl}, xa::AbstractVector, qa:
     cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
     cbpb_b = pb_b - cb_b
     Q = transpose(skew(cbpb_b) * rotation_matrix(inv(qb) * qa))
-    return [X Q]
+    return [
+            constraintmat(joint) * [X Q]
+            -nullspacemat(joint) * [X Q]
+            nullspacemat(joint) * [X Q]
+           ]
 end
 
 function ∂g∂ʳposb(joint::Translational{T,N,N̄,Nl}, stateb::State, λ, Δt) where {T,N,N̄,Nl}
@@ -111,7 +226,22 @@ function ∂g∂ʳposb(joint::Translational{T,N,N̄,Nl}, xb::AbstractVector, qb:
     cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
     cbpb_b = pb_b - cb_b
     Q = transpose(skew(cbpb_b) * rotation_matrix(inv(qb)))
-    return [X Q]
+    return [
+            constraintmat(joint) * [X Q]
+            -nullspacemat(joint) * [X Q]
+            nullspacemat(joint) * [X Q]
+           ]
+end
+
+@inline function ∂g∂ʳself(joint::Translational{T,N,N̄,0}, λ) where {T,N,N̄}
+    return Diagonal(1e-10 * sones(T,N))
+end
+
+@inline function ∂g∂ʳself(joint::Translational{T,N,N̄,Nl}, λ) where {T,N,N̄,Nl}
+    [
+     zeros(N, N + 4Nl);
+     zeros(2Nl, N) Diagonal(ones(2Nl)) zeros(2Nl, 2Nl);
+    ]
 end
 
 ### Forcing
