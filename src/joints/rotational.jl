@@ -84,6 +84,7 @@ end
     e2 = minimalCoordinates(joint, qa, qb)
     s, γ = get_sγ(joint, η)
     return [
+            s .* γ;
             s[1:Nb½] - (joint.joint_limits[2] .- e2);
             s[Nb½ .+ (1:Nb½)] - (e2 .- joint.joint_limits[1]);
             constraintmat(joint) * e1;

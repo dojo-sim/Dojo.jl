@@ -155,7 +155,7 @@ end
 end
 
 @inline function ∂constraintForceMapping!(mechanism, body::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
-    @warn "maybe need some work"
+    # @warn "maybe need some work"
     if body.id == eqc.parentid
         _dGa!(mechanism, body, eqc)
     elseif body.id ∈ eqc.childids

@@ -222,7 +222,14 @@ end
     violation = 0.0
     for eq in mechanism.eqconstraints
         res = g(mechanism, eq)
-        violation = max(violation, norm(res, Inf))
+        shift = 0
+        for (i, joint) in enumerate(eq.constraints) 
+            Nλ = λlength(joint) 
+            Nb = blength(joint)
+            subres = res[shift + 2Nb .+ (1:Nλ)]
+            violation = max(violation, norm(subres, Inf))
+            shift += ηlength(joint)
+        end
     end
     for body in mechanism.bodies
         res = g(mechanism, body)
