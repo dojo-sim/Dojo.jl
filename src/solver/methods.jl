@@ -1,9 +1,6 @@
 @inline function setDandΔs!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry, component::Component)
     matrix_entry.value = ∂g∂ʳself(mechanism, component)
-    # @show "AFTER"
-    @show "BEFORE"
     vector_entry.value = -g(mechanism, component)
-    @show "AFTER"
     return
 end
 

@@ -35,11 +35,7 @@ Base.convert(::Type{SMatrix{N,N,T,N2}}, E::UniformScaling) where {T, N, N2} = SM
 @inline svcat(a::StaticArray, b::StaticArray) = vcat(a, b)
 @inline svcat(a::StaticArray{Tuple{N},T,1}, b::T) where {T,N} = vcat(a, SA[b])
 @inline svcat(a::T, b::StaticArray{Tuple{N},T,1}) where {T,N} = vcat(SA[a], b)
-# @inline svcat(a, b, c...) = svcat(svcat(a, b), svcat(c...))
-@inline function svcat(a, b, c...)
-    error()
-    svcat(svcat(a, b), svcat(c...))
-end
+@inline svcat(a, b, c...) = svcat(svcat(a, b), svcat(c...))
 
 @inline szeros(::Type{T}, N) where T = @SVector zeros(T, N)
 @inline szeros(N)= @SVector zeros(N)

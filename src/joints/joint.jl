@@ -11,11 +11,10 @@ blength(joint::Joint{T,Nλ,Nb}) where {T,Nλ,Nb} = Nb
 ηlength(joint::Joint{T,Nλ,Nb,N}) where {T,Nλ,Nb,N} = N
 
 function get_sγ(joint::Joint{T,Nλ,Nb}, η) where {T,Nλ,Nb}
-    s = η[1:Nb]
-    γ = η[Nb .+ (1:Nb)]
+    s = η[SVector{Nb,Int}(1:Nb)]
+    γ = η[SVector{Nb,Int}(Nb .+ (1:Nb))]
     return s, γ
 end
-
 
 ## Discrete-time position derivatives (for dynamics)
 # Wrappers 1
