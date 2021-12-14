@@ -155,7 +155,7 @@ end
 end
 
 @inline function ∂constraintForceMapping!(mechanism, body::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
-    @warn "maybe need some work"
+    # @warn "maybe need some work"
     if body.id == eqc.parentid
         _dGa!(mechanism, body, eqc)
     elseif body.id ∈ eqc.childids
@@ -380,8 +380,6 @@ function resetVars!(eqc::EqualityConstraint{T,N,Nc,Cs}; scale::T=1.0) where {T,N
         Nb = blength(joint)
         push!(λ, [scale * sones(2Nb); szeros(Nλ)])
     end
-    @show size(vcat(λ...))
-    @show size(eqc.λsol[1])
     eqc.λsol[1] = vcat(λ...)
     eqc.λsol[2] = vcat(λ...)
     return
