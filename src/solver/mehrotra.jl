@@ -174,19 +174,6 @@ end
 end
 
 @inline function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry,
-		eqc::EqualityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
-	cor = []
-	for (i, joint) in enumerate(eqc.constraints)
-        Δs, Δγ = get_sγ(joint, step_entry.value[λindex(eqc,i)])
-		μ = mechanism.μ
-		push!(cor, [- Δs .* Δγ .+ μ; szeros(blength(joint) + length(joint))])
-    end
-	cor = vcat(cor...)
-	residual_entry.value += cor
-    return
-end
-
-@inline function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry,
 		ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
 	cont = ineqc.constraints[1]
 	μ = mechanism.μ
@@ -194,6 +181,23 @@ end
     Δγ = step_entry.value[N½ .+ (1:N½)]
 	residual_entry.value += [[-Δs[1] * Δγ[1]; -cone_product(Δs[2:4], Δγ[2:4])] + μ * neutral_vector(cont); szeros(N½)]
     return
+end
+
+@inline function correction!(mechanism::Mechanism{T}, residual_entry::Entry, step_entry::Entry,
+		eqc::EqualityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
+	cor = correction(mechanism, step_entry, eqc)
+	residual_entry.value += cor
+    return
+end
+
+@generated function correction(mechanism::Mechanism{T}, step_entry::Entry, eqc::EqualityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
+    cor = [:(correction(eqc.constraints[$i], step_entry.value[λindex(eqc,$i)], mechanism.μ)) for i = 1:Nc]
+    return :(vcat($(cor...)))
+end
+
+@inline function correction(joint::Joint{T,Nλ,Nb,N}, Δ, μ) where {T,Nλ,Nb,N}
+    Δs, Δγ = get_sγ(joint, Δ)
+	return [- Δs .* Δγ .+ μ; szeros(Nb + Nλ)]
 end
 
 function pullresidual!(mechanism::Mechanism)

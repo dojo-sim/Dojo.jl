@@ -165,19 +165,19 @@ end
 
 # display learned policy
 function display_policy(env::Environment, policy::Policy, normalizer::Normalizer, hp::HyperParameters; rendering = false)
-    state = reset(env)
-    traj = [state]
+    obs = reset(env)
+    traj = [copy(env.x)]
     done = false
     num_plays = 1.
     reward_evaluation = 0
     while !done && num_plays < hp.horizon
         rendering && render(env)
         sleep(env.mechanism.Δt)
-        observe(normalizer, state)
-        push!(traj, copy(state))
-        state = normalize(normalizer, state)
-        action = evaluate(policy, state)
-        state, reward, done, _ = step(env, action)
+        observe(normalizer, obs)
+        push!(traj, copy(env.x))
+        obs = normalize(normalizer, obs)
+        action = evaluate(policy, obs)
+        obs, reward, done, _ = step(env, action)
         reward_evaluation += reward
         num_plays += 1
     end
@@ -188,17 +188,17 @@ end
 
 # display learned policy
 function display_random_policy(env::Environment, hp::HyperParameters; rendering = false)
-    state = reset(env)
-    traj = [state]
+    obs = reset(env)
+    traj = [copy(env.x)]
     done = false
     num_plays = 1.
     reward_evaluation = 0
     while !done && num_plays < hp.horizon
         rendering && render(env)
         sleep(env.mechanism.Δt)
-        push!(traj, copy(state))
+        push!(traj, copy(env.x))
         action = sample(env.aspace)
-        state, reward, done, _ = step(env, action)
+        obs, reward, done, _ = step(env, action)
         reward_evaluation += reward
         num_plays += 1
     end

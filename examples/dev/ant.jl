@@ -18,10 +18,11 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
-mech = getmechanism(:ant, Δt = 0.05, g = -9.81, contact = true,
+mech = getmechanism(:ant, Δt = 0.01, g = -9.81, contact = true,
     contact_body = true, spring = 0.0, damper = 1.0);
 initialize!(mech, :ant, rot = [0,0,0.], ankle = 0.25)
-@elapsed storage = simulate!(mech, 2.0, record = true, verbose = false,
+# @elapsed storage = simulate!(mech, 2.0, record = true, verbose = false,
+@profiler storage = simulate!(mech, 2.0, record = true, verbose = false,
     opts=InteriorPointOptions(verbose=false, btol = 1e-6))
 visualize(mech, storage, vis = vis)
 
@@ -52,3 +53,87 @@ env.mechanism.eqconstraints
 controldim(env.mechanism)
 sample(env.aspace)
 # sample(env.aspace)
+
+
+
+
+
+
+
+
+using BenchmarkTools
+eqc1 = collect(mech.eqconstraints)[1]
+eqc2 = collect(mech.eqconstraints)[2]
+joint21 = eqc2.constraints[1]
+joint22 = eqc2.constraints[2]
+@benchmark λindex(eqc1, 1)
+@benchmark λindex($eqc2, $1)
+
+
+@inline function correction(joint::Joint{T,Nλ,Nb,N}, Δ, μ) where {T,Nλ,Nb,N}
+    Δs, Δγ = get_sγ(joint, Δ)
+	return [- Δs .* Δγ .+ μ; szeros(Nb + Nλ)]
+end
+
+
+# μ = mech.μ
+# jj = fill(joint22, 2)
+# ll = fill(λ, 2)
+# @benchmark vv($μ, $ll, $jj)
+# @code_warntype vv(μ, ll, jj)
+
+λ = eqc2.λsol[2]
+μ = mech.μ
+
+system = mech.system
+residual_entries = mech.residual_entries
+res = residual_entries[2]
+ste = getentry(system, 2)
+@benchmark correction!($mech, $res, $ste, $eqc2)
+
+
+
+
+correction!(mech, λ, λ, eqc2)
+
+jj = eqc2.constraints[]1
+ll = fill(λ,2)
+@benchmark correction.($jj, $ll, $μ)
+@benchmark correction($joint22, $λ, $μ)
+
+function ttt()
+	c = szeros(0)
+	for i = 1:10
+		c = vcat(c, sones(10))
+	end
+	return c
+end
+
+@benchmark ttt()
+@code_warntype ttt()
+
+
+
+
+system = mech.system
+residual_entries = mech.residual_entries
+res = residual_entries[2]
+ste = getentry(system, 2)
+@benchmark correction($mech, $ste, $eqc2)
+@code_warntype correction(mech, ste, eqc2)
+
+@benchmark correction!($mech, $res, $ste, $eqc2)
+@code_warntype correction!(mech, res, ste, eqc2)
+
+
+@benchmark ∂g∂ʳself($joint22, $λ)
+@code_warntype ∂g∂ʳself(joint22, λ)
+
+joint22
+SMatrix{2,2,Float64,4}([1 2; 3 4])
+
+
+
+
+@benchmark ∂g∂ʳself($joint22, $λ)
+∂g∂ʳself(joint22, λ)

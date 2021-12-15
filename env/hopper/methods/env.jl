@@ -100,7 +100,8 @@ function cost(env::Environment{Hopper}, x, u;
         z_torso = x[(i_torso-1)*13 .+ (1:13)]
         x_velocity = -z_torso[4]
     end
-    c = -x_velocity/10 # -forward velocity
+    # c = -x_velocity/10 # Gym reward
+    c = -x_velocity
     c -= alive_bonus
     c += 1e-4 * u'*u
     return c
