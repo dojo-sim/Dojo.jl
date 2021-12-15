@@ -1,5 +1,5 @@
 function getant(; Δt::T=0.05, g::T=-9.81, cf::T=0.5,
-    spring=25.0, damper=25.0, contact::Bool=true, contact_body=true,
+    spring=0.0, damper=1.0, contact::Bool=true, contact_body=true,
     limits::Bool=true,
     joint_limits=[[-30, 30, -30, -70, -30, -70, -30, 30] * π / 180.0,
                   [ 30, 70,  30, -30,  30, -30,  30, 70] * π / 180.0]) where T

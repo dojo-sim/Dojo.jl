@@ -4,7 +4,7 @@
 struct Ant end
 
 function ant(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
-    cf::T=0.5, spring::T=50.0, damper::T=50.0, s::Int=1,
+    cf::T=0.5, spring::T=0.0, damper::T=1.0, s::Int=1,
     contact::Bool=true, contact_body=true,
     limits::Bool=true,
     info=nothing, vis::Visualizer=Visualizer(),
