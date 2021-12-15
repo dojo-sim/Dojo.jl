@@ -57,6 +57,8 @@ function _get_obs(env::Environment)
     return env.x
 end
 
+@inline is_done(env::Environment, x) = false
+
 function step(env::Environment, x, u; diff=false)
     mechanism = env.mechanism
     Δt = mechanism.Δt
@@ -72,6 +74,9 @@ function step(env::Environment, x, u; diff=false)
     # Compute cost
     costs = cost(env, x, u)
 
+	# Check termination
+	done = is_done(env, x)
+
     # Gradients
     if diff
         if env.mode == :min
@@ -84,9 +89,9 @@ function step(env::Environment, x, u; diff=false)
     end
 
     info = Dict()
-
-    return _get_obs(env), -costs, false, info
+    return _get_obs(env), -costs, done, info
 end
+
 
 function render(env::Environment, mode="human")
     z = env.mode == :min ? min2max(env.mechanism, env.x) : env.x

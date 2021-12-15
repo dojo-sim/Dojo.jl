@@ -50,7 +50,7 @@ function hopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     return env
 end
 
-function reset(env::Environment{Hopper}; x=nothing, reset_noise_scale = 0.1)
+function reset(env::Environment{Hopper}; x=nothing, reset_noise_scale = 0.005)
     if x != nothing
         env.x .= x
     else
@@ -58,7 +58,6 @@ function reset(env::Environment{Hopper}; x=nothing, reset_noise_scale = 0.1)
         initialize!(env.mechanism, :hopper, z = 0.25)
         x0 = getMinState(env.mechanism)
         nx = minCoordDim(env.mechanism)
-        nz = maxCoordDim(env.mechanism)
 
         low = -reset_noise_scale
         high = reset_noise_scale
@@ -75,17 +74,69 @@ function reset(env::Environment{Hopper}; x=nothing, reset_noise_scale = 0.1)
     return _get_obs(env)
 end
 
+function _get_obs(env::Environment; full_state::Bool=false)
+    full_state && (return env.x)
+    nx = minCoordDim(env.mechanism)
+    if env.mode == :min
+        o = env.x
+    elseif env.mode == :max
+        o = max2min(env.mechanism, env.x)
+    end
+    # clamp velocities and remove x position
+    ind = velocity_index(env.mechanism)
+    vel = clamp.(o[ind], -10, 10)
+    o[ind] .= vel
+    o = o[[1;3:nx]]
+    return o
+end
+
 function cost(env::Environment{Hopper}, x, u;
-        forward_reward_weight = 1.0, ctrl_cost_weight = 0.1)
+        alive_bonus=0.1)
 
     if env.mode == :min
         x_velocity = -x[5]
     else
         i_torso = findfirst(body -> body.name == "torso", collect(env.mechanism.bodies))
         z_torso = x[(i_torso-1)*13 .+ (1:13)]
-        x_velocity = z_torso[4]
+        x_velocity = -z_torso[4]
     end
-    # @show mean(abs.(u))
-    c = ctrl_cost_weight * u'*u - x_velocity * forward_reward_weight
+    c = -x_velocity/10 # -forward velocity
+    c -= alive_bonus
+    c += 1e-4 * u'*u
     return c
 end
+
+function is_done(::Environment{Hopper}, x)
+    nx = minCoordDim(env.mechanism)
+    if env.mode == :min
+        x0 = x
+    elseif env.mode == :max
+        x0 = max2min(env.mechanism, x)
+    end
+    height = x0[1]
+    ang = x0[3]
+    done = !(
+        all(isfinite.(x0)) &&
+        all(abs.(x0[[1;3:nx]]) .< 100) &&
+        (height > 0.7) &&
+        (abs(ang) < 0.2)
+        )
+    return done
+end
+
+
+
+#
+# env.x
+# i_torso = findfirst(body -> body.name == "torso", collect(env.mechanism.bodies))
+# z_torso = z[(i_torso-1)*13 .+ (1:13)]
+# x_velocity = z_torso[4]
+# z[3*13 + 4] = 324.0
+# z
+# setState!(env.mechanism, z)
+#
+# initialize!(env.mechanism, :hopper, x = 111.0, z = 1.0, θ=0.18)
+# x = getMinState(env.mechanism)
+# z = getMaxState(env.mechanism)
+# is_done(env, x)
+#

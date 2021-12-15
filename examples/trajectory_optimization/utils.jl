@@ -216,8 +216,8 @@ function getMaxState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	return z
 end
 
-function getMinState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}; 
-	pos_noise=nothing, vel_noise=nothing, 
+function getMinState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni};
+	pos_noise=nothing, vel_noise=nothing,
 	pos_noise_range=[-Inf, Inf], vel_noise_range=[-3.9 / mechanism.Δt^2, 3.9 / mechanism.Δt^2]) where {T,Nn,Ne,Nb,Ni}
 	# z = [[x2, v15, q2, ϕ15]body1  [x2, v15, q2, ϕ15]body2 ....]
 	x = []
@@ -238,7 +238,7 @@ function getMinState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni};
 			if pos_noise != nothing
 				pos += clamp.(length(pos) == 1 ? rand(pos_noise, length(pos))[1] : rand(pos_noise, length(pos)), pos_noise_range...)
 			end
-			if vel_noise != nothing 
+			if vel_noise != nothing
 				vel += clamp.(length(vel) == 1 ? rand(vel_noise, length(vel))[1] : rand(vel_noise, length(vel)), vel_noise_range...)
 			end
 			push!(c, pos...)
@@ -248,6 +248,19 @@ function getMinState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni};
 	end
 	x = [x...]
 	return x
+end
+
+function velocity_index(mechanism::Mechanism{T,Nn,Ne}) where {T,Nn,Ne}
+    ind = []
+    off = 0
+    for id in reverse(mechanism.system.dfs_list)
+        (id > Ne) && continue # only treat eqconstraints
+        eqc = mechanism.eqconstraints[id]
+        nu = controldim(eqc)
+        push!(ind, Vector(off + nu .+ (1:nu)))
+        off += 2nu
+    end
+    return vcat(ind...)
 end
 
 function unpackMaxState(z::AbstractVector, i::Int)
