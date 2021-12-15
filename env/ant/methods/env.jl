@@ -144,7 +144,7 @@ end
 # initialize!(env.mechanism, :ant)
 # open(env.vis)
 # storage = simulate!(env.mechanism, 1.0, record=true, verbose=false)
-# visualize(env.mechanism, storage, vis=env.vis)
+# visualize(env.mechanism, storage, vis=env.vis, show_contact=true)
 
 # reset(env)
 # render(env)
