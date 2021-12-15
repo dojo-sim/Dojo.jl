@@ -246,9 +246,9 @@ end
     s, γ = get_sγ(joint, η)
 
     [
-     Diagonal(γ + 1e-10 * sones(T, Nb)) Diagonal(s) zeros(Nb, Nλ);
-     Diagonal(ones(Nb)) Diagonal(1e-10 * sones(T, Nb)) zeros(Nb, Nλ);
-     zeros(Nλ, 2Nb) Diagonal(1e-10 * sones(T, Nλ));
+     Diagonal(γ + 1e-10 * sones(T, Nb)) Diagonal(s + 1e-10 * sones(T, Nb)) zeros(Nb, Nλ);
+     Diagonal(sones(Nb)) szeros(Nb, Nb+Nλ);
+     szeros(Nλ, 2Nb) Diagonal(1e-10 * sones(T, Nλ));
     ]
 end
 
