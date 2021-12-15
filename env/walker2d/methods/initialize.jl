@@ -1,13 +1,13 @@
-function gethopper(; Δt::T=0.01, g::T=-9.81, cf::T=2.0,
+function getwalker2d(; Δt::T=0.01, g::T=-9.81, cf::T=1.9,
     contact::Bool=true,
     contact_body::Bool=true,
     limits::Bool = true,
     spring=0.0,
-    damper=1.0,
-    joint_limits=[[  0,   0, -45] * π/180,
-                  [150, 150,  45] * π/180]) where T
+    damper=0.1,
+    joint_limits=[[  0,   0, -45,   0,   0, -45] * π/180,
+                  [150, 150,  45, 150, 150,  45] * π/180]) where T
 
-    path = joinpath(@__DIR__, "../deps/hopper.urdf")
+    path = joinpath(@__DIR__, "../deps/walker2d.urdf")
     mech = Mechanism(path, false, T, g=g, Δt=Δt, spring=spring, damper=damper)
 
     # joint limits
@@ -23,6 +23,15 @@ function gethopper(; Δt::T=0.01, g::T=-9.81, cf::T=2.0,
         foot = geteqconstraint(mech, "foot")
         eqcs[foot.id] = add_limits(mech, foot, rot_limits=[SVector{1}(joint_limits[1][3]), SVector{1}(joint_limits[2][3])])
 
+        thigh_left = geteqconstraint(mech, "thigh_left")
+        eqcs[thigh_left.id] = add_limits(mech, thigh_left, rot_limits=[SVector{1}(joint_limits[1][4]), SVector{1}(joint_limits[2][4])])
+
+        leg_left = geteqconstraint(mech, "leg_left")
+        eqcs[leg_left.id] = add_limits(mech, leg_left, rot_limits=[SVector{1}(joint_limits[1][5]), SVector{1}(joint_limits[2][5])])
+
+        foot_left = geteqconstraint(mech, "foot_left")
+        eqcs[foot_left.id] = add_limits(mech, foot_left, rot_limits=[SVector{1}(joint_limits[1][6]), SVector{1}(joint_limits[2][6])])
+
         mech = Mechanism(Origin{T}(), [mech.bodies...], [eqcs...], g=g, Δt=Δt, spring=spring, damper=damper)
     end
 
@@ -36,7 +45,7 @@ function gethopper(; Δt::T=0.01, g::T=-9.81, cf::T=2.0,
         bounds = []
         for name in names
             body = getbody(mech, name)
-            if name == "foot" # need special case for foot
+            if name ∈ ("foot", "foot_left") # need special case for foot
                 # torso
                 pf = [0,0, +0.5 * body.shape.rh[2]]
                 pb = [0,0, -0.5 * body.shape.rh[2]]
@@ -55,7 +64,7 @@ function gethopper(; Δt::T=0.01, g::T=-9.81, cf::T=2.0,
     return mech
 end
 
-function initializehopper!(mechanism::Mechanism; x::T=0.0, z::T=0.0, θ::T=0.0) where {T}
+function initializewalker2d!(mechanism::Mechanism; x::T=0.0, z::T=0.0, θ::T=0.0) where {T}
     setPosition!(mechanism,
                  geteqconstraint(mechanism, "floating_joint"),
                  [z + 1.25 , -x, -θ])
