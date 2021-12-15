@@ -19,14 +19,14 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 # System
 gravity = -9.81
 Δt = 0.05
-mech = gethopper(Δt = Δt, g = gravity, contact = true, damper = 1.0)
-initializehopper!(mech)
+mech = getraiberthopper(Δt = Δt, g = gravity, contact = true, damper = 1.0)
+initializeraiberthopper!(mech)
 
 ## state space
 n = minCoordDim(mech)
 m = 3 + n
 
-function hopper_initial_state()
+function raiberthopper_initial_state()
     # initial state
     x1b1 = [0.0; 0.0; 0.5]
     v1b1 = [0.0; 0.0; 0.0]
@@ -43,17 +43,17 @@ function hopper_initial_state()
     z1 = [z1b1; z1b2]
 end
 
-function hopper_offset_state(x_shift, y_shift, z_shift)
-    z = hopper_initial_state()
+function raiberthopper_offset_state(x_shift, y_shift, z_shift)
+    z = raiberthopper_initial_state()
     shift = [x_shift; y_shift; z_shift]
     z[1:3] += shift
     z[13 .+ (1:3)] += shift
     return z
 end
 
-z1 = max2min(mech, hopper_offset_state(0.0, 0.0, 0.0))
-zM = max2min(mech, hopper_offset_state(0.5, 0.5, 0.5))
-zT = max2min(mech, hopper_offset_state(0.5, 0.5, 0.0))
+z1 = max2min(mech, raiberthopper_offset_state(0.0, 0.0, 0.0))
+zM = max2min(mech, raiberthopper_offset_state(0.5, 0.5, 0.5))
+zT = max2min(mech, raiberthopper_offset_state(0.5, 0.5, 0.0))
 
 u_control = [0.0; 0.0; mech.g * mech.Δt; zeros(n)]
 u_mask = [0 0 0 1 0 0 0;

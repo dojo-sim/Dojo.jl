@@ -154,12 +154,14 @@ end
 ################################################################################
 # Environments
 # ##############################################################################
-include("pendulum/methods/env.jl")
-include("cartpole/methods/env.jl")
-include("hopper/methods/env.jl")
-include("halfcheetah/methods/env.jl")
-include("quadruped/methods/env.jl")
 include("ant/methods/env.jl")
+include("cartpole/methods/env.jl")
+include("halfcheetah/methods/env.jl")
+include("hopper/methods/env.jl")
+include("pendulum/methods/env.jl")
+include("quadruped/methods/env.jl")
+include("raiberthopper/methods/env.jl")
+include("walker2d/methods/env.jl")
 
 ################################################################################
 # Visualize Trajectories

@@ -1,22 +1,22 @@
 ################################################################################
-# Hopper
+# Walker2d
 ################################################################################
-struct Hopper end
+struct Walker2d end
 
-function hopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
-    cf::T=2.0, spring=0.0, damper=1.0,
+function walker2d(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
+    cf::T=1.9, spring=0.0, damper=0.1,
     s::Int=1, contact::Bool=true, info=nothing, vis::Visualizer=Visualizer(),
     opts_step=InteriorPointOptions(), opts_grad=InteriorPointOptions()) where T
 
-    mechanism = gethopper(Δt=dt, g=g, cf=cf, spring=spring, damper=damper, contact=contact)
-    initializehopper!(mechanism)
+    mechanism = getwalker2d(Δt=dt, g=g, cf=cf, spring=spring, damper=damper, contact=contact)
+    initializewalker2d!(mechanism)
 
     if mode == :min
         nx = minCoordDim(mechanism)
     elseif mode == :max
         nx = maxCoordDim(mechanism)
     end
-    nu = 3
+    nu = 6
     no = nx
 
     # values taken from Mujoco's model, combining the control range -1, 1 and the motor gears.
@@ -33,12 +33,12 @@ function hopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
 
     u_prev = zeros(nu)
     control_mask = [zeros(nu, 3) I(nu)]
-    motor_gear = [200, 200, 200.]
+    motor_gear = [100, 100, 100, 100, 100, 100.]
     control_scaling = Diagonal(dt * motor_gear)
 
     build_robot(vis, mechanism)
 
-    TYPES = [Hopper, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
+    TYPES = [Walker2d, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
     env = Environment{TYPES...}(mechanism, mode, aspace, ospace,
         x, fx, fu,
         u_prev, control_mask, control_scaling,
@@ -50,12 +50,12 @@ function hopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     return env
 end
 
-function reset(env::Environment{Hopper}; x=nothing, reset_noise_scale = 0.1)
+function reset(env::Environment{Walker2d}; x=nothing, reset_noise_scale = 0.1)
     if x != nothing
         env.x .= x
     else
         # initialize above the ground to make sure that with random initialization we do not violate the ground constraint.
-        initialize!(env.mechanism, :hopper, z = 0.25)
+        initialize!(env.mechanism, :walker2d, z = 0.25)
         x0 = getMinState(env.mechanism)
         nx = minCoordDim(env.mechanism)
         nz = maxCoordDim(env.mechanism)
@@ -75,7 +75,7 @@ function reset(env::Environment{Hopper}; x=nothing, reset_noise_scale = 0.1)
     return _get_obs(env)
 end
 
-function cost(env::Environment{Hopper}, x, u;
+function cost(env::Environment{Walker2d}, x, u;
         forward_reward_weight = 1.0, ctrl_cost_weight = 0.1)
 
     if env.mode == :min

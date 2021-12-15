@@ -31,7 +31,7 @@ end
 # Test setPosition! and setVelocity!
 ################################################################################\
 @testset "minMaxCoord: setPos!, setVel!" begin
-	mech = Dojo.getmechanism(:hopper)
+	mech = Dojo.getmechanism(:raiberthopper)
 	eqc1 = collect(mech.eqconstraints)[1]
 	eqc2 = collect(mech.eqconstraints)[2]
 	body1 = collect(mech.bodies)[1]
@@ -56,9 +56,9 @@ end
 # Test min -> max -> min
 ################################################################################
 
-# hopper
-@testset "min -> max -> min: hopper" begin
-	mech = Dojo.getmechanism(:hopper)
+# raiberthopper
+@testset "min -> max -> min: raiberthopper" begin
+	mech = Dojo.getmechanism(:raiberthopper)
 	Random.seed!(100)
 	nx = Dojo.minCoordDim(mech)
 	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(nx - 13)]

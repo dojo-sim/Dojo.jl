@@ -55,8 +55,8 @@ plot(Gray.(abs.(1e4(FDu_x - ∇u_x))))
 # Hopper
 ################################################################################
 
-mech = getmechanism(:hopper, contact = false)
-initialize!(mech, :hopper, altitude = 1.0)
+mech = getmechanism(:raiberthopper, contact = false)
+initialize!(mech, :raiberthopper, altitude = 1.0)
 
 nx = minCoordDim(mech)
 nz = maxCoordDim(mech)

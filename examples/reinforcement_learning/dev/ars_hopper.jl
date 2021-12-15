@@ -17,7 +17,7 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
-env = make("halfcheetah", vis = vis, dt = 0.05)
+env = make("hopper", vis = vis, dt = 0.05, damper = 10.0);
 obs = reset(env)
 render(env)
 

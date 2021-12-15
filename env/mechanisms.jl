@@ -39,11 +39,15 @@ include("quadruped/methods/initialize.jl")
 
 include("slider/methods/initialize.jl")
 
+include("raiberthopper/methods/initialize.jl")
+
 include("sphere/methods/initialize.jl")
 
 include("snake/methods/initialize.jl")
 
 include("twister/methods/initialize.jl")
+
+include("walker2d/methods/initialize.jl")
 
 # # Templates
 # include("atlas/methods/template.jl")

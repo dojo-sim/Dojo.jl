@@ -18,23 +18,24 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
-mech = getmechanism(:halfcheetah, Δt = 0.05, g = -0*9.81, contact = true,
-    contact_body = true, spring = 0.0, damper = 10.0);
-initialize!(mech, :halfcheetah, x = 0.0, z = 0.5, θ = -0.0)
+mech = getmechanism(:hopper, Δt = 0.05, g = -9.81, contact = true, limits = true,
+    contact_body = true, spring = 0.0, damper = 1.0);
+initialize!(mech, :hopper, x = 0.0, z = 0.0, θ = -0.0)
+
 @elapsed storage = simulate!(mech, 3.00, controller!, record = true, verbose = false,
     opts=InteriorPointOptions(verbose=false, btol = 1e-6))
-visualize(mech, storage, vis = vis)
+visualize(mech, storage, vis = vis, show_contact = true)
 
 function controller!(mechanism, k)
     for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])
         nu = controldim(eqc)
-        u = sones(nu)
+        u = 150*0.05*(rand(nu) .- 0.5)
         setForce!(mechanism, eqc, u)
     end
     return
 end
-
-env = make("halfcheetah", vis = vis)
+pi/2
+# env = make("halfcheetah", vis = vis)
 
 env.aspace
 seed(env, s = 11)
@@ -62,7 +63,8 @@ controldim(env.mechanism)
 sample(env.aspace)
 # sample(env.aspace)
 #
-
+m.body_inertia
+@show m.body_mass
 
 # initialize!(env.mechanism, :halfcheetah, z = 2.0)
 # torso = getbody(env.mechanism, "torso")

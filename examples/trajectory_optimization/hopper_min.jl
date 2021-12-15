@@ -3,12 +3,12 @@ using IterativeLQR
 # ## system
 dt = 0.05
 gravity = -9.81
-env = make("hopper", 
-    mode=:min, 
+env = make("raiberthopper",
+    mode=:min,
     dt=dt,
     g=gravity);
 
-# ## visualizer 
+# ## visualizer
 open(env.vis)
 
 # ## dimensions
@@ -17,9 +17,9 @@ m = env.nu
 d = 0
 
 # ## states
-z1 = max2min(env.mechanism, hopper_nominal_max())
-zM = max2min(env.mechanism, hopper_offset_max(0.5, 0.5, 0.5))
-zT = max2min(env.mechanism, hopper_offset_max(0.5, 0.5, 0.0))
+z1 = max2min(env.mechanism, raiberthopper_nominal_max())
+zM = max2min(env.mechanism, raiberthopper_offset_max(0.5, 0.5, 0.5))
+zT = max2min(env.mechanism, raiberthopper_offset_max(0.5, 0.5, 0.0))
 
 # ## nominal control
 u_control = [0.0; 0.0; env.mechanism.g * env.mechanism.Δt]
@@ -29,7 +29,7 @@ T = 21
 
 # ## model
 dyn = IterativeLQR.Dynamics(
-    (y, x, u, w) -> f(y, env, x, u, w), 
+    (y, x, u, w) -> f(y, env, x, u, w),
     (dx, x, u, w) -> fx(dx, env, x, u, w),
     (du, x, u, w) -> fu(du, env, x, u, w),
     n, n, m, d)
