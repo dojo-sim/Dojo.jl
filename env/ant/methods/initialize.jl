@@ -1,8 +1,8 @@
 function getant(; Δt::T=0.05, g::T=-9.81, cf::T=0.5,
     spring=25.0, damper=25.0, contact::Bool=true, contact_body=true,
     limits::Bool=true,
-    joint_limits=[[-30, 30, -30, -70, -30, -70, -30, 30] * π / 180.0, 
-                  [30, 70, 30, -30, -30, -30, 30, 70] * π / 180.0]) where T
+    joint_limits=[[-30, 30, -30, -70, -30, -70, -30, 30] * π / 180.0,
+                  [ 30, 70,  30, -30,  30, -30,  30, 70] * π / 180.0]) where T
 
     path = joinpath(@__DIR__, "../deps/ant.urdf")
     mech = Mechanism(path, true, T, g=g, Δt=Δt, spring=spring, damper=damper)
@@ -23,7 +23,7 @@ function getant(; Δt::T=0.05, g::T=-9.81, cf::T=0.5,
     #     ankle4.constraints[2].spring_offset = θ_offset * sones(T,1)
     # end
 
-    # joint limits 
+    # joint limits
     eqcs = deepcopy(mech.eqconstraints)
 
     if limits
@@ -54,10 +54,10 @@ function getant(; Δt::T=0.05, g::T=-9.81, cf::T=0.5,
         mech = Mechanism(Origin{T}(), Vector{Body{T}}(collect(mech.bodies)), Vector{EqualityConstraint{T}}(collect(eqcs)), g=g, Δt=Δt, spring=spring, damper=damper)
     end
 
-    for body in mech.bodies
-        body.m *= 10.0
-        body.J *= 10.0
-    end
+    # for body in mech.bodies
+    #     body.m *= 10.0
+    #     body.J *= 10.0
+    # end
 
     if contact
         origin = Origin{T}()
@@ -95,17 +95,17 @@ function getant(; Δt::T=0.05, g::T=-9.81, cf::T=0.5,
     return mech
 end
 
-function initializeant!(mechanism::Mechanism; alt=0.15, pos=[0.0; 0.0; 0.48 + alt], rot=[0.0; 0.0; 0.00 * π]) where {T}
+function initializeant!(mechanism::Mechanism; α = 0.25, alt=0.15, pos=[0.0; 0.0; 0.48 + alt], rot=[0.0; 0.0; 0.00 * π]) where {T}
     setPosition!(mechanism, geteqconstraint(mechanism, "auto_generated_floating_joint"), [pos; rot])
 
     for i in [1,4]
-        setPosition!(mechanism, geteqconstraint(mechanism, "hip_$i"), [0.0 * π])
-        setPosition!(mechanism, geteqconstraint(mechanism, "ankle_$i"), [0.25 * π])
+        setPosition!(mechanism, geteqconstraint(mechanism, "hip_$i"), 0.0*[0.0 * π])
+        setPosition!(mechanism, geteqconstraint(mechanism, "ankle_$i"), [α * π])
     end
 
     for i in [2,3]
         setPosition!(mechanism, geteqconstraint(mechanism, "hip_$i"), [0.0 * π])
-        setPosition!(mechanism, geteqconstraint(mechanism, "ankle_$i"), [-0.25 * π])
+        setPosition!(mechanism, geteqconstraint(mechanism, "ankle_$i"), [-α * π])
     end
 
     zeroVelocity!(mechanism)

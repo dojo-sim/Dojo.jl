@@ -18,16 +18,17 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
-mech = getmechanism(:halfcheetah, Δt = 0.01, g = -9.81, contact = true,
-    contact_body = true, spring = 10.0, damper = 0.3);
-initialize!(mech, :halfcheetah, x = 0.0, z = 0.0, θ = -0.0)
-@elapsed storage = simulate!(mech, 4.30, record = true, verbose = false,
+mech = getmechanism(:ant, Δt = 0.05, g = -0.00, contact = true,
+    contact_body = true, spring = 0.0, damper = 1.0);
+initialize!(mech, :ant, rot = [0,0,0.], α = 0.5)
+@elapsed storage = simulate!(mech, 2.0, record = true, verbose = false,
     opts=InteriorPointOptions(verbose=false, btol = 1e-6))
 visualize(mech, storage, vis = vis)
 
+mech.bodies
 
-env = make("halfcheetah")
-open(env.vis)
+# env = make("ant")
+# open(env.vis)
 
 env.aspace
 seed(env, s = 11)

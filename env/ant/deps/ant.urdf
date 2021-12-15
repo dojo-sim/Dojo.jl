@@ -247,6 +247,7 @@
 			</geometry>
 		</visual>
 	</link>
+
 	<joint name="hip_1" type="revolute">
 		<parent link="torso"/>
 		<child link="front_left_leg"/>
