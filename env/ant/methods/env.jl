@@ -141,7 +141,6 @@ function _get_obs(env::Environment{Ant,T}) where T
 end
 
 # env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=1.0, spring=0.0, limits=true, contact=true, contact_body=true)
-
 # initialize!(env.mechanism, :ant)
 # open(env.vis)
 # storage = simulate!(env.mechanism, 1.0, record=true, verbose=false)

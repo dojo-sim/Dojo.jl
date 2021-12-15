@@ -1,58 +1,84 @@
 #
 ## Position level constraints (for dynamics) in world frame
-"""
-    torque = 1/2 * spring * sin(θ) ≡≡ k * w * sqrt(1 - w^2)
-    q = [sin(θ/2); r cos(θ/2)] = [w, x, y, z]
-"""
-@inline function gc(joint::Rotational, qa::UnitQuaternion, qb::UnitQuaternion; qoff::UnitQuaternion = one(UnitQuaternion))
-    # return Vmat(qa \ qb / joint.qoffset)
-
-    # q = qa \ qb / joint.qoffset
-    # angle = 2 * acos(q.w)
-    # axis = Vmat(q) ./ sqrt(1 - q.w*q.w)
-    # return angle * axis
-
+@inline function gc(joint::Rotational, qa::UnitQuaternion, qb::UnitQuaternion; qoff::UnitQuaternion = spring_qoffset(joint))
     q = qa \ qb / joint.qoffset / qoff
-    return Vmat(q) * q.w
 end
-"""
-    torque = 1/2 * spring * sin(θ) ≡≡ k * w * sqrt(1 - w^2)
-    q = [sin(θ/2); r cos(θ/2)] = [w, x, y, z]
-"""
-@inline function gc(joint::Rotational, qb::UnitQuaternion; qoff::UnitQuaternion = one(UnitQuaternion))
-    # return Vmat(qb / joint.qoffset)
 
-    # q = qb / joint.qoffset
-    # angle = 2 * acos(q.w)
-    # axis = Vmat(q) ./ sqrt(1 - q.w*q.w)
-    # return angle * axis
-
+@inline function gc(joint::Rotational, qb::UnitQuaternion; qoff::UnitQuaternion = spring_qoffset(joint))
     q = qb / joint.qoffset / qoff
-    return Vmat(q) * q.w
 end
-# used to compute potential energy
-@inline function gq(joint::Rotational, qa::UnitQuaternion, qb::UnitQuaternion)
-    return qa \ qb / joint.qoffset
+
+"""
+    Sinusoidal spring model:
+        This spring model has no singularity.
+        torque = spring * sin(θ) * r ≡≡ spring * 2w * sqrt(1 - w^2) * r == spring * 2w * [x,y,z]
+        q = [cos(θ/2); r sin(θ/2)] = [w, x, y, z]
+    Linear spring model:
+        This spring model has a singularity at θ = π and θ = -π. The spring torque changes direction at these points.
+        We need to becareful to avoid non-differentiable point especially for θ = 0. We use sinc!
+        torque = spring * θ * r == spring * θ/sin(θ/2) * sin(θ/2)r == spring * θ/sin(θ/2) * [x,y,z] == spring * 1/sinc(θ/2π) * [x,y,z] == spring * 1/sinc(atan(||r||_2, w)/π) * [x,y,z]
+        q = [cos(θ/2); r sin(θ/2)] = [w, x, y, z]
+"""
+@inline function spring_distance(joint::Rotational, q::UnitQuaternion)
+    A = nullspacemat(joint)
+    Aᵀ = zerodimstaticadjoint(A)
+    if joint.spring_type == :sinusoidal
+        return Aᵀ*A * 2 * q.w * Vmat(q)
+    elseif joint.spring_type == :linear
+        nr = norm(Vmat(q))
+        return Aᵀ*A * 1/sinc(atan(nr, q.w)/π) * Vmat(q)
+    else
+        error("unknown spring model")
+    end
 end
-@inline function gq(joint::Rotational, qb::UnitQuaternion)
-    return qb / joint.qoffset
+
+"""
+    Sinusoidal spring model:
+        This spring model has no singularity.
+        torque = spring * sin(θ) * r ≡≡ spring * 2w * sqrt(1 - w^2) * r == spring * 2w * [x,y,z]
+        energy = spring * [1 - cos(θ)] == spring * 2 * (1 - cos(θ/2)^2) == spring * 2(1 - w^2)
+        q = [cos(θ/2); r sin(θ/2)] = [w, x, y, z]
+    Linear spring model:
+        This spring model has a singularity at θ = π and θ = -π. The spring torque changes direction at these points.
+        torque = spring * θ * r == spring * θ/sin(θ/2) * sin(θ/2)r == spring * θ/sin(θ/2) * [x,y,z] == spring * 1/sinc(θ/2π) * [x,y,z] == spring * 1/sinc(atan(||r||_2, w)/π) * [x,y,z]
+        energy = 1/2 * spring * θ^2 = 1/2 * spring * (2 * atan(||r||_2, w))^2
+        q = [cos(θ/2); r sin(θ/2)] = [w, x, y, z]
+"""
+@inline function energy(joint::Rotational, q::UnitQuaternion)
+    if joint.spring_type == :sinusoidal
+        return joint.spring * 2 * (1 - q.w^2)
+    elseif joint.spring_type == :linear
+        θ = AngleAxis(q).theta
+        return 0.5 * joint.spring * θ^2
+    else
+        error("unknown spring model")
+    end
+end
+
+@inline function spring_qoffset(joint::Rotational)
+    # We need to convert the joint.spring_offset which is some minimal coordinate representation of the joint (i.e. axis angle). For us it's the axis angle reresentation.
+    A = nullspacemat(joint)
+    Aᵀ = zerodimstaticadjoint(A)
+    aa = Aᵀ * joint.spring_offset # axis angle
+    qoff = axisangle2quaternion(aa)
+    return qoff
 end
 
 ### Spring and damper
 ## Discrete-time position wrappers (for dynamics)
-springforcea(joint::Rotational, statea::State, stateb::State, Δt) = Δt * springforcea(joint, posargs2(statea)[2], posargs2(stateb)[2])
-springforceb(joint::Rotational, statea::State, stateb::State, Δt) = Δt * springforceb(joint, posargs2(statea)[2], posargs2(stateb)[2])
-springforceb(joint::Rotational, stateb::State, Δt) = Δt * springforceb(joint, posargs2(stateb)[2])
-damperforcea(joint::Rotational, statea::State, stateb::State, Δt) = Δt * damperforcea(joint, posargs2(statea)[2], statea.ϕsol[2], posargs2(stateb)[2], stateb.ϕsol[2])
-damperforceb(joint::Rotational, statea::State, stateb::State, Δt) = Δt * damperforceb(joint, posargs2(statea)[2], statea.ϕsol[2], posargs2(stateb)[2], stateb.ϕsol[2])
-damperforceb(joint::Rotational, stateb::State, Δt) = Δt * damperforceb(joint, posargs2(stateb)[2], stateb.ϕsol[2])
+springforcea(joint::Rotational, bodya::Body, bodyb::Body, Δt) = Δt * springforcea(joint, posargs2(bodya.state)[2], posargs2(bodyb.state)[2])
+springforceb(joint::Rotational, bodya::Body, bodyb::Body, Δt) = Δt * springforceb(joint, posargs2(bodya.state)[2], posargs2(bodyb.state)[2])
+springforceb(joint::Rotational, bodyb::Body, Δt) = Δt * springforceb(joint, posargs2(bodyb.state)[2])
+damperforcea(joint::Rotational, bodya::Body, bodyb::Body, Δt) = Δt * damperforcea(joint, posargs2(bodya.state)[2], bodya.ϕsol[2], posargs2(bodyb.state)[2], bodyb.ϕsol[2])
+damperforceb(joint::Rotational, bodya::Body, bodyb::Body, Δt) = Δt * damperforceb(joint, posargs2(bodya.state)[2], bodya.ϕsol[2], posargs2(bodyb.state)[2], bodyb.ϕsol[2])
+damperforceb(joint::Rotational, bodyb::Body, Δt) = Δt * damperforceb(joint, posargs2(bodyb.state)[2], bodyb.ϕsol[2])
 
-springforcea(joint::Rotational3{T}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
-springforceb(joint::Rotational3{T}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
-springforceb(joint::Rotational3{T}, stateb::State, Δt) where {T} = szeros(T, 6)
-damperforcea(joint::Rotational3{T}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
-damperforceb(joint::Rotational3{T}, statea::State, stateb::State, Δt) where {T} = szeros(T, 6)
-damperforceb(joint::Rotational3{T}, stateb::State, Δt) where {T} = szeros(T, 6)
+springforcea(joint::Rotational3{T}, bodya::Body, bodyb::Body, Δt) where {T} = szeros(T, 6)
+springforceb(joint::Rotational3{T}, bodya::Body, bodyb::Body, Δt) where {T} = szeros(T, 6)
+springforceb(joint::Rotational3{T}, bodyb::Body, Δt) where {T} = szeros(T, 6)
+damperforcea(joint::Rotational3{T}, bodya::Body, bodyb::Body, Δt) where {T} = szeros(T, 6)
+damperforceb(joint::Rotational3{T}, bodya::Body, bodyb::Body, Δt) where {T} = szeros(T, 6)
+damperforceb(joint::Rotational3{T}, bodyb::Body, Δt) where {T} = szeros(T, 6)
 
 # Used in energy computation
 springforcea(joint::Rotational3{T}, qa::UnitQuaternion, qb::UnitQuaternion; rotate::Bool = true) where {T} = szeros(T, 6)
@@ -62,43 +88,25 @@ springforceb(joint::Rotational3{T}, qb::UnitQuaternion; rotate::Bool = true) whe
 ### Spring and damper
 # Force applied by body b on body a expressed in frame a
 @inline function springforcea(joint::Rotational{T}, qa::UnitQuaternion, qb::UnitQuaternion; rotate::Bool = true) where {T}
-    A = nullspacemat(joint)
-    Aᵀ = zerodimstaticadjoint(A)
-    # We need to convert the joint.spring_offset which is some minimal coordinate representation of the joint. For us it's the axis angle reresentation.
-    # We convert it to the 'sinusoidal spring'
-    aa = Aᵀ * joint.spring_offset # axis angle
-    θ = norm(aa)
-    qoff = UnitQuaternion(cos(θ/2), 1/2 * sinc(θ/(2π)) * aa) # quaternion
-    distance = A * gc(joint, qa, qb, qoff = qoff)
-    force = joint.spring * Aᵀ * distance # force in offset frame
+    q = gc(joint, qa, qb, qoff = spring_qoffset(joint))
+    distance = spring_distance(joint, q)
+    force = joint.spring * distance # force in offset frame
     rotate && (force = vrotate(force, joint.qoffset)) # rotate back to a frame
     return [szeros(T, 3); force]
 end
 # Force applied by body a on body b expressed in frame b
 @inline function springforceb(joint::Rotational{T}, qa::UnitQuaternion, qb::UnitQuaternion; rotate::Bool = true) where {T}
-    A = nullspacemat(joint)
-    Aᵀ = zerodimstaticadjoint(A)
-    # We need to convert the joint.spring_offset which is some minimal coordinate representation of the joint. For us it's the axis angle reresentation.
-    # We convert it to the 'sinusoidal spring'
-    aa = Aᵀ * joint.spring_offset # axis angle
-    θ = norm(aa)
-    qoff = UnitQuaternion(cos(θ/2), 1/2 * sinc(θ/(2π)) * aa) # quaternion
-    distance = A * gc(joint, qa, qb, qoff = qoff)
-    force = - joint.spring * Aᵀ * distance # force in offset frame
+    q = gc(joint, qa, qb, qoff = spring_qoffset(joint))
+    distance = spring_distance(joint, q)
+    force = - joint.spring * distance # force in offset frame
     rotate && (force = vrotate(force, inv(qb) * qa * joint.qoffset)) # rotate back to b frame
     return [szeros(T, 3); force]
 end
 # Force applied by origin on body b expressed in frame b
 @inline function springforceb(joint::Rotational{T}, qb::UnitQuaternion; rotate::Bool = true) where {T}
-    A = nullspacemat(joint)
-    Aᵀ = zerodimstaticadjoint(A)
-    # We need to convert the joint.spring_offset which is some minimal coordinate representation of the joint. For us it's the axis angle reresentation.
-    # We convert it to the 'sinusoidal spring'
-    aa = Aᵀ * joint.spring_offset # axis angle
-    θ = norm(aa)
-    qoff = UnitQuaternion(cos(θ/2), 1/2 * sinc(θ/(2π)) * aa) # quaternion
-    distance = A * gc(joint, qb, qoff = qoff)
-    force = - joint.spring * Aᵀ * distance # force in offset frame
+    q = gc(joint, qb, qoff = spring_qoffset(joint))
+    distance = spring_distance(joint, q)
+    force = - joint.spring * distance # force in offset frame
     rotate && (force = vrotate(force, inv(qb) * joint.qoffset)) # rotate back to b frame
     return [szeros(T, 3); force]
 end

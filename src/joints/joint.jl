@@ -83,21 +83,21 @@ end
 ## Wrappers 1
 @inline function springforcea(joint::Joint, body1::Body, body2::Body, Δt, childid)
     if body2.id == childid
-        return springforcea(joint, body1.state, body2.state, Δt)
+        return springforcea(joint, body1, body2, Δt)
     else
         return springforce(joint)
     end
 end
 @inline function springforceb(joint::Joint, body1::Body, body2::Body, Δt, childid)
     if body2.id == childid
-        return springforceb(joint, body1.state, body2.state, Δt)
+        return springforceb(joint, body1, body2, Δt)
     else
         return springforce(joint)
     end
 end
 @inline function springforceb(joint::Joint, body1::Origin, body2::Body, Δt, childid)
     if body2.id == childid
-        return springforceb(joint, body2.state, Δt)
+        return springforceb(joint, body2, Δt)
     else
         return springforce(joint)
     end
@@ -105,21 +105,21 @@ end
 
 @inline function damperforcea(joint::Joint, body1::Body, body2::Body, Δt, childid)
     if body2.id == childid
-        return damperforcea(joint, body1.state, body2.state, Δt)
+        return damperforcea(joint, body1, body2, Δt)
     else
         return damperforce(joint)
     end
 end
 @inline function damperforceb(joint::Joint, body1::Body, body2::Body, Δt, childid)
     if body2.id == childid
-        return damperforceb(joint, body1.state, body2.state, Δt)
+        return damperforceb(joint, body1, body2, Δt)
     else
         return damperforce(joint)
     end
 end
 @inline function damperforceb(joint::Joint, body1::Origin, body2::Body, Δt, childid)
     if body2.id == childid
-        return damperforceb(joint, body2.state, Δt)
+        return damperforceb(joint, body2, Δt)
     else
         return damperforce(joint)
     end
@@ -209,8 +209,6 @@ end
 ∂g∂ʳvela(joint::Joint, statea::State, stateb::State, λ, Δt) = ∂g∂ʳvela(joint, posargs3(statea, Δt)..., posargs3(stateb, Δt)..., fullargssol(statea)..., λ, Δt)
 ∂g∂ʳvelb(joint::Joint, statea::State, stateb::State, λ, Δt) = ∂g∂ʳvelb(joint, posargs3(statea, Δt)..., posargs3(stateb, Δt)..., fullargssol(stateb)..., λ, Δt)
 ∂g∂ʳvelb(joint::Joint, stateb::State, λ, Δt) = ∂g∂ʳvelb(joint, posargs3(stateb, Δt)..., fullargssol(stateb)..., λ, Δt)
-# offdiagonal∂damper∂ʳvel(joint::Joint, statea::State, stateb::State) = offdiagonal∂damper∂ʳvel(joint, posargs2(statea)..., posargs2(stateb)..., λ)
-# offdiagonal∂damper∂ʳvel(joint::Joint, stateb::State) = offdiagonal∂damper∂ʳvel(joint, posargs2(stateb)..., λ)
 
 # Derivatives accounting for quaternion specialness
 @inline function ∂g∂ʳvela(joint::Joint, x2a::AbstractVector, q2a::UnitQuaternion, x2b::AbstractVector, q2b::UnitQuaternion,
@@ -286,7 +284,7 @@ end
 
 ## Limits
 function add_limits(mech::Mechanism, eq::EqualityConstraint; 
-    # NOTE: this only works for joints between serial chains
+    # NOTE: this only works for joints between serial chains (ie, single child joints)
     tra_limits=eq.constraints[1].joint_limits, 
     rot_limits=eq.constraints[1].joint_limits)
 
@@ -298,7 +296,7 @@ function add_limits(mech::Mechanism, eq::EqualityConstraint;
     Nb = 2Nb½
     N̄λ = 3 - Nλ
     N = Nλ + 2Nb
-    tra_limit = (Translational{T,Nλ,Nb,N,Nb½,N̄λ}(tra.V3, tra.V12, tra.vertices, tra.spring, tra.damper, tra.spring_offset, tra_limits, tra.Fτ, eq.parentid, eq.childids[1]), eq.parentid, eq.childids[1])
+    tra_limit = (Translational{T,Nλ,Nb,N,Nb½,N̄λ}(tra.V3, tra.V12, tra.vertices, tra.spring, tra.damper, tra.spring_offset, tra_limits, tra.spring_type, tra.Fτ), eq.parentid, eq.childids[1])
 
     # update rotational
     rot = eq.constraints[2]
@@ -308,6 +306,6 @@ function add_limits(mech::Mechanism, eq::EqualityConstraint;
     Nb = 2Nb½
     N̄λ = 3 - Nλ
     N = Nλ + 2Nb
-    rot_limit = (Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(rot.V3, rot.V12, rot.qoffset, rot.spring, rot.damper, rot.spring_offset, rot_limits, rot.Fτ, eq.parentid, eq.childids[1]), eq.parentid, eq.childids[1])
+    rot_limit = (Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(rot.V3, rot.V12, rot.qoffset, rot.spring, rot.damper, rot.spring_offset, rot_limits, rot.spring_type, rot.Fτ), eq.parentid, eq.childids[1])
     EqualityConstraint((tra_limit, rot_limit); name=eq.name)
 end

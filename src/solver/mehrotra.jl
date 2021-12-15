@@ -87,11 +87,6 @@ function solver_status(mechanism::Mechanism, α, rvio, bvio, n, μtarget, underc
     fv = full_vector(mechanism.system)
     Δvar = norm(fv, Inf)
     fM = full_matrix(mechanism.system)
-	for eqc in mechanism.eqconstraints
-		@show eqc.λsol[1]
-		@show eqc.λsol[2]
-	end
-	@show fM[4:9,4:9]
     fΔ = fM \ fv
     Δalt = norm(fΔ, Inf)
     ##################

@@ -6,16 +6,16 @@ mutable struct Translational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N}
     damper::T
     spring_offset::SVector{N̄λ,T}
     joint_limits::Vector{SVector{Nb½,T}} # lower and upper limits on the joint minimal coordinate angles
+    spring_type::Symbol # the rotational springs can be :sinusoidal or :linear, if linear then we need joint_limits to avoid the 180° singularity.
     Fτ::SVector{3,T}
-    parentid::Int 
-    childid::Int
 end
 
 function Translational{T,Nλ}(body1::Component, body2::Component;
-    p1::AbstractVector = szeros(T,3), p2::AbstractVector = szeros(T,3), axis::AbstractVector = szeros(T,3),
-    spring = zero(T), damper = zero(T), spring_offset = szeros(T,3-Nλ),
-    joint_limits = [szeros(T,0), szeros(T,0)]) where {T,Nλ}
-    
+        p1::AbstractVector = szeros(T,3), p2::AbstractVector = szeros(T,3), axis::AbstractVector = szeros(T,3),
+        spring = zero(T), damper = zero(T), spring_offset = szeros(T,3-Nλ),
+        joint_limits = [szeros(T,0), szeros(T,0)],
+        spring_type::Symbol = :sinusoidal,
+    ) where {T,Nλ}
     vertices = (p1, p2)
     V1, V2, V3 = orthogonalrows(axis)
     V12 = [V1;V2]
@@ -24,7 +24,7 @@ function Translational{T,Nλ}(body1::Component, body2::Component;
     Nb = 2Nb½
     N̄λ = 3 - Nλ
     N = Nλ + 2Nb
-    Translational{T,Nλ,Nb,N,Nb½,N̄λ}(V3, V12, vertices, spring, damper, spring_offset, joint_limits, Fτ, body1.id, body2.id), body1.id, body2.id
+    Translational{T,Nλ,Nb,N,Nb½,N̄λ}(V3, V12, vertices, spring, damper, spring_offset, joint_limits, spring_type, Fτ), body1.id, body2.id
 end
 
 Translational0{T} = Translational{T,0} where T

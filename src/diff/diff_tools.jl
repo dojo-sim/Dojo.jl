@@ -774,16 +774,6 @@ end
 function minCoordDim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
     nx = 0
     free_rot_base = false # we are going to check if the link attached to the base has free orientation
-    # @warn "removed 1st link quat"
-    # for eqc in mechanism.eqconstraints
-    #     if eqc.parentid == nothing
-    #         for joint in eqc.constraints
-    #             if typeof(joint) <: Rotational0
-    #                 free_rot_base = true
-    #             end
-    #         end
-    #     end
-    # end
     nx = 2 * controldim(mechanism, ignore_floating_base = false)
     free_rot_base && (nx += 1)
     return nx

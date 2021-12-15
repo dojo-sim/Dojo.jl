@@ -97,7 +97,7 @@ end
 end
 
 # nslider
-	@testset "min -> max -> min: nslider" begin
+@testset "min -> max -> min: nslider" begin
 	Nlink0 = 5
 	mech = Dojo.getmechanism(:nslider, Nlink = Nlink0)
 	Random.seed!(100)
