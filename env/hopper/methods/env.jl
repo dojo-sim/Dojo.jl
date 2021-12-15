@@ -16,7 +16,7 @@ function hopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     elseif mode == :max
         nx = maxCoordDim(mechanism)
     end
-    nu = 6
+    nu = 3
     no = nx
 
     # values taken from Mujoco's model, combining the control range -1, 1 and the motor gears.

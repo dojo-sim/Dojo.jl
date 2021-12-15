@@ -44,7 +44,7 @@ end
 @elapsed storage = simulate!(mech, 2.3, controller!, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
-filename = "hopper_limits"
+filename = "walker2d_limits"
 MeshCat.convert_frames_to_video(
     "/home/simon/Downloads/$filename.tar",
     "/home/simon/Documents/video/$filename.mp4", overwrite=true)
