@@ -1,4 +1,4 @@
-function gethalfcheetah(; Δt::T=0.01, g::T=-9.81, cf::T=0.8,
+function gethalfcheetah(; Δt::T=0.01, g::T=-9.81, cf::T=0.4,
     contact::Bool=true,
     contact_body::Bool=true,
     limits::Bool = true,

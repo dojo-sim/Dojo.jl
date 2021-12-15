@@ -4,7 +4,7 @@
 struct Hopper end
 
 function hopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
-    cf::T=0.4, spring=0.0, damper=1.0,
+    cf::T=2.0, spring=0.0, damper=1.0,
     s::Int=1, contact::Bool=true, info=nothing, vis::Visualizer=Visualizer(),
     opts_step=InteriorPointOptions(), opts_grad=InteriorPointOptions()) where T
 
