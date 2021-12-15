@@ -1,4 +1,4 @@
-function gethopper(; Δt::T=0.05, g::T=-9.81, spring=0.0, damper=0.1, contact::Bool=true, contact_body::Bool=true) where T
+function getraiberthopper(; Δt::T=0.05, g::T=-9.81, spring=0.0, damper=0.1, contact::Bool=true, contact_body::Bool=true) where T
     #TODO: make customizable
 
     # Parameters
@@ -27,15 +27,15 @@ function gethopper(; Δt::T=0.05, g::T=-9.81, spring=0.0, damper=0.1, contact::B
         contact_normal = [0.0; 0.0; 1.0]
         friction_coefficient = 0.5
 
-        # foot 
-        contineqcs = contactconstraint(foot, contact_normal, friction_coefficient, 
+        # foot
+        contineqcs = contactconstraint(foot, contact_normal, friction_coefficient,
             p=[0.0; 0.0; 0.0], offset=[0.0; 0.0; foot_radius])
-        
+
         ineqcs = [contineqcs]
-        
+
         # body
-        if contact_body 
-            contineqcs_body = contactconstraint(body, contact_normal, friction_coefficient, 
+        if contact_body
+            contineqcs_body = contactconstraint(body, contact_normal, friction_coefficient,
                 p=[0.0; 0.0; 0.0], offset=[0.0; 0.0; body_radius])
             push!(ineqcs, contineqcs_body)
         end
@@ -47,13 +47,13 @@ function gethopper(; Δt::T=0.05, g::T=-9.81, spring=0.0, damper=0.1, contact::B
     return mech
 end
 
-function initializehopper!(mech::Mechanism{T,Nn,Ne,Nb}; leg_length_nominal=0.5, altitude=0.05,
+function initializeraiberthopper!(mech::Mechanism{T,Nn,Ne,Nb}; leg_length_nominal=0.5, altitude=0.05,
     v = zeros(3), ω = zeros(3)) where {T,Nn,Ne,Nb}
     body1 = collect(mech.bodies)[1]
     body2 = collect(mech.bodies)[2]
     eqc2 = collect(mech.eqconstraints)[2]
     tra2 = eqc2.constraints[1]
-    
+
     # origin to body
     setPosition!(mech.origin, body1, Δx=[0.0; 0.0; leg_length_nominal + altitude])
     setVelocity!(body1, v=v, ω=ω)

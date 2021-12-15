@@ -27,7 +27,7 @@ include("dzhanibekov/methods/initialize.jl")
 
 include("halfcheetah/methods/initialize.jl")
 
-include("hopper/methods/initialize.jl")
+include("raiberthopper/methods/initialize.jl")
 
 include("humanoid/methods/initialize.jl")
 

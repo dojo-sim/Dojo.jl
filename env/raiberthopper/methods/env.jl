@@ -1,20 +1,20 @@
 ################################################################################
-# Hopper
+# Raiberthopper
 ################################################################################
-struct Hopper end 
+struct Raiberthopper end
 
-function hopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
+function raiberthopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     control_scaling=Diagonal(ones(3)),
     s::Int=1, contact::Bool=true, vis::Visualizer=Visualizer(),
     info=nothing,
     opts_step=InteriorPointOptions(), opts_grad=InteriorPointOptions()) where T
 
-    mechanism = gethopper(Δt=dt, g=g)
-    initializehopper!(mechanism)
+    mechanism = getraiberthopper(Δt=dt, g=g)
+    initializeraiberthopper!(mechanism)
 
     if mode == :min
         nx = minCoordDim(mechanism)
-    elseif mode == :max 
+    elseif mode == :max
         nx = maxCoordDim(mechanism)
     end
     nu = 3
@@ -28,32 +28,32 @@ function hopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     z = getMaxState(mechanism)
     x = mode == :min ? max2min(mechanism, z) : z
 
-    fx = zeros(nx, nx) 
+    fx = zeros(nx, nx)
     fu = zeros(nx, nu)
 
     u_prev = zeros(nu)
-    control_mask = hopper_control_mask() 
+    control_mask = raiberthopper_control_mask()
     build_robot(vis, mechanism)
 
-    TYPES = [Hopper, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
-    env = Environment{TYPES...}(mechanism, mode, aspace, ospace, 
+    TYPES = [Raibertraiberthopper, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
+    env = Environment{TYPES...}(mechanism, mode, aspace, ospace,
         x, fx, fu,
         u_prev, control_mask, control_scaling,
         nx, nu, no,
         info,
         [rng], vis,
         opts_step, opts_grad)
-        
+
     return env
 end
 
-function hopper_control_mask()
+function raiberthopper_control_mask()
     [0 0 0 1 0 0 0;
 	 0 0 0 0 1 0 0;
 	 0 0 0 0 0 0 1]
 end
 
-function hopper_nominal_max(; foot_radius=0.05)
+function raiberthopper_nominal_max(; foot_radius=0.05)
     # initial state
     x1b1 = [0.0; 0.0; 0.5 + foot_radius]
     v1b1 = [0.0; 0.0; 0.0]
@@ -70,8 +70,8 @@ function hopper_nominal_max(; foot_radius=0.05)
     z1 = [z1b1; z1b2]
 end
 
-function hopper_offset_max(x_shift, y_shift, z_shift)
-    z = hopper_nominal_max()
+function raiberthopper_offset_max(x_shift, y_shift, z_shift)
+    z = raiberthopper_nominal_max()
     shift = [x_shift; y_shift; z_shift]
     z[1:3] += shift
     z[13 .+ (1:3)] += shift

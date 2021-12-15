@@ -11,7 +11,7 @@ Pkg.activate(module_dir())
 vis = Visualizer()
 open(vis)
 
-using DirectTrajectoryOptimization 
+using DirectTrajectoryOptimization
 
 include(joinpath(module_dir(), "examples", "loader.jl"))
 include(joinpath(module_dir(), "src", "optional_components", "trajopt_utils.jl"))
@@ -19,14 +19,14 @@ include(joinpath(module_dir(), "src", "optional_components", "trajopt_utils.jl")
 # System
 gravity = -9.81
 Δt = 0.05
-mech = gethopper(Δt = Δt, g = gravity, damper=0.0)
-initializehopper!(mech)
+mech = getraiberthopper(Δt = Δt, g = gravity, damper=0.0)
+initializeraiberthopper!(mech)
 
 ## state space
 n = minCoordDim(mech)
 m = 3
 
-function hopper_initial_state()
+function raiberthopper_initial_state()
     # initial state
     x1b1 = [0.0; 0.0; 0.5]
     v1b1 = [0.0; 0.0; 0.0]
@@ -43,21 +43,21 @@ function hopper_initial_state()
     z1 = [z1b1; z1b2]
 end
 
-function hopper_offset_state(x_shift, y_shift, z_shift)
-    z = hopper_initial_state()
+function raiberthopper_offset_state(x_shift, y_shift, z_shift)
+    z = raiberthopper_initial_state()
     shift = [x_shift; y_shift; z_shift]
     z[1:3] += shift
     z[13 .+ (1:3)] += shift
     return z
 end
 
-z1 = max2min(mech, hopper_offset_state(0.0, 0.0, 0.0))
-zM = max2min(mech, hopper_offset_state(0.25, 0.0, 0.5))
-zT = max2min(mech, hopper_offset_state(0.5, 0.0, 0.0))
+z1 = max2min(mech, raiberthopper_offset_state(0.0, 0.0, 0.0))
+zM = max2min(mech, raiberthopper_offset_state(0.25, 0.0, 0.5))
+zT = max2min(mech, raiberthopper_offset_state(0.5, 0.0, 0.0))
 
-# z1 = max2min(mech, hopper_offset_state(0.0, 0.0, 0.0))
-# zM = max2min(mech, hopper_offset_state(0.0, 0.0, 0.0))
-# zT = max2min(mech, hopper_offset_state(0.0, 0.0, 0.0))
+# z1 = max2min(mech, raiberthopper_offset_state(0.0, 0.0, 0.0))
+# zM = max2min(mech, raiberthopper_offset_state(0.0, 0.0, 0.0))
+# zT = max2min(mech, raiberthopper_offset_state(0.0, 0.0, 0.0))
 
 u_control = [0.0; 0.0; mech.g * mech.Δt]
 u_mask = [0 0 0 1 0 0 0;
@@ -71,14 +71,14 @@ Random.seed!(0)
 nx, nu, nw = minCoordDim(mech), 3, 0
 nu += nx
 function f(d, y, x, u, w)
-    u_ctrl = u[1:3] 
+    u_ctrl = u[1:3]
     s = u[3 .+ (1:nx)]
     z = step!(mech, min2max(mech, x), u_mask'*u_ctrl, ϵ = 1e-6, btol = 3e-4, undercut = 1.5, verbose = false)
 	d .= y - max2min(mech, z) + s
 end
 
 function fz(dz, y, x, u, w)
-    u_ctrl = u[1:3] 
+    u_ctrl = u[1:3]
     s = u[3 .+ (1:nx)]
 	dx, du = getMinGradients!(mech, min2max(mech, x), u_mask'*u_ctrl, ϵ = 1e-6, btol = 3e-3, undercut = 1.5, verbose = false)
     dz .= [-dx -du * transpose(u_mask) I(nx) I(nx)]
@@ -91,10 +91,10 @@ h = mech.Δt
 
 # ## model
 dt = Dynamics(f, fz, nx, nx, nu)
-dyn = [dt for t = 1:T-1] 
+dyn = [dt for t = 1:T-1]
 model = DynamicsModel(dyn)
 
-# ## objective 
+# ## objective
 ot1 = (x, u, w) -> 10.0 * transpose(x - zM) * Diagonal([1.0; 1.0; 100.0; 10.0; 10.0; 10.0; 1.0e-1; 1.0e-1; 1.0e-1; 10.0; 100.0; 10.0; 100.0; 0.1]) * (x - zM) + 1.0 * transpose(u[1:3]) * Diagonal([10.0; 10.0; 1.0]) * u[1:3] + 1.0 * transpose(u[3 .+ (1:nx)]) * u[3 .+ (1:nx)]
 ot2 = (x, u, w) -> 1.0e-1 * transpose(x - zT) * Diagonal([1.0; 1.0; 1.0; 10.0; 10.0; 10.0; 1.0e-1; 1.0e-1; 1.0e-1; 10.0; 100.0; 10.0; 1.0; 1.0]) * (x - zT) + 1.0 * transpose(u[1:3]) * Diagonal([10.0; 10.0; 1.0]) * u[1:3] + 1.0 * transpose(u[3 .+ (1:nx)]) * u[3 .+ (1:nx)]
 oT = (x, u, w) -> 10.0 * transpose(x - zT) * Diagonal([10.0; 10.0; 10.0; 10.0; 10.0; 10.0; 1.0e-1; 1.0e-1; 1.0e-1; 10.0; 100.0; 10.0; 10.0; 1.0]) * (x - zT)
@@ -109,13 +109,13 @@ cT = Cost(oT, nx, 0, 0, [T])
 obj = [ct1, ct2, cT]
 
 # ## constraints
-function _x_init(x, u, w) 
-    x - z1 
+function _x_init(x, u, w)
+    x - z1
 end
-function slack(x, u, w) 
-    u[3 .+ (1:nx)] 
+function slack(x, u, w)
+    u[3 .+ (1:nx)]
 end
-function _x_goal(x, u, w) 
+function _x_goal(x, u, w)
     (x - zT)[1:3]
 end
 con1 = StageConstraint(_x_init, nx, nu, nw, [1], :equality)
@@ -123,7 +123,7 @@ cont = StageConstraint(slack, nx, nu, nw, [t for t = 1:T-1], :equality)
 conT = StageConstraint(_x_goal, nx, 0, 0, [T], :equality)
 cons = ConstraintSet([con1, cont])#, conT])
 
-# ## problem 
+# ## problem
 trajopt = TrajectoryOptimizationProblem(obj, model, cons)
 s = Solver(trajopt, options=Options(
     tol=1.0e-2,

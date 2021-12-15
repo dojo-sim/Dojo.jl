@@ -21,9 +21,7 @@ env = make("halfcheetah", vis = vis, dt = 0.05)
 obs = reset(env)
 render(env)
 
-# hp = HyperParameters(main_loop_size = 30, horizon = 400, n_directions = 6, b = 6, step_size = 0.02)
 hp = HyperParameters(main_loop_size = 30, horizon = 80, n_directions = 6, b = 6, step_size = 0.02)
-# hp = HyperParameters(main_loop_size = 30, horizon = 40, n_directions = 6, b = 6, step_size = 0.20)
 
 input_size = length(obs)
 output_size = length(env.u_prev)
