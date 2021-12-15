@@ -34,7 +34,7 @@ function getpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
         p2=p2,
         spring = spring,
         damper = damper,
-        # spring_type = :sinusoidal,
+        spring_type = :linear,
         rot_spring_offset = spring_offset,
         rot_joint_limits = joint_limits))
     links = [link1]
@@ -46,7 +46,8 @@ end
 
 
 
-mech = getmechanism(:pendulum, Δt = 0.01, g = 0.00, spring = 10, spring_offset = π/2*sones(1), joint_limits = 0.55π .* [-sones(1), sones(1)])
+mech = getmechanism(:pendulum, Δt = 0.01, g = 0.00, spring = 10, spring_offset = π/2*sones(1),
+    joint_limits = 0.55π .* [-sones(1), sones(1)])
 initialize!(mech, :pendulum, ϕ1 = 0.1)
 storage = simulate!(mech, 3.1, record = true, verbose = true)
 visualize(mech, storage, vis=vis)

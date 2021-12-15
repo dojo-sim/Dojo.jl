@@ -20,7 +20,6 @@ end
         q = [cos(θ/2); r sin(θ/2)] = [w, x, y, z]
 """
 @inline function spring_distance(joint::Rotational, q::UnitQuaternion)
-    q = gc(joint, qb, qoff = qoff)
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     if joint.spring_type == :sinusoidal
@@ -46,7 +45,6 @@ end
         q = [cos(θ/2); r sin(θ/2)] = [w, x, y, z]
 """
 @inline function energy(joint::Rotational, q::UnitQuaternion)
-    q = gc(joint, qa, qb, qoff = qoff)
     if joint.spring_type == :sinusoidal
         return joint.spring * 2 * (1 - q.w^2)
     elseif joint.spring_type == :linear
@@ -90,7 +88,7 @@ springforceb(joint::Rotational3{T}, qb::UnitQuaternion; rotate::Bool = true) whe
 ### Spring and damper
 # Force applied by body b on body a expressed in frame a
 @inline function springforcea(joint::Rotational{T}, qa::UnitQuaternion, qb::UnitQuaternion; rotate::Bool = true) where {T}
-    q = gc(qa, qb, qoff = spring_qoffset(joint))
+    q = gc(joint, qa, qb, qoff = spring_qoffset(joint))
     distance = spring_distance(joint, q)
     force = joint.spring * distance # force in offset frame
     rotate && (force = vrotate(force, joint.qoffset)) # rotate back to a frame
@@ -98,7 +96,7 @@ springforceb(joint::Rotational3{T}, qb::UnitQuaternion; rotate::Bool = true) whe
 end
 # Force applied by body a on body b expressed in frame b
 @inline function springforceb(joint::Rotational{T}, qa::UnitQuaternion, qb::UnitQuaternion; rotate::Bool = true) where {T}
-    q = gc(qa, qb, qoff = spring_qoffset(joint))
+    q = gc(joint, qa, qb, qoff = spring_qoffset(joint))
     distance = spring_distance(joint, q)
     force = - joint.spring * distance # force in offset frame
     rotate && (force = vrotate(force, inv(qb) * qa * joint.qoffset)) # rotate back to b frame
@@ -106,7 +104,7 @@ end
 end
 # Force applied by origin on body b expressed in frame b
 @inline function springforceb(joint::Rotational{T}, qb::UnitQuaternion; rotate::Bool = true) where {T}
-    q = gc(qa, qoff = spring_qoffset(joint))
+    q = gc(joint, qb, qoff = spring_qoffset(joint))
     distance = spring_distance(joint, q)
     force = - joint.spring * distance # force in offset frame
     rotate && (force = vrotate(force, inv(qb) * joint.qoffset)) # rotate back to b frame
