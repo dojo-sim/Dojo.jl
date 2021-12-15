@@ -8,23 +8,24 @@ mutable struct Rotational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N}
     spring_offset::SVector{N̄λ,T}
     joint_limits::Vector{SVector{Nb½,T}} # lower and upper limits on the joint minimal coordinate angles
     Fτ::SVector{3,T}
+    parentid::Int 
+    childid::Int
+end
 
-    function Rotational{T,Nλ}(body1::Component, body2::Component;
-            axis::AbstractVector = szeros(T,3), qoffset::UnitQuaternion = one(UnitQuaternion{T}),
-            spring = zero(T), damper = zero(T), spring_offset = szeros(T,3-Nλ),
-            joint_limits = [szeros(T,0), szeros(T,0)],
-        ) where {T,Nλ}
+function Rotational{T,Nλ}(body1::Component, body2::Component;
+    axis::AbstractVector = szeros(T,3), qoffset::UnitQuaternion = one(UnitQuaternion{T}),
+    spring = zero(T), damper = zero(T), spring_offset = szeros(T,3-Nλ),
+    joint_limits = [szeros(T,0), szeros(T,0)]) where {T,Nλ}
 
-        V1, V2, V3 = orthogonalrows(axis)
-        V12 = [V1;V2]
+    V1, V2, V3 = orthogonalrows(axis)
+    V12 = [V1;V2]
 
-        Fτ = zeros(T,3)
-        Nb½ = length(joint_limits[1])
-        Nb = 2Nb½
-        N̄λ = 3 - Nλ
-        N = Nλ + 2Nb
-        new{T,Nλ,Nb,N,Nb½,N̄λ}(V3, V12, qoffset, spring, damper, spring_offset, joint_limits, Fτ), body1.id, body2.id
-    end
+    Fτ = zeros(T,3)
+    Nb½ = length(joint_limits[1])
+    Nb = 2Nb½
+    N̄λ = 3 - Nλ
+    N = Nλ + 2Nb
+    Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(V3, V12, qoffset, spring, damper, spring_offset, joint_limits, Fτ, body1.id, body2.id), body1.id, body2.id
 end
 
 Rotational0{T} = Rotational{T,0} where T

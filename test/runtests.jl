@@ -14,3 +14,5 @@ include("jacobian.jl")
 include("momentum_conservation.jl")
 include("energy_conservation.jl")
 include("behavior.jl")
+include("joint_limits.jl")
+

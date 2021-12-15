@@ -6,10 +6,11 @@ struct Ant end
 function ant(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     cf::T=0.5, spring::T=50.0, damper::T=50.0, s::Int=1,
     contact::Bool=true, contact_body=true,
+    limits::Bool=true,
     info=nothing, vis::Visualizer=Visualizer(),
     opts_step=InteriorPointOptions(), opts_grad=InteriorPointOptions()) where T
 
-    mechanism = getant(Δt=dt, g=g, cf=cf, spring=spring, damper=damper,contact=contact, contact_body=contact_body)
+    mechanism = getant(Δt=dt, g=g, cf=cf, spring=spring, damper=damper,contact=contact, contact_body=contact_body, limits=limits)
     initializeant!(mechanism)
 
     if mode == :min
@@ -139,20 +140,19 @@ function _get_obs(env::Environment{Ant,T}) where T
     return [env.x; contact_force]
 end
 
-# env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=25.0, spring=25.0, contact=true, contact_body=true)
-# total_mass(env.mechanism)
+# env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=1.0, spring=0.0, limits=true, contact=true, contact_body=true)
 
-# # initialize!(env.mechanism, :ant)
+# initialize!(env.mechanism, :ant)
 # open(env.vis)
-# # storage = simulate!(env.mechanism, 1.0, record=true, verbose=false)
-# # visualize(env.mechanism, storage, vis=env.vis)
+# storage = simulate!(env.mechanism, 1.0, record=true, verbose=false)
+# visualize(env.mechanism, storage, vis=env.vis)
 
 # reset(env)
 # render(env)
 # x0 = getMinState(env.mechanism)
 
 # for i = 1:100
-#     u = 1.0 * rand(Distributions.Uniform(-1.0, 1.0), 8)
+#     u = 0.0 * rand(Distributions.Uniform(-1.0, 1.0), 8)
 #     x0, r, _ = step(env, x0, u)
 #     @show r
 #     render(env)

@@ -213,8 +213,7 @@ function parse_links(xlinks, materialdict, T)
 end
 
 function joint_selector(jointtype, link1, link2, T;
-        axis = SA{T}[1;0;0], p1 = szeros(T,3), p2 = szeros(T,3), qoffset = one(UnitQuaternion{T}), name = ""
-    )
+        axis = SA{T}[1;0;0], p1 = szeros(T,3), p2 = szeros(T,3), qoffset = one(UnitQuaternion{T}), name = "")
 
     # TODO limits for revolute joint?
     if jointtype == "revolute" || jointtype == "continuous"

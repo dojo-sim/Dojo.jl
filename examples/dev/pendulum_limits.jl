@@ -43,12 +43,8 @@ end
 
 
 mech = getmechanism(:pendulum, Δt = 0.01, g = -9.81)
-<<<<<<< HEAD
-initialize!(mech, :pendulum, ϕ1 = 0.0)
-=======
 initialize!(mech, :pendulum, ϕ1 = 0.1)
 resetVars!.(mech.eqconstraints)
->>>>>>> 937d7b4426975e4a6260e609f4b9d208897d0407
 storage = simulate!(mech, 3.1, record = true, verbose = true)
 visualize(mech, storage, vis=vis)
 

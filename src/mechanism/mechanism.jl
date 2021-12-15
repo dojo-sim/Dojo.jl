@@ -85,3 +85,30 @@ function Mechanism(filename::String, floating::Bool=false, T=Float64; kwargs...)
 
     return mechanism
 end
+
+function add_limits(mech::Mechanism, eq::EqualityConstraint; 
+    # NOTE: this only works for joints between serial chains
+    tra_limits=eq.constraints[1].joint_limits, 
+    rot_limits=eq.constraints[1].joint_limits)
+
+    # update translational
+    tra = eq.constraints[1]
+    T = typeof(tra).parameters[1]
+    Nλ = typeof(tra).parameters[2]
+    Nb½ = length(tra_limits[1])
+    Nb = 2Nb½
+    N̄λ = 3 - Nλ
+    N = Nλ + 2Nb
+    tra_limit = (Translational{T,Nλ,Nb,N,Nb½,N̄λ}(tra.V3, tra.V12, tra.vertices, tra.spring, tra.damper, tra.spring_offset, tra_limits, tra.Fτ, eq.parentid, eq.childids[1]), eq.parentid, eq.childids[1])
+
+    # update rotational
+    rot = eq.constraints[2]
+    T = typeof(rot).parameters[1]
+    Nλ = typeof(rot).parameters[2]
+    Nb½ = length(rot_limits[1])
+    Nb = 2Nb½
+    N̄λ = 3 - Nλ
+    N = Nλ + 2Nb
+    rot_limit = (Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(rot.V3, rot.V12, rot.qoffset, rot.spring, rot.damper, rot.spring_offset, rot_limits, rot.Fτ, eq.parentid, eq.childids[1]), eq.parentid, eq.childids[1])
+    EqualityConstraint((tra_limit, rot_limit); name=eq.name)
+end

@@ -34,11 +34,12 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: Constraint{T,N}
             @assert set[2] == parentid
             push!(childids, set[3])
 
+            Nλ = λlength(set[1])
             Nset = ηlength(set[1])
             if isempty(inds)
-                push!(inds, [1;3-Nset])
+                push!(inds, [1;3-Nλ])
             else
-                push!(inds, [last(inds)[2]+1; last(inds)[2]+3-Nset])
+                push!(inds, [last(inds)[2]+1; last(inds)[2]+3-Nλ])
             end
             N += Nset
         end
@@ -68,11 +69,20 @@ end
 
 # TODO currently assumed constraints are in order and only joints which is the case unless very low level constraint setting
 function _setPosition!(mechanism, eqc::EqualityConstraint{T,N,Nc}, xθ) where {T,N,Nc}
-    @assert length(xθ)==3*Nc-N
+    Nλ = 0 
+    for (i, joint) in enumerate(eqc.constraints) 
+        Nλ += λlength(joint)
+    end
+    @assert length(xθ)==3*Nc-Nλ
     n = Int64(Nc/2)
+    # @show Nc
     body1 = getbody(mechanism, eqc.parentid)
     for i = 1:n
         body2 = getbody(mechanism, eqc.childids[i])
+        # @show eqc.inds[i][1] 
+        # @show eqc.inds[i][2]
+        # @show eqc.inds[i+1][1]
+        # @show eqc.inds[i+1][2]
         Δx = getPositionDelta(eqc.constraints[i], body1, body2, xθ[SUnitRange(eqc.inds[i][1], eqc.inds[i][2])]) # in body1's frame
         Δq = getPositionDelta(eqc.constraints[i+1], body1, body2, xθ[SUnitRange(eqc.inds[i+1][1], eqc.inds[i+1][2])]) # in body1's frame
 
@@ -83,8 +93,12 @@ function _setPosition!(mechanism, eqc::EqualityConstraint{T,N,Nc}, xθ) where {T
 end
 
 function setVelocity!(mechanism, eqc::EqualityConstraint{T,N,Nc}, vω) where {T,N,Nc}
+    Nλ = 0 
+    for (i, joint) in enumerate(eqc.constraints) 
+        Nλ += λlength(joint)
+    end
     # vω is already in body1 frame
-    @assert length(vω)==3*Nc-N
+    @assert length(vω)==3*Nc-Nλ
     n = Int64(Nc/2)
     body1 = getbody(mechanism, eqc.parentid)
     for i = 1:n
@@ -385,3 +399,4 @@ function resetVars!(eqc::EqualityConstraint{T,N,Nc,Cs}; scale::T=1.0) where {T,N
     eqc.λsol[2] = vcat(λ...)
     return
 end
+

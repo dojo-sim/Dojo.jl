@@ -225,7 +225,6 @@ end
     violation = 0.0
     for eq in mechanism.eqconstraints
         res = g(mechanism, eq)
-        @show res
         shift = 0
         for (i, joint) in enumerate(eq.constraints)
             Nλ = λlength(joint)
