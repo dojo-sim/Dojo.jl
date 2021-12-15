@@ -7,12 +7,14 @@ mutable struct Rotational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N}
     damper::T
     spring_offset::SVector{N̄λ,T}
     joint_limits::Vector{SVector{Nb½,T}} # lower and upper limits on the joint minimal coordinate angles
+    spring_type::Symbol # the rotational springs can be :sinusoidal or :linear, if linear then we need joint_limits to avoid the 180° singularity.
     Fτ::SVector{3,T}
 
     function Rotational{T,Nλ}(body1::Component, body2::Component;
             axis::AbstractVector = szeros(T,3), qoffset::UnitQuaternion = one(UnitQuaternion{T}),
             spring = zero(T), damper = zero(T), spring_offset = szeros(T,3-Nλ),
             joint_limits = [szeros(T,0), szeros(T,0)],
+            spring_type::Symbol = :sinusoidal,
         ) where {T,Nλ}
 
         V1, V2, V3 = orthogonalrows(axis)
@@ -23,7 +25,7 @@ mutable struct Rotational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N}
         Nb = 2Nb½
         N̄λ = 3 - Nλ
         N = Nλ + 2Nb
-        new{T,Nλ,Nb,N,Nb½,N̄λ}(V3, V12, qoffset, spring, damper, spring_offset, joint_limits, Fτ), body1.id, body2.id
+        new{T,Nλ,Nb,N,Nb½,N̄λ}(V3, V12, qoffset, spring, damper, spring_offset, joint_limits, spring_type, Fτ), body1.id, body2.id
     end
 end
 

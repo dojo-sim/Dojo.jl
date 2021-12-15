@@ -167,16 +167,16 @@ function potentialEnergy(mechanism::Mechanism{T,Nn,Ne,Nb}, storage::Storage{T,Ns
                     xa = storage.x[parentid - Ne][t] # TODO this is sketchy way to get the correct index
                     qa = storage.q[parentid - Ne][t] # TODO this is sketchy way to get the correct index
                     (typeof(joint) <: Translational) && (force = springforceb(joint, xa, qa, xb, qb)) # actual force not impulse
-                    (typeof(joint) <: Rotational) && (w = gq(joint, qa, qb).w) # actual force not impulse
+                    (typeof(joint) <: Rotational) && (q = gc(joint, qa, qb, qoff = spring_qoffset(joint)))
                 else
                     (typeof(joint) <: Translational) && (force = springforceb(joint, xb, qb)) # actual force not impulse
-                    (typeof(joint) <: Rotational) && (w = gq(joint, qb).w) # actual force not impulse
+                    (typeof(joint) <: Rotational) && (q = gc(joint, qb, qoff = spring_qoffset(joint)))
                 end
                 # @show force
                 spring = joint.spring
                 if spring > 0
                     (typeof(joint) <: Translational) && (pe += 0.5 * force' * force ./ spring)
-                    (typeof(joint) <: Rotational) && (pe += spring * (1 - w^2))
+                    (typeof(joint) <: Rotational) && (pe += energy(joint, q))
                 end
             end
         end

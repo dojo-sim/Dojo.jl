@@ -30,8 +30,13 @@ function getpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
     link1 = Box(width, depth, l, m)
 
     # Constraints
-    joint_between_origin_and_link1 = EqualityConstraint(Revolute(origin, link1,
-        joint_axis; p2=p2, spring = spring, damper = damper, rot_spring_offset = spring_offset, rot_joint_limits = joint_limits))
+    joint_between_origin_and_link1 = EqualityConstraint(Revolute(origin, link1, joint_axis;
+        p2=p2,
+        spring = spring,
+        damper = damper,
+        # spring_type = :sinusoidal,
+        rot_spring_offset = spring_offset,
+        rot_joint_limits = joint_limits))
     links = [link1]
     eqcs = [joint_between_origin_and_link1]
 
@@ -41,10 +46,33 @@ end
 
 
 
-mech = getmechanism(:pendulum, Δt = 0.01, g = 9.81)
+mech = getmechanism(:pendulum, Δt = 0.01, g = 0.00, spring = 10, spring_offset = π/2*sones(1), joint_limits = 0.55π .* [-sones(1), sones(1)])
 initialize!(mech, :pendulum, ϕ1 = 0.1)
 storage = simulate!(mech, 3.1, record = true, verbose = true)
 visualize(mech, storage, vis=vis)
+
+const Dojo = Main
+
+
+
+
+AngleAxis(q).theta
+
+θ = 0.5
+r = rand(3)
+r ./= norm(r)
+aa = θ * r
+q = axisangle2quaternion(aa)
+
+s2 = q.x * q.x + q.y * q.y + q.z * q.z
+sin_t2 = sqrt(s2)
+theta = 2 * atan(sin_t2, q.w)
+
+θ = 2 * atan(q.w, norm(Vmat(q)))
+r = Vmat(q) ./ cos(θ/2)
+aa = θ * r
+qq = axisangle2quaternion(aa)
+
 
 
 
