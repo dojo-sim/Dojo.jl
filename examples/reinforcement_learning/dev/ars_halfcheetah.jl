@@ -33,11 +33,3 @@ traj = display_policy(env, policy, normalizer, hp)
 
 visualize(env, traj)
 
-
-# θbest005 = deepcopy(policy.θ)
-# θbest = deepcopy(policy.θ)
-# θgood = deepcopy(policy.θ)
-# θbad = deepcopy(policy.θ)
-
-# 5x = 1.1*1.5*2
-# 2x = 1.4

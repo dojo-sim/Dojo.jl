@@ -2,7 +2,7 @@ using Pkg; Pkg.activate(@__DIR__)
 using MuJoCo
 mj_activate("/home/taylor/.mujoco/bin/mjkey.txt") # set location to MuJoCo key path
 
-using LyceumMuJoCoViz 
+using LyceumMuJoCo, LyceumMuJoCoViz 
 using FiniteDiff
 
 using IterativeLQR
@@ -10,11 +10,11 @@ using LinearAlgebra
 using Random
 
 # ## load MuJoCo model
-path = joinpath(@__DIR__, "../../../env/raiberthopper/deps/planarhopper.xml")
+path = joinpath(@__DIR__, "../../../env/raiberthopper/deps/planarhopper_test.xml")
 
 include("mujoco_model.jl")
 planarhopper_mujoco = MuJoCoModel(path)
-sim = MJSim(planarhopper_mujoco.m, planarhopper_mujoco.d)
+sim = LyceumMuJoCo.MJSim(planarhopper_mujoco.m, planarhopper_mujoco.d)
 
 LyceumMuJoCoViz.visualize(sim) #, trajectories=[states]) # ctrl + LEFT (access trajectory mode)
 

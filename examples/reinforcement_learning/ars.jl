@@ -85,83 +85,77 @@ function update(policy::Policy, rollouts, σ_r)
     return nothing
 end
 
-function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T}, hp::HyperParameters{T}) where T
-    envs = [deepcopy(env) for i = 1:Threads.nthreads()]
+function sample_policy(policy::Policy{T}) where {T}
+    δ = [randn(size(policy.θ)) for i = 1:policy.hp.n_directions]
+    θp = [policy.θ + policy.hp.noise .* δ[i] for i = 1:policy.hp.n_directions]
+    θn = [policy.θ - policy.hp.noise .* δ[i] for i = 1:policy.hp.n_directions]
+    return [θp..., θn...], δ
+end
+
+function eval_sample_policy(θ::Matrix{T}, input::AbstractVector{T}) where {T}
+    return θ * input
+end
+
+function rollout_policy(θ::Matrix, env::Environment, normalizer::Normalizer, hp::HyperParameters) 
+    state = reset(env)
+    rewards = 0.0
+    done = false
+    num_plays = 0
+    while !done && num_plays < hp.horizon
+        observe(normalizer, state)
+        state = normalize(normalizer, state)
+        action = eval_sample_policy(θ, state)
+        state, reward, done, _ = step(env, action)
+        reward = max(min(reward, 1), -1)
+        rewards += reward
+        num_plays += 1
+    end
+    return rewards
+end
+
+function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T}, hp::HyperParameters{T}; distributed=false) where T
+    println("Training linear policy with Augmented Random Search (ARS)\n ")
+    if distributed
+        envs = [deepcopy(env) for i = 1:(2 * hp.n_directions)]
+        normalizers = [deepcopy(normalizer) for i = 1:(2 * hp.n_directions)]
+        hps = [deepcopy(hp) for i = 1:(2 * hp.n_directions)]
+        print("  $(nprocs()) processors")
+    else 
+        envs = [deepcopy(env) for i = 1:Threads.nthreads()]
+        print("  $(Threads.nthreads()) threads")
+    end
+
+    # pre-allocate for rewards
+    rewards = zeros(2 * hp.n_directions)
+
     for episode = 1:hp.main_loop_size
-        # init deltas and rewards
-        δs = sample_δs(policy)
-        reward_positive = zeros(hp.n_directions)
-        reward_negative = zeros(hp.n_directions)
-
-        # positive directions
-        Threads.@threads for k = 1:hp.n_directions
-            seed(env, s = episode*k) #TODO I added this not sure if good or not
-            state = reset(envs[Threads.threadid()])
-            done = false
-            num_plays = 0.
-            while !done && num_plays < hp.horizon
-                observe(normalizer, state)
-                state = normalize(normalizer, state)
-                action = positive_perturbation(policy, state, δs[k])
-                state, reward, done, _ = step(envs[Threads.threadid()], action)
-                reward = max(min(reward, 1), -1)
-                reward_positive[k] += reward
-                num_plays += 1
-            end
+        # initialize deltas and rewards
+        θs, δs = sample_policy(policy)
+    
+        # evaluate policies
+        if distributed
+            rewards .= pmap(rollout_policy, θs, envs, normalizers, hps)
+        else 
+            Threads.@threads for k = 1:(2 * hp.n_directions) 
+                rewards[k] = rollout_policy(θs[k], envs[Threads.threadid()], normalizer, hp) 
+            end 
         end
 
-        # negative directions
-        Threads.@threads for k = 1:hp.n_directions
-            seed(env, s = episode*k) #TODO I added this not sure if good or not
-            state = reset(envs[Threads.threadid()])
-            done = false
-            num_plays = 0.
-            while !done && num_plays < hp.horizon
-                observe(normalizer, state)
-                state = normalize(normalizer, state)
-                action = negative_perturbation(policy, state, δs[k])
-                state, reward, done, _ = step(envs[Threads.threadid()], action)
-                reward = max(min(reward, 1), -1)
-                reward_negative[k] += reward
-                num_plays += 1
-            end
-        end
-
-        all_rewards = [reward_negative; reward_positive]
-        σ_r = std(all_rewards)
-
-        # sort rollouts wrt max(r_pos, r_neg) and take (hp.b) best
-        # scores = {k:max(r_pos, r_neg) for k,(r_pos,r_neg) in enumerate(zip(reward_positive,reward_negative))}
-        # order = sorted(scores.keys(), key=lambda x:scores[x])[-hp.b:]
-        # rollouts = [(reward_positive[k], reward_negative[k], deltas[k]) for k in order[::-1]]
-        r_max = [max(reward_negative[k], reward_positive[k]) for k = 1:hp.n_directions]
+        # reward evaluation
+        r_max = [max(rewards[k], rewards[hp.n_directions + k]) for k = 1:hp.n_directions]
+        σ_r = std(rewards)
         order = sortperm(r_max, rev = true)[1:hp.b]
-        rollouts = [(reward_positive[k], reward_negative[k], δs[k]) for k = order]
+        rollouts = [(rewards[k], rewards[hp.n_directions + k], δs[k]) for k = order]
+
+        # policy update
         update(policy, rollouts, σ_r)
-        # @show scn.(policy.θ)
-
-        # # evaluate
-        # state = reset(envs[Threads.threadid()])
-        # done = false
-        # num_plays = 1.
-        # reward_evaluation = 0
-        # while !done && num_plays<hp.horizon
-        #     observe(normalizer, state)
-        #     state = normalize(normalizer, state)
-        #     action = evaluate(policy, state)
-        #     state, reward, done, _ = step(envs[Threads.threadid()], action)
-        #     reward_evaluation += reward
-        #     num_plays += 1
-        # end
-        reward_evaluation = mean(all_rewards)
-
+        
         # finish, print:
-        println("episode $episode reward_evaluation $reward_evaluation")
+        println("episode $episode reward_evaluation $(mean(rewards))")
     end
 
     return nothing
 end
-
 
 # display learned policy
 function display_policy(env::Environment, policy::Policy, normalizer::Normalizer, hp::HyperParameters; rendering = false)

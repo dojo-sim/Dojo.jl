@@ -105,7 +105,9 @@ export Origin,
     mechanicalEnergy,
 
     mehrotra!,
-    InteriorPointOptions
+    InteriorPointOptions, 
+
+    Environment
 
 # Utilities
 include(joinpath("util", "util.jl"))

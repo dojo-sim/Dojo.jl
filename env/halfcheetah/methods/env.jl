@@ -5,10 +5,11 @@ struct HalfCheetah end
 
 function halfcheetah(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     cf::T=0.4, spring=[240, 180, 120, 180, 120, 60.], damper=[6., 4.5, 3., 4.5, 3., 1.5],
+    limits::Bool=true,
     s::Int=1, contact::Bool=true, info=nothing, vis::Visualizer=Visualizer(),
     opts_step=InteriorPointOptions(), opts_grad=InteriorPointOptions()) where T
 
-    mechanism = gethalfcheetah(Δt=dt, g=g, cf=cf, spring=spring, damper=damper, contact=contact)
+    mechanism = gethalfcheetah(Δt=dt, g=g, cf=cf, spring=spring, damper=damper, contact=contact, limits=limits)
     initializehalfcheetah!(mechanism)
 
     if mode == :min
