@@ -18,7 +18,16 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
-mech = getmechanism(:hopper, Δt = 0.01, g = -0*9.81, contact = true, limits = true,
+function controller!(mechanism, k)
+    for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])
+        nu = controldim(eqc)
+        u = 50*mechanism.Δt*(ones(nu) .- 0.5)
+        setForce!(mechanism, eqc, u)
+    end
+    return
+end
+
+mech = getmechanism(:hopper, Δt = 0.05, g = -0*9.81, contact = false, limits = true,
     contact_body = true, spring = 1.0, damper = 0.0);
 mech.ϕreg .= 0.0
 initialize!(mech, :hopper, x = 0.0, z = 0.0, θ = -0.0)
@@ -26,19 +35,16 @@ initialize!(mech, :hopper, x = 0.0, z = 0.0, θ = -0.0)
     opts=InteriorPointOptions(verbose=true, btol = 1e-6))
 visualize(mech, storage, vis = vis, show_contact = true)
 
-mech.ϕreg
-sqrt(4/0.01^2)
+
+setentries!(mech)
+
+
+
+
 
 plot(hcat(Vector.(storage.ω[1])...)')
 
-function controller!(mechanism, k)
-    for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])
-        nu = controldim(eqc)
-        u = 50*0.01*(ones(nu) .- 0.5)
-        setForce!(mechanism, eqc, u)
-    end
-    return
-end
+
 
 eqc1 = collect(mech.eqconstraints)[1]
 body1 = collect(mech.bodies)[1]

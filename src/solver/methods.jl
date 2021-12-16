@@ -5,11 +5,6 @@
     return
 end
 
-# @inline function setDandΔs!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry, eqc::EqualityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
-#     matrix_entry.value = ∂g∂ʳself(mechanism, eqc);
-#     vector_entry.value = -g(mechanism, eqc)
-#     return
-# end
 
 ## Complementarity
 function complementarity(mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}; scaling::Bool = false) where {T,N,Nc,Cs}

@@ -19,15 +19,31 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
-mech = getmechanism(:pendulum, Δt = 0.01, g = -9.81)
+
+function controller!(mechanism, k)
+    for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[1:end])
+        nu = controldim(eqc)
+        u = 33.5 * mechanism.Δt * ones(nu)
+        setForce!(mechanism, eqc, u)
+    end
+    return
+end
+
+
+mech = getmechanism(:pendulum, Δt = 0.05, g = -0*9.81)
 initialize!(mech, :pendulum, ϕ1 = 0.7)
-storage = simulate!(mech, 0.1, record = true, solver = :mehrotra!)
+storage = simulate!(mech, 0.20, controller!, record=true, verbose=true)
+visualize(mech, storage, vis=vis)
+
+
+setentries!(mech)
+
 
 ################################################################################
 # Differentiation
 ################################################################################
 
-include(joinpath(module_dir(), "examples", "diff_tools.jl"))
+include(joinpath(module_dir(), "examples", "diff_tools.jl"))1
 # Set data
 Nb = length(mech.bodies)
 data = getdata(mech)
