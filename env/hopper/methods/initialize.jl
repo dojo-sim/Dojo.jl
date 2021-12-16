@@ -17,11 +17,12 @@ function gethopper(; Δt::T=0.01, g::T=-9.81, cf::T=2.0,
         thigh = geteqconstraint(mech, "thigh")
         eqcs[thigh.id] = add_limits(mech, thigh, rot_limits=[SVector{1}(joint_limits[1][1]), SVector{1}(joint_limits[2][1])])
 
-        leg = geteqconstraint(mech, "leg")
-        eqcs[leg.id] = add_limits(mech, leg, rot_limits=[SVector{1}(joint_limits[1][2]), SVector{1}(joint_limits[2][2])])
-
-        foot = geteqconstraint(mech, "foot")
-        eqcs[foot.id] = add_limits(mech, foot, rot_limits=[SVector{1}(joint_limits[1][3]), SVector{1}(joint_limits[2][3])])
+        @warn "uncomment limits"
+        # leg = geteqconstraint(mech, "leg")
+        # eqcs[leg.id] = add_limits(mech, leg, rot_limits=[SVector{1}(joint_limits[1][2]), SVector{1}(joint_limits[2][2])])
+        #
+        # foot = geteqconstraint(mech, "foot")
+        # eqcs[foot.id] = add_limits(mech, foot, rot_limits=[SVector{1}(joint_limits[1][3]), SVector{1}(joint_limits[2][3])])
 
         mech = Mechanism(Origin{T}(), [mech.bodies...], [eqcs...], g=g, Δt=Δt, spring=spring, damper=damper)
     end

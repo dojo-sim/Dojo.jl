@@ -156,7 +156,7 @@ end
 
 
 @inline function ∂g∂ʳself(joint::Rotational{T,Nλ,0,N}, η) where {T,Nλ,N}
-    return Diagonal(1e-10 * sones(T,N))
+    return Diagonal(+1.00e-10 * sones(T,N))
 end
 
 @inline function ∂g∂ʳself(joint::Rotational{T,Nλ,Nb,N}, η) where {T,Nλ,Nb,N}
@@ -164,7 +164,7 @@ end
 
     c1 = [Diagonal(γ + 1e-10 * sones(T, Nb)); Diagonal(sones(Nb)); szeros(Nλ, Nb)]
     c2 = [Diagonal(s + 1e-10 * sones(T, Nb)); szeros(Nb, Nb); szeros(Nλ, Nb)]
-    c3 = [szeros(Nb, Nλ); szeros(Nb, Nλ); Diagonal(1e-10 * sones(T, Nλ))]
+    c3 = [szeros(Nb, Nλ); szeros(Nb, Nλ); Diagonal(+1.00e-10 * sones(T, Nλ))]
     return [c1 c2 c3]
 end
 

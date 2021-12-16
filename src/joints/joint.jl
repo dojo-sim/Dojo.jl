@@ -175,7 +175,7 @@ g(joint::Joint, statea::State, stateb::State, λ, Δt) = g(joint, posargs3(state
 g(joint::Joint, stateb::State, λ, Δt) = g(joint, posargs3(stateb, Δt)..., λ)
 
 @inline function ∂g∂ʳself(joint::Joint{T,Nλ}, λ) where {T,Nλ}
-    return Diagonal(1e-10 * sones(T,Nλ))
+    return Diagonal(+1.00e-10 * sones(T,Nλ))
 end
 
 ## Discrete-time position derivatives (for dynamics)

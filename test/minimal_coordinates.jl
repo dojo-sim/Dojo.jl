@@ -96,6 +96,17 @@ end
 	@test norm(x0 - x1, Inf) < 1e-10
 end
 
+# halfcheetah
+@testset "min -> max -> min: halfcheetah" begin
+	mech = Dojo.getmechanism(:halfcheetah)
+	Random.seed!(100)
+	nx = Dojo.minCoordDim(mech)
+	x0 = rand(nx)
+	z0 = Dojo.min2max(mech, x0)
+	x1 = Dojo.max2min(mech, z0)
+	@test norm(x0 - x1, Inf) < 1e-10
+end
+
 # nslider
 @testset "min -> max -> min: nslider" begin
 	Nlink0 = 5

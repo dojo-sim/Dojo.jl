@@ -18,23 +18,86 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
-mech = getmechanism(:hopper, Δt = 0.05, g = -9.81, contact = true, limits = true,
-    contact_body = true, spring = 0.0, damper = 1.0);
+mech = getmechanism(:hopper, Δt = 0.01, g = -0*9.81, contact = true, limits = true,
+    contact_body = true, spring = 1.0, damper = 0.0);
+mech.ϕreg .= 0.0
 initialize!(mech, :hopper, x = 0.0, z = 0.0, θ = -0.0)
-
-@elapsed storage = simulate!(mech, 3.00, controller!, record = true, verbose = false,
-    opts=InteriorPointOptions(verbose=false, btol = 1e-6))
+@elapsed storage = simulate!(mech, 0.2, controller!, record = true,
+    opts=InteriorPointOptions(verbose=true, btol = 1e-6))
 visualize(mech, storage, vis = vis, show_contact = true)
+
+mech.ϕreg
+sqrt(4/0.01^2)
+
+plot(hcat(Vector.(storage.ω[1])...)')
 
 function controller!(mechanism, k)
     for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])
         nu = controldim(eqc)
-        u = 150*0.05*(rand(nu) .- 0.5)
+        u = 50*0.01*(ones(nu) .- 0.5)
         setForce!(mechanism, eqc, u)
     end
     return
 end
-pi/2
+
+eqc1 = collect(mech.eqconstraints)[1]
+body1 = collect(mech.bodies)[1]
+body2 = collect(mech.bodies)[2]
+zerodimstaticadjoint(∂g∂ʳpos(mech, eqc1, body1))
+collect(mech.eqconstraints)
+
+
+
+const Dojo = Main
+
+# angular_damping!(mech, body1)
+# ∂angular_damping!(mech, body1)
+
+∇ = [szeros(3,6); sones(3,6)]
+∇ = hcat(szeros(3,6), sones(3,6))
+∂integration(one(UnitQuaternion), srand(3), 0.1)
+#
+#     for i=1:Nc
+#         bnd = ineqc.constraints[i]
+#         bnd_type = typeof(ineqc.constraints[i])
+#
+#         M = ∂integration(q2, ω2, Δt)
+#         function d(vars)
+#             x = vars[1:3]
+#             q = UnitQuaternion(vars[4:7]..., false)
+#             return ∂g∂ʳpos(bnd, x, q, nothing)' * ineqc.γsol[2]
+#         end
+#
+#         if bnd_type <: ContactBound
+#             body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
+#         elseif bnd_type <: ImpactBound
+#             body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
+#         elseif bnd_type <: LinearContactBound
+#             body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
+#         end
+#     end
+#     return
+# end
+
+
+angular_damping!(mech, body1)
+
+body1.state.q2
+body2.state.q2
+
+
+mech = getmechanism(:slider, Δt = 0.05, g = -9.81, spring = 10.0, damper = 1.0);
+initialize!(mech, :slider, z1 = 0.0)
+@elapsed storage = simulate!(mech, 3.00, record = true, verbose = false,
+    opts=InteriorPointOptions(verbose=false, btol = 1e-6))
+visualize(mech, storage, vis = vis, show_contact = true)
+
+
+
+
+
+
+
 # env = make("halfcheetah", vis = vis)
 
 env.aspace

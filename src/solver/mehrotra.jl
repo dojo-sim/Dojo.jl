@@ -99,7 +99,8 @@ function solver_status(mechanism::Mechanism, α, rvio, bvio, n, μtarget, underc
         "   μ", scn(μtarget),
         "   |res|∞", scn(res),
         "   |Δ|∞", scn(Δvar),
-        "   ucut", scn(undercut))
+        # "   ucut", scn(undercut),
+		)
 end
 
 function initial_state!(ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
@@ -236,4 +237,20 @@ function pushdiagonalinverses!(mechanism::Mechanism)
 		mechanism.system.diagonal_inverses[i] = deepcopy(mechanism.diagonal_inverses[i])
 	end
 	return
+end
+
+@inline function angular_damping!(mechanism::Mechanism{T,Nn,Ne}, body::Body) where {T,Nn,Ne}
+    ϕ25 = body.state.ϕsol[2]
+    velocity = ϕ25 # in body frame
+    ϕreg = mechanism.ϕreg[body.id - Ne] # angular damping regularization
+    force = - ϕreg * velocity # Currently assumes same damper constant in all directions: ϕreg
+    body.state.d -= mechanism.Δt*[szeros(T, 3); force]
+    return
+end
+
+@inline function ∂angular_damping!(mechanism::Mechanism{T,Nn,Ne}, body::Body) where {T,Nn,Ne}
+    ϕreg = mechanism.ϕreg[body.id - Ne] # angular damping regularization
+    ∇ = hcat(szeros(3,3), -ϕreg * Diagonal(sones(3)))
+    body.state.D -= mechanism.Δt*[szeros(3,6); ∇]
+    return
 end

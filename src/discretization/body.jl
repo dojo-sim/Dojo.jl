@@ -5,7 +5,7 @@
     x1, q1 = posargs1(state)
     x2, q2 = posargs2(state)
     x3, q3 = posargs3(state, Δt)
-    
+
     ezg = SA{T}[0; 0; -mechanism.g]
     D1x = - 1/Δt * body.m * (x2 - x1) + Δt/2 * body.m * ezg
     D2x =   1/Δt * body.m * (x3 - x2) + Δt/2 * body.m * ezg
@@ -21,7 +21,10 @@
         Ne < connectionid <= Ne+Nb && continue # body
         constraintForceMapping!(mechanism, body, getcomponent(mechanism, connectionid))
     end
-
+    # Regularize the angular velocity when necessary.
+    for body in mechanism.bodies
+        angular_damping!(mechanism, body)
+    end
     return state.d
 end
 
@@ -46,6 +49,9 @@ end
         Ne < connectionid <= Ne+Nb && continue # body
         ∂constraintForceMapping!(mechanism, body, getcomponent(mechanism, connectionid))
     end
-
+    # Regularize the angular velocity when necessary.
+    for body in mechanism.bodies
+        ∂angular_damping!(mechanism, body)
+    end
     return state.D
 end

@@ -21,8 +21,7 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 mech = getmechanism(:ant, Δt = 0.01, g = -9.81, contact = true,
     contact_body = true, spring = 0.0, damper = 1.0);
 initialize!(mech, :ant, rot = [0,0,0.], ankle = 0.25)
-# @elapsed storage = simulate!(mech, 2.0, record = true, verbose = false,
-@profiler storage = simulate!(mech, 2.0, record = true, verbose = false,
+@elapsed storage = simulate!(mech, 2.0, record = true, verbose = false,
     opts=InteriorPointOptions(verbose=false, btol = 1e-6))
 visualize(mech, storage, vis = vis)
 

@@ -12,9 +12,10 @@ mutable struct Mechanism{T,Nn,Ne,Nb,Ni}
     Δt::T
     g::T
     μ::T
+    ϕreg::Vector{T}
 end
 
-function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, eqcs::Vector{<:EqualityConstraint{T}}, ineqcs::Vector{<:InequalityConstraint{T}}; 
+function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, eqcs::Vector{<:EqualityConstraint{T}}, ineqcs::Vector{<:InequalityConstraint{T}};
     spring=0.0, damper=0.0, Δt::T=0.01, g::T=-9.81) where T
 
     # reset ids
@@ -55,7 +56,7 @@ function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, eqcs::Vector{<:
     matrix_entries = deepcopy(system.matrix_entries)
     diagonal_inverses = deepcopy(system.diagonal_inverses)
 
-    # springs and dampers 
+    # springs and dampers
     eqcs = set_spring_damper!(eqcs, spring, damper)
 
     # containers for nodes
@@ -65,8 +66,8 @@ function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, eqcs::Vector{<:
 
     # complementarity slackness (i.e., contact model "softness")
     μ = 0.0
-
-    Mechanism{T,Nn,Ne,Nb,Ni}(origin, eqcs, bodies, ineqcs, system, residual_entries, matrix_entries, diagonal_inverses, Δt, g, μ)
+    ϕreg = zeros(Nb)
+    Mechanism{T,Nn,Ne,Nb,Ni}(origin, eqcs, bodies, ineqcs, system, residual_entries, matrix_entries, diagonal_inverses, Δt, g, μ, ϕreg)
 end
 
 function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, eqcs::Vector{<:EqualityConstraint{T}}; kwargs...) where T

@@ -15,7 +15,7 @@ function lineSearch!(mechanism::Mechanism, α, rvio, bvio, opts; warning::Bool =
         end
         for body in bodies
             ϕmax = 3.9 / mechanism.Δt^2
-            lineStep!(α, body, getentry(system, body.id), scale, ϕmax = ϕmax)
+            lineStep!(α, mechanism, body, getentry(system, body.id), scale, ϕmax = ϕmax)
             if dot(body.state.ϕsol[2], body.state.ϕsol[2]) > 3.91 / mechanism.Δt^2
                 error("Excessive angular velocity. Body-ID: $(string(body.name)) " * string(body.id) * ", ω: " * string(body.state.ϕsol[2]) * ".")
             end
@@ -35,14 +35,19 @@ function lineSearch!(mechanism::Mechanism, α, rvio, bvio, opts; warning::Bool =
     return rvio_cand, bvio_cand
 end
 
-@inline function lineStep!(α::T, body::Body, vector_entry::Entry, scale; ϕmax = Inf) where T
+@inline function lineStep!(α::T, mechanism::Mechanism{T,Nn,Ne}, body::Body, vector_entry::Entry, scale; ϕmax = Inf) where {T,Nn,Ne}
     body.state.vsol[2] = body.state.vsol[1] + 1 / (2^scale) * α * vector_entry.value[SA[1; 2; 3]]
     body.state.ϕsol[2] = body.state.ϕsol[1] + 1 / (2^scale) * α * vector_entry.value[SA[4; 5; 6]]
     ϕ = body.state.ϕsol[2]
-    ϕnorm = dot(ϕ, ϕ)
-    if ϕnorm > ϕmax
-        @warn "clipping"
-        body.state.ϕsol[2] *= ϕmax / ϕnorm
+    ϕdot = dot(ϕ, ϕ)
+    if ϕdot > ϕmax
+        # @warn "clipping $(scn((ϕdot - ϕmax)/ϕmax)), $(body.name)"
+        # if we clip then we increase the regularization on this angular velocity.
+        # ϕ25 = body.state.ϕsol[2]
+        # Δϕ = (sqrt(ϕdot) - sqrt(ϕmax)) * ϕ25 # this is the velocity that we want to 'remove'
+        # mechanism.ϕreg[body.id - Ne] = 0.5 * mechanism.ϕreg[body.id - Ne] + 0.0* 4 * norm(body.J * Δϕ) # heuristic value that should put us in the feasible domain for ϕ
+        println("clipping ", scale, scn(mechanism.ϕreg[body.id - Ne]), scn((ϕdot - ϕmax)/ϕmax), " ", scn(ϕdot), " ", scn(ϕmax), " ", body.name)
+        body.state.ϕsol[2] *= ϕmax / ϕdot # this is overkill, but works better than sqrt(ϕmax/ϕdot)
     end
     return
 end

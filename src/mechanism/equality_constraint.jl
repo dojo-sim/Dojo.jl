@@ -79,10 +79,6 @@ function _setPosition!(mechanism, eqc::EqualityConstraint{T,N,Nc}, xθ) where {T
     body1 = getbody(mechanism, eqc.parentid)
     for i = 1:n
         body2 = getbody(mechanism, eqc.childids[i])
-        # @show eqc.inds[i][1]
-        # @show eqc.inds[i][2]
-        # @show eqc.inds[i+1][1]
-        # @show eqc.inds[i+1][2]
         Δx = getPositionDelta(eqc.constraints[i], body1, body2, xθ[SUnitRange(eqc.inds[i][1], eqc.inds[i][2])]) # in body1's frame
         Δq = getPositionDelta(eqc.constraints[i+1], body1, body2, xθ[SUnitRange(eqc.inds[i+1][1], eqc.inds[i+1][2])]) # in body1's frame
 
@@ -145,24 +141,7 @@ end
 end
 
 @inline function constraintForceMapping!(mechanism, body::Body, eqc::EqualityConstraint)
-    # @show size(∂g∂ʳpos(mechanism, eqc, body))
-    # @show size(eqc.λsol[2])
-    # @warn "we have an issue here we need to filter out the si's that are inside λsol because they do not factor in the dynamics"
-    # λ = []
-    # for (i, joint) in enumerate(eqc.constraints)
-    #     # Nli = joint_limits_length(joint)
-    #     λi = eqc.λsol[2][λindex(eqc, i)]
-    #     si, γi = get_sγ(joint, λi)
-    #     push!(λ, λi[1:length(joint)])
-    #     push!(λ, γi)
-    #     # push!(comp_jac, [zeros(2Nli, length(joint)) Diagonal(γi) Diagonal(si)])
-    # end
-
     body.state.d -= zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
-
-    # if length(eqc.λsol[2]) == 3 && body.id ∈ eqc.childids
-    #     Fτ = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
-    # end
     eqc.isspring && (body.state.d -= springforce(mechanism, eqc, body))
     eqc.isdamper && (body.state.d -= damperforce(mechanism, eqc, body))
     return

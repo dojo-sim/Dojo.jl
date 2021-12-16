@@ -16,7 +16,7 @@ end
 springforcea(joint::Translational, bodya::Body, bodyb::Body, Δt) = Δt * springforcea(joint, posargs2(bodya.state)..., posargs2(bodyb.state)...)
 springforceb(joint::Translational, bodya::Body, bodyb::Body, Δt) = Δt * springforceb(joint, posargs2(bodya.state)..., posargs2(bodyb.state)...)
 springforceb(joint::Translational, bodyb::Body, Δt) = Δt * springforceb(joint, posargs2(bodyb.state)...)
-damperforcea(joint::Translational, bodya::Body, bodyb::Body, Δt) = Δt * damperforcea(joint, posargs2(statea)..., bodya.state.vsol[2], bodya.state.ϕsol[2], posargs2(bodyb.state)..., bodyb.state.vsol[2], bodyb.state.ϕsol[2])
+damperforcea(joint::Translational, bodya::Body, bodyb::Body, Δt) = Δt * damperforcea(joint, posargs2(bodya.state)..., bodya.state.vsol[2], bodya.state.ϕsol[2], posargs2(bodyb.state)..., bodyb.state.vsol[2], bodyb.state.ϕsol[2])
 damperforceb(joint::Translational, bodya::Body, bodyb::Body, Δt) = Δt * damperforceb(joint, posargs2(bodya.state)..., bodya.state.vsol[2], bodya.state.ϕsol[2], posargs2(bodyb.state)..., bodyb.state.vsol[2], bodyb.state.ϕsol[2])
 damperforceb(joint::Translational, bodyb::Body, Δt) = Δt * damperforceb(joint, posargs2(bodyb.state)..., bodyb.state.vsol[2], bodyb.state.ϕsol[2])
 
