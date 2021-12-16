@@ -74,7 +74,7 @@ function reset(env::Environment{Hopper}; x=nothing, reset_noise_scale = 0.005)
     return _get_obs(env)
 end
 
-function _get_obs(env::Environment; full_state::Bool=false)
+function _get_obs(env::Environment{Hopper}; full_state::Bool=false)
     full_state && (return env.x)
     nx = minCoordDim(env.mechanism)
     if env.mode == :min

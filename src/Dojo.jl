@@ -21,7 +21,7 @@ using LightGraphs
 using DocStringExtensions
 
 using Statistics 
-using Distributions
+import Distributions: Uniform, Normal
 
 export Origin,
     Body,
