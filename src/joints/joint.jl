@@ -16,6 +16,11 @@ function get_sγ(joint::Joint{T,Nλ,Nb}, η) where {T,Nλ,Nb}
     return s, γ
 end
 
+function λindex(joint::Joint{T,Nλ,Nb,N}, s::Int) where {T,Nλ,Nb,N}
+    ind = SVector{N,Int}(s+1:s+N)
+    return ind
+end
+
 ## Discrete-time position derivatives (for dynamics)
 # Wrappers 1
 @inline function ∂g∂ʳposa(joint::Joint, body1::Body, body2::Body, childid, λ, Δt)
@@ -283,9 +288,9 @@ end
 @inline minimalCoordinates(joint::Joint{T,Nλ}) where {T,Nλ} = szeros(T, 3 - Nλ)
 
 ## Limits
-function add_limits(mech::Mechanism, eq::EqualityConstraint; 
+function add_limits(mech::Mechanism, eq::EqualityConstraint;
     # NOTE: this only works for joints between serial chains (ie, single child joints)
-    tra_limits=eq.constraints[1].joint_limits, 
+    tra_limits=eq.constraints[1].joint_limits,
     rot_limits=eq.constraints[1].joint_limits)
 
     # update translational

@@ -162,13 +162,11 @@ end
 @inline function ∂g∂ʳself(joint::Rotational{T,Nλ,Nb,N}, η) where {T,Nλ,Nb,N}
     s, γ = get_sγ(joint, η)
 
-    [
-     Diagonal(γ + 1e-10 * sones(T, Nb)) Diagonal(s + 1e-10 * sones(T, Nb)) zeros(Nb, Nλ);
-     Diagonal(sones(Nb)) szeros(Nb, Nb+Nλ);
-     szeros(Nλ, 2Nb) Diagonal(1e-10 * sones(T, Nλ));
-    ]
+    c1 = [Diagonal(γ + 1e-10 * sones(T, Nb)); Diagonal(sones(Nb)); szeros(Nλ, Nb)]
+    c2 = [Diagonal(s + 1e-10 * sones(T, Nb)); szeros(Nb, Nb); szeros(Nλ, Nb)]
+    c3 = [szeros(Nb, Nλ); szeros(Nb, Nλ); Diagonal(1e-10 * sones(T, Nλ))]
+    return [c1 c2 c3]
 end
-
 
 ### Forcing
 ## Application of joint forces (for dynamics)

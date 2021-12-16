@@ -70,8 +70,8 @@ end
     x1, q1 = posargs3(body1.state, Δt)
     x2, q2 = posargs3(body2.state, Δt)
 
-    dGab = zeros(6,6)
-    dGba = zeros(6,6)
+    dGab = szeros(6,6)
+    dGba = szeros(6,6)
 
     for connectionid in connections(mechanism.system, body1.id)
         !(connectionid <= Ne) && continue # body

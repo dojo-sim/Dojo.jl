@@ -84,7 +84,7 @@ function cost(env::Environment{HalfCheetah}, x, u;
     else
         i_torso = findfirst(body -> body.name == "torso", collect(env.mechanism.bodies))
         z_torso = x[(i_torso-1)*13 .+ (1:13)]
-        x_velocity = z_torso[4]
+        x_velocity = -z_torso[4]
     end
     # @show mean(abs.(u))
     c = ctrl_cost_weight * u'*u - x_velocity * forward_reward_weight

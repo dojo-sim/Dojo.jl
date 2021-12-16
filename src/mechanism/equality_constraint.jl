@@ -69,8 +69,8 @@ end
 
 # TODO currently assumed constraints are in order and only joints which is the case unless very low level constraint setting
 function _setPosition!(mechanism, eqc::EqualityConstraint{T,N,Nc}, xθ) where {T,N,Nc}
-    Nλ = 0 
-    for (i, joint) in enumerate(eqc.constraints) 
+    Nλ = 0
+    for (i, joint) in enumerate(eqc.constraints)
         Nλ += λlength(joint)
     end
     @assert length(xθ)==3*Nc-Nλ
@@ -79,7 +79,7 @@ function _setPosition!(mechanism, eqc::EqualityConstraint{T,N,Nc}, xθ) where {T
     body1 = getbody(mechanism, eqc.parentid)
     for i = 1:n
         body2 = getbody(mechanism, eqc.childids[i])
-        # @show eqc.inds[i][1] 
+        # @show eqc.inds[i][1]
         # @show eqc.inds[i][2]
         # @show eqc.inds[i+1][1]
         # @show eqc.inds[i+1][2]
@@ -93,8 +93,8 @@ function _setPosition!(mechanism, eqc::EqualityConstraint{T,N,Nc}, xθ) where {T
 end
 
 function setVelocity!(mechanism, eqc::EqualityConstraint{T,N,Nc}, vω) where {T,N,Nc}
-    Nλ = 0 
-    for (i, joint) in enumerate(eqc.constraints) 
+    Nλ = 0
+    for (i, joint) in enumerate(eqc.constraints)
         Nλ += λlength(joint)
     end
     # vω is already in body1 frame
@@ -377,15 +377,12 @@ end
 end
 
 function λindex(eqc::EqualityConstraint{T,N,Nc,Cs}, i::Int) where {T,N,Nc,Cs}
-    i0 = 1
-    i1 = 0
-    for j = 1:i
-        i0 = i1 + 1
+    s = 0
+    for j = 1:i-1
         joint = eqc.constraints[j]
-        i1 += ηlength(joint)
+        s += ηlength(joint)
     end
-    ind = SVector{i1-i0+1,Int}(i0:i1...)
-    return ind
+    λindex(eqc.constraints[i], s) # to be allocation free
 end
 
 function resetVars!(eqc::EqualityConstraint{T,N,Nc,Cs}; scale::T=1.0) where {T,N,Nc,Cs}
@@ -399,4 +396,3 @@ function resetVars!(eqc::EqualityConstraint{T,N,Nc,Cs}; scale::T=1.0) where {T,N
     eqc.λsol[2] = vcat(λ...)
     return
 end
-
