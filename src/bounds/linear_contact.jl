@@ -91,23 +91,11 @@ end
 ## Derivatives accounting for quaternion specialness
 ## maps boundact forces into the dynamics
 @inline function ∂g∂pos(bound::LinearContactBound, x::AbstractVector, q::UnitQuaternion, λ)
-    # Bxmat = bound.Bx
-    # p = bound.p
-    # nx = size(x)[1]
-    # nq = nx
-
-    # drot = ∂vrotate∂q(bound.p, q) * LVᵀmat(q)
-
-    # X = [bound.ainv3;
-         # Bxmat]
-    # Q = [bound.ainv3 * drot;
-         # szeros(1,nq);
-         # Bxmat * drot]
-
     X = [bound.ainv3;
         szeros(1,3);
         bound.Bx]
-    Q = - X * skew(vrotate(bound.p, q) - bound.offset)
+    # Q = - X * skew(vrotate(bound.p, q) - bound.offset)
+    Q = - X * q * skew(bound.p - vrotate(bound.offset, inv(q)))
     return X, Q
 end
 
@@ -150,27 +138,6 @@ end
 @inline function ∂g∂ʳvel(bound::LinearContactBound, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, Δt
     )
-    # Bxmat = bound.Bx
-    # p = bound.p
-    # nx = size(x2)[1]
-    # nq = nx
-
-    # X = [bound.ainv3 * Δt;
-    #      szeros(1,nx);
-    #      Bxmat]
-
-    # B(q) = Bxmat * ∂vrotate∂q(bound.p, UnitQuaternion(q...)) * LVᵀmat(UnitQuaternion(q...))
-    #
-    # Q = [(bound.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bound.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bound.p)))) * Lmat(q2) * derivωbar(ω2, Δt) * Δt / 2
-    #      szeros(1,nq);
-    #      B(q3) + ForwardDiff.jacobian(q -> B(q) * ω2, [q3.w; q3.x; q3.y; q3.z]) * Lmat(q2) * derivωbar(ω2, Δt) * Δt / 2]
-         # B(q3) + FiniteDiff.finite_difference_jacobian(q -> B(q) * ω2, [q3.w; q3.x; q3.y; q3.z]) * Lmat(q2) * derivωbar(ω2, Δt) * Δt / 2]
-
-    # V = X
-    # Ω = Q
-    # return [V Ω]
-
-
     V = [bound.ainv3 * Δt;
          szeros(1,3);
          bound.Bx]

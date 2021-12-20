@@ -73,7 +73,8 @@ end
 ## maps contact forces into the dynamics
 @inline function ∂g∂pos(bound::ImpactBound, x::AbstractVector, q::UnitQuaternion, λ)
     X = bound.ainv3;
-    Q = - X * skew(vrotate(bound.p, q) - bound.offset)
+    # Q = - X * skew(vrotate(bound.p, q) - bound.offset)
+    Q = - X * q * skew(bound.p - vrotate(bound.offset, inv(q)))
     return X, Q
 end
 

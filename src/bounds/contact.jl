@@ -96,7 +96,8 @@ end
     X = [bound.ainv3;
          szeros(1,3);
          bound.Bx]
-    Q = - X * skew(vrotate(bound.p, q) - bound.offset)
+    # Q = - X * skew(vrotate(bound.p, q) - bound.offset)
+    Q = - X * q * skew(bound.p - vrotate(bound.offset, inv(q)))
     return X, Q
 end
 
