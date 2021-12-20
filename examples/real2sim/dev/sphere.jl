@@ -18,63 +18,142 @@ open(vis)
 
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
+include(joinpath(module_dir(), "env", "sphere", "deps", "texture.jl"))
+
+mech = getmechanism(:sphere, Δt = 0.01, g = -9.81, radius = 0.5, cf = 0.1);
+initialize!(mech, :sphere, x=[0,0,1.], v=[0,0.5,0.], ω=[5,0,0.])
+storage = simulate!(mech, 4.0, record=true, verbose=true,
+    opts=InteriorPointOptions(btol=1e-6, rtol=1e-6))
+visualize(mech, storage, vis=vis)
+sphere_texture!(vis, mech)
 
 
-function controller!(mechanism, k)
-    for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[1:end])
-        nu = controldim(eqc)
-        u = 0 * mechanism.Δt * ones(nu)
-        setForce!(mechanism, eqc, u)
+################################################################################
+# Generate & Save Dataset
+################################################################################
+function filename(; N::Int = 10, cf = 0.1, radius = 0.5)
+    "N:$(N)_cf:$(cf)_radius:$(radius),jld2"
+end
+
+function build_triplets(trajs::AbstractVector)
+    triplets = []
+    for traj in trajs
+        push!(triplets, build_triplets(traj)...)
     end
-    return
+    return triplets
+end
+
+function build_triplets(traj::Storage{T,N}) where {T,N}
+    triplets = []
+    for t = 1:N-2
+        t1 = [traj.x[1][t]; vector(traj.q[1][t])]
+        t2 = [traj.x[1][t+1]; vector(traj.q[1][t+1])]
+        t3 = [traj.x[1][t+2]; vector(traj.q[1][t+2])]
+        triplet = [t1, t2, t3]
+        push!(triplets, triplet)
+    end
+    return triplets
+end
+
+function generate_dataset(; N::Int = 10, H = 2.0, Δt = 0.01, g = -9.81, cf = 0.1, radius = 0.5,
+        xlims=[zeros(3), ones(3)],
+        vlims=[-1*ones(3), ones(3)],
+        ωlims=[-1*ones(3), ones(3)])
+
+    mechanism = getmechanism(:sphere, Δt = Δt, g = g, cf = cf, radius = radius)
+    trajs = []
+    for i = 1:N
+        x = xlims[1] + rand(3) .* (xlims[2] - xlims[1])
+        v = vlims[1] + rand(3) .* (vlims[2] - vlims[1])
+        ω = ωlims[1] + rand(3) .* (ωlims[2] - ωlims[1])
+        initialize!(mech, :sphere, x=x, v=v, ω=ω)
+        storage = simulate!(mech, H, record=true, opts=InteriorPointOptions(btol=1e-6, rtol=1e-6))
+        push!(trajs, storage)
+        visualize(mech, storage, vis=vis)
+        sphere_texture!(vis, mech)
+    end
+    pars = Dict(:N => N, :H => H, :Δt => Δt, :g => g, :cf => cf, :radius => radius)
+    triplets = build_triplets(trajs)
+    jldsave(joinpath(@__DIR__, "dataset", filename(N=N, cf=cf, radius=radius));
+        pars=pars, trajs=trajs, triplets=triplets)
+    return nothing
+end
+
+################################################################################
+# Load Dataset
+################################################################################
+function open_dataset(; N::Int=10, cf = 0.1, radius = 0.5)
+    dataset = jldopen(joinpath(@__DIR__, "dataset", filename(N=N, cf=cf, radius=radius)))
+    pars = dataset["pars"]
+    trajs = dataset["trajs"]
+    triplets = dataset["triplets"]
+    JLD2.close(dataset)
+    return pars, trajs, triplets
 end
 
 
-mech = getmechanism(:sphere, Δt = 0.05, g = -0*9.81);
-initialize!(mech, :sphere, x=zeros(3), v=zeros(3), ω=zeros(3))
-storage = simulate!(mech, 0.20, controller!, record=true, verbose=true)
-visualize(mech, storage, vis=vis)
+################################################################################
+# Optimization Loss: Evaluation & Gradient
+################################################################################
+function loss(triplets, cf, radius; N::Int = 10, H = 2.0, Δt = 0.01, g = -9.81)
+    mechanism = getmechanism(:sphere, Δt = Δt, g = g, cf = cf, radius = radius)
+    l = 0.0
+    ∇ = zeros(2)
+    for triplet in triplets
+        li, ∇i += loss(mechanism, triplet)
+        l += li
+        ∇ += ∇i
+    end
+    return l, ∇
+end
+
+function loss(mechanism::Mechanism, triplet)
+    u = zeros(controldim(mechanism))
+    z = triplet[1]
+    ztrue = triplet[2]
+    z = step(mechanism, z, u)
+    l = norm(z - ztrue)
+    ∇ = FiniteDiff.finite_difference_gradient( -  )
+    return l, ∇
+end
+
+
 
 
 
 ################################################################################
-# Differentiation
+# Optimization Algorithm: L-BFGS
 ################################################################################
 
-include(joinpath(module_dir(), "examples", "diff_tools.jl"))1
-# Set data
-Nb = length(mech.bodies)
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
-attjac = attitudejacobian(data, Nb)
 
-# IFT
-datamat = full_data_matrix(mech)
-solmat = full_matrix(mech.system)
-sensi = - (solmat \ datamat)
-sensi2 = sensitivities(mech, sol, data)
+################################################################################
+# Visualization
+################################################################################
 
-@test norm(sensi - sensi2, Inf) < 1.0e-8
-v0 = rand(13)
-@test norm(jvp(mech, sol, data, v0) - sensi * v0, Inf) < 1.0e-8
 
-# finite diff
-fd_datamat = finitediff_data_matrix(mech, data, sol, δ = 1e-5) * attjac
 
-@test norm(fd_datamat + datamat, Inf) < 1e-8
-plot(Gray.(abs.(datamat)))
-plot(Gray.(abs.(fd_datamat)))
 
-fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
-@test norm(fd_solmat + solmat, Inf) < 1e-8
-plot(Gray.(abs.(solmat)))
-plot(Gray.(abs.(fd_solmat)))
 
-fd_sensi = finitediff_sensitivity(mech, data, δ = 1e-5, ϵr=1.0e-12, ϵb=1.0e-12) * attjac
-@test norm(fd_sensi - sensi) / norm(fd_sensi) < 1e-3
-plot(Gray.(sensi))
-plot(Gray.(fd_sensi))
+################################################################################
+# Generate & Save Dataset
+################################################################################
+generate_dataset()
 
-norm(fd_sensi - sensi, Inf) / norm(fd_sensi, Inf)
-norm(fd_sensi - sensi, Inf)
+################################################################################
+# Load Dataset
+################################################################################
+pars, trajs, triplets = open_dataset()
+
+################################################################################
+# Optimization Objective: Evaluation & Gradient
+################################################################################
+
+
+################################################################################
+# Optimization Algorithm: L-BFGS
+################################################################################
+
+
+################################################################################
+# Visualization
+################################################################################
