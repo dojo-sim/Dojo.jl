@@ -21,9 +21,17 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 include(joinpath(module_dir(), "env", "sphere", "deps", "texture.jl"))
 
 mech = getmechanism(:sphere, Δt = 0.01, g = -9.81, radius = 0.5, cf = 0.1);
-initialize!(mech, :sphere, x=[0,0,1.], v=[0,0.5,0.], ω=[5,0,0.])
+initialize!(mech, :sphere, x=[0,0,1.], v=[0,0.5,0.], ω=[10,0,0.])
 storage = simulate!(mech, 4.0, record=true, verbose=true,
     opts=InteriorPointOptions(btol=1e-6, rtol=1e-6))
+visualize(mech, storage, vis=vis)
+sphere_texture!(vis, mech)
+
+
+mech = getmechanism(:box, Δt = 0.05, g = -9.81, cf = 0.1);
+initialize!(mech, :box, x=[0,0,0.5], v=[1,1.5,1.], ω=[5,4,2.])
+storage = simulate!(mech, 0.64, record=true, verbose=true,
+    opts=InteriorPointOptions(btol=1e-6, rtol=1e-6, verbose=true, max_ls=3))
 visualize(mech, storage, vis=vis)
 sphere_texture!(vis, mech)
 
