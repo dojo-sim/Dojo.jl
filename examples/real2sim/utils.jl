@@ -124,7 +124,7 @@ function generate_dataset(model::Symbol;
         storage = simulate!(mechanism, H, record=true, opts=opts)
         push!(trajs, storage)
         visualize(mechanism, storage, vis=vis, show_contact=true)
-		sleep(H)
+		# sleep(H)
     end
 
 	data = get_simulator_data(mechanism)
@@ -140,7 +140,6 @@ end
 # Load Dataset
 ################################################################################
 function open_dataset(model::Symbol; kwargs...)
-	@show filename(model; kwargs...)
     dataset = jldopen(joinpath(@__DIR__, "dev", "dataset", filename(model; kwargs...)))
     params = dataset["params"]
     trajs = dataset["trajs"]
@@ -184,10 +183,10 @@ function getSimulatorMaxGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::Abstr
 	return ∇data_z̄
 end
 
-function loss(mechanism, pairs, data; Δt=0.05, g=-9.81,
+function loss(model::Symbol, pairs, data; Δt=0.05, g=-9.81,
 		opts=InteriorPointOptions(btol=1e-6, rtol=1e-6), n_sample = 20)
+	mechanism = getmechanism(model, Δt=Δt, g=g)
 	nsd = simulator_data_dim(mechanism)
-	mechanism = getmechanism(:sphere, Δt=Δt, g=g)
 	set_simulator_data!(mechanism, data)
 
 	l = 0.0

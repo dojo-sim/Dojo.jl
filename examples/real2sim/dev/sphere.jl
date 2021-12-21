@@ -51,11 +51,11 @@ data0 = params0[:data]
 ################################################################################
 # Optimization Objective: Evaluation & Gradient
 ################################################################################
-loss(mech, pairs0, data0, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
+loss(:sphere, pairs0, data0, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
 
-[loss(mech, pairs0, [0.1, 0.5+i, 0,0,0], opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
+[loss(:sphere, pairs0, [0.1, 0.5+i, 0,0,0], opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
 	for i in Vector(-0.10:0.01:0.1)]
-[loss(mech, pairs0, [0.1+i, 0.5, 0,0,0], opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
+[loss(:sphere, pairs0, [0.1+i, 0.5, 0,0,0], opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
 	for i in Vector(-0.10:0.01:0.1)]
 
 plot(hcat([p[1][1:3] for p in pairs0]...)')
@@ -85,8 +85,8 @@ solver = LBFGS(; m = 100,
 
 lower = [0.0, 0.0]
 upper = [0.80, 2.0]
-f(d) = loss(mech, pairs0, [d;zeros(3)])[1]
-g(d) = loss(mech, pairs0, [d;zeros(3)])[2][1:2]
+f(d) = loss(:sphere, pairs0, [d;zeros(3)])[1]
+g(d) = loss(:sphere, pairs0, [d;zeros(3)])[2][1:2]
 d0 = [0.40, 1.0]
 optimize(f, g, lower, upper, d0, Fminbox(solver),
 	Optim.Options(x_tol = 1e-4,
