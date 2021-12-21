@@ -18,20 +18,21 @@ open(vis)
 
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
-include(joinpath(module_dir(), "env", "sphere", "deps", "texture.jl"))
 include(joinpath(module_dir(), "examples", "real2sim", "utils.jl"))
 
-mech = getmechanism(:sphere, Δt=0.05, g=-9.81, radius=0.5, cf=0.1);
-initialize!(mech, :sphere, x=[0,0,0.3], v=[0,0.5,0.], ω=[10,0,0.])
-storage = simulate!(mech, 0.5, record=true, verbose=true,
-    opts=InteriorPointOptions(btol=1e-6, rtol=1e-6))
-visualize(mech, storage, vis=vis)
-sphere_texture!(vis, mech)
+mech = getmechanism(:box, Δt=0.05, g=-9.81, cf=0.2, radius = 0.05);
+initialize!(mech, :box, x=[0,1,0.1], v=[1,1.5,1.], ω=[5,4,2.])
+storage = simulate!(mech, 5.0, record=true,
+    opts=InteriorPointOptions(btol=1e-6, rtol=1e-6, verbose=false))
+visualize(mech, storage, vis=vis, show_contact = true)
+
+get_simulator_data(mech)
+collect(mech.ineqconstraints)[1].constraints[1].p[1]
 
 ################################################################################
 # Generate & Save Dataset
 ################################################################################
-generate_dataset(:sphere, H = 0.75, N = 15,
+generate_dataset(H = 0.75, N = 15,
 	xlims = [[0,0,0], [1,1,0.2]],
 	ωlims = [-5ones(3), 5ones(3)],
 	opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
@@ -39,7 +40,7 @@ generate_dataset(:sphere, H = 0.75, N = 15,
 ################################################################################
 # Load Dataset
 ################################################################################
-params0, trajs0, pairs0 = open_dataset(:sphere, N = 15)
+params0, trajs0, pairs0 = open_dataset(N = 15)
 
 data0 = params0[:data]
 

@@ -1,4 +1,4 @@
-function getbox(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8,
+function getbox(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, radius = 0.0,
     contact::Bool = true,
     conetype = :soc,
     # conetype = :impact,
@@ -34,17 +34,18 @@ function getbox(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8,
             @error "incorrect mode specified, try :particle or :box"
         end
         n = length(corners)
-        normal = [[0;0;1.0] for i = 1:n]
+        normal = [[0,0,1.0] for i = 1:n]
+        offset = [[0,0,radius] for i = 1:n]
         cf = cf * ones(n)
 
         if conetype == :soc
-            contineqcs = contactconstraint(link1, normal, cf, p = corners)
+            contineqcs = contactconstraint(link1, normal, cf, p = corners, offset=offset)
             mech = Mechanism(origin, links, eqcs, contineqcs, g = g, Δt = Δt)
         elseif conetype == :impact
-            impineqcs = impactconstraint(link1, normal, p = corners)
+            impineqcs = impactconstraint(link1, normal, p = corners, offset=offset)
             mech = Mechanism(origin, links, eqcs, impineqcs, g = g, Δt = Δt)
         elseif conetype == :linear
-            linineqcs = linearcontactconstraint(link1, normal, cf, p = corners)
+            linineqcs = linearcontactconstraint(link1, normal, cf, p = corners, offset=offset)
             mech = Mechanism(origin, links, eqcs, linineqcs, g = g, Δt = Δt)
         else
             error("Unknown conetype")
@@ -57,7 +58,11 @@ end
 
 function initializebox!(mechanism::Mechanism; x::AbstractVector{T} = [0,0,1.], q::UnitQuaternion{T} = UnitQuaternion(1.,0,0,0),
     v::AbstractVector{T} = [1,.3,.2], ω::AbstractVector{T} = [2.5,-1,2]) where {T}
-    body = collect(mechanism.bodies)[1]
-    setPosition!(body, x = x, q = q)
+    bound = mechanism.ineqconstraints.values[1].constraints[1]
+    side = bound.p[1]
+    offset = bound.offset[3]
+    z = side + offset
+    body = mechanism.bodies.values[1]
+    setPosition!(body, x = x + [0,0,z], q = q)
     setVelocity!(body, v = v, ω = ω)
 end
