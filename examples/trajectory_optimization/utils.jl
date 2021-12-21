@@ -153,15 +153,6 @@ function min2max(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) whe
 			# we need a special case: when the first link has free rotation wrt the origin
 			q2 = one(UnitQuaternion) # only use for the special case
 			for joint in eqc.constraints
-				# @warn "removed 1st link quat"
-				# if typeof(joint) <: Rotational0
-				# 	nj = 4 # 4 instead of 3 since we use a quaternion for the first link in the body, when there is no rotational constraint
-				# 	q2 = UnitQuaternion(x[off .+ (1:nj)]..., false)
-				# 	push!(c, rotation_vector(q2)...); off += nj
-				# else
-				# 	nj = controldim(joint)
-				# 	push!(c, x[off .+ (1:nj)]...); off += nj
-				# end
 				nj = controldim(joint)
 				push!(c, x[off .+ (1:nj)]...); off += nj
 			end
@@ -193,14 +184,9 @@ function getMinGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector
 	∇z_z̄, ∇u_z̄ = getMaxGradients(mechanism)
 
 	∇x = ∇min2max(mechanism, x)
-	# ∇x̄ = ∇min2max(mechanism, x̄)
 	∇z̄ = ∇max2min(mechanism, z̄)
-	# ∇x_x̄ = pinv(∇x̄) * ∇z_z̄ * ∇x
-	# ∇u_x̄ = pinv(∇x̄) * ∇u_z̄
 	∇x_x̄ = ∇z̄ * ∇z_z̄ * ∇x
 	∇u_x̄ = ∇z̄ * ∇u_z̄
-	# ∇x_x̄ = ∇x̄ \ (∇z_z̄ * ∇x)
-	# ∇u_x̄ = ∇x̄ \ ∇u_z̄
 	return ∇x_x̄, ∇u_x̄
 end
 
