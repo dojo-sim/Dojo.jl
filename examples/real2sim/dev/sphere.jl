@@ -20,15 +20,15 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 include(joinpath(module_dir(), "env", "sphere", "deps", "texture.jl"))
 
-mech = getmechanism(:sphere, Δt=0.01, g=-9.81, radius=0.5, cf=0.1);
-initialize!(mech, :sphere, x=[0,0,1.], v=[0,0.5,0.], ω=[10,0,0.])
-storage = simulate!(mech, 4.0, record=true, verbose=true,
+mech = getmechanism(:sphere, Δt=0.05, g=-9.81, radius=0.5, cf=0.1);
+initialize!(mech, :sphere, x=[0,0,0.3], v=[0,0.5,0.], ω=[10,0,0.])
+storage = simulate!(mech, 0.5, record=true, verbose=true,
     opts=InteriorPointOptions(btol=1e-6, rtol=1e-6))
 visualize(mech, storage, vis=vis)
 sphere_texture!(vis, mech)
 
 
-# mech = getmechanism(:box, Δt=0.01, g=-9.81, cf=0.1);
+# mech = getmechanism(:box, Δt=0.05, g=-9.81, cf=0.1);
 # initialize!(mech, :box, x=[0,0,0.5], v=[1,1.5,1.], ω=[5,4,2.])
 # storage = simulate!(mech, 5.0, record=true,
 #     opts=InteriorPointOptions(btol=1e-6, rtol=1e-6, verbose=false))
@@ -106,7 +106,7 @@ end
 
 function build_pairs(mechanism::Mechanism, traj::Storage{T,N}) where {T,N}
     pairs = []
-    z = getMaxState(storage)
+    z = getMaxState(traj)
     for t = 1:N-1
         z1 = z[t]
         z2 = z[t+1]
@@ -116,7 +116,7 @@ function build_pairs(mechanism::Mechanism, traj::Storage{T,N}) where {T,N}
     return pairs
 end
 
-function generate_dataset(; N::Int=10, H=2.0, Δt=0.01, g=-9.81,
+function generate_dataset(; N::Int=10, H=2.0, Δt=0.05, g=-9.81,
 		cf=0.1, radius=0.5, p=szeros(3),
         xlims=[zeros(3), ones(3)],
         vlims=[-1*ones(3), ones(3)],
@@ -190,36 +190,37 @@ function getSimulatorMaxGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::Abstr
 	return ∇data_z̄
 end
 
-function loss(mechanism, pairs, data; Δt=0.01, g=-9.81,
-		opts=InteriorPointOptions(btol=1e-6, rtol=1e-6))
+function loss(mechanism, pairs, data; Δt=0.05, g=-9.81,
+		opts=InteriorPointOptions(btol=1e-6, rtol=1e-6), n_sample = 20)
 	nsd = simulator_data_dim(mechanism)
 	mechanism = getmechanism(:sphere, Δt=Δt, g=g)
 	set_simulator_data!(mechanism, data)
 
 	l = 0.0
     ∇ = zeros(nsd)
+	n = length(pairs)
 
-
-    for pair in pairs
-        li, ∇i = loss(mechanism, pair, opts=opts)
+	mask = rand(1:n, n_sample)
+    for i in mask
+        li, ∇i = loss(mechanism, pairs[i], opts=opts)
         l += li
         ∇ += ∇i
     end
-	n = length(pairs)
-    return l / n, ∇ ./ n
+    return l / n_sample, ∇ ./ n_sample
 end
 
 function loss(mechanism::Mechanism, pair; opts=InteriorPointOptions(btol=1e-6, rtol=1e-6))
-    u = zeros(controldim(mechanism))
+	nu = controldim(mechanism)
+	nz = maxCoordDim(mechanism)
+	u = zeros(nu)
     z1 = pair[1]
     z2true = pair[2]
     z2 = step!(mechanism, z1, u, opts=opts)
     ∇z2 = getSimulatorMaxGradients!(mechanism, z1, u, opts=opts)
     l = 0.5 * (z2 - z2true)'*(z2 - z2true)
-    ∇ = ∇z2' * (z2 - z2true)
+    ∇ = - ∇z2' * (z2 - z2true)
     return l, ∇
 end
-
 
 
 ################################################################################
@@ -238,7 +239,7 @@ end
 ################################################################################
 # Generate & Save Dataset
 ################################################################################
-generate_dataset(H = 0.5, N = 50,
+generate_dataset(H = 0.75, N = 15,
 	xlims = [[0,0,0], [1,1,0.2]],
 	ωlims = [-5ones(3), 5ones(3)],
 	opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
@@ -246,36 +247,61 @@ generate_dataset(H = 0.5, N = 50,
 ################################################################################
 # Load Dataset
 ################################################################################
-params0, trajs0, pairs0 = open_dataset()
-
+params0, trajs0, pairs0 = open_dataset(N = 15)
 
 data0 = params0[:data]
-data1 = [0.1, 0.49, 0,0,0]
-data2 = [0.1, 0.51, 0,0,0]
-loss(mech, pairs0, data_0, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
-loss(mech, pairs0, data0, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
-loss(mech, pairs0, data1, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
-loss(mech, pairs0, data2, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
-
-# data_0 = [0.1, 1.0, 0,0,0]
-for k = 1:10
-	l, ∇ = loss(mech, pairs0, data_0, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
-	data_0[1:2] += 0.1 * ∇[1:2] ./ max(norm(∇[1:2], Inf), 1e1)
-	@show scn.(∇[1:2])
-	@show scn.(data_0[1:2])
-end
-data_0
-
 
 ################################################################################
 # Optimization Objective: Evaluation & Gradient
 ################################################################################
+loss(mech, pairs0, data0, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
+
+[loss(mech, pairs0, [0.1, 0.5+i, 0,0,0], opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
+	for i in Vector(-0.10:0.01:0.1)]
+[loss(mech, pairs0, [0.1+i, 0.5, 0,0,0], opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
+	for i in Vector(-0.10:0.01:0.1)]
+
+plot(hcat([p[1][1:3] for p in pairs0]...)')
+plot(hcat([p[1][4:6] for p in pairs0]...)')
+plot(hcat([p[1][7:10] for p in pairs0]...)')
+plot(hcat([p[1][11:13] for p in pairs0]...)')
 
 
 ################################################################################
 # Optimization Algorithm: L-BFGS
 ################################################################################
 
+# Solution for bad cost landscape
+	# use L-BFGS
+	# use longer horizons to compute the loss (currently the horizon is 1 step)
+		# maybe we just need to sum the gradients along the horizon
+		# maybe we need to chain them together using th chain rule (not sure how stable this is)
+
+using Optim
+solver = LBFGS(; m = 100,
+        alphaguess = Optim.LineSearches.InitialStatic(),
+        linesearch = Optim.LineSearches.HagerZhang(),
+        P = 1e1*I(2),
+        precondprep = (P, x) -> nothing,
+        manifold = Optim.Flat(),
+		)
+
+lower = [0.0, 0.0]
+upper = [0.80, 2.0]
+f(d) = loss(mech, pairs0, [d;zeros(3)])[1]
+g(d) = loss(mech, pairs0, [d;zeros(3)])[2][1:2]
+d0 = [0.40, 1.0]
+optimize(f, g, lower, upper, d0, Fminbox(solver),
+	Optim.Options(x_tol = 1e-4,
+		f_tol = 1e-7,
+		g_tol = 1e-7,
+		show_trace = true),
+	; inplace = false,
+	)
+
+# We can learn the coefficient of friction and the radius form 15*0.75 seconds of
+# recording. We use the simulator to evaluate the loss and its gradients by differentiating
+# through the simulator. With gradient information we can use L-BFGS
 
 ################################################################################
 # Visualization
