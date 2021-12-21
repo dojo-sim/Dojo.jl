@@ -20,7 +20,7 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 include(joinpath(module_dir(), "examples", "real2sim", "utils.jl"))
 
-mech = getmechanism(:box2d, Δt=0.05, g=-9.81, cf=0.2, radius = 0.05);
+mech = getmechanism(:box2d, Δt=0.05, g=-9.81, cf=0.2, radius = 0.05, side = 0.50);
 initialize!(mech, :box2d, x=[-1,1.], v=[2,1.], θ=0.1, ω=2.)
 storage = simulate!(mech, 5.0, record=true,
     opts=InteriorPointOptions(btol=1e-6, rtol=1e-6, verbose=false))
@@ -29,15 +29,21 @@ visualize(mech, storage, vis=vis, show_contact = true)
 ################################################################################
 # Generate & Save Dataset
 ################################################################################
-generate_dataset(:box2d, H = 0.75, N = 15,
-	xlims = [[0,0,0], [1,1,0.2]],
-	ωlims = [-5ones(3), 5ones(3)],
-	opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
+init_kwargs = Dict(:xlims => [[0,0.2], [1,0.4]],
+				   :vlims => [-2ones(2), ones(2)],
+				   :θlims => [-π, π],
+				   :ωlims => [-10, 10])
+mech_kwargs = Dict(:cf => 0.1, :radius => 0.05, :side => 0.5)
+generate_dataset(:box2d, H=1.0, N=15,
+	opts=InteriorPointOptions(btol=3e-4, rtol=3e-4),
+	init_kwargs=init_kwargs,
+	mech_kwargs=mech_kwargs)
+
 
 ################################################################################
 # Load Dataset
 ################################################################################
-params0, trajs0, pairs0 = open_dataset(N = 15)
+params0, trajs0, pairs0 = open_dataset(:box2d; N = 15, mech_kwargs...)
 
 data0 = params0[:data]
 

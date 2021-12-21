@@ -31,15 +31,20 @@ sphere_texture!(vis, mech)
 ################################################################################
 # Generate & Save Dataset
 ################################################################################
-generate_dataset(:sphere, H = 0.75, N = 15,
-	xlims = [[0,0,0], [1,1,0.2]],
-	ωlims = [-5ones(3), 5ones(3)],
-	opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
+init_kwargs = Dict(:xlims => [[0,0,0], [1,1,0.2]],
+				   :vlims => [-1ones(3), 1ones(3)],
+				   :ωlims => [-5ones(3), 5ones(3)])
+mech_kwargs = Dict(:cf => 0.1, :radius => 0.5)
+generate_dataset(:sphere, H=0.75, N=15,
+	opts=InteriorPointOptions(btol=3e-4, rtol=3e-4),
+	init_kwargs=init_kwargs,
+	mech_kwargs=mech_kwargs)
+
 
 ################################################################################
 # Load Dataset
 ################################################################################
-params0, trajs0, pairs0 = open_dataset(:sphere, N = 15)
+params0, trajs0, pairs0 = open_dataset(:sphere; N=15, mech_kwargs...)
 
 data0 = params0[:data]
 

@@ -56,8 +56,38 @@ function filename(model::Symbol; kwargs...)
     eval(Symbol(:filename, model))(; kwargs...)
 end
 
-function filenamesphere(; N::Int=10, cf=0.1, radius=0.5, p=szeros(3))
-    "sphere_dim_N:$(N)_cf:$(cf)_radius:$(radius)_p:$(p).jld2"
+function filenamesphere(; N::Int=10, cf=0.1, radius=0.5)
+    "sphere_dim_N:$(N)_cf:$(cf)_radius:$(radius).jld2"
+end
+
+function filenamebox2d(; N::Int=10, cf=0.1, radius=0.05, side=0.50)
+    "box2d_dim_N:$(N)_cf:$(cf)_radius:$(radius)_side:$(side).jld2"
+end
+
+function initial_state(model::Symbol; kwargs...)
+    eval(Symbol(:initial_state_, model))(; kwargs...)
+end
+
+function initial_state_sphere(;
+	xlims=[[0,0,0], [1,1,0.2]],
+	vlims=[-1ones(3), 1ones(3)],
+	ωlims=[-5ones(3), 5ones(3)],)
+	x = xlims[1] + rand(3) .* (xlims[2] - xlims[1])
+	v = vlims[1] + rand(3) .* (vlims[2] - vlims[1])
+	ω = ωlims[1] + rand(3) .* (ωlims[2] - ωlims[1])
+	return Dict(:x => x, :v => v , :ω => ω)
+end
+
+function initial_state_box2d(;
+		xlims=[[0,0.2], [1,0.4]],
+        vlims=[-ones(2), ones(2)],
+		θlims=[-π, π],
+        ωlims=[-10, 10],)
+	x = xlims[1] + rand(2) .* (xlims[2] - xlims[1])
+	v = vlims[1] + rand(2) .* (vlims[2] - vlims[1])
+	θ = θlims[1] + rand() * (θlims[2] - θlims[1])
+	ω = ωlims[1] + rand() * (ωlims[2] - ωlims[1])
+	return Dict(:x => x, :v => v , :θ => θ, :ω => ω)
 end
 
 function build_pairs(mechanism::Mechanism, trajs::AbstractVector)
@@ -80,29 +110,27 @@ function build_pairs(mechanism::Mechanism, traj::Storage{T,N}) where {T,N}
     return pairs
 end
 
-function generate_dataset(model::Symbol; N::Int=10, H=2.0, Δt=0.05, g=-9.81,
-		cf=0.1, radius=0.5, p=szeros(3),
-        xlims=[zeros(3), ones(3)],
-        vlims=[-1*ones(3), ones(3)],
-        ωlims=[-1*ones(3), ones(3)],
-        opts=InteriorPointOptions(btol=1e-6, rtol=1e-6))
-
-    mechanism = getmechanism(model, Δt=Δt, g=g, cf=cf, radius=radius)
+function generate_dataset(model::Symbol;
+		N::Int=10, H=2.0, Δt=0.05, g=-9.81,
+		opts=InteriorPointOptions(btol=1e-6, rtol=1e-6),
+		init_kwargs=Dict(), # xlims, vlims, θlims, ωlims...
+		mech_kwargs=Dict(), # cf, radius, side...
+		)
+    mechanism = getmechanism(model, Δt=Δt, g=g; mech_kwargs...);
     trajs = []
     for i = 1:N
-        x = xlims[1] + rand(3) .* (xlims[2] - xlims[1])
-        v = vlims[1] + rand(3) .* (vlims[2] - vlims[1])
-        ω = ωlims[1] + rand(3) .* (ωlims[2] - ωlims[1])
-        initialize!(mechanism, model, x=x, v=v, ω=ω)
+		state = initial_state(model; init_kwargs...)
+        initialize!(mechanism, model; state...)
         storage = simulate!(mechanism, H, record=true, opts=opts)
         push!(trajs, storage)
-        visualize(mechanism, storage, vis=vis)
-        sphere_texture!(vis, mechanism)
+        visualize(mechanism, storage, vis=vis, show_contact=true)
+		sleep(H)
     end
+
 	data = get_simulator_data(mechanism)
     params = Dict(:N => N, :H => H, :Δt => Δt, :g => g, :data => data)
     pairs = build_pairs(mechanism, trajs)
-    jldsave(joinpath(@__DIR__, "dev", "dataset", filename(model, N=N, cf=cf, radius=radius));
+    jldsave(joinpath(@__DIR__, "dev", "dataset", filename(model; N = N, mech_kwargs...));
         params=params, trajs=trajs, pairs=pairs)
     return nothing
 end
@@ -111,8 +139,9 @@ end
 ################################################################################
 # Load Dataset
 ################################################################################
-function open_dataset(model::Symbol ; N::Int=10, cf=0.1, radius=0.5, p=szeros(3))
-    dataset = jldopen(joinpath(@__DIR__, "dev", "dataset", filename(model, N=N, cf=cf, radius=radius)))
+function open_dataset(model::Symbol; kwargs...)
+	@show filename(model; kwargs...)
+    dataset = jldopen(joinpath(@__DIR__, "dev", "dataset", filename(model; kwargs...)))
     params = dataset["params"]
     trajs = dataset["trajs"]
     pairs = dataset["pairs"]
