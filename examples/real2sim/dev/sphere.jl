@@ -51,6 +51,7 @@ data0 = params0[:data]
 ################################################################################
 # Optimization Objective: Evaluation & Gradient
 ################################################################################
+global const ROTATE = Ref{Float64}(0.0)
 loss(:sphere, pairs0, data0, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
 
 [loss(:sphere, pairs0, [0.1, 0.5+i, 0,0,0], opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
@@ -75,23 +76,42 @@ plot(hcat([p[1][11:13] for p in pairs0]...)')
 		# maybe we need to chain them together using th chain rule (not sure how stable this is)
 
 using Optim
-solver = LBFGS(; m = 100,
-        alphaguess = Optim.LineSearches.InitialStatic(),
-        linesearch = Optim.LineSearches.HagerZhang(),
-        P = 1e1*I(2),
-        precondprep = (P, x) -> nothing,
-        manifold = Optim.Flat(),
+
+function termination_callback(opt; value_tol=1e-4)
+	return opt.value < value_tol
+end
+
+solver = LBFGS(; m=100,
+        alphaguess=Optim.LineSearches.InitialStatic(),
+        linesearch=Optim.LineSearches.HagerZhang(),
+        P = 1e2*I(2),
 		)
 
 lower = [0.0, 0.0]
 upper = [0.80, 2.0]
-f(d) = loss(:sphere, pairs0, [d;zeros(3)])[1]
-g(d) = loss(:sphere, pairs0, [d;zeros(3)])[2][1:2]
+
+function d2data(d)
+	data = [d[1]; d[2]; 0; 0; 0]
+	return data
+end
+∇d2data = ForwardDiff.jacobian(d -> d2data(d), zeros(2))
+
+function fg!(F,G,d)
+	# do common computations here
+	l, ∇ = loss(:sphere, pairs0, d2data(d), n_sample=20)
+	if G != nothing
+		G .= ∇d2data' * ∇
+	end
+	if F != nothing
+		value = l
+	    return value
+	end
+end
 d0 = [0.40, 1.0]
-optimize(f, g, lower, upper, d0, Fminbox(solver),
-	Optim.Options(x_tol = 1e-4,
-		f_tol = 1e-7,
-		g_tol = 1e-7,
+ROTATE[] = 0.0
+optimize(Optim.only_fg!(fg!), lower, upper, d0, Fminbox(solver),
+	Optim.Options(
+		callback=termination_callback,
 		show_trace = true),
 	; inplace = false,
 	)

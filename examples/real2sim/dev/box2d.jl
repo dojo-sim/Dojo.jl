@@ -50,6 +50,7 @@ data0 = params0[:data]
 ################################################################################
 # Optimization Objective: Evaluation & Gradient
 ################################################################################
+global const ROTATE = Ref{Float64}(0.0)
 loss(:box2d, pairs0, data0, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
 
 [loss(:box2d, pairs0, data0 + [i;zeros(19)], opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
@@ -69,12 +70,14 @@ plot(hcat([p[1][11:13] for p in pairs0]...)')
 ################################################################################
 using Optim
 
-solver = LBFGS(; m = 100,
-        alphaguess = Optim.LineSearches.InitialStatic(),
-        linesearch = Optim.LineSearches.HagerZhang(),
-        P = 1e1*I(9),
-        precondprep = (P, x) -> nothing,
-        manifold = Optim.Flat(),
+function termination_callback(opt; value_tol=1e-4)
+	return opt.value < value_tol
+end
+
+solver = LBFGS(;m=100,
+        alphaguess=Optim.LineSearches.InitialStatic(),
+        linesearch=Optim.LineSearches.HagerZhang(),
+        P = 1e2*I(9),
 		)
 
 lower = [0.00, +0.05, +0.05, +0.05, -1.00, -1.00, +0.05, -1.00, -1.00]
@@ -89,18 +92,29 @@ function d2data(d)
 			]
 	return data
 end
+
 ∇d2data = ForwardDiff.jacobian(d -> d2data(d), zeros(9))
 
-f(d) = loss(:box2d, pairs0, d2data(d), n_sample=100)[1]
-g(d) = ∇d2data' * loss(:box2d, pairs0, d2data(d), n_sample=100)[2]
+function fg!(F,G,d)
+	# do common computations here
+	l, ∇ = loss(:box2d, pairs0, d2data(d), n_sample=50)
+	if G != nothing
+		G .= ∇d2data' * ∇
+	end
+	if F != nothing
+		value = l
+	    return value
+	end
+end
 d0 = [0.40, +0.50, +0.50, +0.50, -0.50, -0.50, +0.50, -0.50, -0.50]
-optimize(f, g, lower, upper, d0, Fminbox(solver),
-	Optim.Options(x_tol = 1e-3,
-		f_tol = 8e-5,
-		g_tol = 8e-5,
+ROTATE[] = 0.0
+optimize(Optim.only_fg!(fg!), lower, upper, d0, Fminbox(solver),
+	Optim.Options(
+		callback = termination_callback,
 		show_trace = true),
 	; inplace = false,
 	)
+
 
 # We can learn the coefficient of friction and the side dimenson of the cube
 # form 15*0.75 seconds of recording. We use the simulator to evaluate the loss
@@ -113,12 +127,10 @@ optimize(f, g, lower, upper, d0, Fminbox(solver),
 ################################################################################
 using Optim
 
-solver = LBFGS(; m = 100,
-        alphaguess = Optim.LineSearches.InitialStatic(),
-        linesearch = Optim.LineSearches.HagerZhang(),
-        P = 1e1*I(2),
-        precondprep = (P, x) -> nothing,
-        manifold = Optim.Flat(),
+solver = LBFGS(;m=100,
+        alphaguess=Optim.LineSearches.InitialStatic(),
+        linesearch=Optim.LineSearches.HagerZhang(),
+        P = 1e2*I(2),
 		)
 
 lower = [0.00, 0.05]
@@ -133,18 +145,31 @@ function d2data(d)
 			]
 	return data
 end
+
 ∇d2data = ForwardDiff.jacobian(d -> d2data(d), zeros(2))
 
-f(d) = loss(:box2d, pairs0, d2data(d))[1]
-g(d) = ∇d2data' * loss(:box2d, pairs0, d2data(d))[2]
+function fg!(F,G,d)
+	# do common computations here
+	l, ∇ = loss(:box2d, pairs0, d2data(d), n_sample=50)
+	if G != nothing
+		G .= ∇d2data' * ∇
+	end
+	if F != nothing
+		value = l
+	    return value
+	end
+end
+
 d0 = [0.40, 0.50]
-optimize(f, g, lower, upper, d0, Fminbox(solver),
-	Optim.Options(x_tol = 1e-4,
-		f_tol = 1e-7,
-		g_tol = 1e-7,
+ROTATE[] = 0.0
+optimize(Optim.only_fg!(fg!), lower, upper, d0, Fminbox(solver),
+	Optim.Options(
+		callback = termination_callback,
 		show_trace = true),
 	; inplace = false,
 	)
+
+
 
 # We can learn the coefficient of friction and the side dimenson of the cube
 # form 15*0.75 seconds of recording. We use the simulator to evaluate the loss

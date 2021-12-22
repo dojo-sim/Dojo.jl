@@ -1,16 +1,12 @@
-function getbox(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, radius = 0.0,
+function getbox(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, radius = 0.0, side = 0.5,
     contact::Bool = true,
     conetype = :soc,
     # conetype = :impact,
     # conetype = :linear,
     mode = :box)  where {T}
     # Parameters
-    joint_axis = [1.0;0.0;0.0]
-    length1 = 0.5
-    width, depth = 0.5, 0.5
-
     origin = Origin{T}()
-    link1 = Box(width, depth, length1, 1., color = RGBA(1., 1., 0.))
+    link1 = Box(side, side, side, 1., color = RGBA(1., 1., 0.))
     joint0to1 = EqualityConstraint(Floating(origin, link1))
     links = [link1]
     eqcs = [joint0to1]
@@ -18,17 +14,17 @@ function getbox(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, radius = 0.0,
     if contact
         # Corner vectors
         if mode == :particle
-            corners = [[0 ; 0; 0.0]]
+            corners = [[0,0,0.]]
         elseif mode == :box
             corners = [
-                [[length1 / 2;length1 / 2;-length1 / 2]]
-                [[length1 / 2;-length1 / 2;-length1 / 2]]
-                [[-length1 / 2;length1 / 2;-length1 / 2]]
-                [[-length1 / 2;-length1 / 2;-length1 / 2]]
-                [[length1 / 2;length1 / 2;length1 / 2]]
-                [[length1 / 2;-length1 / 2;length1 / 2]]
-                [[-length1 / 2;length1 / 2;length1 / 2]]
-                [[-length1 / 2;-length1 / 2;length1 / 2]]
+                [[ side/2;  side/2; -side/2]]
+                [[ side/2; -side/2; -side/2]]
+                [[-side/2;  side/2; -side/2]]
+                [[-side/2; -side/2; -side/2]]
+                [[ side/2;  side/2;  side/2]]
+                [[ side/2; -side/2;  side/2]]
+                [[-side/2;  side/2;  side/2]]
+                [[-side/2; -side/2;  side/2]]
             ]
         else
             @error "incorrect mode specified, try :particle or :box"

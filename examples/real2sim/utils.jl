@@ -64,6 +64,10 @@ function filenamebox2d(; N::Int=10, cf=0.1, radius=0.05, side=0.50)
     "box2d_dim_N:$(N)_cf:$(cf)_radius:$(radius)_side:$(side).jld2"
 end
 
+function filenamebox(; N::Int=10, cf=0.1, radius=0.00, side=0.50)
+    "box_dim_N:$(N)_cf:$(cf)_radius:$(radius)_side:$(side).jld2"
+end
+
 function initial_state(model::Symbol; kwargs...)
     eval(Symbol(:initial_state_, model))(; kwargs...)
 end
@@ -88,6 +92,16 @@ function initial_state_box2d(;
 	θ = θlims[1] + rand() * (θlims[2] - θlims[1])
 	ω = ωlims[1] + rand() * (ωlims[2] - ωlims[1])
 	return Dict(:x => x, :v => v , :θ => θ, :ω => ω)
+end
+
+function initial_state_box(;
+		xlims=[[0,0,0.2], [1,1,0.4]],
+        vlims=[-2ones(3), [2,2,-1.]],
+        ωlims=[-6ones(3), 6ones(3)],)
+	x = xlims[1] + rand(3) .* (xlims[2] - xlims[1])
+	v = vlims[1] + rand(3) .* (vlims[2] - vlims[1])
+	ω = ωlims[1] + rand(3) .* (ωlims[2] - ωlims[1])
+	return Dict(:x => x, :v => v , :q => UnitQuaternion(rand(4)...), :ω => ω)
 end
 
 function build_pairs(mechanism::Mechanism, trajs::AbstractVector)
@@ -115,6 +129,8 @@ function generate_dataset(model::Symbol;
 		opts=InteriorPointOptions(btol=1e-6, rtol=1e-6),
 		init_kwargs=Dict(), # xlims, vlims, θlims, ωlims...
 		mech_kwargs=Dict(), # cf, radius, side...
+		sleep_ratio = 0.0,
+		show_contact = true,
 		)
     mechanism = getmechanism(model, Δt=Δt, g=g; mech_kwargs...);
     trajs = []
@@ -123,8 +139,8 @@ function generate_dataset(model::Symbol;
         initialize!(mechanism, model; state...)
         storage = simulate!(mechanism, H, record=true, opts=opts)
         push!(trajs, storage)
-        visualize(mechanism, storage, vis=vis, show_contact=true)
-		# sleep(H)
+        visualize(mechanism, storage, vis=vis, show_contact=show_contact)
+		sleep(H*sleep_ratio)
     end
 
 	data = get_simulator_data(mechanism)
@@ -193,8 +209,12 @@ function loss(model::Symbol, pairs, data; Δt=0.05, g=-9.81,
     ∇ = zeros(nsd)
 	n = length(pairs)
 
-	Random.seed!(100)
-	mask = rand(1:n, n_sample)
+	global ROTATE[] = ROTATE[] + 1/5
+	offset = Int(floor(ROTATE[]))
+	Random.seed!(0)
+	mask = shuffle!(Vector(1:n))
+	mask = [mask; mask]
+	mask = mask[offset%n .+ (1:n_sample)]
     for i in mask
         li, ∇i = loss(mechanism, pairs[i], opts=opts)
         l += li
@@ -210,7 +230,7 @@ function loss(mechanism::Mechanism, pair; opts=InteriorPointOptions(btol=1e-6, r
     z1 = pair[1]
     z2true = pair[2]
     z2 = step!(mechanism, z1, u, opts=opts)
-    ∇z2 = getSimulatorMaxGradients!(mechanism, z1, u, opts=opts)
+    ∇z2 = getSimulatorMaxGradients(mechanism)
     l = 0.5 * (z2 - z2true)'*(z2 - z2true)
     ∇ = - ∇z2' * (z2 - z2true)
     return l, ∇
