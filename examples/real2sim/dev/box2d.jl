@@ -64,16 +64,55 @@ plot(hcat([p[1][11:13] for p in pairs0]...)')
 
 
 ################################################################################
-# Optimization Algorithm: L-BFGS
+# Optimization Algorithm: L-BFGS:
+# We learn a single coefficient of friction and a 4 contact locations [y,z] -> 9 params in total
 ################################################################################
-
-# Solution for bad cost landscape
-	# use L-BFGS
-	# use longer horizons to compute the loss (currently the horizon is 1 step)
-		# maybe we just need to sum the gradients along the horizon
-		# maybe we need to chain them together using th chain rule (not sure how stable this is)
-
 using Optim
+
+solver = LBFGS(; m = 100,
+        alphaguess = Optim.LineSearches.InitialStatic(),
+        linesearch = Optim.LineSearches.HagerZhang(),
+        P = 1e1*I(9),
+        precondprep = (P, x) -> nothing,
+        manifold = Optim.Flat(),
+		)
+
+lower = [0.00, +0.05, +0.05, +0.05, -1.00, -1.00, +0.05, -1.00, -1.00]
+upper = [0.80, +1.00, +1.00, +1.00, -0.05, -0.05, +1.00, -0.05, -0.05]
+
+function d2data(d)
+	cf = d[1]
+	data = [cf; 0.05; 0; +d[2]; +d[3];
+			cf; 0.05; 0; +d[4]; +d[5];
+			cf; 0.05; 0; +d[6]; +d[7];
+			cf; 0.05; 0; +d[8]; +d[9];
+			]
+	return data
+end
+∇d2data = ForwardDiff.jacobian(d -> d2data(d), zeros(9))
+
+f(d) = loss(:box2d, pairs0, d2data(d), n_sample=100)[1]
+g(d) = ∇d2data' * loss(:box2d, pairs0, d2data(d), n_sample=100)[2]
+d0 = [0.40, +0.50, +0.50, +0.50, -0.50, -0.50, +0.50, -0.50, -0.50]
+optimize(f, g, lower, upper, d0, Fminbox(solver),
+	Optim.Options(x_tol = 1e-3,
+		f_tol = 8e-5,
+		g_tol = 8e-5,
+		show_trace = true),
+	; inplace = false,
+	)
+
+# We can learn the coefficient of friction and the side dimenson of the cube
+# form 15*0.75 seconds of recording. We use the simulator to evaluate the loss
+# and its gradients by differentiating through the simulator. With gradient
+# information we can use L-BFGS
+
+################################################################################
+# Optimization Algorithm: L-BFGS:
+# We learn a single coefficient of friction and a single side length.
+################################################################################
+using Optim
+
 solver = LBFGS(; m = 100,
         alphaguess = Optim.LineSearches.InitialStatic(),
         linesearch = Optim.LineSearches.HagerZhang(),

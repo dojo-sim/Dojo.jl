@@ -193,6 +193,7 @@ function loss(model::Symbol, pairs, data; Δt=0.05, g=-9.81,
     ∇ = zeros(nsd)
 	n = length(pairs)
 
+	Random.seed!(100)
 	mask = rand(1:n, n_sample)
     for i in mask
         li, ∇i = loss(mechanism, pairs[i], opts=opts)
