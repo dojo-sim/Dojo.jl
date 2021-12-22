@@ -96,11 +96,17 @@ end
     X = [bound.ainv3;
          szeros(1,3);
          bound.Bx]
-    # Q = - X * skew(vrotate(bound.p, q) - bound.offset)
+    # q * ... is a rotation by quatrnon q it is equivalent to Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * ...
     Q = - X * q * skew(bound.p - vrotate(bound.offset, inv(q)))
     return X, Q
 end
 
+@inline function forcemapping(bound::ContactBound)
+    X = [bound.ainv3;
+         szeros(1,3);
+         bound.Bx]
+    return X
+end
 
 ## Complementarity
 function complementarity(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}; scaling::Bool = false) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}

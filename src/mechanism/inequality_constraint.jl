@@ -41,26 +41,37 @@ end
 @inline function ∂constraintForceMapping!(mechanism, body::Body, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
     Δt = mechanism.Δt
     x3, q3 = posargs3(body.state, Δt)
-    x2, v2, q2, ω2 = fullargssol(body.state)
+    x2, v25, q2, ϕ25 = fullargssol(body.state)
 
     for i=1:Nc
         bnd = ineqc.constraints[i]
-        bnd_type = typeof(ineqc.constraints[i])
+        p = bnd.p
+        offset = bnd.offset
 
-        M = ∂integration(q2, ω2, Δt)
-        function d(vars)
-            x = vars[1:3]
-            q = UnitQuaternion(vars[4:7]..., false)
-            return ∂g∂ʳpos(bnd, x, q, nothing)' * ineqc.γsol[2]
-        end
+        X = forcemapping(bnd)
+        λ = X' * ineqc.γsol[2]
 
-        if bnd_type <: ContactBound
-            body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
-        elseif bnd_type <: ImpactBound
-            body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
-        elseif bnd_type <: LinearContactBound
-            body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
-        end
+        ∇ = ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * λ) * -∂vrotate∂q(offset, inv(q3)) * Tmat()
+        ∇ += skew(p - vrotate(offset, inv(q3))) * ∂qVRmat(LᵀVᵀmat(q3) * λ)
+        ∇ += skew(p - vrotate(offset, inv(q3))) * VRmat(q3) * ∂qLᵀVᵀmat(λ)
+        ∇ *= ∂integrator∂ϕ(q2, ϕ25, Δt)
+        body.state.D -= D1 = [szeros(T,6,3) [szeros(T,3,3); ∇]]
+
+        # bnd_type = typeof(ineqc.constraints[i])
+        # M = ∂integration(q2, ϕ25, Δt)
+        # function d(vars)
+        #     x = vars[1:3]
+        #     q = UnitQuaternion(vars[4:7]..., false)
+        #     return ∂g∂ʳpos(bnd, x, q, nothing)' * ineqc.γsol[2]
+        # end
+
+        # if bnd_type <: ContactBound
+        #     body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
+        # elseif bnd_type <: ImpactBound
+        #     body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
+        # elseif bnd_type <: LinearContactBound
+        #     body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
+        # end
     end
     return
 end

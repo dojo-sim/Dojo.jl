@@ -207,3 +207,44 @@ function slerp(q1,q2,h)
 
     return q1*qint
 end
+
+################################################################################
+# Matrix-Vector Product Jacobian
+################################################################################
+function ∂qVLmat(p) # 𝞉(VLmat(q)*p)/∂q
+	SA[
+    	0     p[1]  p[2]  p[3];
+    	p[1]  0     p[3] -p[2];
+    	p[2] -p[3]  0     p[1];
+    	p[3]  p[2] -p[1]  0;
+    ]
+end
+
+function ∂qLᵀVᵀmat(p) # 𝞉(VLmat(q)*p)/∂q
+	SA[
+    	0     p[1]  p[2]  p[3];
+    	p[1]  0    -p[3]  p[2];
+    	p[2]  p[3]  0    -p[1];
+    	p[3] -p[2]  p[1]  0;
+    ]
+end
+
+function ∂qVRmat(p) # 𝞉(VRmat(q)*p)/∂q
+	SA[
+		p[2]  p[1] -p[4]  p[3];
+		p[3]  p[4]  p[1] -p[2];
+		p[4] -p[3]  p[2]  p[1];
+    ]
+end
+
+function ∂qRᵀVᵀmat(p) # 𝞉(RᵀVᵀmat(q)*p)/∂q
+	SA[
+    	p[2]  p[1]  p[4] -p[3];
+    	p[3] -p[4]  p[1]  p[2];
+    	p[4]  p[3] -p[2]  p[1];
+    ]
+end
+
+function ∂pskew(λ) # 𝞉(skew(p)*λ)/∂p
+	skew(-λ)
+end

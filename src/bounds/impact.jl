@@ -72,10 +72,15 @@ end
 ## Derivatives accounting for quaternion specialness
 ## maps contact forces into the dynamics
 @inline function ∂g∂pos(bound::ImpactBound, x::AbstractVector, q::UnitQuaternion, λ)
-    X = bound.ainv3;
-    # Q = - X * skew(vrotate(bound.p, q) - bound.offset)
+    X = bound.ainv3
+    # q * ... is a rotation by quatrnon q it is equivalent to Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * ...
     Q = - X * q * skew(bound.p - vrotate(bound.offset, inv(q)))
     return X, Q
+end
+
+@inline function forcemapping(bound::ImpactBound)
+    X = bound.ainv3
+    return X
 end
 
 ## Complementarity

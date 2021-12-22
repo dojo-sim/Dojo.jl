@@ -54,9 +54,13 @@ end
 
 function initializebox!(mechanism::Mechanism; x::AbstractVector{T} = [0,0,1.], q::UnitQuaternion{T} = UnitQuaternion(1.,0,0,0),
     v::AbstractVector{T} = [1,.3,.2], ω::AbstractVector{T} = [2.5,-1,2]) where {T}
-    bound = mechanism.ineqconstraints.values[1].constraints[1]
-    side = bound.p[1]
-    offset = bound.offset[3]
+    side = mechanism.bodies.values[1].shape.xyz[1]/2
+    if length(mechanism.ineqconstraints.values) > 0
+        bound = mechanism.ineqconstraints.values[1].constraints[1]
+        offset = bound.offset[3]
+    else
+        offset = 0.0
+    end
     z = side + offset
     body = mechanism.bodies.values[1]
     setPosition!(body, x = x + [0,0,z], q = q)

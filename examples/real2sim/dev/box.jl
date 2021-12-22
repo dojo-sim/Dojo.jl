@@ -26,6 +26,120 @@ storage = simulate!(mech, 5.0, record=true,
     opts=InteriorPointOptions(btol=1e-6, rtol=1e-6, verbose=false))
 visualize(mech, storage, vis=vis, show_contact = false)
 
+
+body1 = mech.bodies.values[1]
+ineqc1 = mech.ineqconstraints.values[1]
+bnd = ineqc1.constraints[1]
+
+Δt = mech.Δt
+q2 = body1.state.q2[1]
+ϕ25 = body1.state.ϕsol[2]
+x3, q3 = posargs3(body1.state, Δt)
+γ = ineqc1.γsol[2]
+
+function d(vars)
+	x = vars[1:3]
+	q = UnitQuaternion(vars[4:7]..., false)
+	return ∂g∂ʳpos(bnd, x, q, nothing)' * γ
+end
+
+M = ∂integration(q2, ϕ25, Δt)
+D0 = FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
+
+X = [bnd.ainv3;
+     szeros(1,3);
+     bnd.Bx]
+∇ = -X * VLmat(q) * RᵀVᵀmat(q) * skew(bnd.p - vrotate(bnd.offset, inv(q3)))
+
+D1 = [szeros(Float64,6,3) [szeros(Float64,3,3); ∇]]
+
+
+q = UnitQuaternion(rand(4)...)
+p = rand(3)
+offset = rand(3)
+λ = rand(3)
+
+
+Q = - X * q * skew(p - vrotate(offset, inv(q)))
+res0 = Q'*γ
+
+Q = - X * VLmat(q) * RᵀVᵀmat(q) * skew(p - vrotate(offset, inv(q)))
+res1 = Q'*γ
+
+res2 = skew(p - vrotate(offset, inv(q))) * (VLmat(q) * RᵀVᵀmat(q))' * X' * γ
+res3 = skew(p - vrotate(offset, inv(q))) * VRmat(q) * LᵀVᵀmat(q) * X' * γ
+
+norm(res0 - res1, Inf)
+norm(res0 - res2, Inf)
+norm(res0 - res3, Inf)
+
+
+res_fct(q, p, offset, λ) = skew(p - vrotate(offset, inv(q))) * VRmat(q) * LᵀVᵀmat(q) * λ
+# res_fct(q, p, offset, λ) = VRmat(q) * LᵀVᵀmat(q) * λ
+# res_fct(q, p, offset, λ) = skew(p - vrotate(offset, inv(q))) * λ
+Dres0 = FiniteDiff.finite_difference_jacobian(q -> res_fct(UnitQuaternion(q..., false), p, offset, λ), vector(q))
+
+# Dres1 = VRmat(q) * ∂qLᵀVᵀmat(λ) + ∂qVRmat(LᵀVᵀmat(q) * λ)
+# Dres1 = ∂pskew(λ) * -∂vrotate∂q(offset, inv(q)) * Tmat()
+Dres1 = ∂pskew(VRmat(q) * LᵀVᵀmat(q) * λ) * -∂vrotate∂q(offset, inv(q)) * Tmat()
+Dres1 += skew(p - vrotate(offset, inv(q))) * ∂qVRmat(LᵀVᵀmat(q) * λ)
+Dres1 += skew(p - vrotate(offset, inv(q))) * VRmat(q) * ∂qLᵀVᵀmat(λ)
+
+
+norm(Dres0 - Dres1, Inf)
+
+
+
+Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat()
+
+Vmat() * Rmat(q) * Lmat(q)' * Vᵀmat()
+
+Qfct(q,p,offset) = skew(p - vrotate(offset, inv(q))) * q * X' * γ
+
+
+using Symbolics
+@variables p[1:3]
+@variables λ[1:3]
+@variables offset[1:3]
+@variables k[1:3]
+@variables l[1:4]
+@variables q[1:4]
+
+qq = UnitQuaternion(q..., false)
+myexpr = skew(p - vrotate(offset, inv(qq))) * VRmat(qq) * LᵀVᵀmat(qq) * λ
+myjacexpr = Symbolics.jacobian(myexpr, q)
+
+
+skew(k) * λ
+skew(λ)
+RᵀVᵀmat(qq) * k
+LᵀVᵀmat(qq) * k
+VLmat(qq) * l
+VRmat(qq) * l
+RᵀVᵀexpr = Symbolics.jacobian(RᵀVᵀmat(qq) * k, q)
+LᵀVᵀexpr = Symbolics.jacobian(LᵀVᵀmat(qq) * k, q)
+VLexpr = Symbolics.jacobian(VLmat(qq) * l, q)
+VRexpr = Symbolics.jacobian(VRmat(qq) * l, q)
+skewexpr = Symbolics.jacobian(skew(k) * λ, k)
+
+
+
+
+
+
+
+q = UnitQuaternion(rand(4)...)
+r = rand(3)
+R0 = hmat()' * lmult(q) * rmult(q)' * hmat() * r
+R1 = Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * r
+norm(R0 - R1, Inf)
+
+hmat()
+Vmat()
+using Symbolics
+
+
+
 ################################################################################
 # Generate & Save Dataset
 ################################################################################
