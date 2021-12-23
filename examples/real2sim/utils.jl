@@ -52,10 +52,12 @@ function get_simulator_data(bound::ImpactBound)
 end
 
 function get_simulator_data(mechanism::Mechanism{T}) where T
-    data = Vector{T}()
+    data = zeros(T,simdata_dim(mechanism))
+	e = 0
     for ineqc in mechanism.ineqconstraints
 		for bound in ineqc.constraints
-        	push!(data, get_simulator_data(bound)...)
+			N = simdata_dim(bound)
+        	data[e .+ (1:N)] = get_simulator_data(bound); e += N
 		end
     end
     return data
@@ -88,9 +90,8 @@ function simdata_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb
 			c += Ns
 		end
 	end
-
 	return A
-
+	#
 	# mechanism = deepcopy(mechanism)
 	# function res(data)
 	#     set_simulator_data!(mechanism, data)
@@ -98,8 +99,8 @@ function simdata_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb
 	#     return Vector(full_vector(mechanism.system))
 	# end
     # B = FiniteDiff.finite_difference_jacobian(data -> res(data), data)
+	# # return B
 	# return A, B
-	# return B
 end
 
 function ∂g∂simdata(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}}}
@@ -181,7 +182,7 @@ function initial_state_box(;
 	x = xlims[1] + rand(3) .* (xlims[2] - xlims[1])
 	v = vlims[1] + rand(3) .* (vlims[2] - vlims[1])
 	ω = ωlims[1] + rand(3) .* (ωlims[2] - ωlims[1])
-	return Dict(:x => x, :v => v , :q => UnitQuaternion(rand(4)...), :ω => ω)
+	return Dict(:x => x, :v => v , :q => rand(UnitQuaternion), :ω => ω)
 end
 
 function build_pairs(mechanism::Mechanism, trajs::AbstractVector)
