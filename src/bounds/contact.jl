@@ -188,30 +188,79 @@ end
     s = ineqc.ssol[2] + 1e-10*neutral_vector(ineqc.constraints[1]) # TODO need to check this is legit
 
     # ∇s = [ineqc.γsol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])]
-    ∇s1 = hcat(γ[1], szeros(1,3))
-    ∇s2 = hcat(szeros(3,1), ∇cone_product(γ[@SVector [2,3,4]]))
+    ∇s1 = [γ[SA[1]]; szeros(T,3)]'
+    ∇s2 = [szeros(T,3,1) ∇cone_product(γ[SA[2,3,4]])]
     ∇s3 = Diagonal(SVector{4,T}(-1, 0, -1, -1))
-    ∇s = vcat(∇s1, ∇s2, ∇s3)
+    ∇s = [∇s1; ∇s2; ∇s3]
 
     # ∇γ = [ineqc.ssol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.ssol[2][2:4]); szeros(1,4); cf -1 0 0; szeros(2,4)]
-    ∇γ1 = hcat(s[1], szeros(1,3))
-    ∇γ2 = hcat(szeros(3,1), ∇cone_product(s[@SVector [2,3,4]]))
-    ∇γ3 = @SMatrix[0   0 0 0;
-                   cf -1 0 0;
-                   0   0 0 0;
-                   0   0 0 0;]
-    ∇γ = vcat(∇γ1, ∇γ2, ∇γ3)
+    ∇γ1 = [s[SA[1]]; szeros(T,3)]'
+    ∇γ2 = [szeros(T,3,1) ∇cone_product(s[SA[2,3,4]])]
+    ∇γ3 = SA[0   0 0 0;
+             cf -1 0 0;
+             0   0 0 0;
+             0   0 0 0;]
+    ∇γ = [∇γ1; ∇γ2; ∇γ3]
 
     # matrix_entry.value = [[ineqc.γsol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])] [ineqc.ssol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.ssol[2][2:4]); szeros(1,4); cf -1 0 0; szeros(2,4)]]
-    matrix_entry.value = hcat(∇s, ∇γ)
-    # @show scn.(s)
-    # @show scn.(γ)
-    # @show hcat(∇s, ∇γ)
+    matrix_entry.value = [∇s ∇γ]
 
     # [-γsol .* ssol + μ; -g + s]
     vector_entry.value = vcat(-complementarityμ(mechanism, ineqc), -g(mechanism, ineqc))
     return
 end
+#
+# function dummyfct(cf::T, γ::SVector{4,T}, s::SVector{4,T}) where T
+#     # # ∇s = [ineqc.γsol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])]
+#     # ∇s1 = hcat(γ[1], szeros(1,3))
+#     # ∇s2 = hcat(szeros(3,1), ∇cone_product(γ[@SVector [2,3,4]]))
+#     # ∇s3 = Diagonal(SVector{4,T}(-1, 0, -1, -1))
+#     # ∇s = vcat(∇s1, ∇s2, ∇s3)
+#     #
+#     # # ∇γ = [ineqc.ssol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.ssol[2][2:4]); szeros(1,4); cf -1 0 0; szeros(2,4)]
+#     # ∇γ1 = hcat(s[1], szeros(1,3))
+#     # ∇γ2 = hcat(szeros(3,1), ∇cone_product(s[@SVector [2,3,4]]))
+#     # ∇γ3 = @SMatrix[0   0 0 0;
+#     #                cf -1 0 0;
+#     #                0   0 0 0;
+#     #                0   0 0 0;]
+#     # ∇γ = vcat(∇γ1, ∇γ2, ∇γ3)
+#
+#
+#     # ∇s = [ineqc.γsol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])]
+#     ∇s1 = [γ[SA[1]]; szeros(T,3)]'
+#     ∇s2 = [szeros(T,3,1) ∇cone_product(γ[SA[2,3,4]])]
+#     ∇s3 = Diagonal(SVector{4,T}(-1, 0, -1, -1))
+#     ∇s = [∇s1; ∇s2; ∇s3]
+#
+#     # ∇γ = [ineqc.ssol[2][1] szeros(1,3); szeros(3,1) ∇cone_product(ineqc.ssol[2][2:4]); szeros(1,4); cf -1 0 0; szeros(2,4)]
+#     ∇γ1 = [s[SA[1]]; szeros(T,3)]'
+#     ∇γ2 = [szeros(T,3,1) ∇cone_product(s[SA[2,3,4]])]
+#     ∇γ3 = SA[0   0 0 0;
+#              cf -1 0 0;
+#              0   0 0 0;
+#              0   0 0 0;]
+#     ∇γ = [∇γ1; ∇γ2; ∇γ3]
+#     return [∇s ∇γ]
+# end
+#
+# cf0 = 1.0
+# γ0 = @SVector [1,2,3,4.]
+# s0 = @SVector [1,2,3,4.]
+# u0 = @SVector [1,2,3.]
+# # @benchmark ∇cone_product($u0)
+#
+# @code_warntype dummyfct(cf0, γ0, s0)
+# @benchmark dummyfct($cf0, $γ0, $s0)
+#
+#
+# ∇s1 = hcat(γ0[1], szeros(1,3))#[γ0[SA[1]]; szeros(3)]
+# ∇s1 = [γ0[SA[1]]; szeros(3)]
+# ∇s2 = [szeros(3,1) ∇cone_product(γ0[@SVector [2,3,4]])]
+# ∇s3 = Diagonal(SVector{4}(-1, 0, -1, -1))
+# ∇s = vcat(∇s1, ∇s2, ∇s3)
+# ∇s = [∇s1'; ∇s2; ∇s3]
+# [∇s ∇s]
 
 function nt_scaling(ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
     γ = ineqc.γsol[2]

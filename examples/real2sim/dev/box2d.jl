@@ -26,6 +26,7 @@ storage = simulate!(mech, 5.0, record=true,
     opts=InteriorPointOptions(btol=1e-6, rtol=1e-6, verbose=false))
 visualize(mech, storage, vis=vis, show_contact = true)
 
+
 ################################################################################
 # Generate & Save Dataset
 ################################################################################
@@ -53,9 +54,9 @@ data0 = params0[:data]
 global const ROTATE = Ref{Float64}(0.0)
 loss(:box2d, pairs0, data0, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
 
-[loss(:box2d, pairs0, data0 + [i;zeros(19)], opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
+[loss(:box2d, pairs0, data0 + [i;zeros(27)], opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
 	for i in Vector(-0.10:0.01:0.1)]
-[loss(:box2d, pairs0, data0 + [0;i;zeros(18)], opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
+[loss(:box2d, pairs0, data0 + [0;i;zeros(26)], opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
 	for i in Vector(-0.10:0.01:0.1)]
 
 plot(hcat([p[1][1:3] for p in pairs0]...)')
@@ -85,10 +86,10 @@ upper = [0.80, +1.00, +1.00, +1.00, -0.05, -0.05, +1.00, -0.05, -0.05]
 
 function d2data(d)
 	cf = d[1]
-	data = [cf; 0.05; 0; +d[2]; +d[3];
-			cf; 0.05; 0; +d[4]; +d[5];
-			cf; 0.05; 0; +d[6]; +d[7];
-			cf; 0.05; 0; +d[8]; +d[9];
+	data = [cf; 0.05; 0;0;0; +d[2]; +d[3];
+			cf; 0.05; 0;0;0; +d[4]; +d[5];
+			cf; 0.05; 0;0;0; +d[6]; +d[7];
+			cf; 0.05; 0;0;0; +d[8]; +d[9];
 			]
 	return data
 end
@@ -111,6 +112,7 @@ ROTATE[] = 0.0
 optimize(Optim.only_fg!(fg!), lower, upper, d0, Fminbox(solver),
 	Optim.Options(
 		callback = termination_callback,
+		# allow_f_increases=true,
 		show_trace = true),
 	; inplace = false,
 	)
@@ -129,7 +131,8 @@ using Optim
 
 solver = LBFGS(;m=100,
         alphaguess=Optim.LineSearches.InitialStatic(),
-        linesearch=Optim.LineSearches.HagerZhang(),
+		# linesearch=Optim.LineSearches.HagerZhang(),
+        linesearch=Optim.LineSearches.MoreThuente(),
         P = 1e2*I(2),
 		)
 
@@ -138,10 +141,10 @@ upper = [0.80, 1.00]
 
 function d2data(d)
 	cf, side = d
-	data = [cf; 0.05; 0; +side; +side;
-			cf; 0.05; 0; +side; -side;
-			cf; 0.05; 0; -side; +side;
-			cf; 0.05; 0; -side; -side;
+	data = [cf; 0.05; 0;0;0; +side; +side;
+			cf; 0.05; 0;0;0; +side; -side;
+			cf; 0.05; 0;0;0; -side; +side;
+			cf; 0.05; 0;0;0; -side; -side;
 			]
 	return data
 end
@@ -164,12 +167,23 @@ d0 = [0.40, 0.50]
 ROTATE[] = 0.0
 optimize(Optim.only_fg!(fg!), lower, upper, d0, Fminbox(solver),
 	Optim.Options(
+		x_abstol = -1.0,
+		x_reltol = -1.0,
+		x_tol = -1.0,
+		f_abstol = -1.0,
+		f_reltol = -1.0,
+		f_tol = -1.0,
+		# g_abstol = -1.0,
+		# g_reltol = -1.0,
+		g_tol = 1e-8,
 		callback = termination_callback,
+		allow_f_increases=true,
 		show_trace = true),
 	; inplace = false,
 	)
-
-
+d0
+opts = Optim.Options()
+opts.x_abstol = -1.0
 
 # We can learn the coefficient of friction and the side dimenson of the cube
 # form 15*0.75 seconds of recording. We use the simulator to evaluate the loss

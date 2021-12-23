@@ -56,22 +56,6 @@ end
         ∇ += skew(p - vrotate(offset, inv(q3))) * VRmat(q3) * ∂qLᵀVᵀmat(λ)
         ∇ *= ∂integrator∂ϕ(q2, ϕ25, Δt)
         body.state.D -= D1 = [szeros(T,6,3) [szeros(T,3,3); ∇]]
-
-        # bnd_type = typeof(ineqc.constraints[i])
-        # M = ∂integration(q2, ϕ25, Δt)
-        # function d(vars)
-        #     x = vars[1:3]
-        #     q = UnitQuaternion(vars[4:7]..., false)
-        #     return ∂g∂ʳpos(bnd, x, q, nothing)' * ineqc.γsol[2]
-        # end
-
-        # if bnd_type <: ContactBound
-        #     body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
-        # elseif bnd_type <: ImpactBound
-        #     body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
-        # elseif bnd_type <: LinearContactBound
-        #     body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
-        # end
     end
     return
 end
