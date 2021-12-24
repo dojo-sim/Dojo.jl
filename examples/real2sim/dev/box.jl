@@ -27,26 +27,6 @@ storage = simulate!(mech, 5.0, record=true,
 visualize(mech, storage, vis=vis, show_contact = true)
 
 
-# A, B = simdata_jacobian(mech)
-# plot(Gray.(A))
-# plot(Gray.(B))
-# norm(A - B, Inf)
-#
-# ineqc1 = mech.ineqconstraints.values[1]
-# ∂g∂simdata(mech, ineqc1)
-#
-# simmat, simmatFD = simdata_jacobian(mech)
-# plot(Gray.(abs.(simmat)))
-# plot(Gray.(abs.(simmatFD)))
-# plot(Gray.(abs.(1e110 .* simmatFD)))
-#
-# norm((simmat + simmatFD)[4:7, 1:7], Inf)
-# norm((simmat + simmatFD)[7:14, 1:7], Inf)
-#
-# length(mech.ineqconstraints.values[1])
-# length(mech.bodies.values[1])
-rand(UnitQuaternion{Float64})
-
 dbest = [0.09902443899194172,
 	0.24983056763668757, 0.2501325129483943, -0.25042971065786357,
 	0.25000879472930276, -0.25051893328360614, -0.2501886552502975,
