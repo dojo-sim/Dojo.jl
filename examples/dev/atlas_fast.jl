@@ -13,7 +13,6 @@ using MeshCat
 vis = Visualizer()
 open(vis)
 
-module_dir()
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
