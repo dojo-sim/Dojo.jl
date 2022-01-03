@@ -51,12 +51,11 @@ data0 = params0[:data]
 ################################################################################
 # Optimization Objective: Evaluation & Gradient
 ################################################################################
-global const ROTATE = Ref{Float64}(0.0)
-loss(:box2d, pairs0, data0, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
+clean_loss(:box2d, pairs0, data0, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
 
-[loss(:box2d, pairs0, data0 + [i;zeros(27)], opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
+[clean_loss(:box2d, pairs0, data0 + [i;zeros(27)], opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
 	for i in Vector(-0.10:0.01:0.1)]
-[loss(:box2d, pairs0, data0 + [0;i;zeros(26)], opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
+[clean_loss(:box2d, pairs0, data0 + [0;i;zeros(26)], opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
 	for i in Vector(-0.10:0.01:0.1)]
 
 plot(hcat([p[1][1:3] for p in pairs0]...)')
@@ -69,54 +68,40 @@ plot(hcat([p[1][11:13] for p in pairs0]...)')
 # Optimization Algorithm: L-BFGS:
 # We learn a single coefficient of friction and a 4 contact locations [y,z] -> 9 params in total
 ################################################################################
-using Optim
 
-function termination_callback(opt; value_tol=1e-4)
-	return opt.value < value_tol
-end
 
-solver = LBFGS(;m=100,
-        alphaguess=Optim.LineSearches.InitialStatic(),
-        linesearch=Optim.LineSearches.HagerZhang(),
-        P = 1e2*I(9),
-		)
-
-lower = [0.00, +0.05, +0.05, +0.05, -1.00, -1.00, +0.05, -1.00, -1.00]
-upper = [0.80, +1.00, +1.00, +1.00, -0.05, -0.05, +1.00, -0.05, -0.05]
-
+include("../quasi_newton.jl")
 function d2data(d)
 	cf = d[1]
-	data = [cf; 0.05; 0;0;0; +d[2]; +d[3];
-			cf; 0.05; 0;0;0; +d[4]; +d[5];
-			cf; 0.05; 0;0;0; +d[6]; +d[7];
-			cf; 0.05; 0;0;0; +d[8]; +d[9];
+	data = [cf; 0;0; 0.05; 0; +d[2]; +d[3];
+			cf; 0;0; 0.05; 0; +d[4]; +d[5];
+			cf; 0;0; 0.05; 0; +d[6]; +d[7];
+			cf; 0;0; 0.05; 0; +d[8]; +d[9];
 			]
 	return data
 end
 
 ∇d2data = ForwardDiff.jacobian(d -> d2data(d), zeros(9))
 
-function fg!(F,G,d)
-	# do common computations here
-	l, ∇ = loss(:box2d, pairs0, d2data(d), n_sample=50)
-	if G != nothing
-		G .= ∇d2data' * ∇
-	end
-	if F != nothing
-		value = l
-	    return value
-	end
-end
 d0 = [0.40, +0.50, +0.50, +0.50, -0.50, -0.50, +0.50, -0.50, -0.50]
-ROTATE[] = 0.0
-optimize(Optim.only_fg!(fg!), lower, upper, d0, Fminbox(solver),
-	Optim.Options(
-		callback = termination_callback,
-		# allow_f_increases=true,
-		show_trace = true),
-	; inplace = false,
-	)
+lower = [0.00, +0.05, +0.05, +0.05, -1.00, -1.00, +0.05, -1.00, -1.00]
+upper = [0.80, +1.00, +1.00, +1.00, -0.05, -0.05, +1.00, -0.05, -0.05]
 
+function f0(d; rot=0)
+	return clean_loss(:box2d, pairs0, d2data(d), n_sample=15, rot=rot, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))[1]
+end
+
+function fgH0(d; rot=0)
+	f, g, H = clean_loss(:box2d, pairs0, d2data(d), n_sample=15, rot=rot, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
+	return f, ∇d2data' * g, ∇d2data' * H * ∇d2data
+end
+# dsol = bfgs_solve(f0, g0, H0, d0, iter=200, gtol=1e-8, ftol=3e-5,
+dsol = quasi_newton_solve(f0, fgH0, d0, iter=200, gtol=1e-8, ftol=1e-6,
+	lower=lower, upper=upper, reg=1e-6)
+
+d0
+f0(d0)
+f0(dsol)
 
 # We can learn the coefficient of friction and the side dimenson of the cube
 # form 15*0.75 seconds of recording. We use the simulator to evaluate the loss
@@ -127,63 +112,37 @@ optimize(Optim.only_fg!(fg!), lower, upper, d0, Fminbox(solver),
 # Optimization Algorithm: L-BFGS:
 # We learn a single coefficient of friction and a single side length.
 ################################################################################
-using Optim
-
-solver = LBFGS(;m=100,
-        alphaguess=Optim.LineSearches.InitialStatic(),
-		# linesearch=Optim.LineSearches.HagerZhang(),
-        linesearch=Optim.LineSearches.MoreThuente(),
-        P = 1e2*I(2),
-		)
-
-lower = [0.00, 0.05]
-upper = [0.80, 1.00]
-
+include("../quasi_newton.jl")
 function d2data(d)
 	cf, side = d
-	data = [cf; 0.05; 0;0;0; +side; +side;
-			cf; 0.05; 0;0;0; +side; -side;
-			cf; 0.05; 0;0;0; -side; +side;
-			cf; 0.05; 0;0;0; -side; -side;
+	data = [cf; 0;0; 0.05; 0; +side; +side;
+			cf; 0;0; 0.05; 0; +side; -side;
+			cf; 0;0; 0.05; 0; -side; +side;
+			cf; 0;0; 0.05; 0; -side; -side;
 			]
 	return data
 end
-
 ∇d2data = ForwardDiff.jacobian(d -> d2data(d), zeros(2))
 
-function fg!(F,G,d)
-	# do common computations here
-	l, ∇ = loss(:box2d, pairs0, d2data(d), n_sample=50)
-	if G != nothing
-		G .= ∇d2data' * ∇
-	end
-	if F != nothing
-		value = l
-	    return value
-	end
+d0 = [0.40, 0.75]
+lower = [0.00, 0.05]
+upper = [0.80, 1.00]
+
+function f0(d; rot=0)
+	return clean_loss(:box2d, pairs0, d2data(d), n_sample=15, rot=rot, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))[1]
 end
 
-d0 = [0.40, 0.50]
-ROTATE[] = 0.0
-optimize(Optim.only_fg!(fg!), lower, upper, d0, Fminbox(solver),
-	Optim.Options(
-		x_abstol = -1.0,
-		x_reltol = -1.0,
-		x_tol = -1.0,
-		f_abstol = -1.0,
-		f_reltol = -1.0,
-		f_tol = -1.0,
-		# g_abstol = -1.0,
-		# g_reltol = -1.0,
-		g_tol = 1e-8,
-		callback = termination_callback,
-		allow_f_increases=true,
-		show_trace = true),
-	; inplace = false,
-	)
+function fgH0(d; rot=0)
+	f, g, H = clean_loss(:box2d, pairs0, d2data(d), n_sample=15, rot=rot, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
+	return f, ∇d2data' * g, ∇d2data' * H * ∇d2data
+end
+dsol = quasi_newton_solve(f0, fgH0, d0, iter=200, gtol=1e-8, ftol=1e-6,
+	lower=lower, upper=upper, reg=1e-9)
+
 d0
-opts = Optim.Options()
-opts.x_abstol = -1.0
+f0(d0)
+f0(dsol)
+f0([0.1, 0.5])
 
 # We can learn the coefficient of friction and the side dimenson of the cube
 # form 15*0.75 seconds of recording. We use the simulator to evaluate the loss
@@ -193,12 +152,3 @@ opts.x_abstol = -1.0
 ################################################################################
 # Visualization
 ################################################################################
-
-
-using Plots; pyplot()
-x=range(0.00,stop=0.80,length=30)
-y=range(0.05,stop=0.75,length=30)
-f(x,y) = x*y-x-y+1
-f(x,y) = log(10, clean_loss(:box2d, pairs0, d2data([x,y]),
-	opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))[1])
-plot(x,y,f,st=:surface,camera=(90,00))
