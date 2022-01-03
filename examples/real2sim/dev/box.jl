@@ -24,29 +24,7 @@ mech = getmechanism(:box, Δt=0.05, g=-9.81, cf=0.2, radius=0.00, side=0.50, mod
 initialize!(mech, :box, x=[0,-1,1.], v=[0,2,1.], ω=[2,5,10.])
 storage = simulate!(mech, 5.0, record=true,
     opts=InteriorPointOptions(btol=1e-6, rtol=1e-6, verbose=false))
-visualize(mech, storage, vis=vis, show_contact = true)
-
-
-dbest = [0.09902443899194172,
-	0.24983056763668757, 0.2501325129483943, -0.25042971065786357,
-	0.25000879472930276, -0.25051893328360614, -0.2501886552502975,
-	-0.24996123416616736, 0.25013736791624774, -0.25006562608076943,
-	-0.24431161099368243, -0.2500961647900991, -0.2502248998529076,
-	0.2500992241490191, 0.25005706863989413, 0.25006535845090355,
-	0.2497660464529427, -0.2503818791472568, 0.25004117849998964,
-	-0.24991169274364852, 0.2500621347605857, 0.24994574048892784,
-	-0.25023908162014147, -0.2499294194836169, 0.2499100511808172]
-
-datasol = ∇d2data * dsol
-datasol = ∇d2data * dbest
-for i = 1:8
-	datasol[(i-1)*7 + 4] = 0.05
-end
-set_simulator_data!(mech, datasol)
-# for traj in trajs0
-# 	visualize(mech, traj, vis=vis, show_contact = true)
-# 	sleep(0.5)
-# end
+visualize(mech, storage, vis=vis, show_contact=true)
 
 
 ################################################################################
@@ -165,8 +143,6 @@ norm(data0 - d2data(dsol), Inf)
 # Visualization
 ################################################################################
 
-
-
 include("../quasi_newton.jl")
 function d2data(d)
 	data = [d[1]; 0;0;0; +d[2:4];
@@ -219,7 +195,7 @@ function fgH0(d; rot=0)
 	return f, ∇d2data' * g, ∇d2data' * H * ∇d2data
 end
 
-dsol = quasi_newton_solve(f0, fgH0, d0, iter=50, gtol=1e-8, ftol=1e-6,
+dsol, Dsol = quasi_newton_solve(f0, fgH0, d0, iter=50, gtol=1e-8, ftol=1e-6,
 	lower=lower, upper=upper, reg=1e-9)
 
 d0
@@ -231,3 +207,30 @@ norm(data0 - d2data(dsol), Inf)
 # form 35*0.40 seconds of recording. We use the simulator to evaluate the loss
 # and its gradients by differentiating through the simulator. With gradient
 # information we can use L-BFGS
+
+
+################################################################################
+# Visualization
+################################################################################
+
+# Visualize Dataset with solution
+datasol = ∇d2data * dsol
+for i = 1:8
+	datasol[(i-1)*7 + 4] = 0.05
+end
+set_simulator_data!(mech, datasol)
+for traj in trajs0
+	visualize(mech, traj, vis=vis, show_contact = true)
+	sleep(0.5)
+end
+
+# Visualize Progress made during 'learning'
+for (i,dsol) in enumerate(Dsol)
+	datasol = ∇d2data * dsol
+	for i = 1:8
+		datasol[(i-1)*7 + 4] = 0.05
+	end
+	set_simulator_data!(mech, datasol)
+	visualize(mech, trajs0[i], vis=vis, show_contact = true)
+	sleep(0.5)
+end

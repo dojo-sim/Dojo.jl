@@ -4,6 +4,7 @@ using LinearAlgebra
 function quasi_newton_solve(f, fgH, x0; ftol=-Inf, gtol=1e-4, iter=100,
         lower=-Inf, upper=Inf, reg = 1e-3)
     x = copy(x0)
+    X = [copy(x0)]
     rot = 0.0
     for k = 1:iter
         # rot += 1
@@ -13,7 +14,7 @@ function quasi_newton_solve(f, fgH, x0; ftol=-Inf, gtol=1e-4, iter=100,
         p = - He \ ge
         α = clamped_linesearch(f, x, p, rot=rot, lower=lower, upper=upper)
         x = clamp.(x + α*p, lower, upper)
-
+        push!(X, copy(x))
         println("k:", k,
             "   f:", scn(fe, digits=3),
             "   ∇:", scn.(norm(ge, Inf)),
@@ -24,7 +25,7 @@ function quasi_newton_solve(f, fgH, x0; ftol=-Inf, gtol=1e-4, iter=100,
             # "   H:", scn.(H),
             )
     end
-    return x
+    return x, X
 end
 
 function clamped_linesearch(f, x, p; rot=0.0, iter=10,
