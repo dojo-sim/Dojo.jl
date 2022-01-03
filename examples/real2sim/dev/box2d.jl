@@ -193,3 +193,12 @@ opts.x_abstol = -1.0
 ################################################################################
 # Visualization
 ################################################################################
+
+
+using Plots; pyplot()
+x=range(0.00,stop=0.80,length=30)
+y=range(0.05,stop=0.75,length=30)
+f(x,y) = x*y-x-y+1
+f(x,y) = log(10, clean_loss(:box2d, pairs0, d2data([x,y]),
+	opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))[1])
+plot(x,y,f,st=:surface,camera=(90,00))

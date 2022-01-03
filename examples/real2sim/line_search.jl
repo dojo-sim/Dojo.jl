@@ -20,6 +20,7 @@ use `MoreThuente`, `HagerZhang` or `BackTracking`.
     ρ::T = 2.0
 end
 
+
 function StrongWolfe(f, g, x::AbstractArray{T}, p::AbstractArray{T}, α::Real,
     x_new::AbstractArray{T}, ϕ_0, dϕ_0) where T
 

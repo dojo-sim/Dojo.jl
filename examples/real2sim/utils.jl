@@ -280,28 +280,54 @@ function getSimulatorMaxGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::Abstr
 	return ∇data_z̄
 end
 
-function loss(model::Symbol, pairs, data; Δt=0.05, g=-9.81,
-		opts=InteriorPointOptions(btol=1e-6, rtol=1e-6), n_sample = 20)
+# function loss(model::Symbol, pairs, data; Δt=0.05, g=-9.81,
+# 		opts=InteriorPointOptions(btol=1e-6, rtol=1e-6), n_sample = 20)
+# 	mechanism = getmechanism(model, Δt=Δt, g=g)
+# 	nsd = simdata_dim(mechanism)
+# 	set_simulator_data!(mechanism, data)
+#
+# 	l = 0.0
+#     ∇ = zeros(nsd)
+# 	n = length(pairs)
+#
+# 	global ROTATE[] = ROTATE[] + 1/5
+# 	offset = Int(floor(ROTATE[]))
+# 	Random.seed!(0)
+# 	mask = shuffle!(Vector(1:n))
+# 	mask = [mask; mask]
+# 	mask = mask[offset%n .+ (1:n_sample)]
+#     for i in mask
+#         li, ∇i = loss(mechanism, pairs[i], opts=opts)
+#         l += li
+#         ∇ += ∇i
+#     end
+#     return l / n_sample, ∇ ./ n_sample
+# end
+
+function clean_loss(model::Symbol, pairs, data; Δt=0.05, g=-9.81,
+		opts=InteriorPointOptions(btol=1e-6, rtol=1e-6), n_sample = 20, rot = 0.0)
 	mechanism = getmechanism(model, Δt=Δt, g=g)
 	nsd = simdata_dim(mechanism)
 	set_simulator_data!(mechanism, data)
 
 	l = 0.0
-    ∇ = zeros(nsd)
+	∇ = zeros(nsd)
+    H = zeros(nsd, nsd)
 	n = length(pairs)
 
-	global ROTATE[] = ROTATE[] + 1/5
-	offset = Int(floor(ROTATE[]))
+	rot += 1/5
+	offset = Int(floor(rot))
 	Random.seed!(0)
 	mask = shuffle!(Vector(1:n))
 	mask = [mask; mask]
 	mask = mask[offset%n .+ (1:n_sample)]
     for i in mask
-        li, ∇i = loss(mechanism, pairs[i], opts=opts)
+        li, ∇i, Hi = loss(mechanism, pairs[i], opts=opts)
         l += li
         ∇ += ∇i
+		H += Hi
     end
-    return l / n_sample, ∇ ./ n_sample
+    return l / n_sample, ∇ ./ n_sample, H ./ n_sample
 end
 
 function loss(mechanism::Mechanism, pair; opts=InteriorPointOptions(btol=1e-6, rtol=1e-6))
@@ -314,5 +340,6 @@ function loss(mechanism::Mechanism, pair; opts=InteriorPointOptions(btol=1e-6, r
     ∇z2 = getSimulatorMaxGradients(mechanism)
     l = 0.5 * (z2 - z2true)'*(z2 - z2true)
     ∇ = - ∇z2' * (z2 - z2true)
-    return l, ∇
+	H = ∇z2'*∇z2 # quasi newton approx oft he Hessian
+    return l, ∇, H
 end
