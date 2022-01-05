@@ -91,16 +91,6 @@ function simdata_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb
 		end
 	end
 	return A
-	#
-	# mechanism = deepcopy(mechanism)
-	# function res(data)
-	#     set_simulator_data!(mechanism, data)
-	#     setentries!(mechanism)
-	#     return Vector(full_vector(mechanism.system))
-	# end
-    # B = FiniteDiff.finite_difference_jacobian(data -> res(data), data)
-	# # return B
-	# return A, B
 end
 
 function ∂g∂simdata(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}}}
@@ -147,6 +137,10 @@ end
 
 function filenamebox(; N::Int=10, cf=0.1, radius=0., side=0.50)
     "box_dim_N:$(N)_cf:$(cf)_radius:$(radius)_side:$(side).jld2"
+end
+
+function filenamehardwarebox(; N::Int=10)
+    "hardwarebox_dim_N:$(N).jld2"
 end
 
 function initial_state(model::Symbol; kwargs...)
@@ -227,7 +221,7 @@ function generate_dataset(model::Symbol;
 	data = get_simulator_data(mechanism)
     params = Dict(:N => N, :H => H, :Δt => Δt, :g => g, :data => data)
     pairs = build_pairs(mechanism, trajs)
-    jldsave(joinpath(@__DIR__, "dev", "dataset", filename(model; N = N, mech_kwargs...));
+    jldsave(joinpath(@__DIR__, "data", "dataset", filename(model; N = N, mech_kwargs...));
         params=params, trajs=trajs, pairs=pairs)
     return nothing
 end
@@ -237,7 +231,7 @@ end
 # Load Dataset
 ################################################################################
 function open_dataset(model::Symbol; kwargs...)
-    dataset = jldopen(joinpath(@__DIR__, "dev", "dataset", filename(model; kwargs...)))
+    dataset = jldopen(joinpath(@__DIR__, "data", "dataset", filename(model; kwargs...)))
     params = dataset["params"]
     trajs = dataset["trajs"]
     pairs = dataset["pairs"]
@@ -280,30 +274,6 @@ function getSimulatorMaxGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::Abstr
 	return ∇data_z̄
 end
 
-# function loss(model::Symbol, pairs, data; Δt=0.05, g=-9.81,
-# 		opts=InteriorPointOptions(btol=1e-6, rtol=1e-6), n_sample = 20)
-# 	mechanism = getmechanism(model, Δt=Δt, g=g)
-# 	nsd = simdata_dim(mechanism)
-# 	set_simulator_data!(mechanism, data)
-#
-# 	l = 0.0
-#     ∇ = zeros(nsd)
-# 	n = length(pairs)
-#
-# 	global ROTATE[] = ROTATE[] + 1/5
-# 	offset = Int(floor(ROTATE[]))
-# 	Random.seed!(0)
-# 	mask = shuffle!(Vector(1:n))
-# 	mask = [mask; mask]
-# 	mask = mask[offset%n .+ (1:n_sample)]
-#     for i in mask
-#         li, ∇i = loss(mechanism, pairs[i], opts=opts)
-#         l += li
-#         ∇ += ∇i
-#     end
-#     return l / n_sample, ∇ ./ n_sample
-# end
-
 function clean_loss(model::Symbol, pairs, data; Δt=0.05, g=-9.81,
 		opts=InteriorPointOptions(btol=1e-6, rtol=1e-6), n_sample = 20, rot = 0.0)
 	mechanism = getmechanism(model, Δt=Δt, g=g)
@@ -315,7 +285,6 @@ function clean_loss(model::Symbol, pairs, data; Δt=0.05, g=-9.81,
     H = zeros(nsd, nsd)
 	n = length(pairs)
 
-	rot += 1/5
 	offset = Int(floor(rot))
 	Random.seed!(0)
 	mask = shuffle!(Vector(1:n))
@@ -338,8 +307,10 @@ function loss(mechanism::Mechanism, pair; opts=InteriorPointOptions(btol=1e-6, r
     z2true = pair[2]
     z2 = step!(mechanism, z1, u, opts=opts)
     ∇z2 = getSimulatorMaxGradients(mechanism)
-    l = 0.5 * (z2 - z2true)'*(z2 - z2true)
-    ∇ = - ∇z2' * (z2 - z2true)
-	H = ∇z2'*∇z2 # quasi newton approx oft he Hessian
+	# @show scn.(z2 - z2true)
+	Q = Diagonal([ones(3); 1e-1ones(3); ones(4); 1e-1ones(3)])
+    l = 0.5 * (z2 - z2true)'* Q *(z2 - z2true)
+    ∇ = - ∇z2' * Q * (z2 - z2true)
+	H = ∇z2'* Q * ∇z2 # quasi newton approx oft he Hessian
     return l, ∇, H
 end

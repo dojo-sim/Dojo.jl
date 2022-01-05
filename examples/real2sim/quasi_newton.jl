@@ -7,7 +7,7 @@ function quasi_newton_solve(f, fgH, x0; ftol=-Inf, gtol=1e-4, iter=100,
     X = [copy(x0)]
     rot = 0.0
     for k = 1:iter
-        # rot += 1
+        rot += 300
         fe, ge, He = fgH(x, rot=rot)
         He += reg * norm(He, Inf) * I
         ((norm(ge, Inf) < gtol) || (fe < ftol)) && break
@@ -21,21 +21,21 @@ function quasi_newton_solve(f, fgH, x0; ftol=-Inf, gtol=1e-4, iter=100,
             "   α:", scn.(α),
             # "   g:", scn.(-g(x, rot=rot)),
             # "   p:", scn.(p),
-            # "   x:", scn.(x),
+            "   x:", scn.(x),
             # "   H:", scn.(H),
             )
     end
     return x, X
 end
 
-function clamped_linesearch(f, x, p; rot=0.0, iter=10,
+function clamped_linesearch(f, x, p; rot=0.0, iter=4,
         lower=-Inf, upper=Inf)
     α = 1.0
     fprev = f(x,rot=rot)
     for k = 1:iter
         xc = clamp.(x + α*p, lower, upper)
         (f(xc,rot=rot) <= fprev) && break
-        α /= 2
+        α /= 3
     end
     return α
 end
