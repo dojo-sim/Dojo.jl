@@ -95,7 +95,7 @@ end
 
 function render(env::Environment, mode="human")
     z = env.mode == :min ? min2max(env.mechanism, env.x) : env.x
-    set_robot(env.vis, env.mechanism, z)
+    set_robot(env.vis, env.mechanism, z, name=:robot)
     return nothing
 end
 

@@ -72,7 +72,7 @@ end
 function visualize(mechanism::Mechanism, storage::Storage{T,N};
         vis::Visualizer = Visualizer(), env::String = "browser",
         showframes::Bool = false, openvis::Bool = false,
-        show_contact=false) where {T,N}
+        show_contact=false, animation=nothing, name::Symbol=:robot) where {T,N}
 
     storage = deepcopy(storage)
     bodies = mechanism.bodies
@@ -98,7 +98,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N};
     end
 
     framerate = Int64(round(1/mechanism.Δt))
-    animation = MeshCat.Animation(Dict{MeshCat.SceneTrees.Path,MeshCat.AnimationClip}(), framerate)
+    (animation == nothing) && (animation = MeshCat.Animation(Dict{MeshCat.SceneTrees.Path,MeshCat.AnimationClip}(), framerate))
 
     for (id,body) in enumerate(bodies)
         shape = body.shape
@@ -107,7 +107,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N};
         subvisframe = nothing
         showshape = false
         if visshape !== nothing
-            subvisshape = vis["bodies/body:"*string(id)]
+            subvisshape = vis[name]["bodies/body:"*string(id)]
             setobject!(subvisshape,visshape,shape,transparent=show_contact)
             showshape = true
         end
@@ -133,7 +133,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N};
                     showshape = false
                     if visshape !== nothing
                         # subvisshape = vis["bodies/body:"*string(id)]
-                        subvisshape = vis["bodies/contact:"*string(id)*"$jd"]
+                        subvisshape = vis[name]["bodies/contact:"*string(id)*"$jd"]
                         setobject!(subvisshape,visshape,contact_shape,transparent=false)
                         showshape = true
                     end
@@ -147,17 +147,17 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N};
     shape = origin.shape
     visshape = convertshape(shape)
     if visshape !== nothing
-        subvisshape = vis["bodies/origin:"*string(id)]
+        subvisshape = vis[name]["bodies/origin:"*string(id)]
         setobject!(subvisshape,visshape,shape,transparent=show_contact)
         shapetransform = transform(szeros(T,3), one(UnitQuaternion{T}), shape)
         settransform!(subvisshape, shapetransform)
     end
 
     setanimation!(vis, animation)
-    env == "editor" ? (return render(vis)) : (return vis)
+    env == "editor" ? (return render(vis)) : (return vis, animation)
 end
 
-function build_robot(vis::Visualizer, mechanism::Mechanism) where {T,N}
+function build_robot(vis::Visualizer, mechanism::Mechanism; name::Symbol=:robot) where {T,N}
 
     bodies = mechanism.bodies
     origin = mechanism.origin
@@ -173,7 +173,7 @@ function build_robot(vis::Visualizer, mechanism::Mechanism) where {T,N}
         subvisframe = nothing
         showshape = false
         if visshape !== nothing
-            subvisshape = vis["bodies/body:"*string(id)]
+            subvisshape = vis[name]["bodies/body:"*string(id)]
             setobject!(subvisshape,visshape,shape)
             showshape = true
         end
@@ -183,14 +183,14 @@ function build_robot(vis::Visualizer, mechanism::Mechanism) where {T,N}
     shape = origin.shape
     visshape = convertshape(shape)
     if visshape !== nothing
-        subvisshape = vis["bodies/origin:"*string(id)]
+        subvisshape = vis[name]["bodies/origin:"*string(id)]
         setobject!(subvisshape,visshape,shape)
     end
 
    return vis
 end
 
-function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T}) where {T,N}
+function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T}; name::Symbol=:robot) where {T,N}
 
     bodies = mechanism.bodies
     origin = mechanism.origin
@@ -199,7 +199,7 @@ function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T}) where {T
     for (id,body) in enumerate(bodies)
         shape = body.shape
         visshape = convertshape(shape)
-        subvisshape = vis["bodies/body:"*string(id)]
+        subvisshape = vis[name]["bodies/body:"*string(id)]
 
         x = z[(i-1) * 13 .+ (1:3)]
         q = UnitQuaternion(z[(i-1) * 13 + 6 .+ (1:4)]...)
@@ -215,7 +215,7 @@ function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T}) where {T
     id = origin.id
     shape = origin.shape
     visshape = convertshape(shape)
-    subvisshape = vis["bodies/origin:"*string(id)]
+    subvisshape = vis[name]["bodies/origin:"*string(id)]
     if visshape !== nothing
         shapetransform = transform(szeros(T,3), one(UnitQuaternion{T}), shape)
         settransform!(subvisshape, shapetransform)

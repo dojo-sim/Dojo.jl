@@ -5,7 +5,7 @@ struct Hopper end
 
 function hopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     cf::T=2.0, spring=0.0, damper=1.0,
-    s::Int=1, contact::Bool=true, info=nothing, vis::Visualizer=Visualizer(),
+    s::Int=1, contact::Bool=true, info=nothing, vis::Visualizer=Visualizer(), name::Symbol=:robot,
     opts_step=InteriorPointOptions(), opts_grad=InteriorPointOptions()) where T
 
     mechanism = gethopper(Δt=dt, g=g, cf=cf, spring=spring, damper=damper, contact=contact)
@@ -36,7 +36,7 @@ function hopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     motor_gear = [200, 200, 200.]
     control_scaling = Diagonal(dt * motor_gear)
 
-    build_robot(vis, mechanism)
+    build_robot(vis, mechanism, name=name)
 
     TYPES = [Hopper, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
     env = Environment{TYPES...}(mechanism, mode, aspace, ospace,

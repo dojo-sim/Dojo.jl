@@ -5,7 +5,7 @@ struct Walker2d end
 
 function walker2d(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     cf::T=1.9, spring=0.0, damper=0.1,
-    s::Int=1, contact::Bool=true, info=nothing, vis::Visualizer=Visualizer(),
+    s::Int=1, contact::Bool=true, info=nothing, vis::Visualizer=Visualizer(), name::Symbol=:robot,
     opts_step=InteriorPointOptions(), opts_grad=InteriorPointOptions()) where T
 
     mechanism = getwalker2d(Δt=dt, g=g, cf=cf, spring=spring, damper=damper, contact=contact)
@@ -36,7 +36,7 @@ function walker2d(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     motor_gear = [100, 100, 100, 100, 100, 100.]
     control_scaling = Diagonal(dt * motor_gear)
 
-    build_robot(vis, mechanism)
+    build_robot(vis, mechanism, name=name)
 
     TYPES = [Walker2d, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
     env = Environment{TYPES...}(mechanism, mode, aspace, ospace,

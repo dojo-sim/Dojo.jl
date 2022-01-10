@@ -52,16 +52,19 @@ function getbox(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, radius = 0.0, side =
     return mech
 end
 
-function initializebox!(mechanism::Mechanism; x::AbstractVector{T} = [0,0,1.], q::UnitQuaternion{T} = UnitQuaternion(1.,0,0,0),
-    v::AbstractVector{T} = [1,.3,.2], ω::AbstractVector{T} = [2.5,-1,2]) where {T}
-    side = mechanism.bodies.values[1].shape.xyz[1]/2
+function initializebox!(mechanism::Mechanism;
+        x::AbstractVector{T} = [0,0,1.],
+        q::UnitQuaternion{T} = UnitQuaternion(1.,0,0,0),
+        v::AbstractVector{T} = [1,.3,.2],
+        ω::AbstractVector{T} = [2.5,-1,2]) where {T}
+    halfside = mechanism.bodies.values[1].shape.xyz[1]/2
     if length(mechanism.ineqconstraints.values) > 0
         bound = mechanism.ineqconstraints.values[1].constraints[1]
         offset = bound.offset[3]
     else
         offset = 0.0
     end
-    z = side + offset
+    z = halfside + offset
     body = mechanism.bodies.values[1]
     setPosition!(body, x = x + [0,0,z], q = q)
     setVelocity!(body, v = v, ω = ω)

@@ -44,12 +44,13 @@ end
 @elapsed storage = simulate!(mech, 2.3, controller!, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
-filename = "walker2d_limits"
+
+file_name = "cube_traj"
 MeshCat.convert_frames_to_video(
-    "/home/simon/Downloads/$filename.tar",
-    "/home/simon/Documents/video/$filename.mp4", overwrite=true)
+    "/home/simon/Downloads/$file_name.tar",
+    "/home/simon/Documents/video/$file_name.mp4", overwrite=true)
 
 using FFMPEG
 convert_video_to_gif(
-    "/home/simon/Documents/video/$filename.mp4",
-    "/home/simon/Documents/video/$filename.gif", overwrite=true)
+    "/home/simon/Documents/video/$file_name.mp4",
+    "/home/simon/Documents/video/$file_name.gif", overwrite=true)

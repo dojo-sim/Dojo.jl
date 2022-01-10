@@ -1,11 +1,11 @@
 ################################################################################
 # Quadruped
 ################################################################################
-struct Quadruped end 
+struct Quadruped end
 
 function quadruped(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81, cf=0.8,
     damper=10.0, spring=0.0, info=nothing,
-    s::Int=1, contact::Bool=true, vis::Visualizer=Visualizer(),
+    s::Int=1, contact::Bool=true, vis::Visualizer=Visualizer(), name::Symbol=:robot,
     opts_step=InteriorPointOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5), opts_grad=InteriorPointOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5)) where T
 
     mechanism = getmechanism(:quadruped, Δt=dt, g=g, cf=cf, damper=damper, spring=spring)
@@ -13,7 +13,7 @@ function quadruped(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81, cf=0.8,
 
     if mode == :min
         nx = minCoordDim(mechanism)
-    elseif mode == :max 
+    elseif mode == :max
         nx = maxCoordDim(mechanism)
     end
     nu = 12
@@ -25,17 +25,17 @@ function quadruped(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81, cf=0.8,
     rng = MersenneTwister(s)
     z = getMaxState(mechanism)
     x = mode == :min ? max2min(mechanism, z) : z
-    fx = zeros(nx, nx) 
+    fx = zeros(nx, nx)
     fu = zeros(nx, nu)
 
     u_prev = zeros(nu)
-    control_mask = [zeros(nu, 6) I(nu)] 
+    control_mask = [zeros(nu, 6) I(nu)]
     control_scaling = Diagonal(ones(nu))
 
-    build_robot(vis, mechanism)
+    build_robot(vis, mechanism, name=name)
 
     TYPES = [Quadruped, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
-    Environment{TYPES...}(mechanism, mode, aspace, ospace, 
+    Environment{TYPES...}(mechanism, mode, aspace, ospace,
         x, fx, fu,
         u_prev, control_mask, control_scaling,
         nx, nu, no,

@@ -7,7 +7,7 @@ function ant(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     cf::T=0.5, spring::T=0.0, damper::T=1.0, s::Int=1,
     contact::Bool=true, contact_body=true,
     limits::Bool=true,
-    info=nothing, vis::Visualizer=Visualizer(),
+    info=nothing, vis::Visualizer=Visualizer(), name::Symbol=:robot,
     opts_step=InteriorPointOptions(), opts_grad=InteriorPointOptions()) where T
 
     mechanism = getant(Δt=dt, g=g, cf=cf, spring=spring, damper=damper,contact=contact, contact_body=contact_body, limits=limits)
@@ -36,7 +36,7 @@ function ant(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     control_mask = [zeros(8, 6) I(nu)]
     control_scaling = Diagonal(dt * 150.0 * ones(nu))
 
-    build_robot(vis, mechanism)
+    build_robot(vis, mechanism, name=name)
 
     TYPES = [Ant, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
     env = Environment{TYPES...}(mechanism, mode, aspace, ospace,

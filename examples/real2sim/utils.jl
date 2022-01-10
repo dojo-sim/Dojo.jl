@@ -139,8 +139,8 @@ function filenamebox(; N::Int=10, cf=0.1, radius=0., side=0.50)
     "box_dim_N:$(N)_cf:$(cf)_radius:$(radius)_side:$(side).jld2"
 end
 
-function filenamehardwarebox(; N::Int=10)
-    "hardwarebox_dim_N:$(N).jld2"
+function filenamehardwarebox(; N::Int=10, S::Int=1)
+    "hardwarebox_dim_N:$(N)_sample_S:$(S).jld2"
 end
 
 function initial_state(model::Symbol; kwargs...)

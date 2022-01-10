@@ -1,10 +1,10 @@
 ################################################################################
 # Hopper
 ################################################################################
-struct Cartpole end 
+struct Cartpole end
 
 function cartpole(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
-    s::Int=1, vis::Visualizer=Visualizer(), info=nothing,
+    s::Int=1, vis::Visualizer=Visualizer(), info=nothing, name::Symbol=:robot,
     opts_step=InteriorPointOptions(), opts_grad=InteriorPointOptions()) where T
 
     mechanism = getcartpole(Δt=dt, g=g)
@@ -12,7 +12,7 @@ function cartpole(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
 
     if mode == :min
         nx = minCoordDim(mechanism)
-    elseif mode == :max 
+    elseif mode == :max
         nx = maxCoordDim(mechanism)
     end
     nu = 1
@@ -26,23 +26,23 @@ function cartpole(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     z = getMaxState(mechanism)
     x = mode == :min ? max2min(mechanism, z) : z
 
-    fx = zeros(nx, nx) 
+    fx = zeros(nx, nx)
     fu = zeros(nx, nu)
 
     u_prev = zeros(nu)
     control_mask = [1.0 0.0]
 
-    build_robot(vis, mechanism)
+    build_robot(vis, mechanism, name=name)
 
     TYPES = [Cartpole, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
-    env = Environment{TYPES...}(mechanism, mode, aspace, ospace, 
+    env = Environment{TYPES...}(mechanism, mode, aspace, ospace,
         x, fx, fu,
         u_prev, control_mask,
         nx, nu, no,
         info,
         [rng], vis,
         opts_step, opts_grad)
-        
+
     return env
 end
 

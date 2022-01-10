@@ -4,7 +4,7 @@
 struct Pendulum end
 
 function pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
-        dt::T=0.05, g::T=-10.0, m::T=1.0, l::T=1.0, damper=0.0, s::Int=1, vis::Visualizer=Visualizer(),
+        dt::T=0.05, g::T=-10.0, m::T=1.0, l::T=1.0, damper=0.0, s::Int=1, vis::Visualizer=Visualizer(), name::Symbol=:robot,
         opts_step::InteriorPointOptions = InteriorPointOptions(),
         opts_grad::InteriorPointOptions = InteriorPointOptions()) where {T}
 
@@ -32,7 +32,7 @@ function pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
     u_prev = Inf * ones(nu)
     control_mask = ones(1,1)
     control_scaling = Diagonal(ones(nu))
-    build_robot(vis, mechanism)
+    build_robot(vis, mechanism, name=name)
 
     info = Dict(:max_speed => max_speed, :max_torque => max_torque)
 
