@@ -125,19 +125,3 @@ function is_done(::Environment{Hopper}, x)
     return done
 end
 
-
-
-#
-# env.x
-# i_torso = findfirst(body -> body.name == "torso", collect(env.mechanism.bodies))
-# z_torso = z[(i_torso-1)*13 .+ (1:13)]
-# x_velocity = z_torso[4]
-# z[3*13 + 4] = 324.0
-# z
-# setState!(env.mechanism, z)
-#
-# initialize!(env.mechanism, :hopper, x = 111.0, z = 1.0, θ=0.18)
-# x = getMinState(env.mechanism)
-# z = getMaxState(env.mechanism)
-# is_done(env, x)
-#

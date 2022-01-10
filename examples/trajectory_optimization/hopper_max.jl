@@ -1,4 +1,6 @@
+using Dojo
 using IterativeLQR
+using LinearAlgebra 
 
 # ## system
 dt = 0.05
@@ -6,7 +8,7 @@ gravity = -9.81
 env = make("raiberthopper", 
     mode=:max,
     dt=dt,
-    g=gravity)
+    g=gravity);
 
 # ## visualizer
 open(env.vis)
@@ -56,8 +58,8 @@ function goal(x, u, w)
     return [Δ[collect(1:6)]; Δ[collect(13 .+ (1:6))]]
 end
 
-cont = Constraint()
-conT = Constraint(goal, n, 0)
+cont = IterativeLQR.Constraint()
+conT = IterativeLQR.Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
 # ## problem
@@ -79,4 +81,8 @@ IterativeLQR.solve!(prob,
 
 # ## solution
 x_sol, u_sol = IterativeLQR.get_trajectory(prob)
-visualize(env, x_sol)
+visualize(env, [[x_sol[1] for t = 1:10]..., x_sol..., [x_sol[end] for t = 1:10]...])
+
+# ## ghost
+ghost(env, x_sol, timesteps=[1, 5, 7, 10, T])
+

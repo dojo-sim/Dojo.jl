@@ -1,3 +1,4 @@
+using Dojo
 using IterativeLQR
 using LinearAlgebra 
 

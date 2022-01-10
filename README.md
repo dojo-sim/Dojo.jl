@@ -18,6 +18,7 @@ A differentiable rigid-body-dynamics with contact simulator for robotics.
 <img src="examples/animations/cartpole_max.gif" alt="drawing" width="200"/>
 
 ### Hopper 
+<img src="examples/animations/cartpole_max.gif" alt="drawing" width="200"/>
 
 ### Quadruped 
 
