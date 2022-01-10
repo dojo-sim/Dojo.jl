@@ -157,7 +157,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N};
     env == "editor" ? (return render(vis)) : (return vis, animation)
 end
 
-function build_robot(vis::Visualizer, mechanism::Mechanism; name::Symbol=:robot) where {T,N}
+function build_robot(vis::Visualizer, mechanism::Mechanism; name::Symbol=:robot, color=nothing) where {T,N}
 
     bodies = mechanism.bodies
     origin = mechanism.origin
@@ -167,7 +167,10 @@ function build_robot(vis::Visualizer, mechanism::Mechanism; name::Symbol=:robot)
     setvisible!(vis["/Axes"],false)
 
     for (id,body) in enumerate(bodies)
-        shape = body.shape
+        shape = copy(body.shape)
+        if color !== nothing 
+            shape.color = color 
+        end
         visshape = convertshape(shape)
         subvisshape = nothing
         subvisframe = nothing

@@ -108,7 +108,8 @@ export Origin,
     mehrotra!,
     InteriorPointOptions,
 
-    Environment
+    Environment, 
+    getMinState
 
 # Utilities
 include(joinpath("util", "util.jl"))

@@ -3,10 +3,13 @@ getGlobalOrder() = (global METHODORDER; return METHODORDER)
 
 # Convenience functions
 @inline getx3(x2::SVector{3,T}, v25::SVector{3,T}, Δt::T) where {T} = x2 + v25 * Δt
-@inline getq3(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T) where {T} = q2 * ωbar(ϕ25, Δt) * Δt / 2
+# @inline getq3(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T) where {T} = q2 * ωbar(ϕ25, Δt) * Δt / 2
+@inline getq3(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T) where {T} = q2 * cayley(ϕ25)
 
 @inline getx3(state::State, Δt) = state.x2[1] + state.vsol[2]*Δt
-@inline getq3(state::State, Δt) = state.q2[1] * ωbar(state.ϕsol[2],Δt) * Δt / 2
+# @inline getq3(state::State, Δt) = state.q2[1] * ωbar(state.ϕsol[2],Δt) * Δt / 2
+@inline getq3(state::State, Δt) = state.q2[1] * cayley(state.ϕsol[2])
+
 
 @inline posargs1(state::State) = (state.x1, state.q1)
 @inline fullargs1(state::State) = (state.x1, state.v15, state.q1, state.ϕ15)
@@ -21,6 +24,22 @@ end
 
 @inline function ωbar(ω, Δt)
     return UnitQuaternion(sqrt(4 / Δt^2 - dot(ω, ω)), ω, false)
+end
+
+function cayley(ω) 
+    UnitQuaternion(1.0 / sqrt(1.0 + norm(ω)^2.0) * [1.0; ω], false)
+end
+
+function derivcayley(ω)
+    ω₁, ω₂, ω₃ = ω
+    a = sqrt(1.0 + sqrt(abs2(ω₁) + abs2(ω₂) + abs2(ω₃))^2.0)^-3
+    b = sqrt(1.0 + sqrt(abs2(ω₁) + abs2(ω₂) + abs2(ω₃))^2.0)^-1
+    SMatrix{4,3}([
+                 -ω₁*a -ω₂*a -ω₃*a; 
+                 (b - (ω₁^2)*a) (-ω₁ * ω₂ * a) (-ω₁ * ω₃ * a);
+                 (-ω₁ * ω₂ * a) (b - (ω₂^2)*a) (-ω₂ * ω₃ * a);
+                 (-ω₁ * ω₃ * a) (-ω₂ * ω₃ * a) (b - (ω₃^2)*a);
+                 ])
 end
 
 @inline function setForce!(state::State, F, τ)
@@ -42,7 +61,8 @@ end
     ϕ15 = state.ϕ15
 
     state.x1 = x2 - v15*Δt
-    state.q1 = q2 * ωbar(-ϕ15,Δt) * Δt / 2
+    # state.q1 = q2 * ωbar(-ϕ15,Δt) * Δt / 2
+    state.q1 = q2 * cayley(-ϕ15)
 
     state.F2[1] = szeros(T,3)
     state.τ2[1] = szeros(T,3)
@@ -69,7 +89,8 @@ end
     state.ϕ15 = state.ϕsol[2]
 
     state.x2[1] = state.x2[1] + state.vsol[2]*Δt
-    state.q2[1] = state.q2[1] * ωbar(state.ϕsol[2],Δt) * Δt / 2
+    # state.q2[1] = state.q2[1] * ωbar(state.ϕsol[2],Δt) * Δt / 2
+    state.q2[1] = state.q2[1] * cayley(state.ϕsol[2])
 
     state.F2[1] = szeros(T,3)
     state.τ2[1] = szeros(T,3)
@@ -103,7 +124,9 @@ end
 function ∂integration(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T) where {T}
     Δ = Δt * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
     X = hcat(Δ, szeros(T,3,3))
-    Q = hcat(szeros(T,4,3), Lmat(q2)*derivωbar(ϕ25, Δt) * Δt/2)
+    # Q = hcat(szeros(T,4,3), Lmat(q2)*derivωbar(ϕ25, Δt) * Δt/2)
+    Q = hcat(szeros(T,4,3), Lmat(q2)*derivcayley(ϕ25))
+
     return svcat(X, Q) # 7x6
 end
 
@@ -116,11 +139,13 @@ function ∂integrator∂v(Δt::T) where {T}
 end
 
 function ∂integrator∂q(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T; attjac::Bool = true) where {T}
-    M = Rmat(ωbar(ϕ25, Δt) * Δt/2)
+    # M = Rmat(ωbar(ϕ25, Δt) * Δt/2)
+    M = Rmat(cayley(ϕ25))
     attjac && (M *= LVᵀmat(q2))
     return M
 end
 
 function ∂integrator∂ϕ(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T) where {T}
-    return Lmat(q2) * derivωbar(ϕ25, Δt) * Δt/2
+    # return Lmat(q2) * derivωbar(ϕ25, Δt) * Δt/2
+    return Lmat(q2) * derivcayley(ϕ25)
 end

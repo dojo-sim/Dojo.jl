@@ -1,4 +1,5 @@
 using IterativeLQR
+using LinearAlgebra 
 
 # ## system
 gravity = -9.81
@@ -9,7 +10,7 @@ env = make("cartpole",
     g=gravity);
 
 # ## visualizer 
-open(env.vis)
+open(env.vis) 
 
 # ## dimensions
 n = env.nx
@@ -50,14 +51,14 @@ function goal(x, u, w)
     Δ = x - zT
 end
 
-cont = Constraint()
-conT = Constraint(goal, n, 0)
+cont = IterativeLQR.Constraint()
+conT = IterativeLQR.Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
 # ## problem 
-prob = problem_data(model, obj, cons)
-initialize_controls!(prob, ū)
-initialize_states!(prob, x̄)
+prob = IterativeLQR.problem_data(model, obj, cons)
+IterativeLQR.initialize_controls!(prob, ū)
+IterativeLQR.initialize_states!(prob, x̄)
 
 # ## solve
 IterativeLQR.solve!(prob,
@@ -71,5 +72,10 @@ IterativeLQR.solve!(prob,
     ρ_scale=10.0,
     verbose=true)
 
-x_sol, u_sol = get_trajectory(prob)
-visualize(env, x_sol)
+# ## solution
+z_sol, u_sol = IterativeLQR.get_trajectory(prob)
+visualize(env, z_sol)
+
+# ## ghost
+ghost(env, z_sol)
+

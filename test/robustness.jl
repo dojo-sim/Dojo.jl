@@ -1,7 +1,7 @@
 @testset "Robustness: Chucking Box" begin
     for Δt in [0.10, 0.05, 0.01, 0.005]
         mech = getmechanism(:box, Δt = Δt, g = -9.81, cf = 0.1)
-        initialize!(mech, :box, x=[0,0,0.5], v=[1,1.5,1.], ω=[5,4,2.])
+        initialize!(mech, :box, x=[0,0,0.5], v=[1,1.5,1.], ω=[5,4,2.] .* Δt)
         storage = simulate!(mech, 5.0, record=true,
             opts=InteriorPointOptions(btol=1e-6, rtol=1e-6, verbose=false))
         # visualize(mech, storage, vis=vis)

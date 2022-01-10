@@ -49,7 +49,8 @@ end
 
     X, Q = ∂g∂pos(bound, x2, q2, λ)
     V = X * Δt
-    Ω = Q * Lmat(q1) * derivωbar(ω1, Δt) * Δt / 2
+    # Ω = Q * Lmat(q1) * derivωbar(ω1, Δt) * Δt / 2
+    Ω = Q * Lmat(q1) * derivcayley(ω1)
 
     return [V Ω]
 end
