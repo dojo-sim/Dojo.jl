@@ -10,13 +10,12 @@ A differentiable rigid-body-dynamics with contact simulator for robotics.
 
 ### Dzhanibekov Effect
 
-### Tippe Top
+### Astronaut
 
 ## Trajectory Optimization 
 
-### Pendulum 
-
 ### Cart-pole 
+<img src="examples/animations/cartpole_max.gif" alt="drawing" width="200"/>
 
 ### Hopper 
 
@@ -27,7 +26,6 @@ A differentiable rigid-body-dynamics with contact simulator for robotics.
 ### Half Cheetah 
 
 ### Ant
-
 
 ## Real-To-Sim
 

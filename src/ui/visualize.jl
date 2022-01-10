@@ -167,7 +167,7 @@ function build_robot(vis::Visualizer, mechanism::Mechanism; name::Symbol=:robot,
     setvisible!(vis["/Axes"],false)
 
     for (id,body) in enumerate(bodies)
-        shape = copy(body.shape)
+        shape = deepcopy(body.shape)
         if color !== nothing 
             shape.color = color 
         end

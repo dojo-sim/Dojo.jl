@@ -6,7 +6,7 @@ gravity = -9.81
 env = make("raiberthopper", 
     mode=:max,
     dt=dt,
-    g=gravity);
+    g=gravity)
 
 # ## visualizer
 open(env.vis)
