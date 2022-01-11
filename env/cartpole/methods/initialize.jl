@@ -14,7 +14,7 @@ function getcartpole(; Δt::T=0.1, g::T=-9.81, spring=0.0, damper=0.0) where {T}
     origin = Origin{Float64}()
     # slider = Box(width, slider_length, height, slider_mass)
     # pendulum = Box(width, depth, pendulum_length, pendulum_mass)
-    slider = Capsule(radius, slider_length, slider_mass, qoffset=UnitQuaternion(RotX(0.5 * π)))
+    slider = Capsule(1.5 * radius, slider_length, slider_mass, qoffset=UnitQuaternion(RotX(0.5 * π)))
     pendulum = Capsule(radius, pendulum_length, pendulum_mass)
     links = [slider, pendulum]
 

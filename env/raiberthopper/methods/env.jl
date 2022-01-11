@@ -82,6 +82,9 @@ function visualize(env::Environment{RaibertHopper}, traj::Vector{Vector{T}}; nam
     # convert to maximal representation
     z = [env.mode == :min ? min2max(env.mechanism, x) : x for x in traj]
 
+    body_color = RGBA(0.0, 0.0, 0.0, 1.0)
+    foot_color = RGBA(1.0, 165.0 / 255.0, 0.0, 1.0) 
+
     # build system
     build_robot(env.vis, env.mechanism, name=name)
 
