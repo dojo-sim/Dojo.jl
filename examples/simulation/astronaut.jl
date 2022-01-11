@@ -98,17 +98,9 @@ MeshCat.setanimation!(vis, anim)
 setvisible!(vis["/Axes"], false)
 setvisible!(vis["/Grid"], false)
 
-# Ghost 
-vis = Visualizer()
-open(vis)
-timesteps = [1, 175, T] 
-for t in timesteps 
-    name = Symbol("astronaut_$t")
-    color = (t != T ? RGBA(255.0/255.0,0.0,255.0,0.25) : RGBA(255.0/255.0,0.0,255.0,1.0))
-    build_robot(vis, mech, color=color, name=name)
-    set_robot(vis, mech, z[t], name=name)
-end
-
+# Ghost
+t = 400 # 225, 150, 1
+set_robot(vis, mech, z[t])
 ##########
 
 dojo_tratios, dojo_drifts = energy_drift_experiment(vis)

@@ -15,6 +15,9 @@ A differentiable rigid-body-dynamics with contact simulator for robotics.
 ### Astronaut
 <img src="examples/animations/astronaut.gif" alt="drawing" width="200"/>
 
+### Atlas drop 
+<img src="examples/animations/atlas_drop.gif" alt="drawing" width="200"/>
+
 ## Trajectory Optimization 
 
 ### Cart-pole 

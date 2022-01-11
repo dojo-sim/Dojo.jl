@@ -174,7 +174,11 @@ function build_robot(vis::Visualizer, mechanism::Mechanism; name::Symbol=:robot,
                     shape.shape[i].color = color 
                 end
             else
-                shape.color = color 
+                if shape isa EmptyShape 
+                    nothing 
+                else
+                    shape.color = color 
+                end
             end
         end
         visshape = convertshape(shape)

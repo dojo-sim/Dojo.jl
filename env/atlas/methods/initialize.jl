@@ -32,10 +32,10 @@ function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0, d
         names = ["RR", "FR", "RL", "RR"]
 
         contineqcs1 = contactconstraint(getbody(mech, "l_foot"), normal, cf, p = contacts, offset=offset, names = "l_" .* names)
-        # contineqcs2 = contactconstraint(getbody(mech, "r_foot"), normal, cf, p = contacts, offset=offset, names = "r_" .* names)
+        contineqcs2 = contactconstraint(getbody(mech, "r_foot"), normal, cf, p = contacts, offset=offset, names = "r_" .* names)
 
         setPosition!(mech, geteqconstraint(mech, "auto_generated_floating_joint"), [0;0;0.9385;0.;0.;0.])
-        mech = Mechanism(origin, bodies, eqs, contineqcs1, g = g, Δt = Δt, spring=spring, damper=damper)
+        mech = Mechanism(origin, bodies, eqs, [contineqcs1; contineqcs2], g = g, Δt = Δt, spring=spring, damper=damper)
     end
     return mech
 end
