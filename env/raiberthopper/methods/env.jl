@@ -84,6 +84,8 @@ function visualize(env::Environment{RaibertHopper}, traj::Vector{Vector{T}}; nam
 
     body_color = RGBA(0.0, 0.0, 0.0, 1.0)
     foot_color = RGBA(1.0, 165.0 / 255.0, 0.0, 1.0) 
+    env.mechanism.bodies[3].shape.color = body_color 
+    env.mechanism.bodies[4].shape.color = foot_color 
 
     # build system
     build_robot(env.vis, env.mechanism, name=name)
@@ -93,7 +95,7 @@ function visualize(env::Environment{RaibertHopper}, traj::Vector{Vector{T}}; nam
     for i = 1:n_leg
         setobject!(env.vis["leg$i"], GeometryBasics.Sphere(Point3f0(0),
             convert(Float32, r_leg)),
-            MeshPhongMaterial(color=RGBA(0.75, 0.75, 0.75, 1.0)))
+            MeshPhongMaterial(color=RGBA(0.0, 0.0, 0.0, 1.0)))
     end
 
     # animate
@@ -125,6 +127,12 @@ function ghost(env::Environment{RaibertHopper}, traj::Vector{Vector{T}}; timeste
     # convert to maximal representation
     z = [env.mode == :min ? min2max(env.mechanism, x) : x for x in traj]
 
+    # color 
+    body_color = RGBA(0.0, 0.0, 0.0, 1.0)
+    foot_color = RGBA(1.0, 165.0 / 255.0, 0.0, 1.0) 
+    env.mechanism.bodies[3].shape.color = body_color 
+    env.mechanism.bodies[4].shape.color = foot_color 
+
     for t in timesteps
         # build system
         build_robot(env.vis, env.mechanism, name=Symbol("robot_$t"), color=(t == length(z) ? nothing : RGBA(0.75, 0.75, 0.75, 0.25)))
@@ -134,7 +142,7 @@ function ghost(env::Environment{RaibertHopper}, traj::Vector{Vector{T}}; timeste
         x_foot = z[t][13 .+ (1:3)] 
 
         leg = GeometryBasics.Cylinder(Point3f0(x_foot...), Point3f0(x_body...), convert(Float32, 0.025))
-        setobject!(env.vis["leg_$t"], leg, MeshPhongMaterial(color=(t == length(z) ? RGBA(0.75, 0.75, 0.75, 1.0) : RGBA(0.75, 0.75, 0.75, 0.25))))
+        setobject!(env.vis["leg_$t"], leg, MeshPhongMaterial(color=(t == length(z) ? RGBA(0.0, 0.0, 0.0, 1.0) : RGBA(0.0, 0.0, 0.0, 0.25))))
     end
     setvisible!(env.vis[:robot], false)
 
