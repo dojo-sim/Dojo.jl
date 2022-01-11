@@ -6,13 +6,14 @@ A differentiable rigid-body-dynamics with contact simulator for robotics.
 
 ## Simulation 
 
-### Friction Cone Comparison 
-<img src="examples/animations/friction_sim_no_grid.gif" alt="drawing" width="200"/>
+### Friction-cone comparison 
+<img src="examples/animations/friction_sim_no_grid.gif" alt="drawing" width="400"/>
 
-### Dzhanibekov Effect
+### Dzhanibekov effect
 <img src="examples/animations/dzhanibekov.gif" alt="drawing" width="200"/>
 
 ### Astronaut
+<img src="examples/animations/astronaut.gif" alt="drawing" width="200"/>
 
 ## Trajectory Optimization 
 

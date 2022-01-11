@@ -5,8 +5,8 @@ open(vis)
 const Dojo = Main
 
 # Data
-ϵ0 = 1e-14
-Δt0 = 1e-2
+ϵ0 = 1.0e-14
+Δt0 = 0.01
 start0 = Int(floor(1/Δt0)) + 1
 
 # Controller
@@ -33,11 +33,14 @@ nocontrol!(mechanism, k) = controller!(mechanism, k, U = 0.0)
 
 function energy_drift(vis::Visualizer; Δt = 1e-2, tsim = 1.0, g = 0.0,
         spring = 0.0, damper = 0.0, seed::Int = 100, ϵ = 1e-14, display::Bool = true)
+    
     start = Int(floor(1/Δt)) + 1
+
     # Test mechanical energy conservation after one second of simulation
     Random.seed!(seed)
-    mech = getmechanism(:humanoid, Δt = Δt, g = g, spring = spring, damper = damper, contact = false)
+    mech = getmechanism(:humanoid, Δt=Δt, g=g, spring=spring, damper=damper, contact=false)
     initialize!(mech, :humanoid)
+
     # Initialize bodies with random 1m/s velocities
     for body in mech.bodies
         v = rand(3) .- 0.5
@@ -45,8 +48,8 @@ function energy_drift(vis::Visualizer; Δt = 1e-2, tsim = 1.0, g = 0.0,
         setVelocity!(body, v = v)
     end
 
-    tcompute = @elapsed storage = simulate!(mech, tsim + 1.0, nocontrol!, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ)
-    display && visualize(mech, downsample(storage, 1), vis = vis)
+    tcompute = @elapsed storage = simulate!(mech, tsim + 1.0, nocontrol!, record=true, opts=InteriorPointOptions(rtol=ϵ, btol=ϵ))
+    display && visualize(mech, downsample(storage, 1), vis=vis)
 
     ke = Dojo.kineticEnergy(mech, storage)[start:end]
     pe = Dojo.potentialEnergy(mech, storage)[start:end]
@@ -56,9 +59,8 @@ function energy_drift(vis::Visualizer; Δt = 1e-2, tsim = 1.0, g = 0.0,
     display && plot([(i-1)*Δt for i in 1:length(pe)], pe .- pe[1])
     display && plot([(i-1)*Δt for i in 1:length(me)], me .- me[1])
 
-    return ke, pe, me, (tsim + 1.0)/tcompute
+    return ke, pe, me, (tsim + 1.0)/tcompute, mech, storage
 end
-
 
 function energy_drift_experiment(vis::Visualizer; Δts = exp.(Vector(-1.4:-0.2:-4.0) .* log(10)))
     N = length(Δts)
@@ -74,11 +76,40 @@ function energy_drift_experiment(vis::Visualizer; Δts = exp.(Vector(-1.4:-0.2:-
     return tratios, drifts
 end
 
-ke, pe, me, tratio = energy_drift(vis, Δt = 1e-2)
+ke, pe, me, tratio, mech, storage = energy_drift(vis, Δt = 1e-2)
 norm((me .- me[1]) ./ mean(me), Inf)
 abs(me[end] .- me[1]) / mean(me)
-tratio
 
+
+##########
+# Visualization 
+color = RGBA(255.0/255.0,0.0,255.0,1.0);
+z = getMaxState(storage)
+z = [[z[1] for t = 1:100]..., z..., [z[end] for t = 1:100]...]
+build_robot(vis, mech, color=color)
+T = length(z) 
+anim = MeshCat.Animation(convert(Int, floor(1.0 / Δt0)))
+for t = 1:T
+    MeshCat.atframe(anim, t) do
+        set_robot(vis, mech, z[t])
+    end
+end
+MeshCat.setanimation!(vis, anim)
+setvisible!(vis["/Axes"], false)
+setvisible!(vis["/Grid"], false)
+
+# Ghost 
+vis = Visualizer()
+open(vis)
+timesteps = [1, 175, T] 
+for t in timesteps 
+    name = Symbol("astronaut_$t")
+    color = (t != T ? RGBA(255.0/255.0,0.0,255.0,0.25) : RGBA(255.0/255.0,0.0,255.0,1.0))
+    build_robot(vis, mech, color=color, name=name)
+    set_robot(vis, mech, z[t], name=name)
+end
+
+##########
 
 dojo_tratios, dojo_drifts = energy_drift_experiment(vis)
 mujoco_tratios = [0.5, 10, 100, 500]

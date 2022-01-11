@@ -169,7 +169,13 @@ function build_robot(vis::Visualizer, mechanism::Mechanism; name::Symbol=:robot,
     for (id,body) in enumerate(bodies)
         shape = deepcopy(body.shape)
         if color !== nothing 
-            shape.color = color 
+            if shape isa Shapes 
+                for i = 1:length(shape.shape) 
+                    shape.shape[i].color = color 
+                end
+            else
+                shape.color = color 
+            end
         end
         visshape = convertshape(shape)
         subvisshape = nothing
