@@ -3,10 +3,11 @@ function getbox(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, radius = 0.0, side =
     conetype = :soc,
     # conetype = :impact,
     # conetype = :linear,
+    color=RGBA(1.0, 0.0, 0.0, 1.0),
     mode = :box)  where {T}
     # Parameters
     origin = Origin{T}()
-    link1 = Box(side, side, side, 1., color = RGBA(1., 1., 0.))
+    link1 = Box(side, side, side, 1., color=color)
     joint0to1 = EqualityConstraint(Floating(origin, link1))
     links = [link1]
     eqcs = [joint0to1]
@@ -41,7 +42,7 @@ function getbox(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, radius = 0.0, side =
             impineqcs = impactconstraint(link1, normal, p = corners, offset=offset)
             mech = Mechanism(origin, links, eqcs, impineqcs, g = g, Δt = Δt)
         elseif conetype == :linear
-            linineqcs = linearcontactconstraint(link1, normal, cf, p = corners, offset=offset)
+            linineqcs = linearcontactconstraint(link1, normal, cf, p=corners, offset=offset)
             mech = Mechanism(origin, links, eqcs, linineqcs, g = g, Δt = Δt)
         else
             error("Unknown conetype")

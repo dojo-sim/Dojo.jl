@@ -7,6 +7,7 @@ A differentiable rigid-body-dynamics with contact simulator for robotics.
 ## Simulation 
 
 ### Friction Cone Comparison 
+<img src="examples/animations/friction_sim_no_grid.gif" alt="drawing" width="200"/>
 
 ### Dzhanibekov Effect
 <img src="examples/animations/dzhanibekov.gif" alt="drawing" width="200"/>
