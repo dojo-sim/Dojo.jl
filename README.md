@@ -31,6 +31,7 @@ A differentiable rigid-body-dynamics with contact simulator for robotics.
 ## Reinforcement Learning 
 
 ### Half Cheetah 
+<img src="examples/animations/halfcheetah_ars.gif" alt="drawing" width="200"/>
 
 ### Ant
 
