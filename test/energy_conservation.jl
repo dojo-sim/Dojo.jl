@@ -86,7 +86,7 @@ spring0 = 1.0
 damper0 = 0.0
 mech = getmechanism(:pendulum, Δt=Δt0, g=g0, spring=spring0, damper=damper0)
 ϕ0 = 0.9π
-ω0 = 1.0
+ω0 = 2π
 
 initialize!(mech, :pendulum, ϕ1=ϕ0, ω1=ω0)
 storage = simulate!(mech, 5.0, controller!, record=true, verbose=false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
@@ -247,7 +247,7 @@ mech = getmechanism(:humanoid, Δt = Δt0, g = g0, spring = spring0, damper = da
 initialize!(mech, :humanoid)
 bodies = collect(mech.bodies)
 for body in mech.bodies
-    setVelocity!(body, ω = 0.05*rand(3))
+    setVelocity!(body, ω = 0.5*rand(3))
     # setVelocity!(body, v = 1.0*rand(3))
 end
 
@@ -283,7 +283,7 @@ damper0 = 0.0
 mech = getmechanism(:atlas, Δt = Δt0, g = g0, spring = spring0, damper = damper0, contact = false)
 initialize!(mech, :atlas)
 bodies = collect(mech.bodies)
-setVelocity!.(bodies, ω = 1.0e-2*rand(3))
+setVelocity!.(bodies, ω = 1.0*rand(3))
 
 storage = simulate!(mech, 5.0, humanoid_controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
@@ -340,7 +340,7 @@ me0 = mechanicalEnergy(mech, storage)[start0:end]
 
 # Test mechanical energy conservation
 @testset "Energy: Quadruped" begin
-    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 2e-3
+    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-3
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
 
@@ -371,7 +371,7 @@ mech = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0
     jointtype = :Revolute, contact = false, r = 0.05)
 
 v0 = 10.0 * [1, 2, 3] * Δt0
-ω0 = 1.0 * [1, 2, 3] * Δt0
+ω0 = 10.0 * [1, 2, 3] * Δt0
 q10 = UnitQuaternion(RotX(0.5*π))
 
 initialize!(mech, :snake, q1 = q10, v = v0, ω = ω0)
@@ -399,7 +399,7 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
             jointtype = jointtype, contact = false, r = 0.05)
 
         v0 = 10.0 * [1, 2, 3] * Δt0
-        ω0 = 1.0 * [1, 2, 3] * Δt0
+        ω0 = 10.0 * [1, 2, 3] * Δt0
         q10 = UnitQuaternion(RotX(0.5*π))
 
         initialize!(mech, :snake, q1 = q10, v = v0, ω = ω0)
@@ -436,7 +436,7 @@ mech = getmechanism(:twister, Δt = Δt0, g = g0, Nlink = Nlink0, spring = sprin
     jointtype = :Revolute, contact = false, r = 0.05)
 
 v0 = 10.0 * [1, 2, 3] * Δt0
-ω0 = 1.0 * [1, 2, 3] * Δt0
+ω0 = 10.0 * [1, 2, 3] * Δt0
 q10 = UnitQuaternion(RotX(0.5*π))
 
 initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0)
@@ -463,8 +463,8 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
         mech = getmechanism(:twister, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
             jointtype = jointtype, contact = false, r = 0.05)
 
-        v0 = 1.0 * [1, 2, 3] * Δt0
-        ω0 = 1.0 * [1, 2, 3] * Δt0
+        v0 = 10.0 * [1, 2, 3] * Δt0
+        ω0 = 10.0 * [1, 2, 3] * Δt0
         q10 = UnitQuaternion(RotX(0.5*π))
 
         initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0)
@@ -480,7 +480,7 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
         # plot([(i-1)*Δt0 for i in 1:length(me0)], me0 .- me0[1])
 
         # Test mechanical energy conservation
-        @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-1
+        @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-2
         norm((me0 .- me0[1]) ./ mean(me0), Inf)
     end
 end

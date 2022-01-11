@@ -194,7 +194,6 @@ function build_robot(vis::Visualizer, mechanism::Mechanism; name::Symbol=:robot,
 end
 
 function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T}; name::Symbol=:robot) where {T,N}
-
     bodies = mechanism.bodies
     origin = mechanism.origin
 

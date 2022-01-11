@@ -1,25 +1,32 @@
-# Open visualizer
-vis = Visualizer()
-open(vis)
-
 ################################################################################
 # Dzhanibekov effect
 ################################################################################
+using Dojo 
+
+# ## Visualizers
 vis = Visualizer()
 open(vis)
 
-Δt0 = 0.01
-g0 = 0.0
-mech = getmechanism(:dzhanibekov, Δt=Δt0, g=g0);
+# ## Simulation
+timestep = 0.01
+gravity = 0.0
+mech = getdzhanibekov(Δt=timestep, g=gravity);
+initializedzhanibekov!(mech, ω=[15.0; 0.01; 0.0])
+storage = simulate!(mech, 3.75, record=true, verbose=false)
 
-bodies = collect(mech.bodies)
-bodies[1].m
-bodies[2].m = 0.1
-bodies[1].J = Diagonal([1.0, 1.1, 1.0])
-bodies[2].J
-
-initialize!(mech, :dzhanibekov, x=[0.,0.,0.], v = [0.,0.,0.], q=UnitQuaternion(1.,0.,0.,0.), ω = [10.0, 0.01,0.0])
-
-
-storage = simulate!(mech, 5.0, record=true, verbose=false)
+# ## Simulation
 visualize(mech, storage, vis=vis)
+
+# ## Ghost
+MeshCat.settransform!(vis["/Cameras/default"],
+        MeshCat.compose(MeshCat.Translation(2.0, 1.0, -1.0), MeshCat.LinearMap(Rotations.RotZ(1.0 * pi))))
+setprop!(vis["/Cameras/default/rotated/<object>"], "zoom", 1)
+z_sim = getMaxState(storage)
+timesteps = [1, 5, 10, 15, 20] .+ 150
+
+for t in timesteps 
+    name = Symbol("robot_$t")
+    build_robot(vis, mech, name=name, color=(t == timesteps[end] ? nothing : RGBA(1.0, 0.0, 0.0, 0.25)))
+    z = z_sim[t] 
+    set_robot(vis, mech, z, name=name)
+end

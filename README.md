@@ -9,6 +9,7 @@ A differentiable rigid-body-dynamics with contact simulator for robotics.
 ### Friction Cone Comparison 
 
 ### Dzhanibekov Effect
+<img src="examples/animations/dzhanibekov.gif" alt="drawing" width="200"/>
 
 ### Astronaut
 
@@ -18,7 +19,7 @@ A differentiable rigid-body-dynamics with contact simulator for robotics.
 <img src="examples/animations/cartpole_max.gif" alt="drawing" width="200"/>
 
 ### Hopper 
-<img src="examples/animations/cartpole_max.gif" alt="drawing" width="200"/>
+<img src="examples/animations/hopper_max.gif" alt="drawing" width="200"/>
 
 ### Quadruped 
 
