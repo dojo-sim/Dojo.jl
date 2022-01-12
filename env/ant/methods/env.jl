@@ -109,8 +109,8 @@ end
 
 function reset(env::Environment{Ant};
     x=nothing,
-    pos_noise=Distributions.Uniform(-0.1, 0.1),
-    vel_noise=Distributions.Normal(0.0, 0.01))
+    pos_noise=Uniform(-0.1, 0.1),
+    vel_noise=Normal(0.0, 0.01))
 
     initialize!(env.mechanism, type2symbol(Ant))
 

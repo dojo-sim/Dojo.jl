@@ -24,16 +24,17 @@ A differentiable rigid-body-dynamics with contact simulator for robotics.
 <img src="examples/animations/cartpole_max.gif" alt="drawing" width="200"/>
 
 ### Hopper 
-<img src="examples/animations/hopper_max.gif" alt="drawing" width="200"/>
+<img src="examples/animations/hopper_max.gif" alt="drawing" width="150"/>
 
 ### Quadruped 
 
 ## Reinforcement Learning 
 
 ### Half Cheetah 
-<img src="examples/animations/halfcheetah_ars.gif" alt="drawing" width="200"/>
+<img src="examples/animations/halfcheetah_ars.gif" alt="drawing" width="600"/>
 
 ### Ant
+<img src="examples/animations/ant_ars.gif" alt="drawing" width="300"/>
 
 ## Real-To-Sim
 
