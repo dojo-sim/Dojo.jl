@@ -1,5 +1,5 @@
-[![CI](https://github.com/DojoSim/Dojo.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/DojoSim/Dojo.jl/actions/workflows/CI.yml)
-[![codecov](https://codecov.io/gh/DojoSim/Dojo.jl/branch/master/graph/badge.svg?token=NMS3JQZ2OE)](https://codecov.io/gh/DojoSim/Dojo.jl) 
+[![CI](https://github.com/dojo-sim/Dojo.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/dojo-sim/Dojo.jl/actions/workflows/CI.yml)
+[![codecov](https://codecov.io/gh/dojo-sim/Dojo.jl/branch/master/graph/badge.svg?token=NMS3JQZ2OE)](https://codecov.io/gh/dojo-sim/Dojo.jl) 
 
 # Dojo
 A differentiable rigid-body-dynamics with contact simulator for robotics.
@@ -31,10 +31,10 @@ A differentiable rigid-body-dynamics with contact simulator for robotics.
 ## Reinforcement Learning 
 
 ### Half Cheetah 
-<!-- <img src="examples/animations/halfcheetah_ars.gif" alt="drawing" width="600"/> -->
+<img src="examples/animations/halfcheetah_ars.gif" alt="drawing" width="600"/>
 
 ### Ant
-<!-- <img src="examples/animations/ant_ars.gif" alt="drawing" width="300"/> -->
+<img src="examples/animations/ant_ars.gif" alt="drawing" width="300"/>
 
 ## Real-To-Sim
 
