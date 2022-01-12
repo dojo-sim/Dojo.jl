@@ -17,7 +17,7 @@ end
 """
     Linear and angular momentum of a body using Legendre transform.
 """
-function momentum_body_new(mechanism::Mechanism{T}, body::Body{T}) where {T}
+function momentum_body(mechanism::Mechanism{T}, body::Body{T}) where {T}
     Δt = mechanism.Δt
 
     state = body.state
@@ -31,7 +31,6 @@ function momentum_body_new(mechanism::Mechanism{T}, body::Body{T}) where {T}
     D1q =   2/Δt * LVᵀmat(q1)' * Tmat() * Rmat(q2)' * Vᵀmat() * body.J * Vmat() * Lmat(q1)' * vector(q2)
     D2q =   2/Δt * LVᵀmat(q3)' * Lmat(q2) * Vᵀmat() * body.J * Vmat() * Lmat(q2)' * vector(q3)
 
-
     p_linear_body = D2x - 0.5 * state.F2[1]
     p_angular_body = D2q - 0.5 * state.τ2[1]
 
@@ -39,15 +38,6 @@ function momentum_body_new(mechanism::Mechanism{T}, body::Body{T}) where {T}
     for (i, eqc) in enumerate(mechanism.eqconstraints)
         if body.id ∈ [eqc.parentid; eqc.childids]
 
-            # λ = []
-            # for (i, joint) in enumerate(eqc.constraints)
-            #     λi = eqc.λsol[2][λindex(eqc, i)]
-            #     si, γi = get_sγ(joint, λi)
-            #     push!(λ, λi[1:length(joint)])
-            #     push!(λ, γi)
-            # end
-
-            # f_joint = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * vcat(λ...)  # computed at 1.5
             f_joint = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]  # computed at 1.5
             eqc.isspring && (f_joint += springforce(mechanism, eqc, body)) # computed at 1.5
             eqc.isdamper && (f_joint += damperforce(mechanism, eqc, body)) # computed at 1.5
@@ -67,10 +57,9 @@ function momentum(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, storage::Storage{T,Ns}, t
     mass = total_mass(mechanism)
     p_linear_body = []
     p_angular_body = []
-    for body in mechanism.bodies
-        p = momentum_body_new(mechanism, body)
-        push!(p_linear_body, p[1:3])
-        push!(p_angular_body, p[4:6])
+    for (ind, body) in enumerate(mechanism.bodies)
+        push!(p_linear_body, storage.px[ind][t])
+        push!(p_angular_body, storage.pq[ind][t])
     end
 
     p_linear = sum(p_linear_body)

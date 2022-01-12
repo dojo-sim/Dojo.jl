@@ -55,7 +55,7 @@ env = make("ant", vis = vis, mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=30
 vis = Visualizer()
 open(env.vis)
 setvisible!(env.vis[:robot], false)
-timesteps = [1, T] 
+timesteps = [1, 70, 110, 150, T] 
 for t in timesteps
     name = Symbol("robot_$t")
     color = (t == T ? RGBA(51.0 / 255.0, 1.0, 1.0, 1.0) : RGBA(51.0 / 255.0, 1.0, 1.0, 0.25))
