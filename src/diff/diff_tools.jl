@@ -342,16 +342,24 @@ function ∂body∂z(body::Body{T}, Δt::T; attjac::Bool = true) where T
     AposT = [-I Z3]
     AvelT = [Z3 -I*body.m] # solving for impulses
 
-    AposR = [-∂integrator∂q(q2, ϕ25, Δt, attjac = attjac) szeros(4,3)]
+    # AposR = [-∂integrator∂q(q2, ϕ25, Δt, attjac = attjac) szeros(4,3)]
 
+    # J = body.J
+    
+    # rot_q1(q) = 2/Δt * LVᵀmat(UnitQuaternion(q..., false))' * Tmat() * Rmat(q2)' * Vᵀmat() * body.J * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(q2)
+    # rot_q2(q) = 2/Δt * LVᵀmat(getq3(UnitQuaternion(q..., false), state.ϕsol[2], Δt))' * Lmat(UnitQuaternion(q..., false)) * Vᵀmat() * body.J * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(getq3(UnitQuaternion(q..., false), state.ϕsol[2], Δt)) + 2/Δt * LVᵀmat(getq3(UnitQuaternion(q..., false), -state.ϕ15, Δt))' * Tmat() * Rmat(UnitQuaternion(q..., false))' * Vᵀmat() * body.J * Vmat() * Lmat(getq3(UnitQuaternion(q..., false), -state.ϕ15, Δt))' * q
+    # dynR_ϕ15 = -1.0 * FiniteDiff.finite_difference_jacobian(rot_q1, vector(q1)) * ∂integrator∂ϕ(q2, -state.ϕ15, Δt)
+    # dynR_q2 = FiniteDiff.finite_difference_jacobian(rot_q2, vector(q2))
+    # AvelR = attjac ? [dynR_q2 * LVᵀmat(q2) dynR_ϕ15] : [dynR_q2 dynR_ϕ15]
+    
+    AposR = attjac ? [-Rmat(ωbar(state.ϕ15, Δt)*Δt/2)*LVᵀmat(state.q1) -Lmat(state.q1)*derivωbar(state.ϕ15, Δt)*Δt/2] : [-Rmat(ωbar(state.ϕ15, Δt)*Δt/2) -Lmat(state.q1)*derivωbar(state.ϕ15, Δt)*Δt/2]
     J = body.J
-    
-    rot_q1(q) = 2/Δt * LVᵀmat(UnitQuaternion(q..., false))' * Tmat() * Rmat(q2)' * Vᵀmat() * body.J * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(q2)
-    rot_q2(q) = 2/Δt * LVᵀmat(getq3(UnitQuaternion(q..., false), state.ϕsol[2], Δt))' * Lmat(UnitQuaternion(q..., false)) * Vᵀmat() * body.J * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(getq3(UnitQuaternion(q..., false), state.ϕsol[2], Δt)) + 2/Δt * LVᵀmat(getq3(UnitQuaternion(q..., false), -state.ϕ15, Δt))' * Tmat() * Rmat(UnitQuaternion(q..., false))' * Vᵀmat() * body.J * Vmat() * Lmat(getq3(UnitQuaternion(q..., false), -state.ϕ15, Δt))' * q
-    dynR_ϕ15 = -1.0 * FiniteDiff.finite_difference_jacobian(rot_q1, vector(q1)) * ∂integrator∂ϕ(q2, -state.ϕ15, Δt)
-    dynR_q2 = FiniteDiff.finite_difference_jacobian(rot_q2, vector(q2))
-    AvelR = attjac ? [dynR_q2 * LVᵀmat(q2) dynR_ϕ15] : [dynR_q2 dynR_ϕ15]
-    
+    ω1 = state.ϕ15
+    sq1 = sqrt(4 / Δt^2 - ω1' * ω1)
+    ω1func = -skewplusdiag(-ω1, sq1) * J + J * ω1 * (ω1' / sq1) - skew(J * ω1)
+
+    AvelR = [(attjac ? Z3 : Z34) ω1func*Δt] # solving for impulses
+
     return [[AposT;AvelT] ZT;
              ZR [AposR;AvelR]]
 end
@@ -363,7 +371,7 @@ function ∂body∂u(body::Body{T}, Δt) where T
     BposT = [Z3 Z3]
     BvelT = [-I Z3]
     BposR = [Z43 Z43]
-    BvelR = [Z3 -I]
+    BvelR = [Z3 -2.0I]
     return [BposT;BvelT;BposR;BvelR]
 end
 

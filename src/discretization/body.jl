@@ -9,11 +9,18 @@
     ezg = SA{T}[0; 0; -mechanism.g]
     D1x = - 1/Δt * body.m * (x2 - x1) + Δt/2 * body.m * ezg
     D2x =   1/Δt * body.m * (x3 - x2) + Δt/2 * body.m * ezg
-    D1q =   2/Δt * LVᵀmat(q1)' * Tmat() * Rmat(q2)' * Vᵀmat() * body.J * Vmat() * Lmat(q1)' * vector(q2)
-    D2q =   2/Δt * LVᵀmat(q3)' * Lmat(q2) * Vᵀmat() * body.J * Vmat() * Lmat(q2)' * vector(q3)
+    # D1q =   2/Δt * LVᵀmat(q1)' * Tmat() * Rmat(q2)' * Vᵀmat() * body.J * Vmat() * Lmat(q1)' * vector(q2)
+    # D2q =   2/Δt * LVᵀmat(q3)' * Lmat(q2) * Vᵀmat() * body.J * Vmat() * Lmat(q2)' * vector(q3)
+
 
     dynT = D2x + D1x - state.F2[1]
-    dynR = D2q + D1q - state.τ2[1]
+    # dynR = D2q + D1q - state.τ2[1]
+    J = body.J
+    ω1 = state.ϕ15
+    ω2 = state.ϕsol[2]
+    sq1 = sqrt(4 / Δt^2 - ω1' * ω1)
+    sq2 = sqrt(4 / Δt^2 - ω2' * ω2)
+    dynR = Δt * skewplusdiag(ω2, sq2) * (J * ω2) - Δt * skewplusdiag(-1.0 * ω1, sq1) * (J * ω1) - 2 * state.τ2[1]
 
     state.d = [dynT;dynR]
 
@@ -22,9 +29,9 @@
         constraintForceMapping!(mechanism, body, getcomponent(mechanism, connectionid))
     end
     # Regularize the angular velocity when necessary.
-    for body in mechanism.bodies
-        angular_damping!(mechanism, body)
-    end
+    # for body in mechanism.bodies
+    #     angular_damping!(mechanism, body)
+    # end
     return state.d
 end
 
@@ -38,8 +45,12 @@ end
 
     dynT = I * body.m
 
-    rot_q3(q) = 2/Δt * LVᵀmat(UnitQuaternion(q..., false))' * Lmat(q2) * Vᵀmat() * body.J * Vmat() * Lmat(q2)' * vector(UnitQuaternion(q..., false))
-    dynR = FiniteDiff.finite_difference_jacobian(rot_q3, vector(q3)) * ∂integrator∂ϕ(q2, state.ϕsol[2], Δt)
+    J = body.J
+    ω2 = state.ϕsol[2]
+    sq = sqrt(4 / Δt^2 - ω2' * ω2)
+    dynR = Δt * (skewplusdiag(ω2, sq) * J - J * ω2 * (ω2' / sq) - skew(J * ω2))
+    # rot_q3(q) = 2/Δt * LVᵀmat(UnitQuaternion(q..., false))' * Lmat(q2) * Vᵀmat() * body.J * Vmat() * Lmat(q2)' * vector(UnitQuaternion(q..., false))
+    # dynR = FiniteDiff.finite_difference_jacobian(rot_q3, vector(q3)) * ∂integrator∂ϕ(q2, state.ϕsol[2], Δt)
 
     Z = szeros(T, 3, 3)
 
@@ -50,8 +61,8 @@ end
         ∂constraintForceMapping!(mechanism, body, getcomponent(mechanism, connectionid))
     end
     # Regularize the angular velocity when necessary.
-    for body in mechanism.bodies
-        ∂angular_damping!(mechanism, body)
-    end
+    # for body in mechanism.bodies
+    #     ∂angular_damping!(mechanism, body)
+    # end
     return state.D
 end

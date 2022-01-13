@@ -25,15 +25,19 @@ function momentum_body(mechanism::Mechanism{T}, body::Body{T}) where {T}
     x2, q2 = posargs2(state)
     x3, q3 = posargs3(state, Δt)
 
-    ezg = SA{T}[0; 0; -mechanism.g]
-    D1x = - 1/Δt * body.m * (x2 - x1) + Δt/2 * body.m * ezg
-    D2x =   1/Δt * body.m * (x3 - x2) + Δt/2 * body.m * ezg
-    D1q =   2/Δt * LVᵀmat(q1)' * Tmat() * Rmat(q2)' * Vᵀmat() * body.J * Vmat() * Lmat(q1)' * vector(q2)
-    D2q =   2/Δt * LVᵀmat(q3)' * Lmat(q2) * Vᵀmat() * body.J * Vmat() * Lmat(q2)' * vector(q3)
+    v15 = body.state.vsol[2] # v1.5
+    ω15 = body.state.ϕsol[2] # ω1.5
 
-    p_linear_body = D2x - 0.5 * state.F2[1]
-    p_angular_body = D2q - 0.5 * state.τ2[1]
-
+    # ezg = SA{T}[0; 0; -mechanism.g]
+    # D1x = - 1/Δt * body.m * (x2 - x1) + Δt/2 * body.m * ezg
+    # D2x = 1/Δt * body.m * (x3 - x2) + Δt/2 * body.m * ezg
+    # D1q =   2/Δt * LVᵀmat(q1)' * Tmat() * Rmat(q2)' * Vᵀmat() * body.J * Vmat() * Lmat(q1)' * vector(q2)
+    # D2q =   2/Δt * LVᵀmat(q3)' * Lmat(q2) * Vᵀmat() * body.J * Vmat() * Lmat(q2)' * vector(q3)
+    # p_linear_body = D2x - 0.5 * state.F2[1]
+    # p_angular_body = D2q - 0.5 * state.τ2[1]
+    p_linear_body = body.m * v15  - 0.5 * [0; 0; body.m * mechanism.g * Δt] - 0.5 * body.state.F2[1] #BEST TODO should't we divide F by Δt to get a force instead of a force impulse
+    p_angular_body = Δt * sqrt(4 / Δt^2.0 - ω15' * ω15) * body.J * ω15 + Δt * skew(ω15) * (body.J * ω15) - body.state.τ2[1] # TODO should't we divide tau by Δt to get a torque instead of a torque impulse
+    
     α = -1.0
     for (i, eqc) in enumerate(mechanism.eqconstraints)
         if body.id ∈ [eqc.parentid; eqc.childids]
@@ -47,7 +51,7 @@ function momentum_body(mechanism::Mechanism{T}, body::Body{T}) where {T}
         end
     end
 
-    p1 = [p_linear_body; rotation_matrix(q2) * p_angular_body]
+    p1 = [p_linear_body; rotation_matrix(q2) * p_angular_body / 2]
     return p1
 end
 
@@ -55,21 +59,18 @@ function momentum(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, storage::Storage{T,Ns}, t
     p = zeros(T, 6)
     com = center_of_mass(mechanism, storage, t)
     mass = total_mass(mechanism)
-    p_linear_body = []
-    p_angular_body = []
-    for (ind, body) in enumerate(mechanism.bodies)
-        push!(p_linear_body, storage.px[ind][t])
-        push!(p_angular_body, storage.pq[ind][t])
-    end
+    p_linear_body = [storage.px[i][t] for i = 1:Nb] # in world frame
+    p_angular_body = [storage.pq[i][t] for i = 1:Nb] # in world frame
 
     p_linear = sum(p_linear_body)
     p_angular = zeros(T, 3)
     v_com = p_linear ./ mass
     for (i, body) in enumerate(mechanism.bodies)
-        r = body.state.x2[1] - com
+        r = storage.x[i][t] - com
         v_body = p_linear_body[i] ./ body.m
         p_angular += p_angular_body[i]
-        p_angular += cross(r, body.m * (v_body - v_com))
+        # p_angular += cross(r, body.m * (v_body - v_com))
+        p_angular += cross(r, body.m * (v_body - v_com))/2 #TODO maybe there is cleaner way to handle the factor 2
     end
 
     return [p_linear; p_angular] # in world frame
@@ -113,7 +114,7 @@ function kineticEnergy(mechanism::Mechanism, storage::Storage{T,N}, t::Int) wher
         vl = storage.vl[i][t]
         ωl = storage.ωl[i][t]
         ke += 0.5 * body.m * vl' * vl
-        ke += 0.5 * ωl' * body.J * ωl
+        ke += 1.0 * ωl' * body.J * ωl
     end
     return ke
 end
