@@ -36,7 +36,7 @@ end
 
 # Simulation
 solver_tolerance = 1.0e-14
-timestep = [0.01]#, 0.01, 0.005]
+timestep = [0.05, 0.01, 0.005]
 tsim = 10.0
 storage = Storage[]
 mech, _ = astronaut_simulation(vis, tsim=tsim, Δt=timestep[1], ϵ=solver_tolerance)
@@ -65,7 +65,7 @@ m = [Dojo.momentum(mech, s)[1:end] for s in storage]
 
 # linear momentum
 mlin = [[Vector(mi)[1:3] for mi in mt] for mt in m]
-plt = plot(xlabel="time (s)", ylabel="linear momentum drift");
+plt = plot(ylims=(-1.0e-10, 1.0e-10), xlabel="time (s)", ylabel="linear momentum drift");
 for (i, mt) in enumerate(mlin)
     tt = [j * timestep[i] for j in 1:length(mt)]
     plt = plot!(tt, hcat([mi - mt[1] for mi in mt]...)', color=color[i], label=["h = $(timestep[i])" "" ""])
@@ -74,12 +74,29 @@ display(plt)
 
 # angular momentum
 mang = [[Vector(mi)[4:6] for mi in mt] for mt in m]
-plt = plot(xlabel="time (s)", ylabel="angular momentum drift");
+plt = plot(ylims=(-1.0e-10, 1.0e-10), xlabel="time (s)", ylabel="angular momentum drift");
 for (i, mt) in enumerate(mang)
     tt = [j * timestep[i] for j in 1:length(mt)]
     plt = plot!(tt, hcat([mi - mt[1] for mi in mt]...)', color=color[i], label=["h = $(timestep[i])" "" ""])
 end
 display(plt)
+
+# 
+using PGFPlots
+const PGF = PGFPlots
+
+color = ["magenta", "orange", "cyan"];
+p_energy = [PGF.Plots.Linear([j * timestep[i] for j = 1:length(e)], e .- e[1], legendentry="h=$(timestep[i])", mark="none",style="color="*color[i]*", line width=2pt, solid") for (i, e) in enumerate(me)]
+
+a1 = Axis(vcat(p_energy...),
+    xmin=0, 
+    xmax=10.0,
+    hideAxis=false,
+	ylabel="energy drift",
+	xlabel="time (s)",
+    legendPos="south east") 
+dir = joinpath("/home/taylor/Downloads")
+PGF.save(joinpath(dir, "energy_drift.tikz"), a1)
 
 ##########
 # Visualization 
