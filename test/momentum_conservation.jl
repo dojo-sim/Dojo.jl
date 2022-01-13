@@ -223,8 +223,8 @@ end
         # visualize(mech, storage, vis = vis)
 
         m0 = momentum(mech, storage)[5:end]
-        @show mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
-        @show mang0 = [Vector(m-m0[1])[4:6] for m in m0]
+        # @show mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
+        # @show mang0 = [Vector(m-m0[1])[4:6] for m in m0]
         # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
         # plt = plot()
         # plot!([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
@@ -250,8 +250,8 @@ damper0 = 1.0 * 2e+1
 mech = getmechanism(:twister, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
     jointtype = :FixedOrientation, contact = false, r = 0.05);
 
-v0 = 10.0 * [1, 2, 3] * Δt0
-ω0 = 10.0 * [1, 2, 3.0] * Δt0
+v0 = 100.0 * [1, 2, 3] * Δt0
+ω0 = 100.0 * [1, 2, 3.0] * Δt0
 q10 = UnitQuaternion(RotX(0.5*π))
 
 initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0)

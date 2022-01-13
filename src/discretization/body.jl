@@ -9,11 +9,11 @@
     ezg = SA{T}[0; 0; -mechanism.g]
     D1x = - 1 / Δt * body.m * (x2 - x1) + Δt/2 * body.m * ezg
     D2x =   1 / Δt * body.m * (x3 - x2) + Δt/2 * body.m * ezg
-    D1q = -2 / Δt * LVᵀmat(q2)' * Lmat(q1) * Vᵀmat() * body.J * Vmat() * Lmat(q1)' * vector(q2)
-    D2q = -2 / Δt * LVᵀmat(q2)' * Tmat() * Rmat(q3)' * Vᵀmat() * body.J * Vmat() * Lmat(q2)' * vector(q3)
+    D1q = -4 / Δt * LVᵀmat(q2)' * Lmat(q1) * Vᵀmat() * body.J * Vmat() * Lmat(q1)' * vector(q2)
+    D2q = -4 / Δt * LVᵀmat(q2)' * Tmat() * Rmat(q3)' * Vᵀmat() * body.J * Vmat() * Lmat(q2)' * vector(q3)
 
     dynT = D2x + D1x - state.F2[1]
-    dynR = D2q + D1q - state.τ2[1]
+    dynR = D2q + D1q - 2.0 * state.τ2[1]
 
     state.d = [dynT;dynR]
 
@@ -38,7 +38,7 @@ end
 
     dynT = I * body.m
 
-    rot_q3(q) = -2 / Δt * LVᵀmat(q2)' * Tmat() * Rmat(UnitQuaternion(q..., false))' * Vᵀmat() * body.J * Vmat() * Lmat(q2)' * q
+    rot_q3(q) = -4 / Δt * LVᵀmat(q2)' * Tmat() * Rmat(UnitQuaternion(q..., false))' * Vᵀmat() * body.J * Vmat() * Lmat(q2)' * q
     dynR = FiniteDiff.finite_difference_jacobian(rot_q3, vector(q3)) * ∂integrator∂ϕ(q2, state.ϕsol[2], Δt)
 
     Z = szeros(T, 3, 3)
