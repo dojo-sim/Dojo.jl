@@ -340,7 +340,7 @@ me0 = mechanicalEnergy(mech, storage)[start0:end]
 
 # Test mechanical energy conservation
 @testset "Energy: Quadruped" begin
-    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-3
+    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-2
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
 
