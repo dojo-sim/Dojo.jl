@@ -6,17 +6,17 @@ A differentiable rigid-body-dynamics with contact simulator for robotics.
 
 ## Simulation 
 
+### Astronaut
+<img src="examples/animations/astronaut.gif" width="200"/>
+
+### Atlas drop 
+<img src="examples/animations/atlas_drop.gif" width="100"/>
+
 ### Friction-cone comparison 
 <img src="examples/animations/friction_sim_no_grid.gif" width="400"/>
 
 ### Dzhanibekov effect
 <img src="examples/animations/dzhanibekov.gif" width="200"/>
-
-### Astronaut
-<img src="examples/animations/astronaut.gif" width="200"/>
-
-### Atlas drop 
-<img src="examples/animations/atlas_drop.gif" width="200"/>
 
 ## Trajectory Optimization 
 
@@ -38,4 +38,9 @@ A differentiable rigid-body-dynamics with contact simulator for robotics.
 
 ## Real-To-Sim
 
+### Learning
+<img src="examples/animations/box_learning.gif" width="200"/>
+
 ### Toss
+<img src="examples/animations/box_toss.gif" width="300"/>
+

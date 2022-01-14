@@ -6,6 +6,8 @@ open(vis)
 
 # ## Mechanism
 mech = getmechanism(:atlas, Δt=0.01, g=-9.81, cf=0.5, damper=100.0, spring=1.0, contact=true)
+@show length(mech.bodies) * 13
+@show controldim(mech)
 
 # ## Simulate
 initializeatlasstance!(mech, tran=[0,0,0.5], rot=[0.0,0.0, 0.0])
