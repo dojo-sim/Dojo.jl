@@ -63,7 +63,7 @@ end
 function MeshCat.setobject!(subvisshape, visshape, shape::Mesh; transparent=false)
     if visshape.mtl_library == ""
         visshape = MeshFileGeometry(visshape.contents, visshape.format)
-        setobject!(subvisshape, visshape, MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
+        setobject!(subvisshape, visshape, MeshPhongMaterial(color=shape.color))
     else
         setobject!(subvisshape, visshape)
     end

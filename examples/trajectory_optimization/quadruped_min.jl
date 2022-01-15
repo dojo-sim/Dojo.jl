@@ -100,6 +100,34 @@ IterativeLQR.solve!(prob,
     ρ_init=1.0,
     ρ_scale=10.0)
 
+vis = Visualizer()
+open(env.vis)
+
 # ## solution
-x_sol, u_sol = get_trajectory(prob)
-visualize(env, x_sol)
+x_sol, u_sol = IterativeLQR.get_trajectory(prob)
+x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]
+visualize(env, x_view)
+
+MeshCat.settransform!(env.vis["/Cameras/default"],
+        MeshCat.compose(MeshCat.Translation(0.0, 0.0, 1.0), MeshCat.LinearMap(Rotations.RotZ(-pi / 2.0))))
+setprop!(env.vis["/Cameras/default/rotated/<object>"], "zoom", 3)
+
+# ## Ghost 
+vis = Visualizer()
+open(vis)
+setvisible!(vis[:robot], false)
+z = [min2max(mech, x) for x in x_sol]
+z = [[z[1] for t = 1:40]..., z..., [z[end] for t = 1:40]...]
+T = length(z) 
+timesteps = [1, T]# 40, 60, 70, 80, 85, 90, 95, T] 
+for t in timesteps
+    name = Symbol("robot_$t")
+    # color = (t == T ? RGBA(1.0, 153.0 / 255.0, 51.0 / 255.0, 1.0) : RGBA(1.0, 153.0 / 255.0, 51.0 / 255.0, 0.25))
+    build_robot(vis, mech, name=name, color=RGBA(0.75, 0.75, 0.75, 0.25))
+    set_robot(vis, mech, z[t], name=name)
+end
+
+MeshCat.settransform!(vis["/Cameras/default"],
+        MeshCat.compose(MeshCat.Translation(0.0, 0.0, 1.0), MeshCat.LinearMap(Rotations.RotZ(-pi / 2.0))))
+setprop!(vis["/Cameras/default/rotated/<object>"], "zoom", 3)
+

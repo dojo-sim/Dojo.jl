@@ -27,6 +27,8 @@ A differentiable rigid-body-dynamics with contact simulator for robotics.
 <img src="examples/animations/hopper_max.gif" width="150"/>
 
 ### Quadruped 
+<img src="examples/animations/quadruped_min.gif" width="200"/>
+
 
 ## Reinforcement Learning 
 

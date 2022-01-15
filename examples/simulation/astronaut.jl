@@ -119,3 +119,4 @@ setvisible!(vis["/Grid"], false)
 t = 400 # 225, 150, 1
 set_robot(vis, mech, z[t])
 ##########
+

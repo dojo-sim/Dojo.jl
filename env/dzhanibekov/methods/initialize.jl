@@ -4,7 +4,6 @@ function getdzhanibekov(; Δt::T = 0.01, g::T = -9.81, color=RGBA(1.0, 0.0, 0.0,
     body_mass = 1.0
     origin = Origin{Float64}()
     main_body = Capsule(radius, body_length, body_mass, color=color)
-    main_body.J = Diagonal([2.0; 1.0; 3.0])
     side_body = Capsule(0.5 * radius, 0.35 * body_length, 0.1 * body_mass, qoffset=UnitQuaternion(RotY(0.5 * π)), color=color)
     links = [main_body, side_body]
 
