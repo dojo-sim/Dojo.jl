@@ -1,4 +1,6 @@
+using Dojo
 using IterativeLQR
+using LinearAlgebra
 
 # ## system
 include(joinpath(@__DIR__, "../../env/quadruped/methods/template.jl"))
@@ -20,9 +22,9 @@ env = make("quadruped",
 open(env.vis) 
 
 # ## simulate (test)
-initialize!(env.mechanism, :quadruped)
-storage = simulate!(env.mechanism, 0.5, record=true, verbose=false)
-visualize(env.mechanism, storage, vis=env.vis)
+# initialize!(env.mechanism, :quadruped)
+# storage = simulate!(env.mechanism, 0.5, record=true, verbose=false)
+# visualize(env.mechanism, storage, vis=env.vis)
 
 # ## dimensions 
 n = env.nx 
@@ -36,9 +38,9 @@ zref = [min2max(env.mechanism, x) for x in xref]
 visualize(env, xref)
 
 ## gravity compensation TODO: solve optimization problem instead
-mech = getmechanism(:quadruped, Δt=dt, g=gravity, cf=0.8, damper=1000.0, spring=30.0)
+mech = getmechanism(:quadruped, Δt=dt, g=gravity, cf=0.8, damper=1000.0, spring=15.0)
 initialize!(mech, :quadruped)
-storage = simulate!(mech, 5.0, record=true, verbose=false)
+storage = simulate!(mech, 1.0, record=true, verbose=false)
 visualize(mech, storage, vis=env.vis)
 ugc = gravity_compensation(mech)
 u_control = ugc[6 .+ (1:12)]
@@ -57,21 +59,21 @@ model = [dyn for t = 1:T-1]
 
 # ## rollout
 x1 = xref[1]
-ū = [zeros(m) for t = 1:T-1]
+ū = [u_control for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
-x̄ = rollout(model, x1, ū, w)
+x̄ = IterativeLQR.rollout(model, x1, ū, w)
 visualize(env, x̄)
 
-# Objective
+# ## objective
 qt = [0.3; 0.05; 0.05; 0.01 * ones(3); 0.01 * ones(3); 0.01 * ones(3); fill([0.2, 0.001], 12)...]
 ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(dt * qt) * (x - xref[t]) + transpose(u) * Diagonal(dt * 0.01 * ones(m)) * u for t = 1:T-1]
 oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(dt * qt) * (x - xref[end])
 
-cts = Cost.(ots, n, m, d)
-cT = Cost(oT, n, 0, 0)
+cts = IterativeLQR.Cost.(ots, n, m, d)
+cT = IterativeLQR.Cost(oT, n, 0, 0)
 obj = [cts..., cT]
 
-# Constraints
+# ## constraints
 function goal(x, u, w)
     Δ = x - xref[end]
     return Δ[collect(1:3)]
@@ -81,11 +83,12 @@ cont = IterativeLQR.Constraint()
 conT = IterativeLQR.Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
+# ## problem
 prob = IterativeLQR.problem_data(model, obj, cons)
 IterativeLQR.initialize_controls!(prob, ū)
 IterativeLQR.initialize_states!(prob, x̄)
 
-# Solve
+# ## solve
 IterativeLQR.solve!(prob,
     verbose = true,
 	linesearch=:armijo,
@@ -97,5 +100,34 @@ IterativeLQR.solve!(prob,
     ρ_init=1.0,
     ρ_scale=10.0)
 
-x_sol, u_sol = get_trajectory(prob)
-visualize(env, x_sol)
+vis = Visualizer()
+open(env.vis)
+
+# ## solution
+x_sol, u_sol = IterativeLQR.get_trajectory(prob)
+x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]
+visualize(env, x_view)
+
+MeshCat.settransform!(env.vis["/Cameras/default"],
+        MeshCat.compose(MeshCat.Translation(0.0, 0.0, 1.0), MeshCat.LinearMap(Rotations.RotZ(-pi / 2.0))))
+setprop!(env.vis["/Cameras/default/rotated/<object>"], "zoom", 3)
+
+# ## Ghost 
+vis = Visualizer()
+open(vis)
+setvisible!(vis[:robot], false)
+z = [min2max(mech, x) for x in x_sol]
+z = [[z[1] for t = 1:40]..., z..., [z[end] for t = 1:40]...]
+T = length(z) 
+timesteps = [1, T]# 40, 60, 70, 80, 85, 90, 95, T] 
+for t in timesteps
+    name = Symbol("robot_$t")
+    # color = (t == T ? RGBA(1.0, 153.0 / 255.0, 51.0 / 255.0, 1.0) : RGBA(1.0, 153.0 / 255.0, 51.0 / 255.0, 0.25))
+    build_robot(vis, mech, name=name, color=RGBA(0.75, 0.75, 0.75, 0.25))
+    set_robot(vis, mech, z[t], name=name)
+end
+
+MeshCat.settransform!(vis["/Cameras/default"],
+        MeshCat.compose(MeshCat.Translation(0.0, 0.0, 1.0), MeshCat.LinearMap(Rotations.RotZ(-pi / 2.0))))
+setprop!(vis["/Cameras/default/rotated/<object>"], "zoom", 3)
+

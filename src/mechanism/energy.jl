@@ -17,7 +17,7 @@ end
 """
     Linear and angular momentum of a body using Legendre transform.
 """
-function momentum_body_new(mechanism::Mechanism{T}, body::Body{T}) where {T}
+function momentum_body(mechanism::Mechanism{T}, body::Body{T}) where {T}
     Δt = mechanism.Δt
 
     state = body.state
@@ -25,29 +25,29 @@ function momentum_body_new(mechanism::Mechanism{T}, body::Body{T}) where {T}
     x2, q2 = posargs2(state)
     x3, q3 = posargs3(state, Δt)
 
+    v15 = body.state.vsol[2] # v1.5
+    ω15 = body.state.ϕsol[2] # ω1.5
+
+    # ezg = SA{T}[0; 0; -mechanism.g]
+    # D1x = - 1/Δt * body.m * (x2 - x1) + Δt/2 * body.m * ezg
+    # D2x = 1/Δt * body.m * (x3 - x2) + Δt/2 * body.m * ezg
+    # D1q =   2/Δt * LVᵀmat(q1)' * Tmat() * Rmat(q2)' * Vᵀmat() * body.J * Vmat() * Lmat(q1)' * vector(q2)
+    # D2q =   2/Δt * LVᵀmat(q3)' * Lmat(q2) * Vᵀmat() * body.J * Vmat() * Lmat(q2)' * vector(q3)
+    # p_linear_body = D2x - 0.5 * state.F2[1]
+    # p_angular_body = D2q - 0.5 * state.τ2[1]
+    # p_linear_body = body.m * v15  - 0.5 * [0; 0; body.m * mechanism.g * Δt] - 0.5 * body.state.F2[1] #BEST TODO should't we divide F by Δt to get a force instead of a force impulse
+    # p_angular_body = Δt * sqrt(4 / Δt^2.0 - ω15' * ω15) * body.J * ω15 + Δt * skew(ω15) * (body.J * ω15) - body.state.τ2[1] # TODO should't we divide tau by Δt to get a torque instead of a torque impulse
+    
     ezg = SA{T}[0; 0; -mechanism.g]
-    D1x = - 1/Δt * body.m * (x2 - x1) + Δt/2 * body.m * ezg
-    D2x =   1/Δt * body.m * (x3 - x2) + Δt/2 * body.m * ezg
-    D1q =   2/Δt * LVᵀmat(q1)' * Tmat() * Rmat(q2)' * Vᵀmat() * body.J * Vmat() * Lmat(q1)' * vector(q2)
-    D2q =   2/Δt * LVᵀmat(q3)' * Lmat(q2) * Vᵀmat() * body.J * Vmat() * Lmat(q2)' * vector(q3)
-
-
+    D2x = 1 / Δt * body.m * (x3 - x2) + Δt/2 * body.m * ezg
+    D2q = -4 / Δt * LVᵀmat(q2)' * Tmat() * Rmat(q3)' * Vᵀmat() * body.J * Vmat() * Lmat(q2)' * vector(q3)
     p_linear_body = D2x - 0.5 * state.F2[1]
-    p_angular_body = D2q - 0.5 * state.τ2[1]
+    p_angular_body = D2q - 1.0 * state.τ2[1]
 
     α = -1.0
     for (i, eqc) in enumerate(mechanism.eqconstraints)
         if body.id ∈ [eqc.parentid; eqc.childids]
 
-            # λ = []
-            # for (i, joint) in enumerate(eqc.constraints)
-            #     λi = eqc.λsol[2][λindex(eqc, i)]
-            #     si, γi = get_sγ(joint, λi)
-            #     push!(λ, λi[1:length(joint)])
-            #     push!(λ, γi)
-            # end
-
-            # f_joint = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * vcat(λ...)  # computed at 1.5
             f_joint = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]  # computed at 1.5
             eqc.isspring && (f_joint += springforce(mechanism, eqc, body)) # computed at 1.5
             eqc.isdamper && (f_joint += damperforce(mechanism, eqc, body)) # computed at 1.5
@@ -57,7 +57,7 @@ function momentum_body_new(mechanism::Mechanism{T}, body::Body{T}) where {T}
         end
     end
 
-    p1 = [p_linear_body; rotation_matrix(q2) * p_angular_body]
+    p1 = [p_linear_body; rotation_matrix(q2) * p_angular_body * sqrt(2) / 2]
     return p1
 end
 
@@ -65,22 +65,18 @@ function momentum(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, storage::Storage{T,Ns}, t
     p = zeros(T, 6)
     com = center_of_mass(mechanism, storage, t)
     mass = total_mass(mechanism)
-    p_linear_body = []
-    p_angular_body = []
-    for body in mechanism.bodies
-        p = momentum_body_new(mechanism, body)
-        push!(p_linear_body, p[1:3])
-        push!(p_angular_body, p[4:6])
-    end
+    p_linear_body = [storage.px[i][t] for i = 1:Nb] # in world frame
+    p_angular_body = [storage.pq[i][t] for i = 1:Nb] # in world frame
 
     p_linear = sum(p_linear_body)
     p_angular = zeros(T, 3)
     v_com = p_linear ./ mass
     for (i, body) in enumerate(mechanism.bodies)
-        r = body.state.x2[1] - com
+        r = storage.x[i][t] - com
         v_body = p_linear_body[i] ./ body.m
         p_angular += p_angular_body[i]
-        p_angular += cross(r, body.m * (v_body - v_com))
+        # p_angular += cross(r, body.m * (v_body - v_com))
+        p_angular += cross(r, body.m * (v_body - v_com)) * sqrt(2) / 2 #TODO maybe there is cleaner way to handle the factor 2
     end
 
     return [p_linear; p_angular] # in world frame

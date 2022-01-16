@@ -3,6 +3,8 @@
 # vis = Visualizer()
 # open(vis)
 
+# const Dojo = Main
+
 # Controller
 function controller!(mechanism, k; U = 0.5, Δt = 0.01)
     for (i,joint) in enumerate(mechanism.eqconstraints)
@@ -100,7 +102,7 @@ end
 # with spring and damper
 # with control
 ################################################################################
-spring0 = 0.0
+spring0 = 1.0
 damper0 = 1.0
 mech = getmechanism(:humanoid, Δt = Δt0, g = g0, spring = spring0, damper = damper0, contact = false)
 initialize!(mech, :humanoid)
@@ -109,7 +111,7 @@ setVelocity!.(bodies, ω = 1e-0rand(3))
 
 
 storage = simulate!(mech, 10.0, controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
-# visualize(mech, downsample(storage, 1), vis = vis)
+# visualize(mech, storage, vis = vis)
 
 m0 = momentum(mech, storage)[1:end]
 mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
@@ -117,8 +119,8 @@ mang0 = [Vector(m-m0[1])[4:6] for m in m0]
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
 @testset "Momentum: Humanoid" begin
-    @test all(norm.(mlin0, Inf) .< 1e-11)
-    @test all(norm.(mang0, Inf) .< 1e-11)
+    @test all(norm.(mlin0, Inf) .< 1e-8)
+    @test all(norm.(mang0, Inf) .< 1e-8)
 end
 
 ################################################################################
@@ -143,8 +145,8 @@ mang0 = [Vector(m-m0[1])[4:6] for m in m0]
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
 @testset "Momentum: Atlas" begin
-    @test all(norm.(mlin0, Inf) .< 1e-11)
-    @test all(norm.(mang0, Inf) .< 1e-11)
+    @test all(norm.(mlin0, Inf) .< 1e-8)
+    @test all(norm.(mang0, Inf) .< 1e-8)
 end
 
 ################################################################################
@@ -169,8 +171,8 @@ mang0 = [Vector(m-m0[1])[4:6] for m in m0]
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
 @testset "Momentum: Quadruped" begin
-    @test all(norm.(mlin0, Inf) .< 1e-11)
-    @test all(norm.(mang0, Inf) .< 1e-11)
+    @test all(norm.(mlin0, Inf) .< 1e-8)
+    @test all(norm.(mang0, Inf) .< 1e-8)
 end
 
 ################################################################################
@@ -182,12 +184,12 @@ end
 # with spring and damper
 # with control
 ################################################################################
-Nlink0 = 2
-spring0 = 1.0 * 4e0
-damper0 = 1.0 * 2e+1
+Nlink0 = 5
+spring0 = 0.0 * 4e0
+damper0 = 0.0 * 2e+1
 
 mech = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
-    jointtype = :Revolute, contact = false, r = 0.05)
+    jointtype = :Revolute, contact = false, r = 0.05);
 
 v0 = 100.0 * [1, 2, 3] * Δt0
 ω0 = 100.0 * [1, 2, 3.0] * Δt0
@@ -203,8 +205,8 @@ mang0 = [Vector(m-m0[1])[4:6] for m in m0]
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
 @testset "Momentum: Snake" begin
-    @test all(norm.(mlin0, Inf) .< 1e-11)
-    @test all(norm.(mang0, Inf) .< 1e-11)
+    @test all(norm.(mlin0, Inf) .< 1e-8)
+    @test all(norm.(mang0, Inf) .< 1e-8)
 end
 
 @testset "Momentum: Snake" begin
@@ -213,22 +215,22 @@ end
         mech = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
             jointtype = jointtype, contact = false, r = 0.05)
 
-        v0 = 100.0 * [1, 2, 3] * Δt0
-        ω0 = 100.0 * [1, 2, 3.0] * Δt0
+        v0 = 10.0 * [1, 2, 3] * Δt0
+        ω0 = 10.0 * [1, 2, 3.0] * Δt0
         q10 = UnitQuaternion(RotX(0.5*π))
         initialize!(mech, :snake, q1 = q10, v = v0, ω = ω0)
         storage = simulate!(mech, 1.50, controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
         # visualize(mech, storage, vis = vis)
 
         m0 = momentum(mech, storage)[5:end]
-        mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
-        mang0 = [Vector(m-m0[1])[4:6] for m in m0]
+        # @show mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
+        # @show mang0 = [Vector(m-m0[1])[4:6] for m in m0]
         # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
         # plt = plot()
         # plot!([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
         # display(plt)
-        @test all(norm.(mlin0, Inf) .< 1e-11)
-        @test all(norm.(mang0, Inf) .< 1e-11)
+        @test all(norm.(mlin0, Inf) .< 1e-8)
+        @test all(norm.(mang0, Inf) .< 1e-8)
     end
 end
 
@@ -246,10 +248,10 @@ spring0 = 1.0 * 4e0
 damper0 = 1.0 * 2e+1
 
 mech = getmechanism(:twister, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
-    jointtype = :FixedOrientation, contact = false, r = 0.05)
+    jointtype = :FixedOrientation, contact = false, r = 0.05);
 
-v0 = 10.0 * [1, 2, 3] * Δt0
-ω0 = 10.0 * [1, 2, 3.0] * Δt0
+v0 = 100.0 * [1, 2, 3] * Δt0
+ω0 = 100.0 * [1, 2, 3.0] * Δt0
 q10 = UnitQuaternion(RotX(0.5*π))
 
 initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0)
@@ -262,8 +264,8 @@ mang0 = [Vector(m-m0[1])[4:6] for m in m0]
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mlin0...)')
 # plot([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
 @testset "Momentum: Twister" begin
-    @test all(norm.(mlin0, Inf) .< 1e-11)
-    @test all(norm.(mang0, Inf) .< 1e-11)
+    @test all(norm.(mlin0, Inf) .< 1e-8)
+    @test all(norm.(mang0, Inf) .< 1e-8)
 end
 
 @testset "Momentum: Twister" begin
@@ -286,7 +288,7 @@ end
         # plt = plot()
         # plot!([(i-1)*Δt0 for i in 1:length(m0)], hcat(mang0...)')
         # display(plt)
-        @test all(norm.(mlin0, Inf) .< 1e-11)
-        @test all(norm.(mang0, Inf) .< 1e-11)
+        @test all(norm.(mlin0, Inf) .< 1e-8)
+        @test all(norm.(mang0, Inf) .< 1e-8)
     end
 end

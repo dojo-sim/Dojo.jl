@@ -23,4 +23,4 @@ end
 mech = _getpendulum(Δt = 0.01, g = -9.81, spring = 0.0, damper = 0.0)
 initialize!(mech, :pendulum, ϕ1 = 0.4 * π)
 storage = simulate!(mech, 1.0, record = true, verbose = false)
-@test norm(getMinState(mech)[1] - 0.25 * π) < 1.0e-3
+@test norm(Dojo.getMinState(mech)[1] - 0.25 * π) < 1.0e-3

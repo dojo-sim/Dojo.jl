@@ -126,7 +126,7 @@ test_datamat(:slider,    tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6,
 test_datamat(:pendulum,  tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6, spring = 1.0, damper = 0.2)
 test_datamat(:npendulum, tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6, spring = 1.0, damper = 0.2) # always ~1e-8
 test_datamat(:nslider,   tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6, spring = 1.0, damper = 0.2)
-test_datamat(:twister,   tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6, spring = 1.0, damper = 0.2)
+test_datamat(:twister,   tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 5e-6, spring = 1.0, damper = 0.2)
 test_datamat(:sphere,    tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6)
 test_datamat(:sphere,    tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6, contact_mode = :soc)
 test_datamat(:sphere,    tsim = tsim, ctrl = (m,k)->cont!(m,k,u=0.1), ϵ = 1e-6, contact_mode = :linear)

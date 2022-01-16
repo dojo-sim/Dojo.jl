@@ -252,9 +252,9 @@ q2 = traj_truth.q[1][1]
 initialize!(mech, :box, x=x2, v=v15, q=q2, ω=ϕ15)
 traj_sim = simulate!(mech, 0.80, record=true,
     opts=InteriorPointOptions(btol=1e-6, rtol=1e-6, verbose=false))
-traj_truth
-traj_sim
+
 cube_sim_v_truth(Dsol[end], traj_truth, traj_sim, vis=vis,
+	transparency_truth=0.5,
 	fps=Int(floor(1/mech.Δt)), b0=0.0, b1=0.0)
 
-cube_ghost_sim_v_truth(Dsol[end], traj_truth, traj_sim, vis=vis)
+cube_ghost_sim_v_truth(Dsol[end], traj_truth, traj_sim, vis=vis, transparency_truth=0.5)

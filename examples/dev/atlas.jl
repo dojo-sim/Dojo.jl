@@ -19,10 +19,10 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
-mech = getmechanism(:atlas, Δt = 0.01, g = -9.81, cf = 0.8, damper = 100.0, contact = true)
+mech = getmechanism(:atlas, Δt = 0.01, g = -9.81, cf = 0.5, damper = 50.0, spring=1.0, contact = true)
 
-initialize!(mech, :atlas, tran = [0,0,0.1], rot = [0.1,0,0])
-storage = simulate!(mech, 0.40, record = true, opts = InteriorPointOptions(btol = 1e-6))
+initialize!(mech, :atlas, tran = [0,0,0.5], rot = [0.01,0.05, 0.0])
+storage = simulate!(mech, 1.0, record = true, opts = InteriorPointOptions(btol = 1e-6))
 visualize(mech, storage, vis = vis)
 
 # Set data

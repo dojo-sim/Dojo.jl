@@ -23,6 +23,22 @@ end
     return UnitQuaternion(sqrt(4 / Δt^2 - dot(ω, ω)), ω, false)
 end
 
+function cayley(ω) 
+    UnitQuaternion(1.0 / sqrt(1.0 + norm(ω)^2.0) * [1.0; ω], false)
+end
+
+function derivcayley(ω)
+    ω₁, ω₂, ω₃ = ω
+    a = sqrt(1.0 + sqrt(abs2(ω₁) + abs2(ω₂) + abs2(ω₃))^2.0)^-3
+    b = sqrt(1.0 + sqrt(abs2(ω₁) + abs2(ω₂) + abs2(ω₃))^2.0)^-1
+    SMatrix{4,3}([
+                 -ω₁*a -ω₂*a -ω₃*a; 
+                 (b - (ω₁^2)*a) (-ω₁ * ω₂ * a) (-ω₁ * ω₃ * a);
+                 (-ω₁ * ω₂ * a) (b - (ω₂^2)*a) (-ω₂ * ω₃ * a);
+                 (-ω₁ * ω₃ * a) (-ω₂ * ω₃ * a) (b - (ω₃^2)*a);
+                 ])
+end
+
 @inline function setForce!(state::State, F, τ)
     state.F2[1] = F
     state.τ2[1] = τ

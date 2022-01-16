@@ -10,14 +10,15 @@ end
 
 function cube_morphing(D; vis=Visualizer(), fps=30, rot=0.00, vis_truth::Bool=true,
 		vis_learned::Bool=true, translate::Bool=true, cam_pos=[0,-10,4.], zoom=1.8,
+		color_truth=RGBA(1.0, 153.0 / 255.0, 51.0 / 255.0, 1.0),
+		color_learn=RGBA(51.0 / 255.0, 1.0, 1.0, 1.0),
 		background=true, alt=0.0, b0=0.2, b1=1.5)
 	setvisible!(vis["/Background"], background)
-	setprop!(vis["/Background"], "top_color", RGBA(0.0, 0.0, 0.0, 1.0))
-	setprop!(vis["/Background"], "bottom_color", RGBA(0.0, 0.0, 0.0, 1.0))
+	setprop!(vis["/Background"], "top_color", RGBA(1.0, 1.0, 1.0, 1.0))
+	setprop!(vis["/Background"], "bottom_color", RGBA(1.0, 1.0, 1.0, 1.0))
 	setvisible!(vis["/Axes"], false)
 	setvisible!(vis["/Grid"], false)
 	setprop!(vis["/Cameras/default/rotated/<object>"], "zoom", zoom)
-
 
 	settransform!(vis["/Cameras/default/rotated/<object>"], MeshCat.Translation(0.,0, 0))
 	settransform!(vis["/Cameras/default/rotated"], MeshCat.Translation(0.,0, 0))
@@ -30,7 +31,7 @@ function cube_morphing(D; vis=Visualizer(), fps=30, rot=0.00, vis_truth::Bool=tr
 	D = [fill(D[1], b0); D; fill(D[end] .+ 0.005*rand(length(D[end])), 2b1)]
 	setobject!(vis[:cube],
 		Rect(Vec(-1,-1,-1),Vec(2,2,2.0)),
-		MeshPhongMaterial(color = RGBA(1-0.21, 1-0.21, 1-0.21, 1.0)))
+		MeshPhongMaterial(color=color_truth))
 
 	for (i,d) in enumerate(D)
 		v = vrep([d[1 + (i-1)*3 .+ (1:3)] for i = 1:8])
@@ -38,7 +39,7 @@ function cube_morphing(D; vis=Visualizer(), fps=30, rot=0.00, vis_truth::Bool=tr
 		Polyhedra.Mesh(p)
 		setobject!(vis[Symbol("polyhedra$i")],
 			Polyhedra.Mesh(p),
-			MeshPhongMaterial(color = RGBA(1-d[1], 1-d[1], 1-d[1], 1.0)))
+			MeshPhongMaterial(color=color_learn))
 	end
 
 	for (i,d) in enumerate(D)
@@ -70,17 +71,21 @@ Dsol = file["Dsol"]
 cam_pos = [2,-4.5,1.8]
 vis, anim = cube_morphing(Dsol, vis=vis, fps=20, rot=0.03,
 	vis_truth=true, vis_learned=true, translate=true, cam_pos=[0,-6,1.8], alt=-1)
-vis, anim = cube_morphing(Dsol, vis=vis, fps=20, rot=0.00, background=false,
+vis, anim = cube_morphing(Dsol[5:5], vis=vis, fps=20, rot=0.00, background=false,
 	vis_truth=false, vis_learned=true, translate=false, cam_pos=cam_pos, alt=-1, b0=0, b1=0)
 vis, anim = cube_morphing(Dsol, vis=vis, fps=20, rot=0.00, background=false,
 	vis_truth=true, vis_learned=false, translate=false, cam_pos=cam_pos, alt=-1, b0=0, b1=0)
 
-
-
-
+t = 50
+vis, anim = cube_morphing(Dsol[t:t], vis=vis, fps=20, rot=0.00, background=false,
+	vis_truth=true, vis_learned=false, translate=false, cam_pos=cam_pos, alt=-1, b0=0, b1=0)
 
 function cube_sim_v_truth(d, traj_truth::Storage{T,HT}, traj_sim::Storage{T,HS};
 		vis=Visualizer(), fps=30, zoom=1.8,
+		transparency_truth=1.0, 
+		transparency_learn=1.0,
+		color_truth=RGBA(1.0, 153.0 / 255.0, 51.0 / 255.0, transparency_truth),
+		color_learn=RGBA(51.0 / 255.0, 1.0, 1.0, transparency_learn),
 		background=true, b0=0.2, b1=1.5) where {T,HT,HS}
 	setvisible!(vis["/Background"], background)
 	setprop!(vis["/Background"], "top_color", RGBA(1.0, 1.0, 1.0, 1.0))
@@ -99,14 +104,14 @@ function cube_sim_v_truth(d, traj_truth::Storage{T,HT}, traj_sim::Storage{T,HS};
 	# Create Objects
 	setobject!(vis[:truth],
 		Rect(Vec(-1,-1,-1),Vec(2,2,2.0)),
-		MeshPhongMaterial(color = RGBA(66/255, 133/255, 244/255, 1.0)))
+		MeshPhongMaterial(color=color_truth))
 
 	v = vrep([d[1 + (i-1)*3 .+ (1:3)] for i = 1:8])
 	p = polyhedron(v)
 	Polyhedra.Mesh(p)
 	setobject!(vis[:sim],
 		Polyhedra.Mesh(p),
-		MeshPhongMaterial(color = RGBA(244/255, 160/255, 0/255, 0.7)))
+		MeshPhongMaterial(color=color_learn))
 
 	# Animate
 	for i = 1:b0
@@ -150,7 +155,12 @@ function cube_sim_v_truth(d, traj_truth::Storage{T,HT}, traj_sim::Storage{T,HS};
 end
 
 function cube_ghost_sim_v_truth(d, traj_truth::Storage{T,HT}, traj_sim::Storage{T,HS};
-		vis=Visualizer(), zoom=1.8,	background=true) where {T,HT,HS}
+		vis=Visualizer(), zoom=1.8,	
+		transparency_truth=1.0, 
+		transparency_learn=1.0,
+		color_truth=RGBA(1.0, 153.0 / 255.0, 51.0 / 255.0, transparency_truth),
+		color_learn=RGBA(51.0 / 255.0, 1.0, 1.0, transparency_learn),
+		background=true) where {T,HT,HS}
 	setvisible!(vis["/Background"], background)
 	setprop!(vis["/Background"], "top_color", RGBA(1.0, 1.0, 1.0, 1.0))
 	setprop!(vis["/Background"], "bottom_color", RGBA(1.0, 1.0, 1.0, 1.0))
@@ -166,14 +176,14 @@ function cube_ghost_sim_v_truth(d, traj_truth::Storage{T,HT}, traj_sim::Storage{
 	for (j,i) in enumerate(frames)
 		setobject!(vis["truth$(i)"],
 			Rect(Vec(-1,-1,-1),Vec(2,2,2.0)),
-			MeshPhongMaterial(color = RGBA(66/255, 133/255, 244/255, α[j])))
+			MeshPhongMaterial(color=color_truth))
 
 		v = vrep([d[1 + (i-1)*3 .+ (1:3)] for i = 1:8])
 		p = polyhedron(v)
 		Polyhedra.Mesh(p)
 		setobject!(vis["sim$(i)"],
 			Polyhedra.Mesh(p),
-			MeshPhongMaterial(color = RGBA(244/255, 160/255, 0/255, 0.7)))
+			MeshPhongMaterial(color=color_learn))
 	end
 
 	# Animate

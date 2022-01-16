@@ -268,7 +268,6 @@ me0 = mechanicalEnergy(mech, storage)[start0:end]
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
 
-
 ################################################################################
 #  ATLAS
 ################################################################################
@@ -340,7 +339,7 @@ me0 = mechanicalEnergy(mech, storage)[start0:end]
 
 # Test mechanical energy conservation
 @testset "Energy: Quadruped" begin
-    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 2e-3
+    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-2
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
 
@@ -368,7 +367,7 @@ Nlink0 = 5
 spring0 = 0.01
 damper0 = 0.0
 mech = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
-    jointtype = :Revolute, contact = false, r = 0.05)
+    jointtype = :Revolute, contact = false, r = 0.05);
 
 v0 = 10.0 * [1, 2, 3] * Δt0
 ω0 = 10.0 * [1, 2, 3] * Δt0
@@ -433,7 +432,7 @@ Nlink0 = 5
 spring0 = 0.01
 damper0 = 0.0
 mech = getmechanism(:twister, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
-    jointtype = :Revolute, contact = false, r = 0.05)
+    jointtype = :Revolute, contact = false, r = 0.05);
 
 v0 = 10.0 * [1, 2, 3] * Δt0
 ω0 = 10.0 * [1, 2, 3] * Δt0

@@ -63,7 +63,7 @@ end
 function MeshCat.setobject!(subvisshape, visshape, shape::Mesh; transparent=false)
     if visshape.mtl_library == ""
         visshape = MeshFileGeometry(visshape.contents, visshape.format)
-        setobject!(subvisshape, visshape, MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
+        setobject!(subvisshape, visshape, MeshPhongMaterial(color=shape.color))
     else
         setobject!(subvisshape, visshape)
     end
@@ -157,7 +157,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N};
     env == "editor" ? (return render(vis)) : (return vis, animation)
 end
 
-function build_robot(vis::Visualizer, mechanism::Mechanism; name::Symbol=:robot) where {T,N}
+function build_robot(vis::Visualizer, mechanism::Mechanism; name::Symbol=:robot, color=nothing) where {T,N}
 
     bodies = mechanism.bodies
     origin = mechanism.origin
@@ -167,7 +167,20 @@ function build_robot(vis::Visualizer, mechanism::Mechanism; name::Symbol=:robot)
     setvisible!(vis["/Axes"],false)
 
     for (id,body) in enumerate(bodies)
-        shape = body.shape
+        shape = deepcopy(body.shape)
+        if color !== nothing 
+            if shape isa Shapes 
+                for i = 1:length(shape.shape) 
+                    shape.shape[i].color = color 
+                end
+            else
+                if shape isa EmptyShape 
+                    nothing 
+                else
+                    shape.color = color 
+                end
+            end
+        end
         visshape = convertshape(shape)
         subvisshape = nothing
         subvisframe = nothing
@@ -191,7 +204,6 @@ function build_robot(vis::Visualizer, mechanism::Mechanism; name::Symbol=:robot)
 end
 
 function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T}; name::Symbol=:robot) where {T,N}
-
     bodies = mechanism.bodies
     origin = mechanism.origin
 

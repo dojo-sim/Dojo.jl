@@ -90,3 +90,5 @@ function cost(env::Environment{HalfCheetah}, x, u;
     c = ctrl_cost_weight * u'*u - x_velocity * forward_reward_weight
     return c
 end
+
+

@@ -32,10 +32,10 @@ function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0, d
         names = ["RR", "FR", "RL", "RR"]
 
         contineqcs1 = contactconstraint(getbody(mech, "l_foot"), normal, cf, p = contacts, offset=offset, names = "l_" .* names)
-        # contineqcs2 = contactconstraint(getbody(mech, "r_foot"), normal, cf, p = contacts, offset=offset, names = "r_" .* names)
+        contineqcs2 = contactconstraint(getbody(mech, "r_foot"), normal, cf, p = contacts, offset=offset, names = "r_" .* names)
 
         setPosition!(mech, geteqconstraint(mech, "auto_generated_floating_joint"), [0;0;0.9385;0.;0.;0.])
-        mech = Mechanism(origin, bodies, eqs, contineqcs1, g = g, Δt = Δt, spring=spring, damper=damper)
+        mech = Mechanism(origin, bodies, eqs, [contineqcs1; contineqcs2], g = g, Δt = Δt, spring=spring, damper=damper)
     end
     return mech
 end
@@ -68,11 +68,62 @@ function initializeatlas!(mechanism::Mechanism;
     return nothing
 end
 
-# vis = Visualizer() 
-# open(vis)
+function initializeatlasstance!(mechanism::Mechanism; 
+    tran::AbstractVector{T} = [0,0,0.2],
+    rot::AbstractVector{T} = [0,0,0.], 
+    v=[zeros(3) for i = 1:length(mechanism.bodies)], 
+    ω=[zeros(3) for i = 1:length(mechanism.bodies)], 
+    αhip::T = 0.0, αknee::T = 0.0) where {T}
+    tran += [0,0,0.9385]
 
-# model = getatlas()
-# initializeatlas!(model)
-# storage = simulate!(model, 0.3, record=true, verbose=false)
-# visualize(model, storage, vis=vis, show_contact=true)
+    # positions
+    try
+        setPosition!(mech,
+        geteqconstraint(mech, "auto_generated_floating_joint"),
+        [[0,0,0.5]; [0.0,0.0, 0.0]])
+        # setPosition!(mech, geteqconstraint(mech, "l_leg_hpxyz"), [0.0, -αhip, 0.0])
+        # setPosition!(mech, geteqconstraint(mech, "r_leg_hpxyz"), [0.0, -αhip, 0.0])
+        setPosition!(mech, geteqconstraint(mech, "l_leg_kny"), [αknee])
+        setPosition!(mech, geteqconstraint(mech, "r_leg_kny"), [αknee])
+        # setPosition!(mech, geteqconstraint(mech, "l_leg_akxy"), [αhip-αknee, 0.0])
+        # setPosition!(mech, geteqconstraint(mech, "r_leg_akxy"), [αhip-αknee, 0.0])
 
+        setPosition!(mech, geteqconstraint(mech, "auto_generated_floating_joint"), [tran; rot])
+        setPosition!(mech, geteqconstraint(mech, "back_bkx"), [0.0  * π])
+        setPosition!(mech, geteqconstraint(mech, "back_bky"), [0.04 * π])
+        setPosition!(mech, geteqconstraint(mech, "back_bkz"), [0.0 * π])
+        setPosition!(mech, geteqconstraint(mech, "l_arm_elx"), [0.25 * π])
+        setPosition!(mech, geteqconstraint(mech, "l_arm_ely"), [0.5 * π])
+        setPosition!(mech, geteqconstraint(mech, "l_arm_shx"), [-0.5 * π])
+        setPosition!(mech, geteqconstraint(mech, "l_arm_shz"), [0.0 * π])
+        setPosition!(mech, geteqconstraint(mech, "l_arm_mwx"), [0.0 * π])
+        setPosition!(mech, geteqconstraint(mech, "l_arm_uwy"), [0.0 * π])
+        # setPosition!(mech, geteqconstraint(mech, "l_arm_lwy"), [0.0])
+        # setPosition!(mech, geteqconstraint(mech, "l_leg_akx"), [0.0])
+        setPosition!(mech, geteqconstraint(mech, "l_leg_aky"), [-0.1 * π])
+        # setPosition!(mech, geteqconstraint(mech, "l_leg_hpx"), [0.0])
+        setPosition!(mech, geteqconstraint(mech, "l_leg_hpy"), [-0.1 * π])
+        # setPosition!(mech, geteqconstraint(mech, "l_leg_hpz"), [0.0])
+        setPosition!(mech, geteqconstraint(mech, "l_leg_kny"), [0.2 * π])
+        setPosition!(mech, geteqconstraint(mech, "neck_ay"), [0.0])
+        setPosition!(mech, geteqconstraint(mech, "r_arm_elx"), [-0.25 * π])
+        setPosition!(mech, geteqconstraint(mech, "r_arm_ely"), [0.5 * π])
+        setPosition!(mech, geteqconstraint(mech, "r_arm_shx"), [0.5 * π])
+        setPosition!(mech, geteqconstraint(mech, "r_arm_shz"), [0.0 * π])
+        setPosition!(mech, geteqconstraint(mech, "r_arm_mwx"), [0.0 * π])
+        setPosition!(mech, geteqconstraint(mech, "r_arm_uwy"), [0.0 * π])
+        setPosition!(mech, geteqconstraint(mech, "r_arm_lwy"), [0.0 * π])
+        # setPosition!(mech, geteqconstraint(mech, "r_leg_akx"), [0.0])
+        setPosition!(mech, geteqconstraint(mech, "r_leg_aky"), [-0.1 * π])
+        # setPosition!(mech, geteqconstraint(mech, "r_leg_hpx"), [0.0])
+        setPosition!(mech, geteqconstraint(mech, "r_leg_hpy"), [-0.1 * π])
+        # setPosition!(mech, geteqconstraint(mech, "r_leg_hpz"), [0.0 * π])
+        setPosition!(mech, geteqconstraint(mech, "r_leg_kny"), [0.2 * π])
+    catch
+        nothing
+    end
+
+    zeroVelocity!(mechanism)
+
+    return nothing
+end

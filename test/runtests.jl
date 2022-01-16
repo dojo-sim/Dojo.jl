@@ -1,4 +1,3 @@
-using Test
 using ForwardDiff
 using FiniteDiff
 using StaticArrays
@@ -7,6 +6,7 @@ using Random
 using SparseArrays
 using BenchmarkTools
 using Dojo
+using Test
 
 include("integrator.jl")
 include("minimal_coordinates.jl")
