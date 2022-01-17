@@ -42,6 +42,7 @@ A differentiable rigid-body-dynamics with contact simulator for robotics.
 
 ### Learning
 <img src="examples/animations/box_learning.gif" width="200"/>
+<img src="examples/animations/cone_learning.gif" width="200"/>
 
 ### Toss
 <img src="examples/animations/box_toss.gif" width="300"/>
