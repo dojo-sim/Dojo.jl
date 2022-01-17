@@ -29,7 +29,6 @@ A differentiable rigid-body-dynamics with contact simulator for robotics.
 ### Quadruped 
 <img src="examples/animations/quadruped_min.gif" width="200"/>
 
-
 ## Reinforcement Learning 
 
 ### Half Cheetah 
