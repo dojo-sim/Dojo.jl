@@ -108,37 +108,7 @@ end
     return X
 end
 
-## Complementarity
-function complementarity(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}; scaling::Bool = false) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
-    γ = ineqc.γsol[2]
-    s = ineqc.ssol[2]
-    if scaling
-        W, Wi, λ = nt_scaling(ineqc)
-        c = vcat(λ[1] * λ[1], cone_product(λ[@SVector [2,3,4]], λ[@SVector [2,3,4]]))
-    else
-        c = vcat(γ[1] * s[1], cone_product(γ[@SVector [2,3,4]], s[@SVector [2,3,4]]))
-    end
-    return c
-end
-
-function complementarityμ(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}; scaling::Bool = false) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
-    γ = ineqc.γsol[2]
-    s = ineqc.ssol[2]
-    if scaling
-        W, Wi, λ = nt_scaling(ineqc)
-        c = vcat(λ[1] * λ[1], cone_product(λ[@SVector [2,3,4]], λ[@SVector [2,3,4]])) - mechanism.μ * neutral_vector(ineqc.constraints[1])
-    else
-        c = vcat(γ[1] * s[1], cone_product(γ[@SVector [2,3,4]], s[@SVector [2,3,4]])) - mechanism.μ * neutral_vector(ineqc.constraints[1])
-    end
-    return c
-end
-
-function neutral_vector(bound::ContactBound{T,N}) where {T,N}
-    N½ = Int(N/2)
-    return [sones(T, 2); szeros(T, N½-2)]
-end
-
-@inline function ∂g∂ʳvel(bound::ContactBound{T}, x3::AbstractVector{T}, q3::UnitQuaternion{T},
+@inline function ∂g∂v(bound::ContactBound{T}, x3::AbstractVector{T}, q3::UnitQuaternion{T},
         x2::AbstractVector{T}, v25::AbstractVector{T}, q2::UnitQuaternion{T}, ϕ25::AbstractVector{T}, λ, Δt::T) where {T}
     V = [bound.ainv3 * Δt;
          szeros(1,3);
@@ -154,7 +124,7 @@ end
 end
 
 
-@inline function ∂g∂ʳvel(bound::ContactBound, x3::AbstractVector, q3::UnitQuaternion,
+@inline function ∂g∂v(bound::ContactBound, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, Δt
     )
     Bxmat = bound.Bx
@@ -205,19 +175,57 @@ end
     return
 end
 
-function nt_scaling(ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
+function complementarity(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}; scaling::Bool = false) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
     γ = ineqc.γsol[2]
     s = ineqc.ssol[2]
-    W_ort, Wi_ort, λ_ort = ort_nt_scaling(s[1:1], γ[1:1])
-    W_soc, Wi_soc, λ_soc = soc_nt_scaling(s[2:4], γ[2:4])
-    W = cat(W_ort, W_soc, dims = (1,2))
-    Wi = cat(Wi_ort, Wi_soc, dims = (1,2))
-    λ = [λ_ort; λ_soc]
-    return W, Wi, λ
+    return vcat(γ[1] * s[1], cone_product(γ[@SVector [2,3,4]], s[@SVector [2,3,4]]))
+end
+
+function neutral_vector(bound::ContactBound{T,N}) where {T,N}
+    N½ = Int(N/2)
+    return [sones(T, 2); szeros(T, N½-2)]
 end
 
 function cone_degree(bound::ContactBound{T,N}) where {T,N}
     # http://www.seas.ucla.edu/~vandenbe/publications/coneprog.pdf
-    # section 2
-    return 1 + 1 # 1 for impact and 1 for the second order cone
+    return 1 + 1 # 1 for impact and 1 for the second-order cone
+end
+
+## Contact 
+# signed distance function
+function sdf(ineqc::InequalityConstraint{T,N,Nc,Cs}, x::AbstractVector{T}, q::UnitQuaternion{T}) where {T,N,Nc,Cs<:Tuple{<:Bound{T,N}}}
+    cont = ineqc.constraints[1]
+    return cont.ainv3 * (x + vrotate(cont.p, q) - cont.offset)
+end
+
+# contact location
+function contact_location(mechanism::Mechanism)
+    return [contact_location(mech, ineqc) for ineqc in mechanism.ineqconstraints]
+end
+
+function contact_location(mechanism::Mechanism, ineqc::InequalityConstraint)
+    bodies = collect(mechanism.bodies)
+    body = bodies[findfirst(x -> x.id == ineqc.parentid, bodies)]
+    return contact_location(ineqc, body)
+end
+
+function contact_location(ineqc::InequalityConstraint{T,N,Nc,Cs}, body::Body) where {T,N,Nc,Cs<:Tuple{<:Bound{T,N}}}
+    x = body.state.x2[1]
+    q = body.state.q2[1]
+    return contact_location(ineqc, x, q)
+end
+
+function contact_location(ineqc::InequalityConstraint{T,N,Nc,Cs}, x::AbstractVector{T}, q::UnitQuaternion{T}) where {T,N,Nc,Cs<:Tuple{<:Bound{T,N}}}
+    cont = ineqc.constraints[1]
+    return x + vrotate(cont.p,q) - cont.offset
+end
+
+function get_sdf(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, storage::Storage) where {T,Nn,Ne,Nb,Ni}
+    N = length(storage.x[1])
+    d = []
+    for ineqc in mechanism.ineqconstraints
+        ibody = getbody(mechanism, ineqc.parentid).id - Ne
+        push!(d, [sdf(ineqc, storage.x[ibody][i], storage.q[ibody][i]) for i = 1:length(storage.x[1])])
+    end
+    return d
 end

@@ -87,18 +87,6 @@ function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:
         (bound.Bx * vp + ψ * sones(4) - sβ)...)
 end
 
-
-## Derivatives accounting for quaternion specialness
-## maps boundact forces into the dynamics
-@inline function ∂g∂pos(bound::LinearContactBound, x::AbstractVector, q::UnitQuaternion, λ)
-    X = [bound.ainv3;
-         szeros(1,3);
-         bound.Bx]
-    # q * ... is a rotation by quatrnon q it is equivalent to Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * ...
-    Q = - X * q * skew(bound.p - vrotate(bound.offset, inv(q)))
-    return X, Q
-end
-
 @inline function forcemapping(bound::LinearContactBound)
     X = [bound.ainv3;
          szeros(1,3);
@@ -110,25 +98,7 @@ end
 function complementarity(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}; scaling = false) where {T,N,Nc,Cs<:Tuple{LinearContactBound{T,N}},N½}
     γ = ineqc.γsol[2]
     s = ineqc.ssol[2]
-    if scaling
-        W, Wi, λ = nt_scaling(ineqc)
-        c = λ .* λ
-    else
-        c = γ .* s
-    end
-    return c
-end
-
-function complementarityμ(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}; scaling = false) where {T,N,Nc,Cs<:Tuple{LinearContactBound{T,N}},N½}
-    γ = ineqc.γsol[2]
-    s = ineqc.ssol[2]
-    if scaling
-        W, Wi, λ = nt_scaling(ineqc)
-        c = λ .* λ - mechanism.μ * neutral_vector(ineqc.constraints[1])
-    else
-        c = γ .* s - mechanism.μ * neutral_vector(ineqc.constraints[1])
-    end
-    return c
+    return γ .* s
 end
 
 function neutral_vector(bound::LinearContactBound{T,N}) where {T,N}
@@ -136,12 +106,16 @@ function neutral_vector(bound::LinearContactBound{T,N}) where {T,N}
     return sones(T, N½)
 end
 
-@inline function ∂g∂ʳpos(bound::LinearContactBound, x::AbstractVector, q::UnitQuaternion, λ)
-    X, Q = ∂g∂pos(bound, x, q, λ)
+@inline function G(bound::LinearContactBound, x::AbstractVector, q::UnitQuaternion, λ)
+    X = [bound.ainv3;
+         szeros(1,3);
+         bound.Bx]
+    # q * ... is a rotation by quatrnon q it is equivalent to Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * ...
+    Q = - X * q * skew(bound.p - vrotate(bound.offset, inv(q)))
     return [X Q]
 end
 
-@inline function ∂g∂ʳvel(bound::LinearContactBound, x3::AbstractVector, q3::UnitQuaternion,
+@inline function ∂g∂v(bound::LinearContactBound, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, Δt
     )
     V = [bound.ainv3 * Δt;
@@ -186,14 +160,8 @@ end
     return
 end
 
-function nt_scaling(ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{LinearContactBound{T,N}},N½}
-    γ = ineqc.γsol[2]
-    s = ineqc.ssol[2]
-    return ort_nt_scaling(s, γ)
-end
-
 function cone_degree(bound::LinearContactBound{T,N}) where {T,N}
     # http://www.seas.ucla.edu/~vandenbe/publications/coneprog.pdf
     # section 2
-    return Int(N/2)
+    return Int(N / 2)
 end
