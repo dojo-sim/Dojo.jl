@@ -5,7 +5,7 @@ getGlobalOrder() = (global METHODORDER; return METHODORDER)
 @inline getx3(x2::SVector{3,T}, v25::SVector{3,T}, Δt::T) where {T} = x2 + v25 * Δt
 @inline getq3(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T) where {T} = q2 * ωbar(ϕ25, Δt) * Δt / 2
 
-@inline getx3(state::State, Δt) = state.x2[1] + state.vsol[2]*Δt
+@inline getx3(state::State, Δt) = state.x2[1] + state.vsol[2] * Δt
 @inline getq3(state::State, Δt) = state.q2[1] * ωbar(state.ϕsol[2],Δt) * Δt / 2
 
 @inline posargs1(state::State) = (state.x1, state.q1)
@@ -85,7 +85,7 @@ end
     state.ϕ15 = state.ϕsol[2]
 
     state.x2[1] = state.x2[1] + state.vsol[2]*Δt
-    state.q2[1] = state.q2[1] * ωbar(state.ϕsol[2],Δt) * Δt / 2
+    state.q2[1] = state.q2[1] * ωbar(state.ϕsol[2], Δt) * Δt / 2
 
     state.F2[1] = szeros(T,3)
     state.τ2[1] = szeros(T,3)
@@ -138,5 +138,13 @@ function ∂integrator∂q(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T; at
 end
 
 function ∂integrator∂ϕ(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T) where {T}
+    return Lmat(q2) * derivωbar(ϕ25, Δt) * Δt/2
+end
+
+function ∂x3∂v(Δt::T) where {T}
+    return Δt * I(3)
+end
+
+function ∂q3∂ϕ(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T) where {T}
     return Lmat(q2) * derivωbar(ϕ25, Δt) * Δt/2
 end

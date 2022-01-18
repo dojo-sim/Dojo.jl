@@ -1,58 +1,46 @@
 abstract type Bound{T,N} end
 
-# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::Bound{T,N}) where {T,N}
-#     summary(io, constraint)
-# end
-
 ### General functions
 getT(bound::Bound{T}) where T = T
 Base.length(bound::Bound{T,N}) where {T,N} = N
 
 
-### Constraints and derivatives
 ## Position level constraint wrappers
-g(bound::Bound, body::Body, λ, Δt) = g(bound, body.state, λ, Δt)
-
-
-## Discrete-time position wrappers (for dynamics)
-@inline g(bound::Bound, state::State, λ, Δt) = g(bound, posargs3(state, λ, Δt)...)
+g(bound::Bound, body::Body, λ, Δt) = g(bound, posargs3(body.state, Δt)..., λ)
 
 ## Discrete-time position derivatives (for dynamics)
 # Wrappers 1
-@inline function ∂g∂ʳposa(bound::Bound, body::Body, id, λ, Δt)
-    return ∂g∂ʳpos(bound, body.state, λ, Δt)
+@inline function Ga(bound::Bound, body::Body, id, λ, Δt)
+    return G(bound, posargs3(body.state, Δt)..., λ)
 end
 
-# Wrappers 2
-∂g∂ʳpos(bound::Bound, state::State, λ, Δt) = ∂g∂ʳpos(bound, posargs3(state, Δt)..., λ)
+# # Derivatives accounting for quaternion specialness
+# @inline function G(bound::Bound, x::AbstractVector, q::UnitQuaternion, λ)
+#     X, Q = ∂g∂pos(bound, x, q, λ)
+#     Q = Q * LVᵀmat(q)
+#     return [X Q]
+# end
 
-# Derivatives accounting for quaternion specialness
-@inline function ∂g∂ʳpos(bound::Bound, x::AbstractVector, q::UnitQuaternion, λ)
-    X, Q = ∂g∂pos(bound, x, q, λ)
-    Q = Q * LVᵀmat(q)
-    return [X Q]
-end
+# ## Discrete-time velocity derivatives (for dynamics)
+# # Wrappers 1
+# @inline function ∂g∂ʳvela(bound::Bound, body::Body, id, λ, Δt)
+#     return ∂g∂ʳvel(bound, body.state, λ, Δt)
+# end
 
-## Discrete-time velocity derivatives (for dynamics)
-# Wrappers 1
-@inline function ∂g∂ʳvela(bound::Bound, body::Body, id, λ, Δt)
-    return ∂g∂ʳvel(bound, body.state, λ, Δt)
-end
+# # Wrappers 2
+# ∂g∂ʳvel(bound::Bound, state::State, λ, Δt) = ∂g∂ʳvel(bound, posargs3(state, Δt)..., fullargssol(state)..., λ, Δt)
 
-# Wrappers 2
-∂g∂ʳvel(bound::Bound, state::State, λ, Δt) = ∂g∂ʳvel(bound, posargs3(state, Δt)..., fullargssol(state)..., λ, Δt)
+# # Derivatives accounting for quaternion specialness
+# @inline function ∂g∂ʳvel(bound::Bound, x2::AbstractVector, q2::UnitQuaternion,
+#         x1::AbstractVector, v1::AbstractVector, q1::UnitQuaternion, ω1::AbstractVector, λ, Δt
+#     )
 
-# Derivatives accounting for quaternion specialness
-@inline function ∂g∂ʳvel(bound::Bound, x2::AbstractVector, q2::UnitQuaternion,
-        x1::AbstractVector, v1::AbstractVector, q1::UnitQuaternion, ω1::AbstractVector, λ, Δt
-    )
+#     X, Q = ∂g∂pos(bound, x2, q2, λ)
+#     V = X * Δt
+#     Ω = Q * Lmat(q1) * derivωbar(ω1, Δt) * Δt / 2
 
-    X, Q = ∂g∂pos(bound, x2, q2, λ)
-    V = X * Δt
-    Ω = Q * Lmat(q1) * derivωbar(ω1, Δt) * Δt / 2
-
-    return [V Ω]
-end
+#     return [V Ω]
+# end
 
 # signed distance function
 function sdf(ineqc::InequalityConstraint{T,N,Nc,Cs}, x::AbstractVector{T}, q::UnitQuaternion{T}) where {T,N,Nc,Cs<:Tuple{<:Bound{T,N}}}
@@ -64,16 +52,19 @@ end
 function contact_location(mechanism::Mechanism)
     return [contact_location(mech, ineqc) for ineqc in mechanism.ineqconstraints]
 end
+
 function contact_location(mechanism::Mechanism, ineqc::InequalityConstraint)
     bodies = collect(mechanism.bodies)
     body = bodies[findfirst(x -> x.id == ineqc.parentid, bodies)]
     return contact_location(ineqc, body)
 end
+
 function contact_location(ineqc::InequalityConstraint{T,N,Nc,Cs}, body::Body) where {T,N,Nc,Cs<:Tuple{<:Bound{T,N}}}
     x = body.state.x2[1]
     q = body.state.q2[1]
     return contact_location(ineqc, x, q)
 end
+
 function contact_location(ineqc::InequalityConstraint{T,N,Nc,Cs}, x::AbstractVector{T}, q::UnitQuaternion{T}) where {T,N,Nc,Cs<:Tuple{<:Bound{T,N}}}
     cont = ineqc.constraints[1]
     return x + vrotate(cont.p,q) - cont.offset

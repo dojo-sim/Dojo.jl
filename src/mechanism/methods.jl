@@ -97,9 +97,9 @@ end
                 Nj = length(joint)
                 if body1.id == eqc.childids[i]
                     Aᵀ = zerodimstaticadjoint(constraintmat(joint))
-                    eqc.isspring && (dGab -= ∂springforcea∂velb(joint, body2, body1, Δt)) #should be useless
+                    # eqc.isspring && (dGab -= ∂springforcea∂velb(joint, body2, body1, Δt)) #should be useless
                     eqc.isdamper && (dGab -= ∂damperforcea∂velb(joint, body2, body1, Δt))
-                    eqc.isspring && (dGba -= ∂springforceb∂vela(joint, body2, body1, Δt)) #should be useless
+                    # eqc.isspring && (dGba -= ∂springforceb∂vela(joint, body2, body1, Δt)) #should be useless
                     eqc.isdamper && (dGba -= ∂damperforceb∂vela(joint, body2, body1, Δt))
                 end
                 off += Nj

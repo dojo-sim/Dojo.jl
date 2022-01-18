@@ -108,21 +108,16 @@ function max2min(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) whe
 			if eqc.parentid != nothing
 				iparent = eqc.parentid - Ne
 				xa, va, qa, ϕa = unpackMaxState(z, iparent)
-				if typeof(joint) <: Translational
-					push!(c, minimalCoordinates(joint, xa, qa, xb, qb)...) # Δx in bodya's coordinates projected on jointAB's nullspace
-					push!(v, minimalVelocities(joint, xa, qa, va, ϕa, xb, qb, vb, ϕb)...) # Δv in bodya's coordinates projected on jointAB's nullspace
-				elseif typeof(joint) <: Rotational
-					push!(c, minimalCoordinates(joint, qa, qb)...) # Δq in bodya's coordinates projected on jointAB's nullspace
-					push!(v, minimalVelocities(joint, qa, ϕa, qb, ϕb)...) # Δϕ in bodya's coordinates projected on jointAB's nullspace
-				end
-			else
-				if typeof(joint) <: Rotational
-					push!(c, minimalCoordinates(joint, qb)...) # Δq = q2 of body b
-					push!(v, minimalVelocities(joint, qb, ϕb)...) # Δϕ = ϕ15 of bodyb in origin = world's coordinates
-				elseif typeof(joint) <: Translational
-					push!(c, minimalCoordinates(joint, xb, qb)...) # Δx = x2 of bodyb in world's coordinates
-					push!(v, minimalVelocities(joint, qb, vb, ϕb)...) # Δv = v15 of bodyb in world's coordinates
-				end
+			else 
+				xa, va, qa, ϕa = fullargssol(mechanism.origin.state)
+			end
+			
+			if typeof(joint) <: Translational
+				push!(c, minimalCoordinates(joint, xa, qa, xb, qb)...) # Δx in bodya's coordinates projected on jointAB's nullspace
+				push!(v, minimalVelocities(joint, xa, qa, va, ϕa, xb, qb, vb, ϕb)...) # Δv in bodya's coordinates projected on jointAB's nullspace
+			elseif typeof(joint) <: Rotational
+				push!(c, minimalCoordinates(joint, qa, qb)...) # Δq in bodya's coordinates projected on jointAB's nullspace
+				push!(v, minimalVelocities(joint, qa, ϕa, qb, ϕb)...) # Δϕ in bodya's coordinates projected on jointAB's nullspace
 			end
 		end
 		push!(x, [c; v]...)

@@ -28,16 +28,6 @@ function momentum_body(mechanism::Mechanism{T}, body::Body{T}) where {T}
     v15 = body.state.vsol[2] # v1.5
     ω15 = body.state.ϕsol[2] # ω1.5
 
-    # ezg = SA{T}[0; 0; -mechanism.g]
-    # D1x = - 1/Δt * body.m * (x2 - x1) + Δt/2 * body.m * ezg
-    # D2x = 1/Δt * body.m * (x3 - x2) + Δt/2 * body.m * ezg
-    # D1q =   2/Δt * LVᵀmat(q1)' * Tmat() * Rmat(q2)' * Vᵀmat() * body.J * Vmat() * Lmat(q1)' * vector(q2)
-    # D2q =   2/Δt * LVᵀmat(q3)' * Lmat(q2) * Vᵀmat() * body.J * Vmat() * Lmat(q2)' * vector(q3)
-    # p_linear_body = D2x - 0.5 * state.F2[1]
-    # p_angular_body = D2q - 0.5 * state.τ2[1]
-    # p_linear_body = body.m * v15  - 0.5 * [0; 0; body.m * mechanism.g * Δt] - 0.5 * body.state.F2[1] #BEST TODO should't we divide F by Δt to get a force instead of a force impulse
-    # p_angular_body = Δt * sqrt(4 / Δt^2.0 - ω15' * ω15) * body.J * ω15 + Δt * skew(ω15) * (body.J * ω15) - body.state.τ2[1] # TODO should't we divide tau by Δt to get a torque instead of a torque impulse
-    
     ezg = SA{T}[0; 0; -mechanism.g]
     D2x = 1 / Δt * body.m * (x3 - x2) + Δt/2 * body.m * ezg
     D2q = -4 / Δt * LVᵀmat(q2)' * Tmat() * Rmat(q3)' * Vᵀmat() * body.J * Vmat() * Lmat(q2)' * vector(q3)
@@ -48,12 +38,12 @@ function momentum_body(mechanism::Mechanism{T}, body::Body{T}) where {T}
     for (i, eqc) in enumerate(mechanism.eqconstraints)
         if body.id ∈ [eqc.parentid; eqc.childids]
 
-            f_joint = zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]  # computed at 1.5
+            f_joint = zerodimstaticadjoint(G(mechanism, eqc, body)) * eqc.λsol[2]  # computed at 1.5
             eqc.isspring && (f_joint += springforce(mechanism, eqc, body)) # computed at 1.5
             eqc.isdamper && (f_joint += damperforce(mechanism, eqc, body)) # computed at 1.5
 
-            p_linear_body += α * 0.5 * f_joint[1:3] # TODO should't we divide F by Δt to get a force instead of a force impulse
-            p_angular_body += α * 0.5 * f_joint[4:6] # TODO should't we divide F by Δt to get a force instead of a force impulse
+            p_linear_body += α * 0.5 * f_joint[1:3] 
+            p_angular_body += α * 0.5 * f_joint[4:6]
         end
     end
 

@@ -33,12 +33,12 @@ function resetVars!(ineqc::InequalityConstraint{T,N,Nc,Cs,N½}; scale::T=1.0) wh
 end
 
 # contribution of the inequality constraint (impact or friction) to the dynamics equation d = 0
-@inline function constraintForceMapping!(mechanism, body::Body, ineqc::InequalityConstraint)
+@inline function impulses!(mechanism, body::Body, ineqc::InequalityConstraint)
     body.state.d -= ∂g∂ʳpos(mechanism, ineqc, body)' * ineqc.γsol[2]
     return
 end
 
-@inline function ∂constraintForceMapping!(mechanism, body::Body, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+@inline function ∂impulses∂v!(mechanism, body::Body, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
     Δt = mechanism.Δt
     x3, q3 = posargs3(body.state, Δt)
     x2, v25, q2, ϕ25 = fullargssol(body.state)
@@ -55,7 +55,7 @@ end
         ∇ += skew(p - vrotate(offset, inv(q3))) * ∂qVRmat(LᵀVᵀmat(q3) * λ)
         ∇ += skew(p - vrotate(offset, inv(q3))) * VRmat(q3) * ∂qLᵀVᵀmat(λ)
         ∇ *= ∂integrator∂ϕ(q2, ϕ25, Δt)
-        body.state.D -= D1 = [szeros(T,6,3) [szeros(T,3,3); ∇]]
+        body.state.D -= [szeros(T,6,3) [szeros(T,3,3); ∇]]
     end
     return
 end

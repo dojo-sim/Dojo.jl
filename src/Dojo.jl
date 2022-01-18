@@ -145,11 +145,15 @@ include(joinpath("mechanism", "energy.jl"))
 
 # Joints
 include(joinpath("joints", "joint.jl"))
-include(joinpath("joints", "translational.jl"))
-include(joinpath("joints", "rotational.jl"))
+include(joinpath("joints", "translational", "constraint.jl"))
+include(joinpath("joints", "translational", "input.jl"))
+include(joinpath("joints", "translational", "force.jl"))
+include(joinpath("joints", "translational", "minimal.jl"))
+include(joinpath("joints", "rotational", "constraint.jl"))
+include(joinpath("joints", "rotational", "input.jl"))
+include(joinpath("joints", "rotational", "torque.jl"))
+include(joinpath("joints", "rotational", "minimal.jl"))
 include(joinpath("joints", "prototypes.jl"))
-include(joinpath("joints", "force.jl"))
-include(joinpath("joints", "torque.jl"))
 
 # Inequality constraints
 include(joinpath("bounds", "bound.jl"))

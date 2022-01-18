@@ -58,7 +58,7 @@ end
 
 # raiberthopper
 @testset "min -> max -> min: raiberthopper" begin
-	mech = Dojo.getmechanism(:raiberthopper)
+	mech = Dojo.getmechanism(:raiberthopper);
 	Random.seed!(100)
 	nx = Dojo.minCoordDim(mech)
 	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(nx - 13)]

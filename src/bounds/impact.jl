@@ -63,9 +63,7 @@ function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:
     body = getbody(mechanism, ineqc.parentid)
     x2, v25, q2, ϕ25 = fullargssol(body.state)
     x3, q3 = posargs3(body.state, mechanism.Δt)
-    SVector{1,T}(
-        bound.ainv3 * (x3 + vrotate(bound.p,q3) - bound.offset) - ineqc.ssol[2][1],
-        )
+    SVector{1,T}(bound.ainv3 * (x3 + vrotate(bound.p,q3) - bound.offset) - ineqc.ssol[2][1])
 end
 
 
@@ -73,7 +71,7 @@ end
 ## maps contact forces into the dynamics
 @inline function ∂g∂pos(bound::ImpactBound, x::AbstractVector, q::UnitQuaternion, λ)
     X = bound.ainv3
-    # q * ... is a rotation by quatrnon q it is equivalent to Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * ...
+    # q * ... is a rotation by quaternion q it is equivalent to Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * ...
     Q = - X * q * skew(bound.p - vrotate(bound.offset, inv(q)))
     return X, Q
 end
