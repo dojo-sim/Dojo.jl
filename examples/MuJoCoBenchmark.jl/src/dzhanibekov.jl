@@ -27,7 +27,7 @@ function energy(m, qpos, qvel)
 end
 
 module_dir()
-m = jlModel(joinpath(module_dir(), "model/tennis_racket.xml"))
+m = jlModel(joinpath(module_dir(), "model/dzhanibekov.xml"))
 dt = 0.025
 N = 15000
 H = N*dt/60
