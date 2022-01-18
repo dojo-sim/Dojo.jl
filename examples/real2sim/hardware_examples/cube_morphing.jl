@@ -64,6 +64,59 @@ function cube_morphing(D; vis=Visualizer(), fps=30, rot=0.00, vis_truth::Bool=tr
 	return vis, anim
 end
 
+function cone_morphing(D; vis=Visualizer(), fps=30, rot=0.00, vis_truth::Bool=true,
+		vis_learned::Bool=true, translate::Bool=true, cam_pos=[0,-10,4.], zoom=1.8,
+		color_truth=RGBA(1.0, 153.0 / 255.0, 51.0 / 255.0, 1.0),
+		color_learn=RGBA(51.0 / 255.0, 1.0, 1.0, 1.0),
+		background=true, alt=0.0, b0=0.2, b1=1.5)
+	setvisible!(vis["/Background"], background)
+	setprop!(vis["/Background"], "top_color", RGBA(1.0, 1.0, 1.0, 1.0))
+	setprop!(vis["/Background"], "bottom_color", RGBA(1.0, 1.0, 1.0, 1.0))
+	setvisible!(vis["/Axes"], false)
+	setvisible!(vis["/Grid"], false)
+	setprop!(vis["/Cameras/default/rotated/<object>"], "zoom", zoom)
+
+	settransform!(vis["/Cameras/default/rotated/<object>"], MeshCat.Translation(0.,0, 0))
+	settransform!(vis["/Cameras/default/rotated"], MeshCat.Translation(0.,0, 0))
+	settransform!(vis["/Cameras/default"], MeshCat.Translation(0.,0, 0))
+	settransform!(vis["/Cameras"], MeshCat.Translation(cam_pos...))
+
+	anim = MeshCat.Animation(fps)
+	b0 = Int(floor(b0*fps))
+	b1 = Int(floor(b1*fps))
+	D = [fill(D[1], b0); D; fill(D[end] .+ 0.005*rand(length(D[end])), 2b1)]
+	cf_truth = 0.21
+	setobject!(vis[:cone],
+		MeshCat.Cone(Point(0,0,1.0),Point(0,0,0.0),cf_truth),
+		MeshPhongMaterial(color=color_truth))
+
+	for (i,d) in enumerate(D)
+		setobject!(vis[Symbol("cone$i")],
+			MeshCat.Cone(Point(0,0,1.0),Point(0,0,0.0),d[1]),
+			MeshPhongMaterial(color=color_learn))
+	end
+
+	for (i,d) in enumerate(D)
+		atframe(anim, i) do
+			MeshCat.setvisible!(vis[:cone], vis_truth)
+			for (j,d) in enumerate(D)
+				MeshCat.setvisible!(vis[Symbol("cone$j")], i==j && vis_learned)
+			end
+			settransform!(vis[:cone], MeshCat.compose(
+				MeshCat.Translation(-0.5*translate,0,1+alt),
+				MeshCat.LinearMap(RotZ(rot*min(i,length(D)-b1))),
+				))
+
+			settransform!(vis[Symbol("cone$i")], MeshCat.compose(
+				MeshCat.Translation(0.5*translate,0,1+alt),
+				MeshCat.LinearMap(RotZ(rot*min(i,length(D)-b1))),
+				))
+
+		end
+	end
+	setanimation!(vis, anim)
+	return vis, anim
+end
 
 file = jldopen(joinpath(module_dir(), "examples",
 	"real2sim", "hardware_examples", "sol_best6.jld2"))
@@ -80,9 +133,27 @@ t = 50
 vis, anim = cube_morphing(Dsol[t:t], vis=vis, fps=20, rot=0.00, background=false,
 	vis_truth=true, vis_learned=false, translate=false, cam_pos=cam_pos, alt=-1, b0=0, b1=0)
 
+
+
+vis = Visualizer()
+open(vis)
+
+vis, anim = cone_morphing(Dsol, vis=vis, fps=20, rot=0.03,
+	vis_truth=true, vis_learned=true, translate=true, cam_pos=[0,-2,0.7], alt=-1.5)
+
+t = 1
+cam_pos = [0,-1.5,0.5]
+vis, anim = cone_morphing(Dsol[t:t], vis=vis, fps=20, rot=0.00, background=true,
+	vis_truth=false, vis_learned=true, translate=false, cam_pos=cam_pos, alt=-1.65, b0=0, b1=0)
+
+a = 10
+a = 10
+a = 10
+a = 10
+
 function cube_sim_v_truth(d, traj_truth::Storage{T,HT}, traj_sim::Storage{T,HS};
 		vis=Visualizer(), fps=30, zoom=1.8,
-		transparency_truth=1.0, 
+		transparency_truth=1.0,
 		transparency_learn=1.0,
 		color_truth=RGBA(1.0, 153.0 / 255.0, 51.0 / 255.0, transparency_truth),
 		color_learn=RGBA(51.0 / 255.0, 1.0, 1.0, transparency_learn),
@@ -155,8 +226,8 @@ function cube_sim_v_truth(d, traj_truth::Storage{T,HT}, traj_sim::Storage{T,HS};
 end
 
 function cube_ghost_sim_v_truth(d, traj_truth::Storage{T,HT}, traj_sim::Storage{T,HS};
-		vis=Visualizer(), zoom=1.8,	
-		transparency_truth=1.0, 
+		vis=Visualizer(), zoom=1.8,
+		transparency_truth=1.0,
 		transparency_learn=1.0,
 		color_truth=RGBA(1.0, 153.0 / 255.0, 51.0 / 255.0, transparency_truth),
 		color_learn=RGBA(51.0 / 255.0, 1.0, 1.0, transparency_learn),

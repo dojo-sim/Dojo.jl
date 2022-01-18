@@ -45,7 +45,7 @@ end
 visualize(mech, storage, vis = vis)
 
 
-file_name = "cube_traj"
+file_name = "cone_learn"
 MeshCat.convert_frames_to_video(
     "/home/simon/Downloads/$file_name.tar",
     "/home/simon/Documents/video/$file_name.mp4", overwrite=true)
