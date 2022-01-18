@@ -13,6 +13,9 @@ A differentiable rigid-body-dynamics with contact simulator for robotics.
 <img src="examples/animations/atlas_drop.gif" width="100"/>
 
 ### Friction-cone comparison 
+blue = nonlinear friction cone
+orange = linear friction cone
+magenta = MuJoCo friction model 
 <img src="examples/animations/cone_compare_mujoco.gif" height="300"/>
 
 ### Dzhanibekov effect
