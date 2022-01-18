@@ -5,15 +5,12 @@ function getcartpole(; Δt::T=0.1, g::T=-9.81, spring=0.0, damper=0.0) where {T}
     pendulum_axis = [1.0; 0.0; 0.0]
     slider_length = 1.0
     pendulum_length = 1.0
-    width, depth, height = 0.1, 0.1, 0.1
     radius = 0.075
     slider_mass = 1.0
-    pendulum_mass = 1.0
+    pendulum_mass = 0.432
 
     # Links
     origin = Origin{Float64}()
-    # slider = Box(width, slider_length, height, slider_mass)
-    # pendulum = Box(width, depth, pendulum_length, pendulum_mass)
     slider = Capsule(1.5 * radius, slider_length, slider_mass, qoffset=UnitQuaternion(RotX(0.5 * π)))
     pendulum = Capsule(radius, pendulum_length, pendulum_mass)
     links = [slider, pendulum]
@@ -42,4 +39,12 @@ function initializecartpole!(mech::Mechanism{T,Nn,Ne,Nb}; mode=:down, pendulum_l
         setPosition!(mech.bodies[3], mech.bodies[4], Δx=[0.0; 0.0; 0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
         setVelocity!(mech.bodies[4], v=zeros(3), ω=zeros(3))
     end
+end
+
+function mujoco_inertia!(mech)
+    mech.bodies[3].m = 1.0063
+    mech.bodies[3].J = Diagonal([0.106974, 0.106974, 0.00636812])
+
+    mech.bodies[4].m = 0.4321
+    mech.bodies[4].J = Diagonal([0.0422274, 0.0422274, 0.0012155])
 end

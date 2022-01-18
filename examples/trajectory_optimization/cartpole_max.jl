@@ -10,6 +10,8 @@ env = make("cartpole",
     dt=dt,
     g=gravity);
 
+mujoco_inertia!(env.mech)
+
 # ## visualizer 
 open(env.vis) 
 
