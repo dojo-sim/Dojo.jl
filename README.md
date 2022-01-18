@@ -41,7 +41,9 @@ A differentiable rigid-body-dynamics with contact simulator for robotics.
 ## Real-To-Sim
 
 ### Learning
+Learning geometry:
 <img src="examples/animations/box_learning.gif" width="200"/>
+Learning friction coefficient:
 <img src="examples/animations/cone_learning.gif" width="200"/>
 
 ### Toss
