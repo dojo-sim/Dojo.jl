@@ -3,7 +3,7 @@ vis = Visualizer()
 open(vis)
 
 MeshCat.settransform!(vis["/Cameras/default"],
-        MeshCat.compose(MeshCat.Translation(0.0, 0.0, 50.0), MeshCat.LinearMap(Rotations.RotY(-pi / 2.5))))
+        MeshCat.compose(MeshCat.Translation(0.0, 0.0, 30.0), MeshCat.LinearMap(Rotations.RotY(-pi / 2.5))))
 setprop!(vis["/Cameras/default/rotated/<object>"], "zoom", 10)
 
 ################################################################################
@@ -22,7 +22,7 @@ color_lc = RGBA(1.0, 153.0 / 255.0, 51.0 / 255.0, 1.0);
 mech_lc = getmechanism(:box, Δt=timestep, g=gravity, cf=friction_coefficient,
     conetype=:linear, mode=:box, color=color_lc);
 initialize!(mech_lc, :box, x=x0, q=one(UnitQuaternion), v=v0, ω=ω0)
-storage_lc = simulate!(mech_lc, 5.0, record=true, opts=opts)
+storage_lc = simulate!(mech_lc, 4.0, record=true, opts=opts)
 via, anim = visualize(mech_lc, storage_lc, vis=vis, name=:lc)
 
 line_mat_lc = LineBasicMaterial(color=color_lc, linewidth=10.0)
@@ -38,7 +38,7 @@ color_nc = RGBA(51.0 / 255.0, 1.0, 1.0, 1.0);
 mech_nc = getmechanism(:box, Δt=timestep, g=gravity, cf=friction_coefficient,
     conetype=:soc, mode=:box, color=color_nc);
 initialize!(mech_nc, :box, x=x0, q=one(UnitQuaternion), v=v0, ω=ω0)
-storage_nc = simulate!(mech_nc, 5.0, record=true, opts=opts)
+storage_nc = simulate!(mech_nc, 4.0, record=true, opts=opts)
 vis, anim = visualize(mech_nc, storage_nc, vis=vis, name=:nc, animation=anim)
 
 line_mat_nc = LineBasicMaterial(color=color_nc, linewidth=25.0)

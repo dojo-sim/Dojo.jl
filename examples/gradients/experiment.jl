@@ -4,8 +4,8 @@ using Plots
 include("methods.jl")
 
 # cone
-# conetype = :linear
-conetype = :soc
+conetype = :linear
+# conetype = :soc
 
 # scale system for nice plots
 mech = getmechanism(:box2d, Δt=0.1, g=-1.0, cf=1.0, contact=true, conetype=conetype);
@@ -17,8 +17,8 @@ Fsref = 0.001:0.001:0.2
 # options 
 undercut = 1.0
 
-# mode = :friction
-mode = :impact
+mode = :friction
+# mode = :impact
 if mode == :friction && conetype == :soc
     filename = "nonlinear_friction"
 elseif mode == :friction && conetype == :linear

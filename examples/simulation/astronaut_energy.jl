@@ -1,4 +1,4 @@
-using Dojo 
+using Dojo
 
 # visualizer
 vis = Visualizer()
@@ -17,7 +17,7 @@ open(vis)
 
 function astronaut_simulation(vis::Visualizer; Δt=1e-2, tsim=1.0, g=0.0,
         spring=0.0, damper=0.0, seed::Int=100, ϵ=1e-14, display::Bool = true)
-    
+
     Random.seed!(seed)
     mech = getmechanism(:humanoid, Δt=Δt, g=g, spring=spring, damper=damper, contact=false)
     initialize!(mech, :humanoid)
@@ -38,7 +38,7 @@ end
 solver_tolerance = 1.0e-14
 timestep = [0.05, 0.01, 0.005]
 tsim = 10.0
-storage = Storage[]
+storage = []
 mech, _ = astronaut_simulation(vis, tsim=tsim, Δt=timestep[1], ϵ=solver_tolerance)
 for t in timestep
     mech, data, tcompute = astronaut_simulation(vis, tsim=tsim, Δt=t, ϵ=solver_tolerance)
@@ -52,12 +52,13 @@ end
 color = [:magenta, :orange, :cyan];
 
 # energy
+const Dojo = Main
 me = [Dojo.mechanicalEnergy(mech, s)[2:end] for s in storage]
 plt = plot(xlabel="time (s)", ylabel="energy drift");
 for (i, e) in enumerate(me)
     tt = [j * timestep[i] for j = 1:length(e)]
     plt = plot!(tt, e .- e[1], color=color[i], width=2.0, label="h = $(timestep[i])")
-end 
+end
 display(plt);
 
 # momentum
@@ -81,7 +82,7 @@ for (i, mt) in enumerate(mang)
 end
 display(plt)
 
-# 
+#
 using PGFPlots
 const PGF = PGFPlots
 
@@ -89,22 +90,22 @@ color = ["magenta", "orange", "cyan"];
 p_energy = [PGF.Plots.Linear([j * timestep[i] for j = 1:length(e)], e .- e[1], legendentry="h=$(timestep[i])", mark="none",style="color="*color[i]*", line width=2pt, solid") for (i, e) in enumerate(me)]
 
 a1 = Axis(vcat(p_energy...),
-    xmin=0, 
+    xmin=0,
     xmax=10.0,
     hideAxis=false,
 	ylabel="energy drift",
 	xlabel="time (s)",
-    legendPos="south east") 
+    legendPos="south east")
 dir = joinpath("/home/taylor/Downloads")
 PGF.save(joinpath(dir, "energy_drift.tikz"), a1)
 
 ##########
-# Visualization 
+# Visualization
 color = RGBA(255.0/255.0,0.0,255.0,1.0);
 z = getMaxState(storage)
 z = [[z[1] for t = 1:100]..., z..., [z[end] for t = 1:100]...]
 build_robot(vis, mech, color=color)
-T = length(z) 
+T = length(z)
 anim = MeshCat.Animation(convert(Int, floor(1.0 / Δt0)))
 for t = 1:T
     MeshCat.atframe(anim, t) do
@@ -119,4 +120,3 @@ setvisible!(vis["/Grid"], false)
 t = 400 # 225, 150, 1
 set_robot(vis, mech, z[t])
 ##########
-
