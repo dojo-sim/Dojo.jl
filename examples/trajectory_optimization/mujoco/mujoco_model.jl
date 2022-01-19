@@ -17,21 +17,21 @@ struct MuJoCoModel{T,CX,CU}
     cache_u::CU
 end
 
-function MuJoCoModel(path)
+function MuJoCoModel(path; control_idx=nothing)
     m = jlModel(path)
     d = jlData(m)
 
     nq = length(d.qpos)
     nv = length(d.qvel)
     nx = nq + nv
-    nu = length(d.ctrl)
+    nu = control_idx === nothing ? length(d.ctrl) : length(d.ctrl[control_idx])
 
     x = zeros(nx) 
     u = zeros(nu) 
     fx = zeros(nx, nx) 
     fu = zeros(nx, nu) 
    
-    idx_u = collect(1:nu) 
+    idx_u = control_idx === nothing ? collect(1:nu) : control_idx
     idx_pos = collect(1:nq) 
     idx_vel = collect(nq .+ (1:nv))
     idx_next = collect(1:nq) 
@@ -48,10 +48,14 @@ end
 
 # dynamics methods
 function f!(y, model::MuJoCoModel, x, u) 
-    model.d.ctrl .= @views u[model.idx_u]
+    model.d.ctrl .= 0.0
+    model.d.ctrl[model.idx_u] .= @views u[model.idx_u]
+
     model.d.qpos[model.idx_next] .= @views x[model.idx_pos] 
     model.d.qvel[model.idx_next] .= @views x[model.idx_vel] 
+
     mj_step(model.m, model.d) 
+
     y[model.idx_pos] .= @views model.d.qpos[model.idx_next]
     y[model.idx_vel] .= @views model.d.qvel[model.idx_next]
     return y

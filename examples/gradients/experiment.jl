@@ -1,34 +1,24 @@
-# Utils
-function module_dir()
-    return joinpath(@__DIR__, "..", "..")
-end
-
-# Activate package
-using Pkg
-Pkg.activate(module_dir())
-
-using MeshCat
-
-# Open visualizer
-vis = Visualizer()
-open(vis)
-
-# Include new files
-include(joinpath(module_dir(), "examples", "loader.jl"))
-
+using Dojo 
+using Plots 
 
 include("methods.jl")
 
-conetype = :linear
-# conetype = :soc
-mech = getmechanism(:box2d, Δt=0.05, g=-10.0, cf=1.0, contact=true, conetype=conetype);
-btol = 1e-4
-Fs = 0:0.5:20
-Fsref = 0:0.05:20
-plt = plot(layout=(3,1), size=(500,800), legend=:topleft)
+# cone
+# conetype = :linear
+conetype = :soc
+
+# scale system for nice plots
+mech = getmechanism(:box2d, Δt=0.1, g=-1.0, cf=1.0, contact=true, conetype=conetype);
+
+# inputs
+Fs = 0.01:0.01:0.2
+Fsref = 0.001:0.001:0.2
+
+# options 
+undercut = 1.0
+
 # mode = :friction
 mode = :impact
-undercut = (mode == :impact) ? 1.01 : 1.50
 if mode == :friction && conetype == :soc
     filename = "nonlinear_friction"
 elseif mode == :friction && conetype == :linear
@@ -37,38 +27,41 @@ else
     filename = "impact"
 end
 
+
+plt = plot(layout=(3,1), size=(500,800), legend=:topleft)
+
+# hard contact
 for btol = 1e-10
     res = [box2d_dojo(mech, F, btol=btol, mode=mode) for F = Fsref]
+    write_csv(["F", "x", "grad"], [[Fsref[i]; res[i]...] for i=1:length(Fsref)], "data/$(filename)_dojo_"*scn(btol)[2:end]*".csv")
     x = [r[1] for r in res]
     ∇x = [r[2] for r in res]
     plot!(plt[1,1], Fsref,  x, xlabel="F", ylabel="x", linewidth=2.0,
-        label="true dynamics")
+        label="true dynamics", color=:black)
     plot!(plt[2,1], Fsref, ∇x, xlabel="F", ylabel="∇x", linewidth=2.0,
-        label="true dynamics", ylims=(-0.1, 1.5))
+        label="true dynamics", color=:black)#ylims=(-0.1, 1.5))
     plot!(plt[3,1], Fsref, ∇x, xlabel="F", ylabel="∇x", linewidth=2.0,
-        label="true dynamics", ylims=(-0.1, 1.5))
+        label="true dynamics", color=:black)#, ylims=(-0.1, 1.5))
     display(plt)
 end
 
-# for btol in exp.(log(10)* (-10:1:-3))
-for btol in [1e-3, 1e-4, 1e-5, 1e-6, 1e-8]
-# for btol = 3e-4
+# smooth contact
+for btol in [1e-4, 1e-5, 1e-6, 1e-7, 1e-8] .* undercut
     res = [box2d_dojo(mech, F, btol=btol, mode=mode, undercut=undercut) for F = Fsref]
     write_csv(["F", "x", "grad"], [[Fsref[i]; res[i]...] for i=1:length(Fsref)], "data/$(filename)_dojo_"*scn(btol)[2:end]*".csv")
     x = [r[1] for r in res]
     ∇x = [r[2] for r in res]
-    # plot!(plt[1,1], Fsref,  x, xlabel="F", ylabel="x", linewidth=3.0, linestyle=:dot,
-        # label="Dojo btol="*scn(btol))
+    plot!(plt[1,1], Fsref,  x, xlabel="F", ylabel="x", linewidth=3.0, linestyle=:dot,
+        label="Dojo btol="*scn(btol))
     plot!(plt[2,1], Fsref, ∇x, xlabel="F", ylabel="∇x", linewidth=3.0, linestyle=:dot,
         label="Dojo btol="*scn(btol)[2:end])
     display(plt)
 end
 
-for Σ in [1e-1, 1e-2, 1e-3]
-# for Σ in [4e-2]
-    res = [box2d_gradientbundle(mech, F, N=100, Σ=Σ*I, mode=mode) for F = Fs]
+# gradient bundles
+for Σ in [1e-2, 1e-3, 1e-4]
+    res = [box2d_gradientbundle(mech, F, N=500, Σ=Σ*I, mode=mode) for F = Fs]
     write_csv(["F", "x", "gb0", "gb1"], [[Fs[i]; res[i]...] for i=1:length(Fs)], "data/$(filename)_gb_"*scn(Σ)[2:end]*".csv")
-
     x = [r[1] for r in res]
     ∇x0 = [r[2] for r in res]
     ∇x1 = [r[3] for r in res]
@@ -79,9 +72,10 @@ for Σ in [1e-1, 1e-2, 1e-3]
         linestyle=:dash, label="1st order G.B. Σ="*scn(Σ)[2:end])
     display(plt)
 end
-display(plt)
 
+################
 
+################
 δu1 = [rand(3) for k=1:10]
 B1 = rand(6,3)
 Bf1 = vec(B1)
