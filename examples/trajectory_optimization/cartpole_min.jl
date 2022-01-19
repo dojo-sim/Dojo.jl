@@ -1,4 +1,6 @@
+using Dojo
 using IterativeLQR
+using LinearAlgebra 
 
 # ## system
 gravity = -9.81
@@ -8,9 +10,11 @@ env = make("cartpole",
     dt=dt,
     g=gravity);
 
+mujoco_inertia!(env.mechanism)
+
+
 # ## visualizer 
 open(env.vis)
-env.mechanism.bodies[4].state.x2
 
 # ## dimensions
 n = env.nx
@@ -51,8 +55,8 @@ function goal(x, u, w)
     Δ = x - zT
 end
 
-cont = Constraint()
-conT = Constraint(goal, n, 0)
+cont = IterativeLQR.Constraint()
+conT = IterativeLQR.Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
 # ## problem 
@@ -62,15 +66,14 @@ initialize_states!(prob, x̄)
 
 # ## solve
 IterativeLQR.solve!(prob,
-    linesearch=:armijo,
-    α_min=1.0e-5,
-    obj_tol=1.0e-3,
-    grad_tol=1.0e-3,
-    max_iter=100,
-    max_al_iter=5,
-    ρ_init=1.0,
-    ρ_scale=10.0,
+    max_al_iter=10,
     verbose=true)
 
-x_sol, u_sol = get_trajectory(prob)
+# ## solution 
+z_sol, u_sol = IterativeLQR.get_trajectory(prob)
+@show IterativeLQR.eval_obj(prob.m_data.obj.costs, prob.m_data.x, prob.m_data.u, prob.m_data.w)
+@show prob.s_data.iter[1]
+@show norm(goal(prob.m_data.x[T], zeros(0), zeros(0)), Inf)
+
+# ## visualize
 visualize(env, x_sol)
