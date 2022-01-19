@@ -19,15 +19,15 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 
 include("methods.jl")
 
-conetype = :linear
-# conetype = :soc
+# conetype = :linear
+conetype = :soc
 mech = getmechanism(:box2d, Δt=0.05, g=-10.0, cf=1.0, contact=true, conetype=conetype);
 btol = 1e-4
 Fs = 0:0.5:20
 Fsref = 0:0.05:20
 plt = plot(layout=(3,1), size=(500,800), legend=:topleft)
-# mode = :friction
-mode = :impact
+mode = :friction
+# mode = :impact
 undercut = (mode == :impact) ? 1.01 : 1.50
 if mode == :friction && conetype == :soc
     filename = "nonlinear_friction"
@@ -59,7 +59,7 @@ for btol in [1e-3, 1e-4, 1e-5, 1e-6, 1e-8]
     ∇x = [r[2] for r in res]
     # plot!(plt[1,1], Fsref,  x, xlabel="F", ylabel="x", linewidth=3.0, linestyle=:dot,
         # label="Dojo btol="*scn(btol))
-    plot!(plt[2,1], Fsref, ∇x, xlabel="F", ylabel="∇x", linewidth=3.0, linestyle=:dot,
+    plot!(plt[2,1], Fsref, ∇x, xlabel="F", ylabel="∇x", linewidth=1.0,# linestyle=:dot,
         label="Dojo btol="*scn(btol)[2:end])
     display(plt)
 end

@@ -41,6 +41,8 @@ struct Storage{T,N}
     Storage{T}() where T = Storage{T}(Base.OneTo(0),0)
 end
 
+Base.length(storage::Storage{T,N}) where {T,N} = N
+
 function downsample(storage::Storage{T,N}, n::Int) where {T,N}
     steps = N ÷ n
     nbodies = length(storage.x)
