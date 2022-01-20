@@ -220,13 +220,14 @@ pgfsave(filename, gp; include_preamble = true, dpi = 150)
 # energy
 ################################################################################
 
-Δt = [0.10, 0.05, 0.05]
+Δt = [0.10, 0.02, 0.005]
 ener_traj = []
 for i = 1:3
 	mech, storage, tcompute = astronaut_simulation(;Nsim=1, Δt=Δt[i], tsim=100.0, tctrl=1.0, seed=0, control_amplitude=0.02)
 	stride = Int(floor(1/Δt[i]))
 	ener_t = [kineticEnergy(mech, storage[1], i) for i in stride+2:stride:length(storage[1])]
 	push!(ener_traj, ener_t .- ener_t[1])
+	@show i
 end
 ener_traj
 
@@ -251,3 +252,78 @@ for i = 1:3
 		ener_traj_dj[i], linewidth=3, markersize=6)
 end
 display(plt)
+
+
+
+# PGFPlot
+using PGFPlotsX
+using LaTeXStrings
+
+mj_ener_plot1 = @pgf PlotInc({very_thick, "color=orange", "mark options={orange}"},
+	Table(range(0,stop=100,length=length(ener_traj_mj[1])),
+		ener_traj_mj[1]))
+mj_ener_plot2 = @pgf PlotInc({very_thick, "color=orange", "mark options={orange}"},
+	Table(range(0,stop=100,length=length(ener_traj_mj[2])),
+		ener_traj_mj[2]))
+mj_ener_plot3 = @pgf PlotInc({very_thick, "color=orange", "mark options={orange}"},
+	Table(range(0,stop=100,length=length(ener_traj_mj[3])),
+		ener_traj_mj[3]))
+
+dj_ener_plot1 = @pgf PlotInc({very_thick, "color=cyan", "mark options={orange}"},
+	Table(range(0,stop=100,length=length(ener_traj_dj[1])),
+		ener_traj_dj[1]))
+dj_ener_plot2 = @pgf PlotInc({very_thick, "color=cyan", "mark options={orange}"},
+	Table(range(0,stop=100,length=length(ener_traj_dj[2])),
+		ener_traj_dj[2]))
+dj_ener_plot3 = @pgf PlotInc({very_thick, "color=cyan", "mark options={orange}"},
+	Table(range(0,stop=100,length=length(ener_traj_dj[3])),
+		ener_traj_dj[3]))
+
+mj_legend = LegendEntry(raw"MuJoCo")
+dj_legend = LegendEntry(raw"Dojo")
+
+
+axs1 = @pgf Axis({
+		title=raw"simulation rate $10$ Hz",
+		ylabel="energy J",
+		xticklabels={},
+		},
+		dj_ener_plot1, dj_legend, mj_ener_plot1, mj_legend,
+		)
+
+axs2 = @pgf Axis({
+		title=raw"simulation rate $100$ Hz",
+		ylabel="energy J",
+		yshift=13.0,
+		xticklabels={},
+		},
+		dj_ener_plot2, dj_legend, mj_ener_plot2, mj_legend,
+		)
+
+axs3 = @pgf Axis({
+		title=raw"simulation rate $1000$ Hz",
+		xlabel="time s",
+		ylabel="energy J",
+		yshift=13.0,
+		},
+		dj_ener_plot3, dj_legend, mj_ener_plot3, mj_legend,
+		)
+
+gp = @pgf PGFPlotsX.GroupPlot(
+    {group_style = {group_size="1 by 3"},
+	legend_style = {nodes="{scale=0.70, transform shape}"},
+	title_style={at="{(axis description cs:+0.5,0.95)}", anchor="south"},
+	y_label_style={at="{(axis description cs:+0.05,0.5)}", anchor="north"},
+    x_label_style={at="{(axis description cs:+0.5,0.15)}", anchor="north"},
+	xmin=0,
+	xmax=100,
+	height = "3.5cm",
+	width = "7.5cm",
+	no_markers,
+	# xlabel=raw"$\times$ faster than real time",
+	legend_pos="north west",
+    },
+    axs1, axs2, axs3)
+
+filename = joinpath(@__DIR__, "figures/astronaut_energy.tikz")
+pgfsave(filename, gp; include_preamble = true, dpi = 150)

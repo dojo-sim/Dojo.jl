@@ -168,16 +168,16 @@ function build_robot(vis::Visualizer, mechanism::Mechanism; name::Symbol=:robot,
 
     for (id,body) in enumerate(bodies)
         shape = deepcopy(body.shape)
-        if color !== nothing 
-            if shape isa Shapes 
-                for i = 1:length(shape.shape) 
-                    shape.shape[i].color = color 
+        if color !== nothing
+            if shape isa Shapes
+                for i = 1:length(shape.shape)
+                    shape.shape[i].color = color
                 end
             else
-                if shape isa EmptyShape 
-                    nothing 
+                if shape isa EmptyShape
+                    nothing
                 else
-                    shape.color = color 
+                    shape.color = color
                 end
             end
         end
@@ -234,4 +234,25 @@ function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T}; name::Sy
     end
 
     return vis
+end
+
+function set_floor!(vis::Visualizer; x=3.0, y=3.0, z=0.1, tilepermeter=1.0,
+        imagename="tile.png")
+    image = PngImage(joinpath(module_dir(), "assets", imagename))
+    repeat = Int.(ceil.(tilepermeter * [x,y]))
+    texture = Texture(image=image, wrap=(1,1), repeat=(repeat[1],repeat[2]))
+    flr_mat = MeshPhongMaterial(map=texture)
+    flr_obj = HyperRectangle(Vec(0., 0, 0), Vec(x, y, z))
+    setobject!(vis[:floor], flr_obj, flr_mat)
+    settransform!(vis[:floor], MeshCat.Translation(-x/2, -y/2, -z))
+    return nothing
+end
+
+function set_light!(vis::Visualizer; ambient=0.35, fill=0.25, positiveX=0.85,
+        positiveXshadow::Bool=true)
+    setprop!(vis["/Lights/AmbientLight/<object>"], "intensity", ambient)
+    setprop!(vis["/Lights/FillLight/<object>"], "intensity", 0.25)
+    setprop!(vis["/Lights/PointLightPositiveX/<object>"], "intensity", 0.85)
+    setprop!(vis["/Lights/PointLightPositiveX/<object>"], "castShadow", true)
+    return nothing
 end
