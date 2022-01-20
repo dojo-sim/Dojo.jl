@@ -32,7 +32,14 @@ function resetVars!(ineqc::InequalityConstraint{T,N,Nc,Cs,N½}; scale::T=1.0) wh
     return
 end
 
-# contribution of the inequality constraint (impact or friction) to the dynamics equation d = 0
+function ∂g∂v(mechanism, ineqc::InequalityConstraint, body::Body)
+    return ∂g∂v(ineqc.constraints[1], body, nothing, nothing, mechanism.Δt)
+end
+
+function G(mechanism, ineqc::InequalityConstraint, body::Body)
+    return G(ineqc.constraints[1], body, nothing, nothing, mechanism.Δt)
+end
+
 @inline function impulses!(mechanism, body::Body, ineqc::InequalityConstraint)
     body.state.d -= G(mechanism, ineqc, body)' * ineqc.γsol[2]
     return
@@ -70,14 +77,5 @@ end
     return G1, G2
 end
 
-function G(mechanism, ineqc::InequalityConstraint, body::Body)
-    return G(ineqc.constraints[1], body, nothing, nothing, mechanism.Δt)
-end
+cone_degree(ineqc::InequalityConstraint) = sum(cone_degree.(ineqc.constraints))
 
-function ∂g∂v(mechanism, ineqc::InequalityConstraint, body::Body)
-    return ∂g∂v(ineqc.constraints[1], body, nothing, nothing, mechanism.Δt)
-end
-
-function cone_degree(ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
-    return sum(cone_degree.(ineqc.constraints))
-end

@@ -141,6 +141,7 @@ include(joinpath("simulation", "storage.jl"))
 include(joinpath("simulation", "simulate.jl"))
 
 # Energy
+include(joinpath("mechanism", "momentum.jl"))
 include(joinpath("mechanism", "energy.jl"))
 
 # Joints
@@ -179,8 +180,8 @@ include(joinpath("ui", "convert_shape.jl"))
 include(joinpath("ui", "visualize.jl"))
 
 # Differentiation
-include(joinpath("diff", "diff_tools.jl"))
-include(joinpath("diff", "finitediff_tools.jl"))
+include(joinpath("gradients", "analytical.jl"))
+include(joinpath("gradients", "finite_difference.jl"))
 
 # Environments
 include(joinpath("..", "env", "mechanisms.jl"))

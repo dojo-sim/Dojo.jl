@@ -55,7 +55,7 @@ function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
 		μtarget = max(σcentering * ν, opts.btol / undercut)
 		mechanism.μ = μtarget
 		correction!(mechanism) # update the residual in mechanism.residual_entries
-		mechanism.μ = 0.0
+		# mechanism.μ = 0.0
 
 		pushresidual!(mechanism)                # cache residual + correction
         pushmatrix!(mechanism)                  # restore the factorized matrix

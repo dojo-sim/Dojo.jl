@@ -1,4 +1,4 @@
-function _getpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
+function getpendulumlimited(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
     spring = 0.0, damper = 0.0, spring_offset = szeros(1)) where T
     # Parameters
     joint_axis = [1.0; 0; 0]
@@ -20,7 +20,7 @@ function _getpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
     return mech
 end
 
-mech = _getpendulum(Δt = 0.01, g = -9.81, spring = 0.0, damper = 0.0)
+mech = getpendulumlimited(Δt = 0.01, g = -9.81, spring = 0.0, damper = 0.0)
 initialize!(mech, :pendulum, ϕ1 = 0.4 * π)
 storage = simulate!(mech, 1.0, record = true, verbose = false)
 @test norm(Dojo.getMinState(mech)[1] - 0.25 * π) < 1.0e-3

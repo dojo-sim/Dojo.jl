@@ -43,7 +43,6 @@ end
     return Diagonal(+1.00e-10 * sones(T,N))
 end
 
-## Derivatives NOT accounting for quaternion specialness
 @inline function ∂g∂a(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
@@ -70,8 +69,7 @@ end
     return constraintmat(joint) * [X Q]
 end
 
-### w/ Limits
-# Position level constraints (for dynamics)
+## w/ Limits
 @inline function g(joint::Rotational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
     e1 = Vmat(qa \ qb / joint.qoffset)
     e2 = minimalCoordinates(joint, qa, qb)

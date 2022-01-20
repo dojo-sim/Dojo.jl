@@ -5,6 +5,8 @@ Base.length(bound::Bound{T,N}) where {T,N} = N
 
 g(bound::Bound, body::Body, λ, Δt) = g(bound, posargs3(body.state, Δt)..., λ)
 
+∂g∂v(bound::Bound, body::Body, id, λ, Δt) = ∂g∂v(bound, posargs3(body.state, Δt)..., fullargssol(body.state)..., λ, Δt)
+
 G(bound::Bound, body::Body, id, λ, Δt) = G(bound, posargs3(body.state, Δt)..., λ)
 
 complementarity(mechanism, ineqc::InequalityConstraint; scaling=false) = ineqc.γsol[2] .* ineqc.ssol[2]

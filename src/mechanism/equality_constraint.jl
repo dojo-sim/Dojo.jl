@@ -351,7 +351,13 @@ function λindex(eqc::EqualityConstraint{T,N,Nc,Cs}, i::Int) where {T,N,Nc,Cs}
 end
 
 function resetVars!(eqc::EqualityConstraint{T,N,Nc,Cs}; scale::T=1.0) where {T,N,Nc,Cs}
-    eqc.λsol[1] = scale * sones(N)
-    eqc.λsol[2] = scale * sones(N)
+    λ = []
+    for (i, joint) in enumerate(eqc.constraints)
+        Nλ = λlength(joint)
+        Nb = blength(joint)
+        push!(λ, [scale * sones(2Nb); szeros(Nλ)])
+    end
+    eqc.λsol[1] = vcat(λ...)
+    eqc.λsol[2] = vcat(λ...)
     return
 end

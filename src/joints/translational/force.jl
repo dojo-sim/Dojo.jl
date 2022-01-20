@@ -192,6 +192,7 @@ function ∂damperforcea∂posa(joint::Translational, body1::Component, body2::C
     attjac && (Q *= LVᵀmat(qa))
     return Δt * [X Q]
 end
+
 function ∂springforcea∂posb(joint::Translational, body1::Component, body2::Component, Δt::T; attjac::Bool = true) where T
     xa, qa = posargs2(body1.state)
     xb, qb = posargs2(body2.state)
@@ -201,6 +202,7 @@ function ∂springforcea∂posb(joint::Translational, body1::Component, body2::C
     attjac && (Q *= LVᵀmat(qb))
     return Δt * [X Q]
 end
+
 function ∂damperforcea∂posb(joint::Translational, body1::Component, body2::Component, Δt::T; attjac::Bool = true) where T
     xa, qa = posargs2(body1.state)
     xb, qb = posargs2(body2.state)
@@ -214,6 +216,7 @@ function ∂damperforcea∂posb(joint::Translational, body1::Component, body2::C
     attjac && (Q *= LVᵀmat(qb))
     return Δt * [X Q]
 end
+
 function ∂springforceb∂posb(joint::Translational, body1::Component, body2::Component, Δt::T; attjac::Bool = true) where T
     xa, qa = posargs2(body1.state)
     xb, qb = posargs2(body2.state)
