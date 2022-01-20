@@ -105,6 +105,11 @@ open(env.vis)
 
 # ## solution
 x_sol, u_sol = IterativeLQR.get_trajectory(prob)
+@show IterativeLQR.eval_obj(prob.m_data.obj.costs, prob.m_data.x, prob.m_data.u, prob.m_data.w)
+@show prob.s_data.iter[1]
+@show norm(goal(prob.m_data.x[T], zeros(0), zeros(0)), Inf)
+
+# ## visualize
 x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]
 visualize(env, x_view)
 
