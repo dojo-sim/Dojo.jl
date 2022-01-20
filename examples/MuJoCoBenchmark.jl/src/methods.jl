@@ -7,17 +7,21 @@ function mj_model(model; Δt=0.01)
     return jm, jd, mjsim
 end
 
-function linear_momentum(jm, jd)
+function angular_momentum(jm, jd)
     MuJoCo.mj_subtreeVel(jm, jd)
-    p = Vector(sum(jd.subtree_linvel, dims=2)[:,1])
+    p = jd.subtree_angmom[:,1]
     return p
 end
 
-function angular_momentum(jm, jd)
-    @warn "false"
-    mj_subtreeVel(jm, jd)
-    p = Vector(sum(jd.subtree_angnom, dims=2)[:,1])
+function linear_momentum(jm, jd)
+    MuJoCo.mj_subtreeVel(jm, jd)
+	mass = robot_mass(jm)
+    p = mass * jd.subtree_linvel[:,1]
     return p
+end
+
+function robot_mass(jm)
+	return sum(jm.body_mass[2:end])
 end
 
 function energy(jm, jd)

@@ -20,7 +20,7 @@
         <joint limited='false' damping='0' armature='0'  />
         <geom contype='1' conaffinity='1' condim='1' rgba='0.8 0.6 .4 1'
         	margin="0.001" solref=".02 1" solimp=".8 .8 .01" material="geom"/>
-        <motor ctrlrange='-.4 .4' ctrllimited='true'/>
+        <motor ctrlrange='-.4 .4' ctrllimited='false'/>
     </default>
 
     <option gravity="0.0 0.0 0.0" timestep='0.002' iterations="50" solver="PGS">
