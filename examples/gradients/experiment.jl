@@ -242,3 +242,4 @@ Z3 = [analytical_root(u, 1e-6)[1] for u in U]
 dZ3dU = [dz3du_fct(z3,1e-6/z3) for z3 in Z3]
 plot(U, Z3)
 plot(U, dZ3dU)
+UnderlyingUnderlying

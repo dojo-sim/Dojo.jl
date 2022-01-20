@@ -10,31 +10,31 @@ using LinearAlgebra
 using Random
 
 # ## load MuJoCo model
-path = joinpath(@__DIR__, "../../../env/raiberthopper/deps/hopper.xml")
+path = joinpath(@__DIR__, "../../../env/hopper/deps/hopper.xml")
 
 include("mujoco_model.jl")
 hopper = MuJoCoModel(path)
 sim = LyceumMuJoCo.MJSim(hopper.m, hopper.d)
 
-@show hopper.m.body_mass 
-@show hopper.m.body_inertia[:, :]
+hopper.m.body_mass[1] += 1.0
+@show hopper.m.body_inertia[:, 1] = [0.01; 0.001; 0.001]
 length(hopper.d.ctrl)
-
-# LyceumMuJoCoViz.visualize(sim) #, trajectories=[states]) # ctrl + LEFT (access trajectory mode)
 
 T = 1000
 states = Array(undef, statespace(sim), T)
-sim.d.qpos .= [0.0; 0.55; 0.0; 0.5]
-sim.d.qvel .= zeros(4)
+sim.d.qpos .= [0.0; 1.17; 0.1; 0.1; -0.4; 0.4]
+sim.d.qvel .= zeros(6)
 for t = 1:T
-    # sim.d.qpos .= [0.0; 0.0; 0.55; 0.5]
+    # if t > 500 
+    #     sim.d.qpos .= [1.0; 1.21; 0.0; 0.0; 0.0; 0.0] 
+    # end
     # sim.d.qvel .= [0.0; 0.0; 0.0; 0.0]
-    sim.d.ctrl .= [0.0; 1.0 * hopper.m.body_mass[2] * 9.81]#[5.0; 10.0; 0.0]
+    sim.d.ctrl .= [0.0; 0.0; 0.1 * randn(1)[1]]#[5.0; 10.0; 0.0]
     LyceumMuJoCo.step!(sim)
     states[:, t] .= getstate(sim)
 end
+sim.d.qpos
 visualize(sim, trajectories=[states])
-2.0 * hopper.m.body_mass[2] * 9.81
 
 # ## horizon 
 T = 1001
@@ -53,28 +53,27 @@ dyn = Dynamics(
 model = [dyn for t = 1:T-1] 
 
 # ## initial conditions
-x1 = [0.0; 0.55; 0.0; 0.5; 0.0; 0.0; 0.0; 0.0]
-xM = [0.0; 0.55; 0.0; 0.5; 0.0; 0.0; 0.0; 0.0]#[0.1; 0.0; 0.55 + 0.25; 0.0; 0.0; 0.0; 0.25; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0]#[0.5; 0.5; 1.05; 0.0; 0.0; 0.0; 0.5; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0]
-xT = [0.0; 0.55; 0.0; 0.5; 0.0; 0.0; 0.0; 0.0]#[0.1; 0.0; 0.55 + 0.25; 0.0; 0.0; 0.0; 0.25; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0]#[0.5; 0.5; 0.55; 0.0; 0.0; 0.0; 0.5; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0]
+x1 = [0.0; 1.17; 0.1; 0.1; -0.4; 0.4; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0]
+xM = [0.5; 2.0; 0.1; 0.1; -0.4; 0.4; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0]
+xT = [1.0; 1.17; 0.1; 0.1; -0.4; 0.4; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0]
 
 # # rollout
-ū = [[0.0; hopper.m.body_mass[2] * 9.81] for t = 1:T-1]
+ū = [1.0 * randn(nu) for t = 1:T-1]
 w = [zeros(0) for t = 1:T-1]
 x̄ = rollout(model, x1, ū)
 
 # ## objective
-dt = 1.0
-obj1 = (x, u, w) -> transpose(x - xM) * Diagonal(dt * [0.1; 0.1; 0.1; 1.0; 0.01 * ones(4)]) * (x - xM) + transpose(u) * Diagonal(dt * [0.01; 0.01]) * u
-obj2 = (x, u, w) -> transpose(x - xT) * Diagonal(dt * [0.1; 0.1; 0.1; 1.0; 0.01 * ones(4)]) * (x - xT) + transpose(u) * Diagonal(dt * [0.01; 0.01]) * u
-objT = (x, u, w) -> transpose(x - xT) * Diagonal(dt * [0.1; 0.1; 0.1; 1.0; 0.01 * ones(4)]) * (x - xT)
+obj1 = (x, u, w) -> (1 / T) * (transpose(x - xM) * Diagonal([1.0 * ones(6); 1.0 * ones(6)]) * (x - xM) + transpose(u) * Diagonal(1.0e-3 * [1.0; 1.0; 1.0]) * u)
+obj2 = (x, u, w) -> (1 / T) * (transpose(x - xT) * Diagonal([1.0 * ones(6); 1.0 * ones(6)]) * (x - xT) + transpose(u) * Diagonal(1.0e-3 * [1.0; 1.0; 1.0]) * u)
+objT = (x, u, w) -> transpose(x - xT) * Diagonal([1.0 * ones(6); 1.0 * ones(6)]) * (x - xT)
 
 ct1 = IterativeLQR.Cost(obj1, nx, nu, 0)
-ct2 = IterativeLQR.Cost(objt, nx, nu, 0)
+ct2 = IterativeLQR.Cost(obj2, nx, nu, 0)
 cT = IterativeLQR.Cost(objT, nx, 0, 0)
 obj = [[ct1 for t = 1:500]..., [ct2 for t = 1:500]..., cT]
 
 # ## constraints
-goal(x, u, w) = (x - xT)[collect(1:4)]
+goal(x, u, w) = (x - xT)
 
 cont = Constraint()
 conT = Constraint(goal, nx, 0)
@@ -88,7 +87,8 @@ initialize_states!(prob, x̄)
 # ## solve
 solve!(prob, 
     verbose=true,
-    max_al_iter=10)
+    max_iter=100,
+    max_al_iter=3)
 
 # ## solution
 x_sol, u_sol = get_trajectory(prob)
@@ -97,19 +97,22 @@ x_sol, u_sol = get_trajectory(prob)
 @show norm(goal(prob.m_data.x[T], zeros(0), zeros(0)), Inf)
 
 # ## 
-# using Plot
+using Plots
 # plot(hcat(x_sol...)')
-# plot(hcat(u_sol..., u_sol[end])', linetype=:steppost)
+plot(hcat(u_sol..., u_sol[end])', linetype=:steppost)
 
 # ## visualize
-# x_vis = [[x̄[1] for t = 1:10]..., x̄..., [x̄[end] for t = 1:10]...]
-x_vis = [[x_sol[1] for t = 1:100]..., x_sol..., [x_sol[end] for t = 1:100]...]
+x_vis = [[x̄[1] for t = 1:10]..., x̄..., [x̄[end] for t = 1:10]...]
+# x_vis = [[x_sol[1] for t = 1:100]..., x_sol..., [x_sol[end] for t = 1:100]...]
 states = Array(undef, statespace(sim), length(x_vis))
 for t = 1:length(x_vis)
-    sim.d.qpos .= x_vis[t][1:7]
-    sim.d.qvel .= x_vis[t][7 .+ (1:7)]
+    sim.d.qpos .= x_vis[t][1:6]
+    sim.d.qvel .= x_vis[t][6 .+ (1:6)]
     # sim.d.ctrl .= 
     # LyceumMuJoCo.step!(sim)
     states[:, t] .= getstate(sim)
 end
 visualize(sim, trajectories=[states])
+
+minimum([rank(fx) for fx in prob.m_data.model_deriv.fx])
+minimum([rank(fu) for fu in prob.m_data.model_deriv.fu])
