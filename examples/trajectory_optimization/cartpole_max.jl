@@ -10,6 +10,8 @@ env = make("cartpole",
     dt=dt,
     g=gravity);
 
+mujoco_inertia!(env.mechanism)
+
 # ## visualizer 
 open(env.vis) 
 
@@ -40,8 +42,8 @@ x̄ = rollout(model, z1, ū, w)
 visualize(env, x̄)
 
 # ## objective
-ot = (x, u, w) -> transpose(x - zT) * Diagonal(dt * ones(n)) * (x - zT) + transpose(u) * Diagonal(dt * [0.1]) * u
-oT = (x, u, w) -> transpose(x - zT) * Diagonal(100.0 * ones(n)) * (x - zT)
+ot = (x, u, w) -> transpose(x - zT) * Diagonal(1.0e-1 * ones(n)) * (x - zT) + transpose(u) * Diagonal(1.0e-3 * ones(m)) * u
+oT = (x, u, w) -> transpose(x - zT) * Diagonal(1.0e-1 * ones(n)) * (x - zT)
 
 ct = Cost(ot, n, m, d)
 cT = Cost(oT, n, 0, 0)
@@ -63,18 +65,16 @@ IterativeLQR.initialize_states!(prob, x̄)
 
 # ## solve
 IterativeLQR.solve!(prob,
-    linesearch=:armijo,
-    α_min=1.0e-5,
-    obj_tol=1.0e-3,
-    grad_tol=1.0e-3,
-    max_iter=100,
-    max_al_iter=5,
-    ρ_init=1.0,
-    ρ_scale=10.0,
+    max_al_iter=10,
     verbose=true)
 
 # ## solution
 z_sol, u_sol = IterativeLQR.get_trajectory(prob)
+@show IterativeLQR.eval_obj(prob.m_data.obj.costs, prob.m_data.x, prob.m_data.u, prob.m_data.w)
+@show prob.s_data.iter[1]
+@show norm(goal(prob.m_data.x[T], zeros(0), zeros(0)), Inf)
+
+# ## visualize
 visualize(env, [[z_sol[1] for t = 1:10]..., z_sol..., [z_sol[end] for t = 1:10]...])
 
 # ## ghost

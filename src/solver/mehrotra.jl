@@ -6,6 +6,8 @@
     max_iter::Int=50 # maximum number of Newton iterations
     max_ls::Int=10   # maximum number of line search steps
     undercut::T=Inf  # complementarity slackness target; solver will aim at reaching κ_vio = btol / undercut
+    no_progress_max::Int=3 # number of iterations of no progress before rescaling undercut
+    no_progress_undercut::T=10.0 # scaling for undercut if no progress is made
     verbose::Bool=false
 end
 
@@ -69,7 +71,7 @@ function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
 		made_progress = (!(rvio_ < opts.rtol) && (rvio_ < 0.8rvio)) || (!(bvio_ < opts.btol) && (bvio_ < 0.8bvio)) # we only care when progress is made while the tolerance is not met
 		made_progress ? no_progress = max(no_progress - 1, 0) : no_progress += 1
 		rvio, bvio = rvio_, bvio_
-		(no_progress >= 3) && (undercut *= 10.0)
+		(no_progress >= opts.no_progress_max) && (undercut *= opts.no_progress_undercut)
 
 		# update solution
         foreach(updatesolution!, bodies)
