@@ -44,8 +44,8 @@ x̄ = IterativeLQR.rollout(model, z1, ū, w)
 visualize(env, x̄)
 
 # ## objective
-ot1 = (x, u, w) -> transpose(x - zM) * Diagonal([0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) * (x - zM) + transpose(u) * Diagonal([0.1; 0.1; 0.1]) * u
-ot2 = (x, u, w) -> transpose(x - zT) * Diagonal([0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) * (x - zT) + transpose(u) * Diagonal([0.1; 0.1; 0.1]) * u
+ot1 = (x, u, w) -> transpose(x - zM) * Diagonal([0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) * (x - zM) + transpose(u) * Diagonal(0.1 * [0.1; 0.1; 0.1]) * u
+ot2 = (x, u, w) -> transpose(x - zT) * Diagonal([0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) * (x - zT) + transpose(u) * Diagonal(0.1 * [0.1; 0.1; 0.1]) * u
 oT = (x, u, w) -> transpose(x - zT) * Diagonal([0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) * (x - zT)
 
 ct1 = Cost(ot1, n, m, d)

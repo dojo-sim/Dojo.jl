@@ -39,10 +39,12 @@ model = [dyn for t = 1:T-1]
 ū = [[0.0; 0.0; env.mechanism.g * env.mechanism.Δt + 0.0 * randn(1)[1]] for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, z1, ū, w)
+open(env.vis)
+visualize(env, x̄) 
 
 # ## objective
-ot1 = (x, u, w) -> transpose(x - zM) * Diagonal(vcat([[0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)] for i=1:2]...)) * (x - zM) + transpose(u) * Diagonal([0.1; 0.1; 0.1]) * u
-ot2 = (x, u, w) -> transpose(x - zT) * Diagonal(vcat([[0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)] for i=1:2]...)) * (x - zT) + transpose(u) * Diagonal([0.1; 0.1; 0.1]) * u
+ot1 = (x, u, w) -> transpose(x - zM) * Diagonal(vcat([[0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)] for i=1:2]...)) * (x - zM) + transpose(u) * Diagonal(0.1 * [0.1; 0.1; 0.1]) * u
+ot2 = (x, u, w) -> transpose(x - zT) * Diagonal(vcat([[0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)] for i=1:2]...)) * (x - zT) + transpose(u) * Diagonal(0.1 * [0.1; 0.1; 0.1]) * u
 oT = (x, u, w) -> transpose(x - zT) * Diagonal(vcat([[0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)] for i=1:2]...)) * (x - zT)
 
 ct1 = Cost(ot1, n, m, d)
