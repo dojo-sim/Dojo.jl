@@ -20,7 +20,7 @@ function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
     ineqcs = mechanism.ineqconstraints
 
 	resetVars!.(ineqcs, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
-	resetVars!.(eqcs, scale=0.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
+	resetVars!.(eqcs, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
     mechanism.μ = 0.0
 	μtarget = 0.0
 	no_progress = 0

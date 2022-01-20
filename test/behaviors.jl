@@ -1,4 +1,4 @@
-@testset "Behaviors: Quadruped" begin
+@testset "Behavior: Quadruped simulation" begin
     mech = getmechanism(:quadruped, Δt=0.05, g=-9.81, cf=0.8, damper=1000.0, spring=30.0)
     initialize!(mech, :quadruped)
     try
