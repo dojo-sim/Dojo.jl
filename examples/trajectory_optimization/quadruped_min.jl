@@ -32,13 +32,14 @@ m = env.nu
 d = 0 
 
 # ## reference trajectory
+N = 2
 initialize!(env.mechanism, :quadruped)
-xref = quadruped_trajectory(env.mechanism, r=0.05, z=0.29; Δx=-0.04, Δfront=0.10, N=10, Ncycles=1)
+xref = quadruped_trajectory(env.mechanism, r=0.05, z=0.29; Δx=-0.04, Δfront=0.10, N=10, Ncycles=N)
 zref = [min2max(env.mechanism, x) for x in xref]
 visualize(env, xref)
 
 ## gravity compensation TODO: solve optimization problem instead
-mech = getmechanism(:quadruped, Δt=dt, g=gravity, cf=0.8, damper=1000.0, spring=15.0)
+mech = getmechanism(:quadruped, Δt=dt, g=gravity, cf=0.8, damper=5.0, spring=0.0)
 initialize!(mech, :quadruped)
 storage = simulate!(mech, 1.0, record=true, verbose=false)
 visualize(mech, storage, vis=env.vis)
@@ -46,7 +47,7 @@ ugc = gravity_compensation(mech)
 u_control = ugc[6 .+ (1:12)]
 
 # ## horizon 
-T = 21 
+T = N * (21 - 1) + 1 
 
 # ## model 
 dyn = IterativeLQR.Dynamics(
@@ -117,22 +118,6 @@ MeshCat.settransform!(env.vis["/Cameras/default"],
         MeshCat.compose(MeshCat.Translation(0.0, 0.0, 1.0), MeshCat.LinearMap(Rotations.RotZ(-pi / 2.0))))
 setprop!(env.vis["/Cameras/default/rotated/<object>"], "zoom", 3)
 
-# ## Ghost 
-vis = Visualizer()
-open(vis)
-setvisible!(vis[:robot], false)
-z = [min2max(mech, x) for x in x_sol]
-z = [[z[1] for t = 1:40]..., z..., [z[end] for t = 1:40]...]
-T = length(z) 
-timesteps = [1, T]# 40, 60, 70, 80, 85, 90, 95, T] 
-for t in timesteps
-    name = Symbol("robot_$t")
-    # color = (t == T ? RGBA(1.0, 153.0 / 255.0, 51.0 / 255.0, 1.0) : RGBA(1.0, 153.0 / 255.0, 51.0 / 255.0, 0.25))
-    build_robot(vis, mech, name=name, color=RGBA(0.75, 0.75, 0.75, 0.25))
-    set_robot(vis, mech, z[t], name=name)
-end
-
-MeshCat.settransform!(vis["/Cameras/default"],
-        MeshCat.compose(MeshCat.Translation(0.0, 0.0, 1.0), MeshCat.LinearMap(Rotations.RotZ(-pi / 2.0))))
-setprop!(vis["/Cameras/default/rotated/<object>"], "zoom", 3)
-
+z = [min2max(env.mechanism, x) for x in x_sol]
+t = 1 #10, 20, 30, 41
+set_robot(env.vis, env.mechanism, z[t])

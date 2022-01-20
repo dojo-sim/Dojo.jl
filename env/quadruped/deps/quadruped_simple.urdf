@@ -14,12 +14,12 @@
     <color rgba="0.0 0.8 0.0 1.0"/>
   </material>
   <material name="grey">
-    <color rgba="0.2 0.2 0.2 1.0"/>
+    <color rgba="0.7 0.7 0.7 1.0"/>
   </material>
   <material name="silver">
     <color rgba="0.913725490196 0.913725490196 0.847058823529 1.0"/>
   </material>
-  <material name="black">
+  <material name="grey">
     <color rgba="1.0 0.423529411765 0.0392156862745 1.0"/>
   </material>
   <material name="brown">
@@ -50,7 +50,7 @@
       <geometry>
         <mesh filename="env/quadruped/deps/mesh/trunk.dae" scale="1 1 1"/>
       </geometry>
-      <material name="black"/>
+      <material name="grey"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -79,7 +79,7 @@
       <geometry>
         <mesh filename="env/quadruped/deps/mesh/hip.dae" scale="1 1 1"/>
       </geometry>
-      <material name="black"/>
+      <material name="grey"/>
     </visual>
     <collision>
       <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
@@ -107,7 +107,7 @@
       <geometry>
         <mesh filename="env/quadruped/deps/mesh/thigh_mirror.dae" scale="1 1 1"/>
       </geometry>
-      <material name="black"/>
+      <material name="grey"/>
     </visual>
     <collision>
       <origin rpy="0 1.57079632679 0" xyz="0 0 -0.1"/>
@@ -135,7 +135,7 @@
       <geometry>
         <mesh filename="env/quadruped/deps/mesh/calf.dae" scale="1 1 1"/>
       </geometry>
-      <material name="black"/>
+      <material name="grey"/>
     </visual>
     <collision>
       <origin rpy="0 1.57079632679 0" xyz="0 0 -0.1"/>
@@ -164,7 +164,7 @@
       <geometry>
         <mesh filename="env/quadruped/deps/mesh/hip.dae" scale="1 1 1"/>
       </geometry>
-      <material name="black"/>
+      <material name="grey"/>
     </visual>
     <collision>
       <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
@@ -192,7 +192,7 @@
       <geometry>
         <mesh filename="env/quadruped/deps/mesh/thigh.dae" scale="1 1 1"/>
       </geometry>
-      <material name="black"/>
+      <material name="grey"/>
     </visual>
     <collision>
       <origin rpy="0 1.57079632679 0" xyz="0 0 -0.1"/>
@@ -220,7 +220,7 @@
       <geometry>
         <mesh filename="env/quadruped/deps/mesh/calf.dae" scale="1 1 1"/>
       </geometry>
-      <material name="black"/>
+      <material name="grey"/>
     </visual>
     <collision>
       <origin rpy="0 1.57079632679 0" xyz="0 0 -0.1"/>
@@ -249,7 +249,7 @@
       <geometry>
         <mesh filename="env/quadruped/deps/mesh/hip.dae" scale="1 1 1"/>
       </geometry>
-      <material name="black"/>
+      <material name="grey"/>
     </visual>
     <collision>
       <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
@@ -277,7 +277,7 @@
       <geometry>
         <mesh filename="env/quadruped/deps/mesh/thigh_mirror.dae" scale="1 1 1"/>
       </geometry>
-      <material name="black"/>
+      <material name="grey"/>
     </visual>
     <collision>
       <origin rpy="0 1.57079632679 0" xyz="0 0 -0.1"/>
@@ -305,7 +305,7 @@
       <geometry>
         <mesh filename="env/quadruped/deps/mesh/calf.dae" scale="1 1 1"/>
       </geometry>
-      <material name="black"/>
+      <material name="grey"/>
     </visual>
     <collision>
       <origin rpy="0 1.57079632679 0" xyz="0 0 -0.1"/>
@@ -334,7 +334,7 @@
       <geometry>
         <mesh filename="env/quadruped/deps/mesh/hip.dae" scale="1 1 1"/>
       </geometry>
-      <material name="black"/>
+      <material name="grey"/>
     </visual>
     <collision>
       <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
@@ -362,7 +362,7 @@
       <geometry>
         <mesh filename="env/quadruped/deps/mesh/thigh.dae" scale="1 1 1"/>
       </geometry>
-      <material name="black"/>
+      <material name="grey"/>
     </visual>
     <collision>
       <origin rpy="0 1.57079632679 0" xyz="0 0 -0.1"/>
@@ -390,7 +390,7 @@
       <geometry>
         <mesh filename="env/quadruped/deps/mesh/calf.dae" scale="1 1 1"/>
       </geometry>
-      <material name="black"/>
+      <material name="grey"/>
     </visual>
     <collision>
       <origin rpy="0 1.57079632679 0" xyz="0 0 -0.1"/>

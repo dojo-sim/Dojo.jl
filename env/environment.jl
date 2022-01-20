@@ -64,7 +64,7 @@ function step(env::Environment, x, u; diff=false)
     Δt = mechanism.Δt
 
     x0 = x
-    u = clip(env.aspace, u) # control limits
+    # u = clip(env.aspace, u) # control limits
     env.u_prev .= u  # for rendering in Gym
 	u_scaled = env.control_mask' * env.control_scaling * u
 
