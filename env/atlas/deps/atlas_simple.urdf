@@ -4,6 +4,18 @@
 <!-- |    EDITING THIS FILE BY HAND IS NOT RECOMMENDED                                 | -->
 <!-- =================================================================================== -->
 <robot name="atlas" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <material name="dark_gray">
+    <color rgba="0.35 0.35 0.40 1"/>
+  </material>
+  <material name="white">
+    <color rgba="0.95 0.95 0.95 0.95"/>
+  </material>
+  <material name="orange">
+    <color rgba="0.9098 0.44314 0.031373 1"/>
+  </material>
+  <material name="metal">
+    <color rgba="0.8784 0.8745 0.8588 1"/>
+  </material>
   <link name="l_clav">
     <inertial>
       <mass value="4.466"/>
@@ -14,6 +26,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/r_clav.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
   </link>
   <link name="l_foot">
@@ -26,6 +39,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/l_foot.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
     <visual group="heel">
       <origin rpy="0 0 0" xyz="-0.0876 0.066 -0.07645"/>
@@ -81,6 +95,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/r_larm.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
   </link>
   <link name="l_lfarm">
@@ -93,6 +108,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/r_hand.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
   </link>
   <link name="l_lglut">
@@ -105,6 +121,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/l_lglut.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
   </link>
   <link name="l_lleg">
@@ -117,6 +134,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/l_lleg.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
   </link>
   <link name="l_scap">
@@ -129,6 +147,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/r_scap.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
   </link>
   <link name="l_talus">
@@ -141,6 +160,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/l_talus.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
   </link>
   <link name="l_uarm">
@@ -153,6 +173,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/r_uarm.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
   </link>
   <link name="l_ufarm">
@@ -165,6 +186,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/r_farm.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
   </link>
   <link name="l_uglut">
@@ -177,6 +199,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/l_uglut.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
   </link>
   <link name="l_uleg">
@@ -189,6 +212,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/l_uleg.obj"/>
       </geometry>
+      <material name="white"/>
     </visual>
   </link>
   <link name="ltorso">
@@ -201,6 +225,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/ltorso.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
   </link>
   <link name="mtorso">
@@ -213,6 +238,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/mtorso.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
   </link>
   <link name="pelvis">
@@ -225,6 +251,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/pelvis.obj"/>
       </geometry>
+      <material name="metal"/>
     </visual>
   </link>
   <link name="r_clav">
@@ -237,6 +264,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/r_clav.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
   </link>
   <link name="r_foot">
@@ -249,6 +277,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/r_foot.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
     <visual group="heel">
       <origin rpy="0 0 0" xyz="-0.0876 0.0626 -0.07645"/>
@@ -304,6 +333,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/r_larm.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
   </link>
   <link name="r_lfarm">
@@ -316,6 +346,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/r_hand.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
   </link>
   <link name="r_lglut">
@@ -328,6 +359,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/r_lglut.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
   </link>
   <link name="r_lleg">
@@ -340,6 +372,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/r_lleg.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
   </link>
   <link name="r_scap">
@@ -352,6 +385,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/r_scap.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
   </link>
   <link name="r_talus">
@@ -364,6 +398,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/r_talus.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
   </link>
   <link name="r_uarm">
@@ -376,6 +411,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/r_uarm.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
   </link>
   <link name="r_ufarm">
@@ -388,6 +424,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/r_farm.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
   </link>
   <link name="r_uglut">
@@ -400,6 +437,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/r_uglut.obj"/>
       </geometry>
+      <material name="dark_gray"/>
     </visual>
   </link>
   <link name="r_uleg">
@@ -412,6 +450,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/r_uleg.obj"/>
       </geometry>
+      <material name="white"/>
     </visual>
   </link>
   <link name="utorso">
@@ -424,6 +463,7 @@
       <geometry>
         <mesh filename="env/atlas/deps/mesh/utorso.obj"/>
       </geometry>
+      <material name="white"/>
     </visual>
   </link>
   <joint name="back_bkx" type="revolute">
@@ -705,11 +745,9 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="env/atlas/deps/mesh/head_chull.obj"/>
+        <mesh filename="env/atlas/deps/mesh/head.obj"/>
       </geometry>
-      <material name="">
-        <color rgba="0.9098 0.44314 0.031373 1"/>
-      </material>
+      <material name="dark_gray"/>
     </visual>
   </link>
 
