@@ -13,11 +13,28 @@ open(env.vis)
 hp = HyperParameters(main_loop_size = 30, horizon = 80, n_directions = 6, b = 6, step_size = 0.02)
 input_size = length(obs)
 output_size = length(env.u_prev)
-policy = Policy(input_size, output_size, hp)
-normalizer = Normalizer(input_size)
 
-# ## Train policy
-train(env, policy, normalizer, hp)
+# ## Training 
+train_times = Float64[] 
+rewards = Float64[]
+policies = Matrix{Float64}[]
+N = 1 
+for i = 1:N
+    # Random policy
+    normalizer = Normalizer(input_size)
+    policy = Policy(input_size, output_size, hp)
+
+    # Train policy
+    train_time = @elapsed train(env, policy, normalizer, hp)
+
+    # Evaluate policy
+    reward = rollout_policy(policy.θ, env, normalizer, hp)
+
+    # Cache 
+    push!(train_times, train_time) 
+    push!(rewards, reward) 
+    push!(policies, policy.θ)
+end
 
 # ## Visualizer policy
 open(env.vis)

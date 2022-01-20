@@ -75,5 +75,7 @@ z_sol, u_sol = IterativeLQR.get_trajectory(prob)
 @show prob.s_data.iter[1]
 @show norm(goal(prob.m_data.x[T], zeros(0), zeros(0)), Inf)
 
+prob.m_data.model_deriv.fx[20]
+
 # ## visualize
 visualize(env, x_sol)

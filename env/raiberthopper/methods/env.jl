@@ -20,7 +20,7 @@ function raiberthopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     nu = 3
     no = nx
 
-    aspace = BoxSpace(nu, low=(-1.0e-3 * ones(nu)), high=(1.0e-3 * ones(nu)))
+    aspace = BoxSpace(nu, low=(-1.0e8 * ones(nu)), high=(1.0e8 * ones(nu)))
     ospace = BoxSpace(no, low=(-Inf * ones(no)), high=(Inf * ones(no)))
 
     rng = MersenneTwister(s)
@@ -123,7 +123,7 @@ function visualize(env::Environment{RaibertHopper}, traj::Vector{Vector{T}}; nam
     setvisible!(env.vis["/Grid"], grid)
 end
 
-function ghost(env::Environment{RaibertHopper}, traj::Vector{Vector{T}}; timesteps=[t for t = 1:length(traj)], axes=false, grid=true) where T
+function ghost(env::Environment{RaibertHopper}, traj::Vector{Vector{T}}; timesteps=[t for t = 1:length(traj)], axes=false, grid=true, line=false) where T
     # convert to maximal representation
     z = [env.mode == :min ? min2max(env.mechanism, x) : x for x in traj]
 
@@ -135,34 +135,36 @@ function ghost(env::Environment{RaibertHopper}, traj::Vector{Vector{T}}; timeste
 
     for t in timesteps
         # build system
-        build_robot(env.vis, env.mechanism, name=Symbol("robot_$t"), color=(t == length(z) ? nothing : RGBA(0.75, 0.75, 0.75, 0.25)))
+        build_robot(env.vis, env.mechanism, name=Symbol("robot_$t"), color=(t == length(z) ? nothing : gray))
         set_robot(env.vis, env.mechanism, z[t], name=Symbol("robot_$t"))
 
         x_body = z[t][1:3] 
         x_foot = z[t][13 .+ (1:3)] 
 
         leg = GeometryBasics.Cylinder(Point3f0(x_foot...), Point3f0(x_body...), convert(Float32, 0.025))
-        setobject!(env.vis["leg_$t"], leg, MeshPhongMaterial(color=(t == length(z) ? RGBA(0.0, 0.0, 0.0, 1.0) : RGBA(0.0, 0.0, 0.0, 0.25))))
+        setobject!(env.vis["leg_$t"], leg, MeshPhongMaterial(color=(t == length(z) ? RGBA(0.0, 0.0, 0.0, 1.0) : gray)))
     end
     setvisible!(env.vis[:robot], false)
 
     # body
-    line_mat = LineBasicMaterial(color=color=RGBA(51.0 / 255.0, 1.0, 1.0, 1.0), linewidth=25.0)
-    points = Vector{Point{3,Float64}}()
-    for (i, xt) in enumerate(z)
-        k = xt[1:3] 
-        push!(points, Point(k[1], k[2], k[3]))
-    end
-    setobject!(env.vis[:body_traj], MeshCat.Line(points, line_mat))
+    if line 
+        line_mat = LineBasicMaterial(color=color=RGBA(51.0 / 255.0, 1.0, 1.0, 1.0), linewidth=25.0)
+        points = Vector{Point{3,Float64}}()
+        for (i, xt) in enumerate(z)
+            k = xt[1:3] 
+            push!(points, Point(k[1], k[2], k[3]))
+        end
+        setobject!(env.vis[:body_traj], MeshCat.Line(points, line_mat))
 
-    # foot
-    line_mat = LineBasicMaterial(color=color=RGBA(1.0, 153.0 / 255.0, 51.0 / 255.0, 1.0), linewidth=10.0)
-    points = Vector{Point{3,Float64}}()
-    for (i, xt) in enumerate(z)
-        k = xt[13 .+ (1:3)]
-        push!(points, Point(k[1], k[2], k[3]))
+        # foot
+        line_mat = LineBasicMaterial(color=color=RGBA(1.0, 153.0 / 255.0, 51.0 / 255.0, 1.0), linewidth=10.0)
+        points = Vector{Point{3,Float64}}()
+        for (i, xt) in enumerate(z)
+            k = xt[13 .+ (1:3)]
+            push!(points, Point(k[1], k[2], k[3]))
+        end
+        setobject!(env.vis[:foot_traj], MeshCat.Line(points, line_mat))
     end
-    setobject!(env.vis[:foot_traj], MeshCat.Line(points, line_mat))
 
     # MeshCat.settransform!(env.vis["/Cameras/default"],
     #     MeshCat.compose(MeshCat.Translation(0.0, 0.0, -1.0), MeshCat.LinearMap(Rotations.RotZ(-1.0 * pi))))

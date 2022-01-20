@@ -19,7 +19,7 @@ function quadruped(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81, cf=0.8,
     nu = 12
     no = nx
 
-    aspace = BoxSpace(nu, low=(-1.0e-3 * ones(nu)), high=(1.0e-3 * ones(nu)))
+    aspace = BoxSpace(nu, low=(-1.0e8 * ones(nu)), high=(1.0e8 * ones(nu)))
     ospace = BoxSpace(no, low=(-Inf * ones(no)), high=(Inf * ones(no)))
 
     rng = MersenneTwister(s)
