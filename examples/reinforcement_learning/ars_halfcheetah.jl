@@ -3,15 +3,14 @@ using JLD2
 include("ars.jl")
 
 # ## Environment 
-env = make("halfcheetah", vis=vis, dt=0.05)
+env = make("halfcheetah", dt=0.05)
 obs = reset(env)
 
 # ## Open visualizer
-vis = Visualizer()
 open(env.vis)
 
 # ## Augmented random search
-hp = HyperParameters(main_loop_size = 30, horizon = 80, n_directions = 6, b = 6, step_size = 0.02)
+hp = HyperParameters(main_loop_size = 100, horizon = 80, n_directions = 6, b = 6, step_size = 0.02)
 input_size = length(obs)
 output_size = length(env.u_prev)
 policy = Policy(input_size, output_size, hp)
@@ -21,7 +20,6 @@ normalizer = Normalizer(input_size)
 train(env, policy, normalizer, hp)
 
 # ## Visualizer policy
-vis = Visualizer()
 open(env.vis)
 
 traj = display_policy(env, policy, normalizer, hp)
@@ -55,15 +53,13 @@ setvisible!(env.vis[:robot], false)
 timesteps = [1, 40, 60, 70, 80, 85, 90, 95, T] 
 for t in timesteps
     name = Symbol("robot_$t")
-    color = (t == T ? RGBA(1.0, 153.0 / 255.0, 51.0 / 255.0, 1.0) : RGBA(1.0, 153.0 / 255.0, 51.0 / 255.0, 0.25))
+    color = (t == T ? orange : orange_light)
     build_robot(env.vis, env.mechanism, color=color, name=name)
     set_robot(env.vis, env.mechanism, z[t], name=name)
 end
 
-
 # ## Save/Load policy
-θ = policy.θ
-@save joinpath(@__DIR__, "halfcheetah_policy.jld2") θ
+# @save joinpath(@__DIR__, "halfcheetah_policy.jld2") θ
 @load joinpath(@__DIR__, "halfcheetah_policy.jld2") θ
 
 

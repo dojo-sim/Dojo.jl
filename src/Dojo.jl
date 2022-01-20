@@ -178,8 +178,9 @@ include(joinpath("ui", "initialize.jl"))
 include(joinpath("ui", "urdf.jl"))
 include(joinpath("ui", "convert_shape.jl"))
 include(joinpath("ui", "visualize.jl"))
+include(joinpath("ui", "colors.jl"))
 
-# Differentiation
+# Gradients
 include(joinpath("gradients", "analytical.jl"))
 include(joinpath("gradients", "finite_difference.jl"))
 
