@@ -50,6 +50,10 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: Constraint{T,N}
     end
 end
 
+# g(mechanism, eqc::EqualityConstraint{T,N,Nc,Ns}) where {T,N,Nc,Ns} = szeros(N)
+# ∂g∂z(mechanism, eqc::EqualityConstraint{T,N,Nc,Ns}) where {T,N,Nc,Ns} = szeros(N, 6)
+# ∂gab∂ʳba(mechanism, componenta::Component, componentb::Component) = szeros(length(componenta), length(componentb)), szeros(length(componentb), length(componenta))
+
 function setPosition!(mechanism, eqc::EqualityConstraint, xθ; iter::Bool=true)
     if !iter
         _setPosition!(mechanism, eqc, xθ)
@@ -66,7 +70,6 @@ function setPosition!(mechanism, eqc::EqualityConstraint, xθ; iter::Bool=true)
 
     return
 end
-
 # TODO currently assumed constraints are in order and only joints which is the case unless very low level constraint setting
 function _setPosition!(mechanism, eqc::EqualityConstraint{T,N,Nc}, xθ) where {T,N,Nc}
     Nλ = 0
@@ -140,14 +143,14 @@ end
     return :(svcat($(vec...)))
 end
 
-@inline function constraintForceMapping!(mechanism, body::Body, eqc::EqualityConstraint)
-    body.state.d -= zerodimstaticadjoint(∂g∂ʳpos(mechanism, eqc, body)) * eqc.λsol[2]
+@inline function impulses!(mechanism, body::Body, eqc::EqualityConstraint)
+    body.state.d -= zerodimstaticadjoint(G(mechanism, eqc, body)) * eqc.λsol[2]
     eqc.isspring && (body.state.d -= springforce(mechanism, eqc, body))
     eqc.isdamper && (body.state.d -= damperforce(mechanism, eqc, body))
     return
 end
 
-@inline function ∂constraintForceMapping!(mechanism, body::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
+@inline function ∂impulses∂v!(mechanism, body::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
     # @warn "maybe need some work"
     if body.id == eqc.parentid
         _dGa!(mechanism, body, eqc)
@@ -210,52 +213,35 @@ end
 end
 
 @inline function ∂gab∂ʳba(mechanism, body::Body{T}, eqc::EqualityConstraint{T,N}) where {T,N}
-    # Nl = joint_limits_length(eqc)
-    # Z = szeros(T,2Nl,6)
-    # @warn "this is wrong we need to put zeros for the columns correcponding to the si's"
-    # ∇pos = zeros(T,N,6)
-    # ∇vel = zeros(T,N,6)
-    # @show "ffff"
-    return -∂g∂ʳpos(mechanism, eqc, body)', ∂g∂ʳvel(mechanism, eqc, body)
-    # return ∇pos', ∇vel
+    return -G(mechanism, eqc, body)', ∂g∂z(mechanism, eqc, body) * ∂i∂v(body, mechanism.Δt)
 end
 
 @inline function ∂gab∂ʳba(mechanism, eqc::EqualityConstraint{T,N}, body::Body{T}) where {T,N}
-    # Nl = joint_limits_length(eqc)
-    # Z = szeros(T,2Nl,6)
-    # ∇pos = zeros(T,N,6)
-    # ∇vel = zeros(T,N,6)
-    # @show "gggg"
-    # @warn "this is wrong we need to put zeros for the columsn correcponding to the si's"
-    return ∂g∂ʳvel(mechanism, eqc, body), -∂g∂ʳpos(mechanism, eqc, body)'
-    # return ∇vel, ∇pos'
+    return ∂g∂z(mechanism, eqc, body) * ∂i∂v(body, mechanism.Δt), -G(mechanism, eqc, body)'
 end
-# @inline ∂gab∂ʳba(mechanism, body::Body, eqc::EqualityConstraint) = -∂g∂ʳpos(mechanism, eqc, body)', ∂g∂ʳvel(mechanism, eqc, body)
-# @inline ∂gab∂ʳba(mechanism, eqc::EqualityConstraint, body::Body) = ∂g∂ʳvel(mechanism, eqc, body), -∂g∂ʳpos(mechanism, eqc, body)'
 
-
-@generated function ∂g∂ʳposa(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(∂g∂ʳposa(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
+@generated function Ga(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
+    vec = [:(Ga(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 
-@generated function ∂g∂ʳposb(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(∂g∂ʳposb(eqc.constraints[$i], getbody(mechanism, eqc.parentid), body, eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
+@generated function Gb(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
+    vec = [:(Gb(eqc.constraints[$i], getbody(mechanism, eqc.parentid), body, eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 
-@generated function ∂g∂ʳself(mechanism, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
-    vec = [:(∂g∂ʳself(eqc.constraints[$i], eqc.λsol[2][λindex(eqc,$i)])) for i = 1:Nc]
+@generated function ∂g∂z(mechanism, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
+    vec = [:(∂g∂z(eqc.constraints[$i], eqc.λsol[2][λindex(eqc,$i)])) for i = 1:Nc]
     return :(cat($(vec...), dims=(1,2)))
 end
 
-@generated function ∂g∂ʳvela(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(∂g∂ʳvela(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
+@generated function ∂g∂a(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
+    vec = [:(∂g∂a(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 
-@generated function ∂g∂ʳvelb(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(∂g∂ʳvelb(eqc.constraints[$i], getbody(mechanism, eqc.parentid), body, eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
+@generated function ∂g∂b(mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}, body::Body) where {T,N,Nc,Cs}
+    vec = [:(∂g∂b(eqc.constraints[$i], getbody(mechanism, eqc.parentid), body, eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 
@@ -343,16 +329,16 @@ function set_spring_damper!(eqcs, spring, damper)
     return eqcs
 end
 
-@inline function ∂g∂ʳpos(mechanism, constraint::Constraint, body::Body)
+@inline function G(mechanism, constraint::Constraint, body::Body)
     if body.id == constraint.parentid
-        return ∂g∂ʳposa(mechanism, constraint, body)
+        return Ga(mechanism, constraint, body)
     else
-        return ∂g∂ʳposb(mechanism, constraint, body)
+        return Gb(mechanism, constraint, body)
     end
 end
 
-@inline function ∂g∂ʳvel(mechanism, constraint::Constraint, body::Body)
-    body.id == constraint.parentid ? (return ∂g∂ʳvela(mechanism, constraint, body)) : (return ∂g∂ʳvelb(mechanism, constraint, body))
+@inline function ∂g∂z(mechanism, constraint::Constraint, body::Body)
+    body.id == constraint.parentid ? (return ∂g∂a(mechanism, constraint, body)) : (return ∂g∂b(mechanism, constraint, body))
 end
 
 function λindex(eqc::EqualityConstraint{T,N,Nc,Cs}, i::Int) where {T,N,Nc,Cs}

@@ -1,25 +1,8 @@
 @inline function setDandΔs!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry, component::Component)
-    matrix_entry.value = ∂g∂ʳself(mechanism, component)
-    # @show ∂g∂ʳself(mechanism, component)
+    matrix_entry.value = ∂g∂z(mechanism, component)
     vector_entry.value = -g(mechanism, component)
     return
 end
-
-
-## Complementarity
-function complementarity(mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}; scaling::Bool = false) where {T,N,Nc,Cs}
-    c = []
-    for (i, joint) in enumerate(eqc.constraints)
-        λi = eqc.λsol[2][λindex(eqc, i)]
-        si, γi = get_sγ(joint, λi)
-        push!(c, si .* γi)
-    end
-    return vcat(c...)
-end
-
-# function complementarityμ(mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}; scaling::Bool = false) where {T,N,Nc,Cs}
-#     complementarity(mechanism, eqc; scaling=scaling) .- mechanism.μ
-# end
 
 @inline function setLU!(mechanism::Mechanism, matrix_entry_L::Entry, matrix_entry_U::Entry, componenta::Component, componentb::Component)
     L, U = ∂gab∂ʳba(mechanism, componenta, componentb)
@@ -33,6 +16,21 @@ end
     matrix_entry_U.value *= 0
     return
 end
+
+#######
+
+
+## Complementarity
+function complementarity(mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}; scaling::Bool = false) where {T,N,Nc,Cs}
+    c = []
+    for (i, joint) in enumerate(eqc.constraints)
+        λi = eqc.λsol[2][λindex(eqc, i)]
+        si, γi = get_sγ(joint, λi)
+        push!(c, si .* γi)
+    end
+    return vcat(c...)
+end
+
 
 function feasibilityStepLength!(mechanism::Mechanism; τort::T=0.95, τsoc::T=0.95, scaling::Bool=false) where {T}
     system = mechanism.system

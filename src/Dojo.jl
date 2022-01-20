@@ -141,15 +141,20 @@ include(joinpath("simulation", "storage.jl"))
 include(joinpath("simulation", "simulate.jl"))
 
 # Energy
+include(joinpath("mechanism", "momentum.jl"))
 include(joinpath("mechanism", "energy.jl"))
 
 # Joints
 include(joinpath("joints", "joint.jl"))
-include(joinpath("joints", "translational.jl"))
-include(joinpath("joints", "rotational.jl"))
+include(joinpath("joints", "translational", "constraint.jl"))
+include(joinpath("joints", "translational", "input.jl"))
+include(joinpath("joints", "translational", "force.jl"))
+include(joinpath("joints", "translational", "minimal.jl"))
+include(joinpath("joints", "rotational", "constraint.jl"))
+include(joinpath("joints", "rotational", "input.jl"))
+include(joinpath("joints", "rotational", "torque.jl"))
+include(joinpath("joints", "rotational", "minimal.jl"))
 include(joinpath("joints", "prototypes.jl"))
-include(joinpath("joints", "force.jl"))
-include(joinpath("joints", "torque.jl"))
 
 # Inequality constraints
 include(joinpath("bounds", "bound.jl"))
@@ -173,10 +178,11 @@ include(joinpath("ui", "initialize.jl"))
 include(joinpath("ui", "urdf.jl"))
 include(joinpath("ui", "convert_shape.jl"))
 include(joinpath("ui", "visualize.jl"))
+include(joinpath("ui", "colors.jl"))
 
-# Differentiation
-include(joinpath("diff", "diff_tools.jl"))
-include(joinpath("diff", "finitediff_tools.jl"))
+# Gradients
+include(joinpath("gradients", "analytical.jl"))
+include(joinpath("gradients", "finite_difference.jl"))
 
 # Environments
 include(joinpath("..", "env", "mechanisms.jl"))

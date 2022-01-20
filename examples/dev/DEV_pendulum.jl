@@ -22,7 +22,7 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
-mech = getmechanism(:pendulum, Δt = 0.01, g = -9.81, spring = 100.0, damper = 5.0)
+mech = getmechanism(:pendulum, Δt = 0.01, g = -9.81)#, spring = 100.0, damper = 5.0)
 Random.seed!(100)
 ϕ1 = 0.3π
 initialize!(mech, :pendulum, ϕ1 = ϕ1)
@@ -36,7 +36,7 @@ function cont!(mechanism, k; u = 30.1)
     return
 end
 
-storage = simulate!(mech, 0.3, cont!, record = true, solver = :mehrotra!, verbose = false)
+storage = simulate!(mech, 1.0, cont!, record = true, verbose = false)
 visualize(mech, storage, vis = vis)
 
 ################################################################################
