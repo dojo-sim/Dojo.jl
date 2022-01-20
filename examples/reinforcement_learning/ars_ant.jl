@@ -3,7 +3,7 @@ using JLD2
 include("ars.jl")
 
 # ## Ant
-env = make("ant", vis = vis, mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=30.0, cf = 0.5,
+env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=30.0, cf = 0.5,
     contact=true, contact_body=true)
 obs = reset(env)
 initializeant!(env.mechanism, pos = [1.3,0,0], rot = [0,0,0.])
@@ -21,7 +21,6 @@ policy = Policy(input_size, output_size, hp)
 normalizer = Normalizer(input_size)
 
 # ## Train policy
-3
 train(env, policy, normalizer, hp)
 
 # ## Visualize policy
@@ -50,20 +49,19 @@ MeshCat.settransform!(env.vis["/Cameras/default"],
 setprop!(env.vis["/Cameras/default/rotated/<object>"], "zoom", 0.75)
 
 # ## Ghost 
-env = make("ant", vis = vis, mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=30.0, cf = 0.5,
+env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=30.0, cf = 0.5,
     contact=true, contact_body=true)
-vis = Visualizer()
 open(env.vis)
 setvisible!(env.vis[:robot], false)
 timesteps = [1, 70, 110, 150, T] 
 for t in timesteps
     name = Symbol("robot_$t")
-    color = (t == T ? RGBA(51.0 / 255.0, 1.0, 1.0, 1.0) : RGBA(51.0 / 255.0, 1.0, 1.0, 0.25))
+    color = (t == T ? cyan : cyan_light)
     build_robot(env.vis, env.mechanism, color=color, name=name)
     set_robot(env.vis, env.mechanism, z[t], name=name)
 end
 
 # ## Save/Load policy
 θ = policy.θ
-@save joinpath(@__DIR__, "ant_policy.jld2") θ
-@load joinpath(@__DIR__, "ant_policy.jld2") θ
+# @save joinpath(@__DIR__, "ant_policy.jld2") θ
+# @load joinpath(@__DIR__, "ant_policy.jld2") θ

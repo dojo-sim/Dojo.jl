@@ -64,6 +64,7 @@ function step(env::Environment, x, u; diff=false)
     Δt = mechanism.Δt
 
     x0 = x
+    u = clip(env.aspace, u) # control limits
     env.u_prev .= u  # for rendering in Gym
 	u_scaled = env.control_mask' * env.control_scaling * u
 
@@ -91,7 +92,6 @@ function step(env::Environment, x, u; diff=false)
     info = Dict()
     return _get_obs(env), -costs, done, info
 end
-
 
 function render(env::Environment, mode="human")
     z = env.mode == :min ? min2max(env.mechanism, env.x) : env.x
@@ -134,6 +134,10 @@ end
 
 function contains(s::BoxSpace{T,N}, v::AbstractVector{T}) where {T,N}
     all(v .>= s.low) && all(v .<= s.high)
+end
+
+function clip(s::BoxSpace, u) 
+    clamp.(u, s.low, s.high)
 end
 
 ################################################################################

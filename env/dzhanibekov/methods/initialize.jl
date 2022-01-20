@@ -1,4 +1,4 @@
-function getdzhanibekov(; Δt::T = 0.01, g::T = -9.81, color=RGBA(1.0, 0.0, 0.0, 1.0)) where {T}
+function getdzhanibekov(; Δt::T = 0.01, g::T = -9.81, color=magenta) where {T}
     radius = 0.1
     body_length = 1.0
     body_mass = 1.0
