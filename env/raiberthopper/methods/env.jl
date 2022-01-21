@@ -82,8 +82,8 @@ function visualize(env::Environment{RaibertHopper}, traj::Vector{Vector{T}}; nam
     # convert to maximal representation
     z = [env.mode == :min ? min2max(env.mechanism, x) : x for x in traj]
 
-    body_color = orange#RGBA(0.0, 0.0, 0.0, 1.0)
-    foot_color = orange#RGBA(0.0, 0.0, 0.0, 1.0) #RGBA(1.0, 165.0 / 255.0, 0.0, 1.0) 
+    body_color = magenta#RGBA(0.0, 0.0, 0.0, 1.0)
+    foot_color = magenta#RGBA(0.0, 0.0, 0.0, 1.0) #RGBA(1.0, 165.0 / 255.0, 0.0, 1.0) 
     env.mechanism.bodies[3].shape.color = body_color 
     env.mechanism.bodies[4].shape.color = foot_color 
 
@@ -95,7 +95,7 @@ function visualize(env::Environment{RaibertHopper}, traj::Vector{Vector{T}}; nam
     for i = 1:n_leg
         setobject!(env.vis["leg$i"], GeometryBasics.Sphere(Point3f0(0),
             convert(Float32, r_leg)),
-            MeshPhongMaterial(color=orange))
+            MeshPhongMaterial(color=magenta))
     end
 
     # animate
@@ -128,21 +128,21 @@ function ghost(env::Environment{RaibertHopper}, traj::Vector{Vector{T}}; timeste
     z = [env.mode == :min ? min2max(env.mechanism, x) : x for x in traj]
 
     # color 
-    body_color = orange #RGBA(0.0, 0.0, 0.0, 1.0)
-    foot_color = orange #RGBA(0.0, 0.0, 0.0, 1.0)#RGBA(1.0, 165.0 / 255.0, 0.0, 1.0) 
+    body_color = magenta #RGBA(0.0, 0.0, 0.0, 1.0)
+    foot_color = magenta #RGBA(0.0, 0.0, 0.0, 1.0)#RGBA(1.0, 165.0 / 255.0, 0.0, 1.0) 
     env.mechanism.bodies[3].shape.color = body_color 
     env.mechanism.bodies[4].shape.color = foot_color 
 
     for t in timesteps
         # build system
-        build_robot(env.vis, env.mechanism, name=Symbol("robot_$t"), color=(t == length(z) ? orange : orange_light))
+        build_robot(env.vis, env.mechanism, name=Symbol("robot_$t"), color=(t == length(z) ? magenta : magenta_light))
         set_robot(env.vis, env.mechanism, z[t], name=Symbol("robot_$t"))
 
         x_body = z[t][1:3] 
         x_foot = z[t][13 .+ (1:3)] 
 
         leg = GeometryBasics.Cylinder(Point3f0(x_foot...), Point3f0(x_body...), convert(Float32, 0.025))
-        setobject!(env.vis["leg_$t"], leg, MeshPhongMaterial(color=(t == length(z) ? orange : orange_light)))
+        setobject!(env.vis["leg_$t"], leg, MeshPhongMaterial(color=(t == length(z) ? magenta : magenta_light)))
     end
     setvisible!(env.vis[:robot], false)
 

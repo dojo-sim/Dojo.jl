@@ -78,5 +78,6 @@ z_sol, u_sol = IterativeLQR.get_trajectory(prob)
 visualize(env, [[z_sol[1] for t = 1:10]..., z_sol..., [z_sol[end] for t = 1:10]...])
 
 # ## ghost
-ghost(env, z_sol)
+ghost(env, z_sol, timesteps=[1, 10, 18, 20, 22, 24, 25 T])
+
 
