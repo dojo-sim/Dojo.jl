@@ -39,7 +39,15 @@ set_light!(vis)
 
 
 
+##################################################################################
+# Open visualizer
+vis = Visualizer()
+open(vis)
+
+
+
 mech = getatlas(Δt=0.01, model_type=:simple)
+initializeatlasstance!(mech)
 storage = simulate!(mech, 0.20, record=true, verbose=false)
 vis, anim = visualize(mech, storage, vis=vis, show_contact=false)
 
