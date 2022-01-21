@@ -4,24 +4,28 @@ include("ars.jl")
 
 # ## Environment 
 env = make("halfcheetah", dt=0.05)
+env.nx
 obs = reset(env)
 
 # ## Open visualizer
 open(env.vis)
 
 # ## Augmented random search
-hp = HyperParameters(main_loop_size = 30, horizon = 80, n_directions = 6, b = 6, step_size = 0.02)
-input_size = length(obs)
-output_size = length(env.u_prev)
-normalizer = Normalizer(input_size)
 
 # ## Training 
 train_times = Float64[] 
 rewards = Float64[]
 policies = Matrix{Float64}[]
-N = 1 
+N = 5
 for i = 1:N
+    # Reset environment
+    env = make("halfcheetah", dt=0.05)
+    obs = reset(env)
+
     # Random policy
+    hp = HyperParameters(main_loop_size = 30, horizon = 80, n_directions = 6, b = 6, step_size = 0.02)
+    input_size = length(obs)
+    output_size = length(env.u_prev)
     normalizer = Normalizer(input_size)
     policy = Policy(input_size, output_size, hp)
 
@@ -37,19 +41,41 @@ for i = 1:N
     push!(policies, policy.θ)
 end
 
+# @save joinpath(@__DIR__, "halfcheetah_rl.jld2") train_times rewards policies
+@load joinpath(@__DIR__, "halfcheetah_rl.jld2") train_times rewards policies
+
+# Training statistics 
+N_best = 3
+@show rewards
+max_idx = sortperm(rewards, lt=Base.isgreater)
+train_time_best = (train_times[max_idx])[1:N_best]
+rewards_best = (rewards[max_idx])[1:N_best]
+policies_best = (policies[max_idx])[1:N_best]
+@show mean(train_time_best)
+@show std(train_time_best)
+@show mean(rewards)
+@show std(rewards)
+
 # ## Visualizer policy
 open(env.vis)
 
 traj = display_policy(env, 
     # policy, 
-    Policy(hp, θ),
+    Policy(hp, policies[5]),
     normalizer, hp)
 
-for t = 1:length(traj) 
-    traj[t][2] += 3.25
-end
+# for t = 1:length(traj) 
+#     traj[t][2] += 3.25
+# end
 
 visualize(env, traj)
+
+vals = [1, 2, 3, 4]
+findmax(vals, 2)
+max_idx = sortperm(vals, lt=Base.isgreater)
+
+Base.isgreater
+
 MeshCat.settransform!(env.vis["/Cameras/default"],
         MeshCat.compose(MeshCat.LinearMap(Rotations.RotZ(-π / 2.0)), MeshCat.Translation(50.0, 0.0, -1.0)))
 setprop!(env.vis["/Cameras/default/rotated/<object>"], "zoom", 15.0)

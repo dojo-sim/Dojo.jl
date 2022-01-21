@@ -18,6 +18,8 @@ env = make("quadruped",
     damper=damper, 
     spring=spring)
 
+env.nx
+
 # ## visualizer 
 open(env.vis) 
 
