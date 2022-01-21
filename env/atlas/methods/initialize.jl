@@ -1,5 +1,6 @@
 
-function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0, damper::T = 0.0, contact::Bool = true, model_type::Symbol = :simple) where {T}
+function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0,
+        damper::T = 0.0, contact::Bool = true, model_type::Symbol = :simple) where {T}
     path = joinpath(@__DIR__, "../deps/atlas_$(string(model_type)).urdf")
     mech = Mechanism(path, true, T, g = g, Δt = Δt, spring=spring, damper=damper)
 
@@ -40,11 +41,11 @@ function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0, d
     return mech
 end
 
-function initializeatlas!(mechanism::Mechanism; 
+function initializeatlas!(mechanism::Mechanism;
     tran::AbstractVector{T} = [0,0,0.2],
-    rot::AbstractVector{T} = [0,0,0.], 
-    v=[zeros(3) for i = 1:length(mechanism.bodies)], 
-    ω=[zeros(3) for i = 1:length(mechanism.bodies)], 
+    rot::AbstractVector{T} = [0,0,0.],
+    v=[zeros(3) for i = 1:length(mechanism.bodies)],
+    ω=[zeros(3) for i = 1:length(mechanism.bodies)],
     αhip::T = 0.0, αknee::T = 0.0) where {T}
     tran += [0,0,0.9385]
 
@@ -68,11 +69,11 @@ function initializeatlas!(mechanism::Mechanism;
     return nothing
 end
 
-function initializeatlasstance!(mechanism::Mechanism; 
+function initializeatlasstance!(mechanism::Mechanism;
     tran::AbstractVector{T} = [0,0,0.2],
-    rot::AbstractVector{T} = [0,0,0.], 
-    v=[zeros(3) for i = 1:length(mechanism.bodies)], 
-    ω=[zeros(3) for i = 1:length(mechanism.bodies)], 
+    rot::AbstractVector{T} = [0,0,0.],
+    v=[zeros(3) for i = 1:length(mechanism.bodies)],
+    ω=[zeros(3) for i = 1:length(mechanism.bodies)],
     αhip::T = 0.0, αknee::T = 0.0) where {T}
     tran += [0,0,0.9385]
 

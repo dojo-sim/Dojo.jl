@@ -96,7 +96,7 @@ function eval_sample_policy(θ::Matrix{T}, input::AbstractVector{T}) where {T}
     return θ * input
 end
 
-function rollout_policy(θ::Matrix, env::Environment, normalizer::Normalizer, hp::HyperParameters) 
+function rollout_policy(θ::Matrix, env::Environment, normalizer::Normalizer, hp::HyperParameters)
     state = reset(env)
     rewards = 0.0
     done = false
@@ -113,14 +113,15 @@ function rollout_policy(θ::Matrix, env::Environment, normalizer::Normalizer, hp
     return rewards
 end
 
-function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T}, hp::HyperParameters{T}; distributed=false) where T
+function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T},
+        hp::HyperParameters{T}; distributed=false) where T
     println("Training linear policy with Augmented Random Search (ARS)\n ")
     if distributed
         envs = [deepcopy(env) for i = 1:(2 * hp.n_directions)]
         normalizers = [deepcopy(normalizer) for i = 1:(2 * hp.n_directions)]
         hps = [deepcopy(hp) for i = 1:(2 * hp.n_directions)]
         print("  $(nprocs()) processors")
-    else 
+    else
         envs = [deepcopy(env) for i = 1:Threads.nthreads()]
         print("  $(Threads.nthreads()) threads")
     end
@@ -131,14 +132,14 @@ function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T}, h
     for episode = 1:hp.main_loop_size
         # initialize deltas and rewards
         θs, δs = sample_policy(policy)
-    
+
         # evaluate policies
         if distributed
             rewards .= pmap(rollout_policy, θs, envs, normalizers, hps)
-        else 
-            Threads.@threads for k = 1:(2 * hp.n_directions) 
-                rewards[k] = rollout_policy(θs[k], envs[Threads.threadid()], normalizer, hp) 
-            end 
+        else
+            Threads.@threads for k = 1:(2 * hp.n_directions)
+                rewards[k] = rollout_policy(θs[k], envs[Threads.threadid()], normalizer, hp)
+            end
         end
 
         # reward evaluation
@@ -149,7 +150,7 @@ function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T}, h
 
         # policy update
         update(policy, rollouts, σ_r)
-        
+
         # finish, print:
         println("episode $episode reward_evaluation $(mean(rewards))")
     end

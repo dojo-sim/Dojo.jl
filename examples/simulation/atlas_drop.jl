@@ -6,6 +6,7 @@ open(vis)
 
 # ## Mechanism
 mech = getmechanism(:atlas, Δt=0.01, g=-9.81, cf=0.5, damper=100.0, spring=1.0, contact=true)
+# mech = getmechanism(:atlas, Δt=1/65, g=-9.81, cf=0.5, damper=100.0, spring=1.0, contact=true)
 @show length(mech.bodies) * 13
 @show controldim(mech)
 
@@ -32,4 +33,4 @@ MeshCat.settransform!(vis["/Cameras/default"],
         MeshCat.compose(MeshCat.Translation(0.0, 0.0, -1.002), MeshCat.LinearMap(Rotations.RotY(0.0))))
 setprop!(vis["/Cameras/default/rotated/<object>"], "zoom",0.840)
 
-set_floor!(vis, x=1, y=10, z=0.02, color=RGBA(0,0,0,1))
+set_floor!(vis, x=0.2, y=10, z=0.02, color=RGBA(0,0,0,1))

@@ -119,6 +119,7 @@ include(joinpath(module_dir(), "src", "mechanism", "origin.jl"))
 include(joinpath(module_dir(), "src", "mechanism", "mechanism.jl"))
 include(joinpath(module_dir(), "src", "mechanism", "system.jl"))
 include(joinpath(module_dir(), "src", "mechanism", "methods.jl"))
+include(joinpath(module_dir(), "src", "mechanism", "momentum.jl"))
 
 # Simulation
 include(joinpath(module_dir(), "src", "simulation", "step.jl"))
@@ -130,11 +131,15 @@ include(joinpath(module_dir(), "src", "mechanism", "energy.jl"))
 
 # Joints
 include(joinpath(module_dir(), "src", "joints", "joint.jl"))
-include(joinpath(module_dir(), "src", "joints", "translational.jl"))
-include(joinpath(module_dir(), "src", "joints", "rotational.jl"))
+include(joinpath(module_dir(), "src", "joints", "translational", "constraint.jl"))
+include(joinpath(module_dir(), "src", "joints", "translational", "input.jl"))
+include(joinpath(module_dir(), "src", "joints", "translational", "force.jl"))
+include(joinpath(module_dir(), "src", "joints", "translational", "minimal.jl"))
+include(joinpath(module_dir(), "src", "joints", "rotational", "constraint.jl"))
+include(joinpath(module_dir(), "src", "joints", "rotational", "input.jl"))
+include(joinpath(module_dir(), "src", "joints", "rotational", "torque.jl"))
+include(joinpath(module_dir(), "src", "joints", "rotational", "minimal.jl"))
 include(joinpath(module_dir(), "src", "joints", "prototypes.jl"))
-include(joinpath(module_dir(), "src", "joints", "force.jl"))
-include(joinpath(module_dir(), "src", "joints", "torque.jl"))
 
 # Inequality constraints
 include(joinpath(module_dir(), "src", "bounds", "bound.jl"))
@@ -160,8 +165,8 @@ include(joinpath(module_dir(), "src", "ui", "convert_shape.jl"))
 include(joinpath(module_dir(), "src", "ui", "visualize.jl"))
 
 # Differentiation
-include(joinpath(module_dir(), "src", "diff", "diff_tools.jl"))
-include(joinpath(module_dir(), "src", "diff", "finitediff_tools.jl"))
+include(joinpath(module_dir(), "src", "gradients", "analytical.jl"))
+include(joinpath(module_dir(), "src", "gradients", "finite_difference.jl"))
 
 # Environments
 include(joinpath(module_dir(), "env", "mechanisms.jl"))

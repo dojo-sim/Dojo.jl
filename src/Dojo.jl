@@ -108,7 +108,7 @@ export Origin,
     mehrotra!,
     InteriorPointOptions,
 
-    Environment, 
+    Environment,
     getMinState
 
 # Utilities

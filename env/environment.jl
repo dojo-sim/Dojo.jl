@@ -136,7 +136,7 @@ function contains(s::BoxSpace{T,N}, v::AbstractVector{T}) where {T,N}
     all(v .>= s.low) && all(v .<= s.high)
 end
 
-function clip(s::BoxSpace, u) 
+function clip(s::BoxSpace, u)
     clamp.(u, s.low, s.high)
 end
 
@@ -164,6 +164,7 @@ end
 # Environments
 # ##############################################################################
 include("ant/methods/env.jl")
+include("atlas/methods/env.jl")
 include("cartpole/methods/env.jl")
 include("halfcheetah/methods/env.jl")
 include("hopper/methods/env.jl")
