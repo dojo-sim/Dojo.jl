@@ -13,6 +13,7 @@ open(env.vis)
 hp = HyperParameters(main_loop_size = 30, horizon = 80, n_directions = 6, b = 6, step_size = 0.02)
 input_size = length(obs)
 output_size = length(env.u_prev)
+normalizer = Normalizer(input_size)
 
 # ## Training 
 train_times = Float64[] 
@@ -39,7 +40,11 @@ end
 # ## Visualizer policy
 open(env.vis)
 
-traj = display_policy(env, policy, normalizer, hp);
+traj = display_policy(env, 
+    # policy, 
+    Policy(hp, θ),
+    normalizer, hp)
+
 for t = 1:length(traj) 
     traj[t][2] += 3.25
 end
@@ -54,7 +59,7 @@ z = [min2max(env.mechanism, x) for x in traj]
 z = [[z[1] for t = 1:40]..., z..., [z[end] for t = 1:40]...]
 T = length(z) 
 anim = MeshCat.Animation(convert(Int, floor(1.0 / env.mechanism.Δt)))
-build_robot(env.vis, env.mechanism, color=orange)
+build_robot(env.vis, env.mechanism, color=magenta)
 for t = 1:T
     MeshCat.atframe(anim, t) do
         set_robot(env.vis, env.mechanism, z[t])
@@ -66,10 +71,10 @@ MeshCat.setanimation!(env.vis, anim)
 env = make("halfcheetah", dt=0.05)
 open(env.vis)
 setvisible!(env.vis[:robot], false)
-timesteps = [1, 40, 50, 60, 70, 80, 90, 100, 110, T] 
+timesteps = [1, 50, 60, 70, 80, 90, 100, 108, T] 
 for t in timesteps
     name = Symbol("robot_$t")
-    color = (t == T ? orange : orange_light)
+    color = (t == T ? magenta : magenta_light)
     build_robot(env.vis, env.mechanism, color=color, name=name)
     set_robot(env.vis, env.mechanism, z[t], name=name)
 end
@@ -77,25 +82,25 @@ end
 # ## Save/Load policy
 # θ = policy.θ
 # @save joinpath(@__DIR__, "halfcheetah_policy.jld2") θ
-# @load joinpath(@__DIR__, "halfcheetah_policy.jld2") θ
+@load joinpath(@__DIR__, "halfcheetah_policy.jld2") θ
 
 
-# ## test random policy
-# env = make("halfcheetah", mode=:min, g=-9.81, dt=0.05)
-# initialize!(env.mechanism, :halfcheetah)
-# open(env.vis)
-# # storage = simulate!(env.mechanism, 1.0, record=true, verbose=false)
-# # visualize(env.mechanism, storage, vis=env.vis, show_contact=true)
+## test random policy
+env = make("halfcheetah", mode=:min, g=-9.81, dt=0.05)
+initialize!(env.mechanism, :halfcheetah)
+open(env.vis)
+# storage = simulate!(env.mechanism, 1.0, record=true, verbose=false)
+# visualize(env.mechanism, storage, vis=env.vis, show_contact=true)
 
-# reset(env)
-# render(env)
-# x0 = getMinState(env.mechanism)
+reset(env)
+render(env)
+x0 = getMinState(env.mechanism)
 
-# for i = 1:100
-#     u = rand(Uniform(-1.0, 1.0), env.nu)
-#     x0, r, _ = step(env, x0, u)
-#     @show r
-#     render(env)
-# end
+for i = 1:100
+    u = rand(Uniform(-1.0, 1.0), env.nu)
+    x0, r, _ = step(env, x0, u)
+    @show r
+    render(env)
+end
 
 

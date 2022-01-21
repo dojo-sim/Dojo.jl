@@ -3,7 +3,7 @@ using JLD2
 include("ars.jl")
 
 # ## Ant
-env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=10.0, spring=1.0, cf = 0.5,
+env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=25.0, spring=10.0, cf = 0.5,
     contact=true, contact_body=true)
 obs = reset(env)
 initializeant!(env.mechanism, pos = [1.3,0,0], rot = [0,0,0.])
@@ -14,7 +14,7 @@ render(env)
 open(env.vis)
 
 # ## Set up policy
-hp = HyperParameters(main_loop_size=30, horizon=150, n_directions=6, b=6, step_size=0.02)
+hp = HyperParameters(main_loop_size=100, horizon=150, n_directions=6, b=6, step_size=0.02)
 input_size = length(obs)
 output_size = length(env.u_prev)
 
@@ -73,11 +73,11 @@ MeshCat.settransform!(env.vis["/Cameras/default"],
 setprop!(env.vis["/Cameras/default/rotated/<object>"], "zoom", 0.75)
 
 # ## Ghost 
-env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=10.0, spring=1.0, cf = 0.5,
+env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=25.0, spring=10.0, cf = 0.5,
     contact=true, contact_body=true)
 open(env.vis)
 setvisible!(env.vis[:robot], false)
-timesteps = [1, 70, 110, 150, T] 
+timesteps = [1, 70, 110, 150,  170, T] 
 for t in timesteps
     name = Symbol("robot_$t")
     color = (t == T ? cyan : cyan_light)
@@ -91,7 +91,7 @@ end
 # @load joinpath(@__DIR__, "ant_policy.jld2") θ
 
 # ## test random policy
-env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=10.0, spring=1.0, cf = 0.5,
+env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=25.0, spring=10.0, cf = 0.5,
     contact=true, contact_body=true)
 # initialize!(env.mechanism, :ant)
 open(env.vis)
