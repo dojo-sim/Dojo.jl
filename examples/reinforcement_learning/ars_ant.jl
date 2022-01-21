@@ -1,14 +1,17 @@
 using Dojo
 using JLD2 
+using Random
 include("ars.jl")
 
 # ## Ant
-env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=25.0, spring=10.0, cf = 0.5,
+env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=25.0, cf = 0.5,
     contact=true, contact_body=true)
 obs = reset(env)
 initializeant!(env.mechanism, pos = [1.3,0,0], rot = [0,0,0.])
 env.x .= getMinState(env.mechanism)
 render(env)
+
+env.nx
 
 # ## Open visualizer
 open(env.vis)
@@ -17,14 +20,24 @@ open(env.vis)
 hp = HyperParameters(main_loop_size=100, horizon=150, n_directions=6, b=6, step_size=0.02)
 input_size = length(obs)
 output_size = length(env.u_prev)
+normalizer = Normalizer(input_size)
 
 # ## Training 
 train_times = Float64[] 
 rewards = Float64[]
 policies = Matrix{Float64}[]
-N = 1 
+N = 5 
 for i = 1:N
+    # Reset environment 
+    env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=25.0, cf = 0.5,
+        contact=true, contact_body=true)
+    obs = reset(env)
+
     # Random policy
+    Random.seed!(i)
+    hp = HyperParameters(main_loop_size=100, horizon=150, n_directions=6, b=6, step_size=0.02)
+    input_size = length(obs)
+    output_size = length(env.u_prev)
     normalizer = Normalizer(input_size)
     policy = Policy(input_size, output_size, hp)
 
@@ -35,16 +48,29 @@ for i = 1:N
     reward = rollout_policy(policy.θ, env, normalizer, hp)
 
     # Cache 
-    # push!(train_times, train_time) 
+    push!(train_times, train_time) 
     push!(rewards, reward) 
     push!(policies, policy.θ)
 end
 
+# @save joinpath(@__DIR__, "ant_rl.jld2") train_times rewards policies
+
+# Training statistics 
+N_best = 3
+@show rewards
+max_idx = sortperm(rewards, lt=Base.isgreater)
+train_time_best = (train_times[max_idx])[1:N_best]
+rewards_best = (rewards[max_idx])[1:N_best]
+policies_best = (policies[max_idx])[1:N_best]
+@show mean(train_time_best)
+@show std(train_time_best)
+@show mean(rewards)
+@show std(rewards)
 
 # ## Visualize policy
 # traj = display_random_policy(env, hp)
 normalizer = Normalizer(input_size)
-policy = Policy(hp, policies[1])
+policy = Policy(hp, policies_best[1])
 
 # Train policy
 train_time = @elapsed train(env, policy, normalizer, hp)
@@ -53,7 +79,7 @@ traj = display_policy(env, policy, normalizer, hp)
 # visualize(env, traj)
 
 for t = 1:length(traj)
-    traj[t][1] -= 1.5 
+    traj[t][1] -= 2.0
 end
 z = [min2max(env.mechanism, x) for x in traj]
 z = [[z[1] for t = 1:40]..., z..., [z[end] for t = 1:40]...]
@@ -69,15 +95,15 @@ end
 MeshCat.setanimation!(env.vis, anim)
 
 MeshCat.settransform!(env.vis["/Cameras/default"],
-        MeshCat.compose(MeshCat.Translation(0.0, 0.0, 3.0), MeshCat.LinearMap(Rotations.RotZ(-π / 2.0))))
-setprop!(env.vis["/Cameras/default/rotated/<object>"], "zoom", 0.75)
+        MeshCat.compose(MeshCat.Translation(-0.0, 0.0, 90.0), MeshCat.LinearMap(Rotations.RotZ(0.5 * π) * Rotations.RotY(-pi / 2.5))))
+setprop!(env.vis["/Cameras/default/rotated/<object>"], "zoom", 20)
 
 # ## Ghost 
-env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=25.0, spring=10.0, cf = 0.5,
+env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=25.0, cf = 0.5,
     contact=true, contact_body=true)
 open(env.vis)
 setvisible!(env.vis[:robot], false)
-timesteps = [1, 70, 110, 150,  170, T] 
+timesteps = [1, 70, 110, 130, 150, T] 
 for t in timesteps
     name = Symbol("robot_$t")
     color = (t == T ? cyan : cyan_light)
@@ -86,7 +112,7 @@ for t in timesteps
 end
 
 # ## Save/Load policy
-θ = policy.θ
+# θ = policy.θ
 # @save joinpath(@__DIR__, "ant_policy.jld2") θ
 # @load joinpath(@__DIR__, "ant_policy.jld2") θ
 
