@@ -18,10 +18,6 @@ hp = HyperParameters(main_loop_size=30, horizon=150, n_directions=6, b=6, step_s
 input_size = length(obs)
 output_size = length(env.u_prev)
 
- # Random policy
- normalizer = Normalizer(input_size)
- policy = Policy(input_size, output_size, hp)
-
 # ## Training 
 train_times = Float64[] 
 rewards = Float64[]
@@ -44,8 +40,15 @@ for i = 1:N
     push!(policies, policy.θ)
 end
 
+
 # ## Visualize policy
 # traj = display_random_policy(env, hp)
+normalizer = Normalizer(input_size)
+policy = Policy(hp, policies[1])
+
+# Train policy
+train_time = @elapsed train(env, policy, normalizer, hp)
+
 traj = display_policy(env, policy, normalizer, hp)
 # visualize(env, traj)
 
@@ -57,7 +60,7 @@ z = [[z[1] for t = 1:40]..., z..., [z[end] for t = 1:40]...]
 T = length(z) 
 
 anim = MeshCat.Animation(convert(Int, floor(1.0 / env.mechanism.Δt)))
-build_robot(env.vis, env.mechanism, color=RGBA(51.0 / 255.0, 1.0, 1.0, 1.0))
+build_robot(env.vis, env.mechanism, color=cyan)
 for t = 1:T
     MeshCat.atframe(anim, t) do
         set_robot(env.vis, env.mechanism, z[t])

@@ -92,3 +92,7 @@ visualize(env, [[x_sol[1] for t = 1:10]..., x_sol..., [x_sol[end] for t = 1:10].
 # ## ghost
 ghost(env, x_sol, timesteps=[1, 5, 7, 10, T])
 
+MeshCat.settransform!(env.vis["/Cameras/default"],
+    MeshCat.compose(MeshCat.Translation(0.0, 0.1, -1.0), MeshCat.LinearMap(Rotations.RotZ(0.0 * pi))))
+setprop!(env.vis["/Cameras/default/rotated/<object>"], "zoom", 1)
+

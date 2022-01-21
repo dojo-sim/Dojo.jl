@@ -11,8 +11,8 @@ function getcartpole(; Δt::T=0.1, g::T=-9.81, spring=0.0, damper=0.0) where {T}
 
     # Links
     origin = Origin{Float64}()
-    slider = Capsule(1.5 * radius, slider_length, slider_mass, qoffset=UnitQuaternion(RotX(0.5 * π)))
-    pendulum = Capsule(radius, pendulum_length, pendulum_mass)
+    slider = Capsule(1.5 * radius, slider_length, slider_mass, qoffset=UnitQuaternion(RotX(0.5 * π)), color=cyan)
+    pendulum = Capsule(radius, pendulum_length, pendulum_mass, color=cyan)
     links = [slider, pendulum]
 
     # Joint Constraints
