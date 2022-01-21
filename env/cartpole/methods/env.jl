@@ -96,11 +96,11 @@ function visualize(env::Environment{Cartpole}, traj::Vector{Vector{T}}; axes=fal
 	setobject!(env.vis["slider"], l2, MeshPhongMaterial(color = Colors.RGBA(0.0, 0.0, 0.0,1.0)))
 end
 
-function ghost(env::Environment{Cartpole}, z_sol; timesteps=[t for t = 1:length(z_sol)]) 
+function ghost(env::Environment{Cartpole}, z_sol; timesteps=[t for t = 1:length(z_sol)], line=false) 
 
     for t in timesteps 
         name = Symbol("robot_$t")
-        build_robot(env.vis, env.mechanism, name=name, color=(t == length(z_sol) ? nothing : RGBA(0.75, 0.75, 0.75, 0.25)))
+        build_robot(env.vis, env.mechanism, name=name, color=(t == length(z_sol) ? cyan : cyan_light))
         z = z_sol[t] 
         if t == length(z_sol) 
             z[1] -= 0.05 
@@ -120,22 +120,25 @@ function ghost(env::Environment{Cartpole}, z_sol; timesteps=[t for t = 1:length(
     setvisible!(env.vis["/Axes"], false)
     setvisible!(env.vis["/Grid"], false)
 
-    line_mat = LineBasicMaterial(color=color=RGBA(51.0 / 255.0, 1.0, 1.0, 1.0), linewidth=25.0)
-    points = Vector{Point{3,Float64}}()
-    for (i, xt) in enumerate(z_sol)
-        z_pendulum = xt[13 .+ (1:13)]
-        x = z_pendulum[1:3] 
-        q = UnitQuaternion(z_pendulum[6 .+ (1:4)]...)
-        k = x + vrotate([0.0; 0.0; -0.5], q)
+    if line 
+        line_mat = LineBasicMaterial(color=color=RGBA(51.0 / 255.0, 1.0, 1.0, 1.0), linewidth=25.0)
+        points = Vector{Point{3,Float64}}()
+        for (i, xt) in enumerate(z_sol)
+            z_pendulum = xt[13 .+ (1:13)]
+            x = z_pendulum[1:3] 
+            q = UnitQuaternion(z_pendulum[6 .+ (1:4)]...)
+            k = x + vrotate([0.0; 0.0; -0.5], q)
 
-        push!(points, Point(k[1], k[2], k[3]))
+            push!(points, Point(k[1], k[2], k[3]))
 
-        setobject!(env.vis["ee_vertex_$i"], GeometryBasics.Sphere(Point3f0(0),
-            convert(Float32, 0.001)),
-            MeshPhongMaterial(color = RGBA(1.0, 153.0 / 255.0, 51.0 / 255.0, 1.0)))
-            settransform!(env.vis["ee_vertex_$i"], MeshCat.Translation(points[i]))
+            setobject!(env.vis["ee_vertex_$i"], GeometryBasics.Sphere(Point3f0(0),
+                convert(Float32, 0.001)),
+                MeshPhongMaterial(color = RGBA(1.0, 153.0 / 255.0, 51.0 / 255.0, 1.0)))
+                settransform!(env.vis["ee_vertex_$i"], MeshCat.Translation(points[i]))
+        end
+        setobject!(env.vis[:ee_traj], MeshCat.Line(points, line_mat))
     end
-    setobject!(env.vis[:ee_traj], MeshCat.Line(points, line_mat))
+
     open(env.vis)
 end
 

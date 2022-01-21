@@ -14,13 +14,9 @@ render(env)
 open(env.vis)
 
 # ## Set up policy
-hp = HyperParameters(main_loop_size=30, horizon=150, n_directions=6, b=6, step_size=0.02)
+hp = HyperParameters(main_loop_size=100, horizon=150, n_directions=6, b=6, step_size=0.02)
 input_size = length(obs)
 output_size = length(env.u_prev)
-
- # Random policy
- normalizer = Normalizer(input_size)
- policy = Policy(input_size, output_size, hp)
 
 # ## Training 
 train_times = Float64[] 

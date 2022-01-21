@@ -254,7 +254,7 @@ traj_sim = simulate!(mech, 0.80, record=true,
     opts=InteriorPointOptions(btol=1e-6, rtol=1e-6, verbose=false))
 
 cube_sim_v_truth(Dsol[end], traj_truth, traj_sim, vis=vis,
-	transparency_truth=0.5,
+	transparency_truth=1.0,
 	fps=Int(floor(1/mech.Δt)), b0=0.0, b1=0.0)
 
-cube_ghost_sim_v_truth(Dsol[end], traj_truth, traj_sim, vis=vis, transparency_truth=0.5)
+cube_ghost_sim_v_truth(Dsol[end], traj_truth, traj_sim, vis=vis, transparency_truth=1.0)
