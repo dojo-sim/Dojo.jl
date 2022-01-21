@@ -6,6 +6,7 @@ open(vis)
 
 # ## Mechanism
 mech = getmechanism(:atlas, Δt=0.01, g=-9.81, cf=0.5, damper=100.0, spring=1.0, contact=true)
+# mech = getmechanism(:atlas, Δt=1/65, g=-9.81, cf=0.5, damper=100.0, spring=1.0, contact=true)
 @show length(mech.bodies) * 13
 @show controldim(mech)
 

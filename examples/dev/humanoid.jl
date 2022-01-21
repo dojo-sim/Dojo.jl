@@ -45,7 +45,7 @@ end
 visualize(mech, storage, vis = vis)
 
 
-file_name = "atlas_drop_bw"
+file_name = "atlas_stable_position"
 MeshCat.convert_frames_to_video(
     "/home/simon/Downloads/$file_name.tar",
     "/home/simon/Documents/video/$file_name.mp4", overwrite=true)

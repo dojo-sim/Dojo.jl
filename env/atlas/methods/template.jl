@@ -57,7 +57,7 @@ function AtlasIKerror(mechanism::Mechanism, p_base, p_foot, θ; leg::Symbol = :r
 	return err[[1,3]]
 end
 
-function atlas_trajectory(mechanism::Mechanism{T}; Δt = 0.05, r = 0.10, z = 0.85, N = 12, Ncycles = 1) where T
+function atlas_trajectory(mechanism::Mechanism{T}; Δt = 0.05, r = 0.10, x = 0.00, z = 0.85, N = 12, Ncycles = 1) where T
 	pL = [0, + 0.1145, 0]
 	pR = [0, - 0.1145, 0]
 
@@ -68,7 +68,7 @@ function atlas_trajectory(mechanism::Mechanism{T}; Δt = 0.05, r = 0.10, z = 0.8
 	tR = [pR + ti for ti in t]
 
 	# Leg angles
-	p_base = [0,0,z]
+	p_base = [x,0,z]
 	θL = [IKatlas(mechanism, p_base, tL[i], leg = :l) for i = 1:2N]
 	θR = [IKatlas(mechanism, p_base, tR[i], leg = :r) for i = 1:2N]
 
