@@ -89,7 +89,7 @@ function generate_hardware_dataset(;N::Int=10,
 		0.2, 0,0,0, -1, +1, +1,
 		0.2, 0,0,0, -1, -1, +1]
     params = Dict(:N => N, :H => H, :Δt => Δt, :g => gscaled, :data => data)
-    jldsave(joinpath(@__DIR__, "dataset", filename(:hardwarebox; N = N, S = S));
+    jldsave(joinpath(@__DIR__, "dataset", datafilename(:hardwarebox; N = N, S = S));
         params=params, trajs=trajs, pairs=pairs)
     return nothing
 end

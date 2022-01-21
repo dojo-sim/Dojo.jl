@@ -123,23 +123,23 @@ end
 ################################################################################
 # Generate & Save Dataset
 ################################################################################
-function filename(model::Symbol; kwargs...)
-    eval(Symbol(:filename, model))(; kwargs...)
+function datafilename(model::Symbol; kwargs...)
+    eval(Symbol(:datafilename, model))(; kwargs...)
 end
 
-function filenamesphere(; N::Int=10, cf=0.1, radius=0.5)
+function datafilenamesphere(; N::Int=10, cf=0.1, radius=0.5)
     "sphere_dim_N:$(N)_cf:$(cf)_radius:$(radius).jld2"
 end
 
-function filenamebox2d(; N::Int=10, cf=0.1, radius=0.05, side=0.50)
+function datafilenamebox2d(; N::Int=10, cf=0.1, radius=0.05, side=0.50)
     "box2d_dim_N:$(N)_cf:$(cf)_radius:$(radius)_side:$(side).jld2"
 end
 
-function filenamebox(; N::Int=10, cf=0.1, radius=0., side=0.50)
+function datafilenamebox(; N::Int=10, cf=0.1, radius=0., side=0.50)
     "box_dim_N:$(N)_cf:$(cf)_radius:$(radius)_side:$(side).jld2"
 end
 
-function filenamehardwarebox(; N::Int=10, S::Int=1)
+function datafilenamehardwarebox(; N::Int=10, S::Int=1)
     "hardwarebox_dim_N:$(N)_sample_S:$(S).jld2"
 end
 
@@ -221,7 +221,7 @@ function generate_dataset(model::Symbol;
 	data = get_simulator_data(mechanism)
     params = Dict(:N => N, :H => H, :Δt => Δt, :g => g, :data => data)
     pairs = build_pairs(mechanism, trajs)
-    jldsave(joinpath(@__DIR__, "data", "dataset", filename(model; N = N, mech_kwargs...));
+    jldsave(joinpath(@__DIR__, "data", "dataset", datafilename(model; N = N, mech_kwargs...));
         params=params, trajs=trajs, pairs=pairs)
     return nothing
 end
@@ -231,7 +231,7 @@ end
 # Load Dataset
 ################################################################################
 function open_dataset(model::Symbol; kwargs...)
-    dataset = jldopen(joinpath(@__DIR__, "data", "dataset", filename(model; kwargs...)))
+    dataset = jldopen(joinpath(@__DIR__, "data", "dataset", datafilename(model; kwargs...)))
     params = dataset["params"]
     trajs = dataset["trajs"]
     pairs = dataset["pairs"]

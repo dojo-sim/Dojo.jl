@@ -1,0 +1,94 @@
+using Polyhedra
+
+vis = Visualizer()
+open(vis)
+
+# Utils
+function module_dir()
+    return joinpath(@__DIR__, "..", "..", "..")
+end
+
+
+################################################################################
+# # Learned vs truth: geometry and friction cone
+################################################################################
+include("methods.jl")
+
+file = jldopen(joinpath(module_dir(), "examples",
+	"real2sim", "hardware_examples", "sol_best6.jld2"))
+Dsol = file["Dsol"]
+cam_pos = [2,-4.5,1.8]
+vis, anim = cube_morphing(Dsol, vis=vis, fps=20, rot=0.03,
+	vis_truth=true, vis_learned=true, translate=true, cam_pos=[0,-6,1.8], alt=-1)
+vis, anim = cube_morphing(Dsol[5:5], vis=vis, fps=20, rot=0.00, background=false,
+	vis_truth=false, vis_learned=true, translate=false, cam_pos=cam_pos, alt=-1, b0=0, b1=0)
+vis, anim = cube_morphing(Dsol, vis=vis, fps=20, rot=0.00, background=false,
+	vis_truth=true, vis_learned=false, translate=false, cam_pos=cam_pos, alt=-1, b0=0, b1=0)
+
+t = 50
+vis, anim = cube_morphing(Dsol[t:t], vis=vis, fps=20, rot=0.00, background=false,
+	vis_truth=true, vis_learned=false, translate=false, cam_pos=cam_pos, alt=-1, b0=0, b1=0)
+
+
+
+vis = Visualizer()
+open(vis)
+
+vis, anim = cone_morphing(Dsol, vis=vis, fps=20, rot=0.03,
+	vis_truth=true, vis_learned=true, translate=true, cam_pos=[0,-2,0.7], alt=-1.5)
+
+t = 1
+cam_pos = [0,-1.5,0.5]
+vis, anim = cone_morphing(Dsol[t:t], vis=vis, fps=20, rot=0.00, background=true,
+	vis_truth=false, vis_learned=true, translate=false, cam_pos=cam_pos, alt=-1.65, b0=0, b1=0)
+
+
+
+
+
+################################################################################
+# # Learned vs truth: trajectory
+################################################################################
+# open visualizer
+vis = Visualizer()
+open(vis)
+
+include(joinpath(@__DIR__, "..", "utils.jl"))
+include(joinpath(@__DIR__, "methods.jl"))
+
+S = 7
+Δt = 1/148 * S
+gscaled = -9.81*20
+
+file = jldopen(joinpath(module_dir(), "examples",
+	"real2sim", "hardware_examples", "sol_best6.jld2"))
+Dsol = file["Dsol"]
+
+# Load Dataset
+params0, trajs0, pairs0 = open_dataset(:hardwarebox; N=400, S=S)
+params1, trajs1, pairs1 = open_dataset(:hardwarebox; N=400, S=1)
+
+
+mech = getmechanism(:box, Δt=Δt/S, g=gscaled, cf=Dsol[end][1], radius=0.00, side=2.0, mode=:box);
+set_simulator_data!(mech, d2data(Dsol[end]))
+id = 7#4,6,7,8
+traj_truth = trajs1[id]
+x2 = traj_truth.x[1][1] - [0,0,2.0]/2
+v15 = traj_truth.v[1][1]
+q2 = traj_truth.q[1][1]
+ϕ15 = traj_truth.ω[1][1]
+
+initialize!(mech, :box, x=x2, v=v15, q=q2, ω=ϕ15)
+traj_sim = simulate!(mech, 0.80, record=true,
+    opts=InteriorPointOptions(btol=1e-6, rtol=1e-6, verbose=false))
+
+cube_sim_v_truth(Dsol[end], traj_truth, traj_sim, vis=vis,
+	transparency_truth=0.5,
+	fps=Int(floor(1/mech.Δt)), b0=0.0, b1=0.0)
+
+cube_sim_v_truth(Dsol[end], traj_truth, traj_sim, vis=vis, transparency_truth=1.0)
+cube_ghost_sim_v_truth(Dsol[end], traj_truth, traj_sim, vis=vis, transparency_truth=1.0)
+set_floor!(vis, x=20, y=20, color=RGBA(ones(4)...))
+set_light!(vis, ambient=0.80)
+
+setprop!(vis["/Cameras/default/rotated/<object>"], "zoom", 4.00)

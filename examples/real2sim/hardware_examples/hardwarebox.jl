@@ -230,31 +230,3 @@ for (i,dsol) in enumerate(Dsol[1:20])
 	visualize(mech, trajs0[i], vis=vis, show_contact = true)
 	sleep(1.5)
 end
-
-
-
-
-
-
-# # Open visualizer
-vis = Visualizer()
-open(vis)
-
-mech = getmechanism(:box, Δt=Δt/S, g=gscaled, cf=Dsol[end][1], radius=0.00, side=2.0, mode=:box);
-set_simulator_data!(mech, d2data(Dsol[end]))
-id = 7#4,6,7,8
-traj_truth = trajs1[id]
-x2 = traj_truth.x[1][1] - [0,0,2.0]/2
-v15 = traj_truth.v[1][1]
-q2 = traj_truth.q[1][1]
-ϕ15 = traj_truth.ω[1][1]
-
-initialize!(mech, :box, x=x2, v=v15, q=q2, ω=ϕ15)
-traj_sim = simulate!(mech, 0.80, record=true,
-    opts=InteriorPointOptions(btol=1e-6, rtol=1e-6, verbose=false))
-
-cube_sim_v_truth(Dsol[end], traj_truth, traj_sim, vis=vis,
-	transparency_truth=1.0,
-	fps=Int(floor(1/mech.Δt)), b0=0.0, b1=0.0)
-
-cube_ghost_sim_v_truth(Dsol[end], traj_truth, traj_sim, vis=vis, transparency_truth=1.0)

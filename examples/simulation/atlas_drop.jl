@@ -19,7 +19,7 @@ visualize(mech, storage, vis=vis)
 # ## Animation
 z = getMaxState(storage)
 z = [[z[1] for t = 1:100]..., z..., [z[end] for t = 1:100]...]
-T = length(z) 
+T = length(z)
 anim = MeshCat.Animation(convert(Int, floor(1.0 / 0.01)))
 build_robot(vis, mech)
 for t = 1:T
@@ -29,5 +29,7 @@ for t = 1:T
 end
 MeshCat.setanimation!(vis, anim)
 MeshCat.settransform!(vis["/Cameras/default"],
-        MeshCat.compose(MeshCat.Translation(0.0, 0.0, -1.0), MeshCat.LinearMap(Rotations.RotY(0.0))))
-setprop!(vis["/Cameras/default/rotated/<object>"], "zoom", 0.75)
+        MeshCat.compose(MeshCat.Translation(0.0, 0.0, -1.002), MeshCat.LinearMap(Rotations.RotY(0.0))))
+setprop!(vis["/Cameras/default/rotated/<object>"], "zoom",0.840)
+
+set_floor!(vis, x=1, y=10, z=0.02, color=RGBA(0,0,0,1))
