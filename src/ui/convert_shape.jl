@@ -26,17 +26,17 @@ function convertshape(::EmptyShape)
     return nothing
 end
 
-function convertshape(capsule::Capsule) 
+function convertshape(capsule::Capsule)
     r, h = Tuple(capsule.rh)
     p1 = Point(0.0, 0.0, -h / 2)
     p2 = Point(0.0, 0.0, h / 2)
     cyl = GeometryBasics.Cylinder(p1, p2, r)
     cap1 = GeometryBasics.Sphere(p1, r)
     cap2 = GeometryBasics.Sphere(p2, r)
-    return [cyl, cap1, cap2] 
+    return [cyl, cap1, cap2]
 end
 
-function convertshape(shapes::Shapes) 
+function convertshape(shapes::Shapes)
     geom = []
     for s in shapes.shape
         push!(geom, convertshape(s))

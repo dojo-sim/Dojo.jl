@@ -3,9 +3,11 @@ vis = Visualizer()
 open(vis)
 
 MeshCat.settransform!(vis["/Cameras/default"],
-        MeshCat.compose(MeshCat.Translation(0.0, 0.0, 30.0), MeshCat.LinearMap(Rotations.RotY(-pi / 2.5))))
-setprop!(vis["/Cameras/default/rotated/<object>"], "zoom", 10)
-
+        MeshCat.compose(MeshCat.Translation(-0.0, 0.0, 90.0), MeshCat.LinearMap(Rotations.RotY(-pi / 2.5))))
+setprop!(vis["/Cameras/default/rotated/<object>"], "zoom", 30)
+# setprop!(vis["/Cameras/default/rotated/<object>"], "zoom", 1.8)
+set_floor!(vis, x=20, y=20, color=RGBA(1.0, 1.0, 1.0, 1.0))
+set_light!(vis, ambient=0.65, fill=0.60, direction="Positive")
 ################################################################################
 # Nonlinear Friction Cone vs. Linearized Friction Cone
 ################################################################################
@@ -50,7 +52,7 @@ end
 setobject!(vis[:path_nc], MeshCat.Line(points_nc, line_mat_nc))
 
 # ## MuJoCo cone
-color_mj = RGBA(1.0, 0.0, 1.0, 0.5);
+color_mj = RGBA(1.0, 0.0, 1.0, 1.0);
 mech_mj = getmechanism(:box, Δt=timestep, g=gravity, cf=friction_coefficient,
     conetype=:linear, mode=:box, color=color_mj);
 initialize!(mech_mj, :box, x=x0, q=one(UnitQuaternion), v=v0, ω=ω0)

@@ -36,3 +36,26 @@ settransform!(vis[:floor], MeshCat.Translation(-s/2, -s/2, -0.1))
 set_floor!(vis, x=5, y=5, tilepermeter=1.0)
 setobject!(vis[:obj], obj, obj_mat)
 set_light!(vis)
+
+
+
+mech = getatlas(Δt=0.01, model_type=:simple)
+storage = simulate!(mech, 0.20, record=true, verbose=false)
+vis, anim = visualize(mech, storage, vis=vis, show_contact=false)
+
+path = joinpath(module_dir(), "env", "atlas", "deps", "mesh", "head_chull.obj")
+obj = MeshFileObject(path)
+# obj = HyperRectangle(Vec(0.,0.,0.), Vec(1.,1.,1.))
+mat = MeshPhongMaterial(color=RGBA(1,1,1,1))
+setobject!(vis[:head0], obj)
+settransform!(vis[:head0], MeshCat.Translation(0.0, 0.5, 0.0))
+
+image = PngImage(joinpath(module_dir(), "assets", "tile.png"))
+texture = Texture(image=image, wrap=(1,1), repeat=(1,1))
+mat = MeshPhongMaterial(map=texture)
+obj = HyperRectangle(Vec(0., 0, 0), Vec(1, 1, 1))
+setobject!(vis[:floor], obj, mat)
+setobject!(vis[:floor], obj, mat)
+settransform!(vis[:floor], MeshCat.Translation(-x/2, -y/2, -z))
+
+vis

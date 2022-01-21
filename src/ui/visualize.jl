@@ -236,23 +236,24 @@ function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T}; name::Sy
     return vis
 end
 
-function set_floor!(vis::Visualizer; x=3.0, y=3.0, z=0.1, tilepermeter=1.0,
-        imagename="tile.png")
+function set_floor!(vis::Visualizer; x=10.0, y=10.0, z=0.1, tilepermeter=1.0,
+        imagename="tile.png", color=nothing)
     image = PngImage(joinpath(module_dir(), "assets", imagename))
     repeat = Int.(ceil.(tilepermeter * [x,y]))
     texture = Texture(image=image, wrap=(1,1), repeat=(repeat[1],repeat[2]))
-    flr_mat = MeshPhongMaterial(map=texture)
-    flr_obj = HyperRectangle(Vec(0., 0, 0), Vec(x, y, z))
-    setobject!(vis[:floor], flr_obj, flr_mat)
+    mat = MeshPhongMaterial(map=texture)
+    (color != nothing) && (mat = MeshPhongMaterial(color=color))
+    obj = HyperRectangle(Vec(0., 0, 0), Vec(x, y, z))
+    setobject!(vis[:floor], obj, mat)
     settransform!(vis[:floor], MeshCat.Translation(-x/2, -y/2, -z))
     return nothing
 end
 
-function set_light!(vis::Visualizer; ambient=0.35, fill=0.25, positiveX=0.85,
-        positiveXshadow::Bool=true)
+function set_light!(vis::Visualizer; ambient=0.35, fill=0.25, pointX=0.85,
+        pointXshadow::Bool=true, direction::String="Positive")
     setprop!(vis["/Lights/AmbientLight/<object>"], "intensity", ambient)
     setprop!(vis["/Lights/FillLight/<object>"], "intensity", 0.25)
-    setprop!(vis["/Lights/PointLightPositiveX/<object>"], "intensity", 0.85)
-    setprop!(vis["/Lights/PointLightPositiveX/<object>"], "castShadow", true)
+    setprop!(vis["/Lights/PointLight$(direction)X/<object>"], "intensity", 0.85)
+    setprop!(vis["/Lights/PointLight$(direction)X/<object>"], "castShadow", true)
     return nothing
 end
