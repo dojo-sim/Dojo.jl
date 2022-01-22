@@ -2,20 +2,20 @@ using LinearAlgebra, Plots
 function qmult(q1, q2)
     v1 = q1[2:4]
     s1 = q1[1]
-    
+
     v2 = q2[2:4]
     s2 = q2[1]
-    
+
     [s1*s2 - v1'*v2; s1*v2 + s2*v1 + hat(v1)*v2]
 end
 
 function qrot(q, r)
-    
+
     v = q[2:4]
     vh = hat(v);
     w = q[1];
-    
-    rrot = r + 2*vh*(vh*r + w*r); 
+
+    rrot = r + 2*vh*(vh*r + w*r);
 end
 
 function hat(x)
@@ -48,3 +48,22 @@ end
 
 h = [qrot(q[t], J * w[t]) - qrot(q[1], J * w[1]) for t = 1:length(q)]
 plot(hcat(h...)')
+
+
+
+
+
+
+env = cartpole();
+open(env.vis)
+traj = fill(_get_obs(env), 100)
+visualize(env, traj)
+visualize(env, traj)
+ghost(env, traj)
+a = 10
+
+
+vis = Visualizer()
+open(vis)
+setobject!(vis, HyperRectangle(Vec(1,0,0.), Vec(1,1,1.)))
+set_camera!(vis, campos=[0,-50,0], zoom=30)

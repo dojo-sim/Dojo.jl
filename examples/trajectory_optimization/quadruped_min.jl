@@ -7,29 +7,29 @@ include(joinpath(@__DIR__, "../../env/quadruped/methods/template.jl"))
 
 gravity = -9.81
 dt = 0.05
-cf = 0.8 
-damper = 5.0 
+cf = 0.8
+damper = 5.0
 spring = 0.0
-env = make("quadruped", 
-    mode=:min, 
+env = make("quadruped",
+    mode=:min,
     dt=dt,
     g=gravity,
-    cf=cf, 
-    damper=damper, 
+    cf=cf,
+    damper=damper,
     spring=spring)
 
-# ## visualizer 
-open(env.vis) 
+# ## visualizer
+open(env.vis)
 
 # ## simulate (test)
 # initialize!(env.mechanism, :quadruped)
 # storage = simulate!(env.mechanism, 0.5, record=true, verbose=false)
 # visualize(env.mechanism, storage, vis=env.vis)
 
-# ## dimensions 
-n = env.nx 
-m = env.nu 
-d = 0 
+# ## dimensions
+n = env.nx
+m = env.nu
+d = 0
 
 # ## reference trajectory
 N = 2
@@ -46,12 +46,12 @@ visualize(mech, storage, vis=env.vis)
 ugc = gravity_compensation(mech)
 u_control = ugc[6 .+ (1:12)]
 
-# ## horizon 
-T = N * (21 - 1) + 1 
+# ## horizon
+T = N * (21 - 1) + 1
 
-# ## model 
+# ## model
 dyn = IterativeLQR.Dynamics(
-    (y, x, u, w) -> f(y, env, x, u, w), 
+    (y, x, u, w) -> f(y, env, x, u, w),
     (dx, x, u, w) -> fx(dx, env, x, u, w),
     (du, x, u, w) -> fu(du, env, x, u, w),
     n, n, m, d)
@@ -119,7 +119,7 @@ MeshCat.settransform!(env.vis["/Cameras/default"],
 setprop!(env.vis["/Cameras/default/rotated/<object>"], "zoom", 3)
 
 x_shift = deepcopy(x_sol)
-for x in x_shift 
+for x in x_shift
     x[3] += 0.01
 end
 z = [min2max(env.mechanism, x) for x in x_shift]
@@ -132,8 +132,13 @@ x_view = [[x_shift[1] for t = 1:15]..., x_shift..., [x_shift[end] for t = 1:15].
 visualize(env, x_view)
 
 
+
 MeshCat.settransform!(env.vis["/Cameras/default"],
         MeshCat.compose(MeshCat.LinearMap(Rotations.RotZ(-π / 2.0)), MeshCat.Translation(50.0, 0.0, -1.01)))
 setprop!(env.vis["/Cameras/default/rotated/<object>"], "zoom", 30.0)
 
+vis = Visualizer()
+open(vis)
+setobject!(vis, HyperRectangle(Vec(1,0,0.), Vec(1,1,1.)))
+set_camera!(vis, campos=[0,-50,0], zoom=30)
 set_floor!(env.vis, z=0.01)
