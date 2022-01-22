@@ -32,6 +32,21 @@ function set_light!(vis::Visualizer; ambient=0.35, fill=0.25, pointX=0.85,
     return nothing
 end
 
+"""
+    The camera always point towards the origin of the frame, you can choose its
+    position with `campos` and the `zoom`.
+"""
+function set_camera!(vis::Visualizer; zoom=1.0, campos=nothing)
+    camvis = vis["/Cameras/default/rotated/<object>"]
+    setprop!(camvis, "zoom", zoom)
+    (campos != nothing) && MeshCat.settransform!(camvis,
+        MeshCat.compose(
+            MeshCat.LinearMap(Rotations.RotX(-1/2 * pi)),
+            MeshCat.Translation(campos...),
+        ))
+    return nothing
+end
+
 function convert_video_to_gif(video_file_path::String, output_path::String="output.gif";
     framerate::Int=30, start_time=0., duration=1e3, overwrite=false, width::Int=1080, height::Int=-2, hq_colors::Bool=false)
     output_path = abspath(output_path)
