@@ -94,4 +94,4 @@ cube_ghost_sim_v_truth(Dsol[end], traj_truth, traj_sim, vis=vis, transparency_tr
 set_floor!(vis, x=20, y=20, color=RGBA(ones(4)...))
 set_light!(vis, ambient=0.80)
 
-setprop!(vis["/Cameras/default/rotated/<object>"], "zoom", 4.00)
+set_camera!(vis, zoom=4.0)

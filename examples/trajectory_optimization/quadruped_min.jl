@@ -114,9 +114,8 @@ x_sol, u_sol = IterativeLQR.get_trajectory(prob)
 x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]
 visualize(env, x_view)
 
-MeshCat.settransform!(env.vis["/Cameras/default"],
-        MeshCat.compose(MeshCat.Translation(0.0, 0.0, 1.0), MeshCat.LinearMap(Rotations.RotZ(-pi / 2.0))))
-setprop!(env.vis["/Cameras/default/rotated/<object>"], "zoom", 3)
+set_camera!(env.vis, cam_pos=[0,-3,2], zoom=3)
+
 
 x_shift = deepcopy(x_sol)
 for x in x_shift
@@ -131,14 +130,5 @@ set_robot(env.vis, env.mechanism, z[41])
 x_view = [[x_shift[1] for t = 1:15]..., x_shift..., [x_shift[end] for t = 1:15]...]
 visualize(env, x_view)
 
-
-
-MeshCat.settransform!(env.vis["/Cameras/default"],
-        MeshCat.compose(MeshCat.LinearMap(Rotations.RotZ(-π / 2.0)), MeshCat.Translation(50.0, 0.0, -1.01)))
-setprop!(env.vis["/Cameras/default/rotated/<object>"], "zoom", 30.0)
-
-vis = Visualizer()
-open(vis)
-setobject!(vis, HyperRectangle(Vec(1,0,0.), Vec(1,1,1.)))
-set_camera!(vis, campos=[0,-50,0], zoom=30)
+set_camera!(vis, cam_pos=[0,-50,0], zoom=30)
 set_floor!(env.vis, z=0.01)

@@ -2,10 +2,10 @@
 vis = Visualizer()
 open(vis)
 
-MeshCat.settransform!(vis["/Cameras/default"],
-        MeshCat.compose(MeshCat.Translation(-0.0, 0.0, 90.0), MeshCat.LinearMap(Rotations.RotY(-pi / 2.5))))
-setprop!(vis["/Cameras/default/rotated/<object>"], "zoom", 30)
-# setprop!(vis["/Cameras/default/rotated/<object>"], "zoom", 1.8)
+set_camera!(vis, cam_pos=[-0.01,0.0,90], zoom=30)
+
+
+
 set_floor!(vis, x=20, y=20, color=RGBA(1.0, 1.0, 1.0, 1.0))
 set_light!(vis, ambient=0.65, fill=0.60, direction="Positive")
 ################################################################################

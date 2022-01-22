@@ -29,8 +29,6 @@ for t = 1:T
     end
 end
 MeshCat.setanimation!(vis, anim)
-MeshCat.settransform!(vis["/Cameras/default"],
-        MeshCat.compose(MeshCat.Translation(0.0, 0.0, -1.002), MeshCat.LinearMap(Rotations.RotY(0.0))))
-setprop!(vis["/Cameras/default/rotated/<object>"], "zoom",0.840)
+set_camera!(vis, cam_pos=[3,-0,0], zoom=0.84)
 
 set_floor!(vis, x=0.2, y=10, z=0.02, color=RGBA(0,0,0,1))

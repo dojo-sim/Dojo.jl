@@ -34,15 +34,15 @@ end
 
 """
     The camera always point towards the origin of the frame, you can choose its
-    position with `campos` and the `zoom`.
+    position with `cam_pos` and the `zoom`.
 """
-function set_camera!(vis::Visualizer; zoom=1.0, campos=nothing)
+function set_camera!(vis::Visualizer; zoom=1.0, cam_pos=nothing)
     camvis = vis["/Cameras/default/rotated/<object>"]
     setprop!(camvis, "zoom", zoom)
-    (campos != nothing) && MeshCat.settransform!(camvis,
+    (cam_pos != nothing) && MeshCat.settransform!(camvis,
         MeshCat.compose(
             MeshCat.LinearMap(Rotations.RotX(-1/2 * pi)),
-            MeshCat.Translation(campos...),
+            MeshCat.Translation(cam_pos...),
         ))
     return nothing
 end

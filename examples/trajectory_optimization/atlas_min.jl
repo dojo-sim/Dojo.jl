@@ -174,10 +174,7 @@ x_sol, u_sol = IterativeLQR.get_trajectory(prob)
 x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]
 visualize(env, x_view)
 
-MeshCat.settransform!(env.vis["/Cameras/default"],
-        MeshCat.compose(MeshCat.Translation(0.0, 0.0, 1.0), MeshCat.LinearMap(Rotations.RotZ(-pi / 2.0))))
-setprop!(env.vis["/Cameras/default/rotated/<object>"], "zoom", 3)
-
+set_camera!(env.vis, zoom=5, cam_pos=[0,-5,0])
 z = [min2max(env.mechanism, x) for x in x_sol]
 t = 1 #10, 20, 30, 41
 set_robot(env.vis, env.mechanism, z[t])

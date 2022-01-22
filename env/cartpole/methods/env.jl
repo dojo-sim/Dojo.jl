@@ -84,7 +84,7 @@ end
 function visualize(env::Environment{Cartpole}, traj::Vector{Vector{T}}; axes=false, grid=false, ee_traj=false) where T
     storage = generate_storage(env.mechanism, [env.mode == :min ? min2max(env.mechanism, x) : x for x in traj])
     visualize(env.mechanism, storage, vis=env.vis)
-	set_camera!(env.vis, zoom=1.0, campos=[2,0,0])
+	set_camera!(env.vis, zoom=1.0, cam_pos=[2,0,0])
     setvisible!(env.vis["/Axes"], axes)
     setvisible!(env.vis["/Grid"], grid)
     # slider
@@ -107,7 +107,7 @@ function ghost(env::Environment{Cartpole}, z_sol; timesteps=[t for t = 1:length(
         set_robot(env.vis, env.mechanism, z, name=name)
     end
 
-	set_camera!(env.vis, zoom=1.0, campos=[2,0,0])
+	set_camera!(env.vis, zoom=1.0, cam_pos=[2,0,0])
     setvisible!(env.vis[:robot], false)
     l2 = GeometryBasics.Cylinder(Point3f0(0.0, -5.0, 0.0),
             Point3f0(0.0, 5.0, 0.0),

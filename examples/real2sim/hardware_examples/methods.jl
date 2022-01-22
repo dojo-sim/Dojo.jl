@@ -8,12 +8,7 @@ function cube_morphing(D; vis=Visualizer(), fps=30, rot=0.00, vis_truth::Bool=tr
 	setprop!(vis["/Background"], "bottom_color", RGBA(1.0, 1.0, 1.0, 1.0))
 	setvisible!(vis["/Axes"], false)
 	setvisible!(vis["/Grid"], false)
-	setprop!(vis["/Cameras/default/rotated/<object>"], "zoom", zoom)
-
-	settransform!(vis["/Cameras/default/rotated/<object>"], MeshCat.Translation(0.,0, 0))
-	settransform!(vis["/Cameras/default/rotated"], MeshCat.Translation(0.,0, 0))
-	settransform!(vis["/Cameras/default"], MeshCat.Translation(0.,0, 0))
-	settransform!(vis["/Cameras"], MeshCat.Translation(cam_pos...))
+	set_camera!(vis, zoom=zoom, cam_pos=cam_pos)
 
 	anim = MeshCat.Animation(fps)
 	b0 = Int(floor(b0*fps))
@@ -64,12 +59,7 @@ function cone_morphing(D; vis=Visualizer(), fps=30, rot=0.00, vis_truth::Bool=tr
 	setprop!(vis["/Background"], "bottom_color", RGBA(1.0, 1.0, 1.0, 1.0))
 	setvisible!(vis["/Axes"], false)
 	setvisible!(vis["/Grid"], false)
-	setprop!(vis["/Cameras/default/rotated/<object>"], "zoom", zoom)
-
-	settransform!(vis["/Cameras/default/rotated/<object>"], MeshCat.Translation(0.,0, 0))
-	settransform!(vis["/Cameras/default/rotated"], MeshCat.Translation(0.,0, 0))
-	settransform!(vis["/Cameras/default"], MeshCat.Translation(0.,0, 0))
-	settransform!(vis["/Cameras"], MeshCat.Translation(cam_pos...))
+	set_camera!(vis, cam_pos=cam_pos, zoom=zoom)
 
 	anim = MeshCat.Animation(fps)
 	b0 = Int(floor(b0*fps))
@@ -121,7 +111,7 @@ function cube_sim_v_truth(d, traj_truth::Storage{T,HT}, traj_sim::Storage{T,HS};
 	setprop!(vis["/Background"], "bottom_color", RGBA(1.0, 1.0, 1.0, 1.0))
 	setvisible!(vis["/Axes"], false)
 	# setvisible!(vis["/Grid"], false)
-	setprop!(vis["/Cameras/default/rotated/<object>"], "zoom", zoom)
+	set_camera!(vis, zoom=zoom)
 	setprop!(vis["/Lights/AmbientLight/<object>"], "intensity", 0.80)
 
 
@@ -195,7 +185,7 @@ function cube_ghost_sim_v_truth(d, traj_truth::Storage{T,HT}, traj_sim::Storage{
 	setprop!(vis["/Background"], "bottom_color", RGBA(1.0, 1.0, 1.0, 1.0))
 	setvisible!(vis["/Axes"], false)
 	# setvisible!(vis["/Grid"], false)
-	setprop!(vis["/Cameras/default/rotated/<object>"], "zoom", zoom)
+	set_camera!(vis, zoom=zoom)
 	setprop!(vis["/Lights/AmbientLight/<object>"], "intensity", 0.80)
 
 	H = max(HT,HS)

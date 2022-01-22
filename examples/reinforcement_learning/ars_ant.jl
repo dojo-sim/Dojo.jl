@@ -1,5 +1,5 @@
 using Dojo
-using JLD2 
+using JLD2
 using Random
 include("ars.jl")
 
@@ -22,13 +22,13 @@ input_size = length(obs)
 output_size = length(env.u_prev)
 normalizer = Normalizer(input_size)
 
-# ## Training 
-train_times = Float64[] 
+# ## Training
+train_times = Float64[]
 rewards = Float64[]
 policies = Matrix{Float64}[]
-N = 5 
+N = 5
 for i = 1:N
-    # Reset environment 
+    # Reset environment
     env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=25.0, cf = 0.5,
         contact=true, contact_body=true)
     obs = reset(env)
@@ -47,15 +47,15 @@ for i = 1:N
     # Evaluate policy
     reward = rollout_policy(policy.θ, env, normalizer, hp)
 
-    # Cache 
-    push!(train_times, train_time) 
-    push!(rewards, reward) 
+    # Cache
+    push!(train_times, train_time)
+    push!(rewards, reward)
     push!(policies, policy.θ)
 end
 
 # @save joinpath(@__DIR__, "ant_rl.jld2") train_times rewards policies
 
-# Training statistics 
+# Training statistics
 N_best = 3
 @show rewards
 max_idx = sortperm(rewards, lt=Base.isgreater)
@@ -83,7 +83,7 @@ for t = 1:length(traj)
 end
 z = [min2max(env.mechanism, x) for x in traj]
 z = [[z[1] for t = 1:40]..., z..., [z[end] for t = 1:40]...]
-T = length(z) 
+T = length(z)
 
 anim = MeshCat.Animation(convert(Int, floor(1.0 / env.mechanism.Δt)))
 build_robot(env.vis, env.mechanism, color=cyan)
@@ -93,17 +93,17 @@ for t = 1:T
     end
 end
 MeshCat.setanimation!(env.vis, anim)
+set_camera!(env.vis, cam_pos=[0,0,90], zoom=20)
 
-MeshCat.settransform!(env.vis["/Cameras/default"],
-        MeshCat.compose(MeshCat.Translation(-0.0, 0.0, 90.0), MeshCat.LinearMap(Rotations.RotZ(0.5 * π) * Rotations.RotY(-pi / 2.5))))
-setprop!(env.vis["/Cameras/default/rotated/<object>"], "zoom", 20)
 
-# ## Ghost 
+
+
+# ## Ghost
 env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=25.0, cf = 0.5,
     contact=true, contact_body=true)
 open(env.vis)
 setvisible!(env.vis[:robot], false)
-timesteps = [1, 70, 110, 130, 150, T] 
+timesteps = [1, 70, 110, 130, 150, T]
 for t in timesteps
     name = Symbol("robot_$t")
     color = (t == T ? cyan : cyan_light)

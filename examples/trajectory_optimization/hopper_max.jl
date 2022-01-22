@@ -1,11 +1,11 @@
 using Dojo
 using IterativeLQR
-using LinearAlgebra 
+using LinearAlgebra
 
 # ## system
 dt = 0.05
 gravity = -9.81
-env = make("raiberthopper", 
+env = make("raiberthopper",
     mode=:max,
     dt=dt,
     g=gravity);
@@ -40,7 +40,7 @@ ū = [[0.0; 0.0; env.mechanism.g * env.mechanism.Δt + 0.0 * randn(1)[1]] for t
 w = [zeros(d) for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, z1, ū, w)
 open(env.vis)
-visualize(env, x̄) 
+visualize(env, x̄)
 
 # ## objective
 ot1 = (x, u, w) -> transpose(x - zM) * Diagonal(vcat([[0.1 * ones(3); 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)] for i=1:2]...)) * (x - zM) + transpose(u) * Diagonal(0.1 * [0.1; 0.1; 0.1]) * u
@@ -92,13 +92,5 @@ visualize(env, [[x_sol[1] for t = 1:10]..., x_sol..., [x_sol[end] for t = 1:10].
 # ## ghost
 ghost(env, x_sol, timesteps=[1, 5, 7, 10, T])
 
-MeshCat.settransform!(env.vis["/Cameras/default"],
-    MeshCat.compose(MeshCat.Translation(5.0, 0.1, -1.0), MeshCat.LinearMap(Rotations.RotZ(0.0 * pi))))
-setprop!(env.vis["/Cameras/default/rotated/<object>"], "zoom", 5)
-
 set_floor!(env.vis, z=0.01)
-
-MeshCat.settransform!(env.vis["/Cameras/default"],
-        MeshCat.compose(MeshCat.LinearMap(Rotations.RotZ(-π / 2.0)), MeshCat.Translation(4.0, 0.0, -1.0)))
-setprop!(env.vis["/Cameras/default/rotated/<object>"], "zoom", 2.0)
-
+set_camera!(env.vis, cam_pos=[0,-7,0], zoom=2)

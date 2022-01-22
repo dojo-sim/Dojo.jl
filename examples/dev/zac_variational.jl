@@ -66,4 +66,4 @@ a = 10
 vis = Visualizer()
 open(vis)
 setobject!(vis, HyperRectangle(Vec(1,0,0.), Vec(1,1,1.)))
-set_camera!(vis, campos=[0,-50,0], zoom=30)
+set_camera!(vis, cam_pos=[0,-50,0], zoom=30)

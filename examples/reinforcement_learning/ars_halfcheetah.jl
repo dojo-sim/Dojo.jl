@@ -1,8 +1,8 @@
 using Dojo
-using JLD2 
+using JLD2
 include("ars.jl")
 
-# ## Environment 
+# ## Environment
 env = make("halfcheetah", dt=0.05)
 env.nx
 obs = reset(env)
@@ -12,8 +12,8 @@ open(env.vis)
 
 # ## Augmented random search
 
-# ## Training 
-train_times = Float64[] 
+# ## Training
+train_times = Float64[]
 rewards = Float64[]
 policies = Matrix{Float64}[]
 N = 5
@@ -35,16 +35,16 @@ for i = 1:N
     # Evaluate policy
     reward = rollout_policy(policy.θ, env, normalizer, hp)
 
-    # Cache 
-    push!(train_times, train_time) 
-    push!(rewards, reward) 
+    # Cache
+    push!(train_times, train_time)
+    push!(rewards, reward)
     push!(policies, policy.θ)
 end
 
 # @save joinpath(@__DIR__, "halfcheetah_rl.jld2") train_times rewards policies
 @load joinpath(@__DIR__, "halfcheetah_rl.jld2") train_times rewards policies
 
-# Training statistics 
+# Training statistics
 N_best = 3
 @show rewards
 max_idx = sortperm(rewards, lt=Base.isgreater)
@@ -64,12 +64,12 @@ input_size = length(obs)
 output_size = length(env.u_prev)
 normalizer = Normalizer(input_size)
 
-traj = display_policy(env, 
-    # policy, 
+traj = display_policy(env,
+    # policy,
     Policy(hp, θ),
     normalizer, hp)
 
-for t = 1:length(traj) 
+for t = 1:length(traj)
     traj[t][2] += 3.25
 end
 
@@ -78,17 +78,17 @@ visualize(env, traj)
 vals = [1, 2, 3, 4]
 findmax(vals, 2)
 max_idx = sortperm(vals, lt=Base.isgreater)
+set_camera!(env.vis, cam_pos=[0,-52,0], zoom=15)
 
-MeshCat.settransform!(env.vis["/Cameras/default"],
-        MeshCat.compose(MeshCat.LinearMap(Rotations.RotZ(-π / 2.0)), MeshCat.Translation(50.0, 0.0, -1.0)))
-setprop!(env.vis["/Cameras/default/rotated/<object>"], "zoom", 15.0)
+
+
 
 set_floor!(env.vis, z=0.03)
 
 # ## Animation
 z = [min2max(env.mechanism, x) for x in traj]
 z = [[z[1] for t = 1:40]..., z..., [z[end] for t = 1:40]...]
-T = length(z) 
+T = length(z)
 anim = MeshCat.Animation(convert(Int, floor(1.0 / env.mechanism.Δt)))
 build_robot(env.vis, env.mechanism, color=magenta)
 for t = 1:T
@@ -98,11 +98,11 @@ for t = 1:T
 end
 MeshCat.setanimation!(env.vis, anim)
 
-# ## Ghost 
+# ## Ghost
 env = make("halfcheetah", dt=0.05)
 open(env.vis)
 setvisible!(env.vis[:robot], false)
-timesteps = [1, 50, 60, 70, 80, 90, 100, 108, T] 
+timesteps = [1, 50, 60, 70, 80, 90, 100, 108, T]
 for t in timesteps
     name = Symbol("robot_$t")
     color = (t == T ? magenta : magenta_light)
@@ -133,5 +133,3 @@ for i = 1:100
     @show r
     render(env)
 end
-
-
