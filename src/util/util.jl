@@ -45,8 +45,6 @@ end
 @inline offsetrange(offset, length) = (offset-1)*length+1:offset*length
 @inline offsetrange(offset, length, totallength, inneroffset) = (offset-1)*totallength+(inneroffset-1)*length+1:(offset-1)*totallength+inneroffset*length
 
-
-
 function scn(a::Number; digits::Int=1, exp_digits::Int=1)
 	(typeof(a) <: Float64) ? nothing : return nothing
 end
@@ -88,57 +86,8 @@ function scn(a::Float64; digits::Int=1, exp_digits::Int=1)
     return "$sgn$(strm)e$sgne$(stre)"
 end
 
-function convert_video_to_gif(video_file_path::String, output_path::String="output.gif";
-    framerate::Int=30, start_time=0., duration=1e3, overwrite=false, width::Int=1080, height::Int=-2, hq_colors::Bool=false)
-    output_path = abspath(output_path)
-
-    if !isfile(video_file_path)
-        error("Could not find the input file $video_file_path")
-    end
-    if isfile(output_path) && !overwrite
-        error("The output path $output_path already exists. To overwrite that file, you can pass `overwrite=true` to this function")
-    end
-
-    mktempdir() do tmpdir
-        # run(MeshCat.unpack_cmd(video_file_path, tmpdir, ".mp4", nothing)) # unpack the .tar file
-        # cmd = ["-r", string(framerate), "-i", "%07d.png", "-vcodec", "libx264", "-preset", "slow", "-crf", "18"]
-        color_map = hq_colors ?
-            "[0:v] fps=$framerate, scale=$width:$height,split [a][b];[a] palettegen=stats_mode=single [p];[b][p] paletteuse=new=1" :
-            "[0:v] fps=$framerate, scale=$width:$height,split [a][b];[a] palettegen [p];[b][p] paletteuse"
-        cmd = ["-ss", string(start_time), "-t", string(duration), "-i", video_file_path, "-filter_complex", color_map]
-        if overwrite
-            push!(cmd, "-y")
-        end
-        push!(cmd, output_path)
-
-        cd(tmpdir) do
-            FFMPEG.exe(cmd...)
-        end
-    end
-    @info("Saved output as $output_path")
-    return output_path
-end
-
 function module_dir()
     return joinpath(@__DIR__, "..", "..")
-end
-
-# function Dojo.mean(x)
-# 	return sum(x) / length(x)
-# end
-
-function fdjac(f, x; δ = 1e-5)
-    n = length(f(x))
-    m = length(x)
-    jac = zeros(n, m)
-    for i = 1:m
-        xp = deepcopy(x)
-        xm = deepcopy(x)
-        xp[i] += δ
-        xm[i] -= δ
-        jac[:,i] = (f(xp) - f(xm)) / (2δ)
-    end
-    return jac
 end
 
 # useful for python visualizer
