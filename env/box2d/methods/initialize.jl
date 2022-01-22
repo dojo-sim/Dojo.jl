@@ -1,16 +1,14 @@
-function getbox2d(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, radius = 0.0, side = 0.5,
-    contact::Bool = true,
-    conetype = :soc,
-    # conetype = :impact,
-    # conetype = :linear,
-    mode = :box2d)  where {T}
+function getbox2d(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, radius=0.0, side=0.5,
+    contact::Bool=true,
+    contact_mode=:contact,
+    mode=:box2d)  where {T}
     # Parameters
     axis = [1,0,0.]
 
     origin = Origin{T}()
     body1 = Box(side, side, side, 1., color = RGBA(1., 1., 0.))
     eqc1 = EqualityConstraint(PlanarAxis(origin, body1, axis))
-    links = [body1]
+    bodies = [body1]
     eqcs = [eqc1]
 
     if contact
@@ -32,20 +30,10 @@ function getbox2d(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, radius = 0.0, side
         offset = [[0,0,radius] for i = 1:n]
         cf = cf * ones(n)
 
-        if conetype == :soc
-            contineqcs = contactconstraint(body1, normal, cf, p = corners, offset=offset)
-            mech = Mechanism(origin, links, eqcs, contineqcs, g = g, Δt = Δt)
-        elseif conetype == :impact
-            impineqcs = impactconstraint(body1, normal, p = corners, offset=offset)
-            mech = Mechanism(origin, links, eqcs, impineqcs, g = g, Δt = Δt)
-        elseif conetype == :linear
-            linineqcs = linearcontactconstraint(body1, normal, cf, p = corners, offset=offset)
-            mech = Mechanism(origin, links, eqcs, linineqcs, g = g, Δt = Δt)
-        else
-            error("Unknown conetype")
-        end
+        ineqcs = contactconstraint(body1, normal, cf=cf, p=corners, offset=offset, contact_type=contact_type)
+        mech = Mechanism(origin, bodies, eqcs, ineqcs, g=g, Δt=Δt)
     else
-        mech = Mechanism(origin, links, eqcs, g = g, Δt = Δt)
+        mech = Mechanism(origin, bodies, eqcs, g = g, Δt = Δt)
     end
     return mech
 end

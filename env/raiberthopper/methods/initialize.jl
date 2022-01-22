@@ -28,16 +28,16 @@ function getraiberthopper(; Δt::T=0.05, g::T=-9.81, spring=0.0, damper=0.1, con
         friction_coefficient = 0.5
 
         # foot
-        contineqcs = contactconstraint(foot, contact_normal, friction_coefficient,
+        ineqcs = contactconstraint(foot, contact_normal, cf=friction_coefficient,
             p=[0.0; 0.0; 0.0], offset=[0.0; 0.0; foot_radius])
 
-        ineqcs = [contineqcs]
+        ineqcs = [ineqcs]
 
         # body
         if contact_body
-            contineqcs_body = contactconstraint(body, contact_normal, friction_coefficient,
+            ineqcs_body = contactconstraint(body, contact_normal, cf=friction_coefficient,
                 p=[0.0; 0.0; 0.0], offset=[0.0; 0.0; body_radius])
-            push!(ineqcs, contineqcs_body)
+            push!(ineqcs, ineqcs_body)
         end
 
         mech = Mechanism(origin, links, eqcs, ineqcs, g=g, Δt=Δt, spring=spring, damper=damper)

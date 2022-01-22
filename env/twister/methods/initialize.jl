@@ -1,5 +1,6 @@
-function gettwister(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = true,
-    conetype = :soc, spring = 0.0, damper = 0.0, Nlink::Int = 5, jointtype::Symbol = :Prismatic, h::T = 1.0, r::T = 0.05) where {T}
+function gettwister(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=true,
+    contact_type=:contact, spring=0.0, damper=0.0, Nlink::Int=5,
+    jointtype::Symbol=:Prismatic, h::T=1.0, r::T=0.05) where {T}
     # Parameters
     ex = [1.;0.;0.]
     ey = [0.;1.;0.]
@@ -29,27 +30,19 @@ function gettwister(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = 
         n = Nlink
         normal = [[0;0;1.0] for i = 1:n]
         cf = cf * ones(n)
-
-        if conetype == :soc
-            contineqcs1 = contactconstraint(links[1], normal[1], cf[1], p = vert11) # to avoid duplicating the contact points
-            contineqcs2 = contactconstraint(links, normal, cf, p = fill(vert12, n))
-            mech = Mechanism(origin, links, eqcs, [contineqcs1; contineqcs2], g = g, Δt = Δt)
-
-        elseif conetype == :linear
-            @error "linear contact not implemented"
-        else
-            error("Unknown conetype")
-        end
+        ineqcs1 = contactconstraint(links[1], normal[1], cf[1]=cf, p=vert11, contact_type=contact_type) # to avoid duplicating the contact points
+        ineqcs2 = contactconstraint(links, normal, cf=cf, p=fill(vert12, n), contact_type=contact_type)
+        mech = Mechanism(origin, links, eqcs, [ineqcs1; ineqcs2], g = g, Δt = Δt)
     else
         mech = Mechanism(origin, links, eqcs, g = g, Δt = Δt, spring=spring, damper=damper)
     end
     return mech
 end
 
-function initializetwister!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{T} = [0,-1.,0],
-    v::AbstractVector{T} = zeros(3), ω::AbstractVector{T} = zeros(3),
-    Δω::AbstractVector{T} = zeros(3), Δv::AbstractVector{T} = zeros(3),
-    q1::UnitQuaternion{T} = UnitQuaternion(RotX(0.6 * π))) where {T,Nn,Ne,Nb}
+function initializetwister!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{T}=[0,-1.,0],
+    v::AbstractVector{T}=zeros(3), ω::AbstractVector{T}=zeros(3),
+    Δω::AbstractVector{T}=zeros(3), Δv::AbstractVector{T}=zeros(3),
+    q1::UnitQuaternion{T}=UnitQuaternion(RotX(0.6 * π))) where {T,Nn,Ne,Nb}
 
     bodies = collect(mechanism.bodies)
     link1 = bodies[1]

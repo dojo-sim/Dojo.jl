@@ -130,58 +130,8 @@ end
 neutral_vector(bound::ContactBound{T,N}) where {T,N} = [sones(T, 2); szeros(T, Int(N/2) -2)]
 
 cone_degree(bound::ContactBound) = 2
-   
-## Utilities 
 
-"""
-    Generate contact inequality constraints attached to a list of bodies. You need to provide:
-    - the normal for each contact point
-    - the coefficient of friction for each contact point
-    - the offset vector p with respect to the center of the body for each contact point (optional)
-    - the altitude offset for each contact point (optional)
-"""
-function contactconstraint(bodies::AbstractVector{<:Body{T}}, normal::AbstractVector{<:AbstractVector}, cf::AbstractVector{T};
-        p::AbstractVector = [szeros(T, 3) for i=1:length(normal)],
-        offset::AbstractVector = [szeros(T, 3) for i=1:length(normal)],
-        names::AbstractVector{String} = fill("", length(normal)) ) where {T}
-
-    n = length(normal)
-    @assert n == length(bodies) == length(normal) == length(cf) == length(p) == length(offset)
-    contineqcs = Vector{InequalityConstraint}()
-    for i = 1:n
-        contineqc = contactconstraint(bodies[i], normal[i], cf[i], p = p[i], offset = offset[i], name = names[i])
-        push!(contineqcs, contineqc)
-    end
-    contineqcs = [contineqcs...] # vector typing
-    return contineqcs
-end
-
-function contactconstraint(body::Body{T}, normal::AbstractVector{<:AbstractVector}, cf::AbstractVector{T};
-        p::AbstractVector = [szeros(T, 3) for i=1:length(normal)],
-        offset::AbstractVector = [szeros(T, 3) for i=1:length(normal)],
-        names::AbstractVector{String} = fill("", length(normal)) ) where {T}
-    n = length(normal)
-    @assert n == length(normal) == length(cf) == length(p) == length(offset)
-    return contactconstraint(fill(body, n), normal, cf, p = p, offset = offset, names = names)
-end
-
-"""
-    Generate contact inequality constraint attached to one body. You need to provide:
-    - the normal for the contact point
-    - the coefficient of friction for the contact point
-    - the offset vector p with respect to the center of the body for the contact point (optional)
-    - the altitude offset for the contact point (optional)
-"""
-function contactconstraint(body::Body{T}, normal::AbstractVector{T}, cf::T;
-        p::AbstractVector{T} = szeros(T, 3),
-        offset::AbstractVector{T} = szeros(T, 3), name::String = "") where {T}
-
-    contbound = ContactBound(body, normal, cf, p = p, offset = offset)
-    contineqcs = InequalityConstraint((contbound, body.id, nothing); name = name)
-    return contineqcs
-end
-
-
+## Utilities
 # signed distance function
 function sdf(ineqc::InequalityConstraint{T,N,Nc,Cs}, x::AbstractVector{T}, q::UnitQuaternion{T}) where {T,N,Nc,Cs<:Tuple{<:Bound{T,N}}}
     cont = ineqc.constraints[1]

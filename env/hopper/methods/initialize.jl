@@ -42,12 +42,12 @@ function gethopper(; Δt::T=0.01, g::T=-9.81, cf::T=2.0,
                 pf = [0,0, +0.5 * body.shape.rh[2]]
                 pb = [0,0, -0.5 * body.shape.rh[2]]
                 o = [0;0; body.shape.rh[1]]
-                push!(bounds, contactconstraint(body, normal, cf, p=pf, offset=o))
-                push!(bounds, contactconstraint(body, normal, cf, p=pb, offset=o))
+                push!(bounds, contactconstraint(body, normal, cf=cf, p=pf, offset=o))
+                push!(bounds, contactconstraint(body, normal, cf=cf, p=pb, offset=o))
             else
                 p = [0;0; 0.5 * body.shape.rh[2]]
                 o = [0;0; body.shape.rh[1]]
-                push!(bounds, contactconstraint(body, normal, cf, p=p, offset=o))
+                push!(bounds, contactconstraint(body, normal, cf=cf, p=p, offset=o))
             end
         end
         setPosition!(mech, geteqconstraint(mech, "floating_joint"), [1.25, 0.0, 0.0])

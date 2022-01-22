@@ -1,5 +1,5 @@
-function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = true,
-    conetype = :soc, spring = 0.0, damper = 0.0, Nlink::Int = 2, jointtype::Symbol = :Spherical, h::T = 1.0, r::T = 0.05) where {T}
+function getsnake(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=true,
+    contact_type=:contact, spring=0.0, damper=0.0, Nlink::Int=2, jointtype::Symbol=:Spherical, h::T=1.0, r::T=0.05) where {T}
 
     # Parameters
     ex = [1.;0.;0.]
@@ -30,26 +30,19 @@ function getsnake(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, contact::Bool = tr
         normal = [[0;0;1.0] for i = 1:n]
         cf = cf * ones(n)
 
-        if conetype == :soc
-            contineqcs1 = contactconstraint(links, normal, cf, p = fill(vert11, n)) # we need to duplicate point for prismatic joint for instance
-            contineqcs2 = contactconstraint(links, normal, cf, p = fill(vert12, n))
-            mech = Mechanism(origin, links, eqcs, [contineqcs1; contineqcs2], g = g, Δt = Δt, spring=spring, damper=damper)
-
-        elseif conetype == :linear
-            @error "linear contact not implemented"
-        else
-            error("Unknown conetype")
-        end
+        ineqcs1 = contactconstraint(links, normal, cf=cf, p = fill(vert11, n), contact_type=contact_type) # we need to duplicate point for prismatic joint for instance
+        ineqcs2 = contactconstraint(links, normal, cf=cf, p = fill(vert12, n), contact_type=contact_type)
+        mech = Mechanism(origin, links, eqcs, [ineqcs1; ineqcs2], g=g, Δt=Δt, spring=spring, damper=damper)
     else
         mech = Mechanism(origin, links, eqcs, g = g, Δt = Δt, spring=spring, damper=damper)
     end
     return mech
 end
 
-function initializesnake!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{T} = [0,-0.5,0],
-    v::AbstractVector{T} = zeros(3), ω::AbstractVector{T} = zeros(3),
-    Δω::AbstractVector{T} = zeros(3), Δv::AbstractVector{T} = zeros(3),
-    q1::UnitQuaternion{T} = UnitQuaternion(RotX(0.6 * π))) where {T,Nn,Ne,Nb}
+function initializesnake!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{T}=[0,-0.5,0],
+    v::AbstractVector{T}=zeros(3), ω::AbstractVector{T}=zeros(3),
+    Δω::AbstractVector{T}=zeros(3), Δv::AbstractVector{T}=zeros(3),
+    q1::UnitQuaternion{T}=UnitQuaternion(RotX(0.6 * π))) where {T,Nn,Ne,Nb}
 
     bodies = collect(mechanism.bodies)
     link1 = bodies[1]

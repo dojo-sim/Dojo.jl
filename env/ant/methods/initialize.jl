@@ -65,21 +65,21 @@ function getant(; Δt::T=0.05, g::T=-9.81, cf::T=0.5,
         foot = [getbody(mech, name) for name in foot_names]
         p = [[0.2; 0.2; 0.0], [-0.2; 0.2; 0.0], [-0.2; -0.2; 0.0], [0.2; -0.2; 0.0]]
         o = [[0.0; 0.0; f.shape.rh[1]] for f in foot]
-        contineqcs = [contactconstraint(foot[i], normal, cf, p=p[i], offset=o[i]) for i = 1:length(foot_names)]
+        contineqcs = [contactconstraint(foot[i], normal, cf=cf, p=p[i], offset=o[i]) for i = 1:length(foot_names)]
 
         if contact_body
             # torso contact
             torso = getbody(mech, "torso")
             p = [0.0; 0.0; 0.0]
             o = [0.0; 0.0; torso.shape.r]
-            torso_ineqcs = contactconstraint(torso, normal, cf, p=p, offset=o)
+            torso_ineqcs = contactconstraint(torso, normal, cf=cf, p=p, offset=o)
 
             # elbow contact
             elbow_names = ["aux_1", "aux_2", "aux_3", "aux_4"]
             elbow = [getbody(mech, e) for e in elbow_names]
             p = [-[0.1; 0.1; 0.0], -[-0.1; 0.1; 0.0], -[-0.1; -0.1; 0.0], -[0.1; -0.1; 0.0]]
             o = [[0.0; 0.0; e.shape.rh[1]] for e in elbow]
-            elbow_ineqcs = [contactconstraint(elbow[i], normal, cf, p=p[i], offset=o[i]) for i = 1:length(elbow_names)]
+            elbow_ineqcs = [contactconstraint(elbow[i], normal, cf=cf, p=p[i], offset=o[i]) for i = 1:length(elbow_names)]
 
             contineqcs = [contineqcs..., torso_ineqcs, elbow_ineqcs...]
         end

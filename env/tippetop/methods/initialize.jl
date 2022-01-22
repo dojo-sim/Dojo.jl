@@ -1,4 +1,4 @@
-function gettippetop(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=true, contact_mode::Symbol = :soc) where T
+function gettippetop(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=true, contact_type::Symbol=:contact) where T
     origin = Origin{T}(name="origin")
     radius = 0.5
     mass = 1.0
@@ -11,20 +11,12 @@ function gettippetop(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=true, c
     if contact
         contact = [0,0,0.0]
         normal = [0,0,1.0]
-        (contact_mode == :soc) && (contineqcs = [
-            contactconstraint(getbody(mechanism, "sphere1"), normal, cf, p=contact, offset=[0,0,radius]),
-            contactconstraint(getbody(mechanism, "sphere2"), normal, cf, p=contact, offset=[0,0,radius*α])
-            ])
-        (contact_mode == :linear) && (contineqcs = [
-            linearcontactconstraint(getbody(mechanism, "sphere1"), normal, cf, p=contact, offset=[0,0,radius]),
-            linearcontactconstraint(getbody(mechanism, "sphere2"), normal, cf, p=contact, offset=[0,0,radius*α])
-            ])
-        (contact_mode == :impact) && (contineqcs = [
-            impactconstraint(getbody(mechanism, "sphere1"), normal, p=contact, offset=[0,0,radius]),
-            impactconstraint(getbody(mechanism, "sphere2"), normal, p=contact, offset=[0,0,radius*α])
-            ])
+        ineqcs = [
+            contactconstraint(getbody(mechanism, "sphere1"), normal, cf=cf, p=contact, offset=[0,0,radius], contact_type=contact_type),
+            contactconstraint(getbody(mechanism, "sphere2"), normal, cf=cf, p=contact, offset=[0,0,radius*α], contact_type=contact_type)
+            ]
         setPosition!(mechanism, geteqconstraint(mechanism, "floating_joint"), [0;0;radius;zeros(3)])
-        mechanism = Mechanism(origin, bodies, eqcs, contineqcs, g=g, Δt=Δt)
+        mechanism = Mechanism(origin, bodies, eqcs, ineqcs, g=g, Δt=Δt)
     end
     return mechanism
 end
