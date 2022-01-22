@@ -39,7 +39,7 @@ A differentiable rigid-body-dynamics with contact simulator for robotics.
 <img src="examples/animations/halfcheetah_ars.gif" width="600"/>
 
 ### Ant
-<img src="examples/animations/ant_ars.gif" width="300"/>
+<img src="examples/animations/ant_ars_no_grid.gif" width="300"/>
 
 ## Real-To-Sim
 
