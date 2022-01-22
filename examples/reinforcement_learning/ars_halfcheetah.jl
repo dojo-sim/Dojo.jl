@@ -59,14 +59,19 @@ policies_best = (policies[max_idx])[1:N_best]
 # ## Visualizer policy
 open(env.vis)
 
+hp = HyperParameters(main_loop_size = 30, horizon = 80, n_directions = 6, b = 6, step_size = 0.02)
+input_size = length(obs)
+output_size = length(env.u_prev)
+normalizer = Normalizer(input_size)
+
 traj = display_policy(env, 
     # policy, 
-    Policy(hp, policies[5]),
+    Policy(hp, θ),
     normalizer, hp)
 
-# for t = 1:length(traj) 
-#     traj[t][2] += 3.25
-# end
+for t = 1:length(traj) 
+    traj[t][2] += 3.25
+end
 
 visualize(env, traj)
 
@@ -74,11 +79,11 @@ vals = [1, 2, 3, 4]
 findmax(vals, 2)
 max_idx = sortperm(vals, lt=Base.isgreater)
 
-Base.isgreater
-
 MeshCat.settransform!(env.vis["/Cameras/default"],
         MeshCat.compose(MeshCat.LinearMap(Rotations.RotZ(-π / 2.0)), MeshCat.Translation(50.0, 0.0, -1.0)))
 setprop!(env.vis["/Cameras/default/rotated/<object>"], "zoom", 15.0)
+
+set_floor!(env.vis, z=0.03)
 
 # ## Animation
 z = [min2max(env.mechanism, x) for x in traj]

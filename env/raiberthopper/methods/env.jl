@@ -7,7 +7,7 @@ function raiberthopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     control_scaling=Diagonal(ones(3)),
     s::Int=1, contact::Bool=true, vis::Visualizer=Visualizer(), name::Symbol=:robot,
     info=nothing,
-    opts_step=InteriorPointOptions(), opts_grad=InteriorPointOptions()) where T
+    opts_step=InteriorPointOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5), opts_grad=InteriorPointOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5)) where T
 
     mechanism = getraiberthopper(Δt=dt, g=g)
     initializeraiberthopper!(mechanism)
