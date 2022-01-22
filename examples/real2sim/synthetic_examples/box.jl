@@ -1,13 +1,5 @@
-# Utils
-function module_dir()
-    return joinpath(@__DIR__, "..", "..", "..")
-end
-
-# Activate package
-using Pkg
-Pkg.activate(module_dir())
-
 # Load packages
+using Dojo
 using Plots
 using Random
 using MeshCat
@@ -17,14 +9,13 @@ vis = Visualizer()
 open(vis)
 
 # Include new files
-include(joinpath(module_dir(), "examples", "loader.jl"))
-include(joinpath(module_dir(), "examples", "real2sim", "utils.jl"))
+include( "../utils.jl")
 
 mech = getmechanism(:box, Δt=0.05, g=-9.81, cf=0.2, radius=0.00, side=0.50, mode=:box);
 initialize!(mech, :box, x=[0,-1,1.], v=[0,2,1.], ω=[2,5,10.])
 storage = simulate!(mech, 5.0, record=true,
     opts=InteriorPointOptions(btol=1e-6, rtol=1e-6, verbose=false))
-visualize(mech, storage, vis=vis, show_contact=true)
+visualize(mech, storage, vis=vis, show_contact=false)
 
 
 ################################################################################

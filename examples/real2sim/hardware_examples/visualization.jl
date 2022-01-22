@@ -25,8 +25,6 @@ t = 50
 vis, anim = cube_morphing(Dsol[t:t], vis=vis, fps=20, rot=0.00, background=false,
 	vis_truth=true, vis_learned=false, translate=false, cam_pos=cam_pos, alt=-1, b0=0, b1=0)
 
-convert_frames_to_video_and_gif("cone_learning")
-
 vis = Visualizer()
 open(vis)
 
@@ -53,8 +51,7 @@ S = 7
 Δt = 1/148 * S
 gscaled = -9.81*20
 
-file = jldopen(joinpath(module_dir(), "examples",
-	"real2sim", "hardware_examples", "sol_best6.jld2"))
+file = jldopen(joinpath(@__DIR__, "..", "results", "sol_best6.jld2"))
 Dsol = file["Dsol"]
 
 # Load Dataset
@@ -62,6 +59,19 @@ params0, trajs0, pairs0 = open_dataset(:hardwarebox; N=400, S=S)
 params1, trajs1, pairs1 = open_dataset(:hardwarebox; N=400, S=1)
 
 
+function d2data(d)
+	cf = d[1]
+	data = [cf; 0;0;0; +d[2:4];
+			cf; 0;0;0; +d[5:7];
+			cf; 0;0;0; +d[8:10];
+			cf; 0;0;0; +d[11:13];
+			cf; 0;0;0; +d[14:16];
+			cf; 0;0;0; +d[17:19];
+			cf; 0;0;0; +d[20:22];
+			cf; 0;0;0; +d[23:25];
+			]
+	return data
+end
 mech = getmechanism(:box, Δt=Δt/S, g=gscaled, cf=Dsol[end][1], radius=0.00, side=2.0, mode=:box);
 set_simulator_data!(mech, d2data(Dsol[end]))
 id = 7#4,6,7,8
