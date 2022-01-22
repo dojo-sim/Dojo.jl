@@ -99,99 +99,6 @@ function RᵀVᵀmat(q::UnitQuaternion)
     ]
 end
 
-function ∂L∂qsplit(::Type{T}) where T
-    return SA{T}[
-        1 0 0 0
-        0 1 0 0
-        0 0 1 0
-        0 0 0 1
-
-        0 -1 0 0
-        1 0 0 0
-        0 0 0 1
-        0 0 -1 0
-
-        0 0 -1 0
-        0 0 0 -1
-        1 0 0 0
-        0 1 0 0
-
-        0 0 0 -1
-        0 0 1 0
-        0 -1 0 0
-        1 0 0 0
-    ]
-end
-function ∂Lᵀ∂qsplit(::Type{T}) where T
-    return SA{T}[
-        1 0 0 0
-        0 -1 0 0
-        0 0 -1 0
-        0 0 0 -1
-
-        0 1 0 0
-        1 0 0 0
-        0 0 0 -1
-        0 0 1 0
-
-        0 0 1 0
-        0 0 0 1
-        1 0 0 0
-        0 -1 0 0
-
-        0 0 0 1
-        0 0 -1 0
-        0 1 0 0
-        1 0 0 0
-    ]
-end
-function ∂R∂qsplit(::Type{T}) where T
-    return SA{T}[
-        1 0 0 0
-        0 1 0 0
-        0 0 1 0
-        0 0 0 1
-
-        0 -1 0 0
-        1 0 0 0
-        0 0 0 -1
-        0 0 1 0
-
-        0 0 -1 0
-        0 0 0 1
-        1 0 0 0
-        0 -1 0 0
-
-        0 0 0 -1
-        0 0 -1 0
-        0 1 0 0
-        1 0 0 0
-    ]
-end
-function ∂Rᵀ∂qsplit(::Type{T}) where T
-    return SA{T}[
-        1 0 0 0
-        0 -1 0 0
-        0 0 -1 0
-        0 0 0 -1
-
-        0 1 0 0
-        1 0 0 0
-        0 0 0 1
-        0 0 -1 0
-
-        0 0 1 0
-        0 0 0 -1
-        1 0 0 0
-        0 1 0 0
-
-        0 0 0 1
-        0 0 1 0
-        0 -1 0 0
-        1 0 0 0
-    ]
-end
-
 function slerp(q1,q2,h)
     s = params(q1)'*params(q2)
     if s < 0
@@ -207,6 +114,8 @@ function slerp(q1,q2,h)
 
     return q1*qint
 end
+
+
 
 ################################################################################
 # Matrix-Vector Product Jacobian
