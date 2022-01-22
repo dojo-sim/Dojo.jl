@@ -1,27 +1,27 @@
-using Dojo 
-using Plots 
+using Dojo
+using Plots
 
 include("methods.jl")
 
 # cone
-conetype = :linear
-# conetype = :soc
+contact_type = :linear_contact
+# contact_type = :contact
 
 # scale system for nice plots
-mech = getmechanism(:box2d, Δt=0.1, g=-1.0, cf=1.0, contact=true, conetype=conetype);
+mech = getmechanism(:box2d, Δt=0.1, g=-1.0, cf=1.0, contact=true, contact_type=contact_type);
 
 # inputs
 Fs = 0.01:0.01:0.2
 Fsref = 0.001:0.001:0.2
 
-# options 
+# options
 undercut = 1.0
 
 mode = :friction
 # mode = :impact
-if mode == :friction && conetype == :soc
+if mode == :friction && contact_type == :contact
     filename = "nonlinear_friction"
-elseif mode == :friction && conetype == :linear
+elseif mode == :friction && contact_type == :linear_contact
     filename = "linear_friction"
 else
     filename = "impact"

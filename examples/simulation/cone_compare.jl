@@ -22,7 +22,7 @@ opts = InteriorPointOptions(rtol=1e-6, btol=1e-6)
 # ## linear cone
 color_lc = RGBA(1.0, 153.0 / 255.0, 51.0 / 255.0, 1.0);
 mech_lc = getmechanism(:box, Δt=timestep, g=gravity, cf=friction_coefficient,
-    conetype=:linear, mode=:box, color=color_lc);
+    contact_type=:linear_contact, mode=:box, color=color_lc);
 initialize!(mech_lc, :box, x=x0, q=one(UnitQuaternion), v=v0, ω=ω0)
 storage_lc = simulate!(mech_lc, 4.0, record=true, opts=opts)
 via, anim = visualize(mech_lc, storage_lc, vis=vis, name=:lc)
@@ -38,7 +38,7 @@ setobject!(vis[:path_lc], MeshCat.Line(points_lc, line_mat_lc))
 # ## nonlinear cone
 color_nc = RGBA(51.0 / 255.0, 1.0, 1.0, 1.0);
 mech_nc = getmechanism(:box, Δt=timestep, g=gravity, cf=friction_coefficient,
-    conetype=:soc, mode=:box, color=color_nc);
+    contact_type=:contact, mode=:box, color=color_nc);
 initialize!(mech_nc, :box, x=x0, q=one(UnitQuaternion), v=v0, ω=ω0)
 storage_nc = simulate!(mech_nc, 4.0, record=true, opts=opts)
 vis, anim = visualize(mech_nc, storage_nc, vis=vis, name=:nc, animation=anim)
@@ -54,7 +54,7 @@ setobject!(vis[:path_nc], MeshCat.Line(points_nc, line_mat_nc))
 # ## MuJoCo cone
 color_mj = RGBA(1.0, 0.0, 1.0, 1.0);
 mech_mj = getmechanism(:box, Δt=timestep, g=gravity, cf=friction_coefficient,
-    conetype=:linear, mode=:box, color=color_mj);
+    contact_type=:linear_contact, mode=:box, color=color_mj);
 initialize!(mech_mj, :box, x=x0, q=one(UnitQuaternion), v=v0, ω=ω0)
 file = jldopen(joinpath(@__DIR__, "../MuJoCoBenchmark.jl/results/cone_compare.jld2"))
 storage_mj = generate_storage(mech_mj, [getMaxState(mech_mj), file["ztraj"]...])
