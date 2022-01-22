@@ -47,6 +47,8 @@ include("sphere/methods/initialize.jl")
 
 include("snake/methods/initialize.jl")
 
+include("tennisracket/methods/initialize.jl")
+
 include("tippetop/methods/initialize.jl")
 
 include("twister/methods/initialize.jl")
