@@ -1,13 +1,5 @@
-# Utils
-function module_dir()
-    return joinpath(@__DIR__, "..", "..", "..")
-end
-
-# Activate package
-using Pkg
-Pkg.activate(module_dir())
-
 # Load packages
+using Dojo
 using Plots
 using Random
 using MeshCat
@@ -17,9 +9,8 @@ vis = Visualizer()
 open(vis)
 
 # Include new files
-include(joinpath(module_dir(), "examples", "loader.jl"))
 include(joinpath(module_dir(), "env", "sphere", "deps", "texture.jl"))
-include(joinpath(module_dir(), "examples", "real2sim", "utils.jl"))
+include( "../utils.jl")
 
 mech = getmechanism(:sphere, Δt=0.05, g=-9.81, radius=0.5, cf=0.1);
 initialize!(mech, :sphere, x=[0,0,0.3], v=[0,0.5,0.], ω=[10,0,0.])
