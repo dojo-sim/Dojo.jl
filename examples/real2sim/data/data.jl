@@ -8,7 +8,7 @@ function convert_csv()
 		jld2_path = joinpath(module_dir(), "examples", "real2sim", "data", "tosses_jld2", "$(k).jld2")
 		toss = split.(readlines(csv_path), ",")
 		toss = [parse.(Float64, t) for t in toss]
-		jldsave(jld2_path;	toss=toss)
+		jldsave(jld2_path; toss=toss)
 	end
 end
 

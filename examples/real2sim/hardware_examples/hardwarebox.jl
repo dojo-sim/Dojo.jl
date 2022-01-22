@@ -1,24 +1,16 @@
-# Utils
-function module_dir()
-    return joinpath(@__DIR__, "..", "..", "..")
-end
-
-# Activate package
-using Pkg
-Pkg.activate(module_dir())
-
 # Load packages
+using Dojo
 using Plots
 using Random
 using MeshCat
+
+# Include new files
+include(joinpath("..", "utils.jl"))
 
 # Open visualizer
 vis = Visualizer()
 open(vis)
 
-# Include new files
-include(joinpath(module_dir(), "examples", "loader.jl"))
-include(joinpath(module_dir(), "examples", "real2sim", "utils.jl"))
 
 S = 7
 Δt = 1/148 * S
@@ -194,15 +186,12 @@ f0(d0)
 f0(dsol)
 d0
 dsol
-# x:[" 3.5e-1", " 1.0e+0", " 8.2e-1", "-1.0e+0", " 8.1e-1", "-1.0e+0", "-10.0e-1", "-8.0e-1", " 9.7e-1", "-1.0e+0", "-9.4e-1", "-1.1e+0", "-9.4e-1", " 9.4e-1", " 1.0e+0", " 1.0e+0", " 9.3e-1", "-1.0e+0", " 1.0e+0", "-9.4e-1", " 1.1e+0", " 9.4e-1", "-9.2e-1", "-1.1e+0", " 8.9e-1"]
-# x:[" 3.2e-1", " 7.6e-1", " 5.9e-1", "-3.2e-1", " 7.6e-1", "-5.8e-1", "-5.9e-1", "-6.6e-1", " 4.7e-1", "-2.5e-1", "-7.5e-1", "-7.1e-1", "-4.6e-1", " 4.8e-1", " 6.7e-1", " 6.1e-1", " 6.0e-1", "-6.8e-1", " 2.7e-1", "-6.2e-1", " 6.1e-1", " 5.1e-1", "-3.5e-1", "-4.2e-1", " 6.1e-1"]
-
 # We can learn the coefficient of friction and the side dimenson of the cube
 # form 35*0.40 seconds of recording. We use the simulator to evaluate the loss
 # and its gradients by differentiating through the simulator. With gradient
 # information we can use L-BFGS
 
-jldsave(joinpath(module_dir(), "examples", "real2sim", "hardware_examples", "sol.jld2"), dsol=dsol, Dsol=Dsol)
+jldsave(joinpath("..", "results", "sol.jld2"), dsol=dsol, Dsol=Dsol)
 
 
 ################################################################################

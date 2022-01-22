@@ -178,6 +178,7 @@ include(joinpath("ui", "initialize.jl"))
 include(joinpath("ui", "urdf.jl"))
 include(joinpath("ui", "convert_shape.jl"))
 include(joinpath("ui", "visualize.jl"))
+include(joinpath("ui", "visualizer_utils.jl"))
 include(joinpath("ui", "colors.jl"))
 
 # Gradients
