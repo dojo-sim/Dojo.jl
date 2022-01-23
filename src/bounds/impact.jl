@@ -15,7 +15,6 @@ end
 function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{ImpactBound{T,N}}}
     bound = ineqc.constraints[1]
     body = getbody(mechanism, ineqc.parentid)
-    x2, v25, q2, ϕ25 = fullargssol(body.state)
     x3, q3 = posargs3(body.state, mechanism.Δt)
     SVector{1,T}(bound.ainv3 * (x3 + vrotate(bound.p,q3) - bound.offset) - ineqc.ssol[2][1])
 end

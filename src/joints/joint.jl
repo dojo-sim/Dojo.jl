@@ -49,7 +49,7 @@ end
 @inline function ∂g∂b(joint::Joint, body1::Component, body2::Component, childid, λ, Δt)
     if body2.id == childid
         return ∂g∂b(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)..., λ)
-        
+
     else
         return zero(joint)
     end
@@ -113,11 +113,11 @@ Joint3 = Joint{T,3} where T
 
 ### Constraints and derivatives
 ## Position level constraint wrappers
-@inline g(joint::Joint, body1::Component, body2::Component, λ, Δt) = g(joint, body1.state, body2.state, λ, Δt)
+@inline g(joint::Joint, body1::Component, body2::Component, λ, Δt) = g(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)..., λ)
 
 ### Constraints and derivatives
 ## Discrete-time position wrappers (for dynamics)
-g(joint::Joint, statea::State, stateb::State, λ, Δt) = g(joint, posargs3(statea, Δt)..., posargs3(stateb, Δt)..., λ)
+# g(joint::Joint, statea::State, stateb::State, λ, Δt) = g(joint, posargs3(statea, Δt)..., posargs3(stateb, Δt)..., λ)
 
 @inline function ∂g∂z(joint::Joint{T,Nλ}, λ) where {T,Nλ}
     return Diagonal(+1.00e-10 * sones(T,Nλ))

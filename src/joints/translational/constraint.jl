@@ -44,7 +44,6 @@ end
     return constraintmat(joint) * e
 end
 
-
 @inline function ∂g∂z(joint::Translational{T,Nλ,0,N}, η) where {T,Nλ,N}
     return Diagonal(+1.00e-10 * sones(T,N))
 end
@@ -184,4 +183,3 @@ end
     Δv = zerodimstaticadjoint(nullspacemat(joint)) * v # in body1 frame
     return Δv
 end
-

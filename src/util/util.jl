@@ -86,9 +86,5 @@ function scn(a::Float64; digits::Int=1, exp_digits::Int=1)
     return "$sgn$(strm)e$sgne$(stre)"
 end
 
-function module_dir()
-    return joinpath(@__DIR__, "..", "..")
-end
-
 # useful for python visualizer
 wait_for_server = MeshCat.wait_for_server
