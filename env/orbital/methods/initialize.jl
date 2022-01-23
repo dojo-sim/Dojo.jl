@@ -1,4 +1,4 @@
-function getorbital(; Δt::T = 0.01, g::T = -9.81, spring = 0.0, damper = 0.0, Nlink::Int = 5) where {T}
+function getorbital(; Δt::T = 0.01, g::T = -9.81, spring = 0.0, damper = 0.0, Nb::Int = 5) where {T}
     # Parameters
     ex = [0; 0; 1]
     h = 1.
@@ -9,14 +9,14 @@ function getorbital(; Δt::T = 0.01, g::T = -9.81, spring = 0.0, damper = 0.0, N
     # Links
     origin = Origin{T}()
 
-    links = [Box(r, r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
+    links = [Box(r, r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nb]
 
     # Constraints
     jointb1 = EqualityConstraint(Fixed(origin, links[1]; p2 = vert11))
-    if Nlink > 1
+    if Nb > 1
         eqcs = [
             jointb1;
-            [EqualityConstraint(Orbital(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nlink]
+            [EqualityConstraint(Orbital(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nb]
             ]
     else
         eqcs = [jointb1]

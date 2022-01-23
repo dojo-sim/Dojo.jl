@@ -184,11 +184,11 @@ end
 # with spring and damper
 # with control
 ################################################################################
-Nlink0 = 5
+Nb0 = 5
 spring0 = 0.0 * 4e0
 damper0 = 0.0 * 2e+1
 
-mech = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
+mech = getmechanism(:snake, Δt = Δt0, g = g0, Nb = Nb0, spring = spring0, damper = damper0,
     jointtype = :Revolute, contact = false, r = 0.05);
 
 v0 = 100.0 * [1, 2, 3] * Δt0
@@ -212,7 +212,7 @@ end
 @testset "Momentum: Snake" begin
     for jointtype in jointtypes
         # @show jointtype
-        mech = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
+        mech = getmechanism(:snake, Δt = Δt0, g = g0, Nb = Nb0, spring = spring0, damper = damper0,
             jointtype = jointtype, contact = false, r = 0.05)
 
         v0 = 10.0 * [1, 2, 3] * Δt0
@@ -243,11 +243,11 @@ end
 # with spring and damper
 # with control
 ################################################################################
-Nlink0 = 5
+Nb0 = 5
 spring0 = 1.0 * 4e0
 damper0 = 1.0 * 2e+1
 
-mech = getmechanism(:twister, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
+mech = getmechanism(:twister, Δt = Δt0, g = g0, Nb = Nb0, spring = spring0, damper = damper0,
     jointtype = :FixedOrientation, contact = false, r = 0.05);
 
 v0 = 100.0 * [1, 2, 3] * Δt0
@@ -271,7 +271,7 @@ end
 @testset "Momentum: Twister" begin
     for jointtype in jointtypes
         # @show jointtype
-        mech = getmechanism(:twister, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
+        mech = getmechanism(:twister, Δt = Δt0, g = g0, Nb = Nb0, spring = spring0, damper = damper0,
             jointtype = jointtype, contact = false, r = 0.05)
 
         v0 = 10.0 * [1, 2, 3] * Δt0

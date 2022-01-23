@@ -1,5 +1,5 @@
 function getsnake(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=true,
-    contact_type=:contact, spring=0.0, damper=0.0, Nlink::Int=2, jointtype::Symbol=:Spherical, h::T=1.0, r::T=0.05) where {T}
+    contact_type=:contact, spring=0.0, damper=0.0, Nb::Int=2, jointtype::Symbol=:Spherical, h::T=1.0, r::T=0.05) where {T}
 
     # Parameters
     ex = [1.;0.;0.]
@@ -11,30 +11,28 @@ function getsnake(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=true,
 
     # Links
     origin = Origin{T}()
-    # links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
-    links = [Box(3r, 2r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
-    # links = [Box(h, h, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
+    # bodies = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nb]
+    bodies = [Box(3r, 2r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nb]
 
     # Constraints
-    jointb1 = EqualityConstraint(Floating(origin, links[1], spring = 0.0, damper = 0.0)) # TODO remove the spring and damper from floating base
-    if Nlink > 1
-        eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], ex; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
-        # eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], ez; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
+    jointb1 = EqualityConstraint(Floating(origin, bodies[1], spring = 0.0, damper = 0.0))
+    if Nb > 1
+        eqcs = [EqualityConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], ex; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nb]
         eqcs = [jointb1; eqcs]
     else
         eqcs = [jointb1]
     end
 
     if contact
-        n = Nlink
+        n = Nb
         normal = [[0;0;1.0] for i = 1:n]
         cf = cf * ones(n)
 
-        ineqcs1 = contactconstraint(links, normal, cf=cf, p = fill(vert11, n), contact_type=contact_type) # we need to duplicate point for prismatic joint for instance
-        ineqcs2 = contactconstraint(links, normal, cf=cf, p = fill(vert12, n), contact_type=contact_type)
-        mech = Mechanism(origin, links, eqcs, [ineqcs1; ineqcs2], g=g, Δt=Δt, spring=spring, damper=damper)
+        ineqcs1 = contactconstraint(bodies, normal, cf=cf, p = fill(vert11, n), contact_type=contact_type) # we need to duplicate point for prismatic joint for instance
+        ineqcs2 = contactconstraint(bodies, normal, cf=cf, p = fill(vert12, n), contact_type=contact_type)
+        mech = Mechanism(origin, bodies, eqcs, [ineqcs1; ineqcs2], g=g, Δt=Δt, spring=spring, damper=damper)
     else
-        mech = Mechanism(origin, links, eqcs, g = g, Δt = Δt, spring=spring, damper=damper)
+        mech = Mechanism(origin, bodies, eqcs, g = g, Δt = Δt, spring=spring, damper=damper)
     end
     return mech
 end

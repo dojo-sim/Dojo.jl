@@ -20,7 +20,7 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 # Build mechanism
-mech = getmechanism(:npendulum, Δt = 0.05, g = -9.81, Nlink = 5)
+mech = getmechanism(:npendulum, Δt = 0.05, g = -9.81, Nb = 5)
 initialize!(mech, :npendulum, ϕ1 = 0.1*pi)
 
 function cont!(mechanism, k; u = 1.0)

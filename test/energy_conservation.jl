@@ -363,10 +363,10 @@ function snake_controller!(mechanism, k; U = 0.05, Δt = Δt0)
     return
 end
 
-Nlink0 = 5
+Nb0 = 5
 spring0 = 0.01
 damper0 = 0.0
-mech = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
+mech = getmechanism(:snake, Δt = Δt0, g = g0, Nb = Nb0, spring = spring0, damper = damper0,
     jointtype = :Revolute, contact = false, r = 0.05);
 
 v0 = 10.0 * [1, 2, 3] * Δt0
@@ -394,7 +394,7 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 @testset "Energy: Snake" begin
     for jointtype in jointtypes
         # @show jointtype
-        mech = getmechanism(:snake, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
+        mech = getmechanism(:snake, Δt = Δt0, g = g0, Nb = Nb0, spring = spring0, damper = damper0,
             jointtype = jointtype, contact = false, r = 0.05)
 
         v0 = 10.0 * [1, 2, 3] * Δt0
@@ -428,10 +428,10 @@ end
 # with spring and damper
 # with control
 ################################################################################
-Nlink0 = 5
+Nb0 = 5
 spring0 = 0.01
 damper0 = 0.0
-mech = getmechanism(:twister, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
+mech = getmechanism(:twister, Δt = Δt0, g = g0, Nb = Nb0, spring = spring0, damper = damper0,
     jointtype = :Revolute, contact = false, r = 0.05);
 
 v0 = 10.0 * [1, 2, 3] * Δt0
@@ -459,7 +459,7 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 @testset "Energy: Twister" begin
     for jointtype in jointtypes
         # @show jointtype
-        mech = getmechanism(:twister, Δt = Δt0, g = g0, Nlink = Nlink0, spring = spring0, damper = damper0,
+        mech = getmechanism(:twister, Δt = Δt0, g = g0, Nb = Nb0, spring = spring0, damper = damper0,
             jointtype = jointtype, contact = false, r = 0.05)
 
         v0 = 10.0 * [1, 2, 3] * Δt0

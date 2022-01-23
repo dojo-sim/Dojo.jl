@@ -21,7 +21,7 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 
 # Build mechanism
 include("mechanism_zoo.jl")
-mech = getmechanism(:nslider, Δt = 0.01, g = -2.0, Nlink = 5)
+mech = getmechanism(:nslider, Δt = 0.01, g = -2.0, Nb = 5)
 initialize!(mech, :nslider, z1 = 0.0, Δz = 1.1)
 
 for (i,joint) in enumerate(mech.eqconstraints)

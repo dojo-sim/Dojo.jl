@@ -24,7 +24,7 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 ################################################################################
 include("conservation_test.jl")
 Δt_ = 0.01
-Nlink_ = 2
+Nb_ = 2
 
 function controller!(mechanism, k)
     for (i,joint) in enumerate(mechanism.eqconstraints)
@@ -48,17 +48,17 @@ v_ = 0.0*[1.0; 0.0; 0.0]#rand(3)
 Δω_ = 1.0*[0.0; 1.0; 0.0]#rand(3)
 ϕ1_ = 0.0
 jointtype = :Spherical
-mech = getmechanism(:snake, Δt = Δt_, g = 0.0, contact = false, spring = 0.0, damper = 0.0, Nlink = Nlink_, jointtype = jointtype)
+mech = getmechanism(:snake, Δt = Δt_, g = 0.0, contact = false, spring = 0.0, damper = 0.0, Nb = Nb_, jointtype = jointtype)
 initialize!(mech, :snake, ϕ1 = ϕ1_, v=v_, ω=ω_, Δv = Δv_, Δω = Δω_)
-# mech = getmechanism(:npendulum, Δt = 0.01, g = 0.0 * -9.81, Nlink = Nlink_)
+# mech = getmechanism(:npendulum, Δt = 0.01, g = 0.0 * -9.81, Nb = Nb_)
 # initialize!(mech, :npendulum, ϕ1 = 0.0 * π, v=v_, ω=ω_, Δv = Δv_, Δω = Δω_)
 
 storage = simulate!(mech, 1.0, record = true, solver = :mehrotra!, verbose = false)
 m0 = momentum(mech)
 e0 = mechanicalEnergy(mech)
-mech = getmechanism(:snake, Δt = Δt_, g = 0.00, contact = false, spring = 0.0, damper = 0.0, Nlink = Nlink_, jointtype = jointtype)
+mech = getmechanism(:snake, Δt = Δt_, g = 0.00, contact = false, spring = 0.0, damper = 0.0, Nb = Nb_, jointtype = jointtype)
 initialize!(mech, :snake, ϕ1 = ϕ1_, v=v_, ω=ω_, Δv = Δv_, Δω = Δω_)
-# mech = getmechanism(:npendulum, Δt = 0.01, g = 0.0 * -9.81, Nlink = Nlink_)
+# mech = getmechanism(:npendulum, Δt = 0.01, g = 0.0 * -9.81, Nb = Nb_)
 # initialize!(mech, :npendulum, ϕ1 = 0.0 * π, v=v_, ω=ω_, Δv = Δv_, Δω = Δω_)
 
 storage = simulate!(mech, 5.00, record = true, solver = :mehrotra!, verbose = false)
@@ -131,7 +131,7 @@ include("conservation_test.jl")
 n = 1
 Δt_ = 0.01
 Δt_ /= n
-Nlink_ = 2
+Nb_ = 2
 
 Random.seed!(100)
 ω_ = 1.0 * -1.0*2.0*[0,0,1.0] #* 100 * Δt_
@@ -153,7 +153,7 @@ function controller!(mechanism, k)
     end
     return
 end
-mech = getmechanism(:snake, Δt = Δt_, g = 0.0, spring = 0.0, damper = 0.05, contact = false, Nlink = Nlink_, jointtype = :Spherical)
+mech = getmechanism(:snake, Δt = Δt_, g = 0.0, spring = 0.0, damper = 0.05, contact = false, Nb = Nb_, jointtype = :Spherical)
 initialize!(mech, :snake, ω = ω_, v = v_, Δv = Δv_, Δω = Δω_)
 storage = simulate!(mech, 200.0, controller!, record = true, solver = :mehrotra!, verbose = false)
 m0 = momentum(mech)

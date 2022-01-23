@@ -1,5 +1,5 @@
 function gettwister(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=true,
-    contact_type=:contact, spring=0.0, damper=0.0, Nlink::Int=5,
+    contact_type=:contact, spring=0.0, damper=0.0, Nb::Int=5,
     jointtype::Symbol=:Prismatic, h::T=1.0, r::T=0.05) where {T}
     # Parameters
     ex = [1.;0.;0.]
@@ -13,21 +13,21 @@ function gettwister(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=true,
 
     # Links
     origin = Origin{T}()
-    links = [Box(3r, 2r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
+    links = [Box(3r, 2r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nb]
 
     # Constraints
     jointb1 = EqualityConstraint(Floating(origin, links[1], spring = 0.0, damper = 0.0)) # TODO remove the spring and damper from floating base
-    if Nlink > 1
-        eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], axes[i%3+1]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
-        # eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], axes[1]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
-        # eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], axes[3]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
+    if Nb > 1
+        eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], axes[i%3+1]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nb]
+        # eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], axes[1]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nb]
+        # eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], axes[3]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nb]
         eqcs = [jointb1; eqcs]
     else
         eqcs = [jointb1]
     end
 
     if contact
-        n = Nlink
+        n = Nb
         normal = [[0;0;1.0] for i = 1:n]
         cf = cf * ones(n)
         ineqcs1 = contactconstraint(links[1], normal[1], cf=cf[1], p=vert11, contact_type=contact_type) # to avoid duplicating the contact points

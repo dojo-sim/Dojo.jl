@@ -21,7 +21,7 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
 
-mech = getmechanism(:orbital, spring = 0.0, damper = 1.0, Nlink = 2)
+mech = getmechanism(:orbital, spring = 0.0, damper = 1.0, Nb = 2)
 initialize!(mech, :orbital, ϕx = 3π/4, ϕy = 3π/4)
 
 function controller!(mechanism, k)

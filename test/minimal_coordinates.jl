@@ -109,8 +109,8 @@ end
 
 # nslider
 @testset "min -> max -> min: nslider" begin
-	Nlink0 = 5
-	mech = Dojo.getmechanism(:nslider, Nlink = Nlink0)
+	Nb0 = 5
+	mech = Dojo.getmechanism(:nslider, Nb = Nb0)
 	Random.seed!(100)
 	nx = Dojo.minCoordDim(mech)
 	x0 = rand(nx)
@@ -123,8 +123,8 @@ end
 @testset "min -> max -> min: npendulum" begin
 	for jointtype in jointtypes
 		# @show jointtype
-		Nlink0 = 5
-		mech = Dojo.getmechanism(:npendulum, Nlink = Nlink0, jointtype = jointtype)
+		Nb0 = 5
+		mech = Dojo.getmechanism(:npendulum, Nb = Nb0, jointtype = jointtype)
 		Random.seed!(100)
 		nx = Dojo.minCoordDim(mech)
 		x0 = rand(nx)
@@ -138,9 +138,9 @@ end
 @testset "min -> max -> min: snake" begin
 	for jointtype in jointtypes
 	# @show jointtype
-	Nlink0 = 5
-	mech = Dojo.getmechanism(:snake, Nlink = Nlink0, jointtype = jointtype)
-	mech = Dojo.getmechanism(:snake, Nlink = Nlink0, jointtype = :Fixed)
+	Nb0 = 5
+	mech = Dojo.getmechanism(:snake, Nb = Nb0, jointtype = jointtype)
+	mech = Dojo.getmechanism(:snake, Nb = Nb0, jointtype = :Fixed)
 	Random.seed!(100)
 	nx = Dojo.minCoordDim(mech)
 	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(abs(nx - 13))]
@@ -157,8 +157,8 @@ end
 @testset "min -> max -> min: twister" begin
 	for jointtype in jointtypes
 		# @show jointtype
-		Nlink0 = 5
-		mech = Dojo.getmechanism(:twister, Nlink = Nlink0, jointtype = jointtype)
+		Nb0 = 5
+		mech = Dojo.getmechanism(:twister, Nb = Nb0, jointtype = jointtype)
 		Random.seed!(100)
 		nx = Dojo.minCoordDim(mech)
 		x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(abs(nx - 13))]

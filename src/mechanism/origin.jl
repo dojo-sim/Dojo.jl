@@ -8,7 +8,7 @@ mutable struct Origin{T} <: Component{T}
         new{T}(getGlobalID(), name, state, shape)
     end
 
-    function Origin(; name::String="", shape::Shape=EmptyShape())
+    function Origin(; name::String="", state=State{Float64}(), shape::Shape=EmptyShape())
         Origin{Float64}(; name=name, state=state, shape=shape)
     end
 

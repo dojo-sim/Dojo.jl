@@ -30,7 +30,7 @@ function initializependulum!(mechanism::Mechanism; ϕ1::T = 0.7, ω1::T = 0.0) w
 end
 
 function getnpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
-        spring::T = 0.0, damper::T = 0.0, Nlink::Int = 5,
+        spring::T = 0.0, damper::T = 0.0, Nb::Int = 5,
         basetype::Symbol = :Revolute, jointtype::Symbol = :Revolute) where {T}
     # Parameters
     ex = [1.; 0; 0]
@@ -40,12 +40,12 @@ function getnpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
 
     # Links
     origin = Origin{T}()
-    links = [Box(r, r, l, m, color = RGBA(1., 0., 0.)) for i = 1:Nlink]
+    links = [Box(r, r, l, m, color = RGBA(1., 0., 0.)) for i = 1:Nb]
 
     # Constraints
     jointb1 = EqualityConstraint(Prototype(basetype, origin, links[1], ex; p2 = vert11, spring = spring, damper = damper))
-    if Nlink > 1
-        eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], ex; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nlink]
+    if Nb > 1
+        eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], ex; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nb]
         eqcs = [jointb1; eqcs]
     else
         eqcs = [jointb1]
