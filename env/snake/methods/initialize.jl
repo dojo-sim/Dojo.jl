@@ -43,16 +43,16 @@ function initializesnake!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{T}
     q1::UnitQuaternion{T}=UnitQuaternion(RotX(0.6 * π))) where {T,Nn,Ne,Nb}
 
     bodies = collect(mechanism.bodies)
-    link1 = bodies[1]
-    # h = link1.shape.rh[2]
-    h = link1.shape.xyz[3]
+    body1 = bodies[1]
+    # h = body1.shape.rh[2]
+    h = body1.shape.xyz[3]
     vert11 = [0.;0.; h/2]
     vert12 = -vert11
     # set position and velocities
-    setPosition!(mechanism.origin, link1, p2 = x, Δq = q1)
-    setVelocity!(link1, v = v, ω = ω)
+    setPosition!(mechanism.origin, body1, p2 = x, Δq = q1)
+    setVelocity!(body1, v = v, ω = ω)
 
-    previd = link1.id
+    previd = body1.id
     for (i,body) in enumerate(Iterators.drop(mechanism.bodies, 1))
         setPosition!(getbody(mechanism, previd), body, p1 = vert12, p2 = vert11)
         setVelocity!(getbody(mechanism, previd), body, p1 = vert12, p2 = vert11,

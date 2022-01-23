@@ -7,15 +7,15 @@ function getpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
 
     # Links
     origin = Origin{T}()
-    link1 = Box(width, depth, l, m)
+    body1 = Box(width, depth, l, m)
 
     # Constraints
-    joint_between_origin_and_link1 = EqualityConstraint(Revolute(origin, link1,
+    joint_between_origin_and_body1 = EqualityConstraint(Revolute(origin, body1,
         joint_axis; p2=p2, spring = spring, damper = damper, rot_spring_offset = spring_offset))
-    links = [link1]
-    eqcs = [joint_between_origin_and_link1]
+    bodies = [body1]
+    eqcs = [joint_between_origin_and_body1]
 
-    mech = Mechanism(origin, links, eqcs, g = g, Δt = Δt, spring=spring, damper=damper)
+    mech = Mechanism(origin, bodies, eqcs, g = g, Δt = Δt, spring=spring, damper=damper)
     return mech
 end
 
@@ -40,17 +40,17 @@ function getnpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
 
     # Links
     origin = Origin{T}()
-    links = [Box(r, r, l, m, color = RGBA(1., 0., 0.)) for i = 1:Nb]
+    bodies = [Box(r, r, l, m, color = RGBA(1., 0., 0.)) for i = 1:Nb]
 
     # Constraints
-    jointb1 = EqualityConstraint(Prototype(basetype, origin, links[1], ex; p2 = vert11, spring = spring, damper = damper))
+    jointb1 = EqualityConstraint(Prototype(basetype, origin, bodies[1], ex; p2 = vert11, spring = spring, damper = damper))
     if Nb > 1
-        eqcs = [EqualityConstraint(Prototype(jointtype, links[i - 1], links[i], ex; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nb]
+        eqcs = [EqualityConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], ex; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nb]
         eqcs = [jointb1; eqcs]
     else
         eqcs = [jointb1]
     end
-    mech = Mechanism(origin, links, eqcs, g = g, Δt = Δt)
+    mech = Mechanism(origin, bodies, eqcs, g = g, Δt = Δt)
     return mech
 end
 
@@ -60,16 +60,16 @@ function initializenpendulum!(mechanism::Mechanism; ϕ1::T = pi/4, ω = [0.0, 0.
     Δv::AbstractVector{T} = [0, 0, 0.], Δω::AbstractVector{T} = [0, 0, 0.],
     ) where {T}
 
-    link1 = collect(mechanism.bodies)[1]
+    body1 = collect(mechanism.bodies)[1]
     eqc = collect(mechanism.eqconstraints)[1]
     vert11 = eqc.constraints[1].vertices[2]
     vert12 = - vert11
 
     # set position and velocities
-    setPosition!(mechanism.origin, link1, p2 = vert11, Δq = UnitQuaternion(RotX(ϕ1)))
-    setVelocity!(link1, ω = ω)
+    setPosition!(mechanism.origin, body1, p2 = vert11, Δq = UnitQuaternion(RotX(ϕ1)))
+    setVelocity!(body1, ω = ω)
 
-    previd = link1.id
+    previd = body1.id
     for (i,body) in enumerate(Iterators.drop(mechanism.bodies, 1))
         setPosition!(getbody(mechanism, previd), body, p1 = vert12, p2 = vert11)
         setVelocity!(getbody(mechanism, previd), body, p1 = vert12, p2 = vert11,

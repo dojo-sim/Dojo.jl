@@ -7,14 +7,14 @@ function getslider(; Δt::T = 0.01, g::T = -9.81, spring = 0.0, damper = 0.0) wh
 
     # Links
     origin = Origin{T}()
-    link1 = Box(width, depth, length1, length1)
+    body1 = Box(width, depth, length1, length1)
 
     # Constraints
-    joint_between_origin_and_link1 = EqualityConstraint(Prismatic(origin, link1, joint_axis; p2=p2, spring = spring, damper = damper))
-    links = [link1]
-    eqcs = [joint_between_origin_and_link1]
+    joint_between_origin_and_body1 = EqualityConstraint(Prismatic(origin, body1, joint_axis; p2=p2, spring = spring, damper = damper))
+    bodies = [body1]
+    eqcs = [joint_between_origin_and_body1]
 
-    mech = Mechanism(origin, links, eqcs, g = g, Δt = Δt, spring=spring, damper=damper)
+    mech = Mechanism(origin, bodies, eqcs, g = g, Δt = Δt, spring=spring, damper=damper)
     return mech
 end
 
@@ -35,28 +35,28 @@ function getnslider(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 
 
     # Links
     origin = Origin{T}()
-    links = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nb]
+    bodies = [Cylinder(r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nb]
 
     # Constraints
-    jointb1 = EqualityConstraint(Prismatic(origin, links[1], ex; p2 = 0*vert11))
+    jointb1 = EqualityConstraint(Prismatic(origin, bodies[1], ex; p2 = 0*vert11))
     if Nb > 1
         eqcs = [
             jointb1;
-            [EqualityConstraint(Prismatic(links[i - 1], links[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nb]
+            [EqualityConstraint(Prismatic(bodies[i - 1], bodies[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nb]
             ]
     else
         eqcs = [jointb1]
     end
-    mech = Mechanism(origin, links, eqcs, g = g, Δt = Δt)
+    mech = Mechanism(origin, bodies, eqcs, g = g, Δt = Δt)
     return mech
 end
 
 function initializenslider!(mechanism::Mechanism; z1::T = 0.2, Δz = 0.0) where {T}
-    link1 = collect(mechanism.bodies)[1]
+    body1 = collect(mechanism.bodies)[1]
     # set position and velocities
-    setPosition!(mechanism.origin, link1, p1 = [0, 0, z1])
+    setPosition!(mechanism.origin, body1, p1 = [0, 0, z1])
 
-    previd = link1.id
+    previd = body1.id
     for (i,body) in enumerate(Iterators.drop(mechanism.bodies, 1))
         setPosition!(getbody(mechanism, previd), body, p1 = [0, -0.1, Δz])
         previd = body.id

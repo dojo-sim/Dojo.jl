@@ -27,20 +27,20 @@ function getpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
 
     # Links
     origin = Origin{T}()
-    link1 = Box(width, depth, l, m)
+    body1 = Box(width, depth, l, m)
 
     # Constraints
-    joint_between_origin_and_link1 = EqualityConstraint(Revolute(origin, link1, joint_axis;
+    joint_between_origin_and_body1 = EqualityConstraint(Revolute(origin, body1, joint_axis;
         p2=p2,
         spring = spring,
         damper = damper,
         spring_type = :linear,
         rot_spring_offset = spring_offset,
         rot_joint_limits = joint_limits))
-    links = [link1]
-    eqcs = [joint_between_origin_and_link1]
+    bodies = [body1]
+    eqcs = [joint_between_origin_and_body1]
 
-    mech = Mechanism(origin, links, eqcs, g = g, Δt = Δt, spring=spring, damper=damper)
+    mech = Mechanism(origin, bodies, eqcs, g = g, Δt = Δt, spring=spring, damper=damper)
     return mech
 end
 

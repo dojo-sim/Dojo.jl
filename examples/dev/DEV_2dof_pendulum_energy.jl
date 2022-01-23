@@ -36,15 +36,15 @@ p2 = [0; 0; length1/2] # joint connection point
 
 # Links
 origin = Origin{Float64}()
-link1 = Box(width, depth, length1, length1)
+body1 = Box(width, depth, length1, length1)
 
 # Constraints
-# joint_between_origin_and_link1 = EqualityConstraint(Revolute(origin, link1, joint_axis; p2=p2))
-joint_between_origin_and_link1 = EqualityConstraint(Spherical(origin, link1; p2=p2, spring = 20.0))
-links = [link1]
-eqcs = [joint_between_origin_and_link1]
+# joint_between_origin_and_body1 = EqualityConstraint(Revolute(origin, body1, joint_axis; p2=p2))
+joint_between_origin_and_body1 = EqualityConstraint(Spherical(origin, body1; p2=p2, spring = 20.0))
+bodies = [body1]
+eqcs = [joint_between_origin_and_body1]
 
-mech = Mechanism(origin, links, eqcs, g = -9.81, Δt = 0.04)
+mech = Mechanism(origin, bodies, eqcs, g = -9.81, Δt = 0.04)
 
 eqc1 = collect(mech.eqconstraints)[1]
 tra1 = eqc1.constraints[1]

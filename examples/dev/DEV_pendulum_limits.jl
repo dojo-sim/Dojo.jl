@@ -7,21 +7,21 @@ function getpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
 
     # Links
     origin = Origin{T}()
-    link1 = Box(width, depth, l, m)
+    body1 = Box(width, depth, l, m)
 
     # Constraints
-    joint_between_origin_and_link1 = EqualityConstraint(Revolute(origin, link1,
+    joint_between_origin_and_body1 = EqualityConstraint(Revolute(origin, body1,
         joint_axis; p2=p2, spring = spring, damper = damper, rot_spring_offset = spring_offset,
         rot_joint_limits = [SVector{1}([0.25 * π]), SVector{1}([π])]))
-    links = [link1]
-    eqcs = [joint_between_origin_and_link1]
+    bodies = [body1]
+    eqcs = [joint_between_origin_and_body1]
 
-    mech = Mechanism(origin, links, eqcs, g = g, Δt = Δt, spring=spring, damper=damper)
+    mech = Mechanism(origin, bodies, eqcs, g = g, Δt = Δt, spring=spring, damper=damper)
     return mech
 end
 
-vis = Visualizer() 
-open(vis) 
+vis = Visualizer()
+open(vis)
 mech = getpendulum(Δt = 0.01, g = -9.81, spring = 0.0, damper = 0.0)
 # mech.eqconstraints[1].λsol[2]
 # resetVars!.(mech.eqconstraints)

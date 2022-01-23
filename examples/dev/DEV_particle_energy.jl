@@ -34,11 +34,11 @@ length1 = 0.5
 width, depth = 0.5, 0.5
 
 origin = Origin{Float64}()
-link1 = Box(width, depth, length1, 1., color = RGBA(1., 1., 0.))
-joint0to1 = EqualityConstraint(Floating(origin, link1, spring = 100.0, damper = 0.0))
-links = [link1]
+body1 = Box(width, depth, length1, 1., color = RGBA(1., 1., 0.))
+joint0to1 = EqualityConstraint(Floating(origin, body1, spring = 100.0, damper = 0.0))
+bodies = [body1]
 eqcs = [joint0to1]
-mech = Mechanism(origin, links, eqcs, g = 0.0, Δt = 0.01)
+mech = Mechanism(origin, bodies, eqcs, g = 0.0, Δt = 0.01)
 
 body1 = collect(mech.bodies)[1]
 setPosition!(body1, x = [1, 0, 0.])

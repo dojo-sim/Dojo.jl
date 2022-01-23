@@ -212,34 +212,34 @@ function parse_links(xlinks, materialdict, T)
     return ldict
 end
 
-function joint_selector(jointtype, link1, link2, T;
+function joint_selector(jointtype, body1, body2, T;
         axis = SA{T}[1;0;0], p1 = szeros(T,3), p2 = szeros(T,3), qoffset = one(UnitQuaternion{T}), name = "")
 
     # TODO limits for revolute joint?
     if jointtype == "revolute" || jointtype == "continuous"
-        joint = EqualityConstraint(Revolute(link1, link2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = EqualityConstraint(Revolute(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "prismatic"
-        joint = EqualityConstraint(Prismatic(link1, link2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = EqualityConstraint(Prismatic(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "planar"
-        joint = EqualityConstraint(Planar(link1, link2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = EqualityConstraint(Planar(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "planarfree"
-        joint = EqualityConstraint(PlanarFree(link1, link2, axis; p1=p1, p2=p2), name=name)
+        joint = EqualityConstraint(PlanarFree(body1, body2, axis; p1=p1, p2=p2), name=name)
     elseif jointtype == "fixed"
-        joint = EqualityConstraint(Fixed(link1, link2; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = EqualityConstraint(Fixed(body1, body2; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "floating"
-        joint = EqualityConstraint(Floating(link1, link2), name=name)
+        joint = EqualityConstraint(Floating(body1, body2), name=name)
     elseif jointtype == "orbital"
-        joint = EqualityConstraint(Orbital(link1, link2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = EqualityConstraint(Orbital(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "ball"
-        joint = EqualityConstraint(Spherical(link1, link2; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = EqualityConstraint(Spherical(body1, body2; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "fixedorientation"
-        joint = EqualityConstraint(FixedOrientation(link1, link2; qoffset = qoffset), name=name)
+        joint = EqualityConstraint(FixedOrientation(body1, body2; qoffset = qoffset), name=name)
     elseif jointtype == "cylindrical"
-        joint = EqualityConstraint(Cylindrical(link1, link2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = EqualityConstraint(Cylindrical(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "cylindricalfree"
-        joint = EqualityConstraint(CylindricalFree(link1, link2, axis; p1=p1, p2=p2), name=name)
+        joint = EqualityConstraint(CylindricalFree(body1, body2, axis; p1=p1, p2=p2), name=name)
     elseif jointtype == "planaraxis"
-        joint = EqualityConstraint(PlanarAxis(link1, link2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = EqualityConstraint(PlanarAxis(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
     else
         @error "Unknown joint type"
     end
@@ -257,19 +257,19 @@ function parse_joint(xjoint, plink, clink, T)
     return joint_selector(jointtype, plink, clink, T, axis = axis, p1 = p1, qoffset = q, name = name)
 end
 
-function parse_loop_joint(xjoint, link1, link2, T)
-    find_element(xjoint, "link1")
-    find_element(xjoint, "link2")
+function parse_loop_joint(xjoint, body1, body2, T)
+    find_element(xjoint, "body1")
+    find_element(xjoint, "body2")
 
     jointtype = attribute(xjoint, "type")
     axis = parse_vector(find_element(xjoint, "axis"), "xyz", T, default = "1 0 0")
-    x1, q1 = parse_pose(find_element(xjoint, "link1"), T)
-    x2, _ = parse_pose(find_element(xjoint, "link2"), T) # The orientation q2 of the second body is ignored because it is determined by the mechanism's structure
+    x1, q1 = parse_pose(find_element(xjoint, "body1"), T)
+    x2, _ = parse_pose(find_element(xjoint, "body2"), T) # The orientation q2 of the second body is ignored because it is determined by the mechanism's structure
     p1 = x1
     p2 = x2
     name = attribute(xjoint, "name")
 
-    return joint_selector(jointtype, link1, link2, T, axis = axis, p1 = p1, p2 = p2, qoffset = q1, name = name)
+    return joint_selector(jointtype, body1, body2, T, axis = axis, p1 = p1, p2 = p2, qoffset = q1, name = name)
 end
 
 function parse_joints(xjoints, ldict, floating, T)
@@ -336,16 +336,16 @@ function parse_loop_joints(xloopjoints, origin, joints, ldict, T)
 
 
     for xloopjoint in xloopjoints
-        xlink1 = find_element(xloopjoint, "link1")
-        xlink2 = find_element(xloopjoint, "link2")
-        link1 = ldict[attribute(xlink1, "link")]
-        link2 = ldict[attribute(xlink2, "link")]
+        xbody1 = find_element(xloopjoint, "body1")
+        xbody2 = find_element(xloopjoint, "body2")
+        body1 = ldict[attribute(xbody1, "link")]
+        body2 = ldict[attribute(xbody2, "link")]
 
         predlist = Tuple{Int64,Int64}[]
         jointlist = [(joints[i].id,joints[i].parentid,joints[i].childids) for i=1:length(joints)]
-        linkid = link1.id
+        linkid = body1.id
 
-        while true # create list of predecessor joints and parent links for link1
+        while true # create list of predecessor joints and parent links for body1
             for (i,jointdata) in enumerate(jointlist)
                 if linkid ∈ jointdata[3]
                     push!(predlist,(jointdata[1],jointdata[2]))
@@ -360,12 +360,12 @@ function parse_loop_joints(xloopjoints, origin, joints, ldict, T)
         end
 
         jointlist = [(joints[i].id,joints[i].parentid,joints[i].childids) for i=1:length(joints)]
-        linkid = link2.id
+        linkid = body2.id
         joint1id = 0
         joint2id = 0
         foundflag = false
 
-        while true # check which predecessor link of link2 is also a predecessor link of link1
+        while true # check which predecessor link of body2 is also a predecessor link of body1
             for (i,jointdata) in enumerate(jointlist)
                 if linkid ∈ jointdata[3]
                     joint2id = jointdata[1]
@@ -406,7 +406,7 @@ function parse_loop_joints(xloopjoints, origin, joints, ldict, T)
 
         joint = cat(joint1,joint2)
         push!(joints,joint)
-        loopjoint = parse_loop_joint(xloopjoint, link1, link2, T)
+        loopjoint = parse_loop_joint(xloopjoint, body1, body2, T)
         push!(loopjoints, loopjoint)
     end
 
