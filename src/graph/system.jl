@@ -81,11 +81,6 @@ struct System{N}
     System(A, dims; force_static = false) = System{Float64}(A, dims; force_static = force_static);
 end
 
-# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, system::System{N}) where {N}
-#     println(io, "System with "*string(N)*" nodes.")
-#     SparseArrays._show_with_braille_patterns(io, system.matrix_entries)
-# end
-
 @inline children(system, v) = outneighbors(system.dfs_graph, v)
 @inline connections(system, v) = neighbors(system.graph, v)
 @inline parents(system, v) = inneighbors(system.dfs_graph, v)

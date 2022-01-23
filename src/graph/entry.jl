@@ -10,11 +10,6 @@ mutable struct Entry{ET}
     Entry(dims...; static = true) = Entry{Float64}(dims...; static = static)
 end
 
-# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, entry::Entry)
-#     println(io, "Entry with value:")
-#     show(io, mime, entry.value)
-# end
-
 function Base.zero(::Entry{ET}) where ET
     dims = [ET.parameters[1].parameters...]
     return Entry{ET.parameters[2]}(dims...)
