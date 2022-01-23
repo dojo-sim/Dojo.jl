@@ -2,6 +2,7 @@
 # Dzhanibekov effect
 ################################################################################
 using Dojo
+using MeshCat
 
 # ## Visualizers
 vis = Visualizer()

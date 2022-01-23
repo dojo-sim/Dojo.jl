@@ -30,7 +30,7 @@ function gettwister(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=true,
         n = Nlink
         normal = [[0;0;1.0] for i = 1:n]
         cf = cf * ones(n)
-        ineqcs1 = contactconstraint(links[1], normal[1], cf[1]=cf, p=vert11, contact_type=contact_type) # to avoid duplicating the contact points
+        ineqcs1 = contactconstraint(links[1], normal[1], cf=cf[1], p=vert11, contact_type=contact_type) # to avoid duplicating the contact points
         ineqcs2 = contactconstraint(links, normal, cf=cf, p=fill(vert12, n), contact_type=contact_type)
         mech = Mechanism(origin, links, eqcs, [ineqcs1; ineqcs2], g = g, Δt = Δt)
     else

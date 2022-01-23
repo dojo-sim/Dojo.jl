@@ -112,9 +112,9 @@ test_solmat(:pendulum,  tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-
 test_solmat(:npendulum, tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-7, spring = 1.0, damper = 0.2)
 test_solmat(:nslider,   tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-7, spring = 1.0, damper = 0.2)
 test_solmat(:twister,   tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-7, spring = 1.0, damper = 0.2)
-test_solmat(:sphere,    tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-7, contact_mode = :soc)
-test_solmat(:sphere,    tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-7, contact_mode = :linear)
-test_solmat(:sphere,    tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-7, contact_mode = :impact)
+test_solmat(:sphere,    tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-7, contact_type = :contact)
+test_solmat(:sphere,    tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-7, contact_type = :linear_contact)
+test_solmat(:sphere,    tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-7, contact_type = :impact)
 
 tsim = 0.1
 test_datamat(:atlas,     tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-6)
@@ -128,9 +128,9 @@ test_datamat(:npendulum, tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e
 test_datamat(:nslider,   tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-6, spring = 1.0, damper = 0.2)
 test_datamat(:twister,   tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 5e-6, spring = 1.0, damper = 0.2)
 test_datamat(:sphere,    tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-6)
-test_datamat(:sphere,    tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-6, contact_mode = :soc)
-test_datamat(:sphere,    tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-6, contact_mode = :linear)
-test_datamat(:sphere,    tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-6, contact_mode = :impact)
+test_datamat(:sphere,    tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-6, contact_type = :contact)
+test_datamat(:sphere,    tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-6, contact_type = :linear_contact)
+test_datamat(:sphere,    tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-6, contact_type = :impact)
 
 # In contact with the ground after 0.4 sec simulation
 tsim = 0.4
@@ -145,9 +145,9 @@ test_solmat(:npendulum, tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-
 test_solmat(:nslider,   tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-7, spring = 1.0, damper = 0.2)
 test_solmat(:twister,   tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-7, spring = 1.0, damper = 0.2)
 test_solmat(:sphere,    tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-7)
-test_solmat(:sphere,    tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-7, contact_mode = :soc)
-test_solmat(:sphere,    tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-7, contact_mode = :linear)
-test_solmat(:sphere,    tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-7, contact_mode = :impact)
+test_solmat(:sphere,    tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-7, contact_type = :contact)
+test_solmat(:sphere,    tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-7, contact_type = :linear_contact)
+test_solmat(:sphere,    tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-7, contact_type = :impact)
 
 tsim = 0.4
 test_datamat(:atlas,     tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-6)
@@ -161,6 +161,6 @@ test_datamat(:npendulum, tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e
 test_datamat(:nslider,   tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-6, spring = 1.0, damper = 0.2)
 test_datamat(:twister,   tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 5e-6, spring = 1.0, damper = 0.2)
 test_datamat(:sphere,    tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-6)
-test_datamat(:sphere,     tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-6, contact_mode = :soc)
-test_datamat(:sphere,     tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-6, contact_mode = :linear)
-test_datamat(:sphere,     tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-6, contact_mode = :impact)
+test_datamat(:sphere,     tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-6, contact_type = :contact)
+test_datamat(:sphere,     tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-6, contact_type = :linear_contact)
+test_datamat(:sphere,     tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-6, contact_type = :impact)

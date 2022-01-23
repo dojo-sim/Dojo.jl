@@ -35,7 +35,7 @@ function contactconstraint(body::Body{T},
         contact_type::Symbol = :contact) where {T}
     n = length(normal)
     @assert n == length(normal) == length(cf) == length(p) == length(offset)
-    return contactconstraint(fill(body, n), normal, cf, p=p, offset=offset,
+    return contactconstraint(fill(body, n), normal, cf=cf, p=p, offset=offset,
         names=names, contact_type=contact_type)
 end
 
@@ -55,9 +55,9 @@ function contactconstraint(body::Body{T},
         contact_type::Symbol = :contact) where {T}
 
     if contact_type == :contact
-        bound = ContactBound(body, normal, cf=cf, p=p, offset=offset)
+        bound = ContactBound(body, normal, cf, p=p, offset=offset)
     elseif contact_type == :linear_contact
-        bound = LinearContactBound(body, normal, cf=cf, p=p, offset=offset)
+        bound = LinearContactBound(body, normal, cf, p=p, offset=offset)
     elseif contact_type == :impact
         bound = ImpactBound(body, normal, p=p, offset=offset)
     else

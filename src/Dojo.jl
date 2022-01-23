@@ -162,6 +162,7 @@ include(joinpath("bounds", "cone.jl"))
 include(joinpath("bounds", "contact.jl"))
 include(joinpath("bounds", "impact.jl"))
 include(joinpath("bounds", "linear_contact.jl"))
+include(joinpath("bounds", "constructor.jl"))
 
 # Solver
 include(joinpath("solver", "methods.jl"))

@@ -9,7 +9,7 @@ open(vis)
 # Include new files
 include(joinpath(@__DIR__, "..", "..", "env/tippetop/deps/texture.jl"))
 
-mech = getmechanism(:tippetop, Δt = 0.01, g = -9.00, contact = true, contact_mode=:soc);
+mech = getmechanism(:tippetop, Δt = 0.01, g = -9.00, contact = true, contact_type=:contact);
 mech.bodies[3].J = Diagonal([1.9, 2.1, 2.0])
 mech.bodies[4].J
 

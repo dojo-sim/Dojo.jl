@@ -1,6 +1,6 @@
 function getbox2d(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, radius=0.0, side=0.5,
     contact::Bool=true,
-    contact_mode=:contact,
+    contact_type=:contact,
     mode=:box2d)  where {T}
     # Parameters
     axis = [1,0,0.]
