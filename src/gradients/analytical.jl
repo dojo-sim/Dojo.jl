@@ -29,7 +29,7 @@ function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
 
                 p = ∂g∂a(joint, pbody, cbody, eqc.λsol[2], Δt) # x3
                 c = ∂g∂b(joint, pbody, cbody, eqc.λsol[2], Δt) # x3
-              
+
                 pGlx = p[:, 1:3]
                 pGlq = p[:, 4:7]
                 cGlx = c[:, 1:3]
@@ -53,7 +53,7 @@ function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
                 ccol13 = offsetrange(childind,13)
 
                 c = ∂g∂b(joint, mechanism.origin, cbody, eqc.λsol[2], Δt) # x3
-                
+
                 Gl[range,ccol13[1:3]] = c[:, 1:3]
                 Gl[range,ccol13[7:10]] = c[:, 4:7]
                 ind1 = ind2+1
@@ -160,7 +160,7 @@ function joint_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,N
 
                 Abb = zeros(T,6,13)
 
-                xa, qa = posargs2(mechanism.origin.state) 
+                xa, qa = posargs2(mechanism.origin.state)
                 xb, qb = posargs2(cstate)
 
                 if typeof(Gb(joint, xa, qb, xb, qb, eqc.λsol[2])) <: AbstractArray && length(joint) > 0
@@ -331,7 +331,7 @@ function ∂body∂z(body::Body{T}, Δt::T; attjac::Bool = true) where T
     AvelT = [Z3 -I*body.m] # solving for impulses
 
     AposR = [-∂integrator∂q(q2, ϕ25, Δt, attjac = attjac) szeros(4,3)]
-    
+
     rot_q1(q) = -4 / Δt * LVᵀmat(q2)' * Lmat(UnitQuaternion(q..., false)) * Vᵀmat() * body.J * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(q2)
     rot_q2(q) = -4 / Δt * LVᵀmat(UnitQuaternion(q..., false))' * Tmat() * Rmat(getq3(UnitQuaternion(q..., false), state.ϕsol[2], Δt))' * Vᵀmat() * body.J * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(getq3(UnitQuaternion(q..., false), state.ϕsol[2], Δt)) + -4 / Δt * LVᵀmat(UnitQuaternion(q..., false))' * Lmat(getq3(UnitQuaternion(q..., false), -state.ϕ15, Δt)) * Vᵀmat() * body.J * Vmat() * Lmat(getq3(UnitQuaternion(q..., false), -state.ϕ15, Δt))' * q
 
@@ -743,12 +743,12 @@ function soldim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
     return d
 end
 
-function controldim(eqc::EqualityConstraint{T,N,Nc,Cs}; ignore_floating_base::Bool = false) where {T,N,Nc,Cs} 
+function controldim(eqc::EqualityConstraint{T,N,Nc,Cs}; ignore_floating_base::Bool = false) where {T,N,Nc,Cs}
     ignore_floating_base && (N == 0) && return 0
 
     N̄ = 0
-    for (i, joint) in enumerate(eqc.constraints) 
-        N̄ += controldim(joint) 
+    for (i, joint) in enumerate(eqc.constraints)
+        N̄ += controldim(joint)
     end
 
     return N̄
@@ -791,4 +791,3 @@ function eqcdim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
     end
     return neqcs
 end
-using Pkg

@@ -6,7 +6,7 @@ getGlobalOrder() = (global METHODORDER; return METHODORDER)
 @inline getq3(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T) where {T} = q2 * ωbar(ϕ25, Δt) * Δt / 2
 
 @inline getx3(state::State, Δt) = state.x2[1] + state.vsol[2] * Δt
-@inline getq3(state::State, Δt) = state.q2[1] * ωbar(state.ϕsol[2],Δt) * Δt / 2
+@inline getq3(state::State, Δt) = getq3(state.q2[1], state.ϕsol[2], Δt)
 
 @inline posargs1(state::State) = (state.x1, state.q1)
 @inline fullargs1(state::State) = (state.x1, state.v15, state.q1, state.ϕ15)
@@ -23,7 +23,7 @@ end
     return UnitQuaternion(sqrt(4 / Δt^2 - dot(ω, ω)), ω, false)
 end
 
-function cayley(ω) 
+function cayley(ω)
     UnitQuaternion(1.0 / sqrt(1.0 + norm(ω)^2.0) * [1.0; ω], false)
 end
 
@@ -32,7 +32,7 @@ function derivcayley(ω)
     a = sqrt(1.0 + sqrt(abs2(ω₁) + abs2(ω₂) + abs2(ω₃))^2.0)^-3
     b = sqrt(1.0 + sqrt(abs2(ω₁) + abs2(ω₂) + abs2(ω₃))^2.0)^-1
     SMatrix{4,3}([
-                 -ω₁*a -ω₂*a -ω₃*a; 
+                 -ω₁*a -ω₂*a -ω₃*a;
                  (b - (ω₁^2)*a) (-ω₁ * ω₂ * a) (-ω₁ * ω₃ * a);
                  (-ω₁ * ω₂ * a) (b - (ω₂^2)*a) (-ω₂ * ω₃ * a);
                  (-ω₁ * ω₃ * a) (-ω₂ * ω₃ * a) (b - (ω₃^2)*a);
