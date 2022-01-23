@@ -101,7 +101,6 @@ function full_matrix(system::System{N}) where N
     for (i,dim) in enumerate(collect(Iterators.rest(dimcol, 2)))
         push!(range_col,sum(dimcol[1:i])+1:sum(dimcol[1:i])+dim)
     end
-    @show range_col
 
     A = zeros(sum(dimrow),sum(dimcol))
 
@@ -111,3 +110,5 @@ function full_matrix(system::System{N}) where N
     end
     return A
 end
+
+full_vector(system) = vcat(getfield.(system.vector_entries,:value)...)
