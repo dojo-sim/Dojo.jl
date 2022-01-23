@@ -230,8 +230,8 @@ setState!(mech, min2max(mech, xabs[1]))
 
 function controller!(mechanism, k)
 	@show k
-	# setControl!(mechanism, u_mask' * u_mask * ustar[k])
-	setControl!(mechanism, ū[k])
+	# set_control!(mechanism, u_mask' * u_mask * ustar[k])
+	set_control!(mechanism, ū[k])
     return
 end
 @elapsed storage = simulate!(mech, 0.95, controller!, record = true, solver = :mehrotra!, verbose = false)

@@ -13,7 +13,7 @@ function setState!(mechanism::Mechanism, z::AbstractVector)
 	foreach(setsolution!, mechanism.bodies) # warm-start solver
 end
 
-function setControl!(mechanism::Mechanism{T}, u::AbstractVector) where {T}
+function set_control!(mechanism::Mechanism{T}, u::AbstractVector) where {T}
 	eqcs = mechanism.eqconstraints
 	# set the controls in the equality constraints
 	off = 0

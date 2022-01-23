@@ -5,7 +5,7 @@ function step!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::Vector{T}, u::Vector{T};
     setState!(mechanism, z)
 
     # set control
-    setControl!(mechanism, u)
+    set_control!(mechanism, u)
 
     # solve the 1-step simulation problem
     mehrotra!(mechanism, opts=opts)

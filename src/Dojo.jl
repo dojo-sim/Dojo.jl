@@ -183,6 +183,7 @@ include(joinpath("ui", "visualizer_utils.jl"))
 include(joinpath("ui", "colors.jl"))
 
 # Gradients
+include(joinpath("gradients", "index.jl"))
 include(joinpath("gradients", "analytical.jl"))
 include(joinpath("gradients", "finite_difference.jl"))
 

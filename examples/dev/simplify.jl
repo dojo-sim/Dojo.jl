@@ -17,3 +17,24 @@ end
 
 storage = simulate!(mech, 2.3, ctrl!, record=true, verbose=false)
 visualize(mech, storage, vis=vis)
+
+
+
+################################################################################
+# Analytical Jacobian
+################################################################################
+mech.origin.id
+getfield.(mech.eqconstraints.values, :id)
+getfield.(mech.bodies.values, :id)
+getfield.(mech.ineqconstraints.values, :id)
+
+
+
+full_vector(system) = vcat(getfield.(system.vector_entries,:value)...)
+mech.system
+eqcs = mech.eqconstraints.values
+bodies = mech.bodies.values
+ineqcs = mech.ineqconstraints.values
+A, dims = adjacencyMatrix(eqcs, bodies, ineqcs)
+
+plot(Gray.(A))

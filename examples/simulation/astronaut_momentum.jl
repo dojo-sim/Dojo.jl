@@ -28,7 +28,7 @@ function ctrl!(mechanism, k)
 	nu = controldim(mech)
 	# u = 0.5 * mechanism.Δt * [szeros(6); sones(nu-6)]
 	u = 0.3*[zeros(6); mech.Δt; zeros(nu-7)]
-	setControl!(mech, u)
+	set_control!(mech, u)
 	return
 end
 Random.seed!(0)
@@ -47,7 +47,7 @@ function astronaut_simulation(mech::Mechanism; tsim=1.0, tctrl=1.0, seed::Int=0,
 	function ctrl!(mechanism, k)
 		nu = controldim(mech)
 		u = (k*mechanism.Δt < tctrl) * control_amplitude * mechanism.Δt * [szeros(6); srand(nu-6)]
-		setControl!(mech, u)
+		set_control!(mech, u)
 	    return
 	end
     tcompute = @elapsed storage = simulate!(mech, tsim, ctrl!, record=true,

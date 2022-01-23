@@ -22,7 +22,7 @@ mech = getmechanism(:slider, Δt = 0.0005, g = -0.00, spring = 10.0, damper = 0.
 initialize!(mech, :slider, z1 = 0.0)
 function ctrl!(mechanism, k)
     u = [10]*mechanism.Δt
-    setControl!(mechanism, u)
+    set_control!(mechanism, u)
     return nothing
 end
 
@@ -41,7 +41,7 @@ mech = getmechanism(:pendulum, Δt = 0.1, g = -0.00, spring = 10.0, damper = 0.3
 initialize!(mech, :pendulum, ϕ1 = 0.0)
 function ctrl!(mechanism, k)
     u = [5]*mechanism.Δt
-    setControl!(mechanism, u)
+    set_control!(mechanism, u)
     return nothing
 end
 
