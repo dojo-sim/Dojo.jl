@@ -67,6 +67,23 @@ datadim(bound::ContactBound) = 7 # [cf, p, offset]
 datadim(bound::LinearContactBound) = 7 # [cf, p, offset]
 datadim(bound::ImpactBound) = 6 # [p, offset]
 
+function lift_inertia(j::SVector{6,T}) where T
+    J = SMatrix{3,3,T,9}(
+        [j[1] j[2] j[3];
+         j[2] j[4] j[5];
+         j[3] j[5] j[6]])
+end
+function flatten_inertia(J::SMatrix{3,3,T,9}) where T
+    j = SVector{6,T}([J[1,1], J[1,2], J[1,3], J[2,2], J[2,3], J[3,3]])
+end
+function ∂inertia(p)
+    SA[
+        p[1]  p[2]  p[3]  0     0     0;
+        0     p[1]  0     p[2]  p[3]  0;
+        0     0     p[1]  0     p[2]  p[3];
+    ]
+end
+
 function eqc_databody(mechanism::Mechanism, eqc::EqualityConstraint{T,N},
         body::Body{T}) where {T,N}
     Nd = datadim(body)
@@ -99,7 +116,6 @@ function body_databody(mechanism::Mechanism, body::Body{T}) where T
     ∇J += -4 / Δt * LVᵀmat(q2)' * Tmat() * RᵀVᵀmat(q3) * ∂inertia(VLᵀmat(q2) * vector(q3))
     ∇J = [szeros(T,3,6); ∇J]
 
-
     ∇x1 = 1 / Δt * body.m * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
     ∇q1 = -4 / Δt * LVᵀmat(q2)' * ∂qLVᵀmat(body.J * VLᵀmat(q1) * vector(q2))
     ∇q1 += -4 / Δt * LVᵀmat(q2)' * LVᵀmat(q1) * body.J * ∂qVLᵀmat(vector(q2))
@@ -112,34 +128,6 @@ function body_databody(mechanism::Mechanism, body::Body{T}) where T
 
     return [∇m ∇J ∇z1 ∇z2]
 end
-
-function lift_inertia(j::SVector{6,T}) where T
-    J = SMatrix{3,3,T,9}(
-        [j[1] j[2] j[3];
-         j[2] j[4] j[5];
-         j[3] j[5] j[6]])
-end
-function flatten_inertia(J::SMatrix{3,3,T,9}) where T
-    j = SVector{6,T}([J[1,1], J[1,2], J[1,3], J[2,2], J[2,3], J[3,3]])
-end
-function ∂inertia(p)
-    SA[
-        p[1]  p[2]  p[3]  0     0     0;
-        0     p[1]  0     p[2]  p[3]  0;
-        0     0     p[1]  0     p[2]  p[3];
-    ]
-end
-
-# using Symbolics
-# @variables j[1:6]
-# @variables p[1:3]
-# J = SMatrix{3,3,Num,9}([j[1] j[2] j[3];
-#      j[2] j[4] j[5];
-#      j[3] j[5] j[6]])
-# Symbolics.jacobian(J * p, j)
-# lift_inertia(flatten_inertia(J)) - J
-# flatten_inertia(J)
-
 
 function body_dataeqc(mechanism::Mechanism{T}, eqc::EqualityConstraint{T},
         body::Body{T}) where {T}
@@ -180,6 +168,7 @@ function body_dataineqc(mechanism::Mechanism, ineqc::InequalityConstraint{T,N,Nc
     ∇Q = [∇cf ∇p ∇off]
     return [∇X; ∇Q]
 end
+
 
 function ineqc_dataineqc(mechanism::Mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
         body::Body{T}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
@@ -397,3 +386,15 @@ norm(jacv0 - jacv1)
 jacv0 - jacv1
 norm(jacz0 - jacz1)
 jacz0 - jacz1
+
+
+
+# using Symbolics
+# @variables j[1:6]
+# @variables p[1:3]
+# J = SMatrix{3,3,Num,9}([j[1] j[2] j[3];
+#      j[2] j[4] j[5];
+#      j[3] j[5] j[6]])
+# Symbolics.jacobian(J * p, j)
+# lift_inertia(flatten_inertia(J)) - J
+# flatten_inertia(J)
