@@ -69,28 +69,6 @@ end
     return [X Q]
 end
 
-
-ineqc0
-bound0 = ineqc0.constraints[1]
-λ = nothing
-s = SVector{4}([1.0; rand(3)/10])
-γ = SVector{4}([1.0; rand(3)/10])
-g(bound0, s, γ, x3, q3, v25, ϕ25)
-jacv0 = ∂g∂v(bound0, x3, q3, x2, v25, q2, ϕ25, λ, Δt)
-jacv1 = FiniteDiff.finite_difference_jacobian(
-    v -> g(bound0, s, γ, getx3(x2, SVector{3}(v[1:3]), Δt),
-        getq3(q2, SVector{3}(v[4:6]), Δt), SVector{3}(v[1:3]), SVector{3}(v[4:6])), [v25; ϕ25])
-
-jacz0 = ∂g∂z(bound0, x3, q3, x2, v25, q2, ϕ25, λ, Δt)
-jacz1 = FiniteDiff.finite_difference_jacobian(
-    z -> g(bound0, s, γ, SVector{3}(z[1:3]),
-        UnitQuaternion(z[4:7],false), SVector{3}(v[1:3]), SVector{3}(v[4:6])), [x3; vector(q3)])
-
-norm(jacv0 - jacv1)
-jacv0 - jacv1
-norm(jacz0 - jacz1)
-jacz0 - jacz1
-
 @inline function G(bound::ContactBound, x::AbstractVector, q::UnitQuaternion, λ)
     X = [bound.ainv3;
          szeros(1,3);

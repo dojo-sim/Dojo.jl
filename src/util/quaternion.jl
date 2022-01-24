@@ -129,7 +129,24 @@ function ∂qVLmat(p) # 𝞉(VLmat(q)*p)/∂q
     ]
 end
 
-function ∂qLᵀVᵀmat(p) # 𝞉(VLmat(q)*p)/∂q
+function ∂qLVᵀmat(p) # 𝞉(∂qLVᵀmat(q)*p)/∂q
+	SA[
+    	0    -p[1] -p[2] -p[3];
+    	p[1]  0     p[3] -p[2];
+    	p[2] -p[3]  0     p[1];
+    	p[3]  p[2] -p[1]  0;
+    ]
+end
+
+function ∂qVLᵀmat(p) # 𝞉(VLᵀmat(q)*p)/∂q
+	SA[
+		p[2] -p[1] -p[4]  p[3];
+		p[3]  p[4] -p[1] -p[2];
+		p[4] -p[3]  p[2] -p[1];
+    ]
+end
+
+function ∂qLᵀVᵀmat(p) # 𝞉(LᵀVᵀmat(q)*p)/∂q
 	SA[
     	0     p[1]  p[2]  p[3];
     	p[1]  0    -p[3]  p[2];
@@ -157,3 +174,10 @@ end
 function ∂pskew(λ) # 𝞉(skew(p)*λ)/∂p
 	skew(-λ)
 end
+
+
+# using Symbolics
+# @variables q_[1:4], p3_[1:3], p4_[1:4]
+# qq_ = UnitQuaternion(q_, false)
+# Symbolics.jacobian(LVᵀmat(qq_) * p3_, q_)
+# Symbolics.jacobian(VLᵀmat(qq_) * p4_, q_)
