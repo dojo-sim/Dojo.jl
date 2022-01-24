@@ -26,6 +26,13 @@ end
     return [V Ω]
 end
 
+@inline function ∂g∂z(bound::ImpactBound, x3::AbstractVector, q3::UnitQuaternion,
+    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, Δt)
+    X = bound.ainv3
+    Q = bound.ainv3 * ∂vrotate∂q(bound.p, q3)
+    return [X Q]
+end
+
 @inline function G(bound::ImpactBound, x::AbstractVector, q::UnitQuaternion, λ)
     X = bound.ainv3
     # q * ... is a rotation by quaternion q it is equivalent to Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * ...

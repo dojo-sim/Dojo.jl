@@ -36,6 +36,10 @@ function ∂g∂v(mechanism, ineqc::InequalityConstraint, body::Body)
     return ∂g∂v(ineqc.constraints[1], body, nothing, nothing, mechanism.Δt)
 end
 
+function ∂g∂z(mechanism, ineqc::InequalityConstraint, body::Body)
+    return ∂g∂z(ineqc.constraints[1], body, nothing, nothing, mechanism.Δt)
+end
+
 function G(mechanism, ineqc::InequalityConstraint, body::Body)
     return G(ineqc.constraints[1], body, nothing, nothing, mechanism.Δt)
 end
@@ -78,4 +82,3 @@ end
 end
 
 cone_degree(ineqc::InequalityConstraint) = sum(cone_degree.(ineqc.constraints))
-

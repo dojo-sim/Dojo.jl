@@ -50,9 +50,23 @@ end
     ∂v∂q3 = skew(vrotate(ϕ25, q3)) * ∂vrotate∂q(bound.p, q3)
     ∂v∂q3 += skew(bound.offset - vrotate(bound.p, q3)) * ∂vrotate∂q(ϕ25, q3)
     ∂v∂ϕ25 = skew(bound.offset - vrotate(bound.p, q3)) * ∂vrotate∂p(ϕ25, q3)
-    Ω = [bound.ainv3 * ∂vrotate∂q(bound.p, q3) * ∂integrator∂ϕ(q2, ϕ25, Δt)
+    Ω = [bound.ainv3 * ∂vrotate∂q(bound.p, q3) * ∂integrator∂ϕ(q2, ϕ25, Δt);
         szeros(1,3);
         bound.Bx * (∂v∂ϕ25 + ∂v∂q3 * ∂integrator∂ϕ(q2, ϕ25, Δt))]
+    return [V Ω]
+end
+
+@inline function ∂g∂z(bound::LinearContactBound, x3::AbstractVector, q3::UnitQuaternion,
+    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, Δt)
+    V = [bound.ainv3;
+         szeros(1,3);
+         szeros(4,3)]
+    # Ω = FiniteDiff.finite_difference_jacobian(ϕ25 -> g(bound, s, γ, x2+Δt*v25, getq3(q2,ϕ25,Δt), v25, ϕ25), ϕ25)
+    ∂v∂q3 = skew(vrotate(ϕ25, q3)) * ∂vrotate∂q(bound.p, q3)
+    ∂v∂q3 += skew(bound.offset - vrotate(bound.p, q3)) * ∂vrotate∂q(ϕ25, q3)
+    Ω = [bound.ainv3 * ∂vrotate∂q(bound.p, q3);
+        szeros(1,4);
+        bound.Bx * ∂v∂q3]
     return [V Ω]
 end
 

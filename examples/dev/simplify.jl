@@ -56,7 +56,7 @@ function create_data_system(eqcs::Vector{<:EqualityConstraint}, bodies::Vector{<
 end
 
 # Body
-datadim(body::Body) = 21 # 1+6+7+7 [m,flat(J),x1,q1,x2,q2]
+datadim(body::Body) = 19 # 1+6+6+6 [m,flat(J),x1,q1,x2,q2] with attjac
 # Eqconstraints
 datadim(eqc::EqualityConstraint) = 2 + sum(datadim.(eqc.constraints)) # [spring, damper, utra, urot, tra_spring_offset, rot_spring_offset]
 datadim(joint::Rotational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = 2N̄λ # [u, spring, damper, spring_offset]
@@ -100,7 +100,8 @@ function ineqc_databody(mechanism::Mechanism, ineqc::InequalityConstraint{T,N,Nc
     ∇compμ = szeros(T,N½,Nd)
     ∇m = szeros(T,N½,1)
     ∇J = szeros(T,N½,6)
-    ∇z1 = szeros(T,N½,7)
+    ∇z1 = szeros(T,N½,6)
+    @warn " we need to replace dgdv, here we have a dimension issue"
     ∇v = ∂g∂v(mechanism, ineqc, body)
     ∇z2 = ∇v * ∂i∂z(q2, ϕ25, Δt, attjac=true)' # 4x6 * 6x7 = 4x7
     ∇g = [∇m ∇J ∇z1 ∇z2]
@@ -113,7 +114,7 @@ function eqc_databody(mechanism::Mechanism, eqc::EqualityConstraint{T,N},
     ∇m = szeros(T,N,1)
     ∇J = szeros(T,N,6)
     ∇z1 = szeros(T,N,7)
-    ∇z2 = ∂g∂z(mechanism, eqc, body) * ∂i∂z(body, mechanism.Δt, attjac=false)
+    ∇z2 = ∂g∂z(mechanism, eqc, body) * ∂i∂z(body, mechanism.Δt, attjac=true)
     ∇g = [∇m ∇J ∇z1 ∇z2]
     return ∇g
 end
@@ -137,9 +138,9 @@ function body_databody(mechanism::Mechanism, body::Body{T}) where T
     # TODO
     ∇J = szeros(T,N,6)
     # TODO
-    ∇z1 = szeros(T,N,7)
+    ∇z1 = szeros(T,N,6)
     # TODO
-    ∇z2 = szeros(T,N,7)
+    ∇z2 = szeros(T,N,6)
     return [∇m ∇J ∇z1 ∇z2]
 end
 
@@ -236,7 +237,7 @@ end
 # vis = Visualizer()
 # open(vis)
 
-mech = getsnake(Nb=3, damper=0.0, spring=0.0);
+mech = getsnake(Nb=3, damper=0.0, spring=0.0, contact_type=:linear_contact);
 function ctrl!(mech, k)
     nu = controldim(mech)
     u = mech.Δt * 0.00 * sones(nu)

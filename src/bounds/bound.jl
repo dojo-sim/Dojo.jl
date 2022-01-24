@@ -6,6 +6,7 @@ Base.length(bound::Bound{T,N}) where {T,N} = N
 g(bound::Bound, body::Body, λ, Δt) = g(bound, posargs3(body.state, Δt)..., λ)
 
 ∂g∂v(bound::Bound, body::Body, id, λ, Δt) = ∂g∂v(bound, posargs3(body.state, Δt)..., fullargssol(body.state)..., λ, Δt)
+∂g∂z(bound::Bound, body::Body, id, λ, Δt) = ∂g∂z(bound, posargs3(body.state, Δt)..., fullargssol(body.state)..., λ, Δt)
 
 G(bound::Bound, body::Body, id, λ, Δt) = G(bound, posargs3(body.state, Δt)..., λ)
 
@@ -15,6 +16,3 @@ complementarityμ(mechanism, ineqc::InequalityConstraint; scaling=false) = compl
 neutral_vector(bound::Bound{T,N}) where {T,N} = sones(T, Int(N/2))
 
 cone_degree(bound::Bound{T,N}) where {T,N} = Int(N/2)
-
-
-
