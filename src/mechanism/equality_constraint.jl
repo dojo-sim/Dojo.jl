@@ -165,7 +165,7 @@ end
 function _dGa!(mechanism, pbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
     Δt = mechanism.Δt
     _, _, q2, ω2 = fullargssol(pbody.state)
-    M = ∂integration(q2, ω2, Δt)
+    M = ∂i∂v(q2, ω2, Δt)
 
     off = 0
     for i in 1:Nc
@@ -183,7 +183,7 @@ end
 function _dGb!(mechanism, cbody::Body, eqc::EqualityConstraint{T,N,Nc}) where {T,N,Nc}
     Δt = mechanism.Δt
     x2, v2, q2, ω2 = fullargssol(cbody.state)
-    M = ∂integration(q2, ω2, Δt)
+    M = ∂i∂v(q2, ω2, Δt)
 
     off = 0
     for i in 1:Nc

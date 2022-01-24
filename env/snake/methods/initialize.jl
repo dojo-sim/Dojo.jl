@@ -1,5 +1,6 @@
 function getsnake(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=true,
-    contact_type=:contact, spring=0.0, damper=0.0, Nb::Int=2, jointtype::Symbol=:Spherical, h::T=1.0, r::T=0.05) where {T}
+    contact_type=:contact, spring=0.0, damper=0.0, Nb::Int=2,
+    jointtype::Symbol=:Spherical, h::T=1.0, r::T=0.05) where {T}
 
     # Parameters
     ex = [1.;0.;0.]

@@ -116,11 +116,20 @@ end
     return stateold
 end
 
-function ∂integration(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T) where {T}
+function ∂i∂v(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T) where {T}
     Δ = Δt * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
-    X = hcat(Δ, szeros(T,3,3))
-    Q = hcat(szeros(T,4,3), Lmat(q2)*derivωbar(ϕ25, Δt) * Δt/2)
-    return svcat(X, Q) # 7x6
+    V = [Δ szeros(T,3,3)]
+    Ω = [szeros(T,4,3) Lmat(q2)*derivωbar(ϕ25, Δt) * Δt/2]
+    return [V; Ω] # 7x6
+end
+
+function ∂i∂z(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T; attjac::Bool=true) where {T}
+    I = SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
+    X = [I szeros(T,3,(attjac ? 3 : 4))]
+    M = Rmat(ωbar(ϕ25, Δt) * Δt/2)
+    attjac && (M *= LVᵀmat(q2))
+    Q = [szeros(T,4,3) M]
+    return [X; Q] # 7x6 or 7x7
 end
 
 function ∂integrator∂x()
@@ -148,3 +157,35 @@ end
 function ∂q3∂ϕ(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T) where {T}
     return Lmat(q2) * derivωbar(ϕ25, Δt) * Δt/2
 end
+
+# x2 = srand(3)
+# v25 = srand(3)
+# q2 = UnitQuaternion(rand(4)...)
+# ϕ25 = srand(3)/10
+# Δt = 0.05
+# x3 = getx3(x2, v25, Δt)
+# q3 = getq3(q2, ϕ25, Δt)
+# ∂x3∂v(Δt)
+# ∂q3∂ϕ(q2, ϕ25, Δt)
+#
+# ∂i∂v(q2, ϕ25, Δt)
+#
+# function getz3(z2)
+#     x2 = z2[SVector{3}(1,2,3)]
+#     q2 = UnitQuaternion(z2[4:7]..., false)
+#     x3 = getx3(x2, v25, Δt)
+#     q3 = getq3(q2, ϕ25, Δt)
+#     z3 = [x3; vector(q3)]
+#     return z3
+# end
+# v = [v25; ϕ25]
+# z2 = [x2; vector(q2)]
+# FiniteDiff.finite_difference_jacobian(getz3, z2)
+#
+#
+# using BenchmarkTools
+# # @benchmark ∂i∂v(body0, Δt)
+# ∂i∂v(body0, Δt)
+# # @benchmark ∂i∂v($q2, $ϕ25, $Δt)
+# @benchmark ∂i∂z($q2, $ϕ25, $Δt, attjac=true)
+# @benchmark ∂i∂z($q2, $ϕ25, $Δt, attjac=false)

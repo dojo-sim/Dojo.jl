@@ -61,13 +61,13 @@ const Dojo = Main
 
 ∇ = [szeros(3,6); sones(3,6)]
 ∇ = hcat(szeros(3,6), sones(3,6))
-∂integration(one(UnitQuaternion), srand(3), 0.1)
+∂i∂v(one(UnitQuaternion), srand(3), 0.1)
 #
 #     for i=1:Nc
 #         bnd = ineqc.constraints[i]
 #         bnd_type = typeof(ineqc.constraints[i])
 #
-#         M = ∂integration(q2, ω2, Δt)
+#         M = ∂i∂v(q2, ω2, Δt)
 #         function d(vars)
 #             x = vars[1:3]
 #             q = UnitQuaternion(vars[4:7]..., false)

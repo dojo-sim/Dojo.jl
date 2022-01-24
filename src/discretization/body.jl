@@ -14,7 +14,7 @@
     D2q = -4 / Δt * LVᵀmat(q2)' * Tmat() * Rmat(q3)' * Vᵀmat() * body.J * Vmat() * Lmat(q2)' * vector(q3)
 
     dynT = D2x + D1x
-    dynR = D2q + D1q 
+    dynR = D2q + D1q
 
     state.d = [dynT; dynR]
 
@@ -53,10 +53,10 @@ end
 
     state.D = [[dynT; Z33] [Z34; dynR]] * ∂i∂v(body, mechanism.Δt)
 
-    # inputs 
-    nothing 
+    # inputs
+    nothing
 
-    # impulses 
+    # impulses
     for id in connections(mechanism.system, body.id)
         Ne < id <= Ne+Nb && continue # body
         ∂impulses∂v!(mechanism, body, getcomponent(mechanism, id))
@@ -70,14 +70,14 @@ end
     return state.D
 end
 
-@inline function ∂i∂v(body::Body{T}, Δt) where {T} 
+@inline function ∂i∂v(body::Body{T}, Δt) where {T}
     state = body.state
-    x2, q2 = posargs2(state)
-    [∂x3∂v(Δt) szeros(3, 3); 
-     szeros(4, 3) ∂q3∂ϕ(q2, state.ϕsol[2], Δt)]
+    x2, v25, q2, ϕ25 = fullargssol(state)
+    ∂i∂v(q2, ϕ25, Δt)
 end
 
-
-
-
-
+@inline function ∂i∂z(body::Body{T}, Δt; attjac::Bool=true) where {T}
+    state = body.state
+    x2, v25, q2, ϕ25 = fullargssol(state)
+    ∂i∂z(q2, ϕ25, Δt, attjac=attjac)
+end
