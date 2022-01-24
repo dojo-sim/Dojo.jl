@@ -76,7 +76,7 @@ end
 function flatten_inertia(J::SMatrix{3,3,T,9}) where T
     j = SVector{6,T}([J[1,1], J[1,2], J[1,3], J[2,2], J[2,3], J[3,3]])
 end
-function ∂inertia(p)
+function ∂inertia(p) #∂(J*p)/∂flatten(J)
     SA[
         p[1]  p[2]  p[3]  0     0     0;
         0     p[1]  0     p[2]  p[3]  0;
@@ -84,7 +84,7 @@ function ∂inertia(p)
     ]
 end
 
-function eqc_databody(mechanism::Mechanism, eqc::EqualityConstraint{T,N},
+function ∂eqc∂body_data(mechanism::Mechanism, eqc::EqualityConstraint{T,N},
         body::Body{T}) where {T,N}
     Nd = datadim(body)
     ∇m = szeros(T,N,1)
@@ -95,13 +95,13 @@ function eqc_databody(mechanism::Mechanism, eqc::EqualityConstraint{T,N},
     return ∇g
 end
 
-function eqc_dataeqc(mechanism::Mechanism, eqc::EqualityConstraint{T,N}) where {T,N}
+function ∂eqc∂eqc_data(mechanism::Mechanism, eqc::EqualityConstraint{T,N}) where {T,N}
     Nd = datadim(eqc)
     return szeros(T,N,Nd)
 end
 
 
-function body_databody(mechanism::Mechanism, body::Body{T}) where T
+function ∂body∂body_data(mechanism::Mechanism, body::Body{T}) where T
     Nd = datadim(body)
     N = 6
     x1, v15, q1, ϕ15 = fullargs1(body.state)
@@ -129,27 +129,23 @@ function body_databody(mechanism::Mechanism, body::Body{T}) where T
     return [∇m ∇J ∇z1 ∇z2]
 end
 
-function body_dataeqc(mechanism::Mechanism{T}, eqc::EqualityConstraint{T},
+function ∂body∂eqc_data(mechanism::Mechanism{T}, eqc::EqualityConstraint{T},
         body::Body{T}) where {T}
     Nd = datadim(eqc)
     N = 6
     x1, v15, q1, ϕ15 = fullargs1(body.state)
     x2, v25, q2, ϕ25 = fullargssol(body.state)
     x3, q3 = posargs3(body.state, Δt)
+    ∇u = Diagonal(SVector{6,T}(-1,-1,-1,-2,-2,-2)) * ∂Fτ∂u(mechanism, eqc, body)
+    ∇spring = springforce(mechanism, eqc, body, unitary=true)
+    ∇damper = damperforce(mechanism, eqc, body, unitary=true)
+    # TODO
     nu = controldim(eqc)
-    @show nu
-    # TODO
-    ∇u = szeros(T,N,nu)
-    # TODO
-    ∇spring = szeros(T,N,1)
-    # TODO
-    ∇damper = szeros(T,N,1)
-    # TODO
     ∇spring_offset = szeros(T,N,nu)
     return [∇u ∇spring ∇damper ∇spring_offset]
 end
 
-function body_dataineqc(mechanism::Mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
+function ∂body∂ineqc_data(mechanism::Mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
         body::Body{T}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
     Nd = datadim(ineqc)
     bound = ineqc.constraints[1]
@@ -170,7 +166,7 @@ function body_dataineqc(mechanism::Mechanism, ineqc::InequalityConstraint{T,N,Nc
 end
 
 
-function ineqc_dataineqc(mechanism::Mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
+function ∂ineqc∂ineqc_data(mechanism::Mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
         body::Body{T}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
     Nd = datadim(ineqc)
     bound = ineqc.constraints[1]
@@ -190,7 +186,7 @@ function ineqc_dataineqc(mechanism::Mechanism, ineqc::InequalityConstraint{T,N,N
     return [∇compμ; ∇g]
 end
 
-function ineqc_databody(mechanism::Mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
+function ∂ineqc∂body_data(mechanism::Mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
         body::Body{T}) where {T,N,Nc,Cs,N½}
     Nd = datadim(body)
     ∇compμ = szeros(T,N½,Nd)
@@ -204,55 +200,55 @@ function ineqc_databody(mechanism::Mechanism, ineqc::InequalityConstraint{T,N,Nc
 end
 
 
-function dataineqc!(data_system::System, mechanism::Mechanism{T}) where {T}
+function ∂ineqc_data!(data_system::System, mechanism::Mechanism{T}) where {T}
     # ∂body∂ineqcdata
     for ineqc in mechanism.ineqconstraints
         pbody = getbody(mechanism, ineqc.parentid)
-        data_system.matrix_entries[pbody.id, ineqc.id].value += body_dataineqc(mechanism, ineqc, pbody)
+        data_system.matrix_entries[pbody.id, ineqc.id].value += ∂body∂ineqc_data(mechanism, ineqc, pbody)
     end
     # ∂ineqc∂ineqcdata
     for ineqc in mechanism.ineqconstraints
         pbody = getbody(mechanism, ineqc.parentid)
-        data_system.matrix_entries[ineqc.id, ineqc.id].value += ineqc_dataineqc(mechanism, ineqc, pbody)
+        data_system.matrix_entries[ineqc.id, ineqc.id].value += ∂ineqc∂ineqc_data(mechanism, ineqc, pbody)
     end
     return nothing
 end
 
-function dataeqc!(data_system::System, mechanism::Mechanism{T}) where {T}
+function ∂eqc_data!(data_system::System, mechanism::Mechanism{T}) where {T}
     # ∂eqc∂eqcdata
     for eqc in mechanism.eqconstraints
-        data_system.matrix_entries[eqc.id, eqc.id].value += eqc_dataeqc(mechanism, eqc)
+        data_system.matrix_entries[eqc.id, eqc.id].value += ∂eqc∂eqc_data(mechanism, eqc)
     end
     # ∂body∂eqcdata
     # TODO adapt this to handle cycles
     for body in mechanism.bodies
         for eqc in mechanism.eqconstraints
             if (body.id == eqc.parentid) || (body.id ∈ eqc.childids)
-                data_system.matrix_entries[body.id, eqc.id].value += body_dataeqc(mechanism, eqc, body)
+                data_system.matrix_entries[body.id, eqc.id].value += ∂body∂eqc_data(mechanism, eqc, body)
             end
         end
     end
     return nothing
 end
 
-function databody!(data_system::System, mechanism::Mechanism{T}) where {T}
+function ∂body_data!(data_system::System, mechanism::Mechanism{T}) where {T}
     # ∂eqc∂bodydata
     # TODO adapt this to handle cycles
     for body in mechanism.bodies
         for eqc in mechanism.eqconstraints
             if (body.id == eqc.parentid) || (body.id ∈ eqc.childids)
-                data_system.matrix_entries[eqc.id, body.id].value += eqc_databody(mechanism, eqc, body)
+                data_system.matrix_entries[eqc.id, body.id].value += ∂eqc∂body_data(mechanism, eqc, body)
             end
         end
     end
     # ∂body∂bodydata
     for body in mechanism.bodies
-        data_system.matrix_entries[body.id, body.id].value += body_databody(mechanism, body)
+        data_system.matrix_entries[body.id, body.id].value += ∂body∂body_data(mechanism, body)
     end
     # ∂ineqc∂bodydata
     for ineqc in mechanism.ineqconstraints
         pbody = getbody(mechanism, ineqc.parentid)
-        data_system.matrix_entries[ineqc.id, pbody.id].value += ineqc_databody(mechanism, ineqc, pbody)
+        data_system.matrix_entries[ineqc.id, pbody.id].value += ∂ineqc∂body_data(mechanism, ineqc, pbody)
     end
     return nothing
 end
@@ -274,46 +270,30 @@ visualize(mech, storage, vis=vis)
 ineqc0 = mech.ineqconstraints.values[1]
 eqc0 = mech.eqconstraints.values[2]
 body0 = mech.bodies.values[1]
-∇v0 = ∂g∂v(mech, ineqc0, body0)
 
-∇0 = eqc_dataeqc(mech, eqc0)
-∇0 = eqc_databody(mech, eqc0, body0)
-∇0 = ineqc_databody(mech, ineqc0, body0)
-∇0 = ineqc_dataineqc(mech, ineqc0, body0)
-∇0 = body_dataeqc(mech, eqc0, body0)
-∇0 = body_databody(mech, body0)
-∇0 = body_dataineqc(mech, ineqc0, body0)
+∇0 = ∂eqc∂eqc_data(mech, eqc0)
+∇0 = ∂eqc∂body_data(mech, eqc0, body0)
+∇0 = ∂ineqc∂body_data(mech, ineqc0, body0)
+∇0 = ∂ineqc∂ineqc_data(mech, ineqc0, body0)
+∇0 = ∂body∂eqc_data(mech, eqc0, body0)
+∇0 = ∂body∂body_data(mech, body0)
+∇0 = ∂body∂ineqc_data(mech, ineqc0, body0)
 
 data_system = create_data_system(mech.eqconstraints.values,
     mech.bodies.values, mech.ineqconstraints.values);
 
-∂g∂z(mech, eqc0, body0)
-∂i∂z(body0, mech.Δt, attjac=false)
-∂g∂z(mech, eqc0, body0) * ∂i∂z(body0, mech.Δt, attjac=false)
-
-eqc_databody(mech, eqc0, body0)
-sum(ones(10,5), dims=2)
-
-dataineqc!(data_system, mech)
+∂ineqc_data!(data_system, mech)
 plot(Gray.(1e10 .* abs.(full_matrix(data_system))))
 
-databody!(data_system, mech)
+∂body_data!(data_system, mech)
 plot(Gray.(1e10 .* abs.(full_matrix(data_system))))
 
-dataeqc!(data_system, mech)
+∂eqc_data!(data_system, mech)
 plot(Gray.(1e10 .* abs.(full_matrix(data_system))))
 plot(log.(10, abs.(sum(full_matrix(data_system), dims=1)[1,:])))
 
 
 full_matrix(data_system)
-
-eqcs = mech.eqconstraints.values
-bodies = mech.bodies.values
-ineqcs = mech.ineqconstraints.values
-A = adjacencyMatrix(eqcs, bodies, ineqcs)
-plot(Gray.(A))
-
-data_bound!(data_system, mech)
 
 
 

@@ -204,12 +204,12 @@ end
     return :(svcat($(vec...)))
 end
 
-@inline function springforce(mechanism, eqc::EqualityConstraint, body::Body)
-    body.id == eqc.parentid ? (return springforcea(mechanism, eqc, body)) : (return springforceb(mechanism, eqc, body))
+@inline function springforce(mechanism, eqc::EqualityConstraint, body::Body; unitary::Bool=false)
+    body.id == eqc.parentid ? (return springforcea(mechanism, eqc, body, unitary=unitary)) : (return springforceb(mechanism, eqc, body, unitary=unitary))
 end
 
-@inline function damperforce(mechanism, eqc::EqualityConstraint, body::Body)
-    body.id == eqc.parentid ? (return damperforcea(mechanism, eqc, body)) : (return damperforceb(mechanism, eqc, body))
+@inline function damperforce(mechanism, eqc::EqualityConstraint, body::Body; unitary::Bool=false)
+    body.id == eqc.parentid ? (return damperforcea(mechanism, eqc, body, unitary=unitary)) : (return damperforceb(mechanism, eqc, body, unitary=unitary))
 end
 
 @inline function ∂gab∂ʳba(mechanism, body::Body{T}, eqc::EqualityConstraint{T,N}) where {T,N}
@@ -245,35 +245,39 @@ end
     return :(vcat($(vec...)))
 end
 
-@inline function springforcea(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
+@inline function springforcea(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body; unitary::Bool=false) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += springforcea(eqc.constraints[i], body, getbody(mechanism, eqc.childids[i]), mechanism.Δt, eqc.childids[i])
+        vec += springforcea(eqc.constraints[i], body, getbody(mechanism, eqc.childids[i]), mechanism.Δt, eqc.childids[i], unitary=unitary)
     end
     return vec
 end
 
-@inline function springforceb(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
+@inline function springforceb(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body; unitary::Bool=false) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += springforceb(eqc.constraints[i], getbody(mechanism, eqc.parentid), body, mechanism.Δt, eqc.childids[i])
+        vec += springforceb(eqc.constraints[i], getbody(mechanism, eqc.parentid), body, mechanism.Δt, eqc.childids[i], unitary=unitary)
     end
     return vec
 end
 
-@inline function damperforcea(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
+@inline function damperforcea(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body; unitary::Bool=false) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += damperforcea(eqc.constraints[i], body, getbody(mechanism, eqc.childids[i]), mechanism.Δt, eqc.childids[i])
+        vec += damperforcea(eqc.constraints[i], body, getbody(mechanism, eqc.childids[i]), mechanism.Δt, eqc.childids[i], unitary=unitary)
     end
     return vec
 end
-@inline function damperforceb(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
+@inline function damperforceb(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body; unitary::Bool=false) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += damperforceb(eqc.constraints[i], getbody(mechanism, eqc.parentid), body, mechanism.Δt, eqc.childids[i])
+        vec += damperforceb(eqc.constraints[i], getbody(mechanism, eqc.parentid), body, mechanism.Δt, eqc.childids[i], unitary=unitary)
     end
     return vec
+end
+
+@inline function ∂Fτ∂u(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
+    body.id == eqc.parentid ? (return ∂Fτ∂ua(mechanism, eqc, body)) : (return ∂Fτ∂ub(mechanism, eqc, body))
 end
 
 @generated function ∂Fτ∂ua(mechanism, eqc::EqualityConstraint{T,N,Nc}, body::Body) where {T,N,Nc}

@@ -354,6 +354,13 @@ function ∂body∂u(body::Body{T}, Δt) where T
     return [BposT;BvelT;BposR;BvelR]
 end
 
+∂body∂u(body0, Δt)
+
+a = 10
+a = 10
+a = 10
+a = 10
+
 function dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,Nn,Ne,Nb}
     Δt = mechanism.Δt
     nu = controldim(mechanism)
