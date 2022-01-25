@@ -7,11 +7,11 @@ data_dim(mechanism::Mechanism; attjac::Bool=true) =
     sum(Vector{Int64}(data_dim.(mechanism.bodies, attjac=attjac))) +
 	sum(Vector{Int64}(data_dim.(mechanism.ineqconstraints)))
 # Eqconstraints
-data_dim(eqc::EqualityConstraint) = 2 + sum(data_dim.(eqc.constraints)) # [utra, urot, spring, damper, tra_spring_offset, rot_spring_offset]
-data_dim(joint::Rotational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = 2N̄λ # [u, spring, damper, spring_offset]
-data_dim(joint::Translational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = 2N̄λ # [u, spring, damper, spring_offset]
+data_dim(eqc::EqualityConstraint) = 2 + sum(data_dim.(eqc.constraints)) # [utra, urot, spring, damper]
+data_dim(joint::Rotational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = N̄λ # [u, spring, damper]
+data_dim(joint::Translational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = N̄λ # [u, spring, damper]
 # Body
-data_dim(body::Body; attjac::Bool=true) = attjac ? 19 : 20 # 1+6+6+6 or 1+6+6+7 [m,flat(J),x2,v15,q2,ϕ15] with attjac
+data_dim(body::Body; attjac::Bool=true) = attjac ? 19 : 20 # 1+6+6+6 or 1+6+6+7 [m,flat(J),v15,ϕ15,x2,q2] with attjac
 # Ineqconstraints
 data_dim(ineqc::InequalityConstraint) = sum(data_dim.(ineqc.constraints))
 data_dim(bound::ContactBound) = 7 # [cf, p, offset]
@@ -38,7 +38,7 @@ end
 function data_attitude_jacobian(body::Body)
 	# [m,flat(J),x1,q1,x2,q2]
 	x2, q2 = posargs2(body.state)
-	attjac = cat(I(1+6+6), G(vector(q2)), I(3), dims=(1,2))
+	attjac = cat(I(1+6+6+3), G(vector(q2)), dims=(1,2))
 	return attjac
 end
 # Ineqconstraints
@@ -59,17 +59,16 @@ function get_data(eqc::EqualityConstraint)
 	u = vcat(nullspacemat.(joints) .* getfield.(joints, :Fτ)...)
 	spring = joints[1].spring # assumes we have the same spring and dampers for translational and rotational joint.
 	damper = joints[1].damper # assumes we have the same spring and dampers for translational and rotational joint.
-	spring_offset = vcat(getfield.(joints, :spring_offset)...)
-	return [u; spring; damper; spring_offset]
+	return [u; spring; damper]
 end
 # Body
 function get_data(body::Body)
 	m = body.m
 	j = flatten_inertia(body.J)
-	x2, q2 = posargs2(body.state)
 	v15 = body.state.v15
 	ϕ15 = body.state.ϕ15
-	return [m; j; x2; v15; vector(q2); ϕ15]
+	x2, q2 = posargs2(body.state)
+	return [m; j; v15; ϕ15; x2; vector(q2)]
 end
 # Ineqconstraints
 get_data(bound::ContactBound) = [bound.cf; bound.offset; bound.p]
@@ -108,17 +107,12 @@ function set_data!(mechanism::Mechanism, eqc::EqualityConstraint, data::Abstract
 	u = data[SUnitRange(1,nu)]
 	spring = data[nu+1]
 	damper = data[nu+2]
-	spring_offset = data[nu+2 .+ (1:nu)]
 
 	setForce!(eqc, u)
-	c = 0
 	for joint in eqc.constraints
-		nu = controldim(joint)
 		joint.spring = spring
 		joint.damper = damper
-		joint.spring_offset = spring_offset[SUnitRange(c+1,c+nu)]; c += nu
 	end
-	# applyFτ!(eqc, mechanism, false)
 	return nothing
 end
 # Body
@@ -126,10 +120,10 @@ function set_data!(body::Body, data::AbstractVector, Δt)
 	# [m,flat(J),x2,v15,q2,ϕ15]
 	m = data[1]
 	J = lift_inertia(data[SUnitRange(2,7)])
-	x2 = data[SUnitRange(8,10)]
-	v15 = data[SUnitRange(11,13)]
-	q2 = UnitQuaternion(data[14:17]..., false)
-	ϕ15 = data[SUnitRange(18,20)]
+	v15 = data[SUnitRange(8,10)]
+	ϕ15 = data[SUnitRange(11,13)]
+	x2 = data[SUnitRange(14,16)]
+	q2 = UnitQuaternion(data[17:20]..., false)
 	x1 = getx3(x2, -v15, Δt)
 	q1 = getq3(q2, -ϕ15, Δt)
 

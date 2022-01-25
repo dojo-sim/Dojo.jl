@@ -36,6 +36,8 @@ include("data.jl")
 include("data_gradients.jl")
 
 mech = getpendulum(Δt=0.05, damper=1.0, spring=3.0);
+eqc0 = mech.eqconstraints.values[1]
+body0 = mech.bodies.values[1]
 initialize!(mech, :pendulum, ϕ1=0.2, ω1=-0.3)
 simulate!(mech, 0.30, verbose=false)
 
@@ -49,10 +51,6 @@ datajac0 *= attjac0
 plot(Gray.(1e10*abs.(datajac0)))
 plot(Gray.(1e0*abs.(datajac0)))
 
-# data2 = Vector(1:data_dim(mech, attjac=false))
-# set_data!(mech, data2)
-# mech.bodies.values[1].m
-
 # Analytical
 data_system = create_data_system(mech.eqconstraints.values,
     mech.bodies.values, mech.ineqconstraints.values);
@@ -63,26 +61,43 @@ plot(Gray.(1e0 .* abs.(datajac1)))
 
 plot(Gray.(1e10 .* abs.(datajac0)))
 plot(Gray.(1e10 .* abs.(datajac1)))
-plot(Gray.(1e6 .* abs.(datajac0 + datajac1)))
-plot(Gray.(1e0 .* abs.(datajac0 + datajac1)))
+plot(Gray.(1e6 .* abs.(datajac0 - datajac1)))
+plot(Gray.(1e0 .* abs.(datajac0 - datajac1)))
 
-norm((datajac0 + datajac1)[1:5,1:4])
-norm((datajac0 + datajac1)[6:11,1:1])
-norm((datajac0 + datajac1)[6:11,2:2])
-norm((datajac0 + datajac1)[6:11,3:3])
-norm((datajac0 + datajac1)[6:11,4:4])
-norm((datajac0 + datajac1)[6:11,5:5])
-k = 6
-datajac0[6:11,k:k]
+norm((datajac0 - datajac1)[1:5,1:3])
+norm((datajac0 - datajac1)[1:5,4:4])
+norm((datajac0 - datajac1)[1:5,5:10])
+norm((datajac0 - datajac1)[1:5,11:16])
+norm((datajac0 - datajac1)[1:5,17:19])
+norm((datajac0 - datajac1)[1:5,20:22])
+norm((datajac0 - datajac1)[6:11,1:1])
+norm((datajac0 - datajac1)[6:11,2:2])
+norm((datajac0 - datajac1)[6:11,3:3])
+norm((datajac0 - datajac1)[6:11,4:4])
+norm((datajac0 - datajac1)[6:11,5:10])
+norm((datajac0 - datajac1)[6:11,11:13])
+norm((datajac0 - datajac1)[6:11,14:16])
+norm((datajac0 - datajac1)[6:11,17:19])
+norm((datajac0 - datajac1)[6:11,20:22])
+
+datajac0[6:11,17:19]
+
+datajac1[6:11,17:19]
 
 
+datajac0[6:11,20:22]
+
+datajac1[6:11,20:22]
 
 
+eqc0.id
+body0.id
 
 
-datajac1[6:11,k:k]
-
-
+data_system.matrix_entries[eqc0.id, eqc0.id].value
+data_system.matrix_entries[eqc0.id, body0.id].value
+data_system.matrix_entries[body0.id, eqc0.id].value
+data_system.matrix_entries[body0.id, body0.id].value
 
 
 

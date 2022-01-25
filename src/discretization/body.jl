@@ -12,6 +12,10 @@
     D2x =   1 / Δt * body.m * (x3 - x2) + Δt/2 * body.m * ezg
     D1q = -4 / Δt * LVᵀmat(q2)' * Lmat(q1) * Vᵀmat() * body.J * Vmat() * Lmat(q1)' * vector(q2)
     D2q = -4 / Δt * LVᵀmat(q2)' * Tmat() * Rmat(q3)' * Vᵀmat() * body.J * Vmat() * Lmat(q2)' * vector(q3)
+    # the below is cleaner
+    # D1q = -4 / Δt * VLᵀmat(q2) * LVᵀmat(q1) * body.J * VLᵀmat(q1) * vector(q2)
+    # D2q = -4 / Δt * VLᵀmat(q2) * Tmat() * RᵀVᵀmat(q3) * body.J * VLᵀmat(q2) * vector(q3)
+
 
     dynT = D2x + D1x
     dynR = D2q + D1q
