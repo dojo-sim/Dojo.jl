@@ -35,7 +35,7 @@ function controller!(mechanism, k)
     for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])
         nu = controldim(eqc)
         u = 100*0.05*(rand(nu) .- 0.5)
-        setForce!(mechanism, eqc, u)
+        setForce!(eqc, u)
     end
     return
 end

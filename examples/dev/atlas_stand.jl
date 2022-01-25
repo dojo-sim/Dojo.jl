@@ -116,7 +116,7 @@ function controller!(mechanism, k)
                 u = clamp(u, -100.0, 100.0) * mechanism.Δt
             end
             u = 0.0
-            setForce!(mechanism, joint, SA[u])
+            setForce!(joint, SA[u])
         end
     end
     return

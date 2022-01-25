@@ -35,7 +35,7 @@ function controller!(mechanism, k)
         minJ = 0.01
         nu = controldim(eqc)
         u = 10 * minJ * (rand(nu) .- 0.2) * Δt_
-        setForce!(mechanism, eqc, SVector{nu}(u))
+        setForce!(eqc, SVector{nu}(u))
     end
     return
 end

@@ -57,32 +57,31 @@ end
 
 
 ### Springs and Dampers (for dynamics)
-@inline function springforcea(joint::Joint, body1::Component, body2::Component, Δt, childid)
+@inline function springforcea(joint::Joint, body1::Component, body2::Component, Δt, childid; unitary::Bool=false)
     if body2.id == childid
-        return springforcea(joint, body1, body2, Δt)
+        return springforcea(joint, body1, body2, Δt, unitary=unitary)
     else
         return szeros(T, 6)
     end
 end
-@inline function springforceb(joint::Joint, body1::Component, body2::Component, Δt, childid)
+@inline function springforceb(joint::Joint, body1::Component, body2::Component, Δt, childid; unitary::Bool=false)
     if body2.id == childid
-        return springforceb(joint, body1, body2, Δt)
-    else
-        return szeros(T, 6)
-    end
-end
-
-@inline function damperforcea(joint::Joint, body1::Component, body2::Component, Δt, childid)
-    if body2.id == childid
-        return damperforcea(joint, body1, body2, Δt)
+        return springforceb(joint, body1, body2, Δt, unitary=unitary)
     else
         return szeros(T, 6)
     end
 end
 
-@inline function damperforceb(joint::Joint, body1::Component, body2::Component, Δt, childid)
+@inline function damperforcea(joint::Joint, body1::Component, body2::Component, Δt, childid; unitary::Bool=false)
     if body2.id == childid
-        return damperforceb(joint, body1, body2, Δt)
+        return damperforcea(joint, body1, body2, Δt, unitary=unitary)
+    else
+        return szeros(T, 6)
+    end
+end
+@inline function damperforceb(joint::Joint, body1::Component, body2::Component, Δt, childid; unitary::Bool=false)
+    if body2.id == childid
+        return damperforceb(joint, body1, body2, Δt, unitary=unitary)
     else
         return szeros(T, 6)
     end

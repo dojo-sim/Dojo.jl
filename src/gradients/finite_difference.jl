@@ -26,7 +26,7 @@ function setdata!(mechanism::Mechanism, data::AbstractVector)
         dim = controldim(eqc)
         if dim > 0
             u = data[off .+ (1:dim)]; off += dim
-            setForce!(mechanism, eqc, u)
+            setForce!(eqc, u)
         end
     end
 

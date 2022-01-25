@@ -61,10 +61,14 @@ end
 
 ### Spring and damper
 ## Discrete-time position wrappers (for dynamics)
-springforcea(joint::Rotational, bodya::Component, bodyb::Component, Δt) = Δt * springforcea(joint, posargs2(bodya.state)[2], posargs2(bodyb.state)[2])
-springforceb(joint::Rotational, bodya::Component, bodyb::Component, Δt) = Δt * springforceb(joint, posargs2(bodya.state)[2], posargs2(bodyb.state)[2])
-damperforcea(joint::Rotational, bodya::Component, bodyb::Component, Δt) = Δt * damperforcea(joint, posargs2(bodya.state)[2], bodya.state.ϕsol[2], posargs2(bodyb.state)[2], bodyb.state.ϕsol[2])
-damperforceb(joint::Rotational, bodya::Component, bodyb::Component, Δt) = Δt * damperforceb(joint, posargs2(bodya.state)[2], bodya.state.ϕsol[2], posargs2(bodyb.state)[2], bodyb.state.ϕsol[2])
+springforcea(joint::Rotational, bodya::Component, bodyb::Component, Δt; unitary::Bool=false) =
+    Δt * springforcea(joint, posargs2(bodya.state)[2], posargs2(bodyb.state)[2], unitary=unitary)
+springforceb(joint::Rotational, bodya::Component, bodyb::Component, Δt; unitary::Bool=false) =
+    Δt * springforceb(joint, posargs2(bodya.state)[2], posargs2(bodyb.state)[2], unitary=unitary)
+damperforcea(joint::Rotational, bodya::Component, bodyb::Component, Δt; unitary::Bool=false) =
+    Δt * damperforcea(joint, posargs2(bodya.state)[2], bodya.state.ϕsol[2], posargs2(bodyb.state)[2], bodyb.state.ϕsol[2], unitary=unitary)
+damperforceb(joint::Rotational, bodya::Component, bodyb::Component, Δt; unitary::Bool=false) =
+    Δt * damperforceb(joint, posargs2(bodya.state)[2], bodya.state.ϕsol[2], posargs2(bodyb.state)[2], bodyb.state.ϕsol[2], unitary=unitary)
 
 springforcea(joint::Rotational3{T}, bodya::Component, bodyb::Component, Δt) where {T} = szeros(T, 6)
 springforceb(joint::Rotational3{T}, bodya::Component, bodyb::Component, Δt) where {T} = szeros(T, 6)
@@ -72,69 +76,58 @@ damperforcea(joint::Rotational3{T}, bodya::Component, bodyb::Component, Δt) whe
 damperforceb(joint::Rotational3{T}, bodya::Component, bodyb::Component, Δt) where {T} = szeros(T, 6)
 
 # Used in energy computation
-springforcea(joint::Rotational3{T}, qa::UnitQuaternion, qb::UnitQuaternion; rotate::Bool = true) where {T} = szeros(T, 6)
-springforceb(joint::Rotational3{T}, qa::UnitQuaternion, qb::UnitQuaternion; rotate::Bool = true) where {T} = szeros(T, 6)
+springforcea(joint::Rotational3{T}, qa::UnitQuaternion, qb::UnitQuaternion; rotate::Bool=true, unitary::Bool=false) where {T} = szeros(T, 6)
+springforceb(joint::Rotational3{T}, qa::UnitQuaternion, qb::UnitQuaternion; rotate::Bool=true, unitary::Bool=false) where {T} = szeros(T, 6)
 
 ### Spring and damper
 # Force applied by body b on body a expressed in frame a
-@inline function springforcea(joint::Rotational{T}, qa::UnitQuaternion, qb::UnitQuaternion; rotate::Bool = true) where {T}
+@inline function springforcea(joint::Rotational{T}, qa::UnitQuaternion, qb::UnitQuaternion;
+        rotate::Bool=true, unitary::Bool=false) where {T}
+    spring = unitary ? 1.0 : joint.spring
     q = gc(joint, qa, qb, qoff = spring_qoffset(joint))
     distance = spring_distance(joint, q)
-    force = joint.spring * distance # force in offset frame
+    force = spring * distance # force in offset frame
     rotate && (force = vrotate(force, joint.qoffset)) # rotate back to a frame
     return [szeros(T, 3); force]
 end
 
 # Force applied by body a on body b expressed in frame b
-@inline function springforceb(joint::Rotational{T}, qa::UnitQuaternion, qb::UnitQuaternion; rotate::Bool = true) where {T}
+@inline function springforceb(joint::Rotational{T}, qa::UnitQuaternion, qb::UnitQuaternion;
+        rotate::Bool=true, unitary::Bool=false) where {T}
+    spring = unitary ? 1.0 : joint.spring
     q = gc(joint, qa, qb, qoff = spring_qoffset(joint))
     distance = spring_distance(joint, q)
-    force = - joint.spring * distance # force in offset frame
+    force = - spring * distance # force in offset frame
     rotate && (force = vrotate(force, inv(qb) * qa * joint.qoffset)) # rotate back to b frame
     return [szeros(T, 3); force]
 end
 
-# # Force applied by origin on body b expressed in frame b
-# @inline function springforceb(joint::Rotational{T}, qb::UnitQuaternion; rotate::Bool = true) where {T}
-#     q = gc(joint, qb, qoff = spring_qoffset(joint))
-#     distance = spring_distance(joint, q)
-#     force = - joint.spring * distance # force in offset frame
-#     rotate && (force = vrotate(force, inv(qb) * joint.qoffset)) # rotate back to b frame
-#     return [szeros(T, 3); force]
-# end
-
 # Force applied by body b on body a expressed in frame a
-@inline function damperforcea(joint::Rotational{T}, qa::UnitQuaternion, ωa::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector; rotate::Bool = true) where {T}
+@inline function damperforcea(joint::Rotational{T}, qa::UnitQuaternion, ωa::AbstractVector,
+        qb::UnitQuaternion, ωb::AbstractVector; rotate::Bool=true, unitary::Bool=false) where {T}
+    damper = unitary ? 1.0 : joint.damper
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     qoffset = joint.qoffset
     velocity = A * (vrotate(ωb, qa \ qb / qoffset) - vrotate(ωa, inv(qoffset))) # in offset frame
-    force = 2 * Aᵀ * A * joint.damper * Aᵀ * velocity # Currently assumes same damper constant in all directions
+    force = 2 * Aᵀ * A * damper * Aᵀ * velocity # Currently assumes same damper constant in all directions
     rotate && (force = vrotate(force, qoffset)) # rotate back to frame a
     return [szeros(T, 3); force]
 end
 
 # Force applied by body a on body b expressed in frame b
-@inline function damperforceb(joint::Rotational{T}, qa::UnitQuaternion, ωa::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector; rotate::Bool = true) where {T}
+@inline function damperforceb(joint::Rotational{T}, qa::UnitQuaternion, ωa::AbstractVector,
+        qb::UnitQuaternion, ωb::AbstractVector; rotate::Bool=true, unitary::Bool=false) where {T}
+    damper = unitary ? 1.0 : joint.damper
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     qoffset = joint.qoffset
     velocity = A * (vrotate(ωb, qa \ qb / qoffset) - vrotate(ωa, inv(qoffset))) # in offset frame
-    force = - 2 * Aᵀ * A * joint.damper * Aᵀ * velocity # Currently assumes same damper constant in all directions
+    force = - 2 * Aᵀ * A * damper * Aᵀ * velocity # Currently assumes same damper constant in all directions
     rotate && (force = vrotate(force, inv(qb) * qa * qoffset)) # rotate back to frame b
     return [szeros(T, 3); force]
 end
 
-# # Force applied by origin on body b expressed in frame b
-# @inline function damperforceb(joint::Rotational{T}, qb::UnitQuaternion, ωb::AbstractVector; rotate::Bool = true) where {T}
-#     A = nullspacemat(joint)
-#     Aᵀ = zerodimstaticadjoint(A)
-#     qoffset = joint.qoffset
-#     velocity = A * vrotate(ωb, qb / qoffset) # in offset frame
-#     force = - 2 * Aᵀ * A * joint.damper * Aᵀ * velocity # Currently assumes same damper constant in all directions
-#     rotate && (force = vrotate(force, inv(qb) * qoffset)) # rotate back to frame b
-#     return [szeros(T, 3); force]
-# end
 
 ∂springforcea∂posa(joint::Rotational3{T}, body1::Component, body2::Component, Δt::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
 ∂damperforcea∂posa(joint::Rotational3{T}, body1::Component, body2::Component, Δt::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
@@ -158,7 +151,8 @@ end
 # ∂springforceb∂velb(joint::Rotational3{T}, body1::Origin, body2::Component, Δt::T) where T = szeros(T, 6, 6)
 # ∂damperforceb∂velb(joint::Rotational3{T}, body1::Origin, body2::Component, Δt::T) where T = szeros(T, 6, 6)
 
-function ∂springforcea∂posa(joint::Rotational, body1::Component, body2::Component, Δt::T; attjac::Bool = true) where T
+function ∂springforcea∂posa(joint::Rotational, body1::Component, body2::Component,
+        Δt::T; attjac::Bool = true) where T
     # A = nullspacemat(joint)
     # Aᵀ = zerodimstaticadjoint(A)
     xa, qa = posargs2(body1.state)
@@ -173,7 +167,8 @@ function ∂springforcea∂posa(joint::Rotational, body1::Component, body2::Comp
     return Δt * [Z; X Q]
 end
 
-function ∂damperforcea∂posa(joint::Rotational, body1::Component, body2::Component, Δt::T; attjac::Bool = true) where T
+function ∂damperforcea∂posa(joint::Rotational, body1::Component, body2::Component,
+        Δt::T; attjac::Bool = true) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
     _, _, _, ωa = fullargssol(body1.state)

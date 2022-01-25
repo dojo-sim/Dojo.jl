@@ -93,7 +93,7 @@ function control!(mechanism, k; u=0.1)
     for (i, eqc) in enumerate(mechanism.eqconstraints)
         nu = controldim(eqc, ignore_floating_base=false)
         su = mechanism.Δt * u * sones(nu)
-        setForce!(mechanism, eqc, su)
+        setForce!(eqc, su)
     end
     return
 end

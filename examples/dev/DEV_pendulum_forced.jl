@@ -30,7 +30,7 @@ function controller!(mechanism, k)
     θ1 = minimalCoordinates(mechanism, j1)[1]
     dθ1 = minimalVelocities(mechanism, j1)[1]
     u1 = (100.0*(angles[1]-θ1) + 5.0*(0-dθ1)) * mechanism.Δt
-    setForce!(mechanism, j1, SA[u1])
+    setForce!(j1, SA[u1])
     return
 end
 

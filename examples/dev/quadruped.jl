@@ -63,9 +63,9 @@ begin
         u2 = (80.0*(angles[2]-θ2) + 4.0*(0-dθ2)) * Δt_ #* 0.17
         u3 = (60.0*(angles[3]-θ3) + 3.0*(0-dθ3)) * Δt_ #* 0.17
 
-        setForce!(mechanism, j1, SA[u1])
-        setForce!(mechanism, j2, SA[u2])
-        setForce!(mechanism, j3, SA[u3])
+        setForce!(j1, SA[u1])
+        setForce!(j2, SA[u2])
+        setForce!(j3, SA[u3])
     end
 
     function controller!(mechanism, k)

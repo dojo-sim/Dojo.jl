@@ -32,7 +32,7 @@ function controller!(mechanism, k; U=0.5, Δt=Δt0)
     for (i,joint) in enumerate(mechanism.eqconstraints)
         nu = controldim(joint)
         u = (nu <= 5 && k ∈ (1:N)) * U * Δt * sones(nu)
-        setForce!(mechanism, joint, u)
+        setForce!(joint, u)
     end
     return
 end
@@ -235,7 +235,7 @@ function humanoid_controller!(mechanism, k; U=0.05, Δt=Δt0)
     for (i,eqc) in enumerate(mechanism.eqconstraints)
         nu = controldim(eqc)
         u = (nu <= 5 && k ∈ (1:N)) * U * Δt * sones(nu)
-        setForce!(mechanism, eqc, u)
+        setForce!(eqc, u)
     end
     return
 end
@@ -317,7 +317,7 @@ function quadruped_controller!(mechanism, k; U = 0.01, Δt = Δt0)
     for (i,eqc) in enumerate(mechanism.eqconstraints)
         nu = controldim(eqc)
         u = (nu <= 5 && k ∈ (1:N)) * U * Δt * sones(nu)
-        setForce!(mechanism, eqc, u)
+        setForce!(eqc, u)
     end
     return
 end
@@ -358,7 +358,7 @@ function snake_controller!(mechanism, k; U = 0.05, Δt = Δt0)
     for (i,joint) in enumerate(mechanism.eqconstraints)
         nu = controldim(joint)
         u = (nu <= 5 && k ∈ (1:N)) * U * Δt * sones(nu)
-        setForce!(mechanism, joint, u)
+        setForce!(joint, u)
     end
     return
 end

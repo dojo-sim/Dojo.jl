@@ -68,11 +68,11 @@ function setVelocity!(mechanism::Mechanism, dict)
 end
 
 function zeroVelocity!(mechanism::Mechanism)
-    # velocities 
+    # velocities
     for (i, body) in enumerate(mechanism.bodies)
-        try 
+        try
             setVelocity!(body, v=zeros(3), ω=zeros(3))
-        catch 
+        catch
             nothing
         end
     end
@@ -80,7 +80,7 @@ end
 
 function setForce!(mechanism::Mechanism, dict)
     for (id,eqc) in pairs(mechanism.eqconstraints)
-        setForce!(mechanism, eqc, dict[id])
+        setForce!(eqc, dict[id])
     end
 
     return
