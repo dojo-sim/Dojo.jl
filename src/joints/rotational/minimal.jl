@@ -29,11 +29,6 @@ end
     return nullspacemat(joint) * rotation_vector(q)
 end
 
-@inline function minimalCoordinates(joint::Rotational{T,0}, qb::UnitQuaternion) where {T}
-    q = qb / joint.qoffset
-    return nullspacemat(joint) * rotation_vector(q)
-end
-
 @inline function minimalVelocities(joint::Rotational, body1::Node, body2::Node)
     statea = body1.state
     stateb = body2.state

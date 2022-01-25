@@ -4,7 +4,6 @@ abstract type Joint{T,Nλ,Nb,N} end
 getT(joint::Joint{T}) where T = T
 Base.length(joint::Joint{T,Nλ}) where {T,Nλ} = Nλ
 Base.zero(joint::Joint{T,Nλ}) where {T,Nλ} = szeros(T, Nλ, 6)
-@inline g(joint::Joint{T,Nλ}) where {T,Nλ} = szeros(T, Nλ)
 
 λlength(joint::Joint{T,Nλ}) where {T,Nλ} = Nλ
 blength(joint::Joint{T,Nλ,Nb}) where {T,Nλ,Nb} = Nb

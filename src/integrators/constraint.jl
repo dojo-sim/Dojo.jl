@@ -75,9 +75,3 @@ end
     x2, v25, q2, ϕ25 = fullargssol(state)
     ∂i∂v(q2, ϕ25, Δt)
 end
-
-@inline function ∂i∂z(body::Body{T}, Δt; attjac::Bool=true) where {T}
-    state = body.state
-    x2, v25, q2, ϕ25 = fullargssol(state)
-    ∂i∂z(q2, ϕ25, Δt, attjac=attjac)
-end

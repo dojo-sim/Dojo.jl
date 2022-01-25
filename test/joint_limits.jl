@@ -26,3 +26,5 @@
     storage = simulate!(mech, 1.0, record = true, verbose = false)
     @test norm(Dojo.getMinState(mech)[1] - 0.25 * π) < 1.0e-3
 end
+
+# TODO: Add translational joint limits example

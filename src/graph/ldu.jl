@@ -84,8 +84,3 @@ function ldu_backsubstitution!(system)
     end
 end
 
-function ldu_solve!(system)
-    ldu_factorization!(system)
-    ldu_backsubstitution!(system)
-    return
-end

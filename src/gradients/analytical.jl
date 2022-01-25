@@ -251,69 +251,6 @@ function spring_damper_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne
     return J
 end
 
-function control_datamat(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
-    Δt = mechanism.Δt
-    Fzu = zeros(T,13Nb,12Nb)
-    # Fzu = zeros(T,13Nb,13Nb)
-
-    for eqc in mechanism.eqconstraints
-        parentid = eqc.parentid
-        for (i,childid) in enumerate(eqc.childids)
-            childind = childid - Ne
-            joint = eqc.constraints[i]
-            if parentid != nothing
-                parentind = parentid - Ne
-                pbody = getbody(mechanism, parentid)
-                cbody = getbody(mechanism, childid)
-
-                FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa = ∂Fτ∂a(joint, pbody.state, cbody.state, Δt)
-                FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb = ∂Fτ∂b(joint, pbody.state, cbody.state, Δt)
-
-                xa, qa = posargs2(pbody.state)
-                Ma = [I zeros(3,3); zeros(4,3) LVᵀmat(qa)]
-                # @show size(Ma)
-                xb, qb = posargs2(cbody.state)
-                Mb = [I zeros(3,3); zeros(4,3) LVᵀmat(qb)]
-
-                cola6 = offsetrange(parentind,6)
-                colb6 = offsetrange(childind,6)
-                # @show cola6
-                # @show colb6
-                rowav = offsetrange(parentind,3,13,2)
-                rowaω = offsetrange(parentind,3,13,4).+1
-                rowbv = offsetrange(childind,3,13,2)
-                rowbω = offsetrange(childind,3,13,4).+1
-
-                Fzu[[rowav; rowaω],cola6] = [FaXa FaQa; τaXa τaQa] * Ma
-                # @show [FaXa FaQa; τaXa τaQa]
-                Fzu[[rowbv; rowbω],cola6] = [FbXa FbQa; τbXa τbQa] * Ma
-                # @show [FbXa FbQa; τbXa τbQa]
-                Fzu[[rowav; rowaω],colb6] = [FaXb FaQb; τaXb τaQb] * Mb
-                # @show [FaXb FaQb; τaXb τaQb]
-                Fzu[[rowbv; rowbω],colb6] = [FbXb FbQb; τbXb τbQb] * Mb
-                # @show [FbXb FbQb; τbXb τbQb]
-            else
-                pbody = mechanism.origin
-                cbody = getbody(mechanism, childid)
-                FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb = ∂Fτ∂b(joint, cbody.state, Δt)
-
-                colb6 = offsetrange(childind,6)
-                # @show colb6
-                rowbv = offsetrange(childind,3,13,2)
-                rowbω = offsetrange(childind,3,13,4).+1
-
-                xb, qb = posargs2(cbody.state)
-                Mb = [I zeros(3,3); zeros(4,3) LVᵀmat(qb)]
-
-                Fzu[[rowbv; rowbω], colb6] = [FbXb FbQb; τbXb τbQb] * Mb
-                # @show [FbXb FbQb; τbXb τbQb]
-
-            end
-        end
-    end
-    return Fzu
-end
-
 function ∂body∂z(body::Body{T}, Δt::T; attjac::Bool = true) where T
     state = body.state
     q2 = state.q2[1]
@@ -374,14 +311,6 @@ function dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,Nn
         Fz[col6,col13] = Fzi
         Fu[col6,col6] = Fui
     end
-
-    ############################################################################
-    # @warn "control datamat seems wrong"
-    # control datamat is always zero and seems to be filled only for the first half
-    # Fz = Fz * attitudejacobian(getdata(mechanism), Nb)[1:13Nb,1:12Nb]
-    # Fz += control_datamat(mechanism)
-    # @show norm(control_datamat(mechanism))
-    ############################################################################
 
     n1 = 1
     n2 = 0
@@ -484,133 +413,6 @@ function contact_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,
     return J
 end
 
-function dBω(q, ω, p)
-    q₁, q₂, q₃, q₄ = q
-    ω₁, ω₂, ω₃ = ω
-    p₁, p₂, p₃ = p
-    dB = zeros(2, 4)
-
-    dB[1, 1] = ω₁*(4.0p₂*q₃ + 4.0p₃*q₄) + ω₂*(4.0p₃*q₁ - (4.0p₁*q₃)) + ω₃*(-4.0p₁*q₄ - (4.0p₂*q₁))
-    dB[2, 1] = ω₁*(-4.0p₂*q₂ - (4.0p₃*q₁)) + ω₂*(4.0p₁*q₂ + 4.0p₃*q₄) + ω₃*(4.0p₁*q₁ - (4.0p₂*q₄))
-
-    dB[1, 2] = ω₁*(4.0p₂*q₄ - (4.0p₃*q₃)) + ω₂*(4.0p₃*q₂ - (4.0p₁*q₄)) + ω₃*(4.0p₁*q₃ - (4.0p₂*q₂))
-    dB[2, 2] = ω₁*(4.0p₃*q₂ - (4.0p₂*q₁)) + ω₂*(4.0p₁*q₁ + 4.0p₃*q₃) + ω₃*(-4.0p₁*q₂ - (4.0p₂*q₃))
-
-    dB[1, 3] = ω₁*(4.0p₂*q₁ - (4.0p₃*q₂)) + ω₂*(-4.0p₁*q₁ - (4.0p₃*q₃)) + ω₃*(4.0p₁*q₂ + 4.0p₂*q₃)
-    dB[2, 3] = ω₁*(4.0p₂*q₄ - (4.0p₃*q₃)) + ω₂*(4.0p₃*q₂ - (4.0p₁*q₄)) + ω₃*(4.0p₁*q₃ - (4.0p₂*q₂))
-
-    dB[1, 4] = ω₁*(4.0p₂*q₂ + 4.0p₃*q₁) + ω₂*(-4.0p₁*q₂ - (4.0p₃*q₄)) + ω₃*(4.0p₂*q₄ - (4.0p₁*q₁))
-    dB[2, 4] = ω₁*(4.0p₂*q₃ + 4.0p₃*q₄) + ω₂*(4.0p₃*q₁ - (4.0p₁*q₃)) + ω₃*(-4.0p₁*q₄ - (4.0p₂*q₁))
-
-    return dB
-end
-
-function _dB(x, q, b, p)
-    p₁, p₂, p₃ = p
-    z₁, z₂, z₃ = x
-    z₄, z₅, z₆, z₇ = q
-    b₁, b₂, b₃ = b
-    dBb = zeros(6, 7)
-
-    dBb[4,4] = b₂*(4.0p₂*z₆ + 4.0p₃*z₇) + b₃*(-4.0p₂*z₅ - (4.0p₃*z₄))
-    dBb[4,5] = b₂*(4.0p₂*z₇ - (4.0p₃*z₆)) + b₃*(4.0p₃*z₅ - (4.0p₂*z₄))
-    dBb[4,6] = b₂*(4.0p₂*z₄ - (4.0p₃*z₅)) + b₃*(4.0p₂*z₇ - (4.0p₃*z₆))
-    dBb[4,7] = b₂*(4.0p₂*z₅ + 4.0p₃*z₄) + b₃*(4.0p₂*z₆ + 4.0p₃*z₇)
-
-    dBb[5,4] = b₂*(4.0p₃*z₄ - (4.0p₁*z₆)) + b₃*(4.0p₁*z₅ + 4.0p₃*z₇)
-    dBb[5,5] = b₂*(4.0p₃*z₅ - (4.0p₁*z₇)) + b₃*(4.0p₁*z₄ + 4.0p₃*z₆)
-    dBb[5,6] = b₂*(-4.0p₁*z₄ - (4.0p₃*z₆)) + b₃*(4.0p₃*z₅ - (4.0p₁*z₇))
-    dBb[5,7] = b₂*(-4.0p₁*z₅ - (4.0p₃*z₇)) + b₃*(4.0p₃*z₄ - (4.0p₁*z₆))
-
-    dBb[6,4] = b₂*(-4.0p₁*z₇ - (4.0p₂*z₄)) + b₃*(4.0p₁*z₄ - (4.0p₂*z₇))
-    dBb[6,5] = b₂*(4.0p₁*z₆ - (4.0p₂*z₅)) + b₃*(-4.0p₁*z₅ - (4.0p₂*z₆))
-    dBb[6,6] = b₂*(4.0p₁*z₅ + 4.0p₂*z₆) + b₃*(4.0p₁*z₆ - (4.0p₂*z₅))
-    dBb[6,7] = b₂*(4.0p₂*z₇ - (4.0p₁*z₄)) + b₃*(-4.0p₁*z₇ - (4.0p₂*z₄))
-
-    return dBb
-end
-
-dB(x, q, b, p) = _dB(x, q, b, p) * [I zeros(3,3); zeros(4,3) G(q)]
-
-function _dN(x, q, γ, p)
-    p₁, p₂, p₃ = p
-    z₁, z₂, z₃ = x
-    γ₁ = γ[1]
-    z₄, z₅, z₆, z₇ = q
-    dNγ = zeros(6, 7)
-
-    dNγ[4,4] = γ₁*(4.0p₂*z₄ - (4.0p₃*z₅))
-    dNγ[4,5] = γ₁*(-4.0p₂*z₅ - (4.0p₃*z₄))
-    dNγ[4,6] = γ₁*(-4.0p₂*z₆ - (4.0p₃*z₇))
-    dNγ[4,7] = γ₁*(4.0p₂*z₇ - (4.0p₃*z₆))
-
-    dNγ[5,4] = γ₁*(-4.0p₁*z₄ - (4.0p₃*z₆))
-    dNγ[5,5] = γ₁*(4.0p₁*z₅ + 4.0p₃*z₇)
-    dNγ[5,6] = γ₁*(4.0p₁*z₆ - (4.0p₃*z₄))
-    dNγ[5,7] = γ₁*(4.0p₃*z₅ - (4.0p₁*z₇))
-
-    dNγ[6,4] = γ₁*(4.0p₁*z₅ + 4.0p₂*z₆)
-    dNγ[6,5] = γ₁*(4.0p₁*z₄ - (4.0p₂*z₇))
-    dNγ[6,6] = γ₁*(4.0p₁*z₇ + 4.0p₂*z₄)
-    dNγ[6,7] = γ₁*(4.0p₁*z₆ - (4.0p₂*z₅))
-
-    return dNγ
-end
-
-dN(x, q, γ, p) = _dN(x, q, γ, p) * [I zeros(3,3); zeros(4,3) G(q)]
-
-function _dG(joint::Rotational{T,N}, x, q, γ, p) where {T,N}
-    p₁, p₂, p₃ = p
-    z₁, z₂, z₃ = x
-    γ₁ = γ[1]
-    z₄, z₅, z₆, z₇ = q
-    dGγ = zeros(N, 7)
-
-    dGγ[4,4] = γ₁*(4.0p₂*z₄ - (4.0p₃*z₅))
-    dGγ[4,5] = γ₁*(-4.0p₂*z₅ - (4.0p₃*z₄))
-    dGγ[4,6] = γ₁*(-4.0p₂*z₆ - (4.0p₃*z₇))
-    dGγ[4,7] = γ₁*(4.0p₂*z₇ - (4.0p₃*z₆))
-
-    dGγ[5,4] = γ₁*(-4.0p₁*z₄ - (4.0p₃*z₆))
-    dGγ[5,5] = γ₁*(4.0p₁*z₅ + 4.0p₃*z₇)
-    dGγ[5,6] = γ₁*(4.0p₁*z₆ - (4.0p₃*z₄))
-    dGγ[5,7] = γ₁*(4.0p₃*z₅ - (4.0p₁*z₇))
-
-    dGγ[6,4] = γ₁*(4.0p₁*z₅ + 4.0p₂*z₆)
-    dGγ[6,5] = γ₁*(4.0p₁*z₄ - (4.0p₂*z₇))
-    dGγ[6,6] = γ₁*(4.0p₁*z₇ + 4.0p₂*z₄)
-    dGγ[6,7] = γ₁*(4.0p₁*z₆ - (4.0p₂*z₅))
-
-    return dGγ
-end
-
-function _dG(joint::Translational{T,N}, x, q, γ, p) where {T,N}
-    p₁, p₂, p₃ = p
-    z₁, z₂, z₃ = x
-    γ₁ = γ[1]
-    z₄, z₅, z₆, z₇ = q
-    dGγ = zeros(N, 7)
-
-    dGγ[4,4] = γ₁*(4.0p₂*z₄ - (4.0p₃*z₅))
-    dGγ[4,5] = γ₁*(-4.0p₂*z₅ - (4.0p₃*z₄))
-    dGγ[4,6] = γ₁*(-4.0p₂*z₆ - (4.0p₃*z₇))
-    dGγ[4,7] = γ₁*(4.0p₂*z₇ - (4.0p₃*z₆))
-
-    dGγ[5,4] = γ₁*(-4.0p₁*z₄ - (4.0p₃*z₆))
-    dGγ[5,5] = γ₁*(4.0p₁*z₅ + 4.0p₃*z₇)
-    dGγ[5,6] = γ₁*(4.0p₁*z₆ - (4.0p₃*z₄))
-    dGγ[5,7] = γ₁*(4.0p₃*z₅ - (4.0p₁*z₇))
-
-    dGγ[6,4] = γ₁*(4.0p₁*z₅ + 4.0p₂*z₆)
-    dGγ[6,5] = γ₁*(4.0p₁*z₄ - (4.0p₂*z₇))
-    dGγ[6,6] = γ₁*(4.0p₁*z₇ + 4.0p₂*z₄)
-    dGγ[6,7] = γ₁*(4.0p₁*z₆ - (4.0p₂*z₅))
-
-    return dGγ
-end
-
-dG(joint::Joint, x, q, γ, p) = _dG(joint::Joint, x, q, γ, p) * [I zeros(3,3); zeros(4,3) G(q)]
-
 function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}; attjac::Bool = true) where {T,Nn,Ne,Nb}
     mechanism = deepcopy(mechanism)
     Δt = mechanism.Δt
@@ -649,15 +451,6 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}; attjac::Bool = true)
     return A
 end
 
-function G(q::AbstractVector)
-    qs = q[1]
-    qv = q[2:4]
-    m = zeros(eltype(q), 4, 3)
-    m[1,:] += -qv
-    m[2:end,:] += qs * I + skew(qv)
-    return m
-end
-
 function attitudejacobian(data::AbstractVector, Nb::Int)
     G = zeros(0,0)
     for i = 1:Nb
@@ -694,19 +487,4 @@ function getλJoint(eqc::JointConstraint{T,N,Nc}, i::Int) where {T,N,Nc}
 
     λi = SVector{n2-n1+1,T}(eqc.λsol[2][n1:n2])
     return λi
-end
-
-function sensitivities(mechanism, sol, data)
-    setdata!(mechanism, data)
-    setsolution!(mechanism, sol)
-    setentries!(mechanism)
-    datamat = full_data_matrix(mechanism)
-    solmat = full_matrix(mechanism.system)
-    sensi = -1.0 * (solmat \ datamat)
-    return sensi
-end
-
-function jvp(mechanism, sol, data, v)
-    sensi = sensitivities(mechanism, sol, data)
-    return sensi * v
 end

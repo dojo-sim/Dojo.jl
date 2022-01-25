@@ -197,23 +197,6 @@ end
     return
 end
 
-@inline function normΔs(body::Body)
-    d1 = body.state.vsol[2] - body.state.vsol[1]
-    d2 = body.state.ϕsol[2] - body.state.ϕsol[1]
-    return dot(d1, d1) + dot(d2, d2)
-end
-
-@inline function normΔs(eqc::JointConstraint)
-    d = eqc.λsol[2] - eqc.λsol[1]
-    return dot(d, d)
-end
-
-@inline function normΔs(ineqc::ContactConstraint)
-    d1 = ineqc.ssol[2] - ineqc.ssol[1]
-    d2 = ineqc.γsol[2] - ineqc.γsol[1]
-    return dot(d1, d1) + dot(d2, d2)
-end
-
 @inline function residual_violation(mechanism::Mechanism)
     violation = 0.0
     for eq in mechanism.eqconstraints

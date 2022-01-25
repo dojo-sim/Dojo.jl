@@ -8,10 +8,6 @@ mutable struct Origin{T} <: Node{T}
         new{T}(getGlobalID(), name, state, shape)
     end
 
-    function Origin(; name::Symbol=:origin, state=State{Float64}(), shape::Shape=EmptyShape())
-        Origin{Float64}(; name=name, state=state, shape=shape)
-    end
-
     function Origin(body::Body{T}) where T
         new{T}(body.id, body.name, body.state, body.shape)
     end

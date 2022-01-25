@@ -103,13 +103,6 @@ function getsolution(mechanism::Mechanism{T}) where T
     return sol
 end
 
-function evaluate_solution!(mechanism::Mechanism, data::AbstractVector; ϵr=1e-8, ϵb=1.0e-8)
-    setdata!(mechanism, data)
-    mehrotra!(mechanism, opts = InteriorPointOptions(rtol = ϵr, btol = ϵb, undercut=1.2, verbose = true))
-    sol = getsolution(mechanism)
-    return sol
-end
-
 function evaluate_residual!(mechanism::Mechanism, data::AbstractVector, sol::AbstractVector)
     system = mechanism.system
     setdata!(mechanism, data)

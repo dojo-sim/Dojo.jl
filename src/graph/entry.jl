@@ -14,12 +14,3 @@ function Base.zero(::Entry{ET}) where ET
     dims = [ET.parameters[1].parameters...]
     return Entry{ET.parameters[2]}(dims...)
 end
-function Base.zero(::Type{Entry{ET}}) where ET
-    dims = [ET.parameters[1].parameters...]
-    return Entry{ET.parameters[2]}(dims...)
-end
-
-function randomize!(entry::Entry)
-    value = entry.value
-    entry.value = randn(eltype(value), size(value))
-end

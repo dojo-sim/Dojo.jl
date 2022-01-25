@@ -54,8 +54,6 @@ function minCoordDim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
     return nx
 end
 
-maxCoordDim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni} = 13Nb
-
 function ineqcdim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
     nineqcs = 0
     for ineqc in mechanism.ineqconstraints

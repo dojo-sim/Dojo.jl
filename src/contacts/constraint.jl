@@ -28,10 +28,6 @@ function ∂g∂v(mechanism, ineqc::ContactConstraint, body::Body)
     return ∂g∂v(ineqc.constraints[1], body, nothing, nothing, mechanism.Δt)
 end
 
-function ∂g∂z(mechanism, ineqc::ContactConstraint, body::Body)
-    return ∂g∂z(ineqc.constraints[1], body, nothing, nothing, mechanism.Δt)
-end
-
 function G(mechanism, ineqc::ContactConstraint, body::Body)
     return G(ineqc.constraints[1], body, nothing, nothing, mechanism.Δt)
 end
@@ -66,11 +62,6 @@ end
 @inline function ∂gab∂ʳba(mechanism, body::Body, ineqc::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
     Z = szeros(T,N½,6)
     return [Z; -G(mechanism, ineqc, body)]', [Z; ∂g∂v(mechanism, ineqc, body)]
-end
-
-@inline function ∂gab∂ʳba(mechanism, ineqc1::ContactConstraint, ineqc2::ContactConstraint)
-    G1, G2 = ∂gab∂ʳba(ineqc1.constraints[1], ineqc2.constraints[1])
-    return G1, G2
 end
 
 function resetVars!(ineqc::ContactConstraint{T,N,Nc,Cs,N½}; scale::T=1.0) where {T,N,Nc,Cs,N½}

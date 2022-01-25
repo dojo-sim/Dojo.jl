@@ -293,25 +293,6 @@ end
     return
 end
 
-function Base.cat(eqc1::JointConstraint{T,N1,Nc1}, eqc2::JointConstraint{T,N2,Nc2}) where {T,N1,N2,Nc1,Nc2}
-    @assert eqc1.parentid == eqc2.parentid "Can only concatenate constraints with the same parentid"
-    parentid = eqc1.parentid
-    if parentid === nothing
-        parentid = -1
-        nothingflag = true
-    else
-        nothingflag = false
-    end
-
-    constraints = [[eqc1.constraints[i] for i=1:Nc1]; [eqc2.constraints[i] for i=1:Nc2]]
-    childids = [[eqc1.childids[i] for i=1:Nc1]; [eqc2.childids[i] for i=1:Nc2]]
-
-    eqc = JointConstraint([(constraints[i],parentid,childids[i]) for i=1:Nc1+Nc2]..., name="combined_"*eqc1.name*"_and_"*eqc2.name)
-    nothingflag && (eqc.parentid = nothing)
-
-    return eqc
-end
-
 function set_spring_damper!(eqcs, spring, damper)
     i = 1
     for eqc in eqcs

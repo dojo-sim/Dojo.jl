@@ -44,7 +44,6 @@ function getnode(mechanism::Mechanism{T,Nn,Ne,Nb}, id::Integer) where {T,Nn,Ne,N
         return getineqconstraint(mechanism, id)
     end
 end
-getnode(mechanism::Mechanism, id::Nothing) = mechanism.origin
 
 function getnode(mechanism::Mechanism, name::Symbol)
     node = getbody(mechanism,name)
