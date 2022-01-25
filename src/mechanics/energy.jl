@@ -77,8 +77,8 @@ function potential_energy(mechanism::Mechanism{T,Nn,Ne,Nb}, storage::Storage{T,N
                     xa, qa = current_configuration(mechanism.origin.state) 
                 end
 
-                (typeof(joint) <: Translational) && (force = springforceb(joint, xa, qa, xb, qb)) # actual force not impulse
-                (typeof(joint) <: Rotational) && (q = gc(joint, qa, qb, qoff = spring_qoffset(joint)))
+                (typeof(joint) <: Translational) && (force = spring_child(joint, xa, qa, xb, qb)) # actual force not impulse
+                (typeof(joint) <: Rotational) && (q = rotation_error(joint, qa, qb, qoff = spring_qoffset(joint)))
              
                 # @show force
                 spring = joint.spring

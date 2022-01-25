@@ -51,7 +51,7 @@ function get_data(mechanism::Mechanism{T}) where T
             rot = eqc.constraints[findfirst(x -> typeof(x) <: Rotational, eqc.constraints)]
             F = tra.Fτ
             τ = rot.Fτ
-            u = [nullspacemat(tra) * F; nullspacemat(rot) * τ]
+            u = [nullspace_mask(tra) * F; nullspace_mask(rot) * τ]
             push!(data, u...)
         end
     end

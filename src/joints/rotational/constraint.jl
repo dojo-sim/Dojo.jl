@@ -34,9 +34,8 @@ Rotational1{T} = Rotational{T,1} where T
 Rotational2{T} = Rotational{T,2} where T
 Rotational3{T} = Rotational{T,3} where T
 
-# Position level constraints (for dynamics)
 @inline function constraint(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
-    return constraintmat(joint) *  Vmat(qa \ qb / joint.qoffset)
+    return constraint_mask(joint) *  Vmat(qa \ qb / joint.qoffset)
 end
 
 @inline function constraint_jacobian_configuration(joint::Rotational{T,Nλ,0,N}, η) where {T,Nλ,N}
@@ -46,82 +45,25 @@ end
 @inline function constraint_jacobian_parent(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
-    return constraintmat(joint) * [X Q]
+    return constraint_mask(joint) * [X Q]
 end
 
 @inline function constraint_jacobian_child(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa)
-    return constraintmat(joint) * [X Q]
+    return constraint_mask(joint) * [X Q]
 end
 
 @inline function impulse_map_parent(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
     Q = Q * LVᵀmat(qa)
-    return constraintmat(joint) * [X Q]
+    return constraint_mask(joint) * [X Q]
 end
 
 @inline function impulse_map_child(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa)
     Q = Q * LVᵀmat(qb)
-    return constraintmat(joint) * [X Q]
+    return constraint_mask(joint) * [X Q]
 end
-
-## w/ Limits
-@inline function constraint(joint::Rotational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
-    e1 = Vmat(qa \ qb / joint.qoffset)
-    e2 = minimal_coordinates(joint, qa, qb)
-    s, γ = get_sγ(joint, η)
-    return [
-            s .* γ;
-            s[1:Nb½] - (joint.joint_limits[2] .- e2);
-            s[Nb½ .+ (1:Nb½)] - (e2 .- joint.joint_limits[1]);
-            constraintmat(joint) * e1;
-           ]
-end
-
-@inline function constraint_jacobian_configuration(joint::Rotational{T,Nλ,Nb,N}, η) where {T,Nλ,Nb,N}
-    s, γ = get_sγ(joint, η)
-
-    c1 = [Diagonal(γ + 1e-10 * sones(T, Nb)); Diagonal(sones(Nb)); szeros(Nλ, Nb)]
-    c2 = [Diagonal(s + 1e-10 * sones(T, Nb)); szeros(Nb, Nb); szeros(Nλ, Nb)]
-    c3 = [szeros(Nb, Nλ); szeros(Nb, Nλ); Diagonal(+1.00e-10 * sones(T, Nλ))]
-    return [c1 c2 c3]
-end
-
-@inline function constraint_jacobian_parent(joint::Rotational{T,Nλ,Nb,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
-    X = szeros(T, N, 3)
-    Q = FiniteDiff.finite_difference_jacobian(q -> constraint(joint, xa, UnitQuaternion(q..., false), xb, qb, η), vector(qa))
-    return [X Q]
-end
-
-@inline function constraint_jacobian_child(joint::Rotational{T,Nλ,Nb,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
-    X = szeros(T, N, 3)
-    Q = FiniteDiff.finite_difference_jacobian(q -> constraint(joint, xa, qa, xb, UnitQuaternion(q..., false), η), vector(qb))
-    return [X Q]
-end
-
-@inline function impulse_map_parent(joint::Rotational{T,Nλ,Nb,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
-    X = szeros(T, 3, 3)
-    Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
-    return [
-            zeros(Nb, 6);
-            -nullspacemat(joint) * [X Q * LVᵀmat(qa)];
-            nullspacemat(joint) * [X Q * LVᵀmat(qa)];
-            constraintmat(joint) * [X Q * LVᵀmat(qa)];
-           ]
-end
-
-@inline function impulse_map_child(joint::Rotational{T,Nλ,Nb,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
-    X = szeros(T, 3, 3)
-    Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa)
-    return [
-            zeros(Nb, 6);
-            -nullspacemat(joint) * [X Q * LVᵀmat(qb)];
-            nullspacemat(joint) * [X Q * LVᵀmat(qb)];
-            constraintmat(joint) * [X Q * LVᵀmat(qb)];
-           ]
-end
-

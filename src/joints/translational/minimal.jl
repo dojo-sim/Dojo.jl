@@ -6,7 +6,7 @@
 end
 
 @inline function minimal_coordinates(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-    return nullspacemat(joint) * position_error(joint, xa, qa, xb, qb)
+    return nullspace_mask(joint) * position_error(joint, xa, qa, xb, qb)
 end
 
 @inline function minimal_velocities(joint::Translational, body1::Node, body2::Node)
@@ -22,6 +22,6 @@ end
     pbca_w = xa - (xb + vrotate(vertices[2], qb))
     Δvw = vb + skew(pbcb_w) * vrotate(ωb, qb) - (va + skew(pbca_w) * vrotate(ωa, qa))
     Δv = vrotate(Δvw, inv(qa))
-    return nullspacemat(joint) * Δv
+    return nullspace_mask(joint) * Δv
 end
 

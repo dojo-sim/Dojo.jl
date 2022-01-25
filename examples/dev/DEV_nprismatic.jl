@@ -181,9 +181,9 @@ bodyb0 = mech.bodies[4]
 childida0 = 3
 childidb0 = 4
 Δt0 = mech.Δt
-damperforcea(jt0, bodya0, bodyb0, childidb0)
-damperforceb(jt0, bodya0, bodyb0, childidb0)
-damperforceb(jr0, origin0, bodya0, childida0)
+damper_parent(jt0, bodya0, bodyb0, childidb0)
+damper_child(jt0, bodya0, bodyb0, childidb0)
+damper_child(jr0, origin0, bodya0, childida0)
 
 x2a0, q2a0 = next_configuration(bodya0.state, Δt0)
 x2b0, q2b0 = next_configuration(bodyb0.state, Δt0)
@@ -206,7 +206,7 @@ q1b0 = UnitQuaternion(rand(4)...)
 
 # function der1(ω1a, q2a, ω1b, q2b)
 #     invqbqa = q2b\q2a
-#     A = nullspacemat(jr0)
+#     A = nullspace_mask(jr0)
 #     AᵀA = zerodimstaticadjoint(A) * A
 #     return 2*VLmat(invqbqa)*RVᵀmat(invqbqa)* AᵀA * Diagonal(jr0.damper) * AᵀA
 # end
@@ -265,9 +265,9 @@ jt0.damper = 1e1 .* rand(3)[1]
 # jt0.spring = 1e1 .* rand(3)
 # jt0.damper = 1e1 .* rand(3)
 
-damperforcea(jt0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0)
-damperforceb(jt0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0)
-damperforceb(jt0, x1b0, v1b0, q1b0, ω1b0)
+damper_parent(jt0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0)
+damper_child(jt0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0)
+damper_child(jt0, x1b0, v1b0, q1b0, ω1b0)
 
 Dtra1 = diagonal∂damper∂ʳvel(jt0)
 Dtra2 = offdiagonal∂damper∂ʳvel(jt0, x1a0, q1a0, x1b0, q1b0)
@@ -300,9 +300,9 @@ jr0.damper = 1e1 .* rand(3)[1]
 # jr0.spring = 1e1 .* rand(3)
 # jr0.damper = 1e1 .* rand(3)
 
-damperforcea(jr0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0)
-damperforceb(jr0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0)
-damperforceb(jr0, x1b0, v1b0, q1b0, ω1b0)
+damper_parent(jr0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0)
+damper_child(jr0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0)
+damper_child(jr0, x1b0, v1b0, q1b0, ω1b0)
 
 Drot1 = diagonal∂damper∂ʳvel(jr0)
 Drot2 = offdiagonal∂damper∂ʳvel(jr0, x1a0, q1a0, x1b0, q1b0)
@@ -335,9 +335,9 @@ jt0.damper = 1e1 .* rand(3)[1]
 # jt0.spring = 1e1 .* rand(3)
 # jt0.damper = 1e1 .* rand(3)
 
-springforcea(jt0, x1a0, q1a0, x1b0, q1b0)
-springforceb(jt0, x1a0, q1a0, x1b0, q1b0)
-springforceb(jt0, x1b0, q1b0)
+spring_parent(jt0, x1a0, q1a0, x1b0, q1b0)
+spring_child(jt0, x1a0, q1a0, x1b0, q1b0)
+spring_child(jt0, x1b0, q1b0)
 
 Dspr1 = diagonal∂spring∂ʳvel(jt0, x1a0, q1a0, x1b0, q1b0)
 Dspr2 = offdiagonal∂spring∂ʳvel(jt0, x1a0, q1a0, x1b0, q1b0)
@@ -371,9 +371,9 @@ jr0.damper = 1e1 .* rand(3)[1]
 # jt0.spring = 1e1 .* rand(3)
 # jt0.damper = 1e1 .* rand(3)
 
-springforcea(jt0, x1a0, q1a0, x1b0, q1b0)
-springforceb(jt0, x1a0, q1a0, x1b0, q1b0)
-springforceb(jt0, x1b0, q1b0)
+spring_parent(jt0, x1a0, q1a0, x1b0, q1b0)
+spring_child(jt0, x1a0, q1a0, x1b0, q1b0)
+spring_child(jt0, x1b0, q1b0)
 
 Dspr1 = diagonal∂spring∂ʳvel(jt0, x1a0, q1a0, x1b0, q1b0)
 Dspr2 = offdiagonal∂spring∂ʳvel(jt0, x1a0, q1a0, x1b0, q1b0)
@@ -424,9 +424,9 @@ jt0.damper = 1e1 .* rand(3)[1]
 # jt0.spring = 1e1 .* rand(3)
 # jt0.damper = 1e1 .* rand(3)
 
-damperforcea(jt0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0)
-damperforceb(jt0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0)
-damperforceb(jt0, x1b0, v1b0, q1b0, ω1b0)
+damper_parent(jt0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0)
+damper_child(jt0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0)
+damper_child(jt0, x1b0, v1b0, q1b0, ω1b0)
 
 Dtra1 = data_diagonal∂damper∂ʳvel(jt0)
 Dtra2 = data_offdiagonal∂damper∂ʳvel(jt0, x1a0, q1a0, x1b0, q1b0)

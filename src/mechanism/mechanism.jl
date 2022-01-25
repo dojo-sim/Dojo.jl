@@ -57,7 +57,7 @@ function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, eqcs::Vector{<:
     diagonal_inverses = deepcopy(system.diagonal_inverses)
 
     # springs and dampers
-    eqcs = set_spring_damper!(eqcs, spring, damper)
+    eqcs = set_springapply_dampervalues!(eqcs, spring, damper)
 
     # containers for nodes
     # eqcs = UnitDictUnitDict(eqcs)

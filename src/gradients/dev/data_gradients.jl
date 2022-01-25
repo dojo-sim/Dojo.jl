@@ -55,9 +55,9 @@ function ∂body∂eqc_data(mechanism::Mechanism{T}, eqc::JointConstraint{T},
     x1, v15, q1, ϕ15 = fullargs1(body.state)
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, Δt)
-    ∇u = Diagonal(SVector{6,T}(-1,-1,-1,-2,-2,-2)) * ∂Fτ∂u(mechanism, eqc, body)
-    ∇spring = springforce(mechanism, eqc, body, unitary=true)
-    ∇damper = damperforce(mechanism, eqc, body, unitary=true)
+    ∇u = Diagonal(SVector{6,T}(-1,-1,-1,-2,-2,-2)) * input_jacobian_control(mechanism, eqc, body)
+    ∇spring = apply_spring(mechanism, eqc, body, unitary=true)
+    ∇damper = apply_damper(mechanism, eqc, body, unitary=true)
     # TODO
     nu = control_dimension(eqc)
     ∇spring_offset = szeros(T,N,nu)

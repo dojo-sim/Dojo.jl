@@ -1,6 +1,6 @@
 @inline function get_position_delta(joint::Rotational, body1::Node, body2::Node, θ::SVector{N,T}) where {T,N}
     # axis angle representation
-    θ = zerodimstaticadjoint(nullspacemat(joint)) * θ
+    θ = zerodimstaticadjoint(nullspace_mask(joint)) * θ
     nθ = norm(θ)
     if nθ == 0
         q = one(UnitQuaternion{T})
@@ -13,7 +13,7 @@
 end
 
 @inline function get_velocity_delta(joint::Rotational, body1::Node, body2::Node, ω::SVector)
-    ω = zerodimstaticadjoint(nullspacemat(joint)) * ω
+    ω = zerodimstaticadjoint(nullspace_mask(joint)) * ω
     Δω = ω # in body1 frame
     return Δω
 end
@@ -26,7 +26,7 @@ end
 
 @inline function minimal_coordinates(joint::Rotational, qa::UnitQuaternion, qb::UnitQuaternion)
     q = qa \ qb / joint.qoffset
-    return nullspacemat(joint) * rotation_vector(q)
+    return nullspace_mask(joint) * rotation_vector(q)
 end
 
 @inline function minimal_velocities(joint::Rotational, body1::Node, body2::Node)
@@ -37,6 +37,6 @@ end
 
 @inline function minimal_velocities(joint::Rotational, qa::UnitQuaternion,
         ϕa::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector)
-    return nullspacemat(joint) * (vrotate(ϕb, qa \ qb) - ϕa) # in body1's frame
+    return nullspace_mask(joint) * (vrotate(ϕb, qa \ qb) - ϕa) # in body1's frame
 end
 

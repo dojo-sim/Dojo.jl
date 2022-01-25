@@ -5,7 +5,7 @@
 data_dim(mechanism::Mechanism) = sum(data_dim.(mechanism.eqconstraints)) +
     sum(data_dim.(mechanism.bodies)) + sum(data_dim.(mechanism.ineqconstraints))
 # Eqconstraints
-data_dim(eqc::JointConstraint) = 2 + sum(data_dim.(eqc.constraints)) # [utra, urot, spring, damper, tra_spring_offset, rot_spring_offset]
+data_dim(eqc::JointConstraint) = 2 + sum(data_dim.(eqc.constraints)) # [utra, urot, spring, damper, traapply_springoffset, rotapply_springoffset]
 data_dim(joint::Rotational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = 2N̄λ # [u, spring, damper, spring_offset]
 data_dim(joint::Translational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = 2N̄λ # [u, spring, damper, spring_offset]
 # Body
@@ -55,7 +55,7 @@ get_data(mechanism::Mechanism) = vcat([get_data.(mechanism.eqconstraints);
 # Eqconstraints
 function get_data(eqc::JointConstraint)
 	joints = eqc.constraints
-	u = vcat(nullspacemat.(joints) .* getfield.(joints, :Fτ)...)
+	u = vcat(nullspace_mask.(joints) .* getfield.(joints, :Fτ)...)
 	spring = joints[1].spring # assumes we have the same spring and dampers for translational and rotational joint.
 	damper = joints[1].damper # assumes we have the same spring and dampers for translational and rotational joint.
 	spring_offset = vcat(getfield.(joints, :spring_offset)...)

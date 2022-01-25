@@ -183,7 +183,7 @@ function joint_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,N
     return J
 end
 
-function spring_damper_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
+function springapply_damperjacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     Δt = mechanism.Δt
     J = zeros(T,6Nb,13Nb)
 
@@ -211,17 +211,17 @@ function spring_damper_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne
                 Aba = zeros(T,6,13)
                 Abb = zeros(T,6,13)
 
-                Aaa[:, [1:3; 7:10]] -= ∂springforcea∂posa(joint, pbody, cbody, Δt, attjac = false)
-                Aaa[:, [1:3; 7:10]] -= ∂damperforcea∂posa(joint, pbody, cbody, Δt, attjac = false)
+                Aaa[:, [1:3; 7:10]] -= spring_parent_jacobian_configuration_parent(joint, pbody, cbody, Δt, attjac = false)
+                Aaa[:, [1:3; 7:10]] -= damper_parent_jacobian_configuration_parent(joint, pbody, cbody, Δt, attjac = false)
 
-                Aab[:, [1:3; 7:10]] -= ∂springforcea∂posb(joint, pbody, cbody, Δt, attjac = false)
-                Aab[:, [1:3; 7:10]] -= ∂damperforcea∂posb(joint, pbody, cbody, Δt, attjac = false)
+                Aab[:, [1:3; 7:10]] -= spring_parent_jacobian_configuration_child(joint, pbody, cbody, Δt, attjac = false)
+                Aab[:, [1:3; 7:10]] -= damper_parent_jacobian_configuration_child(joint, pbody, cbody, Δt, attjac = false)
 
-                Aba[:, [1:3; 7:10]] -= ∂springforceb∂posa(joint, pbody, cbody, Δt, attjac = false)
-                Aba[:, [1:3; 7:10]] -= ∂damperforceb∂posa(joint, pbody, cbody, Δt, attjac = false)
+                Aba[:, [1:3; 7:10]] -= spring_child_jacobian_configuraion_parent(joint, pbody, cbody, Δt, attjac = false)
+                Aba[:, [1:3; 7:10]] -= damper_child_jacobian_configuration_parent(joint, pbody, cbody, Δt, attjac = false)
 
-                Abb[:, [1:3; 7:10]] -= ∂springforceb∂posb(joint, pbody, cbody, Δt, attjac = false)
-                Abb[:, [1:3; 7:10]] -= ∂damperforceb∂posb(joint, pbody, cbody, Δt, attjac = false)
+                Abb[:, [1:3; 7:10]] -= spring_child_jacobian_configuration_child(joint, pbody, cbody, Δt, attjac = false)
+                Abb[:, [1:3; 7:10]] -= damper_child_jacobian_configuration_child(joint, pbody, cbody, Δt, attjac = false)
 
                 J[prow6,pcol13] += Aaa
                 J[prow6,ccol13] += Aab
@@ -241,8 +241,8 @@ function spring_damper_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne
 
                 Abb = zeros(T,6,13)
 
-                Abb[:, [1:3; 7:10]] -= ∂springforceb∂posb(joint, pbody, cbody, Δt, attjac = false)
-                Abb[:, [1:3; 7:10]] -= ∂damperforceb∂posb(joint, pbody, cbody, Δt, attjac = false)
+                Abb[:, [1:3; 7:10]] -= spring_child_jacobian_configuration_child(joint, pbody, cbody, Δt, attjac = false)
+                Abb[:, [1:3; 7:10]] -= damper_child_jacobian_configuration_child(joint, pbody, cbody, Δt, attjac = false)
 
                 J[crow6,ccol13] += Abb
             end
@@ -323,12 +323,12 @@ function dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,Nn
         if parentid != nothing
             parentind = parentid - Ne
             col6 = offset_range(parentind,6)
-            Bcontrol[col6,n1:n2] = ∂Fτ∂ua(mechanism, eqc, get_body(mechanism, parentid))
+            Bcontrol[col6,n1:n2] = input_jacobian_control_parent(mechanism, eqc, get_body(mechanism, parentid))
         end
         for childid in eqc.childids
             childind = childid - Ne
             col6 = offset_range(childind,6)
-            Bcontrol[col6,n1:n2] = ∂Fτ∂ub(mechanism, eqc, get_body(mechanism, childid))
+            Bcontrol[col6,n1:n2] = input_jacobian_control_child(mechanism, eqc, get_body(mechanism, childid))
         end
 
         n1 = n2+1
@@ -439,7 +439,7 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}; attjac::Bool = true)
     D = contact_dynamics_jacobian(mechanism) * H
     E = contact_constraint_jacobian(mechanism) * H
 
-    C = Fz + joint_dynamics_jacobian(mechanism) + spring_damper_jacobian(mechanism)
+    C = Fz + joint_dynamics_jacobian(mechanism) + springapply_damperjacobian(mechanism)
     attjac && (C = C * G)
 
     A = zeros(sum(resdims), data_dimension(mechanism, attjac = attjac))

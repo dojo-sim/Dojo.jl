@@ -5,7 +5,7 @@
 end
 
 @inline function set_LU!(mechanism::Mechanism, matrix_entry_L::Entry, matrix_entry_U::Entry, nodea::Node, nodeb::Node)
-    L, U = ∂gab∂ʳba(mechanism, nodea, nodeb)
+    L, U = off_diagonal_jacobians(mechanism, nodea, nodeb)
     matrix_entry_L.value = L
     matrix_entry_U.value = U
     return
@@ -17,10 +17,6 @@ end
     return
 end
 
-#######
-
-
-## Complementarity
 function complementarity(mechanism, eqc::JointConstraint{T,N,Nc,Cs}; scaling::Bool = false) where {T,N,Nc,Cs}
     c = []
     for (i, joint) in enumerate(eqc.constraints)

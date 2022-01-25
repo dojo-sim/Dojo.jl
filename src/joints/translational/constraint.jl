@@ -41,7 +41,7 @@ end
 @inline function constraint(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     vertices = joint.vertices
     e = vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
-    return constraintmat(joint) * e
+    return constraint_mask(joint) * e
 end
 
 @inline function constraint_jacobian_configuration(joint::Translational{T,Nλ,0,N}, η) where {T,Nλ,N}
@@ -54,13 +54,13 @@ end
     X = -VLᵀmat(qa) * RVᵀmat(qa)
     Q = ∂vrotate∂q(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * Tmat()
     Q += ∂vrotate∂p(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * -∂vrotate∂q(joint.vertices[1], qa)
-    return constraintmat(joint) * [X Q]
+    return constraint_mask(joint) * [X Q]
 end
 
 @inline function constraint_jacobian_child(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     X = VLᵀmat(qa) * RVᵀmat(qa)
     Q = 2 * VLᵀmat(qa) * Rmat(qa) * Rᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
-    return constraintmat(joint) * [X Q]
+    return constraint_mask(joint) * [X Q]
 end
 
 function impulse_map_parent(joint::Translational{T,Nλ,0}, statea::State, stateb::State, η, Δt) where {T,Nλ}
@@ -75,7 +75,7 @@ function impulse_map_parent(joint::Translational{T,Nλ,0}, xa::AbstractVector, q
     ca_a = rotation_matrix(inv(qa)) * (xa) # body a com
     capb_a = pb_a - ca_a
     Q = - 1.0 * transpose(skew(capb_a))
-    return constraintmat(joint) * [X Q]
+    return constraint_mask(joint) * [X Q]
 end
 
 function impulse_map_child(joint::Translational{T,Nλ,0}, statea::State, stateb::State, η, Δt) where {T,Nλ}
@@ -90,7 +90,7 @@ function impulse_map_child(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa
     cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
     cbpb_b = pb_b - cb_b
     Q = transpose(skew(cbpb_b) * rotation_matrix(inv(qb) * qa))
-    return constraintmat(joint) * [X Q]
+    return constraint_mask(joint) * [X Q]
 end
 
 ### w/ Limits
@@ -107,7 +107,7 @@ end
             s .* γ;
             s[1:Nb½] - (joint.joint_limits[2] - e2);
             s[Nb½ .+ (1:Nb½)] - (e2 - joint.joint_limits[1]);
-            constraintmat(joint) * e1;
+            constraint_mask(joint) * e1;
            ]
 end
 
@@ -147,9 +147,9 @@ function impulse_map_parent(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractV
     Q = - 1.0 * transpose(skew(capb_a))
     return [
             zeros(Nb, 6);
-            -nullspacemat(joint) * [X Q];
-            nullspacemat(joint) * [X Q];
-            constraintmat(joint) * [X Q];
+            -nullspace_mask(joint) * [X Q];
+            nullspace_mask(joint) * [X Q];
+            constraint_mask(joint) * [X Q];
            ]
 end
 
@@ -167,19 +167,19 @@ function impulse_map_child(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractVe
     Q = transpose(skew(cbpb_b) * rotation_matrix(inv(qb) * qa))
     return [
             zeros(Nb, 6);
-            -nullspacemat(joint) * [X Q];
-            nullspacemat(joint) * [X Q];
-            constraintmat(joint) * [X Q];
+            -nullspace_mask(joint) * [X Q];
+            nullspace_mask(joint) * [X Q];
+            constraint_mask(joint) * [X Q];
            ]
 end
 
 ## Position and velocity offsets
 @inline function get_position_delta(joint::Translational, body1::Node, body2::Node, x::SVector)
-    Δx = zerodimstaticadjoint(nullspacemat(joint)) * x # in body1 frame
+    Δx = zerodimstaticadjoint(nullspace_mask(joint)) * x # in body1 frame
     return Δx
 end
 
 @inline function get_velocity_delta(joint::Translational, body1::Node, body2::Node, v::SVector)
-    Δv = zerodimstaticadjoint(nullspacemat(joint)) * v # in body1 frame
+    Δv = zerodimstaticadjoint(nullspace_mask(joint)) * v # in body1 frame
     return Δv
 end

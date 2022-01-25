@@ -35,7 +35,7 @@ function getpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
         spring = spring,
         damper = damper,
         spring_type = :linear,
-        rot_spring_offset = spring_offset,
+        rotapply_springoffset = spring_offset,
         rot_joint_limits = joint_limits))
     bodies = [body1]
     eqcs = [joint_between_origin_and_body1]

@@ -81,12 +81,12 @@ visualize(mech, storage, vis = vis)
 # qa = one(UnitQuaternion)
 # qb = UnitQuaternion(RotX(π/8))
 # joint = collect(mech.eqconstraints)[1].constraints[2]
-# A = nullspacemat(joint)
+# A = nullspace_mask(joint)
 # Aᵀ = zerodimstaticadjoint(A)
 # joint.spring_offset = pi/8 * sones(1)
-# distance = A * gc(joint, qa, qb) .- joint.spring_offset
+# distance = A * rotation_error(joint, qa, qb) .- joint.spring_offset
 #
-# gc(joint, qa, qb)
+# rotation_error(joint, qa, qb)
 # θ = rotation_vector(qb * inv(qa))[1]
 # qr_ = UnitQuaternion(rand(4)...)
 # Δ0 = Vmat(qr_) * qr_.w
@@ -96,8 +96,8 @@ visualize(mech, storage, vis = vis)
 # θ = norm(aa)
 # qoff = UnitQuaternion(cos(θ/2), 1/2 * sinc(θ/(2π)) * aa) # quaternion
 # offset = Vmat(qoff) * qoff.w
-# distance = A * (gc(joint, qb) .- offset)
-# gc(joint, qb)
+# distance = A * (rotation_error(joint, qb) .- offset)
+# rotation_error(joint, qb)
 
 
 
@@ -146,8 +146,8 @@ function gravity_compensation(mechanism::Mechanism)
         if eqc.parentid != nothing
             body = get_body(mechanism, eqc.parentid)
             rot = eqc.constraints[2]
-            A = Matrix(nullspacemat(rot))
-            Fτ = springforce(mechanism, eqc, body)
+            A = Matrix(nullspace_mask(rot))
+            Fτ = apply_spring(mechanism, eqc, body)
             F = Fτ[1:3]
             τ = Fτ[4:6]
             u[off .+ (1:nu)] = -A * τ
@@ -256,7 +256,7 @@ visualize(mech, storage, vis = vis)
 eqcs = collect(mech.eqconstraints)
 rot1 = eqcs[1].constraints[2]
 rot2 = eqcs[2].constraints[2]
-A1 = nullspacemat(rot1)
-A2 = nullspacemat(rot2)
+A1 = nullspace_mask(rot1)
+A2 = nullspace_mask(rot2)
 A1 * srand(3)
 A2 * srand(3)

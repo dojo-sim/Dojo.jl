@@ -53,7 +53,7 @@ storage = simulate!(mech, 0.10, record=true, verbose=false)
 visualize(mech, storage, vis=env.vis)
 # ugc = gravity_compensation(mech)
 # u_control = ugc[6 .+ (1:15)]
-F_damper = get_damperforce(env.mechanism)
+F_damper = get_apply_damper(env.mechanism)
 u_damper = F_damper * env.mechanism.Δt
 u_control = u_damper[6 .+ (1:15)]
 
@@ -67,7 +67,7 @@ initialize!(mech, :atlas, tran=[0,0,0.0])
 storage = simulate!(mech, 0.50, controller!, record=true, verbose=false)
 visualize(mech, storage, vis=env.vis)
 
-function get_damperforce(mechanism::Mechanism{T}) where {T}
+function get_apply_damper(mechanism::Mechanism{T}) where {T}
 	eqcs = mechanism.eqconstraints
 	# set the controls in the equality constraints
 	off = 0
@@ -76,17 +76,17 @@ function get_damperforce(mechanism::Mechanism{T}) where {T}
 	for eqc in eqcs
 		pbody = get_body(mechanism, eqc.parentid)
 		if typeof(pbody) <: Body
-			F = damperforce(mechanism, eqc, pbody)
+			F = apply_damper(mechanism, eqc, pbody)
 			oF = 0
 			for joint in eqc.constraints
-				nf, nF = size(nullspacemat(joint))
-				u[off .+ (1:nf)] .= nullspacemat(joint) * F[oF .+ (1:nF)]
+				nf, nF = size(nullspace_mask(joint))
+				u[off .+ (1:nf)] .= nullspace_mask(joint) * F[oF .+ (1:nF)]
 				off += nf
 				oF += nF
 			end
 		else
 			for joint in eqc.constraints
-				nf, nF = size(nullspacemat(joint))
+				nf, nF = size(nullspace_mask(joint))
 				off += nf
 			end
 		end
@@ -97,13 +97,13 @@ end
 
 # eqc0 = env.mechanism.eqconstraints.values[1]
 # body0 = get_body(env.mechanism, eqc0.parentid)
-# df = damperforce(mech, eqc0, body0)
-# nullspacemat(eqc0.constraints[1])# * df[1:3]
-# nullspacemat(eqc0.constraints[2])# * df[4:6]
-# nf, nF = size(nullspacemat(eqc0.constraints[1]))
+# df = apply_damper(mech, eqc0, body0)
+# nullspace_mask(eqc0.constraints[1])# * df[1:3]
+# nullspace_mask(eqc0.constraints[2])# * df[4:6]
+# nf, nF = size(nullspace_mask(eqc0.constraints[1]))
 # nf
 # null
-# u = get_damperforce(env.mechanism)
+# u = get_apply_damper(env.mechanism)
 
 # ## horizon
 T = N * (25 - 1) + 1

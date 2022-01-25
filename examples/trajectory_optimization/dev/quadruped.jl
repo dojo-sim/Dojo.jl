@@ -86,8 +86,8 @@ function gravity_compensation(mechanism::Mechanism)
         if eqc.parentid != nothing
             body = get_body(mechanism, eqc.parentid)
             rot = eqc.constraints[2]
-            A = Matrix(nullspacemat(rot))
-            Fτ = springforce(mechanism, eqc, body)
+            A = Matrix(nullspace_mask(rot))
+            Fτ = apply_spring(mechanism, eqc, body)
             F = Fτ[1:3]
             τ = Fτ[4:6]
             u[off .+ (1:nu)] = -A * τ

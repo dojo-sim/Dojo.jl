@@ -15,14 +15,14 @@
     return
 end
 
-@inline function ∂Fτ∂ua(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
+@inline function input_jacobian_control_parent(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
     BFa = (szeros(T, 3, 3))
     Bτa = -I
 
     return [BFa; Bτa]
 end
 
-@inline function ∂Fτ∂ub(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
+@inline function input_jacobian_control_child(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
     _, qa = current_configuration(statea)
     _, qb = current_configuration(stateb)
     qbinvqa = qb \ qa
@@ -33,7 +33,7 @@ end
     return [BFb; Bτb]
 end
 
-@inline function ∂Fτ∂a(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
+@inline function input_jacobian_configuration_parent(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
     _, qa = current_configuration(statea)
     _, qb = current_configuration(stateb)
     τ = joint.Fτ
@@ -50,7 +50,7 @@ end
     return FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa
 end
 
-@inline function ∂Fτ∂b(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
+@inline function input_jacobian_configuration_child(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
     _, qa = current_configuration(statea)
     _, qb = current_configuration(stateb)
     τ = joint.Fτ

@@ -59,7 +59,7 @@ end
     return
 end
 
-@inline function ∂gab∂ʳba(mechanism, body::Body, ineqc::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+@inline function off_diagonal_jacobians(mechanism, body::Body, ineqc::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
     Z = szeros(T,N½,6)
     return [Z; -impulse_map(mechanism, ineqc, body)]', [Z; constraint_jacobian_velocity(mechanism, ineqc, body)]
 end

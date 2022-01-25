@@ -63,7 +63,7 @@ end
     return
 end
 
-@inline function ∂gab∂ʳba(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, body1::Body, body2::Body) where {T,Nn,Ne,Nb,Ni}
+@inline function off_diagonal_jacobians(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, body1::Body, body2::Body) where {T,Nn,Ne,Nb,Ni}
     Δt = mechanism.Δt
     _, _, q1, ω1 = current_configuration_velocity(body1.state)
     _, _, q2, ω2 = current_configuration_velocity(body2.state)
@@ -84,11 +84,11 @@ end
                 joint = eqc.constraints[i]
                 Nj = length(joint)
                 if body2.id == eqc.childids[i]
-                    Aᵀ = zerodimstaticadjoint(constraintmat(joint))
-                    eqc.isspring && (dimpulse_map_parentb -= ∂springforcea∂velb(joint, body1, body2, Δt)) #should be useless
-                    eqc.isdamper && (dimpulse_map_parentb -= ∂damperforcea∂velb(joint, body1, body2, Δt))
-                    eqc.isspring && (dimpulse_map_childa -= ∂springforceb∂vela(joint, body1, body2, Δt)) #should be useless
-                    eqc.isdamper && (dimpulse_map_childa -= ∂damperforceb∂vela(joint, body1, body2, Δt))
+                    Aᵀ = zerodimstaticadjoint(constraint_mask(joint))
+                    eqc.isspring && (dimpulse_map_parentb -= spring_parent_jacobian_velocity_child(joint, body1, body2, Δt)) #should be useless
+                    eqc.isdamper && (dimpulse_map_parentb -= damper_parent_jacobian_velocity_child(joint, body1, body2, Δt))
+                    eqc.isspring && (dimpulse_map_childa -= spring_child_configuration_velocity_parent(joint, body1, body2, Δt)) #should be useless
+                    eqc.isdamper && (dimpulse_map_childa -= damper_child_configuration_velocity_parent(joint, body1, body2, Δt))
                 end
                 off += Nj
             end
@@ -97,11 +97,11 @@ end
                 joint = eqc.constraints[i]
                 Nj = length(joint)
                 if body1.id == eqc.childids[i]
-                    Aᵀ = zerodimstaticadjoint(constraintmat(joint))
-                    # eqc.isspring && (dimpulse_map_parentb -= ∂springforcea∂velb(joint, body2, body1, Δt)) #should be useless
-                    eqc.isdamper && (dimpulse_map_parentb -= ∂damperforcea∂velb(joint, body2, body1, Δt))
-                    # eqc.isspring && (dimpulse_map_childa -= ∂springforceb∂vela(joint, body2, body1, Δt)) #should be useless
-                    eqc.isdamper && (dimpulse_map_childa -= ∂damperforceb∂vela(joint, body2, body1, Δt))
+                    Aᵀ = zerodimstaticadjoint(constraint_mask(joint))
+                    # eqc.isspring && (dimpulse_map_parentb -= spring_parent_jacobian_velocity_child(joint, body2, body1, Δt)) #should be useless
+                    eqc.isdamper && (dimpulse_map_parentb -= damper_parent_jacobian_velocity_child(joint, body2, body1, Δt))
+                    # eqc.isspring && (dimpulse_map_childa -= spring_child_configuration_velocity_parent(joint, body2, body1, Δt)) #should be useless
+                    eqc.isdamper && (dimpulse_map_childa -= damper_child_configuration_velocity_parent(joint, body2, body1, Δt))
                 end
                 off += Nj
             end

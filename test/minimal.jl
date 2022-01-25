@@ -40,13 +40,13 @@ end
 	rot2 = eqc2.constraints[1]
 
 	x = srand(1)
-	Δx = Dojo.zerodimstaticadjoint(Dojo.nullspacemat(tra2)) * x
+	Δx = Dojo.zerodimstaticadjoint(Dojo.nullspace_mask(tra2)) * x
 	Δq = UnitQuaternion(rand(4)...)
 	Dojo.set_position(body1, body2; p1 = tra2.vertices[1], p2 = tra2.vertices[2], Δx = Δx, Δq = Δq)
 	@test norm(Dojo.minimal_coordinates(tra2, body1, body2) - x[1], Inf) < 1e-10
 
 	v = srand(1)
-	Δv = Dojo.zerodimstaticadjoint(Dojo.nullspacemat(tra2)) * v
+	Δv = Dojo.zerodimstaticadjoint(Dojo.nullspace_mask(tra2)) * v
 	Δω = rand(3)
 	Dojo.set_velocity!(body1, body2; p1 = tra2.vertices[1], p2 = tra2.vertices[2], Δv = Δv, Δω = Δω)
 	@test norm(Dojo.minimal_velocities(tra2, body1, body2) - v[1], Inf) < 1e-10

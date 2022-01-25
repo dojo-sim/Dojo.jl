@@ -23,8 +23,8 @@ function momentum(mechanism::Mechanism{T}, body::Body{T}) where {T}
         if body.id ∈ [eqc.parentid; eqc.childids]
 
             f_joint = zerodimstaticadjoint(impulse_map(mechanism, eqc, body)) * eqc.λsol[2]  # computed at 1.5
-            eqc.isspring && (f_joint += springforce(mechanism, eqc, body)) # computed at 1.5
-            eqc.isdamper && (f_joint += damperforce(mechanism, eqc, body)) # computed at 1.5
+            eqc.isspring && (f_joint += apply_spring(mechanism, eqc, body)) # computed at 1.5
+            eqc.isdamper && (f_joint += apply_damper(mechanism, eqc, body)) # computed at 1.5
 
             p_linear_body += α * 0.5 * f_joint[1:3] 
             p_angular_body += α * 0.5 * f_joint[4:6]

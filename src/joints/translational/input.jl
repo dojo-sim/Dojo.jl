@@ -1,5 +1,3 @@
-### Forcing
-## Application of joint forces (for dynamics)
 @inline function apply_input!(joint::Translational{T}, statea::State, stateb::State, Δt::T, clear::Bool) where T
     xa, qa = current_configuration(statea)
     xb, qb = current_configuration(stateb)
@@ -12,6 +10,7 @@
     clear && (joint.Fτ = szeros(T,3))
     return
 end
+
 @inline function apply_input(joint::Translational{T}, F::AbstractVector, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
     vertices = joint.vertices
 
@@ -28,9 +27,7 @@ end
     return Faw, τaa, Fbw, τbb
 end
 
-## Forcing derivatives (for linearization)
-# Control derivatives
-@inline function ∂Fτ∂ua(joint::Translational, statea::State, stateb::State, Δt::T) where T
+@inline function input_jacobian_control_parent(joint::Translational, statea::State, stateb::State, Δt::T) where T
     vertices = joint.vertices
     xa, qa = current_configuration(statea)
     xb, qb = current_configuration(stateb)
@@ -42,7 +39,7 @@ end
     return [BFa; Bτa]
 end
 
-@inline function ∂Fτ∂ub(joint::Translational, statea::State, stateb::State, Δt::T) where T
+@inline function input_jacobian_control_child(joint::Translational, statea::State, stateb::State, Δt::T) where T
     vertices = joint.vertices
     xa, qa = current_configuration(statea)
     xb, qb = current_configuration(stateb)
@@ -53,8 +50,7 @@ end
     return [BFb; Bτb]
 end
 
-# Position derivatives
-@inline function ∂Fτ∂a(joint::Translational{T}, statea::State, stateb::State, Δt::T) where T
+@inline function input_jacobian_configuration_parent(joint::Translational{T}, statea::State, stateb::State, Δt::T) where T
     xa, qa = current_configuration(statea)
     xb, qb = current_configuration(stateb)
     F = joint.Fτ
@@ -72,7 +68,7 @@ end
     return FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa
 end
 
-@inline function ∂Fτ∂b(joint::Translational{T}, statea::State, stateb::State, Δt::T) where T
+@inline function input_jacobian_configuration_child(joint::Translational{T}, statea::State, stateb::State, Δt::T) where T
     xa, qa = current_configuration(statea)
     xb, qb = current_configuration(stateb)
     F = joint.Fτ

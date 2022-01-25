@@ -141,8 +141,8 @@ end
 
 @inline function impulses!(mechanism, body::Body, eqc::JointConstraint)
     body.state.d -= zerodimstaticadjoint(impulse_map(mechanism, eqc, body)) * eqc.λsol[2]
-    eqc.isspring && (body.state.d -= springforce(mechanism, eqc, body))
-    eqc.isdamper && (body.state.d -= damperforce(mechanism, eqc, body))
+    eqc.isspring && (body.state.d -= apply_spring(mechanism, eqc, body))
+    eqc.isdamper && (body.state.d -= apply_damper(mechanism, eqc, body))
     return
 end
 
@@ -166,11 +166,11 @@ function impulses_jacobian_parent!(mechanism, pbody::Body, eqc::JointConstraint{
     off = 0
     for i in 1:Nc
         joint = eqc.constraints[i]
-        Aᵀ = zerodimstaticadjoint(constraintmat(joint))
+        Aᵀ = zerodimstaticadjoint(constraint_mask(joint))
         Nj = length(joint)
         cbody = get_body(mechanism, eqc.childids[i])
-        eqc.isspring && (pbody.state.D -= ∂springforcea∂vela(joint, pbody, cbody, Δt))
-        eqc.isdamper && (pbody.state.D -= ∂damperforcea∂vela(joint, pbody, cbody, Δt))
+        eqc.isspring && (pbody.state.D -= spring_parent_jacobian_velocity_parent(joint, pbody, cbody, Δt))
+        eqc.isdamper && (pbody.state.D -= damper_parent_jacobian_velocity_parent(joint, pbody, cbody, Δt))
         off += Nj
     end
     return nothing
@@ -185,11 +185,11 @@ function impulses_jacobian_child!(mechanism, cbody::Body, eqc::JointConstraint{T
     for i in 1:Nc
         if eqc.childids[i] == cbody.id
             joint = eqc.constraints[i]
-            Aᵀ = zerodimstaticadjoint(constraintmat(joint))
+            Aᵀ = zerodimstaticadjoint(constraint_mask(joint))
             Nj = length(joint)
             pbody = get_body(mechanism, eqc.parentid)
-            eqc.isspring && (cbody.state.D -= ∂springforceb∂velb(joint, pbody, cbody, Δt))
-            eqc.isdamper && (cbody.state.D -= ∂damperforceb∂velb(joint, pbody, cbody, Δt))
+            eqc.isspring && (cbody.state.D -= spring_child_jacobian_velocity_child(joint, pbody, cbody, Δt))
+            eqc.isdamper && (cbody.state.D -= damper_child_configuration_velocity_child(joint, pbody, cbody, Δt))
         end
     end
     return nothing
@@ -200,19 +200,19 @@ end
     return :(svcat($(vec...)))
 end
 
-@inline function springforce(mechanism, eqc::JointConstraint, body::Body; unitary::Bool=false)
-    body.id == eqc.parentid ? (return springforcea(mechanism, eqc, body, unitary=unitary)) : (return springforceb(mechanism, eqc, body, unitary=unitary))
+@inline function apply_spring(mechanism, eqc::JointConstraint, body::Body; unitary::Bool=false)
+    body.id == eqc.parentid ? (return spring_parent(mechanism, eqc, body, unitary=unitary)) : (return spring_child(mechanism, eqc, body, unitary=unitary))
 end
 
-@inline function damperforce(mechanism, eqc::JointConstraint, body::Body; unitary::Bool=false)
-    body.id == eqc.parentid ? (return damperforcea(mechanism, eqc, body, unitary=unitary)) : (return damperforceb(mechanism, eqc, body, unitary=unitary))
+@inline function apply_damper(mechanism, eqc::JointConstraint, body::Body; unitary::Bool=false)
+    body.id == eqc.parentid ? (return damper_parent(mechanism, eqc, body, unitary=unitary)) : (return damper_child(mechanism, eqc, body, unitary=unitary))
 end
 
-@inline function ∂gab∂ʳba(mechanism, body::Body{T}, eqc::JointConstraint{T,N}) where {T,N}
+@inline function off_diagonal_jacobians(mechanism, body::Body{T}, eqc::JointConstraint{T,N}) where {T,N}
     return -impulse_map(mechanism, eqc, body)', constraint_jacobian_configuration(mechanism, eqc, body) * integrator_jacobian_velocity(body, mechanism.Δt)
 end
 
-@inline function ∂gab∂ʳba(mechanism, eqc::JointConstraint{T,N}, body::Body{T}) where {T,N}
+@inline function off_diagonal_jacobians(mechanism, eqc::JointConstraint{T,N}, body::Body{T}) where {T,N}
     return constraint_jacobian_configuration(mechanism, eqc, body) * integrator_jacobian_velocity(body, mechanism.Δt), -impulse_map(mechanism, eqc, body)'
 end
 
@@ -241,48 +241,48 @@ end
     return :(vcat($(vec...)))
 end
 
-@inline function springforcea(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body; unitary::Bool=false) where {T,N,Nc}
+@inline function spring_parent(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body; unitary::Bool=false) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += springforcea(eqc.constraints[i], body, get_body(mechanism, eqc.childids[i]), mechanism.Δt, eqc.childids[i], unitary=unitary)
+        vec += spring_parent(eqc.constraints[i], body, get_body(mechanism, eqc.childids[i]), mechanism.Δt, eqc.childids[i], unitary=unitary)
     end
     return vec
 end
 
-@inline function springforceb(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body; unitary::Bool=false) where {T,N,Nc}
+@inline function spring_child(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body; unitary::Bool=false) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += springforceb(eqc.constraints[i], get_body(mechanism, eqc.parentid), body, mechanism.Δt, eqc.childids[i], unitary=unitary)
+        vec += spring_child(eqc.constraints[i], get_body(mechanism, eqc.parentid), body, mechanism.Δt, eqc.childids[i], unitary=unitary)
     end
     return vec
 end
 
-@inline function damperforcea(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body; unitary::Bool=false) where {T,N,Nc}
+@inline function damper_parent(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body; unitary::Bool=false) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += damperforcea(eqc.constraints[i], body, get_body(mechanism, eqc.childids[i]), mechanism.Δt, eqc.childids[i], unitary=unitary)
+        vec += damper_parent(eqc.constraints[i], body, get_body(mechanism, eqc.childids[i]), mechanism.Δt, eqc.childids[i], unitary=unitary)
     end
     return vec
 end
-@inline function damperforceb(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body; unitary::Bool=false) where {T,N,Nc}
+@inline function damper_child(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body; unitary::Bool=false) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += damperforceb(eqc.constraints[i], get_body(mechanism, eqc.parentid), body, mechanism.Δt, eqc.childids[i], unitary=unitary)
+        vec += damper_child(eqc.constraints[i], get_body(mechanism, eqc.parentid), body, mechanism.Δt, eqc.childids[i], unitary=unitary)
     end
     return vec
 end
 
-@inline function ∂Fτ∂u(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    body.id == eqc.parentid ? (return ∂Fτ∂ua(mechanism, eqc, body)) : (return ∂Fτ∂ub(mechanism, eqc, body))
+@inline function input_jacobian_control(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
+    body.id == eqc.parentid ? (return input_jacobian_control_parent(mechanism, eqc, body)) : (return input_jacobian_control_child(mechanism, eqc, body))
 end
 
-@generated function ∂Fτ∂ua(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(∂Fτ∂ua(eqc.constraints[$i], body, get_body(mechanism, eqc.childids[$i]), mechanism.Δt, eqc.childids[$i])) for i = 1:Nc]
+@generated function input_jacobian_control_parent(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
+    vec = [:(input_jacobian_control_parent(eqc.constraints[$i], body, get_body(mechanism, eqc.childids[$i]), mechanism.Δt, eqc.childids[$i])) for i = 1:Nc]
     return :(hcat($(vec...)))
 end
 
-@generated function ∂Fτ∂ub(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(∂Fτ∂ub(eqc.constraints[$i], get_body(mechanism, eqc.parentid), body, mechanism.Δt, eqc.childids[$i])) for i = 1:Nc]
+@generated function input_jacobian_control_child(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
+    vec = [:(input_jacobian_control_child(eqc.constraints[$i], get_body(mechanism, eqc.parentid), body, mechanism.Δt, eqc.childids[$i])) for i = 1:Nc]
     return :(hcat($(vec...)))
 end
 
@@ -293,7 +293,7 @@ end
     return
 end
 
-function set_spring_damper!(eqcs, spring, damper)
+function set_springapply_dampervalues!(eqcs, spring, damper)
     i = 1
     for eqc in eqcs
         eqc.parentid === nothing && continue

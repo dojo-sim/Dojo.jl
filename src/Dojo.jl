@@ -146,10 +146,12 @@ include(joinpath("mechanics", "energy.jl"))
 # Joints
 include(joinpath("joints", "joint.jl"))
 include(joinpath("joints", "translational", "constraint.jl"))
+include(joinpath("joints", "translational", "constraint_limits.jl"))
 include(joinpath("joints", "translational", "input.jl"))
 include(joinpath("joints", "translational", "force.jl"))
 include(joinpath("joints", "translational", "minimal.jl"))
 include(joinpath("joints", "rotational", "constraint.jl"))
+include(joinpath("joints", "rotational", "constraint_limits.jl"))
 include(joinpath("joints", "rotational", "input.jl"))
 include(joinpath("joints", "rotational", "torque.jl"))
 include(joinpath("joints", "rotational", "minimal.jl"))
@@ -162,13 +164,14 @@ include(joinpath("contacts", "impact.jl"))
 include(joinpath("contacts", "linear.jl"))
 include(joinpath("contacts", "nonlinear.jl"))
 include(joinpath("contacts", "constructor.jl"))
+include(joinpath("contacts", "utils.jl"))
 
 # Solver
 include(joinpath("solver", "methods.jl"))
 include(joinpath("solver", "mehrotra.jl"))
 include(joinpath("solver", "linesearch.jl"))
 
-# Variational integrator
+# Integrator
 include(joinpath("integrators", "integrator.jl"))
 include(joinpath("integrators", "constraint.jl"))
 
