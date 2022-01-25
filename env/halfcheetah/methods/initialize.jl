@@ -14,22 +14,22 @@ function gethalfcheetah(; Δt::T=0.01, g::T=-9.81, cf::T=0.4,
     eqcs = deepcopy(mech.eqconstraints)
 
     if limits
-        bthigh = geteqconstraint(mech, "bthigh")
+        bthigh = geteqconstraint(mech, :bthigh)
         eqcs[bthigh.id] = add_limits(mech, bthigh, rot_limits=[SVector{1}(joint_limits[1][1]), SVector{1}(joint_limits[2][1])])
 
-        bshin = geteqconstraint(mech, "bshin")
+        bshin = geteqconstraint(mech, :bshin)
         eqcs[bshin.id] = add_limits(mech, bshin, rot_limits=[SVector{1}(joint_limits[1][2]), SVector{1}(joint_limits[2][2])])
 
-        bfoot = geteqconstraint(mech, "bfoot")
+        bfoot = geteqconstraint(mech, :bfoot)
         eqcs[bfoot.id] = add_limits(mech, bfoot, rot_limits=[SVector{1}(joint_limits[1][3]), SVector{1}(joint_limits[2][3])])
 
-        fthigh = geteqconstraint(mech, "fthigh")
+        fthigh = geteqconstraint(mech, :fthigh)
         eqcs[fthigh.id] = add_limits(mech, fthigh, rot_limits=[SVector{1}(joint_limits[1][4]), SVector{1}(joint_limits[2][4])])
 
-        fshin = geteqconstraint(mech, "fshin")
+        fshin = geteqconstraint(mech, :fshin)
         eqcs[fshin.id] = add_limits(mech, fshin, rot_limits=[SVector{1}(joint_limits[1][5]), SVector{1}(joint_limits[2][5])])
 
-        ffoot = geteqconstraint(mech, "ffoot")
+        ffoot = geteqconstraint(mech, :ffoot)
         eqcs[ffoot.id] = add_limits(mech, ffoot, rot_limits=[SVector{1}(joint_limits[1][6]), SVector{1}(joint_limits[2][6])])
 
         mech = Mechanism(Origin{T}(), [mech.bodies...], [eqcs...], g=g, Δt=Δt, spring=spring, damper=damper)
@@ -37,15 +37,15 @@ function gethalfcheetah(; Δt::T=0.01, g::T=-9.81, cf::T=0.4,
 
     if contact
         origin = Origin{T}()
-        bodies = UnitDict((mech.bodies[1].id):(mech.bodies[length(mech.bodies)].id), mech.bodies).values
-        eqcs = UnitDict(mech.eqconstraints).values
+        bodies = mech.bodies
+        eqcs = mech.eqconstraints
 
         normal = [0.0; 0.0; 1.0]
-        names = contact_body ? getfield.(mech.bodies, :name) : ["ffoot", "bfoot"]
+        names = contact_body ? getfield.(mech.bodies, :name) : [:ffoot, :bfoot]
         bounds = []
         for name in names
             body = getbody(mech, name)
-            if name == "torso" # need special case for torso
+            if name == :torso # need special case for torso
                 # torso
                 pf = [+0.5 * body.shape.shape[1].rh[2]; 0.0; 0.0]
                 pb = [-0.5 * body.shape.shape[1].rh[2]; 0.0; 0.0]
@@ -63,7 +63,7 @@ function gethalfcheetah(; Δt::T=0.01, g::T=-9.81, cf::T=0.4,
                 push!(bounds, contactconstraint(body, normal, cf=cf, p=p, offset=o))
             end
         end
-        setPosition!(mech, geteqconstraint(mech, "floating_joint"), [0.576509, 0.0, 0.02792])
+        setPosition!(mech, geteqconstraint(mech, :floating_joint), [0.576509, 0.0, 0.02792])
         mech = Mechanism(origin, bodies, eqcs, [bounds...], g=g, Δt=Δt, spring=spring, damper=damper)
     end
     return mech
@@ -71,10 +71,10 @@ end
 
 function initializehalfcheetah!(mechanism::Mechanism; x::T=0.0, z::T=0.0, θ::T=0.0) where {T}
     setPosition!(mechanism,
-                 geteqconstraint(mechanism, "floating_joint"),
+                 geteqconstraint(mechanism, :floating_joint),
                  [z + 0.576509, -x, -θ + 0.02792])
     for eqc in mechanism.eqconstraints
-        (eqc.name != "floating_joint") && setPosition!(mechanism, eqc, zeros(controldim(eqc)))
+        (eqc.name != :floating_joint) && setPosition!(mechanism, eqc, zeros(controldim(eqc)))
     end
     zeroVelocity!(mechanism)
 end

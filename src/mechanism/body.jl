@@ -1,12 +1,12 @@
 mutable struct Body{T} <: Component{T}
     id::Int64
-    name::String
+    name::Symbol
     m::T
     J::SMatrix{3,3,T,9}
     state::State{T}
     shape::Shape{T}
 
-    function Body(m::T, J::AbstractMatrix; name::String="", shape::Shape=EmptyShape()) where T
+    function Body(m::T, J::AbstractMatrix; name::Symbol=:origin, shape::Shape=EmptyShape()) where T
         new{T}(getGlobalID(), name, m, J, State{T}(), shape)
     end
 

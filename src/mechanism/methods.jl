@@ -1,8 +1,8 @@
 @inline getbody(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,Ni} = collect(mechanism.bodies)[id-Ne]
 @inline getbody(mechanism::Mechanism, id::Nothing) = mechanism.origin
 
-function getbody(mechanism::Mechanism, name::String)
-    if mechanism.origin.name == name
+function getbody(mechanism::Mechanism, name::Symbol)
+    if name == :origin
         return mechanism.origin
     else
         for body in mechanism.bodies
@@ -16,7 +16,7 @@ end
 
 @inline geteqconstraint(mechanism::Mechanism, id::Integer) = mechanism.eqconstraints[id]
 
-function geteqconstraint(mechanism::Mechanism, name::String)
+function geteqconstraint(mechanism::Mechanism, name::Symbol)
     for eqc in mechanism.eqconstraints
         if eqc.name == name
             return eqc
@@ -26,7 +26,7 @@ function geteqconstraint(mechanism::Mechanism, name::String)
 end
 
 @inline getineqconstraint(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,Ni} = mechanism.ineqconstraints[id-Ne-Nb]
-function getineqconstraint(mechanism::Mechanism, name::String)
+function getineqconstraint(mechanism::Mechanism, name::Symbol)
     for ineqc in mechanism.ineqconstraints
         if ineqc.name == name
             return ineqc
@@ -46,7 +46,7 @@ function getcomponent(mechanism::Mechanism{T,Nn,Ne,Nb}, id::Integer) where {T,Nn
 end
 getcomponent(mechanism::Mechanism, id::Nothing) = mechanism.origin
 
-function getcomponent(mechanism::Mechanism, name::String)
+function getcomponent(mechanism::Mechanism, name::Symbol)
     component = getbody(mechanism,name)
     if component === nothing
         component = geteqconstraint(mechanism,name)

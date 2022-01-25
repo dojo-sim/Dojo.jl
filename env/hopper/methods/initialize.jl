@@ -14,7 +14,7 @@ function gethopper(; Δt::T=0.01, g::T=-9.81, cf::T=2.0,
     eqcs = deepcopy(mech.eqconstraints)
 
     if limits
-        thigh = geteqconstraint(mech, "thigh")
+        thigh = geteqconstraint(mech, :thigh)
         eqcs[thigh.id] = add_limits(mech, thigh, rot_limits=[SVector{1}(joint_limits[1][1]), SVector{1}(joint_limits[2][1])])
 
         @warn "uncomment limits"
@@ -33,11 +33,11 @@ function gethopper(; Δt::T=0.01, g::T=-9.81, cf::T=2.0,
         eqcs = mech.eqconstraints.values
 
         normal = [0.0; 0.0; 1.0]
-        names = contact_body ? getfield.(mech.bodies, :name) : ["ffoot", "foot"]
+        names = contact_body ? getfield.(mech.bodies, :name) : [:ffoot, :foot]
         bounds = []
         for name in names
             body = getbody(mech, name)
-            if name == "foot" # need special case for foot
+            if name == :foot # need special case for foot
                 # torso
                 pf = [0,0, +0.5 * body.shape.rh[2]]
                 pb = [0,0, -0.5 * body.shape.rh[2]]
@@ -50,7 +50,7 @@ function gethopper(; Δt::T=0.01, g::T=-9.81, cf::T=2.0,
                 push!(bounds, contactconstraint(body, normal, cf=cf, p=p, offset=o))
             end
         end
-        setPosition!(mech, geteqconstraint(mech, "floating_joint"), [1.25, 0.0, 0.0])
+        setPosition!(mech, geteqconstraint(mech, :floating_joint), [1.25, 0.0, 0.0])
         mech = Mechanism(origin, bodies, eqcs, [bounds...], g=g, Δt=Δt, spring=spring, damper=damper)
     end
     return mech
@@ -58,10 +58,10 @@ end
 
 function initializehopper!(mechanism::Mechanism; x::T=0.0, z::T=0.0, θ::T=0.0) where {T}
     setPosition!(mechanism,
-                 geteqconstraint(mechanism, "floating_joint"),
+                 geteqconstraint(mechanism, :floating_joint),
                  [z + 1.25 , -x, -θ])
     for eqc in mechanism.eqconstraints
-        (eqc.name != "floating_joint") && setPosition!(mechanism, eqc, zeros(controldim(eqc)))
+        (eqc.name != :floating_joint) && setPosition!(mechanism, eqc, zeros(controldim(eqc)))
     end
     zeroVelocity!(mechanism)
 end

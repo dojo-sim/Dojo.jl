@@ -21,7 +21,7 @@ mutable struct Mesh{T} <: Shape{T}
 
     function Mesh(path::String, m::Real, J::AbstractMatrix;
             xoffset::AbstractVector=szeros(3), qoffset::UnitQuaternion=one(UnitQuaternion),
-            scale::AbstractVector=sones(3), name::String="", color=RGBA(0.75, 0.75, 0.75))
+            scale::AbstractVector=sones(3), name::Symbol=Symbol("body_" * randstring(4)), color=RGBA(0.75, 0.75, 0.75))
         T = promote_type(eltype.((m, J, xoffset, qoffset))...)
         return Body(m, J; name=name, shape=new{T}(xoffset, qoffset, path, scale, color))
     end
@@ -44,7 +44,7 @@ mutable struct Box{T} <: Shape{T}
 
     function Box(x::Real, y::Real, z::Real, m::Real;
             xoffset::AbstractVector=szeros(3), qoffset::UnitQuaternion=one(UnitQuaternion),
-            scale::AbstractVector=sones(3), name::String="", color=RGBA(0.75, 0.75, 0.75))
+            scale::AbstractVector=sones(3), name::Symbol=Symbol("body_" * randstring(4)), color=RGBA(0.75, 0.75, 0.75))
         T = promote_type(eltype.((x, y, z, m, xoffset, qoffset))...)
         J = 1 / 12 * m * diagm([y^2 + z^2; x^2 + z^2; x^2 + y^2])
         return Body(m, J; name=name, shape=new{T}(xoffset, qoffset, [x;y;z], scale, color))
@@ -69,7 +69,7 @@ mutable struct Cylinder{T} <: Shape{T}
 
     function Cylinder(r::Real, h::Real, m::Real;
             xoffset::AbstractVector=szeros(3), qoffset::UnitQuaternion=one(UnitQuaternion),
-            scale::AbstractVector=sones(3), name::String="", color=RGBA(0.75, 0.75, 0.75))
+            scale::AbstractVector=sones(3), name::Symbol=Symbol("body_" * randstring(4)), color=RGBA(0.75, 0.75, 0.75))
         T = promote_type(eltype.((r, h, m, xoffset, qoffset))...)
         J = 1 / 2 * m * diagm([r^2 + 1 / 6 * h^2; r^2 + 1 / 6 * h^2; r^2])
         return Body(m, J; name=name, shape=new{T}(xoffset, qoffset, [r;h], scale, color))
@@ -94,7 +94,7 @@ mutable struct Capsule{T} <: Shape{T}
 
     function Capsule(r::Real, h::Real, m::Real;
             xoffset::AbstractVector=szeros(3), qoffset::UnitQuaternion=one(UnitQuaternion),
-            scale::AbstractVector=sones(3), name::String="", color=RGBA(0.75, 0.75, 0.75))
+            scale::AbstractVector=sones(3), name::Symbol=Symbol("body_" * randstring(4)), color=RGBA(0.75, 0.75, 0.75))
         T = promote_type(eltype.((r, h, m, xoffset, qoffset))...)
 
         mass_cylinder = π * h * r^2.0
@@ -121,13 +121,13 @@ mutable struct Shapes{T} <: Shape{T}
 
     function Shapes(shapes::Vector; 
         xoffset::AbstractVector=szeros(3), qoffset::UnitQuaternion=one(UnitQuaternion),
-        scale::AbstractVector=sones(3), name::String="", color=RGBA(0.75, 0.75, 0.75)) where {T}
+        scale::AbstractVector=sones(3), name::Symbol=Symbol("body_" * randstring(4)), color=RGBA(0.75, 0.75, 0.75)) where {T}
         new{T}(shapes, xoffset, qoffset, scale, color)
     end
 
     function Shapes(shapes::Vector, m::T, J; 
         xoffset::AbstractVector=szeros(3), qoffset::UnitQuaternion=one(UnitQuaternion),
-        scale::AbstractVector=sones(3), name::String="", color=RGBA(0.75, 0.75, 0.75)) where T
+        scale::AbstractVector=sones(3), name::Symbol=Symbol("body_" * randstring(4)), color=RGBA(0.75, 0.75, 0.75)) where T
         Body(m, J; name=name, shape=new{T}(shapes, xoffset, qoffset, scale, color))
     end
 end
@@ -149,7 +149,7 @@ mutable struct Sphere{T} <: Shape{T}
 
     function Sphere(r::Real, m::Real;
             xoffset::AbstractVector=szeros(3), qoffset::UnitQuaternion=one(UnitQuaternion),
-            scale::AbstractVector=sones(3), name::String="", color=RGBA(0.75, 0.75, 0.75))
+            scale::AbstractVector=sones(3), name::Symbol=Symbol("body_" * randstring(4)), color=RGBA(0.75, 0.75, 0.75))
         T = promote_type(eltype.((r, m, xoffset, qoffset))...)
         J = 2 / 5 * m * diagm([r^2 for i = 1:3])
         return Body(m, J; name=name, shape=new{T}(xoffset, qoffset, r, scale, color))
@@ -174,7 +174,7 @@ mutable struct Pyramid{T} <: Shape{T}
 
     function Pyramid(w::Real, h::Real, m::Real;
             xoffset::AbstractVector=szeros(3), qoffset::UnitQuaternion=one(UnitQuaternion),
-            scale::AbstractVector=sones(3), name::String="", color=RGBA(0.75, 0.75, 0.75))
+            scale::AbstractVector=sones(3), name::Symbol=Symbol("body_" * randstring(4)), color=RGBA(0.75, 0.75, 0.75))
         T = promote_type(eltype.((w, h, m, xoffset, qoffset))...)
         J = 1/80 * m * diagm([4*w^2+3*h^2;4*w^2+3*h^2;8*w^2])
         return Body(m, J; name=name, shape=new{T}(xoffset, qoffset, [w;h], scale, color))

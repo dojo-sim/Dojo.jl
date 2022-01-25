@@ -11,7 +11,7 @@ function contactconstraint(bodies::AbstractVector{<:Body{T}},
         cf::AbstractVector{T} = ones(length(normal)),
         p::AbstractVector = [szeros(T, 3) for i=1:length(normal)],
         offset::AbstractVector = [szeros(T, 3) for i=1:length(normal)],
-        names::AbstractVector{String} = fill("", length(normal)),
+        names::Vector{Symbol} = [Symbol("contact_" * randstring(4)) for i = 1:length(normal)],
         contact_type::Symbol = :contact) where {T}
 
     n = length(normal)
@@ -31,7 +31,7 @@ function contactconstraint(body::Body{T},
         cf::AbstractVector{T} = ones(length(normal)),
         p::AbstractVector = [szeros(T, 3) for i=1:length(normal)],
         offset::AbstractVector = [szeros(T, 3) for i=1:length(normal)],
-        names::AbstractVector{String} = fill("", length(normal)),
+        names::Vector{Symbol} = [Symbol("contact_" * randstring(4)) for i = 1:length(normal)],
         contact_type::Symbol = :contact) where {T}
     n = length(normal)
     @assert n == length(normal) == length(cf) == length(p) == length(offset)
@@ -51,7 +51,7 @@ function contactconstraint(body::Body{T},
         cf::T = 1.0,
         p::AbstractVector{T} = szeros(T, 3),
         offset::AbstractVector{T} = szeros(T, 3),
-        name::String = "",
+        name::Symbol = Symbol("contact_" * randstring(4)),
         contact_type::Symbol = :contact) where {T}
 
     if contact_type == :contact

@@ -1,14 +1,14 @@
 mutable struct Origin{T} <: Component{T}
     id::Int64
-    name::String
+    name::Symbol
     state::State{T}
     shape::Shape{T}
 
-    function Origin{T}(; name::String="", state=State{T}(), shape::Shape=EmptyShape()) where T
+    function Origin{T}(; name::Symbol=:origin, state=State{T}(), shape::Shape=EmptyShape()) where T
         new{T}(getGlobalID(), name, state, shape)
     end
 
-    function Origin(; name::String="", state=State{Float64}(), shape::Shape=EmptyShape())
+    function Origin(; name::Symbol=:origin, state=State{Float64}(), shape::Shape=EmptyShape())
         Origin{Float64}(; name=name, state=state, shape=shape)
     end
 

@@ -1,8 +1,8 @@
 mutable struct Mechanism{T,Nn,Ne,Nb,Ni}
     origin::Origin{T}
-    eqconstraints#::Vector{<:EqualityConstraint{T}}
-    bodies#::UnitDict{UnitRange{Int64},Body{T}}
-    ineqconstraints#::UnitDict{UnitRange{Int64},<:InequalityConstraint{T}}
+    eqconstraints::Vector{<:EqualityConstraint{T}}
+    bodies::Vector{<:Body{T}}
+    ineqconstraints::Vector{<:InequalityConstraint{T}}
 
     system::System{Nn}
     residual_entries::Vector{Entry}

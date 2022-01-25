@@ -3,7 +3,7 @@
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://dojo-sim.github.io/Dojo.jl/dev)
 
 # Dojo
-A differentiable rigid-body-dynamics with contact simulator for robotics.
+A differentiable contact-dynamics simulator for robotics.
 
 ## Simulation 
 

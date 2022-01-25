@@ -1,6 +1,6 @@
 mutable struct InequalityConstraint{T,N,Nc,Cs,N½} <: Constraint{T,N}
     id::Int64
-    name::String
+    name::Symbol
 
     # Currently only single constraint and child
     constraints::Cs # can be of type
@@ -9,7 +9,7 @@ mutable struct InequalityConstraint{T,N,Nc,Cs,N½} <: Constraint{T,N}
     ssol::Vector{SVector{N½,T}} # holds the slack variable
     γsol::Vector{SVector{N½,T}} # holds the dual of the slack variable
 
-    function InequalityConstraint(data; name::String="")
+    function InequalityConstraint(data; name::Symbol=Symbol("contact_" * randstring(4)))
         bound, parentid, childid = data
         T = getT(bound)
 

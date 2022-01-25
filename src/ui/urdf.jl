@@ -186,12 +186,12 @@ function parse_link(xlink, materialdict, T)
     name = attribute(xlink, "name")
 
     if shape === nothing
-        link = Body(m, J, name=name)
+        link = Body(m, J, name=Symbol(name))
     else
         link = shape
         link.m = m
         link.J = J
-        link.name = name
+        link.name = Symbol(name)
     end
 
     link.state.x2[1] = x
@@ -202,7 +202,7 @@ function parse_link(xlink, materialdict, T)
 end
 
 function parse_links(xlinks, materialdict, T)
-    ldict = Dict{String,Body{T}}()
+    ldict = Dict{Symbol,Body{T}}()
 
     for xlink in xlinks
         link = parse_link(xlink, materialdict, T)
@@ -213,7 +213,7 @@ function parse_links(xlinks, materialdict, T)
 end
 
 function joint_selector(jointtype, body1, body2, T;
-        axis = SA{T}[1;0;0], p1 = szeros(T,3), p2 = szeros(T,3), qoffset = one(UnitQuaternion{T}), name = "")
+        axis = SA{T}[1;0;0], p1 = szeros(T,3), p2 = szeros(T,3), qoffset = one(UnitQuaternion{T}), name = Symbol("joint_" * randstring(4)))
 
     # TODO limits for revolute joint?
     if jointtype == "revolute" || jointtype == "continuous"
@@ -252,7 +252,7 @@ function parse_joint(xjoint, plink, clink, T)
     x, q = parse_pose(find_element(xjoint, "origin"), T)
     axis = parse_vector(find_element(xjoint, "axis"), "xyz", T, default = "1 0 0")
     p1 = x
-    name = attribute(xjoint, "name")
+    name = Symbol(attribute(xjoint, "name"))
 
     return joint_selector(jointtype, plink, clink, T, axis = axis, p1 = p1, qoffset = q, name = name)
 end
@@ -267,7 +267,7 @@ function parse_loop_joint(xjoint, body1, body2, T)
     x2, _ = parse_pose(find_element(xjoint, "body2"), T) # The orientation q2 of the second body is ignored because it is determined by the mechanism's structure
     p1 = x1
     p2 = x2
-    name = attribute(xjoint, "name")
+    name = Symbol(attribute(xjoint, "name"))
 
     return joint_selector(jointtype, body1, body2, T, axis = axis, p1 = p1, p2 = p2, qoffset = q1, name = name)
 end
@@ -283,7 +283,7 @@ function parse_joints(xjoints, ldict, floating, T)
         for xjoint in xjoints
             xchild = find_element(xjoint, "child")
             childname = attribute(xchild, "link")
-            if childname == name
+            if Symbol(childname) == name
                 childflag = true
                 break
             end
@@ -308,9 +308,9 @@ function parse_joints(xjoints, ldict, floating, T)
     for xjoint in xjoints
         xplink = find_element(xjoint, "parent")
         xclink = find_element(xjoint, "child")
-        clink = ldict[attribute(xclink, "link")]
+        clink = ldict[Symbol(attribute(xclink, "link"))]
 
-        plink = ldict[attribute(xplink, "link")]
+        plink = ldict[Symbol(attribute(xplink, "link"))]
         if plink.id == origin.id
             plink = origin
             joint = parse_joint(xjoint, plink, clink, T)
@@ -322,7 +322,7 @@ function parse_joints(xjoints, ldict, floating, T)
     end
 
     if floating
-        originjoint = EqualityConstraint(Floating(origin, ldict[floatingname]), name="auto_generated_floating_joint")
+        originjoint = EqualityConstraint(Floating(origin, ldict[Symbol(floatingname)]), name=:auto_generated_floating_joint)
         joints = [originjoint; joints] # For proper parsing the first joint must be connected to the origin
     end
 

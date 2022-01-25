@@ -1,6 +1,6 @@
 mutable struct EqualityConstraint{T,N,Nc,Cs} <: Constraint{T,N}
     id::Int64
-    name::String
+    name::Symbol
     isspring::Bool
     isdamper::Bool
 
@@ -11,7 +11,7 @@ mutable struct EqualityConstraint{T,N,Nc,Cs} <: Constraint{T,N}
 
     λsol::Vector{SVector{N,T}}
 
-    function EqualityConstraint(data; name::String="")
+    function EqualityConstraint(data; name::Symbol=Symbol("joint_" * randstring(4)))
         jointdata = Tuple{Joint,Int64,Int64}[]
         for info in data
             push!(jointdata, info)

@@ -54,14 +54,11 @@ function getnpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
     return mech
 end
 
-getpendulum()
-
 function initializenpendulum!(mechanism::Mechanism; ϕ1::T = pi/4, ω = [0.0, 0.0, 0.0],
-    Δv::AbstractVector{T} = [0, 0, 0.], Δω::AbstractVector{T} = [0, 0, 0.],
-    ) where {T}
+    Δv::AbstractVector{T} = [0, 0, 0.], Δω::AbstractVector{T} = [0, 0, 0.]) where {T}
 
-    body1 = collect(mechanism.bodies)[1]
-    eqc = collect(mechanism.eqconstraints)[1]
+    body1 = mechanism.bodies[1]
+    eqc = mechanism.eqconstraints[1]
     vert11 = eqc.constraints[1].vertices[2]
     vert12 = - vert11
 

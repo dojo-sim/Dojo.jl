@@ -22,7 +22,7 @@
 function minimalCoordinates(mechanism::Mechanism)
     d = Dict()
     for eqc in mechanism.eqconstraints
-        push!(dict, eqc.id => minimalCoordinates(mechanism, eqc))
+        push!(d, eqc.id => minimalCoordinates(mechanism, eqc))
     end
     return d
 end
