@@ -39,13 +39,13 @@ visualizeMaxCoord(mech, min2max(mech, z1), vis)
 
 function gravity_compensation(mechanism::Mechanism)
     # only works with revolute joints for now
-    nu = controldim(mechanism)
+    nu = control_dimension(mechanism)
     u = zeros(nu)
     off  = 0
     for eqc in mechanism.eqconstraints
-        nu = controldim(eqc)
+        nu = control_dimension(eqc)
         if eqc.parentid != nothing
-            body = getbody(mechanism, eqc.parentid)
+            body = get_body(mechanism, eqc.parentid)
             rot = eqc.constraints[2]
             A = Matrix(nullspacemat(rot))
             Fτ = springforce(mechanism, eqc, body)
@@ -98,7 +98,7 @@ end
 
 # Time
 h = mech.Δt
-n, m, d = minCoordDim(mech), 12, 0
+n, m, d = minimal_dimension(mech), 12, 0
 dyn = Dynamics(fd, fdx, fdu, n, n, m, d)
 model = [dyn for t = 1:T-1]
 

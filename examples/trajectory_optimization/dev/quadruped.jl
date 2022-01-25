@@ -38,7 +38,7 @@ function potato_dynamics(x, u, Δt, m, g)
 	return x̄
 end
 
-trunk = getbody(mech, "trunk")
+trunk = get_body(mech, "trunk")
 x2_trunk = trunk.state.x2[1]
 v15_trunk = trunk.state.v15
 
@@ -66,25 +66,25 @@ plot!([x[3] for x in X_potato], linewidth = 5.0)
 zref = []
 for t = 1:21
 	initialize!(mech, :quadruped, tran = X_potato[t][1:3] - [0,0,0.23], v = X_potato[t][4:6], θ = 0.95)
-	push!(zref, getMaxState(mech))
+	push!(zref, get_max_state(mech))
 end
 storage = generate_storage(mech, zref)
 visualize(mech, storage, vis = vis)
 
 
 initialize!(mech, :quadruped, tran = [0.00,0,0.0], v = [0.5,0,0], θ = 0.95)
-z1 = getMaxState(mech)
+z1 = get_max_state(mech)
 visualizeMaxCoord(mech, z1, vis)
 
 function gravity_compensation(mechanism::Mechanism)
     # only works with revolute joints for now
-    nu = controldim(mechanism)
+    nu = control_dimension(mechanism)
     u = zeros(nu)
     off  = 0
     for eqc in mechanism.eqconstraints
-        nu = controldim(eqc)
+        nu = control_dimension(eqc)
         if eqc.parentid != nothing
-            body = getbody(mechanism, eqc.parentid)
+            body = get_body(mechanism, eqc.parentid)
             rot = eqc.constraints[2]
             A = Matrix(nullspacemat(rot))
             Fτ = springforce(mechanism, eqc, body)

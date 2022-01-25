@@ -1,32 +1,32 @@
-function convertshape(box::Box)
+function convert_shape(box::Box)
     x,y,z = Tuple(box.xyz)
     return GeometryBasics.HyperRectangle(Vec(-x/2,-y/2,-z/2),Vec(x,y,z))
 end
 
-function convertshape(cylinder::Cylinder)
+function convert_shape(cylinder::Cylinder)
     r,h = Tuple(cylinder.rh)
     return GeometryBasics.Cylinder(Point(0.0,0.0,-h/2),Point(0.0,0.0,h/2), r)
 end
 
-function convertshape(sphere::Sphere)
+function convert_shape(sphere::Sphere)
     r = sphere.r
     return GeometryBasics.Sphere(Point(0.0,0.0,0.0), r)
 end
 
-function convertshape(pyramid::Pyramid)
+function convert_shape(pyramid::Pyramid)
     w, h = Tuple(pyramid.wh)
     return GeometryBasics.Pyramid(Point(0.0,0.0,-h/4), h, w)
 end
 
-function convertshape(mesh::Mesh)
+function convert_shape(mesh::Mesh)
     return MeshFileObject(joinpath(@__DIR__, "..", "..", mesh.path))
 end
 
-function convertshape(::EmptyShape)
+function convert_shape(::EmptyShape)
     return nothing
 end
 
-function convertshape(capsule::Capsule)
+function convert_shape(capsule::Capsule)
     r, h = Tuple(capsule.rh)
     p1 = Point(0.0, 0.0, -h / 2)
     p2 = Point(0.0, 0.0, h / 2)
@@ -36,10 +36,10 @@ function convertshape(capsule::Capsule)
     return [cyl, cap1, cap2]
 end
 
-function convertshape(shapes::Shapes)
+function convert_shape(shapes::Shapes)
     geom = []
     for s in shapes.shape
-        push!(geom, convertshape(s))
+        push!(geom, convert_shape(s))
     end
     return geom
 end

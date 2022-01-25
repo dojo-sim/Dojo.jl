@@ -26,7 +26,7 @@ function astronaut_simulation(vis::Visualizer; Δt=1e-2, tsim=1.0, g=0.0,
     for body in mech.bodies
         v = rand(3) .- 0.5
         v ./= norm(v)
-        setVelocity!(body, v = v)
+        set_velocity!(body, v = v)
     end
 
     tcompute = @elapsed storage = simulate!(mech, tsim, record=true, opts=InteriorPointOptions(rtol=ϵ, btol=ϵ))
@@ -53,7 +53,7 @@ color = [:magenta, :orange, :cyan];
 
 # energy
 const Dojo = Main
-me = [Dojo.mechanicalEnergy(mech, s)[2:end] for s in storage]
+me = [Dojo.mechanical_energy(mech, s)[2:end] for s in storage]
 plt = plot(xlabel="time (s)", ylabel="energy drift");
 for (i, e) in enumerate(me)
     tt = [j * timestep[i] for j = 1:length(e)]
@@ -102,7 +102,7 @@ PGF.save(joinpath(dir, "energy_drift.tikz"), a1)
 ##########
 # Visualization
 color = RGBA(255.0/255.0,0.0,255.0,1.0);
-z = getMaxState(storage)
+z = get_max_state(storage)
 z = [[z[1] for t = 1:100]..., z..., [z[end] for t = 1:100]...]
 build_robot(vis, mech, color=color)
 T = length(z)

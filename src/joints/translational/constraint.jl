@@ -17,7 +17,7 @@ function Translational{T,Nλ}(body1::Node, body2::Node;
         spring_type::Symbol = :sinusoidal,
     ) where {T,Nλ}
     vertices = (p1, p2)
-    V1, V2, V3 = orthogonalrows(axis)
+    V1, V2, V3 = orthogonal_rows(axis)
     V12 = [V1;V2]
     Fτ = zeros(T,3)
     Nb½ = length(joint_limits[1])
@@ -64,8 +64,8 @@ end
 end
 
 function Ga(joint::Translational{T,Nλ,0}, statea::State, stateb::State, η, Δt) where {T,Nλ}
-    xa, qa = posargs2(statea)
-    xb, qb = posargs2(stateb)
+    xa, qa = current_configuration(statea)
+    xb, qb = current_configuration(stateb)
     Ga(joint, xa, qa, xb, qb, η)
 end
 
@@ -79,8 +79,8 @@ function Ga(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternio
 end
 
 function Gb(joint::Translational{T,Nλ,0}, statea::State, stateb::State, η, Δt) where {T,Nλ}
-    xa, qa = posargs2(statea)
-    xb, qb = posargs2(stateb)
+    xa, qa = current_configuration(statea)
+    xb, qb = current_configuration(stateb)
     Gb(joint, xa, qa, xb, qb, η)
 end
 
@@ -99,7 +99,7 @@ end
         xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
     vertices = joint.vertices
     e1 = vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
-    e2 = minimalCoordinates(joint, xa, qa, xb, qb)
+    e2 = minimal_coordinates(joint, xa, qa, xb, qb)
 
     s, γ = get_sγ(joint, η)
 
@@ -133,8 +133,8 @@ end
 end
 
 function Ga(joint::Translational, statea::State, stateb::State, η, Δt)
-    xa, qa = posargs2(statea)
-    xb, qb = posargs2(stateb)
+    xa, qa = current_configuration(statea)
+    xb, qb = current_configuration(stateb)
     Ga(joint, xa, qa, xb, qb, η)
 end
 
@@ -154,8 +154,8 @@ function Ga(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQ
 end
 
 function Gb(joint::Translational, statea::State, stateb::State, η, Δt)
-    xa, qa = posargs2(statea)
-    xb, qb = posargs2(stateb)
+    xa, qa = current_configuration(statea)
+    xb, qb = current_configuration(stateb)
     Gb(joint, xa, qa, xb, qb, η)
 end
 
@@ -174,12 +174,12 @@ function Gb(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQ
 end
 
 ## Position and velocity offsets
-@inline function getPositionDelta(joint::Translational, body1::Node, body2::Node, x::SVector)
+@inline function get_position_delta(joint::Translational, body1::Node, body2::Node, x::SVector)
     Δx = zerodimstaticadjoint(nullspacemat(joint)) * x # in body1 frame
     return Δx
 end
 
-@inline function getVelocityDelta(joint::Translational, body1::Node, body2::Node, v::SVector)
+@inline function get_velocity_delta(joint::Translational, body1::Node, body2::Node, v::SVector)
     Δv = zerodimstaticadjoint(nullspacemat(joint)) * v # in body1 frame
     return Δv
 end

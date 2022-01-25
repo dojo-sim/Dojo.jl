@@ -38,13 +38,13 @@ visualizeMaxCoord(mech, min2max(mech, z1), vis)
 
 function gravity_compensation(mechanism::Mechanism)
     # only works with revolute joints for now
-    nu = controldim(mechanism)
+    nu = control_dimension(mechanism)
     u = zeros(nu)
     off  = 0
     for eqc in mechanism.eqconstraints
-        nu = controldim(eqc)
+        nu = control_dimension(eqc)
         if eqc.parentid != nothing
-            body = getbody(mechanism, eqc.parentid)
+            body = get_body(mechanism, eqc.parentid)
             rot = eqc.constraints[2]
             A = Matrix(nullspacemat(rot))
             Fτ = springforce(mechanism, eqc, body)
@@ -61,13 +61,13 @@ end
 
 mech = getmechanism(:atlas, Δt = Δt, g = gravity, cf = 1.5, damper = 1000.0, spring = 30.0, model_type = :armless)
 initialize!(mech, :atlas)
-setState!(mech, min2max(mech, zref[1]))
+set_state!(mech, min2max(mech, zref[1]))
 @elapsed storage = simulate!(mech, 0.05, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 ugc = 6.00 * gravity_compensation(mech)
 
 mech = getmechanism(:atlas, Δt = Δt, g = gravity, cf = 1.5, damper = 30.0, spring = 0.0, model_type = :armless)
-controldim(mech)
+control_dimension(mech)
 u_control = ugc[6 .+ (1:15)]
 u_mask = [zeros(15,6) I(15)]
 
@@ -98,7 +98,7 @@ end
 
 # Time
 h = mech.Δt
-n, m, d = minCoordDim(mech), 15, 0
+n, m, d = minimal_dimension(mech), 15, 0
 dyn = Dynamics(fd, fdx, fdu, n, n, m, d)
 model = [dyn for t = 1:T-1]
 

@@ -37,7 +37,7 @@ setSpringOffset!(mech, x0)
 
 # Dimensions
 T = 20
-n = minCoordDim(mech)
+n = minimal_dimension(mech)
 m = 12
 d = 0
 # Ref trajectory
@@ -55,7 +55,7 @@ visualize(mech, storage, vis = vis)
 Δt = 0.05
 mech = getmechanism(:quadruped, Δt = Δt, g = -9.0, cf = 0.5, contact = true, spring = 100.0, damper = 2.0)
 initialize!(mech, :quadruped)
-setState!(mech, zref[1])
+set_state!(mech, zref[1])
 
 function controller!(mechanism, k)
 	setSpringOffset!(mechanism, xref[k])
@@ -115,7 +115,7 @@ visualize(mech, storage, vis = vis)
 mech = getmechanism(:quadruped, Δt = 0.01, g = 0.0, spring = 10.0, damper = 1.0, contact = true)
 initialize!(mech, :quadruped)
 z0 = min2max(mech, zref[1])
-setState!(mech, z0)
+set_state!(mech, z0)
 
 visualizeMaxCoord(mech, z0, vis)
 function controller!(mechanism, k)
@@ -138,13 +138,13 @@ a = 10
 # Reference control
 function gravity_compensation(mechanism::Mechanism)
     # only works with revolute joints for now
-    nu = controldim(mechanism)
+    nu = control_dimension(mechanism)
     u = zeros(nu)
     off  = 0
     for eqc in mechanism.eqconstraints
-        nu = controldim(eqc)
+        nu = control_dimension(eqc)
         if eqc.parentid != nothing
-            body = getbody(mechanism, eqc.parentid)
+            body = get_body(mechanism, eqc.parentid)
             rot = eqc.constraints[2]
             A = Matrix(nullspacemat(rot))
             Fτ = springforce(mechanism, eqc, body)

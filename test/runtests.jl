@@ -9,7 +9,7 @@ using Dojo
 using Test
 
 include("integrator.jl")
-include("minimal_coordinates.jl")
+include("minimal.jl")
 include("jacobian.jl")
 include("momentum.jl")
 include("energy.jl")

@@ -30,9 +30,9 @@ jointtypes = [
 function controller!(mechanism, k; U=0.5, Δt=Δt0)
     N = Int(floor(1 / Δt))
     for (i,joint) in enumerate(mechanism.eqconstraints)
-        nu = controldim(joint)
+        nu = control_dimension(joint)
         u = (nu <= 5 && k ∈ (1:N)) * U * Δt * sones(nu)
-        setForce!(joint, u)
+        set_input!(joint, u)
     end
     return
 end
@@ -56,9 +56,9 @@ initialize!(mech, :box, v=v0, ω=ω0)
 storage = simulate!(mech, 5.0, nocontrol!, record=true, verbose=false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
-ke0 = kineticEnergy(mech, storage)[start0:end]
-pe0 = potentialEnergy(mech, storage)[start0:end]
-me0 = mechanicalEnergy(mech, storage)[start0:end]
+ke0 = kinetic_energy(mech, storage)[start0:end]
+pe0 = potential_energy(mech, storage)[start0:end]
+me0 = mechanical_energy(mech, storage)[start0:end]
 
 # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[1])
 # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])
@@ -92,9 +92,9 @@ initialize!(mech, :pendulum, ϕ1=ϕ0, ω1=ω0)
 storage = simulate!(mech, 5.0, controller!, record=true, verbose=false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
-ke0 = kineticEnergy(mech, storage)[start0:end]
-pe0 = potentialEnergy(mech, storage)[start0:end]
-me0 = mechanicalEnergy(mech, storage)[start0:end]
+ke0 = kinetic_energy(mech, storage)[start0:end]
+pe0 = potential_energy(mech, storage)[start0:end]
+me0 = mechanical_energy(mech, storage)[start0:end]
 
 # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[1])
 # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])
@@ -133,9 +133,9 @@ ke_max = 0.5 * body1.m * vmax^2
 storage = simulate!(mech, 5.0,  nocontrol!, record=true, verbose=false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
-ke0 = kineticEnergy(mech, storage)[start0:end]
-pe0 = potentialEnergy(mech, storage)[start0:end]
-me0 = mechanicalEnergy(mech, storage)[start0:end]
+ke0 = kinetic_energy(mech, storage)[start0:end]
+pe0 = potential_energy(mech, storage)[start0:end]
+me0 = mechanical_energy(mech, storage)[start0:end]
 
 # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[1])
 # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])
@@ -171,9 +171,9 @@ initialize!(mech, :slider, z1 = z0)
 storage = simulate!(mech, 1.5,  nocontrol!, record=true, verbose=false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
-ke0 = kineticEnergy(mech, storage)[start0:end]
-pe0 = potentialEnergy(mech, storage)[start0:end]
-me0 = mechanicalEnergy(mech, storage)[start0:end]
+ke0 = kinetic_energy(mech, storage)[start0:end]
+pe0 = potential_energy(mech, storage)[start0:end]
+me0 = mechanical_energy(mech, storage)[start0:end]
 
 # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[1])
 # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])
@@ -206,9 +206,9 @@ initialize!(mech, :slider, z1 = z0)
 storage = simulate!(mech, 5.0,  nocontrol!, record=true, verbose=false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
-ke0 = kineticEnergy(mech, storage)[start0:end]
-pe0 = potentialEnergy(mech, storage)[start0:end]
-me0 = mechanicalEnergy(mech, storage)[start0:end]
+ke0 = kinetic_energy(mech, storage)[start0:end]
+pe0 = potential_energy(mech, storage)[start0:end]
+me0 = mechanical_energy(mech, storage)[start0:end]
 
 # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[start0])
 # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[start0])
@@ -233,9 +233,9 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 function humanoid_controller!(mechanism, k; U=0.05, Δt=Δt0)
     N = Int(floor(1/Δt))
     for (i,eqc) in enumerate(mechanism.eqconstraints)
-        nu = controldim(eqc)
+        nu = control_dimension(eqc)
         u = (nu <= 5 && k ∈ (1:N)) * U * Δt * sones(nu)
-        setForce!(eqc, u)
+        set_input!(eqc, u)
     end
     return
 end
@@ -247,16 +247,16 @@ mech = getmechanism(:humanoid, Δt = Δt0, g = g0, spring = spring0, damper = da
 initialize!(mech, :humanoid)
 bodies = collect(mech.bodies)
 for body in mech.bodies
-    setVelocity!(body, ω = 0.5*rand(3))
-    # setVelocity!(body, v = 1.0*rand(3))
+    set_velocity!(body, ω = 0.5*rand(3))
+    # set_velocity!(body, v = 1.0*rand(3))
 end
 
 storage = simulate!(mech, 3.0, humanoid_controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, downsample(storage, 1), vis = vis)
 
-ke0 = kineticEnergy(mech, storage)[start0:end]
-pe0 = potentialEnergy(mech, storage)[start0:end]
-me0 = mechanicalEnergy(mech, storage)[start0:end]
+ke0 = kinetic_energy(mech, storage)[start0:end]
+pe0 = potential_energy(mech, storage)[start0:end]
+me0 = mechanical_energy(mech, storage)[start0:end]
 
 # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[1])
 # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])
@@ -282,14 +282,14 @@ damper0 = 0.0
 mech = getmechanism(:atlas, Δt = Δt0, g = g0, spring = spring0, damper = damper0, contact = false)
 initialize!(mech, :atlas)
 bodies = collect(mech.bodies)
-setVelocity!.(bodies, ω = 1.0*rand(3))
+set_velocity!.(bodies, ω = 1.0*rand(3))
 
 storage = simulate!(mech, 5.0, humanoid_controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
-ke0 = kineticEnergy(mech, storage)[start0:end]
-pe0 = potentialEnergy(mech, storage)[start0:end]
-me0 = mechanicalEnergy(mech, storage)[start0:end]
+ke0 = kinetic_energy(mech, storage)[start0:end]
+pe0 = potential_energy(mech, storage)[start0:end]
+me0 = mechanical_energy(mech, storage)[start0:end]
 
 # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[1])
 # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])
@@ -315,9 +315,9 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 function quadruped_controller!(mechanism, k; U = 0.01, Δt = Δt0)
     N = Int(floor(1/Δt))
     for (i,eqc) in enumerate(mechanism.eqconstraints)
-        nu = controldim(eqc)
+        nu = control_dimension(eqc)
         u = (nu <= 5 && k ∈ (1:N)) * U * Δt * sones(nu)
-        setForce!(eqc, u)
+        set_input!(eqc, u)
     end
     return
 end
@@ -329,9 +329,9 @@ initialize!(mech, :quadruped)
 storage = simulate!(mech, 5.0, quadruped_controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
-ke0 = kineticEnergy(mech, storage)[start0:end]
-pe0 = potentialEnergy(mech, storage)[start0:end]
-me0 = mechanicalEnergy(mech, storage)[start0:end]
+ke0 = kinetic_energy(mech, storage)[start0:end]
+pe0 = potential_energy(mech, storage)[start0:end]
+me0 = mechanical_energy(mech, storage)[start0:end]
 
 # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[1])
 # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])
@@ -356,9 +356,9 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 function snake_controller!(mechanism, k; U = 0.05, Δt = Δt0)
     N = Int(floor(1/Δt))
     for (i,joint) in enumerate(mechanism.eqconstraints)
-        nu = controldim(joint)
+        nu = control_dimension(joint)
         u = (nu <= 5 && k ∈ (1:N)) * U * Δt * sones(nu)
-        setForce!(joint, u)
+        set_input!(joint, u)
     end
     return
 end
@@ -377,9 +377,9 @@ initialize!(mech, :snake, q1 = q10, v = v0, ω = ω0)
 storage = simulate!(mech, 3.0, snake_controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
-ke0 = kineticEnergy(mech, storage)[start0:end]
-pe0 = potentialEnergy(mech, storage)[start0:end]
-me0 = mechanicalEnergy(mech, storage)[start0:end]
+ke0 = kinetic_energy(mech, storage)[start0:end]
+pe0 = potential_energy(mech, storage)[start0:end]
+me0 = mechanical_energy(mech, storage)[start0:end]
 
 # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[1])
 # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])
@@ -405,9 +405,9 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
         storage = simulate!(mech, 3.0, snake_controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
         # visualize(mech, storage, vis = vis)
 
-        ke0 = kineticEnergy(mech, storage)[start0:end]
-        pe0 = potentialEnergy(mech, storage)[start0:end]
-        me0 = mechanicalEnergy(mech, storage)[start0:end]
+        ke0 = kinetic_energy(mech, storage)[start0:end]
+        pe0 = potential_energy(mech, storage)[start0:end]
+        me0 = mechanical_energy(mech, storage)[start0:end]
 
         # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[1])
         # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])
@@ -442,9 +442,9 @@ initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0)
 storage = simulate!(mech, 3.0, snake_controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
-ke0 = kineticEnergy(mech, storage)[start0:end]
-pe0 = potentialEnergy(mech, storage)[start0:end]
-me0 = mechanicalEnergy(mech, storage)[start0:end]
+ke0 = kinetic_energy(mech, storage)[start0:end]
+pe0 = potential_energy(mech, storage)[start0:end]
+me0 = mechanical_energy(mech, storage)[start0:end]
 
 # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[1])
 # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])
@@ -470,9 +470,9 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
         storage = simulate!(mech, 3.0, snake_controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))
         # visualize(mech, storage, vis = vis)
 
-        ke0 = kineticEnergy(mech, storage)[start0:end]
-        pe0 = potentialEnergy(mech, storage)[start0:end]
-        me0 = mechanicalEnergy(mech, storage)[start0:end]
+        ke0 = kinetic_energy(mech, storage)[start0:end]
+        pe0 = potential_energy(mech, storage)[start0:end]
+        me0 = mechanical_energy(mech, storage)[start0:end]
 
         # plot([(i-1)*Δt0 for i in 1:length(ke0)], ke0 .- ke0[1])
         # plot([(i-1)*Δt0 for i in 1:length(pe0)], pe0 .- pe0[1])

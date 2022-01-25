@@ -51,18 +51,18 @@ tra1 = eqc1.constraints[1]
 rot1 = eqc1.constraints[2]
 origin = mech.origin
 body1 = collect(mech.bodies)[1]
-minimalCoordinates(rot1, origin, body1)
+minimal_coordinates(rot1, origin, body1)
 
 # initialize!(mech, :pendulum)
 ω0 = 10.0
 ω1 = 1.0
 r = 0.5
-setPosition!(body1, x = [0, 0, -r])
-# setVelocity!(body1, v = [0, ω0*r, 0.], ω = [ω0, 0, 0.])
-# setVelocity!(body1, v = [ω1*r, 0, 0.], ω = [0, -ω1, 0.])
-# setVelocity!(body1, v = [ω1*r, ω0*r, 0.], ω = [ω0, -ω1, 0.])
+set_position(body1, x = [0, 0, -r])
+# set_velocity!(body1, v = [0, ω0*r, 0.], ω = [ω0, 0, 0.])
+# set_velocity!(body1, v = [ω1*r, 0, 0.], ω = [0, -ω1, 0.])
+# set_velocity!(body1, v = [ω1*r, ω0*r, 0.], ω = [ω0, -ω1, 0.])
 q0 = UnitQuaternion(RotX(pi/2))
-setPosition!(origin, body1, p2 = [0, 0, r], Δq = q0)
+set_position(origin, body1, p2 = [0, 0, r], Δq = q0)
 
 @elapsed storage = simulate!(mech, 10.10, record = true, solver = :mehrotra!, verbose = true)
 visualize(mech, storage, vis = vis)
@@ -75,15 +75,15 @@ plot([q.w for q in storage.q[1]])
 include(joinpath(module_dir(), "examples", "diff_tools.jl"))
 # Set data
 Nb = length(mech.bodies)
-data = getdata(mech)
-setdata!(mech, data)
+data = get_data(mech)
+set_data!(mech, data)
 
 mehrotra!(mech, opts = InteriorPointOptions(rtol = 1e-6, btol = 1e-1, undercut=1.2, verbose=true))
-sol = getsolution(mech)
-attjac = attitudejacobian(data, Nb)
+sol = get_solution(mech)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
-setentries!(mech)
+set_entries!(mech)
 datamat = full_data_matrix(mech)
 solmat = full_matrix(mech.system)
 sensi = - (solmat \ datamat)

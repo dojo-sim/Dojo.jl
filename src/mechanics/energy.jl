@@ -2,9 +2,9 @@
 """
     Total mechanical energy of a mechanism.
 """
-function mechanicalEnergy(mechanism::Mechanism, storage::Storage)
-    ke = kineticEnergy(mechanism, storage)
-    pe = potentialEnergy(mechanism, storage)
+function mechanical_energy(mechanism::Mechanism, storage::Storage)
+    ke = kinetic_energy(mechanism, storage)
+    pe = potential_energy(mechanism, storage)
     me = ke + pe
     return me
 end
@@ -12,10 +12,10 @@ end
 """
     Kinetic energy of a mechanism due to linear and angular velocity.
 """
-function kineticEnergy(mechanism::Mechanism, storage::Storage{T,N}) where {T,N}
+function kinetic_energy(mechanism::Mechanism, storage::Storage{T,N}) where {T,N}
     ke = zeros(T,N)
     for i = 1:N
-        ke[i] = kineticEnergy(mechanism, storage, i)
+        ke[i] = kinetic_energy(mechanism, storage, i)
     end
     return ke
 end
@@ -23,7 +23,7 @@ end
 """
     Kinetic energy of a mechanism due to linear and angular velocity.
 """
-function kineticEnergy(mechanism::Mechanism, storage::Storage{T,N}, t::Int) where {T,N}
+function kinetic_energy(mechanism::Mechanism, storage::Storage{T,N}, t::Int) where {T,N}
     ke = 0.0
     for (i,body) in enumerate(mechanism.bodies)
         vl = storage.vl[i][t]
@@ -37,10 +37,10 @@ end
 """
     Potential energy of a mechanism due to gravity and springs in the joints.
 """
-function potentialEnergy(mechanism::Mechanism, storage::Storage{T,N}) where {T,N}
+function potential_energy(mechanism::Mechanism, storage::Storage{T,N}) where {T,N}
     pe = zeros(T,N)
     for i = 1:N
-        pe[i] = potentialEnergy(mechanism, storage, i)
+        pe[i] = potential_energy(mechanism, storage, i)
     end
     return pe
 end
@@ -48,7 +48,7 @@ end
 """
     Potential energy of a mechanism due to gravity and springs in the joints.
 """
-function potentialEnergy(mechanism::Mechanism{T,Nn,Ne,Nb}, storage::Storage{T,Ns}, t::Int) where {T,Nn,Ne,Nb,Ns}
+function potential_energy(mechanism::Mechanism{T,Nn,Ne,Nb}, storage::Storage{T,Ns}, t::Int) where {T,Nn,Ne,Nb,Ns}
     pe = 0.0
     # Gravity
     for (i,body) in enumerate(mechanism.bodies)
@@ -74,7 +74,7 @@ function potentialEnergy(mechanism::Mechanism{T,Nn,Ne,Nb}, storage::Storage{T,Ns
                     xa = storage.x[parentid - Ne][t] # TODO this is sketchy way to get the correct index
                     qa = storage.q[parentid - Ne][t] # TODO this is sketchy way to get the correct index
                 else 
-                    xa, qa = posargs2(mechanism.origin.state) 
+                    xa, qa = current_configuration(mechanism.origin.state) 
                 end
 
                 (typeof(joint) <: Translational) && (force = springforceb(joint, xa, qa, xb, qb)) # actual force not impulse

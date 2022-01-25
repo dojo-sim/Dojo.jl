@@ -27,9 +27,9 @@ visualize(mech, storage, vis = vis)
 
 function controller!(mechanism, k)
     for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])
-        nu = controldim(eqc)
+        nu = control_dimension(eqc)
         u = sones(nu)
-        setForce!(eqc, u)
+        set_input!(eqc, u)
     end
     return
 end
@@ -58,19 +58,19 @@ end
 close(env)
 
 env.mechanism.eqconstraints
-controldim(env.mechanism)
+control_dimension(env.mechanism)
 sample(env.aspace)
 # sample(env.aspace)
 #
 
 
 # initialize!(env.mechanism, :halfcheetah, z = 2.0)
-# torso = getbody(env.mechanism, "torso")
-# eqc1 = geteqconstraint(env.mechanism, "floating_joint")
+# torso = get_body(env.mechanism, "torso")
+# eqc1 = get_joint_constraint(env.mechanism, "floating_joint")
 # torso.state.x2
 # orig = env.mechanism.origin
-# minimalCoordinates(eqc1.constraints[1], orig, torso)
-# minimalCoordinates(eqc1.constraints[2], orig, torso)
+# minimal_coordinates(eqc1.constraints[1], orig, torso)
+# minimal_coordinates(eqc1.constraints[2], orig, torso)
 
 
 getMinState(env.mechanism)

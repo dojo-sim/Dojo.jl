@@ -41,8 +41,8 @@ eqcs = [joint0to1]
 mech = Mechanism(origin, bodies, eqcs, g = 0.0, Δt = 0.01)
 
 body1 = collect(mech.bodies)[1]
-setPosition!(body1, x = [1, 0, 0.])
-setVelocity!(body1, v = [0, 0, 0.], ω = [0, 0, 0.])
+set_position(body1, x = [1, 0, 0.])
+set_velocity!(body1, v = [0, 0, 0.], ω = [0, 0, 0.])
 
 storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!)
 visualize(mech, storage, vis = vis)
@@ -57,15 +57,15 @@ plot([x[1] for x in storage.x[1]])
 include(joinpath(module_dir(), "examples", "diff_tools.jl"))
 # Set data
 Nb = length(mech.bodies)
-data = getdata(mech)
-setdata!(mech, data)
+data = get_data(mech)
+set_data!(mech, data)
 
 mehrotra!(mech, opts = InteriorPointOptions(rtol = 1e-6, btol = 1e-1, undercut=1.2, verbose=true))
-sol = getsolution(mech)
-attjac = attitudejacobian(data, Nb)
+sol = get_solution(mech)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
-setentries!(mech)
+set_entries!(mech)
 datamat = full_data_matrix(mech)
 solmat = full_matrix(mech.system)
 sensi = - (solmat \ datamat)

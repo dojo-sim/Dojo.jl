@@ -12,7 +12,7 @@ function walker2d(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     initializewalker2d!(mechanism)
 
     if mode == :min
-        nx = minCoordDim(mechanism)
+        nx = minimal_dimension(mechanism)
     elseif mode == :max
         nx = maxCoordDim(mechanism)
     end
@@ -25,7 +25,7 @@ function walker2d(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
 
     rng = MersenneTwister(s)
 
-    z = getMaxState(mechanism)
+    z = get_max_state(mechanism)
     x = mode == :min ? max2min(mechanism, z) : z
 
     fx = zeros(nx, nx)
@@ -57,17 +57,17 @@ function reset(env::Environment{Walker2d}; x=nothing, reset_noise_scale = 0.005)
         # initialize above the ground to make sure that with random initialization we do not violate the ground constraint.
         initialize!(env.mechanism, :walker2d, z = 0.25)
         x0 = getMinState(env.mechanism)
-        nx = minCoordDim(env.mechanism)
+        nx = minimal_dimension(env.mechanism)
 
         low = -reset_noise_scale
         high = reset_noise_scale
         x = x0 + (high - low) .* rand(env.rng[1], nx) .+ low # we ignored the normal distribution on the velocities
         z = min2max(env.mechanism, x)
-        setState!(env.mechanism, z)
+        set_state!(env.mechanism, z)
         if env.mode == :min
             env.x .= getMinState(env.mechanism)
         elseif env.mode == :max
-            env.x .= getMaxState(env.mechanism)
+            env.x .= get_max_state(env.mechanism)
         end
         env.u_prev .= 0.0
     end
@@ -76,7 +76,7 @@ end
 
 function _get_obs(env::Environment{Walker2d}; full_state::Bool=false)
     full_state && (return env.x)
-    nx = minCoordDim(env.mechanism)
+    nx = minimal_dimension(env.mechanism)
     if env.mode == :min
         o = env.x
     elseif env.mode == :max
@@ -107,7 +107,7 @@ function cost(env::Environment{Walker2d}, x, u;
 end
 
 function is_done(::Environment{Walker2d}, x)
-    nx = minCoordDim(env.mechanism)
+    nx = minimal_dimension(env.mechanism)
     if env.mode == :min
         x0 = x
     elseif env.mode == :max
@@ -127,10 +127,10 @@ end
 # x_velocity = z_torso[4]
 # z[3*13 + 4] = 324.0
 # z
-# setState!(env.mechanism, z)
+# set_state!(env.mechanism, z)
 #
 # initialize!(env.mechanism, :walker2d, x = 111.0, z = 1.0, θ=0.18)
 # x = getMinState(env.mechanism)
-# z = getMaxState(env.mechanism)
+# z = get_max_state(env.mechanism)
 # is_done(env, x)
 #

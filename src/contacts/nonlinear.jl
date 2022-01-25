@@ -21,9 +21,9 @@ end
 
 function g(mechanism, ineqc::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}}}
     bound = ineqc.constraints[1]
-    body = getbody(mechanism, ineqc.parentid)
-    x2, v25, q2, ϕ25 = fullargssol(body.state)
-    x3, q3 = posargs3(body.state, mechanism.Δt)
+    body = get_body(mechanism, ineqc.parentid)
+    x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
+    x3, q3 = next_configuration(body.state, mechanism.Δt)
 
     g(bound, ineqc.ssol[2], ineqc.γsol[2], x3, q3, v25, ϕ25)
 end
@@ -45,7 +45,7 @@ end
     V = [bound.ainv3 * Δt;
         szeros(1,3);
         bound.Bx]
-    # Ω = FiniteDiff.finite_difference_jacobian(ϕ25 -> g(bound, s, γ, x2+Δt*v25, getq3(q2,ϕ25,Δt), v25, ϕ25), ϕ25)
+    # Ω = FiniteDiff.finite_difference_jacobian(ϕ25 -> g(bound, s, γ, x2+Δt*v25, next_orientation(q2,ϕ25,Δt), v25, ϕ25), ϕ25)
     ∂v∂q3 = skew(vrotate(ϕ25, q3)) * ∂vrotate∂q(bound.p, q3)
     ∂v∂q3 += skew(bound.offset - vrotate(bound.p, q3)) * ∂vrotate∂q(ϕ25, q3)
     ∂v∂ϕ25 = skew(bound.offset - vrotate(bound.p, q3)) * ∂vrotate∂p(ϕ25, q3)
@@ -60,7 +60,7 @@ end
     X = [bound.ainv3;
         szeros(1,3);
         szeros(2,3)]
-    # Ω = FiniteDiff.finite_difference_jacobian(ϕ25 -> g(bound, s, γ, x2+Δt*v25, getq3(q2,ϕ25,Δt), v25, ϕ25), ϕ25)
+    # Ω = FiniteDiff.finite_difference_jacobian(ϕ25 -> g(bound, s, γ, x2+Δt*v25, next_orientation(q2,ϕ25,Δt), v25, ϕ25), ϕ25)
     ∂v∂q3 = skew(vrotate(ϕ25, q3)) * ∂vrotate∂q(bound.p, q3)
     ∂v∂q3 += skew(bound.offset - vrotate(bound.p, q3)) * ∂vrotate∂q(ϕ25, q3)
     Q = [bound.ainv3 * ∂vrotate∂q(bound.p, q3);
@@ -78,14 +78,14 @@ end
     return [X Q]
 end
 
-@inline function forcemapping(bound::NonlinearContact)
+@inline function force_mapping(bound::NonlinearContact)
     X = [bound.ainv3;
          szeros(1,3);
          bound.Bx]
     return X
 end
 
-@inline function setDandΔs!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
+@inline function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
     ineqc::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}},N½}
     # ∇ssol[γsol .* ssol - μ; g - s] = [diag(γsol); -diag(0,1,1)]
     # ∇γsol[γsol .* ssol - μ; g - s] = [diag(ssol); -diag(1,0,0)]
@@ -140,7 +140,7 @@ end
 function get_sdf(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, storage::Storage{T,N}) where {T,Nn,Ne,Nb,Ni,N}
     d = []
     for ineqc in mechanism.ineqconstraints
-        ibody = getbody(mechanism, ineqc.parentid).id - Ne
+        ibody = get_body(mechanism, ineqc.parentid).id - Ne
         push!(d, [sdf(ineqc, storage.x[ibody][i], storage.q[ibody][i]) for i = 1:N])
     end
     return d

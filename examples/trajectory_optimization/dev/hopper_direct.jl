@@ -23,7 +23,7 @@ mech = getraiberthopper(Δt = Δt, g = gravity, damper=0.0)
 initializeraiberthopper!(mech)
 
 ## state space
-n = minCoordDim(mech)
+n = minimal_dimension(mech)
 m = 3
 
 function raiberthopper_initial_state()
@@ -68,7 +68,7 @@ u_mask = [0 0 0 1 0 0 0;
 Random.seed!(0)
 
 # Model
-nx, nu, nw = minCoordDim(mech), 3, 0
+nx, nu, nw = minimal_dimension(mech), 3, 0
 nu += nx
 function f(d, y, x, u, w)
     u_ctrl = u[1:3]

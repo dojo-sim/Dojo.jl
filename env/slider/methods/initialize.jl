@@ -22,7 +22,7 @@ function initializeslider!(mechanism::Mechanism; z1::T = 0.0) where {T}
     body = collect(mechanism.bodies)[1]
     eqc = collect(mechanism.eqconstraints)[1]
     p2 = eqc.constraints[1].vertices[2]
-    setPosition!(mechanism.origin, body, p2 = p2 - [0, 0, z1])
+    set_position(mechanism.origin, body, p2 = p2 - [0, 0, z1])
 end
 
 function getnslider(; Δt::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 0.0, Nb::Int = 5) where {T}
@@ -54,11 +54,11 @@ end
 function initializenslider!(mechanism::Mechanism; z1::T = 0.2, Δz = 0.0) where {T}
     body1 = collect(mechanism.bodies)[1]
     # set position and velocities
-    setPosition!(mechanism.origin, body1, p1 = [0, 0, z1])
+    set_position(mechanism.origin, body1, p1 = [0, 0, z1])
 
     previd = body1.id
     for (i,body) in enumerate(Iterators.drop(mechanism.bodies, 1))
-        setPosition!(getbody(mechanism, previd), body, p1 = [0, -0.1, Δz])
+        set_position(get_body(mechanism, previd), body, p1 = [0, -0.1, Δz])
         previd = body.id
     end
 

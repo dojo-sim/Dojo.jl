@@ -14,13 +14,13 @@ end
 ## Forces for dynamics
 ## Discrete-time position wrappers (for dynamics)
 springforcea(joint::Translational, bodya::Node, bodyb::Node, Δt; unitary::Bool=false) =
-    Δt * springforcea(joint, posargs2(bodya.state)..., posargs2(bodyb.state)..., unitary=unitary)
+    Δt * springforcea(joint, current_configuration(bodya.state)..., current_configuration(bodyb.state)..., unitary=unitary)
 springforceb(joint::Translational, bodya::Node, bodyb::Node, Δt; unitary::Bool=false) =
-    Δt * springforceb(joint, posargs2(bodya.state)..., posargs2(bodyb.state)..., unitary=unitary)
+    Δt * springforceb(joint, current_configuration(bodya.state)..., current_configuration(bodyb.state)..., unitary=unitary)
 damperforcea(joint::Translational, bodya::Node, bodyb::Node, Δt; unitary::Bool=false) =
-    Δt * damperforcea(joint, posargs2(bodya.state)..., bodya.state.vsol[2], bodya.state.ϕsol[2], posargs2(bodyb.state)..., bodyb.state.vsol[2], bodyb.state.ϕsol[2], unitary=unitary)
+    Δt * damperforcea(joint, current_configuration(bodya.state)..., bodya.state.vsol[2], bodya.state.ϕsol[2], current_configuration(bodyb.state)..., bodyb.state.vsol[2], bodyb.state.ϕsol[2], unitary=unitary)
 damperforceb(joint::Translational, bodya::Node, bodyb::Node, Δt; unitary::Bool=false) =
-    Δt * damperforceb(joint, posargs2(bodya.state)..., bodya.state.vsol[2], bodya.state.ϕsol[2], posargs2(bodyb.state)..., bodyb.state.vsol[2], bodyb.state.ϕsol[2], unitary=unitary)
+    Δt * damperforceb(joint, current_configuration(bodya.state)..., bodya.state.vsol[2], bodya.state.ϕsol[2], current_configuration(bodyb.state)..., bodyb.state.vsol[2], bodyb.state.ϕsol[2], unitary=unitary)
 
 springforcea(joint::Translational3{T}, bodya::Node, bodyb::Node, Δt) where {T} = szeros(T, 6)
 springforceb(joint::Translational3{T}, bodya::Node, bodyb::Node, Δt) where {T} = szeros(T, 6)
@@ -137,8 +137,8 @@ end
 ∂damperforceb∂velb(joint::Translational3{T}, body1::Origin, body2::Node, Δt::T) where T = szeros(T, 6, 6)
 
 function ∂springforcea∂posa(joint::Translational, body1::Node, body2::Node, Δt::T; attjac::Bool = true) where T
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
 
     X = FiniteDiff.finite_difference_jacobian(xa -> springforcea(joint, xa, qa, xb, qb), xa)
     Q = FiniteDiff.finite_difference_jacobian(qa -> springforcea(joint, xa, UnitQuaternion(qa..., false), xb, qb), [qa.w, qa.x, qa.y, qa.z])
@@ -146,8 +146,8 @@ function ∂springforcea∂posa(joint::Translational, body1::Node, body2::Node, 
     return Δt * [X Q]
 end
 function ∂damperforcea∂posa(joint::Translational, body1::Node, body2::Node, Δt::T; attjac::Bool = true) where T
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
     va = body1.state.vsol[2]
     vb = body2.state.vsol[2]
     ωa = body1.state.ϕsol[2]
@@ -160,8 +160,8 @@ function ∂damperforcea∂posa(joint::Translational, body1::Node, body2::Node, 
 end
 
 function ∂springforcea∂posb(joint::Translational, body1::Node, body2::Node, Δt::T; attjac::Bool = true) where T
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
 
     X = FiniteDiff.finite_difference_jacobian(xb -> springforcea(joint, xa, qa, xb, qb), xb)
     Q = FiniteDiff.finite_difference_jacobian(qb -> springforcea(joint, xa, qa, xb, UnitQuaternion(qb..., false)), [qb.w, qb.x, qb.y, qb.z])
@@ -170,8 +170,8 @@ function ∂springforcea∂posb(joint::Translational, body1::Node, body2::Node, 
 end
 
 function ∂damperforcea∂posb(joint::Translational, body1::Node, body2::Node, Δt::T; attjac::Bool = true) where T
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
     va = body1.state.vsol[2]
     vb = body2.state.vsol[2]
     ωa = body1.state.ϕsol[2]
@@ -184,8 +184,8 @@ function ∂damperforcea∂posb(joint::Translational, body1::Node, body2::Node, 
 end
 
 function ∂springforceb∂posb(joint::Translational, body1::Node, body2::Node, Δt::T; attjac::Bool = true) where T
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
 
     X = FiniteDiff.finite_difference_jacobian(xb -> springforceb(joint, xa, qa, xb, qb), xb)
     Q = FiniteDiff.finite_difference_jacobian(qb -> springforceb(joint, xa, qa, xb, UnitQuaternion(qb..., false)), [qb.w, qb.x, qb.y, qb.z])
@@ -194,8 +194,8 @@ function ∂springforceb∂posb(joint::Translational, body1::Node, body2::Node, 
 end
 
 function ∂damperforceb∂posb(joint::Translational, body1::Node, body2::Node, Δt::T; attjac::Bool = true) where T
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
     va = body1.state.vsol[2]
     vb = body2.state.vsol[2]
     ωa = body1.state.ϕsol[2]
@@ -207,8 +207,8 @@ function ∂damperforceb∂posb(joint::Translational, body1::Node, body2::Node, 
     return Δt * [X Q]
 end
 function ∂springforceb∂posa(joint::Translational, body1::Node, body2::Node, Δt::T; attjac::Bool = true) where T
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
 
     X = FiniteDiff.finite_difference_jacobian(xa -> springforceb(joint, xa, qa, xb, qb), xa)
     Q = FiniteDiff.finite_difference_jacobian(qa -> springforceb(joint, xa, UnitQuaternion(qa..., false), xb, qb), [qa.w, qa.x, qa.y, qa.z])
@@ -216,8 +216,8 @@ function ∂springforceb∂posa(joint::Translational, body1::Node, body2::Node, 
     return Δt * [X Q]
 end
 function ∂damperforceb∂posa(joint::Translational, body1::Node, body2::Node, Δt::T; attjac::Bool = true) where T
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
     va = body1.state.vsol[2]
     vb = body2.state.vsol[2]
     ωa = body1.state.ϕsol[2]
@@ -229,7 +229,7 @@ function ∂damperforceb∂posa(joint::Translational, body1::Node, body2::Node, 
     return Δt * [X Q]
 end
 # function ∂springforceb∂posb(joint::Translational, body1::Origin, body2::Node, Δt::T; attjac::Bool = true) where T
-#     xb, qb = posargs2(body2.state)
+#     xb, qb = current_configuration(body2.state)
 
 #     X = FiniteDiff.finite_difference_jacobian(xb -> springforceb(joint, xb, qb), xb)
 #     Q = FiniteDiff.finite_difference_jacobian(qb -> springforceb(joint, xb, UnitQuaternion(qb..., false)), [qb.w, qb.x, qb.y, qb.z])
@@ -237,7 +237,7 @@ end
 #     return Δt * [X Q]
 # end
 # function ∂damperforceb∂posb(joint::Translational, body1::Origin, body2::Node, Δt::T; attjac::Bool = true) where T
-#     xb, qb = posargs2(body2.state)
+#     xb, qb = current_configuration(body2.state)
 #     vb = body2.state.vsol[2]
 #     ωb = body2.state.ϕsol[2]
 
@@ -252,8 +252,8 @@ function ∂springforcea∂vela(joint::Translational, body1::Node, body2::Node, 
 end
 
 function ∂damperforcea∂vela(joint::Translational, body1::Node, body2::Node, Δt::T) where T
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
     va = body1.state.vsol[2]
     ωa = body1.state.ϕsol[2]
     vb = body2.state.vsol[2]
@@ -269,8 +269,8 @@ function ∂springforcea∂velb(joint::Translational, body1::Node, body2::Node, 
 end
 
 function ∂damperforcea∂velb(joint::Translational, body1::Node, body2::Node, Δt::T) where T
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
     va = body1.state.vsol[2]
     ωa = body1.state.ϕsol[2]
     vb = body2.state.vsol[2]
@@ -286,8 +286,8 @@ function ∂springforceb∂velb(joint::Translational, body1::Node, body2::Node, 
 end
 
 function ∂damperforceb∂velb(joint::Translational, body1::Node, body2::Node, Δt::T) where T
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
     va = body1.state.vsol[2]
     ωa = body1.state.ϕsol[2]
     vb = body2.state.vsol[2]
@@ -303,8 +303,8 @@ function ∂springforceb∂vela(joint::Translational, body1::Node, body2::Node, 
 end
 
 function ∂damperforceb∂vela(joint::Translational, body1::Node, body2::Node, Δt::T) where T
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
     va = body1.state.vsol[2]
     ωa = body1.state.ϕsol[2]
     vb = body2.state.vsol[2]
@@ -319,7 +319,7 @@ end
 #     return Δt * szeros(T, 6, 6)
 # end
 # function ∂damperforceb∂velb(joint::Translational, body1::Origin, body2::Node, Δt::T) where T
-#     xb, qb = posargs2(body2.state)
+#     xb, qb = current_configuration(body2.state)
 #     vb = body2.state.vsol[2]
 #     ωb = body2.state.ϕsol[2]
 

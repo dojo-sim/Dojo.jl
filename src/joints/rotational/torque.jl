@@ -62,13 +62,13 @@ end
 ### Spring and damper
 ## Discrete-time position wrappers (for dynamics)
 springforcea(joint::Rotational, bodya::Node, bodyb::Node, Δt; unitary::Bool=false) =
-    Δt * springforcea(joint, posargs2(bodya.state)[2], posargs2(bodyb.state)[2], unitary=unitary)
+    Δt * springforcea(joint, current_configuration(bodya.state)[2], current_configuration(bodyb.state)[2], unitary=unitary)
 springforceb(joint::Rotational, bodya::Node, bodyb::Node, Δt; unitary::Bool=false) =
-    Δt * springforceb(joint, posargs2(bodya.state)[2], posargs2(bodyb.state)[2], unitary=unitary)
+    Δt * springforceb(joint, current_configuration(bodya.state)[2], current_configuration(bodyb.state)[2], unitary=unitary)
 damperforcea(joint::Rotational, bodya::Node, bodyb::Node, Δt; unitary::Bool=false) =
-    Δt * damperforcea(joint, posargs2(bodya.state)[2], bodya.state.ϕsol[2], posargs2(bodyb.state)[2], bodyb.state.ϕsol[2], unitary=unitary)
+    Δt * damperforcea(joint, current_configuration(bodya.state)[2], bodya.state.ϕsol[2], current_configuration(bodyb.state)[2], bodyb.state.ϕsol[2], unitary=unitary)
 damperforceb(joint::Rotational, bodya::Node, bodyb::Node, Δt; unitary::Bool=false) =
-    Δt * damperforceb(joint, posargs2(bodya.state)[2], bodya.state.ϕsol[2], posargs2(bodyb.state)[2], bodyb.state.ϕsol[2], unitary=unitary)
+    Δt * damperforceb(joint, current_configuration(bodya.state)[2], bodya.state.ϕsol[2], current_configuration(bodyb.state)[2], bodyb.state.ϕsol[2], unitary=unitary)
 
 springforcea(joint::Rotational3{T}, bodya::Node, bodyb::Node, Δt) where {T} = szeros(T, 6)
 springforceb(joint::Rotational3{T}, bodya::Node, bodyb::Node, Δt) where {T} = szeros(T, 6)
@@ -155,8 +155,8 @@ function ∂springforcea∂posa(joint::Rotational, body1::Node, body2::Node,
         Δt::T; attjac::Bool = true) where T
     # A = nullspacemat(joint)
     # Aᵀ = zerodimstaticadjoint(A)
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
     # qoffset = joint.qoffset
     # force = springforcea(joint, qa, qb; rotate = false)[SVector{3,Int}(4,5,6)]
     X = szeros(T, 3, 3)
@@ -171,10 +171,10 @@ function ∂damperforcea∂posa(joint::Rotational, body1::Node, body2::Node,
         Δt::T; attjac::Bool = true) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    _, _, _, ωa = fullargssol(body1.state)
-    _, _, _, ωb = fullargssol(body2.state)
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    _, _, _, ωa = current_configuration_velocity(body1.state)
+    _, _, _, ωb = current_configuration_velocity(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
     qoffset = joint.qoffset
     force = damperforcea(joint, qa, ωa, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
     X = szeros(T, 3, 3)
@@ -187,9 +187,9 @@ end
 function ∂springforcea∂posb(joint::Rotational, body1::Node, body2::Node, Δt::T; attjac::Bool = true) where T
     # A = nullspacemat(joint)
     # Aᵀ = zerodimstaticadjoint(A)
-    # _, _, _, ωb = fullargssol(body2.state)
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    # _, _, _, ωb = current_configuration_velocity(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
     # qoffset = joint.qoffset
     # force = springforcea(joint, qa, qb; rotate = false)[SVector{3,Int}(4,5,6)]
     X = szeros(T, 3, 3)
@@ -203,11 +203,11 @@ end
 function ∂damperforcea∂posb(joint::Rotational, body1::Node, body2::Node, Δt::T; attjac::Bool = true) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    x1b, q1b = posargs2(body2.state)
-    _, _, _, ωa = fullargssol(body1.state)
-    _, _, _, ωb = fullargssol(body2.state)
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    x1b, q1b = current_configuration(body2.state)
+    _, _, _, ωa = current_configuration_velocity(body1.state)
+    _, _, _, ωb = current_configuration_velocity(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
     qoffset = joint.qoffset
     force = damperforcea(joint, qa, ωa, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
     X = szeros(T, 3, 3)
@@ -220,9 +220,9 @@ end
 function ∂springforceb∂posb(joint::Rotational, body1::Node, body2::Node, Δt::T; attjac::Bool = true) where T
     # A = nullspacemat(joint)
     # Aᵀ = zerodimstaticadjoint(A)
-    # _, _, _, ωb = fullargssol(body2.state)
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    # _, _, _, ωb = current_configuration_velocity(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
     # qoffset = joint.qoffset
     # force = springforceb(joint, qa, qb; rotate = false)[SVector{3,Int}(4,5,6)]
     X = szeros(T, 3, 3)
@@ -236,10 +236,10 @@ end
 function ∂damperforceb∂posb(joint::Rotational, body1::Node, body2::Node, Δt::T; attjac::Bool = true) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    _, _, _, ωa = fullargssol(body1.state)
-    _, _, _, ωb = fullargssol(body2.state)
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    _, _, _, ωa = current_configuration_velocity(body1.state)
+    _, _, _, ωb = current_configuration_velocity(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
     qoffset = joint.qoffset
     force = damperforceb(joint, qa, ωa, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
     X = szeros(T, 3, 3)
@@ -253,9 +253,9 @@ end
 function ∂springforceb∂posa(joint::Rotational, body1::Node, body2::Node, Δt::T; attjac::Bool = true) where T
     # A = nullspacemat(joint)
     # Aᵀ = zerodimstaticadjoint(A)
-    # _, _, _, ωa = fullargssol(body1.state)
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    # _, _, _, ωa = current_configuration_velocity(body1.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
     # qoffset = joint.qoffset
     # force = springforceb(joint, qa, qb; rotate = false)[SVector{3,Int}(4,5,6)]
     X = szeros(T, 3, 3)
@@ -270,10 +270,10 @@ end
 function ∂damperforceb∂posa(joint::Rotational, body1::Node, body2::Node, Δt::T; attjac::Bool = true) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    _, _, _, ωa = fullargssol(body1.state)
-    _, _, _, ωb = fullargssol(body2.state)
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    _, _, _, ωa = current_configuration_velocity(body1.state)
+    _, _, _, ωb = current_configuration_velocity(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
     qoffset = joint.qoffset
     force = damperforceb(joint, qa, ωa, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
     X = szeros(T, 3, 3)
@@ -287,8 +287,8 @@ end
 # function ∂springforceb∂posb(joint::Rotational, body1::Origin, body2::Node, Δt::T; attjac::Bool = true) where T
 #     # A = nullspacemat(joint)
 #     # Aᵀ = zerodimstaticadjoint(A)
-#     # _, _, _, ωb = fullargssol(body2.state)
-#     xb, qb = posargs2(body2.state)
+#     # _, _, _, ωb = current_configuration_velocity(body2.state)
+#     xb, qb = current_configuration(body2.state)
 #     # qoffset = joint.qoffset
 #     # force = springforceb(joint, qb; rotate = false)[SVector{3,Int}(4,5,6)]
 #     X = szeros(T, 3, 3)
@@ -302,8 +302,8 @@ end
 # function ∂damperforceb∂posb(joint::Rotational, body1::Origin, body2::Node, Δt::T; attjac::Bool = true) where T
 #     A = nullspacemat(joint)
 #     Aᵀ = zerodimstaticadjoint(A)
-#     _, _, _, ωb = fullargssol(body2.state)
-#     xb, qb = posargs2(body2.state)
+#     _, _, _, ωb = current_configuration_velocity(body2.state)
+#     xb, qb = current_configuration(body2.state)
 #     qoffset = joint.qoffset
 #     force = damperforceb(joint, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
 #     X = szeros(T, 3, 3)
@@ -323,10 +323,10 @@ end
 function ∂damperforcea∂vela(joint::Rotational, body1::Node, body2::Node, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    _, _, _, ωa = fullargssol(body1.state)
-    _, _, _, ωb = fullargssol(body2.state)
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    _, _, _, ωa = current_configuration_velocity(body1.state)
+    _, _, _, ωb = current_configuration_velocity(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
     qoffset = joint.qoffset
     force = damperforcea(joint, qa, ωa, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
     V = szeros(T, 3, 3)
@@ -341,10 +341,10 @@ end
 function ∂damperforcea∂velb(joint::Rotational, body1::Node, body2::Node, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    _, _, _, ωa = fullargssol(body1.state)
-    _, _, _, ωb = fullargssol(body2.state)
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    _, _, _, ωa = current_configuration_velocity(body1.state)
+    _, _, _, ωb = current_configuration_velocity(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
     qoffset = joint.qoffset
     force = damperforcea(joint, qa, ωa, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
     V = szeros(T, 3, 3)
@@ -359,10 +359,10 @@ end
 function ∂damperforceb∂velb(joint::Rotational, body1::Node, body2::Node, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    _, _, _, ωa = fullargssol(body1.state)
-    _, _, _, ωb = fullargssol(body2.state)
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    _, _, _, ωa = current_configuration_velocity(body1.state)
+    _, _, _, ωb = current_configuration_velocity(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
     qoffset = joint.qoffset
     force = damperforceb(joint, qa, ωa, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
     V = szeros(T, 3, 3)
@@ -377,10 +377,10 @@ end
 function ∂damperforceb∂vela(joint::Rotational, body1::Node, body2::Node, Δt::T) where T
     A = nullspacemat(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    _, _, _, ωa = fullargssol(body1.state)
-    _, _, _, ωb = fullargssol(body2.state)
-    xa, qa = posargs2(body1.state)
-    xb, qb = posargs2(body2.state)
+    _, _, _, ωa = current_configuration_velocity(body1.state)
+    _, _, _, ωb = current_configuration_velocity(body2.state)
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
     qoffset = joint.qoffset
     force = damperforceb(joint, qa, ωa, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
     V = szeros(T, 3, 3)
@@ -395,8 +395,8 @@ end
 # function ∂damperforceb∂velb(joint::Rotational, body1::Origin, body2::Node, Δt::T) where T
 #     A = nullspacemat(joint)
 #     Aᵀ = zerodimstaticadjoint(A)
-#     _, _, _, ωb = fullargssol(body2.state)
-#     xb, qb = posargs2(body2.state)
+#     _, _, _, ωb = current_configuration_velocity(body2.state)
+#     xb, qb = current_configuration(body2.state)
 #     qoffset = joint.qoffset
 #     force = damperforceb(joint, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
 #     V = szeros(T, 3, 3)

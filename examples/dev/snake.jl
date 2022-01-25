@@ -42,10 +42,10 @@ visualize(socmech, socstorage, vis = vis)
 include(joinpath(module_dir(), "examples", "diff_tools.jl"))
 # Set data
 Nb = length(socmech.bodies)
-data = getdata(socmech)
-setdata!(socmech, data)
-sol = getsolution(socmech)
-attjac = attitudejacobian(data, Nb)
+data = get_data(socmech)
+set_data!(socmech, data)
+sol = get_solution(socmech)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
 datamat = full_data_matrix(socmech)

@@ -23,7 +23,7 @@ mech = getraiberthopper(Δt = Δt, g = gravity, contact = true, damper = 1.0)
 initializeraiberthopper!(mech)
 
 ## state space
-n = minCoordDim(mech)
+n = minimal_dimension(mech)
 m = 3 + n
 
 function raiberthopper_initial_state()

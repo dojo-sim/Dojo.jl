@@ -164,7 +164,7 @@ function Prototype(jointtype::Symbol, body1::Node{T}, body2::Node{T}, axis; p1=s
         tra_joint_limits=[szeros(T,0), szeros(T,0)], rot_joint_limits=[szeros(T,0), szeros(T,0)],
         spring_type=:sinusoidal) where T
 
-    N̄tra, N̄rot = nullspacedims(jointtype)
+    N̄tra, N̄rot = nullspace_dimension(jointtype)
     (tra_spring_offset == nothing) && (tra_spring_offset = szeros(T,N̄tra))
     (rot_spring_offset == nothing) && (rot_spring_offset = szeros(T,N̄rot))
     (jointtype == :Fixed)            && (return            Fixed(body1, body2;       p1=p1, p2=p2, qoffset=qoffset))
@@ -185,7 +185,7 @@ function Prototype(jointtype::Symbol, body1::Node{T}, body2::Node{T}, axis; p1=s
     (jointtype == :Floating)         && (return         Floating(body1, body2;                                      spring=spring, damper=damper, tra_spring_offset=tra_spring_offset, rot_spring_offset=rot_spring_offset, tra_joint_limits=tra_joint_limits, rot_joint_limits=rot_joint_limits, spring_type=spring_type))
 end
 
-function nullspacedims(jointtype::Symbol)
+function nullspace_dimension(jointtype::Symbol)
     (jointtype == :Fixed)            && (return 0, 0)
     (jointtype == :Prismatic)        && (return 1, 0)
     (jointtype == :Planar)           && (return 2, 0)

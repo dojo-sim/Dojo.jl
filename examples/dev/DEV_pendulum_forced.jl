@@ -26,11 +26,11 @@ initialize!(mech, :pendulum, ϕ1 = 0.7)
 jointid = mech.eqconstraints[1].id
 angles = zeros(1)
 function controller!(mechanism, k)
-    j1 = geteqconstraint(mechanism, jointid)
-    θ1 = minimalCoordinates(mechanism, j1)[1]
-    dθ1 = minimalVelocities(mechanism, j1)[1]
+    j1 = get_joint_constraint(mechanism, jointid)
+    θ1 = minimal_coordinates(mechanism, j1)[1]
+    dθ1 = minimal_velocities(mechanism, j1)[1]
     u1 = (100.0*(angles[1]-θ1) + 5.0*(0-dθ1)) * mechanism.Δt
-    setForce!(j1, SA[u1])
+    set_input!(j1, SA[u1])
     return
 end
 
@@ -64,11 +64,11 @@ visualize(mech, storage, vis = vis)
 ################################################################################
 
 # Set data
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
+data = get_data(mech)
+set_data!(mech, data)
+sol = get_solution(mech)
 Nb = length(collect(mech.bodies))
-attjac = attitudejacobian(data, Nb)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
 datamat = full_data_matrix(deepcopy(mech))

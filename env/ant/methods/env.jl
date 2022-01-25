@@ -14,7 +14,7 @@ function ant(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     initializeant!(mechanism)
 
     if mode == :min
-        nx = minCoordDim(mechanism)
+        nx = minimal_dimension(mechanism)
     elseif mode == :max
         nx = maxCoordDim(mechanism)
     end
@@ -26,7 +26,7 @@ function ant(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
 
     rng = MersenneTwister(s)
 
-    z = getMaxState(mechanism)
+    z = get_max_state(mechanism)
     x = mode == :min ? max2min(mechanism, z) : z
 
     fx = zeros(nx, nx)
@@ -119,11 +119,11 @@ function reset(env::Environment{Ant};
     else
         x = getMinState(env.mechanism, pos_noise=pos_noise, vel_noise=vel_noise)
         if env.mode == :min
-            setState!(env.mechanism, min2max(env.mechanism, x))
+            set_state!(env.mechanism, min2max(env.mechanism, x))
             env.x .= x
         elseif env.mode == :max
             z = min2max(env.mechanism, x)
-            setState!(env.mechanism, z)
+            set_state!(env.mechanism, z)
             env.x .= z
         end
         env.u_prev .= 0.0

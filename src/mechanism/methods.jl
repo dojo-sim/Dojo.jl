@@ -1,7 +1,7 @@
-@inline getbody(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,Ni} = collect(mechanism.bodies)[id-Ne]
-@inline getbody(mechanism::Mechanism, id::Nothing) = mechanism.origin
+@inline get_body(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,Ni} = collect(mechanism.bodies)[id-Ne]
+@inline get_body(mechanism::Mechanism, id::Nothing) = mechanism.origin
 
-function getbody(mechanism::Mechanism, name::Symbol)
+function get_body(mechanism::Mechanism, name::Symbol)
     if name == :origin
         return mechanism.origin
     else
@@ -14,9 +14,9 @@ function getbody(mechanism::Mechanism, name::Symbol)
     return
 end
 
-@inline geteqconstraint(mechanism::Mechanism, id::Integer) = mechanism.eqconstraints[id]
+@inline get_joint_constraint(mechanism::Mechanism, id::Integer) = mechanism.eqconstraints[id]
 
-function geteqconstraint(mechanism::Mechanism, name::Symbol)
+function get_joint_constraint(mechanism::Mechanism, name::Symbol)
     for eqc in mechanism.eqconstraints
         if eqc.name == name
             return eqc
@@ -25,8 +25,8 @@ function geteqconstraint(mechanism::Mechanism, name::Symbol)
     return
 end
 
-@inline getineqconstraint(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,Ni} = mechanism.ineqconstraints[id-Ne-Nb]
-function getineqconstraint(mechanism::Mechanism, name::Symbol)
+@inline get_contact_constraint(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,Ni} = mechanism.ineqconstraints[id-Ne-Nb]
+function get_contact_constraint(mechanism::Mechanism, name::Symbol)
     for ineqc in mechanism.ineqconstraints
         if ineqc.name == name
             return ineqc
@@ -35,48 +35,48 @@ function getineqconstraint(mechanism::Mechanism, name::Symbol)
     return
 end
 
-function getnode(mechanism::Mechanism{T,Nn,Ne,Nb}, id::Integer) where {T,Nn,Ne,Nb}
+function get_node(mechanism::Mechanism{T,Nn,Ne,Nb}, id::Integer) where {T,Nn,Ne,Nb}
     if id <= Ne
-        return geteqconstraint(mechanism, id)
+        return get_joint_constraint(mechanism, id)
     elseif id <= Ne+Nb
-        return getbody(mechanism, id)
+        return get_body(mechanism, id)
     else
-        return getineqconstraint(mechanism, id)
+        return get_contact_constraint(mechanism, id)
     end
 end
 
-function getnode(mechanism::Mechanism, name::Symbol)
-    node = getbody(mechanism,name)
+function get_node(mechanism::Mechanism, name::Symbol)
+    node = get_body(mechanism,name)
     if node === nothing
-        node = geteqconstraint(mechanism,name)
+        node = get_joint_constraint(mechanism,name)
     end
     if node === nothing
-        node = getineqconstraint(mechanism,name)
+        node = get_contact_constraint(mechanism,name)
     end
     return node
 end
 
-@inline function discretizestate!(mechanism::Mechanism)
+@inline function discretize_state!(mechanism::Mechanism)
     for body in mechanism.bodies 
-        discretizestate!(body, mechanism.Δt) 
+        discretize_state!(body, mechanism.Δt) 
     end
     return
 end
 
 @inline function ∂gab∂ʳba(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, body1::Body, body2::Body) where {T,Nn,Ne,Nb,Ni}
     Δt = mechanism.Δt
-    _, _, q1, ω1 = fullargssol(body1.state)
-    _, _, q2, ω2 = fullargssol(body2.state)
+    _, _, q1, ω1 = current_configuration_velocity(body1.state)
+    _, _, q2, ω2 = current_configuration_velocity(body2.state)
 
-    x1, q1 = posargs3(body1.state, Δt)
-    x2, q2 = posargs3(body2.state, Δt)
+    x1, q1 = next_configuration(body1.state, Δt)
+    x2, q2 = next_configuration(body2.state, Δt)
 
     dGab = szeros(6,6)
     dGba = szeros(6,6)
 
     for connectionid in connections(mechanism.system, body1.id)
         !(connectionid <= Ne) && continue # body
-        eqc = getnode(mechanism, connectionid)
+        eqc = get_node(mechanism, connectionid)
         Nc = length(eqc.childids)
         off = 0
         if body1.id == eqc.parentid

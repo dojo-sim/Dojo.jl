@@ -67,7 +67,7 @@ visualize(mech, storage, vis = vis)
 # rot2.Fτ
 
 
-n = minCoordDim(mech)
+n = minimal_dimension(mech)
 Nb = length(mech.bodies)
 m = 18
 d = 0
@@ -83,13 +83,13 @@ z1 = zref[1]
 
 function gravity_compensation(mechanism::Mechanism)
     # only works with revolute joints for now
-    nu = controldim(mechanism)
+    nu = control_dimension(mechanism)
     u = zeros(nu)
     off  = 0
     for eqc in mechanism.eqconstraints
-        nu = controldim(eqc)
+        nu = control_dimension(eqc)
         if eqc.parentid != nothing
-            body = getbody(mechanism, eqc.parentid)
+            body = get_body(mechanism, eqc.parentid)
             rot = eqc.constraints[2]
             A = Matrix(nullspacemat(rot))
             Fτ = springforce(mechanism, eqc, body)
@@ -106,7 +106,7 @@ end
 
 mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = 0.8, damper = 100.0, spring = 200.0)
 initialize!(mech, :quadruped)
-setState!(mech, z1)
+set_state!(mech, z1)
 setSpringOffset!(mech, x1)
 @elapsed storage = simulate!(mech, 1.05, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
@@ -268,11 +268,11 @@ end
 function projectQuadrupedLeg!(mechanism::Mechanism{T}, x::AbstractVector{T}; leg::Symbol = :FR) where {T}
 	xp = x
 	z = min2max(mechanism, x)
-	setState!(mech, z)
+	set_state!(mech, z)
 
 	# starting point of the local search
-	θhip = minimalCoordinates(mech, geteqconstraint(mech, String(leg)*"_thigh_joint"))
-	θknee = minimalCoordinates(mech, geteqconstraint(mech, String(leg)*"_calf_joint"))
+	θhip = minimal_coordinates(mech, get_joint_constraint(mech, String(leg)*"_thigh_joint"))
+	θknee = minimal_coordinates(mech, get_joint_constraint(mech, String(leg)*"_calf_joint"))
 	θ = [θhip; θknee]
 	for k = 1:10
 		s = sdfquadruped(mechanism, θ; leg = leg)
@@ -285,10 +285,10 @@ function projectQuadrupedLeg!(mechanism::Mechanism{T}, x::AbstractVector{T}; leg
 end
 
 function sdfquadruped(mechanism::Mechanism{T}, θ::AbstractVector{T}; leg::Symbol = :FR) where {T}
-	setPosition!(mechanism, geteqconstraint(mechanism, String(leg)*"_thigh_joint"), [θ[1]])
-	setPosition!(mechanism, geteqconstraint(mechanism, String(leg)*"_calf_joint"), [θ[2]])
+	set_position(mechanism, get_joint_constraint(mechanism, String(leg)*"_thigh_joint"), [θ[1]])
+	set_position(mechanism, get_joint_constraint(mechanism, String(leg)*"_calf_joint"), [θ[2]])
 
-	foot = getbody(mechanism, String(leg)*"_calf")
+	foot = get_body(mechanism, String(leg)*"_calf")
 	ineqcs = collect(mechanism.ineqconstraints)
 	ineqc = ineqcs[findfirst(x -> x.parentid == foot.id, ineqcs)]
 	p = contact_location(ineqc, foot)
@@ -299,7 +299,7 @@ end
 
 # zgood = deepcopy(z0)
 # z0 = deepcopy(zgood)
-# setState!(mech, z0)
+# set_state!(mech, z0)
 # z0 = getState(mech)
 x0 = max2min(mech, z0)
 x1 = deepcopy(x0)
@@ -309,7 +309,7 @@ z1 = min2max(mech, x1)
 visualizeMaxCoord(mech, z1, vis)
 xp1 = projectQuadruped!(mech, x1)
 zp1 = min2max(mech, xp1)
-setState!(mech, zp1)
+set_state!(mech, zp1)
 visualizeMaxCoord(mech, zp1, vis)
 
 contact_location(mech)

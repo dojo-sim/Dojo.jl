@@ -1,16 +1,16 @@
-function setState!(mechanism::Mechanism, z::AbstractVector)
+function set_state!(mechanism::Mechanism, z::AbstractVector)
     Δt = mechanism.Δt
     off = 0
     for body in mechanism.bodies
-        x2, v15, q2, ϕ15 = unpackdata(z[off+1:end]); off += 13
+        x2, v15, q2, ϕ15 = unpack_data(z[off+1:end]); off += 13
         q2 = UnitQuaternion(q2..., false)
         body.state.v15 = v15
         body.state.ϕ15 = ϕ15
         body.state.x2[1] = x2
         body.state.q2[1] = q2
-		discretizestate!(mechanism) #set x1, q1 and zeroes out F2 τ2
+		discretize_state!(mechanism) #set x1, q1 and zeroes out F2 τ2
     end
-	foreach(setsolution!, mechanism.bodies) # warm-start solver
+	foreach(set_solution!, mechanism.bodies) # warm-start solver
 end
 
 function set_control!(mechanism::Mechanism{T}, u::AbstractVector) where {T}
@@ -18,12 +18,12 @@ function set_control!(mechanism::Mechanism{T}, u::AbstractVector) where {T}
 	# set the controls in the equality constraints
 	off = 0
 	for eqc in eqcs
-		nu = controldim(eqc)
-		setForce!(eqc, SVector{nu,T}(u[off .+ (1:nu)]))
+		nu = control_dimension(eqc)
+		set_input!(eqc, SVector{nu,T}(u[off .+ (1:nu)]))
 		off += nu
 	end
 	# apply the controls to each body's state
-	foreach(applyFτ!, eqcs, mechanism)
+	foreach(apply_input!, eqcs, mechanism)
 end
 
 function getState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
@@ -38,14 +38,14 @@ function getState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	return z
 end
 
-function getNextState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
+function get_next_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	Δt = mechanism.Δt
 	z̄ = zeros(T,13Nb)
 	for (i, body) in enumerate(mechanism.bodies)
 		v25 = body.state.vsol[2]
 		ϕ25 = body.state.ϕsol[2]
-		x3 = getx3(body.state, Δt)
-		q3 = getq3(body.state, Δt)
+		x3 = next_position(body.state, Δt)
+		q3 = next_orientation(body.state, Δt)
 		z̄[13*(i-1) .+ (1:13)] = [x3; v25; vector(q3); ϕ25]
 	end
 	return z̄
@@ -53,10 +53,10 @@ end
 
 function getMaxGradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	Δt = mechanism.Δt
-	nu = controldim(mechanism)
+	nu = control_dimension(mechanism)
 	attjac = false
 	nic = attjac ? 12Nb : 13Nb
-	neqcs = eqcdim(mechanism)
+	neqcs = joint_dimension(mechanism)
 	datamat = full_data_matrix(mechanism, attjac = attjac)
 	solmat = full_matrix(mechanism.system)
 
@@ -109,15 +109,15 @@ function max2min(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) whe
 				iparent = eqc.parentid - Ne
 				xa, va, qa, ϕa = unpackMaxState(z, iparent)
 			else
-				xa, va, qa, ϕa = fullargssol(mechanism.origin.state)
+				xa, va, qa, ϕa = current_configuration_velocity(mechanism.origin.state)
 			end
 
 			if typeof(joint) <: Translational
-				push!(c, minimalCoordinates(joint, xa, qa, xb, qb)...) # Δx in bodya's coordinates projected on jointAB's nullspace
-				push!(v, minimalVelocities(joint, xa, qa, va, ϕa, xb, qb, vb, ϕb)...) # Δv in bodya's coordinates projected on jointAB's nullspace
+				push!(c, minimal_coordinates(joint, xa, qa, xb, qb)...) # Δx in bodya's coordinates projected on jointAB's nullspace
+				push!(v, minimal_velocities(joint, xa, qa, va, ϕa, xb, qb, vb, ϕb)...) # Δv in bodya's coordinates projected on jointAB's nullspace
 			elseif typeof(joint) <: Rotational
-				push!(c, minimalCoordinates(joint, qa, qb)...) # Δq in bodya's coordinates projected on jointAB's nullspace
-				push!(v, minimalVelocities(joint, qa, ϕa, qb, ϕb)...) # Δϕ in bodya's coordinates projected on jointAB's nullspace
+				push!(c, minimal_coordinates(joint, qa, qb)...) # Δq in bodya's coordinates projected on jointAB's nullspace
+				push!(v, minimal_velocities(joint, qa, ϕa, qb, ϕb)...) # Δϕ in bodya's coordinates projected on jointAB's nullspace
 			end
 		end
 		push!(x, [c; v]...)
@@ -135,12 +135,12 @@ function min2max(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) whe
 	for id in reverse(mechanism.system.dfs_list)
 		(id > Ne) && continue # only treat eqconstraints
 		eqc = mechanism.eqconstraints[id]
-		n = controldim(eqc)
+		n = control_dimension(eqc)
 		if eqc.parentid != nothing
 			c = x[off .+ (1:n)]; off += n
 			v = x[off .+ (1:n)]; off += n#in body1
-			_setPosition!(mechanism, eqc, c)
-			setVelocity!(mechanism, eqc, v)#in body1
+			_set_position(mechanism, eqc, c)
+			set_velocity!(mechanism, eqc, v)#in body1
 		else
 			@assert length(Set(eqc.childids)) == 1 # only one body is linked to the origin
 			c = zeros(Tx,0)
@@ -148,15 +148,15 @@ function min2max(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) whe
 			# we need a special case: when the first link has free rotation wrt the origin
 			q2 = one(UnitQuaternion) # only use for the special case
 			for joint in eqc.constraints
-				nj = controldim(joint)
+				nj = control_dimension(joint)
 				push!(c, x[off .+ (1:nj)]...); off += nj
 			end
 			push!(v, x[off .+ (1:n)]...); off += n
-			_setPosition!(mechanism, eqc, c)
-			setVelocity!(mechanism, eqc, v) # assumes we provide v and ϕ in body1's coordinates i.e world coordinates
+			_set_position(mechanism, eqc, c)
+			set_velocity!(mechanism, eqc, v) # assumes we provide v and ϕ in body1's coordinates i.e world coordinates
 		end
 	end
-	z = getMaxState(mechanism)
+	z = get_max_state(mechanism)
 	return z
 end
 
@@ -173,7 +173,7 @@ function getMinGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector
 
 	step!(mechanism, z, u, opts=opts)
 	z = getState(mechanism)
-	z̄ = getNextState(mechanism)
+	z̄ = get_next_state(mechanism)
 	x = max2min(mechanism, z)
 	x̄ = max2min(mechanism, z̄)
 	∇z_z̄, ∇u_z̄ = getMaxGradients(mechanism)
@@ -185,7 +185,7 @@ function getMinGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector
 	return ∇x_x̄, ∇u_x̄
 end
 
-function getMaxState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
+function get_max_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	z = zeros(T, 13Nb)
 	for (i, body) in enumerate(mechanism.bodies)
 		x2 = body.state.x2[1]
@@ -210,12 +210,12 @@ function getMinState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni};
 		c = zeros(T,0)
 		v = zeros(T,0)
 		for (i,joint) in enumerate(eqc.constraints)
-			cbody = getbody(mechanism, eqc.childids[i])
-			pbody = getbody(mechanism, eqc.parentid)
-			# push!(c, minimalCoordinates(joint, pbody, cbody)...)
-			# push!(v, minimalVelocities(joint, pbody, cbody)...)
-			pos = minimalCoordinates(joint, pbody, cbody)
-			vel = minimalVelocities(joint, pbody, cbody)
+			cbody = get_body(mechanism, eqc.childids[i])
+			pbody = get_body(mechanism, eqc.parentid)
+			# push!(c, minimal_coordinates(joint, pbody, cbody)...)
+			# push!(v, minimal_velocities(joint, pbody, cbody)...)
+			pos = minimal_coordinates(joint, pbody, cbody)
+			vel = minimal_velocities(joint, pbody, cbody)
 			if pos_noise != nothing
 				pos += clamp.(length(pos) == 1 ? rand(pos_noise, length(pos))[1] : rand(pos_noise, length(pos)), pos_noise_range...)
 			end
@@ -237,7 +237,7 @@ function velocity_index(mechanism::Mechanism{T,Nn,Ne}) where {T,Nn,Ne}
     for id in reverse(mechanism.system.dfs_list)
         (id > Ne) && continue # only treat eqconstraints
         eqc = mechanism.eqconstraints[id]
-        nu = controldim(eqc)
+        nu = control_dimension(eqc)
         push!(ind, Vector(off + nu .+ (1:nu)))
         off += 2nu
     end
@@ -284,8 +284,8 @@ function setSpringOffset!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector
 		(id > Ne) && continue # only treat eqconstraints
 		eqc = mechanism.eqconstraints[id]
 		for (i,joint) in enumerate(eqc.constraints)
-			cbody = getbody(mechanism, eqc.childids[i])
-			pbody = getbody(mechanism, eqc.parentid)
+			cbody = get_body(mechanism, eqc.childids[i])
+			pbody = get_body(mechanism, eqc.parentid)
 			N̄ = 3 - length(joint)
 			joint.spring_offset = x[off .+ (1:N̄)]
 			off += 2N̄
@@ -296,13 +296,13 @@ end
 
 function gravity_compensation(mechanism::Mechanism)
     # only works with revolute joints for now
-    nu = controldim(mechanism)
+    nu = control_dimension(mechanism)
     u = zeros(nu)
     off  = 0
     for eqc in mechanism.eqconstraints
-        nu = controldim(eqc)
+        nu = control_dimension(eqc)
         if eqc.parentid != nothing
-            body = getbody(mechanism, eqc.parentid)
+            body = get_body(mechanism, eqc.parentid)
             rot = eqc.constraints[2]
             A = Matrix(nullspacemat(rot))
             Fτ = springforce(mechanism, eqc, body)
@@ -318,7 +318,7 @@ function gravity_compensation(mechanism::Mechanism)
 end
 
 function inverse_control(mechanism::Mechanism, x, x̄; ϵtol = 1e-5)
-	nu = controldim(mechanism)
+	nu = control_dimension(mechanism)
 	u = zeros(nu)
 	# starting point of the local search
 	for k = 1:10
@@ -333,7 +333,7 @@ end
 function inverse_control_error(mechanism, x, x̄, u; ϵtol = 1e-5)
 	z = min2max(mechanism, x)
 	z̄ = min2max(mechanism, x̄)
-	setState!(mechanism, z)
+	set_state!(mechanism, z)
 	opts = InteriorPointOptions(rtol=ϵtol, btol=ϵtol, undercut=1.5)
 	err = x̄ - max2min(mechanism, step!(mechanism, min2max(mechanism, x), u, opts=opts))
 	return err

@@ -48,24 +48,24 @@ begin
 
 
     function singleleg(mechanism, leg, angles)
-        j1 = geteqconstraint(mechanism, leg*"_hip_joint")
-        j2 = geteqconstraint(mechanism, leg*"_thigh_joint")
-        j3 = geteqconstraint(mechanism, leg*"_calf_joint")
+        j1 = get_joint_constraint(mechanism, leg*"_hip_joint")
+        j2 = get_joint_constraint(mechanism, leg*"_thigh_joint")
+        j3 = get_joint_constraint(mechanism, leg*"_calf_joint")
 
-        θ1 = minimalCoordinates(mechanism, j1)[1]
-        θ2 = minimalCoordinates(mechanism, j2)[1]
-        θ3 = minimalCoordinates(mechanism, j3)[1]
-        dθ1 = minimalVelocities(mechanism, j1)[1]
-        dθ2 = minimalVelocities(mechanism, j2)[1]
-        dθ3 = minimalVelocities(mechanism, j3)[1]
+        θ1 = minimal_coordinates(mechanism, j1)[1]
+        θ2 = minimal_coordinates(mechanism, j2)[1]
+        θ3 = minimal_coordinates(mechanism, j3)[1]
+        dθ1 = minimal_velocities(mechanism, j1)[1]
+        dθ2 = minimal_velocities(mechanism, j2)[1]
+        dθ3 = minimal_velocities(mechanism, j3)[1]
 
         u1 = (100.0*(angles[1]-θ1) + 5.0*(0-dθ1)) * Δt_ #* 0.17
         u2 = (80.0*(angles[2]-θ2) + 4.0*(0-dθ2)) * Δt_ #* 0.17
         u3 = (60.0*(angles[3]-θ3) + 3.0*(0-dθ3)) * Δt_ #* 0.17
 
-        setForce!(j1, SA[u1])
-        setForce!(j2, SA[u2])
-        setForce!(j3, SA[u3])
+        set_input!(j1, SA[u1])
+        set_input!(j2, SA[u2])
+        set_input!(j3, SA[u3])
     end
 
     function controller!(mechanism, k)
@@ -80,10 +80,10 @@ end
 
 # Set data
 Nb = length(mech.bodies)
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
-attjac = attitudejacobian(data, Nb)
+data = get_data(mech)
+set_data!(mech, data)
+sol = get_solution(mech)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
 datamat = full_data_matrix(mech)

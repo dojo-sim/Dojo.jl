@@ -20,7 +20,7 @@ A differentiable contact-dynamics simulator for robotics.
 <img src="examples/animations/cone_compare_mujoco.gif" height="300"/>
 
 ### Dzhanibekov effect
-<img src="examples/animations/dzhanibekov.gif" width="200"/>
+<img src="examples/animations/dzhanibekov.gif" width="150"/>
 
 ## Trajectory Optimization 
 
@@ -28,7 +28,7 @@ A differentiable contact-dynamics simulator for robotics.
 <img src="examples/animations/cartpole_max.gif" width="200"/>
 
 ### Hopper 
-<img src="examples/animations/hopper_max.gif" width="150"/>
+<img src="examples/animations/hopper_max.gif" width="100"/>
 
 ### Quadruped 
 <img src="examples/animations/quadruped_min.gif" width="200"/>
@@ -47,7 +47,7 @@ A differentiable contact-dynamics simulator for robotics.
 Learning geometry:
 <img src="examples/animations/box_learning.gif" width="200"/>
 Learning friction coefficient:
-<img src="examples/animations/cone_learning.gif" width="200"/>
+<img src="examples/animations/cone_learning.gif" width="1500"/>
 
 ### Toss
 <img src="examples/animations/box_toss.gif" width="300"/>

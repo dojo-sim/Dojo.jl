@@ -27,10 +27,10 @@ visualize(mech, storage, vis = vis)
 
 # Set data
 Nb = length(mech.bodies)
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
-attjac = attitudejacobian(data, Nb)
+data = get_data(mech)
+set_data!(mech, data)
+sol = get_solution(mech)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
 datamat = full_data_matrix(mech)

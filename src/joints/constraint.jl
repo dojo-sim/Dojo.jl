@@ -50,16 +50,16 @@ mutable struct JointConstraint{T,N,Nc,Cs} <: Constraint{T,N}
     end
 end
 
-function setPosition!(mechanism, eqc::JointConstraint, xθ; iter::Bool=true)
+function set_position(mechanism, eqc::JointConstraint, xθ; iter::Bool=true)
     if !iter
-        _setPosition!(mechanism, eqc, xθ)
+        _set_position(mechanism, eqc, xθ)
     else
-        currentvals = minimalCoordinates(mechanism)
-        _setPosition!(mechanism, eqc, xθ)
+        currentvals = minimal_coordinates(mechanism)
+        _set_position(mechanism, eqc, xθ)
         for id in recursivedirectchildren!(mechanism.system, eqc.id)
-            node = getnode(mechanism, id)
+            node = get_node(mechanism, id)
             if node isa JointConstraint
-                _setPosition!(mechanism, node, currentvals[id])
+                _set_position(mechanism, node, currentvals[id])
             end
         end
     end
@@ -67,7 +67,7 @@ function setPosition!(mechanism, eqc::JointConstraint, xθ; iter::Bool=true)
     return
 end
 # TODO currently assumed constraints are in order and only joints which is the case unless very low level constraint setting
-function _setPosition!(mechanism, eqc::JointConstraint{T,N,Nc}, xθ) where {T,N,Nc}
+function _set_position(mechanism, eqc::JointConstraint{T,N,Nc}, xθ) where {T,N,Nc}
     Nλ = 0
     for (i, joint) in enumerate(eqc.constraints)
         Nλ += λlength(joint)
@@ -75,19 +75,19 @@ function _setPosition!(mechanism, eqc::JointConstraint{T,N,Nc}, xθ) where {T,N,
     @assert length(xθ)==3*Nc-Nλ
     n = Int64(Nc/2)
     # @show Nc
-    body1 = getbody(mechanism, eqc.parentid)
+    body1 = get_body(mechanism, eqc.parentid)
     for i = 1:n
-        body2 = getbody(mechanism, eqc.childids[i])
-        Δx = getPositionDelta(eqc.constraints[i], body1, body2, xθ[SUnitRange(eqc.inds[i][1], eqc.inds[i][2])]) # in body1's frame
-        Δq = getPositionDelta(eqc.constraints[i+1], body1, body2, xθ[SUnitRange(eqc.inds[i+1][1], eqc.inds[i+1][2])]) # in body1's frame
+        body2 = get_body(mechanism, eqc.childids[i])
+        Δx = get_position_delta(eqc.constraints[i], body1, body2, xθ[SUnitRange(eqc.inds[i][1], eqc.inds[i][2])]) # in body1's frame
+        Δq = get_position_delta(eqc.constraints[i+1], body1, body2, xθ[SUnitRange(eqc.inds[i+1][1], eqc.inds[i+1][2])]) # in body1's frame
 
         p1, p2 = eqc.constraints[i].vertices
-        setPosition!(body1, body2; p1=p1, p2=p2, Δx=Δx, Δq=Δq)
+        set_position(body1, body2; p1=p1, p2=p2, Δx=Δx, Δq=Δq)
     end
     return
 end
 
-function setVelocity!(mechanism, eqc::JointConstraint{T,N,Nc}, vω) where {T,N,Nc}
+function set_velocity!(mechanism, eqc::JointConstraint{T,N,Nc}, vω) where {T,N,Nc}
     Nλ = 0
     for (i, joint) in enumerate(eqc.constraints)
         Nλ += λlength(joint)
@@ -95,47 +95,47 @@ function setVelocity!(mechanism, eqc::JointConstraint{T,N,Nc}, vω) where {T,N,N
     # vω is already in body1 frame
     @assert length(vω)==3*Nc-Nλ
     n = Int64(Nc/2)
-    body1 = getbody(mechanism, eqc.parentid)
+    body1 = get_body(mechanism, eqc.parentid)
     for i = 1:n
-        body2 = getbody(mechanism, eqc.childids[i])
-        Δv = getVelocityDelta(eqc.constraints[i], body1, body2, vω[SUnitRange(eqc.inds[i][1], eqc.inds[i][2])]) # projection in body1 frame
-        Δω = getVelocityDelta(eqc.constraints[i+1], body1, body2, vω[SUnitRange(eqc.inds[i+1][1], eqc.inds[i+1][2])]) # projection in body1 frame
+        body2 = get_body(mechanism, eqc.childids[i])
+        Δv = get_velocity_delta(eqc.constraints[i], body1, body2, vω[SUnitRange(eqc.inds[i][1], eqc.inds[i][2])]) # projection in body1 frame
+        Δω = get_velocity_delta(eqc.constraints[i+1], body1, body2, vω[SUnitRange(eqc.inds[i+1][1], eqc.inds[i+1][2])]) # projection in body1 frame
         p1, p2 = eqc.constraints[i].vertices
-        setVelocity!(body1, body2; p1=p1, p2=p2, Δv=Δv, Δω=Δω)
+        set_velocity!(body1, body2; p1=p1, p2=p2, Δv=Δv, Δω=Δω)
     end
     return
 end
 
-function setForce!(eqc::JointConstraint{T,N,Nc}, Fτ::AbstractVector) where {T,N,Nc}
-    @assert length(Fτ)==controldim(eqc)
+function set_input!(eqc::JointConstraint{T,N,Nc}, Fτ::AbstractVector) where {T,N,Nc}
+    @assert length(Fτ)==control_dimension(eqc)
     for i = 1:Nc
         r_idx = SUnitRange(eqc.inds[i][1], eqc.inds[i][2])
         length(r_idx) == 0 && continue
-        setForce!(eqc.constraints[i], Fτ[SUnitRange(eqc.inds[i][1], eqc.inds[i][2])])
+        set_input!(eqc.constraints[i], Fτ[SUnitRange(eqc.inds[i][1], eqc.inds[i][2])])
     end
     return
 end
 
-function addForce!(eqc::JointConstraint{T,N,Nc}, Fτ::AbstractVector) where {T,N,Nc}
-    @assert length(Fτ)==controldim(eqc)
+function add_force!(eqc::JointConstraint{T,N,Nc}, Fτ::AbstractVector) where {T,N,Nc}
+    @assert length(Fτ)==control_dimension(eqc)
     for i = 1:Nc
-        addForce!(eqc.constraints[i], Fτ[SUnitRange(eqc.inds[i][1], eqc.inds[i][2])])
+        add_force!(eqc.constraints[i], Fτ[SUnitRange(eqc.inds[i][1], eqc.inds[i][2])])
     end
     return
 end
 
 """
-    minimalCoordinates(mechanism, eqconstraint)
+    minimal_coordinates(mechanism, eqconstraint)
 
 Gets the minimal coordinates of joint `eqconstraint`.
 """
-@generated function minimalCoordinates(mechanism, eqc::JointConstraint{T,N,Nc}) where {T,N,Nc}
-    vec = [:(minimalCoordinates(eqc.constraints[$i], getbody(mechanism, eqc.parentid), getbody(mechanism, eqc.childids[$i]))) for i = 1:Nc]
+@generated function minimal_coordinates(mechanism, eqc::JointConstraint{T,N,Nc}) where {T,N,Nc}
+    vec = [:(minimal_coordinates(eqc.constraints[$i], get_body(mechanism, eqc.parentid), get_body(mechanism, eqc.childids[$i]))) for i = 1:Nc]
     return :(svcat($(vec...)))
 end
 
-@generated function minimalVelocities(mechanism, eqc::JointConstraint{T,N,Nc}) where {T,N,Nc}
-    vec = [:(minimalVelocities(eqc.constraints[$i], getbody(mechanism, eqc.parentid), getbody(mechanism, eqc.childids[$i]))) for i = 1:Nc]
+@generated function minimal_velocities(mechanism, eqc::JointConstraint{T,N,Nc}) where {T,N,Nc}
+    vec = [:(minimal_velocities(eqc.constraints[$i], get_body(mechanism, eqc.parentid), get_body(mechanism, eqc.childids[$i]))) for i = 1:Nc]
     return :(svcat($(vec...)))
 end
 
@@ -160,7 +160,7 @@ end
 
 function _dGa!(mechanism, pbody::Body, eqc::JointConstraint{T,N,Nc}) where {T,N,Nc}
     Δt = mechanism.Δt
-    _, _, q2, ω2 = fullargssol(pbody.state)
+    _, _, q2, ω2 = current_configuration_velocity(pbody.state)
     M = ∂i∂v(q2, ω2, Δt)
 
     off = 0
@@ -168,7 +168,7 @@ function _dGa!(mechanism, pbody::Body, eqc::JointConstraint{T,N,Nc}) where {T,N,
         joint = eqc.constraints[i]
         Aᵀ = zerodimstaticadjoint(constraintmat(joint))
         Nj = length(joint)
-        cbody = getbody(mechanism, eqc.childids[i])
+        cbody = get_body(mechanism, eqc.childids[i])
         eqc.isspring && (pbody.state.D -= ∂springforcea∂vela(joint, pbody, cbody, Δt))
         eqc.isdamper && (pbody.state.D -= ∂damperforcea∂vela(joint, pbody, cbody, Δt))
         off += Nj
@@ -178,7 +178,7 @@ end
 
 function _dGb!(mechanism, cbody::Body, eqc::JointConstraint{T,N,Nc}) where {T,N,Nc}
     Δt = mechanism.Δt
-    x2, v2, q2, ω2 = fullargssol(cbody.state)
+    x2, v2, q2, ω2 = current_configuration_velocity(cbody.state)
     M = ∂i∂v(q2, ω2, Δt)
 
     off = 0
@@ -187,7 +187,7 @@ function _dGb!(mechanism, cbody::Body, eqc::JointConstraint{T,N,Nc}) where {T,N,
             joint = eqc.constraints[i]
             Aᵀ = zerodimstaticadjoint(constraintmat(joint))
             Nj = length(joint)
-            pbody = getbody(mechanism, eqc.parentid)
+            pbody = get_body(mechanism, eqc.parentid)
             eqc.isspring && (cbody.state.D -= ∂springforceb∂velb(joint, pbody, cbody, Δt))
             eqc.isdamper && (cbody.state.D -= ∂damperforceb∂velb(joint, pbody, cbody, Δt))
         end
@@ -196,7 +196,7 @@ function _dGb!(mechanism, cbody::Body, eqc::JointConstraint{T,N,Nc}) where {T,N,
 end
 
 @generated function g(mechanism, eqc::JointConstraint{T,N,Nc}) where {T,N,Nc}
-    vec = [:(g(eqc.constraints[$i], getbody(mechanism, eqc.parentid), getbody(mechanism, eqc.childids[$i]), eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
+    vec = [:(g(eqc.constraints[$i], get_body(mechanism, eqc.parentid), get_body(mechanism, eqc.childids[$i]), eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
     return :(svcat($(vec...)))
 end
 
@@ -217,12 +217,12 @@ end
 end
 
 @generated function Ga(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(Ga(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
+    vec = [:(Ga(eqc.constraints[$i], body, get_body(mechanism, eqc.childids[$i]), eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 
 @generated function Gb(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(Gb(eqc.constraints[$i], getbody(mechanism, eqc.parentid), body, eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
+    vec = [:(Gb(eqc.constraints[$i], get_body(mechanism, eqc.parentid), body, eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 
@@ -232,19 +232,19 @@ end
 end
 
 @generated function ∂g∂a(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(∂g∂a(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
+    vec = [:(∂g∂a(eqc.constraints[$i], body, get_body(mechanism, eqc.childids[$i]), eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 
 @generated function ∂g∂b(mechanism, eqc::JointConstraint{T,N,Nc,Cs}, body::Body) where {T,N,Nc,Cs}
-    vec = [:(∂g∂b(eqc.constraints[$i], getbody(mechanism, eqc.parentid), body, eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
+    vec = [:(∂g∂b(eqc.constraints[$i], get_body(mechanism, eqc.parentid), body, eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 
 @inline function springforcea(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body; unitary::Bool=false) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += springforcea(eqc.constraints[i], body, getbody(mechanism, eqc.childids[i]), mechanism.Δt, eqc.childids[i], unitary=unitary)
+        vec += springforcea(eqc.constraints[i], body, get_body(mechanism, eqc.childids[i]), mechanism.Δt, eqc.childids[i], unitary=unitary)
     end
     return vec
 end
@@ -252,7 +252,7 @@ end
 @inline function springforceb(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body; unitary::Bool=false) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += springforceb(eqc.constraints[i], getbody(mechanism, eqc.parentid), body, mechanism.Δt, eqc.childids[i], unitary=unitary)
+        vec += springforceb(eqc.constraints[i], get_body(mechanism, eqc.parentid), body, mechanism.Δt, eqc.childids[i], unitary=unitary)
     end
     return vec
 end
@@ -260,14 +260,14 @@ end
 @inline function damperforcea(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body; unitary::Bool=false) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += damperforcea(eqc.constraints[i], body, getbody(mechanism, eqc.childids[i]), mechanism.Δt, eqc.childids[i], unitary=unitary)
+        vec += damperforcea(eqc.constraints[i], body, get_body(mechanism, eqc.childids[i]), mechanism.Δt, eqc.childids[i], unitary=unitary)
     end
     return vec
 end
 @inline function damperforceb(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body; unitary::Bool=false) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += damperforceb(eqc.constraints[i], getbody(mechanism, eqc.parentid), body, mechanism.Δt, eqc.childids[i], unitary=unitary)
+        vec += damperforceb(eqc.constraints[i], get_body(mechanism, eqc.parentid), body, mechanism.Δt, eqc.childids[i], unitary=unitary)
     end
     return vec
 end
@@ -277,18 +277,18 @@ end
 end
 
 @generated function ∂Fτ∂ua(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(∂Fτ∂ua(eqc.constraints[$i], body, getbody(mechanism, eqc.childids[$i]), mechanism.Δt, eqc.childids[$i])) for i = 1:Nc]
+    vec = [:(∂Fτ∂ua(eqc.constraints[$i], body, get_body(mechanism, eqc.childids[$i]), mechanism.Δt, eqc.childids[$i])) for i = 1:Nc]
     return :(hcat($(vec...)))
 end
 
 @generated function ∂Fτ∂ub(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(∂Fτ∂ub(eqc.constraints[$i], getbody(mechanism, eqc.parentid), body, mechanism.Δt, eqc.childids[$i])) for i = 1:Nc]
+    vec = [:(∂Fτ∂ub(eqc.constraints[$i], get_body(mechanism, eqc.parentid), body, mechanism.Δt, eqc.childids[$i])) for i = 1:Nc]
     return :(hcat($(vec...)))
 end
 
-@inline function applyFτ!(eqc::JointConstraint{T,N,Nc}, mechanism, clear::Bool=true) where {T,N,Nc}
+@inline function apply_input!(eqc::JointConstraint{T,N,Nc}, mechanism, clear::Bool=true) where {T,N,Nc}
     for i=1:Nc
-        applyFτ!(eqc.constraints[i], getbody(mechanism, eqc.parentid), getbody(mechanism, eqc.childids[i]), mechanism.Δt, clear)
+        apply_input!(eqc.constraints[i], get_body(mechanism, eqc.parentid), get_body(mechanism, eqc.childids[i]), mechanism.Δt, clear)
     end
     return
 end
@@ -331,7 +331,7 @@ function λindex(eqc::JointConstraint{T,N,Nc,Cs}, i::Int) where {T,N,Nc,Cs}
     λindex(eqc.constraints[i], s) # to be allocation free
 end
 
-function resetVars!(eqc::JointConstraint{T,N,Nc,Cs}; scale::T=1.0) where {T,N,Nc,Cs}
+function reset!(eqc::JointConstraint{T,N,Nc,Cs}; scale::T=1.0) where {T,N,Nc,Cs}
     λ = []
     for (i, joint) in enumerate(eqc.constraints)
         Nλ = λlength(joint)

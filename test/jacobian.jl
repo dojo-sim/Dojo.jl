@@ -12,10 +12,10 @@ function test_solmat(model::Symbol; ϵ::T=1e-6, tsim::T=0.1, ctrl::Any=(m, k)->n
 
         # Set data
         Nb = length(mechanism.bodies)
-        data = getdata(mechanism)
-        setdata!(mechanism, data)
-        sol = getsolution(mechanism)
-        attjac = attitudejacobian(data, Nb)
+        data = get_data(mechanism)
+        set_data!(mechanism, data)
+        sol = get_solution(mechanism)
+        attjac = attitude_jacobian(data, Nb)
 
         # IFT
         solmat = full_matrix(mechanism.system)
@@ -40,10 +40,10 @@ function test_datamat(model::Symbol; ϵ::T=1.0e-6, tsim::T=0.1, ctrl::Any=(m,k)-
 
         # Set data
         Nb = length(mechanism.bodies)
-        data = getdata(mechanism)
-        setdata!(mechanism, data)
-        sol = getsolution(mechanism)
-        attjac = attitudejacobian(data, Nb)
+        data = get_data(mechanism)
+        set_data!(mechanism, data)
+        sol = get_solution(mechanism)
+        attjac = attitude_jacobian(data, Nb)
 
         # IFT
         datamat0 = full_data_matrix(mechanism, attjac = true)
@@ -72,10 +72,10 @@ function test_sensitivity(model::Symbol; ϵ::T=1.0e-6, tsim::T=0.1, ctrl::Any=(m
 
         # Set data
         Nb = length(mechanism.bodies)
-        data = getdata(mechanism)
-        setdata!(mechanism, data)
-        sol = getsolution(mechanism)
-        attjac = attitudejacobian(data, Nb)
+        data = get_data(mechanism)
+        set_data!(mechanism, data)
+        sol = get_solution(mechanism)
+        attjac = attitude_jacobian(data, Nb)
 
         # IFT
         datamat = full_data_matrix(mechanism)
@@ -91,9 +91,9 @@ end
 
 function control!(mechanism, k; u=0.1)
     for (i, eqc) in enumerate(mechanism.eqconstraints)
-        nu = controldim(eqc, ignore_floating_base=false)
+        nu = control_dimension(eqc, ignore_floating_base=false)
         su = mechanism.Δt * u * sones(nu)
-        setForce!(eqc, su)
+        set_input!(eqc, su)
     end
     return
 end

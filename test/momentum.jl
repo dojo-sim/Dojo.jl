@@ -8,9 +8,9 @@
 # Controller
 function controller!(mechanism, k; U = 0.5, Δt = 0.01)
     for (i,joint) in enumerate(mechanism.eqconstraints)
-        nu = controldim(joint)
+        nu = control_dimension(joint)
         u = (nu <= 5 && k ∈ (1:100)) * U * Δt * sones(nu)
-        setForce!(joint, u)
+        set_input!(joint, u)
     end
     return
 end
@@ -107,7 +107,7 @@ damper0 = 1.0
 mech = getmechanism(:humanoid, Δt = Δt0, g = g0, spring = spring0, damper = damper0, contact = false)
 initialize!(mech, :humanoid)
 bodies = collect(mech.bodies)
-setVelocity!.(bodies, ω = 1e-0rand(3))
+set_velocity!.(bodies, ω = 1e-0rand(3))
 
 
 storage = simulate!(mech, 10.0, controller!, record = true, verbose = false, opts=InteriorPointOptions(rtol=ϵ0, btol=ϵ0))

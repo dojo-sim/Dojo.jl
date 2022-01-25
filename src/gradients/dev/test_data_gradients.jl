@@ -4,7 +4,7 @@
 function create_data_system(eqcs::Vector{<:JointConstraint}, bodies::Vector{<:Body},
         ineqcs::Vector{<:ContactConstraint})
     nodes = [eqcs; bodies; ineqcs]
-    A = adjacencyMatrix(eqcs, bodies, ineqcs)
+    A = adjacency_matrix(eqcs, bodies, ineqcs)
     dimrow = length.(nodes)
     dimcol = data_dim.(nodes)
     data_system = System(A, dimrow, dimcol)
@@ -24,10 +24,10 @@ function test_data_system(model::Symbol; ϵ::T=1.0e-6, tsim::T=0.1, ctrl::Any=(m
 
     # Set data
     Nb = data_dim(mechanism)
-    data = getdata(mechanism)
-    setdata!(mechanism, data)
-    sol = getsolution(mechanism)
-    attjac = attitudejacobian(data, Nb)
+    data = get_data(mechanism)
+    set_data!(mechanism, data)
+    sol = get_solution(mechanism)
+    attjac = attitude_jacobian(data, Nb)
 
     # # IFT
     # datamat0 = full_data_matrix(mechanism, attjac = true)
@@ -51,7 +51,7 @@ test_data_system(:snake, Nb=3)
 
 mech = getsnake(Nb=3, damper=0.0, spring=0.0, contact_type=:contact);
 function ctrl!(mech, k)
-    nu = controldim(mech)
+    nu = control_dimension(mech)
     u = mech.Δt * 0.00 * sones(nu)
     set_control!(mech, u)
     return nothing

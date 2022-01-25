@@ -25,7 +25,7 @@ open(vis)
 ################################################################################
 
 function ctrl!(mechanism, k)
-	nu = controldim(mech)
+	nu = control_dimension(mech)
 	# u = 0.5 * mechanism.Δt * [szeros(6); sones(nu-6)]
 	u = 0.3*[zeros(6); mech.Δt; zeros(nu-7)]
 	set_control!(mech, u)
@@ -45,7 +45,7 @@ function astronaut_simulation(mech::Mechanism; tsim=1.0, tctrl=1.0, seed::Int=0,
     initialize!(mech, :humanoid)
 
 	function ctrl!(mechanism, k)
-		nu = controldim(mech)
+		nu = control_dimension(mech)
 		u = (k*mechanism.Δt < tctrl) * control_amplitude * mechanism.Δt * [szeros(6); srand(nu-6)]
 		set_control!(mech, u)
 	    return
@@ -96,7 +96,7 @@ function process_energy_runs(mechanism::Mechanism, storage::Vector{Storage{T,N}}
 		speed += H / tcompute[i]
 		initial = Int(floor(tctrl/mechanism.Δt+2))
 		final = N
-		energy += kineticEnergy(mechanism, storage[i], final) - kineticEnergy(mechanism, storage[i], initial)
+		energy += kinetic_energy(mechanism, storage[i], final) - kinetic_energy(mechanism, storage[i], initial)
 	end
 	speed /= Nsim
 	energy /= Nsim
@@ -225,7 +225,7 @@ ener_traj = []
 for i = 1:3
 	mech, storage, tcompute = astronaut_simulation(;Nsim=1, Δt=Δt[i], tsim=100.0, tctrl=1.0, seed=0, control_amplitude=0.02)
 	stride = Int(floor(1/Δt[i]))
-	ener_t = [kineticEnergy(mech, storage[1], i) for i in stride+2:stride:length(storage[1])]
+	ener_t = [kinetic_energy(mech, storage[1], i) for i in stride+2:stride:length(storage[1])]
 	push!(ener_traj, ener_t .- ener_t[1])
 	@show i
 end

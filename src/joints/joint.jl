@@ -23,7 +23,7 @@ end
 ## Discrete-time position derivatives (for dynamics)
 @inline function Ga(joint::Joint, body1::Node, body2::Node, childid, λ, Δt)
     if body2.id == childid
-        return Ga(joint, posargs2(body1.state)..., posargs2(body2.state)..., λ)
+        return Ga(joint, current_configuration(body1.state)..., current_configuration(body2.state)..., λ)
     else
         return zero(joint)
     end
@@ -31,7 +31,7 @@ end
 
 @inline function Gb(joint::Joint, body1::Node, body2::Node, childid, λ, Δt)
     if body2.id == childid
-        return Gb(joint, posargs2(body1.state)..., posargs2(body2.state)..., λ)
+        return Gb(joint, current_configuration(body1.state)..., current_configuration(body2.state)..., λ)
     else
         return zero(joint)
     end
@@ -40,14 +40,14 @@ end
 ## Discrete-time velocity derivatives (for dynamics)
 @inline function ∂g∂a(joint::Joint, body1::Node, body2::Node, childid, λ, Δt)
     if body2.id == childid
-        return ∂g∂a(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)..., λ)
+        return ∂g∂a(joint, next_configuration(body1.state, Δt)..., next_configuration(body2.state, Δt)..., λ)
     else
         return zero(joint)
     end
 end
 @inline function ∂g∂b(joint::Joint, body1::Node, body2::Node, childid, λ, Δt)
     if body2.id == childid
-        return ∂g∂b(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)..., λ)
+        return ∂g∂b(joint, next_configuration(body1.state, Δt)..., next_configuration(body2.state, Δt)..., λ)
 
     else
         return zero(joint)
@@ -87,8 +87,8 @@ end
 end
 
 # ### Forcing (for dynamics)
-@inline function applyFτ!(joint::Joint, body1::Node, body2::Node, Δt::T, clear::Bool) where T
-    applyFτ!(joint, body1.state, body2.state, Δt, clear)
+@inline function apply_input!(joint::Joint, body1::Node, body2::Node, Δt::T, clear::Bool) where T
+    apply_input!(joint, body1.state, body2.state, Δt, clear)
     return
 end
 
@@ -111,11 +111,11 @@ Joint3 = Joint{T,3} where T
 
 ### Constraints and derivatives
 ## Position level constraint wrappers
-@inline g(joint::Joint, body1::Node, body2::Node, λ, Δt) = g(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)..., λ)
+@inline g(joint::Joint, body1::Node, body2::Node, λ, Δt) = g(joint, next_configuration(body1.state, Δt)..., next_configuration(body2.state, Δt)..., λ)
 
 ### Constraints and derivatives
 ## Discrete-time position wrappers (for dynamics)
-# g(joint::Joint, statea::State, stateb::State, λ, Δt) = g(joint, posargs3(statea, Δt)..., posargs3(stateb, Δt)..., λ)
+# g(joint::Joint, statea::State, stateb::State, λ, Δt) = g(joint, next_configuration(statea, Δt)..., next_configuration(stateb, Δt)..., λ)
 
 @inline function ∂g∂z(joint::Joint{T,Nλ}, λ) where {T,Nλ}
     return Diagonal(+1.00e-10 * sones(T,Nλ))
@@ -123,22 +123,22 @@ end
 
 ## Discrete-time position derivatives (for dynamics)
 # Wrappers 1
-@inline ∂g∂a(joint::Joint, body1::Node, body2::Node, λ, Δt) = ∂g∂a(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)..., λ)
-@inline ∂g∂b(joint::Joint, body1::Node, body2::Node, λ, Δt) = ∂g∂b(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)..., λ)
+@inline ∂g∂a(joint::Joint, body1::Node, body2::Node, λ, Δt) = ∂g∂a(joint, next_configuration(body1.state, Δt)..., next_configuration(body2.state, Δt)..., λ)
+@inline ∂g∂b(joint::Joint, body1::Node, body2::Node, λ, Δt) = ∂g∂b(joint, next_configuration(body1.state, Δt)..., next_configuration(body2.state, Δt)..., λ)
 
 ### Force derivatives (for linearization)
 ## Forcing
-@inline function setForce!(joint::Joint, Fτ::SVector)
+@inline function set_input!(joint::Joint, Fτ::SVector)
     joint.Fτ = zerodimstaticadjoint(nullspacemat(joint)) * Fτ
     return
 end
-@inline setForce!(joint::Joint) = return
+@inline set_input!(joint::Joint) = return
 
-@inline function addForce!(joint::Joint, Fτ::SVector)
+@inline function add_force!(joint::Joint, Fτ::SVector)
     joint.Fτ += zerodimstaticadjoint(nullspacemat(joint)) * Fτ
     return
 end
-@inline addForce!(joint::Joint) = return
+@inline add_force!(joint::Joint) = return
 
 ## Derivative wrappers
 @inline function ∂Fτ∂ua(joint::Joint, body1::Node, body2::Node, Δt, childid)
@@ -154,7 +154,7 @@ end
 end
 
 ## Minimal coordinates
-@inline minimalCoordinates(joint::Joint{T,Nλ}) where {T,Nλ} = szeros(T, 3 - Nλ)
+@inline minimal_coordinates(joint::Joint{T,Nλ}) where {T,Nλ} = szeros(T, 3 - Nλ)
 
 ## Limits
 function add_limits(mech::Mechanism, eq::JointConstraint;

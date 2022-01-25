@@ -14,7 +14,7 @@ function atlas(; mode::Symbol=:min, dt::T=0.01, g::T=-9.81, cf=0.8,
     initialize!(mechanism, :atlas)
 
     if mode == :min
-        nx = minCoordDim(mechanism)
+        nx = minimal_dimension(mechanism)
     elseif mode == :max
         nx = maxCoordDim(mechanism)
     end
@@ -25,7 +25,7 @@ function atlas(; mode::Symbol=:min, dt::T=0.01, g::T=-9.81, cf=0.8,
     ospace = BoxSpace(no, low=(-Inf * ones(no)), high=(Inf * ones(no)))
 
     rng = MersenneTwister(s)
-    z = getMaxState(mechanism)
+    z = get_max_state(mechanism)
     x = mode == :min ? max2min(mechanism, z) : z
     fx = zeros(nx, nx)
     fu = zeros(nx, nu)

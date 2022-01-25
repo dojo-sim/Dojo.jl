@@ -9,7 +9,7 @@ mech = getmechanism(:humanoid, contact=true, Δt=0.05, g=-9.81, spring=30.0, dam
 initialize!(mech, :humanoid, rot=[0.1,0,0], tran=[0,0,1.5])
 
 function ctrl!(mechanism, k)
-    nu = controldim(mechanism)
+    nu = control_dimension(mechanism)
     u = szeros(nu)
     set_control!(mechanism, u)
     return
@@ -67,7 +67,7 @@ mech.system
 eqcs = mech.eqconstraints.values
 bodies = mech.bodies.values
 ineqcs = mech.ineqconstraints.values
-A, dims = adjacencyMatrix(eqcs, bodies, ineqcs)
+A, dims = adjacency_matrix(eqcs, bodies, ineqcs)
 
 
 full_vector(system) = vcat(getfield.(system.vector_entries,:value)...)
@@ -99,8 +99,8 @@ s = SVector{4}([1.0; rand(3)/10])
 g(bound0, s, γ, x3, q3, v25, ϕ25)
 jacv0 = ∂g∂v(bound0, x3, q3, x2, v25, q2, ϕ25, λ, Δt)
 jacv1 = FiniteDiff.finite_difference_jacobian(
-    v -> g(bound0, s, γ, getx3(x2, SVector{3}(v[1:3]), Δt),
-        getq3(q2, SVector{3}(v[4:6]), Δt), SVector{3}(v[1:3]), SVector{3}(v[4:6])), [v25; ϕ25])
+    v -> g(bound0, s, γ, next_position(x2, SVector{3}(v[1:3]), Δt),
+        next_orientation(q2, SVector{3}(v[4:6]), Δt), SVector{3}(v[1:3]), SVector{3}(v[4:6])), [v25; ϕ25])
 
 jacz0 = ∂g∂z(bound0, x3, q3, x2, v25, q2, ϕ25, λ, Δt)
 jacz1 = FiniteDiff.finite_difference_jacobian(

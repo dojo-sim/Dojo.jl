@@ -18,7 +18,7 @@ function Rotational{T,Nλ}(body1::Node, body2::Node;
         spring_type::Symbol = :sinusoidal,
     ) where {T,Nλ}
 
-    V1, V2, V3 = orthogonalrows(axis)
+    V1, V2, V3 = orthogonal_rows(axis)
     V12 = [V1;V2]
 
     Fτ = zeros(T,3)
@@ -72,7 +72,7 @@ end
 ## w/ Limits
 @inline function g(joint::Rotational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
     e1 = Vmat(qa \ qb / joint.qoffset)
-    e2 = minimalCoordinates(joint, qa, qb)
+    e2 = minimal_coordinates(joint, qa, qb)
     s, γ = get_sγ(joint, η)
     return [
             s .* γ;

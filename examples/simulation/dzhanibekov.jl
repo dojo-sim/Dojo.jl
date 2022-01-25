@@ -21,7 +21,7 @@ visualize(mech, storage, vis=vis)
 # ## Ghost
 set_camera!(vis, cam_pos=[-1,1,0], zoom=1)
 
-z_sim = getMaxState(storage)
+z_sim = get_max_state(storage)
 timesteps = [5, 10, 15]# .+ 150
 
 for t in timesteps

@@ -38,15 +38,15 @@ length(eqc.constraints[2]) + 4joint_limits_length(eqc.constraints[2])
 SVector{1,Int}([1,])
 function controller!(mechanism, k)
     for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])
-        pbody = getbody(mech, eqc.parentid)
+        pbody = get_body(mech, eqc.parentid)
         minJ = minimum(diag(pbody.J))
         for (i,joint) in enumerate(eqc.constraints)
-            cbody = getbody(mech, eqc.childids[i])
+            cbody = get_body(mech, eqc.childids[i])
             minJ = min(minJ, minimum(diag(cbody.J)))
         end
-        nu = controldim(eqc)
+        nu = control_dimension(eqc)
         u = 1 * minJ * (rand(nu) .- 0.2) * Δt_ * 0.0
-        setForce!(eqc, SVector{nu}(u))
+        set_input!(eqc, SVector{nu}(u))
     end
     return
 end
@@ -58,10 +58,10 @@ visualize(mech, storage, vis = vis)
 
 # Set data
 Nb = length(mech.bodies)
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
-attjac = attitudejacobian(data, Nb)
+data = get_data(mech)
+set_data!(mech, data)
+sol = get_solution(mech)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
 datamat = full_data_matrix(mech)

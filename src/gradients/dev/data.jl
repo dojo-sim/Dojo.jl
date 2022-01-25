@@ -35,8 +35,8 @@ end
 # Body
 function data_attitude_jacobian(body::Body)
 	# [m,flat(J),x1,q1,x2,q2]
-	x1, q1 = posargs1(body.state)
-	x2, q2 = posargs2(body.state)
+	x1, q1 = previous_configuration(body.state)
+	x2, q2 = current_configuration(body.state)
 	attjac = cat(I(1+6+3), G(vector(q1)), I(3), G(vector(q2)), dims=(1,2))
 	return attjac
 end
@@ -65,8 +65,8 @@ end
 function get_data(body::Body)
 	m = body.m
 	j = flatten_inertia(body.J)
-	x1, q1 = posargs1(body.state)
-	x2, q2 = posargs2(body.state)
+	x1, q1 = previous_configuration(body.state)
+	x2, q2 = current_configuration(body.state)
 	return [m; j; x1; vector(q1); x2; vector(q2)]
 end
 # Ineqconstraints
@@ -98,16 +98,16 @@ function set_data!(mechanism::Mechanism, data::AbstractVector)
 end
  # Eqconstraints
 function set_data!(eqc::JointConstraint, data::AbstractVector)
-	nu = controldim(eqc)
+	nu = control_dimension(eqc)
 	u = data[SUnitRange(1,nu)]
 	spring = data[nu+1]
 	damper = data[nu+2]
 	spring_offset = data[nu+2 .+ (1:nu)]
 
-	setForce!(eqc, u)
+	set_input!(eqc, u)
 	c = 0
 	for joint in eqc.constraints
-		nu = controldim(joint)
+		nu = control_dimension(joint)
 		joint.spring = spring
 		joint.damper = damper
 		joint.spring_offset = spring_offset[SUnitRange(c+1,c+nu)]; c += nu

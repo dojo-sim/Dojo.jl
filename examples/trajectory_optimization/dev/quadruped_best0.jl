@@ -28,7 +28,7 @@ initialize!(mech, :quadruped, tran = [0,0,0.], v = [0.5,0,0.])
 visualize(mech, storage, vis = vis)
 
 T = 20
-n = minCoordDim(mech)
+n = minimal_dimension(mech)
 m = 12
 d = 0
 xref = quadruped_trajectory(mech, r = 0.10, z = 0.29; N = Int(T/2), Ncycles = 1)
@@ -42,13 +42,13 @@ visualizeMaxCoord(mech, min2max(mech, z1), vis)
 
 function gravity_compensation(mechanism::Mechanism)
     # only works with revolute joints for now
-    nu = controldim(mechanism)
+    nu = control_dimension(mechanism)
     u = zeros(nu)
     off  = 0
     for eqc in mechanism.eqconstraints
-        nu = controldim(eqc)
+        nu = control_dimension(eqc)
         if eqc.parentid != nothing
-            body = getbody(mechanism, eqc.parentid)
+            body = get_body(mechanism, eqc.parentid)
             rot = eqc.constraints[2]
             A = Matrix(nullspacemat(rot))
             Fτ = springforce(mechanism, eqc, body)

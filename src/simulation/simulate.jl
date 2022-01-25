@@ -1,8 +1,8 @@
 
-function initializeSimulation!(mechanism::Mechanism)
-    discretizestate!(mechanism)
+function initialize_simulation!(mechanism::Mechanism)
+    discretize_state!(mechanism)
     for body in mechanism.bodies 
-        setsolution!(body) 
+        set_solution!(body) 
     end
     return
 end
@@ -11,18 +11,18 @@ end
 function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Storage, control!::Function=(m, k) -> nothing;
         record::Bool=false, verbose::Bool=true, opts=InteriorPointOptions(verbose=verbose))
 
-    initializeSimulation!(mechanism)
+    initialize_simulation!(mechanism)
     Δt = mechanism.Δt
     bodies = mechanism.bodies
     eqcs = mechanism.eqconstraints
 
     for k = steps
         control!(mechanism, k)
-        for c in mechanism.eqconstraints applyFτ!(c, mechanism) end
+        for c in mechanism.eqconstraints apply_input!(c, mechanism) end
         mehrotra!(mechanism, opts=opts)
-        record && saveToStorage!(mechanism, storage, k)
+        record && save_to_storage!(mechanism, storage, k)
 
-        (k != steps[end]) && (for bodies in mechanism.bodies updatestate!(bodies, Δt) end)
+        (k != steps[end]) && (for bodies in mechanism.bodies update_state!(bodies, Δt) end)
     end
     record ? (return storage) : (return)
 end

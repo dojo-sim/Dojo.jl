@@ -25,8 +25,8 @@ function initializependulum!(mechanism::Mechanism; ϕ1::T = 0.7, ω1::T = 0.0) w
     p2 = eqc.constraints[1].vertices[2]
     p1 = eqc.constraints[1].vertices[1]
     q1 = UnitQuaternion(RotX(ϕ1))
-    setPosition!(mechanism.origin, body, p1 = p1, p2 = p2, Δq = q1)
-    setVelocity!(mechanism.origin, body, p1 = p1, p2 = p2, Δω = [ω1,0,0])
+    set_position(mechanism.origin, body, p1 = p1, p2 = p2, Δq = q1)
+    set_velocity!(mechanism.origin, body, p1 = p1, p2 = p2, Δω = [ω1,0,0])
 end
 
 function getnpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
@@ -63,13 +63,13 @@ function initializenpendulum!(mechanism::Mechanism; ϕ1::T = pi/4, ω = [0.0, 0.
     vert12 = - vert11
 
     # set position and velocities
-    setPosition!(mechanism.origin, body1, p2 = vert11, Δq = UnitQuaternion(RotX(ϕ1)))
-    setVelocity!(body1, ω = ω)
+    set_position(mechanism.origin, body1, p2 = vert11, Δq = UnitQuaternion(RotX(ϕ1)))
+    set_velocity!(body1, ω = ω)
 
     previd = body1.id
     for (i,body) in enumerate(Iterators.drop(mechanism.bodies, 1))
-        setPosition!(getbody(mechanism, previd), body, p1 = vert12, p2 = vert11)
-        setVelocity!(getbody(mechanism, previd), body, p1 = vert12, p2 = vert11,
+        set_position(get_body(mechanism, previd), body, p1 = vert12, p2 = vert11)
+        set_velocity!(get_body(mechanism, previd), body, p1 = vert12, p2 = vert11,
                 Δv = Δv, Δω = 1/i*Δω)
         previd = body.id
     end

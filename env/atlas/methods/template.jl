@@ -44,12 +44,12 @@ function IKatlas(mechanism::Mechanism, p_base, p_foot; leg::Symbol = :r)
 end
 
 function AtlasIKerror(mechanism::Mechanism, p_base, p_foot, θ; leg::Symbol = :r)
-	setPosition!(mechanism, geteqconstraint(mechanism, "auto_generated_floating_joint"), [p_base; zeros(3)])
-	setPosition!(mechanism, geteqconstraint(mechanism, String(leg)*"_leg_hpxyz"), [0.0, -θ[1], 0.0])
-	setPosition!(mechanism, geteqconstraint(mechanism, String(leg)*"_leg_kny"), [θ[2]])
-	setPosition!(mechanism, geteqconstraint(mechanism, String(leg)*"_leg_akxy"), [θ[1]-θ[2], 0.0])
+	set_position(mechanism, get_joint_constraint(mechanism, "auto_generated_floating_joint"), [p_base; zeros(3)])
+	set_position(mechanism, get_joint_constraint(mechanism, String(leg)*"_leg_hpxyz"), [0.0, -θ[1], 0.0])
+	set_position(mechanism, get_joint_constraint(mechanism, String(leg)*"_leg_kny"), [θ[2]])
+	set_position(mechanism, get_joint_constraint(mechanism, String(leg)*"_leg_akxy"), [θ[1]-θ[2], 0.0])
 
-	foot = getbody(mechanism, String(leg)*"_foot")
+	foot = get_body(mechanism, String(leg)*"_foot")
 	ineqcs = collect(mechanism.ineqconstraints)
 	foot_ineqcs = ineqcs[findall(x -> x.parentid == foot.id, ineqcs)]
 	p = mean([contact_location(ineqc, foot) for ineqc in foot_ineqcs]) # average of all contact locations for one foot
@@ -77,26 +77,26 @@ function atlas_trajectory(mechanism::Mechanism{T}; Δt = 0.05, r = 0.10, x = 0.0
 	ωR = [(θR[i%(2N)+1] - θR[i]) / Δt for i = 1:2N]
 
 	# Minimal Coordinates
-	nx = minCoordDim(mechanism)
+	nx = minimal_dimension(mechanism)
 	X = [zeros(nx) for i = 1:2N]
 	for i = 1:2N
-		setPosition!(mechanism, geteqconstraint(mechanism, "auto_generated_floating_joint"), [p_base; zeros(3)])
-		setPosition!(mechanism, geteqconstraint(mechanism, "l_leg_hpxyz"), [0.0, -θL[i][1], 0.0])
-		setPosition!(mechanism, geteqconstraint(mechanism, "l_leg_kny"), [θL[i][2]])
-		setPosition!(mechanism, geteqconstraint(mechanism, "l_leg_akxy"), [θL[i][1]-θL[i][2], 0.0])
+		set_position(mechanism, get_joint_constraint(mechanism, "auto_generated_floating_joint"), [p_base; zeros(3)])
+		set_position(mechanism, get_joint_constraint(mechanism, "l_leg_hpxyz"), [0.0, -θL[i][1], 0.0])
+		set_position(mechanism, get_joint_constraint(mechanism, "l_leg_kny"), [θL[i][2]])
+		set_position(mechanism, get_joint_constraint(mechanism, "l_leg_akxy"), [θL[i][1]-θL[i][2], 0.0])
 
-		setPosition!(mechanism, geteqconstraint(mechanism, "r_leg_hpxyz"), [0.0, -θR[i][1], 0.0])
-		setPosition!(mechanism, geteqconstraint(mechanism, "r_leg_kny"), [θR[i][2]])
-		setPosition!(mechanism, geteqconstraint(mechanism, "r_leg_akxy"), [θR[i][1]-θR[i][2], 0.0])
+		set_position(mechanism, get_joint_constraint(mechanism, "r_leg_hpxyz"), [0.0, -θR[i][1], 0.0])
+		set_position(mechanism, get_joint_constraint(mechanism, "r_leg_kny"), [θR[i][2]])
+		set_position(mechanism, get_joint_constraint(mechanism, "r_leg_akxy"), [θR[i][1]-θR[i][2], 0.0])
 
-		setVelocity!(mechanism, geteqconstraint(mechanism, "auto_generated_floating_joint"), [zeros(3); zeros(3)])
-		setVelocity!(mechanism, geteqconstraint(mechanism, "l_leg_hpxyz"), [0.0, -ωL[i][1], 0.0])
-		setVelocity!(mechanism, geteqconstraint(mechanism, "l_leg_kny"), [ωL[i][2]])
-		setVelocity!(mechanism, geteqconstraint(mechanism, "l_leg_akxy"), [ωL[i][1]-ωL[i][2], 0.0])
+		set_velocity!(mechanism, get_joint_constraint(mechanism, "auto_generated_floating_joint"), [zeros(3); zeros(3)])
+		set_velocity!(mechanism, get_joint_constraint(mechanism, "l_leg_hpxyz"), [0.0, -ωL[i][1], 0.0])
+		set_velocity!(mechanism, get_joint_constraint(mechanism, "l_leg_kny"), [ωL[i][2]])
+		set_velocity!(mechanism, get_joint_constraint(mechanism, "l_leg_akxy"), [ωL[i][1]-ωL[i][2], 0.0])
 
-		setVelocity!(mechanism, geteqconstraint(mechanism, "r_leg_hpxyz"), [0.0, -ωR[i][1], 0.0])
-		setVelocity!(mechanism, geteqconstraint(mechanism, "r_leg_kny"), [ωR[i][2]])
-		setVelocity!(mechanism, geteqconstraint(mechanism, "r_leg_akxy"), [ωR[i][1]-ωR[i][2], 0.0])
+		set_velocity!(mechanism, get_joint_constraint(mechanism, "r_leg_hpxyz"), [0.0, -ωR[i][1], 0.0])
+		set_velocity!(mechanism, get_joint_constraint(mechanism, "r_leg_kny"), [ωR[i][2]])
+		set_velocity!(mechanism, get_joint_constraint(mechanism, "r_leg_akxy"), [ωR[i][1]-ωR[i][2], 0.0])
 		X[i] .= getMinState(mechanism)
 	end
 
@@ -131,8 +131,8 @@ end
 # eqcs = collect(mech.eqconstraints)
 # ineqcs = collect(mech.ineqconstraints)
 # getfield.(ineqcs, :parentid)
-# getbody(mech, 15)
-# nx = minCoordDim(mech)
+# get_body(mech, 15)
+# nx = minimal_dimension(mech)
 #
 #
 # p_base = [0, 0, 0.9385]

@@ -46,7 +46,7 @@ function reset(env::Environment{X}; x=nothing) where X
         if env.mode == :min
             env.x .= getMinState(env.mechanism)
         elseif env.mode == :max
-            env.x .= getMaxState(env.mechanism)
+            env.x .= get_max_state(env.mechanism)
         end
         env.u_prev .= 0.0
     end

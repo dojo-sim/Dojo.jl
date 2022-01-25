@@ -12,7 +12,7 @@ function hopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     initializehopper!(mechanism)
 
     if mode == :min
-        nx = minCoordDim(mechanism)
+        nx = minimal_dimension(mechanism)
     elseif mode == :max
         nx = maxCoordDim(mechanism)
     end
@@ -25,7 +25,7 @@ function hopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
 
     rng = MersenneTwister(s)
 
-    z = getMaxState(mechanism)
+    z = get_max_state(mechanism)
     x = mode == :min ? max2min(mechanism, z) : z
 
     fx = zeros(nx, nx)
@@ -57,17 +57,17 @@ function reset(env::Environment{Hopper}; x=nothing, reset_noise_scale = 0.005)
         # initialize above the ground to make sure that with random initialization we do not violate the ground constraint.
         initialize!(env.mechanism, :hopper, z = 0.25)
         x0 = getMinState(env.mechanism)
-        nx = minCoordDim(env.mechanism)
+        nx = minimal_dimension(env.mechanism)
 
         low = -reset_noise_scale
         high = reset_noise_scale
         x = x0 + (high - low) .* rand(env.rng[1], nx) .+ low # we ignored the normal distribution on the velocities
         z = min2max(env.mechanism, x)
-        setState!(env.mechanism, z)
+        set_state!(env.mechanism, z)
         if env.mode == :min
             env.x .= getMinState(env.mechanism)
         elseif env.mode == :max
-            env.x .= getMaxState(env.mechanism)
+            env.x .= get_max_state(env.mechanism)
         end
         env.u_prev .= 0.0
     end
@@ -76,7 +76,7 @@ end
 
 function _get_obs(env::Environment{Hopper}; full_state::Bool=false)
     full_state && (return env.x)
-    nx = minCoordDim(env.mechanism)
+    nx = minimal_dimension(env.mechanism)
     if env.mode == :min
         o = env.x
     elseif env.mode == :max
@@ -108,7 +108,7 @@ function cost(env::Environment{Hopper}, x, u;
 end
 
 function is_done(::Environment{Hopper}, x)
-    nx = minCoordDim(env.mechanism)
+    nx = minimal_dimension(env.mechanism)
     if env.mode == :min
         x0 = x
     elseif env.mode == :max

@@ -28,14 +28,14 @@ function getraiberthopper(; Δt::T=0.05, g::T=-9.81, spring=0.0, damper=0.1, con
         friction_coefficient = 0.5
 
         # foot
-        ineqcs = contactconstraint(foot, contact_normal, cf=friction_coefficient,
+        ineqcs = contact_constraint(foot, contact_normal, cf=friction_coefficient,
             p=[0.0; 0.0; 0.0], offset=[0.0; 0.0; foot_radius])
 
         ineqcs = [ineqcs]
 
         # body
         if contact_body
-            ineqcs_body = contactconstraint(body, contact_normal, cf=friction_coefficient,
+            ineqcs_body = contact_constraint(body, contact_normal, cf=friction_coefficient,
                 p=[0.0; 0.0; 0.0], offset=[0.0; 0.0; body_radius])
             push!(ineqcs, ineqcs_body)
         end
@@ -55,10 +55,10 @@ function initializeraiberthopper!(mech::Mechanism{T,Nn,Ne,Nb}; leg_length_nomina
     tra2 = eqc2.constraints[1]
 
     # origin to body
-    setPosition!(mech.origin, body1, Δx=[0.0; 0.0; leg_length_nominal + altitude])
-    setVelocity!(body1, v=v, ω=ω)
+    set_position(mech.origin, body1, Δx=[0.0; 0.0; leg_length_nominal + altitude])
+    set_velocity!(body1, v=v, ω=ω)
 
     # body to foot
-    setPosition!(body1, body2, Δx=[0.0; 0.0; -leg_length_nominal], Δq=UnitQuaternion(RotX(0.0)))
-    setVelocity!(body1, body2, p1 = tra2.vertices[1], p2 = tra2.vertices[2], Δv=zeros(3), Δω=zeros(3))
+    set_position(body1, body2, Δx=[0.0; 0.0; -leg_length_nominal], Δq=UnitQuaternion(RotX(0.0)))
+    set_velocity!(body1, body2, p1 = tra2.vertices[1], p2 = tra2.vertices[2], Δv=zeros(3), Δω=zeros(3))
 end

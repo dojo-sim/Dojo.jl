@@ -5,9 +5,9 @@ function momentum(mechanism::Mechanism{T}, body::Body{T}) where {T}
     Δt = mechanism.Δt
 
     state = body.state
-    x1, q1 = posargs1(state)
-    x2, q2 = posargs2(state)
-    x3, q3 = posargs3(state, Δt)
+    x1, q1 = previous_configuration(state)
+    x2, q2 = current_configuration(state)
+    x3, q3 = next_configuration(state, Δt)
 
     v15 = body.state.vsol[2] # v1.5
     ω15 = body.state.ϕsol[2] # ω1.5

@@ -20,9 +20,9 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 
 function controller!(mechanism, k)
     for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])
-        nu = controldim(eqc)
+        nu = control_dimension(eqc)
         u = 50*mechanism.Δt*(ones(nu) .- 0.5)
-        setForce!(eqc, u)
+        set_input!(eqc, u)
     end
     return
 end
@@ -36,7 +36,7 @@ initialize!(mech, :hopper, x = 0.0, z = 0.0, θ = -0.0)
 visualize(mech, storage, vis = vis, show_contact = true)
 
 
-setentries!(mech)
+set_entries!(mech)
 
 
 
@@ -128,7 +128,7 @@ end
 close(env)
 
 env.mechanism.eqconstraints
-controldim(env.mechanism)
+control_dimension(env.mechanism)
 sample(env.aspace)
 # sample(env.aspace)
 #
@@ -136,12 +136,12 @@ m.body_inertia
 @show m.body_mass
 
 # initialize!(env.mechanism, :halfcheetah, z = 2.0)
-# torso = getbody(env.mechanism, "torso")
-# eqc1 = geteqconstraint(env.mechanism, "floating_joint")
+# torso = get_body(env.mechanism, "torso")
+# eqc1 = get_joint_constraint(env.mechanism, "floating_joint")
 # torso.state.x2
 # orig = env.mechanism.origin
-# minimalCoordinates(eqc1.constraints[1], orig, torso)
-# minimalCoordinates(eqc1.constraints[2], orig, torso)
+# minimal_coordinates(eqc1.constraints[1], orig, torso)
+# minimal_coordinates(eqc1.constraints[2], orig, torso)
 
 
 getMinState(env.mechanism)

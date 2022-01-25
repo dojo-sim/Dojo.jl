@@ -41,14 +41,14 @@ visualize(mech, storage, vis=vis)
 
 include(joinpath(module_dir(), "examples", "diff_tools.jl"))
 # Set data
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
+data = get_data(mech)
+set_data!(mech, data)
+sol = get_solution(mech)
 Nb = length(collect(mech.bodies))
-attjac = attitudejacobian(data, Nb)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
-setentries!(mech)
+set_entries!(mech)
 datamat = full_data_matrix(mech)
 solmat = full_matrix(mech.system)
 sensi = - (solmat \ datamat)

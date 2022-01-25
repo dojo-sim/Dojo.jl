@@ -45,11 +45,11 @@ function IKquadruped(mechanism::Mechanism, p_trunk, p_foot; leg::Symbol = :FR)
 end
 
 function QuadrupedIKerror(mechanism::Mechanism, p_trunk, p_foot, θ; leg::Symbol = :FR)
-	setPosition!(mechanism, geteqconstraint(mechanism, "auto_generated_floating_joint"), [p_trunk; zeros(3)])
-	setPosition!(mechanism, geteqconstraint(mechanism, String(leg)*"_thigh_joint"), [θ[1]])
-	setPosition!(mechanism, geteqconstraint(mechanism, String(leg)*"_calf_joint"), [θ[2]])
+	set_position(mechanism, get_joint_constraint(mechanism, "auto_generated_floating_joint"), [p_trunk; zeros(3)])
+	set_position(mechanism, get_joint_constraint(mechanism, String(leg)*"_thigh_joint"), [θ[1]])
+	set_position(mechanism, get_joint_constraint(mechanism, String(leg)*"_calf_joint"), [θ[2]])
 
-	foot = getbody(mechanism, String(leg)*"_calf")
+	foot = get_body(mechanism, String(leg)*"_calf")
 	ineqcs = collect(mechanism.ineqconstraints)
 	ineqc = ineqcs[findfirst(x -> x.parentid == foot.id, ineqcs)]
 	p = contact_location(ineqc, foot)
@@ -180,7 +180,7 @@ end
 #
 # ## dimensions
 # Nb = length(mech.bodies)
-# n = minCoordDim(mech)
+# n = minimal_dimension(mech)
 # m = 12
 #
 # function potato_dynamics(x, u, Δt, m, g)
@@ -191,7 +191,7 @@ end
 # 	return x̄
 # end
 #
-# trunk = getbody(mech, "trunk")
+# trunk = get_body(mech, "trunk")
 # x2_trunk = trunk.state.x2[1]
 # v15_trunk = trunk.state.v15
 #

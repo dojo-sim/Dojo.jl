@@ -71,10 +71,10 @@ function get_damperforce(mechanism::Mechanism{T}) where {T}
 	eqcs = mechanism.eqconstraints
 	# set the controls in the equality constraints
 	off = 0
-	nu = controldim(mechanism)
+	nu = control_dimension(mechanism)
 	u = zeros(nu)
 	for eqc in eqcs
-		pbody = getbody(mechanism, eqc.parentid)
+		pbody = get_body(mechanism, eqc.parentid)
 		if typeof(pbody) <: Body
 			F = damperforce(mechanism, eqc, pbody)
 			oF = 0
@@ -96,7 +96,7 @@ end
 
 
 # eqc0 = env.mechanism.eqconstraints.values[1]
-# body0 = getbody(env.mechanism, eqc0.parentid)
+# body0 = get_body(env.mechanism, eqc0.parentid)
 # df = damperforce(mech, eqc0, body0)
 # nullspacemat(eqc0.constraints[1])# * df[1:3]
 # nullspacemat(eqc0.constraints[2])# * df[4:6]

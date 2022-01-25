@@ -26,8 +26,8 @@ mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = cf, damper = 0.0, s
 
 # Dimensions
 T = 20
-n = minCoordDim(mech)
-m = controldim(mech)
+n = minimal_dimension(mech)
+m = control_dimension(mech)
 d = 0
 u_mask = [zeros(12,6) I(12)]
 
@@ -43,7 +43,7 @@ z1ref = zref[1]
 ϵ0 = 1e-2
 mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = cf, damper = 10.0, spring = 300.0)
 initialize!(mech, :quadruped)
-setState!(mech, z1ref)
+set_state!(mech, z1ref)
 setSpringOffset!(mech, x1ref)
 @elapsed storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0, undercut = 1.5)
 visualize(mech, storage, vis = vis)
@@ -226,7 +226,7 @@ visualize(mech, storage; vis = vis)
 
 mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = cf, damper = 5.0, spring = 0.0)
 initialize!(mech, :quadruped)
-setState!(mech, min2max(mech, xabs[1]))
+set_state!(mech, min2max(mech, xabs[1]))
 
 function controller!(mechanism, k)
 	@show k

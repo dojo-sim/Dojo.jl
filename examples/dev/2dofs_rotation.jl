@@ -26,16 +26,16 @@ initialize!(mech, :orbital, ϕx = 3π/4, ϕy = 3π/4)
 
 function controller!(mechanism, k)
     for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])
-        # pbody = getbody(mech, eqc.parentid)
+        # pbody = get_body(mech, eqc.parentid)
         # minJ = minimum(diag(pbody.J))
         # for (i,joint) in enumerate(eqc.constraints)
-        #     cbody = getbody(mech, eqc.childids[i])
+        #     cbody = get_body(mech, eqc.childids[i])
         #     minJ = min(minJ, minimum(diag(cbody.J)))
         # end
         minJ = 0.01
-        nu = controldim(eqc)
+        nu = control_dimension(eqc)
         u = 10 * minJ * (rand(nu) .- 0.2) * Δt_
-        setForce!(eqc, SVector{nu}(u))
+        set_input!(eqc, SVector{nu}(u))
     end
     return
 end

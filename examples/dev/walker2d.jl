@@ -23,9 +23,9 @@ mech = getmechanism(:walker2d, Δt = 0.05, g = -9.81, contact = true, limits = t
 initialize!(mech, :walker2d, x = 0.0, z = 0.0, θ = -0.0)
 
 mech.eqconstraints
-geteqconstraint(mech, "thigh_left").constraints[1].vertices
-getbody(mech, 14)
-getbody(mech, 10)
+get_joint_constraint(mech, "thigh_left").constraints[1].vertices
+get_body(mech, 14)
+get_body(mech, 10)
 
 @elapsed storage = simulate!(mech, 3.00, controller!, record = true, verbose = false,
     opts=InteriorPointOptions(verbose=false, btol = 1e-6))
@@ -33,9 +33,9 @@ visualize(mech, storage, vis = vis, show_contact = true)
 
 function controller!(mechanism, k)
     for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])
-        nu = controldim(eqc)
+        nu = control_dimension(eqc)
         u = 100*0.05*(rand(nu) .- 0.5)
-        setForce!(eqc, u)
+        set_input!(eqc, u)
     end
     return
 end
@@ -64,7 +64,7 @@ end
 close(env)
 
 env.mechanism.eqconstraints
-controldim(env.mechanism)
+control_dimension(env.mechanism)
 sample(env.aspace)
 # sample(env.aspace)
 #
@@ -72,12 +72,12 @@ m.body_inertia
 @show m.body_mass
 
 # initialize!(env.mechanism, :halfcheetah, z = 2.0)
-# torso = getbody(env.mechanism, "torso")
-# eqc1 = geteqconstraint(env.mechanism, "floating_joint")
+# torso = get_body(env.mechanism, "torso")
+# eqc1 = get_joint_constraint(env.mechanism, "floating_joint")
 # torso.state.x2
 # orig = env.mechanism.origin
-# minimalCoordinates(eqc1.constraints[1], orig, torso)
-# minimalCoordinates(eqc1.constraints[2], orig, torso)
+# minimal_coordinates(eqc1.constraints[1], orig, torso)
+# minimal_coordinates(eqc1.constraints[2], orig, torso)
 
 
 getMinState(env.mechanism)

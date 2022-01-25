@@ -6,7 +6,7 @@
     - the altitude offset for each contact point (optional)
     - the contact type: `:contact`, `:linear_contact`, `:impact`
 """
-function contactconstraint(bodies::AbstractVector{<:Body{T}},
+function contact_constraint(bodies::AbstractVector{<:Body{T}},
         normal::AbstractVector{<:AbstractVector};
         cf::AbstractVector{T} = ones(length(normal)),
         p::AbstractVector = [szeros(T, 3) for i=1:length(normal)],
@@ -18,7 +18,7 @@ function contactconstraint(bodies::AbstractVector{<:Body{T}},
     @assert n == length(bodies) == length(normal) == length(cf) == length(p) == length(offset)
     ineqcs = Vector{ContactConstraint}()
     for i = 1:n
-        ineqc = contactconstraint(bodies[i], normal[i], cf=cf[i], p=p[i],
+        ineqc = contact_constraint(bodies[i], normal[i], cf=cf[i], p=p[i],
             offset=offset[i], name=names[i], contact_type=contact_type)
         push!(ineqcs, ineqc)
     end
@@ -26,7 +26,7 @@ function contactconstraint(bodies::AbstractVector{<:Body{T}},
     return ineqcs
 end
 
-function contactconstraint(body::Body{T},
+function contact_constraint(body::Body{T},
         normal::AbstractVector{<:AbstractVector};
         cf::AbstractVector{T} = ones(length(normal)),
         p::AbstractVector = [szeros(T, 3) for i=1:length(normal)],
@@ -35,7 +35,7 @@ function contactconstraint(body::Body{T},
         contact_type::Symbol = :contact) where {T}
     n = length(normal)
     @assert n == length(normal) == length(cf) == length(p) == length(offset)
-    return contactconstraint(fill(body, n), normal, cf=cf, p=p, offset=offset,
+    return contact_constraint(fill(body, n), normal, cf=cf, p=p, offset=offset,
         names=names, contact_type=contact_type)
 end
 
@@ -46,7 +46,7 @@ end
     - the offset vector p with respect to the center of the body for the contact point (optional)
     - the altitude offset for the contact point (optional)
 """
-function contactconstraint(body::Body{T},
+function contact_constraint(body::Body{T},
         normal::AbstractVector{T};
         cf::T = 1.0,
         p::AbstractVector{T} = szeros(T, 3),

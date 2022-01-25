@@ -2,9 +2,9 @@
     state = body.state
     Δt = mechanism.Δt
 
-    x1, q1 = posargs1(state)
-    x2, q2 = posargs2(state)
-    x3, q3 = posargs3(state, Δt)
+    x1, q1 = previous_configuration(state)
+    x2, q2 = current_configuration(state)
+    x3, q3 = next_configuration(state, Δt)
 
     # dynamics
     ezg = SA{T}[0; 0; -mechanism.g]
@@ -24,7 +24,7 @@
     # impulses
     for id in connections(mechanism.system, body.id)
         Ne < id <= Ne+Nb && continue # body
-        impulses!(mechanism, body, getnode(mechanism, id))
+        impulses!(mechanism, body, get_node(mechanism, id))
     end
 
     # Regularize the angular velocity when necessary.
@@ -38,9 +38,9 @@ end
 @inline function ∂g∂z(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn,Ne,Nb}
     state = body.state
     Δt = mechanism.Δt
-    x1, q1 = posargs1(state)
-    x2, q2 = posargs2(state)
-    x3, q3 = posargs3(state, Δt)
+    x1, q1 = previous_configuration(state)
+    x2, q2 = current_configuration(state)
+    x3, q3 = next_configuration(state, Δt)
 
     # dynamics
     dynT = I(3) * body.m / Δt
@@ -59,7 +59,7 @@ end
     # impulses
     for id in connections(mechanism.system, body.id)
         Ne < id <= Ne+Nb && continue # body
-        ∂impulses∂v!(mechanism, body, getnode(mechanism, id))
+        ∂impulses∂v!(mechanism, body, get_node(mechanism, id))
     end
 
     # regularize the angular velocity when necessary.
@@ -72,6 +72,6 @@ end
 
 @inline function ∂i∂v(body::Body{T}, Δt) where {T}
     state = body.state
-    x2, v25, q2, ϕ25 = fullargssol(state)
+    x2, v25, q2, ϕ25 = current_configuration_velocity(state)
     ∂i∂v(q2, ϕ25, Δt)
 end

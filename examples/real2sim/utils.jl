@@ -68,12 +68,12 @@ end
 ################################################################################
 
 function simdata_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
-	nsol = soldim(mechanism)
+	nsol = solution_dimension(mechanism)
     ndata = simdata_dim(mechanism)
     data = get_simulator_data(mechanism)
 
 	A = zeros(nsol, ndata)
-	neqcs = eqcdim(mechanism)
+	neqcs = joint_dimension(mechanism)
 	n = sum(length.(mech.eqconstraints.values))
 	rb = neqcs # row ineqc
 	ri = neqcs + 6Nb # row body
@@ -97,9 +97,9 @@ function ∂g∂simdata(mechanism, ineqc::ContactConstraint{T,N,Nc,Cs}) where {T
     bound = ineqc.constraints[1]
 	p = bound.p
 	offset = bound.offset
-    body = getbody(mechanism, ineqc.parentid)
-    x2, v25, q2, ϕ25 = fullargssol(body.state)
-    x3, q3 = posargs3(body.state, mechanism.Δt)
+    body = get_body(mechanism, ineqc.parentid)
+    x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
+    x3, q3 = next_configuration(body.state, mechanism.Δt)
 	s = ineqc.ssol[2]
 	γ = ineqc.γsol[2]
 
@@ -111,7 +111,7 @@ function ∂g∂simdata(mechanism, ineqc::ContactConstraint{T,N,Nc,Cs}) where {T
 
 	# Contribution to Body dynamics
 	∇cf = szeros(T,3)
-	X = forcemapping(bound)
+	X = force_mapping(bound)
 	# this what we differentiate: Qᵀγ = - skew(p - vrotate(offset, inv(q3))) * VRmat(q3) * LᵀVᵀmat(q3) * X' * γ
 	∇off = - ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ) * -∂vrotate∂p(offset, inv(q3))
 	∇p = - ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ)
@@ -189,7 +189,7 @@ end
 
 function build_pairs(mechanism::Mechanism, traj::Storage{T,N}) where {T,N}
     pairs = []
-    z = getMaxState(traj)
+    z = get_max_state(traj)
     for t = 1:N-1
         z1 = z[t]
         z2 = z[t+1]
@@ -245,9 +245,9 @@ end
 ################################################################################
 function getSimulatorMaxGradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	Δt = mechanism.Δt
-	nu = controldim(mechanism)
+	nu = control_dimension(mechanism)
 	nsd = simdata_dim(mechanism)
-	neqcs = eqcdim(mechanism)
+	neqcs = joint_dimension(mechanism)
 	datamat = simdata_jacobian(mechanism)
 	solmat = full_matrix(mechanism.system)
 
@@ -300,7 +300,7 @@ function clean_loss(model::Symbol, pairs, data; Δt=0.05, g=-9.81,
 end
 
 function loss(mechanism::Mechanism, pair; opts=InteriorPointOptions(btol=1e-6, rtol=1e-6))
-	nu = controldim(mechanism)
+	nu = control_dimension(mechanism)
 	nz = maxCoordDim(mechanism)
 	u = zeros(nu)
     z1 = pair[1]

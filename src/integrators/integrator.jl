@@ -2,16 +2,16 @@ METHODORDER = 1 # This refers to the interpolating spline
 getGlobalOrder() = (global METHODORDER; return METHODORDER)
 
 # Convenience functions
-@inline getx3(x2::SVector{3,T}, v25::SVector{3,T}, Δt::T) where {T} = x2 + v25 * Δt
-@inline getq3(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T) where {T} = q2 * ωbar(ϕ25, Δt) * Δt / 2
+@inline next_position(x2::SVector{3,T}, v25::SVector{3,T}, Δt::T) where {T} = x2 + v25 * Δt
+@inline next_orientation(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T) where {T} = q2 * ωbar(ϕ25, Δt) * Δt / 2
 
-@inline getx3(state::State, Δt) = state.x2[1] + state.vsol[2] * Δt
-@inline getq3(state::State, Δt) = getq3(state.q2[1], state.ϕsol[2], Δt)
+@inline next_position(state::State, Δt) = state.x2[1] + state.vsol[2] * Δt
+@inline next_orientation(state::State, Δt) = next_orientation(state.q2[1], state.ϕsol[2], Δt)
 
-@inline posargs1(state::State) = (state.x1, state.q1)
-@inline posargs2(state::State; k=1) = (state.x2[k], state.q2[k])
-@inline fullargssol(state::State) = (state.x2[1], state.vsol[2], state.q2[1], state.ϕsol[2])
-@inline posargs3(state::State, Δt) = (getx3(state, Δt), getq3(state, Δt))
+@inline previous_configuration(state::State) = (state.x1, state.q1)
+@inline current_configuration(state::State; k=1) = (state.x2[k], state.q2[k])
+@inline current_configuration_velocity(state::State) = (state.x2[1], state.vsol[2], state.q2[1], state.ϕsol[2])
+@inline next_configuration(state::State, Δt) = (next_position(state, Δt), next_orientation(state, Δt))
 
 @inline function derivωbar(ω::SVector{3}, Δt)
     msq = -sqrt(4 / Δt^2 - dot(ω, ω))
@@ -38,12 +38,12 @@ function derivcayley(ω)
                  ])
 end
 
-# I think this is the inverse of getq3, we recover ϕ15 from q1, q2 and h
+# I think this is the inverse of next_orientation, we recover ϕ15 from q1, q2 and h
 function angular_velocity(q1::UnitQuaternion, q2::UnitQuaternion, Δt)
     2.0 / Δt  * Vmat() * Lᵀmat(q1) * vector(q2)
 end
 
-@inline function discretizestate!(body::Body{T}, Δt) where T
+@inline function discretize_state!(body::Body{T}, Δt) where T
     state = body.state
     x2 = state.x2[1]
     q2 = state.q2[1]
@@ -59,7 +59,7 @@ end
     return
 end
 
-@inline function updatestate!(body::Body{T}, Δt) where T
+@inline function update_state!(body::Body{T}, Δt) where T
     state = body.state
 
     state.x1 = state.x2[1]
@@ -76,7 +76,7 @@ end
     return
 end
 
-@inline function setsolution!(body::Body)
+@inline function set_solution!(body::Body)
     state = body.state
     state.vsol[1] = state.v15
     state.vsol[2] = state.v15

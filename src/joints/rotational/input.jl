@@ -1,7 +1,7 @@
-@inline function applyFτ!(joint::Rotational{T}, statea::State, stateb::State, Δt::T, clear::Bool) where T
+@inline function apply_input!(joint::Rotational{T}, statea::State, stateb::State, Δt::T, clear::Bool) where T
     τ = joint.Fτ
-    _, qa = posargs2(statea)
-    _, qb = posargs2(stateb)
+    _, qa = current_configuration(statea)
+    _, qb = current_configuration(stateb)
 
     τa = vrotate(-τ, qa) # in world coordinates
     τb = -τa # in world coordinates
@@ -23,8 +23,8 @@ end
 end
 
 @inline function ∂Fτ∂ub(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
-    _, qa = posargs2(statea)
-    _, qb = posargs2(stateb)
+    _, qa = current_configuration(statea)
+    _, qb = current_configuration(stateb)
     qbinvqa = qb \ qa
 
     BFb = (szeros(T, 3, 3))
@@ -34,8 +34,8 @@ end
 end
 
 @inline function ∂Fτ∂a(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
-    _, qa = posargs2(statea)
-    _, qb = posargs2(stateb)
+    _, qa = current_configuration(statea)
+    _, qb = current_configuration(stateb)
     τ = joint.Fτ
 
     FaXa = szeros(T,3,3)
@@ -51,8 +51,8 @@ end
 end
 
 @inline function ∂Fτ∂b(joint::Rotational{T}, statea::State, stateb::State, Δt::T) where T
-    _, qa = posargs2(statea)
-    _, qb = posargs2(stateb)
+    _, qa = current_configuration(statea)
+    _, qb = current_configuration(stateb)
     τ = joint.Fτ
 
     FaXb = szeros(T,3,3)

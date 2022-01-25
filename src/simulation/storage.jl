@@ -60,7 +60,7 @@ function downsample(storage::Storage{T,N}, n::Int) where {T,N}
     return s
 end
 
-function saveToStorage!(mechanism::Mechanism, storage::Storage, i::Int)
+function save_to_storage!(mechanism::Mechanism, storage::Storage, i::Int)
     for (ind, body) in enumerate(mechanism.bodies)
         state = body.state
         storage.x[ind][i] = state.x2[1] # x2
@@ -100,12 +100,12 @@ function generate_storage(mechanism, z)
     return storage
 end
 
-function getMaxState(storage::Storage{T,N}) where {T,N}
-	z = [getMaxState(storage, i) for i=1:N]
+function get_max_state(storage::Storage{T,N}) where {T,N}
+	z = [get_max_state(storage, i) for i=1:N]
 	return z
 end
 
-function getMaxState(storage::Storage{T,N}, i::Int) where {T,N}
+function get_max_state(storage::Storage{T,N}, i::Int) where {T,N}
 	Nb = length(storage.x)
 	z = zeros(13*Nb)
 	for j = 1:Nb

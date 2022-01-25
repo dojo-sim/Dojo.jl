@@ -19,9 +19,9 @@ end
 function initializedzhanibekov!(mech::Mechanism{T,Nn,Ne,Nb}; 
     v::AbstractVector{T} = zeros(3), ω::AbstractVector{T} = zeros(3)) where {T,Nn,Ne,Nb}
 
-    setPosition!(mech.origin, mech.bodies[3])
-    setVelocity!(mech.bodies[3], v=v, ω=ω)
+    set_position(mech.origin, mech.bodies[3])
+    set_velocity!(mech.bodies[3], v=v, ω=ω)
 
-    setPosition!(mech.bodies[3], mech.bodies[4], Δx=[0.25; 0.0; 0.0])
-    setVelocity!(mech.bodies[4], v=zeros(3), ω=zeros(3))
+    set_position(mech.bodies[3], mech.bodies[4], Δx=[0.25; 0.0; 0.0])
+    set_velocity!(mech.bodies[4], v=zeros(3), ω=zeros(3))
 end

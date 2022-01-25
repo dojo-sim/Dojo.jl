@@ -49,7 +49,7 @@ end
 close(env)
 
 env.mechanism.eqconstraints
-controldim(env.mechanism)
+control_dimension(env.mechanism)
 sample(env.aspace)
 # sample(env.aspace)
 
@@ -87,7 +87,7 @@ end
 system = mech.system
 residual_entries = mech.residual_entries
 res = residual_entries[2]
-ste = getentry(system, 2)
+ste = get_entry(system, 2)
 @benchmark correction!($mech, $res, $ste, $eqc2)
 
 
@@ -117,7 +117,7 @@ end
 system = mech.system
 residual_entries = mech.residual_entries
 res = residual_entries[2]
-ste = getentry(system, 2)
+ste = get_entry(system, 2)
 @benchmark correction($mech, $ste, $eqc2)
 @code_warntype correction(mech, ste, eqc2)
 

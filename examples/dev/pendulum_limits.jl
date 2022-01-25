@@ -84,14 +84,14 @@ qq = axisangle2quaternion(aa)
 
 # Set data
 Nb = length(mech.bodies)
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
-attjac = attitudejacobian(data, Nb)
+data = get_data(mech)
+set_data!(mech, data)
+sol = get_solution(mech)
+attjac = attitude_jacobian(data, Nb)
 
 # # IFT
 # datamat = full_data_matrix(mech)
-setentries!(mech)
+set_entries!(mech)
 solmat = full_matrix(mech.system)
 rank(solmat)
 rank(solmat[1:9,1:9])
@@ -102,7 +102,7 @@ solmat[1:9,1:9]
 
 tra = eqc1.constraints[1]
 rot = eqc1.constraints[2]
-resetVars!(eqc1)
+reset!(eqc1)
 ηtra = eqc1.λsol[2][1:3]
 ηrot = eqc1.λsol[2][3 .+ (1:6)]
 ∂g∂ʳself(mech, eqc1)

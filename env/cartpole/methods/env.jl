@@ -12,7 +12,7 @@ function cartpole(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     initializecartpole!(mechanism)
 
     if mode == :min
-        nx = minCoordDim(mechanism)
+        nx = minimal_dimension(mechanism)
     elseif mode == :max
         nx = maxCoordDim(mechanism)
     end
@@ -24,7 +24,7 @@ function cartpole(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
 
     rng = MersenneTwister(s)
 
-    z = getMaxState(mechanism)
+    z = get_max_state(mechanism)
     x = mode == :min ? max2min(mechanism, z) : z
 
     fx = zeros(nx, nx)

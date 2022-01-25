@@ -39,15 +39,15 @@ end
 
 @inline function ∂impulses∂v!(mechanism, body::Body, ineqc::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
     Δt = mechanism.Δt
-    x3, q3 = posargs3(body.state, Δt)
-    x2, v25, q2, ϕ25 = fullargssol(body.state)
+    x3, q3 = next_configuration(body.state, Δt)
+    x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
 
     for i=1:Nc
         bnd = ineqc.constraints[i]
         p = bnd.p
         offset = bnd.offset
 
-        X = forcemapping(bnd)
+        X = force_mapping(bnd)
         λ = X' * ineqc.γsol[2]
 
         ∇ = ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * λ) * -∂vrotate∂q(offset, inv(q3)) * Tmat()
@@ -64,7 +64,7 @@ end
     return [Z; -G(mechanism, ineqc, body)]', [Z; ∂g∂v(mechanism, ineqc, body)]
 end
 
-function resetVars!(ineqc::ContactConstraint{T,N,Nc,Cs,N½}; scale::T=1.0) where {T,N,Nc,Cs,N½}
+function reset!(ineqc::ContactConstraint{T,N,Nc,Cs,N½}; scale::T=1.0) where {T,N,Nc,Cs,N½}
     ineqc.ssol[1] = scale * neutral_vector(ineqc.constraints[1])
     ineqc.ssol[2] = scale * neutral_vector(ineqc.constraints[1])
     ineqc.γsol[1] = scale * neutral_vector(ineqc.constraints[1])

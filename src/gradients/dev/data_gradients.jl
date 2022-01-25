@@ -22,8 +22,8 @@ function ∂body∂body_data(mechanism::Mechanism, body::Body{T}) where T
     Nd = data_dim(body)
     N = 6
     x1, v15, q1, ϕ15 = fullargs1(body.state)
-    x2, v25, q2, ϕ25 = fullargssol(body.state)
-    x3, q3 = posargs3(body.state, Δt)
+    x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
+    x3, q3 = next_configuration(body.state, Δt)
     # Mass
     ezg = SA{T}[0; 0; -mechanism.g]
     ∇m = [- 1 / Δt * (x2 - x1) + Δt/2 * ezg + 1 / Δt * (x3 - x2) + Δt/2 * ezg;
@@ -53,13 +53,13 @@ function ∂body∂eqc_data(mechanism::Mechanism{T}, eqc::JointConstraint{T},
     Nd = data_dim(eqc)
     N = 6
     x1, v15, q1, ϕ15 = fullargs1(body.state)
-    x2, v25, q2, ϕ25 = fullargssol(body.state)
-    x3, q3 = posargs3(body.state, Δt)
+    x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
+    x3, q3 = next_configuration(body.state, Δt)
     ∇u = Diagonal(SVector{6,T}(-1,-1,-1,-2,-2,-2)) * ∂Fτ∂u(mechanism, eqc, body)
     ∇spring = springforce(mechanism, eqc, body, unitary=true)
     ∇damper = damperforce(mechanism, eqc, body, unitary=true)
     # TODO
-    nu = controldim(eqc)
+    nu = control_dimension(eqc)
     ∇spring_offset = szeros(T,N,nu)
     return [∇u ∇spring ∇damper ∇spring_offset]
 end
@@ -69,12 +69,12 @@ function ∂body∂ineqc_data(mechanism::Mechanism, ineqc::ContactConstraint{T,N
     Nd = data_dim(ineqc)
     bound = ineqc.constraints[1]
     offset = bound.offset
-    x3, q3 = posargs3(body.state, mechanism.Δt)
+    x3, q3 = next_configuration(body.state, mechanism.Δt)
     γ = ineqc.γsol[2]
 
     ∇cf = szeros(T,3,1)
 
-    X = forcemapping(bound)
+    X = force_mapping(bound)
     # this what we differentiate: Qᵀγ = - skew(p - vrotate(offset, inv(q3))) * VRmat(q3) * LᵀVᵀmat(q3) * X' * γ
     ∇p = - ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ)
     ∇off = - ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ) * -∂vrotate∂p(offset, inv(q3))
@@ -91,8 +91,8 @@ function ∂ineqc∂ineqc_data(mechanism::Mechanism, ineqc::ContactConstraint{T,
     bound = ineqc.constraints[1]
     p = bound.p
     offset = bound.offset
-    x2, v25, q2, ϕ25 = fullargssol(body.state)
-    x3, q3 = posargs3(body.state, mechanism.Δt)
+    x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
+    x3, q3 = next_configuration(body.state, mechanism.Δt)
     s = ineqc.ssol[2]
     γ = ineqc.γsol[2]
 
@@ -124,12 +124,12 @@ end
 function ∂ineqc_data!(data_system::System, mechanism::Mechanism{T}) where {T}
     # ∂body∂ineqcdata
     for ineqc in mechanism.ineqconstraints
-        pbody = getbody(mechanism, ineqc.parentid)
+        pbody = get_body(mechanism, ineqc.parentid)
         data_system.matrix_entries[pbody.id, ineqc.id].value += ∂body∂ineqc_data(mechanism, ineqc, pbody)
     end
     # ∂ineqc∂ineqcdata
     for ineqc in mechanism.ineqconstraints
-        pbody = getbody(mechanism, ineqc.parentid)
+        pbody = get_body(mechanism, ineqc.parentid)
         data_system.matrix_entries[ineqc.id, ineqc.id].value += ∂ineqc∂ineqc_data(mechanism, ineqc, pbody)
     end
     return nothing
@@ -168,7 +168,7 @@ function ∂body_data!(data_system::System, mechanism::Mechanism{T}) where {T}
     end
     # ∂ineqc∂bodydata
     for ineqc in mechanism.ineqconstraints
-        pbody = getbody(mechanism, ineqc.parentid)
+        pbody = get_body(mechanism, ineqc.parentid)
         data_system.matrix_entries[ineqc.id, pbody.id].value += ∂ineqc∂body_data(mechanism, ineqc, pbody)
     end
     return nothing

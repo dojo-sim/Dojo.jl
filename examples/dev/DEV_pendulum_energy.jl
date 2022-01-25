@@ -53,14 +53,14 @@ visualize(mech, storage, vis = vis)
 ################################################################################
 
 # Set data
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
+data = get_data(mech)
+set_data!(mech, data)
+sol = get_solution(mech)
 Nb = length(collect(mech.bodies))
-attjac = attitudejacobian(data, Nb)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
-setentries!(mech)
+set_entries!(mech)
 datamat = full_data_matrix(deepcopy(mech))
 solmat = full_matrix(mech.system)
 sensi = - (solmat \ datamat)
@@ -267,10 +267,10 @@ plot(Gray.(fd_sensi))
 # damperforceb(jt0, bodya0, bodyb0, childidb0, Δt0)
 # damperforceb(jr0, origin0, bodya0, childida0, Δt0)
 
-# x2a0, q2a0 = posargs3(bodya0.state, Δt0)
-# x2b0, q2b0 = posargs3(bodyb0.state, Δt0)
-# x1a0, v1a0, q1a0, ω1a0 = fullargssol(bodya0.state)
-# x1b0, v1b0, q1b0, ω1b0 = fullargssol(bodyb0.state)
+# x2a0, q2a0 = next_configuration(bodya0.state, Δt0)
+# x2b0, q2b0 = next_configuration(bodyb0.state, Δt0)
+# x1a0, v1a0, q1a0, ω1a0 = current_configuration_velocity(bodya0.state)
+# x1b0, v1b0, q1b0, ω1b0 = current_configuration_velocity(bodyb0.state)
 
 # Random.seed!(100)
 # x2a0 = rand(3)

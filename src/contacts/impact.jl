@@ -14,8 +14,8 @@ end
 
 function g(mechanism, ineqc::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{ImpactContact{T,N}}}
     bound = ineqc.constraints[1]
-    body = getbody(mechanism, ineqc.parentid)
-    x3, q3 = posargs3(body.state, mechanism.Δt)
+    body = get_body(mechanism, ineqc.parentid)
+    x3, q3 = next_configuration(body.state, mechanism.Δt)
     SVector{1,T}(bound.ainv3 * (x3 + vrotate(bound.p,q3) - bound.offset) - ineqc.ssol[2][1])
 end
 
@@ -40,12 +40,12 @@ end
     return [X Q]
 end
 
-@inline function forcemapping(bound::ImpactContact)
+@inline function force_mapping(bound::ImpactContact)
     X = bound.ainv3
     return X
 end
 
-@inline function setDandΔs!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
+@inline function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
     ineqc::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ImpactContact{T,N}},N½}
     # ∇ssol[γsol .* ssol - μ; g - s] = [diag(γsol); -diag(0,1,1)]
     # ∇γsol[γsol .* ssol - μ; g - s] = [diag(ssol); -diag(1,0,0)]

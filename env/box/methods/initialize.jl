@@ -35,7 +35,7 @@ function getbox(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, radius=0.0, side=0.5,
         offset = [[0,0,radius] for i = 1:n]
         cf = cf * ones(n)
 
-        ineqcs = contactconstraint(body1, normal, cf=cf, p=corners, offset=offset, contact_type=contact_type)
+        ineqcs = contact_constraint(body1, normal, cf=cf, p=corners, offset=offset, contact_type=contact_type)
         mech = Mechanism(origin, bodies, eqcs, ineqcs, g=g, Δt=Δt)
     else
         mech = Mechanism(origin, bodies, eqcs, g=g, Δt=Δt)
@@ -61,6 +61,6 @@ function initializebox!(mechanism::Mechanism;
     end
 
     z = halfside + offset
-    setPosition!(body, x = x + [0,0,z], q = q)
-    setVelocity!(body, v = v, ω = ω)
+    set_position(body, x = x + [0,0,z], q = q)
+    set_velocity!(body, v = v, ω = ω)
 end

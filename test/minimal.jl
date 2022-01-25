@@ -28,7 +28,7 @@ function quaterror(q0::AbstractVector, q1::AbstractVector, p::Real = Inf)
 end
 
 ################################################################################
-# Test setPosition! and setVelocity!
+# Test set_position and set_velocity!
 ################################################################################\
 @testset "minMaxCoord: setPos!, setVel!" begin
 	mech = Dojo.getmechanism(:raiberthopper)
@@ -42,14 +42,14 @@ end
 	x = srand(1)
 	Δx = Dojo.zerodimstaticadjoint(Dojo.nullspacemat(tra2)) * x
 	Δq = UnitQuaternion(rand(4)...)
-	Dojo.setPosition!(body1, body2; p1 = tra2.vertices[1], p2 = tra2.vertices[2], Δx = Δx, Δq = Δq)
-	@test norm(Dojo.minimalCoordinates(tra2, body1, body2) - x[1], Inf) < 1e-10
+	Dojo.set_position(body1, body2; p1 = tra2.vertices[1], p2 = tra2.vertices[2], Δx = Δx, Δq = Δq)
+	@test norm(Dojo.minimal_coordinates(tra2, body1, body2) - x[1], Inf) < 1e-10
 
 	v = srand(1)
 	Δv = Dojo.zerodimstaticadjoint(Dojo.nullspacemat(tra2)) * v
 	Δω = rand(3)
-	Dojo.setVelocity!(body1, body2; p1 = tra2.vertices[1], p2 = tra2.vertices[2], Δv = Δv, Δω = Δω)
-	@test norm(Dojo.minimalVelocities(tra2, body1, body2) - v[1], Inf) < 1e-10
+	Dojo.set_velocity!(body1, body2; p1 = tra2.vertices[1], p2 = tra2.vertices[2], Δv = Δv, Δω = Δω)
+	@test norm(Dojo.minimal_velocities(tra2, body1, body2) - v[1], Inf) < 1e-10
 end
 
 ################################################################################
@@ -60,7 +60,7 @@ end
 @testset "min -> max -> min: raiberthopper" begin
 	mech = Dojo.getmechanism(:raiberthopper);
 	Random.seed!(100)
-	nx = Dojo.minCoordDim(mech)
+	nx = Dojo.minimal_dimension(mech)
 	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(nx - 13)]
 	z0 = Dojo.min2max(mech, x0)
 	x1 = Dojo.max2min(mech, z0)
@@ -75,7 +75,7 @@ end
 @testset "min -> max -> min: box" begin
 	mech = Dojo.getmechanism(:box)
 	Random.seed!(100)
-	nx = Dojo.minCoordDim(mech)
+	nx = Dojo.minimal_dimension(mech)
 	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(abs(nx - 13))]
 	z0 = Dojo.min2max(mech, x0)
 	x1 = Dojo.max2min(mech, z0)
@@ -89,7 +89,7 @@ end
 @testset "min -> max -> min: pendulum" begin
 	mech = Dojo.getmechanism(:pendulum)
 	Random.seed!(100)
-	nx = Dojo.minCoordDim(mech)
+	nx = Dojo.minimal_dimension(mech)
 	x0 = rand(nx)
 	z0 = Dojo.min2max(mech, x0)
 	x1 = Dojo.max2min(mech, z0)
@@ -100,7 +100,7 @@ end
 @testset "min -> max -> min: halfcheetah" begin
 	mech = Dojo.getmechanism(:halfcheetah)
 	Random.seed!(100)
-	nx = Dojo.minCoordDim(mech)
+	nx = Dojo.minimal_dimension(mech)
 	x0 = rand(nx)
 	z0 = Dojo.min2max(mech, x0)
 	x1 = Dojo.max2min(mech, z0)
@@ -112,7 +112,7 @@ end
 	Nb0 = 5
 	mech = Dojo.getmechanism(:nslider, Nb = Nb0)
 	Random.seed!(100)
-	nx = Dojo.minCoordDim(mech)
+	nx = Dojo.minimal_dimension(mech)
 	x0 = rand(nx)
 	z0 = Dojo.min2max(mech, x0)
 	x1 = Dojo.max2min(mech, z0)
@@ -126,7 +126,7 @@ end
 		Nb0 = 5
 		mech = Dojo.getmechanism(:npendulum, Nb = Nb0, jointtype = jointtype)
 		Random.seed!(100)
-		nx = Dojo.minCoordDim(mech)
+		nx = Dojo.minimal_dimension(mech)
 		x0 = rand(nx)
 		z0 = Dojo.min2max(mech, x0)
 		x1 = Dojo.max2min(mech, z0)
@@ -142,7 +142,7 @@ end
 	mech = Dojo.getmechanism(:snake, Nb = Nb0, jointtype = jointtype)
 	mech = Dojo.getmechanism(:snake, Nb = Nb0, jointtype = :Fixed)
 	Random.seed!(100)
-	nx = Dojo.minCoordDim(mech)
+	nx = Dojo.minimal_dimension(mech)
 	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(abs(nx - 13))]
 	z0 = Dojo.min2max(mech, x0)
 	x1 = Dojo.max2min(mech, z0)
@@ -160,7 +160,7 @@ end
 		Nb0 = 5
 		mech = Dojo.getmechanism(:twister, Nb = Nb0, jointtype = jointtype)
 		Random.seed!(100)
-		nx = Dojo.minCoordDim(mech)
+		nx = Dojo.minimal_dimension(mech)
 		x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(abs(nx - 13))]
 		z0 = Dojo.min2max(mech, x0)
 		x1 = Dojo.max2min(mech, z0)
@@ -175,7 +175,7 @@ end
 @testset "min -> max -> min: humanoid" begin
 	mech = Dojo.getmechanism(:humanoid)
 	Random.seed!(100)
-	nx = Dojo.minCoordDim(mech)
+	nx = Dojo.minimal_dimension(mech)
 	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(abs(nx - 13))]
 	z0 = Dojo.min2max(mech, x0)
 	x1 = Dojo.max2min(mech, z0)
@@ -189,7 +189,7 @@ end
 @testset "min -> max -> min: quadruped" begin
 	mech = Dojo.getmechanism(:quadruped)
 	Random.seed!(100)
-	nx = Dojo.minCoordDim(mech)
+	nx = Dojo.minimal_dimension(mech)
 	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(abs(nx - 13))]
 	z0 = Dojo.min2max(mech, x0)
 	x1 = Dojo.max2min(mech, z0)
@@ -203,7 +203,7 @@ end
 @testset "min -> max -> min: atlas" begin
 	mech = Dojo.getmechanism(:atlas, model_type = :simple, contact = true, damper = 10.0)
 	Random.seed!(100)
-	nx = Dojo.minCoordDim(mech)
+	nx = Dojo.minimal_dimension(mech)
 	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(abs(nx - 13))]
 	z0 = Dojo.min2max(mech, x0)
 	x1 = Dojo.max2min(mech, z0)

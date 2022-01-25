@@ -442,7 +442,7 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
     qjointlist = Dict{Int64,UnitQuaternion{T}}() # stores id, q in world frame
 
     for id in reverse(system.dfs_list) # from root to leaves
-        node = getnode(mechanism, id)
+        node = get_node(mechanism, id)
         !(node isa Body) && continue # only for bodies
 
         body = node
@@ -451,7 +451,7 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         shape = body.shape
 
         parentid = get_parentid(mechanism, id, loopjoints)
-        constraint = geteqconstraint(mechanism, parentid)
+        constraint = get_joint_constraint(mechanism, parentid)
 
         grandparentid = constraint.parentid
         if grandparentid === nothing # predecessor is origin
@@ -463,10 +463,10 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
             xparentjoint = SA{T}[0; 0; 0]
             qparentjoint = one(UnitQuaternion{T})
         else
-            parentbody = getbody(mechanism, grandparentid)
+            parentbody = get_body(mechanism, grandparentid)
 
             grandgrandparentid = get_parentid(mechanism, grandparentid, loopjoints)
-            parentconstraint = geteqconstraint(mechanism, grandgrandparentid)
+            parentconstraint = get_joint_constraint(mechanism, grandgrandparentid)
 
             xparentbody = parentbody.state.x2[1] # in world frame
             qparentbody = parentbody.state.q2[1] # in world frame
@@ -503,8 +503,8 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         constraint.constraints[ind2].qoffset = qoffset # in parent's (parentbody) frame
 
         # actual body properties
-        setPosition!(body) # set everything to zero
-        setPosition!(parentbody, body, p1 = p1, p2 = p2, Δq = qoffset)
+        set_position(body) # set everything to zero
+        set_position(parentbody, body, p1 = p1, p2 = p2, Δq = qoffset)
         xbody = body.state.x2[1]
         qbody = body.state.q2[1]
 
@@ -528,10 +528,10 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
             xparentjoint1 = SA{T}[0; 0; 0]
             qparentjoint1 = one(UnitQuaternion{T})
         else
-            parentbody1 = getbody(mechanism, parentid1)
+            parentbody1 = get_body(mechanism, parentid1)
 
             grandparentid1 = get_parentid(mechanism, parentid1, loopjoints)
-            parentconstraint1 = geteqconstraint(mechanism, grandparentid1)
+            parentconstraint1 = get_joint_constraint(mechanism, grandparentid1)
 
             xparentbody1 = parentbody1.state.x2[1] # in world frame
             qparentbody1 = parentbody1.state.q2[1] # in world frame
@@ -539,10 +539,10 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
             xparentjoint1 = xjointlist[parentconstraint1.id] # in world frame
             qparentjoint1 = qjointlist[parentconstraint1.id] # in world frame
         end
-        parentbody2 = getbody(mechanism, parentid2)
+        parentbody2 = get_body(mechanism, parentid2)
 
         grandparentid2 = get_parentid(mechanism, parentid2, loopjoints)
-        parentconstraint2 = geteqconstraint(mechanism, grandparentid2)
+        parentconstraint2 = get_joint_constraint(mechanism, grandparentid2)
 
         xparentbody2 = parentbody2.state.x2[1] # in world frame
         qparentbody2 = parentbody2.state.q2[1] # in world frame
@@ -579,7 +579,7 @@ function get_parentid(mechanism, id, loopjoints)
     system = mechanism.system
     conns = connections(system, id)
     for connsid in conns
-        constraint = geteqconstraint(mechanism, connsid)
+        constraint = get_joint_constraint(mechanism, connsid)
         if constraint ∉ loopjoints && id ∈ constraint.childids
             return connsid
         end

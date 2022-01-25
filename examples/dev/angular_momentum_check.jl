@@ -28,14 +28,14 @@ Nb_ = 2
 
 function controller!(mechanism, k)
     for (i,joint) in enumerate(mechanism.eqconstraints)
-        nu = controldim(joint)
+        nu = control_dimension(joint)
         if 5 >= nu >= 1
             if k ∈ (1:1)
                 u = 0.0e-0 * Δt_ * [1.0; zeros(nu-1)]
             else
                 u = 0.0 * [1.0; zeros(nu-1)]
             end
-            setForce!(joint, SA[u...])
+            set_input!(joint, SA[u...])
         end
     end
     return
@@ -55,7 +55,7 @@ initialize!(mech, :snake, ϕ1 = ϕ1_, v=v_, ω=ω_, Δv = Δv_, Δω = Δω_)
 
 storage = simulate!(mech, 1.0, record = true, solver = :mehrotra!, verbose = false)
 m0 = momentum(mech)
-e0 = mechanicalEnergy(mech)
+e0 = mechanical_energy(mech)
 mech = getmechanism(:snake, Δt = Δt_, g = 0.00, contact = false, spring = 0.0, damper = 0.0, Nb = Nb_, jointtype = jointtype)
 initialize!(mech, :snake, ϕ1 = ϕ1_, v=v_, ω=ω_, Δv = Δv_, Δω = Δω_)
 # mech = getmechanism(:npendulum, Δt = 0.01, g = 0.0 * -9.81, Nb = Nb_)
@@ -63,7 +63,7 @@ initialize!(mech, :snake, ϕ1 = ϕ1_, v=v_, ω=ω_, Δv = Δv_, Δω = Δω_)
 
 storage = simulate!(mech, 5.00, record = true, solver = :mehrotra!, verbose = false)
 m1 = momentum(mech)
-e1 = mechanicalEnergy(mech)
+e1 = mechanical_energy(mech)
 
 abs(e1 - e0)
 norm((m1 - m0)[1:3], Inf)
@@ -104,14 +104,14 @@ plot!(hcat(Vector.(storage.ω[2])...)', width=1.0, color=:red, label="")
 
 
 # test solmat
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
+data = get_data(mech)
+set_data!(mech, data)
+sol = get_solution(mech)
 Nb = length(collect(mech.bodies))
-attjac = attitudejacobian(data, Nb)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
-setentries!(mech)
+set_entries!(mech)
 datamat = full_data_matrix(deepcopy(mech))
 solmat = full_matrix(mech.system)
 sensi = - (solmat \ datamat)
@@ -141,14 +141,14 @@ v_ = 0.0*rand(3)
 
 function controller!(mechanism, k)
     for (i,joint) in enumerate(mechanism.eqconstraints)
-        nu = controldim(joint)
+        nu = control_dimension(joint)
         if nu <= 5
             if k ∈ (10:10 + 100n)
                 u = 1.0 * 3e-2 * Δt_ * [1.0, 0.0, 0.0] #[0.0; 1.0; zeros(nu-2)]
             else
                 u = zeros(nu)
             end
-            setForce!(joint, SA[u...])
+            set_input!(joint, SA[u...])
         end
     end
     return

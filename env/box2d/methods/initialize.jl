@@ -30,7 +30,7 @@ function getbox2d(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, radius=0.0, side=0.5,
         offset = [[0,0,radius] for i = 1:n]
         cf = cf * ones(n)
 
-        ineqcs = contactconstraint(body1, normal, cf=cf, p=corners, offset=offset, contact_type=contact_type)
+        ineqcs = contact_constraint(body1, normal, cf=cf, p=corners, offset=offset, contact_type=contact_type)
         mech = Mechanism(origin, bodies, eqcs, ineqcs, g=g, Δt=Δt)
     else
         mech = Mechanism(origin, bodies, eqcs, g = g, Δt = Δt)
@@ -45,6 +45,6 @@ function initializebox2d!(mechanism::Mechanism; x::AbstractVector{T} = [0,1.],
     offset = bound.offset[3]
     z = side + offset
     body = mechanism.bodies.values[1]
-    setPosition!(body, x = [0;x] + [0,0,z], q = UnitQuaternion(RotX(θ)))
-    setVelocity!(body, v = [0;v], ω = [ω,0,0])
+    set_position(body, x = [0;x] + [0,0,z], q = UnitQuaternion(RotX(θ)))
+    set_velocity!(body, v = [0;v], ω = [ω,0,0])
 end

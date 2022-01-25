@@ -32,10 +32,10 @@ function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0,
         cf = cf * ones(T, n)
         names = ["RR", "FR", "RL", "RR"]
 
-        ineqcs1 = contactconstraint(getbody(mech, :l_foot), normal, cf=cf, p=contacts, offset=offset, names=[Symbol("l_" .* name) for name in names])
-        ineqcs2 = contactconstraint(getbody(mech, :r_foot), normal, cf=cf, p=contacts, offset=offset, names=[Symbol("r_" .* name) for name in names])
+        ineqcs1 = contact_constraint(get_body(mech, :l_foot), normal, cf=cf, p=contacts, offset=offset, names=[Symbol("l_" .* name) for name in names])
+        ineqcs2 = contact_constraint(get_body(mech, :r_foot), normal, cf=cf, p=contacts, offset=offset, names=[Symbol("r_" .* name) for name in names])
 
-        setPosition!(mech, geteqconstraint(mech, :auto_generated_floating_joint), [0;0;0.9385;0.;0.;0.])
+        set_position(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [0;0;0.9385;0.;0.;0.])
         mech = Mechanism(origin, bodies, eqs, [ineqcs1; ineqcs2], g = g, Δt = Δt, spring=spring, damper=damper)
     end
     return mech
@@ -51,15 +51,15 @@ function initializeatlas!(mechanism::Mechanism;
 
     # positions
     try
-        setPosition!(mechanism,
-                geteqconstraint(mechanism, :auto_generated_floating_joint),
+        set_position(mechanism,
+                get_joint_constraint(mechanism, :auto_generated_floating_joint),
                 [tran; rot])
-        setPosition!(mechanism, geteqconstraint(mechanism, :l_leg_hpxyz), [0.0, -αhip, 0.0])
-        setPosition!(mechanism, geteqconstraint(mechanism, :r_leg_hpxyz), [0.0, -αhip, 0.0])
-        setPosition!(mechanism, geteqconstraint(mechanism, :l_leg_kny), [αknee])
-        setPosition!(mechanism, geteqconstraint(mechanism, :r_leg_kny), [αknee])
-        setPosition!(mechanism, geteqconstraint(mechanism, :l_leg_akxy), [αhip-αknee, 0.0])
-        setPosition!(mechanism, geteqconstraint(mechanism, :r_leg_akxy), [αhip-αknee, 0.0])
+        set_position(mechanism, get_joint_constraint(mechanism, :l_leg_hpxyz), [0.0, -αhip, 0.0])
+        set_position(mechanism, get_joint_constraint(mechanism, :r_leg_hpxyz), [0.0, -αhip, 0.0])
+        set_position(mechanism, get_joint_constraint(mechanism, :l_leg_kny), [αknee])
+        set_position(mechanism, get_joint_constraint(mechanism, :r_leg_kny), [αknee])
+        set_position(mechanism, get_joint_constraint(mechanism, :l_leg_akxy), [αhip-αknee, 0.0])
+        set_position(mechanism, get_joint_constraint(mechanism, :r_leg_akxy), [αhip-αknee, 0.0])
     catch
         nothing
     end
@@ -79,47 +79,47 @@ function initializeatlasstance!(mechanism::Mechanism;
 
     # positions
     try
-        setPosition!(mech,
-        geteqconstraint(mech, :auto_generated_floating_joint),
+        set_position(mech,
+        get_joint_constraint(mech, :auto_generated_floating_joint),
         [[0,0,0.5]; [0.0,0.0, 0.0]])
-        # setPosition!(mech, geteqconstraint(mech, :l_leg_hpxyz), [0.0, -αhip, 0.0])
-        # setPosition!(mech, geteqconstraint(mech, :r_leg_hpxyz), [0.0, -αhip, 0.0])
-        setPosition!(mech, geteqconstraint(mech, :l_leg_kny), [αknee])
-        setPosition!(mech, geteqconstraint(mech, :r_leg_kny), [αknee])
-        # setPosition!(mech, geteqconstraint(mech, :l_leg_akxy), [αhip-αknee, 0.0])
-        # setPosition!(mech, geteqconstraint(mech, :r_leg_akxy), [αhip-αknee, 0.0])
+        # set_position(mech, get_joint_constraint(mech, :l_leg_hpxyz), [0.0, -αhip, 0.0])
+        # set_position(mech, get_joint_constraint(mech, :r_leg_hpxyz), [0.0, -αhip, 0.0])
+        set_position(mech, get_joint_constraint(mech, :l_leg_kny), [αknee])
+        set_position(mech, get_joint_constraint(mech, :r_leg_kny), [αknee])
+        # set_position(mech, get_joint_constraint(mech, :l_leg_akxy), [αhip-αknee, 0.0])
+        # set_position(mech, get_joint_constraint(mech, :r_leg_akxy), [αhip-αknee, 0.0])
 
-        setPosition!(mech, geteqconstraint(mech, :auto_generated_floating_joint), [tran; rot])
-        setPosition!(mech, geteqconstraint(mech, :back_bkx), [0.0  * π])
-        setPosition!(mech, geteqconstraint(mech, :back_bky), [0.04 * π])
-        setPosition!(mech, geteqconstraint(mech, :back_bkz), [0.0 * π])
-        setPosition!(mech, geteqconstraint(mech, :l_arm_elx), [0.25 * π])
-        setPosition!(mech, geteqconstraint(mech, :l_arm_ely), [0.5 * π])
-        setPosition!(mech, geteqconstraint(mech, :l_arm_shx), [-0.5 * π])
-        setPosition!(mech, geteqconstraint(mech, :l_arm_shz), [0.0 * π])
-        setPosition!(mech, geteqconstraint(mech, :l_arm_mwx), [0.0 * π])
-        setPosition!(mech, geteqconstraint(mech, :l_arm_uwy), [0.0 * π])
-        # setPosition!(mech, geteqconstraint(mech, :l_arm_lwy), [0.0])
-        # setPosition!(mech, geteqconstraint(mech, :l_leg_akx), [0.0])
-        setPosition!(mech, geteqconstraint(mech, :l_leg_aky), [-0.1 * π])
-        # setPosition!(mech, geteqconstraint(mech, :l_leg_hpx), [0.0])
-        setPosition!(mech, geteqconstraint(mech, :l_leg_hpy), [-0.1 * π])
-        # setPosition!(mech, geteqconstraint(mech, :l_leg_hpz), [0.0])
-        setPosition!(mech, geteqconstraint(mech, :l_leg_kny), [0.2 * π])
-        setPosition!(mech, geteqconstraint(mech, :neck_ay), [0.0])
-        setPosition!(mech, geteqconstraint(mech, :r_arm_elx), [-0.25 * π])
-        setPosition!(mech, geteqconstraint(mech, :r_arm_ely), [0.5 * π])
-        setPosition!(mech, geteqconstraint(mech, :r_arm_shx), [0.5 * π])
-        setPosition!(mech, geteqconstraint(mech, :r_arm_shz), [0.0 * π])
-        setPosition!(mech, geteqconstraint(mech, :r_arm_mwx), [0.0 * π])
-        setPosition!(mech, geteqconstraint(mech, :r_arm_uwy), [0.0 * π])
-        setPosition!(mech, geteqconstraint(mech, :r_arm_lwy), [0.0 * π])
-        # setPosition!(mech, geteqconstraint(mech, :r_leg_akx), [0.0])
-        setPosition!(mech, geteqconstraint(mech, :r_leg_aky), [-0.1 * π])
-        # setPosition!(mech, geteqconstraint(mech, :r_leg_hpx), [0.0])
-        setPosition!(mech, geteqconstraint(mech, :r_leg_hpy), [-0.1 * π])
-        # setPosition!(mech, geteqconstraint(mech, :r_leg_hpz), [0.0 * π])
-        setPosition!(mech, geteqconstraint(mech, :r_leg_kny), [0.2 * π])
+        set_position(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [tran; rot])
+        set_position(mech, get_joint_constraint(mech, :back_bkx), [0.0  * π])
+        set_position(mech, get_joint_constraint(mech, :back_bky), [0.04 * π])
+        set_position(mech, get_joint_constraint(mech, :back_bkz), [0.0 * π])
+        set_position(mech, get_joint_constraint(mech, :l_arm_elx), [0.25 * π])
+        set_position(mech, get_joint_constraint(mech, :l_arm_ely), [0.5 * π])
+        set_position(mech, get_joint_constraint(mech, :l_arm_shx), [-0.5 * π])
+        set_position(mech, get_joint_constraint(mech, :l_arm_shz), [0.0 * π])
+        set_position(mech, get_joint_constraint(mech, :l_arm_mwx), [0.0 * π])
+        set_position(mech, get_joint_constraint(mech, :l_arm_uwy), [0.0 * π])
+        # set_position(mech, get_joint_constraint(mech, :l_arm_lwy), [0.0])
+        # set_position(mech, get_joint_constraint(mech, :l_leg_akx), [0.0])
+        set_position(mech, get_joint_constraint(mech, :l_leg_aky), [-0.1 * π])
+        # set_position(mech, get_joint_constraint(mech, :l_leg_hpx), [0.0])
+        set_position(mech, get_joint_constraint(mech, :l_leg_hpy), [-0.1 * π])
+        # set_position(mech, get_joint_constraint(mech, :l_leg_hpz), [0.0])
+        set_position(mech, get_joint_constraint(mech, :l_leg_kny), [0.2 * π])
+        set_position(mech, get_joint_constraint(mech, :neck_ay), [0.0])
+        set_position(mech, get_joint_constraint(mech, :r_arm_elx), [-0.25 * π])
+        set_position(mech, get_joint_constraint(mech, :r_arm_ely), [0.5 * π])
+        set_position(mech, get_joint_constraint(mech, :r_arm_shx), [0.5 * π])
+        set_position(mech, get_joint_constraint(mech, :r_arm_shz), [0.0 * π])
+        set_position(mech, get_joint_constraint(mech, :r_arm_mwx), [0.0 * π])
+        set_position(mech, get_joint_constraint(mech, :r_arm_uwy), [0.0 * π])
+        set_position(mech, get_joint_constraint(mech, :r_arm_lwy), [0.0 * π])
+        # set_position(mech, get_joint_constraint(mech, :r_leg_akx), [0.0])
+        set_position(mech, get_joint_constraint(mech, :r_leg_aky), [-0.1 * π])
+        # set_position(mech, get_joint_constraint(mech, :r_leg_hpx), [0.0])
+        set_position(mech, get_joint_constraint(mech, :r_leg_hpy), [-0.1 * π])
+        # set_position(mech, get_joint_constraint(mech, :r_leg_hpz), [0.0 * π])
+        set_position(mech, get_joint_constraint(mech, :r_leg_kny), [0.2 * π])
     catch
         nothing
     end

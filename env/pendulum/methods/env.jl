@@ -12,16 +12,16 @@ function pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
     initialize!(mechanism, :pendulum)
 
     if mode == :min
-        nx = minCoordDim(mechanism)
+        nx = minimal_dimension(mechanism)
         no = 3
     elseif mode == :max
         nx = maxCoordDim(mechanism)
         no = 13
     end
-    nu = controldim(mechanism)
+    nu = control_dimension(mechanism)
 
     high = [1.0, 1.0, max_speed]
-    aspace = BoxSpace(controldim(mechanism), low=[-dt*max_torque], high=[dt*max_torque])
+    aspace = BoxSpace(control_dimension(mechanism), low=[-dt*max_torque], high=[dt*max_torque])
     ospace = BoxSpace(no, low=-high, high=high)
     rng = [MersenneTwister(s),]
 

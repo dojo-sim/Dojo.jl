@@ -32,10 +32,10 @@ function initializeorbital!(mechanism::Mechanism; ϕx::T = pi/4, ϕy::T = pi/8) 
     vert12 = - vert11
 
     # set position and velocities
-    setPosition!(mechanism.origin, body1, p2 = vert11, Δq = UnitQuaternion(RotX(0.0)))
+    set_position(mechanism.origin, body1, p2 = vert11, Δq = UnitQuaternion(RotX(0.0)))
 
     previd = body1.id
-    setPosition!(mechanism, collect(mechanism.eqconstraints)[2], [ϕx, ϕy])
+    set_position(mechanism, collect(mechanism.eqconstraints)[2], [ϕx, ϕy])
 
     zeroVelocity!(mechanism)
 end

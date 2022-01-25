@@ -13,8 +13,8 @@ function initializetennisracket!(mechanism::Mechanism; x::AbstractVector{T}=zero
         q::UnitQuaternion{T}=one(UnitQuaternion), v::AbstractVector{T}=zeros(3),
         ω::AbstractVector{T}=zeros(3)) where {T}
 
-    eqc = geteqconstraint(mechanism, :floating_joint)
+    eqc = get_joint_constraint(mechanism, :floating_joint)
     zeroVelocity!(mechanism)
-    setPosition!(mechanism, eqc, [x; rotation_vector(q)])
-    setVelocity!(mechanism, eqc, [v; ω])
+    set_position(mechanism, eqc, [x; rotation_vector(q)])
+    set_velocity!(mechanism, eqc, [v; ω])
 end

@@ -18,8 +18,8 @@ function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
     eqcs = mechanism.eqconstraints
     ineqcs = mechanism.ineqconstraints
 
-	resetVars!.(mechanism.ineqconstraints, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
-	resetVars!.(mechanism.eqconstraints, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
+	reset!.(mechanism.ineqconstraints, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
+	reset!.(mechanism.eqconstraints, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
     mechanism.μ = 0.0
 	μtarget = 0.0
 	no_progress = 0
@@ -27,10 +27,10 @@ function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
     α = 1.0
 
 	initial_state!.(mechanism.ineqconstraints) # TODO: redundant with resetVars--remove
-    setentries!(mechanism) # compute the residual
+    set_entries!(mechanism) # compute the residual
 
-    bvio = bilinear_violation(mechanism) # does not require to apply setentries!
-    rvio = residual_violation(mechanism) # does not require to apply setentries!
+    bvio = bilinear_violation(mechanism) # does not require to apply set_entries!
+    rvio = residual_violation(mechanism) # does not require to apply set_entries!
 
 	opts.verbose && println("-----------------------------------------------------------------")
 
@@ -43,12 +43,12 @@ function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
 
         # affine search direction
 		μ = 0.0
-		pullresidual!(mechanism)                # store the residual inside mechanism.residual_entries
+		pull_residual!(mechanism)                # store the residual inside mechanism.residual_entries
         ldu_factorization!(mechanism.system)    # factorize system, modifies the matrix in place
-        pullmatrix!(mechanism)                  # store the factorized matrix inside mechanism.matrix_entries
+        pull_matrix!(mechanism)                  # store the factorized matrix inside mechanism.matrix_entries
         ldu_backsubstitution!(mechanism.system) # solve system, modifies the vector in place
 
-		αaff = feasibilityStepLength!(mechanism; τort=0.95, τsoc=0.95, scaling=false) # uses system.vector_entries which holds the search drection
+		αaff = feasibility_linesearch!(mechanism; τort=0.95, τsoc=0.95, scaling=false) # uses system.vector_entries which holds the search drection
 		ν, νaff = centering!(mechanism, αaff)
 		σcentering = clamp(νaff / (ν + 1e-20), 0.0, 1.0)^3
 
@@ -58,27 +58,27 @@ function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
 		correction!(mechanism) # update the residual in mechanism.residual_entries
 		# mechanism.μ = 0.0
 
-		pushresidual!(mechanism)                # cache residual + correction
-        pushmatrix!(mechanism)                  # restore the factorized matrix
+		push_residual!(mechanism)                # cache residual + correction
+        push_matrix!(mechanism)                  # restore the factorized matrix
         ldu_backsubstitution!(mechanism.system) # solve system
 
 		τ = max(0.95, 1 - max(rvio, bvio)^2) # τ = 0.95
-		α = feasibilityStepLength!(mechanism; τort=τ, τsoc=min(τ, 0.95), scaling=false) # uses system.vector_entries which holds the corrected search drection
+		α = feasibility_linesearch!(mechanism; τort=τ, τsoc=min(τ, 0.95), scaling=false) # uses system.vector_entries which holds the corrected search drection
 
 		# steps taken without making progress
-		rvio_, bvio_ = lineSearch!(mechanism, α, rvio, bvio, opts; warning=false)
+		rvio_, bvio_ = line_search!(mechanism, α, rvio, bvio, opts; warning=false)
 		made_progress = (!(rvio_ < opts.rtol) && (rvio_ < 0.8rvio)) || (!(bvio_ < opts.btol) && (bvio_ < 0.8bvio)) # we only care when progress is made while the tolerance is not met
 		made_progress ? no_progress = max(no_progress - 1, 0) : no_progress += 1
 		rvio, bvio = rvio_, bvio_
 		(no_progress >= opts.no_progress_max) && (undercut *= opts.no_progress_undercut)
 
 		# update solution
-        updatesolution!.(mechanism.bodies)
-        updatesolution!.(mechanism.eqconstraints)
-        updatesolution!.(mechanism.ineqconstraints)
+        update_solution!.(mechanism.bodies)
+        update_solution!.(mechanism.eqconstraints)
+        update_solution!.(mechanism.ineqconstraints)
 
 		# recompute Jacobian and residual
-        setentries!(mechanism)
+        set_entries!(mechanism)
     end
 
     return
@@ -155,8 +155,8 @@ function correction!(mechanism)
 	residual_entries = mechanism.residual_entries
 
     for id in reverse(system.dfs_list)
-        node = getnode(mechanism, id)
-        correction!(mechanism, residual_entries[id], getentry(system, id), node)
+        node = get_node(mechanism, id)
+        correction!(mechanism, residual_entries[id], get_entry(system, id), node)
     end
 	return
 end
@@ -202,38 +202,38 @@ end
 	return [- Δs .* Δγ .+ μ; szeros(Nb + Nλ)]
 end
 
-function pullresidual!(mechanism::Mechanism)
+function pull_residual!(mechanism::Mechanism)
 	for i in eachindex(mechanism.residual_entries)
 		mechanism.residual_entries[i].value = mechanism.system.vector_entries[i].value
 	end
 	return
 end
 
-function pushresidual!(mechanism::Mechanism)
+function push_residual!(mechanism::Mechanism)
 	for i in eachindex(mechanism.residual_entries)
 		mechanism.system.vector_entries[i].value = mechanism.residual_entries[i].value
 	end
 	return
 end
 
-function pullmatrix!(mechanism::Mechanism)
+function pull_matrix!(mechanism::Mechanism)
 	mechanism.matrix_entries.nzval .= mechanism.system.matrix_entries.nzval #TODO: make allocation free
 	return
 end
 
-function pushmatrix!(mechanism::Mechanism)
+function push_matrix!(mechanism::Mechanism)
 	mechanism.system.matrix_entries.nzval .= mechanism.matrix_entries.nzval #TODO: make allocation free
 	return
 end
 
-function savediagonalinverses!(mechanism::Mechanism)
+function save_diagonal_inverses!(mechanism::Mechanism)
 	for i in eachindex(mechanism.diagonal_inverses)
 		mechanism.diagonal_inverses[i] = deepcopy(mechanism.system.diagonal_inverses[i])
 	end
 	return
 end
 
-function pushdiagonalinverses!(mechanism::Mechanism)
+function push_diagonal_inverses!(mechanism::Mechanism)
 	for i in eachindex(mechanism.diagonal_inverses)
 		mechanism.system.diagonal_inverses[i] = deepcopy(mechanism.diagonal_inverses[i])
 	end
