@@ -33,7 +33,7 @@ obs = reset(env)[2]
 render(env)
 
 1000*sample(env.aspace)
-collect(env.mechanism.eqconstraints)[1]
+collect(env.mechanism.joints)[1]
 for i = 1:25
     render(env)
     sleep(0.05)
@@ -48,7 +48,7 @@ for i = 1:25
 end
 close(env)
 
-env.mechanism.eqconstraints
+env.mechanism.joints
 control_dimension(env.mechanism)
 sample(env.aspace)
 # sample(env.aspace)
@@ -61,8 +61,8 @@ sample(env.aspace)
 
 
 using BenchmarkTools
-eqc1 = collect(mech.eqconstraints)[1]
-eqc2 = collect(mech.eqconstraints)[2]
+eqc1 = collect(mech.joints)[1]
+eqc2 = collect(mech.joints)[2]
 joint21 = eqc2.constraints[1]
 joint22 = eqc2.constraints[2]
 @benchmark λindex(eqc1, 1)

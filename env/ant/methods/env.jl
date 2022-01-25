@@ -77,7 +77,7 @@ function step(env::Environment{Ant}, x, u; diff=false)
     # contact cost
     contact_cost = 0.0
 
-    for ineq in mechanism.ineqconstraints
+    for ineq in mechanism.contacts
         contact_cost += 0.5 * 1.0e-3 * max(-1.0, min(1.0, ineq.γsol[2][1]))^2.0
     end
 
@@ -134,7 +134,7 @@ end
 
 function _get_obs(env::Environment{Ant,T}) where T
     contact_force = T[]
-    for ineq in env.mechanism.ineqconstraints
+    for ineq in env.mechanism.contacts
         push!(contact_force, max(-1.0, min(1.0, ineq.γsol[2][1])))
     end
     return [env.x; contact_force]

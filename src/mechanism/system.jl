@@ -1,11 +1,11 @@
-function create_system(origin::Origin{T}, eqconstraints::Vector{<:JointConstraint}, bodies::Vector{<:Body},
-    ineqconstraints::Vector{<:ContactConstraint}) where T
+function create_system(origin::Origin{T}, joints::Vector{<:JointConstraint}, bodies::Vector{<:Body},
+    contacts::Vector{<:ContactConstraint}) where T
 
-    adjacency = adjacency_matrix(eqconstraints, bodies, ineqconstraints)
-    dims = length.([eqconstraints; bodies; ineqconstraints])
+    adjacency = adjacency_matrix(joints, bodies, contacts)
+    dims = length.([joints; bodies; contacts])
     system = System{T}(adjacency, dims, dims)
 
-    for eqc in eqconstraints
+    for eqc in joints
         eqc.parentid == origin.id && (eqc.parentid = nothing)
     end
     origin.id = 0
@@ -60,7 +60,7 @@ end
 
 # TODO does not include ineqcs yet
 function dense_system(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
-    eqcs = mechanism.eqconstraints
+    eqcs = mechanism.joints
     system = mechanism.system
     system = mechanism.system
 

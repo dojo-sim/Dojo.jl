@@ -37,7 +37,7 @@ length(eqc.constraints[2]) + 4joint_limits_length(eqc.constraints[2])
 
 SVector{1,Int}([1,])
 function controller!(mechanism, k)
-    for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])
+    for (i,eqc) in enumerate(collect(mechanism.joints)[2:end])
         pbody = get_body(mech, eqc.parentid)
         minJ = minimum(diag(pbody.J))
         for (i,joint) in enumerate(eqc.constraints)

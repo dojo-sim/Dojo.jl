@@ -20,7 +20,7 @@ end
 
 function initializeslider!(mechanism::Mechanism; z1::T = 0.0) where {T}
     body = collect(mechanism.bodies)[1]
-    eqc = collect(mechanism.eqconstraints)[1]
+    eqc = collect(mechanism.joints)[1]
     p2 = eqc.constraints[1].vertices[2]
     set_position(mechanism.origin, body, p2 = p2 - [0, 0, z1])
 end

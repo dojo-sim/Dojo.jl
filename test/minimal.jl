@@ -32,8 +32,8 @@ end
 ################################################################################\
 @testset "minMaxCoord: setPos!, setVel!" begin
 	mech = Dojo.getmechanism(:raiberthopper)
-	eqc1 = collect(mech.eqconstraints)[1]
-	eqc2 = collect(mech.eqconstraints)[2]
+	eqc1 = collect(mech.joints)[1]
+	eqc2 = collect(mech.joints)[2]
 	body1 = collect(mech.bodies)[1]
 	body2 = collect(mech.bodies)[2]
 	tra2 = eqc2.constraints[1]

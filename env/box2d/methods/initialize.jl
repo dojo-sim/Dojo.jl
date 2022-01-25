@@ -40,7 +40,7 @@ end
 
 function initializebox2d!(mechanism::Mechanism; x::AbstractVector{T} = [0,1.],
     v::AbstractVector{T}=[0,0], θ::T=0.0, ω::T=0.0) where {T}
-    bound = mechanism.ineqconstraints.values[1].constraints[1]
+    bound = mechanism.contacts.values[1].constraints[1]
     side = bound.p[2]
     offset = bound.offset[3]
     z = side + offset

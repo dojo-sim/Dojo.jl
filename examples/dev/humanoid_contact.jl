@@ -34,7 +34,7 @@ mech.bodies[14]
 # v = 14
 # c = 27
 # mech.bodies[v]
-# mech.ineqconstraints[c]
+# mech.contacts[c]
 # matrix_entries = mech.system.matrix_entries
 # diagonal_inverses = mech.system.diagonal_inverses
 # matrix_entries[v,v]

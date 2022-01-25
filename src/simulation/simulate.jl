@@ -7,18 +7,17 @@ function initialize_simulation!(mechanism::Mechanism)
     return
 end
 
-## with control function
 function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Storage, control!::Function=(m, k) -> nothing;
         record::Bool=false, verbose::Bool=true, opts=InteriorPointOptions(verbose=verbose))
 
     initialize_simulation!(mechanism)
     Δt = mechanism.Δt
     bodies = mechanism.bodies
-    eqcs = mechanism.eqconstraints
+    eqcs = mechanism.joints
 
     for k = steps
         control!(mechanism, k)
-        for c in mechanism.eqconstraints apply_input!(c, mechanism) end
+        for c in mechanism.joints apply_input!(c, mechanism) end
         mehrotra!(mechanism, opts=opts)
         record && save_to_storage!(mechanism, storage, k)
 

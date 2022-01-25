@@ -23,7 +23,7 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 mech = getmechanism(:npendulum, Δt = 0.01, g = 0.0 * -9.81, Nb = 2)
 initialize!(mech, :npendulum, ϕ1 = 0.5 * π)
 
-for (i,joint) in enumerate(mech.eqconstraints)
+for (i,joint) in enumerate(mech.joints)
     if i ∈ (1,2)
         jt = joint.constraints[1]
         jr = joint.constraints[2]
@@ -37,12 +37,12 @@ for (i,joint) in enumerate(mech.eqconstraints)
 
     end
 end
-mech.eqconstraints[1].isspring
-mech.eqconstraints[1].isdamper
-mech.eqconstraints[1].constraints[1].spring
-mech.eqconstraints[1].constraints[1].damper
-mech.eqconstraints[1].constraints[2].spring
-mech.eqconstraints[1].constraints[2].damper
+mech.joints[1].isspring
+mech.joints[1].isdamper
+mech.joints[1].constraints[1].spring
+mech.joints[1].constraints[1].damper
+mech.joints[1].constraints[2].spring
+mech.joints[1].constraints[2].damper
 
 storage = simulate!(mech, 10.0, record = true, solver = :mehrotra!)
 # storage = simulate!(mech, 3.0, record = true, solver = :mehrotra!)
@@ -157,8 +157,8 @@ norm(solmat, Inf)
 include(joinpath(@__DIR__, "finite_diff.jl"))
 
 Δt = mech.Δt
-rot1 = mech.eqconstraints[1].constraints[2]
-rot2 = mech.eqconstraints[2].constraints[2]
+rot1 = mech.joints[1].constraints[2]
+rot2 = mech.joints[2].constraints[2]
 origin = mech.origin
 body1 = collect(mech.bodies)[1]
 body2 = collect(mech.bodies)[2]
@@ -240,11 +240,11 @@ fd_sensi = finitediff_sensitivity(mech, data, δ = 1e-5, ϵr = 1e-14, ϵb = 1e-1
 plot(Gray.(sensi))
 plot(Gray.(fd_sensi))
 
-# diagonal∂damper∂ʳvel(mech.eqconstraints[1],
+# diagonal∂damper∂ʳvel(mech.joints[1],
 # offdiagonal∂damper∂ʳvel(jt0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, Δt0)
-# diagonal∂damper∂ʳvel(mech, mech.eqconstraints[1], mech.bodies[2])
-# offdiagonal∂damper∂ʳvel(mech.eqconstraints[1].constraints[1], mech.origin, mech.bodies[2], mech.bodies[2].id, mech.Δt)
-# offdiagonal∂damper∂ʳvel(mech.eqconstraints[1].constraints[2], mech.origin, mech.bodies[2], mech.bodies[2].id, mech.Δt)
+# diagonal∂damper∂ʳvel(mech, mech.joints[1], mech.bodies[2])
+# offdiagonal∂damper∂ʳvel(mech.joints[1].constraints[1], mech.origin, mech.bodies[2], mech.bodies[2].id, mech.Δt)
+# offdiagonal∂damper∂ʳvel(mech.joints[1].constraints[2], mech.origin, mech.bodies[2], mech.bodies[2].id, mech.Δt)
 
 # mech.bodies
 
@@ -254,7 +254,7 @@ plot(Gray.(fd_sensi))
 
 # include("fd_tools.jl")
 
-# j0 = mech.eqconstraints[1]
+# j0 = mech.joints[1]
 # jt0 = j0.constraints[1]
 # jr0 = j0.constraints[2]
 # origin0 = mech.origin

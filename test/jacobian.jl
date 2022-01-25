@@ -90,7 +90,7 @@ function test_sensitivity(model::Symbol; ϵ::T=1.0e-6, tsim::T=0.1, ctrl::Any=(m
 end
 
 function control!(mechanism, k; u=0.1)
-    for (i, eqc) in enumerate(mechanism.eqconstraints)
+    for (i, eqc) in enumerate(mechanism.joints)
         nu = control_dimension(eqc, ignore_floating_base=false)
         su = mechanism.Δt * u * sones(nu)
         set_input!(eqc, su)

@@ -92,7 +92,7 @@ norm((fd_datamat + datamat)[12:17,25:31], Inf)
 fd_datamat[15:17,19:21]
 -datamat[15:17,19:21]
 
-ineqcs = collect(mech.ineqconstraints)
+ineqcs = collect(mech.contacts)
 ineqcs[1].parentid
 mech.bodies
 ineqcs[2].parentid
@@ -100,9 +100,9 @@ ineqcs[3].parentid
 ineqcs[4].parentid
 
 
-collect(mech.eqconstraints)
+collect(mech.joints)
 collect(mech.bodies)
-collect(mech.ineqconstraints)
+collect(mech.contacts)
 5 + 2 * 6 + 4 * 8
 12 * 2 + 6 + 1
 

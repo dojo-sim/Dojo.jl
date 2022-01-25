@@ -55,7 +55,7 @@ end
 @elapsed storage = simulate!(mech, 1.5, controller!, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
-# eqcs = collect(mech.eqconstraints)
+# eqcs = collect(mech.joints)
 # tra1 = eqcs[1].constraints[1]
 # rot1 = eqcs[1].constraints[2]
 # tra2 = eqcs[2].constraints[1]
@@ -86,7 +86,7 @@ function gravity_compensation(mechanism::Mechanism)
     nu = control_dimension(mechanism)
     u = zeros(nu)
     off  = 0
-    for eqc in mechanism.eqconstraints
+    for eqc in mechanism.joints
         nu = control_dimension(eqc)
         if eqc.parentid != nothing
             body = get_body(mechanism, eqc.parentid)
@@ -286,7 +286,7 @@ function sdfquadruped(mechanism::Mechanism{T}, θ::AbstractVector{T}; leg::Symbo
 	set_position(mechanism, get_joint_constraint(mechanism, String(leg)*"_calf_joint"), [θ[2]])
 
 	foot = get_body(mechanism, String(leg)*"_calf")
-	ineqcs = collect(mechanism.ineqconstraints)
+	ineqcs = collect(mechanism.contacts)
 	ineqc = ineqcs[findfirst(x -> x.parentid == foot.id, ineqcs)]
 	p = contact_location(ineqc, foot)
 	return p[3]

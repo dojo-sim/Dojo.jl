@@ -28,7 +28,7 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 
 mech = getmechanism(:atlas, Δt = 0.01, g = -9.81, cf = 0.8, contact = true)
 initialize!(mech, :atlas, tran = [0,0,1.9291], rot = [0.,0,0])
-for (i,joint) in enumerate(mech.eqconstraints)
+for (i,joint) in enumerate(mech.joints)
     jt = joint.constraints[1]
     jr = joint.constraints[2]
     joint.isdamper = true #false
@@ -44,7 +44,7 @@ end
 visualize(mech, storage, vis = vis)
 
 # show sign distance function
-ineqcs = collect(mech.ineqconstraints)
+ineqcs = collect(mech.contacts)
 for (i,ineqc) in enumerate(ineqcs)
     ineqc = ineqcs[1]
     cont = ineqc.constraints[1]
@@ -97,15 +97,15 @@ cond(K)
 plot(Gray.(abs.(K ./ 1e14)))
 
 # PD control law
-nu = sum([control_dimension(eqc, floatingbase = false) for eqc in collect(mech.eqconstraints)])
-angles = [minimal_coordinates(mech, joint)[1] for joint in collect(mech.eqconstraints)[2:end]]
+nu = sum([control_dimension(eqc, floatingbase = false) for eqc in collect(mech.joints)])
+angles = [minimal_coordinates(mech, joint)[1] for joint in collect(mech.joints)[2:end]]
 δangles = zeros(nu)
 ind = 23
 # δangles[ind] += π/2
 angles += δangles
 
 function controller!(mechanism, k)
-    for (i,joint) in enumerate(collect(mechanism.eqconstraints)[2:end])
+    for (i,joint) in enumerate(collect(mechanism.joints)[2:end])
         if control_dimension(joint) == 1
             θ = minimal_coordinates(mechanism, joint)[1]
             dθ = minimal_velocities(mechanism, joint)[1]
@@ -136,7 +136,7 @@ visualize(mech, storage, vis = vis)
 gains = zeros(30, 2)
 gains[23,:] = [1e-1, 5e-2]
 
-nams = [eqc.name for eqc in mech.eqconstraints]
+nams = [eqc.name for eqc in mech.joints]
 
 nams[1:10]
 nams[11:20]

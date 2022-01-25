@@ -14,7 +14,7 @@ function set_state!(mechanism::Mechanism, z::AbstractVector)
 end
 
 function set_control!(mechanism::Mechanism{T}, u::AbstractVector) where {T}
-	eqcs = mechanism.eqconstraints
+	eqcs = mechanism.joints
 	# set the controls in the equality constraints
 	off = 0
 	for eqc in eqcs
@@ -96,10 +96,10 @@ function max2min(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) whe
 	# z = [[x2, v15, q2, ϕ15]body1  [x2, v15, q2, ϕ15]body2 ....]
 	x = []
 	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
-	# Thus go through the eqconstraints in order, start from joint between robot and origin and go down the tree.
+	# Thus go through the joints in order, start from joint between robot and origin and go down the tree.
 	for id in reverse(mechanism.system.dfs_list)
-		(id > Ne) && continue # only treat eqconstraints
-		eqc = mechanism.eqconstraints[id]
+		(id > Ne) && continue # only treat joints
+		eqc = mechanism.joints[id]
 		c = zeros(Tz,0)
 		v = zeros(Tz,0)
 		for (i,joint) in enumerate(eqc.constraints)
@@ -130,11 +130,11 @@ function min2max(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) whe
 	# x = [[x2, q2, v15, ϕ15]body1  θ_body1-body2 ....]
 	# z = [[x2, v15, q2, ϕ15]body1  [x2, v15, q2, ϕ15]body2 ....]
 	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
-	# Thus go through the eqconstraints in order, start from joint between robot and origin and go down the tree.
+	# Thus go through the joints in order, start from joint between robot and origin and go down the tree.
 	off = 0
 	for id in reverse(mechanism.system.dfs_list)
-		(id > Ne) && continue # only treat eqconstraints
-		eqc = mechanism.eqconstraints[id]
+		(id > Ne) && continue # only treat joints
+		eqc = mechanism.joints[id]
 		n = control_dimension(eqc)
 		if eqc.parentid != nothing
 			c = x[off .+ (1:n)]; off += n
@@ -203,10 +203,10 @@ function getMinState(mechanism::Mechanism{T,Nn,Ne,Nb,Ni};
 	# z = [[x2, v15, q2, ϕ15]body1  [x2, v15, q2, ϕ15]body2 ....]
 	x = []
 	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
-	# Thus go through the eqconstraints in order, start from joint between robot and origin and go down the tree.
+	# Thus go through the joints in order, start from joint between robot and origin and go down the tree.
 	for id in reverse(mechanism.system.dfs_list)
-		(id > Ne) && continue # only treat eqconstraints
-		eqc = mechanism.eqconstraints[id]
+		(id > Ne) && continue # only treat joints
+		eqc = mechanism.joints[id]
 		c = zeros(T,0)
 		v = zeros(T,0)
 		for (i,joint) in enumerate(eqc.constraints)
@@ -235,8 +235,8 @@ function velocity_index(mechanism::Mechanism{T,Nn,Ne}) where {T,Nn,Ne}
     ind = []
     off = 0
     for id in reverse(mechanism.system.dfs_list)
-        (id > Ne) && continue # only treat eqconstraints
-        eqc = mechanism.eqconstraints[id]
+        (id > Ne) && continue # only treat joints
+        eqc = mechanism.joints[id]
         nu = control_dimension(eqc)
         push!(ind, Vector(off + nu .+ (1:nu)))
         off += 2nu
@@ -278,11 +278,11 @@ end
 
 function setSpringOffset!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector) where {T,Nn,Ne,Nb,Ni}
 	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
-	# Thus go through the eqconstraints in order, start from joint between robot and origin and go down the tree.
+	# Thus go through the joints in order, start from joint between robot and origin and go down the tree.
 	off = 0
 	for id in reverse(mechanism.system.dfs_list)
-		(id > Ne) && continue # only treat eqconstraints
-		eqc = mechanism.eqconstraints[id]
+		(id > Ne) && continue # only treat joints
+		eqc = mechanism.joints[id]
 		for (i,joint) in enumerate(eqc.constraints)
 			cbody = get_body(mechanism, eqc.childids[i])
 			pbody = get_body(mechanism, eqc.parentid)
@@ -299,7 +299,7 @@ function gravity_compensation(mechanism::Mechanism)
     nu = control_dimension(mechanism)
     u = zeros(nu)
     off  = 0
-    for eqc in mechanism.eqconstraints
+    for eqc in mechanism.joints
         nu = control_dimension(eqc)
         if eqc.parentid != nothing
             body = get_body(mechanism, eqc.parentid)

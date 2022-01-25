@@ -50,7 +50,7 @@ function QuadrupedIKerror(mechanism::Mechanism, p_trunk, p_foot, θ; leg::Symbol
 	set_position(mechanism, get_joint_constraint(mechanism, String(leg)*"_calf_joint"), [θ[2]])
 
 	foot = get_body(mechanism, String(leg)*"_calf")
-	ineqcs = collect(mechanism.ineqconstraints)
+	ineqcs = collect(mechanism.contacts)
 	ineqc = ineqcs[findfirst(x -> x.parentid == foot.id, ineqcs)]
 	p = contact_location(ineqc, foot)
 	err = p - p_foot
@@ -127,7 +127,7 @@ end
 # storage = generate_storage(mech, [min2max(mech, x) for x in X])
 # visualize(mech, storage, vis = vis)
 #
-# collect(mech.ineqconstraints)
+# collect(mech.contacts)
 # p_trunk = [0,0,0.31]
 # p_foot = [0.2,.0,0]
 # IKquadruped(mech, p_trunk, p_foot)

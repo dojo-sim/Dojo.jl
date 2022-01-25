@@ -22,7 +22,7 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 # Build mechanism
 mech = getmechanism(:atlas, Δt = 0.01, g = -9.81, cf = 0.8, contact = true)
 initialize!(mech, :atlas, tran = [0,0,0.99], rot = [0.,0,0])
-for (i,joint) in enumerate(mech.eqconstraints)
+for (i,joint) in enumerate(mech.joints)
     jt = joint.constraints[1]
     jr = joint.constraints[2]
     joint.isdamper = true #false
@@ -33,18 +33,18 @@ for (i,joint) in enumerate(mech.eqconstraints)
     jr.spring = 1/i * 0.0 * 1e-0 .* sones(3)[1]# 1e4
     jr.damper = 1/i * 1.0 * 1e+2 .* sones(3)[1]# 1e4
 
-    mech.eqconstraints[1].isspring
-    mech.eqconstraints[1].isdamper
-    mech.eqconstraints[1].constraints[2].damper
+    mech.joints[1].isspring
+    mech.joints[1].isdamper
+    mech.joints[1].constraints[2].damper
 end
 
 bodies = collect(Body, mech.bodies)
-eqcs = collect(JointConstraint, mech.eqconstraints)
-ineqcs = collect(ContactConstraint, mech.ineqconstraints)
+eqcs = collect(JointConstraint, mech.joints)
+ineqcs = collect(ContactConstraint, mech.contacts)
 bodies = [mech.bodies[i] for i = 32:62]
-eqcs = [mech.eqconstraints[i] for i = 1:31]
+eqcs = [mech.joints[i] for i = 1:31]
 teqcs = [eqcs[1]; [addtorque(mech, eqc, spring = 1e2, damper = 1e2) for eqc in eqcs[2:end]]]
-ineqcs = [mech.ineqconstraints[i] for i = 63:70]
+ineqcs = [mech.contacts[i] for i = 63:70]
 
 tmech = Mechanism(mech.origin, bodies, teqcs, ineqcs, Δt = 0.01, g = -9.81)
 
@@ -63,15 +63,15 @@ end
 
 
 # PD control law
-nu = sum([control_dimension(eqc, floatingbase = false) for eqc in collect(mech.eqconstraints)])
-angles = [minimal_coordinates(mech, joint)[1] for joint in collect(mech.eqconstraints)[2:end]]
+nu = sum([control_dimension(eqc, floatingbase = false) for eqc in collect(mech.joints)])
+angles = [minimal_coordinates(mech, joint)[1] for joint in collect(mech.joints)[2:end]]
 δangles = zeros(nu)
 ind = 23
 # δangles[ind] += π/2
 angles += δangles
 
 function controller!(mechanism, k)
-    for (i,joint) in enumerate(collect(mechanism.eqconstraints)[2:end])
+    for (i,joint) in enumerate(collect(mechanism.joints)[2:end])
         if control_dimension(joint) == 1
             # θ = minimal_coordinates(mechanism, joint)[1]
             # dθ = minimal_velocities(mechanism, joint)[1]
@@ -102,7 +102,7 @@ visualize(mech, forcedstorage, vis = vis)
 gains = zeros(30, 2)
 gains[23,:] = [1e-1, 5e-2]
 
-nams = [eqc.name for eqc in mech.eqconstraints]
+nams = [eqc.name for eqc in mech.joints]
 
 nams[1:10]
 nams[11:20]

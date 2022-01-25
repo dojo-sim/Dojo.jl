@@ -22,7 +22,7 @@ function set_data!(mechanism::Mechanism, data::AbstractVector)
         body.state.F2[1] = SVector{3}([0,0,0.])
         body.state.τ2[1] = SVector{3}([0,0,0.])
     end
-    for eqc in mechanism.eqconstraints
+    for eqc in mechanism.joints
         dim = control_dimension(eqc)
         if dim > 0
             u = data[off .+ (1:dim)]; off += dim
@@ -30,7 +30,7 @@ function set_data!(mechanism::Mechanism, data::AbstractVector)
         end
     end
 
-    for c in mechanism.eqconstraints 
+    for c in mechanism.joints 
         apply_input!(c, mechanism, false) 
     end
     return nothing
@@ -45,7 +45,7 @@ function get_data(mechanism::Mechanism{T}) where T
         ϕ15 = body.state.ϕ15
         push!(data, [x2; v15; q2; ϕ15]...)
     end
-    for eqc in mechanism.eqconstraints
+    for eqc in mechanism.joints
         if control_dimension(eqc) > 0
             tra = eqc.constraints[findfirst(x -> typeof(x) <: Translational, eqc.constraints)]
             rot = eqc.constraints[findfirst(x -> typeof(x) <: Rotational, eqc.constraints)]
@@ -60,7 +60,7 @@ end
 
 function set_solution!(mechanism::Mechanism{T}, sol::AbstractVector) where T
     off = 0
-    for (i,eqc) in enumerate(mechanism.eqconstraints)
+    for (i,eqc) in enumerate(mechanism.joints)
         nλ = length(eqc)
         λ = sol[off .+ (1:nλ)]; off += nλ
         eqc.λsol[2] = λ
@@ -73,7 +73,7 @@ function set_solution!(mechanism::Mechanism{T}, sol::AbstractVector) where T
         body.state.vsol[2] = v25
         body.state.ϕsol[2] = ϕ25
     end
-    for (i,ineqc) in enumerate(mechanism.ineqconstraints)
+    for (i,ineqc) in enumerate(mechanism.contacts)
         N = length(ineqc)
         N½ = Int(N/2)
         s = sol[off .+ (1:N½)]; off += N½
@@ -86,7 +86,7 @@ end
 
 function get_solution(mechanism::Mechanism{T}) where T
     sol = T[]
-    for (i,eqc) in enumerate(mechanism.eqconstraints)
+    for (i,eqc) in enumerate(mechanism.joints)
         λ = eqc.λsol[2]
         push!(sol, λ...)
     end
@@ -95,7 +95,7 @@ function get_solution(mechanism::Mechanism{T}) where T
         ϕ25 = body.state.ϕsol[2]
         push!(sol, [v25; ϕ25]...)
     end
-    for (i,ineqc) in enumerate(mechanism.ineqconstraints)
+    for (i,ineqc) in enumerate(mechanism.contacts)
         s = ineqc.ssol[2]
         γ = ineqc.γsol[2]
         push!(sol, [s; γ]...)

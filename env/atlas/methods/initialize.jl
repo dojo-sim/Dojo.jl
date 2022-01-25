@@ -5,7 +5,7 @@ function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0,
     mech = Mechanism(path, true, T, g = g, Δt = Δt, spring=spring, damper=damper)
 
     # Adding springs and dampers
-    for (i,eqc) in enumerate(collect(mech.eqconstraints)[2:end])
+    for (i,eqc) in enumerate(collect(mech.joints)[2:end])
         eqc.isdamper = true
         eqc.isspring = true
         for joint in eqc.constraints
@@ -17,7 +17,7 @@ function getatlas(; Δt::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0,
     if contact
         origin = Origin{T}()
         bodies = Vector{Body{T}}(collect(mech.bodies))
-        eqs = Vector{JointConstraint{T}}(collect(mech.eqconstraints))
+        eqs = Vector{JointConstraint{T}}(collect(mech.joints))
 
         # Foot contact
         contacts = [

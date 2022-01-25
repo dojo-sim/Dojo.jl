@@ -264,6 +264,7 @@ end
     end
     return vec
 end
+
 @inline function damper_child(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body; unitary::Bool=false) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
@@ -293,7 +294,7 @@ end
     return
 end
 
-function set_springapply_dampervalues!(eqcs, spring, damper)
+function set_spring_damper_values!(eqcs, spring, damper)
     i = 1
     for eqc in eqcs
         eqc.parentid === nothing && continue

@@ -40,7 +40,7 @@ end
 
 function control_dimension(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}; ignore_floating_base::Bool = false) where {T,Nn,Ne,Nb,Ni}
     nu = 0
-    for eqc in mechanism.eqconstraints
+    for eqc in mechanism.joints
         nu += control_dimension(eqc, ignore_floating_base = ignore_floating_base)
     end
     return nu
@@ -56,7 +56,7 @@ end
 
 function contact_dimension(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
     nineqcs = 0
-    for ineqc in mechanism.ineqconstraints
+    for ineqc in mechanism.contacts
         nineqcs += length(ineqc)
     end
     return nineqcs
@@ -64,7 +64,7 @@ end
 
 function joint_dimension(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
     neqcs = 0
-    for eqc in mechanism.eqconstraints
+    for eqc in mechanism.joints
         neqcs += length(eqc)
     end
     return neqcs

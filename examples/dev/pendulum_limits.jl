@@ -128,7 +128,7 @@ fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
 plot(Gray.(abs.(1e11 .* solmat)))
 plot(Gray.(abs.(1e9 .* fd_solmat)))
 
-eqc1 = collect(mech.eqconstraints)[1]
+eqc1 = collect(mech.joints)[1]
 λindex(eqc1, 1)
 λindex(eqc1, 2)
 

@@ -68,7 +68,7 @@ storage = simulate!(mech, 0.50, controller!, record=true, verbose=false)
 visualize(mech, storage, vis=env.vis)
 
 function get_apply_damper(mechanism::Mechanism{T}) where {T}
-	eqcs = mechanism.eqconstraints
+	eqcs = mechanism.joints
 	# set the controls in the equality constraints
 	off = 0
 	nu = control_dimension(mechanism)
@@ -95,7 +95,7 @@ function get_apply_damper(mechanism::Mechanism{T}) where {T}
 end
 
 
-# eqc0 = env.mechanism.eqconstraints.values[1]
+# eqc0 = env.mechanism.joints.values[1]
 # body0 = get_body(env.mechanism, eqc0.parentid)
 # df = apply_damper(mech, eqc0, body0)
 # nullspace_mask(eqc0.constraints[1])# * df[1:3]

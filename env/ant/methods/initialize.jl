@@ -8,7 +8,7 @@ function getant(; Δt::T=0.05, g::T=-9.81, cf::T=0.5,
     mech = Mechanism(path, true, T, g=g, Δt=Δt, spring=spring, damper=damper)
 
     # joint limits
-    eqcs = deepcopy(mech.eqconstraints)
+    eqcs = deepcopy(mech.joints)
 
     if limits
         hip1 = get_joint_constraint(mech, :hip_1)
@@ -41,7 +41,7 @@ function getant(; Δt::T=0.05, g::T=-9.81, cf::T=0.5,
     if contact
         origin = Origin{T}()
         bodies = mech.bodies.values
-        eqcs = mech.eqconstraints.values
+        eqcs = mech.joints.values
 
         # foot contact
         normal = [0.0; 0.0; 1.0]

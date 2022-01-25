@@ -23,8 +23,8 @@ end
 vis = Visualizer()
 open(vis)
 mech = getpendulum(Δt = 0.01, g = -9.81, spring = 0.0, damper = 0.0)
-# mech.eqconstraints[1].λsol[2]
-# reset!.(mech.eqconstraints)
+# mech.joints[1].λsol[2]
+# reset!.(mech.joints)
 
 ϕ1 = 0.4 * π
 initialize!(mech, :pendulum, ϕ1 = ϕ1)

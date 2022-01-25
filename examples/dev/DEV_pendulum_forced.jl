@@ -23,7 +23,7 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 mech = getmechanism(:pendulum, Δt = 0.01, g = -9.81)
 initialize!(mech, :pendulum, ϕ1 = 0.7)
 
-jointid = mech.eqconstraints[1].id
+jointid = mech.joints[1].id
 angles = zeros(1)
 function controller!(mechanism, k)
     j1 = get_joint_constraint(mechanism, jointid)
@@ -34,7 +34,7 @@ function controller!(mechanism, k)
     return
 end
 
-j1 = mech.eqconstraints[1]
+j1 = mech.joints[1]
 jt1 = j1.constraints[1]
 jr1 = j1.constraints[2]
 j1.isdamper = false
@@ -42,8 +42,8 @@ j1.isspring = false
 
 jr1.spring = 0.0 * 1e4
 jr1.damper = 0.0 * 1e4
-mech.eqconstraints[1].isdamper
-mech.eqconstraints[1].constraints[2].damper
+mech.joints[1].isdamper
+mech.joints[1].constraints[2].damper
 
 storage = simulate!(mech, 10.0, record = true, solver = :mehrotra!)
 # forcedstorage = simulate!(mech, 0.1, controller!, record = true, solver = :mehrotra!)

@@ -11,7 +11,7 @@ function gethalfcheetah(; Δt::T=0.01, g::T=-9.81, cf::T=0.4,
     mech = Mechanism(path, false, T, g=g, Δt=Δt, spring=spring, damper=damper)
 
     # joint limits
-    eqcs = deepcopy(mech.eqconstraints)
+    eqcs = deepcopy(mech.joints)
 
     if limits
         bthigh = get_joint_constraint(mech, :bthigh)
@@ -38,7 +38,7 @@ function gethalfcheetah(; Δt::T=0.01, g::T=-9.81, cf::T=0.4,
     if contact
         origin = Origin{T}()
         bodies = mech.bodies
-        eqcs = mech.eqconstraints
+        eqcs = mech.joints
 
         normal = [0.0; 0.0; 1.0]
         names = contact_body ? getfield.(mech.bodies, :name) : [:ffoot, :bfoot]
@@ -73,7 +73,7 @@ function initializehalfcheetah!(mechanism::Mechanism; x::T=0.0, z::T=0.0, θ::T=
     set_position(mechanism,
                  get_joint_constraint(mechanism, :floating_joint),
                  [z + 0.576509, -x, -θ + 0.02792])
-    for eqc in mechanism.eqconstraints
+    for eqc in mechanism.joints
         (eqc.name != :floating_joint) && set_position(mechanism, eqc, zeros(control_dimension(eqc)))
     end
     zeroVelocity!(mechanism)

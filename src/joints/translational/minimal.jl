@@ -1,4 +1,3 @@
-## Minimal coordinate calculation
 @inline function minimal_coordinates(joint::Translational, body1::Node, body2::Node)
     statea = body1.state
     stateb = body2.state

@@ -27,7 +27,7 @@ include("conservation_test.jl")
 Nb_ = 2
 
 function controller!(mechanism, k)
-    for (i,joint) in enumerate(mechanism.eqconstraints)
+    for (i,joint) in enumerate(mechanism.joints)
         nu = control_dimension(joint)
         if 5 >= nu >= 1
             if k ∈ (1:1)
@@ -73,7 +73,7 @@ norm(m0[1:3])
 norm(m1[4:6])
 norm(m0[4:6])
 
-eqc = mech.eqconstraints[2]
+eqc = mech.joints[2]
 f1 = (zerodimstaticadjoint(∂g∂ʳpos(mech, eqc, mech.bodies[3])) * eqc.λsol[2])[1:3]
 f2 = (zerodimstaticadjoint(∂g∂ʳpos(mech, eqc, mech.bodies[4])) * eqc.λsol[2])[1:3]
 norm(f1 + f2)
@@ -140,7 +140,7 @@ v_ = 0.0*rand(3)
 Δω_ = 1.0 * 1.0*4.0*[0,0,1.0] #* 100 * Δt_
 
 function controller!(mechanism, k)
-    for (i,joint) in enumerate(mechanism.eqconstraints)
+    for (i,joint) in enumerate(mechanism.joints)
         nu = control_dimension(joint)
         if nu <= 5
             if k ∈ (10:10 + 100n)

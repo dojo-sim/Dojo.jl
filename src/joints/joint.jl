@@ -139,10 +139,8 @@ end
     end
 end
 
-## Minimal coordinates
 @inline minimal_coordinates(joint::Joint{T,Nλ}) where {T,Nλ} = szeros(T, 3 - Nλ)
 
-## Limits
 function add_limits(mech::Mechanism, eq::JointConstraint;
     # NOTE: this only works for joints between serial chains (ie, single child joints)
     tra_limits=eq.constraints[1].joint_limits,

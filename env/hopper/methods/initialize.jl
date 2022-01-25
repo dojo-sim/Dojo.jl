@@ -11,7 +11,7 @@ function gethopper(; Δt::T=0.01, g::T=-9.81, cf::T=2.0,
     mech = Mechanism(path, false, T, g=g, Δt=Δt, spring=spring, damper=damper)
 
     # joint limits
-    eqcs = deepcopy(mech.eqconstraints)
+    eqcs = deepcopy(mech.joints)
 
     if limits
         thigh = get_joint_constraint(mech, :thigh)
@@ -30,7 +30,7 @@ function gethopper(; Δt::T=0.01, g::T=-9.81, cf::T=2.0,
     if contact
         origin = Origin{T}()
         bodies = mech.bodies.values
-        eqcs = mech.eqconstraints.values
+        eqcs = mech.joints.values
 
         normal = [0.0; 0.0; 1.0]
         names = contact_body ? getfield.(mech.bodies, :name) : [:ffoot, :foot]
@@ -60,7 +60,7 @@ function initializehopper!(mechanism::Mechanism; x::T=0.0, z::T=0.0, θ::T=0.0) 
     set_position(mechanism,
                  get_joint_constraint(mechanism, :floating_joint),
                  [z + 1.25 , -x, -θ])
-    for eqc in mechanism.eqconstraints
+    for eqc in mechanism.joints
         (eqc.name != :floating_joint) && set_position(mechanism, eqc, zeros(control_dimension(eqc)))
     end
     zeroVelocity!(mechanism)

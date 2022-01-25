@@ -23,7 +23,7 @@ mech = getmechanism(:atlas, Δt = Δt0, g = -9.81, cf = 0.8, contact = true,
 initialize!(mech, :atlas, tran = [0,0,1.1], rot = [0.1,0.05,0])
 
 function controller!(mechanism, k)
-    for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])
+    for (i,eqc) in enumerate(collect(mechanism.joints)[2:end])
         pbody = get_body(mech, eqc.parentid)
         minJ = minimum(diag(pbody.J))
         for (i,joint) in enumerate(eqc.constraints)

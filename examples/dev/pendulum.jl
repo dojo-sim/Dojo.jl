@@ -21,7 +21,7 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
 function controller!(mechanism, k)
-    for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[1:end])
+    for (i,eqc) in enumerate(collect(mechanism.joints)[1:end])
         nu = control_dimension(eqc)
         u = 33.5 * mechanism.Δt * ones(nu)
         set_input!(eqc, u)

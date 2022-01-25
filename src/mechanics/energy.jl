@@ -59,7 +59,7 @@ function potential_energy(mechanism::Mechanism{T,Nn,Ne,Nb}, storage::Storage{T,N
     end
 
     # Springs
-    for (i,eqc) in enumerate(mechanism.eqconstraints)
+    for (i,eqc) in enumerate(mechanism.joints)
         if eqc.isspring
             for (j,joint) in enumerate(eqc.constraints)
                 # Child

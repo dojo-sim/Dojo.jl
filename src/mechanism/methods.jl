@@ -14,10 +14,10 @@ function get_body(mechanism::Mechanism, name::Symbol)
     return
 end
 
-@inline get_joint_constraint(mechanism::Mechanism, id::Integer) = mechanism.eqconstraints[id]
+@inline get_joint_constraint(mechanism::Mechanism, id::Integer) = mechanism.joints[id]
 
 function get_joint_constraint(mechanism::Mechanism, name::Symbol)
-    for eqc in mechanism.eqconstraints
+    for eqc in mechanism.joints
         if eqc.name == name
             return eqc
         end
@@ -25,9 +25,9 @@ function get_joint_constraint(mechanism::Mechanism, name::Symbol)
     return
 end
 
-@inline get_contact_constraint(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,Ni} = mechanism.ineqconstraints[id-Ne-Nb]
+@inline get_contact_constraint(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,Ni} = mechanism.contacts[id-Ne-Nb]
 function get_contact_constraint(mechanism::Mechanism, name::Symbol)
-    for ineqc in mechanism.ineqconstraints
+    for ineqc in mechanism.contacts
         if ineqc.name == name
             return ineqc
         end

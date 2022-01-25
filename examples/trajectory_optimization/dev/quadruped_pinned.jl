@@ -44,7 +44,7 @@ function gravity_compensation(mechanism::Mechanism)
     nu = control_dimension(mechanism)
     u = zeros(nu)
     off  = 0
-    for eqc in mechanism.eqconstraints
+    for eqc in mechanism.joints
         nu = control_dimension(eqc)
         if eqc.parentid != nothing
             body = get_body(mechanism, eqc.parentid)

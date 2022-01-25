@@ -1,6 +1,6 @@
 function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     Δt = mechanism.Δt
-    eqcs = mechanism.eqconstraints
+    eqcs = mechanism.joints
     nc = sum(length.(eqcs))
     Gl = zeros(T,nc,13Nb)
 
@@ -68,7 +68,7 @@ function joint_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,N
     Δt = mechanism.Δt
     J = zeros(T,6Nb,13Nb)
 
-    for eqc in mechanism.eqconstraints
+    for eqc in mechanism.joints
         parentid = eqc.parentid
 
         if parentid !== nothing
@@ -187,7 +187,7 @@ function springapply_damperjacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,N
     Δt = mechanism.Δt
     J = zeros(T,6Nb,13Nb)
 
-    for eqc in mechanism.eqconstraints
+    for eqc in mechanism.joints
         parentid = eqc.parentid
 
         if parentid !== nothing
@@ -343,7 +343,7 @@ function contact_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
     offr = 0
     offc = 0
     for body in mechanism.bodies
-        for ineqc in mechanism.ineqconstraints
+        for ineqc in mechanism.contacts
             if ineqc.parentid == body.id
                 bound = ineqc.constraints[1]
                 bound_type = typeof(bound)
@@ -374,7 +374,7 @@ end
 
 function contact_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     Δt = mechanism.Δt
-    ineqcs = mechanism.ineqconstraints
+    ineqcs = mechanism.contacts
     nineqcs = contact_dimension(mechanism)
     J = zeros(nineqcs, 13Nb)
 
@@ -417,8 +417,8 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}; attjac::Bool = true)
     mechanism = deepcopy(mechanism)
     Δt = mechanism.Δt
     system = mechanism.system
-    eqcs = mechanism.eqconstraints
-    ineqcs = mechanism.ineqconstraints
+    eqcs = mechanism.joints
+    ineqcs = mechanism.contacts
     eqcids = getfield.(eqcs, :id)
 
     resdims = [length(system.vector_entries[i].value) for i=1:Nn]

@@ -56,17 +56,17 @@ length(joint_between_origin_and_body1.constraints[2])
 
 
 mech.origin.id
-getfield.(mech.eqconstraints.values, :id)
+getfield.(mech.joints.values, :id)
 getfield.(mech.bodies.values, :id)
-getfield.(mech.ineqconstraints.values, :id)
+getfield.(mech.contacts.values, :id)
 
 
 
 full_vector(system) = vcat(getfield.(system.vector_entries,:value)...)
 mech.system
-eqcs = mech.eqconstraints.values
+eqcs = mech.joints.values
 bodies = mech.bodies.values
-ineqcs = mech.ineqconstraints.values
+ineqcs = mech.contacts.values
 A, dims = adjacency_matrix(eqcs, bodies, ineqcs)
 
 

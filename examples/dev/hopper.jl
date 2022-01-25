@@ -19,7 +19,7 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
 function controller!(mechanism, k)
-    for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])
+    for (i,eqc) in enumerate(collect(mechanism.joints)[2:end])
         nu = control_dimension(eqc)
         u = 50*mechanism.Δt*(ones(nu) .- 0.5)
         set_input!(eqc, u)
@@ -46,11 +46,11 @@ plot(hcat(Vector.(storage.ω[1])...)')
 
 
 
-eqc1 = collect(mech.eqconstraints)[1]
+eqc1 = collect(mech.joints)[1]
 body1 = collect(mech.bodies)[1]
 body2 = collect(mech.bodies)[2]
 zerodimstaticadjoint(∂g∂ʳpos(mech, eqc1, body1))
-collect(mech.eqconstraints)
+collect(mech.joints)
 
 
 
@@ -112,7 +112,7 @@ obs = reset(env)[2]
 render(env)
 
 1000*sample(env.aspace)
-collect(env.mechanism.eqconstraints)[1]
+collect(env.mechanism.joints)[1]
 for i = 1:25
     render(env)
     sleep(0.05)
@@ -127,7 +127,7 @@ for i = 1:25
 end
 close(env)
 
-env.mechanism.eqconstraints
+env.mechanism.joints
 control_dimension(env.mechanism)
 sample(env.aspace)
 # sample(env.aspace)

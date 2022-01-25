@@ -2,15 +2,15 @@
 # Dimension
 ################################################################################
 # Mechanism
-data_dim(mechanism::Mechanism) = sum(data_dim.(mechanism.eqconstraints)) +
-    sum(data_dim.(mechanism.bodies)) + sum(data_dim.(mechanism.ineqconstraints))
+data_dim(mechanism::Mechanism) = sum(data_dim.(mechanism.joints)) +
+    sum(data_dim.(mechanism.bodies)) + sum(data_dim.(mechanism.contacts))
 # Eqconstraints
 data_dim(eqc::JointConstraint) = 2 + sum(data_dim.(eqc.constraints)) # [utra, urot, spring, damper, traapply_springoffset, rotapply_springoffset]
 data_dim(joint::Rotational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = 2N̄λ # [u, spring, damper, spring_offset]
 data_dim(joint::Translational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = 2N̄λ # [u, spring, damper, spring_offset]
 # Body
 data_dim(body::Body) = 19 # 1+6+6+6 [m,flat(J),x1,q1,x2,q2] with attjac
-# Ineqconstraints
+# Injoints
 data_dim(ineqc::ContactConstraint) = sum(data_dim.(ineqc.constraints))
 data_dim(bound::NonlinearContact) = 7 # [cf, p, offset]
 data_dim(bound::LinearContact) = 7 # [cf, p, offset]
@@ -22,9 +22,9 @@ data_dim(bound::ImpactContact) = 6 # [p, offset]
 ################################################################################
 # Mechanism
 function data_attitude_jacobian(mechanism::Mechanism)
-	attjacs = [data_attitude_jacobian.(mechanism.eqconstraints);
+	attjacs = [data_attitude_jacobian.(mechanism.joints);
 		data_attitude_jacobian.(mechanism.bodies);
-		data_attitude_jacobian.(mechanism.ineqconstraints)]
+		data_attitude_jacobian.(mechanism.contacts)]
 	attjac = cat(attjacs..., dims=(1,2))
 	return attjac
 end
@@ -40,7 +40,7 @@ function data_attitude_jacobian(body::Body)
 	attjac = cat(I(1+6+3), G(vector(q1)), I(3), G(vector(q2)), dims=(1,2))
 	return attjac
 end
-# Ineqconstraints
+# Injoints
 function data_attitude_jacobian(ineqc::ContactConstraint)
 	return I(data_dim(ineqc))
 end
@@ -50,8 +50,8 @@ end
 # Get Data
 ################################################################################
 # Mechanism
-get_data(mechanism::Mechanism) = vcat([get_data.(mechanism.eqconstraints);
-	get_data.(mechanism.bodies); get_data.(mechanism.ineqconstraints)]...)
+get_data(mechanism::Mechanism) = vcat([get_data.(mechanism.joints);
+	get_data.(mechanism.bodies); get_data.(mechanism.contacts)]...)
 # Eqconstraints
 function get_data(eqc::JointConstraint)
 	joints = eqc.constraints
@@ -69,7 +69,7 @@ function get_data(body::Body)
 	x2, q2 = current_configuration(body.state)
 	return [m; j; x1; vector(q1); x2; vector(q2)]
 end
-# Ineqconstraints
+# Injoints
 get_data(bound::NonlinearContact) = [bound.cf; bound.offset; bound.p]
 get_data(boundset::LinearContact) = [bound.cf; bound.off; bound.p]
 get_data(bound::ImpactContact) = [bound.offset; bound.p]
@@ -82,7 +82,7 @@ get_data(ineqc::ContactConstraint) = vcat(get_data.(ineqc.constraints)...)
 # Mechanism
 function set_data!(mechanism::Mechanism, data::AbstractVector)
 	c = 0
-	for eqc in mechanism.eqconstraints
+	for eqc in mechanism.joints
 		Nd = data_dim(eqc)
 		set_data!(eqc, data[c .+ (1:Nd)]); c += Nd
 	end
@@ -90,7 +90,7 @@ function set_data!(mechanism::Mechanism, data::AbstractVector)
 		Nd = data_dim(body)
 		set_data!(body, data[c .+ (1:Nd)]); c += Nd
 	end
-	for ineqc in mechanism.ineqconstraints
+	for ineqc in mechanism.contacts
 		Nd = data_dim(ineqc)
 		set_data!(ineqc, data[c .+ (1:Nd)]); c += Nd
 	end
@@ -131,7 +131,7 @@ function set_data!(body::Body, data::AbstractVector)
 	body.state.q2[1] = q2
 	return nothing
 end
-# Ineqconstraints
+# Injoints
 function set_data!(bound::NonlinearContact, data::AbstractVector)
 	bound.cf = data[1]
     bound.offset = data[SVector{3,Int}(2:4)]

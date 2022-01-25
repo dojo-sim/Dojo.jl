@@ -1,15 +1,15 @@
 function line_search!(mechanism::Mechanism, α, rvio, bvio, opts; warning::Bool = false)
     scale = 0
     system = mechanism.system
-    eqcs = mechanism.eqconstraints
-    ineqcs = mechanism.ineqconstraints
+    eqcs = mechanism.joints
+    ineqcs = mechanism.contacts
 
     rvio_cand, bvio_cand = Inf * ones(2)
     for n = Base.OneTo(opts.max_ls)
-        for ineqc in mechanism.ineqconstraints
+        for ineqc in mechanism.contacts
             candidate_step!(α, ineqc, get_entry(system, ineqc.id), scale)
         end
-        for eqc in mechanism.eqconstraints
+        for eqc in mechanism.joints
             candidate_step!(α, eqc, get_entry(system, eqc.id), scale)
         end
         for body in mechanism.bodies

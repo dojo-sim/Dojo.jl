@@ -1,4 +1,3 @@
-# solver options
 @with_kw struct InteriorPointOptions{T}
     rtol::T=1.0e-6   # residual violation tolerance (equality constraints)
     btol::T=1.0e-3   # bilinear violation tolerance (complementarity constraints)
@@ -11,22 +10,20 @@
     verbose::Bool=false
 end
 
-
-# solver
 function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
     system = mechanism.system
-    eqcs = mechanism.eqconstraints
-    ineqcs = mechanism.ineqconstraints
+    eqcs = mechanism.joints
+    ineqcs = mechanism.contacts
 
-	reset!.(mechanism.ineqconstraints, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
-	reset!.(mechanism.eqconstraints, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
+	reset!.(mechanism.contacts, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
+	reset!.(mechanism.joints, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
     mechanism.μ = 0.0
 	μtarget = 0.0
 	no_progress = 0
     undercut = opts.undercut
     α = 1.0
 
-	initial_state!.(mechanism.ineqconstraints) # TODO: redundant with resetVars--remove
+	initial_state!.(mechanism.contacts) # TODO: redundant with resetVars--remove
     set_entries!(mechanism) # compute the residual
 
     bvio = bilinear_violation(mechanism) # does not require to apply set_entries!
@@ -74,8 +71,8 @@ function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
 
 		# update solution
         update_solution!.(mechanism.bodies)
-        update_solution!.(mechanism.eqconstraints)
-        update_solution!.(mechanism.ineqconstraints)
+        update_solution!.(mechanism.joints)
+        update_solution!.(mechanism.contacts)
 
 		# recompute Jacobian and residual
         set_entries!(mechanism)

@@ -24,7 +24,7 @@ mech = getmechanism(:npendulum, Δt = 0.05, g = -9.81, Nb = 5)
 initialize!(mech, :npendulum, ϕ1 = 0.1*pi)
 
 function cont!(mechanism, k; u = 1.0)
-    for (i, eqc) in enumerate(mechanism.eqconstraints)
+    for (i, eqc) in enumerate(mechanism.joints)
         nu = control_dimension(eqc, ignore_floating_base = false)
         su = mechanism.Δt * u * sones(nu)
         set_input!(eqc, su)
@@ -83,17 +83,17 @@ norm((datamat + fd_datamat)[6:11, 13:13], Inf)
 datamat[6:11, 1:3]
 -fd_datamat[6:11, 1:3]
 
-joint = mech.eqconstraints[1].constraints[1]
+joint = mech.joints[1].constraints[1]
 xb = mech.bodies[2].state.x2[1]
 qb = mech.bodies[2].state.q2[1]
 
-length(mech.eqconstraints[1])
+length(mech.joints[1])
 length(joint)
-fw = w -> transpose(∂g∂ʳposb(joint, w, qb)[1:3, 4:6]) * constraint_mask(joint)' * mech.eqconstraints[1].λsol[2][1:3]
+fw = w -> transpose(∂g∂ʳposb(joint, w, qb)[1:3, 4:6]) * constraint_mask(joint)' * mech.joints[1].λsol[2][1:3]
 ForwardDiff.jacobian(fw, xb)
 
 using FiniteDiff
-fz = z -> -transpose(∂g∂ʳposb(joint, xb, UnitQuaternion(z..., false))[1:3, 1:3]) * constraint_mask(joint)' * mech.eqconstraints[1].λsol[2][1:3]
+fz = z -> -transpose(∂g∂ʳposb(joint, xb, UnitQuaternion(z..., false))[1:3, 1:3]) * constraint_mask(joint)' * mech.joints[1].λsol[2][1:3]
 FiniteDiff.finite_difference_jacobian(fz, [qb.w, qb.x, qb.y, qb.z]) * LVᵀmat(qb)
 ForwardDiff.jacobian(fz, [qb.w, qb.x, qb.y, qb.z]) #* LVᵀmat(qb)
 fdjac(fz, [qb.w, qb.x, qb.y, qb.z]) #* LVᵀmat(qb)
@@ -174,8 +174,8 @@ norm(solmat, Inf)
 include(joinpath(@__DIR__, "finite_diff.jl"))
 mech.Δt
 Δt = 0.01
-rot1 = mech.eqconstraints[1].constraints[2]
-rot2 = mech.eqconstraints[2].constraints[2]
+rot1 = mech.joints[1].constraints[2]
+rot2 = mech.joints[2].constraints[2]
 origin = mech.origin
 body1 = collect(mech.bodies)[1]
 body2 = collect(mech.bodies)[2]
@@ -258,11 +258,11 @@ fd_sensi = finitediff_sensitivity(mech, data, δ = 1e-5, ϵr = 1e-14, ϵb = 1e-1
 plot(Gray.(sensi))
 plot(Gray.(fd_sensi))
 
-# diagonal∂damper∂ʳvel(mech.eqconstraints[1],
+# diagonal∂damper∂ʳvel(mech.joints[1],
 # offdiagonal∂damper∂ʳvel(jt0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, Δt0)
-# diagonal∂damper∂ʳvel(mech, mech.eqconstraints[1], mech.bodies[2])
-# offdiagonal∂damper∂ʳvel(mech.eqconstraints[1].constraints[1], mech.origin, mech.bodies[2], mech.bodies[2].id, mech.Δt)
-# offdiagonal∂damper∂ʳvel(mech.eqconstraints[1].constraints[2], mech.origin, mech.bodies[2], mech.bodies[2].id, mech.Δt)
+# diagonal∂damper∂ʳvel(mech, mech.joints[1], mech.bodies[2])
+# offdiagonal∂damper∂ʳvel(mech.joints[1].constraints[1], mech.origin, mech.bodies[2], mech.bodies[2].id, mech.Δt)
+# offdiagonal∂damper∂ʳvel(mech.joints[1].constraints[2], mech.origin, mech.bodies[2], mech.bodies[2].id, mech.Δt)
 
 # mech.bodies
 
@@ -272,7 +272,7 @@ plot(Gray.(fd_sensi))
 
 # include("fd_tools.jl")
 
-# j0 = mech.eqconstraints[1]
+# j0 = mech.joints[1]
 # jt0 = j0.constraints[1]
 # jr0 = j0.constraints[2]
 # origin0 = mech.origin

@@ -22,7 +22,7 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 mech = getmechanism(:pendulum, Δt = 0.01, g = -9.81)
 initialize!(mech, :pendulum, ϕ1 = 0.7)
 
-jointid = mech.eqconstraints[1].id
+jointid = mech.joints[1].id
 angles = zeros(1)
 function controller!(mechanism, k)
     j1 = get_joint_constraint(mechanism, jointid)

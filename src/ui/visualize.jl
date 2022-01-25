@@ -115,7 +115,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N};
         prepare_vis!(storage, id, shape, animation, subvisshape, subvisframe, showshape, showframes)
 
         if show_contact
-            for (jd, ineq) in enumerate(mechanism.ineqconstraints)
+            for (jd, ineq) in enumerate(mechanism.contacts)
                 if ineq.parentid == body.id
                     # @show shape.xoffset
                     # @show shape.qoffset

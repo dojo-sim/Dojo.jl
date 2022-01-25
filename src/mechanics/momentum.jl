@@ -19,7 +19,7 @@ function momentum(mechanism::Mechanism{T}, body::Body{T}) where {T}
     p_angular_body = D2q - 1.0 * state.τ2[1]
 
     α = -1.0
-    for (i, eqc) in enumerate(mechanism.eqconstraints)
+    for (i, eqc) in enumerate(mechanism.joints)
         if body.id ∈ [eqc.parentid; eqc.childids]
 
             f_joint = zerodimstaticadjoint(impulse_map(mechanism, eqc, body)) * eqc.λsol[2]  # computed at 1.5

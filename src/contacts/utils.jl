@@ -6,7 +6,7 @@ end
 
 function get_sdf(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, storage::Storage{T,N}) where {T,Nn,Ne,Nb,Ni,N}
     d = []
-    for ineqc in mechanism.ineqconstraints
+    for ineqc in mechanism.contacts
         ibody = get_body(mechanism, ineqc.parentid).id - Ne
         push!(d, [sdf(ineqc, storage.x[ibody][i], storage.q[ibody][i]) for i = 1:N])
     end
@@ -14,7 +14,7 @@ function get_sdf(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, storage::Storage{T,N}) whe
 end
 
 function contact_location(mechanism::Mechanism)
-    return [contact_location(mech, ineqc) for ineqc in mechanism.ineqconstraints]
+    return [contact_location(mech, ineqc) for ineqc in mechanism.contacts]
 end
 
 function contact_location(mechanism::Mechanism, ineqc::ContactConstraint)

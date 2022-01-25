@@ -26,7 +26,7 @@ initialize!(mech, :quadruped, tran = [0,0,0.], v = [0.5,0,0.])
 visualize(mech, storage, vis = vis)
 
 
-eqcs = collect(mech.eqconstraints)
+eqcs = collect(mech.joints)
 eqcs
 rot1 = eqcs[1].constraints[1]
 rot1.spring_offset = srand(3)
@@ -80,7 +80,7 @@ visualize(mech, storage, vis = vis)
 
 # qa = one(UnitQuaternion)
 # qb = UnitQuaternion(RotX(π/8))
-# joint = collect(mech.eqconstraints)[1].constraints[2]
+# joint = collect(mech.joints)[1].constraints[2]
 # A = nullspace_mask(joint)
 # Aᵀ = zerodimstaticadjoint(A)
 # joint.spring_offset = pi/8 * sones(1)
@@ -141,7 +141,7 @@ function gravity_compensation(mechanism::Mechanism)
     nu = control_dimension(mechanism)
     u = zeros(nu)
     off  = 0
-    for eqc in mechanism.eqconstraints
+    for eqc in mechanism.joints
         nu = control_dimension(eqc)
         if eqc.parentid != nothing
             body = get_body(mechanism, eqc.parentid)
@@ -253,7 +253,7 @@ visualize(mech, storage, vis = vis)
 
 
 
-eqcs = collect(mech.eqconstraints)
+eqcs = collect(mech.joints)
 rot1 = eqcs[1].constraints[2]
 rot2 = eqcs[2].constraints[2]
 A1 = nullspace_mask(rot1)

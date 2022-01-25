@@ -24,10 +24,10 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 Δt_ = 0.05
 mech = getmechanism(:humanoid, contact = true, Δt = Δt_, g = -9.81, spring = 500.0, damper = 50.)
 initialize!(mech, :humanoid, rot = [0.1,0,0], tran = [0,0,1.5])
-eqcs = collect(mech.eqconstraints)
+eqcs = collect(mech.joints)
 
 function controller!(mechanism, k)
-    for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])
+    for (i,eqc) in enumerate(collect(mechanism.joints)[2:end])
         pbody = get_body(mech, eqc.parentid)
         minJ = minimum(diag(pbody.J))
         for (i,joint) in enumerate(eqc.constraints)

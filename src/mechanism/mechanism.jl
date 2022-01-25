@@ -1,8 +1,8 @@
 mutable struct Mechanism{T,Nn,Ne,Nb,Ni}
     origin::Origin{T}
-    eqconstraints::Vector{<:JointConstraint{T}}
+    joints::Vector{<:JointConstraint{T}}
     bodies::Vector{<:Body{T}}
-    ineqconstraints::Vector{<:ContactConstraint{T}}
+    contacts::Vector{<:ContactConstraint{T}}
 
     system::System{Nn}
     residual_entries::Vector{Entry}
@@ -57,12 +57,7 @@ function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, eqcs::Vector{<:
     diagonal_inverses = deepcopy(system.diagonal_inverses)
 
     # springs and dampers
-    eqcs = set_springapply_dampervalues!(eqcs, spring, damper)
-
-    # containers for nodes
-    # eqcs = UnitDictUnitDict(eqcs)
-    # bodies = UnitDict((bodies[1].id):(bodies[Nb].id), bodies)
-    # Ni > 0 ? (ineqcs = UnitDict((ineqcs[1].id):(ineqcs[Ni].id), ineqcs)) : (ineqcs = UnitDict(0:0, ineqcs))
+    eqcs = set_spring_damper_values!(eqcs, spring, damper)
 
     # complementarity slackness (i.e., contact model "softness")
     μ = 0.0

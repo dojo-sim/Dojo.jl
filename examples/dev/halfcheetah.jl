@@ -26,7 +26,7 @@ initialize!(mech, :halfcheetah, x = 0.0, z = 0.5, θ = -0.0)
 visualize(mech, storage, vis = vis)
 
 function controller!(mechanism, k)
-    for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])
+    for (i,eqc) in enumerate(collect(mechanism.joints)[2:end])
         nu = control_dimension(eqc)
         u = sones(nu)
         set_input!(eqc, u)
@@ -42,7 +42,7 @@ obs = reset(env)[2]
 render(env)
 
 1000*sample(env.aspace)
-collect(env.mechanism.eqconstraints)[1]
+collect(env.mechanism.joints)[1]
 for i = 1:25
     render(env)
     sleep(0.05)
@@ -57,7 +57,7 @@ for i = 1:25
 end
 close(env)
 
-env.mechanism.eqconstraints
+env.mechanism.joints
 control_dimension(env.mechanism)
 sample(env.aspace)
 # sample(env.aspace)

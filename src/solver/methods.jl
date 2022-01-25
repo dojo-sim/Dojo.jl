@@ -32,10 +32,10 @@ function feasibility_linesearch!(mechanism::Mechanism; τort::T=0.95, τsoc::T=0
     system = mechanism.system
 
     α = 1.0
-    for ineqc in mechanism.ineqconstraints
+    for ineqc in mechanism.contacts
         α = feasibility_linesearch!(α, mechanism, ineqc, get_entry(system, ineqc.id), τort, τsoc; scaling = scaling)
     end
-    for eqc in mechanism.eqconstraints
+    for eqc in mechanism.joints
         α = feasibility_linesearch!(α, mechanism, eqc, get_entry(system, eqc.id), τort, τsoc; scaling = scaling)
     end
     return α
@@ -91,11 +91,11 @@ function centering!(mechanism::Mechanism, αaff::T) where {T}
     n = 0
     ν = 0.0
     νaff = 0.0
-    for ineqc in mechanism.ineqconstraints
+    for ineqc in mechanism.contacts
         ν, νaff, n = centering!(ν, νaff, n, mechanism, ineqc, get_entry(system, ineqc.id), αaff)
     end
 
-    for eqc in mechanism.eqconstraints
+    for eqc in mechanism.joints
         ν, νaff, n = centering!(ν, νaff, n, mechanism, eqc, get_entry(system, eqc.id), αaff)
     end
 
@@ -195,7 +195,7 @@ end
 
 @inline function residual_violation(mechanism::Mechanism)
     violation = 0.0
-    for eq in mechanism.eqconstraints
+    for eq in mechanism.joints
         res = constraint(mechanism, eq)
         shift = 0
         for (i, joint) in enumerate(eq.constraints)
@@ -210,7 +210,7 @@ end
         res = constraint(mechanism, body)
         violation = max(violation, norm(res, Inf))
     end
-    for ineq in mechanism.ineqconstraints
+    for ineq in mechanism.contacts
         res = constraint(mechanism, ineq)
         violation = max(violation, norm(res, Inf))
     end
@@ -219,11 +219,11 @@ end
 
 @inline function bilinear_violation(mechanism::Mechanism)
     violation = 0.0
-    for ineqc in mechanism.ineqconstraints
+    for ineqc in mechanism.contacts
         comp = complementarity(mechanism, ineqc)
         violation = max(violation, norm(comp, Inf))
     end
-    for eqc in mechanism.eqconstraints
+    for eqc in mechanism.joints
         comp = complementarity(mechanism, eqc)
         violation = max(violation, norm(comp, Inf))
     end

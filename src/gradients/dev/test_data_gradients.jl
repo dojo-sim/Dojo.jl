@@ -60,8 +60,8 @@ end
 initialize!(mech, :snake, x=[0,0,1.0])
 storage = simulate!(mech, 1.35, ctrl!, record=true, verbose=false)
 visualize(mech, storage, vis=vis)
-ineqc0 = mech.ineqconstraints.values[1]
-eqc0 = mech.eqconstraints.values[2]
+ineqc0 = mech.contacts.values[1]
+eqc0 = mech.joints.values[2]
 body0 = mech.bodies.values[1]
 
 ∇0 = ∂eqc∂eqc_data(mech, eqc0)
@@ -72,8 +72,8 @@ body0 = mech.bodies.values[1]
 ∇0 = ∂body∂body_data(mech, body0)
 ∇0 = ∂body∂ineqc_data(mech, ineqc0, body0)
 
-data_system = create_data_system(mech.eqconstraints.values,
-    mech.bodies.values, mech.ineqconstraints.values);
+data_system = create_data_system(mech.joints.values,
+    mech.bodies.values, mech.contacts.values);
 
 ∂ineqc_data!(data_system, mech)
 plot(Gray.(1e10 .* abs.(full_matrix(data_system))))

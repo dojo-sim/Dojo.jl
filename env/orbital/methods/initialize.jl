@@ -27,7 +27,7 @@ end
 
 function initializeorbital!(mechanism::Mechanism; ϕx::T = pi/4, ϕy::T = pi/8) where {T}
     body1 = collect(mechanism.bodies)[1]
-    eqc = collect(mechanism.eqconstraints)[1]
+    eqc = collect(mechanism.joints)[1]
     vert11 = eqc.constraints[1].vertices[2]
     vert12 = - vert11
 
@@ -35,7 +35,7 @@ function initializeorbital!(mechanism::Mechanism; ϕx::T = pi/4, ϕy::T = pi/8) 
     set_position(mechanism.origin, body1, p2 = vert11, Δq = UnitQuaternion(RotX(0.0)))
 
     previd = body1.id
-    set_position(mechanism, collect(mechanism.eqconstraints)[2], [ϕx, ϕy])
+    set_position(mechanism, collect(mechanism.joints)[2], [ϕx, ϕy])
 
     zeroVelocity!(mechanism)
 end

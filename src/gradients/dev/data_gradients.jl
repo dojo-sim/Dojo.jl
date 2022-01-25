@@ -123,12 +123,12 @@ end
 ################################################################################
 function ∂ineqc_data!(data_system::System, mechanism::Mechanism{T}) where {T}
     # ∂body∂ineqcdata
-    for ineqc in mechanism.ineqconstraints
+    for ineqc in mechanism.contacts
         pbody = get_body(mechanism, ineqc.parentid)
         data_system.matrix_entries[pbody.id, ineqc.id].value += ∂body∂ineqc_data(mechanism, ineqc, pbody)
     end
     # ∂ineqc∂ineqcdata
-    for ineqc in mechanism.ineqconstraints
+    for ineqc in mechanism.contacts
         pbody = get_body(mechanism, ineqc.parentid)
         data_system.matrix_entries[ineqc.id, ineqc.id].value += ∂ineqc∂ineqc_data(mechanism, ineqc, pbody)
     end
@@ -137,13 +137,13 @@ end
 
 function ∂eqc_data!(data_system::System, mechanism::Mechanism{T}) where {T}
     # ∂eqc∂eqcdata
-    for eqc in mechanism.eqconstraints
+    for eqc in mechanism.joints
         data_system.matrix_entries[eqc.id, eqc.id].value += ∂eqc∂eqc_data(mechanism, eqc)
     end
     # ∂body∂eqcdata
     # TODO adapt this to handle cycles
     for body in mechanism.bodies
-        for eqc in mechanism.eqconstraints
+        for eqc in mechanism.joints
             if (body.id == eqc.parentid) || (body.id ∈ eqc.childids)
                 data_system.matrix_entries[body.id, eqc.id].value += ∂body∂eqc_data(mechanism, eqc, body)
             end
@@ -156,7 +156,7 @@ function ∂body_data!(data_system::System, mechanism::Mechanism{T}) where {T}
     # ∂eqc∂bodydata
     # TODO adapt this to handle cycles
     for body in mechanism.bodies
-        for eqc in mechanism.eqconstraints
+        for eqc in mechanism.joints
             if (body.id == eqc.parentid) || (body.id ∈ eqc.childids)
                 data_system.matrix_entries[eqc.id, body.id].value += ∂eqc∂body_data(mechanism, eqc, body)
             end
@@ -167,7 +167,7 @@ function ∂body_data!(data_system::System, mechanism::Mechanism{T}) where {T}
         data_system.matrix_entries[body.id, body.id].value += ∂body∂body_data(mechanism, body)
     end
     # ∂ineqc∂bodydata
-    for ineqc in mechanism.ineqconstraints
+    for ineqc in mechanism.contacts
         pbody = get_body(mechanism, ineqc.parentid)
         data_system.matrix_entries[ineqc.id, pbody.id].value += ∂ineqc∂body_data(mechanism, ineqc, pbody)
     end

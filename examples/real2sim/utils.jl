@@ -2,7 +2,7 @@
 # Simulator Data
 ################################################################################
 
-simdata_dim(mechanism::Mechanism) = sum(simdata_dim.(mech.ineqconstraints))
+simdata_dim(mechanism::Mechanism) = sum(simdata_dim.(mech.contacts))
 simdata_dim(ineqc::ContactConstraint) = sum(simdata_dim.(ineqc.constraints))
 simdata_dim(bound::NonlinearContact) = 7 # [cf, p, offset]
 simdata_dim(bound::LinearContact) = 7 # [cf, p, offset]
@@ -30,7 +30,7 @@ end
 
 function set_simulator_data!(mechanism::Mechanism, data::AbstractVector)
     c = 0
-    for ineqc in mechanism.ineqconstraints
+    for ineqc in mechanism.contacts
 		for bound in ineqc.constraints
 			N = simdata_dim(bound)
 	        set_simulator_data!(bound, data[c .+ (1:N)]); c += N
@@ -54,7 +54,7 @@ end
 function get_simulator_data(mechanism::Mechanism{T}) where T
     data = zeros(T,simdata_dim(mechanism))
 	e = 0
-    for ineqc in mechanism.ineqconstraints
+    for ineqc in mechanism.contacts
 		for bound in ineqc.constraints
 			N = simdata_dim(bound)
         	data[e .+ (1:N)] = get_simulator_data(bound); e += N
@@ -74,11 +74,11 @@ function simdata_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb
 
 	A = zeros(nsol, ndata)
 	neqcs = joint_dimension(mechanism)
-	n = sum(length.(mech.eqconstraints.values))
+	n = sum(length.(mech.joints.values))
 	rb = neqcs # row ineqc
 	ri = neqcs + 6Nb # row body
 	c = 0 # column
-	for ineqc in mechanism.ineqconstraints
+	for ineqc in mechanism.contacts
 		for bound in ineqc.constraints
 			N = length(ineqc)
 			N½ = Int(N/2)

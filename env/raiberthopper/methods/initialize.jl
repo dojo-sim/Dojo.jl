@@ -51,7 +51,7 @@ function initializeraiberthopper!(mech::Mechanism{T,Nn,Ne,Nb}; leg_length_nomina
     v = zeros(3), ω = zeros(3)) where {T,Nn,Ne,Nb}
     body1 = collect(mech.bodies)[1]
     body2 = collect(mech.bodies)[2]
-    eqc2 = collect(mech.eqconstraints)[2]
+    eqc2 = collect(mech.joints)[2]
     tra2 = eqc2.constraints[1]
 
     # origin to body

@@ -122,8 +122,8 @@ norm(fd_sensi, Inf)
 include(joinpath(@__DIR__, "finite_diff.jl"))
 
 Δt = 0.01
-tra1 = mech.eqconstraints[1].constraints[1]
-tra2 = mech.eqconstraints[2].constraints[1]
+tra1 = mech.joints[1].constraints[1]
+tra2 = mech.joints[2].constraints[1]
 origin = mech.origin
 body1 = collect(mech.bodies)[1]
 body2 = collect(mech.bodies)[2]

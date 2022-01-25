@@ -22,7 +22,7 @@ mech = getmechanism(:walker2d, Δt = 0.05, g = -9.81, contact = true, limits = t
     contact_body = true, spring = 0.0, damper = 10.0);
 initialize!(mech, :walker2d, x = 0.0, z = 0.0, θ = -0.0)
 
-mech.eqconstraints
+mech.joints
 get_joint_constraint(mech, "thigh_left").constraints[1].vertices
 get_body(mech, 14)
 get_body(mech, 10)
@@ -32,7 +32,7 @@ get_body(mech, 10)
 visualize(mech, storage, vis = vis, show_contact = true)
 
 function controller!(mechanism, k)
-    for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])
+    for (i,eqc) in enumerate(collect(mechanism.joints)[2:end])
         nu = control_dimension(eqc)
         u = 100*0.05*(rand(nu) .- 0.5)
         set_input!(eqc, u)
@@ -48,7 +48,7 @@ obs = reset(env)[2]
 render(env)
 
 1000*sample(env.aspace)
-collect(env.mechanism.eqconstraints)[1]
+collect(env.mechanism.joints)[1]
 for i = 1:25
     render(env)
     sleep(0.05)
@@ -63,7 +63,7 @@ for i = 1:25
 end
 close(env)
 
-env.mechanism.eqconstraints
+env.mechanism.joints
 control_dimension(env.mechanism)
 sample(env.aspace)
 # sample(env.aspace)
