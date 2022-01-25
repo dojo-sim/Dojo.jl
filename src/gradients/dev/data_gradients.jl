@@ -19,6 +19,7 @@ end
 
 
 function ∂body∂body_data(mechanism::Mechanism, body::Body{T}) where T
+    Δt = mechanism.Δt
     Nd = data_dim(body)
     N = 6
     x1, v15, q1, ϕ15 = fullargs1(body.state)
@@ -26,11 +27,11 @@ function ∂body∂body_data(mechanism::Mechanism, body::Body{T}) where T
     x3, q3 = posargs3(body.state, Δt)
     # Mass
     ezg = SA{T}[0; 0; -mechanism.g]
-    ∇m = [- 1 / Δt * (x2 - x1) + Δt/2 * ezg + 1 / Δt * (x3 - x2) + Δt/2 * ezg;
+    ∇m = [1 / Δt * (x2 - x1) - Δt/2 * ezg - 1 / Δt * (x3 - x2) - Δt/2 * ezg;
           szeros(T,3,1)]
     # Inertia
-    ∇J = -4 / Δt * LVᵀmat(q2)' * LVᵀmat(q1) * ∂inertia(VLᵀmat(q1) * vector(q2))
-    ∇J += -4 / Δt * LVᵀmat(q2)' * Tmat() * RᵀVᵀmat(q3) * ∂inertia(VLᵀmat(q2) * vector(q3))
+    ∇J = 4 / Δt * LVᵀmat(q2)' * LVᵀmat(q1) * ∂inertia(VLᵀmat(q1) * vector(q2))
+    ∇J += 4 / Δt * LVᵀmat(q2)' * Tmat() * RᵀVᵀmat(q3) * ∂inertia(VLᵀmat(q2) * vector(q3))
     ∇J = [szeros(T,3,6); ∇J]
 
     # configuration 1: z1 = x1, q1
@@ -50,12 +51,13 @@ end
 
 function ∂body∂eqc_data(mechanism::Mechanism{T}, eqc::EqualityConstraint{T},
         body::Body{T}) where {T}
+    Δt = mechanism.Δt
     Nd = data_dim(eqc)
     N = 6
     x1, v15, q1, ϕ15 = fullargs1(body.state)
     x2, v25, q2, ϕ25 = fullargssol(body.state)
     x3, q3 = posargs3(body.state, Δt)
-    ∇u = Diagonal(SVector{6,T}(-1,-1,-1,-2,-2,-2)) * ∂Fτ∂u(mechanism, eqc, body)
+    ∇u = Diagonal(SVector{6,T}(1,1,1,2,2,2)) * ∂Fτ∂u(mechanism, eqc, body)
     ∇spring = springforce(mechanism, eqc, body, unitary=true)
     ∇damper = damperforce(mechanism, eqc, body, unitary=true)
     # TODO
@@ -121,6 +123,23 @@ end
 ################################################################################
 # System Data Jacobians
 ################################################################################
+function create_data_system(eqcs::Vector{<:EqualityConstraint}, bodies::Vector{<:Body},
+        ineqcs::Vector{<:InequalityConstraint})
+    nodes = [eqcs; bodies; ineqcs]
+    A = adjacencyMatrix(eqcs, bodies, ineqcs)
+    dimrow = length.(nodes)
+    dimcol = data_dim.(nodes)
+    data_system = System(A, dimrow, dimcol)
+    return data_system
+end
+
+function ∂data!(data_system::System, mech::Mechanism)
+    ∂ineqc_data!(data_system, mech::Mechanism)
+    ∂body_data!(data_system, mech::Mechanism)
+    ∂eqc_data!(data_system, mech::Mechanism)
+    return nothing
+end
+
 function ∂ineqc_data!(data_system::System, mechanism::Mechanism{T}) where {T}
     # ∂body∂ineqcdata
     for ineqc in mechanism.ineqconstraints

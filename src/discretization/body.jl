@@ -15,7 +15,6 @@
 
     dynT = D2x + D1x
     dynR = D2q + D1q
-
     state.d = [dynT; dynR]
 
     # inputs
