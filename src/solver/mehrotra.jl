@@ -16,18 +16,17 @@ end
 function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
     system = mechanism.system
     eqcs = mechanism.eqconstraints
-    bodies = mechanism.bodies
     ineqcs = mechanism.ineqconstraints
 
-	resetVars!.(ineqcs, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
-	resetVars!.(eqcs, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
+	resetVars!.(mechanism.ineqconstraints, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
+	resetVars!.(mechanism.eqconstraints, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
     mechanism.μ = 0.0
 	μtarget = 0.0
 	no_progress = 0
     undercut = opts.undercut
     α = 1.0
 
-	initial_state!.(ineqcs.values) # TODO: redundant with resetVars--remove
+	initial_state!.(mechanism.ineqconstraints) # TODO: redundant with resetVars--remove
     setentries!(mechanism) # compute the residual
 
     bvio = bilinear_violation(mechanism) # does not require to apply setentries!
@@ -74,9 +73,9 @@ function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
 		(no_progress >= opts.no_progress_max) && (undercut *= opts.no_progress_undercut)
 
 		# update solution
-        foreach(updatesolution!, bodies)
-        foreach(updatesolution!, eqcs)
-        foreach(updatesolution!, ineqcs)
+        updatesolution!.(mechanism.bodies)
+        updatesolution!.(mechanism.eqconstraints)
+        updatesolution!.(mechanism.ineqconstraints)
 
 		# recompute Jacobian and residual
         setentries!(mechanism)

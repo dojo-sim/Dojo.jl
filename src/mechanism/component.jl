@@ -9,18 +9,3 @@ resetGlobalID() = (global CURRENTID = -1; return)
 Base.eltype(::Type{<:Component{E}}) where {E} = @isdefined(E) ? E : Any
 Base.length(::Constraint{T,N}) where {T,N} = N
 getid(component::Component) = component.id
-
-function Base.getindex(dict::UnitDict{Base.OneTo{K},<:Component}, key::String) where K
-    for component in dict.values
-        component.name == key && return component
-    end
-    
-    return
-end
-function Base.getindex(dict::UnitDict{UnitRange{K},<:Component}, key::String) where K
-    for component in dict.values
-        component.name == key && return component
-    end
-    
-    return
-end

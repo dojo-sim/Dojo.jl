@@ -152,8 +152,7 @@ function contact_location(mechanism::Mechanism)
 end
 
 function contact_location(mechanism::Mechanism, ineqc::InequalityConstraint)
-    bodies = collect(mechanism.bodies)
-    body = bodies[findfirst(x -> x.id == ineqc.parentid, bodies)]
+    body = mechanism.bodies[findfirst(x -> x.id == ineqc.parentid, mechanism.bodies)]
     return contact_location(ineqc, body)
 end
 

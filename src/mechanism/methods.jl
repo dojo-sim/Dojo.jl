@@ -1,4 +1,4 @@
-@inline getbody(mechanism::Mechanism, id::Integer) = mechanism.bodies[id]
+@inline getbody(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,Ni} = collect(mechanism.bodies)[id-Ne]
 @inline getbody(mechanism::Mechanism, id::Nothing) = mechanism.origin
 
 function getbody(mechanism::Mechanism, name::String)
@@ -25,7 +25,7 @@ function geteqconstraint(mechanism::Mechanism, name::String)
     return
 end
 
-@inline getineqconstraint(mechanism::Mechanism, id::Integer) = mechanism.ineqconstraints[id]
+@inline getineqconstraint(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,Ni} = mechanism.ineqconstraints[id-Ne-Nb]
 function getineqconstraint(mechanism::Mechanism, name::String)
     for ineqc in mechanism.ineqconstraints
         if ineqc.name == name
@@ -58,7 +58,9 @@ function getcomponent(mechanism::Mechanism, name::String)
 end
 
 @inline function discretizestate!(mechanism::Mechanism)
-    foreach(discretizestate!, mechanism.bodies, mechanism.Δt)
+    for body in mechanism.bodies 
+        discretizestate!(body, mechanism.Δt) 
+    end
     return
 end
 

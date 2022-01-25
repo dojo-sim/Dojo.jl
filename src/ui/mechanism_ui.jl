@@ -1,34 +1,30 @@
-function nameiddict(mechanism::Mechanism)
-    dict = Dict{String,Int64}()
-    for (id,body) in pairs(mechanism.bodies)
-        if body.name != ""
-            dict[body.name] = id
-        end
-    end
-    for (id,eqc) in pairs(mechanism.eqconstraints)
-        if eqc.name != ""
-            dict[eqc.name] = id
-        end
-    end
-    for (id,ineqc) in pairs(mechanism.ineqconstraints)
-        if ineqc.name != ""
-            dict[ineqc.name] = id
-        end
-    end
+# function nameiddict(mechanism::Mechanism)
+#     dict = Dict{String,Int64}()
+#     for (id,body) in pairs(mechanism.bodies)
+#         if body.name != ""
+#             dict[body.name] = id
+#         end
+#     end
+#     for (id,eqc) in pairs(mechanism.eqconstraints)
+#         if eqc.name != ""
+#             dict[eqc.name] = id
+#         end
+#     end
+#     for (id,ineqc) in pairs(mechanism.ineqconstraints)
+#         if ineqc.name != ""
+#             dict[ineqc.name] = id
+#         end
+#     end
 
-    return dict
-end
+#     return dict
+# end
 
 function minimalCoordinates(mechanism::Mechanism)
-    keys = mechanism.eqconstraints.keys
-    values = Vector{SVector}()
-
+    d = Dict()
     for eqc in mechanism.eqconstraints
-        push!(values, minimalCoordinates(mechanism, eqc))
+        push!(dict, eqc.id => minimalCoordinates(mechanism, eqc))
     end
-
-    return UnitDict(keys, values)
-
+    return d
 end
 
 function minimalCoordinatesVector(mechanism::Mechanism{T}) where {T}
@@ -55,7 +51,7 @@ function minimalVelocitiesVector(mechanism::Mechanism{T}) where {T}
     return x
 end
 
-function setPosition!(mechanism::Mechanism, dict::UnitDict)
+function setPosition!(mechanism::Mechanism, dict)
     for (id,eqc) in pairs(mechanism.eqconstraints)
         setPosition!(mechanism, eqc, dict[id])
     end
@@ -63,7 +59,7 @@ function setPosition!(mechanism::Mechanism, dict::UnitDict)
     return
 end
 
-function setVelocity!(mechanism::Mechanism, dict::UnitDict)
+function setVelocity!(mechanism::Mechanism, dict)
     for (id,eqc) in pairs(mechanism.eqconstraints)
         setVelocity!(mechanism, eqc, dict[id])
     end
@@ -82,7 +78,7 @@ function zeroVelocity!(mechanism::Mechanism)
     end
 end
 
-function setForce!(mechanism::Mechanism, dict::UnitDict)
+function setForce!(mechanism::Mechanism, dict)
     for (id,eqc) in pairs(mechanism.eqconstraints)
         setForce!(mechanism, eqc, dict[id])
     end
@@ -91,6 +87,5 @@ function setForce!(mechanism::Mechanism, dict::UnitDict)
 end
 
 @inline function currentasknot!(mechanism::Mechanism)
-    foreach(currentasknot!, mechanism.bodies)
-    return
+    for body in mechanism.bodies currentasknot!(body) end
 end

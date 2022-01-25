@@ -1,8 +1,8 @@
 mutable struct Mechanism{T,Nn,Ne,Nb,Ni}
     origin::Origin{T}
-    eqconstraints::UnitDict{Base.OneTo{Int64},<:EqualityConstraint{T}}
-    bodies::UnitDict{UnitRange{Int64},Body{T}}
-    ineqconstraints::UnitDict{UnitRange{Int64},<:InequalityConstraint{T}}
+    eqconstraints#::Vector{<:EqualityConstraint{T}}
+    bodies#::UnitDict{UnitRange{Int64},Body{T}}
+    ineqconstraints#::UnitDict{UnitRange{Int64},<:InequalityConstraint{T}}
 
     system::System{Nn}
     residual_entries::Vector{Entry}
@@ -60,9 +60,9 @@ function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, eqcs::Vector{<:
     eqcs = set_spring_damper!(eqcs, spring, damper)
 
     # containers for nodes
-    eqcs = UnitDict(eqcs)
-    bodies = UnitDict((bodies[1].id):(bodies[Nb].id), bodies)
-    Ni > 0 ? (ineqcs = UnitDict((ineqcs[1].id):(ineqcs[Ni].id), ineqcs)) : (ineqcs = UnitDict(0:0, ineqcs))
+    # eqcs = UnitDictUnitDict(eqcs)
+    # bodies = UnitDict((bodies[1].id):(bodies[Nb].id), bodies)
+    # Ni > 0 ? (ineqcs = UnitDict((ineqcs[1].id):(ineqcs[Ni].id), ineqcs)) : (ineqcs = UnitDict(0:0, ineqcs))
 
     # complementarity slackness (i.e., contact model "softness")
     μ = 0.0

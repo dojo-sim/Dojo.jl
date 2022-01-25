@@ -1,7 +1,9 @@
 
 function initializeSimulation!(mechanism::Mechanism)
     discretizestate!(mechanism)
-    foreach(setsolution!, mechanism.bodies)
+    for body in mechanism.bodies 
+        setsolution!(body) 
+    end
     return
 end
 
@@ -16,11 +18,11 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
 
     for k = steps
         control!(mechanism, k)
-        foreach(applyFτ!, eqcs, mechanism)
+        for c in mechanism.eqconstraints applyFτ!(c, mechanism) end
         mehrotra!(mechanism, opts=opts)
         record && saveToStorage!(mechanism, storage, k)
 
-        (k != steps[end]) && foreach(updatestate!, bodies, Δt)
+        (k != steps[end]) && (for bodies in mechanism.bodies updatestate!(bodies, Δt) end)
     end
     record ? (return storage) : (return)
 end

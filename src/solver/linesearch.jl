@@ -2,18 +2,17 @@ function lineSearch!(mechanism::Mechanism, α, rvio, bvio, opts; warning::Bool =
     scale = 0
     system = mechanism.system
     eqcs = mechanism.eqconstraints
-    bodies = mechanism.bodies
     ineqcs = mechanism.ineqconstraints
 
     rvio_cand, bvio_cand = Inf * ones(2)
     for n = Base.OneTo(opts.max_ls)
-        for ineqc in ineqcs
+        for ineqc in mechanism.ineqconstraints
             lineStep!(α, ineqc, getentry(system, ineqc.id), scale)
         end
-        for eqc in eqcs
+        for eqc in mechanism.eqconstraints
             lineStep!(α, eqc, getentry(system, eqc.id), scale)
         end
-        for body in bodies
+        for body in mechanism.bodies
             ϕmax = 3.9 / mechanism.Δt^2
             lineStep!(α, mechanism, body, getentry(system, body.id), scale, ϕmax = ϕmax)
             if dot(body.state.ϕsol[2], body.state.ϕsol[2]) > 3.91 / mechanism.Δt^2

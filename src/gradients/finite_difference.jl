@@ -29,7 +29,10 @@ function setdata!(mechanism::Mechanism, data::AbstractVector)
             setForce!(mechanism, eqc, u)
         end
     end
-    foreach(applyFτ!, mechanism.eqconstraints, mechanism, false)
+
+    for c in mechanism.eqconstraints 
+        applyFτ!(c, mechanism, false) 
+    end
     return nothing
 end
 

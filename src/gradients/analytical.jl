@@ -456,7 +456,7 @@ function contact_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,
         N½ = Int(length(ineqc)/2)
         x2, v25, q2, ϕ25 = fullargssol(body.state)
         x3, q3 = posargs3(body.state, Δt)
-        ibody = findfirst(x -> x == body.id, mechanism.bodies.keys)
+        ibody = findfirst(x -> x.id == ineqc.parentid, mechanism.bodies)
         bound_type = typeof(bound)
 
         function d(vars)

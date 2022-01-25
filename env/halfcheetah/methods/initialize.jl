@@ -37,8 +37,8 @@ function gethalfcheetah(; Δt::T=0.01, g::T=-9.81, cf::T=0.4,
 
     if contact
         origin = Origin{T}()
-        bodies = mech.bodies.values
-        eqcs = mech.eqconstraints.values
+        bodies = UnitDict((mech.bodies[1].id):(mech.bodies[length(mech.bodies)].id), mech.bodies).values
+        eqcs = UnitDict(mech.eqconstraints).values
 
         normal = [0.0; 0.0; 1.0]
         names = contact_body ? getfield.(mech.bodies, :name) : ["ffoot", "bfoot"]

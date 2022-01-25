@@ -114,7 +114,6 @@ export Origin,
 # Utilities
 include(joinpath("util", "util.jl"))
 include(joinpath("util", "custom_static.jl"))
-include(joinpath("util", "customdict.jl"))
 include(joinpath("util", "quaternion.jl"))
 
 # Graph system
