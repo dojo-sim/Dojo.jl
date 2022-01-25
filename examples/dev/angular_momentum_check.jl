@@ -35,7 +35,7 @@ function controller!(mechanism, k)
             else
                 u = 0.0 * [1.0; zeros(nu-1)]
             end
-            setForce!(mechanism, joint, SA[u...])
+            setForce!(joint, SA[u...])
         end
     end
     return
@@ -79,7 +79,7 @@ f2 = (zerodimstaticadjoint(∂g∂ʳpos(mech, eqc, mech.bodies[4])) * eqc.λsol[
 norm(f1 + f2)
 norm(f1) - norm(f2)
 t1 = (zerodimstaticadjoint(∂g∂ʳpos(mech, eqc, mech.bodies[3])) * eqc.λsol[2])[4:6]
-t2 = (zerodimstaticadjoint(∂g∂ʳpos(mech, eqc, mech.bodies[4])) * eqc.λsol[2])[4:6] 
+t2 = (zerodimstaticadjoint(∂g∂ʳpos(mech, eqc, mech.bodies[4])) * eqc.λsol[2])[4:6]
 norm(t1 + t2)
 norm(t1) - norm(t2)
 
@@ -103,7 +103,7 @@ plot(hcat(Vector.(storage.ω[1])...)', width=2.0, color=:black, label="")
 plot!(hcat(Vector.(storage.ω[2])...)', width=1.0, color=:red, label="")
 
 
-# test solmat 
+# test solmat
 data = getdata(mech)
 setdata!(mech, data)
 sol = getsolution(mech)
@@ -123,7 +123,7 @@ fd_datamat = finitediff_data_matrix(deepcopy(mech), data, sol, δ = 1e-5) * attj
 fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
 @test norm(fd_solmat + solmat, Inf) < 1e-8
 
-### 
+###
 ################################################################################
 # snake initial velocity
 ################################################################################
@@ -148,7 +148,7 @@ function controller!(mechanism, k)
             else
                 u = zeros(nu)
             end
-            setForce!(mechanism, joint, SA[u...])
+            setForce!(joint, SA[u...])
         end
     end
     return

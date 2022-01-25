@@ -19,7 +19,7 @@ function set_control!(mechanism::Mechanism{T}, u::AbstractVector) where {T}
 	off = 0
 	for eqc in eqcs
 		nu = controldim(eqc)
-		setForce!(mechanism, eqc, SVector{nu,T}(u[off .+ (1:nu)]))
+		setForce!(eqc, SVector{nu,T}(u[off .+ (1:nu)]))
 		off += nu
 	end
 	# apply the controls to each body's state
@@ -108,10 +108,10 @@ function max2min(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) whe
 			if eqc.parentid != nothing
 				iparent = eqc.parentid - Ne
 				xa, va, qa, ϕa = unpackMaxState(z, iparent)
-			else 
+			else
 				xa, va, qa, ϕa = fullargssol(mechanism.origin.state)
 			end
-			
+
 			if typeof(joint) <: Translational
 				push!(c, minimalCoordinates(joint, xa, qa, xb, qb)...) # Δx in bodya's coordinates projected on jointAB's nullspace
 				push!(v, minimalVelocities(joint, xa, qa, va, ϕa, xb, qb, vb, ϕb)...) # Δv in bodya's coordinates projected on jointAB's nullspace

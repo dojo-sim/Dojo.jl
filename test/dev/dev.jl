@@ -93,7 +93,7 @@ function controller!(mechanism, k)
             else
                 u = 0.0
             end
-            setForce!(mechanism, joint, SA[u])
+            setForce!(joint, SA[u])
         end
     end
     return
@@ -133,7 +133,7 @@ function controller!(mechanism, k)
                 else
                     u = 0.0
                 end
-                setForce!(mechanism, joint, SA[u])
+                setForce!(joint, SA[u])
             end
         end
     end
@@ -185,7 +185,7 @@ function controller!(mechanism, k)
             else
                 u = 0.0
             end
-            setForce!(mechanism, joint, SA[u])
+            setForce!(joint, SA[u])
         end
     end
     return
@@ -222,7 +222,7 @@ function controller!(mechanism, k)
                 else
                     u = 0.0
                 end
-                setForce!(mechanism, joint, SA[u])
+                setForce!(joint, SA[u])
             end
         end
     end
@@ -286,7 +286,7 @@ function controller!(mechanism, k)
             else
                 u = 0.0
             end
-            setForce!(mechanism, joint, SA[u])
+            setForce!(joint, SA[u])
         end
     end
     return
@@ -325,7 +325,7 @@ function controller!(mechanism, k)
             else
                 u = zeros(nu)
             end
-            setForce!(mechanism, joint, SA[u...])
+            setForce!(joint, SA[u...])
         end
     end
     return
@@ -370,7 +370,7 @@ function controller!(mechanism, k)
             else
                 u = zeros(3)
             end
-            setForce!(mechanism, joint, SA[u...])
+            setForce!(joint, SA[u...])
         end
     end
     return
@@ -437,7 +437,7 @@ function controller!(mechanism, k)
             else
                 u = 0.0
             end
-            setForce!(mechanism, joint, SA[u])
+            setForce!(joint, SA[u])
         end
     end
     return
@@ -487,7 +487,7 @@ function controller!(mechanism, k)
             else
                 u = 0.0 * [1.0; zeros(nu-1)]
             end
-            setForce!(mechanism, joint, SA[u...])
+            setForce!(joint, SA[u...])
         end
     end
     return
@@ -594,7 +594,7 @@ function controller!(mechanism, k)
             else
                 u = 0.0
             end
-            setForce!(mechanism, joint, SA[u])
+            setForce!(joint, SA[u])
         end
     end
     return

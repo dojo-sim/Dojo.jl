@@ -29,7 +29,7 @@ function controller!(mechanism, k)
     for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])
         nu = controldim(eqc)
         u = sones(nu)
-        setForce!(mechanism, eqc, u)
+        setForce!(eqc, u)
     end
     return
 end

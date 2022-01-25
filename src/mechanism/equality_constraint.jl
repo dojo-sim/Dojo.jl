@@ -110,7 +110,7 @@ function setVelocity!(mechanism, eqc::EqualityConstraint{T,N,Nc}, vω) where {T,
     return
 end
 
-function setForce!(mechanism, eqc::EqualityConstraint{T,N,Nc}, Fτ::AbstractVector) where {T,N,Nc}
+function setForce!(eqc::EqualityConstraint{T,N,Nc}, Fτ::AbstractVector) where {T,N,Nc}
     @assert length(Fτ)==controldim(eqc)
     for i = 1:Nc
         r_idx = SUnitRange(eqc.inds[i][1], eqc.inds[i][2])
@@ -120,7 +120,7 @@ function setForce!(mechanism, eqc::EqualityConstraint{T,N,Nc}, Fτ::AbstractVect
     return
 end
 
-function addForce!(mechanism, eqc::EqualityConstraint{T,N,Nc}, Fτ::AbstractVector) where {T,N,Nc}
+function addForce!(eqc::EqualityConstraint{T,N,Nc}, Fτ::AbstractVector) where {T,N,Nc}
     @assert length(Fτ)==controldim(eqc)
     for i = 1:Nc
         addForce!(eqc.constraints[i], Fτ[SUnitRange(eqc.inds[i][1], eqc.inds[i][2])])
