@@ -47,7 +47,7 @@ A differentiable contact-dynamics simulator for robotics.
 Learning geometry:
 <img src="examples/animations/box_learning.gif" width="200"/>
 Learning friction coefficient:
-<img src="examples/animations/cone_learning.gif" width="1500"/>
+<img src="examples/animations/cone_learning.gif" width="200"/>
 
 ### Toss
 <img src="examples/animations/box_toss.gif" width="300"/>
