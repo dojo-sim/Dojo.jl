@@ -7,7 +7,7 @@ function ∂eqc∂body_data(mechanism::Mechanism, eqc::JointConstraint{T,N},
     ∇m = szeros(T,N,1)
     ∇J = szeros(T,N,6)
     ∇z1 = szeros(T,N,6)
-    ∇z2 = ∂g∂z(mechanism, eqc, body) * ∂i∂z(body, mechanism.Δt, attjac=true)
+    ∇z2 = constraint_jacobian_configuration(mechanism, eqc, body) * ∂i∂z(body, mechanism.Δt, attjac=true)
     ∇g = [∇m ∇J ∇z1 ∇z2]
     return ∇g
 end
@@ -112,7 +112,7 @@ function ∂ineqc∂body_data(mechanism::Mechanism, ineqc::ContactConstraint{T,N
     ∇m = szeros(T,N½,1)
     ∇J = szeros(T,N½,6)
     ∇z1 = szeros(T,N½,6)
-    ∇z3 = ∂g∂z(mechanism, ineqc, body)
+    ∇z3 = constraint_jacobian_configuration(mechanism, ineqc, body)
     ∇z2 = ∇z3 * ∂i∂z(body, mechanism.Δt, attjac=true) # 4x7 * 7x6 = 4x6
     ∇g = [∇m ∇J ∇z1 ∇z2]
     return [∇compμ; ∇g]

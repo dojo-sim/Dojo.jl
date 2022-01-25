@@ -12,28 +12,28 @@ mutable struct ImpactContact{T,N} <: Contact{T,N}
     end
 end
 
-function g(mechanism, ineqc::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{ImpactContact{T,N}}}
+function constraint(mechanism, ineqc::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{ImpactContact{T,N}}}
     bound = ineqc.constraints[1]
     body = get_body(mechanism, ineqc.parentid)
     x3, q3 = next_configuration(body.state, mechanism.Δt)
     SVector{1,T}(bound.ainv3 * (x3 + vrotate(bound.p,q3) - bound.offset) - ineqc.ssol[2][1])
 end
 
-@inline function ∂g∂v(bound::ImpactContact, x3::AbstractVector, q3::UnitQuaternion,
+@inline function constraint_jacobian_velocity(bound::ImpactContact, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, Δt)
     V = bound.ainv3 * Δt
     Ω = bound.ainv3 * ∂vrotate∂q(bound.p, q3) * ∂integrator∂ϕ(q2, ϕ25, Δt)
     return [V Ω]
 end
 
-@inline function ∂g∂z(bound::ImpactContact, x3::AbstractVector, q3::UnitQuaternion,
+@inline function constraint_jacobian_configuration(bound::ImpactContact, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, Δt)
     X = bound.ainv3
     Q = bound.ainv3 * ∂vrotate∂q(bound.p, q3)
     return [X Q]
 end
 
-@inline function G(bound::ImpactContact, x::AbstractVector, q::UnitQuaternion, λ)
+@inline function impulse_map(bound::ImpactContact, x::AbstractVector, q::UnitQuaternion, λ)
     X = bound.ainv3
     # q * ... is a rotation by quaternion q it is equivalent to Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * ...
     Q = - X * q * skew(bound.p - vrotate(bound.offset, inv(q)))
@@ -57,6 +57,6 @@ end
     matrix_entry.value = hcat(∇s, ∇γ)
 
     # [-γsol .* ssol + μ; -g + s]
-    vector_entry.value = vcat(-complementarityμ(mechanism, ineqc), -g(mechanism, ineqc))
+    vector_entry.value = vcat(-complementarityμ(mechanism, ineqc), -constraint(mechanism, ineqc))
     return
 end

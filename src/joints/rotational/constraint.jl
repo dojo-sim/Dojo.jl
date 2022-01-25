@@ -35,34 +35,34 @@ Rotational2{T} = Rotational{T,2} where T
 Rotational3{T} = Rotational{T,3} where T
 
 # Position level constraints (for dynamics)
-@inline function g(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+@inline function constraint(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     return constraintmat(joint) *  Vmat(qa \ qb / joint.qoffset)
 end
 
-@inline function ∂g∂z(joint::Rotational{T,Nλ,0,N}, η) where {T,Nλ,N}
+@inline function constraint_jacobian_configuration(joint::Rotational{T,Nλ,0,N}, η) where {T,Nλ,N}
     return Diagonal(+1.00e-10 * sones(T,N))
 end
 
-@inline function ∂g∂a(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+@inline function constraint_jacobian_parent(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
     return constraintmat(joint) * [X Q]
 end
 
-@inline function ∂g∂b(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+@inline function constraint_jacobian_child(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa)
     return constraintmat(joint) * [X Q]
 end
 
-@inline function Ga(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+@inline function impulse_map_parent(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
     Q = Q * LVᵀmat(qa)
     return constraintmat(joint) * [X Q]
 end
 
-@inline function Gb(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+@inline function impulse_map_child(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa)
     Q = Q * LVᵀmat(qb)
@@ -70,7 +70,7 @@ end
 end
 
 ## w/ Limits
-@inline function g(joint::Rotational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
+@inline function constraint(joint::Rotational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
     e1 = Vmat(qa \ qb / joint.qoffset)
     e2 = minimal_coordinates(joint, qa, qb)
     s, γ = get_sγ(joint, η)
@@ -82,7 +82,7 @@ end
            ]
 end
 
-@inline function ∂g∂z(joint::Rotational{T,Nλ,Nb,N}, η) where {T,Nλ,Nb,N}
+@inline function constraint_jacobian_configuration(joint::Rotational{T,Nλ,Nb,N}, η) where {T,Nλ,Nb,N}
     s, γ = get_sγ(joint, η)
 
     c1 = [Diagonal(γ + 1e-10 * sones(T, Nb)); Diagonal(sones(Nb)); szeros(Nλ, Nb)]
@@ -91,19 +91,19 @@ end
     return [c1 c2 c3]
 end
 
-@inline function ∂g∂a(joint::Rotational{T,Nλ,Nb,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
+@inline function constraint_jacobian_parent(joint::Rotational{T,Nλ,Nb,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
     X = szeros(T, N, 3)
-    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, UnitQuaternion(q..., false), xb, qb, η), vector(qa))
+    Q = FiniteDiff.finite_difference_jacobian(q -> constraint(joint, xa, UnitQuaternion(q..., false), xb, qb, η), vector(qa))
     return [X Q]
 end
 
-@inline function ∂g∂b(joint::Rotational{T,Nλ,Nb,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
+@inline function constraint_jacobian_child(joint::Rotational{T,Nλ,Nb,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
     X = szeros(T, N, 3)
-    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, qa, xb, UnitQuaternion(q..., false), η), vector(qb))
+    Q = FiniteDiff.finite_difference_jacobian(q -> constraint(joint, xa, qa, xb, UnitQuaternion(q..., false), η), vector(qb))
     return [X Q]
 end
 
-@inline function Ga(joint::Rotational{T,Nλ,Nb,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
+@inline function impulse_map_parent(joint::Rotational{T,Nλ,Nb,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
     return [
@@ -114,7 +114,7 @@ end
            ]
 end
 
-@inline function Gb(joint::Rotational{T,Nλ,Nb,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
+@inline function impulse_map_child(joint::Rotational{T,Nλ,Nb,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
     X = szeros(T, 3, 3)
     Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa)
     return [

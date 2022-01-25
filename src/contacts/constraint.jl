@@ -24,20 +24,20 @@ mutable struct ContactConstraint{T,N,Nc,Cs,N½} <: Constraint{T,N}
     end
 end
 
-function ∂g∂v(mechanism, ineqc::ContactConstraint, body::Body)
-    return ∂g∂v(ineqc.constraints[1], body, nothing, nothing, mechanism.Δt)
+function constraint_jacobian_velocity(mechanism, ineqc::ContactConstraint, body::Body)
+    return constraint_jacobian_velocity(ineqc.constraints[1], body, nothing, nothing, mechanism.Δt)
 end
 
-function G(mechanism, ineqc::ContactConstraint, body::Body)
-    return G(ineqc.constraints[1], body, nothing, nothing, mechanism.Δt)
+function impulse_map(mechanism, ineqc::ContactConstraint, body::Body)
+    return impulse_map(ineqc.constraints[1], body, nothing, nothing, mechanism.Δt)
 end
 
 @inline function impulses!(mechanism, body::Body, ineqc::ContactConstraint)
-    body.state.d -= G(mechanism, ineqc, body)' * ineqc.γsol[2]
+    body.state.d -= impulse_map(mechanism, ineqc, body)' * ineqc.γsol[2]
     return
 end
 
-@inline function ∂impulses∂v!(mechanism, body::Body, ineqc::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+@inline function impulses_jacobian_velocity!(mechanism, body::Body, ineqc::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
     Δt = mechanism.Δt
     x3, q3 = next_configuration(body.state, Δt)
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
@@ -61,7 +61,7 @@ end
 
 @inline function ∂gab∂ʳba(mechanism, body::Body, ineqc::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
     Z = szeros(T,N½,6)
-    return [Z; -G(mechanism, ineqc, body)]', [Z; ∂g∂v(mechanism, ineqc, body)]
+    return [Z; -impulse_map(mechanism, ineqc, body)]', [Z; constraint_jacobian_velocity(mechanism, ineqc, body)]
 end
 
 function reset!(ineqc::ContactConstraint{T,N,Nc,Cs,N½}; scale::T=1.0) where {T,N,Nc,Cs,N½}

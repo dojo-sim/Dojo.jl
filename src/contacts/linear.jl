@@ -20,7 +20,7 @@ mutable struct LinearContact{T,N} <: Contact{T,N}
     end
 end
 
-function g(mechanism, ineqc::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{LinearContact{T,N}}}
+function constraint(mechanism, ineqc::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{LinearContact{T,N}}}
     bound = ineqc.constraints[1]
     body = get_body(mechanism, ineqc.parentid)
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
@@ -41,7 +41,7 @@ function g(mechanism, ineqc::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tup
         (bound.Bx * vp + ψ * sones(4) - sβ)...)
 end
 
-@inline function ∂g∂v(bound::LinearContact, x3::AbstractVector, q3::UnitQuaternion,
+@inline function constraint_jacobian_velocity(bound::LinearContact, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, Δt)
     V = [bound.ainv3 * Δt;
          szeros(1,3);
@@ -56,7 +56,7 @@ end
     return [V Ω]
 end
 
-@inline function ∂g∂z(bound::LinearContact, x3::AbstractVector, q3::UnitQuaternion,
+@inline function constraint_jacobian_configuration(bound::LinearContact, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, Δt)
     V = [bound.ainv3;
          szeros(1,3);
@@ -70,7 +70,7 @@ end
     return [V Ω]
 end
 
-@inline function G(bound::LinearContact, x::AbstractVector, q::UnitQuaternion, λ)
+@inline function impulse_map(bound::LinearContact, x::AbstractVector, q::UnitQuaternion, λ)
     X = [bound.ainv3;
          szeros(1,3);
          bound.Bx]
@@ -111,6 +111,6 @@ end
     matrix_entry.value = hcat(∇s, ∇γ)
 
     # [-γsol .* ssol + μ; -g + s]
-    vector_entry.value = vcat(-complementarityμ(mechanism, ineqc), -g(mechanism, ineqc))
+    vector_entry.value = vcat(-complementarityμ(mechanism, ineqc), -constraint(mechanism, ineqc))
     return
 end

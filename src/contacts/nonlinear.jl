@@ -19,16 +19,16 @@ mutable struct NonlinearContact{T,N} <: Contact{T,N}
     end
 end
 
-function g(mechanism, ineqc::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}}}
+function constraint(mechanism, ineqc::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}}}
     bound = ineqc.constraints[1]
     body = get_body(mechanism, ineqc.parentid)
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, mechanism.Δt)
 
-    g(bound, ineqc.ssol[2], ineqc.γsol[2], x3, q3, v25, ϕ25)
+    constraint(bound, ineqc.ssol[2], ineqc.γsol[2], x3, q3, v25, ϕ25)
 end
 
-function g(bound::NonlinearContact, s::AbstractVector{T}, γ::AbstractVector{T},
+function constraint(bound::NonlinearContact, s::AbstractVector{T}, γ::AbstractVector{T},
         x3::AbstractVector{T}, q3::UnitQuaternion{T}, v25::AbstractVector{T},
         ϕ25::AbstractVector{T}) where {T}
 
@@ -40,7 +40,7 @@ function g(bound::NonlinearContact, s::AbstractVector{T}, γ::AbstractVector{T},
         (bound.Bx * vp - s[@SVector [3,4]])...)
 end
 
-@inline function ∂g∂v(bound::NonlinearContact{T}, x3::AbstractVector{T}, q3::UnitQuaternion{T},
+@inline function constraint_jacobian_velocity(bound::NonlinearContact{T}, x3::AbstractVector{T}, q3::UnitQuaternion{T},
     x2::AbstractVector{T}, v25::AbstractVector{T}, q2::UnitQuaternion{T}, ϕ25::AbstractVector{T}, λ, Δt::T) where {T}
     V = [bound.ainv3 * Δt;
         szeros(1,3);
@@ -55,7 +55,7 @@ end
     return [V Ω]
 end
 
-@inline function ∂g∂z(bound::NonlinearContact{T}, x3::AbstractVector{T}, q3::UnitQuaternion{T},
+@inline function constraint_jacobian_configuration(bound::NonlinearContact{T}, x3::AbstractVector{T}, q3::UnitQuaternion{T},
     x2::AbstractVector{T}, v25::AbstractVector{T}, q2::UnitQuaternion{T}, ϕ25::AbstractVector{T}, λ, Δt::T) where {T}
     X = [bound.ainv3;
         szeros(1,3);
@@ -69,7 +69,7 @@ end
     return [X Q]
 end
 
-@inline function G(bound::NonlinearContact, x::AbstractVector, q::UnitQuaternion, λ)
+@inline function impulse_map(bound::NonlinearContact, x::AbstractVector, q::UnitQuaternion, λ)
     X = [bound.ainv3;
          szeros(1,3);
          bound.Bx]
@@ -114,7 +114,7 @@ end
     matrix_entry.value = [∇s ∇γ]
 
     # [-γsol .* ssol + μ; -g + s]
-    vector_entry.value = vcat(-complementarityμ(mechanism, ineqc), -g(mechanism, ineqc))
+    vector_entry.value = vcat(-complementarityμ(mechanism, ineqc), -constraint(mechanism, ineqc))
     return
 end
 

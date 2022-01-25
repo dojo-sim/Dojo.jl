@@ -71,8 +71,8 @@ end
     x1, q1 = next_configuration(body1.state, Δt)
     x2, q2 = next_configuration(body2.state, Δt)
 
-    dGab = szeros(6,6)
-    dGba = szeros(6,6)
+    dimpulse_map_parentb = szeros(6,6)
+    dimpulse_map_childa = szeros(6,6)
 
     for connectionid in connections(mechanism.system, body1.id)
         !(connectionid <= Ne) && continue # body
@@ -85,10 +85,10 @@ end
                 Nj = length(joint)
                 if body2.id == eqc.childids[i]
                     Aᵀ = zerodimstaticadjoint(constraintmat(joint))
-                    eqc.isspring && (dGab -= ∂springforcea∂velb(joint, body1, body2, Δt)) #should be useless
-                    eqc.isdamper && (dGab -= ∂damperforcea∂velb(joint, body1, body2, Δt))
-                    eqc.isspring && (dGba -= ∂springforceb∂vela(joint, body1, body2, Δt)) #should be useless
-                    eqc.isdamper && (dGba -= ∂damperforceb∂vela(joint, body1, body2, Δt))
+                    eqc.isspring && (dimpulse_map_parentb -= ∂springforcea∂velb(joint, body1, body2, Δt)) #should be useless
+                    eqc.isdamper && (dimpulse_map_parentb -= ∂damperforcea∂velb(joint, body1, body2, Δt))
+                    eqc.isspring && (dimpulse_map_childa -= ∂springforceb∂vela(joint, body1, body2, Δt)) #should be useless
+                    eqc.isdamper && (dimpulse_map_childa -= ∂damperforceb∂vela(joint, body1, body2, Δt))
                 end
                 off += Nj
             end
@@ -98,14 +98,14 @@ end
                 Nj = length(joint)
                 if body1.id == eqc.childids[i]
                     Aᵀ = zerodimstaticadjoint(constraintmat(joint))
-                    # eqc.isspring && (dGab -= ∂springforcea∂velb(joint, body2, body1, Δt)) #should be useless
-                    eqc.isdamper && (dGab -= ∂damperforcea∂velb(joint, body2, body1, Δt))
-                    # eqc.isspring && (dGba -= ∂springforceb∂vela(joint, body2, body1, Δt)) #should be useless
-                    eqc.isdamper && (dGba -= ∂damperforceb∂vela(joint, body2, body1, Δt))
+                    # eqc.isspring && (dimpulse_map_parentb -= ∂springforcea∂velb(joint, body2, body1, Δt)) #should be useless
+                    eqc.isdamper && (dimpulse_map_parentb -= ∂damperforcea∂velb(joint, body2, body1, Δt))
+                    # eqc.isspring && (dimpulse_map_childa -= ∂springforceb∂vela(joint, body2, body1, Δt)) #should be useless
+                    eqc.isdamper && (dimpulse_map_childa -= ∂damperforceb∂vela(joint, body2, body1, Δt))
                 end
                 off += Nj
             end
         end
     end
-    return dGab, dGba
+    return dimpulse_map_parentb, dimpulse_map_childa
 end

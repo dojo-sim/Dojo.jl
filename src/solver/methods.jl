@@ -1,6 +1,6 @@
 @inline function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry, node::Node)
-    matrix_entry.value = ∂g∂z(mechanism, node)
-    vector_entry.value = -g(mechanism, node)
+    matrix_entry.value = constraint_jacobian_configuration(mechanism, node)
+    vector_entry.value = -constraint(mechanism, node)
     return
 end
 
@@ -200,7 +200,7 @@ end
 @inline function residual_violation(mechanism::Mechanism)
     violation = 0.0
     for eq in mechanism.eqconstraints
-        res = g(mechanism, eq)
+        res = constraint(mechanism, eq)
         shift = 0
         for (i, joint) in enumerate(eq.constraints)
             Nλ = λlength(joint)
@@ -211,11 +211,11 @@ end
         end
     end
     for body in mechanism.bodies
-        res = g(mechanism, body)
+        res = constraint(mechanism, body)
         violation = max(violation, norm(res, Inf))
     end
     for ineq in mechanism.ineqconstraints
-        res = g(mechanism, ineq)
+        res = constraint(mechanism, ineq)
         violation = max(violation, norm(res, Inf))
     end
     return violation

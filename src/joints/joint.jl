@@ -21,33 +21,33 @@ function λindex(joint::Joint{T,Nλ,Nb,N}, s::Int) where {T,Nλ,Nb,N}
 end
 
 ## Discrete-time position derivatives (for dynamics)
-@inline function Ga(joint::Joint, body1::Node, body2::Node, childid, λ, Δt)
+@inline function impulse_map_parent(joint::Joint, body1::Node, body2::Node, childid, λ, Δt)
     if body2.id == childid
-        return Ga(joint, current_configuration(body1.state)..., current_configuration(body2.state)..., λ)
+        return impulse_map_parent(joint, current_configuration(body1.state)..., current_configuration(body2.state)..., λ)
     else
         return zero(joint)
     end
 end
 
-@inline function Gb(joint::Joint, body1::Node, body2::Node, childid, λ, Δt)
+@inline function impulse_map_child(joint::Joint, body1::Node, body2::Node, childid, λ, Δt)
     if body2.id == childid
-        return Gb(joint, current_configuration(body1.state)..., current_configuration(body2.state)..., λ)
+        return impulse_map_child(joint, current_configuration(body1.state)..., current_configuration(body2.state)..., λ)
     else
         return zero(joint)
     end
 end
 
 ## Discrete-time velocity derivatives (for dynamics)
-@inline function ∂g∂a(joint::Joint, body1::Node, body2::Node, childid, λ, Δt)
+@inline function constraint_jacobian_parent(joint::Joint, body1::Node, body2::Node, childid, λ, Δt)
     if body2.id == childid
-        return ∂g∂a(joint, next_configuration(body1.state, Δt)..., next_configuration(body2.state, Δt)..., λ)
+        return constraint_jacobian_parent(joint, next_configuration(body1.state, Δt)..., next_configuration(body2.state, Δt)..., λ)
     else
         return zero(joint)
     end
 end
-@inline function ∂g∂b(joint::Joint, body1::Node, body2::Node, childid, λ, Δt)
+@inline function constraint_jacobian_child(joint::Joint, body1::Node, body2::Node, childid, λ, Δt)
     if body2.id == childid
-        return ∂g∂b(joint, next_configuration(body1.state, Δt)..., next_configuration(body2.state, Δt)..., λ)
+        return constraint_jacobian_child(joint, next_configuration(body1.state, Δt)..., next_configuration(body2.state, Δt)..., λ)
 
     else
         return zero(joint)
@@ -111,20 +111,16 @@ Joint3 = Joint{T,3} where T
 
 ### Constraints and derivatives
 ## Position level constraint wrappers
-@inline g(joint::Joint, body1::Node, body2::Node, λ, Δt) = g(joint, next_configuration(body1.state, Δt)..., next_configuration(body2.state, Δt)..., λ)
+@inline constraint(joint::Joint, body1::Node, body2::Node, λ, Δt) = constraint(joint, next_configuration(body1.state, Δt)..., next_configuration(body2.state, Δt)..., λ)
 
-### Constraints and derivatives
-## Discrete-time position wrappers (for dynamics)
-# g(joint::Joint, statea::State, stateb::State, λ, Δt) = g(joint, next_configuration(statea, Δt)..., next_configuration(stateb, Δt)..., λ)
-
-@inline function ∂g∂z(joint::Joint{T,Nλ}, λ) where {T,Nλ}
+@inline function constraint_jacobian_configuration(joint::Joint{T,Nλ}, λ) where {T,Nλ}
     return Diagonal(+1.00e-10 * sones(T,Nλ))
 end
 
 ## Discrete-time position derivatives (for dynamics)
 # Wrappers 1
-@inline ∂g∂a(joint::Joint, body1::Node, body2::Node, λ, Δt) = ∂g∂a(joint, next_configuration(body1.state, Δt)..., next_configuration(body2.state, Δt)..., λ)
-@inline ∂g∂b(joint::Joint, body1::Node, body2::Node, λ, Δt) = ∂g∂b(joint, next_configuration(body1.state, Δt)..., next_configuration(body2.state, Δt)..., λ)
+@inline constraint_jacobian_parent(joint::Joint, body1::Node, body2::Node, λ, Δt) = constraint_jacobian_parent(joint, next_configuration(body1.state, Δt)..., next_configuration(body2.state, Δt)..., λ)
+@inline constraint_jacobian_child(joint::Joint, body1::Node, body2::Node, λ, Δt) = constraint_jacobian_child(joint, next_configuration(body1.state, Δt)..., next_configuration(body2.state, Δt)..., λ)
 
 ### Force derivatives (for linearization)
 ## Forcing

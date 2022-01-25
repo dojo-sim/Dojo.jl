@@ -27,8 +27,8 @@ function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
                 pcol13 = offset_range(parentind,13)
                 ccol13 = offset_range(childind,13)
 
-                p = ∂g∂a(joint, pbody, cbody, eqc.λsol[2], Δt) # x3
-                c = ∂g∂b(joint, pbody, cbody, eqc.λsol[2], Δt) # x3
+                p = constraint_jacobian_parent(joint, pbody, cbody, eqc.λsol[2], Δt) # x3
+                c = constraint_jacobian_child(joint, pbody, cbody, eqc.λsol[2], Δt) # x3
 
                 pGlx = p[:, 1:3]
                 pGlq = p[:, 4:7]
@@ -52,7 +52,7 @@ function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
 
                 ccol13 = offset_range(childind,13)
 
-                c = ∂g∂b(joint, mechanism.origin, cbody, eqc.λsol[2], Δt) # x3
+                c = constraint_jacobian_child(joint, mechanism.origin, cbody, eqc.λsol[2], Δt) # x3
 
                 Gl[range,ccol13[1:3]] = c[:, 1:3]
                 Gl[range,ccol13[7:10]] = c[:, 4:7]
@@ -95,11 +95,11 @@ function joint_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,N
                 xa, qa = current_configuration(pstate)
                 xb, qb = current_configuration(cstate)
 
-                if typeof(Ga(joint, xa, qa, xb, qb, eqc.λsol[2])) <: AbstractArray && length(joint) > 0
-                    XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(Ga(joint, w, qa, xb, qb, eqc.λsol[2])[:, 1:3]) * λ, xa)
-                    XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(Ga(joint, xa, UnitQuaternion(w..., false), xb, qb, eqc.λsol[2])[:, 1:3]) * λ, [qa.w; qa.x; qa.y; qa.z])
-                    QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(Ga(joint, w, qa, xb, qb, eqc.λsol[2])[:, 4:6]) * λ, xa)
-                    QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(Ga(joint, xa, UnitQuaternion(w..., false), xb, qb, eqc.λsol[2])[:, 4:6]) * λ, [qa.w; qa.x; qa.y; qa.z])
+                if typeof(impulse_map_parent(joint, xa, qa, xb, qb, eqc.λsol[2])) <: AbstractArray && length(joint) > 0
+                    XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(joint, w, qa, xb, qb, eqc.λsol[2])[:, 1:3]) * λ, xa)
+                    XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(joint, xa, UnitQuaternion(w..., false), xb, qb, eqc.λsol[2])[:, 1:3]) * λ, [qa.w; qa.x; qa.y; qa.z])
+                    QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(joint, w, qa, xb, qb, eqc.λsol[2])[:, 4:6]) * λ, xa)
+                    QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(joint, xa, UnitQuaternion(w..., false), xb, qb, eqc.λsol[2])[:, 4:6]) * λ, [qa.w; qa.x; qa.y; qa.z])
 
                     Aaa[1:3,1:3] = XX
                     Aaa[1:3,7:10] = XQ
@@ -107,11 +107,11 @@ function joint_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,N
                     Aaa[4:6,7:10] = QQ
                 end
 
-                if typeof(Ga(joint, xa, qa, xb, qb, eqc.λsol[2])) <: AbstractArray && length(joint) > 0
-                    XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(Ga(joint, xa, qa, w, qb, eqc.λsol[2])[:, 1:3]) * λ, xb)
-                    XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(Ga(joint, xa, qa, xb, UnitQuaternion(w..., false), eqc.λsol[2])[:, 1:3]) * λ, [qb.w; qb.x; qb.y; qb.z])
-                    QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(Ga(joint, xa, qa, w, qb, eqc.λsol[2])[:, 4:6]) * λ, xb)
-                    QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(Ga(joint, xa, qa, xb, UnitQuaternion(w..., false), eqc.λsol[2])[:, 4:6]) * λ, [qb.w; qb.x; qb.y; qb.z])
+                if typeof(impulse_map_parent(joint, xa, qa, xb, qb, eqc.λsol[2])) <: AbstractArray && length(joint) > 0
+                    XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(joint, xa, qa, w, qb, eqc.λsol[2])[:, 1:3]) * λ, xb)
+                    XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(joint, xa, qa, xb, UnitQuaternion(w..., false), eqc.λsol[2])[:, 1:3]) * λ, [qb.w; qb.x; qb.y; qb.z])
+                    QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(joint, xa, qa, w, qb, eqc.λsol[2])[:, 4:6]) * λ, xb)
+                    QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(joint, xa, qa, xb, UnitQuaternion(w..., false), eqc.λsol[2])[:, 4:6]) * λ, [qb.w; qb.x; qb.y; qb.z])
 
                     Aab[1:3,1:3] = XX
                     Aab[1:3,7:10] = XQ
@@ -119,11 +119,11 @@ function joint_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,N
                     Aab[4:6,7:10] = QQ
                 end
 
-                if typeof(Gb(joint, xa, qa, xb, qb, eqc.λsol[2])) <: AbstractArray && length(joint) > 0
-                    XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(Gb(joint, w, qa, xb, qb, eqc.λsol[2])[:, 1:3]) * λ, xa)
-                    XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(Gb(joint, xa, UnitQuaternion(w..., false), xb, qb, eqc.λsol[2])[:, 1:3]) * λ, [qa.w; qa.x; qa.y; qa.z])
-                    QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(Gb(joint, w, qa, xb, qb, eqc.λsol[2])[:, 4:6]) * λ, xa)
-                    QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(Gb(joint, xa, UnitQuaternion(w..., false), xb, qb, eqc.λsol[2])[:, 4:6]) * λ, [qa.w; qa.x; qa.y; qa.z])
+                if typeof(impulse_map_child(joint, xa, qa, xb, qb, eqc.λsol[2])) <: AbstractArray && length(joint) > 0
+                    XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, w, qa, xb, qb, eqc.λsol[2])[:, 1:3]) * λ, xa)
+                    XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, xa, UnitQuaternion(w..., false), xb, qb, eqc.λsol[2])[:, 1:3]) * λ, [qa.w; qa.x; qa.y; qa.z])
+                    QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, w, qa, xb, qb, eqc.λsol[2])[:, 4:6]) * λ, xa)
+                    QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, xa, UnitQuaternion(w..., false), xb, qb, eqc.λsol[2])[:, 4:6]) * λ, [qa.w; qa.x; qa.y; qa.z])
 
                     Aba[1:3,1:3] = XX
                     Aba[1:3,7:10] = XQ
@@ -131,11 +131,11 @@ function joint_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,N
                     Aba[4:6,7:10] = QQ
                 end
 
-                if typeof(Gb(joint, xa, qa, xb, qb, eqc.λsol[2])) <: AbstractArray && length(joint) > 0
-                    XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(Gb(joint, xa, qa, w, qb, eqc.λsol[2])[:, 1:3]) * λ, xb)
-                    XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(Gb(joint, xa, qa, xb, UnitQuaternion(w..., false), eqc.λsol[2])[:, 1:3]) * λ, [qb.w; qb.x; qb.y; qb.z])
-                    QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(Gb(joint, xa, qa, w, qb, eqc.λsol[2])[:, 4:6]) * λ, xb)
-                    QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(Gb(joint, xa, qa, xb, UnitQuaternion(w..., false), eqc.λsol[2])[:, 4:6]) * λ, [qb.w; qb.x; qb.y; qb.z])
+                if typeof(impulse_map_child(joint, xa, qa, xb, qb, eqc.λsol[2])) <: AbstractArray && length(joint) > 0
+                    XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, xa, qa, w, qb, eqc.λsol[2])[:, 1:3]) * λ, xb)
+                    XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, xa, qa, xb, UnitQuaternion(w..., false), eqc.λsol[2])[:, 1:3]) * λ, [qb.w; qb.x; qb.y; qb.z])
+                    QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, xa, qa, w, qb, eqc.λsol[2])[:, 4:6]) * λ, xb)
+                    QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, xa, qa, xb, UnitQuaternion(w..., false), eqc.λsol[2])[:, 4:6]) * λ, [qb.w; qb.x; qb.y; qb.z])
 
                     Abb[1:3,1:3] = XX
                     Abb[1:3,7:10] = XQ
@@ -163,12 +163,12 @@ function joint_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,N
                 xa, qa = current_configuration(mechanism.origin.state)
                 xb, qb = current_configuration(cstate)
 
-                if typeof(Gb(joint, xa, qb, xb, qb, eqc.λsol[2])) <: AbstractArray && length(joint) > 0
+                if typeof(impulse_map_child(joint, xa, qb, xb, qb, eqc.λsol[2])) <: AbstractArray && length(joint) > 0
 
-                    XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(Gb(joint, xa, qa, w, qb, eqc.λsol[2])[:, 1:3]) * λ, xb)
-                    XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(Gb(joint, xa, qa, xb, UnitQuaternion(w..., false), eqc.λsol[2])[:, 1:3]) * λ, [qb.w; qb.x; qb.y; qb.z])
-                    QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(Gb(joint, xa, qa, w, qb, eqc.λsol[2])[:, 4:6]) * λ, xb)
-                    QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(Gb(joint, xa, qa, xb, UnitQuaternion(w..., false), eqc.λsol[2])[:, 4:6]) * λ, [qb.w; qb.x; qb.y; qb.z])
+                    XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, xa, qa, w, qb, eqc.λsol[2])[:, 1:3]) * λ, xb)
+                    XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, xa, qa, xb, UnitQuaternion(w..., false), eqc.λsol[2])[:, 1:3]) * λ, [qb.w; qb.x; qb.y; qb.z])
+                    QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, xa, qa, w, qb, eqc.λsol[2])[:, 4:6]) * λ, xb)
+                    QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, xa, qa, xb, UnitQuaternion(w..., false), eqc.λsol[2])[:, 4:6]) * λ, [qb.w; qb.x; qb.y; qb.z])
 
                     Abb[1:3,1:3] = XX
                     Abb[1:3,7:10] = XQ
@@ -352,7 +352,7 @@ function contact_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
                 function d(vars)
                     x = vars[1:3]
                     q = UnitQuaternion(vars[4:7]..., false)
-                    return G(bound, x, q, nothing)' * ineqc.γsol[2]
+                    return impulse_map(bound, x, q, nothing)' * ineqc.γsol[2]
                 end
 
                 if bound_type <: NonlinearContact
@@ -398,7 +398,7 @@ function contact_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,
         end
         if bound_type <: NonlinearContact
             J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  bound.ainv3
-            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = bound.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bound.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bound.p)))#) * Rmat(ωbar(ϕ25, Δt)*Δt/2)*LVᵀmat(q2)
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = bound.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bound.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bound.p)))#) * Rmat(quaternion_map(ϕ25, Δt)*Δt/2)*LVᵀmat(q2)
             J[offr + N½ .+ (3:4), (ibody-1)*13 .+ (7:10)] = FiniteDiff.finite_difference_jacobian(d, vector(q3))#dBω(vector(q3), ϕ25, bound.p)
         elseif bound_type <: LinearContact
             J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  bound.ainv3
@@ -406,7 +406,7 @@ function contact_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,
             J[offr + N½ .+ (3:6), (ibody-1)*13 .+ (7:10)] = FiniteDiff.finite_difference_jacobian(d, vector(q3))
         elseif bound_type <: ImpactContact
             J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  bound.ainv3
-            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = bound.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bound.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bound.p)))#) * Rmat(ωbar(ϕ25, Δt)*Δt/2)*LVᵀmat(q2)
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = bound.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bound.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bound.p)))#) * Rmat(quaternion_map(ϕ25, Δt)*Δt/2)*LVᵀmat(q2)
         end
         offr += length(ineqc)
     end

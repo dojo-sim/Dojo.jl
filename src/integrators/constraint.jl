@@ -1,4 +1,4 @@
-@inline function g(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn,Ne,Nb}
+@inline function constraint(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn,Ne,Nb}
     state = body.state
     Δt = mechanism.Δt
 
@@ -35,7 +35,7 @@
     return state.d
 end
 
-@inline function ∂g∂z(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn,Ne,Nb}
+@inline function constraint_jacobian_configuration(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn,Ne,Nb}
     state = body.state
     Δt = mechanism.Δt
     x1, q1 = previous_configuration(state)
@@ -51,7 +51,7 @@ end
     Z33 = szeros(T, 3, 3)
     Z34 = szeros(T, 3, 4)
 
-    state.D = [[dynT; Z33] [Z34; dynR]] * ∂i∂v(body, mechanism.Δt)
+    state.D = [[dynT; Z33] [Z34; dynR]] * integrator_jacobian_velocity(body, mechanism.Δt)
 
     # inputs
     nothing
@@ -59,7 +59,7 @@ end
     # impulses
     for id in connections(mechanism.system, body.id)
         Ne < id <= Ne+Nb && continue # body
-        ∂impulses∂v!(mechanism, body, get_node(mechanism, id))
+        impulses_jacobian_velocity!(mechanism, body, get_node(mechanism, id))
     end
 
     # regularize the angular velocity when necessary.
@@ -70,8 +70,8 @@ end
     return state.D
 end
 
-@inline function ∂i∂v(body::Body{T}, Δt) where {T}
+@inline function integrator_jacobian_velocity(body::Body{T}, Δt) where {T}
     state = body.state
     x2, v25, q2, ϕ25 = current_configuration_velocity(state)
-    ∂i∂v(q2, ϕ25, Δt)
+    integrator_jacobian_velocity(q2, ϕ25, Δt)
 end

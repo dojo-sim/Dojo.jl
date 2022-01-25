@@ -38,18 +38,18 @@ Translational3{T} = Translational{T,3} where T
 end
 
 # Position level constraints (for dynamics)
-@inline function g(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+@inline function constraint(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     vertices = joint.vertices
     e = vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
     return constraintmat(joint) * e
 end
 
-@inline function ∂g∂z(joint::Translational{T,Nλ,0,N}, η) where {T,Nλ,N}
+@inline function constraint_jacobian_configuration(joint::Translational{T,Nλ,0,N}, η) where {T,Nλ,N}
     return Diagonal(+1.00e-10 * sones(T,N))
 end
 
 ## Derivatives NOT accounting for quaternion specialness
-@inline function ∂g∂a(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+@inline function constraint_jacobian_parent(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     point2 = xb + vrotate(joint.vertices[2], qb)
     X = -VLᵀmat(qa) * RVᵀmat(qa)
     Q = ∂vrotate∂q(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * Tmat()
@@ -57,19 +57,19 @@ end
     return constraintmat(joint) * [X Q]
 end
 
-@inline function ∂g∂b(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+@inline function constraint_jacobian_child(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     X = VLᵀmat(qa) * RVᵀmat(qa)
     Q = 2 * VLᵀmat(qa) * Rmat(qa) * Rᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
     return constraintmat(joint) * [X Q]
 end
 
-function Ga(joint::Translational{T,Nλ,0}, statea::State, stateb::State, η, Δt) where {T,Nλ}
+function impulse_map_parent(joint::Translational{T,Nλ,0}, statea::State, stateb::State, η, Δt) where {T,Nλ}
     xa, qa = current_configuration(statea)
     xb, qb = current_configuration(stateb)
-    Ga(joint, xa, qa, xb, qb, η)
+    impulse_map_parent(joint, xa, qa, xb, qb, η)
 end
 
-function Ga(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+function impulse_map_parent(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     X = -1.0 * transpose(rotation_matrix(qa))
     pb_a = rotation_matrix(inv(qa)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
     ca_a = rotation_matrix(inv(qa)) * (xa) # body a com
@@ -78,13 +78,13 @@ function Ga(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternio
     return constraintmat(joint) * [X Q]
 end
 
-function Gb(joint::Translational{T,Nλ,0}, statea::State, stateb::State, η, Δt) where {T,Nλ}
+function impulse_map_child(joint::Translational{T,Nλ,0}, statea::State, stateb::State, η, Δt) where {T,Nλ}
     xa, qa = current_configuration(statea)
     xb, qb = current_configuration(stateb)
-    Gb(joint, xa, qa, xb, qb, η)
+    impulse_map_child(joint, xa, qa, xb, qb, η)
 end
 
-function Gb(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+function impulse_map_child(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     X = transpose(rotation_matrix(qa))
     pb_b = rotation_matrix(inv(qb)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
     cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
@@ -95,7 +95,7 @@ end
 
 ### w/ Limits
 # Position level constraints (for dynamics)
-@inline function g(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion,
+@inline function constraint(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion,
         xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
     vertices = joint.vertices
     e1 = vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
@@ -111,7 +111,7 @@ end
            ]
 end
 
-@inline function ∂g∂z(joint::Translational{T,Nλ,Nb,N}, η) where {T,Nλ,Nb,N}
+@inline function constraint_jacobian_configuration(joint::Translational{T,Nλ,Nb,N}, η) where {T,Nλ,Nb,N}
     s, γ = get_sγ(joint, η)
 
     c1 = [Diagonal(γ + 1e-10 * sones(T, Nb)); Diagonal(sones(Nb)); szeros(Nλ, Nb)]
@@ -120,25 +120,25 @@ end
     return [c1 c2 c3]
 end
 
-@inline function ∂g∂a(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η)
+@inline function constraint_jacobian_parent(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η)
     X = FiniteDiff.finite_difference_jacobian(x -> g(joint, x, qa, xb, qb, η), xa)
     Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, UnitQuaternion(q..., false), xb, qb, η), vector(qa))
     return [X Q]
 end
 
-@inline function ∂g∂b(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η)
+@inline function constraint_jacobian_child(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η)
     X = FiniteDiff.finite_difference_jacobian(x -> g(joint, xa, qa, x, qb, η), xb)
     Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, qa, xb, UnitQuaternion(q..., false), η), vector(qb))
     return [X Q]
 end
 
-function Ga(joint::Translational, statea::State, stateb::State, η, Δt)
+function impulse_map_parent(joint::Translational, statea::State, stateb::State, η, Δt)
     xa, qa = current_configuration(statea)
     xb, qb = current_configuration(stateb)
-    Ga(joint, xa, qa, xb, qb, η)
+    impulse_map_parent(joint, xa, qa, xb, qb, η)
 end
 
-function Ga(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion,
+function impulse_map_parent(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion,
         xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
     X = -1.0 * transpose(rotation_matrix(qa))
     pb_a = rotation_matrix(inv(qa)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
@@ -153,13 +153,13 @@ function Ga(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQ
            ]
 end
 
-function Gb(joint::Translational, statea::State, stateb::State, η, Δt)
+function impulse_map_child(joint::Translational, statea::State, stateb::State, η, Δt)
     xa, qa = current_configuration(statea)
     xb, qb = current_configuration(stateb)
-    Gb(joint, xa, qa, xb, qb, η)
+    impulse_map_child(joint, xa, qa, xb, qb, η)
 end
 
-function Gb(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
+function impulse_map_child(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
     X = transpose(rotation_matrix(qa))
     pb_b = rotation_matrix(inv(qb)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
     cb_b = rotation_matrix(inv(qb)) * (xb) # body b com

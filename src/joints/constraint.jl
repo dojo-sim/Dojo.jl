@@ -140,28 +140,28 @@ end
 end
 
 @inline function impulses!(mechanism, body::Body, eqc::JointConstraint)
-    body.state.d -= zerodimstaticadjoint(G(mechanism, eqc, body)) * eqc.λsol[2]
+    body.state.d -= zerodimstaticadjoint(impulse_map(mechanism, eqc, body)) * eqc.λsol[2]
     eqc.isspring && (body.state.d -= springforce(mechanism, eqc, body))
     eqc.isdamper && (body.state.d -= damperforce(mechanism, eqc, body))
     return
 end
 
-@inline function ∂impulses∂v!(mechanism, body::Body, eqc::JointConstraint{T,N,Nc}) where {T,N,Nc}
+@inline function impulses_jacobian_velocity!(mechanism, body::Body, eqc::JointConstraint{T,N,Nc}) where {T,N,Nc}
     # @warn "maybe need some work"
     if body.id == eqc.parentid
-        _dGa!(mechanism, body, eqc)
+        impulses_jacobian_parent!(mechanism, body, eqc)
     elseif body.id ∈ eqc.childids
-        _dGb!(mechanism, body, eqc)
+        impulses_jacobian_child!(mechanism, body, eqc)
     else
         error()
     end
     return
 end
 
-function _dGa!(mechanism, pbody::Body, eqc::JointConstraint{T,N,Nc}) where {T,N,Nc}
+function impulses_jacobian_parent!(mechanism, pbody::Body, eqc::JointConstraint{T,N,Nc}) where {T,N,Nc}
     Δt = mechanism.Δt
     _, _, q2, ω2 = current_configuration_velocity(pbody.state)
-    M = ∂i∂v(q2, ω2, Δt)
+    M = integrator_jacobian_velocity(q2, ω2, Δt)
 
     off = 0
     for i in 1:Nc
@@ -176,10 +176,10 @@ function _dGa!(mechanism, pbody::Body, eqc::JointConstraint{T,N,Nc}) where {T,N,
     return nothing
 end
 
-function _dGb!(mechanism, cbody::Body, eqc::JointConstraint{T,N,Nc}) where {T,N,Nc}
+function impulses_jacobian_child!(mechanism, cbody::Body, eqc::JointConstraint{T,N,Nc}) where {T,N,Nc}
     Δt = mechanism.Δt
     x2, v2, q2, ω2 = current_configuration_velocity(cbody.state)
-    M = ∂i∂v(q2, ω2, Δt)
+    M = integrator_jacobian_velocity(q2, ω2, Δt)
 
     off = 0
     for i in 1:Nc
@@ -195,8 +195,8 @@ function _dGb!(mechanism, cbody::Body, eqc::JointConstraint{T,N,Nc}) where {T,N,
     return nothing
 end
 
-@generated function g(mechanism, eqc::JointConstraint{T,N,Nc}) where {T,N,Nc}
-    vec = [:(g(eqc.constraints[$i], get_body(mechanism, eqc.parentid), get_body(mechanism, eqc.childids[$i]), eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
+@generated function constraint(mechanism, eqc::JointConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
+    vec = [:(constraint(eqc.constraints[$i], get_body(mechanism, eqc.parentid), get_body(mechanism, eqc.childids[$i]), eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
     return :(svcat($(vec...)))
 end
 
@@ -209,35 +209,35 @@ end
 end
 
 @inline function ∂gab∂ʳba(mechanism, body::Body{T}, eqc::JointConstraint{T,N}) where {T,N}
-    return -G(mechanism, eqc, body)', ∂g∂z(mechanism, eqc, body) * ∂i∂v(body, mechanism.Δt)
+    return -impulse_map(mechanism, eqc, body)', constraint_jacobian_configuration(mechanism, eqc, body) * integrator_jacobian_velocity(body, mechanism.Δt)
 end
 
 @inline function ∂gab∂ʳba(mechanism, eqc::JointConstraint{T,N}, body::Body{T}) where {T,N}
-    return ∂g∂z(mechanism, eqc, body) * ∂i∂v(body, mechanism.Δt), -G(mechanism, eqc, body)'
+    return constraint_jacobian_configuration(mechanism, eqc, body) * integrator_jacobian_velocity(body, mechanism.Δt), -impulse_map(mechanism, eqc, body)'
 end
 
-@generated function Ga(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(Ga(eqc.constraints[$i], body, get_body(mechanism, eqc.childids[$i]), eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
+@generated function impulse_map_parent(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
+    vec = [:(impulse_map_parent(eqc.constraints[$i], body, get_body(mechanism, eqc.childids[$i]), eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 
-@generated function Gb(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(Gb(eqc.constraints[$i], get_body(mechanism, eqc.parentid), body, eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
+@generated function impulse_map_child(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
+    vec = [:(impulse_map_child(eqc.constraints[$i], get_body(mechanism, eqc.parentid), body, eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 
-@generated function ∂g∂z(mechanism, eqc::JointConstraint{T,N,Nc}) where {T,N,Nc}
-    vec = [:(∂g∂z(eqc.constraints[$i], eqc.λsol[2][λindex(eqc,$i)])) for i = 1:Nc]
+@generated function constraint_jacobian_configuration(mechanism, eqc::JointConstraint{T,N,Nc}) where {T,N,Nc}
+    vec = [:(constraint_jacobian_configuration(eqc.constraints[$i], eqc.λsol[2][λindex(eqc,$i)])) for i = 1:Nc]
     return :(cat($(vec...), dims=(1,2)))
 end
 
-@generated function ∂g∂a(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(∂g∂a(eqc.constraints[$i], body, get_body(mechanism, eqc.childids[$i]), eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
+@generated function constraint_jacobian_parent(mechanism, eqc::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
+    vec = [:(constraint_jacobian_parent(eqc.constraints[$i], body, get_body(mechanism, eqc.childids[$i]), eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 
-@generated function ∂g∂b(mechanism, eqc::JointConstraint{T,N,Nc,Cs}, body::Body) where {T,N,Nc,Cs}
-    vec = [:(∂g∂b(eqc.constraints[$i], get_body(mechanism, eqc.parentid), body, eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
+@generated function constraint_jacobian_child(mechanism, eqc::JointConstraint{T,N,Nc,Cs}, body::Body) where {T,N,Nc,Cs}
+    vec = [:(constraint_jacobian_child(eqc.constraints[$i], get_body(mechanism, eqc.parentid), body, eqc.childids[$i], eqc.λsol[2][λindex(eqc,$i)], mechanism.Δt)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 
@@ -310,16 +310,16 @@ function set_spring_damper!(eqcs, spring, damper)
     return eqcs
 end
 
-@inline function G(mechanism, constraint::Constraint, body::Body)
+@inline function impulse_map(mechanism, constraint::Constraint, body::Body)
     if body.id == constraint.parentid
-        return Ga(mechanism, constraint, body)
+        return impulse_map_parent(mechanism, constraint, body)
     else
-        return Gb(mechanism, constraint, body)
+        return impulse_map_child(mechanism, constraint, body)
     end
 end
 
-@inline function ∂g∂z(mechanism, constraint::Constraint, body::Body)
-    body.id == constraint.parentid ? (return ∂g∂a(mechanism, constraint, body)) : (return ∂g∂b(mechanism, constraint, body))
+@inline function constraint_jacobian_configuration(mechanism, constraint::Constraint, body::Body)
+    body.id == constraint.parentid ? (return constraint_jacobian_parent(mechanism, constraint, body)) : (return constraint_jacobian_child(mechanism, constraint, body))
 end
 
 function λindex(eqc::JointConstraint{T,N,Nc,Cs}, i::Int) where {T,N,Nc,Cs}
