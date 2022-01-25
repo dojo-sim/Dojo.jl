@@ -74,11 +74,11 @@ const Dojo = Main
 #             return ∂g∂ʳpos(bnd, x, q, nothing)' * ineqc.γsol[2]
 #         end
 #
-#         if bnd_type <: ContactBound
+#         if bnd_type <: NonlinearContact
 #             body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
-#         elseif bnd_type <: ImpactBound
+#         elseif bnd_type <: ImpactContact
 #             body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
-#         elseif bnd_type <: LinearContactBound
+#         elseif bnd_type <: LinearContact
 #             body.state.D -= FiniteDiff.finite_difference_jacobian(d, [x3; q3.w; q3.x; q3.y; q3.z]) * M
 #         end
 #     end

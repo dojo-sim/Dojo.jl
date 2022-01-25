@@ -1,4 +1,4 @@
-mutable struct Body{T} <: Component{T}
+mutable struct Body{T} <: Node{T}
     id::Int64
     name::Symbol
     m::T
@@ -26,4 +26,6 @@ end
 
 Base.length(::Body) = 6
 Base.zero(::Body{T}) where T = szeros(T, 6, 6)
+
+
 

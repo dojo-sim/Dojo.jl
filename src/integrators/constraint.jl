@@ -24,7 +24,7 @@
     # impulses
     for id in connections(mechanism.system, body.id)
         Ne < id <= Ne+Nb && continue # body
-        impulses!(mechanism, body, getcomponent(mechanism, id))
+        impulses!(mechanism, body, getnode(mechanism, id))
     end
 
     # Regularize the angular velocity when necessary.
@@ -59,7 +59,7 @@ end
     # impulses
     for id in connections(mechanism.system, body.id)
         Ne < id <= Ne+Nb && continue # body
-        ∂impulses∂v!(mechanism, body, getcomponent(mechanism, id))
+        ∂impulses∂v!(mechanism, body, getnode(mechanism, id))
     end
 
     # regularize the angular velocity when necessary.

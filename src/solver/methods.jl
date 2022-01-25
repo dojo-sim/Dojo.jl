@@ -1,11 +1,11 @@
-@inline function setDandΔs!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry, component::Component)
-    matrix_entry.value = ∂g∂z(mechanism, component)
-    vector_entry.value = -g(mechanism, component)
+@inline function setDandΔs!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry, node::Node)
+    matrix_entry.value = ∂g∂z(mechanism, node)
+    vector_entry.value = -g(mechanism, node)
     return
 end
 
-@inline function setLU!(mechanism::Mechanism, matrix_entry_L::Entry, matrix_entry_U::Entry, componenta::Component, componentb::Component)
-    L, U = ∂gab∂ʳba(mechanism, componenta, componentb)
+@inline function setLU!(mechanism::Mechanism, matrix_entry_L::Entry, matrix_entry_U::Entry, nodea::Node, nodeb::Node)
+    L, U = ∂gab∂ʳba(mechanism, nodea, nodeb)
     matrix_entry_L.value = L
     matrix_entry_U.value = U
     return
@@ -21,7 +21,7 @@ end
 
 
 ## Complementarity
-function complementarity(mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}; scaling::Bool = false) where {T,N,Nc,Cs}
+function complementarity(mechanism, eqc::JointConstraint{T,N,Nc,Cs}; scaling::Bool = false) where {T,N,Nc,Cs}
     c = []
     for (i, joint) in enumerate(eqc.constraints)
         λi = eqc.λsol[2][λindex(eqc, i)]
@@ -45,8 +45,8 @@ function feasibilityStepLength!(mechanism::Mechanism; τort::T=0.95, τsoc::T=0.
     return α
 end
 
-function feasibilityStepLength!(α, mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
-        vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
+function feasibilityStepLength!(α, mechanism, ineqc::ContactConstraint{T,N,Nc,Cs,N½},
+        vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}},N½}
 
     s = ineqc.ssol[2]
     γ = ineqc.γsol[2]
@@ -60,8 +60,8 @@ function feasibilityStepLength!(α, mechanism, ineqc::InequalityConstraint{T,N,N
     return min(α, αs_soc, αγ_soc, αs_ort, αγ_ort)
 end
 
-function feasibilityStepLength!(α, mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
-        vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc,Cs<:Tuple{Union{ImpactBound{T,N},LinearContactBound{T,N}}},N½}
+function feasibilityStepLength!(α, mechanism, ineqc::ContactConstraint{T,N,Nc,Cs,N½},
+        vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc,Cs<:Tuple{Union{ImpactContact{T,N},LinearContact{T,N}}},N½}
     s = ineqc.ssol[2]
     γ = ineqc.γsol[2]
     Δs = vector_entry.value[1:N½]
@@ -74,7 +74,7 @@ function feasibilityStepLength!(α, mechanism, ineqc::InequalityConstraint{T,N,N
     return min(α, αs_ort, αγ_ort)
 end
 
-function feasibilityStepLength!(α, mechanism, eqc::EqualityConstraint{T,N,Nc,Cs},
+function feasibilityStepLength!(α, mechanism, eqc::JointConstraint{T,N,Nc,Cs},
         vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc,Cs}
 
     for (i, joint) in enumerate(eqc.constraints)
@@ -108,7 +108,7 @@ function centering!(mechanism::Mechanism, αaff::T) where {T}
     return ν, νaff
 end
 
-function centering!(ν, νaff, n, mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}, vector_entry::Entry, αaff) where {T,N,Nc,Cs,N½}
+function centering!(ν, νaff, n, mechanism, ineqc::ContactConstraint{T,N,Nc,Cs,N½}, vector_entry::Entry, αaff) where {T,N,Nc,Cs,N½}
     s = ineqc.ssol[2]
     γ = ineqc.γsol[2]
     Δs = vector_entry.value[1:N½]
@@ -119,7 +119,7 @@ function centering!(ν, νaff, n, mechanism, ineqc::InequalityConstraint{T,N,Nc,
     return ν, νaff, n
 end
 
-function centering!(ν, νaff, n, mechanism, eqc::EqualityConstraint{T,N,Nc,Cs}, vector_entry::Entry, αaff) where {T,N,Nc,Cs}
+function centering!(ν, νaff, n, mechanism, eqc::JointConstraint{T,N,Nc,Cs}, vector_entry::Entry, αaff) where {T,N,Nc,Cs}
     for (i, joint) in enumerate(eqc.constraints)
         s, γ = get_sγ(joint, eqc.λsol[2][λindex(eqc,i)])
         Δs, Δγ = get_sγ(joint, vector_entry.value[λindex(eqc,i)])
@@ -170,11 +170,11 @@ function setentries!(mechanism::Mechanism)
             zeroLU!(getentry(system, id, childid), getentry(system, childid, id))
         end
 
-        component = getcomponent(mechanism, id)
-        setDandΔs!(mechanism, getentry(system, id, id), getentry(system, id), component)
+        node = getnode(mechanism, id)
+        setDandΔs!(mechanism, getentry(system, id, id), getentry(system, id), node)
 
         for childid in children(system,id)
-            setLU!(mechanism, getentry(system, id, childid), getentry(system, childid, id), component, getcomponent(mechanism, childid))
+            setLU!(mechanism, getentry(system, id, childid), getentry(system, childid, id), node, getnode(mechanism, childid))
         end
     end
     return
@@ -186,12 +186,12 @@ end
     return
 end
 
-@inline function updatesolution!(eqc::EqualityConstraint)
+@inline function updatesolution!(eqc::JointConstraint)
     eqc.λsol[1] = eqc.λsol[2]
     return
 end
 
-@inline function updatesolution!(ineqc::InequalityConstraint)
+@inline function updatesolution!(ineqc::ContactConstraint)
     ineqc.ssol[1] = ineqc.ssol[2]
     ineqc.γsol[1] = ineqc.γsol[2]
     return
@@ -203,12 +203,12 @@ end
     return dot(d1, d1) + dot(d2, d2)
 end
 
-@inline function normΔs(eqc::EqualityConstraint)
+@inline function normΔs(eqc::JointConstraint)
     d = eqc.λsol[2] - eqc.λsol[1]
     return dot(d, d)
 end
 
-@inline function normΔs(ineqc::InequalityConstraint)
+@inline function normΔs(ineqc::ContactConstraint)
     d1 = ineqc.ssol[2] - ineqc.ssol[1]
     d2 = ineqc.γsol[2] - ineqc.γsol[1]
     return dot(d1, d1) + dot(d2, d2)

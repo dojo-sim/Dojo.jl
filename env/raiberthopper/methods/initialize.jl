@@ -16,8 +16,8 @@ function getraiberthopper(; Δt::T=0.05, g::T=-9.81, spring=0.0, damper=0.1, con
     links = [body, foot]
 
     # Joint Constraints
-    joint_origin_body = EqualityConstraint(Floating(origin, body))
-    joint_body_foot = EqualityConstraint(Prismatic(body, foot, leg_axis;
+    joint_origin_body = JointConstraint(Floating(origin, body))
+    joint_body_foot = JointConstraint(Prismatic(body, foot, leg_axis;
         p1=szeros(Float64, 3), p2=szeros(Float64, 3), spring=spring, damper=damper) )
     eqcs = [joint_origin_body, joint_body_foot]
 

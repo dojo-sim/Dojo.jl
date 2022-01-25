@@ -39,8 +39,8 @@ origin = Origin{Float64}()
 body1 = Box(width, depth, length1, length1)
 
 # Constraints
-# joint_between_origin_and_body1 = EqualityConstraint(Revolute(origin, body1, joint_axis; p2=p2))
-joint_between_origin_and_body1 = EqualityConstraint(Spherical(origin, body1; p2=p2, spring = 20.0))
+# joint_between_origin_and_body1 = JointConstraint(Revolute(origin, body1, joint_axis; p2=p2))
+joint_between_origin_and_body1 = JointConstraint(Spherical(origin, body1; p2=p2, spring = 20.0))
 bodies = [body1]
 eqcs = [joint_between_origin_and_body1]
 

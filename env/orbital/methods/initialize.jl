@@ -12,11 +12,11 @@ function getorbital(; Δt::T = 0.01, g::T = -9.81, spring = 0.0, damper = 0.0, N
     bodies = [Box(r, r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nb]
 
     # Constraints
-    jointb1 = EqualityConstraint(Fixed(origin, bodies[1]; p2 = vert11))
+    jointb1 = JointConstraint(Fixed(origin, bodies[1]; p2 = vert11))
     if Nb > 1
         eqcs = [
             jointb1;
-            [EqualityConstraint(Orbital(bodies[i - 1], bodies[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nb]
+            [JointConstraint(Orbital(bodies[i - 1], bodies[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nb]
             ]
     else
         eqcs = [jointb1]

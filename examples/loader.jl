@@ -22,8 +22,8 @@ using JLD2
 
 export Origin,
     Body,
-    EqualityConstraint,
-    InequalityConstraint,
+    JointConstraint,
+    ContactConstraint,
     Mechanism,
     Storage,
     UnitQuaternion,
@@ -52,7 +52,7 @@ export Origin,
     CylindricalFree,
     PlanarFree,
 
-    ContactBound,
+    NonlinearContact,
     UnitQuaternion,
 
     setPosition!,

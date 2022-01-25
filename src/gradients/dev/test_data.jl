@@ -1,8 +1,8 @@
 ################################################################################
 # Analytical Jacobian
 ################################################################################
-function create_data_system(eqcs::Vector{<:EqualityConstraint}, bodies::Vector{<:Body},
-        ineqcs::Vector{<:InequalityConstraint})
+function create_data_system(eqcs::Vector{<:JointConstraint}, bodies::Vector{<:Body},
+        ineqcs::Vector{<:ContactConstraint})
     nodes = [eqcs; bodies; ineqcs]
     A = adjacencyMatrix(eqcs, bodies, ineqcs)
     dimrow = length.(nodes)

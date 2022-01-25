@@ -1,4 +1,4 @@
-mutable struct InequalityConstraint{T,N,Nc,Cs,N½} <: Constraint{T,N}
+mutable struct ContactConstraint{T,N,Nc,Cs,N½} <: Constraint{T,N}
     id::Int64
     name::Symbol
 
@@ -9,7 +9,7 @@ mutable struct InequalityConstraint{T,N,Nc,Cs,N½} <: Constraint{T,N}
     ssol::Vector{SVector{N½,T}} # holds the slack variable
     γsol::Vector{SVector{N½,T}} # holds the dual of the slack variable
 
-    function InequalityConstraint(data; name::Symbol=Symbol("contact_" * randstring(4)))
+    function ContactConstraint(data; name::Symbol=Symbol("contact_" * randstring(4)))
         bound, parentid, childid = data
         T = getT(bound)
 
@@ -24,32 +24,24 @@ mutable struct InequalityConstraint{T,N,Nc,Cs,N½} <: Constraint{T,N}
     end
 end
 
-function resetVars!(ineqc::InequalityConstraint{T,N,Nc,Cs,N½}; scale::T=1.0) where {T,N,Nc,Cs,N½}
-    ineqc.ssol[1] = scale * neutral_vector(ineqc.constraints[1])
-    ineqc.ssol[2] = scale * neutral_vector(ineqc.constraints[1])
-    ineqc.γsol[1] = scale * neutral_vector(ineqc.constraints[1])
-    ineqc.γsol[2] = scale * neutral_vector(ineqc.constraints[1])
-    return
-end
-
-function ∂g∂v(mechanism, ineqc::InequalityConstraint, body::Body)
+function ∂g∂v(mechanism, ineqc::ContactConstraint, body::Body)
     return ∂g∂v(ineqc.constraints[1], body, nothing, nothing, mechanism.Δt)
 end
 
-function ∂g∂z(mechanism, ineqc::InequalityConstraint, body::Body)
+function ∂g∂z(mechanism, ineqc::ContactConstraint, body::Body)
     return ∂g∂z(ineqc.constraints[1], body, nothing, nothing, mechanism.Δt)
 end
 
-function G(mechanism, ineqc::InequalityConstraint, body::Body)
+function G(mechanism, ineqc::ContactConstraint, body::Body)
     return G(ineqc.constraints[1], body, nothing, nothing, mechanism.Δt)
 end
 
-@inline function impulses!(mechanism, body::Body, ineqc::InequalityConstraint)
+@inline function impulses!(mechanism, body::Body, ineqc::ContactConstraint)
     body.state.d -= G(mechanism, ineqc, body)' * ineqc.γsol[2]
     return
 end
 
-@inline function ∂impulses∂v!(mechanism, body::Body, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+@inline function ∂impulses∂v!(mechanism, body::Body, ineqc::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
     Δt = mechanism.Δt
     x3, q3 = posargs3(body.state, Δt)
     x2, v25, q2, ϕ25 = fullargssol(body.state)
@@ -71,14 +63,22 @@ end
     return
 end
 
-@inline function ∂gab∂ʳba(mechanism, body::Body, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+@inline function ∂gab∂ʳba(mechanism, body::Body, ineqc::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
     Z = szeros(T,N½,6)
     return [Z; -G(mechanism, ineqc, body)]', [Z; ∂g∂v(mechanism, ineqc, body)]
 end
 
-@inline function ∂gab∂ʳba(mechanism, ineqc1::InequalityConstraint, ineqc2::InequalityConstraint)
+@inline function ∂gab∂ʳba(mechanism, ineqc1::ContactConstraint, ineqc2::ContactConstraint)
     G1, G2 = ∂gab∂ʳba(ineqc1.constraints[1], ineqc2.constraints[1])
     return G1, G2
 end
 
-cone_degree(ineqc::InequalityConstraint) = sum(cone_degree.(ineqc.constraints))
+function resetVars!(ineqc::ContactConstraint{T,N,Nc,Cs,N½}; scale::T=1.0) where {T,N,Nc,Cs,N½}
+    ineqc.ssol[1] = scale * neutral_vector(ineqc.constraints[1])
+    ineqc.ssol[2] = scale * neutral_vector(ineqc.constraints[1])
+    ineqc.γsol[1] = scale * neutral_vector(ineqc.constraints[1])
+    ineqc.γsol[2] = scale * neutral_vector(ineqc.constraints[1])
+    return
+end
+
+cone_degree(ineqc::ContactConstraint) = sum(cone_degree.(ineqc.constraints))

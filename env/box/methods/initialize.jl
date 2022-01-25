@@ -8,7 +8,7 @@ function getbox(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, radius=0.0, side=0.5,
     # Parameters
     origin = Origin{T}()
     body1 = Box(side, side, side, 1., color=color)
-    joint0to1 = EqualityConstraint(Floating(origin, body1))
+    joint0to1 = JointConstraint(Floating(origin, body1))
     bodies = [body1]
     eqcs = [joint0to1]
 

@@ -35,7 +35,7 @@ function getineqconstraint(mechanism::Mechanism, name::Symbol)
     return
 end
 
-function getcomponent(mechanism::Mechanism{T,Nn,Ne,Nb}, id::Integer) where {T,Nn,Ne,Nb}
+function getnode(mechanism::Mechanism{T,Nn,Ne,Nb}, id::Integer) where {T,Nn,Ne,Nb}
     if id <= Ne
         return geteqconstraint(mechanism, id)
     elseif id <= Ne+Nb
@@ -44,17 +44,17 @@ function getcomponent(mechanism::Mechanism{T,Nn,Ne,Nb}, id::Integer) where {T,Nn
         return getineqconstraint(mechanism, id)
     end
 end
-getcomponent(mechanism::Mechanism, id::Nothing) = mechanism.origin
+getnode(mechanism::Mechanism, id::Nothing) = mechanism.origin
 
-function getcomponent(mechanism::Mechanism, name::Symbol)
-    component = getbody(mechanism,name)
-    if component === nothing
-        component = geteqconstraint(mechanism,name)
+function getnode(mechanism::Mechanism, name::Symbol)
+    node = getbody(mechanism,name)
+    if node === nothing
+        node = geteqconstraint(mechanism,name)
     end
-    if component === nothing
-        component = getineqconstraint(mechanism,name)
+    if node === nothing
+        node = getineqconstraint(mechanism,name)
     end
-    return component
+    return node
 end
 
 @inline function discretizestate!(mechanism::Mechanism)
@@ -77,7 +77,7 @@ end
 
     for connectionid in connections(mechanism.system, body1.id)
         !(connectionid <= Ne) && continue # body
-        eqc = getcomponent(mechanism, connectionid)
+        eqc = getnode(mechanism, connectionid)
         Nc = length(eqc.childids)
         off = 0
         if body1.id == eqc.parentid

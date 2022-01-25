@@ -1,5 +1,5 @@
 [![CI](https://github.com/dojo-sim/Dojo.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/dojo-sim/Dojo.jl/actions/workflows/CI.yml)
-[![codecov](https://codecov.io/gh/dojo-sim/Dojo.jl/branch/master/graph/badge.svg?token=NMS3JQZ2OE)](https://codecov.io/gh/dojo-sim/Dojo.jl) 
+[![codecov](https://codecov.io/gh/dojo-sim/Dojo.jl/branch/main/graph/badge.svg?token=NMS3JQZ2OE)](https://codecov.io/gh/dojo-sim/Dojo.jl)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://dojo-sim.github.io/Dojo.jl/dev)
 
 # Dojo

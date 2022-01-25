@@ -15,7 +15,7 @@ function getquadruped(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, spring=0.0,
     if contact
         origin = Origin{T}()
         bodies = Vector{Body{T}}(collect(mech.bodies))
-        eqs = Vector{EqualityConstraint{T}}(collect(mech.eqconstraints))
+        eqs = Vector{JointConstraint{T}}(collect(mech.eqconstraints))
 
         # Foot contact
         contact = [0.0;0;-0.1]

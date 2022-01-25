@@ -7,7 +7,7 @@ function getbox2d(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, radius=0.0, side=0.5,
 
     origin = Origin{T}()
     body1 = Box(side, side, side, 1., color = RGBA(1., 1., 0.))
-    eqc1 = EqualityConstraint(PlanarAxis(origin, body1, axis))
+    eqc1 = JointConstraint(PlanarAxis(origin, body1, axis))
     bodies = [body1]
     eqcs = [eqc1]
 

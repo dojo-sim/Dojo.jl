@@ -22,7 +22,7 @@ function λindex(joint::Joint{T,Nλ,Nb,N}, s::Int) where {T,Nλ,Nb,N}
 end
 
 ## Discrete-time position derivatives (for dynamics)
-@inline function Ga(joint::Joint, body1::Component, body2::Component, childid, λ, Δt)
+@inline function Ga(joint::Joint, body1::Node, body2::Node, childid, λ, Δt)
     if body2.id == childid
         return Ga(joint, posargs2(body1.state)..., posargs2(body2.state)..., λ)
     else
@@ -30,7 +30,7 @@ end
     end
 end
 
-@inline function Gb(joint::Joint, body1::Component, body2::Component, childid, λ, Δt)
+@inline function Gb(joint::Joint, body1::Node, body2::Node, childid, λ, Δt)
     if body2.id == childid
         return Gb(joint, posargs2(body1.state)..., posargs2(body2.state)..., λ)
     else
@@ -39,14 +39,14 @@ end
 end
 
 ## Discrete-time velocity derivatives (for dynamics)
-@inline function ∂g∂a(joint::Joint, body1::Component, body2::Component, childid, λ, Δt)
+@inline function ∂g∂a(joint::Joint, body1::Node, body2::Node, childid, λ, Δt)
     if body2.id == childid
         return ∂g∂a(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)..., λ)
     else
         return zero(joint)
     end
 end
-@inline function ∂g∂b(joint::Joint, body1::Component, body2::Component, childid, λ, Δt)
+@inline function ∂g∂b(joint::Joint, body1::Node, body2::Node, childid, λ, Δt)
     if body2.id == childid
         return ∂g∂b(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)..., λ)
 
@@ -57,14 +57,14 @@ end
 
 
 ### Springs and Dampers (for dynamics)
-@inline function springforcea(joint::Joint, body1::Component, body2::Component, Δt, childid; unitary::Bool=false)
+@inline function springforcea(joint::Joint, body1::Node, body2::Node, Δt, childid; unitary::Bool=false)
     if body2.id == childid
         return springforcea(joint, body1, body2, Δt, unitary=unitary)
     else
         return szeros(T, 6)
     end
 end
-@inline function springforceb(joint::Joint, body1::Component, body2::Component, Δt, childid; unitary::Bool=false)
+@inline function springforceb(joint::Joint, body1::Node, body2::Node, Δt, childid; unitary::Bool=false)
     if body2.id == childid
         return springforceb(joint, body1, body2, Δt, unitary=unitary)
     else
@@ -72,14 +72,14 @@ end
     end
 end
 
-@inline function damperforcea(joint::Joint, body1::Component, body2::Component, Δt, childid; unitary::Bool=false)
+@inline function damperforcea(joint::Joint, body1::Node, body2::Node, Δt, childid; unitary::Bool=false)
     if body2.id == childid
         return damperforcea(joint, body1, body2, Δt, unitary=unitary)
     else
         return szeros(T, 6)
     end
 end
-@inline function damperforceb(joint::Joint, body1::Component, body2::Component, Δt, childid; unitary::Bool=false)
+@inline function damperforceb(joint::Joint, body1::Node, body2::Node, Δt, childid; unitary::Bool=false)
     if body2.id == childid
         return damperforceb(joint, body1, body2, Δt, unitary=unitary)
     else
@@ -88,7 +88,7 @@ end
 end
 
 # ### Forcing (for dynamics)
-@inline function applyFτ!(joint::Joint, body1::Component, body2::Component, Δt::T, clear::Bool) where T
+@inline function applyFτ!(joint::Joint, body1::Node, body2::Node, Δt::T, clear::Bool) where T
     applyFτ!(joint, body1.state, body2.state, Δt, clear)
     return
 end
@@ -112,7 +112,7 @@ Joint3 = Joint{T,3} where T
 
 ### Constraints and derivatives
 ## Position level constraint wrappers
-@inline g(joint::Joint, body1::Component, body2::Component, λ, Δt) = g(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)..., λ)
+@inline g(joint::Joint, body1::Node, body2::Node, λ, Δt) = g(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)..., λ)
 
 ### Constraints and derivatives
 ## Discrete-time position wrappers (for dynamics)
@@ -124,8 +124,8 @@ end
 
 ## Discrete-time position derivatives (for dynamics)
 # Wrappers 1
-@inline ∂g∂a(joint::Joint, body1::Component, body2::Component, λ, Δt) = ∂g∂a(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)..., λ)
-@inline ∂g∂b(joint::Joint, body1::Component, body2::Component, λ, Δt) = ∂g∂b(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)..., λ)
+@inline ∂g∂a(joint::Joint, body1::Node, body2::Node, λ, Δt) = ∂g∂a(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)..., λ)
+@inline ∂g∂b(joint::Joint, body1::Node, body2::Node, λ, Δt) = ∂g∂b(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)..., λ)
 
 ### Force derivatives (for linearization)
 ## Forcing
@@ -142,11 +142,11 @@ end
 @inline addForce!(joint::Joint) = return
 
 ## Derivative wrappers
-@inline function ∂Fτ∂ua(joint::Joint, body1::Component, body2::Component, Δt, childid)
+@inline function ∂Fτ∂ua(joint::Joint, body1::Node, body2::Node, Δt, childid)
     return ∂Fτ∂ua(joint, body1.state, body2.state, Δt) * zerodimstaticadjoint(nullspacemat(joint))
 end
 
-@inline function ∂Fτ∂ub(joint::Joint{T,Nλ}, body1::Component, body2::Component, Δt, childid) where {T,Nλ}
+@inline function ∂Fτ∂ub(joint::Joint{T,Nλ}, body1::Node, body2::Node, Δt, childid) where {T,Nλ}
     if body2.id == childid
         return ∂Fτ∂ub(joint, body1.state, body2.state, Δt) * zerodimstaticadjoint(nullspacemat(joint))
     else
@@ -158,7 +158,7 @@ end
 @inline minimalCoordinates(joint::Joint{T,Nλ}) where {T,Nλ} = szeros(T, 3 - Nλ)
 
 ## Limits
-function add_limits(mech::Mechanism, eq::EqualityConstraint;
+function add_limits(mech::Mechanism, eq::JointConstraint;
     # NOTE: this only works for joints between serial chains (ie, single child joints)
     tra_limits=eq.constraints[1].joint_limits,
     rot_limits=eq.constraints[1].joint_limits)
@@ -182,5 +182,5 @@ function add_limits(mech::Mechanism, eq::EqualityConstraint;
     N̄λ = 3 - Nλ
     N = Nλ + 2Nb
     rot_limit = (Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(rot.V3, rot.V12, rot.qoffset, rot.spring, rot.damper, rot.spring_offset, rot_limits, rot.spring_type, rot.Fτ), eq.parentid, eq.childids[1])
-    EqualityConstraint((tra_limit, rot_limit); name=eq.name)
+    JointConstraint((tra_limit, rot_limit); name=eq.name)
 end

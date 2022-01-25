@@ -1,7 +1,7 @@
 """
     Generate contact inequality constraints attached to a list of bodies. You need to provide:
     - the normal for each contact point
-    - the coefficient of friction for each contact point (optional for `ImpactBound`)
+    - the coefficient of friction for each contact point (optional for `ImpactContact`)
     - the offset vector p with respect to the center of the body for each contact point (optional)
     - the altitude offset for each contact point (optional)
     - the contact type: `:contact`, `:linear_contact`, `:impact`
@@ -16,7 +16,7 @@ function contactconstraint(bodies::AbstractVector{<:Body{T}},
 
     n = length(normal)
     @assert n == length(bodies) == length(normal) == length(cf) == length(p) == length(offset)
-    ineqcs = Vector{InequalityConstraint}()
+    ineqcs = Vector{ContactConstraint}()
     for i = 1:n
         ineqc = contactconstraint(bodies[i], normal[i], cf=cf[i], p=p[i],
             offset=offset[i], name=names[i], contact_type=contact_type)
@@ -55,14 +55,14 @@ function contactconstraint(body::Body{T},
         contact_type::Symbol = :contact) where {T}
 
     if contact_type == :contact
-        bound = ContactBound(body, normal, cf, p=p, offset=offset)
+        bound = NonlinearContact(body, normal, cf, p=p, offset=offset)
     elseif contact_type == :linear_contact
-        bound = LinearContactBound(body, normal, cf, p=p, offset=offset)
+        bound = LinearContact(body, normal, cf, p=p, offset=offset)
     elseif contact_type == :impact
-        bound = ImpactBound(body, normal, p=p, offset=offset)
+        bound = ImpactContact(body, normal, p=p, offset=offset)
     else
         @warn "unknown contact_type"
     end
-    ineqcs = InequalityConstraint((bound, body.id, nothing); name=name)
+    ineqcs = ContactConstraint((bound, body.id, nothing); name=name)
     return ineqcs
 end

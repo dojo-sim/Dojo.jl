@@ -25,9 +25,9 @@ initialize!(mech, :atlas, tran = [0,0,1.1], rot = [0.1,0.05,0])
 
 orig = Origin()
 body1 = Body(1.0, Diagonal([1,2,3.]))
-EqualityConstraint(Revolute(orig, body1, [0,0,1.0],
+JointConstraint(Revolute(orig, body1, [0,0,1.0],
     rot_joint_limits = [-sones(0), sones(0)]))
-eqc = EqualityConstraint(Revolute(orig, body1, [0,0,1.0],
+eqc = JointConstraint(Revolute(orig, body1, [0,0,1.0],
     rot_joint_limits = [-sones(1), sones(1)]))
 
 λindex(eqc, 1)

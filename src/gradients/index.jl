@@ -23,7 +23,7 @@ function soldim(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
     return d
 end
 
-function controldim(eqc::EqualityConstraint{T,N,Nc,Cs}; ignore_floating_base::Bool = false) where {T,N,Nc,Cs}
+function controldim(eqc::JointConstraint{T,N,Nc,Cs}; ignore_floating_base::Bool = false) where {T,N,Nc,Cs}
     ignore_floating_base && (N == 0) && return 0
 
     N̄ = 0

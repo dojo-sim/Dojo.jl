@@ -4,8 +4,8 @@ function gettippetop(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=true, c
     mass = 1.0
     α = 0.2
     bodies = [Sphere(radius, mass, name=:sphere1), Sphere(radius*α, mass*α^3, name=:sphere2)]
-    eqcs = [EqualityConstraint(Floating(origin, bodies[1]), name = :floating_joint),
-        EqualityConstraint(Fixed(bodies[1], bodies[2], p1=[0,0,radius], p2=zeros(3)), name = :fixed_joint),]
+    eqcs = [JointConstraint(Floating(origin, bodies[1]), name = :floating_joint),
+        JointConstraint(Fixed(bodies[1], bodies[2], p1=[0,0,radius], p2=zeros(3)), name = :fixed_joint),]
     mechanism = Mechanism(origin, bodies, eqcs, Δt = Δt, g = g)
 
     if contact

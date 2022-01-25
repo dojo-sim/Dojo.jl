@@ -1,11 +1,11 @@
-mutable struct LinearContactBound{T,N} <: Bound{T,N}
+mutable struct LinearContact{T,N} <: Contact{T,N}
     cf::T
     Bx::SMatrix{4,3,T,12}
     ainv3::Adjoint{T,SVector{3,T}} # inverse matrix
     p::SVector{3,T}
     offset::SVector{3,T}
 
-    function LinearContactBound(body::Body{T}, normal::AbstractVector, cf; p = szeros(T, 3), offset::AbstractVector = szeros(T, 3)) where T
+    function LinearContact(body::Body{T}, normal::AbstractVector, cf; p = szeros(T, 3), offset::AbstractVector = szeros(T, 3)) where T
         V1, V2, V3 = orthogonalcols(normal) # gives two plane vectors and the original normal axis
         A = [V1 V2 V3]
         Ainv = inv(A)
@@ -20,7 +20,7 @@ mutable struct LinearContactBound{T,N} <: Bound{T,N}
     end
 end
 
-function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{LinearContactBound{T,N}}}
+function g(mechanism, ineqc::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{LinearContact{T,N}}}
     bound = ineqc.constraints[1]
     body = getbody(mechanism, ineqc.parentid)
     x2, v25, q2, ϕ25 = fullargssol(body.state)
@@ -41,7 +41,7 @@ function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:
         (bound.Bx * vp + ψ * sones(4) - sβ)...)
 end
 
-@inline function ∂g∂v(bound::LinearContactBound, x3::AbstractVector, q3::UnitQuaternion,
+@inline function ∂g∂v(bound::LinearContact, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, Δt)
     V = [bound.ainv3 * Δt;
          szeros(1,3);
@@ -56,7 +56,7 @@ end
     return [V Ω]
 end
 
-@inline function ∂g∂z(bound::LinearContactBound, x3::AbstractVector, q3::UnitQuaternion,
+@inline function ∂g∂z(bound::LinearContact, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, Δt)
     V = [bound.ainv3;
          szeros(1,3);
@@ -70,7 +70,7 @@ end
     return [V Ω]
 end
 
-@inline function G(bound::LinearContactBound, x::AbstractVector, q::UnitQuaternion, λ)
+@inline function G(bound::LinearContact, x::AbstractVector, q::UnitQuaternion, λ)
     X = [bound.ainv3;
          szeros(1,3);
          bound.Bx]
@@ -79,7 +79,7 @@ end
     return [X Q]
 end
 
-@inline function forcemapping(bound::LinearContactBound)
+@inline function forcemapping(bound::LinearContact)
     X = [bound.ainv3;
          szeros(1,3);
          bound.Bx]
@@ -87,7 +87,7 @@ end
 end
 
 @inline function setDandΔs!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
-    ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{LinearContactBound{T,N}},N½}
+    ineqc::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{LinearContact{T,N}},N½}
     # ∇ssol[γsol .* ssol - μ; g - s] = [diag(γsol); -diag(0,1,1)]
     # ∇γsol[γsol .* ssol - μ; g - s] = [diag(ssol); -diag(1,0,0)]
     # (cf γ - ψ) dependent of ψ = γsol[2][1:1]

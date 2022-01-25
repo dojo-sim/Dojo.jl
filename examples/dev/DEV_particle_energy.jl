@@ -35,7 +35,7 @@ width, depth = 0.5, 0.5
 
 origin = Origin{Float64}()
 body1 = Box(width, depth, length1, 1., color = RGBA(1., 1., 0.))
-joint0to1 = EqualityConstraint(Floating(origin, body1, spring = 100.0, damper = 0.0))
+joint0to1 = JointConstraint(Floating(origin, body1, spring = 100.0, damper = 0.0))
 bodies = [body1]
 eqcs = [joint0to1]
 mech = Mechanism(origin, bodies, eqcs, g = 0.0, Δt = 0.01)

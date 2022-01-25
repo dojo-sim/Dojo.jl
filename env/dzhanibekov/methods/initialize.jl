@@ -8,8 +8,8 @@ function getdzhanibekov(; Δt::T = 0.01, g::T = -9.81, color=magenta) where {T}
     links = [main_body, side_body]
 
     # Joint Constraints
-    joint_float = EqualityConstraint(Floating(origin, links[1]))
-    joint_attach = EqualityConstraint(Fixed(links[1], links[2]; p1=szeros(3), p2=[-0.25 * body_length; 0.0; 0.0]))#, qoffset=UnitQuaternion(RotX(0.5 * pi))))
+    joint_float = JointConstraint(Floating(origin, links[1]))
+    joint_attach = JointConstraint(Fixed(links[1], links[2]; p1=szeros(3), p2=[-0.25 * body_length; 0.0; 0.0]))#, qoffset=UnitQuaternion(RotX(0.5 * pi))))
     eqcs = [joint_float, joint_attach]
 
     # Mechanism

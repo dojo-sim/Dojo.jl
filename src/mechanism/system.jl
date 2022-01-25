@@ -1,5 +1,5 @@
-function create_system(origin::Origin{T}, eqconstraints::Vector{<:EqualityConstraint}, bodies::Vector{<:Body},
-    ineqconstraints::Vector{<:InequalityConstraint}) where T
+function create_system(origin::Origin{T}, eqconstraints::Vector{<:JointConstraint}, bodies::Vector{<:Body},
+    ineqconstraints::Vector{<:ContactConstraint}) where T
 
     adjacency = adjacencyMatrix(eqconstraints, bodies, ineqconstraints)
     dims = length.([eqconstraints; bodies; ineqconstraints])
@@ -13,8 +13,8 @@ function create_system(origin::Origin{T}, eqconstraints::Vector{<:EqualityConstr
     return system
 end
 
-function adjacencyMatrix(eqcs::Vector{<:EqualityConstraint}, bodies::Vector{<:Body},
-        ineqcs::Vector{<:InequalityConstraint})
+function adjacencyMatrix(eqcs::Vector{<:JointConstraint}, bodies::Vector{<:Body},
+        ineqcs::Vector{<:ContactConstraint})
     # mode can be variables or data depending on whi
     nodes = [eqcs; bodies; ineqcs]
     n = length(nodes)
@@ -78,8 +78,8 @@ function densesystem(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     ind2 = 0
 
     for id in system.dfs_list
-        component = getcomponent(mechanism, id)
-        ind2 += length(component)
+        node = getnode(mechanism, id)
+        ind2 += length(node)
         range = ind1:ind2
         rangeDict[id] = range
 
@@ -112,10 +112,10 @@ function densesystem(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
         x[range] = sol.value
 
         # b
-        if component isa Body
-            b[range] = -g(mechanism, component)
+        if node isa Body
+            b[range] = -g(mechanism, node)
         else
-            b[range] = -g(mechanism, component)
+            b[range] = -g(mechanism, node)
         end
 
         ind1 = ind2+1

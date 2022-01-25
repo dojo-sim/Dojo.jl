@@ -3,26 +3,26 @@
 ################################################################################
 
 simdata_dim(mechanism::Mechanism) = sum(simdata_dim.(mech.ineqconstraints))
-simdata_dim(ineqc::InequalityConstraint) = sum(simdata_dim.(ineqc.constraints))
-simdata_dim(bound::ContactBound) = 7 # [cf, p, offset]
-simdata_dim(bound::LinearContactBound) = 7 # [cf, p, offset]
-simdata_dim(bound::ImpactBound) = 6 # [p, offset]
+simdata_dim(ineqc::ContactConstraint) = sum(simdata_dim.(ineqc.constraints))
+simdata_dim(bound::NonlinearContact) = 7 # [cf, p, offset]
+simdata_dim(bound::LinearContact) = 7 # [cf, p, offset]
+simdata_dim(bound::ImpactContact) = 6 # [p, offset]
 
-function set_simulator_data!(bound::ContactBound, data::AbstractVector)
+function set_simulator_data!(bound::NonlinearContact, data::AbstractVector)
 	bound.cf = data[1]
     bound.offset = data[SVector{3,Int}(2:4)]
     bound.p = data[SVector{3,Int}(5:7)]
     return nothing
 end
 
-function set_simulator_data!(bound::LinearContactBound, data::AbstractVector)
+function set_simulator_data!(bound::LinearContact, data::AbstractVector)
 	bound.cf = data[1]
     bound.offset = data[SVector{3,Int}(2:4)]
     bound.p = data[SVector{3,Int}(5:7)]
     return nothing
 end
 
-function set_simulator_data!(bound::ImpactBound, data::AbstractVector)
+function set_simulator_data!(bound::ImpactContact, data::AbstractVector)
     bound.offset = data[SVector{3,Int}(2:4)]
     bound.p = data[SVector{3,Int}(5:7)]
     return nothing
@@ -39,15 +39,15 @@ function set_simulator_data!(mechanism::Mechanism, data::AbstractVector)
     return nothing
 end
 
-function get_simulator_data(bound::ContactBound)
+function get_simulator_data(bound::NonlinearContact)
 	return [bound.cf; bound.offset; bound.p]
 end
 
-function get_simulator_data(boundset::LinearContactBound)
+function get_simulator_data(boundset::LinearContact)
 	return [bound.cf; bound.off; bound.p]
 end
 
-function get_simulator_data(bound::ImpactBound)
+function get_simulator_data(bound::ImpactContact)
 	return [bound.offset; bound.p]
 end
 
@@ -93,7 +93,7 @@ function simdata_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb
 	return A
 end
 
-function ∂g∂simdata(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}}}
+function ∂g∂simdata(mechanism, ineqc::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}}}
     bound = ineqc.constraints[1]
 	p = bound.p
 	offset = bound.offset

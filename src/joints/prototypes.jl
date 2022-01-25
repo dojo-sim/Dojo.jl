@@ -1,11 +1,11 @@
 # fixed connection between two bodies.
-Fixed(body1::Component{T}, body2::Component{T}; p1=szeros(T, 3), p2=szeros(T, 3),
+Fixed(body1::Node{T}, body2::Node{T}; p1=szeros(T, 3), p2=szeros(T, 3),
     qoffset=one(UnitQuaternion{T})) where T =
     Translational3{T}(body1, body2; p1, p2),
     Rotational3{T}(body1, body2; qoffset)
 
 # prismatic joint between two bodies.
-Prismatic(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
+Prismatic(body1::Node{T}, body2::Node{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
     qoffset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
     tra_spring_offset=szeros(T,1),
     tra_joint_limits=[szeros(T,0), szeros(T,0)]) where T =
@@ -14,7 +14,7 @@ Prismatic(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p2=sz
     Rotational3{T}(body1, body2; qoffset, spring, damper)
 
 # planar joint between two bodies.
-Planar(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
+Planar(body1::Node{T}, body2::Node{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
     qoffset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
     tra_spring_offset=szeros(T,2),
     tra_joint_limits=[szeros(T,0), szeros(T,0)]) where T =
@@ -23,7 +23,7 @@ Planar(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p2=szero
     Rotational3{T}(body1, body2; qoffset, spring, damper)
 
 # fixed orientation between two bodies (chicken's head).
-FixedOrientation(body1::Component{T}, body2::Component{T}; qoffset=one(UnitQuaternion{T}),
+FixedOrientation(body1::Node{T}, body2::Node{T}; qoffset=one(UnitQuaternion{T}),
     spring=zero(T), damper=zero(T),
     tra_spring_offset=szeros(T,3),
     tra_joint_limits=[szeros(T,0), szeros(T,0)]) where T =
@@ -32,7 +32,7 @@ FixedOrientation(body1::Component{T}, body2::Component{T}; qoffset=one(UnitQuate
     Rotational3{T}(body1, body2; qoffset, spring, damper)
 
 # revolute joint between two bodies (pin, continuous, hinge joint).
-Revolute(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
+Revolute(body1::Node{T}, body2::Node{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
     qoffset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
     rot_spring_offset=szeros(T,1),
     rot_joint_limits=[szeros(T,0), szeros(T,0)],
@@ -42,7 +42,7 @@ Revolute(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p2=sze
         spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
 
 # cylindrical joint between two bodies.
-Cylindrical(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
+Cylindrical(body1::Node{T}, body2::Node{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
     qoffset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
     tra_spring_offset=szeros(T,1), rot_spring_offset=szeros(T,1),
     rot_joint_limits=[szeros(T,0), szeros(T,0)], tra_joint_limits=[szeros(T,0), szeros(T,0)],
@@ -53,7 +53,7 @@ Cylindrical(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p2=
         spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
 
 # planar joint between two bodies with a rotation axis perpendicular to the plane (turtle bot).
-PlanarAxis(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
+PlanarAxis(body1::Node{T}, body2::Node{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
     qoffset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
     tra_spring_offset=szeros(T,2), rot_spring_offset=szeros(T,1),
     rot_joint_limits=[szeros(T,0), szeros(T,0)], tra_joint_limits=[szeros(T,0), szeros(T,0)],
@@ -64,7 +64,7 @@ PlanarAxis(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p2=s
         spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
 
 # joint between two bodies with free translation and rotation along one axis.
-FreeRevolute(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
+FreeRevolute(body1::Node{T}, body2::Node{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
     qoffset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
     tra_spring_offset=szeros(T,3), rot_spring_offset=szeros(T,1),
     rot_joint_limits=[szeros(T,0), szeros(T,0)], tra_joint_limits=[szeros(T,0), szeros(T,0)],
@@ -75,7 +75,7 @@ FreeRevolute(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p2
         spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
 
 # rotational between two bodies with a 2 rotational degrees of freedom (skull-eye joint).
-Orbital(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
+Orbital(body1::Node{T}, body2::Node{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
     qoffset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
     rot_spring_offset=szeros(T,2),
     rot_joint_limits=[szeros(T,0), szeros(T,0)],
@@ -85,7 +85,7 @@ Orbital(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p2=szer
         spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
 
 # prismatic joint between two bodies with a 2 rotational degrees of freedom (skull-eye joint).
-PrismaticOrbital(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
+PrismaticOrbital(body1::Node{T}, body2::Node{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
     qoffset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
     tra_spring_offset=szeros(T,1), rot_spring_offset=szeros(T,2),
     rot_joint_limits=[szeros(T,0), szeros(T,0)], tra_joint_limits=[szeros(T,0), szeros(T,0)],
@@ -96,7 +96,7 @@ PrismaticOrbital(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3)
         spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
 
 # planar joint between two bodies with a 2 rotational degrees of freedom (skull-eye joint).
-PlanarOrbital(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
+PlanarOrbital(body1::Node{T}, body2::Node{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
     qoffset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
     tra_spring_offset=szeros(T,2), rot_spring_offset=szeros(T,2),
     rot_joint_limits=[szeros(T,0), szeros(T,0)], tra_joint_limits=[szeros(T,0), szeros(T,0)],
@@ -107,7 +107,7 @@ PlanarOrbital(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p
         spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
 
 # free joint between two bodies with a 2 rotational degrees of freedom (skull-eye joint).
-FreeOrbital(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
+FreeOrbital(body1::Node{T}, body2::Node{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
     qoffset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
     tra_spring_offset=szeros(T,3), rot_spring_offset=szeros(T,2),
     rot_joint_limits=[szeros(T,0), szeros(T,0)], tra_joint_limits=[szeros(T,0), szeros(T,0)],
@@ -118,7 +118,7 @@ FreeOrbital(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p2=
         spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
 
 # spherical joint between two bodies (ball-and-socket joint).
-Spherical(body1::Component{T}, body2::Component{T}; p1=szeros(T, 3), p2=szeros(T, 3),
+Spherical(body1::Node{T}, body2::Node{T}; p1=szeros(T, 3), p2=szeros(T, 3),
     qoffset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
     rot_spring_offset=szeros(T,3), rot_joint_limits=[szeros(T,0), szeros(T,0)],
     spring_type=:sinusoidal) where T =
@@ -127,7 +127,7 @@ Spherical(body1::Component{T}, body2::Component{T}; p1=szeros(T, 3), p2=szeros(T
         spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
 
 # cylindrical joint between two bodies with unconstrained orientation (point-on-line).
-CylindricalFree(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
+CylindricalFree(body1::Node{T}, body2::Node{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
     spring=zero(T), damper=zero(T),
     tra_spring_offset=szeros(T,1), rot_spring_offset=szeros(T,3),
     rot_joint_limits=[szeros(T,0), szeros(T,0)], tra_joint_limits=[szeros(T,0), szeros(T,0)],
@@ -138,7 +138,7 @@ CylindricalFree(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3),
         spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
 
 # planar joint between two bodies with unconstrained orientation.
-PlanarFree(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
+PlanarFree(body1::Node{T}, body2::Node{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
     spring=zero(T), damper= zero(T),
     tra_spring_offset=szeros(T,2), rot_spring_offset=szeros(T,3),
     rot_joint_limits=[szeros(T,0), szeros(T,0)], tra_joint_limits=[szeros(T,0), szeros(T,0)],
@@ -149,7 +149,7 @@ PlanarFree(body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p2=s
         spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
 
 # unconstrained connection between two bodies (connection between floating base and origin).
-Floating(body1::Component{T}, body2::Component{T}; spring=zero(T), damper=zero(T),
+Floating(body1::Node{T}, body2::Node{T}; spring=zero(T), damper=zero(T),
     tra_spring_offset=szeros(T,3), rot_spring_offset=szeros(T,3),
     rot_joint_limits=[szeros(T,0), szeros(T,0)], tra_joint_limits=[szeros(T,0), szeros(T,0)],
     spring_type=:sinusoidal) where T =
@@ -158,7 +158,7 @@ Floating(body1::Component{T}, body2::Component{T}; spring=zero(T), damper=zero(T
     Rotational0{T}(body1, body2; spring, damper,
         spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
 
-function Prototype(jointtype::Symbol, body1::Component{T}, body2::Component{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
+function Prototype(jointtype::Symbol, body1::Node{T}, body2::Node{T}, axis; p1=szeros(T, 3), p2=szeros(T, 3),
         qoffset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
         tra_spring_offset=nothing, rot_spring_offset=nothing,
         tra_joint_limits=[szeros(T,0), szeros(T,0)], rot_joint_limits=[szeros(T,0), szeros(T,0)],

@@ -10,7 +10,7 @@ function getpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
     body1 = Box(width, depth, l, m)
 
     # Constraints
-    joint_between_origin_and_body1 = EqualityConstraint(Revolute(origin, body1,
+    joint_between_origin_and_body1 = JointConstraint(Revolute(origin, body1,
         joint_axis; p2=p2, spring = spring, damper = damper, rot_spring_offset = spring_offset))
     bodies = [body1]
     eqcs = [joint_between_origin_and_body1]
@@ -43,9 +43,9 @@ function getnpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
     bodies = [Box(r, r, l, m, color = RGBA(1., 0., 0.)) for i = 1:Nb]
 
     # Constraints
-    jointb1 = EqualityConstraint(Prototype(basetype, origin, bodies[1], ex; p2 = vert11, spring = spring, damper = damper))
+    jointb1 = JointConstraint(Prototype(basetype, origin, bodies[1], ex; p2 = vert11, spring = spring, damper = damper))
     if Nb > 1
-        eqcs = [EqualityConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], ex; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nb]
+        eqcs = [JointConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], ex; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nb]
         eqcs = [jointb1; eqcs]
     else
         eqcs = [jointb1]

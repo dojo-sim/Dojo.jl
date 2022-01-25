@@ -40,7 +40,7 @@ end
 
 function MeshCat.setobject!(subvisshape, visshape, shapes::Shapes; transparent=false)
     for (i, s) in enumerate(shapes.shape)
-        v = subvisshape["component_$i"]
+        v = subvisshape["node_$i"]
         setobject!(v, visshape[i], s, transparent=transparent)
         scale_transform = MeshCat.LinearMap(diagm(s.scale))
         x_transform = MeshCat.Translation(s.xoffset)

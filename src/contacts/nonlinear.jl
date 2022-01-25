@@ -1,11 +1,11 @@
-mutable struct ContactBound{T,N} <: Bound{T,N}
+mutable struct NonlinearContact{T,N} <: Contact{T,N}
     cf::T
     Bx::SMatrix{2,3,T,6}
     ainv3::Adjoint{T,SVector{3,T}} # inverse matrix
     p::SVector{3,T}
     offset::SVector{3,T}
 
-    function ContactBound(body::Body{T}, normal::AbstractVector, cf; p = szeros(T, 3), offset::AbstractVector = szeros(T, 3)) where T
+    function NonlinearContact(body::Body{T}, normal::AbstractVector, cf; p = szeros(T, 3), offset::AbstractVector = szeros(T, 3)) where T
         V1, V2, V3 = orthogonalcols(normal) # gives two plane vectors and the original normal axis
         A = [V1 V2 V3]
         Ainv = inv(A)
@@ -19,7 +19,7 @@ mutable struct ContactBound{T,N} <: Bound{T,N}
     end
 end
 
-function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}}}
+function g(mechanism, ineqc::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}}}
     bound = ineqc.constraints[1]
     body = getbody(mechanism, ineqc.parentid)
     x2, v25, q2, ϕ25 = fullargssol(body.state)
@@ -28,7 +28,7 @@ function g(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:
     g(bound, ineqc.ssol[2], ineqc.γsol[2], x3, q3, v25, ϕ25)
 end
 
-function g(bound::ContactBound, s::AbstractVector{T}, γ::AbstractVector{T},
+function g(bound::NonlinearContact, s::AbstractVector{T}, γ::AbstractVector{T},
         x3::AbstractVector{T}, q3::UnitQuaternion{T}, v25::AbstractVector{T},
         ϕ25::AbstractVector{T}) where {T}
 
@@ -40,7 +40,7 @@ function g(bound::ContactBound, s::AbstractVector{T}, γ::AbstractVector{T},
         (bound.Bx * vp - s[@SVector [3,4]])...)
 end
 
-@inline function ∂g∂v(bound::ContactBound{T}, x3::AbstractVector{T}, q3::UnitQuaternion{T},
+@inline function ∂g∂v(bound::NonlinearContact{T}, x3::AbstractVector{T}, q3::UnitQuaternion{T},
     x2::AbstractVector{T}, v25::AbstractVector{T}, q2::UnitQuaternion{T}, ϕ25::AbstractVector{T}, λ, Δt::T) where {T}
     V = [bound.ainv3 * Δt;
         szeros(1,3);
@@ -55,7 +55,7 @@ end
     return [V Ω]
 end
 
-@inline function ∂g∂z(bound::ContactBound{T}, x3::AbstractVector{T}, q3::UnitQuaternion{T},
+@inline function ∂g∂z(bound::NonlinearContact{T}, x3::AbstractVector{T}, q3::UnitQuaternion{T},
     x2::AbstractVector{T}, v25::AbstractVector{T}, q2::UnitQuaternion{T}, ϕ25::AbstractVector{T}, λ, Δt::T) where {T}
     X = [bound.ainv3;
         szeros(1,3);
@@ -69,7 +69,7 @@ end
     return [X Q]
 end
 
-@inline function G(bound::ContactBound, x::AbstractVector, q::UnitQuaternion, λ)
+@inline function G(bound::NonlinearContact, x::AbstractVector, q::UnitQuaternion, λ)
     X = [bound.ainv3;
          szeros(1,3);
          bound.Bx]
@@ -78,7 +78,7 @@ end
     return [X Q]
 end
 
-@inline function forcemapping(bound::ContactBound)
+@inline function forcemapping(bound::NonlinearContact)
     X = [bound.ainv3;
          szeros(1,3);
          bound.Bx]
@@ -86,7 +86,7 @@ end
 end
 
 @inline function setDandΔs!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
-    ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
+    ineqc::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}},N½}
     # ∇ssol[γsol .* ssol - μ; g - s] = [diag(γsol); -diag(0,1,1)]
     # ∇γsol[γsol .* ssol - μ; g - s] = [diag(ssol); -diag(1,0,0)]
     # (cf γ - ψ) dependent of ψ = γsol[2][1:1]
@@ -118,21 +118,21 @@ end
     return
 end
 
-function complementarity(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½};
-        scaling::Bool = false) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
+function complementarity(mechanism, ineqc::ContactConstraint{T,N,Nc,Cs,N½};
+        scaling::Bool = false) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}},N½}
     γ = ineqc.γsol[2]
     s = ineqc.ssol[2]
     return vcat(γ[1] * s[1], cone_product(γ[@SVector [2,3,4]], s[@SVector [2,3,4]]))
 end
 
-neutral_vector(bound::ContactBound{T,N}) where {T,N} = [sones(T, 2); szeros(T, Int(N/2) -2)]
+neutral_vector(bound::NonlinearContact{T,N}) where {T,N} = [sones(T, 2); szeros(T, Int(N/2) -2)]
 
-cone_degree(bound::ContactBound) = 2
+cone_degree(bound::NonlinearContact) = 2
 
 ## Utilities
 # signed distance function
-function sdf(ineqc::InequalityConstraint{T,N,Nc,Cs}, x::AbstractVector{T},
-        q::UnitQuaternion{T}) where {T,N,Nc,Cs<:Tuple{<:Bound{T,N}}}
+function sdf(ineqc::ContactConstraint{T,N,Nc,Cs}, x::AbstractVector{T},
+        q::UnitQuaternion{T}) where {T,N,Nc,Cs<:Tuple{<:Contact{T,N}}}
     cont = ineqc.constraints[1]
     return cont.ainv3 * (x + vrotate(cont.p, q) - cont.offset)
 end
@@ -151,20 +151,20 @@ function contact_location(mechanism::Mechanism)
     return [contact_location(mech, ineqc) for ineqc in mechanism.ineqconstraints]
 end
 
-function contact_location(mechanism::Mechanism, ineqc::InequalityConstraint)
+function contact_location(mechanism::Mechanism, ineqc::ContactConstraint)
     body = mechanism.bodies[findfirst(x -> x.id == ineqc.parentid, mechanism.bodies)]
     return contact_location(ineqc, body)
 end
 
-function contact_location(ineqc::InequalityConstraint{T,N,Nc,Cs},
-        body::Body) where {T,N,Nc,Cs<:Tuple{<:Bound{T,N}}}
+function contact_location(ineqc::ContactConstraint{T,N,Nc,Cs},
+        body::Body) where {T,N,Nc,Cs<:Tuple{<:Contact{T,N}}}
     x = body.state.x2[1]
     q = body.state.q2[1]
     return contact_location(ineqc, x, q)
 end
 
-function contact_location(ineqc::InequalityConstraint{T,N,Nc,Cs}, x::AbstractVector{T},
-        q::UnitQuaternion{T}) where {T,N,Nc,Cs<:Tuple{<:Bound{T,N}}}
+function contact_location(ineqc::ContactConstraint{T,N,Nc,Cs}, x::AbstractVector{T},
+        q::UnitQuaternion{T}) where {T,N,Nc,Cs<:Tuple{<:Contact{T,N}}}
     cont = ineqc.constraints[1]
     return x + vrotate(cont.p,q) - cont.offset
 end

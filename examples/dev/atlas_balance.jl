@@ -39,8 +39,8 @@ for (i,joint) in enumerate(mech.eqconstraints)
 end
 
 bodies = collect(Body, mech.bodies)
-eqcs = collect(EqualityConstraint, mech.eqconstraints)
-ineqcs = collect(InequalityConstraint, mech.ineqconstraints)
+eqcs = collect(JointConstraint, mech.eqconstraints)
+ineqcs = collect(ContactConstraint, mech.ineqconstraints)
 bodies = [mech.bodies[i] for i = 32:62]
 eqcs = [mech.eqconstraints[i] for i = 1:31]
 teqcs = [eqcs[1]; [addtorque(mech, eqc, spring = 1e2, damper = 1e2) for eqc in eqcs[2:end]]]
@@ -48,7 +48,7 @@ ineqcs = [mech.ineqconstraints[i] for i = 63:70]
 
 tmech = Mechanism(mech.origin, bodies, teqcs, ineqcs, Δt = 0.01, g = -9.81)
 
-function addtorque(mech::Mechanism, eqc::EqualityConstraint; spring = 0.0, damper = 0.0)
+function addtorque(mech::Mechanism, eqc::JointConstraint; spring = 0.0, damper = 0.0)
     pbody = getbody(mech, eqc.parentid)
     cbody = getbody(mech, eqc.childids[1]) # TODO assume onyly one children
     tid = findfirst(x -> typeof(x) <: Translational, eqc.constraints)
@@ -57,7 +57,7 @@ function addtorque(mech::Mechanism, eqc::EqualityConstraint; spring = 0.0, dampe
     rot = eqc.constraints[rid] # get rotational joint
     p1, p2 = tra.vertices
     axis = [rot.V3[1], rot.V3[2], rot.V3[3]]
-    eqct = EqualityConstraint(TorqueRevolute(pbody, cbody, axis; spring = spring, damper = damper, p1 = p1, p2 = p2))
+    eqct = JointConstraint(TorqueRevolute(pbody, cbody, axis; spring = spring, damper = damper, p1 = p1, p2 = p2))
     return eqct
 end
 

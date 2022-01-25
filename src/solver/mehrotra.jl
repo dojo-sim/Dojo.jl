@@ -104,13 +104,13 @@ function solver_status(mechanism::Mechanism, α, rvio, bvio, n, μtarget, underc
 		)
 end
 
-function initial_state!(ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
+function initial_state!(ineqc::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
     initial_state_ort(ineqc.γsol[1], ineqc.ssol[1])
     initial_state_ort(ineqc.γsol[2], ineqc.ssol[2])
     return nothing
 end
 
-function initial_state!(ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}}}
+function initial_state!(ineqc::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}}}
 	γort, sort = initial_state_ort(ineqc.γsol[1][1:1], ineqc.ssol[1][1:1])
 	γsoc, ssoc = initial_state_soc(ineqc.γsol[1][2:4], ineqc.ssol[1][2:4])
 	ineqc.γsol[1] = [γort; γsoc]
@@ -155,19 +155,19 @@ function correction!(mechanism)
 	residual_entries = mechanism.residual_entries
 
     for id in reverse(system.dfs_list)
-        component = getcomponent(mechanism, id)
-        correction!(mechanism, residual_entries[id], getentry(system, id), component)
+        node = getnode(mechanism, id)
+        correction!(mechanism, residual_entries[id], getentry(system, id), node)
     end
 	return
 end
 
 @inline function correction!(mechanism::Mechanism, residual_entry::Entry,
-		step_entry::Entry, component::Component)
+		step_entry::Entry, node::Node)
     return
 end
 
 @inline function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry,
-		ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+		ineqc::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
 	Δs = step_entry.value[1:N½]
     Δγ = step_entry.value[N½ .+ (1:N½)]
 	μ = mechanism.μ
@@ -176,7 +176,7 @@ end
 end
 
 @inline function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry,
-		ineqc::InequalityConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
+		ineqc::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}},N½}
 	cont = ineqc.constraints[1]
 	μ = mechanism.μ
 	Δs = step_entry.value[1:N½]
@@ -186,13 +186,13 @@ end
 end
 
 @inline function correction!(mechanism::Mechanism{T}, residual_entry::Entry, step_entry::Entry,
-		eqc::EqualityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
+		eqc::JointConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
 	cor = correction(mechanism, step_entry, eqc)
 	residual_entry.value += cor
     return
 end
 
-@generated function correction(mechanism::Mechanism{T}, step_entry::Entry, eqc::EqualityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
+@generated function correction(mechanism::Mechanism{T}, step_entry::Entry, eqc::JointConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
     cor = [:(correction(eqc.constraints[$i], step_entry.value[λindex(eqc,$i)], mechanism.μ)) for i = 1:Nc]
     return :(vcat($(cor...)))
 end

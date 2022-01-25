@@ -3,7 +3,7 @@ function getsphere(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, radius=0.5,
     origin = Origin{T}(name=:origin)
     mass = 1.0
     bodies = [Sphere(radius, mass, name=:sphere)]
-    eqcs = [EqualityConstraint(Floating(origin, bodies[1]), name = :floating_joint)]
+    eqcs = [JointConstraint(Floating(origin, bodies[1]), name = :floating_joint)]
     mechanism = Mechanism(origin, bodies, eqcs, Δt = Δt, g = g)
 
     if contact

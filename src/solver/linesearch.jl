@@ -51,12 +51,12 @@ end
     return
 end
 
-@inline function lineStep!(α::T, eqc::EqualityConstraint, vector_entry::Entry, scale) where T
+@inline function lineStep!(α::T, eqc::JointConstraint, vector_entry::Entry, scale) where T
     eqc.λsol[2] = eqc.λsol[1] + 1.0 / (2^scale) * α * vector_entry.value
     return
 end
 
-@inline function lineStep!(α::T, ineqc::InequalityConstraint{T,N,Nc,Cs,N½}, vector_entry::Entry, scale) where {T,N,Nc,Cs,N½}
+@inline function lineStep!(α::T, ineqc::ContactConstraint{T,N,Nc,Cs,N½}, vector_entry::Entry, scale) where {T,N,Nc,Cs,N½}
     ineqc.ssol[2] = ineqc.ssol[1] + 1 / (2^scale) * α * vector_entry.value[SVector{N½,Int64}(1:N½)]
     ineqc.γsol[2] = ineqc.γsol[1] + 1 / (2^scale) * α * vector_entry.value[SVector{N½,Int64}(N½+1:N)]
     return

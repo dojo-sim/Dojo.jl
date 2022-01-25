@@ -10,7 +10,7 @@ mutable struct Translational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N}
     Fτ::SVector{3,T}
 end
 
-function Translational{T,Nλ}(body1::Component, body2::Component;
+function Translational{T,Nλ}(body1::Node, body2::Node;
         p1::AbstractVector = szeros(T,3), p2::AbstractVector = szeros(T,3), axis::AbstractVector = szeros(T,3),
         spring = zero(T), damper = zero(T), spring_offset = szeros(T,3-Nλ),
         joint_limits = [szeros(T,0), szeros(T,0)],
@@ -174,12 +174,12 @@ function Gb(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQ
 end
 
 ## Position and velocity offsets
-@inline function getPositionDelta(joint::Translational, body1::Component, body2::Component, x::SVector)
+@inline function getPositionDelta(joint::Translational, body1::Node, body2::Node, x::SVector)
     Δx = zerodimstaticadjoint(nullspacemat(joint)) * x # in body1 frame
     return Δx
 end
 
-@inline function getVelocityDelta(joint::Translational, body1::Component, body2::Component, v::SVector)
+@inline function getVelocityDelta(joint::Translational, body1::Node, body2::Node, v::SVector)
     Δv = zerodimstaticadjoint(nullspacemat(joint)) * v # in body1 frame
     return Δv
 end

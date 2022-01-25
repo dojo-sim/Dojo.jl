@@ -1,7 +1,7 @@
 ################################################################################
 # Data Jacobians
 ################################################################################
-function ∂eqc∂body_data(mechanism::Mechanism, eqc::EqualityConstraint{T,N},
+function ∂eqc∂body_data(mechanism::Mechanism, eqc::JointConstraint{T,N},
         body::Body{T}) where {T,N}
     Nd = data_dim(body)
     ∇m = szeros(T,N,1)
@@ -12,7 +12,7 @@ function ∂eqc∂body_data(mechanism::Mechanism, eqc::EqualityConstraint{T,N},
     return ∇g
 end
 
-function ∂eqc∂eqc_data(mechanism::Mechanism, eqc::EqualityConstraint{T,N}) where {T,N}
+function ∂eqc∂eqc_data(mechanism::Mechanism, eqc::JointConstraint{T,N}) where {T,N}
     Nd = data_dim(eqc)
     return szeros(T,N,Nd)
 end
@@ -48,7 +48,7 @@ function ∂body∂body_data(mechanism::Mechanism, body::Body{T}) where T
     return [∇m ∇J ∇z1 ∇z2]
 end
 
-function ∂body∂eqc_data(mechanism::Mechanism{T}, eqc::EqualityConstraint{T},
+function ∂body∂eqc_data(mechanism::Mechanism{T}, eqc::JointConstraint{T},
         body::Body{T}) where {T}
     Nd = data_dim(eqc)
     N = 6
@@ -64,8 +64,8 @@ function ∂body∂eqc_data(mechanism::Mechanism{T}, eqc::EqualityConstraint{T},
     return [∇u ∇spring ∇damper ∇spring_offset]
 end
 
-function ∂body∂ineqc_data(mechanism::Mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
-        body::Body{T}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
+function ∂body∂ineqc_data(mechanism::Mechanism, ineqc::ContactConstraint{T,N,Nc,Cs,N½},
+        body::Body{T}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}},N½}
     Nd = data_dim(ineqc)
     bound = ineqc.constraints[1]
     offset = bound.offset
@@ -85,8 +85,8 @@ function ∂body∂ineqc_data(mechanism::Mechanism, ineqc::InequalityConstraint{
 end
 
 
-function ∂ineqc∂ineqc_data(mechanism::Mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
-        body::Body{T}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
+function ∂ineqc∂ineqc_data(mechanism::Mechanism, ineqc::ContactConstraint{T,N,Nc,Cs,N½},
+        body::Body{T}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}},N½}
     Nd = data_dim(ineqc)
     bound = ineqc.constraints[1]
     p = bound.p
@@ -105,7 +105,7 @@ function ∂ineqc∂ineqc_data(mechanism::Mechanism, ineqc::InequalityConstraint
     return [∇compμ; ∇g]
 end
 
-function ∂ineqc∂body_data(mechanism::Mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
+function ∂ineqc∂body_data(mechanism::Mechanism, ineqc::ContactConstraint{T,N,Nc,Cs,N½},
         body::Body{T}) where {T,N,Nc,Cs,N½}
     Nd = data_dim(body)
     ∇compμ = szeros(T,N½,Nd)

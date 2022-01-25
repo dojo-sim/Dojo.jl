@@ -217,29 +217,29 @@ function joint_selector(jointtype, body1, body2, T;
 
     # TODO limits for revolute joint?
     if jointtype == "revolute" || jointtype == "continuous"
-        joint = EqualityConstraint(Revolute(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(Revolute(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "prismatic"
-        joint = EqualityConstraint(Prismatic(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(Prismatic(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "planar"
-        joint = EqualityConstraint(Planar(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(Planar(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "planarfree"
-        joint = EqualityConstraint(PlanarFree(body1, body2, axis; p1=p1, p2=p2), name=name)
+        joint = JointConstraint(PlanarFree(body1, body2, axis; p1=p1, p2=p2), name=name)
     elseif jointtype == "fixed"
-        joint = EqualityConstraint(Fixed(body1, body2; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(Fixed(body1, body2; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "floating"
-        joint = EqualityConstraint(Floating(body1, body2), name=name)
+        joint = JointConstraint(Floating(body1, body2), name=name)
     elseif jointtype == "orbital"
-        joint = EqualityConstraint(Orbital(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(Orbital(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "ball"
-        joint = EqualityConstraint(Spherical(body1, body2; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(Spherical(body1, body2; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "fixedorientation"
-        joint = EqualityConstraint(FixedOrientation(body1, body2; qoffset = qoffset), name=name)
+        joint = JointConstraint(FixedOrientation(body1, body2; qoffset = qoffset), name=name)
     elseif jointtype == "cylindrical"
-        joint = EqualityConstraint(Cylindrical(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(Cylindrical(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "cylindricalfree"
-        joint = EqualityConstraint(CylindricalFree(body1, body2, axis; p1=p1, p2=p2), name=name)
+        joint = JointConstraint(CylindricalFree(body1, body2, axis; p1=p1, p2=p2), name=name)
     elseif jointtype == "planaraxis"
-        joint = EqualityConstraint(PlanarAxis(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(PlanarAxis(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
     else
         @error "Unknown joint type"
     end
@@ -275,7 +275,7 @@ end
 function parse_joints(xjoints, ldict, floating, T)
     origins = Origin{T}[]
     links = Body{T}[]
-    joints = EqualityConstraint{T}[]
+    joints = JointConstraint{T}[]
     floatingname = ""
 
     for name in keys(ldict)
@@ -322,7 +322,7 @@ function parse_joints(xjoints, ldict, floating, T)
     end
 
     if floating
-        originjoint = EqualityConstraint(Floating(origin, ldict[Symbol(floatingname)]), name=:auto_generated_floating_joint)
+        originjoint = JointConstraint(Floating(origin, ldict[Symbol(floatingname)]), name=:auto_generated_floating_joint)
         joints = [originjoint; joints] # For proper parsing the first joint must be connected to the origin
     end
 
@@ -332,7 +332,7 @@ end
 # TODO This might be missing the detection of a direct loop, i.e. only two links connected by two joints
 # TODO Also only works for a single loop closure in a cycle (so no ladders)
 function parse_loop_joints(xloopjoints, origin, joints, ldict, T)
-    loopjoints = EqualityConstraint{T}[]
+    loopjoints = JointConstraint{T}[]
 
 
     for xloopjoint in xloopjoints
@@ -442,10 +442,10 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
     qjointlist = Dict{Int64,UnitQuaternion{T}}() # stores id, q in world frame
 
     for id in reverse(system.dfs_list) # from root to leaves
-        component = getcomponent(mechanism, id)
-        !(component isa Body) && continue # only for bodies
+        node = getnode(mechanism, id)
+        !(node isa Body) && continue # only for bodies
 
-        body = component
+        body = node
         xbodylocal = body.state.x2[1]
         qbodylocal = body.state.q2[1]
         shape = body.shape

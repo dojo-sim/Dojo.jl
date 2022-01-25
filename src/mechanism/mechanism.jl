@@ -1,8 +1,8 @@
 mutable struct Mechanism{T,Nn,Ne,Nb,Ni}
     origin::Origin{T}
-    eqconstraints::Vector{<:EqualityConstraint{T}}
+    eqconstraints::Vector{<:JointConstraint{T}}
     bodies::Vector{<:Body{T}}
-    ineqconstraints::Vector{<:InequalityConstraint{T}}
+    ineqconstraints::Vector{<:ContactConstraint{T}}
 
     system::System{Nn}
     residual_entries::Vector{Entry}
@@ -15,7 +15,7 @@ mutable struct Mechanism{T,Nn,Ne,Nb,Ni}
     ϕreg::Vector{T}
 end
 
-function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, eqcs::Vector{<:EqualityConstraint{T}}, ineqcs::Vector{<:InequalityConstraint{T}};
+function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, eqcs::Vector{<:JointConstraint{T}}, ineqcs::Vector{<:ContactConstraint{T}};
     spring=0.0, damper=0.0, Δt::T=0.01, g::T=-9.81) where T
 
     # reset ids
@@ -70,8 +70,8 @@ function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, eqcs::Vector{<:
     Mechanism{T,Nn,Ne,Nb,Ni}(origin, eqcs, bodies, ineqcs, system, residual_entries, matrix_entries, diagonal_inverses, Δt, g, μ, ϕreg)
 end
 
-function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, eqcs::Vector{<:EqualityConstraint{T}}; kwargs...) where T
-    return Mechanism(origin, bodies, eqcs, InequalityConstraint{T}[]; kwargs...)
+function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, eqcs::Vector{<:JointConstraint{T}}; kwargs...) where T
+    return Mechanism(origin, bodies, eqcs, ContactConstraint{T}[]; kwargs...)
 end
 
 function Mechanism(filename::String, floating::Bool=false, T=Float64; kwargs...)

@@ -1,4 +1,4 @@
-mutable struct Origin{T} <: Component{T}
+mutable struct Origin{T} <: Node{T}
     id::Int64
     name::Symbol
     state::State{T}

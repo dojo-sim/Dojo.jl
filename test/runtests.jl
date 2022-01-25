@@ -11,8 +11,8 @@ using Test
 include("integrator.jl")
 include("minimal_coordinates.jl")
 include("jacobian.jl")
-include("momentum_conservation.jl")
-include("energy_conservation.jl")
+include("momentum.jl")
+include("energy.jl")
 include("behaviors.jl")
 include("joint_limits.jl")
 

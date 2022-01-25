@@ -11,7 +11,7 @@ mutable struct Rotational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N}
     Fτ::SVector{3,T}
 end
 
-function Rotational{T,Nλ}(body1::Component, body2::Component;
+function Rotational{T,Nλ}(body1::Node, body2::Node;
         axis::AbstractVector = szeros(T,3), qoffset::UnitQuaternion = one(UnitQuaternion{T}),
         spring = zero(T), damper = zero(T), spring_offset = szeros(T,3-Nλ),
         joint_limits = [szeros(T,0), szeros(T,0)],

@@ -4,7 +4,7 @@ function gettennisracket(; Δt::T=0.01, g::T=-9.81) where T
     r = 0.1
     h = 1.0
     bodies = [Box(h/25, h/2, h, mass, color = RGBA(1., 0., 0.), name = :box)]
-    eqcs = [EqualityConstraint(Floating(origin, bodies[1]), name = :floating_joint)]
+    eqcs = [JointConstraint(Floating(origin, bodies[1]), name = :floating_joint)]
     mechanism = Mechanism(origin, bodies, eqcs, Δt = Δt, g = g)
     return mechanism
 end
