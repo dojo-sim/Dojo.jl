@@ -20,7 +20,7 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
-mech = getmechanism(:snake, Nb=5, Δt=0.01, g=-9.81, cf=0.0, contact=true, contact_type=:contact)
+mech = getmechanism(:snake, Nb=5, timestep=0.01, g=-9.81, cf=0.0, contact=true, contact_type=:contact)
 
 x = [0,-0.5,.1]
 v = 0.1*[1,.3,4]
@@ -38,10 +38,10 @@ visualize(mech, storage, vis = vis)
 
 # Set data
 Nb = length(mech.bodies)
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
-attjac = attitudejacobian(data, Nb)
+data = get_data(mech)
+set_data!(mech, data)
+sol = get_solution(mech)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
 datamat = full_data_matrix(mech)
@@ -92,7 +92,7 @@ norm((fd_datamat + datamat)[12:17,25:31], Inf)
 fd_datamat[15:17,19:21]
 -datamat[15:17,19:21]
 
-ineqcs = collect(mech.ineqconstraints)
+ineqcs = collect(mech.contacts)
 ineqcs[1].parentid
 mech.bodies
 ineqcs[2].parentid
@@ -100,9 +100,9 @@ ineqcs[3].parentid
 ineqcs[4].parentid
 
 
-collect(mech.eqconstraints)
+collect(mech.joints)
 collect(mech.bodies)
-collect(mech.ineqconstraints)
+collect(mech.contacts)
 5 + 2 * 6 + 4 * 8
 12 * 2 + 6 + 1
 

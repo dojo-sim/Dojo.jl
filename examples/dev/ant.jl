@@ -18,11 +18,11 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
-mech = getmechanism(:ant, Δt = 0.01, g = -9.81, contact = true,
+mech = getmechanism(:ant, timestep = 0.01, g = -9.81, contact = true,
     contact_body = true, spring = 0.0, damper = 1.0);
 initialize!(mech, :ant, rot = [0,0,0.], ankle = 0.25)
 @elapsed storage = simulate!(mech, 2.0, record = true, verbose = false,
-    opts=InteriorPointOptions(verbose=false, btol = 1e-6))
+    opts=SolverOptions(verbose=false, btol = 1e-6))
 visualize(mech, storage, vis = vis)
 
 env = make("ant", vis = vis)
@@ -33,11 +33,11 @@ obs = reset(env)[2]
 render(env)
 
 1000*sample(env.aspace)
-collect(env.mechanism.eqconstraints)[1]
+collect(env.mechanism.joints)[1]
 for i = 1:25
     render(env)
     sleep(0.05)
-    # action = 120*env.mechanism.Δt*ones(6)#1000*sample(env.aspace) # your agent here (this takes random actions)
+    # action = 120*env.mechanism.timestep*ones(6)#1000*sample(env.aspace) # your agent here (this takes random actions)
     action = sample(env.aspace)#1000*sample(env.aspace) # your agent here (this takes random actions)
     obs, r, done, info = step(env, action)
     @show r
@@ -48,8 +48,8 @@ for i = 1:25
 end
 close(env)
 
-env.mechanism.eqconstraints
-controldim(env.mechanism)
+env.mechanism.joints
+control_dimension(env.mechanism)
 sample(env.aspace)
 # sample(env.aspace)
 
@@ -61,8 +61,8 @@ sample(env.aspace)
 
 
 using BenchmarkTools
-eqc1 = collect(mech.eqconstraints)[1]
-eqc2 = collect(mech.eqconstraints)[2]
+eqc1 = collect(mech.joints)[1]
+eqc2 = collect(mech.joints)[2]
 joint21 = eqc2.constraints[1]
 joint22 = eqc2.constraints[2]
 @benchmark λindex(eqc1, 1)
@@ -87,7 +87,7 @@ end
 system = mech.system
 residual_entries = mech.residual_entries
 res = residual_entries[2]
-ste = getentry(system, 2)
+ste = get_entry(system, 2)
 @benchmark correction!($mech, $res, $ste, $eqc2)
 
 
@@ -117,7 +117,7 @@ end
 system = mech.system
 residual_entries = mech.residual_entries
 res = residual_entries[2]
-ste = getentry(system, 2)
+ste = get_entry(system, 2)
 @benchmark correction($mech, $ste, $eqc2)
 @code_warntype correction(mech, ste, eqc2)
 

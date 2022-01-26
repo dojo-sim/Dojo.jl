@@ -22,16 +22,16 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
-mech = getmechanism(:pendulum, Δt = 0.01, g = -9.81)#, spring = 100.0, damper = 5.0)
+mech = getmechanism(:pendulum, timestep = 0.01, g = -9.81)#, spring = 100.0, damper = 5.0)
 Random.seed!(100)
 ϕ1 = 0.3π
 initialize!(mech, :pendulum, ϕ1 = ϕ1)
 
 function cont!(mechanism, k; u = 30.1)
-    for (i, eqc) in enumerate(mechanism.eqconstraints)
-        nu = controldim(eqc, ignore_floating_base = false)
-        su = mechanism.Δt * u * sones(nu)
-        setForce!(eqc, su)
+    for (i, eqc) in enumerate(mechanism.joints)
+        nu = control_dimension(eqc, ignore_floating_base = false)
+        su = mechanism.timestep * u * sones(nu)
+        set_input!(eqc, su)
     end
     return
 end
@@ -45,20 +45,20 @@ visualize(mech, storage, vis = vis)
 
 include(joinpath(module_dir(), "examples", "diff_tools.jl"))
 # Set data
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
+data = get_data(mech)
+set_data!(mech, data)
+sol = get_solution(mech)
 Nb = length(collect(mech.bodies))
-attjac = attitudejacobian(data, Nb)
+attjac = attitude_jacobian(data, Nb)
 
-data = getdata(mech)
+data = get_data(mech)
 v15 = data[4:6]
-sol = getsolution(mech)
+sol = get_solution(mech)
 v25 = sol[6:8]
 norm(v15 - v25)
 
 # IFT
-setentries!(mech)
+set_entries!(mech)
 datamat = full_data_matrix(mech, attjac = true)
 datamat1 = full_data_matrix(mech, attjac = false)
 datamat2 = full_data_matrix(mech, attjac = false) * attjac

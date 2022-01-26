@@ -1,15 +1,15 @@
-function gethumanoid(; Δt::T=0.01, g::T=-9.81, cf=0.8, spring=0.0, damper=0.0,
-		contact::Bool=true, contact_body::Bool=false) where {T}
+function gethumanoid(; timestep::T=0.01, g::T=-9.81, cf=0.8, spring=0.0, damper=0.0,
+		contact::Bool=true, contact_body::Bool=false) where T
     path = joinpath(@__DIR__, "../deps/humanoid.urdf")
-    mech = Mechanism(path, true, T, g=g, Δt=Δt, spring=spring, damper=damper)
+    mech = Mechanism(path, true, T, g=g, timestep=timestep, spring=spring, damper=damper)
 
     if contact
         origin = Origin{T}()
         bodies = Vector{Body{T}}(collect(mech.bodies))
-        eqs = Vector{EqualityConstraint{T}}(collect(mech.eqconstraints))
+        eqs = Vector{JointConstraint{T}}(collect(mech.joints))
 
         # Foot contact
-        left_foot = getbody(mech, "left_foot")
+        left_foot = get_body(mech, :left_foot)
 
 		aa = -0.43000 * [-0.44721, 0.00000, 0.89442]
 		ql = axisangle2quaternion(aa)
@@ -44,9 +44,9 @@ function gethumanoid(; Δt::T=0.01, g::T=-9.81, cf=0.8, spring=0.0, damper=0.0,
         normal = [[0;0;1.0] for i = 1:n]
         cfs = cf * ones(T, n)
 
-        ineqcs_left = contactconstraint(left_foot, normal, cf=cfs, p=contacts, offset=offsets)
+        contacts_left = contact_constraint(left_foot, normal, cf=cfs, p=contacts, offset=offsets)
 
-        right_foot = getbody(mech, "right_foot")
+        right_foot = get_body(mech, :right_foot)
 
         pfr = [0.5 * right_foot.shape.shape[1].rh[2]; 0.0; 0.0]
         ofr = [0.0; 0.0; right_foot.shape.shape[1].rh[1]]
@@ -64,16 +64,16 @@ function gethumanoid(; Δt::T=0.01, g::T=-9.81, cf=0.8, spring=0.0, damper=0.0,
         normal = [[0;0;1.0] for i = 1:n]
         cfs = cf * ones(T, n)
 
-        ineqcs_right = contactconstraint(right_foot, normal, cf=cfs, p = contacts, offset=offsets)
+        contacts_right = contact_constraint(right_foot, normal, cf=cfs, p = contacts, offset=offsets)
 
-        setPosition!(mech, geteqconstraint(mech, "auto_generated_floating_joint"), [0;0;1.2;0.1;0.;0.])
-        # mech = Mechanism(origin, bodies, eqs, [ineqcs_left; ineqcs_right], g = g, Δt = Δt, spring=spring, damper=damper)
-        mech = Mechanism(origin, bodies, eqs, [ineqcs_left; ], g = g, Δt = Δt, spring=spring, damper=damper)
+        set_position(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [0;0;1.2;0.1;0.;0.])
+        # mech = Mechanism(origin, bodies, eqs, [contacts_left; contacts_right], g = g, timestep = timestep, spring=spring, damper=damper)
+        mech = Mechanism(origin, bodies, eqs, [contacts_left; ], g = g, timestep = timestep, spring=spring, damper=damper)
     end
     return mech
 end
 
 function initializehumanoid!(mechanism::Mechanism; tran=[0,0,1.5], rot=[0.1,0,0]) where T
-    setPosition!(mechanism, geteqconstraint(mechanism, "auto_generated_floating_joint"), [tran; rot])
+    set_position(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [tran; rot])
     zeroVelocity!(mechanism)
 end

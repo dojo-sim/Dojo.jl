@@ -50,7 +50,7 @@ function normal_sample(μ, Σ)
 end
 
 function gradient_bundle_1st(mechanism::Mechanism, z0, u0, idx; N::Int=100, Σ=1e-6I,
-        opts=InteriorPointOptions(rtol=1e-10, btol=1e-10, undercut=1.0, no_progress_undercut=1.0))
+        opts=SolverOptions(rtol=1e-10, btol=1e-10, undercut=1.0, no_progress_undercut=1.0))
     nx = 6
     nu = 3
     ∇ = zeros(nx,nu)
@@ -60,28 +60,28 @@ function gradient_bundle_1st(mechanism::Mechanism, z0, u0, idx; N::Int=100, Σ=1
         u = zeros(3)
         u[idx:idx] = normal_sample(u0[idx:idx], Σ)
         ∇x, ∇u = getMinGradients!(mechanism, z0, u, opts=opts)
-        # ∇u = (u[idx] / mechanism.Δt >= 10.0) * ones(nx,nu) * mechanism.Δt
+        # ∇u = (u[idx] / mechanism.timestep >= 10.0) * ones(nx,nu) * mechanism.timestep
         ∇ += ∇u
     end
     return ∇ ./ N
 end
 
 function gradient_bundle_0th(mechanism::Mechanism, z0, u0, idx; N::Int=100, Σ=1e-6*I,
-        opts=InteriorPointOptions(rtol=1e-10, btol=1e-10, undercut=1.0, no_progress_undercut=1.0))
+        opts=SolverOptions(rtol=1e-10, btol=1e-10, undercut=1.0, no_progress_undercut=1.0))
     nx = 6
     nu = 1
     δx = [zeros(nx) for i=1:N]
     δu = [zeros(nu) for i=1:N]
 
     step!(mechanism, z0, u0, opts=opts)
-    z10 = getNextState(mechanism)
+    z10 = get_next_state(mechanism)
     x10 = max2min(mechanism, z10)
 
     for i = 1:N
         u = zeros(3)
         u[idx:idx] = normal_sample(u0[idx:idx], Σ)
         step!(mechanism, z0, u, opts=opts)
-        z1 = getNextState(mechanism)
+        z1 = get_next_state(mechanism)
         x1 = max2min(mechanism, z1)
         # x11 = copy(x10)
         # x11[idx] = max(0, u[idx]  - 10.0) / 10
@@ -97,11 +97,11 @@ end
 function box2d_dojo(mechanism::Mechanism, F; rtol=1e-10, btol=1e-10, undercut=1.0, no_progress_undercut=1.0, mode::Symbol=:friction)
     (mode == :friction) && (idx = 1)
     (mode == :impact) && (idx = 2)
-    Δt = mechanism.Δt
-    opts_grad = InteriorPointOptions(rtol=rtol, btol=btol, undercut=undercut, no_progress_undercut=no_progress_undercut, verbose=false)
+    timestep = mechanism.timestep
+    opts_grad = SolverOptions(rtol=rtol, btol=btol, undercut=undercut, no_progress_undercut=no_progress_undercut, verbose=false)
 
     initialize!(mechanism, :box2d, x=[0,0.], v=[0,0.], θ=0.0, ω=0.0)
-    z0 = getMaxState(mechanism)
+    z0 = get_max_state(mechanism)
     u0 = zeros(3)
     u0[idx] += F 
 
@@ -109,7 +109,7 @@ function box2d_dojo(mechanism::Mechanism, F; rtol=1e-10, btol=1e-10, undercut=1.
 
     step!(mechanism, z0, u0, opts=opts_grad)
 
-    z1 = getNextState(mechanism)
+    z1 = get_next_state(mechanism)
     x0 = max2min(mechanism, z0)
     x1 = max2min(mechanism, z1)
 
@@ -121,18 +121,18 @@ end
 function box2d_gradientbundle(mechanism::Mechanism, F; N::Int=100, Σ=1e-6*I, rtol=1e-10, btol=1e-10, undercut=1.5, no_progress_undercut=10.0, mode::Symbol=:friction)
     (mode == :friction) && (idx = 1)
     (mode == :impact) && (idx = 2)
-    Δt = mechanism.Δt
-    opts_grad = InteriorPointOptions(rtol=rtol, btol=btol, undercut=undercut, no_progress_undercut=no_progress_undercut)
+    timestep = mechanism.timestep
+    opts_grad = SolverOptions(rtol=rtol, btol=btol, undercut=undercut, no_progress_undercut=no_progress_undercut)
 
     initialize!(mechanism, :box2d, x=[0,0.], v=[0,0.], θ=0.0, ω=0.0)
-    z0 = getMaxState(mechanism)
+    z0 = get_max_state(mechanism)
     u0 = zeros(3)
     u0[idx] += F
 
     GB0 = gradient_bundle_0th(mechanism, z0, u0, idx, opts=opts_grad, N=N, Σ=Σ)
     GB1 = gradient_bundle_1st(mechanism, z0, u0, idx, opts=opts_grad, N=N, Σ=Σ)
     step!(mechanism, z0, u0, opts=opts_grad)
-    z1 = getNextState(mechanism)
+    z1 = get_next_state(mechanism)
     x0 = max2min(mechanism, z0)
     x1 = max2min(mechanism, z1)
 

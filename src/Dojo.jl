@@ -26,8 +26,8 @@ import Distributions: Uniform, Normal
 
 export Origin,
     Body,
-    EqualityConstraint,
-    InequalityConstraint,
+    JointConstraint,
+    ContactConstraint,
     Mechanism,
     Storage,
     UnitQuaternion,
@@ -56,23 +56,23 @@ export Origin,
     CylindricalFree,
     PlanarFree,
 
-    ContactBound,
+    NonlinearContact,
     UnitQuaternion,
 
-    setPosition!,
-    setVelocity!,
-    setForce!,
-    addForce!,
+    set_position,
+    set_velocity!,
+    set_input!,
+    add_force!,
     getid,
-    getcomponent,
-    getbody,
-    geteqconstraint,
-    getineqconstraint,
+    get_node,
+    get_body,
+    get_joint_constraint,
+    get_contact_constraint,
     simulate!,
     initializeConstraints!,
     disassemble,
-    minimalCoordinates,
-    minimalVelocities,
+    minimal_coordinates,
+    minimal_velocities,
 
     RotX,
     RotY,
@@ -86,14 +86,14 @@ export Origin,
     getmechanism,
     initialize!,
     getdim,
-    controldim,
+    control_dimension,
 
     getmechanism,
     initialize!,
-    getdata,
-    setdata!,
-    getsolution,
-    attitudejacobian,
+    get_data,
+    set_data!,
+    get_solution,
+    attitude_jacobian,
     finitediff_sol_matrix,
     full_matrix,
     full_data_matrix,
@@ -101,12 +101,12 @@ export Origin,
     finitediff_sensitivity,
 
     momentum,
-    kineticEnergy,
-    potentialEnergy,
-    mechanicalEnergy,
+    kinetic_energy,
+    potential_energy,
+    mechanical_energy,
 
     mehrotra!,
-    InteriorPointOptions,
+    SolverOptions,
 
     Environment,
     getMinState
@@ -114,7 +114,6 @@ export Origin,
 # Utilities
 include(joinpath("util", "util.jl"))
 include(joinpath("util", "custom_static.jl"))
-include(joinpath("util", "customdict.jl"))
 include(joinpath("util", "quaternion.jl"))
 
 # Graph system
@@ -125,12 +124,12 @@ include(joinpath("graph", "ldu.jl"))
 
 # Mechanism
 include(joinpath("mechanism", "shapes.jl"))
-include(joinpath("mechanism", "component.jl"))
+include(joinpath("mechanism", "node.jl"))
 include(joinpath("mechanism", "state.jl"))
 include(joinpath("mechanism", "body.jl"))
 include(joinpath("mechanism", "origin.jl"))
-include(joinpath("mechanism", "equality_constraint.jl"))
-include(joinpath("mechanism", "inequality_constraint.jl"))
+include(joinpath("joints", "constraint.jl"))
+include(joinpath("contacts", "constraint.jl"))
 include(joinpath("mechanism", "mechanism.jl"))
 include(joinpath("mechanism", "system.jl"))
 include(joinpath("mechanism", "methods.jl"))
@@ -140,38 +139,41 @@ include(joinpath("simulation", "step.jl"))
 include(joinpath("simulation", "storage.jl"))
 include(joinpath("simulation", "simulate.jl"))
 
-# Energy
-include(joinpath("mechanism", "momentum.jl"))
-include(joinpath("mechanism", "energy.jl"))
+# Mechanics
+include(joinpath("mechanics", "momentum.jl"))
+include(joinpath("mechanics", "energy.jl"))
 
 # Joints
 include(joinpath("joints", "joint.jl"))
 include(joinpath("joints", "translational", "constraint.jl"))
+include(joinpath("joints", "translational", "constraint_limits.jl"))
 include(joinpath("joints", "translational", "input.jl"))
 include(joinpath("joints", "translational", "force.jl"))
 include(joinpath("joints", "translational", "minimal.jl"))
 include(joinpath("joints", "rotational", "constraint.jl"))
+include(joinpath("joints", "rotational", "constraint_limits.jl"))
 include(joinpath("joints", "rotational", "input.jl"))
 include(joinpath("joints", "rotational", "torque.jl"))
 include(joinpath("joints", "rotational", "minimal.jl"))
 include(joinpath("joints", "prototypes.jl"))
 
-# Inequality constraints
-include(joinpath("bounds", "bound.jl"))
-include(joinpath("bounds", "cone.jl"))
-include(joinpath("bounds", "contact.jl"))
-include(joinpath("bounds", "impact.jl"))
-include(joinpath("bounds", "linear_contact.jl"))
-include(joinpath("bounds", "constructor.jl"))
+# Contacts 
+include(joinpath("contacts", "contact.jl"))
+include(joinpath("contacts", "cone.jl"))
+include(joinpath("contacts", "impact.jl"))
+include(joinpath("contacts", "linear.jl"))
+include(joinpath("contacts", "nonlinear.jl"))
+include(joinpath("contacts", "constructor.jl"))
+include(joinpath("contacts", "utils.jl"))
 
 # Solver
 include(joinpath("solver", "methods.jl"))
 include(joinpath("solver", "mehrotra.jl"))
 include(joinpath("solver", "linesearch.jl"))
 
-# Variational integrator
-include(joinpath("discretization", "integrator.jl"))
-include(joinpath("discretization", "body.jl"))
+# Integrator
+include(joinpath("integrators", "integrator.jl"))
+include(joinpath("integrators", "constraint.jl"))
 
 # User interface
 include(joinpath("ui", "mechanism_ui.jl"))

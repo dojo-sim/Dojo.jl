@@ -1,22 +1,20 @@
-function create_system(origin::Origin{T}, eqconstraints::Vector{<:EqualityConstraint}, bodies::Vector{<:Body},
-    ineqconstraints::Vector{<:InequalityConstraint}) where T
-
-    adjacency = adjacencyMatrix(eqconstraints, bodies, ineqconstraints)
-    dims = length.([eqconstraints; bodies; ineqconstraints])
+function create_system(origin::Origin{T}, joints::Vector{<:JointConstraint}, bodies::Vector{<:Body}, contacts::Vector{<:ContactConstraint}) where T
+    adjacency = adjacency_matrix(joints, bodies, contacts)
+    dims = length.([joints; bodies; contacts])
     system = System{T}(adjacency, dims, dims)
 
-    for eqc in eqconstraints
-        eqc.parentid == origin.id && (eqc.parentid = nothing)
+    for joint in joints
+        joint.parentid == origin.id && (joint.parentid = nothing)
     end
+
     origin.id = 0
 
     return system
 end
 
-function adjacencyMatrix(eqcs::Vector{<:EqualityConstraint}, bodies::Vector{<:Body},
-        ineqcs::Vector{<:InequalityConstraint})
+function adjacency_matrix(joints::Vector{<:JointConstraint}, bodies::Vector{<:Body}, contacts::Vector{<:ContactConstraint})
     # mode can be variables or data depending on whi
-    nodes = [eqcs; bodies; ineqcs]
+    nodes = [joints; bodies; contacts]
     n = length(nodes)
     A = zeros(Bool, n, n)
 
@@ -29,11 +27,11 @@ function adjacencyMatrix(eqcs::Vector{<:EqualityConstraint}, bodies::Vector{<:Bo
             # TODO these entries linking two bodies should be removed,
             # not sure why this is breaking some of the tests
             elseif typeof(node1) <: Body && typeof(node2) <: Body
-                for eqc in eqcs
-                    if node1.id == eqc.parentid && node2.id ∈ eqc.childids
+                for joint in joints
+                    if node1.id == joint.parentid && node2.id ∈ joint.childids
                         A[node1.id, node2.id] = 1
                     end
-                    if node2.id == eqc.parentid && node1.id ∈ eqc.childids
+                    if node2.id == joint.parentid && node1.id ∈ joint.childids
                         A[node2.id, node1.id] = 1
                     end
                 end
@@ -45,9 +43,8 @@ function adjacencyMatrix(eqcs::Vector{<:EqualityConstraint}, bodies::Vector{<:Bo
     return A
 end
 
-
-@inline getentry(system, id1, id2) = system.matrix_entries[id1, id2]
-@inline getentry(system, id) = system.vector_entries[id]
+@inline get_entry(system, id1, id2) = system.matrix_entries[id1, id2]
+@inline get_entry(system, id) = system.vector_entries[id]
 
 function recursivedirectchildren!(system, id::Integer)
     dirs = copy(children(system, id))
@@ -58,15 +55,15 @@ function recursivedirectchildren!(system, id::Integer)
     return dirs
 end
 
-# TODO does not include ineqcs yet
-function densesystem(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
-    eqcs = mechanism.eqconstraints
+# TODO: efficient method to assemble sparse system
+function dense_system(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
+    joints = mechanism.joints
     system = mechanism.system
     system = mechanism.system
 
     n = 6 * Nb
-    for eqc in eqcs
-        n += length(eqc)
+    for joint in joints
+        n += length(joint)
     end
 
     A = zeros(T, n, n)
@@ -78,18 +75,18 @@ function densesystem(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     ind2 = 0
 
     for id in system.dfs_list
-        component = getcomponent(mechanism, id)
-        ind2 += length(component)
+        node = get_node(mechanism, id)
+        ind2 += length(node)
         range = ind1:ind2
         rangeDict[id] = range
 
         # A
-        diagonal = getentry(system,id,id)
+        diagonal = get_entry(system,id,id)
         A[range,range] = diagonal.value
 
         for childid in system.acyclic_children[id]
-            offdiagonal_L = getentry(system, id, childid)
-            offdiagonal_U = getentry(system, childid, id)
+            offdiagonal_L = get_entry(system, id, childid)
+            offdiagonal_U = get_entry(system, childid, id)
             nc1 = first(rangeDict[childid])
             nc2 = last(rangeDict[childid])
 
@@ -98,8 +95,8 @@ function densesystem(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
         end
 
         for childid in system.cyclic_children[id]
-            offdiagonal_L = getentry(system, id, childid)
-            offdiagonal_U = getentry(system, childid, id)
+            offdiagonal_L = get_entry(system, id, childid)
+            offdiagonal_U = get_entry(system, childid, id)
             nc1 = first(rangeDict[childid])
             nc2 = last(rangeDict[childid])
 
@@ -108,14 +105,14 @@ function densesystem(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
         end
 
         # x
-        sol = getentry(system,id)
+        sol = get_entry(system,id)
         x[range] = sol.value
 
         # b
-        if component isa Body
-            b[range] = -g(mechanism, component)
+        if node isa Body
+            b[range] = -g(mechanism, node)
         else
-            b[range] = -g(mechanism, component)
+            b[range] = -g(mechanism, node)
         end
 
         ind1 = ind2+1

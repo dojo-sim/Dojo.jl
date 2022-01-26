@@ -39,30 +39,30 @@ origin = Origin{Float64}()
 body1 = Box(width, depth, length1, length1)
 
 # Constraints
-# joint_between_origin_and_body1 = EqualityConstraint(Revolute(origin, body1, joint_axis; p2=p2))
-joint_between_origin_and_body1 = EqualityConstraint(Spherical(origin, body1; p2=p2, spring = 20.0))
+# joint_between_origin_and_body1 = JointConstraint(Revolute(origin, body1, joint_axis; p2=p2))
+joint_between_origin_and_body1 = JointConstraint(Spherical(origin, body1; p2=p2, spring = 20.0))
 bodies = [body1]
 eqcs = [joint_between_origin_and_body1]
 
-mech = Mechanism(origin, bodies, eqcs, g = -9.81, Δt = 0.04)
+mech = Mechanism(origin, bodies, eqcs, g = -9.81, timestep = 0.04)
 
-eqc1 = collect(mech.eqconstraints)[1]
+eqc1 = collect(mech.joints)[1]
 tra1 = eqc1.constraints[1]
 rot1 = eqc1.constraints[2]
 origin = mech.origin
 body1 = collect(mech.bodies)[1]
-minimalCoordinates(rot1, origin, body1)
+minimal_coordinates(rot1, origin, body1)
 
 # initialize!(mech, :pendulum)
 ω0 = 10.0
 ω1 = 1.0
 r = 0.5
-setPosition!(body1, x = [0, 0, -r])
-# setVelocity!(body1, v = [0, ω0*r, 0.], ω = [ω0, 0, 0.])
-# setVelocity!(body1, v = [ω1*r, 0, 0.], ω = [0, -ω1, 0.])
-# setVelocity!(body1, v = [ω1*r, ω0*r, 0.], ω = [ω0, -ω1, 0.])
+set_position(body1, x = [0, 0, -r])
+# set_velocity!(body1, v = [0, ω0*r, 0.], ω = [ω0, 0, 0.])
+# set_velocity!(body1, v = [ω1*r, 0, 0.], ω = [0, -ω1, 0.])
+# set_velocity!(body1, v = [ω1*r, ω0*r, 0.], ω = [ω0, -ω1, 0.])
 q0 = UnitQuaternion(RotX(pi/2))
-setPosition!(origin, body1, p2 = [0, 0, r], Δq = q0)
+set_position(origin, body1, p2 = [0, 0, r], Δq = q0)
 
 @elapsed storage = simulate!(mech, 10.10, record = true, solver = :mehrotra!, verbose = true)
 visualize(mech, storage, vis = vis)
@@ -75,15 +75,15 @@ plot([q.w for q in storage.q[1]])
 include(joinpath(module_dir(), "examples", "diff_tools.jl"))
 # Set data
 Nb = length(mech.bodies)
-data = getdata(mech)
-setdata!(mech, data)
+data = get_data(mech)
+set_data!(mech, data)
 
-mehrotra!(mech, opts = InteriorPointOptions(rtol = 1e-6, btol = 1e-1, undercut=1.2, verbose=true))
-sol = getsolution(mech)
-attjac = attitudejacobian(data, Nb)
+mehrotra!(mech, opts = SolverOptions(rtol = 1e-6, btol = 1e-1, undercut=1.2, verbose=true))
+sol = get_solution(mech)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
-setentries!(mech)
+set_entries!(mech)
 datamat = full_data_matrix(mech)
 solmat = full_matrix(mech.system)
 sensi = - (solmat \ datamat)
@@ -139,52 +139,52 @@ norm(fd_sensi, Inf)
 ################################################################################
 include(joinpath(@__DIR__, "finite_diff.jl"))
 
-Δt = 0.01
-tra1 = mech.eqconstraints[1].constraints[1]
-tra2 = mech.eqconstraints[2].constraints[1]
+timestep = 0.01
+tra1 = mech.joints[1].constraints[1]
+tra2 = mech.joints[2].constraints[1]
 origin = mech.origin
 body1 = collect(mech.bodies)[1]
 body2 = collect(mech.bodies)[2]
 
 
-jac0, jac1 = finitediff_vel(tra2, body1, body2, Δt, springforcea, ∂springforcea∂vela, diff_body = :parent)
+jac0, jac1 = finitediff_vel(tra2, body1, body2, timestep, spring_parent, spring_parent_jacobian_velocity_parent, diff_body = :parent)
 norm(jac0 - jac1, Inf)
-jac0, jac1 = finitediff_vel(tra2, body1, body2, Δt, damperforcea, ∂damperforcea∂vela, diff_body = :parent)
+jac0, jac1 = finitediff_vel(tra2, body1, body2, timestep, damper_parent, damper_parent_jacobian_velocity_parent, diff_body = :parent)
 norm(jac0 - jac1, Inf)
-jac0, jac1 = finitediff_vel(tra2, body1, body2, Δt, springforcea, ∂springforcea∂velb, diff_body = :child)
+jac0, jac1 = finitediff_vel(tra2, body1, body2, timestep, spring_parent, spring_parent_jacobian_velocity_child, diff_body = :child)
 norm(jac0 - jac1, Inf)
-jac0, jac1 = finitediff_vel(tra2, body1, body2, Δt, damperforcea, ∂damperforcea∂velb, diff_body = :child)
+jac0, jac1 = finitediff_vel(tra2, body1, body2, timestep, damper_parent, damper_parent_jacobian_velocity_child, diff_body = :child)
 norm(jac0 - jac1, Inf)
-jac0, jac1 = finitediff_vel(tra2, body1, body2, Δt, springforceb, ∂springforceb∂velb, diff_body = :child)
+jac0, jac1 = finitediff_vel(tra2, body1, body2, timestep, spring_child, spring_child_jacobian_velocity_child, diff_body = :child)
 norm(jac0 - jac1, Inf)
-jac0, jac1 = finitediff_vel(tra2, body1, body2, Δt, damperforceb, ∂damperforceb∂velb, diff_body = :child)
+jac0, jac1 = finitediff_vel(tra2, body1, body2, timestep, damper_child, damper_child_configuration_velocity_child, diff_body = :child)
 norm(jac0 - jac1, Inf)
-jac0, jac1 = finitediff_vel(tra2, body1, body2, Δt, springforceb, ∂springforceb∂vela, diff_body = :parent)
+jac0, jac1 = finitediff_vel(tra2, body1, body2, timestep, spring_child, spring_child_configuration_velocity_parent, diff_body = :parent)
 norm(jac0 - jac1, Inf)
-jac0, jac1 = finitediff_vel(tra2, body1, body2, Δt, damperforceb, ∂damperforceb∂vela, diff_body = :parent)
+jac0, jac1 = finitediff_vel(tra2, body1, body2, timestep, damper_child, damper_child_configuration_velocity_parent, diff_body = :parent)
 norm(jac0 - jac1, Inf)
-jac0, jac1 = finitediff_vel(tra1, origin, body1, Δt, springforceb, ∂springforceb∂velb, diff_body = :child)
+jac0, jac1 = finitediff_vel(tra1, origin, body1, timestep, spring_child, spring_child_jacobian_velocity_child, diff_body = :child)
 norm(jac0 - jac1, Inf)
-jac0, jac1 = finitediff_vel(tra1, origin, body1, Δt, damperforceb, ∂damperforceb∂velb, diff_body = :child)
+jac0, jac1 = finitediff_vel(tra1, origin, body1, timestep, damper_child, damper_child_configuration_velocity_child, diff_body = :child)
 norm(jac0 - jac1, Inf)
 
-jac0, jac1 = finitediff_pos(tra2, body1, body2, Δt, springforcea, ∂springforcea∂posa, diff_body = :parent)
+jac0, jac1 = finitediff_pos(tra2, body1, body2, timestep, spring_parent, spring_parent_jacobian_configuration_parent, diff_body = :parent)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_pos(tra2, body1, body2, Δt, damperforcea, ∂damperforcea∂posa, diff_body = :parent)
+jac0, jac1 = finitediff_pos(tra2, body1, body2, timestep, damper_parent, damper_parent_jacobian_configuration_parent, diff_body = :parent)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_pos(tra2, body1, body2, Δt, springforcea, ∂springforcea∂posb, diff_body = :child)
+jac0, jac1 = finitediff_pos(tra2, body1, body2, timestep, spring_parent, spring_parent_jacobian_configuration_child, diff_body = :child)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_pos(tra2, body1, body2, Δt, damperforcea, ∂damperforcea∂posb, diff_body = :child)
+jac0, jac1 = finitediff_pos(tra2, body1, body2, timestep, damper_parent, damper_parent_jacobian_configuration_child, diff_body = :child)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_pos(tra2, body1, body2, Δt, springforceb, ∂springforceb∂posb, diff_body = :child)
+jac0, jac1 = finitediff_pos(tra2, body1, body2, timestep, spring_child, spring_child_jacobian_configuration_child, diff_body = :child)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_pos(tra2, body1, body2, Δt, damperforceb, ∂damperforceb∂posb, diff_body = :child)
+jac0, jac1 = finitediff_pos(tra2, body1, body2, timestep, damper_child, damper_child_jacobian_configuration_child, diff_body = :child)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_pos(tra2, body1, body2, Δt, springforceb, ∂springforceb∂posa, diff_body = :parent)
+jac0, jac1 = finitediff_pos(tra2, body1, body2, timestep, spring_child, spring_child_jacobian_configuraion_parent, diff_body = :parent)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_pos(tra2, body1, body2, Δt, damperforceb, ∂damperforceb∂posa, diff_body = :parent)
+jac0, jac1 = finitediff_pos(tra2, body1, body2, timestep, damper_child, damper_child_jacobian_configuration_parent, diff_body = :parent)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_pos(tra1, origin, body1, Δt, springforceb, ∂springforceb∂posb, diff_body = :child)
+jac0, jac1 = finitediff_pos(tra1, origin, body1, timestep, spring_child, spring_child_jacobian_configuration_child, diff_body = :child)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_pos(tra1, origin, body1, Δt, damperforceb, ∂damperforceb∂posb, diff_body = :child)
+jac0, jac1 = finitediff_pos(tra1, origin, body1, timestep, damper_child, damper_child_jacobian_configuration_child, diff_body = :child)
 @test norm(jac0 - jac1, Inf) < 1e-8

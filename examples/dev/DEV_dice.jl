@@ -22,9 +22,9 @@ open(vis)
 # Include new files
 # include(joinpath(module_dir(), "examples", "loader.jl"))
 
-mech = getmechanism(:box, Δt=0.01, g=-9.81, cf=0.2, contact=false, mode=:box)#, contact_type = :contact);
-# mech = getmechanism(:box, Δt = 0.01, g = -9.81, cf = 0.2, contact = true, mode=:box, contact_type = :linear_contact)
-# mech = getmechanism(:box, Δt = 0.01, g = -9.81, contact = true, mode=:box, contact_type = :impact)
+mech = getmechanism(:box, timestep=0.01, g=-9.81, cf=0.2, contact=false, mode=:box)#, contact_type = :contact);
+# mech = getmechanism(:box, timestep = 0.01, g = -9.81, cf = 0.2, contact = true, mode=:box, contact_type = :linear_contact)
+# mech = getmechanism(:box, timestep = 0.01, g = -9.81, contact = true, mode=:box, contact_type = :impact)
 
 Random.seed!(100)
 ω = 10.0 * (rand(3) .- 0.5) * 1
@@ -41,14 +41,14 @@ visualize(mech, storage, vis=vis)
 
 include(joinpath(module_dir(), "examples", "diff_tools.jl"))
 # Set data
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
+data = get_data(mech)
+set_data!(mech, data)
+sol = get_solution(mech)
 Nb = length(collect(mech.bodies))
-attjac = attitudejacobian(data, Nb)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
-setentries!(mech)
+set_entries!(mech)
 datamat = full_data_matrix(mech)
 solmat = full_matrix(mech.system)
 sensi = - (solmat \ datamat)

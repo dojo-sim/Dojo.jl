@@ -17,17 +17,17 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
-Δt_ = 0.01
-mech = getmechanism(:atlas, Δt = Δt_, g = -2.0, cf = 0.8, contact = true,
+timestep_ = 0.01
+mech = getmechanism(:atlas, timestep = timestep_, g = -2.0, cf = 0.8, contact = true,
     spring = 0.0, damper = 50.0, model_type = :simple)
 initialize!(mech, :atlas, tran = [0,0,1.1], rot = [0.1,0.05,0])
 
 
 orig = Origin()
 body1 = Body(1.0, Diagonal([1,2,3.]))
-EqualityConstraint(Revolute(orig, body1, [0,0,1.0],
+JointConstraint(Revolute(orig, body1, [0,0,1.0],
     rot_joint_limits = [-sones(0), sones(0)]))
-eqc = EqualityConstraint(Revolute(orig, body1, [0,0,1.0],
+eqc = JointConstraint(Revolute(orig, body1, [0,0,1.0],
     rot_joint_limits = [-sones(1), sones(1)]))
 
 λindex(eqc, 1)
@@ -37,16 +37,16 @@ length(eqc.constraints[2]) + 4joint_limits_length(eqc.constraints[2])
 
 SVector{1,Int}([1,])
 function controller!(mechanism, k)
-    for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])
-        pbody = getbody(mech, eqc.parentid)
+    for (i,eqc) in enumerate(collect(mechanism.joints)[2:end])
+        pbody = get_body(mech, eqc.parentid)
         minJ = minimum(diag(pbody.J))
         for (i,joint) in enumerate(eqc.constraints)
-            cbody = getbody(mech, eqc.childids[i])
+            cbody = get_body(mech, eqc.childids[i])
             minJ = min(minJ, minimum(diag(cbody.J)))
         end
-        nu = controldim(eqc)
-        u = 1 * minJ * (rand(nu) .- 0.2) * Δt_ * 0.0
-        setForce!(eqc, SVector{nu}(u))
+        nu = control_dimension(eqc)
+        u = 1 * minJ * (rand(nu) .- 0.2) * timestep_ * 0.0
+        set_input!(eqc, SVector{nu}(u))
     end
     return
 end
@@ -58,10 +58,10 @@ visualize(mech, storage, vis = vis)
 
 # Set data
 Nb = length(mech.bodies)
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
-attjac = attitudejacobian(data, Nb)
+data = get_data(mech)
+set_data!(mech, data)
+sol = get_solution(mech)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
 datamat = full_data_matrix(mech)

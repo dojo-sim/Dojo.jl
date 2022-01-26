@@ -17,22 +17,22 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
-Δt0 = 0.1
-mech = getmechanism(:atlas, Δt = Δt0, g = -9.81, cf = 0.8, contact = true,
+timestep0 = 0.1
+mech = getmechanism(:atlas, timestep = timestep0, g = -9.81, cf = 0.8, contact = true,
     spring = 0.0, damper = 30.0, model_type = :fast)
 initialize!(mech, :atlas, tran = [0,0,1.1], rot = [0.1,0.05,0])
 
 function controller!(mechanism, k)
-    for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[2:end])
-        pbody = getbody(mech, eqc.parentid)
+    for (i,eqc) in enumerate(collect(mechanism.joints)[2:end])
+        pbody = get_body(mech, eqc.parentid)
         minJ = minimum(diag(pbody.J))
         for (i,joint) in enumerate(eqc.constraints)
-            cbody = getbody(mech, eqc.childids[i])
+            cbody = get_body(mech, eqc.childids[i])
             minJ = min(minJ, minimum(diag(cbody.J)))
         end
-        nu = controldim(eqc)
-        u = 1 * minJ * (rand(nu) .- 0.2) * Δt0 * 0.0
-        setForce!(eqc, SVector{nu}(u))
+        nu = control_dimension(eqc)
+        u = 1 * minJ * (rand(nu) .- 0.2) * timestep0 * 0.0
+        set_input!(eqc, SVector{nu}(u))
     end
     return
 end
@@ -45,10 +45,10 @@ visualize(mech, storage, vis = vis)
 
 # Set data
 Nb = length(mech.bodies)
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
-attjac = attitudejacobian(data, Nb)
+data = get_data(mech)
+set_data!(mech, data)
+sol = get_solution(mech)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
 datamat = full_data_matrix(mech)

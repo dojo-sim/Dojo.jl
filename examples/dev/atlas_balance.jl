@@ -20,9 +20,9 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 # Build mechanism
-mech = getmechanism(:atlas, Δt = 0.01, g = -9.81, cf = 0.8, contact = true)
+mech = getmechanism(:atlas, timestep = 0.01, g = -9.81, cf = 0.8, contact = true)
 initialize!(mech, :atlas, tran = [0,0,0.99], rot = [0.,0,0])
-for (i,joint) in enumerate(mech.eqconstraints)
+for (i,joint) in enumerate(mech.joints)
     jt = joint.constraints[1]
     jr = joint.constraints[2]
     joint.isdamper = true #false
@@ -33,56 +33,56 @@ for (i,joint) in enumerate(mech.eqconstraints)
     jr.spring = 1/i * 0.0 * 1e-0 .* sones(3)[1]# 1e4
     jr.damper = 1/i * 1.0 * 1e+2 .* sones(3)[1]# 1e4
 
-    mech.eqconstraints[1].isspring
-    mech.eqconstraints[1].isdamper
-    mech.eqconstraints[1].constraints[2].damper
+    mech.joints[1].isspring
+    mech.joints[1].isdamper
+    mech.joints[1].constraints[2].damper
 end
 
 bodies = collect(Body, mech.bodies)
-eqcs = collect(EqualityConstraint, mech.eqconstraints)
-ineqcs = collect(InequalityConstraint, mech.ineqconstraints)
+eqcs = collect(JointConstraint, mech.joints)
+contacts = collect(ContactConstraint, mech.contacts)
 bodies = [mech.bodies[i] for i = 32:62]
-eqcs = [mech.eqconstraints[i] for i = 1:31]
+eqcs = [mech.joints[i] for i = 1:31]
 teqcs = [eqcs[1]; [addtorque(mech, eqc, spring = 1e2, damper = 1e2) for eqc in eqcs[2:end]]]
-ineqcs = [mech.ineqconstraints[i] for i = 63:70]
+contacts = [mech.contacts[i] for i = 63:70]
 
-tmech = Mechanism(mech.origin, bodies, teqcs, ineqcs, Δt = 0.01, g = -9.81)
+tmech = Mechanism(mech.origin, bodies, teqcs, contacts, timestep = 0.01, g = -9.81)
 
-function addtorque(mech::Mechanism, eqc::EqualityConstraint; spring = 0.0, damper = 0.0)
-    pbody = getbody(mech, eqc.parentid)
-    cbody = getbody(mech, eqc.childids[1]) # TODO assume onyly one children
+function addtorque(mech::Mechanism, eqc::JointConstraint; spring = 0.0, damper = 0.0)
+    pbody = get_body(mech, eqc.parentid)
+    cbody = get_body(mech, eqc.childids[1]) # TODO assume onyly one children
     tid = findfirst(x -> typeof(x) <: Translational, eqc.constraints)
     rid = findfirst(x -> typeof(x) <: Rotational, eqc.constraints)
     tra = eqc.constraints[tid] # get translational joint
     rot = eqc.constraints[rid] # get rotational joint
     p1, p2 = tra.vertices
     axis = [rot.V3[1], rot.V3[2], rot.V3[3]]
-    eqct = EqualityConstraint(TorqueRevolute(pbody, cbody, axis; spring = spring, damper = damper, p1 = p1, p2 = p2))
+    eqct = JointConstraint(TorqueRevolute(pbody, cbody, axis; spring = spring, damper = damper, p1 = p1, p2 = p2))
     return eqct
 end
 
 
 # PD control law
-nu = sum([controldim(eqc, floatingbase = false) for eqc in collect(mech.eqconstraints)])
-angles = [minimalCoordinates(mech, joint)[1] for joint in collect(mech.eqconstraints)[2:end]]
+nu = sum([control_dimension(eqc, floatingbase = false) for eqc in collect(mech.joints)])
+angles = [minimal_coordinates(mech, joint)[1] for joint in collect(mech.joints)[2:end]]
 δangles = zeros(nu)
 ind = 23
 # δangles[ind] += π/2
 angles += δangles
 
 function controller!(mechanism, k)
-    for (i,joint) in enumerate(collect(mechanism.eqconstraints)[2:end])
-        if controldim(joint) == 1
-            # θ = minimalCoordinates(mechanism, joint)[1]
-            # dθ = minimalVelocities(mechanism, joint)[1]
+    for (i,joint) in enumerate(collect(mechanism.joints)[2:end])
+        if control_dimension(joint) == 1
+            # θ = minimal_coordinates(mechanism, joint)[1]
+            # dθ = minimal_velocities(mechanism, joint)[1]
             # u = 3e+2 * (angles[i] - θ) #+ 5e-2 * (0 - dθ)
-            # u = clamp(u, -150.0, 150.0) * mechanism.Δt
+            # u = clamp(u, -150.0, 150.0) * mechanism.timestep
             # if joint.name ∈ ("r_leg_akx", "r_leg_aky", "l_leg_akx", "l_leg_aky", "back_bkx", "back_bky", "back_bkz")
             #     u = 1e+2 * (angles[i] - θ) #+ 5e-2 * (0 - dθ)
-            #     u = clamp(u, -100.0, 100.0) * mechanism.Δt
+            #     u = clamp(u, -100.0, 100.0) * mechanism.timestep
             # end
             u = 0.0
-            setForce!(joint, SA[u])
+            set_input!(joint, SA[u])
         end
     end
     return
@@ -102,7 +102,7 @@ visualize(mech, forcedstorage, vis = vis)
 gains = zeros(30, 2)
 gains[23,:] = [1e-1, 5e-2]
 
-nams = [eqc.name for eqc in mech.eqconstraints]
+nams = [eqc.name for eqc in mech.joints]
 
 nams[1:10]
 nams[11:20]
@@ -110,10 +110,10 @@ nams[21:30]
 
 # Set data
 Nb = length(mech.bodies)
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
-attjac = attitudejacobian(data, Nb)
+data = get_data(mech)
+set_data!(mech, data)
+sol = get_solution(mech)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
 datamat = full_data_matrix(mech)

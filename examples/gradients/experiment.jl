@@ -8,7 +8,7 @@ contact_type = :linear_contact
 # contact_type = :contact
 
 # scale system for nice plots
-mech = getmechanism(:box2d, Δt=0.1, g=-1.0, cf=1.0, contact=true, contact_type=contact_type);
+mech = getmechanism(:box2d, timestep=0.1, g=-1.0, cf=1.0, contact=true, contact_type=contact_type);
 
 # inputs
 Fs = 0.01:0.01:0.2
@@ -94,14 +94,14 @@ using Symbolics
 # Impact simplified
 ################################################################################
 m = 1.0
-Δt = 0.1
+timestep = 0.1
 gv = 10.0
 ρ = 1e-4
 
 function residual(z3, γ, u, ρ)
     z0 = ρ / (m*gv)
     r = [
-        m * (z0 - z3)/Δt + Δt*(γ + u - m*gv),
+        m * (z0 - z3)/timestep + timestep*(γ + u - m*gv),
         z3 * γ - ρ,
         ]
     return r
@@ -109,9 +109,9 @@ end
 
 function analytical_root(u, ρ)
     z0 = ρ / (m*gv)
-    a = - m / Δt
-    b = Δt * (u - m*gv) + m * z0 / Δt
-    c = Δt * ρ
+    a = - m / timestep
+    b = timestep * (u - m*gv) + m * z0 / timestep
+    c = timestep * ρ
     Δ = b^2 - 4a*c
     z3 = (-b - sqrt(Δ)) / (2a)
     γ = ρ / z3
@@ -156,16 +156,16 @@ plot(U, dZ3dU)
 # Linear Friction simplified
 ################################################################################
 m = 1.0
-Δt = 0.1
+timestep = 0.1
 μγ = 10.0
 ρψ = 1e-4
 ρβ = 1e-4*ones(2)
 
 function residual(x, β, sψ, η, ψ, u, ρψ, ρβ)
     r = [
-        m*x/Δt + Δt*(u+β[1]-β[2]);
+        m*x/timestep + timestep*(u+β[1]-β[2]);
         sψ - (μγ - β[1] - β[2]);
-        η - [x, -x] ./Δt - ψ*ones(2);
+        η - [x, -x] ./timestep - ψ*ones(2);
         sψ * ψ - ρψ;
         η .* β .- ρβ;
         ]
@@ -180,8 +180,8 @@ function optim_root(u, ρψ, ρβ, tol=1e-8)
         Δz = - jacz_fct(z, u, ρψ, ρβ) \ r
         x, β, sψ, η, ψ = unpack_z(z)
         Δx, Δβ, Δsψ, Δη, Δψ = unpack_z(Δz)
-        αψ = ort_step_length([sψ; ψ], [Δsψ; Δψ], τ=0.90)
-        αβ = ort_step_length([η; β], [Δη; Δβ], τ=0.90)
+        αψ = positive_orthant_step_length([sψ; ψ], [Δsψ; Δψ], τ=0.90)
+        αβ = positive_orthant_step_length([η; β], [Δη; Δβ], τ=0.90)
         z += min(αψ, αβ) * Δz
         (k == 40) && (@show "failure")
     end

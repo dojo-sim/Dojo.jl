@@ -42,7 +42,7 @@ visualize(env, traj)
 
 
 
-eqc = EqualityConstraint(Prismatic(env.mechanism.origin, collect(env.mechanism.bodies)[1],
+joint = JointConstraint(Prismatic(env.mechanism.origin, collect(env.mechanism.bodies)[1],
     [0,0,1.]; p1=szeros(Float64, 3), p2=szeros(Float64, 3)))
 
 typeof(Prismatic(env.mechanism.origin, collect(env.mechanism.bodies)[1],

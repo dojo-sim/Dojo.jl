@@ -8,7 +8,7 @@ end
 MeshCat.js_scaling(s::AbstractVector) = s
 MeshCat.js_position(p::AbstractVector) = p
 
-function preparevis!(storage::Storage{T,N}, id, shape, animation, shapevisualizer, framevisualizer, showshape, showframes) where {T,N}
+function prepare_vis!(storage::Storage{T,N}, id, shape, animation, shapevisualizer, framevisualizer, showshape, showframes) where {T,N}
     if showshape
         for i=1:N
             x = storage.x[id][i]
@@ -40,7 +40,7 @@ end
 
 function MeshCat.setobject!(subvisshape, visshape, shapes::Shapes; transparent=false)
     for (i, s) in enumerate(shapes.shape)
-        v = subvisshape["component_$i"]
+        v = subvisshape["node_$i"]
         setobject!(v, visshape[i], s, transparent=transparent)
         scale_transform = MeshCat.LinearMap(diagm(s.scale))
         x_transform = MeshCat.Translation(s.xoffset)
@@ -97,12 +97,12 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N};
         end
     end
 
-    framerate = Int64(round(1/mechanism.Δt))
+    framerate = Int64(round(1/mechanism.timestep))
     (animation == nothing) && (animation = MeshCat.Animation(Dict{MeshCat.SceneTrees.Path,MeshCat.AnimationClip}(), framerate))
 
     for (id,body) in enumerate(bodies)
         shape = body.shape
-        visshape = convertshape(shape)
+        visshape = convert_shape(shape)
         subvisshape = nothing
         subvisframe = nothing
         showshape = false
@@ -112,22 +112,15 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N};
             showshape = true
         end
 
-        preparevis!(storage, id, shape, animation, subvisshape, subvisframe, showshape, showframes)
+        prepare_vis!(storage, id, shape, animation, subvisshape, subvisframe, showshape, showframes)
 
         if show_contact
-            for (jd, ineq) in enumerate(mechanism.ineqconstraints)
-                if ineq.parentid == body.id
-                    # @show shape.xoffset
-                    # @show shape.qoffset
-                    # @show ineq.constraints[1].offset[3]
-                    # @show ineq.constraints[1].p
-                    # contact_shape = Sphere(abs(1.0 * ineq.constraints[1].offset[3]),
-                    #     xoffset=(shape.xoffset + ineq.constraints[1].p),
-                    #     qoffset=copy(shape.qoffset), color=RGBA(1.0, 0.0, 0.0, 1.0))
-                    contact_shape = Sphere(abs(1.0 * ineq.constraints[1].offset[3]),
-                        xoffset=(ineq.constraints[1].p),
+            for (jd, contact) in enumerate(mechanism.contacts)
+                if contact.parentid == body.id
+                    contact_shape = Sphere(abs(1.0 * contact.constraints[1].offset[3]),
+                        xoffset=(contact.constraints[1].p),
                         qoffset=one(UnitQuaternion), color=RGBA(1.0, 0.0, 0.0, 1.0))
-                    visshape = convertshape(contact_shape)
+                    visshape = convert_shape(contact_shape)
                     subvisshape = nothing
                     subvisframe = nothing
                     showshape = false
@@ -137,7 +130,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N};
                         setobject!(subvisshape,visshape,contact_shape,transparent=false)
                         showshape = true
                     end
-                    preparevis!(storage, id, contact_shape, animation, subvisshape, subvisframe, showshape, showframes)
+                    prepare_vis!(storage, id, contact_shape, animation, subvisshape, subvisframe, showshape, showframes)
                 end
             end
         end
@@ -145,7 +138,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N};
 
     id = origin.id
     shape = origin.shape
-    visshape = convertshape(shape)
+    visshape = convert_shape(shape)
     if visshape !== nothing
         subvisshape = vis[name]["bodies/origin:"*string(id)]
         setobject!(subvisshape,visshape,shape,transparent=show_contact)
@@ -181,7 +174,7 @@ function build_robot(vis::Visualizer, mechanism::Mechanism; name::Symbol=:robot,
                 end
             end
         end
-        visshape = convertshape(shape)
+        visshape = convert_shape(shape)
         subvisshape = nothing
         subvisframe = nothing
         showshape = false
@@ -194,7 +187,7 @@ function build_robot(vis::Visualizer, mechanism::Mechanism; name::Symbol=:robot,
 
     id = origin.id
     shape = origin.shape
-    visshape = convertshape(shape)
+    visshape = convert_shape(shape)
     if visshape !== nothing
         subvisshape = vis[name]["bodies/origin:"*string(id)]
         setobject!(subvisshape,visshape,shape)
@@ -210,7 +203,7 @@ function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T}; name::Sy
     i = 1
     for (id,body) in enumerate(bodies)
         shape = body.shape
-        visshape = convertshape(shape)
+        visshape = convert_shape(shape)
         subvisshape = vis[name]["bodies/body:"*string(id)]
 
         x = z[(i-1) * 13 .+ (1:3)]
@@ -226,7 +219,7 @@ function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T}; name::Sy
 
     id = origin.id
     shape = origin.shape
-    visshape = convertshape(shape)
+    visshape = convert_shape(shape)
     subvisshape = vis[name]["bodies/origin:"*string(id)]
     if visshape !== nothing
         shapetransform = transform(szeros(T,3), one(UnitQuaternion{T}), shape)

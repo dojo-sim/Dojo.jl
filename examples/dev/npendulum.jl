@@ -19,9 +19,9 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
-mech = getmechanism(:npendulum, Δt = 0.01, g = -9.81, Nb = 2)
+mech = getmechanism(:npendulum, timestep = 0.01, g = -9.81, Nb = 2)
 initialize!(mech, :npendulum, ϕ1 = 0.5)
-initializeSimulation!(mech, true)
+initialize_simulation!(mech, true)
 body1 = collect(mech.bodies)[1]
 body2 = collect(mech.bodies)[2]
 
@@ -35,10 +35,10 @@ visualize(mech, storage, vis = vis)
 # include(joinpath(module_dir(), "examples", "diff_tools.jl"))
 # Set data
 Nb = length(mech.bodies)
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
-attjac = attitudejacobian(data, Nb)
+data = get_data(mech)
+set_data!(mech, data)
+sol = get_solution(mech)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
 datamat = full_data_matrix(mech, attjac = true)

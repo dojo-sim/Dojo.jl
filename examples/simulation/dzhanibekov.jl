@@ -11,7 +11,7 @@ open(vis)
 # ## Simulation
 timestep = 0.01
 gravity = 0.0
-mech = getdzhanibekov(Δt=timestep, g=gravity);
+mech = getdzhanibekov(timestep=timestep, g=gravity);
 initializedzhanibekov!(mech, ω=[15.0; 0.01; 0.0])
 storage = simulate!(mech, 4.65, record=true, verbose=false)
 
@@ -21,7 +21,7 @@ visualize(mech, storage, vis=vis)
 # ## Ghost
 set_camera!(vis, cam_pos=[-1,1,0], zoom=1)
 
-z_sim = getMaxState(storage)
+z_sim = get_max_state(storage)
 timesteps = [5, 10, 15]# .+ 150
 
 for t in timesteps

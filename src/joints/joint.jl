@@ -1,10 +1,8 @@
 abstract type Joint{T,Nλ,Nb,N} end
 
-## General functions
 getT(joint::Joint{T}) where T = T
 Base.length(joint::Joint{T,Nλ}) where {T,Nλ} = Nλ
 Base.zero(joint::Joint{T,Nλ}) where {T,Nλ} = szeros(T, Nλ, 6)
-@inline g(joint::Joint{T,Nλ}) where {T,Nλ} = szeros(T, Nλ)
 
 λlength(joint::Joint{T,Nλ}) where {T,Nλ} = Nλ
 blength(joint::Joint{T,Nλ,Nb}) where {T,Nλ,Nb} = Nb
@@ -21,18 +19,17 @@ function λindex(joint::Joint{T,Nλ,Nb,N}, s::Int) where {T,Nλ,Nb,N}
     return ind
 end
 
-## Discrete-time position derivatives (for dynamics)
-@inline function Ga(joint::Joint, body1::Component, body2::Component, childid, λ, Δt)
+@inline function impulse_map_parent(joint::Joint, body1::Node, body2::Node, childid, λ, timestep)
     if body2.id == childid
-        return transpose(GaT(joint, posargs2(body1.state)..., posargs2(body2.state)..., λ)) # TODO need to remove the transpose here and propagate it to the upper levels
+        return impulse_map_parent(joint, current_configuration(body1.state)..., current_configuration(body2.state)..., λ)
     else
         return zero(joint)
     end
 end
 
-@inline function Gb(joint::Joint, body1::Component, body2::Component, childid, λ, Δt)
+@inline function impulse_map_child(joint::Joint, body1::Node, body2::Node, childid, λ, timestep)
     if body2.id == childid
-        return transpose(GbT(joint, posargs2(body1.state)..., posargs2(body2.state)..., λ)) # TODO need to remove the transpose here and propagate it to the upper levels
+        return impulse_map_child(joint, current_configuration(body1.state)..., current_configuration(body2.state)..., λ)
     else
         return zero(joint)
     end
@@ -84,57 +81,57 @@ end
 
 
 ## Discrete-time velocity derivatives (for dynamics)
-@inline function ∂g∂a(joint::Joint, body1::Component, body2::Component, childid, λ, Δt)
+@inline function constraint_jacobian_parent(joint::Joint, body1::Node, body2::Node, childid, λ, timestep)
     if body2.id == childid
-        return ∂g∂a(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)..., λ)
-    else
-        return zero(joint)
-    end
-end
-@inline function ∂g∂b(joint::Joint, body1::Component, body2::Component, childid, λ, Δt)
-    if body2.id == childid
-        return ∂g∂b(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)..., λ)
-
+        return constraint_jacobian_parent(joint, next_configuration(body1.state, timestep)..., next_configuration(body2.state, timestep)..., λ)
     else
         return zero(joint)
     end
 end
 
+@inline function constraint_jacobian_child(joint::Joint, body1::Node, body2::Node, childid, λ, timestep)
+    if body2.id == childid
+        return constraint_jacobian_child(joint, next_configuration(body1.state, timestep)..., next_configuration(body2.state, timestep)..., λ)
 
-### Springs and Dampers (for dynamics)
-@inline function springforcea(joint::Joint, body1::Component, body2::Component, Δt, childid; unitary::Bool=false)
-    if body2.id == childid
-        return springforcea(joint, body1, body2, Δt, unitary=unitary)
     else
-        return szeros(T, 6)
-    end
-end
-@inline function springforceb(joint::Joint, body1::Component, body2::Component, Δt, childid; unitary::Bool=false)
-    if body2.id == childid
-        return springforceb(joint, body1, body2, Δt, unitary=unitary)
-    else
-        return szeros(T, 6)
+        return zero(joint)
     end
 end
 
-@inline function damperforcea(joint::Joint, body1::Component, body2::Component, Δt, childid; unitary::Bool=false)
+@inline function spring_parent(joint::Joint, body1::Node, body2::Node, timestep, childid; unitary::Bool=false)
     if body2.id == childid
-        return damperforcea(joint, body1, body2, Δt, unitary=unitary)
-    else
-        return szeros(T, 6)
-    end
-end
-@inline function damperforceb(joint::Joint, body1::Component, body2::Component, Δt, childid; unitary::Bool=false)
-    if body2.id == childid
-        return damperforceb(joint, body1, body2, Δt, unitary=unitary)
+        return spring_parent(joint, body1, body2, timestep, unitary=unitary)
     else
         return szeros(T, 6)
     end
 end
 
-# ### Forcing (for dynamics)
-@inline function applyFτ!(joint::Joint, body1::Component, body2::Component, Δt::T, clear::Bool) where T
-    applyFτ!(joint, body1.state, body2.state, Δt, clear)
+@inline function spring_child(joint::Joint, body1::Node, body2::Node, timestep, childid; unitary::Bool=false)
+    if body2.id == childid
+        return spring_child(joint, body1, body2, timestep, unitary=unitary)
+    else
+        return szeros(T, 6)
+    end
+end
+
+@inline function damper_parent(joint::Joint, body1::Node, body2::Node, timestep, childid; unitary::Bool=false)
+    if body2.id == childid
+        return damper_parent(joint, body1, body2, timestep, unitary=unitary)
+    else
+        return szeros(T, 6)
+    end
+end
+
+@inline function damper_child(joint::Joint, body1::Node, body2::Node, timestep, childid; unitary::Bool=false)
+    if body2.id == childid
+        return damper_child(joint, body1, body2, timestep, unitary=unitary)
+    else
+        return szeros(T, 6)
+    end
+end
+
+@inline function apply_input!(joint::Joint, body1::Node, body2::Node, timestep::T, clear::Bool) where T
+    apply_input!(joint, body1.state, body2.state, timestep, clear)
     return
 end
 
@@ -143,67 +140,54 @@ Joint1 = Joint{T,1} where T
 Joint2 = Joint{T,2} where T
 Joint3 = Joint{T,3} where T
 
-# Base.show(io::IO, joint::Joint) = summary(io, joint)
+@inline constraint_mask(::Joint0{T}) where T = szeros(T,0,3)
+@inline nullspace_mask(::Joint0{T}) where T = SMatrix{3,3,T,9}(I)
+@inline constraint_mask(joint::Joint1) = joint.V3
+@inline nullspace_mask(joint::Joint1) = joint.V12
+@inline constraint_mask(joint::Joint2) = joint.V12
+@inline nullspace_mask(joint::Joint2) = joint.V3
+@inline constraint_mask(::Joint3{T}) where T = SMatrix{3,3,T,9}(I)
+@inline nullspace_mask(::Joint3{T}) where T = szeros(T,0,3)
 
-### Constaint and nullspace matrices
-@inline constraintmat(::Joint0{T}) where T = szeros(T,0,3)
-@inline nullspacemat(::Joint0{T}) where T = SMatrix{3,3,T,9}(I)
-@inline constraintmat(joint::Joint1) = joint.V3
-@inline nullspacemat(joint::Joint1) = joint.V12
-@inline constraintmat(joint::Joint2) = joint.V12
-@inline nullspacemat(joint::Joint2) = joint.V3
-@inline constraintmat(::Joint3{T}) where T = SMatrix{3,3,T,9}(I)
-@inline nullspacemat(::Joint3{T}) where T = szeros(T,0,3)
+@inline constraint(joint::Joint, body1::Node, body2::Node, λ, timestep) = constraint(joint, next_configuration(body1.state, timestep)..., next_configuration(body2.state, timestep)..., λ)
 
-### Constraints and derivatives
-## Position level constraint wrappers
-@inline g(joint::Joint, body1::Component, body2::Component, λ, Δt) = g(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)..., λ)
-
-### Constraints and derivatives
-## Discrete-time position wrappers (for dynamics)
-# g(joint::Joint, statea::State, stateb::State, λ, Δt) = g(joint, posargs3(statea, Δt)..., posargs3(stateb, Δt)..., λ)
-
-@inline function ∂g∂z(joint::Joint{T,Nλ}, λ) where {T,Nλ}
+@inline function constraint_jacobian_configuration(joint::Joint{T,Nλ}, λ) where {T,Nλ}
     return Diagonal(+1.00e-10 * sones(T,Nλ))
 end
 
-## Discrete-time position derivatives (for dynamics)
-# Wrappers 1
-@inline ∂g∂a(joint::Joint, body1::Component, body2::Component, λ, Δt) = ∂g∂a(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)..., λ)
-@inline ∂g∂b(joint::Joint, body1::Component, body2::Component, λ, Δt) = ∂g∂b(joint, posargs3(body1.state, Δt)..., posargs3(body2.state, Δt)..., λ)
+@inline constraint_jacobian_parent(joint::Joint, body1::Node, body2::Node, λ, timestep) = constraint_jacobian_parent(joint, next_configuration(body1.state, timestep)..., next_configuration(body2.state, timestep)..., λ)
+@inline constraint_jacobian_child(joint::Joint, body1::Node, body2::Node, λ, timestep) = constraint_jacobian_child(joint, next_configuration(body1.state, timestep)..., next_configuration(body2.state, timestep)..., λ)
 
-### Force derivatives (for linearization)
-## Forcing
-@inline function setForce!(joint::Joint, Fτ::SVector)
-    joint.Fτ = zerodimstaticadjoint(nullspacemat(joint)) * Fτ
+
+@inline function set_input!(joint::Joint, Fτ::SVector)
+    joint.Fτ = zerodimstaticadjoint(nullspace_mask(joint)) * Fτ
     return
 end
-@inline setForce!(joint::Joint) = return
 
-@inline function addForce!(joint::Joint, Fτ::SVector)
-    joint.Fτ += zerodimstaticadjoint(nullspacemat(joint)) * Fτ
+@inline set_input!(joint::Joint) = return
+
+@inline function add_force!(joint::Joint, Fτ::SVector)
+    joint.Fτ += zerodimstaticadjoint(nullspace_mask(joint)) * Fτ
     return
 end
-@inline addForce!(joint::Joint) = return
 
-## Derivative wrappers
-@inline function ∂Fτ∂ua(joint::Joint, body1::Component, body2::Component, Δt, childid)
-    return ∂Fτ∂ua(joint, body1.state, body2.state, Δt) * zerodimstaticadjoint(nullspacemat(joint))
+@inline add_force!(joint::Joint) = return
+
+@inline function input_jacobian_control_parent(joint::Joint, body1::Node, body2::Node, timestep, childid)
+    return input_jacobian_control_parent(joint, body1.state, body2.state, timestep) * zerodimstaticadjoint(nullspace_mask(joint))
 end
 
-@inline function ∂Fτ∂ub(joint::Joint{T,Nλ}, body1::Component, body2::Component, Δt, childid) where {T,Nλ}
+@inline function input_jacobian_control_child(joint::Joint{T,Nλ}, body1::Node, body2::Node, timestep, childid) where {T,Nλ}
     if body2.id == childid
-        return ∂Fτ∂ub(joint, body1.state, body2.state, Δt) * zerodimstaticadjoint(nullspacemat(joint))
+        return input_jacobian_control_child(joint, body1.state, body2.state, timestep) * zerodimstaticadjoint(nullspace_mask(joint))
     else
         return szeros(T, 6, 3 - Nλ)
     end
 end
 
-## Minimal coordinates
-@inline minimalCoordinates(joint::Joint{T,Nλ}) where {T,Nλ} = szeros(T, 3 - Nλ)
+@inline minimal_coordinates(joint::Joint{T,Nλ}) where {T,Nλ} = szeros(T, 3 - Nλ)
 
-## Limits
-function add_limits(mech::Mechanism, eq::EqualityConstraint;
+function add_limits(mech::Mechanism, eq::JointConstraint;
     # NOTE: this only works for joints between serial chains (ie, single child joints)
     tra_limits=eq.constraints[1].joint_limits,
     rot_limits=eq.constraints[1].joint_limits)
@@ -227,5 +211,5 @@ function add_limits(mech::Mechanism, eq::EqualityConstraint;
     N̄λ = 3 - Nλ
     N = Nλ + 2Nb
     rot_limit = (Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(rot.V3, rot.V12, rot.qoffset, rot.spring, rot.damper, rot.spring_offset, rot_limits, rot.spring_type, rot.Fτ), eq.parentid, eq.childids[1])
-    EqualityConstraint((tra_limit, rot_limit); name=eq.name)
+    JointConstraint((tra_limit, rot_limit); name=eq.name)
 end

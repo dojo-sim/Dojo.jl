@@ -23,19 +23,19 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 # snake
 ################################################################################
 include("conservation_test.jl")
-Δt_ = 0.01
+timestep_ = 0.01
 Nb_ = 2
 
 function controller!(mechanism, k)
-    for (i,joint) in enumerate(mechanism.eqconstraints)
-        nu = controldim(joint)
+    for (i,joint) in enumerate(mechanism.joints)
+        nu = control_dimension(joint)
         if 5 >= nu >= 1
             if k ∈ (1:1)
-                u = 0.0e-0 * Δt_ * [1.0; zeros(nu-1)]
+                u = 0.0e-0 * timestep_ * [1.0; zeros(nu-1)]
             else
                 u = 0.0 * [1.0; zeros(nu-1)]
             end
-            setForce!(joint, SA[u...])
+            set_input!(joint, SA[u...])
         end
     end
     return
@@ -48,22 +48,22 @@ v_ = 0.0*[1.0; 0.0; 0.0]#rand(3)
 Δω_ = 1.0*[0.0; 1.0; 0.0]#rand(3)
 ϕ1_ = 0.0
 jointtype = :Spherical
-mech = getmechanism(:snake, Δt = Δt_, g = 0.0, contact = false, spring = 0.0, damper = 0.0, Nb = Nb_, jointtype = jointtype)
+mech = getmechanism(:snake, timestep = timestep_, g = 0.0, contact = false, spring = 0.0, damper = 0.0, Nb = Nb_, jointtype = jointtype)
 initialize!(mech, :snake, ϕ1 = ϕ1_, v=v_, ω=ω_, Δv = Δv_, Δω = Δω_)
-# mech = getmechanism(:npendulum, Δt = 0.01, g = 0.0 * -9.81, Nb = Nb_)
+# mech = getmechanism(:npendulum, timestep = 0.01, g = 0.0 * -9.81, Nb = Nb_)
 # initialize!(mech, :npendulum, ϕ1 = 0.0 * π, v=v_, ω=ω_, Δv = Δv_, Δω = Δω_)
 
 storage = simulate!(mech, 1.0, record = true, solver = :mehrotra!, verbose = false)
 m0 = momentum(mech)
-e0 = mechanicalEnergy(mech)
-mech = getmechanism(:snake, Δt = Δt_, g = 0.00, contact = false, spring = 0.0, damper = 0.0, Nb = Nb_, jointtype = jointtype)
+e0 = mechanical_energy(mech)
+mech = getmechanism(:snake, timestep = timestep_, g = 0.00, contact = false, spring = 0.0, damper = 0.0, Nb = Nb_, jointtype = jointtype)
 initialize!(mech, :snake, ϕ1 = ϕ1_, v=v_, ω=ω_, Δv = Δv_, Δω = Δω_)
-# mech = getmechanism(:npendulum, Δt = 0.01, g = 0.0 * -9.81, Nb = Nb_)
+# mech = getmechanism(:npendulum, timestep = 0.01, g = 0.0 * -9.81, Nb = Nb_)
 # initialize!(mech, :npendulum, ϕ1 = 0.0 * π, v=v_, ω=ω_, Δv = Δv_, Δω = Δω_)
 
 storage = simulate!(mech, 5.00, record = true, solver = :mehrotra!, verbose = false)
 m1 = momentum(mech)
-e1 = mechanicalEnergy(mech)
+e1 = mechanical_energy(mech)
 
 abs(e1 - e0)
 norm((m1 - m0)[1:3], Inf)
@@ -73,7 +73,7 @@ norm(m0[1:3])
 norm(m1[4:6])
 norm(m0[4:6])
 
-eqc = mech.eqconstraints[2]
+eqc = mech.joints[2]
 f1 = (zerodimstaticadjoint(∂g∂ʳpos(mech, eqc, mech.bodies[3])) * eqc.λsol[2])[1:3]
 f2 = (zerodimstaticadjoint(∂g∂ʳpos(mech, eqc, mech.bodies[4])) * eqc.λsol[2])[1:3]
 norm(f1 + f2)
@@ -104,14 +104,14 @@ plot!(hcat(Vector.(storage.ω[2])...)', width=1.0, color=:red, label="")
 
 
 # test solmat
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
+data = get_data(mech)
+set_data!(mech, data)
+sol = get_solution(mech)
 Nb = length(collect(mech.bodies))
-attjac = attitudejacobian(data, Nb)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
-setentries!(mech)
+set_entries!(mech)
 datamat = full_data_matrix(deepcopy(mech))
 solmat = full_matrix(mech.system)
 sensi = - (solmat \ datamat)
@@ -129,31 +129,31 @@ fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
 ################################################################################
 include("conservation_test.jl")
 n = 1
-Δt_ = 0.01
-Δt_ /= n
+timestep_ = 0.01
+timestep_ /= n
 Nb_ = 2
 
 Random.seed!(100)
-ω_ = 1.0 * -1.0*2.0*[0,0,1.0] #* 100 * Δt_
+ω_ = 1.0 * -1.0*2.0*[0,0,1.0] #* 100 * timestep_
 v_ = 0.0*rand(3)
 Δv_ = 0.0*rand(3)
-Δω_ = 1.0 * 1.0*4.0*[0,0,1.0] #* 100 * Δt_
+Δω_ = 1.0 * 1.0*4.0*[0,0,1.0] #* 100 * timestep_
 
 function controller!(mechanism, k)
-    for (i,joint) in enumerate(mechanism.eqconstraints)
-        nu = controldim(joint)
+    for (i,joint) in enumerate(mechanism.joints)
+        nu = control_dimension(joint)
         if nu <= 5
             if k ∈ (10:10 + 100n)
-                u = 1.0 * 3e-2 * Δt_ * [1.0, 0.0, 0.0] #[0.0; 1.0; zeros(nu-2)]
+                u = 1.0 * 3e-2 * timestep_ * [1.0, 0.0, 0.0] #[0.0; 1.0; zeros(nu-2)]
             else
                 u = zeros(nu)
             end
-            setForce!(joint, SA[u...])
+            set_input!(joint, SA[u...])
         end
     end
     return
 end
-mech = getmechanism(:snake, Δt = Δt_, g = 0.0, spring = 0.0, damper = 0.05, contact = false, Nb = Nb_, jointtype = :Spherical)
+mech = getmechanism(:snake, timestep = timestep_, g = 0.0, spring = 0.0, damper = 0.05, contact = false, Nb = Nb_, jointtype = :Spherical)
 initialize!(mech, :snake, ω = ω_, v = v_, Δv = Δv_, Δω = Δω_)
 storage = simulate!(mech, 200.0, controller!, record = true, solver = :mehrotra!, verbose = false)
 m0 = momentum(mech)

@@ -20,14 +20,14 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 
 # System
 gravity = -9.81
-Δt = 0.05
+timestep = 0.05
 cf = 0.8
-mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = cf, damper = 0.0, spring = 0.0)
+mech = getmechanism(:quadruped, timestep = timestep, g = gravity, cf = cf, damper = 0.0, spring = 0.0)
 
 # Dimensions
 T = 20
-n = minCoordDim(mech)
-m = controldim(mech)
+n = minimal_dimension(mech)
+m = control_dimension(mech)
 d = 0
 u_mask = [zeros(12,6) I(12)]
 
@@ -41,9 +41,9 @@ z1ref = zref[1]
 
 # Initial GHOST state
 ϵ0 = 1e-2
-mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = cf, damper = 10.0, spring = 300.0)
+mech = getmechanism(:quadruped, timestep = timestep, g = gravity, cf = cf, damper = 10.0, spring = 300.0)
 initialize!(mech, :quadruped)
-setState!(mech, z1ref)
+set_state!(mech, z1ref)
 setSpringOffset!(mech, x1ref)
 @elapsed storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0, undercut = 1.5)
 visualize(mech, storage, vis = vis)
@@ -54,8 +54,8 @@ for i = 1:T
 end
 
 # Initial conditions, controls, disturbances
-no_contact_mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = cf, damper = 5.0, spring = 0.0, contact = false)
-mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = cf, damper = 5.0, spring = 0.0)
+no_contact_mech = getmechanism(:quadruped, timestep = timestep, g = gravity, cf = cf, damper = 5.0, spring = 0.0, contact = false)
+mech = getmechanism(:quadruped, timestep = timestep, g = gravity, cf = cf, damper = 5.0, spring = 0.0)
 w = [zeros(d) for t = 1:T-1]
 ughost = [inverse_control(no_contact_mech, xghost[i], xghost[i+1]) for i = 1:T-1]
 
@@ -98,9 +98,9 @@ Usol = [usol]
 
 # Objective
 qt = [0.3; 0.05; 0.002; 0.3; 0.05; 0.05; 0.01 * ones(3); 0.01 * ones(3); fill([0.2, 0.001], 12)...]
-ots = [(x, u, w) -> transpose(x - xabs[t]) * Diagonal(Δt * qt) * (x - xabs[t]) +
-	transpose(u) * Diagonal(Δt * [0.01*ones(6); 0.01 * ones(12)]) * u for t = 1:T-1]
-oT = (x, u, w) -> transpose(x - xabs[end]) * Diagonal(Δt * qt) * (x - xabs[end])
+ots = [(x, u, w) -> transpose(x - xabs[t]) * Diagonal(timestep * qt) * (x - xabs[t]) +
+	transpose(u) * Diagonal(timestep * [0.01*ones(6); 0.01 * ones(12)]) * u for t = 1:T-1]
+oT = (x, u, w) -> transpose(x - xabs[end]) * Diagonal(timestep * qt) * (x - xabs[end])
 
 cts = Cost.(ots, n, m, d)
 cT = Cost(oT, n, 0, 0)
@@ -158,9 +158,9 @@ ghost_ilqr_solve!(prob,
 #
 # 	# Objective
 # 	qt = [0.3; 0.05; 0.002; 0.3; 0.05; 0.05; 0.01 * ones(3); 0.01 * ones(3); fill([0.2, 0.001], 12)...]
-# 	ots = [(x, u, w) -> transpose(x - xabs[t]) * Diagonal(Δt * qt) * (x - xabs[t]) +
-# 		transpose(u) * Diagonal(Δt * [0.01*ones(6); 0.01 * ones(12)]) * u for t = 1:T-1]
-# 	oT = (x, u, w) -> transpose(x - xabs[end]) * Diagonal(Δt * qt) * (x - xabs[end])
+# 	ots = [(x, u, w) -> transpose(x - xabs[t]) * Diagonal(timestep * qt) * (x - xabs[t]) +
+# 		transpose(u) * Diagonal(timestep * [0.01*ones(6); 0.01 * ones(12)]) * u for t = 1:T-1]
+# 	oT = (x, u, w) -> transpose(x - xabs[end]) * Diagonal(timestep * qt) * (x - xabs[end])
 #
 # 	cts = Cost.(ots, n, m, d)
 # 	cT = Cost(oT, n, 0, 0)
@@ -224,9 +224,9 @@ ustar = deepcopy(Usol[end])
 visualize(mech, storage; vis = vis)
 
 
-mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = cf, damper = 5.0, spring = 0.0)
+mech = getmechanism(:quadruped, timestep = timestep, g = gravity, cf = cf, damper = 5.0, spring = 0.0)
 initialize!(mech, :quadruped)
-setState!(mech, min2max(mech, xabs[1]))
+set_state!(mech, min2max(mech, xabs[1]))
 
 function controller!(mechanism, k)
 	@show k

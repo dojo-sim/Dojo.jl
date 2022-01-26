@@ -19,18 +19,18 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
-mech = getmechanism(:atlas, Δt = 0.01, g = -9.81, cf = 0.5, damper = 50.0, spring=1.0, contact = true)
+mech = getmechanism(:atlas, timestep = 0.01, g = -9.81, cf = 0.5, damper = 50.0, spring=1.0, contact = true)
 
 initialize!(mech, :atlas, tran = [0,0,0.5], rot = [0.01,0.05, 0.0])
-storage = simulate!(mech, 1.0, record = true, opts = InteriorPointOptions(btol = 1e-6))
+storage = simulate!(mech, 1.0, record = true, opts = SolverOptions(btol = 1e-6))
 visualize(mech, storage, vis = vis)
 
 # Set data
 Nb = length(mech.bodies)
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
-attjac = attitudejacobian(data, Nb)
+data = get_data(mech)
+set_data!(mech, data)
+sol = get_solution(mech)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
 datamat = full_data_matrix(mech)

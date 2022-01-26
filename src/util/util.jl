@@ -8,7 +8,7 @@ end
 
 deleteat(M::Array,i::Integer) = deleteat(M, i, i)
 
-function orthogonalrows(axis::AbstractVector)
+function orthogonal_rows(axis::AbstractVector)
     if norm(axis) > 0
         axis = normalize(axis)
     end
@@ -22,19 +22,11 @@ function orthogonalrows(axis::AbstractVector)
 end
 
 function orthogonalcols(axis::AbstractVector)
-    V1, V2, V3 = orthogonalrows(axis)
+    V1, V2, V3 = orthogonal_rows(axis)
     return V1', V2', V3'
 end
 
-@inline function skewplusdiag(v::AbstractVector{T},w::T) where T
-    SA[
-         w    -v[3]  v[2]
-         v[3]  w    -v[1]
-        -v[2]  v[1]  w
-    ]
-end
-
-function getfieldnumber(obj)
+function get_fieldnumber(obj)
     i = 1
     while true
         !isdefined(obj, i) ? break : (i+=1)
@@ -42,8 +34,8 @@ function getfieldnumber(obj)
     return i-1
 end
 
-@inline offsetrange(offset, length) = (offset-1)*length+1:offset*length
-@inline offsetrange(offset, length, totallength, inneroffset) = (offset-1)*totallength+(inneroffset-1)*length+1:(offset-1)*totallength+inneroffset*length
+@inline offset_range(offset, length) = (offset-1)*length+1:offset*length
+@inline offset_range(offset, length, totallength, inneroffset) = (offset-1)*totallength+(inneroffset-1)*length+1:(offset-1)*totallength+inneroffset*length
 
 function scn(a::Number; digits::Int=1, exp_digits::Int=1)
 	(typeof(a) <: Float64) ? nothing : return nothing

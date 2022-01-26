@@ -186,12 +186,12 @@ function parse_link(xlink, materialdict, T)
     name = attribute(xlink, "name")
 
     if shape === nothing
-        link = Body(m, J, name=name)
+        link = Body(m, J, name=Symbol(name))
     else
         link = shape
         link.m = m
         link.J = J
-        link.name = name
+        link.name = Symbol(name)
     end
 
     link.state.x2[1] = x
@@ -202,7 +202,7 @@ function parse_link(xlink, materialdict, T)
 end
 
 function parse_links(xlinks, materialdict, T)
-    ldict = Dict{String,Body{T}}()
+    ldict = Dict{Symbol,Body{T}}()
 
     for xlink in xlinks
         link = parse_link(xlink, materialdict, T)
@@ -213,33 +213,33 @@ function parse_links(xlinks, materialdict, T)
 end
 
 function joint_selector(jointtype, body1, body2, T;
-        axis = SA{T}[1;0;0], p1 = szeros(T,3), p2 = szeros(T,3), qoffset = one(UnitQuaternion{T}), name = "")
+        axis = SA{T}[1;0;0], p1 = szeros(T,3), p2 = szeros(T,3), qoffset = one(UnitQuaternion{T}), name = Symbol("joint_" * randstring(4)))
 
     # TODO limits for revolute joint?
     if jointtype == "revolute" || jointtype == "continuous"
-        joint = EqualityConstraint(Revolute(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(Revolute(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "prismatic"
-        joint = EqualityConstraint(Prismatic(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(Prismatic(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "planar"
-        joint = EqualityConstraint(Planar(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(Planar(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "planarfree"
-        joint = EqualityConstraint(PlanarFree(body1, body2, axis; p1=p1, p2=p2), name=name)
+        joint = JointConstraint(PlanarFree(body1, body2, axis; p1=p1, p2=p2), name=name)
     elseif jointtype == "fixed"
-        joint = EqualityConstraint(Fixed(body1, body2; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(Fixed(body1, body2; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "floating"
-        joint = EqualityConstraint(Floating(body1, body2), name=name)
+        joint = JointConstraint(Floating(body1, body2), name=name)
     elseif jointtype == "orbital"
-        joint = EqualityConstraint(Orbital(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(Orbital(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "ball"
-        joint = EqualityConstraint(Spherical(body1, body2; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(Spherical(body1, body2; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "fixedorientation"
-        joint = EqualityConstraint(FixedOrientation(body1, body2; qoffset = qoffset), name=name)
+        joint = JointConstraint(FixedOrientation(body1, body2; qoffset = qoffset), name=name)
     elseif jointtype == "cylindrical"
-        joint = EqualityConstraint(Cylindrical(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(Cylindrical(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
     elseif jointtype == "cylindricalfree"
-        joint = EqualityConstraint(CylindricalFree(body1, body2, axis; p1=p1, p2=p2), name=name)
+        joint = JointConstraint(CylindricalFree(body1, body2, axis; p1=p1, p2=p2), name=name)
     elseif jointtype == "planaraxis"
-        joint = EqualityConstraint(PlanarAxis(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(PlanarAxis(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
     else
         @error "Unknown joint type"
     end
@@ -252,7 +252,7 @@ function parse_joint(xjoint, plink, clink, T)
     x, q = parse_pose(find_element(xjoint, "origin"), T)
     axis = parse_vector(find_element(xjoint, "axis"), "xyz", T, default = "1 0 0")
     p1 = x
-    name = attribute(xjoint, "name")
+    name = Symbol(attribute(xjoint, "name"))
 
     return joint_selector(jointtype, plink, clink, T, axis = axis, p1 = p1, qoffset = q, name = name)
 end
@@ -267,7 +267,7 @@ function parse_loop_joint(xjoint, body1, body2, T)
     x2, _ = parse_pose(find_element(xjoint, "body2"), T) # The orientation q2 of the second body is ignored because it is determined by the mechanism's structure
     p1 = x1
     p2 = x2
-    name = attribute(xjoint, "name")
+    name = Symbol(attribute(xjoint, "name"))
 
     return joint_selector(jointtype, body1, body2, T, axis = axis, p1 = p1, p2 = p2, qoffset = q1, name = name)
 end
@@ -275,7 +275,7 @@ end
 function parse_joints(xjoints, ldict, floating, T)
     origins = Origin{T}[]
     links = Body{T}[]
-    joints = EqualityConstraint{T}[]
+    joints = JointConstraint{T}[]
     floatingname = ""
 
     for name in keys(ldict)
@@ -283,7 +283,7 @@ function parse_joints(xjoints, ldict, floating, T)
         for xjoint in xjoints
             xchild = find_element(xjoint, "child")
             childname = attribute(xchild, "link")
-            if childname == name
+            if Symbol(childname) == name
                 childflag = true
                 break
             end
@@ -308,9 +308,9 @@ function parse_joints(xjoints, ldict, floating, T)
     for xjoint in xjoints
         xplink = find_element(xjoint, "parent")
         xclink = find_element(xjoint, "child")
-        clink = ldict[attribute(xclink, "link")]
+        clink = ldict[Symbol(attribute(xclink, "link"))]
 
-        plink = ldict[attribute(xplink, "link")]
+        plink = ldict[Symbol(attribute(xplink, "link"))]
         if plink.id == origin.id
             plink = origin
             joint = parse_joint(xjoint, plink, clink, T)
@@ -322,7 +322,7 @@ function parse_joints(xjoints, ldict, floating, T)
     end
 
     if floating
-        originjoint = EqualityConstraint(Floating(origin, ldict[floatingname]), name="auto_generated_floating_joint")
+        originjoint = JointConstraint(Floating(origin, ldict[Symbol(floatingname)]), name=:auto_generated_floating_joint)
         joints = [originjoint; joints] # For proper parsing the first joint must be connected to the origin
     end
 
@@ -332,7 +332,7 @@ end
 # TODO This might be missing the detection of a direct loop, i.e. only two links connected by two joints
 # TODO Also only works for a single loop closure in a cycle (so no ladders)
 function parse_loop_joints(xloopjoints, origin, joints, ldict, T)
-    loopjoints = EqualityConstraint{T}[]
+    loopjoints = JointConstraint{T}[]
 
 
     for xloopjoint in xloopjoints
@@ -442,16 +442,16 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
     qjointlist = Dict{Int64,UnitQuaternion{T}}() # stores id, q in world frame
 
     for id in reverse(system.dfs_list) # from root to leaves
-        component = getcomponent(mechanism, id)
-        !(component isa Body) && continue # only for bodies
+        node = get_node(mechanism, id)
+        !(node isa Body) && continue # only for bodies
 
-        body = component
+        body = node
         xbodylocal = body.state.x2[1]
         qbodylocal = body.state.q2[1]
         shape = body.shape
 
         parentid = get_parentid(mechanism, id, loopjoints)
-        constraint = geteqconstraint(mechanism, parentid)
+        constraint = get_joint_constraint(mechanism, parentid)
 
         grandparentid = constraint.parentid
         if grandparentid === nothing # predecessor is origin
@@ -463,10 +463,10 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
             xparentjoint = SA{T}[0; 0; 0]
             qparentjoint = one(UnitQuaternion{T})
         else
-            parentbody = getbody(mechanism, grandparentid)
+            parentbody = get_body(mechanism, grandparentid)
 
             grandgrandparentid = get_parentid(mechanism, grandparentid, loopjoints)
-            parentconstraint = geteqconstraint(mechanism, grandgrandparentid)
+            parentconstraint = get_joint_constraint(mechanism, grandgrandparentid)
 
             xparentbody = parentbody.state.x2[1] # in world frame
             qparentbody = parentbody.state.q2[1] # in world frame
@@ -503,8 +503,8 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         constraint.constraints[ind2].qoffset = qoffset # in parent's (parentbody) frame
 
         # actual body properties
-        setPosition!(body) # set everything to zero
-        setPosition!(parentbody, body, p1 = p1, p2 = p2, Δq = qoffset)
+        set_position(body) # set everything to zero
+        set_position(parentbody, body, p1 = p1, p2 = p2, Δq = qoffset)
         xbody = body.state.x2[1]
         qbody = body.state.q2[1]
 
@@ -528,10 +528,10 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
             xparentjoint1 = SA{T}[0; 0; 0]
             qparentjoint1 = one(UnitQuaternion{T})
         else
-            parentbody1 = getbody(mechanism, parentid1)
+            parentbody1 = get_body(mechanism, parentid1)
 
             grandparentid1 = get_parentid(mechanism, parentid1, loopjoints)
-            parentconstraint1 = geteqconstraint(mechanism, grandparentid1)
+            parentconstraint1 = get_joint_constraint(mechanism, grandparentid1)
 
             xparentbody1 = parentbody1.state.x2[1] # in world frame
             qparentbody1 = parentbody1.state.q2[1] # in world frame
@@ -539,10 +539,10 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
             xparentjoint1 = xjointlist[parentconstraint1.id] # in world frame
             qparentjoint1 = qjointlist[parentconstraint1.id] # in world frame
         end
-        parentbody2 = getbody(mechanism, parentid2)
+        parentbody2 = get_body(mechanism, parentid2)
 
         grandparentid2 = get_parentid(mechanism, parentid2, loopjoints)
-        parentconstraint2 = geteqconstraint(mechanism, grandparentid2)
+        parentconstraint2 = get_joint_constraint(mechanism, grandparentid2)
 
         xparentbody2 = parentbody2.state.x2[1] # in world frame
         qparentbody2 = parentbody2.state.q2[1] # in world frame
@@ -579,7 +579,7 @@ function get_parentid(mechanism, id, loopjoints)
     system = mechanism.system
     conns = connections(system, id)
     for connsid in conns
-        constraint = geteqconstraint(mechanism, connsid)
+        constraint = get_joint_constraint(mechanism, connsid)
         if constraint ∉ loopjoints && id ∈ constraint.childids
             return connsid
         end

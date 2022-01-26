@@ -15,6 +15,10 @@ tra0 = eqc0.constraints[1]
 GaT(tra0, xa, qa, xb, qb, η)
 GbT(tra0, xa, qa, xb, qb, η)
 
+using BenchmarkTools
+@benchmark J0 = ∂aGb($tra0, $xa, $qa, $xb, $qb, $λ)
+
+
 # ∂aGb
 J0 = ∂aGb(tra0, xa, qa, xb, qb, λ)
 attjac = cat(I(3),LVᵀmat(qa), dims=(1,2))

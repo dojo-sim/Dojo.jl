@@ -7,13 +7,13 @@ function raiberthopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     control_scaling=Diagonal(ones(3)),
     s::Int=1, contact::Bool=true, vis::Visualizer=Visualizer(), name::Symbol=:robot,
     info=nothing,
-    opts_step=InteriorPointOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5), opts_grad=InteriorPointOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5)) where T
+    opts_step=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5), opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5)) where T
 
-    mechanism = getraiberthopper(Δt=dt, g=g)
+    mechanism = getraiberthopper(timestep=dt, g=g)
     initializeraiberthopper!(mechanism)
 
     if mode == :min
-        nx = minCoordDim(mechanism)
+        nx = minimal_dimension(mechanism)
     elseif mode == :max
         nx = maxCoordDim(mechanism)
     end
@@ -25,7 +25,7 @@ function raiberthopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
 
     rng = MersenneTwister(s)
 
-    z = getMaxState(mechanism)
+    z = get_max_state(mechanism)
     x = mode == :min ? max2min(mechanism, z) : z
 
     fx = zeros(nx, nx)
@@ -99,7 +99,7 @@ function visualize(env::Environment{RaibertHopper}, traj::Vector{Vector{T}}; nam
     end
 
     # animate
-    anim = MeshCat.Animation(convert(Int, floor(1.0 / env.mechanism.Δt)))
+    anim = MeshCat.Animation(convert(Int, floor(1.0 / env.mechanism.timestep)))
     for (t, x) in enumerate(z)
         x_body = x[1:3]
         x_foot = x[13 .+ (1:3)]

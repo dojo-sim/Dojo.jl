@@ -26,9 +26,9 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 # Build mechanism and Identify A and B
 ################################################################################
 
-mech = getmechanism(:atlas, Δt = 0.01, g = -9.81, cf = 0.8, contact = true)
+mech = getmechanism(:atlas, timestep = 0.01, g = -9.81, cf = 0.8, contact = true)
 initialize!(mech, :atlas, tran = [0,0,1.9291], rot = [0.,0,0])
-for (i,joint) in enumerate(mech.eqconstraints)
+for (i,joint) in enumerate(mech.joints)
     jt = joint.constraints[1]
     jr = joint.constraints[2]
     joint.isdamper = true #false
@@ -44,12 +44,12 @@ end
 visualize(mech, storage, vis = vis)
 
 # show sign distance function
-ineqcs = collect(mech.ineqconstraints)
-for (i,ineqc) in enumerate(ineqcs)
-    ineqc = ineqcs[1]
+contacts = collect(mech.contacts)
+for (i,ineqc) in enumerate(contacts)
+    ineqc = contacts[1]
     cont = ineqc.constraints[1]
-    body = getbody(mech, ineqc.parentid)
-    x3, q3 = posargs2(body.state)
+    body = get_body(mech, ineqc.parentid)
+    x3, q3 = current_configuration(body.state)
     sdf = cont.ainv3 * (x3 + vrotate(cont.p,q3) - cont.offset)
     println("sdf $i:", sdf)
 end
@@ -59,10 +59,10 @@ end
 
 # Set data
 Nb = length(mech.bodies)
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
-attjac = attitudejacobian(data, Nb)
+data = get_data(mech)
+set_data!(mech, data)
+sol = get_solution(mech)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
 datamat = full_data_matrix(mech)
@@ -97,26 +97,26 @@ cond(K)
 plot(Gray.(abs.(K ./ 1e14)))
 
 # PD control law
-nu = sum([controldim(eqc, floatingbase = false) for eqc in collect(mech.eqconstraints)])
-angles = [minimalCoordinates(mech, joint)[1] for joint in collect(mech.eqconstraints)[2:end]]
+nu = sum([control_dimension(eqc, floatingbase = false) for eqc in collect(mech.joints)])
+angles = [minimal_coordinates(mech, joint)[1] for joint in collect(mech.joints)[2:end]]
 δangles = zeros(nu)
 ind = 23
 # δangles[ind] += π/2
 angles += δangles
 
 function controller!(mechanism, k)
-    for (i,joint) in enumerate(collect(mechanism.eqconstraints)[2:end])
-        if controldim(joint) == 1
-            θ = minimalCoordinates(mechanism, joint)[1]
-            dθ = minimalVelocities(mechanism, joint)[1]
+    for (i,joint) in enumerate(collect(mechanism.joints)[2:end])
+        if control_dimension(joint) == 1
+            θ = minimal_coordinates(mechanism, joint)[1]
+            dθ = minimal_velocities(mechanism, joint)[1]
             u = 3e+2 * (angles[i] - θ) #+ 5e-2 * (0 - dθ)
-            u = clamp(u, -150.0, 150.0) * mechanism.Δt
+            u = clamp(u, -150.0, 150.0) * mechanism.timestep
             if joint.name ∈ ("r_leg_akx", "r_leg_aky", "l_leg_akx", "l_leg_aky", "back_bkx", "back_bky", "back_bkz")
                 u = 1e+2 * (angles[i] - θ) #+ 5e-2 * (0 - dθ)
-                u = clamp(u, -100.0, 100.0) * mechanism.Δt
+                u = clamp(u, -100.0, 100.0) * mechanism.timestep
             end
             u = 0.0
-            setForce!(joint, SA[u])
+            set_input!(joint, SA[u])
         end
     end
     return
@@ -136,7 +136,7 @@ visualize(mech, storage, vis = vis)
 gains = zeros(30, 2)
 gains[23,:] = [1e-1, 5e-2]
 
-nams = [eqc.name for eqc in mech.eqconstraints]
+nams = [eqc.name for eqc in mech.joints]
 
 nams[1:10]
 nams[11:20]
@@ -144,10 +144,10 @@ nams[21:30]
 
 # Set data
 Nb = length(mech.bodies)
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
-attjac = attitudejacobian(data, Nb)
+data = get_data(mech)
+set_data!(mech, data)
+sol = get_solution(mech)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
 datamat = full_data_matrix(mech)

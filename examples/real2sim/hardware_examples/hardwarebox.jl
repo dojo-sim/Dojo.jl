@@ -13,13 +13,13 @@ open(vis)
 
 
 S = 7
-Δt = 1/148 * S
+timestep = 1/148 * S
 gscaled = -9.81*20
 
-mech = getmechanism(:box, Δt=Δt, g=gscaled, cf=0.2, radius=0.00, side=0.50, mode=:box);
+mech = getmechanism(:box, timestep=timestep, g=gscaled, cf=0.2, radius=0.00, side=0.50, mode=:box);
 initialize!(mech, :box, x=[0,-1,1.], v=[0,2,1.], ω=[2,5,10.])
 storage = simulate!(mech, 5.0, record=true,
-    opts=InteriorPointOptions(btol=1e-6, rtol=1e-6, verbose=false))
+    opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
 visualize(mech, storage, vis=vis, show_contact=true)
 
 ################################################################################
@@ -42,13 +42,13 @@ data0 = params0[:data]
 # Optimization Objective: Evaluation & Gradient
 ################################################################################
 clean_loss(:box, pairs0, data0, n_sample=250,
-	opts=InteriorPointOptions(btol=3e-4, rtol=3e-4), Δt=Δt, g=gscaled)
+	opts=SolverOptions(btol=3e-4, rtol=3e-4), timestep=timestep, g=gscaled)
 
 [clean_loss(:box, pairs0, data0 + [i;zeros(55)],
-	opts=InteriorPointOptions(btol=3e-4, rtol=3e-4), Δt=Δt, g=gscaled)
+	opts=SolverOptions(btol=3e-4, rtol=3e-4), timestep=timestep, g=gscaled)
 	for i in Vector(-0.10:0.01:0.1)]
 [clean_loss(:box, pairs0, data0 + [0;i;zeros(54)],
-	opts=InteriorPointOptions(btol=3e-4, rtol=3e-4), Δt=Δt, g=gscaled)
+	opts=SolverOptions(btol=3e-4, rtol=3e-4), timestep=timestep, g=gscaled)
 	for i in Vector(-0.10:0.01:0.1)]
 
 plot(hcat([p[1][1:3] for p in pairs0]...)')
@@ -83,11 +83,11 @@ lower = [0.00, 0.05]
 upper = [0.80, 1.50]
 
 function f0(d; rot=0)
-	return clean_loss(:box, pairs0, d2data(d), n_sample=200, Δt=Δt, g=gscaled, rot=rot, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))[1]
+	return clean_loss(:box, pairs0, d2data(d), n_sample=200, timestep=timestep, g=gscaled, rot=rot, opts=SolverOptions(btol=3e-4, rtol=3e-4))[1]
 end
 
 function fgH0(d; rot=0)
-	f, g, H = clean_loss(:box, pairs0, d2data(d), n_sample=200, Δt=Δt, g=gscaled, rot=rot, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
+	f, g, H = clean_loss(:box, pairs0, d2data(d), n_sample=200, timestep=timestep, g=gscaled, rot=rot, opts=SolverOptions(btol=3e-4, rtol=3e-4))
 	return f, ∇d2data' * g, ∇d2data' * H * ∇d2data
 end
 dsol, Dsol = quasi_newton_solve(f0, fgH0, d0, iter=100, gtol=1e-8, ftol=1e-6,
@@ -109,8 +109,8 @@ dsol #[0.171, 0.933]
 using Plots; pyplot()
 x=range(0.00,stop=0.80,length=10)
 y=range(0.10,stop=1.50,length=10)
-f(x,y) = log(10, clean_loss(:box, pairs0, d2data([x,y]), n_sample=50, Δt=Δt, g=gscaled,
-	opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))[1])
+f(x,y) = log(10, clean_loss(:box, pairs0, d2data([x,y]), n_sample=50, timestep=timestep, g=gscaled,
+	opts=SolverOptions(btol=3e-4, rtol=3e-4))[1])
 plot(x,y,f,st=:surface,camera=(25,75))
 
 
@@ -172,11 +172,11 @@ upper = [0.80,
 	-0.05, -0.05, +1.50]
 
 function f0(d; rot=0, n_sample=50)
-	return clean_loss(:box, pairs0, d2data(d), n_sample=n_sample, Δt=Δt, g=gscaled, rot=rot, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))[1]
+	return clean_loss(:box, pairs0, d2data(d), n_sample=n_sample, timestep=timestep, g=gscaled, rot=rot, opts=SolverOptions(btol=3e-4, rtol=3e-4))[1]
 end
 
 function fgH0(d; rot=0, n_sample=50)
-	f, g, H = clean_loss(:box, pairs0, d2data(d), n_sample=n_sample, Δt=Δt, g=gscaled, rot=rot, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
+	f, g, H = clean_loss(:box, pairs0, d2data(d), n_sample=n_sample, timestep=timestep, g=gscaled, rot=rot, opts=SolverOptions(btol=3e-4, rtol=3e-4))
 	return f, ∇d2data' * g, ∇d2data' * H * ∇d2data
 end
 dsol, Dsol = quasi_newton_solve(f0, fgH0, d0, iter=50, gtol=1e-8, ftol=1e-6,

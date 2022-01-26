@@ -18,7 +18,7 @@ module_dir()
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
-function getpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
+function getpendulum(; timestep::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
         spring = 0.0, damper = 0.0, spring_offset = szeros(1), joint_limits = [-sones(1), sones(1)]) where T
     # Parameters
     joint_axis = [1.0; 0; 0]
@@ -30,23 +30,23 @@ function getpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
     body1 = Box(width, depth, l, m)
 
     # Constraints
-    joint_between_origin_and_body1 = EqualityConstraint(Revolute(origin, body1, joint_axis;
+    joint_between_origin_and_body1 = JointConstraint(Revolute(origin, body1, joint_axis;
         p2=p2,
         spring = spring,
         damper = damper,
         spring_type = :linear,
-        rot_spring_offset = spring_offset,
+        rotapply_springoffset = spring_offset,
         rot_joint_limits = joint_limits))
     bodies = [body1]
     eqcs = [joint_between_origin_and_body1]
 
-    mech = Mechanism(origin, bodies, eqcs, g = g, Δt = Δt, spring=spring, damper=damper)
+    mech = Mechanism(origin, bodies, eqcs, g = g, timestep = timestep, spring=spring, damper=damper)
     return mech
 end
 
 
 
-mech = getmechanism(:pendulum, Δt = 0.01, g = 0.00, spring = 10, spring_offset = π/2*sones(1),
+mech = getmechanism(:pendulum, timestep = 0.01, g = 0.00, spring = 10, spring_offset = π/2*sones(1),
     joint_limits = 0.55π .* [-sones(1), sones(1)])
 initialize!(mech, :pendulum, ϕ1 = 0.1)
 storage = simulate!(mech, 3.1, record = true, verbose = true)
@@ -84,14 +84,14 @@ qq = axisangle2quaternion(aa)
 
 # Set data
 Nb = length(mech.bodies)
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
-attjac = attitudejacobian(data, Nb)
+data = get_data(mech)
+set_data!(mech, data)
+sol = get_solution(mech)
+attjac = attitude_jacobian(data, Nb)
 
 # # IFT
 # datamat = full_data_matrix(mech)
-setentries!(mech)
+set_entries!(mech)
 solmat = full_matrix(mech.system)
 rank(solmat)
 rank(solmat[1:9,1:9])
@@ -102,7 +102,7 @@ solmat[1:9,1:9]
 
 tra = eqc1.constraints[1]
 rot = eqc1.constraints[2]
-resetVars!(eqc1)
+reset!(eqc1)
 ηtra = eqc1.λsol[2][1:3]
 ηrot = eqc1.λsol[2][3 .+ (1:6)]
 ∂g∂ʳself(mech, eqc1)
@@ -128,7 +128,7 @@ fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
 plot(Gray.(abs.(1e11 .* solmat)))
 plot(Gray.(abs.(1e9 .* fd_solmat)))
 
-eqc1 = collect(mech.eqconstraints)[1]
+eqc1 = collect(mech.joints)[1]
 λindex(eqc1, 1)
 λindex(eqc1, 2)
 

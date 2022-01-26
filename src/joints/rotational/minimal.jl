@@ -1,6 +1,6 @@
-@inline function getPositionDelta(joint::Rotational, body1::Component, body2::Component, θ::SVector{N,T}) where {T,N}
+@inline function get_position_delta(joint::Rotational, body1::Node, body2::Node, θ::SVector{N,T}) where {T,N}
     # axis angle representation
-    θ = zerodimstaticadjoint(nullspacemat(joint)) * θ
+    θ = zerodimstaticadjoint(nullspace_mask(joint)) * θ
     nθ = norm(θ)
     if nθ == 0
         q = one(UnitQuaternion{T})
@@ -12,36 +12,31 @@
     return Δq
 end
 
-@inline function getVelocityDelta(joint::Rotational, body1::Component, body2::Component, ω::SVector)
-    ω = zerodimstaticadjoint(nullspacemat(joint)) * ω
+@inline function get_velocity_delta(joint::Rotational, body1::Node, body2::Node, ω::SVector)
+    ω = zerodimstaticadjoint(nullspace_mask(joint)) * ω
     Δω = ω # in body1 frame
     return Δω
 end
 
-@inline function minimalCoordinates(joint::Rotational, body1::Component, body2::Component)
+@inline function minimal_coordinates(joint::Rotational, body1::Node, body2::Node)
     statea = body1.state
     stateb = body2.state
-    return minimalCoordinates(joint, statea.q2[1], stateb.q2[1])
+    return minimal_coordinates(joint, statea.q2[1], stateb.q2[1])
 end
 
-@inline function minimalCoordinates(joint::Rotational, qa::UnitQuaternion, qb::UnitQuaternion)
+@inline function minimal_coordinates(joint::Rotational, qa::UnitQuaternion, qb::UnitQuaternion)
     q = qa \ qb / joint.qoffset
-    return nullspacemat(joint) * rotation_vector(q)
+    return nullspace_mask(joint) * rotation_vector(q)
 end
 
-@inline function minimalCoordinates(joint::Rotational{T,0}, qb::UnitQuaternion) where {T}
-    q = qb / joint.qoffset
-    return nullspacemat(joint) * rotation_vector(q)
-end
-
-@inline function minimalVelocities(joint::Rotational, body1::Component, body2::Component)
+@inline function minimal_velocities(joint::Rotational, body1::Node, body2::Node)
     statea = body1.state
     stateb = body2.state
-    return minimalVelocities(joint, statea.q2[1], statea.ϕ15, stateb.q2[1], stateb.ϕ15)
+    return minimal_velocities(joint, statea.q2[1], statea.ϕ15, stateb.q2[1], stateb.ϕ15)
 end
 
-@inline function minimalVelocities(joint::Rotational, qa::UnitQuaternion,
+@inline function minimal_velocities(joint::Rotational, qa::UnitQuaternion,
         ϕa::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector)
-    return nullspacemat(joint) * (vrotate(ϕb, qa \ qb) - ϕa) # in body1's frame
+    return nullspace_mask(joint) * (vrotate(ϕb, qa \ qb) - ϕa) # in body1's frame
 end
 

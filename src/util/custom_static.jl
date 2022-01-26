@@ -52,9 +52,7 @@ Base.convert(::Type{SMatrix{N,N,T,N2}}, E::UniformScaling) where {T, N, N2} = SM
 @inline srand(::Type{T}, N1, N2) where T = @SMatrix rand(T, N1, N2)
 @inline srand(N1, N2)= @SMatrix rand(N1, N2)
 
-
 sisnan(a::StaticArray) = any(isnan.(a))
-
 
 # To fix StaticArray bug
 zerodimstaticadjoint(A) = A'

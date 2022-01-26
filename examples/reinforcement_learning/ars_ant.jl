@@ -85,7 +85,7 @@ z = [min2max(env.mechanism, x) for x in traj]
 z = [[z[1] for t = 1:40]..., z..., [z[end] for t = 1:40]...]
 T = length(z)
 
-anim = MeshCat.Animation(convert(Int, floor(1.0 / env.mechanism.Δt)))
+anim = MeshCat.Animation(convert(Int, floor(1.0 / env.mechanism.timestep)))
 build_robot(env.vis, env.mechanism, color=cyan)
 for t = 1:T
     MeshCat.atframe(anim, t) do

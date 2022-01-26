@@ -3,11 +3,11 @@ function tippytop_texture!(vis::Visualizer, mech::Mechanism;
     image = PngImage(image1)
     texture = Texture(image=image);   
     material = MeshLambertMaterial(map=texture);       
-    setobject!(vis["bodies"]["body:1"], convertshape(mech.bodies[3].shape), material)
+    setobject!(vis["bodies"]["body:1"], convert_shape(mech.bodies[3].shape), material)
     
     image = PngImage(image2)
     texture = Texture(image=image);   
     material = MeshLambertMaterial(map=texture); 
     
-    setobject!(vis["bodies"]["body:2"], convertshape(mech.bodies[4].shape), material)
+    setobject!(vis["bodies"]["body:2"], convert_shape(mech.bodies[4].shape), material)
 end

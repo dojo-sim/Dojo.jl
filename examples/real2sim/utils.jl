@@ -2,27 +2,27 @@
 # Simulator Data
 ################################################################################
 
-simdata_dim(mechanism::Mechanism) = sum(simdata_dim.(mech.ineqconstraints))
-simdata_dim(ineqc::InequalityConstraint) = sum(simdata_dim.(ineqc.constraints))
-simdata_dim(bound::ContactBound) = 7 # [cf, p, offset]
-simdata_dim(bound::LinearContactBound) = 7 # [cf, p, offset]
-simdata_dim(bound::ImpactBound) = 6 # [p, offset]
+simdata_dim(mechanism::Mechanism) = sum(simdata_dim.(mech.contacts))
+simdata_dim(contact::ContactConstraint) = sum(simdata_dim.(contact.constraints))
+simdata_dim(bound::NonlinearContact) = 7 # [cf, p, offset]
+simdata_dim(bound::LinearContact) = 7 # [cf, p, offset]
+simdata_dim(bound::ImpactContact) = 6 # [p, offset]
 
-function set_simulator_data!(bound::ContactBound, data::AbstractVector)
+function set_simulator_data!(bound::NonlinearContact, data::AbstractVector)
 	bound.cf = data[1]
     bound.offset = data[SVector{3,Int}(2:4)]
     bound.p = data[SVector{3,Int}(5:7)]
     return nothing
 end
 
-function set_simulator_data!(bound::LinearContactBound, data::AbstractVector)
+function set_simulator_data!(bound::LinearContact, data::AbstractVector)
 	bound.cf = data[1]
     bound.offset = data[SVector{3,Int}(2:4)]
     bound.p = data[SVector{3,Int}(5:7)]
     return nothing
 end
 
-function set_simulator_data!(bound::ImpactBound, data::AbstractVector)
+function set_simulator_data!(bound::ImpactContact, data::AbstractVector)
     bound.offset = data[SVector{3,Int}(2:4)]
     bound.p = data[SVector{3,Int}(5:7)]
     return nothing
@@ -30,33 +30,33 @@ end
 
 function set_simulator_data!(mechanism::Mechanism, data::AbstractVector)
     c = 0
-    for ineqc in mechanism.ineqconstraints
-		for bound in ineqc.constraints
-			N = simdata_dim(bound)
-	        set_simulator_data!(bound, data[c .+ (1:N)]); c += N
+    for contact in mechanism.contacts
+		for element in contact.constraints
+			N = simdata_dim(element)
+	        set_simulator_data!(element, data[c .+ (1:N)]); c += N
 		end
     end
     return nothing
 end
 
-function get_simulator_data(bound::ContactBound)
+function get_simulator_data(bound::NonlinearContact)
 	return [bound.cf; bound.offset; bound.p]
 end
 
-function get_simulator_data(boundset::LinearContactBound)
+function get_simulator_data(boundset::LinearContact)
 	return [bound.cf; bound.off; bound.p]
 end
 
-function get_simulator_data(bound::ImpactBound)
+function get_simulator_data(bound::ImpactContact)
 	return [bound.offset; bound.p]
 end
 
 function get_simulator_data(mechanism::Mechanism{T}) where T
     data = zeros(T,simdata_dim(mechanism))
 	e = 0
-    for ineqc in mechanism.ineqconstraints
-		for bound in ineqc.constraints
-			N = simdata_dim(bound)
+    for contact in mechanism.contacts
+		for element in contact.constraints
+			N = simdata_dim(element)
         	data[e .+ (1:N)] = get_simulator_data(bound); e += N
 		end
     end
@@ -68,24 +68,24 @@ end
 ################################################################################
 
 function simdata_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
-	nsol = soldim(mechanism)
+	nsol = solution_dimension(mechanism)
     ndata = simdata_dim(mechanism)
     data = get_simulator_data(mechanism)
 
 	A = zeros(nsol, ndata)
-	neqcs = eqcdim(mechanism)
-	n = sum(length.(mech.eqconstraints.values))
-	rb = neqcs # row ineqc
-	ri = neqcs + 6Nb # row body
+	njoints = joint_dimension(mechanism)
+	n = sum(length.(mech.joints.values))
+	rb = njoints # row contact
+	ri = njoints + 6Nb # row body
 	c = 0 # column
-	for ineqc in mechanism.ineqconstraints
-		for bound in ineqc.constraints
-			N = length(ineqc)
+	for contact in mechanism.contacts
+		for element in contact.constraints
+			N = length(contact)
 			N½ = Int(N/2)
-			Ns = simdata_dim(bound)
-			∇ineqc, ∇body = ∂g∂simdata(mechanism, ineqc) # assumes only one bound per ineqc
+			Ns = simdata_dim(element)
+			∇contact, ∇body = ∂g∂simdata(mechanism, contact) # assumes only one element per contact
 			A[rb + 3 .+ (1:3), c .+ (1:Ns)] -= ∇body # only works for one body for now
-			A[ri + N½ .+ (1:N½), c .+ (1:Ns)] -= ∇ineqc
+			A[ri + N½ .+ (1:N½), c .+ (1:Ns)] -= ∇contact
 			ri += N
 			c += Ns
 		end
@@ -93,30 +93,30 @@ function simdata_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb
 	return A
 end
 
-function ∂g∂simdata(mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}}}
-    bound = ineqc.constraints[1]
+function ∂g∂simdata(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}}}
+    bound = contact.constraints[1]
 	p = bound.p
 	offset = bound.offset
-    body = getbody(mechanism, ineqc.parentid)
-    x2, v25, q2, ϕ25 = fullargssol(body.state)
-    x3, q3 = posargs3(body.state, mechanism.Δt)
-	s = ineqc.ssol[2]
-	γ = ineqc.γsol[2]
+    body = get_body(mechanism, contact.parentid)
+    x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
+    x3, q3 = next_configuration(body.state, mechanism.timestep)
+	s = contact.ssol[2]
+	γ = contact.γsol[2]
 
-	# Contribution to Ineqconstraint
+	# Contribution to Injointonstraint
 	∇cf = SA[0,γ[1],0,0]
 	∇off = [-bound.ainv3; szeros(T,1,3); -bound.Bx * skew(vrotate(ϕ25, q3))]
 	∇p = [bound.ainv3 * ∂vrotate∂p(bound.p, q3); szeros(T,1,3); bound.Bx * skew(vrotate(ϕ25, q3)) * ∂vrotate∂p(bound.p, q3)]
-	∇ineqc = [∇cf ∇off ∇p]
+	∇contact = [∇cf ∇off ∇p]
 
 	# Contribution to Body dynamics
 	∇cf = szeros(T,3)
-	X = forcemapping(bound)
+	X = force_mapping(bound)
 	# this what we differentiate: Qᵀγ = - skew(p - vrotate(offset, inv(q3))) * VRmat(q3) * LᵀVᵀmat(q3) * X' * γ
 	∇off = - ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ) * -∂vrotate∂p(offset, inv(q3))
 	∇p = - ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ)
 	∇body = [∇cf ∇off ∇p]
-	return ∇ineqc, ∇body
+	return ∇contact, ∇body
 end
 
 
@@ -189,7 +189,7 @@ end
 
 function build_pairs(mechanism::Mechanism, traj::Storage{T,N}) where {T,N}
     pairs = []
-    z = getMaxState(traj)
+    z = get_max_state(traj)
     for t = 1:N-1
         z1 = z[t]
         z2 = z[t+1]
@@ -200,14 +200,14 @@ function build_pairs(mechanism::Mechanism, traj::Storage{T,N}) where {T,N}
 end
 
 function generate_dataset(model::Symbol;
-		N::Int=10, H=2.0, Δt=0.05, g=-9.81,
-		opts=InteriorPointOptions(btol=1e-6, rtol=1e-6),
+		N::Int=10, H=2.0, timestep=0.05, g=-9.81,
+		opts=SolverOptions(btol=1e-6, rtol=1e-6),
 		init_kwargs=Dict(), # xlims, vlims, θlims, ωlims...
 		mech_kwargs=Dict(), # cf, radius, side...
 		sleep_ratio = 0.0,
 		show_contact = true,
 		)
-    mechanism = getmechanism(model, Δt=Δt, g=g; mech_kwargs...);
+    mechanism = getmechanism(model, timestep=timestep, g=g; mech_kwargs...);
     trajs = []
     for i = 1:N
 		state = initial_state(model; init_kwargs...)
@@ -219,7 +219,7 @@ function generate_dataset(model::Symbol;
     end
 
 	data = get_simulator_data(mechanism)
-    params = Dict(:N => N, :H => H, :Δt => Δt, :g => g, :data => data)
+    params = Dict(:N => N, :H => H, :timestep => timestep, :g => g, :data => data)
     pairs = build_pairs(mechanism, trajs)
     jldsave(joinpath(@__DIR__, "data", "dataset", datafilename(model; N = N, mech_kwargs...));
         params=params, trajs=trajs, pairs=pairs)
@@ -244,15 +244,15 @@ end
 # Optimization Loss: Evaluation & Gradient
 ################################################################################
 function getSimulatorMaxGradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
-	Δt = mechanism.Δt
-	nu = controldim(mechanism)
+	timestep = mechanism.timestep
+	nu = control_dimension(mechanism)
 	nsd = simdata_dim(mechanism)
-	neqcs = eqcdim(mechanism)
+	njoints = joint_dimension(mechanism)
 	datamat = simdata_jacobian(mechanism)
 	solmat = full_matrix(mechanism.system)
 
 	∇data_z = - solmat \ datamat
-	∇data_vϕ = ∇data_z[neqcs .+ (1:6Nb),:]
+	∇data_vϕ = ∇data_z[njoints .+ (1:6Nb),:]
 	∇data_z̄ = zeros(13Nb,nsd)
 	for (i, body) in enumerate(mechanism.bodies)
 		# Fill in gradients of v25, ϕ25
@@ -261,22 +261,22 @@ function getSimulatorMaxGradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,
 		# Fill in gradients of x3, q3
 		q2 = body.state.q2[1]
 		ϕ25 = body.state.ϕsol[2]
-		∇data_z̄[13*(i-1) .+ (1:3),:] += ∂integrator∂v(Δt) * ∇data_vϕ[6*(i-1) .+ (1:3),:]
-		∇data_z̄[13*(i-1) .+ (7:10),:] += ∂integrator∂ϕ(q2, ϕ25, Δt) * ∇data_vϕ[6*(i-1) .+ (4:6),:]
+		∇data_z̄[13*(i-1) .+ (1:3),:] += ∂integrator∂v(timestep) * ∇data_vϕ[6*(i-1) .+ (1:3),:]
+		∇data_z̄[13*(i-1) .+ (7:10),:] += ∂integrator∂ϕ(q2, ϕ25, timestep) * ∇data_vϕ[6*(i-1) .+ (4:6),:]
 	end
 	return ∇data_z̄
 end
 
 function getSimulatorMaxGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
-		opts=InteriorPointOptions()) where {T,Nn,Ne,Nb,Ni}
+		opts=SolverOptions()) where {T,Nn,Ne,Nb,Ni}
 	step!(mechanism, z, u, opts=opts)
 	∇data_z̄ = getSimulatorMaxGradients(mechanism)
 	return ∇data_z̄
 end
 
-function clean_loss(model::Symbol, pairs, data; Δt=0.05, g=-9.81,
-		opts=InteriorPointOptions(btol=1e-6, rtol=1e-6), n_sample = 20, rot = 0.0)
-	mechanism = getmechanism(model, Δt=Δt, g=g)
+function clean_loss(model::Symbol, pairs, data; timestep=0.05, g=-9.81,
+		opts=SolverOptions(btol=1e-6, rtol=1e-6), n_sample = 20, rot = 0.0)
+	mechanism = getmechanism(model, timestep=timestep, g=g)
 	nsd = simdata_dim(mechanism)
 	set_simulator_data!(mechanism, data)
 
@@ -299,8 +299,8 @@ function clean_loss(model::Symbol, pairs, data; Δt=0.05, g=-9.81,
     return l / n_sample, ∇ ./ n_sample, H ./ n_sample
 end
 
-function loss(mechanism::Mechanism, pair; opts=InteriorPointOptions(btol=1e-6, rtol=1e-6))
-	nu = controldim(mechanism)
+function loss(mechanism::Mechanism, pair; opts=SolverOptions(btol=1e-6, rtol=1e-6))
+	nu = control_dimension(mechanism)
 	nz = maxCoordDim(mechanism)
 	u = zeros(nu)
     z1 = pair[1]

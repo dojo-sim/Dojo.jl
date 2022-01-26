@@ -1,4 +1,4 @@
-function getcartpole(; Δt::T=0.1, g::T=-9.81, spring=0.0, damper=0.0) where {T}
+function getcartpole(; timestep::T=0.1, g::T=-9.81, spring=0.0, damper=0.0) where T
     #TODO: make customizable
     # Parameters
     slider_axis = [0.0; 1.0; 0.0]
@@ -16,28 +16,28 @@ function getcartpole(; Δt::T=0.1, g::T=-9.81, spring=0.0, damper=0.0) where {T}
     links = [slider, pendulum]
 
     # Joint Constraints
-    joint_origin_slider = EqualityConstraint(Prismatic(origin, slider, slider_axis; p1=szeros(Float64, 3), p2=szeros(Float64, 3)))
-    joint_slider_pendulum = EqualityConstraint(Revolute(slider, pendulum, pendulum_axis; p1=szeros(Float64, 3), p2=[0.0; 0.0; 0.5 * pendulum_length]))
-    eqcs = [joint_origin_slider, joint_slider_pendulum]
+    joint_origin_slider = JointConstraint(Prismatic(origin, slider, slider_axis; p1=szeros(Float64, 3), p2=szeros(Float64, 3)))
+    joint_slider_pendulum = JointConstraint(Revolute(slider, pendulum, pendulum_axis; p1=szeros(Float64, 3), p2=[0.0; 0.0; 0.5 * pendulum_length]))
+    joints = [joint_origin_slider, joint_slider_pendulum]
 
     # Mechanism
-    mech = Mechanism(origin, links, eqcs, g=g, Δt=Δt, spring=spring, damper=damper)
+    mech = Mechanism(origin, links, joints, g=g, timestep=timestep, spring=spring, damper=damper)
 
     return mech
 end
 
 function initializecartpole!(mech::Mechanism{T,Nn,Ne,Nb}; mode=:down, pendulum_length=1.0) where {T,Nn,Ne,Nb}
     # origin to slider
-    setPosition!(mech.origin, mech.bodies[3])
-    setVelocity!(mech.bodies[3], v=[0.0; 0.0; 0.0],ω=zeros(3))
+    set_position(mech.origin, mech.bodies[3])
+    set_velocity!(mech.bodies[3], v=[0.0; 0.0; 0.0],ω=zeros(3))
 
     # slider to pendulum
     if mode == :down
-        setPosition!(mech.bodies[3], mech.bodies[4], Δx=[0.0; 0.0; -0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
-        setVelocity!(mech.bodies[4], v=zeros(3), ω=zeros(3))
+        set_position(mech.bodies[3], mech.bodies[4], Δx=[0.0; 0.0; -0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
+        set_velocity!(mech.bodies[4], v=zeros(3), ω=zeros(3))
     elseif mode == :up
-        setPosition!(mech.bodies[3], mech.bodies[4], Δx=[0.0; 0.0; 0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
-        setVelocity!(mech.bodies[4], v=zeros(3), ω=zeros(3))
+        set_position(mech.bodies[3], mech.bodies[4], Δx=[0.0; 0.0; 0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
+        set_velocity!(mech.bodies[4], v=zeros(3), ω=zeros(3))
     end
 end
 

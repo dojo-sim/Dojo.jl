@@ -18,7 +18,7 @@ end
 # Convert the JLD2 files into trajectories and store them into a dataset
 ################################################################################
 
-function toss2z(toss, Δt; S::Int=1)
+function toss2z(toss, timestep; S::Int=1)
 	N = length(toss)
 	M = Int((N-1 - (N-1)%S) / S)
 	z = []
@@ -32,9 +32,9 @@ function toss2z(toss, Δt; S::Int=1)
 		x2 = vec2[1:3]
 		q2 = vec2[4:7]
 
-		v15 = (x2 - x1) / Δt
+		v15 = (x2 - x1) / timestep
 		ϕ15 = ω_finite_difference(UnitQuaternion(q1...),
-			UnitQuaternion(q2...), Δt)
+			UnitQuaternion(q2...), timestep)
 
 		z2 = [x2; v15; q2; ϕ15]
 		push!(z, z2)
@@ -61,18 +61,18 @@ function generate_hardware_dataset(;N::Int=10,
 		S::Int=1,
 		)
 	H = 1.00
-	Δt = 1/148 * S
+	timestep = 1/148 * S
 	gscaled = -9.81*20
 
-    mechanism = getmechanism(:box, Δt=Δt, g=gscaled);
+    mechanism = getmechanism(:box, timestep=timestep, g=gscaled);
     trajs = []
 	pairs = []
     for i = 1:N
 		file = jldopen(joinpath(module_dir(), "examples", "real2sim", "data", "tosses_jld2", "$(i).jld2"))
 		toss = file["toss"]
-		# z = toss2z(toss[1:7], Δt)
-		# z = toss2z(toss[end-10:end], Δt)
-		z = toss2z(toss, Δt, S=S)
+		# z = toss2z(toss[1:7], timestep)
+		# z = toss2z(toss[end-10:end], timestep)
+		z = toss2z(toss, timestep, S=S)
 		storage = generate_storage(mech, z)
 		push!(pairs, build_pairs(z)...)
         push!(trajs, storage)
@@ -88,7 +88,7 @@ function generate_hardware_dataset(;N::Int=10,
 		0.2, 0,0,0, +1, -1, +1,
 		0.2, 0,0,0, -1, +1, +1,
 		0.2, 0,0,0, -1, -1, +1]
-    params = Dict(:N => N, :H => H, :Δt => Δt, :g => gscaled, :data => data)
+    params = Dict(:N => N, :H => H, :timestep => timestep, :g => gscaled, :data => data)
     jldsave(joinpath(@__DIR__, "dataset", datafilename(:hardwarebox; N = N, S = S));
         params=params, trajs=trajs, pairs=pairs)
     return nothing

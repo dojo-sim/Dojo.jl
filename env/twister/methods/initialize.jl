@@ -1,6 +1,6 @@
-function gettwister(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=true,
+function gettwister(; timestep::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=true,
     contact_type=:contact, spring=0.0, damper=0.0, Nb::Int=5,
-    jointtype::Symbol=:Prismatic, h::T=1.0, r::T=0.05) where {T}
+    jointtype::Symbol=:Prismatic, h::T=1.0, r::T=0.05) where T
     # Parameters
     ex = [1.;0.;0.]
     ey = [0.;1.;0.]
@@ -16,25 +16,25 @@ function gettwister(; Δt::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=true,
     bodies = [Box(3r, 2r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nb]
 
     # Constraints
-    jointb1 = EqualityConstraint(Floating(origin, bodies[1], spring = 0.0, damper = 0.0)) # TODO remove the spring and damper from floating base
+    jointb1 = JointConstraint(Floating(origin, bodies[1], spring = 0.0, damper = 0.0)) # TODO remove the spring and damper from floating base
     if Nb > 1
-        eqcs = [EqualityConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], axes[i%3+1]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nb]
-        # eqcs = [EqualityConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], axes[1]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nb]
-        # eqcs = [EqualityConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], axes[3]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nb]
-        eqcs = [jointb1; eqcs]
+        joints = [JointConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], axes[i%3+1]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nb]
+        # joints = [JointConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], axes[1]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nb]
+        # joints = [JointConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], axes[3]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nb]
+        joints = [jointb1; joints]
     else
-        eqcs = [jointb1]
+        joints = [jointb1]
     end
 
     if contact
         n = Nb
         normal = [[0;0;1.0] for i = 1:n]
         cf = cf * ones(n)
-        ineqcs1 = contactconstraint(bodies[1], normal[1], cf=cf[1], p=vert11, contact_type=contact_type) # to avoid duplicating the contact points
-        ineqcs2 = contactconstraint(bodies, normal, cf=cf, p=fill(vert12, n), contact_type=contact_type)
-        mech = Mechanism(origin, bodies, eqcs, [ineqcs1; ineqcs2], g = g, Δt = Δt)
+        contacts1 = contact_constraint(bodies[1], normal[1], cf=cf[1], p=vert11, contact_type=contact_type) # to avoid duplicating the contact points
+        contacts2 = contact_constraint(bodies, normal, cf=cf, p=fill(vert12, n), contact_type=contact_type)
+        mech = Mechanism(origin, bodies, joints, [contacts1; contacts2], g = g, timestep = timestep)
     else
-        mech = Mechanism(origin, bodies, eqcs, g = g, Δt = Δt, spring=spring, damper=damper)
+        mech = Mechanism(origin, bodies, joints, g = g, timestep = timestep, spring=spring, damper=damper)
     end
     return mech
 end
@@ -50,13 +50,13 @@ function initializetwister!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{
     vert11 = [0.;0.; h/2]
     vert12 = -vert11
     # set position and velocities
-    setPosition!(mechanism.origin, body1, p2 = x, Δq = q1)
-    setVelocity!(body1, v = v, ω = ω)
+    set_position(mechanism.origin, body1, p2 = x, Δq = q1)
+    set_velocity!(body1, v = v, ω = ω)
 
     previd = body1.id
     for (i,body) in enumerate(Iterators.drop(mechanism.bodies, 1))
-        setPosition!(getbody(mechanism, previd), body, p1 = vert12, p2 = vert11)
-        setVelocity!(getbody(mechanism, previd), body, p1 = vert12, p2 = vert11,
+        set_position(get_body(mechanism, previd), body, p1 = vert12, p2 = vert11)
+        set_velocity!(get_body(mechanism, previd), body, p1 = vert12, p2 = vert11,
                 Δv = Δv, Δω = Δω)
         previd = body.id
     end

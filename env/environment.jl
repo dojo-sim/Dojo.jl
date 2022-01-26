@@ -34,8 +34,8 @@ struct Environment{X,T,M,A,O,I}
     info::I
     rng::Vector{MersenneTwister}
     vis::Visualizer
-    opts_step::InteriorPointOptions{T}
-    opts_grad::InteriorPointOptions{T}
+    opts_step::SolverOptions{T}
+    opts_grad::SolverOptions{T}
 end
 
 function reset(env::Environment{X}; x=nothing) where X
@@ -46,7 +46,7 @@ function reset(env::Environment{X}; x=nothing) where X
         if env.mode == :min
             env.x .= getMinState(env.mechanism)
         elseif env.mode == :max
-            env.x .= getMaxState(env.mechanism)
+            env.x .= get_max_state(env.mechanism)
         end
         env.u_prev .= 0.0
     end
@@ -61,7 +61,7 @@ end
 
 function step(env::Environment, x, u; diff=false)
     mechanism = env.mechanism
-    Δt = mechanism.Δt
+    timestep = mechanism.timestep
 
     x0 = x
     # u = clip(env.aspace, u) # control limits
@@ -124,7 +124,7 @@ mutable struct BoxSpace{T,N} <: Space{T,N,}
     dtype::DataType # this is always T, it's needed to interface with Stable-Baselines
 end
 
-function BoxSpace(n::Int; low::AbstractVector{T} = -ones(n), high::AbstractVector{T} = ones(n)) where {T}
+function BoxSpace(n::Int; low::AbstractVector{T} = -ones(n), high::AbstractVector{T} = ones(n)) where T
     return BoxSpace{T,n}(n, low, high, (n,), T)
 end
 

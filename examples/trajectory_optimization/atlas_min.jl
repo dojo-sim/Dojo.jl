@@ -37,7 +37,7 @@ d = 0
 # ## reference trajectory
 N = 1
 initialize!(env.mechanism, :atlas)
-xref = atlas_trajectory(env.mechanism; Δt=dt, r=0.0, x=0.03, z=0.85, N=12, Ncycles=N)
+xref = atlas_trajectory(env.mechanism; timestep=dt, r=0.0, x=0.03, z=0.85, N=12, Ncycles=N)
 zref = [min2max(env.mechanism, x) for x in xref]
 visualize(env, xref)
 #
@@ -46,18 +46,18 @@ visualize(env, xref)
 # center_of_mass(env.mechanism, storage, 1)
 
 ## gravity compensation TODO: solve optimization problem instead
-mech = getmechanism(:atlas, Δt=dt, g=gravity, cf=cf, damper=1000.0,
+mech = getmechanism(:atlas, timestep=dt, g=gravity, cf=cf, damper=1000.0,
 	spring=spring, model_type=model_type)
 initialize!(mech, :atlas)
 storage = simulate!(mech, 0.10, record=true, verbose=false)
 visualize(mech, storage, vis=env.vis)
 # ugc = gravity_compensation(mech)
 # u_control = ugc[6 .+ (1:15)]
-F_damper = get_damperforce(env.mechanism)
-u_damper = F_damper * env.mechanism.Δt
+F_damper = get_apply_damper(env.mechanism)
+u_damper = F_damper * env.mechanism.timestep
 u_control = u_damper[6 .+ (1:15)]
 
-mech = getmechanism(:atlas, Δt=dt, g=gravity, cf=cf, damper=0.0,
+mech = getmechanism(:atlas, timestep=dt, g=gravity, cf=cf, damper=0.0,
 	spring=spring, model_type=model_type)
 function controller!(mechanism, k)
     set_control!(mechanism, u_damper)
@@ -67,26 +67,26 @@ initialize!(mech, :atlas, tran=[0,0,0.0])
 storage = simulate!(mech, 0.50, controller!, record=true, verbose=false)
 visualize(mech, storage, vis=env.vis)
 
-function get_damperforce(mechanism::Mechanism{T}) where {T}
-	eqcs = mechanism.eqconstraints
+function get_apply_damper(mechanism::Mechanism{T}) where T
+	joints = mechanism.joints
 	# set the controls in the equality constraints
 	off = 0
-	nu = controldim(mechanism)
+	nu = control_dimension(mechanism)
 	u = zeros(nu)
-	for eqc in eqcs
-		pbody = getbody(mechanism, eqc.parentid)
+	for joint in joints
+		pbody = get_body(mechanism, joint.parentid)
 		if typeof(pbody) <: Body
-			F = damperforce(mechanism, eqc, pbody)
+			F = apply_damper(mechanism, joint, pbody)
 			oF = 0
-			for joint in eqc.constraints
-				nf, nF = size(nullspacemat(joint))
-				u[off .+ (1:nf)] .= nullspacemat(joint) * F[oF .+ (1:nF)]
+			for joint in joint.constraints
+				nf, nF = size(nullspace_mask(joint))
+				u[off .+ (1:nf)] .= nullspace_mask(joint) * F[oF .+ (1:nF)]
 				off += nf
 				oF += nF
 			end
 		else
-			for joint in eqc.constraints
-				nf, nF = size(nullspacemat(joint))
+			for joint in joint.constraints
+				nf, nF = size(nullspace_mask(joint))
 				off += nf
 			end
 		end
@@ -95,15 +95,15 @@ function get_damperforce(mechanism::Mechanism{T}) where {T}
 end
 
 
-# eqc0 = env.mechanism.eqconstraints.values[1]
-# body0 = getbody(env.mechanism, eqc0.parentid)
-# df = damperforce(mech, eqc0, body0)
-# nullspacemat(eqc0.constraints[1])# * df[1:3]
-# nullspacemat(eqc0.constraints[2])# * df[4:6]
-# nf, nF = size(nullspacemat(eqc0.constraints[1]))
+# joint0 = env.mechanism.joints.values[1]
+# body0 = get_body(env.mechanism, joint0.parentid)
+# df = apply_damper(mech, joint0, body0)
+# nullspace_mask(joint0.constraints[1])# * df[1:3]
+# nullspace_mask(joint0.constraints[2])# * df[4:6]
+# nf, nF = size(nullspace_mask(joint0.constraints[1]))
 # nf
 # null
-# u = get_damperforce(env.mechanism)
+# u = get_apply_damper(env.mechanism)
 
 # ## horizon
 T = N * (25 - 1) + 1

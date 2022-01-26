@@ -15,21 +15,21 @@ open(vis)
 # no control
 ################################################################################
 
-function astronaut_simulation(vis::Visualizer; Δt=1e-2, tsim=1.0, g=0.0,
+function astronaut_simulation(vis::Visualizer; timestep=1e-2, tsim=1.0, g=0.0,
         spring=0.0, damper=0.0, seed::Int=100, ϵ=1e-14, display::Bool = true)
 
     Random.seed!(seed)
-    mech = getmechanism(:humanoid, Δt=Δt, g=g, spring=spring, damper=damper, contact=false)
+    mech = getmechanism(:humanoid, timestep=timestep, g=g, spring=spring, damper=damper, contact=false)
     initialize!(mech, :humanoid)
 
     # Initialize bodies with random velocities
     for body in mech.bodies
         v = rand(3) .- 0.5
         v ./= norm(v)
-        setVelocity!(body, v = v)
+        set_velocity!(body, v = v)
     end
 
-    tcompute = @elapsed storage = simulate!(mech, tsim, record=true, opts=InteriorPointOptions(rtol=ϵ, btol=ϵ))
+    tcompute = @elapsed storage = simulate!(mech, tsim, record=true, opts=SolverOptions(rtol=ϵ, btol=ϵ))
 
     return mech, storage, tcompute
 end
@@ -39,9 +39,9 @@ solver_tolerance = 1.0e-14
 timestep = [0.05, 0.01, 0.005]
 tsim = 10.0
 storage = []
-mech, _ = astronaut_simulation(vis, tsim=tsim, Δt=timestep[1], ϵ=solver_tolerance)
+mech, _ = astronaut_simulation(vis, tsim=tsim, timestep=timestep[1], ϵ=solver_tolerance)
 for t in timestep
-    mech, data, tcompute = astronaut_simulation(vis, tsim=tsim, Δt=t, ϵ=solver_tolerance)
+    mech, data, tcompute = astronaut_simulation(vis, tsim=tsim, timestep=t, ϵ=solver_tolerance)
     push!(storage, data)
 end
 
@@ -53,7 +53,7 @@ color = [:magenta, :orange, :cyan];
 
 # energy
 const Dojo = Main
-me = [Dojo.mechanicalEnergy(mech, s)[2:end] for s in storage]
+me = [Dojo.mechanical_energy(mech, s)[2:end] for s in storage]
 plt = plot(xlabel="time (s)", ylabel="energy drift");
 for (i, e) in enumerate(me)
     tt = [j * timestep[i] for j = 1:length(e)]
@@ -102,11 +102,11 @@ PGF.save(joinpath(dir, "energy_drift.tikz"), a1)
 ##########
 # Visualization
 color = RGBA(255.0/255.0,0.0,255.0,1.0);
-z = getMaxState(storage)
+z = get_max_state(storage)
 z = [[z[1] for t = 1:100]..., z..., [z[end] for t = 1:100]...]
 build_robot(vis, mech, color=color)
 T = length(z)
-anim = MeshCat.Animation(convert(Int, floor(1.0 / Δt0)))
+anim = MeshCat.Animation(convert(Int, floor(1.0 / timestep0)))
 for t = 1:T
     MeshCat.atframe(anim, t) do
         set_robot(vis, mech, z[t])

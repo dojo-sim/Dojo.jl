@@ -1,71 +1,46 @@
-function nameiddict(mechanism::Mechanism)
-    dict = Dict{String,Int64}()
-    for (id,body) in pairs(mechanism.bodies)
-        if body.name != ""
-            dict[body.name] = id
-        end
+function minimal_coordinates(mechanism::Mechanism)
+    d = Dict()
+    for joint in mechanism.joints
+        push!(d, joint.id => minimal_coordinates(mechanism, joint))
     end
-    for (id,eqc) in pairs(mechanism.eqconstraints)
-        if eqc.name != ""
-            dict[eqc.name] = id
-        end
-    end
-    for (id,ineqc) in pairs(mechanism.ineqconstraints)
-        if ineqc.name != ""
-            dict[ineqc.name] = id
-        end
-    end
-
-    return dict
+    return d
 end
 
-function minimalCoordinates(mechanism::Mechanism)
-    keys = mechanism.eqconstraints.keys
-    values = Vector{SVector}()
-
-    for eqc in mechanism.eqconstraints
-        push!(values, minimalCoordinates(mechanism, eqc))
-    end
-
-    return UnitDict(keys, values)
-
-end
-
-function minimalCoordinatesVector(mechanism::Mechanism{T}) where {T}
-    N = controldim(mechanism)
+function minimal_configuration_vector(mechanism::Mechanism{T}) where T
+    N = control_dimension(mechanism)
     x = zeros(T,N)
     off = 0
-    for eqc in mechanism.eqconstraints
-        n = controldim(eqc)
-        x[off .+ (1:n)] += minimalCoordinates(mechanism, eqc)
+    for joint in mechanism.joints
+        n = control_dimension(joint)
+        x[off .+ (1:n)] += minimal_coordinates(mechanism, joint)
         off += n
     end
     return x
 end
 
-function minimalVelocitiesVector(mechanism::Mechanism{T}) where {T}
-    N = controldim(mech)
+function minimal_velocity_vector(mechanism::Mechanism{T}) where T
+    N = control_dimension(mech)
     x = zeros(T,N)
     off = 0
-    for eqc in mechanism.eqconstraints
-        n = controldim(eqc)
-        x[off .+ (1:n)] += minimalVelocities(mechanism, eqc)
+    for joint in mechanism.joints
+        n = control_dimension(joint)
+        x[off .+ (1:n)] += minimal_velocities(mechanism, joint)
         off += n
     end
     return x
 end
 
-function setPosition!(mechanism::Mechanism, dict::UnitDict)
-    for (id,eqc) in pairs(mechanism.eqconstraints)
-        setPosition!(mechanism, eqc, dict[id])
+function set_position(mechanism::Mechanism, dict)
+    for (id,joint) in pairs(mechanism.joints)
+        set_position(mechanism, joint, dict[id])
     end
 
     return
 end
 
-function setVelocity!(mechanism::Mechanism, dict::UnitDict)
-    for (id,eqc) in pairs(mechanism.eqconstraints)
-        setVelocity!(mechanism, eqc, dict[id])
+function set_velocity!(mechanism::Mechanism, dict)
+    for (id,joint) in pairs(mechanism.joints)
+        set_velocity!(mechanism, joint, dict[id])
     end
 
     return
@@ -75,22 +50,21 @@ function zeroVelocity!(mechanism::Mechanism)
     # velocities
     for (i, body) in enumerate(mechanism.bodies)
         try
-            setVelocity!(body, v=zeros(3), ω=zeros(3))
+            set_velocity!(body, v=zeros(3), ω=zeros(3))
         catch
             nothing
         end
     end
 end
 
-function setForce!(mechanism::Mechanism, dict::UnitDict)
-    for (id,eqc) in pairs(mechanism.eqconstraints)
-        setForce!(eqc, dict[id])
+function set_input!(mechanism::Mechanism, dict)
+    for (id,joint) in pairs(mechanism.joints)
+        set_input!(joint, dict[id])
     end
 
     return
 end
 
-@inline function currentasknot!(mechanism::Mechanism)
-    foreach(currentasknot!, mechanism.bodies)
-    return
+@inline function set_current!(mechanism::Mechanism)
+    for body in mechanism.bodies set_current!(body) end
 end

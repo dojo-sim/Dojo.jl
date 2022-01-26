@@ -20,14 +20,14 @@ using IterativeLQR
 
 # System
 gravity = -9.81
-Δt = 0.05
-mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = 0.5, damper = 10.0, spring = 0.0, pinned=true, contact=false)
+timestep = 0.05
+mech = getmechanism(:quadruped, timestep = timestep, g = gravity, cf = 0.5, damper = 10.0, spring = 0.0, pinned=true, contact=false)
 initialize!(mech, :quadruped, tran = [0,0,0.], v = [0.0,0,0.], pinned=true)
 @elapsed storage = simulate!(mech, 2.0, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 
 T = 20
-n = minCoordDim(mech)
+n = minimal_dimension(mech)
 m = 12
 d = 0
 xref = quadruped_trajectory(mech, r = 0.05, z = 0.29; Δx = -0.04, Δfront = 0.10, N = Int(T/2), Ncycles = 1, pinned=true)
@@ -41,16 +41,16 @@ visualizeMaxCoord(mech, min2max(mech, z1), vis)
 
 function gravity_compensation(mechanism::Mechanism)
     # only works with revolute joints for now
-    nu = controldim(mechanism)
+    nu = control_dimension(mechanism)
     u = zeros(nu)
     off  = 0
-    for eqc in mechanism.eqconstraints
-        nu = controldim(eqc)
-        if eqc.parentid != nothing
-            body = getbody(mechanism, eqc.parentid)
-            rot = eqc.constraints[2]
-            A = Matrix(nullspacemat(rot))
-            Fτ = springforce(mechanism, eqc, body)
+    for joint in mechanism.joints
+        nu = control_dimension(joint)
+        if joint.parentid != nothing
+            body = get_body(mechanism, joint.parentid)
+            rot = joint.constraints[2]
+            A = Matrix(nullspace_mask(rot))
+            Fτ = apply_spring(mechanism, joint, body)
             F = Fτ[1:3]
             τ = Fτ[4:6]
             u[off .+ (1:nu)] = -A * τ
@@ -62,13 +62,13 @@ function gravity_compensation(mechanism::Mechanism)
     return u
 end
 
-mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = 0.8, damper = 1000.0, spring = 30.0)
+mech = getmechanism(:quadruped, timestep = timestep, g = gravity, cf = 0.8, damper = 1000.0, spring = 30.0)
 initialize!(mech, :quadruped)
 @elapsed storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 ugc = gravity_compensation(mech)
 
-mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = 0.8, damper = 5.0, spring = 0.0)
+mech = getmechanism(:quadruped, timestep = timestep, g = gravity, cf = 0.8, damper = 5.0, spring = 0.0)
 
 u_control = ugc[6 .+ (1:12)]
 u_mask = [zeros(12,6) I(m)]
@@ -99,7 +99,7 @@ end
 
 
 # Time
-h = mech.Δt
+h = mech.timestep
 dyn = Dynamics(fd, fdx, fdu, n, n, m, d)
 model = [dyn for t = 1:T-1]
 
@@ -114,8 +114,8 @@ visualize(mech, storage; vis = vis)
 
 # Objective
 qt = [0.3; 0.05; 0.05; 0.01 * ones(3); 0.01 * ones(3); 0.01 * ones(3); fill([0.2, 0.001], 12)...]
-ots = [(x, u, w) -> transpose(x - zref[t]) * Diagonal(Δt * qt) * (x - zref[t]) + transpose(u) * Diagonal(Δt * 0.01 * ones(m)) * u for t = 1:T-1]
-oT = (x, u, w) -> transpose(x - zref[end]) * Diagonal(Δt * qt) * (x - zref[end])
+ots = [(x, u, w) -> transpose(x - zref[t]) * Diagonal(timestep * qt) * (x - zref[t]) + transpose(u) * Diagonal(timestep * 0.01 * ones(m)) * u for t = 1:T-1]
+oT = (x, u, w) -> transpose(x - zref[end]) * Diagonal(timestep * qt) * (x - zref[end])
 
 cts = Cost.(ots, n, m, d)
 cT = Cost(oT, n, 0, 0)

@@ -20,14 +20,14 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 # Build mechanism
-mech = getmechanism(:npendulum, Δt = 0.05, g = -9.81, Nb = 5)
+mech = getmechanism(:npendulum, timestep = 0.05, g = -9.81, Nb = 5)
 initialize!(mech, :npendulum, ϕ1 = 0.1*pi)
 
 function cont!(mechanism, k; u = 1.0)
-    for (i, eqc) in enumerate(mechanism.eqconstraints)
-        nu = controldim(eqc, ignore_floating_base = false)
-        su = mechanism.Δt * u * sones(nu)
-        setForce!(eqc, su)
+    for (i, eqc) in enumerate(mechanism.joints)
+        nu = control_dimension(eqc, ignore_floating_base = false)
+        su = mechanism.timestep * u * sones(nu)
+        set_input!(eqc, su)
     end
     return
 end
@@ -42,14 +42,14 @@ control_datamat(mech)
 ################################################################################
 
 # Set data
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
+data = get_data(mech)
+set_data!(mech, data)
+sol = get_solution(mech)
 Nb = length(collect(mech.bodies))
-attjac = attitudejacobian(data, Nb)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
-setentries!(mech)
+set_entries!(mech)
 datamat = full_data_matrix(deepcopy(mech))
 solmat = full_matrix(mech.system)
 sensi = - (solmat \ datamat)
@@ -83,17 +83,17 @@ norm((datamat + fd_datamat)[6:11, 13:13], Inf)
 datamat[6:11, 1:3]
 -fd_datamat[6:11, 1:3]
 
-joint = mech.eqconstraints[1].constraints[1]
+joint = mech.joints[1].constraints[1]
 xb = mech.bodies[2].state.x2[1]
 qb = mech.bodies[2].state.q2[1]
 
-length(mech.eqconstraints[1])
+length(mech.joints[1])
 length(joint)
-fw = w -> transpose(∂g∂ʳposb(joint, w, qb)[1:3, 4:6]) * constraintmat(joint)' * mech.eqconstraints[1].λsol[2][1:3]
+fw = w -> transpose(∂g∂ʳposb(joint, w, qb)[1:3, 4:6]) * constraint_mask(joint)' * mech.joints[1].λsol[2][1:3]
 ForwardDiff.jacobian(fw, xb)
 
 using FiniteDiff
-fz = z -> -transpose(∂g∂ʳposb(joint, xb, UnitQuaternion(z..., false))[1:3, 1:3]) * constraintmat(joint)' * mech.eqconstraints[1].λsol[2][1:3]
+fz = z -> -transpose(∂g∂ʳposb(joint, xb, UnitQuaternion(z..., false))[1:3, 1:3]) * constraint_mask(joint)' * mech.joints[1].λsol[2][1:3]
 FiniteDiff.finite_difference_jacobian(fz, [qb.w, qb.x, qb.y, qb.z]) * LVᵀmat(qb)
 ForwardDiff.jacobian(fz, [qb.w, qb.x, qb.y, qb.z]) #* LVᵀmat(qb)
 fdjac(fz, [qb.w, qb.x, qb.y, qb.z]) #* LVᵀmat(qb)
@@ -172,57 +172,57 @@ norm(solmat, Inf)
 # Finite Diff
 ################################################################################
 include(joinpath(@__DIR__, "finite_diff.jl"))
-mech.Δt
-Δt = 0.01
-rot1 = mech.eqconstraints[1].constraints[2]
-rot2 = mech.eqconstraints[2].constraints[2]
+mech.timestep
+timestep = 0.01
+rot1 = mech.joints[1].constraints[2]
+rot2 = mech.joints[2].constraints[2]
 origin = mech.origin
 body1 = collect(mech.bodies)[1]
 body2 = collect(mech.bodies)[2]
 
-jac0, jac1 = finitediff_vel(rot2, body1, body2, Δt, springforcea, ∂springforcea∂vela, diff_body = :parent)
+jac0, jac1 = finitediff_vel(rot2, body1, body2, timestep, spring_parent, spring_parent_jacobian_velocity_parent, diff_body = :parent)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_vel(rot2, body1, body2, Δt, damperforcea, ∂damperforcea∂vela, diff_body = :parent)
+jac0, jac1 = finitediff_vel(rot2, body1, body2, timestep, damper_parent, damper_parent_jacobian_velocity_parent, diff_body = :parent)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_vel(rot2, body1, body2, Δt, springforcea, ∂springforcea∂velb, diff_body = :child)
+jac0, jac1 = finitediff_vel(rot2, body1, body2, timestep, spring_parent, spring_parent_jacobian_velocity_child, diff_body = :child)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_vel(rot2, body1, body2, Δt, damperforcea, ∂damperforcea∂velb, diff_body = :child)
+jac0, jac1 = finitediff_vel(rot2, body1, body2, timestep, damper_parent, damper_parent_jacobian_velocity_child, diff_body = :child)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_vel(rot2, body1, body2, Δt, springforceb, ∂springforceb∂velb, diff_body = :child)
+jac0, jac1 = finitediff_vel(rot2, body1, body2, timestep, spring_child, spring_child_jacobian_velocity_child, diff_body = :child)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_vel(rot2, body1, body2, Δt, damperforceb, ∂damperforceb∂velb, diff_body = :child)
+jac0, jac1 = finitediff_vel(rot2, body1, body2, timestep, damper_child, damper_child_configuration_velocity_child, diff_body = :child)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_vel(rot2, body1, body2, Δt, springforceb, ∂springforceb∂vela, diff_body = :parent)
+jac0, jac1 = finitediff_vel(rot2, body1, body2, timestep, spring_child, spring_child_configuration_velocity_parent, diff_body = :parent)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_vel(rot2, body1, body2, Δt, damperforceb, ∂damperforceb∂vela, diff_body = :parent)
+jac0, jac1 = finitediff_vel(rot2, body1, body2, timestep, damper_child, damper_child_configuration_velocity_parent, diff_body = :parent)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_vel(rot1, origin, body1, Δt, springforceb, ∂springforceb∂velb, diff_body = :child)
+jac0, jac1 = finitediff_vel(rot1, origin, body1, timestep, spring_child, spring_child_jacobian_velocity_child, diff_body = :child)
 @test norm(jac0 - jac1, Inf) < 1e-8
 jac0
 jac1
-jac0, jac1 = finitediff_vel(rot1, origin, body1, Δt, damperforceb, ∂damperforceb∂velb, diff_body = :child)
+jac0, jac1 = finitediff_vel(rot1, origin, body1, timestep, damper_child, damper_child_configuration_velocity_child, diff_body = :child)
 @test norm(jac0 - jac1, Inf) < 1e-8
 
 
-jac0, jac1 = finitediff_pos(rot2, body1, body2, Δt, springforcea, ∂springforcea∂posa, diff_body = :parent)
+jac0, jac1 = finitediff_pos(rot2, body1, body2, timestep, spring_parent, spring_parent_jacobian_configuration_parent, diff_body = :parent)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_pos(rot2, body1, body2, Δt, damperforcea, ∂damperforcea∂posa, diff_body = :parent)
+jac0, jac1 = finitediff_pos(rot2, body1, body2, timestep, damper_parent, damper_parent_jacobian_configuration_parent, diff_body = :parent)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_pos(rot2, body1, body2, Δt, springforcea, ∂springforcea∂posb, diff_body = :child)
+jac0, jac1 = finitediff_pos(rot2, body1, body2, timestep, spring_parent, spring_parent_jacobian_configuration_child, diff_body = :child)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_pos(rot2, body1, body2, Δt, damperforcea, ∂damperforcea∂posb, diff_body = :child)
+jac0, jac1 = finitediff_pos(rot2, body1, body2, timestep, damper_parent, damper_parent_jacobian_configuration_child, diff_body = :child)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_pos(rot2, body1, body2, Δt, springforceb, ∂springforceb∂posb, diff_body = :child)
+jac0, jac1 = finitediff_pos(rot2, body1, body2, timestep, spring_child, spring_child_jacobian_configuration_child, diff_body = :child)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_pos(rot2, body1, body2, Δt, damperforceb, ∂damperforceb∂posb, diff_body = :child)
+jac0, jac1 = finitediff_pos(rot2, body1, body2, timestep, damper_child, damper_child_jacobian_configuration_child, diff_body = :child)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_pos(rot2, body1, body2, Δt, springforceb, ∂springforceb∂posa, diff_body = :parent)
+jac0, jac1 = finitediff_pos(rot2, body1, body2, timestep, spring_child, spring_child_jacobian_configuraion_parent, diff_body = :parent)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_pos(rot2, body1, body2, Δt, damperforceb, ∂damperforceb∂posa, diff_body = :parent)
+jac0, jac1 = finitediff_pos(rot2, body1, body2, timestep, damper_child, damper_child_jacobian_configuration_parent, diff_body = :parent)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_pos(rot1, origin, body1, Δt, springforceb, ∂springforceb∂posb, diff_body = :child)
+jac0, jac1 = finitediff_pos(rot1, origin, body1, timestep, spring_child, spring_child_jacobian_configuration_child, diff_body = :child)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_pos(rot1, origin, body1, Δt, damperforceb, ∂damperforceb∂posb, diff_body = :child)
+jac0, jac1 = finitediff_pos(rot1, origin, body1, timestep, damper_child, damper_child_jacobian_configuration_child, diff_body = :child)
 @test norm(jac0 - jac1, Inf) < 1e-8
 
 
@@ -258,11 +258,11 @@ fd_sensi = finitediff_sensitivity(mech, data, δ = 1e-5, ϵr = 1e-14, ϵb = 1e-1
 plot(Gray.(sensi))
 plot(Gray.(fd_sensi))
 
-# diagonal∂damper∂ʳvel(mech.eqconstraints[1],
-# offdiagonal∂damper∂ʳvel(jt0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, Δt0)
-# diagonal∂damper∂ʳvel(mech, mech.eqconstraints[1], mech.bodies[2])
-# offdiagonal∂damper∂ʳvel(mech.eqconstraints[1].constraints[1], mech.origin, mech.bodies[2], mech.bodies[2].id, mech.Δt)
-# offdiagonal∂damper∂ʳvel(mech.eqconstraints[1].constraints[2], mech.origin, mech.bodies[2], mech.bodies[2].id, mech.Δt)
+# diagonal∂damper∂ʳvel(mech.joints[1],
+# offdiagonal∂damper∂ʳvel(jt0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, timestep0)
+# diagonal∂damper∂ʳvel(mech, mech.joints[1], mech.bodies[2])
+# offdiagonal∂damper∂ʳvel(mech.joints[1].constraints[1], mech.origin, mech.bodies[2], mech.bodies[2].id, mech.timestep)
+# offdiagonal∂damper∂ʳvel(mech.joints[1].constraints[2], mech.origin, mech.bodies[2], mech.bodies[2].id, mech.timestep)
 
 # mech.bodies
 
@@ -272,7 +272,7 @@ plot(Gray.(fd_sensi))
 
 # include("fd_tools.jl")
 
-# j0 = mech.eqconstraints[1]
+# j0 = mech.joints[1]
 # jt0 = j0.constraints[1]
 # jr0 = j0.constraints[2]
 # origin0 = mech.origin
@@ -280,15 +280,15 @@ plot(Gray.(fd_sensi))
 # bodyb0 = mech.bodies[4]
 # childida0 = 3
 # childidb0 = 4
-# Δt0 = mech.Δt
-# damperforcea(jt0, bodya0, bodyb0, childidb0, Δt0)
-# damperforceb(jt0, bodya0, bodyb0, childidb0, Δt0)
-# damperforceb(jr0, origin0, bodya0, childida0, Δt0)
+# timestep0 = mech.timestep
+# damper_parent(jt0, bodya0, bodyb0, childidb0, timestep0)
+# damper_child(jt0, bodya0, bodyb0, childidb0, timestep0)
+# damper_child(jr0, origin0, bodya0, childida0, timestep0)
 
-# x2a0, q2a0 = posargs3(bodya0.state, Δt0)
-# x2b0, q2b0 = posargs3(bodyb0.state, Δt0)
-# x1a0, v1a0, q1a0, ω1a0 = fullargssol(bodya0.state)
-# x1b0, v1b0, q1b0, ω1b0 = fullargssol(bodyb0.state)
+# x2a0, q2a0 = next_configuration(bodya0.state, timestep0)
+# x2b0, q2b0 = next_configuration(bodyb0.state, timestep0)
+# x1a0, v1a0, q1a0, ω1a0 = current_configuration_velocity(bodya0.state)
+# x1b0, v1b0, q1b0, ω1b0 = current_configuration_velocity(bodyb0.state)
 
 # Random.seed!(100)
 # x2a0 = rand(3)
@@ -325,17 +325,17 @@ plot(Gray.(fd_sensi))
 # # jt0.spring = 1e1 .* rand(3)
 # # jt0.damper = 1e1 .* rand(3)
 
-# damperforcea(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, Δt0)
-# damperforceb(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, Δt0)
-# damperforceb(jt0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, Δt0)
+# damper_parent(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, timestep0)
+# damper_child(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, timestep0)
+# damper_child(jt0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, timestep0)
 
-# Dtra1 = diagonal∂damper∂ʳvel(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, Δt0)
-# Dtra2 = offdiagonal∂damper∂ʳvel(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, Δt0)
-# Dtra3 = offdiagonal∂damper∂ʳvel(jt0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, Δt0)
+# Dtra1 = diagonal∂damper∂ʳvel(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, timestep0)
+# Dtra2 = offdiagonal∂damper∂ʳvel(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, timestep0)
+# Dtra3 = offdiagonal∂damper∂ʳvel(jt0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, timestep0)
 
-# fd_Dtra1 = fd_diagonal∂damper∂ʳvel(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, Δt0)
-# fd_Dtra2 = fd_offdiagonal∂damper∂ʳvel(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, Δt0)
-# fd_Dtra3 = fd_offdiagonal∂damper∂ʳvel(jt0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, Δt0)
+# fd_Dtra1 = fd_diagonal∂damper∂ʳvel(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, timestep0)
+# fd_Dtra2 = fd_offdiagonal∂damper∂ʳvel(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, timestep0)
+# fd_Dtra3 = fd_offdiagonal∂damper∂ʳvel(jt0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, timestep0)
 
 # norm(Dtra1 - fd_Dtra1)
 # norm(Dtra2 - fd_Dtra2)
@@ -362,17 +362,17 @@ plot(Gray.(fd_sensi))
 # # jr0.spring = 1e1 .* rand(3)
 # # jr0.damper = 1e1 .* rand(3)
 
-# damperforcea(jr0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, Δt0)
-# damperforceb(jr0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, Δt0)
-# damperforceb(jr0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, Δt0)
+# damper_parent(jr0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, timestep0)
+# damper_child(jr0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, timestep0)
+# damper_child(jr0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, timestep0)
 
-# Drot1 = diagonal∂damper∂ʳvel(jr0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, Δt0)
-# Drot2 = offdiagonal∂damper∂ʳvel(jr0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, Δt0)
-# Drot3 = offdiagonal∂damper∂ʳvel(jr0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, Δt0)
+# Drot1 = diagonal∂damper∂ʳvel(jr0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, timestep0)
+# Drot2 = offdiagonal∂damper∂ʳvel(jr0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, timestep0)
+# Drot3 = offdiagonal∂damper∂ʳvel(jr0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, timestep0)
 
-# fd_Drot1 = fd_diagonal∂damper∂ʳvel(jr0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, Δt0)
-# fd_Drot2 = fd_offdiagonal∂damper∂ʳvel(jr0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, Δt0)
-# fd_Drot3 = fd_offdiagonal∂damper∂ʳvel(jr0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, Δt0)
+# fd_Drot1 = fd_diagonal∂damper∂ʳvel(jr0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, timestep0)
+# fd_Drot2 = fd_offdiagonal∂damper∂ʳvel(jr0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, timestep0)
+# fd_Drot3 = fd_offdiagonal∂damper∂ʳvel(jr0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, timestep0)
 
 # norm(Drot1 - fd_Drot1)
 # norm(Drot2 - fd_Drot2)
@@ -380,7 +380,7 @@ plot(Gray.(fd_sensi))
 
 # function der1(ω1a, q2a, ω1b, q2b)
 #     invqbqa = q2b\q2a
-#     A = nullspacemat(jr0)
+#     A = nullspace_mask(jr0)
 #     AᵀA = zerodimstaticadjoint(A) * A
 #     return 2*VLmat(invqbqa)*RVᵀmat(invqbqa)* AᵀA * Diagonal(jr0.damper) * AᵀA
 # end
@@ -439,17 +439,17 @@ plot(Gray.(fd_sensi))
 # # jt0.spring = 1e1 .* rand(3)
 # # jt0.damper = 1e1 .* rand(3)
 
-# springforcea(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, Δt0)
-# springforceb(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, Δt0)
-# springforceb(jt0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, Δt0)
+# spring_parent(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, timestep0)
+# spring_child(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, timestep0)
+# spring_child(jt0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, timestep0)
 
-# Dspr1 = diagonal∂spring∂ʳvel(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, Δt0)
-# Dspr2 = offdiagonal∂spring∂ʳvel(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, Δt0)
-# Dspr3 = offdiagonal∂spring∂ʳvel(jt0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, Δt0)
+# Dspr1 = diagonal∂spring∂ʳvel(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, timestep0)
+# Dspr2 = offdiagonal∂spring∂ʳvel(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, timestep0)
+# Dspr3 = offdiagonal∂spring∂ʳvel(jt0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, timestep0)
 
-# fd_Dspr1 = fd_diagonal∂spring∂ʳvel(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, Δt0)
-# fd_Dspr2 = fd_offdiagonal∂spring∂ʳvel(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, Δt0)
-# fd_Dspr3 = fd_offdiagonal∂spring∂ʳvel(jt0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, Δt0)
+# fd_Dspr1 = fd_diagonal∂spring∂ʳvel(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, timestep0)
+# fd_Dspr2 = fd_offdiagonal∂spring∂ʳvel(jt0, x2a0, q2a0, x2b0, q2b0, x1a0, v1a0, q1a0, ω1a0, x1b0, v1b0, q1b0, ω1b0, timestep0)
+# fd_Dspr3 = fd_offdiagonal∂spring∂ʳvel(jt0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, timestep0)
 
 # norm(Dspr1 - fd_Dspr1)
 # norm(Dspr2 - fd_Dspr2)

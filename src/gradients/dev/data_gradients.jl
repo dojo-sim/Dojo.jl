@@ -1,31 +1,31 @@
 ################################################################################
 # Data Jacobians
 ################################################################################
-function ∂eqc∂body_data(mechanism::Mechanism, eqc::EqualityConstraint{T,N},
+function ∂joint∂body_data(mechanism::Mechanism, joint::JointConstraint{T,N},
         body::Body{T}) where {T,N}
     Nd = data_dim(body)
     ∇m = szeros(T,N,1)
     ∇J = szeros(T,N,6)
     ∇v15 = szeros(T,N,3)
     ∇ϕ15 = szeros(T,N,3)
-    ∇z2 = -∂g∂z(mechanism, eqc, body) * ∂i∂z(body, mechanism.Δt, attjac=true)
+    ∇z2 = -constraint_jacobian_configuration(mechanism, joint, body) * ∂i∂z(body, mechanism.timestep, attjac=true)
     ∇g = [∇m ∇J ∇v15 ∇ϕ15 ∇z2]
     return ∇g
 end
 
-function ∂eqc∂eqc_data(mechanism::Mechanism, eqc::EqualityConstraint{T,N}) where {T,N}
-    Nd = data_dim(eqc)
+function ∂joint∂joint_data(mechanism::Mechanism, joint::JointConstraint{T,N}) where {T,N}
+    Nd = data_dim(joint)
     return szeros(T,N,Nd)
 end
 
 
 function ∂body∂body_data(mechanism::Mechanism, body::Body{T}) where T
-    Δt = mechanism.Δt
+    Δt = mechanism.timestep
     Nd = data_dim(body)
     N = 6
-    x1, v15, q1, ϕ15 = fullargs1(body.state)
-    x2, v25, q2, ϕ25 = fullargssol(body.state)
-    x3, q3 = posargs3(body.state, Δt)
+    x1, v15, q1, ϕ15 = previous_configuration_velocity(body.state)
+    x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
+    x3, q3 = next_configuration(body.state, timestep)
     # Mass
     ezg = SA{T}[0; 0; -mechanism.g]
     ∇m = [1 / Δt * (x2 - x1) - Δt/2 * ezg - 1 / Δt * (x3 - x2) - Δt/2 * ezg;
@@ -56,33 +56,31 @@ function ∂body∂body_data(mechanism::Mechanism, body::Body{T}) where T
     return [∇m ∇J ∇15 ∇z2]
 end
 
-LVᵀmat(q2)' - VLᵀmat(q2)
-
-function ∂body∂eqc_data(mechanism::Mechanism{T}, eqc::EqualityConstraint{T},
+function ∂body∂eqc_data(mechanism::Mechanism{T}, joint::JointConstraint{T},
         body::Body{T}) where {T}
-    Δt = mechanism.Δt
-    Nd = data_dim(eqc)
+    Δt = mechanism.timestep
+    Nd = data_dim(joint)
     N = 6
-    x1, v15, q1, ϕ15 = fullargs1(body.state)
-    x2, v25, q2, ϕ25 = fullargssol(body.state)
-    x3, q3 = posargs3(body.state, Δt)
-    ∇u = Diagonal(SVector{6,T}(1,1,1,2,2,2)) * ∂Fτ∂u(mechanism, eqc, body)
-    ∇spring = springforce(mechanism, eqc, body, unitary=true)
-    ∇damper = damperforce(mechanism, eqc, body, unitary=true)
+    x1, v15, q1, ϕ15 = previous_configuration_velocity(body.state)
+    x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
+    x3, q3 = next_configuration(body.state, Δt)
+    ∇u = Diagonal(SVector{6,T}(1,1,1,2,2,2)) * input_jacobian_control(mechanism, joint, body)
+    ∇spring = springforce(mechanism, joint, body, unitary=true)
+    ∇damper = damperforce(mechanism, joint, body, unitary=true)
     return [∇u ∇spring ∇damper]
 end
 
-function ∂body∂ineqc_data(mechanism::Mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
-        body::Body{T}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
-    Nd = data_dim(ineqc)
-    bound = ineqc.constraints[1]
+function ∂body∂contact_data(mechanism::Mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
+        body::Body{T}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}},N½}
+    Nd = data_dim(contact)
+    bound = contact.constraints[1]
     offset = bound.offset
-    x3, q3 = posargs3(body.state, mechanism.Δt)
-    γ = ineqc.γsol[2]
+    x3, q3 = next_configuration(body.state, mechanism.timestep)
+    γ = contact.γsol[2]
 
     ∇cf = szeros(T,3,1)
 
-    X = forcemapping(bound)
+    X = force_mapping(bound)
     # this what we differentiate: Qᵀγ = - skew(p - vrotate(offset, inv(q3))) * VRmat(q3) * LᵀVᵀmat(q3) * X' * γ
     ∇p = - ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ)
     ∇off = - ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ) * -∂vrotate∂p(offset, inv(q3))
@@ -93,16 +91,16 @@ function ∂body∂ineqc_data(mechanism::Mechanism, ineqc::InequalityConstraint{
 end
 
 
-function ∂ineqc∂ineqc_data(mechanism::Mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
-        body::Body{T}) where {T,N,Nc,Cs<:Tuple{ContactBound{T,N}},N½}
-    Nd = data_dim(ineqc)
-    bound = ineqc.constraints[1]
+function ∂contact∂contact_data(mechanism::Mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
+        body::Body{T}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}},N½}
+    Nd = data_dim(contact)
+    bound = contact.constraints[1]
     p = bound.p
     offset = bound.offset
-    x2, v25, q2, ϕ25 = fullargssol(body.state)
-    x3, q3 = posargs3(body.state, mechanism.Δt)
-    s = ineqc.ssol[2]
-    γ = ineqc.γsol[2]
+    x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
+    x3, q3 = next_configuration(body.state, mechanism.timestep)
+    s = contact.ssol[2]
+    γ = contact.γsol[2]
 
     ∇cf = SA[0,γ[1],0,0]
     ∇off = [-bound.ainv3; szeros(T,1,3); -bound.Bx * skew(vrotate(ϕ25, q3))]
@@ -113,15 +111,15 @@ function ∂ineqc∂ineqc_data(mechanism::Mechanism, ineqc::InequalityConstraint
     return [∇compμ; ∇g]
 end
 
-function ∂ineqc∂body_data(mechanism::Mechanism, ineqc::InequalityConstraint{T,N,Nc,Cs,N½},
+function ∂contact∂body_data(mechanism::Mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
         body::Body{T}) where {T,N,Nc,Cs,N½}
     Nd = data_dim(body)
     ∇compμ = szeros(T,N½,Nd)
     ∇m = szeros(T,N½,1)
     ∇J = szeros(T,N½,6)
     ∇z1 = szeros(T,N½,6)
-    ∇z3 = ∂g∂z(mechanism, ineqc, body)
-    ∇z2 = ∇z3 * ∂i∂z(body, mechanism.Δt, attjac=true) # 4x7 * 7x6 = 4x6
+    ∇z3 = constraint_jacobian_configuration(mechanism, contact, body)
+    ∇z2 = ∇z3 * ∂i∂z(body, mechanism.timestep, attjac=true) # 4x7 * 7x6 = 4x6
     ∇g = [∇m ∇J ∇z1 ∇z2]
     return [∇compμ; ∇g]
 end
@@ -129,10 +127,10 @@ end
 ################################################################################
 # System Data Jacobians
 ################################################################################
-function create_data_system(eqcs::Vector{<:EqualityConstraint}, bodies::Vector{<:Body},
-        ineqcs::Vector{<:InequalityConstraint})
-    nodes = [eqcs; bodies; ineqcs]
-    A = adjacencyMatrix(eqcs, bodies, ineqcs)
+function create_data_system(joints::Vector{<:JointConstraint}, bodies::Vector{<:Body},
+        contacts::Vector{<:ContactConstraint})
+    nodes = [joints; bodies; contacts]
+    A = adjacencyMatrix(joints, bodies, contacts)
     dimrow = length.(nodes)
     dimcol = data_dim.(nodes)
     data_system = System(A, dimrow, dimcol)
@@ -148,42 +146,42 @@ end
 
 function ∂ineqc_data!(data_system::System, mechanism::Mechanism{T}) where {T}
     # ∂body∂ineqcdata
-    for ineqc in mechanism.ineqconstraints
-        pbody = getbody(mechanism, ineqc.parentid)
-        data_system.matrix_entries[pbody.id, ineqc.id].value += ∂body∂ineqc_data(mechanism, ineqc, pbody)
+    for contact in mechanism.contacts
+        pbody = getbody(mechanism, contact.parentid)
+        data_system.matrix_entries[pbody.id, contact.id].value += ∂body∂ineqc_data(mechanism, contact, pbody)
     end
-    # ∂ineqc∂ineqcdata
-    for ineqc in mechanism.ineqconstraints
-        pbody = getbody(mechanism, ineqc.parentid)
-        data_system.matrix_entries[ineqc.id, ineqc.id].value += ∂ineqc∂ineqc_data(mechanism, ineqc, pbody)
+    # ∂contact∂contactdata
+    for contact in mechanism.contacts
+        pbody = get_body(mechanism, contact.parentid)
+        data_system.matrix_entries[contact.id, contact.id].value += ∂contact∂contact_data(mechanism, contact, pbody)
     end
     return nothing
 end
 
-function ∂eqc_data!(data_system::System, mechanism::Mechanism{T}) where {T}
-    # ∂eqc∂eqcdata
-    for eqc in mechanism.eqconstraints
-        data_system.matrix_entries[eqc.id, eqc.id].value += ∂eqc∂eqc_data(mechanism, eqc)
+function ∂joint_data!(data_system::System, mechanism::Mechanism{T}) where T
+    # ∂joint∂jointdata
+    for joint in mechanism.joints
+        data_system.matrix_entries[joint.id, joint.id].value += ∂joint∂joint_data(mechanism, joint)
     end
-    # ∂body∂eqcdata
+    # ∂body∂jointdata
     # TODO adapt this to handle cycles
     for body in mechanism.bodies
-        for eqc in mechanism.eqconstraints
-            if (body.id == eqc.parentid) || (body.id ∈ eqc.childids)
-                data_system.matrix_entries[body.id, eqc.id].value += ∂body∂eqc_data(mechanism, eqc, body)
+        for joint in mechanism.joints
+            if (body.id == joint.parentid) || (body.id ∈ joint.childids)
+                data_system.matrix_entries[body.id, joint.id].value += ∂body∂joint_data(mechanism, joint, body)
             end
         end
     end
     return nothing
 end
 
-function ∂body_data!(data_system::System, mechanism::Mechanism{T}) where {T}
-    # ∂eqc∂bodydata
+function ∂body_data!(data_system::System, mechanism::Mechanism{T}) where T
+    # ∂joint∂bodydata
     # TODO adapt this to handle cycles
     for body in mechanism.bodies
-        for eqc in mechanism.eqconstraints
-            if (body.id == eqc.parentid) || (body.id ∈ eqc.childids)
-                data_system.matrix_entries[eqc.id, body.id].value += ∂eqc∂body_data(mechanism, eqc, body)
+        for joint in mechanism.joints
+            if (body.id == joint.parentid) || (body.id ∈ joint.childids)
+                data_system.matrix_entries[joint.id, body.id].value += ∂joint∂body_data(mechanism, joint, body)
             end
         end
     end
@@ -191,10 +189,10 @@ function ∂body_data!(data_system::System, mechanism::Mechanism{T}) where {T}
     for body in mechanism.bodies
         data_system.matrix_entries[body.id, body.id].value += ∂body∂body_data(mechanism, body)
     end
-    # ∂ineqc∂bodydata
-    for ineqc in mechanism.ineqconstraints
-        pbody = getbody(mechanism, ineqc.parentid)
-        data_system.matrix_entries[ineqc.id, pbody.id].value += ∂ineqc∂body_data(mechanism, ineqc, pbody)
+    # ∂contact∂bodydata
+    for contact in mechanism.contacts
+        pbody = get_body(mechanism, contact.parentid)
+        data_system.matrix_entries[contact.id, pbody.id].value += ∂contact∂body_data(mechanism, contact, pbody)
     end
     return nothing
 end

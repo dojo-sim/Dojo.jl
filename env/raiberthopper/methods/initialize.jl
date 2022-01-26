@@ -1,4 +1,4 @@
-function getraiberthopper(; Δt::T=0.05, g::T=-9.81, spring=0.0, damper=0.1, contact::Bool=true, contact_body::Bool=true) where T
+function getraiberthopper(; timestep::T=0.05, g::T=-9.81, spring=0.0, damper=0.1, contact::Bool=true, contact_body::Bool=true) where T
     #TODO: make customizable
 
     # Parameters
@@ -16,10 +16,10 @@ function getraiberthopper(; Δt::T=0.05, g::T=-9.81, spring=0.0, damper=0.1, con
     links = [body, foot]
 
     # Joint Constraints
-    joint_origin_body = EqualityConstraint(Floating(origin, body))
-    joint_body_foot = EqualityConstraint(Prismatic(body, foot, leg_axis;
+    joint_origin_body = JointConstraint(Floating(origin, body))
+    joint_body_foot = JointConstraint(Prismatic(body, foot, leg_axis;
         p1=szeros(Float64, 3), p2=szeros(Float64, 3), spring=spring, damper=damper) )
-    eqcs = [joint_origin_body, joint_body_foot]
+    joints = [joint_origin_body, joint_body_foot]
 
     # Mechanism
     if contact
@@ -28,21 +28,21 @@ function getraiberthopper(; Δt::T=0.05, g::T=-9.81, spring=0.0, damper=0.1, con
         friction_coefficient = 0.5
 
         # foot
-        ineqcs = contactconstraint(foot, contact_normal, cf=friction_coefficient,
+        foot_contacts = contact_constraint(foot, contact_normal, cf=friction_coefficient,
             p=[0.0; 0.0; 0.0], offset=[0.0; 0.0; foot_radius])
 
-        ineqcs = [ineqcs]
+        contacts = [foot_contacts]
 
         # body
         if contact_body
-            ineqcs_body = contactconstraint(body, contact_normal, cf=friction_coefficient,
+            body_contacts = contact_constraint(body, contact_normal, cf=friction_coefficient,
                 p=[0.0; 0.0; 0.0], offset=[0.0; 0.0; body_radius])
-            push!(ineqcs, ineqcs_body)
+            push!(contacts, body_contacts)
         end
 
-        mech = Mechanism(origin, links, eqcs, ineqcs, g=g, Δt=Δt, spring=spring, damper=damper)
+        mech = Mechanism(origin, links, joints, contacts, g=g, timestep=timestep, spring=spring, damper=damper)
     else
-        mech = Mechanism(origin, links, eqcs, g=g, Δt=Δt, spring=spring, damper=damper)
+        mech = Mechanism(origin, links, joints, g=g, timestep=timestep, spring=spring, damper=damper)
     end
     return mech
 end
@@ -51,14 +51,14 @@ function initializeraiberthopper!(mech::Mechanism{T,Nn,Ne,Nb}; leg_length_nomina
     v = zeros(3), ω = zeros(3)) where {T,Nn,Ne,Nb}
     body1 = collect(mech.bodies)[1]
     body2 = collect(mech.bodies)[2]
-    eqc2 = collect(mech.eqconstraints)[2]
-    tra2 = eqc2.constraints[1]
+    joint2 = collect(mech.joints)[2]
+    tra2 = joint2.constraints[1]
 
     # origin to body
-    setPosition!(mech.origin, body1, Δx=[0.0; 0.0; leg_length_nominal + altitude])
-    setVelocity!(body1, v=v, ω=ω)
+    set_position(mech.origin, body1, Δx=[0.0; 0.0; leg_length_nominal + altitude])
+    set_velocity!(body1, v=v, ω=ω)
 
     # body to foot
-    setPosition!(body1, body2, Δx=[0.0; 0.0; -leg_length_nominal], Δq=UnitQuaternion(RotX(0.0)))
-    setVelocity!(body1, body2, p1 = tra2.vertices[1], p2 = tra2.vertices[2], Δv=zeros(3), Δω=zeros(3))
+    set_position(body1, body2, Δx=[0.0; 0.0; -leg_length_nominal], Δq=UnitQuaternion(RotX(0.0)))
+    set_velocity!(body1, body2, p1 = tra2.vertices[1], p2 = tra2.vertices[2], Δv=zeros(3), Δω=zeros(3))
 end

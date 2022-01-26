@@ -19,8 +19,8 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
-linmech = getmechanism(:snake, Nb = 5, Δt = 0.02, g = -9.81, cf = 0.2, contact = false, contact_type = :linear_contact)
-socmech = getmechanism(:snake, Nb = 5, Δt = 0.02, g = -9.81, cf = 0.2, contact = false, contact_type = :contact)
+linmech = getmechanism(:snake, Nb = 5, timestep = 0.02, g = -9.81, cf = 0.2, contact = false, contact_type = :linear_contact)
+socmech = getmechanism(:snake, Nb = 5, timestep = 0.02, g = -9.81, cf = 0.2, contact = false, contact_type = :contact)
 
 x = [0,-1.0,0]
 v = [1,.3,4]
@@ -42,10 +42,10 @@ visualize(socmech, socstorage, vis = vis)
 include(joinpath(module_dir(), "examples", "diff_tools.jl"))
 # Set data
 Nb = length(socmech.bodies)
-data = getdata(socmech)
-setdata!(socmech, data)
-sol = getsolution(socmech)
-attjac = attitudejacobian(data, Nb)
+data = get_data(socmech)
+set_data!(socmech, data)
+sol = get_solution(socmech)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
 datamat = full_data_matrix(socmech)

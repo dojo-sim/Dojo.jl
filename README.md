@@ -1,9 +1,9 @@
 [![CI](https://github.com/dojo-sim/Dojo.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/dojo-sim/Dojo.jl/actions/workflows/CI.yml)
-[![codecov](https://codecov.io/gh/dojo-sim/Dojo.jl/branch/master/graph/badge.svg?token=NMS3JQZ2OE)](https://codecov.io/gh/dojo-sim/Dojo.jl) 
+[![codecov](https://codecov.io/gh/dojo-sim/Dojo.jl/branch/main/graph/badge.svg?token=NMS3JQZ2OE)](https://codecov.io/gh/dojo-sim/Dojo.jl)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://dojo-sim.github.io/Dojo.jl/dev)
 
 # Dojo
-A differentiable rigid-body-dynamics with contact simulator for robotics.
+A differentiable contact-dynamics simulator for robotics.
 
 ## Simulation 
 
@@ -20,7 +20,7 @@ A differentiable rigid-body-dynamics with contact simulator for robotics.
 <img src="examples/animations/cone_compare_mujoco.gif" height="300"/>
 
 ### Dzhanibekov effect
-<img src="examples/animations/dzhanibekov.gif" width="200"/>
+<img src="examples/animations/dzhanibekov.gif" width="150"/>
 
 ## Trajectory Optimization 
 
@@ -28,7 +28,7 @@ A differentiable rigid-body-dynamics with contact simulator for robotics.
 <img src="examples/animations/cartpole_max.gif" width="200"/>
 
 ### Hopper 
-<img src="examples/animations/hopper_max.gif" width="150"/>
+<img src="examples/animations/hopper_max.gif" width="100"/>
 
 ### Quadruped 
 <img src="examples/animations/quadruped_min.gif" width="200"/>

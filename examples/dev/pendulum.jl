@@ -21,22 +21,22 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
 function controller!(mechanism, k)
-    for (i,eqc) in enumerate(collect(mechanism.eqconstraints)[1:end])
-        nu = controldim(eqc)
-        u = 33.5 * mechanism.Δt * ones(nu)
-        setForce!(eqc, u)
+    for (i,eqc) in enumerate(collect(mechanism.joints)[1:end])
+        nu = control_dimension(eqc)
+        u = 33.5 * mechanism.timestep * ones(nu)
+        set_input!(eqc, u)
     end
     return
 end
 
 
-mech = getmechanism(:pendulum, Δt = 0.05, g = -0*9.81)
+mech = getmechanism(:pendulum, timestep = 0.05, g = -0*9.81)
 initialize!(mech, :pendulum, ϕ1 = 0.7)
 storage = simulate!(mech, 0.20, controller!, record=true, verbose=true)
 visualize(mech, storage, vis=vis)
 
 
-setentries!(mech)
+set_entries!(mech)
 
 
 ################################################################################
@@ -46,10 +46,10 @@ setentries!(mech)
 include(joinpath(module_dir(), "examples", "diff_tools.jl"))1
 # Set data
 Nb = length(mech.bodies)
-data = getdata(mech)
-setdata!(mech, data)
-sol = getsolution(mech)
-attjac = attitudejacobian(data, Nb)
+data = get_data(mech)
+set_data!(mech, data)
+sol = get_solution(mech)
+attjac = attitude_jacobian(data, Nb)
 
 # IFT
 datamat = full_data_matrix(mech)
