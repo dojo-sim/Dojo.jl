@@ -244,3 +244,43 @@ a = 10
 ################################################################################
 ################################################################################
 ################################################################################
+
+
+
+mech = getpendulum()
+mech = getdzhanibekov();
+body0 = mech.bodies[1]
+joint0 = mech.joints[1]
+
+tra0 = joint0.constraints[1]
+rot0 = joint0.constraints[2]
+
+xa = rand(3)
+qa = UnitQuaternion(rand(4)...)
+xb = rand(3)
+qb = UnitQuaternion(rand(4)...)
+λ2 = rand(2)
+λ3 = rand(3)
+
+impulse_map_child(tra0, xa, qa, xb, qb, λ2)
+impulse_map_parent(tra0, xa, qa, xb, qb, λ2)
+
+impulse_map_child(rot0, xa, qa, xb, qb, λ2)
+impulse_map_parent(rot0, xa, qa, xb, qb, λ2)
+
+impulse_map_parent(mech, joint0, body0)
+impulse_projector(joint0.constraints[1])
+impulse_projector(joint0.constraints[2])
+transpose([nullspace_mask(tra0); constraint_mask(tra0)])
+
+impulse_map_parent(mech, joint0, body0) * szeros(0)
+szeros(Float64, 6, 0) * szeros(0)
+
+vcat(ones(6,3), zeros(6,2))
+vcat(ones(6,3)', zeros(6,2)')
+hcat(ones(6,3), zeros(6,2))'
+
+@generated function impulse_map_parent(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
+    vec = [:(impulse_map_parent(joint.constraints[$i], body, get_body(mechanism, joint.childids[$i]), joint.childids[$i], joint.λsol[2][λindex(joint,$i)], mechanism.timestep)) for i = 1:Nc]
+    return :(hcat($(vec...)))
+end

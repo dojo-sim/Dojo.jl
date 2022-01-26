@@ -18,7 +18,6 @@ function ∂joint∂joint_data(mechanism::Mechanism, joint::JointConstraint{T,N}
     return szeros(T,N,Nd)
 end
 
-
 function ∂body∂body_data(mechanism::Mechanism, body::Body{T}) where T
     Δt = mechanism.timestep
     Nd = data_dim(body)

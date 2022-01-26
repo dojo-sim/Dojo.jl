@@ -54,32 +54,31 @@ end
     return constraint_mask(joint) * [X Q]
 end
 
-@inline function impulse_map_parent(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
-    X = szeros(T, 3, 3)
-    Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
-    Q = Q * LVᵀmat(qa)
-    return constraint_mask(joint) * [X Q]
-end
+# @inline function impulse_map_parent(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+#     X = szeros(T, 3, 3)
+#     Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
+#     Q = Q * LVᵀmat(qa)
+#     return constraint_mask(joint) * [X Q]
+# end
 
-@inline function impulse_map_child(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
-    X = szeros(T, 3, 3)
-    Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa)
-    Q = Q * LVᵀmat(qb)
-    return constraint_mask(joint) * [X Q]
-end
+# @inline function impulse_map_child(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+#     X = szeros(T, 3, 3)
+#     Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa)
+#     Q = Q * LVᵀmat(qb)
+#     return constraint_mask(joint) * [X Q]
+# end
 
 ################################################################################
-# Force Mapping & Projector
+# Impulse Transform
 ################################################################################
-
-function force_mapa(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
+function impulse_transform_parent(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
     X = szeros(T, 3, 3)
     # QT = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T) * LVᵀmat(qa)
     Q = VLᵀmat(qa) * Tmat(T) * Rᵀmat(qb) * RVᵀmat(joint.qoffset)
     return [X; Q]
 end
 
-function force_mapb(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
+function impulse_transform_child(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
     X = szeros(T, 3, 3)
     # QT = VRᵀmat(joint.qoffset) * Lᵀmat(qa) * LVᵀmat(qb)
     Q = VLᵀmat(qb) * Lmat(qa) * RVᵀmat(joint.qoffset)
@@ -89,24 +88,8 @@ end
 ################################################################################
  # Derivatives
 ################################################################################
-
-function ∂aforce_mapb(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
-    # ∂(force_mapb'*p)/∂(xa,qa)
-    Z3 = szeros(T,3,3)
-    ∇Qqa = VLᵀmat(qb) * ∂qLmat(RVᵀmat(joint.qoffset) * p) * LVᵀmat(qa)
-    return [Z3 Z3;
-            Z3 ∇Qqa]
-end
-
-function ∂bforce_mapb(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
-    # ∂(force_mapb'*p)/∂(xb,qb)
-    Z3 = szeros(T,3,3)
-    ∇Qqb = ∂qVLᵀmat(Lmat(qa) * RVᵀmat(joint.qoffset) * p) * LVᵀmat(qb)
-    return [Z3 Z3;
-            Z3 ∇Qqb]
-end
-
-function ∂aforce_mapa(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
+function impulse_transform_parent_jacobian_parent(joint::Rotational{T,Nλ,0},
+        xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
     # ∂(force_mapa'*p)/∂(xa,qa)
     Z3 = szeros(T,3,3)
     ∇Qqa = ∂qVLᵀmat(Tmat(T) * Rᵀmat(qb) * RVᵀmat(joint.qoffset) * p) * LVᵀmat(qa)
@@ -114,10 +97,29 @@ function ∂aforce_mapa(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::Unit
             Z3 ∇Qqa]
 end
 
-function ∂bforce_mapa(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
+function impulse_transform_parent_jacobian_child(joint::Rotational{T,Nλ,0},
+        xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
     # ∂(force_mapa'*p)/∂(xb,qb)
     Z3 = szeros(T,3,3)
     ∇Qqb = VLᵀmat(qa) * Tmat(T) * ∂qRᵀmat(RVᵀmat(joint.qoffset) * p) * LVᵀmat(qb)
+    return [Z3 Z3;
+            Z3 ∇Qqb]
+end
+
+function impulse_transform_child_jacobian_parent(joint::Rotational{T,Nλ,0},
+        xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
+    # ∂(force_mapb'*p)/∂(xa,qa)
+    Z3 = szeros(T,3,3)
+    ∇Qqa = VLᵀmat(qb) * ∂qLmat(RVᵀmat(joint.qoffset) * p) * LVᵀmat(qa)
+    return [Z3 Z3;
+            Z3 ∇Qqa]
+end
+
+function impulse_transform_child_jacobian_child(joint::Rotational{T,Nλ,0},
+        xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
+    # ∂(force_mapb'*p)/∂(xb,qb)
+    Z3 = szeros(T,3,3)
+    ∇Qqb = ∂qVLᵀmat(Lmat(qa) * RVᵀmat(joint.qoffset) * p) * LVᵀmat(qb)
     return [Z3 Z3;
             Z3 ∇Qqb]
 end

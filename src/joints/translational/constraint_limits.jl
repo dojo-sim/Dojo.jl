@@ -35,44 +35,31 @@ end
     return [X Q]
 end
 
-function impulse_map_parent(joint::Translational, statea::State, stateb::State, η, timestep)
-    xa, qa = current_configuration(statea)
-    xb, qb = current_configuration(stateb)
-    impulse_map_parent(joint, xa, qa, xb, qb, η)
-end
+# function impulse_map_parent(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion,
+#         xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
+#     X = -1.0 * transpose(rotation_matrix(qa))
+#     pb_a = rotation_matrix(inv(qa)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
+#     ca_a = rotation_matrix(inv(qa)) * (xa) # body a com
+#     capb_a = pb_a - ca_a
+#     Q = - 1.0 * transpose(skew(capb_a))
+#     return [
+#             zeros(Nb, 6);
+#             -nullspace_mask(joint) * [X Q];
+#             nullspace_mask(joint) * [X Q];
+#             constraint_mask(joint) * [X Q];
+#            ]
+# end
 
-function impulse_map_parent(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion,
-        xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
-    X = -1.0 * transpose(rotation_matrix(qa))
-    pb_a = rotation_matrix(inv(qa)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
-    ca_a = rotation_matrix(inv(qa)) * (xa) # body a com
-    capb_a = pb_a - ca_a
-    Q = - 1.0 * transpose(skew(capb_a))
-    return [
-            zeros(Nb, 6);
-            -nullspace_mask(joint) * [X Q];
-            nullspace_mask(joint) * [X Q];
-            constraint_mask(joint) * [X Q];
-           ]
-end
-
-function impulse_map_child(joint::Translational, statea::State, stateb::State, η, timestep)
-    xa, qa = current_configuration(statea)
-    xb, qb = current_configuration(stateb)
-    impulse_map_child(joint, xa, qa, xb, qb, η)
-end
-
-function impulse_map_child(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
-    X = transpose(rotation_matrix(qa))
-    pb_b = rotation_matrix(inv(qb)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
-    cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
-    cbpb_b = pb_b - cb_b
-    Q = transpose(skew(cbpb_b) * rotation_matrix(inv(qb) * qa))
-    return [
-            zeros(Nb, 6);
-            -nullspace_mask(joint) * [X Q];
-            nullspace_mask(joint) * [X Q];
-            constraint_mask(joint) * [X Q];
-           ]
-end
-
+# function impulse_map_child(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
+#     X = transpose(rotation_matrix(qa))
+#     pb_b = rotation_matrix(inv(qb)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
+#     cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
+#     cbpb_b = pb_b - cb_b
+#     Q = transpose(skew(cbpb_b) * rotation_matrix(inv(qb) * qa))
+#     return [
+#             zeros(Nb, 6);
+#             -nullspace_mask(joint) * [X Q];
+#             nullspace_mask(joint) * [X Q];
+#             constraint_mask(joint) * [X Q];
+#            ]
+# end

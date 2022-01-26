@@ -35,48 +35,63 @@ end
     end
 end
 
-@inline function GaT(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η)
-    return force_mapa(joint, xa, qa, xb, qb) * force_projector(joint)
+function impulse_map_parent(joint::Joint, statea::State, stateb::State, η, timestep)
+    xa, qa = current_configuration(statea)
+    xb, qb = current_configuration(stateb)
+    impulse_map_parent(joint, xa, qa, xb, qb, η)
 end
 
-@inline function GbT(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η)
-    return force_mapb(joint, xa, qa, xb, qb) * force_projector(joint)
+function impulse_map_child(joint::Joint, statea::State, stateb::State, η, timestep)
+    xa, qa = current_configuration(statea)
+    xb, qb = current_configuration(stateb)
+    impulse_map_child(joint, xa, qa, xb, qb, η)
 end
 
-@inline function force_projector(joint::Joint{T,Nλ,Nb}) where {T,Nλ,Nb}
-    transpose([szeros(T,Nb,3); -nullspacemat(joint); nullspacemat(joint); constraintmat(joint)])
+@inline function impulse_map_parent(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η)
+    return impulse_transform_parent(joint, xa, qa, xb, qb) * impulse_projector(joint)
 end
 
-@inline function force_projector(joint::Joint{T,Nλ,0}) where {T,Nλ}
-    transpose(constraintmat(joint))
+@inline function impulse_map_child(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η)
+    return impulse_transform_child(joint, xa, qa, xb, qb) * impulse_projector(joint)
 end
+
+# With joint limits
+@inline function impulse_projector(joint::Joint{T,Nλ,Nb}) where {T,Nλ,Nb}
+    zerodimstaticadjoint([szeros(Nb,3); -nullspace_mask(joint); nullspace_mask(joint); constraint_mask(joint)])
+end
+
+# Without joint limits
+@inline function impulse_projector(joint::Joint{T,Nλ,0}) where {T,Nλ}
+    zerodimstaticadjoint(constraint_mask(joint))
+end
+
 
 ################################################################################
 # Derivatives
 ################################################################################
 
-function ∂aGa(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
+function impulse_map_parent_jacobian_parent(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
     # ∂(Ga*λ)/∂(xa,qa)
     p = force_projector(joint) * λ
-    ∂aforce_mapa(joint, xa, qa, xb, qb, p)
+    impulse_transform_parent_jacobian_parent(joint, xa, qa, xb, qb, p)
 end
 
-function ∂bGa(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
+function impulse_map_parent_jacobian_child(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
     # ∂(Ga*λ)/∂(xb,qb)
     p = force_projector(joint) * λ
-    ∂bforce_mapa(joint, xa, qa, xb, qb, p)
+    impulse_transform_parent_jacobian_child(joint, xa, qa, xb, qb, p)
 end
 
-function ∂aGb(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
+function impulse_map_child_jacobian_parent(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
     # ∂(Gb*λ)/∂(xa,qa)
     p = force_projector(joint) * λ
-    ∂aforce_mapb(joint, xa, qa, xb, qb, p)
+    impulse_transform_child_jacobian_parent(joint, xa, qa, xb, qb, p)
 end
 
-function ∂bGb(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
+function impulse_map_child_jacobian_child(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
     # ∂(Gb*λ)/∂(xb,qb)
     p = force_projector(joint) * λ
-    ∂bforce_mapb(joint, xa, qa, xb, qb, p)
+    impulse_transform_child_jacobian_child(joint, xa, qa, xb, qb, p)
 end
 
 

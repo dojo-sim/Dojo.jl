@@ -140,7 +140,7 @@ end
 end
 
 @inline function impulses!(mechanism, body::Body, joint::JointConstraint)
-    body.state.d -= zerodimstaticadjoint(impulse_map(mechanism, joint, body)) * joint.λsol[2]
+    body.state.d -= impulse_map(mechanism, joint, body) * joint.λsol[2]
     joint.isspring && (body.state.d -= apply_spring(mechanism, joint, body))
     joint.isdamper && (body.state.d -= apply_damper(mechanism, joint, body))
     return
@@ -209,21 +209,21 @@ end
 end
 
 @inline function off_diagonal_jacobians(mechanism, body::Body{T}, joint::JointConstraint{T,N}) where {T,N}
-    return -impulse_map(mechanism, joint, body)', constraint_jacobian_configuration(mechanism, joint, body) * integrator_jacobian_velocity(body, mechanism.timestep)
+    return -impulse_map(mechanism, joint, body), constraint_jacobian_configuration(mechanism, joint, body) * integrator_jacobian_velocity(body, mechanism.timestep)
 end
 
 @inline function off_diagonal_jacobians(mechanism, joint::JointConstraint{T,N}, body::Body{T}) where {T,N}
-    return constraint_jacobian_configuration(mechanism, joint, body) * integrator_jacobian_velocity(body, mechanism.timestep), -impulse_map(mechanism, joint, body)'
+    return constraint_jacobian_configuration(mechanism, joint, body) * integrator_jacobian_velocity(body, mechanism.timestep), -impulse_map(mechanism, joint, body)
 end
 
 @generated function impulse_map_parent(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     vec = [:(impulse_map_parent(joint.constraints[$i], body, get_body(mechanism, joint.childids[$i]), joint.childids[$i], joint.λsol[2][λindex(joint,$i)], mechanism.timestep)) for i = 1:Nc]
-    return :(vcat($(vec...)))
+    return :(hcat($(vec...)))
 end
 
 @generated function impulse_map_child(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     vec = [:(impulse_map_child(joint.constraints[$i], get_body(mechanism, joint.parentid), body, joint.childids[$i], joint.λsol[2][λindex(joint,$i)], mechanism.timestep)) for i = 1:Nc]
-    return :(vcat($(vec...)))
+    return :(hcat($(vec...)))
 end
 
 @generated function constraint_jacobian_configuration(mechanism, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
