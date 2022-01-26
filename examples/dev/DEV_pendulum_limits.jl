@@ -1,4 +1,4 @@
-function getpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
+function getpendulum(; timestep::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
     spring = 0.0, damper = 0.0, spring_offset = szeros(1)) where T
     # Parameters
     joint_axis = [1.0; 0; 0]
@@ -16,13 +16,13 @@ function getpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
     bodies = [body1]
     eqcs = [joint_between_origin_and_body1]
 
-    mech = Mechanism(origin, bodies, eqcs, g = g, Δt = Δt, spring=spring, damper=damper)
+    mech = Mechanism(origin, bodies, eqcs, g = g, timestep = timestep, spring=spring, damper=damper)
     return mech
 end
 
 vis = Visualizer()
 open(vis)
-mech = getpendulum(Δt = 0.01, g = -9.81, spring = 0.0, damper = 0.0)
+mech = getpendulum(timestep = 0.01, g = -9.81, spring = 0.0, damper = 0.0)
 # mech.joints[1].λsol[2]
 # reset!.(mech.joints)
 

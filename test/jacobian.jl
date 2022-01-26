@@ -1,14 +1,14 @@
 function test_solmat(model::Symbol; ϵ::T=1e-6, tsim::T=0.1, ctrl::Any=(m, k)->nothing,
-        Δt::T=0.01, g::T=-9.81, verbose::Bool=false, kwargs...) where T
+        timestep::T=0.01, g::T=-9.81, verbose::Bool=false, kwargs...) where T
 
     @testset "solmat: $(string(model))" begin
         # mechanism
-        mechanism = getmechanism(model, Δt=Δt, g=g; kwargs...)
+        mechanism = getmechanism(model, timestep=timestep, g=g; kwargs...)
         initialize!(mechanism, model)
 
         # simulate
         storage = simulate!(mechanism, tsim, ctrl,
-            record=true, verbose=verbose, opts=InteriorPointOptions(rtol=ϵ, btol=ϵ))
+            record=true, verbose=verbose, opts=SolverOptions(rtol=ϵ, btol=ϵ))
 
         # Set data
         Nb = length(mechanism.bodies)
@@ -27,16 +27,16 @@ function test_solmat(model::Symbol; ϵ::T=1e-6, tsim::T=0.1, ctrl::Any=(m, k)->n
 end
 
 function test_datamat(model::Symbol; ϵ::T=1.0e-6, tsim::T=0.1, ctrl::Any=(m,k)->nothing,
-        Δt::T=0.01, g::T=-9.81, verbose::Bool=false, kwargs...) where T
+        timestep::T=0.01, g::T=-9.81, verbose::Bool=false, kwargs...) where T
 
     @testset "datamat: $(string(model))" begin
         # mechanism
-        mechanism = getmechanism(model, Δt=Δt, g=g; kwargs...)
+        mechanism = getmechanism(model, timestep=timestep, g=g; kwargs...)
         initialize!(mechanism, model)
 
         # simulate
         storage = simulate!(mechanism, tsim, ctrl,
-            record=true, verbose=false, opts=InteriorPointOptions(rtol=ϵ, btol=ϵ))
+            record=true, verbose=false, opts=SolverOptions(rtol=ϵ, btol=ϵ))
 
         # Set data
         Nb = length(mechanism.bodies)
@@ -59,16 +59,16 @@ function test_datamat(model::Symbol; ϵ::T=1.0e-6, tsim::T=0.1, ctrl::Any=(m,k)-
 end
 
 function test_sensitivity(model::Symbol; ϵ::T=1.0e-6, tsim::T=0.1, ctrl::Any=(m,k)->nothing,
-        Δt::T=0.01, g::T=-9.81, cf::T=0.8,
+        timestep::T=0.01, g::T=-9.81, cf::T=0.8,
         contact::Bool=true, verbose::Bool=false) where T
 
     @testset "sensitivity: $(string(model))" begin
         # mechanism
-        mechanism = getmechanism(model, Δt=Δt, g=g, cf=cf, contact=contact)
+        mechanism = getmechanism(model, timestep=timestep, g=g, cf=cf, contact=contact)
         initialize!(mechanism, model)
 
         # simulate
-        storage = simulate!(mechanism, tsim, ctrl, record=true, verbose=false, opts=InteriorPointOptions(rtol=ϵ, btol=ϵ))
+        storage = simulate!(mechanism, tsim, ctrl, record=true, verbose=false, opts=SolverOptions(rtol=ϵ, btol=ϵ))
 
         # Set data
         Nb = length(mechanism.bodies)
@@ -90,10 +90,10 @@ function test_sensitivity(model::Symbol; ϵ::T=1.0e-6, tsim::T=0.1, ctrl::Any=(m
 end
 
 function control!(mechanism, k; u=0.1)
-    for (i, eqc) in enumerate(mechanism.joints)
-        nu = control_dimension(eqc, ignore_floating_base=false)
-        su = mechanism.Δt * u * sones(nu)
-        set_input!(eqc, su)
+    for (i, joint) in enumerate(mechanism.joints)
+        nu = control_dimension(joint, ignore_floating_base=false)
+        su = mechanism.timestep * u * sones(nu)
+        set_input!(joint, su)
     end
     return
 end

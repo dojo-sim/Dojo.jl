@@ -20,7 +20,7 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 # Build mechanism
-mech = getmechanism(:atlas, Δt = 0.01, g = -9.81, cf = 0.8, contact = true)
+mech = getmechanism(:atlas, timestep = 0.01, g = -9.81, cf = 0.8, contact = true)
 initialize!(mech, :atlas, tran = [0,0,0.99], rot = [0.,0,0])
 for (i,joint) in enumerate(mech.joints)
     jt = joint.constraints[1]
@@ -40,13 +40,13 @@ end
 
 bodies = collect(Body, mech.bodies)
 eqcs = collect(JointConstraint, mech.joints)
-ineqcs = collect(ContactConstraint, mech.contacts)
+contacts = collect(ContactConstraint, mech.contacts)
 bodies = [mech.bodies[i] for i = 32:62]
 eqcs = [mech.joints[i] for i = 1:31]
 teqcs = [eqcs[1]; [addtorque(mech, eqc, spring = 1e2, damper = 1e2) for eqc in eqcs[2:end]]]
-ineqcs = [mech.contacts[i] for i = 63:70]
+contacts = [mech.contacts[i] for i = 63:70]
 
-tmech = Mechanism(mech.origin, bodies, teqcs, ineqcs, Δt = 0.01, g = -9.81)
+tmech = Mechanism(mech.origin, bodies, teqcs, contacts, timestep = 0.01, g = -9.81)
 
 function addtorque(mech::Mechanism, eqc::JointConstraint; spring = 0.0, damper = 0.0)
     pbody = get_body(mech, eqc.parentid)
@@ -76,10 +76,10 @@ function controller!(mechanism, k)
             # θ = minimal_coordinates(mechanism, joint)[1]
             # dθ = minimal_velocities(mechanism, joint)[1]
             # u = 3e+2 * (angles[i] - θ) #+ 5e-2 * (0 - dθ)
-            # u = clamp(u, -150.0, 150.0) * mechanism.Δt
+            # u = clamp(u, -150.0, 150.0) * mechanism.timestep
             # if joint.name ∈ ("r_leg_akx", "r_leg_aky", "l_leg_akx", "l_leg_aky", "back_bkx", "back_bky", "back_bkz")
             #     u = 1e+2 * (angles[i] - θ) #+ 5e-2 * (0 - dθ)
-            #     u = clamp(u, -100.0, 100.0) * mechanism.Δt
+            #     u = clamp(u, -100.0, 100.0) * mechanism.timestep
             # end
             u = 0.0
             set_input!(joint, SA[u])

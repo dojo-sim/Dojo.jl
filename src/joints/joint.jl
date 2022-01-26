@@ -19,7 +19,7 @@ function λindex(joint::Joint{T,Nλ,Nb,N}, s::Int) where {T,Nλ,Nb,N}
     return ind
 end
 
-@inline function impulse_map_parent(joint::Joint, body1::Node, body2::Node, childid, λ, Δt)
+@inline function impulse_map_parent(joint::Joint, body1::Node, body2::Node, childid, λ, timestep)
     if body2.id == childid
         return impulse_map_parent(joint, current_configuration(body1.state)..., current_configuration(body2.state)..., λ)
     else
@@ -27,7 +27,7 @@ end
     end
 end
 
-@inline function impulse_map_child(joint::Joint, body1::Node, body2::Node, childid, λ, Δt)
+@inline function impulse_map_child(joint::Joint, body1::Node, body2::Node, childid, λ, timestep)
     if body2.id == childid
         return impulse_map_child(joint, current_configuration(body1.state)..., current_configuration(body2.state)..., λ)
     else
@@ -35,57 +35,57 @@ end
     end
 end
 
-@inline function constraint_jacobian_parent(joint::Joint, body1::Node, body2::Node, childid, λ, Δt)
+@inline function constraint_jacobian_parent(joint::Joint, body1::Node, body2::Node, childid, λ, timestep)
     if body2.id == childid
-        return constraint_jacobian_parent(joint, next_configuration(body1.state, Δt)..., next_configuration(body2.state, Δt)..., λ)
+        return constraint_jacobian_parent(joint, next_configuration(body1.state, timestep)..., next_configuration(body2.state, timestep)..., λ)
     else
         return zero(joint)
     end
 end
 
-@inline function constraint_jacobian_child(joint::Joint, body1::Node, body2::Node, childid, λ, Δt)
+@inline function constraint_jacobian_child(joint::Joint, body1::Node, body2::Node, childid, λ, timestep)
     if body2.id == childid
-        return constraint_jacobian_child(joint, next_configuration(body1.state, Δt)..., next_configuration(body2.state, Δt)..., λ)
+        return constraint_jacobian_child(joint, next_configuration(body1.state, timestep)..., next_configuration(body2.state, timestep)..., λ)
 
     else
         return zero(joint)
     end
 end
 
-@inline function spring_parent(joint::Joint, body1::Node, body2::Node, Δt, childid; unitary::Bool=false)
+@inline function spring_parent(joint::Joint, body1::Node, body2::Node, timestep, childid; unitary::Bool=false)
     if body2.id == childid
-        return spring_parent(joint, body1, body2, Δt, unitary=unitary)
+        return spring_parent(joint, body1, body2, timestep, unitary=unitary)
     else
         return szeros(T, 6)
     end
 end
 
-@inline function spring_child(joint::Joint, body1::Node, body2::Node, Δt, childid; unitary::Bool=false)
+@inline function spring_child(joint::Joint, body1::Node, body2::Node, timestep, childid; unitary::Bool=false)
     if body2.id == childid
-        return spring_child(joint, body1, body2, Δt, unitary=unitary)
+        return spring_child(joint, body1, body2, timestep, unitary=unitary)
     else
         return szeros(T, 6)
     end
 end
 
-@inline function damper_parent(joint::Joint, body1::Node, body2::Node, Δt, childid; unitary::Bool=false)
+@inline function damper_parent(joint::Joint, body1::Node, body2::Node, timestep, childid; unitary::Bool=false)
     if body2.id == childid
-        return damper_parent(joint, body1, body2, Δt, unitary=unitary)
+        return damper_parent(joint, body1, body2, timestep, unitary=unitary)
     else
         return szeros(T, 6)
     end
 end
 
-@inline function damper_child(joint::Joint, body1::Node, body2::Node, Δt, childid; unitary::Bool=false)
+@inline function damper_child(joint::Joint, body1::Node, body2::Node, timestep, childid; unitary::Bool=false)
     if body2.id == childid
-        return damper_child(joint, body1, body2, Δt, unitary=unitary)
+        return damper_child(joint, body1, body2, timestep, unitary=unitary)
     else
         return szeros(T, 6)
     end
 end
 
-@inline function apply_input!(joint::Joint, body1::Node, body2::Node, Δt::T, clear::Bool) where T
-    apply_input!(joint, body1.state, body2.state, Δt, clear)
+@inline function apply_input!(joint::Joint, body1::Node, body2::Node, timestep::T, clear::Bool) where T
+    apply_input!(joint, body1.state, body2.state, timestep, clear)
     return
 end
 
@@ -103,14 +103,14 @@ Joint3 = Joint{T,3} where T
 @inline constraint_mask(::Joint3{T}) where T = SMatrix{3,3,T,9}(I)
 @inline nullspace_mask(::Joint3{T}) where T = szeros(T,0,3)
 
-@inline constraint(joint::Joint, body1::Node, body2::Node, λ, Δt) = constraint(joint, next_configuration(body1.state, Δt)..., next_configuration(body2.state, Δt)..., λ)
+@inline constraint(joint::Joint, body1::Node, body2::Node, λ, timestep) = constraint(joint, next_configuration(body1.state, timestep)..., next_configuration(body2.state, timestep)..., λ)
 
 @inline function constraint_jacobian_configuration(joint::Joint{T,Nλ}, λ) where {T,Nλ}
     return Diagonal(+1.00e-10 * sones(T,Nλ))
 end
 
-@inline constraint_jacobian_parent(joint::Joint, body1::Node, body2::Node, λ, Δt) = constraint_jacobian_parent(joint, next_configuration(body1.state, Δt)..., next_configuration(body2.state, Δt)..., λ)
-@inline constraint_jacobian_child(joint::Joint, body1::Node, body2::Node, λ, Δt) = constraint_jacobian_child(joint, next_configuration(body1.state, Δt)..., next_configuration(body2.state, Δt)..., λ)
+@inline constraint_jacobian_parent(joint::Joint, body1::Node, body2::Node, λ, timestep) = constraint_jacobian_parent(joint, next_configuration(body1.state, timestep)..., next_configuration(body2.state, timestep)..., λ)
+@inline constraint_jacobian_child(joint::Joint, body1::Node, body2::Node, λ, timestep) = constraint_jacobian_child(joint, next_configuration(body1.state, timestep)..., next_configuration(body2.state, timestep)..., λ)
 
 
 @inline function set_input!(joint::Joint, Fτ::SVector)
@@ -127,13 +127,13 @@ end
 
 @inline add_force!(joint::Joint) = return
 
-@inline function input_jacobian_control_parent(joint::Joint, body1::Node, body2::Node, Δt, childid)
-    return input_jacobian_control_parent(joint, body1.state, body2.state, Δt) * zerodimstaticadjoint(nullspace_mask(joint))
+@inline function input_jacobian_control_parent(joint::Joint, body1::Node, body2::Node, timestep, childid)
+    return input_jacobian_control_parent(joint, body1.state, body2.state, timestep) * zerodimstaticadjoint(nullspace_mask(joint))
 end
 
-@inline function input_jacobian_control_child(joint::Joint{T,Nλ}, body1::Node, body2::Node, Δt, childid) where {T,Nλ}
+@inline function input_jacobian_control_child(joint::Joint{T,Nλ}, body1::Node, body2::Node, timestep, childid) where {T,Nλ}
     if body2.id == childid
-        return input_jacobian_control_child(joint, body1.state, body2.state, Δt) * zerodimstaticadjoint(nullspace_mask(joint))
+        return input_jacobian_control_child(joint, body1.state, body2.state, timestep) * zerodimstaticadjoint(nullspace_mask(joint))
     else
         return szeros(T, 6, 3 - Nλ)
     end

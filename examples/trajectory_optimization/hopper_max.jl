@@ -36,7 +36,7 @@ dyn = IterativeLQR.Dynamics(
 model = [dyn for t = 1:T-1]
 
 # ## rollout
-ū = [[0.0; 0.0; env.mechanism.g * env.mechanism.Δt + 0.0 * randn(1)[1]] for t = 1:T-1]
+ū = [[0.0; 0.0; env.mechanism.g * env.mechanism.timestep + 0.0 * randn(1)[1]] for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, z1, ū, w)
 open(env.vis)

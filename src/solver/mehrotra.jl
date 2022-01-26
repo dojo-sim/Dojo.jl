@@ -1,4 +1,4 @@
-@with_kw struct InteriorPointOptions{T}
+@with_kw struct SolverOptions{T}
     rtol::T=1.0e-6   # residual violation tolerance (equality constraints)
     btol::T=1.0e-3   # bilinear violation tolerance (complementarity constraints)
     ls_scale::T=0.5  # line search scaling factor (α_new ← ls_scale * α_current)
@@ -10,13 +10,10 @@
     verbose::Bool=false
 end
 
-function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
-    system = mechanism.system
-    eqcs = mechanism.joints
-    ineqcs = mechanism.contacts
-
+function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
 	reset!.(mechanism.contacts, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
 	reset!.(mechanism.joints, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
+    
     mechanism.μ = 0.0
 	μtarget = 0.0
 	no_progress = 0
@@ -53,7 +50,6 @@ function mehrotra!(mechanism::Mechanism; opts=InteriorPointOptions())
 		μtarget = max(σcentering * ν, opts.btol / undercut)
 		mechanism.μ = μtarget
 		correction!(mechanism) # update the residual in mechanism.residual_entries
-		# mechanism.μ = 0.0
 
 		push_residual!(mechanism)                # cache residual + correction
         push_matrix!(mechanism)                  # restore the factorized matrix
@@ -98,28 +94,28 @@ function solver_status(mechanism::Mechanism, α, rvio, bvio, n, μtarget, underc
         "   |res|∞", scn(res),
         "   |Δ|∞", scn(Δvar),
         # "   ucut", scn(undercut),
-		)
+        )
 end
 
-function initial_state!(ineqc::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
-    initial_state_ort(ineqc.γsol[1], ineqc.ssol[1])
-    initial_state_ort(ineqc.γsol[2], ineqc.ssol[2])
+function initial_state!(contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
+    initialize_positive_orthant!(contact.γsol[1], contact.ssol[1])
+    initialize_positive_orthant!(contact.γsol[2], contact.ssol[2])
     return nothing
 end
 
-function initial_state!(ineqc::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}}}
-	γort, sort = initial_state_ort(ineqc.γsol[1][1:1], ineqc.ssol[1][1:1])
-	γsoc, ssoc = initial_state_soc(ineqc.γsol[1][2:4], ineqc.ssol[1][2:4])
-	ineqc.γsol[1] = [γort; γsoc]
-	ineqc.ssol[1] = [sort; ssoc]
-	γort, sort = initial_state_ort(ineqc.γsol[2][1:1], ineqc.ssol[2][1:1])
-	γsoc, ssoc = initial_state_soc(ineqc.γsol[2][2:4], ineqc.ssol[2][2:4])
-	ineqc.γsol[2] = [γort; γsoc]
-	ineqc.ssol[2] = [sort; ssoc]
+function initial_state!(contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}}}
+	γort, sort = initialize_positive_orthant!(contact.γsol[1][1:1], contact.ssol[1][1:1])
+	γsoc, ssoc = initialize_second_order_cone!(contact.γsol[1][2:4], contact.ssol[1][2:4])
+	contact.γsol[1] = [γort; γsoc]
+	contact.ssol[1] = [sort; ssoc]
+	γort, sort = initialize_positive_orthant!(contact.γsol[2][1:1], contact.ssol[2][1:1])
+	γsoc, ssoc = initialize_second_order_cone!(contact.γsol[2][2:4], contact.ssol[2][2:4])
+	contact.γsol[2] = [γort; γsoc]
+	contact.ssol[2] = [sort; ssoc]
     return nothing
 end
 
-function initial_state_ort(γ::AbstractVector{T}, s::AbstractVector{T}; ϵ::T = 1e-20) where {T}
+function initialize_positive_orthant!(γ::AbstractVector{T}, s::AbstractVector{T}; ϵ::T = 1e-20) where T
     δs = max(-1.5 * minimum(s), 0)
     δγ = max(-1.5 * minimum(γ), 0)
 
@@ -132,7 +128,7 @@ function initial_state_ort(γ::AbstractVector{T}, s::AbstractVector{T}; ϵ::T = 
 	return γ0, s0
 end
 
-function initial_state_soc(γ::AbstractVector{T}, s::AbstractVector{T}; ϵ::T = 1e-20) where {T}
+function initialize_second_order_cone!(γ::AbstractVector{T}, s::AbstractVector{T}; ϵ::T = 1e-20) where T
     e = [1.0; zeros(length(γ) - 1)] # identity element
     δs = max(-1.5 * (s[1] - norm(s[2:end])), 0)
     δγ = max(-1.5 * (γ[1] - norm(γ[2:end])), 0)
@@ -158,13 +154,11 @@ function correction!(mechanism)
 	return
 end
 
-@inline function correction!(mechanism::Mechanism, residual_entry::Entry,
-		step_entry::Entry, node::Node)
+@inline function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, node::Node)
     return
 end
 
-@inline function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry,
-		ineqc::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+@inline function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, ::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
 	Δs = step_entry.value[1:N½]
     Δγ = step_entry.value[N½ .+ (1:N½)]
 	μ = mechanism.μ
@@ -172,9 +166,8 @@ end
     return
 end
 
-@inline function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry,
-		ineqc::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}},N½}
-	cont = ineqc.constraints[1]
+@inline function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}},N½}
+	cont = contact.constraints[1]
 	μ = mechanism.μ
 	Δs = step_entry.value[1:N½]
     Δγ = step_entry.value[N½ .+ (1:N½)]
@@ -182,15 +175,14 @@ end
     return
 end
 
-@inline function correction!(mechanism::Mechanism{T}, residual_entry::Entry, step_entry::Entry,
-		eqc::JointConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
-	cor = correction(mechanism, step_entry, eqc)
+@inline function correction!(mechanism::Mechanism{T}, residual_entry::Entry, step_entry::Entry, joint::JointConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
+	cor = correction(mechanism, step_entry, joint)
 	residual_entry.value += cor
     return
 end
 
-@generated function correction(mechanism::Mechanism{T}, step_entry::Entry, eqc::JointConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
-    cor = [:(correction(eqc.constraints[$i], step_entry.value[λindex(eqc,$i)], mechanism.μ)) for i = 1:Nc]
+@generated function correction(mechanism::Mechanism{T}, step_entry::Entry, joint::JointConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
+    cor = [:(correction(joint.constraints[$i], step_entry.value[λindex(joint, $i)], mechanism.μ)) for i = 1:Nc]
     return :(vcat($(cor...)))
 end
 
@@ -237,18 +229,3 @@ function push_diagonal_inverses!(mechanism::Mechanism)
 	return
 end
 
-@inline function angular_damping!(mechanism::Mechanism{T,Nn,Ne}, body::Body) where {T,Nn,Ne}
-    ϕ25 = body.state.ϕsol[2]
-    velocity = ϕ25 # in body frame
-    ϕreg = mechanism.ϕreg[body.id - Ne] # angular damping regularization
-    force = - ϕreg * velocity # Currently assumes same damper constant in all directions: ϕreg
-    body.state.d -= mechanism.Δt*[szeros(T, 3); force]
-    return
-end
-
-@inline function ∂angular_damping!(mechanism::Mechanism{T,Nn,Ne}, body::Body) where {T,Nn,Ne}
-    ϕreg = mechanism.ϕreg[body.id - Ne] # angular damping regularization
-    ∇ = hcat(szeros(3,3), -ϕreg * Diagonal(sones(3)))
-    body.state.D -= mechanism.Δt*[szeros(3,6); ∇]
-    return
-end

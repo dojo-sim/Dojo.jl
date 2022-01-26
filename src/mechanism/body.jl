@@ -13,5 +13,12 @@ end
 
 Base.length(::Body) = 6
 
+function check_body(body::Body)
+    initialize!(body.state)
+    if norm(body.m) == 0 || norm(body.J) == 0
+        @info "Bad inertial properties detected"
+    end
+end
+
 
 

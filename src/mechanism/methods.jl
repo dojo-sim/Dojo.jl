@@ -1,5 +1,16 @@
-@inline get_body(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,Ni} = collect(mechanism.bodies)[id-Ne]
+@inline get_joint_constraint(mechanism::Mechanism, id::Integer) = mechanism.joints[id]
 @inline get_body(mechanism::Mechanism, id::Nothing) = mechanism.origin
+@inline get_body(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,Ni} = mechanism.bodies[id-Ne]
+@inline get_contact_constraint(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,Ni} = mechanism.contacts[id-Ne-Nb]
+
+function get_joint_constraint(mechanism::Mechanism, name::Symbol)
+    for joint in mechanism.joints
+        if joint.name == name
+            return joint
+        end
+    end
+    return
+end
 
 function get_body(mechanism::Mechanism, name::Symbol)
     if name == :origin
@@ -14,22 +25,10 @@ function get_body(mechanism::Mechanism, name::Symbol)
     return
 end
 
-@inline get_joint_constraint(mechanism::Mechanism, id::Integer) = mechanism.joints[id]
-
-function get_joint_constraint(mechanism::Mechanism, name::Symbol)
-    for eqc in mechanism.joints
-        if eqc.name == name
-            return eqc
-        end
-    end
-    return
-end
-
-@inline get_contact_constraint(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,Ni} = mechanism.contacts[id-Ne-Nb]
 function get_contact_constraint(mechanism::Mechanism, name::Symbol)
-    for ineqc in mechanism.contacts
-        if ineqc.name == name
-            return ineqc
+    for contact in mechanism.contacts
+        if contact.name == name
+            return contact
         end
     end
     return
@@ -56,52 +55,42 @@ function get_node(mechanism::Mechanism, name::Symbol)
     return node
 end
 
-@inline function discretize_state!(mechanism::Mechanism)
-    for body in mechanism.bodies 
-        discretize_state!(body, mechanism.Δt) 
-    end
-    return
+@inline function initialize_state!(mechanism::Mechanism)
+    for body in mechanism.bodies initialize_state!(body, mechanism.timestep) end
 end
 
 @inline function off_diagonal_jacobians(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, body1::Body, body2::Body) where {T,Nn,Ne,Nb,Ni}
-    Δt = mechanism.Δt
-    _, _, q1, ω1 = current_configuration_velocity(body1.state)
-    _, _, q2, ω2 = current_configuration_velocity(body2.state)
+    timestep = mechanism.timestep
 
-    x1, q1 = next_configuration(body1.state, Δt)
-    x2, q2 = next_configuration(body2.state, Δt)
-
-    dimpulse_map_parentb = szeros(6,6)
-    dimpulse_map_childa = szeros(6,6)
+    dimpulse_map_parentb = szeros(6, 6)
+    dimpulse_map_childa = szeros(6, 6)
 
     for connectionid in connections(mechanism.system, body1.id)
         !(connectionid <= Ne) && continue # body
-        eqc = get_node(mechanism, connectionid)
-        Nc = length(eqc.childids)
+        joint = get_node(mechanism, connectionid)
+        Nc = length(joint.childids)
         off = 0
-        if body1.id == eqc.parentid
+        if body1.id == joint.parentid
             for i in 1:Nc
-                joint = eqc.constraints[i]
-                Nj = length(joint)
-                if body2.id == eqc.childids[i]
-                    Aᵀ = zerodimstaticadjoint(constraint_mask(joint))
-                    eqc.isspring && (dimpulse_map_parentb -= spring_parent_jacobian_velocity_child(joint, body1, body2, Δt)) #should be useless
-                    eqc.isdamper && (dimpulse_map_parentb -= damper_parent_jacobian_velocity_child(joint, body1, body2, Δt))
-                    eqc.isspring && (dimpulse_map_childa -= spring_child_configuration_velocity_parent(joint, body1, body2, Δt)) #should be useless
-                    eqc.isdamper && (dimpulse_map_childa -= damper_child_configuration_velocity_parent(joint, body1, body2, Δt))
+                element = joint.constraints[i]
+                Nj = length(element)
+                if body2.id == joint.childids[i]
+                    joint.isspring && (dimpulse_map_parentb -= spring_parent_jacobian_velocity_child(element, body1, body2, timestep)) #should be useless
+                    joint.isdamper && (dimpulse_map_parentb -= damper_parent_jacobian_velocity_child(element, body1, body2, timestep))
+                    joint.isspring && (dimpulse_map_childa -= spring_child_configuration_velocity_parent(element, body1, body2, timestep)) #should be useless
+                    joint.isdamper && (dimpulse_map_childa -= damper_child_configuration_velocity_parent(element, body1, body2, timestep))
                 end
                 off += Nj
             end
-        elseif body2.id == eqc.parentid
+        elseif body2.id == joint.parentid
             for i = 1:Nc
-                joint = eqc.constraints[i]
-                Nj = length(joint)
-                if body1.id == eqc.childids[i]
-                    Aᵀ = zerodimstaticadjoint(constraint_mask(joint))
-                    # eqc.isspring && (dimpulse_map_parentb -= spring_parent_jacobian_velocity_child(joint, body2, body1, Δt)) #should be useless
-                    eqc.isdamper && (dimpulse_map_parentb -= damper_parent_jacobian_velocity_child(joint, body2, body1, Δt))
-                    # eqc.isspring && (dimpulse_map_childa -= spring_child_configuration_velocity_parent(joint, body2, body1, Δt)) #should be useless
-                    eqc.isdamper && (dimpulse_map_childa -= damper_child_configuration_velocity_parent(joint, body2, body1, Δt))
+                element = joint.constraints[i]
+                Nj = length(element)
+                if body1.id == joint.childids[i]
+                    # joint.isspring && (dimpulse_map_parentb -= spring_parent_jacobian_velocity_child(element, body2, body1, timestep)) #should be useless
+                    joint.isdamper && (dimpulse_map_parentb -= damper_parent_jacobian_velocity_child(element, body2, body1, timestep))
+                    # joint.isspring && (dimpulse_map_childa -= spring_child_configuration_velocity_parent(element, body2, body1, timestep)) #should be useless
+                    joint.isdamper && (dimpulse_map_childa -= damper_child_configuration_velocity_parent(element, body2, body1, timestep))
                 end
                 off += Nj
             end

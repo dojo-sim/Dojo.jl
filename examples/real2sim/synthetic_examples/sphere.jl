@@ -12,10 +12,10 @@ open(vis)
 include(joinpath(module_dir(), "env", "sphere", "deps", "texture.jl"))
 include( "../utils.jl")
 
-mech = getmechanism(:sphere, Δt=0.05, g=-9.81, radius=0.5, cf=0.1);
+mech = getmechanism(:sphere, timestep=0.05, g=-9.81, radius=0.5, cf=0.1);
 initialize!(mech, :sphere, x=[0,0,0.3], v=[0,0.5,0.], ω=[10,0,0.])
 storage = simulate!(mech, 0.5, record=true, verbose=true,
-    opts=InteriorPointOptions(btol=1e-6, rtol=1e-6))
+    opts=SolverOptions(btol=1e-6, rtol=1e-6))
 visualize(mech, storage, vis=vis)
 sphere_texture!(vis, mech)
 
@@ -27,7 +27,7 @@ init_kwargs = Dict(:xlims => [[0,0,0], [1,1,0.2]],
 				   :ωlims => [-5ones(3), 5ones(3)])
 mech_kwargs = Dict(:cf => 0.1, :radius => 0.5)
 generate_dataset(:sphere, H=0.75, N=15,
-	opts=InteriorPointOptions(btol=3e-4, rtol=3e-4),
+	opts=SolverOptions(btol=3e-4, rtol=3e-4),
 	init_kwargs=init_kwargs,
 	mech_kwargs=mech_kwargs)
 
@@ -43,11 +43,11 @@ data0 = params0[:data]
 # CLEAN Optimization Objective: Evaluation & Gradient
 ################################################################################
 
-clean_loss(:sphere, pairs0, data0, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
+clean_loss(:sphere, pairs0, data0, opts=SolverOptions(btol=3e-4, rtol=3e-4))
 
-[clean_loss(:sphere, pairs0, [0.1, 0,0, 0.5+i, 0,0,0], opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
+[clean_loss(:sphere, pairs0, [0.1, 0,0, 0.5+i, 0,0,0], opts=SolverOptions(btol=3e-4, rtol=3e-4))
 	for i in Vector(-0.10:0.01:0.1)]
-[clean_loss(:sphere, pairs0, [0.1+i, 0,0, 0.5, 0,0,0], opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
+[clean_loss(:sphere, pairs0, [0.1+i, 0,0, 0.5, 0,0,0], opts=SolverOptions(btol=3e-4, rtol=3e-4))
 	for i in Vector(-0.10:0.01:0.1)]
 
 plot(hcat([p[1][1:3] for p in pairs0]...)')
@@ -78,11 +78,11 @@ lower = [0.0, 0.0]
 upper = [0.80, 2.0]
 
 function f0(d; rot=0)
-	return clean_loss(:sphere, pairs0, d2data(d), n_sample=15, rot=rot, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))[1]
+	return clean_loss(:sphere, pairs0, d2data(d), n_sample=15, rot=rot, opts=SolverOptions(btol=3e-4, rtol=3e-4))[1]
 end
 
 function fgH0(d; rot=0)
-	f, g, H = clean_loss(:sphere, pairs0, d2data(d), n_sample=15, rot=rot, opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))
+	f, g, H = clean_loss(:sphere, pairs0, d2data(d), n_sample=15, rot=rot, opts=SolverOptions(btol=3e-4, rtol=3e-4))
 	return f, ∇d2data' * g, ∇d2data' * H * ∇d2data
 end
 
@@ -98,7 +98,7 @@ using Plots; pyplot()
 x=range(0,stop=0.80,length=10)
 y=range(0,stop=0.75,length=10)
 f(x,y) = log(10, clean_loss(:sphere, pairs0, d2data([x,y]),
-	opts=InteriorPointOptions(btol=3e-4, rtol=3e-4))[1])
+	opts=SolverOptions(btol=3e-4, rtol=3e-4))[1])
 plot(x,y,f,st=:surface,camera=(20,40))
 
 # We can learn the coefficient of friction and the radius form 15*0.75 seconds of

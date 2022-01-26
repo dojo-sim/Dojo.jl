@@ -18,11 +18,11 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
-mech = getmechanism(:ant, Δt = 0.01, g = -9.81, contact = true,
+mech = getmechanism(:ant, timestep = 0.01, g = -9.81, contact = true,
     contact_body = true, spring = 0.0, damper = 1.0);
 initialize!(mech, :ant, rot = [0,0,0.], ankle = 0.25)
 @elapsed storage = simulate!(mech, 2.0, record = true, verbose = false,
-    opts=InteriorPointOptions(verbose=false, btol = 1e-6))
+    opts=SolverOptions(verbose=false, btol = 1e-6))
 visualize(mech, storage, vis = vis)
 
 env = make("ant", vis = vis)
@@ -37,7 +37,7 @@ collect(env.mechanism.joints)[1]
 for i = 1:25
     render(env)
     sleep(0.05)
-    # action = 120*env.mechanism.Δt*ones(6)#1000*sample(env.aspace) # your agent here (this takes random actions)
+    # action = 120*env.mechanism.timestep*ones(6)#1000*sample(env.aspace) # your agent here (this takes random actions)
     action = sample(env.aspace)#1000*sample(env.aspace) # your agent here (this takes random actions)
     obs, r, done, info = step(env, action)
     @show r

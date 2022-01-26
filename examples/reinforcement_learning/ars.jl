@@ -36,7 +36,7 @@ function Normalizer(num_inputs::Int)
     return Normalizer{eltype(n)}(n, mean, mean_diff, var)
 end
 
-function observe(normalizer::Normalizer{T}, x::AbstractVector{T}) where {T}
+function observe(normalizer::Normalizer{T}, x::AbstractVector{T}) where T
     normalizer.n .+= 1
     last_mean = deepcopy(normalizer.mean)
     normalizer.mean .+= (x .- normalizer.mean) ./ normalizer.n
@@ -56,23 +56,23 @@ mutable struct Policy{T}
     θ::Matrix{T}
 end
 
-function Policy(input_size::Int, output_size::Int, hp::HyperParameters{T}; scale=1.0e-1) where {T}
+function Policy(input_size::Int, output_size::Int, hp::HyperParameters{T}; scale=1.0e-1) where T
     return Policy{T}(hp, scale * randn(output_size, input_size))
 end
 
-function evaluate(policy::Policy{T}, input::AbstractVector{T}) where {T}
+function evaluate(policy::Policy{T}, input::AbstractVector{T}) where T
     return policy.θ * input
 end
 
-function positive_perturbation(policy::Policy{T}, input::AbstractVector{T}, δ::AbstractMatrix{T}) where {T}
+function positive_perturbation(policy::Policy{T}, input::AbstractVector{T}, δ::AbstractMatrix{T}) where T
     return (policy.θ + policy.hp.noise .* δ) * input
 end
 
-function negative_perturbation(policy::Policy{T}, input::AbstractVector{T}, δ::AbstractMatrix{T}) where {T}
+function negative_perturbation(policy::Policy{T}, input::AbstractVector{T}, δ::AbstractMatrix{T}) where T
     return (policy.θ - policy.hp.noise .* δ) * input
 end
 
-function sample_δs(policy::Policy{T}) where {T}
+function sample_δs(policy::Policy{T}) where T
     return [randn(size(policy.θ)) for i = 1:policy.hp.n_directions]
 end
 
@@ -85,14 +85,14 @@ function update(policy::Policy, rollouts, σ_r)
     return nothing
 end
 
-function sample_policy(policy::Policy{T}) where {T}
+function sample_policy(policy::Policy{T}) where T
     δ = [randn(size(policy.θ)) for i = 1:policy.hp.n_directions]
     θp = [policy.θ + policy.hp.noise .* δ[i] for i = 1:policy.hp.n_directions]
     θn = [policy.θ - policy.hp.noise .* δ[i] for i = 1:policy.hp.n_directions]
     return [θp..., θn...], δ
 end
 
-function eval_sample_policy(θ::Matrix{T}, input::AbstractVector{T}) where {T}
+function eval_sample_policy(θ::Matrix{T}, input::AbstractVector{T}) where T
     return θ * input
 end
 
@@ -167,7 +167,7 @@ function display_policy(env::Environment, policy::Policy, normalizer::Normalizer
     reward_evaluation = 0
     while !done && num_plays < hp.horizon
         rendering && render(env)
-        sleep(env.mechanism.Δt)
+        sleep(env.mechanism.timestep)
         observe(normalizer, obs)
         push!(traj, copy(env.x))
         obs = normalize(normalizer, obs)
@@ -190,7 +190,7 @@ function display_random_policy(env::Environment, hp::HyperParameters; rendering 
     reward_evaluation = 0
     while !done && num_plays < hp.horizon
         rendering && render(env)
-        sleep(env.mechanism.Δt)
+        sleep(env.mechanism.timestep)
         push!(traj, copy(env.x))
         action = sample(env.aspace)
         obs, reward, done, _ = step(env, action)

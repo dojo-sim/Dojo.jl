@@ -61,7 +61,7 @@ end
     return constraint_mask(joint) * [X Q]
 end
 
-function impulse_map_parent(joint::Translational{T,Nλ,0}, statea::State, stateb::State, η, Δt) where {T,Nλ}
+function impulse_map_parent(joint::Translational{T,Nλ,0}, statea::State, stateb::State, η, timestep) where {T,Nλ}
     xa, qa = current_configuration(statea)
     xb, qb = current_configuration(stateb)
     impulse_map_parent(joint, xa, qa, xb, qb, η)
@@ -76,7 +76,7 @@ function impulse_map_parent(joint::Translational{T,Nλ,0}, xa::AbstractVector, q
     return constraint_mask(joint) * [X Q]
 end
 
-function impulse_map_child(joint::Translational{T,Nλ,0}, statea::State, stateb::State, η, Δt) where {T,Nλ}
+function impulse_map_child(joint::Translational{T,Nλ,0}, statea::State, stateb::State, η, timestep) where {T,Nλ}
     xa, qa = current_configuration(statea)
     xb, qb = current_configuration(stateb)
     impulse_map_child(joint, xa, qa, xb, qb, η)

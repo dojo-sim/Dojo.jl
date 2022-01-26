@@ -121,7 +121,7 @@ mutable struct Shapes{T} <: Shape{T}
 
     function Shapes(shapes::Vector; 
         xoffset::AbstractVector=szeros(3), qoffset::UnitQuaternion=one(UnitQuaternion),
-        scale::AbstractVector=sones(3), name::Symbol=Symbol("body_" * randstring(4)), color=RGBA(0.75, 0.75, 0.75)) where {T}
+        scale::AbstractVector=sones(3), name::Symbol=Symbol("body_" * randstring(4)), color=RGBA(0.75, 0.75, 0.75)) where T
         new{T}(shapes, xoffset, qoffset, scale, color)
     end
 

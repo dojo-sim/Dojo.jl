@@ -48,7 +48,7 @@ vis = Visualizer()
 open(vis)
 
 S = 7
-Δt = 1/148 * S
+timestep = 1/148 * S
 gscaled = -9.81*20
 
 file = jldopen(joinpath(@__DIR__, "..", "results", "sol_best6.jld2"))
@@ -72,7 +72,7 @@ function d2data(d)
 			]
 	return data
 end
-mech = getmechanism(:box, Δt=Δt/S, g=gscaled, cf=Dsol[end][1], radius=0.00, side=2.0, mode=:box);
+mech = getmechanism(:box, timestep=timestep/S, g=gscaled, cf=Dsol[end][1], radius=0.00, side=2.0, mode=:box);
 set_simulator_data!(mech, d2data(Dsol[end]))
 id = 7#4,6,7,8
 traj_truth = trajs1[id]
@@ -83,11 +83,11 @@ q2 = traj_truth.q[1][1]
 
 initialize!(mech, :box, x=x2, v=v15, q=q2, ω=ϕ15)
 traj_sim = simulate!(mech, 0.80, record=true,
-    opts=InteriorPointOptions(btol=1e-6, rtol=1e-6, verbose=false))
+    opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
 
 cube_sim_v_truth(Dsol[end], traj_truth, traj_sim, vis=vis,
 	transparency_truth=0.5,
-	fps=Int(floor(1/mech.Δt)), b0=0.0, b1=0.0)
+	fps=Int(floor(1/mech.timestep)), b0=0.0, b1=0.0)
 
 cube_sim_v_truth(Dsol[end], traj_truth, traj_sim, vis=vis, transparency_truth=1.0)
 cube_ghost_sim_v_truth(Dsol[end], traj_truth, traj_sim, vis=vis, transparency_truth=1.0)

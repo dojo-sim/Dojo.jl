@@ -23,7 +23,7 @@ zM = max2min(env.mechanism, raiberthopper_offset_max(0.5, 0.5, 1.0))
 zT = max2min(env.mechanism, raiberthopper_offset_max(0.5, 0.5, 0.0))
 
 # ## nominal control
-u_control = [0.0; 0.0; env.mechanism.g * env.mechanism.Δt]
+u_control = [0.0; 0.0; env.mechanism.g * env.mechanism.timestep]
 
 # ## horizon
 T = 21
@@ -38,7 +38,7 @@ dyn = IterativeLQR.Dynamics(
 model = [dyn for t = 1:T-1]
 
 # ## rollout
-ū = [[0.0; 0.0; env.mechanism.g * env.mechanism.Δt + 0.0 * randn(1)[1]] for t = 1:T-1]
+ū = [[0.0; 0.0; env.mechanism.g * env.mechanism.timestep + 0.0 * randn(1)[1]] for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, z1, ū, w)
 visualize(env, x̄)

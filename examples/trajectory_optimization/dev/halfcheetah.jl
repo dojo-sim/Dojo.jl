@@ -19,8 +19,8 @@ using IterativeLQR
 
 # System
 gravity = -9.81
-Δt = 0.05
-mech = getmechanism(:halfcheetah, Δt = Δt, g = gravity, damper = 1.0, spring = 0.0)
+timestep = 0.05
+mech = getmechanism(:halfcheetah, timestep = timestep, g = gravity, damper = 1.0, spring = 0.0)
 initialize!(mech, :halfcheetah)
 
 ## state space
@@ -38,13 +38,13 @@ function gravity_compensation(mechanism::Mechanism)
     nu = control_dimension(mechanism)
     u = zeros(nu)
     off  = 0
-    for eqc in mechanism.joints
-        nu = control_dimension(eqc)
-        if eqc.parentid != nothing
-            body = get_body(mechanism, eqc.parentid)
-            rot = eqc.constraints[2]
+    for joint in mechanism.joints
+        nu = control_dimension(joint)
+        if joint.parentid != nothing
+            body = get_body(mechanism, joint.parentid)
+            rot = joint.constraints[2]
             A = Matrix(nullspace_mask(rot))
-            Fτ = apply_spring(mechanism, eqc, body)
+            Fτ = apply_spring(mechanism, joint, body)
             F = Fτ[1:3]
             τ = Fτ[4:6]
             u[off .+ (1:nu)] = -A * τ
@@ -56,13 +56,13 @@ function gravity_compensation(mechanism::Mechanism)
     return u
 end
 
-mech = getmechanism(:halfcheetah, Δt = Δt, g = gravity, damper = 100.0, spring = 1000.0)
+mech = getmechanism(:halfcheetah, timestep = timestep, g = gravity, damper = 100.0, spring = 1000.0)
 initialize!(mech, :halfcheetah, x = 0.0, z = 0.0, θ = 0.0)
 @elapsed storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 ugc = gravity_compensation(mech)
 
-mech = getmechanism(:halfcheetah, Δt = Δt, g = gravity, damper = 10.0, spring = 1000.0)
+mech = getmechanism(:halfcheetah, timestep = timestep, g = gravity, damper = 10.0, spring = 1000.0)
 
 u_control = ugc[3 .+ (1:6)]
 u_mask = [zeros(6,3) I(m)]
@@ -92,7 +92,7 @@ end
 
 # Time
 T = 21
-h = mech.Δt
+h = mech.timestep
 
 n, m, d = 13Nb, 6, 0
 dyn = Dynamics(fd, fdx, fdu, n, n, m, d)
@@ -116,9 +116,9 @@ qt2 = [0.1; 0.1; 1.0; 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]
 body_scale = [1; 0.2ones(6)]
 qt = vcat([body_scale[i] * [0.1 * ones(3); 0.001 * ones(3); 0.1 * ones(4); 0.01 * ones(3)] for i = 1:Nb]...)
 
-ot1 = (x, u, w) -> transpose(x - zM) * Diagonal(Δt * qt) * (x - zM) + transpose(u) * Diagonal(Δt * 0.01 * ones(m)) * u
-ot2 = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * qt) * (x - zT) + transpose(u) * Diagonal(Δt * 0.01 * ones(m)) * u
-oT = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * qt) * (x - zT)
+ot1 = (x, u, w) -> transpose(x - zM) * Diagonal(timestep * qt) * (x - zM) + transpose(u) * Diagonal(timestep * 0.01 * ones(m)) * u
+ot2 = (x, u, w) -> transpose(x - zT) * Diagonal(timestep * qt) * (x - zT) + transpose(u) * Diagonal(timestep * 0.01 * ones(m)) * u
+oT = (x, u, w) -> transpose(x - zT) * Diagonal(timestep * qt) * (x - zT)
 
 ct1 = Cost(ot1, n, m, d)
 ct2 = Cost(ot2, n, m, d)

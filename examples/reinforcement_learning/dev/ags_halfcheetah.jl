@@ -22,7 +22,7 @@ include("../ars.jl")
 include("../ags.jl")
 
 
-opts_grad = InteriorPointOptions(rtol = 1e-4, btol = 1e-3, undercut = 2.0)
+opts_grad = SolverOptions(rtol = 1e-4, btol = 1e-3, undercut = 2.0)
 env = make("halfcheetah", vis = vis, dt = 0.05, opts_grad = opts_grad)
 obs = reset(env)
 render(env)

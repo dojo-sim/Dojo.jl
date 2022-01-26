@@ -9,35 +9,28 @@ mutable struct Mechanism{T,Nn,Ne,Nb,Ni}
     matrix_entries::SparseMatrixCSC{Entry,Int64}
     diagonal_inverses::Vector{Entry}
 
-    Δt::T
+    timestep::T
     g::T
     μ::T
-    ϕreg::Vector{T}
 end
 
-function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, eqcs::Vector{<:JointConstraint{T}}, ineqcs::Vector{<:ContactConstraint{T}};
-    spring=0.0, damper=0.0, Δt::T=0.01, g::T=-9.81) where T
+function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, joints::Vector{<:JointConstraint{T}}, contacts::Vector{<:ContactConstraint{T}};
+    spring=0.0, damper=0.0, timestep::T=0.01, g::T=-9.81) where T
 
     # reset ids
     resetGlobalID()
-    order = getGlobalOrder()
 
-    # initialize body states
-    for body in bodies
-        initialize!(body.state, order)
-        if norm(body.m) == 0 || norm(body.J) == 0
-            @info "Potentially bad inertial properties detected"
-        end
-    end
+    # check body inertia parameters 
+    check_body.(bodies)
 
     # dimensions
-    Ne = length(eqcs)
+    Ne = length(joints)
     Nb = length(bodies)
-    Ni = length(ineqcs)
+    Ni = length(contacts)
     Nn = Ne + Nb + Ni
 
     # nodes
-    nodes = [eqcs; bodies; ineqcs]
+    nodes = [joints; bodies; contacts]
 
     # ids
     oldnewid = Dict([node.id=>i for (i,node) in enumerate(nodes)]...)
@@ -51,24 +44,19 @@ function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, eqcs::Vector{<:
     end
 
     # graph system
-    system = create_system(origin, eqcs, bodies, ineqcs)
+    system = create_system(origin, joints, bodies, contacts)
     residual_entries = deepcopy(system.vector_entries)
     matrix_entries = deepcopy(system.matrix_entries)
     diagonal_inverses = deepcopy(system.diagonal_inverses)
 
     # springs and dampers
-    eqcs = set_spring_damper_values!(eqcs, spring, damper)
+    joints = set_spring_damper_values!(joints, spring, damper)
 
-    # complementarity slackness (i.e., contact model "softness")
-    μ = 0.0
-    ϕreg = zeros(Nb)
-    Mechanism{T,Nn,Ne,Nb,Ni}(origin, eqcs, bodies, ineqcs, system, residual_entries, matrix_entries, diagonal_inverses, Δt, g, μ, ϕreg)
+    Mechanism{T,Nn,Ne,Nb,Ni}(origin, joints, bodies, contacts, system, residual_entries, matrix_entries, diagonal_inverses, timestep, g, 0.0)
 end
 
-function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, eqcs::Vector{<:JointConstraint{T}}; kwargs...) where T
-    return Mechanism(origin, bodies, eqcs, ContactConstraint{T}[]; kwargs...)
-end
-
+Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, joints::Vector{<:JointConstraint{T}}; kwargs...) where T = Mechanism(origin, bodies, joints, ContactConstraint{T}[]; kwargs...)
+ 
 function Mechanism(filename::String, floating::Bool=false, T=Float64; kwargs...)
     # parse urdf
     origin, links, joints, loopjoints = parse_urdf(filename, floating, T)
@@ -81,3 +69,5 @@ function Mechanism(filename::String, floating::Bool=false, T=Float64; kwargs...)
 
     return mechanism
 end
+
+

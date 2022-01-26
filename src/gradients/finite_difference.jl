@@ -7,14 +7,14 @@ function unpack_data(data::AbstractVector)
 end
 
 function set_data!(mechanism::Mechanism, data::AbstractVector)
-    Δt = mechanism.Δt
+    timestep = mechanism.timestep
     off = 0
     for body in mechanism.bodies
         x2, v15, q2, ϕ15 = unpack_data(data[off+1:end]); off += 13
         q2 = UnitQuaternion(q2..., false)
-        body.state.x1 = next_position(x2, -v15, Δt)
+        body.state.x1 = next_position(x2, -v15, timestep)
         body.state.v15 = v15
-        body.state.q1 = next_orientation(q2, -ϕ15, Δt)
+        body.state.q1 = next_orientation(q2, -ϕ15, timestep)
         body.state.ϕ15 = ϕ15
         body.state.x2[1] = x2
         body.state.q2[1] = q2
@@ -22,11 +22,11 @@ function set_data!(mechanism::Mechanism, data::AbstractVector)
         body.state.F2[1] = SVector{3}([0,0,0.])
         body.state.τ2[1] = SVector{3}([0,0,0.])
     end
-    for eqc in mechanism.joints
-        dim = control_dimension(eqc)
+    for joint in mechanism.joints
+        dim = control_dimension(joint)
         if dim > 0
             u = data[off .+ (1:dim)]; off += dim
-            set_input!(eqc, u)
+            set_input!(joint, u)
         end
     end
 
@@ -45,10 +45,10 @@ function get_data(mechanism::Mechanism{T}) where T
         ϕ15 = body.state.ϕ15
         push!(data, [x2; v15; q2; ϕ15]...)
     end
-    for eqc in mechanism.joints
-        if control_dimension(eqc) > 0
-            tra = eqc.constraints[findfirst(x -> typeof(x) <: Translational, eqc.constraints)]
-            rot = eqc.constraints[findfirst(x -> typeof(x) <: Rotational, eqc.constraints)]
+    for joint in mechanism.joints
+        if control_dimension(joint) > 0
+            tra = joint.constraints[findfirst(x -> typeof(x) <: Translational, joint.constraints)]
+            rot = joint.constraints[findfirst(x -> typeof(x) <: Rotational, joint.constraints)]
             F = tra.Fτ
             τ = rot.Fτ
             u = [nullspace_mask(tra) * F; nullspace_mask(rot) * τ]
@@ -60,10 +60,10 @@ end
 
 function set_solution!(mechanism::Mechanism{T}, sol::AbstractVector) where T
     off = 0
-    for (i,eqc) in enumerate(mechanism.joints)
-        nλ = length(eqc)
+    for (i,joint) in enumerate(mechanism.joints)
+        nλ = length(joint)
         λ = sol[off .+ (1:nλ)]; off += nλ
-        eqc.λsol[2] = λ
+        joint.λsol[2] = λ
     end
     for (i,body) in enumerate(mechanism.bodies)
         nv = 3
@@ -73,21 +73,21 @@ function set_solution!(mechanism::Mechanism{T}, sol::AbstractVector) where T
         body.state.vsol[2] = v25
         body.state.ϕsol[2] = ϕ25
     end
-    for (i,ineqc) in enumerate(mechanism.contacts)
-        N = length(ineqc)
+    for (i,contact) in enumerate(mechanism.contacts)
+        N = length(contact)
         N½ = Int(N/2)
         s = sol[off .+ (1:N½)]; off += N½
         γ = sol[off .+ (1:N½)]; off += N½
-        ineqc.ssol[2] = s
-        ineqc.γsol[2] = γ
+        contact.ssol[2] = s
+        contact.γsol[2] = γ
     end
     return nothing
 end
 
 function get_solution(mechanism::Mechanism{T}) where T
     sol = T[]
-    for (i,eqc) in enumerate(mechanism.joints)
-        λ = eqc.λsol[2]
+    for (i,joint) in enumerate(mechanism.joints)
+        λ = joint.λsol[2]
         push!(sol, λ...)
     end
     for (i,body) in enumerate(mechanism.bodies)
@@ -95,9 +95,9 @@ function get_solution(mechanism::Mechanism{T}) where T
         ϕ25 = body.state.ϕsol[2]
         push!(sol, [v25; ϕ25]...)
     end
-    for (i,ineqc) in enumerate(mechanism.contacts)
-        s = ineqc.ssol[2]
-        γ = ineqc.γsol[2]
+    for (i,contact) in enumerate(mechanism.contacts)
+        s = contact.ssol[2]
+        γ = contact.γsol[2]
         push!(sol, [s; γ]...)
     end
     return sol
@@ -125,12 +125,12 @@ function finitediff_sensitivity(mechanism::Mechanism, data::AbstractVector; ϵr 
 
         mechanismp = deepcopy(mechanism)
         set_data!(mechanismp, deepcopy(datap))
-        mehrotra!(mechanismp, opts = InteriorPointOptions(rtol = ϵr, btol = ϵb, undercut = 1.2, verbose = false))
+        mehrotra!(mechanismp, opts = SolverOptions(rtol = ϵr, btol = ϵb, undercut = 1.2, verbose = false))
         solp = get_solution(mechanismp)
 
         mechanismm = deepcopy(mechanism)
         set_data!(mechanismm, deepcopy(datam))
-        mehrotra!(mechanismm, opts = InteriorPointOptions(rtol = ϵr, btol = ϵb, undercut = 1.2, verbose = false))
+        mehrotra!(mechanismm, opts = SolverOptions(rtol = ϵr, btol = ϵb, undercut = 1.2, verbose = false))
         solm = get_solution(mechanismm)
 
         jac[:,i] = (solp - solm) / (2δ)

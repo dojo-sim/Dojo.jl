@@ -17,8 +17,8 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
-Δt_ = 0.01
-mech = getmechanism(:atlas, Δt = Δt_, g = -2.0, cf = 0.8, contact = true,
+timestep_ = 0.01
+mech = getmechanism(:atlas, timestep = timestep_, g = -2.0, cf = 0.8, contact = true,
     spring = 0.0, damper = 50.0, model_type = :simple)
 initialize!(mech, :atlas, tran = [0,0,1.1], rot = [0.1,0.05,0])
 
@@ -45,7 +45,7 @@ function controller!(mechanism, k)
             minJ = min(minJ, minimum(diag(cbody.J)))
         end
         nu = control_dimension(eqc)
-        u = 1 * minJ * (rand(nu) .- 0.2) * Δt_ * 0.0
+        u = 1 * minJ * (rand(nu) .- 0.2) * timestep_ * 0.0
         set_input!(eqc, SVector{nu}(u))
     end
     return

@@ -5,13 +5,13 @@
 data_dim(mechanism::Mechanism) = sum(data_dim.(mechanism.joints)) +
     sum(data_dim.(mechanism.bodies)) + sum(data_dim.(mechanism.contacts))
 # Eqconstraints
-data_dim(eqc::JointConstraint) = 2 + sum(data_dim.(eqc.constraints)) # [utra, urot, spring, damper, traapply_springoffset, rotapply_springoffset]
+data_dim(joint::JointConstraint) = 2 + sum(data_dim.(joint.constraints)) # [utra, urot, spring, damper, traapply_springoffset, rotapply_springoffset]
 data_dim(joint::Rotational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = 2N̄λ # [u, spring, damper, spring_offset]
 data_dim(joint::Translational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = 2N̄λ # [u, spring, damper, spring_offset]
 # Body
 data_dim(body::Body) = 19 # 1+6+6+6 [m,flat(J),x1,q1,x2,q2] with attjac
 # Injoints
-data_dim(ineqc::ContactConstraint) = sum(data_dim.(ineqc.constraints))
+data_dim(contact::ContactConstraint) = sum(data_dim.(contact.constraints))
 data_dim(bound::NonlinearContact) = 7 # [cf, p, offset]
 data_dim(bound::LinearContact) = 7 # [cf, p, offset]
 data_dim(bound::ImpactContact) = 6 # [p, offset]
@@ -29,8 +29,8 @@ function data_attitude_jacobian(mechanism::Mechanism)
 	return attjac
 end
 # Eqconstraints
-function data_attitude_jacobian(eqc::JointConstraint)
-	return I(data_dim(eqc))
+function data_attitude_jacobian(joint::JointConstraint)
+	return I(data_dim(joint))
 end
 # Body
 function data_attitude_jacobian(body::Body)
@@ -41,8 +41,8 @@ function data_attitude_jacobian(body::Body)
 	return attjac
 end
 # Injoints
-function data_attitude_jacobian(ineqc::ContactConstraint)
-	return I(data_dim(ineqc))
+function data_attitude_jacobian(contact::ContactConstraint)
+	return I(data_dim(contact))
 end
 
 
@@ -53,8 +53,8 @@ end
 get_data(mechanism::Mechanism) = vcat([get_data.(mechanism.joints);
 	get_data.(mechanism.bodies); get_data.(mechanism.contacts)]...)
 # Eqconstraints
-function get_data(eqc::JointConstraint)
-	joints = eqc.constraints
+function get_data(joint::JointConstraint)
+	joints = joint.constraints
 	u = vcat(nullspace_mask.(joints) .* getfield.(joints, :Fτ)...)
 	spring = joints[1].spring # assumes we have the same spring and dampers for translational and rotational joint.
 	damper = joints[1].damper # assumes we have the same spring and dampers for translational and rotational joint.
@@ -73,7 +73,7 @@ end
 get_data(bound::NonlinearContact) = [bound.cf; bound.offset; bound.p]
 get_data(boundset::LinearContact) = [bound.cf; bound.off; bound.p]
 get_data(bound::ImpactContact) = [bound.offset; bound.p]
-get_data(ineqc::ContactConstraint) = vcat(get_data.(ineqc.constraints)...)
+get_data(contact::ContactConstraint) = vcat(get_data.(contact.constraints)...)
 
 
 ################################################################################
@@ -82,31 +82,31 @@ get_data(ineqc::ContactConstraint) = vcat(get_data.(ineqc.constraints)...)
 # Mechanism
 function set_data!(mechanism::Mechanism, data::AbstractVector)
 	c = 0
-	for eqc in mechanism.joints
-		Nd = data_dim(eqc)
-		set_data!(eqc, data[c .+ (1:Nd)]); c += Nd
+	for joint in mechanism.joints
+		Nd = data_dim(joint)
+		set_data!(joint, data[c .+ (1:Nd)]); c += Nd
 	end
 	for body in mechanism.bodies
 		Nd = data_dim(body)
 		set_data!(body, data[c .+ (1:Nd)]); c += Nd
 	end
-	for ineqc in mechanism.contacts
-		Nd = data_dim(ineqc)
-		set_data!(ineqc, data[c .+ (1:Nd)]); c += Nd
+	for contact in mechanism.contacts
+		Nd = data_dim(contact)
+		set_data!(contact, data[c .+ (1:Nd)]); c += Nd
 	end
 	return nothing
 end
  # Eqconstraints
-function set_data!(eqc::JointConstraint, data::AbstractVector)
-	nu = control_dimension(eqc)
+function set_data!(joint::JointConstraint, data::AbstractVector)
+	nu = control_dimension(joint)
 	u = data[SUnitRange(1,nu)]
 	spring = data[nu+1]
 	damper = data[nu+2]
 	spring_offset = data[nu+2 .+ (1:nu)]
 
-	set_input!(eqc, u)
+	set_input!(joint, u)
 	c = 0
-	for joint in eqc.constraints
+	for joint in joint.constraints
 		nu = control_dimension(joint)
 		joint.spring = spring
 		joint.damper = damper
@@ -149,9 +149,9 @@ function set_data!(bound::ImpactContact, data::AbstractVector)
     bound.p = data[SVector{3,Int}(4:6)]
     return nothing
 end
-function set_data!(ineqc::ContactConstraint, data::AbstractVector)
+function set_data!(contact::ContactConstraint, data::AbstractVector)
     c = 0
-	for bound in ineqc.constraints
+	for bound in contact.constraints
 		N = data_dim(bound)
         set_data!(bound, data[c .+ (1:N)]); c += N
     end

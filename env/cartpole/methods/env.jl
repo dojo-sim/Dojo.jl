@@ -6,9 +6,9 @@ struct Cartpole end
 function cartpole(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     s::Int=1, vis::Visualizer=Visualizer(), info=nothing, name::Symbol=:robot,
     control_scaling=Diagonal(ones(1)),
-    opts_step=InteriorPointOptions(), opts_grad=InteriorPointOptions()) where T
+    opts_step=SolverOptions(), opts_grad=SolverOptions()) where T
 
-    mechanism = getcartpole(Δt=dt, g=g)
+    mechanism = getcartpole(timestep=dt, g=g)
     initializecartpole!(mechanism)
 
     if mode == :min

@@ -50,14 +50,13 @@ function AtlasIKerror(mechanism::Mechanism, p_base, p_foot, θ; leg::Symbol = :r
 	set_position(mechanism, get_joint_constraint(mechanism, String(leg)*"_leg_akxy"), [θ[1]-θ[2], 0.0])
 
 	foot = get_body(mechanism, String(leg)*"_foot")
-	ineqcs = collect(mechanism.contacts)
-	foot_ineqcs = ineqcs[findall(x -> x.parentid == foot.id, ineqcs)]
-	p = mean([contact_location(ineqc, foot) for ineqc in foot_ineqcs]) # average of all contact locations for one foot
+	foot_contacts = mechanism.contacts[findall(x -> x.parentid == foot.id, mechanism.contacts)]
+	p = mean([contact_location(contact, foot) for contact in foot_contacts]) # average of all contact locations for one foot
 	err = p - p_foot
 	return err[[1,3]]
 end
 
-function atlas_trajectory(mechanism::Mechanism{T}; Δt = 0.05, r = 0.10, x = 0.00, z = 0.85, N = 12, Ncycles = 1) where T
+function atlas_trajectory(mechanism::Mechanism{T}; timestep = 0.05, r = 0.10, x = 0.00, z = 0.85, N = 12, Ncycles = 1) where T
 	pL = [0, + 0.1145, 0]
 	pR = [0, - 0.1145, 0]
 
@@ -73,8 +72,8 @@ function atlas_trajectory(mechanism::Mechanism{T}; Δt = 0.05, r = 0.10, x = 0.0
 	θR = [IKatlas(mechanism, p_base, tR[i], leg = :r) for i = 1:2N]
 
 	# adding angular velocities
-	ωL = [(θL[i%(2N)+1] - θL[i]) / Δt for i = 1:2N]
-	ωR = [(θR[i%(2N)+1] - θR[i]) / Δt for i = 1:2N]
+	ωL = [(θL[i%(2N)+1] - θL[i]) / timestep for i = 1:2N]
+	ωR = [(θR[i%(2N)+1] - θR[i]) / timestep for i = 1:2N]
 
 	# Minimal Coordinates
 	nx = minimal_dimension(mechanism)
@@ -104,7 +103,7 @@ function atlas_trajectory(mechanism::Mechanism{T}; Δt = 0.05, r = 0.10, x = 0.0
 	# adding forward displacement and velocity
 	for i = 1:2N*Ncycles
 		X[i][1] += (i-1) * 2r / N
-		X[i][7] += 2r / N / Δt
+		X[i][7] += 2r / N / timestep
 	end
 	return X
 end
@@ -114,23 +113,23 @@ end
 # # Compute trajectory
 # ################################################################################
 #
-# mech = getmechanism(:atlas, Δt = 0.05, model_type = :armless, damper = 1000.0)
+# mech = getmechanism(:atlas, timestep = 0.05, model_type = :armless, damper = 1000.0)
 # initialize!(mech, :atlas, tran = [1,0,0.0], rot = [0,0,0.], αhip = 0.0, αknee = 0.0)
 #
 # @elapsed storage = simulate!(mech, 0.55, record = true, undercut = Inf,
 #     solver = :mehrotra!, verbose = true)
 # visualize(mech, storage, vis = vis)
 #
-# X = atlas_trajectory(mech; Δt = 0.05, r = 0.10, z = 0.89, N = 12, Ncycles = 5)
+# X = atlas_trajectory(mech; timestep = 0.05, r = 0.10, z = 0.89, N = 12, Ncycles = 5)
 # zref = [min2max(mech, x) for x in X]
 # storage = generate_storage(mech, zref)
 # visualize(mech, storage, vis = vis)
 #
 #
 # bodies = collect(mech.bodies)
-# eqcs = collect(mech.joints)
-# ineqcs = collect(mech.contacts)
-# getfield.(ineqcs, :parentid)
+# joints = collect(mech.joints)
+# contacts = collect(mech.contacts)
+# getfield.(contacts, :parentid)
 # get_body(mech, 15)
 # nx = minimal_dimension(mech)
 #

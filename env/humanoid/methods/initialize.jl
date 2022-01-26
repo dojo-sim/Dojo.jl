@@ -1,7 +1,7 @@
-function gethumanoid(; Δt::T=0.01, g::T=-9.81, cf=0.8, spring=0.0, damper=0.0,
-		contact::Bool=true, contact_body::Bool=false) where {T}
+function gethumanoid(; timestep::T=0.01, g::T=-9.81, cf=0.8, spring=0.0, damper=0.0,
+		contact::Bool=true, contact_body::Bool=false) where T
     path = joinpath(@__DIR__, "../deps/humanoid.urdf")
-    mech = Mechanism(path, true, T, g=g, Δt=Δt, spring=spring, damper=damper)
+    mech = Mechanism(path, true, T, g=g, timestep=timestep, spring=spring, damper=damper)
 
     if contact
         origin = Origin{T}()
@@ -44,7 +44,7 @@ function gethumanoid(; Δt::T=0.01, g::T=-9.81, cf=0.8, spring=0.0, damper=0.0,
         normal = [[0;0;1.0] for i = 1:n]
         cfs = cf * ones(T, n)
 
-        ineqcs_left = contact_constraint(left_foot, normal, cf=cfs, p=contacts, offset=offsets)
+        contacts_left = contact_constraint(left_foot, normal, cf=cfs, p=contacts, offset=offsets)
 
         right_foot = get_body(mech, :right_foot)
 
@@ -64,11 +64,11 @@ function gethumanoid(; Δt::T=0.01, g::T=-9.81, cf=0.8, spring=0.0, damper=0.0,
         normal = [[0;0;1.0] for i = 1:n]
         cfs = cf * ones(T, n)
 
-        ineqcs_right = contact_constraint(right_foot, normal, cf=cfs, p = contacts, offset=offsets)
+        contacts_right = contact_constraint(right_foot, normal, cf=cfs, p = contacts, offset=offsets)
 
         set_position(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [0;0;1.2;0.1;0.;0.])
-        # mech = Mechanism(origin, bodies, eqs, [ineqcs_left; ineqcs_right], g = g, Δt = Δt, spring=spring, damper=damper)
-        mech = Mechanism(origin, bodies, eqs, [ineqcs_left; ], g = g, Δt = Δt, spring=spring, damper=damper)
+        # mech = Mechanism(origin, bodies, eqs, [contacts_left; contacts_right], g = g, timestep = timestep, spring=spring, damper=damper)
+        mech = Mechanism(origin, bodies, eqs, [contacts_left; ], g = g, timestep = timestep, spring=spring, damper=damper)
     end
     return mech
 end

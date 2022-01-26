@@ -6,9 +6,9 @@ struct Walker2d end
 function walker2d(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     cf::T=1.9, spring=0.0, damper=0.1,
     s::Int=1, contact::Bool=true, info=nothing, vis::Visualizer=Visualizer(), name::Symbol=:robot,
-    opts_step=InteriorPointOptions(), opts_grad=InteriorPointOptions()) where T
+    opts_step=SolverOptions(), opts_grad=SolverOptions()) where T
 
-    mechanism = getwalker2d(Δt=dt, g=g, cf=cf, spring=spring, damper=damper, contact=contact)
+    mechanism = getwalker2d(timestep=dt, g=g, cf=cf, spring=spring, damper=damper, contact=contact)
     initializewalker2d!(mechanism)
 
     if mode == :min

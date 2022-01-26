@@ -21,8 +21,8 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
 
-Δt_ = 0.05
-mech = getmechanism(:humanoid, contact = true, Δt = Δt_, g = -9.81, spring = 500.0, damper = 50.)
+timestep_ = 0.05
+mech = getmechanism(:humanoid, contact = true, timestep = timestep_, g = -9.81, spring = 500.0, damper = 50.)
 initialize!(mech, :humanoid, rot = [0.1,0,0], tran = [0,0,1.5])
 eqcs = collect(mech.joints)
 
@@ -35,7 +35,7 @@ function controller!(mechanism, k)
             minJ = min(minJ, minimum(diag(cbody.J)))
         end
         nu = control_dimension(eqc)
-        u = 10 * minJ * (ones(nu) .- 0.2) * Δt_
+        u = 10 * minJ * (ones(nu) .- 0.2) * timestep_
         set_input!(eqc, SVector{nu}(u))
     end
     return

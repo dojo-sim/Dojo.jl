@@ -18,7 +18,7 @@ module_dir()
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
-function getpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
+function getpendulum(; timestep::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
         spring = 0.0, damper = 0.0, spring_offset = szeros(1), joint_limits = [-sones(1), sones(1)]) where T
     # Parameters
     joint_axis = [1.0; 0; 0]
@@ -40,13 +40,13 @@ function getpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
     bodies = [body1]
     eqcs = [joint_between_origin_and_body1]
 
-    mech = Mechanism(origin, bodies, eqcs, g = g, Δt = Δt, spring=spring, damper=damper)
+    mech = Mechanism(origin, bodies, eqcs, g = g, timestep = timestep, spring=spring, damper=damper)
     return mech
 end
 
 
 
-mech = getmechanism(:pendulum, Δt = 0.01, g = 0.00, spring = 10, spring_offset = π/2*sones(1),
+mech = getmechanism(:pendulum, timestep = 0.01, g = 0.00, spring = 10, spring_offset = π/2*sones(1),
     joint_limits = 0.55π .* [-sones(1), sones(1)])
 initialize!(mech, :pendulum, ϕ1 = 0.1)
 storage = simulate!(mech, 3.1, record = true, verbose = true)

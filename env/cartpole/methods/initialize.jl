@@ -1,4 +1,4 @@
-function getcartpole(; Δt::T=0.1, g::T=-9.81, spring=0.0, damper=0.0) where {T}
+function getcartpole(; timestep::T=0.1, g::T=-9.81, spring=0.0, damper=0.0) where T
     #TODO: make customizable
     # Parameters
     slider_axis = [0.0; 1.0; 0.0]
@@ -18,10 +18,10 @@ function getcartpole(; Δt::T=0.1, g::T=-9.81, spring=0.0, damper=0.0) where {T}
     # Joint Constraints
     joint_origin_slider = JointConstraint(Prismatic(origin, slider, slider_axis; p1=szeros(Float64, 3), p2=szeros(Float64, 3)))
     joint_slider_pendulum = JointConstraint(Revolute(slider, pendulum, pendulum_axis; p1=szeros(Float64, 3), p2=[0.0; 0.0; 0.5 * pendulum_length]))
-    eqcs = [joint_origin_slider, joint_slider_pendulum]
+    joints = [joint_origin_slider, joint_slider_pendulum]
 
     # Mechanism
-    mech = Mechanism(origin, links, eqcs, g=g, Δt=Δt, spring=spring, damper=damper)
+    mech = Mechanism(origin, links, joints, g=g, timestep=timestep, spring=spring, damper=damper)
 
     return mech
 end

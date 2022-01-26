@@ -39,7 +39,7 @@ zref = [min2max(env.mechanism, x) for x in xref]
 visualize(env, xref)
 
 ## gravity compensation TODO: solve optimization problem instead
-mech = getmechanism(:quadruped, Δt=dt, g=gravity, cf=0.8, damper=5.0, spring=0.0)
+mech = getmechanism(:quadruped, timestep=dt, g=gravity, cf=0.8, damper=5.0, spring=0.0)
 initialize!(mech, :quadruped)
 storage = simulate!(mech, 1.0, record=true, verbose=false)
 visualize(mech, storage, vis=env.vis)

@@ -97,7 +97,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N};
         end
     end
 
-    framerate = Int64(round(1/mechanism.Δt))
+    framerate = Int64(round(1/mechanism.timestep))
     (animation == nothing) && (animation = MeshCat.Animation(Dict{MeshCat.SceneTrees.Path,MeshCat.AnimationClip}(), framerate))
 
     for (id,body) in enumerate(bodies)
@@ -115,17 +115,10 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N};
         prepare_vis!(storage, id, shape, animation, subvisshape, subvisframe, showshape, showframes)
 
         if show_contact
-            for (jd, ineq) in enumerate(mechanism.contacts)
-                if ineq.parentid == body.id
-                    # @show shape.xoffset
-                    # @show shape.qoffset
-                    # @show ineq.constraints[1].offset[3]
-                    # @show ineq.constraints[1].p
-                    # contact_shape = Sphere(abs(1.0 * ineq.constraints[1].offset[3]),
-                    #     xoffset=(shape.xoffset + ineq.constraints[1].p),
-                    #     qoffset=copy(shape.qoffset), color=RGBA(1.0, 0.0, 0.0, 1.0))
-                    contact_shape = Sphere(abs(1.0 * ineq.constraints[1].offset[3]),
-                        xoffset=(ineq.constraints[1].p),
+            for (jd, contact) in enumerate(mechanism.contacts)
+                if contact.parentid == body.id
+                    contact_shape = Sphere(abs(1.0 * contact.constraints[1].offset[3]),
+                        xoffset=(contact.constraints[1].p),
                         qoffset=one(UnitQuaternion), color=RGBA(1.0, 0.0, 0.0, 1.0))
                     visshape = convert_shape(contact_shape)
                     subvisshape = nothing

@@ -20,21 +20,21 @@ mutable struct LinearContact{T,N} <: Contact{T,N}
     end
 end
 
-function constraint(mechanism, ineqc::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{LinearContact{T,N}}}
-    bound = ineqc.constraints[1]
-    body = get_body(mechanism, ineqc.parentid)
+function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{LinearContact{T,N}}}
+    bound = contact.constraints[1]
+    body = get_body(mechanism, contact.parentid)
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
-    x3, q3 = next_configuration(body.state, mechanism.Δt)
+    x3, q3 = next_configuration(body.state, mechanism.timestep)
 
     # transforms the velocities of the origin of the link into velocities along all 4 axes of the friction pyramid
     # vp = V(cp, B / W)_w velocity of the contact point cp, attached to body B wrt world frame, expressed in the world frame.
     vp = v25 + skew(vrotate(ϕ25, q3)) * (vrotate(bound.p, q3) - bound.offset)
-    γ = ineqc.γsol[2][1]
-    sγ = ineqc.ssol[2][1]
-    ψ = ineqc.γsol[2][2]
-    sψ = ineqc.ssol[2][2]
-    β = ineqc.γsol[2][@SVector [3,4,5,6]]
-    sβ = ineqc.ssol[2][@SVector [3,4,5,6]]
+    γ = contact.γsol[2][1]
+    sγ = contact.ssol[2][1]
+    ψ = contact.γsol[2][2]
+    sψ = contact.ssol[2][2]
+    β = contact.γsol[2][@SVector [3,4,5,6]]
+    sβ = contact.ssol[2][@SVector [3,4,5,6]]
     SVector{6,T}(
         bound.ainv3 * (x3 + vrotate(bound.p,q3) - bound.offset) - sγ,
         bound.cf * γ - sum(β) - sψ,
@@ -42,26 +42,26 @@ function constraint(mechanism, ineqc::ContactConstraint{T,N,Nc,Cs}) where {T,N,N
 end
 
 @inline function constraint_jacobian_velocity(bound::LinearContact, x3::AbstractVector, q3::UnitQuaternion,
-    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, Δt)
-    V = [bound.ainv3 * Δt;
+    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, timestep)
+    V = [bound.ainv3 * timestep;
          szeros(1,3);
          bound.Bx]
-    # Ω = FiniteDiff.finite_difference_jacobian(ϕ25 -> g(bound, s, γ, x2+Δt*v25, next_orientation(q2,ϕ25,Δt), v25, ϕ25), ϕ25)
+    # Ω = FiniteDiff.finite_difference_jacobian(ϕ25 -> g(bound, s, γ, x2+timestep*v25, next_orientation(q2,ϕ25,timestep), v25, ϕ25), ϕ25)
     ∂v∂q3 = skew(vrotate(ϕ25, q3)) * ∂vrotate∂q(bound.p, q3)
     ∂v∂q3 += skew(bound.offset - vrotate(bound.p, q3)) * ∂vrotate∂q(ϕ25, q3)
     ∂v∂ϕ25 = skew(bound.offset - vrotate(bound.p, q3)) * ∂vrotate∂p(ϕ25, q3)
-    Ω = [bound.ainv3 * ∂vrotate∂q(bound.p, q3) * ∂integrator∂ϕ(q2, ϕ25, Δt);
+    Ω = [bound.ainv3 * ∂vrotate∂q(bound.p, q3) * ∂integrator∂ϕ(q2, ϕ25, timestep);
         szeros(1,3);
-        bound.Bx * (∂v∂ϕ25 + ∂v∂q3 * ∂integrator∂ϕ(q2, ϕ25, Δt))]
+        bound.Bx * (∂v∂ϕ25 + ∂v∂q3 * ∂integrator∂ϕ(q2, ϕ25, timestep))]
     return [V Ω]
 end
 
 @inline function constraint_jacobian_configuration(bound::LinearContact, x3::AbstractVector, q3::UnitQuaternion,
-    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, Δt)
+    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, timestep)
     V = [bound.ainv3;
          szeros(1,3);
          szeros(4,3)]
-    # Ω = FiniteDiff.finite_difference_jacobian(ϕ25 -> g(bound, s, γ, x2+Δt*v25, next_orientation(q2,ϕ25,Δt), v25, ϕ25), ϕ25)
+    # Ω = FiniteDiff.finite_difference_jacobian(ϕ25 -> g(bound, s, γ, x2+timestep*v25, next_orientation(q2,ϕ25,timestep), v25, ϕ25), ϕ25)
     ∂v∂q3 = skew(vrotate(ϕ25, q3)) * ∂vrotate∂q(bound.p, q3)
     ∂v∂q3 += skew(bound.offset - vrotate(bound.p, q3)) * ∂vrotate∂q(ϕ25, q3)
     Ω = [bound.ainv3 * ∂vrotate∂q(bound.p, q3);
@@ -87,14 +87,14 @@ end
 end
 
 @inline function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
-    ineqc::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{LinearContact{T,N}},N½}
+    contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{LinearContact{T,N}},N½}
     # ∇ssol[γsol .* ssol - μ; g - s] = [diag(γsol); -diag(0,1,1)]
     # ∇γsol[γsol .* ssol - μ; g - s] = [diag(ssol); -diag(1,0,0)]
     # (cf γ - ψ) dependent of ψ = γsol[2][1:1]
     # B(z) * zdot - sβ dependent of sβ = ssol[2][2:end]
-    cf = ineqc.constraints[1].cf
-    γ = ineqc.γsol[2]
-    s = ineqc.ssol[2]
+    cf = contact.constraints[1].cf
+    γ = contact.γsol[2]
+    s = contact.ssol[2]
 
     ∇s1 = Diagonal(γ) # 6x6
     ∇s2 = Diagonal(-sones(T,6))
@@ -111,6 +111,6 @@ end
     matrix_entry.value = hcat(∇s, ∇γ)
 
     # [-γsol .* ssol + μ; -g + s]
-    vector_entry.value = vcat(-complementarityμ(mechanism, ineqc), -constraint(mechanism, ineqc))
+    vector_entry.value = vcat(-complementarityμ(mechanism, contact), -constraint(mechanism, contact))
     return
 end

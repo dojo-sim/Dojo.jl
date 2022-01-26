@@ -32,12 +32,12 @@ end
 ################################################################################\
 @testset "minMaxCoord: setPos!, setVel!" begin
 	mech = Dojo.getmechanism(:raiberthopper)
-	eqc1 = collect(mech.joints)[1]
-	eqc2 = collect(mech.joints)[2]
+	joint1 = collect(mech.joints)[1]
+	joint2 = collect(mech.joints)[2]
 	body1 = collect(mech.bodies)[1]
 	body2 = collect(mech.bodies)[2]
-	tra2 = eqc2.constraints[1]
-	rot2 = eqc2.constraints[1]
+	tra2 = joint2.constraints[1]
+	rot2 = joint2.constraints[1]
 
 	x = srand(1)
 	Δx = Dojo.zerodimstaticadjoint(Dojo.nullspace_mask(tra2)) * x

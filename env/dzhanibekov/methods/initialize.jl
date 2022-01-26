@@ -1,4 +1,4 @@
-function getdzhanibekov(; Δt::T = 0.01, g::T = -9.81, color=magenta) where {T}
+function getdzhanibekov(; timestep::T = 0.01, g::T = -9.81, color=magenta) where T
     radius = 0.1
     body_length = 1.0
     body_mass = 1.0
@@ -10,10 +10,10 @@ function getdzhanibekov(; Δt::T = 0.01, g::T = -9.81, color=magenta) where {T}
     # Joint Constraints
     joint_float = JointConstraint(Floating(origin, links[1]))
     joint_attach = JointConstraint(Fixed(links[1], links[2]; p1=szeros(3), p2=[-0.25 * body_length; 0.0; 0.0]))#, qoffset=UnitQuaternion(RotX(0.5 * pi))))
-    eqcs = [joint_float, joint_attach]
+    joints = [joint_float, joint_attach]
 
     # Mechanism
-    return Mechanism(origin, links, eqcs, g=g, Δt=Δt)
+    return Mechanism(origin, links, joints, g=g, timestep=timestep)
 end
 
 function initializedzhanibekov!(mech::Mechanism{T,Nn,Ne,Nb}; 

@@ -1,25 +1,23 @@
-METHODORDER = 1 # This refers to the interpolating spline
-getGlobalOrder() = (global METHODORDER; return METHODORDER)
-
-# Convenience functions
-@inline next_position(x2::SVector{3,T}, v25::SVector{3,T}, Δt::T) where {T} = x2 + v25 * Δt
-@inline next_orientation(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T) where {T} = q2 * quaternion_map(ϕ25, Δt) * Δt / 2
-
-@inline next_position(state::State, Δt) = state.x2[1] + state.vsol[2] * Δt
-@inline next_orientation(state::State, Δt) = next_orientation(state.q2[1], state.ϕsol[2], Δt)
-
 @inline previous_configuration(state::State) = (state.x1, state.q1)
-@inline current_configuration(state::State; k=1) = (state.x2[k], state.q2[k])
-@inline current_configuration_velocity(state::State) = (state.x2[1], state.vsol[2], state.q2[1], state.ϕsol[2])
-@inline next_configuration(state::State, Δt) = (next_position(state, Δt), next_orientation(state, Δt))
 
-@inline function quaternion_map_jacobian(ω::SVector{3}, Δt)
-    msq = -sqrt(4 / Δt^2 - dot(ω, ω))
+@inline current_position(state::State; k=1) = state.x2[k]
+@inline current_orientation(state::State; k=1) = state.q2[k]
+@inline current_configuration(state::State; k=1) = (current_position(state, k=k), current_orientation(state, k=k))
+@inline current_configuration_velocity(state::State) = (current_position(state, k=1), state.vsol[2], current_orientation(state, k=1), state.ϕsol[2])
+
+@inline next_position(x2::SVector{3,T}, v25::SVector{3,T}, timestep::T) where T = x2 + v25 * timestep
+@inline next_orientation(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, timestep::T) where T = q2 * quaternion_map(ϕ25, timestep) * timestep / 2
+@inline next_position(state::State, timestep) = next_position(state.x2[1], state.vsol[2], timestep)
+@inline next_orientation(state::State, timestep) = next_orientation(state.q2[1], state.ϕsol[2], timestep)
+@inline next_configuration(state::State, timestep) = (next_position(state, timestep), next_orientation(state, timestep))
+
+@inline function quaternion_map_jacobian(ω::SVector{3}, timestep)
+    msq = -sqrt(4 / timestep^2 - dot(ω, ω))
     return [ω' / msq; I]
 end
 
-@inline function quaternion_map(ω, Δt)
-    return UnitQuaternion(sqrt(4 / Δt^2 - dot(ω, ω)), ω, false)
+@inline function quaternion_map(ω, timestep)
+    return UnitQuaternion(sqrt(4 / timestep^2 - dot(ω, ω)), ω, false)
 end
 
 function cayley(ω)
@@ -39,19 +37,19 @@ function cayley_jacobian(ω)
 end
 
 # I think this is the inverse of next_orientation, we recover ϕ15 from q1, q2 and h
-function angular_velocity(q1::UnitQuaternion, q2::UnitQuaternion, Δt)
-    2.0 / Δt  * Vmat() * Lᵀmat(q1) * vector(q2)
+function angular_velocity(q1::UnitQuaternion, q2::UnitQuaternion, timestep)
+    2.0 / timestep  * Vmat() * Lᵀmat(q1) * vector(q2)
 end
 
-@inline function discretize_state!(body::Body{T}, Δt) where T
+@inline function initialize_state!(body::Body{T}, timestep) where T
     state = body.state
     x2 = state.x2[1]
     q2 = state.q2[1]
     v15 = state.v15
     ϕ15 = state.ϕ15
 
-    state.x1 = x2 - v15*Δt
-    state.q1 = q2 * quaternion_map(-ϕ15,Δt) * Δt / 2
+    state.x1 = x2 - v15*timestep
+    state.q1 = q2 * quaternion_map(-ϕ15,timestep) * timestep / 2
 
     state.F2[1] = szeros(T,3)
     state.τ2[1] = szeros(T,3)
@@ -59,7 +57,7 @@ end
     return
 end
 
-@inline function update_state!(body::Body{T}, Δt) where T
+@inline function update_state!(body::Body{T}, timestep) where T
     state = body.state
 
     state.x1 = state.x2[1]
@@ -68,8 +66,8 @@ end
     state.v15 = state.vsol[2]
     state.ϕ15 = state.ϕsol[2]
 
-    state.x2[1] = state.x2[1] + state.vsol[2]*Δt
-    state.q2[1] = state.q2[1] * quaternion_map(state.ϕsol[2], Δt) * Δt / 2
+    state.x2[1] = state.x2[1] + state.vsol[2]*timestep
+    state.q2[1] = state.q2[1] * quaternion_map(state.ϕsol[2], timestep) * timestep / 2
 
     state.F2[1] = szeros(T,3)
     state.τ2[1] = szeros(T,3)
@@ -85,10 +83,10 @@ end
     return
 end
 
-function integrator_jacobian_velocity(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T) where {T}
-    Δ = Δt * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
+function integrator_jacobian_velocity(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, timestep::T) where T
+    Δ = timestep * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
     V = [Δ szeros(T,3,3)]
-    Ω = [szeros(T,4,3) Lmat(q2)*quaternion_map_jacobian(ϕ25, Δt) * Δt/2]
+    Ω = [szeros(T,4,3) Lmat(q2)*quaternion_map_jacobian(ϕ25, timestep) * timestep/2]
     return [V; Ω] # 7x6
 end
 
@@ -96,16 +94,16 @@ function ∂integrator∂x()
     return I(3)
 end
 
-function ∂integrator∂v(Δt::T) where {T}
-    return Δt * I(3)
+function ∂integrator∂v(timestep::T) where T
+    return timestep * I(3)
 end
 
-function ∂integrator∂q(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T; attjac::Bool = true) where {T}
-    M = Rmat(quaternion_map(ϕ25, Δt) * Δt/2)
+function ∂integrator∂q(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, timestep::T; attjac::Bool = true) where T
+    M = Rmat(quaternion_map(ϕ25, timestep) * timestep/2)
     attjac && (M *= LVᵀmat(q2))
     return M
 end
 
-function ∂integrator∂ϕ(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, Δt::T) where {T}
-    return Lmat(q2) * quaternion_map_jacobian(ϕ25, Δt) * Δt/2
+function ∂integrator∂ϕ(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, timestep::T) where T
+    return Lmat(q2) * quaternion_map_jacobian(ϕ25, timestep) * timestep/2
 end

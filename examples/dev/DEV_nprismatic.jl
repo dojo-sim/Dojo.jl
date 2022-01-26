@@ -21,7 +21,7 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 
 # Build mechanism
 include("mechanism_zoo.jl")
-mech = getmechanism(:nslider, Δt = 0.01, g = -2.0, Nb = 5)
+mech = getmechanism(:nslider, timestep = 0.01, g = -2.0, Nb = 5)
 initialize!(mech, :nslider, z1 = 0.0, Δz = 1.1)
 
 for (i,joint) in enumerate(mech.joints)
@@ -142,10 +142,10 @@ plot(Gray.(sensi))
 plot(Gray.(fd_sensi))
 
 diagonal∂damper∂ʳvel(mech.joints[1],
-offdiagonal∂damper∂ʳvel(jt0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, Δt0)
+offdiagonal∂damper∂ʳvel(jt0, x2b0, q2b0, x1b0, v1b0, q1b0, ω1b0, timestep0)
 diagonal∂damper∂ʳvel(mech, mech.joints[1], mech.bodies[2])
-offdiagonal∂damper∂ʳvel(mech.joints[1].constraints[1], mech.origin, mech.bodies[2], mech.bodies[2].id, mech.Δt)
-offdiagonal∂damper∂ʳvel(mech.joints[1].constraints[2], mech.origin, mech.bodies[2], mech.bodies[2].id, mech.Δt)
+offdiagonal∂damper∂ʳvel(mech.joints[1].constraints[1], mech.origin, mech.bodies[2], mech.bodies[2].id, mech.timestep)
+offdiagonal∂damper∂ʳvel(mech.joints[1].constraints[2], mech.origin, mech.bodies[2], mech.bodies[2].id, mech.timestep)
 
 
 
@@ -180,13 +180,13 @@ bodya0 = mech.bodies[3]
 bodyb0 = mech.bodies[4]
 childida0 = 3
 childidb0 = 4
-Δt0 = mech.Δt
+timestep0 = mech.timestep
 damper_parent(jt0, bodya0, bodyb0, childidb0)
 damper_child(jt0, bodya0, bodyb0, childidb0)
 damper_child(jr0, origin0, bodya0, childida0)
 
-x2a0, q2a0 = next_configuration(bodya0.state, Δt0)
-x2b0, q2b0 = next_configuration(bodyb0.state, Δt0)
+x2a0, q2a0 = next_configuration(bodya0.state, timestep0)
+x2b0, q2b0 = next_configuration(bodyb0.state, timestep0)
 x1a0, v1a0, q1a0, ω1a0 = current_configuration_velocity(bodya0.state)
 x1b0, v1b0, q1b0, ω1b0 = current_configuration_velocity(bodyb0.state)
 

@@ -35,7 +35,7 @@ end
     return [X Q]
 end
 
-function impulse_map_parent(joint::Translational, statea::State, stateb::State, η, Δt)
+function impulse_map_parent(joint::Translational, statea::State, stateb::State, η, timestep)
     xa, qa = current_configuration(statea)
     xb, qb = current_configuration(stateb)
     impulse_map_parent(joint, xa, qa, xb, qb, η)
@@ -56,7 +56,7 @@ function impulse_map_parent(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractV
            ]
 end
 
-function impulse_map_child(joint::Translational, statea::State, stateb::State, η, Δt)
+function impulse_map_child(joint::Translational, statea::State, stateb::State, η, timestep)
     xa, qa = current_configuration(statea)
     xb, qb = current_configuration(stateb)
     impulse_map_child(joint, xa, qa, xb, qb, η)

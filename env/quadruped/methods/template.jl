@@ -50,14 +50,14 @@ function QuadrupedIKerror(mechanism::Mechanism, p_trunk, p_foot, θ; leg::Symbol
 	set_position(mechanism, get_joint_constraint(mechanism, String(leg)*"_calf_joint"), [θ[2]])
 
 	foot = get_body(mechanism, String(leg)*"_calf")
-	ineqcs = collect(mechanism.contacts)
-	ineqc = ineqcs[findfirst(x -> x.parentid == foot.id, ineqcs)]
-	p = contact_location(ineqc, foot)
+	contacts = collect(mechanism.contacts)
+	contact = contacts[findfirst(x -> x.parentid == foot.id, contacts)]
+	p = contact_location(contact, foot)
 	err = p - p_foot
 	return err[[1,3]]
 end
 
-function quadruped_trajectory(mechanism::Mechanism{T}; Δt = 0.05, Δx = -0.04, Δfront = 0.05, β = 0.5, r = 0.10, z = 0.29, N = 8, Ncycles = 1) where T
+function quadruped_trajectory(mechanism::Mechanism{T}; timestep = 0.05, Δx = -0.04, Δfront = 0.05, β = 0.5, r = 0.10, z = 0.29, N = 8, Ncycles = 1) where T
 	# pFR = [+ 0.13 + Δx, - 0.13205, 0.]
 	# pFL = [+ 0.13 + Δx, + 0.13205, 0.]
 	# pRR = [- 0.23 + Δx, - 0.13205, 0.]
@@ -83,10 +83,10 @@ function quadruped_trajectory(mechanism::Mechanism{T}; Δt = 0.05, Δx = -0.04, 
 	θFR = [IKquadruped(mechanism, p_trunk, tFR[i], leg = :FR) for i = 1:2N]
 
 	# adding angular velocities
-	ωRL = [(θRL[i%(2N)+1] - θRL[i]) / Δt for i = 1:2N]
-	ωRR = [(θRR[i%(2N)+1] - θRR[i]) / Δt for i = 1:2N]
-	ωFL = [(θFL[i%(2N)+1] - θFL[i]) / Δt for i = 1:2N]
-	ωFR = [(θFR[i%(2N)+1] - θFR[i]) / Δt for i = 1:2N]
+	ωRL = [(θRL[i%(2N)+1] - θRL[i]) / timestep for i = 1:2N]
+	ωRR = [(θRR[i%(2N)+1] - θRR[i]) / timestep for i = 1:2N]
+	ωFL = [(θFL[i%(2N)+1] - θFL[i]) / timestep for i = 1:2N]
+	ωFR = [(θFR[i%(2N)+1] - θFR[i]) / timestep for i = 1:2N]
 
 	# Minimal Coordinates
 	X = [Vector{T}([p_trunk; zeros(3); zeros(3); zeros(3);
@@ -100,7 +100,7 @@ function quadruped_trajectory(mechanism::Mechanism{T}; Δt = 0.05, Δx = -0.04, 
 	# adding forward displacement and velocity
 	for i = 1:2N*Ncycles
 		X[i][1] += (i-1) * 2r / N
-		X[i][7] += 2r / N / Δt
+		X[i][7] += 2r / N / timestep
 	end
 	return X
 end
@@ -120,10 +120,10 @@ end
 # r = 0.10 # foot traj radius
 #
 # # System
-# mech = getmechanism(:quadruped, Δt = 0.05)
+# mech = getmechanism(:quadruped, timestep = 0.05)
 # initialize!(mech, :quadruped, tran = [0,0,0.], v = [0,0,0.])
 #
-# X = quadruped_trajectory(mech, r = 0.08, z = 0.27; Δt = 0.05, Δx = -0.03, N = 9, Ncycles = 10)
+# X = quadruped_trajectory(mech, r = 0.08, z = 0.27; timestep = 0.05, Δx = -0.03, N = 9, Ncycles = 10)
 # storage = generate_storage(mech, [min2max(mech, x) for x in X])
 # visualize(mech, storage, vis = vis)
 #
@@ -167,10 +167,10 @@ end
 # scatter!([p[1] for p in tRR], [p[3] for p in tRR])
 
 
-# contact_location(mech, ineqcs[1])
-# contact_location(mech, ineqcs[2])
-# contact_location(mech, ineqcs[3])
-# contact_location(mech, ineqcs[4])
+# contact_location(mech, contacts[1])
+# contact_location(mech, contacts[2])
+# contact_location(mech, contacts[3])
+# contact_location(mech, contacts[4])
 
 
 
@@ -183,11 +183,11 @@ end
 # n = minimal_dimension(mech)
 # m = 12
 #
-# function potato_dynamics(x, u, Δt, m, g)
+# function potato_dynamics(x, u, timestep, m, g)
 # 	# x = [x,y,z,ẋ,ẏ,ż]
 # 	gv = [0, 0, g]
-# 	ẋ = [x[4:6]; u ./ (m*Δt) + gv]
-# 	x̄ = x + ẋ * Δt
+# 	ẋ = [x[4:6]; u ./ (m*timestep) + gv]
+# 	x̄ = x + ẋ * timestep
 # 	return x̄
 # end
 #
@@ -203,12 +203,12 @@ end
 # 	mass = sum(getfield.(mech.bodies, :m))
 # 	alt = x_potato[3] - 0.48
 # 	if t > 13
-# 		u_potato = -[0, 0, mech.Δt * mass * mech.g + 20*alt + 10*x_potato[6]]
+# 		u_potato = -[0, 0, mech.timestep * mass * mech.g + 20*alt + 10*x_potato[6]]
 # 	else
 # 		u_potato = U_potato[t]
 # 	end
 # 	push!(X_potato, x_potato)
-# 	x_potato = potato_dynamics(x_potato, u_potato, mech.Δt, mass, mech.g)
+# 	x_potato = potato_dynamics(x_potato, u_potato, mech.timestep, mass, mech.g)
 # end
 # plot()
 # plot!([x[1] for x in X_potato], linewidth = 5.0)

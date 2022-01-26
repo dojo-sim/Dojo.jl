@@ -1,6 +1,4 @@
-function step!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::Vector{T}, u::Vector{T}; 
-    opts=InteriorPointOptions{T}()) where {T,Nn,Ne,Nb,Ni}
-
+function step!(mechanism::Mechanism{T}, z::Vector{T}, u::Vector{T}; opts=SolverOptions{T}()) where T
     # set state
     set_state!(mechanism, z)
 

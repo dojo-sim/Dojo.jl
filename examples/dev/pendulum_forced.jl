@@ -19,7 +19,7 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
-mech = getmechanism(:pendulum, Δt = 0.01, g = -9.81)
+mech = getmechanism(:pendulum, timestep = 0.01, g = -9.81)
 initialize!(mech, :pendulum, ϕ1 = 0.7)
 
 jointid = mech.joints[1].id
@@ -28,7 +28,7 @@ function controller!(mechanism, k)
     j1 = get_joint_constraint(mechanism, jointid)
     θ1 = minimal_coordinates(mechanism, j1)[1]
     dθ1 = minimal_velocities(mechanism, j1)[1]
-    u1 = (100.0*(angles[1]-θ1) + 5.0*(0-dθ1)) * mechanism.Δt
+    u1 = (100.0*(angles[1]-θ1) + 5.0*(0-dθ1)) * mechanism.timestep
     set_input!(j1, SA[u1])
     return
 end

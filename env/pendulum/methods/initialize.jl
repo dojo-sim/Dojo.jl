@@ -1,4 +1,4 @@
-function getpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
+function getpendulum(; timestep::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
         spring = 0.0, damper = 0.0, spring_offset = szeros(1)) where T
     # Parameters
     joint_axis = [1.0; 0; 0]
@@ -13,25 +13,25 @@ function getpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
     joint_between_origin_and_body1 = JointConstraint(Revolute(origin, body1,
         joint_axis; p2=p2, spring = spring, damper = damper, rotapply_springoffset = spring_offset))
     bodies = [body1]
-    eqcs = [joint_between_origin_and_body1]
+    joints = [joint_between_origin_and_body1]
 
-    mech = Mechanism(origin, bodies, eqcs, g = g, Δt = Δt, spring=spring, damper=damper)
+    mech = Mechanism(origin, bodies, joints, g = g, timestep = timestep, spring=spring, damper=damper)
     return mech
 end
 
-function initializependulum!(mechanism::Mechanism; ϕ1::T = 0.7, ω1::T = 0.0) where {T}
+function initializependulum!(mechanism::Mechanism; ϕ1::T = 0.7, ω1::T = 0.0) where T
     body = collect(mechanism.bodies)[1]
-    eqc = collect(mechanism.joints)[1]
-    p2 = eqc.constraints[1].vertices[2]
-    p1 = eqc.constraints[1].vertices[1]
+    joint = collect(mechanism.joints)[1]
+    p2 = joint.constraints[1].vertices[2]
+    p1 = joint.constraints[1].vertices[1]
     q1 = UnitQuaternion(RotX(ϕ1))
     set_position(mechanism.origin, body, p1 = p1, p2 = p2, Δq = q1)
     set_velocity!(mechanism.origin, body, p1 = p1, p2 = p2, Δω = [ω1,0,0])
 end
 
-function getnpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
+function getnpendulum(; timestep::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
         spring::T = 0.0, damper::T = 0.0, Nb::Int = 5,
-        basetype::Symbol = :Revolute, jointtype::Symbol = :Revolute) where {T}
+        basetype::Symbol = :Revolute, jointtype::Symbol = :Revolute) where T
     # Parameters
     ex = [1.; 0; 0]
     r = 0.05
@@ -45,21 +45,21 @@ function getnpendulum(; Δt::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
     # Constraints
     jointb1 = JointConstraint(Prototype(basetype, origin, bodies[1], ex; p2 = vert11, spring = spring, damper = damper))
     if Nb > 1
-        eqcs = [JointConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], ex; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nb]
-        eqcs = [jointb1; eqcs]
+        joints = [JointConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], ex; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nb]
+        joints = [jointb1; joints]
     else
-        eqcs = [jointb1]
+        joints = [jointb1]
     end
-    mech = Mechanism(origin, bodies, eqcs, g = g, Δt = Δt)
+    mech = Mechanism(origin, bodies, joints, g = g, timestep = timestep)
     return mech
 end
 
 function initializenpendulum!(mechanism::Mechanism; ϕ1::T = pi/4, ω = [0.0, 0.0, 0.0],
-    Δv::AbstractVector{T} = [0, 0, 0.], Δω::AbstractVector{T} = [0, 0, 0.]) where {T}
+    Δv::AbstractVector{T} = [0, 0, 0.], Δω::AbstractVector{T} = [0, 0, 0.]) where T
 
     body1 = mechanism.bodies[1]
-    eqc = mechanism.joints[1]
-    vert11 = eqc.constraints[1].vertices[2]
+    joint = mechanism.joints[1]
+    vert11 = joint.constraints[1].vertices[2]
     vert12 = - vert11
 
     # set position and velocities

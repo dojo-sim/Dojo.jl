@@ -8,9 +8,9 @@ function ant(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     contact::Bool=true, contact_body=true,
     limits::Bool=true,
     info=nothing, vis::Visualizer=Visualizer(), name::Symbol=:robot,
-    opts_step=InteriorPointOptions(), opts_grad=InteriorPointOptions()) where T
+    opts_step=SolverOptions(), opts_grad=SolverOptions()) where T
 
-    mechanism = getant(Δt=dt, g=g, cf=cf, spring=spring, damper=damper,contact=contact, contact_body=contact_body, limits=limits)
+    mechanism = getant(timestep=dt, g=g, cf=cf, spring=spring, damper=damper,contact=contact, contact_body=contact_body, limits=limits)
     initializeant!(mechanism)
 
     if mode == :min
@@ -51,7 +51,7 @@ end
 
 function step(env::Environment{Ant}, x, u; diff=false)
     mechanism = env.mechanism
-    Δt = mechanism.Δt
+    timestep = mechanism.timestep
 
     # x position (before)
     xposbefore = x[1]
@@ -68,7 +68,7 @@ function step(env::Environment{Ant}, x, u; diff=false)
     xposafter = env.x[1]
 
     # forward reward
-    forward_reward = 2*(xposafter - xposbefore) / Δt
+    forward_reward = 2*(xposafter - xposbefore) / timestep
 
     # control cost
     # ctrl_cost = (0.5 * u' * u)[1]
@@ -77,8 +77,8 @@ function step(env::Environment{Ant}, x, u; diff=false)
     # contact cost
     contact_cost = 0.0
 
-    for ineq in mechanism.contacts
-        contact_cost += 0.5 * 1.0e-3 * max(-1.0, min(1.0, ineq.γsol[2][1]))^2.0
+    for contact in mechanism.contacts
+        contact_cost += 0.5 * 1.0e-3 * max(-1.0, min(1.0, contact.γsol[2][1]))^2.0
     end
 
     # survive reward
@@ -134,8 +134,8 @@ end
 
 function _get_obs(env::Environment{Ant,T}) where T
     contact_force = T[]
-    for ineq in env.mechanism.contacts
-        push!(contact_force, max(-1.0, min(1.0, ineq.γsol[2][1])))
+    for contact in env.mechanism.contacts
+        push!(contact_force, max(-1.0, min(1.0, contact.γsol[2][1])))
     end
     return [env.x; contact_force]
 end

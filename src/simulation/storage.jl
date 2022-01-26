@@ -81,10 +81,8 @@ function save_to_storage!(mechanism::Mechanism, storage::Storage, i::Int)
     return
 end
 
-function generate_storage(mechanism, z)
-    steps = length(z)
-    nbodies = length(mechanism.bodies)
-    storage = Storage{Float64}(steps, nbodies)
+function generate_storage(mechanism::Mechanism, z)
+    storage = Storage{Float64}(length(z), length(mechanism.bodies))
 
     for t = 1:steps
         off = 0

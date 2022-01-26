@@ -20,12 +20,12 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
-mech = getmechanism(:quadruped, Δt = 0.01, g = -9.81, cf = 0.8, contact = true, damper = 1.0, spring = 30.0)
+mech = getmechanism(:quadruped, timestep = 0.01, g = -9.81, cf = 0.8, contact = true, damper = 1.0, spring = 30.0)
 initialize!(mech, :quadruped, tran = [0,0,0.56], rot = [0.10,0.05,0.03], θ = 0.95)
 @elapsed storage = simulate!(mech, 0.5, record = true, verbose = false)
 visualize(mech, storage, vis = vis)
 
-Δt_ = 0.001
+timestep_ = 0.001
 begin
     N = 100
     steps = Base.OneTo(N)
@@ -59,9 +59,9 @@ begin
         dθ2 = minimal_velocities(mechanism, j2)[1]
         dθ3 = minimal_velocities(mechanism, j3)[1]
 
-        u1 = (100.0*(angles[1]-θ1) + 5.0*(0-dθ1)) * Δt_ #* 0.17
-        u2 = (80.0*(angles[2]-θ2) + 4.0*(0-dθ2)) * Δt_ #* 0.17
-        u3 = (60.0*(angles[3]-θ3) + 3.0*(0-dθ3)) * Δt_ #* 0.17
+        u1 = (100.0*(angles[1]-θ1) + 5.0*(0-dθ1)) * timestep_ #* 0.17
+        u2 = (80.0*(angles[2]-θ2) + 4.0*(0-dθ2)) * timestep_ #* 0.17
+        u3 = (60.0*(angles[3]-θ3) + 3.0*(0-dθ3)) * timestep_ #* 0.17
 
         set_input!(j1, SA[u1])
         set_input!(j2, SA[u2])

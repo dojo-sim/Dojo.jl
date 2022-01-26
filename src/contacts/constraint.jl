@@ -24,52 +24,52 @@ mutable struct ContactConstraint{T,N,Nc,Cs,N½} <: Constraint{T,N}
     end
 end
 
-function constraint_jacobian_velocity(mechanism, ineqc::ContactConstraint, body::Body)
-    return constraint_jacobian_velocity(ineqc.constraints[1], body, nothing, nothing, mechanism.Δt)
+function constraint_jacobian_velocity(mechanism, contact::ContactConstraint, body::Body)
+    return constraint_jacobian_velocity(contact.constraints[1], body, nothing, nothing, mechanism.timestep)
 end
 
-function impulse_map(mechanism, ineqc::ContactConstraint, body::Body)
-    return impulse_map(ineqc.constraints[1], body, nothing, nothing, mechanism.Δt)
+function impulse_map(mechanism, contact::ContactConstraint, body::Body)
+    return impulse_map(contact.constraints[1], body, nothing, nothing, mechanism.timestep)
 end
 
-@inline function impulses!(mechanism, body::Body, ineqc::ContactConstraint)
-    body.state.d -= impulse_map(mechanism, ineqc, body)' * ineqc.γsol[2]
+@inline function impulses!(mechanism, body::Body, contact::ContactConstraint)
+    body.state.d -= impulse_map(mechanism, contact, body)' * contact.γsol[2]
     return
 end
 
-@inline function impulses_jacobian_velocity!(mechanism, body::Body, ineqc::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
-    Δt = mechanism.Δt
-    x3, q3 = next_configuration(body.state, Δt)
+@inline function impulses_jacobian_velocity!(mechanism, body::Body, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+    timestep = mechanism.timestep
+    x3, q3 = next_configuration(body.state, timestep)
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
 
     for i=1:Nc
-        bnd = ineqc.constraints[i]
+        bnd = contact.constraints[i]
         p = bnd.p
         offset = bnd.offset
 
         X = force_mapping(bnd)
-        λ = X' * ineqc.γsol[2]
+        λ = X' * contact.γsol[2]
 
         ∇ = ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * λ) * -∂vrotate∂q(offset, inv(q3)) * Tmat()
         ∇ += skew(p - vrotate(offset, inv(q3))) * ∂qVRmat(LᵀVᵀmat(q3) * λ)
         ∇ += skew(p - vrotate(offset, inv(q3))) * VRmat(q3) * ∂qLᵀVᵀmat(λ)
-        ∇ *= ∂integrator∂ϕ(q2, ϕ25, Δt)
+        ∇ *= ∂integrator∂ϕ(q2, ϕ25, timestep)
         body.state.D -= [szeros(T,6,3) [szeros(T,3,3); ∇]]
     end
     return
 end
 
-@inline function off_diagonal_jacobians(mechanism, body::Body, ineqc::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+@inline function off_diagonal_jacobians(mechanism, body::Body, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
     Z = szeros(T,N½,6)
-    return [Z; -impulse_map(mechanism, ineqc, body)]', [Z; constraint_jacobian_velocity(mechanism, ineqc, body)]
+    return [Z; -impulse_map(mechanism, contact, body)]', [Z; constraint_jacobian_velocity(mechanism, contact, body)]
 end
 
-function reset!(ineqc::ContactConstraint{T,N,Nc,Cs,N½}; scale::T=1.0) where {T,N,Nc,Cs,N½}
-    ineqc.ssol[1] = scale * neutral_vector(ineqc.constraints[1])
-    ineqc.ssol[2] = scale * neutral_vector(ineqc.constraints[1])
-    ineqc.γsol[1] = scale * neutral_vector(ineqc.constraints[1])
-    ineqc.γsol[2] = scale * neutral_vector(ineqc.constraints[1])
+function reset!(contact::ContactConstraint{T,N,Nc,Cs,N½}; scale::T=1.0) where {T,N,Nc,Cs,N½}
+    contact.ssol[1] = scale * neutral_vector(contact.constraints[1])
+    contact.ssol[2] = scale * neutral_vector(contact.constraints[1])
+    contact.γsol[1] = scale * neutral_vector(contact.constraints[1])
+    contact.γsol[2] = scale * neutral_vector(contact.constraints[1])
     return
 end
 
-cone_degree(ineqc::ContactConstraint) = sum(cone_degree.(ineqc.constraints))
+cone_degree(contact::ContactConstraint) = sum(cone_degree.(contact.constraints))

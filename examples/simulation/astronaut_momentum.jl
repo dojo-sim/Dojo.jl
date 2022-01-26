@@ -26,16 +26,16 @@ open(vis)
 
 function ctrl!(mechanism, k)
 	nu = control_dimension(mech)
-	# u = 0.5 * mechanism.Δt * [szeros(6); sones(nu-6)]
-	u = 0.3*[zeros(6); mech.Δt; zeros(nu-7)]
+	# u = 0.5 * mechanism.timestep * [szeros(6); sones(nu-6)]
+	u = 0.3*[zeros(6); mech.timestep; zeros(nu-7)]
 	set_control!(mech, u)
 	return
 end
 Random.seed!(0)
-mech = getmechanism(:humanoid, Δt=0.01, g=0.0, spring=0.0, damper=0.0, contact=false)
+mech = getmechanism(:humanoid, timestep=0.01, g=0.0, spring=0.0, damper=0.0, contact=false)
 initialize!(mech, :humanoid)
 ϵ = 1e-14
-storage = simulate!(mech, 1.0, ctrl!, record=true, opts=InteriorPointOptions(rtol=ϵ, btol=ϵ))
+storage = simulate!(mech, 1.0, ctrl!, record=true, opts=SolverOptions(rtol=ϵ, btol=ϵ))
 visualize(mech, storage, vis=vis)
 
 function astronaut_simulation(mech::Mechanism; tsim=1.0, tctrl=1.0, seed::Int=0, ϵ=1e-14,
@@ -46,18 +46,18 @@ function astronaut_simulation(mech::Mechanism; tsim=1.0, tctrl=1.0, seed::Int=0,
 
 	function ctrl!(mechanism, k)
 		nu = control_dimension(mech)
-		u = (k*mechanism.Δt < tctrl) * control_amplitude * mechanism.Δt * [szeros(6); srand(nu-6)]
+		u = (k*mechanism.timestep < tctrl) * control_amplitude * mechanism.timestep * [szeros(6); srand(nu-6)]
 		set_control!(mech, u)
 	    return
 	end
     tcompute = @elapsed storage = simulate!(mech, tsim, ctrl!, record=true,
-		opts=InteriorPointOptions(rtol=ϵ, btol=ϵ))
+		opts=SolverOptions(rtol=ϵ, btol=ϵ))
     return storage, tcompute
 end
 
-function astronaut_simulation(;Nsim::Int=1, Δt=1e-2, g=0.0, spring=0.0, damper=0.0,
+function astronaut_simulation(;Nsim::Int=1, timestep=1e-2, g=0.0, spring=0.0, damper=0.0,
 		tsim=1.0, tctrl=1.0, seed::Int=0, ϵ=1e-14, control_amplitude=0.1)
-    mech = getmechanism(:humanoid, Δt=Δt, g=g, spring=spring, damper=damper, contact=false)
+    mech = getmechanism(:humanoid, timestep=timestep, g=g, spring=spring, damper=damper, contact=false)
 	storage = []
 	tcompute = zeros(Nsim)
 	for i = 1:Nsim
@@ -69,7 +69,7 @@ function astronaut_simulation(;Nsim::Int=1, Δt=1e-2, g=0.0, spring=0.0, damper=
 end
 
 function process_momentum_runs(mechanism::Mechanism, storage::Vector{Storage{T,N}}, tcompute::Vector) where {T,N}
-	H = mechanism.Δt * N
+	H = mechanism.timestep * N
 	Nsim = length(tcompute)
 	speed = 0.0
 	plin = 0.0
@@ -88,13 +88,13 @@ end
 
 function process_energy_runs(mechanism::Mechanism, storage::Vector{Storage{T,N}},
 		tcompute::Vector, tctrl::T) where {T,N}
-	H = mechanism.Δt * N
+	H = mechanism.timestep * N
 	Nsim = length(tcompute)
 	speed = 0.0
 	energy = 0.0
 	for i = 1:Nsim
 		speed += H / tcompute[i]
-		initial = Int(floor(tctrl/mechanism.Δt+2))
+		initial = Int(floor(tctrl/mechanism.timestep+2))
 		final = N
 		energy += kinetic_energy(mechanism, storage[i], final) - kinetic_energy(mechanism, storage[i], initial)
 	end
@@ -103,27 +103,27 @@ function process_energy_runs(mechanism::Mechanism, storage::Vector{Storage{T,N}}
 	return speed, energy
 end
 
-function benchmark_momentum(Δt::Vector; Nsim=1, tsim=1.0, tctrl=1.0, seed=0, ϵ=1e-14, control_amplitude=0.05)
-	Nt = length(Δt)
+function benchmark_momentum(timestep::Vector; Nsim=1, tsim=1.0, tctrl=1.0, seed=0, ϵ=1e-14, control_amplitude=0.05)
+	Nt = length(timestep)
 	speed = zeros(Nt)
 	plin = zeros(Nt)
 	pang = zeros(Nt)
 	for i = 1:Nt
-		@show Δt[i]
-		mech, storage, tcompute = astronaut_simulation(Nsim=Nsim, Δt=Δt[i],
+		@show timestep[i]
+		mech, storage, tcompute = astronaut_simulation(Nsim=Nsim, timestep=timestep[i],
 			tsim=tsim, tctrl=tctrl, seed=seed, ϵ=ϵ, control_amplitude=control_amplitude)
 		speed[i], plin[i], pang[i] = process_momentum_runs(mech, storage, tcompute)
 	end
 	return speed, plin, pang
 end
 
-function benchmark_energy(Δt::Vector; Nsim=1, tsim=2.0, tctrl=1.0, seed=0, ϵ=1e-14, control_amplitude=0.05)
-	Nt = length(Δt)
+function benchmark_energy(timestep::Vector; Nsim=1, tsim=2.0, tctrl=1.0, seed=0, ϵ=1e-14, control_amplitude=0.05)
+	Nt = length(timestep)
 	speed = zeros(Nt)
 	energy = zeros(Nt)
 	for i = 1:Nt
-		@show Δt[i]
-		mech, storage, tcompute = astronaut_simulation(Nsim=Nsim, Δt=Δt[i],
+		@show timestep[i]
+		mech, storage, tcompute = astronaut_simulation(Nsim=Nsim, timestep=timestep[i],
 			tsim=tsim, tctrl=tctrl, seed=seed, ϵ=ϵ, control_amplitude=control_amplitude)
 		speed[i], energy[i] = process_energy_runs(mech, storage, tcompute, tctrl)
 	end
@@ -134,13 +134,13 @@ end
 # momentum
 ################################################################################
 
-Δt = [0.10,]
-mech, storage, tcompute = astronaut_simulation(;Nsim=1, Δt=1e-1, tsim=10.0, tctrl=1.0, seed=0, control_amplitude=0.05)
+timestep = [0.10,]
+mech, storage, tcompute = astronaut_simulation(;Nsim=1, timestep=1e-1, tsim=10.0, tctrl=1.0, seed=0, control_amplitude=0.05)
 visualize(mech, storage[1], vis=vis)
 
-Δt = [0.10, 0.03, 0.01, 0.003, 0.001]
-speed_dj, ener_dj = benchmark_energy(Δt; Nsim=1, tsim=2.0, tctrl=1.0, seed=0, ϵ=1e-14)
-speed_dj, plin_dj, pang_dj = benchmark_momentum(Δt; Nsim=1, tsim=1.0, seed=0, ϵ=1e-14)
+timestep = [0.10, 0.03, 0.01, 0.003, 0.001]
+speed_dj, ener_dj = benchmark_energy(timestep; Nsim=1, tsim=2.0, tctrl=1.0, seed=0, ϵ=1e-14)
+speed_dj, plin_dj, pang_dj = benchmark_momentum(timestep; Nsim=1, tsim=1.0, seed=0, ϵ=1e-14)
 
 
 # Saving results
@@ -220,11 +220,11 @@ pgfsave(filename, gp; include_preamble = true, dpi = 150)
 # energy
 ################################################################################
 
-Δt = [0.10, 0.02, 0.005]
+timestep = [0.10, 0.02, 0.005]
 ener_traj = []
 for i = 1:3
-	mech, storage, tcompute = astronaut_simulation(;Nsim=1, Δt=Δt[i], tsim=100.0, tctrl=1.0, seed=0, control_amplitude=0.02)
-	stride = Int(floor(1/Δt[i]))
+	mech, storage, tcompute = astronaut_simulation(;Nsim=1, timestep=timestep[i], tsim=100.0, tctrl=1.0, seed=0, control_amplitude=0.02)
+	stride = Int(floor(1/timestep[i]))
 	ener_t = [kinetic_energy(mech, storage[1], i) for i in stride+2:stride:length(storage[1])]
 	push!(ener_traj, ener_t .- ener_t[1])
 	@show i

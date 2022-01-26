@@ -106,7 +106,7 @@ export Origin,
     mechanical_energy,
 
     mehrotra!,
-    InteriorPointOptions,
+    SolverOptions,
 
     Environment,
     getMinState

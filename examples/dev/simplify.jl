@@ -5,7 +5,7 @@ vis = Visualizer()
 open(vis)
 
 
-mech = getmechanism(:humanoid, contact=true, Δt=0.05, g=-9.81, spring=30.0, damper=5.0)
+mech = getmechanism(:humanoid, contact=true, timestep=0.05, g=-9.81, spring=30.0, damper=5.0)
 initialize!(mech, :humanoid, rot=[0.1,0,0], tran=[0,0,1.5])
 
 function ctrl!(mechanism, k)
@@ -97,12 +97,12 @@ bound0 = ineqc0.constraints[1]
 s = SVector{4}([1.0; rand(3)/10])
 γ = SVector{4}([1.0; rand(3)/10])
 g(bound0, s, γ, x3, q3, v25, ϕ25)
-jacv0 = constraint_jacobian_velocity(bound0, x3, q3, x2, v25, q2, ϕ25, λ, Δt)
+jacv0 = constraint_jacobian_velocity(bound0, x3, q3, x2, v25, q2, ϕ25, λ, timestep)
 jacv1 = FiniteDiff.finite_difference_jacobian(
-    v -> g(bound0, s, γ, next_position(x2, SVector{3}(v[1:3]), Δt),
-        next_orientation(q2, SVector{3}(v[4:6]), Δt), SVector{3}(v[1:3]), SVector{3}(v[4:6])), [v25; ϕ25])
+    v -> g(bound0, s, γ, next_position(x2, SVector{3}(v[1:3]), timestep),
+        next_orientation(q2, SVector{3}(v[4:6]), timestep), SVector{3}(v[1:3]), SVector{3}(v[4:6])), [v25; ϕ25])
 
-jacz0 = constraint_jacobian_configuration(bound0, x3, q3, x2, v25, q2, ϕ25, λ, Δt)
+jacz0 = constraint_jacobian_configuration(bound0, x3, q3, x2, v25, q2, ϕ25, λ, timestep)
 jacz1 = FiniteDiff.finite_difference_jacobian(
     z -> g(bound0, s, γ, SVector{3}(z[1:3]),
         UnitQuaternion(z[4:7],false), SVector{3}(v[1:3]), SVector{3}(v[4:6])), [x3; vector(q3)])

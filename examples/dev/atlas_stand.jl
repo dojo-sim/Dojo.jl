@@ -26,7 +26,7 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 # Build mechanism and Identify A and B
 ################################################################################
 
-mech = getmechanism(:atlas, Δt = 0.01, g = -9.81, cf = 0.8, contact = true)
+mech = getmechanism(:atlas, timestep = 0.01, g = -9.81, cf = 0.8, contact = true)
 initialize!(mech, :atlas, tran = [0,0,1.9291], rot = [0.,0,0])
 for (i,joint) in enumerate(mech.joints)
     jt = joint.constraints[1]
@@ -44,9 +44,9 @@ end
 visualize(mech, storage, vis = vis)
 
 # show sign distance function
-ineqcs = collect(mech.contacts)
-for (i,ineqc) in enumerate(ineqcs)
-    ineqc = ineqcs[1]
+contacts = collect(mech.contacts)
+for (i,ineqc) in enumerate(contacts)
+    ineqc = contacts[1]
     cont = ineqc.constraints[1]
     body = get_body(mech, ineqc.parentid)
     x3, q3 = current_configuration(body.state)
@@ -110,10 +110,10 @@ function controller!(mechanism, k)
             θ = minimal_coordinates(mechanism, joint)[1]
             dθ = minimal_velocities(mechanism, joint)[1]
             u = 3e+2 * (angles[i] - θ) #+ 5e-2 * (0 - dθ)
-            u = clamp(u, -150.0, 150.0) * mechanism.Δt
+            u = clamp(u, -150.0, 150.0) * mechanism.timestep
             if joint.name ∈ ("r_leg_akx", "r_leg_aky", "l_leg_akx", "l_leg_aky", "back_bkx", "back_bky", "back_bkz")
                 u = 1e+2 * (angles[i] - θ) #+ 5e-2 * (0 - dθ)
-                u = clamp(u, -100.0, 100.0) * mechanism.Δt
+                u = clamp(u, -100.0, 100.0) * mechanism.timestep
             end
             u = 0.0
             set_input!(joint, SA[u])

@@ -12,18 +12,18 @@ function contact_constraint(bodies::AbstractVector{<:Body{T}},
         p::AbstractVector = [szeros(T, 3) for i=1:length(normal)],
         offset::AbstractVector = [szeros(T, 3) for i=1:length(normal)],
         names::Vector{Symbol} = [Symbol("contact_" * randstring(4)) for i = 1:length(normal)],
-        contact_type::Symbol = :contact) where {T}
+        contact_type::Symbol = :contact) where T
 
     n = length(normal)
     @assert n == length(bodies) == length(normal) == length(cf) == length(p) == length(offset)
-    ineqcs = Vector{ContactConstraint}()
+    contacts = Vector{ContactConstraint}()
     for i = 1:n
-        ineqc = contact_constraint(bodies[i], normal[i], cf=cf[i], p=p[i],
+        contact = contact_constraint(bodies[i], normal[i], cf=cf[i], p=p[i],
             offset=offset[i], name=names[i], contact_type=contact_type)
-        push!(ineqcs, ineqc)
+        push!(contacts, contact)
     end
-    ineqcs = [ineqcs...] # vector typing
-    return ineqcs
+    contacts = [contacts...] # vector typing
+    return contacts
 end
 
 function contact_constraint(body::Body{T},
@@ -32,7 +32,7 @@ function contact_constraint(body::Body{T},
         p::AbstractVector = [szeros(T, 3) for i=1:length(normal)],
         offset::AbstractVector = [szeros(T, 3) for i=1:length(normal)],
         names::Vector{Symbol} = [Symbol("contact_" * randstring(4)) for i = 1:length(normal)],
-        contact_type::Symbol = :contact) where {T}
+        contact_type::Symbol = :contact) where T
     n = length(normal)
     @assert n == length(normal) == length(cf) == length(p) == length(offset)
     return contact_constraint(fill(body, n), normal, cf=cf, p=p, offset=offset,
@@ -52,7 +52,7 @@ function contact_constraint(body::Body{T},
         p::AbstractVector{T} = szeros(T, 3),
         offset::AbstractVector{T} = szeros(T, 3),
         name::Symbol = Symbol("contact_" * randstring(4)),
-        contact_type::Symbol = :contact) where {T}
+        contact_type::Symbol = :contact) where T
 
     if contact_type == :contact
         bound = NonlinearContact(body, normal, cf, p=p, offset=offset)
@@ -63,6 +63,6 @@ function contact_constraint(body::Body{T},
     else
         @warn "unknown contact_type"
     end
-    ineqcs = ContactConstraint((bound, body.id, nothing); name=name)
-    return ineqcs
+    contacts = ContactConstraint((bound, body.id, nothing); name=name)
+    return contacts
 end

@@ -1,21 +1,19 @@
 function line_search!(mechanism::Mechanism, α, rvio, bvio, opts; warning::Bool = false)
     scale = 0
     system = mechanism.system
-    eqcs = mechanism.joints
-    ineqcs = mechanism.contacts
 
     rvio_cand, bvio_cand = Inf * ones(2)
     for n = Base.OneTo(opts.max_ls)
-        for ineqc in mechanism.contacts
-            candidate_step!(α, ineqc, get_entry(system, ineqc.id), scale)
+        for contact in mechanism.contacts
+            candidate_step!(α, contact, get_entry(system, contact.id), scale)
         end
-        for eqc in mechanism.joints
-            candidate_step!(α, eqc, get_entry(system, eqc.id), scale)
+        for joint in mechanism.joints
+            candidate_step!(α, joint, get_entry(system, joint.id), scale)
         end
         for body in mechanism.bodies
-            ϕmax = 3.9 / mechanism.Δt^2
+            ϕmax = 3.9 / mechanism.timestep^2
             candidate_step!(α, mechanism, body, get_entry(system, body.id), scale, ϕmax = ϕmax)
-            if dot(body.state.ϕsol[2], body.state.ϕsol[2]) > 3.91 / mechanism.Δt^2
+            if dot(body.state.ϕsol[2], body.state.ϕsol[2]) > 3.91 / mechanism.timestep^2
                 error("Excessive angular velocity. Body-ID: $(string(body.name)) " * string(body.id) * ", ω: " * string(body.state.ϕsol[2]) * ".")
             end
         end
@@ -34,30 +32,25 @@ function line_search!(mechanism::Mechanism, α, rvio, bvio, opts; warning::Bool 
     return rvio_cand, bvio_cand
 end
 
-@inline function candidate_step!(α::T, mechanism::Mechanism{T,Nn,Ne}, body::Body, vector_entry::Entry, scale; ϕmax = Inf) where {T,Nn,Ne}
+@inline function candidate_step!(α, mechanism::Mechanism, body::Body, vector_entry::Entry, scale; ϕmax = Inf)
     body.state.vsol[2] = body.state.vsol[1] + 1 / (2^scale) * α * vector_entry.value[SA[1; 2; 3]]
     body.state.ϕsol[2] = body.state.ϕsol[1] + 1 / (2^scale) * α * vector_entry.value[SA[4; 5; 6]]
     ϕ = body.state.ϕsol[2]
     ϕdot = dot(ϕ, ϕ)
     if ϕdot > ϕmax
-        # @warn "clipping $(scn((ϕdot - ϕmax)/ϕmax)), $(body.name)"
-        # if we clip then we increase the regularization on this angular velocity.
-        # ϕ25 = body.state.ϕsol[2]
-        # Δϕ = (sqrt(ϕdot) - sqrt(ϕmax)) * ϕ25 # this is the velocity that we want to 'remove'
-        # mechanism.ϕreg[body.id - Ne] = 0.5 * mechanism.ϕreg[body.id - Ne] + 0.0* 4 * norm(body.J * Δϕ) # heuristic value that should put us in the feasible domain for ϕ
-        println("clipping ", scale, scn(mechanism.ϕreg[body.id - Ne]), scn((ϕdot - ϕmax)/ϕmax), " ", scn(ϕdot), " ", scn(ϕmax), " ", body.name)
+        println("clipping ", scale, scn((ϕdot - ϕmax) / ϕmax), " ", scn(ϕdot), " ", scn(ϕmax), " ", body.name)
         body.state.ϕsol[2] *= ϕmax / ϕdot # this is overkill, but works better than sqrt(ϕmax/ϕdot)
     end
     return
 end
 
-@inline function candidate_step!(α::T, eqc::JointConstraint, vector_entry::Entry, scale) where T
-    eqc.λsol[2] = eqc.λsol[1] + 1.0 / (2^scale) * α * vector_entry.value
+@inline function candidate_step!(α, joint::JointConstraint, vector_entry::Entry, scale)
+    joint.λsol[2] = joint.λsol[1] + 1.0 / (2^scale) * α * vector_entry.value
     return
 end
 
-@inline function candidate_step!(α::T, ineqc::ContactConstraint{T,N,Nc,Cs,N½}, vector_entry::Entry, scale) where {T,N,Nc,Cs,N½}
-    ineqc.ssol[2] = ineqc.ssol[1] + 1 / (2^scale) * α * vector_entry.value[SVector{N½,Int64}(1:N½)]
-    ineqc.γsol[2] = ineqc.γsol[1] + 1 / (2^scale) * α * vector_entry.value[SVector{N½,Int64}(N½+1:N)]
+@inline function candidate_step!(α::T, contact::ContactConstraint{T,N,Nc,Cs,N½}, vector_entry::Entry, scale) where {T,N,Nc,Cs,N½}
+    contact.ssol[2] = contact.ssol[1] + 1 / (2^scale) * α * vector_entry.value[SVector{N½,Int64}(1:N½)]
+    contact.γsol[2] = contact.γsol[1] + 1 / (2^scale) * α * vector_entry.value[SVector{N½,Int64}(N½+1:N)]
     return
 end

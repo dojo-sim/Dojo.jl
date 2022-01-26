@@ -5,10 +5,10 @@ struct Pendulum end
 
 function pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
         dt::T=0.05, g::T=-10.0, m::T=1.0, l::T=1.0, damper=0.0, s::Int=1, vis::Visualizer=Visualizer(), name::Symbol=:robot,
-        opts_step::InteriorPointOptions = InteriorPointOptions(),
-        opts_grad::InteriorPointOptions = InteriorPointOptions()) where {T}
+        opts_step::SolverOptions = SolverOptions(),
+        opts_grad::SolverOptions = SolverOptions()) where T
 
-    mechanism = getmechanism(:pendulum, Δt=dt, g=g, m=m, l=l, damper=damper)
+    mechanism = getmechanism(:pendulum, timestep=dt, g=g, m=m, l=l, damper=damper)
     initialize!(mechanism, :pendulum)
 
     if mode == :min
@@ -74,7 +74,7 @@ end
 
 function step(env::Environment{Pendulum}, x, u; diff=false)
     mechanism = env.mechanism
-    Δt = mechanism.Δt
+    timestep = mechanism.timestep
     max_torque = env.info[:max_torque]
 
     x0 = x
@@ -82,7 +82,7 @@ function step(env::Environment{Pendulum}, x, u; diff=false)
     env.u_prev .= u0  # for rendering
 
     z0 = env.mode == :min ? min2max(mechanism, x0) : x0
-    z1 = step!(mechanism, z0, Δt * u0; opts = env.opts_step)
+    z1 = step!(mechanism, z0, timestep * u0; opts = env.opts_step)
     env.x .= env.mode == :min ? max2min(mechanism, z1) : z1
 
     # Compute cost function
@@ -91,12 +91,12 @@ function step(env::Environment{Pendulum}, x, u; diff=false)
     # Gradients
     if diff
         if env.mode == :min
-            fx, fu = getMinGradients!(env.mechanism, z0, Δt * u0, opts=env.opts_grad)
+            fx, fu = getMinGradients!(env.mechanism, z0, timestep * u0, opts=env.opts_grad)
         elseif env.mode == :max
-            fx, fu = getMaxGradients!(env.mechanism, z0, Δt * u0, opts=env.opts_grad)
+            fx, fu = getMaxGradients!(env.mechanism, z0, timestep * u0, opts=env.opts_grad)
         end
         env.fx .= fx
-        env.fu .= Δt * fu
+        env.fu .= timestep * fu
     end
 
     info = Dict()
@@ -127,7 +127,7 @@ function cost(env::Environment{Pendulum}, x, u)
     if env.mode == :min
         θ, ω = x
         c = angle_normalize(θ - π)^2 + 1e-1 * ω^2 + 1e-3 * (u[1])^2 # angle_normalize enforces angle ∈ [-π, π]
-        c = angle_normalize(θ - π)^2 + 1e-3 * ω^2 + 1e-3 * (env.mechanism.Δt * u[1])^2 # angle_normalize enforces angle ∈ [-π, π]
+        c = angle_normalize(θ - π)^2 + 1e-3 * ω^2 + 1e-3 * (env.mechanism.timestep * u[1])^2 # angle_normalize enforces angle ∈ [-π, π]
     else
         c = Inf
     end

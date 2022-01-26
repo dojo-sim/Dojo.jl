@@ -1,30 +1,30 @@
 """
     Linear and angular momentum of a body using Legendre transform.
 """
-function momentum(mechanism::Mechanism{T}, body::Body{T}) where {T}
-    Δt = mechanism.Δt
+function momentum(mechanism::Mechanism{T}, body::Body{T}) where T
+    timestep = mechanism.timestep
 
     state = body.state
     x1, q1 = previous_configuration(state)
     x2, q2 = current_configuration(state)
-    x3, q3 = next_configuration(state, Δt)
+    x3, q3 = next_configuration(state, timestep)
 
     v15 = body.state.vsol[2] # v1.5
     ω15 = body.state.ϕsol[2] # ω1.5
 
     ezg = SA{T}[0; 0; -mechanism.g]
-    D2x = 1 / Δt * body.m * (x3 - x2) + Δt/2 * body.m * ezg
-    D2q = -4 / Δt * LVᵀmat(q2)' * Tmat() * Rmat(q3)' * Vᵀmat() * body.J * Vmat() * Lmat(q2)' * vector(q3)
+    D2x = 1 / timestep * body.m * (x3 - x2) + timestep/2 * body.m * ezg
+    D2q = -4 / timestep * LVᵀmat(q2)' * Tmat() * Rmat(q3)' * Vᵀmat() * body.J * Vmat() * Lmat(q2)' * vector(q3)
     p_linear_body = D2x - 0.5 * state.F2[1]
     p_angular_body = D2q - 1.0 * state.τ2[1]
 
     α = -1.0
-    for (i, eqc) in enumerate(mechanism.joints)
-        if body.id ∈ [eqc.parentid; eqc.childids]
+    for (i, joint) in enumerate(mechanism.joints)
+        if body.id ∈ [joint.parentid; joint.childids]
 
-            f_joint = zerodimstaticadjoint(impulse_map(mechanism, eqc, body)) * eqc.λsol[2]  # computed at 1.5
-            eqc.isspring && (f_joint += apply_spring(mechanism, eqc, body)) # computed at 1.5
-            eqc.isdamper && (f_joint += apply_damper(mechanism, eqc, body)) # computed at 1.5
+            f_joint = zerodimstaticadjoint(impulse_map(mechanism, joint, body)) * joint.λsol[2]  # computed at 1.5
+            joint.isspring && (f_joint += apply_spring(mechanism, joint, body)) # computed at 1.5
+            joint.isdamper && (f_joint += apply_damper(mechanism, joint, body)) # computed at 1.5
 
             p_linear_body += α * 0.5 * f_joint[1:3] 
             p_angular_body += α * 0.5 * f_joint[4:6]

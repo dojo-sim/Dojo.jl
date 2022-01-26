@@ -18,11 +18,11 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
-mech = getmechanism(:halfcheetah, Δt = 0.05, g = -0*9.81, contact = true,
+mech = getmechanism(:halfcheetah, timestep = 0.05, g = -0*9.81, contact = true,
     contact_body = true, spring = 0.0, damper = 10.0);
 initialize!(mech, :halfcheetah, x = 0.0, z = 0.5, θ = -0.0)
 @elapsed storage = simulate!(mech, 3.00, controller!, record = true, verbose = false,
-    opts=InteriorPointOptions(verbose=false, btol = 1e-6))
+    opts=SolverOptions(verbose=false, btol = 1e-6))
 visualize(mech, storage, vis = vis)
 
 function controller!(mechanism, k)
@@ -46,7 +46,7 @@ collect(env.mechanism.joints)[1]
 for i = 1:25
     render(env)
     sleep(0.05)
-    # action = 120*env.mechanism.Δt*ones(6)#1000*sample(env.aspace) # your agent here (this takes random actions)
+    # action = 120*env.mechanism.timestep*ones(6)#1000*sample(env.aspace) # your agent here (this takes random actions)
     action = sample(env.aspace)#1000*sample(env.aspace) # your agent here (this takes random actions)
     obs, r, done, info = step(env, action)
     @show r
@@ -88,7 +88,7 @@ using LinearAlgebra
 nx = 5
 nr = 10
 nu = 5
-Δt = 0.1
+timestep = 0.1
 Rx0 = rand(nr, nx)
 Ru0 = rand(nr, nu)
 Rz1 = rand(nr, nr)

@@ -1,34 +1,34 @@
 function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
-    Δt = mechanism.Δt
-    eqcs = mechanism.joints
-    nc = sum(length.(eqcs))
+    timestep = mechanism.timestep
+    joints = mechanism.joints
+    nc = sum(length.(joints))
     Gl = zeros(T,nc,13Nb)
 
     oneindc = 0
-    for eqc in eqcs
+    for joint in joints
         ind1 = 1
         ind2 = 0
 
-        parentid = eqc.parentid
+        parentid = joint.parentid
         if parentid !== nothing
             parentind = parentid - Ne
             pbody = get_body(mechanism,parentid)
             pstate = pbody.state
 
-            for (i,childid) in enumerate(eqc.childids)
+            for (i,childid) in enumerate(joint.childids)
                 childind = childid - Ne
                 cbody = get_body(mechanism,childid)
                 cstate = cbody.state
-                joint = eqc.constraints[i]
+                element = joint.constraints[i]
 
-                ind2 += length(joint)
+                ind2 += length(element)
                 range = oneindc+ind1:oneindc+ind2
 
                 pcol13 = offset_range(parentind,13)
                 ccol13 = offset_range(childind,13)
 
-                p = constraint_jacobian_parent(joint, pbody, cbody, eqc.λsol[2], Δt) # x3
-                c = constraint_jacobian_child(joint, pbody, cbody, eqc.λsol[2], Δt) # x3
+                p = constraint_jacobian_parent(element, pbody, cbody, joint.λsol[2], timestep) # x3
+                c = constraint_jacobian_child(element, pbody, cbody, joint.λsol[2], timestep) # x3
 
                 pGlx = p[:, 1:3]
                 pGlq = p[:, 4:7]
@@ -42,34 +42,34 @@ function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
                 ind1 = ind2+1
             end
         else
-            for (i,childid) in enumerate(eqc.childids)
+            for (i,childid) in enumerate(joint.childids)
                 childind = childid - Ne
                 cbody = get_body(mechanism,childid)
                 cstate = cbody.state
-                joint = eqc.constraints[i]
-                ind2 += length(joint)
+                element = joint.constraints[i]
+                ind2 += length(element)
                 range = oneindc+ind1:oneindc+ind2
 
                 ccol13 = offset_range(childind,13)
 
-                c = constraint_jacobian_child(joint, mechanism.origin, cbody, eqc.λsol[2], Δt) # x3
+                c = constraint_jacobian_child(element, mechanism.origin, cbody, joint.λsol[2], timestep) # x3
 
                 Gl[range,ccol13[1:3]] = c[:, 1:3]
                 Gl[range,ccol13[7:10]] = c[:, 4:7]
                 ind1 = ind2+1
             end
         end
-        oneindc += length(eqc)
+        oneindc += length(joint)
     end
     return Gl
 end
 
 function joint_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
-    Δt = mechanism.Δt
+    timestep = mechanism.timestep
     J = zeros(T,6Nb,13Nb)
 
-    for eqc in mechanism.joints
-        parentid = eqc.parentid
+    for joint in mechanism.joints
+        parentid = joint.parentid
 
         if parentid !== nothing
             parentind = parentid - Ne
@@ -78,14 +78,14 @@ function joint_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,N
             prow6 = offset_range(parentind,6)
             pcol13 = offset_range(parentind,13)
 
-            for (i, childid) in enumerate(eqc.childids)
+            for (i, childid) in enumerate(joint.childids)
                 childind = childid - Ne
                 cbody = get_body(mechanism, childid)
                 cstate = cbody.state
-                joint = eqc.constraints[i]
+                element = joint.constraints[i]
                 crow6 = offset_range(childind,6)
                 ccol13 = offset_range(childind,13)
-                λ = getλJoint(eqc, i)
+                λ = getλJoint(joint, i)
 
                 Aaa = zeros(T,6,13)
                 Aab = zeros(T,6,13)
@@ -95,11 +95,11 @@ function joint_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,N
                 xa, qa = current_configuration(pstate)
                 xb, qb = current_configuration(cstate)
 
-                if typeof(impulse_map_parent(joint, xa, qa, xb, qb, eqc.λsol[2])) <: AbstractArray && length(joint) > 0
-                    XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(joint, w, qa, xb, qb, eqc.λsol[2])[:, 1:3]) * λ, xa)
-                    XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(joint, xa, UnitQuaternion(w..., false), xb, qb, eqc.λsol[2])[:, 1:3]) * λ, [qa.w; qa.x; qa.y; qa.z])
-                    QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(joint, w, qa, xb, qb, eqc.λsol[2])[:, 4:6]) * λ, xa)
-                    QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(joint, xa, UnitQuaternion(w..., false), xb, qb, eqc.λsol[2])[:, 4:6]) * λ, [qa.w; qa.x; qa.y; qa.z])
+                if typeof(impulse_map_parent(element, xa, qa, xb, qb, joint.λsol[2])) <: AbstractArray && length(element) > 0
+                    XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(element, w, qa, xb, qb, joint.λsol[2])[:, 1:3]) * λ, xa)
+                    XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(element, xa, UnitQuaternion(w..., false), xb, qb, joint.λsol[2])[:, 1:3]) * λ, [qa.w; qa.x; qa.y; qa.z])
+                    QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(element, w, qa, xb, qb, joint.λsol[2])[:, 4:6]) * λ, xa)
+                    QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(element, xa, UnitQuaternion(w..., false), xb, qb, joint.λsol[2])[:, 4:6]) * λ, [qa.w; qa.x; qa.y; qa.z])
 
                     Aaa[1:3,1:3] = XX
                     Aaa[1:3,7:10] = XQ
@@ -107,11 +107,11 @@ function joint_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,N
                     Aaa[4:6,7:10] = QQ
                 end
 
-                if typeof(impulse_map_parent(joint, xa, qa, xb, qb, eqc.λsol[2])) <: AbstractArray && length(joint) > 0
-                    XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(joint, xa, qa, w, qb, eqc.λsol[2])[:, 1:3]) * λ, xb)
-                    XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(joint, xa, qa, xb, UnitQuaternion(w..., false), eqc.λsol[2])[:, 1:3]) * λ, [qb.w; qb.x; qb.y; qb.z])
-                    QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(joint, xa, qa, w, qb, eqc.λsol[2])[:, 4:6]) * λ, xb)
-                    QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(joint, xa, qa, xb, UnitQuaternion(w..., false), eqc.λsol[2])[:, 4:6]) * λ, [qb.w; qb.x; qb.y; qb.z])
+                if typeof(impulse_map_parent(element, xa, qa, xb, qb, joint.λsol[2])) <: AbstractArray && length(element) > 0
+                    XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(element, xa, qa, w, qb, joint.λsol[2])[:, 1:3]) * λ, xb)
+                    XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(element, xa, qa, xb, UnitQuaternion(w..., false), joint.λsol[2])[:, 1:3]) * λ, [qb.w; qb.x; qb.y; qb.z])
+                    QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(element, xa, qa, w, qb, joint.λsol[2])[:, 4:6]) * λ, xb)
+                    QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_parent(element, xa, qa, xb, UnitQuaternion(w..., false), joint.λsol[2])[:, 4:6]) * λ, [qb.w; qb.x; qb.y; qb.z])
 
                     Aab[1:3,1:3] = XX
                     Aab[1:3,7:10] = XQ
@@ -119,11 +119,11 @@ function joint_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,N
                     Aab[4:6,7:10] = QQ
                 end
 
-                if typeof(impulse_map_child(joint, xa, qa, xb, qb, eqc.λsol[2])) <: AbstractArray && length(joint) > 0
-                    XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, w, qa, xb, qb, eqc.λsol[2])[:, 1:3]) * λ, xa)
-                    XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, xa, UnitQuaternion(w..., false), xb, qb, eqc.λsol[2])[:, 1:3]) * λ, [qa.w; qa.x; qa.y; qa.z])
-                    QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, w, qa, xb, qb, eqc.λsol[2])[:, 4:6]) * λ, xa)
-                    QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, xa, UnitQuaternion(w..., false), xb, qb, eqc.λsol[2])[:, 4:6]) * λ, [qa.w; qa.x; qa.y; qa.z])
+                if typeof(impulse_map_child(element, xa, qa, xb, qb, joint.λsol[2])) <: AbstractArray && length(element) > 0
+                    XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(element, w, qa, xb, qb, joint.λsol[2])[:, 1:3]) * λ, xa)
+                    XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(element, xa, UnitQuaternion(w..., false), xb, qb, joint.λsol[2])[:, 1:3]) * λ, [qa.w; qa.x; qa.y; qa.z])
+                    QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(element, w, qa, xb, qb, joint.λsol[2])[:, 4:6]) * λ, xa)
+                    QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(element, xa, UnitQuaternion(w..., false), xb, qb, joint.λsol[2])[:, 4:6]) * λ, [qa.w; qa.x; qa.y; qa.z])
 
                     Aba[1:3,1:3] = XX
                     Aba[1:3,7:10] = XQ
@@ -131,11 +131,11 @@ function joint_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,N
                     Aba[4:6,7:10] = QQ
                 end
 
-                if typeof(impulse_map_child(joint, xa, qa, xb, qb, eqc.λsol[2])) <: AbstractArray && length(joint) > 0
-                    XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, xa, qa, w, qb, eqc.λsol[2])[:, 1:3]) * λ, xb)
-                    XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, xa, qa, xb, UnitQuaternion(w..., false), eqc.λsol[2])[:, 1:3]) * λ, [qb.w; qb.x; qb.y; qb.z])
-                    QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, xa, qa, w, qb, eqc.λsol[2])[:, 4:6]) * λ, xb)
-                    QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, xa, qa, xb, UnitQuaternion(w..., false), eqc.λsol[2])[:, 4:6]) * λ, [qb.w; qb.x; qb.y; qb.z])
+                if typeof(impulse_map_child(element, xa, qa, xb, qb, joint.λsol[2])) <: AbstractArray && length(element) > 0
+                    XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(element, xa, qa, w, qb, joint.λsol[2])[:, 1:3]) * λ, xb)
+                    XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(element, xa, qa, xb, UnitQuaternion(w..., false), joint.λsol[2])[:, 1:3]) * λ, [qb.w; qb.x; qb.y; qb.z])
+                    QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(element, xa, qa, w, qb, joint.λsol[2])[:, 4:6]) * λ, xb)
+                    QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(element, xa, qa, xb, UnitQuaternion(w..., false), joint.λsol[2])[:, 4:6]) * λ, [qb.w; qb.x; qb.y; qb.z])
 
                     Abb[1:3,1:3] = XX
                     Abb[1:3,7:10] = XQ
@@ -149,26 +149,26 @@ function joint_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,N
                 J[crow6,ccol13] += Abb
             end
         else
-            for (i, childid) in enumerate(eqc.childids)
+            for (i, childid) in enumerate(joint.childids)
                 childind = childid - Ne
                 cbody = get_body(mechanism, childid)
                 cstate = cbody.state
-                joint = eqc.constraints[i]
+                element = joint.constraints[i]
                 crow6 = offset_range(childind,6)
                 ccol13 = offset_range(childind,13)
-                λ = getλJoint(eqc, i)
+                λ = getλJoint(joint, i)
 
                 Abb = zeros(T,6,13)
 
                 xa, qa = current_configuration(mechanism.origin.state)
                 xb, qb = current_configuration(cstate)
 
-                if typeof(impulse_map_child(joint, xa, qb, xb, qb, eqc.λsol[2])) <: AbstractArray && length(joint) > 0
+                if typeof(impulse_map_child(element, xa, qb, xb, qb, joint.λsol[2])) <: AbstractArray && length(element) > 0
 
-                    XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, xa, qa, w, qb, eqc.λsol[2])[:, 1:3]) * λ, xb)
-                    XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, xa, qa, xb, UnitQuaternion(w..., false), eqc.λsol[2])[:, 1:3]) * λ, [qb.w; qb.x; qb.y; qb.z])
-                    QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, xa, qa, w, qb, eqc.λsol[2])[:, 4:6]) * λ, xb)
-                    QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(joint, xa, qa, xb, UnitQuaternion(w..., false), eqc.λsol[2])[:, 4:6]) * λ, [qb.w; qb.x; qb.y; qb.z])
+                    XX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(element, xa, qa, w, qb, joint.λsol[2])[:, 1:3]) * λ, xb)
+                    XQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(element, xa, qa, xb, UnitQuaternion(w..., false), joint.λsol[2])[:, 1:3]) * λ, [qb.w; qb.x; qb.y; qb.z])
+                    QX = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(element, xa, qa, w, qb, joint.λsol[2])[:, 4:6]) * λ, xb)
+                    QQ = FiniteDiff.finite_difference_jacobian(w -> -transpose(impulse_map_child(element, xa, qa, xb, UnitQuaternion(w..., false), joint.λsol[2])[:, 4:6]) * λ, [qb.w; qb.x; qb.y; qb.z])
 
                     Abb[1:3,1:3] = XX
                     Abb[1:3,7:10] = XQ
@@ -184,11 +184,11 @@ function joint_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,N
 end
 
 function springapply_damperjacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
-    Δt = mechanism.Δt
+    timestep = mechanism.timestep
     J = zeros(T,6Nb,13Nb)
 
-    for eqc in mechanism.joints
-        parentid = eqc.parentid
+    for joint in mechanism.joints
+        parentid = joint.parentid
 
         if parentid !== nothing
             parentind = parentid - Ne
@@ -197,31 +197,31 @@ function springapply_damperjacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,N
             prow6 = offset_range(parentind,6)
             pcol13 = offset_range(parentind,13)
 
-            for (i, childid) in enumerate(eqc.childids)
+            for (i, childid) in enumerate(joint.childids)
                 childind = childid - Ne
                 cbody = get_body(mechanism, childid)
                 cstate = cbody.state
-                joint = eqc.constraints[i]
+                element = joint.constraints[i]
                 crow6 = offset_range(childind,6)
                 ccol13 = offset_range(childind,13)
-                λ = getλJoint(eqc, i)
+                λ = getλJoint(joint, i)
 
                 Aaa = zeros(T,6,13)
                 Aab = zeros(T,6,13)
                 Aba = zeros(T,6,13)
                 Abb = zeros(T,6,13)
 
-                Aaa[:, [1:3; 7:10]] -= spring_parent_jacobian_configuration_parent(joint, pbody, cbody, Δt, attjac = false)
-                Aaa[:, [1:3; 7:10]] -= damper_parent_jacobian_configuration_parent(joint, pbody, cbody, Δt, attjac = false)
+                Aaa[:, [1:3; 7:10]] -= spring_parent_jacobian_configuration_parent(element, pbody, cbody, timestep, attjac = false)
+                Aaa[:, [1:3; 7:10]] -= damper_parent_jacobian_configuration_parent(element, pbody, cbody, timestep, attjac = false)
 
-                Aab[:, [1:3; 7:10]] -= spring_parent_jacobian_configuration_child(joint, pbody, cbody, Δt, attjac = false)
-                Aab[:, [1:3; 7:10]] -= damper_parent_jacobian_configuration_child(joint, pbody, cbody, Δt, attjac = false)
+                Aab[:, [1:3; 7:10]] -= spring_parent_jacobian_configuration_child(element, pbody, cbody, timestep, attjac = false)
+                Aab[:, [1:3; 7:10]] -= damper_parent_jacobian_configuration_child(element, pbody, cbody, timestep, attjac = false)
 
-                Aba[:, [1:3; 7:10]] -= spring_child_jacobian_configuraion_parent(joint, pbody, cbody, Δt, attjac = false)
-                Aba[:, [1:3; 7:10]] -= damper_child_jacobian_configuration_parent(joint, pbody, cbody, Δt, attjac = false)
+                Aba[:, [1:3; 7:10]] -= spring_child_jacobian_configuraion_parent(element, pbody, cbody, timestep, attjac = false)
+                Aba[:, [1:3; 7:10]] -= damper_child_jacobian_configuration_parent(element, pbody, cbody, timestep, attjac = false)
 
-                Abb[:, [1:3; 7:10]] -= spring_child_jacobian_configuration_child(joint, pbody, cbody, Δt, attjac = false)
-                Abb[:, [1:3; 7:10]] -= damper_child_jacobian_configuration_child(joint, pbody, cbody, Δt, attjac = false)
+                Abb[:, [1:3; 7:10]] -= spring_child_jacobian_configuration_child(element, pbody, cbody, timestep, attjac = false)
+                Abb[:, [1:3; 7:10]] -= damper_child_jacobian_configuration_child(element, pbody, cbody, timestep, attjac = false)
 
                 J[prow6,pcol13] += Aaa
                 J[prow6,ccol13] += Aab
@@ -229,20 +229,20 @@ function springapply_damperjacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,N
                 J[crow6,ccol13] += Abb
             end
         else
-            for (i, childid) in enumerate(eqc.childids)
+            for (i, childid) in enumerate(joint.childids)
                 pbody = mechanism.origin
                 childind = childid - Ne
                 cbody = get_body(mechanism, childid)
                 cstate = cbody.state
-                joint = eqc.constraints[i]
+                element = joint.constraints[i]
                 crow6 = offset_range(childind,6)
                 ccol13 = offset_range(childind,13)
-                λ = getλJoint(eqc, i)
+                λ = getλJoint(joint, i)
 
                 Abb = zeros(T,6,13)
 
-                Abb[:, [1:3; 7:10]] -= spring_child_jacobian_configuration_child(joint, pbody, cbody, Δt, attjac = false)
-                Abb[:, [1:3; 7:10]] -= damper_child_jacobian_configuration_child(joint, pbody, cbody, Δt, attjac = false)
+                Abb[:, [1:3; 7:10]] -= spring_child_jacobian_configuration_child(element, pbody, cbody, timestep, attjac = false)
+                Abb[:, [1:3; 7:10]] -= damper_child_jacobian_configuration_child(element, pbody, cbody, timestep, attjac = false)
 
                 J[crow6,ccol13] += Abb
             end
@@ -251,7 +251,7 @@ function springapply_damperjacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,N
     return J
 end
 
-function ∂body∂z(body::Body{T}, Δt::T; attjac::Bool = true) where T
+function ∂body∂z(body::Body{T}, timestep::T; attjac::Bool = true) where T
     state = body.state
     q2 = state.q2[1]
     ϕ25 = state.ϕsol[2]
@@ -262,17 +262,17 @@ function ∂body∂z(body::Body{T}, Δt::T; attjac::Bool = true) where T
 
     x1, q1 = previous_configuration(state)
     x2, q2 = current_configuration(state)
-    x3, q3 = next_configuration(state, Δt)
+    x3, q3 = next_configuration(state, timestep)
 
     AposT = [-I Z3]
     AvelT = [Z3 -I*body.m] # solving for impulses
 
-    AposR = [-∂integrator∂q(q2, ϕ25, Δt, attjac = attjac) szeros(4,3)]
+    AposR = [-∂integrator∂q(q2, ϕ25, timestep, attjac = attjac) szeros(4,3)]
 
-    rot_q1(q) = -4 / Δt * LVᵀmat(q2)' * Lmat(UnitQuaternion(q..., false)) * Vᵀmat() * body.J * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(q2)
-    rot_q2(q) = -4 / Δt * LVᵀmat(UnitQuaternion(q..., false))' * Tmat() * Rmat(next_orientation(UnitQuaternion(q..., false), state.ϕsol[2], Δt))' * Vᵀmat() * body.J * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(next_orientation(UnitQuaternion(q..., false), state.ϕsol[2], Δt)) + -4 / Δt * LVᵀmat(UnitQuaternion(q..., false))' * Lmat(next_orientation(UnitQuaternion(q..., false), -state.ϕ15, Δt)) * Vᵀmat() * body.J * Vmat() * Lmat(next_orientation(UnitQuaternion(q..., false), -state.ϕ15, Δt))' * q
+    rot_q1(q) = -4 / timestep * LVᵀmat(q2)' * Lmat(UnitQuaternion(q..., false)) * Vᵀmat() * body.J * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(q2)
+    rot_q2(q) = -4 / timestep * LVᵀmat(UnitQuaternion(q..., false))' * Tmat() * Rmat(next_orientation(UnitQuaternion(q..., false), state.ϕsol[2], timestep))' * Vᵀmat() * body.J * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(next_orientation(UnitQuaternion(q..., false), state.ϕsol[2], timestep)) + -4 / timestep * LVᵀmat(UnitQuaternion(q..., false))' * Lmat(next_orientation(UnitQuaternion(q..., false), -state.ϕ15, timestep)) * Vᵀmat() * body.J * Vmat() * Lmat(next_orientation(UnitQuaternion(q..., false), -state.ϕ15, timestep))' * q
 
-    dynR_ϕ15 = -1.0 * FiniteDiff.finite_difference_jacobian(rot_q1, vector(q1)) * ∂integrator∂ϕ(q2, -state.ϕ15, Δt)
+    dynR_ϕ15 = -1.0 * FiniteDiff.finite_difference_jacobian(rot_q1, vector(q1)) * ∂integrator∂ϕ(q2, -state.ϕ15, timestep)
     dynR_q2 = FiniteDiff.finite_difference_jacobian(rot_q2, vector(q2))
     AvelR = attjac ? [dynR_q2 * LVᵀmat(q2) dynR_ϕ15] : [dynR_q2 dynR_ϕ15]
 
@@ -280,7 +280,7 @@ function ∂body∂z(body::Body{T}, Δt::T; attjac::Bool = true) where T
              ZR [AposR;AvelR]]
 end
 
-function ∂body∂u(body::Body{T}, Δt) where T
+function ∂body∂u(body::Body{T}, timestep) where T
     Z3 = szeros(T,3,3)
     Z43 = szeros(T,4,3)
 
@@ -291,8 +291,8 @@ function ∂body∂u(body::Body{T}, Δt) where T
     return [BposT;BvelT;BposR;BvelR]
 end
 
-function dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,Nn,Ne,Nb}
-    Δt = mechanism.Δt
+function dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}, jointids) where {T,Nn,Ne,Nb}
+    timestep = mechanism.timestep
     nu = control_dimension(mechanism)
 
     # get state linearization
@@ -305,8 +305,8 @@ function dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,Nn
         col6 = offset_range(i,6)
         col13 = offset_range(i,13)
 
-        Fzi = ∂body∂z(body, Δt, attjac = false)[[4:6; 11:13],:]
-        Fui = ∂body∂u(body, Δt)[[4:6; 11:13],:]
+        Fzi = ∂body∂z(body, timestep, attjac = false)[[4:6; 11:13],:]
+        Fui = ∂body∂u(body, timestep)[[4:6; 11:13],:]
 
         Fz[col6,col13] = Fzi
         Fu[col6,col6] = Fui
@@ -315,20 +315,20 @@ function dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,Nn
     n1 = 1
     n2 = 0
 
-    for id in eqcids
-        eqc = get_joint_constraint(mechanism, id)
-        n2 += control_dimension(eqc)
+    for id in jointids
+        joint = get_joint_constraint(mechanism, id)
+        n2 += control_dimension(joint)
 
-        parentid = eqc.parentid
+        parentid = joint.parentid
         if parentid != nothing
             parentind = parentid - Ne
             col6 = offset_range(parentind,6)
-            Bcontrol[col6,n1:n2] = input_jacobian_control_parent(mechanism, eqc, get_body(mechanism, parentid))
+            Bcontrol[col6,n1:n2] = input_jacobian_control_parent(mechanism, joint, get_body(mechanism, parentid))
         end
-        for childid in eqc.childids
+        for childid in joint.childids
             childind = childid - Ne
             col6 = offset_range(childind,6)
-            Bcontrol[col6,n1:n2] = input_jacobian_control_child(mechanism, eqc, get_body(mechanism, childid))
+            Bcontrol[col6,n1:n2] = input_jacobian_control_child(mechanism, joint, get_body(mechanism, childid))
         end
 
         n1 = n2+1
@@ -337,27 +337,27 @@ function dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}, eqcids) where {T,Nn
 end
 
 function contact_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
-    Δt = mechanism.Δt
+    timestep = mechanism.timestep
     J = zeros(6Nb, 13Nb)
 
     offr = 0
     offc = 0
     for body in mechanism.bodies
-        for ineqc in mechanism.contacts
-            if ineqc.parentid == body.id
-                bound = ineqc.constraints[1]
+        for contact in mechanism.contacts
+            if contact.parentid == body.id
+                bound = contact.constraints[1]
                 bound_type = typeof(bound)
-                x3, q3 = next_configuration(body.state, Δt)
+                x3, q3 = next_configuration(body.state, timestep)
 
                 function d(vars)
                     x = vars[1:3]
                     q = UnitQuaternion(vars[4:7]..., false)
-                    return impulse_map(bound, x, q, nothing)' * ineqc.γsol[2]
+                    return impulse_map(bound, x, q, nothing)' * contact.γsol[2]
                 end
 
                 if bound_type <: NonlinearContact
-                    # J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= _dN(x3, vector(q3), ineqc.γsol[2][1:1], bound.p)
-                    # J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= _dB(x3, vector(q3), ineqc.γsol[2][2:4], bound.p)
+                    # J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= _dN(x3, vector(q3), contact.γsol[2][1:1], bound.p)
+                    # J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= _dB(x3, vector(q3), contact.γsol[2][2:4], bound.p)
                     J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= FiniteDiff.finite_difference_jacobian(d, [x3; vector(q3)])
                 elseif bound_type <: LinearContact
                     J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= FiniteDiff.finite_difference_jacobian(d, [x3; vector(q3)])
@@ -373,19 +373,19 @@ function contact_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
 end
 
 function contact_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
-    Δt = mechanism.Δt
-    ineqcs = mechanism.contacts
-    nineqcs = contact_dimension(mechanism)
-    J = zeros(nineqcs, 13Nb)
+    timestep = mechanism.timestep
+    contacts = mechanism.contacts
+    ncontacts = contact_dimension(mechanism)
+    J = zeros(ncontacts, 13Nb)
 
     offr = 0
-    for ineqc in ineqcs
-        bound = ineqc.constraints[1]
-        body = get_body(mechanism, ineqc.parentid)
-        N½ = Int(length(ineqc)/2)
+    for contact in contacts
+        bound = contact.constraints[1]
+        body = get_body(mechanism, contact.parentid)
+        N½ = Int(length(contact)/2)
         x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
-        x3, q3 = next_configuration(body.state, Δt)
-        ibody = findfirst(x -> x.id == ineqc.parentid, mechanism.bodies)
+        x3, q3 = next_configuration(body.state, timestep)
+        ibody = findfirst(x -> x.id == contact.parentid, mechanism.bodies)
         bound_type = typeof(bound)
 
         function d(vars)
@@ -398,7 +398,7 @@ function contact_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,
         end
         if bound_type <: NonlinearContact
             J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  bound.ainv3
-            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = bound.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bound.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bound.p)))#) * Rmat(quaternion_map(ϕ25, Δt)*Δt/2)*LVᵀmat(q2)
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = bound.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bound.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bound.p)))#) * Rmat(quaternion_map(ϕ25, timestep)*timestep/2)*LVᵀmat(q2)
             J[offr + N½ .+ (3:4), (ibody-1)*13 .+ (7:10)] = FiniteDiff.finite_difference_jacobian(d, vector(q3))#dBω(vector(q3), ϕ25, bound.p)
         elseif bound_type <: LinearContact
             J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  bound.ainv3
@@ -406,34 +406,34 @@ function contact_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,
             J[offr + N½ .+ (3:6), (ibody-1)*13 .+ (7:10)] = FiniteDiff.finite_difference_jacobian(d, vector(q3))
         elseif bound_type <: ImpactContact
             J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  bound.ainv3
-            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = bound.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bound.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bound.p)))#) * Rmat(quaternion_map(ϕ25, Δt)*Δt/2)*LVᵀmat(q2)
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = bound.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bound.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bound.p)))#) * Rmat(quaternion_map(ϕ25, timestep)*timestep/2)*LVᵀmat(q2)
         end
-        offr += length(ineqc)
+        offr += length(contact)
     end
     return J
 end
 
 function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}; attjac::Bool = true) where {T,Nn,Ne,Nb}
     mechanism = deepcopy(mechanism)
-    Δt = mechanism.Δt
+    timestep = mechanism.timestep
     system = mechanism.system
-    eqcs = mechanism.joints
-    ineqcs = mechanism.contacts
-    eqcids = getfield.(eqcs, :id)
+    joints = mechanism.joints
+    contacts = mechanism.contacts
+    jointids = getfield.(joints, :id)
 
     resdims = [length(system.vector_entries[i].value) for i=1:Nn]
-    joint_dimensions = length.(eqcs)
-    contact_dimensions = length.(ineqcs)
+    joint_dimensions = length.(joints)
+    contact_dimensions = length.(contacts)
     nu = control_dimension(mechanism)
-    neqcs = joint_dimension(mechanism)
-    nineqcs = contact_dimension(mechanism)
+    njoints = joint_dimension(mechanism)
+    ncontacts = contact_dimension(mechanism)
     nic = attjac ? 12Nb : 13Nb # initial conditions x2, v1, q2, ϕ15
 
-    Fz, Fu = dynamics_jacobian(mechanism, eqcids)
+    Fz, Fu = dynamics_jacobian(mechanism, jointids)
     data = get_data(mechanism)
     solution = get_solution(mechanism)
     G = attitude_jacobian(data, Nb)[1:13Nb,1:12Nb]
-    H = integrator_jacobian(data, solution, Δt, Nb, neqcs, attjac = attjac)[1:13Nb,1:nic]
+    H = integrator_jacobian(data, solution, timestep, Nb, njoints, attjac = attjac)[1:13Nb,1:nic]
 
     B = joint_constraint_jacobian(mechanism) * H
     D = contact_dynamics_jacobian(mechanism) * H
@@ -443,11 +443,11 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}; attjac::Bool = true)
     attjac && (C = C * G)
 
     A = zeros(sum(resdims), data_dimension(mechanism, attjac = attjac))
-    A[1:neqcs, 1:nic] += B
-    A[neqcs .+ (1:6Nb), 1:nic] += C
-    A[neqcs .+ (1:6Nb), 1:nic] += D
-    A[neqcs .+ (1:6Nb), nic .+ (1:nu)] += Fu
-    A[neqcs + 6Nb .+ (1:nineqcs), 1:nic] += E
+    A[1:njoints, 1:nic] += B
+    A[njoints .+ (1:6Nb), 1:nic] += C
+    A[njoints .+ (1:6Nb), 1:nic] += D
+    A[njoints .+ (1:6Nb), nic .+ (1:nu)] += Fu
+    A[njoints + 6Nb .+ (1:ncontacts), 1:nic] += E
     return A
 end
 
@@ -464,13 +464,13 @@ function attitude_jacobian(data::AbstractVector, Nb::Int)
     return G
 end
 
-function integrator_jacobian(data::AbstractVector, sol::AbstractVector, Δt, Nb::Int, neqcs::Int; attjac::Bool = true)
+function integrator_jacobian(data::AbstractVector, sol::AbstractVector, timestep, Nb::Int, njoints::Int; attjac::Bool = true)
     H = zeros(0,0)
     for i = 1:Nb
         x2, v15, q2, ϕ15 = unpack_data(data[13*(i-1) .+ (1:13)])
-        ϕ25 = sol[neqcs + 6*(i-1) + 3 .+ SVector{3,Int}(1:3)]
+        ϕ25 = sol[njoints + 6*(i-1) + 3 .+ SVector{3,Int}(1:3)]
         q2 = UnitQuaternion(q2..., false)
-        H = cat(H, I(6), ∂integrator∂q(q2, ϕ25, Δt, attjac = attjac), I(3), dims = (1,2))
+        H = cat(H, I(6), ∂integrator∂q(q2, ϕ25, timestep, attjac = attjac), I(3), dims = (1,2))
     end
     ndata = length(data)
     nu = ndata - size(H)[1]
@@ -478,13 +478,13 @@ function integrator_jacobian(data::AbstractVector, sol::AbstractVector, Δt, Nb:
     return H
 end
 
-function getλJoint(eqc::JointConstraint{T,N,Nc}, i::Int) where {T,N,Nc}
+function getλJoint(joint::JointConstraint{T,N,Nc}, i::Int) where {T,N,Nc}
     n1 = 1
     for j = 1:i-1
-        n1 += length(eqc.constraints[j])
+        n1 += length(joint.constraints[j])
     end
-    n2 = n1 - 1 + length(eqc.constraints[i])
+    n2 = n1 - 1 + length(joint.constraints[i])
 
-    λi = SVector{n2-n1+1,T}(eqc.λsol[2][n1:n2])
+    λi = SVector{n2-n1+1,T}(joint.λsol[2][n1:n2])
     return λi
 end

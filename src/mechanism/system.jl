@@ -1,22 +1,20 @@
-function create_system(origin::Origin{T}, joints::Vector{<:JointConstraint}, bodies::Vector{<:Body},
-    contacts::Vector{<:ContactConstraint}) where T
-
+function create_system(origin::Origin{T}, joints::Vector{<:JointConstraint}, bodies::Vector{<:Body}, contacts::Vector{<:ContactConstraint}) where T
     adjacency = adjacency_matrix(joints, bodies, contacts)
     dims = length.([joints; bodies; contacts])
     system = System{T}(adjacency, dims, dims)
 
-    for eqc in joints
-        eqc.parentid == origin.id && (eqc.parentid = nothing)
+    for joint in joints
+        joint.parentid == origin.id && (joint.parentid = nothing)
     end
+
     origin.id = 0
 
     return system
 end
 
-function adjacency_matrix(eqcs::Vector{<:JointConstraint}, bodies::Vector{<:Body},
-        ineqcs::Vector{<:ContactConstraint})
+function adjacency_matrix(joints::Vector{<:JointConstraint}, bodies::Vector{<:Body}, contacts::Vector{<:ContactConstraint})
     # mode can be variables or data depending on whi
-    nodes = [eqcs; bodies; ineqcs]
+    nodes = [joints; bodies; contacts]
     n = length(nodes)
     A = zeros(Bool, n, n)
 
@@ -29,11 +27,11 @@ function adjacency_matrix(eqcs::Vector{<:JointConstraint}, bodies::Vector{<:Body
             # TODO these entries linking two bodies should be removed,
             # not sure why this is breaking some of the tests
             elseif typeof(node1) <: Body && typeof(node2) <: Body
-                for eqc in eqcs
-                    if node1.id == eqc.parentid && node2.id ∈ eqc.childids
+                for joint in joints
+                    if node1.id == joint.parentid && node2.id ∈ joint.childids
                         A[node1.id, node2.id] = 1
                     end
-                    if node2.id == eqc.parentid && node1.id ∈ eqc.childids
+                    if node2.id == joint.parentid && node1.id ∈ joint.childids
                         A[node2.id, node1.id] = 1
                     end
                 end
@@ -44,7 +42,6 @@ function adjacency_matrix(eqcs::Vector{<:JointConstraint}, bodies::Vector{<:Body
     A = convert(Matrix{Int64}, A .| A')
     return A
 end
-
 
 @inline get_entry(system, id1, id2) = system.matrix_entries[id1, id2]
 @inline get_entry(system, id) = system.vector_entries[id]
@@ -58,15 +55,15 @@ function recursivedirectchildren!(system, id::Integer)
     return dirs
 end
 
-# TODO does not include ineqcs yet
+# TODO: efficient method to assemble sparse system
 function dense_system(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
-    eqcs = mechanism.joints
+    joints = mechanism.joints
     system = mechanism.system
     system = mechanism.system
 
     n = 6 * Nb
-    for eqc in eqcs
-        n += length(eqc)
+    for joint in joints
+        n += length(joint)
     end
 
     A = zeros(T, n, n)

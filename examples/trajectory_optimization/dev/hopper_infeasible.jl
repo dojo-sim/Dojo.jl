@@ -18,8 +18,8 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 
 # System
 gravity = -9.81
-Δt = 0.05
-mech = getraiberthopper(Δt = Δt, g = gravity, contact = true, damper = 1.0)
+timestep = 0.05
+mech = getraiberthopper(timestep = timestep, g = gravity, contact = true, damper = 1.0)
 initializeraiberthopper!(mech)
 
 ## state space
@@ -55,7 +55,7 @@ z1 = max2min(mech, raiberthopper_offset_state(0.0, 0.0, 0.0))
 zM = max2min(mech, raiberthopper_offset_state(0.5, 0.5, 0.5))
 zT = max2min(mech, raiberthopper_offset_state(0.5, 0.5, 0.0))
 
-u_control = [0.0; 0.0; mech.g * mech.Δt; zeros(n)]
+u_control = [0.0; 0.0; mech.g * mech.timestep; zeros(n)]
 u_mask = [0 0 0 1 0 0 0;
 		  0 0 0 0 1 0 0;
 		  0 0 0 0 0 0 1]
@@ -86,13 +86,13 @@ end
 
 # Time
 T = 21
-h = mech.Δt
+h = mech.timestep
 
 dyn = Dynamics(fd, fdx, fdu, n, n, m, d)
 model = [dyn for t = 1:T-1]
 
 # Initial conditions, controls, disturbances
-ū = [[0.0; 0.0; mech.g * mech.Δt + 0.0 * randn(1)[1]; zeros(n)] for t = 1:T-1]
+ū = [[0.0; 0.0; mech.g * mech.timestep + 0.0 * randn(1)[1]; zeros(n)] for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, z1, ū, w)
 storage = generate_storage(mech, [min2max(mech, x) for x in x̄])
@@ -100,13 +100,13 @@ visualize(mech, storage; vis = vis)
 
 # Objective
 ot1 = (x, u, w) -> transpose(x - zM) *
-	Diagonal(Δt * [0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) *
-	(x - zM) + transpose(u) * Diagonal(Δt * [0.01; 0.01; 0.01; 1*ones(n)]) * u
+	Diagonal(timestep * [0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) *
+	(x - zM) + transpose(u) * Diagonal(timestep * [0.01; 0.01; 0.01; 1*ones(n)]) * u
 ot2 = (x, u, w) -> transpose(x - zT) *
-	Diagonal(Δt * [0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) *
-	(x - zT) + transpose(u) * Diagonal(Δt * [0.01; 0.01; 0.01; 1*ones(n)]) * u
+	Diagonal(timestep * [0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) *
+	(x - zT) + transpose(u) * Diagonal(timestep * [0.01; 0.01; 0.01; 1*ones(n)]) * u
 oT = (x, u, w) -> transpose(x - zT) *
-	Diagonal(Δt * [0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) *
+	Diagonal(timestep * [0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) *
 	(x - zT)
 
 ct1 = Cost(ot1, n, m, d)

@@ -59,16 +59,16 @@ function potential_energy(mechanism::Mechanism{T,Nn,Ne,Nb}, storage::Storage{T,N
     end
 
     # Springs
-    for (i,eqc) in enumerate(mechanism.joints)
-        if eqc.isspring
-            for (j,joint) in enumerate(eqc.constraints)
+    for (i,joint) in enumerate(mechanism.joints)
+        if joint.isspring
+            for (j,element) in enumerate(joint.constraints)
                 # Child
-                childid = eqc.childids[j]
+                childid = joint.childids[j]
                 xb = storage.x[childid - Ne][t] # TODO this is sketchy way to get the correct index
                 qb = storage.q[childid - Ne][t] # TODO this is sketchy way to get the correct index
                 
                 # Parent
-                parentid = eqc.parentid
+                parentid = joint.parentid
 
                 if parentid != nothing
                     xa = storage.x[parentid - Ne][t] # TODO this is sketchy way to get the correct index
@@ -77,14 +77,14 @@ function potential_energy(mechanism::Mechanism{T,Nn,Ne,Nb}, storage::Storage{T,N
                     xa, qa = current_configuration(mechanism.origin.state) 
                 end
 
-                (typeof(joint) <: Translational) && (force = spring_child(joint, xa, qa, xb, qb)) # actual force not impulse
-                (typeof(joint) <: Rotational) && (q = rotation_error(joint, qa, qb, qoff = spring_qoffset(joint)))
+                (typeof(element) <: Translational) && (force = spring_child(element, xa, qa, xb, qb)) # actual force not impulse
+                (typeof(element) <: Rotational) && (q = rotation_error(element, qa, qb, qoff = spring_qoffset(element)))
              
                 # @show force
-                spring = joint.spring
+                spring = element.spring
                 if spring > 0
-                    (typeof(joint) <: Translational) && (pe += 0.5 * force' * force ./ spring)
-                    (typeof(joint) <: Rotational) && (pe += energy(joint, q))
+                    (typeof(element) <: Translational) && (pe += 0.5 * force' * force ./ spring)
+                    (typeof(element) <: Rotational) && (pe += energy(element, q))
                 end
             end
         end

@@ -22,10 +22,10 @@ include("methods.jl")
 # Demo
 ################################################################################
 
-Δt = 0.01
-jm, jd, mjsim = mj_model("dzhanibekov.xml", Δt=Δt)
+timestep = 0.01
+jm, jd, mjsim = mj_model("dzhanibekov.xml", timestep=timestep)
 tsim = 1.0
-N = Int(floor(tsim/Δt))
+N = Int(floor(tsim/timestep))
 
 # jd.qpos
 jd.qvel .= [0,0,0,20π,0,0.01]
@@ -54,8 +54,8 @@ jd.qpos
 jd.qvel
 
 
-Δt = 0.01
-jm, jd, mjsim = mj_model("dzhanibekov.xml", Δt=Δt)
+timestep = 0.01
+jm, jd, mjsim = mj_model("dzhanibekov.xml", timestep=timestep)
 jd.qvel .= [0,0,0,20π,0,0]
 # jd.qvel .= [1,0,0,0.0,0,0]
 
@@ -82,8 +82,8 @@ end
 # ################################################################################
 # ################################################################################
 #
-# Δt = 0.01
-# jm, jd, mjsim = mj_model("half_cheetah.xml", Δt=Δt)
+# timestep = 0.01
+# jm, jd, mjsim = mj_model("half_cheetah.xml", timestep=timestep)
 # jd.qpos[2] += 2.0
 # jd.qvel .= [0,0,0, 0,0,0, 0,0,5]
 # # mj_step(jm, jd)
@@ -96,9 +96,9 @@ end
 #
 #
 # #
-# # jm, jd, mjsim = mj_model("astronaut.xml", Δt=Δt)
+# # jm, jd, mjsim = mj_model("astronaut.xml", timestep=timestep)
 # # tsim = 0.10
-# # N = Int(floor(tsim/Δt))
+# # N = Int(floor(tsim/timestep))
 #
 #
 # # jd.qpos

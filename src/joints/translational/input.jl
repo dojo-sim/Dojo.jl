@@ -1,4 +1,4 @@
-@inline function apply_input!(joint::Translational{T}, statea::State, stateb::State, Δt::T, clear::Bool) where T
+@inline function apply_input!(joint::Translational{T}, statea::State, stateb::State, timestep::T, clear::Bool) where T
     xa, qa = current_configuration(statea)
     xb, qb = current_configuration(stateb)
 
@@ -27,7 +27,7 @@ end
     return Faw, τaa, Fbw, τbb
 end
 
-@inline function input_jacobian_control_parent(joint::Translational, statea::State, stateb::State, Δt::T) where T
+@inline function input_jacobian_control_parent(joint::Translational, statea::State, stateb::State, timestep::T) where T
     vertices = joint.vertices
     xa, qa = current_configuration(statea)
     xb, qb = current_configuration(stateb)
@@ -39,7 +39,7 @@ end
     return [BFa; Bτa]
 end
 
-@inline function input_jacobian_control_child(joint::Translational, statea::State, stateb::State, Δt::T) where T
+@inline function input_jacobian_control_child(joint::Translational, statea::State, stateb::State, timestep::T) where T
     vertices = joint.vertices
     xa, qa = current_configuration(statea)
     xb, qb = current_configuration(stateb)
@@ -50,7 +50,7 @@ end
     return [BFb; Bτb]
 end
 
-@inline function input_jacobian_configuration_parent(joint::Translational{T}, statea::State, stateb::State, Δt::T) where T
+@inline function input_jacobian_configuration_parent(joint::Translational{T}, statea::State, stateb::State, timestep::T) where T
     xa, qa = current_configuration(statea)
     xb, qb = current_configuration(stateb)
     F = joint.Fτ
@@ -68,7 +68,7 @@ end
     return FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa
 end
 
-@inline function input_jacobian_configuration_child(joint::Translational{T}, statea::State, stateb::State, Δt::T) where T
+@inline function input_jacobian_configuration_child(joint::Translational{T}, statea::State, stateb::State, timestep::T) where T
     xa, qa = current_configuration(statea)
     xb, qb = current_configuration(stateb)
     F = joint.Fτ

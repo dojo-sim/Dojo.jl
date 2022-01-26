@@ -53,10 +53,10 @@ params0
 data0 = params0[:data]
 
 
-function quad_loss(x, Δt, x0, v0)
+function quad_loss(x, timestep, x0, v0)
 	loss = 0.0
 	for k = 1:7
-		t = (k-1) * Δt
+		t = (k-1) * timestep
 		Δx = x[k][3] - (x0 + v0*t - t^2/2 * 9.81)
 		loss += Δx^2
 	end

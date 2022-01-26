@@ -20,8 +20,8 @@ using IterativeLQR
 
 # System
 gravity = -9.81
-Δt = 0.05
-mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = 1.5, damper = 10.0, spring = 0.0)
+timestep = 0.05
+mech = getmechanism(:quadruped, timestep = timestep, g = gravity, cf = 1.5, damper = 10.0, spring = 0.0)
 initialize!(mech, :quadruped, tran = [0,0,0.], v = [0.5,0,0.])
 
 @elapsed storage = simulate!(mech, 0.05, record = true, solver = :mehrotra!, verbose = false)
@@ -42,13 +42,13 @@ function gravity_compensation(mechanism::Mechanism)
     nu = control_dimension(mechanism)
     u = zeros(nu)
     off  = 0
-    for eqc in mechanism.joints
-        nu = control_dimension(eqc)
-        if eqc.parentid != nothing
-            body = get_body(mechanism, eqc.parentid)
-            rot = eqc.constraints[2]
+    for joint in mechanism.joints
+        nu = control_dimension(joint)
+        if joint.parentid != nothing
+            body = get_body(mechanism, joint.parentid)
+            rot = joint.constraints[2]
             A = Matrix(nullspace_mask(rot))
-            Fτ = apply_spring(mechanism, eqc, body)
+            Fτ = apply_spring(mechanism, joint, body)
             F = Fτ[1:3]
             τ = Fτ[4:6]
             u[off .+ (1:nu)] = -A * τ
@@ -60,13 +60,13 @@ function gravity_compensation(mechanism::Mechanism)
     return u
 end
 
-mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = 1.5, damper = 1000.0, spring = 30.0)
+mech = getmechanism(:quadruped, timestep = timestep, g = gravity, cf = 1.5, damper = 1000.0, spring = 30.0)
 initialize!(mech, :quadruped)
 @elapsed storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 ugc = gravity_compensation(mech)
 
-mech = getmechanism(:quadruped, Δt = Δt, g = gravity, cf = 1.5, damper = 5.0, spring = 0.0)
+mech = getmechanism(:quadruped, timestep = timestep, g = gravity, cf = 1.5, damper = 5.0, spring = 0.0)
 
 u_control = ugc[6 .+ (1:12)]
 u_mask = [zeros(12,6) I(m)]
@@ -97,7 +97,7 @@ end
 
 
 # Time
-h = mech.Δt
+h = mech.timestep
 n, m, d = minimal_dimension(mech), 12, 0
 dyn = Dynamics(fd, fdx, fdu, n, n, m, d)
 model = [dyn for t = 1:T-1]
@@ -123,11 +123,11 @@ visualize(mech, storage; vis = vis)
 # qt = vcat([body_scale[i] * [0.1 * ones(3); 0.001 * ones(3); 0.1 * ones(4); 0.01 * ones(3)] for i = 1:Nb]...)
 qt = [0.3; 0.05; 0.05; 0.01 * ones(3); 0.01 * ones(3); 0.01 * ones(3); fill([0.2, 0.001], 12)...]
 
-# ot1 = (x, u, w) -> transpose(x - zM) * Diagonal(Δt * qt) * (x - zM) + transpose(u) * Diagonal(Δt * 0.01 * ones(m)) * u
-# ot2 = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * qt) * (x - zT) + transpose(u) * Diagonal(Δt * 0.01 * ones(m)) * u
-# oT = (x, u, w) -> transpose(x - zT) * Diagonal(Δt * qt) * (x - zT)
-ots = [(x, u, w) -> transpose(x - zref[t]) * Diagonal(Δt * qt) * (x - zref[t]) + transpose(u) * Diagonal(Δt * 0.01 * ones(m)) * u for t = 1:T-1]
-oT = (x, u, w) -> transpose(x - zref[end]) * Diagonal(Δt * qt) * (x - zref[end])
+# ot1 = (x, u, w) -> transpose(x - zM) * Diagonal(timestep * qt) * (x - zM) + transpose(u) * Diagonal(timestep * 0.01 * ones(m)) * u
+# ot2 = (x, u, w) -> transpose(x - zT) * Diagonal(timestep * qt) * (x - zT) + transpose(u) * Diagonal(timestep * 0.01 * ones(m)) * u
+# oT = (x, u, w) -> transpose(x - zT) * Diagonal(timestep * qt) * (x - zT)
+ots = [(x, u, w) -> transpose(x - zref[t]) * Diagonal(timestep * qt) * (x - zref[t]) + transpose(u) * Diagonal(timestep * 0.01 * ones(m)) * u for t = 1:T-1]
+oT = (x, u, w) -> transpose(x - zref[end]) * Diagonal(timestep * qt) * (x - zref[end])
 
 # ct1 = Cost(ot1, n, m, d)
 # ct2 = Cost(ot2, n, m, d)

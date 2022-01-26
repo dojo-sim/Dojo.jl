@@ -34,7 +34,7 @@ function controller!(mechanism, k)
         # end
         minJ = 0.01
         nu = control_dimension(eqc)
-        u = 10 * minJ * (rand(nu) .- 0.2) * Δt_
+        u = 10 * minJ * (rand(nu) .- 0.2) * timestep_
         set_input!(eqc, SVector{nu}(u))
     end
     return
