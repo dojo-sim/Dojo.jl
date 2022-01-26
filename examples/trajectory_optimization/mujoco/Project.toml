@@ -1,4 +1,5 @@
 [deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
 IterativeLQR = "605048dd-e178-462b-beb9-98a09398ef27"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
