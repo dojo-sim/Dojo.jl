@@ -44,12 +44,6 @@ function ∂body∂body_data(mechanism::Mechanism, body::Body{T}) where T
            szeros(T,3,3) ∇ϕ15]
 
     # current configuration: z2 = x2, q2
-    # ∇z2 = szeros(T,N,6)
-    # D1x = - 1 / Δt * body.m * (x2 - x1) + Δt/2 * body.m * ezg
-    # D2x =   1 / Δt * body.m * (x3 - x2) + Δt/2 * body.m * ezg
-    D1q = -4 / Δt * VLᵀmat(q2) * LVᵀmat(q1) * body.J * VLᵀmat(q1) * vector(q2)
-    D2q = -4 / Δt * VLᵀmat(q2) * Tmat() * RᵀVᵀmat(q3) * body.J * VLᵀmat(q2) * vector(q3)
-
     ∇tra_x2 = - 2 / Δt * body.m * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
     ∇tra_q2 = szeros(T,3,3)
     ∇rot_x2 = szeros(T,3,3)

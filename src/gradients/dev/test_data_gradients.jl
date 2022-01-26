@@ -35,7 +35,7 @@ include("utils.jl")
 include("data.jl")
 include("data_gradients.jl")
 
-mech = getpendulum(Δt=0.05, damper=1.0, spring=3.0);
+mech = getpendulum(Δt=0.05, damper=0.0, spring=0.0);
 eqc0 = mech.eqconstraints.values[1]
 body0 = mech.bodies.values[1]
 initialize!(mech, :pendulum, ϕ1=0.2, ω1=-0.3)
@@ -77,11 +77,10 @@ norm((datajac0 - datajac1)[6:11,4:4])
 norm((datajac0 - datajac1)[6:11,5:10])
 norm((datajac0 - datajac1)[6:11,11:13])
 norm((datajac0 - datajac1)[6:11,14:16])
-norm((datajac0 - datajac1)[6:11,17:19])
-norm((datajac0 - datajac1)[6:11,20:22])
+norm((datajac0 - datajac1)[6:11,17:19], Inf)
+norm((datajac0 - datajac1)[6:11,20:22], Inf)
 
 datajac0[6:11,17:19]
-
 datajac1[6:11,17:19]
 
 

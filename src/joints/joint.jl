@@ -24,7 +24,7 @@ end
 ## Discrete-time position derivatives (for dynamics)
 @inline function Ga(joint::Joint, body1::Component, body2::Component, childid, λ, Δt)
     if body2.id == childid
-        return Ga(joint, posargs2(body1.state)..., posargs2(body2.state)..., λ)
+        return transpose(GaT(joint, posargs2(body1.state)..., posargs2(body2.state)..., λ)) # TODO need to remove the transpose here and propagate it to the upper levels
     else
         return zero(joint)
     end
@@ -32,11 +32,56 @@ end
 
 @inline function Gb(joint::Joint, body1::Component, body2::Component, childid, λ, Δt)
     if body2.id == childid
-        return Gb(joint, posargs2(body1.state)..., posargs2(body2.state)..., λ)
+        return transpose(GbT(joint, posargs2(body1.state)..., posargs2(body2.state)..., λ)) # TODO need to remove the transpose here and propagate it to the upper levels
     else
         return zero(joint)
     end
 end
+
+@inline function GaT(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η)
+    return force_mapa(joint, xa, qa, xb, qb) * force_projector(joint)
+end
+
+@inline function GbT(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η)
+    return force_mapb(joint, xa, qa, xb, qb) * force_projector(joint)
+end
+
+@inline function force_projector(joint::Joint{T,Nλ,Nb}) where {T,Nλ,Nb}
+    transpose([szeros(T,Nb,3); -nullspacemat(joint); nullspacemat(joint); constraintmat(joint)])
+end
+
+@inline function force_projector(joint::Joint{T,Nλ,0}) where {T,Nλ}
+    transpose(constraintmat(joint))
+end
+
+################################################################################
+# Derivatives
+################################################################################
+
+function ∂aGa(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
+    # ∂(Ga*λ)/∂(xa,qa)
+    p = force_projector(joint) * λ
+    ∂aforce_mapa(joint, xa, qa, xb, qb, p)
+end
+
+function ∂bGa(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
+    # ∂(Ga*λ)/∂(xb,qb)
+    p = force_projector(joint) * λ
+    ∂bforce_mapa(joint, xa, qa, xb, qb, p)
+end
+
+function ∂aGb(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
+    # ∂(Gb*λ)/∂(xa,qa)
+    p = force_projector(joint) * λ
+    ∂aforce_mapb(joint, xa, qa, xb, qb, p)
+end
+
+function ∂bGb(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
+    # ∂(Gb*λ)/∂(xb,qb)
+    p = force_projector(joint) * λ
+    ∂bforce_mapb(joint, xa, qa, xb, qb, p)
+end
+
 
 ## Discrete-time velocity derivatives (for dynamics)
 @inline function ∂g∂a(joint::Joint, body1::Component, body2::Component, childid, λ, Δt)

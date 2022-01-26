@@ -69,14 +69,29 @@ function Ga(joint::Translational{T,Nλ,0}, statea::State, stateb::State, η, Δt
     Ga(joint, xa, qa, xb, qb, η)
 end
 
-function Ga(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
-    X = -1.0 * transpose(rotation_matrix(qa))
-    pb_a = rotation_matrix(inv(qa)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
-    ca_a = rotation_matrix(inv(qa)) * (xa) # body a com
-    capb_a = pb_a - ca_a
-    Q = - 1.0 * transpose(skew(capb_a))
-    return constraintmat(joint) * [X Q]
-end
+# function Ga(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+#     X = -1.0 * transpose(rotation_matrix(qa))
+#     # pb_a = rotation_matrix(inv(qa)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
+#     # ca_a = rotation_matrix(inv(qa)) * (xa) # body a com
+#     # capb_a = pb_a - ca_a
+#     # Q = - 1.0 * transpose(skew(capb_a))
+#
+#     capb_a = rotation_matrix(inv(qa)) * (xb - xa + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
+#     Q = - 1.0 * transpose(skew(capb_a))
+#     return constraintmat(joint) * [X Q]
+# end
+
+# function GaT(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+#     X = -1.0 * rotation_matrix(qa)
+#     # pb_a = rotation_matrix(inv(qa)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
+#     # ca_a = rotation_matrix(inv(qa)) * (xa) # body a com
+#     # capb_a = pb_a - ca_a
+#     # Q = - 1.0 * skew(capb_a)
+#
+#     capb_a = rotation_matrix(inv(qa)) * (xb - xa + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
+#     Q = - 1.0 * skew(capb_a)
+#     return [X; Q] * transpose(constraintmat(joint))
+# end
 
 function Gb(joint::Translational{T,Nλ,0}, statea::State, stateb::State, η, Δt) where {T,Nλ}
     xa, qa = posargs2(statea)
@@ -84,14 +99,30 @@ function Gb(joint::Translational{T,Nλ,0}, statea::State, stateb::State, η, Δt
     Gb(joint, xa, qa, xb, qb, η)
 end
 
-function Gb(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
-    X = transpose(rotation_matrix(qa))
-    pb_b = rotation_matrix(inv(qb)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
-    cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
-    cbpb_b = pb_b - cb_b
-    Q = transpose(skew(cbpb_b) * rotation_matrix(inv(qb) * qa))
-    return constraintmat(joint) * [X Q]
-end
+# function Gb(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+#     X = transpose(rotation_matrix(qa))
+#     # pb_b = rotation_matrix(inv(qb)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
+#     # cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
+#     # cbpb_b = pb_b - cb_b
+#     # Q = transpose(skew(cbpb_b) * rotation_matrix(inv(qb) * qa))
+#
+#     cbpb_w = rotation_matrix(qb) * joint.vertices[2] # body b kinematics point
+#     Q = transpose(rotation_matrix(inv(qb)) * skew(cbpb_w) * rotation_matrix(qa))
+#     return constraintmat(joint) * [X Q]
+# end
+
+# function GbT(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+#     X = rotation_matrix(qa)
+#     # pb_b = rotation_matrix(inv(qb)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
+#     # cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
+#     # cbpb_b = pb_b - cb_b
+#     # Q = skew(cbpb_b) * rotation_matrix(inv(qb) * qa)
+#
+#     cbpb_w = rotation_matrix(qb) * joint.vertices[2] # body b kinematics point
+#     Q = rotation_matrix(inv(qb)) * skew(cbpb_w) * rotation_matrix(qa)
+#     return [X; Q] * transpose(constraintmat(joint))
+# end
+
 
 ### w/ Limits
 # Position level constraints (for dynamics)
@@ -138,20 +169,20 @@ function Ga(joint::Translational, statea::State, stateb::State, η, Δt)
     Ga(joint, xa, qa, xb, qb, η)
 end
 
-function Ga(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion,
-        xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
-    X = -1.0 * transpose(rotation_matrix(qa))
-    pb_a = rotation_matrix(inv(qa)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
-    ca_a = rotation_matrix(inv(qa)) * (xa) # body a com
-    capb_a = pb_a - ca_a
-    Q = - 1.0 * transpose(skew(capb_a))
-    return [
-            zeros(Nb, 6);
-            -nullspacemat(joint) * [X Q];
-            nullspacemat(joint) * [X Q];
-            constraintmat(joint) * [X Q];
-           ]
-end
+# function Ga(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion,
+#         xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
+#     X = -1.0 * transpose(rotation_matrix(qa))
+#     pb_a = rotation_matrix(inv(qa)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
+#     ca_a = rotation_matrix(inv(qa)) * (xa) # body a com
+#     capb_a = pb_a - ca_a
+#     Q = - 1.0 * transpose(skew(capb_a))
+#     return [
+#             zeros(Nb, 6);
+#             -nullspacemat(joint) * [X Q];
+#             nullspacemat(joint) * [X Q];
+#             constraintmat(joint) * [X Q];
+#            ]
+# end
 
 function Gb(joint::Translational, statea::State, stateb::State, η, Δt)
     xa, qa = posargs2(statea)
@@ -159,19 +190,19 @@ function Gb(joint::Translational, statea::State, stateb::State, η, Δt)
     Gb(joint, xa, qa, xb, qb, η)
 end
 
-function Gb(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
-    X = transpose(rotation_matrix(qa))
-    pb_b = rotation_matrix(inv(qb)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
-    cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
-    cbpb_b = pb_b - cb_b
-    Q = transpose(skew(cbpb_b) * rotation_matrix(inv(qb) * qa))
-    return [
-            zeros(Nb, 6);
-            -nullspacemat(joint) * [X Q];
-            nullspacemat(joint) * [X Q];
-            constraintmat(joint) * [X Q];
-           ]
-end
+# function Gb(joint::Translational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
+#     X = transpose(rotation_matrix(qa))
+#     pb_b = rotation_matrix(inv(qb)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
+#     cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
+#     cbpb_b = pb_b - cb_b
+#     Q = transpose(skew(cbpb_b) * rotation_matrix(inv(qb) * qa))
+#     return [
+#             zeros(Nb, 6);
+#             -nullspacemat(joint) * [X Q];
+#             nullspacemat(joint) * [X Q];
+#             constraintmat(joint) * [X Q];
+#            ]
+# end
 
 ## Position and velocity offsets
 @inline function getPositionDelta(joint::Translational, body1::Component, body2::Component, x::SVector)
@@ -182,4 +213,80 @@ end
 @inline function getVelocityDelta(joint::Translational, body1::Component, body2::Component, v::SVector)
     Δv = zerodimstaticadjoint(nullspacemat(joint)) * v # in body1 frame
     return Δv
+end
+
+################################################################################
+# Force Mapping & Projector
+################################################################################
+
+function force_mapa(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
+    X = -1.0 * rotation_matrix(qa)
+    # pb_a = rotation_matrix(inv(qa)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
+    # ca_a = rotation_matrix(inv(qa)) * (xa) # body a com
+    # capb_a = pb_a - ca_a
+    # Q = - 1.0 * skew(capb_a)
+
+    capb_a = rotation_matrix(inv(qa)) * (xb - xa + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
+    Q = - 1.0 * skew(capb_a)
+    return [X; Q]
+end
+
+function force_mapb(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
+    X = rotation_matrix(qa)
+    # pb_b = rotation_matrix(inv(qb)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
+    # cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
+    # cbpb_b = pb_b - cb_b
+    # Q = skew(cbpb_b) * rotation_matrix(inv(qb) * qa)
+
+    cbpb_w = rotation_matrix(qb) * joint.vertices[2] # body b kinematics point
+    Q = rotation_matrix(inv(qb)) * skew(cbpb_w) * rotation_matrix(qa)
+    return [X; Q]
+end
+
+
+################################################################################
+ # Derivatives
+################################################################################
+
+function ∂aforce_mapb(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
+    # ∂(force_mapb'*p)/∂(xa,qa)
+    Z3 = szeros(T,3,3)
+    cbpb_w = rotation_matrix(qb) * joint.vertices[2] # body b kinematics point
+
+    ∇Xqa = ∂qrotation_matrix(qa, p) * LVᵀmat(qa)
+    ∇Qqa = rotation_matrix(inv(qb)) * skew(cbpb_w) * ∂qrotation_matrix(qa, p) * LVᵀmat(qa)
+    return [Z3 ∇Xqa;
+            Z3 ∇Qqa]
+end
+
+function ∂bforce_mapb(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
+    # ∂(force_mapb'*p)/∂(xb,qb)
+    Z3 = szeros(T,3,3)
+    cbpb_w = rotation_matrix(qb) * joint.vertices[2] # body b kinematics point
+    ∇Qqb = ∂qrotation_matrix_inv(qb, skew(cbpb_w) * rotation_matrix(qa) * p)
+    ∇Qqb += rotation_matrix(inv(qb)) * ∂pskew(rotation_matrix(qa) * p) * ∂qrotation_matrix(qb, joint.vertices[2])
+    ∇Qqb *= LVᵀmat(qb)
+    return [Z3 Z3;
+            Z3 ∇Qqb]
+end
+
+function ∂aforce_mapa(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
+    # ∂(force_mapa'*p)/∂(xa,qa)
+    Z3 = szeros(T,3,3)
+
+    ∇Xqa = -∂qrotation_matrix(qa, p) * LVᵀmat(qa)
+    ∇Qxa =  ∂pskew(p) * rotation_matrix(inv(qa))
+    ∇Qqa = -∂pskew(p) * ∂qrotation_matrix_inv(qa, xb - xa + rotation_matrix(qb) * joint.vertices[2]) * LVᵀmat(qa)
+    return [Z3   ∇Xqa;
+            ∇Qxa ∇Qqa]
+end
+
+function ∂bforce_mapa(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
+    # ∂(force_mapa'*p)/∂(xb,qb)
+    Z3 = szeros(T,3,3)
+
+    ∇Qxb = -∂pskew(p) * rotation_matrix(inv(qa))
+    ∇Qqb = -∂pskew(p) * rotation_matrix(inv(qa)) * ∂qrotation_matrix(qb, joint.vertices[2]) * LVᵀmat(qb)
+    return [Z3   Z3;
+            ∇Qxb ∇Qqb]
 end

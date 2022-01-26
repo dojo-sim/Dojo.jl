@@ -10,6 +10,13 @@ vrotate(v::Vector,q::UnitQuaternion) = imag(qrotate(pure_quaternion(v), q))
 vrotate(v::StaticVector,q::UnitQuaternion) = q*v
 
 @inline rotation_matrix(q::UnitQuaternion) = VRᵀmat(q) * LVᵀmat(q)
+# ∂(rotation_matrix(q)*p)/∂q
+@inline ∂qrotation_matrix(q::UnitQuaternion, p::AbstractVector) =
+ 	∂qVRᵀmat(LVᵀmat(q) * p) + VRᵀmat(q) * ∂qLVᵀmat(p)
+# ∂(rotation_matrix(inv(q))*p)/∂q
+@inline ∂qrotation_matrix_inv(q::UnitQuaternion, p::AbstractVector) =
+ 	∂qrotation_matrix(inv(q), p) * Tmat()
+
 @inline ∂vrotate∂p(p::AbstractVector, q::UnitQuaternion) = VRᵀmat(q) * LVᵀmat(q)
 @inline ∂vrotate∂q(p::AbstractVector, q::UnitQuaternion) = VLmat(q) * Lmat(UnitQuaternion(p)) * Tmat() + VRᵀmat(q) * Rmat(UnitQuaternion(p))
 
@@ -120,7 +127,7 @@ end
 ################################################################################
 # Matrix-Vector Product Jacobian
 ################################################################################
-function ∂qVLmat(p) # 𝞉(VLmat(q)*p)/∂q
+function ∂qVLmat(p::AbstractVector) # 𝞉(VLmat(q)*p)/∂q
 	SA[
     	0     p[1]  p[2]  p[3];
     	p[1]  0     p[3] -p[2];
@@ -129,7 +136,7 @@ function ∂qVLmat(p) # 𝞉(VLmat(q)*p)/∂q
     ]
 end
 
-function ∂qLVᵀmat(p) # 𝞉(∂qLVᵀmat(q)*p)/∂q
+function ∂qLVᵀmat(p::AbstractVector) # 𝞉(∂qLVᵀmat(q)*p)/∂q
 	SA[
     	0    -p[1] -p[2] -p[3];
     	p[1]  0     p[3] -p[2];
@@ -138,7 +145,7 @@ function ∂qLVᵀmat(p) # 𝞉(∂qLVᵀmat(q)*p)/∂q
     ]
 end
 
-function ∂qVLᵀmat(p) # 𝞉(VLᵀmat(q)*p)/∂q
+function ∂qVLᵀmat(p::AbstractVector) # 𝞉(VLᵀmat(q)*p)/∂q
 	SA[
 		p[2] -p[1] -p[4]  p[3];
 		p[3]  p[4] -p[1] -p[2];
@@ -146,7 +153,7 @@ function ∂qVLᵀmat(p) # 𝞉(VLᵀmat(q)*p)/∂q
     ]
 end
 
-function ∂qLᵀVᵀmat(p) # 𝞉(LᵀVᵀmat(q)*p)/∂q
+function ∂qLᵀVᵀmat(p::AbstractVector) # 𝞉(LᵀVᵀmat(q)*p)/∂q
 	SA[
     	0     p[1]  p[2]  p[3];
     	p[1]  0    -p[3]  p[2];
@@ -155,7 +162,7 @@ function ∂qLᵀVᵀmat(p) # 𝞉(LᵀVᵀmat(q)*p)/∂q
     ]
 end
 
-function ∂qVRmat(p) # 𝞉(VRmat(q)*p)/∂q
+function ∂qVRmat(p::AbstractVector) # 𝞉(VRmat(q)*p)/∂q
 	SA[
 		p[2]  p[1] -p[4]  p[3];
 		p[3]  p[4]  p[1] -p[2];
@@ -163,8 +170,34 @@ function ∂qVRmat(p) # 𝞉(VRmat(q)*p)/∂q
     ]
 end
 
-function ∂qRᵀVᵀmat(p) # 𝞉(RᵀVᵀmat(q)*p)/∂q
+function ∂qRᵀVᵀmat(p::AbstractVector) # 𝞉(RᵀVᵀmat(q)*p)/∂q
 	SA[
+    	p[2]  p[1]  p[4] -p[3];
+    	p[3] -p[4]  p[1]  p[2];
+    	p[4]  p[3] -p[2]  p[1];
+    ]
+end
+
+function ∂qVRᵀmat(p::AbstractVector) # 𝞉(RᵀVᵀmat(q)*p)/∂q
+	SA[
+    	p[2] -p[1]  p[4] -p[3];
+    	p[3] -p[4] -p[1]  p[2];
+    	p[4]  p[3] -p[2] -p[1];
+    ]
+end
+
+function ∂qRᵀmat(p::AbstractVector) # 𝞉(Rᵀmat(q)*p)/∂q
+	SA[
+    	p[1]  p[2]  p[3]  p[4];
+    	p[2] -p[1]  p[4] -p[3];
+    	p[3] -p[4] -p[1]  p[2];
+    	p[4]  p[3] -p[2] -p[1];
+    ]
+end
+
+function ∂qLmat(p::AbstractVector) # 𝞉(Lmat(q)*p)/∂q
+	SA[
+    	p[1] -p[2] -p[3] -p[4];
     	p[2]  p[1]  p[4] -p[3];
     	p[3] -p[4]  p[1]  p[2];
     	p[4]  p[3] -p[2]  p[1];
@@ -179,5 +212,5 @@ end
 # using Symbolics
 # @variables q_[1:4], p3_[1:3], p4_[1:4]
 # qq_ = UnitQuaternion(q_, false)
-# Symbolics.jacobian(LVᵀmat(qq_) * p3_, q_)
-# Symbolics.jacobian(VLᵀmat(qq_) * p4_, q_)
+# Symbolics.jacobian(Rᵀmat(qq_) * p4_, q_)
+# Symbolics.jacobian(Lmat(qq_) * p4_, q_)

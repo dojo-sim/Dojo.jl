@@ -55,19 +55,34 @@ end
     return constraintmat(joint) * [X Q]
 end
 
-@inline function Ga(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
-    X = szeros(T, 3, 3)
-    Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
-    Q = Q * LVᵀmat(qa)
-    return constraintmat(joint) * [X Q]
-end
+# @inline function Ga(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+#     X = szeros(T, 3, 3)
+#     Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
+#     Q = Q * LVᵀmat(qa)
+#     return constraintmat(joint) * [X Q]
+# end
 
-@inline function Gb(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
-    X = szeros(T, 3, 3)
-    Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa)
-    Q = Q * LVᵀmat(qb)
-    return constraintmat(joint) * [X Q]
-end
+# @inline function GaT(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+#     X = szeros(T, 3, 3)
+#     # Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T) * LVᵀmat(qa)
+#     Q = VLᵀmat(qa) * Tmat(T) * Rᵀmat(qb) * RVᵀmat(joint.qoffset)
+#     return [X; Q] * constraintmat(joint)'
+# end
+
+# @inline function Gb(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+#     X = szeros(T, 3, 3)
+#     Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa)
+#     Q = Q * LVᵀmat(qb)
+#     return constraintmat(joint) * [X Q]
+# end
+
+# @inline function GbT(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+#     X = szeros(T, 3, 3)
+#     # Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa) * LVᵀmat(qb)
+#     Q = VLᵀmat(qb) * Lmat(qa) * RVᵀmat(joint.qoffset)
+#     return [X; Q] * constraintmat(joint)'
+# end
+
 
 ## w/ Limits
 @inline function g(joint::Rotational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
@@ -103,25 +118,82 @@ end
     return [X Q]
 end
 
-@inline function Ga(joint::Rotational{T,Nλ,Nb,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
+# @inline function Ga(joint::Rotational{T,Nλ,Nb,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
+#     X = szeros(T, 3, 3)
+#     Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T) * LVᵀmat(qa)
+#     return [
+#             zeros(Nb, 6);
+#             -nullspacemat(joint) * [X Q];
+#             nullspacemat(joint) *  [X Q];
+#             constraintmat(joint) * [X Q];
+#            ]
+# end
+#
+# @inline function Gb(joint::Rotational{T,Nλ,Nb,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
+#     X = szeros(T, 3, 3)
+#     Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa) * LVᵀmat(qb)
+#     return [
+#             zeros(Nb, 6);
+#             -nullspacemat(joint) * [X Q];
+#             nullspacemat(joint) *  [X Q];
+#             constraintmat(joint) * [X Q];
+#            ]
+# end
+
+
+
+
+
+################################################################################
+# Force Mapping & Projector
+################################################################################
+
+function force_mapa(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
     X = szeros(T, 3, 3)
-    Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
-    return [
-            zeros(Nb, 6);
-            -nullspacemat(joint) * [X Q * LVᵀmat(qa)];
-            nullspacemat(joint) * [X Q * LVᵀmat(qa)];
-            constraintmat(joint) * [X Q * LVᵀmat(qa)];
-           ]
+    # QT = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T) * LVᵀmat(qa)
+    Q = VLᵀmat(qa) * Tmat(T) * Rᵀmat(qb) * RVᵀmat(joint.qoffset)
+    return [X; Q]
 end
 
-@inline function Gb(joint::Rotational{T,Nλ,Nb,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
+function force_mapb(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
     X = szeros(T, 3, 3)
-    Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa)
-    return [
-            zeros(Nb, 6);
-            -nullspacemat(joint) * [X Q * LVᵀmat(qb)];
-            nullspacemat(joint) * [X Q * LVᵀmat(qb)];
-            constraintmat(joint) * [X Q * LVᵀmat(qb)];
-           ]
+    # QT = VRᵀmat(joint.qoffset) * Lᵀmat(qa) * LVᵀmat(qb)
+    Q = VLᵀmat(qb) * Lmat(qa) * RVᵀmat(joint.qoffset)
+    return [X; Q]
 end
 
+################################################################################
+ # Derivatives
+################################################################################
+
+function ∂aforce_mapb(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
+    # ∂(force_mapb'*p)/∂(xa,qa)
+    Z3 = szeros(T,3,3)
+    ∇Qqa = VLᵀmat(qb) * ∂qLmat(RVᵀmat(joint.qoffset) * p) * LVᵀmat(qa)
+    return [Z3 Z3;
+            Z3 ∇Qqa]
+end
+
+function ∂bforce_mapb(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
+    # ∂(force_mapb'*p)/∂(xb,qb)
+    Z3 = szeros(T,3,3)
+    ∇Qqb = ∂qVLᵀmat(Lmat(qa) * RVᵀmat(joint.qoffset) * p) * LVᵀmat(qb)
+    return [Z3 Z3;
+            Z3 ∇Qqb]
+end
+
+function ∂aforce_mapa(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
+    # ∂(force_mapa'*p)/∂(xa,qa)
+    Z3 = szeros(T,3,3)
+    ∇Qqa = ∂qVLᵀmat(Tmat(T) * Rᵀmat(qb) * RVᵀmat(joint.qoffset) * p) * LVᵀmat(qa)
+    return [Z3 Z3;
+            Z3 ∇Qqa]
+end
+
+function ∂bforce_mapa(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
+    # ∂(force_mapa'*p)/∂(xb,qb)
+    Z3 = szeros(T,3,3)
+    ∇Qqb = VLᵀmat(qa) * Tmat(T) * ∂qRᵀmat(RVᵀmat(joint.qoffset) * p) * LVᵀmat(qb)
+    return [Z3 Z3;
+            Z3 ∇Qqb]
+end
