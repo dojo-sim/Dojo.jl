@@ -10,31 +10,31 @@ using LinearAlgebra
 using Random
 
 # ## load MuJoCo model
-path = joinpath(@__DIR__, "../../../env/hopper/deps/hopper.xml")
+path = joinpath(@__DIR__, "../../../env/atlas/deps/atlas_v5.xml")
 
 include("mujoco_model.jl")
-hopper = MuJoCoModel(path)
-sim = LyceumMuJoCo.MJSim(hopper.m, hopper.d)
+atlas = MuJoCoModel(path)
+sim = LyceumMuJoCo.MJSim(atlas.m, atlas.d)
 
-hopper.m.body_mass[1] += 1.0
-@show hopper.m.body_inertia[:, 1] = [0.01; 0.001; 0.001]
-length(hopper.d.ctrl)
+# atlas.m.body_mass[1] += 1.0
+# @show atlas.m.body_inertia[:, 1] = [0.01; 0.001; 0.001]
+# length(atlas.d.ctrl)
 
-T = 1000
+T = 10
 states = Array(undef, statespace(sim), T)
-sim.d.qpos .= [0.0; 1.17; 0.1; 0.1; -0.4; 0.4]
-sim.d.qvel .= zeros(6)
+# sim.d.qpos .= [0.0; 1.17; 0.1; 0.1; -0.4; 0.4]
+# sim.d.qvel .= zeros(6)
 for t = 1:T
     # if t > 500 
     #     sim.d.qpos .= [1.0; 1.21; 0.0; 0.0; 0.0; 0.0] 
     # end
     # sim.d.qvel .= [0.0; 0.0; 0.0; 0.0]
-    sim.d.ctrl .= [0.0; 0.0; 0.1 * randn(1)[1]]#[5.0; 10.0; 0.0]
+    # sim.d.ctrl .= [0.0; 0.0; 0.1 * randn(1)[1]]#[5.0; 10.0; 0.0]
     LyceumMuJoCo.step!(sim)
     states[:, t] .= getstate(sim)
 end
-sim.d.qpos
-visualize(sim, trajectories=[states])
+# sim.d.qpos
+visualize(sim)#, trajectories=[states])
 
 # ## horizon 
 T = 1001
