@@ -35,13 +35,13 @@ function getant(; timestep::T=0.05, g::T=-9.81, cf::T=0.5,
         ankle4 = get_joint_constraint(mech, :ankle_4)
         joints[ankle4.id] = add_limits(mech, ankle4, rot_limits=[SVector{1}(joint_limits[1][8]), SVector{1}(joint_limits[2][8])])
 
-        mech = Mechanism(Origin{T}(), mech.bodies.values, [joints...], g=g, timestep=timestep, spring=spring, damper=damper)
+        mech = Mechanism(Origin{T}(), mech.bodies, [joints...], g=g, timestep=timestep, spring=spring, damper=damper)
     end
 
     if contact
         origin = Origin{T}()
-        bodies = mech.bodies.values
-        joints = mech.joints.values
+        bodies = mech.bodies
+        joints = mech.joints
 
         # foot contact
         normal = [0.0; 0.0; 1.0]

@@ -21,7 +21,7 @@ function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
                 cstate = cbody.state
                 element = joint.constraints[i]
 
-                ind2 += length(element)
+                ind2 += ηlength(element)
                 range = oneindc+ind1:oneindc+ind2
 
                 pcol13 = offset_range(parentind,13)
@@ -37,8 +37,8 @@ function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
 
                 Gl[range, pcol13[1:3]] = pGlx
                 Gl[range, pcol13[7:10]] = pGlq
-                Gl[range,ccol13[1:3]] = cGlx
-                Gl[range,ccol13[7:10]] = cGlq
+                Gl[range, ccol13[1:3]] = cGlx
+                Gl[range, ccol13[7:10]] = cGlq
                 ind1 = ind2+1
             end
         else
@@ -433,12 +433,11 @@ function full_data_matrix(mechanism::Mechanism{T,Nn,Ne,Nb}; attjac::Bool = true)
     data = get_data(mechanism)
     solution = get_solution(mechanism)
     G = attitude_jacobian(data, Nb)[1:13Nb,1:12Nb]
-    H = integrator_jacobian(data, solution, timestep, Nb, njoints, attjac = attjac)[1:13Nb,1:nic]
 
+    H = integrator_jacobian(data, solution, timestep, Nb, njoints, attjac = attjac)[1:13Nb,1:nic]
     B = joint_constraint_jacobian(mechanism) * H
     D = contact_dynamics_jacobian(mechanism) * H
     E = contact_constraint_jacobian(mechanism) * H
-
     C = Fz + joint_dynamics_jacobian(mechanism) + springapply_damperjacobian(mechanism)
     attjac && (C = C * G)
 
@@ -481,9 +480,9 @@ end
 function getλJoint(joint::JointConstraint{T,N,Nc}, i::Int) where {T,N,Nc}
     n1 = 1
     for j = 1:i-1
-        n1 += length(joint.constraints[j])
+        n1 += ηlength(joint.constraints[j])
     end
-    n2 = n1 - 1 + length(joint.constraints[i])
+    n2 = n1 - 1 + ηlength(joint.constraints[i])
 
     λi = SVector{n2-n1+1,T}(joint.λsol[2][n1:n2])
     return λi

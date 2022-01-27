@@ -82,7 +82,7 @@ function cost(env::Environment{HalfCheetah}, x, u;
     if env.mode == :min
         x_velocity = -x[5]
     else
-        i_torso = findfirst(body -> body.name == "torso", collect(env.mechanism.bodies))
+        i_torso = findfirst(body -> body.name == "torso", env.mechanism.bodies)
         z_torso = x[(i_torso-1)*13 .+ (1:13)]
         x_velocity = -z_torso[4]
     end
