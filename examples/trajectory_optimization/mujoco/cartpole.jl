@@ -85,7 +85,7 @@ initialize_controls!(prob, ū)
 initialize_states!(prob, x̄)
 
 # ## solve
-solve!(prob, 
+@time solve!(prob, 
     verbose=true,
     max_al_iter=10)
 

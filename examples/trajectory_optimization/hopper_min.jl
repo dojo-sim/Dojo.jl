@@ -19,14 +19,15 @@ d = 0
 
 # ## states
 z1 = max2min(env.mechanism, raiberthopper_nominal_max())
-zM = max2min(env.mechanism, raiberthopper_offset_max(0.5, 0.5, 1.0))
+zM = max2min(env.mechanism, raiberthopper_offset_max(0.5, 0.5, 0.5))
 zT = max2min(env.mechanism, raiberthopper_offset_max(0.5, 0.5, 0.0))
 
 # ## nominal control
-u_control = [0.0; 0.0; env.mechanism.g * env.mechanism.timestep]
+u_control = [0.0; 0.0; env.mechanism.bodies[1].m * env.mechanism.g * env.mechanism.timestep]
 
 # ## horizon
 T = 21
+Tm = convert(Int, floor((T - 1) / 2))
 
 # ## model
 dyn = IterativeLQR.Dynamics(
@@ -38,25 +39,29 @@ dyn = IterativeLQR.Dynamics(
 model = [dyn for t = 1:T-1]
 
 # ## rollout
-ū = [[0.0; 0.0; env.mechanism.g * env.mechanism.timestep + 0.0 * randn(1)[1]] for t = 1:T-1]
+ū = [[0.0; 0.0; env.mechanism.bodies[1].m * env.mechanism.g * env.mechanism.timestep + 0.0 * randn(1)[1]] for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, z1, ū, w)
 visualize(env, x̄)
 
 # ## objective
-ot1 = (x, u, w) -> transpose(x - zM) * Diagonal([0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) * (x - zM) + transpose(u) * Diagonal(0.1 * [0.1; 0.1; 0.1]) * u
-ot2 = (x, u, w) -> transpose(x - zT) * Diagonal([0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) * (x - zT) + transpose(u) * Diagonal(0.1 * [0.1; 0.1; 0.1]) * u
-oT = (x, u, w) -> transpose(x - zT) * Diagonal([0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) * (x - zT)
+# ot1 = (x, u, w) -> transpose(x - zM) * Diagonal([0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) * (x - zM) + transpose(u) * Diagonal(0.1 * [0.1; 0.1; 0.1]) * u
+# ot2 = (x, u, w) -> transpose(x - zT) * Diagonal([0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) * (x - zT) + transpose(u) * Diagonal(0.1 * [0.1; 0.1; 0.1]) * u
+# oT = (x, u, w) -> transpose(x - zT) * Diagonal([0.1; 0.1; 1.0; 0.001 * ones(3); 0.001 * ones(3); 0.01 * ones(3); 1.0; 0.001]) * (x - zT)
+
+ot1 = (x, u, w) -> 1 * (transpose(x - zM) * Diagonal([1.0 * ones(3); 0.01 * ones(3); 0.1 * ones(3); 0.01 * ones(3); 1.0; 0.01]) * (x - zM) + transpose(u) * Diagonal(1.0e-2 * [1.0; 1.0; 1.0]) * u)
+ot2 = (x, u, w) -> 1 * (transpose(x - zT) * Diagonal([1.0 * ones(3); 0.01 * ones(3); 0.1 * ones(3); 0.01 * ones(3); 1.0; 0.01]) * (x - zT) + transpose(u) * Diagonal(1.0e-2 * [1.0; 1.0; 1.0]) * u)
+oT = (x, u, w) -> transpose(x - zT) * Diagonal([1.0 * ones(3); 0.01 * ones(3); 0.1 * ones(3); 0.01 * ones(3); 1.0; 0.01]) * (x - zT)
 
 ct1 = Cost(ot1, n, m, d)
 ct2 = Cost(ot2, n, m, d)
 cT = Cost(oT, n, 0, 0)
-obj = [[ct1 for t = 1:10]..., [ct2 for t = 1:10]..., cT]
+obj = [[ct1 for t = 1:Tm]..., [ct2 for t = 1:Tm]..., cT]
 
 # ## constraints
 function goal(x, u, w)
     Δ = x - zT
-    return  [Δ[collect(1:6)]; Δ[collect(12 .+ (1:2))]]
+    return  [Δ[collect(1:3)]; Δ[collect(7:9)]; Δ[13]]
 end
 
 cont = IterativeLQR.Constraint()
@@ -69,7 +74,7 @@ IterativeLQR.initialize_controls!(prob, ū)
 IterativeLQR.initialize_states!(prob, x̄)
 
 # ## solve
-IterativeLQR.solve!(prob,
+@time IterativeLQR.solve!(prob,
     linesearch=:armijo,
     α_min=1.0e-5,
     obj_tol=1.0e-3,

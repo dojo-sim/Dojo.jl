@@ -6,8 +6,8 @@ function getraiberthopper(; timestep::T=0.05, g::T=-9.81, spring=0.0, damper=0.1
     leg_length_nominal = 0.5
     body_radius = 0.1
     foot_radius = 0.05
-    body_mass = 1.0
-    foot_mass = 0.1
+    body_mass = 4.18 # from MuJoCo model 
+    foot_mass = 0.52 # from MuJoCo model
 
     # Links
     origin = Origin{Float64}()

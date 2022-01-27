@@ -84,8 +84,8 @@ function visualize(env::Environment{RaibertHopper}, traj::Vector{Vector{T}}; nam
 
     body_color = magenta#RGBA(0.0, 0.0, 0.0, 1.0)
     foot_color = magenta#RGBA(0.0, 0.0, 0.0, 1.0) #RGBA(1.0, 165.0 / 255.0, 0.0, 1.0)
-    env.mechanism.bodies[3].shape.color = body_color
-    env.mechanism.bodies[4].shape.color = foot_color
+    env.mechanism.bodies[1].shape.color = body_color
+    env.mechanism.bodies[2].shape.color = foot_color
 
     # build system
     build_robot(env.vis, env.mechanism, name=name)
@@ -128,8 +128,8 @@ function ghost(env::Environment{RaibertHopper}, traj::Vector{Vector{T}}; timeste
     # color
     body_color = magenta #RGBA(0.0, 0.0, 0.0, 1.0)
     foot_color = magenta #RGBA(0.0, 0.0, 0.0, 1.0)#RGBA(1.0, 165.0 / 255.0, 0.0, 1.0)
-    env.mechanism.bodies[3].shape.color = body_color
-    env.mechanism.bodies[4].shape.color = foot_color
+    env.mechanism.bodies[1].shape.color = body_color
+    env.mechanism.bodies[2].shape.color = foot_color
 
     for t in timesteps
         # build system

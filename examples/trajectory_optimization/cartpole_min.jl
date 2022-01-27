@@ -65,9 +65,9 @@ initialize_controls!(prob, ū)
 initialize_states!(prob, x̄)
 
 # ## solve
-IterativeLQR.solve!(prob,
+@time IterativeLQR.solve!(prob,
     max_al_iter=10,
-    verbose=true)
+    verbose=false)
 
 # ## solution 
 z_sol, u_sol = IterativeLQR.get_trajectory(prob)
