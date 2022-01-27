@@ -91,7 +91,7 @@ IterativeLQR.initialize_states!(prob, x̄)
 
 # ## solve
 @time IterativeLQR.solve!(prob,
-    verbose = true,
+    verbose = false,
 	linesearch=:armijo,
     α_min=1.0e-5,
     obj_tol=1.0e-3,

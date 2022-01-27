@@ -12,7 +12,6 @@ env = make("cartpole",
 
 mujoco_inertia!(env.mechanism)
 
-
 # ## visualizer 
 open(env.vis)
 
