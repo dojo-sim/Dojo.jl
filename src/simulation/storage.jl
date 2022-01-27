@@ -82,9 +82,10 @@ function save_to_storage!(mechanism::Mechanism, storage::Storage, i::Int)
 end
 
 function generate_storage(mechanism::Mechanism, z)
-    storage = Storage{Float64}(length(z), length(mechanism.bodies))
+    N = length(z)
+	storage = Storage{Float64}(N, length(mechanism.bodies))
 
-    for t = 1:steps
+    for t = 1:N
         off = 0
         for (i, body) in enumerate(mechanism.bodies)
             storage.x[i][t] = z[t][off .+ (1:3)]

@@ -6,9 +6,10 @@ function ∂joint∂body_data(mechanism::Mechanism, joint::JointConstraint{T,N},
     Nd = data_dim(body)
     ∇m = szeros(T,N,1)
     ∇J = szeros(T,N,6)
-    ∇z1 = szeros(T,N,6)
-    ∇z2 = constraint_jacobian_configuration(mechanism, joint, body) * ∂i∂z(body, mechanism.timestep, attjac=true)
-    ∇g = [∇m ∇J ∇z1 ∇z2]
+    ∇v15 = szeros(T,N,3)
+    ∇ϕ15 = szeros(T,N,3)
+    ∇z2 = -constraint_jacobian_configuration(mechanism, joint, body) * ∂i∂z(body, mechanism.timestep, attjac=true)
+    ∇g = [∇m ∇J ∇v15 ∇ϕ15 ∇z2]
     return ∇g
 end
 
@@ -17,51 +18,55 @@ function ∂joint∂joint_data(mechanism::Mechanism, joint::JointConstraint{T,N}
     return szeros(T,N,Nd)
 end
 
-
 function ∂body∂body_data(mechanism::Mechanism, body::Body{T}) where T
+    Δt = mechanism.timestep
     Nd = data_dim(body)
     N = 6
-    x1, v15, q1, ϕ15 = fullargs1(body.state)
+    x1, v15, q1, ϕ15 = previous_configuration_velocity(body.state)
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, timestep)
     # Mass
     ezg = SA{T}[0; 0; -mechanism.g]
-    ∇m = [- 1 / timestep * (x2 - x1) + timestep/2 * ezg + 1 / timestep * (x3 - x2) + timestep/2 * ezg;
+    ∇m = [1 / Δt * (x2 - x1) - Δt/2 * ezg - 1 / Δt * (x3 - x2) - Δt/2 * ezg;
           szeros(T,3,1)]
     # Inertia
-    ∇J = -4 / timestep * LVᵀmat(q2)' * LVᵀmat(q1) * ∂inertia(VLᵀmat(q1) * vector(q2))
-    ∇J += -4 / timestep * LVᵀmat(q2)' * Tmat() * RᵀVᵀmat(q3) * ∂inertia(VLᵀmat(q2) * vector(q3))
+    ∇J = 4 / Δt * LVᵀmat(q2)' * LVᵀmat(q1) * ∂inertia(VLᵀmat(q1) * vector(q2))
+    ∇J += 4 / Δt * LVᵀmat(q2)' * Tmat() * RᵀVᵀmat(q3) * ∂inertia(VLᵀmat(q2) * vector(q3))
     ∇J = [szeros(T,3,6); ∇J]
 
-    # configuration 1: z1 = x1, q1
-    ∇x1 = 1 / timestep * body.m * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
-    ∇q1 = -4 / timestep * LVᵀmat(q2)' * ∂qLVᵀmat(body.J * VLᵀmat(q1) * vector(q2))
-    ∇q1 += -4 / timestep * LVᵀmat(q2)' * LVᵀmat(q1) * body.J * ∂qVLᵀmat(vector(q2))
-    ∇q1 *= LVᵀmat(q1) # attjac
-    ∇z1 = [∇x1 szeros(T,3,3);
-           szeros(T,3,3) ∇q1]
+    # initial conditions: v15, ϕ15
+    ∇v15 = body.m * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
+    ∇q1 = -4 / Δt * LVᵀmat(q2)' * ∂qLVᵀmat(body.J * VLᵀmat(q1) * vector(q2))
+    ∇q1 += -4 / Δt * LVᵀmat(q2)' * LVᵀmat(q1) * body.J * ∂qVLᵀmat(vector(q2))
+    ∇ϕ15 = ∇q1 * ∂integrator∂ϕ(q2, -ϕ15, Δt)
+    ∇15 = [∇v15 szeros(T,3,3);
+           szeros(T,3,3) ∇ϕ15]
 
-    # configuration 2: z2 = x2, q2
-    # TODO
-    ∇z2 = szeros(T,N,6)
-
-    return [∇m ∇J ∇z1 ∇z2]
+    # current configuration: z2 = x2, q2
+    ∇tra_x2 = - 2 / Δt * body.m * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
+    ∇tra_q2 = szeros(T,3,3)
+    ∇rot_x2 = szeros(T,3,3)
+    ∇rot_q2 = -4 / Δt * VLᵀmat(q2) * LVᵀmat(q1) * body.J * VLᵀmat(q1)
+    ∇rot_q2 += -4 / Δt * VLᵀmat(q2) * Tmat() * RᵀVᵀmat(q3) * body.J * ∂qVLᵀmat(vector(q3))
+    ∇rot_q2 += -4 / Δt * ∂qVLᵀmat(LVᵀmat(q1) * body.J * VLᵀmat(q1) * vector(q2) + Tmat() * RᵀVᵀmat(q3) * body.J * VLᵀmat(q2) * vector(q3))
+    ∇rot_q2 *= LVᵀmat(q2)
+    ∇z2 = [∇tra_x2 ∇tra_q2;
+           ∇rot_x2 ∇rot_q2]
+    return [∇m ∇J ∇15 ∇z2]
 end
 
-function ∂body∂joint_data(mechanism::Mechanism{T}, joint::JointConstraint{T},
-        body::Body{T}) where T
+function ∂body∂eqc_data(mechanism::Mechanism{T}, joint::JointConstraint{T},
+        body::Body{T}) where {T}
+    Δt = mechanism.timestep
     Nd = data_dim(joint)
     N = 6
-    x1, v15, q1, ϕ15 = fullargs1(body.state)
+    x1, v15, q1, ϕ15 = previous_configuration_velocity(body.state)
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
-    x3, q3 = next_configuration(body.state, timestep)
-    ∇u = Diagonal(SVector{6,T}(-1,-1,-1,-2,-2,-2)) * input_jacobian_control(mechanism, joint, body)
-    ∇spring = apply_spring(mechanism, joint, body, unitary=true)
-    ∇damper = apply_damper(mechanism, joint, body, unitary=true)
-    # TODO
-    nu = control_dimension(joint)
-    ∇spring_offset = szeros(T,N,nu)
-    return [∇u ∇spring ∇damper ∇spring_offset]
+    x3, q3 = next_configuration(body.state, Δt)
+    ∇u = Diagonal(SVector{6,T}(1,1,1,2,2,2)) * input_jacobian_control(mechanism, joint, body)
+    ∇spring = springforce(mechanism, joint, body, unitary=true)
+    ∇damper = damperforce(mechanism, joint, body, unitary=true)
+    return [∇u ∇spring ∇damper]
 end
 
 function ∂body∂contact_data(mechanism::Mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
@@ -121,11 +126,28 @@ end
 ################################################################################
 # System Data Jacobians
 ################################################################################
-function ∂contact_data!(data_system::System, mechanism::Mechanism{T}) where T
-    # ∂body∂contactdata
+function create_data_system(joints::Vector{<:JointConstraint}, bodies::Vector{<:Body},
+        contacts::Vector{<:ContactConstraint})
+    nodes = [joints; bodies; contacts]
+    A = adjacencyMatrix(joints, bodies, contacts)
+    dimrow = length.(nodes)
+    dimcol = data_dim.(nodes)
+    data_system = System(A, dimrow, dimcol)
+    return data_system
+end
+
+function ∂data!(data_system::System, mech::Mechanism)
+    ∂ineqc_data!(data_system, mech::Mechanism)
+    ∂body_data!(data_system, mech::Mechanism)
+    ∂eqc_data!(data_system, mech::Mechanism)
+    return nothing
+end
+
+function ∂ineqc_data!(data_system::System, mechanism::Mechanism{T}) where {T}
+    # ∂body∂ineqcdata
     for contact in mechanism.contacts
-        pbody = get_body(mechanism, contact.parentid)
-        data_system.matrix_entries[pbody.id, contact.id].value += ∂body∂contact_data(mechanism, contact, pbody)
+        pbody = getbody(mechanism, contact.parentid)
+        data_system.matrix_entries[pbody.id, contact.id].value += ∂body∂ineqc_data(mechanism, contact, pbody)
     end
     # ∂contact∂contactdata
     for contact in mechanism.contacts
@@ -172,4 +194,34 @@ function ∂body_data!(data_system::System, mechanism::Mechanism{T}) where T
         data_system.matrix_entries[contact.id, pbody.id].value += ∂contact∂body_data(mechanism, contact, pbody)
     end
     return nothing
+end
+
+
+function ∂body∂z_local(body::Body{T}, Δt::T; attjac::Bool=true) where T
+    state = body.state
+    q2 = state.q2[1]
+    # ϕ25 = state.ϕsol[2]
+    Z3 = szeros(T,3,3)
+    Z34 = szeros(T,3,4)
+    ZT = attjac ? szeros(T,6,6) : szeros(T,6,7)
+    ZR = szeros(T,7,6)
+
+    x1, q1 = previous_configuration(state)
+    x2, q2 = current_configuration(state)
+    x3, q3 = next_configuration(state, Δt)
+
+    AposT = [-I Z3]
+    # AvelT = [Z3 -I*body.m] # solving for impulses
+
+    AposR = [-∂integrator∂q(q2, ϕ25, Δt, attjac = attjac) szeros(4,3)]
+
+    rot_q1(q) = -4 / Δt * LVᵀmat(q2)' * Lmat(UnitQuaternion(q..., false)) * Vᵀmat() * body.J * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(q2)
+    rot_q2(q) = -4 / Δt * LVᵀmat(UnitQuaternion(q..., false))' * Tmat() * Rmat(getq3(UnitQuaternion(q..., false), state.ϕsol[2], Δt))' * Vᵀmat() * body.J * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(getq3(UnitQuaternion(q..., false), state.ϕsol[2], Δt)) + -4 / Δt * LVᵀmat(UnitQuaternion(q..., false))' * Lmat(getq3(UnitQuaternion(q..., false), -state.ϕ15, Δt)) * Vᵀmat() * body.J * Vmat() * Lmat(getq3(UnitQuaternion(q..., false), -state.ϕ15, Δt))' * q
+
+    # dynR_ϕ15 = -1.0 * FiniteDiff.finite_difference_jacobian(rot_q1, vector(q1)) * ∂integrator∂ϕ(q2, -state.ϕ15, Δt)
+    dynR_q2 = FiniteDiff.finite_difference_jacobian(rot_q2, vector(q2))
+    AvelR = attjac ? [dynR_q2 * LVᵀmat(q2) dynR_ϕ15] : [dynR_q2 dynR_ϕ15]
+
+    return [[AposT;AvelT] ZT;
+             ZR [AposR;AvelR]]
 end

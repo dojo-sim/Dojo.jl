@@ -123,3 +123,164 @@ jacz0 - jacz1
 # Symbolics.jacobian(J * p, j)
 # lift_inertia(flatten_inertia(J)) - J
 # flatten_inertia(J)
+
+
+
+
+
+
+
+@variables xa[1:3], qa[1:4], xb[1:3], qb[1:4], p[1:3], p2[1:3]
+qa_ = UnitQuaternion(qa..., false)
+qb_ = UnitQuaternion(qb..., false)
+∂qrotation_matrix(qa_, p) * LVᵀmat(qa_)
+
+Xt = rotation_matrix(qa_)
+cbpb_w = rotation_matrix(qb_) * p2
+Qt = rotation_matrix(inv(qb_)) * skew(cbpb_w) * rotation_matrix(qa_)
+Symbolics.jacobian([Xt; Qt]*p, [xb; qb])
+
+
+
+
+xa = rand(3)
+qa = UnitQuaternion(rand(4)...)
+xb = rand(3)
+qb = UnitQuaternion(rand(4)...)
+tra0 = eqc0.constraints[1]
+tra0.vertices = (srand(3), srand(3))
+Gb(tra0, xa, qa, xb, qb, 0)
+
+
+
+
+using Symbolics
+@variables q[1:4], p[1:3], p4[1:4]
+q_ = UnitQuaternion(q..., false)
+Symbolics.jacobian(VRᵀmat(q_)*p4, q)
+
+@show Symbolics.jacobian(rotation_matrix(inv(q_))*p, q) - ∂qrotation_matrix(inv(q_), p) * Tmat()
+
+
+
+
+VLmat(qa_) * RᵀVᵀmat(qa_)
+inv(qb_)
+Tmat() * qb
+
+LVᵀmat(inv(qb_))
+LVᵀmat(qb_)
+Tmat()'
+
+@variables p4[1:4]
+Symbolics.jacobian(LVᵀmat(inv(qb_)) * p, qb) - ∂qLVᵀmat(p) * Tmat()
+Symbolics.jacobian(VRᵀmat(inv(qb_)) * p4, qb)
+- ∂qVRᵀmat(p4)
+
+
+
+
+
+function ∂Ga(joint::Translational{T,Nλ,0}, λ::AbstractVector) where {T,Nλ} # ∂(G'*λ)/∂z with z = [x3, q3]
+    p = constraintmat(joint)' * λ
+
+    return
+end
+
+
+constraintmat(eqc0.constraints[1])
+constraintmat(eqc0.constraints[2])
+
+
+################################################################################
+# Symbolics
+################################################################################
+using Symbolics
+
+@variables xa[1:3], qa[1:4], xb[1:3], qb[1:4], p[1:3], p2[1:3]
+qa_ = UnitQuaternion(qa..., false)
+qb_ = UnitQuaternion(qb..., false)
+
+Xt = rotation_matrix(qa_)
+Xt - VLmat(qa_) * RᵀVᵀmat(qa_)
+
+j = Symbolics.jacobian(Xt * p, qa)
+@show j
+
+X = transpose(rotation_matrix(qa_))
+cbpb_w = rotation_matrix(qb_) * p2 # body b kinematics point
+Q = transpose(rotation_matrix(inv(qb_)) * skew(cbpb_w) * rotation_matrix(qa_))
+rotation_matrix(inv(qb_))
+
+inv(qb_)
+
+Symbolics.jacobian([X'; Q'] * p, qa)
+Symbolics.jacobian([X'; Q'] * p, xb)
+j = Symbolics.jacobian([X'; Q'] * p, qb)
+
+
+
+
+code = build_function(j, [xa; qa; xb; qb; p; p2])[2]
+fj = eval(code)
+xa = rand(3)
+qa = vector(UnitQuaternion(rand(4)...))
+xb = rand(3)
+qb = vector(UnitQuaternion(rand(4)...))
+p = rand(3)
+p2 = rand(3)
+j = zeros(6,4)
+using BenchmarkTools
+@benchmark fj(j, [xa; qa; xb; qb; p; p2])
+
+a = 10
+a = 10
+a = 10
+a = 10
+a = 10
+a = 10
+################################################################################
+################################################################################
+################################################################################
+################################################################################
+################################################################################
+
+
+
+mech = getpendulum()
+mech = getdzhanibekov();
+body0 = mech.bodies[1]
+joint0 = mech.joints[1]
+
+tra0 = joint0.constraints[1]
+rot0 = joint0.constraints[2]
+
+xa = rand(3)
+qa = UnitQuaternion(rand(4)...)
+xb = rand(3)
+qb = UnitQuaternion(rand(4)...)
+λ2 = rand(2)
+λ3 = rand(3)
+
+impulse_map_child(tra0, xa, qa, xb, qb, λ2)
+impulse_map_parent(tra0, xa, qa, xb, qb, λ2)
+
+impulse_map_child(rot0, xa, qa, xb, qb, λ2)
+impulse_map_parent(rot0, xa, qa, xb, qb, λ2)
+
+impulse_map_parent(mech, joint0, body0)
+impulse_projector(joint0.constraints[1])
+impulse_projector(joint0.constraints[2])
+transpose([nullspace_mask(tra0); constraint_mask(tra0)])
+
+impulse_map_parent(mech, joint0, body0) * szeros(0)
+szeros(Float64, 6, 0) * szeros(0)
+
+vcat(ones(6,3), zeros(6,2))
+vcat(ones(6,3)', zeros(6,2)')
+hcat(ones(6,3), zeros(6,2))'
+
+@generated function impulse_map_parent(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
+    vec = [:(impulse_map_parent(joint.constraints[$i], body, get_body(mechanism, joint.childids[$i]), joint.childids[$i], joint.λsol[2][λindex(joint,$i)], mechanism.timestep)) for i = 1:Nc]
+    return :(hcat($(vec...)))
+end

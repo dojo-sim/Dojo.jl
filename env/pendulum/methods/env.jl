@@ -15,7 +15,7 @@ function pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
         nx = minimal_dimension(mechanism)
         no = 3
     elseif mode == :max
-        nx = maxCoordDim(mechanism)
+        nx = maximal_dimension(mechanism)
         no = 13
     end
     nu = control_dimension(mechanism)

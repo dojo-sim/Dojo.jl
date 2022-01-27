@@ -1,4 +1,5 @@
 @inline previous_configuration(state::State) = (state.x1, state.q1)
+@inline previous_configuration_velocity(state::State) = (state.x1, state.v15, state.q1, state.ϕ15)
 
 @inline current_position(state::State; k=1) = state.x2[k]
 @inline current_orientation(state::State; k=1) = state.q2[k]

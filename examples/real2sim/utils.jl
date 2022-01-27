@@ -301,7 +301,7 @@ end
 
 function loss(mechanism::Mechanism, pair; opts=SolverOptions(btol=1e-6, rtol=1e-6))
 	nu = control_dimension(mechanism)
-	nz = maxCoordDim(mechanism)
+	nz = maximal_dimension(mechanism)
 	u = zeros(nu)
     z1 = pair[1]
     z2true = pair[2]

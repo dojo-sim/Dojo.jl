@@ -15,7 +15,7 @@ function halfcheetah(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     if mode == :min
         nx = minimal_dimension(mechanism)
     elseif mode == :max
-        nx = maxCoordDim(mechanism)
+        nx = maximal_dimension(mechanism)
     end
     nu = 6
     no = nx
@@ -59,7 +59,7 @@ function reset(env::Environment{HalfCheetah}; x=nothing, reset_noise_scale = 0.1
         initialize!(env.mechanism, :halfcheetah, z = 0.25)
         x0 = getMinState(env.mechanism)
         nx = minimal_dimension(env.mechanism)
-        nz = maxCoordDim(env.mechanism)
+        nz = maximal_dimension(env.mechanism)
 
         low = -reset_noise_scale
         high = reset_noise_scale

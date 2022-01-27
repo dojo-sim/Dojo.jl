@@ -35,6 +35,67 @@ end
     end
 end
 
+function impulse_map_parent(joint::Joint, statea::State, stateb::State, η, timestep)
+    xa, qa = current_configuration(statea)
+    xb, qb = current_configuration(stateb)
+    impulse_map_parent(joint, xa, qa, xb, qb, η)
+end
+
+function impulse_map_child(joint::Joint, statea::State, stateb::State, η, timestep)
+    xa, qa = current_configuration(statea)
+    xb, qb = current_configuration(stateb)
+    impulse_map_child(joint, xa, qa, xb, qb, η)
+end
+
+@inline function impulse_map_parent(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η)
+    return impulse_transform_parent(joint, xa, qa, xb, qb) * impulse_projector(joint)
+end
+
+@inline function impulse_map_child(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η)
+    return impulse_transform_child(joint, xa, qa, xb, qb) * impulse_projector(joint)
+end
+
+# With joint limits
+@inline function impulse_projector(joint::Joint{T,Nλ,Nb}) where {T,Nλ,Nb}
+    zerodimstaticadjoint([szeros(Nb,3); -nullspace_mask(joint); nullspace_mask(joint); constraint_mask(joint)])
+end
+
+# Without joint limits
+@inline function impulse_projector(joint::Joint{T,Nλ,0}) where {T,Nλ}
+    zerodimstaticadjoint(constraint_mask(joint))
+end
+
+
+################################################################################
+# Derivatives
+################################################################################
+
+function impulse_map_parent_jacobian_parent(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
+    # ∂(Ga*λ)/∂(xa,qa)
+    p = impulse_projector(joint) * λ
+    impulse_transform_parent_jacobian_parent(joint, xa, qa, xb, qb, p)
+end
+
+function impulse_map_parent_jacobian_child(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
+    # ∂(Ga*λ)/∂(xb,qb)
+    p = impulse_projector(joint) * λ
+    impulse_transform_parent_jacobian_child(joint, xa, qa, xb, qb, p)
+end
+
+function impulse_map_child_jacobian_parent(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
+    # ∂(Gb*λ)/∂(xa,qa)
+    p = impulse_projector(joint) * λ
+    impulse_transform_child_jacobian_parent(joint, xa, qa, xb, qb, p)
+end
+
+function impulse_map_child_jacobian_child(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
+    # ∂(Gb*λ)/∂(xb,qb)
+    p = impulse_projector(joint) * λ
+    impulse_transform_child_jacobian_child(joint, xa, qa, xb, qb, p)
+end
+
+
+## Discrete-time velocity derivatives (for dynamics)
 @inline function constraint_jacobian_parent(joint::Joint, body1::Node, body2::Node, childid, λ, timestep)
     if body2.id == childid
         return constraint_jacobian_parent(joint, next_configuration(body1.state, timestep)..., next_configuration(body2.state, timestep)..., λ)

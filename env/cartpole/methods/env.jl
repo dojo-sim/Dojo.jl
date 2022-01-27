@@ -14,7 +14,7 @@ function cartpole(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     if mode == :min
         nx = minimal_dimension(mechanism)
     elseif mode == :max
-        nx = maxCoordDim(mechanism)
+        nx = maximal_dimension(mechanism)
     end
     nu = 1
     no = nx

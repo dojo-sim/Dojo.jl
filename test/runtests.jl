@@ -15,4 +15,4 @@ include("momentum.jl")
 include("energy.jl")
 include("behaviors.jl")
 include("joint_limits.jl")
-
+include("joint_impulse_map.jl")
