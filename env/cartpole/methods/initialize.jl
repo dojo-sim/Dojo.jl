@@ -28,23 +28,23 @@ end
 
 function initializecartpole!(mech::Mechanism{T,Nn,Ne,Nb}; mode=:down, pendulum_length=1.0) where {T,Nn,Ne,Nb}
     # origin to slider
-    set_position(mech.origin, mech.bodies[3])
-    set_velocity!(mech.bodies[3], v=[0.0; 0.0; 0.0],ω=zeros(3))
+    set_position(mech.origin, mech.bodies[1])
+    set_velocity!(mech.bodies[1], v=[0.0; 0.0; 0.0],ω=zeros(3))
 
     # slider to pendulum
     if mode == :down
-        set_position(mech.bodies[3], mech.bodies[4], Δx=[0.0; 0.0; -0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
-        set_velocity!(mech.bodies[4], v=zeros(3), ω=zeros(3))
+        set_position(mech.bodies[1], mech.bodies[2], Δx=[0.0; 0.0; -0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
+        set_velocity!(mech.bodies[2], v=zeros(3), ω=zeros(3))
     elseif mode == :up
-        set_position(mech.bodies[3], mech.bodies[4], Δx=[0.0; 0.0; 0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
-        set_velocity!(mech.bodies[4], v=zeros(3), ω=zeros(3))
+        set_position(mech.bodies[1], mech.bodies[2], Δx=[0.0; 0.0; 0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
+        set_velocity!(mech.bodies[2], v=zeros(3), ω=zeros(3))
     end
 end
 
 function mujoco_inertia!(mech)
-    mech.bodies[3].m = 1.0063
-    mech.bodies[3].J = Diagonal([0.106974, 0.106974, 0.00636812])
+    mech.bodies[1].m = 1.0063
+    mech.bodies[1].J = Diagonal([0.106974, 0.106974, 0.00636812])
 
-    mech.bodies[4].m = 0.4321
-    mech.bodies[4].J = Diagonal([0.0422274, 0.0422274, 0.0012155])
+    mech.bodies[2].m = 0.4321
+    mech.bodies[2].J = Diagonal([0.0422274, 0.0422274, 0.0012155])
 end

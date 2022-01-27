@@ -1,13 +1,13 @@
 function gethopper(; timestep::T=0.01, g::T=-9.81, cf::T=2.0,
     contact::Bool=true,
     contact_body::Bool=true,
-    limits::Bool = true,
+    limits::Bool = false,
     spring=0.0,
     damper=1.0,
     joint_limits=[[  0,   0, -45] * π/180,
                   [150, 150,  45] * π/180]) where T
 
-    path = joinpath(@__DIR__, "../deps/hopper.urdf")
+    path = joinpath(@__DIR__, "../deps/hopper_good.urdf")
     mech = Mechanism(path, false, T, g=g, timestep=timestep, spring=spring, damper=damper)
 
     # joint limits
@@ -29,8 +29,8 @@ function gethopper(; timestep::T=0.01, g::T=-9.81, cf::T=2.0,
 
     if contact
         origin = Origin{T}()
-        bodies = mech.bodies.values
-        joints = mech.joints.values
+        bodies = mech.bodies
+        joints = mech.joints
 
         normal = [0.0; 0.0; 1.0]
         names = contact_body ? getfield.(mech.bodies, :name) : [:ffoot, :foot]

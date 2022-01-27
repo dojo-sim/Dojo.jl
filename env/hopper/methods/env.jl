@@ -4,9 +4,9 @@
 struct Hopper end
 
 function hopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
-    cf::T=2.0, spring=0.0, damper=1.0,
+    cf::T=1.0, spring=10.0, damper=50.0,
     s::Int=1, contact::Bool=true, info=nothing, vis::Visualizer=Visualizer(), name::Symbol=:robot,
-    opts_step=SolverOptions(), opts_grad=SolverOptions()) where T
+    opts_step=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5), opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5)) where T
 
     mechanism = gethopper(timestep=dt, g=g, cf=cf, spring=spring, damper=damper, contact=contact)
     initializehopper!(mechanism)
@@ -20,7 +20,7 @@ function hopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
     no = nx
 
     # values taken from Mujoco's model, combining the control range -1, 1 and the motor gears.
-    aspace = BoxSpace(nu, low=(-ones(nu)), high=(ones(nu)))
+    aspace = BoxSpace(nu, low=(-Inf * ones(nu)), high=(Inf * ones(nu)))
     ospace = BoxSpace(no, low=(-Inf * ones(no)), high=(Inf * ones(no)))
 
     rng = MersenneTwister(s)

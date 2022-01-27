@@ -38,7 +38,7 @@ visualize(sim, trajectories=[states])
 # 2.0 * hopper.m.body_mass[2] * 9.81
 
 # ## horizon 
-T = 401
+T = 201
 
 # ## hopper 
 nx = hopper.nx
@@ -54,24 +54,24 @@ dyn = Dynamics(
 model = [dyn for t = 1:T-1] 
 
 # ## initial conditions
-x1 = [0.0; 1.25; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0]
-xM = [0.5; 1.21; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0]#[0.5; 0.5; 1.05; 0.0; 0.0; 0.0; 0.5; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0]
+x1 = [0.0; 1.21; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0]
+xM = [0.25; 2.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0]#[0.5; 0.5; 1.05; 0.0; 0.0; 0.0; 0.5; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0]
 xT = [0.5; 1.21; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0]#[0.5; 0.5; 0.55; 0.0; 0.0; 0.0; 0.5; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0]
 
 # # rollout
-ū = [0.1 * randn(3) for t = 1:T-1]
+ū = [0.01 * rand(3) for t = 1:T-1]
 w = [zeros(0) for t = 1:T-1]
 x̄ = rollout(model, x1, ū)
 
 # ## objective
-obj1 = (x, u, w) -> transpose(x - xM) * Diagonal([1.0e-1 * ones(6); 1.0e-2 * ones(6)]) * (x - xM) + transpose(u) * Diagonal([1.0; 1.0; 1.0]) * u
-obj2 = (x, u, w) -> transpose(x - xT) * Diagonal([1.0e-1 * ones(6); 1.0e-2 * ones(6)]) * (x - xT) + transpose(u) * Diagonal([1.0; 1.0; 1.0]) * u
+obj1 = (x, u, w) -> transpose(x - xM) * Diagonal([10.0 * ones(6); 1.0e-2 * ones(6)]) * (x - xM) + transpose(u) * Diagonal([1.0; 1.0; 1.0]) * u
+obj2 = (x, u, w) -> transpose(x - xT) * Diagonal([10.0 * ones(6); 1.0e-2 * ones(6)]) * (x - xT) + transpose(u) * Diagonal([1.0; 1.0; 1.0]) * u
 objT = (x, u, w) -> transpose(x - xT) * Diagonal([ones(6); ones(6)]) * (x - xT)
 
 ct1 = IterativeLQR.Cost(obj1, nx, nu, 0)
 ct2 = IterativeLQR.Cost(obj2, nx, nu, 0)
 cT = IterativeLQR.Cost(objT, nx, 0, 0)
-obj = [[ct1 for t = 1:200]..., [ct2 for t = 1:200]..., cT]
+obj = [[ct1 for t = 1:100]..., [ct2 for t = 1:100]..., cT]
 
 # ## constraints
 goal(x, u, w) = (x - xT)[collect(1:6)]
@@ -88,7 +88,7 @@ initialize_states!(prob, x̄)
 # ## solve
 solve!(prob, 
     verbose=true,
-    max_al_iter=6)
+    max_al_iter=5)
 
 # ## solution
 x_sol, u_sol = get_trajectory(prob)
@@ -102,8 +102,8 @@ x_sol, u_sol = get_trajectory(prob)
 # plot(hcat(u_sol..., u_sol[end])', linetype=:steppost)
 
 # ## visualize
-# x_vis = [[x̄[1] for t = 1:10]..., x̄..., [x̄[end] for t = 1:10]...]
-x_vis = [[x_sol[1] for t = 1:10]..., x_sol..., [x_sol[end] for t = 1:10]...]
+x_vis = [[x̄[1] for t = 1:10]..., x̄..., [x̄[end] for t = 1:10]...]
+x_vis = [[x_sol[1] for t = 1:100]..., x_sol..., [x_sol[end] for t = 1:100]...]
 states = Array(undef, statespace(sim), length(x_vis))
 for t = 1:length(x_vis)
     sim.d.qpos .= x_vis[t][1:6]
