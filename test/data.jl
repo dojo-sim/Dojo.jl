@@ -1,8 +1,8 @@
 using Dojo
 using Test
 
-include("data.jl")
-include("utils.jl")
+include(joinpath(module_dir(), "src", "gradients", "dev", "data.jl"))
+include(joinpath(module_dir(), "src", "gradients", "dev", "utils.jl"))
 
 function test_get_set_data(mechanism::Mechanism)
     Nd = data_dim(mechanism, attjac=false)

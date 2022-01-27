@@ -54,20 +54,6 @@ end
     return constraint_mask(joint) * [X Q]
 end
 
-# @inline function impulse_map_parent(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
-#     X = szeros(T, 3, 3)
-#     Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
-#     Q = Q * LVᵀmat(qa)
-#     return constraint_mask(joint) * [X Q]
-# end
-
-# @inline function impulse_map_child(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
-#     X = szeros(T, 3, 3)
-#     Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa)
-#     Q = Q * LVᵀmat(qb)
-#     return constraint_mask(joint) * [X Q]
-# end
-
 ################################################################################
 # Impulse Transform
 ################################################################################

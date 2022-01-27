@@ -23,7 +23,10 @@ function set_control!(mechanism::Mechanism{T}, u::AbstractVector) where T
 		off += nu
 	end
 	# apply the controls to each body's state
-	foreach(apply_input!, joints, mechanism)
+	for joint in joints
+		apply_input!(joint, mechanism)
+	end
+	# foreach(apply_input!, joints, mechanism)
 end
 
 function get_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}

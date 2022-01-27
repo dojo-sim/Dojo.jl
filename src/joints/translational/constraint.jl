@@ -61,24 +61,6 @@ end
     return constraint_mask(joint) * [X Q]
 end
 
-# function impulse_map_parent(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
-#     X = -1.0 * transpose(rotation_matrix(qa))
-#     pb_a = rotation_matrix(inv(qa)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
-#     ca_a = rotation_matrix(inv(qa)) * (xa) # body a com
-#     capb_a = pb_a - ca_a
-#     Q = - 1.0 * transpose(skew(capb_a))
-#     return constraint_mask(joint) * [X Q]
-# end
-
-# function impulse_map_child(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
-#     X = transpose(rotation_matrix(qa))
-#     pb_b = rotation_matrix(inv(qb)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
-#     cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
-#     cbpb_b = pb_b - cb_b
-#     Q = transpose(skew(cbpb_b) * rotation_matrix(inv(qb) * qa))
-#     return constraint_mask(joint) * [X Q]
-# end
-
 @inline function get_position_delta(joint::Translational, body1::Node, body2::Node, x::SVector)
     Δx = zerodimstaticadjoint(nullspace_mask(joint)) * x # in body1 frame
     return Δx

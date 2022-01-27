@@ -20,7 +20,7 @@ function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, joints::Vector{
     # reset ids
     resetGlobalID()
 
-    # check body inertia parameters 
+    # check body inertia parameters
     check_body.(bodies)
 
     # dimensions
@@ -56,7 +56,7 @@ function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, joints::Vector{
 end
 
 Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, joints::Vector{<:JointConstraint{T}}; kwargs...) where T = Mechanism(origin, bodies, joints, ContactConstraint{T}[]; kwargs...)
- 
+
 function Mechanism(filename::String, floating::Bool=false, T=Float64; kwargs...)
     # parse urdf
     origin, links, joints, loopjoints = parse_urdf(filename, floating, T)
@@ -70,4 +70,7 @@ function Mechanism(filename::String, floating::Bool=false, T=Float64; kwargs...)
     return mechanism
 end
 
-
+Base.length(mechanism::Mechanism) =
+    sum(Vector{Int}(length.(mechanism.joints))) +
+    sum(Vector{Int}(length.(mechanism.bodies))) +
+    sum(Vector{Int}(length.(mechanism.contacts)))

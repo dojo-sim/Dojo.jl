@@ -6,16 +6,16 @@ data_dim(mechanism::Mechanism; attjac::Bool=true) =
 	sum(Vector{Int64}(data_dim.(mechanism.joints))) +
     sum(Vector{Int64}(data_dim.(mechanism.bodies, attjac=attjac))) +
 	sum(Vector{Int64}(data_dim.(mechanism.contacts)))
-# Eqconstraints
+# Joints
 data_dim(joint::JointConstraint) = 2 + sum(data_dim.(joint.constraints)) # [utra, urot, spring, damper]
 data_dim(joint::Rotational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = N̄λ # [u, spring, damper]
 data_dim(joint::Translational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = N̄λ # [u, spring, damper]
 # Body
 data_dim(body::Body; attjac::Bool=true) = attjac ? 19 : 20 # 1+6+6+6 or 1+6+6+7 [m,flat(J),v15,ϕ15,x2,q2] with attjac
-# Ineqconstraints
+# Contact
 data_dim(contact::ContactConstraint) = sum(data_dim.(contact.constraints))
-data_dim(bound::NonLinearContact) = 7 # [cf, p, offset]
-data_dim(bound::LinearContactContact) = 7 # [cf, p, offset]
+data_dim(bound::NonlinearContact) = 7 # [cf, p, offset]
+data_dim(bound::LinearContact) = 7 # [cf, p, offset]
 data_dim(bound::ImpactContact) = 6 # [p, offset]
 
 
@@ -30,7 +30,7 @@ function data_attitude_jacobian(mechanism::Mechanism)
 	attjac = cat(attjacs..., dims=(1,2))
 	return attjac
 end
-# Eqconstraints
+# Joints
 function data_attitude_jacobian(joint::JointConstraint)
 	return I(data_dim(joint))
 end
@@ -41,7 +41,7 @@ function data_attitude_jacobian(body::Body)
 	attjac = cat(I(1+6+6+3), G(vector(q2)), dims=(1,2))
 	return attjac
 end
-# Injoints
+# Contacts
 function data_attitude_jacobian(contact::ContactConstraint)
 	return I(data_dim(contact))
 end
@@ -53,7 +53,7 @@ end
 # Mechanism
 get_data(mechanism::Mechanism) = vcat([get_data.(mechanism.joints);
 	get_data.(mechanism.bodies); get_data.(mechanism.contacts)]...)
-# Eqconstraints
+# Joints
 function get_data(joint::JointConstraint)
 	joints = joint.constraints
 	u = vcat(nullspace_mask.(joints) .* getfield.(joints, :Fτ)...)
@@ -72,7 +72,7 @@ function get_data(body::Body)
 end
 # Contacts
 get_data(bound::NonlinearContact) = [bound.cf; bound.offset; bound.p]
-get_data(boundset::LinearContact) = [bound.cf; bound.off; bound.p]
+get_data(bound::LinearContact) = [bound.cf; bound.offset; bound.p]
 get_data(bound::ImpactContact) = [bound.offset; bound.p]
 get_data(contact::ContactConstraint) = vcat(get_data.(contact.constraints)...)
 
@@ -92,17 +92,19 @@ function set_data!(mechanism::Mechanism, data::AbstractVector)
 	end
 	for body in mechanism.bodies
 		Nd = data_dim(body, attjac=false)
-		set_data!(body, data[c .+ (1:Nd)], mechanism.Δt); c += Nd
+		set_data!(body, data[c .+ (1:Nd)], mechanism.timestep); c += Nd
 	end
 	for contact in mechanism.contacts
 		Nd = data_dim(contact)
 		set_data!(contact, data[c .+ (1:Nd)]); c += Nd
 	end
-	foreach(applyFτ!, mechanism.eqconstraints, mechanism, false)
+	for joint in mechanism.joints
+		apply_input!(joint, mechanism, false)
+	end
 	return nothing
 end
- # Eqconstraints
-function set_data!(mechanism::Mechanism, joint::JointConstraint, data::AbstractVector)
+ # Joints
+function set_data!(joint::JointConstraint, data::AbstractVector)
 	nu = control_dimension(joint)
 	u = data[SUnitRange(1,nu)]
 	spring = data[nu+1]
@@ -116,7 +118,7 @@ function set_data!(mechanism::Mechanism, joint::JointConstraint, data::AbstractV
 	return nothing
 end
 # Body
-function set_data!(body::Body, data::AbstractVector, Δt)
+function set_data!(body::Body, data::AbstractVector, timestep)
 	# [m,flat(J),x2,v15,q2,ϕ15]
 	m = data[1]
 	J = lift_inertia(data[SUnitRange(2,7)])
@@ -124,8 +126,8 @@ function set_data!(body::Body, data::AbstractVector, Δt)
 	ϕ15 = data[SUnitRange(11,13)]
 	x2 = data[SUnitRange(14,16)]
 	q2 = UnitQuaternion(data[17:20]..., false)
-	x1 = getx3(x2, -v15, Δt)
-	q1 = getq3(q2, -ϕ15, Δt)
+	x1 = next_position(x2, -v15, timestep)
+	q1 = next_orientation(q2, -ϕ15, timestep)
 
 	body.m = m
 	body.J = J
@@ -139,7 +141,7 @@ function set_data!(body::Body, data::AbstractVector, Δt)
 	body.state.τ2[1] = SVector{3}(0,0,0.)
 	return nothing
 end
-# Injoints
+# Contact
 function set_data!(bound::NonlinearContact, data::AbstractVector)
 	bound.cf = data[1]
     bound.offset = data[SVector{3,Int}(2:4)]

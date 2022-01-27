@@ -72,25 +72,25 @@ end
 
 function impulse_map_parent_jacobian_parent(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
     # ∂(Ga*λ)/∂(xa,qa)
-    p = force_projector(joint) * λ
+    p = impulse_projector(joint) * λ
     impulse_transform_parent_jacobian_parent(joint, xa, qa, xb, qb, p)
 end
 
 function impulse_map_parent_jacobian_child(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
     # ∂(Ga*λ)/∂(xb,qb)
-    p = force_projector(joint) * λ
+    p = impulse_projector(joint) * λ
     impulse_transform_parent_jacobian_child(joint, xa, qa, xb, qb, p)
 end
 
 function impulse_map_child_jacobian_parent(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
     # ∂(Gb*λ)/∂(xa,qa)
-    p = force_projector(joint) * λ
+    p = impulse_projector(joint) * λ
     impulse_transform_child_jacobian_parent(joint, xa, qa, xb, qb, p)
 end
 
 function impulse_map_child_jacobian_child(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
     # ∂(Gb*λ)/∂(xb,qb)
-    p = force_projector(joint) * λ
+    p = impulse_projector(joint) * λ
     impulse_transform_child_jacobian_child(joint, xa, qa, xb, qb, p)
 end
 

@@ -30,25 +30,3 @@ end
     Q = FiniteDiff.finite_difference_jacobian(q -> constraint(joint, xa, qa, xb, UnitQuaternion(q..., false), η), vector(qb))
     return [X Q]
 end
-
-# @inline function impulse_map_parent(joint::Rotational{T,Nλ,Nb,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
-#     X = szeros(T, 3, 3)
-#     Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
-#     return [
-#             zeros(Nb, 6);
-#             -nullspace_mask(joint) * [X Q * LVᵀmat(qa)];
-#             nullspace_mask(joint) * [X Q * LVᵀmat(qa)];
-#             constraint_mask(joint) * [X Q * LVᵀmat(qa)];
-#            ]
-# end
-
-# @inline function impulse_map_child(joint::Rotational{T,Nλ,Nb,N}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N}
-#     X = szeros(T, 3, 3)
-#     Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa)
-#     return [
-#             zeros(Nb, 6);
-#             -nullspace_mask(joint) * [X Q * LVᵀmat(qb)];
-#             nullspace_mask(joint) * [X Q * LVᵀmat(qb)];
-#             constraint_mask(joint) * [X Q * LVᵀmat(qb)];
-#            ]
-# end
