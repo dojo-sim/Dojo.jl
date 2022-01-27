@@ -34,10 +34,11 @@ using Test
 include("utils.jl")
 include("data.jl")
 include("data_gradients.jl")
+include("finite_difference.jl")
 
-mech = getpendulum(Δt=0.05, damper=0.0, spring=0.0);
-eqc0 = mech.eqconstraints.values[1]
-body0 = mech.bodies.values[1]
+mech = getpendulum(timestep=0.05, damper=0.0, spring=0.0);
+joint0 = mech.joints[1]
+body0 = mech.bodies[1]
 initialize!(mech, :pendulum, ϕ1=0.2, ω1=-0.3)
 simulate!(mech, 0.30, verbose=false)
 
@@ -89,13 +90,13 @@ datajac0[6:11,20:22]
 datajac1[6:11,20:22]
 
 
-eqc0.id
+joint0.id
 body0.id
 
 
-data_system.matrix_entries[eqc0.id, eqc0.id].value
-data_system.matrix_entries[eqc0.id, body0.id].value
-data_system.matrix_entries[body0.id, eqc0.id].value
+data_system.matrix_entries[joint0.id, joint0.id].value
+data_system.matrix_entries[joint0.id, body0.id].value
+data_system.matrix_entries[body0.id, joint0.id].value
 data_system.matrix_entries[body0.id, body0.id].value
 
 

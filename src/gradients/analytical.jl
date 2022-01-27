@@ -34,13 +34,7 @@ function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
                 pGlq = p[:, 4:7]
                 cGlx = c[:, 1:3]
                 cGlq = c[:, 4:7]
-                @show size(p)
-                @show size(c)
-                @show element
-                @show length(element)
-                @show size(pGlx)
-                @show range
-                @show pcol13[1:3]
+
                 Gl[range, pcol13[1:3]] = pGlx
                 Gl[range, pcol13[7:10]] = pGlq
                 Gl[range,ccol13[1:3]] = cGlx

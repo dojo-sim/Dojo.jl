@@ -38,7 +38,7 @@ end
 function data_attitude_jacobian(body::Body)
 	# [m,flat(J),x1,q1,x2,q2]
 	x2, q2 = current_configuration(body.state)
-	attjac = cat(I(1+6+6+3), G(vector(q2)), dims=(1,2))
+	attjac = cat(I(1+6+6+3), LVᵀmat(q2), dims=(1,2))
 	return attjac
 end
 # Contacts

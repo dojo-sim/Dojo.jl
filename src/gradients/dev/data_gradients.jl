@@ -197,7 +197,7 @@ function ∂body_data!(data_system::System, mechanism::Mechanism{T}) where T
 end
 
 
-function ∂body∂z(body::Body{T}, Δt::T; attjac::Bool=true) where T
+function ∂body∂z_local(body::Body{T}, Δt::T; attjac::Bool=true) where T
     state = body.state
     q2 = state.q2[1]
     # ϕ25 = state.ϕsol[2]
@@ -206,9 +206,9 @@ function ∂body∂z(body::Body{T}, Δt::T; attjac::Bool=true) where T
     ZT = attjac ? szeros(T,6,6) : szeros(T,6,7)
     ZR = szeros(T,7,6)
 
-    x1, q1 = posargs1(state)
-    x2, q2 = posargs2(state)
-    x3, q3 = posargs3(state, Δt)
+    x1, q1 = previous_configuration(state)
+    x2, q2 = current_configuration(state)
+    x3, q3 = next_configuration(state, Δt)
 
     AposT = [-I Z3]
     # AvelT = [Z3 -I*body.m] # solving for impulses
