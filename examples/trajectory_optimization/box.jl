@@ -9,7 +9,7 @@ env = make("block",
     mode=:max, 
     dt=dt,
     cf=0.5,
-    g=gravity);
+    g=gravity)
 
 @show env.mechanism.bodies[1].m
 @show env.mechanism.bodies[1].J

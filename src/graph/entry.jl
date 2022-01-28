@@ -14,3 +14,5 @@ function Base.zero(::Entry{ET}) where ET
     dims = [ET.parameters[1].parameters...]
     return Entry{ET.parameters[2]}(dims...)
 end
+
+Base.zero(::Type{Dojo.Entry}) = nothing
