@@ -20,7 +20,7 @@ v0 = [4, 0.80, 0.0]
 opts = SolverOptions(rtol=1e-6, btol=1e-6)
 
 # ## linear cone
-color_lc = RGBA(1.0, 153.0 / 255.0, 51.0 / 255.0, 1.0);
+color_lc = orange;
 mech_lc = getmechanism(:box, timestep=timestep, g=gravity, cf=friction_coefficient,
     contact_type=:linear_contact, mode=:box, color=color_lc);
 initialize!(mech_lc, :box, x=x0, q=one(UnitQuaternion), v=v0, ω=ω0)
@@ -36,27 +36,30 @@ end
 setobject!(vis[:path_lc], MeshCat.Line(points_lc, line_mat_lc))
 
 # ## nonlinear cone
-color_nc = RGBA(51.0 / 255.0, 1.0, 1.0, 1.0);
+color_nc = cyan;
 mech_nc = getmechanism(:box, timestep=timestep, g=gravity, cf=friction_coefficient,
     contact_type=:contact, mode=:box, color=color_nc);
 initialize!(mech_nc, :box, x=x0, q=one(UnitQuaternion), v=v0, ω=ω0)
 storage_nc = simulate!(mech_nc, 4.0, record=true, opts=opts)
+for x in storage_nc.x[1]
+    x += [0.0; 0.0; 0.1] 
+end
 vis, anim = visualize(mech_nc, storage_nc, vis=vis, name=:nc, animation=anim)
 
 line_mat_nc = LineBasicMaterial(color=color_nc, linewidth=25.0)
 points_nc = Vector{Point{3,Float64}}()
 for (i, xt) in enumerate(storage_nc.x[1])
     k = xt
-    push!(points_nc, Point(k[1], k[2]-0.04, k[3] + 0.00))
+    push!(points_nc, Point(k[1], k[2]-0.04, k[3] + 0.0))
 end
 setobject!(vis[:path_nc], MeshCat.Line(points_nc, line_mat_nc))
 
 # ## MuJoCo cone
-color_mj = RGBA(1.0, 0.0, 1.0, 1.0);
+color_mj = magenta;
 mech_mj = getmechanism(:box, timestep=timestep, g=gravity, cf=friction_coefficient,
     contact_type=:linear_contact, mode=:box, color=color_mj);
 initialize!(mech_mj, :box, x=x0, q=one(UnitQuaternion), v=v0, ω=ω0)
-file = jldopen(joinpath(@__DIR__, "../MuJoCoBenchmark.jl/results/cone_compare.jld2"))
+file = jldopen(joinpath(@__DIR__, "../MuJoCo_benchmark/results/cone_compare.jld2"))
 storage_mj = generate_storage(mech_mj, [get_max_state(mech_mj), file["ztraj"]...])
 vis, anim = visualize(mech_mj, storage_mj, vis=vis, name=:mj, animation=anim)
 
