@@ -41,8 +41,8 @@ mech_nc = getmechanism(:box, timestep=timestep, g=gravity, cf=friction_coefficie
     contact_type=:contact, mode=:box, color=color_nc);
 initialize!(mech_nc, :box, x=x0, q=one(UnitQuaternion), v=v0, ω=ω0)
 storage_nc = simulate!(mech_nc, 4.0, record=true, opts=opts)
-for x in storage_nc.x[1]
-    x += [0.0; 0.0; 0.1] 
+for (i, x) in enumerate(storage_nc.x[1])
+    storage_nc.x[1][i] += [0.0; 0.0; 0.1] 
 end
 vis, anim = visualize(mech_nc, storage_nc, vis=vis, name=:nc, animation=anim)
 

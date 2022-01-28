@@ -7,17 +7,17 @@ A differentiable contact-dynamics simulator for robotics.
 
 ## Simulation 
 
-### Astronaut
-<img src="examples/animations/astronaut.gif" width="200"/>
-
 ### Atlas drop 
 <img src="examples/animations/atlas_drop.gif" width="100"/>
+
+### Astronaut
+<img src="examples/animations/astronaut.gif" width="200"/>
 
 ### Friction-cone comparison 
 - blue = nonlinear friction cone
 - orange = linear friction cone
 - magenta = MuJoCo friction model 
-<img src="examples/animations/cone_compare_mujoco.gif" height="300"/>
+<img src="examples/animations/cone_compare_mujoco.gif" height="150"/>
 
 ### Dzhanibekov effect
 <img src="examples/animations/dzhanibekov.gif" width="150"/>

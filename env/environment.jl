@@ -172,6 +172,7 @@ include("pendulum/methods/env.jl")
 include("quadruped/methods/env.jl")
 include("raiberthopper/methods/env.jl")
 include("walker2d/methods/env.jl")
+include("box/methods/env.jl")
 
 ################################################################################
 # Visualize Trajectories

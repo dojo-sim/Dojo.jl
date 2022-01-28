@@ -4,8 +4,7 @@ function module_dir()
 end
 
 # Activate package
-using Pkg
-Pkg.activate(module_dir())
+using Pkg; Pkg.activate(module_dir())
 
 using LinearAlgebra
 using LyceumBase

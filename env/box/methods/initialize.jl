@@ -3,7 +3,7 @@ function getbox(; timestep::T=0.01, g::T=-9.81, cf::T=0.8, radius=0.0, side=0.5,
     contact_type=:contact,
     # contact_type=:linear_contact,
     # contact_type=:impact,
-    color=RGBA(1.0, 0.0, 0.0, 1.0),
+    color=RGBA(0.0, 0.0, 0.0, 1.0),
     mode=:box)  where T
     # Parameters
     origin = Origin{T}()
