@@ -168,4 +168,6 @@ plot(Gray.(1e10 .* abs.(full_matrix(data_system))))
 plot(log.(10, abs.(sum(full_matrix(data_system), dims=1)[1,:])))
 
 
+
+
 full_matrix(data_system)
