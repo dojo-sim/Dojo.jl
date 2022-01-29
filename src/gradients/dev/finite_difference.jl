@@ -1,15 +1,15 @@
-function get_solution(mechanism::Mechanism{T}) where T
+function get_solution0(mechanism::Mechanism{T}) where {T}
     sol = T[]
-    for (i,joints) in enumerate(mechanism.joints)
+    for (i, joints) in enumerate(mechanism.joints)
         λ = joints.λsol[2]
         push!(sol, λ...)
     end
-    for (i,body) in enumerate(mechanism.bodies)
+    for (i, body) in enumerate(mechanism.bodies)
         v25 = body.state.vsol[2]
         ϕ25 = body.state.ϕsol[2]
         push!(sol, [v25; ϕ25]...)
     end
-    for (i,contacts) in enumerate(mechanism.contacts)
+    for (i, contacts) in enumerate(mechanism.contacts)
         s = contacts.ssol[2]
         γ = contacts.γsol[2]
         push!(sol, [s; γ]...)
@@ -17,7 +17,7 @@ function get_solution(mechanism::Mechanism{T}) where T
     return sol
 end
 
-function set_solution!(mechanism::Mechanism{T}, sol::AbstractVector) where T
+function set_solution0!(mechanism::Mechanism{T}, sol::AbstractVector) where T
     off = 0
     for (i,joints) in enumerate(mechanism.joints)
         nλ = length(joints)
@@ -46,7 +46,7 @@ end
 function evaluate_residual!(mechanism::Mechanism, data::AbstractVector, sol::AbstractVector)
     system = mechanism.system
     set_data!(mechanism, data)
-    set_solution!(mechanism, sol)
+    set_solution0!(mechanism, sol)
     set_entries!(mechanism)
     return full_vector(system)
 end
@@ -55,11 +55,10 @@ function finitediff_data_jacobian(mechanism::Mechanism, data::AbstractVector,
         sol::AbstractVector; δ = 1e-5, verbose = false)
     mechanism = deepcopy(mechanism)
     Nd = data_dim(mechanism, attjac=false)
-    N = length(mechanism)
-    jac = zeros(N, Nd)
-
+    Nr = residual_dimension(mechanism)
+    jac = zeros(Nr, Nd)
     set_data!(mechanism, deepcopy(data))
-    set_solution!(mechanism, deepcopy(sol))
+    set_solution0!(mechanism, deepcopy(sol))
 
     for i = 1:Nd
         verbose && println("$i / $ndata")

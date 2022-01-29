@@ -64,8 +64,13 @@ end
 
 Base.length(mechanism::Mechanism{T,N}) where {T,N} = N
 
+function residual_dimension(mechanism::Mechanism)
+    return sum(Vector{Int}(length.(mechanism.joints))) +
+    + sum(Vector{Int}(length.(mechanism.bodies)))
+    + sum(Vector{Int}(length.(mechanism.contacts)))
+end
+
 # gravity
 get_gravity(g::T) where T <: Real = SVector{3,T}([0.0; 0.0; g])
 get_gravity(g::Vector{T}) where T = SVector{3,T}(g)
 get_gravity(g::SVector) = g
-

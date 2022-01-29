@@ -44,18 +44,18 @@ simulate!(mech, 0.30, verbose=false)
 
 # Finite Difference
 Nd = data_dim(mech, attjac=false)
-data0 = get_data(mech)# + 0.05*rand(Nd)
-sol0 = get_solution(mech)
+data0 = get_data0(mech)# + 0.05*rand(Nd)
+sol0 = get_solution0(mech)
 datajac0 = finitediff_data_jacobian(mech, data0, sol0)
 attjac0 = data_attitude_jacobian(mech)
 datajac0 *= attjac0
 plot(Gray.(1e10*abs.(datajac0)))
 plot(Gray.(1e0*abs.(datajac0)))
 
+
 # Analytical
-data_system = create_data_system(mech.eqconstraints.values,
-    mech.bodies.values, mech.ineqconstraints.values);
-∂data!(data_system, mech)
+data_system = create_data_system(mech.joints, mech.bodies, mech.contacts);
+jacobian_data!(data_system, mech)
 datajac1 = full_matrix(data_system)
 plot(Gray.(1e10 .* abs.(datajac1)))
 plot(Gray.(1e0 .* abs.(datajac1)))
@@ -80,6 +80,13 @@ norm((datajac0 - datajac1)[6:11,11:13])
 norm((datajac0 - datajac1)[6:11,14:16])
 norm((datajac0 - datajac1)[6:11,17:19], Inf)
 norm((datajac0 - datajac1)[6:11,20:22], Inf)
+
+datajac0[1:5,17:19]
+datajac1[1:5,17:19]
+
+datajac0[1:5,20:22]
+datajac1[1:5,20:22]
+
 
 datajac0[6:11,17:19]
 datajac1[6:11,17:19]
