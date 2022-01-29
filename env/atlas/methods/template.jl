@@ -96,7 +96,7 @@ function atlas_trajectory(mechanism::Mechanism{T}; timestep = 0.05, r = 0.10, x 
 		set_velocity!(mechanism, get_joint_constraint(mechanism, "r_leg_hpxyz"), [0.0, -ωR[i][1], 0.0])
 		set_velocity!(mechanism, get_joint_constraint(mechanism, "r_leg_kny"), [ωR[i][2]])
 		set_velocity!(mechanism, get_joint_constraint(mechanism, "r_leg_akxy"), [ωR[i][1]-ωR[i][2], 0.0])
-		X[i] .= getMinState(mechanism)
+		X[i] .= get_minimal_state(mechanism)
 	end
 
 	X = vcat([deepcopy(X) for i = 1:Ncycles]...)
@@ -113,7 +113,7 @@ end
 # # Compute trajectory
 # ################################################################################
 #
-# mech = getmechanism(:atlas, timestep = 0.05, model_type = :armless, damper = 1000.0)
+# mech = get_mechanism(:atlas, timestep = 0.05, model_type = :armless, damper = 1000.0)
 # initialize!(mech, :atlas, tran = [1,0,0.0], rot = [0,0,0.], αhip = 0.0, αknee = 0.0)
 #
 # @elapsed storage = simulate!(mech, 0.55, record = true, undercut = Inf,

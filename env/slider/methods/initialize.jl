@@ -1,4 +1,4 @@
-function getslider(; timestep::T = 0.01, g::T = -9.81, spring = 0.0, damper = 0.0) where T
+function getslider(; timestep::T = 0.01, gravity = -9.81, spring = 0.0, damper = 0.0) where T
     # Parameters
     joint_axis = [0; 0; 1.0]
     length1 = 1.0
@@ -10,11 +10,11 @@ function getslider(; timestep::T = 0.01, g::T = -9.81, spring = 0.0, damper = 0.
     body1 = Box(width, depth, length1, length1)
 
     # Constraints
-    joint_between_origin_and_body1 = JointConstraint(Prismatic(origin, body1, joint_axis; p2=p2, spring = spring, damper = damper))
+    joint_between_origin_and_body1 = JointConstraint(Prismatic(origin, body1, joint_axis; p2=p2, spring=spring, damper=damper))
     bodies = [body1]
     joints = [joint_between_origin_and_body1]
 
-    mech = Mechanism(origin, bodies, joints, g = g, timestep = timestep, spring=spring, damper=damper)
+    mech = Mechanism(origin, bodies, joints, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     return mech
 end
 
@@ -25,7 +25,7 @@ function initializeslider!(mechanism::Mechanism; z1::T = 0.0) where T
     set_position(mechanism.origin, body, p2 = p2 - [0, 0, z1])
 end
 
-function getnslider(; timestep::T = 0.01, g::T = -9.81, spring::T = 0.0, damper::T = 0.0, Nb::Int = 5) where T
+function getnslider(; timestep::T = 0.01, gravity = -9.81, spring = 0.0, damper::T = 0.0, Nb::Int = 5) where T
     # Parameters
     ex = [0; 0; 1.0]
     h = 1.
@@ -42,12 +42,12 @@ function getnslider(; timestep::T = 0.01, g::T = -9.81, spring::T = 0.0, damper:
     if Nb > 1
         joints = [
             jointb1;
-            [JointConstraint(Prismatic(bodies[i - 1], bodies[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nb]
+            [JointConstraint(Prismatic(bodies[i - 1], bodies[i], ex; p1=vert12, p2=vert11, spring=spring, damper=damper)) for i = 2:Nb]
             ]
     else
         joints = [jointb1]
     end
-    mech = Mechanism(origin, bodies, joints, g = g, timestep = timestep)
+    mech = Mechanism(origin, bodies, joints, gravity=gravity, timestep=timestep)
     return mech
 end
 

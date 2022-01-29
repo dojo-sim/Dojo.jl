@@ -72,7 +72,7 @@ function d2data(d)
 			]
 	return data
 end
-mech = getmechanism(:box, timestep=timestep/S, g=gscaled, cf=Dsol[end][1], radius=0.00, side=2.0, mode=:box);
+mech = get_mechanism(:box, timestep=timestep/S, gravity=gravityscaled, cf=Dsol[end][1], radius=0.00, side=2.0, mode=:box);
 set_simulator_data!(mech, d2data(Dsol[end]))
 id = 7#4,6,7,8
 traj_truth = trajs1[id]

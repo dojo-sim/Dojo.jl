@@ -63,13 +63,11 @@ export Origin,
     set_velocity!,
     set_input!,
     add_force!,
-    getid,
     get_node,
     get_body,
     get_joint_constraint,
     get_contact_constraint,
     simulate!,
-    initializeConstraints!,
     disassemble,
     minimal_coordinates,
     minimal_velocities,
@@ -83,12 +81,10 @@ export Origin,
     sones,
     srand,
 
-    getmechanism,
-    initialize!,
     getdim,
     control_dimension,
 
-    getmechanism,
+    get_mechanism,
     initialize!,
     get_data,
     set_data!,
@@ -109,7 +105,7 @@ export Origin,
     SolverOptions,
 
     Environment,
-    getMinState
+    get_minimal_state
 
 # Utilities
 include(joinpath("util", "util.jl"))
@@ -130,6 +126,7 @@ include(joinpath("mechanism", "body.jl"))
 include(joinpath("mechanism", "origin.jl"))
 include(joinpath("joints", "constraint.jl"))
 include(joinpath("contacts", "constraint.jl"))
+include(joinpath("mechanism", "id.jl"))
 include(joinpath("mechanism", "mechanism.jl"))
 include(joinpath("mechanism", "system.jl"))
 include(joinpath("mechanism", "methods.jl"))

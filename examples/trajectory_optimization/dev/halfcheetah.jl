@@ -20,7 +20,7 @@ using IterativeLQR
 # System
 gravity = -9.81
 timestep = 0.05
-mech = getmechanism(:halfcheetah, timestep = timestep, g = gravity, damper = 1.0, spring = 0.0)
+mech = get_mechanism(:halfcheetah, timestep=timestep, gravity=gravity, damper = 1.0, spring = 0.0)
 initialize!(mech, :halfcheetah)
 
 ## state space
@@ -56,13 +56,13 @@ function gravity_compensation(mechanism::Mechanism)
     return u
 end
 
-mech = getmechanism(:halfcheetah, timestep = timestep, g = gravity, damper = 100.0, spring = 1000.0)
+mech = get_mechanism(:halfcheetah, timestep=timestep, gravity=gravity, damper = 100.0, spring = 1000.0)
 initialize!(mech, :halfcheetah, x = 0.0, z = 0.0, θ = 0.0)
 @elapsed storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 ugc = gravity_compensation(mech)
 
-mech = getmechanism(:halfcheetah, timestep = timestep, g = gravity, damper = 10.0, spring = 1000.0)
+mech = get_mechanism(:halfcheetah, timestep=timestep, gravity=gravity, damper = 10.0, spring = 1000.0)
 
 u_control = ugc[3 .+ (1:6)]
 u_mask = [zeros(6,3) I(m)]

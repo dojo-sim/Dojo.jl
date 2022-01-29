@@ -1,4 +1,4 @@
-function gethopper(; timestep::T=0.01, g::T=-9.81, cf::T=2.0,
+function gethopper(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=2.0,
     contact::Bool=true,
     contact_body::Bool=true,
     limits::Bool = false,
@@ -8,7 +8,7 @@ function gethopper(; timestep::T=0.01, g::T=-9.81, cf::T=2.0,
                   [150, 150,  45] * π/180]) where T
 
     path = joinpath(@__DIR__, "../deps/hopper_good.urdf")
-    mech = Mechanism(path, false, T, g=g, timestep=timestep, spring=spring, damper=damper)
+    mech = Mechanism(path, false, T, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
 
     # joint limits
     joints = deepcopy(mech.joints)
@@ -24,7 +24,7 @@ function gethopper(; timestep::T=0.01, g::T=-9.81, cf::T=2.0,
         # foot = get_joint_constraint(mech, "foot")
         # joints[foot.id] = add_limits(mech, foot, rot_limits=[SVector{1}(joint_limits[1][3]), SVector{1}(joint_limits[2][3])])
 
-        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...], g=g, timestep=timestep, spring=spring, damper=damper)
+        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
 
     if contact
@@ -51,7 +51,7 @@ function gethopper(; timestep::T=0.01, g::T=-9.81, cf::T=2.0,
             end
         end
         set_position(mech, get_joint_constraint(mech, :floating_joint), [1.25, 0.0, 0.0])
-        mech = Mechanism(origin, bodies, joints, [bounds...], g=g, timestep=timestep, spring=spring, damper=damper)
+        mech = Mechanism(origin, bodies, joints, [bounds...], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
     return mech
 end

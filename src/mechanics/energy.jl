@@ -28,8 +28,8 @@ function kinetic_energy(mechanism::Mechanism, storage::Storage{T,N}, t::Int) whe
     for (i,body) in enumerate(mechanism.bodies)
         vl = storage.vl[i][t]
         ωl = storage.ωl[i][t]
-        ke += 0.5 * body.m * vl' * vl
-        ke += 0.5 * ωl' * body.J * ωl
+        ke += 0.5 * body.mass * vl' * vl
+        ke += 0.5 * ωl' * body.inertia * ωl
     end
     return ke
 end
@@ -55,7 +55,7 @@ function potential_energy(mechanism::Mechanism{T,Nn,Ne,Nb}, storage::Storage{T,N
         x = storage.x[i][t] # x2
         q = storage.q[i][t] # q2
         z = x[3]
-        pe += - body.m * mechanism.g * z
+        pe += - body.mass * dot(mechanism.gravity, x) # TODO: confirm this is correct
     end
 
     # Springs

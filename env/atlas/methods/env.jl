@@ -3,13 +3,13 @@
 ################################################################################
 struct Atlas end
 
-function atlas(; mode::Symbol=:min, dt::T=0.01, g::T=-9.81, cf=0.8,
+function atlas(; mode::Symbol=:min, dt::T=0.01, gravity=[0.0; 0.0; -9.81], cf=0.8,
     damper=10.0, spring=0.0, info=nothing, model_type::Symbol=:simple,
     s::Int=1, contact::Bool=true, vis::Visualizer=Visualizer(), name::Symbol=:robot,
     opts_step=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5),
     opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5)) where T
 
-    mechanism = getmechanism(:atlas, timestep=dt, g=g, cf=cf, damper=damper,
+    mechanism = get_mechanism(:atlas, timestep=dt, gravity=gravity, cf=cf, damper=damper,
         spring=spring, model_type=model_type)
     initialize!(mechanism, :atlas)
 

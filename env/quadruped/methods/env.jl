@@ -3,12 +3,12 @@
 ################################################################################
 struct Quadruped end
 
-function quadruped(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81, cf=0.8,
+function quadruped(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81], cf=0.8,
     damper=10.0, spring=0.0, info=nothing,
     s::Int=1, contact::Bool=true, vis::Visualizer=Visualizer(), name::Symbol=:robot,
     opts_step=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5), opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5)) where T
 
-    mechanism = getmechanism(:quadruped, timestep=dt, g=g, cf=cf, damper=damper, spring=spring)
+    mechanism = get_mechanism(:quadruped, timestep=dt, gravity=gravity, cf=cf, damper=damper, spring=spring)
     initialize!(mechanism, :quadruped)
 
     if mode == :min

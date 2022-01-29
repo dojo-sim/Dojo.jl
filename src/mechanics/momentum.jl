@@ -3,18 +3,18 @@
 """
 function momentum(mechanism::Mechanism{T}, body::Body{T}) where T
     timestep = mechanism.timestep
-
     state = body.state
-    x1, q1 = previous_configuration(state)
+    mass = body.mass 
+    inertia = body.inertia
+    # x1, q1 = previous_configuration(state)
     x2, q2 = current_configuration(state)
     x3, q3 = next_configuration(state, timestep)
 
     v15 = body.state.vsol[2] # v1.5
     ω15 = body.state.ϕsol[2] # ω1.5
 
-    ezg = SA{T}[0; 0; -mechanism.g]
-    D2x = 1 / timestep * body.m * (x3 - x2) + timestep/2 * body.m * ezg
-    D2q = -4 / timestep * LVᵀmat(q2)' * Tmat() * Rmat(q3)' * Vᵀmat() * body.J * Vmat() * Lmat(q2)' * vector(q3)
+    D2x = 1 / timestep * mass * (x3 - x2) - 0.5 * timestep * mass * mechanism.gravity
+    D2q = -4 / timestep * LVᵀmat(q2)' * Tmat() * Rmat(q3)' * Vᵀmat() * inertia * Vmat() * Lmat(q2)' * vector(q3)
     p_linear_body = D2x - 0.5 * state.F2[1]
     p_angular_body = D2q - 1.0 * state.τ2[1]
 
@@ -47,10 +47,9 @@ function momentum(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, storage::Storage{T,Ns}, t
     v_com = p_linear ./ mass
     for (i, body) in enumerate(mechanism.bodies)
         r = storage.x[i][t] - com
-        v_body = p_linear_body[i] ./ body.m
+        v_body = p_linear_body[i] ./ body.mass
         p_angular += p_angular_body[i]
-        # p_angular += cross(r, body.m * (v_body - v_com))
-        p_angular += cross(r, body.m * (v_body - v_com)) * sqrt(2) / 2 #TODO maybe there is cleaner way to handle the factor 2
+        p_angular += cross(r, body.mass * (v_body - v_com)) * sqrt(2) / 2 #TODO maybe there is cleaner way to handle the factor 2
     end
 
     return [p_linear; p_angular] # in world frame
@@ -67,7 +66,7 @@ end
 function center_of_mass(mechanism::Mechanism{T}, storage::Storage{T,N}, t::Int) where {T,N}
     r = zeros(T, 3)
     for (i,body) in enumerate(mechanism.bodies)
-        r += body.m * storage.x[i][t]
+        r += body.mass * storage.x[i][t]
     end
     return r ./ total_mass(mechanism)
 end
@@ -75,7 +74,7 @@ end
 function total_mass(mechanism::Mechanism{T}) where T
     w = 0.0
     for body in mechanism.bodies
-        w += body.m
+        w += body.mass
     end
     return w
 end

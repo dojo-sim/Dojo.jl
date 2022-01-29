@@ -1,5 +1,5 @@
 function halfcheetahState(; x::T=0.0, z::T=0.0, θ::T=0.0) where T
-    mechanism = getmechanism(:halfcheetah)
+    mechanism = get_mechanism(:halfcheetah)
     initialize!(mechanism, :halfcheetah, x=x, z=z, θ=θ)
 
     Nb = length(mechanism.bodies)

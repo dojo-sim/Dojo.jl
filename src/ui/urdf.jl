@@ -189,8 +189,8 @@ function parse_link(xlink, materialdict, T)
         link = Body(m, J, name=Symbol(name))
     else
         link = shape
-        link.m = m
-        link.J = J
+        link.mass = m
+        link.inertia = J
         link.name = Symbol(name)
     end
 

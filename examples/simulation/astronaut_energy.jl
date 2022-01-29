@@ -19,7 +19,7 @@ function astronaut_simulation(vis::Visualizer; timestep=1e-2, tsim=1.0, g=0.0,
         spring=0.0, damper=0.0, seed::Int=100, ϵ=1e-14, display::Bool = true)
 
     Random.seed!(seed)
-    mech = getmechanism(:humanoid, timestep=timestep, g=g, spring=spring, damper=damper, contact=false)
+    mech = get_mechanism(:humanoid, timestep=timestep, gravity=gravity, spring=spring, damper=damper, contact=false)
     initialize!(mech, :humanoid)
 
     # Initialize bodies with random velocities

@@ -5,8 +5,8 @@ vis = Visualizer()
 open(vis)
 
 # ## Mechanism
-# mech = getmechanism(:atlas, timestep=0.01, g=-9.81, cf=0.5, damper=100.0, spring=1.0, contact=true)
-mech = getmechanism(:atlas, timestep=0.001, g=-9.81, cf=0.5, damper=100.0, spring=1.0, contact=true)
+# mech = get_mechanism(:atlas, timestep=0.01, g=-9.81, cf=0.5, damper=100.0, spring=1.0, contact=true)
+mech = get_mechanism(:atlas, timestep=0.001, g=-9.81, cf=0.5, damper=100.0, spring=1.0, contact=true)
 
 @show length(mech.bodies) * 13
 @show control_dimension(mech)

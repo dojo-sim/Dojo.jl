@@ -19,7 +19,7 @@ include(joinpath(module_dir(), "src", "optional_components", "trajopt_utils.jl")
 # System
 gravity = -9.81
 timestep = 0.05
-mech = getraiberthopper(timestep = timestep, g = gravity, damper=0.0)
+mech = getraiberthopper(timestep=timestep, gravity=gravity, damper=0.0)
 initializeraiberthopper!(mech)
 
 ## state space
@@ -59,7 +59,7 @@ zT = max2min(mech, raiberthopper_offset_state(0.5, 0.0, 0.0))
 # zM = max2min(mech, raiberthopper_offset_state(0.0, 0.0, 0.0))
 # zT = max2min(mech, raiberthopper_offset_state(0.0, 0.0, 0.0))
 
-u_control = [0.0; 0.0; mech.g * mech.timestep]
+u_control = [0.0; 0.0; mechanism.gravity * mech.timestep]
 u_mask = [0 0 0 1 0 0 0;
 		  0 0 0 0 1 0 0;
 		  0 0 0 0 0 0 1]
@@ -137,7 +137,7 @@ s = Solver(trajopt, options=Options(
 
 # ## initialize
 x_interpolation = [linear_interpolation(z1, zM, 11)..., linear_interpolation(zM, zT, 11)[2:end]...]
-ū = [[0.0; 0.0; mech.g * mech.timestep + 0.0 * randn(1)[1]; 1.0e-3 * randn(nx)] for t = 1:T-1]
+ū = [[0.0; 0.0; mechanism.gravity * mech.timestep + 0.0 * randn(1)[1]; 1.0e-3 * randn(nx)] for t = 1:T-1]
 z0 = zeros(s.p.num_var)
 for (t, idx) in enumerate(s.p.trajopt.model.idx.x)
     z0[idx] = x_interpolation[t]

@@ -1,16 +1,16 @@
 
-function getatlas(; timestep::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0.0,
+function getatlas(; timestep::T = 0.01, gravity = -9.81, cf::T = 0.8, spring = 0.0,
         damper::T = 0.0, contact::Bool = true, model_type::Symbol = :simple) where T
     path = joinpath(@__DIR__, "../deps/atlas_$(string(model_type)).urdf")
-    mech = Mechanism(path, true, T, g = g, timestep = timestep, spring=spring, damper=damper)
+    mech = Mechanism(path, true, T, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
 
     # Adding springs and dampers
     for (i,joint) in enumerate(collect(mech.joints)[2:end])
         joint.isdamper = true
         joint.isspring = true
         for joint in joint.constraints
-            joint.spring = spring
-            joint.damper = damper
+            joint.spring=spring
+            joint.damper=damper
         end
     end
 
@@ -36,7 +36,7 @@ function getatlas(; timestep::T = 0.01, g::T = -9.81, cf::T = 0.8, spring::T = 0
         foot2_contacts = contact_constraint(get_body(mech, :r_foot), normal, cf=cf, p=contacts, offset=offset, names=[Symbol("r_" .* name) for name in names])
 
         set_position(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [0;0;0.9385;0.;0.;0.])
-        mech = Mechanism(origin, bodies, eqs, [foot1_contacts; foot2_contacts], g = g, timestep = timestep, spring=spring, damper=damper)
+        mech = Mechanism(origin, bodies, eqs, [foot1_contacts; foot2_contacts], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
     return mech
 end

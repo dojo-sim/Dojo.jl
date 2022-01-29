@@ -1,4 +1,4 @@
-function getsnake(; timestep::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=true,
+function getsnake(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, contact::Bool=true,
     contact_type=:contact, spring=0.0, damper=0.0, Nb::Int=2,
     jointtype::Symbol=:Spherical, h::T=1.0, r::T=0.05) where T
 
@@ -18,7 +18,7 @@ function getsnake(; timestep::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=true,
     # Constraints
     jointb1 = JointConstraint(Floating(origin, bodies[1], spring = 0.0, damper = 0.0))
     if Nb > 1
-        joints = [JointConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], ex; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nb]
+        joints = [JointConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], ex; p1 = vert12, p2 = vert11, spring=spring, damper=damper)) for i = 2:Nb]
         joints = [jointb1; joints]
     else
         joints = [jointb1]
@@ -31,9 +31,9 @@ function getsnake(; timestep::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=true,
 
         contacts1 = contact_constraint(bodies, normal, cf=cf, p = fill(vert11, n), contact_type=contact_type) # we need to duplicate point for prismatic joint for instance
         contacts2 = contact_constraint(bodies, normal, cf=cf, p = fill(vert12, n), contact_type=contact_type)
-        mech = Mechanism(origin, bodies, joints, [contacts1; contacts2], g=g, timestep=timestep, spring=spring, damper=damper)
+        mech = Mechanism(origin, bodies, joints, [contacts1; contacts2], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     else
-        mech = Mechanism(origin, bodies, joints, g = g, timestep = timestep, spring=spring, damper=damper)
+        mech = Mechanism(origin, bodies, joints, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
     return mech
 end
@@ -43,8 +43,7 @@ function initializesnake!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{T}
     Δω::AbstractVector{T}=zeros(3), Δv::AbstractVector{T}=zeros(3),
     q1::UnitQuaternion{T}=UnitQuaternion(RotX(0.6 * π))) where {T,Nn,Ne,Nb}
 
-    bodies = collect(mechanism.bodies)
-    body1 = bodies[1]
+    body1 = mechanism.bodies[1]
     # h = body1.shape.rh[2]
     h = body1.shape.xyz[3]
     vert11 = [0.;0.; h/2]

@@ -207,7 +207,7 @@ function generate_dataset(model::Symbol;
 		sleep_ratio = 0.0,
 		show_contact = true,
 		)
-    mechanism = getmechanism(model, timestep=timestep, g=g; mech_kwargs...);
+    mechanism = get_mechanism(model, timestep=timestep, gravity=gravity; mech_kwargs...);
     trajs = []
     for i = 1:N
 		state = initial_state(model; init_kwargs...)
@@ -276,7 +276,7 @@ end
 
 function clean_loss(model::Symbol, pairs, data; timestep=0.05, g=-9.81,
 		opts=SolverOptions(btol=1e-6, rtol=1e-6), n_sample = 20, rot = 0.0)
-	mechanism = getmechanism(model, timestep=timestep, g=g)
+	mechanism = get_mechanism(model, timestep=timestep, gravity=gravity)
 	nsd = simdata_dim(mechanism)
 	set_simulator_data!(mechanism, data)
 

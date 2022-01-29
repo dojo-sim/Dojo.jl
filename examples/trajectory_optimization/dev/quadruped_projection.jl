@@ -20,9 +20,9 @@ using IterativeLQR
 # System
 gravity = -9.81
 timestep = 0.05
-mech = getmechanism(:quadruped, timestep = timestep, g = gravity, cf = 0.8, damper = 10.0, spring = 0.0)
+mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, cf = 0.8, damper = 10.0, spring = 0.0)
 initialize!(mech, :quadruped, tran = [0,0,0.], v = [0.5,0,0.])
-# x0 = getMinState(mech)
+# x0 = get_minimal_state(mech)
 # x0[35] = 0.4
 # set_state!(mech, min2max(mech, x0))
 @elapsed storage = simulate!(mech, 0.05, record = true, solver = :mehrotra!, verbose = false)
@@ -33,7 +33,7 @@ m = 12 + n
 d = 0
 T = 18
 
-xref = quadruped_trajectory(mech, r = 0.08, z = 0.27; timestep = timestep, Δx = -0.04, Δfront = 0.10, N = Int(T/2), Ncycles = 1)
+xref = quadruped_trajectory(mech, r = 0.08, z = 0.27; timestep=timestep, Δx = -0.04, Δfront = 0.10, N = Int(T/2), Ncycles = 1)
 zref = [min2max(mech, x) for x in xref]
 storage = generate_storage(mech, zref)
 visualize(mech, storage, vis = vis)
@@ -64,7 +64,7 @@ function gravity_compensation(mechanism::Mechanism)
     return u
 end
 
-mech = getmechanism(:quadruped, timestep = timestep, g = gravity, cf = 0.8, damper = 100.0, spring = 200.0)
+mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, cf = 0.8, damper = 100.0, spring = 200.0)
 initialize!(mech, :quadruped)
 set_state!(mech, z1)
 setSpringOffset!(mech, x1)
@@ -72,7 +72,7 @@ setSpringOffset!(mech, x1)
 visualize(mech, storage, vis = vis)
 ugc = gravity_compensation(mech)
 
-mech = getmechanism(:quadruped, timestep = timestep, g = gravity, cf = 0.8, damper = 2.0, spring = 0.0)
+mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, cf = 0.8, damper = 2.0, spring = 0.0)
 u_control = ugc[6 .+ (1:12)]
 u_mask = [zeros(12,6) I(12)]
 
@@ -180,7 +180,7 @@ function projectQuadruped!(mechanism::Mechanism{T}, x::AbstractVector{T}) where 
 	for leg in [:RL, :RR, :FL, :FR]
 		x = projectQuadrupedLeg!(mechanism, x; leg = leg)
 	end
-	xp = getMinState(mechanism)
+	xp = get_minimal_state(mechanism)
 	return xp
 end
 
@@ -199,7 +199,7 @@ function projectQuadrupedLeg!(mechanism::Mechanism{T}, x::AbstractVector{T}; leg
 		∇ = FiniteDiff.finite_difference_jacobian(θ -> sdfquadruped(mechanism, θ; leg = leg), θ)
 		θ -= ∇ \ [s]
 	end
-	xp = getMinState(mechanism)
+	xp = get_minimal_state(mechanism)
 	return xp
 end
 

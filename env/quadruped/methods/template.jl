@@ -120,7 +120,7 @@ end
 # r = 0.10 # foot traj radius
 #
 # # System
-# mech = getmechanism(:quadruped, timestep = 0.05)
+# mech = get_mechanism(:quadruped, timestep = 0.05)
 # initialize!(mech, :quadruped, tran = [0,0,0.], v = [0,0,0.])
 #
 # X = quadruped_trajectory(mech, r = 0.08, z = 0.27; timestep = 0.05, Δx = -0.03, N = 9, Ncycles = 10)
@@ -203,12 +203,12 @@ end
 # 	mass = sum(getfield.(mech.bodies, :m))
 # 	alt = x_potato[3] - 0.48
 # 	if t > 13
-# 		u_potato = -[0, 0, mech.timestep * mass * mech.g + 20*alt + 10*x_potato[6]]
+# 		u_potato = -[0, 0, mech.timestep * mass * mechanism.gravity + 20*alt + 10*x_potato[6]]
 # 	else
 # 		u_potato = U_potato[t]
 # 	end
 # 	push!(X_potato, x_potato)
-# 	x_potato = potato_dynamics(x_potato, u_potato, mech.timestep, mass, mech.g)
+# 	x_potato = potato_dynamics(x_potato, u_potato, mech.timestep, mass, mechanism.gravity)
 # end
 # plot()
 # plot!([x[1] for x in X_potato], linewidth = 5.0)

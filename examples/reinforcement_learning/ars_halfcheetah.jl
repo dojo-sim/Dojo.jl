@@ -125,7 +125,7 @@ open(env.vis)
 
 reset(env)
 render(env)
-x0 = getMinState(env.mechanism)
+x0 = get_minimal_state(env.mechanism)
 
 for i = 1:100
     u = rand(Uniform(-1.0, 1.0), env.nu)

@@ -63,8 +63,8 @@ function get_data(joint::JointConstraint)
 end
 # Body
 function get_data(body::Body)
-	m = body.m
-	j = flatten_inertia(body.J)
+	m = body.mass
+	j = flatten_inertia(body.inertia)
 	v15 = body.state.v15
 	ϕ15 = body.state.ϕ15
 	x2, q2 = current_configuration(body.state)
@@ -112,8 +112,8 @@ function set_data!(joint::JointConstraint, data::AbstractVector)
 
 	set_input!(joint, u)
 	for joint in joint.constraints
-		joint.spring = spring
-		joint.damper = damper
+		joint.spring=spring
+		joint.damper=damper
 	end
 	return nothing
 end
@@ -129,8 +129,8 @@ function set_data!(body::Body, data::AbstractVector, timestep)
 	x1 = next_position(x2, -v15, timestep)
 	q1 = next_orientation(q2, -ϕ15, timestep)
 
-	body.m = m
-	body.J = J
+	body.mass = m
+	body.inertia = J
 	body.state.x1 = x1
 	body.state.v15 = v15
 	body.state.q1 = q1

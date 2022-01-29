@@ -2,7 +2,7 @@
      Mechanism constructor. Provides a simple way to construct a example
      mechanisms: atlas, snake, box, etc.
 """
-function getmechanism(model::Symbol; kwargs...)
+function get_mechanism(model::Symbol; kwargs...)
     mech = eval(Symbol(:get, model))(; kwargs...)
     return mech
 end

@@ -26,8 +26,8 @@ function ∂body∂body_data(mechanism::Mechanism, body::Body{T}) where T
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, timestep)
     # Mass
-    ezg = SA{T}[0; 0; -mechanism.g]
-    ∇m = [1 / Δt * (x2 - x1) - Δt/2 * ezg - 1 / Δt * (x3 - x2) - Δt/2 * ezg;
+    gravity = mechanism.gravity
+    ∇m = [1 / Δt * (x2 - x1) + Δt/2 * gravity - 1 / Δt * (x3 - x2) + Δt/2 * gravity;
           szeros(T,3,1)]
     # Inertia
     ∇J = 4 / Δt * LVᵀmat(q2)' * LVᵀmat(q1) * ∂inertia(VLᵀmat(q1) * vector(q2))
@@ -35,20 +35,20 @@ function ∂body∂body_data(mechanism::Mechanism, body::Body{T}) where T
     ∇J = [szeros(T,3,6); ∇J]
 
     # initial conditions: v15, ϕ15
-    ∇v15 = body.m * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
-    ∇q1 = -4 / Δt * LVᵀmat(q2)' * ∂qLVᵀmat(body.J * VLᵀmat(q1) * vector(q2))
-    ∇q1 += -4 / Δt * LVᵀmat(q2)' * LVᵀmat(q1) * body.J * ∂qVLᵀmat(vector(q2))
+    ∇v15 = body.mass * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
+    ∇q1 = -4 / Δt * LVᵀmat(q2)' * ∂qLVᵀmat(body.inertia * VLᵀmat(q1) * vector(q2))
+    ∇q1 += -4 / Δt * LVᵀmat(q2)' * LVᵀmat(q1) * body.inertia * ∂qVLᵀmat(vector(q2))
     ∇ϕ15 = ∇q1 * ∂integrator∂ϕ(q2, -ϕ15, Δt)
     ∇15 = [∇v15 szeros(T,3,3);
            szeros(T,3,3) ∇ϕ15]
 
     # current configuration: z2 = x2, q2
-    ∇tra_x2 = - 2 / Δt * body.m * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
+    ∇tra_x2 = - 2 / Δt * body.mass * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
     ∇tra_q2 = szeros(T,3,3)
     ∇rot_x2 = szeros(T,3,3)
-    ∇rot_q2 = -4 / Δt * VLᵀmat(q2) * LVᵀmat(q1) * body.J * VLᵀmat(q1)
-    ∇rot_q2 += -4 / Δt * VLᵀmat(q2) * Tmat() * RᵀVᵀmat(q3) * body.J * ∂qVLᵀmat(vector(q3))
-    ∇rot_q2 += -4 / Δt * ∂qVLᵀmat(LVᵀmat(q1) * body.J * VLᵀmat(q1) * vector(q2) + Tmat() * RᵀVᵀmat(q3) * body.J * VLᵀmat(q2) * vector(q3))
+    ∇rot_q2 = -4 / Δt * VLᵀmat(q2) * LVᵀmat(q1) * body.inertia * VLᵀmat(q1)
+    ∇rot_q2 += -4 / Δt * VLᵀmat(q2) * Tmat() * RᵀVᵀmat(q3) * body.inertia * ∂qVLᵀmat(vector(q3))
+    ∇rot_q2 += -4 / Δt * ∂qVLᵀmat(LVᵀmat(q1) * body.inertia * VLᵀmat(q1) * vector(q2) + Tmat() * RᵀVᵀmat(q3) * body.inertia * VLᵀmat(q2) * vector(q3))
     ∇rot_q2 *= LVᵀmat(q2)
     ∇z2 = [∇tra_x2 ∇tra_q2;
            ∇rot_x2 ∇rot_q2]
@@ -64,8 +64,8 @@ function ∂body∂eqc_data(mechanism::Mechanism{T}, joint::JointConstraint{T},
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, Δt)
     ∇u = Diagonal(SVector{6,T}(1,1,1,2,2,2)) * input_jacobian_control(mechanism, joint, body)
-    ∇spring = springforce(mechanism, joint, body, unitary=true)
-    ∇damper = damperforce(mechanism, joint, body, unitary=true)
+    ∇spring=springforce(mechanism, joint, body, unitary=true)
+    ∇damper=damperforce(mechanism, joint, body, unitary=true)
     return [∇u ∇spring ∇damper]
 end
 
@@ -211,12 +211,12 @@ function ∂body∂z_local(body::Body{T}, Δt::T; attjac::Bool=true) where T
     x3, q3 = next_configuration(state, Δt)
 
     AposT = [-I Z3]
-    # AvelT = [Z3 -I*body.m] # solving for impulses
+    # AvelT = [Z3 -I*body.mass] # solving for impulses
 
     AposR = [-∂integrator∂q(q2, ϕ25, Δt, attjac = attjac) szeros(4,3)]
 
-    rot_q1(q) = -4 / Δt * LVᵀmat(q2)' * Lmat(UnitQuaternion(q..., false)) * Vᵀmat() * body.J * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(q2)
-    rot_q2(q) = -4 / Δt * LVᵀmat(UnitQuaternion(q..., false))' * Tmat() * Rmat(getq3(UnitQuaternion(q..., false), state.ϕsol[2], Δt))' * Vᵀmat() * body.J * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(getq3(UnitQuaternion(q..., false), state.ϕsol[2], Δt)) + -4 / Δt * LVᵀmat(UnitQuaternion(q..., false))' * Lmat(getq3(UnitQuaternion(q..., false), -state.ϕ15, Δt)) * Vᵀmat() * body.J * Vmat() * Lmat(getq3(UnitQuaternion(q..., false), -state.ϕ15, Δt))' * q
+    rot_q1(q) = -4 / Δt * LVᵀmat(q2)' * Lmat(UnitQuaternion(q..., false)) * Vᵀmat() * body.inertia * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(q2)
+    rot_q2(q) = -4 / Δt * LVᵀmat(UnitQuaternion(q..., false))' * Tmat() * Rmat(getq3(UnitQuaternion(q..., false), state.ϕsol[2], Δt))' * Vᵀmat() * body.inertia * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(getq3(UnitQuaternion(q..., false), state.ϕsol[2], Δt)) + -4 / Δt * LVᵀmat(UnitQuaternion(q..., false))' * Lmat(getq3(UnitQuaternion(q..., false), -state.ϕ15, Δt)) * Vᵀmat() * body.inertia * Vmat() * Lmat(getq3(UnitQuaternion(q..., false), -state.ϕ15, Δt))' * q
 
     # dynR_ϕ15 = -1.0 * FiniteDiff.finite_difference_jacobian(rot_q1, vector(q1)) * ∂integrator∂ϕ(q2, -state.ϕ15, Δt)
     dynR_q2 = FiniteDiff.finite_difference_jacobian(rot_q2, vector(q2))

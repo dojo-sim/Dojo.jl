@@ -31,7 +31,7 @@ end
 # Test set_position and set_velocity!
 ################################################################################\
 @testset "minMaxCoord: setPos!, setVel!" begin
-	mech = Dojo.getmechanism(:raiberthopper)
+	mech = Dojo.get_mechanism(:raiberthopper)
 	joint1 = collect(mech.joints)[1]
 	joint2 = collect(mech.joints)[2]
 	body1 = collect(mech.bodies)[1]
@@ -58,7 +58,7 @@ end
 
 # raiberthopper
 @testset "min -> max -> min: raiberthopper" begin
-	mech = Dojo.getmechanism(:raiberthopper);
+	mech = Dojo.get_mechanism(:raiberthopper);
 	Random.seed!(100)
 	nx = Dojo.minimal_dimension(mech)
 	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(nx - 13)]
@@ -73,7 +73,7 @@ end
 
 # box
 @testset "min -> max -> min: box" begin
-	mech = Dojo.getmechanism(:box)
+	mech = Dojo.get_mechanism(:box)
 	Random.seed!(100)
 	nx = Dojo.minimal_dimension(mech)
 	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(abs(nx - 13))]
@@ -87,7 +87,7 @@ end
 
 # pendulum
 @testset "min -> max -> min: pendulum" begin
-	mech = Dojo.getmechanism(:pendulum)
+	mech = Dojo.get_mechanism(:pendulum)
 	Random.seed!(100)
 	nx = Dojo.minimal_dimension(mech)
 	x0 = rand(nx)
@@ -98,7 +98,7 @@ end
 
 # halfcheetah
 @testset "min -> max -> min: halfcheetah" begin
-	mech = Dojo.getmechanism(:halfcheetah)
+	mech = Dojo.get_mechanism(:halfcheetah)
 	Random.seed!(100)
 	nx = Dojo.minimal_dimension(mech)
 	x0 = rand(nx)
@@ -110,7 +110,7 @@ end
 # nslider
 @testset "min -> max -> min: nslider" begin
 	Nb0 = 5
-	mech = Dojo.getmechanism(:nslider, Nb = Nb0)
+	mech = Dojo.get_mechanism(:nslider, Nb = Nb0)
 	Random.seed!(100)
 	nx = Dojo.minimal_dimension(mech)
 	x0 = rand(nx)
@@ -124,7 +124,7 @@ end
 	for jointtype in jointtypes
 		# @show jointtype
 		Nb0 = 5
-		mech = Dojo.getmechanism(:npendulum, Nb = Nb0, jointtype = jointtype)
+		mech = Dojo.get_mechanism(:npendulum, Nb = Nb0, jointtype = jointtype)
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
 		x0 = rand(nx)
@@ -139,8 +139,8 @@ end
 	for jointtype in jointtypes
 	# @show jointtype
 	Nb0 = 5
-	mech = Dojo.getmechanism(:snake, Nb = Nb0, jointtype = jointtype)
-	mech = Dojo.getmechanism(:snake, Nb = Nb0, jointtype = :Fixed)
+	mech = Dojo.get_mechanism(:snake, Nb = Nb0, jointtype = jointtype)
+	mech = Dojo.get_mechanism(:snake, Nb = Nb0, jointtype = :Fixed)
 	Random.seed!(100)
 	nx = Dojo.minimal_dimension(mech)
 	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(abs(nx - 13))]
@@ -158,7 +158,7 @@ end
 	for jointtype in jointtypes
 		# @show jointtype
 		Nb0 = 5
-		mech = Dojo.getmechanism(:twister, Nb = Nb0, jointtype = jointtype)
+		mech = Dojo.get_mechanism(:twister, Nb = Nb0, jointtype = jointtype)
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
 		x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(abs(nx - 13))]
@@ -173,7 +173,7 @@ end
 
 # humanoid
 @testset "min -> max -> min: humanoid" begin
-	mech = Dojo.getmechanism(:humanoid)
+	mech = Dojo.get_mechanism(:humanoid)
 	Random.seed!(100)
 	nx = Dojo.minimal_dimension(mech)
 	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(abs(nx - 13))]
@@ -187,7 +187,7 @@ end
 
 # quadruped
 @testset "min -> max -> min: quadruped" begin
-	mech = Dojo.getmechanism(:quadruped)
+	mech = Dojo.get_mechanism(:quadruped)
 	Random.seed!(100)
 	nx = Dojo.minimal_dimension(mech)
 	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(abs(nx - 13))]
@@ -201,7 +201,7 @@ end
 
 # atlas
 @testset "min -> max -> min: atlas" begin
-	mech = Dojo.getmechanism(:atlas, model_type = :simple, contact = true, damper = 10.0)
+	mech = Dojo.get_mechanism(:atlas, model_type = :simple, contact = true, damper = 10.0)
 	Random.seed!(100)
 	nx = Dojo.minimal_dimension(mech)
 	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(abs(nx - 13))]

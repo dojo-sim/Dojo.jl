@@ -4,11 +4,11 @@
 struct Pendulum end
 
 function pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
-        dt::T=0.05, g::T=-10.0, m::T=1.0, l::T=1.0, damper=0.0, s::Int=1, vis::Visualizer=Visualizer(), name::Symbol=:robot,
+        dt::T=0.05, gravity=-10.0, m::T=1.0, l::T=1.0, damper=0.0, s::Int=1, vis::Visualizer=Visualizer(), name::Symbol=:robot,
         opts_step::SolverOptions = SolverOptions(),
         opts_grad::SolverOptions = SolverOptions()) where T
 
-    mechanism = getmechanism(:pendulum, timestep=dt, g=g, m=m, l=l, damper=damper)
+    mechanism = get_mechanism(:pendulum, timestep=dt, gravity=gravity, m=m, l=l, damper=damper)
     initialize!(mechanism, :pendulum)
 
     if mode == :min

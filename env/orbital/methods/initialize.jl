@@ -1,4 +1,4 @@
-function getorbital(; timestep::T = 0.01, g::T = -9.81, spring = 0.0, damper = 0.0, Nb::Int = 5) where T
+function getorbital(; timestep::T = 0.01, gravity = -9.81, spring = 0.0, damper = 0.0, Nb::Int = 5) where T
     # Parameters
     ex = [0; 0; 1]
     h = 1.
@@ -16,12 +16,12 @@ function getorbital(; timestep::T = 0.01, g::T = -9.81, spring = 0.0, damper = 0
     if Nb > 1
         joints = [
             jointb1;
-            [JointConstraint(Orbital(bodies[i - 1], bodies[i], ex; p1=vert12, p2=vert11, spring = spring, damper = damper)) for i = 2:Nb]
+            [JointConstraint(Orbital(bodies[i - 1], bodies[i], ex; p1=vert12, p2=vert11, spring=spring, damper=damper)) for i = 2:Nb]
             ]
     else
         joints = [jointb1]
     end
-    mech = Mechanism(origin, bodies, joints, g = g, timestep = timestep, spring=spring, damper=damper)
+    mech = Mechanism(origin, bodies, joints, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     return mech
 end
 

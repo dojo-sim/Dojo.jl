@@ -32,7 +32,7 @@ function ctrl!(mechanism, k)
 	return
 end
 Random.seed!(0)
-mech = getmechanism(:humanoid, timestep=0.01, g=0.0, spring=0.0, damper=0.0, contact=false)
+mech = get_mechanism(:humanoid, timestep=0.01, g=0.0, spring=0.0, damper=0.0, contact=false)
 initialize!(mech, :humanoid)
 ϵ = 1e-14
 storage = simulate!(mech, 1.0, ctrl!, record=true, opts=SolverOptions(rtol=ϵ, btol=ϵ))
@@ -57,7 +57,7 @@ end
 
 function astronaut_simulation(;Nsim::Int=1, timestep=1e-2, g=0.0, spring=0.0, damper=0.0,
 		tsim=1.0, tctrl=1.0, seed::Int=0, ϵ=1e-14, control_amplitude=0.1)
-    mech = getmechanism(:humanoid, timestep=timestep, g=g, spring=spring, damper=damper, contact=false)
+    mech = get_mechanism(:humanoid, timestep=timestep, gravity=gravity, spring=spring, damper=damper, contact=false)
 	storage = []
 	tcompute = zeros(Nsim)
 	for i = 1:Nsim

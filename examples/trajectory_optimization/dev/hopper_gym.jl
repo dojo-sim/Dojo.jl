@@ -7,7 +7,7 @@ dt = 0.05
 gravity = -9.81
 env = make("hopper",
     dt=dt,
-    g=gravity);
+    gravity=gravity);
 
 # ## visualizer
 open(env.vis)

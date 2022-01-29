@@ -1,11 +1,11 @@
-function getant(; timestep::T=0.05, g::T=-9.81, cf::T=0.5,
+function getant(; timestep::T=0.05, gravity=[0.0; 0.0; -9.81], cf::T=0.5,
     spring=0.0, damper=1.0, contact::Bool=true, contact_body=true,
     limits::Bool=true,
     joint_limits=[[-30, 30, -30, -70, -30, -70, -30, 30] * π / 180.0,
                   [ 30, 70,  30, -30,  30, -30,  30, 70] * π / 180.0]) where T
 
     path = joinpath(@__DIR__, "../deps/ant.urdf")
-    mech = Mechanism(path, true, T, g=g, timestep=timestep, spring=spring, damper=damper)
+    mech = Mechanism(path, true, T, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
 
     # joint limits
     joints = deepcopy(mech.joints)
@@ -35,7 +35,7 @@ function getant(; timestep::T=0.05, g::T=-9.81, cf::T=0.5,
         ankle4 = get_joint_constraint(mech, :ankle_4)
         joints[ankle4.id] = add_limits(mech, ankle4, rot_limits=[SVector{1}(joint_limits[1][8]), SVector{1}(joint_limits[2][8])])
 
-        mech = Mechanism(Origin{T}(), mech.bodies, [joints...], g=g, timestep=timestep, spring=spring, damper=damper)
+        mech = Mechanism(Origin{T}(), mech.bodies, [joints...], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
 
     if contact
@@ -68,7 +68,7 @@ function getant(; timestep::T=0.05, g::T=-9.81, cf::T=0.5,
             feet_contacts = [feet_contacts..., torso_contacts, elbow_contacts...]
         end
 
-        mech = Mechanism(origin, bodies, joints, feet_contacts, g=g, timestep=timestep, spring=spring, damper=damper)
+        mech = Mechanism(origin, bodies, joints, feet_contacts, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
 
     return mech

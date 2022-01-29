@@ -3,13 +3,13 @@
 ################################################################################
 struct HalfCheetah end
 
-function halfcheetah(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
+function halfcheetah(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
     cf::T=0.4, spring=[240, 180, 120, 180, 120, 60.], damper=2.5 * [6., 4.5, 3., 4.5, 3., 1.5],
     limits::Bool=true,
     s::Int=1, contact::Bool=true, info=nothing, vis::Visualizer=Visualizer(), name::Symbol=:robot,
     opts_step=SolverOptions(), opts_grad=SolverOptions()) where T
 
-    mechanism = gethalfcheetah(timestep=dt, g=g, cf=cf, spring=spring, damper=damper, contact=contact, limits=limits)
+    mechanism = gethalfcheetah(timestep=dt, gravity=gravity, cf=cf, spring=spring, damper=damper, contact=contact, limits=limits)
     initializehalfcheetah!(mechanism)
 
     if mode == :min
@@ -57,7 +57,7 @@ function reset(env::Environment{HalfCheetah}; x=nothing, reset_noise_scale = 0.1
     else
         # initialize above the ground to make sure that with random initialization we do not violate the ground constraint.
         initialize!(env.mechanism, :halfcheetah, z = 0.25)
-        x0 = getMinState(env.mechanism)
+        x0 = get_minimal_state(env.mechanism)
         nx = minimal_dimension(env.mechanism)
         nz = maximal_dimension(env.mechanism)
 
@@ -67,7 +67,7 @@ function reset(env::Environment{HalfCheetah}; x=nothing, reset_noise_scale = 0.1
         z = min2max(env.mechanism, x)
         set_state!(env.mechanism, z)
         if env.mode == :min
-            env.x .= getMinState(env.mechanism)
+            env.x .= get_minimal_state(env.mechanism)
         elseif env.mode == :max
             env.x .= get_max_state(env.mechanism)
         end

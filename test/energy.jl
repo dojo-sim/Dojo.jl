@@ -47,8 +47,8 @@ nocontrol!(mechanism, k) = controller!(mechanism, k, U = 0.0)
 # no spring and damper
 # no control
 ################################################################################
-g0 = -10.0
-mech = getmechanism(:box, timestep=timestep0, g=g0, contact=false)
+gravity0 = -10.0
+mech = get_mechanism(:box, timestep=timestep0, gravity=gravity0, contact=false)
 v0 = [1,2,3.0]
 ω0 = [1,1,1.0]
 initialize!(mech, :box, v=v0, ω=ω0)
@@ -81,10 +81,10 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 # no damper
 # no control
 ################################################################################
-g0 = -10.0
-spring0 = 1.0
+gravity0 = -10.0
+springravity0 = 1.0
 damper0 = 0.0
-mech = getmechanism(:pendulum, timestep=timestep0, g=g0, spring=spring0, damper=damper0)
+mech = get_mechanism(:pendulum, timestep=timestep0, gravity=gravity0, spring=springravity0, damper=damper0)
 ϕ0 = 0.9π
 ω0 = 2π
 
@@ -116,19 +116,19 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 # no damper
 # no control
 ################################################################################
-g0 = -0.0
-spring0 = 10.0
+gravity0 = -0.0
+springravity0 = 10.0
 damper0 = 0.0
-mech = getmechanism(:slider, timestep=timestep0, g=g0, spring=spring0, damper=damper0)
+mech = get_mechanism(:slider, timestep=timestep0, gravity=gravity0, spring=springravity0, damper=damper0)
 z0 = 0.5
 initialize!(mech, :slider, z1=z0)
 
 # Analytical
 body1 = collect(mech.bodies)[1]
 zmax = z0
-vmax = z0 * sqrt(spring0 / body1.m)
-pe_max = 0.5 * spring0 * zmax^2
-ke_max = 0.5 * body1.m * vmax^2
+vmax = z0 * sqrt(springravity0 / body1.mass)
+pe_max = 0.5 * springravity0 * zmax^2
+ke_max = 0.5 * body1.mass * vmax^2
 
 storage = simulate!(mech, 5.0,  nocontrol!, record=true, verbose=false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
@@ -161,10 +161,10 @@ end
 # no damper
 # no control
 ################################################################################
-g0 = -9.81
-spring0 = 0.0
+gravity0 = -9.81
+springravity0 = 0.0
 damper0 = 0.0
-mech = getmechanism(:slider, timestep=timestep0, g=g0, spring=spring0, damper=damper0)
+mech = get_mechanism(:slider, timestep=timestep0, gravity=gravity0, spring=springravity0, damper=damper0)
 z0 = 0.5
 initialize!(mech, :slider, z1 = z0)
 
@@ -196,10 +196,10 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-9
 # no damper
 # no control
 ################################################################################
-g0 = -9.81
-spring0 = 10.0
+gravity0 = -9.81
+springravity0 = 10.0
 damper0 = 0.0
-mech = getmechanism(:slider, timestep=timestep0, g=g0, spring=spring0, damper=damper0)
+mech = get_mechanism(:slider, timestep=timestep0, gravity=gravity0, spring=springravity0, damper=damper0)
 z0 = 0.5
 initialize!(mech, :slider, z1 = z0)
 
@@ -240,10 +240,10 @@ function humanoid_controller!(mechanism, k; U=0.05, timestep=timestep0)
     return
 end
 
-g0 = 0.0
-spring0 = 1.0
+gravity0 = 0.0
+springravity0 = 1.0
 damper0 = 0.0
-mech = getmechanism(:humanoid, timestep = timestep0, g = g0, spring = spring0, damper = damper0, contact = false)
+mech = get_mechanism(:humanoid, timestep=timestep0, gravity=gravity0, spring=springravity0, damper=damper0, contact = false)
 initialize!(mech, :humanoid)
 bodies = collect(mech.bodies)
 for body in mech.bodies
@@ -277,9 +277,9 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 # with spring and damper
 # with control
 ################################################################################
-spring0 = 1.0
+springravity0 = 1.0
 damper0 = 0.0
-mech = getmechanism(:atlas, timestep = timestep0, g = g0, spring = spring0, damper = damper0, contact = false)
+mech = get_mechanism(:atlas, timestep=timestep0, gravity=gravity0, spring=springravity0, damper=damper0, contact = false)
 initialize!(mech, :atlas)
 bodies = collect(mech.bodies)
 set_velocity!.(bodies, ω = 1.0*rand(3))
@@ -312,7 +312,7 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 # with spring and damper
 # with control
 ################################################################################
-function quadruped_controller!(mechanism, k; U = 0.01, timestep = timestep0)
+function quadruped_controller!(mechanism, k; U = 0.01, timestep=timestep0)
     N = Int(floor(1/timestep))
     for (i,joint) in enumerate(mechanism.joints)
         nu = control_dimension(joint)
@@ -322,9 +322,9 @@ function quadruped_controller!(mechanism, k; U = 0.01, timestep = timestep0)
     return
 end
 
-spring0 = 0.1
+springravity0 = 0.1
 damper0 = 0.0
-mech = getmechanism(:quadruped, timestep = timestep0, g = g0, spring = spring0, damper = damper0, contact = false)
+mech = get_mechanism(:quadruped, timestep=timestep0, gravity=gravity0, spring=springravity0, damper=damper0, contact = false)
 initialize!(mech, :quadruped)
 storage = simulate!(mech, 5.0, quadruped_controller!, record = true, verbose = false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
@@ -353,7 +353,7 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 # with spring and damper
 # with control
 ################################################################################
-function snake_controller!(mechanism, k; U = 0.05, timestep = timestep0)
+function snake_controller!(mechanism, k; U = 0.05, timestep=timestep0)
     N = Int(floor(1/timestep))
     for (i,joint) in enumerate(mechanism.joints)
         nu = control_dimension(joint)
@@ -364,9 +364,9 @@ function snake_controller!(mechanism, k; U = 0.05, timestep = timestep0)
 end
 
 Nb0 = 5
-spring0 = 0.01
+springravity0 = 0.01
 damper0 = 0.0
-mech = getmechanism(:snake, timestep = timestep0, g = g0, Nb = Nb0, spring = spring0, damper = damper0,
+mech = get_mechanism(:snake, timestep=timestep0, gravity=gravity0, Nb = Nb0, spring=springravity0, damper=damper0,
     jointtype = :Revolute, contact = false, r = 0.05);
 
 v0 = 10.0 * [1, 2, 3] * timestep0
@@ -394,7 +394,7 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 @testset "Energy: Snake" begin
     for jointtype in jointtypes
         # @show jointtype
-        mech = getmechanism(:snake, timestep = timestep0, g = g0, Nb = Nb0, spring = spring0, damper = damper0,
+        mech = get_mechanism(:snake, timestep=timestep0, gravity=gravity0, Nb = Nb0, spring=springravity0, damper=damper0,
             jointtype = jointtype, contact = false, r = 0.05)
 
         v0 = 10.0 * [1, 2, 3] * timestep0
@@ -429,9 +429,9 @@ end
 # with control
 ################################################################################
 Nb0 = 5
-spring0 = 0.01
+springravity0 = 0.01
 damper0 = 0.0
-mech = getmechanism(:twister, timestep = timestep0, g = g0, Nb = Nb0, spring = spring0, damper = damper0,
+mech = get_mechanism(:twister, timestep=timestep0, gravity=gravity0, Nb = Nb0, spring=springravity0, damper=damper0,
     jointtype = :Revolute, contact = false, r = 0.05);
 
 v0 = 10.0 * [1, 2, 3] * timestep0
@@ -459,7 +459,7 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 @testset "Energy: Twister" begin
     for jointtype in jointtypes
         # @show jointtype
-        mech = getmechanism(:twister, timestep = timestep0, g = g0, Nb = Nb0, spring = spring0, damper = damper0,
+        mech = get_mechanism(:twister, timestep=timestep0, gravity=gravity0, Nb = Nb0, spring=springravity0, damper=damper0,
             jointtype = jointtype, contact = false, r = 0.05)
 
         v0 = 10.0 * [1, 2, 3] * timestep0

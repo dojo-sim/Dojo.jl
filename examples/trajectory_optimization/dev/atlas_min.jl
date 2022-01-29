@@ -14,7 +14,7 @@ model_type = :armless
 env = make("atlas",
     mode=:min,
     dt=dt,
-    g=gravity,
+    gravity=gravity,
     cf=cf,
     damper=damper,
     spring=spring,
@@ -46,7 +46,7 @@ visualize(env, xref)
 # center_of_mass(env.mechanism, storage, 1)
 
 ## gravity compensation TODO: solve optimization problem instead
-mech = getmechanism(:atlas, timestep=dt, g=gravity, cf=cf, damper=1000.0,
+mech = get_mechanism(:atlas, timestep=dt, gravity=gravity, cf=cf, damper=1000.0,
 	spring=spring, model_type=model_type)
 initialize!(mech, :atlas)
 storage = simulate!(mech, 0.10, record=true, verbose=false)
@@ -57,7 +57,7 @@ F_damper = get_apply_damper(env.mechanism)
 u_damper = F_damper * env.mechanism.timestep
 u_control = u_damper[6 .+ (1:15)]
 
-mech = getmechanism(:atlas, timestep=dt, g=gravity, cf=cf, damper=0.0,
+mech = get_mechanism(:atlas, timestep=dt, gravity=gravity, cf=cf, damper=0.0,
 	spring=spring, model_type=model_type)
 function controller!(mechanism, k)
     set_control!(mechanism, u_damper)

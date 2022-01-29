@@ -20,7 +20,7 @@ using IterativeLQR
 # System
 gravity = -9.81
 timestep = 0.05
-mech = getmechanism(:quadruped, timestep = timestep, g = gravity, cf = 1.5, damper = 10.0, spring = 0.0)
+mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, cf = 1.5, damper = 10.0, spring = 0.0)
 initialize!(mech, :quadruped, tran = [0,0,0.], v = [0.5,0,0.])
 @elapsed storage = simulate!(mech, 0.05, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
@@ -32,7 +32,7 @@ rot1 = joints[1].constraints[1]
 rot1.spring_offset = srand(3)
 length(rot1)
 
-x0 = getMinState(mech)
+x0 = get_minimal_state(mech)
 setSpringOffset!(mech, x0)
 
 # Dimensions
@@ -53,7 +53,7 @@ visualize(mech, storage, vis = vis)
 
 # PID control
 timestep = 0.05
-mech = getmechanism(:quadruped, timestep = timestep, g = -9.0, cf = 0.5, contact = true, spring = 100.0, damper = 2.0)
+mech = get_mechanism(:quadruped, timestep=timestep, g = -9.0, cf = 0.5, contact = true, spring = 100.0, damper = 2.0)
 initialize!(mech, :quadruped)
 set_state!(mech, zref[1])
 
@@ -66,7 +66,7 @@ end
 visualize(mech, storage, vis = vis)
 
 
-mech = getmechanism(:pendulum, g = 0.0, spring = 20.0, damper = 1.0, spring_offset = -0.9*sones(1))
+mech = get_mechanism(:pendulum, g = 0.0, spring = 20.0, damper = 1.0, spring_offset = -0.9*sones(1))
 initialize!(mech, :pendulum, ϕ1 = pi/8)
 function controller!(mechanism, k)
 	setSpringOffset!(mechanism, [π])
@@ -101,18 +101,18 @@ visualize(mech, storage, vis = vis)
 
 
 
-# x0 = getMinState(mech)
+# x0 = get_minimal_state(mech)
 # x0[1:12]
 # x0[13:18]
 # x0[1:12]
 # x0[13:end] .= 0.0
 # x0[13] = pi/4
 # z0 = min2max(mech, x0)
-# mech = getmechanism(:quadruped, timestep = 0.01, g = 0.0, spring = 10.0, damper = 1.0, contact = false)
+# mech = get_mechanism(:quadruped, timestep = 0.01, g = 0.0, spring = 10.0, damper = 1.0, contact = false)
 # initialize!(mech, :quadruped)
-# x1 = getMinState(mech)
+# x1 = get_minimal_state(mech)
 
-mech = getmechanism(:quadruped, timestep = 0.01, g = 0.0, spring = 10.0, damper = 1.0, contact = true)
+mech = get_mechanism(:quadruped, timestep = 0.01, g = 0.0, spring = 10.0, damper = 1.0, contact = true)
 initialize!(mech, :quadruped)
 z0 = min2max(mech, zref[1])
 set_state!(mech, z0)
@@ -159,13 +159,13 @@ function gravity_compensation(mechanism::Mechanism)
     return u
 end
 
-mech = getmechanism(:quadruped, timestep = timestep, g = gravity, cf = 1.5, damper = 1000.0, spring = 30.0)
+mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, cf = 1.5, damper = 1000.0, spring = 30.0)
 initialize!(mech, :quadruped)
 @elapsed storage = simulate!(mech, 0.05, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 ugc = gravity_compensation(mech)
 
-mech = getmechanism(:quadruped, timestep = timestep, g = gravity, cf = 1.5, damper = 5.0, spring = 0.0)
+mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, cf = 1.5, damper = 5.0, spring = 0.0)
 u_control = ugc[6 .+ (1:12)]
 u_mask = [zeros(12,6) I(m)]
 

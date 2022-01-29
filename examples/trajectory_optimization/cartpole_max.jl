@@ -8,7 +8,7 @@ dt = 0.1
 env = make("cartpole", 
     mode=:max, 
     dt=dt,
-    g=gravity);
+    gravity=gravity);
 
 mujoco_inertia!(env.mechanism)
 

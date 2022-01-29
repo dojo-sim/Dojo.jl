@@ -1,4 +1,4 @@
-function gettwister(; timestep::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=true,
+function gettwister(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, contact::Bool=true,
     contact_type=:contact, spring=0.0, damper=0.0, Nb::Int=5,
     jointtype::Symbol=:Prismatic, h::T=1.0, r::T=0.05) where T
     # Parameters
@@ -18,9 +18,9 @@ function gettwister(; timestep::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=tru
     # Constraints
     jointb1 = JointConstraint(Floating(origin, bodies[1], spring = 0.0, damper = 0.0)) # TODO remove the spring and damper from floating base
     if Nb > 1
-        joints = [JointConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], axes[i%3+1]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nb]
-        # joints = [JointConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], axes[1]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nb]
-        # joints = [JointConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], axes[3]; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nb]
+        joints = [JointConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], axes[i%3+1]; p1 = vert12, p2 = vert11, spring=spring, damper=damper)) for i = 2:Nb]
+        # joints = [JointConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], axes[1]; p1 = vert12, p2 = vert11, spring=spring, damper=damper)) for i = 2:Nb]
+        # joints = [JointConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], axes[3]; p1 = vert12, p2 = vert11, spring=spring, damper=damper)) for i = 2:Nb]
         joints = [jointb1; joints]
     else
         joints = [jointb1]
@@ -32,9 +32,9 @@ function gettwister(; timestep::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=tru
         cf = cf * ones(n)
         contacts1 = contact_constraint(bodies[1], normal[1], cf=cf[1], p=vert11, contact_type=contact_type) # to avoid duplicating the contact points
         contacts2 = contact_constraint(bodies, normal, cf=cf, p=fill(vert12, n), contact_type=contact_type)
-        mech = Mechanism(origin, bodies, joints, [contacts1; contacts2], g = g, timestep = timestep)
+        mech = Mechanism(origin, bodies, joints, [contacts1; contacts2], gravity=gravity, timestep=timestep)
     else
-        mech = Mechanism(origin, bodies, joints, g = g, timestep = timestep, spring=spring, damper=damper)
+        mech = Mechanism(origin, bodies, joints, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
     return mech
 end

@@ -1,4 +1,4 @@
-function getdzhanibekov(; timestep::T = 0.01, g::T = -9.81, color=magenta) where T
+function getdzhanibekov(; timestep::T = 0.01, gravity = -9.81, color=magenta) where T
     radius = 0.1
     body_length = 1.0
     body_mass = 1.0
@@ -13,7 +13,7 @@ function getdzhanibekov(; timestep::T = 0.01, g::T = -9.81, color=magenta) where
     joints = [joint_float, joint_attach]
 
     # Mechanism
-    return Mechanism(origin, links, joints, g=g, timestep=timestep)
+    return Mechanism(origin, links, joints, gravity=gravity, timestep=timestep)
 end
 
 function initializedzhanibekov!(mech::Mechanism{T,Nn,Ne,Nb}; 

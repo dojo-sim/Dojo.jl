@@ -1,4 +1,4 @@
-function gethalfcheetah(; timestep::T=0.01, g::T=-9.81, cf::T=0.4,
+function gethalfcheetah(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.4,
     contact::Bool=true,
     contact_body::Bool=true,
     limits::Bool = true,
@@ -8,7 +8,7 @@ function gethalfcheetah(; timestep::T=0.01, g::T=-9.81, cf::T=0.4,
                   [ 1.05,  0.785,  0.785,  0.7,  0.87,  0.5]]) where T
 
     path = joinpath(@__DIR__, "../deps/halfcheetah.urdf")
-    mech = Mechanism(path, false, T, g=g, timestep=timestep, spring=spring, damper=damper)
+    mech = Mechanism(path, false, T, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
 
     # joint limits
     joints = deepcopy(mech.joints)
@@ -32,7 +32,7 @@ function gethalfcheetah(; timestep::T=0.01, g::T=-9.81, cf::T=0.4,
         ffoot = get_joint_constraint(mech, :ffoot)
         joints[ffoot.id] = add_limits(mech, ffoot, rot_limits=[SVector{1}(joint_limits[1][6]), SVector{1}(joint_limits[2][6])])
 
-        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...], g=g, timestep=timestep, spring=spring, damper=damper)
+        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
 
     if contact
@@ -64,7 +64,7 @@ function gethalfcheetah(; timestep::T=0.01, g::T=-9.81, cf::T=0.4,
             end
         end
         set_position(mech, get_joint_constraint(mech, :floating_joint), [0.576509, 0.0, 0.02792])
-        mech = Mechanism(origin, bodies, joints, [bounds...], g=g, timestep=timestep, spring=spring, damper=damper)
+        mech = Mechanism(origin, bodies, joints, [bounds...], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
     return mech
 end

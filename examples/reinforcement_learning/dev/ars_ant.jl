@@ -22,7 +22,7 @@ env = make("ant", vis = vis, mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=30
     contact=true, contact_body=true)
 obs = reset(env)
 initializeant!(env.mechanism, pos = [1.3,0,0], rot = [0,0,0.])
-env.x .= getMinState(env.mechanism)
+env.x .= get_minimal_state(env.mechanism)
 render(env)
 
 hp = HyperParameters(main_loop_size = 30, horizon = 150, n_directions = 6, b = 6, step_size = 0.02)

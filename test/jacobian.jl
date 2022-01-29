@@ -1,9 +1,9 @@
 function test_solmat(model::Symbol; ϵ::T=1e-6, tsim::T=0.1, ctrl::Any=(m, k)->nothing,
-        timestep::T=0.01, g::T=-9.81, verbose::Bool=false, kwargs...) where T
+        timestep::T=0.01, gravity=[0.0; 0.0; -9.81], verbose::Bool=false, kwargs...) where T
 
     @testset "solmat: $(string(model))" begin
         # mechanism
-        mechanism = getmechanism(model, timestep=timestep, g=g; kwargs...)
+        mechanism = get_mechanism(model, timestep=timestep, gravity=gravity; kwargs...)
         initialize!(mechanism, model)
 
         # simulate
@@ -27,11 +27,11 @@ function test_solmat(model::Symbol; ϵ::T=1e-6, tsim::T=0.1, ctrl::Any=(m, k)->n
 end
 
 function test_datamat(model::Symbol; ϵ::T=1.0e-6, tsim::T=0.1, ctrl::Any=(m,k)->nothing,
-        timestep::T=0.01, g::T=-9.81, verbose::Bool=false, kwargs...) where T
+        timestep::T=0.01, gravity=[0.0; 0.0; -9.81], verbose::Bool=false, kwargs...) where T
 
     @testset "datamat: $(string(model))" begin
         # mechanism
-        mechanism = getmechanism(model, timestep=timestep, g=g; kwargs...)
+        mechanism = get_mechanism(model, timestep=timestep, gravity=gravity; kwargs...)
         initialize!(mechanism, model)
 
         # simulate
@@ -59,12 +59,12 @@ function test_datamat(model::Symbol; ϵ::T=1.0e-6, tsim::T=0.1, ctrl::Any=(m,k)-
 end
 
 function test_sensitivity(model::Symbol; ϵ::T=1.0e-6, tsim::T=0.1, ctrl::Any=(m,k)->nothing,
-        timestep::T=0.01, g::T=-9.81, cf::T=0.8,
+        timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8,
         contact::Bool=true, verbose::Bool=false) where T
 
     @testset "sensitivity: $(string(model))" begin
         # mechanism
-        mechanism = getmechanism(model, timestep=timestep, g=g, cf=cf, contact=contact)
+        mechanism = get_mechanism(model, timestep=timestep, gravity=gravity, cf=cf, contact=contact)
         initialize!(mechanism, model)
 
         # simulate

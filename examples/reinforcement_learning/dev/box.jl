@@ -2,7 +2,7 @@
 # Script
 ################################################################################
 
-env = make("dice", timestep = 0.05, g = -9.81);
+env = make("dice", timestep = 0.05, gravity=-9.81);
 reset(env, x = [0,0,0.2])
 action = nothing
 step(env, action)
@@ -47,9 +47,9 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
-mech = getmechanism(:dice, timestep = 0.01, g = -9.81, cf = 0.2, contact = true, mode=:box, contact_type = :contact)
-# mech = getmechanism(:dice, timestep = 0.01, g = -9.81, cf = 0.2, contact = true, mode=:box, contact_type = :linear_contact)
-# mech = getmechanism(:dice, timestep = 0.01, g = -9.81, contact = true, mode=:box, contact_type = :impact)
+mech = get_mechanism(:dice, timestep = 0.01, gravity=-9.81, cf = 0.2, contact = true, mode=:box, contact_type = :contact)
+# mech = get_mechanism(:dice, timestep = 0.01, gravity=-9.81, cf = 0.2, contact = true, mode=:box, contact_type = :linear_contact)
+# mech = get_mechanism(:dice, timestep = 0.01, gravity=-9.81, contact = true, mode=:box, contact_type = :impact)
 Random.seed!(100)
 ω = 0.0 * (rand(3) .- 0.5) * 1
 x = [0, 0, 1.0]

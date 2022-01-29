@@ -3,12 +3,12 @@
 ################################################################################
 struct Cartpole end
 
-function cartpole(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
+function cartpole(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
     s::Int=1, vis::Visualizer=Visualizer(), info=nothing, name::Symbol=:robot,
     control_scaling=Diagonal(ones(1)),
     opts_step=SolverOptions(), opts_grad=SolverOptions()) where T
 
-    mechanism = getcartpole(timestep=dt, g=g)
+    mechanism = getcartpole(timestep=dt, gravity=gravity)
     initializecartpole!(mechanism)
 
     if mode == :min

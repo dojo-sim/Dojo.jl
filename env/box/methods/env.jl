@@ -3,13 +3,13 @@
 ################################################################################
 struct Block end
 
-function block(; mode::Symbol=:max, dt::T=0.05, g::T=-9.81,
+function block(; mode::Symbol=:max, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
     cf=0.8, side=0.5, contact=true, contact_type=:contact,
     s::Int=1, vis::Visualizer=Visualizer(), info=nothing, name::Symbol=:robot,
     control_scaling=Diagonal(ones(3)),
     opts_step=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5), opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5)) where T
 
-    mechanism = getbox(timestep=dt, g=g, cf=cf, side=side, contact=contact, contact_type=contact_type)
+    mechanism = getbox(timestep=dt, gravity=gravity, cf=cf, side=side, contact=contact, contact_type=contact_type)
     initializebox!(mechanism)
 
     if mode == :min

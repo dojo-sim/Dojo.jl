@@ -1,4 +1,4 @@
-function getbox2d(; timestep::T=0.01, g::T=-9.81, cf::T=0.8, radius=0.0, side=0.5,
+function getbox2d(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, radius=0.0, side=0.5,
     contact::Bool=true,
     contact_type=:contact,
     mode=:box2d)  where T
@@ -31,9 +31,9 @@ function getbox2d(; timestep::T=0.01, g::T=-9.81, cf::T=0.8, radius=0.0, side=0.
         cf = cf * ones(n)
 
         contacts = contact_constraint(body1, normal, cf=cf, p=corners, offset=offset, contact_type=contact_type)
-        mech = Mechanism(origin, bodies, joints, contacts, g=g, timestep=timestep)
+        mech = Mechanism(origin, bodies, joints, contacts, gravity=gravity, timestep=timestep)
     else
-        mech = Mechanism(origin, bodies, joints, g = g, timestep = timestep)
+        mech = Mechanism(origin, bodies, joints, gravity=gravity, timestep=timestep)
     end
     return mech
 end

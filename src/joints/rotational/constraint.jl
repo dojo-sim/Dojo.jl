@@ -3,7 +3,7 @@ mutable struct Rotational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N}
     V12::SMatrix{2,3,T,6} # in body1's frame
     qoffset::UnitQuaternion{T} # in body1's frame
 
-    spring::T
+    spring
     damper::T
     spring_offset::SVector{N̄λ,T}
     joint_limits::Vector{SVector{Nb½,T}} # lower and upper limits on the joint minimal coordinate angles

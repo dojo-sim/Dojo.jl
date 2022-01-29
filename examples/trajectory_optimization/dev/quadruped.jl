@@ -20,7 +20,7 @@ using IterativeLQR
 # System
 gravity = -9.81
 timestep = 0.05
-mech = getmechanism(:quadruped, timestep = timestep, g = gravity, damper = 1.0, spring = 100.0)
+mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, damper = 1.0, spring = 100.0)
 initialize!(mech, :quadruped, v = [0.5, 0, 0])
 # @elapsed storage = simulate!(mech, 0.5, record = true, solver = :mehrotra!, verbose = false)
 # visualize(mech, storage, vis = vis)
@@ -50,12 +50,12 @@ for t = 1:21
 	mass = sum(getfield.(mech.bodies, :m))
 	alt = x_potato[3] - 0.40
 	if t > 13
-		u_potato = -[0, 0, mech.timestep * mass * mech.g + 20*alt + 10*x_potato[6]]
+		u_potato = -[0, 0, mech.timestep * mass * mechanism.gravity + 20*alt + 10*x_potato[6]]
 	else
 		u_potato = U_potato[t]
 	end
 	push!(X_potato, x_potato)
-	x_potato = potato_dynamics(x_potato, u_potato, mech.timestep, mass, mech.g)
+	x_potato = potato_dynamics(x_potato, u_potato, mech.timestep, mass, mechanism.gravity)
 end
 plot()
 plot!([x[1] for x in X_potato], linewidth = 5.0)
@@ -99,13 +99,13 @@ function gravity_compensation(mechanism::Mechanism)
     return u
 end
 
-mech = getmechanism(:quadruped, timestep = timestep, g = gravity, damper = 1000.0, spring = 30.0)
+mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, damper = 1000.0, spring = 30.0)
 initialize!(mech, :quadruped)
 @elapsed storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 ugc = gravity_compensation(mech)
 
-mech = getmechanism(:quadruped, timestep = timestep, g = gravity, damper = 10.0, spring = 30.0)
+mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, damper = 10.0, spring = 30.0)
 
 u_control = ugc[6 .+ (1:12)]
 u_mask = [zeros(12,6) I(m)]

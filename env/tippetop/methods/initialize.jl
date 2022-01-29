@@ -1,4 +1,4 @@
-function gettippetop(; timestep::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=true, contact_type::Symbol=:contact) where T
+function gettippetop(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, contact::Bool=true, contact_type::Symbol=:contact) where T
     origin = Origin{T}(name="origin")
     radius = 0.5
     mass = 1.0
@@ -6,7 +6,7 @@ function gettippetop(; timestep::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=tr
     bodies = [Sphere(radius, mass, name=:sphere1), Sphere(radius*α, mass*α^3, name=:sphere2)]
     joints = [JointConstraint(Floating(origin, bodies[1]), name = :floating_joint),
         JointConstraint(Fixed(bodies[1], bodies[2], p1=[0,0,radius], p2=zeros(3)), name = :fixed_joint),]
-    mechanism = Mechanism(origin, bodies, joints, timestep = timestep, g = g)
+    mechanism = Mechanism(origin, bodies, joints, timestep=timestep, gravity=gravity)
 
     if contact
         contact = [0,0,0.0]
@@ -16,7 +16,7 @@ function gettippetop(; timestep::T=0.01, g::T=-9.81, cf::T=0.8, contact::Bool=tr
             contact_constraint(get_body(mechanism, :sphere2), normal, cf=cf, p=contact, offset=[0,0,radius*α], contact_type=contact_type)
             ]
         set_position(mechanism, get_joint_constraint(mechanism, :floating_joint), [0;0;radius;zeros(3)])
-        mechanism = Mechanism(origin, bodies, joints, contacts, g=g, timestep=timestep)
+        mechanism = Mechanism(origin, bodies, joints, contacts, gravity=gravity, timestep=timestep)
     end
     return mechanism
 end

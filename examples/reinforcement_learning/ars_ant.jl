@@ -8,7 +8,7 @@ env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=25.0, cf = 0.
     contact=true, contact_body=true)
 obs = reset(env)
 initializeant!(env.mechanism, pos = [1.3,0,0], rot = [0,0,0.])
-env.x .= getMinState(env.mechanism)
+env.x .= get_minimal_state(env.mechanism)
 render(env)
 
 env.nx
@@ -126,7 +126,7 @@ open(env.vis)
 
 reset(env)
 render(env)
-x0 = getMinState(env.mechanism)
+x0 = get_minimal_state(env.mechanism)
 
 for i = 1:100
     u = rand(Uniform(-1.0, 1.0), env.nu)

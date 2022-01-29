@@ -1,4 +1,4 @@
-function getpendulum(; timestep::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
+function getpendulum(; timestep::T = 0.01, gravity = -9.81, m::T = 1.0, l::T = 1.0,
         spring = 0.0, damper = 0.0, spring_offset = szeros(1)) where T
     # Parameters
     joint_axis = [1.0; 0; 0]
@@ -11,11 +11,11 @@ function getpendulum(; timestep::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
 
     # Constraints
     joint_between_origin_and_body1 = JointConstraint(Revolute(origin, body1,
-        joint_axis; p2=p2, spring = spring, damper = damper, rotapply_springoffset = spring_offset))
+        joint_axis; p2=p2, spring=spring, damper=damper, rotapply_springoffset = spring_offset))
     bodies = [body1]
     joints = [joint_between_origin_and_body1]
 
-    mech = Mechanism(origin, bodies, joints, g = g, timestep = timestep, spring=spring, damper=damper)
+    mech = Mechanism(origin, bodies, joints, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     return mech
 end
 
@@ -29,8 +29,8 @@ function initializependulum!(mechanism::Mechanism; ϕ1::T = 0.7, ω1::T = 0.0) w
     set_velocity!(mechanism.origin, body, p1 = p1, p2 = p2, Δω = [ω1,0,0])
 end
 
-function getnpendulum(; timestep::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
-        spring::T = 0.0, damper::T = 0.0, Nb::Int = 5,
+function getnpendulum(; timestep::T = 0.01, gravity = -9.81, m::T = 1.0, l::T = 1.0,
+        spring = 0.0, damper::T = 0.0, Nb::Int = 5,
         basetype::Symbol = :Revolute, jointtype::Symbol = :Revolute) where T
     # Parameters
     ex = [1.; 0; 0]
@@ -43,14 +43,14 @@ function getnpendulum(; timestep::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0
     bodies = [Box(r, r, l, m, color = RGBA(1., 0., 0.)) for i = 1:Nb]
 
     # Constraints
-    jointb1 = JointConstraint(Prototype(basetype, origin, bodies[1], ex; p2 = vert11, spring = spring, damper = damper))
+    jointb1 = JointConstraint(Prototype(basetype, origin, bodies[1], ex; p2 = vert11, spring=spring, damper=damper))
     if Nb > 1
-        joints = [JointConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], ex; p1 = vert12, p2 = vert11, spring = spring, damper = damper)) for i = 2:Nb]
+        joints = [JointConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], ex; p1 = vert12, p2 = vert11, spring=spring, damper=damper)) for i = 2:Nb]
         joints = [jointb1; joints]
     else
         joints = [jointb1]
     end
-    mech = Mechanism(origin, bodies, joints, g = g, timestep = timestep)
+    mech = Mechanism(origin, bodies, joints, gravity=gravity, timestep=timestep)
     return mech
 end
 

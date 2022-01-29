@@ -3,13 +3,13 @@
 ################################################################################
 struct RaibertHopper end
 
-function raiberthopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
+function raiberthopper(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
     control_scaling=Diagonal(ones(3)),
     s::Int=1, contact::Bool=true, vis::Visualizer=Visualizer(), name::Symbol=:robot,
     info=nothing,
     opts_step=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5), opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5)) where T
 
-    mechanism = getraiberthopper(timestep=dt, g=g)
+    mechanism = getraiberthopper(timestep=dt, gravity=gravity)
     initializeraiberthopper!(mechanism)
 
     if mode == :min

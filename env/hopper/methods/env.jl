@@ -3,12 +3,12 @@
 ################################################################################
 struct Hopper end
 
-function hopper(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
+function hopper(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
     cf::T=1.0, spring=10.0, damper=50.0,
     s::Int=1, contact::Bool=true, info=nothing, vis::Visualizer=Visualizer(), name::Symbol=:robot,
     opts_step=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5), opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5)) where T
 
-    mechanism = gethopper(timestep=dt, g=g, cf=cf, spring=spring, damper=damper, contact=contact)
+    mechanism = gethopper(timestep=dt, gravity=gravity, cf=cf, spring=spring, damper=damper, contact=contact)
     initializehopper!(mechanism)
 
     if mode == :min
@@ -56,7 +56,7 @@ function reset(env::Environment{Hopper}; x=nothing, reset_noise_scale = 0.005)
     else
         # initialize above the ground to make sure that with random initialization we do not violate the ground constraint.
         initialize!(env.mechanism, :hopper, z = 0.25)
-        x0 = getMinState(env.mechanism)
+        x0 = get_minimal_state(env.mechanism)
         nx = minimal_dimension(env.mechanism)
 
         low = -reset_noise_scale
@@ -65,7 +65,7 @@ function reset(env::Environment{Hopper}; x=nothing, reset_noise_scale = 0.005)
         z = min2max(env.mechanism, x)
         set_state!(env.mechanism, z)
         if env.mode == :min
-            env.x .= getMinState(env.mechanism)
+            env.x .= get_minimal_state(env.mechanism)
         elseif env.mode == :max
             env.x .= get_max_state(env.mechanism)
         end

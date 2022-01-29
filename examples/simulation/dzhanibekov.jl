@@ -11,7 +11,7 @@ open(vis)
 # ## Simulation
 timestep = 0.01
 gravity = 0.0
-mech = getdzhanibekov(timestep=timestep, g=gravity);
+mech = getdzhanibekov(timestep=timestep, gravity=gravity);
 initializedzhanibekov!(mech, ω=[15.0; 0.01; 0.0])
 storage = simulate!(mech, 4.65, record=true, verbose=false)
 

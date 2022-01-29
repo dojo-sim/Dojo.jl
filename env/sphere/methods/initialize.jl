@@ -1,10 +1,10 @@
-function getsphere(; timestep::T=0.01, g::T=-9.81, cf::T=0.8, radius=0.5,
+function getsphere(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, radius=0.5,
         contact::Bool=true, contact_type::Symbol=:contact) where T
     origin = Origin{T}(name=:origin)
     mass = 1.0
     bodies = [Sphere(radius, mass, name=:sphere)]
     joints = [JointConstraint(Floating(origin, bodies[1]), name = :floating_joint)]
-    mechanism = Mechanism(origin, bodies, joints, timestep = timestep, g = g)
+    mechanism = Mechanism(origin, bodies, joints, timestep=timestep, gravity=gravity)
 
     if contact
         contact = [0,0,0.0]
@@ -12,7 +12,7 @@ function getsphere(; timestep::T=0.01, g::T=-9.81, cf::T=0.8, radius=0.5,
         contacts = [contact_constraint(get_body(mechanism, :sphere), normal, cf=cf,
             p=contact, offset=[0,0,radius], contact_type=contact_type)]
         set_position(mechanism, get_joint_constraint(mechanism, :floating_joint), [0;0;radius;zeros(3)])
-        mechanism = Mechanism(origin, bodies, joints, contacts, g=g, timestep=timestep)
+        mechanism = Mechanism(origin, bodies, joints, contacts, gravity=gravity, timestep=timestep)
     end
     return mechanism
 end

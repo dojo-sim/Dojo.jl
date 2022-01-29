@@ -21,7 +21,7 @@ using IterativeLQR
 # System
 gravity = -9.81
 timestep = 0.05
-mech = getmechanism(:quadruped, timestep = timestep, g = gravity, cf = 1.5, damper = 10.0, spring = 0.0)
+mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, cf = 1.5, damper = 10.0, spring = 0.0)
 initialize!(mech, :quadruped, tran = [0,0,0.], v = [0.5,0,0.])
 
 @elapsed storage = simulate!(mech, 0.05, record = true, solver = :mehrotra!, verbose = false)
@@ -63,13 +63,13 @@ function gravity_compensation(mechanism::Mechanism)
     return u
 end
 
-mech = getmechanism(:quadruped, timestep = timestep, g = gravity, cf = 1.5, damper = 1000.0, spring = 30.0)
+mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, cf = 1.5, damper = 1000.0, spring = 30.0)
 initialize!(mech, :quadruped)
 @elapsed storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!, verbose = false)
 visualize(mech, storage, vis = vis)
 ugc = gravity_compensation(mech)
 
-mech = getmechanism(:quadruped, timestep = timestep, g = gravity, cf = 1.5, damper = 5.0, spring = 0.0)
+mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, cf = 1.5, damper = 5.0, spring = 0.0)
 
 u_control = ugc[6 .+ (1:12)]
 u_mask = [zeros(12,6) I(m)]

@@ -11,7 +11,7 @@ open(vis)
 # Include new files
 include( "../utils.jl")
 
-mech = getmechanism(:box2d, timestep=0.05, g=-9.81, cf=0.2, radius = 0.05, side = 0.50);
+mech = get_mechanism(:box2d, timestep=0.05, g=-9.81, cf=0.2, radius = 0.05, side = 0.50);
 initialize!(mech, :box2d, x=[-1,1.], v=[2,1.], θ=0.1, ω=2.)
 storage = simulate!(mech, 5.0, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))

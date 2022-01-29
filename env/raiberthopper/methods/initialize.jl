@@ -1,4 +1,4 @@
-function getraiberthopper(; timestep::T=0.05, g::T=-9.81, spring=0.0, damper=0.1, contact::Bool=true, contact_body::Bool=true) where T
+function getraiberthopper(; timestep::T=0.05, gravity=[0.0; 0.0; -9.81], spring=0.0, damper=0.1, contact::Bool=true, contact_body::Bool=true) where T
     #TODO: make customizable
 
     # Parameters
@@ -39,13 +39,17 @@ function getraiberthopper(; timestep::T=0.05, g::T=-9.81, spring=0.0, damper=0.1
                 p=[0.0; 0.0; 0.0], offset=[0.0; 0.0; body_radius])
             push!(contacts, body_contacts)
         end
-
-        mech = Mechanism(origin, links, joints, contacts, g=g, timestep=timestep, spring=spring, damper=damper)
+        @show gravity
+        @show get_gravity(gravity)
+        mech = Mechanism(origin, links, joints, contacts, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     else
-        mech = Mechanism(origin, links, joints, g=g, timestep=timestep, spring=spring, damper=damper)
+        mech = Mechanism(origin, links, joints, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
     return mech
 end
+
+get_gravity([0.0; 0.0; 1.0])
+getraiberthopper()
 
 function initializeraiberthopper!(mech::Mechanism{T,Nn,Ne,Nb}; leg_length_nominal=0.5, altitude=0.05,
     v = zeros(3), ω = zeros(3)) where {T,Nn,Ne,Nb}

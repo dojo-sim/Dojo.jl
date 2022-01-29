@@ -8,7 +8,7 @@ gravity = -9.81
 env = make("raiberthopper",
     mode=:max,
     dt=dt,
-    g=gravity);
+    gravity=gravity);
 
 env.mechanism.bodies[1].m
 env.mechanism.bodies[2].J
@@ -40,7 +40,7 @@ dyn = IterativeLQR.Dynamics(
 model = [dyn for t = 1:T-1]
 
 # ## rollout
-ū = [[0.0; 0.0; env.mechanism.bodies[1].m * env.mechanism.g * env.mechanism.timestep + 0.0 * randn(1)[1]] for t = 1:T-1]
+ū = [[0.0; 0.0; env.mechanism.bodies[1].m * env.mechanism.gravity * env.mechanism.timestep + 0.0 * randn(1)[1]] for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, z1, ū, w)
 open(env.vis)

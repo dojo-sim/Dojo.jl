@@ -10,12 +10,12 @@ mutable struct Mechanism{T,Nn,Ne,Nb,Ni}
     diagonal_inverses::Vector{Entry}
 
     timestep::T
-    g::T
+    gravity::SVector{3,T}
     μ::T
 end
 
 function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, joints::Vector{<:JointConstraint{T}}, contacts::Vector{<:ContactConstraint{T}};
-    spring=0.0, damper=0.0, timestep::T=0.01, g::T=-9.81) where T
+    spring=0.0, damper=0.0, timestep::T=0.01, gravity=[0.0; 0.0;-9.81]) where T
 
     # reset ids
     resetGlobalID()
@@ -32,16 +32,8 @@ function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, joints::Vector{
     # nodes
     nodes = [joints; bodies; contacts]
 
-    # ids
-    oldnewid = Dict([node.id=>i for (i,node) in enumerate(nodes)]...)
-
-    for node in nodes
-        node.id = oldnewid[node.id]
-        if typeof(node) <: Constraint
-            node.parentid = get(oldnewid, node.parentid, nothing)
-            node.childids = [get(oldnewid, childid, nothing) for childid in node.childids]
-        end
-    end
+    # set ids
+    global_id!(nodes)
 
     # graph system
     system = create_system(origin, joints, bodies, contacts)
@@ -52,7 +44,7 @@ function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, joints::Vector{
     # springs and dampers
     joints = set_spring_damper_values!(joints, spring, damper)
 
-    Mechanism{T,Nn,Ne,Nb,Ni}(origin, joints, bodies, contacts, system, residual_entries, matrix_entries, diagonal_inverses, timestep, g, 0.0)
+    Mechanism{T,Nn,Ne,Nb,Ni}(origin, joints, bodies, contacts, system, residual_entries, matrix_entries, diagonal_inverses, timestep, get_gravity(gravity), 0.0)
 end
 
 Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, joints::Vector{<:JointConstraint{T}}; kwargs...) where T = Mechanism(origin, bodies, joints, ContactConstraint{T}[]; kwargs...)
@@ -70,7 +62,10 @@ function Mechanism(filename::String, floating::Bool=false, T=Float64; kwargs...)
     return mechanism
 end
 
-Base.length(mechanism::Mechanism) =
-    sum(Vector{Int}(length.(mechanism.joints))) +
-    sum(Vector{Int}(length.(mechanism.bodies))) +
-    sum(Vector{Int}(length.(mechanism.contacts)))
+Base.length(mechanism::Mechanism{T,N}) where {T,N} = N
+
+# gravity
+get_gravity(g::T) where T <: Real = SVector{3,T}([0.0; 0.0; g])
+get_gravity(g::Vector{T}) where T = SVector{3,T}(g)
+get_gravity(g::SVector) = g
+

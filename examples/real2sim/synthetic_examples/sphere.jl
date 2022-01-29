@@ -12,7 +12,7 @@ open(vis)
 include(joinpath(module_dir(), "env", "sphere", "deps", "texture.jl"))
 include( "../utils.jl")
 
-mech = getmechanism(:sphere, timestep=0.05, g=-9.81, radius=0.5, cf=0.1);
+mech = get_mechanism(:sphere, timestep=0.05, g=-9.81, radius=0.5, cf=0.1);
 initialize!(mech, :sphere, x=[0,0,0.3], v=[0,0.5,0.], ω=[10,0,0.])
 storage = simulate!(mech, 0.5, record=true, verbose=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6))

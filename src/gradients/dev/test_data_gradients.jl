@@ -9,10 +9,10 @@ open(vis)
 ################################################################################
 
 function test_data_system(model::Symbol; ϵ::T=1.0e-6, tsim::T=0.1, ctrl::Any=(m,k)->nothing,
-        timestep::T=0.01, g::T=-9.81, verbose::Bool=false, kwargs...) where T
+        timestep::T=0.01, gravity=[0.0; 0.0; -9.81], verbose::Bool=false, kwargs...) where T
 
     # mechanism
-    mechanism = getmechanism(model, timestep=timestep, g=g; kwargs...)
+    mechanism = get_mechanism(model, timestep=timestep, gravity=gravity; kwargs...)
     initialize!(mechanism, model)
 
     # simulate

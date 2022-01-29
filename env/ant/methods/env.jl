@@ -3,14 +3,14 @@
 ################################################################################
 struct Ant end
 
-function ant(; mode::Symbol=:min, dt::T=0.05, g::T=-9.81,
-    cf::T=0.5, spring::T=0.0, damper::T=1.0, s::Int=1,
+function ant(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
+    cf::T=0.5, spring=0.0, damper::T=1.0, s::Int=1,
     contact::Bool=true, contact_body=true,
     limits::Bool=true,
     info=nothing, vis::Visualizer=Visualizer(), name::Symbol=:robot,
     opts_step=SolverOptions(), opts_grad=SolverOptions()) where T
 
-    mechanism = getant(timestep=dt, g=g, cf=cf, spring=spring, damper=damper,contact=contact, contact_body=contact_body, limits=limits)
+    mechanism = getant(timestep=dt, gravity=gravity, cf=cf, spring=spring, damper=damper,contact=contact, contact_body=contact_body, limits=limits)
     initializeant!(mechanism)
 
     if mode == :min
@@ -117,7 +117,7 @@ function reset(env::Environment{Ant};
     if x != nothing
         env.x .= x
     else
-        x = getMinState(env.mechanism, pos_noise=pos_noise, vel_noise=vel_noise)
+        x = get_minimal_state(env.mechanism, pos_noise=pos_noise, vel_noise=vel_noise)
         if env.mode == :min
             set_state!(env.mechanism, min2max(env.mechanism, x))
             env.x .= x
@@ -148,7 +148,7 @@ end
 
 # reset(env)
 # render(env)
-# x0 = getMinState(env.mechanism)
+# x0 = get_minimal_state(env.mechanism)
 
 # for i = 1:100
 #     u = 0.0 * rand(Distributions.Uniform(-1.0, 1.0), 8)

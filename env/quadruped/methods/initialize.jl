@@ -1,14 +1,14 @@
-function getquadruped(; timestep::T=0.01, g::T=-9.81, cf::T=0.8, spring=0.0,
+function getquadruped(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, spring=0.0,
     damper=0.0, contact::Bool=true, path=joinpath(@__DIR__, "../deps/quadruped.urdf")) where T
-    mech=Mechanism(path, true, T, g=g, timestep=timestep, spring=spring, damper=damper)
+    mech=Mechanism(path, true, T, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
 
     # Adding springs and dampers
     for (i,joint) in enumerate(collect(mech.joints)[2:end])
         joint.isdamper = true
         joint.isspring = true
         for joint in joint.constraints
-            joint.spring = spring
-            joint.damper = damper
+            joint.spring=spring
+            joint.damper=damper
         end
     end
 
@@ -26,7 +26,7 @@ function getquadruped(; timestep::T=0.01, g::T=-9.81, cf::T=0.8, spring=0.0,
         contacts3 = contact_constraint(get_body(mech,:RR_calf), normal; cf=cf, p=contact, name=:RR_contact)
         contacts4 = contact_constraint(get_body(mech,:RL_calf), normal; cf=cf, p=contact, name=:RL_contact)
         set_position(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [0;0;0.23;0.;0.;0.])
-        mech = Mechanism(origin, bodies, eqs, [contacts1; contacts2; contacts3; contacts4], g=g, timestep=timestep, spring=spring, damper=damper)
+        mech = Mechanism(origin, bodies, eqs, [contacts1; contacts2; contacts3; contacts4], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
     return mech
 end

@@ -1,4 +1,4 @@
-function getwalker2d(; timestep::T=0.01, g::T=-9.81, cf::T=1.9,
+function getwalker2d(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=1.9,
     contact::Bool=true,
     contact_body::Bool=true,
     limits::Bool=true,
@@ -8,7 +8,7 @@ function getwalker2d(; timestep::T=0.01, g::T=-9.81, cf::T=1.9,
                   [150, 150,  45, 150, 150,  45] * π/180]) where T
 
     path = joinpath(@__DIR__, "../deps/walker2d.urdf")
-    mech = Mechanism(path, false, T, g=g, timestep=timestep, spring=spring, damper=damper)
+    mech = Mechanism(path, false, T, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
 
     # joint limits
     joints = deepcopy(mech.joints)
@@ -32,7 +32,7 @@ function getwalker2d(; timestep::T=0.01, g::T=-9.81, cf::T=1.9,
         foot_left = get_joint_constraint(mech, :foot_left)
         joints[foot_left.id] = add_limits(mech, foot_left, rot_limits=[SVector{1}(joint_limits[1][6]), SVector{1}(joint_limits[2][6])])
 
-        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...], g=g, timestep=timestep, spring=spring, damper=damper)
+        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
 
     if contact
@@ -59,7 +59,7 @@ function getwalker2d(; timestep::T=0.01, g::T=-9.81, cf::T=1.9,
             end
         end
         set_position(mech, get_joint_constraint(mech, :floating_joint), [1.25, 0.0, 0.0])
-        mech = Mechanism(origin, bodies, joints, [bounds...], g=g, timestep=timestep, spring=spring, damper=damper)
+        mech = Mechanism(origin, bodies, joints, [bounds...], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
     return mech
 end

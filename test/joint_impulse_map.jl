@@ -2,7 +2,7 @@
 # Test Derivatives
 ################################################################################
 @testset "translational joint: impulse_map" begin
-    mech = getmechanism(:pendulum)
+    mech = get_mechanism(:pendulum)
     joint0 = mech.joints[1]
     tra0 = joint0.constraints[1]
 
@@ -53,7 +53,7 @@
 end
 
 @testset "rotational joint: impulse_map" begin
-    mech = getmechanism(:pendulum)
+    mech = get_mechanism(:pendulum)
     joint0 = mech.joints[1]
     rot0 = joint0.constraints[2]
 

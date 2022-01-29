@@ -11,7 +11,7 @@ env = make("pendulum",
     max_torque=max_torque,
     damper=1.0,
     dt=dt,
-    g=gravity,
+    gravity=gravity,
     vis=vis);
 
 # ## dimensions

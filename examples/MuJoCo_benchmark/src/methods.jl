@@ -1,7 +1,7 @@
 function mj_model(model; timestep=0.01)
     module_dir()
     jm = jlModel(joinpath(module_dir(), "model/$model"))
-    MuJoCo.@set!! jm.opt.timestep = timestep
+    MuJoCo.@set!! jm.opt.timestep=timestep
     jd = jlData(jm)
     mjsim = MJSim(jm, jd)
     return jm, jd, mjsim
