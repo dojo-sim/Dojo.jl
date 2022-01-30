@@ -54,9 +54,12 @@ plot(Gray.(1e0*abs.(datajac0)))
 
 
 # Analytical
-data_system = create_data_system(mech.joints, mech.bodies, mech.contacts);
-jacobian_data!(data_system, mech)
-datajac1 = full_matrix(data_system)
+D = create_data_matrix(mech.joints, mech.bodies, mech.contacts)
+jacobian_data!(D, mech)
+nodes = [mech.joints; mech.bodies; mech.contacts]
+dimrow = length.(nodes)
+dimcol = data_dim.(nodes)
+datajac1 = full_matrix(D, dimrow, dimcol)
 plot(Gray.(1e10 .* abs.(datajac1)))
 plot(Gray.(1e0 .* abs.(datajac1)))
 
@@ -233,24 +236,6 @@ function indirect_link(id1::Int, id2::Int, nodes::Vector{S}) where {S<:Node}
     # @test indirect_link(7,7,mech.joints) == []
 end
 
-function data_matrix(A, dimrow, dimcol; force_static = false, T = Float64)
-    N = length(dimrow)
-    @assert N == length(dimcol)
-
-    static = force_static || (all(dimrow.<=10) && all(dimcol.<=10))
-    matrix_entries = spzeros(Entry,N,N)
-
-    for i = 1:N
-        for j = 1:N
-            @show i,j
-            @show A[i,j]
-            if A[i,j] == 1
-                matrix_entries[i,j] = Entry{T}(dimrow[i], dimcol[j], static = static)
-            end
-        end
-    end
-    return matrix_entries
-end
 
 mech = getpendulum()
 mech = gethalfcheetah()

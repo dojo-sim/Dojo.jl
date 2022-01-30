@@ -14,11 +14,6 @@ function joint_constraint_jacobian_body_data(mechanism::Mechanism, joint::JointC
     return ∇g
 end
 
-function joint_constraint_jacobian_joint_data(mechanism::Mechanism, joint::JointConstraint{T,N}) where {T,N}
-    Nd = data_dim(joint)
-    return szeros(T,N,Nd)
-end
-
 
 function body_constraint_jacobian_body_data(mechanism::Mechanism, body::Body{T}) where T
     Δt = mechanism.timestep
@@ -57,7 +52,7 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, body::Body{T})
            ∇rot_x2 ∇rot_q2]
     # TODO
     # joint constraints impulses contribution
-    ∇z2 += impulse_map_child_jacobian_child(joint, szeros(3), one(UnitQuaternion), current_configuration(body.state))
+    # ∇z2 += impulse_map_child_jacobian_child(joint, szeros(3), one(UnitQuaternion), current_configuration(body.state))
 
     # TODO
     # # constact constraints impulses contribution
@@ -139,72 +134,79 @@ end
 ################################################################################
 # System Data Jacobians
 ################################################################################
-function create_data_matrix(joints::Vector{<:JointConstraint}, bodies::Vector{<:Body},
-        contacts::Vector{<:ContactConstraint})
+function create_data_matrix(joints::Vector{<:JointConstraint}, bodies::Vector{B},
+        contacts::Vector{<:ContactConstraint}; force_static::Bool=false) where {T,B<:Body{T}}
     nodes = [joints; bodies; contacts]
     A = data_adjacency_matrix(joints, bodies, contacts)
     dimrow = length.(nodes)
     dimcol = data_dim.(nodes)
-    D = data_matrix(A, dimrow, dimcol)
-    return D
+
+    N = length(dimrow)
+    static = force_static || (all(dimrow.<=10) && all(dimcol.<=10))
+    data_matrix = spzeros(Entry,N,N)
+
+    for i = 1:N
+        for j = 1:N
+            if A[i,j] == 1
+                data_matrix[i,j] = Entry{T}(dimrow[i], dimcol[j], static = static)
+            end
+        end
+    end
+    return data_matrix
 end
 
-function jacobian_data!(data_system::System, mech::Mechanism)
-    jacobian_contact_data!(data_system, mech::Mechanism)
-    jacobian_body_data!(data_system, mech::Mechanism)
-    jacobian_joint_data!(data_system, mech::Mechanism)
+function jacobian_data!(data_matrix::SparseMatrixCSC, mech::Mechanism)
+    jacobian_contact_data!(data_matrix, mech)
+    jacobian_body_data!(data_matrix, mech)
+    jacobian_joint_data!(data_matrix, mech)
     return nothing
 end
 
-function jacobian_contact_data!(data_system::System, mechanism::Mechanism{T}) where {T}
+function jacobian_contact_data!(data_matrix::SparseMatrixCSC, mechanism::Mechanism{T}) where {T}
     # ∂body∂ineqcdata
     for contact in mechanism.contacts
         pbody = getbody(mechanism, contact.parentid)
-        data_system.matrix_entries[pbody.id, contact.id].value += body_constraint_jacobian_contact_data(mechanism, pbody, contact)
+        data_matrix[pbody.id, contact.id].value += body_constraint_jacobian_contact_data(mechanism, pbody, contact)
     end
     # ∂contact∂contactdata
     for contact in mechanism.contacts
         pbody = get_body(mechanism, contact.parentid)
-        data_system.matrix_entries[contact.id, contact.id].value += contact_constraint_jacobian_contact_data(mechanism, contact, pbody)
+        data_matrix[contact.id, contact.id].value += contact_constraint_jacobian_contact_data(mechanism, contact, pbody)
     end
     return nothing
 end
 
-function jacobian_joint_data!(data_system::System, mechanism::Mechanism{T}) where T
-    # ∂joint∂jointdata
-    for joint in mechanism.joints
-        data_system.matrix_entries[joint.id, joint.id].value += joint_constraint_jacobian_joint_data(mechanism, joint)
-    end
+function jacobian_joint_data!(data_matrix::SparseMatrixCSC, mechanism::Mechanism{T}) where T
     # ∂body∂jointdata
     # TODO adapt this to handle cycles
     for body in mechanism.bodies
         for joint in mechanism.joints
             if (body.id == joint.parentid) || (body.id ∈ joint.childids)
-                data_system.matrix_entries[body.id, joint.id].value += body_constraint_jacobian_joint_data(mechanism, body, joint)
+                data_matrix[body.id, joint.id].value += body_constraint_jacobian_joint_data(mechanism, body, joint)
             end
         end
     end
     return nothing
 end
 
-function jacobian_body_data!(data_system::System, mechanism::Mechanism{T}) where T
+function jacobian_body_data!(data_matrix::SparseMatrixCSC, mechanism::Mechanism{T}) where T
     # ∂joint∂bodydata
     # TODO adapt this to handle cycles
     for body in mechanism.bodies
         for joint in mechanism.joints
             if (body.id == joint.parentid) || (body.id ∈ joint.childids)
-                data_system.matrix_entries[joint.id, body.id].value += joint_constraint_jacobian_body_data(mechanism, joint, body)
+                data_matrix[joint.id, body.id].value += joint_constraint_jacobian_body_data(mechanism, joint, body)
             end
         end
     end
     # ∂body∂bodydata
     for body in mechanism.bodies
-        data_system.matrix_entries[body.id, body.id].value += body_constraint_jacobian_body_data(mechanism, body)
+        data_matrix[body.id, body.id].value += body_constraint_jacobian_body_data(mechanism, body)
     end
     # ∂contact∂bodydata
     for contact in mechanism.contacts
         pbody = get_body(mechanism, contact.parentid)
-        data_system.matrix_entries[contact.id, pbody.id].value += contact_constraint_jacobian_body_data(mechanism, contact, pbody)
+        data_matrix[contact.id, pbody.id].value += contact_constraint_jacobian_body_data(mechanism, contact, pbody)
     end
     return nothing
 end
