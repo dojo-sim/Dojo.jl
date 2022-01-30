@@ -11,19 +11,30 @@
     return
 end
 
-@inline function apply_input(joint::Translational{T}, F::AbstractVector, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
-    vertices = joint.vertices
+@inline function apply_input(joint::Translational{T}, Fτ::AbstractVector,
+        xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
+    # vertices = joint.vertices
+    # Faw = vrotate(-Fτ, qa) # in the world frame
+    # Fbw = -Faw # in the world frame
+    # Faa = vrotate(Faw, inv(qa)) # in local frame
+    # Fbb = vrotate(Fbw, inv(qb)) # in local frame
+    #
+    # pb_a = rotation_matrix(inv(qa)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point in b frame
+    # ca_a = rotation_matrix(inv(qa)) * (xa) # body a com in a frame
+    # ra = pb_a - ca_a
+    # τaa = torque_from_force(Faa, ra) # in local coordinates
+    # τbb = torque_from_force(Fbb, vertices[2]) # in local coordinates
 
-    Faw = vrotate(-F, qa) # in the world frame
-    Fbw = -Faw # in the world frame
-    Faa = vrotate(Faw, inv(qa)) # in local frame
-    Fbb = vrotate(Fbw, inv(qb)) # in local frame
-
-    pb_a = rotation_matrix(inv(qa)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point in b frame
-    ca_a = rotation_matrix(inv(qa)) * (xa) # body a com in a frame
-    ra = pb_a - ca_a
-    τaa = torque_from_force(Faa, ra) # in local coordinates
-    τbb = torque_from_force(Fbb, vertices[2]) # in local coordinates
+    Ta = impulse_transform_parent(joint, xa, qa, xb, qb)
+    Tb = impulse_transform_child(joint, xa, qa, xb, qb)
+    Faw = Ta[1:3,1:3] * Fτ
+    τaa = Ta[4:6,1:3] * Fτ
+    Fbw = Tb[1:3,1:3] * Fτ
+    τbb = Tb[4:6,1:3] * Fτ
+    # @show norm(Faw-Faw0)
+    # @show norm(τaa-τaa0)
+    # @show norm(Fbw-Fbw0)
+    # @show norm(τbb-τbb0)
     return Faw, τaa, Fbw, τbb
 end
 
@@ -36,6 +47,13 @@ end
     BFa = FiniteDiff.finite_difference_jacobian(F -> apply_input(joint, F, xa, qa, xb, qb)[1], joint.Fτ)
     Bτa = 0.5 * FiniteDiff.finite_difference_jacobian(F -> apply_input(joint, F, xa, qa, xb, qb)[2], joint.Fτ)
 
+    # dFaw/dFτ
+    # dτaa/dFτ
+    Ta = impulse_transform_parent(joint, xa, qa, xb, qb)
+    BFa0 = Ta[1:3,1:3]
+    Bτa0 = Ta[4:6,1:3]
+    @show norm(BFa - BFa0)
+    @show norm(Bτa - Bτa0)
     return [BFa; Bτa]
 end
 
