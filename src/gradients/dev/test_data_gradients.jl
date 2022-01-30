@@ -203,3 +203,39 @@ typeof(mech.joints[1]) <: JointConstraint
 
 A = data_adjacency_matrix(mech.joints, mech.bodies, mech.contacts)
 D = create_data_matrix(mech.joints, mech.bodies, mech.contacts)
+
+
+
+mech = getsnake(jointtype=:Cylindrical)
+initialize!(mech, :snake)
+simulate!(mech, 0.3, verbose=false)
+
+joint1 = mech.joints[1]
+joint2 = mech.joints[2]
+body1 = mech.bodies[1]
+body2 = mech.bodies[2]
+x0, q0 = current_configuration(mech.origin.state)
+x1, q1 = current_configuration(body1.state)
+x2, q2 = current_configuration(body2.state)
+
+Fτ1 = SVector{3}(-1,-2,3.0)
+Fτ2 = SVector{3}(1,2,3.0)
+
+apply_input(joint1.constraints[1], Fτ1, x0, q0, x1, q1)
+apply_input(joint2.constraints[1], Fτ2, x1, q1, x2, q2)
+
+input_jacobian_control_parent(joint1.constraints[1], mech.origin.state, body2.state, mech.timestep)
+input_jacobian_control_parent(joint2.constraints[1], body1.state, body2.state, mech.timestep)
+
+input_jacobian_control_child(joint1.constraints[1], mech.origin.state, body2.state, mech.timestep)
+input_jacobian_control_child(joint2.constraints[1], body1.state, body2.state, mech.timestep)
+
+input_jacobian_configuration_parent(joint1.constraints[1], mech.origin.state, body2.state, mech.timestep)
+input_jacobian_configuration_parent(joint2.constraints[1], body1.state, body2.state, mech.timestep)
+
+input_jacobian_configuration_child(joint1.constraints[1], mech.origin.state, body2.state, mech.timestep)
+input_jacobian_configuration_child(joint2.constraints[1], body1.state, body2.state, mech.timestep)
+
+
+apply_input(joint1.constraints[2], Fτ1, x0, q0, x1, q1)
+apply_input(joint2.constraints[2], Fτ2, x1, q1, x2, q2)
