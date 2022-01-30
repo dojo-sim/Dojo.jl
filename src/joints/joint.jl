@@ -192,12 +192,12 @@ end
 
 @inline set_input!(joint::Joint) = return
 
-@inline function add_force!(joint::Joint, Fτ::SVector)
+@inline function add_input!(joint::Joint, Fτ::SVector)
     joint.Fτ += zerodimstaticadjoint(nullspace_mask(joint)) * Fτ
     return
 end
 
-@inline add_force!(joint::Joint) = return
+@inline add_input!(joint::Joint) = return
 
 @inline function input_jacobian_control_parent(joint::Joint, body1::Node, body2::Node, timestep, childid)
     return input_jacobian_control_parent(joint, body1.state, body2.state, timestep) * zerodimstaticadjoint(nullspace_mask(joint))

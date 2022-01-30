@@ -116,10 +116,10 @@ function set_input!(joint::JointConstraint{T,N,Nc}, Fτ::AbstractVector) where {
     return
 end
 
-function add_force!(joint::JointConstraint{T,N,Nc}, Fτ::AbstractVector) where {T,N,Nc}
+function add_input!(joint::JointConstraint{T,N,Nc}, Fτ::AbstractVector) where {T,N,Nc}
     @assert length(Fτ)==control_dimension(joint)
     for i = 1:Nc
-        add_force!(joint.constraints[i], Fτ[SUnitRange(joint.inds[i][1], joint.inds[i][2])])
+        add_input!(joint.constraints[i], Fτ[SUnitRange(joint.inds[i][1], joint.inds[i][2])])
     end
     return
 end
