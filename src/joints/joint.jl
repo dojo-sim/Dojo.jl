@@ -70,30 +70,41 @@ end
 # Derivatives
 ################################################################################
 
-function impulse_map_parent_jacobian_parent(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
+function impulse_map_parent_jacobian_parent(joint::Joint, pbody::Node{T}, cbody::Node{T}, λ) where T
     # ∂(Ga*λ)/∂(xa,qa)
     p = impulse_projector(joint) * λ
-    impulse_transform_parent_jacobian_parent(joint, xa, qa, xb, qb, p)
+    impulse_transform_parent_jacobian_parent(joint,
+        current_configuration(pbody.state)...,
+        current_configuration(cbody.state)...,
+        p)
 end
 
-function impulse_map_parent_jacobian_child(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
+function impulse_map_parent_jacobian_child(joint::Joint, pbody::Node{T}, cbody::Node{T}, λ) where T
     # ∂(Ga*λ)/∂(xb,qb)
     p = impulse_projector(joint) * λ
-    impulse_transform_parent_jacobian_child(joint, xa, qa, xb, qb, p)
+    impulse_transform_parent_jacobian_child(joint,
+        current_configuration(pbody.state)...,
+        current_configuration(cbody.state)...,
+        p)
 end
 
-function impulse_map_child_jacobian_parent(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
+function impulse_map_child_jacobian_parent(joint::Joint, pbody::Node{T}, cbody::Node{T}, λ) where T
     # ∂(Gb*λ)/∂(xa,qa)
     p = impulse_projector(joint) * λ
-    impulse_transform_child_jacobian_parent(joint, xa, qa, xb, qb, p)
+    impulse_transform_child_jacobian_parent(joint,
+        current_configuration(pbody.state)...,
+        current_configuration(cbody.state)...,
+        p)
 end
 
-function impulse_map_child_jacobian_child(joint::Joint, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, λ)
+function impulse_map_child_jacobian_child(joint::Joint, pbody::Node{T}, cbody::Node{T}, λ) where T
     # ∂(Gb*λ)/∂(xb,qb)
     p = impulse_projector(joint) * λ
-    impulse_transform_child_jacobian_child(joint, xa, qa, xb, qb, p)
+    impulse_transform_child_jacobian_child(joint,
+        current_configuration(pbody.state)...,
+        current_configuration(cbody.state)...,
+        p)
 end
-
 
 ## Discrete-time velocity derivatives (for dynamics)
 @inline function constraint_jacobian_parent(joint::Joint, body1::Node, body2::Node, childid, λ, timestep)
