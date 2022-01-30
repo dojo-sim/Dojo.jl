@@ -17,7 +17,6 @@ end
 
 function body_constraint_jacobian_body_data(mechanism::Mechanism, body::Body{T}) where T
     Δt = mechanism.timestep
-    Nd = data_dim(body)
     N = 6
     x1, v15, q1, ϕ15 = previous_configuration_velocity(body.state)
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
@@ -51,8 +50,39 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, body::Body{T})
     ∇z2 = [∇tra_x2 ∇tra_q2;
            ∇rot_x2 ∇rot_q2]
     # TODO
+    # # constact constraints impulses contribution
+    # ∇z2 +=
+    # TODO
+    # # spring and damper impulses contribution
+    # ∇z2 +=
+    @warn "000"
+    return [∇m ∇J ∇15 0.0000000000*∇z2]
+end
+
+function body_constraint_jacobian_body_data(mechanism::Mechanism, bodya::Node{T},
+        bodyb::Node{T}, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
+    # Jacobian of Bodya's dynamics constraints wrt Bodyb's data (x2b, q2b)
+    # this comes from the fact that the Joint Constraint force mapping of Bodya
+    # depends on Bodyb's data (x2b, q2b)
+    # This is the same for spring and damper forces.
+
+    ∇z2_aa = szeros(T,6,6)
+    ∇z2_ab = szeros(T,6,6)
     # joint constraints impulses contribution
-    # ∇z2 += impulse_map_child_jacobian_child(joint, szeros(3), one(UnitQuaternion), current_configuration(body.state))
+    for i = 1:Nc
+        λ = getλJoint(joint, i)
+        if bodyb.id ∈ joint.childids
+            ∇z2_aa += impulse_map_parent_jacobian_parent(joint.constraints[i],
+                bodya, bodyb, λ)
+            ∇z2_ab += impulse_map_parent_jacobian_child(joint.constraints[i],
+                bodya, bodyb, λ)
+        elseif bodya.id ∈ joint.childids
+            ∇z2_aa += impulse_map_child_jacobian_child(joint.constraints[i],
+                bodyb, bodya, λ)
+            ∇z2_ab += impulse_map_child_jacobian_parent(joint.constraints[i],
+                bodyb, bodya, λ)
+        end
+    end
 
     # TODO
     # # constact constraints impulses contribution
@@ -60,7 +90,8 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, body::Body{T})
     # TODO
     # # spring and damper impulses contribution
     # ∇z2 +=
-    return [∇m ∇J ∇15 ∇z2]
+
+    return [szeros(T,6,13) ∇z2_aa], [szeros(T,6,13) ∇z2_ab]
 end
 
 function body_constraint_jacobian_joint_data(mechanism::Mechanism{T}, body::Body{T},
@@ -72,8 +103,8 @@ function body_constraint_jacobian_joint_data(mechanism::Mechanism{T}, body::Body
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, Δt)
     ∇u = Diagonal(SVector{6,T}(1,1,1,2,2,2)) * input_jacobian_control(mechanism, joint, body)
-    ∇spring = szeros(T,6,1)#springforce(mechanism, joint, body, unitary=true)
-    ∇damper = szeros(T,6,1)#damperforce(mechanism, joint, body, unitary=true)
+    ∇spring = apply_spring(mechanism, joint, body, unitary=true)
+    ∇damper = apply_damper(mechanism, joint, body, unitary=true)
     return [∇u ∇spring ∇damper]
 end
 
@@ -134,6 +165,61 @@ end
 ################################################################################
 # System Data Jacobians
 ################################################################################
+function data_adjacency_matrix(joints::Vector{<:JointConstraint}, bodies::Vector{<:Body}, contacts::Vector{<:ContactConstraint})
+    # mode can be variables or data depending on whi
+    nodes = [joints; bodies; contacts]
+    n = length(nodes)
+    A = zeros(Bool, n, n)
+
+    for node1 in nodes
+        for node2 in nodes
+            T1 = typeof(node1)
+            T2 = typeof(node2)
+            if T1 <: Body
+                if T2 <: Body
+                    (node1.id == node2.id) && (A[node1.id, node2.id] = 1) # self loop
+                    linked = length(indirect_link0(node1.id, node2.id, [joints; contacts])) > 0
+                    linked && (A[node1.id, node2.id] = 1) # linked through a common joint
+                elseif T2 <: JointConstraint
+                    (node1.id == node2.parentid || node1.id ∈ node2.childids) && (A[node1.id, node2.id] = 1) # linked
+                elseif T2 <: ContactConstraint
+                    (node1.id == node2.parentid || node1.id ∈ node2.childids) && (A[node1.id, node2.id] = 1) # linked
+                end
+            elseif T1 <: JointConstraint
+                if T2 <: Body
+                    (node2.id == node1.parentid || node2.id ∈ node1.childids) && (A[node1.id, node2.id] = 1) # linked
+                end
+            elseif T1 <: ContactConstraint
+                if T2 <: Body
+                    (node2.id == node1.parentid || node2.id ∈ node1.childids) && (A[node1.id, node2.id] = 1) # linked
+                elseif T2 <: ContactConstraint
+                    (node1.id == node2.id) && (A[node1.id, node2.id] = 1) # self loop
+                end
+            end
+        end
+    end
+    A = convert(Matrix{Int64}, A)
+    return A
+end
+
+function indirect_link0(id1, id2, nodes::Vector{S}) where {S<:Node}
+    ids = zeros(Int, 0)
+    @show "here"
+    for node in nodes
+        parentid = node.parentid
+        (parentid == nothing) && (parentid = 0) #handle the origin's corner case
+        @show parentid
+        linked = (id1 ∈ node.childids) && (id2 == parentid)
+        linked |= (id2 ∈ node.childids) && (id1 == parentid)
+        linked && push!(ids, node.id)
+    end
+    return ids
+    # mech = gethalfcheetah()
+    # @test indirect_link0(8,14,mech.joints) == [2]
+    # @test indirect_link0(14,7,mech.joints) == []
+    # @test indirect_link0(7,7,mech.joints) == []
+end
+
 function create_data_matrix(joints::Vector{<:JointConstraint}, bodies::Vector{B},
         contacts::Vector{<:ContactConstraint}; force_static::Bool=false) where {T,B<:Body{T}}
     nodes = [joints; bodies; contacts]
@@ -200,8 +286,29 @@ function jacobian_body_data!(data_matrix::SparseMatrixCSC, mechanism::Mechanism{
         end
     end
     # ∂body∂bodydata
-    for body in mechanism.bodies
-        data_matrix[body.id, body.id].value += body_constraint_jacobian_body_data(mechanism, body)
+    for body1 in mechanism.bodies
+        data_matrix[body1.id, body1.id].value += body_constraint_jacobian_body_data(mechanism, body1)
+
+        for body2 in [mechanism.bodies; mechanism.origin]
+            joint_links = indirect_link0(body1.id, body2.id, mech.joints)
+            @show body1.id
+            @show body2.id
+            @show joint_links
+            joints = [get_joint_constraint(mech, id) for id in joint_links]
+            for joint in joints
+                ∇11, ∇12 = body_constraint_jacobian_body_data(mechanism, body1, body2, joint)
+                (typeof(body1) <: Body) && (data_matrix[body1.id, body1.id].value += ∇11)
+                @show ∇11
+                (typeof(body1) <: Body && typeof(body2) <: Body) && (data_matrix[body1.id, body2.id].value += ∇12)
+                @show ∇12
+            end
+            # pretty sure this is useless
+            # contact_links = indirect_link0(body1.id, body2.id, mech.contacts)
+            # contacts = [get_joint_constraint(mech, id) for id in contact_links]
+            # for contact in contacts
+                # data_matrix[body1.id, body2.id].value += body_constraint_jacobian_body_data(mechanism, body1, body2, contact)
+            # end
+        end
     end
     # ∂contact∂bodydata
     for contact in mechanism.contacts

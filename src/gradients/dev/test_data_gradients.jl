@@ -36,7 +36,7 @@ include("data.jl")
 include("data_gradients.jl")
 include("finite_difference.jl")
 
-mech = getpendulum(timestep=0.05, damper=0.0, spring=0.0);
+mech = getpendulum(timestep=0.05, damper=1.0, spring=3.0);
 joint0 = mech.joints[1]
 body0 = mech.bodies[1]
 initialize!(mech, :pendulum, ϕ1=0.2, ω1=-0.3)
@@ -56,6 +56,14 @@ plot(Gray.(1e0*abs.(datajac0)))
 # Analytical
 D = create_data_matrix(mech.joints, mech.bodies, mech.contacts)
 jacobian_data!(D, mech)
+
+indirect_link0(0, 2, mech.joints)
+
+joint0 = mech.joints[1]
+λ = getλJoint(joint0, 1)
+impulse_map_parent_jacobian_child(joint0.constraints[1], mech.origin, body0, λ)
+
+
 nodes = [mech.joints; mech.bodies; mech.contacts]
 dimrow = length.(nodes)
 dimcol = data_dim.(nodes)
@@ -101,16 +109,16 @@ impulse_map_child_jacobian_child(joint0.constraints[2], mech.origin, body0, λ20
 
 
 datajac0[6:11,17:19]
+
 datajac1[6:11,17:19]
+
+
 
 
 datajac0[6:11,20:22]
 
 datajac1[6:11,20:22]
 
-
-joint0.id
-body0.id
 
 
 data_system.matrix_entries[joint0.id, joint0.id].value
@@ -183,58 +191,6 @@ plot(log.(10, abs.(sum(full_matrix(data_system), dims=1)[1,:])))
 
 
 full_matrix(data_system)
-
-
-function data_adjacency_matrix(joints::Vector{<:JointConstraint}, bodies::Vector{<:Body}, contacts::Vector{<:ContactConstraint})
-    # mode can be variables or data depending on whi
-    nodes = [joints; bodies; contacts]
-    n = length(nodes)
-    A = zeros(Bool, n, n)
-
-    for node1 in nodes
-        for node2 in nodes
-            T1 = typeof(node1)
-            T2 = typeof(node2)
-            if T1 <: Body
-                if T2 <: Body
-                    (node1.id == node2.id) && (A[node1.id, node2.id] = 1) # self loop
-                    linked = length(indirect_link(node1.id, node2.id, [joints; contacts])) > 0
-                    linked && (A[node1.id, node2.id] = 1) # linked through a common joint
-                elseif T2 <: JointConstraint
-                    (node1.id == node2.parentid || node1.id ∈ node2.childids) && (A[node1.id, node2.id] = 1) # linked
-                elseif T2 <: ContactConstraint
-                    (node1.id == node2.parentid || node1.id ∈ node2.childids) && (A[node1.id, node2.id] = 1) # linked
-                end
-            elseif T1 <: JointConstraint
-                if T2 <: Body
-                    (node2.id == node1.parentid || node2.id ∈ node1.childids) && (A[node1.id, node2.id] = 1) # linked
-                end
-            elseif T1 <: ContactConstraint
-                if T2 <: Body
-                    (node2.id == node1.parentid || node2.id ∈ node1.childids) && (A[node1.id, node2.id] = 1) # linked
-                elseif T2 <: ContactConstraint
-                    (node1.id == node2.id) && (A[node1.id, node2.id] = 1) # self loop
-                end
-            end
-        end
-    end
-    A = convert(Matrix{Int64}, A)
-    return A
-end
-
-function indirect_link(id1::Int, id2::Int, nodes::Vector{S}) where {S<:Node}
-    ids = zeros(Int, 0)
-    for node in nodes
-        linked = (id1 ∈ node.childids) && (id2 == node.parentid)
-        linked |= (id2 ∈ node.childids) && (id1 == node.parentid)
-        linked && push!(ids, node.id)
-    end
-    return ids
-    # mech = gethalfcheetah()
-    # @test indirect_link(8,14,mech.joints) == [2]
-    # @test indirect_link(14,7,mech.joints) == []
-    # @test indirect_link(7,7,mech.joints) == []
-end
 
 
 mech = getpendulum()
