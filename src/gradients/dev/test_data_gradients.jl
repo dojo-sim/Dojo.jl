@@ -36,7 +36,7 @@ include("data.jl")
 include("data_gradients.jl")
 include("finite_difference.jl")
 
-mech = getpendulum(timestep=0.05, damper=1.0, spring=3.0);
+mech = getpendulum(timestep=0.05, damper=3.0, spring=1.0);
 joint0 = mech.joints[1]
 body0 = mech.bodies[1]
 initialize!(mech, :pendulum, ϕ1=0.2, ω1=-0.3)
@@ -56,13 +56,6 @@ plot(Gray.(1e0*abs.(datajac0)))
 # Analytical
 D = create_data_matrix(mech.joints, mech.bodies, mech.contacts)
 jacobian_data!(D, mech)
-
-indirect_link0(0, 2, mech.joints)
-
-joint0 = mech.joints[1]
-λ = getλJoint(joint0, 1)
-impulse_map_parent_jacobian_child(joint0.constraints[1], mech.origin, body0, λ)
-
 
 nodes = [mech.joints; mech.bodies; mech.contacts]
 dimrow = length.(nodes)
@@ -97,9 +90,8 @@ datajac1[6:11,17:19]
 
 datajac0[6:11,20:22]
 datajac1[6:11,20:22]
-typeof(joint0.constraints[1]) <: Joint
-typeof(mech.origin) <: Node
-typeof(body0) <: Node
+
+
 
 λ10 = srand(length(joint0.constraints[1]))
 λ20 = srand(length(joint0.constraints[2]))
@@ -206,20 +198,51 @@ D = create_data_matrix(mech.joints, mech.bodies, mech.contacts)
 
 
 
-mech = getsnake(jointtype=:Cylindrical)
-initialize!(mech, :snake)
-simulate!(mech, 0.3, verbose=false)
+# mech = getsnake(jointtype=:PlanarAxis, spring=2.0, damper=4.0)
+mech = getsnake(jointtype=:Prismatic, spring=0.0, damper=4.0, gravity=0.0)
+initialize!(mech, :snake, v=[0,0,0.], ω=[0,0,0.])
+function ctrl!(mech, k)
+    nu = control_dimension(mech)
+    set_control!(mech, [szeros(6); 0.01sones(nu-6)]*mech.timestep)
+end
+storage = simulate!(mech, 5.3, ctrl!, record=true, verbose=false)
+visualize(mech, storage, vis=vis)
+
 
 joint1 = mech.joints[1]
 joint2 = mech.joints[2]
 body1 = mech.bodies[1]
 body2 = mech.bodies[2]
-x0, q0 = current_configuration(mech.origin.state)
-x1, q1 = current_configuration(body1.state)
-x2, q2 = current_configuration(body2.state)
+x0, v0, q0, ω0 = current_configuration_velocity(mech.origin.state)
+x1, v1, q1, ω1 = current_configuration_velocity(body1.state)
+x2, v2, q2, ω2 = current_configuration_velocity(body2.state)
+
+
 
 Fτ1 = SVector{3}(-1,-2,3.0)
 Fτ2 = SVector{3}(1,2,3.0)
+
+position_error(joint1.constraints[1], x0, q0, x1, q1)
+position_error(joint2.constraints[1], x1, q1, x2, q2)
+spring_parent(joint1.constraints[1], x0, q0, x1, q1, unitary=true)
+spring_parent(joint2.constraints[1], x1, q1, x2, q2)
+
+spring_child(joint1.constraints[1], x0, q0, x1, q1, unitary=true)
+spring_child(joint2.constraints[1], x1, q1, x2, q2)
+
+minimal_velocities(joint1.constraints[1], x0, q0, v0, ω0, x1, q1, v1, ω1)
+minimal_velocities(joint2.constraints[1], x0, q0, v0, ω0, x1, q1, v1, ω1)
+
+damper_force(joint1.constraints[1], x0, q0, v0, ω0, x1, q1, v1, ω1)
+damper_parent(joint1.constraints[1], x0, q0, v0, ω0, x1, q1, v1, ω1, unitary=true)
+damper_parent(joint2.constraints[1], x1, q1, v1, ω1, x2, q2, v2, ω2)
+
+damper_child(joint1.constraints[1], x0, q0, v0, ω0, x1, q1, v1, ω1, unitary=true)
+damper_child(joint2.constraints[1], x1, q1, v1, ω1, x2, q2, v2, ω2)
+
+
+
+
 
 apply_input(joint1.constraints[1], Fτ1, x0, q0, x1, q1)
 apply_input(joint2.constraints[1], Fτ2, x1, q1, x2, q2)

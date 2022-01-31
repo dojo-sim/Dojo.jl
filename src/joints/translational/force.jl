@@ -19,103 +19,107 @@ spring_parent(joint::Translational3{T}, xa::AbstractVector, qa::UnitQuaternion,
 spring_child(joint::Translational3{T}, xa::AbstractVector, qa::UnitQuaternion,
     xb::AbstractVector, qb::UnitQuaternion; rotate::Bool=true, unitary::Bool=false) where T = szeros(T, 6)
 
-@inline function spring_parent(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion,
-        xb::AbstractVector, qb::UnitQuaternion; rotate::Bool=true, unitary::Bool=false) where T
-    # spring = unitary ? 1.0 : joint.spring
-    # A = nullspace_mask(joint)
-    # Aᵀ = zerodimstaticadjoint(A)
-    # distance = A * position_error(joint, xa, qa, xb, qb) .- joint.spring_offset
-    # force = spring * Aᵀ * distance # Currently assumes same spring constant in all directions
-    # forceA = force # in the A frame
-    # rotate && (force = vrotate(force, qa)) # rotate back to world frame
-    # torque = skew(joint.vertices[1]) * forceA
 
+function spring_force(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion,
+            xb::AbstractVector, qb::UnitQuaternion; unitary::Bool=false) where T
     spring = unitary ? 1.0 : joint.spring
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
-    Δmincoord0 = joint.spring_offset .- minimal_coordinates(joint, xa, qa, xb, qb) # in the a frame
-    forceA0 = spring * Aᵀ * Δmincoord0 # in the a frame
-    Fτ0 = impulse_transform_parent(joint, xa, qa, xb, qb) * forceA0
-    # @show norm(Fτ0 - [force; torque], Inf)
+    Δmincoord = joint.spring_offset .- minimal_coordinates(joint, xa, qa, xb, qb) # in the a frame
+    Fτ = spring * Aᵀ * Δmincoord # in the a frame
+    return Fτ
+end
 
-    # return [force; torque]
-    return Fτ0
+@inline function spring_parent(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion,
+        xb::AbstractVector, qb::UnitQuaternion; unitary::Bool=false) where T
+    Fτ = spring_force(joint, xa, qa, xb, qb, unitary=unitary)
+    Fτa = impulse_transform_parent(joint, xa, qa, xb, qb) * Fτ
+    return Fτa
 end
 
 @inline function spring_child(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion,
-        xb::AbstractVector, qb::UnitQuaternion; rotate::Bool=true, unitary::Bool=false) where T
-    spring = unitary ? 1.0 : joint.spring
+        xb::AbstractVector, qb::UnitQuaternion; unitary::Bool=false) where T
+    Fτ = spring_force(joint, xa, qa, xb, qb, unitary=unitary)
+    Fτb = impulse_transform_child(joint, xa, qa, xb, qb) * Fτ
+    return Fτb
+end
+
+
+@inline function minimal_velocities(joint::Translational, xa::AbstractVector,
+        qa::UnitQuaternion, va::AbstractVector, ωa::AbstractVector,
+        xb::AbstractVector, qb::UnitQuaternion, vb::AbstractVector, ωb::AbstractVector)
+    vertices = joint.vertices
+    pbcb_w = vrotate(-vertices[2], qb)
+    pbca_w = xa - (xb + vrotate(vertices[2], qb))
+    # Δvw = V(pb,B/A)w - V(pa,A/A)w
+    Δvw = vb + skew(pbcb_w) * vrotate(ωb, qb) - (va + skew(pbca_w) * vrotate(ωa, qa)) # in world frame
+    Δv = vrotate(Δvw, inv(qa)) # in the a frame
+    return nullspace_mask(joint) * Δv
+end
+
+function damper_force(joint::Translational{T}, xa::AbstractVector,
+        qa::UnitQuaternion, va::AbstractVector, ωa::AbstractVector,
+        xb::AbstractVector, qb::UnitQuaternion, vb::AbstractVector,
+        ωb::AbstractVector; unitary::Bool=false) where T
+    damper = unitary ? 1.0 : joint.damper
+    Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
+    Fτ = damper * Aᵀ * -minimal_velocities(joint, xa, qa, va, ωa, xb, qb, vb, ωb) # in the a frame
+    return Fτ
+end
+
+@inline function damper_parent(joint::Translational{T}, xa::AbstractVector,
+        qa::UnitQuaternion, va::AbstractVector, ωa::AbstractVector,
+        xb::AbstractVector, qb::UnitQuaternion, vb::AbstractVector,
+        ωb::AbstractVector; unitary::Bool=false) where T
+    # damper = unitary ? 1.0 : joint.damper
     # A = nullspace_mask(joint)
     # Aᵀ = zerodimstaticadjoint(A)
-    # distance = A * position_error(joint, xa, qa, xb, qb) .- joint.spring_offset
-    # force = - spring * Aᵀ * distance  # Currently assumes same spring constant in all directions
-    # forceA = force
+
+    # pa_b = rotation_matrix(inv(qb)) * (xa + rotation_matrix(qa) * joint.vertices[1]) # body a kinematics point
+    # cb_b = xb # body b com
+    # rb = pa_b - cb_b
+    # vpb = vb + vrotate(skew(ωb) * rb, qb)
+    # vpa = va + vrotate(skew(ωa) * joint.vertices[1], qa)
+    #
+    # # velocity = A * vrotate(vpb - vpa, inv(qa))
+    # # velocity = A * vrotate(vb - va, inv(qa))
+    # force = damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
+    # forceA = force # in the A frame
     # rotate && (force = vrotate(force, qa)) # rotate back to world frame
     #
+    # torque = skew(joint.vertices[1]) * forceA
+    Fτ = damper_force(joint, xa, qa, va, ωa, xb, qb, vb, ωb) # in the a frame
+    Fτa = impulse_transform_parent(joint, xa, qa, xb, qb) * Fτ
+    return Fτa
+    # return [force; torque]
+end
+
+@inline function damper_child(joint::Translational{T}, xa::AbstractVector,
+        qa::UnitQuaternion, va::AbstractVector, ωa::AbstractVector,
+        xb::AbstractVector, qb::UnitQuaternion, vb::AbstractVector,
+        ωb::AbstractVector; unitary::Bool=false) where T
+    # damper = unitary ? 1.0 : joint.damper
+    # A = nullspace_mask(joint)
+    # Aᵀ = zerodimstaticadjoint(A)
+
+    # pa_b = rotation_matrix(inv(qb)) * (xa + rotation_matrix(qa) * joint.vertices[1]) # body a kinematics point
+    # cb_b = xb # body b com
+    # rb = pa_b - cb_b
+    # vpb = vb + vrotate(skew(ωb) * rb, qb)
+    # vpa = va + vrotate(skew(ωa) * joint.vertices[1], qa)
+
+    # velocity = A * vrotate(vpb - vpa, inv(qa))
+    # velocity = A * vrotate(vb - va, inv(qa))
+    # force = - damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
+    # forceA = force
+    # rotate && (force = vrotate(force, qa)) # rotate back to world frame
     # pa_a = rotation_matrix(inv(qa)) * (xa + rotation_matrix(qa) * joint.vertices[1]) # body a kinematics point
     # cb_a = rotation_matrix(inv(qa)) * (xb) # body b com
     # ra = pa_a - cb_a
     # torque = rotation_matrix(inv(qb) * qa) * skew(ra) * forceA
-
-    spring = unitary ? 1.0 : joint.spring
-    Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
-    Δmincoord0 = joint.spring_offset .- minimal_coordinates(joint, xa, qa, xb, qb) # in the a frame
-    forceA0 = spring * Aᵀ * Δmincoord0 # in the a frame
-    Fτ0 = impulse_transform_child(joint, xa, qa, xb, qb) * forceA0
-    # @show norm(Fτ0 - [force; torque], Inf)
-
+    Fτ = damper_force(joint, xa, qa, va, ωa, xb, qb, vb, ωb) # in the a frame
+    Fτb = impulse_transform_child(joint, xa, qa, xb, qb) * Fτ
+    return Fτb
     # return [force; torque]
-    return Fτ0
-end
-
-@inline function damper_parent(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, va::AbstractVector, ωa::AbstractVector,
-        xb::AbstractVector, qb::UnitQuaternion, vb::AbstractVector, ωb::AbstractVector; rotate::Bool=true, unitary::Bool=false) where T
-    damper = unitary ? 1.0 : joint.damper
-    A = nullspace_mask(joint)
-    Aᵀ = zerodimstaticadjoint(A)
-
-    pa_b = rotation_matrix(inv(qb)) * (xa + rotation_matrix(qa) * joint.vertices[1]) # body a kinematics point
-    cb_b = xb # body b com
-    rb = pa_b - cb_b
-    vpb = vb + vrotate(skew(ωb) * rb, qb)
-    vpa = va + vrotate(skew(ωa) * joint.vertices[1], qa)
-
-    # velocity = A * vrotate(vpb - vpa, inv(qa))
-    velocity = A * vrotate(vb - va, inv(qa))
-    force = damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
-    forceA = force # in the A frame
-    rotate && (force = vrotate(force, qa)) # rotate back to world frame
-
-    torque = skew(joint.vertices[1]) * forceA
-
-
-
-
-    return [force; torque]
-end
-
-@inline function damper_child(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, va::AbstractVector, ωa::AbstractVector,
-        xb::AbstractVector, qb::UnitQuaternion, vb::AbstractVector, ωb::AbstractVector; rotate::Bool=true, unitary::Bool=false) where T
-    damper = unitary ? 1.0 : joint.damper
-    A = nullspace_mask(joint)
-    Aᵀ = zerodimstaticadjoint(A)
-
-    pa_b = rotation_matrix(inv(qb)) * (xa + rotation_matrix(qa) * joint.vertices[1]) # body a kinematics point
-    cb_b = xb # body b com
-    rb = pa_b - cb_b
-    vpb = vb + vrotate(skew(ωb) * rb, qb)
-    vpa = va + vrotate(skew(ωa) * joint.vertices[1], qa)
-
-    # velocity = A * vrotate(vpb - vpa, inv(qa))
-    velocity = A * vrotate(vb - va, inv(qa))
-    force = - damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
-    forceA = force
-    rotate && (force = vrotate(force, qa)) # rotate back to world frame
-
-    pa_a = rotation_matrix(inv(qa)) * (xa + rotation_matrix(qa) * joint.vertices[1]) # body a kinematics point
-    cb_a = rotation_matrix(inv(qa)) * (xb) # body b com
-    ra = pa_a - cb_a
-    torque = rotation_matrix(inv(qb) * qa) * skew(ra) * forceA
-    return [force; torque]
 end
 
 spring_parent_jacobian_configuration_parent(joint::Translational3{T}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
