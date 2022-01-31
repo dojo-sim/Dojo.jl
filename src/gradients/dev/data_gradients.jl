@@ -83,14 +83,14 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, bodya::Node{T}
                 bodyb, bodya, λ)
         end
     end
+    # spring and damper impulses contribution
+
+
 
     # TODO
     # # constact constraints impulses contribution
     # ∇z2 +=
     # TODO
-    # # spring and damper impulses contribution
-    # ∇z2 +=
-
     return [szeros(T,6,13) ∇z2_aa], [szeros(T,6,13) ∇z2_ab]
 end
 
@@ -204,11 +204,9 @@ end
 
 function indirect_link0(id1, id2, nodes::Vector{S}) where {S<:Node}
     ids = zeros(Int, 0)
-    @show "here"
     for node in nodes
         parentid = node.parentid
         (parentid == nothing) && (parentid = 0) #handle the origin's corner case
-        @show parentid
         linked = (id1 ∈ node.childids) && (id2 == parentid)
         linked |= (id2 ∈ node.childids) && (id1 == parentid)
         linked && push!(ids, node.id)
