@@ -20,11 +20,11 @@ function momentum(mechanism::Mechanism{T}, body::Body{T}) where T
 
     α = -1.0
     for (i, joint) in enumerate(mechanism.joints)
-        if body.id ∈ [joint.parentid; joint.childids]
+        if body.id ∈ [joint.parent_id; joint.child_ids]
 
-            f_joint = impulse_map(mechanism, joint, body) * joint.λsol[2]  # computed at 1.5
-            joint.isspring && (f_joint += apply_spring(mechanism, joint, body)) # computed at 1.5
-            joint.isdamper && (f_joint += apply_damper(mechanism, joint, body)) # computed at 1.5
+            f_joint = impulse_map(mechanism, joint, body) * joint.variables[2]  # computed at 1.5
+            joint.spring && (f_joint += apply_spring(mechanism, joint, body)) # computed at 1.5
+            joint.damper && (f_joint += apply_damper(mechanism, joint, body)) # computed at 1.5
 
             p_linear_body += α * 0.5 * f_joint[1:3]
             p_angular_body += α * 0.5 * f_joint[4:6]

@@ -50,7 +50,7 @@ function AtlasIKerror(mechanism::Mechanism, p_base, p_foot, θ; leg::Symbol = :r
 	set_position(mechanism, get_joint_constraint(mechanism, String(leg)*"_leg_akxy"), [θ[1]-θ[2], 0.0])
 
 	foot = get_body(mechanism, String(leg)*"_foot")
-	foot_contacts = mechanism.contacts[findall(x -> x.parentid == foot.id, mechanism.contacts)]
+	foot_contacts = mechanism.contacts[findall(x -> x.parent_id == foot.id, mechanism.contacts)]
 	p = mean([contact_location(contact, foot) for contact in foot_contacts]) # average of all contact locations for one foot
 	err = p - p_foot
 	return err[[1,3]]
@@ -129,7 +129,7 @@ end
 # bodies = collect(mech.bodies)
 # joints = collect(mech.joints)
 # contacts = collect(mech.contacts)
-# getfield.(contacts, :parentid)
+# getfield.(contacts, :parent_id)
 # get_body(mech, 15)
 # nx = minimal_dimension(mech)
 #

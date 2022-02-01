@@ -68,29 +68,29 @@ end
     for connectionid in connections(mechanism.system, body1.id)
         !(connectionid <= Ne) && continue # body
         joint = get_node(mechanism, connectionid)
-        Nc = length(joint.childids)
+        Nc = length(joint.child_ids)
         off = 0
-        if body1.id == joint.parentid
+        if body1.id == joint.parent_id
             for i in 1:Nc
                 element = joint.constraints[i]
                 Nj = length(element)
-                if body2.id == joint.childids[i]
-                    joint.isspring && (dimpulse_map_parentb -= spring_parent_jacobian_velocity_child(element, body1, body2, timestep)) #should be useless
-                    joint.isdamper && (dimpulse_map_parentb -= damper_parent_jacobian_velocity_child(element, body1, body2, timestep))
-                    joint.isspring && (dimpulse_map_childa -= spring_child_configuration_velocity_parent(element, body1, body2, timestep)) #should be useless
-                    joint.isdamper && (dimpulse_map_childa -= damper_child_configuration_velocity_parent(element, body1, body2, timestep))
+                if body2.id == joint.child_ids[i]
+                    joint.spring && (dimpulse_map_parentb -= spring_parent_jacobian_velocity_child(element, body1, body2, timestep)) #should be useless
+                    joint.damper && (dimpulse_map_parentb -= damper_parent_jacobian_velocity_child(element, body1, body2, timestep))
+                    joint.spring && (dimpulse_map_childa -= spring_child_configuration_velocity_parent(element, body1, body2, timestep)) #should be useless
+                    joint.damper && (dimpulse_map_childa -= damper_child_configuration_velocity_parent(element, body1, body2, timestep))
                 end
                 off += Nj
             end
-        elseif body2.id == joint.parentid
+        elseif body2.id == joint.parent_id
             for i = 1:Nc
                 element = joint.constraints[i]
                 Nj = length(element)
-                if body1.id == joint.childids[i]
-                    # joint.isspring && (dimpulse_map_parentb -= spring_parent_jacobian_velocity_child(element, body2, body1, timestep)) #should be useless
-                    joint.isdamper && (dimpulse_map_parentb -= damper_parent_jacobian_velocity_child(element, body2, body1, timestep))
-                    # joint.isspring && (dimpulse_map_childa -= spring_child_configuration_velocity_parent(element, body2, body1, timestep)) #should be useless
-                    joint.isdamper && (dimpulse_map_childa -= damper_child_configuration_velocity_parent(element, body2, body1, timestep))
+                if body1.id == joint.child_ids[i]
+                    # joint.spring && (dimpulse_map_parentb -= spring_parent_jacobian_velocity_child(element, body2, body1, timestep)) #should be useless
+                    joint.damper && (dimpulse_map_parentb -= damper_parent_jacobian_velocity_child(element, body2, body1, timestep))
+                    # joint.spring && (dimpulse_map_childa -= spring_child_configuration_velocity_parent(element, body2, body1, timestep)) #should be useless
+                    joint.damper && (dimpulse_map_childa -= damper_child_configuration_velocity_parent(element, body2, body1, timestep))
                 end
                 off += Nj
             end

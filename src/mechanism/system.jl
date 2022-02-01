@@ -4,7 +4,7 @@ function create_system(origin::Origin{T}, joints::Vector{<:JointConstraint}, bod
     system = System{T}(adjacency, dims, dims)
 
     for joint in joints
-        joint.parentid == origin.id && (joint.parentid = nothing)
+        joint.parent_id == origin.id && (joint.parent_id = nothing)
     end
 
     origin.id = 0
@@ -21,17 +21,17 @@ function adjacency_matrix(joints::Vector{<:JointConstraint}, bodies::Vector{<:Bo
     for node1 in nodes
         for node2 in nodes
             if typeof(node1) <: Constraint
-                node2.id in node1.childids && (A[node1.id, node2.id] = 1)
+                node2.id in node1.child_ids && (A[node1.id, node2.id] = 1)
             elseif typeof(node2) <: Constraint
-                node1.id == node2.parentid && (A[node1.id, node2.id] = 1)
+                node1.id == node2.parent_id && (A[node1.id, node2.id] = 1)
             # TODO these entries linking two bodies should be removed,
             # not sure why this is breaking some of the tests
             elseif typeof(node1) <: Body && typeof(node2) <: Body
                 for joint in joints
-                    if node1.id == joint.parentid && node2.id ∈ joint.childids
+                    if node1.id == joint.parent_id && node2.id ∈ joint.child_ids
                         A[node1.id, node2.id] = 1
                     end
-                    if node2.id == joint.parentid && node1.id ∈ joint.childids
+                    if node2.id == joint.parent_id && node1.id ∈ joint.child_ids
                         A[node2.id, node1.id] = 1
                     end
                 end
@@ -49,8 +49,8 @@ end
 function recursivedirectchildren!(system, id::Integer)
     dirs = copy(children(system, id))
     dirslocal = copy(dirs)
-    for childid in dirslocal
-        append!(dirs, recursivedirectchildren!(system, childid))
+    for child_id in dirslocal
+        append!(dirs, recursivedirectchildren!(system, child_id))
     end
     return dirs
 end
@@ -84,21 +84,21 @@ function dense_system(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
         diagonal = get_entry(system,id,id)
         A[range,range] = diagonal.value
 
-        for childid in system.acyclic_children[id]
-            offdiagonal_L = get_entry(system, id, childid)
-            offdiagonal_U = get_entry(system, childid, id)
-            nc1 = first(rangeDict[childid])
-            nc2 = last(rangeDict[childid])
+        for child_id in system.acyclic_children[id]
+            offdiagonal_L = get_entry(system, id, child_id)
+            offdiagonal_U = get_entry(system, child_id, id)
+            nc1 = first(rangeDict[child_id])
+            nc2 = last(rangeDict[child_id])
 
             A[range,nc1:nc2] = offdiagonal_L.value
             A[nc1:nc2,range] = offdiagonal_U.value
         end
 
-        for childid in system.cyclic_children[id]
-            offdiagonal_L = get_entry(system, id, childid)
-            offdiagonal_U = get_entry(system, childid, id)
-            nc1 = first(rangeDict[childid])
-            nc2 = last(rangeDict[childid])
+        for child_id in system.cyclic_children[id]
+            offdiagonal_L = get_entry(system, id, child_id)
+            offdiagonal_U = get_entry(system, child_id, id)
+            nc1 = first(rangeDict[child_id])
+            nc2 = last(rangeDict[child_id])
 
             A[range, nc1:nc2] = offdiagonal_L.value
             A[nc1:nc2, range] = offdiagonal_U.value

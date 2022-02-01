@@ -106,10 +106,10 @@ function max2min(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) whe
 		c = zeros(Tz,0)
 		v = zeros(Tz,0)
 		for (i,element) in enumerate(joint.constraints)
-			ichild = joint.childids[i] - Ne
+			ichild = joint.child_ids[i] - Ne
 			xb, vb, qb, ϕb = unpackMaxState(z, ichild)
-			if joint.parentid != nothing
-				iparent = joint.parentid - Ne
+			if joint.parent_id != nothing
+				iparent = joint.parent_id - Ne
 				xa, va, qa, ϕa = unpackMaxState(z, iparent)
 			else
 				xa, va, qa, ϕa = current_configuration_velocity(mechanism.origin.state)
@@ -139,13 +139,13 @@ function min2max(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) whe
 		(id > Ne) && continue # only treat joints
 		joint = mechanism.joints[id]
 		n = control_dimension(joint)
-		if joint.parentid != nothing
+		if joint.parent_id != nothing
 			c = x[off .+ (1:n)]; off += n
 			v = x[off .+ (1:n)]; off += n#in body1
 			_set_position(mechanism, joint, c)
 			set_velocity!(mechanism, joint, v)#in body1
 		else
-			@assert length(Set(joint.childids)) == 1 # only one body is linked to the origin
+			@assert length(Set(joint.child_ids)) == 1 # only one body is linked to the origin
 			c = zeros(Tx,0)
 			v = zeros(Tx,0)
 			# we need a special case: when the first link has free rotation wrt the origin
@@ -213,8 +213,8 @@ function get_minimal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni};
 		c = zeros(T,0)
 		v = zeros(T,0)
 		for (i,element) in enumerate(joint.constraints)
-			cbody = get_body(mechanism, joint.childids[i])
-			pbody = get_body(mechanism, joint.parentid)
+			cbody = get_body(mechanism, joint.child_ids[i])
+			pbody = get_body(mechanism, joint.parent_id)
 			# push!(c, minimal_coordinates(joint, pbody, cbody)...)
 			# push!(v, minimal_velocities(joint, pbody, cbody)...)
 			pos = minimal_coordinates(element, pbody, cbody)
@@ -287,8 +287,8 @@ function setSpringOffset!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector
 		(id > Ne) && continue # only treat joints
 		joint = mechanism.joints[id]
 		for (i,element) in enumerate(joint.constraints)
-			cbody = get_body(mechanism, joint.childids[i])
-			pbody = get_body(mechanism, joint.parentid)
+			cbody = get_body(mechanism, joint.child_ids[i])
+			pbody = get_body(mechanism, joint.parent_id)
 			N̄ = 3 - length(joint)
 			joint.spring_offset = x[off .+ (1:N̄)]
 			off += 2N̄
@@ -304,8 +304,8 @@ function gravity_compensation(mechanism::Mechanism)
     off  = 0
     for joint in mechanism.joints
         nu = control_dimension(joint)
-        if joint.parentid != nothing
-            body = get_body(mechanism, joint.parentid)
+        if joint.parent_id != nothing
+            body = get_body(mechanism, joint.parent_id)
             rot = joint.constraints[2]
             A = Matrix(nullspace_mask(rot))
             Fτ = apply_spring(mechanism, joint, body)

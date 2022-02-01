@@ -74,7 +74,7 @@ function get_apply_damper(mechanism::Mechanism{T}) where T
 	nu = control_dimension(mechanism)
 	u = zeros(nu)
 	for joint in joints
-		pbody = get_body(mechanism, joint.parentid)
+		pbody = get_body(mechanism, joint.parent_id)
 		if typeof(pbody) <: Body
 			F = apply_damper(mechanism, joint, pbody)
 			oF = 0
@@ -96,7 +96,7 @@ end
 
 
 # joint0 = env.mechanism.joints.values[1]
-# body0 = get_body(env.mechanism, joint0.parentid)
+# body0 = get_body(env.mechanism, joint0.parent_id)
 # df = apply_damper(mech, joint0, body0)
 # nullspace_mask(joint0.constraints[1])# * df[1:3]
 # nullspace_mask(joint0.constraints[2])# * df[4:6]

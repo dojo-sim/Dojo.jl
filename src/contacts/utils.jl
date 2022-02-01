@@ -7,7 +7,7 @@ end
 function get_sdf(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, storage::Storage{T,N}) where {T,Nn,Ne,Nb,Ni,N}
     d = []
     for contact in mechanism.contacts
-        ibody = get_body(mechanism, contact.parentid).id - Ne
+        ibody = get_body(mechanism, contact.parent_id).id - Ne
         push!(d, [sdf(contact, storage.x[ibody][i], storage.q[ibody][i]) for i = 1:N])
     end
     return d
@@ -18,7 +18,7 @@ function contact_location(mechanism::Mechanism)
 end
 
 function contact_location(mechanism::Mechanism, contact::ContactConstraint)
-    body = mechanism.bodies[findfirst(x -> x.id == contact.parentid, mechanism.bodies)]
+    body = mechanism.bodies[findfirst(x -> x.id == contact.parent_id, mechanism.bodies)]
     return contact_location(contact, body)
 end
 

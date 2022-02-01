@@ -39,8 +39,7 @@ function getraiberthopper(; timestep::T=0.05, gravity=[0.0; 0.0; -9.81], spring=
                 p=[0.0; 0.0; 0.0], offset=[0.0; 0.0; body_radius])
             push!(contacts, body_contacts)
         end
-        @show gravity
-        @show get_gravity(gravity)
+        
         mech = Mechanism(origin, links, joints, contacts, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     else
         mech = Mechanism(origin, links, joints, gravity=gravity, timestep=timestep, spring=spring, damper=damper)

@@ -22,19 +22,19 @@ end
 
 function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{LinearContact{T,N}}}
     bound = contact.constraints[1]
-    body = get_body(mechanism, contact.parentid)
+    body = get_body(mechanism, contact.parent_id)
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, mechanism.timestep)
 
     # transforms the velocities of the origin of the link into velocities along all 4 axes of the friction pyramid
     # vp = V(cp, B / W)_w velocity of the contact point cp, attached to body B wrt world frame, expressed in the world frame.
     vp = v25 + skew(vrotate(ϕ25, q3)) * (vrotate(bound.p, q3) - bound.offset)
-    γ = contact.γsol[2][1]
-    sγ = contact.ssol[2][1]
-    ψ = contact.γsol[2][2]
-    sψ = contact.ssol[2][2]
-    β = contact.γsol[2][@SVector [3,4,5,6]]
-    sβ = contact.ssol[2][@SVector [3,4,5,6]]
+    γ = contact.dual[2][1]
+    sγ = contact.primal[2][1]
+    ψ = contact.dual[2][2]
+    sψ = contact.primal[2][2]
+    β = contact.dual[2][@SVector [3,4,5,6]]
+    sβ = contact.primal[2][@SVector [3,4,5,6]]
     SVector{6,T}(
         bound.ainv3 * (x3 + vrotate(bound.p,q3) - bound.offset) - sγ,
         bound.cf * γ - sum(β) - sψ,
@@ -88,13 +88,13 @@ end
 
 @inline function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
     contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{LinearContact{T,N}},N½}
-    # ∇ssol[γsol .* ssol - μ; g - s] = [diag(γsol); -diag(0,1,1)]
-    # ∇γsol[γsol .* ssol - μ; g - s] = [diag(ssol); -diag(1,0,0)]
-    # (cf γ - ψ) dependent of ψ = γsol[2][1:1]
-    # B(z) * zdot - sβ dependent of sβ = ssol[2][2:end]
+    # ∇primal[dual .* primal - μ; g - s] = [diag(dual); -diag(0,1,1)]
+    # ∇dual[dual .* primal - μ; g - s] = [diag(primal); -diag(1,0,0)]
+    # (cf γ - ψ) dependent of ψ = dual[2][1:1]
+    # B(z) * zdot - sβ dependent of sβ = primal[2][2:end]
     cf = contact.constraints[1].cf
-    γ = contact.γsol[2]
-    s = contact.ssol[2]
+    γ = contact.dual[2]
+    s = contact.primal[2]
 
     ∇s1 = Diagonal(γ) # 6x6
     ∇s2 = Diagonal(-sones(T,6))
@@ -110,7 +110,7 @@ end
     ∇γ = vcat(∇γ1, ∇γ2) # 12x6
     matrix_entry.value = hcat(∇s, ∇γ)
 
-    # [-γsol .* ssol + μ; -g + s]
+    # [-dual .* primal + μ; -g + s]
     vector_entry.value = vcat(-complementarityμ(mechanism, contact), -constraint(mechanism, contact))
     return
 end

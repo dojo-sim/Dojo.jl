@@ -51,7 +51,7 @@ function QuadrupedIKerror(mechanism::Mechanism, p_trunk, p_foot, θ; leg::Symbol
 
 	foot = get_body(mechanism, Symbol(String(leg)*"_calf"))
 	contacts = collect(mechanism.contacts)
-	contact = contacts[findfirst(x -> x.parentid == foot.id, contacts)]
+	contact = contacts[findfirst(x -> x.parent_id == foot.id, contacts)]
 	p = contact_location(contact, foot)
 	err = p - p_foot
 	return err[[1,3]]

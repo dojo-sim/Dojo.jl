@@ -88,8 +88,8 @@ function gravity_compensation(mechanism::Mechanism)
     off  = 0
     for joint in mechanism.joints
         nu = control_dimension(joint)
-        if joint.parentid != nothing
-            body = get_body(mechanism, joint.parentid)
+        if joint.parent_id != nothing
+            body = get_body(mechanism, joint.parent_id)
             rot = joint.constraints[2]
             A = Matrix(nullspace_mask(rot))
             Fτ = apply_spring(mechanism, joint, body)
@@ -290,7 +290,7 @@ function sdfquadruped(mechanism::Mechanism{T}, θ::AbstractVector{T}; leg::Symbo
 
 	foot = get_body(mechanism, String(leg)*"_calf")
 	contacts = collect(mechanism.contacts)
-	contact = contacts[findfirst(x -> x.parentid == foot.id, contacts)]
+	contact = contacts[findfirst(x -> x.parent_id == foot.id, contacts)]
 	p = contact_location(contact, foot)
 	return p[3]
 end

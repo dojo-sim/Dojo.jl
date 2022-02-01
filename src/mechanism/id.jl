@@ -3,8 +3,8 @@ function global_id!(nodes)
     for node in nodes
         node.id = oldnewid[node.id]
         if typeof(node) <: Constraint
-            node.parentid = get(oldnewid, node.parentid, nothing)
-            node.childids = [get(oldnewid, childid, nothing) for childid in node.childids]
+            node.parent_id = get(oldnewid, node.parent_id, nothing)
+            node.child_ids = [get(oldnewid, child_id, nothing) for child_id in node.child_ids]
         end
     end
 end

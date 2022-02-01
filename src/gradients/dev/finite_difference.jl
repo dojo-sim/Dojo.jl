@@ -1,7 +1,7 @@
 function get_solution0(mechanism::Mechanism{T}) where {T}
     sol = T[]
     for (i, joints) in enumerate(mechanism.joints)
-        λ = joints.λsol[2]
+        λ = joints.variables[2]
         push!(sol, λ...)
     end
     for (i, body) in enumerate(mechanism.bodies)
@@ -10,8 +10,8 @@ function get_solution0(mechanism::Mechanism{T}) where {T}
         push!(sol, [v25; ϕ25]...)
     end
     for (i, contacts) in enumerate(mechanism.contacts)
-        s = contacts.ssol[2]
-        γ = contacts.γsol[2]
+        s = contacts.primal[2]
+        γ = contacts.dual[2]
         push!(sol, [s; γ]...)
     end
     return sol
@@ -22,7 +22,7 @@ function set_solution0!(mechanism::Mechanism{T}, sol::AbstractVector) where T
     for (i,joints) in enumerate(mechanism.joints)
         nλ = length(joints)
         λ = sol[off .+ (1:nλ)]; off += nλ
-        joints.λsol[2] = λ
+        joints.variables[2] = λ
     end
     for (i,body) in enumerate(mechanism.bodies)
         nv = 3
@@ -37,8 +37,8 @@ function set_solution0!(mechanism::Mechanism{T}, sol::AbstractVector) where T
         N½ = Int(N/2)
         s = sol[off .+ (1:N½)]; off += N½
         γ = sol[off .+ (1:N½)]; off += N½
-        contacts.ssol[2] = s
-        contacts.γsol[2] = γ
+        contacts.primal[2] = s
+        contacts.dual[2] = γ
     end
     return nothing
 end

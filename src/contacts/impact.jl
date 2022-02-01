@@ -14,9 +14,9 @@ end
 
 function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{ImpactContact{T,N}}}
     bound = contact.constraints[1]
-    body = get_body(mechanism, contact.parentid)
+    body = get_body(mechanism, contact.parent_id)
     x3, q3 = next_configuration(body.state, mechanism.timestep)
-    SVector{1,T}(bound.ainv3 * (x3 + vrotate(bound.p,q3) - bound.offset) - contact.ssol[2][1])
+    SVector{1,T}(bound.ainv3 * (x3 + vrotate(bound.p,q3) - bound.offset) - contact.primal[2][1])
 end
 
 @inline function constraint_jacobian_velocity(bound::ImpactContact, x3::AbstractVector, q3::UnitQuaternion,
@@ -47,16 +47,16 @@ end
 
 @inline function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
     contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{ImpactContact{T,N}},N½}
-    # ∇ssol[γsol .* ssol - μ; g - s] = [diag(γsol); -diag(0,1,1)]
-    # ∇γsol[γsol .* ssol - μ; g - s] = [diag(ssol); -diag(1,0,0)]
-    γ = contact.γsol[2]
-    s = contact.ssol[2]
+    # ∇primal[dual .* primal - μ; g - s] = [diag(dual); -diag(0,1,1)]
+    # ∇dual[dual .* primal - μ; g - s] = [diag(primal); -diag(1,0,0)]
+    γ = contact.dual[2]
+    s = contact.primal[2]
 
     ∇s = hcat(γ, -Diagonal(sones(N½)))
     ∇γ = hcat(s, -Diagonal(szeros(N½)))
     matrix_entry.value = hcat(∇s, ∇γ)
 
-    # [-γsol .* ssol + μ; -g + s]
+    # [-dual .* primal + μ; -g + s]
     vector_entry.value = vcat(-complementarityμ(mechanism, contact), -constraint(mechanism, contact))
     return
 end

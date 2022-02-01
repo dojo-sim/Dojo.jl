@@ -14,18 +14,17 @@ mutable struct NonlinearContact{T,N} <: Contact{T,N}
             1 0 0
             0 1 0
         ]
-
-        new{Float64,8}(cf, Bx, ainv3, p, offset)
+        new{T,8}(cf, Bx, ainv3, p, offset)
     end
 end
 
 function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}}}
     bound = contact.constraints[1]
-    body = get_body(mechanism, contact.parentid)
+    body = get_body(mechanism, contact.parent_id)
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, mechanism.timestep)
 
-    constraint(bound, contact.ssol[2], contact.γsol[2], x3, q3, v25, ϕ25)
+    constraint(bound, contact.primal[2], contact.dual[2], x3, q3, v25, ϕ25)
 end
 
 function constraint(bound::NonlinearContact, s::AbstractVector{T}, γ::AbstractVector{T},
@@ -87,21 +86,21 @@ end
 
 @inline function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
     contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}},N½}
-    # ∇ssol[γsol .* ssol - μ; g - s] = [diag(γsol); -diag(0,1,1)]
-    # ∇γsol[γsol .* ssol - μ; g - s] = [diag(ssol); -diag(1,0,0)]
-    # (cf γ - ψ) dependent of ψ = γsol[2][1:1]
-    # B(z) * zdot - sβ dependent of sβ = ssol[2][2:end]
+    # ∇primal[dual .* primal - μ; g - s] = [diag(dual); -diag(0,1,1)]
+    # ∇dual[dual .* primal - μ; g - s] = [diag(primal); -diag(1,0,0)]
+    # (cf γ - ψ) dependent of ψ = dual[2][1:1]
+    # B(z) * zdot - sβ dependent of sβ = primal[2][2:end]
     cf = contact.constraints[1].cf
-    γ = contact.γsol[2] + 1e-10*neutral_vector(contact.constraints[1]) # TODO need to check this is legit
-    s = contact.ssol[2] + 1e-10*neutral_vector(contact.constraints[1]) # TODO need to check this is legit
+    γ = contact.dual[2] + 1e-10*neutral_vector(contact.constraints[1]) # TODO need to check this is legit
+    s = contact.primal[2] + 1e-10*neutral_vector(contact.constraints[1]) # TODO need to check this is legit
 
-    # ∇s = [contact.γsol[2][1] szeros(1,3); szeros(3,1) cone_product_jacobian(contact.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])]
+    # ∇s = [contact.dual[2][1] szeros(1,3); szeros(3,1) cone_product_jacobian(contact.dual[2][2:4]); Diagonal([-1, 0, -1, -1])]
     ∇s1 = [γ[SA[1]]; szeros(T,3)]'
     ∇s2 = [szeros(T,3,1) cone_product_jacobian(γ[SA[2,3,4]])]
     ∇s3 = Diagonal(SVector{4,T}(-1, 0, -1, -1))
     ∇s = [∇s1; ∇s2; ∇s3]
 
-    # ∇γ = [contact.ssol[2][1] szeros(1,3); szeros(3,1) cone_product_jacobian(contact.ssol[2][2:4]); szeros(1,4); cf -1 0 0; szeros(2,4)]
+    # ∇γ = [contact.primal[2][1] szeros(1,3); szeros(3,1) cone_product_jacobian(contact.primal[2][2:4]); szeros(1,4); cf -1 0 0; szeros(2,4)]
     ∇γ1 = [s[SA[1]]; szeros(T,3)]'
     ∇γ2 = [szeros(T,3,1) cone_product_jacobian(s[SA[2,3,4]])]
     ∇γ3 = SA[0   0 0 0;
@@ -110,18 +109,18 @@ end
              0   0 0 0;]
     ∇γ = [∇γ1; ∇γ2; ∇γ3]
 
-    # matrix_entry.value = [[contact.γsol[2][1] szeros(1,3); szeros(3,1) cone_product_jacobian(contact.γsol[2][2:4]); Diagonal([-1, 0, -1, -1])] [contact.ssol[2][1] szeros(1,3); szeros(3,1) cone_product_jacobian(contact.ssol[2][2:4]); szeros(1,4); cf -1 0 0; szeros(2,4)]]
+    # matrix_entry.value = [[contact.dual[2][1] szeros(1,3); szeros(3,1) cone_product_jacobian(contact.dual[2][2:4]); Diagonal([-1, 0, -1, -1])] [contact.primal[2][1] szeros(1,3); szeros(3,1) cone_product_jacobian(contact.primal[2][2:4]); szeros(1,4); cf -1 0 0; szeros(2,4)]]
     matrix_entry.value = [∇s ∇γ]
 
-    # [-γsol .* ssol + μ; -g + s]
+    # [-dual .* primal + μ; -g + s]
     vector_entry.value = vcat(-complementarityμ(mechanism, contact), -constraint(mechanism, contact))
     return
 end
 
 function complementarity(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½};
         scaling::Bool = false) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}},N½}
-    γ = contact.γsol[2]
-    s = contact.ssol[2]
+    γ = contact.dual[2]
+    s = contact.primal[2]
     return vcat(γ[1] * s[1], cone_product(γ[@SVector [2,3,4]], s[@SVector [2,3,4]]))
 end
 

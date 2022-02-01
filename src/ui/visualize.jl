@@ -116,7 +116,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N};
 
         if show_contact
             for (jd, contact) in enumerate(mechanism.contacts)
-                if contact.parentid == body.id
+                if contact.parent_id == body.id
                     contact_shape = Sphere(abs(1.0 * contact.constraints[1].offset[3]),
                         xoffset=(contact.constraints[1].p),
                         qoffset=one(UnitQuaternion), color=RGBA(1.0, 0.0, 0.0, 1.0))

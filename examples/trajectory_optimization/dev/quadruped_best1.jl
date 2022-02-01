@@ -48,8 +48,8 @@ function gravity_compensation(mechanism::Mechanism)
     off  = 0
     for joint in mechanism.joints
         nu = control_dimension(joint)
-        if joint.parentid != nothing
-            body = get_body(mechanism, joint.parentid)
+        if joint.parent_id != nothing
+            body = get_body(mechanism, joint.parent_id)
             rot = joint.constraints[2]
             A = Matrix(nullspace_mask(rot))
             Fτ = apply_spring(mechanism, joint, body)

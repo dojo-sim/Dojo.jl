@@ -342,7 +342,7 @@ function parse_loop_joints(xloopjoints, origin, joints, ldict, T)
         body2 = ldict[attribute(xbody2, "link")]
 
         predlist = Tuple{Int64,Int64}[]
-        jointlist = [(joints[i].id,joints[i].parentid,joints[i].childids) for i=1:length(joints)]
+        jointlist = [(joints[i].id,joints[i].parent_id,joints[i].child_ids) for i=1:length(joints)]
         linkid = body1.id
 
         while true # create list of predecessor joints and parent links for body1
@@ -359,7 +359,7 @@ function parse_loop_joints(xloopjoints, origin, joints, ldict, T)
             end
         end
 
-        jointlist = [(joints[i].id,joints[i].parentid,joints[i].childids) for i=1:length(joints)]
+        jointlist = [(joints[i].id,joints[i].parent_id,joints[i].child_ids) for i=1:length(joints)]
         linkid = body2.id
         joint1id = 0
         joint2id = 0
@@ -450,11 +450,11 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         qbodylocal = body.state.q2[1]
         shape = body.shape
 
-        parentid = get_parentid(mechanism, id, loopjoints)
-        constraint = get_joint_constraint(mechanism, parentid)
+        parent_id = get_parent_id(mechanism, id, loopjoints)
+        constraint = get_joint_constraint(mechanism, parent_id)
 
-        grandparentid = constraint.parentid
-        if grandparentid === nothing # predecessor is origin
+        grandparent_id = constraint.parent_id
+        if grandparent_id === nothing # predecessor is origin
             parentbody = mechanism.origin
 
             xparentbody = SA{T}[0; 0; 0]
@@ -463,10 +463,10 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
             xparentjoint = SA{T}[0; 0; 0]
             qparentjoint = one(UnitQuaternion{T})
         else
-            parentbody = get_body(mechanism, grandparentid)
+            parentbody = get_body(mechanism, grandparent_id)
 
-            grandgrandparentid = get_parentid(mechanism, grandparentid, loopjoints)
-            parentconstraint = get_joint_constraint(mechanism, grandgrandparentid)
+            grandgrandparent_id = get_parent_id(mechanism, grandparent_id, loopjoints)
+            parentconstraint = get_joint_constraint(mechanism, grandgrandparent_id)
 
             xparentbody = parentbody.state.x2[1] # in world frame
             qparentbody = parentbody.state.q2[1] # in world frame
@@ -475,7 +475,7 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
             qparentjoint = qjointlist[parentconstraint.id] # in world frame
         end
 
-        ind1 = findfirst(x->x==id,constraint.childids)
+        ind1 = findfirst(x->x==id,constraint.child_ids)
         ind2 = ind1+1
 
         # urdf joint's x and q in parent's (parentbody) frame
@@ -515,11 +515,11 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         end
     end
     for (i,constraint) in enumerate(loopjoints)
-        @assert length(constraint.childids) == 2 # Loop joint connects only two bodies
+        @assert length(constraint.child_ids) == 2 # Loop joint connects only two bodies
 
-        parentid1 = constraint.parentid
-        parentid2 = constraint.childids[1]
-        if parentid1 === nothing # predecessor is origin
+        parent_id1 = constraint.parent_id
+        parent_id2 = constraint.child_ids[1]
+        if parent_id1 === nothing # predecessor is origin
             parentbody1 = mechanism.origin
 
             xparentbody1 = SA{T}[0; 0; 0]
@@ -528,10 +528,10 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
             xparentjoint1 = SA{T}[0; 0; 0]
             qparentjoint1 = one(UnitQuaternion{T})
         else
-            parentbody1 = get_body(mechanism, parentid1)
+            parentbody1 = get_body(mechanism, parent_id1)
 
-            grandparentid1 = get_parentid(mechanism, parentid1, loopjoints)
-            parentconstraint1 = get_joint_constraint(mechanism, grandparentid1)
+            grandparent_id1 = get_parent_id(mechanism, parent_id1, loopjoints)
+            parentconstraint1 = get_joint_constraint(mechanism, grandparent_id1)
 
             xparentbody1 = parentbody1.state.x2[1] # in world frame
             qparentbody1 = parentbody1.state.q2[1] # in world frame
@@ -539,10 +539,10 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
             xparentjoint1 = xjointlist[parentconstraint1.id] # in world frame
             qparentjoint1 = qjointlist[parentconstraint1.id] # in world frame
         end
-        parentbody2 = get_body(mechanism, parentid2)
+        parentbody2 = get_body(mechanism, parent_id2)
 
-        grandparentid2 = get_parentid(mechanism, parentid2, loopjoints)
-        parentconstraint2 = get_joint_constraint(mechanism, grandparentid2)
+        grandparent_id2 = get_parent_id(mechanism, parent_id2, loopjoints)
+        parentconstraint2 = get_joint_constraint(mechanism, grandparent_id2)
 
         xparentbody2 = parentbody2.state.x2[1] # in world frame
         qparentbody2 = parentbody2.state.q2[1] # in world frame
@@ -575,12 +575,12 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
     end
 end
 
-function get_parentid(mechanism, id, loopjoints)
+function get_parent_id(mechanism, id, loopjoints)
     system = mechanism.system
     conns = connections(system, id)
     for connsid in conns
         constraint = get_joint_constraint(mechanism, connsid)
-        if constraint ∉ loopjoints && id ∈ constraint.childids
+        if constraint ∉ loopjoints && id ∈ constraint.child_ids
             return connsid
         end
     end

@@ -98,20 +98,20 @@ function solver_status(mechanism::Mechanism, α, rvio, bvio, n, μtarget, underc
 end
 
 function initial_state!(contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
-    initialize_positive_orthant!(contact.γsol[1], contact.ssol[1])
-    initialize_positive_orthant!(contact.γsol[2], contact.ssol[2])
+    initialize_positive_orthant!(contact.dual[1], contact.primal[1])
+    initialize_positive_orthant!(contact.dual[2], contact.primal[2])
     return nothing
 end
 
 function initial_state!(contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}}}
-	γort, sort = initialize_positive_orthant!(contact.γsol[1][1:1], contact.ssol[1][1:1])
-	γsoc, ssoc = initialize_second_order_cone!(contact.γsol[1][2:4], contact.ssol[1][2:4])
-	contact.γsol[1] = [γort; γsoc]
-	contact.ssol[1] = [sort; ssoc]
-	γort, sort = initialize_positive_orthant!(contact.γsol[2][1:1], contact.ssol[2][1:1])
-	γsoc, ssoc = initialize_second_order_cone!(contact.γsol[2][2:4], contact.ssol[2][2:4])
-	contact.γsol[2] = [γort; γsoc]
-	contact.ssol[2] = [sort; ssoc]
+	γort, sort = initialize_positive_orthant!(contact.dual[1][1:1], contact.primal[1][1:1])
+	γsoc, ssoc = initialize_second_order_cone!(contact.dual[1][2:4], contact.primal[1][2:4])
+	contact.dual[1] = [γort; γsoc]
+	contact.primal[1] = [sort; ssoc]
+	γort, sort = initialize_positive_orthant!(contact.dual[2][1:1], contact.primal[2][1:1])
+	γsoc, ssoc = initialize_second_order_cone!(contact.dual[2][2:4], contact.primal[2][2:4])
+	contact.dual[2] = [γort; γsoc]
+	contact.primal[2] = [sort; ssoc]
     return nothing
 end
 

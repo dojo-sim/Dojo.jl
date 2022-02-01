@@ -1,26 +1,31 @@
 mutable struct ContactConstraint{T,N,Nc,Cs,N½} <: Constraint{T,N}
+    # ID
     id::Int64
     name::Symbol
 
-    # Currently only single constraint and child
-    constraints::Cs # can be of type
-    parentid::Int64
-    childids::SVector{1,Union{Int64,Nothing}}
-    ssol::Vector{SVector{N½,T}} # holds the slack variable
-    γsol::Vector{SVector{N½,T}} # holds the dual of the slack variable
+    # currently only single constraint and child
+    constraints::Cs
+
+    # neighbor IDs
+    parent_id::Int64
+    child_ids::SVector{1,Union{Int64,Nothing}}
+
+    # variables
+    primal::Vector{SVector{N½,T}} # holds the slack variable
+    dual::Vector{SVector{N½,T}} # holds the dual of the slack variable
 
     function ContactConstraint(data; name::Symbol=Symbol("contact_" * randstring(4)))
-        bound, parentid, childid = data
+        bound, parent_id, child_id = data
         T = getT(bound)
 
-        childids = [childid]
+        child_ids = [child_id]
         constraint = Tuple([bound])
         N = length(constraint[1])
         N½ = Int64(N/2)
 
-        ssol = [neutral_vector(bound) for i = 1:2]
-        γsol = [neutral_vector(bound) for i = 1:2]
-        new{T,N,1,typeof(constraint),N½}(getGlobalID(), name, constraint, parentid, childids, ssol, γsol)
+        primal = [neutral_vector(bound) for i = 1:2]
+        dual = [neutral_vector(bound) for i = 1:2]
+        new{T,N,1,typeof(constraint),N½}(getGlobalID(), name, constraint, parent_id, child_ids, primal, dual)
     end
 end
 
@@ -33,7 +38,7 @@ function impulse_map(mechanism, contact::ContactConstraint, body::Body)
 end
 
 @inline function impulses!(mechanism, body::Body, contact::ContactConstraint)
-    body.state.d -= impulse_map(mechanism, contact, body)' * contact.γsol[2]
+    body.state.d -= impulse_map(mechanism, contact, body)' * contact.dual[2]
     return
 end
 
@@ -48,7 +53,7 @@ end
         offset = bnd.offset
 
         X = force_mapping(bnd)
-        λ = X' * contact.γsol[2]
+        λ = X' * contact.dual[2]
 
         ∇ = ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * λ) * -∂vrotate∂q(offset, inv(q3)) * Tmat()
         ∇ += skew(p - vrotate(offset, inv(q3))) * ∂qVRmat(LᵀVᵀmat(q3) * λ)
@@ -65,10 +70,10 @@ end
 end
 
 function reset!(contact::ContactConstraint{T,N,Nc,Cs,N½}; scale::T=1.0) where {T,N,Nc,Cs,N½}
-    contact.ssol[1] = scale * neutral_vector(contact.constraints[1])
-    contact.ssol[2] = scale * neutral_vector(contact.constraints[1])
-    contact.γsol[1] = scale * neutral_vector(contact.constraints[1])
-    contact.γsol[2] = scale * neutral_vector(contact.constraints[1])
+    contact.primal[1] = scale * neutral_vector(contact.constraints[1])
+    contact.primal[2] = scale * neutral_vector(contact.constraints[1])
+    contact.dual[1] = scale * neutral_vector(contact.constraints[1])
+    contact.dual[2] = scale * neutral_vector(contact.constraints[1])
     return
 end
 

@@ -20,7 +20,7 @@ end
 function complementarity(mechanism, joint::JointConstraint{T,N,Nc,Cs}; scaling::Bool = false) where {T,N,Nc,Cs}
     c = []
     for (i, element) in enumerate(joint.constraints)
-        λi = joint.λsol[2][λindex(joint, i)]
+        λi = joint.variables[2][λindex(joint, i)]
         si, γi = get_sγ(element, λi)
         push!(c, si .* γi)
     end
@@ -44,8 +44,8 @@ end
 function feasibility_linesearch!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
         vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}},N½}
 
-    s = contact.ssol[2]
-    γ = contact.γsol[2]
+    s = contact.primal[2]
+    γ = contact.dual[2]
     Δs = vector_entry.value[1:N½]
     Δγ = vector_entry.value[N½ .+ (1:N½)]
     αs_ort = positive_orthant_step_length(s[1:1], Δs[1:1], τ = τort)
@@ -58,8 +58,8 @@ end
 
 function feasibility_linesearch!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
         vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc,Cs<:Tuple{Union{ImpactContact{T,N},LinearContact{T,N}}},N½}
-    s = contact.ssol[2]
-    γ = contact.γsol[2]
+    s = contact.primal[2]
+    γ = contact.dual[2]
     Δs = vector_entry.value[1:N½]
     Δγ = vector_entry.value[N½ .+ (1:N½)]
 
@@ -74,7 +74,7 @@ function feasibility_linesearch!(α, mechanism, joint::JointConstraint{T,N,Nc,Cs
         vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc,Cs}
 
     for (i, element) in enumerate(joint.constraints)
-        s, γ = get_sγ(element, joint.λsol[2][λindex(joint,i)])
+        s, γ = get_sγ(element, joint.variables[2][λindex(joint,i)])
         Δs, Δγ = get_sγ(element,  vector_entry.value[λindex(joint,i)])
 
         αs_ort = positive_orthant_step_length(s, Δs, τ = τort)
@@ -105,8 +105,8 @@ function centering!(mechanism::Mechanism, αaff::T) where T
 end
 
 function centering!(ν, νaff, n, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}, vector_entry::Entry, αaff) where {T,N,Nc,Cs,N½}
-    s = contact.ssol[2]
-    γ = contact.γsol[2]
+    s = contact.primal[2]
+    γ = contact.dual[2]
     Δs = vector_entry.value[1:N½]
     Δγ = vector_entry.value[N½ .+ (1:N½)]
     ν += dot(s, γ)
@@ -117,7 +117,7 @@ end
 
 function centering!(ν, νaff, n, mechanism, joint::JointConstraint{T,N,Nc,Cs}, vector_entry::Entry, αaff) where {T,N,Nc,Cs}
     for (i, element) in enumerate(joint.constraints)
-        s, γ = get_sγ(element, joint.λsol[2][λindex(joint,i)])
+        s, γ = get_sγ(element, joint.variables[2][λindex(joint,i)])
         Δs, Δγ = get_sγ(element, vector_entry.value[λindex(joint,i)])
         ν += dot(s, γ)
         νaff += dot(s + αaff * Δs, γ + αaff * Δγ) # plus or minus
@@ -162,15 +162,15 @@ function set_entries!(mechanism::Mechanism)
     system = mechanism.system
 
     for id in reverse(system.dfs_list)
-        for childid in system.cyclic_children[id]
-            zero_LU!(get_entry(system, id, childid), get_entry(system, childid, id))
+        for child_id in system.cyclic_children[id]
+            zero_LU!(get_entry(system, id, child_id), get_entry(system, child_id, id))
         end
 
         node = get_node(mechanism, id)
         set_matrix_vector_entries!(mechanism, get_entry(system, id, id), get_entry(system, id), node)
 
-        for childid in children(system,id)
-            set_LU!(mechanism, get_entry(system, id, childid), get_entry(system, childid, id), node, get_node(mechanism, childid))
+        for child_id in children(system,id)
+            set_LU!(mechanism, get_entry(system, id, child_id), get_entry(system, child_id, id), node, get_node(mechanism, child_id))
         end
     end
     return
@@ -183,13 +183,13 @@ end
 end
 
 @inline function update_solution!(joint::JointConstraint)
-    joint.λsol[1] = joint.λsol[2]
+    joint.variables[1] = joint.variables[2]
     return
 end
 
 @inline function update_solution!(contact::ContactConstraint)
-    contact.ssol[1] = contact.ssol[2]
-    contact.γsol[1] = contact.γsol[2]
+    contact.primal[1] = contact.primal[2]
+    contact.dual[1] = contact.dual[2]
     return
 end
 

@@ -6,8 +6,8 @@ function getatlas(; timestep::T = 0.01, gravity = -9.81, cf::T = 0.8, spring = 0
 
     # Adding springs and dampers
     for (i,joint) in enumerate(collect(mech.joints)[2:end])
-        joint.isdamper = true
-        joint.isspring = true
+        joint.damper = true
+        joint.spring = true
         for joint in joint.constraints
             joint.spring=spring
             joint.damper=damper

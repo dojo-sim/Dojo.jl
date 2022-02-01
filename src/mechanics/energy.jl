@@ -60,19 +60,19 @@ function potential_energy(mechanism::Mechanism{T,Nn,Ne,Nb}, storage::Storage{T,N
 
     # Springs
     for (i,joint) in enumerate(mechanism.joints)
-        if joint.isspring
+        if joint.spring
             for (j,element) in enumerate(joint.constraints)
                 # Child
-                childid = joint.childids[j]
-                xb = storage.x[childid - Ne][t] # TODO this is sketchy way to get the correct index
-                qb = storage.q[childid - Ne][t] # TODO this is sketchy way to get the correct index
+                child_id = joint.child_ids[j]
+                xb = storage.x[child_id - Ne][t] # TODO this is sketchy way to get the correct index
+                qb = storage.q[child_id - Ne][t] # TODO this is sketchy way to get the correct index
                 
                 # Parent
-                parentid = joint.parentid
+                parent_id = joint.parent_id
 
-                if parentid != nothing
-                    xa = storage.x[parentid - Ne][t] # TODO this is sketchy way to get the correct index
-                    qa = storage.q[parentid - Ne][t] # TODO this is sketchy way to get the correct index
+                if parent_id != nothing
+                    xa = storage.x[parent_id - Ne][t] # TODO this is sketchy way to get the correct index
+                    qa = storage.q[parent_id - Ne][t] # TODO this is sketchy way to get the correct index
                 else 
                     xa, qa = current_configuration(mechanism.origin.state) 
                 end

@@ -97,11 +97,11 @@ function ∂g∂simdata(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where 
     bound = contact.constraints[1]
 	p = bound.p
 	offset = bound.offset
-    body = get_body(mechanism, contact.parentid)
+    body = get_body(mechanism, contact.parent_id)
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, mechanism.timestep)
-	s = contact.ssol[2]
-	γ = contact.γsol[2]
+	s = contact.primal[2]
+	γ = contact.dual[2]
 
 	# Contribution to Injointonstraint
 	∇cf = SA[0,γ[1],0,0]
