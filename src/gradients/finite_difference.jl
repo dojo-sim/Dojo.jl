@@ -30,8 +30,8 @@ function set_data!(mechanism::Mechanism, data::AbstractVector)
         end
     end
 
-    for c in mechanism.joints 
-        apply_input!(c, mechanism, false) 
+    for c in mechanism.joints
+        apply_input!(c, mechanism, false)
     end
     return nothing
 end

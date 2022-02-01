@@ -3,22 +3,15 @@
     _, qa = current_configuration(statea)
     _, qb = current_configuration(stateb)
 
-    τa = vrotate(-τ, qa) # in world coordinates
-    τb = -τa # in world coordinates
-
-    τa = vrotate(τa,inv(qa)) # in local coordinates
-    τb = vrotate(τb,inv(qb)) # in local coordinates
-
-    statea.τ2[end] += τa
-    stateb.τ2[end] += τb
+    statea.τ2[end] += -τ
+    stateb.τ2[end] += vrotate(vrotate(τ, qa),inv(qb))
     clear && (joint.Fτ = szeros(T,3))
     return
 end
 
 @inline function input_jacobian_control_parent(joint::Rotational{T}, statea::State, stateb::State, timestep::T) where T
-    BFa = (szeros(T, 3, 3))
+    BFa = szeros(T, 3, 3)
     Bτa = -I
-
     return [BFa; Bτa]
 end
 
@@ -27,9 +20,8 @@ end
     _, qb = current_configuration(stateb)
     qbinvqa = qb \ qa
 
-    BFb = (szeros(T, 3, 3))
-    Bτb = VLmat(qbinvqa) * RᵀVᵀmat(qbinvqa)
-
+    BFb = szeros(T, 3, 3)
+    Bτb = rotation_matrix(inv(qb)) * rotation_matrix(qa)
     return [BFb; Bτb]
 end
 
@@ -45,8 +37,7 @@ end
     FbXa = szeros(T,3,3)
     FbQa = szeros(T,3,4)
     τbXa = szeros(T,3,3)
-    τbQa = 2*VLᵀmat(qb)*Rmat(qb)*Rᵀmat(qa)*Rmat(UnitQuaternion(τ))#*LVᵀmat(qa)
-
+    τbQa = rotation_matrix(inv(qb)) * ∂qrotation_matrix(qa, τ)#*LVᵀmat(qa)
     return FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa
 end
 
@@ -62,7 +53,10 @@ end
     FbXb = szeros(T,3,3)
     FbQb = szeros(T,3,4)
     τbXb = szeros(T,3,3)
-    τbQb = 2*VLᵀmat(qb)*Lmat(qa)*Lmat(UnitQuaternion(τ))*Lᵀmat(qa)#*LVᵀmat(qb)
-
+    τbQb = ∂qrotation_matrix_inv(qb, rotation_matrix(qa)*τ)#*LVᵀmat(qb)
     return FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb
 end
+
+
+
+# TODO remove timestep from this script

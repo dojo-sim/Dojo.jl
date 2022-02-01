@@ -8,8 +8,8 @@ data_dim(mechanism::Mechanism; attjac::Bool=true) =
 	sum(Vector{Int64}(data_dim.(mechanism.contacts)))
 # Joints
 data_dim(joint::JointConstraint) = 2 + sum(data_dim.(joint.constraints)) # [utra, urot, spring, damper]
-data_dim(joint::Rotational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = N̄λ # [u, spring, damper]
-data_dim(joint::Translational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = N̄λ # [u, spring, damper]
+data_dim(joint::Translational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = N̄λ # [utra]
+data_dim(joint::Rotational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = N̄λ # [urot]
 # Body
 data_dim(body::Body; attjac::Bool=true) = attjac ? 19 : 20 # 1+6+6+6 or 1+6+6+7 [m,flat(J),v15,ϕ15,x2,q2] with attjac
 # Contact
@@ -51,10 +51,10 @@ end
 # Get Data
 ################################################################################
 # Mechanism
-get_data(mechanism::Mechanism) = vcat([get_data.(mechanism.joints);
-	get_data.(mechanism.bodies); get_data.(mechanism.contacts)]...)
+get_data0(mechanism::Mechanism) = vcat([get_data0.(mechanism.joints);
+	get_data0.(mechanism.bodies); get_data0.(mechanism.contacts)]...)
 # Joints
-function get_data(joint::JointConstraint)
+function get_data0(joint::JointConstraint)
 	joints = joint.constraints
 	u = vcat(nullspace_mask.(joints) .* getfield.(joints, :Fτ)...)
 	spring = joints[1].spring # assumes we have the same spring and dampers for translational and rotational joint.
@@ -62,7 +62,7 @@ function get_data(joint::JointConstraint)
 	return [u; spring; damper]
 end
 # Body
-function get_data(body::Body)
+function get_data0(body::Body)
 	m = body.mass
 	j = flatten_inertia(body.inertia)
 	v15 = body.state.v15
@@ -71,32 +71,32 @@ function get_data(body::Body)
 	return [m; j; v15; ϕ15; x2; vector(q2)]
 end
 # Contacts
-get_data(bound::NonlinearContact) = [bound.cf; bound.offset; bound.p]
-get_data(bound::LinearContact) = [bound.cf; bound.offset; bound.p]
-get_data(bound::ImpactContact) = [bound.offset; bound.p]
-get_data(contact::ContactConstraint) = vcat(get_data.(contact.constraints)...)
+get_data0(bound::NonlinearContact) = [bound.cf; bound.offset; bound.p]
+get_data0(bound::LinearContact) = [bound.cf; bound.offset; bound.p]
+get_data0(bound::ImpactContact) = [bound.offset; bound.p]
+get_data0(contact::ContactConstraint) = vcat(get_data0.(contact.constraints)...)
 
 
 ################################################################################
 # Set Data
 ################################################################################
 # Mechanism
-function set_data!(mechanism::Mechanism, data::AbstractVector)
+function set_data0!(mechanism::Mechanism, data::AbstractVector)
 	# It's important to treat bodies before eqcs
-	# set_data!(body) will erase state.F2[1] and state.τ2[1]
-	# set_data!(eqc) using applyFτ!, will write in state.F2[1] and state.τ2[1]
+	# set_data0!(body) will erase state.F2[1] and state.τ2[1]
+	# set_data0!(eqc) using applyFτ!, will write in state.F2[1] and state.τ2[1]
 	c = 0
 	for joint in mechanism.joints
 		Nd = data_dim(joint)
-		set_data!(joint, data[c .+ (1:Nd)]); c += Nd
+		set_data0!(joint, data[c .+ (1:Nd)]); c += Nd
 	end
 	for body in mechanism.bodies
 		Nd = data_dim(body, attjac=false)
-		set_data!(body, data[c .+ (1:Nd)], mechanism.timestep); c += Nd
+		set_data0!(body, data[c .+ (1:Nd)], mechanism.timestep); c += Nd
 	end
 	for contact in mechanism.contacts
 		Nd = data_dim(contact)
-		set_data!(contact, data[c .+ (1:Nd)]); c += Nd
+		set_data0!(contact, data[c .+ (1:Nd)]); c += Nd
 	end
 	for joint in mechanism.joints
 		apply_input!(joint, mechanism, false)
@@ -104,7 +104,7 @@ function set_data!(mechanism::Mechanism, data::AbstractVector)
 	return nothing
 end
  # Joints
-function set_data!(joint::JointConstraint, data::AbstractVector)
+function set_data0!(joint::JointConstraint, data::AbstractVector)
 	nu = control_dimension(joint)
 	u = data[SUnitRange(1,nu)]
 	spring = data[nu+1]
@@ -118,7 +118,7 @@ function set_data!(joint::JointConstraint, data::AbstractVector)
 	return nothing
 end
 # Body
-function set_data!(body::Body, data::AbstractVector, timestep)
+function set_data0!(body::Body, data::AbstractVector, timestep)
 	# [m,flat(J),x2,v15,q2,ϕ15]
 	m = data[1]
 	J = lift_inertia(data[SUnitRange(2,7)])
@@ -142,28 +142,28 @@ function set_data!(body::Body, data::AbstractVector, timestep)
 	return nothing
 end
 # Contact
-function set_data!(bound::NonlinearContact, data::AbstractVector)
+function set_data0!(bound::NonlinearContact, data::AbstractVector)
 	bound.cf = data[1]
     bound.offset = data[SVector{3,Int}(2:4)]
     bound.p = data[SVector{3,Int}(5:7)]
     return nothing
 end
-function set_data!(bound::LinearContact, data::AbstractVector)
+function set_data0!(bound::LinearContact, data::AbstractVector)
 	bound.cf = data[1]
     bound.offset = data[SVector{3,Int}(2:4)]
     bound.p = data[SVector{3,Int}(5:7)]
     return nothing
 end
-function set_data!(bound::ImpactContact, data::AbstractVector)
+function set_data0!(bound::ImpactContact, data::AbstractVector)
     bound.offset = data[SVector{3,Int}(1:3)]
     bound.p = data[SVector{3,Int}(4:6)]
     return nothing
 end
-function set_data!(contact::ContactConstraint, data::AbstractVector)
+function set_data0!(contact::ContactConstraint, data::AbstractVector)
     c = 0
 	for bound in contact.constraints
 		N = data_dim(bound)
-        set_data!(bound, data[c .+ (1:N)]); c += N
+        set_data0!(bound, data[c .+ (1:N)]); c += N
     end
     return nothing
 end

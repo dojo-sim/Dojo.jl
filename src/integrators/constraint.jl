@@ -2,9 +2,9 @@
     state = body.state
     timestep = mechanism.timestep
 
-    mass = body.mass 
+    mass = body.mass
     inertia = body.inertia
-    gravity = mechanism.gravity 
+    gravity = mechanism.gravity
 
     x1, q1 = previous_configuration(state)
     x2, q2 = current_configuration(state)
@@ -36,8 +36,8 @@ end
 @inline function constraint_jacobian_configuration(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn,Ne,Nb}
     state = body.state
     timestep = mechanism.timestep
-    mass = body.mass 
-    inertia = body.inertia 
+    mass = body.mass
+    inertia = body.inertia
 
     # x1, q1 = previous_configuration(state)
     x2, q2 = current_configuration(state)
@@ -70,4 +70,11 @@ end
     state = body.state
     x2, v25, q2, ϕ25 = current_configuration_velocity(state)
     integrator_jacobian_velocity(q2, ϕ25, timestep)
+end
+
+function integrator_jacobian_configuration(body::Body{T},
+        timestep; attjac::Bool=true) where T
+    state = body.state
+    x2, v25, q2, ϕ25 = current_configuration_velocity(state)
+    integrator_jacobian_configuration(q2, ϕ25, timestep; attjac=attjac)
 end

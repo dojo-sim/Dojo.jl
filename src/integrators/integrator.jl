@@ -85,18 +85,25 @@ end
 end
 
 function integrator_jacobian_velocity(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, timestep::T) where T
-    Δ = timestep * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
-    V = [Δ szeros(T,3,3)]
-    Ω = [szeros(T,4,3) Lmat(q2)*quaternion_map_jacobian(ϕ25, timestep) * timestep/2]
+    V = [∂integrator∂v(timestep) szeros(T,3,3)]
+    Ω = [szeros(T,4,3) ∂integrator∂ϕ(q2, ϕ25, timestep)]
     return [V; Ω] # 7x6
 end
 
-function ∂integrator∂x()
-    return I(3)
+function integrator_jacobian_configuration(q2::UnitQuaternion{T}, ϕ25::SVector{3,T},
+        timestep::T; attjac::Bool=true) where T
+    Z = attjac ? szeros(T,3,3) : szeros(T,3,4)
+    X = [∂integrator∂x() Z]
+    Q = [szeros(T,4,3) ∂integrator∂q(q2, ϕ25, timestep; attjac=attjac)]
+    return [X; Q] # 7x6 or 7x7
+end
+
+function ∂integrator∂x(; T=Float64)
+    return SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
 end
 
 function ∂integrator∂v(timestep::T) where T
-    return timestep * I(3)
+    return timestep * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
 end
 
 function ∂integrator∂q(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, timestep::T; attjac::Bool = true) where T

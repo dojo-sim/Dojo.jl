@@ -36,7 +36,7 @@ include("data.jl")
 include("data_gradients.jl")
 include("finite_difference.jl")
 
-mech = getpendulum(timestep=0.05, damper=0.0, spring=0.0);
+mech = getpendulum(timestep=0.05, damper=3.0, spring=1.0);
 joint0 = mech.joints[1]
 body0 = mech.bodies[1]
 initialize!(mech, :pendulum, ϕ1=0.2, ω1=-0.3)
@@ -44,19 +44,23 @@ simulate!(mech, 0.30, verbose=false)
 
 # Finite Difference
 Nd = data_dim(mech, attjac=false)
-data0 = get_data(mech)# + 0.05*rand(Nd)
-sol0 = get_solution(mech)
+data0 = get_data0(mech)# + 0.05*rand(Nd)
+sol0 = get_solution0(mech)
 datajac0 = finitediff_data_jacobian(mech, data0, sol0)
 attjac0 = data_attitude_jacobian(mech)
 datajac0 *= attjac0
 plot(Gray.(1e10*abs.(datajac0)))
 plot(Gray.(1e0*abs.(datajac0)))
 
+
 # Analytical
-data_system = create_data_system(mech.eqconstraints.values,
-    mech.bodies.values, mech.ineqconstraints.values);
-∂data!(data_system, mech)
-datajac1 = full_matrix(data_system)
+D = create_data_matrix(mech.joints, mech.bodies, mech.contacts)
+jacobian_data!(D, mech)
+
+nodes = [mech.joints; mech.bodies; mech.contacts]
+dimrow = length.(nodes)
+dimcol = data_dim.(nodes)
+datajac1 = full_matrix(D, dimrow, dimcol)
 plot(Gray.(1e10 .* abs.(datajac1)))
 plot(Gray.(1e0 .* abs.(datajac1)))
 
@@ -84,14 +88,29 @@ norm((datajac0 - datajac1)[6:11,20:22], Inf)
 datajac0[6:11,17:19]
 datajac1[6:11,17:19]
 
+datajac0[6:11,20:22]
+datajac1[6:11,20:22]
+
+
+
+λ10 = srand(length(joint0.constraints[1]))
+λ20 = srand(length(joint0.constraints[2]))
+impulse_map_child_jacobian_child(joint0.constraints[1], mech.origin, body0, λ10)
+impulse_map_child_jacobian_child(joint0.constraints[2], mech.origin, body0, λ20)
+
+
+
+datajac0[6:11,17:19]
+
+datajac1[6:11,17:19]
+
+
+
 
 datajac0[6:11,20:22]
 
 datajac1[6:11,20:22]
 
-
-joint0.id
-body0.id
 
 
 data_system.matrix_entries[joint0.id, joint0.id].value
@@ -161,4 +180,85 @@ plot(Gray.(1e10 .* abs.(full_matrix(data_system))))
 plot(log.(10, abs.(sum(full_matrix(data_system), dims=1)[1,:])))
 
 
+
+
 full_matrix(data_system)
+
+
+mech = getpendulum()
+mech = gethalfcheetah()
+A = data_adjacency_matrix(mech.joints, mech.bodies, mech.contacts)
+sum(A)
+plot(Gray.(A))
+typeof(mech.joints[1]) <: JointConstraint
+typeof(mech.joints[1]) <: JointConstraint
+
+A = data_adjacency_matrix(mech.joints, mech.bodies, mech.contacts)
+D = create_data_matrix(mech.joints, mech.bodies, mech.contacts)
+
+
+
+# mech = getsnake(jointtype=:PlanarAxis, spring=2.0, damper=4.0)
+mech = getsnake(jointtype=:Prismatic, spring=0.0, damper=4.0, gravity=0.0)
+initialize!(mech, :snake, v=[0,0,0.], ω=[0,0,0.])
+function ctrl!(mech, k)
+    nu = control_dimension(mech)
+    set_control!(mech, [szeros(6); 0.01sones(nu-6)]*mech.timestep)
+end
+storage = simulate!(mech, 5.3, ctrl!, record=true, verbose=false)
+visualize(mech, storage, vis=vis)
+
+
+joint1 = mech.joints[1]
+joint2 = mech.joints[2]
+body1 = mech.bodies[1]
+body2 = mech.bodies[2]
+x0, v0, q0, ω0 = current_configuration_velocity(mech.origin.state)
+x1, v1, q1, ω1 = current_configuration_velocity(body1.state)
+x2, v2, q2, ω2 = current_configuration_velocity(body2.state)
+
+
+
+Fτ1 = SVector{3}(-1,-2,3.0)
+Fτ2 = SVector{3}(1,2,3.0)
+
+position_error(joint1.constraints[1], x0, q0, x1, q1)
+position_error(joint2.constraints[1], x1, q1, x2, q2)
+spring_parent(joint1.constraints[1], x0, q0, x1, q1, unitary=true)
+spring_parent(joint2.constraints[1], x1, q1, x2, q2)
+
+spring_child(joint1.constraints[1], x0, q0, x1, q1, unitary=true)
+spring_child(joint2.constraints[1], x1, q1, x2, q2)
+
+minimal_velocities(joint1.constraints[1], x0, q0, v0, ω0, x1, q1, v1, ω1)
+minimal_velocities(joint2.constraints[1], x0, q0, v0, ω0, x1, q1, v1, ω1)
+
+damper_force(joint1.constraints[1], x0, q0, v0, ω0, x1, q1, v1, ω1)
+damper_parent(joint1.constraints[1], x0, q0, v0, ω0, x1, q1, v1, ω1, unitary=true)
+damper_parent(joint2.constraints[1], x1, q1, v1, ω1, x2, q2, v2, ω2)
+
+damper_child(joint1.constraints[1], x0, q0, v0, ω0, x1, q1, v1, ω1, unitary=true)
+damper_child(joint2.constraints[1], x1, q1, v1, ω1, x2, q2, v2, ω2)
+
+
+
+
+
+apply_input(joint1.constraints[1], Fτ1, x0, q0, x1, q1)
+apply_input(joint2.constraints[1], Fτ2, x1, q1, x2, q2)
+
+input_jacobian_control_parent(joint1.constraints[1], mech.origin.state, body2.state, mech.timestep)
+input_jacobian_control_parent(joint2.constraints[1], body1.state, body2.state, mech.timestep)
+
+input_jacobian_control_child(joint1.constraints[1], mech.origin.state, body2.state, mech.timestep)
+input_jacobian_control_child(joint2.constraints[1], body1.state, body2.state, mech.timestep)
+
+input_jacobian_configuration_parent(joint1.constraints[1], mech.origin.state, body2.state, mech.timestep)
+input_jacobian_configuration_parent(joint2.constraints[1], body1.state, body2.state, mech.timestep)
+
+input_jacobian_configuration_child(joint1.constraints[1], mech.origin.state, body2.state, mech.timestep)
+input_jacobian_configuration_child(joint2.constraints[1], body1.state, body2.state, mech.timestep)
+
+
+apply_input(joint1.constraints[2], Fτ1, x0, q0, x1, q1)
+apply_input(joint2.constraints[2], Fτ2, x1, q1, x2, q2)

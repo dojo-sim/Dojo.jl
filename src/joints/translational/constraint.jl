@@ -32,9 +32,11 @@ Translational1{T} = Translational{T,1} where T
 Translational2{T} = Translational{T,2} where T
 Translational3{T} = Translational{T,3} where T
 
-@inline function position_error(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+@inline function position_error(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; rotate::Bool = true)
     vertices = joint.vertices
-    return vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
+    d = xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)) # in the world frame
+    rotate && (d = vrotate(d, inv(qa))) # in the a frame
+    return d
 end
 
 @inline function constraint(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
@@ -75,7 +77,8 @@ end
 # Impulse Transform
 ################################################################################
 
-function impulse_transform_parent(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
+function impulse_transform_parent(joint::Translational{T}, xa::AbstractVector,
+        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
     X = -1.0 * rotation_matrix(qa)
     # pb_a = rotation_matrix(inv(qa)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
     # ca_a = rotation_matrix(inv(qa)) * (xa) # body a com
@@ -87,7 +90,8 @@ function impulse_transform_parent(joint::Translational{T}, xa::AbstractVector, q
     return [X; Q]
 end
 
-function impulse_transform_child(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
+function impulse_transform_child(joint::Translational{T}, xa::AbstractVector,
+        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
     X = rotation_matrix(qa)
     # pb_b = rotation_matrix(inv(qb)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
     # cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
