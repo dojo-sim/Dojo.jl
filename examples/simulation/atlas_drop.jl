@@ -5,11 +5,9 @@ vis = Visualizer()
 open(vis)
 
 # ## Mechanism
-# mech = get_mechanism(:atlas, timestep=0.01, g=-9.81, cf=0.5, damper=100.0, spring=1.0, contact=true)
-mech = get_mechanism(:atlas, timestep=0.001, g=-9.81, cf=0.5, damper=100.0, spring=1.0, contact=true)
+# mech = get_mechanism(:atlas, timestep=0.01, gravity=-9.81, cf=0.5, damper=100.0, spring=1.0, contact=true)
+mech = get_mechanism(:atlas, timestep=0.01, gravity=-9.81, cf=0.5, damper=100.0, spring=1.0, contact=true)
 
-@show length(mech.bodies) * 13
-@show control_dimension(mech)
 
 # ## Simulate
 initializeatlasstance!(mech, tran=[0,0,0.5], rot=[0.0,0.0,0.0])
@@ -37,3 +35,9 @@ MeshCat.setanimation!(vis, anim)
 set_camera!(vis, cam_pos=[3,-0,0], zoom=0.84)
 
 set_floor!(vis, x=0.2, y=10, z=0.02, color=RGBA(0,0,0,1))
+
+# ## HMTL scene
+render_static(vis)
+open(joinpath(@__DIR__, "atlas_drop.html"), "w") do file
+    write(file, static_html(vis))
+end
