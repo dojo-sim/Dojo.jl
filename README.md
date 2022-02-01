@@ -22,16 +22,25 @@ A differentiable contact-dynamics simulator for robotics.
 ### Dzhanibekov effect
 <img src="examples/animations/dzhanibekov.gif" width="150"/>
 
+### Tippe top
+<img src="examples/animations/tippetop.gif" width="150"/>
+
 ## Trajectory Optimization 
 
-### Cart-pole 
-<img src="examples/animations/cartpole_max.gif" width="200"/>
+### Box 
+<p>
+<img src="examples/animations/box_right.gif" width="200"/>
+<img src="examples/animations/box_up.gif" width="115"/>
+</p>
 
 ### Hopper 
 <img src="examples/animations/hopper_max.gif" width="100"/>
 
 ### Quadruped 
 <img src="examples/animations/quadruped_min.gif" width="200"/>
+
+### Cart-pole 
+<img src="examples/animations/cartpole_max.gif" width="200"/>
 
 ## Reinforcement Learning 
 

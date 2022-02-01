@@ -1,12 +1,16 @@
 function gettippetop(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, contact::Bool=true, contact_type::Symbol=:contact) where T
-    origin = Origin{T}(name="origin")
+    origin = Origin{T}(name=:origin)
     radius = 0.5
     mass = 1.0
     α = 0.2
-    bodies = [Sphere(radius, mass, name=:sphere1), Sphere(radius*α, mass*α^3, name=:sphere2)]
+    bodies = [Sphere(radius, mass, name=:sphere1, color=cyan), Sphere(radius*α, mass*α, name=:sphere2, color=cyan)]
     joints = [JointConstraint(Floating(origin, bodies[1]), name = :floating_joint),
         JointConstraint(Fixed(bodies[1], bodies[2], p1=[0,0,radius], p2=zeros(3)), name = :fixed_joint),]
     mechanism = Mechanism(origin, bodies, joints, timestep=timestep, gravity=gravity)
+
+    # modify inertias
+    mechanism.bodies[1].inertia = Diagonal([1.9, 2.1, 2.0])
+    # mechanism.bodies[2].inertia
 
     if contact
         contact = [0,0,0.0]
