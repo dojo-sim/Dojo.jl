@@ -45,7 +45,7 @@ datamat = full_data_matrix(env.mechanism, attjac = true)
 
 joint0 = env.mechanism.joints[3]
 pbody0 = get_body(env.mechanism, joint0.parent_id)
-cbody0 = get_body(env.mechanism, joint0.child_ids[1])
+cbody0 = get_body(env.mechanism, joint0.child_id)
 constraint_jacobian_parent(joint0.constraints[1], pbody0, cbody0, joint0.variables[2], env.mechanism.timestep)
 constraint_jacobian_parent(joint0.constraints[2], pbody0, cbody0, joint0.variables[2], env.mechanism.timestep)
 

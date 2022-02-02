@@ -12,7 +12,7 @@ function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVect
 			set_joint_position!(mechanism, joint, c)
 			set_velocity!(mechanism, joint, v) # in body1
 		else
-			@assert length(Set(joint.child_ids)) == 1 # only one body is linked to the origin
+			# @assert length(Set(joint.child_id)) == 1 # only one body is linked to the origin
 			c = zeros(Tx,0)
 			v = zeros(Tx,0)
 			# we need a special case: when the first link has free rotation wrt the origin
@@ -69,9 +69,9 @@ function get_minimal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni};
 		joint = mechanism.joints[id]
 		c = zeros(T,0)
 		v = zeros(T,0)
-		for (i,element) in enumerate(joint.constraints)
-			cbody = get_body(mechanism, joint.child_ids[i])
-			pbody = get_body(mechanism, joint.parent_id)
+		cbody = get_body(mechanism, joint.child_id)
+		pbody = get_body(mechanism, joint.parent_id)
+		for (i, element) in enumerate(joint.constraints)
 			pos = minimal_coordinates(element, pbody, cbody)
 			vel = minimal_velocities(element, pbody, cbody)
 			if pos_noise != nothing

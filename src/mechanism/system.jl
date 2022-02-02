@@ -21,17 +21,17 @@ function adjacency_matrix(joints::Vector{<:JointConstraint}, bodies::Vector{<:Bo
     for node1 in nodes
         for node2 in nodes
             if typeof(node1) <: Constraint
-                node2.id in node1.child_ids && (A[node1.id, node2.id] = 1)
+                node2.id == node1.child_id && (A[node1.id, node2.id] = 1)
             elseif typeof(node2) <: Constraint
                 node1.id == node2.parent_id && (A[node1.id, node2.id] = 1)
             # TODO these entries linking two bodies should be removed,
             # not sure why this is breaking some of the tests
             elseif typeof(node1) <: Body && typeof(node2) <: Body
                 for joint in joints
-                    if node1.id == joint.parent_id && node2.id ∈ joint.child_ids
+                    if node1.id == joint.parent_id && node2.id == joint.child_id
                         A[node1.id, node2.id] = 1
                     end
-                    if node2.id == joint.parent_id && node1.id ∈ joint.child_ids
+                    if node2.id == joint.parent_id && node1.id == joint.child_id
                         A[node2.id, node1.id] = 1
                     end
                 end

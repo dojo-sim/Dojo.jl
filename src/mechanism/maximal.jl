@@ -50,8 +50,8 @@ function maximal_to_minimal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVect
 		joint = mechanism.joints[id]
 		c = zeros(Tz,0)
 		v = zeros(Tz,0)
+		ichild = joint.child_id - Ne
 		for (i,element) in enumerate(joint.constraints)
-			ichild = joint.child_ids[i] - Ne
 			xb, vb, qb, ϕb = unpack_maximal_state(z, ichild)
 			if joint.parent_id != 0
 				iparent = joint.parent_id - Ne
@@ -83,8 +83,8 @@ function maximal_to_minimal_jacobian_analytical(mechanism::Mechanism{T,Nn,Ne,Nb,
 		joint = mechanism.joints[id]
 		c_shift = 0 
 		v_shift = control_dimension(joint)
+		ichild = joint.child_id - Ne
 		for (i, element) in enumerate(joint.constraints)
-			ichild = joint.child_ids[i] - Ne
 
 			xb, vb, qb, ϕb = unpack_maximal_state(z, ichild)
 

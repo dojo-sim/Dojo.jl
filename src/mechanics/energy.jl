@@ -59,11 +59,11 @@ function potential_energy(mechanism::Mechanism{T,Nn,Ne,Nb}, storage::Storage{T,N
     end
 
     # Springs
-    for (i,joint) in enumerate(mechanism.joints)
+    for (i, joint) in enumerate(mechanism.joints)
+         # Child
+         child_id = joint.child_id
         if joint.spring
-            for (j,element) in enumerate(joint.constraints)
-                # Child
-                child_id = joint.child_ids[j]
+            for (j, element) in enumerate(joint.constraints)
                 xb = storage.x[child_id - Ne][t] # TODO this is sketchy way to get the correct index
                 qb = storage.q[child_id - Ne][t] # TODO this is sketchy way to get the correct index
                 

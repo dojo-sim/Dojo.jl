@@ -71,12 +71,12 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, bodya::Node{T}
     # joint constraints impulses contribution
     for i = 1:Nc
         λ = getλJoint(joint, i)
-        if bodyb.id ∈ joint.child_ids
+        if bodyb.id == joint.child_id
             ∇z2_aa += impulse_map_parent_jacobian_parent(joint.constraints[i],
                 bodya, bodyb, λ)
             ∇z2_ab += impulse_map_parent_jacobian_child(joint.constraints[i],
                 bodya, bodyb, λ)
-        elseif bodya.id ∈ joint.child_ids
+        elseif bodya.id == joint.child_id
             ∇z2_aa += impulse_map_child_jacobian_child(joint.constraints[i],
                 bodyb, bodya, λ)
             ∇z2_ab += impulse_map_child_jacobian_parent(joint.constraints[i],
@@ -181,17 +181,17 @@ function data_adjacency_matrix(joints::Vector{<:JointConstraint}, bodies::Vector
                     linked = length(indirect_link0(node1.id, node2.id, [joints; contacts])) > 0
                     linked && (A[node1.id, node2.id] = 1) # linked through a common joint
                 elseif T2 <: JointConstraint
-                    (node1.id == node2.parent_id || node1.id ∈ node2.child_ids) && (A[node1.id, node2.id] = 1) # linked
+                    (node1.id == node2.parent_id || node1.id == node2.child_id) && (A[node1.id, node2.id] = 1) # linked
                 elseif T2 <: ContactConstraint
-                    (node1.id == node2.parent_id || node1.id ∈ node2.child_ids) && (A[node1.id, node2.id] = 1) # linked
+                    (node1.id == node2.parent_id || node1.id == node2.child_id) && (A[node1.id, node2.id] = 1) # linked
                 end
             elseif T1 <: JointConstraint
                 if T2 <: Body
-                    (node2.id == node1.parent_id || node2.id ∈ node1.child_ids) && (A[node1.id, node2.id] = 1) # linked
+                    (node2.id == node1.parent_id || node2.id == node1.child_id) && (A[node1.id, node2.id] = 1) # linked
                 end
             elseif T1 <: ContactConstraint
                 if T2 <: Body
-                    (node2.id == node1.parent_id || node2.id ∈ node1.child_ids) && (A[node1.id, node2.id] = 1) # linked
+                    (node2.id == node1.parent_id || node2.id == node1.child_id) && (A[node1.id, node2.id] = 1) # linked
                 elseif T2 <: ContactConstraint
                     (node1.id == node2.id) && (A[node1.id, node2.id] = 1) # self loop
                 end
@@ -207,8 +207,8 @@ function indirect_link0(id1, id2, nodes::Vector{S}) where {S<:Node}
     for node in nodes
         parent_id = node.parent_id
         (parent_id == nothing) && (parent_id = 0) #handle the origin's corner case
-        linked = (id1 ∈ node.child_ids) && (id2 == parent_id)
-        linked |= (id2 ∈ node.child_ids) && (id1 == parent_id)
+        linked = (id1 == node.child_id) && (id2 == parent_id)
+        linked |= (id2 == node.child_id) && (id1 == parent_id)
         linked && push!(ids, node.id)
     end
     return ids
@@ -265,7 +265,7 @@ function jacobian_joint_data!(data_matrix::SparseMatrixCSC, mechanism::Mechanism
     # TODO adapt this to handle cycles
     for body in mechanism.bodies
         for joint in mechanism.joints
-            if (body.id == joint.parent_id) || (body.id ∈ joint.child_ids)
+            if (body.id == joint.parent_id) || (body.id == joint.child_id)
                 data_matrix[body.id, joint.id].value += body_constraint_jacobian_joint_data(mechanism, body, joint)
             end
         end
@@ -278,7 +278,7 @@ function jacobian_body_data!(data_matrix::SparseMatrixCSC, mechanism::Mechanism{
     # TODO adapt this to handle cycles
     for body in mechanism.bodies
         for joint in mechanism.joints
-            if (body.id == joint.parent_id) || (body.id ∈ joint.child_ids)
+            if (body.id == joint.parent_id) || (body.id == joint.child_id)
                 data_matrix[joint.id, body.id].value += joint_constraint_jacobian_body_data(mechanism, joint, body)
             end
         end

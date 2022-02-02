@@ -15,11 +15,10 @@ function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
             pbody = get_body(mechanism,parent_id)
             pstate = pbody.state
 
-            for (i,child_id) in enumerate(joint.child_ids)
-                childind = child_id - Ne
-                cbody = get_body(mechanism,child_id)
+            for (i, element) in enumerate(joint.constraints)
+                childind = joint.child_id - Ne
+                cbody = get_body(mechanism, joint.child_id)
                 cstate = cbody.state
-                element = joint.constraints[i]
 
                 ind2 += ηlength(element)
                 range = oneindc+ind1:oneindc+ind2
@@ -42,11 +41,10 @@ function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
                 ind1 = ind2+1
             end
         else
-            for (i,child_id) in enumerate(joint.child_ids)
-                childind = child_id - Ne
-                cbody = get_body(mechanism,child_id)
+            for (i, element) in enumerate(joint.constraints)
+                childind = joint.child_id - Ne
+                cbody = get_body(mechanism, joint.child_id)
                 cstate = cbody.state
-                element = joint.constraints[i]
                 ind2 += length(element)
                 range = oneindc+ind1:oneindc+ind2
 
@@ -78,9 +76,9 @@ function joint_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,N
             prow6 = offset_range(parentind,6)
             pcol13 = offset_range(parentind,13)
 
-            for (i, child_id) in enumerate(joint.child_ids)
-                childind = child_id - Ne
-                cbody = get_body(mechanism, child_id)
+            for (i, element) in enumerate(joint.constraints)
+                childind = joint.child_id - Ne
+                cbody = get_body(mechanism, joint.child_id)
                 cstate = cbody.state
                 element = joint.constraints[i]
                 crow6 = offset_range(childind,6)
@@ -149,11 +147,10 @@ function joint_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,N
                 J[crow6,ccol13] += Abb
             end
         else
-            for (i, child_id) in enumerate(joint.child_ids)
-                childind = child_id - Ne
-                cbody = get_body(mechanism, child_id)
+            for (i, element) in enumerate(joint.constraints)
+                childind = joint.child_id - Ne
+                cbody = get_body(mechanism, joint.child_id)
                 cstate = cbody.state
-                element = joint.constraints[i]
                 crow6 = offset_range(childind,6)
                 ccol13 = offset_range(childind,13)
                 λ = getλJoint(joint, i)
@@ -197,11 +194,10 @@ function springapply_damperjacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,N
             prow6 = offset_range(parentind,6)
             pcol13 = offset_range(parentind,13)
 
-            for (i, child_id) in enumerate(joint.child_ids)
-                childind = child_id - Ne
-                cbody = get_body(mechanism, child_id)
+            for (i, element) in enumerate(joint.constraints)
+                childind = joint.child_id - Ne
+                cbody = get_body(mechanism, joint.child_id)
                 cstate = cbody.state
-                element = joint.constraints[i]
                 crow6 = offset_range(childind,6)
                 ccol13 = offset_range(childind,13)
                 λ = getλJoint(joint, i)
@@ -229,10 +225,10 @@ function springapply_damperjacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,N
                 J[crow6,ccol13] += Abb
             end
         else
-            for (i, child_id) in enumerate(joint.child_ids)
+            for (i, element) in enumerate(joint.constraints)
                 pbody = mechanism.origin
-                childind = child_id - Ne
-                cbody = get_body(mechanism, child_id)
+                childind = joint.child_id - Ne
+                cbody = get_body(mechanism, joint.child_id)
                 cstate = cbody.state
                 element = joint.constraints[i]
                 crow6 = offset_range(childind,6)
@@ -325,10 +321,10 @@ function dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}, jointids) where {T,
             col6 = offset_range(parentind,6)
             Bcontrol[col6,n1:n2] = input_jacobian_control_parent(mechanism, joint, get_body(mechanism, parent_id))
         end
-        for child_id in joint.child_ids
-            childind = child_id - Ne
+        for element in joint.constraints
+            childind = joint.child_id - Ne
             col6 = offset_range(childind,6)
-            Bcontrol[col6,n1:n2] = input_jacobian_control_child(mechanism, joint, get_body(mechanism, child_id))
+            Bcontrol[col6,n1:n2] = input_jacobian_control_child(mechanism, joint, get_body(mechanism, joint.child_id))
         end
 
         n1 = n2+1

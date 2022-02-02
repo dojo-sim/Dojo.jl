@@ -202,13 +202,9 @@ function set_spring_offset!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVect
 	for id in reverse(mechanism.system.dfs_list)
 		(id > Ne) && continue # only treat joints
 		joint = mechanism.joints[id]
-		for (i,element) in enumerate(joint.constraints)
-			cbody = get_body(mechanism, joint.child_ids[i])
-			pbody = get_body(mechanism, joint.parent_id)
-			N̄ = 3 - length(joint)
-			joint.spring_offset = x[off .+ (1:N̄)]
-			off += 2N̄
-		end
+        N̄ = 3 - length(joint)
+        joint.spring_offset = x[off .+ (1:N̄)]
+        off += 2N̄
 	end
 	return nothing
 end

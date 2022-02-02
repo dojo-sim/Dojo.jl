@@ -67,13 +67,11 @@ end
     for connectionid in connections(mechanism.system, body1.id)
         !(connectionid <= Ne) && continue # body
         joint = get_node(mechanism, connectionid)
-        Nc = length(joint.child_ids)
         off = 0
         if body1.id == joint.parent_id
-            for i in 1:Nc
-                element = joint.constraints[i]
+            for element in joint.constraints
                 Nj = length(element)
-                if body2.id == joint.child_ids[i]
+                if body2.id == joint.child_id
                     joint.spring && (dimpulse_map_parentb -= spring_parent_jacobian_velocity_child(element, body1, body2, timestep)) #should be useless
                     joint.damper && (dimpulse_map_parentb -= damper_parent_jacobian_velocity_child(element, body1, body2, timestep))
                     joint.spring && (dimpulse_map_childa -= spring_child_configuration_velocity_parent(element, body1, body2, timestep)) #should be useless
@@ -82,10 +80,9 @@ end
                 off += Nj
             end
         elseif body2.id == joint.parent_id
-            for i = 1:Nc
-                element = joint.constraints[i]
+            for element in joint.constraints
                 Nj = length(element)
-                if body1.id == joint.child_ids[i]
+                if body1.id == joint.child_id
                     # joint.spring && (dimpulse_map_parentb -= spring_parent_jacobian_velocity_child(element, body2, body1, timestep)) #should be useless
                     joint.damper && (dimpulse_map_parentb -= damper_parent_jacobian_velocity_child(element, body2, body1, timestep))
                     # joint.spring && (dimpulse_map_childa -= spring_child_configuration_velocity_parent(element, body2, body1, timestep)) #should be useless

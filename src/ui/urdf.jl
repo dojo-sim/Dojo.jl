@@ -342,7 +342,7 @@ function parse_loop_joints(xloopjoints, origin, joints, ldict, T)
         body2 = ldict[attribute(xbody2, "link")]
 
         predlist = Tuple{Int64,Int64}[]
-        jointlist = [(joints[i].id,joints[i].parent_id,joints[i].child_ids) for i=1:length(joints)]
+        jointlist = [(joints[i].id,joints[i].parent_id, joints[i].child_id) for i=1:length(joints)]
         linkid = body1.id
 
         while true # create list of predecessor joints and parent links for body1
@@ -359,7 +359,7 @@ function parse_loop_joints(xloopjoints, origin, joints, ldict, T)
             end
         end
 
-        jointlist = [(joints[i].id,joints[i].parent_id,joints[i].child_ids) for i=1:length(joints)]
+        jointlist = [(joints[i].id, joints[i].parent_id, joints[i].child_id) for i=1:length(joints)]
         linkid = body2.id
         joint1id = 0
         joint2id = 0
@@ -475,7 +475,7 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
             qparentjoint = qjointlist[parentconstraint.id] # in world frame
         end
 
-        ind1 = findfirst(x->x==id,constraint.child_ids)
+        ind1 = findfirst(x -> x == id, constraint.child_id)
         ind2 = ind1+1
 
         # urdf joint's x and q in parent's (parentbody) frame
@@ -515,10 +515,9 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         end
     end
     for (i,constraint) in enumerate(loopjoints)
-        @assert length(constraint.child_ids) == 2 # Loop joint connects only two bodies
 
         parent_id1 = constraint.parent_id
-        parent_id2 = constraint.child_ids[1]
+        parent_id2 = constraint.child_id
         if parent_id1 == 0 # predecessor is origin
             parentbody1 = mechanism.origin
 
@@ -580,7 +579,7 @@ function get_parent_id(mechanism, id, loopjoints)
     conns = connections(system, id)
     for connsid in conns
         constraint = get_joint_constraint(mechanism, connsid)
-        if constraint ∉ loopjoints && id ∈ constraint.child_ids
+        if constraint ∉ loopjoints && id == constraint.child_id
             return connsid
         end
     end

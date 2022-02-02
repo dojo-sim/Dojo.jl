@@ -7,25 +7,24 @@ mutable struct ContactConstraint{T,N,Nc,Cs,N½} <: Constraint{T,N}
     constraints::Cs
 
     # neighbor IDs
-    parent_id::Int64
-    child_ids::SVector{1,Union{Int64,Nothing}}
+    parent_id::Int
+    child_id::Int
 
     # variables
     primal::Vector{SVector{N½,T}} # holds the slack variable
     dual::Vector{SVector{N½,T}} # holds the dual of the slack variable
 
     function ContactConstraint(data; name::Symbol=Symbol("contact_" * randstring(4)))
-        bound, parent_id, child_id = data
+        bound, parent_id, _ = data
         T = getT(bound)
 
-        child_ids = [child_id]
         constraint = Tuple([bound])
         N = length(constraint[1])
         N½ = Int64(N/2)
 
         primal = [neutral_vector(bound) for i = 1:2]
         dual = [neutral_vector(bound) for i = 1:2]
-        new{T,N,1,typeof(constraint),N½}(getGlobalID(), name, constraint, parent_id, child_ids, primal, dual)
+        new{T,N,1,typeof(constraint),N½}(getGlobalID(), name, constraint, parent_id, 0, primal, dual)
     end
 end
 

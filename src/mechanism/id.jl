@@ -4,7 +4,7 @@ function global_id!(nodes)
         node.id = oldnewid[node.id]
         if typeof(node) <: Constraint
             node.parent_id = get(oldnewid, node.parent_id, 0)
-            node.child_ids = [get(oldnewid, child_id, 0) for child_id in node.child_ids]
+            node.child_id = get(oldnewid, node.child_id, 0)
         end
     end
 end
