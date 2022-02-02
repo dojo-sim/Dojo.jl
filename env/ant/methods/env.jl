@@ -10,8 +10,8 @@ function ant(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
     info=nothing, vis::Visualizer=Visualizer(), name::Symbol=:robot,
     opts_step=SolverOptions(), opts_grad=SolverOptions()) where T
 
-    mechanism = getant(timestep=dt, gravity=gravity, cf=cf, spring=spring, damper=damper,contact=contact, contact_body=contact_body, limits=limits)
-    initializeant!(mechanism)
+    mechanism = get_ant(timestep=dt, gravity=gravity, cf=cf, spring=spring, damper=damper,contact=contact, contact_body=contact_body, limits=limits)
+    initialize_ant!(mechanism)
 
     if mode == :min
         nx = minimal_dimension(mechanism)
@@ -26,8 +26,8 @@ function ant(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
 
     rng = MersenneTwister(s)
 
-    z = get_max_state(mechanism)
-    x = mode == :min ? max2min(mechanism, z) : z
+    z = get_maximal_state(mechanism)
+    x = mode == :min ? maximal_to_minimal(mechanism, z) : z
 
     fx = zeros(nx, nx)
     fu = zeros(nx, nu)
@@ -60,9 +60,9 @@ function step(env::Environment{Ant}, x, u; diff=false)
     env.u_prev .= u  # for rendering in Gym
 	u_scaled = env.control_mask' * env.control_scaling * u
 
-    z0 = env.mode == :min ? min2max(mechanism, x0) : x0
+    z0 = env.mode == :min ? minimal_to_maximal(mechanism, x0) : x0
     z1 = step!(mechanism, z0, u_scaled; opts=env.opts_step)
-    env.x .= env.mode == :min ? max2min(mechanism, z1) : z1
+    env.x .= env.mode == :min ? maximal_to_minimal(mechanism, z1) : z1
 
     # x position (after)
     xposafter = env.x[1]
@@ -94,9 +94,9 @@ function step(env::Environment{Ant}, x, u; diff=false)
     # Gradients
     if diff
         if env.mode == :min
-            fx, fu = getMinGradients!(env.mechanism, z0, u_scaled, opts=env.opts_grad)
+            fx, fu = get_minimal_gradients(env.mechanism, z0, u_scaled, opts=env.opts_grad)
         elseif env.mode == :max
-            fx, fu = getMaxGradients!(env.mechanism, z0, u_scaled, opts=env.opts_grad)
+            fx, fu = get_maximal_gradients!(env.mechanism, z0, u_scaled, opts=env.opts_grad)
         end
         env.fx .= fx
         env.fu .= fu * env.control_mask' * env.control_scaling
@@ -119,10 +119,10 @@ function reset(env::Environment{Ant};
     else
         x = get_minimal_state(env.mechanism, pos_noise=pos_noise, vel_noise=vel_noise)
         if env.mode == :min
-            set_state!(env.mechanism, min2max(env.mechanism, x))
+            set_state!(env.mechanism, minimal_to_maximal(env.mechanism, x))
             env.x .= x
         elseif env.mode == :max
-            z = min2max(env.mechanism, x)
+            z = minimal_to_maximal(env.mechanism, x)
             set_state!(env.mechanism, z)
             env.x .= z
         end

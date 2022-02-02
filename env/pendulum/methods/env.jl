@@ -81,9 +81,9 @@ function step(env::Environment{Pendulum}, x, u; diff=false)
     u0 = clamp.(u, -max_torque, max_torque)
     env.u_prev .= u0  # for rendering
 
-    z0 = env.mode == :min ? min2max(mechanism, x0) : x0
+    z0 = env.mode == :min ? minimal_to_maximal(mechanism, x0) : x0
     z1 = step!(mechanism, z0, timestep * u0; opts = env.opts_step)
-    env.x .= env.mode == :min ? max2min(mechanism, z1) : z1
+    env.x .= env.mode == :min ? maximal_to_minimal(mechanism, z1) : z1
 
     # Compute cost function
     costs = cost(env, x0, u0)
@@ -91,9 +91,9 @@ function step(env::Environment{Pendulum}, x, u; diff=false)
     # Gradients
     if diff
         if env.mode == :min
-            fx, fu = getMinGradients!(env.mechanism, z0, timestep * u0, opts=env.opts_grad)
+            fx, fu = get_minimal_gradients(env.mechanism, z0, timestep * u0, opts=env.opts_grad)
         elseif env.mode == :max
-            fx, fu = getMaxGradients!(env.mechanism, z0, timestep * u0, opts=env.opts_grad)
+            fx, fu = get_maximal_gradients!(env.mechanism, z0, timestep * u0, opts=env.opts_grad)
         end
         env.fx .= fx
         env.fu .= timestep * fu

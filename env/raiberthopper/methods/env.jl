@@ -9,8 +9,8 @@ function raiberthopper(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81
     info=nothing,
     opts_step=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5), opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5)) where T
 
-    mechanism = getraiberthopper(timestep=dt, gravity=gravity)
-    initializeraiberthopper!(mechanism)
+    mechanism = get_raiberthopper(timestep=dt, gravity=gravity)
+    initialize_raiberthopper!(mechanism)
 
     if mode == :min
         nx = minimal_dimension(mechanism)
@@ -25,8 +25,8 @@ function raiberthopper(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81
 
     rng = MersenneTwister(s)
 
-    z = get_max_state(mechanism)
-    x = mode == :min ? max2min(mechanism, z) : z
+    z = get_maximal_state(mechanism)
+    x = mode == :min ? maximal_to_minimal(mechanism, z) : z
 
     fx = zeros(nx, nx)
     fu = zeros(nx, nu)
@@ -80,7 +80,7 @@ end
 
 function visualize(env::Environment{RaibertHopper}, traj::Vector{Vector{T}}; name=:robot, axes=false, grid=true) where T
     # convert to maximal representation
-    z = [env.mode == :min ? min2max(env.mechanism, x) : x for x in traj]
+    z = [env.mode == :min ? minimal_to_maximal(env.mechanism, x) : x for x in traj]
 
     body_color = magenta#RGBA(0.0, 0.0, 0.0, 1.0)
     foot_color = magenta#RGBA(0.0, 0.0, 0.0, 1.0) #RGBA(1.0, 165.0 / 255.0, 0.0, 1.0)
@@ -123,7 +123,7 @@ end
 
 function ghost(env::Environment{RaibertHopper}, traj::Vector{Vector{T}}; timesteps=[t for t = 1:length(traj)], axes=false, grid=true, line=false) where T
     # convert to maximal representation
-    z = [env.mode == :min ? min2max(env.mechanism, x) : x for x in traj]
+    z = [env.mode == :min ? minimal_to_maximal(env.mechanism, x) : x for x in traj]
 
     # color
     body_color = magenta #RGBA(0.0, 0.0, 0.0, 1.0)

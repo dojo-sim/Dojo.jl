@@ -228,3 +228,17 @@ function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T}; name::Sy
 
     return vis
 end
+
+function visualize_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector, vis::Visualizer) where {T,Nn,Ne,Nb,Ni}
+	storage = Storage(1,Nb)
+	for t = 1:1
+		for b = 1:Nb
+			x2, v15, q2, ϕ15 = unpack_maximal_state(z, b)
+			storage.x[b][t] = x2
+			storage.v[b][t] = v15
+			storage.q[b][t] = q2
+			storage.ω[b][t] = ϕ15
+		end
+	end
+	visualize(mechanism, storage, vis = vis)
+end

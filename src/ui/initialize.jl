@@ -1,10 +1,10 @@
-function set_position(body::Body; x::AbstractVector = SA[0;0;0], q::UnitQuaternion = one(UnitQuaternion))
+function set_position!(body::Body; x::AbstractVector = SA[0;0;0], q::UnitQuaternion = one(UnitQuaternion))
     body.state.x2[1] = x
     body.state.q2[1] = q
     return
 end
 
-function set_position(body1::Body, body2::Body;
+function set_position!(body1::Body, body2::Body;
         p1::AbstractVector = SA[0;0;0], p2::AbstractVector = SA[0;0;0],
         Δx::AbstractVector = SA[0;0;0], Δq::UnitQuaternion = one(UnitQuaternion)
         # in body1's frame
@@ -13,20 +13,20 @@ function set_position(body1::Body, body2::Body;
     q1 = body1.state.q2[1]
     q2 = body1.state.q2[1] * Δq
     x2 = body1.state.x2[1] + vrotate(p1 + Δx, q1) - vrotate(p2, q2)
-    set_position(body2;x = x2,q = q2)
+    set_position!(body2; x = x2, q = q2)
     return
 end
 
-function set_position(body1::Origin, body2::Body;
-        p1::AbstractVector = SA[0;0;0], p2::AbstractVector = SA[0;0;0],
-        Δx::AbstractVector = SA[0;0;0], Δq::UnitQuaternion = one(UnitQuaternion)
-    )
+# function set_position!(body1::Origin, body2::Body;
+#         p1::AbstractVector = SA[0;0;0], p2::AbstractVector = SA[0;0;0],
+#         Δx::AbstractVector = SA[0;0;0], Δq::UnitQuaternion = one(UnitQuaternion)
+#     )
 
-    q2 = Δq
-    x2 = p1 + Δx - vrotate(p2, q2)
-    set_position(body2;x = x2,q = q2)
-    return
-end
+#     q2 = Δq
+#     x2 = p1 + Δx - vrotate(p2, q2)
+#     set_position!(body2;x = x2,q = q2)
+#     return
+# end
 
 function set_velocity!(body::Body; v::AbstractVector = SA[0;0;0], ω::AbstractVector = SA[0;0;0])
     body.state.v15 = v
@@ -66,26 +66,26 @@ function set_velocity!(body1::Body, body2::Body;
     return
 end
 
-function set_velocity!(body1::Origin, body2::Body;
-        p1::AbstractVector = SA[0;0;0], p2::AbstractVector = SA[0;0;0],
-        Δv::AbstractVector = SA[0;0;0], Δω::AbstractVector = SA[0;0;0]
-    )
+# function set_velocity!(body1::Origin, body2::Body;
+#         p1::AbstractVector = SA[0;0;0], p2::AbstractVector = SA[0;0;0],
+#         Δv::AbstractVector = SA[0;0;0], Δω::AbstractVector = SA[0;0;0]
+#     )
 
-    x2 = body2.state.x2[1]
-    v2 = body2.state.v15
-    q2 = body2.state.q2[1]
-    ω2 = body2.state.ϕ15 # in local coordinates
+#     x2 = body2.state.x2[1]
+#     v2 = body2.state.v15
+#     q2 = body2.state.q2[1]
+#     ω2 = body2.state.ϕ15 # in local coordinates
 
-    # Ω(B/W)b = Ra->b * [Ω(B/A)a + Ω(A/W)a]
-    ω2 = vrotate(Δω, inv(q2))
-    # V(cb,B/W)w =
-    ω2w = vrotate(ω2, q2)
-    Δvw = Δv
-    pBcB_w = - vrotate(p2, q2)
-    v2 = Δvw + skew(ω2w) * pBcB_w
-    set_velocity!(body2; v = v2, ω = ω2)
-    return
-end
+#     # Ω(B/W)b = Ra->b * [Ω(B/A)a + Ω(A/W)a]
+#     ω2 = vrotate(Δω, inv(q2))
+#     # V(cb,B/W)w =
+#     ω2w = vrotate(ω2, q2)
+#     Δvw = Δv
+#     pBcB_w = - vrotate(p2, q2)
+#     v2 = Δvw + skew(ω2w) * pBcB_w
+#     set_velocity!(body2; v = v2, ω = ω2)
+#     return
+# end
 
 function set_input!(body::Body;
         F::AbstractVector = SA[0;0;0], τ::AbstractVector = SA[0;0;0], p::AbstractVector = SA[0;0;0]

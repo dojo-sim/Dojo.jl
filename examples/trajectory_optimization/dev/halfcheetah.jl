@@ -82,11 +82,11 @@ function fd(y, x, u, w)
 end
 
 function fdx(fx, x, u, w)
-	fx .= copy(getMaxGradients!(mech, x, u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[1])
+	fx .= copy(get_maximal_gradients!(mech, x, u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[1])
 end
 
 function fdu(fu, x, u, w)
-	∇u = copy(getMaxGradients!(mech, x, u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[2])
+	∇u = copy(get_maximal_gradients!(mech, x, u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[2])
 	fu .= ∇u * u_mask'
 end
 

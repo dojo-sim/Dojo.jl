@@ -1,4 +1,4 @@
-function gettippetop(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, contact::Bool=true, contact_type::Symbol=:contact) where T
+function get_tippetop(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, contact::Bool=true, contact_type::Symbol=:contact) where T
     origin = Origin{T}(name=:origin)
     radius = 0.5
     mass = 1.0
@@ -19,13 +19,13 @@ function gettippetop(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, c
             contact_constraint(get_body(mechanism, :sphere1), normal, cf=cf, p=contact, offset=[0,0,radius], contact_type=contact_type),
             contact_constraint(get_body(mechanism, :sphere2), normal, cf=cf, p=contact, offset=[0,0,radius*α], contact_type=contact_type)
             ]
-        set_position(mechanism, get_joint_constraint(mechanism, :floating_joint), [0;0;radius;zeros(3)])
+        set_position!(mechanism, get_joint_constraint(mechanism, :floating_joint), [0;0;radius;zeros(3)])
         mechanism = Mechanism(origin, bodies, joints, contacts, gravity=gravity, timestep=timestep)
     end
     return mechanism
 end
 
-function initializetippetop!(mechanism::Mechanism; x::AbstractVector{T}=zeros(3),
+function initialize_tippetop!(mechanism::Mechanism; x::AbstractVector{T}=zeros(3),
         q::UnitQuaternion{T}=one(UnitQuaternion), v::AbstractVector{T}=zeros(3),
         ω::AbstractVector{T}=zeros(3)) where T
 
@@ -35,11 +35,11 @@ function initializetippetop!(mechanism::Mechanism; x::AbstractVector{T}=zeros(3)
     body1 = get_body(mech, :sphere1)
     body2 = get_body(mech, :sphere2)
 
-    zeroVelocity!(mechanism)
-    # set_position(mechanism, joint, [x; rotation_vector(q)])
+    zero_velocity!(mechanism)
+    # set_position!(mechanism, joint, [x; rotation_vector(q)])
     # set_velocity!(mechanism, joint, [v; ω])
-    set_position(origin, body1; p1 = [0;0;radius], p2 = [0;0;0], Δx = x, Δq = q)
-    set_position(body1,  body2; p1 = [0;0;radius], p2 = [0;0;0], Δx = [0;0;0], Δq = one(UnitQuaternion))
+    set_position!(origin, body1; p1 = [0;0;radius], p2 = [0;0;0], Δx = x, Δq = q)
+    set_position!(body1,  body2; p1 = [0;0;radius], p2 = [0;0;0], Δx = [0;0;0], Δq = one(UnitQuaternion))
     set_velocity!(origin, body1; p1 = [0;0;radius], p2 = [0;0;0], Δv = v, Δω = ω)
     set_velocity!(body1,  body2; p1 = [0;0;radius], p2 = [0;0;0], Δv = [0;0;0], Δω = [0;0;0])
     return nothing

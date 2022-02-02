@@ -8,8 +8,8 @@ function cartpole(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
     control_scaling=Diagonal(ones(1)),
     opts_step=SolverOptions(), opts_grad=SolverOptions()) where T
 
-    mechanism = getcartpole(timestep=dt, gravity=gravity)
-    initializecartpole!(mechanism)
+    mechanism = get_cartpole(timestep=dt, gravity=gravity)
+    initialize_cartpole!(mechanism)
 
     if mode == :min
         nx = minimal_dimension(mechanism)
@@ -24,8 +24,8 @@ function cartpole(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
 
     rng = MersenneTwister(s)
 
-    z = get_max_state(mechanism)
-    x = mode == :min ? max2min(mechanism, z) : z
+    z = get_maximal_state(mechanism)
+    x = mode == :min ? maximal_to_minimal(mechanism, z) : z
 
     fx = zeros(nx, nx)
     fu = zeros(nx, nu)
@@ -82,7 +82,7 @@ function cartpole_goal_max(;pendulum_length=1.0)
 end
 
 function visualize(env::Environment{Cartpole}, traj::Vector{Vector{T}}; axes=false, grid=false, ee_traj=false) where T
-    storage = generate_storage(env.mechanism, [env.mode == :min ? min2max(env.mechanism, x) : x for x in traj])
+    storage = generate_storage(env.mechanism, [env.mode == :min ? minimal_to_maximal(env.mechanism, x) : x for x in traj])
     visualize(env.mechanism, storage, vis=env.vis)
 	set_camera!(env.vis, zoom=1.0, cam_pos=[2,0,0])
     setvisible!(env.vis["/Axes"], axes)

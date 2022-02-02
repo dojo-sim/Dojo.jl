@@ -21,7 +21,7 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 env = make("ant", vis = vis, mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=30.0, cf = 0.5,
     contact=true, contact_body=true)
 obs = reset(env)
-initializeant!(env.mechanism, pos = [1.3,0,0], rot = [0,0,0.])
+initialize_ant!(env.mechanism, pos = [1.3,0,0], rot = [0,0,0.])
 env.x .= get_minimal_state(env.mechanism)
 render(env)
 

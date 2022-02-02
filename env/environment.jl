@@ -46,7 +46,7 @@ function reset(env::Environment{X}; x=nothing) where X
         if env.mode == :min
             env.x .= get_minimal_state(env.mechanism)
         elseif env.mode == :max
-            env.x .= get_max_state(env.mechanism)
+            env.x .= get_maximal_state(env.mechanism)
         end
         env.u_prev .= 0.0
     end
@@ -68,9 +68,9 @@ function step(env::Environment, x, u; diff=false)
     env.u_prev .= u  # for rendering in Gym
 	u_scaled = env.control_mask' * env.control_scaling * u
 
-    z0 = env.mode == :min ? min2max(mechanism, x0) : x0
+    z0 = env.mode == :min ? minimal_to_maximal(mechanism, x0) : x0
     z1 = step!(mechanism, z0, u_scaled; opts=env.opts_step)
-    env.x .= env.mode == :min ? max2min(mechanism, z1) : z1
+    env.x .= env.mode == :min ? maximal_to_minimal(mechanism, z1) : z1
 
     # Compute cost
     costs = cost(env, x, u)
@@ -81,9 +81,9 @@ function step(env::Environment, x, u; diff=false)
     # Gradients
     if diff
         if env.mode == :min
-            fx, fu = getMinGradients!(env.mechanism, z0, u_scaled, opts=env.opts_grad)
+            fx, fu = get_minimal_gradients(env.mechanism, z0, u_scaled, opts=env.opts_grad)
         elseif env.mode == :max
-            fx, fu = getMaxGradients!(env.mechanism, z0, u_scaled, opts=env.opts_grad)
+            fx, fu = get_maximal_gradients!(env.mechanism, z0, u_scaled, opts=env.opts_grad)
         end
         env.fx .= fx
         env.fu .= fu * env.control_mask' * env.control_scaling
@@ -94,7 +94,7 @@ function step(env::Environment, x, u; diff=false)
 end
 
 function render(env::Environment, mode="human")
-    z = env.mode == :min ? min2max(env.mechanism, env.x) : env.x
+    z = env.mode == :min ? minimal_to_maximal(env.mechanism, env.x) : env.x
     set_robot(env.vis, env.mechanism, z, name=:robot)
     return nothing
 end
@@ -178,6 +178,6 @@ include("box/methods/env.jl")
 # Visualize Trajectories
 # ##############################################################################
 function visualize(env::Environment, traj::Vector{Vector{T}}) where T
-    storage = generate_storage(env.mechanism, [env.mode == :min ? min2max(env.mechanism, x) : x for x in traj])
+    storage = generate_storage(env.mechanism, [env.mode == :min ? minimal_to_maximal(env.mechanism, x) : x for x in traj])
     visualize(env.mechanism, storage, vis=env.vis)
 end

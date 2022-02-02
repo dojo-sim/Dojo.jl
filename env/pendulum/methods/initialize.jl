@@ -1,4 +1,4 @@
-function getpendulum(; timestep::T = 0.01, gravity = -9.81, m::T = 1.0, l::T = 1.0,
+function get_pendulum(; timestep::T = 0.01, gravity = -9.81, m::T = 1.0, l::T = 1.0,
         spring = 0.0, damper = 0.0, spring_offset = szeros(1)) where T
     # Parameters
     joint_axis = [1.0; 0; 0]
@@ -19,17 +19,17 @@ function getpendulum(; timestep::T = 0.01, gravity = -9.81, m::T = 1.0, l::T = 1
     return mech
 end
 
-function initializependulum!(mechanism::Mechanism; ϕ1::T = 0.7, ω1::T = 0.0) where T
+function initialize_pendulum!(mechanism::Mechanism; ϕ1::T = 0.7, ω1::T = 0.0) where T
     body = collect(mechanism.bodies)[1]
     joint = collect(mechanism.joints)[1]
     p2 = joint.constraints[1].vertices[2]
     p1 = joint.constraints[1].vertices[1]
     q1 = UnitQuaternion(RotX(ϕ1))
-    set_position(mechanism.origin, body, p1 = p1, p2 = p2, Δq = q1)
+    set_position!(mechanism.origin, body, p1 = p1, p2 = p2, Δq = q1)
     set_velocity!(mechanism.origin, body, p1 = p1, p2 = p2, Δω = [ω1,0,0])
 end
 
-function getnpendulum(; timestep::T = 0.01, gravity = -9.81, m::T = 1.0, l::T = 1.0,
+function get_npendulum(; timestep::T = 0.01, gravity = -9.81, m::T = 1.0, l::T = 1.0,
         spring = 0.0, damper::T = 0.0, Nb::Int = 5,
         basetype::Symbol = :Revolute, jointtype::Symbol = :Revolute) where T
     # Parameters
@@ -54,7 +54,7 @@ function getnpendulum(; timestep::T = 0.01, gravity = -9.81, m::T = 1.0, l::T = 
     return mech
 end
 
-function initializenpendulum!(mechanism::Mechanism; ϕ1::T = pi/4, ω = [0.0, 0.0, 0.0],
+function initialize_npendulum!(mechanism::Mechanism; ϕ1::T = pi/4, ω = [0.0, 0.0, 0.0],
     Δv::AbstractVector{T} = [0, 0, 0.], Δω::AbstractVector{T} = [0, 0, 0.]) where T
 
     body1 = mechanism.bodies[1]
@@ -63,12 +63,12 @@ function initializenpendulum!(mechanism::Mechanism; ϕ1::T = pi/4, ω = [0.0, 0.
     vert12 = - vert11
 
     # set position and velocities
-    set_position(mechanism.origin, body1, p2 = vert11, Δq = UnitQuaternion(RotX(ϕ1)))
+    set_position!(mechanism.origin, body1, p2 = vert11, Δq = UnitQuaternion(RotX(ϕ1)))
     set_velocity!(body1, ω = ω)
 
     previd = body1.id
     for (i,body) in enumerate(Iterators.drop(mechanism.bodies, 1))
-        set_position(get_body(mechanism, previd), body, p1 = vert12, p2 = vert11)
+        set_position!(get_body(mechanism, previd), body, p1 = vert12, p2 = vert11)
         set_velocity!(get_body(mechanism, previd), body, p1 = vert12, p2 = vert11,
                 Δv = Δv, Δω = 1/i*Δω)
         previd = body.id

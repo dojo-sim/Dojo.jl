@@ -99,12 +99,12 @@ function generate_storage(mechanism::Mechanism, z)
     return storage
 end
 
-function get_max_state(storage::Storage{T,N}) where {T,N}
-	z = [get_max_state(storage, i) for i=1:N]
+function get_maximal_state(storage::Storage{T,N}) where {T,N}
+	z = [get_maximal_state(storage, i) for i=1:N]
 	return z
 end
 
-function get_max_state(storage::Storage{T,N}, i::Int) where {T,N}
+function get_maximal_state(storage::Storage{T,N}, i::Int) where {T,N}
 	Nb = length(storage.x)
 	z = zeros(13*Nb)
 	for j = 1:Nb

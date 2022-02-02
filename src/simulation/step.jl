@@ -9,6 +9,6 @@ function step!(mechanism::Mechanism{T}, z::Vector{T}, u::Vector{T}; opts=SolverO
     mehrotra!(mechanism, opts=opts)
 
     # extract the next state
-    z̄ = get_next_state(mechanism)
-    return z̄
+    z_next = get_next_state(mechanism)
+    return z_next
 end

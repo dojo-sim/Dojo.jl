@@ -1,4 +1,4 @@
-function gethumanoid(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf=0.8, spring=0.0, damper=0.0,
+function get_humanoid(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf=0.8, spring=0.0, damper=0.0,
 		contact::Bool=true, contact_body::Bool=false) where T
     path = joinpath(@__DIR__, "../deps/humanoid.urdf")
     mech = Mechanism(path, true, T, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
@@ -66,7 +66,7 @@ function gethumanoid(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf=0.8, spri
 
         contacts_right = contact_constraint(right_foot, normal, cf=cfs, p = contacts, offset=offsets)
 
-        set_position(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [0;0;1.2;0.1;0.;0.])
+        set_position!(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [0;0;1.2;0.1;0.;0.])
         # mech = Mechanism(origin, bodies, eqs, [contacts_left; contacts_right], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
         mech = Mechanism(origin, bodies, eqs, [contacts_left; ], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
@@ -74,6 +74,6 @@ function gethumanoid(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf=0.8, spri
 end
 
 function initializehumanoid!(mechanism::Mechanism; tran=[0,0,1.5], rot=[0.1,0,0]) where T
-    set_position(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [tran; rot])
-    zeroVelocity!(mechanism)
+    set_position!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [tran; rot])
+    zero_velocity!(mechanism)
 end

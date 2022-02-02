@@ -19,8 +19,8 @@ include(joinpath(module_dir(), "src", "optional_components", "trajopt_utils.jl")
 # System
 gravity = -9.81
 timestep = 0.05
-mech = getraiberthopper(timestep=timestep, gravity=gravity, damper=0.0)
-initializeraiberthopper!(mech)
+mech = get_raiberthopper(timestep=timestep, gravity=gravity, damper=0.0)
+initialize_raiberthopper!(mech)
 
 ## state space
 n = minimal_dimension(mech)
@@ -51,13 +51,13 @@ function raiberthopper_offset_state(x_shift, y_shift, z_shift)
     return z
 end
 
-z1 = max2min(mech, raiberthopper_offset_state(0.0, 0.0, 0.0))
-zM = max2min(mech, raiberthopper_offset_state(0.25, 0.0, 0.5))
-zT = max2min(mech, raiberthopper_offset_state(0.5, 0.0, 0.0))
+z1 = maximal_to_minimal(mech, raiberthopper_offset_state(0.0, 0.0, 0.0))
+zM = maximal_to_minimal(mech, raiberthopper_offset_state(0.25, 0.0, 0.5))
+zT = maximal_to_minimal(mech, raiberthopper_offset_state(0.5, 0.0, 0.0))
 
-# z1 = max2min(mech, raiberthopper_offset_state(0.0, 0.0, 0.0))
-# zM = max2min(mech, raiberthopper_offset_state(0.0, 0.0, 0.0))
-# zT = max2min(mech, raiberthopper_offset_state(0.0, 0.0, 0.0))
+# z1 = maximal_to_minimal(mech, raiberthopper_offset_state(0.0, 0.0, 0.0))
+# zM = maximal_to_minimal(mech, raiberthopper_offset_state(0.0, 0.0, 0.0))
+# zT = maximal_to_minimal(mech, raiberthopper_offset_state(0.0, 0.0, 0.0))
 
 u_control = [0.0; 0.0; mechanism.gravity * mech.timestep]
 u_mask = [0 0 0 1 0 0 0;
@@ -73,14 +73,14 @@ nu += nx
 function f(d, y, x, u, w)
     u_ctrl = u[1:3]
     s = u[3 .+ (1:nx)]
-    z = step!(mech, min2max(mech, x), u_mask'*u_ctrl, ϵ = 1e-6, btol = 3e-4, undercut = 1.5, verbose = false)
-	d .= y - max2min(mech, z) + s
+    z = step!(mech, minimal_to_maximal(mech, x), u_mask'*u_ctrl, ϵ = 1e-6, btol = 3e-4, undercut = 1.5, verbose = false)
+	d .= y - maximal_to_minimal(mech, z) + s
 end
 
 function fz(dz, y, x, u, w)
     u_ctrl = u[1:3]
     s = u[3 .+ (1:nx)]
-	dx, du = getMinGradients!(mech, min2max(mech, x), u_mask'*u_ctrl, ϵ = 1e-6, btol = 3e-3, undercut = 1.5, verbose = false)
+	dx, du = get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u_ctrl, ϵ = 1e-6, btol = 3e-3, undercut = 1.5, verbose = false)
     dz .= [-dx -du * transpose(u_mask) I(nx) I(nx)]
 end
 
@@ -161,5 +161,5 @@ DirectTrajectoryOptimization.initialize!(s, z0)
 # # ## control
 # plot(hcat(trajopt.u[1:end-1]..., trajopt.u[end-1])', linetype = :steppost)
 
-storage = generate_storage(mech, [min2max(mech, x) for x in trajopt.x])
+storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in trajopt.x])
 visualize(mech, storage, vis = vis)

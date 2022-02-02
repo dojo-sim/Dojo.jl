@@ -66,15 +66,15 @@ plot!([x[3] for x in X_potato], linewidth = 5.0)
 zref = []
 for t = 1:21
 	initialize!(mech, :quadruped, tran = X_potato[t][1:3] - [0,0,0.23], v = X_potato[t][4:6], θ = 0.95)
-	push!(zref, get_max_state(mech))
+	push!(zref, get_maximal_state(mech))
 end
 storage = generate_storage(mech, zref)
 visualize(mech, storage, vis = vis)
 
 
 initialize!(mech, :quadruped, tran = [0.00,0,0.0], v = [0.5,0,0], θ = 0.95)
-z1 = get_max_state(mech)
-visualizeMaxCoord(mech, z1, vis)
+z1 = get_maximal_state(mech)
+visualize_maximal(mech, z1, vis)
 
 function gravity_compensation(mechanism::Mechanism)
     # only works with revolute joints for now
@@ -125,11 +125,11 @@ function fd(y, x, u, w)
 end
 
 function fdx(fx, x, u, w)
-	fx .= copy(getMaxGradients!(mech, x, u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[1])
+	fx .= copy(get_maximal_gradients!(mech, x, u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[1])
 end
 
 function fdu(fu, x, u, w)
-	∇u = copy(getMaxGradients!(mech, x, u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[2])
+	∇u = copy(get_maximal_gradients!(mech, x, u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[2])
 	fu .= ∇u * u_mask'
 end
 

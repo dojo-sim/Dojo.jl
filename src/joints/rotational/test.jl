@@ -4,7 +4,7 @@
 
 using Test
 
-mech = getpendulum()
+mech = get_pendulum()
 eqc0 = mech.eqconstraints[1]
 xa = rand(3)
 qa = UnitQuaternion(rand(4)...)

@@ -36,7 +36,7 @@ include("data.jl")
 include("data_gradients.jl")
 include("finite_difference.jl")
 
-mech = getpendulum(timestep=0.05, damper=3.0, spring=1.0);
+mech = get_pendulum(timestep=0.05, damper=3.0, spring=1.0);
 joint0 = mech.joints[1]
 body0 = mech.bodies[1]
 initialize!(mech, :pendulum, ϕ1=0.2, ω1=-0.3)
@@ -185,8 +185,8 @@ plot(log.(10, abs.(sum(full_matrix(data_system), dims=1)[1,:])))
 full_matrix(data_system)
 
 
-mech = getpendulum()
-mech = gethalfcheetah()
+mech = get_pendulum()
+mech = get_halfcheetah()
 A = data_adjacency_matrix(mech.joints, mech.bodies, mech.contacts)
 sum(A)
 plot(Gray.(A))
@@ -198,8 +198,8 @@ D = create_data_matrix(mech.joints, mech.bodies, mech.contacts)
 
 
 
-# mech = getsnake(jointtype=:PlanarAxis, spring=2.0, damper=4.0)
-mech = getsnake(jointtype=:Prismatic, spring=0.0, damper=4.0, gravity=0.0)
+# mech = get_snake(jointtype=:PlanarAxis, spring=2.0, damper=4.0)
+mech = get_snake(jointtype=:Prismatic, spring=0.0, damper=4.0, gravity=0.0)
 initialize!(mech, :snake, v=[0,0,0.], ω=[0,0,0.])
 function ctrl!(mech, k)
     nu = control_dimension(mech)

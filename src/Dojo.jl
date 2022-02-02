@@ -59,7 +59,7 @@ export Origin,
     NonlinearContact,
     UnitQuaternion,
 
-    set_position,
+    set_position!,
     set_velocity!,
     set_input!,
     add_input!,
@@ -128,6 +128,8 @@ include(joinpath("joints", "constraint.jl"))
 include(joinpath("contacts", "constraint.jl"))
 include(joinpath("mechanism", "id.jl"))
 include(joinpath("mechanism", "mechanism.jl"))
+include(joinpath("mechanism", "maximal.jl"))
+include(joinpath("mechanism", "minimal.jl"))
 include(joinpath("mechanism", "system.jl"))
 include(joinpath("mechanism", "methods.jl"))
 
@@ -191,7 +193,6 @@ include(joinpath("..", "env", "mechanisms.jl"))
 include(joinpath("..", "env", "environment.jl"))
 
 # Utilities
-include(joinpath("..", "examples", "trajectory_optimization", "utils.jl"))
 include(joinpath("..", "examples", "reinforcement_learning", "ars.jl"))
 
 end

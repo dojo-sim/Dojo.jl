@@ -31,13 +31,13 @@ n = minimal_dimension(mech)
 m = 12
 d = 0
 xref = quadruped_trajectory(mech, r = 0.05, z = 0.29; Δx = -0.04, Δfront = 0.10, N = Int(T/2), Ncycles = 1, pinned=true)
-zref = [min2max(mech, x) for x in xref]
+zref = [minimal_to_maximal(mech, x) for x in xref]
 storage = generate_storage(mech, zref)
 visualize(mech, storage, vis = vis)
-zref = [max2min(mech, z) for z in zref]
+zref = [maximal_to_minimal(mech, z) for z in zref]
 
 z1 = zref[1]
-visualizeMaxCoord(mech, min2max(mech, z1), vis)
+visualize_maximal(mech, minimal_to_maximal(mech, z1), vis)
 
 function gravity_compensation(mechanism::Mechanism)
     # only works with revolute joints for now
@@ -75,25 +75,25 @@ u_mask = [zeros(12,6) I(m)]
 
 z = [copy(z1)]
 for t = 1:5
-    znext = max2min(mech, step!(mech, min2max(mech, z[end]), u_mask'*u_control))
+    znext = maximal_to_minimal(mech, step!(mech, minimal_to_maximal(mech, z[end]), u_mask'*u_control))
     push!(z, znext)
 end
-storage = generate_storage(mech, [min2max(mech, zi) for zi in z])
+storage = generate_storage(mech, [minimal_to_maximal(mech, zi) for zi in z])
 visualize(mech, storage, vis = vis)
 
 
 # Model
 function fd(y, x, u, w)
-	z = step!(mech, min2max(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
-	y .= copy(max2min(mech, z))
+	z = step!(mech, minimal_to_maximal(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
+	y .= copy(maximal_to_minimal(mech, z))
 end
 
 function fdx(fx, x, u, w)
-	fx .= copy(getMinGradients!(mech, min2max(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[1])
+	fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[1])
 end
 
 function fdu(fu, x, u, w)
-	∇u = copy(getMinGradients!(mech, min2max(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[2])
+	∇u = copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[2])
 	fu .= ∇u * u_mask'
 end
 
@@ -109,7 +109,7 @@ ū = [u_control for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 # Rollout
 x̄ = rollout(model, z1, ū, w)
-storage = generate_storage(mech, [min2max(mech, x) for x in x̄])
+storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in x̄])
 visualize(mech, storage; vis = vis)
 
 # Objective
@@ -147,5 +147,5 @@ IterativeLQR.constrained_ilqr_solve!(prob,
     ρ_scale=10.0)
 
 x_sol, u_sol = get_trajectory(prob)
-storage = generate_storage(mech, [min2max(mech, x) for x in x_sol])
+storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in x_sol])
 visualize(mech, storage, vis = vis)

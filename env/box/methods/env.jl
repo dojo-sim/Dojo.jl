@@ -9,8 +9,8 @@ function block(; mode::Symbol=:max, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
     control_scaling=Diagonal(ones(3)),
     opts_step=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5), opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5)) where T
 
-    mechanism = getbox(timestep=dt, gravity=gravity, cf=cf, side=side, contact=contact, contact_type=contact_type)
-    initializebox!(mechanism)
+    mechanism = get_box(timestep=dt, gravity=gravity, cf=cf, side=side, contact=contact, contact_type=contact_type)
+    initialize_box!(mechanism)
 
     if mode == :min
         nx = minimal_dimension(mechanism)
@@ -25,8 +25,8 @@ function block(; mode::Symbol=:max, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
 
     rng = MersenneTwister(s)
 
-    z = get_max_state(mechanism)
-    x = mode == :min ? max2min(mechanism, z) : z
+    z = get_maximal_state(mechanism)
+    x = mode == :min ? maximal_to_minimal(mechanism, z) : z
 
     fx = zeros(nx, nx)
     fu = zeros(nx, nu)

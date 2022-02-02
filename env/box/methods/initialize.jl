@@ -1,4 +1,4 @@
-function getbox(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, radius=0.0, side=0.5,
+function get_box(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, radius=0.0, side=0.5,
     contact::Bool=true,
     contact_type=:contact,
     # contact_type=:linear_contact,
@@ -43,7 +43,7 @@ function getbox(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, radius
     return mech
 end
 
-function initializebox!(mechanism::Mechanism;
+function initialize_box!(mechanism::Mechanism;
         x::AbstractVector{T} = [0,0,1.],
         q::UnitQuaternion{T} = UnitQuaternion(1.,0,0,0),
         v::AbstractVector{T} = [1,.3,.2],
@@ -61,6 +61,6 @@ function initializebox!(mechanism::Mechanism;
     end
 
     z = halfside + offset
-    set_position(body, x = x + [0,0,z], q = q)
+    set_position!(body, x = x + [0,0,z], q = q)
     set_velocity!(body, v = v, ω = ω)
 end

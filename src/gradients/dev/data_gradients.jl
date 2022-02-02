@@ -34,7 +34,7 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, body::Body{T})
     ∇v15 = body.mass * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
     ∇q1 = -4 / Δt * LVᵀmat(q2)' * ∂qLVᵀmat(body.inertia * VLᵀmat(q1) * vector(q2))
     ∇q1 += -4 / Δt * LVᵀmat(q2)' * LVᵀmat(q1) * body.inertia * ∂qVLᵀmat(vector(q2))
-    ∇ϕ15 = ∇q1 * ∂integrator∂ϕ(q2, -ϕ15, Δt)
+    ∇ϕ15 = ∇q1 * rotational_integrator_jacobian_velocity(q2, -ϕ15, Δt)
     ∇15 = [∇v15 szeros(T,3,3);
            szeros(T,3,3) ∇ϕ15]
 
@@ -212,7 +212,7 @@ function indirect_link0(id1, id2, nodes::Vector{S}) where {S<:Node}
         linked && push!(ids, node.id)
     end
     return ids
-    # mech = gethalfcheetah()
+    # mech = get_halfcheetah()
     # @test indirect_link0(8,14,mech.joints) == [2]
     # @test indirect_link0(14,7,mech.joints) == []
     # @test indirect_link0(7,7,mech.joints) == []
@@ -333,12 +333,12 @@ end
 #     AposT = [-I Z3]
 #     # AvelT = [Z3 -I*body.mass] # solving for impulses
 #
-#     AposR = [-∂integrator∂q(q2, ϕ25, Δt, attjac = attjac) szeros(4,3)]
+#     AposR = [-rotational_integrator_jacobian_orientation(q2, ϕ25, Δt, attjac = attjac) szeros(4,3)]
 #
 #     rot_q1(q) = -4 / Δt * LVᵀmat(q2)' * Lmat(UnitQuaternion(q..., false)) * Vᵀmat() * body.inertia * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(q2)
 #     rot_q2(q) = -4 / Δt * LVᵀmat(UnitQuaternion(q..., false))' * Tmat() * Rmat(getq3(UnitQuaternion(q..., false), state.ϕsol[2], Δt))' * Vᵀmat() * body.inertia * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(getq3(UnitQuaternion(q..., false), state.ϕsol[2], Δt)) + -4 / Δt * LVᵀmat(UnitQuaternion(q..., false))' * Lmat(getq3(UnitQuaternion(q..., false), -state.ϕ15, Δt)) * Vᵀmat() * body.inertia * Vmat() * Lmat(getq3(UnitQuaternion(q..., false), -state.ϕ15, Δt))' * q
 #
-#     # dynR_ϕ15 = -1.0 * FiniteDiff.finite_difference_jacobian(rot_q1, vector(q1)) * ∂integrator∂ϕ(q2, -state.ϕ15, Δt)
+#     # dynR_ϕ15 = -1.0 * FiniteDiff.finite_difference_jacobian(rot_q1, vector(q1)) * rotational_integrator_jacobian_velocity(q2, -state.ϕ15, Δt)
 #     dynR_q2 = FiniteDiff.finite_difference_jacobian(rot_q2, vector(q2))
 #     AvelR = attjac ? [dynR_q2 * LVᵀmat(q2) dynR_ϕ15] : [dynR_q2 dynR_ϕ15]
 #

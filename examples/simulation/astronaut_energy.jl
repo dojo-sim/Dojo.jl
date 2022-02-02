@@ -102,7 +102,7 @@ PGF.save(joinpath(dir, "energy_drift.tikz"), a1)
 ##########
 # Visualization
 color = RGBA(255.0/255.0,0.0,255.0,1.0);
-z = get_max_state(storage)
+z = get_maximal_state(storage)
 z = [[z[1] for t = 1:100]..., z..., [z[end] for t = 1:100]...]
 build_robot(vis, mech, color=color)
 T = length(z)

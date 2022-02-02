@@ -13,21 +13,21 @@ function test_get_set_data(mechanism::Mechanism)
 end
 
 @testset "get and set data" begin
-    mech = getsnake(Nb=3, damper=1.0, spring=1.0, contact_type=:contact);
+    mech = get_snake(Nb=3, damper=1.0, spring=1.0, contact_type=:contact);
     test_get_set_data(mech)
-    mech = getsnake(Nb=3, damper=1.0, spring=1.0, contact_type=:linear_contact);
+    mech = get_snake(Nb=3, damper=1.0, spring=1.0, contact_type=:linear_contact);
     test_get_set_data(mech)
-    mech = getsnake(Nb=3, damper=1.0, spring=1.0, contact_type=:impact);
+    mech = get_snake(Nb=3, damper=1.0, spring=1.0, contact_type=:impact);
     test_get_set_data(mech)
 
-    mech = getpendulum(damper=1.0, spring=10.0);
+    mech = get_pendulum(damper=1.0, spring=10.0);
     test_get_set_data(mech)
-    mech = gethumanoid(damper=1.0, spring=10.0, contact=true);
+    mech = get_humanoid(damper=1.0, spring=10.0, contact=true);
     test_get_set_data(mech)
-    mech = gethumanoid(damper=1.0, spring=10.0, contact=false);
+    mech = get_humanoid(damper=1.0, spring=10.0, contact=false);
     test_get_set_data(mech)
-    mech = getatlas(damper=1.0, spring=10.0);
+    mech = get_atlas(damper=1.0, spring=10.0);
     test_get_set_data(mech)
-    mech = getquadruped(damper=1.0, spring=10.0);
+    mech = get_quadruped(damper=1.0, spring=10.0);
     test_get_set_data(mech)
 end

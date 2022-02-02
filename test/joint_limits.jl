@@ -1,5 +1,5 @@
 @testset "Joint limits: Pendulum" begin
-    function getpendulumlimited(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], m::T=1.0, l::T=1.0,
+    function get_pendulumlimited(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], m::T=1.0, l::T=1.0,
         spring=0.0, damper=0.0, spring_offset=szeros(1)) where T
         # Parameters
         joint_axis = [1.0; 0; 0]
@@ -21,7 +21,7 @@
         return mech
     end
 
-    mech = getpendulumlimited(timestep = 0.01, gravity=-9.81, spring = 0.0, damper = 0.0)
+    mech = get_pendulumlimited(timestep = 0.01, gravity=-9.81, spring = 0.0, damper = 0.0)
     initialize!(mech, :pendulum, ϕ1 = 0.4 * π)
     storage = simulate!(mech, 1.0, record = true, verbose = false)
     @test norm(Dojo.get_minimal_state(mech)[1] - 0.25 * π) < 1.0e-3

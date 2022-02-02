@@ -35,7 +35,7 @@ d = 0
 N = 2
 initialize!(env.mechanism, :quadruped)
 xref = quadruped_trajectory(env.mechanism, r=0.05, z=0.29; Δx=-0.04, Δfront=0.10, N=10, Ncycles=N)
-zref = [min2max(env.mechanism, x) for x in xref]
+zref = [minimal_to_maximal(env.mechanism, x) for x in xref]
 visualize(env, xref)
 
 ## gravity compensation TODO: solve optimization problem instead
@@ -121,7 +121,7 @@ x_shift = deepcopy(x_sol)
 for x in x_shift
     x[3] += 0.01
 end
-z = [min2max(env.mechanism, x) for x in x_shift]
+z = [minimal_to_maximal(env.mechanism, x) for x in x_shift]
 
 t = 1 #10, 20, 30, 41
 set_robot(env.vis, env.mechanism, z[41])

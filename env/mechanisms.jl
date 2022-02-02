@@ -3,7 +3,7 @@
      mechanisms: atlas, snake, box, etc.
 """
 function get_mechanism(model::Symbol; kwargs...)
-    mech = eval(Symbol(:get, model))(; kwargs...)
+    mech = eval(Symbol(:get, :_, model))(; kwargs...)
     return mech
 end
 
@@ -12,7 +12,7 @@ end
      conditions (pose and velocity) of the mechanism.
 """
 function initialize!(mechanism::Mechanism, model::Symbol; kwargs...)
-    eval(Symbol(:initialize, model, :!))(mechanism; kwargs...)
+    eval(Symbol(:initialize, :_, model, :!))(mechanism; kwargs...)
 end
 
 include("ant/methods/initialize.jl")

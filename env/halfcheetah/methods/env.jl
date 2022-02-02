@@ -9,8 +9,8 @@ function halfcheetah(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
     s::Int=1, contact::Bool=true, info=nothing, vis::Visualizer=Visualizer(), name::Symbol=:robot,
     opts_step=SolverOptions(), opts_grad=SolverOptions()) where T
 
-    mechanism = gethalfcheetah(timestep=dt, gravity=gravity, cf=cf, spring=spring, damper=damper, contact=contact, limits=limits)
-    initializehalfcheetah!(mechanism)
+    mechanism = get_halfcheetah(timestep=dt, gravity=gravity, cf=cf, spring=spring, damper=damper, contact=contact, limits=limits)
+    initialize_halfcheetah!(mechanism)
 
     if mode == :min
         nx = minimal_dimension(mechanism)
@@ -26,8 +26,8 @@ function halfcheetah(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
 
     rng = MersenneTwister(s)
 
-    z = get_max_state(mechanism)
-    x = mode == :min ? max2min(mechanism, z) : z
+    z = get_maximal_state(mechanism)
+    x = mode == :min ? maximal_to_minimal(mechanism, z) : z
 
     fx = zeros(nx, nx)
     fu = zeros(nx, nu)
@@ -64,12 +64,12 @@ function reset(env::Environment{HalfCheetah}; x=nothing, reset_noise_scale = 0.1
         low = -reset_noise_scale
         high = reset_noise_scale
         x = x0 + (high - low) .* rand(env.rng[1], nx) .+ low # we ignored the normal distribution on the velocities
-        z = min2max(env.mechanism, x)
+        z = minimal_to_maximal(env.mechanism, x)
         set_state!(env.mechanism, z)
         if env.mode == :min
             env.x .= get_minimal_state(env.mechanism)
         elseif env.mode == :max
-            env.x .= get_max_state(env.mechanism)
+            env.x .= get_maximal_state(env.mechanism)
         end
         env.u_prev .= 0.0
     end

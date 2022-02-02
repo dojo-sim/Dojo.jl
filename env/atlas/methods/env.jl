@@ -25,8 +25,8 @@ function atlas(; mode::Symbol=:min, dt::T=0.01, gravity=[0.0; 0.0; -9.81], cf=0.
     ospace = BoxSpace(no, low=(-Inf * ones(no)), high=(Inf * ones(no)))
 
     rng = MersenneTwister(s)
-    z = get_max_state(mechanism)
-    x = mode == :min ? max2min(mechanism, z) : z
+    z = get_maximal_state(mechanism)
+    x = mode == :min ? maximal_to_minimal(mechanism, z) : z
     fx = zeros(nx, nx)
     fu = zeros(nx, nu)
 

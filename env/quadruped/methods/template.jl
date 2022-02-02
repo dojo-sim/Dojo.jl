@@ -45,9 +45,9 @@ function IKquadruped(mechanism::Mechanism, p_trunk, p_foot; leg::Symbol = :FR)
 end
 
 function QuadrupedIKerror(mechanism::Mechanism, p_trunk, p_foot, θ; leg::Symbol = :FR)
-	set_position(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [p_trunk; zeros(3)])
-	set_position(mechanism, get_joint_constraint(mechanism, Symbol(String(leg)*"_thigh_joint")), [θ[1]])
-	set_position(mechanism, get_joint_constraint(mechanism, Symbol(String(leg)*"_calf_joint")), [θ[2]])
+	set_position!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [p_trunk; zeros(3)])
+	set_position!(mechanism, get_joint_constraint(mechanism, Symbol(String(leg)*"_thigh_joint")), [θ[1]])
+	set_position!(mechanism, get_joint_constraint(mechanism, Symbol(String(leg)*"_calf_joint")), [θ[2]])
 
 	foot = get_body(mechanism, Symbol(String(leg)*"_calf"))
 	contacts = collect(mechanism.contacts)
@@ -124,7 +124,7 @@ end
 # initialize!(mech, :quadruped, tran = [0,0,0.], v = [0,0,0.])
 #
 # X = quadruped_trajectory(mech, r = 0.08, z = 0.27; timestep = 0.05, Δx = -0.03, N = 9, Ncycles = 10)
-# storage = generate_storage(mech, [min2max(mech, x) for x in X])
+# storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in X])
 # visualize(mech, storage, vis = vis)
 #
 # collect(mech.contacts)

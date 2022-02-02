@@ -1,31 +1,36 @@
 ################################################################################
 # Development
 ################################################################################
-
+using Dojo
 
 # Open visualizer
 vis = Visualizer()
 open(vis)
 
-# Include new files
-include(joinpath(module_dir(), "examples", "loader.jl"))
-
-mech = getmechanism(:pendulum, timestep = 0.01, g = -9.81)#, spring = 100.0, damper = 5.0)
+# Mechanism
+mech = get_mechanism(:npendulum, timestep = 0.01, gravity = -9.81, Nb=5)#, spring = 100.0, damper = 5.0)
 Random.seed!(100)
 ϕ1 = 0.3π
-initialize!(mech, :pendulum, ϕ1 = ϕ1)
+initialize!(mech, :npendulum, ϕ1 = ϕ1)
 
-function cont!(mechanism, k; u = 30.1)
-    for (i, eqc) in enumerate(mechanism.joints)
-        nu = control_dimension(eqc, ignore_floating_base = false)
-        su = mechanism.timestep * u * sones(nu)
-        set_input!(eqc, su)
-    end
-    return
-end
+mech = get_mechanism(:sphere, timestep = 0.01, gravity = -9.81)
+initialize!(mech, :sphere)
 
-storage = simulate!(mech, 1.0, cont!, record = true, verbose = false)
+storage = simulate!(mech, 1.0, record = true, verbose = false)
 visualize(mech, storage, vis = vis)
+
+## Maximal gradients 
+maximal_dimension(mech)
+minimal_dimension(mech)
+z = get_maximal_state(mech)
+u = zeros(control_dimension(mech))
+maximal_to_minimal(mech, z)
+
+M_fd = maximal_to_minimal_jacobian(mech, z)
+M_a = maximal_to_minimal_jacobian_analytical(mech, z)
+
+@assert size(M_fd) == size(M_a)
+norm(M_fd - M_a, Inf)
 
 ################################################################################
 # Differentiation

@@ -22,7 +22,7 @@ end
 @inline function constraint_jacobian_velocity(bound::ImpactContact, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, timestep)
     V = bound.ainv3 * timestep
-    Ω = bound.ainv3 * ∂vrotate∂q(bound.p, q3) * ∂integrator∂ϕ(q2, ϕ25, timestep)
+    Ω = bound.ainv3 * ∂vrotate∂q(bound.p, q3) * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)
     return [V Ω]
 end
 

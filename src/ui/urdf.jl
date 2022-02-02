@@ -503,8 +503,8 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         constraint.constraints[ind2].qoffset = qoffset # in parent's (parentbody) frame
 
         # actual body properties
-        set_position(body) # set everything to zero
-        set_position(parentbody, body, p1 = p1, p2 = p2, Δq = qoffset)
+        set_position!(body) # set everything to zero
+        set_position!(parentbody, body, p1 = p1, p2 = p2, Δq = qoffset)
         xbody = body.state.x2[1]
         qbody = body.state.q2[1]
 

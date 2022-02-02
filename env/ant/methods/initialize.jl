@@ -1,4 +1,4 @@
-function getant(; timestep::T=0.05, gravity=[0.0; 0.0; -9.81], cf::T=0.5,
+function get_ant(; timestep::T=0.05, gravity=[0.0; 0.0; -9.81], cf::T=0.5,
     spring=0.0, damper=1.0, contact::Bool=true, contact_body=true,
     limits::Bool=true,
     joint_limits=[[-30, 30, -30, -70, -30, -70, -30, 30] * π / 180.0,
@@ -74,18 +74,18 @@ function getant(; timestep::T=0.05, gravity=[0.0; 0.0; -9.81], cf::T=0.5,
     return mech
 end
 
-function initializeant!(mechanism::Mechanism; ankle = 0.25, alt=0.15, pos=[0.0; 0.0; 0.48 + alt], rot=[0.0; 0.0; 0.00 * π]) where T
-    set_position(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [pos; rot])
+function initialize_ant!(mechanism::Mechanism; ankle = 0.25, alt=0.15, pos=[0.0; 0.0; 0.48 + alt], rot=[0.0; 0.0; 0.00 * π]) where T
+    set_position!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [pos; rot])
 
     for i in [1,4]
-        set_position(mechanism, get_joint_constraint(mechanism, Symbol("hip_$i")), 0.0*[0.0 * π])
-        set_position(mechanism, get_joint_constraint(mechanism, Symbol("ankle_$i")), [ankle * π])
+        set_position!(mechanism, get_joint_constraint(mechanism, Symbol("hip_$i")), 0.0*[0.0 * π])
+        set_position!(mechanism, get_joint_constraint(mechanism, Symbol("ankle_$i")), [ankle * π])
     end
 
     for i in [2,3]
-        set_position(mechanism, get_joint_constraint(mechanism, Symbol("hip_$i")), [0.0 * π])
-        set_position(mechanism, get_joint_constraint(mechanism, Symbol("ankle_$i")), [-ankle * π])
+        set_position!(mechanism, get_joint_constraint(mechanism, Symbol("hip_$i")), [0.0 * π])
+        set_position!(mechanism, get_joint_constraint(mechanism, Symbol("ankle_$i")), [-ankle * π])
     end
 
-    zeroVelocity!(mechanism)
+    zero_velocity!(mechanism)
 end

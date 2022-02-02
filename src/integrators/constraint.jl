@@ -47,7 +47,7 @@ end
     dynT = I(3) * mass / timestep
 
     rot_q3(q) = -4 / timestep * LVᵀmat(q2)' * Tmat() * Rmat(UnitQuaternion(q..., false))' * Vᵀmat() * inertia * Vmat() * Lmat(q2)' * q
-    dynR = FiniteDiff.finite_difference_jacobian(rot_q3, vector(q3)) #* ∂integrator∂ϕ(q2, state.ϕsol[2], timestep)
+    dynR = FiniteDiff.finite_difference_jacobian(rot_q3, vector(q3)) #* rotational_integrator_jacobian_velocity(q2, state.ϕsol[2], timestep)
 
     Z33 = szeros(T, 3, 3)
     Z34 = szeros(T, 3, 4)

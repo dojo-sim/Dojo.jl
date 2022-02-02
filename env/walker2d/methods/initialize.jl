@@ -1,4 +1,4 @@
-function getwalker2d(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=1.9,
+function get_walker2d(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=1.9,
     contact::Bool=true,
     contact_body::Bool=true,
     limits::Bool=true,
@@ -58,18 +58,18 @@ function getwalker2d(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=1.9,
                 push!(bounds, contact_constraint(body, normal, cf=cf, p=p, offset=o))
             end
         end
-        set_position(mech, get_joint_constraint(mech, :floating_joint), [1.25, 0.0, 0.0])
+        set_position!(mech, get_joint_constraint(mech, :floating_joint), [1.25, 0.0, 0.0])
         mech = Mechanism(origin, bodies, joints, [bounds...], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
     return mech
 end
 
-function initializewalker2d!(mechanism::Mechanism; x::T=0.0, z::T=0.0, θ::T=0.0) where T
-    set_position(mechanism,
+function initialize_walker2d!(mechanism::Mechanism; x::T=0.0, z::T=0.0, θ::T=0.0) where T
+    set_position!(mechanism,
                  get_joint_constraint(mechanism, :floating_joint),
                  [z + 1.25 , -x, -θ])
     for joint in mechanism.joints
-        (joint.name != :floating_joint) && set_position(mechanism, joint, zeros(control_dimension(joint)))
+        (joint.name != :floating_joint) && set_position!(mechanism, joint, zeros(control_dimension(joint)))
     end
-    zeroVelocity!(mechanism)
+    zero_velocity!(mechanism)
 end

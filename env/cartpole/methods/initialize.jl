@@ -1,4 +1,4 @@
-function getcartpole(; timestep::T=0.1, gravity=[0.0; 0.0; -9.81], spring=0.0, damper=0.0) where T
+function get_cartpole(; timestep::T=0.1, gravity=[0.0; 0.0; -9.81], spring=0.0, damper=0.0) where T
     #TODO: make customizable
     # Parameters
     slider_axis = [0.0; 1.0; 0.0]
@@ -26,17 +26,17 @@ function getcartpole(; timestep::T=0.1, gravity=[0.0; 0.0; -9.81], spring=0.0, d
     return mech
 end
 
-function initializecartpole!(mech::Mechanism{T,Nn,Ne,Nb}; mode=:down, pendulum_length=1.0) where {T,Nn,Ne,Nb}
+function initialize_cartpole!(mech::Mechanism{T,Nn,Ne,Nb}; mode=:down, pendulum_length=1.0) where {T,Nn,Ne,Nb}
     # origin to slider
-    set_position(mech.origin, mech.bodies[1])
+    set_position!(mech.origin, mech.bodies[1])
     set_velocity!(mech.bodies[1], v=[0.0; 0.0; 0.0],ω=zeros(3))
 
     # slider to pendulum
     if mode == :down
-        set_position(mech.bodies[1], mech.bodies[2], Δx=[0.0; 0.0; -0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
+        set_position!(mech.bodies[1], mech.bodies[2], Δx=[0.0; 0.0; -0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
         set_velocity!(mech.bodies[2], v=zeros(3), ω=zeros(3))
     elseif mode == :up
-        set_position(mech.bodies[1], mech.bodies[2], Δx=[0.0; 0.0; 0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
+        set_position!(mech.bodies[1], mech.bodies[2], Δx=[0.0; 0.0; 0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
         set_velocity!(mech.bodies[2], v=zeros(3), ω=zeros(3))
     end
 end

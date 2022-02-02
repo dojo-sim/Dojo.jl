@@ -123,7 +123,7 @@ set_camera!(env.vis, cam_pos=[0,-52,0], zoom=15)
 set_floor!(env.vis, z=0.03)
 
 # ## Animation
-z = [min2max(env.mechanism, x) for x in traj]
+z = [minimal_to_maximal(env.mechanism, x) for x in traj]
 z = [[z[1] for t = 1:40]..., z..., [z[end] for t = 1:40]...]
 T = length(z)
 anim = MeshCat.Animation(convert(Int, floor(1.0 / env.mechanism.timestep)))

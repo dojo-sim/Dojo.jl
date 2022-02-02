@@ -1,4 +1,4 @@
-function gethalfcheetah(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.4,
+function get_halfcheetah(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.4,
     contact::Bool=true,
     contact_body::Bool=true,
     limits::Bool = true,
@@ -63,18 +63,18 @@ function gethalfcheetah(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.4
                 push!(bounds, contact_constraint(body, normal, cf=cf, p=p, offset=o))
             end
         end
-        set_position(mech, get_joint_constraint(mech, :floating_joint), [0.576509, 0.0, 0.02792])
+        set_position!(mech, get_joint_constraint(mech, :floating_joint), [0.576509, 0.0, 0.02792])
         mech = Mechanism(origin, bodies, joints, [bounds...], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
     return mech
 end
 
-function initializehalfcheetah!(mechanism::Mechanism; x::T=0.0, z::T=0.0, θ::T=0.0) where T
-    set_position(mechanism,
+function initialize_halfcheetah!(mechanism::Mechanism; x::T=0.0, z::T=0.0, θ::T=0.0) where T
+    set_position!(mechanism,
                  get_joint_constraint(mechanism, :floating_joint),
                  [z + 0.576509, -x, -θ + 0.02792])
     for joint in mechanism.joints
-        (joint.name != :floating_joint) && set_position(mechanism, joint, zeros(control_dimension(joint)))
+        (joint.name != :floating_joint) && set_position!(mechanism, joint, zeros(control_dimension(joint)))
     end
-    zeroVelocity!(mechanism)
+    zero_velocity!(mechanism)
 end

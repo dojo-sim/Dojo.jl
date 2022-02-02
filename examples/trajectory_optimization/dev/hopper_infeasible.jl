@@ -19,8 +19,8 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 # System
 gravity = -9.81
 timestep = 0.05
-mech = getraiberthopper(timestep=timestep, gravity=gravity, contact = true, damper = 1.0)
-initializeraiberthopper!(mech)
+mech = get_raiberthopper(timestep=timestep, gravity=gravity, contact = true, damper = 1.0)
+initialize_raiberthopper!(mech)
 
 ## state space
 n = minimal_dimension(mech)
@@ -51,9 +51,9 @@ function raiberthopper_offset_state(x_shift, y_shift, z_shift)
     return z
 end
 
-z1 = max2min(mech, raiberthopper_offset_state(0.0, 0.0, 0.0))
-zM = max2min(mech, raiberthopper_offset_state(0.5, 0.5, 0.5))
-zT = max2min(mech, raiberthopper_offset_state(0.5, 0.5, 0.0))
+z1 = maximal_to_minimal(mech, raiberthopper_offset_state(0.0, 0.0, 0.0))
+zM = maximal_to_minimal(mech, raiberthopper_offset_state(0.5, 0.5, 0.5))
+zT = maximal_to_minimal(mech, raiberthopper_offset_state(0.5, 0.5, 0.0))
 
 u_control = [0.0; 0.0; mechanism.gravity * mech.timestep; zeros(n)]
 u_mask = [0 0 0 1 0 0 0;
@@ -67,20 +67,20 @@ Random.seed!(0)
 function fd(y, x, u, w)
     u_control = u[1:3]
     s = u[3 .+ (1:n)]
-	z = step!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
-	y .= copy(max2min(mech, z)) + s
+	z = step!(mech, minimal_to_maximal(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
+	y .= copy(maximal_to_minimal(mech, z)) + s
 end
 
 function fdx(fx, x, u, w)
 	u_control = u[1:3]
     s = u[3 .+ (1:n)]
-	fx .= copy(getMinGradients!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[1])
+	fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[1])
 end
 
 function fdu(fu, x, u, w)
 	u_control = u[1:3]
     s = u[3 .+ (1:n)]
-	∇u = copy(getMinGradients!(mech, min2max(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[2])
+	∇u = copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[2])
 	fu .= [∇u * u_mask' I(n)]
 end
 
@@ -95,7 +95,7 @@ model = [dyn for t = 1:T-1]
 ū = [[0.0; 0.0; mechanism.gravity * mech.timestep + 0.0 * randn(1)[1]; zeros(n)] for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, z1, ū, w)
-storage = generate_storage(mech, [min2max(mech, x) for x in x̄])
+storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in x̄])
 visualize(mech, storage; vis = vis)
 
 # Objective
@@ -147,7 +147,7 @@ IterativeLQR.constrained_ilqr_solve!(prob,
     ρ_scale=3.0)
 
 x_sol, u_sol = IterativeLQR.get_trajectory(prob)
-storage = generate_storage(mech, [min2max(mech, x) for x in x_sol])
+storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in x_sol])
 visualize(mech, storage, vis = vis)
 
 norm([norm(u[3 .+ (1:n)], Inf) for u in u_sol], Inf)

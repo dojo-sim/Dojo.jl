@@ -18,9 +18,9 @@ m = env.nu
 d = 0
 
 # ## states
-z1 = max2min(env.mechanism, raiberthopper_nominal_max())
-zM = max2min(env.mechanism, raiberthopper_offset_max(0.5, 0.5, 0.5))
-zT = max2min(env.mechanism, raiberthopper_offset_max(0.5, 0.5, 0.0))
+z1 = maximal_to_minimal(env.mechanism, raiberthopper_nominal_max())
+zM = maximal_to_minimal(env.mechanism, raiberthopper_offset_max(0.5, 0.5, 0.5))
+zT = maximal_to_minimal(env.mechanism, raiberthopper_offset_max(0.5, 0.5, 0.0))
 
 # ## nominal control
 u_control = [0.0; 0.0; env.mechanism.bodies[1].m * env.mechanism.gravity * env.mechanism.timestep]

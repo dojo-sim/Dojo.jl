@@ -60,7 +60,7 @@ mech_mj = get_mechanism(:box, timestep=timestep, gravity=gravity, cf=friction_co
     contact_type=:linear_contact, mode=:box, color=color_mj);
 initialize!(mech_mj, :box, x=x0, q=one(UnitQuaternion), v=v0, ω=ω0)
 file = jldopen(joinpath(@__DIR__, "../MuJoCo_benchmark/results/cone_compare.jld2"))
-storage_mj = generate_storage(mech_mj, [get_max_state(mech_mj), file["ztraj"]...])
+storage_mj = generate_storage(mech_mj, [get_maximal_state(mech_mj), file["ztraj"]...])
 vis, anim = visualize(mech_mj, storage_mj, vis=vis, name=:mj, animation=anim)
 
 line_mat_mj = LineBasicMaterial(color=color_mj, linewidth=25.0)

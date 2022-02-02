@@ -21,8 +21,8 @@ m = env.nu
 d = 0
 
 # ## states
-z1 = max2min(env.mechanism, cartpole_nominal_max())
-zT = max2min(env.mechanism, cartpole_goal_max())
+z1 = maximal_to_minimal(env.mechanism, cartpole_nominal_max())
+zT = maximal_to_minimal(env.mechanism, cartpole_goal_max())
 
 # ## horizon
 T = 26

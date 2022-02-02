@@ -267,12 +267,12 @@ function ∂body∂z(body::Body{T}, timestep::T; attjac::Bool = true) where T
     AposT = [-I Z3]
     AvelT = [Z3 -I * body.mass] # solving for impulses
 
-    AposR = [-∂integrator∂q(q2, ϕ25, timestep, attjac = attjac) szeros(4,3)]
+    AposR = [-rotational_integrator_jacobian_orientation(q2, ϕ25, timestep, attjac = attjac) szeros(4,3)]
 
     rot_q1(q) = -4 / timestep * LVᵀmat(q2)' * Lmat(UnitQuaternion(q..., false)) * Vᵀmat() * body.inertia * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(q2)
     rot_q2(q) = -4 / timestep * LVᵀmat(UnitQuaternion(q..., false))' * Tmat() * Rmat(next_orientation(UnitQuaternion(q..., false), state.ϕsol[2], timestep))' * Vᵀmat() * body.inertia * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(next_orientation(UnitQuaternion(q..., false), state.ϕsol[2], timestep)) + -4 / timestep * LVᵀmat(UnitQuaternion(q..., false))' * Lmat(next_orientation(UnitQuaternion(q..., false), -state.ϕ15, timestep)) * Vᵀmat() * body.inertia * Vmat() * Lmat(next_orientation(UnitQuaternion(q..., false), -state.ϕ15, timestep))' * q
 
-    dynR_ϕ15 = -1.0 * FiniteDiff.finite_difference_jacobian(rot_q1, vector(q1)) * ∂integrator∂ϕ(q2, -state.ϕ15, timestep)
+    dynR_ϕ15 = -1.0 * FiniteDiff.finite_difference_jacobian(rot_q1, vector(q1)) * rotational_integrator_jacobian_velocity(q2, -state.ϕ15, timestep)
     dynR_q2 = FiniteDiff.finite_difference_jacobian(rot_q2, vector(q2))
     AvelR = attjac ? [dynR_q2 * LVᵀmat(q2) dynR_ϕ15] : [dynR_q2 dynR_ϕ15]
 
@@ -469,7 +469,7 @@ function integrator_jacobian(data::AbstractVector, sol::AbstractVector, timestep
         x2, v15, q2, ϕ15 = unpack_data(data[13*(i-1) .+ (1:13)])
         ϕ25 = sol[njoints + 6*(i-1) + 3 .+ SVector{3,Int}(1:3)]
         q2 = UnitQuaternion(q2..., false)
-        H = cat(H, I(6), ∂integrator∂q(q2, ϕ25, timestep, attjac = attjac), I(3), dims = (1,2))
+        H = cat(H, I(6), rotational_integrator_jacobian_orientation(q2, ϕ25, timestep, attjac = attjac), I(3), dims = (1,2))
     end
     ndata = length(data)
     nu = ndata - size(H)[1]

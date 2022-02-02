@@ -7,7 +7,7 @@ include("ars.jl")
 env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=25.0, cf = 0.5,
     contact=true, contact_body=true)
 obs = reset(env)
-initializeant!(env.mechanism, pos = [1.3,0,0], rot = [0,0,0.])
+initialize_ant!(env.mechanism, pos = [1.3,0,0], rot = [0,0,0.])
 env.x .= get_minimal_state(env.mechanism)
 render(env)
 
@@ -81,7 +81,7 @@ traj = display_policy(env, policy, normalizer, hp)
 for t = 1:length(traj)
     traj[t][1] -= 2.0
 end
-z = [min2max(env.mechanism, x) for x in traj]
+z = [minimal_to_maximal(env.mechanism, x) for x in traj]
 z = [[z[1] for t = 1:40]..., z..., [z[end] for t = 1:40]...]
 T = length(z)
 

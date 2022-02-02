@@ -38,7 +38,7 @@ d = 0
 N = 1
 initialize!(env.mechanism, :atlas)
 xref = atlas_trajectory(env.mechanism; timestep=dt, r=0.0, x=0.03, z=0.85, N=12, Ncycles=N)
-zref = [min2max(env.mechanism, x) for x in xref]
+zref = [minimal_to_maximal(env.mechanism, x) for x in xref]
 visualize(env, xref)
 #
 # storage = simulate!(env.mechanism, 0.1, record=true)
@@ -175,6 +175,6 @@ x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]
 visualize(env, x_view)
 
 set_camera!(env.vis, zoom=5, cam_pos=[0,-5,0])
-z = [min2max(env.mechanism, x) for x in x_sol]
+z = [minimal_to_maximal(env.mechanism, x) for x in x_sol]
 t = 1 #10, 20, 30, 41
 set_robot(env.vis, env.mechanism, z[t])

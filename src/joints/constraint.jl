@@ -57,24 +57,25 @@ mutable struct JointConstraint{T,N,Nc,Cs} <: Constraint{T,N}
     end
 end
 
-function set_position(mechanism, joint::JointConstraint, xθ; iter::Bool=true)
+function set_position!(mechanism, joint::JointConstraint, xθ; iter::Bool=true)
     if !iter
-        _set_position(mechanism, joint, xθ)
+        set_joint_position!(mechanism, joint, xθ)
     else
         currentvals = minimal_coordinates(mechanism)
-        _set_position(mechanism, joint, xθ)
+        set_joint_position!(mechanism, joint, xθ)
         for id in recursivedirectchildren!(mechanism.system, joint.id)
             node = get_node(mechanism, id)
             if node isa JointConstraint
-                _set_position(mechanism, node, currentvals[id])
+                set_joint_position!(mechanism, node, currentvals[id])
             end
         end
     end
 
     return
 end
+
 # TODO currently assumed constraints are in order and only joints which is the case unless very low level constraint setting
-function _set_position(mechanism, joint::JointConstraint{T,N,Nc}, xθ) where {T,N,Nc}
+function set_joint_position!(mechanism, joint::JointConstraint{T,N,Nc}, xθ) where {T,N,Nc}
     Nλ = 0
     for (i, element) in enumerate(joint.constraints)
         Nλ += λlength(element)
@@ -89,7 +90,7 @@ function _set_position(mechanism, joint::JointConstraint{T,N,Nc}, xθ) where {T,
         Δq = get_position_delta(joint.constraints[i+1], body1, body2, xθ[SUnitRange(joint.minimal_index[i+1][1], joint.minimal_index[i+1][2])]) # in body1's frame
 
         p1, p2 = joint.constraints[i].vertices
-        set_position(body1, body2; p1=p1, p2=p2, Δx=Δx, Δq=Δq)
+        set_position!(body1, body2; p1=p1, p2=p2, Δx=Δx, Δq=Δq)
     end
     return
 end

@@ -1,4 +1,4 @@
-function gettennisracket(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81]) where T
+function get_tennisracket(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81]) where T
     origin = Origin{T}(name="origin")
     mass = 1.0
     r = 0.1
@@ -9,12 +9,12 @@ function gettennisracket(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81]) where T
     return mechanism
 end
 
-function initializetennisracket!(mechanism::Mechanism; x::AbstractVector{T}=zeros(3),
+function initialize_tennisracket!(mechanism::Mechanism; x::AbstractVector{T}=zeros(3),
         q::UnitQuaternion{T}=one(UnitQuaternion), v::AbstractVector{T}=zeros(3),
         ω::AbstractVector{T}=zeros(3)) where T
 
     joint = get_joint_constraint(mechanism, :floating_joint)
-    zeroVelocity!(mechanism)
-    set_position(mechanism, joint, [x; rotation_vector(q)])
+    zero_velocity!(mechanism)
+    set_position!(mechanism, joint, [x; rotation_vector(q)])
     set_velocity!(mechanism, joint, [v; ω])
 end

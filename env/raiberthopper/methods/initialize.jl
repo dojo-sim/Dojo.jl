@@ -1,4 +1,4 @@
-function getraiberthopper(; timestep::T=0.05, gravity=[0.0; 0.0; -9.81], spring=0.0, damper=0.1, contact::Bool=true, contact_body::Bool=true) where T
+function get_raiberthopper(; timestep::T=0.05, gravity=[0.0; 0.0; -9.81], spring=0.0, damper=0.1, contact::Bool=true, contact_body::Bool=true) where T
     #TODO: make customizable
 
     # Parameters
@@ -48,9 +48,9 @@ function getraiberthopper(; timestep::T=0.05, gravity=[0.0; 0.0; -9.81], spring=
 end
 
 get_gravity([0.0; 0.0; 1.0])
-getraiberthopper()
+get_raiberthopper()
 
-function initializeraiberthopper!(mech::Mechanism{T,Nn,Ne,Nb}; leg_length_nominal=0.5, altitude=0.05,
+function initialize_raiberthopper!(mech::Mechanism{T,Nn,Ne,Nb}; leg_length_nominal=0.5, altitude=0.05,
     v = zeros(3), ω = zeros(3)) where {T,Nn,Ne,Nb}
     body1 = collect(mech.bodies)[1]
     body2 = collect(mech.bodies)[2]
@@ -58,10 +58,10 @@ function initializeraiberthopper!(mech::Mechanism{T,Nn,Ne,Nb}; leg_length_nomina
     tra2 = joint2.constraints[1]
 
     # origin to body
-    set_position(mech.origin, body1, Δx=[0.0; 0.0; leg_length_nominal + altitude])
+    set_position!(mech.origin, body1, Δx=[0.0; 0.0; leg_length_nominal + altitude])
     set_velocity!(body1, v=v, ω=ω)
 
     # body to foot
-    set_position(body1, body2, Δx=[0.0; 0.0; -leg_length_nominal], Δq=UnitQuaternion(RotX(0.0)))
+    set_position!(body1, body2, Δx=[0.0; 0.0; -leg_length_nominal], Δq=UnitQuaternion(RotX(0.0)))
     set_velocity!(body1, body2, p1 = tra2.vertices[1], p2 = tra2.vertices[2], Δv=zeros(3), Δω=zeros(3))
 end

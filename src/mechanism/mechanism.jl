@@ -74,3 +74,142 @@ end
 get_gravity(g::T) where T <: Real = SVector{3,T}([0.0; 0.0; g])
 get_gravity(g::Vector{T}) where T = SVector{3,T}(g)
 get_gravity(g::SVector) = g
+
+function gravity_compensation(mechanism::Mechanism)
+    # only works with revolute joints for now
+    nu = control_dimension(mechanism)
+    u = zeros(nu)
+    off  = 0
+    for joint in mechanism.joints
+        nu = control_dimension(joint)
+        if joint.parent_id != nothing
+            body = get_body(mechanism, joint.parent_id)
+            rot = joint.constraints[2]
+            A = Matrix(nullspace_mask(rot))
+            Fτ = apply_spring(mechanism, joint, body)
+            F = Fτ[1:3]
+            τ = Fτ[4:6]
+            u[off .+ (1:nu)] = -A * τ
+        else
+            @warn "need to treat the joint to origin"
+        end
+        off += nu
+    end
+    return u
+end
+
+# state
+function set_state!(mechanism::Mechanism, z::AbstractVector)
+    off = 0
+    for body in mechanism.bodies
+        x2, v15, q2, ϕ15 = unpack_data(z[off+1:end]); off += 13
+        q2 = UnitQuaternion(q2..., false)
+        body.state.v15 = v15
+        body.state.ϕ15 = ϕ15
+        body.state.x2[1] = x2
+        body.state.q2[1] = q2
+		initialize_state!(mechanism) # set x1, q1 and zeroes out F2 τ2
+    end
+	# warm-start solver
+	for body in mechanism.bodies 
+		set_solution!(body) 
+	end
+end
+
+function get_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
+	z = zeros(T,13Nb)
+	for (i, body) in enumerate(mechanism.bodies)
+		v15 = body.state.v15
+		ϕ15 = body.state.ϕ15
+		x2 = body.state.x2[1]
+		q2 = body.state.q2[1]
+		z[13*(i-1) .+ (1:13)] = [x2; v15; vector(q2); ϕ15]
+	end
+	return z
+end
+
+function get_next_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
+	timestep = mechanism.timestep
+	z_next = zeros(T,13Nb)
+	for (i, body) in enumerate(mechanism.bodies)
+		v25 = body.state.vsol[2]
+		ϕ25 = body.state.ϕsol[2]
+		x3 = next_position(body.state, timestep)
+		q3 = next_orientation(body.state, timestep)
+		z_next[13*(i-1) .+ (1:13)] = [x3; v25; vector(q3); ϕ25]
+	end
+	return z_next
+end
+
+# control
+function set_control!(mechanism::Mechanism{T}, u::AbstractVector) where T
+	joints = mechanism.joints
+	# set the controls in the equality constraints
+	off = 0
+	for joint in joints
+		nu = control_dimension(joint)
+		set_input!(joint, SVector{nu,T}(u[off .+ (1:nu)]))
+		off += nu
+	end
+	# apply the controls to each body's state
+	for joint in joints
+		apply_input!(joint, mechanism)
+	end
+end
+
+function inverse_control(mechanism::Mechanism, x, x₊; ϵtol = 1e-5)
+	nu = control_dimension(mechanism)
+	u = zeros(nu)
+	# starting point of the local search
+	for k = 1:10
+		err = inverse_control_error(mechanism, x, x₊, u, ϵtol = ϵtol)
+		norm(err, Inf) < 1e-10 && continue
+		∇ = FiniteDiff.finite_difference_jacobian(u -> inverse_control_error(mechanism, x, x₊, u, ϵtol = ϵtol), u)
+		u -= ∇ \ err
+	end
+	return u
+end
+
+function inverse_control_error(mechanism, x, x₊, u; ϵtol = 1e-5)
+	z = minimal_to_maximal(mechanism, x)
+	z_next = minimal_to_maximal(mechanism, x₊)
+	set_state!(mechanism, z)
+	opts = SolverOptions(rtol=ϵtol, btol=ϵtol, undercut=1.5)
+	err = x₊ - maximal_to_minimal(mechanism, step!(mechanism, minimal_to_maximal(mechanism, x), u, opts=opts))
+	return err
+end
+
+# velocity 
+function velocity_index(mechanism::Mechanism{T,Nn,Ne}) where {T,Nn,Ne}
+    ind = []
+    off = 0
+    for id in reverse(mechanism.system.dfs_list)
+        (id > Ne) && continue # only treat joints
+        joint = mechanism.joints[id]
+        nu = control_dimension(joint)
+        push!(ind, Vector(off + nu .+ (1:nu)))
+        off += 2nu
+    end
+    return vcat(ind...)
+end
+
+# springs
+function set_spring_offset!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector) where {T,Nn,Ne,Nb,Ni}
+	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
+	# Thus go through the joints in order, start from joint between robot and origin and go down the tree.
+	off = 0
+	for id in reverse(mechanism.system.dfs_list)
+		(id > Ne) && continue # only treat joints
+		joint = mechanism.joints[id]
+		for (i,element) in enumerate(joint.constraints)
+			cbody = get_body(mechanism, joint.child_ids[i])
+			pbody = get_body(mechanism, joint.parent_id)
+			N̄ = 3 - length(joint)
+			joint.spring_offset = x[off .+ (1:N̄)]
+			off += 2N̄
+		end
+	end
+	return nothing
+end
+
+

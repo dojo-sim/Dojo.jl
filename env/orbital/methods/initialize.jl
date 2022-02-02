@@ -1,4 +1,4 @@
-function getorbital(; timestep::T = 0.01, gravity = -9.81, spring = 0.0, damper = 0.0, Nb::Int = 5) where T
+function get_orbital(; timestep::T = 0.01, gravity = -9.81, spring = 0.0, damper = 0.0, Nb::Int = 5) where T
     # Parameters
     ex = [0; 0; 1]
     h = 1.
@@ -25,17 +25,17 @@ function getorbital(; timestep::T = 0.01, gravity = -9.81, spring = 0.0, damper 
     return mech
 end
 
-function initializeorbital!(mechanism::Mechanism; ϕx::T = pi/4, ϕy::T = pi/8) where T
+function initialize_orbital!(mechanism::Mechanism; ϕx::T = pi/4, ϕy::T = pi/8) where T
     body1 = collect(mechanism.bodies)[1]
     joint = collect(mechanism.joints)[1]
     vert11 = joint.constraints[1].vertices[2]
     vert12 = - vert11
 
     # set position and velocities
-    set_position(mechanism.origin, body1, p2 = vert11, Δq = UnitQuaternion(RotX(0.0)))
+    set_position!(mechanism.origin, body1, p2 = vert11, Δq = UnitQuaternion(RotX(0.0)))
 
     previd = body1.id
-    set_position(mechanism, collect(mechanism.joints)[2], [ϕx, ϕy])
+    set_position!(mechanism, collect(mechanism.joints)[2], [ϕx, ϕy])
 
-    zeroVelocity!(mechanism)
+    zero_velocity!(mechanism)
 end

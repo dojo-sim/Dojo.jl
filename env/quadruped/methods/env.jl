@@ -23,8 +23,8 @@ function quadruped(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81], c
     ospace = BoxSpace(no, low=(-Inf * ones(no)), high=(Inf * ones(no)))
 
     rng = MersenneTwister(s)
-    z = get_max_state(mechanism)
-    x = mode == :min ? max2min(mechanism, z) : z
+    z = get_maximal_state(mechanism)
+    x = mode == :min ? maximal_to_minimal(mechanism, z) : z
     fx = zeros(nx, nx)
     fu = zeros(nx, nu)
 

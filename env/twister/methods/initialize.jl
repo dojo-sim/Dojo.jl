@@ -1,4 +1,4 @@
-function gettwister(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, contact::Bool=true,
+function get_twister(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, contact::Bool=true,
     contact_type=:contact, spring=0.0, damper=0.0, Nb::Int=5,
     jointtype::Symbol=:Prismatic, h::T=1.0, r::T=0.05) where T
     # Parameters
@@ -39,7 +39,7 @@ function gettwister(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, co
     return mech
 end
 
-function initializetwister!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{T}=[0,-1.,0],
+function initialize_twister!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{T}=[0,-1.,0],
     v::AbstractVector{T}=zeros(3), ω::AbstractVector{T}=zeros(3),
     Δω::AbstractVector{T}=zeros(3), Δv::AbstractVector{T}=zeros(3),
     q1::UnitQuaternion{T}=UnitQuaternion(RotX(0.6 * π))) where {T,Nn,Ne,Nb}
@@ -50,12 +50,12 @@ function initializetwister!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{
     vert11 = [0.;0.; h/2]
     vert12 = -vert11
     # set position and velocities
-    set_position(mechanism.origin, body1, p2 = x, Δq = q1)
+    set_position!(mechanism.origin, body1, p2 = x, Δq = q1)
     set_velocity!(body1, v = v, ω = ω)
 
     previd = body1.id
     for (i,body) in enumerate(Iterators.drop(mechanism.bodies, 1))
-        set_position(get_body(mechanism, previd), body, p1 = vert12, p2 = vert11)
+        set_position!(get_body(mechanism, previd), body, p1 = vert12, p2 = vert11)
         set_velocity!(get_body(mechanism, previd), body, p1 = vert12, p2 = vert11,
                 Δv = Δv, Δω = Δω)
         previd = body.id

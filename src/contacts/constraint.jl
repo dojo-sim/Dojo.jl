@@ -58,7 +58,7 @@ end
         ∇ = ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * λ) * -∂vrotate∂q(offset, inv(q3)) * Tmat()
         ∇ += skew(p - vrotate(offset, inv(q3))) * ∂qVRmat(LᵀVᵀmat(q3) * λ)
         ∇ += skew(p - vrotate(offset, inv(q3))) * VRmat(q3) * ∂qLᵀVᵀmat(λ)
-        ∇ *= ∂integrator∂ϕ(q2, ϕ25, timestep)
+        ∇ *= rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)
         body.state.D -= [szeros(T,6,3) [szeros(T,3,3); ∇]]
     end
     return

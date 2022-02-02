@@ -33,7 +33,7 @@ rot1.spring_offset = srand(3)
 length(rot1)
 
 x0 = get_minimal_state(mech)
-setSpringOffset!(mech, x0)
+set_spring_offset!(mech, x0)
 
 # Dimensions
 T = 20
@@ -44,10 +44,10 @@ d = 0
 xref = quadruped_trajectory(mech, r = 0.07, z = 0.26; Δx = -0.05, β = 1.0, N = Int(T/2), Ncycles = 40)
 xref = quadruped_trajectory(mech, r = 0.08, z = 0.27; Δx = -0.08, β = 1.0, Δfront = 0.15, N = Int(T/2), Ncycles = 40)
 
-zref = [min2max(mech, x) for x in xref]
+zref = [minimal_to_maximal(mech, x) for x in xref]
 storage = generate_storage(mech, zref)
 visualize(mech, storage, vis = vis)
-# visualizeMaxCoord(mech, min2max(mech, xref[1]), vis)
+# visualize_maximal(mech, minimal_to_maximal(mech, xref[1]), vis)
 
 
 
@@ -58,7 +58,7 @@ initialize!(mech, :quadruped)
 set_state!(mech, zref[1])
 
 function controller!(mechanism, k)
-	setSpringOffset!(mechanism, xref[k])
+	set_spring_offset!(mechanism, xref[k])
     return
 end
 
@@ -69,7 +69,7 @@ visualize(mech, storage, vis = vis)
 mech = get_mechanism(:pendulum, g = 0.0, spring = 20.0, damper = 1.0, spring_offset = -0.9*sones(1))
 initialize!(mech, :pendulum, ϕ1 = pi/8)
 function controller!(mechanism, k)
-	setSpringOffset!(mechanism, [π])
+	set_spring_offset!(mechanism, [π])
     return
 end
 @elapsed storage = simulate!(mech, 8.0, controller!, record = true, solver = :mehrotra!, verbose = false)
@@ -107,19 +107,19 @@ visualize(mech, storage, vis = vis)
 # x0[1:12]
 # x0[13:end] .= 0.0
 # x0[13] = pi/4
-# z0 = min2max(mech, x0)
+# z0 = minimal_to_maximal(mech, x0)
 # mech = get_mechanism(:quadruped, timestep = 0.01, g = 0.0, spring = 10.0, damper = 1.0, contact = false)
 # initialize!(mech, :quadruped)
 # x1 = get_minimal_state(mech)
 
 mech = get_mechanism(:quadruped, timestep = 0.01, g = 0.0, spring = 10.0, damper = 1.0, contact = true)
 initialize!(mech, :quadruped)
-z0 = min2max(mech, zref[1])
+z0 = minimal_to_maximal(mech, zref[1])
 set_state!(mech, z0)
 
-visualizeMaxCoord(mech, z0, vis)
+visualize_maximal(mech, z0, vis)
 function controller!(mechanism, k)
-	setSpringOffset!(mechanism, zref[1])
+	set_spring_offset!(mechanism, zref[1])
     return
 end
 @elapsed storage = simulate!(mech, 4.01, controller!, record = true, solver = :mehrotra!, verbose = false)
@@ -171,25 +171,25 @@ u_mask = [zeros(12,6) I(m)]
 
 z = [copy(z1)]
 for t = 1:5
-    znext = max2min(mech, step!(mech, min2max(mech, z[end]), 0u_mask'*u_control))
+    znext = maximal_to_minimal(mech, step!(mech, minimal_to_maximal(mech, z[end]), 0u_mask'*u_control))
     push!(z, znext)
 end
-storage = generate_storage(mech, [min2max(mech, zi) for zi in z])
+storage = generate_storage(mech, [minimal_to_maximal(mech, zi) for zi in z])
 visualize(mech, storage, vis = vis)
 
 
 # Model
 function fd(y, x, u, w)
-	z = step!(mech, min2max(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
-	y .= copy(max2min(mech, z))
+	z = step!(mech, minimal_to_maximal(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
+	y .= copy(maximal_to_minimal(mech, z))
 end
 
 function fdx(fx, x, u, w)
-	fx .= copy(getMinGradients!(mech, min2max(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[1])
+	fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[1])
 end
 
 function fdu(fu, x, u, w)
-	∇u = copy(getMinGradients!(mech, min2max(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[2])
+	∇u = copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[2])
 	fu .= ∇u * u_mask'
 end
 
@@ -205,7 +205,7 @@ w = [zeros(d) for t = 1:T-1]
 
 # Rollout
 x̄ = rollout(model, z1, ū, w)
-storage = generate_storage(mech, [min2max(mech, x) for x in x̄])
+storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in x̄])
 visualize(mech, storage; vis = vis)
 
 # Objective
@@ -246,7 +246,7 @@ IterativeLQR.constrained_ilqr_solve!(prob,
     ρ_scale=3.0)
 
 x_sol, u_sol = get_trajectory(prob)
-storage = generate_storage(mech, [min2max(mech, x) for x in x_sol])
+storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in x_sol])
 visualize(mech, storage, vis = vis)
 
 

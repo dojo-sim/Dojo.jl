@@ -19,9 +19,9 @@ m = env.nu
 d = 0
 
 # ## states
-z1 = max2min(env.mechanism, halfcheetahState(x=0.00, z=0.00, θ=0.0))
-zM = max2min(env.mechanism, halfcheetahState(x=0.25, z=0.40, θ=0.0))
-zT = max2min(env.mechanism, halfcheetahState(x=0.50, z=0.00, θ=0.0))
+z1 = maximal_to_minimal(env.mechanism, halfcheetahState(x=0.00, z=0.00, θ=0.0))
+zM = maximal_to_minimal(env.mechanism, halfcheetahState(x=0.25, z=0.40, θ=0.0))
+zT = maximal_to_minimal(env.mechanism, halfcheetahState(x=0.50, z=0.00, θ=0.0))
 
 # ## gravity compensation control
 mech = get_mechanism(:halfcheetah, timestep=dt, gravity=gravity, damper=100.0, spring=1000.0)
