@@ -73,7 +73,7 @@ function get_humanoid(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf=0.8, spr
     return mech
 end
 
-function initializehumanoid!(mechanism::Mechanism; tran=[0,0,1.5], rot=[0.1,0,0]) where T
+function initialize_humanoid!(mechanism::Mechanism; tran=[0,0,1.5], rot=[0.1,0,0]) where T
     set_position!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [tran; rot])
     zero_velocity!(mechanism)
 end

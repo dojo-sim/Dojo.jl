@@ -142,7 +142,7 @@ function second_order_cone_step_length(λ::AbstractVector{T}, Δ::AbstractVector
     λ0 = λ[1]
     λ_λ = max(λ0^2 - λ[2:end]' * λ[2:end], 1e-25)
     if λ_λ < 0.0
-        @show λ_λ
+        # @show λ_λ
         @warn "should always be positive"
     end
     λ_λ += ϵ

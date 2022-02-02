@@ -53,7 +53,7 @@ function maximal_to_minimal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVect
 		for (i,element) in enumerate(joint.constraints)
 			ichild = joint.child_ids[i] - Ne
 			xb, vb, qb, ϕb = unpack_maximal_state(z, ichild)
-			if joint.parent_id != nothing
+			if joint.parent_id != 0
 				iparent = joint.parent_id - Ne
 				xa, va, qa, ϕa = unpack_maximal_state(z, iparent)
 			else
@@ -97,7 +97,7 @@ function maximal_to_minimal_jacobian_analytical(mechanism::Mechanism{T,Nn,Ne,Nb,
 			qb_idx = collect((ichild-1)*13 .+ (7:10)) 
 			ϕb_idx = collect((ichild-1)*13 .+ (11:13))
 
-			if joint.parent_id != nothing
+			if joint.parent_id != 0
 				iparent = joint.parent_id - Ne
 				xa, va, qa, ϕa = unpack_maximal_state(z, iparent)
 
@@ -119,7 +119,7 @@ function maximal_to_minimal_jacobian_analytical(mechanism::Mechanism{T,Nn,Ne,Nb,
 			v_idx = row_shift + v_shift .+ (1:nu_element)
 
 			if typeof(element) <: Translational 
-				if joint.parent_id != nothing
+				if joint.parent_id != 0
 					x[c_idx, [xa_idx; qa_idx]] = minimal_coordinates_jacobian_configuration(:parent, element, xa, qa, xb, qb)
 					x[v_idx, [xa_idx; qa_idx]] = minimal_velocities_jacobian_configuration(:parent, element, xa, va, qa, ϕa, xb, vb, qb, ϕb)
 					x[v_idx, [va_idx; ϕa_idx]] = minimal_velocities_jacobian_velocity(:parent, element, xa, va, qa, ϕa, xb, vb, qb, ϕb)
@@ -130,7 +130,7 @@ function maximal_to_minimal_jacobian_analytical(mechanism::Mechanism{T,Nn,Ne,Nb,
 				x[v_idx, [vb_idx; ϕb_idx]] = minimal_velocities_jacobian_velocity(:child, element, xa, va, qa, ϕa, xb, vb, qb, ϕb)
 
 			elseif typeof(element) <: Rotational
-				if joint.parent_id != nothing
+				if joint.parent_id != 0
 					x[c_idx, [xa_idx; qa_idx]] = minimal_coordinates_jacobian_configuration(:parent, element, qa, qb)
 					x[v_idx, [xa_idx; qa_idx]] = minimal_velocities_jacobian_configuration(:parent, element, qa, ϕa, qb, ϕb)
 					x[v_idx, [va_idx; ϕa_idx]] = minimal_velocities_jacobian_velocity(:parent, element, qa, ϕa, qb, ϕb)

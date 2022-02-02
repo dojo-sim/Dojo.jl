@@ -1,6 +1,5 @@
 @inline get_joint_constraint(mechanism::Mechanism, id::Integer) = mechanism.joints[id]
-@inline get_body(mechanism::Mechanism, id::Nothing) = mechanism.origin
-@inline get_body(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,Ni} = mechanism.bodies[id-Ne]
+@inline get_body(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,Ni} = id == 0 ? mechanism.origin : mechanism.bodies[id-Ne]
 @inline get_contact_constraint(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,Ni} = mechanism.contacts[id-Ne-Nb]
 
 function get_joint_constraint(mechanism::Mechanism, name::Symbol)
@@ -45,7 +44,7 @@ function get_node(mechanism::Mechanism{T,Nn,Ne,Nb}, id::Integer) where {T,Nn,Ne,
 end
 
 function get_node(mechanism::Mechanism, name::Symbol)
-    node = get_body(mechanism,name)
+    node = get_body(mechanism, name)
     if node === nothing
         node = get_joint_constraint(mechanism,name)
     end

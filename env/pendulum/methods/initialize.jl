@@ -50,6 +50,7 @@ function get_npendulum(; timestep::T = 0.01, gravity = -9.81, m::T = 1.0, l::T =
     else
         joints = [jointb1]
     end
+
     mech = Mechanism(origin, bodies, joints, gravity=gravity, timestep=timestep)
     return mech
 end

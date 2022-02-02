@@ -6,7 +6,7 @@ function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVect
 		(id > Ne) && continue # only treat joints
 		joint = mechanism.joints[id]
 		n = control_dimension(joint)
-		if joint.parent_id != nothing
+		if joint.parent_id != 0
 			c = x[off .+ (1:n)]; off += n
 			v = x[off .+ (1:n)]; off += n # in body1
 			set_joint_position!(mechanism, joint, c)

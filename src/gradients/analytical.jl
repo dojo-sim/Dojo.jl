@@ -10,7 +10,7 @@ function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
         ind2 = 0
 
         parent_id = joint.parent_id
-        if parent_id !== nothing
+        if parent_id !== 0
             parentind = parent_id - Ne
             pbody = get_body(mechanism,parent_id)
             pstate = pbody.state
@@ -71,7 +71,7 @@ function joint_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,N
     for joint in mechanism.joints
         parent_id = joint.parent_id
 
-        if parent_id !== nothing
+        if parent_id !== 0
             parentind = parent_id - Ne
             pbody = get_body(mechanism, parent_id)
             pstate = pbody.state
@@ -190,7 +190,7 @@ function springapply_damperjacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,N
     for joint in mechanism.joints
         parent_id = joint.parent_id
 
-        if parent_id !== nothing
+        if parent_id !== 0
             parentind = parent_id - Ne
             pbody = get_body(mechanism, parent_id)
             pstate = pbody.state
@@ -320,7 +320,7 @@ function dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}, jointids) where {T,
         n2 += control_dimension(joint)
 
         parent_id = joint.parent_id
-        if parent_id != nothing
+        if parent_id != 0
             parentind = parent_id - Ne
             col6 = offset_range(parentind,6)
             Bcontrol[col6,n1:n2] = input_jacobian_control_parent(mechanism, joint, get_body(mechanism, parent_id))

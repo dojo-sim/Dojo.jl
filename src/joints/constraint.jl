@@ -305,7 +305,7 @@ end
 function set_spring_damper_values!(joints, spring, damper)
     i = 1
     for joint in joints
-        joint.parent_id === nothing && continue
+        joint.parent_id == 0 && continue
         k = (length(spring) > 1) ? spring[i] : spring
         b = (length(damper) > 1) ? damper[i] : damper
         joint.spring = k > 0.0

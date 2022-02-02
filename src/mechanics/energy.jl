@@ -70,7 +70,7 @@ function potential_energy(mechanism::Mechanism{T,Nn,Ne,Nb}, storage::Storage{T,N
                 # Parent
                 parent_id = joint.parent_id
 
-                if parent_id != nothing
+                if parent_id != 0
                     xa = storage.x[parent_id - Ne][t] # TODO this is sketchy way to get the correct index
                     qa = storage.q[parent_id - Ne][t] # TODO this is sketchy way to get the correct index
                 else 

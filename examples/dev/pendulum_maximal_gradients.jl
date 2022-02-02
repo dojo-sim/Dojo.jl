@@ -8,10 +8,23 @@ vis = Visualizer()
 open(vis)
 
 # Mechanism
-mech = get_mechanism(:npendulum, timestep = 0.01, gravity = -9.81, Nb=5)#, spring = 100.0, damper = 5.0)
+mech = get_mechanism(:npendulum, timestep = 0.01, gravity = -9.81, Nb=1)#, spring = 100.0, damper = 5.0)
+mech.origin.id
+mech.bodies[1].id
+mech.joints[1].id
+mech.joints[1].parent_id
+mech.joints[1].child_ids
+
+
 Random.seed!(100)
 ϕ1 = 0.3π
 initialize!(mech, :npendulum, ϕ1 = ϕ1)
+
+# origin = Dojo.Origin{Float64}()
+# origin.id
+# getGlobalID()
+# resetGlobalID()
+# origin.id
 
 mech = get_mechanism(:sphere, timestep = 0.01, gravity = -9.81)
 initialize!(mech, :sphere)

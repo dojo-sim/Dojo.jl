@@ -4,7 +4,7 @@ function create_system(origin::Origin{T}, joints::Vector{<:JointConstraint}, bod
     system = System{T}(adjacency, dims, dims)
 
     for joint in joints
-        joint.parent_id == origin.id && (joint.parent_id = nothing)
+        joint.parent_id == origin.id && (joint.parent_id = 0)
     end
 
     origin.id = 0

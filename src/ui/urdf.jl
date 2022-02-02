@@ -454,7 +454,7 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         constraint = get_joint_constraint(mechanism, parent_id)
 
         grandparent_id = constraint.parent_id
-        if grandparent_id === nothing # predecessor is origin
+        if grandparent_id == 0 # predecessor is origin
             parentbody = mechanism.origin
 
             xparentbody = SA{T}[0; 0; 0]
@@ -519,7 +519,7 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
 
         parent_id1 = constraint.parent_id
         parent_id2 = constraint.child_ids[1]
-        if parent_id1 === nothing # predecessor is origin
+        if parent_id1 == 0 # predecessor is origin
             parentbody1 = mechanism.origin
 
             xparentbody1 = SA{T}[0; 0; 0]

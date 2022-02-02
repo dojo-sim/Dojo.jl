@@ -32,8 +32,9 @@ function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, joints::Vector{
     # nodes
     nodes = [joints; bodies; contacts]
 
-    # set ids
+    # set IDs
     global_id!(nodes)
+    origin.id = 0
 
     # graph system
     system = create_system(origin, joints, bodies, contacts)
@@ -82,7 +83,7 @@ function gravity_compensation(mechanism::Mechanism)
     off  = 0
     for joint in mechanism.joints
         nu = control_dimension(joint)
-        if joint.parent_id != nothing
+        if joint.parent_id != 0
             body = get_body(mechanism, joint.parent_id)
             rot = joint.constraints[2]
             A = Matrix(nullspace_mask(rot))
