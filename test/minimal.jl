@@ -221,7 +221,7 @@ end
 	initialize!(mech, :npendulum, ϕ1 = ϕ1)
 	storage = simulate!(mech, 1.0, record = true, verbose = false)
 
-	maximal_dimension(mech) == 13
+	Dojo.maximal_dimension(mech) == 13
 	minimal_dimension(mech) == 12
 	z = get_maximal_state(mech)
 
@@ -235,7 +235,7 @@ end
 	initialize!(mech, :sphere)
 	storage = simulate!(mech, 1.0, record = true, verbose = false)
 
-	maximal_dimension(mech)
+	Dojo.maximal_dimension(mech)
 	minimal_dimension(mech)
 	z = get_maximal_state(mech)
 
