@@ -6,6 +6,14 @@ function minimal_coordinates(mechanism::Mechanism)
     return d
 end
 
+function minimal_velocities(mechanism::Mechanism)
+    d = Dict()
+    for joint in mechanism.joints
+        push!(d, joint.id => minimal_velocities(mechanism, joint))
+    end
+    return d
+end
+
 function minimal_configuration_vector(mechanism::Mechanism{T}) where T
     N = control_dimension(mechanism)
     x = zeros(T,N)

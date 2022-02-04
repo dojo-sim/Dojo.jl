@@ -74,7 +74,7 @@ function maximal_to_minimal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVect
 end
 
 function maximal_to_minimal_jacobian_analytical(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) where {T,Nn,Ne,Nb,Ni,Tz}
-	x = zeros(minimal_dimension(mechanism), maximal_dimension(mechanism))# TODO: - Nb)
+	J = zeros(minimal_dimension(mechanism), maximal_dimension(mechanism))# TODO: - Nb)
 	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
 	# Thus go through the joints in order, start from joint between robot and origin and go down the tree.
 	row_shift = 0
@@ -120,24 +120,24 @@ function maximal_to_minimal_jacobian_analytical(mechanism::Mechanism{T,Nn,Ne,Nb,
 
 			if typeof(element) <: Translational 
 				if joint.parent_id != 0
-					x[c_idx, [xa_idx; qa_idx]] = minimal_coordinates_jacobian_configuration(:parent, element, xa, qa, xb, qb)
-					x[v_idx, [xa_idx; qa_idx]] = minimal_velocities_jacobian_configuration(:parent, element, xa, va, qa, ϕa, xb, vb, qb, ϕb)
-					x[v_idx, [va_idx; ϕa_idx]] = minimal_velocities_jacobian_velocity(:parent, element, xa, va, qa, ϕa, xb, vb, qb, ϕb)
+					J[c_idx, [xa_idx; qa_idx]] = minimal_coordinates_jacobian_configuration(:parent, element, xa, qa, xb, qb)
+					J[v_idx, [xa_idx; qa_idx]] = minimal_velocities_jacobian_configuration(:parent, element, xa, va, qa, ϕa, xb, vb, qb, ϕb)
+					J[v_idx, [va_idx; ϕa_idx]] = minimal_velocities_jacobian_velocity(:parent, element, xa, va, qa, ϕa, xb, vb, qb, ϕb)
 				end
 
-				x[c_idx, [xb_idx; qb_idx]] = minimal_coordinates_jacobian_configuration(:child, element, xa, qa, xb, qb)
-				x[v_idx, [xb_idx; qb_idx]] = minimal_velocities_jacobian_configuration(:child, element, xa, va, qa, ϕa, xb, vb, qb, ϕb)
-				x[v_idx, [vb_idx; ϕb_idx]] = minimal_velocities_jacobian_velocity(:child, element, xa, va, qa, ϕa, xb, vb, qb, ϕb)
+				J[c_idx, [xb_idx; qb_idx]] = minimal_coordinates_jacobian_configuration(:child, element, xa, qa, xb, qb)
+				J[v_idx, [xb_idx; qb_idx]] = minimal_velocities_jacobian_configuration(:child, element, xa, va, qa, ϕa, xb, vb, qb, ϕb)
+				J[v_idx, [vb_idx; ϕb_idx]] = minimal_velocities_jacobian_velocity(:child, element, xa, va, qa, ϕa, xb, vb, qb, ϕb)
 
 			elseif typeof(element) <: Rotational
 				if joint.parent_id != 0
-					x[c_idx, [xa_idx; qa_idx]] = minimal_coordinates_jacobian_configuration(:parent, element, qa, qb)
-					x[v_idx, [xa_idx; qa_idx]] = minimal_velocities_jacobian_configuration(:parent, element, qa, ϕa, qb, ϕb)
-					x[v_idx, [va_idx; ϕa_idx]] = minimal_velocities_jacobian_velocity(:parent, element, qa, ϕa, qb, ϕb)
+					J[c_idx, [xa_idx; qa_idx]] = minimal_coordinates_jacobian_configuration(:parent, element, qa, qb)
+					J[v_idx, [xa_idx; qa_idx]] = minimal_velocities_jacobian_configuration(:parent, element, qa, ϕa, qb, ϕb)
+					J[v_idx, [va_idx; ϕa_idx]] = minimal_velocities_jacobian_velocity(:parent, element, qa, ϕa, qb, ϕb)
 				end
-				x[c_idx, [xb_idx; qb_idx]] = minimal_coordinates_jacobian_configuration(:child, element, qa, qb)
-				x[v_idx, [xb_idx; qb_idx]] = minimal_velocities_jacobian_configuration(:child, element, qa, ϕa, qb, ϕb)
-				x[v_idx, [vb_idx; ϕb_idx]] = minimal_velocities_jacobian_velocity(:child, element, qa, ϕa, qb, ϕb)
+				J[c_idx, [xb_idx; qb_idx]] = minimal_coordinates_jacobian_configuration(:child, element, qa, qb)
+				J[v_idx, [xb_idx; qb_idx]] = minimal_velocities_jacobian_configuration(:child, element, qa, ϕa, qb, ϕb)
+				J[v_idx, [vb_idx; ϕb_idx]] = minimal_velocities_jacobian_velocity(:child, element, qa, ϕa, qb, ϕb)
 
 			end
 			c_shift += nu_element
@@ -145,11 +145,11 @@ function maximal_to_minimal_jacobian_analytical(mechanism::Mechanism{T,Nn,Ne,Nb,
 		end
 		row_shift += 2 * control_dimension(joint)
 	end
-	return x
+	return J
 end
 
 function maximal_to_minimal_jacobian(mechanism::Mechanism, z)
-	FiniteDiff.finite_difference_jacobian(z -> maximal_to_minimal(mechanism, z), z)
+	FiniteDiff.finite_difference_jacobian(y -> maximal_to_minimal(mechanism, y), z)
 end
 
 function get_maximal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
