@@ -34,7 +34,7 @@ function minimal_to_maximal_jacobian(mechanism::Mechanism, x)
 	FiniteDiff.finite_difference_jacobian(x -> minimal_to_maximal(mechanism, x), x)
 end
 
-function get_minimal_gradients(mechanism::Mechanism{T}, z::AbstractVector{T}, u::AbstractVector{T}; 
+function get_minimal_gradients(mechanism::Mechanism{T}, z::AbstractVector{T}, u::AbstractVector{T};
 	opts=SolverOptions()) where T
 	# simulate next state
 	step!(mechanism, z, u, opts=opts)
@@ -80,6 +80,10 @@ function get_minimal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni};
 			if vel_noise != nothing
 				vel += clamp.(length(vel) == 1 ? rand(vel_noise, length(vel))[1] : rand(vel_noise, length(vel)), vel_noise_range...)
 			end
+			@show typeof(element)
+			(typeof(element) <: Rotational) && (@show vector(element.qoffset))
+			@show pos
+			@show vel
 			push!(c, pos...)
 			push!(v, vel...)
 		end

@@ -1,16 +1,18 @@
 @inline function get_position_delta(joint::Rotational, body1::Node, body2::Node, θ::SVector{N,T}) where {T,N}
     # axis angle representation
     θ = zerodimstaticadjoint(nullspace_mask(joint)) * θ
-    nθ = norm(θ)
-    if nθ == 0
-        q = one(UnitQuaternion{T})
-    else
-        q = UnitQuaternion(cos(nθ/2),(θ/nθ*sin(nθ/2))..., false)
-    end
-
-    Δq = q * joint.qoffset # in body1 frame
-    return Δq
+    # nθ = norm(θ)
+    # if nθ == 0
+    #     q = one(UnitQuaternion{T})
+    # else
+    #     q = UnitQuaternion(cos(nθ/2),(θ/nθ*sin(nθ/2))..., false)
+    # end
+	#
+    # Δq = q * joint.qoffset # in body1 frame
+    # return Δq
+	Δq = axisangle2quaternion(θ)
 end
+
 
 @inline function get_velocity_delta(joint::Rotational, body1::Node, body2::Node, ω::SVector)
     ω = zerodimstaticadjoint(nullspace_mask(joint)) * ω
@@ -25,7 +27,8 @@ end
 end
 
 @inline function minimal_coordinates(joint::Rotational, qa::UnitQuaternion, qb::UnitQuaternion)
-    q = qa \ qb / joint.qoffset
+	# q = qa \ qb / joint.qoffset
+    q = inv(joint.qoffset) * inv(qa) * qb
     return nullspace_mask(joint) * rotation_vector(q)
 end
 
@@ -37,13 +40,16 @@ end
 
 @inline function minimal_velocities(joint::Rotational, qa::UnitQuaternion,
         ϕa::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector)
-    return nullspace_mask(joint) * (vrotate(ϕb, qa \ qb) - ϕa) # in body1's frame
+	qoffset = joint.qoffset
+    Δϕ = rotation_matrix(inv(qoffset)) * (vrotate(ϕb, inv(qa) * qb) - ϕa) # in offset frame
+    return nullspace_mask(joint) * Δϕ
+    # return nullspace_mask(joint) * (vrotate(ϕb, qa \ qb) - ϕa) # in body1's frame
 end
 
 function minimal_coordinates_jacobian_configuration(jacobian_relative::Symbol, joint::Rotational, qa::UnitQuaternion, qb::UnitQuaternion)
 	c = minimal_coordinates(joint, qa, qb)
-	jacobian_relative==:parent && (return [szeros(length(c), 3) FiniteDiff.finite_difference_jacobian(q -> minimal_coordinates(joint, UnitQuaternion(q..., false), qb), vector(qa))]) # * LVᵀmat(qa)]) 
-	jacobian_relative==:child && (return [szeros(length(c), 3) FiniteDiff.finite_difference_jacobian(q -> minimal_coordinates(joint, qa, UnitQuaternion(q..., false)), vector(qb))]) # * LVᵀmat(qb)]) 
+	jacobian_relative==:parent && (return [szeros(length(c), 3) FiniteDiff.finite_difference_jacobian(q -> minimal_coordinates(joint, UnitQuaternion(q..., false), qb), vector(qa))]) # * LVᵀmat(qa)])
+	jacobian_relative==:child && (return [szeros(length(c), 3) FiniteDiff.finite_difference_jacobian(q -> minimal_coordinates(joint, qa, UnitQuaternion(q..., false)), vector(qb))]) # * LVᵀmat(qb)])
 end
 
 function minimal_velocities_jacobian_configuration(jacobian_relative::Symbol,
