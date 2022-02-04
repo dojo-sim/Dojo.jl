@@ -76,32 +76,6 @@ function set_position!(mechanism, joint::JointConstraint, xθ; iter::Bool=true)
     return
 end
 
-# # TODO currently assumed constraints are in order and only joints which is the case unless very low level constraint setting
-# function set_joint_position!(mechanism, joint::JointConstraint{T,N,Nc}, xθ) where {T,N,Nc}
-#     Nλ = 0
-#     for (i, element) in enumerate(joint.constraints)
-#         Nλ += λlength(element)
-#     end
-#     @assert length(xθ)==3*Nc-Nλ
-#
-#     # bodies
-#     body1 = get_body(mechanism, joint.parent_id)
-#     body2 = get_body(mechanism, joint.child_id)
-#
-#     # translational delta in body1 frame
-#     Δx = get_position_delta(joint.constraints[1], body1, body2, xθ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])])
-#
-#     # rotational delta in body2 frame
-#     Δq = get_position_delta(joint.constraints[2], body1, body2, xθ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])])
-#
-#     # vertices
-#     p1, p2 = joint.constraints[1].vertices
-#
-#     # update body2 position
-#     return set_position!(body1, body2; p1=p1, p2=p2, Δx=Δx, Δq=Δq)
-# end
-
-
 # TODO currently assumed constraints are in order and only joints which is the case unless very low level constraint setting
 function set_joint_position!(mechanism, joint::JointConstraint{T,N,Nc}, xθ) where {T,N,Nc}
     Nλ = 0
@@ -119,24 +93,6 @@ function set_joint_position!(mechanism, joint::JointConstraint{T,N,Nc}, xθ) whe
     set_minimal_coordinates!(body1, body2, joint, Δx=Δx, Δθ=Δθ)
     return body2.state.x2[1], body2.state.q2[1]
 end
-
-# function set_velocity!(mechanism, joint::JointConstraint{T,N,Nc}, vω) where {T,N,Nc}
-#     Nλ = 0
-#     for (i, element) in enumerate(joint.constraints)
-#         Nλ += λlength(element)
-#     end
-#     # vω is already in body1 frame
-#     @assert length(vω)==3*Nc-Nλ
-#     body1 = get_body(mechanism, joint.parent_id)
-#     body2 = get_body(mechanism, joint.child_id)
-#     # translational
-#     Δv = get_velocity_delta(joint.constraints[1], body1, body2, vω[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]) # projection in body1 frame
-#     # rotational
-#     Δω = get_velocity_delta(joint.constraints[2], body1, body2, vω[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])]) # projection in body1 frame
-#     # vertices
-#     p1, p2 = joint.constraints[1].vertices
-#     return set_velocity!(body1, body2; p1=p1, p2=p2, Δv=Δv, Δω=Δω)
-# end
 
 function set_velocity!(mechanism, joint::JointConstraint{T,N,Nc}, vϕ) where {T,N,Nc}
     Nλ = 0

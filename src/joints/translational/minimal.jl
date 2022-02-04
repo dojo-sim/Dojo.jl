@@ -69,3 +69,109 @@ function minimal_velocities_jacobian_velocity(jacobian_relative::Symbol,
 	(jacobian_relative == :child) && (return [FiniteDiff.finite_difference_jacobian(v -> minimal_velocities(joint, xa, va, qa, ωa, xb, v, qb, ωb), vb) FiniteDiff.finite_difference_jacobian(ω -> minimal_velocities(joint, xa, va, qa, ωa, xb, vb, qb, ω), ωb)])
 	return
 end
+
+
+
+
+
+
+mech = get_humanoid()
+joint = mech.joints[1].constraints[1]
+qa = UnitQuaternion(rand(4)...)
+qb = UnitQuaternion(rand(4)...)
+xa = rand(3)
+va = rand(3)
+ωa = rand(3)
+xb = rand(3)
+vb = rand(3)
+ωb = rand(3)
+minimal_velocities(joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+
+∇0 = minimal_velocities_jacobian_configuration_parent(joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+∇1 = FiniteDiff.finite_difference_jacobian(
+	xq -> minimal_velocities(joint, xq[1:3], va, UnitQuaternion(xq[4:7]..., false), ωa, xb, vb, qb, ωb),
+	[xa; vector(qa)]) * cat(I(3), LVᵀmat(qa), dims=(1,2))
+@test norm(∇0 - ∇1, Inf) < 1e-6
+
+∇0 = minimal_velocities_jacobian_configuration_child(joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+∇1 = FiniteDiff.finite_difference_jacobian(
+	xq -> minimal_velocities(joint, xa, va, qa, ωa, xq[1:3], vb, UnitQuaternion(xq[4:7]..., false), ωb),
+	[xb; vector(qb)]) * cat(I(3), LVᵀmat(qb), dims=(1,2))
+@test norm(∇0 - ∇1, Inf) < 1e-6
+
+∇0 = minimal_velocities_jacobian_velocity_parent(joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+∇1 = FiniteDiff.finite_difference_jacobian(
+	vϕ -> minimal_velocities(joint, xa, vϕ[1:3], qa, vϕ[4:6], xb, vb, qb, ωb),
+	[va; ωa])
+@test norm(∇0 - ∇1, Inf) < 1e-6
+
+∇0 = minimal_velocities_jacobian_velocity_child(joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+∇1 = FiniteDiff.finite_difference_jacobian(
+	vϕ -> minimal_velocities(joint, xa, va, qa, ωa, xb, vϕ[1:3], qb, vϕ[4:6]),
+	[vb; ωb])
+@test norm(∇0 - ∇1, Inf) < 1e-6
+
+
+@testset "minimal velocity jacobian" begin
+    mech = getpendulum()
+    joint = mech.joints[1].constraints[2]
+    qa = UnitQuaternion(rand(4)...)
+    qb = UnitQuaternion(rand(4)...)
+    xa = rand(3)
+    va = rand(3)
+    ωa = rand(3)
+    xb = rand(3)
+    vb = rand(3)
+    ωb = rand(3)
+    minimal_velocities(joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+
+    ∇0 = minimal_velocities_jacobian_configuration_parent(joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+    ∇1 = FiniteDiff.finite_difference_jacobian(
+        xq -> minimal_velocities(joint, xq[1:3], va, UnitQuaternion(xq[4:7]..., false), ωa, xb, vb, qb, ωb),
+        [xa; vector(qa)]) * cat(I(3), LVᵀmat(qa), dims=(1,2))
+    @test norm(∇0 - ∇1, Inf) < 1e-6
+
+    ∇0 = minimal_velocities_jacobian_configuration_child(joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+    ∇1 = FiniteDiff.finite_difference_jacobian(
+        xq -> minimal_velocities(joint, xa, va, qa, ωa, xq[1:3], vb, UnitQuaternion(xq[4:7]..., false), ωb),
+        [xb; vector(qb)]) * cat(I(3), LVᵀmat(qb), dims=(1,2))
+    @test norm(∇0 - ∇1, Inf) < 1e-6
+
+    ∇0 = minimal_velocities_jacobian_velocity_parent(joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+    ∇1 = FiniteDiff.finite_difference_jacobian(
+        vϕ -> minimal_velocities(joint, xa, vϕ[1:3], qa, vϕ[4:6], xb, vb, qb, ωb),
+        [va; ωa])
+    @test norm(∇0 - ∇1, Inf) < 1e-6
+
+    ∇0 = minimal_velocities_jacobian_velocity_child(joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+    ∇1 = FiniteDiff.finite_difference_jacobian(
+        vϕ -> minimal_velocities(joint, xa, va, qa, ωa, xb, vϕ[1:3], qb, vϕ[4:6]),
+        [vb; ωb])
+    @test norm(∇0 - ∇1, Inf) < 1e-6
+end
+
+@testset "minimal coordinates jacobian" begin
+    mech = getpendulum()
+    joint = mech.joints[1].constraints[2]
+    qa = UnitQuaternion(rand(4)...)
+    qb = UnitQuaternion(rand(4)...)
+    xa = rand(3)
+    va = rand(3)
+    ωa = rand(3)
+    xb = rand(3)
+    vb = rand(3)
+    ωb = rand(3)
+    minimal_coordinates(joint, xa, qa, xb, qb)
+
+    ∇0 = minimal_coordinates_jacobian_configuration(:parent, joint, xa, qa, xb, qb)
+    ∇1 = FiniteDiff.finite_difference_jacobian(
+        xq -> minimal_coordinates(joint, xq[1:3], UnitQuaternion(xq[4:7]..., false), xb, qb),
+        [xa; vector(qa)]) * cat(I(3), LVᵀmat(qa), dims=(1,2))
+    @test norm(∇0 - ∇1, Inf) < 1e-6
+
+    ∇0 = minimal_coordinates_jacobian_configuration(:child, joint, xa, qa, xb, qb)
+    ∇1 = FiniteDiff.finite_difference_jacobian(
+        xq -> minimal_coordinates(joint, xa, qa, xq[1:3], UnitQuaternion(xq[4:7]..., false)),
+        [xb; vector(qb)]) * cat(I(3), LVᵀmat(qb), dims=(1,2))
+    @test norm(∇0 - ∇1, Inf) < 1e-6
+end

@@ -5,12 +5,10 @@ function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, a::AbstractVect
 	for id in reverse(mechanism.system.dfs_list)
 		(id > Ne) && continue # only treat joints
 		joint = mechanism.joints[id]
-		n = control_dimension(joint)
-		c = a[off .+ (1:n)]
-		v = a[off + n .+ (1:n)]
-		set_joint_position!(mechanism, joint, c)
-		set_velocity!(mechanism, joint, v) # in body1
-		off += 2n
+		nu = control_dimension(joint)
+		set_minimal_coordinates_velocities!(mechanism,
+			joint, xmin=a[off .+ SUnitRange(1,2nu)])
+		off += 2nu
 	end
 	z = get_maximal_state(mechanism)
 	return z
@@ -28,37 +26,42 @@ function minimal_to_maximal_jacobian_analytical(mechanism::Mechanism{T,Nn,Ne,Nb,
 		idx = collect(off .+ (1:(2n)))
 		child_joints = unique([get_node(mechanism, id) for id in recursivedirectchildren!(mechanism.system, joint.id) if get_node(mechanism, id) isa JointConstraint])
 		# child_joints = get_child_joints(mechanism, joint)
-		function position_velocity(y) 
+		function position_velocity(y)
 			mech = mechanism
 
-			currentvals = minimal_coordinates(mech)
-			currentvels = minimal_velocities(mech)
+			# currentvals = minimal_coordinates(mech)
+			# currentvels = minimal_velocities(mech)
+			cv = minimal_coordinates_velocities(mech)
 
-			set_joint_position!(mech, joint, y[1:n]) 
-			set_velocity!(mech, joint, y[n .+ (1:n)])
+			# set_joint_position!(mech, joint, y[1:n])
+			# set_velocity!(mech, joint, y[n .+ (1:n)])
+			set_minimal_coordinates_velocities!(mechanism, joint, xmin=y[off .+ SUnitRange(1,2n)])
 
 			for node in child_joints
-				set_joint_position!(mech, node, currentvals[node.id])
-				set_velocity!(mech, node, currentvels[node.id])
+				# set_joint_position!(mech, node, currentvals[node.id])
+				# set_velocity!(mech, node, currentvels[node.id])
+				set_minimal_coordinates_velocities!(mechanism, joint, xmin=cv[node.id])
 			end
 
 			return get_maximal_state(mech)
-		end 
+		end
 
 		J[:, idx] = FiniteDiff.finite_difference_jacobian(position_velocity, a[idx])
 
-		function joint_position_velocity(mech, joint, θ) 
+		function joint_position_velocity(mech, joint, θ)
 			n = control_dimension(joint)
-			x, q = set_joint_position!(mech, joint, θ[1:n]) 
-			v, ω = set_velocity!(mech, joint, θ[n .+ (1:n)])
-			return [x; v; vector(q); ω]
+			# x, q = set_joint_position!(mech, joint, θ[1:n])
+			# v, ω = set_velocity!(mech, joint, θ[n .+ (1:n)])
+			set_minimal_coordinates_velocities!(mechanism, joint, xmin=θ[SUnitRange(1,2n)])
+			x2, v15, q2, ϕ15 = initial_configuration_velocity(get_body(joint.child_id).state)
+			return [x2; v15; vector(q2); ϕ15]
 		end
 
-		function joint_position_velocity(mech, joint, z, θ) 
+		function joint_position_velocity(mech, joint, z, θ)
 			n = control_dimension(joint)
 
 			body_parent = get_body(mech, joint.parent_id)
-			xp = z[1:3] 
+			xp = z[1:3]
 			vp = z[4:6]
 			qp = UnitQuaternion(z[7:10]..., false)
 			ϕp = z[11:13]
@@ -66,25 +69,25 @@ function minimal_to_maximal_jacobian_analytical(mechanism::Mechanism{T,Nn,Ne,Nb,
 			set_position!(body_parent, x=xp, q=qp)
 			set_velocity!(body_parent, v=vp, ω=ϕp)
 
-			x, q = set_joint_position!(mech, joint, θ[1:n]) 
+			x, q = set_joint_position!(mech, joint, θ[1:n])
 			v, ω = set_velocity!(mech, joint, θ[n .+ (1:n)])
 
 			return [x; v; vector(q); ω]
 		end
 
 		function joint_position_velocity_jacobian(mech, joint, θ)
-			FiniteDiff.finite_difference_jacobian(y -> joint_position_velocity(mech, joint, y), θ) 
+			FiniteDiff.finite_difference_jacobian(y -> joint_position_velocity(mech, joint, y), θ)
 		end
 
-		function position_velocity_jacobian(θ) 
-			G = zeros(maximal_dimension(mechanism), length(θ)) 
+		function position_velocity_jacobian(θ)
+			G = zeros(maximal_dimension(mechanism), length(θ))
 
 			mech = mechanism
 
 			currentvals = minimal_coordinates(mech)
 			currentvels = minimal_velocities(mech)
 
-			x, q = set_joint_position!(mech, joint, θ[1:n]) 
+			x, q = set_joint_position!(mech, joint, θ[1:n])
 			v, ω = set_velocity!(mech, joint, θ[n .+ (1:n)])
 			zp = [x; v; vector(q); ω]
 
@@ -93,15 +96,15 @@ function minimal_to_maximal_jacobian_analytical(mechanism::Mechanism{T,Nn,Ne,Nb,
 				set_velocity!(mech, node, currentvels[node.id])
 			end
 
-			# root 
+			# root
 			∂z∂θ = joint_position_velocity_jacobian(mech, joint, θ)
 			G[(joint.child_id - 1 - Ne) * 13 .+ (1:13), :] = ∂z∂θ
-	
+
 			# branch
 			y = ∂z∂θ
-			for node in child_joints		
+			for node in child_joints
 				∂z∂z = FiniteDiff.finite_difference_jacobian(b -> joint_position_velocity(mech, node, b, [currentvals[node.id]; currentvels[node.id]]), zp)
-				y = ∂z∂z * ∂z∂θ			
+				y = ∂z∂z * ∂z∂θ
 				G[(node.child_id - 1 - Ne) * 13 .+ (1:13), :] = y
 				zp = joint_position_velocity(mech, node, zp, θ)
 			end
@@ -110,7 +113,7 @@ function minimal_to_maximal_jacobian_analytical(mechanism::Mechanism{T,Nn,Ne,Nb,
 		end
 
 		# J[:, idx] = position_velocity_jacobian(a[idx])
-	
+
 		off += 2n
 	end
 
@@ -121,7 +124,7 @@ function minimal_to_maximal_jacobian(mechanism::Mechanism, x)
 	FiniteDiff.finite_difference_jacobian(y -> minimal_to_maximal(mechanism, y), x)
 end
 
-function get_minimal_gradients(mechanism::Mechanism{T}, z::AbstractVector{T}, u::AbstractVector{T}; 
+function get_minimal_gradients(mechanism::Mechanism{T}, z::AbstractVector{T}, u::AbstractVector{T};
 	opts=SolverOptions()) where T
 	# simulate next state
 	step!(mechanism, z, u, opts=opts)
@@ -175,4 +178,3 @@ function get_minimal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni};
 	x = [x...]
 	return x
 end
-

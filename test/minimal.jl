@@ -252,7 +252,9 @@ end
 @testset "set and get minimal coordinates and velocities" begin
 	for jointtype in jointtypes
 	    mech = get_snake(Nb=10, jointtype=jointtype)
-	    mech.joints[1].constraints[2].qoffset = UnitQuaternion(rand(4)...)
+		for joint in mech.joints
+		    joint.constraints[2].qoffset = UnitQuaternion(rand(4)...)
+		end
 	    joint0 = mech.joints[1]
 	    tra0 = joint0.constraints[1]
 	    rot0 = joint0.constraints[2]

@@ -1,4 +1,16 @@
 
+function set_minimal_coordinates_velocities!(mechanism::Mechanism, joint::JointConstraint;
+        xmin::AbstractVector=szeros(2control_dimension(joint)))
+    pnode = get_body(mechanism, joint.parent_id)
+    cnode = get_body(mechanism, joint.child_id)
+    nu = control_dimension(joint)
+    Δx = xmin[SUnitRange(joint.minimal_index[1]...)]
+    Δθ = xmin[SUnitRange(joint.minimal_index[2]...)]
+    Δv = xmin[nu .+ SUnitRange(joint.minimal_index[1]...)]
+    Δϕ = xmin[nu .+ SUnitRange(joint.minimal_index[2]...)]
+    set_minimal_coordinates_velocities!(pnode, cnode, joint; Δx=Δx, Δθ=Δθ, Δv=Δv, Δϕ=Δϕ)
+end
+
 function set_minimal_coordinates_velocities!(pnode::Node, cnode::Node, joint::JointConstraint;
         Δx::AbstractVector=szeros(control_dimension(joint.constraints[1])),
         Δθ::AbstractVector=szeros(control_dimension(joint.constraints[2])),
