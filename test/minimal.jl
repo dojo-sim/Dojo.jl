@@ -245,3 +245,41 @@ end
 	@test size(M_fd) == size(M_a)
 	@test norm(M_fd - M_a, Inf) < 1.0e-6
 end
+
+################################################################################
+# Test set and get minimal coordinates and velocities
+################################################################################
+@testset "set and get minimal coordinates and velocities" begin
+	for jointtype in jointtypes
+	    mech = get_snake(Nb=10, jointtype=jointtype)
+	    mech.joints[1].constraints[2].qoffset = UnitQuaternion(rand(4)...)
+	    joint0 = mech.joints[1]
+	    tra0 = joint0.constraints[1]
+	    rot0 = joint0.constraints[2]
+	    pnodes0 = [mech.origin; mech.bodies[1:end-1]]
+	    cnodes0 = mech.bodies
+
+	    Random.seed!(100)
+	    Δθ = rand(control_dimension(rot0))
+	    Δx = rand(control_dimension(tra0))
+	    Δϕ = rand(control_dimension(rot0))
+	    Δv = rand(control_dimension(tra0))
+	    for i = 1:10
+	        set_minimal_coordinates!(pnodes0[i], cnodes0[i], rot0, Δθ=Δθ)
+	        Δθ0 = minimal_coordinates(rot0, pnodes0[i], cnodes0[i])
+	        @test norm(Δθ0 - Δθ, Inf) < 1e-7
+
+	        set_minimal_coordinates!(pnodes0[i], cnodes0[i], tra0, Δx=Δx)
+	        Δx0 = minimal_coordinates(tra0, pnodes0[i], cnodes0[i])
+	        @test norm(Δx0 - Δx, Inf) < 1e-7
+
+	        set_minimal_velocities!(pnodes0[i], cnodes0[i], rot0, Δϕ=Δϕ)
+	        Δϕ0 = minimal_velocities(rot0, pnodes0[i], cnodes0[i])
+	        @test norm(Δϕ0 - Δϕ, Inf) < 1e-7
+
+	        set_minimal_velocities!(pnodes0[i], cnodes0[i], tra0, Δv=Δv)
+	        Δv0 = minimal_velocities(tra0, pnodes0[i], cnodes0[i])
+	        @test norm(Δv0 - Δv, Inf) < 1e-7
+	    end
+	end
+end

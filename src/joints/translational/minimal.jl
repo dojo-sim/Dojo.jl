@@ -8,7 +8,9 @@ end
     return Δv
 end
 
-@inline function position_error(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; rotate::Bool = true)
+@inline function position_error(joint::Translational, xa::AbstractVector,
+		qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; rotate::Bool = true)
+	# TODO remove rotate
     vertices = joint.vertices
     d = xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)) # in the world frame
     rotate && (d = vrotate(d, inv(qa))) # in the a frame
@@ -34,7 +36,7 @@ end
 @inline function minimal_velocities(joint::Translational, xa::AbstractVector,
         va::AbstractVector,  qa::UnitQuaternion, ωa::AbstractVector,
         xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector)
-    vertices = joint.vertices
+	vertices = joint.vertices
     pbcb_w = vrotate(-vertices[2], qb)
     pbca_w = xa - (xb + vrotate(vertices[2], qb))
     # Δvw = V(pb,B/A)w - V(pa,A/A)w

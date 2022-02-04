@@ -132,6 +132,8 @@ include(joinpath("mechanism", "maximal.jl"))
 include(joinpath("mechanism", "minimal.jl"))
 include(joinpath("mechanism", "system.jl"))
 include(joinpath("mechanism", "methods.jl"))
+include(joinpath("mechanism", "set.jl"))
+
 
 # Simulation
 include(joinpath("simulation", "step.jl"))
@@ -155,8 +157,9 @@ include(joinpath("joints", "rotational", "input.jl"))
 include(joinpath("joints", "rotational", "torque.jl"))
 include(joinpath("joints", "rotational", "minimal.jl"))
 include(joinpath("joints", "prototypes.jl"))
+include(joinpath("joints", "set_minimal.jl"))
 
-# Contacts 
+# Contacts
 include(joinpath("contacts", "contact.jl"))
 include(joinpath("contacts", "cone.jl"))
 include(joinpath("contacts", "impact.jl"))
@@ -176,7 +179,6 @@ include(joinpath("integrators", "constraint.jl"))
 
 # User interface
 include(joinpath("ui", "mechanism_ui.jl"))
-include(joinpath("ui", "initialize.jl"))
 include(joinpath("ui", "urdf.jl"))
 include(joinpath("ui", "convert_shape.jl"))
 include(joinpath("ui", "visualize.jl"))
