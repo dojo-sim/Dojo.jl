@@ -1,16 +1,3 @@
-# @inline function get_position_delta(joint::Rotational, body1::Node, body2::Node,
-# 		θ::SVector{N,T}) where {T,N}
-#     # axis angle representation
-#     θ = zerodimstaticadjoint(nullspace_mask(joint)) * θ
-# 	Δq = axis_angle_to_quaternion(θ)
-# end
-
-# @inline function get_velocity_delta(joint::Rotational, body1::Node, body2::Node, ϕ::SVector)
-#     ϕ = zerodimstaticadjoint(nullspace_mask(joint)) * ϕ
-#     Δϕ = ϕ # in body1 frame
-#     return Δϕ
-# end
-
 @inline function orientation_error(joint::Rotational, xa::AbstractVector,
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
     # (norm(Vmat(joint.qoffset)) > 1e-6) && (@warn "check the validity of this expression")

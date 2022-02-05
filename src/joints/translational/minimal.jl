@@ -1,13 +1,3 @@
-# @inline function get_position_delta(joint::Translational, body1::Node, body2::Node, x::SVector)
-#     Δx = zerodimstaticadjoint(nullspace_mask(joint)) * x # in body1 frame
-#     return Δx
-# end
-
-# @inline function get_velocity_delta(joint::Translational, body1::Node, body2::Node, v::SVector)
-#     Δv = zerodimstaticadjoint(nullspace_mask(joint)) * v # in body1 frame
-#     return Δv
-# end
-
 @inline function position_error(joint::Translational, xa::AbstractVector,
 		qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; rotate::Bool = true)
 	# TODO remove rotate

@@ -19,7 +19,9 @@ spring_parent(joint::Translational3{T}, xa::AbstractVector, qa::UnitQuaternion,
 spring_child(joint::Translational3{T}, xa::AbstractVector, qa::UnitQuaternion,
     xb::AbstractVector, qb::UnitQuaternion; rotate::Bool=true, unitary::Bool=false) where T = szeros(T, 6)
 
-
+################################################################################
+# Spring Force
+################################################################################
 function spring_force(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion,
             xb::AbstractVector, qb::UnitQuaternion; unitary::Bool=false) where T
     spring = unitary ? 1.0 : joint.spring
@@ -29,18 +31,34 @@ function spring_force(joint::Translational{T}, xa::AbstractVector, qa::UnitQuate
     return Fτ
 end
 
-@inline function spring_parent(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion,
+function spring_force_jacobian_configuration(jacobian_relative::Symbol,
+        joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion,
+        xb::AbstractVector, qb::UnitQuaternion; unitary::Bool=false) where T
+    spring = unitary ? 1.0 : joint.spring
+    Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
+    ∇Fτ = spring * Aᵀ * - minimal_coordinates_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb)
+    return ∇Fτ
+end
+
+@inline function spring_relative(relative::Symbol, joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion,
         xb::AbstractVector, qb::UnitQuaternion; unitary::Bool=false) where T
     Fτ = spring_force(joint, xa, qa, xb, qb, unitary=unitary)
-    Fτa = impulse_transform_parent(joint, xa, qa, xb, qb) * Fτ
-    return Fτa
+    Fτ = impulse_transform(relative, joint, xa, qa, xb, qb) * Fτ
+    return Fτ
+end
+
+@inline function spring_parent(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion,
+        xb::AbstractVector, qb::UnitQuaternion; unitary::Bool=false) where T
+    @warn "remove this"
+    error()
+    spring_relative(:parent, joint, xa, qa, xb, qb; unitary=unitary)
 end
 
 @inline function spring_child(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion,
         xb::AbstractVector, qb::UnitQuaternion; unitary::Bool=false) where T
-    Fτ = spring_force(joint, xa, qa, xb, qb, unitary=unitary)
-    Fτb = impulse_transform_child(joint, xa, qa, xb, qb) * Fτ
-    return Fτb
+    @warn "remove this"
+    error()
+    spring_relative(:child, joint, xa, qa, xb, qb; unitary=unitary)
 end
 
 

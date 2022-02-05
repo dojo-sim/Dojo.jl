@@ -158,6 +158,7 @@ include(joinpath("joints", "rotational", "torque.jl"))
 include(joinpath("joints", "rotational", "minimal.jl"))
 include(joinpath("joints", "prototypes.jl"))
 include(joinpath("joints", "minimal.jl"))
+include(joinpath("joints", "impulse.jl"))
 
 # Contacts
 include(joinpath("contacts", "contact.jl"))
