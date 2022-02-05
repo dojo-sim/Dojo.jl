@@ -22,7 +22,7 @@ end
     return Faw, τaa, Fbw, τbb
 end
 
-@inline function input_jacobian_control_parent(joint::Translational, statea::State, stateb::State, timestep::T) where T
+@inline function input_jacobian_control_parent(joint::Translational, statea::State, stateb::State) where T
     xa, qa = current_configuration(statea)
     xb, qb = current_configuration(stateb)
     # dFaw/dFτ
@@ -33,7 +33,7 @@ end
     return [X; Q]
 end
 
-@inline function input_jacobian_control_child(joint::Translational, statea::State, stateb::State, timestep::T) where T
+@inline function input_jacobian_control_child(joint::Translational, statea::State, stateb::State) where T
     xa, qa = current_configuration(statea)
     xb, qb = current_configuration(stateb)
     # dFbw/dFτ
@@ -44,7 +44,7 @@ end
     return [X; Q]
 end
 
-@inline function input_jacobian_configuration_parent(joint::Translational{T}, statea::State, stateb::State, timestep::T) where T
+@inline function input_jacobian_configuration_parent(joint::Translational{T}, statea::State, stateb::State) where T
     xa, qa = current_configuration(statea)
     xb, qb = current_configuration(stateb)
     # d[Faw;2τaa]/d[xa,qa]
@@ -62,7 +62,7 @@ end
     return FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa
 end
 
-@inline function input_jacobian_configuration_child(joint::Translational{T}, statea::State, stateb::State, timestep::T) where T
+@inline function input_jacobian_configuration_child(joint::Translational{T}, statea::State, stateb::State) where T
     xa, qa = current_configuration(statea)
     xb, qb = current_configuration(stateb)
     # d[Faw;2τaa]/d[xb,qb]

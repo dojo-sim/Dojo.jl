@@ -1,3 +1,40 @@
+################################################################################
+# Coordinates
+################################################################################
+@inline function minimal_coordinates(joint::Joint, body1::Node, body2::Node)
+    statea = body1.state
+    stateb = body2.state
+    return minimal_coordinates(joint, statea.x2[1], statea.q2[1], stateb.x2[1], stateb.q2[1])
+end
+
+################################################################################
+# Velocities
+################################################################################
+@inline function minimal_velocities(joint::Joint, body1::Node, body2::Node)
+    statea = body1.state
+    stateb = body2.state
+    return minimal_velocities(joint, statea.x2[1], statea.v15, statea.q2[1], statea.ϕ15,
+		stateb.x2[1], stateb.v15, stateb.q2[1], stateb.ϕ15)
+end
+
+function minimal_velocities_jacobian_configuration(jacobian_relative::Symbol,
+        joint::Joint, xa::AbstractVector, va::AbstractVector,
+        qa::UnitQuaternion, ϕa::AbstractVector, xb::AbstractVector,
+        vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector)
+    (jacobian_relative == :parent) && (return minimal_velocities_jacobian_configuration_parent(joint, xa, va, qa, ϕa, xb, vb, qb, ϕb))
+    (jacobian_relative == :child) && (return minimal_velocities_jacobian_configuration_child(joint, xa, va, qa, ϕa, xb, vb, qb, ϕb))
+    return
+end
+
+function minimal_velocities_jacobian_velocity(jacobian_relative::Symbol,
+        joint::Joint, xa::AbstractVector, va::AbstractVector,
+        qa::UnitQuaternion, ϕa::AbstractVector, xb::AbstractVector,
+        vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector)
+    (jacobian_relative == :parent) && (return minimal_velocities_jacobian_velocity_parent(joint, xa, va, qa, ϕa, xb, vb, qb, ϕb))
+    (jacobian_relative == :child) && (return minimal_velocities_jacobian_velocity_child(joint, xa, va, qa, ϕa, xb, vb, qb, ϕb))
+    return
+end
+
 
 function set_minimal_coordinates_velocities!(mechanism::Mechanism, joint::JointConstraint;
         xmin::AbstractVector=szeros(2control_dimension(joint)))

@@ -59,7 +59,6 @@ end
 ################################################################################
 # Impulse Transform
 ################################################################################
-
 function impulse_transform_parent(joint::Translational{T}, xa::AbstractVector,
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
     X = -1.0 * rotation_matrix(qa)
@@ -89,7 +88,6 @@ end
 ################################################################################
  # Derivatives
 ################################################################################
-
 function impulse_transform_parent_jacobian_parent(joint::Translational{T,Nλ,0},
         xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
     # ∂(impulse_transform_a'*p)/∂(xa,qa)

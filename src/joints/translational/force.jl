@@ -70,56 +70,18 @@ end
         qa::UnitQuaternion, va::AbstractVector, ωa::AbstractVector,
         xb::AbstractVector, qb::UnitQuaternion, vb::AbstractVector,
         ωb::AbstractVector; unitary::Bool=false) where T
-    # damper = unitary ? 1.0 : joint.damper
-    # A = nullspace_mask(joint)
-    # Aᵀ = zerodimstaticadjoint(A)
-
-    # pa_b = rotation_matrix(inv(qb)) * (xa + rotation_matrix(qa) * joint.vertices[1]) # body a kinematics point
-    # cb_b = xb # body b com
-    # rb = pa_b - cb_b
-    # vpb = vb + vrotate(skew(ωb) * rb, qb)
-    # vpa = va + vrotate(skew(ωa) * joint.vertices[1], qa)
-    #
-    # # velocity = A * vrotate(vpb - vpa, inv(qa))
-    # # velocity = A * vrotate(vb - va, inv(qa))
-    # force = damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
-    # forceA = force # in the A frame
-    # rotate && (force = vrotate(force, qa)) # rotate back to world frame
-    #
-    # torque = skew(joint.vertices[1]) * forceA
     Fτ = damper_force(joint, xa, qa, va, ωa, xb, qb, vb, ωb) # in the a frame
     Fτa = impulse_transform_parent(joint, xa, qa, xb, qb) * Fτ
     return Fτa
-    # return [force; torque]
 end
 
 @inline function damper_child(joint::Translational{T}, xa::AbstractVector,
         qa::UnitQuaternion, va::AbstractVector, ωa::AbstractVector,
         xb::AbstractVector, qb::UnitQuaternion, vb::AbstractVector,
         ωb::AbstractVector; unitary::Bool=false) where T
-    # damper = unitary ? 1.0 : joint.damper
-    # A = nullspace_mask(joint)
-    # Aᵀ = zerodimstaticadjoint(A)
-
-    # pa_b = rotation_matrix(inv(qb)) * (xa + rotation_matrix(qa) * joint.vertices[1]) # body a kinematics point
-    # cb_b = xb # body b com
-    # rb = pa_b - cb_b
-    # vpb = vb + vrotate(skew(ωb) * rb, qb)
-    # vpa = va + vrotate(skew(ωa) * joint.vertices[1], qa)
-
-    # velocity = A * vrotate(vpb - vpa, inv(qa))
-    # velocity = A * vrotate(vb - va, inv(qa))
-    # force = - damper * Aᵀ * velocity  # Currently assumes same damper constant in all directions
-    # forceA = force
-    # rotate && (force = vrotate(force, qa)) # rotate back to world frame
-    # pa_a = rotation_matrix(inv(qa)) * (xa + rotation_matrix(qa) * joint.vertices[1]) # body a kinematics point
-    # cb_a = rotation_matrix(inv(qa)) * (xb) # body b com
-    # ra = pa_a - cb_a
-    # torque = rotation_matrix(inv(qb) * qa) * skew(ra) * forceA
     Fτ = damper_force(joint, xa, qa, va, ωa, xb, qb, vb, ωb) # in the a frame
     Fτb = impulse_transform_child(joint, xa, qa, xb, qb) * Fτ
     return Fτb
-    # return [force; torque]
 end
 
 spring_parent_jacobian_configuration_parent(joint::Translational3{T}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
@@ -135,12 +97,10 @@ spring_parent_jacobian_velocity_parent(joint::Translational3{T}, body1::Node, bo
 spring_parent_jacobian_velocity_child(joint::Translational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
 spring_child_jacobian_velocity_child(joint::Translational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
 spring_child_configuration_velocity_parent(joint::Translational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
-# spring_child_jacobian_velocity_child(joint::Translational3{T}, body1::Origin, body2::Node, timestep::T) where T = szeros(T, 6, 6)
 damper_parent_jacobian_velocity_parent(joint::Translational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
 damper_parent_jacobian_velocity_child(joint::Translational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
 damper_child_configuration_velocity_child(joint::Translational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
 damper_child_configuration_velocity_parent(joint::Translational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
-# damper_child_configuration_velocity_child(joint::Translational3{T}, body1::Origin, body2::Node, timestep::T) where T = szeros(T, 6, 6)
 
 function spring_parent_jacobian_configuration_parent(joint::Translational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
     xa, qa = current_configuration(body1.state)

@@ -1,12 +1,12 @@
-@inline function get_position_delta(joint::Translational, body1::Node, body2::Node, x::SVector)
-    Δx = zerodimstaticadjoint(nullspace_mask(joint)) * x # in body1 frame
-    return Δx
-end
+# @inline function get_position_delta(joint::Translational, body1::Node, body2::Node, x::SVector)
+#     Δx = zerodimstaticadjoint(nullspace_mask(joint)) * x # in body1 frame
+#     return Δx
+# end
 
-@inline function get_velocity_delta(joint::Translational, body1::Node, body2::Node, v::SVector)
-    Δv = zerodimstaticadjoint(nullspace_mask(joint)) * v # in body1 frame
-    return Δv
-end
+# @inline function get_velocity_delta(joint::Translational, body1::Node, body2::Node, v::SVector)
+#     Δv = zerodimstaticadjoint(nullspace_mask(joint)) * v # in body1 frame
+#     return Δv
+# end
 
 @inline function position_error(joint::Translational, xa::AbstractVector,
 		qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; rotate::Bool = true)
@@ -49,12 +49,6 @@ end
 ################################################################################
 # Coordinates
 ################################################################################
-@inline function minimal_coordinates(joint::Translational, body1::Node, body2::Node)
-    statea = body1.state
-    stateb = body2.state
-    return minimal_coordinates(joint, statea.x2[1], statea.q2[1], stateb.x2[1], stateb.q2[1])
-end
-
 @inline function minimal_coordinates(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
     return nullspace_mask(joint) * position_error(joint, xa, qa, xb, qb)
 end
@@ -67,13 +61,6 @@ end
 ################################################################################
 # Velocities
 ################################################################################
-@inline function minimal_velocities(joint::Translational, body1::Node, body2::Node)
-    statea = body1.state
-    stateb = body2.state
-    return minimal_velocities(joint, statea.x2[1], statea.v15, statea.q2[1], statea.ϕ15,
-		stateb.x2[1], stateb.v15, stateb.q2[1], stateb.ϕ15)
-end
-
 @inline function minimal_velocities(joint::Translational, xa::AbstractVector,
         va::AbstractVector,  qa::UnitQuaternion, ωa::AbstractVector,
         xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector)
@@ -86,22 +73,6 @@ end
     return nullspace_mask(joint) * Δv
 end
 
-function minimal_velocities_jacobian_configuration(jacobian_relative::Symbol,
-        joint::Translational, xa::AbstractVector, va::AbstractVector,
-        qa::UnitQuaternion, ωa::AbstractVector, xb::AbstractVector,
-        vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector)
-    (jacobian_relative == :parent) && (return minimal_velocities_jacobian_configuration_parent(joint, xa, va, qa, ωa, xb, vb, qb, ωb))
-    (jacobian_relative == :child) && (return minimal_velocities_jacobian_configuration_child(joint, xa, va, qa, ωa, xb, vb, qb, ωb))
-    return
-end
-function minimal_velocities_jacobian_velocity(jacobian_relative::Symbol,
-        joint::Translational, xa::AbstractVector, va::AbstractVector,
-        qa::UnitQuaternion, ωa::AbstractVector, xb::AbstractVector,
-        vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector)
-    (jacobian_relative == :parent) && (return minimal_velocities_jacobian_velocity_parent(joint, xa, va, qa, ωa, xb, vb, qb, ωb))
-    (jacobian_relative == :child) && (return minimal_velocities_jacobian_velocity_child(joint, xa, va, qa, ωa, xb, vb, qb, ωb))
-    return
-end
 @inline function minimal_velocities_jacobian_configuration_parent(joint::Translational{T},
         xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
         xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector) where T
