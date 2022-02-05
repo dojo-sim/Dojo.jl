@@ -12,7 +12,7 @@ function get_humanoid(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf=0.8, spr
         left_foot = get_body(mech, :left_foot)
 
 		aa = -0.43000 * [-0.44721, 0.00000, 0.89442]
-		ql = axisangle2quaternion(aa)
+		ql = axis_angle_to_quaternion(aa)
         qll = ql * UnitQuaternion(RotXYZ(roll=-1.57080, pitch=1.47585, yaw=-1.47585)) # roll pitch yaw
         qlr = ql * UnitQuaternion(RotXYZ(roll=+1.57080, pitch=1.47585, yaw=+1.47585)) # roll pitch yaw
 

@@ -1,6 +1,6 @@
 @inline function constraint(joint::Rotational{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
     e1 = Vmat(qa \ qb / joint.qoffset)
-    e2 = minimal_coordinates(joint, qa, qb)
+    e2 = minimal_coordinates(joint, xa, qa, xb, qb)
     s, γ = get_sγ(joint, η)
     return [
             s .* γ;

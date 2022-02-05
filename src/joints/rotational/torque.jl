@@ -54,7 +54,7 @@ end
     A = nullspace_mask(joint)
     Aᵀ = zerodimstaticadjoint(A)
     aa = Aᵀ * joint.spring_offset # axis angle
-    qoff = axisangle2quaternion(aa)
+    qoff = axis_angle_to_quaternion(aa)
     return qoff
 end
 

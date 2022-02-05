@@ -7,7 +7,7 @@ function get_maximal_gradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,
 	datamat = full_data_matrix(mechanism, attjac = attjac)
 	solmat = full_matrix(mechanism.system)
 
-	# data Jacobian 
+	# data Jacobian
 	data_jacobian = - solmat \ datamat #TODO: use pre-factorization
 	data_jacobian_state = data_jacobian[njoints .+ (1:6Nb),1:nic]
 	data_jacobian_control = data_jacobian[njoints .+ (1:6Nb),nic .+ (1:nu)]
@@ -63,8 +63,8 @@ function maximal_to_minimal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVect
 				push!(c, minimal_coordinates(element, xa, qa, xb, qb)...) # Δx in bodya's coordinates projected on elementAB's nullspace
 				push!(v, minimal_velocities(element, xa, va, qa, ϕa, xb, vb, qb, ϕb)...) # Δv in bodya's coordinates projected on elementAB's nullspace
 			elseif typeof(element) <: Rotational
-				push!(c, minimal_coordinates(element, qa, qb)...) # Δq in bodya's coordinates projected on elementAB's nullspace
-				push!(v, minimal_velocities(element, qa, ϕa, qb, ϕb)...) # Δϕ in bodya's coordinates projected on jointAB's nullspace
+				push!(c, minimal_coordinates(element, xa, qa, xb, qb)...) # Δq in bodya's coordinates projected on elementAB's nullspace
+				push!(v, minimal_velocities(element, xa, va, qa, ϕa, xb, vb, qb, ϕb)...) # Δϕ in bodya's coordinates projected on jointAB's nullspace
 			end
 		end
 		push!(x, [c; v]...)
@@ -74,51 +74,52 @@ function maximal_to_minimal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVect
 end
 
 function maximal_to_minimal_jacobian_analytical(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) where {T,Nn,Ne,Nb,Ni,Tz}
-	J = zeros(minimal_dimension(mechanism), maximal_dimension(mechanism))# TODO: - Nb)
+	# J = zeros(minimal_dimension(mechanism), maximal_dimension(mechanism))# TODO: - Nb)
+	J = zeros(minimal_dimension(mechanism), maximal_dimension(mechanism) - Nb)
 	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
 	# Thus go through the joints in order, start from joint between robot and origin and go down the tree.
 	row_shift = 0
 	for id in reverse(mechanism.system.dfs_list)
 		(id > Ne) && continue # only treat joints
 		joint = mechanism.joints[id]
-		c_shift = 0 
+		c_shift = 0
 		v_shift = control_dimension(joint)
 		ichild = joint.child_id - Ne
 		for (i, element) in enumerate(joint.constraints)
 
 			xb, vb, qb, ϕb = unpack_maximal_state(z, ichild)
 
-			# xb_idx = collect((ichild-1)*12 .+ (1:3)) 
-			# vb_idx = collect((ichild-1)*12 .+ (4:6)) 
-			# qb_idx = collect((ichild-1)*12 .+ (7:9)) 
-			# ϕb_idx = collect((ichild-1)*12 .+ (10:12))
-			xb_idx = collect((ichild-1)*13 .+ (1:3)) 
-			vb_idx = collect((ichild-1)*13 .+ (4:6)) 
-			qb_idx = collect((ichild-1)*13 .+ (7:10)) 
-			ϕb_idx = collect((ichild-1)*13 .+ (11:13))
+			xb_idx = collect((ichild-1)*12 .+ (1:3))
+			vb_idx = collect((ichild-1)*12 .+ (4:6))
+			qb_idx = collect((ichild-1)*12 .+ (7:9))
+			ϕb_idx = collect((ichild-1)*12 .+ (10:12))
+			# xb_idx = collect((ichild-1)*13 .+ (1:3))
+			# vb_idx = collect((ichild-1)*13 .+ (4:6))
+			# qb_idx = collect((ichild-1)*13 .+ (7:10))
+			# ϕb_idx = collect((ichild-1)*13 .+ (11:13))
 
 			if joint.parent_id != 0
 				iparent = joint.parent_id - Ne
 				xa, va, qa, ϕa = unpack_maximal_state(z, iparent)
 
-				# xa_idx = collect((iparent-1)*12 .+ (1:3)) 
-				# va_idx = collect((iparent-1)*12 .+ (4:6)) 
-				# qa_idx = collect((iparent-1)*12 .+ (7:9)) 
-				# ϕa_idx = collect((iparent-1)*12 .+ (10:12)) 
-				xa_idx = collect((iparent-1)*13 .+ (1:3)) 
-				va_idx = collect((iparent-1)*13 .+ (4:6)) 
-				qa_idx = collect((iparent-1)*13 .+ (7:10)) 
-				ϕa_idx = collect((iparent-1)*13 .+ (11:13)) 
+				xa_idx = collect((iparent-1)*12 .+ (1:3))
+				va_idx = collect((iparent-1)*12 .+ (4:6))
+				qa_idx = collect((iparent-1)*12 .+ (7:9))
+				ϕa_idx = collect((iparent-1)*12 .+ (10:12))
+				# xa_idx = collect((iparent-1)*13 .+ (1:3))
+				# va_idx = collect((iparent-1)*13 .+ (4:6))
+				# qa_idx = collect((iparent-1)*13 .+ (7:10))
+				# ϕa_idx = collect((iparent-1)*13 .+ (11:13))
 			else
 				xa, va, qa, ϕa = current_configuration_velocity(mechanism.origin.state)
-			end 
+			end
 
 			nu_element = control_dimension(element)
 
 			c_idx = row_shift + c_shift .+ (1:nu_element)
 			v_idx = row_shift + v_shift .+ (1:nu_element)
 
-			if typeof(element) <: Translational 
+			if typeof(element) <: Translational
 				if joint.parent_id != 0
 					J[c_idx, [xa_idx; qa_idx]] = minimal_coordinates_jacobian_configuration(:parent, element, xa, qa, xb, qb)
 					J[v_idx, [xa_idx; qa_idx]] = minimal_velocities_jacobian_configuration(:parent, element, xa, va, qa, ϕa, xb, vb, qb, ϕb)
@@ -131,14 +132,19 @@ function maximal_to_minimal_jacobian_analytical(mechanism::Mechanism{T,Nn,Ne,Nb,
 
 			elseif typeof(element) <: Rotational
 				if joint.parent_id != 0
-					J[c_idx, [xa_idx; qa_idx]] = minimal_coordinates_jacobian_configuration(:parent, element, qa, qb)
-					J[v_idx, [xa_idx; qa_idx]] = minimal_velocities_jacobian_configuration(:parent, element, qa, ϕa, qb, ϕb)
-					J[v_idx, [va_idx; ϕa_idx]] = minimal_velocities_jacobian_velocity(:parent, element, qa, ϕa, qb, ϕb)
+					# J[c_idx, [xa_idx; qa_idx]] = minimal_coordinates_jacobian_configuration(:parent, element, qa, qb)
+					# J[v_idx, [xa_idx; qa_idx]] = minimal_velocities_jacobian_configuration(:parent, element, qa, ϕa, qb, ϕb)
+					# J[v_idx, [va_idx; ϕa_idx]] = minimal_velocities_jacobian_velocity(:parent, element, qa, ϕa, qb, ϕb)
+					J[c_idx, [xa_idx; qa_idx]] = minimal_coordinates_jacobian_configuration(:parent, element, xa, qa, xb, qb)
+					J[v_idx, [xa_idx; qa_idx]] = minimal_velocities_jacobian_configuration(:parent, element, xa, va, qa, ϕa, xb, vb, qb, ϕb)
+					J[v_idx, [va_idx; ϕa_idx]] = minimal_velocities_jacobian_velocity(:parent, element, xa, va, qa, ϕa, xb, vb, qb, ϕb)
 				end
-				J[c_idx, [xb_idx; qb_idx]] = minimal_coordinates_jacobian_configuration(:child, element, qa, qb)
-				J[v_idx, [xb_idx; qb_idx]] = minimal_velocities_jacobian_configuration(:child, element, qa, ϕa, qb, ϕb)
-				J[v_idx, [vb_idx; ϕb_idx]] = minimal_velocities_jacobian_velocity(:child, element, qa, ϕa, qb, ϕb)
-
+				# J[c_idx, [xb_idx; qb_idx]] = minimal_coordinates_jacobian_configuration(:child, element, qa, qb)
+				# J[v_idx, [xb_idx; qb_idx]] = minimal_velocities_jacobian_configuration(:child, element, qa, ϕa, qb, ϕb)
+				# J[v_idx, [vb_idx; ϕb_idx]] = minimal_velocities_jacobian_velocity(:child, element, qa, ϕa, qb, ϕb)
+				J[c_idx, [xb_idx; qb_idx]] = minimal_coordinates_jacobian_configuration(:child, element, xa, qa, xb, qb)
+				J[v_idx, [xb_idx; qb_idx]] = minimal_velocities_jacobian_configuration(:child, element, xa, va, qa, ϕa, xb, vb, qb, ϕb)
+				J[v_idx, [vb_idx; ϕb_idx]] = minimal_velocities_jacobian_velocity(:child, element, xa, va, qa, ϕa, xb, vb, qb, ϕb)
 			end
 			c_shift += nu_element
 			v_shift += nu_element
@@ -181,4 +187,3 @@ function set_maximal_state!(z::AbstractVector, x2::AbstractVector, v15::Abstract
 	z[(i-1)*13 .+ (11:13)] = ϕ15
 	return nothing
 end
-

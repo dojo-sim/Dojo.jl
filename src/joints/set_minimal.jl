@@ -39,7 +39,7 @@ function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::Rotational;
     qoffset = joint.qoffset
     qa = pnode.state.q2[1]
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
-    Δq = axisangle2quaternion(Aᵀ*Δθ)
+    Δq = axis_angle_to_quaternion(Aᵀ*Δθ)
     qb = qa * qoffset * Δq
     set_position!(cnode; x=cnode.state.x2[1], q = qb)
     return nothing
