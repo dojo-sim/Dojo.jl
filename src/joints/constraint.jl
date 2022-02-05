@@ -279,12 +279,12 @@ end
 end
 
 @generated function input_jacobian_control_parent(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(input_jacobian_control_parent(joint.constraints[$i], body, get_body(mechanism, joint.child_id), mechanism.timestep, joint.child_id)) for i = 1:Nc]
+    vec = [:(input_jacobian_control_parent(joint.constraints[$i], body, get_body(mechanism, joint.child_id), joint.child_id)) for i = 1:Nc]
     return :(hcat($(vec...)))
 end
 
 @generated function input_jacobian_control_child(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(input_jacobian_control_child(joint.constraints[$i], get_body(mechanism, joint.parent_id), body, mechanism.timestep, joint.child_id)) for i = 1:Nc]
+    vec = [:(input_jacobian_control_child(joint.constraints[$i], get_body(mechanism, joint.parent_id), body, joint.child_id)) for i = 1:Nc]
     return :(hcat($(vec...)))
 end
 

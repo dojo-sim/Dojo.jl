@@ -14,3 +14,8 @@
 # Training
     # we optimize the task objective over several rollouts wrt θ
     # dOBJ/dθ = dOBJ/dX * dX/dU * dU/dθ
+
+
+################################################################################
+# Smoothly Differentiable QP
+################################################################################

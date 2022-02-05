@@ -49,15 +49,15 @@ end
 
 @inline function spring_parent(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion,
         xb::AbstractVector, qb::UnitQuaternion; unitary::Bool=false) where T
-    @warn "remove this"
-    error()
+    # @warn "remove this"
+    # error()
     spring_relative(:parent, joint, xa, qa, xb, qb; unitary=unitary)
 end
 
 @inline function spring_child(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion,
         xb::AbstractVector, qb::UnitQuaternion; unitary::Bool=false) where T
-    @warn "remove this"
-    error()
+    # @warn "remove this"
+    # error()
     spring_relative(:child, joint, xa, qa, xb, qb; unitary=unitary)
 end
 
