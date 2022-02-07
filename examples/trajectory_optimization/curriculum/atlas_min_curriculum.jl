@@ -45,13 +45,14 @@ function ctrl!(mech, k)
 end
 storage = simulate!(env.mechanism, 0.5, ctrl!, record=true, verbose=false,
 	opts=SolverOptions(rtol=ρ0, btol=ρ0, undercut=1.5))
-visualize(env.mechanism, storage, vis=env.vis, show_contact=true)
+visualize(env.mechanism, storage, vis=env.vis, show_contact=false)
 
 
 # ## reference trajectory
 N = 3
-initialize!(env.mechanism, :atlas, model_type=:armless, tran=[1,0,0.0], rot=[0,0,0.], αhip=0.5, αknee=1.0)
-xref = atlas_trajectory(env.mechanism; timestep=dt, β=1.4, Δx=-0.03, r=0.08, z=1.04, N=10, Ncycles=N)[1:50]
+initialize!(env.mechanism, :atlas, model_type=:armless, tran=[0,0,0.0], rot=[0,0,0.], αhip=0.5, αknee=1.0)
+xref = atlas_trajectory(env.mechanism; timestep=dt, β=1.4, αtorso=0.07, Δx=-0.03, r=0.08, z=1.12, N=10, Ncycles=N)
+# x = get_minimal_state(env.mechanism)
 # xref0 = deepcopy(xref[1])
 # # xref0[1:3] .+= [1.0, 1.0, 1.0] # floating x
 # # xref0[4:6] .+= [1.0, 0.0, 1.0] # floating ϕ
@@ -59,7 +60,7 @@ xref = atlas_trajectory(env.mechanism; timestep=dt, β=1.4, Δx=-0.03, r=0.08, z
 # # xref0[10:12] .+= [0.0, 0.0, 0.0] # floating ϕ
 # xref0[13:15] .+= [0.0, 0.0, 0.0] # back q
 # # xref0[16:18] .+= [1.0, 0.0, 0.0] # back ϕ
-# xref0[19:21] .+= [0.0, 0.0, 0.0] # rhip q
+# xref0[19:21] .+= [0.0, 1.0, 0.0] # rhip q
 # # xref0[22:24] .+= [1.0, 0.0, 0.0] # rhip ϕ
 # xref0[25:25] .+= [0.0] # rknee q
 # # xref0[26:26] .+= [1.0] # rknee ϕ
@@ -71,12 +72,15 @@ xref = atlas_trajectory(env.mechanism; timestep=dt, β=1.4, Δx=-0.03, r=0.08, z
 # # xref0[38:38] .+= [1.0] # lknee ϕ
 # xref0[39:40] .+= [0.0, 0.0] # lankle q
 # # xref0[41:42] .+= [0.0, 0.0] # lankle ϕ
+# xref0 = deepcopy(x)
+# xref0[13] += 1.0
 # xref = [fill(xref[1], 3); fill(xref0, 10)]
+# visualize(env, fill(xref0, 10))
 visualize(env, xref)
 
 # ## horizon
-# T = N * (21 - 1) + 1
-T = 51
+T = N * (21 - 1) + 1
+# T = 51
 
 # ## model
 dyn = IterativeLQR.Dynamics(
@@ -87,10 +91,15 @@ dyn = IterativeLQR.Dynamics(
 
 model = [dyn for t = 1:T-1]
 
+env.mechanism.bodies
+env.mechanism.joints[1]
+env.mechanism.joints[2]
+
+
 # ## rollout
 x1 = xref[1]
 u0 = -total_mass(env.mechanism) * env.mechanism.gravity* env.mechanism.timestep/1.1
-ū = [[u0; 0; 0.6; 0; zeros(m-6)] for t = 1:T-1]
+ū = [[u0; 0; -0.4; 0; zeros(m-6)] for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, x1, ū, w)
 visualize(env, x̄)
@@ -109,7 +118,7 @@ qt = [
 	4.8ones(2); 0.01ones(2); # lankle
 	]
 ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(dt * qt) * (x - xref[t]) +
-	transpose(u) * Diagonal(dt * [0.0001*ones(6); 0.02*ones(m-6)]) * u for t = 1:T-1]
+	transpose(u) * Diagonal(dt * [0.01*ones(6); 0.02*ones(m-6)]) * u for t = 1:T-1]
 oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(dt * qt) * (x - xref[end])
 
 # ## constraints
@@ -134,7 +143,7 @@ function goal(x, u, w)
 end
 
 function ctrl_lmt(x, u, w)
-	return 1e-2*u[collect(1:6)]
+	return 1e-1*u[collect(1:6)]
 end
 
 cont = IterativeLQR.Constraint(ctrl_lmt, n, m)
@@ -182,7 +191,10 @@ x_sol, u_sol = IterativeLQR.get_trajectory(prob)
 @show norm(goal(prob.m_data.x[T], zeros(0), zeros(0)), Inf)
 @show norm(vcat([ctrl_lmt(prob.m_data.x[t], prob.m_data.u[t], zeros(0)) for t=1:T-1]...), Inf)
 
-jldsave(joinpath(@__DIR__, "atlas_traj_5steps.jld2"), x_sol=x_sol, u_sol=u_sol)
+# jldsave(joinpath(@__DIR__, "atlas_traj_6steps.jld2"), x_sol=x_sol, u_sol=u_sol)
+
+plot([x[5] for x in x_sol])
+
 
 # ## visualize
 x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]
@@ -192,12 +204,12 @@ set_camera!(env.vis, cam_pos=[0,-3,2], zoom=3)
 open(env.vis)
 
 set_floor!(env.vis, x=6.0, y=6.0, z=0.01, alt=0.0, color=RGBA(0.5,0.5,0.5,1.0))
-set_camera!(env.vis, cam_pos=[5,-5,5], zoom=3)
+set_camera!(env.vis, cam_pos=[5,-6,6], zoom=3)
 set_light!(env.vis)
 
-convert_frames_to_video_and_gif("atlas_3_steps_front")
+convert_frames_to_video_and_gif("atlas_6_steps_side")
 
 render_static(env.vis)
-open(joinpath(@__DIR__, "atlas_4_steps.html"), "w") do file
-    write(file, static_html(env.vis))
-end
+# open(joinpath(@__DIR__, "atlas_6_steps.html"), "w") do file
+#     write(file, static_html(env.vis))
+# end

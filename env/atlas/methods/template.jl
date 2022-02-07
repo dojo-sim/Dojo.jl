@@ -56,8 +56,8 @@ function AtlasIKerror(mechanism::Mechanism, p_base, p_foot, θ; leg::Symbol = :r
 	return err[[1,3]]
 end
 
-function atlas_trajectory(mechanism::Mechanism{T}; timestep = 0.05, β=0.5, Δx=0.0, r=0.10,
-		x=0.00, z=0.85, N=12, Ncycles=1) where T
+function atlas_trajectory(mechanism::Mechanism{T}; timestep = 0.05, β=0.5,
+		αtorso=0.15, Δx=0.0, r=0.10, x=0.00, z=0.85, N=12, Ncycles=1) where T
 	pL = [Δx, + 0.1145, 0]
 	pR = [Δx, - 0.1145, 0]
 
@@ -80,7 +80,9 @@ function atlas_trajectory(mechanism::Mechanism{T}; timestep = 0.05, β=0.5, Δx=
 	nx = minimal_dimension(mechanism)
 	X = [zeros(nx) for i = 1:2N]
 	for i = 1:2N
-		set_position!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [p_base; zeros(3)])
+
+		set_position!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [p_base; 0.0; αtorso; 0.0])
+		set_position!(mechanism, get_joint_constraint(mechanism, :back_bkxyz), [0.0, -αtorso, 0.0])
 		set_position!(mechanism, get_joint_constraint(mechanism, :l_leg_hpxyz), [0.0, -θL[i][1], 0.0])
 		set_position!(mechanism, get_joint_constraint(mechanism, :l_leg_kny), [θL[i][2]])
 		set_position!(mechanism, get_joint_constraint(mechanism, :l_leg_akxy), [θL[i][1]-θL[i][2], 0.0])

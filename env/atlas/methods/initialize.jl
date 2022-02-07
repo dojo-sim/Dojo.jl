@@ -2,7 +2,7 @@
 function get_atlas(; timestep::T=0.01, gravity=-9.81, cf::T=0.8, spring=0.0,
         damper::T=0.0, contact::Bool=true, model_type::Symbol=:simple) where T
     path = joinpath(@__DIR__, "../deps/atlas_$(string(model_type)).urdf")
-    mech = Mechanism(path, true, T, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
+    mech = Mechanism(path, !(model_type==:armless), T, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
 
     # Adding springs and dampers
     for (i,joint) in enumerate(collect(mech.joints)[2:end])
