@@ -51,7 +51,7 @@ visualize(env.mechanism, storage, vis=env.vis, show_contact=true)
 # ## reference trajectory
 N = 2
 initialize!(env.mechanism, :atlas, model_type=:armless, tran=[1,0,0.0], rot=[0,0,0.], αhip=0.5, αknee=1.0)
-xref = atlas_trajectory(env.mechanism; timestep=dt, β=1.4, Δx=-0.03, r=0.08, z=1.04, N=10, Ncycles=N)[1:30]
+xref = atlas_trajectory(env.mechanism; timestep=dt, β=1.4, Δx=-0.03, r=0.08, z=1.04, N=10, Ncycles=N)#[1:30]
 # xref0 = deepcopy(xref[1])
 # # xref0[1:3] .+= [1.0, 1.0, 1.0] # floating x
 # # xref0[4:6] .+= [1.0, 0.0, 1.0] # floating ϕ
@@ -76,7 +76,7 @@ visualize(env, xref)
 
 # ## horizon
 # T = N * (21 - 1) + 1
-T = 31
+T = 41
 
 # ## model
 dyn = IterativeLQR.Dynamics(
@@ -89,8 +89,8 @@ model = [dyn for t = 1:T-1]
 
 # ## rollout
 x1 = xref[1]
-u0 = -total_mass(env.mechanism) * env.mechanism.gravity* env.mechanism.timestep/1.2
-ū = [[u0; 0; 0.9; 0; zeros(m-6)] for t = 1:T-1]
+u0 = -total_mass(env.mechanism) * env.mechanism.gravity* env.mechanism.timestep/1.1
+ū = [[u0; 0; 0.6; 0; zeros(m-6)] for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, x1, ū, w)
 visualize(env, x̄)
@@ -149,7 +149,7 @@ x_prev = deepcopy(xref) # TODO deepcopy(x̄)
 # ## problem
 prob = IterativeLQR.problem_data(model, obj, cons)
 
-for ρ in [1e-3, 3e-4]#, 1e-4]#, 3e-5, 1e-5, 3e-6, 1e-6]
+for ρ in [1e-3, 3e-4, 1e-4, 3e-5]#, 1e-5, 3e-6, 1e-6]
 	println("ρ: ", scn(ρ), "   *************************************")
 	IterativeLQR.initialize_controls!(prob, u_prev)
 	IterativeLQR.initialize_states!(prob, x_prev)
@@ -192,7 +192,12 @@ set_camera!(env.vis, cam_pos=[0,-3,2], zoom=3)
 open(env.vis)
 
 set_floor!(env.vis, x=6.0, y=6.0, z=0.01, alt=0.0, color=RGBA(0.5,0.5,0.5,1.0))
-set_camera!(env.vis, cam_pos=[0,-15,0], zoom=30)
+set_camera!(env.vis, cam_pos=[5,-5,5], zoom=3)
 set_light!(env.vis)
 
 convert_frames_to_video_and_gif("atlas_3_steps_front")
+
+render_static(env.vis)
+open(joinpath(@__DIR__, "atlas_4_steps.html"), "w") do file
+    write(file, static_html(env.vis))
+end
