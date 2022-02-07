@@ -12,19 +12,19 @@ function low_foot_trajectory(r::T, N::Int) where T
 	return low_traj
 end
 
-function high_foot_trajectory(r::T, N::Int) where T
+function high_foot_trajectory(r::T, β::T, N::Int) where T
 	# high foot trajectory decomposed into N steps (N+1 waypoints)
 	α = range(0, π, length = N+1)
 	θ = π * (1 .- cos.(α)) / 2
 	X = [r*cos(θi) for θi in θ]
-	Z = [r*sin(θi)/2 for θi in θ] # the facto 2 flatten the foo trajectory
+	Z = [β*r*sin(θi) for θi in θ] # the facto 2 flatten the foo trajectory
 	high_traj = [[X[i], 0.0, Z[i]] for i = 1:N+1]
 	return high_traj
 end
 
-function foot_trajectory(r::T, N::Int) where T
+function foot_trajectory(r::T, β::T, N::Int) where T
 	low_traj = low_foot_trajectory(r, N)
-	high_traj = high_foot_trajectory(r, N)
+	high_traj = high_foot_trajectory(r, β, N)
 	traj = [low_traj[1:end-1]; high_traj[1:end-1]]
 	return traj
 end
@@ -44,23 +44,24 @@ function IKatlas(mechanism::Mechanism, p_base, p_foot; leg::Symbol = :r)
 end
 
 function AtlasIKerror(mechanism::Mechanism, p_base, p_foot, θ; leg::Symbol = :r)
-	set_position!(mechanism, get_joint_constraint(mechanism, "auto_generated_floating_joint"), [p_base; zeros(3)])
-	set_position!(mechanism, get_joint_constraint(mechanism, String(leg)*"_leg_hpxyz"), [0.0, -θ[1], 0.0])
-	set_position!(mechanism, get_joint_constraint(mechanism, String(leg)*"_leg_kny"), [θ[2]])
-	set_position!(mechanism, get_joint_constraint(mechanism, String(leg)*"_leg_akxy"), [θ[1]-θ[2], 0.0])
+	set_position!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [p_base; zeros(3)])
+	set_position!(mechanism, get_joint_constraint(mechanism, Symbol(leg, :_leg_hpxyz)), [0.0, -θ[1], 0.0])
+	set_position!(mechanism, get_joint_constraint(mechanism, Symbol(leg, :_leg_kny)), [θ[2]])
+	set_position!(mechanism, get_joint_constraint(mechanism, Symbol(leg, :_leg_akxy)), [θ[1]-θ[2], 0.0])
 
-	foot = get_body(mechanism, String(leg)*"_foot")
+	foot = get_body(mechanism, Symbol(leg, :_foot))
 	foot_contacts = mechanism.contacts[findall(x -> x.parent_id == foot.id, mechanism.contacts)]
 	p = mean([contact_location(contact, foot) for contact in foot_contacts]) # average of all contact locations for one foot
 	err = p - p_foot
 	return err[[1,3]]
 end
 
-function atlas_trajectory(mechanism::Mechanism{T}; timestep = 0.05, r = 0.10, x = 0.00, z = 0.85, N = 12, Ncycles = 1) where T
-	pL = [0, + 0.1145, 0]
-	pR = [0, - 0.1145, 0]
+function atlas_trajectory(mechanism::Mechanism{T}; timestep = 0.05, β=0.5, Δx=0.0, r=0.10,
+		x=0.00, z=0.85, N=12, Ncycles=1) where T
+	pL = [Δx, + 0.1145, 0]
+	pR = [Δx, - 0.1145, 0]
 
-	t = reverse(foot_trajectory(r, N))
+	t = reverse(foot_trajectory(r, β, N))
 	t_dephased = [t[N+1:2N]; t[1:N]]
 	# Foot positions
 	tL = [pL + ti for ti in t_dephased]
@@ -79,23 +80,23 @@ function atlas_trajectory(mechanism::Mechanism{T}; timestep = 0.05, r = 0.10, x 
 	nx = minimal_dimension(mechanism)
 	X = [zeros(nx) for i = 1:2N]
 	for i = 1:2N
-		set_position!(mechanism, get_joint_constraint(mechanism, "auto_generated_floating_joint"), [p_base; zeros(3)])
-		set_position!(mechanism, get_joint_constraint(mechanism, "l_leg_hpxyz"), [0.0, -θL[i][1], 0.0])
-		set_position!(mechanism, get_joint_constraint(mechanism, "l_leg_kny"), [θL[i][2]])
-		set_position!(mechanism, get_joint_constraint(mechanism, "l_leg_akxy"), [θL[i][1]-θL[i][2], 0.0])
+		set_position!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [p_base; zeros(3)])
+		set_position!(mechanism, get_joint_constraint(mechanism, :l_leg_hpxyz), [0.0, -θL[i][1], 0.0])
+		set_position!(mechanism, get_joint_constraint(mechanism, :l_leg_kny), [θL[i][2]])
+		set_position!(mechanism, get_joint_constraint(mechanism, :l_leg_akxy), [θL[i][1]-θL[i][2], 0.0])
 
-		set_position!(mechanism, get_joint_constraint(mechanism, "r_leg_hpxyz"), [0.0, -θR[i][1], 0.0])
-		set_position!(mechanism, get_joint_constraint(mechanism, "r_leg_kny"), [θR[i][2]])
-		set_position!(mechanism, get_joint_constraint(mechanism, "r_leg_akxy"), [θR[i][1]-θR[i][2], 0.0])
+		set_position!(mechanism, get_joint_constraint(mechanism, :r_leg_hpxyz), [0.0, -θR[i][1], 0.0])
+		set_position!(mechanism, get_joint_constraint(mechanism, :r_leg_kny), [θR[i][2]])
+		set_position!(mechanism, get_joint_constraint(mechanism, :r_leg_akxy), [θR[i][1]-θR[i][2], 0.0])
 
-		set_velocity!(mechanism, get_joint_constraint(mechanism, "auto_generated_floating_joint"), [zeros(3); zeros(3)])
-		set_velocity!(mechanism, get_joint_constraint(mechanism, "l_leg_hpxyz"), [0.0, -ωL[i][1], 0.0])
-		set_velocity!(mechanism, get_joint_constraint(mechanism, "l_leg_kny"), [ωL[i][2]])
-		set_velocity!(mechanism, get_joint_constraint(mechanism, "l_leg_akxy"), [ωL[i][1]-ωL[i][2], 0.0])
+		set_velocity!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [zeros(3); zeros(3)])
+		set_velocity!(mechanism, get_joint_constraint(mechanism, :l_leg_hpxyz), [0.0, -ωL[i][1], 0.0])
+		set_velocity!(mechanism, get_joint_constraint(mechanism, :l_leg_kny), [ωL[i][2]])
+		set_velocity!(mechanism, get_joint_constraint(mechanism, :l_leg_akxy), [ωL[i][1]-ωL[i][2], 0.0])
 
-		set_velocity!(mechanism, get_joint_constraint(mechanism, "r_leg_hpxyz"), [0.0, -ωR[i][1], 0.0])
-		set_velocity!(mechanism, get_joint_constraint(mechanism, "r_leg_kny"), [ωR[i][2]])
-		set_velocity!(mechanism, get_joint_constraint(mechanism, "r_leg_akxy"), [ωR[i][1]-ωR[i][2], 0.0])
+		set_velocity!(mechanism, get_joint_constraint(mechanism, :r_leg_hpxyz), [0.0, -ωR[i][1], 0.0])
+		set_velocity!(mechanism, get_joint_constraint(mechanism, :r_leg_kny), [ωR[i][2]])
+		set_velocity!(mechanism, get_joint_constraint(mechanism, :r_leg_akxy), [ωR[i][1]-ωR[i][2], 0.0])
 		X[i] .= get_minimal_state(mechanism)
 	end
 
@@ -112,18 +113,19 @@ end
 # ################################################################################
 # # Compute trajectory
 # ################################################################################
+# vis = Visualizer()
+# open(vis)
 #
-# mech = get_mechanism(:atlas, timestep = 0.05, model_type = :armless, damper = 1000.0)
-# initialize!(mech, :atlas, tran = [1,0,0.0], rot = [0,0,0.], αhip = 0.0, αknee = 0.0)
+# mech = get_mechanism(:atlas, timestep=0.05, model_type=:armless, damper=1000.0)
+# initialize!(mech, :atlas, tran=[1,0,0.0], rot=[0,0,0.], αhip=0.5, αknee=1.0)
 #
-# @elapsed storage = simulate!(mech, 0.55, record = true, undercut = Inf,
-#     solver = :mehrotra!, verbose = true)
-# visualize(mech, storage, vis = vis)
+# @elapsed storage = simulate!(mech, 0.05, record=true, verbose=true)
+# visualize(mech, storage, vis=vis)
 #
-# X = atlas_trajectory(mech; timestep = 0.05, r = 0.10, z = 0.89, N = 12, Ncycles = 5)
+# X = atlas_trajectory(mech; timestep=0.05, r=0.10, z=0.89, N=14, Ncycles=5)
 # zref = [minimal_to_maximal(mech, x) for x in X]
 # storage = generate_storage(mech, zref)
-# visualize(mech, storage, vis = vis)
+# visualize(mech, storage, vis=vis)
 #
 #
 # bodies = collect(mech.bodies)
@@ -138,5 +140,5 @@ end
 # p_base = [0, 0, 0.88]
 # p_foot = [0, 0, 0.00]
 # θ = [0.4, 0.8]
-# IKerror(mech, p_base, p_foot, θ; leg = :r)
-# IKatlas(mech, p_base, p_foot; leg = :r)
+# IKerror(mech, p_base, p_foot, θ; leg=:r)
+# IKatlas(mech, p_base, p_foot; leg=:r)

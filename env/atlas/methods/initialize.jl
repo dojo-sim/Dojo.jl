@@ -54,6 +54,7 @@ function initialize_atlas!(mechanism::Mechanism;
         set_position!(mechanism,
                 get_joint_constraint(mechanism, :auto_generated_floating_joint),
                 [tran; rot])
+        set_position!(mechanism, get_joint_constraint(mechanism, :back_bkxyz), [0.0, 0.0, 0.0])
         set_position!(mechanism, get_joint_constraint(mechanism, :l_leg_hpxyz), [0.0, -αhip, 0.0])
         set_position!(mechanism, get_joint_constraint(mechanism, :r_leg_hpxyz), [0.0, -αhip, 0.0])
         set_position!(mechanism, get_joint_constraint(mechanism, :l_leg_kny), [αknee])
