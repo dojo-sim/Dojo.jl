@@ -129,6 +129,33 @@ function spring_parent_jacobian_configuration_parent(joint::Translational, body1
     attjac && (Q *= LVᵀmat(qa))
     return timestep * [X Q]
 end
+function spring_parent_jacobian_configuration_child(joint::Translational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
+
+    X = FiniteDiff.finite_difference_jacobian(xb -> spring_parent(joint, xa, qa, xb, qb), xb)
+    Q = FiniteDiff.finite_difference_jacobian(qb -> spring_parent(joint, xa, qa, xb, UnitQuaternion(qb..., false)), [qb.w, qb.x, qb.y, qb.z])
+    attjac && (Q *= LVᵀmat(qb))
+    return timestep * [X Q]
+end
+function spring_child_jacobian_configuration_child(joint::Translational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
+
+    X = FiniteDiff.finite_difference_jacobian(xb -> spring_child(joint, xa, qa, xb, qb), xb)
+    Q = FiniteDiff.finite_difference_jacobian(qb -> spring_child(joint, xa, qa, xb, UnitQuaternion(qb..., false)), [qb.w, qb.x, qb.y, qb.z])
+    attjac && (Q *= LVᵀmat(qb))
+    return timestep * [X Q]
+end
+function spring_child_jacobian_configuraion_parent(joint::Translational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
+    xa, qa = current_configuration(body1.state)
+    xb, qb = current_configuration(body2.state)
+
+    X = FiniteDiff.finite_difference_jacobian(xa -> spring_child(joint, xa, qa, xb, qb), xa)
+    Q = FiniteDiff.finite_difference_jacobian(qa -> spring_child(joint, xa, UnitQuaternion(qa..., false), xb, qb), [qa.w, qa.x, qa.y, qa.z])
+    attjac && (Q *= LVᵀmat(qa))
+    return timestep * [X Q]
+end
 
 function damper_parent_jacobian_configuration_parent(joint::Translational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
     xa, qa = current_configuration(body1.state)
@@ -143,17 +170,6 @@ function damper_parent_jacobian_configuration_parent(joint::Translational, body1
     attjac && (Q *= LVᵀmat(qa))
     return timestep * [X Q]
 end
-
-function spring_parent_jacobian_configuration_child(joint::Translational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
-    xa, qa = current_configuration(body1.state)
-    xb, qb = current_configuration(body2.state)
-
-    X = FiniteDiff.finite_difference_jacobian(xb -> spring_parent(joint, xa, qa, xb, qb), xb)
-    Q = FiniteDiff.finite_difference_jacobian(qb -> spring_parent(joint, xa, qa, xb, UnitQuaternion(qb..., false)), [qb.w, qb.x, qb.y, qb.z])
-    attjac && (Q *= LVᵀmat(qb))
-    return timestep * [X Q]
-end
-
 function damper_parent_jacobian_configuration_child(joint::Translational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
     xa, qa = current_configuration(body1.state)
     xb, qb = current_configuration(body2.state)
@@ -167,17 +183,6 @@ function damper_parent_jacobian_configuration_child(joint::Translational, body1:
     attjac && (Q *= LVᵀmat(qb))
     return timestep * [X Q]
 end
-
-function spring_child_jacobian_configuration_child(joint::Translational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
-    xa, qa = current_configuration(body1.state)
-    xb, qb = current_configuration(body2.state)
-
-    X = FiniteDiff.finite_difference_jacobian(xb -> spring_child(joint, xa, qa, xb, qb), xb)
-    Q = FiniteDiff.finite_difference_jacobian(qb -> spring_child(joint, xa, qa, xb, UnitQuaternion(qb..., false)), [qb.w, qb.x, qb.y, qb.z])
-    attjac && (Q *= LVᵀmat(qb))
-    return timestep * [X Q]
-end
-
 function damper_child_jacobian_configuration_child(joint::Translational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
     xa, qa = current_configuration(body1.state)
     xb, qb = current_configuration(body2.state)
@@ -191,17 +196,6 @@ function damper_child_jacobian_configuration_child(joint::Translational, body1::
     attjac && (Q *= LVᵀmat(qb))
     return timestep * [X Q]
 end
-
-function spring_child_jacobian_configuraion_parent(joint::Translational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
-    xa, qa = current_configuration(body1.state)
-    xb, qb = current_configuration(body2.state)
-
-    X = FiniteDiff.finite_difference_jacobian(xa -> spring_child(joint, xa, qa, xb, qb), xa)
-    Q = FiniteDiff.finite_difference_jacobian(qa -> spring_child(joint, xa, UnitQuaternion(qa..., false), xb, qb), [qa.w, qa.x, qa.y, qa.z])
-    attjac && (Q *= LVᵀmat(qa))
-    return timestep * [X Q]
-end
-
 function damper_child_jacobian_configuration_parent(joint::Translational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
     xa, qa = current_configuration(body1.state)
     xb, qb = current_configuration(body2.state)
@@ -217,24 +211,21 @@ function damper_child_jacobian_configuration_parent(joint::Translational, body1:
 end
 
 
-
-
-
-
+function spring_jacobian_velocity(relative::Symbol, jacobian_relative::Symbol, joint::Translational,
+        body1::Node, body2::Node, timestep::T) where T
+    return timestep * szeros(T, 6, 6)
+end
 function spring_parent_jacobian_velocity_parent(joint::Translational, body1::Node, body2::Node, timestep::T) where T
-    return timestep * szeros(T, 6, 6)
+    return spring_jacobian_velocity(:parent, :parent, joint, body1, body2, timestep)
 end
-
 function spring_parent_jacobian_velocity_child(joint::Translational, body1::Node, body2::Node, timestep::T) where T
-    return timestep * szeros(T, 6, 6)
+    return spring_jacobian_velocity(:parent, :child, joint, body1, body2, timestep)
 end
-
 function spring_child_jacobian_velocity_child(joint::Translational, body1::Node, body2::Node, timestep::T) where T
-    return timestep * szeros(T, 6, 6)
+    return spring_jacobian_velocity(:child, :child, joint, body1, body2, timestep)
 end
-
 function spring_child_configuration_velocity_parent(joint::Translational, body1::Node, body2::Node, timestep::T) where T
-    return timestep * szeros(T, 6, 6)
+    return spring_jacobian_velocity(:child, :parent, joint, body1, body2, timestep)
 end
 
 
@@ -250,7 +241,6 @@ function damper_parent_jacobian_velocity_parent(joint::Translational, body1::Nod
     Ω = FiniteDiff.finite_difference_jacobian(ωa -> damper_parent(joint, xa, qa, va, ωa, xb, qb, vb, ωb), ωa)
     return timestep * [V Ω]
 end
-
 function damper_parent_jacobian_velocity_child(joint::Translational, body1::Node, body2::Node, timestep::T) where T
     xa, qa = current_configuration(body1.state)
     xb, qb = current_configuration(body2.state)
@@ -263,7 +253,6 @@ function damper_parent_jacobian_velocity_child(joint::Translational, body1::Node
     Ω = FiniteDiff.finite_difference_jacobian(ωb -> damper_parent(joint, xa, qa, va, ωa, xb, qb, vb, ωb), ωb)
     return timestep * [V Ω]
 end
-
 function damper_child_configuration_velocity_child(joint::Translational, body1::Node, body2::Node, timestep::T) where T
     xa, qa = current_configuration(body1.state)
     xb, qb = current_configuration(body2.state)
@@ -276,7 +265,6 @@ function damper_child_configuration_velocity_child(joint::Translational, body1::
     Ω = FiniteDiff.finite_difference_jacobian(ωb -> damper_child(joint, xa, qa, va, ωa, xb, qb, vb, ωb), ωb)
     return timestep * [V Ω]
 end
-
 function damper_child_configuration_velocity_parent(joint::Translational, body1::Node, body2::Node, timestep::T) where T
     xa, qa = current_configuration(body1.state)
     xb, qb = current_configuration(body2.state)
