@@ -6,7 +6,9 @@ struct Quadruped end
 function quadruped(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81], cf=0.8,
     damper=10.0, spring=0.0, info=nothing,
     s::Int=1, contact::Bool=true, vis::Visualizer=Visualizer(), name::Symbol=:robot,
-    opts_step=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5), opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5)) where T
+    infeasible_control::Bool=false,
+    opts_step=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5),
+    opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5)) where T
 
     mechanism = get_mechanism(:quadruped, timestep=dt, gravity=gravity, cf=cf, damper=damper, spring=spring)
     initialize!(mechanism, :quadruped)
@@ -16,7 +18,8 @@ function quadruped(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81], c
     elseif mode == :max
         nx = maximal_dimension(mechanism)
     end
-    nu = 12
+    nu_inf = control_dimension(mechanism)
+    nu = infeasible_control ? nu_inf : nu_inf - 6 # remove first 6 controls
     no = nx
 
     aspace = BoxSpace(nu, low=(-1.0e8 * ones(nu)), high=(1.0e8 * ones(nu)))
@@ -29,7 +32,7 @@ function quadruped(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81], c
     fu = zeros(nx, nu)
 
     u_prev = zeros(nu)
-    control_mask = [zeros(nu, 6) I(nu)]
+    control_mask = infeasible_control ? I(nu) : [zeros(nu, 6) I(nu)]
     control_scaling = Diagonal(ones(nu))
 
     build_robot(vis, mechanism, name=name)
