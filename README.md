@@ -39,6 +39,9 @@ A differentiable contact-dynamics simulator for robotics.
 ### Quadruped 
 <img src="examples/animations/quadruped_min.gif" width="200"/>
 
+### Atlas
+<img src="examples/animations/atlas_ilqr.gif" width="200"/>
+
 ### Cart-pole 
 <img src="examples/animations/cartpole_max.gif" width="200"/>
 
