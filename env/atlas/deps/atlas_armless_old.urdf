@@ -211,11 +211,10 @@
 
 
   <joint name="back_bkxyz" type="ball">
-    <!-- <origin rpy="0 0 0" xyz="-0.0125 0 0.212"/> -->
-    <origin rpy="0 0 0" xyz="0.0125 0 -0.212"/>
+    <origin rpy="0 0 0" xyz="-0.0125 0 0.212"/>
     <axis xyz="0 0 1"/>
-    <parent link="utorso"/>
-    <child link="pelvis"/>
+    <parent link="pelvis"/>
+    <child link="utorso"/>
     <dynamics damping="0.1" friction="0"/>
   </joint>
   <!-- <joint name="neck_ay" type="revolute">

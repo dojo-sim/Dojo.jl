@@ -25,6 +25,8 @@ env = atlas(
 	)
 
 env.mechanism.joints[2].constraints[2].damper = 75.0
+env.mechanism.joints[7].constraints[2].damper = 75.0
+env.mechanism.joints[8].constraints[2].damper = 75.0
 
 # ## visualizer
 open(env.vis)
@@ -35,7 +37,7 @@ m = env.nu
 d = 0
 
 ## simulate (test)
-initialize!(env.mechanism, :atlas, tran=[1,0,0.0], rot=[0,0,0.], αhip=0.5, αknee=1.0)
+initialize!(env.mechanism, :atlas, model_type=:armless, tran=[1,0,0.0], rot=[0,0,0.], αhip=0.5, αknee=1.0)
 function ctrl!(mech, k)
 	u0 = -total_mass(env.mechanism) * env.mechanism.gravity* env.mechanism.timestep/1.1 * 0
 	set_control!(mech, [u0; szeros(m-3)])
@@ -45,34 +47,36 @@ storage = simulate!(env.mechanism, 0.5, ctrl!, record=true, verbose=false,
 	opts=SolverOptions(rtol=ρ0, btol=ρ0, undercut=1.5))
 visualize(env.mechanism, storage, vis=env.vis, show_contact=true)
 
+
 # ## reference trajectory
-N = 1
-initialize!(env.mechanism, :atlas, tran=[1,0,0.0], rot=[0,0,0.], αhip=0.5, αknee=1.0)
-xref = atlas_trajectory(env.mechanism; timestep=dt, β=1.4, Δx=-0.03, r=0.08, z=0.89, N=10, Ncycles=N)
-# # xref0 = deepcopy(xref[1])
-# xref0[1:3] .+= [0.0, 0.0, 0.0] # body x
-# xref0[4:6] .+= [0.0, 0.0, 0.0] # body ϕ
-# # xref0[7:9] .+= [0.0, 0.0, 0.0] # body v
-# # xref0[10:12] .+= [0.0, 0.0, 0.0] # body ϕ
-# xref0[13:15] .+= [0.0, 0.0, 0.0] # rhip q
-# # xref0[16:18] .+= [1.0, 0.0, 0.0] # rhip ϕ
-# xref0[19:19] .+= [0.0] # rknee q
-# # xref0[20:20] .+= [1.0] # rknee ϕ
-# xref0[21:22] .+= [0.0, 0.0] # rankle q
-# # xref0[23:24] .+= [0.0, 1.0] # rankle ϕ
-# xref0[25:27] .+= [0.0, 0.0, 0.0] # lhip q
-# # xref0[28:30] .+= [1.0, 1.0, 1.0] # lhip ϕ
-# xref0[31:31] .+= [0.0] # lknee q
-# # xref0[32:32] .+= [1.0] # lknee ϕ
-# xref0[33:34] .+= [0.0, 0.0] # lankle q
-# # xref0[35:36] .+= [0.0, 0.0] # lankle ϕ
-# xref0[37:39] .+= [0.0, 0.0, 0.0] # pelvis q
-# # xref0[40:42] .+= [1.0, 1.0, 1.0] # pelvis ϕ
+N = 2
+initialize!(env.mechanism, :atlas, model_type=:armless, tran=[1,0,0.0], rot=[0,0,0.], αhip=0.5, αknee=1.0)
+xref = atlas_trajectory(env.mechanism; timestep=dt, β=1.4, Δx=-0.03, r=0.08, z=1.04, N=10, Ncycles=N)[1:30]
+# xref0 = deepcopy(xref[1])
+# # xref0[1:3] .+= [1.0, 1.0, 1.0] # floating x
+# # xref0[4:6] .+= [1.0, 0.0, 1.0] # floating ϕ
+# # xref0[7:9] .+= [0.0, 0.0, 0.0] # floating v
+# # xref0[10:12] .+= [0.0, 0.0, 0.0] # floating ϕ
+# xref0[13:15] .+= [0.0, 0.0, 0.0] # back q
+# # xref0[16:18] .+= [1.0, 0.0, 0.0] # back ϕ
+# xref0[19:21] .+= [0.0, 0.0, 0.0] # rhip q
+# # xref0[22:24] .+= [1.0, 0.0, 0.0] # rhip ϕ
+# xref0[25:25] .+= [0.0] # rknee q
+# # xref0[26:26] .+= [1.0] # rknee ϕ
+# xref0[27:28] .+= [0.0, 0.0] # rankle q
+# # xref0[29:30] .+= [0.0, 1.0] # rankle ϕ
+# xref0[31:33] .+= [0.0, 0.0, 0.0] # lhip q
+# # xref0[34:36] .+= [1.0, 1.0, 1.0] # lhip ϕ
+# xref0[37:37] .+= [0.0] # lknee q
+# # xref0[38:38] .+= [1.0] # lknee ϕ
+# xref0[39:40] .+= [0.0, 0.0] # lankle q
+# # xref0[41:42] .+= [0.0, 0.0] # lankle ϕ
 # xref = [fill(xref[1], 3); fill(xref0, 10)]
 visualize(env, xref)
 
 # ## horizon
-T = N * (21 - 1) + 1
+# T = N * (21 - 1) + 1
+T = 31
 
 # ## model
 dyn = IterativeLQR.Dynamics(
@@ -85,8 +89,8 @@ model = [dyn for t = 1:T-1]
 
 # ## rollout
 x1 = xref[1]
-u0 = -total_mass(env.mechanism) * env.mechanism.gravity* env.mechanism.timestep/1.5
-ū = [[u0; 0; 2; 0; zeros(m-6)] for t = 1:T-1]
+u0 = -total_mass(env.mechanism) * env.mechanism.gravity* env.mechanism.timestep/1.2
+ū = [[u0; 0; 0.9; 0; zeros(m-6)] for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, x1, ū, w)
 visualize(env, x̄)
@@ -94,15 +98,15 @@ visualize(env, x̄)
 
 # ## objective
 qt = [
-	[0.2, 0.2, 0.2, 0.05, 0.2, 0.2]; #x q body
-	0.02ones(6); # v ϕ body
-	0.8ones(3); 0.01ones(3); # rhip
-	0.8ones(1); 0.01ones(1); # rknee
-	0.8ones(2); 0.01ones(2); # rankle
-	0.8ones(3); 0.01ones(3); # lhip
-	0.8ones(1); 0.01ones(1); # lknee
-	0.8ones(2); 0.01ones(2); # lankle
-	0.5ones(3); 0.02ones(3); # pelvis
+	[0.2, 0.05, 0.2, 0.05, 0.2, 0.2]; #x q floating
+	0.02ones(6); # v ϕ floating
+	0.5ones(3); 0.02ones(3); # back
+	4.8ones(3); 0.01ones(3); # rhip
+	4.8ones(1); 0.01ones(1); # rknee
+	4.8ones(2); 0.01ones(2); # rankle
+	4.8ones(3); 0.01ones(3); # lhip
+	4.8ones(1); 0.01ones(1); # lknee
+	4.8ones(2); 0.01ones(2); # lankle
 	]
 ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(dt * qt) * (x - xref[t]) +
 	transpose(u) * Diagonal(dt * [0.0001*ones(6); 0.02*ones(m-6)]) * u for t = 1:T-1]
@@ -118,19 +122,19 @@ obj = [cts..., cT]
 function goal(x, u, w)
     Δ = x - xref[end]
     return Δ[[
-		1,2,3,4,5,6, # body
-		13,14,15, # rhip
-		19, # rknee
-		21,22, # rankle
-		25,26,27, # lhip
-		31, # lknee
-		33,34, # lankle
-		37,38,39 #pelvis
+		1,2,3,4,5,6, # floating
+		13,14,15, # back
+		19,20,21, #pelvis
+		25, # rknee
+		27,28, # rankle
+		31,32,33, # lhip
+		37, # lknee
+		39,40, # lankle
 		]]
 end
 
 function ctrl_lmt(x, u, w)
-	return u[collect(1:6)]
+	return 1e-1*u[collect(1:6)]
 end
 
 cont = IterativeLQR.Constraint(ctrl_lmt, n, m)
@@ -139,12 +143,13 @@ cons = [[cont for t = 1:T-1]..., conT]
 
 # ## Initialization
 u_prev = deepcopy(ū)
+# x_prev = deepcopy(x̄)
 x_prev = deepcopy(xref) # TODO deepcopy(x̄)
 
 # ## problem
 prob = IterativeLQR.problem_data(model, obj, cons)
 
-for ρ in [1e-2]#, 3e-3, 1e-3, 3e-4, 1e-4, 3e-5, 1e-5, 3e-6, 1e-6]
+for ρ in [1e-3, 3e-4]#, 1e-4]#, 3e-5, 1e-5, 3e-6, 1e-6]
 	println("ρ: ", scn(ρ), "   *************************************")
 	IterativeLQR.initialize_controls!(prob, u_prev)
 	IterativeLQR.initialize_states!(prob, x_prev)
@@ -162,14 +167,14 @@ for ρ in [1e-2]#, 3e-3, 1e-3, 3e-4, 1e-4, 3e-5, 1e-5, 3e-6, 1e-6]
 	    obj_tol=1.0e-3,
 	    grad_tol=1.0e-3,
 	    max_iter=100,
-	    max_al_iter=5,
+		max_al_iter=4,
 	    ρ_init=1.0,
 	    ρ_scale=10.0)
 
 	# Update initialization trajectory
 	x_prev, u_prev = IterativeLQR.get_trajectory(prob)
 end
-
+scatter(abs.(goal(prob.m_data.x[T], zeros(0), zeros(0))))
 # ## solution
 x_sol, u_sol = IterativeLQR.get_trajectory(prob)
 @show IterativeLQR.eval_obj(prob.m_data.obj.costs, prob.m_data.x, prob.m_data.u, prob.m_data.w)
@@ -177,6 +182,7 @@ x_sol, u_sol = IterativeLQR.get_trajectory(prob)
 @show norm(goal(prob.m_data.x[T], zeros(0), zeros(0)), Inf)
 @show norm(vcat([ctrl_lmt(prob.m_data.x[t], prob.m_data.u[t], zeros(0)) for t=1:T-1]...), Inf)
 
+# jldsave(joinpath(@__DIR__, "atlas_traj.jld2"), x_sol=x_sol, u_sol=u_sol)
 
 # ## visualize
 x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]
@@ -185,7 +191,8 @@ visualize(env, x_view)
 set_camera!(env.vis, cam_pos=[0,-3,2], zoom=3)
 open(env.vis)
 
-set_floor!(env.vis, x=6.0, y=1.0, z=0.01, alt=0.0, color=RGBA(0,0.0,0.0,1.0))
+set_floor!(env.vis, x=6.0, y=6.0, z=0.01, alt=0.0, color=RGBA(0.5,0.5,0.5,1.0))
 set_camera!(env.vis, cam_pos=[0,-15,0], zoom=30)
+set_light!(env.vis)
 
-convert_frames_to_video_and_gif("atlas_ilqr")
+convert_frames_to_video_and_gif("atlas_3_steps_front")

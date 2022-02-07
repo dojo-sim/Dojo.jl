@@ -1,6 +1,6 @@
 
-function get_atlas(; timestep::T = 0.01, gravity = -9.81, cf::T = 0.8, spring = 0.0,
-        damper::T = 0.0, contact::Bool = true, model_type::Symbol = :simple) where T
+function get_atlas(; timestep::T=0.01, gravity=-9.81, cf::T=0.8, spring=0.0,
+        damper::T=0.0, contact::Bool=true, model_type::Symbol=:simple) where T
     path = joinpath(@__DIR__, "../deps/atlas_$(string(model_type)).urdf")
     mech = Mechanism(path, true, T, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
 
@@ -42,12 +42,13 @@ function get_atlas(; timestep::T = 0.01, gravity = -9.81, cf::T = 0.8, spring = 
 end
 
 function initialize_atlas!(mechanism::Mechanism;
-    tran::AbstractVector{T} = [0,0,0.2],
-    rot::AbstractVector{T} = [0,0,0.],
-    v=[zeros(3) for i = 1:length(mechanism.bodies)],
-    ω=[zeros(3) for i = 1:length(mechanism.bodies)],
-    αhip::T = 0.0, αknee::T = 0.0) where T
-    tran += [0,0,0.9385]
+    model_type::Symbol=:simple,
+    tran::AbstractVector{T}=[0,0,0.2],
+    rot::AbstractVector{T}=[0,0,0.],
+    v=[zeros(3) for i=1:length(mechanism.bodies)],
+    ω=[zeros(3) for i=1:length(mechanism.bodies)],
+    αhip::T=0.0, αknee::T=0.0) where T
+    tran += (model_type == :armless) ? [0,0,0.9385+0.14853] : [0,0,0.9385]
 
     # positions
     try
@@ -71,11 +72,11 @@ function initialize_atlas!(mechanism::Mechanism;
 end
 
 function initialize_atlasstance!(mechanism::Mechanism;
-    tran::AbstractVector{T} = [0,0,0.2],
-    rot::AbstractVector{T} = [0,0,0.],
-    v=[zeros(3) for i = 1:length(mechanism.bodies)],
-    ω=[zeros(3) for i = 1:length(mechanism.bodies)],
-    αhip::T = 0.0, αknee::T = 0.0) where T
+    tran::AbstractVector{T}=[0,0,0.2],
+    rot::AbstractVector{T}=[0,0,0.],
+    v=[zeros(3) for i=1:length(mechanism.bodies)],
+    ω=[zeros(3) for i=1:length(mechanism.bodies)],
+    αhip::T=0.0, αknee::T=0.0) where T
     tran += [0,0,0.9385]
 
     # positions
