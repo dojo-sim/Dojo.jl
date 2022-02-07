@@ -49,9 +49,9 @@ visualize(env.mechanism, storage, vis=env.vis, show_contact=true)
 
 
 # ## reference trajectory
-N = 2
+N = 3
 initialize!(env.mechanism, :atlas, model_type=:armless, tran=[1,0,0.0], rot=[0,0,0.], αhip=0.5, αknee=1.0)
-xref = atlas_trajectory(env.mechanism; timestep=dt, β=1.4, Δx=-0.03, r=0.08, z=1.04, N=10, Ncycles=N)#[1:30]
+xref = atlas_trajectory(env.mechanism; timestep=dt, β=1.4, Δx=-0.03, r=0.08, z=1.04, N=10, Ncycles=N)[1:50]
 # xref0 = deepcopy(xref[1])
 # # xref0[1:3] .+= [1.0, 1.0, 1.0] # floating x
 # # xref0[4:6] .+= [1.0, 0.0, 1.0] # floating ϕ
@@ -76,7 +76,7 @@ visualize(env, xref)
 
 # ## horizon
 # T = N * (21 - 1) + 1
-T = 41
+T = 51
 
 # ## model
 dyn = IterativeLQR.Dynamics(
@@ -134,7 +134,7 @@ function goal(x, u, w)
 end
 
 function ctrl_lmt(x, u, w)
-	return 1e-1*u[collect(1:6)]
+	return 1e-2*u[collect(1:6)]
 end
 
 cont = IterativeLQR.Constraint(ctrl_lmt, n, m)
@@ -149,7 +149,7 @@ x_prev = deepcopy(xref) # TODO deepcopy(x̄)
 # ## problem
 prob = IterativeLQR.problem_data(model, obj, cons)
 
-for ρ in [1e-3, 3e-4, 1e-4, 3e-5]#, 1e-5, 3e-6, 1e-6]
+for ρ in [1e-3, 3e-4, 1e-4]#, 3e-5]#, 1e-5, 3e-6, 1e-6]
 	println("ρ: ", scn(ρ), "   *************************************")
 	IterativeLQR.initialize_controls!(prob, u_prev)
 	IterativeLQR.initialize_states!(prob, x_prev)
@@ -182,7 +182,7 @@ x_sol, u_sol = IterativeLQR.get_trajectory(prob)
 @show norm(goal(prob.m_data.x[T], zeros(0), zeros(0)), Inf)
 @show norm(vcat([ctrl_lmt(prob.m_data.x[t], prob.m_data.u[t], zeros(0)) for t=1:T-1]...), Inf)
 
-# jldsave(joinpath(@__DIR__, "atlas_traj.jld2"), x_sol=x_sol, u_sol=u_sol)
+jldsave(joinpath(@__DIR__, "atlas_traj_5steps.jld2"), x_sol=x_sol, u_sol=u_sol)
 
 # ## visualize
 x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]
