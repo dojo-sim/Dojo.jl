@@ -1,5 +1,5 @@
 function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, a::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
-	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
+	# When we set the Δv and Δω in the mechanical graph, we need to start from t#he root and get down to the leaves.
 	# Thus go through the joints in order, start from joint between robot and origin and go down the tree.
 	off = 0
 	for id in reverse(mechanism.system.dfs_list)
@@ -95,15 +95,19 @@ function minimal_to_maximal_jacobian_analytical(mechanism::Mechanism{T,Nn,Ne,Nb,
 
 			# root 
 			∂z∂θ = joint_position_velocity_jacobian(mech, joint, θ)
-			G[(joint.child_id - 1 - Ne) * 13 .+ (1:13), :] = ∂z∂θ
+			G[(joint.child_id - 1 - length(mech.joints)) * 13 .+ (1:13), :] = ∂z∂θ
 	
-			# branch
+			Dz = []
+			Da = []
 			y = ∂z∂θ
-			for node in child_joints		
+			for (i, node) in enumerate(child_joints)	
 				∂z∂z = FiniteDiff.finite_difference_jacobian(b -> joint_position_velocity(mech, node, b, [currentvals[node.id]; currentvels[node.id]]), zp)
-				y = ∂z∂z * ∂z∂θ			
-				G[(node.child_id - 1 - Ne) * 13 .+ (1:13), :] = y
-				zp = joint_position_velocity(mech, node, zp, θ)
+				y = ∂z∂z * y
+				push!(Da, y)
+				push!(Dz, ∂z∂z)
+				zp = joint_position_velocity(mech, node, zp, [currentvals[node.id]; currentvels[node.id]])
+
+				G[(node.child_id - 1 - length(mech.joints)) * 13 .+ (1:13), :] = Da[i]
 			end
 
 			return G

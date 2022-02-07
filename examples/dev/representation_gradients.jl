@@ -11,20 +11,46 @@ open(vis)
 # pendulum
 mech = get_mechanism(:npendulum, timestep = 0.01, gravity = -9.81 * 0.0, Nb=5)#, spring = 100.0, damper = 5.0)
 Random.seed!(100)
-ϕ1 = 0.3π
+ϕ1 = 0.0#0.3π
 initialize!(mech, :npendulum, ϕ1 = ϕ1)
+
+[id for id in reverse(mech.system.dfs_list) if get_node(mech, id) isa JointConstraint]
+
+mech.joints[1].parent_id
+mech.joints[1].child_id
+mech.joints[5].parent_id
+mech.joints[5].child_id
+mech.joints[6].parent_id
+mech.joints[6].child_id
+mech.joints[7].parent_id
+mech.joints[7].child_id
+
+mech.joints[2].parent_id
+mech.joints[2].child_id
+mech.joints[3].parent_id
+mech.joints[3].child_id
+mech.joints[4].parent_id
+mech.joints[4].child_id		
 
 # sphere
 mech = get_mechanism(:sphere, timestep = 0.01, gravity = -9.81)
 initialize!(mech, :sphere)
+
+# half cheetah
+mech = get_mechanism(:halfcheetah, timestep=0.01, gravity=-9.81)
+initialize!(mech, :halfcheetah)
 
 # atlas
 mech = get_mechanism(:atlas, timestep=0.01, gravity=-9.81, cf=0.5, damper=100.0, spring=1.0, contact=true)
 initialize_atlasstance!(mech, tran=[0,0,0.5], rot=[0.0,0.0,0.0])
 
 joint = mech.joints[1]
+joint.name
 n = control_dimension(joint)
+off = 0
 idx = collect(off .+ (1:(2n)))
+child_ids = [id for id in recursivedirectchildren!(mech.system, joint.id) if get_node(mech, id) isa JointConstraint]
+
 child_joints = unique([get_node(mech, id) for id in recursivedirectchildren!(mech.system, joint.id) if get_node(mech, id) isa JointConstraint])
 child_joints = unique([id for id in recursivedirectchildren!(mech.system, joint.id) if get_node(mech, id) isa JointConstraint])
 reverse(mech.system.dfs_list)
@@ -33,6 +59,29 @@ reverse(mech.system.dfs_list)
 
 storage = simulate!(mech, 1.0, record = true, verbose = false)
 visualize(mech, storage, vis = vis)
+
+child_ids = [id for id in recursivedirectchildren!(mech.system, joint.id) if get_node(mech, id) isa JointConstraint]
+child_joints = [get_node(mech, id) for id in recursivedirectchildren!(mech.system, joint.id) if get_node(mech, id) isa JointConstraint]
+child_joints = get_child_joints(mech, joint)
+
+joint.id
+children(mech.system, 1)
+mech.joints[1].parent_id
+mech.joints[1].child_id
+mech.joints[2].parent_id
+mech.joints[2].child_id
+mech.joints[3].parent_id
+mech.joints[3].child_id
+mech.joints[4].parent_id
+mech.joints[4].child_id
+mech.joints[5].parent_id
+
+joint.child_id
+for j in child_joints 
+    @show j.id
+    # @show j.parent_id 
+    # @show j.child_id 
+end
 
 ## Maximal gradients 
 maximal_dimension(mech)
@@ -77,33 +126,14 @@ N_a * inv(N_a' * N_a)# - M_a
 
 
 #######
-off = control_dimension(mech.joints[1])
+off = 0#(mech.joints[1])
 mechanism = mech
 length(mech.joints)
-id = reverse(mechanism.system.dfs_list)[3]
+id = reverse(mechanism.system.dfs_list)[1]
 
 joint = mechanism.joints[id]
 n = control_dimension(joint)
 idx = collect(off .+ (1:(2n)))
-function get_child_joints(mechanism, joint) 
-    current = joint
-    children = [] 
-    iter = 0
-    while true 
-        if iter > 1000
-            break
-        end
-        for j in mechanism.joints 
-            if j.parent_id == current.child_id && !(j.parent_id in children)
-                current = j 
-                push!(children, j) 
-                break
-            end
-        end
-        iter += 1 
-    end
-    return children 
-end
 
 child_joints = get_child_joints(mech, joint)
 
@@ -171,15 +201,11 @@ Dz = []
 Da = []
 y = ∂z∂θ
 for node in child_joints	
-    # ∂z∂θi = joint_position_velocity_jacobian(mech, node, [currentvals[node.id]; currentvels[node.id]])
     ∂z∂z = FiniteDiff.finite_difference_jacobian(b -> joint_position_velocity(mech, node, b, [currentvals[node.id]; currentvels[node.id]]), zp)
     y = ∂z∂z * y
     push!(Da, y)
     push!(Dz, ∂z∂z)
-    # # # @show ∂z∂z
-    # # ∂z∂θ = ∂z∂z * (∂z∂θi)
-    # G[(node.child_id - 1 - Ne) * 13 .+ (1:13), :] = ∂z∂θ
-
+   
     zp = joint_position_velocity(mech, node, zp, [currentvals[node.id]; currentvels[node.id]])
 end
 

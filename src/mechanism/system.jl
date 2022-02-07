@@ -55,6 +55,26 @@ function recursivedirectchildren!(system, id::Integer)
     return dirs
 end
 
+function get_child_joints(mechanism, joint) 
+    current = joint
+    children = [] 
+    iter = 0
+    while true 
+        if iter > 1000
+            break
+        end
+        for j in mechanism.joints 
+            if j.parent_id == current.child_id && !(j.parent_id in children)
+                current = j 
+                push!(children, j) 
+                break
+            end
+        end
+        iter += 1 
+    end
+    return children 
+end
+
 # TODO: efficient method to assemble sparse system
 function dense_system(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
     joints = mechanism.joints
