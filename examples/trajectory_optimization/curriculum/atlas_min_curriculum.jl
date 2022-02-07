@@ -8,9 +8,9 @@ include(joinpath(module_dir(), "env/atlas/methods/template.jl"))
 gravity = -9.81
 dt = 0.05
 cf = 0.8
-damper = 50.0
+damper = 20.0
 spring = 0.0
-ρ0 = 1e-2
+ρ0 = 3e-1
 env = atlas(
     mode=:min,
     dt=dt,
@@ -24,7 +24,7 @@ env = atlas(
     opts_grad=SolverOptions(rtol=ρ0, btol=ρ0, undercut=1.5)
 	)
 
-env.mechanism.joints[2].constraints[2].damper = 100.0
+env.mechanism.joints[2].constraints[2].damper = 75.0
 
 # ## visualizer
 open(env.vis)
@@ -43,7 +43,7 @@ function ctrl!(mech, k)
 end
 storage = simulate!(env.mechanism, 0.5, ctrl!, record=true, verbose=false,
 	opts=SolverOptions(rtol=ρ0, btol=ρ0, undercut=1.5))
-visualize(env.mechanism, storage, vis=env.vis)
+visualize(env.mechanism, storage, vis=env.vis, show_contact=true)
 
 # ## reference trajectory
 N = 1
@@ -86,7 +86,7 @@ model = [dyn for t = 1:T-1]
 # ## rollout
 x1 = xref[1]
 u0 = -total_mass(env.mechanism) * env.mechanism.gravity* env.mechanism.timestep/1.5
-ū = [[u0; zeros(m-3)] for t = 1:T-1]
+ū = [[u0; 0; 2; 0; zeros(m-6)] for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, x1, ū, w)
 visualize(env, x̄)
@@ -183,9 +183,9 @@ x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]
 visualize(env, x_view)
 
 set_camera!(env.vis, cam_pos=[0,-3,2], zoom=3)
+open(env.vis)
 
-
-set_floor!(env.vis, x=3.0, y=1.0, z=0.01, alt=-0.015, color=RGBA(0,0.0,0.0,1.0))
+set_floor!(env.vis, x=6.0, y=1.0, z=0.01, alt=0.0, color=RGBA(0,0.0,0.0,1.0))
 set_camera!(env.vis, cam_pos=[0,-15,0], zoom=30)
 
-convert_frames_to_video_and_gif("quadruped_clean_gait_side")
+convert_frames_to_video_and_gif("atlas_ilqr")
