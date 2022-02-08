@@ -50,18 +50,24 @@ end
 end
 
 @inline function spring_qoffset(joint::Rotational)
-    # We need to convert the joint.spring_offset which is some minimal coordinate representation of the joint (i.e. axis angle). For us it's the axis angle reresentation.
-    A = nullspace_mask(joint)
-    Aᵀ = zerodimstaticadjoint(A)
+    # We need to convert the joint.spring_offset which is some minimal coordinate
+    # representation of the joint (i.e. axis angle). For us it's the axis-angle representation.
+    Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
     aa = Aᵀ * joint.spring_offset # axis angle
-    qoff = axis_angle_to_quaternion(aa)
-    return qoff
+    spring_qoffset = axis_angle_to_quaternion(aa)
+    return spring_qoffset
+end
+
+
+function spring_extension(joint::Rotational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+    q = inv(spring_qoffset(joint)) * orientation_error(joint, xa, qa, xb, qb)
+    return q
 end
 
 spring_parent(joint::Rotational, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) =
-    timestep * spring_parent(joint, current_configuration(bodya.state)[2], current_configuration(bodyb.state)[2], unitary=unitary)
+    timestep * spring_parent(joint, current_configuration(bodya.state)..., current_configuration(bodyb.state)..., unitary=unitary)
 spring_child(joint::Rotational, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) =
-    timestep * spring_child(joint, current_configuration(bodya.state)[2], current_configuration(bodyb.state)[2], unitary=unitary)
+    timestep * spring_child(joint, current_configuration(bodya.state)..., current_configuration(bodyb.state)..., unitary=unitary)
 damper_parent(joint::Rotational, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) =
     timestep * damper_parent(joint, current_configuration(bodya.state)[2], bodya.state.ϕsol[2], current_configuration(bodyb.state)[2], bodyb.state.ϕsol[2], unitary=unitary)
 damper_child(joint::Rotational, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) =
@@ -72,28 +78,115 @@ spring_child(joint::Rotational3{T}, bodya::Node, bodyb::Node, timestep) where T 
 damper_parent(joint::Rotational3{T}, bodya::Node, bodyb::Node, timestep) where T = szeros(T, 6)
 damper_child(joint::Rotational3{T}, bodya::Node, bodyb::Node, timestep) where T = szeros(T, 6)
 
-spring_parent(joint::Rotational3{T}, qa::UnitQuaternion, qb::UnitQuaternion; rotate::Bool=true, unitary::Bool=false) where T = szeros(T, 6)
-spring_child(joint::Rotational3{T}, qa::UnitQuaternion, qb::UnitQuaternion; rotate::Bool=true, unitary::Bool=false) where T = szeros(T, 6)
+spring_parent(joint::Rotational3{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; rotate::Bool=true, unitary::Bool=false) where T = szeros(T, 6)
+spring_child(joint::Rotational3{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; rotate::Bool=true, unitary::Bool=false) where T = szeros(T, 6)
 
-@inline function spring_parent(joint::Rotational{T}, qa::UnitQuaternion, qb::UnitQuaternion;
-        rotate::Bool=true, unitary::Bool=false) where T
+
+################################################################################
+# Spring Force
+################################################################################
+@inline function spring_force(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion,
+        xb::AbstractVector, qb::UnitQuaternion; unitary::Bool=false) where T
     spring = unitary ? 1.0 : joint.spring
-    q = rotation_error(joint, qa, qb, qoff = spring_qoffset(joint))
+    q = spring_extension(joint, xa, qa, xb, qb)
     distance = spring_distance(joint, q)
-    force = spring * distance # force in offset frame
-    rotate && (force = vrotate(force, joint.qoffset)) # rotate back to a frame
-    return [szeros(T, 3); force]
+    Fτ = -spring * distance # force in offset frame
+    Fτ = vrotate(Fτ, joint.qoffset) # rotate back to the a frame
+    return Fτ
 end
 
-@inline function spring_child(joint::Rotational{T}, qa::UnitQuaternion, qb::UnitQuaternion;
-        rotate::Bool=true, unitary::Bool=false) where T
-    spring = unitary ? 1.0 : joint.spring
-    q = rotation_error(joint, qa, qb, qoff = spring_qoffset(joint))
-    distance = spring_distance(joint, q)
-    force = - spring * distance # force in offset frame
-    rotate && (force = vrotate(force, inv(qb) * qa * joint.qoffset)) # rotate back to b frame
-    return [szeros(T, 3); force]
+@inline function spring_relative(relative::Symbol, joint::Rotational{T}, xa::AbstractVector,
+        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; unitary::Bool=false) where T
+    Fτ = spring_force(joint, xa, qa, xb, qb, unitary=unitary)
+    Fτ = impulse_transform(relative, joint, xa, qa, xb, qb) * Fτ
+    return Fτ
 end
+
+@inline function spring_parent(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion,
+        xb::AbstractVector, qb::UnitQuaternion; rotate::Bool=true, unitary::Bool=false) where T
+    # spring = unitary ? 1.0 : joint.spring
+    # # q = rotation_error(joint, qa, qb, qoff = spring_qoffset(joint))
+    # q = spring_extension(joint, xa, qa, xb, qb)
+    # distance = spring_distance(joint, q)
+    # force = spring * distance # force in offset frame
+    # rotate && (force = vrotate(force, joint.qoffset)) # rotate back to a frame
+    force = -spring_force(joint, xa, qa, xb, qb; unitary=unitary)
+    # force = vrotate(force, joint.qoffset) # back to A
+    return [szeros(T, 3); force]
+    # return spring_relative(:parent, joint, xa, qa, xb, qb; unitary=unitary)
+end
+
+@inline function spring_child(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion,
+        xb::AbstractVector, qb::UnitQuaternion; rotate::Bool=true, unitary::Bool=false) where T
+    # spring = unitary ? 1.0 : joint.spring
+    # # q = rotation_error(joint, qa, qb, qoff = spring_qoffset(joint))
+    # q = spring_extension(joint, xa, qa, xb, qb)
+    # distance = spring_distance(joint, q)
+    # force = - spring * distance # force in offset frame
+    # rotate && (force = vrotate(force, inv(qb) * qa * joint.qoffset)) # rotate back to b frame
+
+    force = spring_force(joint, xa, qa, xb, qb; unitary=unitary)
+    # rotate && (force = vrotate(force, inv(qb) * qa * joint.qoffset)) # rotate back to b frame
+    rotate && (force = vrotate(force, inv(qb) * qa)) # rotate back to b frame
+
+    return [szeros(T, 3); force]
+    # return spring_relative(:child, joint, xa, qa, xb, qb; unitary=unitary)
+end
+@inline function spring_parent_new(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion,
+        xb::AbstractVector, qb::UnitQuaternion; rotate::Bool=true, unitary::Bool=false) where T
+    return spring_relative(:parent, joint, xa, qa, xb, qb; unitary=unitary)
+end
+
+@inline function spring_child_new(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion,
+        xb::AbstractVector, qb::UnitQuaternion; rotate::Bool=true, unitary::Bool=false) where T
+    return spring_relative(:child, joint, xa, qa, xb, qb; unitary=unitary)
+end
+
+# vis = Visualizer()
+# open(vis)
+#
+# mech = get_snake(spring=10.0, damper=1.0, Nb=2, gravity=0.0, contact=false)
+# initialize!(mech, :snake)
+# function ctrl!(mech, k)
+#     nu = control_dimension(mech)
+#     set_control!(mech, [szeros(6); 11srand(nu-6)]*mech.timestep)
+# end
+# storage = simulate!(mech, 8.0, ctrl!, record=true, verbose=false)
+# visualize(mech, storage, vis=vis)
+#
+# joint0 = mech.joints[1]
+# xa = mech.origin.state.x2[1]
+# qa = mech.origin.state.q2[1]
+# xb = mech.bodies[1].state.x2[1]
+# qb = mech.bodies[1].state.q2[1]
+#
+#
+# spring_parent(joint0.constraints[2], xa, qa, xb, qb)
+# spring_child(joint0.constraints[2], xa, qa, xb, qb)
+#
+# spring_parent_new(joint0.constraints[2], xa, qa, xb, qb)
+# spring_child_new(joint0.constraints[2], xa, qa, xb, qb)
+#
+# impulse_transform(:parent, joint0.constraints[2], xa, qa, xb, qb)
+# impulse_transform(:child, joint0.constraints[2], xa, qa, xb, qb)
+#
+
+#
+# qa = UnitQuaternion(rand(4)...)
+# qb = UnitQuaternion(rand(4)...)
+# qoff = UnitQuaternion(rand(4)...)
+# Vmat(qa \ qb / qoff)
+#
+# qa \ qb / qoff
+# Vmat(orientation_error(joint0.constraints[2], xa, qa, xb, qb))
+
+
+# #
+# # a = 10
+# # a = 10
+# # a = 10
+# # a = 10
+# # a = 10
 
 @inline function damper_parent(joint::Rotational{T}, qa::UnitQuaternion, ωa::AbstractVector,
         qb::UnitQuaternion, ωb::AbstractVector; rotate::Bool=true, unitary::Bool=false) where T
@@ -147,7 +240,7 @@ function spring_parent_jacobian_configuration_parent(joint::Rotational, body1::N
     # force = spring_parent(joint, qa, qb; rotate = false)[SVector{3,Int}(4,5,6)]
     X = szeros(T, 3, 3)
     # Q = ∂vrotate∂p(force, qoffset) * Aᵀ * A * joint.spring * Aᵀ * A * VRmat(qb * inv(qoffset)) * Tmat() * LVᵀmat(qa)
-    Q = FiniteDiff.finite_difference_jacobian(qa -> spring_parent(joint, UnitQuaternion(qa..., false), qb)[SVector{3,Int}(4,5,6)], [qa.w, qa.x, qa.y, qa.z])
+    Q = FiniteDiff.finite_difference_jacobian(qa -> spring_parent(joint, xa, UnitQuaternion(qa..., false), xb, qb)[SVector{3,Int}(4,5,6)], [qa.w, qa.x, qa.y, qa.z])
     attjac && (Q *= LVᵀmat(qa))
     Z = attjac ? szeros(T, 3, 6) : szeros(T, 3, 7)
     return timestep * [Z; X Q]
@@ -163,7 +256,7 @@ function spring_parent_jacobian_configuration_child(joint::Rotational, body1::No
     # force = spring_parent(joint, qa, qb; rotate = false)[SVector{3,Int}(4,5,6)]
     X = szeros(T, 3, 3)
     # Q = ∂vrotate∂p(force, qoffset) * Aᵀ * A * joint.spring * Aᵀ * A * VRmat(inv(qoffset)) * Lmat(inv(qa)) * LVᵀmat(qb)
-    Q = FiniteDiff.finite_difference_jacobian(qb -> spring_parent(joint, qa, UnitQuaternion(qb..., false))[SVector{3,Int}(4,5,6)], [qb.w, qb.x, qb.y, qb.z])
+    Q = FiniteDiff.finite_difference_jacobian(qb -> spring_parent(joint, xa, qa, xb, UnitQuaternion(qb..., false))[SVector{3,Int}(4,5,6)], [qb.w, qb.x, qb.y, qb.z])
     attjac && (Q *= LVᵀmat(qb))
     Z = attjac ? szeros(T, 3, 6) : szeros(T, 3, 7)
     return timestep * [Z; X Q]
@@ -180,7 +273,7 @@ function spring_child_jacobian_configuration_child(joint::Rotational, body1::Nod
     X = szeros(T, 3, 3)
     # Q = ∂vrotate∂p(force, inv(qb) * qa * qoffset) * -1.0 * Aᵀ * A * joint.spring * Aᵀ * A * VRmat(inv(qoffset)) * Lmat(inv(qa)) * LVᵀmat(qb)
     # Q += ∂vrotate∂q(force, inv(qb) * qa * qoffset) * Rmat(qa * qoffset) * Tmat() * LVᵀmat(qb)
-    Q = FiniteDiff.finite_difference_jacobian(qb -> spring_child(joint, qa, UnitQuaternion(qb..., false))[SVector{3,Int}(4,5,6)], [qb.w, qb.x, qb.y, qb.z])
+    Q = FiniteDiff.finite_difference_jacobian(qb -> spring_child(joint, xa, qa, xb, UnitQuaternion(qb..., false))[SVector{3,Int}(4,5,6)], [qb.w, qb.x, qb.y, qb.z])
     attjac && (Q *= LVᵀmat(qb))
     Z = attjac ? szeros(T, 3, 6) : szeros(T, 3, 7)
     return timestep * [Z; X Q]
@@ -197,7 +290,7 @@ function spring_child_jacobian_configuraion_parent(joint::Rotational, body1::Nod
     X = szeros(T, 3, 3)
     # Q = ∂vrotate∂p(force, inv(qb) * qa * qoffset) * -1.0 * Aᵀ * A * joint.spring * Aᵀ * A * VRmat(qb * inv(qoffset)) * Tmat() * LVᵀmat(qa)
     # Q += ∂vrotate∂q(force, inv(qb) * qa * qoffset) * Rmat(qoffset) * Lmat(inv(qb)) * LVᵀmat(qa)
-    Q = FiniteDiff.finite_difference_jacobian(qa -> spring_child(joint, UnitQuaternion(qa..., false), qb)[SVector{3,Int}(4,5,6)], [qa.w, qa.x, qa.y, qa.z])
+    Q = FiniteDiff.finite_difference_jacobian(qa -> spring_child(joint, xa, UnitQuaternion(qa..., false), xb, qb)[SVector{3,Int}(4,5,6)], [qa.w, qa.x, qa.y, qa.z])
     attjac && (Q *= LVᵀmat(qa))
     Z = attjac ? szeros(T, 3, 6) : szeros(T, 3, 7)
     return timestep * [Z; X Q]
