@@ -88,35 +88,26 @@ function set_joint_position!(mechanism, joint::JointConstraint{T,N,Nc}, xθ) whe
     body1 = get_body(mechanism, joint.parent_id)
     body2 = get_body(mechanism, joint.child_id)
 
-    # translational delta in body1 frame
-    Δx = get_position_delta(joint.constraints[1], body1, body2, xθ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]) 
-
-    # rotational delta in body2 frame
-    Δq = get_position_delta(joint.constraints[2], body1, body2, xθ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])])
-
-    # vertices
-    p1, p2 = joint.constraints[1].vertices
-
-    # update body2 position
-    return set_position!(body1, body2; p1=p1, p2=p2, Δx=Δx, Δq=Δq)
+    Δx = xθ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]
+    Δθ = xθ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])]
+    set_minimal_coordinates!(body1, body2, joint, Δx=Δx, Δθ=Δθ)
+    return body2.state.x2[1], body2.state.q2[1]
 end
 
-function set_velocity!(mechanism, joint::JointConstraint{T,N,Nc}, vω) where {T,N,Nc}
+function set_velocity!(mechanism, joint::JointConstraint{T,N,Nc}, vϕ) where {T,N,Nc}
     Nλ = 0
     for (i, element) in enumerate(joint.constraints)
         Nλ += λlength(element)
     end
-    # vω is already in body1 frame
-    @assert length(vω)==3*Nc-Nλ
+
+    # bodies
     body1 = get_body(mechanism, joint.parent_id)
     body2 = get_body(mechanism, joint.child_id)
-    # translational
-    Δv = get_velocity_delta(joint.constraints[1], body1, body2, vω[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]) # projection in body1 frame
-    # rotational
-    Δω = get_velocity_delta(joint.constraints[2], body1, body2, vω[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])]) # projection in body1 frame
-    # vertices
-    p1, p2 = joint.constraints[1].vertices
-    return set_velocity!(body1, body2; p1=p1, p2=p2, Δv=Δv, Δω=Δω)
+
+    Δv = vϕ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]
+    Δϕ = vϕ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])]
+    set_minimal_velocities!(body1, body2, joint, Δv=Δv, Δϕ=Δϕ)
+    return body2.state.v15, body2.state.ϕ15
 end
 
 function set_input!(joint::JointConstraint{T,N,Nc}, Fτ::AbstractVector) where {T,N,Nc}
@@ -288,12 +279,12 @@ end
 end
 
 @generated function input_jacobian_control_parent(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(input_jacobian_control_parent(joint.constraints[$i], body, get_body(mechanism, joint.child_id), mechanism.timestep, joint.child_id)) for i = 1:Nc]
+    vec = [:(input_jacobian_control_parent(joint.constraints[$i], body, get_body(mechanism, joint.child_id), joint.child_id)) for i = 1:Nc]
     return :(hcat($(vec...)))
 end
 
 @generated function input_jacobian_control_child(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(input_jacobian_control_child(joint.constraints[$i], get_body(mechanism, joint.parent_id), body, mechanism.timestep, joint.child_id)) for i = 1:Nc]
+    vec = [:(input_jacobian_control_child(joint.constraints[$i], get_body(mechanism, joint.parent_id), body, joint.child_id)) for i = 1:Nc]
     return :(hcat($(vec...)))
 end
 

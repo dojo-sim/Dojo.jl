@@ -1,63 +1,95 @@
-@inline function get_position_delta(joint::Rotational, body1::Node, body2::Node, θ::SVector{N,T}) where {T,N}
-    # axis angle representation
-    θ = zerodimstaticadjoint(nullspace_mask(joint)) * θ
-    nθ = norm(θ)
-    if nθ == 0
-        q = one(UnitQuaternion{T})
-    else
-        q = UnitQuaternion(cos(nθ/2),(θ/nθ*sin(nθ/2))..., false)
-    end
+@inline function orientation_error(joint::Rotational, xa::AbstractVector,
+        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+    # (norm(Vmat(joint.qoffset)) > 1e-6) && (@warn "check the validity of this expression")
 
-    Δq = q * joint.qoffset # in body1 frame
-    return Δq
+    q = inv(joint.qoffset) * inv(qa) * qb # rotation from frame b to frame a then joint_qoffset then spring_qoffset
+    "q = Lᵀmat(qoffset) * Rmat(qb) * Tmat() * vector(qa)"
+    "q = Lᵀmat(qoffset) * Lᵀmat(qa) * vector(qb)"
+    # b --qb-> world --inv(qa)-> a --inv(qoffset)-> jointoffsetframe --inv(qoffset)-> springoffsetframe
+    return q
 end
 
-@inline function get_velocity_delta(joint::Rotational, body1::Node, body2::Node, ω::SVector)
-    ω = zerodimstaticadjoint(nullspace_mask(joint)) * ω
-    Δω = ω # in body1 frame
-    return Δω
+function orientation_error_jacobian_configuration(jacobian_relative::Symbol,
+        joint::Rotational, xa::AbstractVector, qa::UnitQuaternion,
+        xb::AbstractVector, qb::UnitQuaternion)
+    (jacobian_relative == :parent) && (return Lᵀmat(joint.qoffset) * Rmat(qb) * Tmat() * LVᵀmat(qa))
+    (jacobian_relative == :child) && (return Lᵀmat(joint.qoffset) * Lᵀmat(qa) * LVᵀmat(qb))
+    return
 end
 
-@inline function minimal_coordinates(joint::Rotational, body1::Node, body2::Node)
-    statea = body1.state
-    stateb = body2.state
-    return minimal_coordinates(joint, statea.q2[1], stateb.q2[1])
-end
-
-@inline function minimal_coordinates(joint::Rotational, qa::UnitQuaternion, qb::UnitQuaternion)
-    q = qa \ qb / joint.qoffset
+################################################################################
+# Coordinates
+################################################################################
+@inline function minimal_coordinates(joint::Rotational, xa::AbstractVector,
+        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+    q = inv(joint.qoffset) * inv(qa) * qb
     return nullspace_mask(joint) * rotation_vector(q)
 end
 
-@inline function minimal_velocities(joint::Rotational, body1::Node, body2::Node)
-    statea = body1.state
-    stateb = body2.state
-    return minimal_velocities(joint, statea.q2[1], statea.ϕ15, stateb.q2[1], stateb.ϕ15)
+@inline function minimal_coordinates_jacobian_configuration(jacobian_relative::Symbol,
+        joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector,
+        qb::UnitQuaternion) where T
+    A = nullspace_mask(joint)
+    q = inv(joint.qoffset) * inv(qa) * qb
+    X = szeros(T,3,3)
+    if jacobian_relative == :parent
+        return A * [X ∂qrotation_vector(q) * Lᵀmat(joint.qoffset) * Rmat(qb) * Tmat() * LVᵀmat(qa)]
+    elseif jacobian_relative == :child
+        @show A 
+        @show q
+        @show ∂qrotation_vector(q) * Lᵀmat(joint.qoffset) * Lᵀmat(qa) * LVᵀmat(qb) 
+        @show ∂qrotation_vector(q) 
+        @show Lᵀmat(joint.qoffset) 
+        @show Lᵀmat(qa) 
+        @show LVᵀmat(qb)
+        return A * [X ∂qrotation_vector(q) * Lᵀmat(joint.qoffset) * Lᵀmat(qa) * LVᵀmat(qb)]
+    end
 end
 
-@inline function minimal_velocities(joint::Rotational, qa::UnitQuaternion,
-        ϕa::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector)
-    return nullspace_mask(joint) * (vrotate(ϕb, qa \ qb) - ϕa) # in body1's frame
+################################################################################
+# Velocities
+################################################################################
+@inline function minimal_velocities(joint::Rotational, xa::AbstractVector,
+        va::AbstractVector,  qa::UnitQuaternion, ϕa::AbstractVector,
+        xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector)
+	qoffset = joint.qoffset
+    Δϕ = rotation_matrix(inv(qoffset)) * (vrotate(ϕb, inv(qa) * qb) - ϕa) # in offset frame
+    return nullspace_mask(joint) * Δϕ
 end
 
-function minimal_coordinates_jacobian_configuration(jacobian_relative::Symbol, joint::Rotational, qa::UnitQuaternion, qb::UnitQuaternion)
-	c = minimal_coordinates(joint, qa, qb)
-	jacobian_relative==:parent && (return [szeros(length(c), 3) FiniteDiff.finite_difference_jacobian(q -> minimal_coordinates(joint, UnitQuaternion(q..., false), qb), vector(qa))]) # * LVᵀmat(qa)]) 
-	jacobian_relative==:child && (return [szeros(length(c), 3) FiniteDiff.finite_difference_jacobian(q -> minimal_coordinates(joint, qa, UnitQuaternion(q..., false)), vector(qb))]) # * LVᵀmat(qb)]) 
+@inline function minimal_velocities_jacobian_configuration_parent(joint::Rotational{T},
+        xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+        xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector) where T
+    qoffset = joint.qoffset
+    X = szeros(T,3,3)
+    Q = rotation_matrix(inv(qoffset)) * ∂qrotation_matrix_inv(qa, vrotate(ϕb, qb))
+    ∇xq = nullspace_mask(joint) * [X Q*LVᵀmat(qa)]
+    return ∇xq
 end
-
-function minimal_velocities_jacobian_configuration(jacobian_relative::Symbol,
-	joint::Rotational, qa::UnitQuaternion, ωa::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector)
-	v = minimal_velocities(joint, qa, ωa, qb, ωb)
-	(jacobian_relative == :parent) && (return [szeros(length(v), 3) FiniteDiff.finite_difference_jacobian(q -> minimal_velocities(joint, UnitQuaternion(q..., false), ωa, qb, ωb), vector(qa))]) # * LVᵀmat(qa)])
-	(jacobian_relative == :child) && (return [szeros(length(v), 3) FiniteDiff.finite_difference_jacobian(q -> minimal_velocities(joint, qa, ωa, UnitQuaternion(q..., false), ωb), vector(qb))]) # * LVᵀmat(qb)])
-	return
+@inline function minimal_velocities_jacobian_configuration_child(joint::Rotational{T},
+        xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+        xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector) where T
+    qoffset = joint.qoffset
+    X = szeros(T,3,3)
+    Q = rotation_matrix(inv(qoffset) * inv(qa)) * ∂qrotation_matrix(qb, ϕb)
+    ∇xq = nullspace_mask(joint) * [X Q*LVᵀmat(qb)]
+    return ∇xq
 end
-
-function minimal_velocities_jacobian_velocity(jacobian_relative::Symbol,
-	joint::Rotational, qa::UnitQuaternion, ωa::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector)
-	v = minimal_velocities(joint, qa, ωa, qb, ωb)
-	(jacobian_relative == :parent) && (return [szeros(length(v), 3) FiniteDiff.finite_difference_jacobian(ω -> minimal_velocities(joint, qa, ω, qb, ωb), ωa)])
-	(jacobian_relative == :child) && (return [szeros(length(v), 3) FiniteDiff.finite_difference_jacobian(ω -> minimal_velocities(joint, qa, ωa, qb, ω), ωb)])
-	return
+@inline function minimal_velocities_jacobian_velocity_parent(joint::Rotational{T},
+        xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+        xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector) where T
+    qoffset = joint.qoffset
+    V = szeros(T,3,3)
+    Ω = - rotation_matrix(inv(qoffset))
+    ∇vϕ = nullspace_mask(joint) * [V Ω]
+    return ∇vϕ
+end
+@inline function minimal_velocities_jacobian_velocity_child(joint::Rotational{T},
+        xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+        xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector) where T
+    qoffset = joint.qoffset
+    V = szeros(T,3,3)
+    Ω = rotation_matrix(inv(qoffset) * inv(qa) * qb)
+    ∇vϕ = nullspace_mask(joint) * [V Ω]
+    return ∇vϕ
 end

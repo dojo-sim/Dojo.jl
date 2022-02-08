@@ -247,17 +247,17 @@ damper_child(joint2.constraints[1], x1, q1, v1, ω1, x2, q2, v2, ω2)
 apply_input(joint1.constraints[1], Fτ1, x0, q0, x1, q1)
 apply_input(joint2.constraints[1], Fτ2, x1, q1, x2, q2)
 
-input_jacobian_control_parent(joint1.constraints[1], mech.origin.state, body2.state, mech.timestep)
-input_jacobian_control_parent(joint2.constraints[1], body1.state, body2.state, mech.timestep)
+input_jacobian_control_parent(joint1.constraints[1], mech.origin.state, body2.state)
+input_jacobian_control_parent(joint2.constraints[1], body1.state, body2.state)
 
-input_jacobian_control_child(joint1.constraints[1], mech.origin.state, body2.state, mech.timestep)
-input_jacobian_control_child(joint2.constraints[1], body1.state, body2.state, mech.timestep)
+input_jacobian_control_child(joint1.constraints[1], mech.origin.state, body2.state)
+input_jacobian_control_child(joint2.constraints[1], body1.state, body2.state)
 
-input_jacobian_configuration_parent(joint1.constraints[1], mech.origin.state, body2.state, mech.timestep)
-input_jacobian_configuration_parent(joint2.constraints[1], body1.state, body2.state, mech.timestep)
+input_jacobian_configuration_parent(joint1.constraints[1], mech.origin.state, body2.state)
+input_jacobian_configuration_parent(joint2.constraints[1], body1.state, body2.state)
 
-input_jacobian_configuration_child(joint1.constraints[1], mech.origin.state, body2.state, mech.timestep)
-input_jacobian_configuration_child(joint2.constraints[1], body1.state, body2.state, mech.timestep)
+input_jacobian_configuration_child(joint1.constraints[1], mech.origin.state, body2.state)
+input_jacobian_configuration_child(joint2.constraints[1], body1.state, body2.state)
 
 
 apply_input(joint1.constraints[2], Fτ1, x0, q0, x1, q1)

@@ -7,7 +7,7 @@ end
 function set_position!(body1::Node, body2::Body;
         p1::AbstractVector = SA[0;0;0], p2::AbstractVector = SA[0;0;0],
         Δx::AbstractVector = SA[0;0;0], Δq::UnitQuaternion = one(UnitQuaternion)
-        # in body1's frame
+        # in body1's frame              # wrt to body1's orientation not qoffset
     )
 
     q1 = body1.state.q2[1]

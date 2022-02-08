@@ -63,7 +63,7 @@ AngleAxis(q).theta
 r = rand(3)
 r ./= norm(r)
 aa = θ * r
-q = axisangle2quaternion(aa)
+q = axis_angle_to_quaternion(aa)
 
 s2 = q.x * q.x + q.y * q.y + q.z * q.z
 sin_t2 = sqrt(s2)
@@ -72,7 +72,7 @@ theta = 2 * atan(sin_t2, q.w)
 θ = 2 * atan(q.w, norm(Vmat(q)))
 r = Vmat(q) ./ cos(θ/2)
 aa = θ * r
-qq = axisangle2quaternion(aa)
+qq = axis_angle_to_quaternion(aa)
 
 
 

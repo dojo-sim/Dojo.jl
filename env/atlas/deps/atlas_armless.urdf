@@ -16,6 +16,28 @@
   <material name="metal">
     <color rgba="0.8784 0.8745 0.8588 1"/>
   </material>
+
+  <link name="base">
+    <inertial>
+      <origin rpy="0.00000 -0.00000 0.00000" xyz="0.00000 0.00000 0.00000"/>
+      <mass value="1.00000"/>
+      <inertia ixx="1.00000" ixy="0" ixz="0" iyy="1.00000" iyz="0" izz="1.00000"/>
+    </inertial>
+  </link>
+  <link name="utorso">
+    <inertial>
+      <mass value="84.409"/>
+      <!-- <origin rpy="0 0 0" xyz="-0.0622 0.0023 0.3157"/> -->
+      <origin rpy="0 0 0" xyz="0.0000 0.0000 0.0000"/>
+      <inertia ixx="1.577" ixy="-0.032" ixz="0.102" iyy="1.602" iyz="0.047" izz="0.565"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="env/atlas/deps/mesh/utorso.obj"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+  </link>
   <link name="pelvis">
     <inertial>
       <mass value="9.509"/>
@@ -27,19 +49,6 @@
         <mesh filename="env/atlas/deps/mesh/pelvis.obj"/>
       </geometry>
       <material name="metal"/>
-    </visual>
-  </link>
-  <link name="utorso">
-    <inertial>
-      <mass value="84.409"/>
-      <origin rpy="0 0 0" xyz="-0.0622 0.0023 0.3157"/>
-      <inertia ixx="1.577" ixy="-0.032" ixz="0.102" iyy="1.602" iyz="0.047" izz="0.565"/>
-    </inertial>
-    <visual>
-      <geometry>
-        <mesh filename="env/atlas/deps/mesh/utorso.obj"/>
-      </geometry>
-      <material name="white"/>
     </visual>
   </link>
   <!-- <link name="head">
@@ -209,12 +218,18 @@
     </visual>
   </link>
 
-
+  <joint name="auto_generated_floating_joint" type="floating">
+		<parent link="base"/>
+		<child link="utorso"/>
+		<origin rpy="0.00000 0.00000 0.00000" xyz="0.00000 0.00000 0.00000"/>
+		<axis xyz="0.00000 1.00000 0.00000"/>
+	</joint>
   <joint name="back_bkxyz" type="ball">
-    <origin rpy="0 0 0" xyz="-0.0125 0 0.212"/>
+    <!-- <origin rpy="0 0 0" xyz="-0.0125 0 0.212"/> -->
+    <origin rpy="0 0 0" xyz="0.0125 0 -0.212"/>
     <axis xyz="0 0 1"/>
-    <parent link="pelvis"/>
-    <child link="utorso"/>
+    <parent link="utorso"/>
+    <child link="pelvis"/>
     <dynamics damping="0.1" friction="0"/>
   </joint>
   <!-- <joint name="neck_ay" type="revolute">

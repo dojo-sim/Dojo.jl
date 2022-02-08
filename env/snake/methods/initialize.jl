@@ -49,8 +49,8 @@ function initialize_snake!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{T
     vert11 = [0.;0.; h/2]
     vert12 = -vert11
     # set position and velocities
-    set_position!(mechanism.origin, body1, p2 = x, Δq = q1)
-    set_velocity!(body1, v = v, ω = ω)
+    set_position!(mechanism.origin, body1, p2=x, Δq=q1)
+    set_velocity!(body1, v=v, ω=ω)
 
     previd = body1.id
     for (i,body) in enumerate(Iterators.drop(mechanism.bodies, 1))

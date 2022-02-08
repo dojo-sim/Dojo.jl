@@ -1,3 +1,11 @@
+function minimal_coordinates_velocities(mechanism::Mechanism)
+    d = Dict()
+    for joint in mechanism.joints
+        push!(d, joint.id => [minimal_coordinates(mechanism, joint); minimal_velocities(mechanism, joint)])
+    end
+    return d
+end
+
 function minimal_coordinates(mechanism::Mechanism)
     d = Dict()
     for joint in mechanism.joints

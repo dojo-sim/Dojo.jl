@@ -1,4 +1,4 @@
-@with_kw struct SolverOptions{T}
+@with_kw mutable struct SolverOptions{T} # TODO maybe remove the mutable, I used it for curriculum iLQR
     rtol::T=1.0e-6   # residual violation tolerance (equality constraints)
     btol::T=1.0e-3   # bilinear violation tolerance (complementarity constraints)
     ls_scale::T=0.5  # line search scaling factor (α_new ← ls_scale * α_current)
@@ -13,7 +13,7 @@ end
 function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
 	reset!.(mechanism.contacts, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
 	reset!.(mechanism.joints, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
-    
+
     mechanism.μ = 0.0
 	μtarget = 0.0
 	no_progress = 0
@@ -228,4 +228,3 @@ function push_diagonal_inverses!(mechanism::Mechanism)
 	end
 	return
 end
-

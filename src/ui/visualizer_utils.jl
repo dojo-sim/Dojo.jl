@@ -1,7 +1,7 @@
 using FFMPEG
 using Meshing
 
-function set_floor!(vis::Visualizer; x=20.0, y=20.0, z=0.1, color=nothing,
+function set_floor!(vis::Visualizer; x=20.0, y=20.0, z=0.1, alt=0.0, color=nothing,
         tilepermeter=1.0, imagename="tile.png")
     image = PngImage(joinpath(module_dir(), "assets", imagename))
     repeat = Int.(ceil.(tilepermeter * [x,y]))
@@ -10,7 +10,7 @@ function set_floor!(vis::Visualizer; x=20.0, y=20.0, z=0.1, color=nothing,
     (color != nothing) && (mat = MeshPhongMaterial(color=color))
     obj = HyperRectangle(Vec(0., 0, 0), Vec(x, y, z))
     setobject!(vis[:floor], obj, mat)
-    settransform!(vis[:floor], MeshCat.Translation(-x/2, -y/2, -z))
+    settransform!(vis[:floor], MeshCat.Translation(-x/2, -y/2, -z+alt))
     return nothing
 end
 

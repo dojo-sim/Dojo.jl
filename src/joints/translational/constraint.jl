@@ -32,13 +32,6 @@ Translational1{T} = Translational{T,1} where T
 Translational2{T} = Translational{T,2} where T
 Translational3{T} = Translational{T,3} where T
 
-@inline function position_error(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; rotate::Bool = true)
-    vertices = joint.vertices
-    d = xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)) # in the world frame
-    rotate && (d = vrotate(d, inv(qa))) # in the a frame
-    return d
-end
-
 @inline function constraint(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     vertices = joint.vertices
     e = vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
@@ -63,20 +56,9 @@ end
     return constraint_mask(joint) * [X Q]
 end
 
-@inline function get_position_delta(joint::Translational, body1::Node, body2::Node, x::SVector)
-    Δx = zerodimstaticadjoint(nullspace_mask(joint)) * x # in body1 frame
-    return Δx
-end
-
-@inline function get_velocity_delta(joint::Translational, body1::Node, body2::Node, v::SVector)
-    Δv = zerodimstaticadjoint(nullspace_mask(joint)) * v # in body1 frame
-    return Δv
-end
-
 ################################################################################
 # Impulse Transform
 ################################################################################
-
 function impulse_transform_parent(joint::Translational{T}, xa::AbstractVector,
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
     X = -1.0 * rotation_matrix(qa)
@@ -106,7 +88,6 @@ end
 ################################################################################
  # Derivatives
 ################################################################################
-
 function impulse_transform_parent_jacobian_parent(joint::Translational{T,Nλ,0},
         xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
     # ∂(impulse_transform_a'*p)/∂(xa,qa)

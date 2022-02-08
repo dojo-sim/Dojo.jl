@@ -199,13 +199,13 @@ end
 
 @inline add_input!(joint::Joint) = return
 
-@inline function input_jacobian_control_parent(joint::Joint, body1::Node, body2::Node, timestep, child_id)
-    return input_jacobian_control_parent(joint, body1.state, body2.state, timestep) * zerodimstaticadjoint(nullspace_mask(joint))
+@inline function input_jacobian_control_parent(joint::Joint, body1::Node, body2::Node, child_id)
+    return input_jacobian_control_parent(joint, body1.state, body2.state) * zerodimstaticadjoint(nullspace_mask(joint))
 end
 
-@inline function input_jacobian_control_child(joint::Joint{T,Nλ}, body1::Node, body2::Node, timestep, child_id) where {T,Nλ}
+@inline function input_jacobian_control_child(joint::Joint{T,Nλ}, body1::Node, body2::Node, child_id) where {T,Nλ}
     if body2.id == child_id
-        return input_jacobian_control_child(joint, body1.state, body2.state, timestep) * zerodimstaticadjoint(nullspace_mask(joint))
+        return input_jacobian_control_child(joint, body1.state, body2.state) * zerodimstaticadjoint(nullspace_mask(joint))
     else
         return szeros(T, 6, 3 - Nλ)
     end
