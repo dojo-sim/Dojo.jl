@@ -264,7 +264,7 @@ me0 = mechanical_energy(mech, storage)[start0:end]
 
 # Test mechanical energy conservation
 @testset "Energy: Humanoid" begin
-    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-3
+    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 2e-3
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
 

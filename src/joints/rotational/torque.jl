@@ -90,7 +90,7 @@ spring_child(joint::Rotational3{T}, xa::AbstractVector, qa::UnitQuaternion, xb::
     spring = unitary ? 1.0 : joint.spring
     q = spring_extension(joint, xa, qa, xb, qb)
     distance = spring_distance(joint, q)
-    Fτ = spring * distance # force in offset frame
+    Fτ = -spring * distance # force in offset frame
     Fτ = vrotate(Fτ, joint.qoffset) # rotate back to the a frame
     return Fτ
 end
@@ -110,7 +110,7 @@ end
     # distance = spring_distance(joint, q)
     # force = spring * distance # force in offset frame
     # rotate && (force = vrotate(force, joint.qoffset)) # rotate back to a frame
-    force = spring_force(joint, xa, qa, xb, qb; unitary=unitary)
+    force = -spring_force(joint, xa, qa, xb, qb; unitary=unitary)
     # force = vrotate(force, joint.qoffset) # back to A
     return [szeros(T, 3); force]
     # return spring_relative(:parent, joint, xa, qa, xb, qb; unitary=unitary)
@@ -125,7 +125,7 @@ end
     # force = - spring * distance # force in offset frame
     # rotate && (force = vrotate(force, inv(qb) * qa * joint.qoffset)) # rotate back to b frame
 
-    force = - spring_force(joint, xa, qa, xb, qb; unitary=unitary)
+    force = spring_force(joint, xa, qa, xb, qb; unitary=unitary)
     # rotate && (force = vrotate(force, inv(qb) * qa * joint.qoffset)) # rotate back to b frame
     rotate && (force = vrotate(force, inv(qb) * qa)) # rotate back to b frame
 

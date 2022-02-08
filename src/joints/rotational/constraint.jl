@@ -76,6 +76,7 @@ function impulse_transform_parent(joint::Rotational{T}, xa::AbstractVector, qa::
     # τ = T(A->B)_a
     # Fτa = [Fa, τa] = [0, T(B->A)_a]
     # Q = -SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
+    # Q = -rotation_matrix(joint.qoffset)
     return [X; Q]
 end
 
@@ -87,6 +88,7 @@ function impulse_transform_child(joint::Rotational{T}, xa::AbstractVector, qa::U
     # τ = T(A->B)_a
     # Fτb = [Fb, τb] = [0, T(A->B)_b]
     # Q = rotation_matrix(inv(qb) * qa)
+    # Q = rotation_matrix(inv(qb) * qa * joint.qoffset)
     return [X; Q]
 end
 
@@ -100,7 +102,9 @@ function impulse_transform_parent_jacobian_parent(joint::Rotational{T,Nλ,0},
     ∇Qqa = ∂qVLᵀmat(Tmat(T) * Rᵀmat(qb) * RVᵀmat(joint.qoffset) * p) * LVᵀmat(qa)
     return [Z3 Z3;
             Z3 ∇Qqa]
-    # return szeros(T,6,6)
+    return szeros(T,6,6)
+    # error()
+    # return 1e-10*SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
 end
 
 function impulse_transform_parent_jacobian_child(joint::Rotational{T,Nλ,0},
@@ -110,7 +114,9 @@ function impulse_transform_parent_jacobian_child(joint::Rotational{T,Nλ,0},
     ∇Qqb = VLᵀmat(qa) * Tmat(T) * ∂qRᵀmat(RVᵀmat(joint.qoffset) * p) * LVᵀmat(qb)
     return [Z3 Z3;
             Z3 ∇Qqb]
-    # return szeros(T,6,6)
+    return szeros(T,6,6)
+    # error()
+    # return 1e-10*SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
 end
 
 function impulse_transform_child_jacobian_parent(joint::Rotational{T,Nλ,0},
