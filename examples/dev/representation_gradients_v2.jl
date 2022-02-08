@@ -32,7 +32,7 @@ end
 
 
 storage = simulate!(mechanism, 1.0, ctrl!, record = true, verbose = false)
-visualize(mechanism, storage, vis = vis)
+# visualize(mechanism, storage, vis = vis)
 
 ## Maximal gradients 
 maximal_dimension(mechanism)
@@ -56,7 +56,7 @@ N_a = minimal_to_maximal_jacobian_analytical(mechanism, x)#[(ibody-1) * 13 .+ (1
 sum(N_fd)
 sum(N_a)
 @test size(N_fd) == size(N_a)
-@test norm(N_fd - N_a, Inf) < 1.0e-6
+@test norm(N_fd - N_a, Inf) < 1.0e-5
 
 M_fd * G' * N_fd
 M_a * G' * N_a

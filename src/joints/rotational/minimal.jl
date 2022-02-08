@@ -35,13 +35,6 @@ end
     if jacobian_relative == :parent
         return A * [X ∂qrotation_vector(q) * Lᵀmat(joint.qoffset) * Rmat(qb) * Tmat() * LVᵀmat(qa)]
     elseif jacobian_relative == :child
-        @show A 
-        @show q
-        @show ∂qrotation_vector(q) * Lᵀmat(joint.qoffset) * Lᵀmat(qa) * LVᵀmat(qb) 
-        @show ∂qrotation_vector(q) 
-        @show Lᵀmat(joint.qoffset) 
-        @show Lᵀmat(qa) 
-        @show LVᵀmat(qb)
         return A * [X ∂qrotation_vector(q) * Lᵀmat(joint.qoffset) * Lᵀmat(qa) * LVᵀmat(qb)]
     end
 end

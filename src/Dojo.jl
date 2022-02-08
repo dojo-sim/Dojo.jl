@@ -71,6 +71,8 @@ export Origin,
     disassemble,
     minimal_coordinates,
     minimal_velocities,
+    minimal_dimension, 
+    maximal_dimension
 
     RotX,
     RotY,
