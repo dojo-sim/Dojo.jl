@@ -91,11 +91,6 @@ dyn = IterativeLQR.Dynamics(
 
 model = [dyn for t = 1:T-1]
 
-env.mechanism.bodies
-env.mechanism.joints[1]
-env.mechanism.joints[2]
-
-
 # ## rollout
 x1 = xref[1]
 u0 = -total_mass(env.mechanism) * env.mechanism.gravity* env.mechanism.timestep/1.1
