@@ -1,7 +1,10 @@
 function get_quadruped(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, spring=0.0,
-    damper=0.0, contact::Bool=true, path=joinpath(@__DIR__, "../deps/quadruped.urdf")) where T
-    mech=Mechanism(path, true, T, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
+        damper=0.0, contact::Bool=true, body_contact::Bool=false, limits::Bool=false,
+        path=joinpath(@__DIR__, "../deps/quadruped.urdf"),
+        joint_limits=[[-0.5, -0.5, -0.5,],
+                      [ 0.5,  0.5,  0.5,]]) where T
 
+    mech = Mechanism(path, true, T, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     # Adding springs and dampers
     for (i,joint) in enumerate(collect(mech.joints)[2:end])
         joint.damper = true
@@ -12,28 +15,69 @@ function get_quadruped(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8,
         end
     end
 
+    # joint limits
+    joints = deepcopy(mech.joints)
+    if limits
+        for group in [:FR, :FL, :RR, :RL]
+            hip_joint = get_joint_constraint(mech, Symbol(group, :_hip_joint))
+            joints[hip_joint.id] = add_limits(mech, hip_joint,
+                rot_limits=[SVector{1}(joint_limits[1][1]), SVector{1}(joint_limits[2][1])])
+
+            thigh_joint = get_joint_constraint(mech, Symbol(group, :_thigh_joint))
+            joints[thigh_joint.id] = add_limits(mech, thigh_joint,
+                rot_limits=[SVector{1}(joint_limits[1][2]), SVector{1}(joint_limits[2][2])])
+
+            calf_joint = get_joint_constraint(mech, Symbol(group, :_calf_joint))
+            joints[calf_joint.id] = add_limits(mech, calf_joint,
+                rot_limits=[SVector{1}(joint_limits[1][3]), SVector{1}(joint_limits[2][3])])
+        end
+        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...], gravity=gravity,
+            timestep=timestep, spring=spring, damper=damper)
+    end
+
     if contact
         origin = Origin{T}()
         bodies = Vector{Body{T}}(collect(mech.bodies))
         eqs = Vector{JointConstraint{T}}(collect(mech.joints))
 
         # Foot contact
-        contact = [0.0;0;-0.1]
         normal = [0;0;1.0]
+        foot_contact = [-0.006;0.0;-0.092]
+        foot_offset = [0;0;0.021]
+        hip_contact = [0.0;0.05;0.0]
+        hip_offset = [0;0;0.05]
+        elbow_contactR = [-0.005;-0.023;-0.16]
+        elbow_contactL = [-0.005;+0.023;-0.16]
+        elbow_offset = [0;0;0.023]
 
-        contacts1 = contact_constraint(get_body(mech,:FR_calf), normal; cf=cf, p=contact, name=:FR_contact)
-        contacts2 = contact_constraint(get_body(mech,:FL_calf), normal; cf=cf, p=contact, name=:FL_contact)
-        contacts3 = contact_constraint(get_body(mech,:RR_calf), normal; cf=cf, p=contact, name=:RR_contact)
-        contacts4 = contact_constraint(get_body(mech,:RL_calf), normal; cf=cf, p=contact, name=:RL_contact)
-        set_position!(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [0;0;0.23;0.;0.;0.])
-        mech = Mechanism(origin, bodies, eqs, [contacts1; contacts2; contacts3; contacts4], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
+        foot_contacts1 = contact_constraint(get_body(mech,:FR_calf), normal; cf=cf, p=foot_contact, offset=foot_offset, name=:FR_contact)
+        foot_contacts2 = contact_constraint(get_body(mech,:FL_calf), normal; cf=cf, p=foot_contact, offset=foot_offset, name=:FL_contact)
+        foot_contacts3 = contact_constraint(get_body(mech,:RR_calf), normal; cf=cf, p=foot_contact, offset=foot_offset, name=:RR_contact)
+        foot_contacts4 = contact_constraint(get_body(mech,:RL_calf), normal; cf=cf, p=foot_contact, offset=foot_offset, name=:RL_contact)
+        contacts = [foot_contacts1; foot_contacts2; foot_contacts3; foot_contacts4]
+
+        if body_contact
+            elbow_contacts1 = contact_constraint(get_body(mech,:FR_thigh), normal; cf=cf, p=elbow_contactR, offset=elbow_offset, name=:FR_hip_contact)
+            elbow_contacts2 = contact_constraint(get_body(mech,:FL_thigh), normal; cf=cf, p=elbow_contactL, offset=elbow_offset, name=:FL_hip_contact)
+            elbow_contacts3 = contact_constraint(get_body(mech,:RR_thigh), normal; cf=cf, p=elbow_contactR, offset=elbow_offset, name=:RR_hip_contact)
+            elbow_contacts4 = contact_constraint(get_body(mech,:RL_thigh), normal; cf=cf, p=elbow_contactL, offset=elbow_offset, name=:RL_hip_contact)
+            push!(contacts, elbow_contacts1, elbow_contacts2, elbow_contacts3, elbow_contacts4)
+            hip_contacts1 = contact_constraint(get_body(mech,:FR_hip), normal; cf=cf, p=-hip_contact, offset=hip_offset, name=:FR_hip_contact)
+            hip_contacts2 = contact_constraint(get_body(mech,:FL_hip), normal; cf=cf, p=+hip_contact, offset=hip_offset, name=:FL_hip_contact)
+            hip_contacts3 = contact_constraint(get_body(mech,:RR_hip), normal; cf=cf, p=-hip_contact, offset=hip_offset, name=:RR_hip_contact)
+            hip_contacts4 = contact_constraint(get_body(mech,:RL_hip), normal; cf=cf, p=+hip_contact, offset=hip_offset, name=:RL_hip_contact)
+            push!(contacts, hip_contacts1, hip_contacts2, hip_contacts3, hip_contacts4)
+        end
+
+        set_position!(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [0;0;0.32;0.;0.;0.])
+        mech = Mechanism(origin, bodies, eqs, contacts, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
     return mech
 end
 
 function initialize_quadruped!(mechanism::Mechanism; tran::AbstractVector{T}=[0,0,0.],
     rot::AbstractVector{T}=[0,0,0.0], v::AbstractVector{T}=[0,0,0.0], θ::T=0.95) where T
-    tran += [0,0,0.31]
+    tran += [0,0,0.32]
     set_position!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [tran; rot])
 
     set_position!(mechanism, get_joint_constraint(mechanism, :FR_thigh_joint), [θ])

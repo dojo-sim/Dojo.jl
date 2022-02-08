@@ -83,8 +83,11 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N};
 
     setprop!(vis["/Background"], "top_color", RGBA(1.0, 1.0, 1.0))
     setprop!(vis["/Background"], "bottom_color", RGBA(1.0, 1.0, 1.0))
+    set_light!(vis)
+    set_floor!(vis)
     # Somehow delete! doesn't work in a function call, so set axes to not visible for now
     setvisible!(vis["/Axes"],false)
+    # setvisible!(vis["/Grid"],false)
     # delete!(vis["/Axes"])
 
     if openvis
@@ -117,7 +120,9 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N};
         if show_contact
             for (jd, contact) in enumerate(mechanism.contacts)
                 if contact.parent_id == body.id
-                    contact_shape = Sphere(abs(1.0 * contact.constraints[1].offset[3]),
+                    radius = abs(1.0 * contact.constraints[1].offset[3])
+                    (radius == 0.0) && (radius = 0.01)
+                    contact_shape = Sphere(radius,
                         xoffset=(contact.constraints[1].p),
                         qoffset=one(UnitQuaternion), color=RGBA(1.0, 0.0, 0.0, 1.0))
                     visshape = convert_shape(contact_shape)

@@ -8,7 +8,7 @@
     <color rgba="0.35 0.35 0.40 1"/>
   </material>
   <material name="white">
-    <color rgba="0.95 0.95 0.95 0.95"/>
+    <color rgba="0.95 0.95 0.95 1.0"/>
   </material>
   <material name="orange">
     <color rgba="0.9098 0.44314 0.031373 1"/>
