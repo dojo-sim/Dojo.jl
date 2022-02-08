@@ -74,6 +74,10 @@ end
     return nullspace_mask(joint) * Δv
 end
 
+
+################################################################################
+# Damper Force
+################################################################################
 function damper_force(joint::Translational{T}, xa::AbstractVector,
         qa::UnitQuaternion, va::AbstractVector, ωa::AbstractVector,
         xb::AbstractVector, qb::UnitQuaternion, vb::AbstractVector,
@@ -82,6 +86,26 @@ function damper_force(joint::Translational{T}, xa::AbstractVector,
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
     Fτ = damper * Aᵀ * -minimal_velocities(joint, xa, qa, va, ωa, xb, qb, vb, ωb) # in the a frame
     return Fτ
+end
+
+function damper_force_jacobian_configuration(jacobian_relative::Symbol, joint::Translational{T}, xa::AbstractVector,
+        va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
+        xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion,
+        ωb::AbstractVector; unitary::Bool=false) where T
+    damper = unitary ? 1.0 : joint.damper
+    Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
+    ∇Fτ = damper * Aᵀ * -minimal_velocities_jacobian_configuration(jacobian_relative, joint, xa, va, qa, ωa, xb, vb, qb, ωb) # in the a frame
+    return ∇Fτ
+end
+
+function damper_force_jacobian_velocity(jacobian_relative::Symbol, joint::Translational{T}, xa::AbstractVector,
+        va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
+        xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion,
+        ωb::AbstractVector; unitary::Bool=false) where T
+    damper = unitary ? 1.0 : joint.damper
+    Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
+    ∇Fτ = damper * Aᵀ * -minimal_velocities_jacobian_velocity(jacobian_relative, joint, xa, va, qa, ωa, xb, vb, qb, ωb) # in the a frame
+    return ∇Fτ
 end
 
 @inline function damper_relative(relative::Symbol, joint::Translational{T}, xa::AbstractVector,
@@ -304,7 +328,7 @@ function damper_parent_jacobian_velocity_child(joint::Translational, body1::Node
     ωa = body1.state.ϕsol[2]
     vb = body2.state.vsol[2]
     ωb = body2.state.ϕsol[2]
-    attjac && (return damper_jacobian_velocity(:parent, :child, joint, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep; unitary=false))
+    attjac && (return damper_jacobian_velocity(:parent, :child, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep; unitary=false))
 
     V = FiniteDiff.finite_difference_jacobian(vb -> damper_parent(joint, xa, qa, va, ωa, xb, qb, vb, ωb), vb)
     Ω = FiniteDiff.finite_difference_jacobian(ωb -> damper_parent(joint, xa, qa, va, ωa, xb, qb, vb, ωb), ωb)
@@ -317,7 +341,7 @@ function damper_child_configuration_velocity_child(joint::Translational, body1::
     ωa = body1.state.ϕsol[2]
     vb = body2.state.vsol[2]
     ωb = body2.state.ϕsol[2]
-    attjac && (return damper_jacobian_velocity(:child, :child, joint, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep; unitary=false))
+    attjac && (return damper_jacobian_velocity(:child, :child, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep; unitary=false))
 
     V = FiniteDiff.finite_difference_jacobian(vb -> damper_child(joint, xa, qa, va, ωa, xb, qb, vb, ωb), vb)
     Ω = FiniteDiff.finite_difference_jacobian(ωb -> damper_child(joint, xa, qa, va, ωa, xb, qb, vb, ωb), ωb)
@@ -330,7 +354,7 @@ function damper_child_configuration_velocity_parent(joint::Translational, body1:
     ωa = body1.state.ϕsol[2]
     vb = body2.state.vsol[2]
     ωb = body2.state.ϕsol[2]
-    attjac && (return damper_jacobian_velocity(:child, :parent, joint, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep; unitary=false))
+    attjac && (return damper_jacobian_velocity(:child, :parent, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep; unitary=false))
 
     V = FiniteDiff.finite_difference_jacobian(va -> damper_child(joint, xa, qa, va, ωa, xb, qb, vb, ωb), va)
     Ω = FiniteDiff.finite_difference_jacobian(ωa -> damper_child(joint, xa, qa, va, ωa, xb, qb, vb, ωb), ωa)
