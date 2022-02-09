@@ -244,7 +244,7 @@ end
 
 	Dojo.maximal_dimension(mech) == 13
 	minimal_dimension(mech) == 12
-	z = get_maximal_state(mech)
+	z = Dojo.get_maximal_state(mech)
 
 	attjac = attitude_jacobian(z, length(mech.bodies))
 	M_fd = FiniteDiff.finite_difference_jacobian(z -> maximal_to_minimal(mech, z), z) * attjac
@@ -386,7 +386,7 @@ end
 end
 
 @testset "minimal to maximal Jacobian" begin
-	function ctrl!(mechanism, k) 
+	function ctrl!(mechanism, k)
 		set_control!(mechanism, 0.1 * srand(control_dimension(mechanism)))
 	end
 

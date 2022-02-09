@@ -22,11 +22,7 @@ end
 function initialize_pendulum!(mechanism::Mechanism; ϕ1::T = 0.7, ω1::T = 0.0) where T
     body = collect(mechanism.bodies)[1]
     joint = collect(mechanism.joints)[1]
-    p2 = joint.constraints[1].vertices[2]
-    p1 = joint.constraints[1].vertices[1]
-    q1 = UnitQuaternion(RotX(ϕ1))
-    set_position!(mechanism.origin, body, p1 = p1, p2 = p2, Δq = q1)
-    set_velocity!(mechanism.origin, body, p1 = p1, p2 = p2, Δω = [ω1,0,0])
+    set_minimal_coordinates_velocities!(mechanism, joint; xmin=[ϕ1, ω1])
 end
 
 function get_npendulum(; timestep::T = 0.01, gravity = -9.81, m::T = 1.0, l::T = 1.0,

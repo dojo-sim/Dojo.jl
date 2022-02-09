@@ -222,7 +222,7 @@ end
 function spring_child_jacobian_velocity_child(joint::Translational, body1::Node, body2::Node, timestep::T) where T
     return spring_jacobian_velocity(:child, :child, joint, body1, body2, timestep)
 end
-function spring_child_jacobian_configuration_velocity_parent(joint::Translational, body1::Node, body2::Node, timestep::T) where T
+function spring_child_jacobian_velocity_parent(joint::Translational, body1::Node, body2::Node, timestep::T) where T
     return spring_jacobian_velocity(:child, :parent, joint, body1, body2, timestep)
 end
 

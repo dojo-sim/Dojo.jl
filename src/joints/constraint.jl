@@ -190,7 +190,7 @@ function impulses_jacobian_child!(mechanism, cbody::Body, joint::JointConstraint
         if joint.child_id == cbody.id
             pbody = get_body(mechanism, joint.parent_id)
             joint.spring && (cbody.state.D -= spring_child_jacobian_velocity_child(element, pbody, cbody, timestep))
-            joint.damper && (cbody.state.D -= damper_child_configuration_velocity_child(element, pbody, cbody, timestep))
+            joint.damper && (cbody.state.D -= damper_child_jacobian_velocity_child(element, pbody, cbody, timestep))
         end
     end
     return nothing

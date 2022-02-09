@@ -7,39 +7,53 @@ open(vis)
 ################################################################################
 # Analytical Jacobian
 ################################################################################
+function ctrl!(mechanism, k)
+	nu = control_dimension(mechanism)
+	u = 1*[szeros(6); mechanism.timestep * sones(nu-6)]
+	set_control!(mechanism, u)
+	return
+end
 
 function test_data_system(model::Symbol; ϵ::T=1.0e-6, tsim::T=0.1, ctrl::Any=(m,k)->nothing,
         timestep::T=0.01, gravity=[0.0; 0.0; -9.81], verbose::Bool=false, kwargs...) where T
-
     # mechanism
     mechanism = get_mechanism(model, timestep=timestep, gravity=gravity; kwargs...)
     initialize!(mechanism, model)
-
     # simulate
-    storage = simulate!(mechanism, tsim, ctrl,
-        record=true, verbose=false, opts=SolverOptions(rtol=ϵ, btol=ϵ))
+    simulate!(mechanism, tsim, ctrl!,
+        record=false, verbose=false, opts=SolverOptions(rtol=ϵ, btol=ϵ))
 
-    # Set data
-    Nb = data_dim(mechanism)
-    data = getdata(mechanism)
-    setdata!(mechanism, data)
-    sol = getsolution(mechanism)
+	# Finite Difference
+	Nd = data_dim(mechanism, attjac=false)
+	data0 = get_data0(mechanism)# + 0.05*rand(Nd)
+	sol0 = get_solution0(mechanism)
+	datajac0 = finitediff_data_jacobian(mechanism, data0, sol0)
+	attjac0 = data_attitude_jacobian(mechanism)
+	datajac0 *= attjac0
 
+	# Analytical
+	D = create_data_matrix(mechanism.joints, mechanism.bodies, mechanism.contacts)
+	jacobian_data!(D, mechanism)
+	nodes = [mechanism.joints; mechanism.bodies; mechanism.contacts]
+	dimrow = length.(nodes)
+	dimcol = data_dim.(nodes)
+	datajac1 = full_matrix(D, dimrow, dimcol)
+	@test norm(datajac0 - datajac1, Inf) < 1e-7
     return nothing
 end
 
 # test_data_system(:snake, Nb=3)
 using Test
 
-################################################################################
-# Pendulum
-################################################################################
 include("utils.jl")
 include("data.jl")
 include("data_gradients.jl")
 include("finite_difference.jl")
 
-mech = get_pendulum(timestep=0.05, damper=3.0, spring=1.0);
+################################################################################
+# Pendulum
+################################################################################
+mech = get_pendulum(timestep=0.05, damper=0.3, spring=1.0);
 joint0 = mech.joints[1]
 body0 = mech.bodies[1]
 initialize!(mech, :pendulum, ϕ1=0.2, ω1=-0.3)
@@ -63,16 +77,13 @@ nodes = [mech.joints; mech.bodies; mech.contacts]
 dimrow = length.(nodes)
 dimcol = data_dim.(nodes)
 datajac1 = full_matrix(D, dimrow, dimcol)
+plot(Gray.(1e10 .* abs.(datajac1)))
+plot(Gray.(1e0 .* abs.(datajac1)))
 @test norm(datajac0 - datajac1, Inf) < 1e-7
 
 ################################################################################
 # Snake
 ################################################################################
-include("utils.jl")
-include("data.jl")
-include("data_gradients.jl")
-include("finite_difference.jl")
-
 mech = get_snake(timestep=0.05, damper=0.3, spring=1.0, gravity=-0.5, Nb=2, contact=false);
 function ctrl!(mechanism, k)
 	nu = control_dimension(mechanism)
@@ -81,11 +92,11 @@ function ctrl!(mechanism, k)
 	return
 end
 
-# joint0 = mech.joints[1]
-# joint1 = mech.joints[2]
-# body0 = mech.origin
-# body1 = mech.bodies[1]
-# body2 = mech.bodies[2]
+joint0 = mech.joints[1]
+joint1 = mech.joints[2]
+body0 = mech.origin
+body1 = mech.bodies[1]
+body2 = mech.bodies[2]
 initialize!(mech, :snake)
 storage = simulate!(mech, 0.30, ctrl!, verbose=false, record=true)
 visualize(mech, storage, vis=vis)
@@ -110,11 +121,26 @@ dimcol = data_dim.(nodes)
 datajac1 = full_matrix(D, dimrow, dimcol)
 plot(Gray.(1e10 .* abs.(datajac1)))
 plot(Gray.(1e0 .* abs.(datajac1)))
+@test norm(datajac0 - datajac1, Inf) < 1e-7
+
 
 plot(Gray.(1e10 .* abs.(datajac0)))
 plot(Gray.(1e10 .* abs.(datajac1)))
 plot(Gray.(1e6 .* abs.(datajac0 - datajac1)))
 plot(Gray.(1e0 .* abs.(datajac0 - datajac1)))
+
+(datajac0 - datajac1)[4:9,7:8]
+datajac0[4:9,7:8]
+datajac1[4:9,7:8]
+
+
+joint0.spring
+joint1.spring
+
+joint0.damper
+joint1.damper
+
+8 + 5 + 19 + 19
 
 norm((datajac0 - datajac1)[1:5,1:3])
 norm((datajac0 - datajac1)[1:5,4:4])

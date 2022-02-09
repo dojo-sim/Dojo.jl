@@ -86,29 +86,38 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, bodya::Node{T}
         end
     end
     # spring and damper impulses contribution
-    for i = 1:Nc
-        λ = getλJoint(joint, i)
-        if bodyb.id == joint.child_id
-            ∇z2_aa += spring_parent_jacobian_configuration_parent(
-                joint.constraints[i], bodya, bodyb, timestep)
-            ∇z2_aa += damper_parent_jacobian_configuration_parent(
-                joint.constraints[i], bodya, bodyb, timestep)
-            ∇z2_ab += spring_parent_jacobian_configuration_child(
-                joint.constraints[i], bodya, bodyb, timestep)
-            ∇z2_ab += damper_parent_jacobian_configuration_child(
-                joint.constraints[i], bodya, bodyb, timestep)
-        elseif bodya.id == joint.child_id
-            ∇z2_aa += spring_child_jacobian_configuration_child(
-                joint.constraints[i], bodyb, bodya, timestep)
-            ∇z2_aa += damper_child_jacobian_configuration_child(
-                joint.constraints[i], bodyb, bodya, timestep)
-            ∇z2_ab += spring_child_jacobian_configuration_parent(
-                joint.constraints[i], bodyb, bodya, timestep)
-            ∇z2_ab += damper_child_jacobian_configuration_parent(
-                joint.constraints[i], bodyb, bodya, timestep)
+    if true || joint.spring
+        for i = 1:Nc
+            λ = getλJoint(joint, i)
+            if bodyb.id == joint.child_id
+                ∇z2_aa += spring_parent_jacobian_configuration_parent(
+                    joint.constraints[i], bodya, bodyb, timestep)
+                ∇z2_ab += spring_parent_jacobian_configuration_child(
+                    joint.constraints[i], bodya, bodyb, timestep)
+            elseif bodya.id == joint.child_id
+                ∇z2_aa += spring_child_jacobian_configuration_child(
+                    joint.constraints[i], bodyb, bodya, timestep)
+                ∇z2_ab += spring_child_jacobian_configuration_parent(
+                    joint.constraints[i], bodyb, bodya, timestep)
+            end
         end
     end
-
+    if true || joint.damper
+        for i = 1:Nc
+            λ = getλJoint(joint, i)
+            if bodyb.id == joint.child_id
+                ∇z2_aa += damper_parent_jacobian_configuration_parent(
+                    joint.constraints[i], bodya, bodyb, timestep)
+                ∇z2_ab += damper_parent_jacobian_configuration_child(
+                    joint.constraints[i], bodya, bodyb, timestep)
+            elseif bodya.id == joint.child_id
+                ∇z2_aa += damper_child_jacobian_configuration_child(
+                    joint.constraints[i], bodyb, bodya, timestep)
+                ∇z2_ab += damper_child_jacobian_configuration_parent(
+                    joint.constraints[i], bodyb, bodya, timestep)
+            end
+        end
+    end
 
     # TODO
     # # contact constraints impulses contribution
@@ -126,8 +135,8 @@ function body_constraint_jacobian_joint_data(mechanism::Mechanism{T}, body::Body
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, Δt)
     ∇u = Diagonal(SVector{6,T}(1,1,1,2,2,2)) * input_jacobian_control(mechanism, joint, body)
-    ∇spring = apply_spring(mechanism, joint, body, unitary=true)
-    ∇damper = apply_damper(mechanism, joint, body, unitary=true)
+    ∇spring = joint.spring ? apply_spring(mechanism, joint, body, unitary=true) : szeros(T,6,1)
+    ∇damper = joint.damper ? apply_damper(mechanism, joint, body, unitary=true) : szeros(T,6,1)
     return [∇u ∇spring ∇damper]
 end
 
