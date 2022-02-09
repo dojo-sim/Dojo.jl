@@ -49,6 +49,7 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, body::Body{T})
     ∇rot_q2 *= LVᵀmat(q2)
     ∇z2 = [∇tra_x2 ∇tra_q2;
            ∇rot_x2 ∇rot_q2]
+    # @show ∇z2
     # TODO
     # # constact constraints impulses contribution
     # @warn "000"
@@ -121,6 +122,28 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, bodya::Node{T}
     return [szeros(T,6,13) ∇z2_aa], [szeros(T,6,13) ∇z2_ab]
 end
 
+function body_constraint_jacobian_body_data(mechanism::Mechanism, body::Node{T},
+        contact::ContactConstraint{T,N,Nc}) where {T,N,Nc}
+    # Jacobian of the Body's dynamics constraints wrt the Body's data (x2, q2)
+    # this comes from the fact that the Contact Constraint force mapping depends
+    # on the Body's data (x2, q2)
+    timestep = mechanism.timestep
+
+    ∇z2 = szeros(T,6,6)
+    # contact constraints impulses contribution
+    for i = 1:Nc
+        λ = getλJoint(joint, i)
+        if bodyb.id == joint.child_id
+            ∇z2 += impulse_map_parent_jacobian_parent(joint.constraints[i],
+                bodya, bodyb, λ)
+        elseif bodya.id == joint.child_id
+            ∇z2 += impulse_map_child_jacobian_child(joint.constraints[i],
+                bodyb, bodya, λ)
+        end
+    end
+    return [szeros(T,6,13) ∇z2]
+end
+
 function body_constraint_jacobian_joint_data(mechanism::Mechanism{T}, body::Body{T},
     joint::JointConstraint{T}) where {T}
     Δt = mechanism.timestep
@@ -151,7 +174,7 @@ function body_constraint_jacobian_contact_data(mechanism::Mechanism, body::Body{
     ∇off = - ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ) * -∂vrotate∂p(offset, inv(q3))
 
     ∇X = szeros(T,3,Nd)
-    ∇Q = [∇cf ∇p ∇off]
+    ∇Q = -[∇cf ∇off ∇p] # minus sign coming from res = [-compμ; -constraint]
     return [∇X; ∇Q]
 end
 
@@ -172,7 +195,7 @@ function contact_constraint_jacobian_contact_data(mechanism::Mechanism, contact:
     ∇p = [bound.ainv3 * ∂vrotate∂p(bound.p, q3); szeros(T,1,3); bound.Bx * skew(vrotate(ϕ25, q3)) * ∂vrotate∂p(bound.p, q3)]
 
     ∇compμ = szeros(T,N½,Nd)
-    ∇g = [∇cf ∇p ∇off]
+    ∇g = -[∇cf ∇off ∇p] # minus sign coming from res = [-compμ; -constraint]
     return [∇compμ; ∇g]
 end
 
@@ -182,10 +205,11 @@ function contact_constraint_jacobian_body_data(mechanism::Mechanism, contact::Co
     ∇compμ = szeros(T,N½,Nd)
     ∇m = szeros(T,N½,1)
     ∇J = szeros(T,N½,6)
-    ∇z1 = szeros(T,N½,6)
-    ∇z3 = constraint_jacobian_configuration(mechanism, contact, body)
-    ∇z2 = ∇z3 * ∂i∂z(body, mechanism.timestep, attjac=true) # 4x7 * 7x6 = 4x6
-    ∇g = [∇m ∇J ∇z1 ∇z2]
+    ∇v15 = szeros(T,N½,3)
+    ∇ϕ15 = szeros(T,N½,3)
+    ∇z3 = - constraint_jacobian_configuration(mechanism, contact, body) # minus sign coming from res = [-compμ; -constraint]
+    ∇z2 = ∇z3 * integrator_jacobian_configuration(body, mechanism.timestep, attjac=true) # 4x7 * 7x6 = 4x6
+    ∇g = [∇m ∇J ∇v15 ∇ϕ15 ∇z2]
     return [∇compμ; ∇g]
 end
 

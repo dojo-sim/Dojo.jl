@@ -165,9 +165,43 @@ plot(Gray.(1e0 .* abs.(datajac1)))
 ################################################################################
 # Snake
 ################################################################################
-mech = get_slider(timestep=0.05, damper=0.3, spring=1.0, gravity=-0.5);
-initialize!(mech, :slider)
-storage = simulate!(mech, 0.30, ctrl!, verbose=false, record=true)
+mech = get_box(timestep=0.05, gravity=-9.81, mode=:particle);
+initialize!(mech, :box)
+storage = simulate!(mech, 1.0, ctrl!, verbose=false, record=true)
+visualize(mech, storage, vis=vis)
+
+# Finite Difference
+Nd = data_dim(mech, attjac=false)
+data0 = get_data0(mech)
+sol0 = get_solution0(mech)
+datajac0 = finitediff_data_jacobian(mech, data0, sol0)
+attjac0 = data_attitude_jacobian(mech)
+datajac0 *= attjac0
+plot(Gray.(1e10*abs.(datajac0)))
+plot(Gray.(1e0*abs.(datajac0)))
+
+# Analytical
+D = create_data_matrix(mech.joints, mech.bodies, mech.contacts)
+@benchmark jacobian_data!(D, mech)
+@profile jacobian_data!(D, mech)
+nodes = [mech.joints; mech.bodies; mech.contacts]
+dimrow = length.(nodes)
+dimcol = data_dim.(nodes)
+datajac1 = full_matrix(D, dimrow, dimcol)
+plot(Gray.(1e10 .* abs.(datajac1)))
+plot(Gray.(1e0 .* abs.(datajac1)))
+
+plot(Gray.(1e8 .* abs.(datajac0 - datajac1)))
+plot(Gray.(1e0 .* abs.(datajac0 - datajac1)))
+
+norm((datajac0 - datajac1), Inf)
+
+################################################################################
+# Snake
+################################################################################
+mech = get_box(timestep=0.05, gravity=-9.81);
+initialize!(mech, :box)
+storage = simulate!(mech, 1.0, ctrl!, verbose=false, record=true)
 visualize(mech, storage, vis=vis)
 
 # Finite Difference
@@ -183,6 +217,8 @@ plot(Gray.(1e0*abs.(datajac0)))
 # Analytical
 D = create_data_matrix(mech.joints, mech.bodies, mech.contacts)
 jacobian_data!(D, mech)
+# @benchmark jacobian_data!(D, mech)
+# @profile jacobian_data!(D, mech)
 nodes = [mech.joints; mech.bodies; mech.contacts]
 dimrow = length.(nodes)
 dimcol = data_dim.(nodes)
@@ -193,7 +229,47 @@ plot(Gray.(1e0 .* abs.(datajac1)))
 plot(Gray.(1e8 .* abs.(datajac0 - datajac1)))
 plot(Gray.(1e0 .* abs.(datajac0 - datajac1)))
 
-datajac0[6:8,1:3] .\ datajac1[6:8,1:3]
+norm((datajac0 - datajac1), Inf)
+
+datajac0[4:6, 25:27]
+
+
+
+
+datajac1[4:6, 25:27]
+
+
+
+
+datajac1[1:3, 9:9]
+
+norm((datajac0 - datajac1)[4:6, 1:27], Inf)
+norm((datajac0 - datajac1)[4:6, 28:34], Inf)
+norm((datajac0 - datajac1)[7:10, :], Inf)
+norm((datajac0 - datajac1)[11:14, 1:23], Inf)
+norm((datajac0 - datajac1)[11:14, 24:24], Inf)
+norm((datajac0 - datajac1)[11:14, 25:27], Inf)
+norm((datajac0 - datajac1)[11:14, 28:34], Inf)
+
+datajac0[4:6, 28:34]
+datajac1[4:6, 28:34]
+
+datajac0[11:14, 28:34]
+datajac1[11:14, 28:34]
+
+datajac0[11:14, 24:24]
+datajac1[11:14, 24:24]
+mech.contacts[1].constraints[1].ainv3
+mech.bodies[1].state.x2[1] += [0,0,0.1]
+constraint(mech, mech.contacts[1])
+
+data_dim(mech.joints[1])
+data_dim(mech.bodies[1])
+data_dim(mech.contacts[1])
+
+length(mech.joints[1])
+length(mech.bodies[1])
+length(mech.contacts[1])
 
 
 # Test

@@ -23,7 +23,6 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N
     body = get_body(mechanism, contact.parent_id)
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, mechanism.timestep)
-
     constraint(bound, contact.primal[2], contact.dual[2], x3, q3, v25, ϕ25)
 end
 
@@ -127,4 +126,3 @@ end
 neutral_vector(bound::NonlinearContact{T,N}) where {T,N} = [sones(T, 2); szeros(T, Int(N/2) -2)]
 
 cone_degree(bound::NonlinearContact) = 2
-
