@@ -50,7 +50,7 @@ jointtypes = [
 ################################################################################
 mech = get_mechanism(:box, timestep=timestep0, gravity=gravity0, contact = false)
 v0 = [1,2,3.0]
-ω0 = [1,1,1.0]
+ω0 = [10,10,10.0]
 initialize!(mech, :box, v = v0, ω = ω0)
 
 storage = simulate!(mech, 5.0, nocontrol!, record = true, verbose = false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
@@ -102,16 +102,18 @@ end
 # with spring and damper
 # with control
 ################################################################################
-spring0 = 1.0
-damper0 = 1.0
+spring0 = 0.0
+damper0 = 0.0
 mech = get_mechanism(:humanoid, timestep=timestep0, gravity=gravity0, spring=spring0, damper=damper0, contact = false)
 initialize!(mech, :humanoid)
 bodies = collect(mech.bodies)
-set_velocity!.(bodies, ω = 1e-0rand(3))
+set_velocity!.(bodies,  ω = 1e-1ones(3))
+    # ω = 1e-0rand(3))
 
-
-storage = simulate!(mech, 10.0, controller!, record = true, verbose = false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
-# visualize(mech, storage, vis = vis)
+storage = simulate!(mech, 10.0, 
+    # controller!, 
+    record = true, verbose = false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+visualize(mech, storage, vis = vis)
 
 m0 = momentum(mech, storage)[1:end]
 mlin0 = [Vector(m-m0[1])[1:3] for m in m0]

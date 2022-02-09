@@ -22,7 +22,7 @@ function momentum(mechanism::Mechanism{T}, body::Body{T}) where T
     for (i, joint) in enumerate(mechanism.joints)
         if body.id ∈ [joint.parent_id; joint.child_id]
 
-            f_joint = impulse_map(mechanism, joint, body) * joint.variables[2]  # computed at 1.5
+            f_joint = impulse_map(mechanism, joint, body) * joint.variables[2] # computed at 1.5
             joint.spring && (f_joint += apply_spring(mechanism, joint, body)) # computed at 1.5
             joint.damper && (f_joint += apply_damper(mechanism, joint, body)) # computed at 1.5
 
@@ -31,7 +31,7 @@ function momentum(mechanism::Mechanism{T}, body::Body{T}) where T
         end
     end
 
-    p1 = [p_linear_body; rotation_matrix(q2) * p_angular_body * sqrt(2) / 2]
+    p1 = [p_linear_body; rotation_matrix(q2) * p_angular_body * sqrt(4) / 4]
     return p1
 end
 
@@ -49,7 +49,7 @@ function momentum(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, storage::Storage{T,Ns}, t
         r = storage.x[i][t] - com
         v_body = p_linear_body[i] ./ body.mass
         p_angular += p_angular_body[i]
-        p_angular += cross(r, body.mass * (v_body - v_com)) * sqrt(2) / 2 #TODO maybe there is cleaner way to handle the factor 2
+        p_angular += cross(r, body.mass * (v_body - v_com) * sqrt(4) / 4) #TODO maybe there is cleaner way to handle the factor 2
     end
 
     return [p_linear; p_angular] # in world frame

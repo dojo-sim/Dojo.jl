@@ -33,9 +33,9 @@ Translational2{T} = Translational{T,2} where T
 Translational3{T} = Translational{T,3} where T
 
 @inline function constraint(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
-    vertices = joint.vertices
-    e = vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
-    return constraint_mask(joint) * e
+    # vertices = joint.vertices
+    # e = vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
+    return constraint_mask(joint) * position_error(joint, xa, qa, xb, qb)#* e
 end
 
 @inline function constraint_jacobian_configuration(joint::Translational{T,Nλ,0,N}, η) where {T,Nλ,N}
@@ -43,17 +43,18 @@ end
 end
 
 @inline function constraint_jacobian_parent(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
-    point2 = xb + vrotate(joint.vertices[2], qb)
-    X = -VLᵀmat(qa) * RVᵀmat(qa)
-    Q = ∂vrotate∂q(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * Tmat()
-    Q += ∂vrotate∂p(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * -∂vrotate∂q(joint.vertices[1], qa)
-    return constraint_mask(joint) * [X Q]
+    # point2 = xb + vrotate(joint.vertices[2], qb)
+    # X = -VLᵀmat(qa) * RVᵀmat(qa)
+    # Q = ∂vrotate∂q(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * Tmat()
+    # Q += ∂vrotate∂p(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * -∂vrotate∂q(joint.vertices[1], qa)
+    return constraint_mask(joint) * position_error_jacobian_configuration(:parent, joint, xa, qa, xb, qb, attjac=false)#* [X Q]
 end
 
 @inline function constraint_jacobian_child(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
-    X = VLᵀmat(qa) * RVᵀmat(qa)
-    Q = 2 * VLᵀmat(qa) * Rmat(qa) * Rᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
-    return constraint_mask(joint) * [X Q]
+    # X = VLᵀmat(qa) * RVᵀmat(qa)
+    # Q = 2 * VLᵀmat(qa) * Rmat(qa) * Rᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
+    # return constraint_mask(joint) * [X Q]
+    return constraint_mask(joint) * position_error_jacobian_configuration(:child, joint, xa, qa, xb, qb, attjac=false)#* [X Q]
 end
 
 ################################################################################
@@ -61,28 +62,30 @@ end
 ################################################################################
 function impulse_transform_parent(joint::Translational{T}, xa::AbstractVector,
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
-    X = -1.0 * rotation_matrix(qa)
-    # pb_a = rotation_matrix(inv(qa)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
-    # ca_a = rotation_matrix(inv(qa)) * (xa) # body a com
-    # capb_a = pb_a - ca_a
-    # Q = - 1.0 * skew(capb_a)
+    # X = -1.0 * rotation_matrix(qa)
+    # # pb_a = rotation_matrix(inv(qa)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
+    # # ca_a = rotation_matrix(inv(qa)) * (xa) # body a com
+    # # capb_a = pb_a - ca_a
+    # # Q = - 1.0 * skew(capb_a)
 
-    capb_a = rotation_matrix(inv(qa)) * (xb - xa + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
-    Q = - 1.0 * skew(capb_a)
-    return [X; Q]
+    # capb_a = rotation_matrix(inv(qa)) * (xb - xa + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
+    # Q = - 1.0 * skew(capb_a)
+    # return [X; Q]
+    cat(I(3), 0.5 * I(3), dims=(1,2)) * transpose(position_error_jacobian_configuration(:parent, joint, xa, qa, xb, qb, attjac=true))
 end
 
 function impulse_transform_child(joint::Translational{T}, xa::AbstractVector,
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
-    X = rotation_matrix(qa)
-    # pb_b = rotation_matrix(inv(qb)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
-    # cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
-    # cbpb_b = pb_b - cb_b
-    # Q = skew(cbpb_b) * rotation_matrix(inv(qb) * qa)
+    # X = rotation_matrix(qa)
+    # # pb_b = rotation_matrix(inv(qb)) * (xb + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
+    # # cb_b = rotation_matrix(inv(qb)) * (xb) # body b com
+    # # cbpb_b = pb_b - cb_b
+    # # Q = skew(cbpb_b) * rotation_matrix(inv(qb) * qa)
 
-    cbpb_w = rotation_matrix(qb) * joint.vertices[2] # body b kinematics point
-    Q = rotation_matrix(inv(qb)) * skew(cbpb_w) * rotation_matrix(qa)
-    return [X; Q]
+    # cbpb_w = rotation_matrix(qb) * joint.vertices[2] # body b kinematics point
+    # Q = rotation_matrix(inv(qb)) * skew(cbpb_w) * rotation_matrix(qa)
+    # return [X; Q]
+    cat(I(3), 0.5 * I(3), dims=(1,2)) * transpose(position_error_jacobian_configuration(:child, joint, xa, qa, xb, qb, attjac=true))
 end
 
 ################################################################################

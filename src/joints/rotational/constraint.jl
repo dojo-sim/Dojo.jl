@@ -44,9 +44,10 @@ end
 end
 
 @inline function constraint_jacobian(jacobian_relative::Symbol, joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
-    X = szeros(T, 3, 3)
-    Q = Vmat() * orientation_error_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, attjac=false)
-    return constraint_mask(joint) * [X Q]
+    # X = szeros(T, 3, 3)
+    # Q = Vmat() * 
+    X, Q = orientation_error_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, attjac=false)
+    return constraint_mask(joint) * [X Vmat() * Q]
 end
 
 @inline function constraint_jacobian_parent(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
@@ -69,27 +70,31 @@ end
 # Impulse Transform
 ################################################################################
 function impulse_transform_parent(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
-    X = szeros(T, 3, 3)
-    # QT = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T) * LVᵀmat(qa)
-    Q = VLᵀmat(qa) * Tmat(T) * Rᵀmat(qb) * RVᵀmat(joint.qoffset)
+    # X = szeros(T, 3, 3)
+    # # QT = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T) * LVᵀmat(qa)
+    # Q = VLᵀmat(qa) * Tmat(T) * Rᵀmat(qb) * RVᵀmat(joint.qoffset)
 
-    # τ = T(A->B)_a
-    # Fτa = [Fa, τa] = [0, T(B->A)_a]
-    # Q = -SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
-    # Q = -rotation_matrix(joint.qoffset)
-    return [X; Q]
+    # # τ = T(A->B)_a
+    # # Fτa = [Fa, τa] = [0, T(B->A)_a]
+    # # Q = -SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
+    # # Q = -rotation_matrix(joint.qoffset)
+    # return [X; Q]
+    X, Q = orientation_error_jacobian_configuration(:parent, joint, xa, qa, xb, qb, attjac=true)
+    return transpose([X Vmat() * Q])
 end
 
 function impulse_transform_child(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
-    X = szeros(T, 3, 3)
-    # QT = VRᵀmat(joint.qoffset) * Lᵀmat(qa) * LVᵀmat(qb)
-    Q = VLᵀmat(qb) * Lmat(qa) * RVᵀmat(joint.qoffset)
+    # X = szeros(T, 3, 3)
+    # # QT = VRᵀmat(joint.qoffset) * Lᵀmat(qa) * LVᵀmat(qb)
+    # Q = VLᵀmat(qb) * Lmat(qa) * RVᵀmat(joint.qoffset)
 
-    # τ = T(A->B)_a
-    # Fτb = [Fb, τb] = [0, T(A->B)_b]
-    # Q = rotation_matrix(inv(qb) * qa)
-    # Q = rotation_matrix(inv(qb) * qa * joint.qoffset)
-    return [X; Q]
+    # # τ = T(A->B)_a
+    # # Fτb = [Fb, τb] = [0, T(A->B)_b]
+    # # Q = rotation_matrix(inv(qb) * qa)
+    # # Q = rotation_matrix(inv(qb) * qa * joint.qoffset)
+    # return [X; Q]
+    X, Q = orientation_error_jacobian_configuration(:child, joint, xa, qa, xb, qb, attjac=true)
+    return transpose([X Vmat() * Q])
 end
 
 ################################################################################

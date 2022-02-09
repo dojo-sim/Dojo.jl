@@ -10,16 +10,20 @@
 end
 
 function orientation_error_jacobian_configuration(jacobian_relative::Symbol,
-        joint::Rotational, xa::AbstractVector, qa::UnitQuaternion,
-        xb::AbstractVector, qb::UnitQuaternion; attjac::Bool=true)
-	if jacobian_relative == :parent
+        joint::Rotational, xa::AbstractVector{T}, qa::UnitQuaternion,
+        xb::AbstractVector{T}, qb::UnitQuaternion; attjac::Bool=true) where T
+	
+    X = szeros(T, 3, 3)
+
+    if jacobian_relative == :parent
 		Q = Lᵀmat(joint.qoffset) * Rmat(qb) * Tmat()
 		attjac && (Q *= LVᵀmat(qa))
     elseif jacobian_relative == :child
 		Q = Lᵀmat(joint.qoffset) * Lᵀmat(qa)
 		attjac && (Q *= LVᵀmat(qb))
 	end
-    return Q
+
+    return X, Q
 end
 
 ################################################################################
