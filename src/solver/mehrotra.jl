@@ -87,12 +87,12 @@ function solver_status(mechanism::Mechanism, α, rvio, bvio, n, μtarget, underc
     res = norm(fv, Inf)
     println(
         "n ", n,
-        "   bvio", scn(bvio),
-        "   rvio", scn(rvio),
-        "   α", scn(α),
-        "   μ", scn(μtarget),
-        "   |res|∞", scn(res),
-        "   |Δ|∞", scn(Δvar),
+        "   bvio", scn(bvio, digits=0),
+        "   rvio", scn(rvio, digits=0),
+        "   α", scn(α, digits=0),
+        "   μ", scn(μtarget, digits=0),
+        "   |res|∞", scn(res, digits=0),
+        "   |Δ|∞", scn(Δvar, digits=0),
         # "   ucut", scn(undercut),
         )
 end

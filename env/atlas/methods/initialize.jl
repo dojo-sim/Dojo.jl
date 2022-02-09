@@ -1,6 +1,6 @@
 
 function get_atlas(; timestep::T=0.01, gravity=-9.81, cf::T=0.8, spring=0.0,
-        damper::T=0.0, contact::Bool=true, model_type::Symbol=:simple) where T
+        damper::T=0.0, contact::Bool=true, body_contact::Bool=false, model_type::Symbol=:simple) where T
     path = joinpath(@__DIR__, "../deps/atlas_$(string(model_type)).urdf")
     mech = Mechanism(path, !(model_type==:armless), T, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
 
@@ -15,28 +15,101 @@ function get_atlas(; timestep::T=0.01, gravity=-9.81, cf::T=0.8, spring=0.0,
     end
 
     if contact
+        contact = []
         origin = Origin{T}()
         bodies = Vector{Body{T}}(collect(mech.bodies))
         eqs = Vector{JointConstraint{T}}(collect(mech.joints))
 
         # Foot contact
-        contacts = [
-            [-0.1; -0.05; 0.0-0.0095],
-            [+0.1; -0.05; 0.0-0.0095],
-            [-0.1; +0.05; 0.0-0.0095],
-            [+0.1; +0.05; 0.0-0.0095],
+        locations = [
+            [-0.08; -0.04; 0.015],
+            [+0.12; -0.02; 0.015],
+            [-0.08; +0.04; 0.015],
+            [+0.12; +0.02; 0.015],
             ]
-        n = length(contacts)
+        n = length(locations)
         normal = [[0;0;1.0] for i = 1:n]
-        offset = [[0.0; 0.0; 0.01] for i = 1:n]
-        cf = cf * ones(T, n)
+        offset = [[0.0; 0.0; 0.025] for i = 1:n]
+        cfs = cf * ones(T, n)
         names = ["RR", "FR", "RL", "RR"]
 
-        foot1_contacts = contact_constraint(get_body(mech, :l_foot), normal, cf=cf, p=contacts, offset=offset, names=[Symbol("l_" .* name) for name in names])
-        foot2_contacts = contact_constraint(get_body(mech, :r_foot), normal, cf=cf, p=contacts, offset=offset, names=[Symbol("r_" .* name) for name in names])
+        foot_contacts1 = contact_constraint(get_body(mech, :l_foot), normal, cf=cfs, p=locations, offset=offset, names=[Symbol("l_" .* name) for name in names])
+        foot_contacts2 = contact_constraint(get_body(mech, :r_foot), normal, cf=cfs, p=locations, offset=offset, names=[Symbol("r_" .* name) for name in names])
+        contacts = [foot_contacts1; foot_contacts2]
+
+        if body_contact
+            # Hands 
+            location = [0.0; 0.0; 0.0]
+            normal = [0.0; 0.0; 1.0]
+            offset = [0.0; 0.0; 0.06]
+            name = "hand"
+
+            push!(contacts, contact_constraint(get_body(mech, :l_hand), normal, cf=cf, p=location, offset=offset, name=Symbol("l_" .* name)))
+            push!(contacts, contact_constraint(get_body(mech, :r_hand), normal, cf=cf, p=location, offset=offset, name=Symbol("r_" .* name)))
+
+            # knee 
+            location = [0.025; 0.0; 0.175]
+            normal = [0.0; 0.0; 1.0]
+            offset = [0.0; 0.0; 0.075]
+            name = "knee"
+
+            push!(contacts, contact_constraint(get_body(mech, :l_lleg), normal, cf=cf, p=location, offset=offset, name=Symbol("l_" .* name)))
+            push!(contacts, contact_constraint(get_body(mech, :r_lleg), normal, cf=cf, p=location, offset=offset, name=Symbol("r_" .* name)))
+
+            # clavicals 
+            location_l = [0.0; -0.05; -0.075]
+            location_r = [0.0; -0.05; -0.075]
+
+            normal = [0.0; 0.0; 1.0]
+            offset = [0.0; 0.0; 0.11]
+            name = "clav"
+
+            push!(contacts, contact_constraint(get_body(mech, :l_clav), normal, cf=cf, p=location_l, offset=offset, name=Symbol("l_" .* name)))
+            push!(contacts, contact_constraint(get_body(mech, :r_clav), normal, cf=cf, p=location_r, offset=offset, name=Symbol("r_" .* name)))
+
+             # pelvis
+             location = [0.05; 0.0; -0.1]
+             normal = [0.0; 0.0; 1.0]
+             offset = [0.0; 0.0; 0.19]
+             name = "pelvis"
+ 
+             push!(contacts, contact_constraint(get_body(mech, :pelvis), normal, cf=cf, p=location, offset=offset, name=Symbol(name)))
+        
+             # elbow 
+             location = [0.0; -0.185; 0.0]
+             normal = [0.0; 0.0; 1.0]
+             offset = [0.0; 0.0; 0.085]
+             name = "elbow"
+
+             push!(contacts, contact_constraint(get_body(mech, :l_uarm), normal, cf=cf, p=location, offset=offset, name=Symbol("l_" .* name)))
+             push!(contacts, contact_constraint(get_body(mech, :r_uarm), normal, cf=cf, p=location, offset=offset, name=Symbol("r_" .* name)))
+
+              # head
+              location = [0.0; 0.0; 0.0]
+              normal = [0.0; 0.0; 1.0]
+              offset = [0.0; 0.0; 0.175]
+              name = "head"
+ 
+              push!(contacts, contact_constraint(get_body(mech, :head), normal, cf=cf, p=location, offset=offset, name=Symbol(name)))
+
+              # backpack
+              location = [-0.095; 0.0; 0.25]
+              normal = [0.0; 0.0; 1.0]
+              offset = [0.0; 0.0; 0.15]
+              name = "backpack_bottom"
+ 
+              push!(contacts, contact_constraint(get_body(mech, :utorso), normal, cf=cf, p=location, offset=offset, name=Symbol(name)))
+
+              location = [-0.095; 0.0; -0.2]
+              normal = [0.0; 0.0; 1.0]
+              offset = [0.0; 0.0; 0.15]
+              name = "backpack_top"
+ 
+              push!(contacts, contact_constraint(get_body(mech, :utorso), normal, cf=cf, p=location, offset=offset, name=Symbol(name)))
+        end
 
         set_position!(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [0;0;0.9385;0.;0.;0.])
-        mech = Mechanism(origin, bodies, eqs, [foot1_contacts; foot2_contacts], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
+        mech = Mechanism(origin, bodies, eqs, contacts, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
     return mech
 end

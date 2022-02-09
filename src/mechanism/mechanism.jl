@@ -67,8 +67,8 @@ Base.length(mechanism::Mechanism{T,N}) where {T,N} = N
 
 function residual_dimension(mechanism::Mechanism)
     return sum(Vector{Int}(length.(mechanism.joints))) +
-    + sum(Vector{Int}(length.(mechanism.bodies)))
-    + sum(Vector{Int}(length.(mechanism.contacts)))
+    	sum(Vector{Int}(length.(mechanism.bodies))) +
+    	sum(Vector{Int}(length.(mechanism.contacts)))
 end
 
 # gravity
@@ -112,8 +112,8 @@ function set_state!(mechanism::Mechanism, z::AbstractVector)
 		initialize_state!(mechanism) # set x1, q1 and zeroes out F2 τ2
     end
 	# warm-start solver
-	for body in mechanism.bodies 
-		set_solution!(body) 
+	for body in mechanism.bodies
+		set_solution!(body)
 	end
 end
 
@@ -180,7 +180,7 @@ function inverse_control_error(mechanism, x, x₊, u; ϵtol = 1e-5)
 	return err
 end
 
-# velocity 
+# velocity
 function velocity_index(mechanism::Mechanism{T,Nn,Ne}) where {T,Nn,Ne}
     ind = []
     off = 0
@@ -208,5 +208,3 @@ function set_spring_offset!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVect
 	end
 	return nothing
 end
-
-

@@ -118,7 +118,8 @@ Xa = FiniteDiff.finite_difference_jacobian(a -> position_error(tra0, a, qa, xb, 
 Qa = FiniteDiff.finite_difference_jacobian(a -> position_error(tra0, xa, UnitQuaternion(a..., false), xb, qb, rotate=true), vector(qa)) * LVᵀmat(qa)
 transpose(impulse_transform_parent(tra0, xa, qa, xb, qb))
 
-(2 * VLᵀmat(qa) * (Lmat(UnitQuaternion(joint0.constraints[1].vertices[2])) - Lmat(UnitQuaternion(xa))))
+-VLᵀmat(qa) * RVᵀmat(qa)
+(2.0 * VLᵀmat(qa) * (Lmat(UnitQuaternion(xb + vrotate(joint0.constraints[1].vertices[2], qb))) - Lmat(UnitQuaternion(xa)))) * LVᵀmat(qa)
 
 position_error_jacobian_configuration(:child, tra0, xa, qa, xb, qb)
 Xb = FiniteDiff.finite_difference_jacobian(b -> position_error(tra0, xa, qa, b, qb, rotate=true), xb)

@@ -1,8 +1,8 @@
 function get_quadruped(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, spring=0.0,
-        damper=0.0, contact::Bool=true, body_contact::Bool=false, limits::Bool=false,
+        damper=0.0, contact::Bool=true, body_contact::Bool=true, limits::Bool=true,
         path=joinpath(@__DIR__, "../deps/quadruped.urdf"),
-        joint_limits=[[-0.5, -0.5, -0.5,],
-                      [ 0.5,  0.5,  0.5,]]) where T
+        joint_limits=[[-0.5, -0.5, -2.5,],
+                      [ 0.5,  1.5, -1.0,]]) where T
 
     mech = Mechanism(path, true, T, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     # Adding springs and dampers

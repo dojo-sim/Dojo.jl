@@ -130,13 +130,13 @@ x_sol, u_sol = IterativeLQR.get_trajectory(prob)
 @show prob.s_data.iter[1]
 @show norm(goal(prob.m_data.x[T], zeros(0), zeros(0)), Inf)
 @show norm(vcat([ctrl_lmt(prob.m_data.x[t], prob.m_data.u[t], zeros(0)) for t=1:T-1]...), Inf)
-
+jldsave(joinpath(@__DIR__, "quadruped_4_steps.jld2"), x_sol=x_sol, u_sol=u_sol)
 
 # ## visualize
 x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]
 visualize(env, x_view)
 
-set_camera!(env.vis, cam_pos=[0,-3,2], zoom=3)
+set_camera!(env.vis, cam_pos=[0,-3,0], zoom=3)
 
 
 set_floor!(env.vis, x=3.0, y=1.0, z=0.01, alt=-0.015, color=RGBA(0,0.0,0.0,1.0))
