@@ -25,6 +25,7 @@
     bodyb.state.q2[1] = qb
     # impulse_map_parent_jacobian_parent
     J0 = Dojo.impulse_map_parent_jacobian_parent(tra0, bodya, bodyb, λ)
+
     attjac = cat(I(3),Dojo.LVᵀmat(qa), dims=(1,2))
     J1 = FiniteDiff.finite_difference_jacobian(
         z -> Dojo.impulse_map_parent(tra0, z[1:3], UnitQuaternion(z[4:7]..., false), xb, qb, 0)*λ,

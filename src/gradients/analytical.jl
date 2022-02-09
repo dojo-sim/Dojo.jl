@@ -265,8 +265,8 @@ function ∂body∂z(body::Body{T}, timestep::T; attjac::Bool = true) where T
 
     AposR = [-rotational_integrator_jacobian_orientation(q2, ϕ25, timestep, attjac = attjac) szeros(4,3)]
 
-    rot_q1(q) = -4 / timestep * LVᵀmat(q2)' * Lmat(UnitQuaternion(q..., false)) * Vᵀmat() * body.inertia * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(q2)
-    rot_q2(q) = -4 / timestep * LVᵀmat(UnitQuaternion(q..., false))' * Tmat() * Rmat(next_orientation(UnitQuaternion(q..., false), state.ϕsol[2], timestep))' * Vᵀmat() * body.inertia * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(next_orientation(UnitQuaternion(q..., false), state.ϕsol[2], timestep)) + -4 / timestep * LVᵀmat(UnitQuaternion(q..., false))' * Lmat(next_orientation(UnitQuaternion(q..., false), -state.ϕ15, timestep)) * Vᵀmat() * body.inertia * Vmat() * Lmat(next_orientation(UnitQuaternion(q..., false), -state.ϕ15, timestep))' * q
+    rot_q1(q) = -2.0 / timestep * LVᵀmat(q2)' * Lmat(UnitQuaternion(q..., false)) * Vᵀmat() * body.inertia * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(q2)
+    rot_q2(q) = -2.0 / timestep * LVᵀmat(UnitQuaternion(q..., false))' * Tmat() * Rmat(next_orientation(UnitQuaternion(q..., false), state.ϕsol[2], timestep))' * Vᵀmat() * body.inertia * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(next_orientation(UnitQuaternion(q..., false), state.ϕsol[2], timestep)) + -2.0 / timestep * LVᵀmat(UnitQuaternion(q..., false))' * Lmat(next_orientation(UnitQuaternion(q..., false), -state.ϕ15, timestep)) * Vᵀmat() * body.inertia * Vmat() * Lmat(next_orientation(UnitQuaternion(q..., false), -state.ϕ15, timestep))' * q
 
     dynR_ϕ15 = -1.0 * FiniteDiff.finite_difference_jacobian(rot_q1, vector(q1)) * rotational_integrator_jacobian_velocity(q2, -state.ϕ15, timestep)
     dynR_q2 = FiniteDiff.finite_difference_jacobian(rot_q2, vector(q2))
@@ -283,7 +283,7 @@ function ∂body∂u(body::Body{T}, timestep) where T
     BposT = [Z3 Z3]
     BvelT = [-I Z3]
     BposR = [Z43 Z43]
-    BvelR = [Z3 -2.0 * I]
+    BvelR = [Z3 -1.0 * I]
     return [BposT;BvelT;BposR;BvelR]
 end
 

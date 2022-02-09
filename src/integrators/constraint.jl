@@ -13,8 +13,8 @@
     # dynamics
     D1x = - 1.0 / timestep * mass * (x2 - x1) - 0.5 * timestep * mass * gravity
     D2x =   1.0 / timestep * mass * (x3 - x2) - 0.5 * timestep * mass * gravity
-    D1q = -4.0 / timestep * LVᵀmat(q2)' * Lmat(q1) * Vᵀmat() * inertia * Vmat() * Lmat(q1)' * vector(q2)
-    D2q = -4.0 / timestep * LVᵀmat(q2)' * Tmat() * Rmat(q3)' * Vᵀmat() * inertia * Vmat() * Lmat(q2)' * vector(q3)
+    D1q = -2.0 / timestep * LVᵀmat(q2)' * Lmat(q1) * Vᵀmat() * inertia * Vmat() * Lmat(q1)' * vector(q2)
+    D2q = -2.0 / timestep * LVᵀmat(q2)' * Tmat() * Rmat(q3)' * Vᵀmat() * inertia * Vmat() * Lmat(q2)' * vector(q3)
 
     dynT = D2x + D1x
     dynR = D2q + D1q
@@ -22,7 +22,7 @@
     state.d = [dynT; dynR]
 
     # inputs
-    state.d -= [state.F2[1]; 2.0 * state.τ2[1]]
+    state.d -= [state.F2[1]; 1.0 * state.τ2[1]]
 
     # impulses
     for id in connections(mechanism.system, body.id)
@@ -46,7 +46,7 @@ end
     # dynamics
     dynT = I(3) * mass / timestep
 
-    rot_q3(q) = -4 / timestep * LVᵀmat(q2)' * Tmat() * Rmat(UnitQuaternion(q..., false))' * Vᵀmat() * inertia * Vmat() * Lmat(q2)' * q
+    rot_q3(q) = -2.0 / timestep * LVᵀmat(q2)' * Tmat() * Rmat(UnitQuaternion(q..., false))' * Vᵀmat() * inertia * Vmat() * Lmat(q2)' * q
     dynR = FiniteDiff.finite_difference_jacobian(rot_q3, vector(q3)) #* rotational_integrator_jacobian_velocity(q2, state.ϕsol[2], timestep)
 
     Z33 = szeros(T, 3, 3)

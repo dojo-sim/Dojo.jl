@@ -99,8 +99,7 @@ function impulse_transform_parent_jacobian_parent(joint::Translational{T,Nλ,0},
     ∇Xqa = -∂qrotation_matrix(qa, p) * LVᵀmat(qa)
     ∇Qxa =  ∂pskew(p) * rotation_matrix(inv(qa))
     ∇Qqa = -∂pskew(p) * ∂qrotation_matrix_inv(qa, xb - xa + rotation_matrix(qb) * joint.vertices[2]) * LVᵀmat(qa)
-    return [Z3   ∇Xqa;
-            ∇Qxa ∇Qqa]
+    return [Z3   ∇Xqa; ∇Qxa ∇Qqa]
 end
 
 function impulse_transform_parent_jacobian_child(joint::Translational{T,Nλ,0},
@@ -110,8 +109,7 @@ function impulse_transform_parent_jacobian_child(joint::Translational{T,Nλ,0},
 
     ∇Qxb = -∂pskew(p) * rotation_matrix(inv(qa))
     ∇Qqb = -∂pskew(p) * rotation_matrix(inv(qa)) * ∂qrotation_matrix(qb, joint.vertices[2]) * LVᵀmat(qb)
-    return [Z3   Z3;
-            ∇Qxb ∇Qqb]
+    return [Z3   Z3; ∇Qxb ∇Qqb]
 end
 
 function impulse_transform_child_jacobian_parent(joint::Translational{T,Nλ,0},
@@ -122,8 +120,7 @@ function impulse_transform_child_jacobian_parent(joint::Translational{T,Nλ,0},
 
     ∇Xqa = ∂qrotation_matrix(qa, p) * LVᵀmat(qa)
     ∇Qqa = rotation_matrix(inv(qb)) * skew(cbpb_w) * ∂qrotation_matrix(qa, p) * LVᵀmat(qa)
-    return [Z3 ∇Xqa;
-            Z3 ∇Qqa]
+    return [Z3 ∇Xqa; Z3 ∇Qqa]
 end
 
 function impulse_transform_child_jacobian_child(joint::Translational{T,Nλ,0},
@@ -134,6 +131,5 @@ function impulse_transform_child_jacobian_child(joint::Translational{T,Nλ,0},
     ∇Qqb = ∂qrotation_matrix_inv(qb, skew(cbpb_w) * rotation_matrix(qa) * p)
     ∇Qqb += rotation_matrix(inv(qb)) * ∂pskew(rotation_matrix(qa) * p) * ∂qrotation_matrix(qb, joint.vertices[2])
     ∇Qqb *= LVᵀmat(qb)
-    return [Z3 Z3;
-            Z3 ∇Qqb]
+    return [Z3 Z3; Z3 ∇Qqb]
 end
