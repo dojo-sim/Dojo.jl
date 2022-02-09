@@ -45,27 +45,76 @@ end
     return
 end
 
+function impulse_map_jacobian_configuration(mechanism, body::Body, contact::ContactConstraint{T}) where T
+    x, q = next_configuration(body.state, mechanism.timestep)
+    bound = contact.constraints[1]
+    X = force_mapping(bound)
+    λ = X' * contact.dual[2]
+
+    # Q = skew(bound.p - vrotate(bound.offset, inv(q))) * VRmat(q) * LᵀVᵀmat(q) * λ
+    ∇Q = skew(bound.p - vrotate(bound.offset, inv(q))) * VRmat(q) * ∂qLᵀVᵀmat(λ)
+    ∇Q += skew(bound.p - vrotate(bound.offset, inv(q))) * ∂qVRmat(LᵀVᵀmat(q) * λ)
+    ∇Q += -∂pskew(VRmat(q) * LᵀVᵀmat(q) * λ) * ∂qrotation_matrix_inv(q, bound.offset)
+    # ∇Q *= LVᵀmat(q)
+    Z3 = szeros(T,3,3)
+    Z4 = szeros(T,3,4)
+    return [Z3 Z4;
+            Z3 ∇Q]
+end
+
+# ddd0 = impulse_map_jacobian_configuration(mech, mech.contacts[1], mech.bodies[1]) * integrator_jacobian_velocity(mech.bodies[1], mech.timestep)
+# ddd1 = impulse_map_jacobian_velocity(mech, mech.contacts[1], mech.bodies[1])
+# ddd0 - ddd1
+
+# @inline function impulse_map_jacobian_velocity(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}, body::Body) where {T,N,Nc,Cs,N½}
+#     timestep = mechanism.timestep
+#     x3, q3 = next_configuration(body.state, timestep)
+#     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
+#     D = szeros(T,6,6)
+#     for i=1:Nc
+#         bnd = contact.constraints[i]
+#         p = bnd.p
+#         offset = bnd.offset
+#
+#         X = force_mapping(bnd)
+#         λ = X' * contact.dual[2]
+#
+#         ∇ = ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * λ) * -∂vrotate∂q(offset, inv(q3)) * Tmat()
+#         ∇ += skew(p - vrotate(offset, inv(q3))) * ∂qVRmat(LᵀVᵀmat(q3) * λ)
+#         ∇ += skew(p - vrotate(offset, inv(q3))) * VRmat(q3) * ∂qLᵀVᵀmat(λ)
+#         ∇ *= rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)
+#         D = [szeros(T,6,3) [szeros(T,3,3); ∇]]
+#     end
+#     return D
+# end
 @inline function impulses_jacobian_velocity!(mechanism, body::Body, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
     timestep = mechanism.timestep
-    x3, q3 = next_configuration(body.state, timestep)
-    x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
-
-    for i=1:Nc
-        bnd = contact.constraints[i]
-        p = bnd.p
-        offset = bnd.offset
-
-        X = force_mapping(bnd)
-        λ = X' * contact.dual[2]
-
-        ∇ = ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * λ) * -∂vrotate∂q(offset, inv(q3)) * Tmat()
-        ∇ += skew(p - vrotate(offset, inv(q3))) * ∂qVRmat(LᵀVᵀmat(q3) * λ)
-        ∇ += skew(p - vrotate(offset, inv(q3))) * VRmat(q3) * ∂qLᵀVᵀmat(λ)
-        ∇ *= rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)
-        body.state.D -= [szeros(T,6,3) [szeros(T,3,3); ∇]]
-    end
+    body.state.D -= impulse_map_jacobian_configuration(mechanism, body, contact) *
+        integrator_jacobian_velocity(body, timestep)
     return
 end
+
+# @inline function impulses_jacobian_velocity!(mechanism, body::Body, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+#     timestep = mechanism.timestep
+#     x3, q3 = next_configuration(body.state, timestep)
+#     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
+#
+#     for i=1:Nc
+#         bnd = contact.constraints[i]
+#         p = bnd.p
+#         offset = bnd.offset
+#
+#         X = force_mapping(bnd)
+#         λ = X' * contact.dual[2]
+#
+#         ∇ = ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * λ) * -∂vrotate∂q(offset, inv(q3)) * Tmat()
+#         ∇ += skew(p - vrotate(offset, inv(q3))) * ∂qVRmat(LᵀVᵀmat(q3) * λ)
+#         ∇ += skew(p - vrotate(offset, inv(q3))) * VRmat(q3) * ∂qLᵀVᵀmat(λ)
+#         ∇ *= rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)
+#         body.state.D -= [szeros(T,6,3) [szeros(T,3,3); ∇]]
+#     end
+#     return
+# end
 
 @inline function off_diagonal_jacobians(mechanism, body::Body, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
     Z = szeros(T,N½,6)

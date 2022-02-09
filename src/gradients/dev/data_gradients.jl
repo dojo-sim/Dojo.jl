@@ -127,20 +127,9 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, body::Node{T},
     # Jacobian of the Body's dynamics constraints wrt the Body's data (x2, q2)
     # this comes from the fact that the Contact Constraint force mapping depends
     # on the Body's data (x2, q2)
-    timestep = mechanism.timestep
-
-    ∇z2 = szeros(T,6,6)
     # contact constraints impulses contribution
-    for i = 1:Nc
-        λ = getλJoint(joint, i)
-        if bodyb.id == joint.child_id
-            ∇z2 += impulse_map_parent_jacobian_parent(joint.constraints[i],
-                bodya, bodyb, λ)
-        elseif bodya.id == joint.child_id
-            ∇z2 += impulse_map_child_jacobian_child(joint.constraints[i],
-                bodyb, bodya, λ)
-        end
-    end
+    ∇z3 = impulse_map_jacobian_configuration(mechanism, body, contact)
+    ∇z2 = ∇z3 * integrator_jacobian_configuration(body, mechanism.timestep)
     return [szeros(T,6,13) ∇z2]
 end
 
@@ -338,18 +327,14 @@ function jacobian_body_data!(data_matrix::SparseMatrixCSC, mechanism::Mechanism{
     for body1 in mechanism.bodies
         data_matrix[body1.id, body1.id].value += body_constraint_jacobian_body_data(mechanism, body1)
 
+
         for body2 in [mechanism.bodies; mechanism.origin]
             joint_links = indirect_link0(body1.id, body2.id, mechanism.joints)
-            # @show body1.id
-            # @show body2.id
-            # @show joint_links
             joints = [get_joint_constraint(mechanism, id) for id in joint_links]
             for joint in joints
                 ∇11, ∇12 = body_constraint_jacobian_body_data(mechanism, body1, body2, joint)
                 (typeof(body1) <: Body) && (data_matrix[body1.id, body1.id].value += ∇11)
-                # @show ∇11
                 (typeof(body1) <: Body && typeof(body2) <: Body) && (data_matrix[body1.id, body2.id].value += ∇12)
-                # @show ∇12
             end
             # pretty sure this is useless
             # contact_links = indirect_link0(body1.id, body2.id, mechanism.contacts)
@@ -358,6 +343,10 @@ function jacobian_body_data!(data_matrix::SparseMatrixCSC, mechanism::Mechanism{
                 # data_matrix[body1.id, body2.id].value += body_constraint_jacobian_body_data(mechanism, body1, body2, contact)
             # end
         end
+    end
+    for contact in mechanism.contacts
+        body = get_body(mechanism, contact.parent_id)
+        data_matrix[body.id, body.id].value += body_constraint_jacobian_body_data(mechanism, body, contact)
     end
     # ∂contact∂bodydata
     for contact in mechanism.contacts

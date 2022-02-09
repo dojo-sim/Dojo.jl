@@ -199,9 +199,13 @@ norm((datajac0 - datajac1), Inf)
 ################################################################################
 # Snake
 ################################################################################
-mech = get_box(timestep=0.05, gravity=-9.81);
-initialize!(mech, :box)
-storage = simulate!(mech, 1.0, ctrl!, verbose=false, record=true)
+# mech = get_box(timestep=0.05, gravity=-9.81, mode=:box);
+# initialize!(mech, :box)
+# mech = get_atlas(timestep=0.05, gravity=-1.0, contact=true);
+# initialize_atlasstance!(mech)
+mech = get_halfcheetah(timestep=0.05, gravity=-9.81)
+initialize!(mech, :halfcheetah)
+storage = simulate!(mech, 1.0, verbose=false, record=true)
 visualize(mech, storage, vis=vis)
 
 # Finite Difference
@@ -217,8 +221,8 @@ plot(Gray.(1e0*abs.(datajac0)))
 # Analytical
 D = create_data_matrix(mech.joints, mech.bodies, mech.contacts)
 jacobian_data!(D, mech)
-# @benchmark jacobian_data!(D, mech)
-# @profile jacobian_data!(D, mech)
+@benchmark jacobian_data!(D, mech)
+@profile jacobian_data!(D, mech)
 nodes = [mech.joints; mech.bodies; mech.contacts]
 dimrow = length.(nodes)
 dimcol = data_dim.(nodes)
@@ -241,7 +245,10 @@ datajac1[4:6, 25:27]
 
 
 
-datajac1[1:3, 9:9]
+(datajac0 - datajac1)[4:6, 25:27]
+
+
+
 
 norm((datajac0 - datajac1)[4:6, 1:27], Inf)
 norm((datajac0 - datajac1)[4:6, 28:34], Inf)
@@ -250,6 +257,7 @@ norm((datajac0 - datajac1)[11:14, 1:23], Inf)
 norm((datajac0 - datajac1)[11:14, 24:24], Inf)
 norm((datajac0 - datajac1)[11:14, 25:27], Inf)
 norm((datajac0 - datajac1)[11:14, 28:34], Inf)
+impulse_map_jacobian(mech.contacts[1].constraints[1], rand(3), UnitQuaternion(rand(4)...), rand(4))
 
 datajac0[4:6, 28:34]
 datajac1[4:6, 28:34]

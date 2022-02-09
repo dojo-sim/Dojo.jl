@@ -95,7 +95,7 @@ function test_data_system(model::Symbol; ϵ::T=1.0e-6, tsim::T=0.1, ctrl::Any=(m
 
 	# Test
 	@testset "Datajac: $(String(model))" begin
-		@test norm(datajac0 - datajac1, Inf) < 1e-7
+		@test norm(datajac0 - datajac1, Inf) < 1e-6
 	end
     return nothing
 end
@@ -127,23 +127,23 @@ end
 ################################################################################
 # With contact and joint limits
 ################################################################################
-# for (spring, damper) in [(0.0, 0.0), (2.0, 0.3)]
-# 	test_data_system(:sphere, contact=true)
-# 	test_data_system(:box, contact=true)
-# 	test_data_system(:box2d, contact=true)
-# 	test_data_system(:slider, spring=spring, damper=damper)
-# 	test_data_system(:nslider, spring=spring, damper=damper)
-# 	test_data_system(:pendulum, spring=spring, damper=damper)
-# 	test_data_system(:cartpole, spring=spring, damper=damper)
-# 	test_data_system(:pendulum, spring=spring, damper=damper)
-# 	test_data_system(:hopper, spring=spring, damper=damper, contact=true)
-# 	test_data_system(:humanoid, spring=spring, damper=damper, contact=true)
-# 	test_data_system(:atlas, spring=spring, damper=damper, contact=true)
-# 	test_data_system(:halfcheetah, contact=true, limits=true)
-# 	test_data_system(:walker2d, spring=spring, damper=damper, contact=true, limits=true)
-# 	test_data_system(:quadruped, spring=spring, damper=damper, contact=true, limits=true)
-# 	for jointtype in jointtypes
-# 		test_data_system(:snake, Nb=5, spring=spring, damper=damper, contact=true, jointtype=jointtype)
-# 		test_data_system(:twister, Nb=5, spring=spring, damper=damper, contact=true, jointtype=jointtype)
-# 	end
-# end
+for (spring, damper) in [(0.0, 0.0), (2.0, 0.3)]
+	test_data_system(:sphere, contact=true)
+	test_data_system(:box, contact=true)
+	test_data_system(:box2d, contact=true)
+	test_data_system(:slider, spring=spring, damper=damper)
+	test_data_system(:nslider, spring=spring, damper=damper)
+	test_data_system(:pendulum, spring=spring, damper=damper)
+	test_data_system(:cartpole, spring=spring, damper=damper)
+	test_data_system(:pendulum, spring=spring, damper=damper)
+	test_data_system(:hopper, spring=spring, damper=damper, contact=true)
+	test_data_system(:humanoid, spring=spring, damper=damper, contact=true)
+	test_data_system(:atlas, spring=spring, damper=damper, contact=true)
+	test_data_system(:halfcheetah, contact=true, limits=false)
+	test_data_system(:walker2d, spring=spring, damper=damper, contact=true, limits=false)
+	test_data_system(:quadruped, spring=spring, damper=damper, contact=true, limits=false)
+	for jointtype in jointtypes
+		test_data_system(:snake, Nb=5, spring=spring, damper=damper, contact=true, jointtype=jointtype)
+		test_data_system(:twister, Nb=5, spring=spring, damper=damper, contact=true, jointtype=jointtype)
+	end
+end

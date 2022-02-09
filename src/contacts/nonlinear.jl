@@ -58,7 +58,6 @@ end
     X = [bound.ainv3;
         szeros(1,3);
         szeros(2,3)]
-    # Ω = FiniteDiff.finite_difference_jacobian(ϕ25 -> g(bound, s, γ, x2+timestep*v25, next_orientation(q2,ϕ25,timestep), v25, ϕ25), ϕ25)
     ∂v∂q3 = skew(vrotate(ϕ25, q3)) * ∂vrotate∂q(bound.p, q3)
     ∂v∂q3 += skew(bound.offset - vrotate(bound.p, q3)) * ∂vrotate∂q(ϕ25, q3)
     Q = [bound.ainv3 * ∂vrotate∂q(bound.p, q3);
@@ -75,17 +74,6 @@ end
     Q = - X * q * skew(bound.p - vrotate(bound.offset, inv(q)))
     return transpose([X Q])
 end
-
-@inline function impulse_map_jacobian(bound::NonlinearContact, x::AbstractVector, q::UnitQuaternion, λ)
-    X = [bound.ainv3;
-         szeros(1,3);
-         bound.Bx]
-    # q * ... is a rotation by quaternion q it is equivalent to Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * ...
-    Q = - X * q * skew(bound.p - vrotate(bound.offset, inv(q)))
-    return [X Q]
-end
-
-
 
 @inline function force_mapping(bound::NonlinearContact)
     X = [bound.ainv3;

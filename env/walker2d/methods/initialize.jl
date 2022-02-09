@@ -37,8 +37,8 @@ function get_walker2d(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=1.9,
 
     if contact
         origin = Origin{T}()
-        bodies = mech.bodies.values
-        joints = mech.joints.values
+        bodies = mech.bodies
+        joints = mech.joints
 
         normal = [0.0; 0.0; 1.0]
         names = contact_body ? getfield.(mech.bodies, :name) : [:ffoot, :foot]
