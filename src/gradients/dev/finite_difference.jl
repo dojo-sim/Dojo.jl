@@ -43,7 +43,7 @@ function set_solution0!(mechanism::Mechanism{T}, sol::AbstractVector) where T
     return nothing
 end
 
-function evaluate_residual!(mechanism::Mechanism, data::AbstractVector, sol::AbstractVector)
+function evaluate_residual0!(mechanism::Mechanism, data::AbstractVector, sol::AbstractVector)
     system = mechanism.system
     set_data0!(mechanism, data)
     set_solution0!(mechanism, sol)
@@ -66,8 +66,8 @@ function finitediff_data_jacobian(mechanism::Mechanism, data::AbstractVector,
         datam = deepcopy(data)
         datap[i] += δ
         datam[i] -= δ
-        rp = evaluate_residual!(deepcopy(mechanism), datap, deepcopy(sol))
-        rm = evaluate_residual!(deepcopy(mechanism), datam, deepcopy(sol))
+        rp = evaluate_residual0!(deepcopy(mechanism), datap, deepcopy(sol))
+        rm = evaluate_residual0!(deepcopy(mechanism), datam, deepcopy(sol))
         jac[:,i] = (rp - rm) / (2δ)
     end
     return jac
