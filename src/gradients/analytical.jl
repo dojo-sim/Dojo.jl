@@ -348,7 +348,7 @@ function contact_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
                 function d(vars)
                     x = vars[1:3]
                     q = UnitQuaternion(vars[4:7]..., false)
-                    return impulse_map(bound, x, q, nothing)' * contact.dual[2]
+                    return impulse_map(bound, x, q, nothing) * contact.dual[2]
                 end
 
                 if bound_type <: NonlinearContact

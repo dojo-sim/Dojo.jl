@@ -41,7 +41,7 @@ function impulse_map(mechanism, contact::ContactConstraint, body::Body)
 end
 
 @inline function impulses!(mechanism, body::Body, contact::ContactConstraint)
-    body.state.d -= impulse_map(mechanism, contact, body)' * contact.dual[2]
+    body.state.d -= impulse_map(mechanism, contact, body) * contact.dual[2]
     return
 end
 
@@ -69,7 +69,7 @@ end
 
 @inline function off_diagonal_jacobians(mechanism, body::Body, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
     Z = szeros(T,N½,6)
-    return [Z; -impulse_map(mechanism, contact, body)]', [Z; constraint_jacobian_velocity(mechanism, contact, body)]
+    return [Z' -impulse_map(mechanism, contact, body)], [Z; constraint_jacobian_velocity(mechanism, contact, body)]
 end
 
 function reset!(contact::ContactConstraint{T,N,Nc,Cs,N½}; scale::T=1.0) where {T,N,Nc,Cs,N½}

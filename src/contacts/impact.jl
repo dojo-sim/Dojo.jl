@@ -37,7 +37,7 @@ end
     X = bound.ainv3
     # q * ... is a rotation by quaternion q it is equivalent to Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * ...
     Q = - X * q * skew(bound.p - vrotate(bound.offset, inv(q)))
-    return [X Q]
+    return transpose([X Q])
 end
 
 @inline function force_mapping(bound::ImpactContact)

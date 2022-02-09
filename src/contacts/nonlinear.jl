@@ -73,8 +73,19 @@ end
          bound.Bx]
     # q * ... is a rotation by quaternion q it is equivalent to Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * ...
     Q = - X * q * skew(bound.p - vrotate(bound.offset, inv(q)))
+    return transpose([X Q])
+end
+
+@inline function impulse_map_jacobian(bound::NonlinearContact, x::AbstractVector, q::UnitQuaternion, λ)
+    X = [bound.ainv3;
+         szeros(1,3);
+         bound.Bx]
+    # q * ... is a rotation by quaternion q it is equivalent to Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * ...
+    Q = - X * q * skew(bound.p - vrotate(bound.offset, inv(q)))
     return [X Q]
 end
+
+
 
 @inline function force_mapping(bound::NonlinearContact)
     X = [bound.ainv3;
