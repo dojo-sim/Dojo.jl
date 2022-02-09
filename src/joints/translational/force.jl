@@ -3,11 +3,11 @@ spring_parent(joint::Translational, bodya::Node, bodyb::Node, timestep; unitary:
 spring_child(joint::Translational, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) =
     timestep * spring_child(joint, current_configuration(bodya.state)..., current_configuration(bodyb.state)..., unitary=unitary)
 damper_parent(joint::Translational, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) =
-    timestep * damper_parent(joint, initial_configuration_velocity(bodya.state)...,
-        initial_configuration_velocity(bodyb.state)..., unitary=unitary)
+    timestep * damper_parent(joint, current_configuration_velocity(bodya.state)...,
+    current_configuration_velocity(bodyb.state)..., unitary=unitary)
 damper_child(joint::Translational, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) =
-    timestep * damper_child(joint, initial_configuration_velocity(bodya.state)...,
-        initial_configuration_velocity(bodyb.state)..., unitary=unitary)
+    timestep * damper_child(joint, current_configuration_velocity(bodya.state)...,
+    current_configuration_velocity(bodyb.state)..., unitary=unitary)
 
 spring_parent(joint::Translational3{T}, bodya::Node, bodyb::Node, timestep) where T = szeros(T, 6)
 spring_child(joint::Translational3{T}, bodya::Node, bodyb::Node, timestep) where T = szeros(T, 6)

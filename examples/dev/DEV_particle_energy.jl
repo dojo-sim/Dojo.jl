@@ -162,7 +162,7 @@ jac0, jac1 = finitediff_pos(tra2, body1, body2, timestep, spring_child, spring_c
 @test norm(jac0 - jac1, Inf) < 1e-8
 jac0, jac1 = finitediff_pos(tra2, body1, body2, timestep, damper_child, damper_child_jacobian_configuration_child, diff_body = :child)
 @test norm(jac0 - jac1, Inf) < 1e-8
-jac0, jac1 = finitediff_pos(tra2, body1, body2, timestep, spring_child, spring_child_jacobian_configuraion_parent, diff_body = :parent)
+jac0, jac1 = finitediff_pos(tra2, body1, body2, timestep, spring_child, spring_child_jacobian_configuration_parent, diff_body = :parent)
 @test norm(jac0 - jac1, Inf) < 1e-8
 jac0, jac1 = finitediff_pos(tra2, body1, body2, timestep, damper_child, damper_child_jacobian_configuration_parent, diff_body = :parent)
 @test norm(jac0 - jac1, Inf) < 1e-8

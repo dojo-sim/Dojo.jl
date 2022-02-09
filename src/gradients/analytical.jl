@@ -213,7 +213,7 @@ function springapply_damperjacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,N
                 Aab[:, [1:3; 7:10]] -= spring_parent_jacobian_configuration_child(element, pbody, cbody, timestep, attjac = false)
                 Aab[:, [1:3; 7:10]] -= damper_parent_jacobian_configuration_child(element, pbody, cbody, timestep, attjac = false)
 
-                Aba[:, [1:3; 7:10]] -= spring_child_jacobian_configuraion_parent(element, pbody, cbody, timestep, attjac = false)
+                Aba[:, [1:3; 7:10]] -= spring_child_jacobian_configuration_parent(element, pbody, cbody, timestep, attjac = false)
                 Aba[:, [1:3; 7:10]] -= damper_child_jacobian_configuration_parent(element, pbody, cbody, timestep, attjac = false)
 
                 Abb[:, [1:3; 7:10]] -= spring_child_jacobian_configuration_child(element, pbody, cbody, timestep, attjac = false)
