@@ -112,7 +112,7 @@ end
         va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
         xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion,
         ωb::AbstractVector; unitary::Bool=false) where T
-    Fτ = damper_force(joint, xa, va, qa, ωa, xb, vb, qb, ωb) # in the a frame
+    Fτ = damper_force(joint, xa, va, qa, ωa, xb, vb, qb, ωb, unitary=unitary) # in the a frame
     Fτa = impulse_transform(relative, joint, xa, qa, xb, qb) * Fτ
     return Fτa
 end
@@ -123,7 +123,7 @@ end
     # Fτ = damper_force(joint, xa, qa, va, ωa, xb, qb, vb, ωb) # in the a frame
     # Fτa = impulse_transform_parent(joint, xa, qa, xb, qb) * Fτ
     # return Fτa
-    return damper_relative(:parent, joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+    return damper_relative(:parent, joint, xa, va, qa, ωa, xb, vb, qb, ωb, unitary=unitary)
 end
 @inline function damper_child(joint::Translational{T}, xa::AbstractVector,
         va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
@@ -132,7 +132,7 @@ end
     # Fτ = damper_force(joint, xa, qa, va, ωa, xb, qb, vb, ωb) # in the a frame
     # Fτb = impulse_transform_child(joint, xa, qa, xb, qb) * Fτ
     # return Fτb
-    return damper_relative(:child, joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+    return damper_relative(:child, joint, xa, va, qa, ωa, xb, vb, qb, ωb, unitary=unitary)
 end
 
 spring_parent_jacobian_configuration_parent(joint::Translational3{T}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)

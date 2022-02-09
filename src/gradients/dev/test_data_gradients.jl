@@ -4,12 +4,35 @@ using MeshCat
 vis = Visualizer()
 open(vis)
 
+jointtypes = [
+    :Fixed, #good
+    :Prismatic,
+    :Planar,
+    :FixedOrientation,
+    :Revolute, #good
+    :Cylindrical,
+    :PlanarAxis,
+    :FreeRevolute,
+    :Orbital, #good
+    :PrismaticOrbital,
+    :PlanarOrbital,
+    :FreeOrbital,
+    :Spherical, #good
+    :CylindricalFree,
+    :PlanarFree
+    ]
+
 ################################################################################
 # Analytical Jacobian
 ################################################################################
+# Controller
 function ctrl!(mechanism, k)
 	nu = control_dimension(mechanism)
-	u = 1*[szeros(6); mechanism.timestep * sones(nu-6)]
+	if control_dimension(mechanism.joints[1]) == 6
+		u = 0.2*[szeros(6); mechanism.timestep * sones(nu-6)]
+	else
+		u = 0.2*mechanism.timestep * sones(nu)
+	end
 	set_control!(mechanism, u)
 	return
 end
@@ -38,9 +61,65 @@ function test_data_system(model::Symbol; ϵ::T=1.0e-6, tsim::T=0.1, ctrl::Any=(m
 	dimrow = length.(nodes)
 	dimcol = data_dim.(nodes)
 	datajac1 = full_matrix(D, dimrow, dimcol)
-	@test norm(datajac0 - datajac1, Inf) < 1e-7
+
+	# Test
+	@testset "Datajac: String(model)" begin
+		@test norm(datajac0 - datajac1, Inf) < 1e-7
+	end
     return nothing
 end
+
+################################################################################
+# Without contact and joint limits
+################################################################################
+for (spring, damper) in [(0.0, 0.0), (2.0, 0.3)]
+	test_data_system(:sphere, contact=false)
+	test_data_system(:box, contact=false)
+	test_data_system(:box2d, contact=false)
+	test_data_system(:slider, spring=spring, damper=damper)
+	test_data_system(:nslider, spring=spring, damper=damper)
+	test_data_system(:pendulum, spring=spring, damper=damper)
+	test_data_system(:cartpole, spring=spring, damper=damper)
+	test_data_system(:pendulum, spring=spring, damper=damper)
+	test_data_system(:hopper, spring=spring, damper=damper, contact=false)
+	test_data_system(:humanoid, spring=spring, damper=damper, contact=false)
+	test_data_system(:atlas, spring=spring, damper=damper, contact=false)
+	test_data_system(:halfcheetah, contact=false, limits=false)
+	test_data_system(:walker2d, spring=spring, damper=damper, contact=false, limits=false)
+	test_data_system(:quadruped, spring=spring, damper=damper, contact=false, limits=false)
+	for jointtype in jointtypes
+		test_data_system(:snake, Nb=5, spring=spring, damper=damper, contact=false, jointtype=jointtype)
+		test_data_system(:twister, Nb=5, spring=spring, damper=damper, contact=false, jointtype=jointtype)
+	end
+end
+
+################################################################################
+# With contact and joint limits
+################################################################################
+# for (spring, damper) in [(0.0, 0.0), (2.0, 0.3)]
+# 	test_data_system(:sphere, contact=true)
+# 	test_data_system(:box, contact=true)
+# 	test_data_system(:box2d, contact=true)
+# 	test_data_system(:slider, spring=spring, damper=damper)
+# 	test_data_system(:nslider, spring=spring, damper=damper)
+# 	test_data_system(:pendulum, spring=spring, damper=damper)
+# 	test_data_system(:cartpole, spring=spring, damper=damper)
+# 	test_data_system(:pendulum, spring=spring, damper=damper)
+# 	test_data_system(:hopper, spring=spring, damper=damper, contact=true)
+# 	test_data_system(:humanoid, spring=spring, damper=damper, contact=true)
+# 	test_data_system(:atlas, spring=spring, damper=damper, contact=true)
+# 	test_data_system(:halfcheetah, contact=true, limits=true)
+# 	test_data_system(:walker2d, spring=spring, damper=damper, contact=true, limits=true)
+# 	test_data_system(:quadruped, spring=spring, damper=damper, contact=true, limits=true)
+# 	for jointtype in jointtypes
+# 		test_data_system(:snake, Nb=5, spring=spring, damper=damper, contact=true, jointtype=jointtype)
+# 		test_data_system(:twister, Nb=5, spring=spring, damper=damper, contact=true, jointtype=jointtype)
+# 	end
+# end
+
+
+
+
 
 # test_data_system(:snake, Nb=3)
 using Test
@@ -56,12 +135,13 @@ include("finite_difference.jl")
 mech = get_pendulum(timestep=0.05, damper=0.3, spring=1.0);
 joint0 = mech.joints[1]
 body0 = mech.bodies[1]
-initialize!(mech, :pendulum, ϕ1=0.2, ω1=-0.3)
+# initialize!(mech, :pendulum, ϕ1=0.2, ω1=-0.3)
+initialize!(mech, :pendulum)
 simulate!(mech, 0.30, verbose=false)
 
 # Finite Difference
 Nd = data_dim(mech, attjac=false)
-data0 = get_data0(mech)# + 0.05*rand(Nd)
+data0 = get_data0(mech)
 sol0 = get_solution0(mech)
 datajac0 = finitediff_data_jacobian(mech, data0, sol0)
 attjac0 = data_attitude_jacobian(mech)
@@ -72,18 +152,56 @@ plot(Gray.(1e0*abs.(datajac0)))
 # Analytical
 D = create_data_matrix(mech.joints, mech.bodies, mech.contacts)
 jacobian_data!(D, mech)
-
 nodes = [mech.joints; mech.bodies; mech.contacts]
 dimrow = length.(nodes)
 dimcol = data_dim.(nodes)
 datajac1 = full_matrix(D, dimrow, dimcol)
 plot(Gray.(1e10 .* abs.(datajac1)))
 plot(Gray.(1e0 .* abs.(datajac1)))
+
+# Test
 @test norm(datajac0 - datajac1, Inf) < 1e-7
 
 ################################################################################
 # Snake
 ################################################################################
+mech = get_slider(timestep=0.05, damper=0.3, spring=1.0, gravity=-0.5);
+initialize!(mech, :slider)
+storage = simulate!(mech, 0.30, ctrl!, verbose=false, record=true)
+visualize(mech, storage, vis=vis)
+
+# Finite Difference
+Nd = data_dim(mech, attjac=false)
+data0 = get_data0(mech)
+sol0 = get_solution0(mech)
+datajac0 = finitediff_data_jacobian(mech, data0, sol0)
+attjac0 = data_attitude_jacobian(mech)
+datajac0 *= attjac0
+plot(Gray.(1e10*abs.(datajac0)))
+plot(Gray.(1e0*abs.(datajac0)))
+
+# Analytical
+D = create_data_matrix(mech.joints, mech.bodies, mech.contacts)
+jacobian_data!(D, mech)
+nodes = [mech.joints; mech.bodies; mech.contacts]
+dimrow = length.(nodes)
+dimcol = data_dim.(nodes)
+datajac1 = full_matrix(D, dimrow, dimcol)
+plot(Gray.(1e10 .* abs.(datajac1)))
+plot(Gray.(1e0 .* abs.(datajac1)))
+
+plot(Gray.(1e8 .* abs.(datajac0 - datajac1)))
+plot(Gray.(1e0 .* abs.(datajac0 - datajac1)))
+
+datajac0[6:8,1:3] .\ datajac1[6:8,1:3]
+
+
+# Test
+@test norm(datajac0 - datajac1, Inf) < 1e-7
+
+
+
+
 mech = get_snake(timestep=0.05, damper=0.3, spring=1.0, gravity=-0.5, Nb=2, contact=false);
 function ctrl!(mechanism, k)
 	nu = control_dimension(mechanism)
@@ -232,13 +350,13 @@ contact0 = mech.contacts.values[1]
 joint0 = mech.joints.values[2]
 body0 = mech.bodies.values[1]
 
-∇0 = ∂joint∂joint_data(mech, joint0)
-∇0 = ∂joint∂body_data(mech, joint0, body0)
-∇0 = ∂contact∂body_data(mech, contact0, body0)
-∇0 = ∂contact∂contact_data(mech, contact0, body0)
-∇0 = ∂body∂joint_data(mech, joint0, body0)
-∇0 = ∂body∂body_data(mech, body0)
-∇0 = ∂body∂contact_data(mech, contact0, body0)
+datajac0 = ∂joint∂joint_data(mech, joint0)
+datajac0 = ∂joint∂body_data(mech, joint0, body0)
+datajac0 = ∂contact∂body_data(mech, contact0, body0)
+datajac0 = ∂contact∂contact_data(mech, contact0, body0)
+datajac0 = ∂body∂joint_data(mech, joint0, body0)
+datajac0 = ∂body∂body_data(mech, body0)
+datajac0 = ∂body∂contact_data(mech, contact0, body0)
 
 data_system = create_data_system(mech.joints.values,
     mech.bodies.values, mech.contacts.values);

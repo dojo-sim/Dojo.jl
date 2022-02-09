@@ -51,13 +51,8 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, body::Body{T})
            ∇rot_x2 ∇rot_q2]
     # TODO
     # # constact constraints impulses contribution
-    # ∇z2 +=
-    # TODO
-    # # spring and damper impulses contribution
-    # ∇z2 +=
-    @warn "000"
-    @show ∇z2
-    return [∇m ∇J ∇15 0.0000000000*∇z2]
+    # @warn "000"
+    return [∇m ∇J ∇15 0.0000000000*∇z2] #TODO not sure why we need to zero out this block, maybe finite diff is not correct and we try to match finite diff
 end
 
 function body_constraint_jacobian_body_data(mechanism::Mechanism, bodya::Node{T},
@@ -271,10 +266,10 @@ function create_data_matrix(joints::Vector{<:JointConstraint}, bodies::Vector{B}
     return data_matrix
 end
 
-function jacobian_data!(data_matrix::SparseMatrixCSC, mech::Mechanism)
-    jacobian_contact_data!(data_matrix, mech)
-    jacobian_body_data!(data_matrix, mech)
-    jacobian_joint_data!(data_matrix, mech)
+function jacobian_data!(data_matrix::SparseMatrixCSC, mechanism::Mechanism)
+    jacobian_contact_data!(data_matrix, mechanism)
+    jacobian_body_data!(data_matrix, mechanism)
+    jacobian_joint_data!(data_matrix, mechanism)
     return nothing
 end
 
@@ -320,11 +315,11 @@ function jacobian_body_data!(data_matrix::SparseMatrixCSC, mechanism::Mechanism{
         data_matrix[body1.id, body1.id].value += body_constraint_jacobian_body_data(mechanism, body1)
 
         for body2 in [mechanism.bodies; mechanism.origin]
-            joint_links = indirect_link0(body1.id, body2.id, mech.joints)
+            joint_links = indirect_link0(body1.id, body2.id, mechanism.joints)
             # @show body1.id
             # @show body2.id
             # @show joint_links
-            joints = [get_joint_constraint(mech, id) for id in joint_links]
+            joints = [get_joint_constraint(mechanism, id) for id in joint_links]
             for joint in joints
                 ∇11, ∇12 = body_constraint_jacobian_body_data(mechanism, body1, body2, joint)
                 (typeof(body1) <: Body) && (data_matrix[body1.id, body1.id].value += ∇11)
@@ -333,8 +328,8 @@ function jacobian_body_data!(data_matrix::SparseMatrixCSC, mechanism::Mechanism{
                 # @show ∇12
             end
             # pretty sure this is useless
-            # contact_links = indirect_link0(body1.id, body2.id, mech.contacts)
-            # contacts = [get_joint_constraint(mech, id) for id in contact_links]
+            # contact_links = indirect_link0(body1.id, body2.id, mechanism.contacts)
+            # contacts = [get_joint_constraint(mechanism, id) for id in contact_links]
             # for contact in contacts
                 # data_matrix[body1.id, body2.id].value += body_constraint_jacobian_body_data(mechanism, body1, body2, contact)
             # end
