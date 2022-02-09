@@ -38,13 +38,17 @@ function get_box2d(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, rad
     return mech
 end
 
-function initialize_box2d!(mechanism::Mechanism; x::AbstractVector{T} = [0,1.],
-    v::AbstractVector{T}=[0,0], θ::T=0.0, ω::T=0.0) where T
-    bound = mechanism.contacts.values[1].constraints[1]
-    side = bound.p[2]
-    offset = bound.offset[3]
-    z = side + offset
-    body = mechanism.bodies.values[1]
+function initialize_box2d!(mechanism::Mechanism{T}; x::AbstractVector=[0,1.],
+    v::AbstractVector=[0,0], θ::T=0.0, ω::T=0.0) where T
+    if length(mechanism.contacts) > 0
+        bound = mechanism.contacts[1].constraints[1]
+        side = bound.p[2]
+        offset = bound.offset[3]
+        z = side + offset
+    else
+        z = 0.0
+    end
+    body = mechanism.bodies[1]
     set_position!(body, x = [0;x] + [0,0,z], q = UnitQuaternion(RotX(θ)))
     set_velocity!(body, v = [0;v], ω = [ω,0,0])
 end
