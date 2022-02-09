@@ -1,4 +1,4 @@
-mutable struct Translational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N}
+mutable struct Translational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N,Nb½}
     V3::Adjoint{T,SVector{3,T}} # in body1's frame
     V12::SMatrix{2,3,T,6} # in body1's frame
     vertices::NTuple{2,SVector{3,T}} # in body1's & body2's frames
@@ -41,9 +41,9 @@ end
     return constraint_mask(joint) * e
 end
 
-@inline function constraint_jacobian_configuration(joint::Translational{T,Nλ,0,N}, η) where {T,Nλ,N}
-    return Diagonal(+1.00e-10 * sones(T,N))
-end
+# @inline function constraint_jacobian_configuration(joint::Translational{T,Nλ,0,N}, η) where {T,Nλ,N}
+#     return Diagonal(+1.00e-10 * sones(T,N))
+# end
 
 @inline function constraint_jacobian_parent(joint::Translational{T,Nλ,0}, xa::AbstractVector,
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}

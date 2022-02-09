@@ -14,14 +14,14 @@
            ]
 end
 
-@inline function constraint_jacobian_configuration(joint::Joint{T,Nλ,Nb,N}, η) where {T,Nλ,Nb,N}
-    s, γ = get_sγ(joint, η)
-
-    c1 = [Diagonal(γ + 1e-10 * sones(T, Nb)); Diagonal(sones(Nb)); szeros(Nλ, Nb)]
-    c2 = [Diagonal(s + 1e-10 * sones(T, Nb)); szeros(Nb, Nb); szeros(Nλ, Nb)]
-    c3 = [szeros(Nb, Nλ); szeros(Nb, Nλ); Diagonal(+1.00e-10 * sones(T, Nλ))]
-    return [c1 c2 c3]
-end
+# @inline function constraint_jacobian_configuration(joint::Joint{T,Nλ,Nb,N}, η) where {T,Nλ,Nb,N}
+#     s, γ = get_sγ(joint, η)
+#
+#     c1 = [Diagonal(γ + 1e-10 * sones(T, Nb)); Diagonal(sones(Nb)); szeros(Nλ, Nb)]
+#     c2 = [Diagonal(s + 1e-10 * sones(T, Nb)); szeros(Nb, Nb); szeros(Nλ, Nb)]
+#     c3 = [szeros(Nb, Nλ); szeros(Nb, Nλ); Diagonal(+1.00e-10 * sones(T, Nλ))]
+#     return [c1 c2 c3]
+# end
 
 @inline function constraint_jacobian_parent(joint::Joint, xa::AbstractVector,
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η)
