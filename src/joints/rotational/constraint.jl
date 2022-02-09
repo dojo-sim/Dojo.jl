@@ -35,7 +35,9 @@ Rotational2{T} = Rotational{T,2} where T
 Rotational3{T} = Rotational{T,3} where T
 
 @inline function constraint(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
-    # return constraint_mask(joint) *  Vmat(qa \ qb / joint.qoffset)
+    unlimited_constraint(joint, xa, qa, xb, qb, η)
+end
+@inline function unlimited_constraint(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T}
     return constraint_mask(joint) * Vmat(orientation_error(joint, xa, qa, xb, qb)) # maybe we need to use rotation_vector instead of Vmat
 end
 

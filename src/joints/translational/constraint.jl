@@ -33,6 +33,9 @@ Translational2{T} = Translational{T,2} where T
 Translational3{T} = Translational{T,3} where T
 
 @inline function constraint(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+    unlimited_constraint(joint, xa, qa, xb, qb, η)
+end
+@inline function unlimited_constraint(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T}
     vertices = joint.vertices
     e = vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
     return constraint_mask(joint) * e
@@ -42,15 +45,25 @@ end
     return Diagonal(+1.00e-10 * sones(T,N))
 end
 
-@inline function constraint_jacobian_parent(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+@inline function constraint_jacobian_parent(joint::Translational{T,Nλ,0}, xa::AbstractVector,
+        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+    unlimited_constraint_jacobian_parent(joint, xa, qa, xb, qb, η)
+end
+@inline function constraint_jacobian_child(joint::Translational{T,Nλ,0}, xa::AbstractVector,
+        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+    unlimited_constraint_jacobian_child(joint, xa, qa, xb, qb, η)
+end
+
+@inline function unlimited_constraint_jacobian_parent(joint::Translational{T}, xa::AbstractVector,
+        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T}
     point2 = xb + vrotate(joint.vertices[2], qb)
     X = -VLᵀmat(qa) * RVᵀmat(qa)
     Q = ∂vrotate∂q(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * Tmat()
     Q += ∂vrotate∂p(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * -∂vrotate∂q(joint.vertices[1], qa)
     return constraint_mask(joint) * [X Q]
 end
-
-@inline function constraint_jacobian_child(joint::Translational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+@inline function unlimited_constraint_jacobian_child(joint::Translational{T}, xa::AbstractVector,
+        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T}
     X = VLᵀmat(qa) * RVᵀmat(qa)
     Q = 2 * VLᵀmat(qa) * Rmat(qa) * Rᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
     return constraint_mask(joint) * [X Q]
