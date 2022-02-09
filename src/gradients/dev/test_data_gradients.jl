@@ -31,6 +31,9 @@ end
 # test_data_system(:snake, Nb=3)
 using Test
 
+################################################################################
+# Pendulum
+################################################################################
 include("utils.jl")
 include("data.jl")
 include("data_gradients.jl")
@@ -52,6 +55,50 @@ datajac0 *= attjac0
 plot(Gray.(1e10*abs.(datajac0)))
 plot(Gray.(1e0*abs.(datajac0)))
 
+# Analytical
+D = create_data_matrix(mech.joints, mech.bodies, mech.contacts)
+jacobian_data!(D, mech)
+
+nodes = [mech.joints; mech.bodies; mech.contacts]
+dimrow = length.(nodes)
+dimcol = data_dim.(nodes)
+datajac1 = full_matrix(D, dimrow, dimcol)
+@test norm(datajac0 - datajac1, Inf) < 1e-7
+
+################################################################################
+# Snake
+################################################################################
+include("utils.jl")
+include("data.jl")
+include("data_gradients.jl")
+include("finite_difference.jl")
+
+mech = get_snake(timestep=0.05, damper=0.3, spring=1.0, gravity=-0.5, Nb=2, contact=false);
+function ctrl!(mechanism, k)
+	nu = control_dimension(mechanism)
+	u = 1*[szeros(6); mechanism.timestep * sones(nu-6)]
+	set_control!(mechanism, u)
+	return
+end
+
+# joint0 = mech.joints[1]
+# joint1 = mech.joints[2]
+# body0 = mech.origin
+# body1 = mech.bodies[1]
+# body2 = mech.bodies[2]
+initialize!(mech, :snake)
+storage = simulate!(mech, 0.30, ctrl!, verbose=false, record=true)
+visualize(mech, storage, vis=vis)
+
+# Finite Difference
+Nd = data_dim(mech, attjac=false)
+data0 = get_data0(mech)# + 0.05*rand(Nd)
+sol0 = get_solution0(mech)
+datajac0 = finitediff_data_jacobian(mech, data0, sol0)
+attjac0 = data_attitude_jacobian(mech)
+datajac0 *= attjac0
+plot(Gray.(1e10*abs.(datajac0)))
+plot(Gray.(1e0*abs.(datajac0)))
 
 # Analytical
 D = create_data_matrix(mech.joints, mech.bodies, mech.contacts)
@@ -90,6 +137,7 @@ datajac1[6:11,17:19]
 
 datajac0[6:11,20:22]
 datajac1[6:11,20:22]
+(datajac0 - datajac1)[6:11,20:22]
 
 
 

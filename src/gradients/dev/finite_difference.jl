@@ -55,7 +55,9 @@ function finitediff_data_jacobian(mechanism::Mechanism, data::AbstractVector,
         sol::AbstractVector; δ = 1e-5, verbose = false)
     mechanism = deepcopy(mechanism)
     Nd = data_dim(mechanism, attjac=false)
+    @show Nd
     Nr = residual_dimension(mechanism)
+    @show Nr
     jac = zeros(Nr, Nd)
     set_data0!(mechanism, deepcopy(data))
     set_solution0!(mechanism, deepcopy(sol))
@@ -68,6 +70,8 @@ function finitediff_data_jacobian(mechanism::Mechanism, data::AbstractVector,
         datam[i] -= δ
         rp = evaluate_residual!(deepcopy(mechanism), datap, deepcopy(sol))
         rm = evaluate_residual!(deepcopy(mechanism), datam, deepcopy(sol))
+        @show size(rp)
+        @show size(rm)
         jac[:,i] = (rp - rm) / (2δ)
     end
     return jac

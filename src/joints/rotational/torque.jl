@@ -226,9 +226,9 @@ damper_parent_jacobian_velocity_parent(joint::Rotational3{T}, body1::Node, body2
 spring_parent_jacobian_velocity_child(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
 damper_parent_jacobian_velocity_child(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
 spring_child_jacobian_velocity_child(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
-damper_child_configuration_velocity_child(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
-spring_child_configuration_velocity_parent(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
-damper_child_configuration_velocity_parent(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
+damper_child_jacobian_velocity_child(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
+spring_child_jacobian_velocity_parent(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
+damper_child_jacobian_velocity_parent(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
 
 function spring_parent_jacobian_configuration_parent(joint::Rotational, body1::Node, body2::Node,
         timestep::T; attjac::Bool = true) where T
@@ -245,7 +245,6 @@ function spring_parent_jacobian_configuration_parent(joint::Rotational, body1::N
     Z = attjac ? szeros(T, 3, 6) : szeros(T, 3, 7)
     return timestep * [Z; X Q]
 end
-
 function spring_parent_jacobian_configuration_child(joint::Rotational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
     # A = nullspace_mask(joint)
     # Aᵀ = zerodimstaticadjoint(A)
@@ -261,7 +260,6 @@ function spring_parent_jacobian_configuration_child(joint::Rotational, body1::No
     Z = attjac ? szeros(T, 3, 6) : szeros(T, 3, 7)
     return timestep * [Z; X Q]
 end
-
 function spring_child_jacobian_configuration_child(joint::Rotational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
     # A = nullspace_mask(joint)
     # Aᵀ = zerodimstaticadjoint(A)
@@ -278,8 +276,7 @@ function spring_child_jacobian_configuration_child(joint::Rotational, body1::Nod
     Z = attjac ? szeros(T, 3, 6) : szeros(T, 3, 7)
     return timestep * [Z; X Q]
 end
-
-function spring_child_jacobian_configuraion_parent(joint::Rotational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
+function spring_child_jacobian_configuration_parent(joint::Rotational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
     # A = nullspace_mask(joint)
     # Aᵀ = zerodimstaticadjoint(A)
     # _, _, _, ωa = current_configuration_velocity(body1.state)
@@ -313,7 +310,6 @@ function damper_parent_jacobian_configuration_parent(joint::Rotational, body1::N
     Z = attjac ? szeros(T, 3, 6) : szeros(T, 3, 7)
     return timestep * [Z; X Q]
 end
-
 function damper_parent_jacobian_configuration_child(joint::Rotational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
     A = nullspace_mask(joint)
     Aᵀ = zerodimstaticadjoint(A)
@@ -330,7 +326,6 @@ function damper_parent_jacobian_configuration_child(joint::Rotational, body1::No
     Z = attjac ? szeros(T, 3, 6) : szeros(T, 3, 7)
     return timestep * [Z; X Q]
 end
-
 function damper_child_jacobian_configuration_child(joint::Rotational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
     A = nullspace_mask(joint)
     Aᵀ = zerodimstaticadjoint(A)
@@ -347,7 +342,6 @@ function damper_child_jacobian_configuration_child(joint::Rotational, body1::Nod
     Z = attjac ? szeros(T, 3, 6) : szeros(T, 3, 7)
     return timestep * [Z; X Q]
 end
-
 function damper_child_jacobian_configuration_parent(joint::Rotational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
     A = nullspace_mask(joint)
     Aᵀ = zerodimstaticadjoint(A)
@@ -371,24 +365,22 @@ function spring_parent_jacobian_velocity_parent(joint::Rotational, body1::Node, 
     Ω = szeros(T, 3, 3)
     return timestep * [szeros(T, 3, 6); V Ω]
 end
-
 function spring_parent_jacobian_velocity_child(joint::Rotational, body1::Node, body2::Node, timestep::T) where T
     V = szeros(T, 3, 3)
     Ω = szeros(T, 3, 3)
     return timestep * [szeros(T, 3, 6); V Ω]
 end
-
 function spring_child_jacobian_velocity_child(joint::Rotational, body1::Node, body2::Node, timestep::T) where T
     V = szeros(T, 3, 3)
     Ω = szeros(T, 3, 3)
     return timestep * [szeros(T, 3, 6); V Ω]
 end
-
-function spring_child_configuration_velocity_parent(joint::Rotational, body1::Node, body2::Node, timestep::T) where T
+function spring_child_jacobian_velocity_parent(joint::Rotational, body1::Node, body2::Node, timestep::T) where T
     V = szeros(T, 3, 3)
     Ω = szeros(T, 3, 3)
     return timestep * [szeros(T, 3, 6); V Ω]
 end
+
 
 function damper_parent_jacobian_velocity_parent(joint::Rotational, body1::Node, body2::Node, timestep::T) where T
     A = nullspace_mask(joint)
@@ -403,7 +395,6 @@ function damper_parent_jacobian_velocity_parent(joint::Rotational, body1::Node, 
     Ω = ∂vrotate∂p(force, qoffset) * 2 * Aᵀ * A * joint.damper * Aᵀ * A * -1.0 * ∂vrotate∂p(ωa, inv(qoffset))
     return timestep * [szeros(T, 3, 6); V Ω]
 end
-
 function damper_parent_jacobian_velocity_child(joint::Rotational, body1::Node, body2::Node, timestep::T) where T
     A = nullspace_mask(joint)
     Aᵀ = zerodimstaticadjoint(A)
@@ -417,8 +408,7 @@ function damper_parent_jacobian_velocity_child(joint::Rotational, body1::Node, b
     Ω = ∂vrotate∂p(force, qoffset) * 2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂p(ωb, qa \ qb / qoffset)
     return timestep * [szeros(T, 3, 6); V Ω]
 end
-
-function damper_child_configuration_velocity_child(joint::Rotational, body1::Node, body2::Node, timestep::T) where T
+function damper_child_jacobian_velocity_child(joint::Rotational, body1::Node, body2::Node, timestep::T) where T
     A = nullspace_mask(joint)
     Aᵀ = zerodimstaticadjoint(A)
     _, _, _, ωa = current_configuration_velocity(body1.state)
@@ -431,8 +421,7 @@ function damper_child_configuration_velocity_child(joint::Rotational, body1::Nod
     Ω = ∂vrotate∂p(force, inv(qb) * qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂p(ωb, qa \ qb / qoffset)
     return timestep * [szeros(T, 3, 6); V Ω]
 end
-
-function damper_child_configuration_velocity_parent(joint::Rotational, body1::Node, body2::Node, timestep::T) where T
+function damper_child_jacobian_velocity_parent(joint::Rotational, body1::Node, body2::Node, timestep::T) where T
     A = nullspace_mask(joint)
     Aᵀ = zerodimstaticadjoint(A)
     _, _, _, ωa = current_configuration_velocity(body1.state)
