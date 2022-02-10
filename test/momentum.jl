@@ -255,7 +255,7 @@ q10 = UnitQuaternion(RotX(0.5*π))
 
 initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0)
 storage = simulate!(mech, 2.5, record = true, verbose = false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
-visualize(mech, storage, vis = vis)
+# visualize(mech, storage, vis = vis)
 
 m0 = momentum(mech, storage)[5:end]
 mlin0 = [Vector(m-m0[1])[1:3] for m in m0]

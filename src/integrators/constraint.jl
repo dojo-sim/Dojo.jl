@@ -33,6 +33,8 @@
     return state.d
 end
 
+
+
 @inline function constraint_jacobian_configuration(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn,Ne,Nb}
     state = body.state
     timestep = mechanism.timestep
@@ -46,8 +48,7 @@ end
     # dynamics
     dynT = I(3) * mass / timestep
 
-    rot_q3(q) = -2.0 / timestep * LVᵀmat(q2)' * Tmat() * Rmat(UnitQuaternion(q..., false))' * Vᵀmat() * inertia * Vmat() * Lmat(q2)' * q
-    dynR = FiniteDiff.finite_difference_jacobian(rot_q3, vector(q3)) #* rotational_integrator_jacobian_velocity(q2, state.ϕsol[2], timestep)
+    dynR = -2.0 / timestep * LVᵀmat(q2)' * Tmat() * (∂qRᵀmat(Vᵀmat() * inertia * Vmat() * Lmat(q2)' * vector(q3)) + Rmat(q3)' * Vᵀmat() * inertia * Vmat() * Lmat(q2)')
 
     Z33 = szeros(T, 3, 3)
     Z34 = szeros(T, 3, 4)
