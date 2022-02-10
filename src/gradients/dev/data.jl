@@ -14,8 +14,8 @@ data_dim(joint::Rotational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ}
 data_dim(body::Body; attjac::Bool=true) = attjac ? 19 : 20 # 1+6+6+6 or 1+6+6+7 [m,flat(J),v15,ϕ15,x2,q2] with attjac
 # Contact
 data_dim(contact::ContactConstraint) = data_dim(contact.model)
-data_dim(model::NonlinearContact) = 7 # [cf, p, offset]
-data_dim(model::LinearContact) = 7 # [cf, p, offset]
+data_dim(model::NonlinearContact) = 7 # [friction_coefficient, p, offset]
+data_dim(model::LinearContact) = 7 # [friction_coefficient, p, offset]
 data_dim(model::ImpactContact) = 6 # [p, offset]
 
 
@@ -71,9 +71,9 @@ function get_data0(body::Body)
 	return [m; j; v15; ϕ15; x2; vector(q2)]
 end
 # Contacts
-get_data0(model::NonlinearContact) = [model.cf; model.offset; model.p]
-get_data0(model::LinearContact) = [model.cf; model.offset; model.p]
-get_data0(model::ImpactContact) = [model.offset; model.p]
+get_data0(model::NonlinearContact) = [model.friction_coefficient; model.offset; model.contact_point]
+get_data0(model::LinearContact) = [model.friction_coefficient; model.offset; model.contact_point]
+get_data0(model::ImpactContact) = [model.offset; model.contact_point]
 get_data0(contact::ContactConstraint) = get_data0(contact.model)
 
 
@@ -143,20 +143,20 @@ function set_data0!(body::Body, data::AbstractVector, timestep)
 end
 # Contact
 function set_data0!(model::NonlinearContact, data::AbstractVector)
-	model.cf = data[1]
+	model.friction_coefficient = data[1]
     model.offset = data[SVector{3,Int}(2:4)]
-    model.p = data[SVector{3,Int}(5:7)]
+    model.contact_point = data[SVector{3,Int}(5:7)]
     return nothing
 end
 function set_data0!(model::LinearContact, data::AbstractVector)
-	model.cf = data[1]
+	model.friction_coefficient = data[1]
     model.offset = data[SVector{3,Int}(2:4)]
-    model.p = data[SVector{3,Int}(5:7)]
+    model.contact_point = data[SVector{3,Int}(5:7)]
     return nothing
 end
 function set_data0!(model::ImpactContact, data::AbstractVector)
     model.offset = data[SVector{3,Int}(1:3)]
-    model.p = data[SVector{3,Int}(4:6)]
+    model.contact_point = data[SVector{3,Int}(4:6)]
     return nothing
 end
 function set_data0!(contact::ContactConstraint, data::AbstractVector)

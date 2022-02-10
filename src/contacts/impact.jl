@@ -1,14 +1,14 @@
 mutable struct ImpactContact{T,N} <: Contact{T,N}
-    ainv3::Adjoint{T,SVector{3,T}} # inverse matrix
-    p::SVector{3,T}
+    surface_normal_projector::Adjoint{T,SVector{3,T}} # inverse matrix
+    contact_point::SVector{3,T}
     offset::SVector{3,T}
 
-    function ImpactContact(body::Body{T}, normal::AbstractVector; p = szeros(T, 3), offset::AbstractVector = szeros(T, 3)) where T
+    function ImpactContact(body::Body{T}, normal::AbstractVector; contact_point = szeros(T, 3), offset::AbstractVector = szeros(T, 3)) where T
         V1, V2, V3 = orthogonalcols(normal) # gives two plane vectors and the original normal axis
         A = [V1 V2 V3]
         Ainv = inv(A)
-        ainv3 = Ainv[3,SA[1; 2; 3]]'
-        new{Float64,2}(ainv3, p, offset)
+        surface_normal_projector = Ainv[3,SA[1; 2; 3]]'
+        new{Float64,2}(surface_normal_projector, contact_point, offset)
     end
 end
 
@@ -16,32 +16,33 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N
     model = contact.model
     body = get_body(mechanism, contact.parent_id)
     x3, q3 = next_configuration(body.state, mechanism.timestep)
-    SVector{1,T}(model.ainv3 * (x3 + vrotate(model.p,q3) - model.offset) - contact.impulses[2][1])
+    SVector{1,T}(model.surface_normal_projector * (x3 + vrotate(model.contact_point,q3) - model.offset) - contact.impulses[2][1])
 end
 
 @inline function constraint_jacobian_velocity(model::ImpactContact, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, timestep)
-    V = model.ainv3 * timestep
-    Ω = model.ainv3 * ∂vrotate∂q(model.p, q3) * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)
+    V = model.surface_normal_projector * timestep
+    Ω = model.surface_normal_projector * ∂vrotate∂q(model.contact_point, q3) * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)
     return [V Ω]
 end
 
 @inline function constraint_jacobian_configuration(model::ImpactContact, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, timestep)
-    X = model.ainv3
-    Q = model.ainv3 * ∂vrotate∂q(model.p, q3)
+    X = model.surface_normal_projector
+    Q = model.surface_normal_projector * ∂vrotate∂q(model.contact_point, q3)
     return [X Q]
 end
 
 @inline function impulse_map(model::ImpactContact, x::AbstractVector, q::UnitQuaternion, λ)
-    X = model.ainv3
+    X = model.surface_normal_projector
     # q * ... is a rotation by quaternion q it is equivalent to Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * ...
-    Q = - X * q * skew(model.p - vrotate(model.offset, inv(q)))
+    Q = - X * q * skew(
+         - vrotate(model.offset, inv(q)))
     return [X Q]
 end
 
 @inline function force_mapping(model::ImpactContact)
-    X = model.ainv3
+    X = model.surface_normal_projector
     return X
 end
 

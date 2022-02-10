@@ -28,15 +28,15 @@ function get_raiberthopper(; timestep::T=0.05, gravity=[0.0; 0.0; -9.81], spring
         friction_coefficient = 0.5
 
         # foot
-        foot_contacts = contact_constraint(foot, contact_normal, cf=friction_coefficient,
-            p=[0.0; 0.0; 0.0], offset=[0.0; 0.0; foot_radius])
+        foot_contacts = contact_constraint(foot, contact_normal, friction_coefficient=friction_coefficient,
+            contact_point=[0.0; 0.0; 0.0], offset=[0.0; 0.0; foot_radius])
 
         contacts = [foot_contacts]
 
         # body
         if contact_body
-            body_contacts = contact_constraint(body, contact_normal, cf=friction_coefficient,
-                p=[0.0; 0.0; 0.0], offset=[0.0; 0.0; body_radius])
+            body_contacts = contact_constraint(body, contact_normal, friction_coefficient=friction_coefficient,
+                contact_point=[0.0; 0.0; 0.0], offset=[0.0; 0.0; body_radius])
             push!(contacts, body_contacts)
         end
         

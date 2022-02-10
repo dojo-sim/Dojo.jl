@@ -1,4 +1,4 @@
-function get_snake(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, contact::Bool=true,
+function get_snake(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_coefficient::T=0.8, contact::Bool=true,
     contact_type=:contact, spring=0.0, damper=0.0, Nb::Int=2,
     jointtype::Symbol=:Spherical, h::T=1.0, r::T=0.05) where T
 
@@ -27,10 +27,10 @@ function get_snake(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, con
     if contact
         n = Nb
         normal = [[0;0;1.0] for i = 1:n]
-        cf = cf * ones(n)
+        friction_coefficient = friction_coefficient * ones(n)
 
-        contacts1 = contact_constraint(bodies, normal, cf=cf, p = fill(vert11, n), contact_type=contact_type) # we need to duplicate point for prismatic joint for instance
-        contacts2 = contact_constraint(bodies, normal, cf=cf, p = fill(vert12, n), contact_type=contact_type)
+        contacts1 = contact_constraint(bodies, normal, friction_coefficient=friction_coefficient, contact_points=fill(vert11, n), contact_type=contact_type) # we need to duplicate point for prismatic joint for instance
+        contacts2 = contact_constraint(bodies, normal, friction_coefficient=friction_coefficient, contact_points=fill(vert12, n), contact_type=contact_type)
         mech = Mechanism(origin, bodies, joints, [contacts1; contacts2], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     else
         mech = Mechanism(origin, bodies, joints, gravity=gravity, timestep=timestep, spring=spring, damper=damper)

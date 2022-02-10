@@ -65,9 +65,9 @@ function cone_morphing(D; vis=Visualizer(), fps=30, rot=0.00, vis_truth::Bool=tr
 	b0 = Int(floor(b0*fps))
 	b1 = Int(floor(b1*fps))
 	D = [fill(D[1], b0); D; fill(D[end] .+ 0.005*rand(length(D[end])), 2b1)]
-	cf_truth = 0.21
+	friction_coefficient_truth = 0.21
 	setobject!(vis[:cone],
-		MeshCat.Cone(Point(0,0,1.0),Point(0,0,0.0),cf_truth),
+		MeshCat.Cone(Point(0,0,1.0),Point(0,0,0.0),friction_coefficient_truth),
 		MeshPhongMaterial(color=color_truth))
 
 	for (i,d) in enumerate(D)

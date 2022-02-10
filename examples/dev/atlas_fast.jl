@@ -18,7 +18,7 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
 timestep_ = 0.01
-mech = getmechanism(:atlas, timestep = timestep_, g = -2.0, cf = 0.8, contact = true,
+mech = getmechanism(:atlas, timestep = timestep_, g = -2.0, friction_coefficient = 0.8, contact = true,
     spring = 0.0, damper = 50.0, model_type = :simple)
 initialize!(mech, :atlas, tran = [0,0,1.1], rot = [0.1,0.05,0])
 

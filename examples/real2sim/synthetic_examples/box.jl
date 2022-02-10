@@ -11,7 +11,7 @@ open(vis)
 # Include new files
 include( "../utils.jl")
 
-mech = get_mechanism(:box, timestep=0.05, g=-9.81, cf=0.2, radius=0.00, side=0.50, mode=:box);
+mech = get_mechanism(:box, timestep=0.05, g=-9.81, friction_coefficient=0.2, radius=0.00, side=0.50, mode=:box);
 initialize!(mech, :box, x=[0,-1,1.], v=[0,2,1.], ω=[2,5,10.])
 storage = simulate!(mech, 5.0, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
@@ -24,7 +24,7 @@ visualize(mech, storage, vis=vis, show_contact=false)
 init_kwargs = Dict(:xlims => [[0,0,0.2], [1,1,0.4]],
 				   :vlims => [-2ones(3), [2,2,-1.]],
 				   :ωlims => [-6ones(3), 6ones(3)])
-mech_kwargs = Dict(:cf => 0.1, :radius => 0.0, :side => 0.5)
+mech_kwargs = Dict(:friction_coefficient => 0.1, :radius => 0.0, :side => 0.5)
 generate_dataset(:box, H=0.40, N=35,
 	opts=SolverOptions(btol=3e-4, rtol=3e-4),
 	init_kwargs=init_kwargs,
@@ -66,15 +66,15 @@ plot(hcat([p[1][11:13] for p in pairs0]...)')
 
 include("../quasi_newton.jl")
 function d2data(d)
-	cf = d[1]
-	data = [cf; 0;0;0; +d[2:4];
-			cf; 0;0;0; +d[5:7];
-			cf; 0;0;0; +d[8:10];
-			cf; 0;0;0; +d[11:13];
-			cf; 0;0;0; +d[14:16];
-			cf; 0;0;0; +d[17:19];
-			cf; 0;0;0; +d[20:22];
-			cf; 0;0;0; +d[23:25];
+	friction_coefficient = d[1]
+	data = [friction_coefficient; 0;0;0; +d[2:4];
+			friction_coefficient; 0;0;0; +d[5:7];
+			friction_coefficient; 0;0;0; +d[8:10];
+			friction_coefficient; 0;0;0; +d[11:13];
+			friction_coefficient; 0;0;0; +d[14:16];
+			friction_coefficient; 0;0;0; +d[17:19];
+			friction_coefficient; 0;0;0; +d[20:22];
+			friction_coefficient; 0;0;0; +d[23:25];
 			]
 	return data
 end

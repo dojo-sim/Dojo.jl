@@ -143,7 +143,7 @@ function body_constraint_jacobian_contact_data(mechanism::Mechanism, body::Body{
     x3, q3 = next_configuration(body.state, mechanism.timestep)
     γ = contact.impulses_dual[2]
 
-    ∇cf = szeros(T,3,1)
+    ∇friction_coefficient = szeros(T,3,1)
 
     X = force_mapping(model)
     # this what we differentiate: Qᵀγ = - skew(p - vrotate(offset, inv(q3))) * VRmat(q3) * LᵀVᵀmat(q3) * X' * γ
@@ -151,7 +151,7 @@ function body_constraint_jacobian_contact_data(mechanism::Mechanism, body::Body{
     ∇off = - ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ) * -∂vrotate∂p(offset, inv(q3))
 
     ∇X = szeros(T,3,Nd)
-    ∇Q = [∇cf ∇p ∇off]
+    ∇Q = [∇friction_coefficient ∇p ∇off]
     return [∇X; ∇Q]
 end
 
@@ -160,19 +160,19 @@ function contact_constraint_jacobian_contact_data(mechanism::Mechanism, contact:
         body::Body{T}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
     Nd = data_dim(contact)
     model = contact.model
-    p = model.p
+    p = model.contact_point
     offset = model.offset
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, mechanism.timestep)
     s = contact.impulses[2]
     γ = contact.impulses_dual[2]
 
-    ∇cf = SA[0,γ[1],0,0]
-    ∇off = [-model.ainv3; szeros(T,1,3); -model.Bx * skew(vrotate(ϕ25, q3))]
-    ∇p = [model.ainv3 * ∂vrotate∂p(model.p, q3); szeros(T,1,3); model.Bx * skew(vrotate(ϕ25, q3)) * ∂vrotate∂p(model.p, q3)]
+    ∇friction_coefficient = SA[0,γ[1],0,0]
+    ∇off = [-model.surface_normal_projector; szeros(T,1,3); -model.surface_projector * skew(vrotate(ϕ25, q3))]
+    ∇p = [model.surface_normal_projector * ∂vrotate∂p(model.contact_point, q3); szeros(T,1,3); model.surface_projector * skew(vrotate(ϕ25, q3)) * ∂vrotate∂p(model.contact_point, q3)]
 
     ∇compμ = szeros(T,N½,Nd)
-    ∇g = [∇cf ∇p ∇off]
+    ∇g = [∇friction_coefficient ∇p ∇off]
     return [∇compμ; ∇g]
 end
 

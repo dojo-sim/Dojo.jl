@@ -4,11 +4,11 @@
 struct Walker2d end
 
 function walker2d(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
-    cf::T=1.9, spring=0.0, damper=0.1,
+    friction_coefficient::T=1.9, spring=0.0, damper=0.1,
     s::Int=1, contact::Bool=true, info=nothing, vis::Visualizer=Visualizer(), name::Symbol=:robot,
     opts_step=SolverOptions(), opts_grad=SolverOptions()) where T
 
-    mechanism = get_walker2d(timestep=dt, gravity=gravity, cf=cf, spring=spring, damper=damper, contact=contact)
+    mechanism = get_walker2d(timestep=dt, gravity=gravity, friction_coefficient=friction_coefficient, spring=spring, damper=damper, contact=contact)
     initialize_walker2d!(mechanism)
 
     if mode == :min

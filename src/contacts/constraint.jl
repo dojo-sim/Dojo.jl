@@ -47,15 +47,15 @@ end
 
     for i=1:Nc
         model = contact.model
-        p = model.p
+        contact_point = model.contact_point
         offset = model.offset
 
         X = force_mapping(model)
         λ = X' * contact.impulses_dual[2]
 
         ∇ = ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * λ) * -∂vrotate∂q(offset, inv(q3)) * Tmat()
-        ∇ += skew(p - vrotate(offset, inv(q3))) * ∂qVRmat(LᵀVᵀmat(q3) * λ)
-        ∇ += skew(p - vrotate(offset, inv(q3))) * VRmat(q3) * ∂qLᵀVᵀmat(λ)
+        ∇ += skew(contact_point - vrotate(offset, inv(q3))) * ∂qVRmat(LᵀVᵀmat(q3) * λ)
+        ∇ += skew(contact_point - vrotate(offset, inv(q3))) * VRmat(q3) * ∂qLᵀVᵀmat(λ)
         ∇ *= rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)
         body.state.D -= [szeros(T,6,3) [szeros(T,3,3); ∇]]
     end

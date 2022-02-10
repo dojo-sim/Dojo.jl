@@ -18,7 +18,7 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 timestep0 = 0.1
-mech = getmechanism(:atlas, timestep = timestep0, g = -9.81, cf = 0.8, contact = true,
+mech = getmechanism(:atlas, timestep = timestep0, g = -9.81, friction_coefficient = 0.8, contact = true,
     spring = 0.0, damper = 30.0, model_type = :fast)
 initialize!(mech, :atlas, tran = [0,0,1.1], rot = [0.1,0.05,0])
 

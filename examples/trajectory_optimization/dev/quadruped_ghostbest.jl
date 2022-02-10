@@ -21,8 +21,8 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 # System
 gravity = -9.81
 timestep = 0.05
-cf = 0.8
-mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, cf = cf, damper = 0.0, spring = 0.0)
+friction_coefficient = 0.8
+mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_coefficient = friction_coefficient, damper = 0.0, spring = 0.0)
 
 # Dimensions
 H = 20
@@ -41,7 +41,7 @@ z1ref = zref[1]
 
 # Initial GHOST state
 ϵ0 = 1e-2
-mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, cf = cf, damper = 10.0, spring = 300.0)
+mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_coefficient = friction_coefficient, damper = 10.0, spring = 300.0)
 initialize!(mech, :quadruped)
 set_state!(mech, z1ref)
 set_spring_offset!(mech, x1ref)
@@ -54,8 +54,8 @@ for i = 1:H
 end
 
 # Initial conditions, controls, disturbances
-no_contact_mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, cf = cf, damper = 5.0, spring = 0.0, contact = false)
-mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, cf = cf, damper = 5.0, spring = 0.0)
+no_contact_mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_coefficient = friction_coefficient, damper = 5.0, spring = 0.0, contact = false)
+mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_coefficient = friction_coefficient, damper = 5.0, spring = 0.0)
 w = [zeros(d) for t = 1:H-1]
 ughost = [inverse_control(no_contact_mech, xghost[i], xghost[i+1]) for i = 1:H-1]
 
@@ -235,7 +235,7 @@ ustar = deepcopy(Usol[end])
 visualize(mech, storage; vis = vis)
 
 
-mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, cf = cf, damper = 5.0, spring = 0.0)
+mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_coefficient = friction_coefficient, damper = 5.0, spring = 0.0)
 initialize!(mech, :quadruped)
 set_state!(mech, minimal_to_maximal(mech, xabs[1]))
 

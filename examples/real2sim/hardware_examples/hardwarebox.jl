@@ -16,7 +16,7 @@ S = 7
 timestep = 1/148 * S
 gscaled = -9.81*20
 
-mech = get_mechanism(:box, timestep=timestep, gravity=gravityscaled, cf=0.2, radius=0.00, side=0.50, mode=:box);
+mech = get_mechanism(:box, timestep=timestep, gravity=gravityscaled, friction_coefficient=0.2, radius=0.00, side=0.50, mode=:box);
 initialize!(mech, :box, x=[0,-1,1.], v=[0,2,1.], ω=[2,5,10.])
 storage = simulate!(mech, 5.0, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
@@ -63,16 +63,16 @@ plot(hcat([p[1][11:13] for p in pairs0]...)')
 ################################################################################
 include("../quasi_newton.jl")
 function d2data(d)
-	cf = d[1]
+	friction_coefficient = d[1]
 	side = d[2]
-	data = [cf; 0;0;0; +side; +side; -side;
-			cf; 0;0;0; +side; -side; -side;
-			cf; 0;0;0; -side; +side; -side;
-			cf; 0;0;0; -side; -side; -side;
-			cf; 0;0;0; +side; +side; +side;
-			cf; 0;0;0; +side; -side; +side;
-			cf; 0;0;0; -side; +side; +side;
-			cf; 0;0;0; -side; -side; +side;
+	data = [friction_coefficient; 0;0;0; +side; +side; -side;
+			friction_coefficient; 0;0;0; +side; -side; -side;
+			friction_coefficient; 0;0;0; -side; +side; -side;
+			friction_coefficient; 0;0;0; -side; -side; -side;
+			friction_coefficient; 0;0;0; +side; +side; +side;
+			friction_coefficient; 0;0;0; +side; -side; +side;
+			friction_coefficient; 0;0;0; -side; +side; +side;
+			friction_coefficient; 0;0;0; -side; -side; +side;
 			]
 	return data
 end
@@ -121,15 +121,15 @@ plot(x,y,f,st=:surface,camera=(25,75))
 
 include("../quasi_newton.jl")
 function d2data(d)
-	cf = d[1]
-	data = [cf; 0;0;0; +d[2:4];
-			cf; 0;0;0; +d[5:7];
-			cf; 0;0;0; +d[8:10];
-			cf; 0;0;0; +d[11:13];
-			cf; 0;0;0; +d[14:16];
-			cf; 0;0;0; +d[17:19];
-			cf; 0;0;0; +d[20:22];
-			cf; 0;0;0; +d[23:25];
+	friction_coefficient = d[1]
+	data = [friction_coefficient; 0;0;0; +d[2:4];
+			friction_coefficient; 0;0;0; +d[5:7];
+			friction_coefficient; 0;0;0; +d[8:10];
+			friction_coefficient; 0;0;0; +d[11:13];
+			friction_coefficient; 0;0;0; +d[14:16];
+			friction_coefficient; 0;0;0; +d[17:19];
+			friction_coefficient; 0;0;0; +d[20:22];
+			friction_coefficient; 0;0;0; +d[23:25];
 			]
 	return data
 end
