@@ -7,7 +7,7 @@ include(joinpath(@__DIR__, "../../env/atlas/methods/template.jl"))
 
 gravity = -9.81
 dt = 0.05
-cf = 0.8
+friction_coefficient = 0.8
 damper = 50.0
 spring = 0.0
 model_type = :armless
@@ -15,7 +15,7 @@ env = make("atlas",
     mode=:min,
     dt=dt,
     gravity=gravity,
-    cf=cf,
+    friction_coefficient=friction_coefficient,
     damper=damper,
     spring=spring,
 	model_type=model_type)
@@ -46,7 +46,7 @@ visualize(env, xref)
 # center_of_mass(env.mechanism, storage, 1)
 
 ## gravity compensation TODO: solve optimization problem instead
-mech = get_mechanism(:atlas, timestep=dt, gravity=gravity, cf=cf, damper=1000.0,
+mech = get_mechanism(:atlas, timestep=dt, gravity=gravity, friction_coefficient=friction_coefficient, damper=1000.0,
 	spring=spring, model_type=model_type)
 initialize!(mech, :atlas)
 storage = simulate!(mech, 0.10, record=true, verbose=false)
@@ -57,7 +57,7 @@ F_damper = get_apply_damper(env.mechanism)
 u_damper = F_damper * env.mechanism.timestep
 u_control = u_damper[6 .+ (1:15)]
 
-mech = get_mechanism(:atlas, timestep=dt, gravity=gravity, cf=cf, damper=0.0,
+mech = get_mechanism(:atlas, timestep=dt, gravity=gravity, friction_coefficient=friction_coefficient, damper=0.0,
 	spring=spring, model_type=model_type)
 function controller!(mechanism, k)
     set_control!(mechanism, u_damper)

@@ -1,4 +1,4 @@
-function get_quadruped(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, spring=0.0,
+function get_quadruped(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_coefficient::T=0.8, spring=0.0,
         damper=0.0, contact::Bool=true, body_contact::Bool=true, limits::Bool=true,
         path=joinpath(@__DIR__, "../deps/quadruped.urdf"),
         joint_limits=[[-0.5, -0.5, -2.5,],
@@ -50,22 +50,22 @@ function get_quadruped(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8,
         elbow_contactL = [-0.005;+0.023;-0.16]
         elbow_offset = [0;0;0.023]
 
-        foot_contacts1 = contact_constraint(get_body(mech,:FR_calf), normal; cf=cf, p=foot_contact, offset=foot_offset, name=:FR_contact)
-        foot_contacts2 = contact_constraint(get_body(mech,:FL_calf), normal; cf=cf, p=foot_contact, offset=foot_offset, name=:FL_contact)
-        foot_contacts3 = contact_constraint(get_body(mech,:RR_calf), normal; cf=cf, p=foot_contact, offset=foot_offset, name=:RR_contact)
-        foot_contacts4 = contact_constraint(get_body(mech,:RL_calf), normal; cf=cf, p=foot_contact, offset=foot_offset, name=:RL_contact)
+        foot_contacts1 = contact_constraint(get_body(mech,:FR_calf), normal; friction_coefficient=friction_coefficient, contact_point=foot_contact, offset=foot_offset, name=:FR_contact)
+        foot_contacts2 = contact_constraint(get_body(mech,:FL_calf), normal; friction_coefficient=friction_coefficient, contact_point=foot_contact, offset=foot_offset, name=:FL_contact)
+        foot_contacts3 = contact_constraint(get_body(mech,:RR_calf), normal; friction_coefficient=friction_coefficient, contact_point=foot_contact, offset=foot_offset, name=:RR_contact)
+        foot_contacts4 = contact_constraint(get_body(mech,:RL_calf), normal; friction_coefficient=friction_coefficient, contact_point=foot_contact, offset=foot_offset, name=:RL_contact)
         contacts = [foot_contacts1; foot_contacts2; foot_contacts3; foot_contacts4]
 
         if body_contact
-            elbow_contacts1 = contact_constraint(get_body(mech,:FR_thigh), normal; cf=cf, p=elbow_contactR, offset=elbow_offset, name=:FR_hip_contact)
-            elbow_contacts2 = contact_constraint(get_body(mech,:FL_thigh), normal; cf=cf, p=elbow_contactL, offset=elbow_offset, name=:FL_hip_contact)
-            elbow_contacts3 = contact_constraint(get_body(mech,:RR_thigh), normal; cf=cf, p=elbow_contactR, offset=elbow_offset, name=:RR_hip_contact)
-            elbow_contacts4 = contact_constraint(get_body(mech,:RL_thigh), normal; cf=cf, p=elbow_contactL, offset=elbow_offset, name=:RL_hip_contact)
+            elbow_contacts1 = contact_constraint(get_body(mech,:FR_thigh), normal; friction_coefficient=friction_coefficient, contact_point=elbow_contactR, offset=elbow_offset, name=:FR_hip_contact)
+            elbow_contacts2 = contact_constraint(get_body(mech,:FL_thigh), normal; friction_coefficient=friction_coefficient, contact_point=elbow_contactL, offset=elbow_offset, name=:FL_hip_contact)
+            elbow_contacts3 = contact_constraint(get_body(mech,:RR_thigh), normal; friction_coefficient=friction_coefficient, contact_point=elbow_contactR, offset=elbow_offset, name=:RR_hip_contact)
+            elbow_contacts4 = contact_constraint(get_body(mech,:RL_thigh), normal; friction_coefficient=friction_coefficient, contact_point=elbow_contactL, offset=elbow_offset, name=:RL_hip_contact)
             push!(contacts, elbow_contacts1, elbow_contacts2, elbow_contacts3, elbow_contacts4)
-            hip_contacts1 = contact_constraint(get_body(mech,:FR_hip), normal; cf=cf, p=-hip_contact, offset=hip_offset, name=:FR_hip_contact)
-            hip_contacts2 = contact_constraint(get_body(mech,:FL_hip), normal; cf=cf, p=+hip_contact, offset=hip_offset, name=:FL_hip_contact)
-            hip_contacts3 = contact_constraint(get_body(mech,:RR_hip), normal; cf=cf, p=-hip_contact, offset=hip_offset, name=:RR_hip_contact)
-            hip_contacts4 = contact_constraint(get_body(mech,:RL_hip), normal; cf=cf, p=+hip_contact, offset=hip_offset, name=:RL_hip_contact)
+            hip_contacts1 = contact_constraint(get_body(mech,:FR_hip), normal; friction_coefficient=friction_coefficient, contact_point=-hip_contact, offset=hip_offset, name=:FR_hip_contact)
+            hip_contacts2 = contact_constraint(get_body(mech,:FL_hip), normal; friction_coefficient=friction_coefficient, contact_point=+hip_contact, offset=hip_offset, name=:FL_hip_contact)
+            hip_contacts3 = contact_constraint(get_body(mech,:RR_hip), normal; friction_coefficient=friction_coefficient, contact_point=-hip_contact, offset=hip_offset, name=:RR_hip_contact)
+            hip_contacts4 = contact_constraint(get_body(mech,:RL_hip), normal; friction_coefficient=friction_coefficient, contact_point=+hip_contact, offset=hip_offset, name=:RL_hip_contact)
             push!(contacts, hip_contacts1, hip_contacts2, hip_contacts3, hip_contacts4)
         end
 

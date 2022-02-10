@@ -7,14 +7,14 @@ include(joinpath(@__DIR__, "../../env/quadruped/methods/template.jl"))
 
 gravity = -9.81
 dt = 0.05
-cf = 0.8
+friction_coefficient = 0.8
 damper = 5.0
 spring = 0.0
 env = quadruped(
     mode=:min,
     dt=dt,
     gravity=gravity,
-    cf=cf,
+    friction_coefficient=friction_coefficient,
     damper=damper,
     spring=spring)
 
@@ -39,7 +39,7 @@ zref = [minimal_to_maximal(env.mechanism, x) for x in xref]
 visualize(env, xref)
 
 ## gravity compensation TODO: solve optimization problem instead
-mech = get_mechanism(:quadruped, timestep=dt, gravity=gravity, cf=0.8, damper=5.0, spring=0.0)
+mech = get_mechanism(:quadruped, timestep=dt, gravity=gravity, friction_coefficient=0.8, damper=5.0, spring=0.0)
 initialize!(mech, :quadruped)
 storage = simulate!(mech, 1.0, record=true, verbose=false)
 visualize(mech, storage, vis=env.vis)

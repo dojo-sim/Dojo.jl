@@ -350,8 +350,8 @@ function contact_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
                 end
 
                 if model_type <: NonlinearContact
-                    # J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= _dN(x3, vector(q3), contact.impulses_dual[2][1:1], model.p)
-                    # J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= _dB(x3, vector(q3), contact.impulses_dual[2][2:4], model.p)
+                    # J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= _dN(x3, vector(q3), contact.impulses_dual[2][1:1], model.contact_point)
+                    # J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= _dB(x3, vector(q3), contact.impulses_dual[2][2:4], model.contact_point)
                     J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= FiniteDiff.finite_difference_jacobian(d, [x3; vector(q3)])
                 elseif model_type <: LinearContact
                     J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= FiniteDiff.finite_difference_jacobian(d, [x3; vector(q3)])
@@ -384,23 +384,23 @@ function contact_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,
 
         function d(vars)
             q3 = UnitQuaternion(vars..., false)
-            # Bxmat = model.Bx
-            # Bqmat = Bxmat * ∂vrotate∂q(model.p, q) * LVᵀmat(q)
+            # surface_projectormat = model.surface_projector
+            # Bqmat = surface_projectormat * ∂vrotate∂q(model.contact_point, q) * LVᵀmat(q)
             # return Bqmat * ϕ25
-            vp = v25 + skew(vrotate(ϕ25, q3)) * (vrotate(model.p, q3) - model.offset)
-            return model.Bx * vp
+            vp = v25 + skew(vrotate(ϕ25, q3)) * (vrotate(model.contact_point, q3) - model.offset)
+            return model.surface_projector * vp
         end
         if model_type <: NonlinearContact
-            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  model.ainv3
-            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = model.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(model.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(model.p)))#) * Rmat(quaternion_map(ϕ25, timestep)*timestep/2)*LVᵀmat(q2)
-            J[offr + N½ .+ (3:4), (ibody-1)*13 .+ (7:10)] = FiniteDiff.finite_difference_jacobian(d, vector(q3))#dBω(vector(q3), ϕ25, model.p)
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  model.surface_normal_projector
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = model.surface_normal_projector * (VLmat(q3) * Lmat(UnitQuaternion(model.contact_point)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(model.contact_point)))#) * Rmat(quaternion_map(ϕ25, timestep)*timestep/2)*LVᵀmat(q2)
+            J[offr + N½ .+ (3:4), (ibody-1)*13 .+ (7:10)] = FiniteDiff.finite_difference_jacobian(d, vector(q3))#dBω(vector(q3), ϕ25, model.contact_point)
         elseif model_type <: LinearContact
-            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  model.ainv3
-            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = model.ainv3 * ∂vrotate∂q(model.p, q3)
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  model.surface_normal_projector
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = model.surface_normal_projector * ∂vrotate∂q(model.contact_point, q3)
             J[offr + N½ .+ (3:6), (ibody-1)*13 .+ (7:10)] = FiniteDiff.finite_difference_jacobian(d, vector(q3))
         elseif model_type <: ImpactContact
-            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  model.ainv3
-            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = model.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(model.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(model.p)))#) * Rmat(quaternion_map(ϕ25, timestep)*timestep/2)*LVᵀmat(q2)
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  model.surface_normal_projector
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = model.surface_normal_projector * (VLmat(q3) * Lmat(UnitQuaternion(model.contact_point)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(model.contact_point)))#) * Rmat(quaternion_map(ϕ25, timestep)*timestep/2)*LVᵀmat(q2)
         end
         offr += length(contact)
     end

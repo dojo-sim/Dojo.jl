@@ -4,19 +4,19 @@
 
 simdata_dim(mechanism::Mechanism) = sum(simdata_dim.(mech.contacts))
 simdata_dim(contact::ContactConstraint) = sum(simdata_dim.(contact.constraints))
-simdata_dim(bound::NonlinearContact) = 7 # [cf, p, offset]
-simdata_dim(bound::LinearContact) = 7 # [cf, p, offset]
+simdata_dim(bound::NonlinearContact) = 7 # [friction_coefficient, p, offset]
+simdata_dim(bound::LinearContact) = 7 # [friction_coefficient, p, offset]
 simdata_dim(bound::ImpactContact) = 6 # [p, offset]
 
 function set_simulator_data!(bound::NonlinearContact, data::AbstractVector)
-	bound.cf = data[1]
+	bound.friction_coefficient = data[1]
     bound.offset = data[SVector{3,Int}(2:4)]
     bound.p = data[SVector{3,Int}(5:7)]
     return nothing
 end
 
 function set_simulator_data!(bound::LinearContact, data::AbstractVector)
-	bound.cf = data[1]
+	bound.friction_coefficient = data[1]
     bound.offset = data[SVector{3,Int}(2:4)]
     bound.p = data[SVector{3,Int}(5:7)]
     return nothing
@@ -40,11 +40,11 @@ function set_simulator_data!(mechanism::Mechanism, data::AbstractVector)
 end
 
 function get_simulator_data(bound::NonlinearContact)
-	return [bound.cf; bound.offset; bound.p]
+	return [bound.friction_coefficient; bound.offset; bound.p]
 end
 
 function get_simulator_data(boundset::LinearContact)
-	return [bound.cf; bound.off; bound.p]
+	return [bound.friction_coefficient; bound.off; bound.p]
 end
 
 function get_simulator_data(bound::ImpactContact)
@@ -100,22 +100,22 @@ function ∂g∂simdata(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where 
     body = get_body(mechanism, contact.parent_id)
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, mechanism.timestep)
-	s = contact.primal[2]
-	γ = contact.dual[2]
+	s = contact.impulses[2]
+	γ = contact.impulses_dual[2]
 
 	# Contribution to Injointonstraint
-	∇cf = SA[0,γ[1],0,0]
-	∇off = [-bound.ainv3; szeros(T,1,3); -bound.Bx * skew(vrotate(ϕ25, q3))]
-	∇p = [bound.ainv3 * ∂vrotate∂p(bound.p, q3); szeros(T,1,3); bound.Bx * skew(vrotate(ϕ25, q3)) * ∂vrotate∂p(bound.p, q3)]
-	∇contact = [∇cf ∇off ∇p]
+	∇friction_coefficient = SA[0,γ[1],0,0]
+	∇off = [-bound.surface_normal_projector; szeros(T,1,3); -bound.surface_projector * skew(vrotate(ϕ25, q3))]
+	∇p = [bound.surface_normal_projector * ∂vrotate∂p(bound.p, q3); szeros(T,1,3); bound.surface_projector * skew(vrotate(ϕ25, q3)) * ∂vrotate∂p(bound.p, q3)]
+	∇contact = [∇friction_coefficient ∇off ∇p]
 
 	# Contribution to Body dynamics
-	∇cf = szeros(T,3)
+	∇friction_coefficient = szeros(T,3)
 	X = force_mapping(bound)
 	# this what we differentiate: Qᵀγ = - skew(p - vrotate(offset, inv(q3))) * VRmat(q3) * LᵀVᵀmat(q3) * X' * γ
 	∇off = - ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ) * -∂vrotate∂p(offset, inv(q3))
 	∇p = - ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ)
-	∇body = [∇cf ∇off ∇p]
+	∇body = [∇friction_coefficient ∇off ∇p]
 	return ∇contact, ∇body
 end
 
@@ -127,16 +127,16 @@ function datafilename(model::Symbol; kwargs...)
     eval(Symbol(:datafilename, model))(; kwargs...)
 end
 
-function datafilenamesphere(; N::Int=10, cf=0.1, radius=0.5)
-    "sphere_dim_N:$(N)_cf:$(cf)_radius:$(radius).jld2"
+function datafilenamesphere(; N::Int=10, friction_coefficient=0.1, radius=0.5)
+    "sphere_dim_N:$(N)_friction_coefficient:$(friction_coefficient)_radius:$(radius).jld2"
 end
 
-function datafilenamebox2d(; N::Int=10, cf=0.1, radius=0.05, side=0.50)
-    "box2d_dim_N:$(N)_cf:$(cf)_radius:$(radius)_side:$(side).jld2"
+function datafilenamebox2d(; N::Int=10, friction_coefficient=0.1, radius=0.05, side=0.50)
+    "box2d_dim_N:$(N)_friction_coefficient:$(friction_coefficient)_radius:$(radius)_side:$(side).jld2"
 end
 
-function datafilenamebox(; N::Int=10, cf=0.1, radius=0., side=0.50)
-    "box_dim_N:$(N)_cf:$(cf)_radius:$(radius)_side:$(side).jld2"
+function datafilenamebox(; N::Int=10, friction_coefficient=0.1, radius=0., side=0.50)
+    "box_dim_N:$(N)_friction_coefficient:$(friction_coefficient)_radius:$(radius)_side:$(side).jld2"
 end
 
 function datafilenamehardwarebox(; N::Int=10, S::Int=1)
@@ -203,7 +203,7 @@ function generate_dataset(model::Symbol;
 		N::Int=10, H=2.0, timestep=0.05, g=-9.81,
 		opts=SolverOptions(btol=1e-6, rtol=1e-6),
 		init_kwargs=Dict(), # xlims, vlims, θlims, ωlims...
-		mech_kwargs=Dict(), # cf, radius, side...
+		mech_kwargs=Dict(), # friction_coefficient, radius, side...
 		sleep_ratio = 0.0,
 		show_contact = true,
 		)

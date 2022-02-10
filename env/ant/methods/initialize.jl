@@ -1,4 +1,4 @@
-function get_ant(; timestep::T=0.05, gravity=[0.0; 0.0; -9.81], cf::T=0.5,
+function get_ant(; timestep::T=0.05, gravity=[0.0; 0.0; -9.81], friction_coefficient::T=0.5,
     spring=0.0, damper=1.0, contact::Bool=true, contact_body=true,
     limits::Bool=true,
     joint_limits=[[-30, 30, -30, -70, -30, -70, -30, 30] * π / 180.0,
@@ -49,21 +49,21 @@ function get_ant(; timestep::T=0.05, gravity=[0.0; 0.0; -9.81], cf::T=0.5,
         foot = [get_body(mech, name) for name in foot_names]
         p = [[0.2; 0.2; 0.0], [-0.2; 0.2; 0.0], [-0.2; -0.2; 0.0], [0.2; -0.2; 0.0]]
         o = [[0.0; 0.0; f.shape.rh[1]] for f in foot]
-        feet_contacts = [contact_constraint(foot[i], normal, cf=cf, p=p[i], offset=o[i]) for i = 1:length(foot_names)]
+        feet_contacts = [contact_constraint(foot[i], normal, friction_coefficient=friction_coefficient, contact_point=p[i], offset=o[i]) for i = 1:length(foot_names)]
 
         if contact_body
             # torso contact
             torso = get_body(mech, :torso)
             p = [0.0; 0.0; 0.0]
             o = [0.0; 0.0; torso.shape.r]
-            torso_contacts = contact_constraint(torso, normal, cf=cf, p=p, offset=o)
+            torso_contacts = contact_constraint(torso, normal, friction_coefficient=friction_coefficient, contact_point=p, offset=o)
 
             # elbow contact
             elbow_names = [:aux_1, :aux_2, :aux_3, :aux_4]
             elbow = [get_body(mech, e) for e in elbow_names]
-            p = [-[0.1; 0.1; 0.0], -[-0.1; 0.1; 0.0], -[-0.1; -0.1; 0.0], -[0.1; -0.1; 0.0]]
+            p = [-[0.1; 0.1; 0.0], -[-0.1; 0.1; 0.0], -[-0.1;-0.1; 0.0], -[0.1; -0.1; 0.0]]
             o = [[0.0; 0.0; e.shape.rh[1]] for e in elbow]
-            elbow_contacts = [contact_constraint(elbow[i], normal, cf=cf, p=p[i], offset=o[i]) for i = 1:length(elbow_names)]
+            elbow_contacts = [contact_constraint(elbow[i], normal, friction_coefficient=friction_coefficient, contact_point=p[i], offset=o[i]) for i = 1:length(elbow_names)]
 
             feet_contacts = [feet_contacts..., torso_contacts, elbow_contacts...]
         end

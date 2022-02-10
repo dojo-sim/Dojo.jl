@@ -19,8 +19,8 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
-linmech = getmechanism(:snake, Nb = 5, timestep = 0.02, g = -9.81, cf = 0.2, contact = false, contact_type = :linear_contact)
-socmech = getmechanism(:snake, Nb = 5, timestep = 0.02, g = -9.81, cf = 0.2, contact = false, contact_type = :contact)
+linmech = getmechanism(:snake, Nb = 5, timestep = 0.02, g = -9.81, friction_coefficient = 0.2, contact = false, contact_type = :linear_contact)
+socmech = getmechanism(:snake, Nb = 5, timestep = 0.02, g = -9.81, friction_coefficient = 0.2, contact = false, contact_type = :contact)
 
 x = [0,-1.0,0]
 v = [1,.3,4]

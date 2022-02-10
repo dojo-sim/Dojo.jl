@@ -471,7 +471,7 @@ end
 # 	@test abs(sum(diag(M_a * G' * N_a)) - minimal_dimension(mechanism)) < 1.0e-6
 
 # 	# atlas
-# 	mechanism = get_mechanism(:atlas, timestep=0.01, gravity=-9.81, cf=0.5, damper=100.0, spring=1.0, contact=true)
+# 	mechanism = get_mechanism(:atlas, timestep=0.01, gravity=-9.81, friction_coefficient=0.5, damper=100.0, spring=1.0, contact=true)
 # 	initialize_atlasstance!(mechanism, tran=[0,0,0.5], rot=[0.0,0.0,0.0])
 # 	storage = simulate!(mechanism, 1.0, ctrl!, record = true, verbose = false)
 

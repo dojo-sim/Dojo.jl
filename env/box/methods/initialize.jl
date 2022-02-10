@@ -1,4 +1,4 @@
-function get_box(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, radius=0.0, side=0.5,
+function get_box(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_coefficient::T=0.8, radius=0.0, side=0.5,
     contact::Bool=true,
     contact_type=:contact,
     # contact_type=:linear_contact,
@@ -33,9 +33,9 @@ function get_box(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, radiu
         n = length(corners)
         normal = [[0,0,1.0] for i = 1:n]
         offset = [[0,0,radius] for i = 1:n]
-        cf = cf * ones(n)
+        friction_coefficient = friction_coefficient * ones(n)
 
-        contacts = contact_constraint(body1, normal, cf=cf, p=corners, offset=offset, contact_type=contact_type)
+        contacts = contact_constraint(body1, normal, friction_coefficient=friction_coefficient, contact_points=corners, offset=offset, contact_type=contact_type)
         mech = Mechanism(origin, bodies, joints, contacts, gravity=gravity, timestep=timestep)
     else
         mech = Mechanism(origin, bodies, joints, gravity=gravity, timestep=timestep)

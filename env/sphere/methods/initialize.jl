@@ -1,4 +1,4 @@
-function get_sphere(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, radius=0.5,
+function get_sphere(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_coefficient::T=0.8, radius=0.5,
         contact::Bool=true, contact_type::Symbol=:contact) where T
     origin = Origin{T}(name=:origin)
     mass = 1.0
@@ -9,8 +9,8 @@ function get_sphere(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, ra
     if contact
         contact = [0,0,0.0]
         normal = [0,0,1.0]
-        contacts = [contact_constraint(get_body(mechanism, :sphere), normal, cf=cf,
-            p=contact, offset=[0,0,radius], contact_type=contact_type)]
+        contacts = [contact_constraint(get_body(mechanism, :sphere), normal, friction_coefficient=friction_coefficient,
+            contact_point=contact, offset=[0,0,radius], contact_type=contact_type)]
         set_position!(mechanism, get_joint_constraint(mechanism, :floating_joint), [0;0;radius;zeros(3)])
         mechanism = Mechanism(origin, bodies, joints, contacts, gravity=gravity, timestep=timestep)
     end

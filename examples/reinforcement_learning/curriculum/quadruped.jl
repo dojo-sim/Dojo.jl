@@ -21,7 +21,7 @@ open(vis)
 
 gravity = -0*9.81
 timestep = 0.01
-cf = 0.8
+friction_coefficient = 0.8
 damper = 0.0
 spring = 0.0
 ρ0 = 1e-2

@@ -123,7 +123,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N};
                     radius = abs(1.0 * contact.model.offset[3])
                     (radius == 0.0) && (radius = 0.01)
                     contact_shape = Sphere(radius,
-                        xoffset=(contact.model.p),
+                        xoffset=(contact.model.contact_point),
                         qoffset=one(UnitQuaternion), color=RGBA(1.0, 0.0, 0.0, 1.0))
                     visshape = convert_shape(contact_shape)
                     subvisshape = nothing
