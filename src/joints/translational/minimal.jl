@@ -9,29 +9,31 @@ end
 
 function position_error_jacobian_configuration(jacobian_relative::Symbol,
         joint::Translational, xa::AbstractVector, qa::UnitQuaternion,
-        xb::AbstractVector, qb::UnitQuaternion)
-    (jacobian_relative == :parent) && (return position_error_jacobian_configuration_parent(joint, xa, qa, xb, qb))
-    (jacobian_relative == :child) && (return position_error_jacobian_configuration_child(joint, xa, qa, xb, qb))
+        xb::AbstractVector, qb::UnitQuaternion; attjac::Bool=true)
+    (jacobian_relative == :parent) && (return position_error_jacobian_configuration_parent(joint, xa, qa, xb, qb, attjac=attjac))
+    (jacobian_relative == :child) && (return position_error_jacobian_configuration_child(joint, xa, qa, xb, qb, attjac=attjac))
     return
 end
 
 @inline function position_error_jacobian_configuration_parent(joint::Translational{T}, xa::AbstractVector,
-        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
+        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; attjac::Bool=true) where T
     vertices = joint.vertices
     d = xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)) # in the world frame
     X = - SMatrix{3,3,T,9}(Diagonal(sones(3)))
     Q = - ∂qrotation_matrix(qa, vertices[1])
-    ∇xq = [X Q*LVᵀmat(qa)]
+	attjac && (Q *= LVᵀmat(qa))
+    ∇xq = [X Q]
     ∇xq = rotation_matrix(inv(qa)) * ∇xq + [szeros(T,3,3) ∂qrotation_matrix_inv(qa, d) * LVᵀmat(qa)]
     return ∇xq
 end
 
 @inline function position_error_jacobian_configuration_child(joint::Translational{T}, xa::AbstractVector,
-        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
+        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; attjac::Bool=true) where T
     vertices = joint.vertices
     X = SMatrix{3,3,T,9}(Diagonal(sones(3)))
     Q = ∂qrotation_matrix(qb, vertices[2])
-    ∇xq = [X Q*LVᵀmat(qb)]
+	attjac && (Q *= LVᵀmat(qb))
+    ∇xq = [X Q]
     ∇xq = rotation_matrix(inv(qa)) * ∇xq
     return ∇xq
 end
@@ -44,8 +46,8 @@ end
 end
 
 @inline function minimal_coordinates_jacobian_configuration(jacobian_relative::Symbol, joint::Translational,
-        xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-    return nullspace_mask(joint) * position_error_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb)
+        xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; attjac::Bool=true)
+    return nullspace_mask(joint) * position_error_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, attjac=attjac)
 end
 
 ################################################################################

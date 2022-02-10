@@ -177,11 +177,11 @@ Joint3 = Joint{T,3} where T
 
 @inline constraint(joint::Joint, body1::Node, body2::Node, λ, timestep) = constraint(joint, next_configuration(body1.state, timestep)..., next_configuration(body2.state, timestep)..., λ)
 
-@inline function constraint_jacobian_configuration(joint::Joint{T,Nλ,0}, λ) where {T,Nλ}
+@inline function constraint_jacobian_configuration(joint::Joint{T,Nλ,0}, η) where {T,Nλ}
     return Diagonal(+1.00e-10 * sones(T,Nλ))
 end
 
-@inline function constraint_jacobian_configuration(joint::Joint{T,Nλ,Nb}, λ) where {T,Nλ,Nb}
+@inline function constraint_jacobian_configuration(joint::Joint{T,Nλ,Nb}, η) where {T,Nλ,Nb}
     s, γ = get_sγ(joint, η)
     c1 = [Diagonal(γ + 1e-10 * sones(T, Nb)); Diagonal(sones(Nb)); szeros(Nλ, Nb)]
     c2 = [Diagonal(s + 1e-10 * sones(T, Nb)); szeros(Nb, Nb); szeros(Nλ, Nb)]

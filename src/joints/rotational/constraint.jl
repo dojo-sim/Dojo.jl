@@ -40,30 +40,46 @@ end
 @inline function unlimited_constraint(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T}
     return constraint_mask(joint) * Vmat(orientation_error(joint, xa, qa, xb, qb)) # maybe we need to use rotation_vector instead of Vmat
 end
-#
-# @inline function constraint_jacobian_configuration(joint::Rotational{T,Nλ,0,N}, η) where {T,Nλ,N}
-#     return Diagonal(+1.00e-10 * sones(T,N))
+
+# @inline function constraint_jacobian(jacobian_relative::Symbol, joint::Rotational{T,Nλ,0},
+#         xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+#     unlimited_constraint_jacobian(jacobian_relative, joint, xa, qa, xb, qb, η)
 # end
 
-@inline function constraint_jacobian(jacobian_relative::Symbol, joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+@inline function unlimited_constraint_jacobian(jacobian_relative::Symbol, joint::Rotational{T},
+        xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where T
     X = szeros(T, 3, 3)
     Q = Vmat() * orientation_error_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, attjac=false)
     return constraint_mask(joint) * [X Q]
 end
 
-@inline function constraint_jacobian_parent(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
-    X = szeros(T, 3, 3)
-    # Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
-    # return constraint_mask(joint) * [X Q]
-    constraint_jacobian(:parent, joint, xa, qa, xb, qb, η)
+@inline function unlimited_constraint_jacobian_parent(joint::Rotational{T}, xa::AbstractVector,
+        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where T
+    unlimited_constraint_jacobian(:parent, joint, xa, qa, xb, qb, η)
 end
 
-@inline function constraint_jacobian_child(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
-    X = szeros(T, 3, 3)
-    # Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa)
-    # return constraint_mask(joint) * [X Q]
-    constraint_jacobian(:child, joint, xa, qa, xb, qb, η)
+@inline function unlimited_constraint_jacobian_child(joint::Rotational{T}, xa::AbstractVector,
+        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where T
+    unlimited_constraint_jacobian(:child, joint, xa, qa, xb, qb, η)
 end
+
+# @inline function constraint_jacobian_parent(joint::Rotational, xa::AbstractVector,
+#         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η)
+#     # X = szeros(T, 3, 3)
+#     # Q = VRᵀmat(joint.qoffset) * Rmat(qb) * Tmat(T)
+#     # return constraint_mask(joint) * [X Q]
+#     # constraint_jacobian(:parent, joint, xa, qa, xb, qb, η)
+#     unlimited_constraint_jacobian(:parent, joint, xa, qa, xb, qb, η)
+# end
+#
+# @inline function constraint_jacobian_child(joint::Rotational, xa::AbstractVector,
+#         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η)
+#     # X = szeros(T, 3, 3)
+#     # Q = VRᵀmat(joint.qoffset) * Lᵀmat(qa)
+#     # return constraint_mask(joint) * [X Q]
+#     # constraint_jacobian(:child, joint, xa, qa, xb, qb, η)
+#     unlimited_constraint_jacobian(:child, joint, xa, qa, xb, qb, η)
+# end
 
 
 

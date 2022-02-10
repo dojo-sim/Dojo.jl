@@ -41,18 +41,14 @@ end
     return constraint_mask(joint) * e
 end
 
-# @inline function constraint_jacobian_configuration(joint::Translational{T,Nλ,0,N}, η) where {T,Nλ,N}
-#     return Diagonal(+1.00e-10 * sones(T,N))
+# @inline function constraint_jacobian_parent(joint::Translational{T,Nλ,0}, xa::AbstractVector,
+#         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+#     unlimited_constraint_jacobian_parent(joint, xa, qa, xb, qb, η)
 # end
-
-@inline function constraint_jacobian_parent(joint::Translational{T,Nλ,0}, xa::AbstractVector,
-        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
-    unlimited_constraint_jacobian_parent(joint, xa, qa, xb, qb, η)
-end
-@inline function constraint_jacobian_child(joint::Translational{T,Nλ,0}, xa::AbstractVector,
-        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
-    unlimited_constraint_jacobian_child(joint, xa, qa, xb, qb, η)
-end
+# @inline function constraint_jacobian_child(joint::Translational{T,Nλ,0}, xa::AbstractVector,
+#         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+#     unlimited_constraint_jacobian_child(joint, xa, qa, xb, qb, η)
+# end
 
 @inline function unlimited_constraint_jacobian_parent(joint::Translational{T}, xa::AbstractVector,
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T}

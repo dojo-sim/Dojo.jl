@@ -94,7 +94,7 @@ function test_data_system(model::Symbol; ϵ::T=1.0e-6, tsim::T=0.1, ctrl::Any=(m
 	datajac1 = full_matrix(D, dimrow, dimcol)
 
 	# Test
-	@testset "Datajac: $(String(model))" begin
+	@testset "Data Jacobian: $(String(model))" begin
 		@test norm(datajac0 - datajac1, Inf) < 1e-6
 	end
     return nothing

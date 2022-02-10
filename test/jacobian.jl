@@ -172,3 +172,35 @@ test_datamat(:sphere,     tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1
 test_datamat(:sphere,     tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-6, contact_type = :impact)
 test_datamat(:ant,        tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-6)
 test_datamat(:halfcheetah,tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-6)
+
+
+# vis = Visualizer()
+# open(vis)
+#
+# mech = get_mechanism(:halfcheetah)
+# initialize!(mech, :halfcheetah)
+# storage = simulate!(mech, 1.0, control!, record=true, verbose=false)
+# visualize(mech, storage, vis=vis)
+#
+#
+#
+# joint0 = mech.joints[2]
+# tra0 = joint0.constraints[1]
+# rot0 = joint0.constraints[2]
+# body0 = mech.bodies[1]
+# body2 = mech.bodies[1]
+# xa = rand(3)
+# xb = rand(3)
+# qa = UnitQuaternion(rand(4)...)
+# qb = UnitQuaternion(rand(4)...)
+# η = rand(4)
+# constraint_jacobian_parent(tra0, xa, qa, xb, qb, η)
+# ∇0 = constraint_jacobian_parent(rot0, xa, qa, xb, qb, η)
+# ∇1 = FiniteDiff.finite_difference_jacobian(xq -> constraint(rot0, xq[1:3], UnitQuaternion(xq[4:7]..., false), xb, qb, η),
+#     [xa; vector(qa)])
+# ∇0 - ∇1
+#
+# ∇0 = minimal_coordinates_jacobian_configuration(:parent, rot0, xa, qa, xb, qb, attjac=false)
+# ∇1 = FiniteDiff.finite_difference_jacobian(xq -> minimal_coordinates(rot0, xq[1:3], UnitQuaternion(xq[4:7]..., false), xb, qb),
+#     [xa; vector(qa)])
+# ∇0 - ∇1
