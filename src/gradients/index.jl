@@ -23,11 +23,11 @@ function solution_dimension(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,
     return d
 end
 
-function control_dimension(joint::JointConstraint{T,N,Nc,Cs}; ignore_floating_base::Bool = false) where {T,N,Nc,Cs}
+function control_dimension(joint::JointConstraint{T,N,Nc}; ignore_floating_base::Bool = false) where {T,N,Nc}
     ignore_floating_base && (N == 0) && return 0
 
     N̄ = 0
-    for (i, element) in enumerate(joint.constraints)
+    for (i, element) in enumerate([joint.translational, joint.rotational])
         N̄ += control_dimension(element)
     end
 

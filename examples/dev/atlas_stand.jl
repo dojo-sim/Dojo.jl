@@ -29,8 +29,8 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 mech = getmechanism(:atlas, timestep = 0.01, g = -9.81, cf = 0.8, contact = true)
 initialize!(mech, :atlas, tran = [0,0,1.9291], rot = [0.,0,0])
 for (i,joint) in enumerate(mech.joints)
-    jt = joint.constraints[1]
-    jr = joint.constraints[2]
+    jt = joint.translational
+    jr = joint.rotational
     joint.isdamper = true #false
     joint.isspring = false #false
 

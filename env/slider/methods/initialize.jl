@@ -21,7 +21,7 @@ end
 function initialize_slider!(mechanism::Mechanism; z1::T = 0.0) where T
     body = collect(mechanism.bodies)[1]
     joint = collect(mechanism.joints)[1]
-    p2 = joint.constraints[1].vertices[2]
+    p2 = joint.translational.vertices[2]
     set_position!(mechanism.origin, body, p2 = p2 - [0, 0, z1])
 end
 

@@ -8,12 +8,12 @@
 end
 
 function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::JointConstraint;
-        Δx::AbstractVector=szeros(control_dimension(joint.constraints[1])),
-        Δθ::AbstractVector=szeros(control_dimension(joint.constraints[2])))
+        Δx::AbstractVector=szeros(control_dimension(joint.translational)),
+        Δθ::AbstractVector=szeros(control_dimension(joint.rotational)))
     # We need to set the minimal coordinates of the rotational joint first
     # since xb = fct(qb, Δx)
-    set_minimal_coordinates!(pnode, cnode, joint.constraints[2]; Δθ=Δθ)
-    set_minimal_coordinates!(pnode, cnode, joint.constraints[1]; Δx=Δx)
+    set_minimal_coordinates!(pnode, cnode, joint.rotational; Δθ=Δθ)
+    set_minimal_coordinates!(pnode, cnode, joint.translational; Δx=Δx)
     return nothing
 end
 
@@ -76,12 +76,12 @@ function minimal_velocities_jacobian_velocity(jacobian_relative::Symbol,
 end
 
 function set_minimal_velocities!(pnode::Node, cnode::Node, joint::JointConstraint;
-        Δv::AbstractVector=szeros(control_dimension(joint.constraints[1])),
-        Δϕ::AbstractVector=szeros(control_dimension(joint.constraints[2])))
+        Δv::AbstractVector=szeros(control_dimension(joint.translational)),
+        Δϕ::AbstractVector=szeros(control_dimension(joint.rotational)))
     # We need to set the minimal coordinates of the rotational joint first
     # since vb = fct(ϕb, Δv)
-    set_minimal_velocities!(pnode, cnode, joint.constraints[2]; Δϕ=Δϕ)
-    set_minimal_velocities!(pnode, cnode, joint.constraints[1]; Δv=Δv)
+    set_minimal_velocities!(pnode, cnode, joint.rotational; Δϕ=Δϕ)
+    set_minimal_velocities!(pnode, cnode, joint.translational; Δv=Δv)
     return nothing
 end
 
@@ -142,10 +142,10 @@ function set_minimal_coordinates_velocities!(mechanism::Mechanism, joint::JointC
 end
 
 function set_minimal_coordinates_velocities!(pnode::Node, cnode::Node, joint::JointConstraint;
-        Δx::AbstractVector=szeros(control_dimension(joint.constraints[1])),
-        Δθ::AbstractVector=szeros(control_dimension(joint.constraints[2])),
-        Δv::AbstractVector=szeros(control_dimension(joint.constraints[1])),
-        Δϕ::AbstractVector=szeros(control_dimension(joint.constraints[2])))
+        Δx::AbstractVector=szeros(control_dimension(joint.translational)),
+        Δθ::AbstractVector=szeros(control_dimension(joint.rotational)),
+        Δv::AbstractVector=szeros(control_dimension(joint.translational)),
+        Δϕ::AbstractVector=szeros(control_dimension(joint.rotational)))
     # We need to set the minimal coordinates of the rotational joint first
     # since xb = fct(qb, Δx)
     # since vb = fct(ϕb, Δv)

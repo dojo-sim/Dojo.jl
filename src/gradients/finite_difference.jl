@@ -47,8 +47,8 @@ function get_data(mechanism::Mechanism{T}) where T
     end
     for joint in mechanism.joints
         if control_dimension(joint) > 0
-            tra = joint.constraints[findfirst(x -> typeof(x) <: Translational, joint.constraints)]
-            rot = joint.constraints[findfirst(x -> typeof(x) <: Rotational, joint.constraints)]
+            tra = [joint.translational, joint.rotational][findfirst(x -> typeof(x) <: Translational, [joint.translational, joint.rotational])]
+            rot = [joint.translational, joint.rotational][findfirst(x -> typeof(x) <: Rotational, [joint.translational, joint.rotational])]
             F = tra.Fτ
             τ = rot.Fτ
             u = [nullspace_mask(tra) * F; nullspace_mask(rot) * τ]
@@ -63,7 +63,7 @@ function set_solution!(mechanism::Mechanism{T}, sol::AbstractVector) where T
     for (i,joint) in enumerate(mechanism.joints)
         nλ = length(joint)
         λ = sol[off .+ (1:nλ)]; off += nλ
-        joint.variables[2] = λ
+        joint.impulses[2] = λ
     end
     for (i,body) in enumerate(mechanism.bodies)
         nv = 3
@@ -87,7 +87,7 @@ end
 function get_solution(mechanism::Mechanism{T}) where T
     sol = T[]
     for (i,joint) in enumerate(mechanism.joints)
-        λ = joint.variables[2]
+        λ = joint.impulses[2]
         push!(sol, λ...)
     end
     for (i,body) in enumerate(mechanism.bodies)

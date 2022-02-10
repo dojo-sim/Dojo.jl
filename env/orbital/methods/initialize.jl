@@ -28,7 +28,7 @@ end
 function initialize_orbital!(mechanism::Mechanism; ϕx::T = pi/4, ϕy::T = pi/8) where T
     body1 = collect(mechanism.bodies)[1]
     joint = collect(mechanism.joints)[1]
-    vert11 = joint.constraints[1].vertices[2]
+    vert11 = joint.translational.vertices[2]
     vert12 = - vert11
 
     # set position and velocities

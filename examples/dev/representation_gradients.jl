@@ -119,10 +119,10 @@ N_a * inv(N_a' * N_a)# - M_a
 
 # # translational delta in body1 frame
 # xθ = [1.0, 1.0]
-# Δx = get_position_delta(joint.constraints[1], body1, body2, xθ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]) 
+# Δx = get_position_delta(joint.translational, body1, body2, xθ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]) 
 
 # # rotational delta in body2 frame
-# Δq = get_position_delta(joint.constraints[2], body1, body2, xθ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])])
+# Δq = get_position_delta(joint.rotational, body1, body2, xθ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])])
 
 
 #######

@@ -17,10 +17,10 @@ end
     return
 end
 
-function complementarity(mechanism, joint::JointConstraint{T,N,Nc,Cs}; scaling::Bool = false) where {T,N,Nc,Cs}
+function complementarity(mechanism, joint::JointConstraint{T,N,Nc}; scaling::Bool = false) where {T,N,Nc}
     c = []
-    for (i, element) in enumerate(joint.constraints)
-        λi = joint.variables[2][λindex(joint, i)]
+    for (i, element) in enumerate([joint.translational, joint.rotational])
+        λi = joint.impulses[2][λindex(joint, i)]
         si, γi = get_sγ(element, λi)
         push!(c, si .* γi)
     end
@@ -70,11 +70,11 @@ function feasibility_linesearch!(α, mechanism, contact::ContactConstraint{T,N,N
     return min(α, αs_ort, αγ_ort)
 end
 
-function feasibility_linesearch!(α, mechanism, joint::JointConstraint{T,N,Nc,Cs},
-        vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc,Cs}
+function feasibility_linesearch!(α, mechanism, joint::JointConstraint{T,N,Nc},
+        vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc}
 
-    for (i, element) in enumerate(joint.constraints)
-        s, γ = get_sγ(element, joint.variables[2][λindex(joint,i)])
+    for (i, element) in enumerate([joint.translational, joint.rotational])
+        s, γ = get_sγ(element, joint.impulses[2][λindex(joint,i)])
         Δs, Δγ = get_sγ(element,  vector_entry.value[λindex(joint,i)])
 
         αs_ort = positive_orthant_step_length(s, Δs, τ = τort)
@@ -115,9 +115,9 @@ function centering!(ν, νaff, n, mechanism, contact::ContactConstraint{T,N,Nc,C
     return ν, νaff, n
 end
 
-function centering!(ν, νaff, n, mechanism, joint::JointConstraint{T,N,Nc,Cs}, vector_entry::Entry, αaff) where {T,N,Nc,Cs}
-    for (i, element) in enumerate(joint.constraints)
-        s, γ = get_sγ(element, joint.variables[2][λindex(joint,i)])
+function centering!(ν, νaff, n, mechanism, joint::JointConstraint{T,N,Nc}, vector_entry::Entry, αaff) where {T,N,Nc}
+    for (i, element) in enumerate([joint.translational, joint.rotational])
+        s, γ = get_sγ(element, joint.impulses[2][λindex(joint,i)])
         Δs, Δγ = get_sγ(element, vector_entry.value[λindex(joint,i)])
         ν += dot(s, γ)
         νaff += dot(s + αaff * Δs, γ + αaff * Δγ) # plus or minus
@@ -183,7 +183,7 @@ end
 end
 
 @inline function update_solution!(joint::JointConstraint)
-    joint.variables[1] = joint.variables[2]
+    joint.impulses[1] = joint.impulses[2]
     return
 end
 
@@ -198,7 +198,7 @@ end
     for joint in mechanism.joints
         res = constraint(mechanism, joint)
         shift = 0
-        for (i, element) in enumerate(joint.constraints)
+        for (i, element) in enumerate([joint.translational, joint.rotational])
             Nλ = λlength(element)
             Nb = blength(element)
             subres = res[shift + 2Nb .+ (1:Nλ)]

@@ -281,6 +281,6 @@ vcat(ones(6,3)', zeros(6,2)')
 hcat(ones(6,3), zeros(6,2))'
 
 @generated function impulse_map_parent(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(impulse_map_parent(joint.constraints[$i], body, get_body(mechanism, joint.childids[$i]), joint.childids[$i], joint.λsol[2][λindex(joint,$i)], mechanism.timestep)) for i = 1:Nc]
+    vec = [:(impulse_map_parent([joint.translational, joint.rotational][$i], body, get_body(mechanism, joint.childids[$i]), joint.childids[$i], joint.λsol[2][λindex(joint,$i)], mechanism.timestep)) for i = 1:Nc]
     return :(hcat($(vec...)))
 end

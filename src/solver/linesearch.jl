@@ -45,7 +45,7 @@ end
 end
 
 @inline function candidate_step!(α, joint::JointConstraint, vector_entry::Entry, scale)
-    joint.variables[2] = joint.variables[1] + 1.0 / (2^scale) * α * vector_entry.value
+    joint.impulses[2] = joint.impulses[1] + 1.0 / (2^scale) * α * vector_entry.value
     return
 end
 

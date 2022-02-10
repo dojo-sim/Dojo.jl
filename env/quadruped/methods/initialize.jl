@@ -9,10 +9,10 @@ function get_quadruped(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8,
     for (i,joint) in enumerate(collect(mech.joints)[2:end])
         joint.damper = true
         joint.spring = true
-        for joint in joint.constraints
-            joint.spring=spring
-            joint.damper=damper
-        end
+        joint.translational.spring=spring
+        joint.translational.damper=damper
+        joint.rotational.spring=spring
+        joint.rotational.damper=damper
     end
 
     # joint limits
