@@ -23,7 +23,7 @@ mechanism = get_mechanism(:halfcheetah, timestep=0.01, gravity=-9.81)
 initialize!(mechanism, :halfcheetah)
 
 # atlas
-mechanism = get_mechanism(:atlas, timestep=0.01, gravity=-9.81, cf=0.5, damper=100.0, spring=1.0, contact=true)
+mechanism = get_mechanism(:atlas, timestep=0.01, gravity=-9.81, friction_coefficient=0.5, damper=100.0, spring=1.0, contact=true)
 initialize_atlasstance!(mechanism, tran=[0,0,0.5], rot=[0.0,0.0,0.0])
 
 function ctrl!(mechanism, k) 

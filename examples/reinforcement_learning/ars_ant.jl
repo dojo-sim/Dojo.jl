@@ -4,7 +4,7 @@ using Random
 include("ars.jl")
 
 # ## Ant
-env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=25.0, cf = 0.5,
+env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=25.0, friction_coefficient = 0.5,
     contact=true, contact_body=true)
 obs = reset(env)
 initialize_ant!(env.mechanism, pos = [1.3,0,0], rot = [0,0,0.])
@@ -29,7 +29,7 @@ policies = Matrix{Float64}[]
 N = 5
 for i = 1:N
     # Reset environment
-    env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=25.0, cf = 0.5,
+    env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=25.0, friction_coefficient = 0.5,
         contact=true, contact_body=true)
     obs = reset(env)
 
@@ -99,7 +99,7 @@ set_camera!(env.vis, cam_pos=[0,0,90], zoom=20)
 
 
 # ## Ghost
-env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=25.0, cf = 0.5,
+env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=25.0, friction_coefficient = 0.5,
     contact=true, contact_body=true)
 open(env.vis)
 setvisible!(env.vis[:robot], false)
@@ -117,7 +117,7 @@ end
 # @load joinpath(@__DIR__, "ant_policy.jld2") θ
 
 # ## test random policy
-env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=25.0, spring=10.0, cf = 0.5,
+env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=25.0, spring=10.0, friction_coefficient = 0.5,
     contact=true, contact_body=true)
 # initialize!(env.mechanism, :ant)
 open(env.vis)

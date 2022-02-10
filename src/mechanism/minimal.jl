@@ -143,7 +143,7 @@ function get_minimal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni};
 		v = zeros(T,0)
 		pbody = get_body(mechanism, joint.parent_id)
 		cbody = get_body(mechanism, joint.child_id)
-		for (i, element) in enumerate(joint.constraints)
+		for (i, element) in enumerate([joint.translational, joint.rotational])
 			pos = minimal_coordinates(element, pbody, cbody)
 			vel = minimal_velocities(element, pbody, cbody)
 			if pos_noise != nothing

@@ -479,8 +479,8 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         ind2 = ind1+1
 
         # urdf joint's x and q in parent's (parentbody) frame
-        xjointlocal = vrotate(xparentjoint + vrotate(constraint.constraints[ind1].vertices[1], qparentjoint) - xparentbody, inv(qparentbody))
-        qjointlocal = qparentbody \ qparentjoint * constraint.constraints[ind2].qoffset
+        xjointlocal = vrotate(xparentjoint + vrotate(constraint.translational.vertices[1], qparentjoint) - xparentbody, inv(qparentbody))
+        qjointlocal = qparentbody \ qparentjoint * constraint.rotational.qoffset
 
         # store joint's x and q in world frame
         xjoint = xparentbody + vrotate(xjointlocal, qparentbody)
@@ -494,13 +494,13 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         # actual joint properties
         p1 = xjointlocal # in parent's (parentbody) frame
         p2 = vrotate(-xbodylocal, inv(qbodylocal)) # in body frame (xbodylocal and qbodylocal are both relative to the same (joint) frame -> rotationg by inv(body.q) gives body frame)
-        constraint.constraints[ind1].vertices = (p1, p2)
+        constraint.translational.vertices = (p1, p2)
 
-        V3 = vrotate(constraint.constraints[ind2].V3', qjointlocal) # in parent's (parentbody) frame
+        V3 = vrotate(constraint.rotational.V3', qjointlocal) # in parent's (parentbody) frame
         V12 = (svd(skew(V3)).Vt)[1:2,:]
-        constraint.constraints[ind2].V3 = V3'
-        constraint.constraints[ind2].V12 = V12
-        constraint.constraints[ind2].qoffset = qoffset # in parent's (parentbody) frame
+        constraint.rotational.V3 = V3'
+        constraint.rotational.V12 = V12
+        constraint.rotational.qoffset = qoffset # in parent's (parentbody) frame
 
         # actual body properties
         set_position!(body) # set everything to zero
@@ -554,9 +554,9 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         ind2 = ind1+1
 
         # urdf joint's x and q in parent's (parentbody) frame
-        xjointlocal1 = vrotate(xparentjoint1 + vrotate(constraint.constraints[ind1].vertices[1], qparentjoint1) - xparentbody1, inv(qparentbody1))
-        xjointlocal2 = vrotate(xparentjoint2 + vrotate(constraint.constraints[ind1].vertices[2], qparentjoint2) - xparentbody2, inv(qparentbody2))
-        qjointlocal1 = qparentbody1 \ qparentjoint1 * constraint.constraints[ind2].qoffset
+        xjointlocal1 = vrotate(xparentjoint1 + vrotate(constraint.translational.vertices[1], qparentjoint1) - xparentbody1, inv(qparentbody1))
+        xjointlocal2 = vrotate(xparentjoint2 + vrotate(constraint.translational.vertices[2], qparentjoint2) - xparentbody2, inv(qparentbody2))
+        qjointlocal1 = qparentbody1 \ qparentjoint1 * constraint.rotational.qoffset
 
         # difference to parent body (parentbody)
         qoffset1 = qjointlocal1 * qparentbody2 #  qparentbody2 = body in for loop above
@@ -564,13 +564,13 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         # actual joint properties
         p1 = xjointlocal1 # in parent's (parentbody1) frame
         p2 = xjointlocal2 # in parent's (parentbody2) frame
-        constraint.constraints[ind1].vertices = (p1, p2)
+        constraint.translational.vertices = (p1, p2)
 
-        V3 = vrotate(constraint.constraints[ind2].V3', qjointlocal1) # in parent's (parentbody1) frame
+        V3 = vrotate(constraint.rotational.V3', qjointlocal1) # in parent's (parentbody1) frame
         V12 = (svd(skew(V3)).Vt)[1:2,:]
-        constraint.constraints[ind2].V3 = V3'
-        constraint.constraints[ind2].V12 = V12
-        constraint.constraints[ind2].qoffset = qoffset1 # in parent's (parentbody1) frame
+        constraint.rotational.V3 = V3'
+        constraint.rotational.V12 = V12
+        constraint.rotational.qoffset = qoffset1 # in parent's (parentbody1) frame
     end
 end
 

@@ -60,19 +60,19 @@ params1, trajs1, pairs1 = open_dataset(:hardwarebox; N=400, S=1)
 
 
 function d2data(d)
-	cf = d[1]
-	data = [cf; 0;0;0; +d[2:4];
-			cf; 0;0;0; +d[5:7];
-			cf; 0;0;0; +d[8:10];
-			cf; 0;0;0; +d[11:13];
-			cf; 0;0;0; +d[14:16];
-			cf; 0;0;0; +d[17:19];
-			cf; 0;0;0; +d[20:22];
-			cf; 0;0;0; +d[23:25];
+	friction_coefficient = d[1]
+	data = [friction_coefficient; 0;0;0; +d[2:4];
+			friction_coefficient; 0;0;0; +d[5:7];
+			friction_coefficient; 0;0;0; +d[8:10];
+			friction_coefficient; 0;0;0; +d[11:13];
+			friction_coefficient; 0;0;0; +d[14:16];
+			friction_coefficient; 0;0;0; +d[17:19];
+			friction_coefficient; 0;0;0; +d[20:22];
+			friction_coefficient; 0;0;0; +d[23:25];
 			]
 	return data
 end
-mech = get_mechanism(:box, timestep=timestep/S, gravity=gravityscaled, cf=Dsol[end][1], radius=0.00, side=2.0, mode=:box);
+mech = get_mechanism(:box, timestep=timestep/S, gravity=gravityscaled, friction_coefficient=Dsol[end][1], radius=0.00, side=2.0, mode=:box);
 set_simulator_data!(mech, d2data(Dsol[end]))
 id = 7#4,6,7,8
 traj_truth = trajs1[id]

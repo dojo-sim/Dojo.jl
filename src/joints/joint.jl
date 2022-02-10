@@ -221,29 +221,29 @@ end
 
 @inline minimal_coordinates(joint::Joint{T,Nλ}) where {T,Nλ} = szeros(T, 3 - Nλ)
 
-function add_limits(mech::Mechanism, eq::JointConstraint;
+function add_limits(mech::Mechanism, joint::JointConstraint;
     # NOTE: this only works for joints between serial chains (ie, single child joints)
-    tra_limits=eq.constraints[1].joint_limits,
-    rot_limits=eq.constraints[1].joint_limits)
+    tra_limits=joint.translational.joint_limits,
+    rot_limits=joint.rotational.joint_limits)
 
     # update translational
-    tra = eq.constraints[1]
+    tra = joint.translational
     T = typeof(tra).parameters[1]
     Nλ = typeof(tra).parameters[2]
     Nb½ = length(tra_limits[1])
     Nb = 2Nb½
     N̄λ = 3 - Nλ
     N = Nλ + 2Nb
-    tra_limit = (Translational{T,Nλ,Nb,N,Nb½,N̄λ}(tra.V3, tra.V12, tra.vertices, tra.spring, tra.damper, tra.spring_offset, tra_limits, tra.spring_type, tra.Fτ), eq.parent_id, eq.child_id)
+    tra_limit = (Translational{T,Nλ,Nb,N,Nb½,N̄λ}(tra.V3, tra.V12, tra.vertices, tra.spring, tra.damper, tra.spring_offset, tra_limits, tra.spring_type, tra.Fτ), joint.parent_id, joint.child_id)
 
     # update rotational
-    rot = eq.constraints[2]
+    rot = joint.rotational
     T = typeof(rot).parameters[1]
     Nλ = typeof(rot).parameters[2]
     Nb½ = length(rot_limits[1])
     Nb = 2Nb½
     N̄λ = 3 - Nλ
     N = Nλ + 2Nb
-    rot_limit = (Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(rot.V3, rot.V12, rot.qoffset, rot.spring, rot.damper, rot.spring_offset, rot_limits, rot.spring_type, rot.Fτ), eq.parent_id, eq.child_id)
-    JointConstraint((tra_limit, rot_limit); name=eq.name)
+    rot_limit = (Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(rot.V3, rot.V12, rot.qoffset, rot.spring, rot.damper, rot.spring_offset, rot_limits, rot.spring_type, rot.Fτ), joint.parent_id, joint.child_id)
+    JointConstraint((tra_limit, rot_limit); name=joint.name)
 end

@@ -4,13 +4,13 @@
 struct Ant end
 
 function ant(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
-    cf::T=0.5, spring=0.0, damper::T=1.0, s::Int=1,
+    friction_coefficient::T=0.5, spring=0.0, damper::T=1.0, s::Int=1,
     contact::Bool=true, contact_body=true,
     limits::Bool=true,
     info=nothing, vis::Visualizer=Visualizer(), name::Symbol=:robot,
     opts_step=SolverOptions(), opts_grad=SolverOptions()) where T
 
-    mechanism = get_ant(timestep=dt, gravity=gravity, cf=cf, spring=spring, damper=damper,contact=contact, contact_body=contact_body, limits=limits)
+    mechanism = get_ant(timestep=dt, gravity=gravity, friction_coefficient=friction_coefficient, spring=spring, damper=damper,contact=contact, contact_body=contact_body, limits=limits)
     initialize_ant!(mechanism)
 
     if mode == :min
@@ -78,7 +78,7 @@ function step(env::Environment{Ant}, x, u; diff=false)
     contact_cost = 0.0
 
     for contact in mechanism.contacts
-        contact_cost += 0.5 * 1.0e-3 * max(-1.0, min(1.0, contact.dual[2][1]))^2.0
+        contact_cost += 0.5 * 1.0e-3 * max(-1.0, min(1.0, contact.impulses_dual[2][1]))^2.0
     end
 
     # survive reward
@@ -135,7 +135,7 @@ end
 function _get_obs(env::Environment{Ant,T}) where T
     contact_force = T[]
     for contact in env.mechanism.contacts
-        push!(contact_force, max(-1.0, min(1.0, contact.dual[2][1])))
+        push!(contact_force, max(-1.0, min(1.0, contact.impulses_dual[2][1])))
     end
     return [env.x; contact_force]
 end

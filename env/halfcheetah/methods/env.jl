@@ -4,12 +4,12 @@
 struct HalfCheetah end
 
 function halfcheetah(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
-    cf::T=0.4, spring=[240, 180, 120, 180, 120, 60.], damper=2.5 * [6., 4.5, 3., 4.5, 3., 1.5],
+    friction_coefficient::T=0.4, spring=[240, 180, 120, 180, 120, 60.], damper=2.5 * [6., 4.5, 3., 4.5, 3., 1.5],
     limits::Bool=true,
     s::Int=1, contact::Bool=true, info=nothing, vis::Visualizer=Visualizer(), name::Symbol=:robot,
     opts_step=SolverOptions(), opts_grad=SolverOptions()) where T
 
-    mechanism = get_halfcheetah(timestep=dt, gravity=gravity, cf=cf, spring=spring, damper=damper, contact=contact, limits=limits)
+    mechanism = get_halfcheetah(timestep=dt, gravity=gravity, friction_coefficient=friction_coefficient, spring=spring, damper=damper, contact=contact, limits=limits)
     initialize_halfcheetah!(mechanism)
 
     if mode == :min

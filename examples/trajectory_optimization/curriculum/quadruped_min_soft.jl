@@ -7,14 +7,14 @@ include(joinpath(@__DIR__, "../../env/quadruped/methods/template.jl"))
 
 gravity = -9.81
 dt = 0.05
-cf = 0.8
+friction_coefficient = 0.8
 damper = 5.0
 spring = 0.0
 env = quadruped(
     mode=:min,
     dt=dt,
     gravity=gravity,
-    cf=cf,
+    friction_coefficient=friction_coefficient,
     damper=damper,
     spring=spring,
 	infeasible_control=true,

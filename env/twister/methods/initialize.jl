@@ -1,4 +1,4 @@
-function get_twister(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, contact::Bool=true,
+function get_twister(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_coefficient::T=0.8, contact::Bool=true,
     contact_type=:contact, spring=0.0, damper=0.0, Nb::Int=5,
     jointtype::Symbol=:Prismatic, h::T=1.0, r::T=0.05) where T
     # Parameters
@@ -29,9 +29,9 @@ function get_twister(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, c
     if contact
         n = Nb
         normal = [[0;0;1.0] for i = 1:n]
-        cf = cf * ones(n)
-        contacts1 = contact_constraint(bodies[1], normal[1], cf=cf[1], p=vert11, contact_type=contact_type) # to avoid duplicating the contact points
-        contacts2 = contact_constraint(bodies, normal, cf=cf, p=fill(vert12, n), contact_type=contact_type)
+        friction_coefficient = friction_coefficient * ones(n)
+        contacts1 = contact_constraint(bodies[1], normal[1], friction_coefficient=friction_coefficient[1], contact_point=vert11, contact_type=contact_type) # to avoid duplicating the contact points
+        contacts2 = contact_constraint(bodies, normal, friction_coefficient=friction_coefficient, contact_points=fill(vert12, n), contact_type=contact_type)
         mech = Mechanism(origin, bodies, joints, [contacts1; contacts2], gravity=gravity, timestep=timestep)
     else
         mech = Mechanism(origin, bodies, joints, gravity=gravity, timestep=timestep, spring=spring, damper=damper)

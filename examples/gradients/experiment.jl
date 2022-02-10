@@ -8,7 +8,7 @@ contact_type = :linear_contact
 # contact_type = :contact
 
 # scale system for nice plots
-mech = get_mechanism(:box2d, timestep=0.1, g=-1.0, cf=1.0, contact=true, contact_type=contact_type);
+mech = get_mechanism(:box2d, timestep=0.1, g=-1.0, friction_coefficient=1.0, contact=true, contact_type=contact_type);
 
 # inputs
 Fs = 0.01:0.01:0.2

@@ -19,7 +19,7 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
-mech = getmechanism(:atlas, timestep = 0.01, g = -9.81, cf = 0.5, damper = 50.0, spring=1.0, contact = true)
+mech = getmechanism(:atlas, timestep = 0.01, g = -9.81, friction_coefficient = 0.5, damper = 50.0, spring=1.0, contact = true)
 
 initialize!(mech, :atlas, tran = [0,0,0.5], rot = [0.01,0.05, 0.0])
 storage = simulate!(mech, 1.0, record = true, opts = SolverOptions(btol = 1e-6))

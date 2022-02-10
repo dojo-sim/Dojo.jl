@@ -45,12 +45,12 @@ end
 end
 
 @inline function candidate_step!(α, joint::JointConstraint, vector_entry::Entry, scale)
-    joint.variables[2] = joint.variables[1] + 1.0 / (2^scale) * α * vector_entry.value
+    joint.impulses[2] = joint.impulses[1] + 1.0 / (2^scale) * α * vector_entry.value
     return
 end
 
 @inline function candidate_step!(α::T, contact::ContactConstraint{T,N,Nc,Cs,N½}, vector_entry::Entry, scale) where {T,N,Nc,Cs,N½}
-    contact.primal[2] = contact.primal[1] + 1 / (2^scale) * α * vector_entry.value[SVector{N½,Int64}(1:N½)]
-    contact.dual[2] = contact.dual[1] + 1 / (2^scale) * α * vector_entry.value[SVector{N½,Int64}(N½+1:N)]
+    contact.impulses[2] = contact.impulses[1] + 1 / (2^scale) * α * vector_entry.value[SVector{N½,Int64}(1:N½)]
+    contact.impulses_dual[2] = contact.impulses_dual[1] + 1 / (2^scale) * α * vector_entry.value[SVector{N½,Int64}(N½+1:N)]
     return
 end

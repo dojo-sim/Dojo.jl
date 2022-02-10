@@ -23,7 +23,7 @@ open(vis)
 # System
 gravity = -9.81
 timestep = 0.05
-mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, cf = 0.8, damper = 10.0, spring = 0.0)
+mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_coefficient = 0.8, damper = 10.0, spring = 0.0)
 initialize!(mech, :quadruped, tran = [0,0,0.], v = [0,0,0.])
 @elapsed storage = simulate!(mech, 0.05, record = true, verbose = false)
 visualize(mech, storage, vis = vis)
@@ -50,7 +50,7 @@ function gravity_compensation(mechanism::Mechanism)
         nu = control_dimension(joint)
         if joint.parent_id != nothing
             body = get_body(mechanism, joint.parent_id)
-            rot = joint.constraints[2]
+            rot = joint.rotational
             A = Matrix(nullspace_mask(rot))
             Fτ = apply_spring(mechanism, joint, body)
             F = Fτ[1:3]
@@ -64,13 +64,13 @@ function gravity_compensation(mechanism::Mechanism)
     return u
 end
 
-mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, cf = 0.8, damper = 1000.0, spring = 30.0)
+mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_coefficient = 0.8, damper = 1000.0, spring = 30.0)
 initialize!(mech, :quadruped)
 @elapsed storage = simulate!(mech, 5.0, record = true, verbose = false)
 visualize(mech, storage, vis = vis)
 ugc = gravity_compensation(mech)
 
-mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, cf = 0.8, damper = 5.0, spring = 0.0)
+mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_coefficient = 0.8, damper = 5.0, spring = 0.0)
 
 u_control = ugc[6 .+ (1:12)]
 u_mask = [zeros(12,6) I(m)]

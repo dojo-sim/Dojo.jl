@@ -1,5 +1,5 @@
 
-function get_atlas(; timestep::T=0.01, gravity=-9.81, cf::T=0.8, spring=0.0,
+function get_atlas(; timestep::T=0.01, gravity=-9.81, friction_coefficient::T=0.8, spring=0.0,
         damper::T=0.0, contact::Bool=true, body_contact::Bool=false, model_type::Symbol=:simple) where T
     path = joinpath(@__DIR__, "../deps/atlas_$(string(model_type)).urdf")
     mech = Mechanism(path, !(model_type==:armless), T, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
@@ -8,10 +8,10 @@ function get_atlas(; timestep::T=0.01, gravity=-9.81, cf::T=0.8, spring=0.0,
     for (i,joint) in enumerate(collect(mech.joints)[2:end])
         joint.damper = true
         joint.spring = true
-        for joint in joint.constraints
-            joint.spring=spring
-            joint.damper=damper
-        end
+        joint.translational.spring=spring
+        joint.translational.damper=damper
+        joint.rotational.spring=spring
+        joint.rotational.damper=damper
     end
 
     if contact
@@ -30,11 +30,12 @@ function get_atlas(; timestep::T=0.01, gravity=-9.81, cf::T=0.8, spring=0.0,
         n = length(locations)
         normal = [[0;0;1.0] for i = 1:n]
         offset = [[0.0; 0.0; 0.025] for i = 1:n]
-        cfs = cf * ones(T, n)
+        friction_coefficients = friction_coefficient * ones(T, n)
+        
         names = ["RR", "FR", "RL", "RR"]
 
-        foot_contacts1 = contact_constraint(get_body(mech, :l_foot), normal, cf=cfs, p=locations, offset=offset, names=[Symbol("l_" .* name) for name in names])
-        foot_contacts2 = contact_constraint(get_body(mech, :r_foot), normal, cf=cfs, p=locations, offset=offset, names=[Symbol("r_" .* name) for name in names])
+        foot_contacts1 = contact_constraint(get_body(mech, :l_foot), normal, friction_coefficient=friction_coefficients, contact_points=locations, offset=offset, names=[Symbol("l_" .* name) for name in names])
+        foot_contacts2 = contact_constraint(get_body(mech, :r_foot), normal, friction_coefficient=friction_coefficients, contact_points=locations, offset=offset, names=[Symbol("r_" .* name) for name in names])
         contacts = [foot_contacts1; foot_contacts2]
 
         if body_contact
@@ -44,8 +45,8 @@ function get_atlas(; timestep::T=0.01, gravity=-9.81, cf::T=0.8, spring=0.0,
             offset = [0.0; 0.0; 0.06]
             name = "hand"
 
-            push!(contacts, contact_constraint(get_body(mech, :l_hand), normal, cf=cf, p=location, offset=offset, name=Symbol("l_" .* name)))
-            push!(contacts, contact_constraint(get_body(mech, :r_hand), normal, cf=cf, p=location, offset=offset, name=Symbol("r_" .* name)))
+            push!(contacts, contact_constraint(get_body(mech, :l_hand), normal, friction_coefficient=friction_coefficient, contact_point=location, offset=offset, name=Symbol("l_" .* name)))
+            push!(contacts, contact_constraint(get_body(mech, :r_hand), normal, friction_coefficient=friction_coefficient, contact_point=location, offset=offset, name=Symbol("r_" .* name)))
 
             # knee 
             location = [0.025; 0.0; 0.175]
@@ -53,8 +54,8 @@ function get_atlas(; timestep::T=0.01, gravity=-9.81, cf::T=0.8, spring=0.0,
             offset = [0.0; 0.0; 0.075]
             name = "knee"
 
-            push!(contacts, contact_constraint(get_body(mech, :l_lleg), normal, cf=cf, p=location, offset=offset, name=Symbol("l_" .* name)))
-            push!(contacts, contact_constraint(get_body(mech, :r_lleg), normal, cf=cf, p=location, offset=offset, name=Symbol("r_" .* name)))
+            push!(contacts, contact_constraint(get_body(mech, :l_lleg), normal, friction_coefficient=friction_coefficient, contact_point=location, offset=offset, name=Symbol("l_" .* name)))
+            push!(contacts, contact_constraint(get_body(mech, :r_lleg), normal, friction_coefficient=friction_coefficient, contact_point=location, offset=offset, name=Symbol("r_" .* name)))
 
             # clavicals 
             location_l = [0.0; -0.05; -0.075]
@@ -64,8 +65,8 @@ function get_atlas(; timestep::T=0.01, gravity=-9.81, cf::T=0.8, spring=0.0,
             offset = [0.0; 0.0; 0.11]
             name = "clav"
 
-            push!(contacts, contact_constraint(get_body(mech, :l_clav), normal, cf=cf, p=location_l, offset=offset, name=Symbol("l_" .* name)))
-            push!(contacts, contact_constraint(get_body(mech, :r_clav), normal, cf=cf, p=location_r, offset=offset, name=Symbol("r_" .* name)))
+            push!(contacts, contact_constraint(get_body(mech, :l_clav), normal, friction_coefficient=friction_coefficient, contact_point=location_l, offset=offset, name=Symbol("l_" .* name)))
+            push!(contacts, contact_constraint(get_body(mech, :r_clav), normal, friction_coefficient=friction_coefficient, contact_point=location_r, offset=offset, name=Symbol("r_" .* name)))
 
              # pelvis
              location = [0.05; 0.0; -0.1]
@@ -73,7 +74,7 @@ function get_atlas(; timestep::T=0.01, gravity=-9.81, cf::T=0.8, spring=0.0,
              offset = [0.0; 0.0; 0.19]
              name = "pelvis"
  
-             push!(contacts, contact_constraint(get_body(mech, :pelvis), normal, cf=cf, p=location, offset=offset, name=Symbol(name)))
+             push!(contacts, contact_constraint(get_body(mech, :pelvis), normal, friction_coefficient=friction_coefficient, contact_point=location, offset=offset, name=Symbol(name)))
         
              # elbow 
              location = [0.0; -0.185; 0.0]
@@ -81,8 +82,8 @@ function get_atlas(; timestep::T=0.01, gravity=-9.81, cf::T=0.8, spring=0.0,
              offset = [0.0; 0.0; 0.085]
              name = "elbow"
 
-             push!(contacts, contact_constraint(get_body(mech, :l_uarm), normal, cf=cf, p=location, offset=offset, name=Symbol("l_" .* name)))
-             push!(contacts, contact_constraint(get_body(mech, :r_uarm), normal, cf=cf, p=location, offset=offset, name=Symbol("r_" .* name)))
+             push!(contacts, contact_constraint(get_body(mech, :l_uarm), normal, friction_coefficient=friction_coefficient, contact_point=location, offset=offset, name=Symbol("l_" .* name)))
+             push!(contacts, contact_constraint(get_body(mech, :r_uarm), normal, friction_coefficient=friction_coefficient, contact_point=location, offset=offset, name=Symbol("r_" .* name)))
 
               # head
               location = [0.0; 0.0; 0.0]
@@ -90,7 +91,7 @@ function get_atlas(; timestep::T=0.01, gravity=-9.81, cf::T=0.8, spring=0.0,
               offset = [0.0; 0.0; 0.175]
               name = "head"
  
-              push!(contacts, contact_constraint(get_body(mech, :head), normal, cf=cf, p=location, offset=offset, name=Symbol(name)))
+              push!(contacts, contact_constraint(get_body(mech, :head), normal, friction_coefficient=friction_coefficient, contact_point=location, offset=offset, name=Symbol(name)))
 
               # backpack
               location = [-0.095; 0.0; 0.25]
@@ -98,14 +99,14 @@ function get_atlas(; timestep::T=0.01, gravity=-9.81, cf::T=0.8, spring=0.0,
               offset = [0.0; 0.0; 0.15]
               name = "backpack_bottom"
  
-              push!(contacts, contact_constraint(get_body(mech, :utorso), normal, cf=cf, p=location, offset=offset, name=Symbol(name)))
+              push!(contacts, contact_constraint(get_body(mech, :utorso), normal, friction_coefficient=friction_coefficient, contact_point=location, offset=offset, name=Symbol(name)))
 
               location = [-0.095; 0.0; -0.2]
               normal = [0.0; 0.0; 1.0]
               offset = [0.0; 0.0; 0.15]
               name = "backpack_top"
  
-              push!(contacts, contact_constraint(get_body(mech, :utorso), normal, cf=cf, p=location, offset=offset, name=Symbol(name)))
+              push!(contacts, contact_constraint(get_body(mech, :utorso), normal, friction_coefficient=friction_coefficient, contact_point=location, offset=offset, name=Symbol(name)))
         end
 
         set_position!(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [0;0;0.9385;0.;0.;0.])

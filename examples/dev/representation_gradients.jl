@@ -41,7 +41,7 @@ mech = get_mechanism(:halfcheetah, timestep=0.01, gravity=-9.81)
 initialize!(mech, :halfcheetah)
 
 # atlas
-mech = get_mechanism(:atlas, timestep=0.01, gravity=-9.81, cf=0.5, damper=100.0, spring=1.0, contact=true)
+mech = get_mechanism(:atlas, timestep=0.01, gravity=-9.81, friction_coefficient=0.5, damper=100.0, spring=1.0, contact=true)
 initialize_atlasstance!(mech, tran=[0,0,0.5], rot=[0.0,0.0,0.0])
 
 joint = mech.joints[1]
@@ -119,10 +119,10 @@ N_a * inv(N_a' * N_a)# - M_a
 
 # # translational delta in body1 frame
 # xθ = [1.0, 1.0]
-# Δx = get_position_delta(joint.constraints[1], body1, body2, xθ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]) 
+# Δx = get_position_delta(joint.translational, body1, body2, xθ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]) 
 
 # # rotational delta in body2 frame
-# Δq = get_position_delta(joint.constraints[2], body1, body2, xθ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])])
+# Δq = get_position_delta(joint.rotational, body1, body2, xθ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])])
 
 
 #######

@@ -444,12 +444,12 @@ q1 = [1.0; 0.0; 0.0; 0.0]
 x1 = [q1; 0.5 * h * ω1]
 p1 = J * ω1
 newton_zac_variational(x1, u1, h)
-newton_zac_variational(x1, u1, h, p=p1, init=true)
+newton_zac_variational(x1, u1, h, contact_point=contact_point1, init=true)
 
 x = [copy(x1)]
 for t = 1:T
     if t == 1
-        push!(x, newton_zac_variational(x[end], u1, h, p=p1, init=true))
+        push!(x, newton_zac_variational(x[end], u1, h, contact_point=contact_point1, init=true))
     else
 	    push!(x, newton_zac_variational(x[end], u1, h))
     end

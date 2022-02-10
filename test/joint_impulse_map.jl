@@ -4,7 +4,7 @@
 @testset "translational joint: impulse_map" begin
     mech = get_mechanism(:pendulum)
     joint0 = mech.joints[1]
-    tra0 = joint0.constraints[1]
+    tra0 = joint0.translational
 
     xa = rand(3)
     qa = UnitQuaternion(rand(4)...)
@@ -64,7 +64,7 @@ end
 @testset "rotational joint: impulse_map" begin
     mech = get_mechanism(:pendulum)
     joint0 = mech.joints[1]
-    rot0 = joint0.constraints[2]
+    rot0 = joint0.rotational
 
     xa = rand(3)
     qa = UnitQuaternion(rand(4)...)

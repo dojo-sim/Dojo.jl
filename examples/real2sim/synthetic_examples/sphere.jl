@@ -12,7 +12,7 @@ open(vis)
 include(joinpath(module_dir(), "env", "sphere", "deps", "texture.jl"))
 include( "../utils.jl")
 
-mech = get_mechanism(:sphere, timestep=0.05, g=-9.81, radius=0.5, cf=0.1);
+mech = get_mechanism(:sphere, timestep=0.05, g=-9.81, radius=0.5, friction_coefficient=0.1);
 initialize!(mech, :sphere, x=[0,0,0.3], v=[0,0.5,0.], ω=[10,0,0.])
 storage = simulate!(mech, 0.5, record=true, verbose=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6))
@@ -25,7 +25,7 @@ sphere_texture!(vis, mech)
 init_kwargs = Dict(:xlims => [[0,0,0], [1,1,0.2]],
 				   :vlims => [-1ones(3), 1ones(3)],
 				   :ωlims => [-5ones(3), 5ones(3)])
-mech_kwargs = Dict(:cf => 0.1, :radius => 0.5)
+mech_kwargs = Dict(:friction_coefficient => 0.1, :radius => 0.5)
 generate_dataset(:sphere, H=0.75, N=15,
 	opts=SolverOptions(btol=3e-4, rtol=3e-4),
 	init_kwargs=init_kwargs,

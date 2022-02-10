@@ -8,7 +8,7 @@ dt = 0.1
 env = make("block", 
     mode=:max, 
     dt=dt,
-    cf=0.5,
+    friction_coefficient=0.5,
     gravity=gravity)
 
 @show env.mechanism.bodies[1].m

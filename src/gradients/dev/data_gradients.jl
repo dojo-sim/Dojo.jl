@@ -70,14 +70,14 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, bodya::Node{T}
     for i = 1:Nc
         λ = getλJoint(joint, i)
         if bodyb.id == joint.child_id
-            ∇z2_aa += impulse_map_parent_jacobian_parent(joint.constraints[i],
+            ∇z2_aa += impulse_map_parent_jacobian_parent([joint.translational, joint.rotational][i],
                 bodya, bodyb, λ)
-            ∇z2_ab += impulse_map_parent_jacobian_child(joint.constraints[i],
+            ∇z2_ab += impulse_map_parent_jacobian_child([joint.translational, joint.rotational][i],
                 bodya, bodyb, λ)
         elseif bodya.id == joint.child_id
-            ∇z2_aa += impulse_map_child_jacobian_child(joint.constraints[i],
+            ∇z2_aa += impulse_map_child_jacobian_child([joint.translational, joint.rotational][i],
                 bodyb, bodya, λ)
-            ∇z2_ab += impulse_map_child_jacobian_parent(joint.constraints[i],
+            ∇z2_ab += impulse_map_child_jacobian_parent([joint.translational, joint.rotational][i],
                 bodyb, bodya, λ)
         end
     end
@@ -87,14 +87,14 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, bodya::Node{T}
             λ = getλJoint(joint, i)
             if bodyb.id == joint.child_id
                 ∇z2_aa += spring_parent_jacobian_configuration_parent(
-                    joint.constraints[i], bodya, bodyb, timestep)
+                    [joint.translational, joint.rotational][i], bodya, bodyb, timestep)
                 ∇z2_ab += spring_parent_jacobian_configuration_child(
-                    joint.constraints[i], bodya, bodyb, timestep)
+                    [joint.translational, joint.rotational][i], bodya, bodyb, timestep)
             elseif bodya.id == joint.child_id
                 ∇z2_aa += spring_child_jacobian_configuration_child(
-                    joint.constraints[i], bodyb, bodya, timestep)
+                    [joint.translational, joint.rotational][i], bodyb, bodya, timestep)
                 ∇z2_ab += spring_child_jacobian_configuration_parent(
-                    joint.constraints[i], bodyb, bodya, timestep)
+                    [joint.translational, joint.rotational][i], bodyb, bodya, timestep)
             end
         end
     end
@@ -103,14 +103,14 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, bodya::Node{T}
             λ = getλJoint(joint, i)
             if bodyb.id == joint.child_id
                 ∇z2_aa += damper_parent_jacobian_configuration_parent(
-                    joint.constraints[i], bodya, bodyb, timestep)
+                    [joint.translational, joint.rotational][i], bodya, bodyb, timestep)
                 ∇z2_ab += damper_parent_jacobian_configuration_child(
-                    joint.constraints[i], bodya, bodyb, timestep)
+                    [joint.translational, joint.rotational][i], bodya, bodyb, timestep)
             elseif bodya.id == joint.child_id
                 ∇z2_aa += damper_child_jacobian_configuration_child(
-                    joint.constraints[i], bodyb, bodya, timestep)
+                    [joint.translational, joint.rotational][i], bodyb, bodya, timestep)
                 ∇z2_ab += damper_child_jacobian_configuration_parent(
-                    joint.constraints[i], bodyb, bodya, timestep)
+                    [joint.translational, joint.rotational][i], bodyb, bodya, timestep)
             end
         end
     end
@@ -149,43 +149,43 @@ function body_constraint_jacobian_joint_data(mechanism::Mechanism{T}, body::Body
 end
 
 function body_constraint_jacobian_contact_data(mechanism::Mechanism, body::Body{T},
-    contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}},N½}
+    contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
     Nd = data_dim(contact)
-    bound = contact.constraints[1]
-    offset = bound.offset
+    model = contact.model
+    offset = model.offset
     x3, q3 = next_configuration(body.state, mechanism.timestep)
-    γ = contact.dual[2]
+    γ = contact.impulses_dual[2]
 
-    ∇cf = szeros(T,3,1)
+    ∇friction_coefficient = szeros(T,3,1)
 
-    X = force_mapping(bound, x3, q3)
+    X = force_mapping(model, x3, q3)
     # this what we differentiate: Qᵀγ = - skew(p - vrotate(offset, inv(q3))) * VRmat(q3) * LᵀVᵀmat(q3) * X' * γ
     ∇p = - ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ)
     ∇off = - ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ) * -∂vrotate∂p(offset, inv(q3))
 
     ∇X = szeros(T,3,Nd)
-    ∇Q = -[∇cf ∇off ∇p] # minus sign coming from res = [-compμ; -constraint]
+    ∇Q = -[∇friction_coefficient ∇off ∇p]
     return [∇X; ∇Q]
 end
 
 
 function contact_constraint_jacobian_contact_data(mechanism::Mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
-        body::Body{T}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}},N½}
+        body::Body{T}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
     Nd = data_dim(contact)
-    bound = contact.constraints[1]
-    p = bound.p
-    offset = bound.offset
+    model = contact.model
+    p = model.contact_point
+    offset = model.offset
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, mechanism.timestep)
-    s = contact.primal[2]
-    γ = contact.dual[2]
+    s = contact.impulses[2]
+    γ = contact.impulses_dual[2]
 
-    ∇cf = SA[0,γ[1],0,0]
-    ∇off = [-bound.ainv3; szeros(T,1,3); -bound.Bx * skew(vrotate(ϕ25, q3))]
-    ∇p = [bound.ainv3 * ∂vrotate∂p(bound.p, q3); szeros(T,1,3); bound.Bx * skew(vrotate(ϕ25, q3)) * ∂vrotate∂p(bound.p, q3)]
+    ∇friction_coefficient = SA[0,γ[1],0,0]
+    ∇off = [-model.surface_normal_projector; szeros(T,1,3); -model.surface_projector * skew(vrotate(ϕ25, q3))]
+    ∇p = [model.surface_normal_projector * ∂vrotate∂p(model.contact_point, q3); szeros(T,1,3); model.surface_projector * skew(vrotate(ϕ25, q3)) * ∂vrotate∂p(model.contact_point, q3)]
 
     ∇compμ = szeros(T,N½,Nd)
-    ∇g = -[∇cf ∇off ∇p] # minus sign coming from res = [-compμ; -constraint]
+    ∇g = -[∇friction_coefficient ∇off ∇p]
     return [∇compμ; ∇g]
 end
 
@@ -207,7 +207,7 @@ end
 # System Data Jacobians
 ################################################################################
 function data_adjacency_matrix(joints::Vector{<:JointConstraint}, bodies::Vector{<:Body}, contacts::Vector{<:ContactConstraint})
-    # mode can be variables or data depending on whi
+    # mode can be impulses or data depending on whi
     nodes = [joints; bodies; contacts]
     n = length(nodes)
     A = zeros(Bool, n, n)

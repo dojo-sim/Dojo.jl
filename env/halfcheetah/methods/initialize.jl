@@ -1,4 +1,4 @@
-function get_halfcheetah(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.4,
+function get_halfcheetah(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_coefficient::T=0.4,
     contact::Bool=true,
     contact_body::Bool=true,
     limits::Bool = true,
@@ -50,17 +50,17 @@ function get_halfcheetah(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.
                 pf = [+0.5 * body.shape.shape[1].rh[2]; 0.0; 0.0]
                 pb = [-0.5 * body.shape.shape[1].rh[2]; 0.0; 0.0]
                 o = [0;0; body.shape.shape[1].rh[1]]
-                push!(bounds, contact_constraint(body, normal, cf=cf, p=pf, offset=o))
-                push!(bounds, contact_constraint(body, normal, cf=cf, p=pb, offset=o))
+                push!(bounds, contact_constraint(body, normal, friction_coefficient=friction_coefficient, contact_point=pf, offset=o))
+                push!(bounds, contact_constraint(body, normal, friction_coefficient=friction_coefficient, contact_point=pb, offset=o))
 
                 # head
                 pf = [+0.5 * body.shape.shape[1].rh[2] + 0.214; 0.0; 0.1935]
                 o = [0;0; body.shape.shape[2].rh[1]]
-                push!(bounds, contact_constraint(body, normal, cf=cf, p=pf, offset=o))
+                push!(bounds, contact_constraint(body, normal, friction_coefficient=friction_coefficient, contact_point=pf, offset=o))
             else
                 p = [0;0; -0.5 * body.shape.rh[2]]
                 o = [0;0; body.shape.rh[1]]
-                push!(bounds, contact_constraint(body, normal, cf=cf, p=p, offset=o))
+                push!(bounds, contact_constraint(body, normal, friction_coefficient=friction_coefficient, contact_point=p, offset=o))
             end
         end
         set_position!(mech, get_joint_constraint(mech, :floating_joint), [0.576509, 0.0, 0.02792])

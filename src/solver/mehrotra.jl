@@ -98,20 +98,20 @@ function solver_status(mechanism::Mechanism, α, rvio, bvio, n, μtarget, underc
 end
 
 function initial_state!(contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
-    initialize_positive_orthant!(contact.dual[1], contact.primal[1])
-    initialize_positive_orthant!(contact.dual[2], contact.primal[2])
+    initialize_positive_orthant!(contact.impulses_dual[1], contact.impulses[1])
+    initialize_positive_orthant!(contact.impulses_dual[2], contact.impulses[2])
     return nothing
 end
 
-function initial_state!(contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}}}
-	γort, sort = initialize_positive_orthant!(contact.dual[1][1:1], contact.primal[1][1:1])
-	γsoc, ssoc = initialize_second_order_cone!(contact.dual[1][2:4], contact.primal[1][2:4])
-	contact.dual[1] = [γort; γsoc]
-	contact.primal[1] = [sort; ssoc]
-	γort, sort = initialize_positive_orthant!(contact.dual[2][1:1], contact.primal[2][1:1])
-	γsoc, ssoc = initialize_second_order_cone!(contact.dual[2][2:4], contact.primal[2][2:4])
-	contact.dual[2] = [γort; γsoc]
-	contact.primal[2] = [sort; ssoc]
+function initial_state!(contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:NonlinearContact{T,N}}
+	γort, sort = initialize_positive_orthant!(contact.impulses_dual[1][1:1], contact.impulses[1][1:1])
+	γsoc, ssoc = initialize_second_order_cone!(contact.impulses_dual[1][2:4], contact.impulses[1][2:4])
+	contact.impulses_dual[1] = [γort; γsoc]
+	contact.impulses[1] = [sort; ssoc]
+	γort, sort = initialize_positive_orthant!(contact.impulses_dual[2][1:1], contact.impulses[2][1:1])
+	γsoc, ssoc = initialize_second_order_cone!(contact.impulses_dual[2][2:4], contact.impulses[2][2:4])
+	contact.impulses_dual[2] = [γort; γsoc]
+	contact.impulses[2] = [sort; ssoc]
     return nothing
 end
 
@@ -166,8 +166,8 @@ end
     return
 end
 
-@inline function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}},N½}
-	cont = contact.constraints[1]
+@inline function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
+	cont = contact.model
 	μ = mechanism.μ
 	Δs = step_entry.value[1:N½]
     Δγ = step_entry.value[N½ .+ (1:N½)]
@@ -175,14 +175,14 @@ end
     return
 end
 
-@inline function correction!(mechanism::Mechanism{T}, residual_entry::Entry, step_entry::Entry, joint::JointConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
+@inline function correction!(mechanism::Mechanism{T}, residual_entry::Entry, step_entry::Entry, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
 	cor = correction(mechanism, step_entry, joint)
 	residual_entry.value += cor
     return
 end
 
-@generated function correction(mechanism::Mechanism{T}, step_entry::Entry, joint::JointConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
-    cor = [:(correction(joint.constraints[$i], step_entry.value[λindex(joint, $i)], mechanism.μ)) for i = 1:Nc]
+@generated function correction(mechanism::Mechanism{T}, step_entry::Entry, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
+    cor = [:(correction([joint.translational, joint.rotational][$i], step_entry.value[λindex(joint, $i)], mechanism.μ)) for i = 1:Nc]
     return :(vcat($(cor...)))
 end
 

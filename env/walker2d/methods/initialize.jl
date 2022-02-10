@@ -1,4 +1,4 @@
-function get_walker2d(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=1.9,
+function get_walker2d(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_coefficient::T=1.9,
     contact::Bool=true,
     contact_body::Bool=true,
     limits::Bool=true,
@@ -50,12 +50,12 @@ function get_walker2d(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=1.9,
                 pf = [0,0, +0.5 * body.shape.rh[2]]
                 pb = [0,0, -0.5 * body.shape.rh[2]]
                 o = [0;0; body.shape.rh[1]]
-                push!(bounds, contact_constraint(body, normal, cf=cf, p=pf, offset=o))
-                push!(bounds, contact_constraint(body, normal, cf=cf, p=pb, offset=o))
+                push!(bounds, contact_constraint(body, normal, friction_coefficient=friction_coefficient, contact_point=contact_pointf, offset=o))
+                push!(bounds, contact_constraint(body, normal, friction_coefficient=friction_coefficient, contact_point=contact_pointb, offset=o))
             else
                 p = [0;0; 0.5 * body.shape.rh[2]]
                 o = [0;0; body.shape.rh[1]]
-                push!(bounds, contact_constraint(body, normal, cf=cf, p=p, offset=o))
+                push!(bounds, contact_constraint(body, normal, friction_coefficient=friction_coefficient, contact_point=contact_point, offset=o))
             end
         end
         set_position!(mech, get_joint_constraint(mech, :floating_joint), [1.25, 0.0, 0.0])

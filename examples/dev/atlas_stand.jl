@@ -26,11 +26,11 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 # Build mechanism and Identify A and B
 ################################################################################
 
-mech = getmechanism(:atlas, timestep = 0.01, g = -9.81, cf = 0.8, contact = true)
+mech = getmechanism(:atlas, timestep = 0.01, g = -9.81, friction_coefficient = 0.8, contact = true)
 initialize!(mech, :atlas, tran = [0,0,1.9291], rot = [0.,0,0])
 for (i,joint) in enumerate(mech.joints)
-    jt = joint.constraints[1]
-    jr = joint.constraints[2]
+    jt = joint.translational
+    jr = joint.rotational
     joint.isdamper = true #false
     joint.isspring = false #false
 
@@ -50,7 +50,7 @@ for (i,ineqc) in enumerate(contacts)
     cont = ineqc.constraints[1]
     body = get_body(mech, ineqc.parentid)
     x3, q3 = current_configuration(body.state)
-    sdf = cont.ainv3 * (x3 + vrotate(cont.p,q3) - cont.offset)
+    sdf = cont.surface_normal_projector * (x3 + vrotate(cont.p,q3) - cont.offset)
     println("sdf $i:", sdf)
 end
 

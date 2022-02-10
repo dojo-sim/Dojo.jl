@@ -21,10 +21,10 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 
 gravity = -1.0
 dt = 0.01
-cf = 0.8
+friction_coefficient = 0.8
 damper = 4.5
 spring = 0.0
-mech = gethumanoid(g=gravity, timestep=dt, cf=cf, damper=damper, spring=spring)
+mech = gethumanoid(g=gravity, timestep=dt, friction_coefficient=friction_coefficient, damper=damper, spring=spring)
 initialize!(mech, :humanoid, rot = [0,0,0.3], tran = [0,0,1.4])
 storage = simulate!(mech, 1.0, record = true, verbose = true,
 	opts = SolverOptions(rtol = 1e-10, btol = 1e-6, verbose = false))
