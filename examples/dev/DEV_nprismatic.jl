@@ -26,8 +26,8 @@ initialize!(mech, :nslider, z1 = 0.0, Δz = 1.1)
 
 for (i,joint) in enumerate(mech.joints)
     if i ∈ (1:10)
-        jt = joint.constraints[1]
-        jr = joint.constraints[2]
+        jt = joint.translational
+        jr = joint.rotational
         joint.isdamper = false #false
         joint.isspring = false #false
 

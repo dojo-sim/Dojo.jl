@@ -56,7 +56,7 @@ function initialize_npendulum!(mechanism::Mechanism; ϕ1::T = pi/4, ω = [0.0, 0
 
     body1 = mechanism.bodies[1]
     joint = mechanism.joints[1]
-    vert11 = joint.constraints[1].vertices[2]
+    vert11 = joint.translational.vertices[2]
     vert12 = - vert11
 
     # set position and velocities

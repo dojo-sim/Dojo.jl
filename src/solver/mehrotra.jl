@@ -175,14 +175,14 @@ end
     return
 end
 
-@inline function correction!(mechanism::Mechanism{T}, residual_entry::Entry, step_entry::Entry, joint::JointConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
+@inline function correction!(mechanism::Mechanism{T}, residual_entry::Entry, step_entry::Entry, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
 	cor = correction(mechanism, step_entry, joint)
 	residual_entry.value += cor
     return
 end
 
-@generated function correction(mechanism::Mechanism{T}, step_entry::Entry, joint::JointConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
-    cor = [:(correction(joint.constraints[$i], step_entry.value[λindex(joint, $i)], mechanism.μ)) for i = 1:Nc]
+@generated function correction(mechanism::Mechanism{T}, step_entry::Entry, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
+    cor = [:(correction([joint.translational, joint.rotational][$i], step_entry.value[λindex(joint, $i)], mechanism.μ)) for i = 1:Nc]
     return :(vcat($(cor...)))
 end
 

@@ -36,8 +36,8 @@ end
 	joint2 = collect(mech.joints)[2]
 	body1 = collect(mech.bodies)[1]
 	body2 = collect(mech.bodies)[2]
-	tra2 = joint2.constraints[1]
-	rot2 = joint2.constraints[1]
+	tra2 = joint2.translational
+	rot2 = joint2.rotational
 
 	x = srand(1)
 	Δx = Dojo.zerodimstaticadjoint(Dojo.nullspace_mask(tra2)) * x
@@ -276,11 +276,11 @@ end
 	for jointtype in jointtypes
 	    mech = get_snake(Nb=10, jointtype=jointtype)
 		for joint in mech.joints
-		    joint.constraints[2].qoffset = UnitQuaternion(rand(4)...)
+		    joint.rotational.qoffset = UnitQuaternion(rand(4)...)
 		end
 	    joint0 = mech.joints[1]
-	    tra0 = joint0.constraints[1]
-	    rot0 = joint0.constraints[2]
+	    tra0 = joint0.translational
+	    rot0 = joint0.rotational
 	    pnodes0 = [mech.origin; mech.bodies[1:end-1]]
 	    cnodes0 = mech.bodies
 
@@ -316,8 +316,7 @@ end
 @testset "minimal velocity jacobian" begin
 	mech = get_humanoid()
 	for jointcon in mech.joints
-		for joint in jointcon.constraints
-			joint = jointcon.constraints[2]
+		for joint in [jointcon.translational, jointcon.rotational]
 			qa = UnitQuaternion(rand(4)...)
 			qb = UnitQuaternion(rand(4)...)
 			xa = rand(3)
@@ -358,8 +357,7 @@ end
 @testset "minimal coordinates jacobian" begin
 	mech = get_humanoid()
 	for jointcon in mech.joints
-		for joint in jointcon.constraints
-			joint = jointcon.constraints[1]
+		for joint in [jointcon.translational, jointcon.rotational]
 			qa = UnitQuaternion(rand(4)...)
 			qb = UnitQuaternion(rand(4)...)
 			xa = rand(3)

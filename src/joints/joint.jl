@@ -213,13 +213,13 @@ end
 
 @inline minimal_coordinates(joint::Joint{T,Nλ}) where {T,Nλ} = szeros(T, 3 - Nλ)
 
-function add_limits(mech::Mechanism, eq::JointConstraint;
+function add_limits(mech::Mechanism, joint::JointConstraint;
     # NOTE: this only works for joints between serial chains (ie, single child joints)
-    tra_limits=eq.constraints[1].joint_limits,
-    rot_limits=eq.constraints[1].joint_limits)
+    tra_limits=joint.translational.joint_limits,
+    rot_limits=joint.rotational.joint_limits)
 
     # update translational
-    tra = eq.constraints[1]
+    tra = joint.translational
     T = typeof(tra).parameters[1]
     Nλ = typeof(tra).parameters[2]
     Nb½ = length(tra_limits[1])
@@ -229,7 +229,7 @@ function add_limits(mech::Mechanism, eq::JointConstraint;
     tra_limit = (Translational{T,Nλ,Nb,N,Nb½,N̄λ}(tra.axis, tra.V3, tra.V12, tra.vertices, tra.spring, tra.damper, tra.spring_offset, tra_limits, tra.spring_type, tra.input), eq.parent_id, eq.child_id)
 
     # update rotational
-    rot = eq.constraints[2]
+    rot = joint.rotational
     T = typeof(rot).parameters[1]
     Nλ = typeof(rot).parameters[2]
     Nb½ = length(rot_limits[1])

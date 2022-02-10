@@ -25,8 +25,8 @@ initialize!(mech, :npendulum, ϕ1 = 0.5 * π)
 
 for (i,joint) in enumerate(mech.joints)
     if i ∈ (1,2)
-        jt = joint.constraints[1]
-        jr = joint.constraints[2]
+        jt = joint.translational
+        jr = joint.rotational
         joint.isdamper = false #false
         joint.isspring = true #false
 
