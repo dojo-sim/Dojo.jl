@@ -22,30 +22,36 @@ mutable struct JointConstraint{T,N,Nc,TJ,RJ} <: Constraint{T,N}
     impulses::Vector{SVector{N,T}}
 
     function JointConstraint(data; name::Symbol=Symbol("joint_" * randstring(4)))
-        jointdata = Tuple{Joint,Int64,Int64}[]
-        for info in data
-            push!(jointdata, info)
-        end
+        @assert data[1][2] == data[2][2] # check parent ids
+        @assert data[1][3] == data[2][3] # check child ids
 
-        T = getT(jointdata[1][1])
+        # joints 
+        translational = data[1][1] 
+        rotational = data[2][1]
 
+        # IDs
+        parent_id = data[1][2] 
+        child_id = data[1][3]
+
+        # data dype
+        T = getT(data[1][1])
+
+        # set springs & dampers off
         spring = false
         damper = false
-        parent_id = jointdata[1][2]
-        child_ids = Int64[]
-        constraints = Joint{T}[]
+        
         minimal_index = Vector{Int64}[]
         N = 0
-        for set in jointdata
-            set[1].spring != 0 && (spring = true)
-            set[1].damper != 0 && (damper = true)
+        for joint_data in data
+            joint = joint_data[1]
 
-            push!(constraints, set[1])
-            @assert set[2] == parent_id
-            push!(child_ids, set[3])
+            # set spring & damper on
+            joint.spring != 0 && (spring = true)
+            joint.damper != 0 && (damper = true)
 
-            Nλ = λlength(set[1])
-            Nset = ηlength(set[1])
+            # minimal-coordaintes indices
+            Nλ = λlength(joint)
+            Nset = ηlength(joint)
             if isempty(minimal_index)
                 push!(minimal_index, [1;3-Nλ])
             else
@@ -53,12 +59,11 @@ mutable struct JointConstraint{T,N,Nc,TJ,RJ} <: Constraint{T,N}
             end
             N += Nset
         end
-        @assert all(y->y==child_ids[1], child_ids)
 
-        constraints = Tuple(constraints)
-        Nc = length(constraints)
+        Nc = 2
         impulses = [zeros(T, N) for i=1:2]
-        return new{T,N,Nc,typeof(constraints[1]),typeof(constraints[2])}(getGlobalID(), name, constraints[1], constraints[2], spring, damper, parent_id, child_ids[1], minimal_index, impulses)
+
+        return new{T,N,Nc,typeof(translational),typeof(rotational)}(getGlobalID(), name, translational, rotational, spring, damper, parent_id, child_id, minimal_index, impulses)
     end
 end
 
