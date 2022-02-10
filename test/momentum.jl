@@ -50,7 +50,7 @@ jointtypes = [
 ################################################################################
 mech = get_mechanism(:box, timestep=timestep0, gravity=gravity0, contact = false)
 v0 = [1,2,3.0]
-ω0 = [1,1,1.0]
+ω0 = [10,10,10.0]
 initialize!(mech, :box, v = v0, ω = ω0)
 
 storage = simulate!(mech, 5.0, nocontrol!, record = true, verbose = false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
@@ -108,7 +108,6 @@ mech = get_mechanism(:humanoid, timestep=timestep0, gravity=gravity0, spring=spr
 initialize!(mech, :humanoid)
 bodies = collect(mech.bodies)
 set_velocity!.(bodies, ω = 1e-0rand(3))
-
 
 storage = simulate!(mech, 10.0, controller!, record = true, verbose = false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
@@ -241,8 +240,8 @@ end
 # initial linear and angular velocity
 # no gravity
 # with spring and damper
-# with control
 ################################################################################
+
 Nb0 = 5
 spring0 = 1.0 * 4e0
 damper0 = 1.0 * 2e+1
@@ -255,7 +254,7 @@ v0 = 100.0 * [1, 2, 3] * timestep0
 q10 = UnitQuaternion(RotX(0.5*π))
 
 initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0)
-storage = simulate!(mech, 1.25, controller!, record = true, verbose = false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+storage = simulate!(mech, 2.5, record = true, verbose = false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 m0 = momentum(mech, storage)[5:end]
@@ -278,16 +277,13 @@ end
         ω0 = 10.0 * [1, 2, 3.0] * timestep0
         q10 = UnitQuaternion(RotX(0.5*π))
         initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0)
-        storage = simulate!(mech, 1.50, controller!, record = true, verbose = false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+        storage = simulate!(mech, 1.50, record = true, verbose = false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
         # visualize(mech, storage, vis = vis)
 
         m0 = momentum(mech, storage)[5:end]
         mlin0 = [Vector(m-m0[1])[1:3] for m in m0]
         mang0= [Vector(m-m0[1])[4:6] for m in m0]
-        # plot([(i-1)*timestep0 for i in 1:length(m0)], hcat(mlin0...)')
-        # plt = plot()
-        # plot!([(i-1)*timestep0 for i in 1:length(m0)], hcat(mang0...)')
-        # display(plt)
+
         @test all(norm.(mlin0, Inf) .< 1e-8)
         @test all(norm.(mang0, Inf) .< 1e-8)
     end

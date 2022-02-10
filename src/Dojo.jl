@@ -73,6 +73,8 @@ export Origin,
     minimal_velocities,
     minimal_dimension,
     maximal_dimension,
+    maximal_to_minimal, 
+    minimal_to_maximal,
 
     RotX,
     RotY,
