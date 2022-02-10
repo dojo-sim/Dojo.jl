@@ -40,7 +40,7 @@ Rotational3{T} = Rotational{T,3} where T
     unlimited_constraint(joint, xa, qa, xb, qb, η)
 end
 @inline function unlimited_constraint(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T}
-    return constraint_mask(joint) * Vmat(orientation_error(joint, xa, qa, xb, qb)) # maybe we need to use rotation_vector instead of Vmat
+    return constraint_mask(joint) * displacement(joint, xa, qa, xb, qb, vmat=true) # maybe we need to use rotation_vector instead of Vmat
 end
 
 # @inline function constraint_jacobian(jacobian_relative::Symbol, joint::Rotational{T,Nλ,0},
@@ -51,17 +51,17 @@ end
 # @inline function unlimited_constraint_jacobian(jacobian_relative::Symbol, joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
 #     # X = szeros(T, 3, 3)
 #     # Q = Vmat() *
-#     X, Q = orientation_error_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, attjac=false)
+#     X, Q = displacement_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, attjac=false)
 #     return constraint_mask(joint) * [X Vmat() * Q]
 # end
 #
 @inline function unlimited_constraint_jacobian(jacobian_relative::Symbol, joint::Rotational{T},
         xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where T
     # X = szeros(T, 3, 3)
-    # Q = Vmat() * orientation_error_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, attjac=false)
+    # Q = Vmat() * displacement_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, attjac=false)
     # return constraint_mask(joint) * [X Q]
-    X, Q = orientation_error_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, attjac=false)
-    return constraint_mask(joint) * [X Vmat() * Q]
+    X, Q = displacement_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, attjac=false)
+    return constraint_mask(joint) * [X Q]
 end
 
 

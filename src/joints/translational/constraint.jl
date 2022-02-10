@@ -122,22 +122,6 @@ function impulse_transform_parent(joint::Translational{T}, xa::AbstractVector,
     cat(I(3), 0.5 * I(3), dims=(1,2)) * transpose([X Q])
 end
 
-mech = get_pendulum()
-joint = mech.joints[1]
-xa = rand(3)
-qa = UnitQuaternion(rand(4)...)
-xb = rand(3)
-qb = UnitQuaternion(rand(4)...)
-displacement_jacobian_configuration(:parent, joint.translational, xa, qa, xb, qb, attjac=true)
-joint
-
-
-a = 1
-a = 1
-a = 1
-a = 1
-a = 1
-
 
 function impulse_transform_child(joint::Translational{T}, xa::AbstractVector,
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
