@@ -47,7 +47,6 @@ end
 
     # dynamics
     dynT = I(3) * mass / timestep
-
     dynR = -2.0 / timestep * LVᵀmat(q2)' * Tmat() * (∂qRᵀmat(Vᵀmat() * inertia * Vmat() * Lmat(q2)' * vector(q3)) + Rmat(q3)' * Vᵀmat() * inertia * Vmat() * Lmat(q2)')
 
     Z33 = szeros(T, 3, 3)

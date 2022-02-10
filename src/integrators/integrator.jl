@@ -7,6 +7,7 @@
 @inline current_position(state::State; k=1) = state.x2[k]
 @inline current_orientation(state::State; k=1) = state.q2[k]
 @inline current_configuration(state::State; k=1) = (current_position(state, k=k), current_orientation(state, k=k))
+@inline current_velocity(state::State) = (state.vsol[2], state.ϕsol[2])
 @inline current_configuration_velocity(state::State) = (current_position(state, k=1), state.vsol[2], current_orientation(state, k=1), state.ϕsol[2])
 
 @inline next_position(x2::SVector{3,T}, v25::SVector{3,T}, timestep::T) where T = x2 + v25 * timestep

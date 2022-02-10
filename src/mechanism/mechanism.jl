@@ -1,7 +1,7 @@
 mutable struct Mechanism{T,Nn,Ne,Nb,Ni}
     origin::Origin{T}
     joints::Vector{<:JointConstraint{T}}
-    bodies::Vector{<:Body{T}}
+    bodies::Vector{Body{T}}
     contacts::Vector{<:ContactConstraint{T}}
 
     system::System{Nn}
@@ -14,7 +14,7 @@ mutable struct Mechanism{T,Nn,Ne,Nb,Ni}
     μ::T
 end
 
-function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, joints::Vector{<:JointConstraint{T}}, contacts::Vector{<:ContactConstraint{T}};
+function Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:JointConstraint{T}}, contacts::Vector{<:ContactConstraint{T}};
     spring=0.0, damper=0.0, timestep::T=0.01, gravity=[0.0; 0.0;-9.81]) where T
 
     # reset ids
@@ -48,7 +48,7 @@ function Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, joints::Vector{
     Mechanism{T,Nn,Ne,Nb,Ni}(origin, joints, bodies, contacts, system, residual_entries, matrix_entries, diagonal_inverses, timestep, get_gravity(gravity), 0.0)
 end
 
-Mechanism(origin::Origin{T}, bodies::Vector{<:Body{T}}, joints::Vector{<:JointConstraint{T}}; kwargs...) where T = Mechanism(origin, bodies, joints, ContactConstraint{T}[]; kwargs...)
+Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:JointConstraint{T}}; kwargs...) where T = Mechanism(origin, bodies, joints, ContactConstraint{T}[]; kwargs...)
 
 function Mechanism(filename::String, floating::Bool=false, T=Float64; kwargs...)
     # parse urdf
