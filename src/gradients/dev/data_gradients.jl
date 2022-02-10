@@ -26,14 +26,14 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, body::Body{T})
     ∇m = [1 / Δt * (x2 - x1) + Δt/2 * gravity - 1 / Δt * (x3 - x2) + Δt/2 * gravity;
           szeros(T,3,1)]
     # Inertia
-    ∇J = 4 / Δt * LVᵀmat(q2)' * LVᵀmat(q1) * ∂inertia(VLᵀmat(q1) * vector(q2))
-    ∇J += 4 / Δt * LVᵀmat(q2)' * Tmat() * RᵀVᵀmat(q3) * ∂inertia(VLᵀmat(q2) * vector(q3))
+    ∇J = 2 / Δt * LVᵀmat(q2)' * LVᵀmat(q1) * ∂inertia(VLᵀmat(q1) * vector(q2))
+    ∇J += 2 / Δt * LVᵀmat(q2)' * Tmat() * RᵀVᵀmat(q3) * ∂inertia(VLᵀmat(q2) * vector(q3))
     ∇J = [szeros(T,3,6); ∇J]
 
     # initial conditions: v15, ϕ15
     ∇v15 = body.mass * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
-    ∇q1 = -4 / Δt * LVᵀmat(q2)' * ∂qLVᵀmat(body.inertia * VLᵀmat(q1) * vector(q2))
-    ∇q1 += -4 / Δt * LVᵀmat(q2)' * LVᵀmat(q1) * body.inertia * ∂qVLᵀmat(vector(q2))
+    ∇q1 = -2 / Δt * LVᵀmat(q2)' * ∂qLVᵀmat(body.inertia * VLᵀmat(q1) * vector(q2))
+    ∇q1 += -2 / Δt * LVᵀmat(q2)' * LVᵀmat(q1) * body.inertia * ∂qVLᵀmat(vector(q2))
     ∇ϕ15 = ∇q1 * rotational_integrator_jacobian_velocity(q2, -ϕ15, Δt)
     ∇15 = [∇v15 szeros(T,3,3);
            szeros(T,3,3) ∇ϕ15]
@@ -43,9 +43,9 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, body::Body{T})
     ∇tra_x2 = - 2 / Δt * body.mass * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
     ∇tra_q2 = szeros(T,3,3)
     ∇rot_x2 = szeros(T,3,3)
-    ∇rot_q2 = -4 / Δt * VLᵀmat(q2) * LVᵀmat(q1) * body.inertia * VLᵀmat(q1)
-    ∇rot_q2 += -4 / Δt * VLᵀmat(q2) * Tmat() * RᵀVᵀmat(q3) * body.inertia * ∂qVLᵀmat(vector(q3))
-    ∇rot_q2 += -4 / Δt * ∂qVLᵀmat(LVᵀmat(q1) * body.inertia * VLᵀmat(q1) * vector(q2) + Tmat() * RᵀVᵀmat(q3) * body.inertia * VLᵀmat(q2) * vector(q3))
+    ∇rot_q2 = -2 / Δt * VLᵀmat(q2) * LVᵀmat(q1) * body.inertia * VLᵀmat(q1)
+    ∇rot_q2 += -2 / Δt * VLᵀmat(q2) * Tmat() * RᵀVᵀmat(q3) * body.inertia * ∂qVLᵀmat(vector(q3))
+    ∇rot_q2 += -2 / Δt * ∂qVLᵀmat(LVᵀmat(q1) * body.inertia * VLᵀmat(q1) * vector(q2) + Tmat() * RᵀVᵀmat(q3) * body.inertia * VLᵀmat(q2) * vector(q3))
     ∇rot_q2 *= LVᵀmat(q2)
     ∇z2 = [∇tra_x2 ∇tra_q2;
            ∇rot_x2 ∇rot_q2]
@@ -141,7 +141,8 @@ function body_constraint_jacobian_joint_data(mechanism::Mechanism{T}, body::Body
     x1, v15, q1, ϕ15 = previous_configuration_velocity(body.state)
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, Δt)
-    ∇u = Diagonal(SVector{6,T}(1,1,1,2,2,2)) * input_jacobian_control(mechanism, joint, body)
+    # ∇u = Diagonal(SVector{6,T}(1,1,1,2,2,2)) * input_jacobian_control(mechanism, joint, body)
+    ∇u = Diagonal(SVector{6,T}(1,1,1,1,1,1)) * input_jacobian_control(mechanism, joint, body)
     ∇spring = joint.spring ? apply_spring(mechanism, joint, body, unitary=true) : szeros(T,6,1)
     ∇damper = joint.damper ? apply_damper(mechanism, joint, body, unitary=true) : szeros(T,6,1)
     return [∇u ∇spring ∇damper]
