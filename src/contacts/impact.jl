@@ -40,7 +40,7 @@ end
     return transpose([X Q])
 end
 
-@inline function force_mapping(bound::ImpactContact)
+@inline function force_mapping(bound::ImpactContact, x::AbstractVector, q::UnitQuaternion)
     X = bound.ainv3
     return X
 end

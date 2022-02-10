@@ -111,7 +111,7 @@ function ∂g∂simdata(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where 
 
 	# Contribution to Body dynamics
 	∇cf = szeros(T,3)
-	X = force_mapping(bound)
+	X = force_mapping(bound, x3, q3)
 	# this what we differentiate: Qᵀγ = - skew(p - vrotate(offset, inv(q3))) * VRmat(q3) * LᵀVᵀmat(q3) * X' * γ
 	∇off = - ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ) * -∂vrotate∂p(offset, inv(q3))
 	∇p = - ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ)

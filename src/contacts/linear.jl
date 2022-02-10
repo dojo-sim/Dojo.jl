@@ -79,7 +79,7 @@ end
     return transpose([X Q])
 end
 
-@inline function force_mapping(bound::LinearContact)
+@inline function force_mapping(bound::LinearContact, x::AbstractVector, q::UnitQuaternion)
     X = [bound.ainv3;
          szeros(1,3);
          bound.Bx]

@@ -48,7 +48,7 @@ end
 function impulse_map_jacobian_configuration(mechanism, body::Body, contact::ContactConstraint{T}) where T
     x, q = next_configuration(body.state, mechanism.timestep)
     bound = contact.constraints[1]
-    X = force_mapping(bound)
+    X = force_mapping(bound, x, q)
     λ = X' * contact.dual[2]
 
     # Q = skew(bound.p - vrotate(bound.offset, inv(q))) * VRmat(q) * LᵀVᵀmat(q) * λ
