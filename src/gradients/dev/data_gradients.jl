@@ -136,16 +136,16 @@ function body_constraint_jacobian_joint_data(mechanism::Mechanism{T}, body::Body
 end
 
 function body_constraint_jacobian_contact_data(mechanism::Mechanism, body::Body{T},
-    contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}},N½}
+    contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
     Nd = data_dim(contact)
-    bound = contact.constraints[1]
-    offset = bound.offset
+    model = contact.model
+    offset = model.offset
     x3, q3 = next_configuration(body.state, mechanism.timestep)
-    γ = contact.dual[2]
+    γ = contact.impulses_dual[2]
 
     ∇cf = szeros(T,3,1)
 
-    X = force_mapping(bound)
+    X = force_mapping(model)
     # this what we differentiate: Qᵀγ = - skew(p - vrotate(offset, inv(q3))) * VRmat(q3) * LᵀVᵀmat(q3) * X' * γ
     ∇p = - ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ)
     ∇off = - ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ) * -∂vrotate∂p(offset, inv(q3))
@@ -157,19 +157,19 @@ end
 
 
 function contact_constraint_jacobian_contact_data(mechanism::Mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
-        body::Body{T}) where {T,N,Nc,Cs<:Tuple{NonlinearContact{T,N}},N½}
+        body::Body{T}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
     Nd = data_dim(contact)
-    bound = contact.constraints[1]
-    p = bound.p
-    offset = bound.offset
+    model = contact.model
+    p = model.p
+    offset = model.offset
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, mechanism.timestep)
-    s = contact.primal[2]
-    γ = contact.dual[2]
+    s = contact.impulses[2]
+    γ = contact.impulses_dual[2]
 
     ∇cf = SA[0,γ[1],0,0]
-    ∇off = [-bound.ainv3; szeros(T,1,3); -bound.Bx * skew(vrotate(ϕ25, q3))]
-    ∇p = [bound.ainv3 * ∂vrotate∂p(bound.p, q3); szeros(T,1,3); bound.Bx * skew(vrotate(ϕ25, q3)) * ∂vrotate∂p(bound.p, q3)]
+    ∇off = [-model.ainv3; szeros(T,1,3); -model.Bx * skew(vrotate(ϕ25, q3))]
+    ∇p = [model.ainv3 * ∂vrotate∂p(model.p, q3); szeros(T,1,3); model.Bx * skew(vrotate(ϕ25, q3)) * ∂vrotate∂p(model.p, q3)]
 
     ∇compμ = szeros(T,N½,Nd)
     ∇g = [∇cf ∇p ∇off]

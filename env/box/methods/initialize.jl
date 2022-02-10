@@ -54,8 +54,8 @@ function initialize_box!(mechanism::Mechanism;
     halfside = body.shape.xyz[1] / 2
 
     if length(mechanism.contacts) > 0
-        bound = mechanism.contacts[1].constraints[1]
-        offset = bound.offset[3]
+        model = mechanism.contacts[1].model
+        offset = model.offset[3]
     else
         offset = 0.0
     end

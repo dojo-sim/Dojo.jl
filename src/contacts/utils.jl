@@ -1,6 +1,6 @@
 function sdf(contact::ContactConstraint{T,N,Nc,Cs}, x::AbstractVector{T},
     q::UnitQuaternion{T}) where {T,N,Nc,Cs<:Tuple{<:Contact{T,N}}}
-    cont = contact.constraints[1]
+    cont = contact.model
     return cont.ainv3 * (x + vrotate(cont.p, q) - cont.offset)
 end
 
@@ -31,6 +31,6 @@ end
 
 function contact_location(contact::ContactConstraint{T,N,Nc,Cs}, x::AbstractVector{T},
     q::UnitQuaternion{T}) where {T,N,Nc,Cs<:Tuple{<:Contact{T,N}}}
-    cont = contact.constraints[1]
+    cont = contact.model
     return x + vrotate(cont.p,q) - cont.offset
 end

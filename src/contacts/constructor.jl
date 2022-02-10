@@ -55,14 +55,14 @@ function contact_constraint(body::Body{T},
         contact_type::Symbol = :contact) where T
 
     if contact_type == :contact
-        bound = NonlinearContact(body, normal, cf, p=p, offset=offset)
+        model = NonlinearContact(body, normal, cf, p=p, offset=offset)
     elseif contact_type == :linear_contact
-        bound = LinearContact(body, normal, cf, p=p, offset=offset)
+        model = LinearContact(body, normal, cf, p=p, offset=offset)
     elseif contact_type == :impact
-        bound = ImpactContact(body, normal, p=p, offset=offset)
+        model = ImpactContact(body, normal, p=p, offset=offset)
     else
         @warn "unknown contact_type"
     end
-    contacts = ContactConstraint((bound, body.id, nothing); name=name)
+    contacts = ContactConstraint((model, body.id, nothing); name=name)
     return contacts
 end

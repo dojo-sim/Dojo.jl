@@ -339,23 +339,23 @@ function contact_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
     for body in mechanism.bodies
         for contact in mechanism.contacts
             if contact.parent_id == body.id
-                bound = contact.constraints[1]
-                bound_type = typeof(bound)
+                model = contact.model
+                model_type = typeof(model)
                 x3, q3 = next_configuration(body.state, timestep)
 
                 function d(vars)
                     x = vars[1:3]
                     q = UnitQuaternion(vars[4:7]..., false)
-                    return impulse_map(bound, x, q, nothing)' * contact.dual[2]
+                    return impulse_map(model, x, q, nothing)' * contact.impulses_dual[2]
                 end
 
-                if bound_type <: NonlinearContact
-                    # J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= _dN(x3, vector(q3), contact.dual[2][1:1], bound.p)
-                    # J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= _dB(x3, vector(q3), contact.dual[2][2:4], bound.p)
+                if model_type <: NonlinearContact
+                    # J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= _dN(x3, vector(q3), contact.impulses_dual[2][1:1], model.p)
+                    # J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= _dB(x3, vector(q3), contact.impulses_dual[2][2:4], model.p)
                     J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= FiniteDiff.finite_difference_jacobian(d, [x3; vector(q3)])
-                elseif bound_type <: LinearContact
+                elseif model_type <: LinearContact
                     J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= FiniteDiff.finite_difference_jacobian(d, [x3; vector(q3)])
-                elseif bound_type <: ImpactContact
+                elseif model_type <: ImpactContact
                     J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= FiniteDiff.finite_difference_jacobian(d, [x3; vector(q3)])
                 end
             end
@@ -374,33 +374,33 @@ function contact_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,
 
     offr = 0
     for contact in contacts
-        bound = contact.constraints[1]
+        model = contact.model
         body = get_body(mechanism, contact.parent_id)
         N½ = Int(length(contact)/2)
         x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
         x3, q3 = next_configuration(body.state, timestep)
         ibody = findfirst(x -> x.id == contact.parent_id, mechanism.bodies)
-        bound_type = typeof(bound)
+        model_type = typeof(model)
 
         function d(vars)
             q3 = UnitQuaternion(vars..., false)
-            # Bxmat = bound.Bx
-            # Bqmat = Bxmat * ∂vrotate∂q(bound.p, q) * LVᵀmat(q)
+            # Bxmat = model.Bx
+            # Bqmat = Bxmat * ∂vrotate∂q(model.p, q) * LVᵀmat(q)
             # return Bqmat * ϕ25
-            vp = v25 + skew(vrotate(ϕ25, q3)) * (vrotate(bound.p, q3) - bound.offset)
-            return bound.Bx * vp
+            vp = v25 + skew(vrotate(ϕ25, q3)) * (vrotate(model.p, q3) - model.offset)
+            return model.Bx * vp
         end
-        if bound_type <: NonlinearContact
-            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  bound.ainv3
-            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = bound.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bound.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bound.p)))#) * Rmat(quaternion_map(ϕ25, timestep)*timestep/2)*LVᵀmat(q2)
-            J[offr + N½ .+ (3:4), (ibody-1)*13 .+ (7:10)] = FiniteDiff.finite_difference_jacobian(d, vector(q3))#dBω(vector(q3), ϕ25, bound.p)
-        elseif bound_type <: LinearContact
-            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  bound.ainv3
-            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = bound.ainv3 * ∂vrotate∂q(bound.p, q3)
+        if model_type <: NonlinearContact
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  model.ainv3
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = model.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(model.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(model.p)))#) * Rmat(quaternion_map(ϕ25, timestep)*timestep/2)*LVᵀmat(q2)
+            J[offr + N½ .+ (3:4), (ibody-1)*13 .+ (7:10)] = FiniteDiff.finite_difference_jacobian(d, vector(q3))#dBω(vector(q3), ϕ25, model.p)
+        elseif model_type <: LinearContact
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  model.ainv3
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = model.ainv3 * ∂vrotate∂q(model.p, q3)
             J[offr + N½ .+ (3:6), (ibody-1)*13 .+ (7:10)] = FiniteDiff.finite_difference_jacobian(d, vector(q3))
-        elseif bound_type <: ImpactContact
-            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  bound.ainv3
-            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = bound.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(bound.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(bound.p)))#) * Rmat(quaternion_map(ϕ25, timestep)*timestep/2)*LVᵀmat(q2)
+        elseif model_type <: ImpactContact
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (1:3)] =  model.ainv3
+            J[offr + N½ .+ (1:1), (ibody-1)*13 .+ (7:10)] = model.ainv3 * (VLmat(q3) * Lmat(UnitQuaternion(model.p)) * Tmat() + VRᵀmat(q3) * Rmat(UnitQuaternion(model.p)))#) * Rmat(quaternion_map(ϕ25, timestep)*timestep/2)*LVᵀmat(q2)
         end
         offr += length(contact)
     end

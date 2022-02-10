@@ -120,10 +120,10 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N};
         if show_contact
             for (jd, contact) in enumerate(mechanism.contacts)
                 if contact.parent_id == body.id
-                    radius = abs(1.0 * contact.constraints[1].offset[3])
+                    radius = abs(1.0 * contact.model.offset[3])
                     (radius == 0.0) && (radius = 0.01)
                     contact_shape = Sphere(radius,
-                        xoffset=(contact.constraints[1].p),
+                        xoffset=(contact.model.p),
                         qoffset=one(UnitQuaternion), color=RGBA(1.0, 0.0, 0.0, 1.0))
                     visshape = convert_shape(contact_shape)
                     subvisshape = nothing

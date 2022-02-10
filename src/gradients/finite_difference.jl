@@ -78,8 +78,8 @@ function set_solution!(mechanism::Mechanism{T}, sol::AbstractVector) where T
         N½ = Int(N/2)
         s = sol[off .+ (1:N½)]; off += N½
         γ = sol[off .+ (1:N½)]; off += N½
-        contact.primal[2] = s
-        contact.dual[2] = γ
+        contact.impulses[2] = s
+        contact.impulses_dual[2] = γ
     end
     return nothing
 end
@@ -96,8 +96,8 @@ function get_solution(mechanism::Mechanism{T}) where T
         push!(sol, [v25; ϕ25]...)
     end
     for (i,contact) in enumerate(mechanism.contacts)
-        s = contact.primal[2]
-        γ = contact.dual[2]
+        s = contact.impulses[2]
+        γ = contact.impulses_dual[2]
         push!(sol, [s; γ]...)
     end
     return sol
