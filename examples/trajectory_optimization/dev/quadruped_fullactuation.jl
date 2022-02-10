@@ -21,17 +21,17 @@ using IterativeLQR
 ################################################################################
 ################################################################################
 
-function addSlackForce!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, Fτ::AbstractVector{T}) where {T,Nn,Ne,Nb,Ni}
-    @assert length(Fτ) == 6Nb
+function addSlackForce!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, input::AbstractVector{T}) where {T,Nn,Ne,Nb,Ni}
+    @assert length(input) == 6Nb
     for (i,body) in enumerate(mechanism.bodies)
-        addSlackForce!(body, Fτ[(i-1)*6 .+ (1:6)])
+        addSlackForce!(body, input[(i-1)*6 .+ (1:6)])
     end
     return
 end
 
-@inline function addSlackForce!(body::Body{T}, Fτ::Vector{T}) where T
-	body.state.F2[end] += Fτ[1:3]
-    body.state.τ2[end] += Fτ[4:6]
+@inline function addSlackForce!(body::Body{T}, input::Vector{T}) where T
+	body.state.F2[end] += input[1:3]
+    body.state.τ2[end] += input[4:6]
     return
 end
 
@@ -61,10 +61,10 @@ visualize(mech, storage, vis = vis)
 # tra2 = joints[2].constraints[1]
 # rot2 = joints[2].constraints[2]
 #
-# tra1.Fτ
-# tra2.Fτ
-# rot1.Fτ
-# rot2.Fτ
+# tra1.input
+# tra2.input
+# rot1.input
+# rot2.input
 
 
 n = minimal_dimension(mech)
@@ -92,9 +92,9 @@ function gravity_compensation(mechanism::Mechanism)
             body = get_body(mechanism, joint.parent_id)
             rot = joint.rotational
             A = Matrix(nullspace_mask(rot))
-            Fτ = apply_spring(mechanism, joint, body)
-            F = Fτ[1:3]
-            τ = Fτ[4:6]
+            input = apply_spring(mechanism, joint, body)
+            F = input[1:3]
+            τ = input[4:6]
             u[off .+ (1:nu)] = -A * τ
         else
             @warn "need to treat the joint to origin"

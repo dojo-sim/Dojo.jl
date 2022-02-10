@@ -73,7 +73,7 @@ export Origin,
     minimal_velocities,
     minimal_dimension,
     maximal_dimension,
-    maximal_to_minimal, 
+    maximal_to_minimal,
     minimal_to_maximal,
 
     RotX,
@@ -151,12 +151,10 @@ include(joinpath("mechanics", "energy.jl"))
 # Joints
 include(joinpath("joints", "joint.jl"))
 include(joinpath("joints", "translational", "constraint.jl"))
-include(joinpath("joints", "translational", "constraint_limits.jl"))
 include(joinpath("joints", "translational", "input.jl"))
 include(joinpath("joints", "translational", "force.jl"))
 include(joinpath("joints", "translational", "minimal.jl"))
 include(joinpath("joints", "rotational", "constraint.jl"))
-include(joinpath("joints", "rotational", "constraint_limits.jl"))
 include(joinpath("joints", "rotational", "input.jl"))
 include(joinpath("joints", "rotational", "torque.jl"))
 include(joinpath("joints", "rotational", "minimal.jl"))

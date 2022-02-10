@@ -1,14 +1,16 @@
-mutable struct Rotational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N,Nb½}
+mutable struct Rotational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N}
+    axis::SVector{3,T} # rotation axis in parent frame
+
     V3::Adjoint{T,SVector{3,T}} # in body1's frame
     V12::SMatrix{2,3,T,6} # in body1's frame
     qoffset::UnitQuaternion{T} # in body1's frame
 
     spring
-    damper::T
+    damper
     spring_offset::SVector{N̄λ,T}
     joint_limits::Vector{SVector{Nb½,T}} # lower and upper limits on the joint minimal coordinate angles
     spring_type::Symbol # the rotational springs can be :sinusoidal or :linear, if linear then we need joint_limits to avoid the 180° singularity.
-    Fτ::SVector{3,T}
+    input::SVector{3,T}
 end
 
 function Rotational{T,Nλ}(body1::Node, body2::Node;
@@ -21,12 +23,12 @@ function Rotational{T,Nλ}(body1::Node, body2::Node;
     V1, V2, V3 = orthogonal_rows(axis)
     V12 = [V1;V2]
 
-    Fτ = zeros(T,3)
+    input = zeros(T,3)
     Nb½ = length(joint_limits[1])
     Nb = 2Nb½
     N̄λ = 3 - Nλ
     N = Nλ + 2Nb
-    Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(V3, V12, qoffset, spring, damper, spring_offset, joint_limits, spring_type, Fτ), body1.id, body2.id
+    Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(axis, V3, V12, qoffset, spring, damper, spring_offset, joint_limits, spring_type, input), body1.id, body2.id
 end
 
 Rotational0{T} = Rotational{T,0} where T
@@ -73,6 +75,21 @@ end
     unlimited_constraint_jacobian(:child, joint, xa, qa, xb, qb, η)
 end
 
+# @inline function constraint_jacobian(jacobian_relative::Symbol, joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+#     X, Q = displacement_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, attjac=false)
+#     return constraint_mask(joint) * [X Q]
+# end
+#
+# @inline function constraint_jacobian_parent(joint::Rotational{T,Nλ,0}, xa::AbstractVector,
+#         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+#     constraint_jacobian(:parent, joint, xa, qa, xb, qb, η)
+# end
+#
+# @inline function constraint_jacobian_child(joint::Rotational{T,Nλ,0}, xa::AbstractVector,
+#         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+#     constraint_jacobian(:child, joint, xa, qa, xb, qb, η)
+# end
+
 ################################################################################
 # Impulse Transform
 ################################################################################
@@ -82,12 +99,12 @@ function impulse_transform_parent(joint::Rotational{T}, xa::AbstractVector, qa::
     # Q = VLᵀmat(qa) * Tmat(T) * Rᵀmat(qb) * RVᵀmat(joint.qoffset)
 
     # # τ = T(A->B)_a
-    # # Fτa = [Fa, τa] = [0, T(B->A)_a]
+    # # inputa = [Fa, τa] = [0, T(B->A)_a]
     # # Q = -SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
     # # Q = -rotation_matrix(joint.qoffset)
     # return [X; Q]
-    X, Q = orientation_error_jacobian_configuration(:parent, joint, xa, qa, xb, qb, attjac=true)
-    return cat(I(3), 0.5 * I(3), dims=(1,2)) * transpose([X Vmat() * Q])
+    X, Q = displacement_jacobian_configuration(:parent, joint, xa, qa, xb, qb, attjac=true)
+    return cat(I(3), 0.5 * I(3), dims=(1,2)) * transpose([X Q])
 end
 
 function impulse_transform_child(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
@@ -96,12 +113,12 @@ function impulse_transform_child(joint::Rotational{T}, xa::AbstractVector, qa::U
     # Q = VLᵀmat(qb) * Lmat(qa) * RVᵀmat(joint.qoffset)
 
     # # τ = T(A->B)_a
-    # # Fτb = [Fb, τb] = [0, T(A->B)_b]
+    # # inputb = [Fb, τb] = [0, T(A->B)_b]
     # # Q = rotation_matrix(inv(qb) * qa)
     # # Q = rotation_matrix(inv(qb) * qa * joint.qoffset)
     # return [X; Q]
-    X, Q = orientation_error_jacobian_configuration(:child, joint, xa, qa, xb, qb, attjac=true)
-    return cat(I(3), 0.5 * I(3), dims=(1,2)) * transpose([X Vmat() * Q])
+    X, Q = displacement_jacobian_configuration(:child, joint, xa, qa, xb, qb, attjac=true)
+    return cat(I(3), 0.5 * I(3), dims=(1,2)) * transpose([X Q])
 end
 
 ################################################################################

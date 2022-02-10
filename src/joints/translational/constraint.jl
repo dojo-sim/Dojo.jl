@@ -1,4 +1,5 @@
-mutable struct Translational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N,Nb½}
+mutable struct Translational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N}
+    axis::SVector{3,T} # translation axis in parent frame
     V3::Adjoint{T,SVector{3,T}} # in body1's frame
     V12::SMatrix{2,3,T,6} # in body1's frame
     vertices::NTuple{2,SVector{3,T}} # in body1's & body2's frames
@@ -7,7 +8,7 @@ mutable struct Translational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N,Nb½}
     spring_offset::SVector{N̄λ,T}
     joint_limits::Vector{SVector{Nb½,T}} # lower and upper limits on the joint minimal coordinate angles
     spring_type::Symbol # the rotational springs can be :sinusoidal or :linear, if linear then we need joint_limits to avoid the 180° singularity.
-    Fτ::SVector{3,T}
+    input::SVector{3,T}
 end
 
 function Translational{T,Nλ}(body1::Node, body2::Node;
@@ -19,12 +20,12 @@ function Translational{T,Nλ}(body1::Node, body2::Node;
     vertices = (p1, p2)
     V1, V2, V3 = orthogonal_rows(axis)
     V12 = [V1;V2]
-    Fτ = zeros(T,3)
+    input = zeros(T,3)
     Nb½ = length(joint_limits[1])
     Nb = 2Nb½
     N̄λ = 3 - Nλ
     N = Nλ + 2Nb
-    Translational{T,Nλ,Nb,N,Nb½,N̄λ}(V3, V12, vertices, spring, damper, spring_offset, joint_limits, spring_type, Fτ), body1.id, body2.id
+    Translational{T,Nλ,Nb,N,Nb½,N̄λ}(axis, V3, V12, vertices, spring, damper, spring_offset, joint_limits, spring_type, input), body1.id, body2.id
 end
 
 Translational0{T} = Translational{T,0} where T
@@ -38,7 +39,7 @@ end
 @inline function unlimited_constraint(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T}
     # vertices = joint.vertices
     # e = vrotate(xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)), inv(qa))
-    return constraint_mask(joint) * position_error(joint, xa, qa, xb, qb)#* e
+    return constraint_mask(joint) * displacement(joint, xa, qa, xb, qb)#* e
 end
 
 # @inline function constraint_jacobian_parent(joint::Translational{T,Nλ,0}, xa::AbstractVector,
@@ -62,7 +63,7 @@ end
     # X = -VLᵀmat(qa) * RVᵀmat(qa)
     # Q = ∂vrotate∂q(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * Tmat()
     # Q += ∂vrotate∂p(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * -∂vrotate∂q(joint.vertices[1], qa)
-    return constraint_mask(joint) * position_error_jacobian_configuration(:parent, joint, xa, qa, xb, qb, attjac=false)#* [X Q]
+    return constraint_mask(joint) * displacement_jacobian_configuration(:parent, joint, xa, qa, xb, qb, attjac=false)#* [X Q]
 end
 @inline function unlimited_constraint_jacobian_child(joint::Translational{T}, xa::AbstractVector,
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T}
@@ -73,7 +74,7 @@ end
     # X = VLᵀmat(qa) * RVᵀmat(qa)
     # Q = 2 * VLᵀmat(qa) * Rmat(qa) * Rᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
     # return constraint_mask(joint) * [X Q]
-    return constraint_mask(joint) * position_error_jacobian_configuration(:child, joint, xa, qa, xb, qb, attjac=false)#* [X Q]
+    return constraint_mask(joint) * displacement_jacobian_configuration(:child, joint, xa, qa, xb, qb, attjac=false)#* [X Q]
 end
 # =======
 # #     # vertices = joint.vertices
@@ -115,7 +116,8 @@ function impulse_transform_parent(joint::Translational{T}, xa::AbstractVector,
     # capb_a = rotation_matrix(inv(qa)) * (xb - xa + rotation_matrix(qb) * joint.vertices[2]) # body b kinematics point
     # Q = - 1.0 * skew(capb_a)
     # return [X; Q]
-    cat(I(3), 0.5 * I(3), dims=(1,2)) * transpose(position_error_jacobian_configuration(:parent, joint, xa, qa, xb, qb, attjac=true))
+    X, Q = displacement_jacobian_configuration(:parent, joint, xa, qa, xb, qb, attjac=true)
+    cat(I(3), 0.5 * I(3), dims=(1,2)) * transpose([X Q])
 end
 
 function impulse_transform_child(joint::Translational{T}, xa::AbstractVector,
@@ -129,7 +131,8 @@ function impulse_transform_child(joint::Translational{T}, xa::AbstractVector,
     # cbpb_w = rotation_matrix(qb) * joint.vertices[2] # body b kinematics point
     # Q = rotation_matrix(inv(qb)) * skew(cbpb_w) * rotation_matrix(qa)
     # return [X; Q]
-    cat(I(3), 0.5 * I(3), dims=(1,2)) * transpose(position_error_jacobian_configuration(:child, joint, xa, qa, xb, qb, attjac=true))
+    X, Q = displacement_jacobian_configuration(:child, joint, xa, qa, xb, qb, attjac=true)
+    cat(I(3), 0.5 * I(3), dims=(1,2)) * transpose([X Q])
 end
 
 ################################################################################

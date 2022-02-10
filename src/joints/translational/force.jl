@@ -27,8 +27,8 @@ function spring_force(joint::Translational{T}, xa::AbstractVector, qa::UnitQuate
     spring = unitary ? 1.0 : joint.spring
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
     Δmincoord = joint.spring_offset .- minimal_coordinates(joint, xa, qa, xb, qb) # in the a frame
-    Fτ = spring * Aᵀ * Δmincoord # in the a frame
-    return Fτ
+    input = spring * Aᵀ * Δmincoord # in the a frame
+    return input
 end
 
 function spring_force_jacobian_configuration(jacobian_relative::Symbol,
@@ -36,15 +36,15 @@ function spring_force_jacobian_configuration(jacobian_relative::Symbol,
         xb::AbstractVector, qb::UnitQuaternion; unitary::Bool=false) where T
     spring = unitary ? 1.0 : joint.spring
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
-    ∇Fτ = spring * Aᵀ * - minimal_coordinates_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb)
-    return ∇Fτ
+    ∇input = spring * Aᵀ * - minimal_coordinates_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb)
+    return ∇input
 end
 
 @inline function spring_relative(relative::Symbol, joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion,
         xb::AbstractVector, qb::UnitQuaternion; unitary::Bool=false) where T
-    Fτ = spring_force(joint, xa, qa, xb, qb, unitary=unitary)
-    Fτ = impulse_transform(relative, joint, xa, qa, xb, qb) * Fτ
-    return Fτ
+    input = spring_force(joint, xa, qa, xb, qb, unitary=unitary)
+    input = impulse_transform(relative, joint, xa, qa, xb, qb) * input
+    return input
 end
 
 @inline function spring_parent(joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion,
@@ -84,8 +84,8 @@ function damper_force(joint::Translational{T}, xa::AbstractVector,
         ωb::AbstractVector; unitary::Bool=false) where T
     damper = unitary ? 1.0 : joint.damper
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
-    Fτ = damper * Aᵀ * -minimal_velocities(joint, xa, va, qa, ωa, xb, vb, qb, ωb) # in the a frame
-    return Fτ
+    input = damper * Aᵀ * -minimal_velocities(joint, xa, va, qa, ωa, xb, vb, qb, ωb) # in the a frame
+    return input
 end
 
 function damper_force_jacobian_configuration(jacobian_relative::Symbol, joint::Translational{T}, xa::AbstractVector,
@@ -94,8 +94,8 @@ function damper_force_jacobian_configuration(jacobian_relative::Symbol, joint::T
         ωb::AbstractVector; unitary::Bool=false) where T
     damper = unitary ? 1.0 : joint.damper
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
-    ∇Fτ = damper * Aᵀ * -minimal_velocities_jacobian_configuration(jacobian_relative, joint, xa, va, qa, ωa, xb, vb, qb, ωb) # in the a frame
-    return ∇Fτ
+    ∇input = damper * Aᵀ * -minimal_velocities_jacobian_configuration(jacobian_relative, joint, xa, va, qa, ωa, xb, vb, qb, ωb) # in the a frame
+    return ∇input
 end
 
 function damper_force_jacobian_velocity(jacobian_relative::Symbol, joint::Translational{T}, xa::AbstractVector,
@@ -104,34 +104,34 @@ function damper_force_jacobian_velocity(jacobian_relative::Symbol, joint::Transl
         ωb::AbstractVector; unitary::Bool=false) where T
     damper = unitary ? 1.0 : joint.damper
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
-    ∇Fτ = damper * Aᵀ * -minimal_velocities_jacobian_velocity(jacobian_relative, joint, xa, va, qa, ωa, xb, vb, qb, ωb) # in the a frame
-    return ∇Fτ
+    ∇input = damper * Aᵀ * -minimal_velocities_jacobian_velocity(jacobian_relative, joint, xa, va, qa, ωa, xb, vb, qb, ωb) # in the a frame
+    return ∇input
 end
 
 @inline function damper_relative(relative::Symbol, joint::Translational{T}, xa::AbstractVector,
         va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
         xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion,
         ωb::AbstractVector; unitary::Bool=false) where T
-    Fτ = damper_force(joint, xa, va, qa, ωa, xb, vb, qb, ωb, unitary=unitary) # in the a frame
-    Fτa = impulse_transform(relative, joint, xa, qa, xb, qb) * Fτ
-    return Fτa
+    input = damper_force(joint, xa, va, qa, ωa, xb, vb, qb, ωb, unitary=unitary) # in the a frame
+    inputa = impulse_transform(relative, joint, xa, qa, xb, qb) * input
+    return inputa
 end
 @inline function damper_parent(joint::Translational{T}, xa::AbstractVector,
         va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
         xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion,
         ωb::AbstractVector; unitary::Bool=false) where T
-    # Fτ = damper_force(joint, xa, qa, va, ωa, xb, qb, vb, ωb) # in the a frame
-    # Fτa = impulse_transform_parent(joint, xa, qa, xb, qb) * Fτ
-    # return Fτa
+    # input = damper_force(joint, xa, qa, va, ωa, xb, qb, vb, ωb) # in the a frame
+    # inputa = impulse_transform_parent(joint, xa, qa, xb, qb) * input
+    # return inputa
     return damper_relative(:parent, joint, xa, va, qa, ωa, xb, vb, qb, ωb, unitary=unitary)
 end
 @inline function damper_child(joint::Translational{T}, xa::AbstractVector,
         va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
         xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion,
         ωb::AbstractVector; unitary::Bool=false) where T
-    # Fτ = damper_force(joint, xa, qa, va, ωa, xb, qb, vb, ωb) # in the a frame
-    # Fτb = impulse_transform_child(joint, xa, qa, xb, qb) * Fτ
-    # return Fτb
+    # input = damper_force(joint, xa, qa, va, ωa, xb, qb, vb, ωb) # in the a frame
+    # inputb = impulse_transform_child(joint, xa, qa, xb, qb) * input
+    # return inputb
     return damper_relative(:child, joint, xa, va, qa, ωa, xb, vb, qb, ωb, unitary=unitary)
 end
 
@@ -157,10 +157,10 @@ damper_child_jacobian_velocity_parent(joint::Translational3{T}, body1::Node, bod
 @inline function spring_jacobian_configuration(relative::Symbol, jacobian_relative::Symbol,
         joint::Translational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector,
         qb::UnitQuaternion, timestep::T; unitary::Bool=false) where T
-    Fτ = spring_force(joint, xa, qa, xb, qb, unitary=unitary)
+    input = spring_force(joint, xa, qa, xb, qb, unitary=unitary)
     ∇xq = impulse_transform(relative, joint, xa, qa, xb, qb) *
         spring_force_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, unitary=unitary)
-    ∇xq += impulse_transform_jacobian(relative, jacobian_relative, joint, xa, qa, xb, qb, Fτ)
+    ∇xq += impulse_transform_jacobian(relative, jacobian_relative, joint, xa, qa, xb, qb, input)
     return timestep * ∇xq
 end
 function spring_parent_jacobian_configuration_parent(joint::Translational, body1::Node,
@@ -232,10 +232,10 @@ end
         qa::UnitQuaternion, ωa::AbstractVector, xb::AbstractVector,
         vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector,
         timestep::T; unitary::Bool=false) where T
-    Fτ = damper_force(joint, xa, va, qa, ωa, xb, vb, qb, ωb, unitary=unitary)
+    input = damper_force(joint, xa, va, qa, ωa, xb, vb, qb, ωb, unitary=unitary)
     ∇xq = impulse_transform(relative, joint, xa, qa, xb, qb) *
         damper_force_jacobian_configuration(jacobian_relative, joint, xa, va, qa, ωa, xb, vb, qb, ωb, unitary=unitary)
-    ∇xq += impulse_transform_jacobian(relative, jacobian_relative, joint, xa, qa, xb, qb, Fτ)
+    ∇xq += impulse_transform_jacobian(relative, jacobian_relative, joint, xa, qa, xb, qb, input)
     return timestep * ∇xq
 end
 function damper_parent_jacobian_configuration_parent(joint::Translational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T

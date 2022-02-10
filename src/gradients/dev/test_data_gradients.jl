@@ -495,11 +495,11 @@ x2, v2, q2, ω2 = current_configuration_velocity(body2.state)
 
 
 
-Fτ1 = SVector{3}(-1,-2,3.0)
-Fτ2 = SVector{3}(1,2,3.0)
+input1 = SVector{3}(-1,-2,3.0)
+input2 = SVector{3}(1,2,3.0)
 
-position_error(joint1.constraints[1], x0, q0, x1, q1)
-position_error(joint2.constraints[1], x1, q1, x2, q2)
+displacement(joint1.constraints[1], x0, q0, x1, q1)
+displacement(joint2.constraints[1], x1, q1, x2, q2)
 spring_parent(joint1.constraints[1], x0, q0, x1, q1, unitary=true)
 spring_parent(joint2.constraints[1], x1, q1, x2, q2)
 
@@ -520,8 +520,8 @@ damper_child(joint2.constraints[1], x1, q1, v1, ω1, x2, q2, v2, ω2)
 
 
 
-apply_input(joint1.constraints[1], Fτ1, x0, q0, x1, q1)
-apply_input(joint2.constraints[1], Fτ2, x1, q1, x2, q2)
+apply_input(joint1.constraints[1], input1, x0, q0, x1, q1)
+apply_input(joint2.constraints[1], input2, x1, q1, x2, q2)
 
 input_jacobian_control_parent(joint1.constraints[1], mech.origin.state, body2.state)
 input_jacobian_control_parent(joint2.constraints[1], body1.state, body2.state)
@@ -536,5 +536,5 @@ input_jacobian_configuration_child(joint1.constraints[1], mech.origin.state, bod
 input_jacobian_configuration_child(joint2.constraints[1], body1.state, body2.state)
 
 
-apply_input(joint1.constraints[2], Fτ1, x0, q0, x1, q1)
-apply_input(joint2.constraints[2], Fτ2, x1, q1, x2, q2)
+apply_input(joint1.constraints[2], input1, x0, q0, x1, q1)
+apply_input(joint2.constraints[2], input2, x1, q1, x2, q2)

@@ -118,8 +118,8 @@ function set_velocity!(mechanism, joint::JointConstraint{T,N,Nc}, vϕ) where {T,
     return body2.state.v15, body2.state.ϕ15
 end
 
-function set_input!(joint::JointConstraint{T,N,Nc}, Fτ::AbstractVector) where {T,N,Nc}
-    @assert length(Fτ)==control_dimension(joint)
+function set_input!(joint::JointConstraint{T,N,Nc}, input::AbstractVector) where {T,N,Nc}
+    @assert length(input)==control_dimension(joint)
     for i = 1:Nc
         r_idx = SUnitRange(joint.minimal_index[i][1], joint.minimal_index[i][2])
         length(r_idx) == 0 && continue
@@ -128,8 +128,8 @@ function set_input!(joint::JointConstraint{T,N,Nc}, Fτ::AbstractVector) where {
     return
 end
 
-function add_input!(joint::JointConstraint{T,N,Nc}, Fτ::AbstractVector) where {T,N,Nc}
-    @assert length(Fτ)==control_dimension(joint)
+function add_input!(joint::JointConstraint{T,N,Nc}, input::AbstractVector) where {T,N,Nc}
+    @assert length(input)==control_dimension(joint)
     for i = 1:Nc
         add_input!([joint.translational, joint.rotational][i], Fτ[SUnitRange(joint.minimal_index[i][1], joint.minimal_index[i][2])])
     end
