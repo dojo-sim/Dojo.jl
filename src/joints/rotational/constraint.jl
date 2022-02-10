@@ -44,17 +44,17 @@ end
     return Diagonal(+1.00e-10 * sones(T,N))
 end
 
-@inline function constraint_jacobian(jacobian_relative::Symbol, joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+@inline function constraint_jacobian_configuration(jacobian_relative::Symbol, joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     X, Q = displacement_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, attjac=false)
     return constraint_mask(joint) * [X Q]
 end
 
 @inline function constraint_jacobian_parent(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}  
-    constraint_jacobian(:parent, joint, xa, qa, xb, qb, η)
+    constraint_jacobian_configuration(:parent, joint, xa, qa, xb, qb, η)
 end
 
 @inline function constraint_jacobian_child(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
-    constraint_jacobian(:child, joint, xa, qa, xb, qb, η)
+    constraint_jacobian_configuration(:child, joint, xa, qa, xb, qb, η)
 end
 
 ################################################################################

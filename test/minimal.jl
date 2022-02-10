@@ -32,10 +32,10 @@ end
 ################################################################################\
 @testset "minimal to maximal: set_position!, set_velocity" begin
 	mech = Dojo.get_mechanism(:raiberthopper)
-	joint1 = collect(mech.joints)[1]
-	joint2 = collect(mech.joints)[2]
-	body1 = collect(mech.bodies)[1]
-	body2 = collect(mech.bodies)[2]
+	joint1 = mech.joints[1]
+	joint2 = mech.joints[2]
+	body1 = mech.bodies[1]
+	body2 = mech.bodies[2]
 	tra2 = joint2.translational
 	rot2 = joint2.rotational
 

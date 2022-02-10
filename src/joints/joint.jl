@@ -19,6 +19,29 @@ function λindex(joint::Joint{T,Nλ,Nb,N}, s::Int) where {T,Nλ,Nb,N}
     return ind
 end
 
+# Joint constraints 
+
+# @inline function constraint(joint::Joint{T,Nλ,0}, xa, qa::UnitQuaternion, xb, qb::UnitQuaternion, η) where {T,Nλ}
+#     return constraint_mask(joint) * displacement(joint, xa, qa, xb, qb)
+# end
+
+# @inline function constraint_jacobian_configuration(joint::Joint{T,Nλ,0,N}, η) where {T,Nλ,N}
+#     return Diagonal(+1.00e-10 * sones(T,N))
+# end
+
+# @inline function constraint_jacobian_configuration(jacobian_relative::Symbol, joint::Joint{T,Nλ,0}, xa, qa::UnitQuaternion, xb, qb::UnitQuaternion, η) where {T,Nλ}
+#     X, Q = displacement_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, attjac=false)
+#     return constraint_mask(joint) * [X Q]
+# end
+
+# @inline function constraint_jacobian_parent(joint::Joint{T,Nλ,0}, xa, qa::UnitQuaternion, xb, qb::UnitQuaternion, η) where {T,Nλ}  
+#     constraint_jacobian_configuration(:parent, joint, xa, qa, xb, qb, η)
+# end
+
+# @inline function constraint_jacobian_child(joint::Joint{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+#     constraint_jacobian_configuration(:child, joint, xa, qa, xb, qb, η)
+# end
+
 @inline function impulse_map_parent(joint::Joint, body1::Node, body2::Node, child_id, λ, timestep)
     if body2.id == child_id
         return impulse_map_parent(joint, current_configuration(body1.state)..., current_configuration(body2.state)..., λ)
@@ -226,7 +249,7 @@ function add_limits(mech::Mechanism, joint::JointConstraint;
     Nb = 2Nb½
     N̄λ = 3 - Nλ
     N = Nλ + 2Nb
-    tra_limit = (Translational{T,Nλ,Nb,N,Nb½,N̄λ}(tra.axis, tra.V3, tra.V12, tra.vertices, tra.spring, tra.damper, tra.spring_offset, tra_limits, tra.spring_type, tra.input), eq.parent_id, eq.child_id)
+    tra_limit = (Translational{T,Nλ,Nb,N,Nb½,N̄λ}(tra.axis, tra.V3, tra.V12, tra.vertices, tra.spring, tra.damper, tra.spring_offset, tra_limits, tra.spring_type, tra.input), joint.parent_id, joint.child_id)
 
     # update rotational
     rot = joint.rotational
@@ -236,6 +259,6 @@ function add_limits(mech::Mechanism, joint::JointConstraint;
     Nb = 2Nb½
     N̄λ = 3 - Nλ
     N = Nλ + 2Nb
-    rot_limit = (Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(rot.axis, rot.V3, rot.V12, rot.qoffset, rot.spring, rot.damper, rot.spring_offset, rot_limits, rot.spring_type, rot.input), eq.parent_id, eq.child_id)
-    JointConstraint((tra_limit, rot_limit); name=eq.name)
+    rot_limit = (Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(rot.axis, rot.V3, rot.V12, rot.qoffset, rot.spring, rot.damper, rot.spring_offset, rot_limits, rot.spring_type, rot.input), joint.parent_id, joint.child_id)
+    JointConstraint((tra_limit, rot_limit); name=joint.name)
 end

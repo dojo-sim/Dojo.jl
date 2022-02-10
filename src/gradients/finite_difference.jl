@@ -49,8 +49,8 @@ function get_data(mechanism::Mechanism{T}) where T
         if control_dimension(joint) > 0
             tra = [joint.translational, joint.rotational][findfirst(x -> typeof(x) <: Translational, [joint.translational, joint.rotational])]
             rot = [joint.translational, joint.rotational][findfirst(x -> typeof(x) <: Rotational, [joint.translational, joint.rotational])]
-            F = tra.Fτ
-            τ = rot.Fτ
+            F = tra.input
+            τ = rot.input
             u = [nullspace_mask(tra) * F; nullspace_mask(rot) * τ]
             push!(data, u...)
         end

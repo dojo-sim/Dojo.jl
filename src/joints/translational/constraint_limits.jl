@@ -24,13 +24,13 @@ end
 end
 
 @inline function constraint_jacobian_parent(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η)
-    X = FiniteDiff.finite_difference_jacobian(x -> g(joint, x, qa, xb, qb, η), xa)
-    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, UnitQuaternion(q..., false), xb, qb, η), vector(qa))
+    X = FiniteDiff.finite_difference_jacobian(x -> constraint(joint, x, qa, xb, qb, η), xa)
+    Q = FiniteDiff.finite_difference_jacobian(q -> constraint(joint, xa, UnitQuaternion(q..., false), xb, qb, η), vector(qa))
     return [X Q]
 end
 
 @inline function constraint_jacobian_child(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η)
-    X = FiniteDiff.finite_difference_jacobian(x -> g(joint, xa, qa, x, qb, η), xb)
-    Q = FiniteDiff.finite_difference_jacobian(q -> g(joint, xa, qa, xb, UnitQuaternion(q..., false), η), vector(qb))
+    X = FiniteDiff.finite_difference_jacobian(x -> constraint(joint, xa, qa, x, qb, η), xb)
+    Q = FiniteDiff.finite_difference_jacobian(q -> constraint(joint, xa, qa, xb, UnitQuaternion(q..., false), η), vector(qb))
     return [X Q]
 end

@@ -123,7 +123,7 @@ function set_input!(joint::JointConstraint{T,N,Nc}, input::AbstractVector) where
     for i = 1:Nc
         r_idx = SUnitRange(joint.minimal_index[i][1], joint.minimal_index[i][2])
         length(r_idx) == 0 && continue
-        set_input!([joint.translational, joint.rotational][i], Fτ[SUnitRange(joint.minimal_index[i][1], joint.minimal_index[i][2])])
+        set_input!([joint.translational, joint.rotational][i], input[SUnitRange(joint.minimal_index[i][1], joint.minimal_index[i][2])])
     end
     return
 end
@@ -131,7 +131,7 @@ end
 function add_input!(joint::JointConstraint{T,N,Nc}, input::AbstractVector) where {T,N,Nc}
     @assert length(input)==control_dimension(joint)
     for i = 1:Nc
-        add_input!([joint.translational, joint.rotational][i], Fτ[SUnitRange(joint.minimal_index[i][1], joint.minimal_index[i][2])])
+        add_input!([joint.translational, joint.rotational][i], input[SUnitRange(joint.minimal_index[i][1], joint.minimal_index[i][2])])
     end
     return
 end
