@@ -10,7 +10,6 @@ mutable struct NerfObject111{T} <: NerfObject{T}
     threshold::T
 end
 
-
 function density(nerf::NerfObject{T}, p::AbstractVector{T}) where T
     # p in Nerf frame
     std = nerf.std
@@ -30,7 +29,7 @@ end
 mutable struct NerfContact111{T,N} <: NerfContact{T,N}
     ainv3::Adjoint{T,SVector{3,T}} # inverse matrix
     p::SVector{3,T}
-    offset::SVector{3,T}
+    offset::SVector{3,T} # offset of the contact point expressed in the world frame
     nerf::NerfObject{T}
 
     function NerfContact111(body::Body{T}, normal::AbstractVector, nerf::NerfObject;
@@ -48,7 +47,7 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N
     body = get_body(mechanism, contact.parent_id)
     x3, q3 = next_configuration(body.state, mechanism.timestep)
     # SVector{1,T}(bound.ainv3 * (x3 + vrotate(bound.p,q3) - bound.offset) - contact.primal[2][1])
-    r = - bound.p - inv(q3) * x3 # position of the origin point in the frame of centered on P expressed in the body's frame
+    r = - bound.p + inv(q3) * (bound.offset - x3) # position of the origin point in the frame of centered on P expressed in the body's frame
     c = bound.nerf.threshold - density(bound.nerf, r) # > 0
     SVector{1,T}(c - contact.primal[2][1])
 end
@@ -59,7 +58,9 @@ end
     # Ω = bound.ainv3 * ∂vrotate∂q(bound.p, q3) * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)
     # return [V Ω]
     FiniteDiff.finite_difference_jacobian(
-        vϕ -> -density(bound.nerf, -bound.p -inv(next_orientation(q2, vϕ[4:6], timestep)) * next_position(x2, vϕ[1:3], timestep)),
+        vϕ -> -density(bound.nerf,
+            -bound.p +inv(next_orientation(q2, vϕ[SUnitRange(4,6)], timestep)) *
+            (bound.offset - next_position(x2, vϕ[SUnitRange(1,3)], timestep))),
         [v25; ϕ25])
 end
 
@@ -69,27 +70,26 @@ end
     # Q = bound.ainv3 * ∂vrotate∂q(bound.p, q3)
     # return [X Q]
     FiniteDiff.finite_difference_jacobian(
-        xq -> -density(bound.nerf, -bound.p -inv(UnitQuaternion(xq[4:7]..., false)) * xq[1:3]),
+        xq -> -density(bound.nerf, -bound.p +inv(UnitQuaternion(xq[4:7]..., false)) * (bound.offset - xq[1:3])),
         [x3; vector(q3)])
 end
-
 
 @inline function impulse_map(bound::NerfContact, x::AbstractVector, q::UnitQuaternion, λ)
     # X = bound.ainv3
     # # q * ... is a rotation by quaternion q it is equivalent to Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * ...
     # Q = - X * q * skew(bound.p - vrotate(bound.offset, inv(q)))
     X = FiniteDiff.finite_difference_jacobian(
-        x -> -density(bound.nerf, -bound.p -inv(q)*x),
+        x -> -density(bound.nerf, -bound.p +inv(q)*(bound.offset-x)),
         x)
     Q = FiniteDiff.finite_difference_jacobian(
-        q -> -density(bound.nerf, -bound.p -inv(UnitQuaternion(q..., false))*x),
+        q -> -density(bound.nerf, -bound.p +inv(UnitQuaternion(q..., false))*(bound.offset-x)),
         vector(q)) * LVᵀmat(q)
     return transpose([X Q])
 end
 
 @inline function force_mapping(bound::NerfContact, x::AbstractVector, q::UnitQuaternion)
     X = FiniteDiff.finite_difference_jacobian(
-        x -> -density(bound.nerf, -bound.p -inv(q)*x),
+        x -> -density(bound.nerf, -bound.p -inv(q)*(bound.offset-x)),
         x)
     # X = bound.ainv3
     return X
@@ -112,7 +112,8 @@ end
 end
 
 function get_nerf(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, radius=0.1,
-        contact::Bool=true, contact_type::Symbol=:impact) where T
+        std=0.2, threshold=0.95, offsets=[szeros(3)], contact::Bool=true,
+        contact_type::Symbol=:impact) where T
     origin = Origin{T}(name=:origin)
     mass = 1.0
     bodies = [Sphere(radius, mass, name=:sphere)]
@@ -122,10 +123,10 @@ function get_nerf(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, radi
     if contact
         contact = [0,0,0.0]
         normal = [0,0,1.0]
-        nerf = NerfObject111(radius, 0.05, 0.5)
+        nerf = NerfObject111(radius, std, threshold)
         body = get_body(mechanism, :sphere)
-        bound = NerfContact111(body, normal, nerf; p=szeros(T, 3), offset=szeros(T, 3))
-        contacts = [ContactConstraint((bound, body.id, nothing); name=:nerf_contact)]
+        bounds = [NerfContact111(body, normal, nerf; p=szeros(T, 3), offset=offset) for offset in offsets]
+        contacts = [ContactConstraint((bound, body.id, nothing); name=Symbol(:nerf_contact, i)) for (i,bound) in enumerate(bounds)]
         set_position!(mechanism, get_joint_constraint(mechanism, :floating_joint), [0;0;2radius;zeros(3)])
         mechanism = Mechanism(origin, bodies, joints, contacts, gravity=gravity, timestep=timestep)
     end
@@ -142,21 +143,80 @@ function initialize_nerf!(mechanism::Mechanism; x::AbstractVector{T}=zeros(3),
     set_velocity!(mechanism, joint, [v; ω])
 end
 
-mech = get_nerf()
-initialize!(mech, :nerf)
+function feasibility_linesearch!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
+        vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc,Cs<:Tuple{Union{NerfContact{T,N},ImpactContact{T,N},LinearContact{T,N}}},N½}
+    s = contact.primal[2]
+    γ = contact.dual[2]
+    Δs = vector_entry.value[1:N½]
+    Δγ = vector_entry.value[N½ .+ (1:N½)]
+
+    αs_ort = positive_orthant_step_length(s, Δs, τ = τort)
+    αγ_ort = positive_orthant_step_length(γ, Δγ, τ = τort)
+
+    return min(α, αs_ort, αγ_ort)
+end
+
+function visualize_contact_points(mechanism::Mechanism, vis::Visualizer)
+    mat = MeshPhongMaterial(color= RGBA(0.05, 0.05, 0.05, 1.0))
+    for (i,contact) in enumerate(mechanism.contacts)
+        bound = contact.constraints[1]
+        offset = bound.offset
+        obj = MeshCat.HyperEllipsoid(Point(offset...), 0.008*Vec(1,1,1.))
+        setobject!(vis[:contact_points][Symbol(i)], obj, mat)
+    end
+    return nothing
+end
+
+# vis = Visualizer()
+# open(vis)
+offsets = vcat([[SVector(0.10*j,0.10*i,0.0+0.02*i^2+0.02*j^2) for i in -0:0] for j in -0:0]...)
+radius = 0.10
+std = 0.03
+threshold = 0.95
+Δ = sqrt(-2 * std^2 * log(threshold))
+radius_int = radius - Δ
+radius_ext = radius + Δ
+
+mech = get_nerf(timestep=0.001, gravity=-10.0, radius=radius,
+    std=std, threshold=threshold, offsets=offsets)
+# initialize!(mech, :nerf, x=[0.1,0.1,0.35], v=[0.03, 0.02, 0.1])
+initialize!(mech, :nerf, x=[0.00,0.01,0.35], v=[0.00, 0.02, 0.1])
 storage = simulate!(mech, 1.0, record=true, verbose=false)
 visualize(mech, storage, vis=vis)
+visualize_contact_points(mech, vis)
 
-nerf0 = NerfObject111(0.1, 0.05, 0.5)
-p1 = [0.05, 0.05, -0.0]
+obj_int = MeshCat.HyperEllipsoid(Point(0.0, 0.0, 0.0), radius_int*Vec(1,1,1.))
+obj_ext = MeshCat.HyperEllipsoid(Point(0.0, 0.0, 0.0), radius_ext*Vec(1,1,1.))
+mat_int = MeshPhongMaterial(color= RGBA(0.25, 0.25, 0.25, 1.0))
+mat_ext = MeshPhongMaterial(color= RGBA(0.05, 0.05, 0.05, 0.2))
+setobject!(vis[:robot][:bodies]["body:1"][:ext], obj_ext, mat_ext)
+setobject!(vis[:robot][:bodies]["body:1"][:int], obj_int, mat_int)
+
+
+
+sdTorus( vec3 p, vec2 t )
+{
+  vec2 q = vec2(length(p.xz)-t.x,p.y);
+  return length(q)-t.y;
+}
+
+
+nerf0 = NerfObject111(0.1, 0.2, 0.95)
+p1 = [0.1, 0.2, -0.0]
 density(nerf0, p1)
 plot(-1:0.01:1, [density(nerf0, [0,0,i]) for i in -1:0.01:1])
+convert_frames_to_video_and_gif("nerf_point_fast")
 
 
-normal = [0,0,1.0]
-NerfContact111(mech.bodies[1], normal, nerf0;
-            p=szeros(3), offset=szeros(3))
 
+render_static(vis)
+
+open(joinpath(@__DIR__, "nerf_hammock.html"), "w") do file
+    write(file, static_html(vis))
+end
+
+a = 10
+a = 10
 # body0 =
 # contact0 = NerfContact(body::Body{T}, normal::AbstractVector, nerf::NerfObject;
 #         p = szeros(T, 3), offset::AbstractVector = szeros(T, 3))
