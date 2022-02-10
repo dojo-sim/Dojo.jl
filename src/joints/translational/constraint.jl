@@ -75,7 +75,8 @@ end
     # X = VLᵀmat(qa) * RVᵀmat(qa)
     # Q = 2 * VLᵀmat(qa) * Rmat(qa) * Rᵀmat(qb) * Rmat(UnitQuaternion(joint.vertices[2]))
     # return constraint_mask(joint) * [X Q]
-    return constraint_mask(joint) * displacement_jacobian_configuration(:child, joint, xa, qa, xb, qb, attjac=false)#* [X Q]
+    X, Q = displacement_jacobian_configuration(:child, joint, xa, qa, xb, qb, attjac=false)
+    return constraint_mask(joint) * [X Q]
 end
 # =======
 # #     # vertices = joint.vertices
@@ -120,6 +121,23 @@ function impulse_transform_parent(joint::Translational{T}, xa::AbstractVector,
     X, Q = displacement_jacobian_configuration(:parent, joint, xa, qa, xb, qb, attjac=true)
     cat(I(3), 0.5 * I(3), dims=(1,2)) * transpose([X Q])
 end
+
+mech = get_pendulum()
+joint = mech.joints[1]
+xa = rand(3)
+qa = UnitQuaternion(rand(4)...)
+xb = rand(3)
+qb = UnitQuaternion(rand(4)...)
+displacement_jacobian_configuration(:parent, joint.translational, xa, qa, xb, qb, attjac=true)
+joint
+
+
+a = 1
+a = 1
+a = 1
+a = 1
+a = 1
+
 
 function impulse_transform_child(joint::Translational{T}, xa::AbstractVector,
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}

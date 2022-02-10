@@ -18,17 +18,19 @@ end
     vertices = joint.vertices
     d = xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)) # in the world frame
 
-    X = -rotation_matrix(inv(qa))
+	X = -rotation_matrix(inv(qa))
     Q = -rotation_matrix(inv(qa)) * ∂qrotation_matrix(qa, vertices[1])
     Q += ∂qrotation_matrix_inv(qa, d)
     attjac && (Q *= LVᵀmat(qa))
     ∇xq = [X Q]
     ∇xq = rotation_matrix(inv(qa)) * ∇xq + [szeros(T,3,3) (attjac ? ∂qrotation_matrix_inv(qa, d) * LVᵀmat(qa) : ∂qrotation_matrix_inv(qa, d))]
-    return ∇xq
     # X = -rotation_matrix(inv(qa))
     # Q = -∂qrotation_matrix_inv(qa, xb + rotation_matrix(qb) * vertices[2] - xa)
     # attjac && (Q *= LVᵀmat(qa))
-    # return [X Q]
+	X = -rotation_matrix(inv(qa))
+
+	X =
+    return [X Q]
 end
 
 @inline function displacement_jacobian_configuration_child(joint::Translational{T}, xa::AbstractVector,
