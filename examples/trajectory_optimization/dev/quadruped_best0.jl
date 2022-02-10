@@ -51,9 +51,9 @@ function gravity_compensation(mechanism::Mechanism)
             body = get_body(mechanism, joint.parent_id)
             rot = joint.constraints[2]
             A = Matrix(nullspace_mask(rot))
-            Fτ = apply_spring(mechanism, joint, body)
-            F = Fτ[1:3]
-            τ = Fτ[4:6]
+            input = apply_spring(mechanism, joint, body)
+            F = input[1:3]
+            τ = input[4:6]
             u[off .+ (1:nu)] = -A * τ
         else
             @warn "need to treat the joint to origin"

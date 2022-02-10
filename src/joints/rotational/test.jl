@@ -112,17 +112,17 @@ impulse_transform_child(tra0, xa, qa, xb, qb)
 @test norm(∇0 - ∇1, Inf) < 1e-7
 
 
-position_error(tra0, xa, qa, xb, qb, rotate=true)
-position_error_jacobian_configuration(:parent, tra0, xa, qa, xb, qb)
-Xa = FiniteDiff.finite_difference_jacobian(a -> position_error(tra0, a, qa, xb, qb, rotate=true), xa)
-Qa = FiniteDiff.finite_difference_jacobian(a -> position_error(tra0, xa, UnitQuaternion(a..., false), xb, qb, rotate=true), vector(qa)) * LVᵀmat(qa)
+displacement(tra0, xa, qa, xb, qb, rotate=true)
+displacement_jacobian_configuration(:parent, tra0, xa, qa, xb, qb)
+Xa = FiniteDiff.finite_difference_jacobian(a -> displacement(tra0, a, qa, xb, qb, rotate=true), xa)
+Qa = FiniteDiff.finite_difference_jacobian(a -> displacement(tra0, xa, UnitQuaternion(a..., false), xb, qb, rotate=true), vector(qa)) * LVᵀmat(qa)
 transpose(impulse_transform_parent(tra0, xa, qa, xb, qb))
 
 -VLᵀmat(qa) * RVᵀmat(qa)
 (2.0 * VLᵀmat(qa) * (Lmat(UnitQuaternion(xb + vrotate(joint0.constraints[1].vertices[2], qb))) - Lmat(UnitQuaternion(xa)))) * LVᵀmat(qa)
 
-position_error_jacobian_configuration(:child, tra0, xa, qa, xb, qb)
-Xb = FiniteDiff.finite_difference_jacobian(b -> position_error(tra0, xa, qa, b, qb, rotate=true), xb)
-Qb = FiniteDiff.finite_difference_jacobian(b -> position_error(tra0, xa, qa, xb, UnitQuaternion(b..., false), rotate=true), vector(qb)) * LVᵀmat(qb)
+displacement_jacobian_configuration(:child, tra0, xa, qa, xb, qb)
+Xb = FiniteDiff.finite_difference_jacobian(b -> displacement(tra0, xa, qa, b, qb, rotate=true), xb)
+Qb = FiniteDiff.finite_difference_jacobian(b -> displacement(tra0, xa, qa, xb, UnitQuaternion(b..., false), rotate=true), vector(qb)) * LVᵀmat(qb)
 transpose(impulse_transform_child(tra0, xa, qa, xb, qb))
 

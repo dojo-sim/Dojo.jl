@@ -1,11 +1,11 @@
 @inline function apply_input!(joint::Rotational{T}, statea::State, stateb::State, timestep::T, clear::Bool) where T
-    τ = joint.Fτ
+    τ = joint.input
     _, qa = current_configuration(statea)
     _, qb = current_configuration(stateb)
 
     statea.τ2[end] += -τ
     stateb.τ2[end] += vrotate(vrotate(τ, qa),inv(qb))
-    clear && (joint.Fτ = szeros(T,3))
+    clear && (joint.input = szeros(T,3))
     return
 end
 
@@ -28,7 +28,7 @@ end
 @inline function input_jacobian_configuration_parent(joint::Rotational{T}, statea::State, stateb::State) where T
     _, qa = current_configuration(statea)
     _, qb = current_configuration(stateb)
-    τ = joint.Fτ
+    τ = joint.input
 
     FaXa = szeros(T,3,3)
     FaQa = szeros(T,3,4)
@@ -44,7 +44,7 @@ end
 @inline function input_jacobian_configuration_child(joint::Rotational{T}, statea::State, stateb::State) where T
     _, qa = current_configuration(statea)
     _, qb = current_configuration(stateb)
-    τ = joint.Fτ
+    τ = joint.input
 
     FaXb = szeros(T,3,3)
     FaQb = szeros(T,3,4)

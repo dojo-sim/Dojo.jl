@@ -185,15 +185,15 @@ end
 @inline constraint_jacobian_child(joint::Joint, body1::Node, body2::Node, λ, timestep) = constraint_jacobian_child(joint, next_configuration(body1.state, timestep)..., next_configuration(body2.state, timestep)..., λ)
 
 
-@inline function set_input!(joint::Joint, Fτ::SVector)
-    joint.Fτ = zerodimstaticadjoint(nullspace_mask(joint)) * Fτ
+@inline function set_input!(joint::Joint, input::SVector)
+    joint.input = zerodimstaticadjoint(nullspace_mask(joint)) * input
     return
 end
 
 @inline set_input!(joint::Joint) = return
 
-@inline function add_input!(joint::Joint, Fτ::SVector)
-    joint.Fτ += zerodimstaticadjoint(nullspace_mask(joint)) * Fτ
+@inline function add_input!(joint::Joint, input::SVector)
+    joint.input += zerodimstaticadjoint(nullspace_mask(joint)) * input
     return
 end
 
@@ -226,7 +226,7 @@ function add_limits(mech::Mechanism, eq::JointConstraint;
     Nb = 2Nb½
     N̄λ = 3 - Nλ
     N = Nλ + 2Nb
-    tra_limit = (Translational{T,Nλ,Nb,N,Nb½,N̄λ}(tra.V3, tra.V12, tra.vertices, tra.spring, tra.damper, tra.spring_offset, tra_limits, tra.spring_type, tra.Fτ), eq.parent_id, eq.child_id)
+    tra_limit = (Translational{T,Nλ,Nb,N,Nb½,N̄λ}(tra.axis, tra.V3, tra.V12, tra.vertices, tra.spring, tra.damper, tra.spring_offset, tra_limits, tra.spring_type, tra.input), eq.parent_id, eq.child_id)
 
     # update rotational
     rot = eq.constraints[2]
@@ -236,6 +236,6 @@ function add_limits(mech::Mechanism, eq::JointConstraint;
     Nb = 2Nb½
     N̄λ = 3 - Nλ
     N = Nλ + 2Nb
-    rot_limit = (Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(rot.V3, rot.V12, rot.qoffset, rot.spring, rot.damper, rot.spring_offset, rot_limits, rot.spring_type, rot.Fτ), eq.parent_id, eq.child_id)
+    rot_limit = (Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(rot.axis, rot.V3, rot.V12, rot.qoffset, rot.spring, rot.damper, rot.spring_offset, rot_limits, rot.spring_type, rot.input), eq.parent_id, eq.child_id)
     JointConstraint((tra_limit, rot_limit); name=eq.name)
 end

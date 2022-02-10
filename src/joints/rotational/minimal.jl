@@ -1,25 +1,20 @@
-@inline function orientation_error(joint::Rotational, xa::AbstractVector,
-        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-    # (norm(Vmat(joint.qoffset)) > 1e-6) && (@warn "check the validity of this expression")
-
-    q = inv(joint.qoffset) * inv(qa) * qb # rotation from frame b to frame a then joint_qoffset then spring_qoffset
-    "q = Lᵀmat(qoffset) * Rmat(qb) * Tmat() * vector(qa)"
-    "q = Lᵀmat(qoffset) * Lᵀmat(qa) * vector(qb)"
-    # b --qb-> world --inv(qa)-> a --inv(qoffset)-> jointoffsetframe --inv(qoffset)-> springoffsetframe
-    return q
+@inline function displacement(joint::Rotational, xa::AbstractVector,
+        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; vmat=true)
+    q = inv(joint.qoffset) * inv(qa) * qb
+    vmat ? (return Vmat(q)) : (return q)
 end
 
-function orientation_error_jacobian_configuration(jacobian_relative::Symbol,
+function displacement_jacobian_configuration(jacobian_relative::Symbol,
         joint::Rotational, xa::AbstractVector{T}, qa::UnitQuaternion,
         xb::AbstractVector{T}, qb::UnitQuaternion; attjac::Bool=true) where T
 	
     X = szeros(T, 3, 3)
 
     if jacobian_relative == :parent
-		Q = Lᵀmat(joint.qoffset) * Rmat(qb) * Tmat()
+		Q = Vmat() * Lᵀmat(joint.qoffset) * Rmat(qb) * Tmat()
 		attjac && (Q *= LVᵀmat(qa))
     elseif jacobian_relative == :child
-		Q = Lᵀmat(joint.qoffset) * Lᵀmat(qa)
+		Q = Vmat() * Lᵀmat(joint.qoffset) * Lᵀmat(qa)
 		attjac && (Q *= LVᵀmat(qb))
 	end
 

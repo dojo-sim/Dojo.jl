@@ -60,7 +60,7 @@ end
 
 
 function spring_extension(joint::Rotational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-    q = inv(spring_qoffset(joint)) * orientation_error(joint, xa, qa, xb, qb)
+    q = inv(spring_qoffset(joint)) * displacement(joint, xa, qa, xb, qb, vmat=false)
     return q
 end
 
@@ -90,16 +90,16 @@ spring_child(joint::Rotational3{T}, xa::AbstractVector, qa::UnitQuaternion, xb::
     spring = unitary ? 1.0 : joint.spring
     q = spring_extension(joint, xa, qa, xb, qb)
     distance = spring_distance(joint, q)
-    Fτ = -spring * distance # force in offset frame
-    Fτ = vrotate(Fτ, joint.qoffset) # rotate back to the a frame
-    return Fτ
+    input = -spring * distance # force in offset frame
+    input = vrotate(input, joint.qoffset) # rotate back to the a frame
+    return input
 end
 
 @inline function spring_relative(relative::Symbol, joint::Rotational{T}, xa::AbstractVector,
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; unitary::Bool=false) where T
-    Fτ = spring_force(joint, xa, qa, xb, qb, unitary=unitary)
-    Fτ = impulse_transform(relative, joint, xa, qa, xb, qb) * Fτ
-    return Fτ
+    input = spring_force(joint, xa, qa, xb, qb, unitary=unitary)
+    input = impulse_transform(relative, joint, xa, qa, xb, qb) * input
+    return input
 end
 
 @inline function spring_parent(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion,
@@ -178,7 +178,7 @@ end
 # Vmat(qa \ qb / qoff)
 #
 # qa \ qb / qoff
-# Vmat(orientation_error(joint0.constraints[2], xa, qa, xb, qb))
+# Vmat(displacement(joint0.constraints[2], xa, qa, xb, qb))
 
 
 # #

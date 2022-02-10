@@ -56,7 +56,7 @@ get_data0(mechanism::Mechanism) = vcat([get_data0.(mechanism.joints);
 # Joints
 function get_data0(joint::JointConstraint)
 	joints = joint.constraints
-	u = vcat(nullspace_mask.(joints) .* getfield.(joints, :Fτ)...)
+	u = vcat(nullspace_mask.(joints) .* getfield.(joints, :input)...)
 	spring = joints[1].spring # assumes we have the same spring and dampers for translational and rotational joint.
 	damper = joints[1].damper # assumes we have the same spring and dampers for translational and rotational joint.
 	return [u; spring; damper]
@@ -84,7 +84,7 @@ get_data0(contact::ContactConstraint) = get_data0(contact.model)
 function set_data0!(mechanism::Mechanism, data::AbstractVector)
 	# It's important to treat bodies before eqcs
 	# set_data0!(body) will erase state.F2[1] and state.τ2[1]
-	# set_data0!(eqc) using applyFτ!, will write in state.F2[1] and state.τ2[1]
+	# set_data0!(eqc) using applyinput!, will write in state.F2[1] and state.τ2[1]
 	c = 0
 	for joint in mechanism.joints
 		Nd = data_dim(joint)
