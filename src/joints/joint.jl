@@ -234,7 +234,9 @@ function add_limits(mech::Mechanism, joint::JointConstraint;
     Nb = 2Nb½
     N̄λ = 3 - Nλ
     N = Nλ + 2Nb
-    tra_limit = (Translational{T,Nλ,Nb,N,Nb½,N̄λ}(tra.axis, tra.V3, tra.V12, tra.vertices, tra.spring, tra.damper, tra.spring_offset, tra_limits, tra.spring_type, tra.input), eq.parent_id, eq.child_id)
+    tra_limit = (Translational{T,Nλ,Nb,N,Nb½,N̄λ}(tra.axis, tra.V3, tra.V12,
+        tra.vertices, tra.spring, tra.damper, tra.spring_offset, tra_limits,
+        tra.spring_type, tra.input), joint.parent_id, joint.child_id)
 
     # update rotational
     rot = joint.rotational
@@ -244,6 +246,8 @@ function add_limits(mech::Mechanism, joint::JointConstraint;
     Nb = 2Nb½
     N̄λ = 3 - Nλ
     N = Nλ + 2Nb
-    rot_limit = (Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(rot.axis, rot.V3, rot.V12, rot.qoffset, rot.spring, rot.damper, rot.spring_offset, rot_limits, rot.spring_type, rot.input), eq.parent_id, eq.child_id)
+    rot_limit = (Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(rot.axis, rot.V3, rot.V12,
+        rot.qoffset, rot.spring, rot.damper, rot.spring_offset, rot_limits,
+        rot.spring_type, rot.input), joint.parent_id, joint.child_id)
     JointConstraint((tra_limit, rot_limit); name=eq.name)
 end

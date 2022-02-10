@@ -1,4 +1,4 @@
-mutable struct Rotational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N}
+mutable struct Rotational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N,Nb½}
     axis::SVector{3,T} # rotation axis in parent frame
 
     V3::Adjoint{T,SVector{3,T}} # in body1's frame

@@ -1,4 +1,4 @@
-mutable struct Translational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N}
+mutable struct Translational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N,Nb½}
     axis::SVector{3,T} # translation axis in parent frame
     V3::Adjoint{T,SVector{3,T}} # in body1's frame
     V12::SMatrix{2,3,T,6} # in body1's frame
@@ -63,7 +63,8 @@ end
     # X = -VLᵀmat(qa) * RVᵀmat(qa)
     # Q = ∂vrotate∂q(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * Tmat()
     # Q += ∂vrotate∂p(point2 - (xa + vrotate(joint.vertices[1], qa)), inv(qa)) * -∂vrotate∂q(joint.vertices[1], qa)
-    return constraint_mask(joint) * displacement_jacobian_configuration(:parent, joint, xa, qa, xb, qb, attjac=false)#* [X Q]
+    X, Q = displacement_jacobian_configuration(:parent, joint, xa, qa, xb, qb, attjac=false)#
+    return constraint_mask(joint) * [X Q]
 end
 @inline function unlimited_constraint_jacobian_child(joint::Translational{T}, xa::AbstractVector,
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T}
