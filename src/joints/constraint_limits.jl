@@ -6,8 +6,8 @@
     s, γ = get_sγ(joint, η)
     return [
             s .* γ;
-            s[1:Nb½] - (joint.joint_limits[2] - e2);
-            s[Nb½ .+ (1:Nb½)] - (e2 - joint.joint_limits[1]);
+            s[SUnitRange(1,Nb½)] - (joint.joint_limits[2] .- e2);
+            s[SUnitRange(Nb½+1,Nb)] - (e2 .- joint.joint_limits[1]);
             e1;
            ]
 end
