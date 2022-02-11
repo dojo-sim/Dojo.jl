@@ -136,6 +136,7 @@ function impulse_transform_parent(joint::Translational{T}, xa::AbstractVector,
     cat(I(3), 0.5 * I(3), dims=(1,2)) * transpose([X Q])
 end
 
+
 function impulse_transform_child(joint::Translational{T}, xa::AbstractVector,
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
     # X = rotation_matrix(qa)

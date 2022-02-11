@@ -41,7 +41,7 @@ end
 function initialize_box2d!(mechanism::Mechanism{T}; x::AbstractVector=[0,1.],
     v::AbstractVector=[0,0], θ::T=0.0, ω::T=0.0) where T
     if length(mechanism.contacts) > 0
-        model = mechanism.contacts[1].constraints[1]
+        model = mechanism.contacts[1].model
         side = model.contact_point[2]
         offset = model.offset[3]
         z = side + offset

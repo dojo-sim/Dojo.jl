@@ -25,12 +25,12 @@ mutable struct JointConstraint{T,N,Nc,TJ,RJ} <: Constraint{T,N}
         @assert data[1][2] == data[2][2] # check parent ids
         @assert data[1][3] == data[2][3] # check child ids
 
-        # joints 
-        translational = data[1][1] 
+        # joints
+        translational = data[1][1]
         rotational = data[2][1]
 
         # IDs
-        parent_id = data[1][2] 
+        parent_id = data[1][2]
         child_id = data[1][3]
 
         # data dype
@@ -39,7 +39,7 @@ mutable struct JointConstraint{T,N,Nc,TJ,RJ} <: Constraint{T,N}
         # set springs & dampers off
         spring = false
         damper = false
-        
+
         minimal_index = Vector{Int64}[]
         N = 0
         for joint_data in data

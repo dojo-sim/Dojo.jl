@@ -13,9 +13,22 @@ function displacement_jacobian_configuration(jacobian_relative::Symbol,
     return
 end
 
+@inline function position_error_jacobian_configuration_child(joint::Translational{T}, xa::AbstractVector,
+        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; attjac::Bool=true) where T
+    vertices = joint.vertices
+    X = SMatrix{3,3,T,9}(Diagonal(sones(3)))
+    Q = ∂qrotation_matrix(qb, vertices[2])
+	attjac && (Q *= LVᵀmat(qb))
+    ∇xq = [X Q]
+    ∇xq = rotation_matrix(inv(qa)) * ∇xq
+    return ∇xq
+end
+
+
+
 @inline function displacement_jacobian_configuration_parent(joint::Translational{T}, xa::AbstractVector,
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; attjac=true) where T
-    vertices = joint.vertices
+	vertices = joint.vertices
     d = xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)) # in the world frame
     
     X = -rotation_matrix(inv(qa))

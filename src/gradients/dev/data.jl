@@ -61,6 +61,10 @@ function get_data0(joint::JointConstraint)
 	damper = joints[1].damper # assumes we have the same spring and dampers for translational and rotational joint.
 	return [u; spring; damper]
 end
+
+mech = get_pendulum()
+mech.joints[1]
+
 # Body
 function get_data0(body::Body)
 	m = body.mass
