@@ -82,7 +82,7 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, bodya::Node{T}
         end
     end
     # spring and damper impulses contribution
-    if true || joint.spring
+    if joint.spring
         for i = 1:Nc
             λ = getλJoint(joint, i)
             if bodyb.id == joint.child_id
@@ -98,7 +98,7 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, bodya::Node{T}
             end
         end
     end
-    if true || joint.damper
+    if joint.damper
         for i = 1:Nc
             λ = getλJoint(joint, i)
             if bodyb.id == joint.child_id
@@ -328,7 +328,6 @@ function jacobian_body_data!(data_matrix::SparseMatrixCSC, mechanism::Mechanism{
     for body1 in mechanism.bodies
         data_matrix[body1.id, body1.id].value += body_constraint_jacobian_body_data(mechanism, body1)
 
-
         for body2 in [mechanism.bodies; mechanism.origin]
             joint_links = indirect_link0(body1.id, body2.id, mechanism.joints)
             joints = [get_joint_constraint(mechanism, id) for id in joint_links]
@@ -337,7 +336,7 @@ function jacobian_body_data!(data_matrix::SparseMatrixCSC, mechanism::Mechanism{
                 (typeof(body1) <: Body) && (data_matrix[body1.id, body1.id].value += ∇11)
                 (typeof(body1) <: Body && typeof(body2) <: Body) && (data_matrix[body1.id, body2.id].value += ∇12)
             end
-            # pretty sure this is useless
+            # pretty sure this is useless because contact is never linked to two bodies
             # contact_links = indirect_link0(body1.id, body2.id, mechanism.contacts)
             # contacts = [get_joint_constraint(mechanism, id) for id in contact_links]
             # for contact in contacts
@@ -356,33 +355,3 @@ function jacobian_body_data!(data_matrix::SparseMatrixCSC, mechanism::Mechanism{
     end
     return nothing
 end
-
-#
-# function ∂body∂z_local(body::Body{T}, Δt::T; attjac::Bool=true) where T
-#     state = body.state
-#     q2 = state.q2[1]
-#     # ϕ25 = state.ϕsol[2]
-#     Z3 = szeros(T,3,3)
-#     Z34 = szeros(T,3,4)
-#     ZT = attjac ? szeros(T,6,6) : szeros(T,6,7)
-#     ZR = szeros(T,7,6)
-#
-#     x1, q1 = previous_configuration(state)
-#     x2, q2 = current_configuration(state)
-#     x3, q3 = next_configuration(state, Δt)
-#
-#     AposT = [-I Z3]
-#     # AvelT = [Z3 -I*body.mass] # solving for impulses
-#
-#     AposR = [-rotational_integrator_jacobian_orientation(q2, ϕ25, Δt, attjac = attjac) szeros(4,3)]
-#
-#     rot_q1(q) = -4 / Δt * LVᵀmat(q2)' * Lmat(UnitQuaternion(q..., false)) * Vᵀmat() * body.inertia * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(q2)
-#     rot_q2(q) = -4 / Δt * LVᵀmat(UnitQuaternion(q..., false))' * Tmat() * Rmat(getq3(UnitQuaternion(q..., false), state.ϕsol[2], Δt))' * Vᵀmat() * body.inertia * Vmat() * Lmat(UnitQuaternion(q..., false))' * vector(getq3(UnitQuaternion(q..., false), state.ϕsol[2], Δt)) + -4 / Δt * LVᵀmat(UnitQuaternion(q..., false))' * Lmat(getq3(UnitQuaternion(q..., false), -state.ϕ15, Δt)) * Vᵀmat() * body.inertia * Vmat() * Lmat(getq3(UnitQuaternion(q..., false), -state.ϕ15, Δt))' * q
-#
-#     # dynR_ϕ15 = -1.0 * FiniteDiff.finite_difference_jacobian(rot_q1, vector(q1)) * rotational_integrator_jacobian_velocity(q2, -state.ϕ15, Δt)
-#     dynR_q2 = FiniteDiff.finite_difference_jacobian(rot_q2, vector(q2))
-#     AvelR = attjac ? [dynR_q2 * LVᵀmat(q2) dynR_ϕ15] : [dynR_q2 dynR_ϕ15]
-#
-#     return [[AposT;AvelT] ZT;
-#              ZR [AposR;AvelR]]
-# end

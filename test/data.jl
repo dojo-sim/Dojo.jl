@@ -114,8 +114,8 @@ for (spring, damper) in [(0.0, 0.0), (2.0, 0.3)]
 	test_data_system(:cartpole, spring=spring, damper=damper)
 	test_data_system(:pendulum, spring=spring, damper=damper)
 	test_data_system(:hopper, spring=spring, damper=damper, contact=false)
-	# test_data_system(:humanoid, spring=spring, damper=damper, contact=false)
-	# test_data_system(:atlas, spring=spring, damper=damper, contact=false)
+	test_data_system(:humanoid, spring=spring, damper=damper, contact=false)
+	test_data_system(:atlas, spring=spring, damper=damper, contact=false)
 	test_data_system(:halfcheetah, contact=false, limits=false)
 	test_data_system(:walker2d, spring=spring, damper=damper, contact=false, limits=false)
 	test_data_system(:quadruped, spring=spring, damper=damper, contact=false, limits=false)
@@ -138,8 +138,8 @@ for (spring, damper) in [(0.0, 0.0), (2.0, 0.3)]
 	test_data_system(:cartpole, spring=spring, damper=damper)
 	test_data_system(:pendulum, spring=spring, damper=damper)
 	test_data_system(:hopper, spring=spring, damper=damper, contact=true)
-	# test_data_system(:humanoid, spring=spring, damper=damper, contact=true)
-	# test_data_system(:atlas, spring=spring, damper=damper, contact=true)
+	test_data_system(:humanoid, spring=spring, damper=damper, contact=true)
+	test_data_system(:atlas, spring=spring, damper=damper, contact=true)
 	test_data_system(:halfcheetah, contact=true, limits=false)
 	test_data_system(:walker2d, spring=spring, damper=damper, contact=true, limits=false)
 	test_data_system(:quadruped, spring=spring, damper=damper, contact=true, limits=false)
@@ -149,8 +149,48 @@ for (spring, damper) in [(0.0, 0.0), (2.0, 0.3)]
 	end
 end
 
+
+
+
 #
+# spring = 0.2
+# damper = 0.3
+# test_data_system(:humanoid, spring=spring, damper=damper, contact=true)
 #
+# mech = get_humanoid()
+# getfield.(getfield.(mech.joints, :rotational), :qoffset)
+#
+# # mechanism
+# mechanism = get_mechanism(:humanoid, timestep=0.01, gravity=-9.81)
+# for joint in mechanism.joints
+# 	joint.rotational.qoffset = one(UnitQuaternion)
+# end
+#
+# initialize!(mechanism, :humanoid)
+# # simulate
+# simulate!(mechanism, tsim, ctrl!,
+# 	record=false, verbose=false, opts=SolverOptions(rtol=1e-6, btol=1e-6))
+#
+# # Finite Difference
+# Nd = data_dim(mechanism, attjac=false)
+# data0 = get_data0(mechanism)# + 0.05*rand(Nd)
+# sol0 = get_solution0(mechanism)
+# datajac0 = finitediff_data_jacobian(mechanism, data0, sol0)
+# attjac0 = data_attitude_jacobian(mechanism)
+# datajac0 *= attjac0
+#
+# # Analytical
+# D = create_data_matrix(mechanism.joints, mechanism.bodies, mechanism.contacts)
+# jacobian_data!(D, mechanism)
+# nodes = [mechanism.joints; mechanism.bodies; mechanism.contacts]
+# dimrow = length.(nodes)
+# dimcol = data_dim.(nodes)
+# datajac1 = full_matrix(D, dimrow, dimcol)
+#
+# # Test
+# @testset "Data Jacobian: $(String(:humanoid))" begin
+# 	@test norm(datajac0 - datajac1, Inf) < 1e-6
+# end
 #
 # # Controller
 # function ctrl!(mechanism, k)
