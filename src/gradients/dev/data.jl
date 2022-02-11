@@ -14,9 +14,9 @@ data_dim(joint::Rotational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ}
 data_dim(body::Body; attjac::Bool=true) = attjac ? 19 : 20 # 1+6+6+6 or 1+6+6+7 [m,flat(J),v15,ϕ15,x2,q2] with attjac
 # Contact
 data_dim(contact::ContactConstraint) = data_dim(contact.model)
-data_dim(model::NonlinearContact) = 7 # [friction_coefficient, p, offset]
-data_dim(model::LinearContact) = 7 # [friction_coefficient, p, offset]
-data_dim(model::ImpactContact) = 6 # [p, offset]
+data_dim(model::NonlinearContact) = 7 # [friction_coefficient, offset, p]
+data_dim(model::LinearContact) = 7 # [friction_coefficient, offset, p]
+data_dim(model::ImpactContact) = 6 # [offset, p]
 
 
 ################################################################################

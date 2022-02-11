@@ -1,4 +1,4 @@
-mutable struct Rotational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N}
+mutable struct Rotational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N,Nb½}
     axis::SVector{3,T} # rotation axis in parent frame
 
     V3::Adjoint{T,SVector{3,T}} # in body1's frame
@@ -37,11 +37,10 @@ Rotational2{T} = Rotational{T,2} where T
 Rotational3{T} = Rotational{T,3} where T
 
 @inline function constraint(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
-    return constraint_mask(joint) * displacement(joint, xa, qa, xb, qb)
+    unlimited_constraint(joint, xa, qa, xb, qb, η)
 end
-
-@inline function constraint_jacobian_configuration(joint::Rotational{T,Nλ,0,N}, η) where {T,Nλ,N}
-    return Diagonal(+1.00e-10 * sones(T,N))
+@inline function unlimited_constraint(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T}
+    return constraint_mask(joint) * displacement(joint, xa, qa, xb, qb) # maybe we need to use rotation_vector instead of Vmat
 end
 
 @inline function constraint_jacobian_configuration(jacobian_relative::Symbol, joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
@@ -56,6 +55,51 @@ end
 @inline function constraint_jacobian_child(joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     constraint_jacobian_configuration(:child, joint, xa, qa, xb, qb, η)
 end
+@inline function constraint_jacobian(jacobian_relative::Symbol, joint::Rotational{T,Nλ,0},
+        xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+    unlimited_constraint_jacobian(jacobian_relative, joint, xa, qa, xb, qb, η)
+end
+
+# @inline function unlimited_constraint_jacobian(jacobian_relative::Symbol, joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+#     # X = szeros(T, 3, 3)
+#     # Q = Vmat() *
+#     X, Q = orientation_error_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, attjac=false)
+#     return constraint_mask(joint) * [X Vmat() * Q]
+# end
+#
+@inline function unlimited_constraint_jacobian(jacobian_relative::Symbol, joint::Rotational{T},
+        xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where T
+    # X = szeros(T, 3, 3)
+    # Q = Vmat() * orientation_error_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, attjac=false)
+    # return constraint_mask(joint) * [X Q]
+    X, Q = displacement_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, attjac=false)
+    return constraint_mask(joint) * [X Q]
+end
+
+@inline function unlimited_constraint_jacobian_parent(joint::Rotational{T}, xa::AbstractVector,
+        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where T
+    unlimited_constraint_jacobian(:parent, joint, xa, qa, xb, qb, η)
+end
+
+@inline function unlimited_constraint_jacobian_child(joint::Rotational{T}, xa::AbstractVector,
+        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where T
+    unlimited_constraint_jacobian(:child, joint, xa, qa, xb, qb, η)
+end
+
+# @inline function constraint_jacobian(jacobian_relative::Symbol, joint::Rotational{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+#     X, Q = displacement_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, attjac=false)
+#     return constraint_mask(joint) * [X Q]
+# end
+#
+# @inline function constraint_jacobian_parent(joint::Rotational{T,Nλ,0}, xa::AbstractVector,
+#         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+#     constraint_jacobian(:parent, joint, xa, qa, xb, qb, η)
+# end
+#
+# @inline function constraint_jacobian_child(joint::Rotational{T,Nλ,0}, xa::AbstractVector,
+#         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+#     constraint_jacobian(:child, joint, xa, qa, xb, qb, η)
+# end
 
 ################################################################################
 # Impulse Transform

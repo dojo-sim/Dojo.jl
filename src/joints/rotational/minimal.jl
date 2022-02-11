@@ -32,16 +32,23 @@ end
 
 @inline function minimal_coordinates_jacobian_configuration(jacobian_relative::Symbol,
         joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector,
-        qb::UnitQuaternion) where T
+        qb::UnitQuaternion; attjac::Bool=true) where T
     A = nullspace_mask(joint)
     q = inv(joint.qoffset) * inv(qa) * qb
     X = szeros(T,3,3)
     if jacobian_relative == :parent
-        return A * [X ∂qrotation_vector(q) * Lᵀmat(joint.qoffset) * Rmat(qb) * Tmat() * LVᵀmat(qa)]
+		# Q = ∂qrotation_vector(q) * Lᵀmat(joint.qoffset) * Rmat(qb) * Tmat()
+		Q = FiniteDiff.finite_difference_jacobian(qa -> rotation_vector(inv(joint.qoffset) * inv(UnitQuaternion(qa..., false)) * qb), vector(qa))
+		attjac && (Q *= LVᵀmat(qa))
     elseif jacobian_relative == :child
-        return A * [X ∂qrotation_vector(q) * Lᵀmat(joint.qoffset) * Lᵀmat(qa) * LVᵀmat(qb)]
+		# Q = ∂qrotation_vector(q) * Lᵀmat(joint.qoffset) * Lᵀmat(qa)
+		# Q = ∂qrotation_vector(q) * rotation_matrix(inv(joint.qoffset) * inv(qa)) * ∂qrotation_matrix(qb, )
+		Q = FiniteDiff.finite_difference_jacobian(qb -> rotation_vector(inv(joint.qoffset) * inv(qa) * UnitQuaternion(qb..., false)), vector(qb))
+		attjac && (Q *= LVᵀmat(qb))
     end
+	return A * [X Q]
 end
+
 
 ################################################################################
 # Velocities

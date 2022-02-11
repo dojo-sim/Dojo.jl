@@ -44,8 +44,8 @@ end
 function feasibility_linesearch!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
         vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
 
-    s = contact.impulses[2]
-    γ = contact.impulses_dual[2]
+    s = contact.impulses_dual[2]
+    γ = contact.impulses[2]
     Δs = vector_entry.value[1:N½]
     Δγ = vector_entry.value[N½ .+ (1:N½)]
     αs_ort = positive_orthant_step_length(s[1:1], Δs[1:1], τ = τort)
@@ -58,8 +58,8 @@ end
 
 function feasibility_linesearch!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
         vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc,Cs<:Union{ImpactContact{T,N},LinearContact{T,N}},N½}
-    s = contact.impulses[2]
-    γ = contact.impulses_dual[2]
+    s = contact.impulses_dual[2]
+    γ = contact.impulses[2]
     Δs = vector_entry.value[1:N½]
     Δγ = vector_entry.value[N½ .+ (1:N½)]
 
@@ -105,8 +105,8 @@ function centering!(mechanism::Mechanism, αaff::T) where T
 end
 
 function centering!(ν, νaff, n, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}, vector_entry::Entry, αaff) where {T,N,Nc,Cs,N½}
-    s = contact.impulses[2]
-    γ = contact.impulses_dual[2]
+    s = contact.impulses_dual[2]
+    γ = contact.impulses[2]
     Δs = vector_entry.value[1:N½]
     Δγ = vector_entry.value[N½ .+ (1:N½)]
     ν += dot(s, γ)
@@ -188,8 +188,8 @@ end
 end
 
 @inline function update_solution!(contact::ContactConstraint)
-    contact.impulses[1] = contact.impulses[2]
     contact.impulses_dual[1] = contact.impulses_dual[2]
+    contact.impulses[1] = contact.impulses[2]
     return
 end
 

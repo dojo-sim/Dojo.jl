@@ -92,19 +92,19 @@ full_matrix(mech.system)
 
 
 ineqc0
-bound0 = ineqc0.constraints[1]
+model0 = ineqc0.constraints[1]
 λ = nothing
 s = SVector{4}([1.0; rand(3)/10])
 γ = SVector{4}([1.0; rand(3)/10])
-g(bound0, s, γ, x3, q3, v25, ϕ25)
-jacv0 = constraint_jacobian_velocity(bound0, x3, q3, x2, v25, q2, ϕ25, λ, timestep)
+g(model0, s, γ, x3, q3, v25, ϕ25)
+jacv0 = constraint_jacobian_velocity(model0, x3, q3, x2, v25, q2, ϕ25, λ, timestep)
 jacv1 = FiniteDiff.finite_difference_jacobian(
-    v -> g(bound0, s, γ, next_position(x2, SVector{3}(v[1:3]), timestep),
+    v -> g(model0, s, γ, next_position(x2, SVector{3}(v[1:3]), timestep),
         next_orientation(q2, SVector{3}(v[4:6]), timestep), SVector{3}(v[1:3]), SVector{3}(v[4:6])), [v25; ϕ25])
 
-jacz0 = constraint_jacobian_configuration(bound0, x3, q3, x2, v25, q2, ϕ25, λ, timestep)
+jacz0 = constraint_jacobian_configuration(model0, x3, q3, x2, v25, q2, ϕ25, λ, timestep)
 jacz1 = FiniteDiff.finite_difference_jacobian(
-    z -> g(bound0, s, γ, SVector{3}(z[1:3]),
+    z -> g(model0, s, γ, SVector{3}(z[1:3]),
         UnitQuaternion(z[4:7],false), SVector{3}(v[1:3]), SVector{3}(v[4:6])), [x3; vector(q3)])
 
 norm(jacv0 - jacv1)

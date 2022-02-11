@@ -1,4 +1,4 @@
-abstract type Joint{T,Nλ,Nb,N} end
+abstract type Joint{T,Nλ,Nb,N,Nb½} end
 
 getT(joint::Joint{T}) where T = T
 Base.length(joint::Joint{T,Nλ}) where {T,Nλ} = Nλ
@@ -200,8 +200,16 @@ Joint3 = Joint{T,3} where T
 
 @inline constraint(joint::Joint, body1::Node, body2::Node, λ, timestep) = constraint(joint, next_configuration(body1.state, timestep)..., next_configuration(body2.state, timestep)..., λ)
 
-@inline function constraint_jacobian_configuration(joint::Joint{T,Nλ}, λ) where {T,Nλ}
+@inline function constraint_jacobian_configuration(joint::Joint{T,Nλ,0}, η) where {T,Nλ}
     return Diagonal(+1.00e-10 * sones(T,Nλ))
+end
+
+@inline function constraint_jacobian_configuration(joint::Joint{T,Nλ,Nb}, η) where {T,Nλ,Nb}
+    s, γ = get_sγ(joint, η)
+    c1 = [Diagonal(γ + 1e-10 * sones(T, Nb)); Diagonal(sones(Nb)); szeros(Nλ, Nb)]
+    c2 = [Diagonal(s + 1e-10 * sones(T, Nb)); szeros(Nb, Nb); szeros(Nλ, Nb)]
+    c3 = [szeros(Nb, Nλ); szeros(Nb, Nλ); Diagonal(+1.00e-10 * sones(T, Nλ))]
+    return [c1 c2 c3]
 end
 
 @inline constraint_jacobian_parent(joint::Joint, body1::Node, body2::Node, λ, timestep) = constraint_jacobian_parent(joint, next_configuration(body1.state, timestep)..., next_configuration(body2.state, timestep)..., λ)
@@ -249,7 +257,9 @@ function add_limits(mech::Mechanism, joint::JointConstraint;
     Nb = 2Nb½
     N̄λ = 3 - Nλ
     N = Nλ + 2Nb
-    tra_limit = (Translational{T,Nλ,Nb,N,Nb½,N̄λ}(tra.axis, tra.V3, tra.V12, tra.vertices, tra.spring, tra.damper, tra.spring_offset, tra_limits, tra.spring_type, tra.input), joint.parent_id, joint.child_id)
+    tra_limit = (Translational{T,Nλ,Nb,N,Nb½,N̄λ}(tra.axis, tra.V3, tra.V12,
+        tra.vertices, tra.spring, tra.damper, tra.spring_offset, tra_limits,
+        tra.spring_type, tra.input), joint.parent_id, joint.child_id)
 
     # update rotational
     rot = joint.rotational
@@ -259,6 +269,9 @@ function add_limits(mech::Mechanism, joint::JointConstraint;
     Nb = 2Nb½
     N̄λ = 3 - Nλ
     N = Nλ + 2Nb
-    rot_limit = (Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(rot.axis, rot.V3, rot.V12, rot.qoffset, rot.spring, rot.damper, rot.spring_offset, rot_limits, rot.spring_type, rot.input), joint.parent_id, joint.child_id)
+    rot_limit = (Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(rot.axis, rot.V3, rot.V12,
+        rot.qoffset, rot.spring, rot.damper, rot.spring_offset, rot_limits,
+        rot.spring_type, rot.input), joint.parent_id, joint.child_id)
+        
     JointConstraint((tra_limit, rot_limit); name=joint.name)
 end

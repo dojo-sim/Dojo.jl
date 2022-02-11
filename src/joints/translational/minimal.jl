@@ -1,7 +1,7 @@
 @inline function displacement(joint::Translational, xa::AbstractVector,
 		qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; rotate::Bool = true)
     vertices = joint.vertices
-    d = xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)) 
+    d = xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa))
     rotate && (return vrotate(d, inv(qa))) : (return d)
 end
 
@@ -29,7 +29,7 @@ end
 @inline function displacement_jacobian_configuration_child(joint::Translational{T}, xa::AbstractVector,
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; attjac=true) where T
     vertices = joint.vertices
-    
+
     X = rotation_matrix(inv(qa))
     Q = rotation_matrix(inv(qa)) * ∂qrotation_matrix(qb, vertices[2])
     attjac && (Q *= LVᵀmat(qb))
@@ -45,9 +45,9 @@ end
 end
 
 @inline function minimal_coordinates_jacobian_configuration(jacobian_relative::Symbol, joint::Translational,
-        xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-    X, Q = displacement_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb)
-    return nullspace_mask(joint) * [X Q]
+        xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; attjac::Bool=true)
+    X, Q = displacement_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, attjac=attjac)
+	return nullspace_mask(joint) * [X Q]
 end
 
 ################################################################################

@@ -346,12 +346,12 @@ function contact_dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
                 function d(vars)
                     x = vars[1:3]
                     q = UnitQuaternion(vars[4:7]..., false)
-                    return impulse_map(model, x, q, nothing)' * contact.impulses_dual[2]
+                    return impulse_map(model, x, q, nothing) * contact.impulses[2]
                 end
 
                 if model_type <: NonlinearContact
-                    # J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= _dN(x3, vector(q3), contact.impulses_dual[2][1:1], model.contact_point)
-                    # J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= _dB(x3, vector(q3), contact.impulses_dual[2][2:4], model.contact_point)
+                    # J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= _dN(x3, vector(q3), contact.impulses[2][1:1], model.contact_point)
+                    # J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= _dB(x3, vector(q3), contact.impulses[2][2:4], model.contact_point)
                     J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= FiniteDiff.finite_difference_jacobian(d, [x3; vector(q3)])
                 elseif model_type <: LinearContact
                     J[offr .+ (1:6), offc .+ [1:3; 7:10]] -= FiniteDiff.finite_difference_jacobian(d, [x3; vector(q3)])

@@ -50,7 +50,7 @@ end
 end
 
 @inline function candidate_step!(α::T, contact::ContactConstraint{T,N,Nc,Cs,N½}, vector_entry::Entry, scale) where {T,N,Nc,Cs,N½}
-    contact.impulses[2] = contact.impulses[1] + 1 / (2^scale) * α * vector_entry.value[SVector{N½,Int64}(1:N½)]
-    contact.impulses_dual[2] = contact.impulses_dual[1] + 1 / (2^scale) * α * vector_entry.value[SVector{N½,Int64}(N½+1:N)]
+    contact.impulses_dual[2] = contact.impulses_dual[1] + 1 / (2^scale) * α * vector_entry.value[SVector{N½,Int64}(1:N½)]
+    contact.impulses[2] = contact.impulses[1] + 1 / (2^scale) * α * vector_entry.value[SVector{N½,Int64}(N½+1:N)]
     return
 end
