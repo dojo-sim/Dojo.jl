@@ -46,14 +46,15 @@ end
 
 function impulse_map_jacobian_configuration(mechanism, body::Body, contact::ContactConstraint{T}) where T
     x, q = next_configuration(body.state, mechanism.timestep)
-    bound = contact.constraints[1]
-    X = force_mapping(bound, x, q)
-    λ = X' * contact.dual[2]
+    model = contact.model
+    X = force_mapping(model, x, q)
+    λ = X' * contact.impulses_dual[2]
+    p = model.contact_point
 
-    # Q = skew(bound.p - vrotate(bound.offset, inv(q))) * VRmat(q) * LᵀVᵀmat(q) * λ
-    ∇Q = skew(bound.p - vrotate(bound.offset, inv(q))) * VRmat(q) * ∂qLᵀVᵀmat(λ)
-    ∇Q += skew(bound.p - vrotate(bound.offset, inv(q))) * ∂qVRmat(LᵀVᵀmat(q) * λ)
-    ∇Q += -∂pskew(VRmat(q) * LᵀVᵀmat(q) * λ) * ∂qrotation_matrix_inv(q, bound.offset)
+    # Q = skew(p - vrotate(model.offset, inv(q))) * VRmat(q) * LᵀVᵀmat(q) * λ
+    ∇Q = skew(p - vrotate(model.offset, inv(q))) * VRmat(q) * ∂qLᵀVᵀmat(λ)
+    ∇Q += skew(p - vrotate(model.offset, inv(q))) * ∂qVRmat(LᵀVᵀmat(q) * λ)
+    ∇Q += -∂pskew(VRmat(q) * LᵀVᵀmat(q) * λ) * ∂qrotation_matrix_inv(q, model.offset)
     # ∇Q *= LVᵀmat(q)
     Z3 = szeros(T,3,3)
     Z4 = szeros(T,3,4)

@@ -16,3 +16,11 @@ complementarityμ(mechanism, contact::ContactConstraint; scaling=false) = comple
 neutral_vector(model::Contact{T,N}) where {T,N} = sones(T, Int(N/2))
 
 cone_degree(model::Contact{T,N}) where {T,N} = Int(N/2)
+
+@inline function impulse_map(model::Contact, x::AbstractVector, q::UnitQuaternion, λ)
+    X = force_mapping(model, x, q)
+    # q * ... is a rotation by quaternion q it is equivalent to Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * ...
+    # Q = - X * q * skew(- vrotate(model.offset, inv(q)))
+    Q = - X * q * skew(model.contact_point - vrotate(model.offset, inv(q)))
+    return [X'; Q']
+end

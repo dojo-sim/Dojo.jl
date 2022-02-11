@@ -213,27 +213,6 @@ end
 	@test norm(x0[11:nx] - x1[11:nx], Inf) < 1e-10
 end
 
-
-# # sphere
-# mech = get_mechanism(:sphere, timestep = 0.01, gravity = -9.81)
-# initialize!(mech, :sphere)
-# storage = simulate!(mech, 1.0, record = true, verbose = false)
-#
-# Dojo.maximal_dimension(mech)
-# minimal_dimension(mech)
-# z = get_maximal_state(mech)
-#
-# attjac = attitude_jacobian(z, length(mech.bodies))
-# M_fd = maximal_to_minimal_jacobian(mech, z) * attjac
-# M_a = maximal_to_minimal_jacobian_analytical(mech, z)
-#
-# @test size(M_fd) == size(M_a)
-# @test norm(M_fd - M_a, Inf) < 1.0e-6
-# plot(Gray.(1e0*abs.(M_fd)))
-# plot(Gray.(1e0*abs.(M_a)))
-# M_fd[4:9,4:9]
-# M_a[4:9,4:9]
-
 @testset "maximal_to_minimal_jacobian" begin
 	# 5-link pendulum
 	mech = get_mechanism(:npendulum, timestep = 0.01, gravity = -9.81, Nb=5)

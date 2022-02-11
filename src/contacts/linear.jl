@@ -70,15 +70,6 @@ end
     return [V Ω]
 end
 
-@inline function impulse_map(model::LinearContact, x::AbstractVector, q::UnitQuaternion, λ)
-    X = [model.surface_normal_projector;
-         szeros(1,3);
-         model.surface_projector]
-    # q * ... is a rotation by quatrnon q it is equivalent to Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * ...
-    Q = - X * q * skew(model.contact_point - vrotate(model.offset, inv(q)))
-    return [X Q]
-end
-
 @inline function force_mapping(model::LinearContact, x::AbstractVector, q::UnitQuaternion)
     X = [model.surface_normal_projector;
          szeros(1,3);
