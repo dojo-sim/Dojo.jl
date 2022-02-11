@@ -32,7 +32,7 @@ function constraint_jacobian_velocity(mechanism, contact::ContactConstraint, bod
 end
 
 function constraint_jacobian_configuration(mechanism, contact::ContactConstraint, body::Body)
-    return constraint_jacobian_configuration(contact.constraints[1], body, nothing, nothing, mechanism.timestep)
+    return constraint_jacobian_configuration(contact.model, body, nothing, nothing, mechanism.timestep)
 end
 
 function impulse_map(mechanism, contact::ContactConstraint, body::Body)
