@@ -13,7 +13,7 @@ function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVect
 	return z
 end
 
-function minimal_to_maximal_jacobian_analytical(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
+function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
 	J = zeros(maximal_dimension(mechanism), minimal_dimension(mechanism))
 	z = minimal_to_maximal(mechanism, x)
 	off = 0
@@ -102,10 +102,6 @@ end
 
 ##########
 
-function minimal_to_maximal_jacobian(mechanism::Mechanism, x)
-	FiniteDiff.finite_difference_jacobian(y -> minimal_to_maximal(mechanism, y), x)
-end
-
 function get_minimal_gradients(mechanism::Mechanism{T}, z::AbstractVector{T}, u::AbstractVector{T};
 	opts=SolverOptions()) where T
 	# simulate next state
@@ -134,6 +130,7 @@ function get_minimal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni};
 	pos_noise=nothing, vel_noise=nothing,
 	pos_noise_range=[-Inf, Inf], vel_noise_range=[-3.9 / mechanism.timestep^2, 3.9 / mechanism.timestep^2]) where {T,Nn,Ne,Nb,Ni}
 	x = []
+	mechanism = deepcopy(mechanism)
 	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
 	# Thus go through the joints in order, start from joint between robot and origin and go down the tree.
 	for id in reverse(mechanism.system.dfs_list)

@@ -93,6 +93,7 @@ end
     ∇xq = nullspace_mask(joint) * ∇xq
     return ∇xq
 end
+
 @inline function minimal_velocities_jacobian_configuration_child(joint::Translational{T},
         xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
         xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector) where T
@@ -107,6 +108,7 @@ end
     ∇xq = nullspace_mask(joint) * ∇xq
     return ∇xq
 end
+
 @inline function minimal_velocities_jacobian_velocity_parent(joint::Translational{T},
         xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
         xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector) where T
@@ -120,6 +122,7 @@ end
     ∇vϕ = nullspace_mask(joint) * ∇vϕ
     return ∇vϕ
 end
+
 @inline function minimal_velocities_jacobian_velocity_child(joint::Translational{T},
         xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
         xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector) where T
