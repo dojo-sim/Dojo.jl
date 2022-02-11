@@ -20,9 +20,3 @@ end
         @test norm(storage.x[1][end][3] - 0.25, Inf) < 1e-3
     end
 end
-#
-# mech = get_mechanism(:quadruped, timestep=0.05, gravity=-9.81, friction_coefficient=0.8, damper=1000.0, spring=30.0)
-# initialize!(mech, :quadruped)
-# storage = simulate!(mech, 5.0, record=true, verbose=false)
-#
-# mech.contacts[1].impulses_dual

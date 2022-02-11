@@ -25,12 +25,12 @@ mutable struct JointConstraint{T,N,Nc,TJ,RJ} <: Constraint{T,N}
         @assert data[1][2] == data[2][2] # check parent ids
         @assert data[1][3] == data[2][3] # check child ids
 
-        # joints 
-        translational = data[1][1] 
+        # joints
+        translational = data[1][1]
         rotational = data[2][1]
 
         # IDs
-        parent_id = data[1][2] 
+        parent_id = data[1][2]
         child_id = data[1][3]
 
         # data dype
@@ -39,7 +39,7 @@ mutable struct JointConstraint{T,N,Nc,TJ,RJ} <: Constraint{T,N}
         # set springs & dampers off
         spring = false
         damper = false
-        
+
         minimal_index = Vector{Int64}[]
         N = 0
         for joint_data in data
@@ -123,7 +123,7 @@ function set_input!(joint::JointConstraint{T,N,Nc}, input::AbstractVector) where
     for i = 1:Nc
         r_idx = SUnitRange(joint.minimal_index[i][1], joint.minimal_index[i][2])
         length(r_idx) == 0 && continue
-        set_input!([joint.translational, joint.rotational][i], Fτ[SUnitRange(joint.minimal_index[i][1], joint.minimal_index[i][2])])
+        set_input!([joint.translational, joint.rotational][i], input[SUnitRange(joint.minimal_index[i][1], joint.minimal_index[i][2])])
     end
     return
 end
@@ -131,7 +131,7 @@ end
 function add_input!(joint::JointConstraint{T,N,Nc}, input::AbstractVector) where {T,N,Nc}
     @assert length(input)==control_dimension(joint)
     for i = 1:Nc
-        add_input!([joint.translational, joint.rotational][i], Fτ[SUnitRange(joint.minimal_index[i][1], joint.minimal_index[i][2])])
+        add_input!([joint.translational, joint.rotational][i], input[SUnitRange(joint.minimal_index[i][1], joint.minimal_index[i][2])])
     end
     return
 end
