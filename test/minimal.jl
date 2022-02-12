@@ -269,12 +269,11 @@ end
 	    Δϕ = rand(control_dimension(rot0))
 	    Δv = rand(control_dimension(tra0))
 	    for i = 1:10
-			@warn
 	        set_minimal_coordinates!(pnodes0[i], cnodes0[i], rot0, Δθ=Δθ)
 	        Δθ0 = minimal_coordinates(rot0, pnodes0[i], cnodes0[i])
 	        @test norm(Δθ0 - Δθ, Inf) < 1e-7
-			@warn
-	        set_minimal_coordinates!(pnodes0[i], cnodes0[i], tra0, Δx=Δx)
+
+			set_minimal_coordinates!(pnodes0[i], cnodes0[i], tra0, Δx=Δx)
 	        Δx0 = minimal_coordinates(tra0, pnodes0[i], cnodes0[i])
 	        @test norm(Δx0 - Δx, Inf) < 1e-7
 
