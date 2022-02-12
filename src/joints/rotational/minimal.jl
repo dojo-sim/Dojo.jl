@@ -7,7 +7,7 @@ end
 function displacement_jacobian_configuration(jacobian_relative::Symbol,
         joint::Rotational, xa::AbstractVector{T}, qa::UnitQuaternion,
         xb::AbstractVector{T}, qb::UnitQuaternion; attjac::Bool=true) where T
-	
+
     X = szeros(T, 3, 3)
 
     if jacobian_relative == :parent
@@ -54,7 +54,7 @@ end
 # Velocities
 ################################################################################
 @inline function minimal_velocities(joint::Rotational, xa::AbstractVector,
-        va::AbstractVector,  qa::UnitQuaternion, ϕa::AbstractVector,
+        va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
         xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector)
 	qoffset = joint.qoffset
     Δϕ = rotation_matrix(inv(qoffset)) * (vrotate(ϕb, inv(qa) * qb) - ϕa) # in offset frame

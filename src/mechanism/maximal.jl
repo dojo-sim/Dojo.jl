@@ -100,7 +100,7 @@ function maximal_to_minimal_jacobian_analytical(mechanism::Mechanism{T,Nn,Ne,Nb,
 				va_idx = collect((iparent-1)*12 .+ (4:6))
 				qa_idx = collect((iparent-1)*12 .+ (7:9))
 				ϕa_idx = collect((iparent-1)*12 .+ (10:12))
-				
+
 				J[c_idx, [xa_idx; qa_idx]] = minimal_coordinates_jacobian_configuration(:parent, element, xa, qa, xb, qb)
 				J[v_idx, [xa_idx; qa_idx]] = minimal_velocities_jacobian_configuration(:parent, element, xa, va, qa, ϕa, xb, vb, qb, ϕb)
 				J[v_idx, [va_idx; ϕa_idx]] = minimal_velocities_jacobian_velocity(:parent, element, xa, va, qa, ϕa, xb, vb, qb, ϕb)

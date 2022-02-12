@@ -19,19 +19,19 @@ end
 
 function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::Rotational;
         Δθ::AbstractVector=szeros(control_dimension(joint)))
-        # Δθ is expressed in along the joint's nullspace axes, in pnode's offset frame
+    # Δθ is expressed in along the joint's nullspace axes, in pnode's offset frame
     qoffset = joint.qoffset
     qa = pnode.state.q2[1]
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
     Δq = axis_angle_to_quaternion(Aᵀ*Δθ)
     qb = qa * qoffset * Δq
-    set_position!(cnode; x=cnode.state.x2[1], q = qb)
+    set_position!(cnode; x=cnode.state.x2[1], q=qb)
     return nothing
 end
 
 function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::Translational;
         Δx::AbstractVector=szeros(control_dimension(joint)))
-        # Δx is expressed in along the joint's nullspace axes, in pnode's frame
+    # Δx is expressed in along the joint's nullspace axes, in pnode's frame
 
     pa = joint.vertices[1]
     pb = joint.vertices[2]
@@ -43,7 +43,7 @@ function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::Translational
 
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
     xb = xa + vrotate(pa + Aᵀ*Δx, qa) - vrotate(pb, qb)
-    set_position!(cnode; x = xb, q=cnode.state.q2[1])
+    set_position!(cnode; x=xb, q=cnode.state.q2[1])
     return nothing
 end
 
@@ -87,9 +87,9 @@ end
 
 function set_minimal_velocities!(pnode::Node, cnode::Node, joint::Rotational;
         Δϕ::AbstractVector=szeros(control_dimension(joint)))
-        # Δϕ is expressed in along the joint's nullspace axes, in pnode's offset frame
-        # We need to set the minimal coordinates of the rotational joint first
-        # since ϕb = fct(qb, Δϕ)
+    # Δϕ is expressed in along the joint's nullspace axes, in pnode's offset frame
+    # We need to set the minimal coordinates of the rotational joint first
+    # since ϕb = fct(qb, Δϕ)
     qoffset = joint.qoffset
     qa = pnode.state.q2[1]
     qb = cnode.state.q2[1]
@@ -103,7 +103,7 @@ end
 
 function set_minimal_velocities!(pnode::Node, cnode::Node, joint::Translational;
         Δv::AbstractVector=szeros(control_dimension(joint)))
-        # Δv is expressed in along the joint's nullspace axes, in pnode's frame
+    # Δv is expressed in along the joint's nullspace axes, in pnode's frame
     xa = pnode.state.x2[1]
     va = pnode.state.v15
     qa = pnode.state.q2[1]
@@ -125,6 +125,9 @@ function set_minimal_velocities!(pnode::Node, cnode::Node, joint::Translational;
     set_velocity!(cnode; v=vb, ω=cnode.state.ϕ15)
     return nothing
 end
+
+
+
 
 ################################################################################
 # Coordinates and Velocities

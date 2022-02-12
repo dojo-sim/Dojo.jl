@@ -30,12 +30,12 @@ end
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; attjac=true) where T
 	vertices = joint.vertices
     d = xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)) # in the world frame
-    
+
     X = -rotation_matrix(inv(qa))
     Q = -rotation_matrix(inv(qa)) * ∂qrotation_matrix(qa, vertices[1])
     Q += ∂qrotation_matrix_inv(qa, d)
     attjac && (Q *= LVᵀmat(qa))
-    
+
     return X, Q
 end
 
@@ -46,7 +46,7 @@ end
     X = rotation_matrix(inv(qa))
     Q = rotation_matrix(inv(qa)) * ∂qrotation_matrix(qb, vertices[2])
     attjac && (Q *= LVᵀmat(qb))
-    
+
     return X, Q
 end
 

@@ -106,7 +106,7 @@ function ctrl!(mechanism, k)
 end
 initialize!(mech, :quadruped)
 Main.@profiler storage = simulate!(mech, 1.00, ctrl!, record=true, opts=SolverOptions(btol=1e-4, verbose=false))
-storage = simulate!(mech, 2.0, ctrl!, record=true, opts=SolverOptions(btol=1e-4, verbose=false))
+@elapsed storage = simulate!(mech, 2.0, ctrl!, record=true, opts=SolverOptions(btol=1e-4, verbose=false))
 visualize(mech, storage, vis=vis, show_contact=true)
 
 

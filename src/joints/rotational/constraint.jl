@@ -103,31 +103,31 @@ function impulse_transform_parent_jacobian_parent(joint::Rotational{T,Nλ,0},
 	∂Q∂qa = ∂qVLᵀmat(Tmat() * Rᵀmat(qb) * LVᵀmat(joint.qoffset) * p) * LVᵀmat(qa)
 	return cat(I(3), 0.5 * I(3), dims=(1,2)) * [Z3 Z3; Z3 ∂Q∂qa]
 end
-qa = UnitQuaternion(rand(4)...)
-qb = UnitQuaternion(rand(4)...)
-qoff = UnitQuaternion(rand(4)...)
-Q = Vmat() * Lᵀmat(qoff) * Rmat(qb) * Tmat()
-QT = Tmat() * Rᵀmat(qb) * LVᵀmat(qoff)
-
-Q - QT'
-
-function displacement_jacobian_configuration(jacobian_relative::Symbol,
-        joint::Rotational, xa::AbstractVector{T}, qa::UnitQuaternion,
-        xb::AbstractVector{T}, qb::UnitQuaternion; attjac::Bool=true) where T
-
-    X = szeros(T, 3, 3)
-
-    if jacobian_relative == :parent
-		Q = Vmat() * Lᵀmat(joint.qoffset) * Rmat(qb) * Tmat()
-		attjac && (Q *= LVᵀmat(qa))
-    elseif jacobian_relative == :child
-		Q = Vmat() * Lᵀmat(joint.qoffset) * Lᵀmat(qa)
-		attjac && (Q *= LVᵀmat(qb))
-	end
-
-    return X, Q
-end
-
+# qa = UnitQuaternion(rand(4)...)
+# qb = UnitQuaternion(rand(4)...)
+# qoff = UnitQuaternion(rand(4)...)
+# Q = Vmat() * Lᵀmat(qoff) * Rmat(qb) * Tmat()
+# QT = Tmat() * Rᵀmat(qb) * LVᵀmat(qoff)
+#
+# Q - QT'
+#
+# function displacement_jacobian_configuration(jacobian_relative::Symbol,
+#         joint::Rotational, xa::AbstractVector{T}, qa::UnitQuaternion,
+#         xb::AbstractVector{T}, qb::UnitQuaternion; attjac::Bool=true) where T
+#
+#     X = szeros(T, 3, 3)
+#
+#     if jacobian_relative == :parent
+# 		Q = Vmat() * Lᵀmat(joint.qoffset) * Rmat(qb) * Tmat()
+# 		attjac && (Q *= LVᵀmat(qa))
+#     elseif jacobian_relative == :child
+# 		Q = Vmat() * Lᵀmat(joint.qoffset) * Lᵀmat(qa)
+# 		attjac && (Q *= LVᵀmat(qb))
+# 	end
+#
+#     return X, Q
+# end
+#
 
 
 
