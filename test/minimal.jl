@@ -64,6 +64,7 @@ end
 	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(nx - 13)]
 	z0 = Dojo.minimal_to_maximal(mech, x0)
 	x1 = Dojo.maximal_to_minimal(mech, z0)
+
 	@test norm(x0[1:3] - x1[1:3], Inf) < 1e-10
 	@test quaterror(x0[4:7], x1[4:7]) < 1e-10
 	@test norm(x0[8:10] - x1[8:10], Inf) < 1e-10
@@ -213,41 +214,6 @@ end
 	@test norm(x0[11:nx] - x1[11:nx], Inf) < 1e-10
 end
 
-@testset "maximal_to_minimal_jacobian" begin
-	# 5-link pendulum
-	mech = get_mechanism(:npendulum, timestep = 0.01, gravity = -9.81, Nb=5)
-	Random.seed!(100)
-	ϕ1 = 0.3π
-	initialize!(mech, :npendulum, ϕ1 = ϕ1)
-	storage = simulate!(mech, 1.0, record = true, verbose = false)
-
-	Dojo.maximal_dimension(mech) == 13
-	minimal_dimension(mech) == 12
-	z = Dojo.get_maximal_state(mech)
-
-	attjac = attitude_jacobian(z, length(mech.bodies))
-	M_fd = FiniteDiff.finite_difference_jacobian(z -> maximal_to_minimal(mech, z), z) * attjac
-	M_a = maximal_to_minimal_jacobian_analytical(mech, z)
-	@test size(M_fd) == size(M_a)
-	@test norm(M_fd - M_a, Inf) < 1.0e-6
-
-	# # sphere
-	# mech = get_mechanism(:sphere, timestep = 0.01, gravity = -9.81)
-	# initialize!(mech, :sphere)
-	# storage = simulate!(mech, 1.0, record = true, verbose = false)
-	#
-	# Dojo.maximal_dimension(mech)
-	# minimal_dimension(mech)
-	# z = get_maximal_state(mech)
-	#
-	# M_fd = maximal_to_minimal_jacobian(mech, z)
-	# M_a = maximal_to_minimal_jacobian_analytical(mech, z)
-	#
-	# @test size(M_fd) == size(M_a)
-	# @test norm(M_fd - M_a, Inf) < 1.0e-6
-	@warn "sphere does not pass for some reason"
-end
-
 ################################################################################
 # Test set and get minimal coordinates and velocities
 ################################################################################
@@ -273,7 +239,7 @@ end
 	        Δθ0 = minimal_coordinates(rot0, pnodes0[i], cnodes0[i])
 	        @test norm(Δθ0 - Δθ, Inf) < 1e-7
 
-			set_minimal_coordinates!(pnodes0[i], cnodes0[i], tra0, Δx=Δx)
+	        set_minimal_coordinates!(pnodes0[i], cnodes0[i], tra0, Δx=Δx)
 	        Δx0 = minimal_coordinates(tra0, pnodes0[i], cnodes0[i])
 	        @test norm(Δx0 - Δx, Inf) < 1e-7
 
@@ -306,25 +272,25 @@ end
 			ωb = rand(3)
 			minimal_velocities(joint, xa, va, qa, ωa, xb, vb, qb, ωb)
 
-			∇0 = minimal_velocities_jacobian_configuration_parent(joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+			∇0 = minimal_velocities_jacobian_configuration(:parent, joint, xa, va, qa, ωa, xb, vb, qb, ωb)
 			∇1 = FiniteDiff.finite_difference_jacobian(
 				xq -> minimal_velocities(joint, xq[1:3], va, UnitQuaternion(xq[4:7]..., false), ωa, xb, vb, qb, ωb),
 				[xa; vector(qa)]) * cat(I(3), LVᵀmat(qa), dims=(1,2))
 			@test norm(∇0 - ∇1, Inf) < 1e-6
 
-			∇0 = minimal_velocities_jacobian_configuration_child(joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+			∇0 = minimal_velocities_jacobian_configuration(:child, joint, xa, va, qa, ωa, xb, vb, qb, ωb)
 			∇1 = FiniteDiff.finite_difference_jacobian(
 				xq -> minimal_velocities(joint, xa, va, qa, ωa, xq[1:3], vb, UnitQuaternion(xq[4:7]..., false), ωb),
 				[xb; vector(qb)]) * cat(I(3), LVᵀmat(qb), dims=(1,2))
 			@test norm(∇0 - ∇1, Inf) < 1e-6
 
-			∇0 = minimal_velocities_jacobian_velocity_parent(joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+			∇0 = minimal_velocities_jacobian_velocity(:parent, joint, xa, va, qa, ωa, xb, vb, qb, ωb)
 			∇1 = FiniteDiff.finite_difference_jacobian(
 				vϕ -> minimal_velocities(joint, xa, vϕ[1:3], qa, vϕ[4:6], xb, vb, qb, ωb),
 				[va; ωa])
 			@test norm(∇0 - ∇1, Inf) < 1e-6
 
-			∇0 = minimal_velocities_jacobian_velocity_child(joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+			∇0 = minimal_velocities_jacobian_velocity(:child, joint, xa, va, qa, ωa, xb, vb, qb, ωb)
 			∇1 = FiniteDiff.finite_difference_jacobian(
 				vϕ -> minimal_velocities(joint, xa, va, qa, ωa, xb, vϕ[1:3], qb, vϕ[4:6]),
 				[vb; ωb])
@@ -362,117 +328,163 @@ end
 	end
 end
 
-# @testset "minimal to maximal Jacobian" begin
-# 	function ctrl!(mechanism, k)
-# 		set_control!(mechanism, 0.1 * srand(control_dimension(mechanism)))
-# 	end
+@testset "minimal-maximal Jacobians" begin
+	function maximal_to_minimal_jacobian_fd(mechanism::Mechanism, z)
+		FiniteDiff.finite_difference_jacobian(y -> maximal_to_minimal(mechanism, y), z)
+	end
 
-# 	# pendulum
-# 	mechanism = get_mechanism(:npendulum, timestep = 0.01, gravity = -9.81 * 0.0, Nb=10)
-# 	Random.seed!(100)
-# 	ϕ1 = 0.3π
-# 	initialize!(mechanism, :npendulum, ϕ1 = ϕ1)
-# 	storage = simulate!(mechanism, 1.0, ctrl!, record = true, verbose = false)
+	function minimal_to_maximal_jacobian_fd(mechanism::Mechanism, x)
+		FiniteDiff.finite_difference_jacobian(y -> minimal_to_maximal(mechanism, y), x)
+	end
 
-# 	maximal_dimension(mechanism)
-# 	minimal_dimension(mechanism)
-# 	z = get_maximal_state(mechanism)
-# 	x = get_minimal_state(mechanism)
-# 	u = zeros(control_dimension(mechanism))
-# 	maximal_to_minimal(mechanism, z) - x
-# 	minimal_to_maximal(mechanism, x) - z
-# 	Nb = length(mechanism.bodies)
-# 	G = attitude_jacobian(z, Nb)[1:13Nb,1:12Nb]
-# 	M_fd = maximal_to_minimal_jacobian(mechanism, z) * G
-# 	M_a = maximal_to_minimal_jacobian_analytical(mechanism, z)
-# 	@test size(M_fd) == size(M_a)
-# 	@test norm(M_fd - M_a, Inf) < 1.0e-5
+	function ctrl!(mechanism, k)
+		set_control!(mechanism, 0.1 * srand(control_dimension(mechanism)))
+	end
 
-# 	N_fd = minimal_to_maximal_jacobian(mechanism, x)
-# 	N_a = minimal_to_maximal_jacobian_analytical(mechanism, x)
-# 	@test size(N_fd) == size(N_a)
-# 	@test norm(N_fd - N_a, Inf) < 1.0e-5
-# 	@test abs(sum(diag(M_fd * G' * N_fd)) - minimal_dimension(mechanism)) < 1.0e-6
-# 	@test abs(sum(diag(M_a * G' * N_a)) - minimal_dimension(mechanism)) < 1.0e-6
+	# n-pendulum
+	mechanism = get_mechanism(:npendulum, timestep = 0.01, gravity = -9.81, Nb=1)
+	ϕ1 = 0.3 * π
+	initialize!(mechanism, :npendulum, ϕ1 = ϕ1)
+	storage = simulate!(mechanism, 1.0, ctrl!, record = true, verbose = false)
 
-# 	# sphere
-# 	mechanism = get_mechanism(:sphere, timestep = 0.01, gravity = -9.81)
-# 	initialize!(mechanism, :sphere)
-# 	storage = simulate!(mechanism, 1.0, ctrl!, record = true, verbose = false)
+	x = get_minimal_state(mechanism)
+	z = get_maximal_state(mechanism)
+	u = zeros(control_dimension(mechanism))
 
-# 	maximal_dimension(mechanism)
-# 	minimal_dimension(mechanism)
-# 	z = get_maximal_state(mechanism)
-# 	x = get_minimal_state(mechanism)
-# 	u = zeros(control_dimension(mechanism))
-# 	maximal_to_minimal(mechanism, z) - x
-# 	minimal_to_maximal(mechanism, x) - z
-# 	Nb = length(mechanism.bodies)
-# 	G = attitude_jacobian(z, Nb)[1:13Nb,1:12Nb]
-# 	M_fd = maximal_to_minimal_jacobian(mechanism, z) * G
-# 	M_a = maximal_to_minimal_jacobian_analytical(mechanism, z)
-# 	@test size(M_fd) == size(M_a)
-# 	@test norm(M_fd - M_a, Inf) < 1.0e-5
+	# @test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-6 # NOTE: this won't necessarily pass
+	@test norm(maximal_to_minimal(mechanism, z) - x) < 1.0e-6
 
-# 	N_fd = minimal_to_maximal_jacobian(mechanism, x)
-# 	N_a = minimal_to_maximal_jacobian_analytical(mechanism, x)
-# 	@test size(N_fd) == size(N_a)
-# 	@test norm(N_fd - N_a, Inf) < 1.0e-6
-# 	@test abs(sum(diag(M_fd * G' * N_fd)) - minimal_dimension(mechanism)) < 1.0e-6
-# 	@test abs(sum(diag(M_a * G' * N_a)) - minimal_dimension(mechanism)) < 1.0e-6
+	Nb = length(mechanism.bodies)
+	G = attitude_jacobian(z, Nb)[1:13Nb,1:12Nb]
+	M_fd = maximal_to_minimal_jacobian_fd(mechanism, z) * G
+	M_a = maximal_to_minimal_jacobian(mechanism, z)
+	@test size(M_fd) == size(M_a)
+	@test norm(M_fd - M_a, Inf) < 1.0e-5
 
-# 	# half cheetah
-# 	mechanism = get_mechanism(:halfcheetah, timestep=0.01, gravity=-9.81)
-# 	initialize!(mechanism, :halfcheetah)
-# 	storage = simulate!(mechanism, 1.0, ctrl!, record = true, verbose = false)
+	N_fd = minimal_to_maximal_jacobian_fd(mechanism, maximal_to_minimal(mechanism, z))
+	N_a = minimal_to_maximal_jacobian(mechanism, maximal_to_minimal(mechanism, z))
+	@test size(N_fd) == size(N_a)
+	@test norm(N_fd - N_a, Inf) < 1.0e-5
+	@test abs(sum(diag(M_fd * G' * N_fd)) - minimal_dimension(mechanism)) < 1.0e-6
+	@test abs(sum(diag(M_a * G' * N_a)) - minimal_dimension(mechanism)) < 1.0e-6
 
-# 	maximal_dimension(mechanism)
-# 	minimal_dimension(mechanism)
-# 	z = get_maximal_state(mechanism)
-# 	x = get_minimal_state(mechanism)
-# 	u = zeros(control_dimension(mechanism))
-# 	maximal_to_minimal(mechanism, z) - x
-# 	minimal_to_maximal(mechanism, x) - z
-# 	Nb = length(mechanism.bodies)
-# 	G = attitude_jacobian(z, Nb)[1:13Nb,1:12Nb]
+	# sphere
+	mechanism = get_mechanism(:sphere, timestep = 0.01, gravity = -9.81)
+	initialize!(mechanism, :sphere)
+	storage = simulate!(mechanism, 1.0, record = true, verbose = false)
 
-# 	M_fd = Dojo.maximal_to_minimal_jacobian(mechanism, z) * G
-# 	M_a = Dojo.maximal_to_minimal_jacobian_analytical(mechanism, z)
-# 	@test size(M_fd) == size(M_a)
-# 	@test norm(M_fd - M_a, Inf) < 1.0e-5
+	z = get_maximal_state(mechanism)
+	x = get_minimal_state(mechanism)
+	u = zeros(control_dimension(mechanism))
 
-# 	N_fd = Dojo.minimal_to_maximal_jacobian(mechanism, x)
-# 	N_a = Dojo.minimal_to_maximal_jacobian_analytical(mechanism, x)
-# 	@test size(N_fd) == size(N_a)
-# 	@test norm(N_fd - N_a, Inf) < 1.0e-6
+	# @test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-6 # NOTE: this won't necessarily pass
+	@test norm(maximal_to_minimal(mechanism, z) - x) < 1.0e-6
 
-# 	@test abs(sum(diag(M_fd * G' * N_fd)) - minimal_dimension(mechanism)) < 1.0e-6
-# 	@test abs(sum(diag(M_a * G' * N_a)) - minimal_dimension(mechanism)) < 1.0e-6
+	Nb = length(mechanism.bodies)
+	G = attitude_jacobian(z, Nb)[1:13Nb,1:12Nb]
+	M_fd = maximal_to_minimal_jacobian_fd(mechanism, z) * G
+	M_a = maximal_to_minimal_jacobian(mechanism, z)
+	@test size(M_fd) == size(M_a)
+	@test norm(M_fd - M_a, Inf) < 1.0e-5
 
-# 	# atlas
-# 	mechanism = get_mechanism(:atlas, timestep=0.01, gravity=-9.81, friction_coefficient=0.5, damper=100.0, spring=1.0, contact=true)
-# 	initialize_atlasstance!(mechanism, tran=[0,0,0.5], rot=[0.0,0.0,0.0])
-# 	storage = simulate!(mechanism, 1.0, ctrl!, record = true, verbose = false)
+	N_fd = minimal_to_maximal_jacobian_fd(mechanism, maximal_to_minimal(mechanism, z))
+	N_a = minimal_to_maximal_jacobian(mechanism, maximal_to_minimal(mechanism, z))
+	@test size(N_fd) == size(N_a)
+	@test norm(N_fd - N_a, Inf) < 1.0e-6
+	@test abs(sum(diag(M_fd * G' * N_fd)) - minimal_dimension(mechanism)) < 1.0e-6
+	@test abs(sum(diag(M_a * G' * N_a)) - minimal_dimension(mechanism)) < 1.0e-6
 
-# 	maximal_dimension(mechanism)
-# 	minimal_dimension(mechanism)
-# 	z = get_maximal_state(mechanism)
-# 	x = get_minimal_state(mechanism)
-# 	u = zeros(control_dimension(mechanism))
-# 	maximal_to_minimal(mechanism, z) - x
-# 	minimal_to_maximal(mechanism, x) - z
-# 	Nb = length(mechanism.bodies)
-# 	G = attitude_jacobian(z, Nb)[1:13Nb,1:12Nb]
-# 	M_fd = Dojo.maximal_to_minimal_jacobian(mechanism, z) * G
-# 	M_a = Dojo.maximal_to_minimal_jacobian_analytical(mechanism, z)
-# 	@test size(M_fd) == size(M_a)
-# 	@test norm(M_fd - M_a, Inf) < 1.0e-5
+	# half cheetah
+	mechanism = get_mechanism(:halfcheetah, timestep=0.01, gravity=-9.81)
+	initialize!(mechanism, :halfcheetah)
+	storage = simulate!(mechanism, 1.0, ctrl!, record = true, verbose = false)
 
-# 	N_fd = Dojo.minimal_to_maximal_jacobian(mechanism, x)
-# 	N_a = Dojo.minimal_to_maximal_jacobian_analytical(mechanism, x)
-# 	@test size(N_fd) == size(N_a)
-# 	@test norm(N_fd - N_a, Inf) < 1.0e-5 # TODO: replace tolerance after replacing FD
+	z = get_maximal_state(mechanism)
+	x = get_minimal_state(mechanism)
+	u = zeros(control_dimension(mechanism))
 
-# 	@test abs(sum(diag(M_fd * G' * N_fd)) - minimal_dimension(mechanism)) < 1.0e-6
-# 	@test abs(sum(diag(M_a * G' * N_a)) - minimal_dimension(mechanism)) < 1.0e-6
-# end
+	# @test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-6 # NOTE: this won't necessarily pass
+	@test norm(maximal_to_minimal(mechanism, z) - x) < 1.0e-6
+
+	Nb = length(mechanism.bodies)
+	G = attitude_jacobian(z, Nb)[1:13Nb,1:12Nb]
+
+	M_fd = maximal_to_minimal_jacobian_fd(mechanism, z) * G
+	M_a = maximal_to_minimal_jacobian(mechanism, z)
+	@test size(M_fd) == size(M_a)
+	@test norm(M_fd - M_a, Inf) < 1.0e-5
+
+	N_fd = minimal_to_maximal_jacobian_fd(mechanism, maximal_to_minimal(mechanism, z))
+	N_a = minimal_to_maximal_jacobian(mechanism, maximal_to_minimal(mechanism, z))
+	@test size(N_fd) == size(N_a)
+	@test norm(N_fd - N_a, Inf) < 1.0e-6
+
+	@test abs(sum(diag(M_fd * G' * N_fd)) - minimal_dimension(mechanism)) < 1.0e-6
+	@test abs(sum(diag(M_a * G' * N_a)) - minimal_dimension(mechanism)) < 1.0e-6
+
+	# atlas
+	mechanism = get_mechanism(:atlas, timestep=0.01, gravity=-9.81, friction_coefficient=0.5, damper=100.0, spring=1.0, contact=true)
+	initialize_atlasstance!(mechanism, tran=[0,0,0.5], rot=[0.0,0.0,0.0])
+	storage = simulate!(mechanism, 1.0, ctrl!, record = true, verbose = false)
+
+	z = get_maximal_state(mechanism)
+	x = get_minimal_state(mechanism)
+	u = zeros(control_dimension(mechanism))
+
+	# @test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-6 # NOTE: this won't necessarily pass
+	@test norm(maximal_to_minimal(mechanism, z) - x) < 1.0e-6
+
+	Nb = length(mechanism.bodies)
+	G = attitude_jacobian(z, Nb)[1:13Nb,1:12Nb]
+	M_fd = maximal_to_minimal_jacobian_fd(mechanism, z) * G
+	M_a = maximal_to_minimal_jacobian(mechanism, z)
+	@test size(M_fd) == size(M_a)
+	@test norm(M_fd - M_a, Inf) < 1.0e-5
+
+	N_fd = minimal_to_maximal_jacobian_fd(mechanism, maximal_to_minimal(mechanism, z))
+	N_a = minimal_to_maximal_jacobian(mechanism, maximal_to_minimal(mechanism, z))
+	@test size(N_fd) == size(N_a)
+	@test norm(N_fd - N_a, Inf) < 1.0e-5
+
+	@test abs(sum(diag(M_fd * G' * N_fd)) - minimal_dimension(mechanism)) < 1.0e-6
+	@test abs(sum(diag(M_a * G' * N_a)) - minimal_dimension(mechanism)) < 1.0e-6
+end
+
+@testset "maximal_to_minimal_jacobian" begin
+	function maximal_to_minimal_jacobian_fd(mechanism::Mechanism, z)
+		FiniteDiff.finite_difference_jacobian(y -> maximal_to_minimal(mechanism, y), z)
+	end
+
+	# 5-link pendulum
+	mech = get_mechanism(:npendulum, timestep = 0.01, gravity = -9.81, Nb=5)
+	Random.seed!(100)
+	ϕ1 = 0.3π
+	initialize!(mech, :npendulum, ϕ1 = ϕ1)
+	storage = simulate!(mech, 1.0, record = true, verbose = false)
+
+	Dojo.maximal_dimension(mech) == 13
+	minimal_dimension(mech) == 12
+	z = Dojo.get_maximal_state(mech)
+
+	attjac = attitude_jacobian(z, length(mech.bodies))
+	M_fd = maximal_to_minimal_jacobian_fd(mech, z) * attjac
+	M_a = maximal_to_minimal_jacobian(mech, z)
+	@test size(M_fd) == size(M_a)
+	@test norm(M_fd - M_a, Inf) < 1.0e-6
+
+	# # sphere
+	mech = get_mechanism(:sphere, timestep = 0.01, gravity = -9.81)
+	initialize!(mech, :sphere)
+	storage = simulate!(mech, 1.0, record = true, verbose = false)
+
+	Dojo.maximal_dimension(mech)
+	minimal_dimension(mech)
+	z = get_maximal_state(mech)
+
+	attjac = attitude_jacobian(z, length(mech.bodies))
+	M_fd = maximal_to_minimal_jacobian_fd(mech, z) * attjac
+	M_a = maximal_to_minimal_jacobian(mech, z)
+
+	@test size(M_fd) == size(M_a)
+	@test norm(M_fd - M_a, Inf) < 1.0e-6
+end
