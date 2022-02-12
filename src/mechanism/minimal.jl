@@ -130,7 +130,9 @@ function get_minimal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni};
 	pos_noise=nothing, vel_noise=nothing,
 	pos_noise_range=[-Inf, Inf], vel_noise_range=[-3.9 / mechanism.timestep^2, 3.9 / mechanism.timestep^2]) where {T,Nn,Ne,Nb,Ni}
 	x = []
+	
 	mechanism = deepcopy(mechanism)
+
 	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
 	# Thus go through the joints in order, start from joint between robot and origin and go down the tree.
 	for id in reverse(mechanism.system.dfs_list)

@@ -26,8 +26,8 @@ function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
                 pcol13 = offset_range(parentind,13)
                 ccol13 = offset_range(childind,13)
 
-                p = constraint_jacobian_parent(element, pbody, cbody, joint.impulses[2], timestep) # x3
-                c = constraint_jacobian_child(element, pbody, cbody, joint.impulses[2], timestep) # x3
+                p = constraint_jacobian_configuration(:parent, element, pbody, cbody, joint.impulses[2], timestep) # x3
+                c = constraint_jacobian_configuration(:child, element, pbody, cbody, joint.impulses[2], timestep) # x3
 
                 pGlx = p[:, 1:3]
                 pGlq = p[:, 4:7]
@@ -50,7 +50,7 @@ function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
 
                 ccol13 = offset_range(childind,13)
 
-                c = constraint_jacobian_child(element, mechanism.origin, cbody, joint.impulses[2], timestep) # x3
+                c = constraint_jacobian_configuration(:child, element, mechanism.origin, cbody, joint.impulses[2], timestep) # x3
 
                 Gl[range,ccol13[1:3]] = c[:, 1:3]
                 Gl[range,ccol13[7:10]] = c[:, 4:7]

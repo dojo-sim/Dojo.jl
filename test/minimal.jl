@@ -272,25 +272,25 @@ end
 			ωb = rand(3)
 			minimal_velocities(joint, xa, va, qa, ωa, xb, vb, qb, ωb)
 
-			∇0 = minimal_velocities_jacobian_configuration_parent(joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+			∇0 = minimal_velocities_jacobian_configuration(:parent, joint, xa, va, qa, ωa, xb, vb, qb, ωb)
 			∇1 = FiniteDiff.finite_difference_jacobian(
 				xq -> minimal_velocities(joint, xq[1:3], va, UnitQuaternion(xq[4:7]..., false), ωa, xb, vb, qb, ωb),
 				[xa; vector(qa)]) * cat(I(3), LVᵀmat(qa), dims=(1,2))
 			@test norm(∇0 - ∇1, Inf) < 1e-6
 
-			∇0 = minimal_velocities_jacobian_configuration_child(joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+			∇0 = minimal_velocities_jacobian_configuration(:child, joint, xa, va, qa, ωa, xb, vb, qb, ωb)
 			∇1 = FiniteDiff.finite_difference_jacobian(
 				xq -> minimal_velocities(joint, xa, va, qa, ωa, xq[1:3], vb, UnitQuaternion(xq[4:7]..., false), ωb),
 				[xb; vector(qb)]) * cat(I(3), LVᵀmat(qb), dims=(1,2))
 			@test norm(∇0 - ∇1, Inf) < 1e-6
 
-			∇0 = minimal_velocities_jacobian_velocity_parent(joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+			∇0 = minimal_velocities_jacobian_velocity(:parent, joint, xa, va, qa, ωa, xb, vb, qb, ωb)
 			∇1 = FiniteDiff.finite_difference_jacobian(
 				vϕ -> minimal_velocities(joint, xa, vϕ[1:3], qa, vϕ[4:6], xb, vb, qb, ωb),
 				[va; ωa])
 			@test norm(∇0 - ∇1, Inf) < 1e-6
 
-			∇0 = minimal_velocities_jacobian_velocity_child(joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+			∇0 = minimal_velocities_jacobian_velocity(:child, joint, xa, va, qa, ωa, xb, vb, qb, ωb)
 			∇1 = FiniteDiff.finite_difference_jacobian(
 				vϕ -> minimal_velocities(joint, xa, va, qa, ωa, xb, vϕ[1:3], qb, vϕ[4:6]),
 				[vb; ωb])

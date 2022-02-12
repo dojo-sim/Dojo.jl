@@ -83,7 +83,7 @@ function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::Translational
     qb = cnode.state.q2[1]
 
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
-    xb = xa + vrotate(pa + Aᵀ*Δx, qa) - vrotate(pb, qb)
+    xb = xa + vrotate(pa + Aᵀ * Δx, qa) - vrotate(pb, qb)
     set_position!(cnode; x = xb, q=cnode.state.q2[1])
     return nothing
 end
@@ -134,7 +134,7 @@ function set_minimal_coordinates_jacobian_minimal(pnode::Node, cnode::Node, join
     #     x = xa + vrotate(pa + Aᵀ*Δx, qa) - vrotate(pb, qb)
     #     q = self
     # ]
-    
+
     nu = control_dimension(joint)
 
     xθ = ∂vrotate∂p(pa + Aᵀ * Δx) * Aᵀ
@@ -151,24 +151,6 @@ end
     stateb = body2.state
     return minimal_velocities(joint, statea.x2[1], statea.v15, statea.q2[1], statea.ϕ15,
 		stateb.x2[1], stateb.v15, stateb.q2[1], stateb.ϕ15)
-end
-
-function minimal_velocities_jacobian_configuration(jacobian_relative::Symbol,
-        joint::Joint, xa::AbstractVector, va::AbstractVector,
-        qa::UnitQuaternion, ϕa::AbstractVector, xb::AbstractVector,
-        vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector)
-    (jacobian_relative == :parent) && (return minimal_velocities_jacobian_configuration_parent(joint, xa, va, qa, ϕa, xb, vb, qb, ϕb))
-    (jacobian_relative == :child) && (return minimal_velocities_jacobian_configuration_child(joint, xa, va, qa, ϕa, xb, vb, qb, ϕb))
-    return
-end
-
-function minimal_velocities_jacobian_velocity(jacobian_relative::Symbol,
-        joint::Joint, xa::AbstractVector, va::AbstractVector,
-        qa::UnitQuaternion, ϕa::AbstractVector, xb::AbstractVector,
-        vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector)
-    (jacobian_relative == :parent) && (return minimal_velocities_jacobian_velocity_parent(joint, xa, va, qa, ϕa, xb, vb, qb, ϕb))
-    (jacobian_relative == :child) && (return minimal_velocities_jacobian_velocity_child(joint, xa, va, qa, ϕa, xb, vb, qb, ϕb))
-    return
 end
 
 function set_minimal_velocities!(pnode::Node, cnode::Node, joint::JointConstraint;
@@ -192,7 +174,7 @@ function set_minimal_velocities!(pnode::Node, cnode::Node, joint::Rotational;
     ϕa = pnode.state.ϕ15
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
     Δϕ_a = vrotate(Aᵀ*Δϕ, qoffset) # in pnode's frame
-    ϕb = vrotate(ϕa + Δϕ_a , inv(qb) * qa)
+    ϕb = vrotate(ϕa + Δϕ_a, inv(qb) * qa)
     set_velocity!(cnode; v=cnode.state.v15, ω=ϕb)
     return nothing
 end

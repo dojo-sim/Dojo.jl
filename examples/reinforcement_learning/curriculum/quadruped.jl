@@ -122,7 +122,7 @@ get_minimal_state(mech)
 
 @inline function constraint(joint::Joint{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion,
         xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
-    e1 = unlimited_constraint(joint, xa, qa, xb, qb, η)
+    e1 = joint_constraint(joint, xa, qa, xb, qb, η)
     e2 = minimal_coordinates(joint, xa, qa, xb, qb)
 
     s, γ = get_sγ(joint, η)
@@ -142,6 +142,6 @@ qa = UnitQuaternion(rand(4)...)
 qb = UnitQuaternion(rand(4)...)
 η = srand(4)
 # Main.@profiler constraint(rot0, xa, qa, xb, qb, η)
-# @benchmark unlimited_constraint($rot0, $xa, $qa, $xb, $qb, $η)
+# @benchmark joint_constraint($rot0, $xa, $qa, $xb, $qb, $η)
 # @benchmark minimal_coordinates($rot0, $xa, $qa, $xb, $qb)
 @benchmark constraint($rot0, $xa, $qa, $xb, $qb, $η)

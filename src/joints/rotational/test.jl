@@ -18,13 +18,13 @@ qb = UnitQuaternion(rand(4)...)
 η0 = 0
 constraint(rot0, xa, qa, xb, qb, η0)
 
-∇0 = constraint_jacobian_parent(rot0, xa, qa, xb, qb, η0)
+∇0 = constraint_jacobian_configuration(:parent, rot0, xa, qa, xb, qb, η0)
 ∇1 = FiniteDiff.finite_difference_jacobian(
     xq -> constraint(rot0, xq[1:3], UnitQuaternion(xq[4:7]..., false), xb, qb, η0), [xa; vector(qa)])
      # * cat(I(3), LVᵀmat(qa), dims=(1,2))
 @test norm(∇0 - ∇1, Inf) < 1e-7
 
-∇0 = constraint_jacobian_child(rot0, xa, qa, xb, qb, η0)
+∇0 = constraint_jacobian_configuration(:child, rot0, xa, qa, xb, qb, η0)
 ∇1 = FiniteDiff.finite_difference_jacobian(
     xq -> constraint(rot0, xa, qa, xq[1:3], UnitQuaternion(xq[4:7]..., false), η0), [xb; vector(qb)])
      # * cat(I(3), LVᵀmat(qb), dims=(1,2))
@@ -67,7 +67,7 @@ qb = UnitQuaternion(rand(4)...)
 η0 = 0
 constraint(tra0, xa, qa, xb, qb, η0)
 
-∇0 = constraint_jacobian_parent(tra0, xa, qa, xb, qb, η0)
+∇0 = constraint_jacobian_configuration(:parent, tra0, xa, qa, xb, qb, η0)
 ∇1 = FiniteDiff.finite_difference_jacobian(
     xq -> constraint(tra0, xq[1:3], UnitQuaternion(xq[4:7]..., false), xb, qb, η0), [xa; vector(qa)])
      # * cat(I(3), LVᵀmat(qa), dims=(1,2))

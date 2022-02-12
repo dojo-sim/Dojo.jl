@@ -241,12 +241,12 @@ end
 end
 
 @generated function constraint_jacobian_parent(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(constraint_jacobian_parent([joint.translational, joint.rotational][$i], body, get_body(mechanism, joint.child_id), joint.child_id, joint.impulses[2][λindex(joint,$i)], mechanism.timestep)) for i = 1:Nc]
+    vec = [:(constraint_jacobian_configuration(:parent, [joint.translational, joint.rotational][$i], body, get_body(mechanism, joint.child_id), joint.child_id, joint.impulses[2][λindex(joint,$i)], mechanism.timestep)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 
 @generated function constraint_jacobian_child(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(constraint_jacobian_child([joint.translational, joint.rotational][$i], get_body(mechanism, joint.parent_id), body, joint.child_id, joint.impulses[2][λindex(joint,$i)], mechanism.timestep)) for i = 1:Nc]
+    vec = [:(constraint_jacobian_configuration(:child, [joint.translational, joint.rotational][$i], get_body(mechanism, joint.parent_id), body, joint.child_id, joint.impulses[2][λindex(joint,$i)], mechanism.timestep)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 
