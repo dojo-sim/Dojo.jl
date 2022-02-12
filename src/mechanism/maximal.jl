@@ -23,10 +23,10 @@ function get_maximal_gradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,
 		# Fill in gradients of x3, q3
 		q2 = body.state.q2[1]
 		ϕ25 = body.state.ϕsol[2]
-		jacobian_state[13*(i-1) .+ (1:3),:] += linear_integrator_jacobian_velocity(timestep) * data_jacobian_state[6*(i-1) .+ (1:3),:]
-		jacobian_state[13*(i-1) .+ (1:3),13*(i-1) .+ (1:13)] += linear_integrator_jacobian_position() * [I(3) zeros(3,10)]
-		jacobian_state[13*(i-1) .+ (7:10),:] += rotational_integrator_jacobian_velocity(q2, ϕ25, timestep) * data_jacobian_state[6*(i-1) .+ (4:6),:]
-		jacobian_state[13*(i-1) .+ (7:10),13*(i-1) .+ (1:13)] += rotational_integrator_jacobian_orientation(q2, ϕ25, timestep, attjac = false) * [zeros(4,6) I(4) zeros(4,3)]
+		jacobian_state[13*(i-1) .+ (1:3), :] += linear_integrator_jacobian_velocity(timestep) * data_jacobian_state[6*(i-1) .+ (1:3),:]
+		jacobian_state[13*(i-1) .+ (1:3), 13*(i-1) .+ (1:13)] += linear_integrator_jacobian_position() * [I(3) zeros(3,10)]
+		jacobian_state[13*(i-1) .+ (7:10), :] += rotational_integrator_jacobian_velocity(q2, ϕ25, timestep) * data_jacobian_state[6*(i-1) .+ (4:6),:]
+		jacobian_state[13*(i-1) .+ (7:10), 13*(i-1) .+ (1:13)] += rotational_integrator_jacobian_orientation(q2, ϕ25, timestep, attjac = false) * [zeros(4,6) I(4) zeros(4,3)]
 
 		jacobian_control[13*(i-1) .+ (1:3),:] += linear_integrator_jacobian_velocity(timestep) * data_jacobian_control[6*(i-1) .+ (1:3),:]
 		jacobian_control[13*(i-1) .+ (7:10),:] += rotational_integrator_jacobian_velocity(q2, ϕ25, timestep) * data_jacobian_control[6*(i-1) .+ (4:6),:]
@@ -36,8 +36,10 @@ end
 
 function get_maximal_gradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
     opts=SolverOptions()) where {T,Nn,Ne,Nb,Ni}
+
     step!(mechanism, z, u, opts=opts)
     jacobian_state, jacobian_control = get_maximal_gradients(mechanism)
+	
     return jacobian_state, jacobian_control
 end
 
@@ -68,7 +70,7 @@ function maximal_to_minimal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVect
 	return x
 end
 
-function maximal_to_minimal_jacobian_analytical(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) where {T,Nn,Ne,Nb,Ni,Tz}
+function maximal_to_minimal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) where {T,Nn,Ne,Nb,Ni,Tz}
 	J = zeros(minimal_dimension(mechanism), maximal_dimension(mechanism) - Nb)
 	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
 	# Thus go through the joints in order, start from joint between robot and origin and go down the tree.
@@ -118,10 +120,6 @@ function maximal_to_minimal_jacobian_analytical(mechanism::Mechanism{T,Nn,Ne,Nb,
 		row_shift += 2 * control_dimension(joint)
 	end
 	return J
-end
-
-function maximal_to_minimal_jacobian(mechanism::Mechanism, z)
-	FiniteDiff.finite_difference_jacobian(y -> maximal_to_minimal(mechanism, y), z)
 end
 
 function get_maximal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}

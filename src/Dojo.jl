@@ -69,12 +69,15 @@ export Origin,
     get_contact_constraint,
     simulate!,
     disassemble,
+
     minimal_coordinates,
     minimal_velocities,
     minimal_dimension,
     maximal_dimension,
     maximal_to_minimal,
     minimal_to_maximal,
+    maximal_to_minimal_jacobian,
+    minimal_to_maximal_jacobian,
 
     RotX,
     RotY,
@@ -157,7 +160,7 @@ include(joinpath("joints", "rotational", "constraint.jl"))
 include(joinpath("joints", "rotational", "input.jl"))
 include(joinpath("joints", "rotational", "torque.jl"))
 include(joinpath("joints", "rotational", "minimal.jl"))
-include(joinpath("joints", "constraint_limits.jl"))
+include(joinpath("joints", "limits.jl"))
 include(joinpath("joints", "prototypes.jl"))
 include(joinpath("joints", "get_minimal.jl"))
 include(joinpath("joints", "set_minimal.jl"))

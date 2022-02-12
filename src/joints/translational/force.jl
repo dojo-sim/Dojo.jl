@@ -61,20 +61,6 @@ end
     spring_relative(:child, joint, xa, qa, xb, qb; unitary=unitary)
 end
 
-
-@inline function minimal_velocities(joint::Translational, xa::AbstractVector,
-        va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
-        xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector)
-    vertices = joint.vertices
-    pbcb_w = vrotate(-vertices[2], qb)
-    pbca_w = xa - (xb + vrotate(vertices[2], qb))
-    # Δvw = V(pb,B/A)w - V(pa,A/A)w
-    Δvw = vb + skew(pbcb_w) * vrotate(ωb, qb) - (va + skew(pbca_w) * vrotate(ωa, qa)) # in world frame
-    Δv = vrotate(Δvw, inv(qa)) # in the a frame
-    return nullspace_mask(joint) * Δv
-end
-
-
 ################################################################################
 # Damper Force
 ################################################################################

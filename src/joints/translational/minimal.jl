@@ -10,7 +10,7 @@ end
 
 @inline function displacement_jacobian_configuration(relative::Symbol, joint::Translational{T}, xa::AbstractVector,
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; attjac=true) where T
-
+	
     vertices = joint.vertices
 
     if relative == :parent
@@ -19,7 +19,7 @@ end
         Q = -rotation_matrix(inv(qa)) * ∂qrotation_matrix(qa, vertices[1])
         Q += ∂qrotation_matrix_inv(qa, d)
         attjac && (Q *= LVᵀmat(qa))
-    elseif relative == :child
+    elseif relative == :child 
         X = rotation_matrix(inv(qa))
         Q = rotation_matrix(inv(qa)) * ∂qrotation_matrix(qb, vertices[2])
         attjac && (Q *= LVᵀmat(qb))
@@ -59,7 +59,7 @@ end
 @inline function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Translational{T},
         xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
         xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector) where T
-
+    
     if relative == :parent
         vertices = joint.vertices
         pbcb_w = vrotate(-vertices[2], qb)
@@ -71,7 +71,7 @@ end
         ∇xq = [X Q*LVᵀmat(qa)]
         ∇xq = rotation_matrix(inv(qa)) * ∇xq + [szeros(T,3,3) ∂qrotation_matrix_inv(qa, Δvw) * LVᵀmat(qa)]
         ∇xq = nullspace_mask(joint) * ∇xq
-    elseif relative == :child
+    elseif relative == :child 
         vertices = joint.vertices
         pbcb_w = vrotate(-vertices[2], qb)
 
@@ -89,7 +89,7 @@ end
 @inline function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Translational{T},
         xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
         xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector) where T
-
+    
     if relative == :parent
         vertices = joint.vertices
         pbca_w = xa - (xb + vrotate(vertices[2], qb))

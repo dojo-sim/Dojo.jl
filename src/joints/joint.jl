@@ -20,6 +20,38 @@ function λindex(joint::Joint{T,Nλ,Nb,N}, s::Int) where {T,Nλ,Nb,N}
 end
 
 # Joint constraints
+function joint_constraint(joint::Joint{T}, 
+    xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T}
+    return constraint_mask(joint) * displacement(joint, xa, qa, xb, qb)
+end
+
+function joint_constraint_jacobian_configuration(relative::Symbol, joint::Joint{T}, 
+    xa::AbstractVector, qa::UnitQuaternion, 
+    xb::AbstractVector, qb::UnitQuaternion, η) where {T}
+    X, Q = displacement_jacobian_configuration(relative, joint, xa, qa, xb, qb, attjac=false)
+    return constraint_mask(joint) * [X Q]
+end
+
+@inline function constraint(joint::Joint{T,Nλ,0}, 
+    xa::AbstractVector, qa::UnitQuaternion, 
+    xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+    joint_constraint(joint, xa, qa, xb, qb, η)
+end
+
+@inline function constraint_jacobian_configuration(relative::Symbol, joint::Joint{T,Nλ,0}, 
+        xa::AbstractVector, qa::UnitQuaternion, 
+        xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+    joint_constraint_jacobian_configuration(relative, joint, xa, qa, xb, qb, η)
+end
+
+@inline function constraint_jacobian_configuration(relative::Symbol, joint::Joint, body1::Node, body2::Node, child_id, λ, timestep)
+    if body2.id == child_id
+        return constraint_jacobian_configuration(relative, joint, next_configuration(body1.state, timestep)..., next_configuration(body2.state, timestep)..., λ)
+    else
+        return zero(joint)
+    end
+end
+
 @inline function impulse_map_parent(joint::Joint, body1::Node, body2::Node, child_id, λ, timestep)
     if body2.id == child_id
         return impulse_map_parent(joint, current_configuration(body1.state)..., current_configuration(body2.state)..., λ)
@@ -109,24 +141,6 @@ function impulse_map_child_jacobian_child(joint::Joint, pbody::Node{T}, cbody::N
         p)
 end
 
-## Discrete-time velocity derivatives (for dynamics)
-@inline function constraint_jacobian_parent(joint::Joint, body1::Node, body2::Node, child_id, λ, timestep)
-    if body2.id == child_id
-        return constraint_jacobian_parent(joint, next_configuration(body1.state, timestep)..., next_configuration(body2.state, timestep)..., λ)
-    else
-        return zero(joint)
-    end
-end
-
-@inline function constraint_jacobian_child(joint::Joint, body1::Node, body2::Node, child_id, λ, timestep)
-    if body2.id == child_id
-        return constraint_jacobian_child(joint, next_configuration(body1.state, timestep)..., next_configuration(body2.state, timestep)..., λ)
-
-    else
-        return zero(joint)
-    end
-end
-
 @inline function spring_parent(joint::Joint, body1::Node, body2::Node, timestep, child_id; unitary::Bool=false)
     if body2.id == child_id
         return spring_parent(joint, body1, body2, timestep, unitary=unitary)
@@ -192,8 +206,7 @@ end
     return [c1 c2 c3]
 end
 
-@inline constraint_jacobian_parent(joint::Joint, body1::Node, body2::Node, λ, timestep) = constraint_jacobian_parent(joint, next_configuration(body1.state, timestep)..., next_configuration(body2.state, timestep)..., λ)
-@inline constraint_jacobian_child(joint::Joint, body1::Node, body2::Node, λ, timestep) = constraint_jacobian_child(joint, next_configuration(body1.state, timestep)..., next_configuration(body2.state, timestep)..., λ)
+@inline constraint_jacobian_configuration(relative::Symbol, joint::Joint, body1::Node, body2::Node, λ, timestep) = constraint_jacobian_configuration(relative, joint, next_configuration(body1.state, timestep)..., next_configuration(body2.state, timestep)..., λ)
 
 
 @inline function set_input!(joint::Joint, input::SVector)
@@ -223,35 +236,3 @@ end
 end
 
 @inline minimal_coordinates(joint::Joint{T,Nλ}) where {T,Nλ} = szeros(T, 3 - Nλ)
-
-function add_limits(mech::Mechanism, joint::JointConstraint;
-    # NOTE: this only works for joints between serial chains (ie, single child joints)
-    tra_limits=joint.translational.joint_limits,
-    rot_limits=joint.rotational.joint_limits)
-
-    # update translational
-    tra = joint.translational
-    T = typeof(tra).parameters[1]
-    Nλ = typeof(tra).parameters[2]
-    Nb½ = length(tra_limits[1])
-    Nb = 2Nb½
-    N̄λ = 3 - Nλ
-    N = Nλ + 2Nb
-    tra_limit = (Translational{T,Nλ,Nb,N,Nb½,N̄λ}(tra.axis, tra.V3, tra.V12,
-        tra.vertices, tra.spring, tra.damper, tra.spring_offset, tra_limits,
-        tra.spring_type, tra.input), joint.parent_id, joint.child_id)
-
-    # update rotational
-    rot = joint.rotational
-    T = typeof(rot).parameters[1]
-    Nλ = typeof(rot).parameters[2]
-    Nb½ = length(rot_limits[1])
-    Nb = 2Nb½
-    N̄λ = 3 - Nλ
-    N = Nλ + 2Nb
-    rot_limit = (Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(rot.axis, rot.V3, rot.V12,
-        rot.qoffset, rot.spring, rot.damper, rot.spring_offset, rot_limits,
-        rot.spring_type, rot.input), joint.parent_id, joint.child_id)
-
-    JointConstraint((tra_limit, rot_limit); name=joint.name)
-end

@@ -183,6 +183,46 @@ function set_minimal_velocities_new!(pnode::Node, cnode::Node, joint::JointConst
 end
 
 
+# end
+
+# function set_minimal_coordinates_jacobian_minimal(pnode::Node, cnode::Node, joint::Translational;
+#     Δx::AbstractVector=szeros(control_dimension(joint)))
+#     # Δx is expressed in along the joint's nullspace axes, in pnode's frame
+#
+#     # pa = joint.vertices[1]
+#     # pb = joint.vertices[2]
+#
+#     # qa = pnode.state.q2[1]
+#     # xa = pnode.state.x2[1]
+#
+#     # qb = cnode.state.q2[1]
+#
+#     # Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
+#     # xb = xa + vrotate(pa + Aᵀ*Δx, qa) - vrotate(pb, qb)
+#     # set_position!(cnode; x = xb, q=cnode.state.q2[1])
+#     # [
+#     #     x = xa + vrotate(pa + Aᵀ*Δx, qa) - vrotate(pb, qb)
+#     #     q = self
+#     # ]
+#
+#     nu = control_dimension(joint)
+#
+#     xθ = ∂vrotate∂p(pa + Aᵀ * Δx) * Aᵀ
+#     qθ = SMatrix{4,nu,T,4 * nu}(zeros(4, nu))
+#
+#     return [xθ; qθ]
+# end
+#
+# ################################################################################
+# # Velocities
+# ################################################################################
+# @inline function minimal_velocities(joint::Joint, body1::Node, body2::Node)
+#     statea = body1.state
+#     stateb = body2.state
+#     return minimal_velocities(joint, statea.x2[1], statea.v15, statea.q2[1], statea.ϕ15,
+# 		stateb.x2[1], stateb.v15, stateb.q2[1], stateb.ϕ15)
+# end
+
 function set_minimal_velocities!(pnode::Node, cnode::Node, joint::JointConstraint;
         Δv::AbstractVector=szeros(control_dimension(joint.translational)),
         Δϕ::AbstractVector=szeros(control_dimension(joint.rotational)))
