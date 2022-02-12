@@ -29,6 +29,7 @@ spring = 0.0
 mech = get_quadruped(timestep=timestep, damper=damper, spring=spring,
 	gravity=gravity, body_contact=true,
 	joint_limits=[[-0.5, -0.5, -2.5,],[ 0.5,  1.5, -1.0,]],
+	contact=true,
 	limits=true)
 initialize!(mech, :quadruped)
 function ctrl!(mechanism, k)
@@ -37,8 +38,14 @@ function ctrl!(mechanism, k)
     set_control!(mechanism, u)
     return
 end
-storage = simulate!(mech, 0.20, ctrl!, record=true, opts=SolverOptions(btol=1e-4, verbose=false))
+Main.@profiler storage = simulate!(mech, 1.0, ctrl!, record=true,
+	opts=SolverOptions(btol=1e-4, verbose=false))
 visualize(mech, storage, vis=vis, show_contact=true)
+
+
+
+
+
 
 file = jldopen(joinpath(@__DIR__, "../../trajectory_optimization/curriculum/quadruped_4_steps.jld2"))
 x_sol = file["x_sol"]
@@ -145,3 +152,22 @@ qb = UnitQuaternion(rand(4)...)
 # @benchmark joint_constraint($rot0, $xa, $qa, $xb, $qb, $η)
 # @benchmark minimal_coordinates($rot0, $xa, $qa, $xb, $qb)
 @benchmark constraint($rot0, $xa, $qa, $xb, $qb, $η)
+
+
+function ttt(N::Int; μ0=ones(2), Σ0=Diagonal(ones(2)))
+	plt = plot(aspectratio=1.0)
+	X = [sqrt(Σ0) * randn(2) + μ0 for i=1:N]
+	μ = sum(X) ./ N
+	Xc = [x - μ for x in X]
+	Σ = 1/N * sum([x*x' for x in Xc])
+	Xr = [sqrt(inv(Σ)) * x for x in Xc]
+	scatter!(plt, [x[1] for x in Xr], [x[2] for x in Xr], color=:blue)
+	scatter!(plt, [x[1] for x in X], [x[2] for x in X], color=:red)
+	display(plt)
+	return Xr, μ, Σ
+end
+
+Xr, μ, Σ = ttt(400, μ0=[6,6], Σ0=Diagonal([3,3]))
+Xr, μ, Σ = ttt(400, μ0=[6,6], Σ0=[5 -2; -2 5])
+μ
+Σ
