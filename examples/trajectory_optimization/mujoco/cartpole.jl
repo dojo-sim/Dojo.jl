@@ -43,11 +43,6 @@ xM = zeros(cartpole.nx)
 xT = zeros(cartpole.nx)
 x_ref = zeros(cartpole.nx)
 
-# x1 = [0.0; 0.0; 0.0; 0.0]
-# xM = [0.0; 0.2 * π; 0.0; 0.0]
-# xT = [0.0; 0.2 * π; 0.0; 0.0]
-# x_ref = [0.0; 0.2 * π; 0.0; 0.0]
-
 # # rollout
 ū = [t < 5 ? 1.0 * rand(nu) : (t < 10 ? -1.0 * rand(nu) : zeros(nu)) for t = 1:T-1]
 w = [zeros(0) for t = 1:T-1]
@@ -68,8 +63,8 @@ function objT(x, u, w)
 	return J
 end
 
-ct = IterativeLQR.Cost(objt, nx, nu, 0)
-cT = IterativeLQR.Cost(objT, nx, 0, 0)
+ct = IterativeLQR.Cost(objt, nx, nu)
+cT = IterativeLQR.Cost(objT, nx, 0)
 obj = [[ct for t = 1:T-1]..., cT]
 
 # ## constraints
@@ -80,14 +75,15 @@ conT = Constraint(goal, nx, 0)
 cons = [[cont for t = 1:T-1]..., conT] 
 
 # ## problem
-prob = problem_data(model, obj, cons)
+prob = IterativeLQR.solver(model, obj, cons, 
+    opts=Options(
+        verbose=true,
+        max_al_iter=10))
 initialize_controls!(prob, ū)
 initialize_states!(prob, x̄)
 
 # ## solve
-@time solve!(prob, 
-    verbose=true,
-    max_al_iter=10)
+@time solve!(prob)
 
 # ## solution
 x_sol, u_sol = get_trajectory(prob)

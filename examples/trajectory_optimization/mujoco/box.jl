@@ -66,8 +66,8 @@ x̄ = rollout(model, x1, ū)
 ot = (x, u, w) -> transpose(x - xT) * Diagonal(1.0 * ones(nx)) * (x - xT) + transpose(u) * Diagonal(1.0e-2 * ones(nu)) * u
 oT = (x, u, w) -> transpose(x - xT) * Diagonal(1.0 * ones(nx)) * (x - xT)
 
-ct = Cost(ot, nx, nu, 0)
-cT = Cost(oT, nx, 0, 0)
+ct = Cost(ot, nx, nu)
+cT = Cost(oT, nx, 0)
 obj = [[ct for t = 1:T-1]..., cT]
 
 # ## constraints
@@ -78,22 +78,23 @@ conT = Constraint(goal, nx, 0)
 cons = [[cont for t = 1:T-1]..., conT] 
 
 # ## problem
-prob = problem_data(model, obj, cons)
+prob = solver(model, obj, cons, 
+    opts=Options(
+        linesearch=:armijo,
+        α_min=1.0e-5,
+        obj_tol=1.0e-3,
+        grad_tol=1.0e-3,
+        con_tol=0.005,
+        max_iter=100,
+        max_al_iter=10,
+        ρ_init=1.0,
+        ρ_scale=10.0,
+        verbose=true))
 initialize_controls!(prob, ū)
 initialize_states!(prob, x̄)
 
 # ## solve
-@time IterativeLQR.solve!(prob,
-    linesearch=:armijo,
-    α_min=1.0e-5,
-    obj_tol=1.0e-3,
-    grad_tol=1.0e-3,
-    con_tol=0.005,
-    max_iter=100,
-    max_al_iter=10,
-    ρ_init=1.0,
-    ρ_scale=10.0,
-    verbose=true)
+@time IterativeLQR.solve!(prob)
 
 # ## solution
 x_sol, u_sol = get_trajectory(prob)
