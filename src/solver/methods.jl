@@ -198,7 +198,7 @@ end
     for joint in mechanism.joints
         res = constraint(mechanism, joint)
         shift = 0
-        for (i, element) in enumerate([joint.translational, joint.rotational])
+        for (i, element) in enumerate((joint.translational, joint.rotational))
             Nλ = λlength(element)
             Nb = blength(element)
             subres = res[shift + 2Nb .+ (1:Nλ)]

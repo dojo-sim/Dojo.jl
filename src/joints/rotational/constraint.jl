@@ -38,14 +38,17 @@ Rotational3{T} = Rotational{T,3} where T
 ################################################################################
 # Impulse Transform
 ################################################################################
-function impulse_transform_parent(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
+function impulse_transform_parent(joint::Rotational{T}, xa::AbstractVector,
+		qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
     X, Q = displacement_jacobian_configuration(:parent, joint, xa, qa, xb, qb, attjac=true)
-    return cat(I(3), 0.5 * I(3), dims=(1,2)) * transpose([X Q])
+    return Diagonal([sones(T,3);0.5*sones(T,3)]) * transpose([X Q])
 end
 
-function impulse_transform_child(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
+function impulse_transform_child(joint::Rotational{T}, xa::AbstractVector,
+		qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
     X, Q = displacement_jacobian_configuration(:child, joint, xa, qa, xb, qb, attjac=true)
-    return cat(I(3), 0.5 * I(3), dims=(1,2)) * transpose([X Q])
+	return Diagonal([sones(T,3);0.5*sones(T,3)]) * transpose([X Q])
+    # return transpose([X Q])
 end
 
 ################################################################################

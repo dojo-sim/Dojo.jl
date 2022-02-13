@@ -61,48 +61,10 @@ function impulse_map_jacobian_configuration(mechanism, body::Body, contact::Cont
             Z3 ∇Q]
 end
 
-# @inline function impulse_map_jacobian_velocity(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}, body::Body) where {T,N,Nc,Cs,N½}
-#     timestep = mechanism.timestep
-#     x3, q3 = next_configuration(body.state, timestep)
-#     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
-#     D = szeros(T,6,6)
-#     for i=1:Nc
-#         bnd = contact.constraints[i]
-#         p = bnd.p
-#         offset = bnd.offset
-#
-#         X = force_mapping(bnd)
-#         λ = X' * contact.impulses[2]
-#
-#         ∇ = ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * λ) * -∂vrotate∂q(offset, inv(q3)) * Tmat()
-#         ∇ += skew(p - vrotate(offset, inv(q3))) * ∂qVRmat(LᵀVᵀmat(q3) * λ)
-#         ∇ += skew(p - vrotate(offset, inv(q3))) * VRmat(q3) * ∂qLᵀVᵀmat(λ)
-#         ∇ *= rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)
-#         D = [szeros(T,6,3) [szeros(T,3,3); ∇]]
-#     end
-#     return D
-# end
 @inline function impulses_jacobian_velocity!(mechanism, body::Body, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
     timestep = mechanism.timestep
     body.state.D -= impulse_map_jacobian_configuration(mechanism, body, contact) *
         integrator_jacobian_velocity(body, timestep)
-    # x3, q3 = next_configuration(body.state, timestep)
-    # x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
-    #
-    # for i=1:Nc
-    #     model = contact.model
-    #     contact_point = model.contact_point
-    #     offset = model.offset
-    #
-    #     X = force_mapping(model)
-    #     λ = X' * contact.impulses[2]
-    #
-    #     ∇ = ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * λ) * -∂vrotate∂q(offset, inv(q3)) * Tmat()
-    #     ∇ += skew(contact_point - vrotate(offset, inv(q3))) * ∂qVRmat(LᵀVᵀmat(q3) * λ)
-    #     ∇ += skew(contact_point - vrotate(offset, inv(q3))) * VRmat(q3) * ∂qLᵀVᵀmat(λ)
-    #     ∇ *= rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)
-    #     body.state.D -= [szeros(T,6,3) [szeros(T,3,3); ∇]]
-    # end
     return
 end
 

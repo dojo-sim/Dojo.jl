@@ -6,7 +6,7 @@ using LinearAlgebra
 include(joinpath(module_dir(), "env/atlas/methods/template.jl"))
 
 gravity = -9.81
-dt = 0.05
+dt = 0.025
 friction_coefficient = 0.8
 damper = 20.0
 spring = 0.0
@@ -52,8 +52,10 @@ mech.contacts[1].model
 N = 3
 initialize!(env.mechanism, :atlas, model_type=:armless,
 	tran=[0,0,0.0], rot=[0,0,0.], αhip=0.5, αknee=1.0)
-xref = atlas_trajectory(env.mechanism; timestep=dt, β=1.4,
-	αtorso=0.07, Δx=-0.03, r=0.08, z=1.12, N=10, Ncycles=N)
+xref = atlas_jump(env.mechanism; Ns=[10,6,6,10,12], timestep=dt,
+	Δx=0.0, x=0.0, z=1.10, foot_high=0.20, base_high=+0.20, base_low=-0.20)
+
+
 # x = get_minimal_state(env.mechanism)
 # xref0 = deepcopy(xref[1])
 # # xref0[1:3] .+= [1.0, 1.0, 1.0] # floating x
@@ -81,8 +83,8 @@ xref = atlas_trajectory(env.mechanism; timestep=dt, β=1.4,
 visualize(env, xref)
 
 # ## horizon
-T = N * (21 - 1) + 1
-# T = 51
+# T = N * (21 - 1) + 1
+T = 45
 
 # ## model
 dyn = IterativeLQR.Dynamics(
@@ -143,9 +145,26 @@ function ctrl_lmt(x, u, w)
 	return 1e-1*u[collect(1:6)]
 end
 
+function top_lmt(x, u, w)
+	Δ = x - xref[22]
+    Δ = Δ[[
+		1,2,3,
+		# 4,5,6, # floating
+		# 13,14,15, # back
+		# 19,20,21, #pelvis
+		# 25, # rknee
+		# 27,28, # rankle
+		# 31,32,33, # lhip
+		# 37, # lknee
+		# 39,40, # lankle
+		]]
+	return [1e-1*u[collect(1:6)]; Δ]
+end
+
 cont = IterativeLQR.Constraint(ctrl_lmt, n, m)
+contop = IterativeLQR.Constraint(top_lmt, n, m)
 conT = IterativeLQR.Constraint(goal, n, 0)
-cons = [[cont for t = 1:T-1]..., conT]
+cons = [[cont for t = 1:21]; contop; [cont for t = 1:22]; conT]
 
 # ## Initialization
 u_prev = deepcopy(ū)
@@ -155,7 +174,7 @@ x_prev = deepcopy(xref) # TODO deepcopy(x̄)
 # ## problem
 prob = IterativeLQR.problem_data(model, obj, cons)
 
-for ρ in [1e-3, 3e-4, 1e-4]#, 3e-5]#, 1e-5, 3e-6, 1e-6]
+for ρ in [1e-3]#, 3e-4]#, 1e-4]#, 3e-5]#, 1e-5, 3e-6, 1e-6]
 	println("ρ: ", scn(ρ), "   *************************************")
 	IterativeLQR.initialize_controls!(prob, u_prev)
 	IterativeLQR.initialize_states!(prob, x_prev)
@@ -172,13 +191,14 @@ for ρ in [1e-3, 3e-4, 1e-4]#, 3e-5]#, 1e-5, 3e-6, 1e-6]
 	    α_min=1.0e-5,
 	    obj_tol=1.0e-3,
 	    grad_tol=1.0e-3,
-	    max_iter=100,
-		max_al_iter=4,
+	    max_iter=25,
+		max_al_iter=3,
 	    ρ_init=1.0,
 	    ρ_scale=10.0)
 
 	# Update initialization trajectory
 	x_prev, u_prev = IterativeLQR.get_trajectory(prob)
+	visualize(env, x_prev)
 end
 scatter(abs.(goal(prob.m_data.x[T], zeros(0), zeros(0))))
 # ## solution
@@ -204,7 +224,7 @@ set_floor!(env.vis, x=6.0, y=6.0, z=0.01, alt=0.0, color=RGBA(0.5,0.5,0.5,1.0))
 set_camera!(env.vis, cam_pos=[5,-6,6], zoom=3)
 set_light!(env.vis)
 
-convert_frames_to_video_and_gif("atlas_6_steps_side")
+convert_frames_to_video_and_gif("atlas_tryna_jump")
 
 render_static(env.vis)
 # open(joinpath(@__DIR__, "atlas_6_steps.html"), "w") do file

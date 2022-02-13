@@ -69,7 +69,7 @@ end
         joint = get_node(mechanism, connectionid)
         off = 0
         if body1.id == joint.parent_id
-            for element in [joint.translational, joint.rotational]
+            for element in (joint.translational, joint.rotational)
                 Nj = length(element)
                 if body2.id == joint.child_id
                     joint.spring && (dimpulse_map_parentb -= spring_parent_jacobian_velocity_child(element, body1, body2, timestep)) #should be useless
@@ -80,7 +80,7 @@ end
                 off += Nj
             end
         elseif body2.id == joint.parent_id
-            for element in [joint.translational, joint.rotational]
+            for element in (joint.translational, joint.rotational)
                 Nj = length(element)
                 if body1.id == joint.child_id
                     # joint.spring && (dimpulse_map_parentb -= spring_parent_jacobian_velocity_child(element, body2, body1, timestep)) #should be useless
