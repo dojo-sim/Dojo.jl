@@ -31,6 +31,6 @@ end
 
 function contact_location(contact::ContactConstraint{T,N,Nc,Cs}, x::AbstractVector{T},
     q::UnitQuaternion{T}) where {T,N,Nc,Cs<:Contact{T,N}}
-    cont = contact.model
-    return x + vrotate(cont.p,q) - cont.offset
+    model = contact.model
+    return x + vrotate(model.contact_point,q) - model.offset
 end
