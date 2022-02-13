@@ -9,10 +9,13 @@ mutable struct Mechanism{T,Nn,Ne,Nb,Ni}
     matrix_entries::SparseMatrixCSC{Entry,Int64}
     diagonal_inverses::Vector{Entry}
 
+	data_matrix::SparseMatrixCSC{Entry,Int64}
+
     timestep::T
     gravity::SVector{3,T}
     μ::T
 end
+
 
 function Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:JointConstraint{T}}, contacts::Vector{<:ContactConstraint{T}};
     spring=0.0, damper=0.0, timestep::T=0.01, gravity=[0.0; 0.0;-9.81]) where T
@@ -42,10 +45,14 @@ function Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:
     matrix_entries = deepcopy(system.matrix_entries)
     diagonal_inverses = deepcopy(system.diagonal_inverses)
 
+	# data gradient system
+	data_matrix = create_data_matrix(joints, bodies, contacts)
+
     # springs and dampers
     joints = set_spring_damper_values!(joints, spring, damper)
 
-    Mechanism{T,Nn,Ne,Nb,Ni}(origin, joints, bodies, contacts, system, residual_entries, matrix_entries, diagonal_inverses, timestep, get_gravity(gravity), 0.0)
+    Mechanism{T,Nn,Ne,Nb,Ni}(origin, joints, bodies, contacts, system, residual_entries,
+		matrix_entries, diagonal_inverses, data_matrix, timestep, get_gravity(gravity), 0.0)
 end
 
 Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:JointConstraint{T}}; kwargs...) where T = Mechanism(origin, bodies, joints, ContactConstraint{T}[]; kwargs...)

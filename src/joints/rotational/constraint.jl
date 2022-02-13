@@ -51,7 +51,7 @@ end
 ################################################################################
  # Derivatives
 ################################################################################
-function impulse_transform_parent_jacobian_parent(joint::Rotational{T,Nλ,0},
+function impulse_transform_parent_jacobian_parent(joint::Rotational{T,Nλ},
         xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
 
     # ∂(force_mapa'*p)/∂(xa,qa)
@@ -61,7 +61,7 @@ function impulse_transform_parent_jacobian_parent(joint::Rotational{T,Nλ,0},
     return cat(I(3), 0.5 * I(3), dims=(1,2)) * [Z3 Z3; Z3 ∂Q∂qa]
 end
 
-function impulse_transform_parent_jacobian_child(joint::Rotational{T,Nλ,0},
+function impulse_transform_parent_jacobian_child(joint::Rotational{T,Nλ},
         xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
 
     # ∂(force_mapa'*p)/∂(xb,qb)
@@ -71,7 +71,7 @@ function impulse_transform_parent_jacobian_child(joint::Rotational{T,Nλ,0},
     return cat(I(3), 0.5 * I(3), dims=(1,2))* [Z3 Z3; Z3 ∇Qqb]
 end
 
-function impulse_transform_child_jacobian_parent(joint::Rotational{T,Nλ,0},
+function impulse_transform_child_jacobian_parent(joint::Rotational{T,Nλ},
         xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
 
     # ∂(force_mapb'*p)/∂(xa,qa)
@@ -81,7 +81,7 @@ function impulse_transform_child_jacobian_parent(joint::Rotational{T,Nλ,0},
     return cat(I(3), 0.5 * I(3), dims=(1,2)) * [Z3 Z3; Z3 ∇Qqa]
 end
 
-function impulse_transform_child_jacobian_child(joint::Rotational{T,Nλ,0},
+function impulse_transform_child_jacobian_child(joint::Rotational{T,Nλ},
         xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
 
     # ∂(force_mapb'*p)/∂(xb,qb)

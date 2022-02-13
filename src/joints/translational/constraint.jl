@@ -39,20 +39,19 @@ Translational3{T} = Translational{T,3} where T
 function impulse_transform_parent(joint::Translational{T}, xa::AbstractVector,
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
     X, Q = displacement_jacobian_configuration(:parent, joint, xa, qa, xb, qb, attjac=true)
-    cat(I(3), 0.5 * I(3), dims=(1,2)) * transpose([X Q])
+    Diagonal([sones(3); 0.5*sones(3)]) * transpose([X Q])
 end
-
 
 function impulse_transform_child(joint::Translational{T}, xa::AbstractVector,
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
     X, Q = displacement_jacobian_configuration(:child, joint, xa, qa, xb, qb, attjac=true)
-    cat(I(3), 0.5 * I(3), dims=(1,2)) * transpose([X Q])
+    Diagonal([sones(3); 0.5*sones(3)]) * transpose([X Q])
 end
 
 ################################################################################
 # Impulse Transform Derivatives
 ################################################################################
-function impulse_transform_parent_jacobian_parent(joint::Translational{T,Nλ,0},
+function impulse_transform_parent_jacobian_parent(joint::Translational{T,Nλ},
         xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
     # ∂(impulse_transform_a'*p)/∂(xa,qa)
     Z3 = szeros(T,3,3)
@@ -63,7 +62,7 @@ function impulse_transform_parent_jacobian_parent(joint::Translational{T,Nλ,0},
     return [Z3   ∇Xqa; ∇Qxa ∇Qqa]
 end
 
-function impulse_transform_parent_jacobian_child(joint::Translational{T,Nλ,0},
+function impulse_transform_parent_jacobian_child(joint::Translational{T,Nλ},
         xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
     # ∂(impulse_transform_a'*p)/∂(xb,qb)
     Z3 = szeros(T,3,3)
@@ -73,7 +72,7 @@ function impulse_transform_parent_jacobian_child(joint::Translational{T,Nλ,0},
     return [Z3   Z3; ∇Qxb ∇Qqb]
 end
 
-function impulse_transform_child_jacobian_parent(joint::Translational{T,Nλ,0},
+function impulse_transform_child_jacobian_parent(joint::Translational{T,Nλ},
         xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
     # ∂(impulse_transform_b'*p)/∂(xa,qa)
     Z3 = szeros(T,3,3)
@@ -84,7 +83,7 @@ function impulse_transform_child_jacobian_parent(joint::Translational{T,Nλ,0},
     return [Z3 ∇Xqa; Z3 ∇Qqa]
 end
 
-function impulse_transform_child_jacobian_child(joint::Translational{T,Nλ,0},
+function impulse_transform_child_jacobian_child(joint::Translational{T,Nλ},
         xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
     # ∂(impulse_transform_b'*p)/∂(xb,qb)
     Z3 = szeros(T,3,3)

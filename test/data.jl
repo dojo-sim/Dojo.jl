@@ -140,9 +140,9 @@ for (spring, damper) in [(0.0, 0.0), (2.0, 0.3)]
 	test_data_system(:hopper, spring=spring, damper=damper, contact=true)
 	test_data_system(:humanoid, spring=spring, damper=damper, contact=true)
 	test_data_system(:atlas, spring=spring, damper=damper, contact=true)
-	test_data_system(:halfcheetah, contact=true, limits=false)
-	test_data_system(:walker2d, spring=spring, damper=damper, contact=true, limits=false)
-	test_data_system(:quadruped, spring=spring, damper=damper, contact=true, limits=false)
+	test_data_system(:halfcheetah, contact=true, limits=true)
+	test_data_system(:walker2d, spring=spring, damper=damper, contact=true, limits=true)
+	test_data_system(:quadruped, spring=spring, damper=damper, contact=true, limits=true)
 	for jointtype in jointtypes
 		test_data_system(:snake, Nb=5, spring=spring, damper=damper, contact=true, jointtype=jointtype)
 		test_data_system(:twister, Nb=5, spring=spring, damper=damper, contact=true, jointtype=jointtype)
@@ -151,10 +151,18 @@ end
 
 
 
-
+#
 #
 # spring = 0.2
 # damper = 0.3
+# test_data_system(:quadruped, spring=spring, damper=damper, contact=true, limits=true)
+#
+# a = 10
+# a = 10
+# a = 10
+# a = 10
+
+
 # test_data_system(:humanoid, spring=spring, damper=damper, contact=true)
 #
 # mech = get_humanoid()

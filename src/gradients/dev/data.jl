@@ -62,9 +62,6 @@ function get_data0(joint::JointConstraint)
 	return [u; spring; damper]
 end
 
-mech = get_pendulum()
-mech.joints[1]
-
 # Body
 function get_data0(body::Body)
 	m = body.mass
