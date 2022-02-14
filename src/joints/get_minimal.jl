@@ -19,22 +19,33 @@ end
 ################################################################################
 # GET: Coordinates Joint
 ################################################################################
+@inline function minimal_coordinates_velocities_new(joint::JointConstraint,
+		pnode::Node, cnode::Node, timestep)
+	∇xθ = minimal_velocities_new(joint, pnode, cnode, timestep)
+	∇vϕ = minimal_velocities_new(joint, pnode, cnode, timestep)
+end
+
 @inline function minimal_velocities_new(joint::JointConstraint, pnode::Node, cnode::Node, timestep)
+	minimal_velocities_new(joint, initial_configuration_velocity(pnode.state)...,
+		initial_configuration_velocity(cnode.state)..., timestep)
+end
+
+@inline function minimal_velocities_new(joint::JointConstraint,
+		xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+		xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
+		timestep)
 	rot = joint.rotational
 	tra = joint.translational
-	pa = tra.vertices[1]
-	pb = tra.vertices[2]
-	qoffset = rot.qoffset
-	Arot = nullspace_mask(rot)
-	Atra = nullspace_mask(tra)
+	Δv = minimal_velocities_new(tra, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
+	Δϕ = minimal_velocities_new(rot, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
+	return [Δv; Δϕ]
+end
 
-	xa, va, qa, ϕa = initial_configuration_velocity(pnode.state)
-	xb, vb, qb, ϕb = initial_configuration_velocity(cnode.state)
-
-	# Coordinates
-	q = inv(qoffset) * inv(qa) * qb
-	Δθ = Arot * rotation_vector(q)
-	Δx = Atra * displacement(tra, xa, qa, xb, qb)
+@inline function minimal_velocities_new(joint::Translational,
+		xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+		xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
+		timestep)
+	A = nullspace_mask(joint)
 
 	# 1 step backward in time
 	xa10 = next_position(xa, -va, timestep)
@@ -42,15 +53,72 @@ end
 	xb10 = next_position(xb, -vb, timestep)
 	qb10 = next_orientation(qb, -ϕb, timestep)
 
+
+	# Coordinates
+	Δx = A * displacement(tra, xa, qa, xb, qb)
 	# Previous step coordinates
-	q10 = inv(qoffset) * inv(qa10) * qb10
-	Δθ10 = Arot * rotation_vector(q10)
-	Δx10 = Atra * displacement(tra, xa10, qa10, xb10, qb10)
+	Δx10 = A * displacement(tra, xa10, qa10, xb10, qb10)
 
 	# Finite difference
 	Δv = (Δx - Δx10) / timestep
+	return Δv
+end
+
+@inline function minimal_velocities_new(joint::Rotational,
+		xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+		xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
+		timestep)
+	qoffset = joint.qoffset
+	A = nullspace_mask(joint)
+
+	# 1 step backward in time
+	xa10 = next_position(xa, -va, timestep)
+	qa10 = next_orientation(qa, -ϕa, timestep)
+	xb10 = next_position(xb, -vb, timestep)
+	qb10 = next_orientation(qb, -ϕb, timestep)
+
+	# Coordinates
+	q = inv(qoffset) * inv(qa) * qb
+	Δθ = A * rotation_vector(q)
+	# Previous step coordinates
+	q10 = inv(qoffset) * inv(qa10) * qb10
+	Δθ10 = A * rotation_vector(q10)
+
+	# Finite difference
     Δϕ = (Δθ - Δθ10) / timestep
-	return [Δv; Δϕ]
+	return Δϕ
+end
+
+@inline function minimal_velocities_jacobian_configuration_new(relative::Symbol, joint::Joint{T},
+        xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+        xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector, timestep) where T
+
+    if relative == :parent
+		∇xq = FiniteDiff.finite_difference_jacobian(xq -> minimal_velocities_new(
+			joint, xq[SUnitRange(1,3)], va, UnitQuaternion(xq[4:7]..., false),
+			ϕa, xb, vb, qb, ϕb, timestep), [xa; vector(qa)]) * cat(I(3), LVᵀmat(qa), dims=(1,2))
+    elseif relative == :child
+		∇xq = FiniteDiff.finite_difference_jacobian(xq -> minimal_velocities_new(
+			joint, xa, va, qa, ϕa, xq[SUnitRange(1,3)], vb, UnitQuaternion(xq[4:7]..., false),
+			ϕb, timestep), [xb; vector(qb)]) * cat(I(3), LVᵀmat(qb), dims=(1,2))
+    end
+    return ∇xq
+end
+
+@inline function minimal_velocities_jacobian_velocity_new(relative::Symbol, joint::Joint{T},
+        xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+        xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector, timestep) where T
+
+	if relative == :parent
+		∇vϕ = FiniteDiff.finite_difference_jacobian(vϕ -> minimal_velocities_new(
+			joint, xa, vϕ[SUnitRange(1,3)], qa, vϕ[SUnitRange(4,6)],
+			xb, vb, qb, ϕb, timestep), [va; ϕa])
+    elseif relative == :child
+		∇vϕ = FiniteDiff.finite_difference_jacobian(vϕ -> minimal_velocities_new(
+			joint, xa, va, qa, ϕa, xb, vϕ[SUnitRange(1,3)], qb, vϕ[SUnitRange(4,6)],
+			timestep), [vb; ϕb])
+    end
+    return ∇vϕ
 end
 
 

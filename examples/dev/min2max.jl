@@ -33,3 +33,32 @@ initialize!(mech, :pendulum)
 pnode = mech.origin
 cnode = mech.bodies[1]
 chain_jacobian(mech, pnode, cnode)
+
+
+
+
+joint = mech.joints[1]
+tra = mech.joints[1].translational
+rot = mech.joints[1].rotational
+xa = srand(3)
+va = srand(3)
+qa = UnitQuaternion(rand(4)...)
+ϕa = srand(3)
+xb = srand(3)
+vb = srand(3)
+qb = UnitQuaternion(rand(4)...)
+ϕb = srand(3)
+timestep = mech.timestep
+Δvϕ = minimal_velocities_new(joint, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
+Δv = minimal_velocities_new(tra, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
+Δϕ = minimal_velocities_new(rot, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
+Δvϕ - [Δv; Δϕ]
+
+minimal_velocities_jacobian_configuration_new(:parent,
+	tra, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
+minimal_velocities_jacobian_configuration_new(:child,
+	tra, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
+minimal_velocities_jacobian_velocity_new(:parent,
+	tra, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
+minimal_velocities_jacobian_velocity_new(:child,
+	tra, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
