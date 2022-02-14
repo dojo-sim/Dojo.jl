@@ -100,36 +100,15 @@ function position_velocity_jacobian_maximal(mechanism, joint, z, x)
     FiniteDiff.finite_difference_jacobian(y -> joint_position_velocity(mechanism, joint, y, x), z)
 end
 
-##########
-
-# function get_minimal_gradients_old(mechanism::Mechanism{T}, z::AbstractVector{T}, u::AbstractVector{T};
-# 	opts=SolverOptions()) where T
-# 	# simulate next state
-# 	step!(mechanism, z, u, opts=opts)
-# 	# current maximal state
-# 	z = get_state(mechanism)
-# 	# next maximal state
-# 	z_next = get_next_state(mechanism)
-# 	# current minimal state
-# 	x = maximal_to_minimal(mechanism, z)
-# 	# maximal dynamics Jacobians
-# 	maximal_jacobian_state, minimal_jacobian_control = get_maximal_gradients_old(mechanism)
-# 	# minimal to maximal Jacobian at current time step (rhs)
-# 	min_to_max_jacobian_current = minimal_to_maximal_jacobian(mechanism, x, attjac=false)
-# 	# maximal to minimal Jacobian at next time step (lhs)
-# 	max_to_min_jacobian_next = maximal_to_minimal_jacobian(mechanism, z_next)
-# 	# minimal state Jacobian
-# 	minimal_jacobian_state = max_to_min_jacobian_next * maximal_jacobian_state * min_to_max_jacobian_current
-# 	# minimal control Jacobian
-# 	minimal_jacobian_control = max_to_min_jacobian_next * minimal_jacobian_control
-#
-# 	return minimal_jacobian_state, minimal_jacobian_control
-# end
 
 function get_minimal_gradients(mechanism::Mechanism{T}, z::AbstractVector{T}, u::AbstractVector{T};
 	opts=SolverOptions()) where T
 	# simulate next state
 	step!(mechanism, z, u, opts=opts)
+	return get_minimal_gradients_no_step(mechanism)
+end
+
+function get_minimal_gradients_no_step(mechanism::Mechanism{T}) where T
 	# current maximal state
 	z = get_state(mechanism)
 	# next maximal state
@@ -149,6 +128,7 @@ function get_minimal_gradients(mechanism::Mechanism{T}, z::AbstractVector{T}, u:
 
 	return minimal_jacobian_state, minimal_jacobian_control
 end
+
 
 function get_minimal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni};
 	pos_noise=nothing, vel_noise=nothing,

@@ -1,47 +1,47 @@
-function get_maximal_gradients_old(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
-	timestep = mechanism.timestep
-	nu = control_dimension(mechanism)
-	attjac = false
-	nic = attjac ? 12Nb : 13Nb
-	njoints = joint_dimension(mechanism)
-	datamat = full_data_matrix(mechanism, attjac = attjac)
-	solmat = full_matrix(mechanism.system)
-
-	# data Jacobian
-	data_jacobian = - solmat \ datamat #TODO: use pre-factorization
-	data_jacobian_state = data_jacobian[njoints .+ (1:6Nb),1:nic]
-	data_jacobian_control = data_jacobian[njoints .+ (1:6Nb),nic .+ (1:nu)]
-
-	# Jacobian
-	jacobian_state = zeros(13Nb,13Nb)
-	jacobian_control = zeros(13Nb,nu)
-	for (i, body) in enumerate(mechanism.bodies)
-		# Fill in gradients of v25, ϕ25
-		jacobian_state[13*(i-1) .+ [4:6; 11:13],:] += data_jacobian_state[6*(i-1) .+ (1:6),:]
-		jacobian_control[13*(i-1) .+ [4:6; 11:13],:] += data_jacobian_control[6*(i-1) .+ (1:6),:]
-
-		# Fill in gradients of x3, q3
-		q2 = body.state.q2[1]
-		ϕ25 = body.state.ϕsol[2]
-		jacobian_state[13*(i-1) .+ (1:3), :] += linear_integrator_jacobian_velocity(timestep) * data_jacobian_state[6*(i-1) .+ (1:3),:]
-		jacobian_state[13*(i-1) .+ (1:3), 13*(i-1) .+ (1:13)] += linear_integrator_jacobian_position() * [I(3) zeros(3,10)]
-		jacobian_state[13*(i-1) .+ (7:10), :] += rotational_integrator_jacobian_velocity(q2, ϕ25, timestep) * data_jacobian_state[6*(i-1) .+ (4:6),:]
-		jacobian_state[13*(i-1) .+ (7:10), 13*(i-1) .+ (1:13)] += rotational_integrator_jacobian_orientation(q2, ϕ25, timestep, attjac = false) * [zeros(4,6) I(4) zeros(4,3)]
-
-		jacobian_control[13*(i-1) .+ (1:3),:] += linear_integrator_jacobian_velocity(timestep) * data_jacobian_control[6*(i-1) .+ (1:3),:]
-		jacobian_control[13*(i-1) .+ (7:10),:] += rotational_integrator_jacobian_velocity(q2, ϕ25, timestep) * data_jacobian_control[6*(i-1) .+ (4:6),:]
-	end
-	return jacobian_state, jacobian_control
-end
-
-function get_maximal_gradients_old!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
-    opts=SolverOptions()) where {T,Nn,Ne,Nb,Ni}
-
-    step!(mechanism, z, u, opts=opts)
-    jacobian_state, jacobian_control = get_maximal_gradients_old(mechanism)
-
-    return jacobian_state, jacobian_control
-end
+# function get_maximal_gradients_old(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
+# 	timestep = mechanism.timestep
+# 	nu = control_dimension(mechanism)
+# 	attjac = false
+# 	nic = attjac ? 12Nb : 13Nb
+# 	njoints = joint_dimension(mechanism)
+# 	datamat = full_data_matrix(mechanism, attjac = attjac)
+# 	solmat = full_matrix(mechanism.system)
+#
+# 	# data Jacobian
+# 	data_jacobian = - solmat \ datamat #TODO: use pre-factorization
+# 	data_jacobian_state = data_jacobian[njoints .+ (1:6Nb),1:nic]
+# 	data_jacobian_control = data_jacobian[njoints .+ (1:6Nb),nic .+ (1:nu)]
+#
+# 	# Jacobian
+# 	jacobian_state = zeros(13Nb,13Nb)
+# 	jacobian_control = zeros(13Nb,nu)
+# 	for (i, body) in enumerate(mechanism.bodies)
+# 		# Fill in gradients of v25, ϕ25
+# 		jacobian_state[13*(i-1) .+ [4:6; 11:13],:] += data_jacobian_state[6*(i-1) .+ (1:6),:]
+# 		jacobian_control[13*(i-1) .+ [4:6; 11:13],:] += data_jacobian_control[6*(i-1) .+ (1:6),:]
+#
+# 		# Fill in gradients of x3, q3
+# 		q2 = body.state.q2[1]
+# 		ϕ25 = body.state.ϕsol[2]
+# 		jacobian_state[13*(i-1) .+ (1:3), :] += linear_integrator_jacobian_velocity(timestep) * data_jacobian_state[6*(i-1) .+ (1:3),:]
+# 		jacobian_state[13*(i-1) .+ (1:3), 13*(i-1) .+ (1:13)] += linear_integrator_jacobian_position() * [I(3) zeros(3,10)]
+# 		jacobian_state[13*(i-1) .+ (7:10), :] += rotational_integrator_jacobian_velocity(q2, ϕ25, timestep) * data_jacobian_state[6*(i-1) .+ (4:6),:]
+# 		jacobian_state[13*(i-1) .+ (7:10), 13*(i-1) .+ (1:13)] += rotational_integrator_jacobian_orientation(q2, ϕ25, timestep, attjac = false) * [zeros(4,6) I(4) zeros(4,3)]
+#
+# 		jacobian_control[13*(i-1) .+ (1:3),:] += linear_integrator_jacobian_velocity(timestep) * data_jacobian_control[6*(i-1) .+ (1:3),:]
+# 		jacobian_control[13*(i-1) .+ (7:10),:] += rotational_integrator_jacobian_velocity(q2, ϕ25, timestep) * data_jacobian_control[6*(i-1) .+ (4:6),:]
+# 	end
+# 	return jacobian_state, jacobian_control
+# end
+#
+# function get_maximal_gradients_old!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
+#     opts=SolverOptions()) where {T,Nn,Ne,Nb,Ni}
+#
+#     step!(mechanism, z, u, opts=opts)
+#     jacobian_state, jacobian_control = get_maximal_gradients_old(mechanism)
+#
+#     return jacobian_state, jacobian_control
+# end
 
 
 function get_maximal_gradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
