@@ -13,6 +13,7 @@ spring = 0.0
 env = quadruped(
     mode=:min,
     dt=dt,
+    body_contact=false,
     gravity=gravity,
     friction_coefficient=friction_coefficient,
     damper=damper,
@@ -29,7 +30,6 @@ open(env.vis)
 # ## dimensions
 n = env.nx
 m = env.nu
-d = 0
 
 # ## reference trajectory
 N = 2
@@ -54,15 +54,14 @@ dyn = IterativeLQR.Dynamics(
     (y, x, u, w) -> f(y, env, x, u, w),
     (dx, x, u, w) -> fx(dx, env, x, u, w),
     (du, x, u, w) -> fu(du, env, x, u, w),
-    n, n, m, d)
+    n, n, m)
 
 model = [dyn for t = 1:T-1]
 
 # ## rollout
 x1 = xref[1]
 ū = [u_control for t = 1:T-1]
-w = [zeros(d) for t = 1:T-1]
-x̄ = IterativeLQR.rollout(model, x1, ū, w)
+x̄ = IterativeLQR.rollout(model, x1, ū)
 visualize(env, x̄)
 
 # ## objective
@@ -70,8 +69,8 @@ qt = [0.3; 0.05; 0.05; 0.01 * ones(3); 0.01 * ones(3); 0.01 * ones(3); fill([0.2
 ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(dt * qt) * (x - xref[t]) + transpose(u) * Diagonal(dt * 0.01 * ones(m)) * u for t = 1:T-1]
 oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(dt * qt) * (x - xref[end])
 
-cts = IterativeLQR.Cost.(ots, n, m, d)
-cT = IterativeLQR.Cost(oT, n, 0, 0)
+cts = IterativeLQR.Cost.(ots, n, m)
+cT = IterativeLQR.Cost(oT, n, 0)
 obj = [cts..., cT]
 
 # ## constraints
@@ -85,21 +84,21 @@ conT = IterativeLQR.Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
 # ## problem
-prob = IterativeLQR.problem_data(model, obj, cons)
+prob = IterativeLQR.solver(model, obj, cons, 
+    opts=Options(verbose = false,
+        linesearch=:armijo,
+        α_min=1.0e-5,
+        obj_tol=1.0e-3,
+        grad_tol=1.0e-3,
+        max_iter=100,
+        max_al_iter=5,
+        ρ_init=1.0,
+        ρ_scale=10.0))
 IterativeLQR.initialize_controls!(prob, ū)
 IterativeLQR.initialize_states!(prob, x̄)
 
 # ## solve
-@time IterativeLQR.solve!(prob,
-    verbose = false,
-	linesearch=:armijo,
-    α_min=1.0e-5,
-    obj_tol=1.0e-3,
-    grad_tol=1.0e-3,
-    max_iter=100,
-    max_al_iter=5,
-    ρ_init=1.0,
-    ρ_scale=10.0)
+@time IterativeLQR.solve!(prob)
 
 vis = Visualizer()
 open(env.vis)

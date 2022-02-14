@@ -240,13 +240,9 @@ end
     return :(cat($(vec...), dims=(1,2)))
 end
 
-@generated function constraint_jacobian_parent(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(constraint_jacobian_configuration(:parent, [joint.translational, joint.rotational][$i], body, get_body(mechanism, joint.child_id), joint.child_id, joint.impulses[2][λindex(joint,$i)], mechanism.timestep)) for i = 1:Nc]
-    return :(vcat($(vec...)))
-end
-
-@generated function constraint_jacobian_child(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(constraint_jacobian_configuration(:child, [joint.translational, joint.rotational][$i], get_body(mechanism, joint.parent_id), body, joint.child_id, joint.impulses[2][λindex(joint,$i)], mechanism.timestep)) for i = 1:Nc]
+@generated function constraint_jacobian_configuration(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
+    # relatives = (body.id == joint.parent_id ? :parent : :child)
+    vec = [:(constraint_jacobian_configuration(body.id == joint.parent_id ? :parent : :child, [joint.translational, joint.rotational][$i], get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), joint.child_id, joint.impulses[2][λindex(joint,$i)], mechanism.timestep)) for i = 1:Nc]
     return :(vcat($(vec...)))
 end
 
@@ -326,10 +322,6 @@ end
     else
         return impulse_map_child(mechanism, constraint, body)
     end
-end
-
-@inline function constraint_jacobian_configuration(mechanism, constraint::Constraint, body::Body)
-    body.id == constraint.parent_id ? (return constraint_jacobian_parent(mechanism, constraint, body)) : (return constraint_jacobian_child(mechanism, constraint, body))
 end
 
 function λindex(joint::JointConstraint{T,N,Nc}, i::Int) where {T,N,Nc}

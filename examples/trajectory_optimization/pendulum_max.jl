@@ -17,7 +17,6 @@ env = make("pendulum",
 # ## dimensions
 n = env.nx
 m = env.nu
-d = 0
 
 # ## states
 z1 = pendulum_nominal_max()
@@ -31,22 +30,21 @@ dyn = IterativeLQR.Dynamics(
     (y, x, u, w) -> f(y, env, x, u, w), 
     (dx, x, u, w) -> fx(dx, env, x, u, w),
     (du, x, u, w) -> fu(du, env, x, u, w),
-    n, n, m, d)
+    n, n, m)
 
 model = [dyn for t = 1:T-1]
 
 # ## rollout
 ū = [1.0 * randn(m) for t = 1:T-1]
-w = [zeros(d) for t = 1:T-1]
-x̄ = IterativeLQR.rollout(model, z1, ū, w)
+x̄ = IterativeLQR.rollout(model, z1, ū)
 visualize(env, x̄) 
 
 # ## objective
 ot = (x, u, w) -> transpose(x - zT) * Diagonal(1.0e-1 * ones(n)) * (x - zT) + transpose(u) * Diagonal(1.0e-2 * ones(m)) * u
 oT = (x, u, w) -> transpose(x - zT) * Diagonal(1.0e-1 * ones(n)) * (x - zT)
 
-ct = Cost(ot, n, m, d)
-cT = Cost(oT, n, 0, 0)
+ct = Cost(ot, n, m)
+cT = Cost(oT, n, 0)
 obj = [[ct for t = 1:T-1]..., cT]
 
 # ## constraints 
@@ -66,21 +64,21 @@ conT = Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
 # ## problem 
-prob = IterativeLQR.problem_data(model, obj, cons)
+prob = IterativeLQR.solver(model, obj, cons, 
+    opts=Options(verbose = true,
+        linesearch=:armijo,
+        α_min=1.0e-5,
+        obj_tol=1.0e-3,
+        grad_tol=1.0e-3,
+        max_iter=100,
+        max_al_iter=5,
+        ρ_init=1.0,
+        ρ_scale=10.0))
 IterativeLQR.initialize_controls!(prob, ū)
 IterativeLQR.initialize_states!(prob, x̄)
 
 # ## solve
-IterativeLQR.solve!(prob,
-    verbose = true,
-    linesearch=:armijo,
-    α_min=1.0e-5,
-    obj_tol=1.0e-3,
-    grad_tol=1.0e-3,
-    max_iter=100,
-    max_al_iter=5,
-    ρ_init=1.0,
-    ρ_scale=10.0)
+IterativeLQR.solve!(prob)
 
 # ## solution
 x_sol, u_sol = IterativeLQR.get_trajectory(prob)
