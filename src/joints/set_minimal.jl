@@ -142,21 +142,21 @@ end
 ################################################################################
 # SET: Velocities Joint constraints
 ################################################################################
-function set_minimal_velocities_new!(pnode::Node, cnode::Node, joint::JointConstraint, timestep;
+function set_minimal_velocities!(pnode::Node, cnode::Node, joint::JointConstraint, timestep;
         Δv=szeros(control_dimension(joint.translational)),
         Δϕ=szeros(control_dimension(joint.rotational)))
     # We need to set the minimal coordinates of the rotational joint first
     # since vb = fct(ϕb, Δv)
     # set_minimal_velocities!(pnode, cnode, joint.rotational; Δϕ=Δϕ)
     # set_minimal_velocities!(pnode, cnode, joint.translational; Δv=Δv)
-	vb, ϕb = set_minimal_velocities_new(joint, initial_configuration_velocity(pnode.state)...,
+	vb, ϕb = set_minimal_velocities(joint, initial_configuration_velocity(pnode.state)...,
 	 	current_configuration(cnode.state)..., timestep, Δv=Δv, Δϕ=Δϕ)
 	set_velocity!(cnode; v=vb, ω=ϕb)
 	set_previous_configuration!(cnode, timestep)
     return nothing
 end
 
-function set_minimal_velocities_new(joint::JointConstraint,
+function set_minimal_velocities(joint::JointConstraint,
 		xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
 		xb::AbstractVector, qb::UnitQuaternion, timestep;
         Δv=szeros(control_dimension(joint.translational)),
@@ -196,7 +196,7 @@ end
 ################################################################################
 # SET: Coordinates and Velocities
 ################################################################################
-function set_minimal_coordinates_velocities_new!(mechanism::Mechanism, joint::JointConstraint;
+function set_minimal_coordinates_velocities!(mechanism::Mechanism, joint::JointConstraint;
         xmin::AbstractVector=szeros(2*control_dimension(joint)))
     pnode = get_body(mechanism, joint.parent_id)
     cnode = get_body(mechanism, joint.child_id)
@@ -205,10 +205,10 @@ function set_minimal_coordinates_velocities_new!(mechanism::Mechanism, joint::Jo
     Δθ = xmin[SUnitRange(joint.minimal_index[2]...)]
     Δv = xmin[nu .+ SUnitRange(joint.minimal_index[1]...)]
     Δϕ = xmin[nu .+ SUnitRange(joint.minimal_index[2]...)]
-    set_minimal_coordinates_velocities_new!(pnode, cnode, joint, mechanism.timestep; Δx=Δx, Δθ=Δθ, Δv=Δv, Δϕ=Δϕ)
+    set_minimal_coordinates_velocities!(pnode, cnode, joint, mechanism.timestep; Δx=Δx, Δθ=Δθ, Δv=Δv, Δϕ=Δϕ)
 end
 
-function set_minimal_coordinates_velocities_new!(pnode::Node, cnode::Node, joint::JointConstraint, timestep;
+function set_minimal_coordinates_velocities!(pnode::Node, cnode::Node, joint::JointConstraint, timestep;
         Δx::AbstractVector=szeros(control_dimension(joint.translational)),
         Δθ::AbstractVector=szeros(control_dimension(joint.rotational)),
         Δv::AbstractVector=szeros(control_dimension(joint.translational)),
@@ -217,88 +217,6 @@ function set_minimal_coordinates_velocities_new!(pnode::Node, cnode::Node, joint
     # since xb = fct(qb, Δx)
     # since vb = fct(ϕb, Δv)
     set_minimal_coordinates!(pnode, cnode, joint, timestep; Δx=Δx, Δθ=Δθ)
-    set_minimal_velocities_new!(pnode, cnode, joint, timestep; Δv=Δv, Δϕ=Δϕ)
+    set_minimal_velocities!(pnode, cnode, joint, timestep; Δv=Δv, Δϕ=Δϕ)
     return nothing
 end
-
-
-# function set_minimal_velocities!(pnode::Node, cnode::Node, joint::JointConstraint;
-#         Δv=szeros(control_dimension(joint.translational)),
-#         Δϕ=szeros(control_dimension(joint.rotational)))
-#     # We need to set the minimal coordinates of the rotational joint first
-#     # since vb = fct(ϕb, Δv)
-#     set_minimal_velocities!(pnode, cnode, joint.rotational; Δϕ=Δϕ)
-#     set_minimal_velocities!(pnode, cnode, joint.translational; Δv=Δv)
-#     return nothing
-# end
-
-# function set_minimal_velocities!(pnode::Node, cnode::Node, joint::Rotational;
-#         Δϕ=szeros(control_dimension(joint)))
-#         # Δϕ is expressed in along the joint's nullspace axes, in pnode's offset frame
-#         # We need to set the minimal coordinates of the rotational joint first
-#         # since ϕb = fct(qb, Δϕ)
-#     qoffset = joint.qoffset
-#     qa = pnode.state.q2[1]
-#     qb = cnode.state.q2[1]
-#     ϕa = pnode.state.ϕ15
-#     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
-#     Δϕ_a = vrotate(Aᵀ*Δϕ, qoffset) # in pnode's frame
-#     ϕb = vrotate(ϕa + Δϕ_a, inv(qb) * qa)
-#     set_velocity!(cnode; v=cnode.state.v15, ω=ϕb)
-#     return nothing
-# end
-
-# function set_minimal_velocities!(pnode::Node, cnode::Node, joint::Translational;
-#         Δv=szeros(control_dimension(joint)))
-#         # Δv is expressed in along the joint's nullspace axes, in pnode's frame
-#     xa = pnode.state.x2[1]
-#     va = pnode.state.v15
-#     qa = pnode.state.q2[1]
-#     ϕa = pnode.state.ϕ15
-#
-#     xb = cnode.state.x2[1]
-#     vb = cnode.state.v15
-#     qb = cnode.state.q2[1]
-#     ϕb = cnode.state.ϕ15
-#
-#     vertices = joint.vertices
-#     pbcb_w = vrotate(-vertices[2], qb)
-#     pbca_w = xa - (xb + vrotate(vertices[2], qb))
-#     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
-#     Δv = Aᵀ * Δv # in pnode's frame
-#     Δvw = vrotate(Δv, qa) # in the world frame
-#     # Δvw = V(pb,B/A)w - V(pa,A/A)w
-#     vb = Δvw - skew(pbcb_w) * vrotate(ϕb, qb) + (va + skew(pbca_w) * vrotate(ϕa, qa)) # in world frame
-#     set_velocity!(cnode; v=vb, ω=cnode.state.ϕ15)
-#     return nothing
-# end
-
-
-# ################################################################################
-# # SET: Coordinates and Velocities
-# ################################################################################
-# function set_minimal_coordinates_velocities!(mechanism::Mechanism, joint::JointConstraint;
-#         xmin::AbstractVector=szeros(2control_dimension(joint)))
-#     pnode = get_body(mechanism, joint.parent_id)
-#     cnode = get_body(mechanism, joint.child_id)
-#     nu = control_dimension(joint)
-#     Δx = xmin[SUnitRange(joint.minimal_index[1]...)]
-#     Δθ = xmin[SUnitRange(joint.minimal_index[2]...)]
-#     Δv = xmin[nu .+ SUnitRange(joint.minimal_index[1]...)]
-#     Δϕ = xmin[nu .+ SUnitRange(joint.minimal_index[2]...)]
-#     set_minimal_coordinates_velocities!(pnode, cnode, joint; Δx=Δx, Δθ=Δθ, Δv=Δv, Δϕ=Δϕ)
-# end
-#
-# function set_minimal_coordinates_velocities!(pnode::Node, cnode::Node, joint::JointConstraint;
-#         Δx::AbstractVector=szeros(control_dimension(joint.translational)),
-#         Δθ::AbstractVector=szeros(control_dimension(joint.rotational)),
-#         Δv::AbstractVector=szeros(control_dimension(joint.translational)),
-#         Δϕ::AbstractVector=szeros(control_dimension(joint.rotational)))
-#     # We need to set the minimal coordinates of the rotational joint first
-#     # since xb = fct(qb, Δx)
-#     # since vb = fct(ϕb, Δv)
-#     set_minimal_coordinates!(pnode, cnode, joint; Δx=Δx, Δθ=Δθ)
-# 	set_minimal_velocities!(pnode, cnode, joint; Δv=Δv, Δϕ=Δϕ)
-#     # set_minimal_velocities!(pnode, cnode, joint; Δx=Δx, Δθ=Δθ, Δv=Δv, Δϕ=Δϕ)
-#     return nothing
-# end

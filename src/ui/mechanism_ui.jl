@@ -1,7 +1,7 @@
-function minimal_coordinates_velocities_new(mechanism::Mechanism)
+function minimal_coordinates_velocities(mechanism::Mechanism)
     d = Dict()
     for joint in mechanism.joints
-        push!(d, joint.id => [minimal_coordinates(mechanism, joint); minimal_velocities_new(mechanism, joint)])
+        push!(d, joint.id => [minimal_coordinates(mechanism, joint); minimal_velocities(mechanism, joint)])
     end
     return d
 end
@@ -14,10 +14,10 @@ function minimal_coordinates(mechanism::Mechanism)
     return d
 end
 
-function minimal_velocities_new(mechanism::Mechanism)
+function minimal_velocities(mechanism::Mechanism)
     d = Dict()
     for joint in mechanism.joints
-        push!(d, joint.id => minimal_velocities_new(mechanism, joint))
+        push!(d, joint.id => minimal_velocities(mechanism, joint))
     end
     return d
 end
@@ -67,6 +67,7 @@ function zero_velocity!(mechanism::Mechanism)
     for (i, body) in enumerate(mechanism.bodies)
         try
             set_velocity!(body, v=zeros(3), ω=zeros(3))
+            set_previous_configuration!(body, mechanism.timestep)
         catch
             nothing
         end

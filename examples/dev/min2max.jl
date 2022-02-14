@@ -49,24 +49,24 @@ vb = srand(3)
 qb = UnitQuaternion(rand(4)...)
 ϕb = srand(3)
 timestep = mech.timestep
-Δvϕ = minimal_velocities_new(joint, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
-Δv = minimal_velocities_new(tra, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
-Δϕ = minimal_velocities_new(rot, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
-Δvϕ1 = minimal_velocities_new(joint, xa, va, qa, ϕa, xb, vb, qb, ϕb, 10*timestep)
-Δv1 = minimal_velocities_new(tra, xa, va, qa, ϕa, xb, vb, qb, ϕb, 10*timestep)
-Δϕ1 = minimal_velocities_new(rot, xa, va, qa, ϕa, xb, vb, qb, ϕb, 0.01*timestep)
+Δvϕ = minimal_velocities(joint, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
+Δv = minimal_velocities(tra, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
+Δϕ = minimal_velocities(rot, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
+Δvϕ1 = minimal_velocities(joint, xa, va, qa, ϕa, xb, vb, qb, ϕb, 10*timestep)
+Δv1 = minimal_velocities(tra, xa, va, qa, ϕa, xb, vb, qb, ϕb, 10*timestep)
+Δϕ1 = minimal_velocities(rot, xa, va, qa, ϕa, xb, vb, qb, ϕb, 0.01*timestep)
 Δvϕ - [Δv; Δϕ]
 
-set_minimal_velocities_new!
+set_minimal_velocities!
 
 
-minimal_velocities_jacobian_configuration_new(:parent,
+minimal_velocities_jacobian_configuration(:parent,
 	tra, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
-minimal_velocities_jacobian_configuration_new(:child,
+minimal_velocities_jacobian_configuration(:child,
 	tra, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
-minimal_velocities_jacobian_velocity_new(:parent,
+minimal_velocities_jacobian_velocity(:parent,
 	tra, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
-minimal_velocities_jacobian_velocity_new(:child,
+minimal_velocities_jacobian_velocity(:child,
 	tra, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
 
 
@@ -105,9 +105,9 @@ vb = bodyb.state.v15
 
 Δx = minimal_coordinates(joint.translational, xa, qa, xb, qb)
 Δθ = minimal_coordinates(joint.rotational, xa, qa, xb, qb)
-Δv = minimal_velocities_new(joint.translational, xa, va, qa, ϕa, xb, vb, qb, ϕb, 1e-5*timestep)
-Δϕ = minimal_velocities_new(joint.rotational, xa, va, qa, ϕa, xb, vb, qb, ϕb, 1e-5*timestep)
-vb2, ϕb2 = set_minimal_velocities_new(joint, xa, va, qa, ϕa, xb, qb, 1e-5*timestep, Δv=Δv, Δϕ=Δϕ)
+Δv = minimal_velocities(joint.translational, xa, va, qa, ϕa, xb, vb, qb, ϕb, 1e-5*timestep)
+Δϕ = minimal_velocities(joint.rotational, xa, va, qa, ϕa, xb, vb, qb, ϕb, 1e-5*timestep)
+vb2, ϕb2 = set_minimal_velocities(joint, xa, va, qa, ϕa, xb, qb, 1e-5*timestep, Δv=Δv, Δϕ=Δϕ)
 norm(xb - xb2, Inf)
 norm(vb - vb2, Inf)
 norm(ϕb - ϕb2, Inf)

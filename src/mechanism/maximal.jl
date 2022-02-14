@@ -119,7 +119,7 @@ function maximal_to_minimal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVect
 				xa, va, qa, ϕa = current_configuration_velocity(mechanism.origin.state)
 			end
 			push!(c, minimal_coordinates(element, xa, qa, xb, qb)...)
-			push!(v, minimal_velocities_new(element, xa, va, qa, ϕa, xb, vb, qb, ϕb, mechanism.timestep)...)
+			push!(v, minimal_velocities(element, xa, va, qa, ϕa, xb, vb, qb, ϕb, mechanism.timestep)...)
 		end
 		push!(x, [c; v]...)
 	end
@@ -162,15 +162,15 @@ function maximal_to_minimal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::Abs
 				ϕa_idx = collect((iparent-1)*12 .+ (10:12))
 
 				J[c_idx, [xa_idx; qa_idx]] = minimal_coordinates_jacobian_configuration(:parent, element, xa, qa, xb, qb)
-				J[v_idx, [xa_idx; qa_idx]] = minimal_velocities_jacobian_configuration_new(:parent, element, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
-				J[v_idx, [va_idx; ϕa_idx]] = minimal_velocities_jacobian_velocity_new(:parent, element, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
+				J[v_idx, [xa_idx; qa_idx]] = minimal_velocities_jacobian_configuration(:parent, element, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
+				J[v_idx, [va_idx; ϕa_idx]] = minimal_velocities_jacobian_velocity(:parent, element, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
 			else
 				xa, va, qa, ϕa = current_configuration_velocity(mechanism.origin.state)
 			end
 
 			J[c_idx, [xb_idx; qb_idx]] = minimal_coordinates_jacobian_configuration(:child, element, xa, qa, xb, qb)
-			J[v_idx, [xb_idx; qb_idx]] = minimal_velocities_jacobian_configuration_new(:child, element, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
-			J[v_idx, [vb_idx; ϕb_idx]] = minimal_velocities_jacobian_velocity_new(:child, element, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
+			J[v_idx, [xb_idx; qb_idx]] = minimal_velocities_jacobian_configuration(:child, element, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
+			J[v_idx, [vb_idx; ϕb_idx]] = minimal_velocities_jacobian_velocity(:child, element, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
 
 			c_shift += nu_element
 			v_shift += nu_element

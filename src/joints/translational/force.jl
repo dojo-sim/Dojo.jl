@@ -70,7 +70,7 @@ function damper_force(joint::Translational{T}, xa::AbstractVector,
         ωb::AbstractVector, timestep; unitary::Bool=false) where T
     damper = unitary ? 1.0 : joint.damper
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
-    input = damper * Aᵀ * -minimal_velocities_new(joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep) # in the a frame
+    input = damper * Aᵀ * -minimal_velocities(joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep) # in the a frame
     return input
 end
 
@@ -80,7 +80,7 @@ function damper_force_jacobian_configuration(jacobian_relative::Symbol, joint::T
         ωb::AbstractVector, timestep; unitary::Bool=false) where T
     damper = unitary ? 1.0 : joint.damper
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
-    ∇input = damper * Aᵀ * -minimal_velocities_jacobian_configuration_new(jacobian_relative, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep) # in the a frame
+    ∇input = damper * Aᵀ * -minimal_velocities_jacobian_configuration(jacobian_relative, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep) # in the a frame
     return ∇input
 end
 
@@ -90,7 +90,7 @@ function damper_force_jacobian_velocity(jacobian_relative::Symbol, joint::Transl
         ωb::AbstractVector, timestep; unitary::Bool=false) where T
     damper = unitary ? 1.0 : joint.damper
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
-    ∇input = damper * Aᵀ * -minimal_velocities_jacobian_velocity_new(jacobian_relative, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep) # in the a frame
+    ∇input = damper * Aᵀ * -minimal_velocities_jacobian_velocity(jacobian_relative, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep) # in the a frame
     return ∇input
 end
 
