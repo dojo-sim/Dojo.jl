@@ -21,8 +21,9 @@ end
 ################################################################################
 @inline function minimal_coordinates_velocities_new(joint::JointConstraint,
 		pnode::Node, cnode::Node, timestep)
-	∇xθ = minimal_velocities_new(joint, pnode, cnode, timestep)
-	∇vϕ = minimal_velocities_new(joint, pnode, cnode, timestep)
+	Δxθ = minimal_coordinates_new(joint, pnode, cnode)
+	Δvϕ = minimal_velocities_new(joint, pnode, cnode, timestep)
+	return [Δxθ; Δvϕ]
 end
 
 @inline function minimal_velocities_new(joint::JointConstraint, pnode::Node, cnode::Node, timestep)
@@ -34,10 +35,8 @@ end
 		xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
 		xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
 		timestep)
-	rot = joint.rotational
-	tra = joint.translational
-	Δv = minimal_velocities_new(tra, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
-	Δϕ = minimal_velocities_new(rot, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
+	Δv = minimal_velocities_new(joint.translational, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
+	Δϕ = minimal_velocities_new(joint.rotational, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
 	return [Δv; Δϕ]
 end
 
