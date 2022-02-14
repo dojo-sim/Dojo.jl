@@ -32,6 +32,7 @@ end
 ################################################################################\
 @testset "minimal to maximal: set_position!, set_velocity" begin
 	mech = Dojo.get_mechanism(:raiberthopper)
+	timestep = mech.timestep
 	joint1 = mech.joints[1]
 	joint2 = mech.joints[2]
 	body1 = mech.bodies[1]
@@ -49,7 +50,7 @@ end
 	Δv = Dojo.zerodimstaticadjoint(Dojo.nullspace_mask(tra2)) * v
 	Δω = rand(3)
 	Dojo.set_velocity!(body1, body2; p1 = tra2.vertices[1], p2 = tra2.vertices[2], Δv = Δv, Δω = Δω)
-	@test norm(Dojo.minimal_velocities(tra2, body1, body2) - v[1], Inf) < 1e-10
+	@test norm(Dojo.minimal_velocities_new(tra2, body1, body2, timestep) - v[1], Inf) < 1e-10
 end
 
 ################################################################################
@@ -220,6 +221,7 @@ end
 @testset "set and get minimal coordinates and velocities" begin
 	for jointtype in jointtypes
 	    mech = get_snake(Nb=10, jointtype=jointtype)
+		timestep = mech.timestep
 		for joint in mech.joints
 		    joint.rotational.qoffset = UnitQuaternion(rand(4)...)
 		end
@@ -243,13 +245,11 @@ end
 	        Δx0 = minimal_coordinates(tra0, pnodes0[i], cnodes0[i])
 	        @test norm(Δx0 - Δx, Inf) < 1e-7
 
-	        set_minimal_velocities!(pnodes0[i], cnodes0[i], rot0, Δϕ=Δϕ)
-	        Δϕ0 = minimal_velocities(rot0, pnodes0[i], cnodes0[i])
+	        set_minimal_velocities_new!(pnodes0[i], cnodes0[i], joint0, timestep, Δx=Δx, Δθ=Δθ, Δv=Δv, Δϕ=Δϕ)
+	        Δϕ0 = minimal_velocities_new(rot0, pnodes0[i], cnodes0[i], timestep)
+			Δv0 = minimal_velocities_new(tra0, pnodes0[i], cnodes0[i], timestep)
 	        @test norm(Δϕ0 - Δϕ, Inf) < 1e-7
-
-	        set_minimal_velocities!(pnodes0[i], cnodes0[i], tra0, Δv=Δv)
-	        Δv0 = minimal_velocities(tra0, pnodes0[i], cnodes0[i])
-	        @test norm(Δv0 - Δv, Inf) < 1e-7
+			@test norm(Δv0 - Δv, Inf) < 1e-7
 	    end
 	end
 end
@@ -260,39 +260,40 @@ end
 ################################################################################
 @testset "minimal velocity jacobian" begin
 	mech = get_humanoid()
+	timestep = mech.timestep
 	for jointcon in mech.joints
 		for joint in [jointcon.translational, jointcon.rotational]
 			qa = UnitQuaternion(rand(4)...)
 			qb = UnitQuaternion(rand(4)...)
-			xa = rand(3)
-			va = rand(3)
-			ωa = rand(3)
-			xb = rand(3)
-			vb = rand(3)
-			ωb = rand(3)
-			minimal_velocities(joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+			xa = srand(3)
+			va = srand(3)
+			ωa = srand(3)
+			xb = srand(3)
+			vb = srand(3)
+			ωb = srand(3)
+			minimal_velocities_new(joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 
-			∇0 = minimal_velocities_jacobian_configuration(:parent, joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+			∇0 = minimal_velocities_jacobian_configuration_new(:parent, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 			∇1 = FiniteDiff.finite_difference_jacobian(
-				xq -> minimal_velocities(joint, xq[1:3], va, UnitQuaternion(xq[4:7]..., false), ωa, xb, vb, qb, ωb),
+				xq -> minimal_velocities_new(joint, xq[SUnitRange(1,3)], va, UnitQuaternion(xq[4:7]..., false), ωa, xb, vb, qb, ωb, timestep),
 				[xa; vector(qa)]) * cat(I(3), LVᵀmat(qa), dims=(1,2))
 			@test norm(∇0 - ∇1, Inf) < 1e-6
 
-			∇0 = minimal_velocities_jacobian_configuration(:child, joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+			∇0 = minimal_velocities_jacobian_configuration_new(:child, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 			∇1 = FiniteDiff.finite_difference_jacobian(
-				xq -> minimal_velocities(joint, xa, va, qa, ωa, xq[1:3], vb, UnitQuaternion(xq[4:7]..., false), ωb),
+				xq -> minimal_velocities_new(joint, xa, va, qa, ωa, xq[SUnitRange(1,3)], vb, UnitQuaternion(xq[4:7]..., false), ωb, timestep),
 				[xb; vector(qb)]) * cat(I(3), LVᵀmat(qb), dims=(1,2))
 			@test norm(∇0 - ∇1, Inf) < 1e-6
 
-			∇0 = minimal_velocities_jacobian_velocity(:parent, joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+			∇0 = minimal_velocities_jacobian_velocity_new(:parent, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 			∇1 = FiniteDiff.finite_difference_jacobian(
-				vϕ -> minimal_velocities(joint, xa, vϕ[1:3], qa, vϕ[4:6], xb, vb, qb, ωb),
+				vϕ -> minimal_velocities_new(joint, xa, vϕ[SUnitRange(1,3)], qa, vϕ[SUnitRange(4,6)], xb, vb, qb, ωb, timestep),
 				[va; ωa])
 			@test norm(∇0 - ∇1, Inf) < 1e-6
 
-			∇0 = minimal_velocities_jacobian_velocity(:child, joint, xa, va, qa, ωa, xb, vb, qb, ωb)
+			∇0 = minimal_velocities_jacobian_velocity_new(:child, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 			∇1 = FiniteDiff.finite_difference_jacobian(
-				vϕ -> minimal_velocities(joint, xa, va, qa, ωa, xb, vϕ[1:3], qb, vϕ[4:6]),
+				vϕ -> minimal_velocities_new(joint, xa, va, qa, ωa, xb, vϕ[SUnitRange(1,3)], qb, vϕ[SUnitRange(4,6)], timestep),
 				[vb; ωb])
 			@test norm(∇0 - ∇1, Inf) < 1e-6
 		end
@@ -365,8 +366,8 @@ end
 	N_a = minimal_to_maximal_jacobian(mechanism, maximal_to_minimal(mechanism, z))
 	@test size(N_fd) == size(N_a)
 	@test norm(N_fd - N_a, Inf) < 1.0e-5
-	@test abs(sum(diag(M_fd * G' * N_fd)) - minimal_dimension(mechanism)) < 1.0e-6
-	@test abs(sum(diag(M_a * G' * N_a)) - minimal_dimension(mechanism)) < 1.0e-6
+	@test abs(sum(diag(M_fd * G' * N_fd)) - minimal_dimension(mechanism)) < 1.0e-5
+	@test abs(sum(diag(M_a * G' * N_a)) - minimal_dimension(mechanism)) < 1.0e-5
 
 	# sphere
 	mechanism = get_mechanism(:sphere, timestep = 0.01, gravity = -9.81)
@@ -417,10 +418,10 @@ end
 	N_fd = minimal_to_maximal_jacobian_fd(mechanism, maximal_to_minimal(mechanism, z))
 	N_a = minimal_to_maximal_jacobian(mechanism, maximal_to_minimal(mechanism, z))
 	@test size(N_fd) == size(N_a)
-	@test norm(N_fd - N_a, Inf) < 1.0e-6
+	@test norm(N_fd - N_a, Inf) < 1.0e-5
 
-	@test abs(sum(diag(M_fd * G' * N_fd)) - minimal_dimension(mechanism)) < 1.0e-6
-	@test abs(sum(diag(M_a * G' * N_a)) - minimal_dimension(mechanism)) < 1.0e-6
+	@test abs(sum(diag(M_fd * G' * N_fd)) - minimal_dimension(mechanism)) < 1.0e-5
+	@test abs(sum(diag(M_a * G' * N_a)) - minimal_dimension(mechanism)) < 1.0e-5
 
 	# atlas
 	mechanism = get_mechanism(:atlas, timestep=0.01, gravity=-9.81, friction_coefficient=0.5, damper=100.0, spring=1.0, contact=true)
@@ -446,8 +447,8 @@ end
 	@test size(N_fd) == size(N_a)
 	@test norm(N_fd - N_a, Inf) < 1.0e-5
 
-	@test abs(sum(diag(M_fd * G' * N_fd)) - minimal_dimension(mechanism)) < 1.0e-6
-	@test abs(sum(diag(M_a * G' * N_a)) - minimal_dimension(mechanism)) < 1.0e-6
+	@test abs(sum(diag(M_fd * G' * N_fd)) - minimal_dimension(mechanism)) < 1.0e-5
+	@test abs(sum(diag(M_a * G' * N_a)) - minimal_dimension(mechanism)) < 1.0e-5
 end
 
 @testset "maximal_to_minimal_jacobian" begin

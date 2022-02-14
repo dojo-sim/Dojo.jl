@@ -27,18 +27,24 @@ end
 end
 
 @inline function minimal_velocities_new(joint::JointConstraint, pnode::Node, cnode::Node, timestep)
+	Δv = minimal_velocities_new(joint.translational, pnode, cnode, timestep)
+	Δϕ = minimal_velocities_new(joint.rotational, pnode, cnode, timestep)
+	return [Δv; Δϕ]
+end
+
+@inline function minimal_velocities_new(joint::Joint, pnode::Node, cnode::Node, timestep)
 	minimal_velocities_new(joint, initial_configuration_velocity(pnode.state)...,
 		initial_configuration_velocity(cnode.state)..., timestep)
 end
 
-@inline function minimal_velocities_new(joint::JointConstraint,
-		xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
-		xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
-		timestep)
-	Δv = minimal_velocities_new(joint.translational, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
-	Δϕ = minimal_velocities_new(joint.rotational, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
-	return [Δv; Δϕ]
-end
+# @inline function minimal_velocities_new(joint::JointConstraint,
+# 		xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+# 		xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
+# 		timestep)
+# 	Δv = minimal_velocities_new(joint.translational, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
+# 	Δϕ = minimal_velocities_new(joint.rotational, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
+# 	return [Δv; Δϕ]
+# end
 
 @inline function minimal_velocities_new(joint::Translational,
 		xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
@@ -54,9 +60,9 @@ end
 
 
 	# Coordinates
-	Δx = A * displacement(tra, xa, qa, xb, qb)
+	Δx = A * displacement(joint, xa, qa, xb, qb)
 	# Previous step coordinates
-	Δx10 = A * displacement(tra, xa10, qa10, xb10, qb10)
+	Δx10 = A * displacement(joint, xa10, qa10, xb10, qb10)
 
 	# Finite difference
 	Δv = (Δx - Δx10) / timestep
@@ -125,30 +131,30 @@ end
 ################################################################################
 # GET: Velocities Joint
 ################################################################################
-@inline function minimal_velocities(joint::Joint, body1::Node, body2::Node)
-    statea = body1.state
-    stateb = body2.state
-    return minimal_velocities(joint, statea.x2[1], statea.v15, statea.q2[1], statea.ϕ15,
-		stateb.x2[1], stateb.v15, stateb.q2[1], stateb.ϕ15)
-end
+# @inline function minimal_velocities(joint::Joint, body1::Node, body2::Node)
+#     statea = body1.state
+#     stateb = body2.state
+#     return minimal_velocities(joint, statea.x2[1], statea.v15, statea.q2[1], statea.ϕ15,
+# 		stateb.x2[1], stateb.v15, stateb.q2[1], stateb.ϕ15)
+# end
 
-function minimal_velocities_jacobian_configuration(jacobian_relative::Symbol,
-        joint::Joint, xa::AbstractVector, va::AbstractVector,
-        qa::UnitQuaternion, ϕa::AbstractVector, xb::AbstractVector,
-        vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector)
-    (jacobian_relative == :parent) && (return minimal_velocities_jacobian_configuration_parent(joint, xa, va, qa, ϕa, xb, vb, qb, ϕb))
-    (jacobian_relative == :child) && (return minimal_velocities_jacobian_configuration_child(joint, xa, va, qa, ϕa, xb, vb, qb, ϕb))
-    return
-end
-
-function minimal_velocities_jacobian_velocity(jacobian_relative::Symbol,
-        joint::Joint, xa::AbstractVector, va::AbstractVector,
-        qa::UnitQuaternion, ϕa::AbstractVector, xb::AbstractVector,
-        vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector)
-    (jacobian_relative == :parent) && (return minimal_velocities_jacobian_velocity_parent(joint, xa, va, qa, ϕa, xb, vb, qb, ϕb))
-    (jacobian_relative == :child) && (return minimal_velocities_jacobian_velocity_child(joint, xa, va, qa, ϕa, xb, vb, qb, ϕb))
-    return
-end
+# function minimal_velocities_jacobian_configuration(jacobian_relative::Symbol,
+#         joint::Joint, xa::AbstractVector, va::AbstractVector,
+#         qa::UnitQuaternion, ϕa::AbstractVector, xb::AbstractVector,
+#         vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector)
+#     (jacobian_relative == :parent) && (return minimal_velocities_jacobian_configuration_parent(joint, xa, va, qa, ϕa, xb, vb, qb, ϕb))
+#     (jacobian_relative == :child) && (return minimal_velocities_jacobian_configuration_child(joint, xa, va, qa, ϕa, xb, vb, qb, ϕb))
+#     return
+# end
+#
+# function minimal_velocities_jacobian_velocity(jacobian_relative::Symbol,
+#         joint::Joint, xa::AbstractVector, va::AbstractVector,
+#         qa::UnitQuaternion, ϕa::AbstractVector, xb::AbstractVector,
+#         vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector)
+#     (jacobian_relative == :parent) && (return minimal_velocities_jacobian_velocity_parent(joint, xa, va, qa, ϕa, xb, vb, qb, ϕb))
+#     (jacobian_relative == :child) && (return minimal_velocities_jacobian_velocity_child(joint, xa, va, qa, ϕa, xb, vb, qb, ϕb))
+#     return
+# end
 
 # ################################################################################
 # # GET: Velocities Rotational

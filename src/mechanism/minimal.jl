@@ -6,7 +6,7 @@ function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVect
 		(id > Ne) && continue # only treat joints
 		joint = mechanism.joints[id]
 		nu = control_dimension(joint)
-		set_minimal_coordinates_velocities!(mechanism, joint, xmin=x[off .+ SUnitRange(1, 2nu)])
+		set_minimal_coordinates_velocities_new!(mechanism, joint, xmin=x[off .+ SUnitRange(1, 2nu)])
 		off += 2nu
 	end
 	z = get_maximal_state(mechanism)
@@ -35,7 +35,7 @@ end
 
 function position_velocity_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, joint, z, x) where {T,Nn,Ne,Nb,Ni}
 	child_joints = unique([get_node(mechanism, id) for id in recursivedirectchildren!(mechanism.system, joint.id) if get_node(mechanism, id) isa JointConstraint])
-	cv = minimal_coordinates_velocities(mechanism)
+	cv = minimal_coordinates_velocities_new(mechanism)
 
 	# initialize
 	G = zeros(maximal_dimension(mechanism), 2 * control_dimension(joint))
@@ -87,7 +87,7 @@ function joint_position_velocity(mechanism, joint, z, x)
         set_velocity!(body_parent, v=vp, ω=ϕp)
     end
 
-    set_minimal_coordinates_velocities!(mechanism, joint, xmin=x)
+    set_minimal_coordinates_velocities_new!(mechanism, joint, xmin=x)
     xc, vc, qc, ωc = initial_configuration_velocity(get_body(mechanism, joint.child_id).state)
     [xc; vc; vector(qc); ωc]
 end
@@ -136,6 +136,7 @@ function get_minimal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni};
 	x = []
 
 	mechanism = deepcopy(mechanism)
+	timestep = mechanism.timestep
 
 	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
 	# Thus go through the joints in order, start from joint between robot and origin and go down the tree.
@@ -148,7 +149,7 @@ function get_minimal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni};
 		cbody = get_body(mechanism, joint.child_id)
 		for (i, element) in enumerate([joint.translational, joint.rotational])
 			pos = minimal_coordinates(element, pbody, cbody)
-			vel = minimal_velocities(element, pbody, cbody)
+			vel = minimal_velocities_new(element, pbody, cbody, timestep)
 			if pos_noise != nothing
 				pos += clamp.(length(pos) == 1 ? rand(pos_noise, length(pos))[1] : rand(pos_noise, length(pos)), pos_noise_range...)
 			end
