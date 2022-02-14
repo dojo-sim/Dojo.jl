@@ -1,17 +1,17 @@
 ################################################################################
 # SET: Coordinates Joint constraints
 ################################################################################
-function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::JointConstraint;
+function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::JointConstraint, timestep;
         Δx::AbstractVector=szeros(control_dimension(joint.translational)),
         Δθ::AbstractVector=szeros(control_dimension(joint.rotational)))
     # We need to set the minimal coordinates of the rotational joint first
     # since xb = fct(qb, Δx)
-    set_minimal_coordinates!(pnode, cnode, joint.rotational; Δθ=Δθ)
-    set_minimal_coordinates!(pnode, cnode, joint.translational; Δx=Δx)
+    set_minimal_coordinates!(pnode, cnode, joint.rotational, timestep; Δθ=Δθ)
+    set_minimal_coordinates!(pnode, cnode, joint.translational, timestep; Δx=Δx)
     return nothing
 end
 
-function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::Rotational;
+function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::Rotational, timestep;
         Δθ::AbstractVector=szeros(control_dimension(joint)))
         # Δθ is expressed in along the joint's nullspace axes, in pnode's offset frame
     qoffset = joint.qoffset
@@ -20,6 +20,7 @@ function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::Rotational;
     Δq = axis_angle_to_quaternion(Aᵀ*Δθ)
     qb = qa * qoffset * Δq
     set_position!(cnode; x=cnode.state.x2[1], q = qb)
+	set_previous_configuration!(cnode, timestep)
     return nothing
 end
 
@@ -64,7 +65,7 @@ function set_minimal_coordinates_jacobian_minimal(pnode::Node, cnode::Node, join
     return [xθ; qθ]
 end
 
-function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::Translational;
+function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::Translational, timestep;
         Δx::AbstractVector=szeros(control_dimension(joint)))
         # Δx is expressed in along the joint's nullspace axes, in pnode's frame
 
@@ -79,6 +80,7 @@ function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::Translational
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
     xb = xa + vrotate(pa + Aᵀ * Δx, qa) - vrotate(pb, qb)
     set_position!(cnode; x = xb, q=cnode.state.q2[1])
+	set_previous_configuration!(cnode, timestep)
     return nothing
 end
 
@@ -141,8 +143,6 @@ end
 # SET: Velocities Joint constraints
 ################################################################################
 function set_minimal_velocities_new!(pnode::Node, cnode::Node, joint::JointConstraint, timestep;
-		Δx=szeros(control_dimension(joint.translational)),
-		Δθ=szeros(control_dimension(joint.rotational)),
         Δv=szeros(control_dimension(joint.translational)),
         Δϕ=szeros(control_dimension(joint.rotational)))
     # We need to set the minimal coordinates of the rotational joint first
@@ -150,16 +150,15 @@ function set_minimal_velocities_new!(pnode::Node, cnode::Node, joint::JointConst
     # set_minimal_velocities!(pnode, cnode, joint.rotational; Δϕ=Δϕ)
     # set_minimal_velocities!(pnode, cnode, joint.translational; Δv=Δv)
 	vb, ϕb = set_minimal_velocities_new(joint, initial_configuration_velocity(pnode.state)...,
-	 	current_configuration(cnode.state)..., timestep, Δx=Δx, Δθ=Δθ, Δv=Δv, Δϕ=Δϕ)
+	 	current_configuration(cnode.state)..., timestep, Δv=Δv, Δϕ=Δϕ)
 	set_velocity!(cnode; v=vb, ω=ϕb)
+	set_previous_configuration!(cnode, timestep)
     return nothing
 end
 
 function set_minimal_velocities_new(joint::JointConstraint,
 		xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
 		xb::AbstractVector, qb::UnitQuaternion, timestep;
-		Δx=szeros(control_dimension(joint.translational)),
-		Δθ=szeros(control_dimension(joint.rotational)),
         Δv=szeros(control_dimension(joint.translational)),
         Δϕ=szeros(control_dimension(joint.rotational)))
 	rot = joint.rotational
@@ -170,13 +169,16 @@ function set_minimal_velocities_new(joint::JointConstraint,
 	Arotᵀ = zerodimstaticadjoint(nullspace_mask(rot))
 	Atraᵀ = zerodimstaticadjoint(nullspace_mask(tra))
 
+	Δx = minimal_coordinates(joint.translational, xa, qa, xb, qb)
+    Δθ = minimal_coordinates(joint.rotational, xa, qa, xb, qb)
+
 	# 1 step backward in time
 	xa1 = next_position(xa, -va, timestep)
 	qa1 = next_orientation(qa, -ϕa, timestep)
 
 	# Finite difference
-	Δx1 = Δx - Δv * timestep
-	Δθ1 = Δθ - Δϕ * timestep
+	Δx1 = Δx .- Δv * timestep
+	Δθ1 = Δθ .- Δϕ * timestep
 
 	# Δθ is expressed in along the joint's nullspace axes, in pnode's offset frame
     Δq1 = axis_angle_to_quaternion(Arotᵀ*Δθ1)
@@ -214,8 +216,8 @@ function set_minimal_coordinates_velocities_new!(pnode::Node, cnode::Node, joint
     # We need to set the minimal coordinates of the rotational joint first
     # since xb = fct(qb, Δx)
     # since vb = fct(ϕb, Δv)
-    set_minimal_coordinates!(pnode, cnode, joint; Δx=Δx, Δθ=Δθ)
-    set_minimal_velocities_new!(pnode, cnode, joint, timestep; Δx=Δx, Δθ=Δθ, Δv=Δv, Δϕ=Δϕ)
+    set_minimal_coordinates!(pnode, cnode, joint, timestep; Δx=Δx, Δθ=Δθ)
+    set_minimal_velocities_new!(pnode, cnode, joint, timestep; Δv=Δv, Δϕ=Δϕ)
     return nothing
 end
 

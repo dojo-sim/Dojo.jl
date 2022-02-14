@@ -107,8 +107,7 @@ vb = bodyb.state.v15
 Δθ = minimal_coordinates(joint.rotational, xa, qa, xb, qb)
 Δv = minimal_velocities_new(joint.translational, xa, va, qa, ϕa, xb, vb, qb, ϕb, 1e-5*timestep)
 Δϕ = minimal_velocities_new(joint.rotational, xa, va, qa, ϕa, xb, vb, qb, ϕb, 1e-5*timestep)
-vb2, ϕb2 = set_minimal_velocities_new(joint, xa, va, qa, ϕa, xb, qb, 1e-5*timestep,
-	Δx=Δx, Δθ=Δθ, Δv=Δv, Δϕ=Δϕ)
+vb2, ϕb2 = set_minimal_velocities_new(joint, xa, va, qa, ϕa, xb, qb, 1e-5*timestep, Δv=Δv, Δϕ=Δϕ)
 norm(xb - xb2, Inf)
 norm(vb - vb2, Inf)
 norm(ϕb - ϕb2, Inf)

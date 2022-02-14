@@ -237,15 +237,15 @@ end
 	    Δϕ = rand(control_dimension(rot0))
 	    Δv = rand(control_dimension(tra0))
 	    for i = 1:10
-	        set_minimal_coordinates!(pnodes0[i], cnodes0[i], rot0, Δθ=Δθ)
+	        set_minimal_coordinates!(pnodes0[i], cnodes0[i], rot0, timestep, Δθ=Δθ)
 	        Δθ0 = minimal_coordinates(rot0, pnodes0[i], cnodes0[i])
 	        @test norm(Δθ0 - Δθ, Inf) < 1e-7
 
-	        set_minimal_coordinates!(pnodes0[i], cnodes0[i], tra0, Δx=Δx)
+	        set_minimal_coordinates!(pnodes0[i], cnodes0[i], tra0, timestep, Δx=Δx)
 	        Δx0 = minimal_coordinates(tra0, pnodes0[i], cnodes0[i])
 	        @test norm(Δx0 - Δx, Inf) < 1e-7
 
-	        set_minimal_velocities_new!(pnodes0[i], cnodes0[i], joint0, timestep, Δx=Δx, Δθ=Δθ, Δv=Δv, Δϕ=Δϕ)
+	        set_minimal_velocities_new!(pnodes0[i], cnodes0[i], joint0, timestep, Δv=Δv, Δϕ=Δϕ)
 	        Δϕ0 = minimal_velocities_new(rot0, pnodes0[i], cnodes0[i], timestep)
 			Δv0 = minimal_velocities_new(tra0, pnodes0[i], cnodes0[i], timestep)
 	        @test norm(Δϕ0 - Δϕ, Inf) < 1e-7

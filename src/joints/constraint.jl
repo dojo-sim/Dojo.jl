@@ -98,7 +98,7 @@ function set_joint_position!(mechanism, joint::JointConstraint{T,N,Nc}, xθ) whe
 
     Δx = xθ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]
     Δθ = xθ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])]
-    set_minimal_coordinates!(body1, body2, joint, Δx=Δx, Δθ=Δθ)
+    set_minimal_coordinates!(body1, body2, joint, mechanism.timestep, Δx=Δx, Δθ=Δθ)
     return body2.state.x2[1], body2.state.q2[1]
 end
 

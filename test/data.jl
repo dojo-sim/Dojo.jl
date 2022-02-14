@@ -177,8 +177,8 @@ end
 
 
 # mechanism
-# vis = Visualizer()
-# open(vis)
+vis = Visualizer()
+open(vis)
 
 function ctrl!(mechanism, k)
 	nu = control_dimension(mechanism)
@@ -191,17 +191,60 @@ function ctrl!(mechanism, k)
 	return
 end
 
-mechanism = get_mechanism(:quadruped, timestep=0.01, gravity=-.0; spring=0.0, damper=40.0, contact=false)
-initialize!(mechanism, :quadruped, tran=[0,0,1.])
+mechanism = get_mechanism(:quadruped, timestep=0.05, gravity=-.20; spring=00.0, damper=00.0, contact=true, limits=false)
+reverse(mechanism.system.dfs_list)
+initialize!(mechanism, :quadruped, tran=[0,0,0.2])
+
+
+function set_velocity!(mechanism, joint::JointConstraint{T,N,Nc}, vϕ) where {T,N,Nc}
+    Nλ = 0
+    for (i, element) in enumerate([joint.translational, joint.rotational])
+        Nλ += λlength(element)
+    end
+
+    # bodies
+    body1 = get_body(mechanism, joint.parent_id)
+    body2 = get_body(mechanism, joint.child_id)
+
+    Δv = vϕ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]
+    Δϕ = vϕ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])]
+    set_minimal_velocities_new!(body1, body2, joint, mechanism.timestep, Δv=Δv, Δϕ=Δϕ)
+    return body2.state.v15, body2.state.ϕ15
+end
+
+mechanism.bodies[1].state.x1
+mechanism.joints[1].translational.vertices
+v15, ϕ15 = set_velocity!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [0;0;0; zeros(3)])
+v15
+ϕ15
+
+mechanism.bodies[1].state
 # simulate
-storage = simulate!(mechanism, 0.02, ctrl!,
-	record=true, verbose=false, opts=SolverOptions(rtol=1e-4, btol=1e-4))
+storage = simulate!(mechanism, 2.2, #ctrl!,
+	record=true, opts=SolverOptions(rtol=1e-4, btol=1e-4, verbose=true))
 visualize(mechanism, storage, vis=vis)
 
 get_sdf(mechanism, storage)
 
 mechanism.joints
 
+
+
+
+mech0 = get_atlas(contact=false)
+mech0.joints
+mech = Mechanism(deepcopy(mech0.origin), deepcopy([get_body(mech0, 49)]),
+	deepcopy(mech0.joints[1:1]), deepcopy(mech0.contacts),
+	gravity=-9.81, timestep=0.01, spring=0.0, damper=0.0)
+# mech.joints[1].child_id = 2
+
+initialize!(mech, :atlas, tran=[0,0,1.])
+# simulate
+storage = simulate!(mech, 2.02, #ctrl!,
+	record=true, opts=SolverOptions(rtol=1e-4, btol=1e-4, verbose=true))
+visualize(mech, storage, vis=vis)
+mech.joints
+mech.joints[1]
 
 
 a = 10
