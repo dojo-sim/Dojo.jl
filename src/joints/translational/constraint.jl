@@ -28,11 +28,6 @@ function Translational{T,Nλ}(body1::Node, body2::Node;
     Translational{T,Nλ,Nb,N,Nb½,N̄λ}(axis, V3, V12, vertices, spring, damper, spring_offset, joint_limits, spring_type, input), body1.id, body2.id
 end
 
-Translational0{T} = Translational{T,0} where T
-Translational1{T} = Translational{T,1} where T
-Translational2{T} = Translational{T,2} where T
-Translational3{T} = Translational{T,3} where T
-
 ################################################################################
 # Impulse Transform
 ################################################################################

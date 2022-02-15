@@ -29,12 +29,6 @@ function Rotational{T,Nλ}(body1::Node, body2::Node;
     N = Nλ + 2Nb
     Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(axis, V3, V12, qoffset, spring, damper, spring_offset, joint_limits, spring_type, input), body1.id, body2.id
 end
-
-Rotational0{T} = Rotational{T,0} where T
-Rotational1{T} = Rotational{T,1} where T
-Rotational2{T} = Rotational{T,2} where T
-Rotational3{T} = Rotational{T,3} where T
-
 ################################################################################
 # Impulse Transform
 ################################################################################

@@ -9,14 +9,14 @@ damper_child(joint::Translational, bodya::Node, bodyb::Node, timestep; unitary::
     timestep * damper_child(joint, current_configuration_velocity(bodya.state)...,
     current_configuration_velocity(bodyb.state)..., unitary=unitary)
 
-spring_parent(joint::Translational3{T}, bodya::Node, bodyb::Node, timestep) where T = szeros(T, 6)
-spring_child(joint::Translational3{T}, bodya::Node, bodyb::Node, timestep) where T = szeros(T, 6)
-damper_parent(joint::Translational3{T}, bodya::Node, bodyb::Node, timestep) where T = szeros(T, 6)
-damper_child(joint::Translational3{T}, bodya::Node, bodyb::Node, timestep) where T = szeros(T, 6)
+spring_parent(joint::Translational{T,3}, bodya::Node, bodyb::Node, timestep) where T = szeros(T, 6)
+spring_child(joint::Translational{T,3}, bodya::Node, bodyb::Node, timestep) where T = szeros(T, 6)
+damper_parent(joint::Translational{T,3}, bodya::Node, bodyb::Node, timestep) where T = szeros(T, 6)
+damper_child(joint::Translational{T,3}, bodya::Node, bodyb::Node, timestep) where T = szeros(T, 6)
 
-spring_parent(joint::Translational3{T}, xa::AbstractVector, qa::UnitQuaternion,
+spring_parent(joint::Translational{T,3}, xa::AbstractVector, qa::UnitQuaternion,
     xb::AbstractVector, qb::UnitQuaternion; rotate::Bool=true, unitary::Bool=false) where T = szeros(T, 6)
-spring_child(joint::Translational3{T}, xa::AbstractVector, qa::UnitQuaternion,
+spring_child(joint::Translational{T,3}, xa::AbstractVector, qa::UnitQuaternion,
     xb::AbstractVector, qb::UnitQuaternion; rotate::Bool=true, unitary::Bool=false) where T = szeros(T, 6)
 
 ################################################################################
@@ -121,23 +121,23 @@ end
     return damper_relative(:child, joint, xa, va, qa, ωa, xb, vb, qb, ωb, unitary=unitary)
 end
 
-spring_parent_jacobian_configuration_parent(joint::Translational3{T}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
-spring_parent_jacobian_configuration_child(joint::Translational3{T}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
-spring_child_jacobian_configuration_child(joint::Translational3{T}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
-spring_child_jacobian_configuration_parent(joint::Translational3{T}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
-damper_parent_jacobian_configuration_parent(joint::Translational3{T}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
-damper_parent_jacobian_configuration_child(joint::Translational3{T}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
-damper_child_jacobian_configuration_child(joint::Translational3{T}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
-damper_child_jacobian_configuration_parent(joint::Translational3{T}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
+spring_parent_jacobian_configuration_parent(joint::Translational{T,3}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
+spring_parent_jacobian_configuration_child(joint::Translational{T,3}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
+spring_child_jacobian_configuration_child(joint::Translational{T,3}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
+spring_child_jacobian_configuration_parent(joint::Translational{T,3}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
+damper_parent_jacobian_configuration_parent(joint::Translational{T,3}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
+damper_parent_jacobian_configuration_child(joint::Translational{T,3}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
+damper_child_jacobian_configuration_child(joint::Translational{T,3}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
+damper_child_jacobian_configuration_parent(joint::Translational{T,3}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
 
-spring_parent_jacobian_velocity_parent(joint::Translational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
-spring_parent_jacobian_velocity_child(joint::Translational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
-spring_child_jacobian_velocity_child(joint::Translational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
-spring_child_jacobian_velocity_parent(joint::Translational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
-damper_parent_jacobian_velocity_parent(joint::Translational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
-damper_parent_jacobian_velocity_child(joint::Translational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
-damper_child_jacobian_velocity_child(joint::Translational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
-damper_child_jacobian_velocity_parent(joint::Translational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
+spring_parent_jacobian_velocity_parent(joint::Translational{T,3}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
+spring_parent_jacobian_velocity_child(joint::Translational{T,3}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
+spring_child_jacobian_velocity_child(joint::Translational{T,3}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
+spring_child_jacobian_velocity_parent(joint::Translational{T,3}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
+damper_parent_jacobian_velocity_parent(joint::Translational{T,3}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
+damper_parent_jacobian_velocity_child(joint::Translational{T,3}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
+damper_child_jacobian_velocity_child(joint::Translational{T,3}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
+damper_child_jacobian_velocity_parent(joint::Translational{T,3}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
 
 
 @inline function spring_jacobian_configuration(relative::Symbol, jacobian_relative::Symbol,
