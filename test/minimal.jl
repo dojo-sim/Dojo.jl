@@ -275,25 +275,25 @@ end
 
 			∇0 = Dojo.minimal_velocities_jacobian_configuration(:parent, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 			∇1 = FiniteDiff.finite_difference_jacobian(
-				xq -> Dojo.minimal_velocities(joint, xq[SUnitRange(1,3)], va, UnitQuaternion(xq[4:7]..., false), ωa, xb, vb, qb, ωb, timestep),
-				[xa; vector(qa)]) * cat(I(3), LVᵀmat(qa), dims=(1,2))
+				xq -> Dojo.minimal_velocities(joint, xq[Dojo.SUnitRange(1,3)], va, UnitQuaternion(xq[4:7]..., false), ωa, xb, vb, qb, ωb, timestep),
+				[xa; Dojo.vector(qa)]) * cat(I(3), Dojo.LVᵀmat(qa), dims=(1,2))
 			@test norm(∇0 - ∇1, Inf) < 1e-6
 
 			∇0 = Dojo.minimal_velocities_jacobian_configuration(:child, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 			∇1 = FiniteDiff.finite_difference_jacobian(
-				xq -> Dojo.minimal_velocities(joint, xa, va, qa, ωa, xq[SUnitRange(1,3)], vb, UnitQuaternion(xq[4:7]..., false), ωb, timestep),
-				[xb; vector(qb)]) * cat(I(3), LVᵀmat(qb), dims=(1,2))
+				xq -> Dojo.minimal_velocities(joint, xa, va, qa, ωa, xq[Dojo.SUnitRange(1,3)], vb, UnitQuaternion(xq[4:7]..., false), ωb, timestep),
+				[xb; Dojo.vector(qb)]) * cat(I(3), Dojo.LVᵀmat(qb), dims=(1,2))
 			@test norm(∇0 - ∇1, Inf) < 1e-6
 
 			∇0 = Dojo.minimal_velocities_jacobian_velocity(:parent, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 			∇1 = FiniteDiff.finite_difference_jacobian(
-				vϕ -> Dojo.minimal_velocities(joint, xa, vϕ[SUnitRange(1,3)], qa, vϕ[SUnitRange(4,6)], xb, vb, qb, ωb, timestep),
+				vϕ -> Dojo.minimal_velocities(joint, xa, vϕ[Dojo.SUnitRange(1,3)], qa, vϕ[Dojo.SUnitRange(4,6)], xb, vb, qb, ωb, timestep),
 				[va; ωa])
 			@test norm(∇0 - ∇1, Inf) < 1e-6
 
 			∇0 = Dojo.minimal_velocities_jacobian_velocity(:child, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 			∇1 = FiniteDiff.finite_difference_jacobian(
-				vϕ -> Dojo.minimal_velocities(joint, xa, va, qa, ωa, xb, vϕ[SUnitRange(1,3)], qb, vϕ[SUnitRange(4,6)], timestep),
+				vϕ -> Dojo.minimal_velocities(joint, xa, va, qa, ωa, xb, vϕ[Dojo.SUnitRange(1,3)], qb, vϕ[Dojo.SUnitRange(4,6)], timestep),
 				[vb; ωb])
 			@test norm(∇0 - ∇1, Inf) < 1e-6
 		end
@@ -317,13 +317,13 @@ end
 			∇0 = Dojo.minimal_coordinates_jacobian_configuration(:parent, joint, xa, qa, xb, qb)
 			∇1 = FiniteDiff.finite_difference_jacobian(
 				xq -> Dojo.minimal_coordinates(joint, xq[1:3], UnitQuaternion(xq[4:7]..., false), xb, qb),
-				[xa; vector(qa)]) * cat(I(3), LVᵀmat(qa), dims=(1,2))
+				[xa; Dojo.vector(qa)]) * cat(I(3), Dojo.LVᵀmat(qa), dims=(1,2))
 			@test norm(∇0 - ∇1, Inf) < 1e-6
 
 			∇0 = Dojo.minimal_coordinates_jacobian_configuration(:child, joint, xa, qa, xb, qb)
 			∇1 = FiniteDiff.finite_difference_jacobian(
 				xq -> Dojo.minimal_coordinates(joint, xa, qa, xq[1:3], UnitQuaternion(xq[4:7]..., false)),
-				[xb; vector(qb)]) * cat(I(3), LVᵀmat(qb), dims=(1,2))
+				[xb; Dojo.vector(qb)]) * cat(I(3), Dojo.LVᵀmat(qb), dims=(1,2))
 			@test norm(∇0 - ∇1, Inf) < 1e-6
 		end
 	end
@@ -339,7 +339,7 @@ end
 	end
 
 	function ctrl!(mechanism, k)
-		set_control!(mechanism, 0.1 * srand(Dojo.control_dimension(mechanism)))
+		Dojo.set_control!(mechanism, 0.1 * srand(Dojo.control_dimension(mechanism)))
 	end
 
 	# n-pendulum

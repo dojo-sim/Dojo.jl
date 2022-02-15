@@ -27,12 +27,73 @@ function chain_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, joint::JointConstra
 	return nothing
 end
 
+s = Dict{Vector{Int}, Matrix}([1,1] => ones(3,3))
+s[2] = 3
+parent()
 
-mech = get_pendulum()
-initialize!(mech, :pendulum)
+function minimal_to_maximal_jacobian2(mechanism::Mechanism{T,Nn,Ne,Nb,Ni},
+		x::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
+	system = mechanism.system
+	timestep = mechanism.timestep
+	J = zeros(maximal_dimension(mechanism, attjac=true), minimal_dimension(mechanism))
+	z = minimal_to_maximal(mechanism, x)
+
+	# Compute partials
+	partials = Dict{Vector{Int}, Matrix{T}}()
+	for cnode in mechanism.bodies
+		for pjoint in parent_joints(mechanism, cnode)
+			pnode = get_node(mechanism, pjoint.parent_id, origin=true)
+			partials[[cnode.id, pjoint.id]] = set_minimal_coordinates_velocities_jacobian_minimal(pnode, cnode, pjoint, timestep) # 12 x 2nu (xvqϕ x Δxθvϕ)
+			partials[[cnode.id, pnode.id]] = set_minimal_coordinates_velocities_jacobian_parent(pnode, cnode, pjoint, timestep) # 12 x 12 (xvqϕ x xvqϕ)
+		end
+	end
+
+	# Index
+	nu = control_dimension.(mech.joints)
+	col = [1+2sum(nu[1:i-1]):2sum(nu[1:i]) for i=1:Ne]
+	row = [12(i-1)+1:12i for i = 1:Nb]
+
+	 # Chain partials together from root to leaves
+	for id in reverse(mechanism.system.dfs_list)
+		!(Ne < id <= Ne+Nb) && continue # only treat bodies
+		println("id ", id)
+		println("Ne ", Ne)
+		println("id ", id)
+		cnode = get_node(mechanism, id)
+		for pjoint in parent_joints(mechanism, cnode)
+			pnode = get_node(mechanism, pjoint.parent_id, origin=true)
+			J[row[cnode.id-Ne], col[pjoint.id]] += partials[[cnode.id, pjoint.id]] # ∂zi∂θp(i)
+			(pnode.id == 0) && continue # avoid origin
+			J[row[cnode.id-Ne], :] += partials[[cnode.id, pnode.id]] * J[row[pnode.id-Ne], :] # ∂zi∂zp(p(i)) * ∂zp(p(i))/∂θ
+		end
+	end
+	return J
+end
+
+function parent_joints(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, body::Body) where {T,Nn,Ne,Nb,Ni}
+	ids = parents(mechanism.system, body.id)
+	ids = intersect(ids, 1:Ne)# filter out the bodies
+	return [get_node(mechanism, id) for id in ids]
+end
+
+
+mech = get_quadruped()
+initialize!(mech, :quadruped)
+x = get_minimal_state(mech)
+J = minimal_to_maximal_jacobian2(mech, x)
+Main.@profiler minimal_to_maximal_jacobian2(mech, x)
+@benchmark J = minimal_to_maximal_jacobian2(mech, x)
+spy(J)
+mech.system.dfs_list
+
+parents(mech.system, 6)
+parents(mech.system, 9)
+parents(mech.system, 9)
+
+
 pnode = mech.origin
 cnode = mech.bodies[1]
-chain_jacobian(mech, pnode, cnode)
+# chain_jacobian(mech, pnode, cnode)
 
 
 

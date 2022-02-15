@@ -1,10 +1,10 @@
 using Dojo
 using Test
 
-include(joinpath(module_dir(), "src", "gradients", "dev", "data.jl"))
-include(joinpath(module_dir(), "src", "gradients", "dev", "utils.jl"))
-include(joinpath(module_dir(), "src", "gradients", "dev", "finite_difference.jl"))
-include(joinpath(module_dir(), "src", "gradients", "dev", "data_gradients.jl"))
+# include(joinpath(Dojo.module_dir(), "src", "gradients", "dev", "data.jl"))
+# include(joinpath(Dojo.module_dir(), "src", "gradients", "dev", "utils.jl"))
+# include(joinpath(Dojo.module_dir(), "src", "gradients", "dev", "finite_difference.jl"))
+# include(joinpath(Dojo.module_dir(), "src", "gradients", "dev", "data_gradients.jl"))
 
 jointtypes = [
     :Fixed,
@@ -25,30 +25,30 @@ jointtypes = [
     ]
 
 function test_get_set_data(mechanism::Mechanism)
-    Nd = data_dim(mechanism, attjac=false)
+    Nd = Dojo.data_dim(mechanism, attjac=false)
     data0 = rand(Nd)
-    set_data0!(mechanism, data0)
-    data1 = get_data0(mechanism)
+    Dojo.set_data0!(mechanism, data0)
+    data1 = Dojo.get_data0(mechanism)
     @test norm(data0 - data1) < 1e-10
 end
 
 @testset "get and set data" begin
-    mech = get_snake(Nb=3, damper=1.0, spring=1.0, contact_type=:contact);
+    mech = Dojo.get_snake(Nb=3, damper=1.0, spring=1.0, contact_type=:contact);
     test_get_set_data(mech)
-    mech = get_snake(Nb=3, damper=1.0, spring=1.0, contact_type=:linear_contact);
+    mech = Dojo.get_snake(Nb=3, damper=1.0, spring=1.0, contact_type=:linear_contact);
     test_get_set_data(mech)
-    mech = get_snake(Nb=3, damper=1.0, spring=1.0, contact_type=:impact);
+    mech = Dojo.get_snake(Nb=3, damper=1.0, spring=1.0, contact_type=:impact);
     test_get_set_data(mech)
 
-    mech = get_pendulum(damper=1.0, spring=10.0);
+    mech = Dojo.get_pendulum(damper=1.0, spring=10.0);
     test_get_set_data(mech)
-    mech = get_humanoid(damper=1.0, spring=10.0, contact=true);
+    mech = Dojo.get_humanoid(damper=1.0, spring=10.0, contact=true);
     test_get_set_data(mech)
-    mech = get_humanoid(damper=1.0, spring=10.0, contact=false);
+    mech = Dojo.get_humanoid(damper=1.0, spring=10.0, contact=false);
     test_get_set_data(mech)
-    mech = get_atlas(damper=1.0, spring=10.0);
+    mech = Dojo.get_atlas(damper=1.0, spring=10.0);
     test_get_set_data(mech)
-    mech = get_quadruped(damper=1.0, spring=10.0);
+    mech = Dojo.get_quadruped(damper=1.0, spring=10.0);
     test_get_set_data(mech)
 end
 
@@ -58,40 +58,40 @@ end
 ################################################################################
 # Controller
 function ctrl!(mechanism, k)
-	nu = control_dimension(mechanism)
-	if control_dimension(mechanism.joints[1]) == 6
+	nu = Dojo.control_dimension(mechanism)
+	if Dojo.control_dimension(mechanism.joints[1]) == 6
 		u = 0.2*[szeros(6); mechanism.timestep * sones(nu-6)]
 	else
 		u = 0.2*mechanism.timestep * sones(nu)
 	end
-	set_control!(mechanism, u)
+	Dojo.set_control!(mechanism, u)
 	return
 end
 
 function test_data_system(model::Symbol; ϵ::T=1.0e-6, tsim::T=0.1, ctrl::Any=(m,k)->nothing,
         timestep::T=0.01, gravity=[0.0; 0.0; -9.81], verbose::Bool=false, kwargs...) where T
     # mechanism
-    mechanism = get_mechanism(model, timestep=timestep, gravity=gravity; kwargs...)
-    initialize!(mechanism, model)
+    mechanism = Dojo.get_mechanism(model, timestep=timestep, gravity=gravity; kwargs...)
+    Dojo.initialize!(mechanism, model)
     # simulate
-    simulate!(mechanism, tsim, ctrl!,
-        record=false, verbose=false, opts=SolverOptions(rtol=ϵ, btol=ϵ))
+    Dojo.simulate!(mechanism, tsim, ctrl!,
+        record=false, verbose=false, opts=Dojo.SolverOptions(rtol=ϵ, btol=ϵ))
 
 	# Finite Difference
-	Nd = data_dim(mechanism, attjac=false)
-	data0 = get_data0(mechanism)# + 0.05*rand(Nd)
-	sol0 = get_solution0(mechanism)
-	datajac0 = finitediff_data_jacobian(mechanism, data0, sol0)
-	attjac0 = data_attitude_jacobian(mechanism)
+	Nd = Dojo.data_dim(mechanism, attjac=false)
+	data0 = Dojo.get_data0(mechanism)# + 0.05*rand(Nd)
+	sol0 = Dojo.get_solution0(mechanism)
+	datajac0 = Dojo.finitediff_data_jacobian(mechanism, data0, sol0)
+	attjac0 = Dojo.data_attitude_jacobian(mechanism)
 	datajac0 *= attjac0
 
 	# Analytical
-	D = create_data_matrix(mechanism.joints, mechanism.bodies, mechanism.contacts)
-	jacobian_data!(D, mechanism)
+	D = Dojo.create_data_matrix(mechanism.joints, mechanism.bodies, mechanism.contacts)
+	Dojo.jacobian_data!(D, mechanism)
 	nodes = [mechanism.joints; mechanism.bodies; mechanism.contacts]
 	dimrow = length.(nodes)
-	dimcol = data_dim.(nodes)
-	datajac1 = full_matrix(D, dimrow, dimcol)
+	dimcol = Dojo.data_dim.(nodes)
+	datajac1 = Dojo.full_matrix(D, dimrow, dimcol)
 
 	# Test
 	@testset "Data Jacobian: $(String(model))" begin

@@ -33,7 +33,8 @@ function get_contact_constraint(mechanism::Mechanism, name::Symbol)
     return
 end
 
-function get_node(mechanism::Mechanism{T,Nn,Ne,Nb}, id::Integer) where {T,Nn,Ne,Nb}
+function get_node(mechanism::Mechanism{T,Nn,Ne,Nb}, id::Integer; origin::Bool=false) where {T,Nn,Ne,Nb}
+    (origin && id == 0) && return mechanism.origin
     if id <= Ne
         return get_joint_constraint(mechanism, id)
     elseif id <= Ne+Nb

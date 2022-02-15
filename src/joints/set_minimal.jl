@@ -200,23 +200,59 @@ function set_minimal_coordinates_velocities!(mechanism::Mechanism, joint::JointC
         xmin::AbstractVector=szeros(2*control_dimension(joint)))
     pnode = get_body(mechanism, joint.parent_id)
     cnode = get_body(mechanism, joint.child_id)
+    set_minimal_coordinates_velocities!(pnode, cnode, joint, mechanism.timestep; xmin=xmin)
+end
+
+function set_minimal_coordinates_velocities!(pnode::Node, cnode::Node, joint::JointConstraint, timestep;
+        xmin::AbstractVector=szeros(2*control_dimension(joint)))
     nu = control_dimension(joint)
     Δx = xmin[SUnitRange(joint.minimal_index[1]...)]
     Δθ = xmin[SUnitRange(joint.minimal_index[2]...)]
     Δv = xmin[nu .+ SUnitRange(joint.minimal_index[1]...)]
     Δϕ = xmin[nu .+ SUnitRange(joint.minimal_index[2]...)]
-    set_minimal_coordinates_velocities!(pnode, cnode, joint, mechanism.timestep; Δx=Δx, Δθ=Δθ, Δv=Δv, Δϕ=Δϕ)
+	# We need to set the minimal coordinates of the rotational joint first
+	# since xb = fct(qb, Δx)
+	# since vb = fct(ϕb, Δv)
+	set_minimal_coordinates!(pnode, cnode, joint, timestep; Δx=Δx, Δθ=Δθ)
+	set_minimal_velocities!(pnode, cnode, joint, timestep; Δv=Δv, Δϕ=Δϕ)
 end
 
-function set_minimal_coordinates_velocities!(pnode::Node, cnode::Node, joint::JointConstraint, timestep;
-        Δx::AbstractVector=szeros(control_dimension(joint.translational)),
-        Δθ::AbstractVector=szeros(control_dimension(joint.rotational)),
-        Δv::AbstractVector=szeros(control_dimension(joint.translational)),
-        Δϕ::AbstractVector=szeros(control_dimension(joint.rotational)))
-    # We need to set the minimal coordinates of the rotational joint first
-    # since xb = fct(qb, Δx)
-    # since vb = fct(ϕb, Δv)
-    set_minimal_coordinates!(pnode, cnode, joint, timestep; Δx=Δx, Δθ=Δθ)
-    set_minimal_velocities!(pnode, cnode, joint, timestep; Δv=Δv, Δϕ=Δϕ)
-    return nothing
+function set_minimal_coordinates_velocities_jacobian_minimal(pnode::Node, cnode::Node,
+		joint::JointConstraint, timestep)
+
+	xmin = minimal_coordinates_velocities(joint, pnode, cnode, timestep)
+	qb = current_orientation(cnode.state)
+	function child_maximal_state(xmin)
+		set_minimal_coordinates_velocities!(pnode, cnode, joint, timestep; xmin=xmin)
+		xb, vb, qb, ϕb = initial_configuration_velocity(cnode.state)
+		zb = [xb; vb; vector(qb); ϕb]
+		return zb
+	end
+	J = FiniteDiff.finite_difference_jacobian(xmin -> child_maximal_state(xmin), xmin)
+	J = cat(Diagonal(sones(6)), LVᵀmat(qb)', Diagonal(sones(3)), dims=(1,2)) * J
+	return J
+end
+
+function set_minimal_coordinates_velocities_jacobian_parent(pnode::Node, cnode::Node,
+		joint::JointConstraint, timestep)
+	xmin = minimal_coordinates_velocities(joint, pnode, cnode, timestep)
+	qb = current_orientation(cnode.state)
+	xa, va, qa, ϕa = initial_configuration_velocity(pnode.state)
+	za = [xa; va; vector(qa); ϕa]
+
+	function child_maximal_state(za)
+		xa, va, qa, ϕa = unpack_maximal_state(za,1)
+		pnode.state.x2[1] = xa
+		pnode.state.v15 = va
+		pnode.state.q2[1] = qa
+		pnode.state.ϕ15 = ϕa
+		set_minimal_coordinates_velocities!(pnode, cnode, joint, timestep; xmin=xmin)
+		xb, vb, qb, ϕb = initial_configuration_velocity(cnode.state)
+		zb = [xb; vb; vector(qb); ϕb]
+		return zb
+	end
+	J = FiniteDiff.finite_difference_jacobian(za -> child_maximal_state(za), za)
+	J = cat(Diagonal(sones(6)), LVᵀmat(qb)', Diagonal(sones(3)), dims=(1,2)) * J
+	J = J * cat(Diagonal(sones(6)), LVᵀmat(qa), Diagonal(sones(3)), dims=(1,2))
+	return J
 end

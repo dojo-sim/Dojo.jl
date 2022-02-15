@@ -40,3 +40,28 @@ end
     X, Q = displacement_jacobian_configuration(relative, joint, xa, qa, xb, qb, attjac=attjac)
 	return nullspace_mask(joint) * [X Q]
 end
+
+################################################################################
+# Velocities
+################################################################################
+@inline function minimal_velocities(joint::Translational,
+		xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+		xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
+		timestep)
+	A = nullspace_mask(joint)
+
+	# 1 step backward in time
+	xa1 = next_position(xa, -va, timestep)
+	qa1 = next_orientation(qa, -ϕa, timestep)
+	xb1 = next_position(xb, -vb, timestep)
+	qb1 = next_orientation(qb, -ϕb, timestep)
+
+	# Coordinates
+	Δx = A * displacement(joint, xa, qa, xb, qb)
+	# Previous step coordinates
+	Δx1 = A * displacement(joint, xa1, qa1, xb1, qb1)
+
+	# Finite difference
+	Δv = (Δx - Δx1) / timestep
+	return Δv
+end
