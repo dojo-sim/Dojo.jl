@@ -50,9 +50,6 @@ function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni},
 	 # Chain partials together from root to leaves
 	for id in reverse(mechanism.system.dfs_list)
 		!(Ne < id <= Ne+Nb) && continue # only treat bodies
-		println("id ", id)
-		println("Ne ", Ne)
-		println("id ", id)
 		cnode = get_node(mechanism, id)
 		for pjoint in parent_joints(mechanism, cnode)
 			pnode = get_node(mechanism, pjoint.parent_id, origin=true)
