@@ -8,7 +8,7 @@ include(joinpath(module_dir(), "env/quadruped/methods/template.jl"))
 gravity = -9.81
 dt = 0.05
 friction_coefficient = 0.8
-damper = 1.5
+damper = 3.0
 spring = 20.0
 ρ0 = 1e-2
 env = quadruped(
@@ -61,15 +61,16 @@ model = [dyn for t = 1:T-1]
 
 # ## rollout
 x1 = xref[1]
-ū = [zeros(m) for t = 1:T-1]
+F = -total_mass(env.mechanism) * gravity * dt * 0.50
+ū = [[0;0;F; zeros(m-3)] for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, x1, ū, w)
 visualize(env, x̄)
 
 # ## objective
-qt = [0.5; 0.1; 0.1; 0.2 * ones(3); 0.02 * ones(3); 0.02 * ones(3); fill([0.2, 0.01], 12)...]
+qt = 2*[1; 1; 1; 0.1ones(3); 1ones(3); 0.1ones(3); fill([1.0, 0.05], 12)...]
 ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(dt * qt) * (x - xref[t]) +
-	transpose(u) * Diagonal(dt * [0.01*ones(6); 0.02*ones(m-6)]) * u for t = 1:T-1]
+	transpose(u) * Diagonal(dt * [0.01*ones(6); 0.1*ones(m-6)]) * u for t = 1:T-1]
 oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(dt * qt) * (x - xref[end])
 
 # ## constraints
@@ -80,7 +81,7 @@ obj = [cts..., cT]
 # ## constraints
 function goal(x, u, w)
     Δ = x - xref[end]
-    return Δ[collect(1:3)]
+    return Δ[[1,2,3,7,8,9,13,15,17,19,21,23,25,27,29,31,33,35]]
 end
 
 function ctrl_lmt(x, u, w)
@@ -98,7 +99,8 @@ x_prev = deepcopy(x̄)
 # ## problem
 prob = IterativeLQR.problem_data(model, obj, cons)
 
-for ρ in [1e-2, 3e-3]#, 1e-3, 3e-4, 1e-4, 3e-5, 1e-5, 3e-6, 1e-6]
+# for ρ in [1e-2, 3e-3, 1e-3, 3e-4, 1e-4, 3e-5, 1e-5, 3e-6, 1e-6]
+for ρ in [1e-2, 1e-3, 1e-4]
 	println("ρ: ", scn(ρ), "   *************************************")
 	IterativeLQR.initialize_controls!(prob, u_prev)
 	IterativeLQR.initialize_states!(prob, x_prev)
@@ -115,8 +117,8 @@ for ρ in [1e-2, 3e-3]#, 1e-3, 3e-4, 1e-4, 3e-5, 1e-5, 3e-6, 1e-6]
 	    α_min=1.0e-5,
 	    obj_tol=1.0e-3,
 	    grad_tol=1.0e-3,
-	    max_iter=20,
-	    max_al_iter=5,
+	    max_iter=10,
+	    max_al_iter=4,
 	    ρ_init=1.0,
 	    ρ_scale=10.0)
 
