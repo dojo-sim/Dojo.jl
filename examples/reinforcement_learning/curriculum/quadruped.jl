@@ -255,7 +255,7 @@ maximal_dimension(mech, attjac=true)
 z = get_state(mech)
 z_next = get_next_state(mech)
 x = maximal_to_minimal(mech, z)
-minimal_to_maximal_jacobian(mech, x, attjac=true)
+minimal_to_maximal_jacobian(mech, x)
 maximal_to_minimal_jacobian(mech, z_next)
 
 
