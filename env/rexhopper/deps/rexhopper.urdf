@@ -4,6 +4,30 @@
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
 <robot
   name="rexhopper">
+
+  <joint
+    name="joint4"
+    type="revolute">
+    <origin
+      xyz="0.3174120461954416  0.0  -0.08804599865731941"
+      rpy="0.0 -2.0647611361516 0.0" />
+    <parent
+      link="link1" />
+    <child
+      link="link3" />
+    <axis
+      xyz="0 -1 0" />
+    <limit
+      lower="-3.14"
+      upper="3.14"
+      effort="0"
+      velocity="0" />
+  </joint>
+
+  <!-- α = 1.07683151743819
+  xyz = [0.270000000042219, 0, 0] + [cos(α)*0.10, 0, -sin(α)*0.10] -->
+
+
   <link
     name="base_link">
     <inertial>
@@ -26,7 +50,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://hopper_rev05/meshes/base_link.obj" />
+          filename="env/rexhopper/deps/mesh/base_link.obj" />
       </geometry>
       <material
         name="">
@@ -40,12 +64,12 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://hopper_rev05/meshes/base_link.obj" />
+          filename="env/rexhopper/deps/mesh/base_link.obj" />
       </geometry>
     </collision>
   </link>
   <link
-    name="Link 0">
+    name="link0">
     <inertial>
       <origin
         xyz="0.0121851264299085 0.0180889013941849 0.00112690392742547"
@@ -66,7 +90,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://hopper_rev05/meshes/Link 0.obj" />
+          filename="env/rexhopper/deps/mesh/link0.obj" />
       </geometry>
       <material
         name="">
@@ -80,7 +104,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://hopper_rev05/meshes/Link 0.obj" />
+          filename="env/rexhopper/deps/mesh/link0.obj" />
       </geometry>
     </collision>
   </link>
@@ -93,7 +117,7 @@
     <parent
       link="base_link" />
     <child
-      link="Link 0" />
+      link="link0" />
     <axis
       xyz="0 -1 0" />
     <limit
@@ -103,7 +127,7 @@
       velocity="0" />
   </joint>
   <link
-    name="Link 1">
+    name="link1">
     <inertial>
       <origin
         xyz="0.133101645966312 0.00652998365271682 -1.77401555945256E-09"
@@ -124,7 +148,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://hopper_rev05/meshes/Link 1.obj" />
+          filename="env/rexhopper/deps/mesh/link1.obj" />
       </geometry>
       <material
         name="">
@@ -138,20 +162,20 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://hopper_rev05/meshes/Link 1.obj" />
+          filename="env/rexhopper/deps/mesh/link1.obj" />
       </geometry>
     </collision>
   </link>
   <joint
-    name="Joint 1"
+    name="joint1"
     type="revolute">
     <origin
       xyz="0.0999999999999999 0 0"
       rpy="-3.14159265358979 1.0768315178335 -3.14159265358979" />
     <parent
-      link="Link 0" />
+      link="link0" />
     <child
-      link="Link 1" />
+      link="link1" />
     <axis
       xyz="0 -1 0" />
     <limit
@@ -161,7 +185,7 @@
       velocity="0" />
   </joint>
   <link
-    name="Link 2">
+    name="link2">
     <inertial>
       <origin
         xyz="0.0389032293637952 -0.0169313660252965 -0.000627148519961443"
@@ -182,7 +206,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://hopper_rev05/meshes/Link 2.obj" />
+          filename="env/rexhopper/deps/mesh/link2.obj" />
       </geometry>
       <material
         name="">
@@ -196,12 +220,12 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://hopper_rev05/meshes/Link 2.obj" />
+          filename="env/rexhopper/deps/mesh/link2.obj" />
       </geometry>
     </collision>
   </link>
   <joint
-    name="Joint 2"
+    name="joint2"
     type="revolute">
     <origin
       xyz="0 0 0"
@@ -209,7 +233,7 @@
     <parent
       link="base_link" />
     <child
-      link="Link 2" />
+      link="link2" />
     <axis
       xyz="0 -1 0" />
     <limit
@@ -219,7 +243,7 @@
       velocity="0" />
   </joint>
   <link
-    name="Link 3">
+    name="link3">
     <inertial>
       <origin
         xyz="0.10143817132357 -0.00251001068107951 -0.0148532860322689"
@@ -240,7 +264,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://hopper_rev05/meshes/Link 3.obj" />
+          filename="env/rexhopper/deps/mesh/link3.obj" />
       </geometry>
       <material
         name="">
@@ -254,20 +278,20 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://hopper_rev05/meshes/Link 3.obj" />
+          filename="env/rexhopper/deps/mesh/link3.obj" />
       </geometry>
     </collision>
   </link>
-  <joint
-    name="Joint 3"
+  <!-- <joint
+    name="joint3"
     type="revolute">
     <origin
       xyz="0.270000000042219 0 0"
       rpy="-3.14159265358979 -1.07683151743819 3.14159265358979" />
     <parent
-      link="Link 2" />
+      link="link2" />
     <child
-      link="Link 3" />
+      link="link3" />
     <axis
       xyz="0 -1 0" />
     <limit
@@ -275,7 +299,7 @@
       upper="0.7597"
       effort="0"
       velocity="0" />
-  </joint>
+  </joint> -->
   <link
     name="rw0">
     <inertial>
@@ -298,7 +322,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://hopper_rev05/meshes/rw0.obj" />
+          filename="env/rexhopper/deps/mesh/rw0.obj" />
       </geometry>
       <material
         name="">
@@ -312,7 +336,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://hopper_rev05/meshes/rw0.obj" />
+          filename="env/rexhopper/deps/mesh/rw0.obj" />
       </geometry>
     </collision>
   </link>
@@ -351,7 +375,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://hopper_rev05/meshes/rw1.obj" />
+          filename="env/rexhopper/deps/mesh/rw1.obj" />
       </geometry>
       <material
         name="">
@@ -365,7 +389,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://hopper_rev05/meshes/rw1.obj" />
+          filename="env/rexhopper/deps/mesh/rw1.obj" />
       </geometry>
     </collision>
   </link>
@@ -404,7 +428,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://hopper_rev05/meshes/rwz.obj" />
+          filename="env/rexhopper/deps/mesh/rwz.obj" />
       </geometry>
       <material
         name="">
@@ -418,7 +442,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://hopper_rev05/meshes/rwz.obj" />
+          filename="env/rexhopper/deps/mesh/rwz.obj" />
       </geometry>
     </collision>
   </link>
