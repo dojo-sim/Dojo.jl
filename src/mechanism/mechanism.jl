@@ -94,7 +94,7 @@ function gravity_compensation(mechanism::Mechanism)
             body = get_body(mechanism, joint.parent_id)
             rot = joint.rotational
             A = Matrix(nullspace_mask(rot))
-            input = apply_spring(mechanism, joint, body)
+            input = spring_impulses(mechanism, joint, body)
             F = input[1:3]
             τ = input[4:6]
             u[off .+ (1:nu)] = -A * τ

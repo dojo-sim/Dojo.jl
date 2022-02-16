@@ -53,7 +53,7 @@ storage = simulate!(mech, 0.10, record=true, verbose=false)
 visualize(mech, storage, vis=env.vis)
 # ugc = gravity_compensation(mech)
 # u_control = ugc[6 .+ (1:15)]
-F_damper = get_apply_damper(env.mechanism)
+F_damper = get_damper_impulses(env.mechanism)
 u_damper = F_damper * env.mechanism.timestep
 u_control = u_damper[6 .+ (1:15)]
 
@@ -67,7 +67,7 @@ initialize!(mech, :atlas, tran=[0,0,0.0])
 storage = simulate!(mech, 0.50, controller!, record=true, verbose=false)
 visualize(mech, storage, vis=env.vis)
 
-function get_apply_damper(mechanism::Mechanism{T}) where T
+function get_damper_impulses(mechanism::Mechanism{T}) where T
 	joints = mechanism.joints
 	# set the controls in the equality constraints
 	off = 0
@@ -76,7 +76,7 @@ function get_apply_damper(mechanism::Mechanism{T}) where T
 	for joint in joints
 		pbody = get_body(mechanism, joint.parent_id)
 		if typeof(pbody) <: Body
-			F = apply_damper(mechanism, joint, pbody)
+			F = damper_impulses(mechanism, joint, pbody)
 			oF = 0
 			for joint in [joint.translational, joint.rotational]
 				nf, nF = size(nullspace_mask(joint))
@@ -97,13 +97,13 @@ end
 
 # joint0 = env.mechanism.joints.values[1]
 # body0 = get_body(env.mechanism, joint0.parent_id)
-# df = apply_damper(mech, joint0, body0)
+# df = damper_impulses(mech, joint0, body0)
 # nullspace_mask(joint0.constraints[1])# * df[1:3]
 # nullspace_mask(joint0.constraints[2])# * df[4:6]
 # nf, nF = size(nullspace_mask(joint0.constraints[1]))
 # nf
 # null
-# u = get_apply_damper(env.mechanism)
+# u = get_damper_impulses(env.mechanism)
 
 # ## horizon
 T = N * (25 - 1) + 1

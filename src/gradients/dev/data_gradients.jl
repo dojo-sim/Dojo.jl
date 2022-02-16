@@ -145,8 +145,8 @@ function body_constraint_jacobian_joint_data(mechanism::Mechanism{T}, body::Body
     x3, q3 = next_configuration(body.state, Δt)
     # ∇u = Diagonal(SVector{6,T}(1,1,1,2,2,2)) * input_jacobian_control(mechanism, joint, body)
     ∇u = Diagonal(SVector{6,T}(1,1,1,1,1,1)) * input_jacobian_control(mechanism, joint, body)
-    ∇spring = joint.spring ? apply_spring(mechanism, joint, body, unitary=true) : szeros(T,6,1)
-    ∇damper = joint.damper ? apply_damper(mechanism, joint, body, unitary=true) : szeros(T,6,1)
+    ∇spring = joint.spring ? spring_impulses(mechanism, joint, body, unitary=true) : szeros(T,6,1)
+    ∇damper = joint.damper ? damper_impulses(mechanism, joint, body, unitary=true) : szeros(T,6,1)
     return [∇u ∇spring ∇damper]
 end
 
