@@ -6,7 +6,7 @@ include("initialize.jl")
 
 function ctrl!(m,k)
     nu = control_dimension(m)
-    set_control!(m, 2.0*m.timestep * [szeros(6); szeros(4); sones(nu-10)])
+    set_control!(m, 0.1*m.timestep * [szeros(6); sones(4); sones(nu-10)])
     return nothing
 end
 
@@ -19,7 +19,28 @@ end
 
 
 include("initialize.jl")
-mech = get_rexhopper(timestep=0.05, gravity=-0.0, model=:rexhopper_base, spring=0.0, damper=0.5, limits=true)
+mech = Mechanism(joinpath(@__DIR__, "../deps/fourbar_open.urdf"), false)
+# mech = Mechanism(joinpath(@__DIR__, "../deps/fourbar.urdf"), false)
+adjacency_matrix(mech.joints, mech.bodies, mech.contacts)
+mech.joints
+mech.bodies
+mech.system
+reverse(mech.system.dfs_list)
+mech.system.matrix_entries[5,6]
+mech.system.matrix_entries[6,7]
+mech.system.matrix_entries[7,8]
+
+
+
+
+storage = simulate!(mech, 1.0, record=true, verbose=false)
+visualize(mech, storage, vis=vis)
+reverse(mech.system.dfs_list)
+mech.joints
+mech.bodies
+
+
+mech = get_rexhopper(timestep=0.05, gravity=-0.0, model=:rexhopper, spring=0.0, damper=0.5, limits=true)
 initialize!(mech, :rexhopper, x=[0,0,0.4])
 z_base = get_maximal_state(mech)
 x_base = get_minimal_state(mech)
@@ -28,7 +49,7 @@ x_base = get_minimal_state(mech)
 set_robot(vis, mech, z)
 set_robot(vis, mech, z_base)
 
-storage = simulate!(mech, 15.0, ctrl!, record=true, verbose=false)
+storage = simulate!(mech, 1.10, ctrl!, record=true, verbose=false)
 visualize(mech, storage, vis=vis, show_contact=false)
 
 mech.joints[end-1].rotational

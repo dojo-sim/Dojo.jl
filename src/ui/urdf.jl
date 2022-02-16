@@ -106,8 +106,8 @@ function parse_xmaterial(xmaterial, materialdict, T)
     return color
 end
 
-function parse_shape(xvisual, materialdict, T)
 # function parse_shape(xvisual, materialdict, T, xb, qb)
+function parse_shape(xvisual, materialdict, T)
 
     if xvisual === nothing
         shape = nothing
@@ -262,13 +262,13 @@ function parse_joint(xjoint, plink, clink, T)
 end
 
 function parse_loop_joint(xjoint, body1, body2, T)
-    find_element(xjoint, "body1")
-    find_element(xjoint, "body2")
+    find_element(xjoint, "link1")
+    find_element(xjoint, "link2")
 
     jointtype = attribute(xjoint, "type")
     axis = parse_vector(find_element(xjoint, "axis"), "xyz", T, default = "1 0 0")
-    x1, q1 = parse_pose(find_element(xjoint, "body1"), T)
-    x2, _ = parse_pose(find_element(xjoint, "body2"), T) # The orientation q2 of the second body is ignored because it is determined by the mechanism's structure
+    x1, q1 = parse_pose(find_element(xjoint, "link1"), T)
+    x2, _ = parse_pose(find_element(xjoint, "link2"), T) # The orientation q2 of the second body is ignored because it is determined by the mechanism's structure
     p1 = x1
     p2 = x2
     name = Symbol(attribute(xjoint, "name"))
@@ -338,12 +338,11 @@ end
 function parse_loop_joints(xloopjoints, origin, joints, ldict, T)
     loopjoints = JointConstraint{T}[]
 
-
     for xloopjoint in xloopjoints
-        xbody1 = find_element(xloopjoint, "body1")
-        xbody2 = find_element(xloopjoint, "body2")
-        body1 = ldict[attribute(xbody1, "link")]
-        body2 = ldict[attribute(xbody2, "link")]
+        xbody1 = find_element(xloopjoint, "link1")
+        xbody2 = find_element(xloopjoint, "link2")
+        body1 = ldict[Symbol(attribute(xbody1, "link"))]
+        body2 = ldict[Symbol(attribute(xbody2, "link"))]
 
         predlist = Tuple{Int64,Int64}[]
         jointlist = [(joints[i].id,joints[i].parent_id, joints[i].child_id) for i=1:length(joints)]
@@ -408,6 +407,11 @@ function parse_loop_joints(xloopjoints, origin, joints, ldict, T)
             end
         end
 
+        @show joint1.parent_id
+        @show joint1.child_id
+        @show joint2.parent_id
+        @show joint2.child_id
+
         joint = cat(joint1,joint2)
         push!(joints,joint)
         loopjoint = parse_loop_joint(xloopjoint, body1, body2, T)
@@ -445,6 +449,21 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
     xjointlist = Dict{Int64,SVector{3,T}}() # stores id, x in world frame
     qjointlist = Dict{Int64,UnitQuaternion{T}}() # stores id, q in world frame
 
+    # @show reverse(system.dfs_list)
+    # for id in reverse(system.dfs_list)
+    #     node = get_node(mechanism, id)
+    #     !(node isa Body) && continue # only for bodies
+    #     body = node
+    #
+    #     parent_id = get_parent_id(mechanism, id, loopjoints)
+    #     constraint = get_joint_constraint(mechanism, parent_id)
+    #     grandparent_id = constraint.parent_id
+    #
+    #     @show grandparent_id
+    #     @show parent_id
+    #     @show id
+    # end
+
     for id in reverse(system.dfs_list) # from root to leaves
         node = get_node(mechanism, id)
         !(node isa Body) && continue # only for bodies
@@ -475,6 +494,14 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
             xparentbody = parentbody.state.x2[1] # in world frame
             qparentbody = parentbody.state.q2[1] # in world frame
 
+            # @show id
+            # @show parent_id
+            # @show parentconstraint.name
+            # @show parentconstraint.parent_id
+            # @show parentconstraint.id
+            # @show parentconstraint.child_id
+            # @show keys(xjointlist)
+            # @show keys(qjointlist)
             xparentjoint = xjointlist[parentconstraint.id] # in world frame
             qparentjoint = qjointlist[parentconstraint.id] # in world frame
         end
