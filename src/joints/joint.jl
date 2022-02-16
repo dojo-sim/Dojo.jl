@@ -106,14 +106,6 @@ end
     end
 end
 
-# @inline function spring_child(joint::Joint, body1::Node, body2::Node, timestep, child_id; unitary::Bool=false)
-#     if body2.id == child_id
-#         return spring_child(joint, body1, body2, timestep, unitary=unitary)
-#     else
-#         return szeros(T, 6)
-#     end
-# end
-
 # dampers
 @inline function damper_force(relative::Symbol, joint::Joint, body1::Node, body2::Node, timestep, child_id; unitary::Bool=false)
     if body2.id == child_id
@@ -124,11 +116,6 @@ end
 end
 
 # inputs
-@inline function apply_input!(joint::Joint, body1::Node, body2::Node, timestep::T, clear::Bool) where T
-    apply_input!(joint, body1.state, body2.state, timestep, clear)
-    return
-end
-
 @inline function set_input!(joint::Joint, input::SVector)
     joint.input = zerodimstaticadjoint(nullspace_mask(joint)) * input
     return
@@ -143,16 +130,8 @@ end
 
 @inline add_input!(joint::Joint) = return
 
-@inline function input_jacobian_control_parent(joint::Joint, body1::Node, body2::Node, child_id)
-    return input_jacobian_control_parent(joint, body1.state, body2.state) * zerodimstaticadjoint(nullspace_mask(joint))
-end
-
-@inline function input_jacobian_control_child(joint::Joint{T,Nλ}, body1::Node, body2::Node, child_id) where {T,Nλ}
-    if body2.id == child_id
-        return input_jacobian_control_child(joint, body1.state, body2.state) * zerodimstaticadjoint(nullspace_mask(joint))
-    else
-        return szeros(T, 6, 3 - Nλ)
-    end
+@inline function input_jacobian_control(relative::Symbol, joint::Joint, body1::Node, body2::Node, child_id)
+    return input_jacobian_control(relative, joint, current_configuration(body1.state)..., current_configuration(body2.state)...) * zerodimstaticadjoint(nullspace_mask(joint))
 end
 
 # minimal coordinates

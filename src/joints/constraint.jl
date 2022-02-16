@@ -214,23 +214,14 @@ function add_input!(joint::JointConstraint{T,N,Nc}, input::AbstractVector) where
     return
 end
 
-@inline function input_jacobian_control(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    body.id == joint.parent_id ? (return input_jacobian_control_parent(mechanism, joint, body)) : (return input_jacobian_control_child(mechanism, joint, body))
-end
-
-@generated function input_jacobian_control_parent(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(input_jacobian_control_parent([joint.translational, joint.rotational][$i], body, get_body(mechanism, joint.child_id), joint.child_id)) for i = 1:Nc]
+@generated function input_jacobian_control(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
+    vec = [:(input_jacobian_control((body.id == joint.parent_id ? :parent : :child), [joint.translational, joint.rotational][$i], get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), joint.child_id)) for i = 1:Nc]
     return :(hcat($(vec...)))
 end
 
-@generated function input_jacobian_control_child(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(input_jacobian_control_child([joint.translational, joint.rotational][$i], get_body(mechanism, joint.parent_id), body, joint.child_id)) for i = 1:Nc]
-    return :(hcat($(vec...)))
-end
-
-@inline function apply_input!(joint::JointConstraint{T,N,Nc}, mechanism, clear::Bool=true) where {T,N,Nc}
+@inline function input_impulse!(joint::JointConstraint{T,N,Nc}, mechanism, clear::Bool=true) where {T,N,Nc}
     for i=1:Nc
-        apply_input!([joint.translational, joint.rotational][i], get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), mechanism.timestep, clear)
+        input_impulse!([joint.translational, joint.rotational][i], get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), mechanism.timestep, clear)
     end
     return
 end

@@ -317,12 +317,12 @@ function dynamics_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}, jointids) where {T,
         if parent_id != 0
             parentind = parent_id - Ne
             col6 = offset_range(parentind,6)
-            Bcontrol[col6,n1:n2] = input_jacobian_control_parent(mechanism, joint, get_body(mechanism, parent_id))
+            Bcontrol[col6,n1:n2] = input_jacobian_control(mechanism, joint, get_body(mechanism, parent_id))
         end
         for element in [joint.translational, joint.rotational]
             childind = joint.child_id - Ne
             col6 = offset_range(childind,6)
-            Bcontrol[col6,n1:n2] = input_jacobian_control_child(mechanism, joint, get_body(mechanism, joint.child_id))
+            Bcontrol[col6,n1:n2] = input_jacobian_control(mechanism, joint, get_body(mechanism, joint.child_id))
         end
 
         n1 = n2+1

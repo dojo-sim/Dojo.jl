@@ -1,58 +1,66 @@
-@inline function apply_input!(joint::Rotational{T}, statea::State, stateb::State, timestep::T, clear::Bool) where T
-    τ = joint.input
-    _, qa = current_configuration(statea)
-    _, qb = current_configuration(stateb)
+################################################################################
+# Control Input
+################################################################################
 
-    statea.τ2[end] += -τ
-    stateb.τ2[end] += vrotate(vrotate(τ, qa),inv(qb))
+@inline function input_impulse!(joint::Rotational{T}, 
+    bodya::Node, bodyb::Node, 
+    timestep::T, clear::Bool) where T
+
+    τ = joint.input
+    xa, qa = current_configuration(bodya.state)
+    xb, qb = current_configuration(bodyb.state)
+
+    bodya.state.τ2[end] += -τ
+    bodyb.state.τ2[end] += vrotate(vrotate(τ, qa),inv(qb))
     clear && (joint.input = szeros(T,3))
     return
 end
 
-@inline function input_jacobian_control_parent(joint::Rotational{T}, statea::State, stateb::State) where T
-    BFa = szeros(T, 3, 3)
-    Bτa = -I
-    return [BFa; Bτa]
+################################################################################
+# Control Jacobian
+################################################################################
+
+@inline function input_jacobian_control(relative::Symbol, joint::Rotational{T}, 
+    xa::AbstractVector, qa::UnitQuaternion,
+    xb::AbstractVector, qb::UnitQuaternion) where T
+    if relative == :parent
+        BFa = szeros(T, 3, 3)
+        Bτa = -I
+        return [BFa; Bτa]
+    elseif relative == :child 
+        qbinvqa = qb \ qa
+
+        BFb = szeros(T, 3, 3)
+        Bτb = rotation_matrix(inv(qb)) * rotation_matrix(qa)
+        return [BFb; Bτb]
+    end
 end
 
-@inline function input_jacobian_control_child(joint::Rotational{T}, statea::State, stateb::State) where T
-    _, qa = current_configuration(statea)
-    _, qb = current_configuration(stateb)
-    qbinvqa = qb \ qa
+@inline function input_jacobian_configuration(relative::Symbol, joint::Rotational{T}, 
+    xa::AbstractVector, qa::UnitQuaternion,
+    xb::AbstractVector, qb::UnitQuaternion) where T
 
-    BFb = szeros(T, 3, 3)
-    Bτb = rotation_matrix(inv(qb)) * rotation_matrix(qa)
-    return [BFb; Bτb]
-end
-
-@inline function input_jacobian_configuration_parent(joint::Rotational{T}, statea::State, stateb::State) where T
-    _, qa = current_configuration(statea)
-    _, qb = current_configuration(stateb)
     τ = joint.input
 
-    FaXa = szeros(T,3,3)
-    FaQa = szeros(T,3,4)
-    τaXa = szeros(T,3,3)
-    τaQa = szeros(T,3,4)
-    FbXa = szeros(T,3,3)
-    FbQa = szeros(T,3,4)
-    τbXa = szeros(T,3,3)
-    τbQa = rotation_matrix(inv(qb)) * ∂qrotation_matrix(qa, τ)#*LVᵀmat(qa)
-    return FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa
-end
-
-@inline function input_jacobian_configuration_child(joint::Rotational{T}, statea::State, stateb::State) where T
-    _, qa = current_configuration(statea)
-    _, qb = current_configuration(stateb)
-    τ = joint.input
-
-    FaXb = szeros(T,3,3)
-    FaQb = szeros(T,3,4)
-    τaXb = szeros(T,3,3)
-    τaQb = szeros(T,3,4)
-    FbXb = szeros(T,3,3)
-    FbQb = szeros(T,3,4)
-    τbXb = szeros(T,3,3)
-    τbQb = ∂qrotation_matrix_inv(qb, rotation_matrix(qa)*τ)#*LVᵀmat(qb)
-    return FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb
+    if relative == :parent
+        FaXa = szeros(T,3,3)
+        FaQa = szeros(T,3,4)
+        τaXa = szeros(T,3,3)
+        τaQa = szeros(T,3,4)
+        FbXa = szeros(T,3,3)
+        FbQa = szeros(T,3,4)
+        τbXa = szeros(T,3,3)
+        τbQa = rotation_matrix(inv(qb)) * ∂qrotation_matrix(qa, τ)#*LVᵀmat(qa)
+        return FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa
+    elseif relative == :child 
+        FaXb = szeros(T,3,3)
+        FaQb = szeros(T,3,4)
+        τaXb = szeros(T,3,3)
+        τaQb = szeros(T,3,4)
+        FbXb = szeros(T,3,3)
+        FbQb = szeros(T,3,4)
+        τbXb = szeros(T,3,3)
+        τbQb = ∂qrotation_matrix_inv(qb, rotation_matrix(qa)*τ)#*LVᵀmat(qb)
+        return FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb
+    end
 end
