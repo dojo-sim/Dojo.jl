@@ -55,7 +55,10 @@ makedocs(
             "friction.md",
         ],
 
-
+        "Interior-Point Solver" => [
+            "interior_point.md",
+            "solver_options.md",
+        ],
 
         "faq.md",
         "api.md",
