@@ -20,7 +20,8 @@ end
 # Control Jacobian
 ################################################################################
 
-@inline function input_jacobian_control(relative::Symbol, joint::Rotational{T}, 
+@inline function input_jacobian_control(relative::Symbol, 
+    joint::Rotational{T}, 
     xa::AbstractVector, qa::UnitQuaternion,
     xb::AbstractVector, qb::UnitQuaternion) where T
     if relative == :parent
@@ -36,7 +37,8 @@ end
     end
 end
 
-@inline function input_jacobian_configuration(relative::Symbol, joint::Rotational{T}, 
+@inline function input_jacobian_configuration(relative::Symbol, 
+    joint::Rotational{T}, 
     xa::AbstractVector, qa::UnitQuaternion,
     xb::AbstractVector, qb::UnitQuaternion) where T
 
