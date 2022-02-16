@@ -65,6 +65,7 @@ function Mechanism(filename::String, floating::Bool=false, T=Float64; kwargs...)
     mechanism = Mechanism(origin, links, [joints; loopjoints]; kwargs...)
 
     # initialize mechanism
+	# @warn "need to uncomment"
     set_parsed_values!(mechanism, loopjoints)
 
     return mechanism
