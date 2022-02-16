@@ -69,14 +69,14 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, bodya::Node{T}
     for i = 1:Nc
         λ = getλJoint(joint, i)
         if bodyb.id == joint.child_id
-            ∇z2_aa += impulse_map_parent_jacobian_parent([joint.translational, joint.rotational][i],
+            ∇z2_aa += impulse_map_jacobian(:parent, :parent, [joint.translational, joint.rotational][i],
                 bodya, bodyb, λ)
-            ∇z2_ab += impulse_map_parent_jacobian_child([joint.translational, joint.rotational][i],
+            ∇z2_ab += impulse_map_jacobian(:parent, :child, [joint.translational, joint.rotational][i],
                 bodya, bodyb, λ)
         elseif bodya.id == joint.child_id
-            ∇z2_aa += impulse_map_child_jacobian_child([joint.translational, joint.rotational][i],
+            ∇z2_aa += impulse_map_jacobian(:child, :child, [joint.translational, joint.rotational][i],
                 bodyb, bodya, λ)
-            ∇z2_ab += impulse_map_child_jacobian_parent([joint.translational, joint.rotational][i],
+            ∇z2_ab += impulse_map_jacobian(:child, :parent, [joint.translational, joint.rotational][i],
                 bodyb, bodya, λ)
         end
     end

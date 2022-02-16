@@ -225,13 +225,8 @@ end
     return constraint_jacobian_configuration(mechanism, joint, body) * integrator_jacobian_velocity(body, mechanism.timestep), -impulse_map(mechanism, joint, body)
 end
 
-@generated function impulse_map_parent(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(impulse_map_parent([joint.translational, joint.rotational][$i], body, get_body(mechanism, joint.child_id), joint.child_id, joint.impulses[2][λindex(joint,$i)], mechanism.timestep)) for i = 1:Nc]
-    return :(hcat($(vec...)))
-end
-
-@generated function impulse_map_child(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
-    vec = [:(impulse_map_child([joint.translational, joint.rotational][$i], get_body(mechanism, joint.parent_id), body, joint.child_id, joint.impulses[2][λindex(joint,$i)], mechanism.timestep)) for i = 1:Nc]
+@generated function impulse_map(relative::Symbol, mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
+    vec = [:(impulse_map(relative, [joint.translational, joint.rotational][$i], get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), joint.child_id, joint.impulses[2][λindex(joint,$i)], mechanism.timestep)) for i = 1:Nc]
     return :(hcat($(vec...)))
 end
 
@@ -318,9 +313,9 @@ end
 
 @inline function impulse_map(mechanism, constraint::Constraint, body::Body)
     if body.id == constraint.parent_id
-        return impulse_map_parent(mechanism, constraint, body)
+        return impulse_map(:parent, mechanism, constraint, body)
     else
-        return impulse_map_child(mechanism, constraint, body)
+        return impulse_map(:child, mechanism, constraint, body)
     end
 end
 

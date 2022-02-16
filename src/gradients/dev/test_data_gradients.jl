@@ -371,8 +371,8 @@ datajac1[6:11,20:22]
 
 λ10 = srand(length(joint0.constraints[1]))
 λ20 = srand(length(joint0.constraints[2]))
-impulse_map_child_jacobian_child(joint0.constraints[1], mech.origin, body0, λ10)
-impulse_map_child_jacobian_child(joint0.constraints[2], mech.origin, body0, λ20)
+impulse_map_jacobian(:child, :child, joint0.constraints[1], mech.origin, body0, λ10)
+impulse_map_jacobian(:child, :child, joint0.constraints[2], mech.origin, body0, λ20)
 
 
 

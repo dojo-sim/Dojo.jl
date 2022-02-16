@@ -52,42 +52,24 @@ end
     end
 end
 
-@inline function impulse_map_parent(joint::Joint, body1::Node, body2::Node, child_id, λ, timestep)
+@inline function impulse_map(relative::Symbol, joint::Joint, body1::Node, body2::Node, child_id, λ, timestep)
     if body2.id == child_id
-        return impulse_map_parent(joint, current_configuration(body1.state)..., current_configuration(body2.state)..., λ)
+        return impulse_map(relative, joint, current_configuration(body1.state)..., current_configuration(body2.state)..., λ)
     else
         return zero(joint)
     end
 end
 
-@inline function impulse_map_child(joint::Joint, body1::Node, body2::Node, child_id, λ, timestep)
-    if body2.id == child_id
-        return impulse_map_child(joint, current_configuration(body1.state)..., current_configuration(body2.state)..., λ)
-    else
-        return zero(joint)
-    end
+@inline function impulse_map(relative::Symbol, joint::Joint{T,Nλ,Nb}, xa::AbstractVector, qa::UnitQuaternion,
+        xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb}
+    return impulse_transform(relative, joint, xa, qa, xb, qb) * impulse_projector(joint)
 end
 
-function impulse_map_parent(joint::Joint, statea::State, stateb::State, η, timestep)
-    xa, qa = current_configuration(statea)
-    xb, qb = current_configuration(stateb)
-    impulse_map_parent(joint, xa, qa, xb, qb, η)
-end
-
-function impulse_map_child(joint::Joint, statea::State, stateb::State, η, timestep)
-    xa, qa = current_configuration(statea)
-    xb, qb = current_configuration(stateb)
-    impulse_map_child(joint, xa, qa, xb, qb, η)
-end
-
-@inline function impulse_map_parent(joint::Joint, xa::AbstractVector, qa::UnitQuaternion,
-        xb::AbstractVector, qb::UnitQuaternion, η)
-    return impulse_transform_parent(joint, xa, qa, xb, qb) * impulse_projector(joint)
-end
-
-@inline function impulse_map_child(joint::Joint, xa::AbstractVector, qa::UnitQuaternion,
-        xb::AbstractVector, qb::UnitQuaternion, η)
-    return impulse_transform_child(joint, xa, qa, xb, qb) * impulse_projector(joint)
+@inline function impulse_map(relative::Symbol, joint::Joint{T,Nλ,0}, xa::AbstractVector, qa::UnitQuaternion,
+    xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+    J = constraint_jacobian_configuration(relative, joint, xa, qa, xb, qb, η)
+    G = cat(Diagonal(sones(3)), LVᵀmat(relative == :parent ? qa : qb), dims=(1,2))
+    return Diagonal([sones(3); 0.5 * sones(3)]) * transpose(J * G)
 end
 
 # With joint limits
@@ -98,47 +80,6 @@ end
 # Without joint limits
 @inline function impulse_projector(joint::Joint{T,Nλ,0}) where {T,Nλ}
     zerodimstaticadjoint(constraint_mask(joint))
-end
-
-
-################################################################################
-# Derivatives
-################################################################################
-
-function impulse_map_parent_jacobian_parent(joint::Joint, pbody::Node{T}, cbody::Node{T}, λ) where T
-    # ∂(Ga*λ)/∂(xa,qa)
-    p = impulse_projector(joint) * λ
-    impulse_transform_parent_jacobian_parent(joint,
-        current_configuration(pbody.state)...,
-        current_configuration(cbody.state)...,
-        p)
-end
-
-function impulse_map_parent_jacobian_child(joint::Joint, pbody::Node{T}, cbody::Node{T}, λ) where T
-    # ∂(Ga*λ)/∂(xb,qb)
-    p = impulse_projector(joint) * λ
-    impulse_transform_parent_jacobian_child(joint,
-        current_configuration(pbody.state)...,
-        current_configuration(cbody.state)...,
-        p)
-end
-
-function impulse_map_child_jacobian_parent(joint::Joint, pbody::Node{T}, cbody::Node{T}, λ) where T
-    # ∂(Gb*λ)/∂(xa,qa)
-    p = impulse_projector(joint) * λ
-    impulse_transform_child_jacobian_parent(joint,
-        current_configuration(pbody.state)...,
-        current_configuration(cbody.state)...,
-        p)
-end
-
-function impulse_map_child_jacobian_child(joint::Joint, pbody::Node{T}, cbody::Node{T}, λ) where T
-    # ∂(Gb*λ)/∂(xb,qb)
-    p = impulse_projector(joint) * λ
-    impulse_transform_child_jacobian_child(joint,
-        current_configuration(pbody.state)...,
-        current_configuration(cbody.state)...,
-        p)
 end
 
 @inline function spring_parent(joint::Joint, body1::Node, body2::Node, timestep, child_id; unitary::Bool=false)
@@ -178,19 +119,14 @@ end
     return
 end
 
-Joint0 = Joint{T,0} where T
-Joint1 = Joint{T,1} where T
-Joint2 = Joint{T,2} where T
-Joint3 = Joint{T,3} where T
-
-@inline constraint_mask(::Joint0{T}) where T = szeros(T,0,3)
-@inline nullspace_mask(::Joint0{T}) where T = SMatrix{3,3,T,9}(I)
-@inline constraint_mask(joint::Joint1) = joint.V3
-@inline nullspace_mask(joint::Joint1) = joint.V12
-@inline constraint_mask(joint::Joint2) = joint.V12
-@inline nullspace_mask(joint::Joint2) = joint.V3
-@inline constraint_mask(::Joint3{T}) where T = SMatrix{3,3,T,9}(I)
-@inline nullspace_mask(::Joint3{T}) where T = szeros(T,0,3)
+@inline constraint_mask(::Joint{T,0}) where T = szeros(T,0,3)
+@inline nullspace_mask(::Joint{T,0}) where T = SMatrix{3,3,T,9}(I)
+@inline constraint_mask(joint::Joint{T,1}) where T = joint.V3
+@inline nullspace_mask(joint::Joint{T,1}) where T = joint.V12
+@inline constraint_mask(joint::Joint{T,2}) where T = joint.V12
+@inline nullspace_mask(joint::Joint{T,2}) where T = joint.V3
+@inline constraint_mask(::Joint{T,3}) where T = SMatrix{3,3,T,9}(I)
+@inline nullspace_mask(::Joint{T,3}) where T = szeros(T,0,3)
 
 @inline constraint(joint::Joint, body1::Node, body2::Node, λ, timestep) = constraint(joint, next_configuration(body1.state, timestep)..., next_configuration(body2.state, timestep)..., λ)
 

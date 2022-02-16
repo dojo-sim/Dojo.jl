@@ -1,20 +1,21 @@
 ################################################################################
 # Impulse Transform
 ################################################################################
-function impulse_transform(relative::Symbol, joint::Joint{T}, xa::AbstractVector,
+function impulse_transform(relative::Symbol, joint::Joint, xa::AbstractVector,
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where {T}
-    (relative == :parent) && (return impulse_transform_parent(joint, xa, qa, xb, qb))
-    (relative == :child) && (return impulse_transform_child(joint, xa, qa, xb, qb))
+    X, Q = displacement_jacobian_configuration(relative, joint, xa, qa, xb, qb, attjac=true)
+    Diagonal([sones(3); 0.5 * sones(3)]) * transpose([X Q])
 end
 
 ################################################################################
 # Derivatives
 ################################################################################
-function impulse_transform_jacobian(relative::Symbol, jacobian_relative::Symbol, joint::Joint{T,Nλ,0},
-        xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
-    (relative == :parent) && (jacobian_relative == :parent) && (return impulse_transform_parent_jacobian_parent(joint, xa, qa, xb, qb, p))
-    (relative == :parent) && (jacobian_relative == :child) && (return impulse_transform_parent_jacobian_child(joint, xa, qa, xb, qb, p))
-    (relative == :child) && (jacobian_relative == :parent) && (return impulse_transform_child_jacobian_parent(joint, xa, qa, xb, qb, p))
-    (relative == :child) && (jacobian_relative == :child) && (return impulse_transform_child_jacobian_child(joint, xa, qa, xb, qb, p))
-    return
+function impulse_map_jacobian(relative::Symbol, jacobian::Symbol, joint::Joint, pbody::Node{T}, cbody::Node{T}, λ) where T
+    # ∂(G*λ)/∂(x,q)
+    p = impulse_projector(joint) * λ
+    impulse_transform_jacobian(relative, jacobian,
+        joint,
+        current_configuration(pbody.state)...,
+        current_configuration(cbody.state)...,
+        p)
 end
