@@ -11,7 +11,7 @@ function getpendulum(; timestep::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
 
     # Constraints
     joint_between_origin_and_body1 = JointConstraint(Revolute(origin, body1,
-        joint_axis; p2=p2, spring = spring, damper = damper, rotapply_springoffset = spring_offset,
+        joint_axis; p2=p2, spring = spring, damper = damper, rot_spring_offset = spring_offset,
         rot_joint_limits = [SVector{1}([0.25 * π]), SVector{1}([π])]))
     bodies = [body1]
     eqcs = [joint_between_origin_and_body1]

@@ -46,6 +46,13 @@ function angular_velocity(q1::UnitQuaternion, q2::UnitQuaternion, timestep)
     2.0 / timestep  * Vmat() * Lᵀmat(q1) * vector(q2)
 end
 
+function set_previous_configuration!(node::Node{T}, timestep::T) where {T}
+    x2, v15, q2, ϕ15 = initial_configuration_velocity(node.state)
+    node.state.x1 = next_position(x2, -v15, timestep)
+    node.state.q1 = next_orientation(q2, -ϕ15, timestep)
+    return nothing
+end
+
 @inline function initialize_state!(body::Body{T}, timestep) where T
     state = body.state
     x2 = state.x2[1]
@@ -53,6 +60,7 @@ end
     v15 = state.v15
     ϕ15 = state.ϕ15
 
+    # TODO use set_previous_configuration!
     state.x1 = x2 - v15*timestep
     state.q1 = q2 * quaternion_map(-ϕ15,timestep) * timestep / 2
 
@@ -71,6 +79,7 @@ end
     state.v15 = state.vsol[2]
     state.ϕ15 = state.ϕsol[2]
 
+    # TODO use next_position next_orientation!
     state.x2[1] = state.x2[1] + state.vsol[2]*timestep
     state.q2[1] = state.q2[1] * quaternion_map(state.ϕsol[2], timestep) * timestep / 2
 

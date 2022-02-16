@@ -98,7 +98,7 @@ function set_joint_position!(mechanism, joint::JointConstraint{T,N,Nc}, xθ) whe
 
     Δx = xθ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]
     Δθ = xθ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])]
-    set_minimal_coordinates!(body1, body2, joint, Δx=Δx, Δθ=Δθ)
+    set_minimal_coordinates!(body1, body2, joint, mechanism.timestep, Δx=Δx, Δθ=Δθ)
     return body2.state.x2[1], body2.state.q2[1]
 end
 
@@ -114,7 +114,7 @@ function set_velocity!(mechanism, joint::JointConstraint{T,N,Nc}, vϕ) where {T,
 
     Δv = vϕ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]
     Δϕ = vϕ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])]
-    set_minimal_velocities!(body1, body2, joint, Δv=Δv, Δϕ=Δϕ)
+    set_minimal_velocities!(body1, body2, joint, mechanism.timestep, Δv=Δv, Δϕ=Δϕ)
     return body2.state.v15, body2.state.ϕ15
 end
 
@@ -147,7 +147,7 @@ Gets the minimal coordinates of joint `jointonstraint`.
 end
 
 @generated function minimal_velocities(mechanism, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
-    vec = [:(minimal_velocities([joint.translational, joint.rotational][$i], get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id))) for i = 1:Nc]
+    vec = [:(minimal_velocities([joint.translational, joint.rotational][$i], get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), mechanism.timestep)) for i = 1:Nc]
     return :(svcat($(vec...)))
 end
 

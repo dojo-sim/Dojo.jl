@@ -33,7 +33,8 @@ function get_contact_constraint(mechanism::Mechanism, name::Symbol)
     return
 end
 
-function get_node(mechanism::Mechanism{T,Nn,Ne,Nb}, id::Integer) where {T,Nn,Ne,Nb}
+function get_node(mechanism::Mechanism{T,Nn,Ne,Nb}, id::Integer; origin::Bool=false) where {T,Nn,Ne,Nb}
+    (origin && id == 0) && return mechanism.origin
     if id <= Ne
         return get_joint_constraint(mechanism, id)
     elseif id <= Ne+Nb
@@ -69,7 +70,7 @@ end
         joint = get_node(mechanism, connectionid)
         off = 0
         if body1.id == joint.parent_id
-            for element in [joint.translational, joint.rotational]
+            for element in (joint.translational, joint.rotational)
                 Nj = length(element)
                 if body2.id == joint.child_id
                     joint.spring && (dimpulse_map_parentb -= spring_parent_jacobian_velocity_child(element, body1, body2, timestep)) #should be useless
@@ -80,7 +81,7 @@ end
                 off += Nj
             end
         elseif body2.id == joint.parent_id
-            for element in [joint.translational, joint.rotational]
+            for element in (joint.translational, joint.rotational)
                 Nj = length(element)
                 if body1.id == joint.child_id
                     # joint.spring && (dimpulse_map_parentb -= spring_parent_jacobian_velocity_child(element, body2, body1, timestep)) #should be useless

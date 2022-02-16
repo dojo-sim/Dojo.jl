@@ -215,6 +215,9 @@ end
 function joint_selector(jointtype, body1, body2, T;
         axis = SA{T}[1;0;0], p1 = szeros(T,3), p2 = szeros(T,3), qoffset = one(UnitQuaternion{T}), name = Symbol("joint_" * randstring(4)))
 
+    @warn "this is not great"
+    axis = inv(qoffset) * axis
+
     # TODO limits for revolute joint?
     if jointtype == "revolute" || jointtype == "continuous"
         joint = JointConstraint(Revolute(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)

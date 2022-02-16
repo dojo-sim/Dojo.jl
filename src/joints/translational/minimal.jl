@@ -10,7 +10,7 @@ end
 
 @inline function displacement_jacobian_configuration(relative::Symbol, joint::Translational{T}, xa::AbstractVector,
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; attjac=true) where T
-	
+
     vertices = joint.vertices
 
     if relative == :parent
@@ -19,7 +19,7 @@ end
         Q = -rotation_matrix(inv(qa)) * ∂qrotation_matrix(qa, vertices[1])
         Q += ∂qrotation_matrix_inv(qa, d)
         attjac && (Q *= LVᵀmat(qa))
-    elseif relative == :child 
+    elseif relative == :child
         X = rotation_matrix(inv(qa))
         Q = rotation_matrix(inv(qa)) * ∂qrotation_matrix(qb, vertices[2])
         attjac && (Q *= LVᵀmat(qb))
@@ -44,69 +44,24 @@ end
 ################################################################################
 # Velocities
 ################################################################################
-@inline function minimal_velocities(joint::Translational, xa::AbstractVector,
-        va::AbstractVector,  qa::UnitQuaternion, ωa::AbstractVector,
-        xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector)
-	vertices = joint.vertices
-    pbcb_w = vrotate(-vertices[2], qb)
-    pbca_w = xa - (xb + vrotate(vertices[2], qb))
-    # Δvw = V(pb,B/A)w - V(pa,A/A)w
-    Δvw = vb + skew(pbcb_w) * vrotate(ωb, qb) - (va + skew(pbca_w) * vrotate(ωa, qa)) # in world frame
-    Δv = vrotate(Δvw, inv(qa)) # in the a frame
-    return nullspace_mask(joint) * Δv
-end
+@inline function minimal_velocities(joint::Translational,
+		xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+		xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
+		timestep)
+	A = nullspace_mask(joint)
 
-@inline function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Translational{T},
-        xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
-        xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector) where T
-    
-    if relative == :parent
-        vertices = joint.vertices
-        pbcb_w = vrotate(-vertices[2], qb)
-        pbca_w = xa - (xb + vrotate(vertices[2], qb))
-        Δvw = vb + skew(pbcb_w) * vrotate(ωb, qb) - (va + skew(pbca_w) * vrotate(ωa, qa)) # in world frame
+	# 1 step backward in time
+	xa1 = next_position(xa, -va, timestep)
+	qa1 = next_orientation(qa, -ϕa, timestep)
+	xb1 = next_position(xb, -vb, timestep)
+	qb1 = next_orientation(qb, -ϕb, timestep)
 
-        X = - ∂pskew(vrotate(ωa, qa))
-        Q = - skew(pbca_w) * ∂qrotation_matrix(qa, ωa)
-        ∇xq = [X Q*LVᵀmat(qa)]
-        ∇xq = rotation_matrix(inv(qa)) * ∇xq + [szeros(T,3,3) ∂qrotation_matrix_inv(qa, Δvw) * LVᵀmat(qa)]
-        ∇xq = nullspace_mask(joint) * ∇xq
-    elseif relative == :child 
-        vertices = joint.vertices
-        pbcb_w = vrotate(-vertices[2], qb)
+	# Coordinates
+	Δx = A * displacement(joint, xa, qa, xb, qb)
+	# Previous step coordinates
+	Δx1 = A * displacement(joint, xa1, qa1, xb1, qb1)
 
-        X = ∂pskew(vrotate(ωa, qa))
-        Q = ∂pskew(vrotate(ωb, qb)) * ∂qrotation_matrix(qb, -vertices[2]) + skew(pbcb_w) * ∂qrotation_matrix(qb, ωb)
-        Q += ∂pskew(vrotate(ωa, qa)) * ∂qrotation_matrix(qb, vertices[2])
-        ∇xq = [X Q*LVᵀmat(qb)]
-        ∇xq = rotation_matrix(inv(qa)) * ∇xq
-        ∇xq = nullspace_mask(joint) * ∇xq
-    end
-
-    return ∇xq
-end
-
-@inline function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Translational{T},
-        xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
-        xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector) where T
-    
-    if relative == :parent
-        vertices = joint.vertices
-        pbca_w = xa - (xb + vrotate(vertices[2], qb))
-        V = - SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
-        Ω = - skew(pbca_w) * rotation_matrix(qa)
-        ∇vϕ = [V Ω]
-        ∇vϕ = rotation_matrix(inv(qa)) * ∇vϕ
-        ∇vϕ = nullspace_mask(joint) * ∇vϕ
-    elseif relative == :child
-        vertices = joint.vertices
-        pbcb_w = vrotate(-vertices[2], qb)
-        V = SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
-        Ω = skew(pbcb_w) * rotation_matrix(qb)
-        ∇vϕ = [V Ω]
-        ∇vϕ = rotation_matrix(inv(qa)) * ∇vϕ
-        ∇vϕ = nullspace_mask(joint) * ∇vϕ
-    end
-
-    return ∇vϕ
+	# Finite difference
+	Δv = (Δx - Δx1) / timestep
+	return Δv
 end

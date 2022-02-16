@@ -2,7 +2,7 @@
 # Displacement Jacobian
 ################################################################################
 @testset "displacement jacobian: rotational" begin
-    mech = get_mechanism(:pendulum)
+    mech = Dojo.get_mechanism(:pendulum)
     joint0 = mech.joints[1]
     rot0 = joint0.rotational
     rot0.qoffset = UnitQuaternion(rand(4)...)
@@ -14,7 +14,7 @@
     qb = UnitQuaternion(rand(4)...)
 
     # displacement_jacobian_configuration
-    X0, Q0 = displacement_jacobian_configuration(:parent, rot0, xa, qa, xb, qb, attjac=true)
+    X0, Q0 = Dojo.displacement_jacobian_configuration(:parent, rot0, xa, qa, xb, qb, attjac=true)
     J0 = [X0 Q0]
     attjac = cat(I(3),Dojo.LVᵀmat(qa), dims=(1,2))
     J1 = FiniteDiff.finite_difference_jacobian(
@@ -24,7 +24,7 @@
     @test norm(J0 - J1, Inf) < 1e-7
 
     # displacement_jacobian_configuration
-    X0, Q0 = displacement_jacobian_configuration(:child, rot0, xa, qa, xb, qb, attjac=true)
+    X0, Q0 = Dojo.displacement_jacobian_configuration(:child, rot0, xa, qa, xb, qb, attjac=true)
     J0 = [X0 Q0]
     attjac = cat(I(3),Dojo.LVᵀmat(qb), dims=(1,2))
     J1 = FiniteDiff.finite_difference_jacobian(
@@ -35,7 +35,7 @@
 end
 
 @testset "displacement jacobian: translational" begin
-    mech = get_mechanism(:slider)
+    mech = Dojo.get_mechanism(:slider)
     joint0 = mech.joints[1]
     tra0 = joint0.translational
 
@@ -45,7 +45,7 @@ end
     qb = UnitQuaternion(rand(4)...)
 
     # displacement_jacobian_configuration
-    X0, Q0 = displacement_jacobian_configuration(:parent, tra0, xa, qa, xb, qb, attjac=true)
+    X0, Q0 = Dojo.displacement_jacobian_configuration(:parent, tra0, xa, qa, xb, qb, attjac=true)
     J0 = [X0 Q0]
     attjac = cat(I(3),Dojo.LVᵀmat(qa), dims=(1,2))
     J1 = FiniteDiff.finite_difference_jacobian(
@@ -55,7 +55,7 @@ end
     @test norm(J0 - J1, Inf) < 1e-7
 
     # displacement_jacobian_configuration
-    X0, Q0 = displacement_jacobian_configuration(:child, tra0, xa, qa, xb, qb, attjac=true)
+    X0, Q0 = Dojo.displacement_jacobian_configuration(:child, tra0, xa, qa, xb, qb, attjac=true)
     J0 = [X0 Q0]
     attjac = cat(I(3),Dojo.LVᵀmat(qb), dims=(1,2))
     J1 = FiniteDiff.finite_difference_jacobian(
@@ -70,7 +70,7 @@ end
 # Impulse transform Jacobian
 ################################################################################
 @testset "impulse transform jacobian: rotational" begin
-    mech = get_mechanism(:pendulum)
+    mech = Dojo.get_mechanism(:pendulum)
     joint0 = mech.joints[1]
     rot0 = joint0.rotational
     rot0.qoffset = UnitQuaternion(rand(4)...)
@@ -81,41 +81,41 @@ end
     qb = UnitQuaternion(rand(4)...)
 
     p0 = rand(3)
-    J0 = impulse_transform_parent_jacobian_parent(rot0, xa, qa, xb, qb, p0)
+    J0 = Dojo.impulse_transform_jacobian(:parent, :parent, rot0, xa, qa, xb, qb, p0)
     attjac = cat(I(3),Dojo.LVᵀmat(qa), dims=(1,2))
     J1 = FiniteDiff.finite_difference_jacobian(
-        z -> Dojo.impulse_transform_parent(rot0, z[1:3], UnitQuaternion(z[4:7]..., false), xb, qb)*p0,
+        z -> Dojo.impulse_transform(:parent, rot0, z[1:3], UnitQuaternion(z[4:7]..., false), xb, qb)*p0,
         [xa; Dojo.vector(qa)]
         ) * attjac
     @test norm(J0 - J1, Inf) < 1e-7
 
-    J0 = impulse_transform_parent_jacobian_child(rot0, xa, qa, xb, qb, p0)
+    J0 = Dojo.impulse_transform_jacobian(:parent, :child, rot0, xa, qa, xb, qb, p0)
     attjac = cat(I(3),Dojo.LVᵀmat(qb), dims=(1,2))
     J1 = FiniteDiff.finite_difference_jacobian(
-        z -> Dojo.impulse_transform_parent(rot0, xa, qa, z[1:3], UnitQuaternion(z[4:7]..., false))*p0,
+        z -> Dojo.impulse_transform(:parent, rot0, xa, qa, z[1:3], UnitQuaternion(z[4:7]..., false))*p0,
         [xb; Dojo.vector(qb)]
         ) * attjac
     @test norm(J0 - J1, Inf) < 1e-7
 
-    J0 = impulse_transform_child_jacobian_parent(rot0, xa, qa, xb, qb, p0)
+    J0 = Dojo.impulse_transform_jacobian(:child, :parent, rot0, xa, qa, xb, qb, p0)
     attjac = cat(I(3),Dojo.LVᵀmat(qa), dims=(1,2))
     J1 = FiniteDiff.finite_difference_jacobian(
-        z -> Dojo.impulse_transform_child(rot0, z[1:3], UnitQuaternion(z[4:7]..., false), xb, qb)*p0,
+        z -> Dojo.impulse_transform(:child, rot0, z[1:3], UnitQuaternion(z[4:7]..., false), xb, qb)*p0,
         [xa; Dojo.vector(qa)]
         ) * attjac
     @test norm(J0 - J1, Inf) < 1e-7
 
-    J0 = impulse_transform_child_jacobian_child(rot0, xa, qa, xb, qb, p0)
+    J0 = Dojo.impulse_transform_jacobian(:child, :child, rot0, xa, qa, xb, qb, p0)
     attjac = cat(I(3),Dojo.LVᵀmat(qb), dims=(1,2))
     J1 = FiniteDiff.finite_difference_jacobian(
-        z -> Dojo.impulse_transform_child(rot0, xa, qa, z[1:3], UnitQuaternion(z[4:7]..., false))*p0,
+        z -> Dojo.impulse_transform(:child, rot0, xa, qa, z[1:3], UnitQuaternion(z[4:7]..., false))*p0,
         [xb; Dojo.vector(qb)]
         ) * attjac
     @test norm(J0 - J1, Inf) < 1e-7
 end
 
 @testset "impulse transform jacobian: translational" begin
-    mech = get_mechanism(:slider)
+    mech = Dojo.get_mechanism(:slider)
     joint0 = mech.joints[1]
     tra0 = joint0.translational
 
@@ -125,34 +125,34 @@ end
     qb = UnitQuaternion(rand(4)...)
 
     p0 = rand(3)
-    J0 = impulse_transform_parent_jacobian_parent(tra0, xa, qa, xb, qb, p0)
+    J0 = Dojo.impulse_transform_jacobian(:parent, :parent, tra0, xa, qa, xb, qb, p0)
     attjac = cat(I(3),Dojo.LVᵀmat(qa), dims=(1,2))
     J1 = FiniteDiff.finite_difference_jacobian(
-        z -> Dojo.impulse_transform_parent(tra0, z[1:3], UnitQuaternion(z[4:7]..., false), xb, qb)*p0,
+        z -> Dojo.impulse_transform(:parent, tra0, z[1:3], UnitQuaternion(z[4:7]..., false), xb, qb)*p0,
         [xa; Dojo.vector(qa)]
         ) * attjac
     @test norm(J0 - J1, Inf) < 1e-7
 
-    J0 = impulse_transform_parent_jacobian_child(tra0, xa, qa, xb, qb, p0)
+    J0 = Dojo.impulse_transform_jacobian(:parent, :child, tra0, xa, qa, xb, qb, p0)
     attjac = cat(I(3),Dojo.LVᵀmat(qb), dims=(1,2))
     J1 = FiniteDiff.finite_difference_jacobian(
-        z -> Dojo.impulse_transform_parent(tra0, xa, qa, z[1:3], UnitQuaternion(z[4:7]..., false))*p0,
+        z -> Dojo.impulse_transform(:parent, tra0, xa, qa, z[1:3], UnitQuaternion(z[4:7]..., false))*p0,
         [xb; Dojo.vector(qb)]
         ) * attjac
     @test norm(J0 - J1, Inf) < 1e-7
 
-    J0 = impulse_transform_child_jacobian_parent(tra0, xa, qa, xb, qb, p0)
+    J0 = Dojo.impulse_transform_jacobian(:child, :parent, tra0, xa, qa, xb, qb, p0)
     attjac = cat(I(3),Dojo.LVᵀmat(qa), dims=(1,2))
     J1 = FiniteDiff.finite_difference_jacobian(
-        z -> Dojo.impulse_transform_child(tra0, z[1:3], UnitQuaternion(z[4:7]..., false), xb, qb)*p0,
+        z -> Dojo.impulse_transform(:child, tra0, z[1:3], UnitQuaternion(z[4:7]..., false), xb, qb)*p0,
         [xa; Dojo.vector(qa)]
         ) * attjac
     @test norm(J0 - J1, Inf) < 1e-7
 
-    J0 = impulse_transform_child_jacobian_child(tra0, xa, qa, xb, qb, p0)
+    J0 = Dojo.impulse_transform_jacobian(:child, :child, tra0, xa, qa, xb, qb, p0)
     attjac = cat(I(3),Dojo.LVᵀmat(qb), dims=(1,2))
     J1 = FiniteDiff.finite_difference_jacobian(
-        z -> Dojo.impulse_transform_child(tra0, xa, qa, z[1:3], UnitQuaternion(z[4:7]..., false))*p0,
+        z -> Dojo.impulse_transform(:child, tra0, xa, qa, z[1:3], UnitQuaternion(z[4:7]..., false))*p0,
         [xb; Dojo.vector(qb)]
         ) * attjac
     @test norm(J0 - J1, Inf) < 1e-7
@@ -223,7 +223,7 @@ end
 end
 
 @testset "impulse map: rotational" begin
-    mech = get_mechanism(:pendulum)
+    mech = Dojo.get_mechanism(:pendulum)
     joint0 = mech.joints[1]
     rot0 = joint0.rotational
     rot0.qoffset = UnitQuaternion(rand(4)...)

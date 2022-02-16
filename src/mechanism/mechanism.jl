@@ -215,3 +215,10 @@ function set_spring_offset!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVect
 	end
 	return nothing
 end
+
+# find all the joints parents of a body
+function parent_joints(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, body::Body) where {T,Nn,Ne,Nb,Ni}
+	ids = parents(mechanism.system, body.id)
+	ids = intersect(ids, 1:Ne)# filter out the bodies
+	return [get_node(mechanism, id) for id in ids]
+end
