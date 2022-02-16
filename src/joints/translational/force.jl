@@ -107,7 +107,7 @@ end
         xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion,
         ωb::AbstractVector; unitary::Bool=false) where T
     # input = damper_force(joint, xa, qa, va, ωa, xb, qb, vb, ωb) # in the a frame
-    # inputa = impulse_transform_parent(joint, xa, qa, xb, qb) * input
+    # inputa = impulse_transform(:parent, joint, xa, qa, xb, qb) * input
     # return inputa
     return damper_relative(:parent, joint, xa, va, qa, ωa, xb, vb, qb, ωb, unitary=unitary)
 end
@@ -116,7 +116,7 @@ end
         xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion,
         ωb::AbstractVector; unitary::Bool=false) where T
     # input = damper_force(joint, xa, qa, va, ωa, xb, qb, vb, ωb) # in the a frame
-    # inputb = impulse_transform_child(joint, xa, qa, xb, qb) * input
+    # inputb = impulse_transform(:child, joint, xa, qa, xb, qb) * input
     # return inputb
     return damper_relative(:child, joint, xa, va, qa, ωa, xb, vb, qb, ωb, unitary=unitary)
 end
