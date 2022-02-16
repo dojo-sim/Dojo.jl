@@ -1,3 +1,5 @@
+# Citing
+
 If you find Dojo useful in your project, we kindly request that you cite the following paper:
 ```
 @article{howell2021dojo,
@@ -7,4 +9,4 @@ If you find Dojo useful in your project, we kindly request that you cite the fol
 }
 ```
 
-A preprint can be downloaded here.
+A preprint can be downloaded from [arXiv]().

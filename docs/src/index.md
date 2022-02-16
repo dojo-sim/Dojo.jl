@@ -1,7 +1,7 @@
-__Dojo.jl__ is a differentiable simulator for robotics written in Julia.
+# [Dojo.jl](https://github.com/dojo-sim/Dojo.jl)
+A differentiable simulator for robotics, written in Julia.
 
 ## Features
-
 * __Maximal-Coordinates Representation__
 * __Smooth Gradients__
 * __Open Source__: Our code is available on [GitHub](https://github.com/dojo-sim/Dojo.jl) and distributed under the MIT Licence.
