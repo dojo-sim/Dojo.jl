@@ -49,8 +49,8 @@ function get_data(mechanism::Mechanism{T}) where T
         if control_dimension(joint) > 0
             tra = [joint.translational, joint.rotational][findfirst(x -> typeof(x) <: Translational, [joint.translational, joint.rotational])]
             rot = [joint.translational, joint.rotational][findfirst(x -> typeof(x) <: Rotational, [joint.translational, joint.rotational])]
-            F = tra.Fτ
-            τ = rot.Fτ
+            F = tra.input
+            τ = rot.input
             u = [nullspace_mask(tra) * F; nullspace_mask(rot) * τ]
             push!(data, u...)
         end
@@ -78,8 +78,8 @@ function set_solution!(mechanism::Mechanism{T}, sol::AbstractVector) where T
         N½ = Int(N/2)
         s = sol[off .+ (1:N½)]; off += N½
         γ = sol[off .+ (1:N½)]; off += N½
-        contact.impulses[2] = s
-        contact.impulses_dual[2] = γ
+        contact.impulses_dual[2] = s
+        contact.impulses[2] = γ
     end
     return nothing
 end
@@ -96,8 +96,8 @@ function get_solution(mechanism::Mechanism{T}) where T
         push!(sol, [v25; ϕ25]...)
     end
     for (i,contact) in enumerate(mechanism.contacts)
-        s = contact.impulses[2]
-        γ = contact.impulses_dual[2]
+        s = contact.impulses_dual[2]
+        γ = contact.impulses[2]
         push!(sol, [s; γ]...)
     end
     return sol

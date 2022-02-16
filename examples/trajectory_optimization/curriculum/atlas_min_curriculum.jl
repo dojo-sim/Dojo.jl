@@ -24,9 +24,9 @@ env = atlas(
     opts_grad=SolverOptions(rtol=ρ0, btol=ρ0, undercut=1.5)
 	)
 
-env.mechanism.joints[2].constraints[2].damper = 75.0
-env.mechanism.joints[7].constraints[2].damper = 75.0
-env.mechanism.joints[8].constraints[2].damper = 75.0
+env.mechanism.joints[2].rotational.damper = 75.0
+env.mechanism.joints[7].rotational.damper = 75.0
+env.mechanism.joints[8].rotational.damper = 75.0
 
 # ## visualizer
 open(env.vis)
@@ -47,11 +47,13 @@ storage = simulate!(env.mechanism, 0.5, ctrl!, record=true, verbose=false,
 	opts=SolverOptions(rtol=ρ0, btol=ρ0, undercut=1.5))
 visualize(env.mechanism, storage, vis=env.vis, show_contact=false)
 
-
+mech.contacts[1].model
 # ## reference trajectory
 N = 3
-initialize!(env.mechanism, :atlas, model_type=:armless, tran=[0,0,0.0], rot=[0,0,0.], αhip=0.5, αknee=1.0)
-xref = atlas_trajectory(env.mechanism; timestep=dt, β=1.4, αtorso=0.07, Δx=-0.03, r=0.08, z=1.12, N=10, Ncycles=N)
+initialize!(env.mechanism, :atlas, model_type=:armless,
+	tran=[0,0,0.0], rot=[0,0,0.], αhip=0.5, αknee=1.0)
+xref = atlas_trajectory(env.mechanism; timestep=dt, β=1.4,
+	αtorso=0.07, Δx=-0.03, r=0.08, z=1.12, N=10, Ncycles=N)
 # x = get_minimal_state(env.mechanism)
 # xref0 = deepcopy(xref[1])
 # # xref0[1:3] .+= [1.0, 1.0, 1.0] # floating x

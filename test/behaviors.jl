@@ -4,8 +4,8 @@
     try
         storage = simulate!(mech, 5.0, record=true, verbose=false)
         @test true
-    catch 
-        @test false 
+    catch
+        @test false
     end
 end
 

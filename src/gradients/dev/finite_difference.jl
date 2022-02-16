@@ -11,7 +11,7 @@ function get_solution0(mechanism::Mechanism{T}) where {T}
     end
     for (i, contacts) in enumerate(mechanism.contacts)
         s = contacts.impulses[2]
-        γ = contacts.impulses_dual[2]
+        γ = contacts.impulses[2]
         push!(sol, [s; γ]...)
     end
     return sol
@@ -38,12 +38,12 @@ function set_solution0!(mechanism::Mechanism{T}, sol::AbstractVector) where T
         s = sol[off .+ (1:N½)]; off += N½
         γ = sol[off .+ (1:N½)]; off += N½
         contacts.impulses[2] = s
-        contacts.impulses_dual[2] = γ
+        contacts.impulses[2] = γ
     end
     return nothing
 end
 
-function evaluate_residual!(mechanism::Mechanism, data::AbstractVector, sol::AbstractVector)
+function evaluate_residual0!(mechanism::Mechanism, data::AbstractVector, sol::AbstractVector)
     system = mechanism.system
     set_data0!(mechanism, data)
     set_solution0!(mechanism, sol)
@@ -66,8 +66,8 @@ function finitediff_data_jacobian(mechanism::Mechanism, data::AbstractVector,
         datam = deepcopy(data)
         datap[i] += δ
         datam[i] -= δ
-        rp = evaluate_residual!(deepcopy(mechanism), datap, deepcopy(sol))
-        rm = evaluate_residual!(deepcopy(mechanism), datam, deepcopy(sol))
+        rp = evaluate_residual0!(deepcopy(mechanism), datap, deepcopy(sol))
+        rm = evaluate_residual0!(deepcopy(mechanism), datam, deepcopy(sol))
         jac[:,i] = (rp - rm) / (2δ)
     end
     return jac

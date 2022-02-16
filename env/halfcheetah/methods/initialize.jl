@@ -42,7 +42,7 @@ function get_halfcheetah(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction
 
         normal = [0.0; 0.0; 1.0]
         names = contact_body ? getfield.(mech.bodies, :name) : [:ffoot, :bfoot]
-        bounds = []
+        models = []
         for name in names
             body = get_body(mech, name)
             if name == :torso # need special case for torso
@@ -50,21 +50,21 @@ function get_halfcheetah(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction
                 pf = [+0.5 * body.shape.shape[1].rh[2]; 0.0; 0.0]
                 pb = [-0.5 * body.shape.shape[1].rh[2]; 0.0; 0.0]
                 o = [0;0; body.shape.shape[1].rh[1]]
-                push!(bounds, contact_constraint(body, normal, friction_coefficient=friction_coefficient, contact_point=pf, offset=o))
-                push!(bounds, contact_constraint(body, normal, friction_coefficient=friction_coefficient, contact_point=pb, offset=o))
+                push!(models, contact_constraint(body, normal, friction_coefficient=friction_coefficient, contact_point=pf, offset=o))
+                push!(models, contact_constraint(body, normal, friction_coefficient=friction_coefficient, contact_point=pb, offset=o))
 
                 # head
                 pf = [+0.5 * body.shape.shape[1].rh[2] + 0.214; 0.0; 0.1935]
                 o = [0;0; body.shape.shape[2].rh[1]]
-                push!(bounds, contact_constraint(body, normal, friction_coefficient=friction_coefficient, contact_point=pf, offset=o))
+                push!(models, contact_constraint(body, normal, friction_coefficient=friction_coefficient, contact_point=pf, offset=o))
             else
                 p = [0;0; -0.5 * body.shape.rh[2]]
                 o = [0;0; body.shape.rh[1]]
-                push!(bounds, contact_constraint(body, normal, friction_coefficient=friction_coefficient, contact_point=p, offset=o))
+                push!(models, contact_constraint(body, normal, friction_coefficient=friction_coefficient, contact_point=p, offset=o))
             end
         end
         set_position!(mech, get_joint_constraint(mech, :floating_joint), [0.576509, 0.0, 0.02792])
-        mech = Mechanism(origin, bodies, joints, [bounds...], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
+        mech = Mechanism(origin, bodies, joints, [models...], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
     return mech
 end

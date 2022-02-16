@@ -1,82 +1,66 @@
-# Utils
-function module_dir()
-    return joinpath(@__DIR__, "..", "..")
-end
-
-# Activate package
-using Pkg
-Pkg.activate(module_dir())
-
-# Load packages
-using Plots
-using Random
-using MeshCat
+using Dojo 
 
 # Open visualizer
 vis = Visualizer()
 open(vis)
 
-# Include new files
-include(joinpath(module_dir(), "examples", "loader.jl"))
+# Mechanism
+mechanism = get_mechanism(:pendulum, timestep=0.1, gravity=0.0 * -9.81)
 
-
+# Controller
 function controller!(mechanism, k)
-    for (i,eqc) in enumerate(collect(mechanism.joints)[1:end])
+    # target state
+    x_goal = [0.5 * π; 0.0]
+
+    # current state
+    x = get_minimal_state(mechanism) 
+
+    # gains 
+    K = [10.0 0.5]
+
+    off = 0
+    for (i, eqc) in enumerate(mechanism.joints)
         nu = control_dimension(eqc)
-        u = 33.5 * mechanism.timestep * ones(nu)
-        set_input!(eqc, u)
+        # get joint configuration + velocity
+        xi = x[off .+ (1:2nu)]
+        xi_goal = x_goal[off .+ (1:2nu)]
+        
+        # control
+        ui = -K * (xi - xi_goal) 
+        set_input!(eqc, ui)
+
+        off += nu
     end
-    return
 end
 
+@show [joint.name for joint in mechanism.joints]
 
-mech = getmechanism(:pendulum, timestep = 0.05, g = -0*9.81)
-initialize!(mech, :pendulum, ϕ1 = 0.7)
-storage = simulate!(mech, 0.20, controller!, record=true, verbose=true)
-visualize(mech, storage, vis=vis)
+# Simulate
+initialize!(mechanism, :pendulum, ϕ1 = 0.0, ω1 = 1.0)
+storage = simulate!(mechanism, 20.0, record=true, verbose=true)
 
+z7 = [zt[7] for zt in z]
+z = get_maximal_state(storage)
+x = [maximal_to_minimal(mechanism, zt) for zt in z]
 
-set_entries!(mech)
+θ = Float64[]
+for t = 1:length(z)
+    push!(θ, nullspace_mask(mechanism.joints[1].rotational) * displacement(mechanism.joints[1].rotational, 
+        mechanism.origin.state.x2[1], mechanism.origin.state.q2[1], 
+        z[t][1:3], UnitQuaternion(z[t][6 .+ (1:4)]..., false), vmat=true))
+end
 
+plot(hcat(x...)')
+plot!(hcat(θ...)')
 
-################################################################################
-# Differentiation
-################################################################################
+# Visualize
+visualize(mechanism, storage, vis=vis)
 
-include(joinpath(module_dir(), "examples", "diff_tools.jl"))1
-# Set data
-Nb = length(mech.bodies)
-data = get_data(mech)
-set_data!(mech, data)
-sol = get_solution(mech)
-attjac = attitude_jacobian(data, Nb)
+θ = []
+for t = 1:length(z)
+    push!(θ, vector(displacement(mechanism.joints[1].rotational, 
+        mechanism.origin.state.x2[1], mechanism.origin.state.q2[1], 
+        z[t][1:3], UnitQuaternion(z[t][6 .+ (1:4)]..., false), vmat=false)))
+end
 
-# IFT
-datamat = full_data_matrix(mech)
-solmat = full_matrix(mech.system)
-sensi = - (solmat \ datamat)
-sensi2 = sensitivities(mech, sol, data)
-
-@test norm(sensi - sensi2, Inf) < 1.0e-8
-v0 = rand(13)
-@test norm(jvp(mech, sol, data, v0) - sensi * v0, Inf) < 1.0e-8
-
-# finite diff
-fd_datamat = finitediff_data_matrix(mech, data, sol, δ = 1e-5) * attjac
-
-@test norm(fd_datamat + datamat, Inf) < 1e-8
-plot(Gray.(abs.(datamat)))
-plot(Gray.(abs.(fd_datamat)))
-
-fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
-@test norm(fd_solmat + solmat, Inf) < 1e-8
-plot(Gray.(abs.(solmat)))
-plot(Gray.(abs.(fd_solmat)))
-
-fd_sensi = finitediff_sensitivity(mech, data, δ = 1e-5, ϵr=1.0e-12, ϵb=1.0e-12) * attjac
-@test norm(fd_sensi - sensi) / norm(fd_sensi) < 1e-3
-plot(Gray.(sensi))
-plot(Gray.(fd_sensi))
-
-norm(fd_sensi - sensi, Inf) / norm(fd_sensi, Inf)
-norm(fd_sensi - sensi, Inf)
+plot(hcat(θ...)')

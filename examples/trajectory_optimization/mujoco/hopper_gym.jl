@@ -60,7 +60,6 @@ xT = [0.5; 1.21; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0]#[0.5; 0.5; 0.
 
 # # rollout
 ū = [0.01 * rand(3) for t = 1:T-1]
-w = [zeros(0) for t = 1:T-1]
 x̄ = rollout(model, x1, ū)
 
 # ## objective
@@ -68,9 +67,9 @@ obj1 = (x, u, w) -> transpose(x - xM) * Diagonal([10.0 * ones(6); 1.0e-2 * ones(
 obj2 = (x, u, w) -> transpose(x - xT) * Diagonal([10.0 * ones(6); 1.0e-2 * ones(6)]) * (x - xT) + transpose(u) * Diagonal([1.0; 1.0; 1.0]) * u
 objT = (x, u, w) -> transpose(x - xT) * Diagonal([ones(6); ones(6)]) * (x - xT)
 
-ct1 = IterativeLQR.Cost(obj1, nx, nu, 0)
-ct2 = IterativeLQR.Cost(obj2, nx, nu, 0)
-cT = IterativeLQR.Cost(objT, nx, 0, 0)
+ct1 = IterativeLQR.Cost(obj1, nx, nu)
+ct2 = IterativeLQR.Cost(obj2, nx, nu)
+cT = IterativeLQR.Cost(objT, nx, 0)
 obj = [[ct1 for t = 1:100]..., [ct2 for t = 1:100]..., cT]
 
 # ## constraints
@@ -81,14 +80,15 @@ conT = Constraint(goal, nx, 0)
 cons = [[cont for t = 1:T-1]..., conT] 
 
 # ## problem
-prob = problem_data(model, obj, cons)
+prob = solver(model, obj, cons, 
+    opts=Options(
+        verbose=true,
+        max_al_iter=5))
 initialize_controls!(prob, ū)
 initialize_states!(prob, x̄)
 
 # ## solve
-solve!(prob, 
-    verbose=true,
-    max_al_iter=5)
+solve!(prob)
 
 # ## solution
 x_sol, u_sol = get_trajectory(prob)

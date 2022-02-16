@@ -67,6 +67,7 @@ function zero_velocity!(mechanism::Mechanism)
     for (i, body) in enumerate(mechanism.bodies)
         try
             set_velocity!(body, v=zeros(3), ω=zeros(3))
+            set_previous_configuration!(body, mechanism.timestep)
         catch
             nothing
         end

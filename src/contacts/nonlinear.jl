@@ -24,7 +24,7 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, mechanism.timestep)
 
-    constraint(model, contact.impulses[2], contact.impulses_dual[2], x3, q3, v25, ϕ25)
+    constraint(model, contact.impulses_dual[2], contact.impulses[2], x3, q3, v25, ϕ25)
 end
 
 function constraint(model::NonlinearContact, s::AbstractVector{T}, γ::AbstractVector{T},
@@ -68,16 +68,7 @@ end
     return [X Q]
 end
 
-@inline function impulse_map(model::NonlinearContact, x::AbstractVector, q::UnitQuaternion, λ)
-    X = [model.surface_normal_projector;
-         szeros(1,3);
-         model.surface_projector]
-    # q * ... is a rotation by quaternion q it is equivalent to Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * ...
-    Q = - X * q * skew(model.contact_point - vrotate(model.offset, inv(q)))
-    return [X Q]
-end
-
-@inline function force_mapping(model::NonlinearContact)
+@inline function force_mapping(model::NonlinearContact, x::AbstractVector, q::UnitQuaternion)
     X = [model.surface_normal_projector;
          szeros(1,3);
          model.surface_projector]
@@ -86,21 +77,21 @@ end
 
 @inline function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
     contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
-    # ∇impulses[impulses_dual .* impulses - μ; g - s] = [diag(impulses_dual); -diag(0,1,1)]
-    # ∇impulses_dual[impulses_dual .* impulses - μ; g - s] = [diag(impulses); -diag(1,0,0)]
-    # (friction_coefficient γ - ψ) dependent of ψ = impulses_dual[2][1:1]
+    # ∇impulses[impulses .* impulses - μ; g - s] = [diag(impulses); -diag(0,1,1)]
+    # ∇impulses[impulses .* impulses - μ; g - s] = [diag(impulses); -diag(1,0,0)]
+    # (friction_coefficient γ - ψ) dependent of ψ = impulses[2][1:1]
     # B(z) * zdot - sβ dependent of sβ = impulses[2][2:end]
     friction_coefficient = contact.model.friction_coefficient
-    γ = contact.impulses_dual[2] + 1e-10*neutral_vector(contact.model) # TODO need to check this is legit
-    s = contact.impulses[2] + 1e-10*neutral_vector(contact.model) # TODO need to check this is legit
+    γ = contact.impulses[2] + 1e-10*neutral_vector(contact.model) # TODO need to check this is legit
+    s = contact.impulses_dual[2] + 1e-10*neutral_vector(contact.model) # TODO need to check this is legit
 
-    # ∇s = [contact.impulses_dual[2][1] szeros(1,3); szeros(3,1) cone_product_jacobian(contact.impulses_dual[2][2:4]); Diagonal([-1, 0, -1, -1])]
+    # ∇s = [contact.impulses[2][1] szeros(1,3); szeros(3,1) cone_product_jacobian(contact.impulses[2][2:4]); Diagonal([-1, 0, -1, -1])]
     ∇s1 = [γ[SA[1]]; szeros(T,3)]'
     ∇s2 = [szeros(T,3,1) cone_product_jacobian(γ[SA[2,3,4]])]
     ∇s3 = Diagonal(SVector{4,T}(-1, 0, -1, -1))
     ∇s = [∇s1; ∇s2; ∇s3]
 
-    # ∇γ = [contact.impulses[2][1] szeros(1,3); szeros(3,1) cone_product_jacobian(contact.impulses[2][2:4]); szeros(1,4); friction_coefficient -1 0 0; szeros(2,4)]
+    # ∇γ = [contact.impulses_dual[2][1] szeros(1,3); szeros(3,1) cone_product_jacobian(contact.impulses_dual[2][2:4]); szeros(1,4); friction_coefficient -1 0 0; szeros(2,4)]
     ∇γ1 = [s[SA[1]]; szeros(T,3)]'
     ∇γ2 = [szeros(T,3,1) cone_product_jacobian(s[SA[2,3,4]])]
     ∇γ3 = SA[0   0 0 0;
@@ -109,22 +100,21 @@ end
              0   0 0 0;]
     ∇γ = [∇γ1; ∇γ2; ∇γ3]
 
-    # matrix_entry.value = [[contact.impulses_dual[2][1] szeros(1,3); szeros(3,1) cone_product_jacobian(contact.impulses_dual[2][2:4]); Diagonal([-1, 0, -1, -1])] [contact.impulses[2][1] szeros(1,3); szeros(3,1) cone_product_jacobian(contact.impulses[2][2:4]); szeros(1,4); friction_coefficient -1 0 0; szeros(2,4)]]
+    # matrix_entry.value = [[contact.impulses[2][1] szeros(1,3); szeros(3,1) cone_product_jacobian(contact.impulses[2][2:4]); Diagonal([-1, 0, -1, -1])] [contact.impulses_dual[2][1] szeros(1,3); szeros(3,1) cone_product_jacobian(contact.impulses_dual[2][2:4]); szeros(1,4); friction_coefficient -1 0 0; szeros(2,4)]]
     matrix_entry.value = [∇s ∇γ]
 
-    # [-impulses_dual .* impulses + μ; -g + s]
+    # [-impulses .* impulses + μ; -g + s]
     vector_entry.value = vcat(-complementarityμ(mechanism, contact), -constraint(mechanism, contact))
     return
 end
 
 function complementarity(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½};
         scaling::Bool = false) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
-    γ = contact.impulses_dual[2]
-    s = contact.impulses[2]
+    γ = contact.impulses[2]
+    s = contact.impulses_dual[2]
     return vcat(γ[1] * s[1], cone_product(γ[@SVector [2,3,4]], s[@SVector [2,3,4]]))
 end
 
 neutral_vector(model::NonlinearContact{T,N}) where {T,N} = [sones(T, 2); szeros(T, Int(N/2) -2)]
 
 cone_degree(model::NonlinearContact) = 2
-

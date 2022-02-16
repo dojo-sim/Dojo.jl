@@ -111,24 +111,96 @@ function atlas_trajectory(mechanism::Mechanism{T}; timestep = 0.05, β=0.5,
 	return X
 end
 
+function interpolate(p1, p2, N::Int)
+	return [p1 .+ α*(p2 - p1) for α in range(0, stop=1.0, length=N)]
+end
 
-# ################################################################################
-# # Compute trajectory
-# ################################################################################
+function atlas_jump(mechanism::Mechanism{T}; timestep = 0.05, αtorso=0.0, z=0.95, Δx=0.0, x = 0.0,
+		Ns=[5,5,5,5,5], foot_high=0.20, base_high=0.20, base_low=-0.20) where T
+	N = sum(Ns)
+	# Foot position
+	fL = [Δx, + 0.1145, 0]
+	fH = [Δx, + 0.1145, foot_high]
+	# Base position
+	bL = [x, 0, z+base_low]
+	bM = [x, 0, z]
+	bH = [x, 0, z+base_high]
+
+	pfoot = [
+		interpolate(fL, fL, Ns[1]);
+		interpolate(fL, fL, Ns[2]);
+		interpolate(fL, fH, Ns[3]);
+		interpolate(fH, fL, Ns[4]);
+		interpolate(fL, fL, Ns[5]);
+		]
+	pbase = [
+		interpolate(bM, bL, Ns[1]);
+		interpolate(bL, bM, Ns[2]);
+		interpolate(bM, bH, Ns[3]);
+		interpolate(bH, bL, Ns[4]);
+		interpolate(bL, bM, Ns[5]);
+		]
+
+	# Leg angles
+	θL = [IKatlas(mechanism, pbase[i], pfoot[i], leg=:l) for i=1:N]
+	θR = [IKatlas(mechanism, pbase[i], pfoot[i], leg=:r) for i=1:N]
+
+	# adding angular velocities
+	ωL = [(θL[i%N+1] - θL[i]) / timestep for i = 1:N]
+	ωR = [(θR[i%N+1] - θR[i]) / timestep for i = 1:N]
+
+	# Minimal Coordinates
+	nx = minimal_dimension(mechanism)
+	X = [zeros(nx) for i = 1:N]
+	for i = 1:N
+		set_position!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [pbase[i]; 0.0; αtorso; 0.0])
+		set_position!(mechanism, get_joint_constraint(mechanism, :back_bkxyz), [0.0, -αtorso, 0.0])
+		set_position!(mechanism, get_joint_constraint(mechanism, :l_leg_hpxyz), [0.0, -θL[i][1], 0.0])
+		set_position!(mechanism, get_joint_constraint(mechanism, :l_leg_kny), [θL[i][2]])
+		set_position!(mechanism, get_joint_constraint(mechanism, :l_leg_akxy), [θL[i][1]-θL[i][2], 0.0])
+
+		set_position!(mechanism, get_joint_constraint(mechanism, :r_leg_hpxyz), [0.0, -θR[i][1], 0.0])
+		set_position!(mechanism, get_joint_constraint(mechanism, :r_leg_kny), [θR[i][2]])
+		set_position!(mechanism, get_joint_constraint(mechanism, :r_leg_akxy), [θR[i][1]-θR[i][2], 0.0])
+
+		# set_velocity!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [zeros(3); zeros(3)])
+		# set_velocity!(mechanism, get_joint_constraint(mechanism, :l_leg_hpxyz), [0.0, -ωL[i][1], 0.0])
+		# set_velocity!(mechanism, get_joint_constraint(mechanism, :l_leg_kny), [ωL[i][2]])
+		# set_velocity!(mechanism, get_joint_constraint(mechanism, :l_leg_akxy), [ωL[i][1]-ωL[i][2], 0.0])
+		#
+		# set_velocity!(mechanism, get_joint_constraint(mechanism, :r_leg_hpxyz), [0.0, -ωR[i][1], 0.0])
+		# set_velocity!(mechanism, get_joint_constraint(mechanism, :r_leg_kny), [ωR[i][2]])
+		# set_velocity!(mechanism, get_joint_constraint(mechanism, :r_leg_akxy), [ωR[i][1]-ωR[i][2], 0.0])
+		X[i] .= get_minimal_state(mechanism)
+	end
+
+	# X = vcat([deepcopy(X) for i = 1:Ncycles]...)
+	# # adding forward displacement and velocity
+	# for i = 1:2N*Ncycles
+	# 	X[i][1] += (i-1) * 2r / N
+	# 	X[i][7] += 2r / N / timestep
+	# end
+	return X
+end
+
+
+################################################################################
+# Compute trajectory
+################################################################################
 # vis = Visualizer()
 # open(vis)
-#
+
 # mech = get_mechanism(:atlas, timestep=0.05, model_type=:armless, damper=1000.0)
 # initialize!(mech, :atlas, tran=[1,0,0.0], rot=[0,0,0.], αhip=0.5, αknee=1.0)
 #
 # @elapsed storage = simulate!(mech, 0.05, record=true, verbose=true)
 # visualize(mech, storage, vis=vis)
 #
-# X = atlas_trajectory(mech; timestep=0.05, r=0.10, z=0.89, N=14, Ncycles=5)
+# X = atlas_jump(mech; Ns=[7,4,4,8,8], timestep=0.025, Δx=0.0, x=0.0, z=1.10, foot_high=0.20, base_high=+0.20, base_low=-0.20)
 # zref = [minimal_to_maximal(mech, x) for x in X]
 # storage = generate_storage(mech, zref)
 # visualize(mech, storage, vis=vis)
-#
+
 #
 # bodies = collect(mech.bodies)
 # joints = collect(mech.joints)

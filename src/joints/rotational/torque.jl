@@ -60,7 +60,7 @@ end
 
 
 function spring_extension(joint::Rotational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
-    q = inv(spring_qoffset(joint)) * orientation_error(joint, xa, qa, xb, qb)
+    q = inv(spring_qoffset(joint)) * displacement(joint, xa, qa, xb, qb, vmat=false)
     return q
 end
 
@@ -69,17 +69,19 @@ spring_parent(joint::Rotational, bodya::Node, bodyb::Node, timestep; unitary::Bo
 spring_child(joint::Rotational, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) =
     timestep * spring_child(joint, current_configuration(bodya.state)..., current_configuration(bodyb.state)..., unitary=unitary)
 damper_parent(joint::Rotational, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) =
-    timestep * damper_parent(joint, current_configuration(bodya.state)[2], bodya.state.ϕsol[2], current_configuration(bodyb.state)[2], bodyb.state.ϕsol[2], unitary=unitary)
+    timestep * damper_parent(joint, current_configuration(bodya.state)[2], bodya.state.ϕsol[2],
+    current_configuration(bodyb.state)[2], bodyb.state.ϕsol[2], timestep, unitary=unitary)
 damper_child(joint::Rotational, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) =
-    timestep * damper_child(joint, current_configuration(bodya.state)[2], bodya.state.ϕsol[2], current_configuration(bodyb.state)[2], bodyb.state.ϕsol[2], unitary=unitary)
+    timestep * damper_child(joint, current_configuration(bodya.state)[2], bodya.state.ϕsol[2],
+    current_configuration(bodyb.state)[2], bodyb.state.ϕsol[2], timestep, unitary=unitary)
 
-spring_parent(joint::Rotational3{T}, bodya::Node, bodyb::Node, timestep) where T = szeros(T, 6)
-spring_child(joint::Rotational3{T}, bodya::Node, bodyb::Node, timestep) where T = szeros(T, 6)
-damper_parent(joint::Rotational3{T}, bodya::Node, bodyb::Node, timestep) where T = szeros(T, 6)
-damper_child(joint::Rotational3{T}, bodya::Node, bodyb::Node, timestep) where T = szeros(T, 6)
+spring_parent(joint::Rotational{T,3}, bodya::Node, bodyb::Node, timestep) where T = szeros(T, 6)
+spring_child(joint::Rotational{T,3}, bodya::Node, bodyb::Node, timestep) where T = szeros(T, 6)
+damper_parent(joint::Rotational{T,3}, bodya::Node, bodyb::Node, timestep) where T = szeros(T, 6)
+damper_child(joint::Rotational{T,3}, bodya::Node, bodyb::Node, timestep) where T = szeros(T, 6)
 
-spring_parent(joint::Rotational3{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; rotate::Bool=true, unitary::Bool=false) where T = szeros(T, 6)
-spring_child(joint::Rotational3{T}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; rotate::Bool=true, unitary::Bool=false) where T = szeros(T, 6)
+spring_parent(joint::Rotational{T,3}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; rotate::Bool=true, unitary::Bool=false) where T = szeros(T, 6)
+spring_child(joint::Rotational{T,3}, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; rotate::Bool=true, unitary::Bool=false) where T = szeros(T, 6)
 
 
 ################################################################################
@@ -90,16 +92,16 @@ spring_child(joint::Rotational3{T}, xa::AbstractVector, qa::UnitQuaternion, xb::
     spring = unitary ? 1.0 : joint.spring
     q = spring_extension(joint, xa, qa, xb, qb)
     distance = spring_distance(joint, q)
-    Fτ = -spring * distance # force in offset frame
-    Fτ = vrotate(Fτ, joint.qoffset) # rotate back to the a frame
-    return Fτ
+    input = -spring * distance # force in offset frame
+    input = vrotate(input, joint.qoffset) # rotate back to the a frame
+    return input
 end
 
 @inline function spring_relative(relative::Symbol, joint::Rotational{T}, xa::AbstractVector,
         qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; unitary::Bool=false) where T
-    Fτ = spring_force(joint, xa, qa, xb, qb, unitary=unitary)
-    Fτ = impulse_transform(relative, joint, xa, qa, xb, qb) * Fτ
-    return Fτ
+    input = spring_force(joint, xa, qa, xb, qb, unitary=unitary)
+    input = impulse_transform(relative, joint, xa, qa, xb, qb) * input
+    return input
 end
 
 @inline function spring_parent(joint::Rotational{T}, xa::AbstractVector, qa::UnitQuaternion,
@@ -142,93 +144,65 @@ end
     return spring_relative(:child, joint, xa, qa, xb, qb; unitary=unitary)
 end
 
-# vis = Visualizer()
-# open(vis)
-#
-# mech = get_snake(spring=10.0, damper=1.0, Nb=2, gravity=0.0, contact=false)
-# initialize!(mech, :snake)
-# function ctrl!(mech, k)
-#     nu = control_dimension(mech)
-#     set_control!(mech, [szeros(6); 11srand(nu-6)]*mech.timestep)
-# end
-# storage = simulate!(mech, 8.0, ctrl!, record=true, verbose=false)
-# visualize(mech, storage, vis=vis)
-#
-# joint0 = mech.joints[1]
-# xa = mech.origin.state.x2[1]
-# qa = mech.origin.state.q2[1]
-# xb = mech.bodies[1].state.x2[1]
-# qb = mech.bodies[1].state.q2[1]
-#
-#
-# spring_parent(joint0.constraints[2], xa, qa, xb, qb)
-# spring_child(joint0.constraints[2], xa, qa, xb, qb)
-#
-# spring_parent_new(joint0.constraints[2], xa, qa, xb, qb)
-# spring_child_new(joint0.constraints[2], xa, qa, xb, qb)
-#
-# impulse_transform(:parent, joint0.constraints[2], xa, qa, xb, qb)
-# impulse_transform(:child, joint0.constraints[2], xa, qa, xb, qb)
-#
 
-#
-# qa = UnitQuaternion(rand(4)...)
-# qb = UnitQuaternion(rand(4)...)
-# qoff = UnitQuaternion(rand(4)...)
-# Vmat(qa \ qb / qoff)
-#
-# qa \ qb / qoff
-# Vmat(orientation_error(joint0.constraints[2], xa, qa, xb, qb))
+################################################################################
+# Damper Force
+################################################################################
+@inline function damper_force(joint::Rotational{T}, qa::UnitQuaternion, ϕa::AbstractVector,
+        qb::UnitQuaternion, ϕb::AbstractVector, timestep; unitary::Bool=false) where T
+    A = nullspace_mask(joint)
+    Aᵀ = zerodimstaticadjoint(A)
+    qoffset = joint.qoffset
+    force = 2Aᵀ * A * (vrotate(ϕb, inv(qoffset) * inv(qa) * qb) - vrotate(ϕa, inv(qoffset))) # in offset frame
+    unitary && (force *= joint.damper) # Currently assumes same damper constant in all directions
+    return force # in the offset frame
+end
 
-
-# #
-# # a = 10
-# # a = 10
-# # a = 10
-# # a = 10
-# # a = 10
-
-@inline function damper_parent(joint::Rotational{T}, qa::UnitQuaternion, ωa::AbstractVector,
-        qb::UnitQuaternion, ωb::AbstractVector; rotate::Bool=true, unitary::Bool=false) where T
+@inline function damper_parent(joint::Rotational{T}, qa::UnitQuaternion, ϕa::AbstractVector,
+        qb::UnitQuaternion, ϕb::AbstractVector, timestep; rotate::Bool=true, unitary::Bool=false) where T
+    # qoffset = joint.qoffset
+    # force = damper_force(joint, qa, ϕa, qb, ϕb, unitary=unitary)
     damper = unitary ? 1.0 : joint.damper
     A = nullspace_mask(joint)
     Aᵀ = zerodimstaticadjoint(A)
     qoffset = joint.qoffset
-    velocity = A * (vrotate(ωb, qa \ qb / qoffset) - vrotate(ωa, inv(qoffset))) # in offset frame
+    velocity = A * (vrotate(ϕb, qa \ qb / qoffset) - vrotate(ϕa, inv(qoffset))) # in offset frame
     force = 2 * Aᵀ * A * damper * Aᵀ * velocity # Currently assumes same damper constant in all directions
     rotate && (force = vrotate(force, qoffset)) # rotate back to frame a
     return [szeros(T, 3); force]
 end
 
-@inline function damper_child(joint::Rotational{T}, qa::UnitQuaternion, ωa::AbstractVector,
-        qb::UnitQuaternion, ωb::AbstractVector; rotate::Bool=true, unitary::Bool=false) where T
+@inline function damper_child(joint::Rotational{T}, qa::UnitQuaternion, ϕa::AbstractVector,
+        qb::UnitQuaternion, ϕb::AbstractVector, timestep; rotate::Bool=true, unitary::Bool=false) where T
+    # qoffset = joint.qoffset
+    # force = -damper_force(joint, qa, ϕa, qb, ϕb, unitary=unitary)
     damper = unitary ? 1.0 : joint.damper
     A = nullspace_mask(joint)
     Aᵀ = zerodimstaticadjoint(A)
     qoffset = joint.qoffset
-    velocity = A * (vrotate(ωb, qa \ qb / qoffset) - vrotate(ωa, inv(qoffset))) # in offset frame
+    velocity = A * (vrotate(ϕb, qa \ qb / qoffset) - vrotate(ϕa, inv(qoffset))) # in offset frame
     force = - 2 * Aᵀ * A * damper * Aᵀ * velocity # Currently assumes same damper constant in all directions
     rotate && (force = vrotate(force, inv(qb) * qa * qoffset)) # rotate back to frame b
     return [szeros(T, 3); force]
 end
 
-spring_parent_jacobian_configuration_parent(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
-damper_parent_jacobian_configuration_parent(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
-spring_parent_jacobian_configuration_child(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
-damper_parent_jacobian_configuration_child(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
-spring_child_jacobian_configuration_child(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
-damper_child_jacobian_configuration_child(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
-spring_child_jacobian_configuration_parent(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
-damper_child_jacobian_configuration_parent(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
+spring_parent_jacobian_configuration_parent(joint::Rotational{T,3}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
+damper_parent_jacobian_configuration_parent(joint::Rotational{T,3}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
+spring_parent_jacobian_configuration_child(joint::Rotational{T,3}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
+damper_parent_jacobian_configuration_child(joint::Rotational{T,3}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
+spring_child_jacobian_configuration_child(joint::Rotational{T,3}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
+damper_child_jacobian_configuration_child(joint::Rotational{T,3}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
+spring_child_jacobian_configuration_parent(joint::Rotational{T,3}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
+damper_child_jacobian_configuration_parent(joint::Rotational{T,3}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
 
-spring_parent_jacobian_velocity_parent(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
-damper_parent_jacobian_velocity_parent(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
-spring_parent_jacobian_velocity_child(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
-damper_parent_jacobian_velocity_child(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
-spring_child_jacobian_velocity_child(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
-damper_child_jacobian_velocity_child(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
-spring_child_jacobian_velocity_parent(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
-damper_child_jacobian_velocity_parent(joint::Rotational3{T}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
+spring_parent_jacobian_velocity_parent(joint::Rotational{T,3}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
+damper_parent_jacobian_velocity_parent(joint::Rotational{T,3}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
+spring_parent_jacobian_velocity_child(joint::Rotational{T,3}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
+damper_parent_jacobian_velocity_child(joint::Rotational{T,3}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
+spring_child_jacobian_velocity_child(joint::Rotational{T,3}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
+damper_child_jacobian_velocity_child(joint::Rotational{T,3}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
+spring_child_jacobian_velocity_parent(joint::Rotational{T,3}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
+damper_child_jacobian_velocity_parent(joint::Rotational{T,3}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
 
 function spring_parent_jacobian_configuration_parent(joint::Rotational, body1::Node, body2::Node,
         timestep::T; attjac::Bool = true) where T
@@ -248,7 +222,7 @@ end
 function spring_parent_jacobian_configuration_child(joint::Rotational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
     # A = nullspace_mask(joint)
     # Aᵀ = zerodimstaticadjoint(A)
-    # _, _, _, ωb = current_configuration_velocity(body2.state)
+    # _, _, _, ϕb = current_configuration_velocity(body2.state)
     xa, qa = current_configuration(body1.state)
     xb, qb = current_configuration(body2.state)
     # qoffset = joint.qoffset
@@ -263,7 +237,7 @@ end
 function spring_child_jacobian_configuration_child(joint::Rotational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
     # A = nullspace_mask(joint)
     # Aᵀ = zerodimstaticadjoint(A)
-    # _, _, _, ωb = current_configuration_velocity(body2.state)
+    # _, _, _, ϕb = current_configuration_velocity(body2.state)
     xa, qa = current_configuration(body1.state)
     xb, qb = current_configuration(body2.state)
     # qoffset = joint.qoffset
@@ -279,7 +253,7 @@ end
 function spring_child_jacobian_configuration_parent(joint::Rotational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
     # A = nullspace_mask(joint)
     # Aᵀ = zerodimstaticadjoint(A)
-    # _, _, _, ωa = current_configuration_velocity(body1.state)
+    # _, _, _, ϕa = current_configuration_velocity(body1.state)
     xa, qa = current_configuration(body1.state)
     xb, qb = current_configuration(body2.state)
     # qoffset = joint.qoffset
@@ -298,14 +272,14 @@ function damper_parent_jacobian_configuration_parent(joint::Rotational, body1::N
         timestep::T; attjac::Bool = true) where T
     A = nullspace_mask(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    _, _, _, ωa = current_configuration_velocity(body1.state)
-    _, _, _, ωb = current_configuration_velocity(body2.state)
+    _, _, _, ϕa = current_configuration_velocity(body1.state)
+    _, _, _, ϕb = current_configuration_velocity(body2.state)
     xa, qa = current_configuration(body1.state)
     xb, qb = current_configuration(body2.state)
     qoffset = joint.qoffset
-    force = damper_parent(joint, qa, ωa, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
+    force = damper_parent(joint, qa, ϕa, qb, ϕb, timestep; rotate = false)[SVector{3,Int}(4,5,6)]
     X = szeros(T, 3, 3)
-    Q = ∂vrotate∂p(force, qoffset) * 2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qa \ qb / qoffset) * Rmat(qb * inv(qoffset)) * Tmat()
+    Q = ∂vrotate∂p(force, qoffset) * 2 * joint.damper * Aᵀ * A * ∂vrotate∂q(ϕb, qa \ qb / qoffset) * Rmat(qb * inv(qoffset)) * Tmat()
     attjac && (Q *= LVᵀmat(qa))
     Z = attjac ? szeros(T, 3, 6) : szeros(T, 3, 7)
     return timestep * [Z; X Q]
@@ -314,14 +288,14 @@ function damper_parent_jacobian_configuration_child(joint::Rotational, body1::No
     A = nullspace_mask(joint)
     Aᵀ = zerodimstaticadjoint(A)
     x1b, q1b = current_configuration(body2.state)
-    _, _, _, ωa = current_configuration_velocity(body1.state)
-    _, _, _, ωb = current_configuration_velocity(body2.state)
+    _, _, _, ϕa = current_configuration_velocity(body1.state)
+    _, _, _, ϕb = current_configuration_velocity(body2.state)
     xa, qa = current_configuration(body1.state)
     xb, qb = current_configuration(body2.state)
     qoffset = joint.qoffset
-    force = damper_parent(joint, qa, ωa, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
+    force = damper_parent(joint, qa, ϕa, qb, ϕb, timestep; rotate = false)[SVector{3,Int}(4,5,6)]
     X = szeros(T, 3, 3)
-    Q = ∂vrotate∂p(force, qoffset) * 2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qa \ qb / qoffset) * Rmat(inv(qoffset)) * Lmat(inv(qa))
+    Q = ∂vrotate∂p(force, qoffset) * 2 * joint.damper * Aᵀ * A * ∂vrotate∂q(ϕb, qa \ qb / qoffset) * Rmat(inv(qoffset)) * Lmat(inv(qa))
     attjac && (Q *= LVᵀmat(qb))
     Z = attjac ? szeros(T, 3, 6) : szeros(T, 3, 7)
     return timestep * [Z; X Q]
@@ -329,14 +303,14 @@ end
 function damper_child_jacobian_configuration_child(joint::Rotational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
     A = nullspace_mask(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    _, _, _, ωa = current_configuration_velocity(body1.state)
-    _, _, _, ωb = current_configuration_velocity(body2.state)
+    _, _, _, ϕa = current_configuration_velocity(body1.state)
+    _, _, _, ϕb = current_configuration_velocity(body2.state)
     xa, qa = current_configuration(body1.state)
     xb, qb = current_configuration(body2.state)
     qoffset = joint.qoffset
-    force = damper_child(joint, qa, ωa, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
+    force = damper_child(joint, qa, ϕa, qb, ϕb, timestep; rotate = false)[SVector{3,Int}(4,5,6)]
     X = szeros(T, 3, 3)
-    Q = ∂vrotate∂p(force, inv(qb) * qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qa \ qb / qoffset) * Rmat(inv(qoffset)) * Lmat(inv(qa))
+    Q = ∂vrotate∂p(force, inv(qb) * qa * qoffset) * -2 * joint.damper * Aᵀ * A * ∂vrotate∂q(ϕb, qa \ qb / qoffset) * Rmat(inv(qoffset)) * Lmat(inv(qa))
     Q += ∂vrotate∂q(force, inv(qb) * qa * qoffset) * Rmat(qa * qoffset) * Tmat()
     attjac && (Q *= LVᵀmat(qb))
     Z = attjac ? szeros(T, 3, 6) : szeros(T, 3, 7)
@@ -345,14 +319,14 @@ end
 function damper_child_jacobian_configuration_parent(joint::Rotational, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T
     A = nullspace_mask(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    _, _, _, ωa = current_configuration_velocity(body1.state)
-    _, _, _, ωb = current_configuration_velocity(body2.state)
+    _, _, _, ϕa = current_configuration_velocity(body1.state)
+    _, _, _, ϕb = current_configuration_velocity(body2.state)
     xa, qa = current_configuration(body1.state)
     xb, qb = current_configuration(body2.state)
     qoffset = joint.qoffset
-    force = damper_child(joint, qa, ωa, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
+    force = damper_child(joint, qa, ϕa, qb, ϕb, timestep; rotate = false)[SVector{3,Int}(4,5,6)]
     X = szeros(T, 3, 3)
-    Q = ∂vrotate∂p(force, inv(qb) * qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂q(ωb, qa \ qb / qoffset) * Rmat(qb * inv(qoffset)) * Tmat()
+    Q = ∂vrotate∂p(force, inv(qb) * qa * qoffset) * -2 * joint.damper * Aᵀ * A * ∂vrotate∂q(ϕb, qa \ qb / qoffset) * Rmat(qb * inv(qoffset)) * Tmat()
     Q += ∂vrotate∂q(force, inv(qb) * qa * qoffset) * Rmat(qoffset) * Lmat(inv(qb))
     attjac && (Q *= LVᵀmat(qa))
     Z = attjac ? szeros(T, 3, 6) : szeros(T, 3, 7)
@@ -385,52 +359,70 @@ end
 function damper_parent_jacobian_velocity_parent(joint::Rotational, body1::Node, body2::Node, timestep::T) where T
     A = nullspace_mask(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    _, _, _, ωa = current_configuration_velocity(body1.state)
-    _, _, _, ωb = current_configuration_velocity(body2.state)
+    _, _, _, ϕa = current_configuration_velocity(body1.state)
+    _, _, _, ϕb = current_configuration_velocity(body2.state)
     xa, qa = current_configuration(body1.state)
     xb, qb = current_configuration(body2.state)
     qoffset = joint.qoffset
-    force = damper_parent(joint, qa, ωa, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
+    force = damper_parent(joint, qa, ϕa, qb, ϕb, timestep; rotate = false)[SVector{3,Int}(4,5,6)]
     V = szeros(T, 3, 3)
-    Ω = ∂vrotate∂p(force, qoffset) * 2 * Aᵀ * A * joint.damper * Aᵀ * A * -1.0 * ∂vrotate∂p(ωa, inv(qoffset))
+    Ω = ∂vrotate∂p(force, qoffset) * 2 * joint.damper * Aᵀ * A * -1.0 * ∂vrotate∂p(ϕa, inv(qoffset))
     return timestep * [szeros(T, 3, 6); V Ω]
 end
 function damper_parent_jacobian_velocity_child(joint::Rotational, body1::Node, body2::Node, timestep::T) where T
     A = nullspace_mask(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    _, _, _, ωa = current_configuration_velocity(body1.state)
-    _, _, _, ωb = current_configuration_velocity(body2.state)
+    _, _, _, ϕa = current_configuration_velocity(body1.state)
+    _, _, _, ϕb = current_configuration_velocity(body2.state)
     xa, qa = current_configuration(body1.state)
     xb, qb = current_configuration(body2.state)
     qoffset = joint.qoffset
-    force = damper_parent(joint, qa, ωa, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
+    force = damper_parent(joint, qa, ϕa, qb, ϕb, timestep; rotate = false)[SVector{3,Int}(4,5,6)]
     V = szeros(T, 3, 3)
-    Ω = ∂vrotate∂p(force, qoffset) * 2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂p(ωb, qa \ qb / qoffset)
+    Ω = ∂vrotate∂p(force, qoffset) * 2 * joint.damper * Aᵀ * A * ∂vrotate∂p(ϕb, qa \ qb / qoffset)
     return timestep * [szeros(T, 3, 6); V Ω]
 end
 function damper_child_jacobian_velocity_child(joint::Rotational, body1::Node, body2::Node, timestep::T) where T
     A = nullspace_mask(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    _, _, _, ωa = current_configuration_velocity(body1.state)
-    _, _, _, ωb = current_configuration_velocity(body2.state)
+    _, _, _, ϕa = current_configuration_velocity(body1.state)
+    _, _, _, ϕb = current_configuration_velocity(body2.state)
     xa, qa = current_configuration(body1.state)
     xb, qb = current_configuration(body2.state)
     qoffset = joint.qoffset
-    force = damper_child(joint, qa, ωa, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
+    force = damper_child(joint, qa, ϕa, qb, ϕb, timestep; rotate = false)[SVector{3,Int}(4,5,6)]
     V = szeros(T, 3, 3)
-    Ω = ∂vrotate∂p(force, inv(qb) * qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * ∂vrotate∂p(ωb, qa \ qb / qoffset)
+    Ω = ∂vrotate∂p(force, inv(qb) * qa * qoffset) * -2 * joint.damper * Aᵀ * A * ∂vrotate∂p(ϕb, qa \ qb / qoffset)
     return timestep * [szeros(T, 3, 6); V Ω]
 end
 function damper_child_jacobian_velocity_parent(joint::Rotational, body1::Node, body2::Node, timestep::T) where T
     A = nullspace_mask(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    _, _, _, ωa = current_configuration_velocity(body1.state)
-    _, _, _, ωb = current_configuration_velocity(body2.state)
-    xa, qa = current_configuration(body1.state)
-    xb, qb = current_configuration(body2.state)
+    xa, va, qa, ϕa = current_configuration_velocity(body1.state)
+    xb, vb, qb, ϕb = current_configuration_velocity(body2.state)
     qoffset = joint.qoffset
-    force = damper_child(joint, qa, ωa, qb, ωb; rotate = false)[SVector{3,Int}(4,5,6)]
+    force = damper_child(joint, qa, ϕa, qb, ϕb, timestep; rotate = false)[SVector{3,Int}(4,5,6)]
     V = szeros(T, 3, 3)
-    Ω = ∂vrotate∂p(force, inv(qb) * qa * qoffset) * -2 * Aᵀ * A * joint.damper * Aᵀ * A * -1.0 * ∂vrotate∂p(ωa, inv(qoffset))
+    Ω = ∂vrotate∂p(force, inv(qb) * qa * qoffset) * -2 * joint.damper * Aᵀ * A * -1.0 * ∂vrotate∂p(ϕa, inv(qoffset))
     return timestep * [szeros(T, 3, 6); V Ω]
 end
+#
+#
+# timestep = mech.timestep
+# body1 = mech.bodies[1]
+# body2 = mech.bodies[2]
+# joint = mech.joints[3]
+# rot = joint.rotational
+# @benchmark damper_child_jacobian_velocity_parent($rot, $body1, $body2, $timestep)
+#
+#
+#
+#
+#
+# qa = UnitQuaternion(rand(4)...)
+# qb = UnitQuaternion(rand(4)...)
+# ϕa = srand(3)
+# ϕb = srand(3)
+# @benchmark damper_force($rot, $qa, $ϕa, $qb, $ϕb; unitary=false)
+# Main.@code_warntype damper_force(rot, qa, ϕa, qb, ϕb; unitary=false)
+# damper_force(rot, qa, ϕa, qb, ϕb; unitary=false)

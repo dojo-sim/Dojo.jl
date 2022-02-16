@@ -13,23 +13,71 @@ function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVect
 	return z
 end
 
-function minimal_to_maximal_jacobian_analytical(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
-	J = zeros(maximal_dimension(mechanism), minimal_dimension(mechanism))
+function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni},
+		x::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
+	system = mechanism.system
+	timestep = mechanism.timestep
+	J = zeros(maximal_dimension(mechanism, attjac=true), minimal_dimension(mechanism))
 	z = minimal_to_maximal(mechanism, x)
-	off = 0
-	for id in reverse(mechanism.system.dfs_list)
-		(id > Ne) && continue # only treat joints
-		joint = mechanism.joints[id]
-		nu = control_dimension(joint)
-		idx = collect(off .+ (1:(2nu)))
 
-		J[:, idx] = position_velocity_jacobian(mechanism, joint, z, x[idx])
-
-		off += 2nu
+	# Compute partials
+	partials = Dict{Vector{Int}, Matrix{T}}()
+	for cnode in mechanism.bodies
+		for pjoint in parent_joints(mechanism, cnode)
+			pnode = get_node(mechanism, pjoint.parent_id, origin=true)
+			partials[[cnode.id, pjoint.id]] = set_minimal_coordinates_velocities_jacobian_minimal(pnode, cnode, pjoint, timestep) # 12 x 2nu (xvqϕ x Δxθvϕ)
+			partials[[cnode.id, pnode.id]] = set_minimal_coordinates_velocities_jacobian_parent(pnode, cnode, pjoint, timestep) # 12 x 12 (xvqϕ x xvqϕ)
+		end
 	end
 
+	# Index
+	row = [12(i-1)+1:12i for i = 1:Nb]
+	col = [] # ordering joints from root to tree
+	col_idx = zeros(Int,Ne)
+	cnt = 0
+	for id in reverse(mechanism.system.dfs_list)
+		(id > Ne) && continue # only keep joints
+		cnt += 1
+		nu = control_dimension(get_joint_constraint(mechanism, id))
+		if length(col) > 0
+			push!(col, col[end][end] .+ (1:2nu))
+		else
+			push!(col, 1:2nu)
+		end
+		col_idx[id] = cnt
+	end
+
+	 # Chain partials together from root to leaves
+	for id in reverse(mechanism.system.dfs_list)
+		!(Ne < id <= Ne+Nb) && continue # only treat bodies
+		cnode = get_node(mechanism, id)
+		for pjoint in parent_joints(mechanism, cnode)
+			pnode = get_node(mechanism, pjoint.parent_id, origin=true)
+			J[row[cnode.id-Ne], col[col_idx[pjoint.id]]] += partials[[cnode.id, pjoint.id]] # ∂zi∂θp(i)
+			(pnode.id == 0) && continue # avoid origin
+			J[row[cnode.id-Ne], :] += partials[[cnode.id, pnode.id]] * J[row[pnode.id-Ne], :] # ∂zi∂zp(p(i)) * ∂zp(p(i))/∂θ
+		end
+	end
 	return J
 end
+
+# function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}; attjac::Bool=false) where {T,Nn,Ne,Nb,Ni,Tx}
+# 	J = zeros(maximal_dimension(mechanism, attjac=false), minimal_dimension(mechanism))
+# 	z = minimal_to_maximal(mechanism, x)
+# 	off = 0
+# 	for id in reverse(mechanism.system.dfs_list)
+# 		(id > Ne) && continue # only treat joints
+# 		joint = mechanism.joints[id]
+# 		nu = control_dimension(joint)
+# 		idx = collect(off .+ (1:(2nu)))
+#
+# 		J[:, idx] = position_velocity_jacobian(mechanism, joint, z, x[idx])
+#
+# 		off += 2nu
+# 	end
+# 	attjac && (J = attitude_jacobian(z, Nb)' * J)
+# 	return J
+# end
 
 ### Support for FD ###
 
@@ -40,11 +88,11 @@ function position_velocity_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, joint, 
 	# initialize
 	G = zeros(maximal_dimension(mechanism), 2 * control_dimension(joint))
 
-	# root 
-	if joint.parent_id == 0 
+	# root
+	if joint.parent_id == 0
 		xp, vp, qp, ϕp = current_configuration_velocity(mechanism.origin.state)
-		zp = [xp; vp; vector(qp); ϕp] 
-	else 
+		zp = [xp; vp; vector(qp); ϕp]
+	else
 		zp = z[(joint.parent_id - Ne - 1) * 13 .+ (1:13)]
 	end
 
@@ -53,15 +101,15 @@ function position_velocity_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, joint, 
 
 	# recursion
 	∂z∂z = Dict()
-	∂a∂z = Dict() 
+	∂a∂z = Dict()
 	push!(∂a∂z, "$(joint.child_id)" => ∂z∂θ)
 
 	for node in child_joints
 		haskey(∂a∂z, "$(node.child_id)") && continue
-		if node.name == :origin 
+		if node.name == :origin
 			xp, vp, qp, ϕp = current_configuration_velocity(mechanism.origin.state)
-			zp = [xp; vp; vector(qp); ϕp] 
-		else 
+			zp = [xp; vp; vector(qp); ϕp]
+		else
 			zp = z[(node.parent_id - Ne - 1) * 13 .+ (1:13)]
 		end
 
@@ -74,12 +122,12 @@ function position_velocity_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, joint, 
 	return G
 end
 
-function joint_position_velocity(mechanism, joint, z, x) 
+function joint_position_velocity(mechanism, joint, z, x)
 	mechanism = deepcopy(mechanism)
     body_parent = get_body(mechanism, joint.parent_id)
 
     if body_parent.name != :origin
-		xp = z[1:3] 
+		xp = z[1:3]
 		vp = z[4:6]
 		qp = UnitQuaternion(z[7:10]..., false)
 		ϕp = z[11:13]
@@ -93,23 +141,22 @@ function joint_position_velocity(mechanism, joint, z, x)
 end
 
 function position_velocity_jacobian_minimal(mechanism, joint, z, x)
-    FiniteDiff.finite_difference_jacobian(y -> joint_position_velocity(mechanism, joint, z, y), x) 
+    FiniteDiff.finite_difference_jacobian(y -> joint_position_velocity(mechanism, joint, z, y), x)
 end
 
 function position_velocity_jacobian_maximal(mechanism, joint, z, x)
-    FiniteDiff.finite_difference_jacobian(y -> joint_position_velocity(mechanism, joint, y, x), z) 
+    FiniteDiff.finite_difference_jacobian(y -> joint_position_velocity(mechanism, joint, y, x), z)
 end
 
-##########
-
-function minimal_to_maximal_jacobian(mechanism::Mechanism, x)
-	FiniteDiff.finite_difference_jacobian(y -> minimal_to_maximal(mechanism, y), x)
-end
 
 function get_minimal_gradients(mechanism::Mechanism{T}, z::AbstractVector{T}, u::AbstractVector{T};
 	opts=SolverOptions()) where T
 	# simulate next state
 	step!(mechanism, z, u, opts=opts)
+	return get_minimal_gradients_no_step(mechanism)
+end
+
+function get_minimal_gradients_no_step(mechanism::Mechanism{T}) where T
 	# current maximal state
 	z = get_state(mechanism)
 	# next maximal state
@@ -130,10 +177,15 @@ function get_minimal_gradients(mechanism::Mechanism{T}, z::AbstractVector{T}, u:
 	return minimal_jacobian_state, minimal_jacobian_control
 end
 
+
 function get_minimal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni};
 	pos_noise=nothing, vel_noise=nothing,
 	pos_noise_range=[-Inf, Inf], vel_noise_range=[-3.9 / mechanism.timestep^2, 3.9 / mechanism.timestep^2]) where {T,Nn,Ne,Nb,Ni}
 	x = []
+
+	mechanism = deepcopy(mechanism)
+	timestep = mechanism.timestep
+
 	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
 	# Thus go through the joints in order, start from joint between robot and origin and go down the tree.
 	for id in reverse(mechanism.system.dfs_list)
@@ -145,7 +197,7 @@ function get_minimal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni};
 		cbody = get_body(mechanism, joint.child_id)
 		for (i, element) in enumerate([joint.translational, joint.rotational])
 			pos = minimal_coordinates(element, pbody, cbody)
-			vel = minimal_velocities(element, pbody, cbody)
+			vel = minimal_velocities(element, pbody, cbody, timestep)
 			if pos_noise != nothing
 				pos += clamp.(length(pos) == 1 ? rand(pos_noise, length(pos))[1] : rand(pos_noise, length(pos)), pos_noise_range...)
 			end

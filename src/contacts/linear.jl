@@ -29,12 +29,12 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N
     # transforms the velocities of the origin of the link into velocities along all 4 axes of the friction pyramid
     # vp = V(cp, B / W)_w velocity of the contact point cp, attached to body B wrt world frame, expressed in the world frame.
     vp = v25 + skew(vrotate(ϕ25, q3)) * (vrotate(model.contact_point, q3) - model.offset)
-    γ = contact.impulses_dual[2][1]
-    sγ = contact.impulses[2][1]
-    ψ = contact.impulses_dual[2][2]
-    sψ = contact.impulses[2][2]
-    β = contact.impulses_dual[2][@SVector [3,4,5,6]]
-    sβ = contact.impulses[2][@SVector [3,4,5,6]]
+    γ = contact.impulses[2][1]
+    sγ = contact.impulses_dual[2][1]
+    ψ = contact.impulses[2][2]
+    sψ = contact.impulses_dual[2][2]
+    β = contact.impulses[2][@SVector [3,4,5,6]]
+    sβ = contact.impulses_dual[2][@SVector [3,4,5,6]]
     SVector{6,T}(
         model.surface_normal_projector * (x3 + vrotate(model.contact_point,q3) - model.offset) - sγ,
         model.friction_coefficient * γ - sum(β) - sψ,
@@ -70,16 +70,7 @@ end
     return [V Ω]
 end
 
-@inline function impulse_map(model::LinearContact, x::AbstractVector, q::UnitQuaternion, λ)
-    X = [model.surface_normal_projector;
-         szeros(1,3);
-         model.surface_projector]
-    # q * ... is a rotation by quatrnon q it is equivalent to Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * ...
-    Q = - X * q * skew(model.contact_point - vrotate(model.offset, inv(q)))
-    return [X Q]
-end
-
-@inline function force_mapping(model::LinearContact)
+@inline function force_mapping(model::LinearContact, x::AbstractVector, q::UnitQuaternion)
     X = [model.surface_normal_projector;
          szeros(1,3);
          model.surface_projector]
@@ -88,13 +79,13 @@ end
 
 @inline function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
     contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:LinearContact{T,N},N½}
-    # ∇impulses[impulses_dual .* impulses - μ; g - s] = [diag(impulses_dual); -diag(0,1,1)]
-    # ∇impulses_dual[impulses_dual .* impulses - μ; g - s] = [diag(impulses); -diag(1,0,0)]
-    # (friction_coefficient γ - ψ) dependent of ψ = impulses_dual[2][1:1]
+    # ∇impulses[impulses .* impulses - μ; g - s] = [diag(impulses); -diag(0,1,1)]
+    # ∇impulses[impulses .* impulses - μ; g - s] = [diag(impulses); -diag(1,0,0)]
+    # (friction_coefficient γ - ψ) dependent of ψ = impulses[2][1:1]
     # B(z) * zdot - sβ dependent of sβ = impulses[2][2:end]
     friction_coefficient = contact.model.friction_coefficient
-    γ = contact.impulses_dual[2]
-    s = contact.impulses[2]
+    γ = contact.impulses[2]
+    s = contact.impulses_dual[2]
 
     ∇s1 = Diagonal(γ) # 6x6
     ∇s2 = Diagonal(-sones(T,6))
@@ -110,7 +101,7 @@ end
     ∇γ = vcat(∇γ1, ∇γ2) # 12x6
     matrix_entry.value = hcat(∇s, ∇γ)
 
-    # [-impulses_dual .* impulses + μ; -g + s]
+    # [-impulses .* impulses + μ; -g + s]
     vector_entry.value = vcat(-complementarityμ(mechanism, contact), -constraint(mechanism, contact))
     return
 end

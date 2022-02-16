@@ -14,9 +14,9 @@ data_dim(joint::Rotational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ}
 data_dim(body::Body; attjac::Bool=true) = attjac ? 19 : 20 # 1+6+6+6 or 1+6+6+7 [m,flat(J),v15,ϕ15,x2,q2] with attjac
 # Contact
 data_dim(contact::ContactConstraint) = data_dim(contact.model)
-data_dim(model::NonlinearContact) = 7 # [friction_coefficient, p, offset]
-data_dim(model::LinearContact) = 7 # [friction_coefficient, p, offset]
-data_dim(model::ImpactContact) = 6 # [p, offset]
+data_dim(model::NonlinearContact) = 7 # [friction_coefficient, offset, p]
+data_dim(model::LinearContact) = 7 # [friction_coefficient, offset, p]
+data_dim(model::ImpactContact) = 6 # [offset, p]
 
 
 ################################################################################
@@ -56,11 +56,12 @@ get_data0(mechanism::Mechanism) = vcat([get_data0.(mechanism.joints);
 # Joints
 function get_data0(joint::JointConstraint)
 	joints = [joint.translational, joint.rotational]
-	u = vcat(nullspace_mask.(joints) .* getfield.(joints, :Fτ)...)
+	u = vcat(nullspace_mask.(joints) .* getfield.(joints, :input)...)
 	spring = joints[1].spring # assumes we have the same spring and dampers for translational and rotational joint.
 	damper = joints[1].damper # assumes we have the same spring and dampers for translational and rotational joint.
 	return [u; spring; damper]
 end
+
 # Body
 function get_data0(body::Body)
 	m = body.mass
@@ -84,7 +85,7 @@ get_data0(contact::ContactConstraint) = get_data0(contact.model)
 function set_data0!(mechanism::Mechanism, data::AbstractVector)
 	# It's important to treat bodies before eqcs
 	# set_data0!(body) will erase state.F2[1] and state.τ2[1]
-	# set_data0!(eqc) using applyFτ!, will write in state.F2[1] and state.τ2[1]
+	# set_data0!(eqc) using applyinput!, will write in state.F2[1] and state.τ2[1]
 	c = 0
 	for joint in mechanism.joints
 		Nd = data_dim(joint)

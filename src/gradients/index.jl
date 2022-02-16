@@ -54,7 +54,7 @@ function minimal_dimension(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,N
     return nx
 end
 
-maximal_dimension(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb} = 13 * Nb
+maximal_dimension(mechanism::Mechanism{T,Nn,Ne,Nb}; attjac::Bool=false) where {T,Nn,Ne,Nb} = attjac ? 12Nb : 13Nb
 
 function contact_dimension(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
     ncontacts = 0

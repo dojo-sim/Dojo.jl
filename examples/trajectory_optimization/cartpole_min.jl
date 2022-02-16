@@ -18,7 +18,6 @@ open(env.vis)
 # ## dimensions
 n = env.nx
 m = env.nu
-d = 0
 
 # ## states
 z1 = maximal_to_minimal(env.mechanism, cartpole_nominal_max())
@@ -32,21 +31,20 @@ dyn = IterativeLQR.Dynamics(
     (y, x, u, w) -> f(y, env, x, u, w), 
     (dx, x, u, w) -> fx(dx, env, x, u, w),
     (du, x, u, w) -> fu(du, env, x, u, w),
-    n, n, m, d)
+    n, n, m)
 model = [dyn for t = 1:T-1]
 
 # ## rollout
 ū = [t < 5 ? 1.0 * rand(m) : (t < 10 ? -1.0 * rand(m) : zeros(m)) for t = 1:T-1]
-w = [zeros(d) for t = 1:T-1]
-x̄ = rollout(model, z1, ū, w)
+x̄ = rollout(model, z1, ū)
 visualize(env, x̄)
 
 # ## objective
 ot = (x, u, w) -> transpose(x - zT) * Diagonal(1.0e-1 * ones(n)) * (x - zT) + transpose(u) * Diagonal(1.0e-3 * ones(m)) * u
 oT = (x, u, w) -> transpose(x - zT) * Diagonal(1.0e-1 * ones(n)) * (x - zT)
 
-ct = Cost(ot, n, m, d)
-cT = Cost(oT, n, 0, 0)
+ct = Cost(ot, n, m)
+cT = Cost(oT, n, 0)
 obj = [[ct for t = 1:T-1]..., cT]
 
 # ## constraints
@@ -59,14 +57,15 @@ conT = IterativeLQR.Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
 # ## problem 
-prob = problem_data(model, obj, cons)
+prob = solver(model, obj, cons, 
+    opts=Options(
+        max_al_iter=10,
+        verbose=false))
 initialize_controls!(prob, ū)
 initialize_states!(prob, x̄)
 
 # ## solve
-@time IterativeLQR.solve!(prob,
-    max_al_iter=10,
-    verbose=false)
+@time IterativeLQR.solve!(prob)
 
 # ## solution 
 z_sol, u_sol = IterativeLQR.get_trajectory(prob)

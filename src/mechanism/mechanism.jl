@@ -9,10 +9,13 @@ mutable struct Mechanism{T,Nn,Ne,Nb,Ni}
     matrix_entries::SparseMatrixCSC{Entry,Int64}
     diagonal_inverses::Vector{Entry}
 
+	data_matrix::SparseMatrixCSC{Entry,Int64}
+
     timestep::T
     gravity::SVector{3,T}
     μ::T
 end
+
 
 function Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:JointConstraint{T}}, contacts::Vector{<:ContactConstraint{T}};
     spring=0.0, damper=0.0, timestep::T=0.01, gravity=[0.0; 0.0;-9.81]) where T
@@ -42,10 +45,14 @@ function Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:
     matrix_entries = deepcopy(system.matrix_entries)
     diagonal_inverses = deepcopy(system.diagonal_inverses)
 
+	# data gradient system
+	data_matrix = create_data_matrix(joints, bodies, contacts)
+
     # springs and dampers
     joints = set_spring_damper_values!(joints, spring, damper)
 
-    Mechanism{T,Nn,Ne,Nb,Ni}(origin, joints, bodies, contacts, system, residual_entries, matrix_entries, diagonal_inverses, timestep, get_gravity(gravity), 0.0)
+    Mechanism{T,Nn,Ne,Nb,Ni}(origin, joints, bodies, contacts, system, residual_entries,
+		matrix_entries, diagonal_inverses, data_matrix, timestep, get_gravity(gravity), 0.0)
 end
 
 Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:JointConstraint{T}}; kwargs...) where T = Mechanism(origin, bodies, joints, ContactConstraint{T}[]; kwargs...)
@@ -58,6 +65,7 @@ function Mechanism(filename::String, floating::Bool=false, T=Float64; kwargs...)
     mechanism = Mechanism(origin, links, [joints; loopjoints]; kwargs...)
 
     # initialize mechanism
+	# @warn "need to uncomment"
     set_parsed_values!(mechanism, loopjoints)
 
     return mechanism
@@ -87,9 +95,9 @@ function gravity_compensation(mechanism::Mechanism)
             body = get_body(mechanism, joint.parent_id)
             rot = joint.rotational
             A = Matrix(nullspace_mask(rot))
-            Fτ = apply_spring(mechanism, joint, body)
-            F = Fτ[1:3]
-            τ = Fτ[4:6]
+            input = apply_spring(mechanism, joint, body)
+            F = input[1:3]
+            τ = input[4:6]
             u[off .+ (1:nu)] = -A * τ
         else
             @warn "need to treat the joint to origin"
@@ -207,4 +215,11 @@ function set_spring_offset!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVect
         off += 2N̄
 	end
 	return nothing
+end
+
+# find all the joints parents of a body
+function parent_joints(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, body::Body) where {T,Nn,Ne,Nb,Ni}
+	ids = parents(mechanism.system, body.id)
+	ids = intersect(ids, 1:Ne)# filter out the bodies
+	return [get_node(mechanism, id) for id in ids]
 end

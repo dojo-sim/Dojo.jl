@@ -47,9 +47,6 @@ function get_raiberthopper(; timestep::T=0.05, gravity=[0.0; 0.0; -9.81], spring
     return mech
 end
 
-get_gravity([0.0; 0.0; 1.0])
-get_raiberthopper()
-
 function initialize_raiberthopper!(mech::Mechanism{T,Nn,Ne,Nb}; leg_length_nominal=0.5, altitude=0.05,
     v = zeros(3), ω = zeros(3)) where {T,Nn,Ne,Nb}
     body1 = collect(mech.bodies)[1]

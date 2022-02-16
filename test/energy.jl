@@ -53,7 +53,8 @@ v0 = [1,2,3.0]
 ω0 = [1,1,1.0]
 initialize!(mech, :box, v=v0, ω=ω0)
 
-storage = simulate!(mech, 5.0, nocontrol!, record=true, verbose=false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+storage = simulate!(mech, 5.0, nocontrol!, record=true, verbose=false,
+    opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 ke0 = kinetic_energy(mech, storage)[start0:end]
@@ -89,7 +90,8 @@ mech = get_mechanism(:pendulum, timestep=timestep0, gravity=gravity0, spring=spr
 ω0 = 2π
 
 initialize!(mech, :pendulum, ϕ1=ϕ0, ω1=ω0)
-storage = simulate!(mech, 5.0, controller!, record=true, verbose=false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+storage = simulate!(mech, 5.0, controller!, record=true, verbose=false,
+    opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 ke0 = kinetic_energy(mech, storage)[start0:end]
@@ -130,7 +132,8 @@ vmax = z0 * sqrt(spring0 / body1.mass)
 pe_max = 0.5 * spring0 * zmax^2
 ke_max = 0.5 * body1.mass * vmax^2
 
-storage = simulate!(mech, 5.0,  nocontrol!, record=true, verbose=false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+storage = simulate!(mech, 5.0,  nocontrol!, record=true, verbose=false,
+    opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 ke0 = kinetic_energy(mech, storage)[start0:end]
@@ -168,7 +171,8 @@ mech = get_mechanism(:slider, timestep=timestep0, gravity=gravity0, spring=sprin
 z0 = 0.5
 initialize!(mech, :slider, z1 = z0)
 
-storage = simulate!(mech, 1.5,  nocontrol!, record=true, verbose=false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+storage = simulate!(mech, 1.5,  nocontrol!, record=true, verbose=false,
+    opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 ke0 = kinetic_energy(mech, storage)[start0:end]
@@ -203,7 +207,8 @@ mech = get_mechanism(:slider, timestep=timestep0, gravity=gravity0, spring=sprin
 z0 = 0.5
 initialize!(mech, :slider, z1 = z0)
 
-storage = simulate!(mech, 5.0,  nocontrol!, record=true, verbose=false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+storage = simulate!(mech, 5.0,  nocontrol!, record=true, verbose=false,
+    opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 ke0 = kinetic_energy(mech, storage)[start0:end]
@@ -243,7 +248,8 @@ end
 gravity0 = 0.0
 spring0 = 1.0
 damper0 = 0.0
-mech = get_mechanism(:humanoid, timestep=timestep0, gravity=gravity0, spring=spring0, damper=damper0, contact = false)
+mech = get_mechanism(:humanoid, timestep=timestep0, gravity=gravity0,
+    spring=spring0, damper=damper0, contact=false)
 initialize!(mech, :humanoid)
 bodies = collect(mech.bodies)
 for body in mech.bodies
@@ -251,7 +257,8 @@ for body in mech.bodies
     # set_velocity!(body, v = 1.0*rand(3))
 end
 
-storage = simulate!(mech, 3.0, humanoid_controller!, record = true, verbose = false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+storage = simulate!(mech, 3.0, humanoid_controller!, record=true,
+    verbose=false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, downsample(storage, 1), vis = vis)
 
 ke0 = kinetic_energy(mech, storage)[start0:end]
@@ -279,12 +286,14 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 ################################################################################
 spring0 = 1.0
 damper0 = 0.0
-mech = get_mechanism(:atlas, timestep=timestep0, gravity=gravity0, spring=spring0, damper=damper0, contact = false)
+mech = get_mechanism(:atlas, timestep=timestep0, gravity=gravity0, spring=spring0,
+    damper=damper0, contact = false)
 initialize!(mech, :atlas)
 bodies = collect(mech.bodies)
 set_velocity!.(bodies, ω = 1.0*rand(3))
 
-storage = simulate!(mech, 5.0, humanoid_controller!, record = true, verbose = false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+storage = simulate!(mech, 5.0, humanoid_controller!, record=true, verbose=false,
+    opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 ke0 = kinetic_energy(mech, storage)[start0:end]
@@ -325,9 +334,10 @@ end
 spring0 = 0.1
 damper0 = 0.0
 mech = get_mechanism(:quadruped, timestep=timestep0, gravity=gravity0, spring=spring0,
-    damper=damper0, contact = false, limits=false)
+    damper=damper0, contact=false, limits=false)
 initialize!(mech, :quadruped)
-storage = simulate!(mech, 5.0, quadruped_controller!, record = true, verbose = false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+storage = simulate!(mech, 5.0, quadruped_controller!, record=true, verbose=false,
+    opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 ke0 = kinetic_energy(mech, storage)[start0:end]
@@ -367,15 +377,16 @@ end
 Nb0 = 5
 spring0 = 0.01
 damper0 = 0.0
-mech = get_mechanism(:snake, timestep=timestep0, gravity=gravity0, Nb = Nb0, spring=spring0, damper=damper0,
-    jointtype = :Revolute, contact = false, r = 0.05);
+mech = get_mechanism(:snake, timestep=timestep0, gravity=gravity0, Nb=Nb0,
+    spring=spring0, damper=damper0, jointtype=:Revolute, contact=false, r=0.05);
 
 v0 = 10.0 * [1, 2, 3] * timestep0
 ω0 = 10.0 * [1, 2, 3] * timestep0
 q10 = UnitQuaternion(RotX(0.5*π))
 
 initialize!(mech, :snake, q1 = q10, v = v0, ω = ω0)
-storage = simulate!(mech, 3.0, snake_controller!, record = true, verbose = false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+storage = simulate!(mech, 3.0, snake_controller!, record=true, verbose=false,
+    opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 ke0 = kinetic_energy(mech, storage)[start0:end]
@@ -395,15 +406,16 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 @testset "Energy: Snake" begin
     for jointtype in jointtypes
         # @show jointtype
-        mech = get_mechanism(:snake, timestep=timestep0, gravity=gravity0, Nb = Nb0, spring=spring0, damper=damper0,
-            jointtype = jointtype, contact = false, r = 0.05)
+        mech = get_mechanism(:snake, timestep=timestep0, gravity=gravity0, Nb=Nb0,
+            spring=spring0, damper=damper0, jointtype=jointtype, contact=false, r=0.05)
 
         v0 = 10.0 * [1, 2, 3] * timestep0
         ω0 = 10.0 * [1, 2, 3] * timestep0
         q10 = UnitQuaternion(RotX(0.5*π))
 
         initialize!(mech, :snake, q1 = q10, v = v0, ω = ω0)
-        storage = simulate!(mech, 3.0, snake_controller!, record = true, verbose = false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+        storage = simulate!(mech, 3.0, snake_controller!, record = true, verbose=false,
+            opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
         # visualize(mech, storage, vis = vis)
 
         ke0 = kinetic_energy(mech, storage)[start0:end]
@@ -432,15 +444,16 @@ end
 Nb0 = 5
 spring0 = 0.01
 damper0 = 0.0
-mech = get_mechanism(:twister, timestep=timestep0, gravity=gravity0, Nb = Nb0, spring=spring0, damper=damper0,
-    jointtype = :Revolute, contact = false, r = 0.05);
+mech = get_mechanism(:twister, timestep=timestep0, gravity=gravity0, Nb = Nb0,
+    spring=spring0, damper=damper0, jointtype=:Revolute, contact=false, r=0.05);
 
 v0 = 10.0 * [1, 2, 3] * timestep0
 ω0 = 10.0 * [1, 2, 3] * timestep0
 q10 = UnitQuaternion(RotX(0.5*π))
 
 initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0)
-storage = simulate!(mech, 3.0, snake_controller!, record = true, verbose = false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+storage = simulate!(mech, 3.0, snake_controller!, record = true, verbose = false,
+    opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 ke0 = kinetic_energy(mech, storage)[start0:end]
@@ -460,15 +473,16 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 @testset "Energy: Twister" begin
     for jointtype in jointtypes
         # @show jointtype
-        mech = get_mechanism(:twister, timestep=timestep0, gravity=gravity0, Nb = Nb0, spring=spring0, damper=damper0,
-            jointtype = jointtype, contact = false, r = 0.05)
+        mech = get_mechanism(:twister, timestep=timestep0, gravity=gravity0, Nb=Nb0,
+            spring=spring0, damper=damper0, jointtype=jointtype, contact=false, r=0.05)
 
         v0 = 10.0 * [1, 2, 3] * timestep0
         ω0 = 10.0 * [1, 2, 3] * timestep0
         q10 = UnitQuaternion(RotX(0.5*π))
 
         initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0)
-        storage = simulate!(mech, 3.0, snake_controller!, record = true, verbose = false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+        storage = simulate!(mech, 3.0, snake_controller!, record=true, verbose=false,
+            opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
         # visualize(mech, storage, vis = vis)
 
         ke0 = kinetic_energy(mech, storage)[start0:end]

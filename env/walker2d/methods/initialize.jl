@@ -37,12 +37,12 @@ function get_walker2d(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_co
 
     if contact
         origin = Origin{T}()
-        bodies = mech.bodies.values
-        joints = mech.joints.values
+        bodies = mech.bodies
+        joints = mech.joints
 
         normal = [0.0; 0.0; 1.0]
         names = contact_body ? getfield.(mech.bodies, :name) : [:ffoot, :foot]
-        bounds = []
+        models = []
         for name in names
             body = get_body(mech, name)
             if name in [:foot, :foot_left] # need special case for foot
@@ -50,16 +50,16 @@ function get_walker2d(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_co
                 pf = [0,0, +0.5 * body.shape.rh[2]]
                 pb = [0,0, -0.5 * body.shape.rh[2]]
                 o = [0;0; body.shape.rh[1]]
-                push!(bounds, contact_constraint(body, normal, friction_coefficient=friction_coefficient, contact_point=contact_pointf, offset=o))
-                push!(bounds, contact_constraint(body, normal, friction_coefficient=friction_coefficient, contact_point=contact_pointb, offset=o))
+                push!(models, contact_constraint(body, normal, friction_coefficient=friction_coefficient, contact_point=pf, offset=o))
+                push!(models, contact_constraint(body, normal, friction_coefficient=friction_coefficient, contact_point=pb, offset=o))
             else
                 p = [0;0; 0.5 * body.shape.rh[2]]
                 o = [0;0; body.shape.rh[1]]
-                push!(bounds, contact_constraint(body, normal, friction_coefficient=friction_coefficient, contact_point=contact_point, offset=o))
+                push!(models, contact_constraint(body, normal, friction_coefficient=friction_coefficient, contact_point=p, offset=o))
             end
         end
         set_position!(mech, get_joint_constraint(mech, :floating_joint), [1.25, 0.0, 0.0])
-        mech = Mechanism(origin, bodies, joints, [bounds...], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
+        mech = Mechanism(origin, bodies, joints, [models...], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
     return mech
 end
