@@ -20,7 +20,7 @@ function joint_constraint_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn
                 cbody = get_body(mechanism, joint.child_id)
                 cstate = cbody.state
 
-                ind2 += ηlength(element)
+                ind2 += impulses_length(element)
                 range = oneindc+ind1:oneindc+ind2
 
                 pcol13 = offset_range(parentind,13)
@@ -474,9 +474,9 @@ end
 function getλJoint(joint::JointConstraint{T,N,Nc}, i::Int) where {T,N,Nc}
     n1 = 1
     for j = 1:i-1
-        n1 += ηlength([joint.translational, joint.rotational][j])
+        n1 += impulses_length([joint.translational, joint.rotational][j])
     end
-    n2 = n1 - 1 + ηlength([joint.translational, joint.rotational][i])
+    n2 = n1 - 1 + impulses_length([joint.translational, joint.rotational][i])
 
     λi = SVector{n2-n1+1,T}(joint.impulses[2][n1:n2])
     return λi

@@ -68,35 +68,3 @@ function impulse_transform_jacobian(relative::Symbol, jacobian::Symbol,
         end
     end
 end
-
-# function impulse_transform_jacobian(:parent, :child, joint::Translational{T,Nλ},
-#         xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
-#     # ∂(impulse_transform_a'*p)/∂(xb,qb)
-#     Z3 = szeros(T,3,3)
-
-#     ∇Qxb = -∂pskew(p) * rotation_matrix(inv(qa))
-#     ∇Qqb = -∂pskew(p) * rotation_matrix(inv(qa)) * ∂qrotation_matrix(qb, joint.vertices[2]) * LVᵀmat(qb)
-#     return [Z3   Z3; ∇Qxb ∇Qqb]
-# end
-
-# function impulse_transform_jacobian(:child, :parent, joint::Translational{T,Nλ},
-#         xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
-#     # ∂(impulse_transform_b'*p)/∂(xa,qa)
-#     Z3 = szeros(T,3,3)
-#     cbpb_w = rotation_matrix(qb) * joint.vertices[2] # body b kinematics point
-
-#     ∇Xqa = ∂qrotation_matrix(qa, p) * LVᵀmat(qa)
-#     ∇Qqa = rotation_matrix(inv(qb)) * skew(cbpb_w) * ∂qrotation_matrix(qa, p) * LVᵀmat(qa)
-#     return [Z3 ∇Xqa; Z3 ∇Qqa]
-# end
-
-# function impulse_transform_jacobian(:child, :child, joint::Translational{T,Nλ},
-#         xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
-#     # ∂(impulse_transform_b'*p)/∂(xb,qb)
-#     Z3 = szeros(T,3,3)
-#     cbpb_w = rotation_matrix(qb) * joint.vertices[2] # body b kinematics point
-#     ∇Qqb = ∂qrotation_matrix_inv(qb, skew(cbpb_w) * rotation_matrix(qa) * p)
-#     ∇Qqb += rotation_matrix(inv(qb)) * ∂pskew(rotation_matrix(qa) * p) * ∂qrotation_matrix(qb, joint.vertices[2])
-#     ∇Qqb *= LVᵀmat(qb)
-#     return [Z3 Z3; Z3 ∇Qqb]
-# end

@@ -30,8 +30,8 @@ JointConstraint(Revolute(orig, body1, [0,0,1.0],
 eqc = JointConstraint(Revolute(orig, body1, [0,0,1.0],
     rot_joint_limits = [-sones(1), sones(1)]))
 
-λindex(eqc, 1)
-λindex(eqc, 2)
+joint_impulse_index(eqc, 1)
+joint_impulse_index(eqc, 2)
 length(eqc.constraints[1]) + 4joint_limits_length(eqc.constraints[1])
 length(eqc.constraints[2]) + 4joint_limits_length(eqc.constraints[2])
 

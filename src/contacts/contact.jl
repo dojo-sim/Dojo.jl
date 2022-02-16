@@ -1,6 +1,5 @@
 abstract type Contact{T,N} end
 
-getT(model::Contact{T}) where T = T
 Base.length(model::Contact{T,N}) where {T,N} = N
 
 constraint(model::Contact, body::Body, λ, timestep) = constraint(model, next_configuration(body.state, timestep)..., λ)

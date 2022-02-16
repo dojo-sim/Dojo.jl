@@ -6,7 +6,7 @@
     e1 = joint_constraint(joint, xa, qa, xb, qb, η)
     e2 = minimal_coordinates(joint, xa, qa, xb, qb)
 
-    s, γ = get_sγ(joint, η)
+    s, γ = split_impulses(joint, η)
 
     return [
             s .* γ;
