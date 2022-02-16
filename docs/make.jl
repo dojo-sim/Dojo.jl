@@ -1,11 +1,13 @@
 using Documenter
-using Dojo  # your package name here
+# using Dojo  # your package name here
 
  makedocs(
      sitename = "Dojo",  # your package name here
      format = Documenter.HTML(prettyurls = false),  # optional
      pages = [
-         "Introduction" => "index.md"
+         "Introduction" => "index.md",
+         "Examples" => "examples.md",
+         "Notations" => "notations.md"
      ]
  )
 

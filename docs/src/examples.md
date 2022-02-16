@@ -1,0 +1,60 @@
+## Simulation 
+
+### Atlas drop 
+<img src="examples/animations/atlas_drop.gif" width="100"/>
+
+### Astronaut
+<img src="examples/animations/astronaut.gif" width="200"/>
+
+### Friction-cone comparison 
+- blue = nonlinear friction cone
+- orange = linear friction cone
+- magenta = MuJoCo friction model 
+<img src="examples/animations/cone_compare_mujoco.gif" height="150"/>
+
+### Dzhanibekov effect
+<img src="examples/animations/dzhanibekov.gif" width="150"/>
+
+### Tippe top
+<img src="examples/animations/tippetop.gif" width="150"/>
+
+## Trajectory Optimization 
+
+### Box 
+<p>
+<img src="examples/animations/box_right.gif" width="200"/>
+<img src="examples/animations/box_up.gif" width="115"/>
+</p>
+
+### Hopper 
+<img src="examples/animations/hopper_max.gif" width="100"/>
+
+### Quadruped 
+<img src="examples/animations/quadruped_min.gif" width="200"/>
+
+### Atlas
+<img src="examples/animations/atlas_ilqr.gif" width="200"/>
+
+### Cart-pole 
+<img src="examples/animations/cartpole_max.gif" width="200"/>
+
+## Reinforcement Learning 
+
+### Half Cheetah 
+<img src="examples/animations/halfcheetah_ars.gif" width="600"/>
+
+### Ant
+<img src="examples/animations/ant_ars_no_grid.gif" width="300"/>
+
+## Real-To-Sim
+
+### Learning
+Learning geometry:
+<img src="examples/animations/box_learning.gif" width="200"/>
+Learning friction coefficient:
+<img src="examples/animations/cone_learning.gif" width="200"/>
+
+### Toss
+<img src="examples/animations/box_toss.gif" width="300"/>
+
+## Control
