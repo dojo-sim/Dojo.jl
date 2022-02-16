@@ -129,8 +129,8 @@ plot(Gray.(abs.(1e11 .* solmat)))
 plot(Gray.(abs.(1e9 .* fd_solmat)))
 
 eqc1 = collect(mech.joints)[1]
-λindex(eqc1, 1)
-λindex(eqc1, 2)
+joint_impulse_index(eqc1, 1)
+joint_impulse_index(eqc1, 2)
 
 ∂g∂ʳpos()
 

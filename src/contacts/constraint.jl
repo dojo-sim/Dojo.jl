@@ -16,7 +16,7 @@ mutable struct ContactConstraint{T,N,Nc,Cs,N½} <: Constraint{T,N}
 
     function ContactConstraint(data; name::Symbol=Symbol("contact_" * randstring(4)))
         model, parent_id, _ = data
-        T = getT(model)
+        T = typeof(model).parameters[1]
 
         N = length(model)
         N½ = Int64(N/2)

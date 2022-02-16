@@ -212,10 +212,11 @@ function parse_links(xlinks, materialdict, T)
     return ldict
 end
 
+# TODO: fix axis
 function joint_selector(jointtype, body1, body2, T;
         axis = SA{T}[1;0;0], p1 = szeros(T,3), p2 = szeros(T,3), qoffset = one(UnitQuaternion{T}), name = Symbol("joint_" * randstring(4)))
 
-    # TODO @warn "this is not great"
+    # @warn "this is not great"
     axis = inv(qoffset) * axis
 
     # TODO limits for revolute joint?

@@ -77,8 +77,10 @@ function potential_energy(mechanism::Mechanism{T,Nn,Ne,Nb}, storage::Storage{T,N
                     xa, qa = current_configuration(mechanism.origin.state) 
                 end
 
-                (typeof(element) <: Translational) && (force = spring_child(element, xa, qa, xb, qb)) # actual force not impulse
-                (typeof(element) <: Rotational) && (q = rotation_error(element, qa, qb, qoff = spring_qoffset(element)))
+                (typeof(element) <: Translational) && (force = spring_force(:child, element, xa, qa, xb, qb)) # actual force not impulse
+                # (typeof(element) <: Rotational) && (q = rotation_error(element, qa, qb, qoff = spring_qoffset(element)))
+                (typeof(element) <: Rotational) && (q = qa \ qb / element.qoffset / spring_qoffset(element))
+
              
                 # @show force
                 spring = element.spring

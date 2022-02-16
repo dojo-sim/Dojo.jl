@@ -15,6 +15,7 @@ initialize_atlasstance!(mech, tran=[0,0,0.5], rot=[0.0,0.2,0.1])
 storage = simulate!(mech, 2.5, record=true, opts=SolverOptions(rtol=1.0e-6, btol=1e-6))
 
 # ## Visualize
+render(vis)
 visualize(mech, storage, vis=vis, show_contact=true)
 
 # ## Contact innerpenetration 

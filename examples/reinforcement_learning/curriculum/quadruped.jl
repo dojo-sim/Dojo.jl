@@ -118,7 +118,7 @@ get_minimal_state(mech)
     e1 = joint_constraint(joint, xa, qa, xb, qb, η)
     e2 = minimal_coordinates(joint, xa, qa, xb, qb)
 
-    s, γ = get_sγ(joint, η)
+    s, γ = split_impulses(joint, η)
     return [
             s .* γ;
             s[SUnitRange(1,Nb½)] - (joint.joint_limits[2] .- e2);
@@ -179,22 +179,22 @@ qb = UnitQuaternion(rand(4)...)
 
 
 @generated function constraint_jacobian_configuration2(mechanism, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
-    # vec = [:(constraint_jacobian_configuration((joint.translational, joint.rotational)[$i], joint.impulses[2][λindex(joint,$i)])) for i = 1:Nc]
-    vec = [:(constraint_jacobian_configuration(joint.translational, joint.impulses[2][λindex(joint,1)])) for i = 1:Nc]
+    # vec = [:(constraint_jacobian_configuration((joint.translational, joint.rotational)[$i], joint.impulses[2][joint_impulse_index(joint,$i)])) for i = 1:Nc]
+    vec = [:(constraint_jacobian_configuration(joint.translational, joint.impulses[2][joint_impulse_index(joint,1)])) for i = 1:Nc]
     return :(cat($(vec...), dims=(1,2)))
 end
 
-function λindex2(joint::JointConstraint{T,N,Nc,RJ,TJ}, i::Int) where {T,N,Nc,RJ,TJ}
+function joint_impulse_index2(joint::JointConstraint{T,N,Nc,RJ,TJ}, i::Int) where {T,N,Nc,RJ,TJ}
     s = 0
     for j = 1:i-1
         element = [joint.translational, joint.rotational][j]
-        s += ηlength(element)
+        s += impulses_length(element)
     end
-    λindex2([joint.translational, joint.rotational][i], s) # to be allocation free
+    joint_impulse_index2([joint.translational, joint.rotational][i], s) # to be allocation free
 end
 
 
-function λindex2(joint::Joint{T,Nλ,Nb,N}, s::Int) where {T,Nλ,Nb,N}
+function joint_impulse_index2(joint::Joint{T,Nλ,Nb,N}, s::Int) where {T,Nλ,Nb,N}
     SVector{N,Int}(s+1:s+N)
 end
 
@@ -203,13 +203,13 @@ tr = [joint.translational, joint.rotational]
 tra = joint.translational
 rot = joint.rotational
 i = 1
-λindex2(joint, i)
-Main.@code_warntype λindex2(joint, i)
-Main.@code_warntype λindex2(rot, i)
-Main.@code_warntype λindex2(tra, i)
-@benchmark λindex2($joint, $i)
-@benchmark λindex2($rot, $i)
-@benchmark λindex2($tra, $i)
+joint_impulse_index2(joint, i)
+Main.@code_warntype joint_impulse_index2(joint, i)
+Main.@code_warntype joint_impulse_index2(rot, i)
+Main.@code_warntype joint_impulse_index2(tra, i)
+@benchmark joint_impulse_index2($joint, $i)
+@benchmark joint_impulse_index2($rot, $i)
+@benchmark joint_impulse_index2($tra, $i)
 constraint_jacobian_configuration2(mech, joint)
 @benchmark constraint_jacobian_configuration2($mech, $joint)
 

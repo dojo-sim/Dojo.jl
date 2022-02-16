@@ -20,8 +20,8 @@ end
 function complementarity(mechanism, joint::JointConstraint{T,N,Nc}; scaling::Bool = false) where {T,N,Nc}
     c = []
     for (i, element) in enumerate([joint.translational, joint.rotational])
-        λi = joint.impulses[2][λindex(joint, i)]
-        si, γi = get_sγ(element, λi)
+        λi = joint.impulses[2][joint_impulse_index(joint, i)]
+        si, γi = split_impulses(element, λi)
         push!(c, si .* γi)
     end
     return vcat(c...)
@@ -74,8 +74,8 @@ function feasibility_linesearch!(α, mechanism, joint::JointConstraint{T,N,Nc},
         vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc}
 
     for (i, element) in enumerate([joint.translational, joint.rotational])
-        s, γ = get_sγ(element, joint.impulses[2][λindex(joint,i)])
-        Δs, Δγ = get_sγ(element,  vector_entry.value[λindex(joint,i)])
+        s, γ = split_impulses(element, joint.impulses[2][joint_impulse_index(joint,i)])
+        Δs, Δγ = split_impulses(element,  vector_entry.value[joint_impulse_index(joint,i)])
 
         αs_ort = positive_orthant_step_length(s, Δs, τ = τort)
         αγ_ort = positive_orthant_step_length(γ, Δγ, τ = τort)
@@ -117,8 +117,8 @@ end
 
 function centering!(ν, νaff, n, mechanism, joint::JointConstraint{T,N,Nc}, vector_entry::Entry, αaff) where {T,N,Nc}
     for (i, element) in enumerate([joint.translational, joint.rotational])
-        s, γ = get_sγ(element, joint.impulses[2][λindex(joint,i)])
-        Δs, Δγ = get_sγ(element, vector_entry.value[λindex(joint,i)])
+        s, γ = split_impulses(element, joint.impulses[2][joint_impulse_index(joint,i)])
+        Δs, Δγ = split_impulses(element, vector_entry.value[joint_impulse_index(joint,i)])
         ν += dot(s, γ)
         νaff += dot(s + αaff * Δs, γ + αaff * Δγ) # plus or minus
         n += length(s)
@@ -199,11 +199,11 @@ end
         res = constraint(mechanism, joint)
         shift = 0
         for (i, element) in enumerate((joint.translational, joint.rotational))
-            Nλ = λlength(element)
-            Nb = blength(element)
+            Nλ = joint_length(element)
+            Nb = limits_length(element)
             subres = res[shift + 2Nb .+ (1:Nλ)]
             violation = max(violation, norm(subres, Inf))
-            shift += ηlength(element)
+            shift += impulses_length(element)
         end
     end
     for body in mechanism.bodies

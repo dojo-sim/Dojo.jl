@@ -65,12 +65,12 @@ eqc1 = collect(mech.joints)[1]
 eqc2 = collect(mech.joints)[2]
 joint21 = eqc2.constraints[1]
 joint22 = eqc2.constraints[2]
-@benchmark λindex(eqc1, 1)
-@benchmark λindex($eqc2, $1)
+@benchmark joint_impulse_index(eqc1, 1)
+@benchmark joint_impulse_index($eqc2, $1)
 
 
 @inline function correction(joint::Joint{T,Nλ,Nb,N}, Δ, μ) where {T,Nλ,Nb,N}
-    Δs, Δγ = get_sγ(joint, Δ)
+    Δs, Δγ = split_impulses(joint, Δ)
 	return [- Δs .* Δγ .+ μ; szeros(Nb + Nλ)]
 end
 

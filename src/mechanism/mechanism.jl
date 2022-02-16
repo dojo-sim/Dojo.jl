@@ -16,7 +16,6 @@ mutable struct Mechanism{T,Nn,Ne,Nb,Ni}
     μ::T
 end
 
-
 function Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:JointConstraint{T}}, contacts::Vector{<:ContactConstraint{T}};
     spring=0.0, damper=0.0, timestep::T=0.01, gravity=[0.0; 0.0;-9.81]) where T
 
