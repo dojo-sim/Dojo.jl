@@ -120,13 +120,13 @@ end
 
 function impulses_jacobian_parent!(mechanism, pbody::Body, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
     timestep = mechanism.timestep
-
+    
     # child boy
     cbody = get_body(mechanism, joint.child_id)
 
     for element in [joint.translational, joint.rotational]
-        joint.spring && (pbody.state.D -= spring_parent_jacobian_velocity_parent(element, pbody, cbody, timestep))
-        joint.damper && (pbody.state.D -= damper_parent_jacobian_velocity_parent(element, pbody, cbody, timestep))
+        joint.spring && (pbody.state.D -= spring_jacobian_velocity(:parent, :parent, element, pbody, cbody, timestep))
+        joint.damper && (pbody.state.D -= damper_jacobian_velocity(:parent, :parent, element, pbody, cbody, timestep))
     end
     return nothing
 end
@@ -137,8 +137,8 @@ function impulses_jacobian_child!(mechanism, cbody::Body, joint::JointConstraint
     for element in [joint.translational, joint.rotational]
         if joint.child_id == cbody.id
             pbody = get_body(mechanism, joint.parent_id)
-            joint.spring && (cbody.state.D -= spring_child_jacobian_velocity_child(element, pbody, cbody, timestep))
-            joint.damper && (cbody.state.D -= damper_child_jacobian_velocity_child(element, pbody, cbody, timestep))
+            joint.spring && (cbody.state.D -= spring_jacobian_velocity(:child, :child, element, pbody, cbody, timestep))
+            joint.damper && (cbody.state.D -= damper_jacobian_velocity(:child, :child, element, pbody, cbody, timestep))
         end
     end
     return nothing
@@ -161,7 +161,7 @@ end
 @inline function spring_parent(mechanism, joint::JointConstraint{T,N,Nc}, body::Body; unitary::Bool=false) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += spring_parent([joint.translational, joint.rotational][i], body, get_body(mechanism, joint.child_id), mechanism.timestep, joint.child_id, unitary=unitary)
+        vec += spring_force(:parent, [joint.translational, joint.rotational][i], body, get_body(mechanism, joint.child_id), mechanism.timestep, joint.child_id, unitary=unitary)
     end
     return vec
 end
@@ -169,7 +169,7 @@ end
 @inline function spring_child(mechanism, joint::JointConstraint{T,N,Nc}, body::Body; unitary::Bool=false) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += spring_child([joint.translational, joint.rotational][i], get_body(mechanism, joint.parent_id), body, mechanism.timestep, joint.child_id, unitary=unitary)
+        vec += spring_force(:child, [joint.translational, joint.rotational][i], get_body(mechanism, joint.parent_id), body, mechanism.timestep, joint.child_id, unitary=unitary)
     end
     return vec
 end
@@ -182,7 +182,7 @@ end
 @inline function damper_parent(mechanism, joint::JointConstraint{T,N,Nc}, body::Body; unitary::Bool=false) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += damper_parent([joint.translational, joint.rotational][i], body, get_body(mechanism, joint.child_id), mechanism.timestep, joint.child_id, unitary=unitary)
+        vec += damper_force(:parent, [joint.translational, joint.rotational][i], body, get_body(mechanism, joint.child_id), mechanism.timestep, joint.child_id, unitary=unitary)
     end
     return vec
 end
@@ -190,7 +190,7 @@ end
 @inline function damper_child(mechanism, joint::JointConstraint{T,N,Nc}, body::Body; unitary::Bool=false) where {T,N,Nc}
     vec = szeros(T,6)
     for i=1:Nc
-        vec += damper_child([joint.translational, joint.rotational][i], get_body(mechanism, joint.parent_id), body, mechanism.timestep, joint.child_id, unitary=unitary)
+        vec += damper_force(:child, [joint.translational, joint.rotational][i], get_body(mechanism, joint.parent_id), body, mechanism.timestep, joint.child_id, unitary=unitary)
     end
     return vec
 end
@@ -249,7 +249,6 @@ function set_position!(mechanism, joint::JointConstraint, xθ; iter::Bool=true)
             end
         end
     end
-
     return
 end
 

@@ -98,34 +98,26 @@ end
 end
 
 # springs
-@inline function spring_parent(joint::Joint, body1::Node, body2::Node, timestep, child_id; unitary::Bool=false)
+@inline function spring_force(relative::Symbol, joint::Joint, body1::Node, body2::Node, timestep, child_id; unitary::Bool=false)
     if body2.id == child_id
-        return spring_parent(joint, body1, body2, timestep, unitary=unitary)
+        return spring_force(relative, joint, body1, body2, timestep, unitary=unitary)
     else
         return szeros(T, 6)
     end
 end
 
-@inline function spring_child(joint::Joint, body1::Node, body2::Node, timestep, child_id; unitary::Bool=false)
-    if body2.id == child_id
-        return spring_child(joint, body1, body2, timestep, unitary=unitary)
-    else
-        return szeros(T, 6)
-    end
-end
+# @inline function spring_child(joint::Joint, body1::Node, body2::Node, timestep, child_id; unitary::Bool=false)
+#     if body2.id == child_id
+#         return spring_child(joint, body1, body2, timestep, unitary=unitary)
+#     else
+#         return szeros(T, 6)
+#     end
+# end
 
 # dampers
-@inline function damper_parent(joint::Joint, body1::Node, body2::Node, timestep, child_id; unitary::Bool=false)
+@inline function damper_force(relative::Symbol, joint::Joint, body1::Node, body2::Node, timestep, child_id; unitary::Bool=false)
     if body2.id == child_id
-        return damper_parent(joint, body1, body2, timestep, unitary=unitary)
-    else
-        return szeros(T, 6)
-    end
-end
-
-@inline function damper_child(joint::Joint, body1::Node, body2::Node, timestep, child_id; unitary::Bool=false)
-    if body2.id == child_id
-        return damper_child(joint, body1, body2, timestep, unitary=unitary)
+        return damper_force(relative, joint, body1, body2, timestep, unitary=unitary)
     else
         return szeros(T, 6)
     end

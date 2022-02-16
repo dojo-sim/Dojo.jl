@@ -348,17 +348,17 @@ end
 	end
 
 	# n-pendulum
-	mechanism = Dojo.get_mechanism(:npendulum, timestep = 0.01, gravity = -9.81, Nb=1)
+	mechanism = Dojo.get_mechanism(:npendulum, timestep = 0.1, gravity = -9.81, Nb=1)
 	ϕ1 = 0.3 * π
 	Dojo.initialize!(mechanism, :npendulum, ϕ1 = ϕ1)
-	storage = Dojo.simulate!(mechanism, 1.0, ctrl!, record = true, verbose = false)
+	storage = Dojo.simulate!(mechanism, 1.0, record = true, verbose = false)
 
 	x = Dojo.get_minimal_state(mechanism)
 	z = Dojo.get_maximal_state(mechanism)
 	u = zeros(Dojo.control_dimension(mechanism))
 
-	# @test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-6 # NOTE: this won't necessarily pass
-	@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-6
+	@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 # NOTE: this won't necessarily pass
+	@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-5
 
 	M_fd = maximal_to_minimal_jacobian_fd(mechanism, z)
 	M_a = Dojo.maximal_to_minimal_jacobian(mechanism, z)
@@ -373,17 +373,17 @@ end
 	@test abs(sum(diag(M_a * N_a)) - Dojo.minimal_dimension(mechanism)) < 1.0e-5
 
 	# n-pendulum
-	mechanism = Dojo.get_mechanism(:npendulum, timestep = 0.01, gravity = -9.81, Nb=3)
+	mechanism = Dojo.get_mechanism(:npendulum, timestep = 0.1, gravity = -9.81, Nb=3)
 	ϕ1 = 0.3 * π
 	Dojo.initialize!(mechanism, :npendulum, ϕ1 = ϕ1)
-	storage = Dojo.simulate!(mechanism, 1.0, ctrl!, record = true, verbose = false)
+	storage = Dojo.simulate!(mechanism, 1.0, record = true, verbose = false)
 
 	x = Dojo.get_minimal_state(mechanism)
 	z = Dojo.get_maximal_state(mechanism)
 	u = zeros(Dojo.control_dimension(mechanism))
 
-	# @test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-6 # NOTE: this won't necessarily pass
-	@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-6
+	@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 # NOTE: this won't necessarily pass
+	@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-5
 
 	M_fd = maximal_to_minimal_jacobian_fd(mechanism, z)
 	M_a = Dojo.maximal_to_minimal_jacobian(mechanism, z)
@@ -397,7 +397,6 @@ end
 	@test abs(sum(diag(M_fd * N_fd)) - Dojo.minimal_dimension(mechanism)) < 1.0e-5
 	@test abs(sum(diag(M_a * N_a)) - Dojo.minimal_dimension(mechanism)) < 1.0e-5
 
-
 	# sphere
 	mechanism = Dojo.get_mechanism(:sphere, timestep = 0.01, gravity = -9.81)
 	Dojo.initialize!(mechanism, :sphere)
@@ -407,8 +406,8 @@ end
 	x = Dojo.get_minimal_state(mechanism)
 	u = zeros(Dojo.control_dimension(mechanism))
 
-	# @test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-6 # NOTE: this won't necessarily pass
-	@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-6
+	@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 # NOTE: this won't necessarily pass
+	@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-5
 
 	M_fd = maximal_to_minimal_jacobian_fd(mechanism, z)
 	M_a = Dojo.maximal_to_minimal_jacobian(mechanism, z)
@@ -419,8 +418,8 @@ end
 	N_a = Dojo.minimal_to_maximal_jacobian(mechanism, Dojo.maximal_to_minimal(mechanism, z))
 	@test size(N_fd) == size(N_a)
 	@test norm(N_fd - N_a, Inf) < 1.0e-6
-	@test abs(sum(diag(M_fd * N_fd)) - Dojo.minimal_dimension(mechanism)) < 1.0e-6
-	@test abs(sum(diag(M_a * N_a)) - Dojo.minimal_dimension(mechanism)) < 1.0e-6
+	@test abs(sum(diag(M_fd * N_fd)) - Dojo.minimal_dimension(mechanism)) < 1.0e-5
+	@test abs(sum(diag(M_a * N_a)) - Dojo.minimal_dimension(mechanism)) < 1.0e-5
 
 	# half cheetah
 	mechanism = Dojo.get_mechanism(:halfcheetah, timestep=0.01, gravity=-9.81)
@@ -431,8 +430,8 @@ end
 	x = Dojo.get_minimal_state(mechanism)
 	u = zeros(Dojo.control_dimension(mechanism))
 
-	# @test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-6 # NOTE: this won't necessarily pass
-	@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-6
+	@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 # NOTE: this won't necessarily pass
+	@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-5
 
 	M_fd = maximal_to_minimal_jacobian_fd(mechanism, z)
 	M_a = Dojo.maximal_to_minimal_jacobian(mechanism, z)
@@ -457,8 +456,8 @@ end
 	x = Dojo.get_minimal_state(mechanism)
 	u = zeros(Dojo.control_dimension(mechanism))
 
-	# @test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-6 # NOTE: this won't necessarily pass
-	@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-6
+	@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 # NOTE: this won't necessarily pass
+	@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-5
 
 	M_fd = maximal_to_minimal_jacobian_fd(mechanism, z)
 	M_a = Dojo.maximal_to_minimal_jacobian(mechanism, z)
