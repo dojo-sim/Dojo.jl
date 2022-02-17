@@ -85,14 +85,18 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, bodya::Node{T}
         for i = 1:Nc
             λ = getλJoint(joint, i)
             if bodyb.id == joint.child_id
-                ∇z2_aa += spring_parent_jacobian_configuration_parent(
+                ∇z2_aa += spring_jacobian_configuration(
+                    :parent, :parent,
                     [joint.translational, joint.rotational][i], bodya, bodyb, timestep)
-                ∇z2_ab += spring_parent_jacobian_configuration_child(
+                ∇z2_ab += spring_jacobian_configuration(
+                    :parent, :child,
                     [joint.translational, joint.rotational][i], bodya, bodyb, timestep)
             elseif bodya.id == joint.child_id
-                ∇z2_aa += spring_child_jacobian_configuration_child(
+                ∇z2_aa += spring_jacobian_configuration(
+                    :child, :child,
                     [joint.translational, joint.rotational][i], bodyb, bodya, timestep)
-                ∇z2_ab += spring_child_jacobian_configuration_parent(
+                ∇z2_ab += spring_jacobian_configuration(
+                    :child, :parent,
                     [joint.translational, joint.rotational][i], bodyb, bodya, timestep)
             end
         end
@@ -101,14 +105,18 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, bodya::Node{T}
         for i = 1:Nc
             λ = getλJoint(joint, i)
             if bodyb.id == joint.child_id
-                ∇z2_aa += damper_parent_jacobian_configuration_parent(
+                ∇z2_aa += damper_jacobian_configuration(
+                    :parent, :parent,
                     [joint.translational, joint.rotational][i], bodya, bodyb, timestep)
-                ∇z2_ab += damper_parent_jacobian_configuration_child(
+                ∇z2_ab += damper_jacobian_configuration(
+                    :parent, :child,
                     [joint.translational, joint.rotational][i], bodya, bodyb, timestep)
             elseif bodya.id == joint.child_id
-                ∇z2_aa += damper_child_jacobian_configuration_child(
+                ∇z2_aa += damper_jacobian_configuration(
+                    :child, :child,
                     [joint.translational, joint.rotational][i], bodyb, bodya, timestep)
-                ∇z2_ab += damper_child_jacobian_configuration_parent(
+                ∇z2_ab += damper_jacobian_configuration(
+                    :child, :parent,
                     [joint.translational, joint.rotational][i], bodyb, bodya, timestep)
             end
         end
@@ -137,8 +145,8 @@ function body_constraint_jacobian_joint_data(mechanism::Mechanism{T}, body::Body
     x3, q3 = next_configuration(body.state, Δt)
     # ∇u = Diagonal(SVector{6,T}(1,1,1,2,2,2)) * input_jacobian_control(mechanism, joint, body)
     ∇u = Diagonal(SVector{6,T}(1,1,1,1,1,1)) * input_jacobian_control(mechanism, joint, body)
-    ∇spring = joint.spring ? apply_spring(mechanism, joint, body, unitary=true) : szeros(T,6,1)
-    ∇damper = joint.damper ? apply_damper(mechanism, joint, body, unitary=true) : szeros(T,6,1)
+    ∇spring = joint.spring ? spring_impulses(mechanism, joint, body, unitary=true) : szeros(T,6,1)
+    ∇damper = joint.damper ? damper_impulses(mechanism, joint, body, unitary=true) : szeros(T,6,1)
     return [∇u ∇spring ∇damper]
 end
 

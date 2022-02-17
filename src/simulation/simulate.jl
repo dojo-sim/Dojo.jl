@@ -10,7 +10,7 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
     initialize_simulation!(mechanism)
     for k = steps
         control!(mechanism, k)
-        for joint in mechanism.joints apply_input!(joint, mechanism) end
+        for joint in mechanism.joints input_impulse!(joint, mechanism) end
         mehrotra!(mechanism, opts=opts)
         record && save_to_storage!(mechanism, storage, k)
         (k != steps[end]) && (for body in mechanism.bodies update_state!(body, mechanism.timestep) end)

@@ -182,12 +182,12 @@ end
 end
 
 @generated function correction(mechanism::Mechanism{T}, step_entry::Entry, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
-    cor = [:(correction([joint.translational, joint.rotational][$i], step_entry.value[λindex(joint, $i)], mechanism.μ)) for i = 1:Nc]
+    cor = [:(correction([joint.translational, joint.rotational][$i], step_entry.value[joint_impulse_index(joint, $i)], mechanism.μ)) for i = 1:Nc]
     return :(vcat($(cor...)))
 end
 
 @inline function correction(joint::Joint{T,Nλ,Nb,N}, Δ, μ) where {T,Nλ,Nb,N}
-    Δs, Δγ = get_sγ(joint, Δ)
+    Δs, Δγ = split_impulses(joint, Δ)
 	return [- Δs .* Δγ .+ μ; szeros(Nb + Nλ)]
 end
 

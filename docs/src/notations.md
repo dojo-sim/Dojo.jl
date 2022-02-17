@@ -1,3 +1,5 @@
+# Notations 
+
 ## General notations
 - O is the origin of the frame
 - CA is the center of mass of body A

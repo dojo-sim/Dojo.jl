@@ -1,81 +1,65 @@
-@inline function apply_input!(joint::Translational{T}, statea::State, stateb::State, timestep::T, clear::Bool) where T
-    xa, qa = current_configuration(statea)
-    xb, qb = current_configuration(stateb)
+################################################################################
+# Control Input
+################################################################################
 
-    Faw, τaa, Fbw, τbb = apply_input(joint, joint.input, xa, qa, xb, qb)
-    statea.F2[end] += Faw
-    statea.τ2[end] += τaa/2
-    stateb.F2[end] += Fbw
-    stateb.τ2[end] += τbb/2
-    clear && (joint.input = szeros(T,3))
-    return
-end
+@inline function input_impulse!(joint::Translational{T}, 
+    bodya::Node, bodyb::Node,
+    timestep::T, clear::Bool) where T
 
-@inline function apply_input(joint::Translational{T}, input::AbstractVector,
-        xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion) where T
+    xa, qa = current_configuration(bodya.state)
+    xb, qb = current_configuration(bodyb.state)
+  
+    input = joint.input
     Ta = impulse_transform(:parent, joint, xa, qa, xb, qb)
     Tb = impulse_transform(:child, joint, xa, qa, xb, qb)
     Faw = Ta[1:3,1:3] * input
     τaa = Ta[4:6,1:3] * input
     Fbw = Tb[1:3,1:3] * input
     τbb = Tb[4:6,1:3] * input
-    return Faw, τaa, Fbw, τbb
+
+    bodya.state.F2[end] += Faw
+    bodya.state.τ2[end] += τaa/2
+    bodyb.state.F2[end] += Fbw
+    bodyb.state.τ2[end] += τbb/2
+    clear && (joint.input = szeros(T,3))
+    return
 end
 
-@inline function input_jacobian_control_parent(joint::Translational, statea::State, stateb::State) where T
-    xa, qa = current_configuration(statea)
-    xb, qb = current_configuration(stateb)
+################################################################################
+# Control Jacobian
+################################################################################
+
+@inline function input_jacobian_control(relative::Symbol, 
+    joint::Translational, 
+    xa::AbstractVector, qa::UnitQuaternion,
+    xb::AbstractVector, qb::UnitQuaternion) where T
+
     # dFaw/dinput
     # dτaa/dinput
-    Ta = impulse_transform(:parent, joint, xa, qa, xb, qb)
+    Ta = impulse_transform(relative, joint, xa, qa, xb, qb)
     X = Ta[1:3,1:3]
     Q = 0.5*Ta[4:6,1:3]
     return [X; Q]
 end
 
-@inline function input_jacobian_control_child(joint::Translational, statea::State, stateb::State) where T
-    xa, qa = current_configuration(statea)
-    xb, qb = current_configuration(stateb)
-    # dFbw/dinput
-    # dτbb/dinput
-    Tb = impulse_transform(:child, joint, xa, qa, xb, qb)
-    X = Tb[1:3,1:3]
-    Q = 0.5*Tb[4:6,1:3]
-    return [X; Q]
-end
+@inline function input_jacobian_configuration(relative::Symbol, 
+    joint::Translational{T}, 
+    xa::AbstractVector, qa::UnitQuaternion,
+    xb::AbstractVector, qb::UnitQuaternion) where T
 
-@inline function input_jacobian_configuration_parent(joint::Translational{T}, statea::State, stateb::State) where T
-    xa, qa = current_configuration(statea)
-    xb, qb = current_configuration(stateb)
     # d[Faw;2τaa]/d[xa,qa]
-    ∇aa = impulse_transform_jacobian(:parent, :parent, joint, xa, qa, xb, qb, joint.input)
+    ∇aa = impulse_transform_jacobian(:parent, relative, joint, xa, qa, xb, qb, joint.input)
     FaXa = ∇aa[1:3,1:3]
     FaQa = ∇aa[1:3,4:6]
     τaXa = 0.5*∇aa[4:6,1:3]
     τaQa = 0.5*∇aa[4:6,4:6]
+
     # d[Fbw;2τbb]/d[xa,qa]
-    ∇ba = impulse_transform_jacobian(:child, :parent, joint, xa, qa, xb, qb, joint.input)
+    ∇ba = impulse_transform_jacobian(:child, relative, joint, xa, qa, xb, qb, joint.input)
     FbXa = ∇ba[1:3,1:3]
     FbQa = ∇ba[1:3,4:6]
     τbXa = 0.5*∇ba[4:6,1:3]
     τbQa = 0.5*∇ba[4:6,4:6]
-    return FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa
-end
 
-@inline function input_jacobian_configuration_child(joint::Translational{T}, statea::State, stateb::State) where T
-    xa, qa = current_configuration(statea)
-    xb, qb = current_configuration(stateb)
-    # d[Faw;2τaa]/d[xb,qb]
-    ∇ab = impulse_transform_jacobian(:parent, :child, joint, xa, qa, xb, qb, joint.input)
-    FaXb = ∇ab[1:3,1:3]
-    FaQb = ∇ab[1:3,4:6]
-    τaXb = 0.5*∇ab[4:6,1:3]
-    τaQb = 0.5*∇ab[4:6,4:6]
-    # d[Fbw;2τbb]/d[xb,qb]
-    ∇bb = impulse_transform_jacobian(:child, :child, joint, xa, qa, xb, qb, joint.input)
-    FbXb = ∇bb[1:3,1:3]
-    FbQb = ∇bb[1:3,4:6]
-    τbXb = 0.5*∇bb[4:6,1:3]
-    τbQb = 0.5*∇bb[4:6,4:6]
-    return FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb
+    return FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa
 end

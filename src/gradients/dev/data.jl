@@ -100,7 +100,7 @@ function set_data0!(mechanism::Mechanism, data::AbstractVector)
 		set_data0!(contact, data[c .+ (1:Nd)]); c += Nd
 	end
 	for joint in mechanism.joints
-		apply_input!(joint, mechanism, false)
+		input_impulse!(joint, mechanism, false)
 	end
 	return nothing
 end

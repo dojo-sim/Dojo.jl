@@ -16,7 +16,6 @@ mutable struct Mechanism{T,Nn,Ne,Nb,Ni}
     μ::T
 end
 
-
 function Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:JointConstraint{T}}, contacts::Vector{<:ContactConstraint{T}};
     spring=0.0, damper=0.0, timestep::T=0.01, gravity=[0.0; 0.0;-9.81]) where T
 
@@ -95,7 +94,7 @@ function gravity_compensation(mechanism::Mechanism)
             body = get_body(mechanism, joint.parent_id)
             rot = joint.rotational
             A = Matrix(nullspace_mask(rot))
-            input = apply_spring(mechanism, joint, body)
+            input = spring_impulses(mechanism, joint, body)
             F = input[1:3]
             τ = input[4:6]
             u[off .+ (1:nu)] = -A * τ
@@ -162,7 +161,7 @@ function set_control!(mechanism::Mechanism{T}, u::AbstractVector) where T
 	end
 	# apply the controls to each body's state
 	for joint in joints
-		apply_input!(joint, mechanism)
+		input_impulse!(joint, mechanism)
 	end
 end
 
