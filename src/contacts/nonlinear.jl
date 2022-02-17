@@ -68,13 +68,6 @@ end
     return [X Q]
 end
 
-@inline function force_mapping(model::NonlinearContact, x::AbstractVector, q::UnitQuaternion)
-    X = [model.surface_normal_projector;
-         szeros(1,3);
-         model.surface_projector]
-    return X
-end
-
 @inline function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
     contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
     # ∇impulses[impulses .* impulses - μ; g - s] = [diag(impulses); -diag(0,1,1)]

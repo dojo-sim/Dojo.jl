@@ -1,3 +1,33 @@
+
+mutable struct ContactConstraint{T,N,Nc,Cs,N½} <: Constraint{T,N}
+    # ID
+    id::Int64
+    name::Symbol
+
+    # contact model
+    model::Cs
+
+    # neighbor IDs
+    parent_id::Int
+    child_id::Int
+
+    # variables
+    impulses::Vector{SVector{N½,T}}
+    impulses_dual::Vector{SVector{N½,T}}
+
+    function ContactConstraint(data; name::Symbol=Symbol("contact_" * randstring(4)))
+        model, parent_id, _ = data
+        T = typeof(model).parameters[1]
+
+        N = length(model)
+        N½ = Int64(N/2)
+
+        impulses = [neutral_vector(model) for i = 1:2]
+        impulses_dual = [neutral_vector(model) for i = 1:2]
+        new{T,N,1,typeof(model),N½}(getGlobalID(), name, model, parent_id, 0, impulses, impulses_dual)
+    end
+end
+
 """
     Generate contact inequality constraints attached to a list of bodies. You need to provide:
     - the normal for each contact point

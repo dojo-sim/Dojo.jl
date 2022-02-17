@@ -22,7 +22,7 @@
     state.d = [dynT; dynR]
 
     # inputs
-    state.d -= [state.F2[1]; 1.0 * state.τ2[1]]
+    state.d -= [state.F2[1]; state.τ2[1]]
 
     # impulses
     for id in connections(mechanism.system, body.id)

@@ -7,9 +7,10 @@ mutable struct Rotational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N,Nb½}
 
     spring::T
     damper::T
+    
     spring_offset::SVector{N̄λ,T}
     joint_limits::Vector{SVector{Nb½,T}} # lower and upper limits on the joint minimal coordinate angles
-    spring_type::Symbol # the rotational springs can be :sinusoidal or :linear, if linear then we need joint_limits to avoid the 180° singularity.
+    spring_type::Symbol # the rotational springs can be :sinusoidal or :linear, if linear then we need joint_limits to avoid the 360° singularity.
     input::SVector{3,T}
 end
 

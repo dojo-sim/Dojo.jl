@@ -69,11 +69,13 @@ end
 
 # constraints
 @generated function constraint(mechanism, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
-    tra = :(constraint(joint.translational,
-        get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id),
+    pbody = :(get_body(mechanism, joint.parent_id))
+    cbody = :(get_body(mechanism, joint.child_id))
+    tra = :(constraint(joint.translational, 
+        $pbody, $cbody,
         joint.impulses[2][joint_impulse_index(joint,1)], mechanism.timestep))
-    rot = :(constraint(joint.rotational,
-        get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id),
+    rot = :(constraint(joint.rotational,    
+        $pbody, $cbody, 
         joint.impulses[2][joint_impulse_index(joint,2)], mechanism.timestep))
     return :(svcat($tra, $rot))
 end
@@ -87,13 +89,15 @@ end
 
 @generated function constraint_jacobian_configuration(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     relative = :(body.id == joint.parent_id ? :parent : :child)
-    tra = :(constraint_jacobian_configuration($relative,
-        joint.translational,
-        get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id),
+    pbody = :(get_body(mechanism, joint.parent_id))
+    cbody = :(get_body(mechanism, joint.child_id))
+    tra = :(constraint_jacobian_configuration($relative, 
+        joint.translational, 
+        $pbody, $cbody, 
         joint.child_id, joint.impulses[2][joint_impulse_index(joint, 1)], mechanism.timestep))
-    rot = :(constraint_jacobian_configuration($relative,
-        joint.rotational,
-        get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id),
+    rot = :(constraint_jacobian_configuration($relative, 
+        joint.rotational, 
+        $pbody, $cbody, 
         joint.child_id, joint.impulses[2][joint_impulse_index(joint, 2)], mechanism.timestep))
     return :(vcat($tra, $rot))
 end
@@ -108,11 +112,13 @@ end
 
 @generated function impulse_map(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     relative = :(body.id == joint.parent_id ? :parent : :child)
-    tra = :(impulse_map($relative, joint.translational,
-        get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id),
+    pbody = :(get_body(mechanism, joint.parent_id))
+    cbody = :(get_body(mechanism, joint.child_id))
+    tra = :(impulse_map($relative, joint.translational, 
+        $pbody, $cbody, 
         joint.child_id, joint.impulses[2][joint_impulse_index(joint, 1)], mechanism.timestep))
     rot = :(impulse_map($relative, joint.rotational,
-        get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id),
+        $pbody, $cbody, 
         joint.child_id, joint.impulses[2][joint_impulse_index(joint, 2)], mechanism.timestep))
     return :(hcat($tra, $rot))
 end
@@ -154,8 +160,8 @@ end
 @inline function spring_impulses(mechanism, joint::JointConstraint{T}, body::Body; unitary::Bool=false) where T
     relative = (body.id == joint.parent_id ? :parent : :child)
     impulses = szeros(T,6)
-    impulses += spring_force(relative, joint.translational, get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), mechanism.timestep, joint.child_id, unitary=unitary)
-    impulses += spring_force(relative, joint.rotational, get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), mechanism.timestep, joint.child_id, unitary=unitary)
+    impulses += spring_impulses(relative, joint.translational, get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), mechanism.timestep, joint.child_id, unitary=unitary)
+    impulses += spring_impulses(relative, joint.rotational, get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), mechanism.timestep, joint.child_id, unitary=unitary)
     return impulses
 end
 
@@ -163,8 +169,8 @@ end
 @inline function damper_impulses(mechanism, joint::JointConstraint{T}, body::Body; unitary::Bool=false) where T
     relative = (body.id == joint.parent_id ? :parent : :child)
     impulses = szeros(T,6)
-    impulses += damper_force(relative, joint.translational, get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), mechanism.timestep, joint.child_id, unitary=unitary)
-    impulses += damper_force(relative, joint.rotational, get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), mechanism.timestep, joint.child_id, unitary=unitary)
+    impulses += damper_impulses(relative, joint.translational, get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), mechanism.timestep, joint.child_id, unitary=unitary)
+    impulses += damper_impulses(relative, joint.rotational, get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), mechanism.timestep, joint.child_id, unitary=unitary)
     return impulses
 end
 
@@ -189,93 +195,36 @@ end
 
 @generated function input_jacobian_control(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     relative = :(body.id == joint.parent_id ? :parent : :child)
-    rot = :(input_jacobian_control($relative, joint.translational, get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), joint.child_id))
-    tra = :(input_jacobian_control($relative, joint.rotational, get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), joint.child_id))
+    pbody = :(get_body(mechanism, joint.parent_id))
+    cbody = :(get_body(mechanism, joint.child_id))
+    rot = :(input_jacobian_control($relative, joint.translational, $pbody, $cbody, joint.child_id))
+    tra = :(input_jacobian_control($relative, joint.rotational, $pbody, $cbody, joint.child_id))
     return :(hcat($rot, $tra))
 end
 
 @inline function input_impulse!(joint::JointConstraint{T,N,Nc}, mechanism, clear::Bool=true) where {T,N,Nc}
-    input_impulse!(joint.translational, get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), mechanism.timestep, clear)
-    input_impulse!(joint.rotational, get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), mechanism.timestep, clear)
+    pbody = get_body(mechanism, joint.parent_id)
+    cbody = get_body(mechanism, joint.child_id)
+    input_impulse!(joint.translational, pbody, cbody, mechanism.timestep, clear)
+    input_impulse!(joint.rotational, pbody, cbody, mechanism.timestep, clear)
     return
-end
-
-# set methods
-function set_position!(mechanism, joint::JointConstraint, xθ; iter::Bool=true)
-    if !iter
-        set_joint_position!(mechanism, joint, xθ)
-    else
-        currentvals = minimal_coordinates(mechanism)
-        set_joint_position!(mechanism, joint, xθ)
-        for id in recursivedirectchildren!(mechanism.system, joint.id)
-            node = get_node(mechanism, id)
-            if node isa JointConstraint
-                set_joint_position!(mechanism, node, currentvals[id])
-            end
-        end
-    end
-    return
-end
-
-function set_joint_position!(mechanism, joint::JointConstraint{T,N,Nc}, xθ) where {T,N,Nc}
-    Nλ = 0
-    for (i, element) in enumerate([joint.translational, joint.rotational])
-        Nλ += joint_length(element)
-    end
-    @assert length(xθ)==3*Nc-Nλ
-
-    # bodies
-    body1 = get_body(mechanism, joint.parent_id)
-    body2 = get_body(mechanism, joint.child_id)
-
-    Δx = xθ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]
-    Δθ = xθ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])]
-    set_minimal_coordinates!(body1, body2, joint, mechanism.timestep, Δx=Δx, Δθ=Δθ)
-    return body2.state.x2[1], body2.state.q2[1]
-end
-
-function set_velocity!(mechanism, joint::JointConstraint{T,N,Nc}, vϕ) where {T,N,Nc}
-    Nλ = 0
-    for (i, element) in enumerate([joint.translational, joint.rotational])
-        Nλ += joint_length(element)
-    end
-
-    # bodies
-    body1 = get_body(mechanism, joint.parent_id)
-    body2 = get_body(mechanism, joint.child_id)
-
-    Δv = vϕ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]
-    Δϕ = vϕ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])]
-    set_minimal_velocities!(body1, body2, joint, mechanism.timestep, Δv=Δv, Δϕ=Δϕ)
-    return body2.state.v15, body2.state.ϕ15
 end
 
 # minimal
 @generated function minimal_coordinates(mechanism, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
-    vec = [:(minimal_coordinates([joint.translational, joint.rotational][$i], get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id))) for i = 1:Nc]
-    return :(svcat($(vec...)))
+    pbody = :(get_body(mechanism, joint.parent_id))
+    cbody = :(get_body(mechanism, joint.child_id))
+    tra = :(minimal_coordinates(joint.translational, $pbody, $cbody)) 
+    rot = :(minimal_coordinates(joint.rotational, $pbody, $cbody)) 
+    return :(svcat($tra, $rot))
 end
 
 @generated function minimal_velocities(mechanism, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
-    vec = [:(minimal_velocities([joint.translational, joint.rotational][$i], get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), mechanism.timestep)) for i = 1:Nc]
-    return :(svcat($(vec...)))
-end
-
-function set_spring_damper_values!(joints, spring, damper)
-    i = 1
-    for joint in joints
-        joint.parent_id == 0 && continue
-        k = (length(spring) > 1) ? spring[i] : spring
-        b = (length(damper) > 1) ? damper[i] : damper
-        joint.spring = k > 0.0
-        joint.damper = b > 0.0
-        for element in [joint.translational, joint.rotational]
-            element.spring = max(0.0, k)
-            element.damper = max(0.0, b)
-        end
-        i += 1
-    end
-    return joints
+    pbody = :(get_body(mechanism, joint.parent_id))
+    cbody = :(get_body(mechanism, joint.child_id))
+    tra = :(minimal_velocities(joint.translational, $pbody, $cbody, mechanism.timestep))
+    rot = :(minimal_velocities(joint.rotational, $pbody, $cbody, mechanism.timestep))
+    return :(svcat($tra, $rot))
 end
 
 ################################################################################
@@ -300,4 +249,21 @@ function reset!(joint::JointConstraint{T,N,Nc}; scale::T=1.0) where {T,N,Nc}
     joint.impulses[1] = vcat(λ...)
     joint.impulses[2] = vcat(λ...)
     return
+end
+
+function set_spring_damper_values!(joints, spring, damper)
+    i = 1
+    for joint in joints
+        joint.parent_id == 0 && continue
+        k = (length(spring) > 1) ? spring[i] : spring
+        b = (length(damper) > 1) ? damper[i] : damper
+        joint.spring = k > 0.0
+        joint.damper = b > 0.0
+        for element in [joint.translational, joint.rotational]
+            element.spring = max(0.0, k)
+            element.damper = max(0.0, b)
+        end
+        i += 1
+    end
+    return joints
 end
