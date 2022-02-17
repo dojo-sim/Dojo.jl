@@ -34,7 +34,7 @@
          <box size=".1 .1 1" />
       </geometry>
       <material name="red">
-	       <color rgba="1 0 0 1" />
+	       <color rgba="0.3 0.3 0.3 1" />
       </material>
     </visual>
   </link>
@@ -52,7 +52,7 @@
          <box size=".1 .1 1" />
       </geometry>
       <material name="green">
-	       <color rgba="0 1 0 1" />
+	       <color rgba="0.7 0.7 0.7 1" />
       </material>
     </visual>
   </link>
@@ -69,7 +69,7 @@
          <box size=".1 .1 1" />
       </geometry>
       <material name="blue">
-	       <color rgba="0 0 1 1" />
+	       <color rgba="0.9 0.9 0.9 1" />
       </material>
     </visual>
   </link>
@@ -79,7 +79,7 @@
 	<joint name="jointb1" type="continuous">
 		<parent link="base_link" />
 		<child link="link1" />
-		<origin rpy="0.0 0 0" xyz="0 0 0" />
+		<origin rpy="0.0 0 0" xyz="0 0 2.1" />
 		<axis xyz="1 0 0" />
 	</joint>
 
@@ -93,7 +93,7 @@
   <joint name="jointb3" type="continuous">
 		<parent link="base_link" />
 		<child link="link3" />
-		<origin rpy="-0.0 0 0" xyz="0 0 0" />
+		<origin rpy="-0.0 0 0" xyz="0 0 2.1" />
 		<axis xyz="1 0 0" />
 	</joint>
 
@@ -104,6 +104,9 @@
 		<axis xyz="1 0 0" />
 	</joint>
 
-
-
+	<!-- <loop_joint name="joint24" type="continuous">
+    <axis xyz="1 0 0"/>
+    <link1 link="link2" rpy="0 0 0" xyz="0 0 -1.0"/>
+    <link2 link="link4" rpy="0 0 0" xyz="0 0 -1.0"/>
+	</loop_joint> -->
 </robot>

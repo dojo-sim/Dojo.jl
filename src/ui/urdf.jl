@@ -387,33 +387,6 @@ function parse_loop_joints(xloopjoints, origin, joints, ldict, T)
             foundflag && break
         end
 
-        # # Find and remove joints to combine them
-        # joint1 = 0
-        # joint2 = 0
-        # for (i,joint) in enumerate(joints)
-        #     if joint.id == joint1id
-        #         joint1 = joint
-        #         deleteat!(joints,i)
-        #         break
-        #     end
-        # end
-        # # if joint1id == joint2id # already combined joint
-        # #     joint2 = joint
-        # for (i,joint) in enumerate(joints)
-        #     if joint.id == joint2id
-        #         joint2 = joint
-        #         deleteat!(joints,i)
-        #         break
-        #     end
-        # end
-        #
-        # @show joint1.parent_id
-        # @show joint1.child_id
-        # @show joint2.parent_id
-        # @show joint2.child_id
-        #
-        # joint = cat(joint1,joint2)
-        # push!(joints,joint)
         loopjoint = parse_loop_joint(xloopjoint, body1, body2, T)
         push!(loopjoints, loopjoint)
     end
@@ -535,97 +508,6 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
             shape.qoffset = qoffset \ qjointlocal * shape.qoffset
         end
     end
-
-
-    # for id in reverse(system.dfs_list) # from root to leaves
-    #     node = get_node(mechanism, id)
-    #     !(node isa Body) && continue # only for bodies
-    #
-    #     body = node
-    #     xbodylocal = body.state.x2[1]
-    #     qbodylocal = body.state.q2[1]
-    #     shape = body.shape
-    #
-    #     parent_id = get_parent_id(mechanism, id, loopjoints)
-    #     constraint = get_joint_constraint(mechanism, parent_id)
-    #
-    #     grandparent_id = constraint.parent_id
-    #     if grandparent_id == 0 # predecessor is origin
-    #         parentbody = mechanism.origin
-    #
-    #         xparentbody = SA{T}[0; 0; 0]
-    #         qparentbody = one(UnitQuaternion{T})
-    #
-    #         xparentjoint = SA{T}[0; 0; 0]
-    #         qparentjoint = one(UnitQuaternion{T})
-    #     else
-    #         parentbody = get_body(mechanism, grandparent_id)
-    #
-    #         grandgrandparent_id = get_parent_id(mechanism, grandparent_id, loopjoints)
-    #         parentconstraint = get_joint_constraint(mechanism, grandgrandparent_id)
-    #
-    #         xparentbody = parentbody.state.x2[1] # in world frame
-    #         qparentbody = parentbody.state.q2[1] # in world frame
-    #
-    #         @show id
-    #         @show parent_id
-    #         @show parentconstraint.name
-    #         @show parentconstraint.parent_id
-    #         @show parentconstraint.id
-    #         @show parentconstraint.child_id
-    #         @show keys(xjointlist)
-    #         @show keys(qjointlist)
-    #         @show body.name
-    #         @show grandparent_id
-    #         @show get_node(mechanism, grandparent_id).name
-    #         xparentjoint = xjointlist[parentconstraint.id] # in world frame
-    #         qparentjoint = qjointlist[parentconstraint.id] # in world frame
-    #     end
-    #
-    #     ind1 = findfirst(x -> x == id, constraint.child_id)
-    #     ind2 = ind1+1
-    #     @show ind1
-    #     @show ind2
-    #
-    #     # urdf joint's x and q in parent's (parentbody) frame
-    #     xjointlocal = vrotate(xparentjoint + vrotate(constraint.translational.vertices[1], qparentjoint) - xparentbody, inv(qparentbody))
-    #     qjointlocal = qparentbody \ qparentjoint * constraint.rotational.qoffset
-    #
-    #     # store joint's x and q in world frame
-    #     xjoint = xparentbody + vrotate(xjointlocal, qparentbody)
-    #     qjoint = qparentbody * qjointlocal
-    #     @show "***", id
-    #     @show "***", constraint.id
-    #     xjointlist[constraint.id] = xjoint
-    #     qjointlist[constraint.id] = qjoint
-    #
-    #     # difference to parent body (parentbody)
-    #     qoffset = qjointlocal * qbodylocal
-    #
-    #     # actual joint properties
-    #     p1 = xjointlocal # in parent's (parentbody) frame
-    #     p2 = vrotate(-xbodylocal, inv(qbodylocal)) # in body frame (xbodylocal and qbodylocal are both relative to the same (joint) frame -> rotationg by inv(body.q) gives body frame)
-    #     constraint.translational.vertices = (p1, p2)
-    #
-    #     V3 = vrotate(constraint.rotational.V3', qjointlocal) # in parent's (parentbody) frame
-    #     V12 = (svd(skew(V3)).Vt)[1:2,:]
-    #     constraint.rotational.V3 = V3'
-    #     constraint.rotational.V12 = V12
-    #     constraint.rotational.qoffset = qoffset # in parent's (parentbody) frame
-    #
-    #     # actual body properties
-    #     set_position!(body) # set everything to zero
-    #     set_position!(parentbody, body, p1 = p1, p2 = p2, Δq = qoffset)
-    #     xbody = body.state.x2[1]
-    #     qbody = body.state.q2[1]
-    #
-    #     # shape relative
-    #     if !(typeof(shape) <: EmptyShape)
-    #         shape.xoffset = vrotate(xjoint + vrotate(shape.xoffset, qjoint) - xbody, inv(qbody))
-    #         shape.qoffset = qoffset \ qjointlocal * shape.qoffset
-    #     end
-    # end
-
 
     for (i,constraint) in enumerate(loopjoints)
 

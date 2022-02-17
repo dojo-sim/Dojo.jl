@@ -69,16 +69,16 @@ end
 
 # constraints
 @generated function constraint(mechanism, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
-    tra = :(constraint(joint.translational, 
+    tra = :(constraint(joint.translational,
         get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id),
         joint.impulses[2][joint_impulse_index(joint,1)], mechanism.timestep))
-    rot = :(constraint(joint.rotational,    
-        get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), 
+    rot = :(constraint(joint.rotational,
+        get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id),
         joint.impulses[2][joint_impulse_index(joint,2)], mechanism.timestep))
     return :(svcat($tra, $rot))
 end
 
-# constraints Jacobians 
+# constraints Jacobians
 @generated function constraint_jacobian_configuration(mechanism, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
     tra = :(constraint_jacobian_configuration(joint.translational, joint.impulses[2][joint_impulse_index(joint, 1)]))
     rot = :(constraint_jacobian_configuration(joint.rotational, joint.impulses[2][joint_impulse_index(joint, 2)]))
@@ -87,18 +87,18 @@ end
 
 @generated function constraint_jacobian_configuration(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     relative = :(body.id == joint.parent_id ? :parent : :child)
-    tra = :(constraint_jacobian_configuration($relative, 
-        joint.translational, 
-        get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), 
+    tra = :(constraint_jacobian_configuration($relative,
+        joint.translational,
+        get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id),
         joint.child_id, joint.impulses[2][joint_impulse_index(joint, 1)], mechanism.timestep))
-    rot = :(constraint_jacobian_configuration($relative, 
-        joint.rotational, 
-        get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), 
+    rot = :(constraint_jacobian_configuration($relative,
+        joint.rotational,
+        get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id),
         joint.child_id, joint.impulses[2][joint_impulse_index(joint, 2)], mechanism.timestep))
     return :(vcat($tra, $rot))
 end
 
-# impulses 
+# impulses
 @inline function impulses!(mechanism, body::Body, joint::JointConstraint)
     body.state.d -= impulse_map(mechanism, joint, body) * joint.impulses[2]
     joint.spring && (body.state.d -= spring_impulses(mechanism, joint, body))
@@ -108,11 +108,11 @@ end
 
 @generated function impulse_map(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
     relative = :(body.id == joint.parent_id ? :parent : :child)
-    tra = :(impulse_map($relative, joint.translational, 
-        get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), 
+    tra = :(impulse_map($relative, joint.translational,
+        get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id),
         joint.child_id, joint.impulses[2][joint_impulse_index(joint, 1)], mechanism.timestep))
     rot = :(impulse_map($relative, joint.rotational,
-        get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), 
+        get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id),
         joint.child_id, joint.impulses[2][joint_impulse_index(joint, 2)], mechanism.timestep))
     return :(hcat($tra, $rot))
 end
@@ -125,7 +125,7 @@ end
 
     # time step
     timestep = mechanism.timestep
-    
+
     # bodies
     pbody = get_body(mechanism, joint.parent_id)
     cbody = get_body(mechanism, joint.child_id)
@@ -141,7 +141,7 @@ end
     return
 end
 
-# off-diagonal Jacobians 
+# off-diagonal Jacobians
 @inline function off_diagonal_jacobians(mechanism, body::Body{T}, joint::JointConstraint{T,N}) where {T,N}
     return -impulse_map(mechanism, joint, body), constraint_jacobian_configuration(mechanism, joint, body) * integrator_jacobian_velocity(body, mechanism.timestep)
 end
@@ -150,7 +150,7 @@ end
     return constraint_jacobian_configuration(mechanism, joint, body) * integrator_jacobian_velocity(body, mechanism.timestep), -impulse_map(mechanism, joint, body)
 end
 
-# springs 
+# springs
 @inline function spring_impulses(mechanism, joint::JointConstraint{T}, body::Body; unitary::Bool=false) where T
     relative = (body.id == joint.parent_id ? :parent : :child)
     impulses = szeros(T,6)
@@ -168,7 +168,7 @@ end
     return impulses
 end
 
-# inputs 
+# inputs
 function set_input!(joint::JointConstraint{T,N,Nc}, input::AbstractVector) where {T,N,Nc}
     @assert length(input) == control_dimension(joint)
     # translational
@@ -264,8 +264,7 @@ end
 function set_spring_damper_values!(joints, spring, damper)
     i = 1
     for joint in joints
-        @warn "uncomment this"
-        # joint.parent_id == 0 && continue
+        joint.parent_id == 0 && continue
         k = (length(spring) > 1) ? spring[i] : spring
         b = (length(damper) > 1) ? damper[i] : damper
         joint.spring = k > 0.0
