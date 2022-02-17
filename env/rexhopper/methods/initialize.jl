@@ -3,11 +3,12 @@ function get_rexhopper(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_c
     contact_body::Bool=true,
     limits::Bool = false,
     model=:rexhopper,
+    floating=true,
     spring=0.0,
     damper=1.0) where T
 
     path = joinpath(@__DIR__, "../deps/$(String(model)).urdf")
-    mech = Mechanism(path, true, T, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
+    mech = Mechanism(path, floating, T, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
 
     # joint limits
     joints = deepcopy(mech.joints)

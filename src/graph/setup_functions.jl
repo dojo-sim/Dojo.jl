@@ -7,22 +7,9 @@ function dfs(graph,v)
 
     # removes double entries of cycle connections and keeps the first found pair
     cycleclosures = cycleclosures[sortperm(sort.(cycleclosures))[1:2:length(cycleclosures)]]
-    # @show cycleclosures
 
     return list, cycleclosures
 end
-#
-# mech = Mechanism(joinpath(module_dir(), "env/rexhopper/deps/fourbar_open.urdf"), false)
-# mech = get_npendulum(Nb=4)
-# graph = mech.system.graph
-# A = adjacency_matrix(mech.joints, mech.bodies, mech.contacts)
-# graphs, roots = split_adjacency(A)
-# dfs(graphs[1], roots[1])
-# nv(graph)
-# ne(graph)
-#
-
-
 
 function _dfs(graph,v,p,list,cycleclosures,visited)
     if !visited[v]

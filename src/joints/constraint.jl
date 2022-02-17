@@ -80,7 +80,7 @@ end
     return :(svcat($tra, $rot))
 end
 
-# constraints Jacobians 
+# constraints Jacobians
 @generated function constraint_jacobian_configuration(mechanism, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
     tra = :(constraint_jacobian_configuration(joint.translational, joint.impulses[2][joint_impulse_index(joint, 1)]))
     rot = :(constraint_jacobian_configuration(joint.rotational, joint.impulses[2][joint_impulse_index(joint, 2)]))
@@ -102,7 +102,7 @@ end
     return :(vcat($tra, $rot))
 end
 
-# impulses 
+# impulses
 @inline function impulses!(mechanism, body::Body, joint::JointConstraint)
     body.state.d -= impulse_map(mechanism, joint, body) * joint.impulses[2]
     joint.spring && (body.state.d -= spring_impulses(mechanism, joint, body))
@@ -131,7 +131,7 @@ end
 
     # time step
     timestep = mechanism.timestep
-    
+
     # bodies
     pbody = get_body(mechanism, joint.parent_id)
     cbody = get_body(mechanism, joint.child_id)
@@ -147,7 +147,7 @@ end
     return
 end
 
-# off-diagonal Jacobians 
+# off-diagonal Jacobians
 @inline function off_diagonal_jacobians(mechanism, body::Body{T}, joint::JointConstraint{T,N}) where {T,N}
     return -impulse_map(mechanism, joint, body), constraint_jacobian_configuration(mechanism, joint, body) * integrator_jacobian_velocity(body, mechanism.timestep)
 end
@@ -156,7 +156,7 @@ end
     return constraint_jacobian_configuration(mechanism, joint, body) * integrator_jacobian_velocity(body, mechanism.timestep), -impulse_map(mechanism, joint, body)
 end
 
-# springs 
+# springs
 @inline function spring_impulses(mechanism, joint::JointConstraint{T}, body::Body; unitary::Bool=false) where T
     relative = (body.id == joint.parent_id ? :parent : :child)
     impulses = szeros(T,6)
@@ -174,7 +174,7 @@ end
     return impulses
 end
 
-# inputs 
+# inputs
 function set_input!(joint::JointConstraint{T,N,Nc}, input::AbstractVector) where {T,N,Nc}
     @assert length(input) == control_dimension(joint)
     # translational
