@@ -190,6 +190,7 @@ include(joinpath("integrators", "constraint.jl"))
 
 # User interface
 include(joinpath("ui", "mechanism_ui.jl"))
+include(joinpath("ui", "mechanism_traversal.jl"))
 include(joinpath("ui", "urdf.jl"))
 include(joinpath("ui", "convert_shape.jl"))
 include(joinpath("ui", "visualize.jl"))
