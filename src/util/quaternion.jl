@@ -20,24 +20,6 @@ vrotate(v::StaticVector,q::UnitQuaternion) = q*v
 @inline ∂vrotate∂p(p::AbstractVector, q::UnitQuaternion) = VRᵀmat(q) * LVᵀmat(q)
 @inline ∂vrotate∂q(p::AbstractVector, q::UnitQuaternion) = VLmat(q) * Lmat(UnitQuaternion(p)) * Tmat() + VRᵀmat(q) * Rmat(UnitQuaternion(p))
 
-rotation_vector(q::UnitQuaternion) = rotation_angle(q) * rotation_axis(q)
-# function rotation_vector1(q::UnitQuaternion{T}) where T
-#     angle = 2 * acos(q.w)
-# 	ϵ = max(1-q.w*q.w, 1e-10)
-#     x = q.x / sqrt(ϵ)
-#     y = q.y / sqrt(ϵ)
-#     z = q.z / sqrt(ϵ)
-#     return angle * SVector{3,T}(x, y, z)
-# end
-function ∂qrotation_vector(q::UnitQuaternion{T}) where T
-    # v = amp * Vmat(q)
-	ϵ = max(1-q.w*q.w, 1e-10)
-    amp = 2 * acos(q.w) / sqrt(ϵ)
-    ∇amp = SVector{4,T}(2q.w*acos(q.w)*(sqrt(ϵ)^-3) - 2(sqrt(ϵ)^-2), 0, 0, 0)
-    ∇ = Vmat(q) * ∇amp' + amp * Vmat()
-    return ∇
-end
-
 @inline function axis_angle_to_quaternion(v)
     θ = norm(v)
     q = UnitQuaternion(cos(θ/2), 1/2 * sinc(θ/(2π)) * v)
@@ -60,6 +42,7 @@ Vᵀmat(::Type{T}=Float64) where T = hmat(T)
 Vmat(q::UnitQuaternion) = imag(q)
 
 vector(q::UnitQuaternion) = SA[q.w, q.x, q.y, q.z]
+vector(q::AbstractVector) = q 
 
 function VLmat(q::UnitQuaternion)
     SA[

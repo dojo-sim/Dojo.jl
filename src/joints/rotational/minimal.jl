@@ -44,10 +44,29 @@ function minimal_coordinates_jacobian_configuration(relative::Symbol, joint::Rot
     A = nullspace_mask(joint)
     q = displacement(joint, xa, qa, xb, qb, vmat=false)
     X, Q = displacement_jacobian_configuration(relative, joint, xa, qa, xb, qb, attjac=attjac, vmat=false)
-    ∂rotation_vector∂q = FiniteDiff.finite_difference_jacobian(r -> rotation_vector(UnitQuaternion(r..., false)), vector(q))
+    # ∂rv∂q = FiniteDiff.finite_difference_jacobian(r -> rotation_vector(UnitQuaternion(r..., false)), vector(q))
+    ∂rv∂q = ∂rotation_vector∂q(q)
 
-	return A * [X ∂rotation_vector∂q * Q]
+	return A * [X ∂rv∂q * Q]
 end
+
+################################################################################
+# Set Coordinates
+################################################################################
+function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::Rotational, timestep;
+	Δθ::AbstractVector=szeros(control_dimension(joint)))
+	# Δθ is expressed in along the joint's nullspace axes, in pnode's offset frame
+	qoffset = joint.qoffset
+	qa = pnode.state.q2[1]
+	Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
+	Δq = axis_angle_to_quaternion(Aᵀ*Δθ)
+	qb = qa * qoffset * Δq
+	set_position!(cnode; x=cnode.state.x2[1], q = qb)
+	set_previous_configuration!(cnode, timestep)
+	return nothing
+end
+
+
 
 ################################################################################
 # Velocities

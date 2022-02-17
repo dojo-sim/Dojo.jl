@@ -1,47 +1,21 @@
-mutable struct ContactConstraint{T,N,Nc,Cs,N½} <: Constraint{T,N}
-    # ID
-    id::Int64
-    name::Symbol
 
-    # contact model
-    model::Cs
-
-    # neighbor IDs
-    parent_id::Int
-    child_id::Int
-
-    # variables
-    impulses::Vector{SVector{N½,T}}
-    impulses_dual::Vector{SVector{N½,T}}
-
-    function ContactConstraint(data; name::Symbol=Symbol("contact_" * randstring(4)))
-        model, parent_id, _ = data
-        T = typeof(model).parameters[1]
-
-        N = length(model)
-        N½ = Int64(N/2)
-
-        impulses = [neutral_vector(model) for i = 1:2]
-        impulses_dual = [neutral_vector(model) for i = 1:2]
-        new{T,N,1,typeof(model),N½}(getGlobalID(), name, model, parent_id, 0, impulses, impulses_dual)
-    end
+# constraints
+function constraint_jacobian_configuration(mechanism, contact::ContactConstraint, body::Body)
+    return constraint_jacobian_configuration(contact.model, body, nothing, nothing, mechanism.timestep)
 end
 
 function constraint_jacobian_velocity(mechanism, contact::ContactConstraint, body::Body)
     return constraint_jacobian_velocity(contact.model, body, nothing, nothing, mechanism.timestep)
 end
 
-function constraint_jacobian_configuration(mechanism, contact::ContactConstraint, body::Body)
-    return constraint_jacobian_configuration(contact.model, body, nothing, nothing, mechanism.timestep)
+# impulses
+@inline function impulses!(mechanism, body::Body, contact::ContactConstraint)
+    body.state.d -= impulse_map(mechanism, contact, body) * contact.impulses[2]
+    return
 end
 
 function impulse_map(mechanism, contact::ContactConstraint, body::Body)
     return impulse_map(contact.model, body, nothing, nothing, mechanism.timestep)
-end
-
-@inline function impulses!(mechanism, body::Body, contact::ContactConstraint)
-    body.state.d -= impulse_map(mechanism, contact, body) * contact.impulses[2]
-    return
 end
 
 function impulse_map_jacobian_configuration(mechanism, body::Body, contact::ContactConstraint{T}) where T

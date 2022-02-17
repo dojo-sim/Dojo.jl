@@ -34,9 +34,12 @@ end
 #     return input
 # end
 
-spring_force(relative::Symbol, joint::Translational, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) =
-    timestep * spring_force(relative, joint, current_configuration(bodya.state)..., current_configuration(bodyb.state)...; unitary=unitary)
-spring_force(relative::Symbol, joint::Translational{T,3}, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) where T = szeros(T, 6)
+spring_impulses(relative::Symbol, joint::Translational, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) =
+    timestep * spring_force(relative, joint,
+    current_configuration(bodya.state)..., 
+    current_configuration(bodyb.state)...; 
+    unitary=unitary)
+spring_impulses(relative::Symbol, joint::Translational{T,3}, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) where T = szeros(T, 6)
 
 ################################################################################
 # Spring Jacobians

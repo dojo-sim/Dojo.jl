@@ -41,27 +41,11 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N
         (model.surface_projector * vp + ψ * sones(4) - sβ)...)
 end
 
-@inline function constraint_jacobian_velocity(model::LinearContact, x3::AbstractVector, q3::UnitQuaternion,
-    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, timestep)
-    V = [model.surface_normal_projector * timestep;
-         szeros(1,3);
-         model.surface_projector]
-    # Ω = FiniteDiff.finite_difference_jacobian(ϕ25 -> g(model, s, γ, x2+timestep*v25, next_orientation(q2,ϕ25,timestep), v25, ϕ25), ϕ25)
-    ∂v∂q3 = skew(vrotate(ϕ25, q3)) * ∂vrotate∂q(model.contact_point, q3)
-    ∂v∂q3 += skew(model.offset - vrotate(model.contact_point, q3)) * ∂vrotate∂q(ϕ25, q3)
-    ∂v∂ϕ25 = skew(model.offset - vrotate(model.contact_point, q3)) * ∂vrotate∂p(ϕ25, q3)
-    Ω = [model.surface_normal_projector * ∂vrotate∂q(model.contact_point, q3) * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep);
-        szeros(1,3);
-        model.surface_projector * (∂v∂ϕ25 + ∂v∂q3 * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep))]
-    return [V Ω]
-end
-
 @inline function constraint_jacobian_configuration(model::LinearContact, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, timestep)
     V = [model.surface_normal_projector;
          szeros(1,3);
          szeros(4,3)]
-    # Ω = FiniteDiff.finite_difference_jacobian(ϕ25 -> g(model, s, γ, x2+timestep*v25, next_orientation(q2,ϕ25,timestep), v25, ϕ25), ϕ25)
     ∂v∂q3 = skew(vrotate(ϕ25, q3)) * ∂vrotate∂q(model.contact_point, q3)
     ∂v∂q3 += skew(model.offset - vrotate(model.contact_point, q3)) * ∂vrotate∂q(ϕ25, q3)
     Ω = [model.surface_normal_projector * ∂vrotate∂q(model.contact_point, q3);
@@ -70,11 +54,18 @@ end
     return [V Ω]
 end
 
-@inline function force_mapping(model::LinearContact, x::AbstractVector, q::UnitQuaternion)
-    X = [model.surface_normal_projector;
+@inline function constraint_jacobian_velocity(model::LinearContact, x3::AbstractVector, q3::UnitQuaternion,
+    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, timestep)
+    V = [model.surface_normal_projector * timestep;
          szeros(1,3);
          model.surface_projector]
-    return X
+    ∂v∂q3 = skew(vrotate(ϕ25, q3)) * ∂vrotate∂q(model.contact_point, q3)
+    ∂v∂q3 += skew(model.offset - vrotate(model.contact_point, q3)) * ∂vrotate∂q(ϕ25, q3)
+    ∂v∂ϕ25 = skew(model.offset - vrotate(model.contact_point, q3)) * ∂vrotate∂p(ϕ25, q3)
+    Ω = [model.surface_normal_projector * ∂vrotate∂q(model.contact_point, q3) * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep);
+        szeros(1,3);
+        model.surface_projector * (∂v∂ϕ25 + ∂v∂q3 * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep))]
+    return [V Ω]
 end
 
 @inline function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,

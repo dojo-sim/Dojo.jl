@@ -1,6 +1,14 @@
 ################################################################################
-# SET: Coordinates Joint constraints
+# Coordinates
 ################################################################################
+@inline function minimal_coordinates(joint::JointConstraint, body1::Node, body2::Node)
+    statea = body1.state
+    stateb = body2.state
+	Δx = minimal_coordinates(joint.translational, statea.x2[1], statea.q2[1], stateb.x2[1], stateb.q2[1])
+    Δθ = minimal_coordinates(joint.rotational, statea.x2[1], statea.q2[1], stateb.x2[1], stateb.q2[1])
+	return [Δx; Δθ]
+end
+
 function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::JointConstraint, timestep;
         Δx::AbstractVector=szeros(control_dimension(joint.translational)),
         Δθ::AbstractVector=szeros(control_dimension(joint.rotational)))
@@ -11,137 +19,55 @@ function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::JointConstrai
     return nothing
 end
 
-function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::Rotational, timestep;
-        Δθ::AbstractVector=szeros(control_dimension(joint)))
-        # Δθ is expressed in along the joint's nullspace axes, in pnode's offset frame
-    qoffset = joint.qoffset
-    qa = pnode.state.q2[1]
-    Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
-    Δq = axis_angle_to_quaternion(Aᵀ*Δθ)
-    qb = qa * qoffset * Δq
-    set_position!(cnode; x=cnode.state.x2[1], q = qb)
-	set_previous_configuration!(cnode, timestep)
-    return nothing
+function set_position!(mechanism, joint::JointConstraint, xθ; iter::Bool=true)
+    if !iter
+        set_joint_position!(mechanism, joint, xθ)
+    else
+        currentvals = minimal_coordinates(mechanism)
+        set_joint_position!(mechanism, joint, xθ)
+        for id in recursivedirectchildren!(mechanism.system, joint.id)
+            node = get_node(mechanism, id)
+            if node isa JointConstraint
+                set_joint_position!(mechanism, node, currentvals[id])
+            end
+        end
+    end
+    return
 end
 
-function set_minimal_coordinates_jacobian_parent(pnode::Node, cnode::Node, joint::Rotational{T};
-    Δθ::AbstractVector=szeros(control_dimension(joint))) where T
-    # Δθ is expressed in along the joint's nullspace axes, in pnode's offset frame
-    # qoffset = joint.qoffset
-    # qa = pnode.state.q2[1]
-    # Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
-    # Δq = axis_angle_to_quaternion(Aᵀ*Δθ)
-    # qb = qa * qoffset * Δq
-    # set_position!(cnode; x=cnode.state.x2[1], q = qb)
-    # [
-    #     cnode.state.x2[1] = self;
-    #     cnode.state.q2[1] = qa * qoffset * Δq
-    # ]
-    X = SMatrix{3,3,T,9}(Diagonal(szeros(3)))
-    Q = Rmat(qoffset * Δq)
-    return X, Q
-end
+function set_joint_position!(mechanism, joint::JointConstraint{T,N,Nc}, xθ) where {T,N,Nc}
+    Nλ = 0
+    for (i, element) in enumerate([joint.translational, joint.rotational])
+        Nλ += joint_length(element)
+    end
+    @assert length(xθ)==3*Nc-Nλ
 
-function set_minimal_coordinates_jacobian_minimal(pnode::Node, cnode::Node, joint::Rotational{T};
-    Δθ::AbstractVector=szeros(control_dimension(joint))) where T
-    # Δθ is expressed in along the joint's nullspace axes, in pnode's offset frame
-    # qoffset = joint.qoffset
-    # qa = pnode.state.q2[1]
-    # Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
-    # Δq = axis_angle_to_quaternion(Aᵀ*Δθ)
-    # qb = qa * qoffset * Δq
-    # set_position!(cnode; x=cnode.state.x2[1], q = qb)
-    # [
-    #     x = self;
-    #     q = qa * qoffset * Δq
-    # ]
+    # bodies
+    body1 = get_body(mechanism, joint.parent_id)
+    body2 = get_body(mechanism, joint.child_id)
 
-    nu = control_dimension(joint)
-    xθ = SMatrix{3,nu,T,3 * nu}(zeros(3, nu))
-
-    ∂axis_angle_to_quaternion∂a = FiniteDiff.finite_difference_jacobian(r -> axis_angle_to_quaternion(r), Aᵀ * Δθ)
-    qθ = Lmat(qa * qoffset) * ∂axis_angle_to_quaternion∂a * Aᵀ
-
-    return [xθ; qθ]
-end
-
-function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::Translational, timestep;
-        Δx::AbstractVector=szeros(control_dimension(joint)))
-        # Δx is expressed in along the joint's nullspace axes, in pnode's frame
-
-    pa = joint.vertices[1]
-    pb = joint.vertices[2]
-
-    qa = pnode.state.q2[1]
-    xa = pnode.state.x2[1]
-
-    qb = cnode.state.q2[1]
-
-    Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
-    xb = xa + vrotate(pa + Aᵀ * Δx, qa) - vrotate(pb, qb)
-    set_position!(cnode; x = xb, q=cnode.state.q2[1])
-	set_previous_configuration!(cnode, timestep)
-    return nothing
-end
-
-function set_minimal_coordinates_jacobian_parent(pnode::Node, cnode::Node, joint::Translational;
-    Δx::AbstractVector=szeros(control_dimension(joint)))
-    # Δx is expressed in along the joint's nullspace axes, in pnode's frame
-
-    # pa = joint.vertices[1]
-    # pb = joint.vertices[2]
-
-    # qa = pnode.state.q2[1]
-    # xa = pnode.state.x2[1]
-
-    # qb = cnode.state.q2[1]
-
-    # Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
-    # xb = xa + vrotate(pa + Aᵀ*Δx, qa) - vrotate(pb, qb)
-    # set_position!(cnode; x = xb, q=cnode.state.q2[1])
-    # [
-    #     x = xa + vrotate(pa + Aᵀ*Δx, qa) - vrotate(pb, qb)
-    #     q = self
-    # ]
-    xx = SMatrix{3,3,T,9}(Diagonal(sones(3)))
-    xq = ∂vrotate∂q(pa + Aᵀ*Δx, qa)
-    qx = SMatrix{4,3,T,12}(Diagonal(szeros(3)))
-    qq = SMatrix{4,4,T,16}(Diagonal(szeros(4)))
-
-    return [xx xq; qx qq]
-end
-
-function set_minimal_coordinates_jacobian_minimal(pnode::Node, cnode::Node, joint::Translational;
-    Δx::AbstractVector=szeros(control_dimension(joint)))
-    # Δx is expressed in along the joint's nullspace axes, in pnode's frame
-
-    # pa = joint.vertices[1]
-    # pb = joint.vertices[2]
-
-    # qa = pnode.state.q2[1]
-    # xa = pnode.state.x2[1]
-
-    # qb = cnode.state.q2[1]
-
-    # Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
-    # xb = xa + vrotate(pa + Aᵀ*Δx, qa) - vrotate(pb, qb)
-    # set_position!(cnode; x = xb, q=cnode.state.q2[1])
-    # [
-    #     x = xa + vrotate(pa + Aᵀ*Δx, qa) - vrotate(pb, qb)
-    #     q = self
-    # ]
-
-    nu = control_dimension(joint)
-
-    xθ = ∂vrotate∂p(pa + Aᵀ * Δx) * Aᵀ
-    qθ = SMatrix{4,nu,T,4 * nu}(zeros(4, nu))
-
-    return [xθ; qθ]
+    Δx = xθ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]
+    Δθ = xθ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])]
+    set_minimal_coordinates!(body1, body2, joint, mechanism.timestep, Δx=Δx, Δθ=Δθ)
+    return body2.state.x2[1], body2.state.q2[1]
 end
 
 ################################################################################
-# SET: Velocities Joint constraints
+# Velocities
 ################################################################################
+@inline function minimal_coordinates_velocities(joint::JointConstraint,
+    pnode::Node, cnode::Node, timestep)
+    Δxθ = minimal_coordinates(joint, pnode, cnode)
+    Δvϕ = minimal_velocities(joint, pnode, cnode, timestep)
+    return [Δxθ; Δvϕ]
+end
+
+@inline function minimal_velocities(joint::JointConstraint, pnode::Node, cnode::Node, timestep)
+    Δv = minimal_velocities(joint.translational, pnode, cnode, timestep)
+    Δϕ = minimal_velocities(joint.rotational, pnode, cnode, timestep)
+    return [Δv; Δϕ]
+end
+
 function set_minimal_velocities!(pnode::Node, cnode::Node, joint::JointConstraint, timestep;
         Δv=szeros(control_dimension(joint.translational)),
         Δϕ=szeros(control_dimension(joint.rotational)))
@@ -192,9 +118,24 @@ function set_minimal_velocities(joint::JointConstraint,
     return vb, ϕb
 end
 
+function set_velocity!(mechanism, joint::JointConstraint{T,N,Nc}, vϕ) where {T,N,Nc}
+    Nλ = 0
+    for (i, element) in enumerate([joint.translational, joint.rotational])
+        Nλ += joint_length(element)
+    end
+
+    # bodies
+    body1 = get_body(mechanism, joint.parent_id)
+    body2 = get_body(mechanism, joint.child_id)
+
+    Δv = vϕ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]
+    Δϕ = vϕ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])]
+    set_minimal_velocities!(body1, body2, joint, mechanism.timestep, Δv=Δv, Δϕ=Δϕ)
+    return body2.state.v15, body2.state.ϕ15
+end
 
 ################################################################################
-# SET: Coordinates and Velocities
+# Coordinates and Velocities
 ################################################################################
 function set_minimal_coordinates_velocities!(mechanism::Mechanism, joint::JointConstraint;
         xmin::AbstractVector=szeros(2*control_dimension(joint)))

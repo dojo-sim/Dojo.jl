@@ -34,10 +34,12 @@ end
 #     return inputa
 # end
 
-damper_force(relative::Symbol, joint::Translational, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) =
-    timestep * damper_force(relative, joint, current_configuration_velocity(bodya.state)...,
-        current_configuration_velocity(bodyb.state)..., timestep; unitary=unitary)
-damper_force(relative::Symbol, joint::Translational{T,3}, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) where T = szeros(T, 6)
+damper_impulses(relative::Symbol, joint::Translational, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) =
+    timestep * damper_force(relative, joint, 
+        current_configuration_velocity(bodya.state)...,
+        current_configuration_velocity(bodyb.state)..., 
+        timestep; unitary=unitary)
+damper_impulses(relative::Symbol, joint::Translational{T,3}, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) where T = szeros(T, 6)
 
 ################################################################################
 # Damper Jacobian

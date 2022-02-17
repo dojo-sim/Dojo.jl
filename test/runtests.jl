@@ -11,6 +11,7 @@ using Test
 
 include("integrator.jl")
 include("minimal.jl")
+include("mrp.jl")
 include("jacobian.jl")
 include("momentum.jl")
 include("energy.jl")

@@ -33,11 +33,11 @@ end
     end
 end
 
-damper_force(relative::Symbol, joint::Rotational, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) =
+damper_impulses(relative::Symbol, joint::Rotational, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) =
     timestep * damper_force(relative, joint, current_configuration(bodya.state)[2], bodya.state.ϕsol[2],
     current_configuration(bodyb.state)[2], bodyb.state.ϕsol[2], timestep, unitary=unitary)
 
-damper_force(relative::Symbol, joint::Rotational{T,3}, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) where T = szeros(T, 6)
+damper_impulses(relative::Symbol, joint::Rotational{T,3}, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) where T = szeros(T, 6)
 
 ###############################################################################
 # Damper Jacobians

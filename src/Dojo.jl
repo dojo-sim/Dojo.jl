@@ -118,6 +118,7 @@ export Origin,
 include(joinpath("util", "util.jl"))
 include(joinpath("util", "custom_static.jl"))
 include(joinpath("util", "quaternion.jl"))
+include(joinpath("util", "mrp.jl"))
 
 # Graph system
 include(joinpath("graph", "entry.jl"))
@@ -132,7 +133,7 @@ include(joinpath("mechanism", "state.jl"))
 include(joinpath("mechanism", "body.jl"))
 include(joinpath("mechanism", "origin.jl"))
 include(joinpath("joints", "constraint.jl"))
-include(joinpath("contacts", "constraint.jl"))
+include(joinpath("contacts", "constructor.jl"))
 include(joinpath("mechanism", "id.jl"))
 include(joinpath("mechanism", "mechanism.jl"))
 include(joinpath("mechanism", "maximal.jl"))
@@ -166,17 +167,16 @@ include(joinpath("joints", "rotational", "dampers.jl"))
 include(joinpath("joints", "rotational", "minimal.jl"))
 include(joinpath("joints", "limits.jl"))
 include(joinpath("joints", "prototypes.jl"))
-include(joinpath("joints", "get_minimal.jl"))
-include(joinpath("joints", "set_minimal.jl"))
-include(joinpath("joints", "impulse.jl"))
+include(joinpath("joints", "minimal.jl"))
+include(joinpath("joints", "impulses.jl"))
 
 # Contacts
+include(joinpath("contacts", "constraints.jl"))
 include(joinpath("contacts", "contact.jl"))
 include(joinpath("contacts", "cone.jl"))
 include(joinpath("contacts", "impact.jl"))
 include(joinpath("contacts", "linear.jl"))
 include(joinpath("contacts", "nonlinear.jl"))
-include(joinpath("contacts", "constructor.jl"))
 include(joinpath("contacts", "utils.jl"))
 
 # Solver
