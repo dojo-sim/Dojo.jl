@@ -27,6 +27,8 @@ include("cartpole/methods/initialize.jl")
 
 include("dzhanibekov/methods/initialize.jl")
 
+include("fourbar/methods/initialize.jl")
+
 include("halfcheetah/methods/initialize.jl")
 
 include("hopper/methods/initialize.jl")
@@ -40,6 +42,8 @@ include("pendulum/methods/initialize.jl")
 include("quadruped/methods/initialize.jl")
 
 include("raiberthopper/methods/initialize.jl")
+
+include("rexhopper/methods/initialize.jl")
 
 include("slider/methods/initialize.jl")
 
