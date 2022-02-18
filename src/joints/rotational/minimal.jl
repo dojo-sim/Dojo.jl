@@ -84,22 +84,8 @@ end
 	xb1 = next_position(xb, -vb, timestep)
 	qb1 = next_orientation(qb, -ϕb, timestep)
 
-	# # Coordinates
-	# q = inv(qoffset) * inv(qa) * qb
-	# Δθ = A * rotation_vector(q)
-	# # Previous step coordinates
-	# q1 = inv(qoffset) * inv(qa1) * qb1
-	# Δθ1 = A * rotation_vector(q1)
-	#
-	# # Finite difference
-    # Δϕ = (Δθ - Δθ1) / timestep
-
-
-
 	q = inv(qoffset) * inv(qa) * qb
-    q1 = inv(qoffset) * inv(qa1) * qb1
-    @show sol = A * rotation_vector(inv(q1) * q) ./ timestep
-    return sol
+	q1 = inv(qoffset) * inv(qa1) * qb1
 
-	# return Δϕ
+	return A * rotation_vector(inv(q1) * q) ./ timestep
 end

@@ -83,37 +83,32 @@ function set_minimal_velocities!(pnode::Node, cnode::Node, joint::JointConstrain
 end
 
 function set_minimal_velocities(joint::JointConstraint,
-		xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
-		xb::AbstractVector, qb::UnitQuaternion, timestep;
-        Δv=szeros(control_dimension(joint.translational)),
-        Δϕ=szeros(control_dimension(joint.rotational)))
-	rot = joint.rotational
-	tra = joint.translational
-	pa = tra.vertices[1]
+    xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+    xb::AbstractVector, qb::UnitQuaternion, timestep;
+    Δv=szeros(control_dimension(joint.translational)),
+    Δϕ=szeros(control_dimension(joint.rotational)))
+    rot = joint.rotational
+    tra = joint.translational
+    pa = tra.vertices[1]
     pb = tra.vertices[2]
-	qoffset = rot.qoffset
-	Arotᵀ = zerodimstaticadjoint(nullspace_mask(rot))
-	Atraᵀ = zerodimstaticadjoint(nullspace_mask(tra))
-
-	Δx = minimal_coordinates(joint.translational, xa, qa, xb, qb)
-
-	# 1 step backward in time
-	xa1 = next_position(xa, -va, timestep)
-	qa1 = next_orientation(qa, -ϕa, timestep)
-
-	# Finite difference
-	Δx1 = Δx .- Δv * timestep
-
-	# Δθ is expressed in along the joint's nullspace axes, in pnode's offset frame
-	Δq2 = inv(qoffset) * qa * qb
-	Δq1 = Δq2 * inv(axis_angle_to_quaternion(Arotᵀ * Δϕ * timestep))
-	qb1 = qa1 * qoffset * Δq1
-
+    qoffset = rot.qoffset
+    Arotᵀ = zerodimstaticadjoint(nullspace_mask(rot))
+    Atraᵀ = zerodimstaticadjoint(nullspace_mask(tra))
+    Δx = minimal_coordinates(joint.translational, xa, qa, xb, qb)
+    # 1 step backward in time
+    xa1 = next_position(xa, -va, timestep)
+    qa1 = next_orientation(qa, -ϕa, timestep)
+    # Finite difference
+    Δx1 = Δx .- Δv * timestep
+    # Δθ is expressed in along the joint's nullspace axes, in pnode's offset frame
+    Δq2 = inv(qoffset) * inv(qa) * qb
+    Δq1 = Δq2 * inv(axis_angle_to_quaternion(Arotᵀ * Δϕ * timestep))
+    qb1 = qa1 * qoffset * Δq1
     xb1 = xa1 + vrotate(pa + Atraᵀ*Δx1, qa1) - vrotate(pb, qb1)
-
-	# Finite difference
-	vb = (xb - xb1) / timestep
-	ϕb = angular_velocity(qb1, qb, timestep)
+    
+    # Finite difference
+    vb = (xb - xb1) / timestep
+    ϕb = angular_velocity(qb1, qb, timestep)
     return vb, ϕb
 end
 

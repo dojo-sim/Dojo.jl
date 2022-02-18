@@ -20,13 +20,6 @@ jointtypes = [
     :PlanarFree
     ]
 
-function quaterror(q0::AbstractVector, q1::AbstractVector, p::Real = Inf)
-	q0_ = UnitQuaternion(q0...)
-	q1_ = UnitQuaternion(q1...)
-	q_ = q0_ * inv(q1_)
-	return norm([q_.x, q_.y, q_.z], p)
-end
-
 ################################################################################
 # Test set_position! and set_velocity!
 ################################################################################\
@@ -62,15 +55,16 @@ end
 	mech = Dojo.get_mechanism(:raiberthopper);
 	Random.seed!(100)
 	nx = Dojo.minimal_dimension(mech)
-	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(nx - 13)]
+	x0 = rand(nx)
 	z0 = Dojo.minimal_to_maximal(mech, x0)
 	x1 = Dojo.maximal_to_minimal(mech, z0)
 
 	@test norm(x0[1:3] - x1[1:3], Inf) < 1e-10
-	@test quaterror(x0[4:7], x1[4:7]) < 1e-10
-	@test norm(x0[8:10] - x1[8:10], Inf) < 1e-10
-	@test norm(x0[11:13] - x1[11:13], Inf) < 1e-10
-	@test norm(x0[14:nx] - x1[14:nx], Inf) < 1e-10
+	@test norm(x0[4:6] - x1[4:6]) < 1e-10
+	@test norm(x0[7:9] - x1[7:9], Inf) < 1e-10
+	@test norm(x0[11:12] - x1[11:12], Inf) < 1e-10
+	@test norm(x0[13] - x1[13], Inf) < 1e-10
+	@test norm(x0[14] - x1[14], Inf) < 1e-10
 end
 
 # box
@@ -78,13 +72,10 @@ end
 	mech = Dojo.get_mechanism(:box)
 	Random.seed!(100)
 	nx = Dojo.minimal_dimension(mech)
-	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(abs(nx - 13))]
+	x0 = rand(nx)
 	z0 = Dojo.minimal_to_maximal(mech, x0)
 	x1 = Dojo.maximal_to_minimal(mech, z0)
-	@test norm(x0[1:3] - x1[1:3], Inf) < 1e-10
-	@test quaterror(x0[4:7], x1[4:7]) < 1e-10
-	@test norm(x0[8:10] - x1[8:10], Inf) < 1e-10
-	@test norm(x0[11:nx] - x1[11:nx], Inf) < 1e-10
+	@test norm(x0 - x1, Inf) < 1.0e-8
 end
 
 # pendulum
@@ -139,19 +130,16 @@ end
 # snake
 @testset "minimal to maximal to minimal: snake" begin
 	for jointtype in jointtypes
-	# @show jointtype
-	Nb0 = 5
-	mech = Dojo.get_mechanism(:snake, Nb = Nb0, jointtype = jointtype)
-	mech = Dojo.get_mechanism(:snake, Nb = Nb0, jointtype = :Fixed)
-	Random.seed!(100)
-	nx = Dojo.minimal_dimension(mech)
-	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(abs(nx - 13))]
-	z0 = Dojo.minimal_to_maximal(mech, x0)
-	x1 = Dojo.maximal_to_minimal(mech, z0)
-	@test norm(x0[1:3] - x1[1:3], Inf) < 1e-10
-	@test quaterror(x0[4:7], x1[4:7]) < 1e-10
-	@test norm(x0[8:10] - x1[8:10], Inf) < 1e-10
-	@test norm(x0[11:nx] - x1[11:nx], Inf) < 1e-10
+		# @show jointtype
+		Nb0 = 5
+		mech = Dojo.get_mechanism(:snake, Nb = Nb0, jointtype = jointtype)
+		mech = Dojo.get_mechanism(:snake, Nb = Nb0, jointtype = :Fixed)
+		Random.seed!(100)
+		nx = Dojo.minimal_dimension(mech)
+		x0 = rand(nx)
+		z0 = Dojo.minimal_to_maximal(mech, x0)
+		x1 = Dojo.maximal_to_minimal(mech, z0)
+		@test norm(x0 - x1, Inf) < 1e-10
 	end
 end
 
@@ -163,13 +151,10 @@ end
 		mech = Dojo.get_mechanism(:twister, Nb = Nb0, jointtype = jointtype)
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
-		x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(abs(nx - 13))]
+		x0 = rand(nx)
 		z0 = Dojo.minimal_to_maximal(mech, x0)
 		x1 = Dojo.maximal_to_minimal(mech, z0)
-		@test norm(x0[1:3] - x1[1:3], Inf) < 1e-10
-		@test quaterror(x0[4:7], x1[4:7]) < 1e-10
-		@test norm(x0[8:10] - x1[8:10], Inf) < 1e-10
-		@test norm(x0[11:nx] - x1[11:nx], Inf) < 1e-10
+		@test norm(x0 - x1, Inf) < 1e-10
 	end
 end
 
@@ -178,13 +163,10 @@ end
 	mech = Dojo.get_mechanism(:humanoid)
 	Random.seed!(100)
 	nx = Dojo.minimal_dimension(mech)
-	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(abs(nx - 13))]
+	x0 = rand(nx)
 	z0 = Dojo.minimal_to_maximal(mech, x0)
 	x1 = Dojo.maximal_to_minimal(mech, z0)
-	@test norm(x0[1:3] - x1[1:3], Inf) < 1e-10
-	@test quaterror(x0[4:7], x1[4:7]) < 1e-10
-	@test norm(x0[8:10] - x1[8:10], Inf) < 1e-10
-	@test norm(x0[11:nx] - x1[11:nx], Inf) < 1e-10
+	@test norm(x0 - x1, Inf) < 1e-10
 end
 
 # quadruped
@@ -192,13 +174,10 @@ end
 	mech = Dojo.get_mechanism(:quadruped)
 	Random.seed!(100)
 	nx = Dojo.minimal_dimension(mech)
-	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(abs(nx - 13))]
+	x0 = rand(nx)
 	z0 = Dojo.minimal_to_maximal(mech, x0)
 	x1 = Dojo.maximal_to_minimal(mech, z0)
-	@test norm(x0[1:3] - x1[1:3], Inf) < 1e-10
-	@test quaterror(x0[4:7], x1[4:7]) < 1e-10
-	@test norm(x0[8:10] - x1[8:10], Inf) < 1e-10
-	@test norm(x0[11:nx] - x1[11:nx], Inf) < 1e-10
+	@test norm(x0 - x1, Inf) < 1e-10
 end
 
 # atlas
@@ -206,13 +185,10 @@ end
 	mech = Dojo.get_mechanism(:atlas, model_type = :simple, contact = true, damper = 10.0)
 	Random.seed!(100)
 	nx = Dojo.minimal_dimension(mech)
-	x0 = [rand(3); Dojo.vector(UnitQuaternion(rand(4)...)); rand(3); rand(3); rand(abs(nx - 13))]
+	x0 = rand(nx)
 	z0 = Dojo.minimal_to_maximal(mech, x0)
 	x1 = Dojo.maximal_to_minimal(mech, z0)
-	@test norm(x0[1:3] - x1[1:3], Inf) < 1e-10
-	@test quaterror(x0[4:7], x1[4:7]) < 1e-10
-	@test norm(x0[8:10] - x1[8:10], Inf) < 1e-10
-	@test norm(x0[11:nx] - x1[11:nx], Inf) < 1e-10
+	@test norm(x0 - x1, Inf) < 1e-10
 end
 
 ################################################################################

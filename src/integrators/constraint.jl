@@ -33,8 +33,6 @@
     return state.d
 end
 
-
-
 @inline function constraint_jacobian_configuration(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn,Ne,Nb}
     state = body.state
     timestep = mechanism.timestep
