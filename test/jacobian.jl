@@ -32,7 +32,7 @@ function finitediff_sol_matrix(mechanism::Mechanism, data::AbstractVector,
     jac = zeros(nsol, nsol)
 
     set_data0!(mechanism, data)
-    set_solution!(mechanism, sol)
+    set_solution0!(mechanism, sol)
 
     for i = 1:nsol
         verbose && println("$i / $nsol")
