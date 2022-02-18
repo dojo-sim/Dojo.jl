@@ -96,7 +96,6 @@ function set_minimal_velocities(joint::JointConstraint,
 	Atraᵀ = zerodimstaticadjoint(nullspace_mask(tra))
 
 	Δx = minimal_coordinates(joint.translational, xa, qa, xb, qb)
-    Δθ = minimal_coordinates(joint.rotational, xa, qa, xb, qb)
 
 	# 1 step backward in time
 	xa1 = next_position(xa, -va, timestep)
@@ -104,12 +103,12 @@ function set_minimal_velocities(joint::JointConstraint,
 
 	# Finite difference
 	Δx1 = Δx .- Δv * timestep
-	Δθ1 = Δθ .- Δϕ * timestep
 
 	# Δθ is expressed in along the joint's nullspace axes, in pnode's offset frame
-    Δq1 = axis_angle_to_quaternion(Arotᵀ*Δθ1)
-    qb1 = qa1 * qoffset * Δq1
-    # Δx is expressed in along the joint's nullspace axes, in pnode's frame
+	Δq2 = inv(qoffset) * qa * qb
+	Δq1 = Δq2 * inv(axis_angle_to_quaternion(Arotᵀ * Δϕ * timestep))
+	qb1 = qa1 * qoffset * Δq1
+
     xb1 = xa1 + vrotate(pa + Atraᵀ*Δx1, qa1) - vrotate(pb, qb1)
 
 	# Finite difference
