@@ -31,43 +31,40 @@ spring_impulses(relative::Symbol, joint::Translational{T,3}, bodya::Node, bodyb:
 # Spring Jacobians
 ################################################################################
 
-# function spring_jacobian_configuration(jacobian_relative::Symbol, 
-#         joint::Translational{T}, 
-#         xa::AbstractVector, qa::UnitQuaternion,
-#         xb::AbstractVector, qb::UnitQuaternion; 
-#         unitary::Bool=false) where T
+function spring_jacobian_configuration(jacobian_relative::Symbol, 
+        joint::Translational{T}, 
+        xa::AbstractVector, qa::UnitQuaternion,
+        xb::AbstractVector, qb::UnitQuaternion; 
+        unitary::Bool=false) where T
+    spring = unitary ? 1.0 : joint.spring
+    return -spring * zerodimstaticadjoint(nullspace_mask(joint)) * minimal_coordinates_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb)
+end
 
-#     spring = unitary ? 1.0 : joint.spring
-#     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
-#     ∇input = spring * Aᵀ * - minimal_coordinates_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb)
+@inline function spring_jacobian_configuration(relative::Symbol, jacobian_relative::Symbol,
+    joint::Translational{T}, 
+    xa::AbstractVector, qa::UnitQuaternion, 
+    xb::AbstractVector, qb::UnitQuaternion, 
+    timestep::T; unitary::Bool=false) where T
 
-#     return ∇input
-# end
+    force = spring_force(joint, xa, qa, xb, qb, unitary=unitary)
+    J = impulse_transform(relative, joint, xa, qa, xb, qb) *
+        spring_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, unitary=unitary)
+    J += impulse_transform_jacobian(relative, jacobian_relative, joint, xa, qa, xb, qb, force)
 
-# @inline function spring_jacobian_configuration(relative::Symbol, jacobian_relative::Symbol,
-#     joint::Translational{T}, 
-#     xa::AbstractVector, qa::UnitQuaternion, 
-#     xb::AbstractVector, qb::UnitQuaternion, 
-#     timestep::T; unitary::Bool=false) where T
-
-#     input = spring_force(joint, xa, qa, xb, qb, unitary=unitary)
-#     ∇xq = impulse_transform(relative, joint, xa, qa, xb, qb) *
-#         spring_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, unitary=unitary)
-#     ∇xq += impulse_transform_jacobian(relative, jacobian_relative, joint, xa, qa, xb, qb, input)
-
-#     return timestep * ∇xq
-# end
+    return timestep * J
+end
 
 function spring_jacobian_configuration(relative::Symbol, jacobian::Symbol, 
     joint::Translational, 
     body1::Node, body2::Node, 
-    timestep::T; attjac::Bool = true) where T
+    timestep::T; attjac::Bool=true, unitary=false) where T
 
     xa, qa = current_configuration(body1.state)
     xb, qb = current_configuration(body2.state)
 
-    # attjac && (return spring_jacobian_configuration(relative, jacobian, joint, xa, qa, xb, qb, timestep; unitary=false))
+    attjac && (return spring_jacobian_configuration(relative, jacobian, joint, xa, qa, xb, qb, timestep; unitary=false))
 
+    # TODO: remove below
     if relative == :parent 
         if jacobian == :parent 
             X = FiniteDiff.finite_difference_jacobian(x -> spring_impulses(:parent, joint, x, qa, xb, qb, timestep, unitary=unitary), xa)
@@ -97,7 +94,7 @@ function spring_jacobian_velocity(relative::Symbol,
     jacobian_relative::Symbol,
     joint::Translational,
     body1::Node, body2::Node, 
-    timestep::T) where T
+    timestep::T, unitary=false) where T
     return szeros(T, 6, 6)
 end
 

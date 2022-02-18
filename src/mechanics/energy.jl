@@ -84,7 +84,7 @@ function potential_energy(mechanism::Mechanism{T,Nn,Ne,Nb}, storage::Storage{T,N
 
                 if spring > 0
                     (typeof(element) <: Translational) && (pe += 0.5 * dot(force, force) ./ spring)
-                    (typeof(element) <: Rotational) && (pe += 0.25 * element.spring * dot(axis_angle(q), axis_angle(q))) # TODO: extra factor of 2...
+                    (typeof(element) <: Rotational) && (pe += 0.25 * element.spring * dot(nullspace_mask(element) * rotation_vector(q), nullspace_mask(element) * rotation_vector(q))) # TODO: extra factor of 2...
                 end
             end
         end

@@ -8,7 +8,12 @@
         rotate::Bool=true, unitary::Bool=false) where T
 
     spring = unitary ? 1.0 : joint.spring
+    # if joint.spring_type == :linear
     distance = joint.spring_offset - minimal_coordinates(joint, xa, qa, xb, qb)
+    # elseif joint.spring_type == :sinusoidal
+        #TODO
+    # end
+
     force = -0.5 * spring * zerodimstaticadjoint(nullspace_mask(joint))  * distance # force in offset frame
     
     if relative == :parent
@@ -16,7 +21,7 @@
     elseif relative == :child 
         rotate && (force = vrotate(-force, inv(qb) * qa)) # rotate back to b frame
     end
-    
+
     return [szeros(T, 3); force]
 end
 
