@@ -1,7 +1,7 @@
 function get_box(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_coefficient::T=0.8, radius=0.0, side=0.5,
     contact::Bool=true,
-    contact_type=:contact,
-    # contact_type=:linear_contact,
+    contact_type=:nonlinear,
+    # contact_type=:linear,
     # contact_type=:impact,
     color=RGBA(0.0, 0.0, 0.0, 1.0),
     mode=:box)  where T

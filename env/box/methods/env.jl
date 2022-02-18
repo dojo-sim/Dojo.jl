@@ -4,7 +4,7 @@
 struct Block end
 
 function block(; mode::Symbol=:max, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
-    friction_coefficient=0.8, side=0.5, contact=true, contact_type=:contact,
+    friction_coefficient=0.8, side=0.5, contact=true, contact_type=:nonlinear,
     s::Int=1, vis::Visualizer=Visualizer(), info=nothing, name::Symbol=:robot,
     control_scaling=Diagonal(ones(3)),
     opts_step=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5), opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5)) where T

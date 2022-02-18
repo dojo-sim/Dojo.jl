@@ -20,7 +20,7 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
-mech = getmechanism(:snake, Nb=5, timestep=0.01, g=-9.81, friction_coefficient=0.0, contact=true, contact_type=:contact)
+mech = getmechanism(:snake, Nb=5, timestep=0.01, g=-9.81, friction_coefficient=0.0, contact=true, contact_type=:nonlinear)
 
 x = [0,-0.5,.1]
 v = 0.1*[1,.3,4]

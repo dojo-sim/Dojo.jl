@@ -1,4 +1,4 @@
-function get_tippetop(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_coefficient::T=0.8, contact::Bool=true, contact_type::Symbol=:contact) where T
+function get_tippetop(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_coefficient::T=0.8, contact::Bool=true, contact_type::Symbol=:nonlinear) where T
     origin = Origin{T}(name=:origin)
     radius = 0.5
     mass = 1.0

@@ -1,5 +1,5 @@
 function get_twister(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_coefficient::T=0.8, contact::Bool=true,
-    contact_type=:contact, spring=0.0, damper=0.0, Nb::Int=5,
+    contact_type=:nonlinear, spring=0.0, damper=0.0, Nb::Int=5,
     jointtype::Symbol=:Prismatic, h::T=1.0, r::T=0.05) where T
     # Parameters
     ex = [1.;0.;0.]

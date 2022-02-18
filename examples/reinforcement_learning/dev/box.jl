@@ -47,8 +47,8 @@ open(vis)
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
-mech = get_mechanism(:dice, timestep = 0.01, gravity=-9.81, friction_coefficient = 0.2, contact = true, mode=:box, contact_type = :contact)
-# mech = get_mechanism(:dice, timestep = 0.01, gravity=-9.81, friction_coefficient = 0.2, contact = true, mode=:box, contact_type = :linear_contact)
+mech = get_mechanism(:dice, timestep = 0.01, gravity=-9.81, friction_coefficient = 0.2, contact = true, mode=:box, contact_type = :nonlinear)
+# mech = get_mechanism(:dice, timestep = 0.01, gravity=-9.81, friction_coefficient = 0.2, contact = true, mode=:box, contact_type = :linear)
 # mech = get_mechanism(:dice, timestep = 0.01, gravity=-9.81, contact = true, mode=:box, contact_type = :impact)
 Random.seed!(100)
 ω = 0.0 * (rand(3) .- 0.5) * 1

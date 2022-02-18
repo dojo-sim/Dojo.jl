@@ -33,9 +33,9 @@ function test_get_set_data(mechanism::Mechanism)
 end
 
 @testset "get and set data" begin
-    mech = Dojo.get_snake(Nb=3, damper=1.0, spring=1.0, contact_type=:contact);
+    mech = Dojo.get_snake(Nb=3, damper=1.0, spring=1.0, contact_type=:nonlinear);
     test_get_set_data(mech)
-    mech = Dojo.get_snake(Nb=3, damper=1.0, spring=1.0, contact_type=:linear_contact);
+    mech = Dojo.get_snake(Nb=3, damper=1.0, spring=1.0, contact_type=:linear);
     test_get_set_data(mech)
     mech = Dojo.get_snake(Nb=3, damper=1.0, spring=1.0, contact_type=:impact);
     test_get_set_data(mech)

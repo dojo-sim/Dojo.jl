@@ -4,8 +4,8 @@ using Plots
 include("methods.jl")
 
 # cone
-contact_type = :linear_contact
-# contact_type = :contact
+contact_type = :linear
+# contact_type = :nonlinear
 
 # scale system for nice plots
 mech = get_mechanism(:box2d, timestep=0.1, g=-1.0, friction_coefficient=1.0, contact=true, contact_type=contact_type);
@@ -19,9 +19,9 @@ undercut = 1.0
 
 mode = :friction
 # mode = :impact
-if mode == :friction && contact_type == :contact
+if mode == :friction && contact_type == :nonlinear
     filename = "nonlinear_friction"
-elseif mode == :friction && contact_type == :linear_contact
+elseif mode == :friction && contact_type == :linear
     filename = "linear_friction"
 else
     filename = "impact"

@@ -1,7 +1,9 @@
 
 function initialize_simulation!(mechanism::Mechanism)
     initialize_state!(mechanism)
-    for body in mechanism.bodies set_solution!(body) end
+    for body in mechanism.bodies
+        set_solution!(body)
+    end
 end
 
 function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Storage, control!::Function=(m, k) -> nothing;

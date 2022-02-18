@@ -114,9 +114,13 @@ q3 = UnitQuaternion(rand(4)...)
 
 vector(q1 \ q2) - vector(inv(q1) * q2)
 
+
+
+include("env.jl")
+include("initialize.jl")
 # mech = Mechanism(joinpath(module_dir(), "env/rexhopper/deps/fourbar_open.urdf"), false)
 # mech = Mechanism(joinpath(module_dir(), "env/rexhopper/deps/rexhopper0.urdf"), false, timestep=0.01, gravity=-9.81)
-mech = get_rexhopper(timestep=0.05, gravity=-9.81, model="rexhopper1", floating=true, contact=false, damper=0.5)
+mech = get_rexhopper(timestep=0.05, gravity=-0.0*9.81, model="rexhopper1", floating=true, contact=false, damper=0.5)
 spring = 0.0
 damper = 0.5
 # set_spring_damper_values!(mech.joints, spring, damper, ignore_origin=false)
@@ -125,27 +129,27 @@ damper = 0.5
 
 z = get_maximal_state(mech)
 function ctrl!(m,k)
-    set_control!(m, 1* m.timestep * [sones(3); szeros(4); sones(4)])
+    set_control!(m, 4 * m.timestep * [szeros(6); sones(3); szeros(4); sones(4)])
     return nothing
 end
 
-θ = []
-for i = 1:100
-    function ctrl!(m,k)
-        set_control!(m, (i < 10) * 0.01* m.timestep * [sones(3); szeros(4); sones(4)])
-        return nothing
-    end
-
-    storage = simulate!(mech, 0.2, ctrl!, record=true, verbose=false)
-    push!(θ, minimal_coordinates(mech.joints[1], mech.origin, mech.bodies[1])[1])
-end
-storage = simulate!(mech, 20.2, ctrl!, record=true, verbose=false)
+# θ = []
+# for i = 1:100
+#     function ctrl!(m,k)
+#         set_control!(m, (i < 10) * 0.01* m.timestep * [sones(3); szeros(4); sones(4)])
+#         return nothing
+#     end
+#
+#     storage = simulate!(mech, 0.2, ctrl!, record=true, verbose=false)
+#     push!(θ, minimal_coordinates(mech.joints[1], mech.origin, mech.bodies[1])[1])
+# end
+storage = simulate!(mech, 10.0, ctrl!, record=true, verbose=false)
 plot(θ)
 
 visualize(mech, storage, vis=vis)
 plot(hcat(Vector.(vector.(storage.q[end]))...)')
-
-
+mech.joints
+storage.x[1]
 
 
 # build_robot(vis, mech)

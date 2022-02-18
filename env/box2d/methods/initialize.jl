@@ -1,6 +1,6 @@
 function get_box2d(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_coefficient::T=0.8, radius=0.0, side=0.5,
     contact::Bool=true,
-    contact_type=:contact,
+    contact_type=:nonlinear,
     mode=:box2d)  where T
     # Parameters
     axis = [1,0,0.]

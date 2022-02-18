@@ -1,5 +1,5 @@
 function get_snake(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_coefficient::T=0.8, contact::Bool=true,
-    contact_type=:contact, spring=0.0, damper=0.0, Nb::Int=2,
+    contact_type=:nonlinear, spring=0.0, damper=0.0, Nb::Int=2,
     jointtype::Symbol=:Spherical, h::T=1.0, r::T=0.05) where T
 
     # Parameters

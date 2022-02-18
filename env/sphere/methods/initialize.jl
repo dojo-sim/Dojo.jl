@@ -1,5 +1,5 @@
 function get_sphere(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_coefficient::T=0.8, radius=0.5,
-        contact::Bool=true, contact_type::Symbol=:contact) where T
+        contact::Bool=true, contact_type::Symbol=:nonlinear) where T
     origin = Origin{T}(name=:origin)
     mass = 1.0
     bodies = [Sphere(radius, mass, name=:sphere)]
