@@ -115,22 +115,19 @@ q3 = UnitQuaternion(rand(4)...)
 vector(q1 \ q2) - vector(inv(q1) * q2)
 
 # mech = Mechanism(joinpath(module_dir(), "env/rexhopper/deps/fourbar_open.urdf"), false)
-mech = Mechanism(joinpath(module_dir(), "env/rexhopper/deps/rexhopper0.urdf"), false, timestep=0.01, gravity=-9.81)
-mech = get_rexhopper(timestep=0.05, gravity=-9.81, model="rexhopper1", floating=false, contact=false, damper=0.0)
+# mech = Mechanism(joinpath(module_dir(), "env/rexhopper/deps/rexhopper0.urdf"), false, timestep=0.01, gravity=-9.81)
+mech = get_rexhopper(timestep=0.05, gravity=-9.81, model="rexhopper1", floating=true, contact=false, damper=0.5)
+spring = 0.0
+damper = 0.5
+# set_spring_damper_values!(mech.joints, spring, damper, ignore_origin=false)
 # mech = Mechanism(joinpath(module_dir(), "env/rexhopper/deps/fourbar.urdf"), false)
 # initialize!(mech, :rexhopper)
-
-mech.joints[1]
-
 
 z = get_maximal_state(mech)
 function ctrl!(m,k)
     set_control!(m, 1* m.timestep * [sones(3); szeros(4); sones(4)])
     return nothing
 end
-
-mech.bodies
-mech.joints
 
 θ = []
 for i = 1:100
@@ -144,8 +141,6 @@ for i = 1:100
 end
 storage = simulate!(mech, 20.2, ctrl!, record=true, verbose=false)
 plot(θ)
-
-storage = simulate!(mech, 0.2, ctrl!, record=true, verbose=false)
 
 visualize(mech, storage, vis=vis)
 plot(hcat(Vector.(vector.(storage.q[end]))...)')

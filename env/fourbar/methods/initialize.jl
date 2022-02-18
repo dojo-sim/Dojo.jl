@@ -8,10 +8,10 @@ end
 
 function initialize_fourbar!(mechanism::Mechanism; θ=0.0, ω1=0.0, ω2=0.0) where T
     zero_velocity!(mechanism)
-    set_minimal_coordinates_velocities!(mech, get_joint_constraint(mech, :jointb1); xmin=[ -θ, ω2])
-    set_minimal_coordinates_velocities!(mech, get_joint_constraint(mech, :joint12); xmin=[+2θ, 0])
-    set_minimal_coordinates_velocities!(mech, get_joint_constraint(mech, :jointb3); xmin=[ +θ, ω1])
-    set_minimal_coordinates_velocities!(mech, get_joint_constraint(mech, :joint34); xmin=[-2θ, 0])
+    set_minimal_coordinates_velocities!(mechanism, get_joint_constraint(mechanism, :jointb1); xmin=[ -θ, ω2])
+    set_minimal_coordinates_velocities!(mechanism, get_joint_constraint(mechanism, :joint12); xmin=[+2θ, 0])
+    set_minimal_coordinates_velocities!(mechanism, get_joint_constraint(mechanism, :jointb3); xmin=[ +θ, ω1])
+    set_minimal_coordinates_velocities!(mechanism, get_joint_constraint(mechanism, :joint34); xmin=[-2θ, 0])
 end
 
 
