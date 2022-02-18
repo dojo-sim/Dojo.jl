@@ -82,21 +82,31 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 # no damper
 # no control
 ################################################################################
-gravity0 = -10.0
+gravity0 = 0.0
 spring0 = 1.0
 damper0 = 0.0
 mech = get_mechanism(:pendulum, timestep=timestep0, gravity=gravity0, spring=spring0, damper=damper0)
-ϕ0 = 0.9π
-ω0 = 2π
+mech.joints[1].rotational.spring_type = :linear
+ϕ0 = 0.5π
+ω0 = 0.0
 
 initialize!(mech, :pendulum, ϕ1=ϕ0, ω1=ω0)
-storage = simulate!(mech, 5.0, controller!, record=true, verbose=false,
+storage = simulate!(mech, 25.0, controller!, record=true, verbose=false,
     opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
 ke0 = kinetic_energy(mech, storage)[start0:end]
 pe0 = potential_energy(mech, storage)[start0:end]
 me0 = mechanical_energy(mech, storage)[start0:end]
+
+plot(ke0)
+plot!(pe0)
+plot!(me0)
+
+z = get_maximal_state(storage)
+x = [maximal_to_minimal(mech, zt) for zt in z]
+plot(hcat(x...)')
+plot(hcat([zt[1:3] for zt in z]...)')
 
 # plot([(i-1)*timestep0 for i in 1:length(ke0)], ke0 .- ke0[1])
 # plot([(i-1)*timestep0 for i in 1:length(pe0)], pe0 .- pe0[1])
@@ -186,9 +196,9 @@ me0 = mechanical_energy(mech, storage)[start0:end]
 # Test mechanical energy conservation
 # For gravity the conservation is perfect
 @testset "Energy: Slider" begin
-    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-2
+    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-6
 end
-norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-9
+norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-6
 
 
 ################################################################################
@@ -221,7 +231,7 @@ me0 = mechanical_energy(mech, storage)[start0:end]
 
 # Test mechanical energy conservation
 @testset "Energy: Slider" begin
-    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-2
+    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-3
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
 
@@ -257,6 +267,10 @@ for body in mech.bodies
     # set_velocity!(body, v = 1.0*rand(3))
 end
 
+for joint in mech.joints 
+    joint.rotational.spring_type = :linear 
+end
+
 storage = simulate!(mech, 3.0, humanoid_controller!, record=true,
     verbose=false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, downsample(storage, 1), vis = vis)
@@ -290,6 +304,9 @@ mech = get_mechanism(:atlas, timestep=timestep0, gravity=gravity0, spring=spring
     damper=damper0, contact = false)
 initialize!(mech, :atlas)
 bodies = collect(mech.bodies)
+for joint in mech.joints 
+    joint.rotational.spring_type = :linear 
+end
 set_velocity!.(bodies, ω = 1.0*rand(3))
 
 storage = simulate!(mech, 5.0, humanoid_controller!, record=true, verbose=false,
@@ -309,8 +326,6 @@ me0 = mechanical_energy(mech, storage)[start0:end]
     @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 3e-3
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
-
-
 
 ################################################################################
 #  QUADRUPED

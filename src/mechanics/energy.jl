@@ -78,15 +78,13 @@ function potential_energy(mechanism::Mechanism{T,Nn,Ne,Nb}, storage::Storage{T,N
                 end
 
                 (typeof(element) <: Translational) && (force = spring_force(:child, element, xa, qa, xb, qb)) # actual force not impulse
-                # (typeof(element) <: Rotational) && (q = rotation_error(element, qa, qb, qoff = spring_qoffset(element)))
-                (typeof(element) <: Rotational) && (q = qa \ qb / element.qoffset / spring_qoffset(element))
+                (typeof(element) <: Rotational) && (q = qa \ qb / element.qoffset / axis_angle_to_quaternion(zerodimstaticadjoint(nullspace_mask(element)) * element.spring_offset))
 
-             
-                # @show force
                 spring = element.spring
+
                 if spring > 0
-                    (typeof(element) <: Translational) && (pe += 0.5 * force' * force ./ spring)
-                    (typeof(element) <: Rotational) && (pe += energy(element, q))
+                    (typeof(element) <: Translational) && (pe += 0.5 * dot(force, force) ./ spring)
+                    (typeof(element) <: Rotational) && (pe += 0.25 * element.spring * dot(axis_angle(q), axis_angle(q))) # TODO: extra factor of 2...
                 end
             end
         end
