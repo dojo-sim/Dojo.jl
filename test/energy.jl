@@ -82,15 +82,15 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 # no damper
 # no control
 ################################################################################
-gravity0 = -10.0
+gravity0 = 0.0
 spring0 = 1.0
 damper0 = 0.0
 mech = get_mechanism(:pendulum, timestep=timestep0, gravity=gravity0, spring=spring0, damper=damper0)
-ϕ0 = 0.9π
-ω0 = 2π
+ϕ0 = 0.5π
+ω0 = 0.0
 
 initialize!(mech, :pendulum, ϕ1=ϕ0, ω1=ω0)
-storage = simulate!(mech, 5.0, controller!, record=true, verbose=false,
+storage = simulate!(mech, 25.0, controller!, record=true, verbose=false,
     opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)
 
@@ -186,9 +186,9 @@ me0 = mechanical_energy(mech, storage)[start0:end]
 # Test mechanical energy conservation
 # For gravity the conservation is perfect
 @testset "Energy: Slider" begin
-    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-2
+    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-6
 end
-norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-9
+norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-6
 
 
 ################################################################################
@@ -201,14 +201,15 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-9
 # no control
 ################################################################################
 gravity0 = -9.81
-spring0 = 10.0
+spring0 = 1.0
 damper0 = 0.0
 mech = get_mechanism(:slider, timestep=timestep0, gravity=gravity0, spring=spring0, damper=damper0)
-z0 = 0.5
+z0 = 0.1
 initialize!(mech, :slider, z1 = z0)
 
-storage = simulate!(mech, 5.0,  nocontrol!, record=true, verbose=false,
+storage = simulate!(mech, 10.0,  nocontrol!, record=true, verbose=false,
     opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+
 # visualize(mech, storage, vis = vis)
 
 ke0 = kinetic_energy(mech, storage)[start0:end]
@@ -221,7 +222,7 @@ me0 = mechanical_energy(mech, storage)[start0:end]
 
 # Test mechanical energy conservation
 @testset "Energy: Slider" begin
-    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-2
+    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-3
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
 
@@ -255,6 +256,10 @@ bodies = collect(mech.bodies)
 for body in mech.bodies
     set_velocity!(body, ω = 0.5*rand(3))
     # set_velocity!(body, v = 1.0*rand(3))
+end
+
+for joint in mech.joints 
+    joint.rotational.spring_type = :linear 
 end
 
 storage = simulate!(mech, 3.0, humanoid_controller!, record=true,
@@ -310,8 +315,6 @@ me0 = mechanical_energy(mech, storage)[start0:end]
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
 
-
-
 ################################################################################
 #  QUADRUPED
 ################################################################################
@@ -321,7 +324,7 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 # with spring and damper
 # with control
 ################################################################################
-function quadruped_controller!(mechanism, k; U = 0.01, timestep=timestep0)
+function quadruped_controller!(mechanism, k; U = 0.05, timestep=timestep0)
     N = Int(floor(1/timestep))
     for (i,joint) in enumerate(mechanism.joints)
         nu = control_dimension(joint)
@@ -331,13 +334,14 @@ function quadruped_controller!(mechanism, k; U = 0.01, timestep=timestep0)
     return
 end
 
-spring0 = 0.1
+spring0 = 1.0
 damper0 = 0.0
 mech = get_mechanism(:quadruped, timestep=timestep0, gravity=gravity0, spring=spring0,
     damper=damper0, contact=false, limits=false)
 initialize!(mech, :quadruped)
-storage = simulate!(mech, 5.0, quadruped_controller!, record=true, verbose=false,
+storage = simulate!(mech, 5.0, record=true, verbose=false,
     opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+    
 # visualize(mech, storage, vis = vis)
 
 ke0 = kinetic_energy(mech, storage)[start0:end]
@@ -441,6 +445,15 @@ end
 # with spring and damper
 # with control
 ################################################################################
+function twister_controller!(mechanism, k; U = 0.01, timestep=timestep0)
+    N = Int(floor(1/timestep))
+    for (i,joint) in enumerate(mechanism.joints)
+        nu = control_dimension(joint)
+        u = (nu <= 5 && k ∈ (1:N)) * U * timestep * sones(nu)
+        set_input!(joint, u)
+    end
+    return
+end
 Nb0 = 5
 spring0 = 0.01
 damper0 = 0.0
@@ -452,8 +465,9 @@ v0 = 10.0 * [1, 2, 3] * timestep0
 q10 = UnitQuaternion(RotX(0.5*π))
 
 initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0)
-storage = simulate!(mech, 3.0, snake_controller!, record = true, verbose = false,
+storage = simulate!(mech, 3.0, twister_controller!, record = true, verbose = false,
     opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+
 # visualize(mech, storage, vis = vis)
 
 ke0 = kinetic_energy(mech, storage)[start0:end]
