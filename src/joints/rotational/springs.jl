@@ -8,13 +8,8 @@
         rotate::Bool=true, unitary::Bool=false) where T
 
     spring = unitary ? 1.0 : joint.spring
-    # if joint.spring_type == :linear
-    distance = joint.spring_offset - minimal_coordinates(joint, xa, qa, xb, qb)
-    # elseif joint.spring_type == :sinusoidal
-        #TODO
-    # end
-
-    force = -0.5 * spring * zerodimstaticadjoint(nullspace_mask(joint))  * distance # force in offset frame
+    distance = joint.spring_offset .- minimal_coordinates(joint, xa, qa, xb, qb)
+    force = -spring * zerodimstaticadjoint(nullspace_mask(joint)) * distance # force in offset frame
     
     if relative == :parent
         nothing

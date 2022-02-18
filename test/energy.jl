@@ -201,14 +201,15 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-6
 # no control
 ################################################################################
 gravity0 = -9.81
-spring0 = 10.0
+spring0 = 1.0
 damper0 = 0.0
 mech = get_mechanism(:slider, timestep=timestep0, gravity=gravity0, spring=spring0, damper=damper0)
-z0 = 0.5
+z0 = 0.1
 initialize!(mech, :slider, z1 = z0)
 
-storage = simulate!(mech, 5.0,  nocontrol!, record=true, verbose=false,
+storage = simulate!(mech, 10.0,  nocontrol!, record=true, verbose=false,
     opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+
 # visualize(mech, storage, vis = vis)
 
 ke0 = kinetic_energy(mech, storage)[start0:end]
@@ -294,9 +295,6 @@ mech = get_mechanism(:atlas, timestep=timestep0, gravity=gravity0, spring=spring
     damper=damper0, contact = false)
 initialize!(mech, :atlas)
 bodies = collect(mech.bodies)
-for joint in mech.joints 
-    joint.rotational.spring_type = :linear 
-end
 set_velocity!.(bodies, ω = 1.0*rand(3))
 
 storage = simulate!(mech, 5.0, humanoid_controller!, record=true, verbose=false,
@@ -343,7 +341,8 @@ mech = get_mechanism(:quadruped, timestep=timestep0, gravity=gravity0, spring=sp
 initialize!(mech, :quadruped)
 storage = simulate!(mech, 5.0, record=true, verbose=false,
     opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
-visualize(mech, storage, vis = vis)
+    
+# visualize(mech, storage, vis = vis)
 
 ke0 = kinetic_energy(mech, storage)[start0:end]
 pe0 = potential_energy(mech, storage)[start0:end]
@@ -469,9 +468,7 @@ initialize!(mech, :twister, q1 = q10, v = v0, ω = ω0)
 storage = simulate!(mech, 3.0, twister_controller!, record = true, verbose = false,
     opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 
-vis = Visualizer() 
-render(vis)
-visualize(mech, storage, vis = vis)
+# visualize(mech, storage, vis = vis)
 
 ke0 = kinetic_energy(mech, storage)[start0:end]
 pe0 = potential_energy(mech, storage)[start0:end]
