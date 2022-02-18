@@ -9,7 +9,7 @@ using BenchmarkTools
 using Dojo
 using Test
 
-include("integrator.jl")Do
+include("integrator.jl")
 include("minimal.jl")
 include("mrp.jl")
 include("jacobian.jl")
