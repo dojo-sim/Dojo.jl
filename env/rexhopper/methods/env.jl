@@ -76,7 +76,7 @@ function rexhopper(;
     return env
 end
 
-function reset(env::Environment{RexHopper}; x=nothing, reset_noise_scale = 0.0)
+function reset(env::Environment{RexHopper}; x=nothing)
     if x != nothing
         env.x .= x
     else
@@ -84,10 +84,6 @@ function reset(env::Environment{RexHopper}; x=nothing, reset_noise_scale = 0.0)
         initialize!(env.mechanism, :rexhopper)
         x0 = get_minimal_state(env.mechanism)
         nx = minimal_dimension(env.mechanism)
-
-        low = -reset_noise_scale
-        high = reset_noise_scale
-        x = x0 + (high - low) .* rand(env.rng[1], nx) .+ low # we ignored the normal distribution on the velocities
         z = minimal_to_maximal(env.mechanism, x)
         set_state!(env.mechanism, z)
         if env.mode == :min

@@ -79,6 +79,7 @@ function raiberthopper_offset_max(x_shift, y_shift, z_shift)
 end
 
 function visualize(env::Environment{RaibertHopper}, traj::Vector{Vector{T}}; name=:robot, axes=false, grid=true) where T
+	@assert size(traj[1]) == size(env.x)
     # convert to maximal representation
     z = [env.mode == :min ? minimal_to_maximal(env.mechanism, x) : x for x in traj]
 

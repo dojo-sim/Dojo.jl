@@ -4,29 +4,30 @@ using LinearAlgebra
 
 # ## system
 # include(joinpath(module_dir(), "env/atlas/methods/template.jl"))
+include(joinpath(module_dir(), "env/rexhopper/methods/env.jl"))
+include(joinpath(module_dir(), "env/rexhopper/methods/initialize.jl"))
+
 
 gravity = -9.81
 dt = 0.05
-friction_coefficient = 0.8
-damper = 20.0
+friction_coefficient = 0.5
+damper = 1.0
 spring = 0.0
-ρ0 = 3e-1
+ρ0 = 1e-4
 env = rexhopper(
     mode=:min,
-    dt=dt,
+    timestep=dt,
     gravity=gravity,
     friction_coefficient=friction_coefficient,
     damper=damper,
     spring=spring,
-	model_type=:rexhopper_fixed,
+	contact=true,
+	contact_body=true,
+	model=:rexhopper_fixed,
 	infeasible_control=true,
-	opts_step=SolverOptions(rtol=ρ0, btol=ρ0, undercut=1.5),
-    opts_grad=SolverOptions(rtol=ρ0, btol=ρ0, undercut=1.5)
+	opts_step=SolverOptions(rtol=ρ0, btol=ρ0, undercut=5.0),
+    opts_grad=SolverOptions(rtol=ρ0, btol=ρ0, undercut=5.0)
 	)
-
-# env.mechanism.joints[2].rotational.damper = 75.0
-# env.mechanism.joints[7].rotational.damper = 75.0
-# env.mechanism.joints[8].rotational.damper = 75.0
 
 # ## visualizer
 open(env.vis)
@@ -35,9 +36,74 @@ open(env.vis)
 n = env.nx
 m = env.nu
 d = 0
+root_to_leaves_ordering(env.mechanism, [get_joint_constraint(env.mechanism, :loop_joint)])
+
+
+function get_minimal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni};
+	pos_noise=nothing, vel_noise=nothing,
+	pos_noise_range=[-Inf, Inf], vel_noise_range=[-3.9 / mechanism.timestep^2, 3.9 / mechanism.timestep^2]) where {T,Nn,Ne,Nb,Ni}
+	x = []
+
+	mechanism = deepcopy(mechanism)
+	timestep = mechanism.timestep
+
+	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
+	# Thus go through the joints in order, start from joint between robot and origin and go down the tree.
+	for id in root_to_leaves_ordering(mechanism, [get_joint_constraint(mechanism, :loop_joint)],
+		    exclude_origin=true, exclude_loop_joints=false)
+		(id > Ne) && continue # only treat joints
+		joint = mechanism.joints[id]
+		c = zeros(T,0)
+		v = zeros(T,0)
+		pbody = get_body(mechanism, joint.parent_id)
+		cbody = get_body(mechanism, joint.child_id)
+		for (i, element) in enumerate([joint.translational, joint.rotational])
+			pos = minimal_coordinates(element, pbody, cbody)
+			vel = minimal_velocities(element, pbody, cbody, timestep)
+			if pos_noise != nothing
+				pos += clamp.(length(pos) == 1 ? rand(pos_noise, length(pos))[1] : rand(pos_noise, length(pos)), pos_noise_range...)
+			end
+			if vel_noise != nothing
+				vel += clamp.(length(vel) == 1 ? rand(vel_noise, length(vel))[1] : rand(vel_noise, length(vel)), vel_noise_range...)
+			end
+			push!(c, pos...)
+			push!(v, vel...)
+		end
+		push!(x, [c; v]...)
+	end
+	x = [x...]
+	return x
+end
+
+function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
+	# When we set the Δv and Δω in the mechanical graph, we need to start from t#he root and get down to the leaves.
+	# Thus go through the joints in order, start from joint between robot and origin and go down the tree.
+	off = 0
+	# for id in reverse(mechanism.system.dfs_list)
+	for id in root_to_leaves_ordering(mechanism, [get_joint_constraint(mechanism, :loop_joint)],
+		    exclude_origin=true, exclude_loop_joints=false)
+		(id > Ne) && continue # only treat joints
+		joint = mechanism.joints[id]
+		nu = control_dimension(joint)
+		@show joint.name
+		set_minimal_coordinates_velocities!(mechanism, joint, xmin=x[off .+ SUnitRange(1, 2nu)])
+		off += 2nu
+	end
+	z = get_maximal_state(mechanism)
+	return z
+end
+
+
 
 ## simulate (test)
-initialize!(env.mechanism, :rexhopper, x=[1,0,0.0], θ=[0,0,0.], αhip=0.5, αknee=1.0)
+initialize!(env.mechanism, :rexhopper, x=[0,0,0], θ=[0,0,0.])
+xinit = get_minimal_state(env.mechanism) + 0.2*[ones(6); zeros(16)]# 0.1ones(minimal_dimension(env.mechanism))
+zinit = minimal_to_maximal(env.mechanism, xinit)
+# build_robot(env.vis, env.mechanism)
+set_robot(env.vis, env.mechanism, zinit)
+
+initialize!(env.mechanism, :rexhopper, x=[0,0,0.0], θ=[0,0,0.])
+xup = get_minimal_state(env.mechanism)
 function ctrl!(mech, k)
 	u0 = -total_mass(env.mechanism) * env.mechanism.gravity* env.mechanism.timestep/1.1 * 0
 	set_control!(mech, [u0; szeros(m-3)])
@@ -47,62 +113,37 @@ storage = simulate!(env.mechanism, 0.5, ctrl!, record=true, verbose=false,
 	opts=SolverOptions(rtol=ρ0, btol=ρ0, undercut=1.5))
 visualize(env.mechanism, storage, vis=env.vis, show_contact=false)
 
-mech.contacts[1].model
-# ## reference trajectory
-N = 3
-initialize!(env.mechanism, :atlas, model_type=:armless,
-	tran=[0,0,0.0], rot=[0,0,0.], αhip=0.5, αknee=1.0)
-xref = atlas_jump(env.mechanism; Ns=[10,6,6,10,12], timestep=dt,
-	Δx=0.0, x=0.0, z=1.10, foot_high=0.20, base_high=+0.20, base_low=-0.20)
-
-
-# x = get_minimal_state(env.mechanism)
-# xref0 = deepcopy(xref[1])
-# # xref0[1:3] .+= [1.0, 1.0, 1.0] # floating x
-# # xref0[4:6] .+= [1.0, 0.0, 1.0] # floating ϕ
-# # xref0[7:9] .+= [0.0, 0.0, 0.0] # floating v
-# # xref0[10:12] .+= [0.0, 0.0, 0.0] # floating ϕ
-# xref0[13:15] .+= [0.0, 0.0, 0.0] # back q
-# # xref0[16:18] .+= [1.0, 0.0, 0.0] # back ϕ
-# xref0[19:21] .+= [0.0, 1.0, 0.0] # rhip q
-# # xref0[22:24] .+= [1.0, 0.0, 0.0] # rhip ϕ
-# xref0[25:25] .+= [0.0] # rknee q
-# # xref0[26:26] .+= [1.0] # rknee ϕ
-# xref0[27:28] .+= [0.0, 0.0] # rankle q
-# # xref0[29:30] .+= [0.0, 1.0] # rankle ϕ
-# xref0[31:33] .+= [0.0, 0.0, 0.0] # lhip q
-# # xref0[34:36] .+= [1.0, 1.0, 1.0] # lhip ϕ
-# xref0[37:37] .+= [0.0] # lknee q
-# # xref0[38:38] .+= [1.0] # lknee ϕ
-# xref0[39:40] .+= [0.0, 0.0] # lankle q
-# # xref0[41:42] .+= [0.0, 0.0] # lankle ϕ
-# xref0 = deepcopy(x)
-# xref0[13] += 1.0
-# xref = [fill(xref[1], 3); fill(xref0, 10)]
-# visualize(env, fill(xref0, 10))
-visualize(env, xref)
-
 # ## horizon
-# T = N * (21 - 1) + 1
-T = 45
+T = 15
+# ## reference trajectory
+xref = [deepcopy(xup) for i = 1:T]
+# visualize(env, xref)
 
 # ## model
 dyn = IterativeLQR.Dynamics(
     (y, x, u, w) -> f(y, env, x, u, w),
     (dx, x, u, w) -> fx(dx, env, x, u, w),
     (du, x, u, w) -> fu(du, env, x, u, w),
-    n, n, m, d)
+    n, n, m)
 
 model = [dyn for t = 1:T-1]
 
 # ## rollout
-x1 = xref[1]
-u0 = -total_mass(env.mechanism) * env.mechanism.gravity* env.mechanism.timestep/1.1
-ū = [[u0; 0; -0.4; 0; zeros(m-6)] for t = 1:T-1]
+initialize!(env.mechanism, :rexhopper, x=[0,0,0], θ=[0,0,0.])
+xinit = get_minimal_state(env.mechanism)
+zinit = minimal_to_maximal(env.mechanism, xinit)
+set_robot(env.vis, env.mechanism, zinit)
+scn.(get_maximal_state(env.mechanism)[3*13+1:4*13][1:3])
+scn.(get_maximal_state(env.mechanism)[3*13+1:4*13][7:10])
+
+
+x1 = xinit
+env.x .= xinit
+u0 = -total_mass(env.mechanism) * env.mechanism.gravity * env.mechanism.timestep/1.1 * 0
+ū = [[u0; zeros(m-3)] for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, x1, ū, w)
 visualize(env, x̄)
-
 
 # ## objective
 qt = [
