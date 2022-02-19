@@ -3,33 +3,35 @@
 ################################################################################
 struct RexHopper end
 
-function rexhopper(; 
-    mode::Symbol=:min, 
+function rexhopper(;
+    mode::Symbol=:min,
     model=:rexhopper,
     timestep::T=0.05,
     s=1,
     gravity=[0.0; 0.0; -9.81],
-    friction_coefficient::T=1.0, 
-    spring=0.0, 
+    friction_coefficient::T=1.0,
+    spring=0.0,
     damper=1.0,
     contact_type=:nonlinear,
-    contact::Bool=true, 
+    contact::Bool=true,
     contact_body::Bool=true,
     limits::Bool = true,
-    info=nothing, 
-    vis::Visualizer=Visualizer(), 
+    info=nothing,
+    infeasible_control::Bool=false,
+    vis::Visualizer=Visualizer(),
     name::Symbol=:robot,
-    opts_step=SolverOptions(rtol=1.0e-4, btol=1.0e-4, undercut=10.0), opts_grad=SolverOptions(rtol=1.0e-4, btol=1.0e-4, undercut=10.0)) where T
+    opts_step=SolverOptions(rtol=1.0e-4, btol=1.0e-4, undercut=10.0),
+    opts_grad=SolverOptions(rtol=1.0e-4, btol=1.0e-4, undercut=10.0)) where T
 
-    mechanism = get_rexhopper(model=model, 
-        limits=limits, 
-        contact_type=contact_type, 
-        timestep=timestep, 
-        gravity=gravity, 
-        friction_coefficient=friction_coefficient, 
-        spring=spring, 
-        damper=damper, 
-        contact=contact, 
+    mechanism = get_rexhopper(model=model,
+        limits=limits,
+        contact_type=contact_type,
+        timestep=timestep,
+        gravity=gravity,
+        friction_coefficient=friction_coefficient,
+        spring=spring,
+        damper=damper,
+        contact=contact,
         contact_body=contact_body)
 
     initialize_rexhopper!(mechanism)
@@ -39,7 +41,8 @@ function rexhopper(;
     elseif mode == :max
         nx = maximal_dimension(mechanism)
     end
-    nu = 5
+    nu_inf = control_dimension(mechanism)
+    nu = infeasible_control ? nu_inf : 5
     no = nx
 
     # values taken from Mujoco's model, combining the control range -1, 1 and the motor gears.
@@ -55,8 +58,8 @@ function rexhopper(;
     fu = zeros(nx, nu)
 
     u_prev = zeros(nu)
-    control_mask = cat(zeros(3,3), I(3), 1, 0, 1, zeros(5,5), dims=(1,2))
-    motor_gear = [1., 1., 1., 1., 1.]
+    control_mask = infeasible_control ? I(nu) : cat(zeros(3,3), I(3), 1, 0, 1, zeros(5,5), dims=(1,2))
+    motor_gear = ones(nu)
     control_scaling = Diagonal(timestep * motor_gear)
 
     build_robot(vis, mechanism, name=name)
@@ -73,7 +76,7 @@ function rexhopper(;
     return env
 end
 
-function reset(env::Environment{RexHopper}; x=nothing, reset_noise_scale = 0.005)
+function reset(env::Environment{RexHopper}; x=nothing, reset_noise_scale = 0.0)
     if x != nothing
         env.x .= x
     else
@@ -96,4 +99,3 @@ function reset(env::Environment{RexHopper}; x=nothing, reset_noise_scale = 0.005
     end
     return _get_obs(env)
 end
-
