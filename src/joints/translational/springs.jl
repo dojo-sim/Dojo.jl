@@ -70,3 +70,4 @@ end
 
 spring_jacobian_configuration(relative::Symbol, jacobian::Symbol, joint::Translational{T,3}, body1::Node, body2::Node, timestep::T; attjac::Bool = true, unitary::Bool=false) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
 spring_jacobian_velocity(relative::Symbol, jacobian::Symbol, joint::Translational, body1::Node, body2::Node, timestep::T, unitary::Bool=false) where T = szeros(T, 6, 6)
+
