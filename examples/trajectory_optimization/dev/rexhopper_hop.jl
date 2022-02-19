@@ -11,22 +11,22 @@ friction_coefficient = 0.8
 damper = 20.0
 spring = 0.0
 ρ0 = 3e-1
-env = atlas(
+env = rexhopper(
     mode=:min,
     dt=dt,
     gravity=gravity,
     friction_coefficient=friction_coefficient,
     damper=damper,
     spring=spring,
-	model_type=:armless,
+	model_type=:rexhopper_fixed,
 	infeasible_control=true,
 	opts_step=SolverOptions(rtol=ρ0, btol=ρ0, undercut=1.5),
     opts_grad=SolverOptions(rtol=ρ0, btol=ρ0, undercut=1.5)
 	)
 
-env.mechanism.joints[2].rotational.damper = 75.0
-env.mechanism.joints[7].rotational.damper = 75.0
-env.mechanism.joints[8].rotational.damper = 75.0
+# env.mechanism.joints[2].rotational.damper = 75.0
+# env.mechanism.joints[7].rotational.damper = 75.0
+# env.mechanism.joints[8].rotational.damper = 75.0
 
 # ## visualizer
 open(env.vis)
@@ -37,7 +37,7 @@ m = env.nu
 d = 0
 
 ## simulate (test)
-initialize!(env.mechanism, :atlas, model_type=:armless, tran=[1,0,0.0], rot=[0,0,0.], αhip=0.5, αknee=1.0)
+initialize!(env.mechanism, :rexhopper, x=[1,0,0.0], θ=[0,0,0.], αhip=0.5, αknee=1.0)
 function ctrl!(mech, k)
 	u0 = -total_mass(env.mechanism) * env.mechanism.gravity* env.mechanism.timestep/1.1 * 0
 	set_control!(mech, [u0; szeros(m-3)])
