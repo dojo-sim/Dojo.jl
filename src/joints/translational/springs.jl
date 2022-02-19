@@ -34,7 +34,7 @@ spring_impulses(relative::Symbol, joint::Translational{T,3}, bodya::Node, bodyb:
 # Spring Jacobians
 ################################################################################
 
-function spring_jacobian_configuration(jacobian_relative::Symbol,
+function spring_force_jacobian_configuration(jacobian_relative::Symbol,
         joint::Translational{T},
         xa::AbstractVector, qa::UnitQuaternion,
         xb::AbstractVector, qb::UnitQuaternion;
@@ -51,7 +51,7 @@ end
 
     force = spring_force(relative, joint, xa, qa, xb, qb, unitary=unitary)
     J = impulse_transform(relative, joint, xa, qa, xb, qb) *
-        spring_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, unitary=unitary, attjac=attjac)
+        spring_force_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, unitary=unitary, attjac=attjac)
     J += impulse_transform_jacobian(relative, jacobian_relative, joint, xa, qa, xb, qb, force, attjac=attjac)
 
     return timestep * J
