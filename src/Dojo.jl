@@ -198,13 +198,10 @@ include(joinpath("ui", "visualizer_utils.jl"))
 include(joinpath("ui", "colors.jl"))
 
 # Gradients
-include(joinpath("gradients", "index.jl"))
-include(joinpath("gradients", "analytical.jl"))
 include(joinpath("gradients", "finite_difference.jl"))
-include(joinpath("gradients", "dev", "finite_difference.jl"))
-include(joinpath("gradients", "dev", "data.jl"))
-include(joinpath("gradients", "dev", "data_gradients.jl"))
-include(joinpath("gradients", "dev", "utils.jl"))
+include(joinpath("gradients", "data.jl"))
+include(joinpath("gradients", "data_gradients.jl"))
+include(joinpath("gradients", "utils.jl"))
 
 # Environments
 include(joinpath("..", "env", "mechanisms.jl"))
