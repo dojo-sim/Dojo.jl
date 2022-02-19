@@ -44,7 +44,6 @@ function minimal_coordinates_jacobian_configuration(relative::Symbol, joint::Rot
     A = nullspace_mask(joint)
     q = displacement(joint, xa, qa, xb, qb, vmat=false)
     X, Q = displacement_jacobian_configuration(relative, joint, xa, qa, xb, qb, attjac=attjac, vmat=false)
-    # ∂rv∂q = FiniteDiff.finite_difference_jacobian(r -> rotation_vector(UnitQuaternion(r..., false)), vector(q))
     ∂rv∂q = ∂rotation_vector∂q(q)
 
 	return A * [X ∂rv∂q * Q]

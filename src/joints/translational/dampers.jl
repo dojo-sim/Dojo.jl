@@ -25,15 +25,6 @@ end
     return inputa
 end
 
-# @inline function damper_relative(relative::Symbol, joint::Translational{T}, xa::AbstractVector,
-#         va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
-#         xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion,
-#         ωb::AbstractVector, timestep; unitary::Bool=false) where T
-#     input = damper_force(joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep, unitary=unitary) # in the a frame
-#     inputa = impulse_transform(relative, joint, xa, qa, xb, qb) * input
-#     return inputa
-# end
-
 damper_impulses(relative::Symbol, joint::Translational, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) =
     timestep * damper_force(relative, joint, 
         current_configuration_velocity(bodya.state)...,

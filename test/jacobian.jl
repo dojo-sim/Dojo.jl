@@ -12,10 +12,10 @@ function test_solmat(model::Symbol; ϵ::T=1e-6, tsim::T=0.1, ctrl::Any=(m, k)->n
 
         # Set data
         Nb = length(mechanism.bodies)
-        data = get_data0(mechanism)
-        set_data0!(mechanism, data)
-        sol = get_solution0(mechanism)
-        attjac = attitude_jacobian(data, Nb)
+        data = Dojo.get_data0(mechanism)
+        Dojo.set_data0!(mechanism, data)
+        sol = Dojo.get_solution0(mechanism)
+        attjac = Dojo.attitude_jacobian(data, Nb)
 
         # IFT
         solmat = full_matrix(mechanism.system)

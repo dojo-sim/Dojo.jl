@@ -21,7 +21,10 @@
 end
 
 function spring_impulses(relative::Symbol, joint::Rotational, bodya::Node, bodyb::Node, timestep; unitary::Bool=false)
-    spring_impulses(relative, joint, current_configuration(bodya.state)..., current_configuration(bodyb.state)..., timestep, unitary=unitary)
+    spring_impulses(relative, joint, 
+        current_configuration(bodya.state)..., 
+        current_configuration(bodyb.state)..., 
+        timestep, unitary=unitary)
 end
 
 function spring_impulses(relative::Symbol, joint::Rotational, 
@@ -37,42 +40,42 @@ spring_impulses(relative::Symbol, joint::Rotational{T,3}, bodya::Node, bodyb::No
 # Spring Jacobians
 ################################################################################
 
-function spring_jacobian_configuration(relative::Symbol, jacobian::Symbol, 
-    joint::Rotational, body1::Node, body2::Node,
-    timestep::T; attjac::Bool = true) where T
+@inline function spring_jacobian_configuration(relative::Symbol, jacobian::Symbol, joint::Rotational{T}, 
+    xa::AbstractVector, qa::UnitQuaternion,
+    xb::AbstractVector, qb::UnitQuaternion,
+    timestep::T; 
+    rotate::Bool=true, unitary::Bool=false, attjac=true) where T
 
-    xa, qa = current_configuration(body1.state)
-    xb, qb = current_configuration(body2.state)
-    X = szeros(T, 3, 3)
+    spring = unitary ? 1.0 : joint.spring
     Z = attjac ? szeros(T, 3, 6) : szeros(T, 3, 7)
 
-    if relative == :parent 
-        if jacobian == :parent 
-            Q = FiniteDiff.finite_difference_jacobian(q -> spring_impulses(:parent, joint, xa, UnitQuaternion(q..., false), xb, qb, timestep)[SVector{3,Int}(4,5,6)], [qa.w, qa.x, qa.y, qa.z])
-            attjac && (Q *= LVᵀmat(qa))
-        elseif jacobian == :child 
-            Q = FiniteDiff.finite_difference_jacobian(q -> spring_impulses(:parent, joint, xa, qa, xb, UnitQuaternion(q..., false), timestep)[SVector{3,Int}(4,5,6)], [qb.w, qb.x, qb.y, qb.z])
-            attjac && (Q *= LVᵀmat(qb))
-        end
+    if relative == :parent
+        J = spring * zerodimstaticadjoint(nullspace_mask(joint)) * minimal_coordinates_jacobian_configuration(jacobian, joint, xa, qa, xb, qb, attjac=attjac)
     elseif relative == :child 
-        if jacobian == :parent 
-            Q = FiniteDiff.finite_difference_jacobian(q -> spring_impulses(:child, joint, xa, UnitQuaternion(q..., false), xb, qb, timestep)[SVector{3,Int}(4,5,6)], [qa.w, qa.x, qa.y, qa.z])
-            attjac && (Q *= LVᵀmat(qa))
-        elseif jacobian == :child 
-            Q = FiniteDiff.finite_difference_jacobian(q -> spring_impulses(:child, joint, xa, qa, xb, UnitQuaternion(q..., false), timestep)[SVector{3,Int}(4,5,6)], [qb.w, qb.x, qb.y, qb.z])
-            attjac && (Q *= LVᵀmat(qb))
-        end
-    end   
-    return [Z; X Q]
-end
+        X = szeros(T, 3, 3)
 
-function spring_jacobian_velocity(relative::Symbol, jacobian::Symbol, joint::Rotational, body1::Node, body2::Node, timestep::T) where T
-    V = szeros(T, 3, 3)
-    Ω = szeros(T, 3, 3)
-    return [szeros(T, 3, 6); V Ω]
+        input = -spring * zerodimstaticadjoint(nullspace_mask(joint)) * minimal_coordinates(joint, xa, qa, xb, qb)
+        input_jacobian = -spring * zerodimstaticadjoint(nullspace_mask(joint)) * minimal_coordinates_jacobian_configuration(jacobian, joint, xa, qa, xb, qb, attjac=attjac)
+       
+        if rotate 
+            J1 = ∂vrotate∂p(input, inv(qb) * qa) * input_jacobian
+            if jacobian == :parent
+                Q2 = ∂vrotate∂q(input, inv(qb) * qa) * Lmat(inv(qb))
+                attjac && (Q2 *= LVᵀmat(qa))
+            elseif jacobian == :child 
+                Q2 = ∂vrotate∂q(input, inv(qb) * qa) * Rmat(qa) * Tmat()
+                attjac && (Q2 *= LVᵀmat(qb))
+            end
+            J = J1 + [X Q2] 
+        else
+            J = input_jacobian 
+        end
+    end
+
+    return timestep * [Z; J]
 end
 
 spring_jacobian_configuration(relative::Symbol, jacobian::Symbol, joint::Rotational{T,3}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
-spring_jacobian_velocity(relative::Symbol, jacobian::Symbol, joint::Rotational{T,3}, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
+spring_jacobian_velocity(relative::Symbol, jacobian::Symbol, joint::Rotational, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
 
 
