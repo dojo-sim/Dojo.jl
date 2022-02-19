@@ -18,7 +18,7 @@ function test_solmat(model::Symbol; ϵ::T=1e-6, tsim::T=0.1, ctrl::Any=(m, k)->n
         attjac = Dojo.attitude_jacobian(data, Nb)
 
         # IFT
-        solmat = full_matrix(mechanism.system)
+        solmat = Dojo.full_matrix(mechanism.system)
         # finite diff
         fd_solmat = finitediff_sol_matrix(mechanism, data, sol, δ=1.0e-5, verbose=verbose)
         @test norm(fd_solmat + solmat, Inf) < ϵ
@@ -31,8 +31,8 @@ function finitediff_sol_matrix(mechanism::Mechanism, data::AbstractVector,
     nsol = length(sol)
     jac = zeros(nsol, nsol)
 
-    set_data0!(mechanism, data)
-    set_solution0!(mechanism, sol)
+    Dojo.set_data0!(mechanism, data)
+    Dojo.set_solution0!(mechanism, sol)
 
     for i = 1:nsol
         verbose && println("$i / $nsol")
@@ -40,8 +40,8 @@ function finitediff_sol_matrix(mechanism::Mechanism, data::AbstractVector,
         solm = deepcopy(sol)
         solp[i] += δ
         solm[i] -= δ
-        rp = evaluate_residual0!(deepcopy(mechanism), data, solp)
-        rm = evaluate_residual0!(deepcopy(mechanism), data, solm)
+        rp = Dojo.evaluate_residual0!(deepcopy(mechanism), data, solp)
+        rm = Dojo.evaluate_residual0!(deepcopy(mechanism), data, solm)
         jac[:,i] = (rp - rm) / (2δ)
     end
     return jac
@@ -49,9 +49,9 @@ end
 
 function control!(mechanism, k; u=0.1)
     for (i, joint) in enumerate(mechanism.joints)
-        nu = control_dimension(joint, ignore_floating_base=false)
+        nu = Dojo.control_dimension(joint, ignore_floating_base=false)
         su = mechanism.timestep * u * sones(nu)
-        set_input!(joint, su)
+        Dojo.set_input!(joint, su)
     end
     return
 end

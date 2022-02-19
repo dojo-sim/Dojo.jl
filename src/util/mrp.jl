@@ -74,7 +74,6 @@ function ∂rotation_vector∂q(q::AbstractVector)
             0.0  0.0  2.0  0.0;
             0.0  0.0  0.0  2.0;
         ]
-        # FiniteDiff.finite_difference_jacobian(rotation_vector, vector(q))
     end
 end
 
