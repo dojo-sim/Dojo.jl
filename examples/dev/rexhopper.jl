@@ -6,19 +6,15 @@ vis = Visualizer()
 render(vis)
 
 # Mechanism
-mechanism = get_rexhopper(model=:rexhopper2, timestep=0.01, gravity=-9.81, contact_body=true, friction_coefficient=1.0)
-
-for body in mechanism.bodies 
-    body.inertia = 10.0 * body.inertia
-    @show body.inertia 
-    @show norm(diag(body.inertia))
-end
+mechanism = get_rexhopper(model=:rexhopper_fixed, timestep=0.05, gravity=-9.81, contact_body=true, friction_coefficient=1.0)
+env = make("rexhopper",
+    timestep=0.05, gravity=-9.81, contact_body=true, friction_coefficient=1.0)
 
 # Simulate
-initialize!(mechanism, :rexhopper, x=[0.0; 0.0; 0.4])
+initialize!(env.mechanism, :rexhopper, x=[0.0; 0.0; 0.4])
 
 # Open visualizer
-storage = simulate!(mechanism, 5.0, record=true, opts=SolverOptions(undercut=10.0, btol=1.0e-4, rtol=1.0e-4, verbose=true));
+storage = simulate!(mechanism, 2.5, record=true, opts=SolverOptions(undercut=10.0, btol=1.0e-4, rtol=1.0e-4, verbose=false));
 
 # Visualize
-visualize(mechanism, storage, vis=vis, show_contact=true);
+visualize(mechanism, storage, vis=vis, show_contact=false);

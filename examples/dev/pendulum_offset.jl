@@ -33,7 +33,7 @@ function controller!(mechanism, k)
 end
 
 # Mechanism
-mechanism = get_mechanism(:pendulum, timestep=0.01, gravity=0.0 * -9.81, 
+mechanism = get_mechanism(:pendulum, timestep=0.001, gravity=0.0 * -9.81, 
     spring=0.0,
     damper=0.0,
     qoffset=UnitQuaternion(RotZ(0.0 * π)))
@@ -42,7 +42,7 @@ mechanism = get_mechanism(:pendulum, timestep=0.01, gravity=0.0 * -9.81,
 initialize!(mechanism, :pendulum, ϕ1 = 0.5 * π, ω1 = 0.0)
 
 # Open visualizer
-storage = simulate!(mechanism, 10.0, controller!, record=true, verbose=true)
+storage = simulate!(mechanism, 1.0, controller!, record=true, verbose=true)
 
 # Visualize
 visualize(mechanism, storage, vis=vis)
