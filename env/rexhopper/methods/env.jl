@@ -60,7 +60,7 @@ function rexhopper(;
     u_prev = zeros(nu)
     control_mask = infeasible_control ? I(nu) : cat(zeros(3,3), I(3), 1, 0, 1, zeros(5,5), dims=(1,2))
     motor_gear = ones(nu)
-    control_scaling = Diagonal(timestep * motor_gear)
+    control_scaling = Diagonal(motor_gear)
 
     build_robot(vis, mechanism, name=name)
 

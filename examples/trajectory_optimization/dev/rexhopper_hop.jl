@@ -9,10 +9,10 @@ include(joinpath(module_dir(), "env/rexhopper/methods/initialize.jl"))
 
 
 gravity = -9.81
-dt = 0.05
+dt = 0.02
 friction_coefficient = 0.5
-damper = 1.0
-spring = 0.0
+damper = 2.0
+spring = 5.0
 ρ0 = 1e-4
 env = rexhopper(
     mode=:min,
@@ -62,7 +62,7 @@ storage = simulate!(env.mechanism, 0.5, ctrl!, record=true, verbose=false,
 visualize(env.mechanism, storage, vis=env.vis, show_contact=false)
 
 # ## horizon
-T = 15
+T = 25
 # ## reference trajectory
 xref = [deepcopy(xup) for i = 1:T]
 visualize(env, xref)
@@ -77,40 +77,31 @@ dyn = IterativeLQR.Dynamics(
 model = [dyn for t = 1:T-1]
 
 # ## rollout
-initialize!(env.mechanism, :rexhopper, x=[0,0,0], θ=[0,0,0.])
+initialize!(env.mechanism, :rexhopper, x=[0,0,0.0], θ=[0,0,0.])
 xinit = get_minimal_state(env.mechanism)
-zinit = minimal_to_maximal(env.mechanism, xinit)
-set_robot(env.vis, env.mechanism, zinit)
-scn.(get_maximal_state(env.mechanism)[3*13+1:4*13][1:3])
-scn.(get_maximal_state(env.mechanism)[3*13+1:4*13][7:10])
-
-
 x1 = xinit
-env.x .= xinit
-u0 = -total_mass(env.mechanism) * env.mechanism.gravity * env.mechanism.timestep/1.1 * 0
-ū = [[u0; zeros(m-3)] for t = 1:T-1]
+u0 = -total_mass(env.mechanism) * env.mechanism.gravity * env.mechanism.timestep/1.1
+ū = [[u0; 0; 0.5env.mechanism.timestep ; 0; zeros(m-6)] for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, x1, ū, w)
 visualize(env, x̄)
 
-env.mechanism.root_to_leaves
-getfield.(env.mechanism.joints, :name)[[1,8,7,6,4,5,2,3,9]]
 
 # ## objective
-qt = [
+qt = 0.01*[
 	[0.2, 0.05, 0.2, 0.05, 0.2, 0.2]; #x q floating
 	0.02ones(6); # v ϕ floating
-	4.8ones(0); 0.01ones(0); # joint_rwz
-	4.8ones(0); 0.01ones(0); # joint_rw1
-	4.8ones(0); 0.01ones(0); # joint_rw0
-	4.8ones(1); 0.01ones(1); # joint2
-	4.8ones(1); 0.01ones(1); # joint3
-	4.8ones(1); 0.01ones(1); # joint0
-	4.8ones(1); 0.01ones(1); # joint1
-	4.8ones(1); 0.01ones(1); # loop_joint
+	0.8ones(0); 0.01ones(0); # joint_rwz
+	0.8ones(0); 0.01ones(0); # joint_rw1
+	0.8ones(0); 0.01ones(0); # joint_rw0
+	0.8ones(1); 0.01ones(1); # joint2
+	0.8ones(1); 0.01ones(1); # joint3
+	0.8ones(1); 0.01ones(1); # joint0
+	0.8ones(1); 0.01ones(1); # joint1
+	0.8ones(1); 0.01ones(1); # loop_joint
 	]
 ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(dt * qt) * (x - xref[t]) +
-	transpose(u) * Diagonal(dt * [0.01*ones(6); 0.02*ones(m-6)]) * u for t = 1:T-1]
+	transpose(u) * Diagonal(dt * [0.1*ones(6); 0.2*ones(m-6)]) * u for t = 1:T-1]
 oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(dt * qt) * (x - xref[end])
 
 # ## constraints
@@ -131,7 +122,8 @@ function ctrl_lmt(x, u, w)
 	return 1e-1*u[collect(1:3)]
 end
 
-cont = IterativeLQR.Constraint(ctrl_lmt, n, m)
+# cont = IterativeLQR.Constraint(ctrl_lmt, n, m)
+cont = Constraint()
 conT = IterativeLQR.Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
@@ -143,7 +135,7 @@ x_prev = deepcopy(xref) # TODO deepcopy(x̄)
 # ## problem
 prob = IterativeLQR.problem_data(model, obj, cons)
 
-for ρ in [1e-4]#, 3e-4]#, 1e-4]#, 3e-5]#, 1e-5, 3e-6, 1e-6]
+for ρ in [1e-3]#, 3e-4]#, 1e-4]#, 3e-5]#, 1e-5, 3e-6, 1e-6]
 	println("ρ: ", scn(ρ), "   *************************************")
 	IterativeLQR.initialize_controls!(prob, u_prev)
 	IterativeLQR.initialize_states!(prob, x_prev)

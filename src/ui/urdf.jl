@@ -117,8 +117,6 @@ function parse_shape(xvisual, materialdict, T)
 
         color = parse_xmaterial(find_element(xvisual, "material"), materialdict, T)
         x, q = parse_pose(find_element(xvisual, "origin"), T)
-        # x = vrotate(x - xb, inv(qb))
-        # q = inv(qb) * q
 
         shapenodes = LightXML.XMLElement[]
         for node in child_nodes(xgeometry)  # node is an instance of XMLNode
