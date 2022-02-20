@@ -287,7 +287,7 @@
       effort="0"
       velocity="0" />
   </joint>
-  <link
+  <!-- <link
     name="rw0">
     <inertial>
       <origin
@@ -445,5 +445,5 @@
       link="rwz" />
     <axis
       xyz="0 0 1" />
-  </joint>
+  </joint> -->
 </robot>

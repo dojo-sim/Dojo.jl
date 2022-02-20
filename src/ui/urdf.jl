@@ -423,7 +423,7 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
     xjointlist = Dict{Int64,SVector{3,T}}() # stores id, x in world frame
     qjointlist = Dict{Int64,UnitQuaternion{T}}() # stores id, q in world frame
 
-    for id in root_to_leaves_ordering(mechanism, loopjoints)
+    for id in root_to_leaves_ordering(mechanism, exclude_origin=true, exclude_loop_joints=true)
         node = get_node(mechanism, id)
         !(node isa JointConstraint) && continue # only for joints
 

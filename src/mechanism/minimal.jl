@@ -2,11 +2,11 @@ function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVect
 	# When we set the Δv and Δω in the mechanical graph, we need to start from t#he root and get down to the leaves.
 	# Thus go through the joints in order, start from joint between robot and origin and go down the tree.
 	off = 0
-	for id in reverse(mechanism.system.dfs_list)
+	# for id in reverse(mechanism.system.dfs_list)
+	for id in mechanism.root_to_leaves
 		(id > Ne) && continue # only treat joints
 		joint = mechanism.joints[id]
 		nu = control_dimension(joint)
-		@show joint.name
 		set_minimal_coordinates_velocities!(mechanism, joint, xmin=x[off .+ SUnitRange(1, 2nu)])
 		off += 2nu
 	end
@@ -36,7 +36,8 @@ function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni},
 	col = [] # ordering joints from root to tree
 	col_idx = zeros(Int,Ne)
 	cnt = 0
-	for id in reverse(mechanism.system.dfs_list)
+	# for id in reverse(mechanism.system.dfs_list)
+	for id in mechanism.root_to_leaves
 		(id > Ne) && continue # only keep joints
 		cnt += 1
 		nu = control_dimension(get_joint_constraint(mechanism, id))
@@ -49,7 +50,8 @@ function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni},
 	end
 
 	 # Chain partials together from root to leaves
-	for id in reverse(mechanism.system.dfs_list)
+	# for id in reverse(mechanism.system.dfs_list)
+	for id in mechanism.root_to_leaves
 		!(Ne < id <= Ne+Nb) && continue # only treat bodies
 		cnode = get_node(mechanism, id)
 		for pjoint in parent_joints(mechanism, cnode)
@@ -189,7 +191,8 @@ function get_minimal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni};
 
 	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
 	# Thus go through the joints in order, start from joint between robot and origin and go down the tree.
-	for id in reverse(mechanism.system.dfs_list)
+	# for id in reverse(mechanism.system.dfs_list)
+	for id in mechanism.root_to_leaves
 		(id > Ne) && continue # only treat joints
 		joint = mechanism.joints[id]
 		c = zeros(T,0)

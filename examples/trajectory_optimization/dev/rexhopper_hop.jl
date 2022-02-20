@@ -23,11 +23,13 @@ env = rexhopper(
     spring=spring,
 	contact=true,
 	contact_body=true,
-	model=:rexhopper_fixed,
+	# model=:rexhopper_fixed,
+	model=:rexhopper_no_wheel,
 	infeasible_control=true,
 	opts_step=SolverOptions(rtol=ρ0, btol=ρ0, undercut=5.0),
     opts_grad=SolverOptions(rtol=ρ0, btol=ρ0, undercut=5.0)
 	)
+
 
 # ## visualizer
 open(env.vis)
@@ -36,71 +38,17 @@ open(env.vis)
 n = env.nx
 m = env.nu
 d = 0
-root_to_leaves_ordering(env.mechanism, [get_joint_constraint(env.mechanism, :loop_joint)])
-
-
-function get_minimal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni};
-	pos_noise=nothing, vel_noise=nothing,
-	pos_noise_range=[-Inf, Inf], vel_noise_range=[-3.9 / mechanism.timestep^2, 3.9 / mechanism.timestep^2]) where {T,Nn,Ne,Nb,Ni}
-	x = []
-
-	mechanism = deepcopy(mechanism)
-	timestep = mechanism.timestep
-
-	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
-	# Thus go through the joints in order, start from joint between robot and origin and go down the tree.
-	for id in root_to_leaves_ordering(mechanism, [get_joint_constraint(mechanism, :loop_joint)],
-		    exclude_origin=true, exclude_loop_joints=false)
-		(id > Ne) && continue # only treat joints
-		joint = mechanism.joints[id]
-		c = zeros(T,0)
-		v = zeros(T,0)
-		pbody = get_body(mechanism, joint.parent_id)
-		cbody = get_body(mechanism, joint.child_id)
-		for (i, element) in enumerate([joint.translational, joint.rotational])
-			pos = minimal_coordinates(element, pbody, cbody)
-			vel = minimal_velocities(element, pbody, cbody, timestep)
-			if pos_noise != nothing
-				pos += clamp.(length(pos) == 1 ? rand(pos_noise, length(pos))[1] : rand(pos_noise, length(pos)), pos_noise_range...)
-			end
-			if vel_noise != nothing
-				vel += clamp.(length(vel) == 1 ? rand(vel_noise, length(vel))[1] : rand(vel_noise, length(vel)), vel_noise_range...)
-			end
-			push!(c, pos...)
-			push!(v, vel...)
-		end
-		push!(x, [c; v]...)
-	end
-	x = [x...]
-	return x
-end
-
-function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
-	# When we set the Δv and Δω in the mechanical graph, we need to start from t#he root and get down to the leaves.
-	# Thus go through the joints in order, start from joint between robot and origin and go down the tree.
-	off = 0
-	# for id in reverse(mechanism.system.dfs_list)
-	for id in root_to_leaves_ordering(mechanism, [get_joint_constraint(mechanism, :loop_joint)],
-		    exclude_origin=true, exclude_loop_joints=false)
-		(id > Ne) && continue # only treat joints
-		joint = mechanism.joints[id]
-		nu = control_dimension(joint)
-		@show joint.name
-		set_minimal_coordinates_velocities!(mechanism, joint, xmin=x[off .+ SUnitRange(1, 2nu)])
-		off += 2nu
-	end
-	z = get_maximal_state(mechanism)
-	return z
-end
-
-
 
 ## simulate (test)
 initialize!(env.mechanism, :rexhopper, x=[0,0,0], θ=[0,0,0.])
-xinit = get_minimal_state(env.mechanism) + 0.2*[ones(6); zeros(16)]# 0.1ones(minimal_dimension(env.mechanism))
-zinit = minimal_to_maximal(env.mechanism, xinit)
+xinit = get_minimal_state(env.mechanism) + 0.3*[ones(6); zeros(16)]# 0.1ones(minimal_dimension(env.mechanism))
+zinit = get_maximal_state(env.mechanism)
+x2 = maximal_to_minimal(env.mechanism, zinit)
+z2 = minimal_to_maximal(env.mechanism, xinit)
 # build_robot(env.vis, env.mechanism)
 set_robot(env.vis, env.mechanism, zinit)
+set_robot(env.vis, env.mechanism, z2)
+
 
 initialize!(env.mechanism, :rexhopper, x=[0,0,0.0], θ=[0,0,0.])
 xup = get_minimal_state(env.mechanism)
@@ -117,7 +65,7 @@ visualize(env.mechanism, storage, vis=env.vis, show_contact=false)
 T = 15
 # ## reference trajectory
 xref = [deepcopy(xup) for i = 1:T]
-# visualize(env, xref)
+visualize(env, xref)
 
 # ## model
 dyn = IterativeLQR.Dynamics(
@@ -145,17 +93,21 @@ w = [zeros(d) for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, x1, ū, w)
 visualize(env, x̄)
 
+env.mechanism.root_to_leaves
+getfield.(env.mechanism.joints, :name)[[1,8,7,6,4,5,2,3,9]]
+
 # ## objective
 qt = [
 	[0.2, 0.05, 0.2, 0.05, 0.2, 0.2]; #x q floating
 	0.02ones(6); # v ϕ floating
-	0.5ones(3); 0.02ones(3); # back
-	4.8ones(3); 0.01ones(3); # rhip
-	4.8ones(1); 0.01ones(1); # rknee
-	4.8ones(2); 0.01ones(2); # rankle
-	4.8ones(3); 0.01ones(3); # lhip
-	4.8ones(1); 0.01ones(1); # lknee
-	4.8ones(2); 0.01ones(2); # lankle
+	4.8ones(0); 0.01ones(0); # joint_rwz
+	4.8ones(0); 0.01ones(0); # joint_rw1
+	4.8ones(0); 0.01ones(0); # joint_rw0
+	4.8ones(1); 0.01ones(1); # joint2
+	4.8ones(1); 0.01ones(1); # joint3
+	4.8ones(1); 0.01ones(1); # joint0
+	4.8ones(1); 0.01ones(1); # joint1
+	4.8ones(1); 0.01ones(1); # loop_joint
 	]
 ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(dt * qt) * (x - xref[t]) +
 	transpose(u) * Diagonal(dt * [0.01*ones(6); 0.02*ones(m-6)]) * u for t = 1:T-1]
@@ -172,40 +124,16 @@ function goal(x, u, w)
     Δ = x - xref[end]
     return Δ[[
 		1,2,3,4,5,6, # floating
-		13,14,15, # back
-		19,20,21, #pelvis
-		25, # rknee
-		27,28, # rankle
-		31,32,33, # lhip
-		37, # lknee
-		39,40, # lankle
 		]]
 end
 
 function ctrl_lmt(x, u, w)
-	return 1e-1*u[collect(1:6)]
-end
-
-function top_lmt(x, u, w)
-	Δ = x - xref[22]
-    Δ = Δ[[
-		1,2,3,
-		# 4,5,6, # floating
-		# 13,14,15, # back
-		# 19,20,21, #pelvis
-		# 25, # rknee
-		# 27,28, # rankle
-		# 31,32,33, # lhip
-		# 37, # lknee
-		# 39,40, # lankle
-		]]
-	return [1e-1*u[collect(1:6)]; Δ]
+	return 1e-1*u[collect(1:3)]
 end
 
 cont = IterativeLQR.Constraint(ctrl_lmt, n, m)
-contop = IterativeLQR.Constraint(top_lmt, n, m)
 conT = IterativeLQR.Constraint(goal, n, 0)
-cons = [[cont for t = 1:21]; contop; [cont for t = 1:22]; conT]
+cons = [[cont for t = 1:T-1]..., conT]
 
 # ## Initialization
 u_prev = deepcopy(ū)
@@ -215,7 +143,7 @@ x_prev = deepcopy(xref) # TODO deepcopy(x̄)
 # ## problem
 prob = IterativeLQR.problem_data(model, obj, cons)
 
-for ρ in [1e-3]#, 3e-4]#, 1e-4]#, 3e-5]#, 1e-5, 3e-6, 1e-6]
+for ρ in [1e-4]#, 3e-4]#, 1e-4]#, 3e-5]#, 1e-5, 3e-6, 1e-6]
 	println("ρ: ", scn(ρ), "   *************************************")
 	IterativeLQR.initialize_controls!(prob, u_prev)
 	IterativeLQR.initialize_states!(prob, x_prev)
@@ -241,6 +169,7 @@ for ρ in [1e-3]#, 3e-4]#, 1e-4]#, 3e-5]#, 1e-5, 3e-6, 1e-6]
 	x_prev, u_prev = IterativeLQR.get_trajectory(prob)
 	visualize(env, x_prev)
 end
+
 scatter(abs.(goal(prob.m_data.x[T], zeros(0), zeros(0))))
 # ## solution
 x_sol, u_sol = IterativeLQR.get_trajectory(prob)
@@ -249,7 +178,7 @@ x_sol, u_sol = IterativeLQR.get_trajectory(prob)
 @show norm(goal(prob.m_data.x[T], zeros(0), zeros(0)), Inf)
 @show norm(vcat([ctrl_lmt(prob.m_data.x[t], prob.m_data.u[t], zeros(0)) for t=1:T-1]...), Inf)
 
-# jldsave(joinpath(@__DIR__, "atlas_traj_6steps.jld2"), x_sol=x_sol, u_sol=u_sol)
+# jldsave(joinpath(@__DIR__, "rexhopper_traj.jld2"), x_sol=x_sol, u_sol=u_sol)
 
 plot([x[5] for x in x_sol])
 

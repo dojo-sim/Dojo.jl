@@ -146,17 +146,7 @@ end
 step(env::Environment, u; diff::Bool=false) = step(env, env.x, u; diff=diff)
 
 function f(y, env::Environment, x, u, w)
-	# println(scn.(get_maximal_state(env.mechanism)[3*13+1:4*13][1:3]), "f before step:")
-	# println(scn.(get_maximal_state(env.mechanism)[3*13+1:4*13][7:10]), "f before step:")
-	println(scn.(minimal_to_maximal(env.mechanism, env.x)[3*13+1:4*13][1:3]), "f before step:")
-	println(scn.(minimal_to_maximal(env.mechanism, env.x)[3*13+1:4*13][4:6]), "f before step:")
-	println(scn.(minimal_to_maximal(env.mechanism, env.x)[3*13+1:4*13][7:10]), "f before step:")
 	step(env, x, u)[1]
-	# println(scn.(get_maximal_state(env.mechanism)[3*13+1:4*13][1:3]), "f after step:")
-	# println(scn.(get_maximal_state(env.mechanism)[3*13+1:4*13][7:10]), "f after step:")
-	println(scn.(minimal_to_maximal(env.mechanism, env.x)[3*13+1:4*13][1:3]), "f after step:")
-	println(scn.(minimal_to_maximal(env.mechanism, env.x)[3*13+1:4*13][4:6]), "f after step:")
-	println(scn.(minimal_to_maximal(env.mechanism, env.x)[3*13+1:4*13][7:10]), "f after step:")
     y .= env.x
 end
 
