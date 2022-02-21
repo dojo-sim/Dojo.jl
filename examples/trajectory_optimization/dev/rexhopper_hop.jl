@@ -9,9 +9,9 @@ include(joinpath(module_dir(), "env/rexhopper/methods/initialize.jl"))
 
 
 gravity = -9.81
-dt = 0.02
+dt = 0.005
 friction_coefficient = 0.5
-damper = 2.0
+damper = 0.5
 spring = 5.0
 ρ0 = 1e-4
 env = rexhopper(
@@ -29,7 +29,6 @@ env = rexhopper(
 	opts_step=SolverOptions(rtol=ρ0, btol=ρ0, undercut=5.0),
     opts_grad=SolverOptions(rtol=ρ0, btol=ρ0, undercut=5.0)
 	)
-
 
 # ## visualizer
 open(env.vis)
@@ -50,16 +49,16 @@ set_robot(env.vis, env.mechanism, zinit)
 set_robot(env.vis, env.mechanism, z2)
 
 
-initialize!(env.mechanism, :rexhopper, x=[0,0,0.0], θ=[0,0,0.])
+initialize!(env.mechanism, :rexhopper, x=[0,0,0.1], θ=[0,0.2,0.2])
 xup = get_minimal_state(env.mechanism)
 function ctrl!(mech, k)
 	u0 = -total_mass(env.mechanism) * env.mechanism.gravity* env.mechanism.timestep/1.1 * 0
 	set_control!(mech, [u0; szeros(m-3)])
 	return nothing
 end
-storage = simulate!(env.mechanism, 0.5, ctrl!, record=true, verbose=false,
-	opts=SolverOptions(rtol=ρ0, btol=ρ0, undercut=1.5))
-visualize(env.mechanism, storage, vis=env.vis, show_contact=false)
+storage = simulate!(env.mechanism, 3.0, ctrl!, record=true, verbose=false,
+	opts=SolverOptions(rtol=ρ0, btol=ρ0, undercut=5.0))
+visualize(env.mechanism, storage, vis=env.vis, show_contact=true)
 
 # ## horizon
 T = 25

@@ -6,8 +6,6 @@ function root_to_leaves_ordering(mechanism::Mechanism{T};
         exclude_origin::Bool=true, exclude_loop_joints::Bool=true) where T
     nodes = [mechanism.origin; mechanism.bodies; mechanism.joints; mechanism.contacts]
     loop_joints = get_loop_joints(mechanism.bodies, mechanism.joints)
-    @show getfield.(nodes, :name)
-    @show getfield.(loop_joints, :name)
     return root_to_leaves_ordering(nodes, loop_joints,
         exclude_origin=exclude_origin, exclude_loop_joints=exclude_loop_joints)
 end
