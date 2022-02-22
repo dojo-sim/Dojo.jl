@@ -1,6 +1,5 @@
 @inline function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry, node::Node)
     matrix_entry.value = constraint_jacobian_configuration(mechanism, node)
-    @show typeof(node)
     vector_entry.value = -constraint(mechanism, node)
     return
 end
@@ -27,7 +26,6 @@ function complementarity(mechanism, joint::JointConstraint{T,N,Nc}; scaling::Boo
     end
     return vcat(c...)
 end
-
 
 function feasibility_linesearch!(mechanism::Mechanism; τort::T=0.95, τsoc::T=0.95, scaling::Bool=false) where T
     system = mechanism.system

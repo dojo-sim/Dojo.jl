@@ -246,8 +246,8 @@ function reset!(joint::JointConstraint{T,N,Nc}; scale::T=1.0) where {T,N,Nc}
         Nb = limits_length(element)
         push!(λ, [scale * sones(2Nb); szeros(Nλ)])
     end
-    joint.impulses[1] = vcat(λ...)
-    joint.impulses[2] = vcat(λ...)
+    joint.impulses[1] += vcat(λ...)
+    joint.impulses[2] += vcat(λ...)
     return
 end
 

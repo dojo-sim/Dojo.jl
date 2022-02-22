@@ -11,8 +11,8 @@
 end
 
 function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
-	reset!.(mechanism.contacts, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
-	reset!.(mechanism.joints, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
+	reset!.(mechanism.contacts, scale=.1) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
+	reset!.(mechanism.joints, scale=.1) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
 
     mechanism.μ = 0.0
 	μtarget = 0.0
