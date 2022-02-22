@@ -1,7 +1,6 @@
 
 # constraints
 function constraint_jacobian_configuration(mechanism, contact::ContactConstraint, body::Body)
-    error()
     return constraint_jacobian_configuration(contact.model, body, nothing, nothing, mechanism.timestep)
 end
 

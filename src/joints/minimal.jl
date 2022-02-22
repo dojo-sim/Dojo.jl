@@ -94,6 +94,7 @@ function set_minimal_velocities(joint::JointConstraint,
     # 1 step backward in time
     xa1 = next_position(xa, -va, timestep)
     qa1 = next_orientation(qa, -ϕa, timestep)
+    
     # Finite difference
     Δx1 = Δx .- Δv * timestep
     

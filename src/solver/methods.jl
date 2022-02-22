@@ -1,6 +1,6 @@
 @inline function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry, node::Node)
     matrix_entry.value = constraint_jacobian_configuration(mechanism, node)
-    @show typeof(node)
+    # @show typeof(node)
     vector_entry.value = -constraint(mechanism, node)
     return
 end
