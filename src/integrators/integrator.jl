@@ -46,6 +46,14 @@ function angular_velocity(q1::UnitQuaternion, q2::UnitQuaternion, timestep)
     2.0 / timestep  * Vmat() * Lᵀmat(q1) * vector(q2)
 end
 
+function ∂angular_velocity∂q1(q1::UnitQuaternion, q2::UnitQuaternion, timestep)
+    2.0 / timestep  * Vmat() * Rmat(q2) * Tmat()
+end
+
+function ∂angular_velocity∂q2(q1::UnitQuaternion, q2::UnitQuaternion, timestep)
+    2.0 / timestep  * Vmat() * Lᵀmat(q1)
+end
+
 function set_previous_configuration!(node::Node{T}, timestep::T) where {T}
     x2, v15, q2, ϕ15 = initial_configuration_velocity(node.state)
     node.state.x1 = next_position(x2, -v15, timestep)
