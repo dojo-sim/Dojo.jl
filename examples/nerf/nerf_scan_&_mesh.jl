@@ -82,8 +82,8 @@ anim = @animate for z ∈ zrange
         title="bunny")
 end
 
-nerf_dir = joinpath(module_dir(), "examples/nerf")
-# gif(anim, joinpath(nerf_dir, "bunny_scan.gif"), fps=15)
+nerf_dir = joinpath(module_dir(), "examples/nerf/deps")
+# gif(anim, joinpath(nerf_dir, "bunny_scan_.gif"), fps=15)
 
 
 ################################################################################
