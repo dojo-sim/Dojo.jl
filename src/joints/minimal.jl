@@ -55,13 +55,6 @@ end
 ################################################################################
 # Velocities
 ################################################################################
-@inline function minimal_coordinates_velocities(joint::JointConstraint,
-    pnode::Node, cnode::Node, timestep)
-    Δxθ = minimal_coordinates(joint, pnode, cnode)
-    Δvϕ = minimal_velocities(joint, pnode, cnode, timestep)
-    return [Δxθ; Δvϕ]
-end
-
 @inline function minimal_velocities(joint::JointConstraint, pnode::Node, cnode::Node, timestep)
     Δv = minimal_velocities(joint.translational, pnode, cnode, timestep)
     Δϕ = minimal_velocities(joint.rotational, pnode, cnode, timestep)
@@ -94,15 +87,19 @@ function set_minimal_velocities(joint::JointConstraint,
     qoffset = rot.qoffset
     Arotᵀ = zerodimstaticadjoint(nullspace_mask(rot))
     Atraᵀ = zerodimstaticadjoint(nullspace_mask(tra))
+
     Δx = minimal_coordinates(joint.translational, xa, qa, xb, qb)
+    Δq = inv(qoffset) * inv(qa) * qb
+
     # 1 step backward in time
     xa1 = next_position(xa, -va, timestep)
     qa1 = next_orientation(qa, -ϕa, timestep)
+    
     # Finite difference
     Δx1 = Δx .- Δv * timestep
+    
     # Δθ is expressed in along the joint's nullspace axes, in pnode's offset frame
-    Δq2 = inv(qoffset) * inv(qa) * qb
-    Δq1 = Δq2 * inv(axis_angle_to_quaternion(Arotᵀ * Δϕ * timestep))
+    Δq1 = Δq * inv(axis_angle_to_quaternion(Arotᵀ * Δϕ * timestep))
     qb1 = qa1 * qoffset * Δq1
     xb1 = xa1 + vrotate(pa + Atraᵀ*Δx1, qa1) - vrotate(pb, qb1)
     
@@ -113,17 +110,14 @@ function set_minimal_velocities(joint::JointConstraint,
 end
 
 function set_velocity!(mechanism, joint::JointConstraint{T,N,Nc}, vϕ) where {T,N,Nc}
-    Nλ = 0
-    for (i, element) in enumerate([joint.translational, joint.rotational])
-        Nλ += joint_length(element)
-    end
-
     # bodies
     body1 = get_body(mechanism, joint.parent_id)
     body2 = get_body(mechanism, joint.child_id)
 
+    # unpack
     Δv = vϕ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]
     Δϕ = vϕ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])]
+    
     set_minimal_velocities!(body1, body2, joint, mechanism.timestep, Δv=Δv, Δϕ=Δϕ)
     return body2.state.v15, body2.state.ϕ15
 end
@@ -131,6 +125,13 @@ end
 ################################################################################
 # Coordinates and Velocities
 ################################################################################
+@inline function minimal_coordinates_velocities(joint::JointConstraint,
+    pnode::Node, cnode::Node, timestep)
+    Δxθ = minimal_coordinates(joint, pnode, cnode)
+    Δvϕ = minimal_velocities(joint, pnode, cnode, timestep)
+    return [Δxθ; Δvϕ]
+end
+
 function set_minimal_coordinates_velocities!(mechanism::Mechanism, joint::JointConstraint;
         xmin::AbstractVector=szeros(2*control_dimension(joint)))
     pnode = get_body(mechanism, joint.parent_id)
@@ -186,6 +187,7 @@ function set_minimal_coordinates_velocities_jacobian_parent(pnode::Node, cnode::
 		zb = [xb; vb; vector(qb); ϕb]
 		return zb
 	end
+    
 	J = FiniteDiff.finite_difference_jacobian(za -> child_maximal_state(za), za)
 	J = cat(Diagonal(sones(6)), LVᵀmat(qb)', Diagonal(sones(3)), dims=(1,2)) * J
 	J = J * cat(Diagonal(sones(6)), LVᵀmat(qa), Diagonal(sones(3)), dims=(1,2))

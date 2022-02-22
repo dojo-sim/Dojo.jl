@@ -1,27 +1,22 @@
 using Dojo
 using Test
 
-# include(joinpath(Dojo.module_dir(), "src", "gradients", "dev", "data.jl"))
-# include(joinpath(Dojo.module_dir(), "src", "gradients", "dev", "utils.jl"))
-# include(joinpath(Dojo.module_dir(), "src", "gradients", "dev", "finite_difference.jl"))
-# include(joinpath(Dojo.module_dir(), "src", "gradients", "dev", "data_gradients.jl"))
-
 jointtypes = [
     :Fixed,
-    # :Prismatic,
-    # :Planar,
-    # :FixedOrientation,
+    :Prismatic,
+    :Planar,
+    :FixedOrientation,
     :Revolute,
-    # :Cylindrical,
-    # :PlanarAxis,
-    # :FreeRevolute,
+    :Cylindrical,
+    :PlanarAxis,
+    :FreeRevolute,
     :Orbital,
-    # :PrismaticOrbital,
-    # :PlanarOrbital,
-    # :FreeOrbital,
+    :PrismaticOrbital,
+    :PlanarOrbital,
+    :FreeOrbital,
     :Spherical,
-    # :CylindricalFree,
-    # :PlanarFree
+    :CylindricalFree,
+    :PlanarFree
     ]
 
 function test_get_set_data(mechanism::Mechanism)
@@ -108,8 +103,8 @@ for (spring, damper) in [(0.0, 0.0), (2.0, 0.3)]
 	test_data_system(:sphere, contact=false)
 	test_data_system(:box, contact=false)
 	test_data_system(:box2d, contact=false)
-	# test_data_system(:slider, spring=spring, damper=damper)
-	# test_data_system(:nslider, spring=spring, damper=damper)
+	test_data_system(:slider, spring=spring, damper=damper)
+	test_data_system(:nslider, spring=spring, damper=damper)
 	test_data_system(:pendulum, spring=spring, damper=damper)
 	test_data_system(:cartpole, spring=spring, damper=damper)
 	test_data_system(:pendulum, spring=spring, damper=damper)
@@ -132,8 +127,8 @@ for (spring, damper) in [(0.0, 0.0), (2.0, 0.3)]
 	test_data_system(:sphere, contact=true)
 	test_data_system(:box, contact=true)
 	test_data_system(:box2d, contact=true)
-	# test_data_system(:slider, spring=spring, damper=damper)
-	# test_data_system(:nslider, spring=spring, damper=damper)
+	test_data_system(:slider, spring=spring, damper=damper)
+	test_data_system(:nslider, spring=spring, damper=damper)
 	test_data_system(:pendulum, spring=spring, damper=damper)
 	test_data_system(:cartpole, spring=spring, damper=damper)
 	test_data_system(:pendulum, spring=spring, damper=damper)

@@ -9,7 +9,7 @@
 function impulse_transform_jacobian(relative::Symbol, jacobian::Symbol,
     joint::Rotational{T,Nλ},
     xa::AbstractVector, qa::UnitQuaternion, 
-    xb::AbstractVector, qb::UnitQuaternion, p) where {T,Nλ}
+    xb::AbstractVector, qb::UnitQuaternion, p; attjac=true) where {T,Nλ}
 
     if relative == :parent 
         if jacobian == :parent 
@@ -21,7 +21,7 @@ function impulse_transform_jacobian(relative::Symbol, jacobian::Symbol,
             # ∂(Ja'*p)/∂(xb,qb)
             Z3 = szeros(T,3,3)
             ∇Qqb = VLᵀmat(qa) * Tmat(T) * ∂qRᵀmat(LVᵀmat(joint.qoffset) * p) * LVᵀmat(qb)
-            return cat(I(3), 0.5 * I(3), dims=(1,2))* [Z3 Z3; Z3 ∇Qqb]
+            return cat(I(3), 0.5 * I(3), dims=(1,2)) * [Z3 Z3; Z3 ∇Qqb]
         end
     elseif relative == :child 
         if jacobian == :parent 

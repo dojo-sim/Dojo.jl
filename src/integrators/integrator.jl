@@ -16,13 +16,13 @@
 @inline next_orientation(state::State, timestep) = next_orientation(state.q2[1], state.ϕsol[2], timestep)
 @inline next_configuration(state::State, timestep) = (next_position(state, timestep), next_orientation(state, timestep))
 
+@inline function quaternion_map(ω, timestep)
+    return UnitQuaternion(sqrt(4 / timestep^2 - dot(ω, ω)), ω, false)
+end
+
 @inline function quaternion_map_jacobian(ω::SVector{3}, timestep)
     msq = -sqrt(4 / timestep^2 - dot(ω, ω))
     return [ω' / msq; I]
-end
-
-@inline function quaternion_map(ω, timestep)
-    return UnitQuaternion(sqrt(4 / timestep^2 - dot(ω, ω)), ω, false)
 end
 
 function cayley(ω)
@@ -44,6 +44,14 @@ end
 # I think this is the inverse of next_orientation, we recover ϕ15 from q1, q2 and h
 function angular_velocity(q1::UnitQuaternion, q2::UnitQuaternion, timestep)
     2.0 / timestep  * Vmat() * Lᵀmat(q1) * vector(q2)
+end
+
+function ∂angular_velocity∂q1(q1::UnitQuaternion, q2::UnitQuaternion, timestep)
+    2.0 / timestep  * Vmat() * Rmat(q2) * Tmat()
+end
+
+function ∂angular_velocity∂q2(q1::UnitQuaternion, q2::UnitQuaternion, timestep)
+    2.0 / timestep  * Vmat() * Lᵀmat(q1)
 end
 
 function set_previous_configuration!(node::Node{T}, timestep::T) where {T}

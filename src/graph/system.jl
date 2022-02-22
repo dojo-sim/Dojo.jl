@@ -94,11 +94,11 @@ end
 function full_matrix(matrix_entries::SparseMatrixCSC, dimrow, dimcol)
     range_row = [1:dimrow[1]]
     for (i,dim) in enumerate(collect(Iterators.rest(dimrow, 2)))
-        push!(range_row,sum(dimrow[1:i])+1:sum(dimrow[1:i])+dim)
+        push!(range_row, sum(dimrow[1:i])+1:sum(dimrow[1:i])+dim)
     end
     range_col = [1:dimcol[1]]
     for (i,dim) in enumerate(collect(Iterators.rest(dimcol, 2)))
-        push!(range_col,sum(dimcol[1:i])+1:sum(dimcol[1:i])+dim)
+        push!(range_col, sum(dimcol[1:i])+1:sum(dimcol[1:i])+dim)
     end
 
     A = zeros(sum(dimrow),sum(dimcol))
