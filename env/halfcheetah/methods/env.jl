@@ -37,7 +37,7 @@ function halfcheetah(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
     motor_gear = [120, 90, 60, 120, 60, 30.]
     control_scaling = Diagonal(dt * motor_gear)
 
-    build_robot(vis, mechanism, name=name)
+    build_robot(mechanism, vis=vis, name=name)
 
     TYPES = [HalfCheetah, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
     env = Environment{TYPES...}(mechanism, mode, aspace, ospace,

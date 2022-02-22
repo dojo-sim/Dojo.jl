@@ -32,7 +32,7 @@ function pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
     u_prev = Inf * ones(nu)
     control_mask = ones(1,1)
     control_scaling = Diagonal(ones(nu))
-    build_robot(vis, mechanism, name=name)
+    build_robot(mechanism, vis=vis, name=name)
 
     info = Dict(:max_speed => max_speed, :max_torque => max_torque)
 

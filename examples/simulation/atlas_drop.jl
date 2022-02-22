@@ -27,7 +27,7 @@ z = get_maximal_state(storage)
 z = [[z[1] for t = 1:100]..., z..., [z[end] for t = 1:100]...]
 T = length(z)
 anim = MeshCat.Animation(convert(Int, floor(1.0 / 0.01)))
-build_robot(vis, mech)
+build_robot(mech, vis=vis)
 for t = 1:T
     MeshCat.atframe(anim, t) do
         set_robot(vis, mech, z[t])

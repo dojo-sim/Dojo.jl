@@ -50,14 +50,10 @@ end
 end
 
 function reset!(contact::ContactConstraint{T,N,Nc,Cs,N½}; scale::T=1.0) where {T,N,Nc,Cs,N½}
-    # contact.impulses_dual[1] = scale * neutral_vector(contact.model)
-    # contact.impulses_dual[2] = scale * neutral_vector(contact.model)
-    # contact.impulses[1] = scale * neutral_vector(contact.model)
-    # contact.impulses[2] = scale * neutral_vector(contact.model)
-    contact.impulses_dual[1] += scale * neutral_vector(contact.model)
-    contact.impulses_dual[2] += scale * neutral_vector(contact.model)
-    contact.impulses[1] += scale * neutral_vector(contact.model)
-    contact.impulses[2] += scale * neutral_vector(contact.model)
+    contact.impulses_dual[1] = scale * neutral_vector(contact.model)
+    contact.impulses_dual[2] = scale * neutral_vector(contact.model)
+    contact.impulses[1] = scale * neutral_vector(contact.model)
+    contact.impulses[2] = scale * neutral_vector(contact.model)
     return
 end
 

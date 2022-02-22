@@ -36,7 +36,7 @@ function ant(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
     control_mask = [zeros(8, 6) I(nu)]
     control_scaling = Diagonal(dt * 150.0 * ones(nu))
 
-    build_robot(vis, mechanism, name=name)
+    build_robot(mechanism, vis=vis, name=name)
 
     TYPES = [Ant, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
     env = Environment{TYPES...}(mechanism, mode, aspace, ospace,

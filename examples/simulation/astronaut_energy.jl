@@ -104,7 +104,7 @@ PGF.save(joinpath(dir, "energy_drift.tikz"), a1)
 color = RGBA(255.0/255.0,0.0,255.0,1.0);
 z = get_maximal_state(storage)
 z = [[z[1] for t = 1:100]..., z..., [z[end] for t = 1:100]...]
-build_robot(vis, mech, color=color)
+build_robot(mech, vis=vis, color=color)
 T = length(z)
 anim = MeshCat.Animation(convert(Int, floor(1.0 / timestep0)))
 for t = 1:T

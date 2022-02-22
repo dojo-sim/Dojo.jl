@@ -43,3 +43,14 @@ function convert_shape(shapes::Shapes)
     end
     return geom
 end
+
+function set_color!(shape::EmptyShape, color)
+end
+function set_color!(shape::Shape, color)
+    shape.color = color
+end
+function set_color!(shapes::Shapes, color)
+    for i in eachindex(shapes)
+        shapes.shape[i].color = color
+    end
+end

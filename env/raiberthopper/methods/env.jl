@@ -33,7 +33,7 @@ function raiberthopper(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81
 
     u_prev = zeros(nu)
     control_mask = raiberthopper_control_mask()
-    build_robot(vis, mechanism, name=name)
+    build_robot(mechanism, vis=vis, name=name)
 
     TYPES = [RaibertHopper, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
     env = Environment{TYPES...}(mechanism, mode, aspace, ospace,

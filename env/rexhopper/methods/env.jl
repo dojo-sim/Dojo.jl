@@ -62,7 +62,7 @@ function rexhopper(;
     motor_gear = ones(nu)
     control_scaling = Diagonal(motor_gear)
 
-    build_robot(vis, mechanism, name=name)
+    build_robot(mechanism, vis=vis, name=name)
 
     TYPES = [RexHopper, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
     env = Environment{TYPES...}(mechanism, mode, aspace, ospace,

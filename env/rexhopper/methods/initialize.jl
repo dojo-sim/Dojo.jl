@@ -43,6 +43,9 @@ function get_rexhopper(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_c
         o = [0;0; ankle_radius]
         push!(models, contact_constraint(link3, normal, friction_coefficient=friction_coefficient,
             contact_point=p, offset=o, contact_type=contact_type))
+        p = [0.24; 0.007; 0.005]
+        push!(models, contact_constraint(link2, normal, friction_coefficient=friction_coefficient,
+            contact_point=p, offset=o, contact_type=contact_type))
         base_link = get_body(mech, :base_link)
         p = [0.0; 0.0; 0.0]
         o = [0;0; base_radius]
