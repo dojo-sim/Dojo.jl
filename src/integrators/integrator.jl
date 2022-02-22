@@ -16,13 +16,13 @@
 @inline next_orientation(state::State, timestep) = next_orientation(state.q2[1], state.ϕsol[2], timestep)
 @inline next_configuration(state::State, timestep) = (next_position(state, timestep), next_orientation(state, timestep))
 
+@inline function quaternion_map(ω, timestep)
+    return UnitQuaternion(sqrt(4 / timestep^2 - dot(ω, ω)), ω, false)
+end
+
 @inline function quaternion_map_jacobian(ω::SVector{3}, timestep)
     msq = -sqrt(4 / timestep^2 - dot(ω, ω))
     return [ω' / msq; I]
-end
-
-@inline function quaternion_map(ω, timestep)
-    return UnitQuaternion(sqrt(4 / timestep^2 - dot(ω, ω)), ω, false)
 end
 
 function cayley(ω)
