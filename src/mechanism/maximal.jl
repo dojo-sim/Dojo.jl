@@ -104,7 +104,8 @@ function maximal_to_minimal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVect
 	x = []
 	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
 	# Thus go through the joints in order, start from joint between robot and origin and go down the tree.
-	for id in reverse(mechanism.system.dfs_list)
+	# for id in reverse(mechanism.system.dfs_list)
+	for id in mechanism.root_to_leaves
 		(id > Ne) && continue # only treat joints
 		joint = mechanism.joints[id]
 		c = zeros(Tz,0)
@@ -133,7 +134,8 @@ function maximal_to_minimal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::Abs
 	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
 	# Thus go through the joints in order, start from joint between robot and origin and go down the tree.
 	row_shift = 0
-	for id in reverse(mechanism.system.dfs_list)
+	# for id in reverse(mechanism.system.dfs_list)
+	for id in mechanism.root_to_leaves
 		(id > Ne) && continue # only treat joints
 		joint = mechanism.joints[id]
 		c_shift = 0

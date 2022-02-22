@@ -178,6 +178,7 @@ include("box/methods/env.jl")
 # Visualize Trajectories
 # ##############################################################################
 function visualize(env::Environment, traj::Vector{Vector{T}}) where T
+	@assert size(traj[1]) == size(env.x)
     storage = generate_storage(env.mechanism, [env.mode == :min ? minimal_to_maximal(env.mechanism, x) : x for x in traj])
     visualize(env.mechanism, storage, vis=env.vis)
 end

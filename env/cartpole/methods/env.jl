@@ -82,6 +82,7 @@ function cartpole_goal_max(;pendulum_length=1.0)
 end
 
 function visualize(env::Environment{Cartpole}, traj::Vector{Vector{T}}; axes=false, grid=false, ee_traj=false) where T
+	@assert size(traj[1]) == size(env.x)
     storage = generate_storage(env.mechanism, [env.mode == :min ? minimal_to_maximal(env.mechanism, x) : x for x in traj])
     visualize(env.mechanism, storage, vis=env.vis)
 	set_camera!(env.vis, zoom=1.0, cam_pos=[2,0,0])

@@ -10,6 +10,7 @@ mutable struct Mechanism{T,Nn,Ne,Nb,Ni}
     diagonal_inverses::Vector{Entry}
 
 	data_matrix::SparseMatrixCSC{Entry,Int64}
+	root_to_leaves::Vector{Int64}
 
     timestep::T
     gravity::SVector{3,T}
@@ -47,14 +48,21 @@ function Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:
 	# data gradient system
 	data_matrix = create_data_matrix(joints, bodies, contacts)
 
+	# Node ordering from root to leaves, loop joints at the end
+	loop_joints = get_loop_joints(bodies, joints)
+	nodes = [origin; bodies; joints; contacts]
+	root_to_leaves = root_to_leaves_ordering(nodes, loop_joints,
+		    exclude_origin=true, exclude_loop_joints=false)
+
     # springs and dampers
     joints = set_spring_damper_values!(joints, spring, damper)
 
     Mechanism{T,Nn,Ne,Nb,Ni}(origin, joints, bodies, contacts, system, residual_entries,
-		matrix_entries, diagonal_inverses, data_matrix, timestep, get_gravity(gravity), 0.0)
+		matrix_entries, diagonal_inverses, data_matrix, root_to_leaves, timestep, get_gravity(gravity), 0.0)
 end
 
-Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:JointConstraint{T}}; kwargs...) where T = Mechanism(origin, bodies, joints, ContactConstraint{T}[]; kwargs...)
+Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:JointConstraint{T}}; kwargs...) where T =
+	Mechanism(origin, bodies, joints, ContactConstraint{T}[]; kwargs...)
 
 function Mechanism(filename::String, floating::Bool=false, T=Float64; kwargs...)
     # parse urdf
@@ -64,7 +72,6 @@ function Mechanism(filename::String, floating::Bool=false, T=Float64; kwargs...)
     mechanism = Mechanism(origin, links, [joints; loopjoints]; kwargs...)
 
     # initialize mechanism
-	# @warn "need to uncomment"
     set_parsed_values!(mechanism, loopjoints)
 
     return mechanism
@@ -191,7 +198,8 @@ end
 function velocity_index(mechanism::Mechanism{T,Nn,Ne}) where {T,Nn,Ne}
     ind = []
     off = 0
-    for id in reverse(mechanism.system.dfs_list)
+    # for id in reverse(mechanism.system.dfs_list)
+	for id in mechanism.root_to_leaves
         (id > Ne) && continue # only treat joints
         joint = mechanism.joints[id]
         nu = control_dimension(joint)
@@ -206,7 +214,8 @@ function set_spring_offset!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVect
 	# When we set the Δv and Δω in the mechanical graph, we need to start from the root and get down to the leaves.
 	# Thus go through the joints in order, start from joint between robot and origin and go down the tree.
 	off = 0
-	for id in reverse(mechanism.system.dfs_list)
+	# for id in reverse(mechanism.system.dfs_list)
+	for id in mechanism.root_to_leaves
 		(id > Ne) && continue # only treat joints
 		joint = mechanism.joints[id]
         N̄ = 3 - length(joint)

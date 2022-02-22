@@ -96,7 +96,7 @@
     </collision>
   </link>
   <joint
-    name="Joint 0"
+    name="joint0"
     type="revolute">
     <origin
       xyz="0 0 0"

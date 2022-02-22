@@ -28,7 +28,7 @@ end
         mech = Dojo.get_fourbar(model="fourbar", timestep=timestep)
         Dojo.initialize!(mech, :fourbar, θ=0.1, ω1=3.0, ω2=-3.0)
         loopjoints = mech.joints[end:end]
-        Dojo.root_to_leaves_ordering(mech, loopjoints) == [2,7,3,6,1,8,4,9]
+        Dojo.root_to_leaves_ordering(mech) == [2,7,3,6,1,8,4,9]
 
         # Simulation
         function ctrl!(m,k)
