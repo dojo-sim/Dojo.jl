@@ -54,6 +54,15 @@ function ∂angular_velocity∂q2(q1::UnitQuaternion, q2::UnitQuaternion, timest
     2.0 / timestep  * Vmat() * Lᵀmat(q1)
 end
 
+qa = rand(UnitQuaternion)
+qb = rand(UnitQuaternion) 
+FiniteDiff.finite_difference_jacobian(w -> angular_velocity(UnitQuaternion(w..., false), qb, 0.1), vector(qa))
+∂angular_velocity∂q1(qa, qb, 0.1)
+
+FiniteDiff.finite_difference_jacobian(w -> angular_velocity(qa, UnitQuaternion(w..., false), 0.1), vector(qb))
+∂angular_velocity∂q2(qa, qb, 0.1)
+
+
 function set_previous_configuration!(node::Node{T}, timestep::T) where {T}
     x2, v15, q2, ϕ15 = initial_configuration_velocity(node.state)
     node.state.x1 = next_position(x2, -v15, timestep)

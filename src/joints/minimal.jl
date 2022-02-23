@@ -68,18 +68,20 @@ function set_minimal_velocities!(pnode::Node, cnode::Node, joint::JointConstrain
     # since vb = fct(ϕb, Δv)
     # set_minimal_velocities!(pnode, cnode, joint.rotational; Δϕ=Δϕ)
     # set_minimal_velocities!(pnode, cnode, joint.translational; Δv=Δv)
-	vb, ϕb = set_minimal_velocities(joint, initial_configuration_velocity(pnode.state)...,
+	vb, ϕb = set_child_velocities(joint, 
+        initial_configuration_velocity(pnode.state)...,
 	 	current_configuration(cnode.state)..., timestep, Δv=Δv, Δϕ=Δϕ)
 	set_velocity!(cnode; v=vb, ω=ϕb)
 	set_previous_configuration!(cnode, timestep)
     return nothing
 end
 
-function set_minimal_velocities(joint::JointConstraint,
+function set_child_velocities(joint::JointConstraint,
     xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
     xb::AbstractVector, qb::UnitQuaternion, timestep;
     Δv=szeros(control_dimension(joint.translational)),
     Δϕ=szeros(control_dimension(joint.rotational)))
+
     rot = joint.rotational
     tra = joint.translational
     pa = tra.vertices[1]
@@ -94,12 +96,11 @@ function set_minimal_velocities(joint::JointConstraint,
     # 1 step backward in time
     xa1 = next_position(xa, -va, timestep)
     qa1 = next_orientation(qa, -ϕa, timestep)
-    
+
     # Finite difference
     Δx1 = Δx .- Δv * timestep
-    
-    # Δθ is expressed in along the joint's nullspace axes, in pnode's offset frame
     Δq1 = Δq * inv(axis_angle_to_quaternion(Arotᵀ * Δϕ * timestep))
+
     qb1 = qa1 * qoffset * Δq1
     xb1 = xa1 + vrotate(pa + Atraᵀ*Δx1, qa1) - vrotate(pb, qb1)
     
@@ -141,14 +142,15 @@ end
 
 function set_minimal_coordinates_velocities!(pnode::Node, cnode::Node, joint::JointConstraint, timestep;
         xmin::AbstractVector=szeros(2*control_dimension(joint)))
+    
     nu = control_dimension(joint)
     Δx = xmin[SUnitRange(joint.minimal_index[1]...)]
     Δθ = xmin[SUnitRange(joint.minimal_index[2]...)]
+
     Δv = xmin[nu .+ SUnitRange(joint.minimal_index[1]...)]
     Δϕ = xmin[nu .+ SUnitRange(joint.minimal_index[2]...)]
+
 	# We need to set the minimal coordinates of the rotational joint first
-	# since xb = fct(qb, Δx)
-	# since vb = fct(ϕb, Δv)
 	set_minimal_coordinates!(pnode, cnode, joint, timestep; Δx=Δx, Δθ=Δθ)
 	set_minimal_velocities!(pnode, cnode, joint, timestep; Δv=Δv, Δϕ=Δϕ)
 end

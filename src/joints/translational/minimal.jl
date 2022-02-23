@@ -58,7 +58,7 @@ function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::Translational
 
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
     xb = xa + vrotate(pa + Aᵀ * Δx, qa) - vrotate(pb, qb)
-    set_position!(cnode; x = xb, q=cnode.state.q2[1])
+    set_position!(cnode; x=xb, q=cnode.state.q2[1])
     set_previous_configuration!(cnode, timestep)
     return nothing
 end
