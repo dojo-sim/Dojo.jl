@@ -14,7 +14,7 @@ mutable struct Mechanism{T,Nn,Ne,Nb,Ni}
 
     timestep::T
     gravity::SVector{3,T}
-    μ::T
+	μ::T
 end
 
 function Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:JointConstraint{T}}, contacts::Vector{<:ContactConstraint{T}};

@@ -14,6 +14,7 @@ function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
 	reset!.(mechanism.contacts, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
 	reset!.(mechanism.joints, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
 
+	status = :failed
     mechanism.μ = 0.0
 	μtarget = 0.0
 	no_progress = 0
@@ -25,24 +26,23 @@ function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
 
     bvio = bilinear_violation(mechanism) # does not require to apply set_entries!
     rvio = residual_violation(mechanism) # does not require to apply set_entries!
-
-	opts.verbose && println("-----------------------------------------------------------------")
-
+	opts.verbose && solver_header()
     for n = Base.OneTo(opts.max_iter)
-
         opts.verbose && solver_status(mechanism, α, rvio, bvio, n, μtarget, undercut)
 
-        ((rvio < opts.rtol) && (bvio < opts.btol)) && break
+        ((rvio < opts.rtol) && (bvio < opts.btol)) && (status=:success; break)
 		(n == opts.max_iter) && (opts.verbose && (@warn "failed mehrotra"))
 
         # affine search direction
 		μ = 0.0
-		pull_residual!(mechanism)                # store the residual inside mechanism.residual_entries
+		pull_residual!(mechanism)               # store the residual inside mechanism.residual_entries
         ldu_factorization!(mechanism.system)    # factorize system, modifies the matrix in place
-        pull_matrix!(mechanism)                  # store the factorized matrix inside mechanism.matrix_entries
+        pull_matrix!(mechanism)                 # store the factorized matrix inside mechanism.matrix_entries
         ldu_backsubstitution!(mechanism.system) # solve system, modifies the vector in place
 
+		VERBOSE_MEHROTRA && println("predictor")
 		αaff = feasibility_linesearch!(mechanism; τort=0.95, τsoc=0.95, scaling=false) # uses system.vector_entries which holds the search drection
+		VERBOSE_MEHROTRA && @show αaff
 		ν, νaff = centering!(mechanism, αaff)
 		σcentering = clamp(νaff / (ν + 1e-20), 0.0, 1.0)^3
 
@@ -51,13 +51,14 @@ function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
 		mechanism.μ = μtarget
 		correction!(mechanism) # update the residual in mechanism.residual_entries
 
-		push_residual!(mechanism)                # cache residual + correction
-        push_matrix!(mechanism)                  # restore the factorized matrix
+		push_residual!(mechanism)               # cache residual + correction
+        push_matrix!(mechanism)                 # restore the factorized matrix
         ldu_backsubstitution!(mechanism.system) # solve system
 
 		τ = max(0.95, 1 - max(rvio, bvio)^2) # τ = 0.95
+		VERBOSE_MEHROTRA && println("corrector")
 		α = feasibility_linesearch!(mechanism; τort=τ, τsoc=min(τ, 0.95), scaling=false) # uses system.vector_entries which holds the corrected search drection
-
+		VERBOSE_MEHROTRA && @show α
 		# steps taken without making progress
 		rvio_, bvio_ = line_search!(mechanism, α, rvio, bvio, opts; warning=false)
 		made_progress = (!(rvio_ < opts.rtol) && (rvio_ < 0.8rvio)) || (!(bvio_ < opts.btol) && (bvio_ < 0.8bvio)) # we only care when progress is made while the tolerance is not met
@@ -74,7 +75,13 @@ function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
         set_entries!(mechanism)
     end
 
-    return
+    return status
+end
+
+function solver_header()
+	println("                                                 ")
+	println("n    bvio    rvio     α       μ     |res|∞   |Δ|∞")
+	println("–––––––––––––––––––––––––––––––––––––––––––––––––")
 end
 
 function solver_status(mechanism::Mechanism, α, rvio, bvio, n, μtarget, undercut)
@@ -83,18 +90,27 @@ function solver_status(mechanism::Mechanism, α, rvio, bvio, n, μtarget, underc
     fM = full_matrix(mechanism.system)
     fΔ = fM \ fv
     Δalt = norm(fΔ, Inf)
-    ##################
     res = norm(fv, Inf)
-    println(
-        "n ", n,
-        "   bvio", scn(bvio, digits=0),
-        "   rvio", scn(rvio, digits=0),
-        "   α", scn(α, digits=0),
-        "   μ", scn(μtarget, digits=0),
-        "   |res|∞", scn(res, digits=0),
-        "   |Δ|∞", scn(Δvar, digits=0),
+	println(
+        n,
+        "   ", scn(bvio, digits=0),
+        "   ", scn(rvio, digits=0),
+        "   ", scn(α, digits=0),
+        "   ", scn(μtarget, digits=0),
+        "   ", scn(res, digits=0),
+        "   ", scn(Δvar, digits=0),
         # "   ucut", scn(undercut),
         )
+    # println(
+    #     "n ", n,
+    #     "   bvio", scn(bvio, digits=0),
+    #     "   rvio", scn(rvio, digits=0),
+    #     "   α", scn(α, digits=0),
+    #     "   μ", scn(μtarget, digits=0),
+    #     "   |res|∞", scn(res, digits=0),
+    #     "   |Δ|∞", scn(Δvar, digits=0),
+    #     # "   ucut", scn(undercut),
+    #     )
 end
 
 function initial_state!(contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
@@ -154,11 +170,13 @@ function correction!(mechanism)
 	return
 end
 
-@inline function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, node::Node)
+@inline function correction!(mechanism::Mechanism, residual_entry::Entry,
+		step_entry::Entry, node::Node)
     return
 end
 
-@inline function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, ::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+@inline function correction!(mechanism::Mechanism, residual_entry::Entry,
+		step_entry::Entry, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
 	Δs = step_entry.value[1:N½]
     Δγ = step_entry.value[N½ .+ (1:N½)]
 	μ = mechanism.μ
@@ -166,7 +184,8 @@ end
     return
 end
 
-@inline function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
+@inline function correction!(mechanism::Mechanism, residual_entry::Entry,
+		step_entry::Entry, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
 	cont = contact.model
 	μ = mechanism.μ
 	Δs = step_entry.value[1:N½]
@@ -175,13 +194,15 @@ end
     return
 end
 
-@inline function correction!(mechanism::Mechanism{T}, residual_entry::Entry, step_entry::Entry, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
+@inline function correction!(mechanism::Mechanism{T}, residual_entry::Entry,
+		step_entry::Entry, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
 	cor = correction(mechanism, step_entry, joint)
 	residual_entry.value += cor
     return
 end
 
-@generated function correction(mechanism::Mechanism{T}, step_entry::Entry, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
+@generated function correction(mechanism::Mechanism{T}, step_entry::Entry,
+		joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
     cor = [:(correction([joint.translational, joint.rotational][$i], step_entry.value[joint_impulse_index(joint, $i)], mechanism.μ)) for i = 1:Nc]
     return :(vcat($(cor...)))
 end

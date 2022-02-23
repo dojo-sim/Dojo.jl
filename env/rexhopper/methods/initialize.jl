@@ -38,19 +38,19 @@ function get_rexhopper(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_c
         p = [0.1685; 0.0025; -0.0055]
         o = [0;0; foot_radius]
         push!(models, contact_constraint(link3, normal, friction_coefficient=friction_coefficient,
-            contact_point=p, offset=o, contact_type=contact_type))
+            contact_point=p, offset=o, contact_type=contact_type, name=:foot))
         p = [-0.10; -0.002; 0.01]
         o = [0;0; ankle_radius]
         push!(models, contact_constraint(link3, normal, friction_coefficient=friction_coefficient,
-            contact_point=p, offset=o, contact_type=contact_type))
+            contact_point=p, offset=o, contact_type=contact_type, name=:ankle3))
         p = [0.24; 0.007; 0.005]
         push!(models, contact_constraint(link2, normal, friction_coefficient=friction_coefficient,
-            contact_point=p, offset=o, contact_type=contact_type))
+            contact_point=p, offset=o, contact_type=contact_type, name=:ankle2))
         base_link = get_body(mech, :base_link)
         p = [0.0; 0.0; 0.0]
         o = [0;0; base_radius]
         push!(models, contact_constraint(base_link, normal, friction_coefficient=friction_coefficient,
-            contact_point=p, offset=o, contact_type=contact_type))
+            contact_point=p, offset=o, contact_type=contact_type, name=:torso))
 
         set_position!(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [0,0,1.0, 0,0,0])
         mech = Mechanism(origin, bodies, joints, [models...], gravity=gravity, timestep=timestep, spring=spring, damper=damper)

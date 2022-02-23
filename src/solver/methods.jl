@@ -51,7 +51,13 @@ function feasibility_linesearch!(α, mechanism, contact::ContactConstraint{T,N,N
     αγ_ort = positive_orthant_step_length(γ[1:1], Δγ[1:1], τ = τort)
     αs_soc = second_order_cone_step_length(s[2:4], Δs[2:4]; τ = τsoc)
     αγ_soc = second_order_cone_step_length(γ[2:4], Δγ[2:4]; τ = τsoc)
+    # VERBOSE && (αs_ort < 1e-3) && println("contact $(contact.name) αs_ort ", scn(αs_ort, digits=1))
+    # VERBOSE && (αγ_ort < 1e-3) && println("contact $(contact.name) αγ_ort ", scn(αγ_ort, digits=1))
+    # VERBOSE && (αs_soc < 1e-3) && println("contact $(contact.name) αs_soc ", scn(αs_soc, digits=1))
+    # VERBOSE && (αγ_soc < 1e-3) && println("contact $(contact.name) αγ_soc ", scn(αγ_soc, digits=1))
 
+    VERBOSE && println("contact $(contact.name)  ", scn(min(αs_soc, αγ_soc, αs_ort, αγ_ort), digits=1))
+    VERBOSE && println("contact bvio  ", scn(s'*γ, digits=1))
     return min(α, αs_soc, αγ_soc, αs_ort, αγ_ort)
 end
 
@@ -65,7 +71,10 @@ function feasibility_linesearch!(α, mechanism, contact::ContactConstraint{T,N,N
 
     αs_ort = positive_orthant_step_length(s, Δs, τ = τort)
     αγ_ort = positive_orthant_step_length(γ, Δγ, τ = τort)
-
+    # VERBOSE && (αs_ort < 1e-3) && println("contact $(contact.name) αs_ort ", scn(αs_ort, digits=1))
+    # VERBOSE && (αγ_ort < 1e-3) && println("contact $(contact.name) αγ_ort ", scn(αγ_ort, digits=1))
+    VERBOSE && println("contact $(contact.name)  ", scn(min(αs_ort, αγ_ort), digits=1))
+    VERBOSE && println("contact bvio  ", scn(s'*γ, digits=1))
     return min(α, αs_ort, αγ_ort)
 end
 
@@ -78,6 +87,11 @@ function feasibility_linesearch!(α, mechanism, joint::JointConstraint{T,N,Nc},
 
         αs_ort = positive_orthant_step_length(s, Δs, τ = τort)
         αγ_ort = positive_orthant_step_length(γ, Δγ, τ = τort)
+        # VERBOSE && (αs_ort < 1e-3) && println("joint $(joint.name) αs_ort ", scn(αs_ort, digits=1))
+        # VERBOSE && (αγ_ort < 1e-3) && println("joint $(joint.name) αγ_ort ", scn(αγ_ort, digits=1))
+
+        VERBOSE && (length(s) > 0) && println("joint $(joint.name) $i  ", scn(min(αs_ort, αγ_ort), digits=1))
+        VERBOSE && (length(s) > 0) && println("joint bvio     ", scn(s'*γ, digits=1))
         α = min(α, αs_ort, αγ_ort)
     end
 
