@@ -349,7 +349,7 @@ end
 	@test abs(sum(diag(M_a * N_a)) - Dojo.minimal_dimension(mechanism)) < 1.0e-5
 
 	# n-pendulum
-	mechanism = Dojo.get_mechanism(:npendulum, timestep = 0.1, gravity = -9.81, Nb=3)
+	mechanism = Dojo.get_mechanism(:npendulum, timestep = 0.1, gravity = -9.81, Nb=2)
 	ϕ1 = 0.3 * π
 	Dojo.initialize!(mechanism, :npendulum, ϕ1 = ϕ1)
 	storage = Dojo.simulate!(mechanism, 1.0, record = true, verbose = false)

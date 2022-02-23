@@ -194,7 +194,7 @@ FiniteDiff.finite_difference_jacobian(w -> vcat(set_child_velocities(mech.joints
     mech.timestep,
     Δv=SVector{nu_tra}(x[1:nu_tra]),
     Δϕ=SVector{nu_rot}(x[nu_tra .+ (1:nu_rot)]))...), vector(qb))[1:3, :]
-
+    ∂∂
 ∂vb∂qb(mech.joints[1], 
     current_configuration_velocity(mech.origin.state)...,
     current_configuration(mech.bodies[1].state)...,
@@ -358,43 +358,437 @@ function ∂vb∂qb(joint::JointConstraint,
     1.0 / timestep * I(3)
 end
 
+function ∂vb∂qa(joint::JointConstraint,
+    xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+    xb::AbstractVector, qb::UnitQuaternion, 
+    timestep;
+    Δx=szeros(control_dimension(joint.translational)),
+    Δθ=szeros(control_dimension(joint.rotational)),
+    Δv=szeros(control_dimension(joint.translational)),
+    Δϕ=szeros(control_dimension(joint.rotational)))
 
+    rot = joint.rotational
+    tra = joint.translational
+    pa = tra.vertices[1]
+    pb = tra.vertices[2]
+    qoffset = rot.qoffset
+    Arot = zerodimstaticadjoint(nullspace_mask(rot))
+    Atra = zerodimstaticadjoint(nullspace_mask(tra))
 
+    # positions
+    Δq = axis_angle_to_quaternion(Arot * Δθ)
+	qb = qa * qoffset * Δq
+    xb = xa + vrotate(pa + Atra * Δx, qa) - vrotate(pb, qb)
 
-# function ∂vb∂xa(joint::JointConstraint,
-#     xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
-#     xb::AbstractVector, qb::UnitQuaternion, timestep;
-#     Δv=szeros(control_dimension(joint.translational)),
-#     Δϕ=szeros(control_dimension(joint.rotational)))
+    # previous configuration
+    xa1 = next_position(xa, -va, timestep)
+    qa1 = next_orientation(qa, -ϕa, timestep)
 
-#     rot = joint.rotational
-#     tra = joint.translational
-#     pa = tra.vertices[1]
-#     pb = tra.vertices[2]
-#     qoffset = rot.qoffset
-#     Arot = zerodimstaticadjoint(nullspace_mask(rot))
-#     Atra = zerodimstaticadjoint(nullspace_mask(tra))
+    # finite-difference configuration
+    Δx1 = Δx .- Δv * timestep
+    Δq1 = Δq * inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))
 
-#     Δx = minimal_coordinates(joint.translational, xa, qa, xb, qb)
-#     Δq = inv(qoffset) * inv(qa) * qb 
-
-#     # step backward in time
-#     xa1 = next_position(xa, -va, timestep)
-#     qa1 = next_orientation(qa, -ϕa, timestep)
-
-#     # step backward in time
-#     Δx1 = Δx .- Δv * timestep  
-#     Δq1 = Δq * inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))
+    qb1 = qa1 * qoffset * Δq1
+    xb1 = xa1 + vrotate(pa + Atra * Δx1, qa1) - vrotate(pb, qb1)
     
-#     qb1 = qa1 * qoffset * Δq1
-#     xb1 = xa1 + vrotate(pa + Atra * Δx1, qa1) - vrotate(pb, qb1)
+    # finite-difference velocity
+    vb = (xb - xb1) / timestep
+    ϕb = angular_velocity(qb1, qb, timestep)
+
+    J = 1.0 / timestep * ∂vrotate∂q(pa + Atra * Δx, qa)
+    J -= 1.0 / timestep * ∂vrotate∂q(pb, qb) * Rmat(qoffset * Δq)
+    J += -1.0 / timestep * ∂vrotate∂q(pa + Atra * Δx1, qa1) * Rmat(quaternion_map(-ϕa, timestep)) * timestep / 2
+    J += 1.0 / timestep * ∂vrotate∂q(pb, qb1) * Rmat(quaternion_map(-ϕa, timestep) * qoffset * Δq1) * timestep / 2 
+
+    return J
+end
+
+# velocity wrt maximal
+FiniteDiff.finite_difference_jacobian(w -> set_minimal_coordinates_velocities!(bodya, bodyb, joint, timestep, xmin=xmin, zp=w), za)[collect(3 .+ (1:3)), 6 .+ (1:4)]
+
+∂vb∂qa(joint,
+    xa, va, qa, ϕa,
+    xb, qb, 
+    timestep;
+    Δx=Δx,
+    Δθ=Δθ,
+    Δv=Δv,
+    Δϕ=Δϕ)
+
+
+function ∂vb∂ϕa(joint::JointConstraint,
+    xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+    xb::AbstractVector, qb::UnitQuaternion, 
+    timestep;
+    Δx=szeros(control_dimension(joint.translational)),
+    Δθ=szeros(control_dimension(joint.rotational)),
+    Δv=szeros(control_dimension(joint.translational)),
+    Δϕ=szeros(control_dimension(joint.rotational)))
+
+    rot = joint.rotational
+    tra = joint.translational
+    pa = tra.vertices[1]
+    pb = tra.vertices[2]
+    qoffset = rot.qoffset
+    Arot = zerodimstaticadjoint(nullspace_mask(rot))
+    Atra = zerodimstaticadjoint(nullspace_mask(tra))
+
+    # positions
+    Δq = axis_angle_to_quaternion(Arot * Δθ)
+    qb = qa * qoffset * Δq
+    xb = xa + vrotate(pa + Atra * Δx, qa) - vrotate(pb, qb)
+
+    # previous configuration
+    xa1 = next_position(xa, -va, timestep)
+    qa1 = next_orientation(qa, -ϕa, timestep)
+
+    # finite-difference configuration
+    Δx1 = Δx .- Δv * timestep
+    Δq1 = Δq * inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))
+
+    qb1 = qa1 * qoffset * Δq1
+    xb1 = xa1 + vrotate(pa + Atra * Δx1, qa1) - vrotate(pb, qb1)
     
-#     # finite-difference velocities
-#     # vb = (xb - xb1) / timestep
-#     # ϕb = angular_velocity(qb1, qb, timestep)
-   
-#     -1.0 / timestep * (I(3) + ∂vrotate∂p(pa + Atra * (minimal_coordinates(joint.translational, xa, qa, xb, qb) .- Δv * timestep), qa1) * Atra * minimal_coordinates_jacobian_configuration(:parent, joint.translational, xa, qa, xb, qb)[:, 1:3])
-# end
+    # finite-difference velocity
+    vb = (xb - xb1) / timestep
+    ϕb = angular_velocity(qb1, qb, timestep)
+
+    -1.0 / timestep * (vrotate(pa + Atra * Δx1, qa1) - vrotate(pb, qb1))
+
+    J = 1.0 / timestep * ∂vrotate∂q(pa + Atra * Δx1, qa1) * Lmat(qa) * quaternion_map_jacobian(-ϕa, timestep) * timestep / 2
+    J += -1.0 / timestep * ∂vrotate∂q(pb, qb1) * Rmat(qoffset * Δq1) * Lmat(qa) * quaternion_map_jacobian(-ϕa, timestep)  * timestep / 2
+    return J
+end
+
+# velocity wrt maximal
+FiniteDiff.finite_difference_jacobian(w -> set_minimal_coordinates_velocities!(bodya, bodyb, joint, timestep, xmin=xmin, zp=w), za)[collect(3 .+ (1:3)), 10 .+ (1:3)]
+
+∂vb∂ϕa(joint,
+    xa, va, qa, ϕa,
+    xb, qb, 
+    timestep;
+    Δx=Δx,
+    Δθ=Δθ,
+    Δv=Δv,
+    Δϕ=Δϕ)
+
+
+function ∂ϕb∂qa(joint::JointConstraint,
+    xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+    xb::AbstractVector, qb::UnitQuaternion, 
+    timestep;
+    Δx=szeros(control_dimension(joint.translational)),
+    Δθ=szeros(control_dimension(joint.rotational)),
+    Δv=szeros(control_dimension(joint.translational)),
+    Δϕ=szeros(control_dimension(joint.rotational)))
+
+    rot = joint.rotational
+    tra = joint.translational
+    pa = tra.vertices[1]
+    pb = tra.vertices[2]
+    qoffset = rot.qoffset
+    Arot = zerodimstaticadjoint(nullspace_mask(rot))
+    Atra = zerodimstaticadjoint(nullspace_mask(tra))
+
+    # positions
+    Δq = axis_angle_to_quaternion(Arot * Δθ)
+    qb = qa * qoffset * Δq
+    xb = xa + vrotate(pa + Atra * Δx, qa) - vrotate(pb, qb)
+
+    # previous configuration
+    xa1 = next_position(xa, -va, timestep)
+    qa1 = next_orientation(qa, -ϕa, timestep)
+
+    # finite-difference configuration
+    Δx1 = Δx .- Δv * timestep
+    Δq1 = Δq * inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))
+
+    qb1 = qa1 * qoffset * Δq1
+    xb1 = xa1 + vrotate(pa + Atra * Δx1, qa1) - vrotate(pb, qb1)
+    
+    # finite-difference velocity
+    vb = (xb - xb1) / timestep
+    ϕb = angular_velocity(qb1, qb, timestep)
+
+    J = ∂angular_velocity∂q1(qb1, qb, timestep) * Rmat(quaternion_map(-ϕa, timestep) * qoffset * Δq1) * timestep / 2
+    J += ∂angular_velocity∂q2(qb1, qb, timestep) * Rmat(qoffset * Δq)
+    return J
+end
+
+# velocity wrt maximal
+FiniteDiff.finite_difference_jacobian(w -> set_minimal_coordinates_velocities!(bodya, bodyb, joint, timestep, xmin=xmin, zp=w), za)[collect(10 .+ (1:3)), 6 .+ (1:4)]
+
+∂ϕb∂qa(joint,
+    xa, va, qa, ϕa,
+    xb, qb, 
+    timestep;
+    Δx=Δx,
+    Δθ=Δθ,
+    Δv=Δv,
+    Δϕ=Δϕ)
+
+function ∂ϕb∂ϕa(joint::JointConstraint,
+    xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+    xb::AbstractVector, qb::UnitQuaternion, 
+    timestep;
+    Δx=szeros(control_dimension(joint.translational)),
+    Δθ=szeros(control_dimension(joint.rotational)),
+    Δv=szeros(control_dimension(joint.translational)),
+    Δϕ=szeros(control_dimension(joint.rotational)))
+
+    rot = joint.rotational
+    tra = joint.translational
+    pa = tra.vertices[1]
+    pb = tra.vertices[2]
+    qoffset = rot.qoffset
+    Arot = zerodimstaticadjoint(nullspace_mask(rot))
+    Atra = zerodimstaticadjoint(nullspace_mask(tra))
+
+    # positions
+    Δq = axis_angle_to_quaternion(Arot * Δθ)
+    qb = qa * qoffset * Δq
+    xb = xa + vrotate(pa + Atra * Δx, qa) - vrotate(pb, qb)
+
+    # previous configuration
+    xa1 = next_position(xa, -va, timestep)
+    qa1 = next_orientation(qa, -ϕa, timestep)
+
+    # finite-difference configuration
+    Δx1 = Δx .- Δv * timestep
+    Δq1 = Δq * inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))
+
+    qb1 = qa1 * qoffset * Δq1
+    xb1 = xa1 + vrotate(pa + Atra * Δx1, qa1) - vrotate(pb, qb1)
+    
+    # finite-difference velocity
+    vb = (xb - xb1) / timestep
+    ϕb = angular_velocity(qb1, qb, timestep)
+
+    J = -1.0 * ∂angular_velocity∂q1(qb1, qb, timestep) * Rmat(qoffset * Δq1) * Lmat(qa) * quaternion_map_jacobian(-ϕa, timestep) * timestep / 2
+    return J
+end
+
+# velocity wrt maximal
+FiniteDiff.finite_difference_jacobian(w -> set_minimal_coordinates_velocities!(bodya, bodyb, joint, timestep, xmin=xmin, zp=w), za)[collect(10 .+ (1:3)), 10 .+ (1:3)]
+
+∂ϕb∂ϕa(joint,
+    xa, va, qa, ϕa,
+    xb, qb, 
+    timestep;
+    Δx=Δx,
+    Δθ=Δθ,
+    Δv=Δv,
+    Δϕ=Δϕ)
+
+function ∂vb∂Δx(joint::JointConstraint,
+    xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+    xb::AbstractVector, qb::UnitQuaternion, 
+    timestep;
+    Δx=szeros(control_dimension(joint.translational)),
+    Δθ=szeros(control_dimension(joint.rotational)),
+    Δv=szeros(control_dimension(joint.translational)),
+    Δϕ=szeros(control_dimension(joint.rotational)))
+
+    rot = joint.rotational
+    tra = joint.translational
+    pa = tra.vertices[1]
+    pb = tra.vertices[2]
+    qoffset = rot.qoffset
+    Arot = zerodimstaticadjoint(nullspace_mask(rot))
+    Atra = zerodimstaticadjoint(nullspace_mask(tra))
+
+    # positions
+    Δq = axis_angle_to_quaternion(Arot * Δθ)
+    qb = qa * qoffset * Δq
+    xb = xa + vrotate(pa + Atra * Δx, qa) - vrotate(pb, qb)
+
+    # previous configuration
+    xa1 = next_position(xa, -va, timestep)
+    qa1 = next_orientation(qa, -ϕa, timestep)
+
+    # finite-difference configuration
+    Δx1 = Δx .- Δv * timestep
+    Δq1 = Δq * inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))
+
+    qb1 = qa1 * qoffset * Δq1
+    xb1 = xa1 + vrotate(pa + Atra * Δx1, qa1) - vrotate(pb, qb1)
+    
+    # finite-difference velocity
+    vb = (xb - xb1) / timestep
+    ϕb = angular_velocity(qb1, qb, timestep)
+
+    1 / timestep * (vrotate(pa + Atra * Δx, qa) - vrotate(pa + Atra * Δx1, qa1))
+
+    J = 1 / timestep * ∂vrotate∂p(pa + Atra * Δx, qa) * Atra
+    J += -1 / timestep * ∂vrotate∂p(pa + Atra * Δx1, qa1) * Atra
+
+    return J 
+end
+
+# velocity wrt maximal
+FiniteDiff.finite_difference_jacobian(w -> set_minimal_coordinates_velocities!(bodya, bodyb, joint, timestep, xmin=w, zp=za), xmin)[collect(3 .+ (1:3)), 1:nu_tra]
+
+∂vb∂Δx(joint,
+    xa, va, qa, ϕa,
+    xb, qb, 
+    timestep;
+    Δx=Δx,
+    Δθ=Δθ,
+    Δv=Δv,
+    Δϕ=Δϕ)
+
+function ∂vb∂Δθ(joint::JointConstraint,
+    xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+    xb::AbstractVector, qb::UnitQuaternion, 
+    timestep;
+    Δx=szeros(control_dimension(joint.translational)),
+    Δθ=szeros(control_dimension(joint.rotational)),
+    Δv=szeros(control_dimension(joint.translational)),
+    Δϕ=szeros(control_dimension(joint.rotational)))
+
+    rot = joint.rotational
+    tra = joint.translational
+    pa = tra.vertices[1]
+    pb = tra.vertices[2]
+    qoffset = rot.qoffset
+    Arot = zerodimstaticadjoint(nullspace_mask(rot))
+    Atra = zerodimstaticadjoint(nullspace_mask(tra))
+
+    # positions
+    Δq = axis_angle_to_quaternion(Arot * Δθ)
+    qb = qa * qoffset * Δq
+    xb = xa + vrotate(pa + Atra * Δx, qa) - vrotate(pb, qb)
+
+    # previous configuration
+    xa1 = next_position(xa, -va, timestep)
+    qa1 = next_orientation(qa, -ϕa, timestep)
+
+    # finite-difference configuration
+    Δx1 = Δx .- Δv * timestep
+    Δq1 = Δq * inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))
+
+    qb1 = qa1 * qoffset * Δq1
+    xb1 = xa1 + vrotate(pa + Atra * Δx1, qa1) - vrotate(pb, qb1)
+    
+    # finite-difference velocity
+    vb = (xb - xb1) / timestep
+    ϕb = angular_velocity(qb1, qb, timestep)
+
+    J = -1.0 / timestep * ∂vrotate∂q(pb, qb) * Lmat(qa * qoffset) * ∂axis_angle_to_quaternion∂axis_angle(Arot * Δθ) * Arot
+    J += 1.0 / timestep * ∂vrotate∂q(pb, qb1) * Rmat(inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))) * Lmat(qa1 * qoffset) * ∂axis_angle_to_quaternion∂axis_angle(Arot * Δθ) * Arot
+    
+    1 / timestep * (- vrotate(pb, qb) - (- vrotate(pb, qb1)))
+    return J 
+end
+
+# velocity wrt maximal
+FiniteDiff.finite_difference_jacobian(w -> set_minimal_coordinates_velocities!(bodya, bodyb, joint, timestep, xmin=w, zp=za), xmin)[collect(3 .+ (1:3)), nu_tra .+ (1:nu_rot)]
+
+∂vb∂Δθ(joint,
+    xa, va, qa, ϕa,
+    xb, qb, 
+    timestep;
+    Δx=Δx,
+    Δθ=Δθ,
+    Δv=Δv,
+    Δϕ=Δϕ)
+
+function ∂ϕb∂Δθ(joint::JointConstraint,
+    xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+    xb::AbstractVector, qb::UnitQuaternion, 
+    timestep;
+    Δx=szeros(control_dimension(joint.translational)),
+    Δθ=szeros(control_dimension(joint.rotational)),
+    Δv=szeros(control_dimension(joint.translational)),
+    Δϕ=szeros(control_dimension(joint.rotational)))
+
+    rot = joint.rotational
+    tra = joint.translational
+    pa = tra.vertices[1]
+    pb = tra.vertices[2]
+    qoffset = rot.qoffset
+    Arot = zerodimstaticadjoint(nullspace_mask(rot))
+    Atra = zerodimstaticadjoint(nullspace_mask(tra))
+
+    # positions
+    Δq = axis_angle_to_quaternion(Arot * Δθ)
+    qb = qa * qoffset * Δq
+    xb = xa + vrotate(pa + Atra * Δx, qa) - vrotate(pb, qb)
+
+    # previous configuration
+    xa1 = next_position(xa, -va, timestep)
+    qa1 = next_orientation(qa, -ϕa, timestep)
+
+    # finite-difference configuration
+    Δx1 = Δx .- Δv * timestep
+    Δq1 = Δq * inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))
+
+    qb1 = qa1 * qoffset * Δq1
+    xb1 = xa1 + vrotate(pa + Atra * Δx1, qa1) - vrotate(pb, qb1)
+    
+    # finite-difference velocity
+    vb = (xb - xb1) / timestep
+    ϕb = angular_velocity(qb1, qb, timestep)
+
+    J = ∂angular_velocity∂q1(qb1, qb, timestep) * Rmat(inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))) * Lmat(qa1 * qoffset) * ∂axis_angle_to_quaternion∂axis_angle(Arot * Δθ) * Arot
+    J += ∂angular_velocity∂q2(qb1, qb, timestep) * Lmat(qa * qoffset) * ∂axis_angle_to_quaternion∂axis_angle(Arot * Δθ) * Arot
+    return J 
+end
+
+# velocity wrt maximal
+FiniteDiff.finite_difference_jacobian(w -> set_minimal_coordinates_velocities!(bodya, bodyb, joint, timestep, xmin=w, zp=za), xmin)[collect(10 .+ (1:3)), nu_tra .+ (1:nu_rot)]
+
+∂ϕb∂Δθ(joint,
+    xa, va, qa, ϕa,
+    xb, qb, 
+    timestep;
+    Δx=Δx,
+    Δθ=Δθ,
+    Δv=Δv,
+    Δϕ=Δϕ)
+    
+
+
+function ∂∂(joint::JointConstraint,
+    xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+    xb::AbstractVector, qb::UnitQuaternion, 
+    timestep;
+    Δx=szeros(control_dimension(joint.translational)),
+    Δθ=szeros(control_dimension(joint.rotational)),
+    Δv=szeros(control_dimension(joint.translational)),
+    Δϕ=szeros(control_dimension(joint.rotational)))
+
+    rot = joint.rotational
+    tra = joint.translational
+    pa = tra.vertices[1]
+    pb = tra.vertices[2]
+    qoffset = rot.qoffset
+    Arot = zerodimstaticadjoint(nullspace_mask(rot))
+    Atra = zerodimstaticadjoint(nullspace_mask(tra))
+
+    # positions
+    Δq = axis_angle_to_quaternion(Arot * Δθ)
+	qb = qa * qoffset * Δq
+    xb = xa + vrotate(pa + Atra * Δx, qa) - vrotate(pb, qb)
+
+    # previous configuration
+    xa1 = next_position(xa, -va, timestep)
+    qa1 = next_orientation(qa, -ϕa, timestep)
+
+    # finite-difference configuration
+    Δx1 = Δx .- Δv * timestep
+    Δq1 = Δq * inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))
+
+    qb1 = qa1 * qoffset * Δq1
+    xb1 = xa1 + vrotate(pa + Atra * Δx1, qa1) - vrotate(pb, qb1)
+    
+    # finite-difference velocity
+    vb = (xb - xb1) / timestep
+    ϕb = angular_velocity(qb1, qb, timestep)
+
+
+    ∂angular_velocity∂q1(qb1, qb, timestep) * Lmat(qa1 * qoffset * Δq) * Tmat() * ∂axis_angle_to_quaternion∂axis_angle(Arot * Δϕ * timestep) * Arot * timestep
+end
 
 # mech = get_slider()
 # initialize_slider!(mech, z1=0.1)
@@ -1182,56 +1576,58 @@ FiniteDiff.finite_difference_jacobian(w -> vcat(set_child_configurations(mech.jo
     Δθ=SVector{nu_rot}(w))...), x[nu_tra .+ (1:nu_rot)])[3 .+ (1:4), :]
              
 ############
-function child_velocities_jacobian_child_configurations(joint::JointConstraint{T},
-    xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
-    xb::AbstractVector, qb::UnitQuaternion, 
-    timestep;
-    Δv=szeros(control_dimension(joint.translational)),
-    Δϕ=szeros(control_dimension(joint.rotational))) where T
+# function child_velocities_jacobian_child_configurations(joint::JointConstraint{T},
+#     xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+#     xb::AbstractVector, qb::UnitQuaternion, 
+#     timestep;
+#     Δx=szeros(control_dimension(joint.translational)),
+#     Δθ=szeros(control_dimension(joint.rotational)),
+#     Δv=szeros(control_dimension(joint.translational)),
+#     Δϕ=szeros(control_dimension(joint.rotational))) where T
 
-    rot = joint.rotational
-    tra = joint.translational
-    pa = tra.vertices[1]
-    pb = tra.vertices[2]
-    qoffset = rot.qoffset
-    Arot = zerodimstaticadjoint(nullspace_mask(rot))
-    Atra = zerodimstaticadjoint(nullspace_mask(tra))
+#     rot = joint.rotational
+#     tra = joint.translational
+#     pa = tra.vertices[1]
+#     pb = tra.vertices[2]
+#     qoffset = rot.qoffset
+#     Arot = zerodimstaticadjoint(nullspace_mask(rot))
+#     Atra = zerodimstaticadjoint(nullspace_mask(tra))
 
-    Δx = minimal_coordinates(joint.translational, xa, qa, xb, qb)
-    Δq = inv(qoffset) * inv(qa) * qb 
+#     # step backward in time
+#     xa1 = next_position(xa, -va, timestep)
+#     qa1 = next_orientation(qa, -ϕa, timestep)
 
-    # step backward in time
-    xa1 = next_position(xa, -va, timestep)
-    qa1 = next_orientation(qa, -ϕa, timestep)
-
-    # step backward in time
-    Δx1 = Δx .- Δv * timestep  
-    Δq1 = Δq * inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))
+#     # step backward in time
+#     Δq = axis_angle_to_quaternion(Arot * Δθ)
+#     Δx1 = Δx .- Δv * timestep  
+#     Δq1 = Δq * inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))
     
-    qb1 = qa1 * qoffset * Δq1
-    xb1 = xa1 + vrotate(pa + Atra * Δx1, qa1) - vrotate(pb, qb1)
+#     qb1 = qa1 * qoffset * Δq1
+#     xb1 = xa1 + vrotate(pa + Atra * Δx1, qa1) - vrotate(pb, qb1)
     
-    # finite-difference velocities
-    ∂vb∂xb = 1.0 / timestep * I(3)
-    ∂vb∂xb += -1.0 / timestep * ∂vrotate∂p(pa + Atra * Δx1, qa1) * Atra * minimal_coordinates_jacobian_configuration(:child, joint.translational, xa, qa, xb, qb)[:, 1:3]
+#     # finite-difference velocities
+#     ∂vb∂xb = 1.0 / timestep * I(3)
+#     ∂vb∂xb += -1.0 / timestep * ∂vrotate∂p(pa + Atra * Δx1, qa1) * Atra * minimal_coordinates_jacobian_configuration(:child, joint.translational, xa, qa, xb, qb)[:, 1:3]
     
-    ∂vb∂qb = -1.0 / timestep * ∂vrotate∂p(pa + Atra * Δx1, qa1) * Atra * minimal_coordinates_jacobian_configuration(:child, joint.translational, xa, qa, xb, qb, attjac=false)[:, 3 .+ (1:4)]
-    ∂vb∂qb += 1.0 / timestep * ∂vrotate∂q(pb, qb1) * Rmat(inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))) * Lmat(qa1 * qoffset * inv(qoffset) * inv(qa))
+#     ∂vb∂qb = -1.0 / timestep * ∂vrotate∂p(pa + Atra * Δx1, qa1) * Atra * minimal_coordinates_jacobian_configuration(:child, joint.translational, xa, qa, xb, qb, attjac=false)[:, 3 .+ (1:4)]
+#     ∂vb∂qb += 1.0 / timestep * ∂vrotate∂q(pb, qb1) * Rmat(inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))) * Lmat(qa1 * qoffset * inv(qoffset) * inv(qa))
 
-    ∂ϕb∂xb = szeros(T, 3, 3)
+#     ∂ϕb∂xb = szeros(T, 3, 3)
 
-    ∂ϕb∂qb = ∂angular_velocity∂q1(qb1, qb, timestep) * Lmat(qa1 * qoffset * inv(qoffset) * inv(qa)) * Rmat(inv(axis_angle_to_quaternion(Arot * Δϕ * timestep)))
-    ∂ϕb∂qb += ∂angular_velocity∂q2(qb1, qb, timestep)
+#     ∂ϕb∂qb = ∂angular_velocity∂q1(qb1, qb, timestep) * Lmat(qa1 * qoffset * inv(qoffset) * inv(qa)) * Rmat(inv(axis_angle_to_quaternion(Arot * Δϕ * timestep)))
+#     ∂ϕb∂qb += ∂angular_velocity∂q2(qb1, qb, timestep)
 
-    [
-        ∂vb∂xb ∂vb∂qb;
-        ∂ϕb∂xb ∂ϕb∂qb;
-    ]
-end
+#     [
+#         ∂vb∂xb ∂vb∂qb;
+#         ∂ϕb∂xb ∂ϕb∂qb;
+#     ]
+# end
 
 function child_velocities_jacobian_minimal(joint::JointConstraint,
     xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
     xb::AbstractVector, qb::UnitQuaternion, timestep;
+    Δx=szeros(control_dimension(joint.translational)),
+    Δθ=szeros(control_dimension(joint.rotational)),
     Δv=szeros(control_dimension(joint.translational)),
     Δϕ=szeros(control_dimension(joint.rotational)))
 
@@ -1243,14 +1639,12 @@ function child_velocities_jacobian_minimal(joint::JointConstraint,
     Arot = zerodimstaticadjoint(nullspace_mask(rot))
     Atra = zerodimstaticadjoint(nullspace_mask(tra))
 
-    Δx = minimal_coordinates(joint.translational, xa, qa, xb, qb)
-    Δq = inv(qoffset) * inv(qa) * qb 
-
     # step backward in time
     xa1 = next_position(xa, -va, timestep)
     qa1 = next_orientation(qa, -ϕa, timestep)
 
     # step backward in time
+    Δq = axis_angle_to_quaternion(Arot * Δθ)
     Δx1 = Δx .- Δv * timestep  
     Δq1 = Δq * inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))
     
@@ -1270,9 +1664,11 @@ function child_velocities_jacobian_minimal(joint::JointConstraint,
     ]
 end
 
-function set_child_velocities_jacobian_parent_configuration(joint::JointConstraint{T},
+function child_velocities_jacobian_parent_configuration(joint::JointConstraint{T},
     xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
     xb::AbstractVector, qb::UnitQuaternion, timestep;
+    Δx=szeros(control_dimension(joint.translational)),
+    Δθ=szeros(control_dimension(joint.rotational)),
     Δv=szeros(control_dimension(joint.translational)),
     Δϕ=szeros(control_dimension(joint.rotational))) where T
 
@@ -1284,14 +1680,12 @@ function set_child_velocities_jacobian_parent_configuration(joint::JointConstrai
     Arot = zerodimstaticadjoint(nullspace_mask(rot))
     Atra = zerodimstaticadjoint(nullspace_mask(tra))
 
-    Δx = minimal_coordinates(joint.translational, xa, qa, xb, qb)
-    Δq = inv(qoffset) * inv(qa) * qb 
-
     # step backward in time
     xa1 = next_position(xa, -va, timestep)
     qa1 = next_orientation(qa, -ϕa, timestep)
 
     # step backward in time
+    Δq = axis_angle_to_quaternion(Arot * Δθ)
     Δx1 = Δx .- Δv * timestep  
     Δq1 = Δq * inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))
     
@@ -1299,25 +1693,25 @@ function set_child_velocities_jacobian_parent_configuration(joint::JointConstrai
     xb1 = xa1 + vrotate(pa + Atra * Δx1, qa1) - vrotate(pb, qb1)
     
     # Jacobians
-    ∂vb∂xa = -1.0 / timestep * (I(3) + ∂vrotate∂p(pa + Atra * (minimal_coordinates(joint.translational, xa, qa, xb, qb) .- Δv * timestep), qa1) * Atra * minimal_coordinates_jacobian_configuration(:parent, joint.translational, xa, qa, xb, qb)[:, 1:3])
+    ∂vb∂xa = szeros(T, 3, 3)
     
     ∂vb∂va = 1.0 * I(3)
 
-    ∂vb∂qa = -1.0 / timestep * ∂vrotate∂p(pa + Atra * Δx1, qa1) * Atra * minimal_coordinates_jacobian_configuration(:parent, joint.translational, xa, qa, xb, qb, attjac=false)[:, 3 .+ (1:4)]
+    ∂vb∂qa = 1.0 / timestep * ∂vrotate∂q(pa + Atra * Δx, qa)
+    ∂vb∂qa -= 1.0 / timestep * ∂vrotate∂q(pb, qb) * Rmat(qoffset * Δq)
     ∂vb∂qa += -1.0 / timestep * ∂vrotate∂q(pa + Atra * Δx1, qa1) * Rmat(quaternion_map(-ϕa, timestep)) * timestep / 2
-    ∂vb∂qa += 1.0 / timestep * ∂vrotate∂q(pb, qb1) * Rmat(quaternion_map(-ϕa, timestep) * qoffset * Δq1) * timestep / 2
-    ∂vb∂qa += 1.0 / timestep * ∂vrotate∂q(pb, qb1) * Lmat(qa1) * Rmat(qb * inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))) * Tmat()
+    ∂vb∂qa += 1.0 / timestep * ∂vrotate∂q(pb, qb1) * Rmat(quaternion_map(-ϕa, timestep) * qoffset * Δq1) * timestep / 2 
 
     ∂vb∂ϕa = 1.0 / timestep * ∂vrotate∂q(pa + Atra * Δx1, qa1) * Lmat(qa) * quaternion_map_jacobian(-ϕa, timestep) * timestep / 2
-    ∂vb∂ϕa -= 1.0 / timestep * ∂vrotate∂q(pb, qb1) * Rmat(qoffset * Δq1) * Lmat(qa) * quaternion_map_jacobian(-ϕa, timestep) * timestep / 2 
-
+    ∂vb∂ϕa += -1.0 / timestep * ∂vrotate∂q(pb, qb1) * Rmat(qoffset * Δq1) * Lmat(qa) * quaternion_map_jacobian(-ϕa, timestep)  * timestep / 2
+    
     ∂ϕb∂xa = szeros(T, 3, 3) 
 
     ∂ϕb∂va = szeros(T, 3, 3)
 
     ∂ϕb∂qa = ∂angular_velocity∂q1(qb1, qb, timestep) * Rmat(quaternion_map(-ϕa, timestep) * qoffset * Δq1) * timestep / 2
-    ∂ϕb∂qa += ∂angular_velocity∂q1(qb1, qb, timestep) * Lmat(qa1) * Rmat(qb  * inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))) * Tmat() 
-
+    ∂ϕb∂qa += ∂angular_velocity∂q2(qb1, qb, timestep) * Rmat(qoffset * Δq)
+    
     ∂ϕb∂ϕa = -1.0 * ∂angular_velocity∂q1(qb1, qb, timestep) * Rmat(qoffset * Δq1) * Lmat(qa) * quaternion_map_jacobian(-ϕa, timestep) * timestep / 2 
 
     [

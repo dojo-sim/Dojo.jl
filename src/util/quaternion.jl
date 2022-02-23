@@ -57,6 +57,8 @@ function ∂axis_angle_to_quaternion∂axis_angle(x)
     end
 end
 
+
+
 Lmat(q) = lmult(q)
 Lᵀmat(q) = lmult(q)'
 Rmat(q) = rmult(q)

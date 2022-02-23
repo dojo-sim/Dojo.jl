@@ -57,7 +57,6 @@ timestep = mech.timestep
 Δϕ1 = minimal_velocities(rot, xa, va, qa, ϕa, xb, vb, qb, ϕb, 0.01*timestep)
 Δvϕ - [Δv; Δϕ]
 
-set_minimal_velocities!
 
 
 minimal_velocities_jacobian_configuration(:parent,
