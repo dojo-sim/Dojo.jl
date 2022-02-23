@@ -36,7 +36,7 @@ function quadruped(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81], f
     control_mask = infeasible_control ? I(nu) : [zeros(nu, 6) I(nu)]
     control_scaling = Diagonal(ones(nu))
 
-    build_robot(vis, mechanism, name=name)
+    build_robot(mechanism, vis=vis, name=name)
 
     TYPES = [Quadruped, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
     Environment{TYPES...}(mechanism, mode, aspace, ospace,

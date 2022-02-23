@@ -34,7 +34,7 @@ function block(; mode::Symbol=:max, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
     u_prev = zeros(nu)
     control_mask = [I(nu) zeros(nu, nu)]
 
-    build_robot(vis, mechanism, name=name)
+    build_robot(mechanism, vis=vis, name=name)
 
     TYPES = [Block, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
     env = Environment{TYPES...}(mechanism, mode, aspace, ospace,

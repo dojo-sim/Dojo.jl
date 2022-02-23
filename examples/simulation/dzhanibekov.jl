@@ -26,7 +26,7 @@ timesteps = [5, 10, 15]# .+ 150
 
 for t in timesteps
     name = Symbol("robot_$t")
-    build_robot(vis, mech, name=name, color= magenta_light)
+    build_robot(mech, vis=vis, name=name, color= magenta_light)
     z = z_sim[t]
     set_robot(vis, mech, z, name=name)
 end

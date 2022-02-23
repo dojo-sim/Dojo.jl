@@ -1,26 +1,23 @@
 
 vis = Visualizer()
 open(vis)
-render(vis)
 include("env.jl")
 include("initialize.jl")
 # mech = get_rexhopper(timestep=0.01, gravity=-2.81, model="rexhopper2",
-mech = get_rexhopper(timestep=0.01, gravity=0.0 * -9.81, model="rexhopper_damper",
-    floating=true, contact=false, limits=false, spring=1.0, damper=0.5, contact_type=:nonlinear)
+mech = get_rexhopper(timestep=0.01, gravity= -0.99 * 9.81, model="rexhopper_no_wheel0",
+    floating=true, contact=true, limits=true, spring=0.0, damper=0.2, contact_type=:linear)
+
 initialize!(mech, :rexhopper, x=[0,0,0.4])
 # set_state!(mech, z0)
-# z0 = get_maximal_state(mech)
-
-loop_joint = get_joint_constraint(mech, :loop_joint)
-constraint(mech, loop_joint)
-
+z0 = get_maximal_state(mech)
+visualize(mech, generate_storage(mech, [z0]), show_contact=true, vis=vis)
 
 function ctrl!(m,k)
     set_control!(m, 0sin(4k*m.timestep) * m.timestep * [szeros(6); sones(10)])
     return nothing
 end
-storage = simulate!(mech, 2.0, ctrl!, record=true, verbose=true,
-    opts=SolverOptions(rtol=1e-4, btol=1e-4, undercut=5.0, verbose=false))
+storage = simulate!(mech, 10.0, ctrl!, record=true, verbose=true,
+    opts=SolverOptions(rtol=1e-4, btol=1e-4, undercut=5.0, verbose=true))
 visualize(mech, storage, vis=vis, show_contact=true)
 
 mech.joints
@@ -31,3 +28,13 @@ mech.bodies[1].state.x2
 mech.bodies[1].state.q2
 
 plot(hcat(get_sdf(mech, storage)[1][45:end]...)')
+mech.bodies
+
+
+
+mech.bodies[1]
+
+
+build_robot(mech, vis=vis, show_contact=true, name=:hopper, color=RGBA(0.4, 0.4, 0.6, 1.0))
+@elapsed visualize(mech, storage, vis=vis, show_contact=true, build=true, name=:hopper)
+@elapsed visualize(mech, storage, vis=vis, show_contact=true, build=false, name=:hopper)
