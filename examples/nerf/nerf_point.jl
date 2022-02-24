@@ -46,7 +46,7 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N
     model = contact.model
     body = get_body(mechanism, contact.parent_id)
     x3, q3 = next_configuration(body.state, mechanism.timestep)
-    # SVector{1,T}(model.ainv3 * (x3 + vrotate(model.contact_point,q3) - model.offset) - contact.impulses_dual[2][1])
+    # SVector{1,T}(model.ainv3 * (x3 + vector_rotate(model.contact_point,q3) - model.offset) - contact.impulses_dual[2][1])
     r = - model.contact_point + inv(q3) * (model.offset - x3) # position of the origin point in the frame of centered on P expressed in the body's frame
     c = model.nerf.threshold - density(model.nerf, r) # > 0
     SVector{1,T}(c - contact.impulses_dual[2][1])
@@ -55,7 +55,7 @@ end
 function constraint_jacobian_velocity(model::NerfContact, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, timestep)
     # V = model.ainv3 * timestep
-    # Ω = model.ainv3 * ∂vrotate∂q(model.contact_point, q3) * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)
+    # Ω = model.ainv3 * ∂vector_rotate∂q(model.contact_point, q3) * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)
     # return [V Ω]
     FiniteDiff.finite_difference_jacobian(
         vϕ -> -density(model.nerf,
@@ -67,7 +67,7 @@ end
 function constraint_jacobian_configuration(model::NerfContact, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, timestep)
     # X = model.ainv3
-    # Q = model.ainv3 * ∂vrotate∂q(model.contact_point, q3)
+    # Q = model.ainv3 * ∂vector_rotate∂q(model.contact_point, q3)
     # return [X Q]
     FiniteDiff.finite_difference_jacobian(
         xq -> -density(model.nerf, -model.contact_point +inv(UnitQuaternion(xq[4:7]..., false)) * (model.offset - xq[1:3])),
@@ -77,7 +77,7 @@ end
 function impulse_map(model::NerfContact, x::AbstractVector, q::UnitQuaternion, λ)
     # X = model.ainv3
     # # q * ... is a rotation by quaternion q it is equivalent to Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * ...
-    # Q = - X * q * skew(model.contact_point - vrotate(model.offset, inv(q)))
+    # Q = - X * q * skew(model.contact_point - vector_rotate(model.offset, inv(q)))
     X = FiniteDiff.finite_difference_jacobian(
         x -> -density(model.nerf, -model.contact_point +inv(q)*(model.offset-x)),
         x)
@@ -228,8 +228,8 @@ a = 10
 # model = mech.contacts[1].constraints[1]
 # q3 = UnitQuaternion(rand(4)...)
 # X = model.ainv3
-# Q0 = model.ainv3 * ∂vrotate∂q(model.contact_point, q3) * LVᵀmat(q3)
-# Q1 = - X * q3 * skew(model.contact_point - vrotate(model.offset, inv(q3)))
+# Q0 = model.ainv3 * ∂vector_rotate∂q(model.contact_point, q3) * LVᵀmat(q3)
+# Q1 = - X * q3 * skew(model.contact_point - vector_rotate(model.offset, inv(q3)))
 #
 # Q0 ./ Q1
 

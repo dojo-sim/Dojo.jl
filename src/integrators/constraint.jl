@@ -45,7 +45,7 @@ function constraint_jacobian_configuration(mechanism::Mechanism{T,Nn,Ne,Nb}, bod
 
     # dynamics
     dynT = I(3) * mass / timestep
-    dynR = -2.0 / timestep * LVᵀmat(q2)' * Tmat() * (∂qRᵀmat(Vᵀmat() * inertia * Vmat() * Lmat(q2)' * vector(q3)) + Rmat(q3)' * Vᵀmat() * inertia * Vmat() * Lmat(q2)')
+    dynR = -2.0 / timestep * LVᵀmat(q2)' * Tmat() * (∂Rᵀmat∂q(Vᵀmat() * inertia * Vmat() * Lmat(q2)' * vector(q3)) + Rmat(q3)' * Vᵀmat() * inertia * Vmat() * Lmat(q2)')
 
     Z33 = szeros(T, 3, 3)
     Z34 = szeros(T, 3, 4)

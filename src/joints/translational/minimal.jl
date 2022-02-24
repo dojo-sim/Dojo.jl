@@ -6,8 +6,8 @@ function displacement(joint::Translational,
     xb::AbstractVector, qb::UnitQuaternion; rotate::Bool = true)
 
     vertices = joint.vertices
-    d = xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa))
-    rotate && (return vrotate(d, inv(qa))) : (return d)
+    d = xb + vector_rotate(vertices[2], qb) - (xa + vector_rotate(vertices[1], qa))
+    rotate && (return vector_rotate(d, inv(qa))) : (return d)
 end
 
 function displacement_jacobian_configuration(relative::Symbol, joint::Translational{T}, 
@@ -17,14 +17,14 @@ function displacement_jacobian_configuration(relative::Symbol, joint::Translatio
     vertices = joint.vertices
 
     if relative == :parent
-        d = xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa)) # in the world frame
+        d = xb + vector_rotate(vertices[2], qb) - (xa + vector_rotate(vertices[1], qa)) # in the world frame
         X = -rotation_matrix(inv(qa))
-        Q = -rotation_matrix(inv(qa)) * ∂qrotation_matrix(qa, vertices[1])
-        Q += ∂qrotation_matrix_inv(qa, d)
+        Q = -rotation_matrix(inv(qa)) * ∂rotation_matrix∂q(qa, vertices[1])
+        Q += ∂rotation_matrix_inv∂q(qa, d)
         attjac && (Q *= LVᵀmat(qa))
     elseif relative == :child
         X = rotation_matrix(inv(qa))
-        Q = rotation_matrix(inv(qa)) * ∂qrotation_matrix(qb, vertices[2])
+        Q = rotation_matrix(inv(qa)) * ∂rotation_matrix∂q(qb, vertices[2])
         attjac && (Q *= LVᵀmat(qb))
     end
 
@@ -61,7 +61,7 @@ function set_minimal_coordinates!(joint::Translational,
     qb = cnode.state.q2[1]
 
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
-    xb = xa + vrotate(pa + Aᵀ * Δx, qa) - vrotate(pb, qb)
+    xb = xa + vector_rotate(pa + Aᵀ * Δx, qa) - vector_rotate(pb, qb)
     set_maximal_coordinates!(cnode; x=xb, q=cnode.state.q2[1])
     set_previous_configuration!(cnode, timestep)
     return nothing

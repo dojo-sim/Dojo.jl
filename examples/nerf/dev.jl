@@ -83,13 +83,13 @@ end
 function constraint_jacobian_velocity(model::NerfContact, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, timestep)
     # V = model.ainv3 * timestep
-    # Ω = model.ainv3 * ∂vrotate∂q(model.contact_point, q3) * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)
+    # Ω = model.ainv3 * ∂vector_rotate∂q(model.contact_point, q3) * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)
     # return [V Ω]
     p = inv(q3) * (model.contact_point - x3)
     ∂nerf∂p = FiniteDiff.finite_difference_jacobian(p -> nerf_density(model.nerf,p), p, absstep=FDEPS, relstep=FDEPS)
     # ∂nerf∂p ./= norm(∂nerf∂p) + 1e-2
     X = -∂nerf∂p * -rotation_matrix(inv(q3))
-    Q = -∂nerf∂p * ∂qrotation_matrix_inv(q3, model.contact_point - x3)
+    Q = -∂nerf∂p * ∂rotation_matrix_inv∂q(q3, model.contact_point - x3)
     return [X Q] * integrator_jacobian_velocity(q2, ϕ25, timestep)
     # inv(q3) * (model.contact_point - x3)
     # FiniteDiff.finite_difference_jacobian(
@@ -102,13 +102,13 @@ end
 function constraint_jacobian_configuration(model::NerfContact, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, timestep)
     # X = model.ainv3
-    # Q = model.ainv3 * ∂vrotate∂q(model.contact_point, q3)
+    # Q = model.ainv3 * ∂vector_rotate∂q(model.contact_point, q3)
     # return [X Q]
     p = inv(q3) * (model.contact_point - x3)
     ∂nerf∂p = FiniteDiff.finite_difference_jacobian(p -> nerf_density(model.nerf,p), p, absstep=FDEPS, relstep=FDEPS)
     # ∂nerf∂p ./= norm(∂nerf∂p) + 1e-2
     X = -∂nerf∂p * -rotation_matrix(inv(q))
-    Q = -∂nerf∂p * ∂qrotation_matrix_inv(q, model.contact_point - x) * LVᵀmat(q)
+    Q = -∂nerf∂p * ∂rotation_matrix_inv∂q(q, model.contact_point - x) * LVᵀmat(q)
     return [X Q]
     # FiniteDiff.finite_difference_jacobian(
     #     xq -> -nerf_density(model.nerf, inv(UnitQuaternion(xq[4:7]..., false)) * (model.contact_point - xq[1:3])),
@@ -119,12 +119,12 @@ end
 function impulse_map(model::NerfContact, x::AbstractVector, q::UnitQuaternion, λ)
     # X = model.ainv3
     # # q * ... is a rotation by quaternion q it is equivalent to Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * ...
-    # Q = - X * q * skew(model.contact_point - vrotate(model.offset, inv(q)))
+    # Q = - X * q * skew(model.contact_point - vector_rotate(model.offset, inv(q)))
     p = inv(q) * (model.contact_point - x)
     ∂nerf∂p = FiniteDiff.finite_difference_jacobian(p -> nerf_density(model.nerf,p), p, absstep=FDEPS, relstep=FDEPS)
     ∂nerf∂p ./= norm(∂nerf∂p) + 1e-2
     X = -∂nerf∂p * -rotation_matrix(inv(q))
-    Q = -∂nerf∂p * ∂qrotation_matrix_inv(q, model.contact_point - x) * LVᵀmat(q)
+    Q = -∂nerf∂p * ∂rotation_matrix_inv∂q(q, model.contact_point - x) * LVᵀmat(q)
     # Q = FiniteDiff.finite_difference_jacobian(
     #     q -> -nerf_density(model.nerf, -model.contact_point +inv(UnitQuaternion(q..., false))*(model.offset-x)),
     #     vector(q), absstep=FDEPS, relstep=FDEPS) * LVᵀmat(q)

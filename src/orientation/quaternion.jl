@@ -95,7 +95,7 @@ end
 ################################################################################
 # Matrix-Vector Product Jacobian
 ################################################################################
-function ∂qVLmat(p::AbstractVector) # 𝞉(VLmat(q)*p)/∂q
+function ∂VLmat∂q(p::AbstractVector) # 𝞉(VLmat(q)*p)/∂q
 	SA[
     	0     p[1]  p[2]  p[3];
     	p[1]  0     p[3] -p[2];
@@ -104,7 +104,7 @@ function ∂qVLmat(p::AbstractVector) # 𝞉(VLmat(q)*p)/∂q
     ]
 end
 
-function ∂qLVᵀmat(p::AbstractVector) # 𝞉(∂qLVᵀmat(q)*p)/∂q
+function ∂LVᵀmat∂q(p::AbstractVector) # 𝞉(∂LVᵀmat∂q(q)*p)/∂q
 	SA[
     	0    -p[1] -p[2] -p[3];
     	p[1]  0     p[3] -p[2];
@@ -113,7 +113,7 @@ function ∂qLVᵀmat(p::AbstractVector) # 𝞉(∂qLVᵀmat(q)*p)/∂q
     ]
 end
 
-function ∂qVLᵀmat(p::AbstractVector) # 𝞉(VLᵀmat(q)*p)/∂q
+function ∂VLᵀmat∂q(p::AbstractVector) # 𝞉(VLᵀmat(q)*p)/∂q
 	SA[
 		p[2] -p[1] -p[4]  p[3];
 		p[3]  p[4] -p[1] -p[2];
@@ -121,7 +121,7 @@ function ∂qVLᵀmat(p::AbstractVector) # 𝞉(VLᵀmat(q)*p)/∂q
     ]
 end
 
-function ∂qLᵀVᵀmat(p::AbstractVector) # 𝞉(LᵀVᵀmat(q)*p)/∂q
+function ∂LᵀVᵀmat∂q(p::AbstractVector) # 𝞉(LᵀVᵀmat(q)*p)/∂q
 	SA[
     	0     p[1]  p[2]  p[3];
     	p[1]  0    -p[3]  p[2];
@@ -130,7 +130,7 @@ function ∂qLᵀVᵀmat(p::AbstractVector) # 𝞉(LᵀVᵀmat(q)*p)/∂q
     ]
 end
 
-function ∂qVRmat(p::AbstractVector) # 𝞉(VRmat(q)*p)/∂q
+function ∂VRmat∂q(p::AbstractVector) # 𝞉(VRmat(q)*p)/∂q
 	SA[
 		p[2]  p[1] -p[4]  p[3];
 		p[3]  p[4]  p[1] -p[2];
@@ -138,7 +138,7 @@ function ∂qVRmat(p::AbstractVector) # 𝞉(VRmat(q)*p)/∂q
     ]
 end
 
-function ∂qRᵀVᵀmat(p::AbstractVector) # 𝞉(RᵀVᵀmat(q)*p)/∂q
+function ∂RᵀVᵀmat∂q(p::AbstractVector) # 𝞉(RᵀVᵀmat(q)*p)/∂q
 	SA[
     	p[2]  p[1]  p[4] -p[3];
     	p[3] -p[4]  p[1]  p[2];
@@ -146,7 +146,7 @@ function ∂qRᵀVᵀmat(p::AbstractVector) # 𝞉(RᵀVᵀmat(q)*p)/∂q
     ]
 end
 
-function ∂qVRᵀmat(p::AbstractVector) # 𝞉(RᵀVᵀmat(q)*p)/∂q
+function ∂VRᵀmat∂q(p::AbstractVector) # 𝞉(RᵀVᵀmat(q)*p)/∂q
 	SA[
     	p[2] -p[1]  p[4] -p[3];
     	p[3] -p[4] -p[1]  p[2];
@@ -154,7 +154,7 @@ function ∂qVRᵀmat(p::AbstractVector) # 𝞉(RᵀVᵀmat(q)*p)/∂q
     ]
 end
 
-function ∂qRᵀmat(p::AbstractVector) # 𝞉(Rᵀmat(q)*p)/∂q
+function ∂Rᵀmat∂q(p::AbstractVector) # 𝞉(Rᵀmat(q)*p)/∂q
 	SA[
     	p[1]  p[2]  p[3]  p[4];
     	p[2] -p[1]  p[4] -p[3];
@@ -163,7 +163,7 @@ function ∂qRᵀmat(p::AbstractVector) # 𝞉(Rᵀmat(q)*p)/∂q
     ]
 end
 
-function ∂qLmat(p::AbstractVector) # 𝞉(Lmat(q)*p)/∂q
+function ∂Lmat∂q(p::AbstractVector) # 𝞉(Lmat(q)*p)/∂q
 	SA[
     	p[1] -p[2] -p[3] -p[4];
     	p[2]  p[1]  p[4] -p[3];
@@ -172,6 +172,6 @@ function ∂qLmat(p::AbstractVector) # 𝞉(Lmat(q)*p)/∂q
     ]
 end
 
-function ∂pskew(λ) # 𝞉(skew(p)*λ)/∂p
+function ∂skew∂p(λ) # 𝞉(skew(p)*λ)/∂p
 	skew(-λ)
 end

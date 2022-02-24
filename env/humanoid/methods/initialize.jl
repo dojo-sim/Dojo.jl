@@ -18,10 +18,10 @@ function get_humanoid(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_co
 
 
 
-        pfll = vrotate([ 0.5 * left_foot.shape.shape[1].rh[2] + 0.03500; -0.03; 0.0], qll)
-        pbll = vrotate([-0.5 * left_foot.shape.shape[1].rh[2] + 0.03500; -0.03; 0.0], qll)
-        pflr = vrotate([ 0.5 * left_foot.shape.shape[1].rh[2] + 0.03500; +0.01; 0.0], qlr)
-		pblr = vrotate([-0.5 * left_foot.shape.shape[1].rh[2] + 0.03500; +0.01; 0.0], qlr)
+        pfll = vector_rotate([ 0.5 * left_foot.shape.shape[1].rh[2] + 0.03500; -0.03; 0.0], qll)
+        pbll = vector_rotate([-0.5 * left_foot.shape.shape[1].rh[2] + 0.03500; -0.03; 0.0], qll)
+        pflr = vector_rotate([ 0.5 * left_foot.shape.shape[1].rh[2] + 0.03500; +0.01; 0.0], qlr)
+		pblr = vector_rotate([-0.5 * left_foot.shape.shape[1].rh[2] + 0.03500; +0.01; 0.0], qlr)
 		# pflr = [  0.0 * 0.5 * left_foot.shape.shape[1].rh[2], -0.01, 0]
 		# p    = [- 0.0 * 0.5 * left_foot.shape.shape[1].rh[2], +0.01, 0]
 		# p = [0.035,0.030,0.]

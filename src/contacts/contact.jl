@@ -12,7 +12,7 @@ impulse_map(model::Contact, body::Body, id, λ, timestep) = impulse_map(model, n
 
 function impulse_map(model::Contact, x::AbstractVector, q::UnitQuaternion, λ)
     X = force_mapping(model, x, q)
-    Q = - X * q * skew(model.contact_point - vrotate(model.offset, inv(q)))
+    Q = - X * q * skew(model.contact_point - vector_rotate(model.offset, inv(q)))
     return [X'; Q']
 end
 

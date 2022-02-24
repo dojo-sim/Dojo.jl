@@ -228,9 +228,9 @@ q1b0 = UnitQuaternion(rand(4)...)
 #     function f(ω1b)
 #         q2a_ = UnitQuaternion(q2a.w, q2a.x, q2a.y, q2a.z, false)
 #         q2b_ = UnitQuaternion(q2b.w, q2b.x, q2b.y, q2b.z, false)
-#         velocity = A * (vrotate(ω1b,q2a_\q2b_) - ω1a) # in pbody's frame
+#         velocity = A * (vector_rotate(ω1b,q2a_\q2b_) - ω1a) # in pbody's frame
 #         force = -2 * Aᵀ * A * Diagonal(jr0.damper) * Aᵀ * velocity
-#         force = vrotate(force, q2b_ \ q2a_) # in cbody's frame
+#         force = vector_rotate(force, q2b_ \ q2a_) # in cbody's frame
 #         return force
 #     end
 #     ForwardDiff.jacobian(f, ω1b)

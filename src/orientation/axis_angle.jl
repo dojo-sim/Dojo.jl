@@ -1,4 +1,5 @@
 function axis_angle_to_quaternion(x)
+    @assert length(x) == 3
     θ = norm(x)
     if θ > 0.0
         r = x ./ θ
@@ -9,7 +10,7 @@ function axis_angle_to_quaternion(x)
     return q
 end
 
-function ∂axis_angle_to_quaternion∂axis_angle(x) 
+function daxis_angle_to_quaterniondx(x) 
     θ = norm(x) 
     if θ > 0.0
         r = x ./ θ

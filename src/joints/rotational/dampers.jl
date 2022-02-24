@@ -7,7 +7,7 @@ function damper_force(joint::Rotational{T}, qa::UnitQuaternion, ϕa::AbstractVec
     A = nullspace_mask(joint)
     Aᵀ = zerodimstaticadjoint(A)
     axis_offset = joint.axis_offset
-    force = 2 * Aᵀ * A * (vrotate(ϕb, inv(axis_offset) * inv(qa) * qb) - vrotate(ϕa, inv(axis_offset))) # in offset frame
+    force = 2 * Aᵀ * A * (vector_rotate(ϕb, inv(axis_offset) * inv(qa) * qb) - vector_rotate(ϕa, inv(axis_offset))) # in offset frame
     unitary && (force *= joint.damper) # Currently assumes same damper constant in all directions
     return force # in the offset frame
 end
@@ -21,14 +21,14 @@ function damper_force(relative::Symbol, joint::Rotational{T}, qa::UnitQuaternion
     axis_offset = joint.axis_offset
 
     if relative == :parent
-        velocity = A * (vrotate(ϕb, qa \ qb / axis_offset) - vrotate(ϕa, inv(axis_offset))) # in offset frame
+        velocity = A * (vector_rotate(ϕb, qa \ qb / axis_offset) - vector_rotate(ϕa, inv(axis_offset))) # in offset frame
         force = 2 * Aᵀ * A * damper * Aᵀ * velocity # Currently assumes same damper constant in all directions
-        rotate && (force = vrotate(force, axis_offset)) # rotate back to frame a
+        rotate && (force = vector_rotate(force, axis_offset)) # rotate back to frame a
         return [szeros(T, 3); force]
     elseif relative == :child 
-        velocity = A * (vrotate(ϕb, qa \ qb / axis_offset) - vrotate(ϕa, inv(axis_offset))) # in offset frame
+        velocity = A * (vector_rotate(ϕb, qa \ qb / axis_offset) - vector_rotate(ϕa, inv(axis_offset))) # in offset frame
         force = - 2 * Aᵀ * A * damper * Aᵀ * velocity # Currently assumes same damper constant in all directions
-        rotate && (force = vrotate(force, inv(qb) * qa * axis_offset)) # rotate back to frame b
+        rotate && (force = vector_rotate(force, inv(qb) * qa * axis_offset)) # rotate back to frame b
         return [szeros(T, 3); force]
     end
 end
@@ -59,20 +59,20 @@ function damper_jacobian_configuration(relative::Symbol, jacobian::Symbol,
 
     if relative == :parent 
         if jacobian == :parent 
-            Q = ∂vrotate∂p(force, axis_offset) * 2 * joint.damper * Aᵀ * A * ∂vrotate∂q(ϕb, qa \ qb / axis_offset) * Rmat(qb * inv(axis_offset)) * Tmat()
+            Q = ∂vector_rotate∂p(force, axis_offset) * 2 * joint.damper * Aᵀ * A * ∂vector_rotate∂q(ϕb, qa \ qb / axis_offset) * Rmat(qb * inv(axis_offset)) * Tmat()
             attjac && (Q *= LVᵀmat(qa))
         elseif jacobian == :child 
-            Q = ∂vrotate∂p(force, axis_offset) * 2 * joint.damper * Aᵀ * A * ∂vrotate∂q(ϕb, qa \ qb / axis_offset) * Rmat(inv(axis_offset)) * Lmat(inv(qa))
+            Q = ∂vector_rotate∂p(force, axis_offset) * 2 * joint.damper * Aᵀ * A * ∂vector_rotate∂q(ϕb, qa \ qb / axis_offset) * Rmat(inv(axis_offset)) * Lmat(inv(qa))
             attjac && (Q *= LVᵀmat(qb))
         end
     elseif relative == :child 
         if jacobian == :parent 
-            Q = ∂vrotate∂p(force, inv(qb) * qa * axis_offset) * -2 * joint.damper * Aᵀ * A * ∂vrotate∂q(ϕb, qa \ qb / axis_offset) * Rmat(qb * inv(axis_offset)) * Tmat()
-            Q += ∂vrotate∂q(force, inv(qb) * qa * axis_offset) * Rmat(axis_offset) * Lmat(inv(qb))
+            Q = ∂vector_rotate∂p(force, inv(qb) * qa * axis_offset) * -2 * joint.damper * Aᵀ * A * ∂vector_rotate∂q(ϕb, qa \ qb / axis_offset) * Rmat(qb * inv(axis_offset)) * Tmat()
+            Q += ∂vector_rotate∂q(force, inv(qb) * qa * axis_offset) * Rmat(axis_offset) * Lmat(inv(qb))
             attjac && (Q *= LVᵀmat(qa))
         elseif jacobian == :child 
-            Q = ∂vrotate∂p(force, inv(qb) * qa * axis_offset) * -2 * joint.damper * Aᵀ * A * ∂vrotate∂q(ϕb, qa \ qb / axis_offset) * Rmat(inv(axis_offset)) * Lmat(inv(qa))
-            Q += ∂vrotate∂q(force, inv(qb) * qa * axis_offset) * Rmat(qa * axis_offset) * Tmat()
+            Q = ∂vector_rotate∂p(force, inv(qb) * qa * axis_offset) * -2 * joint.damper * Aᵀ * A * ∂vector_rotate∂q(ϕb, qa \ qb / axis_offset) * Rmat(inv(axis_offset)) * Lmat(inv(qa))
+            Q += ∂vector_rotate∂q(force, inv(qb) * qa * axis_offset) * Rmat(qa * axis_offset) * Tmat()
             attjac && (Q *= LVᵀmat(qb))
         end
     end 
@@ -93,15 +93,15 @@ function damper_jacobian_velocity(relative::Symbol, jacobian::Symbol,
     force = damper_force(relative, joint, qa, ϕa, qb, ϕb, timestep; rotate = false)[SVector{3,Int}(4,5,6)]
     if relative == :parent 
         if jacobian == :parent 
-            Ω = ∂vrotate∂p(force, axis_offset) * 2 * joint.damper * Aᵀ * A * -1.0 * ∂vrotate∂p(ϕa, inv(axis_offset))
+            Ω = ∂vector_rotate∂p(force, axis_offset) * 2 * joint.damper * Aᵀ * A * -1.0 * ∂vector_rotate∂p(ϕa, inv(axis_offset))
         elseif jacobian == :child 
-            Ω = ∂vrotate∂p(force, axis_offset) * 2 * joint.damper * Aᵀ * A * ∂vrotate∂p(ϕb, qa \ qb / axis_offset)
+            Ω = ∂vector_rotate∂p(force, axis_offset) * 2 * joint.damper * Aᵀ * A * ∂vector_rotate∂p(ϕb, qa \ qb / axis_offset)
         end
     elseif relative == :child 
         if jacobian == :parent 
-            Ω = ∂vrotate∂p(force, inv(qb) * qa * axis_offset) * -2 * joint.damper * Aᵀ * A * -1.0 * ∂vrotate∂p(ϕa, inv(axis_offset))
+            Ω = ∂vector_rotate∂p(force, inv(qb) * qa * axis_offset) * -2 * joint.damper * Aᵀ * A * -1.0 * ∂vector_rotate∂p(ϕa, inv(axis_offset))
         elseif jacobian == :child 
-            Ω = ∂vrotate∂p(force, inv(qb) * qa * axis_offset) * -2 * joint.damper * Aᵀ * A * ∂vrotate∂p(ϕb, qa \ qb / axis_offset)
+            Ω = ∂vector_rotate∂p(force, inv(qb) * qa * axis_offset) * -2 * joint.damper * Aᵀ * A * ∂vector_rotate∂p(ϕb, qa \ qb / axis_offset)
         end
     end 
     return timestep * [szeros(T, 3, 6); V Ω]

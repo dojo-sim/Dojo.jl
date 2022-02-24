@@ -25,9 +25,9 @@ function impulse_map_jacobian_configuration(mechanism, body::Body, contact::Cont
     X = force_mapping(model, x, q)
     λ = X' * contact.impulses[2]
 
-    ∇Q = skew(model.contact_point - vrotate(model.offset, inv(q))) * VRmat(q) * ∂qLᵀVᵀmat(λ)
-    ∇Q += skew(model.contact_point - vrotate(model.offset, inv(q))) * ∂qVRmat(LᵀVᵀmat(q) * λ)
-    ∇Q += -∂pskew(VRmat(q) * LᵀVᵀmat(q) * λ) * ∂qrotation_matrix_inv(q, model.offset)
+    ∇Q = skew(model.contact_point - vector_rotate(model.offset, inv(q))) * VRmat(q) * ∂LᵀVᵀmat∂q(λ)
+    ∇Q += skew(model.contact_point - vector_rotate(model.offset, inv(q))) * ∂VRmat∂q(LᵀVᵀmat(q) * λ)
+    ∇Q += -∂skew∂p(VRmat(q) * LᵀVᵀmat(q) * λ) * ∂rotation_matrix_inv∂q(q, model.offset)
     Z3 = szeros(T,3,3)
     Z4 = szeros(T,3,4)
     return [Z3 Z4;

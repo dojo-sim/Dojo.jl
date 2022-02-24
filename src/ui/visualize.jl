@@ -1,6 +1,6 @@
 function transform(x, q, shape)
     scale_transform = MeshCat.LinearMap(diagm(shape.scale))
-    x_transform = MeshCat.Translation(x + vrotate(shape.xoffset, q))
+    x_transform = MeshCat.Translation(x + vector_rotate(shape.xoffset, q))
     q_transform = MeshCat.LinearMap(q * shape.axis_offset)
     return MeshCat.compose(x_transform, q_transform, scale_transform)
 end
@@ -14,7 +14,7 @@ function set_node!(x, q, id, shape, shapevisualizer, showshape) where {T,N}
         # TODO currently setting props directly because MeshCat/Rotations doesn't convert scaled rotation properly.
         # If this changes, do similarily to origin
         setprop!(shapevisualizer, "scale", MeshCat.js_scaling(shape.scale))
-        setprop!(shapevisualizer, "position", MeshCat.js_position(x + vrotate(shape.xoffset, q)))
+        setprop!(shapevisualizer, "position", MeshCat.js_position(x + vector_rotate(shape.xoffset, q)))
         setprop!(shapevisualizer, "quaternion", MeshCat.js_quaternion(q * shape.axis_offset))
     end
     return
@@ -255,7 +255,7 @@ end
 #             # If this changes, do similarily to origin
 #             atframe(animation, i) do
 #                 setprop!(shapevisualizer, "scale", MeshCat.js_scaling(shape.scale))
-#                 setprop!(shapevisualizer, "position", MeshCat.js_position(x + vrotate(shape.xoffset, q)))
+#                 setprop!(shapevisualizer, "position", MeshCat.js_position(x + vector_rotate(shape.xoffset, q)))
 #                 setprop!(shapevisualizer, "quaternion", MeshCat.js_quaternion(q * shape.axis_offset))
 #             end
 #         end
@@ -278,7 +278,7 @@ end
 #
 #         if visshape !== nothing
 #             setprop!(subvisshape, "scale", MeshCat.js_scaling(shape.scale))
-#             setprop!(subvisshape, "position", MeshCat.js_position(x + vrotate(shape.xoffset, q)))
+#             setprop!(subvisshape, "position", MeshCat.js_position(x + vector_rotate(shape.xoffset, q)))
 #             setprop!(subvisshape, "quaternion", MeshCat.js_quaternion(q * shape.axis_offset))
 #         end
 #         i += 1

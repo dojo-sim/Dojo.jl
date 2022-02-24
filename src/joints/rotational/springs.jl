@@ -12,9 +12,9 @@ function spring_force(relative::Symbol, joint::Rotational{T},
     force = -spring * zerodimstaticadjoint(nullspace_mask(joint)) * distance # force in offset frame
     
     if relative == :parent
-        rotate ? (output = vrotate(force, joint.axis_offset)) : (output = force) # rotate into a frame
+        rotate ? (output = vector_rotate(force, joint.axis_offset)) : (output = force) # rotate into a frame
     elseif relative == :child 
-        rotate ? (output = vrotate(-force, inv(qb) * qa  * joint.axis_offset)) : (output = -force) # rotate back to b frame
+        rotate ? (output = vector_rotate(-force, inv(qb) * qa  * joint.axis_offset)) : (output = -force) # rotate back to b frame
     end
 
     return [szeros(T, 3); output]
@@ -51,19 +51,19 @@ function spring_jacobian_configuration(relative::Symbol, jacobian::Symbol, joint
     spring = unitary ? 1.0 : joint.spring
 
     if relative == :parent
-        J = timestep * ∂vrotate∂p(force[SVector{3,Int}(4,5,6)], joint.axis_offset) * spring * zerodimstaticadjoint(nullspace_mask(joint)) * minimal_coordinates_jacobian_configuration(jacobian, joint, xa, qa, xb, qb, attjac=attjac)
+        J = timestep * ∂vector_rotate∂p(force[SVector{3,Int}(4,5,6)], joint.axis_offset) * spring * zerodimstaticadjoint(nullspace_mask(joint)) * minimal_coordinates_jacobian_configuration(jacobian, joint, xa, qa, xb, qb, attjac=attjac)
     elseif relative == :child 
         X = szeros(T, 3, 3)
        
         if rotate 
-            J1 = timestep * ∂vrotate∂p(force[SVector{3,Int}(4,5,6)], inv(qb) * qa * joint.axis_offset) * -spring * zerodimstaticadjoint(nullspace_mask(joint)) * minimal_coordinates_jacobian_configuration(jacobian, joint, xa, qa, xb, qb, attjac=attjac)
+            J1 = timestep * ∂vector_rotate∂p(force[SVector{3,Int}(4,5,6)], inv(qb) * qa * joint.axis_offset) * -spring * zerodimstaticadjoint(nullspace_mask(joint)) * minimal_coordinates_jacobian_configuration(jacobian, joint, xa, qa, xb, qb, attjac=attjac)
 
             if jacobian == :parent 
-                Q2 = timestep * ∂vrotate∂q(force[SVector{3,Int}(4,5,6)], inv(qb) * qa * joint.axis_offset) * Rmat(joint.axis_offset) * Lmat(inv(qb))
+                Q2 = timestep * ∂vector_rotate∂q(force[SVector{3,Int}(4,5,6)], inv(qb) * qa * joint.axis_offset) * Rmat(joint.axis_offset) * Lmat(inv(qb))
                 attjac && (Q2 *= LVᵀmat(qa))
                 J2 = [X Q2]
             elseif jacobian == :child 
-                Q2 = timestep * ∂vrotate∂q(force[SVector{3,Int}(4,5,6)], inv(qb) * qa * joint.axis_offset) * Rmat(qa * joint.axis_offset) * Tmat()
+                Q2 = timestep * ∂vector_rotate∂q(force[SVector{3,Int}(4,5,6)], inv(qb) * qa * joint.axis_offset) * Rmat(qa * joint.axis_offset) * Tmat()
                 attjac && (Q2 *= LVᵀmat(qb))
                 J2 = [X Q2]
             end

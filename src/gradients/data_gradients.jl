@@ -31,8 +31,8 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, body::Body{T})
 
     # initial conditions: v15, ϕ15
     ∇v15 = body.mass * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
-    ∇q1 = -2 / Δt * LVᵀmat(q2)' * ∂qLVᵀmat(body.inertia * VLᵀmat(q1) * vector(q2))
-    ∇q1 += -2 / Δt * LVᵀmat(q2)' * LVᵀmat(q1) * body.inertia * ∂qVLᵀmat(vector(q2))
+    ∇q1 = -2 / Δt * LVᵀmat(q2)' * ∂LVᵀmat∂q(body.inertia * VLᵀmat(q1) * vector(q2))
+    ∇q1 += -2 / Δt * LVᵀmat(q2)' * LVᵀmat(q1) * body.inertia * ∂VLᵀmat∂q(vector(q2))
     ∇ϕ15 = ∇q1 * rotational_integrator_jacobian_velocity(q2, -ϕ15, Δt)
     ∇15 = [∇v15 szeros(T,3,3);
            szeros(T,3,3) ∇ϕ15]
@@ -43,8 +43,8 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, body::Body{T})
     ∇tra_q2 = szeros(T,3,3)
     ∇rot_x2 = szeros(T,3,3)
     ∇rot_q2 = -2 / Δt * VLᵀmat(q2) * LVᵀmat(q1) * body.inertia * VLᵀmat(q1)
-    ∇rot_q2 += -2 / Δt * VLᵀmat(q2) * Tmat() * RᵀVᵀmat(q3) * body.inertia * ∂qVLᵀmat(vector(q3))
-    ∇rot_q2 += -2 / Δt * ∂qVLᵀmat(LVᵀmat(q1) * body.inertia * VLᵀmat(q1) * vector(q2) + Tmat() * RᵀVᵀmat(q3) * body.inertia * VLᵀmat(q2) * vector(q3))
+    ∇rot_q2 += -2 / Δt * VLᵀmat(q2) * Tmat() * RᵀVᵀmat(q3) * body.inertia * ∂VLᵀmat∂q(vector(q3))
+    ∇rot_q2 += -2 / Δt * ∂VLᵀmat∂q(LVᵀmat(q1) * body.inertia * VLᵀmat(q1) * vector(q2) + Tmat() * RᵀVᵀmat(q3) * body.inertia * VLᵀmat(q2) * vector(q3))
     ∇rot_q2 *= LVᵀmat(q2)
     ∇z2 = [∇tra_x2 ∇tra_q2;
            ∇rot_x2 ∇rot_q2]
@@ -161,9 +161,9 @@ function body_constraint_jacobian_contact_data(mechanism::Mechanism, body::Body{
     ∇friction_coefficient = szeros(T,3,1)
 
     X = force_mapping(model, x3, q3)
-    # this what we differentiate: Qᵀγ = - skew(p - vrotate(offset, inv(q3))) * VRmat(q3) * LᵀVᵀmat(q3) * X' * γ
-    ∇p = - ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ)
-    ∇off = - ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ) * -∂vrotate∂p(offset, inv(q3))
+    # this what we differentiate: Qᵀγ = - skew(p - vector_rotate(offset, inv(q3))) * VRmat(q3) * LᵀVᵀmat(q3) * X' * γ
+    ∇p = - ∂skew∂p(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ)
+    ∇off = - ∂skew∂p(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ) * -∂vector_rotate∂p(offset, inv(q3))
 
     ∇X = szeros(T,3,Nd)
     ∇Q = -[∇friction_coefficient ∇off ∇p]
@@ -183,8 +183,8 @@ function contact_constraint_jacobian_contact_data(mechanism::Mechanism, contact:
     γ = contact.impulses[2]
 
     ∇friction_coefficient = SA[0,γ[1],0,0]
-    ∇off = [-model.surface_normal_projector; szeros(T,1,3); -model.surface_projector * skew(vrotate(ϕ25, q3))]
-    ∇p = [model.surface_normal_projector * ∂vrotate∂p(model.contact_point, q3); szeros(T,1,3); model.surface_projector * skew(vrotate(ϕ25, q3)) * ∂vrotate∂p(model.contact_point, q3)]
+    ∇off = [-model.surface_normal_projector; szeros(T,1,3); -model.surface_projector * skew(vector_rotate(ϕ25, q3))]
+    ∇p = [model.surface_normal_projector * ∂vector_rotate∂p(model.contact_point, q3); szeros(T,1,3); model.surface_projector * skew(vector_rotate(ϕ25, q3)) * ∂vector_rotate∂p(model.contact_point, q3)]
 
     ∇compμ = szeros(T,N½,Nd)
     ∇g = -[∇friction_coefficient ∇off ∇p]

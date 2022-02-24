@@ -44,7 +44,7 @@ function minimal_coordinates_jacobian_configuration(relative::Symbol, joint::Rot
     A = nullspace_mask(joint)
     q = displacement(joint, xa, qa, xb, qb, vmat=false)
     X, Q = displacement_jacobian_configuration(relative, joint, xa, qa, xb, qb, attjac=attjac, vmat=false)
-    ∂rv∂q = ∂rotation_vector∂q(q)
+    ∂rv∂q = drotation_vectordq(q)
 
 	return A * [X ∂rv∂q * Q]
 end
@@ -113,12 +113,12 @@ function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Rota
 	X = szeros(T, nu, 3)
 
 	if relative == :parent 
-		Q = 1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Rmat(q) * Tmat() * Rmat(qb1) * Lmat(inv(axis_offset)) * Tmat() * Rmat(quaternion_map(-ϕa, timestep)) * timestep / 2
-		Q += 1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Lmat(inv(q1)) * Rmat(qb) * Lmat(inv(axis_offset)) * Tmat()
+		Q = 1.0 / timestep * A * drotation_vectordq(inv(q1) * q) * Rmat(q) * Tmat() * Rmat(qb1) * Lmat(inv(axis_offset)) * Tmat() * Rmat(quaternion_map(-ϕa, timestep)) * timestep / 2
+		Q += 1.0 / timestep * A * drotation_vectordq(inv(q1) * q) * Lmat(inv(q1)) * Rmat(qb) * Lmat(inv(axis_offset)) * Tmat()
 		Q *= LVᵀmat(qa)
 	elseif relative == :child 
-		Q = 1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Rmat(q) * Tmat() * Lmat(inv(axis_offset) * inv(qa1)) * Rmat(quaternion_map(-ϕb, timestep)) * timestep / 2
-		Q += 1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Lmat(inv(q1) * inv(axis_offset) * inv(qa))
+		Q = 1.0 / timestep * A * drotation_vectordq(inv(q1) * q) * Rmat(q) * Tmat() * Lmat(inv(axis_offset) * inv(qa1)) * Rmat(quaternion_map(-ϕb, timestep)) * timestep / 2
+		Q += 1.0 / timestep * A * drotation_vectordq(inv(q1) * q) * Lmat(inv(q1) * inv(axis_offset) * inv(qa))
 		Q *= LVᵀmat(qb)
 	end
 
@@ -148,9 +148,9 @@ function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Rotationa
 	V = szeros(T, nu, 3)
 
 	if relative == :parent
-		Ω = -1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Rmat(q) * Tmat() * Lmat(inv(axis_offset)) * Rmat(qb1) * Tmat() * Lmat(qa) * quaternion_map_jacobian(-ϕa, timestep) * timestep / 2 
+		Ω = -1.0 / timestep * A * drotation_vectordq(inv(q1) * q) * Rmat(q) * Tmat() * Lmat(inv(axis_offset)) * Rmat(qb1) * Tmat() * Lmat(qa) * quaternion_map_jacobian(-ϕa, timestep) * timestep / 2 
 	elseif relative == :child 
-		Ω = -1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Rmat(q) * Tmat() * Lmat(inv(axis_offset) * inv(qa1)) * Lmat(qb) * quaternion_map_jacobian(-ϕb, timestep) * timestep / 2
+		Ω = -1.0 / timestep * A * drotation_vectordq(inv(q1) * q) * Rmat(q) * Tmat() * Lmat(inv(axis_offset) * inv(qa1)) * Lmat(qb) * quaternion_map_jacobian(-ϕb, timestep) * timestep / 2
 	end
 
 	return [V Ω]

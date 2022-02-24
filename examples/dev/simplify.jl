@@ -133,7 +133,7 @@ jacz0 - jacz1
 @variables xa[1:3], qa[1:4], xb[1:3], qb[1:4], p[1:3], p2[1:3]
 qa_ = UnitQuaternion(qa..., false)
 qb_ = UnitQuaternion(qb..., false)
-∂qrotation_matrix(qa_, p) * LVᵀmat(qa_)
+∂rotation_matrix∂q(qa_, p) * LVᵀmat(qa_)
 
 Xt = rotation_matrix(qa_)
 cbpb_w = rotation_matrix(qb_) * p2
@@ -159,7 +159,7 @@ using Symbolics
 q_ = UnitQuaternion(q..., false)
 Symbolics.jacobian(VRᵀmat(q_)*p4, q)
 
-@show Symbolics.jacobian(rotation_matrix(inv(q_))*p, q) - ∂qrotation_matrix(inv(q_), p) * Tmat()
+@show Symbolics.jacobian(rotation_matrix(inv(q_))*p, q) - ∂rotation_matrix∂q(inv(q_), p) * Tmat()
 
 
 
@@ -173,9 +173,9 @@ LVᵀmat(qb_)
 Tmat()'
 
 @variables p4[1:4]
-Symbolics.jacobian(LVᵀmat(inv(qb_)) * p, qb) - ∂qLVᵀmat(p) * Tmat()
+Symbolics.jacobian(LVᵀmat(inv(qb_)) * p, qb) - ∂LVᵀmat∂q(p) * Tmat()
 Symbolics.jacobian(VRᵀmat(inv(qb_)) * p4, qb)
-- ∂qVRᵀmat(p4)
+- ∂VRᵀmat∂q(p4)
 
 
 

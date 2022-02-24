@@ -28,7 +28,7 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N
 
     # transforms the velocities of the origin of the link into velocities along all 4 axes of the friction pyramid
     # vp = V(cp, B / W)_w velocity of the contact point cp, attached to body B wrt world frame, expressed in the world frame.
-    vp = v25 + skew(vrotate(ϕ25, q3)) * (vrotate(model.contact_point, q3) - model.offset)
+    vp = v25 + skew(vector_rotate(ϕ25, q3)) * (vector_rotate(model.contact_point, q3) - model.offset)
     γ = contact.impulses[2][1]
     sγ = contact.impulses_dual[2][1]
     ψ = contact.impulses[2][2]
@@ -36,7 +36,7 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N
     β = contact.impulses[2][@SVector [3,4,5,6]]
     sβ = contact.impulses_dual[2][@SVector [3,4,5,6]]
     SVector{6,T}(
-        model.surface_normal_projector * (x3 + vrotate(model.contact_point,q3) - model.offset) - sγ,
+        model.surface_normal_projector * (x3 + vector_rotate(model.contact_point,q3) - model.offset) - sγ,
         model.friction_coefficient * γ - sum(β) - sψ,
         (model.surface_projector * vp + ψ * sones(4) - sβ)...)
 end
@@ -46,9 +46,9 @@ function constraint_jacobian_configuration(model::LinearContact, x3::AbstractVec
     V = [model.surface_normal_projector;
          szeros(1,3);
          szeros(4,3)]
-    ∂v∂q3 = skew(vrotate(ϕ25, q3)) * ∂vrotate∂q(model.contact_point, q3)
-    ∂v∂q3 += skew(model.offset - vrotate(model.contact_point, q3)) * ∂vrotate∂q(ϕ25, q3)
-    Ω = [model.surface_normal_projector * ∂vrotate∂q(model.contact_point, q3);
+    ∂v∂q3 = skew(vector_rotate(ϕ25, q3)) * ∂vector_rotate∂q(model.contact_point, q3)
+    ∂v∂q3 += skew(model.offset - vector_rotate(model.contact_point, q3)) * ∂vector_rotate∂q(ϕ25, q3)
+    Ω = [model.surface_normal_projector * ∂vector_rotate∂q(model.contact_point, q3);
         szeros(1,4);
         model.surface_projector * ∂v∂q3]
     return [V Ω]
@@ -59,10 +59,10 @@ function constraint_jacobian_velocity(model::LinearContact, x3::AbstractVector, 
     V = [model.surface_normal_projector * timestep;
          szeros(1,3);
          model.surface_projector]
-    ∂v∂q3 = skew(vrotate(ϕ25, q3)) * ∂vrotate∂q(model.contact_point, q3)
-    ∂v∂q3 += skew(model.offset - vrotate(model.contact_point, q3)) * ∂vrotate∂q(ϕ25, q3)
-    ∂v∂ϕ25 = skew(model.offset - vrotate(model.contact_point, q3)) * ∂vrotate∂p(ϕ25, q3)
-    Ω = [model.surface_normal_projector * ∂vrotate∂q(model.contact_point, q3) * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep);
+    ∂v∂q3 = skew(vector_rotate(ϕ25, q3)) * ∂vector_rotate∂q(model.contact_point, q3)
+    ∂v∂q3 += skew(model.offset - vector_rotate(model.contact_point, q3)) * ∂vector_rotate∂q(ϕ25, q3)
+    ∂v∂ϕ25 = skew(model.offset - vector_rotate(model.contact_point, q3)) * ∂vector_rotate∂p(ϕ25, q3)
+    Ω = [model.surface_normal_projector * ∂vector_rotate∂q(model.contact_point, q3) * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep);
         szeros(1,3);
         model.surface_projector * (∂v∂ϕ25 + ∂v∂q3 * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep))]
     return [V Ω]

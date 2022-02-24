@@ -50,7 +50,7 @@ for (i,ineqc) in enumerate(contacts)
     cont = ineqc.constraints[1]
     body = get_body(mech, ineqc.parentid)
     x3, q3 = current_configuration(body.state)
-    sdf = cont.surface_normal_projector * (x3 + vrotate(cont.p,q3) - cont.offset)
+    sdf = cont.surface_normal_projector * (x3 + vector_rotate(cont.p,q3) - cont.offset)
     println("sdf $i:", sdf)
 end
 

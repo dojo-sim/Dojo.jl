@@ -16,17 +16,17 @@ function minimal_velocities(joint::Translational, xa::AbstractVector,
         va::AbstractVector,  qa::UnitQuaternion, ωa::AbstractVector,
         xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector)
 	vertices = joint.vertices
-    pbcb_w = vrotate(-vertices[2], qb)
-    pbca_w = xa - (xb + vrotate(vertices[2], qb))
+    pbcb_w = vector_rotate(-vertices[2], qb)
+    pbca_w = xa - (xb + vector_rotate(vertices[2], qb))
     # Δvw = V(pb,B/A)w - V(pa,A/A)w
 	@show nullspace_mask(joint)
-    Δvw = vb + skew(pbcb_w) * vrotate(ωb, qb) - (va + skew(pbca_w) * vrotate(ωa, qa)) # in world frame
-	Δv = vrotate(Δvw, inv(qa)) # in the a frame
+    Δvw = vb + skew(pbcb_w) * vector_rotate(ωb, qb) - (va + skew(pbca_w) * vector_rotate(ωa, qa)) # in world frame
+	Δv = vector_rotate(Δvw, inv(qa)) # in the a frame
 	@show Δv
 	@show Δvw
 	# @show pbcb_w
 	# @show pbca_w
-	# @show + skew(pbcb_w) * vrotate(ωb, qb) - (va + skew(pbca_w) * vrotate(ωa, qa))
+	# @show + skew(pbcb_w) * vector_rotate(ωb, qb) - (va + skew(pbca_w) * vector_rotate(ωa, qa))
     return nullspace_mask(joint) * Δv
 end
 
@@ -37,18 +37,18 @@ function set_minimal_velocities(joint::Translational, xa::AbstractVector,
     # Δv is expressed in along the joint's nullspace axes, in pnode's frame
 
     vertices = joint.vertices
-    pbcb_w = vrotate(-vertices[2], qb)
-    pbca_w = xa - (xb + vrotate(vertices[2], qb))
+    pbcb_w = vector_rotate(-vertices[2], qb)
+    pbca_w = xa - (xb + vector_rotate(vertices[2], qb))
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
     Δv = Aᵀ * Δv # in pnode's frame
-    Δvw = vrotate(Δv, qa) # in the world frame
+    Δvw = vector_rotate(Δv, qa) # in the world frame
     # Δvw = V(pb,B/A)w - V(pa,A/A)w
-    vb = Δvw - skew(pbcb_w) * vrotate(ϕb, qb) + (va + skew(pbca_w) * vrotate(ϕa, qa)) # in world frame
+    vb = Δvw - skew(pbcb_w) * vector_rotate(ϕb, qb) + (va + skew(pbca_w) * vector_rotate(ϕa, qa)) # in world frame
 	@show Δv
 	@show Δvw
 	# @show pbcb_w
 	# @show pbca_w
-	# @show - skew(pbcb_w) * vrotate(ϕb, qb) + (va + skew(pbca_w) * vrotate(ϕa, qa))
+	# @show - skew(pbcb_w) * vector_rotate(ϕb, qb) + (va + skew(pbca_w) * vector_rotate(ϕa, qa))
     return vb
 end
 
@@ -197,7 +197,7 @@ function set_minimal_velocities(joint::JointConstraint, xa::AbstractVector,
     Δq = axis_angle_to_quaternion(Arotᵀ*Δθ)
     qb = qa * axis_offset * Δq
     # Δx is expressed in along the joint's nullspace axes, in pnode's frame
-    xb = xa + vrotate(pa + Atraᵀ*Δx, qa) - vrotate(pb, qb)
+    xb = xa + vector_rotate(pa + Atraᵀ*Δx, qa) - vector_rotate(pb, qb)
 
 	xa10 = next_position(xa, -va, timestep)
 	qa10 = next_orientation(qa, -ϕa, timestep)
@@ -210,7 +210,7 @@ function set_minimal_velocities(joint::JointConstraint, xa::AbstractVector,
     Δq10 = axis_angle_to_quaternion(Arotᵀ*Δθ10)
     qb10 = qa10 * axis_offset * Δq10
     # Δx is expressed in along the joint's nullspace axes, in pnode's frame
-    xb10 = xa10 + vrotate(pa + Atraᵀ*Δx10, qa10) - vrotate(pb, qb10)
+    xb10 = xa10 + vector_rotate(pa + Atraᵀ*Δx10, qa10) - vector_rotate(pb, qb10)
 
 	# Finite difference
 	vb = (xb - xb10) / timestep

@@ -464,12 +464,12 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         end
 
         # urdf joint's x and q in parent's (parentbody) frame
-        # xjointlocal = vrotate(x_pjoint + vrotate(x_cjoint, q_pjoint) - x_pnode, inv(q_pnode))
-        xjointlocal = vrotate(xparentjoint + vrotate(x_cjoint, qparentjoint) - xparentbody, inv(qparentbody))
+        # xjointlocal = vector_rotate(x_pjoint + vector_rotate(x_cjoint, q_pjoint) - x_pnode, inv(q_pnode))
+        xjointlocal = vector_rotate(xparentjoint + vector_rotate(x_cjoint, qparentjoint) - xparentbody, inv(qparentbody))
         qjointlocal = qparentbody \ qparentjoint * q_cjoint
 
         # store joint's x and q in world frame
-        xjoint = xparentbody + vrotate(xjointlocal, qparentbody)
+        xjoint = xparentbody + vector_rotate(xjointlocal, qparentbody)
         qjoint = qparentbody * qjointlocal
         xjointlist[cjoint.id] = xjoint
         qjointlist[cjoint.id] = qjoint
@@ -479,10 +479,10 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
 
         # actual joint properties
         parent_vertex = xjointlocal # in parent's (parentbody) frame
-        child_vertex = vrotate(-xbodylocal, inv(qbodylocal)) # in body frame (xbodylocal and qbodylocal are both relative to the same (joint) frame -> rotationg by inv(body.q) gives body frame)
+        child_vertex = vector_rotate(-xbodylocal, inv(qbodylocal)) # in body frame (xbodylocal and qbodylocal are both relative to the same (joint) frame -> rotationg by inv(body.q) gives body frame)
         cjoint.translational.vertices = (parent_vertex, child_vertex)
 
-        V3 = vrotate(cjoint.rotational.axis_mask3', qjointlocal) # in parent's (parentbody) frame
+        V3 = vector_rotate(cjoint.rotational.axis_mask3', qjointlocal) # in parent's (parentbody) frame
         V1 = (svd(skew(V3)).Vt)[1:1,:]
         V2 = (svd(skew(V3)).Vt)[2:2,:]
 
@@ -499,7 +499,7 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
 
         # shape relative
         if !(typeof(shape) <: EmptyShape)
-            shape.xoffset = vrotate(xjoint + vrotate(shape.xoffset, qjoint) - xbody, inv(qbody))
+            shape.xoffset = vector_rotate(xjoint + vector_rotate(shape.xoffset, qjoint) - xbody, inv(qbody))
             shape.axis_offset = axis_offset \ qjointlocal * shape.axis_offset
         end
     end
@@ -544,8 +544,8 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         ind2 = ind1+1
 
         # urdf joint's x and q in parent's (parentbody) frame
-        xjointlocal1 = vrotate(xparentjoint1 + vrotate(constraint.translational.vertices[1], qparentjoint1) - xparentpbody, inv(qparentpbody))
-        xjointlocal2 = vrotate(xparentjoint2 + vrotate(constraint.translational.vertices[2], qparentjoint2) - xparentcbody, inv(qparentcbody))
+        xjointlocal1 = vector_rotate(xparentjoint1 + vector_rotate(constraint.translational.vertices[1], qparentjoint1) - xparentpbody, inv(qparentpbody))
+        xjointlocal2 = vector_rotate(xparentjoint2 + vector_rotate(constraint.translational.vertices[2], qparentjoint2) - xparentcbody, inv(qparentcbody))
         qjointlocal1 = qparentpbody \ qparentjoint1 * constraint.rotational.axis_offset
 
         # difference to parent body (parentbody)
@@ -556,7 +556,7 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         child_vertex = xjointlocal2 # in parent's (parentcbody) frame
         constraint.translational.vertices = (parent_vertex, child_vertex)
 
-        V3 = vrotate(constraint.rotational.axis_mask3', qjointlocal1) # in parent's (parentpbody) frame
+        V3 = vector_rotate(constraint.rotational.axis_mask3', qjointlocal1) # in parent's (parentpbody) frame
         V1 = (svd(skew(V3)).Vt)[1:1,:]
         V2 = (svd(skew(V3)).Vt)[2:2,:]
 

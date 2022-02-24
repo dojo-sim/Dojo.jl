@@ -16,28 +16,28 @@ function impulse_transform_jacobian(relative::Symbol, jacobian::Symbol,
     if relative == :parent 
         if jacobian == :parent 
             # ∂(impulse_transform_a'*p)/∂(xa,qa)
-            ∇Xqa = -∂qrotation_matrix(qa, p) * LVᵀmat(qa)
-            ∇Qxa =  ∂pskew(p) * rotation_matrix(inv(qa))
-            ∇Qqa = -∂pskew(p) * ∂qrotation_matrix_inv(qa, xb - xa + rotation_matrix(qb) * joint.vertices[2]) * LVᵀmat(qa)
+            ∇Xqa = -∂rotation_matrix∂q(qa, p) * LVᵀmat(qa)
+            ∇Qxa =  ∂skew∂p(p) * rotation_matrix(inv(qa))
+            ∇Qqa = -∂skew∂p(p) * ∂rotation_matrix_inv∂q(qa, xb - xa + rotation_matrix(qb) * joint.vertices[2]) * LVᵀmat(qa)
             return [Z3 ∇Xqa; ∇Qxa ∇Qqa]
         elseif jacobian == :child 
             # ∂(impulse_transform_a'*p)/∂(xb,qb)
-            ∇Qxb = -∂pskew(p) * rotation_matrix(inv(qa))
-            ∇Qqb = -∂pskew(p) * rotation_matrix(inv(qa)) * ∂qrotation_matrix(qb, joint.vertices[2]) * LVᵀmat(qb)
+            ∇Qxb = -∂skew∂p(p) * rotation_matrix(inv(qa))
+            ∇Qqb = -∂skew∂p(p) * rotation_matrix(inv(qa)) * ∂rotation_matrix∂q(qb, joint.vertices[2]) * LVᵀmat(qb)
             return [Z3 Z3; ∇Qxb ∇Qqb]
         end
     elseif relative == :child 
         if jacobian == :parent 
             # ∂(impulse_transform_b'*p)/∂(xa,qa)
             cbpb_w = rotation_matrix(qb) * joint.vertices[2] # body b kinematics point
-            ∇Xqa = ∂qrotation_matrix(qa, p) * LVᵀmat(qa)
-            ∇Qqa = rotation_matrix(inv(qb)) * skew(cbpb_w) * ∂qrotation_matrix(qa, p) * LVᵀmat(qa)
+            ∇Xqa = ∂rotation_matrix∂q(qa, p) * LVᵀmat(qa)
+            ∇Qqa = rotation_matrix(inv(qb)) * skew(cbpb_w) * ∂rotation_matrix∂q(qa, p) * LVᵀmat(qa)
             return [Z3 ∇Xqa; Z3 ∇Qqa]
         elseif jacobian == :child 
             # ∂(impulse_transform_b'*p)/∂(xb,qb)
             cbpb_w = rotation_matrix(qb) * joint.vertices[2] # body b kinematics point
-            ∇Qqb = ∂qrotation_matrix_inv(qb, skew(cbpb_w) * rotation_matrix(qa) * p)
-            ∇Qqb += rotation_matrix(inv(qb)) * ∂pskew(rotation_matrix(qa) * p) * ∂qrotation_matrix(qb, joint.vertices[2])
+            ∇Qqb = ∂rotation_matrix_inv∂q(qb, skew(cbpb_w) * rotation_matrix(qa) * p)
+            ∇Qqb += rotation_matrix(inv(qb)) * ∂skew∂p(rotation_matrix(qa) * p) * ∂rotation_matrix∂q(qb, joint.vertices[2])
             ∇Qqb *= LVᵀmat(qb)
             return [Z3 Z3; Z3 ∇Qqb]
         end

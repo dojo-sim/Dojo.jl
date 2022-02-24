@@ -7,7 +7,7 @@ function mrp(q::AbstractVector)
     return q[2:4] ./ (q[1] + 1.0)
 end
 
-function ∂mrp∂q(q::AbstractVector)
+function dmrpdq(q::AbstractVector)
     s = q[1] 
     v = q[2:4]
 
@@ -32,9 +32,9 @@ function axis(q)
     return n
 end
 
-function ∂axis∂q(q::AbstractVector)
+function daxisdq(q::AbstractVector)
     m = mrp(q)
-    ∂mrp∂q(q) ./ norm(m) - m ./ norm(m)^2 * transpose(m ./ norm(m)) * ∂mrp∂q(q)
+    dmrpdq(q) ./ norm(m) - m ./ norm(m)^2 * transpose(m ./ norm(m)) * dmrpdq(q)
 end
 
 
@@ -49,9 +49,9 @@ function angle(q)
     return θ
 end
 
-function ∂angle∂q(q::AbstractVector) 
+function dangledq(q::AbstractVector) 
     m = mrp(q)
-    4.0 * 1.0 / (1.0 + norm(m)^2.0) * transpose(m ./ norm(m)) * ∂mrp∂q(q)
+    4.0 * 1.0 / (1.0 + norm(m)^2.0) * transpose(m ./ norm(m)) * dmrpdq(q)
 end
 
 function axis_angle(q)
@@ -63,11 +63,11 @@ function rotation_vector(q)
     return θ .* n 
 end
 
-function ∂rotation_vector∂q(q::AbstractVector)
+function drotation_vectordq(q::AbstractVector)
     θ = angle(q)
     if θ != 0.0
         a = axis(q)
-        return a * ∂angle∂q(q) + θ * ∂axis∂q(q) 
+        return a * dangledq(q) + θ * daxisdq(q) 
     else
         [
             0.0  2.0  0.0  0.0;
@@ -77,4 +77,4 @@ function ∂rotation_vector∂q(q::AbstractVector)
     end
 end
 
-∂rotation_vector∂q(q::UnitQuaternion) = ∂rotation_vector∂q(vector(q))
+drotation_vectordq(q::UnitQuaternion) = drotation_vectordq(vector(q))
