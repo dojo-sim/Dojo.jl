@@ -117,7 +117,7 @@ function reset(env::Environment{Ant};
     if x != nothing
         env.x .= x
     else
-        x = get_minimal_state(env.mechanism, pos_noise=pos_noise, vel_noise=vel_noise)
+        x = get_minimal_state(env.mechanism)
         if env.mode == :min
             set_state!(env.mechanism, minimal_to_maximal(env.mechanism, x))
             env.x .= x

@@ -52,20 +52,19 @@ end
 ################################################################################
 # Set Coordinates
 ################################################################################
-function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::Rotational, timestep;
+function set_minimal_coordinates!(pnode::Node, cnode::Node, 
+	joint::Rotational, 
+	timestep;
 	Δθ::AbstractVector=szeros(control_dimension(joint)))
-	# Δθ is expressed in along the joint's nullspace axes, in pnode's offset frame
 	qoffset = joint.qoffset
 	qa = pnode.state.q2[1]
 	Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
-	Δq = axis_angle_to_quaternion(Aᵀ*Δθ)
+	Δq = axis_angle_to_quaternion(Aᵀ * Δθ)
 	qb = qa * qoffset * Δq
 	set_position!(cnode; x=cnode.state.x2[1], q = qb)
 	set_previous_configuration!(cnode, timestep)
 	return nothing
 end
-
-
 
 ################################################################################
 # Velocities
@@ -74,6 +73,7 @@ end
 		xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
 		xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
 		timestep)
+		
 	qoffset = joint.qoffset
 	A = nullspace_mask(joint)
 
