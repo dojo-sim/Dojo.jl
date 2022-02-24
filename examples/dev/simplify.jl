@@ -11,7 +11,7 @@ initialize!(mech, :humanoid, rot=[0.1,0,0], tran=[0,0,1.5])
 function ctrl!(mechanism, k)
     nu = control_dimension(mechanism)
     u = szeros(nu)
-    set_control!(mechanism, u)
+    set_input!(mechanism, u)
     return
 end
 

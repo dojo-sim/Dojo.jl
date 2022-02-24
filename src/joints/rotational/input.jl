@@ -2,16 +2,15 @@
 # Control Input
 ################################################################################
 
-function input_impulse!(joint::Rotational{T}, 
-    pbody::Node, cbody::Node, 
+function input_impulse!(joint::Rotational{T}, pbody::Node, cbody::Node, 
     timestep::T, clear::Bool) where T
 
     τ = joint.input
     xa, qa = current_configuration(pbody.state)
     xb, qb = current_configuration(cbody.state)
 
-    pbody.state.τ2[end] += -τ
-    cbody.state.τ2[end] += vector_rotate(vector_rotate(τ, qa),inv(qb))
+    pbody.state.τ2 += -τ
+    cbody.state.τ2 += vector_rotate(vector_rotate(τ, qa),inv(qb))
     clear && (joint.input = szeros(T,3))
     return
 end
@@ -24,13 +23,12 @@ function input_jacobian_control(relative::Symbol,
     joint::Rotational{T}, 
     xa::AbstractVector, qa::UnitQuaternion,
     xb::AbstractVector, qb::UnitQuaternion) where T
+
     if relative == :parent
         BFa = szeros(T, 3, 3)
         Bτa = -I
         return [BFa; Bτa]
     elseif relative == :child 
-        qbinvqa = qb \ qa
-
         BFb = szeros(T, 3, 3)
         Bτb = rotation_matrix(inv(qb)) * rotation_matrix(qa)
         return [BFb; Bτb]

@@ -27,7 +27,7 @@ mechanism = get_mechanism(:atlas, timestep=0.01, gravity=-9.81, friction_coeffic
 initialize_atlasstance!(mechanism, tran=[0,0,0.5], rot=[0.0,0.0,0.0])
 
 function ctrl!(mechanism, k) 
-    set_control!(mechanism, 0.1 * srand(control_dimension(mechanism)))
+    set_input!(mechanism, 0.1 * srand(control_dimension(mechanism)))
 end
 
 

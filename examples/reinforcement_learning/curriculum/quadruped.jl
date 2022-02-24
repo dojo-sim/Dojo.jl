@@ -22,7 +22,7 @@ initialize!(mech, :quadruped)
 function ctrl!(mechanism, k)
     nu = control_dimension(mechanism)
     u = -0*[szeros(6); sones(nu-6)] * mechanism.timestep
-    set_control!(mechanism, u)
+    set_input!(mechanism, u)
     return
 end
 @elapsed storage = simulate!(mech, 1.0, ctrl!, record=true,
@@ -94,7 +94,7 @@ function ctrl!(mechanism, k)
     nu = control_dimension(mechanism)
     u = SVector{nu}(A * get_minimal_state(mech))
 	u = u_sol[k]
-    set_control!(mechanism, u)
+    set_input!(mechanism, u)
     return
 end
 initialize!(mech, :quadruped)
@@ -224,17 +224,17 @@ constraint_jacobian_configuration2(mech, joint)
 
 
 @benchmark fx0, fu0 = get_maximal_gradients(mech)
-z = get_state(mech)
+z = get_current_state(mech)
 u = rand(control_dimension(mech))
 fx0, fu0 = get_maximal_gradients!(mech, z, u)
 fx0, fu0 = get_minimal_gradients(mech, z, u)
 fx1, fu1 = get_maximal_gradients(mech)
 
-attjac2 = cat([cat(I(6), LVᵀmat(body.state.q2[1]), I(3), dims=(1,2)) for body in mech.bodies]..., dims=(1,2))
+attjac2 = cat([cat(I(6), LVᵀmat(body.state.q2), I(3), dims=(1,2)) for body in mech.bodies]..., dims=(1,2))
 attjac3 =
 	cat(
 	[cat(I(6),
-	LVᵀmat(next_orientation(body.state.q2[1], body.state.ϕsol[2], mech.timestep)),
+	LVᵀmat(next_orientation(body.state.q2, body.state.ϕsol[2], mech.timestep)),
 	I(3), dims=(1:2)) for body in mech.bodies]...
 	, dims=(1,2))
 
@@ -252,7 +252,7 @@ norm(attjac3' * fu1 - fu0, Inf)
 
 maximal_dimension(mech, attjac=true)
 
-z = get_state(mech)
+z = get_current_state(mech)
 z_next = get_next_state(mech)
 x = maximal_to_minimal(mech, z)
 minimal_to_maximal_jacobian(mech, x)

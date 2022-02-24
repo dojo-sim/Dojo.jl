@@ -39,7 +39,7 @@ function potato_dynamics(x, u, timestep, m, g)
 end
 
 trunk = get_body(mech, "trunk")
-x2_trunk = trunk.state.x2[1]
+x2_trunk = trunk.state.x2
 v15_trunk = trunk.state.v15
 
 

@@ -60,7 +60,7 @@ u_control = u_damper[6 .+ (1:15)]
 mech = get_mechanism(:atlas, timestep=dt, gravity=gravity, friction_coefficient=friction_coefficient, damper=0.0,
 	spring=spring, model_type=model_type)
 function controller!(mechanism, k)
-    set_control!(mechanism, u_damper)
+    set_input!(mechanism, u_damper)
     return
 end
 initialize!(mech, :atlas, tran=[0,0,0.0])

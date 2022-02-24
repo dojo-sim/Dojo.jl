@@ -22,7 +22,7 @@ function constraint(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn
     state.d = [dynT; dynR]
 
     # inputs
-    state.d -= [state.F2[1]; state.τ2[1]]
+    state.d -= [state.F2; state.τ2]
 
     # impulses
     for id in connections(mechanism.system, body.id)

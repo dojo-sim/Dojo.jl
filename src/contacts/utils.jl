@@ -24,8 +24,8 @@ end
 
 function contact_location(contact::ContactConstraint{T,N,Nc,Cs},
     body::Body) where {T,N,Nc,Cs<:Contact{T,N}}
-    x = body.state.x2[1]
-    q = body.state.q2[1]
+    x = body.state.x2
+    q = body.state.q2
     return contact_location(contact, x, q)
 end
 

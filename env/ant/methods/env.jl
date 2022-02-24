@@ -107,10 +107,8 @@ function step(env::Environment{Ant}, x, u; diff=false)
     return _get_obs(env), reward, done, info
 end
 
-function reset(env::Environment{Ant};
-    x=nothing,
-    pos_noise=Uniform(-0.1, 0.1),
-    vel_noise=Normal(0.0, 0.01))
+# TODO add random noise
+function reset(env::Environment{Ant}; x=nothing)
 
     initialize!(env.mechanism, type2symbol(Ant))
 

@@ -14,10 +14,10 @@ end
 Base.length(::Body) = 6
 
 function check_body(body::Body)
-    initialize!(body.state)
     if norm(body.mass) == 0 || norm(body.inertia) == 0
         @info "Bad inertial properties detected"
     end
+    #TODO check condition number and potentially adapt
 end
 
 

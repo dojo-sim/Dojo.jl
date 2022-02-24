@@ -192,8 +192,8 @@ function parse_link(xlink, materialdict, T)
         link.name = Symbol(name)
     end
 
-    link.state.x2[1] = x
-    link.state.q2[1] = q
+    link.state.x2 = x
+    link.state.q2 = q
 
 
     return link
@@ -435,17 +435,17 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         # Child body (body of interest here)
         cnode = get_node(mechanism, cjoint.child_id) # x and q are stored in x2[1] and q2[1]
         shape = cnode.shape
-        # x_cnode = cnode.state.x2[1]
-        # q_cnode = cnode.state.q2[1]
-        xbodylocal = cnode.state.x2[1]
-        qbodylocal = cnode.state.q2[1]
+        # x_cnode = cnode.state.x2
+        # q_cnode = cnode.state.q2
+        xbodylocal = cnode.state.x2
+        qbodylocal = cnode.state.q2
 
         # Parent body
         pnode = get_node(mechanism, cjoint.parent_id, origin=true) # x and q are stored in x2[1] and q2[1]
-        # x_pnode = pnode.state.x2[1]
-        # q_pnode = pnode.state.q2[1]
-        xparentbody = pnode.state.x2[1]
-        qparentbody = pnode.state.q2[1]
+        # x_pnode = pnode.state.x2
+        # q_pnode = pnode.state.q2
+        xparentbody = pnode.state.x2
+        qparentbody = pnode.state.q2
 
         # Parent joint
         if pnode.id == 0 # parent body is origin
@@ -494,8 +494,8 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         # actual body properties
         set_maximal_coordinates!(cnode) # set everything to zero
         set_maximal_coordinates!(pnode, cnode, parent_vertex = parent_vertex, child_vertex = child_vertex, Δq = axis_offset)
-        xbody = cnode.state.x2[1]
-        qbody = cnode.state.q2[1]
+        xbody = cnode.state.x2
+        qbody = cnode.state.q2
 
         # shape relative
         if !(typeof(shape) <: EmptyShape)
@@ -522,8 +522,8 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
             grandparent_id1 = get_parent_id(mechanism, parent_id1, loopjoints)
             parentconstraint1 = get_joint_constraint(mechanism, grandparent_id1)
 
-            xparentpbody = parentpbody.state.x2[1] # in world frame
-            qparentpbody = parentpbody.state.q2[1] # in world frame
+            xparentpbody = parentpbody.state.x2 # in world frame
+            qparentpbody = parentpbody.state.q2 # in world frame
 
             xparentjoint1 = xjointlist[parentconstraint1.id] # in world frame
             qparentjoint1 = qjointlist[parentconstraint1.id] # in world frame
@@ -533,8 +533,8 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         grandparent_id2 = get_parent_id(mechanism, parent_id2, loopjoints)
         parentconstraint2 = get_joint_constraint(mechanism, grandparent_id2)
 
-        xparentcbody = parentcbody.state.x2[1] # in world frame
-        qparentcbody = parentcbody.state.q2[1] # in world frame
+        xparentcbody = parentcbody.state.x2 # in world frame
+        qparentcbody = parentcbody.state.q2 # in world frame
 
         xparentjoint2 = xjointlist[parentconstraint2.id] # in world frame
         qparentjoint2 = qjointlist[parentconstraint2.id] # in world frame

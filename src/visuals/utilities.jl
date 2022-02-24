@@ -1,6 +1,3 @@
-using FFMPEG
-using Meshing
-
 function set_floor!(vis::Visualizer; x=20.0, y=20.0, z=0.1, alt=0.0, color=RGBA(0.5,0.5,0.5,1.0),
         tilepermeter=1.0, imagename="tile.png", axis::Bool=false, grid::Bool=true)
     image = PngImage(joinpath(module_dir(), "assets", imagename))

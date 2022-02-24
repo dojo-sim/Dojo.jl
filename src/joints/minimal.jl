@@ -32,7 +32,7 @@ function set_minimal_coordinates!(mechanism, joint::JointConstraint{T,N,Nc}, xθ
 
     # recursive update down the kinematic chain
     if iter 
-        current = minimal_coordinates(mechanism)
+        current = get_minimal_coordinates(mechanism)
         for id in recursivedirectchildren!(mechanism.system, joint.id)
             node = get_node(mechanism, id)
             if node isa JointConstraint
@@ -134,9 +134,9 @@ function set_minimal_coordinates_velocities!(mechanism::Mechanism, joint::JointC
     pnode = get_body(mechanism, joint.parent_id)
     cnode = get_body(mechanism, joint.child_id)
 
-    xa = pnode.state.x2[1] 
+    xa = pnode.state.x2 
     va = pnode.state.v15 
-    qa = pnode.state.q2[1] 
+    qa = pnode.state.q2 
     ϕa = pnode.state.ϕ15 
 
     za = [xa; va; vector(qa); ϕa]
@@ -147,7 +147,7 @@ end
 function set_minimal_coordinates_velocities!(joint::JointConstraint, 
         pbody::Node, cbody::Node, 
         timestep;
-        zp::AbstractVector=[pbody.state.x2[1]; pbody.state.v15; vector(pbody.state.q2[1]); pbody.state.ϕ15],
+        zp::AbstractVector=[pbody.state.x2; pbody.state.v15; vector(pbody.state.q2); pbody.state.ϕ15],
         xmin::AbstractVector=szeros(2*control_dimension(joint)))
     
     nu = control_dimension(joint)
@@ -193,9 +193,9 @@ function set_minimal_coordinates_velocities!(joint::JointConstraint,
     ϕb = angular_velocity(qb1, qb, timestep)
     
     # set child state
-    cbody.state.x2[1] = xb 
+    cbody.state.x2 = xb 
     cbody.state.v15 = vb 
-    cbody.state.q2[1] = qb 
+    cbody.state.q2 = qb 
     cbody.state.ϕ15 = ϕb 
 
     return [xb; vb; vector(qb); ϕb]

@@ -58,11 +58,11 @@ function set_minimal_coordinates!(joint::Rotational,
 	Δθ::AbstractVector=szeros(control_dimension(joint)))
 	
 	axis_offset = joint.axis_offset
-	qa = pnode.state.q2[1]
+	qa = pnode.state.q2
 	Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
 	Δq = axis_angle_to_quaternion(Aᵀ * Δθ)
 	qb = qa * axis_offset * Δq
-	set_maximal_coordinates!(cnode; x=cnode.state.x2[1], q = qb)
+	set_maximal_coordinates!(cnode; x=cnode.state.x2, q = qb)
 	set_previous_configuration!(cnode, timestep)
 	return nothing
 end

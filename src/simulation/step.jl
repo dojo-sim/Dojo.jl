@@ -3,7 +3,7 @@ function step!(mechanism::Mechanism{T}, z::Vector{T}, u::Vector{T}; opts=SolverO
     set_state!(mechanism, z)
 
     # set control
-    set_control!(mechanism, u)
+    set_input!(mechanism, u)
 
     # solve the 1-step simulation problem
     mehrotra!(mechanism, opts=opts)

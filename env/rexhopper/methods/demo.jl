@@ -13,7 +13,7 @@ z0 = get_maximal_state(mech)
 visualize(mech, generate_storage(mech, [z0]), show_contact=true, vis=vis)
 
 function ctrl!(m,k)
-    set_control!(m, 0sin(4k*m.timestep) * m.timestep * [szeros(6); sones(10)])
+    set_input!(m, 0sin(4k*m.timestep) * m.timestep * [szeros(6); sones(10)])
     return nothing
 end
 storage = simulate!(mech, 10.0, ctrl!, record=true, verbose=true,

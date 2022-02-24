@@ -80,8 +80,8 @@ datamat1[6:10,    7:10]
 
 -fd_datamat1[6:8,7:10]
 (datamat1 + fd_datamat1)[6:8,7:10]
-LVᵀmat(pbody.state.q2[1])
-(datamat1 + fd_datamat1)[6:8,7:10] * LVᵀmat(pbody.state.q2[1])
+LVᵀmat(pbody.state.q2)
+(datamat1 + fd_datamat1)[6:8,7:10] * LVᵀmat(pbody.state.q2)
 
 
 plot(Gray.(abs.(fd_datamat1)))

@@ -180,10 +180,10 @@ end
     J = I(3)
     pbody = Body(m, J)
     cbody = Body(m, J)
-    pbody.state.x2[1] = xa
-    pbody.state.q2[1] = qa
-    cbody.state.x2[1] = xb
-    cbody.state.q2[1] = qb
+    pbody.state.x2 = xa
+    pbody.state.q2 = qa
+    cbody.state.x2 = xb
+    cbody.state.q2 = qb
     # impulse_map_parent_jacobian_parent
     J0 = Dojo.impulse_map_jacobian(:parent, :parent, tra0, pbody, cbody, λ)
 
@@ -242,10 +242,10 @@ end
     J = I(3)
     pbody = Body(m, J)
     cbody = Body(m, J)
-    pbody.state.x2[1] = xa
-    pbody.state.q2[1] = qa
-    cbody.state.x2[1] = xb
-    cbody.state.q2[1] = qb
+    pbody.state.x2 = xa
+    pbody.state.q2 = qa
+    cbody.state.x2 = xb
+    cbody.state.q2 = qb
     # impulse_map_parent_jacobian_parent
     J0 = Dojo.impulse_map_jacobian(:parent, :parent, rot0, pbody, cbody, λ)
     attjac = cat(I(3),Dojo.LVᵀmat(qa), dims=(1,2))

@@ -1,25 +1,25 @@
 module Dojo
 
 using LinearAlgebra
+using Random
 using StaticArrays
-using ForwardDiff
+using SparseArrays
 using FiniteDiff
 using StaticArrays: SUnitRange
 using Rotations
 using Rotations: RotationError, params, lmult, rmult, tmat, vmat, hmat, skew, pure_quaternion
-using Colors: RGBA, RGB
-using LightXML
 using Parameters
-using SparseArrays
 
-using Plots
-using Random
+using Colors: RGBA, RGB
+using FFMPEG
+using LightXML
 using MeshCat
 using Meshing
 using GeometryBasics
 using LightGraphs
-using DocStringExtensions
+
 using JLD2
+using DocStringExtensions
 
 using Statistics
 import Distributions: Uniform, Normal
@@ -123,7 +123,7 @@ include(joinpath("utilities", "custom_static.jl"))
 include(joinpath("orientation", "quaternion.jl"))
 include(joinpath("orientation", "mrp.jl"))
 include(joinpath("orientation", "axis_angle.jl"))
-include(joinpath("orientation", "rotation.jl"))
+include(joinpath("orientation", "rotate.jl"))
 
 # Graph system
 include(joinpath("graph", "entry.jl"))
@@ -131,23 +131,31 @@ include(joinpath("graph", "system.jl"))
 include(joinpath("graph", "setup_functions.jl"))
 include(joinpath("graph", "ldu.jl"))
 
-# Mechanism
-include(joinpath("mechanism", "shapes.jl"))
+# Node 
 include(joinpath("mechanism", "node.jl"))
-include(joinpath("mechanism", "state.jl"))
-include(joinpath("mechanism", "body.jl"))
-include(joinpath("mechanism", "origin.jl"))
+include(joinpath("mechanism", "id.jl"))
+
+# Bodies
+include(joinpath("bodies", "shapes.jl"))
+include(joinpath("bodies", "state.jl"))
+include(joinpath("bodies", "constructor.jl"))
+include(joinpath("bodies", "origin.jl"))
+include(joinpath("bodies", "set.jl"))
+
+# Mechanism
 include(joinpath("joints", "constraint.jl"))
 include(joinpath("contacts", "constructor.jl"))
-include(joinpath("mechanism", "id.jl"))
+include(joinpath("contacts", "contact.jl"))
+
 include(joinpath("mechanism", "constructor.jl"))
 include(joinpath("mechanism", "gravity.jl"))
-
-include(joinpath("mechanism", "maximal.jl"))
-include(joinpath("mechanism", "minimal.jl"))
+include(joinpath("mechanism", "state.jl"))
 include(joinpath("mechanism", "system.jl"))
 include(joinpath("mechanism", "methods.jl"))
 include(joinpath("mechanism", "set.jl"))
+include(joinpath("mechanism", "get.jl"))
+include(joinpath("mechanism", "urdf.jl"))
+include(joinpath("mechanism", "traversal.jl"))
 
 # Simulation
 include(joinpath("simulation", "step.jl"))
@@ -180,7 +188,6 @@ include(joinpath("joints", "impulses.jl"))
 
 # Contacts
 include(joinpath("contacts", "constraints.jl"))
-include(joinpath("contacts", "contact.jl"))
 include(joinpath("contacts", "cone.jl"))
 include(joinpath("contacts", "impact.jl"))
 include(joinpath("contacts", "linear.jl"))
@@ -197,25 +204,25 @@ include(joinpath("solver", "line_search.jl"))
 include(joinpath("integrators", "integrator.jl"))
 include(joinpath("integrators", "constraint.jl"))
 
-# User interface
-include(joinpath("ui", "mechanism_ui.jl"))
-include(joinpath("ui", "mechanism_traversal.jl"))
-include(joinpath("ui", "urdf.jl"))
-include(joinpath("ui", "visualize.jl"))
-include(joinpath("ui", "visualizer_utils.jl"))
-include(joinpath("ui", "colors.jl"))
+# Visualizer
+include(joinpath("visuals", "visualizer.jl"))
+include(joinpath("visuals", "utilities.jl"))
+include(joinpath("visuals", "colors.jl"))
+
+# Data 
+include(joinpath("mechanism", "data.jl"))
 
 # Gradients
 include(joinpath("gradients", "finite_difference.jl"))
+include(joinpath("gradients", "state.jl"))
 include(joinpath("gradients", "data.jl"))
-include(joinpath("gradients", "data_gradients.jl"))
-include(joinpath("gradients", "utils.jl"))
+include(joinpath("gradients", "utilities.jl"))
 
 # Environments
 include(joinpath("..", "env", "mechanisms.jl"))
 include(joinpath("..", "env", "environment.jl"))
 
-# Utilities
+# Optimizers
 include(joinpath("..", "examples", "reinforcement_learning", "ars.jl"))
 
 end

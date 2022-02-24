@@ -84,8 +84,8 @@ datamat[6:11, 1:3]
 -fd_datamat[6:11, 1:3]
 
 joint = mech.joints[1].constraints[1]
-xb = mech.bodies[2].state.x2[1]
-qb = mech.bodies[2].state.q2[1]
+xb = mech.bodies[2].state.x2
+qb = mech.bodies[2].state.q2
 
 length(mech.joints[1])
 length(joint)

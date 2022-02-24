@@ -241,8 +241,8 @@ set_state!(mech, minimal_to_maximal(mech, xabs[1]))
 
 function controller!(mechanism, k)
 	@show k
-	# set_control!(mechanism, u_mask' * u_mask * ustar[k])
-	set_control!(mechanism, ū[k])
+	# set_input!(mechanism, u_mask' * u_mask * ustar[k])
+	set_input!(mechanism, ū[k])
     return
 end
 @elapsed storage = simulate!(mech, 0.95, controller!, record = true, solver = :mehrotra!, verbose = false)

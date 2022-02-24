@@ -59,7 +59,7 @@ function ctrl!(mechanism, k)
 	else
 		u = 0.2*mechanism.timestep * sones(nu)
 	end
-	Dojo.set_control!(mechanism, u)
+	Dojo.set_input!(mechanism, u)
 	return
 end
 

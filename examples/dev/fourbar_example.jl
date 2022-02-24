@@ -10,7 +10,7 @@ root_to_leaves_ordering(mech, loopjoints) == [2,7,3,6,1,8,4,9]
 
 # Simulation
 function ctrl!(m,k)
-    set_control!(m, 17.5 * m.timestep * SVector(1rand(),-1rand(),0,0,0))
+    set_input!(m, 17.5 * m.timestep * SVector(1rand(),-1rand(),0,0,0))
     return nothing
 end
 storage = simulate!(mech, 5.0, ctrl!, verbose=false, record=true)

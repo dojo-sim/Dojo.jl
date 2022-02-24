@@ -1,28 +1,3 @@
-function maximal_to_minimal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) where {T,Nn,Ne,Nb,Ni,Tz}
-	x = []
-	for id in mechanism.root_to_leaves
-		(id > Ne) && continue # only treat joints
-		joint = mechanism.joints[id]
-		c = zeros(Tz,0)
-		v = zeros(Tz,0)
-		ichild = joint.child_id - Ne
-		for element in [joint.translational, joint.rotational]
-			xb, vb, qb, ϕb = unpack_maximal_state(z, ichild)
-			if joint.parent_id != 0
-				iparent = joint.parent_id - Ne
-				xa, va, qa, ϕa = unpack_maximal_state(z, iparent)
-			else
-				xa, va, qa, ϕa = current_configuration_velocity(mechanism.origin.state)
-			end
-			push!(c, minimal_coordinates(element, xa, qa, xb, qb)...)
-			push!(v, minimal_velocities(element, xa, va, qa, ϕa, xb, vb, qb, ϕb, mechanism.timestep)...)
-		end
-		push!(x, [c; v]...)
-	end
-	x = [x...]
-	return x
-end
-
 function maximal_to_minimal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) where {T,Nn,Ne,Nb,Ni,Tz}
 	J = zeros(minimal_dimension(mechanism), maximal_dimension(mechanism) - Nb)
 	timestep = mechanism.timestep
@@ -107,7 +82,7 @@ function get_maximal_gradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,
 		jacobian_control[12*(i-1) .+ [4:6; 10:12],:] += data_jacobian[index_row[id], vcat(index_control...)]
 
 		# Fill in gradients of x3, q3
-		q2 = body.state.q2[1]
+		q2 = body.state.q2
 		ϕ25 = body.state.ϕsol[2]
 		q3 = next_orientation(q2, ϕ25, timestep)
 		jacobian_state[12*(i-1) .+ (1:3), :] += linear_integrator_jacobian_velocity(timestep) * data_jacobian[index_row[id][1:3], vcat(index_state...)]
@@ -122,41 +97,75 @@ function get_maximal_gradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,
 	return jacobian_state, jacobian_control
 end
 
-function get_maximal_gradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
-    opts=SolverOptions()) where {T,Nn,Ne,Nb,Ni}
+function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
+	timestep = mechanism.timestep
+	J = zeros(maximal_dimension(mechanism, attjac=true), minimal_dimension(mechanism))
 
-    step!(mechanism, z, u, opts=opts)
-    jacobian_state, jacobian_control = get_maximal_gradients(mechanism)
-
-    return jacobian_state, jacobian_control
-end
-
-function get_maximal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
-	z = zeros(T, 13Nb)
-	for (i, body) in enumerate(mechanism.bodies)
-		x2 = body.state.x2[1]
-		v15 = body.state.v15
-		q2 = body.state.q2[1]
-		ϕ15 = body.state.ϕ15
-		set_maximal_state!(z, x2, v15, q2, ϕ15, i)
+	# Compute partials
+	partials = Dict{Vector{Int}, Matrix{T}}()
+	for cnode in mechanism.bodies
+		for joint in parent_joints(mechanism, cnode)
+			pnode = get_node(mechanism, joint.parent_id, origin=true)
+			partials[[cnode.id, joint.id]] = set_minimal_coordinates_velocities_jacobian_minimal(joint, pnode, cnode, timestep) # 12 x 2nu (xvqϕ x Δxθvϕ)
+			partials[[cnode.id, pnode.id]] = set_minimal_coordinates_velocities_jacobian_parent(joint, pnode, cnode, timestep) # 12 x 12 (xvqϕ x xvqϕ)
+		end
 	end
-	return z
+
+	# Index
+	row = [12(i-1)+1:12i for i = 1:Nb]
+	col = [] # ordering joints from root to tree
+	col_idx = zeros(Int,Ne)
+	cnt = 0
+	for id in mechanism.root_to_leaves
+		(id > Ne) && continue # only keep joints
+		cnt += 1
+		nu = control_dimension(get_joint_constraint(mechanism, id))
+		if length(col) > 0
+			push!(col, col[end][end] .+ (1:2nu))
+		else
+			push!(col, 1:2nu)
+		end
+		col_idx[id] = cnt
+	end
+
+	 # chain partials together from root to leaves
+	for id in mechanism.root_to_leaves
+		!(Ne < id <= Ne+Nb) && continue # only treat bodies
+		cnode = get_node(mechanism, id)
+		for joint in parent_joints(mechanism, cnode)
+			pnode = get_node(mechanism, joint.parent_id, origin=true)
+			J[row[cnode.id-Ne], col[col_idx[joint.id]]] += partials[[cnode.id, joint.id]] # ∂zi∂θp(i)
+			(pnode.id == 0) && continue # avoid origin
+			J[row[cnode.id-Ne], :] += partials[[cnode.id, pnode.id]] * J[row[pnode.id-Ne], :] # ∂zi∂zp(p(i)) * ∂zp(p(i))/∂θ
+		end
+	end
+	return J
 end
 
-function unpack_maximal_state(z::AbstractVector, i::Int)
-	zi = z[(i-1)*13 .+ (1:13)]
-	x2 = zi[SUnitRange(1,3)]
-	v15 = zi[SUnitRange(4,6)]
-	q2 = UnitQuaternion(zi[7:10]..., false)
-	ϕ15 = zi[SUnitRange(11,13)]
-	return x2, v15, q2, ϕ15
+function get_minimal_gradients(mechanism::Mechanism{T}, z::AbstractVector{T}, u::AbstractVector{T};
+	opts=SolverOptions()) where T
+	# simulate next state
+	step!(mechanism, z, u, opts=opts)
+	return get_minimal_gradients(mechanism)
 end
 
-function set_maximal_state!(z::AbstractVector, x2::AbstractVector, v15::AbstractVector,
-		q2::UnitQuaternion, ϕ15::AbstractVector, i::Int)
-	z[(i-1)*13 .+ (1:3)] = x2
-	z[(i-1)*13 .+ (4:6)] = v15
-	z[(i-1)*13 .+ (7:10)] = vector(q2)
-	z[(i-1)*13 .+ (11:13)] = ϕ15
-	return nothing
+function get_minimal_gradients(mechanism::Mechanism{T}) where T
+	# current maximal state
+	z = get_current_state(mechanism)
+	# next maximal state
+	z_next = get_next_state(mechanism)
+	# current minimal state
+	x = maximal_to_minimal(mechanism, z)
+	# maximal dynamics Jacobians
+	maximal_jacobian_state, minimal_jacobian_control = get_maximal_gradients(mechanism)
+	# minimal to maximal Jacobian at current time step (rhs)
+	min_to_max_jacobian_current = minimal_to_maximal_jacobian(mechanism, x)
+	# maximal to minimal Jacobian at next time step (lhs)
+	max_to_min_jacobian_next = maximal_to_minimal_jacobian(mechanism, z_next)
+	# minimal state Jacobian
+	minimal_jacobian_state = max_to_min_jacobian_next * maximal_jacobian_state * min_to_max_jacobian_current
+	# minimal control Jacobian
+	minimal_jacobian_control = max_to_min_jacobian_next * minimal_jacobian_control
+
+	return minimal_jacobian_state, minimal_jacobian_control
 end

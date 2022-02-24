@@ -1,185 +1,360 @@
 ################################################################################
-# Dimension
+# Data Jacobians
 ################################################################################
+function joint_constraint_jacobian_body_data(mechanism::Mechanism, joint::JointConstraint{T,N},
+    body::Body{T}) where {T,N}
+    Nd = data_dim(body)
+    ∇m = szeros(T,N,1)
+    ∇J = szeros(T,N,6)
+    ∇v15 = szeros(T,N,3)
+    ∇ϕ15 = szeros(T,N,3)
+    ∇z2 = -constraint_jacobian_configuration(mechanism, joint, body) *
+        integrator_jacobian_configuration(body, mechanism.timestep, attjac=true)
+    ∇g = [∇m ∇J ∇v15 ∇ϕ15 ∇z2]
+    return ∇g
+end
 
-# Mechanism
-data_dim(mechanism::Mechanism; attjac::Bool=true) =
-	sum(Vector{Int64}(data_dim.(mechanism.joints))) +
-    sum(Vector{Int64}(data_dim.(mechanism.bodies, attjac=attjac))) +
-	sum(Vector{Int64}(data_dim.(mechanism.contacts)))
-	
-# Joints
-data_dim(joint::JointConstraint) = 2 + sum(data_dim.([joint.translational, joint.rotational])) # [utra, urot, spring, damper]
-data_dim(joint::Translational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = N̄λ # [utra]
-data_dim(joint::Rotational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = N̄λ # [urot]
+function body_constraint_jacobian_body_data(mechanism::Mechanism, body::Body{T}) where T
+    Δt = mechanism.timestep
+    N = 6
+    x1, v15, q1, ϕ15 = previous_configuration_velocity(body.state)
+    x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
+    x3, q3 = next_configuration(body.state, Δt)
+    # Mass
+    gravity = mechanism.gravity
+    ∇m = [1 / Δt * (x2 - x1) + Δt/2 * gravity - 1 / Δt * (x3 - x2) + Δt/2 * gravity;
+          szeros(T,3,1)]
+    # Inertia
+    ∇J = 2 / Δt * LVᵀmat(q2)' * LVᵀmat(q1) * ∂inertia(VLᵀmat(q1) * vector(q2))
+    ∇J += 2 / Δt * LVᵀmat(q2)' * Tmat() * RᵀVᵀmat(q3) * ∂inertia(VLᵀmat(q2) * vector(q3))
+    ∇J = [szeros(T,3,6); ∇J]
 
-# Body
-data_dim(body::Body; attjac::Bool=true) = attjac ? 19 : 20 # 1+6+6+6 or 1+6+6+7 [m,flat(J),v15,ϕ15,x2,q2] with attjac
+    # initial conditions: v15, ϕ15
+    ∇v15 = body.mass * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
+    ∇q1 = -2 / Δt * LVᵀmat(q2)' * ∂LVᵀmat∂q(body.inertia * VLᵀmat(q1) * vector(q2))
+    ∇q1 += -2 / Δt * LVᵀmat(q2)' * LVᵀmat(q1) * body.inertia * ∂VLᵀmat∂q(vector(q2))
+    ∇ϕ15 = ∇q1 * rotational_integrator_jacobian_velocity(q2, -ϕ15, Δt)
+    ∇15 = [∇v15 szeros(T,3,3);
+           szeros(T,3,3) ∇ϕ15]
 
-# Contact
-data_dim(contact::ContactConstraint) = data_dim(contact.model)
-data_dim(model::NonlinearContact) = 7 # [friction_coefficient, offset, p]
-data_dim(model::LinearContact) = 7 # [friction_coefficient, offset, p]
-data_dim(model::ImpactContact) = 6 # [offset, p]
+    # current configuration: z2 = x2, q2
+    # manipulator's equation contribution
+    ∇tra_x2 = - 2 / Δt * body.mass * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
+    ∇tra_q2 = szeros(T,3,3)
+    ∇rot_x2 = szeros(T,3,3)
+    ∇rot_q2 = -2 / Δt * VLᵀmat(q2) * LVᵀmat(q1) * body.inertia * VLᵀmat(q1)
+    ∇rot_q2 += -2 / Δt * VLᵀmat(q2) * Tmat() * RᵀVᵀmat(q3) * body.inertia * ∂VLᵀmat∂q(vector(q3))
+    ∇rot_q2 += -2 / Δt * ∂VLᵀmat∂q(LVᵀmat(q1) * body.inertia * VLᵀmat(q1) * vector(q2) + Tmat() * RᵀVᵀmat(q3) * body.inertia * VLᵀmat(q2) * vector(q3))
+    ∇rot_q2 *= LVᵀmat(q2)
+    ∇z2 = [∇tra_x2 ∇tra_q2;
+           ∇rot_x2 ∇rot_q2]
+    # @show ∇z2
+    # TODO
+    # # constact constraints impulses contribution
+    # @warn "000"
+    return [∇m ∇J ∇15 0.0000000000*∇z2] #TODO not sure why we need to zero out this block, maybe finite diff is not correct and we try to match finite diff
+end
 
+function body_constraint_jacobian_body_data(mechanism::Mechanism, pbody::Node{T},
+        cbody::Node{T}, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
+    # Jacobian of pbody's dynamics constraints wrt cbody's data (x2b, q2b)
+    # this comes from the fact that the Joint Constraint force mapping of pbody
+    # depends on cbody's data (x2b, q2b)
+    # This is the same for spring and damper forces.
+    timestep = mechanism.timestep
+
+    ∇z2_aa = szeros(T,6,6)
+    ∇z2_ab = szeros(T,6,6)
+    # joint constraints impulses contribution
+    for i = 1:Nc
+        λ = getλJoint(joint, i)
+        if cbody.id == joint.child_id
+            ∇z2_aa += impulse_map_jacobian(:parent, :parent, [joint.translational, joint.rotational][i],
+                pbody, cbody, λ)
+            ∇z2_ab += impulse_map_jacobian(:parent, :child, [joint.translational, joint.rotational][i],
+                pbody, cbody, λ)
+        elseif pbody.id == joint.child_id
+            ∇z2_aa += impulse_map_jacobian(:child, :child, [joint.translational, joint.rotational][i],
+                cbody, pbody, λ)
+            ∇z2_ab += impulse_map_jacobian(:child, :parent, [joint.translational, joint.rotational][i],
+                cbody, pbody, λ)
+        end
+    end
+    # spring and damper impulses contribution
+    if joint.spring
+        for i = 1:Nc
+            λ = getλJoint(joint, i)
+            if cbody.id == joint.child_id
+                ∇z2_aa += spring_jacobian_configuration(
+                    :parent, :parent,
+                    [joint.translational, joint.rotational][i], pbody, cbody, timestep)
+                ∇z2_ab += spring_jacobian_configuration(
+                    :parent, :child,
+                    [joint.translational, joint.rotational][i], pbody, cbody, timestep)
+            elseif pbody.id == joint.child_id
+                ∇z2_aa += spring_jacobian_configuration(
+                    :child, :child,
+                    [joint.translational, joint.rotational][i], cbody, pbody, timestep)
+                ∇z2_ab += spring_jacobian_configuration(
+                    :child, :parent,
+                    [joint.translational, joint.rotational][i], cbody, pbody, timestep)
+            end
+        end
+    end
+    if joint.damper
+        for i = 1:Nc
+            λ = getλJoint(joint, i)
+            if cbody.id == joint.child_id
+                ∇z2_aa += damper_jacobian_configuration(
+                    :parent, :parent,
+                    [joint.translational, joint.rotational][i], pbody, cbody, timestep)
+                ∇z2_ab += damper_jacobian_configuration(
+                    :parent, :child,
+                    [joint.translational, joint.rotational][i], pbody, cbody, timestep)
+            elseif pbody.id == joint.child_id
+                ∇z2_aa += damper_jacobian_configuration(
+                    :child, :child,
+                    [joint.translational, joint.rotational][i], cbody, pbody, timestep)
+                ∇z2_ab += damper_jacobian_configuration(
+                    :child, :parent,
+                    [joint.translational, joint.rotational][i], cbody, pbody, timestep)
+            end
+        end
+    end
+    return [szeros(T,6,13) ∇z2_aa], [szeros(T,6,13) ∇z2_ab]
+end
+
+function body_constraint_jacobian_body_data(mechanism::Mechanism, body::Node{T},
+        contact::ContactConstraint{T,N,Nc}) where {T,N,Nc}
+    # Jacobian of the Body's dynamics constraints wrt the Body's data (x2, q2)
+    # this comes from the fact that the Contact Constraint force mapping depends
+    # on the Body's data (x2, q2)
+    # contact constraints impulses contribution
+    ∇z3 = impulse_map_jacobian_configuration(mechanism, body, contact)
+    ∇z2 = ∇z3 * integrator_jacobian_configuration(body, mechanism.timestep)
+    return [szeros(T,6,13) ∇z2]
+end
+
+function body_constraint_jacobian_joint_data(mechanism::Mechanism{T}, body::Body{T},
+        joint::JointConstraint{T}) where {T}
+    Δt = mechanism.timestep
+    Nd = data_dim(joint)
+    N = 6
+    x1, v15, q1, ϕ15 = previous_configuration_velocity(body.state)
+    x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
+    x3, q3 = next_configuration(body.state, Δt)
+    # ∇u = Diagonal(SVector{6,T}(1,1,1,2,2,2)) * input_jacobian_control(mechanism, joint, body)
+    ∇u = Diagonal(SVector{6,T}(1,1,1,1,1,1)) * input_jacobian_control(mechanism, joint, body)
+    ∇spring = joint.spring ? spring_impulses(mechanism, joint, body, unitary=true) : szeros(T,6,1)
+    ∇damper = joint.damper ? damper_impulses(mechanism, joint, body, unitary=true) : szeros(T,6,1)
+    return [∇u ∇spring ∇damper]
+end
+
+function body_constraint_jacobian_contact_data(mechanism::Mechanism, body::Body{T},
+        contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
+    Nd = data_dim(contact)
+    model = contact.model
+    offset = model.offset
+    x3, q3 = next_configuration(body.state, mechanism.timestep)
+    γ = contact.impulses[2]
+
+    ∇friction_coefficient = szeros(T,3,1)
+
+    X = force_mapping(model, x3, q3)
+    # this what we differentiate: Qᵀγ = - skew(p - vector_rotate(offset, inv(q3))) * VRmat(q3) * LᵀVᵀmat(q3) * X' * γ
+    ∇p = - ∂skew∂p(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ)
+    ∇off = - ∂skew∂p(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ) * -∂vector_rotate∂p(offset, inv(q3))
+
+    ∇X = szeros(T,3,Nd)
+    ∇Q = -[∇friction_coefficient ∇off ∇p]
+    return [∇X; ∇Q]
+end
+
+
+function contact_constraint_jacobian_contact_data(mechanism::Mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
+        body::Body{T}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
+    Nd = data_dim(contact)
+    model = contact.model
+    p = model.contact_point
+    offset = model.offset
+    x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
+    x3, q3 = next_configuration(body.state, mechanism.timestep)
+    s = contact.impulses_dual[2]
+    γ = contact.impulses[2]
+
+    ∇friction_coefficient = SA[0,γ[1],0,0]
+    ∇off = [-model.surface_normal_projector; szeros(T,1,3); -model.surface_projector * skew(vector_rotate(ϕ25, q3))]
+    ∇p = [model.surface_normal_projector * ∂vector_rotate∂p(model.contact_point, q3); szeros(T,1,3); model.surface_projector * skew(vector_rotate(ϕ25, q3)) * ∂vector_rotate∂p(model.contact_point, q3)]
+
+    ∇compμ = szeros(T,N½,Nd)
+    ∇g = -[∇friction_coefficient ∇off ∇p]
+    return [∇compμ; ∇g]
+end
+
+function contact_constraint_jacobian_body_data(mechanism::Mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
+        body::Body{T}) where {T,N,Nc,Cs,N½}
+    Nd = data_dim(body)
+    ∇compμ = szeros(T,N½,Nd)
+    ∇m = szeros(T,N½,1)
+    ∇J = szeros(T,N½,6)
+    ∇v15 = szeros(T,N½,3)
+    ∇ϕ15 = szeros(T,N½,3)
+    ∇z3 = - constraint_jacobian_configuration(mechanism, contact, body) # minus sign coming from res = [-compμ; -constraint]
+    ∇z2 = ∇z3 * integrator_jacobian_configuration(body, mechanism.timestep, attjac=true) # 4x7 * 7x6 = 4x6
+    ∇g = [∇m ∇J ∇v15 ∇ϕ15 ∇z2]
+    return [∇compμ; ∇g]
+end
 
 ################################################################################
-# Attitude Jacobian
+# System Data Jacobians
 ################################################################################
+function data_adjacency_matrix(joints::Vector{<:JointConstraint}, bodies::Vector{<:Body},
+        contacts::Vector{<:ContactConstraint})
+    # mode can be impulses or data depending on whi
+    nodes = [joints; bodies; contacts]
+    n = length(nodes)
+    A = zeros(Bool, n, n)
 
-# Mechanism
-function data_attitude_jacobian(mechanism::Mechanism)
-	attjacs = [data_attitude_jacobian.(mechanism.joints);
-		data_attitude_jacobian.(mechanism.bodies);
-		data_attitude_jacobian.(mechanism.contacts)]
-	attjac = cat(attjacs..., dims=(1,2))
-	return attjac
+    for node1 in nodes
+        for node2 in nodes
+            T1 = typeof(node1)
+            T2 = typeof(node2)
+            if T1 <: Body
+                if T2 <: Body
+                    (node1.id == node2.id) && (A[node1.id, node2.id] = 1) # self loop
+                    linked = length(indirect_link0(node1.id, node2.id, [joints; contacts])) > 0
+                    linked && (A[node1.id, node2.id] = 1) # linked through a common joint
+                elseif T2 <: JointConstraint
+                    (node1.id == node2.parent_id || node1.id == node2.child_id) && (A[node1.id, node2.id] = 1) # linked
+                elseif T2 <: ContactConstraint
+                    (node1.id == node2.parent_id || node1.id == node2.child_id) && (A[node1.id, node2.id] = 1) # linked
+                end
+            elseif T1 <: JointConstraint
+                if T2 <: Body
+                    (node2.id == node1.parent_id || node2.id == node1.child_id) && (A[node1.id, node2.id] = 1) # linked
+                end
+            elseif T1 <: ContactConstraint
+                if T2 <: Body
+                    (node2.id == node1.parent_id || node2.id == node1.child_id) && (A[node1.id, node2.id] = 1) # linked
+                elseif T2 <: ContactConstraint
+                    (node1.id == node2.id) && (A[node1.id, node2.id] = 1) # self loop
+                end
+            end
+        end
+    end
+    A = convert(Matrix{Int64}, A)
+    return A
 end
 
-# Joints
-function data_attitude_jacobian(joint::JointConstraint)
-	return I(data_dim(joint))
+function indirect_link0(id1, id2, nodes::Vector{S}) where {S<:Node}
+    ids = zeros(Int, 0)
+    for node in nodes
+        parent_id = node.parent_id
+        (parent_id == nothing) && (parent_id = 0) #handle the origin's corner case
+        linked = (id1 == node.child_id) && (id2 == parent_id)
+        linked |= (id2 == node.child_id) && (id1 == parent_id)
+        linked && push!(ids, node.id)
+    end
+    return ids
+    # mech = get_halfcheetah()
+    # @test indirect_link0(8,14,mech.joints) == [2]
+    # @test indirect_link0(14,7,mech.joints) == []
+    # @test indirect_link0(7,7,mech.joints) == []
 end
 
-# Body
-function data_attitude_jacobian(body::Body)
-	# [m,flat(J),x1,q1,x2,q2]
-	x2, q2 = current_configuration(body.state)
-	attjac = cat(I(1+6+6+3), LVᵀmat(q2), dims=(1,2))
-	return attjac
+function create_data_matrix(joints::Vector{<:JointConstraint}, bodies::Vector{B},
+        contacts::Vector{<:ContactConstraint}; force_static::Bool=false) where {T,B<:Body{T}}
+    nodes = [joints; bodies; contacts]
+    A = data_adjacency_matrix(joints, bodies, contacts)
+    dimrow = length.(nodes)
+    dimcol = data_dim.(nodes)
+
+    N = length(dimrow)
+    static = force_static || (all(dimrow.<=10) && all(dimcol.<=10))
+    data_matrix = spzeros(Entry,N,N)
+
+    for i = 1:N
+        for j = 1:N
+            if A[i,j] == 1
+                data_matrix[i,j] = Entry{T}(dimrow[i], dimcol[j], static = static)
+            end
+        end
+    end
+    return data_matrix
 end
 
-# Contacts
-function data_attitude_jacobian(contact::ContactConstraint)
-	return I(data_dim(contact))
-end
-
-################################################################################
-# Get Data
-################################################################################
-
-# Mechanism
-get_data(mechanism::Mechanism) = vcat([get_data.(mechanism.joints);
-	get_data.(mechanism.bodies); get_data.(mechanism.contacts)]...)
-
-# Joints
-function get_data(joint::JointConstraint)
-	joints = [joint.translational, joint.rotational]
-	u = vcat(nullspace_mask.(joints) .* getfield.(joints, :input)...)
-	spring = joints[1].spring # assumes we have the same spring and dampers for translational and rotational joint.
-	damper = joints[1].damper # assumes we have the same spring and dampers for translational and rotational joint.
-	return [u; spring; damper]
-end
-
-# Body
-function get_data(body::Body)
-	m = body.mass
-	j = flatten_inertia(body.inertia)
-	v15 = body.state.v15
-	ϕ15 = body.state.ϕ15
-	x2, q2 = current_configuration(body.state)
-	return [m; j; v15; ϕ15; x2; vector(q2)]
-end
-
-# Contacts
-get_data(model::NonlinearContact) = [model.friction_coefficient; model.offset; model.contact_point]
-get_data(model::LinearContact) = [model.friction_coefficient; model.offset; model.contact_point]
-get_data(model::ImpactContact) = [model.offset; model.contact_point]
-get_data(contact::ContactConstraint) = get_data(contact.model)
-
-
-################################################################################
-# Set Data
-################################################################################
-
-# Mechanism
-function set_data!(mechanism::Mechanism, data::AbstractVector)
-	# It's important to treat bodies before eqcs
-	# set_data!(body) will erase state.F2[1] and state.τ2[1]
-	# set_data!(eqc) using applyinput!, will write in state.F2[1] and state.τ2[1]
-	c = 0
-	for joint in mechanism.joints
-		Nd = data_dim(joint)
-		set_data!(joint, data[c .+ (1:Nd)]); c += Nd
-	end
-	for body in mechanism.bodies
-		Nd = data_dim(body, attjac=false)
-		set_data!(body, data[c .+ (1:Nd)], mechanism.timestep); c += Nd
-	end
-	for contact in mechanism.contacts
-		Nd = data_dim(contact)
-		set_data!(contact, data[c .+ (1:Nd)]); c += Nd
-	end
-	for joint in mechanism.joints
-		input_impulse!(joint, mechanism, false)
-	end
-	return nothing
-end
-
-# Joints
-function set_data!(joint::JointConstraint, data::AbstractVector)
-	nu = control_dimension(joint)
-	u = data[SUnitRange(1,nu)]
-	spring = data[nu+1]
-	damper = data[nu+2]
-
-	set_input!(joint, u)
-	for joint in [joint.translational, joint.rotational]
-		joint.spring=spring
-		joint.damper=damper
-	end
-	return nothing
-end
-
-# Body
-function set_data!(body::Body, data::AbstractVector, timestep)
-	# [m,flat(J),x2,v15,q2,ϕ15]
-	m = data[1]
-	J = lift_inertia(data[SUnitRange(2,7)])
-	v15 = data[SUnitRange(8,10)]
-	ϕ15 = data[SUnitRange(11,13)]
-	x2 = data[SUnitRange(14,16)]
-	q2 = UnitQuaternion(data[17:20]..., false)
-	x1 = next_position(x2, -v15, timestep)
-	q1 = next_orientation(q2, -ϕ15, timestep)
-
-	body.mass = m
-	body.inertia = J
-	body.state.x1 = x1
-	body.state.v15 = v15
-	body.state.q1 = q1
-	body.state.ϕ15 = ϕ15
-	body.state.x2[1] = x2
-	body.state.q2[1] = q2
-	body.state.F2[1] = SVector{3}(0,0,0.)
-	body.state.τ2[1] = SVector{3}(0,0,0.)
-	return nothing
-end
-
-# Contact
-function set_data!(model::NonlinearContact, data::AbstractVector)
-	model.friction_coefficient = data[1]
-    model.offset = data[SVector{3,Int}(2:4)]
-    model.contact_point = data[SVector{3,Int}(5:7)]
+function jacobian_data!(data_matrix::SparseMatrixCSC, mechanism::Mechanism)
+    jacobian_contact_data!(data_matrix, mechanism)
+    jacobian_body_data!(data_matrix, mechanism)
+    jacobian_joint_data!(data_matrix, mechanism)
     return nothing
 end
 
-function set_data!(model::LinearContact, data::AbstractVector)
-	model.friction_coefficient = data[1]
-    model.offset = data[SVector{3,Int}(2:4)]
-    model.contact_point = data[SVector{3,Int}(5:7)]
+function jacobian_contact_data!(data_matrix::SparseMatrixCSC, mechanism::Mechanism{T}) where {T}
+    # ∂body∂ineqcdata
+    for contact in mechanism.contacts
+        pbody = get_body(mechanism, contact.parent_id)
+        data_matrix[pbody.id, contact.id].value += body_constraint_jacobian_contact_data(mechanism, pbody, contact)
+    end
+    # ∂contact∂contactdata
+    for contact in mechanism.contacts
+        pbody = get_body(mechanism, contact.parent_id)
+        data_matrix[contact.id, contact.id].value += contact_constraint_jacobian_contact_data(mechanism, contact, pbody)
+    end
     return nothing
 end
 
-function set_data!(model::ImpactContact, data::AbstractVector)
-    model.offset = data[SVector{3,Int}(1:3)]
-    model.contact_point = data[SVector{3,Int}(4:6)]
+function jacobian_joint_data!(data_matrix::SparseMatrixCSC, mechanism::Mechanism{T}) where T
+    # ∂body∂jointdata
+    # TODO adapt this to handle cycles
+    for body in mechanism.bodies
+        for joint in mechanism.joints
+            if (body.id == joint.parent_id) || (body.id == joint.child_id)
+                data_matrix[body.id, joint.id].value += body_constraint_jacobian_joint_data(mechanism, body, joint)
+            end
+        end
+    end
     return nothing
 end
 
-function set_data!(contact::ContactConstraint, data::AbstractVector)
-	model = contact.model
-	N = data_dim(model)
-	set_data!(model, data[1:N])
+function jacobian_body_data!(data_matrix::SparseMatrixCSC, mechanism::Mechanism{T}) where T
+    # ∂joint∂bodydata
+    # TODO adapt this to handle cycles
+    for body in mechanism.bodies
+        for joint in mechanism.joints
+            if (body.id == joint.parent_id) || (body.id == joint.child_id)
+                data_matrix[joint.id, body.id].value += joint_constraint_jacobian_body_data(mechanism, joint, body)
+            end
+        end
+    end
+    # ∂body∂bodydata
+    for pbody in mechanism.bodies
+        data_matrix[pbody.id, pbody.id].value += body_constraint_jacobian_body_data(mechanism, pbody)
+
+        for cbody in [mechanism.bodies; mechanism.origin]
+            joint_links = indirect_link0(pbody.id, cbody.id, mechanism.joints)
+            joints = [get_joint_constraint(mechanism, id) for id in joint_links]
+            for joint in joints
+                ∇11, ∇12 = body_constraint_jacobian_body_data(mechanism, pbody, cbody, joint)
+                (typeof(pbody) <: Body) && (data_matrix[pbody.id, pbody.id].value += ∇11)
+                (typeof(pbody) <: Body && typeof(cbody) <: Body) && (data_matrix[pbody.id, cbody.id].value += ∇12)
+            end
+            # pretty sure this is useless because contact is never linked to two bodies
+            # contact_links = indirect_link0(pbody.id, cbody.id, mechanism.contacts)
+            # contacts = [get_joint_constraint(mechanism, id) for id in contact_links]
+            # for contact in contacts
+                # data_matrix[pbody.id, cbody.id].value += body_constraint_jacobian_body_data(mechanism, pbody, cbody, contact)
+            # end
+        end
+    end
+    for contact in mechanism.contacts
+        body = get_body(mechanism, contact.parent_id)
+        data_matrix[body.id, body.id].value += body_constraint_jacobian_body_data(mechanism, body, contact)
+    end
+    # ∂contact∂bodydata
+    for contact in mechanism.contacts
+        pbody = get_body(mechanism, contact.parent_id)
+        data_matrix[contact.id, pbody.id].value += contact_constraint_jacobian_body_data(mechanism, contact, pbody)
+    end
     return nothing
 end

@@ -1,21 +1,24 @@
+# previous
 previous_configuration(state::State) = (state.x1, state.q1)
 previous_configuration_velocity(state::State) = (state.x1, state.v15, state.q1, state.ϕ15)
 
-# Initial conditions of a body
-initial_configuration_velocity(state::State) = (current_position(state, k=1), state.v15, current_orientation(state, k=1), state.ϕ15)
-
-current_position(state::State; k=1) = state.x2[k]
-current_orientation(state::State; k=1) = state.q2[k]
-current_configuration(state::State; k=1) = (current_position(state, k=k), current_orientation(state, k=k))
+# current
+current_position(state::State) = state.x2
+current_orientation(state::State) = state.q2
+current_configuration(state::State) = (current_position(state), current_orientation(state))
 current_velocity(state::State) = (state.vsol[2], state.ϕsol[2])
-current_configuration_velocity(state::State) = (current_position(state, k=1), state.vsol[2], current_orientation(state, k=1), state.ϕsol[2])
+current_configuration_velocity(state::State) = (current_position(state), state.vsol[2], current_orientation(state), state.ϕsol[2])
+initial_configuration_velocity(state::State) = (current_position(state), state.v15, current_orientation(state), state.ϕ15)
 
+# next
 next_position(x2::SVector{3,T}, v25::SVector{3,T}, timestep::T) where T = x2 + v25 * timestep
 next_orientation(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, timestep::T) where T = q2 * quaternion_map(ϕ25, timestep) * timestep / 2
-next_position(state::State, timestep) = next_position(state.x2[1], state.vsol[2], timestep)
-next_orientation(state::State, timestep) = next_orientation(state.q2[1], state.ϕsol[2], timestep)
+next_position(state::State, timestep) = next_position(state.x2, state.vsol[2], timestep)
+next_orientation(state::State, timestep) = next_orientation(state.q2, state.ϕsol[2], timestep)
 next_configuration(state::State, timestep) = (next_position(state, timestep), next_orientation(state, timestep))
+next_configuration_velocity(state::State, timestep) = (next_position(state, timestep), state.vsol[2], next_orientation(state, timestep), state.ϕsol[2])
 
+# mapping
 function quaternion_map(ω, timestep)
     return UnitQuaternion(sqrt(4 / timestep^2 - dot(ω, ω)), ω, false)
 end
@@ -41,7 +44,7 @@ function cayley_jacobian(ω)
                  ])
 end
 
-# I think this is the inverse of next_orientation, we recover ϕ15 from q1, q2 and h
+# angular velocity
 function angular_velocity(q1::UnitQuaternion, q2::UnitQuaternion, timestep)
     2.0 / timestep  * Vmat() * Lᵀmat(q1) * vector(q2)
 end
@@ -54,65 +57,16 @@ function ∂angular_velocity∂q2(q1::UnitQuaternion, q2::UnitQuaternion, timest
     2.0 / timestep  * Vmat() * Lᵀmat(q1)
 end
 
-function set_previous_configuration!(node::Node{T}, timestep::T) where {T}
-    x2, v15, q2, ϕ15 = initial_configuration_velocity(node.state)
-    node.state.x1 = next_position(x2, -v15, timestep)
-    node.state.q1 = next_orientation(q2, -ϕ15, timestep)
-    return nothing
-end
-
-function initialize_state!(body::Body{T}, timestep) where T
-    state = body.state
-    x2 = state.x2[1]
-    q2 = state.q2[1]
-    v15 = state.v15
-    ϕ15 = state.ϕ15
-
-    # TODO use set_previous_configuration!
-    state.x1 = x2 - v15*timestep
-    state.q1 = q2 * quaternion_map(-ϕ15,timestep) * timestep / 2
-
-    state.F2[1] = szeros(T,3)
-    state.τ2[1] = szeros(T,3)
-
-    return
-end
-
-function update_state!(body::Body{T}, timestep) where T
-    state = body.state
-
-    state.x1 = state.x2[1]
-    state.q1 = state.q2[1]
-
-    state.v15 = state.vsol[2]
-    state.ϕ15 = state.ϕsol[2]
-
-    # TODO use next_position next_orientation!
-    state.x2[1] = state.x2[1] + state.vsol[2]*timestep
-    state.q2[1] = state.q2[1] * quaternion_map(state.ϕsol[2], timestep) * timestep / 2
-
-    state.F2[1] = szeros(T,3)
-    state.τ2[1] = szeros(T,3)
-    return
-end
-
-function set_solution!(body::Body)
-    state = body.state
-    state.vsol[1] = state.v15
-    state.vsol[2] = state.v15
-    state.ϕsol[1] = state.ϕ15
-    state.ϕsol[2] = state.ϕ15
-    return
-end
-
+# Jacobians
 function integrator_jacobian_velocity(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, timestep::T) where T
     V = [linear_integrator_jacobian_velocity(timestep) szeros(T,3,3)]
     Ω = [szeros(T,4,3) rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)]
     return [V; Ω] # 7x6
 end
 
-function integrator_jacobian_configuration(q2::UnitQuaternion{T}, ϕ25::SVector{3,T},
-        timestep::T; attjac::Bool=true) where T
+function integrator_jacobian_configuration(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, timestep::T; 
+    attjac::Bool=true) where T
+
     Z = attjac ? szeros(T,3,3) : szeros(T,3,4)
     X = [linear_integrator_jacobian_position() Z]
     Q = [szeros(T,4,3) rotational_integrator_jacobian_orientation(q2, ϕ25, timestep; attjac=attjac)]
@@ -127,12 +81,14 @@ function linear_integrator_jacobian_velocity(timestep::T) where T
     return timestep * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
 end
 
-function rotational_integrator_jacobian_orientation(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, timestep::T; attjac::Bool = true) where T
-    M = Rmat(quaternion_map(ϕ25, timestep) * timestep/2)
+function rotational_integrator_jacobian_orientation(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, timestep::T; 
+    attjac::Bool = true) where T
+
+    M = Rmat(quaternion_map(ϕ25, timestep) * timestep / 2)
     attjac && (M *= LVᵀmat(q2))
     return M
 end
 
 function rotational_integrator_jacobian_velocity(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, timestep::T) where T
-    return Lmat(q2) * quaternion_map_jacobian(ϕ25, timestep) * timestep/2
+    return Lmat(q2) * quaternion_map_jacobian(ϕ25, timestep) * timestep / 2
 end

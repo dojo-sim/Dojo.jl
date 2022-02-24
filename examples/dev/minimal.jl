@@ -54,7 +54,7 @@ end
 
 
 function ctrl!(mech, k)
-	set_control!(mech, 0.0*sones(control_dimension(mech))*mech.timestep)
+	set_input!(mech, 0.0*sones(control_dimension(mech))*mech.timestep)
 end
 # vis = Visualizer()
 # open(vis)
@@ -69,15 +69,15 @@ tra = joint.translational
 pbody = mechanism.origin
 cbody = mechanism.bodies[1]
 
-xa = pbody.state.x2[1]
-qa = pbody.state.q2[1]
+xa = pbody.state.x2
+qa = pbody.state.q2
 va = pbody.state.v15
 ϕa = pbody.state.ϕ15
 # va = pbody.state.vsol[2]
 # ϕa = pbody.state.ϕsol[2]
 
-xb = cbody.state.x2[1]
-qb = cbody.state.q2[1]
+xb = cbody.state.x2
+qb = cbody.state.q2
 vb = cbody.state.v15
 ϕb = cbody.state.ϕ15
 # vb = cbody.state.vsol[2]
@@ -224,7 +224,7 @@ end
 
 
 function ctrl!(mech, k)
-	set_control!(mech, 0.0*sones(control_dimension(mech))*mech.timestep)
+	set_input!(mech, 0.0*sones(control_dimension(mech))*mech.timestep)
 end
 # vis = Visualizer()
 # open(vis)
@@ -240,15 +240,15 @@ timestep = mechanism.timestep
 pbody = mechanism.origin
 cbody = mechanism.bodies[1]
 
-xa = pbody.state.x2[1]
-qa = pbody.state.q2[1]
+xa = pbody.state.x2
+qa = pbody.state.q2
 va = pbody.state.v15
 ϕa = pbody.state.ϕ15
 # va = pbody.state.vsol[2]
 # ϕa = pbody.state.ϕsol[2]
 
-xb = cbody.state.x2[1]
-qb = cbody.state.q2[1]
+xb = cbody.state.x2
+qb = cbody.state.q2
 vb = cbody.state.v15
 ϕb = cbody.state.ϕ15
 # vb = cbody.state.vsol[2]

@@ -30,8 +30,8 @@ function addSlackForce!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, input::AbstractVect
 end
 
 function addSlackForce!(body::Body{T}, input::Vector{T}) where T
-	body.state.F2[end] += input[1:3]
-    body.state.τ2[end] += input[4:6]
+	body.state.F2 += input[1:3]
+    body.state.τ2 += input[4:6]
     return
 end
 
@@ -297,7 +297,7 @@ end
 # zgood = deepcopy(z0)
 # z0 = deepcopy(zgood)
 # set_state!(mech, z0)
-# z0 = get_state(mech)
+# z0 = get_current_state(mech)
 x0 = maximal_to_minimal(mech, z0)
 x1 = deepcopy(x0)
 x1[3] -= 0.1

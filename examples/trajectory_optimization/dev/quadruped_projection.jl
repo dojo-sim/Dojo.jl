@@ -219,7 +219,7 @@ end
 # zgood = deepcopy(z0)
 # z0 = deepcopy(zgood)
 # set_state!(mech, z0)
-# z0 = get_state(mech)
+# z0 = get_current_state(mech)
 x0 = maximal_to_minimal(mech, z0)
 x1 = deepcopy(x0)
 x1[3] -= 0.1

@@ -33,7 +33,7 @@ d = 0
 ## simulate (test)
 initialize!(env.mechanism, :quadruped)
 function ctrl!(mech, k)
-	set_control!(mech, szeros(m))
+	set_input!(mech, szeros(m))
 	return nothing
 end
 storage = simulate!(env.mechanism, 1.5, ctrl!, record=true, verbose=false)

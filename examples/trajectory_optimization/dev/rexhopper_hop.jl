@@ -53,7 +53,7 @@ initialize!(env.mechanism, :rexhopper, x=[0,0,0.1], θ=[0,0.2,0.2])
 xup = get_minimal_state(env.mechanism)
 function ctrl!(mech, k)
 	u0 = -total_mass(env.mechanism) * env.mechanism.gravity* env.mechanism.timestep/1.1 * 0
-	set_control!(mech, [u0; szeros(m-3)])
+	set_input!(mech, [u0; szeros(m-3)])
 	return nothing
 end
 storage = simulate!(env.mechanism, 3.0, ctrl!, record=true, verbose=false,

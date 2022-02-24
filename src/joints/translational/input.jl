@@ -17,10 +17,11 @@ function input_impulse!(joint::Translational{T},
     Fbw = Tb[1:3,1:3] * input
     τbb = Tb[4:6,1:3] * input
 
-    pbody.state.F2[end] += Faw
-    pbody.state.τ2[end] += τaa/2
-    cbody.state.F2[end] += Fbw
-    cbody.state.τ2[end] += τbb/2
+    pbody.state.F2 += Faw
+    pbody.state.τ2 += τaa/2
+    cbody.state.F2 += Fbw
+    cbody.state.τ2 += τbb/2
+    
     clear && (joint.input = szeros(T,3))
     return
 end

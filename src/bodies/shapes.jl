@@ -119,7 +119,7 @@ mutable struct Shapes{T} <: Shape{T}
     scale::SVector{3,T}
     color::RGBA
 
-    function Shapes(shapes::Vector; 
+    function Shapes(shapes::Vector{Shape{T}}; 
         xoffset::AbstractVector=szeros(3), axis_offset::UnitQuaternion=one(UnitQuaternion),
         scale::AbstractVector=sones(3), name::Symbol=Symbol("body_" * randstring(4)), color=RGBA(0.75, 0.75, 0.75)) where T
         new{T}(shapes, xoffset, axis_offset, scale, color)

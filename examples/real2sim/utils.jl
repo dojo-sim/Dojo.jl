@@ -259,7 +259,7 @@ function getSimulatorMaxGradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,
 		data_jacobian̄[13*(i-1) .+ [4:6; 11:13],:] += ∇data_vϕ[6*(i-1) .+ (1:6),:]
 
 		# Fill in gradients of x3, q3
-		q2 = body.state.q2[1]
+		q2 = body.state.q2
 		ϕ25 = body.state.ϕsol[2]
 		data_jacobian̄[13*(i-1) .+ (1:3),:] += linear_integrator_jacobian_velocity(timestep) * ∇data_vϕ[6*(i-1) .+ (1:3),:]
 		data_jacobian̄[13*(i-1) .+ (7:10),:] += rotational_integrator_jacobian_velocity(q2, ϕ25, timestep) * ∇data_vϕ[6*(i-1) .+ (4:6),:]

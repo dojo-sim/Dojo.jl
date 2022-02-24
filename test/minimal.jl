@@ -248,7 +248,7 @@ end
 			# extract body states
 			Ne = Dojo.length(mech.joints)
 			if Dojo.get_body(mech, jointcon.parent_id).name == :origin 
-				zp = [mech.origin.state.x2[1]; mech.origin.state.v15; Dojo.vector(mech.origin.state.q2[1]); mech.origin.state.ϕ15]
+				zp = [mech.origin.state.x2; mech.origin.state.v15; Dojo.vector(mech.origin.state.q2); mech.origin.state.ϕ15]
 			else
 				zp = z[(jointcon.parent_id - Ne - 1) * 13 .+ (1:13)]
 			end
@@ -307,7 +307,7 @@ end
 			# extract body states
 			Ne = Dojo.length(mech.joints)
 			if Dojo.get_body(mech, jointcon.parent_id).name == :origin 
-				zp = [mech.origin.state.x2[1]; mech.origin.state.v15; Dojo.vector(mech.origin.state.q2[1]); mech.origin.state.ϕ15]
+				zp = [mech.origin.state.x2; mech.origin.state.v15; Dojo.vector(mech.origin.state.q2); mech.origin.state.ϕ15]
 			else
 				zp = z[(jointcon.parent_id - Ne - 1) * 13 .+ (1:13)]
 			end
@@ -355,7 +355,7 @@ end
 	end
 
 	function ctrl!(mechanism, k)
-		Dojo.set_control!(mechanism, 0.1 * srand(Dojo.control_dimension(mechanism)))
+		Dojo.set_input!(mechanism, 0.1 * srand(Dojo.control_dimension(mechanism)))
 	end
 
 	# n-pendulum
