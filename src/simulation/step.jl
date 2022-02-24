@@ -10,5 +10,6 @@ function step!(mechanism::Mechanism{T}, z::Vector{T}, u::Vector{T}; opts=SolverO
 
     # extract the next state
     z_next = get_next_state(mechanism)
+    
     return z_next
 end

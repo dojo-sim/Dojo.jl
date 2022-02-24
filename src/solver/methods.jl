@@ -17,17 +17,24 @@ function zero_LU!(matrix_entry_L::Entry, matrix_entry_U::Entry)
     return
 end
 
-function complementarity(mechanism, joint::JointConstraint{T,N,Nc}; scaling::Bool = false) where {T,N,Nc}
+function complementarity(mechanism, joint::JointConstraint{T,N,Nc}; 
+    scaling::Bool=false) where {T,N,Nc}
+
     c = []
     for (i, element) in enumerate([joint.translational, joint.rotational])
         λi = joint.impulses[2][joint_impulse_index(joint, i)]
         si, γi = split_impulses(element, λi)
         push!(c, si .* γi)
     end
+
     return vcat(c...)
 end
 
-function feasibility_linesearch!(mechanism::Mechanism; τort::T=0.95, τsoc::T=0.95, scaling::Bool=false) where T
+function feasibility_linesearch!(mechanism::Mechanism; 
+    τort::T=0.95, 
+    τsoc::T=0.95, 
+    scaling::Bool=false) where T
+
     system = mechanism.system
 
     α = 1.0
@@ -37,11 +44,13 @@ function feasibility_linesearch!(mechanism::Mechanism; τort::T=0.95, τsoc::T=0
     for joint in mechanism.joints
         α = feasibility_linesearch!(α, mechanism, joint, get_entry(system, joint.id), τort, τsoc; scaling = scaling)
     end
+
     return α
 end
 
 function feasibility_linesearch!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
-        vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
+        vector_entry::Entry, τort, τsoc; 
+        scaling::Bool=false) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
 
     s = contact.impulses_dual[2]
     γ = contact.impulses[2]
@@ -56,7 +65,9 @@ function feasibility_linesearch!(α, mechanism, contact::ContactConstraint{T,N,N
 end
 
 function feasibility_linesearch!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
-        vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc,Cs<:Union{ImpactContact{T,N},LinearContact{T,N}},N½}
+        vector_entry::Entry, τort, τsoc; 
+        scaling::Bool=false) where {T,N,Nc,Cs<:Union{ImpactContact{T,N},LinearContact{T,N}},N½}
+
     s = contact.impulses_dual[2]
     γ = contact.impulses[2]
     Δs = vector_entry.value[1:N½]
@@ -70,7 +81,8 @@ function feasibility_linesearch!(α, mechanism, contact::ContactConstraint{T,N,N
 end
 
 function feasibility_linesearch!(α, mechanism, joint::JointConstraint{T,N,Nc},
-        vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc}
+        vector_entry::Entry, τort, τsoc; 
+        scaling::Bool=false) where {T,N,Nc}
 
     for (i, element) in enumerate([joint.translational, joint.rotational])
         s, γ = split_impulses(element, joint.impulses[2][joint_impulse_index(joint,i)])
@@ -197,7 +209,7 @@ function residual_violation(mechanism::Mechanism)
     for joint in mechanism.joints
         res = constraint(mechanism, joint)
         shift = 0
-        for (i, element) in enumerate((joint.translational, joint.rotational))
+        for element in [joint.translational, joint.rotational]
             Nλ = joint_length(element)
             Nb = limits_length(element)
             subres = res[shift + 2Nb .+ (1:Nλ)]

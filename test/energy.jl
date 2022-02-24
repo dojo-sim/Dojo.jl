@@ -264,7 +264,7 @@ end
 
 storage = simulate!(mech, 3.0, humanoid_controller!, record=true,
     verbose=false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
-# visualize(mech, downsample(storage, 1), vis = vis)
+# visualize(mech, storage, vis = vis)
 
 ke0 = kinetic_energy(mech, storage)[start0:end]
 pe0 = potential_energy(mech, storage)[start0:end]

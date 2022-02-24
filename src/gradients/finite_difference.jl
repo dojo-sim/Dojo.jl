@@ -51,6 +51,12 @@ function evaluate_residual0!(mechanism::Mechanism, data::AbstractVector, sol::Ab
     return full_vector(system)
 end
 
+function residual_dimension(mechanism::Mechanism)
+    return sum(Vector{Int}(length.(mechanism.joints))) +
+    	sum(Vector{Int}(length.(mechanism.bodies))) +
+    	sum(Vector{Int}(length.(mechanism.contacts)))
+end
+
 function finitediff_data_jacobian(mechanism::Mechanism, data::AbstractVector,
         sol::AbstractVector; δ = 1e-5, verbose = false)
     mechanism = deepcopy(mechanism)

@@ -34,7 +34,7 @@ mutable struct NerfContact111{T,N} <: NerfContact{T,N}
 
     function NerfContact111(body::Body{T}, normal::AbstractVector, nerf::NerfObject;
             p = szeros(T, 3), offset::AbstractVector = szeros(T, 3)) where T
-        V1, V2, V3 = orthogonalcols(normal) # gives two plane vectors and the original normal axis
+        V1, V2, V3 = orthogonal_columns(normal) # gives two plane vectors and the original normal axis
         A = [V1 V2 V3]
         Ainv = inv(A)
         ainv3 = Ainv[3,SA[1; 2; 3]]'

@@ -1,15 +1,3 @@
-@with_kw mutable struct SolverOptions{T} # TODO maybe remove the mutable, I used it for curriculum iLQR
-    rtol::T=1.0e-6   # residual violation tolerance (equality constraints)
-    btol::T=1.0e-3   # bilinear violation tolerance (complementarity constraints)
-    ls_scale::T=0.5  # line search scaling factor (α_new ← ls_scale * α_current)
-    max_iter::Int=50 # maximum number of Newton iterations
-    max_ls::Int=10   # maximum number of line search steps
-    undercut::T=Inf  # complementarity slackness target; solver will aim at reaching κ_vio = btol / undercut
-    no_progress_max::Int=3 # number of iterations of no progress before rescaling undercut
-    no_progress_undercut::T=10.0 # scaling for undercut if no progress is made
-    verbose::Bool=false
-end
-
 function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
 	reset!.(mechanism.contacts, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
 	reset!.(mechanism.joints, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
@@ -146,7 +134,6 @@ end
 function correction!(mechanism)
 	system = mechanism.system
 	residual_entries = mechanism.residual_entries
-
     for id in reverse(system.dfs_list)
         node = get_node(mechanism, id)
         correction!(mechanism, residual_entries[id], get_entry(system, id), node)
@@ -154,9 +141,7 @@ function correction!(mechanism)
 	return
 end
 
-function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, node::Node)
-    return
-end
+correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, node::Node) = nothing
 
 function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, ::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
 	Δs = step_entry.value[1:N½]
@@ -182,8 +167,9 @@ function correction!(mechanism::Mechanism{T}, residual_entry::Entry, step_entry:
 end
 
 @generated function correction(mechanism::Mechanism{T}, step_entry::Entry, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
-    cor = [:(correction([joint.translational, joint.rotational][$i], step_entry.value[joint_impulse_index(joint, $i)], mechanism.μ)) for i = 1:Nc]
-    return :(vcat($(cor...)))
+    cor_tra = :(correction(joint.translational, step_entry.value[joint_impulse_index(joint, 1)], mechanism.μ))
+    cor_rot = :(correction(joint.rotational, step_entry.value[joint_impulse_index(joint, 2)], mechanism.μ))
+    return :(vcat($cor_tra, $cor_rot))
 end
 
 function correction(joint::Joint{T,Nλ,Nb,N}, Δ, μ) where {T,Nλ,Nb,N}

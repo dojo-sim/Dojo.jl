@@ -62,7 +62,7 @@ export Origin,
     set_maximal_coordinates!,
     set_minimal_coordinates!,
     set_maximal_velocities!,
-    set_minimal_velocities!
+    set_minimal_velocities!,
     set_input!,
     add_input!,
     get_node,
@@ -90,7 +90,6 @@ export Origin,
     sones,
     srand,
 
-    getdim,
     control_dimension,
 
     get_mechanism,
@@ -117,8 +116,8 @@ export Origin,
     get_minimal_state
 
 # Utilities
-include(joinpath("util", "util.jl"))
-include(joinpath("util", "custom_static.jl"))
+include(joinpath("utilities", "methods.jl"))
+include(joinpath("utilities", "custom_static.jl"))
 
 # Orientation
 include(joinpath("orientation", "quaternion.jl"))
@@ -141,7 +140,9 @@ include(joinpath("mechanism", "origin.jl"))
 include(joinpath("joints", "constraint.jl"))
 include(joinpath("contacts", "constructor.jl"))
 include(joinpath("mechanism", "id.jl"))
-include(joinpath("mechanism", "mechanism.jl"))
+include(joinpath("mechanism", "constructor.jl"))
+include(joinpath("mechanism", "gravity.jl"))
+
 include(joinpath("mechanism", "maximal.jl"))
 include(joinpath("mechanism", "minimal.jl"))
 include(joinpath("mechanism", "system.jl"))
@@ -158,6 +159,7 @@ include(joinpath("mechanics", "momentum.jl"))
 include(joinpath("mechanics", "energy.jl"))
 
 # Joints
+include(joinpath("joints", "orthogonal.jl"))
 include(joinpath("joints", "joint.jl"))
 include(joinpath("joints", "translational", "constructor.jl"))
 include(joinpath("joints", "translational", "impulses.jl"))
@@ -187,8 +189,9 @@ include(joinpath("contacts", "utils.jl"))
 
 # Solver
 include(joinpath("solver", "methods.jl"))
+include(joinpath("solver", "options.jl"))
 include(joinpath("solver", "mehrotra.jl"))
-include(joinpath("solver", "linesearch.jl"))
+include(joinpath("solver", "line_search.jl"))
 
 # Integrator
 include(joinpath("integrators", "integrator.jl"))
@@ -198,7 +201,6 @@ include(joinpath("integrators", "constraint.jl"))
 include(joinpath("ui", "mechanism_ui.jl"))
 include(joinpath("ui", "mechanism_traversal.jl"))
 include(joinpath("ui", "urdf.jl"))
-include(joinpath("ui", "convert_shape.jl"))
 include(joinpath("ui", "visualize.jl"))
 include(joinpath("ui", "visualizer_utils.jl"))
 include(joinpath("ui", "colors.jl"))

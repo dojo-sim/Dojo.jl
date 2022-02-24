@@ -43,23 +43,6 @@ end
 
 Base.length(storage::Storage{T,N}) where {T,N} = N
 
-function downsample(storage::Storage{T,N}, n::Int) where {T,N}
-    steps = N ÷ n
-    nbodies = length(storage.x)
-    s = Storage(steps, nbodies)
-    for i = 1:nbodies
-        s.x[i] = storage.x[i][1:n:end]
-        s.q[i] = storage.q[i][1:n:end]
-        s.v[i] = storage.v[i][1:n:end]
-        s.ω[i] = storage.ω[i][1:n:end]
-        s.px[i] = storage.px[i][1:n:end]
-        s.pq[i] = storage.pq[i][1:n:end]
-        s.vl[i] = storage.vl[i][1:n:end]
-        s.ωl[i] = storage.ωl[i][1:n:end]
-    end
-    return s
-end
-
 function save_to_storage!(mechanism::Mechanism, storage::Storage, i::Int)
     for (ind, body) in enumerate(mechanism.bodies)
         state = body.state

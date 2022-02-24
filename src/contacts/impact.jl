@@ -4,7 +4,7 @@ mutable struct ImpactContact{T,N} <: Contact{T,N}
     offset::SVector{3,T}
 
     function ImpactContact(body::Body{T}, normal::AbstractVector; contact_point = szeros(T, 3), offset::AbstractVector = szeros(T, 3)) where T
-        V1, V2, V3 = orthogonalcols(normal) # gives two plane vectors and the original normal axis
+        V1, V2, V3 = orthogonal_columns(normal) # gives two plane vectors and the original normal axis
         A = [V1 V2 V3]
         Ainv = inv(A)
         surface_normal_projector = Ainv[3,SA[1; 2; 3]]'

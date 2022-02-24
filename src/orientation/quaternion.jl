@@ -1,7 +1,7 @@
 Rotations.UnitQuaternion(w::T, v::StaticVector{3,T}, normalize::Bool = true) where T = UnitQuaternion{T}(w, v[1], v[2], v[3], normalize)
 Rotations.UnitQuaternion(w::T, v::Vector{T}, normalize::Bool = true) where T = (@assert length(v)==3; UnitQuaternion{T}(w, v[1], v[2], v[3], normalize))
 Rotations.UnitQuaternion(v::StaticVector{3,T}) where T = pure_quaternion(v)
-Rotations.UnitQuaternion(v::Vector) = (@assert length(v)==3; pure_quaternion(v))
+# Rotations.UnitQuaternion(v::Vector) = (@assert length(v)==3; pure_quaternion(v))
 
 imag(q::UnitQuaternion) = Rotations.vector(q)
 
