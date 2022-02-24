@@ -1,15 +1,18 @@
 ################################################################################
 # Displacements
 ################################################################################
-@inline function displacement(joint::Translational, xa::AbstractVector,
-		qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; rotate::Bool = true)
+@inline function displacement(joint::Translational, 
+    xa::AbstractVector, qa::UnitQuaternion, 
+    xb::AbstractVector, qb::UnitQuaternion; rotate::Bool = true)
+
     vertices = joint.vertices
     d = xb + vrotate(vertices[2], qb) - (xa + vrotate(vertices[1], qa))
     rotate && (return vrotate(d, inv(qa))) : (return d)
 end
 
-@inline function displacement_jacobian_configuration(relative::Symbol, joint::Translational{T}, xa::AbstractVector,
-        qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; attjac=true) where T
+@inline function displacement_jacobian_configuration(relative::Symbol, joint::Translational{T}, 
+    xa::AbstractVector, qa::UnitQuaternion, 
+    xb::AbstractVector, qb::UnitQuaternion; attjac=true) where T
 
     vertices = joint.vertices
 
@@ -86,4 +89,84 @@ end
 	# Finite difference
 	Δv = (Δx - Δx1) / timestep
 	return Δv
+end
+
+@inline function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Translational,
+    xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+    xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
+    timestep)
+    A = nullspace_mask(joint)
+
+    # 1 step backward in time
+    xa1 = next_position(xa, -va, timestep)
+    qa1 = next_orientation(qa, -ϕa, timestep)
+    xb1 = next_position(xb, -vb, timestep)
+    qb1 = next_orientation(qb, -ϕb, timestep)
+
+    # Coordinates
+    Δx = A * displacement(joint, xa, qa, xb, qb)
+    # Previous step coordinates
+    Δx1 = A * displacement(joint, xa1, qa1, xb1, qb1)
+
+    # Finite difference
+    # Δv = (Δx - Δx1) / timestep
+
+    if relative == :parent
+        X, Q = displacement_jacobian_configuration(:parent, joint, xa, qa, xb, qb, attjac=false)
+        X1, Q1 = displacement_jacobian_configuration(:parent, joint, xa1, qa1, xb1, qb1, attjac=false)
+        X1 *= -1.0
+        Q1 *= -1.0 * Rmat(quaternion_map(-ϕa, timestep)) * timestep / 2
+        Q *= LVᵀmat(qa) 
+        Q1 *= LVᵀmat(qa)
+        J = 1.0 / timestep * A * [X Q]
+        J += 1.0 / timestep * A * [X1 Q1]
+    elseif relative == :child 
+        1.0 / timestep * (Δx - Δx1)
+        X, Q = displacement_jacobian_configuration(:child, joint, xa, qa, xb, qb, attjac=false)
+        X1, Q1 = displacement_jacobian_configuration(:child, joint, xa1, qa1, xb1, qb1, attjac=false)
+        X1 *= -1.0
+        Q1 *= -1.0 * Rmat(quaternion_map(-ϕb, timestep)) * timestep / 2
+        Q *= LVᵀmat(qb) 
+        Q1 *= LVᵀmat(qb)
+        J = 1.0 / timestep * A * [X Q]
+        J += 1.0 / timestep * A * [X1 Q1]
+    end
+
+    return J
+end
+
+@inline function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Translational,
+    xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+    xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
+    timestep)
+    A = nullspace_mask(joint)
+
+    # 1 step backward in time
+    xa1 = next_position(xa, -va, timestep)
+    qa1 = next_orientation(qa, -ϕa, timestep)
+    xb1 = next_position(xb, -vb, timestep)
+    qb1 = next_orientation(qb, -ϕb, timestep)
+
+    # Coordinates
+    Δx = A * displacement(joint, xa, qa, xb, qb)
+    
+    # Previous step coordinates
+    Δx1 = A * displacement(joint, xa1, qa1, xb1, qb1)
+
+    # Finite difference
+    Δv = (Δx - Δx1) / timestep
+
+    if relative == :parent
+        X1, Q1 = displacement_jacobian_configuration(:parent, joint, xa1, qa1, xb1, qb1, attjac=false)
+        X1 *= -timestep 
+        Q1 *= -Lmat(qa) * quaternion_map_jacobian(-ϕa, timestep) * timestep / 2
+        J = -1.0 / timestep * A * [X1 Q1]
+    elseif relative == :child 
+        X1, Q1 = displacement_jacobian_configuration(:child, joint, xa1, qa1, xb1, qb1, attjac=false)
+        X1 *= -timestep 
+        Q1 *= -Lmat(qb) * quaternion_map_jacobian(-ϕb, timestep) * timestep / 2
+        J = -1.0 / timestep * A * [X1 Q1]
+    end
+
+    return J
 end

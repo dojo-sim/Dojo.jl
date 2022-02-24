@@ -239,39 +239,57 @@ end
 	timestep = mech.timestep
 	for jointcon in mech.joints
 		for joint in [jointcon.translational, jointcon.rotational]
-			qa = UnitQuaternion(rand(4)...)
-			qb = UnitQuaternion(rand(4)...)
-			xa = srand(3)
-			va = srand(3)
-			ωa = srand(3)
-			xb = srand(3)
-			vb = srand(3)
-			ωb = srand(3)
+			# generate random configuration in minimal space
+			x = rand(minimal_dimension(mech))
+
+			# convert to maximal
+			z = minimal_to_maximal(mech, x)
+
+			# extract body states
+			Ne = length(mech.joints)
+			if get_body(mech, jointcon.parent_id).name == :origin 
+				zp = [mech.origin.state.x2[1]; mech.origin.state.v15; vector(mech.origin.state.q2[1]); mech.origin.state.ϕ15]
+			else
+				zp = z[(jointcon.parent_id - Ne - 1) * 13 .+ (1:13)]
+			end
+			zc = z[(jointcon.child_id - Ne - 1) * 13 .+ (1:13)]
+
+			xa = SVector{3}(zp[1:3])
+			va = SVector{3}(zp[3 .+ (1:3)])
+			qa = UnitQuaternion(zp[6 .+ (1:4)]..., false)
+			ωa = SVector{3}(zp[10 .+ (1:3)])
+
+			xb = SVector{3}(zc[1:3])
+			vb = SVector{3}(zc[3 .+ (1:3)])
+			qb = UnitQuaternion(zc[6 .+ (1:4)]..., false)
+			ωb = SVector{3}(zc[10 .+ (1:3)])
+
 			Dojo.minimal_velocities(joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 
+			# Jacobians
 			∇0 = Dojo.minimal_velocities_jacobian_configuration(:parent, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 			∇1 = FiniteDiff.finite_difference_jacobian(
 				xq -> Dojo.minimal_velocities(joint, xq[Dojo.SUnitRange(1,3)], va, UnitQuaternion(xq[4:7]..., false), ωa, xb, vb, qb, ωb, timestep),
 				[xa; Dojo.vector(qa)]) * cat(I(3), Dojo.LVᵀmat(qa), dims=(1,2))
-			@test norm(∇0 - ∇1, Inf) < 1e-6
+			@test norm(∇0 - ∇1, Inf) < 1e-5
 
 			∇0 = Dojo.minimal_velocities_jacobian_configuration(:child, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 			∇1 = FiniteDiff.finite_difference_jacobian(
 				xq -> Dojo.minimal_velocities(joint, xa, va, qa, ωa, xq[Dojo.SUnitRange(1,3)], vb, UnitQuaternion(xq[4:7]..., false), ωb, timestep),
 				[xb; Dojo.vector(qb)]) * cat(I(3), Dojo.LVᵀmat(qb), dims=(1,2))
-			@test norm(∇0 - ∇1, Inf) < 1e-6
+			@test norm(∇0 - ∇1, Inf) < 1e-5
 
 			∇0 = Dojo.minimal_velocities_jacobian_velocity(:parent, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 			∇1 = FiniteDiff.finite_difference_jacobian(
 				vϕ -> Dojo.minimal_velocities(joint, xa, vϕ[Dojo.SUnitRange(1,3)], qa, vϕ[Dojo.SUnitRange(4,6)], xb, vb, qb, ωb, timestep),
 				[va; ωa])
-			@test norm(∇0 - ∇1, Inf) < 1e-6
+			@test norm(∇0 - ∇1, Inf) < 1e-5
 
 			∇0 = Dojo.minimal_velocities_jacobian_velocity(:child, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 			∇1 = FiniteDiff.finite_difference_jacobian(
 				vϕ -> Dojo.minimal_velocities(joint, xa, va, qa, ωa, xb, vϕ[Dojo.SUnitRange(1,3)], qb, vϕ[Dojo.SUnitRange(4,6)], timestep),
 				[vb; ωb])
-			@test norm(∇0 - ∇1, Inf) < 1e-6
+			@test norm(∇0 - ∇1, Inf) < 1e-5
 		end
 	end
 end
@@ -280,14 +298,31 @@ end
 	mech = Dojo.get_humanoid()
 	for jointcon in mech.joints
 		for joint in [jointcon.translational, jointcon.rotational]
-			qa = UnitQuaternion(rand(4)...)
-			qb = UnitQuaternion(rand(4)...)
-			xa = rand(3)
-			va = rand(3)
-			ωa = rand(3)
-			xb = rand(3)
-			vb = rand(3)
-			ωb = rand(3)
+			# generate random configuration in minimal space
+			x = rand(minimal_dimension(mech))
+
+			# convert to maximal
+			z = minimal_to_maximal(mech, x)
+
+			# extract body states
+			Ne = length(mech.joints)
+			if get_body(mech, jointcon.parent_id).name == :origin 
+				zp = [mech.origin.state.x2[1]; mech.origin.state.v15; vector(mech.origin.state.q2[1]); mech.origin.state.ϕ15]
+			else
+				zp = z[(jointcon.parent_id - Ne - 1) * 13 .+ (1:13)]
+			end
+			zc = z[(jointcon.child_id - Ne - 1) * 13 .+ (1:13)]
+
+			xa = SVector{3}(zp[1:3])
+			# va = SVector{3}(zp[3 .+ (1:3)])
+			qa = UnitQuaternion(zp[6 .+ (1:4)]..., false)
+			# ωa = SVector{3}(zp[10 .+ (1:3)])
+
+			xb = SVector{3}(zc[1:3])
+			# vb = SVector{3}(zc[3 .+ (1:3)])
+			qb = UnitQuaternion(zc[6 .+ (1:4)]..., false)
+			# ωb = SVector{3}(zc[10 .+ (1:3)])
+
 			Dojo.minimal_coordinates(joint, xa, qa, xb, qb)
 
 			∇0 = Dojo.minimal_coordinates_jacobian_configuration(:parent, joint, xa, qa, xb, qb)

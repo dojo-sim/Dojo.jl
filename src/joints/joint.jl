@@ -146,37 +146,60 @@ end
 		initial_configuration_velocity(cnode.state)..., timestep)
 end
 
-@inline function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Joint{T},
-        xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
-        xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector, timestep) where T
+# @inline function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Joint{T},
+#         xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+#         xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector, timestep) where T
 
-    if relative == :parent
-		∇xq = FiniteDiff.finite_difference_jacobian(xq -> minimal_velocities(
-			joint, xq[SUnitRange(1,3)], va, UnitQuaternion(xq[4:7]..., false),
-			ϕa, xb, vb, qb, ϕb, timestep), [xa; vector(qa)]) * cat(I(3), LVᵀmat(qa), dims=(1,2))
-    elseif relative == :child
-		∇xq = FiniteDiff.finite_difference_jacobian(xq -> minimal_velocities(
-			joint, xa, va, qa, ϕa, xq[SUnitRange(1,3)], vb, UnitQuaternion(xq[4:7]..., false),
-			ϕb, timestep), [xb; vector(qb)]) * cat(I(3), LVᵀmat(qb), dims=(1,2))
-    end
-    return ∇xq
-end
+#     # if relative == :parent
+#     #     ∇xq = _minimal_velocities_jacobian_configuration(:parent, joint,
+#     #         xa, va, qa, ϕa,
+#     #         xb, vb, qb, ϕb,
+#     #         timestep)
+# 	# 	# ∇xq = FiniteDiff.finite_difference_jacobian(xq -> minimal_velocities(
+# 	# 	# 	joint, xq[SUnitRange(1,3)], va, UnitQuaternion(xq[4:7]..., false),
+# 	# 	# 	ϕa, xb, vb, qb, ϕb, timestep), [xa; vector(qa)]) * cat(I(3), LVᵀmat(qa), dims=(1,2))
+#     # elseif relative == :child
+# 	# 	∇xq = FiniteDiff.finite_difference_jacobian(xq -> minimal_velocities(
+# 	# 		joint, xa, va, qa, ϕa, xq[SUnitRange(1,3)], vb, UnitQuaternion(xq[4:7]..., false),
+# 	# 		ϕb, timestep), [xb; vector(qb)]) * cat(I(3), LVᵀmat(qb), dims=(1,2))
+#     # end
+#     ∇xq = _minimal_velocities_jacobian_configuration(relative, joint,
+#         xa, va, qa, ϕa,
+#         xb, vb, qb, ϕb,
+#         timestep)
+#     return ∇xq
+# end
 
-@inline function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Joint{T},
-        xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
-        xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector, timestep) where T
+# @inline function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Joint{T},
+#         xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+#         xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector, timestep) where T
 
-	if relative == :parent
-		∇vϕ = FiniteDiff.finite_difference_jacobian(vϕ -> minimal_velocities(
-			joint, xa, vϕ[SUnitRange(1,3)], qa, vϕ[SUnitRange(4,6)],
-			xb, vb, qb, ϕb, timestep), [va; ϕa])
-    elseif relative == :child
-		∇vϕ = FiniteDiff.finite_difference_jacobian(vϕ -> minimal_velocities(
-			joint, xa, va, qa, ϕa, xb, vϕ[SUnitRange(1,3)], qb, vϕ[SUnitRange(4,6)],
-			timestep), [vb; ϕb])
-    end
-    return ∇vϕ
-end
+# 	if relative == :parent
+#         ∇vϕ = _minimal_velocities_jacobian_velocity(:parent, joint,
+#             xa, va, qa, ϕa,
+#             xb, vb, qb, ϕb,
+#             timestep)
+# 		# ∇vϕ = FiniteDiff.finite_difference_jacobian(vϕ -> minimal_velocities(
+# 		# 	joint, xa, vϕ[SUnitRange(1,3)], qa, vϕ[SUnitRange(4,6)],
+# 		# 	xb, vb, qb, ϕb, timestep), [va; ϕa])
+#     elseif relative == :child
+#         # if eltype(joint) == Translational
+#         ∇vϕ = _minimal_velocities_jacobian_velocity(:child, joint,
+#             xa, va, qa, ϕa,
+#             xb, vb, qb, ϕb,
+#             timestep)
+#         # else
+#         #     ∇vϕ = FiniteDiff.finite_difference_jacobian(vϕ -> minimal_velocities(
+#         #         joint, xa, va, qa, ϕa, xb, vϕ[SUnitRange(1,3)], qb, vϕ[SUnitRange(4,6)],
+#         #         timestep), [vb; ϕb])
+#         # end
+#     end
+#     # ∇vϕ = _minimal_velocities_jacobian_velocity(relative, joint,
+#     #     xa, va, qa, ϕa,
+#     #     xb, vb, qb, ϕb,
+#     #     timestep)
+#     return ∇vϕ
+# end
 
 
 ################################################################################

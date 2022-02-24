@@ -73,7 +73,7 @@ end
 		xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
 		xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
 		timestep)
-		
+
 	qoffset = joint.qoffset
 	A = nullspace_mask(joint)
 
@@ -87,4 +87,70 @@ end
 	q1 = inv(qoffset) * inv(qa1) * qb1
 
 	return A * rotation_vector(inv(q1) * q) ./ timestep
+end
+
+@inline function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Rotational{T},
+	xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+	xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
+	timestep) where T
+	
+	qoffset = joint.qoffset
+	A = nullspace_mask(joint)
+	nu = control_dimension(joint)
+
+	# 1 step backward in time
+	xa1 = next_position(xa, -va, timestep)
+	qa1 = next_orientation(qa, -ϕa, timestep)
+	xb1 = next_position(xb, -vb, timestep)
+	qb1 = next_orientation(qb, -ϕb, timestep)
+
+	q = inv(qoffset) * inv(qa) * qb
+	q1 = inv(qoffset) * inv(qa1) * qb1
+
+	# return A * rotation_vector(inv(q1) * q) ./ timestep
+
+	X = szeros(T, nu, 3)
+
+	if relative == :parent 
+		Q = 1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Rmat(q) * Tmat() * Rmat(qb1) * Lmat(inv(qoffset)) * Tmat() * Rmat(quaternion_map(-ϕa, timestep)) * timestep / 2
+		Q += 1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Lmat(inv(q1)) * Rmat(qb) * Lmat(inv(qoffset)) * Tmat()
+		Q *= LVᵀmat(qa)
+	elseif relative == :child 
+		Q = 1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Rmat(q) * Tmat() * Lmat(inv(qoffset) * inv(qa1)) * Rmat(quaternion_map(-ϕb, timestep)) * timestep / 2
+		Q += 1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Lmat(inv(q1) * inv(qoffset) * inv(qa))
+		Q *= LVᵀmat(qb)
+	end
+
+	return [X Q]
+end
+
+@inline function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Rotational{T},
+	xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+	xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
+	timestep) where T
+	
+	qoffset = joint.qoffset
+	A = nullspace_mask(joint)
+	nu = control_dimension(joint)
+
+	# 1 step backward in time
+	xa1 = next_position(xa, -va, timestep)
+	qa1 = next_orientation(qa, -ϕa, timestep)
+	xb1 = next_position(xb, -vb, timestep)
+	qb1 = next_orientation(qb, -ϕb, timestep)
+
+	q = inv(qoffset) * inv(qa) * qb
+	q1 = inv(qoffset) * inv(qa1) * qb1
+
+	# return A * rotation_vector(inv(q1) * q) ./ timestep
+
+	V = szeros(T, nu, 3)
+
+	if relative == :parent
+		Ω = -1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Rmat(q) * Tmat() * Lmat(inv(qoffset)) * Rmat(qb1) * Tmat() * Lmat(qa) * quaternion_map_jacobian(-ϕa, timestep) * timestep / 2 
+	elseif relative == :child 
+		Ω = -1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Rmat(q) * Tmat() * Lmat(inv(qoffset) * inv(qa1)) * Lmat(qb) * quaternion_map_jacobian(-ϕb, timestep) * timestep / 2
+	end
+
+	return [V Ω]
 end
