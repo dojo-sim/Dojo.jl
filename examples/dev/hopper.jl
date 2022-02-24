@@ -47,17 +47,17 @@ plot(hcat(Vector.(storage.ω[1])...)')
 
 
 eqc1 = collect(mech.joints)[1]
-body1 = collect(mech.bodies)[1]
-body2 = collect(mech.bodies)[2]
-zerodimstaticadjoint(∂g∂ʳpos(mech, eqc1, body1))
+pbody = collect(mech.bodies)[1]
+cbody = collect(mech.bodies)[2]
+zerodimstaticadjoint(∂g∂ʳpos(mech, eqc1, pbody))
 collect(mech.joints)
 
 
 
 const Dojo = Main
 
-# angular_damping!(mech, body1)
-# ∂angular_damping!(mech, body1)
+# angular_damping!(mech, pbody)
+# ∂angular_damping!(mech, pbody)
 
 ∇ = [szeros(3,6); sones(3,6)]
 ∇ = hcat(szeros(3,6), sones(3,6))
@@ -86,10 +86,10 @@ integrator_jacobian_velocity(one(UnitQuaternion), srand(3), 0.1)
 # end
 
 
-angular_damping!(mech, body1)
+angular_damping!(mech, pbody)
 
-body1.state.q2
-body2.state.q2
+pbody.state.q2
+cbody.state.q2
 
 
 mech = getmechanism(:slider, timestep = 0.05, g = -9.81, spring = 10.0, damper = 1.0);

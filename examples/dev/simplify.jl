@@ -27,19 +27,19 @@ p2 = [0; 0; l/2] # joint connection point
 
 # Links
 origin = Origin{Float64}()
-body1 = Box(width, depth, l, m)
+pbody = Box(width, depth, l, m)
 
 # Constraints
-joint_between_origin_and_body1 = JointConstraint(Revolute(origin, body1,
+joint_between_origin_and_pbody = JointConstraint(Revolute(origin, pbody,
     joint_axis; p2=p2, spring = 0, damper = 0,
     rot_joint_limits = [SVector{1}([0.25 * π]), SVector{1}([π])]
     ))
-bodies = [body1]
-eqcs = [joint_between_origin_and_body1]
+bodies = [pbody]
+eqcs = [joint_between_origin_and_pbody]
 
-length(joint_between_origin_and_body1)
-length(joint_between_origin_and_body1.constraints[1])
-length(joint_between_origin_and_body1.constraints[2])
+length(joint_between_origin_and_pbody)
+length(joint_between_origin_and_pbody.constraints[1])
+length(joint_between_origin_and_pbody.constraints[2])
 
 
 

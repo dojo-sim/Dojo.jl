@@ -4,12 +4,12 @@ function get_dzhanibekov(; timestep::T = 0.01, gravity = -9.81, color=magenta) w
     body_mass = 1.0
     origin = Origin{Float64}()
     main_body = Capsule(radius, body_length, body_mass, color=color)
-    side_body = Capsule(0.5 * radius, 0.35 * body_length, 0.1 * body_mass, qoffset=UnitQuaternion(RotY(0.5 * π)), color=color)
+    side_body = Capsule(0.5 * radius, 0.35 * body_length, 0.1 * body_mass, axis_offset=UnitQuaternion(RotY(0.5 * π)), color=color)
     links = [main_body, side_body]
 
     # Joint Constraints
     joint_float = JointConstraint(Floating(origin, links[1]))
-    joint_attach = JointConstraint(Fixed(links[1], links[2]; p1=szeros(3), p2=[-0.25 * body_length; 0.0; 0.0]))#, qoffset=UnitQuaternion(RotX(0.5 * pi))))
+    joint_attach = JointConstraint(Fixed(links[1], links[2]; parent_vertex=szeros(3), child_vertex=[-0.25 * body_length; 0.0; 0.0]))#, axis_offset=UnitQuaternion(RotX(0.5 * pi))))
     joints = [joint_float, joint_attach]
 
     # Mechanism

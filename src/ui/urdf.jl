@@ -142,26 +142,26 @@ end
 function get_shape(shapenode, x, q, color, T)
     if name(shapenode) == "box"
         xyz = parse_vector(shapenode, "size", T, default = "1 1 1")
-        shape = Box(xyz..., zero(T), color = color, xoffset = x, qoffset = q)
+        shape = Box(xyz..., zero(T), color = color, xoffset = x, axis_offset = q)
     elseif name(shapenode) == "cylinder"
         r = parse_scalar(shapenode, "radius", T, default = "0.5")
         l = parse_scalar(shapenode, "length", T, default = "1")
-        shape = Cylinder(r, l, zero(T), color = color, xoffset = x, qoffset = q)
+        shape = Cylinder(r, l, zero(T), color = color, xoffset = x, axis_offset = q)
     elseif name(shapenode) == "pyramid"
         w = parse_scalar(shapenode, "width", T, default = "1")
         h = parse_scalar(shapenode, "height", T, default = "1")
-        shape = Cylinder(w, h, zero(T), color = color, xoffset = x, qoffset = q)
+        shape = Cylinder(w, h, zero(T), color = color, xoffset = x, axis_offset = q)
     elseif name(shapenode) == "sphere"
         r = parse_scalar(shapenode, "radius", T, default = "0.5")
-        shape = Sphere(r, zero(T), color = color, xoffset = x, qoffset = q)
+        shape = Sphere(r, zero(T), color = color, xoffset = x, axis_offset = q)
     elseif name(shapenode) == "mesh"
         path = attribute(shapenode, "filename")
         scale = parse_vector(shapenode, "scale", T, default = "1 1 1")
-        shape = Mesh(path, zero(T), zeros(T, 3, 3), scale=scale, color = color, xoffset = x, qoffset = q)
+        shape = Mesh(path, zero(T), zeros(T, 3, 3), scale=scale, color = color, xoffset = x, axis_offset = q)
     elseif name(shapenode) == "capsule"
         r = parse_scalar(shapenode, "radius", T, default = "0.5")
         l = parse_scalar(shapenode, "length", T, default = "1")
-        shape = Capsule(r, l, zero(T), color = color, xoffset = x, qoffset = q)
+        shape = Capsule(r, l, zero(T), color = color, xoffset = x, axis_offset = q)
     else
         @info "Unknown geometry."
         shape = nothing
@@ -211,37 +211,37 @@ function parse_links(xlinks, materialdict, T)
 end
 
 # TODO: fix axis
-function joint_selector(jointtype, body1, body2, T;
-        axis = SA{T}[1;0;0], p1 = szeros(T,3), p2 = szeros(T,3), qoffset = one(UnitQuaternion{T}), name = Symbol("joint_" * randstring(4)))
+function joint_selector(jointtype, pbody, cbody, T;
+        axis = SA{T}[1;0;0], parent_vertex = szeros(T,3), child_vertex = szeros(T,3), axis_offset = one(UnitQuaternion{T}), name = Symbol("joint_" * randstring(4)))
 
     # TODO @warn "this is not great"
-    axis = inv(qoffset) * axis
+    axis = inv(axis_offset) * axis
 
     # TODO limits for revolute joint?
     if jointtype == "revolute" || jointtype == "continuous"
-        joint = JointConstraint(Revolute(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(Revolute(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
     elseif jointtype == "prismatic"
-        joint = JointConstraint(Prismatic(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(Prismatic(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
     elseif jointtype == "planar"
-        joint = JointConstraint(Planar(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(Planar(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
     elseif jointtype == "planarfree"
-        joint = JointConstraint(PlanarFree(body1, body2, axis; p1=p1, p2=p2), name=name)
+        joint = JointConstraint(PlanarFree(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex), name=name)
     elseif jointtype == "fixed"
-        joint = JointConstraint(Fixed(body1, body2; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(Fixed(pbody, cbody; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
     elseif jointtype == "floating"
-        joint = JointConstraint(Floating(body1, body2), name=name)
+        joint = JointConstraint(Floating(pbody, cbody), name=name)
     elseif jointtype == "orbital"
-        joint = JointConstraint(Orbital(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(Orbital(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
     elseif jointtype == "ball"
-        joint = JointConstraint(Spherical(body1, body2; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(Spherical(pbody, cbody; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
     elseif jointtype == "fixedorientation"
-        joint = JointConstraint(FixedOrientation(body1, body2; qoffset = qoffset), name=name)
+        joint = JointConstraint(FixedOrientation(pbody, cbody; axis_offset = axis_offset), name=name)
     elseif jointtype == "cylindrical"
-        joint = JointConstraint(Cylindrical(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(Cylindrical(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
     elseif jointtype == "cylindricalfree"
-        joint = JointConstraint(CylindricalFree(body1, body2, axis; p1=p1, p2=p2), name=name)
+        joint = JointConstraint(CylindricalFree(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex), name=name)
     elseif jointtype == "planaraxis"
-        joint = JointConstraint(PlanarAxis(body1, body2, axis; p1=p1, p2=p2, qoffset = qoffset), name=name)
+        joint = JointConstraint(PlanarAxis(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
     else
         @error "Unknown joint type"
     end
@@ -253,13 +253,13 @@ function parse_joint(xjoint, plink, clink, T)
     jointtype = attribute(xjoint, "type")
     x, q = parse_pose(find_element(xjoint, "origin"), T)
     axis = parse_vector(find_element(xjoint, "axis"), "xyz", T, default = "1 0 0")
-    p1 = x
+    parent_vertex = x
     name = Symbol(attribute(xjoint, "name"))
 
-    return joint_selector(jointtype, plink, clink, T, axis = axis, p1 = p1, qoffset = q, name = name)
+    return joint_selector(jointtype, plink, clink, T, axis = axis, parent_vertex = parent_vertex, axis_offset = q, name = name)
 end
 
-function parse_loop_joint(xjoint, body1, body2, T)
+function parse_loop_joint(xjoint, pbody, cbody, T)
     find_element(xjoint, "link1")
     find_element(xjoint, "link2")
 
@@ -267,11 +267,11 @@ function parse_loop_joint(xjoint, body1, body2, T)
     axis = parse_vector(find_element(xjoint, "axis"), "xyz", T, default = "1 0 0")
     x1, q1 = parse_pose(find_element(xjoint, "link1"), T)
     x2, _ = parse_pose(find_element(xjoint, "link2"), T) # The orientation q2 of the second body is ignored because it is determined by the mechanism's structure
-    p1 = x1
-    p2 = x2
+    parent_vertex = x1
+    child_vertex = x2
     name = Symbol(attribute(xjoint, "name"))
 
-    return joint_selector(jointtype, body1, body2, T, axis = axis, p1 = p1, p2 = p2, qoffset = q1, name = name)
+    return joint_selector(jointtype, pbody, cbody, T, axis = axis, parent_vertex = parent_vertex, child_vertex = child_vertex, axis_offset = q1, name = name)
 end
 
 function parse_joints(xjoints, ldict, floating, T)
@@ -337,16 +337,16 @@ function parse_loop_joints(xloopjoints, origin, joints, ldict, T)
     loopjoints = JointConstraint{T}[]
 
     for xloopjoint in xloopjoints
-        xbody1 = find_element(xloopjoint, "link1")
-        xbody2 = find_element(xloopjoint, "link2")
-        body1 = ldict[Symbol(attribute(xbody1, "link"))]
-        body2 = ldict[Symbol(attribute(xbody2, "link"))]
+        xpbody = find_element(xloopjoint, "link1")
+        xcbody = find_element(xloopjoint, "link2")
+        pbody = ldict[Symbol(attribute(xpbody, "link"))]
+        cbody = ldict[Symbol(attribute(xcbody, "link"))]
 
         predlist = Tuple{Int64,Int64}[]
         jointlist = [(joints[i].id,joints[i].parent_id, joints[i].child_id) for i=1:length(joints)]
-        linkid = body1.id
+        linkid = pbody.id
 
-        while true # create list of predecessor joints and parent links for body1
+        while true # create list of predecessor joints and parent links for pbody
             for (i,jointdata) in enumerate(jointlist)
                 if linkid ∈ jointdata[3]
                     push!(predlist,(jointdata[1],jointdata[2]))
@@ -361,12 +361,12 @@ function parse_loop_joints(xloopjoints, origin, joints, ldict, T)
         end
 
         jointlist = [(joints[i].id, joints[i].parent_id, joints[i].child_id) for i=1:length(joints)]
-        linkid = body2.id
+        linkid = cbody.id
         joint1id = 0
         joint2id = 0
         foundflag = false
 
-        while true # check which predecessor link of body2 is also a predecessor link of body1
+        while true # check which predecessor link of cbody is also a predecessor link of pbody
             for (i,jointdata) in enumerate(jointlist)
                 if linkid ∈ jointdata[3]
                     joint2id = jointdata[1]
@@ -385,7 +385,7 @@ function parse_loop_joints(xloopjoints, origin, joints, ldict, T)
             foundflag && break
         end
 
-        loopjoint = parse_loop_joint(xloopjoint, body1, body2, T)
+        loopjoint = parse_loop_joint(xloopjoint, pbody, cbody, T)
         push!(loopjoints, loopjoint)
     end
 
@@ -428,8 +428,8 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         # Parent joint --> Parent body --> Child joint --> Child body
         # Child joint (joint of interest here)
         cjoint = node
-        x_cjoint = cjoint.translational.vertices[1] # stored in p1
-        q_cjoint = cjoint.rotational.qoffset # stored in qoffset
+        x_cjoint = cjoint.translational.vertices[1] # stored in parent_vertex
+        q_cjoint = cjoint.rotational.axis_offset # stored in axis_offset
         # axis_pjoint = #
 
         # Child body (body of interest here)
@@ -456,8 +456,8 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
             qparentjoint = one(UnitQuaternion{T})
         else
             pjoint = get_node(mechanism, get_parent_id(mechanism, pnode.id, loopjoints))
-            # x_pjoint = pjoint.translational.vertices[1] # stored in p1
-            # q_pjoint = pjoint.rotational.qoffset # stored in qoffset
+            # x_pjoint = pjoint.translational.vertices[1] # stored in parent_vertex
+            # q_pjoint = pjoint.rotational.axis_offset # stored in axis_offset
             # # axis_pjoint = #
             xparentjoint = xjointlist[pjoint.id] # in world frame
             qparentjoint = qjointlist[pjoint.id] # in world frame
@@ -481,29 +481,29 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         qjointlist[cjoint.id] = qjoint
 
         # difference to parent body (parentbody)
-        qoffset = qjointlocal * qbodylocal
+        axis_offset = qjointlocal * qbodylocal
 
         # actual joint properties
-        p1 = xjointlocal # in parent's (parentbody) frame
-        p2 = vrotate(-xbodylocal, inv(qbodylocal)) # in body frame (xbodylocal and qbodylocal are both relative to the same (joint) frame -> rotationg by inv(body.q) gives body frame)
-        cjoint.translational.vertices = (p1, p2)
+        parent_vertex = xjointlocal # in parent's (parentbody) frame
+        child_vertex = vrotate(-xbodylocal, inv(qbodylocal)) # in body frame (xbodylocal and qbodylocal are both relative to the same (joint) frame -> rotationg by inv(body.q) gives body frame)
+        cjoint.translational.vertices = (parent_vertex, child_vertex)
 
         V3 = vrotate(cjoint.rotational.V3', qjointlocal) # in parent's (parentbody) frame
         V12 = (svd(skew(V3)).Vt)[1:2,:]
         cjoint.rotational.V3 = V3'
         cjoint.rotational.V12 = V12
-        cjoint.rotational.qoffset = qoffset # in parent's (parentbody) frame
+        cjoint.rotational.axis_offset = axis_offset # in parent's (parentbody) frame
 
         # actual body properties
         set_maximal_configuration!(cnode) # set everything to zero
-        set_maximal_configuration!(pnode, cnode, p1 = p1, p2 = p2, Δq = qoffset)
+        set_maximal_configuration!(pnode, cnode, parent_vertex = parent_vertex, child_vertex = child_vertex, Δq = axis_offset)
         xbody = cnode.state.x2[1]
         qbody = cnode.state.q2[1]
 
         # shape relative
         if !(typeof(shape) <: EmptyShape)
             shape.xoffset = vrotate(xjoint + vrotate(shape.xoffset, qjoint) - xbody, inv(qbody))
-            shape.qoffset = qoffset \ qjointlocal * shape.qoffset
+            shape.axis_offset = axis_offset \ qjointlocal * shape.axis_offset
         end
     end
 
@@ -512,32 +512,32 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         parent_id1 = constraint.parent_id
         parent_id2 = constraint.child_id
         if parent_id1 == 0 # predecessor is origin
-            parentbody1 = mechanism.origin
+            parentpbody = mechanism.origin
 
-            xparentbody1 = SA{T}[0; 0; 0]
-            qparentbody1 = one(UnitQuaternion{T})
+            xparentpbody = SA{T}[0; 0; 0]
+            qparentpbody = one(UnitQuaternion{T})
 
             xparentjoint1 = SA{T}[0; 0; 0]
             qparentjoint1 = one(UnitQuaternion{T})
         else
-            parentbody1 = get_body(mechanism, parent_id1)
+            parentpbody = get_body(mechanism, parent_id1)
 
             grandparent_id1 = get_parent_id(mechanism, parent_id1, loopjoints)
             parentconstraint1 = get_joint_constraint(mechanism, grandparent_id1)
 
-            xparentbody1 = parentbody1.state.x2[1] # in world frame
-            qparentbody1 = parentbody1.state.q2[1] # in world frame
+            xparentpbody = parentpbody.state.x2[1] # in world frame
+            qparentpbody = parentpbody.state.q2[1] # in world frame
 
             xparentjoint1 = xjointlist[parentconstraint1.id] # in world frame
             qparentjoint1 = qjointlist[parentconstraint1.id] # in world frame
         end
-        parentbody2 = get_body(mechanism, parent_id2)
+        parentcbody = get_body(mechanism, parent_id2)
 
         grandparent_id2 = get_parent_id(mechanism, parent_id2, loopjoints)
         parentconstraint2 = get_joint_constraint(mechanism, grandparent_id2)
 
-        xparentbody2 = parentbody2.state.x2[1] # in world frame
-        qparentbody2 = parentbody2.state.q2[1] # in world frame
+        xparentcbody = parentcbody.state.x2[1] # in world frame
+        qparentcbody = parentcbody.state.q2[1] # in world frame
 
         xparentjoint2 = xjointlist[parentconstraint2.id] # in world frame
         qparentjoint2 = qjointlist[parentconstraint2.id] # in world frame
@@ -547,23 +547,23 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         ind2 = ind1+1
 
         # urdf joint's x and q in parent's (parentbody) frame
-        xjointlocal1 = vrotate(xparentjoint1 + vrotate(constraint.translational.vertices[1], qparentjoint1) - xparentbody1, inv(qparentbody1))
-        xjointlocal2 = vrotate(xparentjoint2 + vrotate(constraint.translational.vertices[2], qparentjoint2) - xparentbody2, inv(qparentbody2))
-        qjointlocal1 = qparentbody1 \ qparentjoint1 * constraint.rotational.qoffset
+        xjointlocal1 = vrotate(xparentjoint1 + vrotate(constraint.translational.vertices[1], qparentjoint1) - xparentpbody, inv(qparentpbody))
+        xjointlocal2 = vrotate(xparentjoint2 + vrotate(constraint.translational.vertices[2], qparentjoint2) - xparentcbody, inv(qparentcbody))
+        qjointlocal1 = qparentpbody \ qparentjoint1 * constraint.rotational.axis_offset
 
         # difference to parent body (parentbody)
-        qoffset1 = qjointlocal1 * qparentbody2 #  qparentbody2 = body in for loop above
+        axis_offset1 = qjointlocal1 * qparentcbody #  qparentcbody = body in for loop above
 
         # actual joint properties
-        p1 = xjointlocal1 # in parent's (parentbody1) frame
-        p2 = xjointlocal2 # in parent's (parentbody2) frame
-        constraint.translational.vertices = (p1, p2)
+        parent_vertex = xjointlocal1 # in parent's (parentpbody) frame
+        child_vertex = xjointlocal2 # in parent's (parentcbody) frame
+        constraint.translational.vertices = (parent_vertex, child_vertex)
 
-        V3 = vrotate(constraint.rotational.V3', qjointlocal1) # in parent's (parentbody1) frame
+        V3 = vrotate(constraint.rotational.V3', qjointlocal1) # in parent's (parentpbody) frame
         V12 = (svd(skew(V3)).Vt)[1:2,:]
         constraint.rotational.V3 = V3'
         constraint.rotational.V12 = V12
-        constraint.rotational.qoffset = qoffset1 # in parent's (parentbody1) frame
+        constraint.rotational.axis_offset = axis_offset1 # in parent's (parentpbody) frame
     end
 end
 

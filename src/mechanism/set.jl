@@ -7,15 +7,15 @@ function set_maximal_configuration!(body::Body;
     return body.state.x2[1], body.state.q2[1]
 end
 
-function set_maximal_configuration!(body1::Node, body2::Body;
-        p1::AbstractVector=SA[0;0;0], p2::AbstractVector=SA[0;0;0],
+function set_maximal_configuration!(pbody::Node, cbody::Body;
+        parent_vertex::AbstractVector=SA[0;0;0], child_vertex::AbstractVector=SA[0;0;0],
         Δx::AbstractVector=SA[0;0;0], Δq::UnitQuaternion=one(UnitQuaternion))
 
-    q1 = body1.state.q2[1]
-    q2 = body1.state.q2[1] * Δq
-    x2 = body1.state.x2[1] + vrotate(p1 + Δx, q1) - vrotate(p2, q2)
+    q1 = pbody.state.q2[1]
+    q2 = pbody.state.q2[1] * Δq
+    x2 = pbody.state.x2[1] + vrotate(parent_vertex + Δx, q1) - vrotate(child_vertex, q2)
 
-    return set_maximal_configuration!(body2; x = x2, q = q2)
+    return set_maximal_configuration!(cbody; x = x2, q = q2)
 end
 
 function set_maximal_velocity!(body::Body; 
@@ -27,19 +27,19 @@ function set_maximal_velocity!(body::Body;
     return body.state.v15, body.state.ϕ15
 end
 
-function set_maximal_velocity!(body1::Node, body2::Body;
-        p1::AbstractVector=SA[0;0;0], p2::AbstractVector=SA[0;0;0],
+function set_maximal_velocity!(pbody::Node, cbody::Body;
+        parent_vertex::AbstractVector=SA[0;0;0], child_vertex::AbstractVector=SA[0;0;0],
         Δv::AbstractVector=SA[0;0;0], Δω::AbstractVector=SA[0;0;0])
 
-    x1 = body1.state.x2[1]
-    v1 = body1.state.v15
-    q1 = body1.state.q2[1]
-    ω1 = body1.state.ϕ15 # in local coordinates
+    x1 = pbody.state.x2[1]
+    v1 = pbody.state.v15
+    q1 = pbody.state.q2[1]
+    ω1 = pbody.state.ϕ15 # in local coordinates
 
-    x2 = body2.state.x2[1]
-    # v2 = body2.state.v15
-    q2 = body2.state.q2[1]
-    # ω2 = body2.state.ϕ15 # in local coordinates
+    x2 = cbody.state.x2[1]
+    # v2 = cbody.state.v15
+    q2 = cbody.state.q2[1]
+    # ω2 = cbody.state.ϕ15 # in local coordinates
 
     # Ω(B/W)b = Ra->b * [Ω(B/A)a + Ω(A/W)a]
     ω2 = vrotate(Δω + ω1, inv(q2) * q1)
@@ -47,14 +47,14 @@ function set_maximal_velocity!(body1::Node, body2::Body;
     ω1w = vrotate(ω1, q1)
     ω2w = vrotate(ω2, q2)
     Δvw = vrotate(Δv, q1)
-    cApB_w = (x2 + vrotate(p2, q2)) - x1
-    pBcB_w = - vrotate(p2, q2)
+    cApB_w = (x2 + vrotate(child_vertex, q2)) - x1
+    pBcB_w = - vrotate(child_vertex, q2)
     v2 = copy(v1)
     v2 += skew(ω1w) * cApB_w
     v2 += skew(ω2w) * pBcB_w
     v2 += Δvw
 
-    return set_maximal_velocity!(body2; v = v2, ω = ω2)
+    return set_maximal_velocity!(cbody; v = v2, ω = ω2)
 end
 
 function set_input!(body::Body;

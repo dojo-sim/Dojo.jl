@@ -59,11 +59,11 @@ end
 ################################################################################
 
 # Mechanism
-get_data0(mechanism::Mechanism) = vcat([get_data0.(mechanism.joints);
-	get_data0.(mechanism.bodies); get_data0.(mechanism.contacts)]...)
+get_data(mechanism::Mechanism) = vcat([get_data.(mechanism.joints);
+	get_data.(mechanism.bodies); get_data.(mechanism.contacts)]...)
 
 # Joints
-function get_data0(joint::JointConstraint)
+function get_data(joint::JointConstraint)
 	joints = [joint.translational, joint.rotational]
 	u = vcat(nullspace_mask.(joints) .* getfield.(joints, :input)...)
 	spring = joints[1].spring # assumes we have the same spring and dampers for translational and rotational joint.
@@ -72,7 +72,7 @@ function get_data0(joint::JointConstraint)
 end
 
 # Body
-function get_data0(body::Body)
+function get_data(body::Body)
 	m = body.mass
 	j = flatten_inertia(body.inertia)
 	v15 = body.state.v15
@@ -82,10 +82,10 @@ function get_data0(body::Body)
 end
 
 # Contacts
-get_data0(model::NonlinearContact) = [model.friction_coefficient; model.offset; model.contact_point]
-get_data0(model::LinearContact) = [model.friction_coefficient; model.offset; model.contact_point]
-get_data0(model::ImpactContact) = [model.offset; model.contact_point]
-get_data0(contact::ContactConstraint) = get_data0(contact.model)
+get_data(model::NonlinearContact) = [model.friction_coefficient; model.offset; model.contact_point]
+get_data(model::LinearContact) = [model.friction_coefficient; model.offset; model.contact_point]
+get_data(model::ImpactContact) = [model.offset; model.contact_point]
+get_data(contact::ContactConstraint) = get_data(contact.model)
 
 
 ################################################################################
@@ -93,22 +93,22 @@ get_data0(contact::ContactConstraint) = get_data0(contact.model)
 ################################################################################
 
 # Mechanism
-function set_data0!(mechanism::Mechanism, data::AbstractVector)
+function set_data!(mechanism::Mechanism, data::AbstractVector)
 	# It's important to treat bodies before eqcs
-	# set_data0!(body) will erase state.F2[1] and state.τ2[1]
-	# set_data0!(eqc) using applyinput!, will write in state.F2[1] and state.τ2[1]
+	# set_data!(body) will erase state.F2[1] and state.τ2[1]
+	# set_data!(eqc) using applyinput!, will write in state.F2[1] and state.τ2[1]
 	c = 0
 	for joint in mechanism.joints
 		Nd = data_dim(joint)
-		set_data0!(joint, data[c .+ (1:Nd)]); c += Nd
+		set_data!(joint, data[c .+ (1:Nd)]); c += Nd
 	end
 	for body in mechanism.bodies
 		Nd = data_dim(body, attjac=false)
-		set_data0!(body, data[c .+ (1:Nd)], mechanism.timestep); c += Nd
+		set_data!(body, data[c .+ (1:Nd)], mechanism.timestep); c += Nd
 	end
 	for contact in mechanism.contacts
 		Nd = data_dim(contact)
-		set_data0!(contact, data[c .+ (1:Nd)]); c += Nd
+		set_data!(contact, data[c .+ (1:Nd)]); c += Nd
 	end
 	for joint in mechanism.joints
 		input_impulse!(joint, mechanism, false)
@@ -117,7 +117,7 @@ function set_data0!(mechanism::Mechanism, data::AbstractVector)
 end
 
 # Joints
-function set_data0!(joint::JointConstraint, data::AbstractVector)
+function set_data!(joint::JointConstraint, data::AbstractVector)
 	nu = control_dimension(joint)
 	u = data[SUnitRange(1,nu)]
 	spring = data[nu+1]
@@ -132,7 +132,7 @@ function set_data0!(joint::JointConstraint, data::AbstractVector)
 end
 
 # Body
-function set_data0!(body::Body, data::AbstractVector, timestep)
+function set_data!(body::Body, data::AbstractVector, timestep)
 	# [m,flat(J),x2,v15,q2,ϕ15]
 	m = data[1]
 	J = lift_inertia(data[SUnitRange(2,7)])
@@ -157,29 +157,29 @@ function set_data0!(body::Body, data::AbstractVector, timestep)
 end
 
 # Contact
-function set_data0!(model::NonlinearContact, data::AbstractVector)
+function set_data!(model::NonlinearContact, data::AbstractVector)
 	model.friction_coefficient = data[1]
     model.offset = data[SVector{3,Int}(2:4)]
     model.contact_point = data[SVector{3,Int}(5:7)]
     return nothing
 end
 
-function set_data0!(model::LinearContact, data::AbstractVector)
+function set_data!(model::LinearContact, data::AbstractVector)
 	model.friction_coefficient = data[1]
     model.offset = data[SVector{3,Int}(2:4)]
     model.contact_point = data[SVector{3,Int}(5:7)]
     return nothing
 end
 
-function set_data0!(model::ImpactContact, data::AbstractVector)
+function set_data!(model::ImpactContact, data::AbstractVector)
     model.offset = data[SVector{3,Int}(1:3)]
     model.contact_point = data[SVector{3,Int}(4:6)]
     return nothing
 end
 
-function set_data0!(contact::ContactConstraint, data::AbstractVector)
+function set_data!(contact::ContactConstraint, data::AbstractVector)
 	model = contact.model
 	N = data_dim(model)
-	set_data0!(model, data[1:N])
+	set_data!(model, data[1:N])
     return nothing
 end

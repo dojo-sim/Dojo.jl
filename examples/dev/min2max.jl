@@ -85,22 +85,22 @@ visualize(mechanism, storage, vis=vis)
 joint = mechanism.joints[1]
 tra = joint.translational
 timestep = mechanism.timestep
-bodya = mechanism.origin
-bodyb = mechanism.bodies[1]
+pbody = mechanism.origin
+cbody = mechanism.bodies[1]
 
-xa = bodya.state.x2[1]
-qa = bodya.state.q2[1]
-va = bodya.state.v15
-ϕa = bodya.state.ϕ15
-# va = bodya.state.vsol[2]
-# ϕa = bodya.state.ϕsol[2]
+xa = pbody.state.x2[1]
+qa = pbody.state.q2[1]
+va = pbody.state.v15
+ϕa = pbody.state.ϕ15
+# va = pbody.state.vsol[2]
+# ϕa = pbody.state.ϕsol[2]
 
-xb = bodyb.state.x2[1]
-qb = bodyb.state.q2[1]
-vb = bodyb.state.v15
-ϕb = bodyb.state.ϕ15
-# vb = bodyb.state.vsol[2]
-# ϕb = bodyb.state.ϕsol[2]
+xb = cbody.state.x2[1]
+qb = cbody.state.q2[1]
+vb = cbody.state.v15
+ϕb = cbody.state.ϕ15
+# vb = cbody.state.vsol[2]
+# ϕb = cbody.state.ϕsol[2]
 
 Δx = minimal_coordinates(joint.translational, xa, qa, xb, qb)
 Δθ = minimal_coordinates(joint.rotational, xa, qa, xb, qb)

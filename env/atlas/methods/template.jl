@@ -111,8 +111,8 @@ function atlas_trajectory(mechanism::Mechanism{T}; timestep = 0.05, β=0.5,
 	return X
 end
 
-function interpolate(p1, p2, N::Int)
-	return [p1 .+ α*(p2 - p1) for α in range(0, stop=1.0, length=N)]
+function interpolate(parent_vertex, p2, N::Int)
+	return [parent_vertex .+ α*(p2 - parent_vertex) for α in range(0, stop=1.0, length=N)]
 end
 
 function atlas_jump(mechanism::Mechanism{T}; timestep = 0.05, αtorso=0.0, z=0.95, Δx=0.0, x = 0.0,

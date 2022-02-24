@@ -7,9 +7,9 @@ function get_box(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_coeffic
     mode=:box)  where T
     # Parameters
     origin = Origin{T}()
-    body1 = Box(side, side, side, 1., color=color)
-    joint0to1 = JointConstraint(Floating(origin, body1))
-    bodies = [body1]
+    pbody = Box(side, side, side, 1., color=color)
+    joint0to1 = JointConstraint(Floating(origin, pbody))
+    bodies = [pbody]
     joints = [joint0to1]
 
     if contact
@@ -35,7 +35,7 @@ function get_box(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_coeffic
         offset = [[0,0,radius] for i = 1:n]
         friction_coefficient = friction_coefficient * ones(n)
 
-        contacts = contact_constraint(body1, normal, friction_coefficient=friction_coefficient, contact_points=corners, offset=offset, contact_type=contact_type)
+        contacts = contact_constraint(pbody, normal, friction_coefficient=friction_coefficient, contact_points=corners, offset=offset, contact_type=contact_type)
         mech = Mechanism(origin, bodies, joints, contacts, gravity=gravity, timestep=timestep)
     else
         mech = Mechanism(origin, bodies, joints, gravity=gravity, timestep=timestep)

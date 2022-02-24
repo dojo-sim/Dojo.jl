@@ -5,7 +5,7 @@ function get_tippetop(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_co
     α = 0.2
     bodies = [Sphere(radius, mass, name=:sphere1, color=cyan), Sphere(radius*α, mass*α, name=:sphere2, color=cyan)]
     joints = [JointConstraint(Floating(origin, bodies[1]), name = :floating_joint),
-        JointConstraint(Fixed(bodies[1], bodies[2], p1=[0,0,radius], p2=zeros(3)), name = :fixed_joint),]
+        JointConstraint(Fixed(bodies[1], bodies[2], parent_vertex=[0,0,radius], child_vertex=zeros(3)), name = :fixed_joint),]
     mechanism = Mechanism(origin, bodies, joints, timestep=timestep, gravity=gravity)
 
     # modify inertias
@@ -32,15 +32,15 @@ function initialize_tippetop!(mechanism::Mechanism; x::AbstractVector{T}=zeros(3
     joint2 = get_joint_constraint(mechanism, :fixed_joint)
     radius = joint2.constraints[1].vertices[1][3]
     origin = mechanism.origin
-    body1 = get_body(mech, :sphere1)
-    body2 = get_body(mech, :sphere2)
+    pbody = get_body(mech, :sphere1)
+    cbody = get_body(mech, :sphere2)
 
     zero_velocity!(mechanism)
     # set_minimal_coordinates!(mechanism, joint, [x; rotation_vector(q)])
     # set_minimal_velocities!(mechanism, joint, [v; ω])
-    set_maximal_configuration!(origin, body1; p1 = [0;0;radius], p2 = [0;0;0], Δx = x, Δq = q)
-    set_maximal_configuration!(body1,  body2; p1 = [0;0;radius], p2 = [0;0;0], Δx = [0;0;0], Δq = one(UnitQuaternion))
-    set_maximal_velocity!(origin, body1; p1 = [0;0;radius], p2 = [0;0;0], Δv = v, Δω = ω)
-    set_maximal_velocity!(body1,  body2; p1 = [0;0;radius], p2 = [0;0;0], Δv = [0;0;0], Δω = [0;0;0])
+    set_maximal_configuration!(origin, pbody; parent_vertex = [0;0;radius], child_vertex = [0;0;0], Δx = x, Δq = q)
+    set_maximal_configuration!(pbody,  cbody; parent_vertex = [0;0;radius], child_vertex = [0;0;0], Δx = [0;0;0], Δq = one(UnitQuaternion))
+    set_maximal_velocity!(origin, pbody; parent_vertex = [0;0;radius], child_vertex = [0;0;0], Δv = v, Δω = ω)
+    set_maximal_velocity!(pbody,  cbody; parent_vertex = [0;0;radius], child_vertex = [0;0;0], Δv = [0;0;0], Δω = [0;0;0])
     return nothing
 end

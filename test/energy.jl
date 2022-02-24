@@ -126,11 +126,11 @@ z0 = 0.5
 initialize!(mech, :slider, z1=z0)
 
 # Analytical
-body1 = collect(mech.bodies)[1]
+pbody = collect(mech.bodies)[1]
 zmax = z0
-vmax = z0 * sqrt(spring0 / body1.mass)
+vmax = z0 * sqrt(spring0 / pbody.mass)
 pe_max = 0.5 * spring0 * zmax^2
-ke_max = 0.5 * body1.mass * vmax^2
+ke_max = 0.5 * pbody.mass * vmax^2
 
 storage = simulate!(mech, 5.0,  nocontrol!, record=true, verbose=false,
     opts=SolverOptions(rtol=ϵ0, btol=ϵ0))

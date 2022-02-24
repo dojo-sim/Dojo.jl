@@ -1,7 +1,7 @@
 function transform(x, q, shape)
     scale_transform = MeshCat.LinearMap(diagm(shape.scale))
     x_transform = MeshCat.Translation(x + vrotate(shape.xoffset, q))
-    q_transform = MeshCat.LinearMap(q * shape.qoffset)
+    q_transform = MeshCat.LinearMap(q * shape.axis_offset)
     return MeshCat.compose(x_transform, q_transform, scale_transform)
 end
 
@@ -15,7 +15,7 @@ function set_node!(x, q, id, shape, shapevisualizer, showshape) where {T,N}
         # If this changes, do similarily to origin
         setprop!(shapevisualizer, "scale", MeshCat.js_scaling(shape.scale))
         setprop!(shapevisualizer, "position", MeshCat.js_position(x + vrotate(shape.xoffset, q)))
-        setprop!(shapevisualizer, "quaternion", MeshCat.js_quaternion(q * shape.qoffset))
+        setprop!(shapevisualizer, "quaternion", MeshCat.js_quaternion(q * shape.axis_offset))
     end
     return
 end
@@ -37,7 +37,7 @@ function MeshCat.setobject!(subvisshape, visshape, shapes::Shapes; transparent=f
         setobject!(v, visshape[i], s, transparent=transparent)
         scale_transform = MeshCat.LinearMap(diagm(s.scale))
         x_transform = MeshCat.Translation(s.xoffset)
-        q_transform = MeshCat.LinearMap(s.qoffset)
+        q_transform = MeshCat.LinearMap(s.axis_offset)
         t = MeshCat.compose(x_transform, q_transform, scale_transform)
         settransform!(v, t)
     end
@@ -93,7 +93,7 @@ function build_robot(mechanism::Mechanism; vis::Visualizer=Visualizer(),
                     (radius == 0.0) && (radius = 0.01)
                     contact_shape = Sphere(radius,
                         xoffset=(contact.model.contact_point),
-                        qoffset=one(UnitQuaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
+                        axis_offset=one(UnitQuaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
                     visshape = convert_shape(contact_shape)
                     subvisshape = nothing
                     if visshape !== nothing
@@ -142,7 +142,7 @@ function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T};
                     (radius == 0.0) && (radius = 0.01)
                     contact_shape = Sphere(radius,
                         xoffset=(contact.model.contact_point),
-                        qoffset=one(UnitQuaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
+                        axis_offset=one(UnitQuaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
                     visshape = convert_shape(contact_shape)
                     subvisshape = nothing
                     showshape = false
@@ -202,7 +202,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
                     (radius == 0.0) && (radius = 0.01)
                     contact_shape = Sphere(radius,
                         xoffset=(contact.model.contact_point),
-                        qoffset=one(UnitQuaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
+                        axis_offset=one(UnitQuaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
                     visshape = convert_shape(contact_shape)
                     subvisshape = nothing
                     showshape = false
@@ -256,7 +256,7 @@ end
 #             atframe(animation, i) do
 #                 setprop!(shapevisualizer, "scale", MeshCat.js_scaling(shape.scale))
 #                 setprop!(shapevisualizer, "position", MeshCat.js_position(x + vrotate(shape.xoffset, q)))
-#                 setprop!(shapevisualizer, "quaternion", MeshCat.js_quaternion(q * shape.qoffset))
+#                 setprop!(shapevisualizer, "quaternion", MeshCat.js_quaternion(q * shape.axis_offset))
 #             end
 #         end
 #     end
@@ -279,7 +279,7 @@ end
 #         if visshape !== nothing
 #             setprop!(subvisshape, "scale", MeshCat.js_scaling(shape.scale))
 #             setprop!(subvisshape, "position", MeshCat.js_position(x + vrotate(shape.xoffset, q)))
-#             setprop!(subvisshape, "quaternion", MeshCat.js_quaternion(q * shape.qoffset))
+#             setprop!(subvisshape, "quaternion", MeshCat.js_quaternion(q * shape.axis_offset))
 #         end
 #         i += 1
 #     end
@@ -337,7 +337,7 @@ end
 #                     (radius == 0.0) && (radius = 0.01)
 #                     contact_shape = Sphere(radius,
 #                         xoffset=(contact.model.contact_point),
-#                         qoffset=one(UnitQuaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
+#                         axis_offset=one(UnitQuaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
 #                     visshape = convert_shape(contact_shape)
 #                     subvisshape = nothing
 #                     subvisframe = nothing

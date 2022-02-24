@@ -59,35 +59,35 @@ function initialize_state!(mechanism::Mechanism)
     for body in mechanism.bodies initialize_state!(body, mechanism.timestep) end
 end
 
-function off_diagonal_jacobians(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, body1::Body, body2::Body) where {T,Nn,Ne,Nb,Ni}
+function off_diagonal_jacobians(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, pbody::Body, cbody::Body) where {T,Nn,Ne,Nb,Ni}
     timestep = mechanism.timestep
 
     dimpulse_map_parentb = szeros(6, 6)
     dimpulse_map_childa = szeros(6, 6)
 
-    for connectionid in connections(mechanism.system, body1.id)
+    for connectionid in connections(mechanism.system, pbody.id)
         !(connectionid <= Ne) && continue # body
         joint = get_node(mechanism, connectionid)
         off = 0
-        if body1.id == joint.parent_id
+        if pbody.id == joint.parent_id
             for element in (joint.translational, joint.rotational)
                 Nj = length(element)
-                if body2.id == joint.child_id
-                    joint.spring && (dimpulse_map_parentb -= spring_jacobian_velocity(:parent, :child, element, body1, body2, timestep)) #should be useless
-                    joint.damper && (dimpulse_map_parentb -= damper_jacobian_velocity(:parent, :child, element, body1, body2, timestep))
-                    joint.spring && (dimpulse_map_childa -= spring_jacobian_velocity(:child, :parent, element, body1, body2, timestep)) #should be useless
-                    joint.damper && (dimpulse_map_childa -= damper_jacobian_velocity(:child, :parent, element, body1, body2, timestep))
+                if cbody.id == joint.child_id
+                    joint.spring && (dimpulse_map_parentb -= spring_jacobian_velocity(:parent, :child, element, pbody, cbody, timestep)) #should be useless
+                    joint.damper && (dimpulse_map_parentb -= damper_jacobian_velocity(:parent, :child, element, pbody, cbody, timestep))
+                    joint.spring && (dimpulse_map_childa -= spring_jacobian_velocity(:child, :parent, element, pbody, cbody, timestep)) #should be useless
+                    joint.damper && (dimpulse_map_childa -= damper_jacobian_velocity(:child, :parent, element, pbody, cbody, timestep))
                 end
                 off += Nj
             end
-        elseif body2.id == joint.parent_id
+        elseif cbody.id == joint.parent_id
             for element in (joint.translational, joint.rotational)
                 Nj = length(element)
-                if body1.id == joint.child_id
-                    # joint.spring && (dimpulse_map_parentb -= spring_parent_jacobian_velocity_child(element, body2, body1, timestep)) #should be useless
-                    joint.damper && (dimpulse_map_parentb -= damper_jacobian_velocity(:parent, :child, element, body2, body1, timestep))
-                    # joint.spring && (dimpulse_map_childa -= spring_child_jacobian_velocity_parent(element, body2, body1, timestep)) #should be useless
-                    joint.damper && (dimpulse_map_childa -= damper_jacobian_velocity(:child, :parent, element, body2, body1, timestep))
+                if pbody.id == joint.child_id
+                    # joint.spring && (dimpulse_map_parentb -= spring_parent_jacobian_velocity_child(element, cbody, pbody, timestep)) #should be useless
+                    joint.damper && (dimpulse_map_parentb -= damper_jacobian_velocity(:parent, :child, element, cbody, pbody, timestep))
+                    # joint.spring && (dimpulse_map_childa -= spring_child_jacobian_velocity_parent(element, cbody, pbody, timestep)) #should be useless
+                    joint.damper && (dimpulse_map_childa -= damper_jacobian_velocity(:child, :parent, element, cbody, pbody, timestep))
                 end
                 off += Nj
             end

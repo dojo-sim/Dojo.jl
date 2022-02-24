@@ -28,22 +28,22 @@ jointtypes = [
 	timestep = mech.timestep
 	joint1 = mech.joints[1]
 	joint2 = mech.joints[2]
-	body1 = mech.bodies[1]
-	body2 = mech.bodies[2]
+	pbody = mech.bodies[1]
+	cbody = mech.bodies[2]
 	tra2 = joint2.translational
 	rot2 = joint2.rotational
 
 	x = srand(1)
 	Δx = Dojo.zerodimstaticadjoint(Dojo.nullspace_mask(tra2)) * x
 	Δq = UnitQuaternion(rand(4)...)
-	Dojo.set_maximal_configuration!(body1, body2; p1 = tra2.vertices[1], p2 = tra2.vertices[2], Δx = Δx, Δq = Δq)
-	@test norm(Dojo.minimal_coordinates(tra2, body1, body2) - x[1], Inf) < 1e-10
+	Dojo.set_maximal_configuration!(pbody, cbody; parent_vertex = tra2.vertices[1], child_vertex = tra2.vertices[2], Δx = Δx, Δq = Δq)
+	@test norm(Dojo.minimal_coordinates(tra2, pbody, cbody) - x[1], Inf) < 1e-10
 
 	v = srand(1)
 	Δv = Dojo.zerodimstaticadjoint(Dojo.nullspace_mask(tra2)) * v
 	Δω = rand(3)
-	Dojo.set_maximal_velocity!(body1, body2; p1 = tra2.vertices[1], p2 = tra2.vertices[2], Δv = Δv, Δω = Δω)
-	@test norm(Dojo.minimal_velocities(tra2, body1, body2, timestep) - v[1], Inf) < 1e-10
+	Dojo.set_maximal_velocity!(pbody, cbody; parent_vertex = tra2.vertices[1], child_vertex = tra2.vertices[2], Δv = Δv, Δω = Δω)
+	@test norm(Dojo.minimal_velocities(tra2, pbody, cbody, timestep) - v[1], Inf) < 1e-10
 end
 
 ################################################################################
@@ -199,7 +199,7 @@ end
 	    mech = Dojo.get_snake(Nb=10, jointtype=jointtype)
 		timestep = mech.timestep
 		for joint in mech.joints
-		    joint.rotational.qoffset = UnitQuaternion(rand(4)...)
+		    joint.rotational.axis_offset = UnitQuaternion(rand(4)...)
 		end
 	    joint0 = mech.joints[1]
 	    tra0 = joint0.translational

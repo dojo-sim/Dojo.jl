@@ -4,18 +4,18 @@
         # Parameters
         joint_axis = [1.0; 0; 0]
         width, depth = 0.1, 0.1
-        p2 = [0; 0; l/2] # joint connection point
+        child_vertex = [0; 0; l/2] # joint connection point
 
         # Links
         origin = Origin{T}()
-        body1 = Box(width, depth, l, m)
+        pbody = Box(width, depth, l, m)
 
         # Constraints
-        joint_between_origin_and_body1 = JointConstraint(Revolute(origin, body1,
-            joint_axis; p2=p2, spring=spring, damper=damper, rot_spring_offset = spring_offset,
+        joint_between_origin_and_pbody = JointConstraint(Revolute(origin, pbody,
+            joint_axis; child_vertex=child_vertex, spring=spring, damper=damper, rot_spring_offset = spring_offset,
             rot_joint_limits = [SVector{1}([0.25 * π]), SVector{1}([π])]))
-        bodies = [body1]
-        joints = [joint_between_origin_and_body1]
+        bodies = [pbody]
+        joints = [joint_between_origin_and_pbody]
 
         mech = Mechanism(origin, bodies, joints, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
         return mech

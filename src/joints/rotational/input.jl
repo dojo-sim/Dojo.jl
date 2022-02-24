@@ -3,15 +3,15 @@
 ################################################################################
 
 function input_impulse!(joint::Rotational{T}, 
-    bodya::Node, bodyb::Node, 
+    pbody::Node, cbody::Node, 
     timestep::T, clear::Bool) where T
 
     τ = joint.input
-    xa, qa = current_configuration(bodya.state)
-    xb, qb = current_configuration(bodyb.state)
+    xa, qa = current_configuration(pbody.state)
+    xb, qb = current_configuration(cbody.state)
 
-    bodya.state.τ2[end] += -τ
-    bodyb.state.τ2[end] += vrotate(vrotate(τ, qa),inv(qb))
+    pbody.state.τ2[end] += -τ
+    cbody.state.τ2[end] += vrotate(vrotate(τ, qa),inv(qb))
     clear && (joint.input = szeros(T,3))
     return
 end

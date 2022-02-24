@@ -22,8 +22,8 @@ jointtypes = [
 function test_get_set_data(mechanism::Mechanism)
     Nd = Dojo.data_dim(mechanism, attjac=false)
     data0 = rand(Nd)
-    Dojo.set_data0!(mechanism, data0)
-    data1 = Dojo.get_data0(mechanism)
+    Dojo.set_data!(mechanism, data0)
+    data1 = Dojo.get_data(mechanism)
     @test norm(data0 - data1) < 1e-10
 end
 
@@ -74,7 +74,7 @@ function test_data_system(model::Symbol; ϵ::T=1.0e-6, tsim::T=0.1, ctrl::Any=(m
 
 	# Finite Difference
 	Nd = Dojo.data_dim(mechanism, attjac=false)
-	data0 = Dojo.get_data0(mechanism)# + 0.05*rand(Nd)
+	data0 = Dojo.get_data(mechanism)# + 0.05*rand(Nd)
 	sol0 = Dojo.get_solution0(mechanism)
 	datajac0 = Dojo.finitediff_data_jacobian(mechanism, data0, sol0)
 	attjac0 = Dojo.data_attitude_jacobian(mechanism)

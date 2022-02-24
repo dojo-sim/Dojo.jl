@@ -6,9 +6,9 @@ function get_box2d(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_coeff
     axis = [1,0,0.]
 
     origin = Origin{T}()
-    body1 = Box(side, side, side, 1., color = RGBA(1., 1., 0.))
-    joint1 = JointConstraint(PlanarAxis(origin, body1, axis))
-    bodies = [body1]
+    pbody = Box(side, side, side, 1., color = RGBA(1., 1., 0.))
+    joint1 = JointConstraint(PlanarAxis(origin, pbody, axis))
+    bodies = [pbody]
     joints = [joint1]
 
     if contact
@@ -30,7 +30,7 @@ function get_box2d(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_coeff
         offset = [[0,0,radius] for i = 1:n]
         friction_coefficient = friction_coefficient * ones(n)
 
-        contacts = contact_constraint(body1, normal, friction_coefficient=friction_coefficient, contact_points=corners, offset=offset, contact_type=contact_type)
+        contacts = contact_constraint(pbody, normal, friction_coefficient=friction_coefficient, contact_points=corners, offset=offset, contact_type=contact_type)
         mech = Mechanism(origin, bodies, joints, contacts, gravity=gravity, timestep=timestep)
     else
         mech = Mechanism(origin, bodies, joints, gravity=gravity, timestep=timestep)

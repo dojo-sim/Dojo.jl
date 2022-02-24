@@ -66,22 +66,22 @@ visualize(mechanism, storage, vis=vis)
 
 joint = mechanism.joints[1]
 tra = joint.translational
-bodya = mechanism.origin
-bodyb = mechanism.bodies[1]
+pbody = mechanism.origin
+cbody = mechanism.bodies[1]
 
-xa = bodya.state.x2[1]
-qa = bodya.state.q2[1]
-va = bodya.state.v15
-ϕa = bodya.state.ϕ15
-# va = bodya.state.vsol[2]
-# ϕa = bodya.state.ϕsol[2]
+xa = pbody.state.x2[1]
+qa = pbody.state.q2[1]
+va = pbody.state.v15
+ϕa = pbody.state.ϕ15
+# va = pbody.state.vsol[2]
+# ϕa = pbody.state.ϕsol[2]
 
-xb = bodyb.state.x2[1]
-qb = bodyb.state.q2[1]
-vb = bodyb.state.v15
-ϕb = bodyb.state.ϕ15
-# vb = bodyb.state.vsol[2]
-# ϕb = bodyb.state.ϕsol[2]
+xb = cbody.state.x2[1]
+qb = cbody.state.q2[1]
+vb = cbody.state.v15
+ϕb = cbody.state.ϕ15
+# vb = cbody.state.vsol[2]
+# ϕb = cbody.state.ϕsol[2]
 
 xb = storage.x[1][4]
 qb = storage.q[1][4]
@@ -154,12 +154,12 @@ function minimal_velocities(joint::JointConstraint, xa::AbstractVector,
 	tra = joint.translational
 	pa = tra.vertices[1]
     pb = tra.vertices[2]
-	qoffset = rot.qoffset
+	axis_offset = rot.axis_offset
 	Arot = nullspace_mask(rot)
 	Atra = nullspace_mask(tra)
 
 	# Coordinates
-	q = inv(qoffset) * inv(qa) * qb
+	q = inv(axis_offset) * inv(qa) * qb
     Δθ = Arot * rotation_vector(q)
     Δx = Atra * displacement(tra, xa, qa, xb, qb)
 
@@ -168,7 +168,7 @@ function minimal_velocities(joint::JointConstraint, xa::AbstractVector,
 	xb10 = next_position(xb, -vb, timestep)
 	qb10 = next_orientation(qb, -ϕb, timestep)
 	# Previous step coordinates
-	q10 = inv(qoffset) * inv(qa10) * qb10
+	q10 = inv(axis_offset) * inv(qa10) * qb10
     Δθ10 = Arot * rotation_vector(q10)
     Δx10 = Atra * displacement(tra, xa10, qa10, xb10, qb10)
 
@@ -189,13 +189,13 @@ function set_minimal_velocities(joint::JointConstraint, xa::AbstractVector,
 	tra = joint.translational
 	pa = tra.vertices[1]
     pb = tra.vertices[2]
-	qoffset = rot.qoffset
+	axis_offset = rot.axis_offset
 	Arotᵀ = zerodimstaticadjoint(nullspace_mask(rot))
 	Atraᵀ = zerodimstaticadjoint(nullspace_mask(tra))
 
 	# Δθ is expressed in along the joint's nullspace axes, in pnode's offset frame
     Δq = axis_angle_to_quaternion(Arotᵀ*Δθ)
-    qb = qa * qoffset * Δq
+    qb = qa * axis_offset * Δq
     # Δx is expressed in along the joint's nullspace axes, in pnode's frame
     xb = xa + vrotate(pa + Atraᵀ*Δx, qa) - vrotate(pb, qb)
 
@@ -208,7 +208,7 @@ function set_minimal_velocities(joint::JointConstraint, xa::AbstractVector,
 
 	# Δθ is expressed in along the joint's nullspace axes, in pnode's offset frame
     Δq10 = axis_angle_to_quaternion(Arotᵀ*Δθ10)
-    qb10 = qa10 * qoffset * Δq10
+    qb10 = qa10 * axis_offset * Δq10
     # Δx is expressed in along the joint's nullspace axes, in pnode's frame
     xb10 = xa10 + vrotate(pa + Atraᵀ*Δx10, qa10) - vrotate(pb, qb10)
 
@@ -237,22 +237,22 @@ visualize(mechanism, storage, vis=vis)
 joint = mechanism.joints[1]
 tra = joint.translational
 timestep = mechanism.timestep
-bodya = mechanism.origin
-bodyb = mechanism.bodies[1]
+pbody = mechanism.origin
+cbody = mechanism.bodies[1]
 
-xa = bodya.state.x2[1]
-qa = bodya.state.q2[1]
-va = bodya.state.v15
-ϕa = bodya.state.ϕ15
-# va = bodya.state.vsol[2]
-# ϕa = bodya.state.ϕsol[2]
+xa = pbody.state.x2[1]
+qa = pbody.state.q2[1]
+va = pbody.state.v15
+ϕa = pbody.state.ϕ15
+# va = pbody.state.vsol[2]
+# ϕa = pbody.state.ϕsol[2]
 
-xb = bodyb.state.x2[1]
-qb = bodyb.state.q2[1]
-vb = bodyb.state.v15
-ϕb = bodyb.state.ϕ15
-# vb = bodyb.state.vsol[2]
-# ϕb = bodyb.state.ϕsol[2]
+xb = cbody.state.x2[1]
+qb = cbody.state.q2[1]
+vb = cbody.state.v15
+ϕb = cbody.state.ϕ15
+# vb = cbody.state.vsol[2]
+# ϕb = cbody.state.ϕsol[2]
 
 # xb = storage.x[1][4]
 # qb = storage.q[1][4]

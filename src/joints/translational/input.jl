@@ -3,11 +3,11 @@
 ################################################################################
 
 function input_impulse!(joint::Translational{T}, 
-    bodya::Node, bodyb::Node,
+    pbody::Node, cbody::Node,
     timestep::T, clear::Bool) where T
 
-    xa, qa = current_configuration(bodya.state)
-    xb, qb = current_configuration(bodyb.state)
+    xa, qa = current_configuration(pbody.state)
+    xb, qb = current_configuration(cbody.state)
   
     input = joint.input
     Ta = impulse_transform(:parent, joint, xa, qa, xb, qb)
@@ -17,10 +17,10 @@ function input_impulse!(joint::Translational{T},
     Fbw = Tb[1:3,1:3] * input
     τbb = Tb[4:6,1:3] * input
 
-    bodya.state.F2[end] += Faw
-    bodya.state.τ2[end] += τaa/2
-    bodyb.state.F2[end] += Fbw
-    bodyb.state.τ2[end] += τbb/2
+    pbody.state.F2[end] += Faw
+    pbody.state.τ2[end] += τaa/2
+    cbody.state.F2[end] += Fbw
+    cbody.state.τ2[end] += τbb/2
     clear && (joint.input = szeros(T,3))
     return
 end

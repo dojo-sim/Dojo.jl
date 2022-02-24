@@ -24,10 +24,10 @@ initialize!(mech, :atlas, tran = [0,0,1.1], rot = [0.1,0.05,0])
 
 
 orig = Origin()
-body1 = Body(1.0, Diagonal([1,2,3.]))
-JointConstraint(Revolute(orig, body1, [0,0,1.0],
+pbody = Body(1.0, Diagonal([1,2,3.]))
+JointConstraint(Revolute(orig, pbody, [0,0,1.0],
     rot_joint_limits = [-sones(0), sones(0)]))
-eqc = JointConstraint(Revolute(orig, body1, [0,0,1.0],
+eqc = JointConstraint(Revolute(orig, pbody, [0,0,1.0],
     rot_joint_limits = [-sones(1), sones(1)]))
 
 joint_impulse_index(eqc, 1)

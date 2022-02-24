@@ -25,12 +25,12 @@ function damper_force(relative::Symbol, joint::Translational{T},
     return inputa
 end
 
-damper_impulses(relative::Symbol, joint::Translational, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) =
+damper_impulses(relative::Symbol, joint::Translational, pbody::Node, cbody::Node, timestep; unitary::Bool=false) =
     timestep * damper_force(relative, joint, 
-        current_configuration_velocity(bodya.state)...,
-        current_configuration_velocity(bodyb.state)..., 
+        current_configuration_velocity(pbody.state)...,
+        current_configuration_velocity(cbody.state)..., 
         timestep; unitary=unitary)
-damper_impulses(relative::Symbol, joint::Translational{T,3}, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) where T = szeros(T, 6)
+damper_impulses(relative::Symbol, joint::Translational{T,3}, pbody::Node, cbody::Node, timestep; unitary::Bool=false) where T = szeros(T, 6)
 
 ################################################################################
 # Damper Jacobian
@@ -79,13 +79,13 @@ end
 
 function damper_jacobian_configuration(relative::Symbol, jacobian::Symbol, 
     joint::Translational, 
-    body1::Node, body2::Node, 
+    pbody::Node, cbody::Node, 
     timestep::T; attjac::Bool = true) where T
 
     return damper_jacobian_configuration(relative, jacobian, 
         joint, 
-        current_configuration_velocity(body1.state)..., 
-        current_configuration_velocity(body2.state)...,
+        current_configuration_velocity(pbody.state)..., 
+        current_configuration_velocity(cbody.state)...,
         timestep; unitary=false)
 end
 
@@ -103,15 +103,15 @@ end
 
 function damper_jacobian_velocity(relative::Symbol, jacobian::Symbol, 
     joint::Translational, 
-    body1::Node, body2::Node, 
+    pbody::Node, cbody::Node, 
     timestep::T, attjac::Bool=true) where T
 
     return damper_jacobian_velocity(relative, jacobian, 
         joint, 
-        current_configuration_velocity(body1.state)...,
-        current_configuration_velocity(body2.state)..., 
+        current_configuration_velocity(pbody.state)...,
+        current_configuration_velocity(cbody.state)..., 
         timestep; unitary=false)
 end
 
-damper_jacobian_configuration(relative::Symbol, jacobian::Symbol, joint::Translational{T,3}, body1::Node, body2::Node, timestep::T; attjac::Bool = true, unitary::Bool=false) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
-damper_jacobian_velocity(relative::Symbol, jacobian::Symbol, joint::Translational{T,3}, body1::Node, body2::Node, timestep::T, unitary::Bool=false) where T = szeros(T, 6, 6)
+damper_jacobian_configuration(relative::Symbol, jacobian::Symbol, joint::Translational{T,3}, pbody::Node, cbody::Node, timestep::T; attjac::Bool = true, unitary::Bool=false) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
+damper_jacobian_velocity(relative::Symbol, jacobian::Symbol, joint::Translational{T,3}, pbody::Node, cbody::Node, timestep::T, unitary::Bool=false) where T = szeros(T, 6, 6)

@@ -6,7 +6,7 @@ function displacement(joint::Rotational,
         xb::AbstractVector, qb::UnitQuaternion;
         vmat=true)
 
-    q = inv(joint.qoffset) * inv(qa) * qb
+    q = inv(joint.axis_offset) * inv(qa) * qb
     vmat ? (return Vmat(q)) : (return q)
 end
 
@@ -16,10 +16,10 @@ function displacement_jacobian_configuration(relative::Symbol, joint::Rotational
         attjac::Bool=true, vmat=true) where T
     X = szeros(T, 3, 3)
     if relative == :parent
-		Q = Lᵀmat(joint.qoffset) * Rmat(qb) * Tmat()
+		Q = Lᵀmat(joint.axis_offset) * Rmat(qb) * Tmat()
 		attjac && (Q *= LVᵀmat(qa))
     elseif relative == :child
-		Q = Lᵀmat(joint.qoffset) * Lᵀmat(qa)
+		Q = Lᵀmat(joint.axis_offset) * Lᵀmat(qa)
 		attjac && (Q *= LVᵀmat(qb))
 	end
 	vmat && (Q = Vmat() * Q)
@@ -57,11 +57,11 @@ function set_minimal_coordinates!(joint::Rotational,
 	timestep;
 	Δθ::AbstractVector=szeros(control_dimension(joint)))
 	
-	qoffset = joint.qoffset
+	axis_offset = joint.axis_offset
 	qa = pnode.state.q2[1]
 	Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
 	Δq = axis_angle_to_quaternion(Aᵀ * Δθ)
-	qb = qa * qoffset * Δq
+	qb = qa * axis_offset * Δq
 	set_maximal_configuration!(cnode; x=cnode.state.x2[1], q = qb)
 	set_previous_configuration!(cnode, timestep)
 	return nothing
@@ -75,7 +75,7 @@ function minimal_velocities(joint::Rotational,
 		xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
 		timestep)
 
-	qoffset = joint.qoffset
+	axis_offset = joint.axis_offset
 	A = nullspace_mask(joint)
 
 	# 1 step backward in time
@@ -84,8 +84,8 @@ function minimal_velocities(joint::Rotational,
 	xb1 = next_position(xb, -vb, timestep)
 	qb1 = next_orientation(qb, -ϕb, timestep)
 
-	q = inv(qoffset) * inv(qa) * qb
-	q1 = inv(qoffset) * inv(qa1) * qb1
+	q = inv(axis_offset) * inv(qa) * qb
+	q1 = inv(axis_offset) * inv(qa1) * qb1
 
 	return A * rotation_vector(inv(q1) * q) ./ timestep
 end
@@ -95,7 +95,7 @@ function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Rota
 	xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
 	timestep) where T
 	
-	qoffset = joint.qoffset
+	axis_offset = joint.axis_offset
 	A = nullspace_mask(joint)
 	nu = control_dimension(joint)
 
@@ -105,20 +105,20 @@ function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Rota
 	xb1 = next_position(xb, -vb, timestep)
 	qb1 = next_orientation(qb, -ϕb, timestep)
 
-	q = inv(qoffset) * inv(qa) * qb
-	q1 = inv(qoffset) * inv(qa1) * qb1
+	q = inv(axis_offset) * inv(qa) * qb
+	q1 = inv(axis_offset) * inv(qa1) * qb1
 
 	# return A * rotation_vector(inv(q1) * q) ./ timestep
 
 	X = szeros(T, nu, 3)
 
 	if relative == :parent 
-		Q = 1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Rmat(q) * Tmat() * Rmat(qb1) * Lmat(inv(qoffset)) * Tmat() * Rmat(quaternion_map(-ϕa, timestep)) * timestep / 2
-		Q += 1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Lmat(inv(q1)) * Rmat(qb) * Lmat(inv(qoffset)) * Tmat()
+		Q = 1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Rmat(q) * Tmat() * Rmat(qb1) * Lmat(inv(axis_offset)) * Tmat() * Rmat(quaternion_map(-ϕa, timestep)) * timestep / 2
+		Q += 1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Lmat(inv(q1)) * Rmat(qb) * Lmat(inv(axis_offset)) * Tmat()
 		Q *= LVᵀmat(qa)
 	elseif relative == :child 
-		Q = 1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Rmat(q) * Tmat() * Lmat(inv(qoffset) * inv(qa1)) * Rmat(quaternion_map(-ϕb, timestep)) * timestep / 2
-		Q += 1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Lmat(inv(q1) * inv(qoffset) * inv(qa))
+		Q = 1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Rmat(q) * Tmat() * Lmat(inv(axis_offset) * inv(qa1)) * Rmat(quaternion_map(-ϕb, timestep)) * timestep / 2
+		Q += 1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Lmat(inv(q1) * inv(axis_offset) * inv(qa))
 		Q *= LVᵀmat(qb)
 	end
 
@@ -130,7 +130,7 @@ function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Rotationa
 	xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
 	timestep) where T
 	
-	qoffset = joint.qoffset
+	axis_offset = joint.axis_offset
 	A = nullspace_mask(joint)
 	nu = control_dimension(joint)
 
@@ -140,17 +140,17 @@ function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Rotationa
 	xb1 = next_position(xb, -vb, timestep)
 	qb1 = next_orientation(qb, -ϕb, timestep)
 
-	q = inv(qoffset) * inv(qa) * qb
-	q1 = inv(qoffset) * inv(qa1) * qb1
+	q = inv(axis_offset) * inv(qa) * qb
+	q1 = inv(axis_offset) * inv(qa1) * qb1
 
 	# return A * rotation_vector(inv(q1) * q) ./ timestep
 
 	V = szeros(T, nu, 3)
 
 	if relative == :parent
-		Ω = -1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Rmat(q) * Tmat() * Lmat(inv(qoffset)) * Rmat(qb1) * Tmat() * Lmat(qa) * quaternion_map_jacobian(-ϕa, timestep) * timestep / 2 
+		Ω = -1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Rmat(q) * Tmat() * Lmat(inv(axis_offset)) * Rmat(qb1) * Tmat() * Lmat(qa) * quaternion_map_jacobian(-ϕa, timestep) * timestep / 2 
 	elseif relative == :child 
-		Ω = -1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Rmat(q) * Tmat() * Lmat(inv(qoffset) * inv(qa1)) * Lmat(qb) * quaternion_map_jacobian(-ϕb, timestep) * timestep / 2
+		Ω = -1.0 / timestep * A * ∂rotation_vector∂q(inv(q1) * q) * Rmat(q) * Tmat() * Lmat(inv(axis_offset) * inv(qa1)) * Lmat(qb) * quaternion_map_jacobian(-ϕb, timestep) * timestep / 2
 	end
 
 	return [V Ω]

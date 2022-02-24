@@ -11,8 +11,8 @@ function get_ant(; timestep::T=0.05, gravity=[0.0; 0.0; -9.81], friction_coeffic
     joints = deepcopy(mech.joints)
 
     if limits
-        hip1 = get_joint_constraint(mech, :hip_1)
-        joints[hip1.id] = add_limits(mech, hip1, rot_limits=[SVector{1}(joint_limits[1][1]), SVector{1}(joint_limits[2][1])])
+        hiparent_vertex = get_joint_constraint(mech, :hip_1)
+        joints[hiparent_vertex.id] = add_limits(mech, hiparent_vertex, rot_limits=[SVector{1}(joint_limits[1][1]), SVector{1}(joint_limits[2][1])])
 
         ankle1 = get_joint_constraint(mech, :ankle_1)
         joints[ankle1.id] = add_limits(mech, ankle1, rot_limits=[SVector{1}(joint_limits[1][2]), SVector{1}(joint_limits[2][2])])

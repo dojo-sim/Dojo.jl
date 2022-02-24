@@ -176,19 +176,19 @@ j0 = mech.joints[1]
 jt0 = j0.constraints[1]
 jr0 = j0.constraints[2]
 origin0 = mech.origin
-bodya0 = mech.bodies[3]
-bodyb0 = mech.bodies[4]
+pbody0 = mech.bodies[3]
+cbody0 = mech.bodies[4]
 childida0 = 3
 childidb0 = 4
 timestep0 = mech.timestep
-damper_parent(jt0, bodya0, bodyb0, childidb0)
-damper_child(jt0, bodya0, bodyb0, childidb0)
-damper_child(jr0, origin0, bodya0, childida0)
+damper_parent(jt0, pbody0, cbody0, childidb0)
+damper_child(jt0, pbody0, cbody0, childidb0)
+damper_child(jr0, origin0, pbody0, childida0)
 
-x2a0, q2a0 = next_configuration(bodya0.state, timestep0)
-x2b0, q2b0 = next_configuration(bodyb0.state, timestep0)
-x1a0, v1a0, q1a0, ω1a0 = current_configuration_velocity(bodya0.state)
-x1b0, v1b0, q1b0, ω1b0 = current_configuration_velocity(bodyb0.state)
+x2a0, q2a0 = next_configuration(pbody0.state, timestep0)
+x2b0, q2b0 = next_configuration(cbody0.state, timestep0)
+x1a0, v1a0, q1a0, ω1a0 = current_configuration_velocity(pbody0.state)
+x1b0, v1b0, q1b0, ω1b0 = current_configuration_velocity(cbody0.state)
 
 Random.seed!(100)
 x2a0 = rand(3)
@@ -228,9 +228,9 @@ q1b0 = UnitQuaternion(rand(4)...)
 #     function f(ω1b)
 #         q2a_ = UnitQuaternion(q2a.w, q2a.x, q2a.y, q2a.z, false)
 #         q2b_ = UnitQuaternion(q2b.w, q2b.x, q2b.y, q2b.z, false)
-#         velocity = A * (vrotate(ω1b,q2a_\q2b_) - ω1a) # in body1's frame
+#         velocity = A * (vrotate(ω1b,q2a_\q2b_) - ω1a) # in pbody's frame
 #         force = -2 * Aᵀ * A * Diagonal(jr0.damper) * Aᵀ * velocity
-#         force = vrotate(force, q2b_ \ q2a_) # in body2's frame
+#         force = vrotate(force, q2b_ \ q2a_) # in cbody's frame
 #         return force
 #     end
 #     ForwardDiff.jacobian(f, ω1b)
@@ -249,19 +249,19 @@ q1b0 = UnitQuaternion(rand(4)...)
 ################################################################################
 # Damper translation
 ################################################################################
-jt0 = FixedOrientation(bodya0, bodyb0; spring = 0.0, damper = 0.0)[1][1]
+jt0 = FixedOrientation(pbody0, cbody0; spring = 0.0, damper = 0.0)[1][1]
 jt0.spring = 1e1 .* rand(3)[1]
 jt0.damper = 1e1 .* rand(3)[1]
 
-# jt0 = Planar(bodya0, bodyb0, rand(3); spring = zeros(3), damper = zeros(3))[1][1]
+# jt0 = Planar(pbody0, cbody0, rand(3); spring = zeros(3), damper = zeros(3))[1][1]
 # jt0.spring = 1e1 .* rand(3)
 # jt0.damper = 1e1 .* rand(3)
 #
-# jt0 = Prismatic(bodya0, bodyb0, rand(3); spring = zeros(3), damper = zeros(3))[1][1]
+# jt0 = Prismatic(pbody0, cbody0, rand(3); spring = zeros(3), damper = zeros(3))[1][1]
 # jt0.spring = 1e1 .* rand(3)
 # jt0.damper = 1e1 .* rand(3)
 #
-# jt0 = Fixed(bodya0, bodyb0)[1][1]
+# jt0 = Fixed(pbody0, cbody0)[1][1]
 # jt0.spring = 1e1 .* rand(3)
 # jt0.damper = 1e1 .* rand(3)
 
@@ -284,19 +284,19 @@ norm(Dtra3 - fd_Dtra3)
 ################################################################################
 # Damper rotation
 ################################################################################
-jr0 = Spherical(bodya0, bodyb0, spring = zeros(3)[1], damper = zeros(3)[1])[2][1]
+jr0 = Spherical(pbody0, cbody0, spring = zeros(3)[1], damper = zeros(3)[1])[2][1]
 jr0.spring = 1e1 .* rand(3)[1]
 jr0.damper = 1e1 .* rand(3)[1]
 
-# # jr0 = Planar(bodya0, bodyb0, rand(3); spring = zeros(3), damper = zeros(3))[1][1]
+# # jr0 = Planar(pbody0, cbody0, rand(3); spring = zeros(3), damper = zeros(3))[1][1]
 # # jr0.spring = 1e1 .* rand(3)
 # # jr0.damper = 1e1 .* rand(3)
 #
-# jr0 = Revolute(bodya0, bodyb0, rand(3))[2][1]
+# jr0 = Revolute(pbody0, cbody0, rand(3))[2][1]
 # jr0.spring = 1e1 .* rand(3)
 # jr0.damper = 1e1 .* rand(3)
 #
-# jr0 = Fixed(bodya0, bodyb0)[2][1]
+# jr0 = Fixed(pbody0, cbody0)[2][1]
 # jr0.spring = 1e1 .* rand(3)
 # jr0.damper = 1e1 .* rand(3)
 
@@ -319,19 +319,19 @@ norm(Drot3 - fd_Drot3)
 ################################################################################
 # Spring translation
 ################################################################################
-jt0 = FixedOrientation(bodya0, bodyb0; spring = zeros(3)[1], damper = zeros(3)[1])[1][1]
+jt0 = FixedOrientation(pbody0, cbody0; spring = zeros(3)[1], damper = zeros(3)[1])[1][1]
 jt0.spring = 1e1 .* rand(3)[1]
 jt0.damper = 1e1 .* rand(3)[1]
 
-# jt0 = Planar(bodya0, bodyb0, rand(3); spring = zeros(3), damper = zeros(3))[1][1]
+# jt0 = Planar(pbody0, cbody0, rand(3); spring = zeros(3), damper = zeros(3))[1][1]
 # jt0.spring = 1e1 .* rand(3)
 # jt0.damper = 1e1 .* rand(3)
 #
-# jt0 = Prismatic(bodya0, bodyb0, rand(3); spring = zeros(3), damper = zeros(3))[1][1]
+# jt0 = Prismatic(pbody0, cbody0, rand(3); spring = zeros(3), damper = zeros(3))[1][1]
 # jt0.spring = 1e1 .* rand(3)
 # jt0.damper = 1e1 .* rand(3)
 #
-# jt0 = Fixed(bodya0, bodyb0)[1][1]
+# jt0 = Fixed(pbody0, cbody0)[1][1]
 # jt0.spring = 1e1 .* rand(3)
 # jt0.damper = 1e1 .* rand(3)
 
@@ -355,19 +355,19 @@ norm(Dspr3 - fd_Dspr3)
 ################################################################################
 # Spring Rotation
 ################################################################################
-jr0 = Spherical(bodya0, bodyb0, spring = zeros(3)[1], damper = zeros(3)[1])[2][1]
+jr0 = Spherical(pbody0, cbody0, spring = zeros(3)[1], damper = zeros(3)[1])[2][1]
 jr0.spring = 1e1 .* rand(3)[1]
 jr0.damper = 1e1 .* rand(3)[1]
 
-# jt0 = Planar(bodya0, bodyb0, rand(3); spring = zeros(3), damper = zeros(3))[1][1]
+# jt0 = Planar(pbody0, cbody0, rand(3); spring = zeros(3), damper = zeros(3))[1][1]
 # jt0.spring = 1e1 .* rand(3)
 # jt0.damper = 1e1 .* rand(3)
 #
-# jt0 = Prismatic(bodya0, bodyb0, rand(3); spring = zeros(3), damper = zeros(3))[1][1]
+# jt0 = Prismatic(pbody0, cbody0, rand(3); spring = zeros(3), damper = zeros(3))[1][1]
 # jt0.spring = 1e1 .* rand(3)
 # jt0.damper = 1e1 .* rand(3)
 #
-# jt0 = Fixed(bodya0, bodyb0)[1][1]
+# jt0 = Fixed(pbody0, cbody0)[1][1]
 # jt0.spring = 1e1 .* rand(3)
 # jt0.damper = 1e1 .* rand(3)
 
@@ -408,19 +408,19 @@ norm(Dspr3 - fd_Dspr3)
 ################################################################################
 # Damper translation
 ################################################################################
-jt0 = FixedOrientation(bodya0, bodyb0; spring = 0.0, damper = 0.0)[1][1]
+jt0 = FixedOrientation(pbody0, cbody0; spring = 0.0, damper = 0.0)[1][1]
 jt0.spring = 1e1 .* rand(3)[1]
 jt0.damper = 1e1 .* rand(3)[1]
 
-# jt0 = Planar(bodya0, bodyb0, rand(3); spring = zeros(3), damper = zeros(3))[1][1]
+# jt0 = Planar(pbody0, cbody0, rand(3); spring = zeros(3), damper = zeros(3))[1][1]
 # jt0.spring = 1e1 .* rand(3)
 # jt0.damper = 1e1 .* rand(3)
 #
-# jt0 = Prismatic(bodya0, bodyb0, rand(3); spring = zeros(3), damper = zeros(3))[1][1]
+# jt0 = Prismatic(pbody0, cbody0, rand(3); spring = zeros(3), damper = zeros(3))[1][1]
 # jt0.spring = 1e1 .* rand(3)
 # jt0.damper = 1e1 .* rand(3)
 #
-# jt0 = Fixed(bodya0, bodyb0)[1][1]
+# jt0 = Fixed(pbody0, cbody0)[1][1]
 # jt0.spring = 1e1 .* rand(3)
 # jt0.damper = 1e1 .* rand(3)
 

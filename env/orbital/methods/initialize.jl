@@ -12,11 +12,11 @@ function get_orbital(; timestep::T = 0.01, gravity = -9.81, spring = 0.0, damper
     bodies = [Box(r, r, h, h, color = RGBA(1., 0., 0.)) for i = 1:Nb]
 
     # Constraints
-    jointb1 = JointConstraint(Fixed(origin, bodies[1]; p2 = vert11))
+    jointb1 = JointConstraint(Fixed(origin, bodies[1]; child_vertex = vert11))
     if Nb > 1
         joints = [
             jointb1;
-            [JointConstraint(Orbital(bodies[i - 1], bodies[i], ex; p1=vert12, p2=vert11, spring=spring, damper=damper)) for i = 2:Nb]
+            [JointConstraint(Orbital(bodies[i - 1], bodies[i], ex; parent_vertex=vert12, child_vertex=vert11, spring=spring, damper=damper)) for i = 2:Nb]
             ]
     else
         joints = [jointb1]
@@ -26,15 +26,15 @@ function get_orbital(; timestep::T = 0.01, gravity = -9.81, spring = 0.0, damper
 end
 
 function initialize_orbital!(mechanism::Mechanism; ϕx::T = pi/4, ϕy::T = pi/8) where T
-    body1 = collect(mechanism.bodies)[1]
+    pbody = collect(mechanism.bodies)[1]
     joint = collect(mechanism.joints)[1]
     vert11 = joint.translational.vertices[2]
     vert12 = - vert11
 
     # set position and velocities
-    set_maximal_configuration!(mechanism.origin, body1, p2 = vert11, Δq = UnitQuaternion(RotX(0.0)))
+    set_maximal_configuration!(mechanism.origin, pbody, child_vertex = vert11, Δq = UnitQuaternion(RotX(0.0)))
 
-    previd = body1.id
+    previd = pbody.id
     set_minimal_coordinates!(mechanism, collect(mechanism.joints)[2], [ϕx, ϕy])
 
     zero_velocity!(mechanism)

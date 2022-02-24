@@ -11,13 +11,13 @@ function get_cartpole(; timestep::T=0.1, gravity=[0.0; 0.0; -9.81], spring=0.0, 
 
     # Links
     origin = Origin{Float64}()
-    slider = Capsule(1.5 * radius, slider_length, slider_mass, qoffset=UnitQuaternion(RotX(0.5 * π)), color=cyan)
+    slider = Capsule(1.5 * radius, slider_length, slider_mass, axis_offset=UnitQuaternion(RotX(0.5 * π)), color=cyan)
     pendulum = Capsule(radius, pendulum_length, pendulum_mass, color=cyan)
     links = [slider, pendulum]
 
     # Joint Constraints
-    joint_origin_slider = JointConstraint(Prismatic(origin, slider, slider_axis; p1=szeros(Float64, 3), p2=szeros(Float64, 3)))
-    joint_slider_pendulum = JointConstraint(Revolute(slider, pendulum, pendulum_axis; p1=szeros(Float64, 3), p2=[0.0; 0.0; 0.5 * pendulum_length]))
+    joint_origin_slider = JointConstraint(Prismatic(origin, slider, slider_axis; parent_vertex=szeros(Float64, 3), child_vertex=szeros(Float64, 3)))
+    joint_slider_pendulum = JointConstraint(Revolute(slider, pendulum, pendulum_axis; parent_vertex=szeros(Float64, 3), child_vertex=[0.0; 0.0; 0.5 * pendulum_length]))
     joints = [joint_origin_slider, joint_slider_pendulum]
 
     # Mechanism

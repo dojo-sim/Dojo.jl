@@ -114,15 +114,15 @@ N_a * inv(N_a' * N_a)# - M_a
 
 # # bodies
 # joint = mech.joints[1]
-# body1 = get_body(mech, joint.parent_id)
-# body2 = get_body(mech, joint.child_id)
+# pbody = get_body(mech, joint.parent_id)
+# cbody = get_body(mech, joint.child_id)
 
-# # translational delta in body1 frame
+# # translational delta in pbody frame
 # xθ = [1.0, 1.0]
-# Δx = get_position_delta(joint.translational, body1, body2, xθ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]) 
+# Δx = get_position_delta(joint.translational, pbody, cbody, xθ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]) 
 
-# # rotational delta in body2 frame
-# Δq = get_position_delta(joint.rotational, body1, body2, xθ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])])
+# # rotational delta in cbody frame
+# Δq = get_position_delta(joint.rotational, pbody, cbody, xθ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])])
 
 
 #######
