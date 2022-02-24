@@ -1,11 +1,11 @@
 push!(LOAD_PATH, "../src/")
 
-using Documenter#, Dojo
+using Documenter, Dojo
 
 makedocs(
     modules = [Dojo],
     format = Documenter.HTML(prettyurls = false),
-    sitename = "Dojo.jl",
+    sitename = "Dojo",
     pages = [
         ##############################################
         ## MAKE SURE TO SYNC WITH docs/src/index.md ##

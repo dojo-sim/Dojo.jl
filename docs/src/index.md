@@ -22,9 +22,10 @@ If you want to install the latest version from main run
 ## Credits
 
 The following people are involved in the development of Dojo:
-* [Simon Le Cleac'h](https://simon-lc.github.io/) (main development)
-* [Taylor Howell](https://thowell.github.io/) (main development)
-* [Zachary Manchester](https://www.ri.cmu.edu/ri-faculty/zachary-manchester/) (physics and algorithms)
+* [Simon Le Cleac'h](https://simon-lc.github.io/)
+* [Taylor Howell](https://thowell.github.io/) 
+* [Jan Bruedigam](https://github.com/janbruedigam)
+* [Zachary Manchester](https://www.ri.cmu.edu/ri-faculty/zachary-manchester/)
 \*all contributors are affiliated with the [Robotic Exploration Lab](https://roboticexplorationlab.org/).
  
 If this project is useful for your work please consider
