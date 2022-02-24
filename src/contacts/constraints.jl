@@ -10,7 +10,7 @@ function constraint_jacobian_velocity(mechanism, contact::ContactConstraint, bod
 end
 
 # impulses
-@inline function impulses!(mechanism, body::Body, contact::ContactConstraint)
+function impulses!(mechanism, body::Body, contact::ContactConstraint)
     body.state.d -= impulse_map(mechanism, contact, body) * contact.impulses[2]
     return
 end
@@ -36,14 +36,14 @@ function impulse_map_jacobian_configuration(mechanism, body::Body, contact::Cont
             Z3 ∇Q]
 end
 
-@inline function impulses_jacobian_velocity!(mechanism, body::Body, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+function impulses_jacobian_velocity!(mechanism, body::Body, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
     timestep = mechanism.timestep
     body.state.D -= impulse_map_jacobian_configuration(mechanism, body, contact) *
         integrator_jacobian_velocity(body, timestep)
     return
 end
 
-@inline function off_diagonal_jacobians(mechanism, body::Body, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+function off_diagonal_jacobians(mechanism, body::Body, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
     Z = szeros(T,N½,6)
     return [Z' -impulse_map(mechanism, contact, body)], [Z; constraint_jacobian_velocity(mechanism, contact, body)]
 end

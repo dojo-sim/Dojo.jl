@@ -4,7 +4,6 @@ function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVect
 		(id > Ne) && continue # only treat joints
 		joint = mechanism.joints[id]
 		nu = control_dimension(joint)
-	
 		set_minimal_coordinates_velocities!(mechanism, joint, xmin=x[off .+ SUnitRange(1, 2nu)])
 		off += 2nu
 	end
@@ -64,10 +63,10 @@ function get_minimal_gradients(mechanism::Mechanism{T}, z::AbstractVector{T}, u:
 	opts=SolverOptions()) where T
 	# simulate next state
 	step!(mechanism, z, u, opts=opts)
-	return get_minimal_gradients_no_step(mechanism)
+	return get_minimal_gradients(mechanism)
 end
 
-function get_minimal_gradients_no_step(mechanism::Mechanism{T}) where T
+function get_minimal_gradients(mechanism::Mechanism{T}) where T
 	# current maximal state
 	z = get_state(mechanism)
 	# next maximal state

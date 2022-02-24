@@ -1,6 +1,6 @@
-@inline get_joint_constraint(mechanism::Mechanism, id::Integer) = mechanism.joints[id]
-@inline get_body(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,Ni} = id == 0 ? mechanism.origin : mechanism.bodies[id-Ne]
-@inline get_contact_constraint(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,Ni} = mechanism.contacts[id-Ne-Nb]
+get_joint_constraint(mechanism::Mechanism, id::Integer) = mechanism.joints[id]
+get_body(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,Ni} = id == 0 ? mechanism.origin : mechanism.bodies[id-Ne]
+get_contact_constraint(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,Ni} = mechanism.contacts[id-Ne-Nb]
 
 function get_joint_constraint(mechanism::Mechanism, name::Symbol)
     for joint in mechanism.joints
@@ -55,11 +55,11 @@ function get_node(mechanism::Mechanism, name::Symbol)
     return node
 end
 
-@inline function initialize_state!(mechanism::Mechanism)
+function initialize_state!(mechanism::Mechanism)
     for body in mechanism.bodies initialize_state!(body, mechanism.timestep) end
 end
 
-@inline function off_diagonal_jacobians(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, body1::Body, body2::Body) where {T,Nn,Ne,Nb,Ni}
+function off_diagonal_jacobians(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, body1::Body, body2::Body) where {T,Nn,Ne,Nb,Ni}
     timestep = mechanism.timestep
 
     dimpulse_map_parentb = szeros(6, 6)

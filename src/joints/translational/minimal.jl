@@ -1,7 +1,7 @@
 ################################################################################
 # Displacements
 ################################################################################
-@inline function displacement(joint::Translational, 
+function displacement(joint::Translational, 
     xa::AbstractVector, qa::UnitQuaternion, 
     xb::AbstractVector, qb::UnitQuaternion; rotate::Bool = true)
 
@@ -10,7 +10,7 @@
     rotate && (return vrotate(d, inv(qa))) : (return d)
 end
 
-@inline function displacement_jacobian_configuration(relative::Symbol, joint::Translational{T}, 
+function displacement_jacobian_configuration(relative::Symbol, joint::Translational{T}, 
     xa::AbstractVector, qa::UnitQuaternion, 
     xb::AbstractVector, qb::UnitQuaternion; attjac=true) where T
 
@@ -34,11 +34,11 @@ end
 ################################################################################
 # Coordinates
 ################################################################################
-@inline function minimal_coordinates(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+function minimal_coordinates(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
     return nullspace_mask(joint) * displacement(joint, xa, qa, xb, qb)
 end
 
-@inline function minimal_coordinates_jacobian_configuration(relative::Symbol, joint::Translational,
+function minimal_coordinates_jacobian_configuration(relative::Symbol, joint::Translational,
         xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; attjac::Bool=true)
     X, Q = displacement_jacobian_configuration(relative, joint, xa, qa, xb, qb, attjac=attjac)
 	return nullspace_mask(joint) * [X Q]
@@ -69,7 +69,7 @@ end
 ################################################################################
 # Velocities
 ################################################################################
-@inline function minimal_velocities(joint::Translational,
+function minimal_velocities(joint::Translational,
 		xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
 		xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
 		timestep)
@@ -91,7 +91,7 @@ end
 	return Δv
 end
 
-@inline function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Translational,
+function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Translational,
     xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
     xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
     timestep)
@@ -135,7 +135,7 @@ end
     return J
 end
 
-@inline function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Translational,
+function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Translational,
     xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
     xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
     timestep)

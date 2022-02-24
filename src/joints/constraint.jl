@@ -94,16 +94,18 @@ end
     tra = :(constraint_jacobian_configuration($relative,
         joint.translational,
         $pbody, $cbody,
-        joint.child_id, joint.impulses[2][joint_impulse_index(joint, 1)], mechanism.timestep))
+        # joint.child_id, 
+        joint.impulses[2][joint_impulse_index(joint, 1)], mechanism.timestep))
     rot = :(constraint_jacobian_configuration($relative,
         joint.rotational,
         $pbody, $cbody,
-        joint.child_id, joint.impulses[2][joint_impulse_index(joint, 2)], mechanism.timestep))
+        # joint.child_id, 
+        joint.impulses[2][joint_impulse_index(joint, 2)], mechanism.timestep))
     return :(vcat($tra, $rot))
 end
 
 # impulses
-@inline function impulses!(mechanism, body::Body, joint::JointConstraint)
+function impulses!(mechanism, body::Body, joint::JointConstraint)
     body.state.d -= impulse_map(mechanism, joint, body) * joint.impulses[2]
     joint.spring && (body.state.d -= spring_impulses(mechanism, joint, body))
     joint.damper && (body.state.d -= damper_impulses(mechanism, joint, body))
@@ -116,15 +118,15 @@ end
     cbody = :(get_body(mechanism, joint.child_id))
     tra = :(impulse_map($relative, joint.translational,
         $pbody, $cbody,
-        joint.child_id, joint.impulses[2][joint_impulse_index(joint, 1)], mechanism.timestep))
+        joint.impulses[2][joint_impulse_index(joint, 1)]))
     rot = :(impulse_map($relative, joint.rotational,
         $pbody, $cbody,
-        joint.child_id, joint.impulses[2][joint_impulse_index(joint, 2)], mechanism.timestep))
+        joint.impulses[2][joint_impulse_index(joint, 2)]))
     return :(hcat($tra, $rot))
 end
 
 # impulses Jacobians
-@inline function impulses_jacobian_velocity!(mechanism, body::Body, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
+function impulses_jacobian_velocity!(mechanism, body::Body, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
 
     # relative
     relative = (body.id == joint.parent_id ? :parent : (body.id == joint.child_id ? :child : error()))
@@ -148,29 +150,43 @@ end
 end
 
 # off-diagonal Jacobians
-@inline function off_diagonal_jacobians(mechanism, body::Body{T}, joint::JointConstraint{T,N}) where {T,N}
+function off_diagonal_jacobians(mechanism, body::Body{T}, joint::JointConstraint{T,N}) where {T,N}
     return -impulse_map(mechanism, joint, body), constraint_jacobian_configuration(mechanism, joint, body) * integrator_jacobian_velocity(body, mechanism.timestep)
 end
 
-@inline function off_diagonal_jacobians(mechanism, joint::JointConstraint{T,N}, body::Body{T}) where {T,N}
+function off_diagonal_jacobians(mechanism, joint::JointConstraint{T,N}, body::Body{T}) where {T,N}
     return constraint_jacobian_configuration(mechanism, joint, body) * integrator_jacobian_velocity(body, mechanism.timestep), -impulse_map(mechanism, joint, body)
 end
 
 # springs
-@inline function spring_impulses(mechanism, joint::JointConstraint{T}, body::Body; unitary::Bool=false) where T
+function spring_impulses(mechanism, joint::JointConstraint{T}, body::Body; unitary::Bool=false) where T
     relative = (body.id == joint.parent_id ? :parent : :child)
     impulses = szeros(T,6)
-    impulses += spring_impulses(relative, joint.translational, get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), mechanism.timestep, joint.child_id, unitary=unitary)
-    impulses += spring_impulses(relative, joint.rotational, get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), mechanism.timestep, joint.child_id, unitary=unitary)
+    impulses += spring_impulses(relative, joint.translational, 
+        get_body(mechanism, joint.parent_id), 
+        get_body(mechanism, joint.child_id), 
+        mechanism.timestep, 
+        unitary=unitary)
+    impulses += spring_impulses(relative, joint.rotational, 
+        get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), 
+        mechanism.timestep, 
+        unitary=unitary)
     return impulses
 end
 
 # dampers
-@inline function damper_impulses(mechanism, joint::JointConstraint{T}, body::Body; unitary::Bool=false) where T
+function damper_impulses(mechanism, joint::JointConstraint{T}, body::Body; unitary::Bool=false) where T
     relative = (body.id == joint.parent_id ? :parent : :child)
     impulses = szeros(T,6)
-    impulses += damper_impulses(relative, joint.translational, get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), mechanism.timestep, joint.child_id, unitary=unitary)
-    impulses += damper_impulses(relative, joint.rotational, get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), mechanism.timestep, joint.child_id, unitary=unitary)
+    impulses += damper_impulses(relative, joint.translational, 
+        get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id), 
+        mechanism.timestep, 
+        unitary=unitary)
+    impulses += damper_impulses(relative, joint.rotational, 
+        get_body(mechanism, joint.parent_id), 
+        get_body(mechanism, joint.child_id), 
+        mechanism.timestep, 
+        unitary=unitary)
     return impulses
 end
 
@@ -197,12 +213,12 @@ end
     relative = :(body.id == joint.parent_id ? :parent : :child)
     pbody = :(get_body(mechanism, joint.parent_id))
     cbody = :(get_body(mechanism, joint.child_id))
-    rot = :(input_jacobian_control($relative, joint.translational, $pbody, $cbody, joint.child_id))
-    tra = :(input_jacobian_control($relative, joint.rotational, $pbody, $cbody, joint.child_id))
+    rot = :(input_jacobian_control($relative, joint.translational, $pbody, $cbody))
+    tra = :(input_jacobian_control($relative, joint.rotational, $pbody, $cbody))
     return :(hcat($rot, $tra))
 end
 
-@inline function input_impulse!(joint::JointConstraint{T,N,Nc}, mechanism, clear::Bool=true) where {T,N,Nc}
+function input_impulse!(joint::JointConstraint{T,N,Nc}, mechanism, clear::Bool=true) where {T,N,Nc}
     pbody = get_body(mechanism, joint.parent_id)
     cbody = get_body(mechanism, joint.child_id)
     input_impulse!(joint.translational, pbody, cbody, mechanism.timestep, clear)

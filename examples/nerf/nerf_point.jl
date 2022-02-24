@@ -52,7 +52,7 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N
     SVector{1,T}(c - contact.impulses_dual[2][1])
 end
 
-@inline function constraint_jacobian_velocity(model::NerfContact, x3::AbstractVector, q3::UnitQuaternion,
+function constraint_jacobian_velocity(model::NerfContact, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, timestep)
     # V = model.ainv3 * timestep
     # Ω = model.ainv3 * ∂vrotate∂q(model.contact_point, q3) * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)
@@ -64,7 +64,7 @@ end
         [v25; ϕ25])
 end
 
-@inline function constraint_jacobian_configuration(model::NerfContact, x3::AbstractVector, q3::UnitQuaternion,
+function constraint_jacobian_configuration(model::NerfContact, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, timestep)
     # X = model.ainv3
     # Q = model.ainv3 * ∂vrotate∂q(model.contact_point, q3)
@@ -74,7 +74,7 @@ end
         [x3; vector(q3)])
 end
 
-@inline function impulse_map(model::NerfContact, x::AbstractVector, q::UnitQuaternion, λ)
+function impulse_map(model::NerfContact, x::AbstractVector, q::UnitQuaternion, λ)
     # X = model.ainv3
     # # q * ... is a rotation by quaternion q it is equivalent to Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * ...
     # Q = - X * q * skew(model.contact_point - vrotate(model.offset, inv(q)))
@@ -87,7 +87,7 @@ end
     return transpose([X Q])
 end
 
-@inline function force_mapping(model::NerfContact, x::AbstractVector, q::UnitQuaternion)
+function force_mapping(model::NerfContact, x::AbstractVector, q::UnitQuaternion)
     X = FiniteDiff.finite_difference_jacobian(
         x -> -density(model.nerf, -model.contact_point -inv(q)*(model.offset-x)),
         x)
@@ -95,7 +95,7 @@ end
     return X
 end
 
-@inline function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
+function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
     contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{NerfContact{T,N}},N½}
     # ∇primal[dual .* primal - μ; g - s] = [diag(dual); -diag(0,1,1)]
     # ∇dual[dual .* primal - μ; g - s] = [diag(primal); -diag(1,0,0)]

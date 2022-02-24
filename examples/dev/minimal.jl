@@ -12,7 +12,7 @@
 
 
 
-@inline function minimal_velocities(joint::Translational, xa::AbstractVector,
+function minimal_velocities(joint::Translational, xa::AbstractVector,
         va::AbstractVector,  qa::UnitQuaternion, ωa::AbstractVector,
         xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector)
 	vertices = joint.vertices
@@ -147,7 +147,7 @@ storage.ω[1]
 
 
 
-@inline function minimal_velocities(joint::JointConstraint, xa::AbstractVector,
+function minimal_velocities(joint::JointConstraint, xa::AbstractVector,
         va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
         xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector, timestep)
 	rot = joint.rotational

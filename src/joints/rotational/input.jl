@@ -2,7 +2,7 @@
 # Control Input
 ################################################################################
 
-@inline function input_impulse!(joint::Rotational{T}, 
+function input_impulse!(joint::Rotational{T}, 
     bodya::Node, bodyb::Node, 
     timestep::T, clear::Bool) where T
 
@@ -20,7 +20,7 @@ end
 # Control Jacobian
 ################################################################################
 
-@inline function input_jacobian_control(relative::Symbol, 
+function input_jacobian_control(relative::Symbol, 
     joint::Rotational{T}, 
     xa::AbstractVector, qa::UnitQuaternion,
     xb::AbstractVector, qb::UnitQuaternion) where T
@@ -37,7 +37,7 @@ end
     end
 end
 
-@inline function input_jacobian_configuration(relative::Symbol, 
+function input_jacobian_configuration(relative::Symbol, 
     joint::Rotational{T}, 
     xa::AbstractVector, qa::UnitQuaternion,
     xb::AbstractVector, qb::UnitQuaternion) where T

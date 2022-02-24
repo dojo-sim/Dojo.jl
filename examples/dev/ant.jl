@@ -69,7 +69,7 @@ joint22 = eqc2.constraints[2]
 @benchmark joint_impulse_index($eqc2, $1)
 
 
-@inline function correction(joint::Joint{T,Nλ,Nb,N}, Δ, μ) where {T,Nλ,Nb,N}
+function correction(joint::Joint{T,Nλ,Nb,N}, Δ, μ) where {T,Nλ,Nb,N}
     Δs, Δγ = split_impulses(joint, Δ)
 	return [- Δs .* Δγ .+ μ; szeros(Nb + Nλ)]
 end

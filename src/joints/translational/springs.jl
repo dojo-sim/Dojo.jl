@@ -43,7 +43,7 @@ function spring_force_jacobian_configuration(jacobian_relative::Symbol,
     return -spring * zerodimstaticadjoint(nullspace_mask(joint)) * minimal_coordinates_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, attjac=attjac)
 end
 
-@inline function spring_jacobian_configuration(relative::Symbol, jacobian_relative::Symbol,
+function spring_jacobian_configuration(relative::Symbol, jacobian_relative::Symbol,
     joint::Translational{T},
     xa::AbstractVector, qa::UnitQuaternion,
     xb::AbstractVector, qb::UnitQuaternion,

@@ -2,7 +2,7 @@
 # Damper Force
 ###############################################################################
 
-@inline function damper_force(joint::Rotational{T}, qa::UnitQuaternion, ϕa::AbstractVector,
+function damper_force(joint::Rotational{T}, qa::UnitQuaternion, ϕa::AbstractVector,
         qb::UnitQuaternion, ϕb::AbstractVector, timestep; unitary::Bool=false) where T
     A = nullspace_mask(joint)
     Aᵀ = zerodimstaticadjoint(A)
@@ -12,7 +12,7 @@
     return force # in the offset frame
 end
 
-@inline function damper_force(relative::Symbol, joint::Rotational{T}, qa::UnitQuaternion, ϕa::AbstractVector,
+function damper_force(relative::Symbol, joint::Rotational{T}, qa::UnitQuaternion, ϕa::AbstractVector,
         qb::UnitQuaternion, ϕb::AbstractVector, timestep; rotate::Bool=true, unitary::Bool=false) where T
 
     damper = unitary ? 1.0 : joint.damper

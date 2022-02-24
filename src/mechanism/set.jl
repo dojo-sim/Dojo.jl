@@ -62,4 +62,4 @@ function set_input!(body::Body;
     return
 end
 
-@inline torque_from_force(F::AbstractVector, p::AbstractVector) = cross(p, F)
+torque_from_force(F::AbstractVector, p::AbstractVector) = cross(p, F)

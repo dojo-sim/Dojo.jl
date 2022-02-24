@@ -39,7 +39,7 @@ function constraint(model::NonlinearContact, s::AbstractVector{T}, γ::AbstractV
         (model.surface_projector * vp - s[@SVector [3,4]])...)
 end
 
-@inline function constraint_jacobian_velocity(model::NonlinearContact{T}, x3::AbstractVector{T}, q3::UnitQuaternion{T},
+function constraint_jacobian_velocity(model::NonlinearContact{T}, x3::AbstractVector{T}, q3::UnitQuaternion{T},
     x2::AbstractVector{T}, v25::AbstractVector{T}, q2::UnitQuaternion{T}, ϕ25::AbstractVector{T}, λ, timestep::T) where T
     V = [model.surface_normal_projector * timestep;
         szeros(1,3);
@@ -54,7 +54,7 @@ end
     return [V Ω]
 end
 
-@inline function constraint_jacobian_configuration(model::NonlinearContact{T}, x3::AbstractVector{T}, q3::UnitQuaternion{T},
+function constraint_jacobian_configuration(model::NonlinearContact{T}, x3::AbstractVector{T}, q3::UnitQuaternion{T},
     x2::AbstractVector{T}, v25::AbstractVector{T}, q2::UnitQuaternion{T}, ϕ25::AbstractVector{T}, λ, timestep::T) where T
     X = [model.surface_normal_projector;
         szeros(1,3);
@@ -68,7 +68,7 @@ end
     return [X Q]
 end
 
-@inline function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
+function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
     contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
     # ∇impulses[impulses .* impulses - μ; g - s] = [diag(impulses); -diag(0,1,1)]
     # ∇impulses[impulses .* impulses - μ; g - s] = [diag(impulses); -diag(1,0,0)]

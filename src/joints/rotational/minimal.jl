@@ -69,7 +69,7 @@ end
 ################################################################################
 # Velocities
 ################################################################################
-@inline function minimal_velocities(joint::Rotational,
+function minimal_velocities(joint::Rotational,
 		xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
 		xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
 		timestep)
@@ -89,7 +89,7 @@ end
 	return A * rotation_vector(inv(q1) * q) ./ timestep
 end
 
-@inline function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Rotational{T},
+function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Rotational{T},
 	xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
 	xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
 	timestep) where T
@@ -124,7 +124,7 @@ end
 	return [X Q]
 end
 
-@inline function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Rotational{T},
+function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Rotational{T},
 	xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
 	xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
 	timestep) where T

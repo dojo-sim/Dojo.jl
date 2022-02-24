@@ -1,26 +1,26 @@
-@inline previous_configuration(state::State) = (state.x1, state.q1)
-@inline previous_configuration_velocity(state::State) = (state.x1, state.v15, state.q1, state.ϕ15)
+previous_configuration(state::State) = (state.x1, state.q1)
+previous_configuration_velocity(state::State) = (state.x1, state.v15, state.q1, state.ϕ15)
 
 # Initial conditions of a body
-@inline initial_configuration_velocity(state::State) = (current_position(state, k=1), state.v15, current_orientation(state, k=1), state.ϕ15)
+initial_configuration_velocity(state::State) = (current_position(state, k=1), state.v15, current_orientation(state, k=1), state.ϕ15)
 
-@inline current_position(state::State; k=1) = state.x2[k]
-@inline current_orientation(state::State; k=1) = state.q2[k]
-@inline current_configuration(state::State; k=1) = (current_position(state, k=k), current_orientation(state, k=k))
-@inline current_velocity(state::State) = (state.vsol[2], state.ϕsol[2])
-@inline current_configuration_velocity(state::State) = (current_position(state, k=1), state.vsol[2], current_orientation(state, k=1), state.ϕsol[2])
+current_position(state::State; k=1) = state.x2[k]
+current_orientation(state::State; k=1) = state.q2[k]
+current_configuration(state::State; k=1) = (current_position(state, k=k), current_orientation(state, k=k))
+current_velocity(state::State) = (state.vsol[2], state.ϕsol[2])
+current_configuration_velocity(state::State) = (current_position(state, k=1), state.vsol[2], current_orientation(state, k=1), state.ϕsol[2])
 
-@inline next_position(x2::SVector{3,T}, v25::SVector{3,T}, timestep::T) where T = x2 + v25 * timestep
-@inline next_orientation(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, timestep::T) where T = q2 * quaternion_map(ϕ25, timestep) * timestep / 2
-@inline next_position(state::State, timestep) = next_position(state.x2[1], state.vsol[2], timestep)
-@inline next_orientation(state::State, timestep) = next_orientation(state.q2[1], state.ϕsol[2], timestep)
-@inline next_configuration(state::State, timestep) = (next_position(state, timestep), next_orientation(state, timestep))
+next_position(x2::SVector{3,T}, v25::SVector{3,T}, timestep::T) where T = x2 + v25 * timestep
+next_orientation(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, timestep::T) where T = q2 * quaternion_map(ϕ25, timestep) * timestep / 2
+next_position(state::State, timestep) = next_position(state.x2[1], state.vsol[2], timestep)
+next_orientation(state::State, timestep) = next_orientation(state.q2[1], state.ϕsol[2], timestep)
+next_configuration(state::State, timestep) = (next_position(state, timestep), next_orientation(state, timestep))
 
-@inline function quaternion_map(ω, timestep)
+function quaternion_map(ω, timestep)
     return UnitQuaternion(sqrt(4 / timestep^2 - dot(ω, ω)), ω, false)
 end
 
-@inline function quaternion_map_jacobian(ω::SVector{3}, timestep)
+function quaternion_map_jacobian(ω::SVector{3}, timestep)
     msq = -sqrt(4 / timestep^2 - dot(ω, ω))
     return [ω' / msq; I]
 end
@@ -54,14 +54,6 @@ function ∂angular_velocity∂q2(q1::UnitQuaternion, q2::UnitQuaternion, timest
     2.0 / timestep  * Vmat() * Lᵀmat(q1)
 end
 
-# qa = rand(UnitQuaternion)
-# qb = rand(UnitQuaternion) 
-# FiniteDiff.finite_difference_jacobian(w -> angular_velocity(UnitQuaternion(w..., false), qb, 0.1), vector(qa))
-# ∂angular_velocity∂q1(qa, qb, 0.1)
-
-# FiniteDiff.finite_difference_jacobian(w -> angular_velocity(qa, UnitQuaternion(w..., false), 0.1), vector(qb))
-# ∂angular_velocity∂q2(qa, qb, 0.1)
-
 function set_previous_configuration!(node::Node{T}, timestep::T) where {T}
     x2, v15, q2, ϕ15 = initial_configuration_velocity(node.state)
     node.state.x1 = next_position(x2, -v15, timestep)
@@ -69,7 +61,7 @@ function set_previous_configuration!(node::Node{T}, timestep::T) where {T}
     return nothing
 end
 
-@inline function initialize_state!(body::Body{T}, timestep) where T
+function initialize_state!(body::Body{T}, timestep) where T
     state = body.state
     x2 = state.x2[1]
     q2 = state.q2[1]
@@ -86,7 +78,7 @@ end
     return
 end
 
-@inline function update_state!(body::Body{T}, timestep) where T
+function update_state!(body::Body{T}, timestep) where T
     state = body.state
 
     state.x1 = state.x2[1]
@@ -104,7 +96,7 @@ end
     return
 end
 
-@inline function set_solution!(body::Body)
+function set_solution!(body::Body)
     state = body.state
     state.vsol[1] = state.v15
     state.vsol[2] = state.v15

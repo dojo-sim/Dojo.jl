@@ -29,7 +29,7 @@ function addSlackForce!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, input::AbstractVect
     return
 end
 
-@inline function addSlackForce!(body::Body{T}, input::Vector{T}) where T
+function addSlackForce!(body::Body{T}, input::Vector{T}) where T
 	body.state.F2[end] += input[1:3]
     body.state.τ2[end] += input[4:6]
     return

@@ -1,4 +1,4 @@
-@inline function constraint(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn,Ne,Nb}
+function constraint(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn,Ne,Nb}
     state = body.state
     timestep = mechanism.timestep
 
@@ -33,7 +33,7 @@
     return state.d
 end
 
-@inline function constraint_jacobian_configuration(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn,Ne,Nb}
+function constraint_jacobian_configuration(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn,Ne,Nb}
     state = body.state
     timestep = mechanism.timestep
     mass = body.mass
@@ -64,7 +64,7 @@ end
     return state.D
 end
 
-@inline function integrator_jacobian_velocity(body::Body{T}, timestep) where T
+function integrator_jacobian_velocity(body::Body{T}, timestep) where T
     state = body.state
     x2, v25, q2, ϕ25 = current_configuration_velocity(state)
     integrator_jacobian_velocity(q2, ϕ25, timestep)

@@ -84,12 +84,12 @@ struct System{N}
     System(A, dimrow, dimcol; force_static = false) = System{Float64}(A, dimrow, dimcol; force_static = force_static);
 end
 
-@inline children(system, v) = outneighbors(system.dfs_graph, v)
-@inline connections(system, v) = neighbors(system.graph, v)
-@inline parents(system, v) = inneighbors(system.dfs_graph, v)
+children(system, v) = outneighbors(system.dfs_graph, v)
+connections(system, v) = neighbors(system.graph, v)
+parents(system, v) = inneighbors(system.dfs_graph, v)
 
 # There probably exists a smarter way of getting the dense matrix from the sparses one
-@inline full_matrix(system::System) = full_matrix(system.matrix_entries, system.dimrow, system.dimcol)
+full_matrix(system::System) = full_matrix(system.matrix_entries, system.dimrow, system.dimcol)
 
 function full_matrix(matrix_entries::SparseMatrixCSC, dimrow, dimcol)
     range_row = [1:dimrow[1]]

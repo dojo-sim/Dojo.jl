@@ -41,7 +41,7 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N
         (model.surface_projector * vp + ψ * sones(4) - sβ)...)
 end
 
-@inline function constraint_jacobian_configuration(model::LinearContact, x3::AbstractVector, q3::UnitQuaternion,
+function constraint_jacobian_configuration(model::LinearContact, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, timestep)
     V = [model.surface_normal_projector;
          szeros(1,3);
@@ -54,7 +54,7 @@ end
     return [V Ω]
 end
 
-@inline function constraint_jacobian_velocity(model::LinearContact, x3::AbstractVector, q3::UnitQuaternion,
+function constraint_jacobian_velocity(model::LinearContact, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, timestep)
     V = [model.surface_normal_projector * timestep;
          szeros(1,3);
@@ -68,7 +68,7 @@ end
     return [V Ω]
 end
 
-@inline function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
+function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
     contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:LinearContact{T,N},N½}
     # ∇impulses[impulses .* impulses - μ; g - s] = [diag(impulses); -diag(0,1,1)]
     # ∇impulses[impulses .* impulses - μ; g - s] = [diag(impulses); -diag(1,0,0)]

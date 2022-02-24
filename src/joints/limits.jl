@@ -1,4 +1,4 @@
-@inline function constraint(joint::Joint{T,Nλ,Nb,N,Nb½}, 
+function constraint(joint::Joint{T,Nλ,Nb,N,Nb½}, 
         xa::AbstractVector, qa::UnitQuaternion,
         xb::AbstractVector, qb::UnitQuaternion, 
         η) where {T,Nλ,Nb,N,Nb½}
@@ -16,7 +16,7 @@
            ]
 end
 
-@inline function constraint_jacobian_configuration(relative::Symbol, joint::Joint{T,Nλ,Nb}, 
+function constraint_jacobian_configuration(relative::Symbol, joint::Joint{T,Nλ,Nb}, 
         xa::AbstractVector, qa::UnitQuaternion, 
         xb::AbstractVector, qb::UnitQuaternion, 
         η) where {T,Nλ,Nb}

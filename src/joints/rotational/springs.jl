@@ -2,7 +2,7 @@
 # Spring Impulses
 ################################################################################
 
-@inline function spring_force(relative::Symbol, joint::Rotational{T}, 
+function spring_force(relative::Symbol, joint::Rotational{T}, 
         xa::AbstractVector, qa::UnitQuaternion,
         xb::AbstractVector, qb::UnitQuaternion; 
         rotate::Bool=true, unitary::Bool=false) where T
@@ -40,7 +40,7 @@ spring_impulses(relative::Symbol, joint::Rotational{T,3}, bodya::Node, bodyb::No
 # Spring Jacobians
 ################################################################################
 
-@inline function spring_jacobian_configuration(relative::Symbol, jacobian::Symbol, joint::Rotational{T}, 
+function spring_jacobian_configuration(relative::Symbol, jacobian::Symbol, joint::Rotational{T}, 
     xa::AbstractVector, qa::UnitQuaternion,
     xb::AbstractVector, qb::UnitQuaternion,
     timestep::T; 

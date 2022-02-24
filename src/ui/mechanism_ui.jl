@@ -82,6 +82,6 @@ function set_input!(mechanism::Mechanism, dict)
     return
 end
 
-@inline function set_current!(mechanism::Mechanism)
+function set_current!(mechanism::Mechanism)
     for body in mechanism.bodies set_current!(body) end
 end

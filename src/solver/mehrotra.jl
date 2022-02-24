@@ -154,11 +154,11 @@ function correction!(mechanism)
 	return
 end
 
-@inline function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, node::Node)
+function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, node::Node)
     return
 end
 
-@inline function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, ::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, ::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
 	Δs = step_entry.value[1:N½]
     Δγ = step_entry.value[N½ .+ (1:N½)]
 	μ = mechanism.μ
@@ -166,7 +166,7 @@ end
     return
 end
 
-@inline function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
+function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
 	cont = contact.model
 	μ = mechanism.μ
 	Δs = step_entry.value[1:N½]
@@ -175,7 +175,7 @@ end
     return
 end
 
-@inline function correction!(mechanism::Mechanism{T}, residual_entry::Entry, step_entry::Entry, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
+function correction!(mechanism::Mechanism{T}, residual_entry::Entry, step_entry::Entry, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
 	cor = correction(mechanism, step_entry, joint)
 	residual_entry.value += cor
     return
@@ -186,7 +186,7 @@ end
     return :(vcat($(cor...)))
 end
 
-@inline function correction(joint::Joint{T,Nλ,Nb,N}, Δ, μ) where {T,Nλ,Nb,N}
+function correction(joint::Joint{T,Nλ,Nb,N}, Δ, μ) where {T,Nλ,Nb,N}
     Δs, Δγ = split_impulses(joint, Δ)
 	return [- Δs .* Δγ .+ μ; szeros(Nb + Nλ)]
 end

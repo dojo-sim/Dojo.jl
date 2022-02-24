@@ -32,7 +32,7 @@ function line_search!(mechanism::Mechanism, α, rvio, bvio, opts; warning::Bool 
     return rvio_cand, bvio_cand
 end
 
-@inline function candidate_step!(α, mechanism::Mechanism, body::Body, vector_entry::Entry, scale; ϕmax = Inf)
+function candidate_step!(α, mechanism::Mechanism, body::Body, vector_entry::Entry, scale; ϕmax = Inf)
     body.state.vsol[2] = body.state.vsol[1] + 1 / (2^scale) * α * vector_entry.value[SA[1; 2; 3]]
     body.state.ϕsol[2] = body.state.ϕsol[1] + 1 / (2^scale) * α * vector_entry.value[SA[4; 5; 6]]
     ϕ = body.state.ϕsol[2]
@@ -44,12 +44,12 @@ end
     return
 end
 
-@inline function candidate_step!(α, joint::JointConstraint, vector_entry::Entry, scale)
+function candidate_step!(α, joint::JointConstraint, vector_entry::Entry, scale)
     joint.impulses[2] = joint.impulses[1] + 1.0 / (2^scale) * α * vector_entry.value
     return
 end
 
-@inline function candidate_step!(α::T, contact::ContactConstraint{T,N,Nc,Cs,N½}, vector_entry::Entry, scale) where {T,N,Nc,Cs,N½}
+function candidate_step!(α::T, contact::ContactConstraint{T,N,Nc,Cs,N½}, vector_entry::Entry, scale) where {T,N,Nc,Cs,N½}
     contact.impulses_dual[2] = contact.impulses_dual[1] + 1 / (2^scale) * α * vector_entry.value[SVector{N½,Int64}(1:N½)]
     contact.impulses[2] = contact.impulses[1] + 1 / (2^scale) * α * vector_entry.value[SVector{N½,Int64}(N½+1:N)]
     return

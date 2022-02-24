@@ -34,8 +34,8 @@ function get_fieldnumber(obj)
     return i-1
 end
 
-@inline offset_range(offset, length) = (offset-1)*length+1:offset*length
-@inline offset_range(offset, length, totallength, inneroffset) = (offset-1)*totallength+(inneroffset-1)*length+1:(offset-1)*totallength+inneroffset*length
+offset_range(offset, length) = (offset-1)*length+1:offset*length
+offset_range(offset, length, totallength, inneroffset) = (offset-1)*totallength+(inneroffset-1)*length+1:(offset-1)*totallength+inneroffset*length
 
 function scn(a::Number; digits::Int=1, exp_digits::Int=1)
 	(typeof(a) <: Float64) ? nothing : return nothing

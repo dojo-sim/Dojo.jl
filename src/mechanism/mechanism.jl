@@ -172,28 +172,6 @@ function set_control!(mechanism::Mechanism{T}, u::AbstractVector) where T
 	end
 end
 
-function inverse_control(mechanism::Mechanism, x, x₊; ϵtol = 1e-5)
-	nu = control_dimension(mechanism)
-	u = zeros(nu)
-	# starting point of the local search
-	for k = 1:10
-		err = inverse_control_error(mechanism, x, x₊, u, ϵtol = ϵtol)
-		norm(err, Inf) < 1e-10 && continue
-		∇ = FiniteDiff.finite_difference_jacobian(u -> inverse_control_error(mechanism, x, x₊, u, ϵtol = ϵtol), u)
-		u -= ∇ \ err
-	end
-	return u
-end
-
-function inverse_control_error(mechanism, x, x₊, u; ϵtol = 1e-5)
-	z = minimal_to_maximal(mechanism, x)
-	z_next = minimal_to_maximal(mechanism, x₊)
-	set_state!(mechanism, z)
-	opts = SolverOptions(rtol=ϵtol, btol=ϵtol, undercut=1.5)
-	err = x₊ - maximal_to_minimal(mechanism, step!(mechanism, minimal_to_maximal(mechanism, x), u, opts=opts))
-	return err
-end
-
 # velocity
 function velocity_index(mechanism::Mechanism{T,Nn,Ne}) where {T,Nn,Ne}
     ind = []
@@ -228,6 +206,6 @@ end
 # find all the joints parents of a body
 function parent_joints(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, body::Body) where {T,Nn,Ne,Nb,Ni}
 	ids = parents(mechanism.system, body.id)
-	ids = intersect(ids, 1:Ne)# filter out the bodies
+	ids = intersect(ids, 1:Ne) # filter out the bodies
 	return [get_node(mechanism, id) for id in ids]
 end

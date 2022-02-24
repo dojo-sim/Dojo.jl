@@ -243,11 +243,11 @@ end
 			x = rand(minimal_dimension(mech))
 
 			# convert to maximal
-			z = minimal_to_maximal(mech, x)
+			z = Dojo.minimal_to_maximal(mech, x)
 
 			# extract body states
 			Ne = length(mech.joints)
-			if get_body(mech, jointcon.parent_id).name == :origin 
+			if Dojo.get_body(mech, jointcon.parent_id).name == :origin 
 				zp = [mech.origin.state.x2[1]; mech.origin.state.v15; vector(mech.origin.state.q2[1]); mech.origin.state.ϕ15]
 			else
 				zp = z[(jointcon.parent_id - Ne - 1) * 13 .+ (1:13)]

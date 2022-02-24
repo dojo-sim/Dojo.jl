@@ -19,26 +19,26 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N
     SVector{1,T}(model.surface_normal_projector * (x3 + vrotate(model.contact_point,q3) - model.offset) - contact.impulses_dual[2][1])
 end
 
-@inline function constraint_jacobian_configuration(model::ImpactContact, x3::AbstractVector, q3::UnitQuaternion,
+function constraint_jacobian_configuration(model::ImpactContact, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, timestep)
     X = model.surface_normal_projector
     Q = model.surface_normal_projector * ∂vrotate∂q(model.contact_point, q3)
     return [X Q]
 end
 
-@inline function constraint_jacobian_velocity(model::ImpactContact, x3::AbstractVector, q3::UnitQuaternion,
+function constraint_jacobian_velocity(model::ImpactContact, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, timestep)
     V = model.surface_normal_projector * timestep
     Ω = model.surface_normal_projector * ∂vrotate∂q(model.contact_point, q3) * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)
     return [V Ω]
 end
 
-@inline function force_mapping(model::ImpactContact, x::AbstractVector, q::UnitQuaternion)
+function force_mapping(model::ImpactContact, x::AbstractVector, q::UnitQuaternion)
     X = model.surface_normal_projector
     return X
 end
 
-@inline function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
+function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
     contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:ImpactContact{T,N},N½}
     # ∇impulses[dual .* impulses - μ; g - s] = [diag(dual); -diag(0,1,1)]
     # ∇dual[dual .* impulses - μ; g - s] = [diag(impulses); -diag(1,0,0)]

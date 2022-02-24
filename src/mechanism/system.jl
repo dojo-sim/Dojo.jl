@@ -43,8 +43,8 @@ function adjacency_matrix(joints::Vector{<:JointConstraint}, bodies::Vector{<:Bo
     return A
 end
 
-@inline get_entry(system, id1, id2) = system.matrix_entries[id1, id2]
-@inline get_entry(system, id) = system.vector_entries[id]
+get_entry(system, id1, id2) = system.matrix_entries[id1, id2]
+get_entry(system, id) = system.vector_entries[id]
 
 function recursivedirectchildren!(system, id::Integer)
     dirs = copy(children(system, id))

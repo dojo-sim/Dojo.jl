@@ -1,17 +1,17 @@
-@inline function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry, node::Node)
+function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry, node::Node)
     matrix_entry.value = constraint_jacobian_configuration(mechanism, node)
     vector_entry.value = -constraint(mechanism, node)
     return
 end
 
-@inline function set_LU!(mechanism::Mechanism, matrix_entry_L::Entry, matrix_entry_U::Entry, nodea::Node, nodeb::Node)
+function set_LU!(mechanism::Mechanism, matrix_entry_L::Entry, matrix_entry_U::Entry, nodea::Node, nodeb::Node)
     L, U = off_diagonal_jacobians(mechanism, nodea, nodeb)
     matrix_entry_L.value = L
     matrix_entry_U.value = U
     return
 end
 
-@inline function zero_LU!(matrix_entry_L::Entry, matrix_entry_U::Entry)
+function zero_LU!(matrix_entry_L::Entry, matrix_entry_U::Entry)
     matrix_entry_L.value *= 0
     matrix_entry_U.value *= 0
     return
@@ -175,24 +175,24 @@ function set_entries!(mechanism::Mechanism)
     return
 end
 
-@inline function update_solution!(body::Body)
+function update_solution!(body::Body)
     body.state.vsol[1] = body.state.vsol[2]
     body.state.ϕsol[1] = body.state.ϕsol[2]
     return
 end
 
-@inline function update_solution!(joint::JointConstraint)
+function update_solution!(joint::JointConstraint)
     joint.impulses[1] = joint.impulses[2]
     return
 end
 
-@inline function update_solution!(contact::ContactConstraint)
+function update_solution!(contact::ContactConstraint)
     contact.impulses_dual[1] = contact.impulses_dual[2]
     contact.impulses[1] = contact.impulses[2]
     return
 end
 
-@inline function residual_violation(mechanism::Mechanism)
+function residual_violation(mechanism::Mechanism)
     violation = 0.0
     for joint in mechanism.joints
         res = constraint(mechanism, joint)
@@ -216,7 +216,7 @@ end
     return violation
 end
 
-@inline function bilinear_violation(mechanism::Mechanism)
+function bilinear_violation(mechanism::Mechanism)
     violation = 0.0
     for contact in mechanism.contacts
         comp = complementarity(mechanism, contact)
