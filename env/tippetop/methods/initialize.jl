@@ -38,9 +38,9 @@ function initialize_tippetop!(mechanism::Mechanism; x::AbstractVector{T}=zeros(3
     zero_velocity!(mechanism)
     # set_minimal_coordinates!(mechanism, joint, [x; rotation_vector(q)])
     # set_minimal_velocities!(mechanism, joint, [v; ω])
-    set_maximal_configuration!(origin, pbody; parent_vertex = [0;0;radius], child_vertex = [0;0;0], Δx = x, Δq = q)
-    set_maximal_configuration!(pbody,  cbody; parent_vertex = [0;0;radius], child_vertex = [0;0;0], Δx = [0;0;0], Δq = one(UnitQuaternion))
-    set_maximal_velocity!(origin, pbody; parent_vertex = [0;0;radius], child_vertex = [0;0;0], Δv = v, Δω = ω)
-    set_maximal_velocity!(pbody,  cbody; parent_vertex = [0;0;radius], child_vertex = [0;0;0], Δv = [0;0;0], Δω = [0;0;0])
+    set_maximal_coordinates!(origin, pbody; parent_vertex = [0;0;radius], child_vertex = [0;0;0], Δx = x, Δq = q)
+    set_maximal_coordinates!(pbody,  cbody; parent_vertex = [0;0;radius], child_vertex = [0;0;0], Δx = [0;0;0], Δq = one(UnitQuaternion))
+    set_maximal_velocities!(origin, pbody; parent_vertex = [0;0;radius], child_vertex = [0;0;0], Δv = v, Δω = ω)
+    set_maximal_velocities!(pbody,  cbody; parent_vertex = [0;0;radius], child_vertex = [0;0;0], Δv = [0;0;0], Δω = [0;0;0])
     return nothing
 end

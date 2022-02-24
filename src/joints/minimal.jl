@@ -63,7 +63,7 @@ function set_minimal_velocities!(joint::JointConstraint, pnode::Node, cnode::Nod
         Δv=Δv, Δϕ=Δϕ)
 
     # set 
-	set_maximal_velocity!(cnode; v=vb, ω=ϕb)
+	set_maximal_velocities!(cnode; v=vb, ω=ϕb)
 	set_previous_configuration!(cnode, timestep)
 
     return nothing

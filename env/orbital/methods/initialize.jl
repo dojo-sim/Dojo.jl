@@ -32,7 +32,7 @@ function initialize_orbital!(mechanism::Mechanism; ϕx::T = pi/4, ϕy::T = pi/8)
     vert12 = - vert11
 
     # set position and velocities
-    set_maximal_configuration!(mechanism.origin, pbody, child_vertex = vert11, Δq = UnitQuaternion(RotX(0.0)))
+    set_maximal_coordinates!(mechanism.origin, pbody, child_vertex = vert11, Δq = UnitQuaternion(RotX(0.0)))
 
     previd = pbody.id
     set_minimal_coordinates!(mechanism, collect(mechanism.joints)[2], [ϕx, ϕy])

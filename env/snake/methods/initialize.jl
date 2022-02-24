@@ -49,13 +49,13 @@ function initialize_snake!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector{T
     vert11 = [0.;0.; h/2]
     vert12 = -vert11
     # set position and velocities
-    set_maximal_configuration!(mechanism.origin, pbody, child_vertex=x, Δq=q1)
-    set_maximal_velocity!(pbody, v=v, ω=ω)
+    set_maximal_coordinates!(mechanism.origin, pbody, child_vertex=x, Δq=q1)
+    set_maximal_velocities!(pbody, v=v, ω=ω)
 
     previd = pbody.id
     for (i,body) in enumerate(Iterators.drop(mechanism.bodies, 1))
-        set_maximal_configuration!(get_body(mechanism, previd), body, parent_vertex = vert12, child_vertex = vert11)
-        set_maximal_velocity!(get_body(mechanism, previd), body, parent_vertex = vert12, child_vertex = vert11,
+        set_maximal_coordinates!(get_body(mechanism, previd), body, parent_vertex = vert12, child_vertex = vert11)
+        set_maximal_velocities!(get_body(mechanism, previd), body, parent_vertex = vert12, child_vertex = vert11,
                 Δv = Δv, Δω = Δω)
         previd = body.id
     end

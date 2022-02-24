@@ -19,9 +19,9 @@ end
 function initialize_dzhanibekov!(mech::Mechanism{T,Nn,Ne,Nb}; 
     v::AbstractVector{T} = zeros(3), ω::AbstractVector{T} = zeros(3)) where {T,Nn,Ne,Nb}
 
-    set_maximal_configuration!(mech.origin, mech.bodies[3])
-    set_maximal_velocity!(mech.bodies[3], v=v, ω=ω)
+    set_maximal_coordinates!(mech.origin, mech.bodies[3])
+    set_maximal_velocities!(mech.bodies[3], v=v, ω=ω)
 
-    set_maximal_configuration!(mech.bodies[3], mech.bodies[4], Δx=[0.25; 0.0; 0.0])
-    set_maximal_velocity!(mech.bodies[4], v=zeros(3), ω=zeros(3))
+    set_maximal_coordinates!(mech.bodies[3], mech.bodies[4], Δx=[0.25; 0.0; 0.0])
+    set_maximal_velocities!(mech.bodies[4], v=zeros(3), ω=zeros(3))
 end

@@ -26,7 +26,7 @@ function astronaut_simulation(vis::Visualizer; timestep=1e-2, tsim=1.0, g=0.0,
     for body in mech.bodies
         v = rand(3) .- 0.5
         v ./= norm(v)
-        set_maximal_velocity!(body, v = v)
+        set_maximal_velocities!(body, v = v)
     end
 
     tcompute = @elapsed storage = simulate!(mech, tsim, record=true, opts=SolverOptions(rtol=ϵ, btol=ϵ))

@@ -41,7 +41,7 @@ function add_limits(mech::Mechanism, joint::JointConstraint;
     Nb = 2Nb½
     N̄λ = 3 - Nλ
     N = Nλ + 2Nb
-    tra_limit = (Translational{T,Nλ,Nb,N,Nb½,N̄λ}(tra.axis, tra.V3, tra.V12,
+    tra_limit = (Translational{T,Nλ,Nb,N,Nb½,N̄λ}(tra.axis, tra.axis_mask1, tra.axis_mask2, tra.axis_mask3,
         tra.vertices, tra.spring, tra.damper, tra.spring_offset, tra_limits,
         tra.spring_type, tra.input), joint.parent_id, joint.child_id)
 
@@ -53,7 +53,7 @@ function add_limits(mech::Mechanism, joint::JointConstraint;
     Nb = 2Nb½
     N̄λ = 3 - Nλ
     N = Nλ + 2Nb
-    rot_limit = (Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(rot.axis, rot.V3, rot.V12,
+    rot_limit = (Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(rot.axis, rot.axis_mask1, rot.axis_mask2, rot.axis_mask3,
         rot.axis_offset, rot.spring, rot.damper, rot.spring_offset, rot_limits,
         rot.spring_type, rot.input), joint.parent_id, joint.child_id)
 

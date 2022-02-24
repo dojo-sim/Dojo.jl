@@ -28,16 +28,16 @@ end
 
 function initialize_cartpole!(mech::Mechanism{T,Nn,Ne,Nb}; mode=:down, pendulum_length=1.0) where {T,Nn,Ne,Nb}
     # origin to slider
-    set_maximal_configuration!(mech.origin, mech.bodies[1])
-    set_maximal_velocity!(mech.bodies[1], v=[0.0; 0.0; 0.0],ω=zeros(3))
+    set_maximal_coordinates!(mech.origin, mech.bodies[1])
+    set_maximal_velocities!(mech.bodies[1], v=[0.0; 0.0; 0.0],ω=zeros(3))
 
     # slider to pendulum
     if mode == :down
-        set_maximal_configuration!(mech.bodies[1], mech.bodies[2], Δx=[0.0; 0.0; -0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
-        set_maximal_velocity!(mech.bodies[2], v=zeros(3), ω=zeros(3))
+        set_maximal_coordinates!(mech.bodies[1], mech.bodies[2], Δx=[0.0; 0.0; -0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
+        set_maximal_velocities!(mech.bodies[2], v=zeros(3), ω=zeros(3))
     elseif mode == :up
-        set_maximal_configuration!(mech.bodies[1], mech.bodies[2], Δx=[0.0; 0.0; 0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
-        set_maximal_velocity!(mech.bodies[2], v=zeros(3), ω=zeros(3))
+        set_maximal_coordinates!(mech.bodies[1], mech.bodies[2], Δx=[0.0; 0.0; 0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
+        set_maximal_velocities!(mech.bodies[2], v=zeros(3), ω=zeros(3))
     end
 end
 

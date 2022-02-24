@@ -107,7 +107,7 @@ damper0 = 1.0
 mech = get_mechanism(:humanoid, timestep=timestep0, gravity=gravity0, spring=spring0, damper=damper0, contact = false)
 initialize!(mech, :humanoid)
 bodies = collect(mech.bodies)
-set_maximal_velocity!.(bodies, ω = 1e-0rand(3))
+set_maximal_velocities!.(bodies, ω = 1e-0rand(3))
 
 storage = simulate!(mech, 10.0, controller!, record = true, verbose = false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 # visualize(mech, storage, vis = vis)

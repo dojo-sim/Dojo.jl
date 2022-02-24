@@ -21,7 +21,7 @@ jointtypes = [
     ]
 
 ################################################################################
-# Test set_position! and set_maximal_velocity!
+# Test set_position! and set_maximal_velocities!
 ################################################################################\
 @testset "minimal to maximal: set_position!, set_velocity" begin
 	mech = Dojo.get_mechanism(:raiberthopper)
@@ -36,13 +36,13 @@ jointtypes = [
 	x = srand(1)
 	Δx = Dojo.zerodimstaticadjoint(Dojo.nullspace_mask(tra2)) * x
 	Δq = UnitQuaternion(rand(4)...)
-	Dojo.set_maximal_configuration!(pbody, cbody; parent_vertex = tra2.vertices[1], child_vertex = tra2.vertices[2], Δx = Δx, Δq = Δq)
+	Dojo.set_maximal_coordinates!(pbody, cbody; parent_vertex = tra2.vertices[1], child_vertex = tra2.vertices[2], Δx = Δx, Δq = Δq)
 	@test norm(Dojo.minimal_coordinates(tra2, pbody, cbody) - x[1], Inf) < 1e-10
 
 	v = srand(1)
 	Δv = Dojo.zerodimstaticadjoint(Dojo.nullspace_mask(tra2)) * v
 	Δω = rand(3)
-	Dojo.set_maximal_velocity!(pbody, cbody; parent_vertex = tra2.vertices[1], child_vertex = tra2.vertices[2], Δv = Δv, Δω = Δω)
+	Dojo.set_maximal_velocities!(pbody, cbody; parent_vertex = tra2.vertices[1], child_vertex = tra2.vertices[2], Δv = Δv, Δω = Δω)
 	@test norm(Dojo.minimal_velocities(tra2, pbody, cbody, timestep) - v[1], Inf) < 1e-10
 end
 

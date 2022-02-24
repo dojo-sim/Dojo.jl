@@ -1,7 +1,8 @@
 mutable struct Translational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N,Nb½}
     axis::SVector{3,T} # translation axis in parent frame
-    V3::Adjoint{T,SVector{3,T}} # in pbody's frame
-    V12::SMatrix{2,3,T,6} # in pbody's frame
+    axis_mask1::Adjoint{T,SVector{3,T}} # in pbody's frame
+    axis_mask2::Adjoint{T,SVector{3,T}} # in pbody's frame
+    axis_mask3::Adjoint{T,SVector{3,T}} # in pbody's frame
     vertices::NTuple{2,SVector{3,T}} # in pbody's & cbody's frames
     spring::T
     damper::T
@@ -24,12 +25,11 @@ function Translational{T,Nλ}(pbody::Node, cbody::Node;
 
     vertices = (parent_vertex, child_vertex)
     V1, V2, V3 = orthogonal_rows(axis)
-    V12 = [V1;V2]
     input = zeros(T,3)
     Nb½ = length(joint_limits[1])
     Nb = 2Nb½
     N̄λ = 3 - Nλ
     N = Nλ + 2Nb
-    
-    Translational{T,Nλ,Nb,N,Nb½,N̄λ}(axis, V3, V12, vertices, spring, damper, spring_offset, joint_limits, spring_type, input), pbody.id, cbody.id
+
+    Translational{T,Nλ,Nb,N,Nb½,N̄λ}(axis, V1, V2, V3, vertices, spring, damper, spring_offset, joint_limits, spring_type, input), pbody.id, cbody.id
 end

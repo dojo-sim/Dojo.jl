@@ -59,9 +59,10 @@ export Origin,
     NonlinearContact,
     UnitQuaternion,
 
-    set_maximal_configuration!,
+    set_maximal_coordinates!,
     set_minimal_coordinates!,
-    set_maximal_velocity!,
+    set_maximal_velocities!,
+    set_minimal_velocities!
     set_input!,
     add_input!,
     get_node,
@@ -118,8 +119,12 @@ export Origin,
 # Utilities
 include(joinpath("util", "util.jl"))
 include(joinpath("util", "custom_static.jl"))
-include(joinpath("util", "quaternion.jl"))
-include(joinpath("util", "mrp.jl"))
+
+# Orientation
+include(joinpath("orientation", "quaternion.jl"))
+include(joinpath("orientation", "mrp.jl"))
+include(joinpath("orientation", "axis_angle.jl"))
+include(joinpath("orientation", "rotation.jl"))
 
 # Graph system
 include(joinpath("graph", "entry.jl"))

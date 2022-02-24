@@ -42,7 +42,7 @@ mech = Mechanism(origin, bodies, eqcs, g = 0.0, timestep = 0.01)
 
 pbody = collect(mech.bodies)[1]
 set_position(pbody, x = [1, 0, 0.])
-set_maximal_velocity!(pbody, v = [0, 0, 0.], ω = [0, 0, 0.])
+set_maximal_velocities!(pbody, v = [0, 0, 0.], ω = [0, 0, 0.])
 
 storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!)
 visualize(mech, storage, vis = vis)

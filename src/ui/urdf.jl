@@ -463,12 +463,6 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
             qparentjoint = qjointlist[pjoint.id] # in world frame
         end
 
-
-        # @show pnode.name
-        # @show cjoint.name
-        # @show cnode.name
-
-
         # urdf joint's x and q in parent's (parentbody) frame
         # xjointlocal = vrotate(x_pjoint + vrotate(x_cjoint, q_pjoint) - x_pnode, inv(q_pnode))
         xjointlocal = vrotate(xparentjoint + vrotate(x_cjoint, qparentjoint) - xparentbody, inv(qparentbody))
@@ -488,15 +482,18 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         child_vertex = vrotate(-xbodylocal, inv(qbodylocal)) # in body frame (xbodylocal and qbodylocal are both relative to the same (joint) frame -> rotationg by inv(body.q) gives body frame)
         cjoint.translational.vertices = (parent_vertex, child_vertex)
 
-        V3 = vrotate(cjoint.rotational.V3', qjointlocal) # in parent's (parentbody) frame
-        V12 = (svd(skew(V3)).Vt)[1:2,:]
-        cjoint.rotational.V3 = V3'
-        cjoint.rotational.V12 = V12
+        V3 = vrotate(cjoint.rotational.axis_mask3', qjointlocal) # in parent's (parentbody) frame
+        V1 = (svd(skew(V3)).Vt)[1:1,:]
+        V2 = (svd(skew(V3)).Vt)[2:2,:]
+
+        cjoint.rotational.axis_mask3 = SVector{3}(V3)'
+        cjoint.rotational.axis_mask1 = SVector{3}(V1)'
+        cjoint.rotational.axis_mask2 = SVector{3}(V2)'
         cjoint.rotational.axis_offset = axis_offset # in parent's (parentbody) frame
 
         # actual body properties
-        set_maximal_configuration!(cnode) # set everything to zero
-        set_maximal_configuration!(pnode, cnode, parent_vertex = parent_vertex, child_vertex = child_vertex, Δq = axis_offset)
+        set_maximal_coordinates!(cnode) # set everything to zero
+        set_maximal_coordinates!(pnode, cnode, parent_vertex = parent_vertex, child_vertex = child_vertex, Δq = axis_offset)
         xbody = cnode.state.x2[1]
         qbody = cnode.state.q2[1]
 
@@ -559,10 +556,14 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         child_vertex = xjointlocal2 # in parent's (parentcbody) frame
         constraint.translational.vertices = (parent_vertex, child_vertex)
 
-        V3 = vrotate(constraint.rotational.V3', qjointlocal1) # in parent's (parentpbody) frame
-        V12 = (svd(skew(V3)).Vt)[1:2,:]
-        constraint.rotational.V3 = V3'
-        constraint.rotational.V12 = V12
+        V3 = vrotate(constraint.rotational.axis_mask3', qjointlocal1) # in parent's (parentpbody) frame
+        V1 = (svd(skew(V3)).Vt)[1:1,:]
+        V2 = (svd(skew(V3)).Vt)[2:2,:]
+
+        constraint.rotational.axis_mask3 = SVector{3}(V3)'
+        constraint.rotational.axis_mask1 = SVector{3}(V1)'
+        constraint.rotational.axis_mask2 = SVector{3}(V2)'
+
         constraint.rotational.axis_offset = axis_offset1 # in parent's (parentpbody) frame
     end
 end
