@@ -168,7 +168,7 @@ function initialize_nerf!(mechanism::Mechanism; x::AbstractVector{T}=zeros(3),
     joint = get_joint_constraint(mechanism, :floating_joint)
     zero_velocity!(mechanism)
     set_position!(mechanism, joint, [x+[0,0,r] rotation_vector(q)])
-    set_velocity!(mechanism, joint, [v; ω])
+    set_minimal_velocities!(mechanism, joint, [v; ω])
 end
 
 function feasibility_linesearch!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},

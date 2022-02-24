@@ -7,9 +7,11 @@ function lift_inertia(j::SVector{6,T}) where T
          j[2] j[4] j[5];
          j[3] j[5] j[6]])
 end
+
 function flatten_inertia(J::SMatrix{3,3,T,9}) where T
     j = SVector{6,T}([J[1,1], J[1,2], J[1,3], J[2,2], J[2,3], J[3,3]])
 end
+
 function ∂inertia(p) #∂(J*p)/∂flatten(J)
     SA[
         p[1]  p[2]  p[3]  0     0     0;
@@ -17,7 +19,6 @@ function ∂inertia(p) #∂(J*p)/∂flatten(J)
         0     0     p[1]  0     p[2]  p[3];
     ]
 end
-
 
 function getλJoint(joint::JointConstraint{T,N,Nc}, i::Int) where {T,N,Nc}
     n1 = 1
@@ -29,7 +30,6 @@ function getλJoint(joint::JointConstraint{T,N,Nc}, i::Int) where {T,N,Nc}
     λi = SVector{n2-n1+1,T}(joint.impulses[2][n1:n2])
     return λi
 end
-
 
 function attitude_jacobian(data::AbstractVector, Nb::Int)
     G = zeros(0,0)
@@ -51,8 +51,6 @@ function unpack_data(data::AbstractVector)
     ϕ15 = data[SVector{3,Int}(11:13)]
     return x2, v15, q2, ϕ15
 end
-
-
 
 ################################################################################
 # Index and Dimensions

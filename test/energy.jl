@@ -254,8 +254,8 @@ mech = get_mechanism(:humanoid, timestep=timestep0, gravity=gravity0,
 initialize!(mech, :humanoid)
 bodies = collect(mech.bodies)
 for body in mech.bodies
-    set_velocity!(body, ω = 0.5*rand(3))
-    # set_velocity!(body, v = 1.0*rand(3))
+    set_maximal_velocity!(body, ω = 0.5*rand(3))
+    # set_maximal_velocity!(body, v = 1.0*rand(3))
 end
 
 for joint in mech.joints 
@@ -295,7 +295,7 @@ mech = get_mechanism(:atlas, timestep=timestep0, gravity=gravity0, spring=spring
     damper=damper0, contact = false)
 initialize!(mech, :atlas)
 bodies = collect(mech.bodies)
-set_velocity!.(bodies, ω = 1.0*rand(3))
+set_maximal_velocity!.(bodies, ω = 1.0*rand(3))
 
 storage = simulate!(mech, 5.0, humanoid_controller!, record=true, verbose=false,
     opts=SolverOptions(rtol=ϵ0, btol=ϵ0))

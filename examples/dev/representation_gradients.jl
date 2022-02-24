@@ -160,11 +160,11 @@ function position_velocity(y)
     currentvels = minimal_velocities(mech)
 
     set_joint_position!(mech, joint, y[1:n]) 
-    set_velocity!(mech, joint, y[n .+ (1:n)])
+    set_minimal_velocities!(mech, joint, y[n .+ (1:n)])
 
     for node in child_joints
         set_joint_position!(mech, node, currentvals[node.id])
-        set_velocity!(mech, node, currentvels[node.id])
+        set_minimal_velocities!(mech, node, currentvels[node.id])
     end
 
     return get_maximal_state(mech)
@@ -179,7 +179,7 @@ currentvels = minimal_velocities(mech)
 function joint_position_velocity(mech, joint, θ) 
     n = control_dimension(joint)
     x, q = set_joint_position!(mech, joint, θ[1:n]) 
-    v, ω = set_velocity!(mech, joint, θ[n .+ (1:n)])
+    v, ω = set_minimal_velocities!(mech, joint, θ[n .+ (1:n)])
     return [x; v; vector(q); ω]
 end
 
@@ -187,12 +187,12 @@ D1 = FiniteDiff.finite_difference_jacobian(a -> joint_position_velocity(mech, jo
 norm(D1 - minimal_to_maximal_jacobian(mech, x)[(ichild - 1) * 13 .+ (1:13), 1:2n])
 
 xa, qa = set_joint_position!(mech, joint, x[idx][1:n]) 
-va, ωa = set_velocity!(mech, joint, x[idx][n .+ (1:n)])
+va, ωa = set_minimal_velocities!(mech, joint, x[idx][n .+ (1:n)])
 zp = [xa; va; vector(qa); ωa]
 
 for node in child_joints
     set_joint_position!(mech, node, currentvals[node.id])
-    set_velocity!(mech, node, currentvels[node.id])
+    set_minimal_velocities!(mech, node, currentvels[node.id])
 end
 
 # root 
@@ -236,11 +236,11 @@ function joint_position_velocity(mech, joint, z, θ)
     qp = UnitQuaternion(z[7:10]..., false)
     ϕp = z[11:13]
 
-    set_position!(body_parent, x=xp, q=qp)
-    set_velocity!(body_parent, v=vp, ω=ϕp)
+    set_maximal_configuration!(body_parent, x=xp, q=qp)
+    set_maximal_velocity!(body_parent, v=vp, ω=ϕp)
 
     x, q = set_joint_position!(mech, joint, θ[1:n]) 
-    v, ω = set_velocity!(mech, joint, θ[n .+ (1:n)])
+    v, ω = set_minimal_velocities!(mech, joint, θ[n .+ (1:n)])
 
     return [x; v; vector(q); ω]
 end
@@ -258,12 +258,12 @@ function position_velocity_jacobian(θ)
     currentvels = minimal_velocities(mech)
 
     x, q = set_joint_position!(mech, joint, θ[1:n]) 
-    v, ω = set_velocity!(mech, joint, θ[n .+ (1:n)])
+    v, ω = set_minimal_velocities!(mech, joint, θ[n .+ (1:n)])
     zp = [x; v; vector(q); ω]
 
     for node in child_joints
         set_joint_position!(mech, node, currentvals[node.id])
-        set_velocity!(mech, node, currentvels[node.id])
+        set_minimal_velocities!(mech, node, currentvels[node.id])
     end
 
     # root 

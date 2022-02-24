@@ -175,7 +175,7 @@ function get_nerf(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, radi
         body = get_body(mechanism, :sphere)
         models = [NerfContact133(body, normal, nerf; p=p) for p in contact_points]
         contacts = [ContactConstraint((model, body.id, nothing); name=Symbol(:nerf_contact, i)) for (i,model) in enumerate(models)]
-        set_position!(mechanism, get_joint_constraint(mechanism, :floating_joint), [0;0;2radius;zeros(3)])
+        set_maximal_configuration!(mechanism, get_joint_constraint(mechanism, :floating_joint), [0;0;2radius;zeros(3)])
         mechanism = Mechanism(origin, bodies, joints, contacts, gravity=gravity, timestep=timestep)
     end
     return mechanism
@@ -187,8 +187,8 @@ function initialize_nerf!(mechanism::Mechanism; x::AbstractVector{T}=zeros(3),
     r = collect(mechanism.bodies)[1].shape.r
     joint = get_joint_constraint(mechanism, :floating_joint)
     zero_velocity!(mechanism)
-    set_position!(mechanism, joint, [x+[0,0,r] rotation_vector(q)])
-    set_velocity!(mechanism, joint, [v; ω])
+    set_maximal_configuration!(mechanism, joint, [x+[0,0,r] rotation_vector(q)])
+    set_minimal_velocities!(mechanism, joint, [v; ω])
 end
 
 function feasibility_linesearch!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},

@@ -66,7 +66,7 @@ function get_humanoid(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_co
 
         contacts_right = contact_constraint(right_foot, normal, friction_coefficient=friction_coefficients, contact_points = contacts, offset=offsets)
 
-        set_position!(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [0;0;1.2;0.1;0.;0.])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [0;0;1.2;0.1;0.;0.])
         # mech = Mechanism(origin, bodies, eqs, [contacts_left; contacts_right], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
         mech = Mechanism(origin, bodies, eqs, [contacts_left; ], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
@@ -74,6 +74,6 @@ function get_humanoid(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_co
 end
 
 function initialize_humanoid!(mechanism::Mechanism; tran=[0,0,1.5], rot=[0.1,0,0]) where T
-    set_position!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [tran; rot])
+    set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [tran; rot])
     zero_velocity!(mechanism)
 end

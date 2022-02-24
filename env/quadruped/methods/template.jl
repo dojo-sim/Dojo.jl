@@ -45,9 +45,9 @@ function IKquadruped(mechanism::Mechanism, p_trunk, p_foot; leg::Symbol = :FR)
 end
 
 function QuadrupedIKerror(mechanism::Mechanism, p_trunk, p_foot, θ; leg::Symbol = :FR)
-	set_position!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [p_trunk; zeros(3)])
-	set_position!(mechanism, get_joint_constraint(mechanism, Symbol(String(leg)*"_thigh_joint")), [θ[1]])
-	set_position!(mechanism, get_joint_constraint(mechanism, Symbol(String(leg)*"_calf_joint")), [θ[2]])
+	set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [p_trunk; zeros(3)])
+	set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, Symbol(String(leg)*"_thigh_joint")), [θ[1]])
+	set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, Symbol(String(leg)*"_calf_joint")), [θ[2]])
 
 	foot = get_body(mechanism, Symbol(String(leg)*"_calf"))
 	contacts = collect(mechanism.contacts)

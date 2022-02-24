@@ -6,7 +6,7 @@ function maximal_to_minimal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVect
 		c = zeros(Tz,0)
 		v = zeros(Tz,0)
 		ichild = joint.child_id - Ne
-		for (i, element) in enumerate([joint.translational, joint.rotational])
+		for element in [joint.translational, joint.rotational]
 			xb, vb, qb, ϕb = unpack_maximal_state(z, ichild)
 			if joint.parent_id != 0
 				iparent = joint.parent_id - Ne
@@ -33,7 +33,7 @@ function maximal_to_minimal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::Abs
 		c_shift = 0
 		v_shift = control_dimension(joint)
 		ichild = joint.child_id - Ne
-		for (i, element) in enumerate([joint.translational, joint.rotational])
+		for element in [joint.translational, joint.rotational]
 			nu_element = control_dimension(element)
 
 			c_idx = row_shift + c_shift .+ (1:nu_element)
@@ -118,6 +118,7 @@ function get_maximal_gradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,
 		jacobian_control[12*(i-1) .+ (1:3),:] += linear_integrator_jacobian_velocity(timestep) * data_jacobian[index_row[id][1:3], vcat(index_control...)]
 		jacobian_control[12*(i-1) .+ (7:9),:] += LVᵀmat(q3)' * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep) * data_jacobian[index_row[id][4:6], vcat(index_control...)]
 	end
+	
 	return jacobian_state, jacobian_control
 end
 

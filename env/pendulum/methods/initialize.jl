@@ -65,13 +65,13 @@ function initialize_npendulum!(mechanism::Mechanism; ϕ1::T = pi/4, ω = [0.0, 0
     vert12 = - vert11
 
     # set position and velocities
-    set_position!(mechanism.origin, body1, p2 = vert11, Δq = UnitQuaternion(RotX(ϕ1)))
-    set_velocity!(body1, ω = ω)
+    set_maximal_configuration!(mechanism.origin, body1, p2 = vert11, Δq = UnitQuaternion(RotX(ϕ1)))
+    set_maximal_velocity!(body1, ω = ω)
 
     previd = body1.id
     for (i,body) in enumerate(Iterators.drop(mechanism.bodies, 1))
-        set_position!(get_body(mechanism, previd), body, p1 = vert12, p2 = vert11)
-        set_velocity!(get_body(mechanism, previd), body, p1 = vert12, p2 = vert11,
+        set_maximal_configuration!(get_body(mechanism, previd), body, p1 = vert12, p2 = vert11)
+        set_maximal_velocity!(get_body(mechanism, previd), body, p1 = vert12, p2 = vert11,
                 Δv = Δv, Δω = 1/i*Δω)
         previd = body.id
     end

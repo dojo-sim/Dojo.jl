@@ -22,7 +22,7 @@ function initialize_slider!(mechanism::Mechanism; z1::T = 0.0) where T
     body = collect(mechanism.bodies)[1]
     joint = collect(mechanism.joints)[1]
     p2 = joint.translational.vertices[2]
-    set_position!(mechanism.origin, body, p2 = p2 - [0, 0, z1])
+    set_maximal_configuration!(mechanism.origin, body, p2 = p2 - [0, 0, z1])
 end
 
 function get_nslider(; timestep::T = 0.01, gravity = -9.81, spring = 0.0, damper::T = 0.0, Nb::Int = 5) where T
@@ -54,11 +54,11 @@ end
 function initialize_nslider!(mechanism::Mechanism; z1::T = 0.2, Δz = 0.0) where T
     body1 = collect(mechanism.bodies)[1]
     # set position and velocities
-    set_position!(mechanism.origin, body1, p1 = [0, 0, z1])
+    set_maximal_configuration!(mechanism.origin, body1, p1 = [0, 0, z1])
 
     previd = body1.id
     for (i,body) in enumerate(Iterators.drop(mechanism.bodies, 1))
-        set_position!(get_body(mechanism, previd), body, p1 = [0, -0.1, Δz])
+        set_maximal_configuration!(get_body(mechanism, previd), body, p1 = [0, -0.1, Δz])
         previd = body.id
     end
 

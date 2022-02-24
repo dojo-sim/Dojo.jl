@@ -217,8 +217,8 @@ function set_minimal_velocities(joint::JointConstraint, xa::AbstractVector,
 	ϕb = angular_velocity(qb10, qb, timestep)
 
 	return xb, vb, qb, ϕb
-	# set_position!(cnode; x=xb, q=qb)
-    # set_velocity!(cnode; v=vb, ω=ϕb)
+	# set_maximal_configuration!(cnode; x=xb, q=qb)
+    # set_maximal_velocity!(cnode; v=vb, ω=ϕb)
 	# return nothing
 end
 

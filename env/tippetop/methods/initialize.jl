@@ -19,7 +19,7 @@ function get_tippetop(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_co
             contact_constraint(get_body(mechanism, :sphere1), normal, friction_coefficient=friction_coefficient, contact_point=contact, offset=[0,0,radius], contact_type=contact_type),
             contact_constraint(get_body(mechanism, :sphere2), normal, friction_coefficient=friction_coefficient, contact_point=contact, offset=[0,0,radius*α], contact_type=contact_type)
             ]
-        set_position!(mechanism, get_joint_constraint(mechanism, :floating_joint), [0;0;radius;zeros(3)])
+        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :floating_joint), [0;0;radius;zeros(3)])
         mechanism = Mechanism(origin, bodies, joints, contacts, gravity=gravity, timestep=timestep)
     end
     return mechanism
@@ -36,11 +36,11 @@ function initialize_tippetop!(mechanism::Mechanism; x::AbstractVector{T}=zeros(3
     body2 = get_body(mech, :sphere2)
 
     zero_velocity!(mechanism)
-    # set_position!(mechanism, joint, [x; rotation_vector(q)])
-    # set_velocity!(mechanism, joint, [v; ω])
-    set_position!(origin, body1; p1 = [0;0;radius], p2 = [0;0;0], Δx = x, Δq = q)
-    set_position!(body1,  body2; p1 = [0;0;radius], p2 = [0;0;0], Δx = [0;0;0], Δq = one(UnitQuaternion))
-    set_velocity!(origin, body1; p1 = [0;0;radius], p2 = [0;0;0], Δv = v, Δω = ω)
-    set_velocity!(body1,  body2; p1 = [0;0;radius], p2 = [0;0;0], Δv = [0;0;0], Δω = [0;0;0])
+    # set_minimal_coordinates!(mechanism, joint, [x; rotation_vector(q)])
+    # set_minimal_velocities!(mechanism, joint, [v; ω])
+    set_maximal_configuration!(origin, body1; p1 = [0;0;radius], p2 = [0;0;0], Δx = x, Δq = q)
+    set_maximal_configuration!(body1,  body2; p1 = [0;0;radius], p2 = [0;0;0], Δx = [0;0;0], Δq = one(UnitQuaternion))
+    set_maximal_velocity!(origin, body1; p1 = [0;0;radius], p2 = [0;0;0], Δv = v, Δω = ω)
+    set_maximal_velocity!(body1,  body2; p1 = [0;0;radius], p2 = [0;0;0], Δv = [0;0;0], Δω = [0;0;0])
     return nothing
 end

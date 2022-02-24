@@ -1,32 +1,35 @@
-function set_position!(body::Body; x::AbstractVector = SA[0;0;0], q::UnitQuaternion = one(UnitQuaternion))
+function set_maximal_configuration!(body::Body; 
+    x::AbstractVector=SA[0;0;0], q::UnitQuaternion=one(UnitQuaternion))
+
     body.state.x2[1] = x
     body.state.q2[1] = q
+
     return body.state.x2[1], body.state.q2[1]
 end
 
-function set_position!(body1::Node, body2::Body;
-        p1::AbstractVector = SA[0;0;0], p2::AbstractVector = SA[0;0;0],
-        Δx::AbstractVector = SA[0;0;0], Δq::UnitQuaternion = one(UnitQuaternion)
-        # in body1's frame              # wrt to body1's orientation not qoffset
-    )
+function set_maximal_configuration!(body1::Node, body2::Body;
+        p1::AbstractVector=SA[0;0;0], p2::AbstractVector=SA[0;0;0],
+        Δx::AbstractVector=SA[0;0;0], Δq::UnitQuaternion=one(UnitQuaternion))
 
     q1 = body1.state.q2[1]
     q2 = body1.state.q2[1] * Δq
     x2 = body1.state.x2[1] + vrotate(p1 + Δx, q1) - vrotate(p2, q2)
-    return set_position!(body2; x = x2, q = q2)
+
+    return set_maximal_configuration!(body2; x = x2, q = q2)
 end
 
-function set_velocity!(body::Body; v::AbstractVector = SA[0;0;0], ω::AbstractVector = SA[0;0;0])
+function set_maximal_velocity!(body::Body; 
+    v::AbstractVector=SA[0;0;0], ω::AbstractVector=SA[0;0;0])
+
     body.state.v15 = v
     body.state.ϕ15 = ω
+
     return body.state.v15, body.state.ϕ15
 end
 
-function set_velocity!(body1::Node, body2::Body;
-        p1::AbstractVector = SA[0;0;0], p2::AbstractVector = SA[0;0;0],
-        Δv::AbstractVector = SA[0;0;0], Δω::AbstractVector = SA[0;0;0]
-        # in body1's frame              in body1's frame
-    )
+function set_maximal_velocity!(body1::Node, body2::Body;
+        p1::AbstractVector=SA[0;0;0], p2::AbstractVector=SA[0;0;0],
+        Δv::AbstractVector=SA[0;0;0], Δω::AbstractVector=SA[0;0;0])
 
     x1 = body1.state.x2[1]
     v1 = body1.state.v15
@@ -50,12 +53,12 @@ function set_velocity!(body1::Node, body2::Body;
     v2 += skew(ω1w) * cApB_w
     v2 += skew(ω2w) * pBcB_w
     v2 += Δvw
-    return set_velocity!(body2; v = v2, ω = ω2)
+
+    return set_maximal_velocity!(body2; v = v2, ω = ω2)
 end
 
 function set_input!(body::Body;
-        F::AbstractVector = SA[0;0;0], τ::AbstractVector = SA[0;0;0], p::AbstractVector = SA[0;0;0]
-    )
+        F::AbstractVector=SA[0;0;0], τ::AbstractVector=SA[0;0;0], p::AbstractVector=SA[0;0;0])
     # F and p in local coordinates
     τ += torque_from_force(F, p) # in local coordinates
     set_input!(body.state, vrotate(F,body.state.q2[1]), τ)

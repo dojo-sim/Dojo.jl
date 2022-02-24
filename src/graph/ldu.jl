@@ -13,6 +13,7 @@ function ldu_factorization_acyclic!(diagonal_v, offdiagonal_l, diagonal_c, offdi
     diagonal_v.value -= offdiagonal_l.value*diagonal_c.value*offdiagonal_u.value
     return
 end
+
 function ldu_factorization_cyclic!(entry_lu, offdiagonal_lu, diagonal_c, offdiagonal_ul)
     entry_lu.value -= offdiagonal_lu.value*diagonal_c.value*offdiagonal_ul.value
     return
@@ -38,6 +39,7 @@ function ldu_factorization!(system)
             ldu_factorization_acyclic!(matrix_entries[v,v], matrix_entries[v,c], matrix_entries[c,c], matrix_entries[c,v], diagonal_inverses[c])
         end
     end
+
     return
 end
 
@@ -45,10 +47,12 @@ function ldu_backsubstitution_l!(vector_v, offdiagonal, vector_c)
     vector_v.value -= offdiagonal.value*vector_c.value
     return
 end
+
 function ldu_backsubstitution_u!(vector_v, offdiagonal, vector_p)
     vector_v.value -= offdiagonal.value*vector_p.value
     return
 end
+
 function ldu_backsubstitution_d!(vector, diagonal, diagonal_inverse)
     if diagonal_inverse.isinverted
         vector.value = diagonal_inverse.value*vector.value
@@ -76,6 +80,7 @@ function ldu_backsubstitution!(system)
             ldu_backsubstitution_l!(vector_entries[v], matrix_entries[v,c], vector_entries[c])
         end
     end
+    
     for v in reverse(dfs_list)
         ldu_backsubstitution_d!(vector_entries[v], matrix_entries[v,v], diagonal_inverses[v])
         for p in parents[v]

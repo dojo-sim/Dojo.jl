@@ -58,9 +58,9 @@ minimal_coordinates(rot1, origin, body1)
 ω1 = 1.0
 r = 0.5
 set_position(body1, x = [0, 0, -r])
-# set_velocity!(body1, v = [0, ω0*r, 0.], ω = [ω0, 0, 0.])
-# set_velocity!(body1, v = [ω1*r, 0, 0.], ω = [0, -ω1, 0.])
-# set_velocity!(body1, v = [ω1*r, ω0*r, 0.], ω = [ω0, -ω1, 0.])
+# set_maximal_velocity!(body1, v = [0, ω0*r, 0.], ω = [ω0, 0, 0.])
+# set_maximal_velocity!(body1, v = [ω1*r, 0, 0.], ω = [0, -ω1, 0.])
+# set_maximal_velocity!(body1, v = [ω1*r, ω0*r, 0.], ω = [ω0, -ω1, 0.])
 q0 = UnitQuaternion(RotX(pi/2))
 set_position(origin, body1, p2 = [0, 0, r], Δq = q0)
 

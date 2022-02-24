@@ -52,7 +52,7 @@ function get_rexhopper(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_c
         push!(models, contact_constraint(base_link, normal, friction_coefficient=friction_coefficient,
             contact_point=p, offset=o, contact_type=contact_type))
 
-        set_position!(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [0,0,1.0, 0,0,0])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [0,0,1.0, 0,0,0])
         mech = Mechanism(origin, bodies, joints, [models...], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
     return mech
@@ -62,10 +62,10 @@ function initialize_rexhopper!(mechanism::Mechanism; x=zeros(3), v=zeros(3), θ=
     zero_velocity!(mechanism)
     x += [0,0,0.3148]
     for joint in mechanism.joints
-        !(joint.name in (:loop_joint, :floating_joint)) && set_position!(mechanism, joint, zeros(control_dimension(joint)))
+        !(joint.name in (:loop_joint, :floating_joint)) && set_minimal_coordinates!(mechanism, joint, zeros(control_dimension(joint)))
     end
-    set_position!(mechanism, get_joint_constraint(mechanism,
+    set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism,
         :auto_generated_floating_joint), [x; θ])
-    set_velocity!(mechanism, get_joint_constraint(mechanism,
+    set_minimal_velocities!(mechanism, get_joint_constraint(mechanism,
         :auto_generated_floating_joint), [v; ϕ])
 end

@@ -46,17 +46,17 @@ function minimal_velocity_vector(mechanism::Mechanism{T}) where T
     return x
 end
 
-function set_position!(mechanism::Mechanism, dict)
+function set_minimal_coordinates!(mechanism::Mechanism, dict)
     for (id,joint) in pairs(mechanism.joints)
-        set_position!(mechanism, joint, dict[id])
+        set_minimal_coordinates!(mechanism, joint, dict[id])
     end
 
     return
 end
 
-function set_velocity!(mechanism::Mechanism, dict)
+function set_minimal_velocities!(mechanism::Mechanism, dict)
     for (id,joint) in pairs(mechanism.joints)
-        set_velocity!(mechanism, joint, dict[id])
+        set_minimal_velocities!(mechanism, joint, dict[id])
     end
 
     return
@@ -66,7 +66,7 @@ function zero_velocity!(mechanism::Mechanism)
     # velocities
     for (i, body) in enumerate(mechanism.bodies)
         try
-            set_velocity!(body, v=zeros(3), ω=zeros(3))
+            set_maximal_velocity!(body, v=zeros(3), ω=zeros(3))
             set_previous_configuration!(body, mechanism.timestep)
         catch
             nothing

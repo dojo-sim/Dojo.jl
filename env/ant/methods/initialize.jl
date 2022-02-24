@@ -75,16 +75,16 @@ function get_ant(; timestep::T=0.05, gravity=[0.0; 0.0; -9.81], friction_coeffic
 end
 
 function initialize_ant!(mechanism::Mechanism; ankle = 0.25, alt=0.15, pos=[0.0; 0.0; 0.48 + alt], rot=[0.0; 0.0; 0.00 * π]) where T
-    set_position!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [pos; rot])
+    set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [pos; rot])
 
     for i in [1,4]
-        set_position!(mechanism, get_joint_constraint(mechanism, Symbol("hip_$i")), 0.0*[0.0 * π])
-        set_position!(mechanism, get_joint_constraint(mechanism, Symbol("ankle_$i")), [ankle * π])
+        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, Symbol("hip_$i")), 0.0*[0.0 * π])
+        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, Symbol("ankle_$i")), [ankle * π])
     end
 
     for i in [2,3]
-        set_position!(mechanism, get_joint_constraint(mechanism, Symbol("hip_$i")), [0.0 * π])
-        set_position!(mechanism, get_joint_constraint(mechanism, Symbol("ankle_$i")), [-ankle * π])
+        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, Symbol("hip_$i")), [0.0 * π])
+        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, Symbol("ankle_$i")), [-ankle * π])
     end
 
     zero_velocity!(mechanism)

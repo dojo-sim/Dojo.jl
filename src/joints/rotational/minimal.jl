@@ -52,16 +52,17 @@ end
 ################################################################################
 # Set Coordinates
 ################################################################################
-function set_minimal_coordinates!(pnode::Node, cnode::Node, 
-	joint::Rotational, 
+function set_minimal_coordinates!(joint::Rotational, 
+	pnode::Node, cnode::Node, 
 	timestep;
 	Δθ::AbstractVector=szeros(control_dimension(joint)))
+	
 	qoffset = joint.qoffset
 	qa = pnode.state.q2[1]
 	Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
 	Δq = axis_angle_to_quaternion(Aᵀ * Δθ)
 	qb = qa * qoffset * Δq
-	set_position!(cnode; x=cnode.state.x2[1], q = qb)
+	set_maximal_configuration!(cnode; x=cnode.state.x2[1], q = qb)
 	set_previous_configuration!(cnode, timestep)
 	return nothing
 end

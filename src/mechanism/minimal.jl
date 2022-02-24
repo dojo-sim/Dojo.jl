@@ -12,18 +12,16 @@ function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVect
 end
 
 function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
-	system = mechanism.system
 	timestep = mechanism.timestep
 	J = zeros(maximal_dimension(mechanism, attjac=true), minimal_dimension(mechanism))
-	z = minimal_to_maximal(mechanism, x)
 
 	# Compute partials
 	partials = Dict{Vector{Int}, Matrix{T}}()
 	for cnode in mechanism.bodies
-		for pjoint in parent_joints(mechanism, cnode)
-			pnode = get_node(mechanism, pjoint.parent_id, origin=true)
-			partials[[cnode.id, pjoint.id]] = set_minimal_coordinates_velocities_jacobian_minimal(pnode, cnode, pjoint, timestep) # 12 x 2nu (xvqϕ x Δxθvϕ)
-			partials[[cnode.id, pnode.id]] = set_minimal_coordinates_velocities_jacobian_parent(pnode, cnode, pjoint, timestep) # 12 x 12 (xvqϕ x xvqϕ)
+		for joint in parent_joints(mechanism, cnode)
+			pnode = get_node(mechanism, joint.parent_id, origin=true)
+			partials[[cnode.id, joint.id]] = set_minimal_coordinates_velocities_jacobian_minimal(joint, pnode, cnode, timestep) # 12 x 2nu (xvqϕ x Δxθvϕ)
+			partials[[cnode.id, pnode.id]] = set_minimal_coordinates_velocities_jacobian_parent(joint, pnode, cnode, timestep) # 12 x 12 (xvqϕ x xvqϕ)
 		end
 	end
 
@@ -32,7 +30,6 @@ function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::Abs
 	col = [] # ordering joints from root to tree
 	col_idx = zeros(Int,Ne)
 	cnt = 0
-	# for id in reverse(mechanism.system.dfs_list)
 	for id in mechanism.root_to_leaves
 		(id > Ne) && continue # only keep joints
 		cnt += 1
@@ -49,9 +46,9 @@ function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::Abs
 	for id in mechanism.root_to_leaves
 		!(Ne < id <= Ne+Nb) && continue # only treat bodies
 		cnode = get_node(mechanism, id)
-		for pjoint in parent_joints(mechanism, cnode)
-			pnode = get_node(mechanism, pjoint.parent_id, origin=true)
-			J[row[cnode.id-Ne], col[col_idx[pjoint.id]]] += partials[[cnode.id, pjoint.id]] # ∂zi∂θp(i)
+		for joint in parent_joints(mechanism, cnode)
+			pnode = get_node(mechanism, joint.parent_id, origin=true)
+			J[row[cnode.id-Ne], col[col_idx[joint.id]]] += partials[[cnode.id, joint.id]] # ∂zi∂θp(i)
 			(pnode.id == 0) && continue # avoid origin
 			J[row[cnode.id-Ne], :] += partials[[cnode.id, pnode.id]] * J[row[pnode.id-Ne], :] # ∂zi∂zp(p(i)) * ∂zp(p(i))/∂θ
 		end

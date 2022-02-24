@@ -1,53 +1,45 @@
 ################################################################################
 # Coordinates
 ################################################################################
-function minimal_coordinates(joint::JointConstraint, body1::Node, body2::Node)
-    statea = body1.state
-    stateb = body2.state
-	Δx = minimal_coordinates(joint.translational, statea.x2[1], statea.q2[1], stateb.x2[1], stateb.q2[1])
-    Δθ = minimal_coordinates(joint.rotational, statea.x2[1], statea.q2[1], stateb.x2[1], stateb.q2[1])
+function minimal_coordinates(joint::JointConstraint, pbody::Node, cbody::Node)
+	Δx = minimal_coordinates(joint.translational, current_configuration(pbody.state)..., current_configuration(cbody.state)...)
+    Δθ = minimal_coordinates(joint.rotational,    current_configuration(pbody.state)..., current_configuration(cbody.state)...)
 	return [Δx; Δθ]
 end
 
-function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::JointConstraint, timestep;
+function set_minimal_coordinates!(joint::JointConstraint, pnode::Node, cnode::Node,  
+        timestep;
         Δx::AbstractVector=szeros(control_dimension(joint.translational)),
         Δθ::AbstractVector=szeros(control_dimension(joint.rotational)))
-    set_minimal_coordinates!(pnode, cnode, joint.rotational, timestep; Δθ=Δθ)
-    set_minimal_coordinates!(pnode, cnode, joint.translational, timestep; Δx=Δx)
+
+    set_minimal_coordinates!(joint.rotational,    pnode, cnode, timestep; Δθ=Δθ)
+    set_minimal_coordinates!(joint.translational, pnode, cnode, timestep; Δx=Δx)
+
     return nothing
 end
 
-function set_position!(mechanism, joint::JointConstraint, xθ; iter::Bool=true)
-    if !iter
-        set_joint_position!(mechanism, joint, xθ)
-    else
-        currentvals = minimal_coordinates(mechanism)
-        set_joint_position!(mechanism, joint, xθ)
+function set_minimal_coordinates!(mechanism, joint::JointConstraint{T,N,Nc}, xθ; iter=true) where {T,N,Nc}
+    # bodies
+    pbody = get_body(mechanism, joint.parent_id)
+    cbody = get_body(mechanism, joint.child_id)
+
+    # unpack
+    Δx = xθ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]
+    Δθ = xθ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])]
+
+    # set
+    set_minimal_coordinates!(joint, pbody, cbody, mechanism.timestep, Δx=Δx, Δθ=Δθ)
+
+    # recursive update down the kinematic chain
+    if iter 
+        current = minimal_coordinates(mechanism)
         for id in recursivedirectchildren!(mechanism.system, joint.id)
             node = get_node(mechanism, id)
             if node isa JointConstraint
-                set_joint_position!(mechanism, node, currentvals[id])
+                set_minimal_coordinates!(mechanism, node, current[id])
             end
         end
     end
-    return
-end
-
-function set_joint_position!(mechanism, joint::JointConstraint{T,N,Nc}, xθ) where {T,N,Nc}
-    Nλ = 0
-    for (i, element) in enumerate([joint.translational, joint.rotational])
-        Nλ += joint_length(element)
-    end
-    @assert length(xθ)==3*Nc-Nλ
-
-    # bodies
-    body1 = get_body(mechanism, joint.parent_id)
-    body2 = get_body(mechanism, joint.child_id)
-
-    Δx = xθ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]
-    Δθ = xθ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])]
-    set_minimal_coordinates!(body1, body2, joint, mechanism.timestep, Δx=Δx, Δθ=Δθ)
-    return body2.state.x2[1], body2.state.q2[1]
 end
 
 ################################################################################
@@ -55,24 +47,46 @@ end
 ################################################################################
 function minimal_velocities(joint::JointConstraint, pnode::Node, cnode::Node, timestep)
     Δv = minimal_velocities(joint.translational, pnode, cnode, timestep)
-    Δϕ = minimal_velocities(joint.rotational, pnode, cnode, timestep)
+    Δϕ = minimal_velocities(joint.rotational,    pnode, cnode, timestep)
     return [Δv; Δϕ]
 end
 
-function set_minimal_velocities!(pnode::Node, cnode::Node, joint::JointConstraint, timestep;
+function set_minimal_velocities!(joint::JointConstraint, pnode::Node, cnode::Node, timestep;
         Δv=szeros(control_dimension(joint.translational)),
         Δϕ=szeros(control_dimension(joint.rotational)))
-	vb, ϕb = set_child_velocities(joint, 
+
+    # get
+	vb, ϕb = get_child_velocity(joint, 
         initial_configuration_velocity(pnode.state)...,
-	 	current_configuration(cnode.state)..., timestep, Δv=Δv, Δϕ=Δϕ)
-	set_velocity!(cnode; v=vb, ω=ϕb)
+	 	current_configuration(cnode.state)..., 
+        timestep, 
+        Δv=Δv, Δϕ=Δϕ)
+
+    # set 
+	set_maximal_velocity!(cnode; v=vb, ω=ϕb)
 	set_previous_configuration!(cnode, timestep)
+
     return nothing
 end
 
-function set_child_velocities(joint::JointConstraint,
+function set_minimal_velocities!(mechanism, joint::JointConstraint{T,N,Nc}, vϕ) where {T,N,Nc}
+    # bodies
+    pbody = get_body(mechanism, joint.parent_id)
+    cbody = get_body(mechanism, joint.child_id)
+
+    # unpack
+    Δv = vϕ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]
+    Δϕ = vϕ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])]
+    
+    # set 
+    set_minimal_velocities!(joint, pbody, cbody, mechanism.timestep, Δv=Δv, Δϕ=Δϕ)
+    return
+end
+
+function get_child_velocity(joint::JointConstraint,
     xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
-    xb::AbstractVector, qb::UnitQuaternion, timestep;
+    xb::AbstractVector, qb::UnitQuaternion, 
+    timestep;
     Δv=szeros(control_dimension(joint.translational)),
     Δϕ=szeros(control_dimension(joint.rotational)))
 
@@ -81,47 +95,34 @@ function set_child_velocities(joint::JointConstraint,
     pa = tra.vertices[1]
     pb = tra.vertices[2]
     qoffset = rot.qoffset
-    Arotᵀ = zerodimstaticadjoint(nullspace_mask(rot))
-    Atraᵀ = zerodimstaticadjoint(nullspace_mask(tra))
+    Arot = zerodimstaticadjoint(nullspace_mask(rot))
+    Atra = zerodimstaticadjoint(nullspace_mask(tra))
 
     Δx = minimal_coordinates(joint.translational, xa, qa, xb, qb)
     Δq = inv(qoffset) * inv(qa) * qb
-
+    
     # 1 step backward in time
     xa1 = next_position(xa, -va, timestep)
     qa1 = next_orientation(qa, -ϕa, timestep)
 
     # Finite difference
     Δx1 = Δx .- Δv * timestep
-    Δq1 = Δq * inv(axis_angle_to_quaternion(Arotᵀ * Δϕ * timestep))
+    Δq1 = Δq * inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))
 
     qb1 = qa1 * qoffset * Δq1
-    xb1 = xa1 + vrotate(pa + Atraᵀ*Δx1, qa1) - vrotate(pb, qb1)
+    xb1 = xa1 + vrotate(pa + Atra * Δx1, qa1) - vrotate(pb, qb1)
     
     # Finite difference
     vb = (xb - xb1) / timestep
     ϕb = angular_velocity(qb1, qb, timestep)
+
     return vb, ϕb
-end
-
-function set_velocity!(mechanism, joint::JointConstraint{T,N,Nc}, vϕ) where {T,N,Nc}
-    # bodies
-    body1 = get_body(mechanism, joint.parent_id)
-    body2 = get_body(mechanism, joint.child_id)
-
-    # unpack
-    Δv = vϕ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]
-    Δϕ = vϕ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])]
-    
-    set_minimal_velocities!(body1, body2, joint, mechanism.timestep, Δv=Δv, Δϕ=Δϕ)
-    return body2.state.v15, body2.state.ϕ15
 end
 
 ################################################################################
 # Coordinates and Velocities
 ################################################################################
-function minimal_coordinates_velocities(joint::JointConstraint,
-    pnode::Node, cnode::Node, timestep)
+function minimal_coordinates_velocities(joint::JointConstraint, pnode::Node, cnode::Node, timestep)
     Δxθ = minimal_coordinates(joint, pnode, cnode)
     Δvϕ = minimal_velocities(joint, pnode, cnode, timestep)
     return [Δxθ; Δvϕ]
@@ -129,18 +130,23 @@ end
 
 function set_minimal_coordinates_velocities!(mechanism::Mechanism, joint::JointConstraint;
         xmin::AbstractVector=szeros(2*control_dimension(joint)))
+    
     pnode = get_body(mechanism, joint.parent_id)
     cnode = get_body(mechanism, joint.child_id)
+
     xa = pnode.state.x2[1] 
     va = pnode.state.v15 
     qa = pnode.state.q2[1] 
     ϕa = pnode.state.ϕ15 
+
     za = [xa; va; vector(qa); ϕa]
 
-    set_minimal_coordinates_velocities!(pnode, cnode, joint, mechanism.timestep; xmin=xmin, zp=za)
+    set_minimal_coordinates_velocities!(joint, pnode, cnode, mechanism.timestep; xmin=xmin, zp=za)
 end
 
-function set_minimal_coordinates_velocities!(pbody::Node, cbody::Node, joint::JointConstraint, timestep;
+function set_minimal_coordinates_velocities!(joint::JointConstraint, 
+        pbody::Node, cbody::Node, 
+        timestep;
         zp::AbstractVector=[pbody.state.x2[1]; pbody.state.v15; vector(pbody.state.q2[1]); pbody.state.ϕ15],
         xmin::AbstractVector=szeros(2*control_dimension(joint)))
     
@@ -275,6 +281,31 @@ function minimal_coordinates_velocities_jacobian_parent(joint::JointConstraint{T
     ]
 end
 
+function set_minimal_coordinates_velocities_jacobian_parent(joint::JointConstraint, 
+    pnode::Node, cnode::Node, timestep)
+
+    xmin = minimal_coordinates_velocities(joint, pnode, cnode, timestep)
+    qb = current_orientation(cnode.state)
+    xa, va, qa, ϕa = initial_configuration_velocity(pnode.state)
+    za = [xa; va; vector(qa); ϕa]
+
+    nu = control_dimension(joint)
+    Δx = xmin[SUnitRange(joint.minimal_index[1]...)]
+    Δθ = xmin[SUnitRange(joint.minimal_index[2]...)]
+    Δv = xmin[nu .+ SUnitRange(joint.minimal_index[1]...)]
+    Δϕ = xmin[nu .+ SUnitRange(joint.minimal_index[2]...)]
+    J = minimal_coordinates_velocities_jacobian_parent(joint,
+                xa, va, qa, ϕa,
+                timestep;
+                Δx=Δx,
+                Δθ=Δθ,
+                Δv=Δv,
+                Δϕ=Δϕ)
+    J = cat(Diagonal(sones(6)), LVᵀmat(qb)', Diagonal(sones(3)), dims=(1,2)) * J
+    J = J * cat(Diagonal(sones(6)), LVᵀmat(qa), Diagonal(sones(3)), dims=(1,2))
+    return J
+end
+
 function minimal_coordinates_velocities_jacobian_minimal(joint::JointConstraint{T},
     xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
     timestep;
@@ -309,7 +340,6 @@ function minimal_coordinates_velocities_jacobian_minimal(joint::JointConstraint{
     xb1 = xa1 + vrotate(pa + Atra * Δx1, qa1) - vrotate(pb, qb1)
     
     # Jacobians
-
     ∂xb∂Δx = ∂vrotate∂p(pa + Atra * Δx, qa) * Atra
     ∂xb∂Δθ = -∂vrotate∂q(pb, qb) * Lmat(qa * qoffset) * ∂axis_angle_to_quaternion∂axis_angle(Arot * Δθ) * Arot
     ∂xb∂Δv = szeros(T, 3, control_dimension(joint.translational))
@@ -347,8 +377,8 @@ function minimal_coordinates_velocities_jacobian_minimal(joint::JointConstraint{
     ]
 end
 
-function set_minimal_coordinates_velocities_jacobian_minimal(pnode::Node, cnode::Node,
-    joint::JointConstraint, timestep)
+function set_minimal_coordinates_velocities_jacobian_minimal(joint::JointConstraint, 
+    pnode::Node, cnode::Node, timestep)
 
     xmin = minimal_coordinates_velocities(joint, pnode, cnode, timestep)
     qb = current_orientation(cnode.state)
@@ -371,26 +401,3 @@ function set_minimal_coordinates_velocities_jacobian_minimal(pnode::Node, cnode:
     return J
 end
 
-function set_minimal_coordinates_velocities_jacobian_parent(pnode::Node, cnode::Node,
-    joint::JointConstraint, timestep)
-    xmin = minimal_coordinates_velocities(joint, pnode, cnode, timestep)
-    qb = current_orientation(cnode.state)
-    xa, va, qa, ϕa = initial_configuration_velocity(pnode.state)
-    za = [xa; va; vector(qa); ϕa]
-
-    nu = control_dimension(joint)
-    Δx = xmin[SUnitRange(joint.minimal_index[1]...)]
-    Δθ = xmin[SUnitRange(joint.minimal_index[2]...)]
-    Δv = xmin[nu .+ SUnitRange(joint.minimal_index[1]...)]
-    Δϕ = xmin[nu .+ SUnitRange(joint.minimal_index[2]...)]
-    J = minimal_coordinates_velocities_jacobian_parent(joint,
-                xa, va, qa, ϕa,
-                timestep;
-                Δx=Δx,
-                Δθ=Δθ,
-                Δv=Δv,
-                Δϕ=Δϕ)
-    J = cat(Diagonal(sones(6)), LVᵀmat(qb)', Diagonal(sones(3)), dims=(1,2)) * J
-    J = J * cat(Diagonal(sones(6)), LVᵀmat(qa), Diagonal(sones(3)), dims=(1,2))
-    return J
-end

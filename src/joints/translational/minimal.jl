@@ -47,9 +47,10 @@ end
 ################################################################################
 # Coordinates
 ################################################################################
-function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::Translational, timestep;
+function set_minimal_coordinates!(joint::Translational, 
+    pnode::Node, cnode::Node,  
+    timestep;
     Δx::AbstractVector=szeros(control_dimension(joint)))
-    # Δx is expressed in along the joint's nullspace axes, in pnode's frame
 
     pa = joint.vertices[1]
     pb = joint.vertices[2]
@@ -61,7 +62,7 @@ function set_minimal_coordinates!(pnode::Node, cnode::Node, joint::Translational
 
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
     xb = xa + vrotate(pa + Aᵀ * Δx, qa) - vrotate(pb, qb)
-    set_position!(cnode; x=xb, q=cnode.state.q2[1])
+    set_maximal_configuration!(cnode; x=xb, q=cnode.state.q2[1])
     set_previous_configuration!(cnode, timestep)
     return nothing
 end

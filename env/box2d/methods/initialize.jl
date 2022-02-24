@@ -49,6 +49,6 @@ function initialize_box2d!(mechanism::Mechanism{T}; x::AbstractVector=[0,1.],
         z = 0.0
     end
     body = mechanism.bodies[1]
-    set_position!(body, x = [0;x] + [0,0,z], q = UnitQuaternion(RotX(θ)))
-    set_velocity!(body, v = [0;v], ω = [ω,0,0])
+    set_maximal_configuration!(body, x = [0;x] + [0,0,z], q = UnitQuaternion(RotX(θ)))
+    set_maximal_velocity!(body, v = [0;v], ω = [ω,0,0])
 end

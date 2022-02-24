@@ -495,8 +495,8 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         cjoint.rotational.qoffset = qoffset # in parent's (parentbody) frame
 
         # actual body properties
-        set_position!(cnode) # set everything to zero
-        set_position!(pnode, cnode, p1 = p1, p2 = p2, Δq = qoffset)
+        set_maximal_configuration!(cnode) # set everything to zero
+        set_maximal_configuration!(pnode, cnode, p1 = p1, p2 = p2, Δq = qoffset)
         xbody = cnode.state.x2[1]
         qbody = cnode.state.q2[1]
 

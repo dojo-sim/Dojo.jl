@@ -21,7 +21,7 @@ jointtypes = [
     ]
 
 ################################################################################
-# Test set_position! and set_velocity!
+# Test set_position! and set_maximal_velocity!
 ################################################################################\
 @testset "minimal to maximal: set_position!, set_velocity" begin
 	mech = Dojo.get_mechanism(:raiberthopper)
@@ -36,13 +36,13 @@ jointtypes = [
 	x = srand(1)
 	Δx = Dojo.zerodimstaticadjoint(Dojo.nullspace_mask(tra2)) * x
 	Δq = UnitQuaternion(rand(4)...)
-	Dojo.set_position!(body1, body2; p1 = tra2.vertices[1], p2 = tra2.vertices[2], Δx = Δx, Δq = Δq)
+	Dojo.set_maximal_configuration!(body1, body2; p1 = tra2.vertices[1], p2 = tra2.vertices[2], Δx = Δx, Δq = Δq)
 	@test norm(Dojo.minimal_coordinates(tra2, body1, body2) - x[1], Inf) < 1e-10
 
 	v = srand(1)
 	Δv = Dojo.zerodimstaticadjoint(Dojo.nullspace_mask(tra2)) * v
 	Δω = rand(3)
-	Dojo.set_velocity!(body1, body2; p1 = tra2.vertices[1], p2 = tra2.vertices[2], Δv = Δv, Δω = Δω)
+	Dojo.set_maximal_velocity!(body1, body2; p1 = tra2.vertices[1], p2 = tra2.vertices[2], Δv = Δv, Δω = Δω)
 	@test norm(Dojo.minimal_velocities(tra2, body1, body2, timestep) - v[1], Inf) < 1e-10
 end
 
@@ -213,15 +213,15 @@ end
 	    Δϕ = rand(control_dimension(rot0))
 	    Δv = rand(control_dimension(tra0))
 	    for i = 1:10
-	        Dojo.set_minimal_coordinates!(pnodes0[i], cnodes0[i], rot0, timestep, Δθ=Δθ)
+	        Dojo.set_minimal_coordinates!(rot0, pnodes0[i], cnodes0[i],  timestep, Δθ=Δθ)
 	        Δθ0 = Dojo.minimal_coordinates(rot0, pnodes0[i], cnodes0[i])
 	        @test norm(Δθ0 - Δθ, Inf) < 1e-7
 
-	        Dojo.set_minimal_coordinates!(pnodes0[i], cnodes0[i], tra0, timestep, Δx=Δx)
+	        Dojo.set_minimal_coordinates!(tra0, pnodes0[i], cnodes0[i], timestep, Δx=Δx)
 	        Δx0 = Dojo.minimal_coordinates(tra0, pnodes0[i], cnodes0[i])
 	        @test norm(Δx0 - Δx, Inf) < 1e-7
 
-	        Dojo.set_minimal_velocities!(pnodes0[i], cnodes0[i], joint0, timestep, Δv=Δv, Δϕ=Δϕ)
+	        Dojo.set_minimal_velocities!(joint0, pnodes0[i], cnodes0[i], timestep, Δv=Δv, Δϕ=Δϕ)
 	        Δϕ0 = Dojo.minimal_velocities(rot0, pnodes0[i], cnodes0[i], timestep)
 			Δv0 = Dojo.minimal_velocities(tra0, pnodes0[i], cnodes0[i], timestep)
 	        @test norm(Δϕ0 - Δϕ, Inf) < 1e-7
@@ -246,9 +246,9 @@ end
 			z = Dojo.minimal_to_maximal(mech, x)
 
 			# extract body states
-			Ne = length(mech.joints)
+			Ne = Dojo.length(mech.joints)
 			if Dojo.get_body(mech, jointcon.parent_id).name == :origin 
-				zp = [mech.origin.state.x2[1]; mech.origin.state.v15; vector(mech.origin.state.q2[1]); mech.origin.state.ϕ15]
+				zp = [mech.origin.state.x2[1]; mech.origin.state.v15; Dojo.vector(mech.origin.state.q2[1]); mech.origin.state.ϕ15]
 			else
 				zp = z[(jointcon.parent_id - Ne - 1) * 13 .+ (1:13)]
 			end
@@ -299,15 +299,15 @@ end
 	for jointcon in mech.joints
 		for joint in [jointcon.translational, jointcon.rotational]
 			# generate random configuration in minimal space
-			x = rand(minimal_dimension(mech))
+			x = rand(Dojo.minimal_dimension(mech))
 
 			# convert to maximal
-			z = minimal_to_maximal(mech, x)
+			z = Dojo.minimal_to_maximal(mech, x)
 
 			# extract body states
-			Ne = length(mech.joints)
-			if get_body(mech, jointcon.parent_id).name == :origin 
-				zp = [mech.origin.state.x2[1]; mech.origin.state.v15; vector(mech.origin.state.q2[1]); mech.origin.state.ϕ15]
+			Ne = Dojo.length(mech.joints)
+			if Dojo.get_body(mech, jointcon.parent_id).name == :origin 
+				zp = [mech.origin.state.x2[1]; mech.origin.state.v15; Dojo.vector(mech.origin.state.q2[1]); mech.origin.state.ϕ15]
 			else
 				zp = z[(jointcon.parent_id - Ne - 1) * 13 .+ (1:13)]
 			end
