@@ -81,7 +81,7 @@ function build_robot(mechanism::Mechanism; vis::Visualizer=Visualizer(),
         visshape = convert_shape(shape)
         subvisshape = nothing
         if visshape !== nothing
-            subvisshape = vis[name][:bodies][Symbol(body.name, "_id_$id")]
+            subvisshape = vis[name][:bodies][Symbol(body.name, "__id_$id")]
             setobject!(subvisshape,visshape,shape,transparent=show_contact)
         end
 
@@ -96,7 +96,7 @@ function build_robot(mechanism::Mechanism; vis::Visualizer=Visualizer(),
                     visshape = convert_shape(contact_shape)
                     subvisshape = nothing
                     if visshape !== nothing
-                        subvisshape = vis[name][:contacts][Symbol(contact.name, "_$(jd)")]
+                        subvisshape = vis[name][:contacts][Symbol(contact.name, "__id_$(jd)")]
                         setobject!(subvisshape,visshape,contact_shape,transparent=false)
                     end
                 end
@@ -129,7 +129,7 @@ function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T};
         subvisshape = nothing
         showshape = false
         if visshape !== nothing
-            subvisshape = vis[name][:bodies][Symbol(body.name, "_id_$id")]
+            subvisshape = vis[name][:bodies][Symbol(body.name, "__id_$id")]
             showshape = true
         end
         set_node!(x, q, id, shape, subvisshape, showshape)
@@ -146,7 +146,7 @@ function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T};
                     subvisshape = nothing
                     showshape = false
                     if visshape !== nothing
-                        subvisshape = vis[name][:contacts][Symbol(contact.name, "_$(jd)")]
+                        subvisshape = vis[name][:contacts][Symbol(contact.name, "__id_$(jd)")]
                         showshape = true
                     end
                     set_node!(x, q, id, contact_shape, subvisshape, showshape)
@@ -189,7 +189,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
         subvisshape = nothing
         showshape = false
         if visshape !== nothing
-            subvisshape = vis[name][:bodies][Symbol(body.name, "_id_$id")]
+            subvisshape = vis[name][:bodies][Symbol(body.name, "__id_$id")]
             showshape = true
         end
         animate_node!(storage, id, shape, animation, subvisshape, showshape)
@@ -206,7 +206,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
                     subvisshape = nothing
                     showshape = false
                     if visshape !== nothing
-                        subvisshape = vis[name][:contacts][Symbol(contact.name, "_$(jd)")]
+                        subvisshape = vis[name][:contacts][Symbol(contact.name, "__id_$(jd)")]
                         showshape = true
                     end
                     animate_node!(storage, id, contact_shape, animation, subvisshape, showshape)
@@ -228,4 +228,3 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
     setanimation!(vis, animation)
     return vis, animation
 end
-

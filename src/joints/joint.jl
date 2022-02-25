@@ -4,26 +4,26 @@
 abstract type Joint{T,Nλ,Nb,N,Nb½} end
 
 # joints
-function joint_constraint(joint::Joint{T}, 
+function joint_constraint(joint::Joint{T},
     xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion, η) where {T}
     return constraint_mask(joint) * displacement(joint, xa, qa, xb, qb)
 end
 
-function joint_constraint_jacobian_configuration(relative::Symbol, joint::Joint{T}, 
-    xa::AbstractVector, qa::UnitQuaternion, 
+function joint_constraint_jacobian_configuration(relative::Symbol, joint::Joint{T},
+    xa::AbstractVector, qa::UnitQuaternion,
     xb::AbstractVector, qb::UnitQuaternion, η) where {T}
     X, Q = displacement_jacobian_configuration(relative, joint, xa, qa, xb, qb, attjac=false)
     return constraint_mask(joint) * [X Q]
 end
 
 # constraints
-function constraint(joint::Joint{T,Nλ,0}, 
-    xa::AbstractVector, qa::UnitQuaternion, 
-    xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
+function constraint(joint::Joint{T,Nλ,0},
+    xa::AbstractVector, qa::UnitQuaternion,
+    xb::AbstractVector, qb::UnitQuaternion, η, μ) where {T,Nλ}
     joint_constraint(joint, xa, qa, xb, qb, η)
 end
 
-constraint(joint::Joint, pbody::Node, cbody::Node, λ, timestep) = constraint(joint, next_configuration(pbody.state, timestep)..., next_configuration(cbody.state, timestep)..., λ)
+constraint(joint::Joint, pbody::Node, cbody::Node, λ, μ, timestep) = constraint(joint, next_configuration(pbody.state, timestep)..., next_configuration(cbody.state, timestep)..., λ, μ)
 
 # constraint Jacobians
 function constraint_jacobian_configuration(joint::Joint{T,Nλ,0}, η) where {T,Nλ}
@@ -40,8 +40,8 @@ end
 
 constraint_jacobian_configuration(relative::Symbol, joint::Joint, pbody::Node, cbody::Node, λ, timestep) = constraint_jacobian_configuration(relative, joint, next_configuration(pbody.state, timestep)..., next_configuration(cbody.state, timestep)..., λ)
 
-function constraint_jacobian_configuration(relative::Symbol, joint::Joint{T,Nλ,0}, 
-        xa::AbstractVector, qa::UnitQuaternion, 
+function constraint_jacobian_configuration(relative::Symbol, joint::Joint{T,Nλ,0},
+        xa::AbstractVector, qa::UnitQuaternion,
         xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ}
     joint_constraint_jacobian_configuration(relative, joint, xa, qa, xb, qb, η)
 end
@@ -60,16 +60,16 @@ nullspace_mask(::Joint{T,3}) where T = szeros(T,0,3)
 # impulse maps
 impulse_map(relative::Symbol, joint::Joint, pbody::Node, cbody::Node, λ) = impulse_map(relative, joint, current_configuration(pbody.state)..., current_configuration(cbody.state)..., λ)
 
-function impulse_map(relative::Symbol, joint::Joint{T,Nλ,Nb}, 
+function impulse_map(relative::Symbol, joint::Joint{T,Nλ,Nb},
         xa::AbstractVector, qa::UnitQuaternion,
-        xb::AbstractVector, qb::UnitQuaternion, 
+        xb::AbstractVector, qb::UnitQuaternion,
         η) where {T,Nλ,Nb}
     return impulse_transform(relative, joint, xa, qa, xb, qb) * impulse_projector(joint)
 end
 
-function impulse_map(relative::Symbol, joint::Joint{T,Nλ,0}, 
+function impulse_map(relative::Symbol, joint::Joint{T,Nλ,0},
     xa::AbstractVector, qa::UnitQuaternion,
-    xb::AbstractVector, qb::UnitQuaternion, 
+    xb::AbstractVector, qb::UnitQuaternion,
     η) where {T,Nλ}
     J = constraint_jacobian_configuration(relative, joint, xa, qa, xb, qb, η)
     G = cat(Diagonal(sones(3)), LVᵀmat(relative == :parent ? qa : qb), dims=(1,2))

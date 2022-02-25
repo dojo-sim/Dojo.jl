@@ -2,6 +2,7 @@ function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
 	reset!.(mechanism.contacts, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
 	reset!.(mechanism.joints,   scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
 
+	status = :failed
     mechanism.μ = 0.0
 	μtarget = 0.0
 	no_progress = 0
@@ -13,21 +14,18 @@ function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
 
     bvio = bilinear_violation(mechanism) # does not require to apply set_entries!
     rvio = residual_violation(mechanism) # does not require to apply set_entries!
-
-	opts.verbose && println("-----------------------------------------------------------------")
-
+	opts.verbose && solver_header()
     for n = Base.OneTo(opts.max_iter)
+        opts.verbose && solver_status(mechanism, α, rvio, bvio, n, μtarget, undercut)
 
-        opts.verbose && status(mechanism, α, rvio, bvio, n, μtarget, undercut)
-
-        ((rvio < opts.rtol) && (bvio < opts.btol)) && break
+        ((rvio < opts.rtol) && (bvio < opts.btol)) && (status=:success; break)
 		(n == opts.max_iter) && (opts.verbose && (@warn "failed mehrotra"))
 
         # affine search direction
 		μ = 0.0
-		pull_residual!(mechanism)                # store the residual inside mechanism.residual_entries
+		pull_residual!(mechanism)               # store the residual inside mechanism.residual_entries
         ldu_factorization!(mechanism.system)    # factorize system, modifies the matrix in place
-        pull_matrix!(mechanism)                  # store the factorized matrix inside mechanism.matrix_entries
+        pull_matrix!(mechanism)                 # store the factorized matrix inside mechanism.matrix_entries
         ldu_backsubstitution!(mechanism.system) # solve system, modifies the vector in place
 
 		αaff = cone_line_search!(mechanism; τort=0.95, τsoc=0.95, scaling=false) # uses system.vector_entries which holds the search drection
@@ -39,8 +37,8 @@ function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
 		mechanism.μ = μtarget
 		correction!(mechanism) # update the residual in mechanism.residual_entries
 
-		push_residual!(mechanism)                # cache residual + correction
-        push_matrix!(mechanism)                  # restore the factorized matrix
+		push_residual!(mechanism)               # cache residual + correction
+        push_matrix!(mechanism)                 # restore the factorized matrix
         ldu_backsubstitution!(mechanism.system) # solve system
 
 		τ = max(0.95, 1 - max(rvio, bvio)^2) # τ = 0.95
@@ -63,29 +61,37 @@ function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
 		# recompute Jacobian and residual
         set_entries!(mechanism)
     end
+
+    return status
 end
 
-function status(mechanism::Mechanism, α, rvio, bvio, n, μtarget, undercut)
+function solver_header()
+	println("                                                 ")
+	println("n    bvio    rvio     α       μ     |res|∞   |Δ|∞")
+	println("–––––––––––––––––––––––––––––––––––––––––––––––––")
+end
+
+function solver_status(mechanism::Mechanism, α, rvio, bvio, n, μtarget, undercut)
     fv = full_vector(mechanism.system)
     Δvar = norm(fv, Inf)
     fM = full_matrix(mechanism.system)
     fΔ = fM \ fv
     Δalt = norm(fΔ, Inf)
-
-    ##################
     res = norm(fv, Inf)
-    println(
-        "n ", n,
-        "   bvio", scn(bvio, digits=0),
-        "   rvio", scn(rvio, digits=0),
-        "   α", scn(α, digits=0),
-        "   μ", scn(μtarget, digits=0),
-        "   |res|∞", scn(res, digits=0),
-        "   |Δ|∞", scn(Δvar, digits=0),
-        "   ucut", scn(undercut))
+	println(
+        n,
+        "   ", scn(bvio, digits=0),
+        "   ", scn(rvio, digits=0),
+        "   ", scn(α, digits=0),
+        "   ", scn(μtarget, digits=0),
+        "   ", scn(res, digits=0),
+        "   ", scn(Δvar, digits=0),
+        # "   ucut", scn(undercut),
+        )
 end
 
-
-
-
-
+function initial_state!(contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
+    initialize_positive_orthant!(contact.impulses[1], contact.impulses_dual[1])
+    initialize_positive_orthant!(contact.impulses[2], contact.impulses_dual[2])
+    return nothing
+end
