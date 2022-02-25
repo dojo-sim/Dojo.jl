@@ -30,10 +30,9 @@ A differentiable contact-dynamics simulator for robotics.
 ## Trajectory Optimization 
 
 ### Box 
-<p>
 <img src="examples/animations/box_right.gif" width="200"/>
-<img src="examples/animations/box_up.gif" width="115"/>
-</p>
+
+<img src="examples/animations/box_up.gif" width="95"/>
 
 ### Hopper 
 <img src="examples/animations/hopper_max.gif" width="100"/>
@@ -65,4 +64,29 @@ Learning friction coefficient:
 
 ### Toss
 <img src="examples/animations/box_toss.gif" width="300"/>
+
+## Installation 
+
+`Dojo` can be added via the Julia package manager (type `]`): 
+```julia
+pkg> add Dojo
+```
+
+The latest version can be added by calling:
+```julia
+pkg> add Dojo#main
+```
+
+## Citing
+```
+@article{howell2021dojo,
+	title={Dojo: {A} {D}ifferentiable {S}imulator for {R}obotics},
+	author={Howell, Taylor A. and Le Cleac'h, Simon and and Kolter, J. Zico and Schwager, Mac and Manchester, Zachary},
+	year={2022}
+}
+```
+
+## How To Contribute
+
+
 

@@ -134,3 +134,7 @@ function joint_impulse_index(joint::Joint{T,Nλ,Nb,N}, s::Int) where {T,Nλ,Nb,N
     ind = SVector{N,Int}(s+1:s+N)
     return ind
 end
+
+function control_dimension(joint::Joint{T,N}) where {T,N}
+    return 3 - N
+end

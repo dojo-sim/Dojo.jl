@@ -284,6 +284,17 @@ end
 ################################################################################
 # Utilities
 ################################################################################
+function get_joint_impulses(joint::JointConstraint{T,N,Nc}, i::Int) where {T,N,Nc}
+    n1 = 1
+    for j = 1:i-1
+        n1 += impulses_length([joint.translational, joint.rotational][j])
+    end
+    n2 = n1 - 1 + impulses_length([joint.translational, joint.rotational][i])
+
+    λi = SVector{n2-n1+1,T}(joint.impulses[2][n1:n2])
+    return λi
+end
+
 function joint_impulse_index(joint::JointConstraint{T,N,Nc}, i::Int) where {T,N,Nc}
     s = 0
     for j = 1:i-1
@@ -320,4 +331,13 @@ function set_spring_damper_values!(joints, spring, damper; ignore_origin::Bool=t
         i += 1
     end
     return joints
+end
+
+function control_dimension(joint::JointConstraint{T,N,Nc}; ignore_floating_base::Bool = false) where {T,N,Nc}
+    ignore_floating_base && (N == 0) && return 0
+    N̄ = 0
+    for (i, element) in enumerate([joint.translational, joint.rotational])
+        N̄ += control_dimension(element)
+    end
+    return N̄
 end

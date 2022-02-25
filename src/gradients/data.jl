@@ -25,8 +25,8 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, body::Body{T})
     ∇m = [1 / Δt * (x2 - x1) + Δt/2 * gravity - 1 / Δt * (x3 - x2) + Δt/2 * gravity;
           szeros(T,3,1)]
     # Inertia
-    ∇J = 2 / Δt * LVᵀmat(q2)' * LVᵀmat(q1) * ∂inertia(VLᵀmat(q1) * vector(q2))
-    ∇J += 2 / Δt * LVᵀmat(q2)' * Tmat() * RᵀVᵀmat(q3) * ∂inertia(VLᵀmat(q2) * vector(q3))
+    ∇J = 2 / Δt * LVᵀmat(q2)' * LVᵀmat(q1) * ∂Jp∂J(VLᵀmat(q1) * vector(q2))
+    ∇J += 2 / Δt * LVᵀmat(q2)' * Tmat() * RᵀVᵀmat(q3) * ∂Jp∂J(VLᵀmat(q2) * vector(q3))
     ∇J = [szeros(T,3,6); ∇J]
 
     # initial conditions: v15, ϕ15
@@ -67,7 +67,7 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, pbody::Node{T}
     ∇z2_ab = szeros(T,6,6)
     # joint constraints impulses contribution
     for i = 1:Nc
-        λ = getλJoint(joint, i)
+        λ = get_joint_impulses(joint, i)
         if cbody.id == joint.child_id
             ∇z2_aa += impulse_map_jacobian(:parent, :parent, [joint.translational, joint.rotational][i],
                 pbody, cbody, λ)
@@ -83,7 +83,7 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, pbody::Node{T}
     # spring and damper impulses contribution
     if joint.spring
         for i = 1:Nc
-            λ = getλJoint(joint, i)
+            λ = get_joint_impulses(joint, i)
             if cbody.id == joint.child_id
                 ∇z2_aa += spring_jacobian_configuration(
                     :parent, :parent,
@@ -103,7 +103,7 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, pbody::Node{T}
     end
     if joint.damper
         for i = 1:Nc
-            λ = getλJoint(joint, i)
+            λ = get_joint_impulses(joint, i)
             if cbody.id == joint.child_id
                 ∇z2_aa += damper_jacobian_configuration(
                     :parent, :parent,

@@ -7,7 +7,7 @@ function preprocess(str)
 end
 
 exampledir = @__DIR__
-for subdir in readdir(exampledir)
+for subdir in ["trajectory_optimization", "reinforcement_learning"]
     root = joinpath(exampledir, subdir)
     isdir(root) || continue
     @show subdir
