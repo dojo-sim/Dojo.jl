@@ -65,3 +65,5 @@ end
 function rotational_integrator_jacobian_velocity(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, timestep::T) where T
     return Lmat(q2) * quaternion_map_jacobian(ϕ25, timestep) * timestep / 2
 end
+
+
