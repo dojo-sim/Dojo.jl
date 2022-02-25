@@ -13,8 +13,8 @@ end
 
 function cayley_jacobian(ω)
     ω₁, ω₂, ω₃ = ω
-    a = sqrt(1.0 + sqrt(abs2(ω₁) + abs2(ω₂) + abs2(ω₃))^2.0)^-3
-    b = sqrt(1.0 + sqrt(abs2(ω₁) + abs2(ω₂) + abs2(ω₃))^2.0)^-1
+    a = (sqrt(1.0 + ω₁^2 + ω₂^2 + ω₃^2)^-3)
+    b = sqrt(1.0 + ω₁^2 + ω₂^2 + ω₃^2)^-1
     SMatrix{4,3}([
                  -ω₁*a -ω₂*a -ω₃*a;
                  (b - (ω₁^2)*a) (-ω₁ * ω₂ * a) (-ω₁ * ω₃ * a);

@@ -57,7 +57,6 @@ end
 
 function rotational_integrator_jacobian_orientation(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, timestep::T; 
     attjac::Bool = true) where T
-
     M = Rmat(quaternion_map(ϕ25, timestep) * timestep / 2)
     attjac && (M *= LVᵀmat(q2))
     return M

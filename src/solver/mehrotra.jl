@@ -48,6 +48,8 @@ function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
 
 		# steps taken without making progress
 		rvio_, bvio_ = line_search!(mechanism, α, rvio, bvio, opts)
+
+        # evaluate progress
 		made_progress = (!(rvio_ < opts.rtol) && (rvio_ < 0.8rvio)) || (!(bvio_ < opts.btol) && (bvio_ < 0.8bvio)) # we only care when progress is made while the tolerance is not met
 		made_progress ? no_progress = max(no_progress - 1, 0) : no_progress += 1
 		rvio, bvio = rvio_, bvio_
