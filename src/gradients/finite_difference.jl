@@ -1,4 +1,4 @@
-function get_solution0(mechanism::Mechanism{T}) where {T}
+function get_solution(mechanism::Mechanism{T}) where {T}
     sol = T[]
     for (i, joints) in enumerate(mechanism.joints)
         λ = joints.impulses[2]
@@ -17,7 +17,7 @@ function get_solution0(mechanism::Mechanism{T}) where {T}
     return sol
 end
 
-function set_solution0!(mechanism::Mechanism{T}, sol::AbstractVector) where T
+function set_solution!(mechanism::Mechanism{T}, sol::AbstractVector) where T
     off = 0
     for (i,joints) in enumerate(mechanism.joints)
         nλ = length(joints)
@@ -43,10 +43,10 @@ function set_solution0!(mechanism::Mechanism{T}, sol::AbstractVector) where T
     return nothing
 end
 
-function evaluate_residual0!(mechanism::Mechanism, data::AbstractVector, sol::AbstractVector)
+function evaluate_residual!(mechanism::Mechanism, data::AbstractVector, sol::AbstractVector)
     system = mechanism.system
     set_data!(mechanism, data)
-    set_solution0!(mechanism, sol)
+    set_solution!(mechanism, sol)
     set_entries!(mechanism)
     return full_vector(system)
 end
@@ -57,14 +57,14 @@ function residual_dimension(mechanism::Mechanism)
     	sum(Vector{Int}(length.(mechanism.contacts)))
 end
 
-function finitediff_data_jacobian(mechanism::Mechanism, data::AbstractVector,
+function finite_difference_data_jacobian(mechanism::Mechanism, data::AbstractVector,
         sol::AbstractVector; δ = 1e-5, verbose = false)
     mechanism = deepcopy(mechanism)
     Nd = data_dim(mechanism, attjac=false)
     Nr = residual_dimension(mechanism)
     jac = zeros(Nr, Nd)
     set_data!(mechanism, deepcopy(data))
-    set_solution0!(mechanism, deepcopy(sol))
+    set_solution!(mechanism, deepcopy(sol))
 
     for i = 1:Nd
         verbose && println("$i / $ndata")
@@ -72,8 +72,8 @@ function finitediff_data_jacobian(mechanism::Mechanism, data::AbstractVector,
         datam = deepcopy(data)
         datap[i] += δ
         datam[i] -= δ
-        rp = evaluate_residual0!(deepcopy(mechanism), datap, deepcopy(sol))
-        rm = evaluate_residual0!(deepcopy(mechanism), datam, deepcopy(sol))
+        rp = evaluate_residual!(deepcopy(mechanism), datap, deepcopy(sol))
+        rm = evaluate_residual!(deepcopy(mechanism), datam, deepcopy(sol))
         jac[:,i] = (rp - rm) / (2δ)
     end
     return jac

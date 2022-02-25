@@ -75,8 +75,8 @@ function test_data_system(model::Symbol; ϵ::T=1.0e-6, tsim::T=0.1, ctrl::Any=(m
 	# Finite Difference
 	Nd = Dojo.data_dim(mechanism, attjac=false)
 	data0 = Dojo.get_data(mechanism)# + 0.05*rand(Nd)
-	sol0 = Dojo.get_solution0(mechanism)
-	datajac0 = Dojo.finitediff_data_jacobian(mechanism, data0, sol0)
+	sol0 = Dojo.get_solution(mechanism)
+	datajac0 = Dojo.finite_difference_data_jacobian(mechanism, data0, sol0)
 	attjac0 = Dojo.data_attitude_jacobian(mechanism)
 	datajac0 *= attjac0
 

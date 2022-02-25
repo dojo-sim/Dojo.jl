@@ -1,3 +1,14 @@
+"""
+    NonlinearContact{T,N} 
+
+    Contact object for impact and friction with a nonlinear friction cone
+
+    friction_coefficient - value of friction coefficient
+    surface_projector - mapping from world frame to surface tangent frame 
+    surface_normal_projector - inverse/complement of surface_projector
+    contact_point - position of contact on Body relative to center of mass 
+    offset - position of contact relative to contact_point
+"""
 mutable struct NonlinearContact{T,N} <: Contact{T,N}
     friction_coefficient::T
     surface_projector::SMatrix{2,3,T,6}
@@ -5,8 +16,10 @@ mutable struct NonlinearContact{T,N} <: Contact{T,N}
     contact_point::SVector{3,T}
     offset::SVector{3,T}
 
-    function NonlinearContact(body::Body{T}, normal::AbstractVector, friction_coefficient; contact_point = szeros(T, 3), offset::AbstractVector = szeros(T, 3)) where T
-        V1, V2, V3 = orthogonal_columns(normal) # gives two plane vectors and the original normal axis
+    function NonlinearContact(body::Body{T}, normal::AbstractVector, friction_coefficient; 
+        contact_point=szeros(T, 3), 
+        offset::AbstractVector=szeros(T, 3)) where T
+        V1, V2, V3 = orthogonal_columns(normal)
         A = [V1 V2 V3]
         Ainv = inv(A)
         surface_normal_projector = Ainv[3,SA[1; 2; 3]]'
@@ -28,8 +41,8 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N
 end
 
 function constraint(model::NonlinearContact, s::AbstractVector{T}, γ::AbstractVector{T},
-        x3::AbstractVector{T}, q3::UnitQuaternion{T}, v25::AbstractVector{T},
-        ϕ25::AbstractVector{T}) where T
+        x3::AbstractVector{T}, q3::UnitQuaternion{T}, 
+        v25::AbstractVector{T}, ϕ25::AbstractVector{T}) where T
 
     # transforms the velocities of the origin of the link into velocities
     vp = v25 + skew(vector_rotate(ϕ25, q3)) * (vector_rotate(model.contact_point, q3) - model.offset)
@@ -39,12 +52,14 @@ function constraint(model::NonlinearContact, s::AbstractVector{T}, γ::AbstractV
         (model.surface_projector * vp - s[@SVector [3,4]])...)
 end
 
-function constraint_jacobian_velocity(model::NonlinearContact{T}, x3::AbstractVector{T}, q3::UnitQuaternion{T},
-    x2::AbstractVector{T}, v25::AbstractVector{T}, q2::UnitQuaternion{T}, ϕ25::AbstractVector{T}, λ, timestep::T) where T
+function constraint_jacobian_velocity(model::NonlinearContact{T}, 
+    x3::AbstractVector{T}, q3::UnitQuaternion{T},
+    x2::AbstractVector{T}, v25::AbstractVector{T}, q2::UnitQuaternion{T}, ϕ25::AbstractVector{T}, 
+    λ, timestep::T) where T
     V = [model.surface_normal_projector * timestep;
         szeros(1,3);
         model.surface_projector]
-    # Ω = FiniteDiff.finite_difference_jacobian(ϕ25 -> g(model, s, γ, x2+timestep*v25, next_orientation(q2,ϕ25,timestep), v25, ϕ25), ϕ25)
+        
     ∂v∂q3 = skew(vector_rotate(ϕ25, q3)) * ∂vector_rotate∂q(model.contact_point, q3)
     ∂v∂q3 += skew(model.offset - vector_rotate(model.contact_point, q3)) * ∂vector_rotate∂q(ϕ25, q3)
     ∂v∂ϕ25 = skew(model.offset - vector_rotate(model.contact_point, q3)) * ∂vector_rotate∂p(ϕ25, q3)
@@ -54,12 +69,14 @@ function constraint_jacobian_velocity(model::NonlinearContact{T}, x3::AbstractVe
     return [V Ω]
 end
 
-function constraint_jacobian_configuration(model::NonlinearContact{T}, x3::AbstractVector{T}, q3::UnitQuaternion{T},
-    x2::AbstractVector{T}, v25::AbstractVector{T}, q2::UnitQuaternion{T}, ϕ25::AbstractVector{T}, λ, timestep::T) where T
+function constraint_jacobian_configuration(model::NonlinearContact{T}, 
+    x3::AbstractVector{T}, q3::UnitQuaternion{T},
+    x2::AbstractVector{T}, v25::AbstractVector{T}, q2::UnitQuaternion{T}, ϕ25::AbstractVector{T}, 
+    λ, timestep::T) where T
     X = [model.surface_normal_projector;
         szeros(1,3);
         szeros(2,3)]
-    # Ω = FiniteDiff.finite_difference_jacobian(ϕ25 -> g(model, s, γ, x2+timestep*v25, next_orientation(q2,ϕ25,timestep), v25, ϕ25), ϕ25)
+
     ∂v∂q3 = skew(vector_rotate(ϕ25, q3)) * ∂vector_rotate∂q(model.contact_point, q3)
     ∂v∂q3 += skew(model.offset - vector_rotate(model.contact_point, q3)) * ∂vector_rotate∂q(ϕ25, q3)
     Q = [model.surface_normal_projector * ∂vector_rotate∂q(model.contact_point, q3);

@@ -14,7 +14,7 @@ function test_solmat(model::Symbol; ϵ::T=1e-6, tsim::T=0.1, ctrl::Any=(m, k)->n
         Nb = length(mechanism.bodies)
         data = Dojo.get_data(mechanism)
         Dojo.set_data!(mechanism, data)
-        sol = Dojo.get_solution0(mechanism)
+        sol = Dojo.get_solution(mechanism)
         attjac = Dojo.attitude_jacobian(data, Nb)
 
         # IFT
@@ -32,7 +32,7 @@ function finitediff_sol_matrix(mechanism::Mechanism, data::AbstractVector,
     jac = zeros(nsol, nsol)
 
     Dojo.set_data!(mechanism, data)
-    Dojo.set_solution0!(mechanism, sol)
+    Dojo.set_solution!(mechanism, sol)
 
     for i = 1:nsol
         verbose && println("$i / $nsol")
@@ -40,8 +40,8 @@ function finitediff_sol_matrix(mechanism::Mechanism, data::AbstractVector,
         solm = deepcopy(sol)
         solp[i] += δ
         solm[i] -= δ
-        rp = Dojo.evaluate_residual0!(deepcopy(mechanism), data, solp)
-        rm = Dojo.evaluate_residual0!(deepcopy(mechanism), data, solm)
+        rp = Dojo.evaluate_residual!(deepcopy(mechanism), data, solp)
+        rm = Dojo.evaluate_residual!(deepcopy(mechanism), data, solm)
         jac[:,i] = (rp - rm) / (2δ)
     end
     return jac
@@ -94,61 +94,3 @@ test_solmat(:sphere,     tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e
 test_solmat(:sphere,     tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-7, contact_type = :impact)
 test_solmat(:ant,        tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-7)
 test_solmat(:halfcheetah,tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e-7)
-
-
-
-
-# function set_solution!(mechanism::Mechanism{T}, sol::AbstractVector) where T
-#     off = 0
-#     for (i,joint) in enumerate(mechanism.joints)
-#         nλ = length(joint)
-#         λ = sol[off .+ (1:nλ)]; off += nλ
-#         joint.impulses[2] = λ
-#     end
-#     for (i,body) in enumerate(mechanism.bodies)
-#         nv = 3
-#         nω = 3
-#         v25 = sol[off .+ (1:nv)]; off += nv
-#         ϕ25 = sol[off .+ (1:nω)]; off += nω
-#         body.state.vsol[2] = v25
-#         body.state.ϕsol[2] = ϕ25
-#     end
-#     for (i,contact) in enumerate(mechanism.contacts)
-#         N = length(contact)
-#         N½ = Int(N/2)
-#         s = sol[off .+ (1:N½)]; off += N½
-#         γ = sol[off .+ (1:N½)]; off += N½
-#         contact.impulses_dual[2] = s
-#         contact.impulses[2] = γ
-#     end
-#     return nothing
-# end
-#
-# function get_solution(mechanism::Mechanism{T}) where T
-#     sol = T[]
-#     for (i,joint) in enumerate(mechanism.joints)
-#         λ = joint.impulses[2]
-#         push!(sol, λ...)
-#     end
-#     for (i,body) in enumerate(mechanism.bodies)
-#         v25 = body.state.vsol[2]
-#         ϕ25 = body.state.ϕsol[2]
-#         push!(sol, [v25; ϕ25]...)
-#     end
-#     for (i,contact) in enumerate(mechanism.contacts)
-#         s = contact.impulses_dual[2]
-#         γ = contact.impulses[2]
-#         push!(sol, [s; γ]...)
-#     end
-#     return sol
-# end
-
-
-#
-# function evaluate_residual1!(mechanism::Mechanism, data::AbstractVector, sol::AbstractVector)
-#     system = mechanism.system
-#     set_data!(mechanism, data)
-#     set_solution0!(mechanism, sol)
-#     set_entries!(mechanism)
-#     return full_vector(system)
-# end

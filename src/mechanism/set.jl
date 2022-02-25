@@ -12,7 +12,7 @@ function set_state!(mechanism::Mechanism, z::AbstractVector)
     end
 	# warm-start solver
 	for body in mechanism.bodies
-		set_solution!(body)
+		set_velocity_solution!(body)
 	end
 end
 

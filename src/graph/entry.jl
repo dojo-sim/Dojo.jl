@@ -2,7 +2,8 @@ mutable struct Entry{ET}
     value::ET
     isinverted::Bool
 
-    function Entry{T}(dims...; static = true) where T
+    function Entry{T}(dims...; 
+        static = true) where T
         static ? value = szeros(T,dims...) : value = zeros(T,dims...)
         new{typeof(value)}(value, false)
     end

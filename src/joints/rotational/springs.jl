@@ -5,7 +5,8 @@
 function spring_force(relative::Symbol, joint::Rotational{T}, 
         xa::AbstractVector, qa::UnitQuaternion,
         xb::AbstractVector, qb::UnitQuaternion; 
-        rotate::Bool=true, unitary::Bool=false) where T
+        rotate::Bool=true, 
+        unitary::Bool=false) where T
 
     spring = unitary ? 1.0 : joint.spring
     distance = joint.spring_offset .- minimal_coordinates(joint, xa, qa, xb, qb)
@@ -20,7 +21,8 @@ function spring_force(relative::Symbol, joint::Rotational{T},
     return [szeros(T, 3); output]
 end
 
-function spring_impulses(relative::Symbol, joint::Rotational, pbody::Node, cbody::Node, timestep; unitary::Bool=false)
+function spring_impulses(relative::Symbol, joint::Rotational, pbody::Node, cbody::Node, timestep; 
+    unitary::Bool=false)
     spring_impulses(relative, joint, 
         current_configuration(pbody.state)..., 
         current_configuration(cbody.state)..., 
@@ -30,7 +32,8 @@ end
 function spring_impulses(relative::Symbol, joint::Rotational, 
     xa::AbstractVector, qa::UnitQuaternion, 
     xb::AbstractVector, qb::UnitQuaternion, 
-    timestep; unitary::Bool=false)
+    timestep; 
+    unitary::Bool=false)
     timestep * spring_force(relative, joint, xa, qa, xb, qb; unitary=unitary)
 end
 
@@ -44,7 +47,9 @@ function spring_jacobian_configuration(relative::Symbol, jacobian::Symbol, joint
     xa::AbstractVector, qa::UnitQuaternion,
     xb::AbstractVector, qb::UnitQuaternion,
     timestep::T; 
-    rotate::Bool=true, unitary::Bool=false, attjac=true) where T
+    rotate::Bool=true, 
+    unitary::Bool=false, 
+    attjac=true) where T
 
     Z = attjac ? szeros(T, 3, 6) : szeros(T, 3, 7)
     force = spring_force(relative, joint, xa, qa, xb, qb, rotate=false)
@@ -78,7 +83,8 @@ end
 
 function spring_jacobian_configuration(relative::Symbol, jacobian::Symbol, 
     joint::Rotational, pbody::Node, cbody::Node,
-    timestep::T; attjac::Bool = true) where T
+    timestep::T; 
+    attjac::Bool = true) where T
 
     spring_jacobian_configuration(relative, jacobian, joint, 
         current_configuration(pbody.state)...,

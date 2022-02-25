@@ -3,7 +3,8 @@
 ################################################################################
 function displacement(joint::Translational, 
     xa::AbstractVector, qa::UnitQuaternion, 
-    xb::AbstractVector, qb::UnitQuaternion; rotate::Bool = true)
+    xb::AbstractVector, qb::UnitQuaternion; 
+    rotate::Bool = true)
 
     vertices = joint.vertices
     d = xb + vector_rotate(vertices[2], qb) - (xa + vector_rotate(vertices[1], qa))
@@ -12,7 +13,8 @@ end
 
 function displacement_jacobian_configuration(relative::Symbol, joint::Translational{T}, 
     xa::AbstractVector, qa::UnitQuaternion, 
-    xb::AbstractVector, qb::UnitQuaternion; attjac=true) where T
+    xb::AbstractVector, qb::UnitQuaternion; 
+    attjac=true) where T
 
     vertices = joint.vertices
 

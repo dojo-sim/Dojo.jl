@@ -29,12 +29,16 @@ include(joinpath("utilities", "custom_static.jl"))
 include(joinpath("orientation", "quaternion.jl"))
 include(joinpath("orientation", "mrp.jl"))
 include(joinpath("orientation", "axis_angle.jl"))
+include(joinpath("orientation", "mapping.jl"))
 include(joinpath("orientation", "rotate.jl"))
 
 # Graph system
 include(joinpath("graph", "entry.jl"))
 include(joinpath("graph", "system.jl"))
-include(joinpath("graph", "setup_functions.jl"))
+include(joinpath("graph", "linear_system.jl"))
+include(joinpath("graph", "adjacency.jl"))
+include(joinpath("graph", "dfs.jl"))
+include(joinpath("graph", "cycles.jl"))
 include(joinpath("graph", "ldu.jl"))
 
 # Node 

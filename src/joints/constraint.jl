@@ -1,3 +1,19 @@
+"""
+    JointConstraint{T} 
+
+    Joint constraint restricting translational and rotational degrees of freedom between two Body{T} objects.
+
+    id - a unique identifying number 
+    name - a unique identifying name 
+    translational - Translational
+    rotational - Rotational
+    spring - flag for joint springs on
+    damper - flag for joint dampers on
+    parent_id - identifying number for parent Body{T}
+    child_id - identifying number for child Body{T}
+    minimal_index - indices for minimal coordinates
+    impulses - joint impulses that maintain constraint between two Body{T} objects
+"""
 mutable struct JointConstraint{T,N,Nc,TJ,RJ} <: Constraint{T,N}
     # ID
     id::Int64
@@ -21,7 +37,9 @@ mutable struct JointConstraint{T,N,Nc,TJ,RJ} <: Constraint{T,N}
     # impulses
     impulses::Vector{SVector{N,T}}
 
-    function JointConstraint(data; name::Symbol=Symbol("joint_" * randstring(4)))
+    function JointConstraint(data; 
+        name::Symbol=Symbol("joint_" * randstring(4)))
+
         @assert data[1][2] == data[2][2] # check parent ids
         @assert data[1][3] == data[2][3] # check child ids
 
@@ -94,12 +112,10 @@ end
     tra = :(constraint_jacobian_configuration($relative,
         joint.translational,
         $pbody, $cbody,
-        # joint.child_id, 
         joint.impulses[2][joint_impulse_index(joint, 1)], mechanism.timestep))
     rot = :(constraint_jacobian_configuration($relative,
         joint.rotational,
         $pbody, $cbody,
-        # joint.child_id, 
         joint.impulses[2][joint_impulse_index(joint, 2)], mechanism.timestep))
     return :(vcat($tra, $rot))
 end
@@ -197,7 +213,8 @@ function off_diagonal_jacobians(mechanism, pbody::Body, cbody::Body)
 end
 
 # springs
-function spring_impulses(mechanism, joint::JointConstraint{T}, body::Body; unitary::Bool=false) where T
+function spring_impulses(mechanism, joint::JointConstraint{T}, body::Body; 
+    unitary::Bool=false) where T
     relative = (body.id == joint.parent_id ? :parent : :child)
     impulses = szeros(T,6)
     impulses += spring_impulses(relative, joint.translational, 
@@ -213,7 +230,8 @@ function spring_impulses(mechanism, joint::JointConstraint{T}, body::Body; unita
 end
 
 # dampers
-function damper_impulses(mechanism, joint::JointConstraint{T}, body::Body; unitary::Bool=false) where T
+function damper_impulses(mechanism, joint::JointConstraint{T}, body::Body; 
+    unitary::Bool=false) where T
     relative = (body.id == joint.parent_id ? :parent : :child)
     impulses = szeros(T,6)
     impulses += damper_impulses(relative, joint.translational, 
@@ -304,7 +322,8 @@ function joint_impulse_index(joint::JointConstraint{T,N,Nc}, i::Int) where {T,N,
     joint_impulse_index([joint.translational, joint.rotational][i], s) # to be allocation free
 end
 
-function reset!(joint::JointConstraint{T,N,Nc}; scale::T=1.0) where {T,N,Nc}
+function reset!(joint::JointConstraint{T,N,Nc}; 
+    scale::T=1.0) where {T,N,Nc}
     λ = []
     for (i, element) in enumerate([joint.translational, joint.rotational])
         Nλ = joint_length(element)
@@ -316,7 +335,8 @@ function reset!(joint::JointConstraint{T,N,Nc}; scale::T=1.0) where {T,N,Nc}
     return
 end
 
-function set_spring_damper_values!(joints, spring, damper; ignore_origin::Bool=true)
+function set_spring_damper_values!(joints, spring, damper; 
+    ignore_origin::Bool=true)
     i = 1
     for joint in joints
         (ignore_origin && joint.parent_id == 0) && continue
@@ -333,7 +353,8 @@ function set_spring_damper_values!(joints, spring, damper; ignore_origin::Bool=t
     return joints
 end
 
-function input_dimension(joint::JointConstraint{T,N,Nc}; ignore_floating_base::Bool = false) where {T,N,Nc}
+function input_dimension(joint::JointConstraint{T,N,Nc}; 
+    ignore_floating_base::Bool=false) where {T,N,Nc}
     ignore_floating_base && (N == 0) && return 0
     N̄ = 0
     N̄ = input_dimension(joint.translational) + input_dimension(joint.rotational)

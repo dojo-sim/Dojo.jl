@@ -2,7 +2,7 @@
 function initialize_simulation!(mechanism::Mechanism)
     initialize_state!(mechanism)
     for body in mechanism.bodies
-        set_solution!(body)
+        set_velocity_solution!(body)
     end
 end
 

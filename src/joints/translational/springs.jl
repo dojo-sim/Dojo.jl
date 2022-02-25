@@ -38,7 +38,8 @@ function spring_force_jacobian_configuration(jacobian_relative::Symbol,
         joint::Translational{T},
         xa::AbstractVector, qa::UnitQuaternion,
         xb::AbstractVector, qb::UnitQuaternion;
-        unitary::Bool=false, attjac=true) where T
+        unitary::Bool=false, 
+        attjac=true) where T
     spring = unitary ? 1.0 : joint.spring
     return -spring * zerodimstaticadjoint(nullspace_mask(joint)) * minimal_coordinates_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, attjac=attjac)
 end
@@ -47,12 +48,11 @@ function spring_jacobian_configuration(relative::Symbol, jacobian_relative::Symb
     joint::Translational{T},
     xa::AbstractVector, qa::UnitQuaternion,
     xb::AbstractVector, qb::UnitQuaternion,
-    timestep::T; unitary::Bool=false, attjac=true) where T
+    timestep::T; 
+    unitary::Bool=false, 
+    attjac=true) where T
 
     force = spring_force(relative, joint, xa, qa, xb, qb, unitary=unitary)[SVector{3,Int}(1,2,3)]
-    # @show size(impulse_transform(relative, joint, xa, qa, xb, qb))
-    # @show size(spring_force_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, unitary=unitary, attjac=attjac))
-    # @show size(impulse_transform_jacobian(relative, jacobian_relative, joint, xa, qa, xb, qb, force, attjac=attjac))
     
     J = impulse_transform(relative, joint, xa, qa, xb, qb) *
         spring_force_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, unitary=unitary, attjac=attjac)
@@ -64,7 +64,9 @@ end
 function spring_jacobian_configuration(relative::Symbol, jacobian::Symbol,
     joint::Translational,
     pbody::Node, cbody::Node,
-    timestep::T; attjac::Bool=true, unitary=false) where T
+    timestep::T; 
+    attjac::Bool=true, 
+    unitary=false) where T
     return spring_jacobian_configuration(relative, jacobian, 
         joint, 
         current_configuration(pbody.state)..., 
