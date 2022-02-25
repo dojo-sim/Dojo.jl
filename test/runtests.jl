@@ -19,4 +19,8 @@ include("behaviors.jl")
 include("joint_limits.jl")
 include("impulse_map.jl")
 include("bodies.jl")
+include("mechanism.jl")
+include("simulate.jl")
+include("visuals.jl")
+include("utilities.jl")
 

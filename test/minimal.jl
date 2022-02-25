@@ -208,10 +208,10 @@ end
 	    cnodes0 = mech.bodies
 
 	    Random.seed!(100)
-	    Δθ = rand(control_dimension(rot0))
-	    Δx = rand(control_dimension(tra0))
-	    Δϕ = rand(control_dimension(rot0))
-	    Δv = rand(control_dimension(tra0))
+	    Δθ = rand(input_dimension(rot0))
+	    Δx = rand(input_dimension(tra0))
+	    Δϕ = rand(input_dimension(rot0))
+	    Δv = rand(input_dimension(tra0))
 	    for i = 1:10
 	        Dojo.set_minimal_coordinates!(rot0, pnodes0[i], cnodes0[i],  timestep, Δθ=Δθ)
 	        Δθ0 = Dojo.minimal_coordinates(rot0, pnodes0[i], cnodes0[i])
@@ -355,7 +355,7 @@ end
 	end
 
 	function ctrl!(mechanism, k)
-		Dojo.set_input!(mechanism, 0.1 * srand(Dojo.control_dimension(mechanism)))
+		Dojo.set_input!(mechanism, 0.1 * srand(Dojo.input_dimension(mechanism)))
 	end
 
 	# n-pendulum
@@ -366,7 +366,7 @@ end
 
 	x = Dojo.get_minimal_state(mechanism)
 	z = Dojo.get_maximal_state(mechanism)
-	u = zeros(Dojo.control_dimension(mechanism))
+	u = zeros(Dojo.input_dimension(mechanism))
 
 	@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 # NOTE: this won't necessarily pass
 	@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-5
@@ -391,7 +391,7 @@ end
 
 	x = Dojo.get_minimal_state(mechanism)
 	z = Dojo.get_maximal_state(mechanism)
-	u = zeros(Dojo.control_dimension(mechanism))
+	u = zeros(Dojo.input_dimension(mechanism))
 
 	@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 # NOTE: this won't necessarily pass
 	@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-5
@@ -415,7 +415,7 @@ end
 
 	z = Dojo.get_maximal_state(mechanism)
 	x = Dojo.get_minimal_state(mechanism)
-	u = zeros(Dojo.control_dimension(mechanism))
+	u = zeros(Dojo.input_dimension(mechanism))
 
 	@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 # NOTE: this won't necessarily pass
 	@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-5
@@ -439,7 +439,7 @@ end
 
 	z = Dojo.get_maximal_state(mechanism)
 	x = Dojo.get_minimal_state(mechanism)
-	u = zeros(Dojo.control_dimension(mechanism))
+	u = zeros(Dojo.input_dimension(mechanism))
 
 	@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 # NOTE: this won't necessarily pass
 	@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-5
@@ -465,7 +465,7 @@ end
 
 	z = Dojo.get_maximal_state(mechanism)
 	x = Dojo.get_minimal_state(mechanism)
-	u = zeros(Dojo.control_dimension(mechanism))
+	u = zeros(Dojo.input_dimension(mechanism))
 
 	@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 # NOTE: this won't necessarily pass
 	@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-5

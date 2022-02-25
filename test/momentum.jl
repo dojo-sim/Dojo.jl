@@ -8,7 +8,7 @@
 # Controller
 function controller!(mechanism, k; U = 0.5, timestep = 0.01)
     for (i,joint) in enumerate(mechanism.joints)
-        nu = control_dimension(joint)
+        nu = input_dimension(joint)
         u = (nu <= 5 && k ∈ (1:100)) * U * timestep * sones(nu)
         set_input!(joint, u)
     end

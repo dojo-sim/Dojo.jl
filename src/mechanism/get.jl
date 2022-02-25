@@ -129,36 +129,36 @@ function get_minimal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,N
 	return x
 end
 
-function get_minimal_coordinates_velocities(mechanism::Mechanism)
-    d = Dict()
-    for joint in mechanism.joints
-        push!(d, joint.id => [minimal_coordinates(mechanism, joint); minimal_velocities(mechanism, joint)])
-    end
-    return d
-end
-
-function get_minimal_coordinates(mechanism::Mechanism)
-    d = Dict()
+function get_minimal_coordinates(mechanism::Mechanism{T}) where T
+    d = Dict{Int,Vector{T}}()
     for joint in mechanism.joints
         push!(d, joint.id => minimal_coordinates(mechanism, joint))
     end
     return d
 end
 
-function get_minimal_velocities(mechanism::Mechanism)
-    d = Dict()
+function get_minimal_velocities(mechanism::Mechanism{T}) where T
+    d = Dict{Int,Vector{T}}()
     for joint in mechanism.joints
         push!(d, joint.id => minimal_velocities(mechanism, joint))
     end
     return d
 end
 
+function get_minimal_coordinates_velocities(mechanism::Mechanism{T}) where T
+    d = Dict{Int,Vector{T}}()
+    for joint in mechanism.joints
+        push!(d, joint.id => [minimal_coordinates(mechanism, joint); minimal_velocities(mechanism, joint)])
+    end
+    return d
+end
+
 function get_minimal_configuration_vector(mechanism::Mechanism{T}) where T
-    N = control_dimension(mechanism)
+    N = input_dimension(mechanism)
     x = zeros(T,N)
     off = 0
     for joint in mechanism.joints
-        n = control_dimension(joint)
+        n = input_dimension(joint)
         x[off .+ (1:n)] += minimal_coordinates(mechanism, joint)
         off += n
     end
@@ -166,11 +166,11 @@ function get_minimal_configuration_vector(mechanism::Mechanism{T}) where T
 end
 
 function get_minimal_velocity_vector(mechanism::Mechanism{T}) where T
-    N = control_dimension(mech)
+    N = input_dimension(mechanism)
     x = zeros(T,N)
     off = 0
     for joint in mechanism.joints
-        n = control_dimension(joint)
+        n = input_dimension(joint)
         x[off .+ (1:n)] += minimal_velocities(mechanism, joint)
         off += n
     end

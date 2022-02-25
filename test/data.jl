@@ -53,8 +53,8 @@ end
 ################################################################################
 # Controller
 function ctrl!(mechanism, k)
-	nu = Dojo.control_dimension(mechanism)
-	if Dojo.control_dimension(mechanism.joints[1]) == 6
+	nu = Dojo.input_dimension(mechanism)
+	if Dojo.input_dimension(mechanism.joints[1]) == 6
 		u = 0.2*[szeros(6); mechanism.timestep * sones(nu-6)]
 	else
 		u = 0.2*mechanism.timestep * sones(nu)

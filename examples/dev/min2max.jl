@@ -72,7 +72,7 @@ minimal_velocities_jacobian_velocity(:child,
 
 
 function ctrl!(mech, k)
-	set_input!(mech, 0.0*sones(control_dimension(mech))*mech.timestep)
+	set_input!(mech, 0.0*sones(input_dimension(mech))*mech.timestep)
 end
 # vis = Visualizer()
 # open(vis)

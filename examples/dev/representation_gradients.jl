@@ -46,7 +46,7 @@ initialize_atlasstance!(mech, tran=[0,0,0.5], rot=[0.0,0.0,0.0])
 
 joint = mech.joints[1]
 joint.name
-n = control_dimension(joint)
+n = input_dimension(joint)
 off = 0
 idx = collect(off .+ (1:(2n)))
 child_ids = [id for id in recursivedirectchildren!(mech.system, joint.id) if get_node(mech, id) isa JointConstraint]
@@ -88,7 +88,7 @@ maximal_dimension(mech)
 minimal_dimension(mech)
 z = get_maximal_state(mech)
 x = get_minimal_state(mech)
-u = zeros(control_dimension(mech))
+u = zeros(input_dimension(mech))
 maximal_to_minimal(mech, z) - x
 minimal_to_maximal(mech, x) - z
 
@@ -132,7 +132,7 @@ length(mech.joints)
 id = reverse(mechanism.system.dfs_list)[1]
 
 joint = mechanism.joints[id]
-n = control_dimension(joint)
+n = input_dimension(joint)
 idx = collect(off .+ (1:(2n)))
 
 child_joints = get_child_joints(mech, joint)
@@ -177,7 +177,7 @@ currentvals = minimal_coordinates(mech)
 currentvels = minimal_velocities(mech)
 
 function joint_position_velocity(mech, joint, θ) 
-    n = control_dimension(joint)
+    n = input_dimension(joint)
     x, q = set_joint_position!(mech, joint, θ[1:n]) 
     v, ω = set_minimal_velocities!(mech, joint, θ[n .+ (1:n)])
     return [x; v; vector(q); ω]
@@ -228,7 +228,7 @@ norm(minimal_to_maximal_jacobian(mech, x)[(child_joints[3].child_id - length(mec
 norm(minimal_to_maximal_jacobian(mech, x)[(child_joints[3].child_id - length(mech.joints) - 1) * 13 .+ (1:13), 1:2n] - Da[3])
 
 function joint_position_velocity(mech, joint, z, θ) 
-    n = control_dimension(joint)
+    n = input_dimension(joint)
 
     body_parent = get_body(mech, joint.parent_id)
     xp = z[1:3] 

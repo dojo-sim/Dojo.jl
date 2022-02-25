@@ -74,7 +74,7 @@ function initialize_halfcheetah!(mechanism::Mechanism; x::T=0.0, z::T=0.0, θ::T
                  get_joint_constraint(mechanism, :floating_joint),
                  [z + 0.576509, -x, -θ + 0.02792])
     for joint in mechanism.joints
-        (joint.name != :floating_joint) && set_minimal_coordinates!(mechanism, joint, zeros(control_dimension(joint)))
+        (joint.name != :floating_joint) && set_minimal_coordinates!(mechanism, joint, zeros(input_dimension(joint)))
     end
     zero_velocity!(mechanism)
 end

@@ -24,10 +24,6 @@ function force_mapping(model::Contact, x::AbstractVector, q::UnitQuaternion)
     return X
 end
 
-# complementarity
-complementarity(mechanism, contact::ContactConstraint; scaling=false) = contact.impulses[2] .* contact.impulses_dual[2]
-complementarityμ(mechanism, contact::ContactConstraint; scaling=false) = complementarity(mechanism, contact, scaling=scaling) - mechanism.μ * neutral_vector(contact.model)
-
 # utilities
 Base.length(model::Contact{T,N}) where {T,N} = N
 neutral_vector(model::Contact{T,N}) where {T,N} = sones(T, Int(N/2))

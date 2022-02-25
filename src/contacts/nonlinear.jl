@@ -101,13 +101,6 @@ function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, v
     return
 end
 
-function complementarity(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½};
-        scaling::Bool = false) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
-    γ = contact.impulses[2]
-    s = contact.impulses_dual[2]
-    return vcat(γ[1] * s[1], cone_product(γ[@SVector [2,3,4]], s[@SVector [2,3,4]]))
-end
-
 neutral_vector(model::NonlinearContact{T,N}) where {T,N} = [sones(T, 2); szeros(T, Int(N/2) -2)]
 
 cone_degree(model::NonlinearContact) = 2

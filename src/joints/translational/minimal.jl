@@ -50,7 +50,7 @@ end
 function set_minimal_coordinates!(joint::Translational, 
     pnode::Node, cnode::Node,  
     timestep;
-    Δx::AbstractVector=szeros(control_dimension(joint)))
+    Δx::AbstractVector=szeros(input_dimension(joint)))
 
     pa = joint.vertices[1]
     pb = joint.vertices[2]

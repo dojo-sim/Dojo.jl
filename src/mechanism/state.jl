@@ -3,7 +3,7 @@ function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVect
 	for id in mechanism.root_to_leaves
 		(id > Ne) && continue # only treat joints
 		joint = mechanism.joints[id]
-		nu = control_dimension(joint)
+		nu = input_dimension(joint)
 		set_minimal_coordinates_velocities!(mechanism, joint, xmin=x[off .+ SUnitRange(1, 2nu)])
 		off += 2nu
 	end

@@ -21,100 +21,6 @@ using LightGraphs
 using JLD2
 using DocStringExtensions
 
-using Statistics
-import Distributions: Uniform, Normal
-
-export Origin,
-    Body,
-    JointConstraint,
-    ContactConstraint,
-    Mechanism,
-    Storage,
-    UnitQuaternion,
-    Rotational,
-    Translational,
-
-    Box,
-    Cylinder,
-    Sphere,
-    Pyramid,
-    Mesh,
-
-    Fixed,
-    Prismatic,
-    Planar,
-    FixedOrientation,
-    Revolute,
-    Cylindrical,
-    PlanarAxis,
-    FreeRevolute,
-    Orbital,
-    PrismaticOrbital,
-    PlanarOrbital,
-    FreeOrbital,
-    Spherical,
-    CylindricalFree,
-    PlanarFree,
-
-    NonlinearContact,
-    UnitQuaternion,
-
-    set_maximal_coordinates!,
-    set_minimal_coordinates!,
-    set_maximal_velocities!,
-    set_minimal_velocities!,
-    set_input!,
-    add_input!,
-    get_node,
-    get_body,
-    get_joint_constraint,
-    get_contact_constraint,
-    simulate!,
-    disassemble,
-
-    minimal_coordinates,
-    minimal_velocities,
-    minimal_dimension,
-    maximal_dimension,
-    maximal_to_minimal,
-    minimal_to_maximal,
-    maximal_to_minimal_jacobian,
-    minimal_to_maximal_jacobian,
-
-    RotX,
-    RotY,
-    RotZ,
-    RGBA,
-
-    szeros,
-    sones,
-    srand,
-
-    control_dimension,
-
-    get_mechanism,
-    initialize!,
-    get_data,
-    set_data!,
-    get_solution,
-    attitude_jacobian,
-    finitediff_sol_matrix,
-    full_matrix,
-    full_data_matrix,
-    finitediff_data_matrix,
-    finitediff_sensitivity,
-
-    momentum,
-    kinetic_energy,
-    potential_energy,
-    mechanical_energy,
-
-    mehrotra!,
-    SolverOptions,
-
-    Environment,
-    get_minimal_state
-
 # Utilities
 include(joinpath("utilities", "methods.jl"))
 include(joinpath("utilities", "custom_static.jl"))
@@ -195,8 +101,13 @@ include(joinpath("contacts", "nonlinear.jl"))
 include(joinpath("contacts", "utils.jl"))
 
 # Solver
-include(joinpath("solver", "methods.jl"))
+include(joinpath("solver", "linear_system.jl"))
+include(joinpath("solver", "centering.jl"))
+include(joinpath("solver", "complementarity.jl"))
+include(joinpath("solver", "violations.jl"))
 include(joinpath("solver", "options.jl"))
+include(joinpath("solver", "initialization.jl"))
+include(joinpath("solver", "correction.jl"))
 include(joinpath("solver", "mehrotra.jl"))
 include(joinpath("solver", "line_search.jl"))
 
@@ -206,7 +117,8 @@ include(joinpath("integrators", "constraint.jl"))
 
 # Visualizer
 include(joinpath("visuals", "visualizer.jl"))
-include(joinpath("visuals", "utilities.jl"))
+include(joinpath("visuals", "set.jl"))
+include(joinpath("visuals", "convert.jl"))
 include(joinpath("visuals", "colors.jl"))
 
 # Data 
@@ -222,7 +134,140 @@ include(joinpath("gradients", "utilities.jl"))
 include(joinpath("..", "env", "mechanisms.jl"))
 include(joinpath("..", "env", "environment.jl"))
 
-# Optimizers
-include(joinpath("..", "examples", "reinforcement_learning", "ars.jl"))
+# Bodies
+export 
+    Body,
+    Origin,
+    Box,
+    Cylinder,
+    Sphere,
+    Pyramid,
+    Mesh,
+    Shapes,
+    get_body,
+    get_node
+
+# Joints
+export
+    Rotational,
+    Translational,
+    JointConstraint,
+    Fixed,
+    Prismatic,
+    Planar,
+    FixedOrientation,
+    Revolute,
+    Cylindrical,
+    PlanarAxis,
+    FreeRevolute,
+    Orbital,
+    PrismaticOrbital,
+    PlanarOrbital,
+    FreeOrbital,
+    Spherical,
+    CylindricalFree,
+    PlanarFree,
+    get_joint_constraint
+
+# Contacts
+export
+    ContactConstraint,
+    ImpactContact, 
+    LinearContact, 
+    NonlinearContact,
+    get_contact_constraint
+
+# Inputs
+export 
+    set_input!,
+    add_input!,
+    input_dimension
+
+# Mechanism
+export 
+    Mechanism,
+    get_mechanism,
+    initialize!
+    
+# Maximal 
+export
+    set_maximal_coordinates!,
+    set_maximal_velocities!,
+    maximal_dimension
+
+# Minimal
+export 
+    set_minimal_coordinates!,
+    set_minimal_velocities!,
+    get_minimal_state,
+    minimal_coordinates,
+    minimal_velocities,
+    minimal_dimension
+
+# Maximal <-> Minimal
+export
+    maximal_to_minimal,
+    minimal_to_maximal
+
+# Simulation
+export
+    simulate!,
+    step!
+
+# Environments
+export
+    Environment
+
+# Orientation
+export 
+    UnitQuaternion,
+    RotX,
+    RotY,
+    RotZ,
+    attitude_jacobian
+
+# Data
+export 
+    get_data,
+    set_data!,
+    get_solution
+
+# Gradients
+export 
+    maximal_to_minimal_jacobian,
+    minimal_to_maximal_jacobian
+    
+# Mechanics
+export
+    kinetic_energy,
+    potential_energy,
+    mechanical_energy,
+    momentum
+
+# Solver
+export
+    mehrotra!,
+    SolverOptions
+
+# Linear System "Ax = b"
+export 
+    full_matrix,
+    full_data_matrix
+
+# Visuals 
+export 
+    Visualizer, 
+    set_background!,
+    set_floor!,
+    set_surface!, 
+    set_light!,
+    set_camera!
+    RGBA
+
+# Static
+export
+    szeros,
+    sones,
+    srand
 
 end

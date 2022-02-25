@@ -9,7 +9,7 @@ mech = getmechanism(:humanoid, contact=true, timestep=0.05, g=-9.81, spring=30.0
 initialize!(mech, :humanoid, rot=[0.1,0,0], tran=[0,0,1.5])
 
 function ctrl!(mechanism, k)
-    nu = control_dimension(mechanism)
+    nu = input_dimension(mechanism)
     u = szeros(nu)
     set_input!(mechanism, u)
     return

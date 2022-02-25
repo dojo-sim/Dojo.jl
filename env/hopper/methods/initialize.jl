@@ -61,7 +61,7 @@ function initialize_hopper!(mechanism::Mechanism; x::T=0.0, z::T=0.0, θ::T=0.0)
                  get_joint_constraint(mechanism, :floating_joint),
                  [z + 1.25 , -x, -θ])
     for joint in mechanism.joints
-        (joint.name != :floating_joint) && set_minimal_coordinates!(mechanism, joint, zeros(control_dimension(joint)))
+        (joint.name != :floating_joint) && set_minimal_coordinates!(mechanism, joint, zeros(input_dimension(joint)))
     end
     zero_velocity!(mechanism)
 end

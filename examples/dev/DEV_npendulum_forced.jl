@@ -25,7 +25,7 @@ initialize!(mech, :npendulum, ϕ1 = 0.1*pi)
 
 function cont!(mechanism, k; u = 1.0)
     for (i, eqc) in enumerate(mechanism.joints)
-        nu = control_dimension(eqc, ignore_floating_base = false)
+        nu = input_dimension(eqc, ignore_floating_base = false)
         su = mechanism.timestep * u * sones(nu)
         set_input!(eqc, su)
     end

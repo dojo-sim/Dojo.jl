@@ -16,7 +16,6 @@ function Base.:/(q::UnitQuaternion, w::Real)
 end
 
 Tmat(::Type{T}=Float64) where T = tmat(T)
-Tᵀmat(::Type{T}=Float64) where T = tmat(T)
 Vmat(::Type{T}=Float64) where T = vmat(T)
 Vᵀmat(::Type{T}=Float64) where T = hmat(T)
 Vmat(q::UnitQuaternion) = imag(q)

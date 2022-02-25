@@ -118,7 +118,7 @@ end
 
 # Joints
 function set_data!(joint::JointConstraint, data::AbstractVector)
-	nu = control_dimension(joint)
+	nu = input_dimension(joint)
 	u = data[SUnitRange(1,nu)]
 	spring = data[nu+1]
 	damper = data[nu+2]

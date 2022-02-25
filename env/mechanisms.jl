@@ -58,8 +58,3 @@ include("tippetop/methods/initialize.jl")
 include("twister/methods/initialize.jl")
 
 include("walker2d/methods/initialize.jl")
-
-# # Templates
-# include("atlas/methods/template.jl")
-# include("halfcheetah/methods/template.jl")
-# include("quadruped/methods/template.jl")

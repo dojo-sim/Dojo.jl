@@ -20,7 +20,7 @@ mech = get_quadruped(timestep=timestep, damper=damper, spring=spring,
 	limits=true)
 initialize!(mech, :quadruped)
 function ctrl!(mechanism, k)
-    nu = control_dimension(mechanism)
+    nu = input_dimension(mechanism)
     u = -0*[szeros(6); sones(nu-6)] * mechanism.timestep
     set_input!(mechanism, u)
     return
@@ -38,7 +38,7 @@ x_sol = file["x_sol"]
 u_sol = file["u_sol"]
 
 nx = minimal_dimension(mech)
-nu = control_dimension(mech)
+nu = input_dimension(mech)
 N = length(u_sol)
 function eval_loss(Av, x, u; α=1.0)
 	l = 0.0
@@ -91,7 +91,7 @@ Av = optimize(Av, x_sol, u_sol; α=0.05)
 A = reshape(Av, (nu,nx))
 
 function ctrl!(mechanism, k)
-    nu = control_dimension(mechanism)
+    nu = input_dimension(mechanism)
     u = SVector{nu}(A * get_minimal_state(mech))
 	u = u_sol[k]
     set_input!(mechanism, u)
@@ -225,7 +225,7 @@ constraint_jacobian_configuration2(mech, joint)
 
 @benchmark fx0, fu0 = get_maximal_gradients(mech)
 z = get_current_state(mech)
-u = rand(control_dimension(mech))
+u = rand(input_dimension(mech))
 fx0, fu0 = get_maximal_gradients!(mech, z, u)
 fx0, fu0 = get_minimal_gradients(mech, z, u)
 fx1, fu1 = get_maximal_gradients(mech)

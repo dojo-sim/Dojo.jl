@@ -55,7 +55,7 @@ end
 function set_minimal_coordinates!(joint::Rotational, 
 	pnode::Node, cnode::Node, 
 	timestep;
-	Δθ::AbstractVector=szeros(control_dimension(joint)))
+	Δθ::AbstractVector=szeros(input_dimension(joint)))
 	
 	axis_offset = joint.axis_offset
 	qa = pnode.state.q2
@@ -97,7 +97,7 @@ function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Rota
 	
 	axis_offset = joint.axis_offset
 	A = nullspace_mask(joint)
-	nu = control_dimension(joint)
+	nu = input_dimension(joint)
 
 	# 1 step backward in time
 	xa1 = next_position(xa, -va, timestep)
@@ -132,7 +132,7 @@ function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Rotationa
 	
 	axis_offset = joint.axis_offset
 	A = nullspace_mask(joint)
-	nu = control_dimension(joint)
+	nu = input_dimension(joint)
 
 	# 1 step backward in time
 	xa1 = next_position(xa, -va, timestep)

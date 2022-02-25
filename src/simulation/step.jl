@@ -1,4 +1,6 @@
-function step!(mechanism::Mechanism{T}, z::Vector{T}, u::Vector{T}; opts=SolverOptions{T}()) where T
+function step!(mechanism::Mechanism{T}, z::Vector{T}, u::Vector{T}; 
+    opts=SolverOptions{T}()) where T
+    
     # set state
     set_state!(mechanism, z)
 

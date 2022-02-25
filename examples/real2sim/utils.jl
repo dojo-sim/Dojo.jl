@@ -245,7 +245,7 @@ end
 ################################################################################
 function getSimulatorMaxGradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	timestep = mechanism.timestep
-	nu = control_dimension(mechanism)
+	nu = input_dimension(mechanism)
 	nsd = simdata_dim(mechanism)
 	njoints = joint_dimension(mechanism)
 	datamat = simdata_jacobian(mechanism)
@@ -300,7 +300,7 @@ function clean_loss(model::Symbol, pairs, data; timestep=0.05, g=-9.81,
 end
 
 function loss(mechanism::Mechanism, pair; opts=SolverOptions(btol=1e-6, rtol=1e-6))
-	nu = control_dimension(mechanism)
+	nu = input_dimension(mechanism)
 	nz = maximal_dimension(mechanism)
 	u = zeros(nu)
     z1 = pair[1]

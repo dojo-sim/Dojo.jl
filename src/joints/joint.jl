@@ -135,6 +135,4 @@ function joint_impulse_index(joint::Joint{T,Nλ,Nb,N}, s::Int) where {T,Nλ,Nb,N
     return ind
 end
 
-function control_dimension(joint::Joint{T,N}) where {T,N}
-    return 3 - N
-end
+input_dimension(joint::Joint{T,N}) where {T,N} = 3 - N

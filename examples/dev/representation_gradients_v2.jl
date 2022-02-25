@@ -27,7 +27,7 @@ mechanism = get_mechanism(:atlas, timestep=0.01, gravity=-9.81, friction_coeffic
 initialize_atlasstance!(mechanism, tran=[0,0,0.5], rot=[0.0,0.0,0.0])
 
 function ctrl!(mechanism, k) 
-    set_input!(mechanism, 0.1 * srand(control_dimension(mechanism)))
+    set_input!(mechanism, 0.1 * srand(input_dimension(mechanism)))
 end
 
 
@@ -39,7 +39,7 @@ maximal_dimension(mechanism)
 minimal_dimension(mechanism)
 z = get_maximal_state(mechanism)
 x = get_minimal_state(mechanism)
-u = zeros(control_dimension(mechanism))
+u = zeros(input_dimension(mechanism))
 maximal_to_minimal(mechanism, z) - x
 minimal_to_maximal(mechanism, x) - z
 Nb = length(mechanism.bodies)
@@ -68,10 +68,10 @@ N_a * inv(N_a' * N_a)# - M_a
 id = reverse(mechanism.system.dfs_list)[1]
 get_node(mechanism, id) isa JointConstraint
 joint = get_node(mechanism, id)
-off = 0#2 * sum(control_dimension.(mechanism.joints[1:1]))
+off = 0#2 * sum(input_dimension.(mechanism.joints[1:1]))
 
 Ne = length(mechanism.joints)
-nu = control_dimension(joint)
+nu = input_dimension(joint)
 idx = collect(off .+ (1:(2nu)))
 
 cv = minimal_coordinates_velocities(mechanism)

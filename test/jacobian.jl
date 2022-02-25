@@ -49,7 +49,7 @@ end
 
 function control!(mechanism, k; u=0.1)
     for (i, joint) in enumerate(mechanism.joints)
-        nu = Dojo.control_dimension(joint, ignore_floating_base=false)
+        nu = Dojo.input_dimension(joint, ignore_floating_base=false)
         su = mechanism.timestep * u * sones(nu)
         Dojo.set_input!(joint, su)
     end

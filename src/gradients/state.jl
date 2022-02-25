@@ -6,10 +6,10 @@ function maximal_to_minimal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::Abs
 		(id > Ne) && continue # only treat joints
 		joint = mechanism.joints[id]
 		c_shift = 0
-		v_shift = control_dimension(joint)
+		v_shift = input_dimension(joint)
 		ichild = joint.child_id - Ne
 		for element in [joint.translational, joint.rotational]
-			nu_element = control_dimension(element)
+			nu_element = input_dimension(element)
 
 			c_idx = row_shift + c_shift .+ (1:nu_element)
 			v_idx = row_shift + v_shift .+ (1:nu_element)
@@ -44,14 +44,14 @@ function maximal_to_minimal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::Abs
 			c_shift += nu_element
 			v_shift += nu_element
 		end
-		row_shift += 2 * control_dimension(joint)
+		row_shift += 2 * input_dimension(joint)
 	end
 	return J
 end
 
 function get_maximal_gradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	timestep = mechanism.timestep
-	nu = control_dimension(mechanism)
+	nu = input_dimension(mechanism)
 
 	for entry in mechanism.data_matrix.nzval # reset matrix
 		entry.value .= 0.0
@@ -64,7 +64,7 @@ function get_maximal_gradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,
 	index_col = [1+sum(dimcol[1:i-1]):sum(dimcol[1:i]) for i in 1:length(dimcol)]
 
 	index_state = [index_col[body.id][[14:16; 8:10; 17:19; 11:13]] for body in mechanism.bodies] # ∂ x2 v15 q2 ϕ15
-	index_control = [index_col[joint.id][1:control_dimension(joint)] for joint in mechanism.joints] # ∂ u
+	index_control = [index_col[joint.id][1:input_dimension(joint)] for joint in mechanism.joints] # ∂ u
 
 	datamat = full_matrix(mechanism.data_matrix, dimrow, dimcol)
 	solmat = full_matrix(mechanism.system)
@@ -119,7 +119,7 @@ function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::Abs
 	for id in mechanism.root_to_leaves
 		(id > Ne) && continue # only keep joints
 		cnt += 1
-		nu = control_dimension(get_joint_constraint(mechanism, id))
+		nu = input_dimension(get_joint_constraint(mechanism, id))
 		if length(col) > 0
 			push!(col, col[end][end] .+ (1:2nu))
 		else

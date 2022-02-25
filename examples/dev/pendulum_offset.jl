@@ -18,7 +18,7 @@ function controller!(mechanism, k)
 
     off = 0
     for (i, eqc) in enumerate(mechanism.joints)
-        nu = control_dimension(eqc)
+        nu = input_dimension(eqc)
         # get joint configuration + velocity
         xi = x[off .+ (1:2nu)]
         xi_goal = x_goal[off .+ (1:2nu)]

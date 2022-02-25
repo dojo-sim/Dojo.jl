@@ -230,7 +230,7 @@ end
 
 # inputs
 function set_input!(joint::JointConstraint{T,N,Nc}, input::AbstractVector) where {T,N,Nc}
-    @assert length(input) == control_dimension(joint)
+    @assert length(input) == input_dimension(joint)
     # translational
     r_idx = SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])
     length(r_idx) > 0 && set_input!(joint.translational, input[r_idx])
@@ -241,7 +241,7 @@ function set_input!(joint::JointConstraint{T,N,Nc}, input::AbstractVector) where
 end
 
 function add_input!(joint::JointConstraint{T,N,Nc}, input::AbstractVector) where {T,N,Nc}
-    @assert length(input) == control_dimension(joint)
+    @assert length(input) == input_dimension(joint)
     add_input!(joint.translational, input[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])])
     add_input!(joint.rotational, input[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])])
     return
@@ -333,11 +333,9 @@ function set_spring_damper_values!(joints, spring, damper; ignore_origin::Bool=t
     return joints
 end
 
-function control_dimension(joint::JointConstraint{T,N,Nc}; ignore_floating_base::Bool = false) where {T,N,Nc}
+function input_dimension(joint::JointConstraint{T,N,Nc}; ignore_floating_base::Bool = false) where {T,N,Nc}
     ignore_floating_base && (N == 0) && return 0
     N̄ = 0
-    for (i, element) in enumerate([joint.translational, joint.rotational])
-        N̄ += control_dimension(element)
-    end
+    N̄ = input_dimension(joint.translational) + input_dimension(joint.rotational)
     return N̄
 end

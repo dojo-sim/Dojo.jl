@@ -33,7 +33,7 @@ end
 function set_minimal_velocities(joint::Translational, xa::AbstractVector,
         va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
         xb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector;
-        Δv::AbstractVector=szeros(control_dimension(joint)))
+        Δv::AbstractVector=szeros(input_dimension(joint)))
     # Δv is expressed in along the joint's nullspace axes, in pnode's frame
 
     vertices = joint.vertices
@@ -54,7 +54,7 @@ end
 
 
 function ctrl!(mech, k)
-	set_input!(mech, 0.0*sones(control_dimension(mech))*mech.timestep)
+	set_input!(mech, 0.0*sones(input_dimension(mech))*mech.timestep)
 end
 # vis = Visualizer()
 # open(vis)
@@ -100,7 +100,7 @@ vb = storage.vl[1][4]
 
 z = get_maximal_state(mechanism)
 x = get_minimal_state(mechanism)
-u = zeros(control_dimension(mechanism))
+u = zeros(input_dimension(mechanism))
 norm(minimal_to_maximal(mechanism, x) - z, Inf)
 norm(maximal_to_minimal(mechanism, z) - x, Inf)
 
@@ -180,10 +180,10 @@ end
 
 function set_minimal_velocities(joint::JointConstraint, xa::AbstractVector,
         va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector, timestep;
-		Δx=szeros(control_dimension(joint)),
-		Δθ=szeros(control_dimension(joint)),
-		Δv=szeros(control_dimension(joint)),
-		Δϕ=szeros(control_dimension(joint)),
+		Δx=szeros(input_dimension(joint)),
+		Δθ=szeros(input_dimension(joint)),
+		Δv=szeros(input_dimension(joint)),
+		Δϕ=szeros(input_dimension(joint)),
 		)
 	rot = joint.rotational
 	tra = joint.translational
@@ -224,7 +224,7 @@ end
 
 
 function ctrl!(mech, k)
-	set_input!(mech, 0.0*sones(control_dimension(mech))*mech.timestep)
+	set_input!(mech, 0.0*sones(input_dimension(mech))*mech.timestep)
 end
 # vis = Visualizer()
 # open(vis)

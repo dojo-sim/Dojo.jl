@@ -25,7 +25,7 @@ open(vis)
 ################################################################################
 
 function ctrl!(mechanism, k)
-	nu = control_dimension(mech)
+	nu = input_dimension(mech)
 	# u = 0.5 * mechanism.timestep * [szeros(6); sones(nu-6)]
 	u = 0.3*[zeros(6); mech.timestep; zeros(nu-7)]
 	set_input!(mech, u)
@@ -45,7 +45,7 @@ function astronaut_simulation(mech::Mechanism; tsim=1.0, tctrl=1.0, seed::Int=0,
     initialize!(mech, :humanoid)
 
 	function ctrl!(mechanism, k)
-		nu = control_dimension(mech)
+		nu = input_dimension(mech)
 		u = (k*mechanism.timestep < tctrl) * control_amplitude * mechanism.timestep * [szeros(6); srand(nu-6)]
 		set_input!(mech, u)
 	    return

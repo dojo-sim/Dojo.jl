@@ -26,7 +26,7 @@ function set_input!(mechanism::Mechanism{T}, u::AbstractVector) where T
 	# set the controls in the equality constraints
 	off = 0
 	for joint in joints
-		nu = control_dimension(joint)
+		nu = input_dimension(joint)
 		set_input!(joint, SVector{nu,T}(u[off .+ (1:nu)]))
 		off += nu
 	end

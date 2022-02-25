@@ -71,7 +71,7 @@ function get_damper_impulses(mechanism::Mechanism{T}) where T
 	joints = mechanism.joints
 	# set the controls in the equality constraints
 	off = 0
-	nu = control_dimension(mechanism)
+	nu = input_dimension(mechanism)
 	u = zeros(nu)
 	for joint in joints
 		pbody = get_body(mechanism, joint.parent_id)

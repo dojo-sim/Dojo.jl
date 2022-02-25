@@ -49,7 +49,7 @@ end
 close(env)
 
 env.mechanism.joints
-control_dimension(env.mechanism)
+input_dimension(env.mechanism)
 sample(env.aspace)
 # sample(env.aspace)
 

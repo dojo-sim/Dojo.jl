@@ -24,20 +24,6 @@ struct Storage{T,N}
     Storage{T}(nsteps::Integer, nbodies) where T = Storage{T}(Base.OneTo(nsteps), nbodies)
     Storage(nsteps::Integer, nbodies) = Storage{Float64}(nsteps, nbodies)
 
-    function Storage(x::Vector{<:Vector{<:AbstractVector{T}}},q::Vector{Vector{UnitQuaternion{T}}}) where T
-        steps = Base.OneTo(length(x[1]))
-        nbodies = length(x)
-
-        v = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
-        ω = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
-        px = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
-        pq = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
-        vl = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
-        ωl = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
-
-        new{T,length(steps)}(x, q, v, ω, px, pq, vl, ωl)
-    end
-
     Storage{T}() where T = Storage{T}(Base.OneTo(0),0)
 end
 
@@ -62,6 +48,25 @@ function save_to_storage!(mechanism::Mechanism, storage::Storage, i::Int)
         storage.ωl[ind][i] = ω2 # ω2
     end
     return
+end
+
+function generate_storage(mechanism::Mechanism, z)
+    N = length(z)
+    M = length(mechanism.bodies)
+	storage = Storage{Float64}(N, M)
+
+    for t = 1:N
+        off = 0
+        for i = 1:M 
+            storage.x[i][t] = z[t][off .+ (1:3)]
+            storage.v[i][t] = z[t][off .+ (4:6)]
+            storage.q[i][t] = UnitQuaternion(z[t][off .+ (7:10)]..., false)
+            storage.ω[i][t] = z[t][off .+ (11:13)]
+            off += 13
+        end
+    end
+
+    return storage
 end
 
 function generate_storage(mechanism::Mechanism, z)

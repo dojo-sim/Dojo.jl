@@ -191,7 +191,7 @@ function initialize_nerf!(mechanism::Mechanism; x::AbstractVector{T}=zeros(3),
     set_minimal_velocities!(mechanism, joint, [v; ω])
 end
 
-function feasibility_linesearch!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
+function cone_line_search!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
         vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc,Cs<:Union{NerfContact{T,N},ImpactContact{T,N},LinearContact{T,N}},N½}
     s = contact.impulses_dual[2]
     γ = contact.impulses[2]

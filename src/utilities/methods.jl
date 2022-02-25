@@ -2,12 +2,6 @@ function module_dir()
     return joinpath(@__DIR__, "..", "..")
 end
 
-# function deleteat(M::Array, i1::Integer, i2::Integer)
-#     return [M[1:i1 - 1,1:i2 - 1] M[1:i1 - 1,i2 + 1:end];M[i1 + 1:end,1:i2 - 1] M[i1 + 1:end,i2 + 1:end]]
-# end
-
-# deleteat(M::Array,i::Integer) = deleteat(M, i, i)
-
 function scn(a::Float64; digits::Int=1, exp_digits::Int=1)
 	isnan(a) && return " NaN" * " "^(digits + exp_digits)
 	@assert digits >= 0

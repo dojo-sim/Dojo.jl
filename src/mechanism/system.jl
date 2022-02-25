@@ -13,7 +13,6 @@ function create_system(origin::Origin{T}, joints::Vector{<:JointConstraint}, bod
 end
 
 function adjacency_matrix(joints::Vector{<:JointConstraint}, bodies::Vector{<:Body}, contacts::Vector{<:ContactConstraint})
-    # mode can be variables or data depending on whi
     nodes = [joints; bodies; contacts]
     n = length(nodes)
     A = zeros(Bool, n, n)
@@ -38,7 +37,6 @@ function adjacency_matrix(joints::Vector{<:JointConstraint}, bodies::Vector{<:Bo
             end
         end
     end
-
     A = convert(Matrix{Int64}, A .| A')
     return A
 end
@@ -53,90 +51,4 @@ function recursivedirectchildren!(system, id::Integer)
         append!(dirs, recursivedirectchildren!(system, child_id))
     end
     return dirs
-end
-
-function get_child_joints(mechanism, joint)
-    current = joint
-    children = []
-    iter = 0
-    while true
-        if iter > 1000
-            break
-        end
-        for j in mechanism.joints
-            if j.parent_id == current.child_id && !(j.parent_id in children)
-                current = j
-                push!(children, j)
-                break
-            end
-        end
-        iter += 1
-    end
-    return children
-end
-
-# TODO: efficient method to assemble sparse system
-function dense_system(mechanism::Mechanism{T,Nn,Ne,Nb}) where {T,Nn,Ne,Nb}
-    joints = mechanism.joints
-    system = mechanism.system
-    system = mechanism.system
-
-    n = 6 * Nb
-    for joint in joints
-        n += length(joint)
-    end
-
-    A = zeros(T, n, n)
-    x = zeros(T, n)
-    b = zeros(T, n)
-
-    rangeDict = Dict{Int64,UnitRange}()
-    ind1 = 1
-    ind2 = 0
-
-    for id in system.dfs_list
-        node = get_node(mechanism, id)
-        ind2 += length(node)
-        range = ind1:ind2
-        rangeDict[id] = range
-
-        # A
-        diagonal = get_entry(system,id,id)
-        A[range,range] = diagonal.value
-
-        for child_id in system.acyclic_children[id]
-            offdiagonal_L = get_entry(system, id, child_id)
-            offdiagonal_U = get_entry(system, child_id, id)
-            nc1 = first(rangeDict[child_id])
-            nc2 = last(rangeDict[child_id])
-
-            A[range,nc1:nc2] = offdiagonal_L.value
-            A[nc1:nc2,range] = offdiagonal_U.value
-        end
-
-        for child_id in system.cyclic_children[id]
-            offdiagonal_L = get_entry(system, id, child_id)
-            offdiagonal_U = get_entry(system, child_id, id)
-            nc1 = first(rangeDict[child_id])
-            nc2 = last(rangeDict[child_id])
-
-            A[range, nc1:nc2] = offdiagonal_L.value
-            A[nc1:nc2, range] = offdiagonal_U.value
-        end
-
-        # x
-        sol = get_entry(system,id)
-        x[range] = sol.value
-
-        # b
-        if node isa Body
-            b[range] = -g(mechanism, node)
-        else
-            b[range] = -g(mechanism, node)
-        end
-
-        ind1 = ind2+1
-    end
-
-    return A, x, b
 end

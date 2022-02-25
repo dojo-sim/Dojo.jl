@@ -19,7 +19,7 @@ function box2d(; mode::Symbol=:min, dt::T=0.05, gravity=[0.0; 0.0; -9.81], frict
     elseif mode == :max
         nx = maximal_dimension(mechanism)
     end
-    nu_inf = control_dimension(mechanism)
+    nu_inf = input_dimension(mechanism)
     nu = infeasible_control ? nu_inf : nu_inf - 2 # remove last 2 controls
     no = nx
 

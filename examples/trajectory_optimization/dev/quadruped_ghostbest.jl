@@ -27,7 +27,7 @@ mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_co
 # Dimensions
 H = 20
 n = minimal_dimension(mech)
-m = control_dimension(mech)
+m = input_dimension(mech)
 d = 0
 u_mask = [zeros(12,6) I(12)]
 

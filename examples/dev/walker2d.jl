@@ -33,7 +33,7 @@ visualize(mech, storage, vis = vis, show_contact = true)
 
 function controller!(mechanism, k)
     for (i,eqc) in enumerate(collect(mechanism.joints)[2:end])
-        nu = control_dimension(eqc)
+        nu = input_dimension(eqc)
         u = 100*0.05*(rand(nu) .- 0.5)
         set_input!(eqc, u)
     end
@@ -64,7 +64,7 @@ end
 close(env)
 
 env.mechanism.joints
-control_dimension(env.mechanism)
+input_dimension(env.mechanism)
 sample(env.aspace)
 # sample(env.aspace)
 #
