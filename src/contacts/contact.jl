@@ -1,3 +1,8 @@
+"""
+    Contact{T,N} 
+
+    Subtypes contain contact information for a parent Body{T} object.
+"""
 abstract type Contact{T,N} end
 
 # constraints

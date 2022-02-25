@@ -166,6 +166,5 @@ function get_minimal_gradients(mechanism::Mechanism{T}) where T
 	minimal_jacobian_state = max_to_min_jacobian_next * maximal_jacobian_state * min_to_max_jacobian_current
 	# minimal control Jacobian
 	minimal_jacobian_control = max_to_min_jacobian_next * minimal_jacobian_control
-
 	return minimal_jacobian_state, minimal_jacobian_control
 end

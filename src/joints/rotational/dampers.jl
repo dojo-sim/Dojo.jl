@@ -3,7 +3,9 @@
 ###############################################################################
 
 function damper_force(joint::Rotational{T}, qa::UnitQuaternion, ϕa::AbstractVector,
-        qb::UnitQuaternion, ϕb::AbstractVector, timestep; unitary::Bool=false) where T
+        qb::UnitQuaternion, ϕb::AbstractVector, 
+        timestep; 
+        unitary::Bool=false) where T
     A = nullspace_mask(joint)
     Aᵀ = zerodimstaticadjoint(A)
     axis_offset = joint.axis_offset
@@ -13,7 +15,9 @@ function damper_force(joint::Rotational{T}, qa::UnitQuaternion, ϕa::AbstractVec
 end
 
 function damper_force(relative::Symbol, joint::Rotational{T}, qa::UnitQuaternion, ϕa::AbstractVector,
-        qb::UnitQuaternion, ϕb::AbstractVector, timestep; rotate::Bool=true, unitary::Bool=false) where T
+        qb::UnitQuaternion, ϕb::AbstractVector, timestep; 
+        rotate::Bool=true, 
+        unitary::Bool=false) where T
 
     damper = unitary ? 1.0 : joint.damper
     A = nullspace_mask(joint)
@@ -22,12 +26,12 @@ function damper_force(relative::Symbol, joint::Rotational{T}, qa::UnitQuaternion
 
     if relative == :parent
         velocity = A * (vector_rotate(ϕb, qa \ qb / axis_offset) - vector_rotate(ϕa, inv(axis_offset))) # in offset frame
-        force = 2 * Aᵀ * A * damper * Aᵀ * velocity # Currently assumes same damper constant in all directions
+        force = 2 * Aᵀ * A * damper * Aᵀ * velocity # currently assumes same damper constant in all directions
         rotate && (force = vector_rotate(force, axis_offset)) # rotate back to frame a
         return [szeros(T, 3); force]
     elseif relative == :child 
         velocity = A * (vector_rotate(ϕb, qa \ qb / axis_offset) - vector_rotate(ϕa, inv(axis_offset))) # in offset frame
-        force = - 2 * Aᵀ * A * damper * Aᵀ * velocity # Currently assumes same damper constant in all directions
+        force = - 2 * Aᵀ * A * damper * Aᵀ * velocity # currently assumes same damper constant in all directions
         rotate && (force = vector_rotate(force, inv(qb) * qa * axis_offset)) # rotate back to frame b
         return [szeros(T, 3); force]
     end

@@ -1,4 +1,4 @@
-function set_solution!(body::Body)
+function set_velocity_solution!(body::Body)
     state = body.state
     state.vsol[1] = state.v15
     state.vsol[2] = state.v15
@@ -37,7 +37,7 @@ end
 
 # maximal
 function set_maximal_coordinates!(body::Body; 
-    x::AbstractVector=SA[0;0;0], 
+    x::AbstractVector=SA[0.0; 0.0; 0.0], 
     q::UnitQuaternion=one(UnitQuaternion))
 
     body.state.x2 = x
@@ -47,8 +47,8 @@ function set_maximal_coordinates!(body::Body;
 end
 
 function set_maximal_velocities!(body::Body; 
-    v::AbstractVector=SA[0;0;0], 
-    ω::AbstractVector=SA[0;0;0])
+    v::AbstractVector=SA[0.0; 0.0; 0.0], 
+    ω::AbstractVector=SA[0.0; 0.0; 0.0])
 
     body.state.v15 = v
     body.state.ϕ15 = ω
@@ -57,9 +57,9 @@ function set_maximal_velocities!(body::Body;
 end
 
 function set_maximal_coordinates!(pbody::Node, cbody::Body;
-    parent_vertex::AbstractVector=SA[0;0;0], 
-    child_vertex::AbstractVector=SA[0;0;0],
-    Δx::AbstractVector=SA[0;0;0], 
+    parent_vertex::AbstractVector=SA[0.0; 0.0; 0.0], 
+    child_vertex::AbstractVector=SA[0.0; 0.0; 0.0],
+    Δx::AbstractVector=SA[0.0; 0.0; 0.0], 
     Δq::UnitQuaternion=one(UnitQuaternion))
 
     q1 = pbody.state.q2
@@ -70,22 +70,20 @@ function set_maximal_coordinates!(pbody::Node, cbody::Body;
 end
 
 function set_maximal_velocities!(pbody::Node, cbody::Body;
-    parent_vertex::AbstractVector=SA[0;0;0], 
-    child_vertex::AbstractVector=SA[0;0;0],
-    Δv::AbstractVector=SA[0;0;0], 
-    Δω::AbstractVector=SA[0;0;0])
+    parent_vertex::AbstractVector=SA[0.0; 0.0; 0.0], 
+    child_vertex::AbstractVector=SA[0.0; 0.0; 0.0],
+    Δv::AbstractVector=SA[0.0; 0.0; 0.0], 
+    Δω::AbstractVector=SA[0.0; 0.0; 0.0])
 
     x1 = pbody.state.x2
     v1 = pbody.state.v15
     q1 = pbody.state.q2
-    ω1 = pbody.state.ϕ15 # in local coordinates
+    ω1 = pbody.state.ϕ15
 
     x2 = cbody.state.x2
     q2 = cbody.state.q2
 
-    # Ω(B/W)b = Ra->b * [Ω(B/A)a + Ω(A/W)a]
     ω2 = vector_rotate(Δω + ω1, inv(q2) * q1)
-    # V(cb,B/W)w =
     ω1w = vector_rotate(ω1, q1)
     ω2w = vector_rotate(ω2, q2)
     Δvw = vector_rotate(Δv, q1)
@@ -101,9 +99,9 @@ end
 
 # inputs
 function set_input!(body::Body;
-    F::AbstractVector=SA[0;0;0], 
-    τ::AbstractVector=SA[0;0;0], 
-    p::AbstractVector=SA[0;0;0])
+    F::AbstractVector=SA[0.0; 0.0; 0.0], 
+    τ::AbstractVector=SA[0.0; 0.0; 0.0], 
+    p::AbstractVector=SA[0.0; 0.0; 0.0])
 
     τ += cross(p, F) # in local coordinates
     set_input!(body.state, vector_rotate(F, body.state.q2), τ)

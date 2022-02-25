@@ -1,3 +1,14 @@
+"""
+    LinearContact{T,N} 
+
+    Contact object for impact and friction with a linearized friction cone
+
+    friction_coefficient - value of friction coefficient
+    surface_projector - mapping from world frame to surface tangent frame 
+    surface_normal_projector - inverse/complement of surface_projector
+    contact_point - position of contact on Body relative to center of mass 
+    offset - position of contact relative to contact_point
+"""
 mutable struct LinearContact{T,N} <: Contact{T,N}
     friction_coefficient::T
     surface_projector::SMatrix{4,3,T,12}
@@ -5,11 +16,13 @@ mutable struct LinearContact{T,N} <: Contact{T,N}
     contact_point::SVector{3,T}
     offset::SVector{3,T}
 
-    function LinearContact(body::Body{T}, normal::AbstractVector, friction_coefficient; contact_point = szeros(T, 3), offset::AbstractVector = szeros(T, 3)) where T
-        V1, V2, V3 = orthogonal_columns(normal) # gives two plane vectors and the original normal axis
+    function LinearContact(body::Body{T}, normal::AbstractVector, friction_coefficient; 
+        contact_point=szeros(T, 3), 
+        offset::AbstractVector=szeros(T, 3)) where T
+        V1, V2, V3 = orthogonal_columns(normal)
         A = [V1 V2 V3]
         Ainv = inv(A)
-        surface_normal_projector = Ainv[3,SA[1; 2; 3]]'
+        surface_normal_projector = Ainv[3, SA[1; 2; 3]]'
         surface_projector = SA{T}[
              1  0  0
             -1  0  0
@@ -42,7 +55,8 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N
 end
 
 function constraint_jacobian_configuration(model::LinearContact, x3::AbstractVector, q3::UnitQuaternion,
-    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, timestep)
+    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, 
+    λ, timestep)
     V = [model.surface_normal_projector;
          szeros(1,3);
          szeros(4,3)]
@@ -55,7 +69,8 @@ function constraint_jacobian_configuration(model::LinearContact, x3::AbstractVec
 end
 
 function constraint_jacobian_velocity(model::LinearContact, x3::AbstractVector, q3::UnitQuaternion,
-    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, timestep)
+    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, 
+    λ, timestep)
     V = [model.surface_normal_projector * timestep;
          szeros(1,3);
          model.surface_projector]

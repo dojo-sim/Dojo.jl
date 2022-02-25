@@ -1,3 +1,4 @@
+# signed-distance functions
 function sdf(contact::ContactConstraint{T,N,Nc,Cs}, x::AbstractVector{T},
     q::UnitQuaternion{T}) where {T,N,Nc,Cs<:Contact{T,N}}
     model = contact.model

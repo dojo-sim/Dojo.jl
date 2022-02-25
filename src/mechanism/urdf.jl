@@ -142,26 +142,26 @@ end
 function get_shape(shapenode, x, q, color, T)
     if name(shapenode) == "box"
         xyz = parse_vector(shapenode, "size", T, default = "1 1 1")
-        shape = Box(xyz..., zero(T), color = color, xoffset = x, axis_offset = q)
+        shape = Box(xyz..., zero(T), color = color, position_offset = x, axis_offset = q)
     elseif name(shapenode) == "cylinder"
         r = parse_scalar(shapenode, "radius", T, default = "0.5")
         l = parse_scalar(shapenode, "length", T, default = "1")
-        shape = Cylinder(r, l, zero(T), color = color, xoffset = x, axis_offset = q)
+        shape = Cylinder(r, l, zero(T), color = color, position_offset = x, axis_offset = q)
     elseif name(shapenode) == "pyramid"
         w = parse_scalar(shapenode, "width", T, default = "1")
         h = parse_scalar(shapenode, "height", T, default = "1")
-        shape = Cylinder(w, h, zero(T), color = color, xoffset = x, axis_offset = q)
+        shape = Cylinder(w, h, zero(T), color = color, position_offset = x, axis_offset = q)
     elseif name(shapenode) == "sphere"
         r = parse_scalar(shapenode, "radius", T, default = "0.5")
-        shape = Sphere(r, zero(T), color = color, xoffset = x, axis_offset = q)
+        shape = Sphere(r, zero(T), color = color, position_offset = x, axis_offset = q)
     elseif name(shapenode) == "mesh"
         path = attribute(shapenode, "filename")
         scale = parse_vector(shapenode, "scale", T, default = "1 1 1")
-        shape = Mesh(path, zero(T), zeros(T, 3, 3), scale=scale, color = color, xoffset = x, axis_offset = q)
+        shape = Mesh(path, zero(T), zeros(T, 3, 3), scale=scale, color = color, position_offset = x, axis_offset = q)
     elseif name(shapenode) == "capsule"
         r = parse_scalar(shapenode, "radius", T, default = "0.5")
         l = parse_scalar(shapenode, "length", T, default = "1")
-        shape = Capsule(r, l, zero(T), color = color, xoffset = x, axis_offset = q)
+        shape = Capsule(r, l, zero(T), color = color, position_offset = x, axis_offset = q)
     else
         @info "Unknown geometry."
         shape = nothing
@@ -499,7 +499,7 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
 
         # shape relative
         if !(typeof(shape) <: EmptyShape)
-            shape.xoffset = vector_rotate(xjoint + vector_rotate(shape.xoffset, qjoint) - xbody, inv(qbody))
+            shape.position_offset = vector_rotate(xjoint + vector_rotate(shape.position_offset, qjoint) - xbody, inv(qbody))
             shape.axis_offset = axis_offset \ qjointlocal * shape.axis_offset
         end
     end

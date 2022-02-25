@@ -1,8 +1,7 @@
 ################################################################################
 # Data Jacobians
 ################################################################################
-function joint_constraint_jacobian_body_data(mechanism::Mechanism, joint::JointConstraint{T,N},
-    body::Body{T}) where {T,N}
+function joint_constraint_jacobian_body_data(mechanism::Mechanism, joint::JointConstraint{T,N}, body::Body{T}) where {T,N}
     Nd = data_dim(body)
     ∇m = szeros(T,N,1)
     ∇J = szeros(T,N,6)
@@ -170,9 +169,7 @@ function body_constraint_jacobian_contact_data(mechanism::Mechanism, body::Body{
     return [∇X; ∇Q]
 end
 
-
-function contact_constraint_jacobian_contact_data(mechanism::Mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
-        body::Body{T}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
+function contact_constraint_jacobian_contact_data(mechanism::Mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}, body::Body{T}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
     Nd = data_dim(contact)
     model = contact.model
     p = model.contact_point
@@ -191,8 +188,7 @@ function contact_constraint_jacobian_contact_data(mechanism::Mechanism, contact:
     return [∇compμ; ∇g]
 end
 
-function contact_constraint_jacobian_body_data(mechanism::Mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
-        body::Body{T}) where {T,N,Nc,Cs,N½}
+function contact_constraint_jacobian_body_data(mechanism::Mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}, body::Body{T}) where {T,N,Nc,Cs,N½}
     Nd = data_dim(body)
     ∇compμ = szeros(T,N½,Nd)
     ∇m = szeros(T,N½,1)
@@ -222,7 +218,7 @@ function data_adjacency_matrix(joints::Vector{<:JointConstraint}, bodies::Vector
             if T1 <: Body
                 if T2 <: Body
                     (node1.id == node2.id) && (A[node1.id, node2.id] = 1) # self loop
-                    linked = length(indirect_link0(node1.id, node2.id, [joints; contacts])) > 0
+                    linked = length(indirect_link(node1.id, node2.id, [joints; contacts])) > 0
                     linked && (A[node1.id, node2.id] = 1) # linked through a common joint
                 elseif T2 <: JointConstraint
                     (node1.id == node2.parent_id || node1.id == node2.child_id) && (A[node1.id, node2.id] = 1) # linked
@@ -246,7 +242,7 @@ function data_adjacency_matrix(joints::Vector{<:JointConstraint}, bodies::Vector
     return A
 end
 
-function indirect_link0(id1, id2, nodes::Vector{S}) where {S<:Node}
+function indirect_link(id1, id2, nodes::Vector{S}) where {S<:Node}
     ids = zeros(Int, 0)
     for node in nodes
         parent_id = node.parent_id
@@ -256,14 +252,10 @@ function indirect_link0(id1, id2, nodes::Vector{S}) where {S<:Node}
         linked && push!(ids, node.id)
     end
     return ids
-    # mech = get_halfcheetah()
-    # @test indirect_link0(8,14,mech.joints) == [2]
-    # @test indirect_link0(14,7,mech.joints) == []
-    # @test indirect_link0(7,7,mech.joints) == []
 end
 
-function create_data_matrix(joints::Vector{<:JointConstraint}, bodies::Vector{B},
-        contacts::Vector{<:ContactConstraint}; force_static::Bool=false) where {T,B<:Body{T}}
+function create_data_matrix(joints::Vector{<:JointConstraint}, bodies::Vector{B}, contacts::Vector{<:ContactConstraint}; 
+        force_static::Bool=false) where {T,B<:Body{T}}
     nodes = [joints; bodies; contacts]
     A = data_adjacency_matrix(joints, bodies, contacts)
     dimrow = length.(nodes)
@@ -332,7 +324,7 @@ function jacobian_body_data!(data_matrix::SparseMatrixCSC, mechanism::Mechanism{
         data_matrix[pbody.id, pbody.id].value += body_constraint_jacobian_body_data(mechanism, pbody)
 
         for cbody in [mechanism.bodies; mechanism.origin]
-            joint_links = indirect_link0(pbody.id, cbody.id, mechanism.joints)
+            joint_links = indirect_link(pbody.id, cbody.id, mechanism.joints)
             joints = [get_joint_constraint(mechanism, id) for id in joint_links]
             for joint in joints
                 ∇11, ∇12 = body_constraint_jacobian_body_data(mechanism, pbody, cbody, joint)
@@ -340,7 +332,7 @@ function jacobian_body_data!(data_matrix::SparseMatrixCSC, mechanism::Mechanism{
                 (typeof(pbody) <: Body && typeof(cbody) <: Body) && (data_matrix[pbody.id, cbody.id].value += ∇12)
             end
             # pretty sure this is useless because contact is never linked to two bodies
-            # contact_links = indirect_link0(pbody.id, cbody.id, mechanism.contacts)
+            # contact_links = indirect_link(pbody.id, cbody.id, mechanism.contacts)
             # contacts = [get_joint_constraint(mechanism, id) for id in contact_links]
             # for contact in contacts
                 # data_matrix[pbody.id, cbody.id].value += body_constraint_jacobian_body_data(mechanism, pbody, cbody, contact)

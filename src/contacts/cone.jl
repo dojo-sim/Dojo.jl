@@ -1,3 +1,4 @@
+# second-order cone product; see: https://web.stanford.edu/~boyd/papers/ecos.html
 function cone_product(u::AbstractVector{T}, v::AbstractVector{T}) where {T}
     [u' * v; u[1] * v[2:end] + v[1] * u[2:end]]
 end

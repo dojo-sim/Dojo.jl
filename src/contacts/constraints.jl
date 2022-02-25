@@ -5,7 +5,6 @@ function constraint_jacobian_configuration(mechanism, contact::ContactConstraint
 end
 
 function constraint_jacobian_velocity(mechanism, contact::ContactConstraint, body::Body)
-    # error()
     return constraint_jacobian_velocity(contact.model, body, nothing, nothing, mechanism.timestep)
 end
 
@@ -36,16 +35,17 @@ end
 
 function impulses_jacobian_velocity!(mechanism, body::Body, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
     timestep = mechanism.timestep
-    body.state.D -= impulse_map_jacobian_configuration(mechanism, body, contact) *
-        integrator_jacobian_velocity(body, timestep)
+    body.state.D -= impulse_map_jacobian_configuration(mechanism, body, contact) * integrator_jacobian_velocity(body, timestep)
     return
 end
 
+# off-diagonal terms for linear system
 function off_diagonal_jacobians(mechanism, body::Body, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
     Z = szeros(T,N½,6)
     return [Z' -impulse_map(mechanism, contact, body)], [Z; constraint_jacobian_velocity(mechanism, contact, body)]
 end
 
+# reset variables using cone-specific neutral vector
 function reset!(contact::ContactConstraint{T,N,Nc,Cs,N½}; scale::T=1.0) where {T,N,Nc,Cs,N½}
     contact.impulses_dual[1] = scale * neutral_vector(contact.model)
     contact.impulses_dual[2] = scale * neutral_vector(contact.model)
@@ -54,4 +54,5 @@ function reset!(contact::ContactConstraint{T,N,Nc,Cs,N½}; scale::T=1.0) where {
     return
 end
 
+# dimension of cone
 cone_degree(contact::ContactConstraint) = sum(cone_degree(contact.model))

@@ -1,6 +1,6 @@
 function transform(x, q, shape)
     scale_transform = MeshCat.LinearMap(diagm(shape.scale))
-    x_transform = MeshCat.Translation(x + vector_rotate(shape.xoffset, q))
+    x_transform = MeshCat.Translation(x + vector_rotate(shape.position_offset, q))
     q_transform = MeshCat.LinearMap(q * shape.axis_offset)
     return MeshCat.compose(x_transform, q_transform, scale_transform)
 end
@@ -13,7 +13,7 @@ function set_node!(x, q, id, shape, shapevisualizer, showshape) where {T,N}
         # TODO currently setting props directly because MeshCat/Rotations doesn't convert scaled rotation properly.
         # If this changes, do similarily to origin
         setprop!(shapevisualizer, "scale", MeshCat.js_scaling(shape.scale))
-        setprop!(shapevisualizer, "position", MeshCat.js_position(x + vector_rotate(shape.xoffset, q)))
+        setprop!(shapevisualizer, "position", MeshCat.js_position(x + vector_rotate(shape.position_offset, q)))
         setprop!(shapevisualizer, "quaternion", MeshCat.js_quaternion(q * shape.axis_offset))
     end
     return
@@ -35,7 +35,7 @@ function MeshCat.setobject!(subvisshape, visshape, shapes::Shapes; transparent=f
         v = subvisshape["node_$i"]
         setobject!(v, visshape[i], s, transparent=transparent)
         scale_transform = MeshCat.LinearMap(diagm(s.scale))
-        x_transform = MeshCat.Translation(s.xoffset)
+        x_transform = MeshCat.Translation(s.position_offset)
         q_transform = MeshCat.LinearMap(s.axis_offset)
         t = MeshCat.compose(x_transform, q_transform, scale_transform)
         settransform!(v, t)
@@ -91,7 +91,7 @@ function build_robot(mechanism::Mechanism; vis::Visualizer=Visualizer(),
                     radius = abs(contact.model.offset[3])
                     (radius == 0.0) && (radius = 0.01)
                     contact_shape = Sphere(radius,
-                        xoffset=(contact.model.contact_point),
+                        position_offset=(contact.model.contact_point),
                         axis_offset=one(UnitQuaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
                     visshape = convert_shape(contact_shape)
                     subvisshape = nothing
@@ -140,7 +140,7 @@ function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T};
                     radius = abs(contact.model.offset[3])
                     (radius == 0.0) && (radius = 0.01)
                     contact_shape = Sphere(radius,
-                        xoffset=(contact.model.contact_point),
+                        position_offset=(contact.model.contact_point),
                         axis_offset=one(UnitQuaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
                     visshape = convert_shape(contact_shape)
                     subvisshape = nothing
@@ -200,7 +200,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
                     radius = abs(contact.model.offset[3])
                     (radius == 0.0) && (radius = 0.01)
                     contact_shape = Sphere(radius,
-                        xoffset=(contact.model.contact_point),
+                        position_offset=(contact.model.contact_point),
                         axis_offset=one(UnitQuaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
                     visshape = convert_shape(contact_shape)
                     subvisshape = nothing

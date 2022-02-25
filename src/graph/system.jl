@@ -88,26 +88,3 @@ children(system, v) = outneighbors(system.dfs_graph, v)
 connections(system, v) = neighbors(system.graph, v)
 parents(system, v) = inneighbors(system.dfs_graph, v)
 
-# There probably exists a smarter way of getting the dense matrix from the sparses one
-full_matrix(system::System) = full_matrix(system.matrix_entries, system.dimrow, system.dimcol)
-
-function full_matrix(matrix_entries::SparseMatrixCSC, dimrow, dimcol)
-    range_row = [1:dimrow[1]]
-    for (i,dim) in enumerate(collect(Iterators.rest(dimrow, 2)))
-        push!(range_row, sum(dimrow[1:i])+1:sum(dimrow[1:i])+dim)
-    end
-    range_col = [1:dimcol[1]]
-    for (i,dim) in enumerate(collect(Iterators.rest(dimcol, 2)))
-        push!(range_col, sum(dimcol[1:i])+1:sum(dimcol[1:i])+dim)
-    end
-
-    A = zeros(sum(dimrow),sum(dimcol))
-
-    for (i,row) in enumerate(matrix_entries.rowval)
-        col = findfirst(x->i<x,matrix_entries.colptr)-1
-            A[range_row[row],range_col[col]] = matrix_entries[row,col].value
-    end
-    return A
-end
-
-full_vector(system) = vcat(getfield.(system.vector_entries,:value)...)

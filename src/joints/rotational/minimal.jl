@@ -108,8 +108,6 @@ function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Rota
 	q = inv(axis_offset) * inv(qa) * qb
 	q1 = inv(axis_offset) * inv(qa1) * qb1
 
-	# return A * rotation_vector(inv(q1) * q) ./ timestep
-
 	X = szeros(T, nu, 3)
 
 	if relative == :parent 
@@ -142,8 +140,6 @@ function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Rotationa
 
 	q = inv(axis_offset) * inv(qa) * qb
 	q1 = inv(axis_offset) * inv(qa1) * qb1
-
-	# return A * rotation_vector(inv(q1) * q) ./ timestep
 
 	V = szeros(T, nu, 3)
 
