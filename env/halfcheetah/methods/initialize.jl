@@ -63,18 +63,18 @@ function get_halfcheetah(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction
                 push!(models, contact_constraint(body, normal, friction_coefficient=friction_coefficient, contact_point=p, offset=o))
             end
         end
-        set_position!(mech, get_joint_constraint(mech, :floating_joint), [0.576509, 0.0, 0.02792])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :floating_joint), [0.576509, 0.0, 0.02792])
         mech = Mechanism(origin, bodies, joints, [models...], gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
     return mech
 end
 
 function initialize_halfcheetah!(mechanism::Mechanism; x::T=0.0, z::T=0.0, θ::T=0.0) where T
-    set_position!(mechanism,
+    set_minimal_coordinates!(mechanism,
                  get_joint_constraint(mechanism, :floating_joint),
                  [z + 0.576509, -x, -θ + 0.02792])
     for joint in mechanism.joints
-        (joint.name != :floating_joint) && set_position!(mechanism, joint, zeros(control_dimension(joint)))
+        (joint.name != :floating_joint) && set_minimal_coordinates!(mechanism, joint, zeros(input_dimension(joint)))
     end
     zero_velocity!(mechanism)
 end

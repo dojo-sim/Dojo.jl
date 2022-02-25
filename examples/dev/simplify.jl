@@ -9,9 +9,9 @@ mech = getmechanism(:humanoid, contact=true, timestep=0.05, g=-9.81, spring=30.0
 initialize!(mech, :humanoid, rot=[0.1,0,0], tran=[0,0,1.5])
 
 function ctrl!(mechanism, k)
-    nu = control_dimension(mechanism)
+    nu = input_dimension(mechanism)
     u = szeros(nu)
-    set_control!(mechanism, u)
+    set_input!(mechanism, u)
     return
 end
 
@@ -27,19 +27,19 @@ p2 = [0; 0; l/2] # joint connection point
 
 # Links
 origin = Origin{Float64}()
-body1 = Box(width, depth, l, m)
+pbody = Box(width, depth, l, m)
 
 # Constraints
-joint_between_origin_and_body1 = JointConstraint(Revolute(origin, body1,
+joint_between_origin_and_pbody = JointConstraint(Revolute(origin, pbody,
     joint_axis; p2=p2, spring = 0, damper = 0,
     rot_joint_limits = [SVector{1}([0.25 * π]), SVector{1}([π])]
     ))
-bodies = [body1]
-eqcs = [joint_between_origin_and_body1]
+bodies = [pbody]
+eqcs = [joint_between_origin_and_pbody]
 
-length(joint_between_origin_and_body1)
-length(joint_between_origin_and_body1.constraints[1])
-length(joint_between_origin_and_body1.constraints[2])
+length(joint_between_origin_and_pbody)
+length(joint_between_origin_and_pbody.constraints[1])
+length(joint_between_origin_and_pbody.constraints[2])
 
 
 
@@ -133,7 +133,7 @@ jacz0 - jacz1
 @variables xa[1:3], qa[1:4], xb[1:3], qb[1:4], p[1:3], p2[1:3]
 qa_ = UnitQuaternion(qa..., false)
 qb_ = UnitQuaternion(qb..., false)
-∂qrotation_matrix(qa_, p) * LVᵀmat(qa_)
+∂rotation_matrix∂q(qa_, p) * LVᵀmat(qa_)
 
 Xt = rotation_matrix(qa_)
 cbpb_w = rotation_matrix(qb_) * p2
@@ -159,7 +159,7 @@ using Symbolics
 q_ = UnitQuaternion(q..., false)
 Symbolics.jacobian(VRᵀmat(q_)*p4, q)
 
-@show Symbolics.jacobian(rotation_matrix(inv(q_))*p, q) - ∂qrotation_matrix(inv(q_), p) * Tmat()
+@show Symbolics.jacobian(rotation_matrix(inv(q_))*p, q) - ∂rotation_matrix∂q(inv(q_), p) * Tmat()
 
 
 
@@ -173,9 +173,9 @@ LVᵀmat(qb_)
 Tmat()'
 
 @variables p4[1:4]
-Symbolics.jacobian(LVᵀmat(inv(qb_)) * p, qb) - ∂qLVᵀmat(p) * Tmat()
+Symbolics.jacobian(LVᵀmat(inv(qb_)) * p, qb) - ∂LVᵀmat∂q(p) * Tmat()
 Symbolics.jacobian(VRᵀmat(inv(qb_)) * p4, qb)
-- ∂qVRᵀmat(p4)
+- ∂VRᵀmat∂q(p4)
 
 
 

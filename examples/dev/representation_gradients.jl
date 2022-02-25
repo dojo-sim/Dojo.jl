@@ -46,7 +46,7 @@ initialize_atlasstance!(mech, tran=[0,0,0.5], rot=[0.0,0.0,0.0])
 
 joint = mech.joints[1]
 joint.name
-n = control_dimension(joint)
+n = input_dimension(joint)
 off = 0
 idx = collect(off .+ (1:(2n)))
 child_ids = [id for id in recursivedirectchildren!(mech.system, joint.id) if get_node(mech, id) isa JointConstraint]
@@ -88,7 +88,7 @@ maximal_dimension(mech)
 minimal_dimension(mech)
 z = get_maximal_state(mech)
 x = get_minimal_state(mech)
-u = zeros(control_dimension(mech))
+u = zeros(input_dimension(mech))
 maximal_to_minimal(mech, z) - x
 minimal_to_maximal(mech, x) - z
 
@@ -114,15 +114,15 @@ N_a * inv(N_a' * N_a)# - M_a
 
 # # bodies
 # joint = mech.joints[1]
-# body1 = get_body(mech, joint.parent_id)
-# body2 = get_body(mech, joint.child_id)
+# pbody = get_body(mech, joint.parent_id)
+# cbody = get_body(mech, joint.child_id)
 
-# # translational delta in body1 frame
+# # translational delta in pbody frame
 # xθ = [1.0, 1.0]
-# Δx = get_position_delta(joint.translational, body1, body2, xθ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]) 
+# Δx = get_position_delta(joint.translational, pbody, cbody, xθ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]) 
 
-# # rotational delta in body2 frame
-# Δq = get_position_delta(joint.rotational, body1, body2, xθ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])])
+# # rotational delta in cbody frame
+# Δq = get_position_delta(joint.rotational, pbody, cbody, xθ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])])
 
 
 #######
@@ -132,7 +132,7 @@ length(mech.joints)
 id = reverse(mechanism.system.dfs_list)[1]
 
 joint = mechanism.joints[id]
-n = control_dimension(joint)
+n = input_dimension(joint)
 idx = collect(off .+ (1:(2n)))
 
 child_joints = get_child_joints(mech, joint)
@@ -160,11 +160,11 @@ function position_velocity(y)
     currentvels = minimal_velocities(mech)
 
     set_joint_position!(mech, joint, y[1:n]) 
-    set_velocity!(mech, joint, y[n .+ (1:n)])
+    set_minimal_velocities!(mech, joint, y[n .+ (1:n)])
 
     for node in child_joints
         set_joint_position!(mech, node, currentvals[node.id])
-        set_velocity!(mech, node, currentvels[node.id])
+        set_minimal_velocities!(mech, node, currentvels[node.id])
     end
 
     return get_maximal_state(mech)
@@ -177,9 +177,9 @@ currentvals = minimal_coordinates(mech)
 currentvels = minimal_velocities(mech)
 
 function joint_position_velocity(mech, joint, θ) 
-    n = control_dimension(joint)
+    n = input_dimension(joint)
     x, q = set_joint_position!(mech, joint, θ[1:n]) 
-    v, ω = set_velocity!(mech, joint, θ[n .+ (1:n)])
+    v, ω = set_minimal_velocities!(mech, joint, θ[n .+ (1:n)])
     return [x; v; vector(q); ω]
 end
 
@@ -187,12 +187,12 @@ D1 = FiniteDiff.finite_difference_jacobian(a -> joint_position_velocity(mech, jo
 norm(D1 - minimal_to_maximal_jacobian(mech, x)[(ichild - 1) * 13 .+ (1:13), 1:2n])
 
 xa, qa = set_joint_position!(mech, joint, x[idx][1:n]) 
-va, ωa = set_velocity!(mech, joint, x[idx][n .+ (1:n)])
+va, ωa = set_minimal_velocities!(mech, joint, x[idx][n .+ (1:n)])
 zp = [xa; va; vector(qa); ωa]
 
 for node in child_joints
     set_joint_position!(mech, node, currentvals[node.id])
-    set_velocity!(mech, node, currentvels[node.id])
+    set_minimal_velocities!(mech, node, currentvels[node.id])
 end
 
 # root 
@@ -228,7 +228,7 @@ norm(minimal_to_maximal_jacobian(mech, x)[(child_joints[3].child_id - length(mec
 norm(minimal_to_maximal_jacobian(mech, x)[(child_joints[3].child_id - length(mech.joints) - 1) * 13 .+ (1:13), 1:2n] - Da[3])
 
 function joint_position_velocity(mech, joint, z, θ) 
-    n = control_dimension(joint)
+    n = input_dimension(joint)
 
     body_parent = get_body(mech, joint.parent_id)
     xp = z[1:3] 
@@ -236,11 +236,11 @@ function joint_position_velocity(mech, joint, z, θ)
     qp = UnitQuaternion(z[7:10]..., false)
     ϕp = z[11:13]
 
-    set_position!(body_parent, x=xp, q=qp)
-    set_velocity!(body_parent, v=vp, ω=ϕp)
+    set_maximal_coordinates!(body_parent, x=xp, q=qp)
+    set_maximal_velocities!(body_parent, v=vp, ω=ϕp)
 
     x, q = set_joint_position!(mech, joint, θ[1:n]) 
-    v, ω = set_velocity!(mech, joint, θ[n .+ (1:n)])
+    v, ω = set_minimal_velocities!(mech, joint, θ[n .+ (1:n)])
 
     return [x; v; vector(q); ω]
 end
@@ -258,12 +258,12 @@ function position_velocity_jacobian(θ)
     currentvels = minimal_velocities(mech)
 
     x, q = set_joint_position!(mech, joint, θ[1:n]) 
-    v, ω = set_velocity!(mech, joint, θ[n .+ (1:n)])
+    v, ω = set_minimal_velocities!(mech, joint, θ[n .+ (1:n)])
     zp = [x; v; vector(q); ω]
 
     for node in child_joints
         set_joint_position!(mech, node, currentvals[node.id])
-        set_velocity!(mech, node, currentvels[node.id])
+        set_minimal_velocities!(mech, node, currentvels[node.id])
     end
 
     # root 

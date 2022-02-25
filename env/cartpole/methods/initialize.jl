@@ -11,13 +11,13 @@ function get_cartpole(; timestep::T=0.1, gravity=[0.0; 0.0; -9.81], spring=0.0, 
 
     # Links
     origin = Origin{Float64}()
-    slider = Capsule(1.5 * radius, slider_length, slider_mass, qoffset=UnitQuaternion(RotX(0.5 * π)), color=cyan)
+    slider = Capsule(1.5 * radius, slider_length, slider_mass, axis_offset=UnitQuaternion(RotX(0.5 * π)), color=cyan)
     pendulum = Capsule(radius, pendulum_length, pendulum_mass, color=cyan)
     links = [slider, pendulum]
 
     # Joint Constraints
-    joint_origin_slider = JointConstraint(Prismatic(origin, slider, slider_axis; p1=szeros(Float64, 3), p2=szeros(Float64, 3)))
-    joint_slider_pendulum = JointConstraint(Revolute(slider, pendulum, pendulum_axis; p1=szeros(Float64, 3), p2=[0.0; 0.0; 0.5 * pendulum_length]))
+    joint_origin_slider = JointConstraint(Prismatic(origin, slider, slider_axis; parent_vertex=szeros(Float64, 3), child_vertex=szeros(Float64, 3)))
+    joint_slider_pendulum = JointConstraint(Revolute(slider, pendulum, pendulum_axis; parent_vertex=szeros(Float64, 3), child_vertex=[0.0; 0.0; 0.5 * pendulum_length]))
     joints = [joint_origin_slider, joint_slider_pendulum]
 
     # Mechanism
@@ -28,16 +28,16 @@ end
 
 function initialize_cartpole!(mech::Mechanism{T,Nn,Ne,Nb}; mode=:down, pendulum_length=1.0) where {T,Nn,Ne,Nb}
     # origin to slider
-    set_position!(mech.origin, mech.bodies[1])
-    set_velocity!(mech.bodies[1], v=[0.0; 0.0; 0.0],ω=zeros(3))
+    set_maximal_coordinates!(mech.origin, mech.bodies[1])
+    set_maximal_velocities!(mech.bodies[1], v=[0.0; 0.0; 0.0],ω=zeros(3))
 
     # slider to pendulum
     if mode == :down
-        set_position!(mech.bodies[1], mech.bodies[2], Δx=[0.0; 0.0; -0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
-        set_velocity!(mech.bodies[2], v=zeros(3), ω=zeros(3))
+        set_maximal_coordinates!(mech.bodies[1], mech.bodies[2], Δx=[0.0; 0.0; -0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
+        set_maximal_velocities!(mech.bodies[2], v=zeros(3), ω=zeros(3))
     elseif mode == :up
-        set_position!(mech.bodies[1], mech.bodies[2], Δx=[0.0; 0.0; 0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
-        set_velocity!(mech.bodies[2], v=zeros(3), ω=zeros(3))
+        set_maximal_coordinates!(mech.bodies[1], mech.bodies[2], Δx=[0.0; 0.0; 0.5 * pendulum_length], Δq=UnitQuaternion(RotX(π)))
+        set_maximal_velocities!(mech.bodies[2], v=zeros(3), ω=zeros(3))
     end
 end
 

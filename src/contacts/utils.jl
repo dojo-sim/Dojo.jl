@@ -1,7 +1,7 @@
 function sdf(contact::ContactConstraint{T,N,Nc,Cs}, x::AbstractVector{T},
     q::UnitQuaternion{T}) where {T,N,Nc,Cs<:Contact{T,N}}
     model = contact.model
-    return model.surface_normal_projector * (x + vrotate(model.contact_point, q) - model.offset)
+    return model.surface_normal_projector * (x + vector_rotate(model.contact_point, q) - model.offset)
 end
 
 function get_sdf(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, storage::Storage{T,N}) where {T,Nn,Ne,Nb,Ni,N}
@@ -24,13 +24,13 @@ end
 
 function contact_location(contact::ContactConstraint{T,N,Nc,Cs},
     body::Body) where {T,N,Nc,Cs<:Contact{T,N}}
-    x = body.state.x2[1]
-    q = body.state.q2[1]
+    x = body.state.x2
+    q = body.state.q2
     return contact_location(contact, x, q)
 end
 
 function contact_location(contact::ContactConstraint{T,N,Nc,Cs}, x::AbstractVector{T},
     q::UnitQuaternion{T}) where {T,N,Nc,Cs<:Contact{T,N}}
     model = contact.model
-    return x + vrotate(model.contact_point,q) - model.offset
+    return x + vector_rotate(model.contact_point,q) - model.offset
 end

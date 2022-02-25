@@ -57,7 +57,7 @@ function _get_obs(env::Environment)
     return env.x
 end
 
-@inline is_done(env::Environment, x) = false
+is_done(env::Environment, x) = false
 
 function step(env::Environment, x, u; diff=false)
     mechanism = env.mechanism

@@ -18,9 +18,9 @@ function get_twister(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_coe
     # Constraints
     jointb1 = JointConstraint(Floating(origin, bodies[1], spring = 0.0, damper = 0.0)) # TODO remove the spring and damper from floating base
     if Nb > 1
-        joints = [JointConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], axes[i%3+1]; p1 = vert12, p2 = vert11, spring=spring, damper=damper)) for i = 2:Nb]
-        # joints = [JointConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], axes[1]; p1 = vert12, p2 = vert11, spring=spring, damper=damper)) for i = 2:Nb]
-        # joints = [JointConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], axes[3]; p1 = vert12, p2 = vert11, spring=spring, damper=damper)) for i = 2:Nb]
+        joints = [JointConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], axes[i%3+1]; parent_vertex = vert12, child_vertex = vert11, spring=spring, damper=damper)) for i = 2:Nb]
+        # joints = [JointConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], axes[1]; parent_vertex = vert12, child_vertex = vert11, spring=spring, damper=damper)) for i = 2:Nb]
+        # joints = [JointConstraint(Prototype(jointtype, bodies[i - 1], bodies[i], axes[3]; parent_vertex = vert12, child_vertex = vert11, spring=spring, damper=damper)) for i = 2:Nb]
         joints = [jointb1; joints]
     else
         joints = [jointb1]
@@ -45,18 +45,18 @@ function initialize_twister!(mechanism::Mechanism{T,Nn,Ne,Nb}; x::AbstractVector
     q1::UnitQuaternion{T}=UnitQuaternion(RotX(0.6 * π))) where {T,Nn,Ne,Nb}
 
     bodies = collect(mechanism.bodies)
-    body1 = bodies[1]
+    pbody = bodies[1]
     h = 1.0
     vert11 = [0.;0.; h/2]
     vert12 = -vert11
     # set position and velocities
-    set_position!(mechanism.origin, body1, p2 = x, Δq = q1)
-    set_velocity!(body1, v = v, ω = ω)
+    set_maximal_coordinates!(mechanism.origin, pbody, child_vertex = x, Δq = q1)
+    set_maximal_velocities!(pbody, v = v, ω = ω)
 
-    previd = body1.id
+    previd = pbody.id
     for (i,body) in enumerate(Iterators.drop(mechanism.bodies, 1))
-        set_position!(get_body(mechanism, previd), body, p1 = vert12, p2 = vert11)
-        set_velocity!(get_body(mechanism, previd), body, p1 = vert12, p2 = vert11,
+        set_maximal_coordinates!(get_body(mechanism, previd), body, parent_vertex = vert12, child_vertex = vert11)
+        set_maximal_velocities!(get_body(mechanism, previd), body, parent_vertex = vert12, child_vertex = vert11,
                 Δv = Δv, Δω = Δω)
         previd = body.id
     end

@@ -2,12 +2,12 @@
 # Control Input
 ################################################################################
 
-@inline function input_impulse!(joint::Translational{T}, 
-    bodya::Node, bodyb::Node,
+function input_impulse!(joint::Translational{T}, 
+    pbody::Node, cbody::Node,
     timestep::T, clear::Bool) where T
 
-    xa, qa = current_configuration(bodya.state)
-    xb, qb = current_configuration(bodyb.state)
+    xa, qa = current_configuration(pbody.state)
+    xb, qb = current_configuration(cbody.state)
   
     input = joint.input
     Ta = impulse_transform(:parent, joint, xa, qa, xb, qb)
@@ -17,10 +17,11 @@
     Fbw = Tb[1:3,1:3] * input
     τbb = Tb[4:6,1:3] * input
 
-    bodya.state.F2[end] += Faw
-    bodya.state.τ2[end] += τaa/2
-    bodyb.state.F2[end] += Fbw
-    bodyb.state.τ2[end] += τbb/2
+    pbody.state.F2 += Faw
+    pbody.state.τ2 += τaa/2
+    cbody.state.F2 += Fbw
+    cbody.state.τ2 += τbb/2
+    
     clear && (joint.input = szeros(T,3))
     return
 end
@@ -29,7 +30,7 @@ end
 # Control Jacobian
 ################################################################################
 
-@inline function input_jacobian_control(relative::Symbol, 
+function input_jacobian_control(relative::Symbol, 
     joint::Translational, 
     xa::AbstractVector, qa::UnitQuaternion,
     xb::AbstractVector, qb::UnitQuaternion) where T
@@ -42,7 +43,7 @@ end
     return [X; Q]
 end
 
-@inline function input_jacobian_configuration(relative::Symbol, 
+function input_jacobian_configuration(relative::Symbol, 
     joint::Translational{T}, 
     xa::AbstractVector, qa::UnitQuaternion,
     xb::AbstractVector, qb::UnitQuaternion) where T

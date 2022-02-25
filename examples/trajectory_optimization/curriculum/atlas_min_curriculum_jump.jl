@@ -40,7 +40,7 @@ d = 0
 initialize!(env.mechanism, :atlas, model_type=:armless, tran=[1,0,0.0], rot=[0,0,0.], αhip=0.5, αknee=1.0)
 function ctrl!(mech, k)
 	u0 = -total_mass(env.mechanism) * env.mechanism.gravity* env.mechanism.timestep/1.1 * 0
-	set_control!(mech, [u0; szeros(m-3)])
+	set_input!(mech, [u0; szeros(m-3)])
 	return nothing
 end
 storage = simulate!(env.mechanism, 0.5, ctrl!, record=true, verbose=false,

@@ -18,10 +18,10 @@ function pendulum(; mode::Symbol=:min, max_speed::T=8.0, max_torque::T=8.0,
         nx = maximal_dimension(mechanism)
         no = 13
     end
-    nu = control_dimension(mechanism)
+    nu = input_dimension(mechanism)
 
     high = [1.0, 1.0, max_speed]
-    aspace = BoxSpace(control_dimension(mechanism), low=[-dt*max_torque], high=[dt*max_torque])
+    aspace = BoxSpace(input_dimension(mechanism), low=[-dt*max_torque], high=[dt*max_torque])
     ospace = BoxSpace(no, low=-high, high=high)
     rng = [MersenneTwister(s),]
 

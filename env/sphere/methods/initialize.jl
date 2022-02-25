@@ -11,7 +11,7 @@ function get_sphere(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], friction_coef
         normal = [0,0,1.0]
         contacts = [contact_constraint(get_body(mechanism, :sphere), normal, friction_coefficient=friction_coefficient,
             contact_point=contact, offset=[0,0,radius], contact_type=contact_type)]
-        set_position!(mechanism, get_joint_constraint(mechanism, :floating_joint), [0;0;radius;zeros(3)])
+        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :floating_joint), [0;0;radius;zeros(3)])
         mechanism = Mechanism(origin, bodies, joints, contacts, gravity=gravity, timestep=timestep)
     end
     return mechanism
@@ -23,6 +23,6 @@ function initialize_sphere!(mechanism::Mechanism; x::AbstractVector{T}=zeros(3),
     r = collect(mechanism.bodies)[1].shape.r
     joint = get_joint_constraint(mechanism, :floating_joint)
     zero_velocity!(mechanism)
-    set_position!(mechanism, joint, [x+[0,0,r] rotation_vector(q)])
-    set_velocity!(mechanism, joint, [v; ω])
+    set_minimal_coordinates!(mechanism, joint, [x+[0,0,r] rotation_vector(q)])
+    set_minimal_velocities!(mechanism, joint, [v; ω])
 end

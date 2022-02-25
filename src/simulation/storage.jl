@@ -24,61 +24,49 @@ struct Storage{T,N}
     Storage{T}(nsteps::Integer, nbodies) where T = Storage{T}(Base.OneTo(nsteps), nbodies)
     Storage(nsteps::Integer, nbodies) = Storage{Float64}(nsteps, nbodies)
 
-    function Storage(x::Vector{<:Vector{<:AbstractVector{T}}},q::Vector{Vector{UnitQuaternion{T}}}) where T
-        steps = Base.OneTo(length(x[1]))
-        nbodies = length(x)
-
-        v = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
-        ω = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
-        px = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
-        pq = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
-        vl = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
-        ωl = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
-
-        new{T,length(steps)}(x, q, v, ω, px, pq, vl, ωl)
-    end
-
     Storage{T}() where T = Storage{T}(Base.OneTo(0),0)
 end
 
 Base.length(storage::Storage{T,N}) where {T,N} = N
 
-function downsample(storage::Storage{T,N}, n::Int) where {T,N}
-    steps = N ÷ n
-    nbodies = length(storage.x)
-    s = Storage(steps, nbodies)
-    for i = 1:nbodies
-        s.x[i] = storage.x[i][1:n:end]
-        s.q[i] = storage.q[i][1:n:end]
-        s.v[i] = storage.v[i][1:n:end]
-        s.ω[i] = storage.ω[i][1:n:end]
-        s.px[i] = storage.px[i][1:n:end]
-        s.pq[i] = storage.pq[i][1:n:end]
-        s.vl[i] = storage.vl[i][1:n:end]
-        s.ωl[i] = storage.ωl[i][1:n:end]
-    end
-    return s
-end
-
 function save_to_storage!(mechanism::Mechanism, storage::Storage, i::Int)
     for (ind, body) in enumerate(mechanism.bodies)
         state = body.state
-        storage.x[ind][i] = state.x2[1] # x2
-        storage.q[ind][i] = state.q2[1] # q2
+        storage.x[ind][i] = state.x2 # x2
+        storage.q[ind][i] = state.q2 # q2
         storage.v[ind][i] = state.v15 # v1.5
         storage.ω[ind][i] = state.ϕ15 # ω1.5
-        q2 = state.q2[1]
+        q2 = state.q2
         p2 = momentum(mechanism, body) # p1 in world frame
         px2 = p2[SVector{3,Int}(1,2,3)] # px1 in world frame
         pq2 = p2[SVector{3,Int}(4,5,6)] # pq1 in world frame
         v2 = px2 ./ body.mass # in world frame
-        ω2 = body.inertia \ (rotation_matrix(inv(q2)) * pq2) # in body frame, we rotate using the current quaternion q2 = state.q2[1]
+        ω2 = body.inertia \ (rotation_matrix(inv(q2)) * pq2) # in body frame, we rotate using the current quaternion q2 = state.q2
         storage.px[ind][i] = px2 # px2
         storage.pq[ind][i] = pq2 # pq2
         storage.vl[ind][i] = v2 # v2
         storage.ωl[ind][i] = ω2 # ω2
     end
     return
+end
+
+function generate_storage(mechanism::Mechanism, z)
+    N = length(z)
+    M = length(mechanism.bodies)
+	storage = Storage{Float64}(N, M)
+
+    for t = 1:N
+        off = 0
+        for i = 1:M 
+            storage.x[i][t] = z[t][off .+ (1:3)]
+            storage.v[i][t] = z[t][off .+ (4:6)]
+            storage.q[i][t] = UnitQuaternion(z[t][off .+ (7:10)]..., false)
+            storage.ω[i][t] = z[t][off .+ (11:13)]
+            off += 13
+        end
+    end
+
+    return storage
 end
 
 function generate_storage(mechanism::Mechanism, z)

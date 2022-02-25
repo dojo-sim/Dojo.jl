@@ -15,6 +15,6 @@ function initialize_tennisracket!(mechanism::Mechanism; x::AbstractVector{T}=zer
 
     joint = get_joint_constraint(mechanism, :floating_joint)
     zero_velocity!(mechanism)
-    set_position!(mechanism, joint, [x; rotation_vector(q)])
-    set_velocity!(mechanism, joint, [v; ω])
+    set_minimal_coordinates!(mechanism, joint, [x; rotation_vector(q)])
+    set_minimal_velocities!(mechanism, joint, [v; ω])
 end

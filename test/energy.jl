@@ -30,7 +30,7 @@ jointtypes = [
 function controller!(mechanism, k; U=0.5, timestep=timestep0)
     N = Int(floor(1 / timestep))
     for (i,joint) in enumerate(mechanism.joints)
-        nu = control_dimension(joint)
+        nu = input_dimension(joint)
         u = (nu <= 5 && k ∈ (1:N)) * U * timestep * sones(nu)
         set_input!(joint, u)
     end
@@ -126,11 +126,11 @@ z0 = 0.5
 initialize!(mech, :slider, z1=z0)
 
 # Analytical
-body1 = collect(mech.bodies)[1]
+pbody = collect(mech.bodies)[1]
 zmax = z0
-vmax = z0 * sqrt(spring0 / body1.mass)
+vmax = z0 * sqrt(spring0 / pbody.mass)
 pe_max = 0.5 * spring0 * zmax^2
-ke_max = 0.5 * body1.mass * vmax^2
+ke_max = 0.5 * pbody.mass * vmax^2
 
 storage = simulate!(mech, 5.0,  nocontrol!, record=true, verbose=false,
     opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
@@ -239,7 +239,7 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 function humanoid_controller!(mechanism, k; U=0.05, timestep=timestep0)
     N = Int(floor(1/timestep))
     for (i,joint) in enumerate(mechanism.joints)
-        nu = control_dimension(joint)
+        nu = input_dimension(joint)
         u = (nu <= 5 && k ∈ (1:N)) * U * timestep * sones(nu)
         set_input!(joint, u)
     end
@@ -254,8 +254,8 @@ mech = get_mechanism(:humanoid, timestep=timestep0, gravity=gravity0,
 initialize!(mech, :humanoid)
 bodies = collect(mech.bodies)
 for body in mech.bodies
-    set_velocity!(body, ω = 0.5*rand(3))
-    # set_velocity!(body, v = 1.0*rand(3))
+    set_maximal_velocities!(body, ω = 0.5*rand(3))
+    # set_maximal_velocities!(body, v = 1.0*rand(3))
 end
 
 for joint in mech.joints 
@@ -264,7 +264,7 @@ end
 
 storage = simulate!(mech, 3.0, humanoid_controller!, record=true,
     verbose=false, opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
-# visualize(mech, downsample(storage, 1), vis = vis)
+# visualize(mech, storage, vis = vis)
 
 ke0 = kinetic_energy(mech, storage)[start0:end]
 pe0 = potential_energy(mech, storage)[start0:end]
@@ -295,7 +295,7 @@ mech = get_mechanism(:atlas, timestep=timestep0, gravity=gravity0, spring=spring
     damper=damper0, contact = false)
 initialize!(mech, :atlas)
 bodies = collect(mech.bodies)
-set_velocity!.(bodies, ω = 1.0*rand(3))
+set_maximal_velocities!.(bodies, ω = 1.0*rand(3))
 
 storage = simulate!(mech, 5.0, humanoid_controller!, record=true, verbose=false,
     opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
@@ -327,7 +327,7 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 function quadruped_controller!(mechanism, k; U = 0.05, timestep=timestep0)
     N = Int(floor(1/timestep))
     for (i,joint) in enumerate(mechanism.joints)
-        nu = control_dimension(joint)
+        nu = input_dimension(joint)
         u = (nu <= 5 && k ∈ (1:N)) * U * timestep * sones(nu)
         set_input!(joint, u)
     end
@@ -371,7 +371,7 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 function snake_controller!(mechanism, k; U = 0.05, timestep=timestep0)
     N = Int(floor(1/timestep))
     for (i,joint) in enumerate(mechanism.joints)
-        nu = control_dimension(joint)
+        nu = input_dimension(joint)
         u = (nu <= 5 && k ∈ (1:N)) * U * timestep * sones(nu)
         set_input!(joint, u)
     end
@@ -448,7 +448,7 @@ end
 function twister_controller!(mechanism, k; U = 0.01, timestep=timestep0)
     N = Int(floor(1/timestep))
     for (i,joint) in enumerate(mechanism.joints)
-        nu = control_dimension(joint)
+        nu = input_dimension(joint)
         u = (nu <= 5 && k ∈ (1:N)) * U * timestep * sones(nu)
         set_input!(joint, u)
     end

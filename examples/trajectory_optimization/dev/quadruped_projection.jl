@@ -43,11 +43,11 @@ z1 = zref[1]
 
 function gravity_compensation(mechanism::Mechanism)
     # only works with revolute joints for now
-    nu = control_dimension(mechanism)
+    nu = input_dimension(mechanism)
     u = zeros(nu)
     off  = 0
     for joint in mechanism.joints
-        nu = control_dimension(joint)
+        nu = input_dimension(joint)
         if joint.parent_id != nothing
             body = get_body(mechanism, joint.parent_id)
             rot = joint.rotational
@@ -219,7 +219,7 @@ end
 # zgood = deepcopy(z0)
 # z0 = deepcopy(zgood)
 # set_state!(mech, z0)
-# z0 = get_state(mech)
+# z0 = get_current_state(mech)
 x0 = maximal_to_minimal(mech, z0)
 x1 = deepcopy(x0)
 x1[3] -= 0.1

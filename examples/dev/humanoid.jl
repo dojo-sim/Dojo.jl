@@ -34,7 +34,7 @@ function controller!(mechanism, k)
             cbody = get_body(mech, eqc.childids[i])
             minJ = min(minJ, minimum(diag(cbody.J)))
         end
-        nu = control_dimension(eqc)
+        nu = input_dimension(eqc)
         u = 10 * minJ * (ones(nu) .- 0.2) * timestep_
         set_input!(eqc, SVector{nu}(u))
     end

@@ -8,12 +8,12 @@ minimal_coordinates
 
 mech = get_atlas()
 for j in mech.joints
-    @show vector(j.constraints[2].qoffset)
+    @show vector(j.constraints[2].axis_offset)
 end
 
 mech = get_humanoid()
 for j in mech.joints
-    @show vector(j.constraints[2].qoffset), j.name
+    @show vector(j.constraints[2].axis_offset), j.name
 end
 
 
@@ -53,7 +53,7 @@ x1 = Dojo.maximal_to_minimal(mech, z0)
 
 
 ################################################################################
-# qoffset = 0, zeros
+# axis_offset = 0, zeros
 ################################################################################
 mech = get_snake(Nb=1)
 initialize!(mech, :snake, x=[0,0,0.], v=[0,0,0.], q1=one(UnitQuaternion), ω=[0,0,0.])
@@ -68,7 +68,7 @@ norm(z0 - z1, Inf) < 1e-10
 norm(x0 - x1, Inf) < 1e-10
 
 ################################################################################
-# qoffset = 0, Translational
+# axis_offset = 0, Translational
 ################################################################################
 mech = get_snake(Nb=1)
 xi = rand(3)
@@ -85,7 +85,7 @@ norm(z0 - z1, Inf) < 1e-10
 norm(x0 - x1, Inf) < 1e-10
 
 ################################################################################
-# qoffset = 0, Rotational
+# axis_offset = 0, Rotational
 ################################################################################
 mech = get_snake(Nb=1)
 qi = UnitQuaternion(rand(4)...)
@@ -103,7 +103,7 @@ norm(x0 - x1, Inf) < 1e-10
 norm(x0 - x1, Inf)
 
 ################################################################################
-# qoffset = 0, Translatioanl & Rotational
+# axis_offset = 0, Translatioanl & Rotational
 ################################################################################
 mech = get_snake(Nb=1)
 xi = [0,1,0.]#zeros(3)#rand(3)
@@ -153,7 +153,7 @@ tra0 = joint0.constraints[1]
 rot0 = joint0.constraints[2]
 nullspace_mask(tra0)
 nullspace_mask(rot0)
-joint0.constraints[2].qoffset
+joint0.constraints[2].axis_offset
 
 q0 = UnitQuaternion(1,0,0,0.)
 rotation_vector(q0)
@@ -178,10 +178,10 @@ minimal_coordinates(rot0, origin0, body0)
 
 qa = UnitQuaternion(rand(4)...)
 qb = UnitQuaternion(rand(4)...)
-qoffset = UnitQuaternion(rand(4)...)
+axis_offset = UnitQuaternion(rand(4)...)
 vector(qa \ qb) - vector(inv(qa) * qb)
-vector(qb / qoffset) - vector(qb * inv(qoffset))
-vector(qa \ qb / qoffset) - vector(inv(qa) * qb * inv(qoffset))
+vector(qb / axis_offset) - vector(qb * inv(axis_offset))
+vector(qa \ qb / axis_offset) - vector(inv(qa) * qb * inv(axis_offset))
 
 
 

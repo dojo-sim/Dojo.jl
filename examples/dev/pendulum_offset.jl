@@ -18,7 +18,7 @@ function controller!(mechanism, k)
 
     off = 0
     for (i, eqc) in enumerate(mechanism.joints)
-        nu = control_dimension(eqc)
+        nu = input_dimension(eqc)
         # get joint configuration + velocity
         xi = x[off .+ (1:2nu)]
         xi_goal = x_goal[off .+ (1:2nu)]
@@ -36,7 +36,7 @@ end
 mechanism = get_mechanism(:pendulum, timestep=0.001, gravity=0.0 * -9.81, 
     spring=0.0,
     damper=0.0,
-    qoffset=UnitQuaternion(RotZ(0.0 * π)))
+    axis_offset=UnitQuaternion(RotZ(0.0 * π)))
 
 # Simulate
 initialize!(mechanism, :pendulum, ϕ1 = 0.5 * π, ω1 = 0.0)

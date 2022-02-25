@@ -24,10 +24,10 @@ initialize!(mech, :atlas, tran = [0,0,1.1], rot = [0.1,0.05,0])
 
 
 orig = Origin()
-body1 = Body(1.0, Diagonal([1,2,3.]))
-JointConstraint(Revolute(orig, body1, [0,0,1.0],
+pbody = Body(1.0, Diagonal([1,2,3.]))
+JointConstraint(Revolute(orig, pbody, [0,0,1.0],
     rot_joint_limits = [-sones(0), sones(0)]))
-eqc = JointConstraint(Revolute(orig, body1, [0,0,1.0],
+eqc = JointConstraint(Revolute(orig, pbody, [0,0,1.0],
     rot_joint_limits = [-sones(1), sones(1)]))
 
 joint_impulse_index(eqc, 1)
@@ -44,7 +44,7 @@ function controller!(mechanism, k)
             cbody = get_body(mech, eqc.childids[i])
             minJ = min(minJ, minimum(diag(cbody.J)))
         end
-        nu = control_dimension(eqc)
+        nu = input_dimension(eqc)
         u = 1 * minJ * (rand(nu) .- 0.2) * timestep_ * 0.0
         set_input!(eqc, SVector{nu}(u))
     end

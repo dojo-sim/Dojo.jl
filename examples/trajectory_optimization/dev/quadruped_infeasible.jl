@@ -29,9 +29,9 @@ function addSlackForce!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, input::AbstractVect
     return
 end
 
-@inline function addSlackForce!(body::Body{T}, input::Vector{T}) where T
-	body.state.F2[end] += input[1:3]
-    body.state.τ2[end] += input[4:6]
+function addSlackForce!(body::Body{T}, input::Vector{T}) where T
+	body.state.F2 += input[1:3]
+    body.state.τ2 += input[4:6]
     return
 end
 
@@ -83,11 +83,11 @@ z1 = zref[1]
 
 function gravity_compensation(mechanism::Mechanism)
     # only works with revolute joints for now
-    nu = control_dimension(mechanism)
+    nu = input_dimension(mechanism)
     u = zeros(nu)
     off  = 0
     for joint in mechanism.joints
-        nu = control_dimension(joint)
+        nu = input_dimension(joint)
         if joint.parent_id != nothing
             body = get_body(mechanism, joint.parent_id)
             rot = joint.rotational
@@ -297,7 +297,7 @@ end
 # zgood = deepcopy(z0)
 # z0 = deepcopy(zgood)
 # set_state!(mech, z0)
-# z0 = get_state(mech)
+# z0 = get_current_state(mech)
 x0 = maximal_to_minimal(mech, z0)
 x1 = deepcopy(x0)
 x1[3] -= 0.1

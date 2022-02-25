@@ -109,7 +109,7 @@ function get_atlas(; timestep::T=0.01, gravity=-9.81, friction_coefficient::T=0.
               push!(contacts, contact_constraint(get_body(mech, :utorso), normal, friction_coefficient=friction_coefficient, contact_point=location, offset=offset, name=Symbol(name)))
         end
 
-        set_position!(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [0;0;0.9385;0.;0.;0.])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [0;0;0.9385;0.;0.;0.])
         mech = Mechanism(origin, bodies, eqs, contacts, gravity=gravity, timestep=timestep, spring=spring, damper=damper)
     end
     return mech
@@ -126,16 +126,16 @@ function initialize_atlas!(mechanism::Mechanism;
 
     # positions
     try
-        set_position!(mechanism,
+        set_minimal_coordinates!(mechanism,
                 get_joint_constraint(mechanism, :auto_generated_floating_joint),
                 [tran; rot])
-        set_position!(mechanism, get_joint_constraint(mechanism, :back_bkxyz), [0.0, 0.0, 0.0])
-        set_position!(mechanism, get_joint_constraint(mechanism, :l_leg_hpxyz), [0.0, -αhip, 0.0])
-        set_position!(mechanism, get_joint_constraint(mechanism, :r_leg_hpxyz), [0.0, -αhip, 0.0])
-        set_position!(mechanism, get_joint_constraint(mechanism, :l_leg_kny), [αknee])
-        set_position!(mechanism, get_joint_constraint(mechanism, :r_leg_kny), [αknee])
-        set_position!(mechanism, get_joint_constraint(mechanism, :l_leg_akxy), [αhip-αknee, 0.0])
-        set_position!(mechanism, get_joint_constraint(mechanism, :r_leg_akxy), [αhip-αknee, 0.0])
+        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :back_bkxyz), [0.0, 0.0, 0.0])
+        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :l_leg_hpxyz), [0.0, -αhip, 0.0])
+        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :r_leg_hpxyz), [0.0, -αhip, 0.0])
+        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :l_leg_kny), [αknee])
+        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :r_leg_kny), [αknee])
+        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :l_leg_akxy), [αhip-αknee, 0.0])
+        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :r_leg_akxy), [αhip-αknee, 0.0])
     catch
         nothing
     end
@@ -155,47 +155,47 @@ function initialize_atlasstance!(mechanism::Mechanism;
 
     # positions
     try
-        set_position!(mech,
+        set_minimal_coordinates!(mech,
         get_joint_constraint(mech, :auto_generated_floating_joint),
         [[0,0,0.5]; [0.0,0.0, 0.0]])
-        # set_position!(mech, get_joint_constraint(mech, :l_leg_hpxyz), [0.0, -αhip, 0.0])
-        # set_position!(mech, get_joint_constraint(mech, :r_leg_hpxyz), [0.0, -αhip, 0.0])
-        set_position!(mech, get_joint_constraint(mech, :l_leg_kny), [αknee])
-        set_position!(mech, get_joint_constraint(mech, :r_leg_kny), [αknee])
-        # set_position!(mech, get_joint_constraint(mech, :l_leg_akxy), [αhip-αknee, 0.0])
-        # set_position!(mech, get_joint_constraint(mech, :r_leg_akxy), [αhip-αknee, 0.0])
+        # set_minimal_coordinates!(mech, get_joint_constraint(mech, :l_leg_hpxyz), [0.0, -αhip, 0.0])
+        # set_minimal_coordinates!(mech, get_joint_constraint(mech, :r_leg_hpxyz), [0.0, -αhip, 0.0])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :l_leg_kny), [αknee])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :r_leg_kny), [αknee])
+        # set_minimal_coordinates!(mech, get_joint_constraint(mech, :l_leg_akxy), [αhip-αknee, 0.0])
+        # set_minimal_coordinates!(mech, get_joint_constraint(mech, :r_leg_akxy), [αhip-αknee, 0.0])
 
-        set_position!(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [tran; rot])
-        set_position!(mech, get_joint_constraint(mech, :back_bkx), [0.0  * π])
-        set_position!(mech, get_joint_constraint(mech, :back_bky), [0.04 * π])
-        set_position!(mech, get_joint_constraint(mech, :back_bkz), [0.0 * π])
-        set_position!(mech, get_joint_constraint(mech, :l_arm_elx), [0.25 * π])
-        set_position!(mech, get_joint_constraint(mech, :l_arm_ely), [0.5 * π])
-        set_position!(mech, get_joint_constraint(mech, :l_arm_shx), [-0.5 * π])
-        set_position!(mech, get_joint_constraint(mech, :l_arm_shz), [0.0 * π])
-        set_position!(mech, get_joint_constraint(mech, :l_arm_mwx), [0.0 * π])
-        set_position!(mech, get_joint_constraint(mech, :l_arm_uwy), [0.0 * π])
-        # set_position!(mech, get_joint_constraint(mech, :l_arm_lwy), [0.0])
-        # set_position!(mech, get_joint_constraint(mech, :l_leg_akx), [0.0])
-        set_position!(mech, get_joint_constraint(mech, :l_leg_aky), [-0.1 * π])
-        # set_position!(mech, get_joint_constraint(mech, :l_leg_hpx), [0.0])
-        set_position!(mech, get_joint_constraint(mech, :l_leg_hpy), [-0.1 * π])
-        # set_position!(mech, get_joint_constraint(mech, :l_leg_hpz), [0.0])
-        set_position!(mech, get_joint_constraint(mech, :l_leg_kny), [0.2 * π])
-        set_position!(mech, get_joint_constraint(mech, :neck_ay), [0.0])
-        set_position!(mech, get_joint_constraint(mech, :r_arm_elx), [-0.25 * π])
-        set_position!(mech, get_joint_constraint(mech, :r_arm_ely), [0.5 * π])
-        set_position!(mech, get_joint_constraint(mech, :r_arm_shx), [0.5 * π])
-        set_position!(mech, get_joint_constraint(mech, :r_arm_shz), [0.0 * π])
-        set_position!(mech, get_joint_constraint(mech, :r_arm_mwx), [0.0 * π])
-        set_position!(mech, get_joint_constraint(mech, :r_arm_uwy), [0.0 * π])
-        set_position!(mech, get_joint_constraint(mech, :r_arm_lwy), [0.0 * π])
-        # set_position!(mech, get_joint_constraint(mech, :r_leg_akx), [0.0])
-        set_position!(mech, get_joint_constraint(mech, :r_leg_aky), [-0.1 * π])
-        # set_position!(mech, get_joint_constraint(mech, :r_leg_hpx), [0.0])
-        set_position!(mech, get_joint_constraint(mech, :r_leg_hpy), [-0.1 * π])
-        # set_position!(mech, get_joint_constraint(mech, :r_leg_hpz), [0.0 * π])
-        set_position!(mech, get_joint_constraint(mech, :r_leg_kny), [0.2 * π])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [tran; rot])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :back_bkx), [0.0  * π])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :back_bky), [0.04 * π])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :back_bkz), [0.0 * π])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :l_arm_elx), [0.25 * π])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :l_arm_ely), [0.5 * π])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :l_arm_shx), [-0.5 * π])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :l_arm_shz), [0.0 * π])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :l_arm_mwx), [0.0 * π])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :l_arm_uwy), [0.0 * π])
+        # set_minimal_coordinates!(mech, get_joint_constraint(mech, :l_arm_lwy), [0.0])
+        # set_minimal_coordinates!(mech, get_joint_constraint(mech, :l_leg_akx), [0.0])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :l_leg_aky), [-0.1 * π])
+        # set_minimal_coordinates!(mech, get_joint_constraint(mech, :l_leg_hpx), [0.0])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :l_leg_hpy), [-0.1 * π])
+        # set_minimal_coordinates!(mech, get_joint_constraint(mech, :l_leg_hpz), [0.0])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :l_leg_kny), [0.2 * π])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :neck_ay), [0.0])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :r_arm_elx), [-0.25 * π])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :r_arm_ely), [0.5 * π])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :r_arm_shx), [0.5 * π])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :r_arm_shz), [0.0 * π])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :r_arm_mwx), [0.0 * π])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :r_arm_uwy), [0.0 * π])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :r_arm_lwy), [0.0 * π])
+        # set_minimal_coordinates!(mech, get_joint_constraint(mech, :r_leg_akx), [0.0])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :r_leg_aky), [-0.1 * π])
+        # set_minimal_coordinates!(mech, get_joint_constraint(mech, :r_leg_hpx), [0.0])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :r_leg_hpy), [-0.1 * π])
+        # set_minimal_coordinates!(mech, get_joint_constraint(mech, :r_leg_hpz), [0.0 * π])
+        set_minimal_coordinates!(mech, get_joint_constraint(mech, :r_leg_kny), [0.2 * π])
     catch
         nothing
     end

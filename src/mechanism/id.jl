@@ -1,3 +1,7 @@
+global CURRENTID = -1
+getGlobalID() = (global CURRENTID -= 1; return CURRENTID + 1)
+resetGlobalID() = (global CURRENTID = -1; return)
+
 function global_id!(nodes) 
     oldnewid = Dict([node.id => i for (i, node) in enumerate(nodes)]...)
     for node in nodes

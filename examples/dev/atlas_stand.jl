@@ -50,7 +50,7 @@ for (i,ineqc) in enumerate(contacts)
     cont = ineqc.constraints[1]
     body = get_body(mech, ineqc.parentid)
     x3, q3 = current_configuration(body.state)
-    sdf = cont.surface_normal_projector * (x3 + vrotate(cont.p,q3) - cont.offset)
+    sdf = cont.surface_normal_projector * (x3 + vector_rotate(cont.p,q3) - cont.offset)
     println("sdf $i:", sdf)
 end
 
@@ -97,7 +97,7 @@ cond(K)
 plot(Gray.(abs.(K ./ 1e14)))
 
 # PD control law
-nu = sum([control_dimension(eqc, floatingbase = false) for eqc in collect(mech.joints)])
+nu = sum([input_dimension(eqc, floatingbase = false) for eqc in collect(mech.joints)])
 angles = [minimal_coordinates(mech, joint)[1] for joint in collect(mech.joints)[2:end]]
 δangles = zeros(nu)
 ind = 23
@@ -106,7 +106,7 @@ angles += δangles
 
 function controller!(mechanism, k)
     for (i,joint) in enumerate(collect(mechanism.joints)[2:end])
-        if control_dimension(joint) == 1
+        if input_dimension(joint) == 1
             θ = minimal_coordinates(mechanism, joint)[1]
             dθ = minimal_velocities(mechanism, joint)[1]
             u = 3e+2 * (angles[i] - θ) #+ 5e-2 * (0 - dθ)

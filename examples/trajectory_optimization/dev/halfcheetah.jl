@@ -35,11 +35,11 @@ zT = halfcheetahState(x = 0.50, z = 0.00, θ = 0.0)
 
 function gravity_compensation(mechanism::Mechanism)
     # only works with revolute joints for now
-    nu = control_dimension(mechanism)
+    nu = input_dimension(mechanism)
     u = zeros(nu)
     off  = 0
     for joint in mechanism.joints
-        nu = control_dimension(joint)
+        nu = input_dimension(joint)
         if joint.parent_id != nothing
             body = get_body(mechanism, joint.parent_id)
             rot = joint.rotational

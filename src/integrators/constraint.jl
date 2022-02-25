@@ -1,4 +1,4 @@
-@inline function constraint(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn,Ne,Nb}
+function constraint(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn,Ne,Nb}
     state = body.state
     timestep = mechanism.timestep
 
@@ -22,7 +22,7 @@
     state.d = [dynT; dynR]
 
     # inputs
-    state.d -= [state.F2[1]; state.τ2[1]]
+    state.d -= [state.F2; state.τ2]
 
     # impulses
     for id in connections(mechanism.system, body.id)
@@ -33,7 +33,7 @@
     return state.d
 end
 
-@inline function constraint_jacobian_configuration(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn,Ne,Nb}
+function constraint_jacobian_configuration(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn,Ne,Nb}
     state = body.state
     timestep = mechanism.timestep
     mass = body.mass
@@ -45,7 +45,7 @@ end
 
     # dynamics
     dynT = I(3) * mass / timestep
-    dynR = -2.0 / timestep * LVᵀmat(q2)' * Tmat() * (∂qRᵀmat(Vᵀmat() * inertia * Vmat() * Lmat(q2)' * vector(q3)) + Rmat(q3)' * Vᵀmat() * inertia * Vmat() * Lmat(q2)')
+    dynR = -2.0 / timestep * LVᵀmat(q2)' * Tmat() * (∂Rᵀmat∂q(Vᵀmat() * inertia * Vmat() * Lmat(q2)' * vector(q3)) + Rmat(q3)' * Vᵀmat() * inertia * Vmat() * Lmat(q2)')
 
     Z33 = szeros(T, 3, 3)
     Z34 = szeros(T, 3, 4)
@@ -64,7 +64,7 @@ end
     return state.D
 end
 
-@inline function integrator_jacobian_velocity(body::Body{T}, timestep) where T
+function integrator_jacobian_velocity(body::Body{T}, timestep) where T
     state = body.state
     x2, v25, q2, ϕ25 = current_configuration_velocity(state)
     integrator_jacobian_velocity(q2, ϕ25, timestep)

@@ -28,7 +28,7 @@ Nb_ = 2
 
 function controller!(mechanism, k)
     for (i,joint) in enumerate(mechanism.joints)
-        nu = control_dimension(joint)
+        nu = input_dimension(joint)
         if 5 >= nu >= 1
             if k ∈ (1:1)
                 u = 0.0e-0 * timestep_ * [1.0; zeros(nu-1)]
@@ -88,8 +88,8 @@ zerodimstaticadjoint(∂g∂ʳpos(mech, eqc, mech.bodies[3])) * eqc.λsol[2]
 
 ∂g∂ʳpos(mech, eqc, mech.bodies[3])
 ∂g∂ʳpos(mech, eqc, mech.bodies[4])
-mech.bodies[3].state.q2[1]
-mech.bodies[4].state.q2[1]
+mech.bodies[3].state.q2
+mech.bodies[4].state.q2
 
 visualize(mech, storage, vis = vis)
 
@@ -141,7 +141,7 @@ v_ = 0.0*rand(3)
 
 function controller!(mechanism, k)
     for (i,joint) in enumerate(mechanism.joints)
-        nu = control_dimension(joint)
+        nu = input_dimension(joint)
         if nu <= 5
             if k ∈ (10:10 + 100n)
                 u = 1.0 * 3e-2 * timestep_ * [1.0, 0.0, 0.0] #[0.0; 1.0; zeros(nu-2)]

@@ -133,11 +133,11 @@ function visualize!(vis, p, q; timestep = 0.1)
 	setvisible!(vis["/Axes"], false)
 	setvisible!(vis["/Grid"], false)
 
-    setobject!(vis[:body1],
+    setobject!(vis[:pbody],
     	Rect(Vec(-0.5, -0.1, -0.1),Vec(1.0, 0.2, 0.2)),
     	MeshPhongMaterial(color = RGBA(1.0, 0.0, 0.0, 1.0)))
 
-	setobject!(vis[:body2],
+	setobject!(vis[:cbody],
 		Rect(Vec(-0.5, -0.1, -0.1),Vec(1.0, 0.2, 0.2)),
 		MeshPhongMaterial(color = RGBA(0.0, 1.0, 0.0, 1.0)))
 

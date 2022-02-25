@@ -2,7 +2,7 @@
 # Spring Impulses
 ################################################################################
 
-@inline function spring_force(relative::Symbol, joint::Rotational{T}, 
+function spring_force(relative::Symbol, joint::Rotational{T}, 
         xa::AbstractVector, qa::UnitQuaternion,
         xb::AbstractVector, qb::UnitQuaternion; 
         rotate::Bool=true, unitary::Bool=false) where T
@@ -12,18 +12,18 @@
     force = -spring * zerodimstaticadjoint(nullspace_mask(joint)) * distance # force in offset frame
     
     if relative == :parent
-        rotate ? (output = vrotate(force, joint.qoffset)) : (output = force) # rotate into a frame
+        rotate ? (output = vector_rotate(force, joint.axis_offset)) : (output = force) # rotate into a frame
     elseif relative == :child 
-        rotate ? (output = vrotate(-force, inv(qb) * qa  * joint.qoffset)) : (output = -force) # rotate back to b frame
+        rotate ? (output = vector_rotate(-force, inv(qb) * qa  * joint.axis_offset)) : (output = -force) # rotate back to b frame
     end
 
     return [szeros(T, 3); output]
 end
 
-function spring_impulses(relative::Symbol, joint::Rotational, bodya::Node, bodyb::Node, timestep; unitary::Bool=false)
+function spring_impulses(relative::Symbol, joint::Rotational, pbody::Node, cbody::Node, timestep; unitary::Bool=false)
     spring_impulses(relative, joint, 
-        current_configuration(bodya.state)..., 
-        current_configuration(bodyb.state)..., 
+        current_configuration(pbody.state)..., 
+        current_configuration(cbody.state)..., 
         timestep, unitary=unitary)
 end
 
@@ -34,13 +34,13 @@ function spring_impulses(relative::Symbol, joint::Rotational,
     timestep * spring_force(relative, joint, xa, qa, xb, qb; unitary=unitary)
 end
 
-spring_impulses(relative::Symbol, joint::Rotational{T,3}, bodya::Node, bodyb::Node, timestep; unitary::Bool=false) where T = szeros(T, 6)
+spring_impulses(relative::Symbol, joint::Rotational{T,3}, pbody::Node, cbody::Node, timestep; unitary::Bool=false) where T = szeros(T, 6)
 
 ################################################################################
 # Spring Jacobians
 ################################################################################
 
-@inline function spring_jacobian_configuration(relative::Symbol, jacobian::Symbol, joint::Rotational{T}, 
+function spring_jacobian_configuration(relative::Symbol, jacobian::Symbol, joint::Rotational{T}, 
     xa::AbstractVector, qa::UnitQuaternion,
     xb::AbstractVector, qb::UnitQuaternion,
     timestep::T; 
@@ -51,19 +51,19 @@ spring_impulses(relative::Symbol, joint::Rotational{T,3}, bodya::Node, bodyb::No
     spring = unitary ? 1.0 : joint.spring
 
     if relative == :parent
-        J = timestep * ∂vrotate∂p(force[SVector{3,Int}(4,5,6)], joint.qoffset) * spring * zerodimstaticadjoint(nullspace_mask(joint)) * minimal_coordinates_jacobian_configuration(jacobian, joint, xa, qa, xb, qb, attjac=attjac)
+        J = timestep * ∂vector_rotate∂p(force[SVector{3,Int}(4,5,6)], joint.axis_offset) * spring * zerodimstaticadjoint(nullspace_mask(joint)) * minimal_coordinates_jacobian_configuration(jacobian, joint, xa, qa, xb, qb, attjac=attjac)
     elseif relative == :child 
         X = szeros(T, 3, 3)
        
         if rotate 
-            J1 = timestep * ∂vrotate∂p(force[SVector{3,Int}(4,5,6)], inv(qb) * qa * joint.qoffset) * -spring * zerodimstaticadjoint(nullspace_mask(joint)) * minimal_coordinates_jacobian_configuration(jacobian, joint, xa, qa, xb, qb, attjac=attjac)
+            J1 = timestep * ∂vector_rotate∂p(force[SVector{3,Int}(4,5,6)], inv(qb) * qa * joint.axis_offset) * -spring * zerodimstaticadjoint(nullspace_mask(joint)) * minimal_coordinates_jacobian_configuration(jacobian, joint, xa, qa, xb, qb, attjac=attjac)
 
             if jacobian == :parent 
-                Q2 = timestep * ∂vrotate∂q(force[SVector{3,Int}(4,5,6)], inv(qb) * qa * joint.qoffset) * Rmat(joint.qoffset) * Lmat(inv(qb))
+                Q2 = timestep * ∂vector_rotate∂q(force[SVector{3,Int}(4,5,6)], inv(qb) * qa * joint.axis_offset) * Rmat(joint.axis_offset) * Lmat(inv(qb))
                 attjac && (Q2 *= LVᵀmat(qa))
                 J2 = [X Q2]
             elseif jacobian == :child 
-                Q2 = timestep * ∂vrotate∂q(force[SVector{3,Int}(4,5,6)], inv(qb) * qa * joint.qoffset) * Rmat(qa * joint.qoffset) * Tmat()
+                Q2 = timestep * ∂vector_rotate∂q(force[SVector{3,Int}(4,5,6)], inv(qb) * qa * joint.axis_offset) * Rmat(qa * joint.axis_offset) * Tmat()
                 attjac && (Q2 *= LVᵀmat(qb))
                 J2 = [X Q2]
             end
@@ -77,16 +77,16 @@ spring_impulses(relative::Symbol, joint::Rotational{T,3}, bodya::Node, bodyb::No
 end
 
 function spring_jacobian_configuration(relative::Symbol, jacobian::Symbol, 
-    joint::Rotational, body1::Node, body2::Node,
+    joint::Rotational, pbody::Node, cbody::Node,
     timestep::T; attjac::Bool = true) where T
 
     spring_jacobian_configuration(relative, jacobian, joint, 
-        current_configuration(body1.state)...,
-        current_configuration(body2.state)...,
+        current_configuration(pbody.state)...,
+        current_configuration(cbody.state)...,
         timestep; attjac=attjac)
 end
 
-spring_jacobian_configuration(relative::Symbol, jacobian::Symbol, joint::Rotational{T,3}, body1::Node, body2::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
-spring_jacobian_velocity(relative::Symbol, jacobian::Symbol, joint::Rotational, body1::Node, body2::Node, timestep::T) where T = szeros(T, 6, 6)
+spring_jacobian_configuration(relative::Symbol, jacobian::Symbol, joint::Rotational{T,3}, pbody::Node, cbody::Node, timestep::T; attjac::Bool = true) where T = attjac ? szeros(T, 6, 6) : szeros(T, 6, 7)
+spring_jacobian_velocity(relative::Symbol, jacobian::Symbol, joint::Rotational, pbody::Node, cbody::Node, timestep::T) where T = szeros(T, 6, 6)
 
 

@@ -105,16 +105,16 @@ function ∂g∂simdata(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where 
 
 	# Contribution to Injointonstraint
 	∇friction_coefficient = SA[0,γ[1],0,0]
-	∇off = [-model.surface_normal_projector; szeros(T,1,3); -model.surface_projector * skew(vrotate(ϕ25, q3))]
-	∇p = [model.surface_normal_projector * ∂vrotate∂p(model.contact_point, q3); szeros(T,1,3); model.surface_projector * skew(vrotate(ϕ25, q3)) * ∂vrotate∂p(model.contact_point, q3)]
+	∇off = [-model.surface_normal_projector; szeros(T,1,3); -model.surface_projector * skew(vector_rotate(ϕ25, q3))]
+	∇p = [model.surface_normal_projector * ∂vector_rotate∂p(model.contact_point, q3); szeros(T,1,3); model.surface_projector * skew(vector_rotate(ϕ25, q3)) * ∂vector_rotate∂p(model.contact_point, q3)]
 	∇contact = [∇friction_coefficient ∇off ∇p]
 
 	# Contribution to Body dynamics
 	∇friction_coefficient = szeros(T,3)
 	X = force_mapping(model, x3, q3)
-	# this what we differentiate: Qᵀγ = - skew(p - vrotate(offset, inv(q3))) * VRmat(q3) * LᵀVᵀmat(q3) * X' * γ
-	∇off = - ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ) * -∂vrotate∂p(offset, inv(q3))
-	∇p = - ∂pskew(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ)
+	# this what we differentiate: Qᵀγ = - skew(p - vector_rotate(offset, inv(q3))) * VRmat(q3) * LᵀVᵀmat(q3) * X' * γ
+	∇off = - ∂skew∂p(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ) * -∂vector_rotate∂p(offset, inv(q3))
+	∇p = - ∂skew∂p(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ)
 	∇body = [∇friction_coefficient ∇off ∇p]
 	return ∇contact, ∇body
 end
@@ -245,7 +245,7 @@ end
 ################################################################################
 function getSimulatorMaxGradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	timestep = mechanism.timestep
-	nu = control_dimension(mechanism)
+	nu = input_dimension(mechanism)
 	nsd = simdata_dim(mechanism)
 	njoints = joint_dimension(mechanism)
 	datamat = simdata_jacobian(mechanism)
@@ -259,7 +259,7 @@ function getSimulatorMaxGradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,
 		data_jacobian̄[13*(i-1) .+ [4:6; 11:13],:] += ∇data_vϕ[6*(i-1) .+ (1:6),:]
 
 		# Fill in gradients of x3, q3
-		q2 = body.state.q2[1]
+		q2 = body.state.q2
 		ϕ25 = body.state.ϕsol[2]
 		data_jacobian̄[13*(i-1) .+ (1:3),:] += linear_integrator_jacobian_velocity(timestep) * ∇data_vϕ[6*(i-1) .+ (1:3),:]
 		data_jacobian̄[13*(i-1) .+ (7:10),:] += rotational_integrator_jacobian_velocity(q2, ϕ25, timestep) * ∇data_vϕ[6*(i-1) .+ (4:6),:]
@@ -300,7 +300,7 @@ function clean_loss(model::Symbol, pairs, data; timestep=0.05, g=-9.81,
 end
 
 function loss(mechanism::Mechanism, pair; opts=SolverOptions(btol=1e-6, rtol=1e-6))
-	nu = control_dimension(mechanism)
+	nu = input_dimension(mechanism)
 	nz = maximal_dimension(mechanism)
 	u = zeros(nu)
     z1 = pair[1]

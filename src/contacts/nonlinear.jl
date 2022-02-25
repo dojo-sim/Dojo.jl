@@ -6,7 +6,7 @@ mutable struct NonlinearContact{T,N} <: Contact{T,N}
     offset::SVector{3,T}
 
     function NonlinearContact(body::Body{T}, normal::AbstractVector, friction_coefficient; contact_point = szeros(T, 3), offset::AbstractVector = szeros(T, 3)) where T
-        V1, V2, V3 = orthogonalcols(normal) # gives two plane vectors and the original normal axis
+        V1, V2, V3 = orthogonal_columns(normal) # gives two plane vectors and the original normal axis
         A = [V1 V2 V3]
         Ainv = inv(A)
         surface_normal_projector = Ainv[3,SA[1; 2; 3]]'
@@ -32,43 +32,43 @@ function constraint(model::NonlinearContact, s::AbstractVector{T}, γ::AbstractV
         ϕ25::AbstractVector{T}) where T
 
     # transforms the velocities of the origin of the link into velocities
-    vp = v25 + skew(vrotate(ϕ25, q3)) * (vrotate(model.contact_point, q3) - model.offset)
+    vp = v25 + skew(vector_rotate(ϕ25, q3)) * (vector_rotate(model.contact_point, q3) - model.offset)
     SVector{4,T}(
-        model.surface_normal_projector * (x3 + vrotate(model.contact_point, q3) - model.offset) - s[1],
+        model.surface_normal_projector * (x3 + vector_rotate(model.contact_point, q3) - model.offset) - s[1],
         model.friction_coefficient * γ[1] - γ[2],
         (model.surface_projector * vp - s[@SVector [3,4]])...)
 end
 
-@inline function constraint_jacobian_velocity(model::NonlinearContact{T}, x3::AbstractVector{T}, q3::UnitQuaternion{T},
+function constraint_jacobian_velocity(model::NonlinearContact{T}, x3::AbstractVector{T}, q3::UnitQuaternion{T},
     x2::AbstractVector{T}, v25::AbstractVector{T}, q2::UnitQuaternion{T}, ϕ25::AbstractVector{T}, λ, timestep::T) where T
     V = [model.surface_normal_projector * timestep;
         szeros(1,3);
         model.surface_projector]
     # Ω = FiniteDiff.finite_difference_jacobian(ϕ25 -> g(model, s, γ, x2+timestep*v25, next_orientation(q2,ϕ25,timestep), v25, ϕ25), ϕ25)
-    ∂v∂q3 = skew(vrotate(ϕ25, q3)) * ∂vrotate∂q(model.contact_point, q3)
-    ∂v∂q3 += skew(model.offset - vrotate(model.contact_point, q3)) * ∂vrotate∂q(ϕ25, q3)
-    ∂v∂ϕ25 = skew(model.offset - vrotate(model.contact_point, q3)) * ∂vrotate∂p(ϕ25, q3)
-    Ω = [model.surface_normal_projector * ∂vrotate∂q(model.contact_point, q3) * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep);
+    ∂v∂q3 = skew(vector_rotate(ϕ25, q3)) * ∂vector_rotate∂q(model.contact_point, q3)
+    ∂v∂q3 += skew(model.offset - vector_rotate(model.contact_point, q3)) * ∂vector_rotate∂q(ϕ25, q3)
+    ∂v∂ϕ25 = skew(model.offset - vector_rotate(model.contact_point, q3)) * ∂vector_rotate∂p(ϕ25, q3)
+    Ω = [model.surface_normal_projector * ∂vector_rotate∂q(model.contact_point, q3) * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep);
         szeros(1,3);
         model.surface_projector * (∂v∂ϕ25 + ∂v∂q3 * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep))]
     return [V Ω]
 end
 
-@inline function constraint_jacobian_configuration(model::NonlinearContact{T}, x3::AbstractVector{T}, q3::UnitQuaternion{T},
+function constraint_jacobian_configuration(model::NonlinearContact{T}, x3::AbstractVector{T}, q3::UnitQuaternion{T},
     x2::AbstractVector{T}, v25::AbstractVector{T}, q2::UnitQuaternion{T}, ϕ25::AbstractVector{T}, λ, timestep::T) where T
     X = [model.surface_normal_projector;
         szeros(1,3);
         szeros(2,3)]
     # Ω = FiniteDiff.finite_difference_jacobian(ϕ25 -> g(model, s, γ, x2+timestep*v25, next_orientation(q2,ϕ25,timestep), v25, ϕ25), ϕ25)
-    ∂v∂q3 = skew(vrotate(ϕ25, q3)) * ∂vrotate∂q(model.contact_point, q3)
-    ∂v∂q3 += skew(model.offset - vrotate(model.contact_point, q3)) * ∂vrotate∂q(ϕ25, q3)
-    Q = [model.surface_normal_projector * ∂vrotate∂q(model.contact_point, q3);
+    ∂v∂q3 = skew(vector_rotate(ϕ25, q3)) * ∂vector_rotate∂q(model.contact_point, q3)
+    ∂v∂q3 += skew(model.offset - vector_rotate(model.contact_point, q3)) * ∂vector_rotate∂q(ϕ25, q3)
+    Q = [model.surface_normal_projector * ∂vector_rotate∂q(model.contact_point, q3);
         szeros(1,4);
         model.surface_projector * ∂v∂q3]
     return [X Q]
 end
 
-@inline function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
+function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
     contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
     # ∇impulses[impulses .* impulses - μ; g - s] = [diag(impulses); -diag(0,1,1)]
     # ∇impulses[impulses .* impulses - μ; g - s] = [diag(impulses); -diag(1,0,0)]
@@ -99,13 +99,6 @@ end
     # [-impulses .* impulses + μ; -g + s]
     vector_entry.value = vcat(-complementarityμ(mechanism, contact), -constraint(mechanism, contact))
     return
-end
-
-function complementarity(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½};
-        scaling::Bool = false) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
-    γ = contact.impulses[2]
-    s = contact.impulses_dual[2]
-    return vcat(γ[1] * s[1], cone_product(γ[@SVector [2,3,4]], s[@SVector [2,3,4]]))
 end
 
 neutral_vector(model::NonlinearContact{T,N}) where {T,N} = [sones(T, 2); szeros(T, Int(N/2) -2)]

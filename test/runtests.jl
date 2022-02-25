@@ -1,4 +1,3 @@
-using ForwardDiff
 using FiniteDiff
 using StaticArrays
 using LinearAlgebra
@@ -18,4 +17,10 @@ include("momentum.jl")
 include("energy.jl")
 include("behaviors.jl")
 include("joint_limits.jl")
-include("joint_impulse_map.jl")
+include("impulse_map.jl")
+include("bodies.jl")
+include("mechanism.jl")
+include("simulate.jl")
+include("visuals.jl")
+include("utilities.jl")
+

@@ -107,17 +107,15 @@ function step(env::Environment{Ant}, x, u; diff=false)
     return _get_obs(env), reward, done, info
 end
 
-function reset(env::Environment{Ant};
-    x=nothing,
-    pos_noise=Uniform(-0.1, 0.1),
-    vel_noise=Normal(0.0, 0.01))
+# TODO add random noise
+function reset(env::Environment{Ant}; x=nothing)
 
     initialize!(env.mechanism, type2symbol(Ant))
 
     if x != nothing
         env.x .= x
     else
-        x = get_minimal_state(env.mechanism, pos_noise=pos_noise, vel_noise=vel_noise)
+        x = get_minimal_state(env.mechanism)
         if env.mode == :min
             set_state!(env.mechanism, minimal_to_maximal(env.mechanism, x))
             env.x .= x

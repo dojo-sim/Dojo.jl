@@ -39,9 +39,9 @@ mech = get_quadruped(timestep=timestep, damper=damper, spring=spring,
 	limits=true)
 initialize!(mech, :quadruped, tran=[0,0,0.30], rot=[0,-0.1,0], v=[0.2,0,0])
 function ctrl!(mechanism, k)
-    nu = control_dimension(mechanism)
+    nu = input_dimension(mechanism)
     u = -0*[szeros(6); sones(nu-6)] * mechanism.timestep
-    set_control!(mechanism, u)
+    set_input!(mechanism, u)
     return
 end
 @elapsed storage = simulate!(mech, 2.0, ctrl!, record=true,
@@ -51,7 +51,7 @@ visualize(mech, storage, vis=vis, show_contact=true)
 # Initialize Policy
 ################################################################################
 z_sol, u_sol = load_trajectory()
-nu = control_dimension(mech)
+nu = input_dimension(mech)
 nz = maximal_dimension(mech)
 nz̄ = nz + 1
 nzg = maximal_dimension(mech, attjac=true)
@@ -92,7 +92,7 @@ norm(A00 .- A0, Inf)
 function ctrl!(mechanism, i; offset::Int=0)
 	z = get_maximal_state(mechanism)
 	u = linear_policy(z, i+offset, A, u_sol; N=N, n=n)
-	set_control!(mechanism, u)
+	set_input!(mechanism, u)
 	return u
 end
 convert_frames_to_video_and_gif("quadruped_open_loop_spring")
@@ -184,7 +184,7 @@ tracking_cost(z, u, z_sol, u_sol, A)
 
 
 nx = minimal_dimension(mech)
-nu = control_dimension(mech)
+nu = input_dimension(mech)
 N = length(u_sol)
 function eval_loss(Av, x, u; α=1.0)
 	l = 0.0
@@ -237,10 +237,10 @@ Av = optimize(Av, x_sol, u_sol; α=0.05)
 A = reshape(Av, (nu,nx))
 
 function ctrl!(mechanism, k)
-    nu = control_dimension(mechanism)
+    nu = input_dimension(mechanism)
     u = SVector{nu}(A * get_minimal_state(mech))
 	u = u_sol[k]
-    set_control!(mechanism, u)
+    set_input!(mechanism, u)
     return
 end
 initialize!(mech, :quadruped)
@@ -259,7 +259,7 @@ get_minimal_state(mech)
 # simulate quadruped efficiently
 
 
-@inline function constraint(joint::Joint{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion,
+function constraint(joint::Joint{T,Nλ,Nb,N,Nb½}, xa::AbstractVector, qa::UnitQuaternion,
         xb::AbstractVector, qb::UnitQuaternion, η) where {T,Nλ,Nb,N,Nb½}
     e1 = joint_constraint(joint, xa, qa, xb, qb, η)
     e2 = minimal_coordinates(joint, xa, qa, xb, qb)
@@ -370,17 +370,17 @@ constraint_jacobian_configuration2(mech, joint)
 
 
 @benchmark fx0, fu0 = get_maximal_gradients(mech)
-z = get_state(mech)
-u = rand(control_dimension(mech))
+z = get_current_state(mech)
+u = rand(input_dimension(mech))
 fx0, fu0 = get_maximal_gradients!(mech, z, u)
 fx0, fu0 = get_minimal_gradients(mech, z, u)
 fx1, fu1 = get_maximal_gradients(mech)
 
-attjac2 = cat([cat(I(6), LVᵀmat(body.state.q2[1]), I(3), dims=(1,2)) for body in mech.bodies]..., dims=(1,2))
+attjac2 = cat([cat(I(6), LVᵀmat(body.state.q2), I(3), dims=(1,2)) for body in mech.bodies]..., dims=(1,2))
 attjac3 =
 	cat(
 	[cat(I(6),
-	LVᵀmat(next_orientation(body.state.q2[1], body.state.ϕsol[2], mech.timestep)),
+	LVᵀmat(next_orientation(body.state.q2, body.state.ϕsol[2], mech.timestep)),
 	I(3), dims=(1:2)) for body in mech.bodies]...
 	, dims=(1,2))
 
@@ -398,7 +398,7 @@ norm(attjac3' * fu1 - fu0, Inf)
 
 maximal_dimension(mech, attjac=true)
 
-z = get_state(mech)
+z = get_current_state(mech)
 z_next = get_next_state(mech)
 x = maximal_to_minimal(mech, z)
 minimal_to_maximal_jacobian(mech, x)

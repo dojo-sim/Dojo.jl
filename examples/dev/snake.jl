@@ -72,7 +72,7 @@ plot(Gray.(fd_sensi))
 q0 = UnitQuaternion(rand(4)...)
 q1 = UnitQuaternion(rand(4)...)
 p0 = rand(3)
-r0 = vrotate(vrotate(p0, q1), q0)
-r1 = vrotate(p0, q0*q1)
+r0 = vector_rotate(vector_rotate(p0, q1), q0)
+r1 = vector_rotate(p0, q0*q1)
 
 r0 - r1

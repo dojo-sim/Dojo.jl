@@ -1,11 +1,11 @@
 push!(LOAD_PATH, "../src/")
 
-using Documenter#, Dojo
+using Documenter, Dojo
 
 makedocs(
     modules = [Dojo],
     format = Documenter.HTML(prettyurls = false),
-    sitename = "Dojo.jl",
+    sitename = "Dojo",
     pages = [
         ##############################################
         ## MAKE SURE TO SYNC WITH docs/src/index.md ##
@@ -18,18 +18,18 @@ makedocs(
            ],
 
         "Creating a Mechanism" => [
-            "def_mechanism.md",
+            "define_mechanism.md",
             "load_mechanism.md",
             "mechanism_interfaces.md",
            ],
 
         "Creating a Simulation" => [
-            "def_simulation.md",
-            "def_controller.md",
+            "define_simulation.md",
+            "define_controller.md",
            ],
 
         "Creating Environments" => [
-            "def_environment.md",
+            "define_environment.md",
             "load_environment.md",
         ],
 
@@ -42,12 +42,12 @@ makedocs(
             "control.md",
             "trajectory_optimization.md",
             "reinforcement_learning.md",
-            "system_id.md",
+            "system_identification.md",
            ],
 
         "State Representations" => [
-            "maximal_rep.md",
-            "minimal_rep.md",
+            "maximal_representation.md",
+            "minimal_representation.md",
         ],
 
         "Contact Models" => [
@@ -62,6 +62,7 @@ makedocs(
 
         "faq.md",
         "api.md",
+        "contributing.md",
         "citing.md"
     ]
 )

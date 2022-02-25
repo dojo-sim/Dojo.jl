@@ -27,7 +27,7 @@ mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_co
 # Dimensions
 T = 20
 n = minimal_dimension(mech)
-m = control_dimension(mech)
+m = input_dimension(mech)
 d = 0
 u_mask = [zeros(12,6) I(12)]
 
@@ -230,8 +230,8 @@ set_state!(mech, minimal_to_maximal(mech, xabs[1]))
 
 function controller!(mechanism, k)
 	@show k
-	# set_control!(mechanism, u_mask' * u_mask * ustar[k])
-	set_control!(mechanism, ū[k])
+	# set_input!(mechanism, u_mask' * u_mask * ustar[k])
+	set_input!(mechanism, ū[k])
     return
 end
 @elapsed storage = simulate!(mech, 0.95, controller!, record = true, solver = :mehrotra!, verbose = false)

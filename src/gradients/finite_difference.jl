@@ -45,10 +45,16 @@ end
 
 function evaluate_residual0!(mechanism::Mechanism, data::AbstractVector, sol::AbstractVector)
     system = mechanism.system
-    set_data0!(mechanism, data)
+    set_data!(mechanism, data)
     set_solution0!(mechanism, sol)
     set_entries!(mechanism)
     return full_vector(system)
+end
+
+function residual_dimension(mechanism::Mechanism)
+    return sum(Vector{Int}(length.(mechanism.joints))) +
+    	sum(Vector{Int}(length.(mechanism.bodies))) +
+    	sum(Vector{Int}(length.(mechanism.contacts)))
 end
 
 function finitediff_data_jacobian(mechanism::Mechanism, data::AbstractVector,
@@ -57,7 +63,7 @@ function finitediff_data_jacobian(mechanism::Mechanism, data::AbstractVector,
     Nd = data_dim(mechanism, attjac=false)
     Nr = residual_dimension(mechanism)
     jac = zeros(Nr, Nd)
-    set_data0!(mechanism, deepcopy(data))
+    set_data!(mechanism, deepcopy(data))
     set_solution0!(mechanism, deepcopy(sol))
 
     for i = 1:Nd

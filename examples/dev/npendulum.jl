@@ -22,8 +22,8 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 mech = getmechanism(:npendulum, timestep = 0.01, g = -9.81, Nb = 2)
 initialize!(mech, :npendulum, ϕ1 = 0.5)
 initialize_simulation!(mech, true)
-body1 = collect(mech.bodies)[1]
-body2 = collect(mech.bodies)[2]
+pbody = collect(mech.bodies)[1]
+cbody = collect(mech.bodies)[2]
 
 storage = simulate!(mech, 1.11, record = true, solver = :mehrotra!)
 visualize(mech, storage, vis = vis)
@@ -80,8 +80,8 @@ datamat1[6:10,    7:10]
 
 -fd_datamat1[6:8,7:10]
 (datamat1 + fd_datamat1)[6:8,7:10]
-LVᵀmat(body1.state.q2[1])
-(datamat1 + fd_datamat1)[6:8,7:10] * LVᵀmat(body1.state.q2[1])
+LVᵀmat(pbody.state.q2)
+(datamat1 + fd_datamat1)[6:8,7:10] * LVᵀmat(pbody.state.q2)
 
 
 plot(Gray.(abs.(fd_datamat1)))

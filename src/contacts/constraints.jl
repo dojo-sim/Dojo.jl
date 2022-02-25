@@ -10,7 +10,7 @@ function constraint_jacobian_velocity(mechanism, contact::ContactConstraint, bod
 end
 
 # impulses
-@inline function impulses!(mechanism, body::Body, contact::ContactConstraint)
+function impulses!(mechanism, body::Body, contact::ContactConstraint)
     body.state.d -= impulse_map(mechanism, contact, body) * contact.impulses[2]
     return
 end
@@ -25,25 +25,23 @@ function impulse_map_jacobian_configuration(mechanism, body::Body, contact::Cont
     X = force_mapping(model, x, q)
     λ = X' * contact.impulses[2]
 
-    # Q = skew(model.contact_point - vrotate(model.offset, inv(q))) * VRmat(q) * LᵀVᵀmat(q) * λ
-    ∇Q = skew(model.contact_point - vrotate(model.offset, inv(q))) * VRmat(q) * ∂qLᵀVᵀmat(λ)
-    ∇Q += skew(model.contact_point - vrotate(model.offset, inv(q))) * ∂qVRmat(LᵀVᵀmat(q) * λ)
-    ∇Q += -∂pskew(VRmat(q) * LᵀVᵀmat(q) * λ) * ∂qrotation_matrix_inv(q, model.offset)
-    # ∇Q *= LVᵀmat(q)
+    ∇Q = skew(model.contact_point - vector_rotate(model.offset, inv(q))) * VRmat(q) * ∂LᵀVᵀmat∂q(λ)
+    ∇Q += skew(model.contact_point - vector_rotate(model.offset, inv(q))) * ∂VRmat∂q(LᵀVᵀmat(q) * λ)
+    ∇Q += -∂skew∂p(VRmat(q) * LᵀVᵀmat(q) * λ) * ∂rotation_matrix_inv∂q(q, model.offset)
     Z3 = szeros(T,3,3)
     Z4 = szeros(T,3,4)
     return [Z3 Z4;
             Z3 ∇Q]
 end
 
-@inline function impulses_jacobian_velocity!(mechanism, body::Body, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+function impulses_jacobian_velocity!(mechanism, body::Body, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
     timestep = mechanism.timestep
     body.state.D -= impulse_map_jacobian_configuration(mechanism, body, contact) *
         integrator_jacobian_velocity(body, timestep)
     return
 end
 
-@inline function off_diagonal_jacobians(mechanism, body::Body, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+function off_diagonal_jacobians(mechanism, body::Body, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
     Z = szeros(T,N½,6)
     return [Z' -impulse_map(mechanism, contact, body)], [Z; constraint_jacobian_velocity(mechanism, contact, body)]
 end

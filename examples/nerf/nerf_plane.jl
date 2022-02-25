@@ -40,7 +40,7 @@ mutable struct NerfContact111{T,N} <: NerfContact{T,N}
 
     function NerfContact111(body::Body{T}, normal::AbstractVector, nerf::NerfObject;
             p = szeros(T, 3), offset::AbstractVector = szeros(T, 3)) where T
-        V1, V2, V3 = orthogonalcols(normal) # gives two plane vectors and the original normal axis
+        V1, V2, V3 = orthogonal_columns(normal) # gives two plane vectors and the original normal axis
         A = [V1 V2 V3]
         Ainv = inv(A)
         ainv3 = Ainv[3,SA[1; 2; 3]]'
@@ -80,10 +80,10 @@ end
 
 nerf_constraint(nerf0, zeros(3), one(UnitQuaternion), [0,0.05,0.4])
 
-@inline function constraint_jacobian_velocity(model::NerfContact, x3::AbstractVector, q3::UnitQuaternion,
+function constraint_jacobian_velocity(model::NerfContact, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, timestep)
     # V = model.ainv3 * timestep
-    # Ω = model.ainv3 * ∂vrotate∂q(model.contact_point, q3) * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)
+    # Ω = model.ainv3 * ∂vector_rotate∂q(model.contact_point, q3) * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)
     # return [V Ω]
     FiniteDiff.finite_difference_jacobian(
         vϕ -> nerf_constraint(model.nerf, model.contact_point,
@@ -92,20 +92,20 @@ nerf_constraint(nerf0, zeros(3), one(UnitQuaternion), [0,0.05,0.4])
         [v25; ϕ25])
 end
 
-@inline function constraint_jacobian_configuration(model::NerfContact, x3::AbstractVector, q3::UnitQuaternion,
+function constraint_jacobian_configuration(model::NerfContact, x3::AbstractVector, q3::UnitQuaternion,
     x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, λ, timestep)
     # X = model.ainv3
-    # Q = model.ainv3 * ∂vrotate∂q(model.contact_point, q3)
+    # Q = model.ainv3 * ∂vector_rotate∂q(model.contact_point, q3)
     # return [X Q]
     FiniteDiff.finite_difference_jacobian(
         xq -> nerf_constraint(model.nerf, model.contact_point, UnitQuaternion(xq[4:7]..., false), xq[1:3]),
         [x3; vector(q3)])
 end
 
-@inline function impulse_map(model::NerfContact, x::AbstractVector, q::UnitQuaternion, λ)
+function impulse_map(model::NerfContact, x::AbstractVector, q::UnitQuaternion, λ)
     # X = model.ainv3
     # # q * ... is a rotation by quaternion q it is equivalent to Vmat() * Lmat(q) * Rmat(q)' * Vᵀmat() * ...
-    # Q = - X * q * skew(model.contact_point - vrotate(model.offset, inv(q)))
+    # Q = - X * q * skew(model.contact_point - vector_rotate(model.offset, inv(q)))
     X = FiniteDiff.finite_difference_jacobian(
         x -> nerf_constraint(model.nerf, model.contact_point, q, x),
         x)
@@ -115,7 +115,7 @@ end
     return transpose([X Q])
 end
 
-@inline function force_mapping(model::NerfContact, x::AbstractVector, q::UnitQuaternion)
+function force_mapping(model::NerfContact, x::AbstractVector, q::UnitQuaternion)
     X = FiniteDiff.finite_difference_jacobian(
         x -> nerf_constraint(model.nerf, model.contact_point, q, x),
         x)
@@ -123,7 +123,7 @@ end
     return X
 end
 
-@inline function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
+function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
     contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:Tuple{NerfContact{T,N}},N½}
     # ∇primal[dual .* primal - μ; g - s] = [diag(dual); -diag(0,1,1)]
     # ∇dual[dual .* primal - μ; g - s] = [diag(primal); -diag(1,0,0)]
@@ -168,10 +168,10 @@ function initialize_nerf!(mechanism::Mechanism; x::AbstractVector{T}=zeros(3),
     joint = get_joint_constraint(mechanism, :floating_joint)
     zero_velocity!(mechanism)
     set_position!(mechanism, joint, [x+[0,0,r] rotation_vector(q)])
-    set_velocity!(mechanism, joint, [v; ω])
+    set_minimal_velocities!(mechanism, joint, [v; ω])
 end
 
-function feasibility_linesearch!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
+function cone_line_search!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
         vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc,Cs<:Tuple{Union{NerfContact{T,N},ImpactContact{T,N},LinearContact{T,N}}},N½}
     s = contact.impulses_dual[2]
     γ = contact.impulses[2]
@@ -273,8 +273,8 @@ a = 0
 # model = mech.contacts[1].constraints[1]
 # q3 = UnitQuaternion(rand(4)...)
 # X = model.ainv3
-# Q0 = model.ainv3 * ∂vrotate∂q(model.contact_point, q3) * LVᵀmat(q3)
-# Q1 = - X * q3 * skew(model.contact_point - vrotate(model.offset, inv(q3)))
+# Q0 = model.ainv3 * ∂vector_rotate∂q(model.contact_point, q3) * LVᵀmat(q3)
+# Q1 = - X * q3 * skew(model.contact_point - vector_rotate(model.offset, inv(q3)))
 #
 # Q0 ./ Q1
 

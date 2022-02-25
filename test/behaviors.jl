@@ -32,12 +32,12 @@ end
 
         # Simulation
         function ctrl!(m,k)
-            Dojo.set_control!(m, 20 * m.timestep * SVector(1rand(),-1rand(),0,0,0))
+            Dojo.set_input!(m, 20 * m.timestep * SVector(1rand(),-1rand(),0,0,0))
             return nothing
         end
         storage = Dojo.simulate!(mech, 5.0, ctrl!, verbose=false, record=true)
 
-        min_coords = Dojo.minimal_coordinates(mech)
+        min_coords = Dojo.get_minimal_coordinates(mech)
         @test norm(min_coords[5] - +min_coords[4], Inf) < 1e-5
         @test norm(min_coords[5] - -min_coords[3], Inf) < 1e-5
         @test norm(min_coords[5] - (min_coords[2] - min_coords[1]), Inf) < 1e-5

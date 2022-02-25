@@ -12,8 +12,8 @@ function test_solmat(model::Symbol; ϵ::T=1e-6, tsim::T=0.1, ctrl::Any=(m, k)->n
 
         # Set data
         Nb = length(mechanism.bodies)
-        data = Dojo.get_data0(mechanism)
-        Dojo.set_data0!(mechanism, data)
+        data = Dojo.get_data(mechanism)
+        Dojo.set_data!(mechanism, data)
         sol = Dojo.get_solution0(mechanism)
         attjac = Dojo.attitude_jacobian(data, Nb)
 
@@ -31,7 +31,7 @@ function finitediff_sol_matrix(mechanism::Mechanism, data::AbstractVector,
     nsol = length(sol)
     jac = zeros(nsol, nsol)
 
-    Dojo.set_data0!(mechanism, data)
+    Dojo.set_data!(mechanism, data)
     Dojo.set_solution0!(mechanism, sol)
 
     for i = 1:nsol
@@ -49,7 +49,7 @@ end
 
 function control!(mechanism, k; u=0.1)
     for (i, joint) in enumerate(mechanism.joints)
-        nu = Dojo.control_dimension(joint, ignore_floating_base=false)
+        nu = Dojo.input_dimension(joint, ignore_floating_base=false)
         su = mechanism.timestep * u * sones(nu)
         Dojo.set_input!(joint, su)
     end
@@ -147,7 +147,7 @@ test_solmat(:halfcheetah,tsim = tsim, ctrl = (m,k)->control!(m,k,u=0.1), ϵ = 1e
 #
 # function evaluate_residual1!(mechanism::Mechanism, data::AbstractVector, sol::AbstractVector)
 #     system = mechanism.system
-#     set_data0!(mechanism, data)
+#     set_data!(mechanism, data)
 #     set_solution0!(mechanism, sol)
 #     set_entries!(mechanism)
 #     return full_vector(system)
