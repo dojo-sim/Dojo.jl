@@ -69,7 +69,7 @@ function solver_header()
 	println("–––––––––––––––––––––––––––––––––––––––––––––––––")
 end
 
-function status(mechanism::Mechanism, α, rvio, bvio, n, μtarget, undercut)
+function solver_status(mechanism::Mechanism, α, rvio, bvio, n, μtarget, undercut)
     fv = full_vector(mechanism.system)
     Δvar = norm(fv, Inf)
     fM = full_matrix(mechanism.system)

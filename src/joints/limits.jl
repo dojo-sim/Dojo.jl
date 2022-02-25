@@ -1,7 +1,7 @@
-function constraint(joint::Joint{T,Nλ,Nb,N,Nb½}, 
+function constraint(joint::Joint{T,Nλ,Nb,N,Nb½},
         xa::AbstractVector, qa::UnitQuaternion,
-        xb::AbstractVector, qb::UnitQuaternion, 
-        η) where {T,Nλ,Nb,N,Nb½}
+        xb::AbstractVector, qb::UnitQuaternion,
+        η, μ) where {T,Nλ,Nb,N,Nb½}
 
     e1 = joint_constraint(joint, xa, qa, xb, qb, η)
     e2 = minimal_coordinates(joint, xa, qa, xb, qb)
@@ -9,18 +9,18 @@ function constraint(joint::Joint{T,Nλ,Nb,N,Nb½},
     s, γ = split_impulses(joint, η)
 
     return [
-            s .* γ;
+            s .* γ .- μ;
             s[SUnitRange(1,Nb½)] - (joint.joint_limits[2] .- e2);
             s[SUnitRange(Nb½+1,Nb)] - (e2 .- joint.joint_limits[1]);
             e1;
            ]
 end
 
-function constraint_jacobian_configuration(relative::Symbol, joint::Joint{T,Nλ,Nb}, 
-        xa::AbstractVector, qa::UnitQuaternion, 
-        xb::AbstractVector, qb::UnitQuaternion, 
+function constraint_jacobian_configuration(relative::Symbol, joint::Joint{T,Nλ,Nb},
+        xa::AbstractVector, qa::UnitQuaternion,
+        xb::AbstractVector, qb::UnitQuaternion,
         η) where {T,Nλ,Nb}
-    
+
     ∇comp = szeros(T,Nb,7)
     ∇mincoord = minimal_coordinates_jacobian_configuration(relative, joint, xa, qa, xb, qb, attjac=false)
     ∇unlim = joint_constraint_jacobian_configuration(relative, joint, xa, qa, xb, qb, η)
