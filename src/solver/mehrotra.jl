@@ -73,11 +73,10 @@ end
 
 function solver_status(mechanism::Mechanism, α, rvio, bvio, n, μtarget, undercut)
     fv = full_vector(mechanism.system)
-    Δvar = norm(fv, Inf)
-    fM = full_matrix(mechanism.system)
-    fΔ = fM \ fv
-    Δalt = norm(fΔ, Inf)
-    res = norm(fv, Inf)
+	fM = full_matrix(mechanism.system)
+    Δv = fM \ fv
+	res = norm(fv, Inf)
+	Δ = norm(Δv, Inf)
 	println(
         n,
         "   ", scn(bvio, digits=0),
@@ -86,7 +85,7 @@ function solver_status(mechanism::Mechanism, α, rvio, bvio, n, μtarget, underc
         # "   ", scn(αmean, digits=0),
         "   ", scn(μtarget, digits=0),
         "   ", scn(res, digits=0),
-        "   ", scn(Δvar, digits=0),
+        "   ", scn(Δ, digits=0),
         # "   ucut", scn(undercut),
         )
 end

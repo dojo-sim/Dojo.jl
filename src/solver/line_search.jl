@@ -6,15 +6,17 @@ function line_search!(mechanism::Mechanism, α, rvio, bvio, opts)
     for n = Base.OneTo(opts.max_ls)
         for contact in mechanism.contacts
             # candidate_step!(α[contact.id,:], contact, get_entry(system, contact.id), scale)
-            candidate_step!(fill(minimum(α[contact.id,:]), 2), contact, get_entry(system, contact.id), scale)
+            # candidate_step!(fill(minimum(α[contact.id,:]), 2), contact, get_entry(system, contact.id), scale)
+            candidate_step!([minimum(α[:,1]), minimum(α[:,2])] , contact, get_entry(system, contact.id), scale)
         end
         for joint in mechanism.joints
             # candidate_step!(α[joint.id,:], joint, get_entry(system, joint.id), scale)
-            candidate_step!(fill(minimum(α[joint.id,:]), 2), joint, get_entry(system, joint.id), scale)
+            # candidate_step!(fill(minimum(α[joint.id,:]), 2), joint, get_entry(system, joint.id), scale)
+            candidate_step!([minimum(α[:,1]), minimum(α[:,2])] , joint, get_entry(system, joint.id), scale)
         end
         for body in mechanism.bodies
             ϕmax = 3.9 / mechanism.timestep^2
-            candidate_step!(minimum(α), mechanism, body, get_entry(system, body.id), scale, ϕmax = ϕmax) # TODO this α is always one
+            candidate_step!(mean(α), mechanism, body, get_entry(system, body.id), scale, ϕmax = ϕmax) # TODO this α is always one
             if dot(body.state.ϕsol[2], body.state.ϕsol[2]) > 3.91 / mechanism.timestep^2
                 error("Excessive angular velocity. Body-ID: $(string(body.name)) " * string(body.id) * ", ω: " * string(body.state.ϕsol[2]) * ".")
             end
