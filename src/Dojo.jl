@@ -1,5 +1,8 @@
 module Dojo
 
+# constants
+global REG = 1.0e-6
+
 using LinearAlgebra
 using Random
 using StaticArrays

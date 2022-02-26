@@ -27,14 +27,14 @@ constraint(joint::Joint, pbody::Node, cbody::Node, λ, μ, timestep) = constrain
 
 # constraint Jacobians
 function constraint_jacobian_configuration(joint::Joint{T,Nλ,0}, η) where {T,Nλ}
-    return Diagonal(+1.00e-10 * sones(T,Nλ))
+    return Diagonal(REG * sones(T,Nλ))
 end
 
 function constraint_jacobian_configuration(joint::Joint{T,Nλ,Nb}, η) where {T,Nλ,Nb}
     s, γ = split_impulses(joint, η)
-    c1 = [Diagonal(γ + 1e-10 * sones(T, Nb)); Diagonal(sones(Nb)); szeros(Nλ, Nb)]
-    c2 = [Diagonal(s + 1e-10 * sones(T, Nb)); szeros(Nb, Nb); szeros(Nλ, Nb)]
-    c3 = [szeros(Nb, Nλ); szeros(Nb, Nλ); Diagonal(+1.00e-10 * sones(T, Nλ))]
+    c1 = [Diagonal(γ + REG * sones(T, Nb)); Diagonal(sones(Nb)); szeros(Nλ, Nb)]
+    c2 = [Diagonal(s + REG * sones(T, Nb)); szeros(Nb, Nb); szeros(Nλ, Nb)]
+    c3 = [szeros(Nb, Nλ); szeros(Nb, Nλ); Diagonal(REG * sones(T, Nλ))]
     return [c1 c2 c3]
 end
 

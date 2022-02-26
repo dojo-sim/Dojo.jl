@@ -258,20 +258,20 @@ function minimal_coordinates_velocities_jacobian_parent(joint::JointConstraint{T
 
     ∂vb∂qa = 1.0 / timestep * ∂vector_rotate∂q(pa + Atra * Δx, qa)
     ∂vb∂qa -= 1.0 / timestep * ∂vector_rotate∂q(pb, qb) * Rmat(axis_offset * Δq)
-    ∂vb∂qa += -1.0 / timestep * ∂vector_rotate∂q(pa + Atra * Δx1, qa1) * Rmat(quaternion_map(-ϕa, timestep)) * timestep / 2
-    ∂vb∂qa += 1.0 / timestep * ∂vector_rotate∂q(pb, qb1) * Rmat(quaternion_map(-ϕa, timestep) * axis_offset * Δq1) * timestep / 2 
+    ∂vb∂qa += -1.0 / timestep * ∂vector_rotate∂q(pa + Atra * Δx1, qa1) * rotational_integrator_jacobian_orientation(qa, -ϕa, timestep, attjac=false)
+    ∂vb∂qa += 1.0 / timestep * ∂vector_rotate∂q(pb, qb1) * Rmat(axis_offset * Δq1) * rotational_integrator_jacobian_orientation(qa, -ϕa, timestep, attjac=false)
 
-    ∂vb∂ϕa = 1.0 / timestep * ∂vector_rotate∂q(pa + Atra * Δx1, qa1) * Lmat(qa) * quaternion_map_jacobian(-ϕa, timestep) * timestep / 2
-    ∂vb∂ϕa += -1.0 / timestep * ∂vector_rotate∂q(pb, qb1) * Rmat(axis_offset * Δq1) * Lmat(qa) * quaternion_map_jacobian(-ϕa, timestep)  * timestep / 2
+    ∂vb∂ϕa = 1.0 / timestep * ∂vector_rotate∂q(pa + Atra * Δx1, qa1) * rotational_integrator_jacobian_velocity(qa, -ϕa, timestep) 
+    ∂vb∂ϕa += -1.0 / timestep * ∂vector_rotate∂q(pb, qb1) * Rmat(axis_offset * Δq1) * rotational_integrator_jacobian_velocity(qa, -ϕa, timestep) 
     
     ∂ϕb∂xa = szeros(T, 3, 3) 
 
     ∂ϕb∂va = szeros(T, 3, 3)
 
-    ∂ϕb∂qa = ∂angular_velocity∂q1(qb1, qb, timestep) * Rmat(quaternion_map(-ϕa, timestep) * axis_offset * Δq1) * timestep / 2
+    ∂ϕb∂qa = ∂angular_velocity∂q1(qb1, qb, timestep) * Rmat(axis_offset * Δq1) * rotational_integrator_jacobian_orientation(qa, -ϕa, timestep, attjac=false) 
     ∂ϕb∂qa += ∂angular_velocity∂q2(qb1, qb, timestep) * Rmat(axis_offset * Δq)
     
-    ∂ϕb∂ϕa = -1.0 * ∂angular_velocity∂q1(qb1, qb, timestep) * Rmat(axis_offset * Δq1) * Lmat(qa) * quaternion_map_jacobian(-ϕa, timestep) * timestep / 2 
+    ∂ϕb∂ϕa = -1.0 * ∂angular_velocity∂q1(qb1, qb, timestep) * Rmat(axis_offset * Δq1) * rotational_integrator_jacobian_velocity(qa, -ϕa, timestep)
 
     [
         ∂xb∂xa ∂xb∂va ∂xb∂qa ∂xb∂ϕa;

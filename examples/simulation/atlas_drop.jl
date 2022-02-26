@@ -4,15 +4,18 @@ using Dojo
 vis = Visualizer()
 open(vis)
 
-
 # ## Mechanism
 # mech = get_mechanism(:atlas, timestep=0.01, gravity=-9.81, friction_coefficient=0.5, damper=100.0, spring=1.0, contact=true)
 mech = get_mechanism(:atlas, timestep=0.1, gravity=-9.81, friction_coefficient=0.5, damper=25.0, spring=1.0, contact=true, body_contact=true, model_type=:v2)
-[b.name for b in mech.bodies]
 
 # ## Simulate
 initialize_atlasstance!(mech, tran=[0,0,0.5], rot=[0.0,0.2,0.1])
-storage = simulate!(mech, 2.5, record=true, opts=SolverOptions(rtol=1.0e-6, btol=1e-6))
+storage = simulate!(mech, 1.0, record=true, opts=SolverOptions(rtol=1.0e-6, btol=1e-6, verbose=true))
+
+A = full_matrix(mech.system)
+Ne = sum([length(joint) for joint in mech.joints])
+bi = 2
+maximum([cond(A[Ne + (i - 1) * 6 .+ (1:6), Ne + (i - 1) * 6  .+ (1:6)]) for i = 1:length(mech.bodies)])
 
 # ## Visualize
 render(vis)

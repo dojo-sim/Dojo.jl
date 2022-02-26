@@ -45,12 +45,13 @@ function constraint_jacobian_configuration(mechanism::Mechanism{T,Nn,Ne,Nb}, bod
 
     # dynamics
     dynT = I(3) * mass / timestep
-    dynR = -2.0 / timestep * LVᵀmat(q2)' * Tmat() * (∂Rᵀmat∂q(Vᵀmat() * inertia * Vmat() * Lmat(q2)' * vector(q3)) + Rmat(q3)' * Vᵀmat() * inertia * Vmat() * Lmat(q2)')
+    dynR = -2.0 / timestep * LVᵀmat(q2)' * Tmat() * (∂Rᵀmat∂q(Vᵀmat() * inertia * Vmat() * Lmat(q2)' * vector(q3)) + Rmat(q3)' * Vᵀmat() * inertia * Vmat() * Lmat(q2)') 
 
     Z33 = szeros(T, 3, 3)
     Z34 = szeros(T, 3, 4)
 
     state.D = [[dynT; Z33] [Z34; dynR]] * integrator_jacobian_velocity(body, timestep)
+    state.D += [[REG * I(3); Z33] [Z33; REG * I(3)]]
 
     # inputs
     nothing
@@ -63,6 +64,7 @@ function constraint_jacobian_configuration(mechanism::Mechanism{T,Nn,Ne,Nb}, bod
 
     return state.D
 end
+
 
 function integrator_jacobian_velocity(body::Body{T}, timestep) where T
     state = body.state

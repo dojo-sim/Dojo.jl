@@ -92,8 +92,8 @@ function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, v
     # (friction_coefficient γ - ψ) dependent of ψ = impulses[2][1:1]
     # B(z) * zdot - sβ dependent of sβ = impulses[2][2:end]
     friction_coefficient = contact.model.friction_coefficient
-    γ = contact.impulses[2] + 1e-10*neutral_vector(contact.model) # TODO need to check this is legit
-    s = contact.impulses_dual[2] + 1e-10*neutral_vector(contact.model) # TODO need to check this is legit
+    γ = contact.impulses[2] + REG * neutral_vector(contact.model) # TODO need to check this is legit
+    s = contact.impulses_dual[2] + REG * neutral_vector(contact.model) # TODO need to check this is legit
 
     # ∇s = [contact.impulses[2][1] szeros(1,3); szeros(3,1) cone_product_jacobian(contact.impulses[2][2:4]); Diagonal([-1, 0, -1, -1])]
     ∇s1 = [γ[SA[1]]; szeros(T,3)]'

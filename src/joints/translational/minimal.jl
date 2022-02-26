@@ -118,7 +118,7 @@ function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Tran
         X, Q = displacement_jacobian_configuration(:parent, joint, xa, qa, xb, qb, attjac=false)
         X1, Q1 = displacement_jacobian_configuration(:parent, joint, xa1, qa1, xb1, qb1, attjac=false)
         X1 *= -1.0
-        Q1 *= -1.0 * Rmat(quaternion_map(-ϕa, timestep)) * timestep / 2
+        Q1 *= -1.0 * rotational_integrator_jacobian_orientation(qa, -ϕa, timestep, attjac=false)
         Q *= LVᵀmat(qa) 
         Q1 *= LVᵀmat(qa)
         J = 1.0 / timestep * A * [X Q]
@@ -128,7 +128,7 @@ function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Tran
         X, Q = displacement_jacobian_configuration(:child, joint, xa, qa, xb, qb, attjac=false)
         X1, Q1 = displacement_jacobian_configuration(:child, joint, xa1, qa1, xb1, qb1, attjac=false)
         X1 *= -1.0
-        Q1 *= -1.0 * Rmat(quaternion_map(-ϕb, timestep)) * timestep / 2
+        Q1 *= -1.0 * rotational_integrator_jacobian_orientation(qb, -ϕb, timestep, attjac=false)
         Q *= LVᵀmat(qb) 
         Q1 *= LVᵀmat(qb)
         J = 1.0 / timestep * A * [X Q]
@@ -162,12 +162,12 @@ function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Translati
     if relative == :parent
         X1, Q1 = displacement_jacobian_configuration(:parent, joint, xa1, qa1, xb1, qb1, attjac=false)
         X1 *= -timestep 
-        Q1 *= -Lmat(qa) * quaternion_map_jacobian(-ϕa, timestep) * timestep / 2
+        Q1 *= -rotational_integrator_jacobian_velocity(qa, -ϕa, timestep)
         J = -1.0 / timestep * A * [X1 Q1]
     elseif relative == :child 
         X1, Q1 = displacement_jacobian_configuration(:child, joint, xa1, qa1, xb1, qb1, attjac=false)
         X1 *= -timestep 
-        Q1 *= -Lmat(qb) * quaternion_map_jacobian(-ϕb, timestep) * timestep / 2
+        Q1 *= -rotational_integrator_jacobian_velocity(qb, -ϕb, timestep)
         J = -1.0 / timestep * A * [X1 Q1]
     end
 
