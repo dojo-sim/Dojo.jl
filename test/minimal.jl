@@ -112,7 +112,7 @@ end
 @testset "minimal to maximal to minimal: nslider" begin
 	Nb0 = 5
 	mech = Dojo.get_mechanism(:nslider, 
-		Nb=Nb0)
+		num_bodies=Nb0)
 	Random.seed!(100)
 	nx = Dojo.minimal_dimension(mech)
 	x0 = rand(nx)
@@ -127,7 +127,7 @@ end
 		# @show joint_type
 		Nb0 = 5
 		mech = Dojo.get_mechanism(:npendulum, 
-			Nb=Nb0, 
+			num_bodies=Nb0, 
 			joint_type=joint_type)
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
@@ -144,10 +144,10 @@ end
 		# @show joint_type
 		Nb0 = 5
 		mech = Dojo.get_mechanism(:snake, 
-			Nb=Nb0, 
+			num_bodies=Nb0, 
 			joint_type=joint_type)
 		mech = Dojo.get_mechanism(:snake, 
-			Nb=Nb0, 
+			num_bodies=Nb0, 
 			joint_type=:Fixed)
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
@@ -164,7 +164,7 @@ end
 		# @show joint_type
 		Nb0 = 5
 		mech = Dojo.get_mechanism(:twister, 
-			Nb=Nb0, 
+			num_bodies=Nb0, 
 			joint_type=joint_type)
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
@@ -218,7 +218,7 @@ end
 @testset "set and get minimal coordinates and velocities" begin
 	for joint_type in joint_types
 	    mech = Dojo.get_snake(
-				Nb=10, 
+				num_bodies=10, 
 				joint_type=joint_type)
 
 		timestep = mech.timestep
@@ -389,7 +389,7 @@ end
 	mechanism = Dojo.get_mechanism(:npendulum, 
 		timestep=0.1, 
 		gravity=-9.81, 
-		Nb=1)
+		num_bodies=1)
 
 	ϕ1 = 0.3 * π
 	Dojo.initialize!(mechanism, :npendulum, 
@@ -421,7 +421,7 @@ end
 	mechanism = Dojo.get_mechanism(:npendulum, 
 		timestep=0.1, 
 		gravity=-9.81, 
-		Nb=2)
+		num_bodies=2)
 	ϕ1 = 0.3 * π
 	Dojo.initialize!(mechanism, :npendulum, 
 		ϕ1=ϕ1)
@@ -553,7 +553,7 @@ end
 	mech = Dojo.get_mechanism(:npendulum, 
 		timestep=0.01, 
 		gravity=-9.81, 
-		Nb=5)
+		num_bodies=5)
 
 	Random.seed!(100)
 	ϕ1 = 0.3π

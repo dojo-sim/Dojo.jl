@@ -8,11 +8,11 @@ using BenchmarkTools
 using Dojo
 using Test
 
-include("integrator.jl")
-include("minimal.jl")
-include("mrp.jl")
-include("jacobian.jl")
-include("data.jl")
+# include("integrator.jl")
+# include("minimal.jl")
+# include("mrp.jl")
+# include("jacobian.jl")
+# include("data.jl")
 include("momentum.jl")
 include("energy.jl")
 include("behaviors.jl")

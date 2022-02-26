@@ -1,1 +1,1 @@
-# Interior Point Solver
+# Algorithm

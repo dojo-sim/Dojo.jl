@@ -1,7 +1,7 @@
 function get_pendulum(; 
     timestep=0.01, 
     gravity=-9.81, 
-    masseed=1.0, 
+    mass=1.0, 
     len=1.0,
     spring=0.0, 
     damper=0.0, 
@@ -49,11 +49,11 @@ end
 function get_npendulum(; 
     timestep=0.01, 
     gravity=-9.81, 
-    masseed=1.0, 
+    mass=1.0, 
     len=1.0,
     spring=0.0, 
     damper=0.0, 
-    Nb=5,
+    num_bodies=5,
     basetype=:Revolute, 
     joint_type=:Revolute,
     T=Float64) 
@@ -66,19 +66,19 @@ function get_npendulum(;
 
     # Links
     origin = Origin{T}()
-    bodies = [Box(r, r, len, mass, color=RGBA(1.0, 0.0, 0.0)) for i = 1:Nb]
+    bodies = [Box(r, r, len, mass, color=RGBA(1.0, 0.0, 0.0)) for i = 1:num_bodies]
 
     # Constraints
     jointb1 = JointConstraint(Prototype(basetype, origin, bodies[1], ex; 
         child_vertex=vert11, 
         spring=spring, 
         damper=damper))
-    if Nb > 1
+    if num_bodies > 1
         joints = [JointConstraint(Prototype(joint_type, bodies[i - 1], bodies[i], ex; 
             parent_vertex=vert12, 
             child_vertex=vert11, 
             spring=spring, 
-            damper=damper)) for i = 2:Nb]
+            damper=damper)) for i = 2:num_bodies]
         joints = [jointb1; joints]
     else
         joints = [jointb1]

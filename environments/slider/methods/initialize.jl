@@ -48,7 +48,7 @@ function get_nslider(;
     gravity=-9.81, 
     spring=0.0, 
     damper=0.0, 
-    Nb=5,
+    num_bodies=5,
     T=Float64)
 
     # Parameters
@@ -60,20 +60,20 @@ function get_nslider(;
 
     # Links
     origin = Origin{T}()
-    bodies = [Cylinder(r, h, h, color=RGBA(1.0, 0.0, 0.0)) for i = 1:Nb]
+    bodies = [Cylinder(r, h, h, color=RGBA(1.0, 0.0, 0.0)) for i = 1:num_bodies]
 
     # Constraints
     jointb1 = JointConstraint(Prismatic(origin, bodies[1], ex; 
         child_vertex = 0 * vert11))
 
-    if Nb > 1
+    if num_bodies > 1
         joints = [
             jointb1;
             [JointConstraint(Prismatic(bodies[i - 1], bodies[i], ex; 
                 parent_vertex=vert12, 
                 child_vertex=vert11, 
                 spring=spring, 
-                damper=damper)) for i = 2:Nb]
+                damper=damper)) for i = 2:num_bodies]
             ]
     else
         joints = [jointb1]

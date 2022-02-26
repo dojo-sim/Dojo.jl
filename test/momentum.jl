@@ -56,7 +56,7 @@ storage = simulate!(mech, 5.0, nocontrol!,
     record=true, 
     verbose=false, 
     opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
-# visualize(mech, storage, vis=vis)
+# visualize(mech, storage, vis = vis)
 
 m0 = momentum(mech, storage)[5:end]
 mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
@@ -90,7 +90,7 @@ storage = simulate!(mech, 5.0, nocontrol!,
     verbose=false, 
     opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 
-# visualize(mech, storage, vis=vis)
+# visualize(mech, storage, vis = vis)
 
 m0 = momentum(mech, storage)[10:end]
 mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
@@ -130,7 +130,7 @@ storage = simulate!(mech, 10.0, controller!,
     verbose=false, 
     opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 
-# visualize(mech, storage, vis=vis)
+# visualize(mech, storage, vis = vis)
 
 m0 = momentum(mech, storage)[1:end]
 mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
@@ -167,7 +167,7 @@ storage = simulate!(mech, 5.0, controller!,
     verbose=false, 
     opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 
-# visualize(mech, storage, vis=vis)
+# visualize(mech, storage, vis = vis)
 
 m0 = momentum(mech, storage)[1:end]
 mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
@@ -204,7 +204,7 @@ storage = simulate!(mech, 5.0, controller!,
     verbose=false, 
     opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 
-# visualize(mech, storage, vis=vis)
+# visualize(mech, storage, vis = vis)
 
 m0 = momentum(mech, storage)[1:end]
 mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
@@ -232,12 +232,12 @@ damper0 = 0.0 * 2e+1
 mech = get_mechanism(:snake, 
     timestep=timestep0, 
     gravity=gravity0, 
-    Nb=Nb0, 
+    num_bodies=Nb0, 
     spring=spring0, 
     damper=damper0,
     joint_type=:Revolute, 
     contact=false, 
-    r=0.05);
+    radius=0.05);
 
 v0 = 100.0 * [1, 2, 3] * timestep0
 ω0 = 100.0 * [1, 2, 3.0] * timestep0
@@ -252,7 +252,7 @@ storage = simulate!(mech, 1.50,
     verbose=false, 
     opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 
-# visualize(mech, storage, vis=vis)
+# visualize(mech, storage, vis = vis)
 
 m0 = momentum(mech, storage)[5:end]
 mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
@@ -269,12 +269,12 @@ end
         mech = get_mechanism(:snake, 
             timestep=timestep0, 
             gravity=gravity0, 
-            Nb=Nb0, 
+            num_bodies=Nb0, 
             spring=spring0, 
             damper=damper0,
             joint_type=joint_type, 
             contact=false, 
-            r=0.05)
+            radius=0.05)
 
         v0 = 10.0 * [1, 2, 3] * timestep0
         ω0 = 10.0 * [1, 2, 3.0] * timestep0
@@ -289,7 +289,7 @@ end
             verbose=false, 
             opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 
-        # visualize(mech, storage, vis=vis)
+        # visualize(mech, storage, vis = vis)
 
         m0 = momentum(mech, storage)[5:end]
         # @show mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
@@ -319,12 +319,12 @@ damper0 = 1.0 * 2e+1
 mech = get_mechanism(:twister, 
     timestep=timestep0, 
     gravity=gravity0, 
-    Nb=Nb0, 
+    num_bodies=Nb0, 
     spring=spring0, 
     damper=damper0,
     joint_type=:FixedOrientation, 
     contact=false, 
-    r=0.05);
+    radius=0.05);
 
 v0 = 100.0 * [1, 2, 3] * timestep0
 ω0 = 100.0 * [1, 2, 3.0] * timestep0
@@ -339,7 +339,7 @@ storage = simulate!(mech, 2.5,
     verbose=false, 
     opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 
-# visualize(mech, storage, vis=vis)
+# visualize(mech, storage, vis = vis)
 
 m0 = momentum(mech, storage)[5:end]
 mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
@@ -356,12 +356,12 @@ end
         mech = get_mechanism(:twister, 
             timestep=timestep0, 
             gravity=gravity0, 
-            Nb = Nb0, 
+            num_bodies=Nb0, 
             spring=spring0, 
             damper=damper0,
             joint_type=joint_type, 
             contact=false, 
-            r=0.05)
+            radius=0.05)
 
         v0 = 10.0 * [1, 2, 3] * timestep0
         ω0 = 10.0 * [1, 2, 3.0] * timestep0
@@ -374,8 +374,7 @@ end
             record=true, 
             verbose=false, 
             opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
-
-        # visualize(mech, storage, vis=vis)
+        # visualize(mech, storage, vis = vis)
 
         m0 = momentum(mech, storage)[5:end]
         mlin0 = [Vector(m - m0[1])[1:3] for m in m0]

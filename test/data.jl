@@ -29,19 +29,19 @@ function test_get_set_data(mechanism::Mechanism)
 end
 
 @testset "get and set data" begin
-    mech = Dojo.get_snake(Nb=3, 
+    mech = Dojo.get_snake(num_bodies=3, 
 		damper=1.0, 
 			spring=1.0, 
 			contact_type=:nonlinear);
     test_get_set_data(mech)
 
-    mech = Dojo.get_snake(Nb=3, 
+    mech = Dojo.get_snake(num_bodies=3, 
 		damper=1.0, 
 		spring=1.0, 
 		contact_type=:linear);
     test_get_set_data(mech)
 
-    mech = Dojo.get_snake(Nb=3, 
+    mech = Dojo.get_snake(num_bodies=3, 
 		damper=1.0, 
 		spring=1.0, 
 		contact_type=:impact);
@@ -94,7 +94,7 @@ end
 function test_data_system(model::Symbol; 
 		ϵ=1.0e-6, 
 		tsim=0.1, 
-		ctrl=(m,k)->nothing,
+		ctrl=(m, k)->nothing,
         timestep=0.01, 
 		gravity=[0.0; 0.0; -9.81], 
 		verbose=false, 
@@ -193,13 +193,13 @@ for (spring, damper) in [(0.0, 0.0), (2.0, 0.3)]
 		limits=false)
 	for joint_type in joint_types
 		test_data_system(:snake, 
-			Nb=5, 
+			num_bodies=5, 
 			spring=spring, 
 			damper=damper, 
 			contact=false, 
 			joint_type=joint_type)
 		test_data_system(:twister, 
-			Nb=5, 
+			num_bodies=5, 
 			spring=spring, 
 			damper=damper, 
 			contact=false, 
@@ -265,13 +265,13 @@ for (spring, damper) in [(0.0, 0.0), (2.0, 0.3)]
 		limits=true)
 	for joint_type in joint_types
 		test_data_system(:snake, 
-			Nb=5, 
+			num_bodies=5, 
 			spring=spring, 
 			damper=damper, 
 			contact=true, 
 			joint_type=joint_type)
 		test_data_system(:twister, 
-			Nb=5, 
+			num_bodies=5, 
 			spring=spring, 
 			damper=damper, 
 			contact=true, 

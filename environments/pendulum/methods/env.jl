@@ -9,7 +9,7 @@ function pendulum(;
     max_torque=8.0,
     timestep=0.05, 
     gravity=-10.0, 
-    masseed=1.0, 
+    mass=1.0, 
     len=1.0, 
     damper=0.0, 
     seed=1, 

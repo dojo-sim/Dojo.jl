@@ -6,10 +6,10 @@ function get_snake(;
     contact_type=:nonlinear, 
     spring=0.0, 
     damper=0.0, 
-    Nb=2,
+    num_bodies=2,
     joint_type=:Spherical, 
-    h=1.0, 
-    r=0.05,
+    height=1.0, 
+    radius=0.05,
     T=Float64)
 
     # Parameters
@@ -17,31 +17,31 @@ function get_snake(;
     ey = [0.0; 1.0; 0.0] 
     ez = [0.0; 0.0; 1.0] 
 
-    vert11 = [0.0; 0.0; h / 2.0]
+    vert11 = [0.0; 0.0; height / 2.0]
     vert12 = -vert11
 
     # Links
     origin = Origin{T}()
-    bodies = [Box(3r, 2r, h, h, color=RGBA(1.0, 0.0, 0.0)) for i = 1:Nb]
+    bodies = [Box(3 * radius, 2 * radius, height, height, color=RGBA(1.0, 0.0, 0.0)) for i = 1:num_bodies]
 
     # Constraints
     jointb1 = JointConstraint(Floating(origin, bodies[1], 
         spring=0.0, 
         damper=0.0))
 
-    if Nb > 1
+    if num_bodies > 1
         joints = [JointConstraint(Prototype(joint_type, bodies[i - 1], bodies[i], ex; 
             parent_vertex=vert12, 
             child_vertex=vert11, 
             spring=spring, 
-            damper=damper)) for i = 2:Nb]
+            damper=damper)) for i = 2:num_bodies]
         joints = [jointb1; joints]
     else
         joints = [jointb1]
     end
 
     if contact
-        n = Nb
+        n = num_bodies
         normal = [[0.0; 0.0; 1.0] for i = 1:n]
         friction_coefficient = friction_coefficient * ones(n)
 
@@ -68,13 +68,13 @@ function get_snake(;
     return mech
 end
 
-function initialize_snake!(mechanism::Mechanism{T,Nn,Ne,Nb}; 
+function initialize_snake!(mechanism::Mechanism{T}; 
     x=[0.0, -0.5, 0.0],
     v=zeros(3), 
     ω=zeros(3),
     Δω=zeros(3), 
     Δv=zeros(3),
-    q1=UnitQuaternion(RotX(0.6 * π))) where {T,Nn,Ne,Nb}
+    q1=UnitQuaternion(RotX(0.6 * π))) where T
 
     pbody = mechanism.bodies[1]
     h = pbody.shape.xyz[3]

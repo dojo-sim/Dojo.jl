@@ -470,12 +470,12 @@ damper0 = 0.0
 mech = get_mechanism(:snake, 
     timestep=timestep0, 
     gravity=gravity0, 
-    Nb=Nb0,
+    num_bodies=Nb0,
     spring=spring0, 
     damper=damper0, 
     joint_type=:Revolute, 
     contact=false, 
-    r=0.05);
+    radius=0.05);
 
 v0 = 10.0 * [1, 2, 3] * timestep0
 ω0 = 10.0 * [1, 2, 3] * timestep0
@@ -512,12 +512,12 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
         mech = get_mechanism(:snake, 
             timestep=timestep0, 
             gravity=gravity0, 
-            Nb=Nb0,
+            num_bodies=Nb0,
             spring=spring0, 
             damper=damper0, 
             joint_type=joint_type, 
             contact=false, 
-            r=0.05)
+            radius=0.05)
 
         v0 = 10.0 * [1, 2, 3] * timestep0
         ω0 = 10.0 * [1, 2, 3] * timestep0
@@ -576,12 +576,12 @@ damper0 = 0.0
 mech = get_mechanism(:twister, 
     timestep=timestep0, 
     gravity=gravity0, 
-    Nb=Nb0,
+    num_bodies=Nb0,
     spring=spring0, 
     damper=damper0, 
     joint_type=:Revolute, 
     contact=false, 
-    r=0.05);
+    radius=0.05);
 
 v0 = 10.0 * [1, 2, 3] * timestep0
 ω0 = 10.0 * [1, 2, 3] * timestep0
@@ -617,12 +617,12 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
         mech = get_mechanism(:twister, 
             timestep=timestep0, 
             gravity=gravity0, 
-            Nb=Nb0,
+            num_bodies=Nb0,
             spring=spring0, 
             damper=damper0, 
             joint_type=joint_type, 
             contact=false, 
-            r=0.05)
+            radius=0.05)
 
         v0 = 10.0 * [1, 2, 3] * timestep0
         ω0 = 10.0 * [1, 2, 3] * timestep0

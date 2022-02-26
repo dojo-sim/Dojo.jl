@@ -6,10 +6,10 @@ function get_twister(;
     contact_type=:nonlinear, 
     spring=0.0, 
     damper=0.0, 
-    Nb=5,
+    num_bodies=5,
     joint_type=:Prismatic, 
-    h=1.0, 
-    r=0.05,
+    height=1.0, 
+    radius=0.05,
     T=Float64)
 
     # Parameters
@@ -18,32 +18,32 @@ function get_twister(;
     ez = [0.0; 0.0; 1.0] 
     axes = [ex, ey, ez]
 
-    vert11 = [0.0; 0.0; h / 2.0]
+    vert11 = [0.0; 0.0; height / 2.0]
     vert12 = -vert11
-    vert = h / 2.0
+    vert = height / 2.0
 
     # Links
     origin = Origin{T}()
-    bodies = [Box(3r, 2r, h, h, color=RGBA(1.0, 0.0, 0.0)) for i = 1:Nb]
+    bodies = [Box(3 * radius, 2 * radius, height, height, color=RGBA(1.0, 0.0, 0.0)) for i = 1:num_bodies]
 
     # Constraints
     jointb1 = JointConstraint(Floating(origin, bodies[1], 
         spring=0.0, 
         damper=0.0)) # TODO remove the spring and damper from floating base
 
-    if Nb > 1
+    if num_bodies > 1
         joints = [JointConstraint(Prototype(joint_type, bodies[i - 1], bodies[i], axes[i%3+1]; 
             parent_vertex=vert12, 
             child_vertex=vert11, 
             spring=spring, 
-            damper=damper)) for i = 2:Nb]
+            damper=damper)) for i = 2:num_bodies]
         joints = [jointb1; joints]
     else
         joints = [jointb1]
     end
 
     if contact
-        n = Nb
+        n = num_bodies
         normal = [[0.0; 0.0; 1.0] for i = 1:n]
         friction_coefficient = friction_coefficient * ones(n)
         contacts1 = contact_constraint(bodies[1], normal[1], 
@@ -67,13 +67,13 @@ function get_twister(;
     return mech
 end
 
-function initialize_twister!(mechanism::Mechanism{T,Nn,Ne,Nb}; 
+function initialize_twister!(mechanism::Mechanism{T}; 
     x=[0.0, -1.0, 0.0],
     v=zeros(3), 
     ω=zeros(3),
     Δω=zeros(3), 
     Δv=zeros(3),
-    q1=UnitQuaternion(RotX(0.6 * π))) where {T,Nn,Ne,Nb}
+    q1=UnitQuaternion(RotX(0.6 * π))) where T
 
     bodies = mechanism.bodies
     pbody = bodies[1]
