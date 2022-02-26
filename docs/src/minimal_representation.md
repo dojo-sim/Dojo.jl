@@ -1,6 +1,6 @@
 # Minimal Coordinates
 
-Dojo simulates systems in [maximal coordinates](maximal_rep.md). 
+Dojo simulates systems in [maximal coordinates](maximal_representation.md). 
 
 For a mechanism with ``M`` joints and ``N`` bodies, the maximal representation ``z`` can be efficiently converted to minimal coordinates: 
 

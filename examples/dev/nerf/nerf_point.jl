@@ -136,7 +136,7 @@ end
 function initialize_nerf!(mechanism::Mechanism; x::AbstractVector{T}=zeros(3),
         q::UnitQuaternion{T}=one(UnitQuaternion), v::AbstractVector{T}=zeros(3),
         ω::AbstractVector{T}=zeros(3)) where T
-    r = collect(mechanism.bodies)[1].shape.r
+    r = mechanism.bodies[1].shape.r
     joint = get_joint_constraint(mechanism, :floating_joint)
     zero_velocity!(mechanism)
     set_position!(mechanism, joint, [x+[0,0,r] rotation_vector(q)])
@@ -167,7 +167,7 @@ function visualize_contact_points(mechanism::Mechanism, vis::Visualizer)
     return nothing
 end
 
-# vis = Visualizer()
+# vis=visualizer()
 # open(vis)
 offsets = vcat([[SVector(0.10*j,0.10*i,0.0+0.02*i^2+0.02*j^2) for i in -0:0] for j in -0:0]...)
 radius = 0.10

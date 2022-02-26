@@ -13,7 +13,7 @@ using Random
 using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
@@ -22,12 +22,12 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
 timestep_ = 0.05
-mech = getmechanism(:humanoid, contact = true, timestep = timestep_, g = -9.81, spring = 500.0, damper = 50.)
+mech = getmechanism(:humanoid, contact = true, timestep= timestep_, g = -9.81, spring = 500.0, damper = 50.)
 initialize!(mech, :humanoid, rot = [0.1,0,0], tran = [0,0,1.5])
-eqcs = collect(mech.joints)
+eqcs = mech.joints
 
 function controller!(mechanism, k)
-    for (i,eqc) in enumerate(collect(mechanism.joints)[2:end])
+    for (i,eqc) in enumerate(mechanism.joints[2:end])
         pbody = get_body(mech, eqc.parentid)
         minJ = minimum(diag(pbody.J))
         for (i,joint) in enumerate(eqc.constraints)
@@ -41,5 +41,5 @@ function controller!(mechanism, k)
     return
 end
 
-@elapsed storage = simulate!(mech, 2.3, controller!, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
+@elapsed storage = simulate!(mech, 2.3, controller!, record=true, solver = :mehrotra!, verbose=false)
+visualize(mech, storage, vis=vis)

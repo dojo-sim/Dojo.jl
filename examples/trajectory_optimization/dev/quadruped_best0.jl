@@ -9,7 +9,7 @@ Pkg.activate(module_dir())
 
 using MeshCat
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
@@ -19,13 +19,13 @@ include(joinpath(module_dir(), "src", "optional_components", "trajopt_utils.jl")
 using IterativeLQR
 
 # System
-gravity = -9.81
-timestep = 0.05
+gravity=-9.81
+timestep=0.05
 mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_coefficient = 1.5, damper = 10.0, spring = 0.0)
 initialize!(mech, :quadruped, tran = [0,0,0.], v = [0.5,0,0.])
 
-@elapsed storage = simulate!(mech, 0.05, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
+@elapsed storage = simulate!(mech, 0.05, record=true, solver = :mehrotra!, verbose=false)
+visualize(mech, storage, vis=vis)
 
 T = 20
 n = minimal_dimension(mech)
@@ -34,7 +34,7 @@ d = 0
 xref = quadruped_trajectory(mech, r = 0.10, z = 0.29; N = Int(T/2), Ncycles = 1)
 zref = [minimal_to_maximal(mech, x) for x in xref]
 storage = generate_storage(mech, zref)
-visualize(mech, storage, vis = vis)
+visualize(mech, storage, vis=vis)
 zref = [maximal_to_minimal(mech, z) for z in zref]
 
 z1 = zref[1]
@@ -65,8 +65,8 @@ end
 
 mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_coefficient = 1.5, damper = 1000.0, spring = 30.0)
 initialize!(mech, :quadruped)
-@elapsed storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
+@elapsed storage = simulate!(mech, 5.0, record=true, solver = :mehrotra!, verbose=false)
+visualize(mech, storage, vis=vis)
 ugc = gravity_compensation(mech)
 
 mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_coefficient = 1.5, damper = 5.0, spring = 0.0)
@@ -80,21 +80,21 @@ for t = 1:5
     push!(z, znext)
 end
 storage = generate_storage(mech, [minimal_to_maximal(mech, zi) for zi in z])
-visualize(mech, storage, vis = vis)
+visualize(mech, storage, vis=vis)
 
 
 # Model
 function fd(y, x, u, w)
-	z = step!(mech, minimal_to_maximal(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
+	z = step!(mech, minimal_to_maximal(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)
 	y .= copy(maximal_to_minimal(mech, z))
 end
 
 function fdx(fx, x, u, w)
-	fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[1])
+	fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)[1])
 end
 
 function fdu(fu, x, u, w)
-	∇u = copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[2])
+	∇u = copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)[2])
 	fu .= ∇u * u_mask'
 end
 
@@ -113,10 +113,10 @@ w = [zeros(d) for t = 1:T-1]
 
 
 x̄ = rollout(model, z1, ū, w)
-# step!(model.mech, x, u_mask'*u_control, ϵ = 1e-6, btol = 1e-6, undercut = 1.5, verbose = false)
-# getGradients!(model.mech, x, u_mask'*u_control, ϵ = 1e-6, btol = 1e-3, undercut = 1.5, verbose = false)
+# step!(model.mech, x, u_mask'*u_control, ϵ = 1e-6, btol = 1e-6, undercut = 1.5, verbose=false)
+# getGradients!(model.mech, x, u_mask'*u_control, ϵ = 1e-6, btol = 1e-3, undercut = 1.5, verbose=false)
 storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in x̄])
-visualize(mech, storage; vis = vis)
+visualize(mech, storage; vis=vis)
 
 # Objective
 # qt1 = [0.1; 0.1; 1.0; 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]
@@ -168,4 +168,4 @@ IterativeLQR.constrained_ilqr_solve!(prob,
 
 x_sol, u_sol = get_trajectory(prob)
 storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in x_sol])
-visualize(mech, storage, vis = vis)
+visualize(mech, storage, vis=vis)

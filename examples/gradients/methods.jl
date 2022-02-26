@@ -97,7 +97,7 @@ end
 function box2d_dojo(mechanism::Mechanism, F; rtol=1e-10, btol=1e-10, undercut=1.0, no_progress_undercut=1.0, mode::Symbol=:friction)
     (mode == :friction) && (idx = 1)
     (mode == :impact) && (idx = 2)
-    timestep = mechanism.timestep
+    timestep= mechanism.timestep
     opts_grad = SolverOptions(rtol=rtol, btol=btol, undercut=undercut, no_progress_undercut=no_progress_undercut, verbose=false)
 
     initialize!(mechanism, :box2d, x=[0,0.], v=[0,0.], θ=0.0, ω=0.0)
@@ -121,7 +121,7 @@ end
 function box2d_gradientbundle(mechanism::Mechanism, F; N::Int=100, Σ=1e-6*I, rtol=1e-10, btol=1e-10, undercut=1.5, no_progress_undercut=10.0, mode::Symbol=:friction)
     (mode == :friction) && (idx = 1)
     (mode == :impact) && (idx = 2)
-    timestep = mechanism.timestep
+    timestep= mechanism.timestep
     opts_grad = SolverOptions(rtol=rtol, btol=btol, undercut=undercut, no_progress_undercut=no_progress_undercut)
 
     initialize!(mechanism, :box2d, x=[0,0.], v=[0,0.], θ=0.0, ω=0.0)

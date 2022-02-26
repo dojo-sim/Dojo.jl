@@ -8,12 +8,12 @@ using MeshCat
 include(joinpath("..", "utils.jl"))
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 
 S = 7
-timestep = 1/148 * S
+timestep= 1/148 * S
 gscaled = -9.81*20
 
 mech = get_mechanism(:box, timestep=timestep, gravity=gravityscaled, friction_coefficient=0.2, radius=0.00, side=0.50, mode=:box);

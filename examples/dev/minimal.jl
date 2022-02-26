@@ -56,11 +56,11 @@ end
 function ctrl!(mech, k)
 	set_input!(mech, 0.0*sones(input_dimension(mech))*mech.timestep)
 end
-# vis = Visualizer()
+# vis=visualizer()
 # open(vis)
-mechanism = get_mechanism(:pendulum, timestep = 0.02, gravity = -0.0 * 9.81)
+mechanism = get_mechanism(:pendulum, timestep=0.02, gravity=-0.0 * 9.81)
 initialize!(mechanism, :pendulum, ϕ1 = 0.5 * π, ω1 = 2.0)
-storage = simulate!(mechanism, 0.07, ctrl!, record = true, verbose = false)
+storage = simulate!(mechanism, 0.07, ctrl!, record=true, verbose=false)
 visualize(mechanism, storage, vis=vis)
 
 
@@ -226,17 +226,17 @@ end
 function ctrl!(mech, k)
 	set_input!(mech, 0.0*sones(input_dimension(mech))*mech.timestep)
 end
-# vis = Visualizer()
+# vis=visualizer()
 # open(vis)
-mechanism = get_mechanism(:pendulum, timestep = 0.02, gravity = -0.0 * 9.81)
+mechanism = get_mechanism(:pendulum, timestep=0.02, gravity=-0.0 * 9.81)
 initialize!(mechanism, :pendulum, ϕ1 = 0.5 * π, ω1 = 2.0)
-storage = simulate!(mechanism, 0.07, ctrl!, record = true, verbose = false)
+storage = simulate!(mechanism, 0.07, ctrl!, record=true, verbose=false)
 visualize(mechanism, storage, vis=vis)
 
 
 joint = mechanism.joints[1]
 tra = joint.translational
-timestep = mechanism.timestep
+timestep= mechanism.timestep
 pbody = mechanism.origin
 cbody = mechanism.bodies[1]
 

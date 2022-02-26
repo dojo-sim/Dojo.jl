@@ -3,17 +3,17 @@ using IterativeLQR
 using LinearAlgebra
 
 # ## system
-include(joinpath(@__DIR__, "../../env/atlas/methods/template.jl"))
+include(joinpath(@__DIR__, "../../environments/atlas/methods/template.jl"))
 
-gravity = -9.81
+gravity=-9.81
 dt = 0.05
 friction_coefficient = 0.8
 damper = 50.0
 spring = 0.0
 model_type = :armless
-env = make("atlas",
-    mode=:min,
-    dt=dt,
+env = get_environment("atlas",
+    mode=:minimal,
+    timestep=dt,
     gravity=gravity,
     friction_coefficient=friction_coefficient,
     damper=damper,
@@ -30,8 +30,8 @@ open(env.vis)
 # visualize(env.mechanism, storage, vis=env.vis)
 
 # ## dimensions
-n = env.nx
-m = env.nu
+n = env.num_states
+m = env.num_inputs
 d = 0
 
 # ## reference trajectory
@@ -161,7 +161,7 @@ IterativeLQR.solve!(prob,
     ρ_init=1.0,
     ρ_scale=10.0)
 
-vis = Visualizer()
+vis=visualizer()
 open(env.vis)
 
 # ## solution

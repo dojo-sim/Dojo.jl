@@ -10,7 +10,7 @@ Pkg.activate(module_dir())
 using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 ################################################################################
@@ -134,11 +134,11 @@ end
 # momentum
 ################################################################################
 
-timestep = [0.10,]
+timestep= [0.10,]
 mech, storage, tcompute = astronaut_simulation(;Nsim=1, timestep=1e-1, tsim=10.0, tctrl=1.0, seed=0, control_amplitude=0.05)
 visualize(mech, storage[1], vis=vis)
 
-timestep = [0.10, 0.03, 0.01, 0.003, 0.001]
+timestep= [0.10, 0.03, 0.01, 0.003, 0.001]
 speed_dj, ener_dj = benchmark_energy(timestep; Nsim=1, tsim=2.0, tctrl=1.0, seed=0, ϵ=1e-14)
 speed_dj, plin_dj, pang_dj = benchmark_momentum(timestep; Nsim=1, tsim=1.0, seed=0, ϵ=1e-14)
 
@@ -220,7 +220,7 @@ pgfsave(filename, gp; include_preamble = true, dpi = 150)
 # energy
 ################################################################################
 
-timestep = [0.10, 0.02, 0.005]
+timestep= [0.10, 0.02, 0.005]
 ener_traj = []
 for i = 1:3
 	mech, storage, tcompute = astronaut_simulation(;Nsim=1, timestep=timestep[i], tsim=100.0, tctrl=1.0, seed=0, control_amplitude=0.02)

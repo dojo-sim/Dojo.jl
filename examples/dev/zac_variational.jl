@@ -56,14 +56,14 @@ plot(hcat(h...)')
 
 env = cartpole();
 open(env.vis)
-traj = fill(_get_obs(env), 100)
+traj = fill(get_observation(env), 100)
 visualize(env, traj)
 visualize(env, traj)
 ghost(env, traj)
 a = 10
 
 
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 setobject!(vis, HyperRectangle(Vec(1,0,0.), Vec(1,1,1.)))
 set_camera!(vis, cam_pos=[0,-50,0], zoom=30)

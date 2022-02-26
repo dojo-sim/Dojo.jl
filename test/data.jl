@@ -1,7 +1,7 @@
 using Dojo
 using Test
 
-jointtypes = [
+joint_types = [
     :Fixed,
     :Prismatic,
     :Planar,
@@ -20,7 +20,8 @@ jointtypes = [
     ]
 
 function test_get_set_data(mechanism::Mechanism)
-    Nd = Dojo.data_dim(mechanism, attjac=false)
+    Nd = Dojo.data_dim(mechanism, 
+		attjac=false)
     data0 = rand(Nd)
     Dojo.set_data!(mechanism, data0)
     data1 = Dojo.get_data(mechanism)
@@ -28,22 +29,49 @@ function test_get_set_data(mechanism::Mechanism)
 end
 
 @testset "get and set data" begin
-    mech = Dojo.get_snake(Nb=3, damper=1.0, spring=1.0, contact_type=:nonlinear);
-    test_get_set_data(mech)
-    mech = Dojo.get_snake(Nb=3, damper=1.0, spring=1.0, contact_type=:linear);
-    test_get_set_data(mech)
-    mech = Dojo.get_snake(Nb=3, damper=1.0, spring=1.0, contact_type=:impact);
+    mech = Dojo.get_snake(Nb=3, 
+		damper=1.0, 
+			spring=1.0, 
+			contact_type=:nonlinear);
     test_get_set_data(mech)
 
-    mech = Dojo.get_pendulum(damper=1.0, spring=10.0);
+    mech = Dojo.get_snake(Nb=3, 
+		damper=1.0, 
+		spring=1.0, 
+		contact_type=:linear);
     test_get_set_data(mech)
-    mech = Dojo.get_humanoid(damper=1.0, spring=10.0, contact=true);
+
+    mech = Dojo.get_snake(Nb=3, 
+		damper=1.0, 
+		spring=1.0, 
+		contact_type=:impact);
     test_get_set_data(mech)
-    mech = Dojo.get_humanoid(damper=1.0, spring=10.0, contact=false);
+
+    mech = Dojo.get_pendulum(
+		damper=1.0, 
+		spring=10.0);
     test_get_set_data(mech)
-    mech = Dojo.get_atlas(damper=1.0, spring=10.0);
+
+    mech = Dojo.get_humanoid(
+		damper=1.0, 
+		spring=10.0, 
+		contact_feet=true);
     test_get_set_data(mech)
-    mech = Dojo.get_quadruped(damper=1.0, spring=10.0);
+
+    mech = Dojo.get_humanoid(
+		damper=1.0, 
+		spring=10.0, 
+		contact_feet=false);
+    test_get_set_data(mech)
+
+    mech = Dojo.get_atlas(
+		damper=1.0, 
+		spring=10.0);
+    test_get_set_data(mech)
+	
+    mech = Dojo.get_quadruped(
+		damper=1.0, 
+		spring=10.0);
     test_get_set_data(mech)
 end
 
@@ -55,26 +83,40 @@ end
 function ctrl!(mechanism, k)
 	nu = Dojo.input_dimension(mechanism)
 	if Dojo.input_dimension(mechanism.joints[1]) == 6
-		u = 0.2*[szeros(6); mechanism.timestep * sones(nu-6)]
+		u = 0.2 * [szeros(6); mechanism.timestep * sones(nu-6)]
 	else
-		u = 0.2*mechanism.timestep * sones(nu)
+		u = 0.2 * mechanism.timestep * sones(nu)
 	end
 	Dojo.set_input!(mechanism, u)
 	return
 end
 
-function test_data_system(model::Symbol; ϵ::T=1.0e-6, tsim::T=0.1, ctrl::Any=(m,k)->nothing,
-        timestep::T=0.01, gravity=[0.0; 0.0; -9.81], verbose::Bool=false, kwargs...) where T
+function test_data_system(model::Symbol; 
+		ϵ=1.0e-6, 
+		tsim=0.1, 
+		ctrl=(m,k)->nothing,
+        timestep=0.01, 
+		gravity=[0.0; 0.0; -9.81], 
+		verbose=false, 
+		T=Float64,
+		kwargs...)
+
     # mechanism
-    mechanism = Dojo.get_mechanism(model, timestep=timestep, gravity=gravity; kwargs...)
+    mechanism = Dojo.get_mechanism(model, 
+		timestep=timestep, 
+		gravity=gravity; 
+		kwargs...)
     Dojo.initialize!(mechanism, model)
     # simulate
     Dojo.simulate!(mechanism, tsim, ctrl!,
-        record=false, verbose=false, opts=Dojo.SolverOptions(rtol=ϵ, btol=ϵ))
+        record=false, 
+		verbose=false, 
+		opts=Dojo.SolverOptions(rtol=ϵ, btol=ϵ))
 
 	# Finite Difference
-	Nd = Dojo.data_dim(mechanism, attjac=false)
-	data0 = Dojo.get_data(mechanism)# + 0.05*rand(Nd)
+	Nd = Dojo.data_dim(mechanism, 
+		attjac=false)
+	data0 = Dojo.get_data(mechanism)
 	sol0 = Dojo.get_solution(mechanism)
 	datajac0 = Dojo.finite_difference_data_jacobian(mechanism, data0, sol0)
 	attjac0 = Dojo.data_attitude_jacobian(mechanism)
@@ -100,23 +142,68 @@ end
 # Without contact and joint limits
 ################################################################################
 for (spring, damper) in [(0.0, 0.0), (2.0, 0.3)]
-	test_data_system(:sphere, contact=false)
-	test_data_system(:box, contact=false)
-	test_data_system(:box2d, contact=false)
-	test_data_system(:slider, spring=spring, damper=damper)
-	test_data_system(:nslider, spring=spring, damper=damper)
-	test_data_system(:pendulum, spring=spring, damper=damper)
-	test_data_system(:cartpole, spring=spring, damper=damper)
-	test_data_system(:pendulum, spring=spring, damper=damper)
-	test_data_system(:hopper, spring=spring, damper=damper, contact=false)
-	test_data_system(:humanoid, spring=spring, damper=damper, contact=false)
-	test_data_system(:atlas, spring=spring, damper=damper, contact=false)
-	test_data_system(:halfcheetah, contact=false, limits=false)
-	test_data_system(:walker2d, spring=spring, damper=damper, contact=false, limits=false)
-	test_data_system(:quadruped, spring=spring, damper=damper, contact=false, limits=false)
-	for jointtype in jointtypes
-		test_data_system(:snake, Nb=5, spring=spring, damper=damper, contact=false, jointtype=jointtype)
-		test_data_system(:twister, Nb=5, spring=spring, damper=damper, contact=false, jointtype=jointtype)
+	test_data_system(:sphere, 
+		contact=false)
+	test_data_system(:box, 
+		contact=false)
+	test_data_system(:box2d, 
+		contact=false)
+	test_data_system(:slider, 
+		spring=spring, 
+		damper=damper)
+	test_data_system(:nslider, 
+		spring=spring, 
+		damper=damper)
+	test_data_system(:pendulum, 
+		spring=spring, 
+		damper=damper)
+	test_data_system(:cartpole, 
+		spring=spring, 
+		damper=damper)
+	test_data_system(:pendulum, 
+		spring=spring, 
+		damper=damper)
+	test_data_system(:hopper, 
+		spring=spring, 
+		damper=damper, 
+		contact_foot=false, 
+		contact_body=false)
+	test_data_system(:humanoid, 
+		spring=spring, 
+		damper=damper, 
+		contact_feet=false, 
+		contact_body=false)
+	test_data_system(:atlas, 
+		spring=spring, 
+		damper=damper, 
+		contact_feet=false, 
+		contact_body=false)
+	test_data_system(:halfcheetah, 
+		contact_feet=false, 
+		contact_body=false, 
+		limits=false)
+	test_data_system(:walker2d, spring=spring, 
+		damper=damper, 
+		contact_feet=false, 
+		contact_body=false, 
+		limits=false)
+	test_data_system(:quadruped, spring=spring, 
+		damper=damper, contact_feet=false, 
+		contact_body=false, 
+		limits=false)
+	for joint_type in joint_types
+		test_data_system(:snake, 
+			Nb=5, 
+			spring=spring, 
+			damper=damper, 
+			contact=false, 
+			joint_type=joint_type)
+		test_data_system(:twister, 
+			Nb=5, 
+			spring=spring, 
+			damper=damper, 
+			contact=false, 
+			joint_type=joint_type)
 	end
 end
 
@@ -124,22 +211,70 @@ end
 # With contact and joint limits
 ################################################################################
 for (spring, damper) in [(0.0, 0.0), (2.0, 0.3)]
-	test_data_system(:sphere, contact=true)
-	test_data_system(:box, contact=true)
-	test_data_system(:box2d, contact=true)
-	test_data_system(:slider, spring=spring, damper=damper)
-	test_data_system(:nslider, spring=spring, damper=damper)
-	test_data_system(:pendulum, spring=spring, damper=damper)
-	test_data_system(:cartpole, spring=spring, damper=damper)
-	test_data_system(:pendulum, spring=spring, damper=damper)
-	test_data_system(:hopper, spring=spring, damper=damper, contact=true)
-	test_data_system(:humanoid, spring=spring, damper=damper, contact=true)
-	test_data_system(:atlas, spring=spring, damper=damper, contact=true)
-	test_data_system(:halfcheetah, contact=true, limits=true)
-	test_data_system(:walker2d, spring=spring, damper=damper, contact=true, limits=true)
-	test_data_system(:quadruped, spring=spring, damper=damper, contact=true, limits=true)
-	for jointtype in jointtypes
-		test_data_system(:snake, Nb=5, spring=spring, damper=damper, contact=true, jointtype=jointtype)
-		test_data_system(:twister, Nb=5, spring=spring, damper=damper, contact=true, jointtype=jointtype)
+	test_data_system(:sphere, 
+		contact=true)
+	test_data_system(:box, 
+		contact=true)
+	test_data_system(:box2d, 
+		contact=true)
+	test_data_system(:slider, 
+		spring=spring, 
+		damper=damper)
+	test_data_system(:nslider, 
+		spring=spring, 
+		damper=damper)
+	test_data_system(:pendulum, 
+		spring=spring, 
+		damper=damper)
+	test_data_system(:cartpole, 
+		spring=spring, 
+		damper=damper)
+	test_data_system(:pendulum, 
+		spring=spring, 
+		damper=damper)
+	test_data_system(:hopper, 
+		spring=spring, 
+		damper=damper, 
+		contact_foot=true, 
+		contact_body=true)
+	test_data_system(:humanoid, 
+		spring=spring, 
+		damper=damper, 
+		contact_feet=true, 
+		contact_body=true)
+	test_data_system(:atlas, 
+		spring=spring, 
+		damper=damper, 
+		contact_feet=true, 
+		contact_body=true)
+	test_data_system(:halfcheetah, 
+		contact_feet=true, 
+		contact_body=true, 
+		limits=true)
+	test_data_system(:walker2d, 
+		spring=spring, 
+		damper=damper, 
+		contact_feet=true, 
+		contact_body=true, 
+		limits=true)
+	test_data_system(:quadruped, 
+		spring=spring, 
+		damper=damper, 
+		contact_feet=true, 
+		contact_body=true, 
+		limits=true)
+	for joint_type in joint_types
+		test_data_system(:snake, 
+			Nb=5, 
+			spring=spring, 
+			damper=damper, 
+			contact=true, 
+			joint_type=joint_type)
+		test_data_system(:twister, 
+			Nb=5, 
+			spring=spring, 
+			damper=damper, 
+			contact=true, 
+			joint_type=joint_type)
 	end
 end

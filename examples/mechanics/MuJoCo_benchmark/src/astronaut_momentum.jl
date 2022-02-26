@@ -98,7 +98,7 @@ LyceumMuJoCoViz.visualize(mjsim, trajectories=traj)
 # momentum
 ################################################################################
 # mj_batch_astronaut_simulation(Nsim=10)
-timestep = [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 0.00003]
+timestep= [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 0.00003]
 speed, plin, pang, ener, fail = mj_benchmark_momentum(timestep, Nsim=3, control_amplitude=0.05)
 
 # Saving results
@@ -114,7 +114,7 @@ scatter!(plt[1,2], speed, pang, axis=:log, yaxis=:flip, linewidth=3, markersize=
 ################################################################################
 # energy
 ################################################################################
-timestep = [0.1, 0.01, 0.001]
+timestep= [0.1, 0.01, 0.001]
 ener_traj = []
 for i = 1:3
 	speed, plin, pang, Δener, fail, traj, ener_t = mj_astronaut_simulation(tsim=100, tctrl=1.0,
@@ -142,7 +142,7 @@ jldsave(path, ener_traj=ener_traj)
 # Demo
 ################################################################################
 
-timestep = 0.01
+timestep=0.01
 jm, jd, mjsim = mj_model("astronaut.xml", timestep=0.01)
 tsim = 1.0
 N = Int(floor(tsim/timestep))

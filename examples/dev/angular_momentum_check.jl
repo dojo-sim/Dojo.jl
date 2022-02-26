@@ -13,7 +13,7 @@ using Random
 using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
@@ -47,21 +47,21 @@ v_ = 0.0*[1.0; 0.0; 0.0]#rand(3)
 Δv_ = 0.0*[0.0; 0.0; 0.0]#rand(3)
 Δω_ = 1.0*[0.0; 1.0; 0.0]#rand(3)
 ϕ1_ = 0.0
-jointtype = :Spherical
-mech = getmechanism(:snake, timestep = timestep_, g = 0.0, contact = false, spring = 0.0, damper = 0.0, Nb = Nb_, jointtype = jointtype)
-initialize!(mech, :snake, ϕ1 = ϕ1_, v=v_, ω=ω_, Δv = Δv_, Δω = Δω_)
-# mech = getmechanism(:npendulum, timestep = 0.01, g = 0.0 * -9.81, Nb = Nb_)
-# initialize!(mech, :npendulum, ϕ1 = 0.0 * π, v=v_, ω=ω_, Δv = Δv_, Δω = Δω_)
+joint_type = :Spherical
+mech = getmechanism(:snake, timestep= timestep_, g = 0.0, contact = false, spring = 0.0, damper = 0.0, Nb = Nb_, joint_type = joint_type)
+initialize!(mech, :snake, ϕ1 = ϕ1_, v=v_, ω=ω_, Δv=Δv_, Δω=Δω_)
+# mech = getmechanism(:npendulum, timestep=0.01, g = 0.0 * -9.81, Nb = Nb_)
+# initialize!(mech, :npendulum, ϕ1 = 0.0 * π, v=v_, ω=ω_, Δv=Δv_, Δω=Δω_)
 
-storage = simulate!(mech, 1.0, record = true, solver = :mehrotra!, verbose = false)
+storage = simulate!(mech, 1.0, record=true, solver = :mehrotra!, verbose=false)
 m0 = momentum(mech)
 e0 = mechanical_energy(mech)
-mech = getmechanism(:snake, timestep = timestep_, g = 0.00, contact = false, spring = 0.0, damper = 0.0, Nb = Nb_, jointtype = jointtype)
-initialize!(mech, :snake, ϕ1 = ϕ1_, v=v_, ω=ω_, Δv = Δv_, Δω = Δω_)
-# mech = getmechanism(:npendulum, timestep = 0.01, g = 0.0 * -9.81, Nb = Nb_)
-# initialize!(mech, :npendulum, ϕ1 = 0.0 * π, v=v_, ω=ω_, Δv = Δv_, Δω = Δω_)
+mech = getmechanism(:snake, timestep= timestep_, g = 0.00, contact = false, spring = 0.0, damper = 0.0, Nb = Nb_, joint_type = joint_type)
+initialize!(mech, :snake, ϕ1 = ϕ1_, v=v_, ω=ω_, Δv=Δv_, Δω=Δω_)
+# mech = getmechanism(:npendulum, timestep=0.01, g = 0.0 * -9.81, Nb = Nb_)
+# initialize!(mech, :npendulum, ϕ1 = 0.0 * π, v=v_, ω=ω_, Δv=Δv_, Δω=Δω_)
 
-storage = simulate!(mech, 5.00, record = true, solver = :mehrotra!, verbose = false)
+storage = simulate!(mech, 5.00, record=true, solver = :mehrotra!, verbose=false)
 m1 = momentum(mech)
 e1 = mechanical_energy(mech)
 
@@ -91,7 +91,7 @@ zerodimstaticadjoint(∂g∂ʳpos(mech, eqc, mech.bodies[3])) * eqc.λsol[2]
 mech.bodies[3].state.q2
 mech.bodies[4].state.q2
 
-visualize(mech, storage, vis = vis)
+visualize(mech, storage, vis=vis)
 
 plot(hcat(Vector.(storage.x[1])...)')
 plot!(hcat(Vector.(storage.x[2])...)')
@@ -107,7 +107,7 @@ plot!(hcat(Vector.(storage.ω[2])...)', width=1.0, color=:red, label="")
 data = get_data(mech)
 set_data!(mech, data)
 sol = get_solution(mech)
-Nb = length(collect(mech.bodies))
+Nb = length(mech.bodies)
 attjac = attitude_jacobian(data, Nb)
 
 # IFT
@@ -153,10 +153,10 @@ function controller!(mechanism, k)
     end
     return
 end
-mech = getmechanism(:snake, timestep = timestep_, g = 0.0, spring = 0.0, damper = 0.05, contact = false, Nb = Nb_, jointtype = :Spherical)
-initialize!(mech, :snake, ω = ω_, v = v_, Δv = Δv_, Δω = Δω_)
-storage = simulate!(mech, 200.0, controller!, record = true, solver = :mehrotra!, verbose = false)
+mech = getmechanism(:snake, timestep= timestep_, g = 0.0, spring = 0.0, damper = 0.05, contact = false, Nb = Nb_, joint_type = :Spherical)
+initialize!(mech, :snake, ω = ω_, v = v_, Δv=Δv_, Δω=Δω_)
+storage = simulate!(mech, 200.0, controller!, record=true, solver = :mehrotra!, verbose=false)
 m0 = momentum(mech)
 
 
-visualize(mech, storage, vis = vis)
+visualize(mech, storage, vis=vis)

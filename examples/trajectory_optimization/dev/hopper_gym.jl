@@ -4,9 +4,9 @@ using LinearAlgebra
 
 # ## system
 dt = 0.05
-gravity = -9.81
-env = make("hopper",
-    dt=dt,
+gravity=-9.81
+env = get_environment("hopper",
+    timestep=dt,
     gravity=gravity);
 
 # ## visualizer
@@ -14,8 +14,8 @@ open(env.vis)
 render(env)
 
 # ## dimensions
-nx = env.nx
-nu = env.nu
+nx = env.num_states
+nu = env.num_inputs
 d = 0
 
 # ## horizon 

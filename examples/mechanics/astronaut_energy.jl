@@ -1,7 +1,7 @@
 using Dojo
 
 # visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 ################################################################################
@@ -36,7 +36,7 @@ end
 
 # Simulation
 solver_tolerance = 1.0e-14
-timestep = [0.05, 0.01, 0.005]
+timestep= [0.05, 0.01, 0.005]
 tsim = 10.0
 storage = []
 mech, _ = astronaut_simulation(vis, tsim=tsim, timestep=timestep[1], ϵ=solver_tolerance)

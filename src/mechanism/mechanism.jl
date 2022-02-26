@@ -144,7 +144,7 @@ function get_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 end
 
 function get_next_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
-	timestep = mechanism.timestep
+	timestep= mechanism.timestep
 	z_next = zeros(T,13Nb)
 	for (i, body) in enumerate(mechanism.bodies)
 		v25 = body.state.vsol[2]

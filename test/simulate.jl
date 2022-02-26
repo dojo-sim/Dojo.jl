@@ -1,6 +1,8 @@
 @testset "Simulate: step!" begin 
     # get environment and simulate
-    env = Dojo.make("pendulum", dt=0.1, gravity=0.0);
+    env = Dojo.get_environment("pendulum", 
+        timestep=0.1, 
+        gravity=0.0);
     Dojo.reset(env);
 
     # step (no control)
@@ -18,10 +20,14 @@ end
 
 @testset "Simulate: Storage" begin 
     # get environment and simulate
-    env = Dojo.make("pendulum", dt=0.1);
+    env = Dojo.get_environment("pendulum",
+        timestep=0.1);
     Dojo.reset(env);
-    Dojo.initialize_pendulum!(env.mechanism, ϕ1=0.25 * π)
-    storage = Dojo.simulate!(env.mechanism, 1.0, record=true, verbose=false)
+    Dojo.initialize_pendulum!(env.mechanism,
+        ϕ1=0.25 * π)
+    storage = Dojo.simulate!(env.mechanism, 1.0, 
+        record=true, 
+        verbose=false)
     # check storage length
     @test Dojo.length(storage) == 10
     # convert to vector of vectors

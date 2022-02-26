@@ -12,8 +12,8 @@ mech = get_mechanism(:atlas,
     friction_coefficient=0.5, 
     damper=25.0, 
     spring=1.0, 
-    contact=true, 
-    body_contact=true, 
+    contact_feet=true, 
+    contact_body=true, 
     model_type=:v2)
 
 # ## Simulate
@@ -26,7 +26,7 @@ storage = simulate!(mech, 5.0,
     opts=SolverOptions(rtol=1.0e-6, btol=1e-6, verbose=true))
 
 # ## Visualize
-vis = Visualizer()
+vis=visualizer()
 render(vis)
 visualize(mech, storage, 
     vis=vis, show_contact=true)

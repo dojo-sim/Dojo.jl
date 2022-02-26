@@ -18,7 +18,7 @@ end
 # Convert the JLD2 files into trajectories and store them into a dataset
 ################################################################################
 
-function toss2z(toss, timestep; S::Int=1)
+function toss2z(toss, timestep; s=1)
 	N = length(toss)
 	M = Int((N-1 - (N-1)%S) / S)
 	z = []
@@ -58,10 +58,10 @@ end
 function generate_hardware_dataset(;N::Int=10,
 		sleep_ratio = 0.0,
 		show_contact = true,
-		S::Int=1,
+		s=1,
 		)
 	H = 1.00
-	timestep = 1/148 * S
+	timestep= 1/148 * S
 	gscaled = -9.81*20
 
     mechanism = get_mechanism(:box, timestep=timestep, gravity=gravityscaled);

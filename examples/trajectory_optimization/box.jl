@@ -8,11 +8,11 @@ using IterativeLQR
 using LinearAlgebra 
 
 # ## system
-gravity = -9.81
+gravity=-9.81
 dt = 0.1
-env = make("block", 
-    mode=:max, 
-    dt=dt,
+env = get_environment("block", 
+    mode=:maximal, 
+    timestep=dt,
     friction_coefficient=0.5,
     gravity=gravity)
 
@@ -20,8 +20,8 @@ env = make("block",
 open(env.vis) 
 
 # ## dimensions
-n = env.nx
-m = env.nu
+n = env.num_states
+m = env.num_inputs
 
 # ## states
 z1 = [0.0; 0.0; 0.25; 0.0; 0.0; 0.0; 1.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0]

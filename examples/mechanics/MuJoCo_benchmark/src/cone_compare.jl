@@ -22,7 +22,7 @@ include("methods.jl")
 # Demo
 ################################################################################
 
-timestep = 0.01
+timestep=0.01
 jm, jd, mjsim = mj_model("box.xml", timestep=timestep)
 tsim = 3.0
 N = Int(floor(tsim/timestep))

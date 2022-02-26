@@ -9,11 +9,11 @@ using LinearAlgebra
 include(joinpath(@__DIR__, "algorithms/ars.jl")) # augmented random search
 
 # ## Ant
-env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=25.0, friction_coefficient = 0.5,
+env = get_environment("ant", mode=:minimal, g=-9.81, timestep=0.05, damper=50.0, spring=25.0, friction_coefficient = 0.5,
     contact=true, contact_body=true)
 obs = reset(env)
 initialize_ant!(env.mechanism, pos = [1.3,0,0], rot = [0,0,0.])
-env.x .= get_minimal_state(env.mechanism)
+env.state .= get_minimal_state(env.mechanism)
 render(env)
 
 # ## Open visualizer
@@ -22,7 +22,7 @@ open(env.vis)
 # ## Set up policy
 hp = HyperParameters(main_loop_size=100, horizon=150, n_directions=6, b=6, step_size=0.02)
 input_size = length(obs)
-output_size = length(env.u_prev)
+output_size = length(env.input_previous)
 normalizer = Normalizer(input_size)
 
 # ## Training
@@ -32,7 +32,7 @@ policies = Matrix{Float64}[]
 N = 5
 for i = 1:N
     ## Reset environment
-    env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=25.0, friction_coefficient = 0.5,
+    env = get_environment("ant", mode=:minimal, g=-9.81, timestep=0.05, damper=50.0, spring=25.0, friction_coefficient = 0.5,
         contact=true, contact_body=true)
     obs = reset(env)
 
@@ -40,7 +40,7 @@ for i = 1:N
     Random.seed!(i)
     hp = HyperParameters(main_loop_size=100, horizon=150, n_directions=6, b=6, step_size=0.02)
     input_size = length(obs)
-    output_size = length(env.u_prev)
+    output_size = length(env.input_previous)
     normalizer = Normalizer(input_size)
     policy = Policy(input_size, output_size, hp)
 

@@ -139,7 +139,7 @@ function datafilenamebox(; N::Int=10, friction_coefficient=0.1, radius=0., side=
     "box_dim_N:$(N)_friction_coefficient:$(friction_coefficient)_radius:$(radius)_side:$(side).jld2"
 end
 
-function datafilenamehardwarebox(; N::Int=10, S::Int=1)
+function datafilenamehardwarebox(; N::Int=10, s=1)
     "hardwarebox_dim_N:$(N)_sample_S:$(S).jld2"
 end
 
@@ -244,7 +244,7 @@ end
 # Optimization Loss: Evaluation & Gradient
 ################################################################################
 function getSimulatorMaxGradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
-	timestep = mechanism.timestep
+	timestep= mechanism.timestep
 	nu = input_dimension(mechanism)
 	nsd = simdata_dim(mechanism)
 	njoints = joint_dimension(mechanism)

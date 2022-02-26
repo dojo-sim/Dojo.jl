@@ -2,22 +2,22 @@ using Dojo
 using IterativeLQR
 using LinearAlgebra
 
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 
-gravity = -9.81
-timestep = 0.05
+gravity=-9.81
+timestep=0.05
 friction_coefficient = 0.8
 damper = 5.0
 spring = 0.0
 ρ0 = 1e-2
 
 mech = get_quadruped(timestep=timestep, damper=damper, spring=spring,
-	gravity=gravity, body_contact=true,
+	gravity=gravity, contact_feet=true, contact_body=true,
 	joint_limits=[[-0.5, -0.5, -2.5,],[ 0.5,  1.5, -1.0,]],
-	contact=true,
 	limits=true)
+
 initialize!(mech, :quadruped)
 function ctrl!(mechanism, k)
     nu = input_dimension(mechanism)

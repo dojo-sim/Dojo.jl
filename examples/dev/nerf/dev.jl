@@ -184,7 +184,7 @@ end
 function initialize_nerf!(mechanism::Mechanism; x::AbstractVector{T}=zeros(3),
         q::UnitQuaternion{T}=one(UnitQuaternion), v::AbstractVector{T}=zeros(3),
         ω::AbstractVector{T}=zeros(3)) where T
-    r = collect(mechanism.bodies)[1].shape.r
+    r = mechanism.bodies[1].shape.r
     joint = get_joint_constraint(mechanism, :floating_joint)
     zero_velocity!(mechanism)
     set_maximal_coordinates!(mechanism, joint, [x+[0,0,r] rotation_vector(q)])
@@ -230,8 +230,8 @@ end
 #
 # origin = Origin{Float64}(name=:origin)
 # mass = 1.0
-# timestep = 0.01
-# gravity = 0.9
+# timestep=0.01
+# gravity=0.9
 # radius = 0.10
 # bodies = [Sphere(radius, mass, name=:sphere)]
 # joints = [JointConstraint(Floating(origin, bodies[1]), name=:floating_joint)]
@@ -270,7 +270,7 @@ end
 
 
 # using MeshCat
-# vis = Visualizer()
+# vis=visualizer()
 # open(vis)
 # mesh = jldopen(joinpath(@__DIR__, "deps/bunny_mesh.jld"))["mesh"]
 FDEPS = 1e-2

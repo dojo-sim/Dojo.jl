@@ -3,17 +3,17 @@ using IterativeLQR
 using LinearAlgebra
 
 # ## system
-include(joinpath(module_dir(), "env/atlas/methods/template.jl"))
+include(joinpath(module_dir(), "environments/atlas/methods/template.jl"))
 
-gravity = -9.81
+gravity=-9.81
 dt = 0.025
 friction_coefficient = 0.8
 damper = 20.0
 spring = 0.0
 ρ0 = 3e-1
 env = atlas(
-    mode=:min,
-    dt=dt,
+    mode=:minimal,
+    timestep=dt,
     gravity=gravity,
     friction_coefficient=friction_coefficient,
     damper=damper,
@@ -32,8 +32,8 @@ env.mechanism.joints[8].rotational.damper = 75.0
 open(env.vis)
 
 # ## dimensions
-n = env.nx
-m = env.nu
+n = env.num_states
+m = env.num_inputs
 d = 0
 
 ## simulate (test)

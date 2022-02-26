@@ -22,7 +22,7 @@ include("methods.jl")
 # Demo
 ################################################################################
 
-timestep = 0.01
+timestep=0.01
 jm, jd, mjsim = mj_model("dzhanibekov.xml", timestep=timestep)
 tsim = 1.0
 N = Int(floor(tsim/timestep))
@@ -54,7 +54,7 @@ jd.qpos
 jd.qvel
 
 
-timestep = 0.01
+timestep=0.01
 jm, jd, mjsim = mj_model("dzhanibekov.xml", timestep=timestep)
 jd.qvel .= [0,0,0,20π,0,0]
 # jd.qvel .= [1,0,0,0.0,0,0]
@@ -82,7 +82,7 @@ end
 # ################################################################################
 # ################################################################################
 #
-# timestep = 0.01
+# timestep=0.01
 # jm, jd, mjsim = mj_model("half_cheetah.xml", timestep=timestep)
 # jd.qpos[2] += 2.0
 # jd.qvel .= [0,0,0, 0,0,0, 0,0,5]

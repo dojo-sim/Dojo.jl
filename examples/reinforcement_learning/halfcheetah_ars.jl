@@ -9,8 +9,8 @@ using LinearAlgebra
 include(joinpath(@__DIR__, "algorithms/ars.jl")) # augmented random search
 
 # ## Environment
-env = make("halfcheetah", dt=0.05)
-env.nx
+env = get_environment("halfcheetah", timestep=0.05)
+env.num_states
 obs = reset(env)
 
 # ## Open visualizer
@@ -23,13 +23,13 @@ policies = Matrix{Float64}[]
 N = 5
 for i = 1:N
     ## Reset environment
-    env = make("halfcheetah", dt=0.05)
+    env = get_environment("halfcheetah", timestep=0.05)
     obs = reset(env)
 
     ## Random policy
     hp = HyperParameters(main_loop_size = 30, horizon = 80, n_directions = 6, b = 6, step_size = 0.02)
     input_size = length(obs)
-    output_size = length(env.u_prev)
+    output_size = length(env.input_previous)
     normalizer = Normalizer(input_size)
     policy = Policy(input_size, output_size, hp)
 
@@ -64,7 +64,7 @@ policies_best = (policies[max_idx])[1:N_best]
 # ## Recover policy
 hp = HyperParameters(main_loop_size = 30, horizon = 80, n_directions = 6, b = 6, step_size = 0.02)
 input_size = length(obs)
-output_size = length(env.u_prev)
+output_size = length(env.input_previous)
 normalizer = Normalizer(input_size)
 
 traj = display_policy(env,

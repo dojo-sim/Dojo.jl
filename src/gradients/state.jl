@@ -1,6 +1,6 @@
 function maximal_to_minimal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) where {T,Nn,Ne,Nb,Ni,Tz}
 	J = zeros(minimal_dimension(mechanism), maximal_dimension(mechanism) - Nb)
-	timestep = mechanism.timestep
+	timestep= mechanism.timestep
 	row_shift = 0
 	for id in mechanism.root_to_leaves
 		(id > Ne) && continue # only treat joints
@@ -50,7 +50,7 @@ function maximal_to_minimal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::Abs
 end
 
 function get_maximal_gradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
-	timestep = mechanism.timestep
+	timestep= mechanism.timestep
 	nu = input_dimension(mechanism)
 
 	for entry in mechanism.data_matrix.nzval # reset matrix
@@ -98,7 +98,7 @@ function get_maximal_gradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,
 end
 
 function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
-	timestep = mechanism.timestep
+	timestep= mechanism.timestep
 	J = zeros(maximal_dimension(mechanism, attjac=true), minimal_dimension(mechanism))
 
 	# Compute partials

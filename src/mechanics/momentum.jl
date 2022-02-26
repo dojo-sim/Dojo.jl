@@ -2,7 +2,7 @@
     Linear and angular momentum of a body using Legendre transform.
 """
 function momentum(mechanism::Mechanism{T}, body::Body{T}) where T
-    timestep = mechanism.timestep
+    timestep= mechanism.timestep
     state = body.state
     mass = body.mass 
     inertia = body.inertia

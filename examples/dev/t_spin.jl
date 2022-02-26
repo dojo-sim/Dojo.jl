@@ -77,7 +77,7 @@ function φ(ϕ)
 	1.0 / sqrt(1.0 + norm(ϕ)^2.0) * [1.0; ϕ]
 end
 
-function visualize!(vis, p, q; timestep = 0.1)
+function visualize!(vis, p, q; timestep=0.1)
 	setvisible!(vis["/Background"], true)
 	setprop!(vis["/Background"], "top_color", RGBA(1.0, 1.0, 1.0, 1.0))
 	setprop!(vis["/Background"], "bottom_color", RGBA(1.0, 1.0, 1.0, 1.0))
@@ -143,7 +143,7 @@ function angular_momentum(x)
     quaternion_rotation_matrix(q) * J * ω 
 end
 
-vis = Visualizer()
+vis=visualizer()
 render(vis)
 
 nq = 4
@@ -179,7 +179,7 @@ for t = 1:T
 	push!(x, f(x[end], u1, h))
 end
 
-visualize!(vis, nothing, x, timestep = h)
+visualize!(vis, nothing, x, timestep= h)
 
 am = [angular_momentum(xt) - angular_momentum(x[1]) for xt in x]
 plot(hcat(am...)')
@@ -245,7 +245,7 @@ for t = 1:T
 	push!(x, newton(x[end], u1, h))
 end
 
-visualize!(vis, nothing, x, timestep = h)
+visualize!(vis, nothing, x, timestep= h)
 
 am = [angular_momentum(xt) - angular_momentum(x[1]) for xt in x]
 plot(hcat(am...)')
@@ -317,7 +317,7 @@ for t = 1:T
 	push!(x, newton_variational(x[end], u1, h))
 end
 
-visualize!(vis, nothing, x, timestep = h)
+visualize!(vis, nothing, x, timestep= h)
 
 function newton_zac_variational(x, u, h; p = zeros(3), init=false)
 	q2 = copy(x)[1:4]
@@ -455,9 +455,9 @@ for t = 1:T
     end
 end
 
-vis = Visualizer() 
+vis=visualizer() 
 render(vis)
-visualize!(vis, nothing, x, timestep = h)
+visualize!(vis, nothing, x, timestep= h)
 
 function angular_momentum_variational(x) 
     q = x[1:4] 
@@ -540,4 +540,4 @@ for t = 1:500
 	push!(x, newton_variational_2(x[end-1], x[end], u, h))
 end
 
-visualize!(vis, nothing, x, timestep = h)
+visualize!(vis, nothing, x, timestep= h)

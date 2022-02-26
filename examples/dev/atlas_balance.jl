@@ -13,14 +13,14 @@ using Random
 using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 # Build mechanism
-mech = getmechanism(:atlas, timestep = 0.01, g = -9.81, friction_coefficient = 0.8, contact = true)
+mech = getmechanism(:atlas, timestep=0.01, g = -9.81, friction_coefficient = 0.8, contact = true)
 initialize!(mech, :atlas, tran = [0,0,0.99], rot = [0.,0,0])
 for (i,joint) in enumerate(mech.joints)
     jt = joint.translational
@@ -46,7 +46,7 @@ eqcs = [mech.joints[i] for i = 1:31]
 teqcs = [eqcs[1]; [addtorque(mech, eqc, spring = 1e2, damper = 1e2) for eqc in eqcs[2:end]]]
 contacts = [mech.contacts[i] for i = 63:70]
 
-tmech = Mechanism(mech.origin, bodies, teqcs, contacts, timestep = 0.01, g = -9.81)
+tmech = Mechanism(mech.origin, bodies, teqcs, contacts, timestep=0.01, g = -9.81)
 
 function addtorque(mech::Mechanism, eqc::JointConstraint; spring = 0.0, damper = 0.0)
     pbody = get_body(mech, eqc.parentid)
@@ -63,15 +63,15 @@ end
 
 
 # PD control law
-nu = sum([input_dimension(eqc, floatingbase = false) for eqc in collect(mech.joints)])
-angles = [minimal_coordinates(mech, joint)[1] for joint in collect(mech.joints)[2:end]]
+nu = sum([input_dimension(eqc, floatingbase = false) for eqc in mech.joints])
+angles = [minimal_coordinates(mech, joint)[1] for joint in mech.joints[2:end]]
 δangles = zeros(nu)
 ind = 23
 # δangles[ind] += π/2
 angles += δangles
 
 function controller!(mechanism, k)
-    for (i,joint) in enumerate(collect(mechanism.joints)[2:end])
+    for (i,joint) in enumerate(mechanism.joints[2:end])
         if input_dimension(joint) == 1
             # θ = minimal_coordinates(mechanism, joint)[1]
             # dθ = minimal_velocities(mechanism, joint)[1]
@@ -88,14 +88,14 @@ function controller!(mechanism, k)
     return
 end
 
-# forcedstorage = simulate!(tmech, 2.5, controller!, record = true, solver = :mehrotra!)
-# @elapsed forcedstorage = simulate!(tmech, 2.5, controller!, record = true, solver = :mehrotra!)
-# @elapsed forcedstorage = simulate!(mech, 1.5, controller!, record = true, solver = :mehrotra!)
-# @profiler forcedstorage = simulate!(tmech, 0.5, controller!, record = true, solver = :mehrotra!)
-# visualize(tmech, forcedstorage, vis = vis)
+# forcedstorage = simulate!(tmech, 2.5, controller!, record=true, solver = :mehrotra!)
+# @elapsed forcedstorage = simulate!(tmech, 2.5, controller!, record=true, solver = :mehrotra!)
+# @elapsed forcedstorage = simulate!(mech, 1.5, controller!, record=true, solver = :mehrotra!)
+# @profiler forcedstorage = simulate!(tmech, 0.5, controller!, record=true, solver = :mehrotra!)
+# visualize(tmech, forcedstorage, vis=vis)
 
-@elapsed forcedstorage = simulate!(mech, 0.4, controller!, record = true, solver = :mehrotra!, verbose = true)
-visualize(mech, forcedstorage, vis = vis)
+@elapsed forcedstorage = simulate!(mech, 0.4, controller!, record=true, solver = :mehrotra!, verbose = true)
+visualize(mech, forcedstorage, vis=vis)
 
 
 

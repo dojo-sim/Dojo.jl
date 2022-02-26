@@ -58,7 +58,7 @@ function residual_dimension(mechanism::Mechanism)
 end
 
 function finite_difference_data_jacobian(mechanism::Mechanism, data::AbstractVector,
-        sol::AbstractVector; δ = 1e-5, verbose = false)
+        sol::AbstractVector; δ = 1e-5, verbose=false)
     mechanism = deepcopy(mechanism)
     Nd = data_dim(mechanism, attjac=false)
     Nr = residual_dimension(mechanism)

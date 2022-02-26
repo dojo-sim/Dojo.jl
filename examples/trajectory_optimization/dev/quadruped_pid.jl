@@ -9,7 +9,7 @@ Pkg.activate(module_dir())
 
 using MeshCat
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
@@ -18,15 +18,15 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 using IterativeLQR
 
 # System
-gravity = -9.81
-timestep = 0.05
+gravity=-9.81
+timestep=0.05
 mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_coefficient = 1.5, damper = 10.0, spring = 0.0)
 initialize!(mech, :quadruped, tran = [0,0,0.], v = [0.5,0,0.])
-@elapsed storage = simulate!(mech, 0.05, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
+@elapsed storage = simulate!(mech, 0.05, record=true, solver = :mehrotra!, verbose=false)
+visualize(mech, storage, vis=vis)
 
 
-joints = collect(mech.joints)
+joints = mech.joints
 joints
 rot1 = joints[1].constraints[1]
 rot1.spring_offset = srand(3)
@@ -46,13 +46,13 @@ xref = quadruped_trajectory(mech, r = 0.08, z = 0.27; Δx = -0.08, β = 1.0, Δf
 
 zref = [minimal_to_maximal(mech, x) for x in xref]
 storage = generate_storage(mech, zref)
-visualize(mech, storage, vis = vis)
+visualize(mech, storage, vis=vis)
 # visualize_maximal(mech, minimal_to_maximal(mech, xref[1]), vis)
 
 
 
 # PID control
-timestep = 0.05
+timestep=0.05
 mech = get_mechanism(:quadruped, timestep=timestep, g = -9.0, friction_coefficient = 0.5, contact = true, spring = 100.0, damper = 2.0)
 initialize!(mech, :quadruped)
 set_state!(mech, zref[1])
@@ -62,8 +62,8 @@ function controller!(mechanism, k)
     return
 end
 
-@elapsed storage = simulate!(mech, 4.01, controller!, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
+@elapsed storage = simulate!(mech, 4.01, controller!, record=true, solver = :mehrotra!, verbose=false)
+visualize(mech, storage, vis=vis)
 
 
 mech = get_mechanism(:pendulum, g = 0.0, spring = 20.0, damper = 1.0, spring_offset = -0.9*sones(1))
@@ -72,15 +72,15 @@ function controller!(mechanism, k)
 	set_spring_offset!(mechanism, [π])
     return
 end
-@elapsed storage = simulate!(mech, 8.0, controller!, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
+@elapsed storage = simulate!(mech, 8.0, controller!, record=true, solver = :mehrotra!, verbose=false)
+visualize(mech, storage, vis=vis)
 
 
 
 
 # qa = one(UnitQuaternion)
 # qb = UnitQuaternion(RotX(π/8))
-# joint = collect(mech.joints)[1].constraints[2]
+# joint = mech.joints[1].constraints[2]
 # A = nullspace_mask(joint)
 # Aᵀ = zerodimstaticadjoint(A)
 # joint.spring_offset = pi/8 * sones(1)
@@ -108,11 +108,11 @@ visualize(mech, storage, vis = vis)
 # x0[13:end] .= 0.0
 # x0[13] = pi/4
 # z0 = minimal_to_maximal(mech, x0)
-# mech = get_mechanism(:quadruped, timestep = 0.01, g = 0.0, spring = 10.0, damper = 1.0, contact = false)
+# mech = get_mechanism(:quadruped, timestep=0.01, g = 0.0, spring = 10.0, damper = 1.0, contact = false)
 # initialize!(mech, :quadruped)
 # x1 = get_minimal_state(mech)
 
-mech = get_mechanism(:quadruped, timestep = 0.01, g = 0.0, spring = 10.0, damper = 1.0, contact = true)
+mech = get_mechanism(:quadruped, timestep=0.01, g = 0.0, spring = 10.0, damper = 1.0, contact = true)
 initialize!(mech, :quadruped)
 z0 = minimal_to_maximal(mech, zref[1])
 set_state!(mech, z0)
@@ -122,8 +122,8 @@ function controller!(mechanism, k)
 	set_spring_offset!(mechanism, zref[1])
     return
 end
-@elapsed storage = simulate!(mech, 4.01, controller!, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
+@elapsed storage = simulate!(mech, 4.01, controller!, record=true, solver = :mehrotra!, verbose=false)
+visualize(mech, storage, vis=vis)
 
 
 
@@ -161,8 +161,8 @@ end
 
 mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_coefficient = 1.5, damper = 1000.0, spring = 30.0)
 initialize!(mech, :quadruped)
-@elapsed storage = simulate!(mech, 0.05, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
+@elapsed storage = simulate!(mech, 0.05, record=true, solver = :mehrotra!, verbose=false)
+visualize(mech, storage, vis=vis)
 ugc = gravity_compensation(mech)
 
 mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_coefficient = 1.5, damper = 5.0, spring = 0.0)
@@ -175,21 +175,21 @@ for t = 1:5
     push!(z, znext)
 end
 storage = generate_storage(mech, [minimal_to_maximal(mech, zi) for zi in z])
-visualize(mech, storage, vis = vis)
+visualize(mech, storage, vis=vis)
 
 
 # Model
 function fd(y, x, u, w)
-	z = step!(mech, minimal_to_maximal(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
+	z = step!(mech, minimal_to_maximal(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)
 	y .= copy(maximal_to_minimal(mech, z))
 end
 
 function fdx(fx, x, u, w)
-	fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[1])
+	fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)[1])
 end
 
 function fdu(fu, x, u, w)
-	∇u = copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[2])
+	∇u = copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)[2])
 	fu .= ∇u * u_mask'
 end
 
@@ -206,7 +206,7 @@ w = [zeros(d) for t = 1:T-1]
 # Rollout
 x̄ = rollout(model, z1, ū, w)
 storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in x̄])
-visualize(mech, storage; vis = vis)
+visualize(mech, storage; vis=vis)
 
 # Objective
 qt = [0.3; 0.05; 0.05; 0.01 * ones(3); 0.01 * ones(3); 0.01 * ones(3); fill([0.2, 0.001], 12)...]
@@ -247,13 +247,13 @@ IterativeLQR.constrained_ilqr_solve!(prob,
 
 x_sol, u_sol = get_trajectory(prob)
 storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in x_sol])
-visualize(mech, storage, vis = vis)
+visualize(mech, storage, vis=vis)
 
 
 
 
 
-joints = collect(mech.joints)
+joints = mech.joints
 rot1 = joints[1].constraints[2]
 rot2 = joints[2].constraints[2]
 A1 = nullspace_mask(rot1)

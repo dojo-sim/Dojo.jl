@@ -9,7 +9,7 @@ Pkg.activate(module_dir())
 
 using MeshCat
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
@@ -40,8 +40,8 @@ end
 
 
 # System
-gravity = -9.81
-timestep = 0.05
+gravity=-9.81
+timestep=0.05
 mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_coefficient = 0.8, damper = 0.1, spring = 0.0)
 initialize!(mech, :quadruped, tran = [0,0,0.], v = [0.0,0,0.])
 
@@ -52,10 +52,10 @@ function controller!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, k) where {T,Nn,Ne,Nb,N
     return
 end
 
-@elapsed storage = simulate!(mech, 1.5, controller!, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
+@elapsed storage = simulate!(mech, 1.5, controller!, record=true, solver = :mehrotra!, verbose=false)
+visualize(mech, storage, vis=vis)
 
-# joints = collect(mech.joints)
+# joints = mech.joints
 # tra1 = joints[1].constraints[1]
 # rot1 = joints[1].constraints[2]
 # tra2 = joints[2].constraints[1]
@@ -76,7 +76,7 @@ T = 18
 xref = quadruped_trajectory(mech, r = 0.08, z = 0.27; timestep=timestep, Δx = -0.04, Δfront = 0.10, N = Int(T/2), Ncycles = 1)
 zref = [minimal_to_maximal(mech, x) for x in xref]
 storage = generate_storage(mech, zref)
-visualize(mech, storage, vis = vis)
+visualize(mech, storage, vis=vis)
 x1 = xref[1]
 z1 = zref[1]
 # visualize_maximal(mech, zref[1], vis)
@@ -108,8 +108,8 @@ mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_co
 initialize!(mech, :quadruped)
 set_state!(mech, z1)
 set_spring_offset!(mech, x1)
-@elapsed storage = simulate!(mech, 1.05, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
+@elapsed storage = simulate!(mech, 1.05, record=true, solver = :mehrotra!, verbose=false)
+visualize(mech, storage, vis=vis)
 ugc = gravity_compensation(mech)
 
 mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_coefficient = 0.8, damper = 2.0, spring = 0.0)
@@ -122,7 +122,7 @@ for t = 1:5
     push!(z, znext)
 end
 storage = generate_storage(mech, z)
-visualize(mech, storage, vis = vis)
+visualize(mech, storage, vis=vis)
 
 
 # Model
@@ -132,8 +132,8 @@ function fd(y, x, u, w)
 	# function ctrl!(mechanism)
 	# 	addSlackForce!(mechanism, s*mechanism.timestep)
 	# end
-	# z = step!(mech, minimal_to_maximal(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)
-	z = step!(mech, minimal_to_maximal(mech, x), u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)
+	# z = step!(mech, minimal_to_maximal(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false, ctrl! = ctrl!)
+	z = step!(mech, minimal_to_maximal(mech, x), u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)
 	y .= copy(maximal_to_minimal(mech, z))
 end
 
@@ -143,9 +143,9 @@ function fdx(fx, x, u, w)
 	# function ctrl!(mechanism)
 	# 	addSlackForce!(mechanism, s*mechanism.timestep)
 	# end
-	# fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)[1])
-	fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[1])
-	# fx .= FiniteDiff.finite_difference_jacobian(x -> maximal_to_minimal(mech, step!(mech, minimal_to_maximal(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)), x)
+	# fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false, ctrl! = ctrl!)[1])
+	fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)[1])
+	# fx .= FiniteDiff.finite_difference_jacobian(x -> maximal_to_minimal(mech, step!(mech, minimal_to_maximal(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false, ctrl! = ctrl!)), x)
 end
 
 function fdu(fu, x, u, w)
@@ -154,10 +154,10 @@ function fdu(fu, x, u, w)
 	# function ctrl!(mechanism)
 	# 	addSlackForce!(mechanism, s*mechanism.timestep)
 	# end
-	# ∇u = copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)[2])
-	fu .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[2])
+	# ∇u = copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false, ctrl! = ctrl!)[2])
+	fu .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)[2])
 	# ∇s = zeros(36,6Nb)
-	# ∇s = FiniteDiff.finite_difference_jacobian(s -> maximal_to_minimal(mech, step!(mech, minimal_to_maximal(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false, ctrl! = ctrl!)), s)
+	# ∇s = FiniteDiff.finite_difference_jacobian(s -> maximal_to_minimal(mech, step!(mech, minimal_to_maximal(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false, ctrl! = ctrl!)), s)
 	# fu .= [∇u * u_mask' ∇s]
 
 	# @show size(∇u)
@@ -187,7 +187,7 @@ w = [zeros(d) for t = 1:T-1]
 # x̄ = rollout(model, x1, ū, w)
 x̄ = deepcopy(xref)
 storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in x̄])
-visualize(mech, storage; vis = vis)
+visualize(mech, storage; vis=vis)
 
 # Objective
 qt = [0.3; 0.1; 0.1; 0.01 * ones(3); 0.01 * ones(3); 0.01 * ones(3); fill([0.2, 0.001], 12)...]
@@ -232,7 +232,7 @@ IterativeLQR.constrained_ilqr_solve!(prob,
 
 x_sol, u_sol = get_trajectory(prob)
 storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in x_sol])
-visualize(mech, storage, vis = vis)
+visualize(mech, storage, vis=vis)
 
 norm([norm(u[12 .+ (1:Nb)], Inf) for u in u_sol], Inf)
 

@@ -1,11 +1,11 @@
-# [Dojo.jl](https://github.com/dojo-sim/Dojo.jl)
-A differentiable simulator for robotics, written in Julia.
+# [Dojo](https://github.com/dojo-sim/Dojo.jl)
+A differentiable simulator for robotics
 
 ## Features
 * __Maximal-Coordinates Representation__
 * __Smooth Gradients__
 * __Open Source__: Our code is available on [GitHub](https://github.com/dojo-sim/Dojo.jl) and distributed under the MIT Licence.
-* __Python Interface__: [pydojo](https://github.com/dojo-sim/pydojo)
+* __Python Interface__: [dojopy](https://github.com/dojo-sim/dojopy)
 
 ## Installation
 Dojo can be installed using the Julia package manager for Julia `v1.6` and higher. Inside the Julia REPL, type `]` to enter the Pkg REPL mode then run
@@ -22,10 +22,11 @@ If you want to install the latest version from main run
 ## Credits
 
 The following people are involved in the development of Dojo:
-* [Simon Le Cleac'h](https://simon-lc.github.io/)
-* [Taylor Howell](https://thowell.github.io/) 
-* [Jan Bruedigam](https://github.com/janbruedigam)
-* [Zachary Manchester](https://www.ri.cmu.edu/ri-faculty/zachary-manchester/)
+* [Simon Le Cleac'h](https://simon-lc.github.io/) (main developement, contact modeling, interior-point solver, gradients)
+* [Taylor Howell](https://thowell.github.io/) (main developement, contact modeling, interior-point solver, gradients)
+* [Jan Bruedigam](https://github.com/janbruedigam) (main developemnt, maximal representation and graph-based solver)
+* [Zico Kolter](https://zicokolter.com/) (implicit differentiation)
+* [Zachary Manchester](https://www.ri.cmu.edu/ri-faculty/zachary-manchester/) (physics and algorithms)
 \*all contributors are affiliated with the [Robotic Exploration Lab](https://roboticexplorationlab.org/).
  
 If this project is useful for your work please consider

@@ -10,7 +10,7 @@ Pkg.activate(module_dir())
 using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 module_dir()
@@ -40,16 +40,16 @@ function getpendulum(; timestep::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
     bodies = [pbody]
     eqcs = [joint_between_origin_and_pbody]
 
-    mech = Mechanism(origin, bodies, eqcs, g = g, timestep = timestep, spring=spring, damper=damper)
+    mech = Mechanism(origin, bodies, eqcs, g = g, timestep= timestep, spring=spring, damper=damper)
     return mech
 end
 
 
 
-mech = getmechanism(:pendulum, timestep = 0.01, g = 0.00, spring = 10, spring_offset = π/2*sones(1),
+mech = getmechanism(:pendulum, timestep=0.01, g = 0.00, spring = 10, spring_offset = π/2*sones(1),
     joint_limits = 0.55π .* [-sones(1), sones(1)])
 initialize!(mech, :pendulum, ϕ1 = 0.1)
-storage = simulate!(mech, 3.1, record = true, verbose = true)
+storage = simulate!(mech, 3.1, record=true, verbose = true)
 visualize(mech, storage, vis=vis)
 
 const Dojo = Main
@@ -128,7 +128,7 @@ fd_solmat = finitediff_sol_matrix(mech, data, sol, δ = 1e-5)
 plot(Gray.(abs.(1e11 .* solmat)))
 plot(Gray.(abs.(1e9 .* fd_solmat)))
 
-eqc1 = collect(mech.joints)[1]
+eqc1 = mech.joints[1]
 joint_impulse_index(eqc1, 1)
 joint_impulse_index(eqc1, 2)
 

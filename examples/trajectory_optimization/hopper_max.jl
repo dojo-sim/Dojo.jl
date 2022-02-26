@@ -9,10 +9,10 @@ using LinearAlgebra
 
 # ## system
 dt = 0.05
-gravity = -9.81
-env = make("raiberthopper",
-    mode=:max,
-    dt=dt,
+gravity=-9.81
+env = get_environment("raiberthopper",
+    mode=:maximal,
+    timestep=dt,
     gravity=gravity);
 
 env.mechanism.bodies[1].m
@@ -22,8 +22,8 @@ env.mechanism.bodies[2].J
 open(env.vis)
 
 # ## dimensions
-n = env.nx
-m = env.nu
+n = env.num_states
+m = env.num_inputs
 
 # ## states
 z1 = raiberthopper_nominal_max()

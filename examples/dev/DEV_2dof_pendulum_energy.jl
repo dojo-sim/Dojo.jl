@@ -13,7 +13,7 @@ using Random
 using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
@@ -44,13 +44,13 @@ joint_between_origin_and_pbody = JointConstraint(Spherical(origin, pbody; p2=p2,
 bodies = [pbody]
 eqcs = [joint_between_origin_and_pbody]
 
-mech = Mechanism(origin, bodies, eqcs, g = -9.81, timestep = 0.04)
+mech = Mechanism(origin, bodies, eqcs, g = -9.81, timestep=0.04)
 
-eqc1 = collect(mech.joints)[1]
+eqc1 = mech.joints[1]
 tra1 = eqc1.constraints[1]
 rot1 = eqc1.constraints[2]
 origin = mech.origin
-pbody = collect(mech.bodies)[1]
+pbody = mech.bodies[1]
 minimal_coordinates(rot1, origin, pbody)
 
 # initialize!(mech, :pendulum)
@@ -64,8 +64,8 @@ set_position(pbody, x = [0, 0, -r])
 q0 = UnitQuaternion(RotX(pi/2))
 set_position(origin, pbody, p2 = [0, 0, r], Δq = q0)
 
-@elapsed storage = simulate!(mech, 10.10, record = true, solver = :mehrotra!, verbose = true)
-visualize(mech, storage, vis = vis)
+@elapsed storage = simulate!(mech, 10.10, record=true, solver = :mehrotra!, verbose = true)
+visualize(mech, storage, vis=vis)
 plot([q.w for q in storage.q[1]])
 
 ################################################################################
@@ -139,12 +139,12 @@ norm(fd_sensi, Inf)
 ################################################################################
 include(joinpath(@__DIR__, "finite_diff.jl"))
 
-timestep = 0.01
+timestep=0.01
 tra1 = mech.joints[1].constraints[1]
 tra2 = mech.joints[2].constraints[1]
 origin = mech.origin
-pbody = collect(mech.bodies)[1]
-cbody = collect(mech.bodies)[2]
+pbody = mech.bodies[1]
+cbody = mech.bodies[2]
 
 
 jac0, jac1 = finitediff_vel(tra2, pbody, cbody, timestep, spring_parent, spring_parent_jacobian_velocity_parent, diff_body = :parent)

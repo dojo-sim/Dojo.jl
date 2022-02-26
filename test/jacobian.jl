@@ -27,7 +27,7 @@ function test_solmat(model::Symbol; ϵ::T=1e-6, tsim::T=0.1, ctrl::Any=(m, k)->n
 end
 
 function finitediff_sol_matrix(mechanism::Mechanism, data::AbstractVector,
-        sol::AbstractVector; δ = 1e-8, verbose = false)
+        sol::AbstractVector; δ = 1e-8, verbose=false)
     nsol = length(sol)
     jac = zeros(nsol, nsol)
 

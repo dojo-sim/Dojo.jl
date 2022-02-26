@@ -5,17 +5,17 @@ using Dojo
 using Test
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # pendulum
-mechanism = get_mechanism(:npendulum, timestep = 0.01, gravity = -9.81 * 0.0, Nb=10)#, spring = 100.0, damper = 5.0)
+mechanism = get_mechanism(:npendulum, timestep=0.01, gravity=-9.81 * 0.0, Nb=10)#, spring = 100.0, damper = 5.0)
 Random.seed!(100)
 ϕ1 = 0.3π
 initialize!(mechanism, :npendulum, ϕ1 = ϕ1)
 
 # sphere
-mechanism = get_mechanism(:sphere, timestep = 0.01, gravity = -9.81)
+mechanism = get_mechanism(:sphere, timestep=0.01, gravity=-9.81)
 initialize!(mechanism, :sphere)
 
 # half cheetah
@@ -31,8 +31,8 @@ function ctrl!(mechanism, k)
 end
 
 
-storage = simulate!(mechanism, 1.0, ctrl!, record = true, verbose = false)
-# visualize(mechanism, storage, vis = vis)
+storage = simulate!(mechanism, 1.0, ctrl!, record=true, verbose=false)
+# visualize(mechanism, storage, vis=vis)
 
 ## Maximal gradients 
 maximal_dimension(mechanism)

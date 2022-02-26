@@ -95,7 +95,7 @@ using GeometryBasics
 using LinearAlgebra
 using JLD2
 
-# vis = Visualizer()
+# vis=visualizer()
 # open(vis)
 
 # NeRF density -> Mesh

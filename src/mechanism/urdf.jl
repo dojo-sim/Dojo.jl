@@ -211,36 +211,36 @@ function parse_links(xlinks, materialdict, T)
 end
 
 # TODO: fix axis
-function joint_selector(jointtype, pbody, cbody, T;
+function joint_selector(joint_type, pbody, cbody, T;
         axis = SA{T}[1;0;0], parent_vertex = szeros(T,3), child_vertex = szeros(T,3), axis_offset = one(UnitQuaternion{T}), name = Symbol("joint_" * randstring(4)))
 
     # TODO @warn "this is not great"
     axis = inv(axis_offset) * axis
 
     # TODO limits for revolute joint?
-    if jointtype == "revolute" || jointtype == "continuous"
+    if joint_type == "revolute" || joint_type == "continuous"
         joint = JointConstraint(Revolute(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
-    elseif jointtype == "prismatic"
+    elseif joint_type == "prismatic"
         joint = JointConstraint(Prismatic(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
-    elseif jointtype == "planar"
+    elseif joint_type == "planar"
         joint = JointConstraint(Planar(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
-    elseif jointtype == "planarfree"
+    elseif joint_type == "planarfree"
         joint = JointConstraint(PlanarFree(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex), name=name)
-    elseif jointtype == "fixed"
+    elseif joint_type == "fixed"
         joint = JointConstraint(Fixed(pbody, cbody; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
-    elseif jointtype == "floating"
+    elseif joint_type == "floating"
         joint = JointConstraint(Floating(pbody, cbody), name=name)
-    elseif jointtype == "orbital"
+    elseif joint_type == "orbital"
         joint = JointConstraint(Orbital(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
-    elseif jointtype == "ball"
+    elseif joint_type == "ball"
         joint = JointConstraint(Spherical(pbody, cbody; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
-    elseif jointtype == "fixedorientation"
+    elseif joint_type == "fixedorientation"
         joint = JointConstraint(FixedOrientation(pbody, cbody; axis_offset = axis_offset), name=name)
-    elseif jointtype == "cylindrical"
+    elseif joint_type == "cylindrical"
         joint = JointConstraint(Cylindrical(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
-    elseif jointtype == "cylindricalfree"
+    elseif joint_type == "cylindricalfree"
         joint = JointConstraint(CylindricalFree(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex), name=name)
-    elseif jointtype == "planaraxis"
+    elseif joint_type == "planaraxis"
         joint = JointConstraint(PlanarAxis(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
     else
         @error "Unknown joint type"
@@ -250,20 +250,20 @@ function joint_selector(jointtype, pbody, cbody, T;
 end
 
 function parse_joint(xjoint, plink, clink, T)
-    jointtype = attribute(xjoint, "type")
+    joint_type = attribute(xjoint, "type")
     x, q = parse_pose(find_element(xjoint, "origin"), T)
     axis = parse_vector(find_element(xjoint, "axis"), "xyz", T, default = "1 0 0")
     parent_vertex = x
     name = Symbol(attribute(xjoint, "name"))
 
-    return joint_selector(jointtype, plink, clink, T, axis = axis, parent_vertex = parent_vertex, axis_offset = q, name = name)
+    return joint_selector(joint_type, plink, clink, T, axis = axis, parent_vertex = parent_vertex, axis_offset = q, name = name)
 end
 
 function parse_loop_joint(xjoint, pbody, cbody, T)
     find_element(xjoint, "link1")
     find_element(xjoint, "link2")
 
-    jointtype = attribute(xjoint, "type")
+    joint_type = attribute(xjoint, "type")
     axis = parse_vector(find_element(xjoint, "axis"), "xyz", T, default = "1 0 0")
     x1, q1 = parse_pose(find_element(xjoint, "link1"), T)
     x2, _ = parse_pose(find_element(xjoint, "link2"), T) # The orientation q2 of the second body is ignored because it is determined by the mechanism's structure
@@ -271,7 +271,7 @@ function parse_loop_joint(xjoint, pbody, cbody, T)
     child_vertex = x2
     name = Symbol(attribute(xjoint, "name"))
 
-    return joint_selector(jointtype, pbody, cbody, T, axis = axis, parent_vertex = parent_vertex, child_vertex = child_vertex, axis_offset = q1, name = name)
+    return joint_selector(joint_type, pbody, cbody, T, axis = axis, parent_vertex = parent_vertex, child_vertex = child_vertex, axis_offset = q1, name = name)
 end
 
 function parse_joints(xjoints, ldict, floating, T)
@@ -417,7 +417,7 @@ end
 
 function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
     system = mechanism.system
-    timestep = mechanism.timestep
+    timestep= mechanism.timestep
     xjointlist = Dict{Int64,SVector{3,T}}() # stores id, x in world frame
     qjointlist = Dict{Int64,UnitQuaternion{T}}() # stores id, q in world frame
 

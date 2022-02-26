@@ -2,7 +2,7 @@ function module_dir()
     return joinpath(@__DIR__, "..", "..")
 end
 
-function scn(a::Float64; digits::Int=1, exp_digits::Int=1)
+function scn(a::Float64; digits=1, exp_digits=1)
 	isnan(a) && return " NaN" * " "^(digits + exp_digits)
 	@assert digits >= 0
     # a = m x 10^e

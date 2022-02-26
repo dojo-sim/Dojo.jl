@@ -47,7 +47,7 @@ storage = simulate!(mechanism, 10.0, controller!,
     verbose=true)
 
 # ## Visualize
-vis = Visualizer()
+vis=visualizer()
 render(vis)
 visualize(mechanism, storage, 
     vis=vis)

@@ -13,20 +13,20 @@ using Random
 using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
-mech = getmechanism(:npendulum, timestep = 0.01, g = -9.81, Nb = 2)
+mech = getmechanism(:npendulum, timestep=0.01, g = -9.81, Nb = 2)
 initialize!(mech, :npendulum, ϕ1 = 0.5)
 initialize_simulation!(mech, true)
-pbody = collect(mech.bodies)[1]
-cbody = collect(mech.bodies)[2]
+pbody = mech.bodies[1]
+cbody = mech.bodies[2]
 
-storage = simulate!(mech, 1.11, record = true, solver = :mehrotra!)
-visualize(mech, storage, vis = vis)
+storage = simulate!(mech, 1.11, record=true, solver = :mehrotra!)
+visualize(mech, storage, vis=vis)
 
 ################################################################################
 # Differentiation

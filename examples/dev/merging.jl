@@ -48,7 +48,7 @@ x1 = Dojo.maximal_to_minimal(mech, z0)
 @test norm(x0[8:10] - x1[8:10], Inf) < 1e-10
 @test norm(x0[11:nx] - x1[11:nx], Inf) < 1e-10
 
-# vis = Visualizer()
+# vis=visualizer()
 # open(vis)
 
 

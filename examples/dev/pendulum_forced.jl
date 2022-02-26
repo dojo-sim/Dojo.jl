@@ -13,13 +13,13 @@ using Random
 using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
-mech = getmechanism(:pendulum, timestep = 0.01, g = -9.81)
+mech = getmechanism(:pendulum, timestep=0.01, g = -9.81)
 initialize!(mech, :pendulum, ϕ1 = 0.7)
 
 jointid = mech.joints[1].id
@@ -33,8 +33,8 @@ function controller!(mechanism, k)
     return
 end
 
-storage = simulate!(mech, 4.0, record = true, solver = :mehrotra!)
-forcedstorage = simulate!(mech, 4.0, controller!, record = true, solver = :mehrotra!)
+storage = simulate!(mech, 4.0, record=true, solver = :mehrotra!)
+forcedstorage = simulate!(mech, 4.0, controller!, record=true, solver = :mehrotra!)
 plot(hcat(Vector.(storage.x[1])...)')
 plot(hcat(Vector.(forcedstorage.x[1])...)')
 plot(hcat([[q.w, q.x, q.y, q.z] for q in storage.q[1]]...)')
@@ -44,8 +44,8 @@ plot(hcat(Vector.(forcedstorage.v[1])...)')
 plot(hcat(Vector.(storage.ω[1])...)')
 plot(hcat(Vector.(forcedstorage.ω[1])...)')
 
-visualize(mech, storage, vis = vis)
-visualize(mech, forcedstorage, vis = vis)
+visualize(mech, storage, vis=vis)
+visualize(mech, forcedstorage, vis=vis)
 
 ################################################################################
 # Differentiation
@@ -57,7 +57,7 @@ include(joinpath(module_dir(), "examples", "diff_tools.jl"))
 data = get_data(mech)
 set_data!(mech, data)
 sol = get_solution(mech)
-Nb = length(collect(mech.bodies))
+Nb = length(mech.bodies)
 attjac = attitude_jacobian(data, Nb)
 
 # IFT

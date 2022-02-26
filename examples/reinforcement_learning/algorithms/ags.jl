@@ -38,8 +38,8 @@ function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T}, h
             A[k] .= copy(action)
             state, reward, done, _ = step(env, action, diff = true)
             X[k+1] .= copy(state)
-            fx[k] .= copy(env.fx)
-            fu[k] .= copy(env.fu)
+            fx[k] .= copy(env.dynamics_jacobian_state)
+            fu[k] .= copy(env.dynamics_jacobian_input)
             reward = max(min(reward, 1), -1)
             sum_reward += reward
             num_plays += 1

@@ -16,7 +16,7 @@ MeshCat.setanimation!(env.vis, anim)
 set_camera!(env.vis, cam_pos=[0,0,90], zoom=20)
 
 # ## Ghost
-env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=50.0, spring=25.0, friction_coefficient = 0.5,
+env = get_environment("ant", mode=:minimal, g=-9.81, timestep=0.05, damper=50.0, spring=25.0, friction_coefficient = 0.5,
     contact=true, contact_body=true)
 open(env.vis)
 setvisible!(env.vis[:robot], false)
@@ -30,7 +30,7 @@ end
 
 
 # ## test random policy
-env = make("ant", mode=:min, g=-9.81, dt=0.05, damper=25.0, spring=10.0, friction_coefficient = 0.5,
+env = get_environment("ant", mode=:minimal, g=-9.81, timestep=0.05, damper=25.0, spring=10.0, friction_coefficient = 0.5,
     contact=true, contact_body=true)
 # initialize!(env.mechanism, :ant)
 open(env.vis)
@@ -42,7 +42,7 @@ render(env)
 x0 = get_minimal_state(env.mechanism)
 
 for i = 1:100
-    u = rand(Uniform(-1.0, 1.0), env.nu)
+    u = rand(Uniform(-1.0, 1.0), env.num_inputs)
     x0, r, _ = step(env, x0, u)
     @show r
     render(env)

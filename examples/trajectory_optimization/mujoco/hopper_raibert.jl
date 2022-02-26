@@ -12,7 +12,7 @@ using Random
 
 # ## load MuJoCo model
 path = joinpath(@__DIR__, "../../../env/raiberthopper/deps/hopper.xml")
-path = joinpath(@__DIR__, "../../../env/rexhopper/deps/rexhopper.xml")
+path = joinpath(@__DIR__, "../../../environments/rexhopper/deps/rexhopper.xml")
 
 include("mujoco_model.jl")
 hopper = MuJoCoModel(path)

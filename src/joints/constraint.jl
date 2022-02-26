@@ -148,7 +148,7 @@ function impulses_jacobian_velocity!(mechanism, body::Body, joint::JointConstrai
     relative = (body.id == joint.parent_id ? :parent : (body.id == joint.child_id ? :child : error()))
 
     # time step
-    timestep = mechanism.timestep
+    timestep= mechanism.timestep
 
     # bodies
     pbody = get_body(mechanism, joint.parent_id)
@@ -175,7 +175,7 @@ function off_diagonal_jacobians(mechanism, joint::JointConstraint{T,N}, body::Bo
 end
 
 function off_diagonal_jacobians(mechanism, pbody::Body, cbody::Body)
-    timestep = mechanism.timestep
+    timestep= mechanism.timestep
 
     dimpulse_map_parentb = szeros(6, 6)
     dimpulse_map_childa = szeros(6, 6)

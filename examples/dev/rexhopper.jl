@@ -1,17 +1,17 @@
 using Dojo
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 # render(vis)
 
-include(joinpath(module_dir(), "env/rexhopper/methods/env.jl"))
-include(joinpath(module_dir(), "env/rexhopper/methods/initialize.jl"))
+include(joinpath(module_dir(), "environments/rexhopper/methods/env.jl"))
+include(joinpath(module_dir(), "environments/rexhopper/methods/initialize.jl"))
 
 # Mechanism
 mechanism = get_rexhopper(model=:rexhopper_fixed, timestep=0.05, gravity=-9.81,
     contact_body=true, friction_coefficient=1.0)
-env = make("rexhopper",
+env = get_environment("rexhopper",
     timestep=0.05, gravity=-9.81, contact_body=true, friction_coefficient=1.0)
 
 # Simulate

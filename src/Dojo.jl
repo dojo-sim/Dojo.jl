@@ -1,7 +1,7 @@
 module Dojo
 
 # constants
-global REG = 1.0e-6
+global REG = 1.0e-10
 
 using LinearAlgebra
 using Random
@@ -12,6 +12,7 @@ using StaticArrays: SUnitRange
 using Rotations
 using Rotations: RotationError, params, lmult, rmult, tmat, vmat, hmat, skew, pure_quaternion
 using Parameters
+using Statistics
 
 using Colors: RGBA, RGB
 using FFMPEG
@@ -138,8 +139,12 @@ include(joinpath("gradients", "data.jl"))
 include(joinpath("gradients", "utilities.jl"))
 
 # Environments
-include(joinpath("..", "env", "mechanisms.jl"))
-include(joinpath("..", "env", "environment.jl"))
+include(joinpath("..", "environments", "mechanisms.jl"))
+include(joinpath("..", "environments", "environment.jl"))
+include(joinpath("..", "environments", "dynamics.jl"))
+include(joinpath("..", "environments", "utilities.jl"))
+
+include(joinpath("..", "environments", "include.jl"))
 
 # Bodies
 export 

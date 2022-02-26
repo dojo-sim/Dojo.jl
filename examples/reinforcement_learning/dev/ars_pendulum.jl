@@ -11,7 +11,7 @@ Pkg.activate(module_dir())
 using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
@@ -19,11 +19,11 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
 
-env = make("pendulum", g = -1.00, damper = 0.4, max_torque = 12.0, vis = vis)
+env = get_environment("pendulum", g = -1.00, damper = 0.4, max_torque = 12.0, vis=vis)
 obs = reset(env)
 render(env)
 input_size = length(obs)
-output_size = length(env.u_prev)
+output_size = length(env.input_previous)
 hp = HyperParameters(main_loop_size = 500, horizon = 100, n_directions = 4, b = 4, step_size = 0.05)
 normalizer = Normalizer(input_size)
 policy = Policy(input_size, output_size, hp)

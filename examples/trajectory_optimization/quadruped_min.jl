@@ -8,29 +8,29 @@ using IterativeLQR
 using LinearAlgebra
 
 # ## system
-gravity = -9.81
+gravity=-9.81
 dt = 0.05
 friction_coefficient = 0.8
 damper = 5.0
 spring = 0.0
 env = quadruped(
-    mode=:min,
-    dt=dt,
-    body_contact=false,
+    representation=:minimal,
+    timestep=timestep,
+    contact_body=false,
     gravity=gravity,
     friction_coefficient=friction_coefficient,
     damper=damper,
     spring=spring)
 
 # ## template
-include(joinpath(@__DIR__, "../../env/quadruped/methods/template.jl"))
+include(joinpath(@__DIR__, "../../environments/quadruped/methods/template.jl"))
 
 # ## visualizer
 open(env.vis)
 
 # ## dimensions
-n = env.nx
-m = env.nu
+n = env.num_states
+m = env.num_inputs
 
 # ## reference trajectory
 N = 2
@@ -86,7 +86,7 @@ cons = [[cont for t = 1:T-1]..., conT]
 
 # ## problem
 prob = IterativeLQR.solver(model, obj, cons, 
-    opts=Options(verbose = false,
+    opts=Options(verbose=false,
         linesearch=:armijo,
         α_min=1.0e-5,
         obj_tol=1.0e-3,
@@ -101,7 +101,7 @@ IterativeLQR.initialize_states!(prob, x̄)
 # ## solve
 @time IterativeLQR.solve!(prob)
 
-vis = Visualizer()
+vis=visualizer()
 open(env.vis)
 
 # ## solution

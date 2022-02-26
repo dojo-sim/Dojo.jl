@@ -6,7 +6,7 @@
 using Dojo
 
 # ## Visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 set_camera!(vis, cam_pos=[-0.01,0.0,90], zoom=30)
 set_floor!(vis, x=20, y=20, color=RGBA(1.0, 1.0, 1.0, 1.0))
@@ -15,8 +15,8 @@ set_light!(vis, ambient=0.65, fill=0.60, direction="Positive")
 ################################################################################
 # Nonlinear Friction Cone vs. Linearized Friction Cone
 ################################################################################
-timestep = 0.01
-gravity = -9.81
+timestep=0.01
+gravity=-9.81
 friction_coefficient = 0.25
 x0 = [-1.5, -0.50, 0.25]
 v0 = [4, 0.80, 0.0]

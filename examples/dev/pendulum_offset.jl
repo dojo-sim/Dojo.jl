@@ -1,7 +1,7 @@
 using Dojo 
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 render(vis)
 

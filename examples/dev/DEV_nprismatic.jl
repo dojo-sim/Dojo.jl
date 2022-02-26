@@ -13,7 +13,7 @@ using Random
 using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
@@ -21,7 +21,7 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 
 # Build mechanism
 include("mechanism_zoo.jl")
-mech = getmechanism(:nslider, timestep = 0.01, g = -2.0, Nb = 5)
+mech = getmechanism(:nslider, timestep=0.01, g = -2.0, Nb = 5)
 initialize!(mech, :nslider, z1 = 0.0, Δz = 1.1)
 
 for (i,joint) in enumerate(mech.joints)
@@ -38,14 +38,14 @@ for (i,joint) in enumerate(mech.joints)
     end
 end
 
-storage = simulate!(mech, 1.0, record = true, solver = :mehrotra!)
-# visstorage = simulate!(mech, 4.0, record = true, solver = :mehrotra!)
+storage = simulate!(mech, 1.0, record=true, solver = :mehrotra!)
+# visstorage = simulate!(mech, 4.0, record=true, solver = :mehrotra!)
 # plot(hcat(Vector.(storage.x[1])...)')
 # plot(hcat([[q.w, q.x, q.y, q.z] for q in storage.q[1]]...)')
 # plot(hcat(Vector.(storage.v[1])...)')
 # plot(hcat(Vector.(storage.ω[1])...)')
 
-visualize(mech, storage, vis = vis)
+visualize(mech, storage, vis=vis)
 
 ################################################################################
 # Differentiation
@@ -55,7 +55,7 @@ visualize(mech, storage, vis = vis)
 data = get_data(mech)
 set_data!(mech, data)
 sol = get_solution(mech)
-Nb = length(collect(mech.bodies))
+Nb = length(mech.bodies)
 attjac = attitude_jacobian(data, Nb)
 
 # IFT

@@ -1,4 +1,4 @@
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Mehcanism

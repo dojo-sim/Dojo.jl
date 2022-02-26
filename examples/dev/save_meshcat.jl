@@ -13,7 +13,7 @@ using Rotations
 using Colors
 using LinearAlgebra: I
 
-vis = Visualizer()
+vis=visualizer()
 MeshCat.setobject!(vis[:box1],
     GeometryBasics.Rect3D(Vec(0., 0, 0), Vec(0.1, 0.2, 0.3)))
 anim = MeshCat.Animation()

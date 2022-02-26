@@ -9,18 +9,18 @@ using LinearAlgebra
 
 # ## system
 dt = 0.05
-gravity = -9.81
-env = make("raiberthopper",
-    mode=:min,
-    dt=dt,
+gravity=-9.81
+env = get_environment("raiberthopper",
+    mode=:minimal,
+    timestep=dt,
     gravity=gravity);
 
 # ## visualizer
 open(env.vis)
 
 # ## dimensions
-n = env.nx
-m = env.nu
+n = env.num_states
+m = env.num_inputs
 
 # ## states
 z1 = maximal_to_minimal(env.mechanism, raiberthopper_nominal_max())

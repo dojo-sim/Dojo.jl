@@ -126,7 +126,7 @@ position_constraint_jacobian_parent_orientation = eval(Symbolics.build_function(
 position_constraint_jacobian_child_position = eval(Symbolics.build_function(pc_xb, xa, qa, pa, xb, qb, pb)[1])
 position_constraint_jacobian_child_orientation = eval(Symbolics.build_function(pc_qb, xa, qa, pa, xb, qb, pb)[1])
 
-function visualize!(vis, p, q; timestep = 0.1)
+function visualize!(vis, p, q; timestep=0.1)
 	setvisible!(vis["/Background"], true)
 	setprop!(vis["/Background"], "top_color", RGBA(1.0, 1.0, 1.0, 1.0))
 	setprop!(vis["/Background"], "bottom_color", RGBA(1.0, 1.0, 1.0, 1.0))
@@ -168,13 +168,13 @@ function visualize!(vis, p, q; timestep = 0.1)
     MeshCat.setanimation!(vis, anim)
 end
 
-vis = Visualizer()
+vis=visualizer()
 render(vis)
 
 visualize!(vis, nothing, [z1, z2]; timestep=h)
 
 # system parameters
-gravity = [0.0; 0.0; 0.0 * -9.81]
+gravity=[0.0; 0.0; 0.0 * -9.81]
 
 ma = 1.0 
 Ja = Diagonal([1.0; 1.0; 1.0])
@@ -360,6 +360,6 @@ end
 H_linear
 H_angular
 
-visualize!(vis, nothing, z, timestep = h)
+visualize!(vis, nothing, z, timestep= h)
 
 # plot(hcat(H...)')

@@ -3,19 +3,19 @@ using IterativeLQR
 using LinearAlgebra
 
 # ## system
-# include(joinpath(module_dir(), "env/atlas/methods/template.jl"))
-include(joinpath(module_dir(), "env/rexhopper/methods/env.jl"))
-include(joinpath(module_dir(), "env/rexhopper/methods/initialize.jl"))
+# include(joinpath(module_dir(), "environments/atlas/methods/template.jl"))
+include(joinpath(module_dir(), "environments/rexhopper/methods/env.jl"))
+include(joinpath(module_dir(), "environments/rexhopper/methods/initialize.jl"))
 
 
-gravity = -9.81
+gravity=-9.81
 dt = 0.005
 friction_coefficient = 0.5
 damper = 0.5
 spring = 5.0
 ρ0 = 1e-4
 env = rexhopper(
-    mode=:min,
+    mode=:minimal,
     timestep=dt,
     gravity=gravity,
     friction_coefficient=friction_coefficient,
@@ -34,8 +34,8 @@ env = rexhopper(
 open(env.vis)
 
 # ## dimensions
-n = env.nx
-m = env.nu
+n = env.num_states
+m = env.num_inputs
 d = 0
 
 ## simulate (test)

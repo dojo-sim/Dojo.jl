@@ -24,7 +24,7 @@ storage = simulate!(mech, 25.0,
     opts=SolverOptions(verbose=false, btol=1e-6))
 
 # ## Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 visualize(mech, storage, 
     vis=vis)

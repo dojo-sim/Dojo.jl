@@ -1,6 +1,6 @@
 push!(LOAD_PATH, "../src/")
 
-using Documenter, Dojo
+using Documenter#, Dojo
 
 makedocs(
     modules = [Dojo],
@@ -36,6 +36,14 @@ makedocs(
         "Gradients from Simulator" => [
             "gradients.md",
            ],
+
+        "Environments" => [
+            "atlas_env.md",
+            "quadruped_env.md",
+            "rexhopper_env.md",
+            "classic_env.md",
+            "gym_env.md",
+        ],
 
         "Examples" => [
             "simulation.md",
