@@ -69,24 +69,6 @@ function generate_storage(mechanism::Mechanism, z)
     return storage
 end
 
-function generate_storage(mechanism::Mechanism, z)
-    N = length(z)
-	storage = Storage{Float64}(N, length(mechanism.bodies))
-
-    for t = 1:N
-        off = 0
-        for (i, body) in enumerate(mechanism.bodies)
-            storage.x[i][t] = z[t][off .+ (1:3)]
-            storage.v[i][t] = z[t][off .+ (4:6)]
-            storage.q[i][t] = UnitQuaternion(z[t][off .+ (7:10)]..., false)
-            storage.ω[i][t] = z[t][off .+ (11:13)]
-            off += 13
-        end
-    end
-
-    return storage
-end
-
 function get_maximal_state(storage::Storage{T,N}) where {T,N}
 	z = [get_maximal_state(storage, i) for i=1:N]
 	return z

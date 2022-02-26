@@ -90,8 +90,8 @@ function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, v
     # (friction_coefficient γ - ψ) dependent of ψ = impulses[2][1:1]
     # B(z) * zdot - sβ dependent of sβ = impulses[2][2:end]
     friction_coefficient = contact.model.friction_coefficient
-    γ = contact.impulses[2]
-    s = contact.impulses_dual[2]
+    γ = contact.impulses[2] + REG * neutral_vector(contact.model)
+    s = contact.impulses_dual[2] + REG * neutral_vector(contact.model)
 
     ∇s1 = Diagonal(γ) # 6x6
     ∇s2 = Diagonal(-sones(T,6))

@@ -55,8 +55,8 @@ function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, v
     contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:ImpactContact{T,N},N½}
     # ∇impulses[dual .* impulses - μ; g - s] = [diag(dual); -diag(0,1,1)]
     # ∇dual[dual .* impulses - μ; g - s] = [diag(impulses); -diag(1,0,0)]
-    γ = contact.impulses[2]
-    s = contact.impulses_dual[2]
+    γ = contact.impulses[2] +  REG * neutral_vector(contact.model)
+    s = contact.impulses_dual[2] + REG * neutral_vector(contact.model)
 
     ∇s = hcat(γ, -Diagonal(sones(N½)))
     ∇γ = hcat(s, -Diagonal(szeros(N½)))
