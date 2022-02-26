@@ -1,4 +1,4 @@
-function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
+function mehrotra!(mechanism::Mechanism{T,Nn}; opts=SolverOptions()) where {T,Nn}
 	reset!.(mechanism.contacts, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
 	reset!.(mechanism.joints,   scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
 
@@ -7,7 +7,7 @@ function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
 	μtarget = 0.0
 	no_progress = 0
     undercut = opts.undercut
-    α = 1.0
+    α = ones(T,Nn,2)
 
 	initialize!.(mechanism.contacts) # TODO: redundant with resetVars--remove
     set_entries!(mechanism) # compute the residual
@@ -65,7 +65,7 @@ end
 
 function solver_header()
 	println("                                                 ")
-	println("n    bvio    rvio     α       μ     |res|∞   |Δ|∞")
+	println("n    bvio    rvio    αmin     μ     |res|∞   |Δ|∞")
 	println("–––––––––––––––––––––––––––––––––––––––––––––––––")
 end
 
@@ -80,7 +80,8 @@ function solver_status(mechanism::Mechanism, α, rvio, bvio, n, μtarget, underc
         n,
         "   ", scn(bvio, digits=0),
         "   ", scn(rvio, digits=0),
-        "   ", scn(α, digits=0),
+		"   ", scn(minimum(α), digits=0),
+        # "   ", scn(αmean, digits=0),
         "   ", scn(μtarget, digits=0),
         "   ", scn(res, digits=0),
         "   ", scn(Δvar, digits=0),

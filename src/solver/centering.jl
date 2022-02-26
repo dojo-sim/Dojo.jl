@@ -1,15 +1,15 @@
-function centering!(mechanism::Mechanism, αaff::T) where T
+function centering!(mechanism::Mechanism, αaff::Matrix{T}) where T
     system = mechanism.system
 
     n = 0
     ν = 0.0
     νaff = 0.0
     for contact in mechanism.contacts
-        ν, νaff, n = centering!(ν, νaff, n, mechanism, contact, get_entry(system, contact.id), αaff)
+        ν, νaff, n = centering!(ν, νaff, n, mechanism, contact, get_entry(system, contact.id), fill(minimum(αaff[contact.id,:]), 2))
     end
 
     for joint in mechanism.joints
-        ν, νaff, n = centering!(ν, νaff, n, mechanism, joint, get_entry(system, joint.id), αaff)
+        ν, νaff, n = centering!(ν, νaff, n, mechanism, joint, get_entry(system, joint.id), fill(minimum(αaff[joint.id,:]), 2))
     end
 
     ν /= n
@@ -23,7 +23,7 @@ function centering!(ν, νaff, n, mechanism, contact::ContactConstraint{T,N,Nc,C
     Δs = vector_entry.value[1:N½]
     Δγ = vector_entry.value[N½ .+ (1:N½)]
     ν += dot(s, γ)
-    νaff += dot(s + αaff * Δs, γ + αaff * Δγ) # plus or minus
+    νaff += dot(s + αaff[1] * Δs, γ + αaff[2] * Δγ) # plus or minus
     n += cone_degree(contact)
     return ν, νaff, n
 end
@@ -33,7 +33,7 @@ function centering!(ν, νaff, n, mechanism, joint::JointConstraint{T,N,Nc}, vec
         s, γ = split_impulses(element, joint.impulses[2][joint_impulse_index(joint,i)])
         Δs, Δγ = split_impulses(element, vector_entry.value[joint_impulse_index(joint,i)])
         ν += dot(s, γ)
-        νaff += dot(s + αaff * Δs, γ + αaff * Δγ) # plus or minus
+        νaff += dot(s + αaff[1] * Δs, γ + αaff[2] * Δγ) # plus or minus
         n += length(s)
     end
     return ν, νaff, n

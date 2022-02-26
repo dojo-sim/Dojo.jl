@@ -78,9 +78,3 @@ function Mechanism(filename::String, floating::Bool=false, T=Float64; kwargs...)
 end
 
 Base.length(mechanism::Mechanism{T,N}) where {T,N} = N
-
-
-
-
-
-
