@@ -1,3 +1,8 @@
+# PREAMBLE
+
+# PKG_SETUP
+
+# ## setup
 using Dojo
 using IterativeLQR
 using LinearAlgebra
@@ -58,7 +63,6 @@ obj = [[ct1 for t = 1:Tm]..., [ct2 for t = 1:Tm]..., cT]
 function goal(x, u, w)
     Δ = x - zT
     return [Δ[collect(1:6)]; Δ[collect(13 .+ (1:6))]]
-    # Δ[collect(1:6)]
 end
 
 cont = IterativeLQR.Constraint()
@@ -78,6 +82,7 @@ prob = IterativeLQR.solver(model, obj, cons,
         ρ_init=1.0,
         ρ_scale=10.0,
         verbose=true))
+
 IterativeLQR.initialize_controls!(prob, ū)
 IterativeLQR.initialize_states!(prob, x̄)
 
@@ -92,9 +97,3 @@ x_sol, u_sol = IterativeLQR.get_trajectory(prob)
 
 # ## visualize
 visualize(env, [[x_sol[1] for t = 1:10]..., x_sol..., [x_sol[end] for t = 1:10]...])
-
-# ## ghost
-ghost(env, x_sol, timesteps=[1, 5, 7, 10, T])
-
-set_floor!(env.vis, z=0.01)
-set_camera!(env.vis, cam_pos=[0,-7,0], zoom=2)

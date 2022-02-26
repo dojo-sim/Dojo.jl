@@ -1,3 +1,9 @@
+
+# PREAMBLE
+
+# PKG_SETUP
+
+# ## setup
 using Dojo
 using IterativeLQR
 using LinearAlgebra 
@@ -49,7 +55,7 @@ obj = [[ct for t = 1:T-1]..., cT]
 
 # ## constraints
 function goal(x, u, w)
-    Δ = x - zT
+    x - zT
 end
 
 cont = IterativeLQR.Constraint()
@@ -75,8 +81,3 @@ z_sol, u_sol = IterativeLQR.get_trajectory(prob)
 
 # ## visualize
 visualize(env, [[z_sol[1] for t = 1:10]..., z_sol..., [z_sol[end] for t = 1:10]...])
-
-# ## ghost
-ghost(env, z_sol, timesteps=[1, 10, 18, 20, 22, 24, 25 T])
-
-

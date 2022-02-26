@@ -1,4 +1,11 @@
+# PREAMBLE
+
+# PKG_SETUP
+
+# ## setup
+using Dojo
 using IterativeLQR
+using LinearAlgebra
 
 # ## system
 dt = 0.05

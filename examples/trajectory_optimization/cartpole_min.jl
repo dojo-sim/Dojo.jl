@@ -1,3 +1,9 @@
+
+# PREAMBLE
+
+# PKG_SETUP
+
+# ## setup
 using Dojo
 using IterativeLQR
 using LinearAlgebra 
@@ -49,7 +55,7 @@ obj = [[ct for t = 1:T-1]..., cT]
 
 # ## constraints
 function goal(x, u, w)
-    Δ = x - zT
+    x - zT
 end
 
 cont = IterativeLQR.Constraint()
