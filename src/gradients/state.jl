@@ -119,7 +119,7 @@ function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::Abs
 	for id in mechanism.root_to_leaves
 		(id > Ne) && continue # only keep joints
 		cnt += 1
-		nu = input_dimension(get_joint_constraint(mechanism, id))
+		nu = input_dimension(get_joint(mechanism, id))
 		if length(col) > 0
 			push!(col, col[end][end] .+ (1:2nu))
 		else
@@ -142,16 +142,27 @@ function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::Abs
 	return J
 end
 
-function get_minimal_gradients(mechanism::Mechanism{T}, z::AbstractVector{T}, u::AbstractVector{T};
+"""
+    get_minimal_gradients!(mechanism, z, u; opts) 
+
+    return minimal gradients for mechanism 
+    note: this requires simulating the mechanism for one time step
+
+    mechanism: Mechanism
+    y: state 
+    u: input
+	opts: SolverOptions
+"""
+function get_minimal_gradients!(mechanism::Mechanism{T}, y::AbstractVector{T}, u::AbstractVector{T};
 	opts=SolverOptions()) where T
 	# simulate next state
-	step!(mechanism, z, u, opts=opts)
-	return get_minimal_gradients(mechanism)
+	step!(mechanism, y, u, opts=opts)
+	return get_minimal_gradients!(mechanism)
 end
 
-function get_minimal_gradients(mechanism::Mechanism{T}) where T
+function get_minimal_gradients!(mechanism::Mechanism{T}) where T
 	# current maximal state
-	z = get_current_state(mechanism)
+	z = get_maximal_state(mechanism)
 	# next maximal state
 	z_next = get_next_state(mechanism)
 	# current minimal state

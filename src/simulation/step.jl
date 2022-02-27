@@ -12,7 +12,7 @@ function step!(mechanism::Mechanism{T}, z::Vector{T}, u::Vector{T};
     opts=SolverOptions{T}()) where T
     
     # set state
-    set_state!(mechanism, z)
+    set_maximal_state!(mechanism, z)
 
     # set control
     set_input!(mechanism, u)

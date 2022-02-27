@@ -1,5 +1,5 @@
 """
-    RaibertHopper
+    RaibertHopper <: Environment
 
     hopping robot, inspired by: "Dynamically Stable Legged Locomotion"
 """

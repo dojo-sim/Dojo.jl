@@ -82,14 +82,14 @@ function initialize_raiberthopper!(mech::Mechanism{T,Nn,Ne,Nb};
     tra2 = joint2.constraints[1]
 
     # origin to body
-    set_maximal_coordinates!(mech.origin, pbody, 
+    set_maximal_configurations!(mech.origin, pbody, 
         Δx=[body_position[1:2]; leg_length + body_position[3]])
     set_maximal_velocities!(pbody, 
         v=body_linear_velocity, 
         ω=body_angular_velocity)
 
     # body to foot
-    set_maximal_coordinates!(pbody, cbody, 
+    set_maximal_configurations!(pbody, cbody, 
         Δx=[0.0; 0.0; -leg_length], 
         Δq=UnitQuaternion(RotX(0.0)))
     set_maximal_velocities!(pbody, cbody, 

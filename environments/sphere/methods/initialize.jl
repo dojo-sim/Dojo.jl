@@ -23,7 +23,7 @@ function get_sphere(;
             contact_point=contact, 
             offset=[0.0, 0.0, radius], 
             contact_type=contact_type)]
-        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :floating_joint), [0.0; 0.0; radius; zeros(3)])
+        set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_joint), [0.0; 0.0; radius; zeros(3)])
         mechanism = Mechanism(origin, bodies, joints, contacts, 
             gravity=gravity, 
             timestep=timestep)
@@ -38,7 +38,7 @@ function initialize_sphere!(mechanism::Mechanism{T};
     ω=zeros(3)) where T
 
     r = mechanism.bodies[1].shape.r
-    joint = get_joint_constraint(mechanism, :floating_joint)
+    joint = get_joint(mechanism, :floating_joint)
     zero_velocity!(mechanism)
     set_minimal_coordinates!(mechanism, joint, [x + [0.0, 0.0, r] rotation_vector(q)])
     set_minimal_velocities!(mechanism, joint, [v; ω])

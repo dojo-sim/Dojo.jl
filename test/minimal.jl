@@ -36,7 +36,7 @@ joint_types = [
 	x = srand(1)
 	Δx = Dojo.zerodimstaticadjoint(Dojo.nullspace_mask(tra2)) * x
 	Δq = UnitQuaternion(rand(4)...)
-	Dojo.set_maximal_coordinates!(pbody, cbody; 
+	Dojo.set_maximal_configurations!(pbody, cbody; 
 		parent_vertex=tra2.vertices[1], 
 		child_vertex=tra2.vertices[2], 
 		Δx=Δx, 

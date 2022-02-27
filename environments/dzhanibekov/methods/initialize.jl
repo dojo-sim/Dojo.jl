@@ -31,12 +31,12 @@ function initialize_dzhanibekov!(mech::Mechanism{T,Nn,Ne,Nb};
     linear_velocity=zeros(3), 
     angular_velocity=zeros(3)) where {T,Nn,Ne,Nb}
 
-    set_maximal_coordinates!(mech.origin, mech.bodies[3])
+    set_maximal_configurations!(mech.origin, mech.bodies[3])
     set_maximal_velocities!(mech.bodies[3], 
         v=linear_velocity, 
         ω=angular_velocity)
 
-    set_maximal_coordinates!(mech.bodies[3], mech.bodies[4], 
+    set_maximal_configurations!(mech.bodies[3], mech.bodies[4], 
         Δx=[0.25; 0.0; 0.0])
     set_maximal_velocities!(mech.bodies[4], 
         v=zeros(3), 

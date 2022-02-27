@@ -1,5 +1,5 @@
 """
-    Quadruped 
+    Quadruped <: Environment
 
     four-legged dog-like robot 
     https://www.unitree.com/products/a1/

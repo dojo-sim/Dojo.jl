@@ -22,6 +22,19 @@ Pages = ["api.md"]
 
 ```@docs
 Mechanism
+get_mechanism 
+initialize!
+get_node 
+get_body
+get_joint 
+get_contact 
+get_maximal_state 
+get_next_state
+get_minimal_state
+set_maximal_state!
+set_minimal_state!
+set_input! 
+input_dimension
 ```
 
 ### Nodes 
@@ -86,9 +99,12 @@ Entry
 
 ## Environments 
 ```@docs
+Environment
+Space 
+BoxSpace
 Ant
 Atlas 
-Box 
+Block 
 Cartpole
 HalfCheetah
 Hopper 
@@ -96,6 +112,12 @@ Pendulum
 Quadruped 
 RexHopper 
 Walker 
+get_environment 
+step
+get_observation 
+cost 
+is_done
+reset
 ```
 
 ## Simulate
@@ -107,6 +129,8 @@ Walker
 
 ## Gradients
 ```@docs
+get_maximal_gradients! 
+get_minimal_gradients!
 ```
 
 ## Solver 
@@ -120,6 +144,10 @@ mehrotra!
 visualize
 build_robot 
 set_robot
+set_camera! 
+set_light! 
+set_surface! 
+set_floor!
 ```
 
 

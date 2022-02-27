@@ -48,9 +48,9 @@ begin
 
 
     function singleleg(mechanism, leg, angles)
-        j1 = get_joint_constraint(mechanism, leg*"_hip_joint")
-        j2 = get_joint_constraint(mechanism, leg*"_thigh_joint")
-        j3 = get_joint_constraint(mechanism, leg*"_calf_joint")
+        j1 = get_joint(mechanism, leg*"_hip_joint")
+        j2 = get_joint(mechanism, leg*"_thigh_joint")
+        j3 = get_joint(mechanism, leg*"_calf_joint")
 
         θ1 = minimal_coordinates(mechanism, j1)[1]
         θ2 = minimal_coordinates(mechanism, j2)[1]

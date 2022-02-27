@@ -13,7 +13,7 @@ for i = 1:20
     for t = 1:200
         # render(env)
         println(scn.(observation))
-        action = sample(env.action_space)
+        action = sample(env.input_space)
         observation, reward, done, info = step(env, action)
         if done
             println("Episode finished after $(t+1) timesteps")

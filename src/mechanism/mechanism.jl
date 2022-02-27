@@ -114,7 +114,7 @@ function gravity_compensation(mechanism::Mechanism)
 end
 
 # state
-function set_state!(mechanism::Mechanism, z::AbstractVector)
+function set_maximal_state!(mechanism::Mechanism, z::AbstractVector)
     off = 0
     for body in mechanism.bodies
         x2, v15, q2, ϕ15 = unpack_data(z[off+1:end]); off += 13
@@ -188,7 +188,7 @@ end
 function inverse_control_error(mechanism, x, x₊, u; ϵtol = 1e-5)
 	z = minimal_to_maximal(mechanism, x)
 	z_next = minimal_to_maximal(mechanism, x₊)
-	set_state!(mechanism, z)
+	set_maximal_state!(mechanism, z)
 	opts = SolverOptions(rtol=ϵtol, btol=ϵtol, undercut=1.5)
 	err = x₊ - maximal_to_minimal(mechanism, step!(mechanism, minimal_to_maximal(mechanism, x), u, opts=opts))
 	return err

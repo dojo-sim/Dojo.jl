@@ -1,5 +1,5 @@
 """
-    HalfCheetah 
+    HalfCheetah <: Environment
 
     planar cheetah-like robot, based on https://gym.openai.com/envs/HalfCheetah-v2/
 """
@@ -93,7 +93,7 @@ function reset(env::Environment{HalfCheetah};
         high = reset_noise_scale
         x = x0 + (high - low) .* rand(env.rng[1], nx) .+ low # we ignored the normal distribution on the velocities
         z = minimal_to_maximal(env.mechanism, x)
-        set_state!(env.mechanism, z)
+        set_maximal_state!(env.mechanism, z)
         if env.representation == :minimal
             env.state .= get_minimal_state(env.mechanism)
         elseif env.representation == :maximal

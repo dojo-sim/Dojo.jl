@@ -72,7 +72,7 @@ function initialize_box2d!(mechanism::Mechanism{T};
 
     body = mechanism.bodies[1]
 
-    set_maximal_coordinates!(body, 
+    set_maximal_configurations!(body, 
         x=[0.0; position] + [0.0, 0.0 , z], 
         q=UnitQuaternion(RotX(orientation)))
     set_maximal_velocities!(body, 

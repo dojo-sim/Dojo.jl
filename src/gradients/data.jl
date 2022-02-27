@@ -325,7 +325,7 @@ function jacobian_body_data!(data_matrix::SparseMatrixCSC, mechanism::Mechanism{
 
         for cbody in [mechanism.bodies; mechanism.origin]
             joint_links = indirect_link(pbody.id, cbody.id, mechanism.joints)
-            joints = [get_joint_constraint(mechanism, id) for id in joint_links]
+            joints = [get_joint(mechanism, id) for id in joint_links]
             for joint in joints
                 ∇11, ∇12 = body_constraint_jacobian_body_data(mechanism, pbody, cbody, joint)
                 (typeof(pbody) <: Body) && (data_matrix[pbody.id, pbody.id].value += ∇11)
@@ -333,7 +333,7 @@ function jacobian_body_data!(data_matrix::SparseMatrixCSC, mechanism::Mechanism{
             end
             # pretty sure this is useless because contact is never linked to two bodies
             # contact_links = indirect_link(pbody.id, cbody.id, mechanism.contacts)
-            # contacts = [get_joint_constraint(mechanism, id) for id in contact_links]
+            # contacts = [get_joint(mechanism, id) for id in contact_links]
             # for contact in contacts
                 # data_matrix[pbody.id, cbody.id].value += body_constraint_jacobian_body_data(mechanism, pbody, cbody, contact)
             # end

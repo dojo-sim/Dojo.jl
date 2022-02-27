@@ -1,5 +1,5 @@
 """
-    Ant
+    Ant <: Environment
 
     four-legged insect-like robot, based on https://gym.openai.com/envs/Ant-v2/
 """
@@ -119,7 +119,7 @@ function step(env::Environment{Ant}, x, u;
     # Gradients
     if diff
         if env.representation == :minimal
-            fx, fu = get_minimal_gradients(env.mechanism, z0, u_scaled, opts=env.opts_grad)
+            fx, fu = get_minimal_gradients!(env.mechanism, z0, u_scaled, opts=env.opts_grad)
         elseif env.representation == :maximal
             fx, fu = get_maximal_gradients!(env.mechanism, z0, u_scaled, opts=env.opts_grad)
         end
@@ -143,11 +143,11 @@ function reset(env::Environment{Ant};
     else
         x = get_minimal_state(env.mechanism)
         if env.representation == :minimal
-            set_state!(env.mechanism, minimal_to_maximal(env.mechanism, x))
+            set_maximal_state!(env.mechanism, minimal_to_maximal(env.mechanism, x))
             env.state .= x
         elseif env.representation == :maximal
             z = minimal_to_maximal(env.mechanism, x)
-            set_state!(env.mechanism, z)
+            set_maximal_state!(env.mechanism, z)
             env.state .= z
         end
         env.input_previous .= 0.0

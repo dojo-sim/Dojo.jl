@@ -113,7 +113,7 @@ function joint_position_velocity(mechanism, joint, z, θ)
     ϕp = z[11:13]
 
     if body_parent.name != :origin
-        set_maximal_coordinates!(body_parent, x=xp, q=qp)
+        set_maximal_configurations!(body_parent, x=xp, q=qp)
         set_maximal_velocities!(body_parent, v=vp, ω=ϕp)
     end
 

@@ -39,7 +39,7 @@ function initialize_slider!(mechanism::Mechanism{T};
     body = mechanism.bodies[1]
     joint = mechanism.joints[1]
     child_vertex = joint.translational.vertices[2]
-    set_maximal_coordinates!(mechanism.origin, body, 
+    set_maximal_configurations!(mechanism.origin, body, 
         child_vertex=child_vertex - [0, 0, position])
 end
 
@@ -93,13 +93,13 @@ function initialize_nslider!(mechanism::Mechanism{T};
     pbody = mechanism.bodies[1]
 
     # set position and velocities
-    set_maximal_coordinates!(mechanism.origin, pbody, 
+    set_maximal_configurations!(mechanism.origin, pbody, 
         parent_vertex=[0.0, 0.0, position])
 
     # set relative positions
     previd = pbody.id
     for body in mechanism.bodies[2:end]
-        set_maximal_coordinates!(get_body(mechanism, previd), body, 
+        set_maximal_configurations!(get_body(mechanism, previd), body, 
             parent_vertex=[0.0, -0.1, relative_position])
         previd = body.id
     end

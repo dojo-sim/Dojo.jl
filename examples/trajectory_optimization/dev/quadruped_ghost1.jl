@@ -43,7 +43,7 @@ z1ref = zref[1]
 ϵ0 = 1e-2
 mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_coefficient = friction_coefficient, damper = 10.0, spring = 300.0)
 initialize!(mech, :quadruped)
-set_state!(mech, z1ref)
+set_maximal_state!(mech, z1ref)
 set_spring_offset!(mech, x1ref)
 @elapsed storage = simulate!(mech, 5.0, record=true, solver = :mehrotra!, verbose=false, ϵ = ϵ0, undercut = 1.5)
 visualize(mech, storage, vis=vis)
@@ -68,10 +68,10 @@ function fd(y, x, u, w)
 	y .= copy(maximal_to_minimal(mech, z))
 end
 function fdx(fx, x, u, w)
-	fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose=false)[1])
+	fx .= copy(get_minimal_gradients!(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose=false)[1])
 end
 function fdu(fu, x, u, w)
-	∇u = copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose=false)[2])
+	∇u = copy(get_minimal_gradients!(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose=false)[2])
 	fu .= ∇u
 end
 
@@ -149,10 +149,10 @@ ghost_ilqr_solve!(prob,
 # 		y .= copy(maximal_to_minimal(mech, z))
 # 	end
 # 	function fdx(fx, x, u, w)
-# 		fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose=false)[1])
+# 		fx .= copy(get_minimal_gradients!(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose=false)[1])
 # 	end
 # 	function fdu(fu, x, u, w)
-# 		∇u = copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose=false)[2])
+# 		∇u = copy(get_minimal_gradients!(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose=false)[2])
 # 		fu .= ∇u
 # 	end
 #
@@ -226,7 +226,7 @@ visualize(mech, storage; vis=vis)
 
 mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_coefficient = friction_coefficient, damper = 5.0, spring = 0.0)
 initialize!(mech, :quadruped)
-set_state!(mech, minimal_to_maximal(mech, xabs[1]))
+set_maximal_state!(mech, minimal_to_maximal(mech, xabs[1]))
 
 function controller!(mechanism, k)
 	@show k
@@ -281,10 +281,10 @@ function ghost_ilqr_solve!(prob::ProblemData;
 			y .= copy(maximal_to_minimal(mech, z))
 		end
 		function fdx(fx, x, u, w)
-			fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose=false)[1])
+			fx .= copy(get_minimal_gradients!(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose=false)[1])
 		end
 		function fdu(fu, x, u, w)
-			fu .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose=false)[2])
+			fu .= copy(get_minimal_gradients!(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose=false)[2])
 		end
 		# Time
 		dyn = Dynamics(fd, fdx, fdu, n, n, m, d)

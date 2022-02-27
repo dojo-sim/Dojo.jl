@@ -1,6 +1,8 @@
-################################################################################
-# Hopper
-################################################################################
+"""
+    RexHopper <: Environment
+
+    hopping robot designed and build by the Robotic Exploration Lab (Benjamin Bokser)
+"""
 struct RexHopper end
 
 function rexhopper(;
@@ -93,7 +95,7 @@ function reset(env::Environment{RexHopper};
         x0 = get_minimal_state(env.mechanism)
         nx = minimal_dimension(env.mechanism)
         z = minimal_to_maximal(env.mechanism, x)
-        set_state!(env.mechanism, z)
+        set_maximal_state!(env.mechanism, z)
         if env.representation == :minimal
             env.state .= get_minimal_state(env.mechanism)
         elseif env.representation == :maximal

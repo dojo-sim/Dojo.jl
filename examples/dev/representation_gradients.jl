@@ -236,7 +236,7 @@ function joint_position_velocity(mech, joint, z, θ)
     qp = UnitQuaternion(z[7:10]..., false)
     ϕp = z[11:13]
 
-    set_maximal_coordinates!(body_parent, x=xp, q=qp)
+    set_maximal_configurations!(body_parent, x=xp, q=qp)
     set_maximal_velocities!(body_parent, v=vp, ω=ϕp)
 
     x, q = set_joint_position!(mech, joint, θ[1:n]) 

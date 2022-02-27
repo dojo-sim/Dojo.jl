@@ -6,7 +6,7 @@
 abstract type Shape{T} end
 
 """
-    EmptyShape{T} 
+    EmptyShape{T} <: Shape{T}
 
     Contains no geometric or visual information
 """
@@ -17,7 +17,7 @@ end
 #TODO: change to MeshShape
 
 """
-    Mesh{T} 
+    Mesh{T} <: Shape{T}
 
     Contains geometric and visual information based on .obj file
 """
@@ -50,7 +50,7 @@ mutable struct Mesh{T} <: Shape{T}
 end
 
 """
-    Box{T} 
+    Box{T} <: Shape{T}
 
     Cuboid geometry 
 
@@ -90,7 +90,7 @@ mutable struct Box{T} <: Shape{T}
 end
 
 """
-    Cylinder{T} 
+    Cylinder{T} <: Shape{T}
 
     cylinder geometry 
     
@@ -131,7 +131,7 @@ mutable struct Cylinder{T} <: Shape{T}
 end
 
 """
-    Capsule{T} 
+    Capsule{T} <: Shape{T}
 
     capsule geometry 
     
@@ -183,7 +183,7 @@ mutable struct Capsule{T} <: Shape{T}
 end
 
 """
-    Shapes{T} 
+    Shapes{T} <: Shape{T}
 
     composite geometry
     
@@ -221,7 +221,7 @@ mutable struct Shapes{T} <: Shape{T}
 end
 
 """
-    Sphere{T} 
+    Sphere{T} <: Shape{T}
 
     sphere geometry 
     
@@ -260,7 +260,7 @@ mutable struct Sphere{T} <: Shape{T}
 end
 
 """
-    Pyramid{T} 
+    Pyramid{T} <: Shape{T}
 
     pyramid geometry 
     

@@ -1,5 +1,5 @@
 """
-    Atlas
+    Atlas <: Environment
 
     humanoid robot designed by Boston Dynamics (v5)
 """

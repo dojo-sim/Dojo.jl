@@ -59,7 +59,7 @@ function gradient_bundle_1st(mechanism::Mechanism, z0, u0, idx; N::Int=100, Σ=1
         # u = normal_sample(u0, Σ)
         u = zeros(3)
         u[idx:idx] = normal_sample(u0[idx:idx], Σ)
-        ∇x, ∇u = get_minimal_gradients(mechanism, z0, u, opts=opts)
+        ∇x, ∇u = get_minimal_gradients!(mechanism, z0, u, opts=opts)
         # ∇u = (u[idx] / mechanism.timestep >= 10.0) * ones(nx,nu) * mechanism.timestep
         ∇ += ∇u
     end
@@ -105,7 +105,7 @@ function box2d_dojo(mechanism::Mechanism, F; rtol=1e-10, btol=1e-10, undercut=1.
     u0 = zeros(3)
     u0[idx] += F 
 
-    ∇x, ∇u = get_minimal_gradients(mechanism, z0, u0, opts=opts_grad)
+    ∇x, ∇u = get_minimal_gradients!(mechanism, z0, u0, opts=opts_grad)
 
     step!(mechanism, z0, u0, opts=opts_grad)
 

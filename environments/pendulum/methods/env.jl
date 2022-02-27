@@ -1,5 +1,5 @@
 """
-    Pendulum
+    Pendulum <: Environment
 
     classic system with one rotational degree of freedom
     https://underactuated.mit.edu/pend.html
@@ -119,7 +119,7 @@ function step(env::Environment{Pendulum}, x, u;
     # Gradients
     if diff
         if env.representation == :minimal
-            fx, fu = get_minimal_gradients(env.mechanism, z0, timestep * u0, 
+            fx, fu = get_minimal_gradients!(env.mechanism, z0, timestep * u0, 
                 opts=env.opts_grad)
         elseif env.representation == :maximal
             fx, fu = get_maximal_gradients!(env.mechanism, z0, timestep * u0, 

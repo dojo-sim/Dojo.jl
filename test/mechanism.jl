@@ -8,12 +8,12 @@
     Dojo.initialize_pendulum!(env.mechanism, 
         angle=0.25 * π)
     u1 = rand(Dojo.input_dimension(env.mechanism))
-    z1 = Dojo.get_current_state(env.mechanism)
+    z1 = Dojo.get_maximal_state(env.mechanism)
 
     storage = Dojo.simulate!(env.mechanism, 1.0, 
         record=true)
     @test norm(z1 - Dojo.get_maximal_state(storage, 1)) < 1.0e-6
-    zTs = Dojo.get_current_state(env.mechanism)
+    zTs = Dojo.get_maximal_state(env.mechanism)
     @test norm(zTs - Dojo.get_maximal_state(storage, Dojo.length(storage))) < 1.0e-6
     zT = Dojo.get_next_state(env.mechanism)
     Dojo.initialize_pendulum!(env.mechanism, 
@@ -29,16 +29,6 @@
     @test norm(Fx1 - Fx2, Inf) < 1.0e-6 
     @test norm(Fu1 - Fu2, Inf) < 1.0e-6 
 
-    # get minimal
-    dc = Dojo.get_minimal_coordinates(env.mechanism)
-    dv = Dojo.get_minimal_velocities(env.mechanism)
-    dcv = Dojo.get_minimal_coordinates_velocities(env.mechanism)
-    @test norm(dcv[1] - [dc[1]; dv[1]]) < 1.0e-6
-
-    vc = Dojo.get_minimal_configuration_vector(env.mechanism)
-    vv = Dojo.get_minimal_velocity_vector(env.mechanism)
-    @test norm(dcv[1] - [vc[1]; vv[1]]) < 1.0e-6
-
     timestep=0.1
     env = Dojo.get_environment("halfcheetah", 
         timestep=timestep, 
@@ -50,7 +40,7 @@
 
     # get contact
     contact_name = env.mechanism.contacts[1].name
-    @test Dojo.get_contact_constraint(env.mechanism, contact_name).name == contact_name
+    @test Dojo.get_contact(env.mechanism, contact_name).name == contact_name
 
     # velocity indices 
     @test Dojo.velocity_index(env.mechanism) == [4, 5, 6, 8, 10, 12, 14, 16, 18]
@@ -61,10 +51,10 @@
         timestep=timestep, 
         gravity=-10.0);
     Dojo.reset(env);
-    Dojo.set_state!(env2.mechanism, zeros(Dojo.maximal_dimension(env2.mechanism)))
+    Dojo.set_maximal_state!(env2.mechanism, zeros(Dojo.maximal_dimension(env2.mechanism)))
     z2 = Dojo.get_maximal_state(env2.mechanism)
     @test norm(z2) < 1.0e-8
-    Dojo.set_state!(env2.mechanism, z)
+    Dojo.set_maximal_state!(env2.mechanism, z)
     @test norm(z - Dojo.get_maximal_state(env2.mechanism)) < 1.0e-8
 
     #TODO: get and set methods

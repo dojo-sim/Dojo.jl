@@ -46,21 +46,21 @@ function initialize_cartpole!(mech::Mechanism{T,Nn,Ne,Nb};
         pendulum_length=1.0) where {T,Nn,Ne,Nb}
 
     # origin to slider
-    set_maximal_coordinates!(mech.origin, mech.bodies[1])
+    set_maximal_configurations!(mech.origin, mech.bodies[1])
     set_maximal_velocities!(mech.bodies[1], 
         v=[0.0; 0.0; 0.0],
         ω=zeros(3))
 
     # slider to pendulum
     if mode == :down
-        set_maximal_coordinates!(mech.bodies[1], mech.bodies[2], 
+        set_maximal_configurations!(mech.bodies[1], mech.bodies[2], 
             Δx=[0.0; 0.0; -0.5 * pendulum_length], 
             Δq=UnitQuaternion(RotX(π)))
         set_maximal_velocities!(mech.bodies[2], 
             v=zeros(3), 
             ω=zeros(3))
     elseif mode == :up
-        set_maximal_coordinates!(mech.bodies[1], mech.bodies[2], 
+        set_maximal_configurations!(mech.bodies[1], mech.bodies[2], 
             Δx=[0.0; 0.0; 0.5 * pendulum_length], 
             Δq=UnitQuaternion(RotX(π)))
         set_maximal_velocities!(mech.bodies[2], 

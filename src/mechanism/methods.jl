@@ -29,6 +29,13 @@ end
 
 maximal_dimension(mechanism::Mechanism{T,Nn,Ne,Nb}; attjac::Bool=false) where {T,Nn,Ne,Nb} = attjac ? 12Nb : 13Nb
 
+""" 
+    input_dimension(mechanism) 
+
+    return the number of inputs for mechanism 
+
+    mechanism: Mechanism 
+"""
 function input_dimension(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}; 
     ignore_floating_base::Bool=false) where {T,Nn,Ne,Nb,Ni}
     nu = 0

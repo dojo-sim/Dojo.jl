@@ -4,7 +4,7 @@ Contributions are always welcome:
 
 * If you want to contribute features, bug fixes, etc, please take a look at our __Code Style Guide__ below
 * Please report any issues and bugs that you encounter in [Issues](https://github.com/dojo-sim/Dojo.jl/issues)
-* As an open source project we are also interested in any projects and applications that use COSMO. Please let us know via email to: thowell@stanford.edu or simonlc@stanford.edu
+* As an open source project we are also interested in any projects and applications that use Dojo. Please let us know via email to: thowell@stanford.edu or simonlc@stanford.edu
 
 ## Code Style Guide
 

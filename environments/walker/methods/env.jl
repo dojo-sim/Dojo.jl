@@ -1,5 +1,5 @@
 """
-    Walker
+    Walker <: Environment
 
     planar bipedal robot, based on: https://gym.openai.com/envs/Walker2d-v2/
 """
@@ -69,7 +69,7 @@ function reset(env::Environment{Walker}; x=nothing, reset_noise_scale = 0.005)
         high = reset_noise_scale
         x = x0 + (high - low) .* rand(env.rng[1], nx) .+ low # we ignored the normal distribution on the velocities
         z = minimal_to_maximal(env.mechanism, x)
-        set_state!(env.mechanism, z)
+        set_maximal_state!(env.mechanism, z)
         if env.representation == :minimal
             env.state .= get_minimal_state(env.mechanism)
         elseif env.representation == :maximal
@@ -133,7 +133,7 @@ end
 # x_velocity = z_torso[4]
 # z[3*13 + 4] = 324.0
 # z
-# set_state!(env.mechanism, z)
+# set_maximal_state!(env.mechanism, z)
 #
 # initialize!(env.mechanism, :walker, x = 111.0, z = 1.0, θ=0.18)
 # x = get_minimal_state(env.mechanism)

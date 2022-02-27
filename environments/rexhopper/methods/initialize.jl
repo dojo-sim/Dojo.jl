@@ -23,8 +23,8 @@ function get_rexhopper(;
     joints = deepcopy(mech.joints)
 
     if limits
-        joint1 = get_joint_constraint(mech, :joint1)
-        joint3 = get_joint_constraint(mech, :joint3)
+        joint1 = get_joint(mech, :joint1)
+        joint3 = get_joint(mech, :joint3)
         joints[joint1.id] = add_limits(mech, joint1, 
             rot_limits=[SVector{1}(-0.7597), SVector{1}(1.8295)])
         joints[joint3.id] = add_limits(mech, joint3, 
@@ -82,7 +82,7 @@ function get_rexhopper(;
             contact_type=contact_type, 
             name=:torso))
 
-        set_minimal_coordinates!(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [0,0,1.0, 0,0,0])
+        set_minimal_coordinates!(mech, get_joint(mech, :auto_generated_floating_joint), [0,0,1.0, 0,0,0])
         mech = Mechanism(origin, bodies, joints, [models...], 
             gravity=gravity, 
             timestep=timestep, 
@@ -105,8 +105,8 @@ function initialize_rexhopper!(mechanism::Mechanism{T};
         !(joint.name in (:loop_joint, :floating_joint)) && set_minimal_coordinates!(mechanism, joint, zeros(input_dimension(joint)))
     end
     
-    set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism,
+    set_minimal_coordinates!(mechanism, get_joint(mechanism,
         :auto_generated_floating_joint), [body_position; body_orientation])
-    set_minimal_velocities!(mechanism, get_joint_constraint(mechanism,
+    set_minimal_velocities!(mechanism, get_joint(mechanism,
         :auto_generated_floating_joint), [body_linear_velocity; body_angular_velocity])
 end

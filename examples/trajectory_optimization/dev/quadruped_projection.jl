@@ -24,7 +24,7 @@ mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_co
 initialize!(mech, :quadruped, tran = [0,0,0.], v = [0.5,0,0.])
 # x0 = get_minimal_state(mech)
 # x0[35] = 0.4
-# set_state!(mech, minimal_to_maximal(mech, x0))
+# set_maximal_state!(mech, minimal_to_maximal(mech, x0))
 @elapsed storage = simulate!(mech, 0.05, record=true, solver = :mehrotra!, verbose=false)
 visualize(mech, storage, vis=vis)
 
@@ -66,7 +66,7 @@ end
 
 mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_coefficient = 0.8, damper = 100.0, spring = 200.0)
 initialize!(mech, :quadruped)
-set_state!(mech, z1)
+set_maximal_state!(mech, z1)
 set_spring_offset!(mech, x1)
 @elapsed storage = simulate!(mech, 5.0, record=true, solver = :mehrotra!, verbose=false)
 visualize(mech, storage, vis=vis)
@@ -97,13 +97,13 @@ end
 function fdx(fx, x, u, w)
 	u_control = u[1:12]
     s = u[12 .+ (1:n)]
-	fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)[1])
+	fx .= copy(get_minimal_gradients!(mech, minimal_to_maximal(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)[1])
 end
 
 function fdu(fu, x, u, w)
 	u_control = u[1:12]
     s = u[12 .+ (1:n)]
-	∇u = copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)[2])
+	∇u = copy(get_minimal_gradients!(mech, minimal_to_maximal(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)[2])
 	fu .= [∇u * u_mask' I(n)]
 end
 
@@ -187,11 +187,11 @@ end
 function projectQuadrupedLeg!(mechanism::Mechanism{T}, x::AbstractVector{T}; leg::Symbol = :FR) where T
 	xp = x
 	z = minimal_to_maximal(mechanism, x)
-	set_state!(mech, z)
+	set_maximal_state!(mech, z)
 
 	# starting point of the local search
-	θhip = minimal_coordinates(mech, get_joint_constraint(mech, String(leg)*"_thigh_joint"))
-	θknee = minimal_coordinates(mech, get_joint_constraint(mech, String(leg)*"_calf_joint"))
+	θhip = minimal_coordinates(mech, get_joint(mech, String(leg)*"_thigh_joint"))
+	θknee = minimal_coordinates(mech, get_joint(mech, String(leg)*"_calf_joint"))
 	θ = [θhip; θknee]
 	for k = 1:10
 		s = sdfquadruped(mechanism, θ; leg = leg)
@@ -204,8 +204,8 @@ function projectQuadrupedLeg!(mechanism::Mechanism{T}, x::AbstractVector{T}; leg
 end
 
 function sdfquadruped(mechanism::Mechanism{T}, θ::AbstractVector{T}; leg::Symbol = :FR) where T
-	set_position!(mechanism, get_joint_constraint(mechanism, String(leg)*"_thigh_joint"), [θ[1]])
-	set_position!(mechanism, get_joint_constraint(mechanism, String(leg)*"_calf_joint"), [θ[2]])
+	set_position!(mechanism, get_joint(mechanism, String(leg)*"_thigh_joint"), [θ[1]])
+	set_position!(mechanism, get_joint(mechanism, String(leg)*"_calf_joint"), [θ[2]])
 
 	foot = get_body(mechanism, String(leg)*"_calf")
 	contacts = collect(mechanism.contacts)
@@ -218,8 +218,8 @@ end
 
 # zgood = deepcopy(z0)
 # z0 = deepcopy(zgood)
-# set_state!(mech, z0)
-# z0 = get_current_state(mech)
+# set_maximal_state!(mech, z0)
+# z0 = get_maximal_state(mech)
 x0 = maximal_to_minimal(mech, z0)
 x1 = deepcopy(x0)
 x1[3] -= 0.1
@@ -228,7 +228,7 @@ z1 = minimal_to_maximal(mech, x1)
 visualize_maximal(mech, z1, vis)
 xp1 = projectQuadruped!(mech, x1)
 zp1 = minimal_to_maximal(mech, xp1)
-set_state!(mech, zp1)
+set_maximal_state!(mech, zp1)
 visualize_maximal(mech, zp1, vis)
 
 contact_location(mech)
