@@ -69,12 +69,12 @@ function get_snake(;
 end
 
 function initialize_snake!(mechanism::Mechanism{T}; 
-    x=[0.0, -0.5, 0.0],
-    v=zeros(3), 
-    ω=zeros(3),
-    Δω=zeros(3), 
-    Δv=zeros(3),
-    q1=UnitQuaternion(RotX(0.6 * π))) where T
+    base_position=[0.0, -0.5, 0.0],
+    base_orientation=UnitQuaternion(RotX(0.6 * π)),
+    base_linear_velocity=zeros(3), 
+    base_angular_velocity=zeros(3),
+    relative_linear_velocity=zeros(3), 
+    relative_angular_velocity=zeros(3)) where T
 
     pbody = mechanism.bodies[1]
     h = pbody.shape.xyz[3]
@@ -83,11 +83,11 @@ function initialize_snake!(mechanism::Mechanism{T};
 
     # set position and velocities
     set_maximal_coordinates!(mechanism.origin, pbody, 
-        child_vertex=x, 
-        Δq=q1)
+        child_vertex=base_position, 
+        Δq=base_orientation)
     set_maximal_velocities!(pbody, 
-        v=v, 
-        ω=ω)
+        v=base_linear_velocity, 
+        ω=base_angular_velocity)
 
     previd = pbody.id
     for body in mechanism.bodies[2:end]
@@ -97,8 +97,8 @@ function initialize_snake!(mechanism::Mechanism{T};
         set_maximal_velocities!(get_body(mechanism, previd), body, 
             parent_vertex=vert12, 
             child_vertex=vert11,
-            Δv=Δv, 
-            Δω=Δω)
+            Δv=relative_linear_velocity, 
+            Δω=relative_angular_velocity)
         previd = body.id
     end
 end

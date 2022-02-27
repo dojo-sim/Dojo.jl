@@ -6,7 +6,7 @@
         gravity=-10.0);
     Dojo.reset(env);
     Dojo.initialize_pendulum!(env.mechanism, 
-        ϕ1=0.25 * π)
+        angle=0.25 * π)
     u1 = rand(Dojo.input_dimension(env.mechanism))
     z1 = Dojo.get_current_state(env.mechanism)
 
@@ -17,7 +17,7 @@
     @test norm(zTs - Dojo.get_maximal_state(storage, Dojo.length(storage))) < 1.0e-6
     zT = Dojo.get_next_state(env.mechanism)
     Dojo.initialize_pendulum!(env.mechanism, 
-        ϕ1=0.25 * π)
+        angle=0.25 * π)
     storage = Dojo.simulate!(env.mechanism, 1.0 + timestep, 
         record=true)
     @test norm(zT - Dojo.get_maximal_state(storage, Dojo.length(storage))) < 1.0e-6

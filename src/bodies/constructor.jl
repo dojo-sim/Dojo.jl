@@ -3,12 +3,12 @@
 
     A rigid body object
 
-    id - a unique identifying number 
-    name - a unique identifying name 
-    mass - inertial property (kilograms)
-    inertia - inertia matrix (kilogram * meter^2)
-    state - representation of the system's: position, linear velocity, orientation, and angular velocity 
-    shape - geometry information about the body
+    id: unique identifying number 
+    name: unique identifying name 
+    mass: inertial property (kilograms)
+    inertia: inertia matrix (kilograms meter^2)
+    state: State; representation of the system's: position, linear velocity, orientation, and angular velocity 
+    shape: Shape; geometry information about the Body
 """
 mutable struct Body{T} <: Node{T}
     id::Int64

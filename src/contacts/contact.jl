@@ -1,7 +1,7 @@
 """
     Contact{T,N} 
 
-    Subtypes contain contact information for a parent Body{T} object.
+    Abstract type contain contact information associated with a parent Body object.
 """
 abstract type Contact{T,N} end
 

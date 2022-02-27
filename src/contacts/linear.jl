@@ -1,13 +1,13 @@
 """
-    LinearContact{T,N} 
+    LinearContact{T,N} <: Contact{T,N}
 
-    Contact object for impact and friction with a linearized friction cone
+    contact object for impact and friction with a linearized friction cone
 
-    friction_coefficient - value of friction coefficient
-    surface_projector - mapping from world frame to surface tangent frame 
-    surface_normal_projector - inverse/complement of surface_projector
-    contact_point - position of contact on Body relative to center of mass 
-    offset - position of contact relative to contact_point
+    friction_coefficient: value of friction coefficient
+    surface_projector: mapping from world frame to surface tangent frame 
+    surface_normal_projector: inverse/complement of surface_projector
+    contact_point: position of contact on Body relative to center of mass 
+    offset: position of contact relative to contact_point
 """
 mutable struct LinearContact{T,N} <: Contact{T,N}
     friction_coefficient::T

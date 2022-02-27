@@ -1,3 +1,17 @@
+"""
+    Storage{T,N}
+
+    contains maximal-representation trajectories
+
+    x: position 
+    q: orientation (UnitQuaternion)
+    v: linear velocity (midpoint) 
+    ω: angular velocity (midpoint)
+    px: linear momentum
+    pq: angular momentum 
+    vl: linear velocity
+    ωl: angular velocity
+"""
 struct Storage{T,N}
     x::Vector{Vector{SVector{3,T}}}
     q::Vector{Vector{UnitQuaternion{T}}}

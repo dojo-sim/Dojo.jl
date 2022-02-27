@@ -1,6 +1,9 @@
-################################################################################
-# Quadruped
-################################################################################
+"""
+    Quadruped 
+
+    four-legged dog-like robot 
+    https://www.unitree.com/products/a1/
+"""
 struct Quadruped end
 
 function quadruped(; 

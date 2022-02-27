@@ -93,20 +93,20 @@ function get_rexhopper(;
 end
 
 function initialize_rexhopper!(mechanism::Mechanism{T}; 
-        x=zeros(3), 
-        v=zeros(3), 
-        θ=zeros(3), 
-        ϕ=zeros(3)) where T
+        body_position=zeros(3), 
+        body_orientation=zeros(3), 
+        body_linear_velocity=zeros(3), 
+        body_angular_velocity=zeros(3)) where T
 
     zero_velocity!(mechanism)
-    x += [0,0,0.3148]
+    body_position += [0.0, 0.0, 0.3148]
 
     for joint in mechanism.joints
         !(joint.name in (:loop_joint, :floating_joint)) && set_minimal_coordinates!(mechanism, joint, zeros(input_dimension(joint)))
     end
     
     set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism,
-        :auto_generated_floating_joint), [x; θ])
+        :auto_generated_floating_joint), [body_position; body_orientation])
     set_minimal_velocities!(mechanism, get_joint_constraint(mechanism,
-        :auto_generated_floating_joint), [v; ϕ])
+        :auto_generated_floating_joint), [body_linear_velocity; body_angular_velocity])
 end

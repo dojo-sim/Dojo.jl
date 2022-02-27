@@ -1,6 +1,8 @@
-################################################################################
-# RaibertHopper
-################################################################################
+"""
+    RaibertHopper
+
+    hopping robot, inspired by: "Dynamically Stable Legged Locomotion"
+"""
 struct RaibertHopper end
 
 function raiberthopper(; 

@@ -1,3 +1,20 @@
+"""
+    System{N}
+
+    graph structure representing a linear system ("Ax = b")
+
+    matrix_entries: matrix entries
+    vector_entries: residual entries 
+    diagonal_inverses: matrix inverses computed during LU factorization
+    acyclic_children: contains direct children that are not part of a cycle
+    cyclic_children: contains direct and indirect children that are part of a cycle
+    parents: contains direct and cycle-opening parents
+    dfs_list: list of graph nodes (depth first)
+    graph: graph object
+    dfs_graph: direct graph object
+    dimrow: dimensions of row
+    dimcol: dimensions of columns
+"""
 struct System{N}
     matrix_entries::SparseMatrixCSC{Entry, Int64}
     vector_entries::Vector{Entry}

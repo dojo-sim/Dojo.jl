@@ -182,7 +182,7 @@ for (spring, damper) in [(0.0, 0.0), (2.0, 0.3)]
 		contact_feet=false, 
 		contact_body=false, 
 		limits=false)
-	test_data_system(:walker2d, spring=spring, 
+	test_data_system(:walker, spring=spring, 
 		damper=damper, 
 		contact_feet=false, 
 		contact_body=false, 
@@ -251,7 +251,7 @@ for (spring, damper) in [(0.0, 0.0), (2.0, 0.3)]
 		contact_feet=true, 
 		contact_body=true, 
 		limits=true)
-	test_data_system(:walker2d, 
+	test_data_system(:walker, 
 		spring=spring, 
 		damper=damper, 
 		contact_feet=true, 

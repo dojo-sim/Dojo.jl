@@ -9,8 +9,8 @@ using LinearAlgebra
 include(joinpath(@__DIR__, "algorithms/ars.jl")) # augmented random search
 
 # ## Environment
-env = get_environment("halfcheetah", timestep=0.05)
-env.num_states
+env = get_environment("halfcheetah", 
+    timestep=0.05)
 obs = reset(env)
 
 # ## Open visualizer
@@ -23,11 +23,17 @@ policies = Matrix{Float64}[]
 N = 5
 for i = 1:N
     ## Reset environment
-    env = get_environment("halfcheetah", timestep=0.05)
+    env = get_environment("halfcheetah", 
+        timestep=0.05)
     obs = reset(env)
 
     ## Random policy
-    hp = HyperParameters(main_loop_size = 30, horizon = 80, n_directions = 6, b = 6, step_size = 0.02)
+    hp = HyperParameters(
+            main_loop_size=30, 
+            horizon=80, 
+            n_directions=6, 
+            b=6, 
+            step_size=0.02)
     input_size = length(obs)
     output_size = length(env.input_previous)
     normalizer = Normalizer(input_size)
@@ -50,7 +56,8 @@ end
 
 # Training statistics
 N_best = 3
-max_idx = sortperm(rewards, lt=Base.isgreater)
+max_idx = sortperm(rewards, 
+    lt=Base.isgreater)
 train_time_best = (train_times[max_idx])[1:N_best]
 rewards_best = (rewards[max_idx])[1:N_best]
 policies_best = (policies[max_idx])[1:N_best]
@@ -62,7 +69,12 @@ policies_best = (policies[max_idx])[1:N_best]
 @show std(rewards)
 
 # ## Recover policy
-hp = HyperParameters(main_loop_size = 30, horizon = 80, n_directions = 6, b = 6, step_size = 0.02)
+hp = HyperParameters(
+        main_loop_size=30, 
+        horizon=80, 
+        n_directions=6, 
+        b=6, 
+        step_size=0.02)
 input_size = length(obs)
 output_size = length(env.input_previous)
 normalizer = Normalizer(input_size)
@@ -79,7 +91,9 @@ end
 # ## Visualizer policy
 open(env.vis)
 visualize(env, traj)
-set_camera!(env.vis, cam_pos=[0,-52,0], zoom=15)
+set_camera!(env.vis, 
+    cam_pos=[0.0, -52.0, 0.0], 
+    zoom=15)
 
 
 

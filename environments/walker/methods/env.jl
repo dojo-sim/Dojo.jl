@@ -1,15 +1,17 @@
-################################################################################
-# Walker2d
-################################################################################
-struct Walker2d end
+"""
+    Walker
 
-function walker2d(; mode::Symbol=:minimal, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
+    planar bipedal robot, based on: https://gym.openai.com/envs/Walker2d-v2/
+"""
+struct Walker end
+
+function walker(; mode::Symbol=:minimal, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
     friction_coefficient::T=1.9, spring=0.0, damper=0.1,
     seed=1, contact::Bool=true, info=nothing, vis::Visualizer=Visualizer(), name::Symbol=:robot,
     opts_step=SolverOptions(), opts_grad=SolverOptions()) where T
 
-    mechanism = get_walker2d(timestep=dt, gravity=gravity, friction_coefficient=friction_coefficient, spring=spring, damper=damper, contact=contact)
-    initialize_walker2d!(mechanism)
+    mechanism = get_walker(timestep=dt, gravity=gravity, friction_coefficient=friction_coefficient, spring=spring, damper=damper, contact=contact)
+    initialize_walker!(mechanism)
 
     if mode == :minimal
         nx = minimal_dimension(mechanism)
@@ -42,7 +44,7 @@ function walker2d(; mode::Symbol=:minimal, dt::T=0.05, gravity=[0.0; 0.0; -9.81]
 
     build_robot(mechanism, vis=vis, name=name)
 
-    TYPES = [Walker2d, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
+    TYPES = [Walker, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
     env = Environment{TYPES...}(mechanism, mode, aspace, ospace,
         x, fx, fu,
         u_prev, control_mask, control_scaling,
@@ -54,12 +56,12 @@ function walker2d(; mode::Symbol=:minimal, dt::T=0.05, gravity=[0.0; 0.0; -9.81]
     return env
 end
 
-function reset(env::Environment{Walker2d}; x=nothing, reset_noise_scale = 0.005)
+function reset(env::Environment{Walker}; x=nothing, reset_noise_scale = 0.005)
     if x != nothing
         env.state .= x
     else
         # initialize above the ground to make sure that with random initialization we do not violate the ground constraint.
-        initialize!(env.mechanism, :walker2d, z = 0.25)
+        initialize!(env.mechanism, :walker, z = 0.25)
         x0 = get_minimal_state(env.mechanism)
         nx = minimal_dimension(env.mechanism)
 
@@ -78,7 +80,7 @@ function reset(env::Environment{Walker2d}; x=nothing, reset_noise_scale = 0.005)
     return get_observation(env)
 end
 
-function get_observation(env::Environment{Walker2d}; full_state::Bool=false)
+function get_observation(env::Environment{Walker}; full_state::Bool=false)
     full_state && (return env.state)
     nx = minimal_dimension(env.mechanism)
     if env.representation == :minimal
@@ -94,7 +96,7 @@ function get_observation(env::Environment{Walker2d}; full_state::Bool=false)
     return o
 end
 
-function cost(env::Environment{Walker2d}, x, u;
+function cost(env::Environment{Walker}, x, u;
         alive_bonus=0.1)
 
     if env.representation == :minimal
@@ -110,7 +112,7 @@ function cost(env::Environment{Walker2d}, x, u;
     return c
 end
 
-function is_done(::Environment{Walker2d}, x)
+function is_done(::Environment{Walker}, x)
     nx = minimal_dimension(env.mechanism)
     if env.representation == :minimal
         x0 = x
@@ -133,7 +135,7 @@ end
 # z
 # set_state!(env.mechanism, z)
 #
-# initialize!(env.mechanism, :walker2d, x = 111.0, z = 1.0, θ=0.18)
+# initialize!(env.mechanism, :walker, x = 111.0, z = 1.0, θ=0.18)
 # x = get_minimal_state(env.mechanism)
 # z = get_maximal_state(env.mechanism)
 # is_done(env, x)

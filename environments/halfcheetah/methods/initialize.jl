@@ -103,13 +103,12 @@ function get_halfcheetah(;
 end
 
 function initialize_halfcheetah!(mechanism::Mechanism{T}; 
-    x=0.0, 
-    z=0.0, 
-    θ=0.0) where T
+    body_position=[0.0, 0.0],  
+    body_orientation=0.0) where T
 
     set_minimal_coordinates!(mechanism,
                  get_joint_constraint(mechanism, :floating_joint),
-                 [z + 0.576509, -x, -θ + 0.02792])
+                 [body_position[2] + 0.576509, -body_position[1], -body_orientation + 0.02792])
     for joint in mechanism.joints
         (joint.name != :floating_joint) && set_minimal_coordinates!(mechanism, joint, zeros(input_dimension(joint)))
     end

@@ -1,11 +1,11 @@
 """
-    ImpactContact{T,N} 
+    ImpactContact{T,N} <: Contact{T,N}
 
-    Contact object for impact (i.e., no friction)
+    contact object for impact (i.e., no friction)
 
-    surface_normal_projector - mapping from world frame to surface tangent frame 
-    contact_point - position of contact on Body relative to center of mass 
-    offset - position of contact relative to contact_point
+    surface_normal_projector: mapping from world frame to surface tangent frame 
+    contact_point: position of contact on Body relative to center of mass 
+    offset: position of contact relative to contact_point
 """
 mutable struct ImpactContact{T,N} <: Contact{T,N}
     surface_normal_projector::Adjoint{T,SVector{3,T}}

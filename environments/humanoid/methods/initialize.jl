@@ -96,8 +96,10 @@ function get_humanoid(;
 end
 
 function initialize_humanoid!(mechanism::Mechanism{T}; 
-    tran=[0,0,1.5], 
-    rot=[0.1,0,0]) where T
-    set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [tran; rot])
+    body_position=[0.0, 0.0, 1.5], 
+    body_orientation=[0.1, 0.0, 0.0]) where T
+    set_minimal_coordinates!(mechanism, 
+        get_joint_constraint(mechanism, :auto_generated_floating_joint), 
+        [body_position; body_orientation])
     zero_velocity!(mechanism)
 end

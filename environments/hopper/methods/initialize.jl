@@ -85,13 +85,13 @@ function get_hopper(;
 end
 
 function initialize_hopper!(mechanism::Mechanism{T}; 
-    x=0.0, 
-    z=0.0, 
-    θ=0.0) where T
+    body_position=[0.0, 0.0],
+    body_orientation=0.0) where T
+    #TODO add leg length
 
     set_minimal_coordinates!(mechanism,
                  get_joint_constraint(mechanism, :floating_joint),
-                 [z + 1.25 , -x, -θ])
+                 [body_position[2] + 1.25 , -body_position[1], -body_orientation])
     for joint in mechanism.joints
         (joint.name != :floating_joint) && set_minimal_coordinates!(mechanism, joint, zeros(input_dimension(joint)))
     end

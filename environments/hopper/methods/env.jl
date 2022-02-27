@@ -1,6 +1,8 @@
-################################################################################
-# Hopper
-################################################################################
+"""
+    Hopper
+
+    planar hopping robot, based on https://gym.openai.com/envs/Hopper-v2/
+"""
 struct Hopper end
 
 function hopper(; 

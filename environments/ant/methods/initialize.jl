@@ -101,21 +101,20 @@ function get_ant(;
 end
 
 function initialize_ant!(mechanism::Mechanism; 
-        ankle=0.25, 
-        alt=0.15, 
-        pos=[0.0; 0.0; 0.48 + alt], 
-        rot=[0.0; 0.0; 0.00 * π]) where T
+        body_position=[0.0; 0.0; 0.63], 
+        body_orientation=[0.0; 0.0; 0.0 * π],
+        ankle_orientation=0.25) where T
         
-    set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [pos; rot])
+    set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [body_position; body_orientation])
 
     for i in [1,4]
         set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, Symbol("hip_$i")), [0.0 * π])
-        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, Symbol("ankle_$i")), [ankle * π])
+        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, Symbol("ankle_$i")), [ankle_orientation * π])
     end
 
     for i in [2,3]
         set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, Symbol("hip_$i")), [0.0 * π])
-        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, Symbol("ankle_$i")), [-ankle * π])
+        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, Symbol("ankle_$i")), [-ankle_orientation * π])
     end
 
     zero_velocity!(mechanism)

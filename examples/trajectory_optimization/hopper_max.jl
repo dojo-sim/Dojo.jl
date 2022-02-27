@@ -8,15 +8,12 @@ using IterativeLQR
 using LinearAlgebra
 
 # ## system
-dt = 0.05
+timestep = 0.05
 gravity=-9.81
 env = get_environment("raiberthopper",
-    mode=:maximal,
-    timestep=dt,
+    representation=:maximal,
+    timestep=timestep,
     gravity=gravity);
-
-env.mechanism.bodies[1].m
-env.mechanism.bodies[2].J
 
 # ## visualizer
 open(env.vis)
@@ -36,9 +33,9 @@ Tm = convert(Int, floor((T - 1) / 2))
 
 # ## model
 dyn = IterativeLQR.Dynamics(
-    (y, x, u, w) -> f(y, env, x, u, w),
-    (dx, x, u, w) -> fx(dx, env, x, u, w),
-    (du, x, u, w) -> fu(du, env, x, u, w),
+    (y, x, u, w) -> dynamics(y, env, x, u, w),
+    (dx, x, u, w) -> dynamics_jacobian_state(dx, env, x, u, w),
+    (du, x, u, w) -> dynamics_jacobian_input(du, env, x, u, w),
     n, n, m)
 
 model = [dyn for t = 1:T-1]

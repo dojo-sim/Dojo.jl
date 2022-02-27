@@ -1,6 +1,8 @@
-################################################################################
-# Joint
-################################################################################
+"""
+   Joint{T} 
+
+   Abstract type for 3-dimensional constraint between two Body objects
+"""
 abstract type Joint{T,Nλ,Nb,N,Nb½} end
 
 # joints

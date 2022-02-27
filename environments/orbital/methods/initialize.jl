@@ -45,8 +45,7 @@ function get_orbital(;
 end
 
 function initialize_orbital!(mechanism::Mechanism{T}; 
-    ϕx=pi / 4.0, 
-    ϕy=pi / 8.0) where T
+    orientation=[pi / 4.0, pi / 8.0]) where T
 
     pbody = mechanism.bodies[1]
     joint = mechanism.joints[1]
@@ -58,7 +57,7 @@ function initialize_orbital!(mechanism::Mechanism{T};
         child_vertex=vert11, 
         Δq=UnitQuaternion(RotX(0.0)))
 
-    set_minimal_coordinates!(mechanism, mechanism.joints[2], [ϕx, ϕy])
+    set_minimal_coordinates!(mechanism, mechanism.joints[2], orientation)
 
     zero_velocity!(mechanism)
 end

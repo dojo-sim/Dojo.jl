@@ -45,8 +45,9 @@ include(joinpath("graph", "dfs.jl"))
 include(joinpath("graph", "cycles.jl"))
 include(joinpath("graph", "ldu.jl"))
 
-# Node 
+# Graph objects 
 include(joinpath("mechanism", "node.jl"))
+include(joinpath("mechanism", "edge.jl"))
 include(joinpath("mechanism", "id.jl"))
 
 # Bodies

@@ -40,6 +40,6 @@ function initialize_sphere!(mechanism::Mechanism{T};
     r = mechanism.bodies[1].shape.r
     joint = get_joint_constraint(mechanism, :floating_joint)
     zero_velocity!(mechanism)
-    set_minimal_coordinates!(mechanism, joint, [x+[0,0,r] rotation_vector(q)])
+    set_minimal_coordinates!(mechanism, joint, [x + [0.0, 0.0, r] rotation_vector(q)])
     set_minimal_velocities!(mechanism, joint, [v; ω])
 end

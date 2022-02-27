@@ -22,7 +22,7 @@ include("snake/methods/initialize.jl")
 include("tennisracket/methods/initialize.jl")
 include("tippetop/methods/initialize.jl")
 include("twister/methods/initialize.jl")
-include("walker2d/methods/initialize.jl")
+include("walker/methods/initialize.jl")
 
 ################################################################################
 # Environments
@@ -35,5 +35,5 @@ include("hopper/methods/env.jl")
 include("pendulum/methods/env.jl")
 include("quadruped/methods/env.jl")
 include("raiberthopper/methods/env.jl")
-include("walker2d/methods/env.jl")
+include("walker/methods/env.jl")
 include("box/methods/env.jl")

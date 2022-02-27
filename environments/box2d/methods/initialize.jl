@@ -56,10 +56,10 @@ function get_box2d(;
 end
 
 function initialize_box2d!(mechanism::Mechanism{T}; 
-    x=[0.0, 1.0],
-    v=[0.0, 0.0], 
-    θ=0.0, 
-    ω=0.0) where T
+    position=[0.0, 1.0],
+    linear_velocity=[0.0, 0.0], 
+    orientation=0.0, 
+    angular_velocity=0.0) where T
 
     if length(mechanism.contacts) > 0
         model = mechanism.contacts[1].model
@@ -73,9 +73,9 @@ function initialize_box2d!(mechanism::Mechanism{T};
     body = mechanism.bodies[1]
 
     set_maximal_coordinates!(body, 
-        x=[0.0; x] + [0.0, 0.0 , z], 
-        q=UnitQuaternion(RotX(θ)))
+        x=[0.0; position] + [0.0, 0.0 , z], 
+        q=UnitQuaternion(RotX(orientation)))
     set_maximal_velocities!(body, 
-        v=[0.0; v], 
-        ω=[ω, 0.0, 0.0])
+        v=[0.0; linear_velocity], 
+        ω=[angular_velocity, 0.0, 0.0])
 end

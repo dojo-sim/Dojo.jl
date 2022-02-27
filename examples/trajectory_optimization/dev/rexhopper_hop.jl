@@ -15,7 +15,7 @@ damper = 0.5
 spring = 5.0
 ρ0 = 1e-4
 env = rexhopper(
-    mode=:minimal,
+    representation=:minimal,
     timestep=dt,
     gravity=gravity,
     friction_coefficient=friction_coefficient,
@@ -68,9 +68,9 @@ visualize(env, xref)
 
 # ## model
 dyn = IterativeLQR.Dynamics(
-    (y, x, u, w) -> f(y, env, x, u, w),
-    (dx, x, u, w) -> fx(dx, env, x, u, w),
-    (du, x, u, w) -> fu(du, env, x, u, w),
+    (y, x, u, w) -> dynamics(y, env, x, u, w),
+    (dx, x, u, w) -> dynamics_jacobian_state(dx, env, x, u, w),
+    (du, x, u, w) -> dynamics_jacobian_input(du, env, x, u, w),
     n, n, m)
 
 model = [dyn for t = 1:T-1]

@@ -1,6 +1,9 @@
-################################################################################
-# Pendulum
-################################################################################
+"""
+    Pendulum
+
+    classic system with one rotational degree of freedom
+    https://underactuated.mit.edu/pend.html
+"""
 struct Pendulum end
 
 function pendulum(; 

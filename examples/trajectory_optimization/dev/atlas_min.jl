@@ -12,7 +12,7 @@ damper = 50.0
 spring = 0.0
 model_type = :armless
 env = get_environment("atlas",
-    mode=:minimal,
+    representation=:minimal,
     timestep=dt,
     gravity=gravity,
     friction_coefficient=friction_coefficient,
@@ -110,9 +110,9 @@ T = N * (25 - 1) + 1
 
 # ## model
 dyn = IterativeLQR.Dynamics(
-    (y, x, u, w) -> f(y, env, x, u, w),
-    (dx, x, u, w) -> fx(dx, env, x, u, w),
-    (du, x, u, w) -> fu(du, env, x, u, w),
+    (y, x, u, w) -> dynamics(y, env, x, u, w),
+    (dx, x, u, w) -> dynamics_jacobian_state(dx, env, x, u, w),
+    (du, x, u, w) -> dynamics_jacobian_input(du, env, x, u, w),
     n, n, m, d)
 
 model = [dyn for t = 1:T-1]

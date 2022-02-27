@@ -1,4 +1,4 @@
-function get_walker2d(; 
+function get_walker(; 
     timestep=0.01, 
     gravity=[0.0; 0.0; -9.81], 
     friction_coefficient=0.5,
@@ -11,7 +11,7 @@ function get_walker2d(;
                   [150.0, 150.0,  45.0, 150.0, 150.0,  45.0] * π / 180.0],
     T=Float64)
 
-    path = joinpath(@__DIR__, "../deps/walker2d.urdf")
+    path = joinpath(@__DIR__, "../deps/walker.urdf")
     mech = Mechanism(path, false, T, 
         gravity=gravity, 
         timestep=timestep, 
@@ -95,14 +95,13 @@ function get_walker2d(;
     return mech
 end
 
-function initialize_walker2d!(mechanism::Mechanism; 
-    x::T=0.0, 
-    z::T=0.0, 
-    θ::T=0.0) where T
+function initialize_walker!(mechanism::Mechanism; 
+    body_position=[0.0, 0.0],
+    body_orientation=0.0) where T
     
     set_minimal_coordinates!(mechanism,
                  get_joint_constraint(mechanism, :floating_joint),
-                 [z + 1.25 , -x, -θ])
+                 [body_position[2] + 1.25 , -body_position[1], -body_orientation])
     for joint in mechanism.joints
         (joint.name != :floating_joint) && set_minimal_coordinates!(mechanism, joint, zeros(input_dimension(joint)))
     end
