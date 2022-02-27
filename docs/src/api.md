@@ -98,16 +98,28 @@ RexHopper
 Walker 
 ```
 
-## Simulation
+## Simulate
 ```@docs
+    Storage 
+    step!
+    simulate! 
 ```
 
 ## Gradients
 ```@docs
 ```
 
+## Solver 
+```@docs
+SolverOptions
+mehrotra!
+```
+
 ## Visualization
 ```@docs
+visualize
+build_robot 
+set_robot
 ```
 
 
