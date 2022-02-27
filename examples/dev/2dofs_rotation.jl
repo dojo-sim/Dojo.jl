@@ -13,7 +13,7 @@ using Random
 using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
@@ -25,7 +25,7 @@ mech = getmechanism(:orbital, spring = 0.0, damper = 1.0, Nb = 2)
 initialize!(mech, :orbital, ϕx = 3π/4, ϕy = 3π/4)
 
 function controller!(mechanism, k)
-    for (i,eqc) in enumerate(collect(mechanism.joints)[2:end])
+    for (i,eqc) in enumerate(mechanism.joints[2:end])
         # pbody = get_body(mech, eqc.parentid)
         # minJ = minimum(diag(pbody.J))
         # for (i,joint) in enumerate(eqc.constraints)
@@ -40,11 +40,11 @@ function controller!(mechanism, k)
     return
 end
 
-@elapsed storage = simulate!(mech, 5, controller!, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
+@elapsed storage = simulate!(mech, 5, controller!, record=true, solver = :mehrotra!, verbose=false)
+visualize(mech, storage, vis=vis)
 
-collect(mech.joints)[1]
-collect(mech.joints)[1].isdamper
-collect(mech.joints)[2]
-collect(mech.joints)[2].isdamper
-collect(mech.joints)[2].constraints[1].damper
+mech.joints[1]
+mech.joints[1].isdamper
+mech.joints[2]
+mech.joints[2].isdamper
+mech.joints[2].constraints[1].damper

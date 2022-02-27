@@ -11,7 +11,7 @@ using MeshCat
 # using IterativeLQR
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
@@ -19,8 +19,8 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
 # System
-gravity = -9.81
-timestep = 0.05
+gravity=-9.81
+timestep=0.05
 friction_coefficient = 0.8
 mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_coefficient = friction_coefficient, damper = 0.0, spring = 0.0)
 
@@ -35,7 +35,7 @@ u_mask = [zeros(12,6) I(12)]
 xref = quadruped_trajectory(mech, r = 0.05, z = 0.25; Δx = -0.06, Δfront = 0.08, N = Int(T/2), Ncycles = 1)
 zref = [minimal_to_maximal(mech, x) for x in xref]
 storage = generate_storage(mech, zref)
-visualize(mech, storage, vis = vis)
+visualize(mech, storage, vis=vis)
 x1ref = xref[1]
 z1ref = zref[1]
 
@@ -45,8 +45,8 @@ mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_co
 initialize!(mech, :quadruped)
 set_state!(mech, z1ref)
 set_spring_offset!(mech, x1ref)
-@elapsed storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!, verbose = false, ϵ = ϵ0, undercut = 1.5)
-visualize(mech, storage, vis = vis)
+@elapsed storage = simulate!(mech, 5.0, record=true, solver = :mehrotra!, verbose=false, ϵ = ϵ0, undercut = 1.5)
+visualize(mech, storage, vis=vis)
 ghost_altitude = get_minimal_state(mech)[3]
 xghost = deepcopy(xref)
 for i = 1:T
@@ -64,14 +64,14 @@ ughost = [inverse_control(no_contact_mech, xghost[i], xghost[i+1]) for i = 1:T-1
 # Model
 ϵtol = 1e-5
 function fd(y, x, u, w)
-	z = step!(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose = false)
+	z = step!(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose=false)
 	y .= copy(maximal_to_minimal(mech, z))
 end
 function fdx(fx, x, u, w)
-	fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose = false)[1])
+	fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose=false)[1])
 end
 function fdu(fu, x, u, w)
-	∇u = copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose = false)[2])
+	∇u = copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = 1.5, verbose=false)[2])
 	fu .= ∇u
 end
 
@@ -82,7 +82,7 @@ model = [dyn for t = 1:T-1]
 # # Rollout
 # xrol = rollout(model, xghost[1], ughost, w)
 # storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in x̄])
-# visualize(mech, storage; vis = vis)
+# visualize(mech, storage; vis=vis)
 # plot(hcat(get_sdf(mech, storage)...))
 
 xsol = deepcopy(xghost)
@@ -145,14 +145,14 @@ ghost_ilqr_solve!(prob,
 # 	ϵtol = 1e-8
 # 	undercut = Inf
 # 	function fd(y, x, u, w)
-# 		z = step!(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose = false)
+# 		z = step!(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose=false)
 # 		y .= copy(maximal_to_minimal(mech, z))
 # 	end
 # 	function fdx(fx, x, u, w)
-# 		fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose = false)[1])
+# 		fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose=false)[1])
 # 	end
 # 	function fdu(fu, x, u, w)
-# 		∇u = copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose = false)[2])
+# 		∇u = copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose=false)[2])
 # 		fu .= ∇u
 # 	end
 #
@@ -204,13 +204,13 @@ ghost_ilqr_solve!(prob,
 #
 # 	println("Solution: ###################################")
 # 	storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in xsol])
-# 	visualize(mech, storage, vis = vis)
+# 	visualize(mech, storage, vis=vis)
 # 	sleep(5.0)
 #
 # 	println("Rollout: #####################################")
 # 	xrol = rollout(model, x1, usol, w)
 # 	storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in xrol])
-# 	visualize(mech, storage; vis = vis)
+# 	visualize(mech, storage; vis=vis)
 # 	sleep(5.0)
 # end
 
@@ -221,7 +221,7 @@ plot(hcat(Xsol[end]...)')
 plot(hcat([u[1:6] for u in Usol[end]]...)')
 ustar = deepcopy(Usol[end])
 
-visualize(mech, storage; vis = vis)
+visualize(mech, storage; vis=vis)
 
 
 mech = get_mechanism(:quadruped, timestep=timestep, gravity=gravity, friction_coefficient = friction_coefficient, damper = 5.0, spring = 0.0)
@@ -234,10 +234,10 @@ function controller!(mechanism, k)
 	set_input!(mechanism, ū[k])
     return
 end
-@elapsed storage = simulate!(mech, 0.95, controller!, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
+@elapsed storage = simulate!(mech, 0.95, controller!, record=true, solver = :mehrotra!, verbose=false)
+visualize(mech, storage, vis=vis)
 storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in Xsol[2]])
-visualize(mech, storage, vis = vis)
+visualize(mech, storage, vis=vis)
 
 
 
@@ -268,7 +268,7 @@ function ghost_ilqr_solve!(prob::ProblemData;
         fill!(ρ, ρ_init)
 	end
 
-	for i = 1:max_al_iter
+	for i = 1:maximal_al_iter
 		verbose && println("  al iter: $i")
 
 		########################################################################
@@ -277,14 +277,14 @@ function ghost_ilqr_solve!(prob::ProblemData;
 		ϵtol = ϵinit / 2^(i-1)
 		undercut = Inf
 		function fd(y, x, u, w)
-			z = step!(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose = false)
+			z = step!(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose=false)
 			y .= copy(maximal_to_minimal(mech, z))
 		end
 		function fdx(fx, x, u, w)
-			fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose = false)[1])
+			fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose=false)[1])
 		end
 		function fdu(fu, x, u, w)
-			fu .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose = false)[2])
+			fu .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u, ϵ = ϵtol, btol = ϵtol, undercut = undercut, verbose=false)[2])
 		end
 		# Time
 		dyn = Dynamics(fd, fdx, fdu, n, n, m, d)
@@ -321,13 +321,13 @@ function ghost_ilqr_solve!(prob::ProblemData;
 
 		println("Solution: ###################################")
 		storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in xsol])
-		visualize(mech, storage, vis = vis)
+		visualize(mech, storage, vis=vis)
 		sleep(5.0)
 
 		println("Rollout: #####################################")
 		xrol = rollout(model, x1, usol, w)
 		storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in xrol])
-		visualize(mech, storage; vis = vis)
+		visualize(mech, storage; vis=vis)
 		sleep(5.0)
 		########################################################################
 		########################################################################

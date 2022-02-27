@@ -8,7 +8,7 @@ using Pkg
 Pkg.activate(module_dir())
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 using DirectTrajectoryOptimization
@@ -17,8 +17,8 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 include(joinpath(module_dir(), "src", "optional_components", "trajopt_utils.jl"))
 
 # System
-gravity = -9.81
-timestep = 0.05
+gravity=-9.81
+timestep=0.05
 mech = get_raiberthopper(timestep=timestep, gravity=gravity, damper=0.0)
 initialize_raiberthopper!(mech)
 
@@ -73,14 +73,14 @@ nu += nx
 function f(d, y, x, u, w)
     u_ctrl = u[1:3]
     s = u[3 .+ (1:nx)]
-    z = step!(mech, minimal_to_maximal(mech, x), u_mask'*u_ctrl, ϵ = 1e-6, btol = 3e-4, undercut = 1.5, verbose = false)
+    z = step!(mech, minimal_to_maximal(mech, x), u_mask'*u_ctrl, ϵ = 1e-6, btol = 3e-4, undercut = 1.5, verbose=false)
 	d .= y - maximal_to_minimal(mech, z) + s
 end
 
 function fz(dz, y, x, u, w)
     u_ctrl = u[1:3]
     s = u[3 .+ (1:nx)]
-	dx, du = get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u_ctrl, ϵ = 1e-6, btol = 3e-3, undercut = 1.5, verbose = false)
+	dx, du = get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u_ctrl, ϵ = 1e-6, btol = 3e-3, undercut = 1.5, verbose=false)
     dz .= [-dx -du * transpose(u_mask) I(nx) I(nx)]
 end
 
@@ -162,4 +162,4 @@ DirectTrajectoryOptimization.initialize!(s, z0)
 # plot(hcat(trajopt.u[1:end-1]..., trajopt.u[end-1])', linetype = :steppost)
 
 storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in trajopt.x])
-visualize(mech, storage, vis = vis)
+visualize(mech, storage, vis=vis)

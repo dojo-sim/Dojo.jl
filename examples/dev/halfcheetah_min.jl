@@ -4,18 +4,18 @@ using IterativeLQR
 include(joinpath(@__DIR__, "../../env/halfcheetah/methods/template.jl"))
 
 dt = 0.05
-gravity = -9.81
-env = make("halfcheetah", 
-    mode=:min, 
+gravity=-9.81
+env = get_environment("halfcheetah", 
+    mode=:minimal, 
     g=gravity,
-    dt=dt)
+    timestep=dt)
 
 # ## visualizer 
 open(env.vis)
 
 # ## dimensions
-n = env.nx
-m = env.nu 
+n = env.num_states
+m = env.num_inputs 
 d = 0
 
 # ## states

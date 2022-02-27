@@ -6,7 +6,7 @@
     shapes = Dojo.Shapes([box, cylinder, capsule])
     sphere = Dojo.Sphere(1.0)
     pyramid = Dojo.Pyramid(1.0, 1.0)
-    mesh = Dojo.Mesh(joinpath(@__DIR__, "../env/atlas/deps/mesh/head.obj"))
+    mesh = Dojo.Mesh(joinpath(@__DIR__, "../environments/atlas/deps/mesh/head.obj"))
 
     # convert 
     box_geom = Dojo.convert_shape(box)

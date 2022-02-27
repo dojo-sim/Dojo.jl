@@ -1,10 +1,10 @@
 function constraint(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn,Ne,Nb}
     state = body.state
-    timestep = mechanism.timestep
+    timestep= mechanism.timestep
 
     mass = body.mass
     inertia = body.inertia
-    gravity = mechanism.gravity
+    gravity=mechanism.gravity
 
     x1, q1 = previous_configuration(state)
     x2, q2 = current_configuration(state)
@@ -35,7 +35,7 @@ end
 
 function constraint_jacobian_configuration(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn,Ne,Nb}
     state = body.state
-    timestep = mechanism.timestep
+    timestep= mechanism.timestep
     mass = body.mass
     inertia = body.inertia
 

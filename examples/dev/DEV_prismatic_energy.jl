@@ -13,7 +13,7 @@ using Random
 using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
@@ -50,12 +50,12 @@ if Nb > 1
 else
     eqcs = [jointb1]
 end
-mech = Mechanism(origin, links, eqcs, g = -9.81, timestep = 0.02)
+mech = Mechanism(origin, links, eqcs, g = -9.81, timestep=0.02)
 
 # mech = getmechanism(:nslider, Nb = 5)
 initialize!(mech, :nslider)
-storage = simulate!(mech, 10.1, record = true, solver = :mehrotra!)
-visualize(mech, storage, vis = vis)
+storage = simulate!(mech, 10.1, record=true, solver = :mehrotra!)
+visualize(mech, storage, vis=vis)
 
 ################################################################################
 # Differentiation
@@ -128,12 +128,12 @@ norm(fd_sensi, Inf)
 ################################################################################
 include(joinpath(@__DIR__, "finite_diff.jl"))
 
-timestep = 0.01
+timestep=0.01
 tra1 = mech.joints[1].constraints[1]
 tra2 = mech.joints[2].constraints[1]
 origin = mech.origin
-pbody = collect(mech.bodies)[1]
-cbody = collect(mech.bodies)[2]
+pbody = mech.bodies[1]
+cbody = mech.bodies[2]
 
 
 jac0, jac1 = finitediff_vel(tra2, pbody, cbody, timestep, spring_parent, spring_parent_jacobian_velocity_parent, diff_body = :parent)

@@ -34,7 +34,7 @@ function impulse_map_jacobian_configuration(mechanism, body::Body, contact::Cont
 end
 
 function impulses_jacobian_velocity!(mechanism, body::Body, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
-    timestep = mechanism.timestep
+    timestep= mechanism.timestep
     body.state.D -= impulse_map_jacobian_configuration(mechanism, body, contact) * integrator_jacobian_velocity(body, timestep)
     return
 end

@@ -1,19 +1,25 @@
 @testset "Mechanism: Miscellaneous methods" begin 
     # get pendulum environment and simulate
-    timestep = 0.1
-    env = Dojo.make("pendulum", dt=timestep, gravity=-10.0);
+    timestep=0.1
+    env = Dojo.get_environment("pendulum", 
+        timestep=timestep, 
+        gravity=-10.0);
     Dojo.reset(env);
-    Dojo.initialize_pendulum!(env.mechanism, ϕ1=0.25 * π)
+    Dojo.initialize_pendulum!(env.mechanism, 
+        ϕ1=0.25 * π)
     u1 = rand(Dojo.input_dimension(env.mechanism))
     z1 = Dojo.get_current_state(env.mechanism)
 
-    storage = Dojo.simulate!(env.mechanism, 1.0, record=true)
+    storage = Dojo.simulate!(env.mechanism, 1.0, 
+        record=true)
     @test norm(z1 - Dojo.get_maximal_state(storage, 1)) < 1.0e-6
     zTs = Dojo.get_current_state(env.mechanism)
     @test norm(zTs - Dojo.get_maximal_state(storage, Dojo.length(storage))) < 1.0e-6
     zT = Dojo.get_next_state(env.mechanism)
-    Dojo.initialize_pendulum!(env.mechanism, ϕ1=0.25 * π)
-    storage = Dojo.simulate!(env.mechanism, 1.0 + timestep, record=true)
+    Dojo.initialize_pendulum!(env.mechanism, 
+        ϕ1=0.25 * π)
+    storage = Dojo.simulate!(env.mechanism, 1.0 + timestep, 
+        record=true)
     @test norm(zT - Dojo.get_maximal_state(storage, Dojo.length(storage))) < 1.0e-6
 
     # maximal gradients
@@ -33,8 +39,10 @@
     vv = Dojo.get_minimal_velocity_vector(env.mechanism)
     @test norm(dcv[1] - [vc[1]; vv[1]]) < 1.0e-6
 
-    timestep = 0.1
-    env = Dojo.make("halfcheetah", dt=timestep, gravity=-10.0);
+    timestep=0.1
+    env = Dojo.get_environment("halfcheetah", 
+        timestep=timestep, 
+        gravity=-10.0);
     Dojo.reset(env);
 
     # get body 
@@ -49,7 +57,9 @@
 
     # set state
     z = Dojo.get_maximal_state(env.mechanism)
-    env2 = Dojo.make("halfcheetah", dt=timestep, gravity=-10.0);
+    env2 = Dojo.get_environment("halfcheetah", 
+        timestep=timestep, 
+        gravity=-10.0);
     Dojo.reset(env);
     Dojo.set_state!(env2.mechanism, zeros(Dojo.maximal_dimension(env2.mechanism)))
     z2 = Dojo.get_maximal_state(env2.mechanism)

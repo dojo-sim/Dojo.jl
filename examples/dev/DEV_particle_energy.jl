@@ -13,7 +13,7 @@ using Random
 using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
@@ -38,14 +38,14 @@ pbody = Box(width, depth, length1, 1., color = RGBA(1., 1., 0.))
 joint0to1 = JointConstraint(Floating(origin, pbody, spring = 100.0, damper = 0.0))
 bodies = [pbody]
 eqcs = [joint0to1]
-mech = Mechanism(origin, bodies, eqcs, g = 0.0, timestep = 0.01)
+mech = Mechanism(origin, bodies, eqcs, g = 0.0, timestep=0.01)
 
-pbody = collect(mech.bodies)[1]
+pbody = mech.bodies[1]
 set_position(pbody, x = [1, 0, 0.])
 set_maximal_velocities!(pbody, v = [0, 0, 0.], ω = [0, 0, 0.])
 
-storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!)
-visualize(mech, storage, vis = vis)
+storage = simulate!(mech, 5.0, record=true, solver = :mehrotra!)
+visualize(mech, storage, vis=vis)
 
 plot([x[1] for x in storage.x[1]])
 
@@ -121,12 +121,12 @@ norm(fd_sensi, Inf)
 ################################################################################
 include(joinpath(@__DIR__, "finite_diff.jl"))
 
-timestep = 0.01
+timestep=0.01
 tra1 = mech.joints[1].constraints[1]
 tra2 = mech.joints[2].constraints[1]
 origin = mech.origin
-pbody = collect(mech.bodies)[1]
-cbody = collect(mech.bodies)[2]
+pbody = mech.bodies[1]
+cbody = mech.bodies[2]
 
 
 jac0, jac1 = finitediff_vel(tra2, pbody, cbody, timestep, spring_parent, spring_parent_jacobian_velocity_parent, diff_body = :parent)

@@ -10,7 +10,7 @@ Pkg.activate(module_dir())
 using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 image = PngImage(joinpath(@__DIR__, "tile_marble_darker.png"))
@@ -41,7 +41,7 @@ set_light!(vis)
 
 ##################################################################################
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 

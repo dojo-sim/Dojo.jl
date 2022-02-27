@@ -9,7 +9,7 @@ function get_current_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,N
 end
 
 function get_next_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
-	timestep = mechanism.timestep
+	timestep= mechanism.timestep
 	z_next = zeros(T, 13Nb)
 	for (i, body) in enumerate(mechanism.bodies)
         x3, v25, q3, ϕ25 = next_configuration_velocity(body.state, timestep)
@@ -108,7 +108,7 @@ function get_minimal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,N
 	x = []
 
 	mechanism = deepcopy(mechanism)
-	timestep = mechanism.timestep
+	timestep= mechanism.timestep
 
 	for id in mechanism.root_to_leaves
 		(id > Ne) && continue # only treat joints

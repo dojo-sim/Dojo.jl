@@ -1,35 +1,36 @@
+# PREAMBLE
+
+# PKG_SETUP
+
+# ## setup
 using Dojo
 using IterativeLQR
 using LinearAlgebra
 
 # ## system
-include(joinpath(@__DIR__, "../../env/quadruped/methods/template.jl"))
-
-gravity = -9.81
+gravity=-9.81
 dt = 0.05
 friction_coefficient = 0.8
 damper = 5.0
 spring = 0.0
 env = quadruped(
-    mode=:min,
-    dt=dt,
-    body_contact=false,
+    representation=:minimal,
+    timestep=timestep,
+    contact_body=false,
     gravity=gravity,
     friction_coefficient=friction_coefficient,
     damper=damper,
     spring=spring)
 
+# ## template
+include(joinpath(@__DIR__, "../../environments/quadruped/methods/template.jl"))
+
 # ## visualizer
 open(env.vis)
 
-# ## simulate (test)
-# initialize!(env.mechanism, :quadruped)
-# storage = simulate!(env.mechanism, 0.5, record=true, verbose=false)
-# visualize(env.mechanism, storage, vis=env.vis)
-
 # ## dimensions
-n = env.nx
-m = env.nu
+n = env.num_states
+m = env.num_inputs
 
 # ## reference trajectory
 N = 2
@@ -85,7 +86,7 @@ cons = [[cont for t = 1:T-1]..., conT]
 
 # ## problem
 prob = IterativeLQR.solver(model, obj, cons, 
-    opts=Options(verbose = false,
+    opts=Options(verbose=false,
         linesearch=:armijo,
         α_min=1.0e-5,
         obj_tol=1.0e-3,
@@ -100,7 +101,7 @@ IterativeLQR.initialize_states!(prob, x̄)
 # ## solve
 @time IterativeLQR.solve!(prob)
 
-vis = Visualizer()
+vis=visualizer()
 open(env.vis)
 
 # ## solution
@@ -114,20 +115,3 @@ x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]
 visualize(env, x_view)
 
 set_camera!(env.vis, cam_pos=[0,-3,2], zoom=3)
-
-
-x_shift = deepcopy(x_sol)
-for x in x_shift
-    x[3] += 0.01
-end
-z = [minimal_to_maximal(env.mechanism, x) for x in x_shift]
-
-t = 1 #10, 20, 30, 41
-set_robot(env.vis, env.mechanism, z[41])
-
-# ## visualize
-x_view = [[x_shift[1] for t = 1:15]..., x_shift..., [x_shift[end] for t = 1:15]...]
-visualize(env, x_view)
-
-set_camera!(vis, cam_pos=[0,-50,0], zoom=30)
-set_floor!(env.vis, z=0.01)

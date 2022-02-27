@@ -13,14 +13,14 @@ using Random
 using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 # Build mechanism
-mech = getmechanism(:npendulum, timestep = 0.01, g = 0.0 * -9.81, Nb = 2)
+mech = getmechanism(:npendulum, timestep=0.01, g = 0.0 * -9.81, Nb = 2)
 initialize!(mech, :npendulum, ϕ1 = 0.5 * π)
 
 for (i,joint) in enumerate(mech.joints)
@@ -44,9 +44,9 @@ mech.joints[1].constraints[1].damper
 mech.joints[1].constraints[2].spring
 mech.joints[1].constraints[2].damper
 
-storage = simulate!(mech, 10.0, record = true, solver = :mehrotra!)
-# storage = simulate!(mech, 3.0, record = true, solver = :mehrotra!)
-visualize(mech, storage, vis = vis)
+storage = simulate!(mech, 10.0, record=true, solver = :mehrotra!)
+# storage = simulate!(mech, 3.0, record=true, solver = :mehrotra!)
+visualize(mech, storage, vis=vis)
 
 ################################################################################
 # Differentiation
@@ -56,7 +56,7 @@ visualize(mech, storage, vis = vis)
 data = get_data(mech)
 set_data!(mech, data)
 sol = get_solution(mech)
-Nb = length(collect(mech.bodies))
+Nb = length(mech.bodies)
 attjac = attitude_jacobian(data, Nb)
 
 # IFT
@@ -156,12 +156,12 @@ norm(solmat, Inf)
 ################################################################################
 include(joinpath(@__DIR__, "finite_diff.jl"))
 
-timestep = mech.timestep
+timestep= mech.timestep
 rot1 = mech.joints[1].constraints[2]
 rot2 = mech.joints[2].constraints[2]
 origin = mech.origin
-pbody = collect(mech.bodies)[1]
-cbody = collect(mech.bodies)[2]
+pbody = mech.bodies[1]
+cbody = mech.bodies[2]
 
 
 jac0, jac1 = finitediff_vel(rot2, pbody, cbody, timestep, spring_parent, spring_parent_jacobian_velocity_parent, diff_body = :parent)

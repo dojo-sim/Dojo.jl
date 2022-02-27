@@ -13,14 +13,14 @@ using Random
 using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
-linmech = getmechanism(:snake, Nb = 5, timestep = 0.02, g = -9.81, friction_coefficient = 0.2, contact = false, contact_type = :linear_contact)
-socmech = getmechanism(:snake, Nb = 5, timestep = 0.02, g = -9.81, friction_coefficient = 0.2, contact = false, contact_type = :nonlinear)
+linmech = getmechanism(:snake, Nb = 5, timestep=0.02, g = -9.81, friction_coefficient = 0.2, contact = false, contact_type = :linear_contact)
+socmech = getmechanism(:snake, Nb = 5, timestep=0.02, g = -9.81, friction_coefficient = 0.2, contact = false, contact_type = :nonlinear)
 
 x = [0,-1.0,0]
 v = [1,.3,4]
@@ -29,11 +29,11 @@ v = [1,.3,4]
 initialize!(linmech, :snake, x = x, v = v, ω = ω, ϕ1 = ϕ1)
 initialize!(socmech, :snake, x = x, v = v, ω = ω, ϕ1 = ϕ1)
 
-@elapsed linstorage = simulate!(linmech, 1.5, record = true, solver = :mehrotra!)
-@elapsed socstorage = simulate!(socmech, 1.5, record = true, solver = :mehrotra!)
+@elapsed linstorage = simulate!(linmech, 1.5, record=true, solver = :mehrotra!)
+@elapsed socstorage = simulate!(socmech, 1.5, record=true, solver = :mehrotra!)
 
-visualize(linmech, linstorage, vis = vis)
-visualize(socmech, socstorage, vis = vis)
+visualize(linmech, linstorage, vis=vis)
+visualize(socmech, socstorage, vis=vis)
 
 ################################################################################
 # Differentiation

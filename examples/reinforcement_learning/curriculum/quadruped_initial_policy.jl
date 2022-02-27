@@ -2,7 +2,7 @@ using Dojo
 using IterativeLQR
 using LinearAlgebra
 
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 ################################################################################
@@ -23,8 +23,8 @@ end
 # Build Mechanism
 ################################################################################
 opts_grad = SolverOptions(rtol=1e-4, btol=1e-4, verbose=false)
-gravity = -9.81
-timestep = 0.05
+gravity=-9.81
+timestep=0.05
 friction_coefficient = 0.8
 damper = 1.5
 spring = 20.0
@@ -33,9 +33,8 @@ spring = 20.0
 
 
 mech = get_quadruped(timestep=timestep, damper=damper, spring=spring,
-	gravity=gravity, body_contact=true,
+	gravity=gravity, contact_feet=true, contact_body=true,
 	joint_limits=[[-0.5, -0.5, -2.5,],[ 0.5,  1.5, -1.0,]],
-	contact=true,
 	limits=true)
 initialize!(mech, :quadruped, tran=[0,0,0.30], rot=[0,-0.1,0], v=[0.2,0,0])
 function ctrl!(mechanism, k)

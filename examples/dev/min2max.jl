@@ -48,7 +48,7 @@ xb = srand(3)
 vb = srand(3)
 qb = UnitQuaternion(rand(4)...)
 ϕb = srand(3)
-timestep = mech.timestep
+timestep= mech.timestep
 Δvϕ = minimal_velocities(joint, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
 Δv = minimal_velocities(tra, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
 Δϕ = minimal_velocities(rot, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
@@ -74,17 +74,17 @@ minimal_velocities_jacobian_velocity(:child,
 function ctrl!(mech, k)
 	set_input!(mech, 0.0*sones(input_dimension(mech))*mech.timestep)
 end
-# vis = Visualizer()
+# vis=visualizer()
 # open(vis)
-mechanism = get_mechanism(:pendulum, timestep = 0.02, gravity = -0.0 * 9.81)
+mechanism = get_mechanism(:pendulum, timestep=0.02, gravity=-0.0 * 9.81)
 initialize!(mechanism, :pendulum, ϕ1 = 0.5 * π, ω1 = 2.0)
-storage = simulate!(mechanism, 0.07, ctrl!, record = true, verbose = false)
+storage = simulate!(mechanism, 0.07, ctrl!, record=true, verbose=false)
 visualize(mechanism, storage, vis=vis)
 
 
 joint = mechanism.joints[1]
 tra = joint.translational
-timestep = mechanism.timestep
+timestep= mechanism.timestep
 pbody = mechanism.origin
 cbody = mechanism.bodies[1]
 

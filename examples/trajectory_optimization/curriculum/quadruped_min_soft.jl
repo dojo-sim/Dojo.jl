@@ -3,16 +3,16 @@ using IterativeLQR
 using LinearAlgebra
 
 # ## system
-include(joinpath(@__DIR__, "../../env/quadruped/methods/template.jl"))
+include(joinpath(@__DIR__, "../../environments/quadruped/methods/template.jl"))
 
-gravity = -9.81
+gravity=-9.81
 dt = 0.05
 friction_coefficient = 0.8
 damper = 5.0
 spring = 0.0
 env = quadruped(
-    mode=:min,
-    dt=dt,
+    mode=:minimal,
+    timestep=dt,
     gravity=gravity,
     friction_coefficient=friction_coefficient,
     damper=damper,
@@ -26,8 +26,8 @@ env = quadruped(
 open(env.vis)
 
 # ## dimensions
-n = env.nx
-m = env.nu
+n = env.num_states
+m = env.num_inputs
 d = 0
 
 ## simulate (test)

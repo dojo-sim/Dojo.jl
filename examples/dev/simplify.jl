@@ -1,7 +1,7 @@
 using Dojo
 using MeshCat
 
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 

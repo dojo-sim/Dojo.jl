@@ -13,14 +13,14 @@ using Random
 using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 # Build mechanism
-mech = getmechanism(:npendulum, timestep = 0.05, g = -9.81, Nb = 5)
+mech = getmechanism(:npendulum, timestep=0.05, g = -9.81, Nb = 5)
 initialize!(mech, :npendulum, ϕ1 = 0.1*pi)
 
 function cont!(mechanism, k; u = 1.0)
@@ -32,8 +32,8 @@ function cont!(mechanism, k; u = 1.0)
     return
 end
 
-storage = simulate!(mech, 10.0, cont!, record = true, solver = :mehrotra!)
-visualize(mech, storage, vis = vis)
+storage = simulate!(mech, 10.0, cont!, record=true, solver = :mehrotra!)
+visualize(mech, storage, vis=vis)
 plot([q.x for q in storage.q[1]])
 control_datamat(mech)
 
@@ -45,7 +45,7 @@ control_datamat(mech)
 data = get_data(mech)
 set_data!(mech, data)
 sol = get_solution(mech)
-Nb = length(collect(mech.bodies))
+Nb = length(mech.bodies)
 attjac = attitude_jacobian(data, Nb)
 
 # IFT
@@ -173,12 +173,12 @@ norm(solmat, Inf)
 ################################################################################
 include(joinpath(@__DIR__, "finite_diff.jl"))
 mech.timestep
-timestep = 0.01
+timestep=0.01
 rot1 = mech.joints[1].constraints[2]
 rot2 = mech.joints[2].constraints[2]
 origin = mech.origin
-pbody = collect(mech.bodies)[1]
-cbody = collect(mech.bodies)[2]
+pbody = mech.bodies[1]
+cbody = mech.bodies[2]
 
 jac0, jac1 = finitediff_vel(rot2, pbody, cbody, timestep, spring_parent, spring_parent_jacobian_velocity_parent, diff_body = :parent)
 @test norm(jac0 - jac1, Inf) < 1e-8

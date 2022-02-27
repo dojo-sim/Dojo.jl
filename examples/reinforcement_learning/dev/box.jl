@@ -2,18 +2,18 @@
 # Script
 ################################################################################
 
-env = make("dice", timestep = 0.05, gravity=-9.81);
+env = get_environment("dice", timestep=0.05, gravity=-9.81);
 reset(env, x = [0,0,0.2])
 action = nothing
 step(env, action)
 
-env = make("dice");
+env = get_environment("dice");
 for i = 1:20
     observation = reset(env)
     for t = 1:200
         # render(env)
         println(scn.(observation))
-        action = sample(env.aspace)
+        action = sample(env.action_space)
         observation, reward, done, info = step(env, action)
         if done
             println("Episode finished after $(t+1) timesteps")
@@ -41,19 +41,19 @@ using Random
 using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
-mech = get_mechanism(:dice, timestep = 0.01, gravity=-9.81, friction_coefficient = 0.2, contact = true, mode=:box, contact_type = :nonlinear)
-# mech = get_mechanism(:dice, timestep = 0.01, gravity=-9.81, friction_coefficient = 0.2, contact = true, mode=:box, contact_type = :linear)
-# mech = get_mechanism(:dice, timestep = 0.01, gravity=-9.81, contact = true, mode=:box, contact_type = :impact)
+mech = get_mechanism(:dice, timestep=0.01, gravity=-9.81, friction_coefficient = 0.2, contact = true, mode=:box, contact_type = :nonlinear)
+# mech = get_mechanism(:dice, timestep=0.01, gravity=-9.81, friction_coefficient = 0.2, contact = true, mode=:box, contact_type = :linear)
+# mech = get_mechanism(:dice, timestep=0.01, gravity=-9.81, contact = true, mode=:box, contact_type = :impact)
 Random.seed!(100)
 ω = 0.0 * (rand(3) .- 0.5) * 1
 x = [0, 0, 1.0]
 v = 1.0 * [4, 1, 0.0]
 initialize!(mech, :dice, x = x, v = v, ω = ω)
-storage = simulate!(mech, 1.3, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
+storage = simulate!(mech, 1.3, record=true, solver = :mehrotra!, verbose=false)
+visualize(mech, storage, vis=vis)

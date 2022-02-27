@@ -8,7 +8,7 @@ using Pkg
 Pkg.activate(module_dir())
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
@@ -18,8 +18,8 @@ include(joinpath(module_dir(), "src", "optional_components", "trajopt_utils.jl")
 using IterativeLQR
 
 # System
-gravity = -9.81
-timestep = 0.05
+gravity=-9.81
+timestep=0.05
 mech = get_mechanism(:halfcheetah, timestep=timestep, gravity=gravity, damper = 1.0, spring = 0.0)
 initialize!(mech, :halfcheetah)
 
@@ -58,8 +58,8 @@ end
 
 mech = get_mechanism(:halfcheetah, timestep=timestep, gravity=gravity, damper = 100.0, spring = 1000.0)
 initialize!(mech, :halfcheetah, x = 0.0, z = 0.0, θ = 0.0)
-@elapsed storage = simulate!(mech, 5.0, record = true, solver = :mehrotra!, verbose = false)
-visualize(mech, storage, vis = vis)
+@elapsed storage = simulate!(mech, 5.0, record=true, solver = :mehrotra!, verbose=false)
+visualize(mech, storage, vis=vis)
 ugc = gravity_compensation(mech)
 
 mech = get_mechanism(:halfcheetah, timestep=timestep, gravity=gravity, damper = 10.0, spring = 1000.0)
@@ -78,15 +78,15 @@ Random.seed!(0)
 
 # Model
 function fd(y, x, u, w)
-	y .= copy(step!(mech, x, u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false))
+	y .= copy(step!(mech, x, u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false))
 end
 
 function fdx(fx, x, u, w)
-	fx .= copy(get_maximal_gradients!(mech, x, u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[1])
+	fx .= copy(get_maximal_gradients!(mech, x, u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)[1])
 end
 
 function fdu(fu, x, u, w)
-	∇u = copy(get_maximal_gradients!(mech, x, u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose = false)[2])
+	∇u = copy(get_maximal_gradients!(mech, x, u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)[2])
 	fu .= ∇u * u_mask'
 end
 
@@ -105,10 +105,10 @@ w = [zeros(d) for t = 1:T-1]
 
 # Rollout
 x̄ = rollout(model, z1, ū, w)
-# step!(model.mech, x, u_mask'*u_control, ϵ = 1e-6, btol = 1e-6, undercut = 1.5, verbose = false)
-# getGradients!(model.mech, x, u_mask'*u_control, ϵ = 1e-6, btol = 1e-3, undercut = 1.5, verbose = false)
+# step!(model.mech, x, u_mask'*u_control, ϵ = 1e-6, btol = 1e-6, undercut = 1.5, verbose=false)
+# getGradients!(model.mech, x, u_mask'*u_control, ϵ = 1e-6, btol = 1e-3, undercut = 1.5, verbose=false)
 storage = generate_storage(mech, x̄)
-visualize(mech, storage; vis = vis)
+visualize(mech, storage; vis=vis)
 
 # Objective
 qt1 = [0.1; 0.1; 1.0; 0.001 * ones(3); 0.01 * ones(4); 0.01 * ones(3)]
@@ -153,4 +153,4 @@ IterativeLQR.constrained_ilqr_solve!(prob,
 
 x_sol, u_sol = get_trajectory(prob)
 storage = generate_storage(mech, x_sol)
-visualize(mech, storage, vis = vis)
+visualize(mech, storage, vis=vis)

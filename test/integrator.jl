@@ -22,7 +22,7 @@
     FD∂i∂q = FiniteDiff.finite_difference_jacobian(q0 ->
         Dojo.vector(Dojo.next_orientation(UnitQuaternion(q0..., false), ϕ0, timestep0)),
         Dojo.vector(q0))
-    @test norm(FD∂i∂q - Dojo.rotational_integrator_jacobian_orientation(q0, ϕ0, timestep0, attjac = false), Inf) < 1e-8
+    @test norm(FD∂i∂q - Dojo.rotational_integrator_jacobian_orientation(q0, ϕ0, timestep0, attjac=false), Inf) < 1e-8
 
     # ∇vϕ
     vel0 = [v0; ϕ0]

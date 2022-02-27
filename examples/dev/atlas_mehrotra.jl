@@ -10,7 +10,7 @@ Pkg.activate(module_dir())
 using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 
@@ -18,12 +18,12 @@ open(vis)
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 timestep0 = 0.1
-mech = getmechanism(:atlas, timestep = timestep0, g = -9.81, friction_coefficient = 0.8, contact = true,
+mech = getmechanism(:atlas, timestep= timestep0, g = -9.81, friction_coefficient = 0.8, contact = true,
     spring = 0.0, damper = 30.0, model_type = :fast)
 initialize!(mech, :atlas, tran = [0,0,1.1], rot = [0.1,0.05,0])
 
 function controller!(mechanism, k)
-    for (i,eqc) in enumerate(collect(mechanism.joints)[2:end])
+    for (i,eqc) in enumerate(mechanism.joints[2:end])
         pbody = get_body(mech, eqc.parentid)
         minJ = minimum(diag(pbody.J))
         for (i,joint) in enumerate(eqc.constraints)
@@ -37,9 +37,9 @@ function controller!(mechanism, k)
     return
 end
 
-@elapsed storage = simulate!(mech, 2.71, controller!, record = true, undercut = Inf,
+@elapsed storage = simulate!(mech, 2.71, controller!, record=true, undercut = Inf,
     solver = :mehrotra!, verbose = true)
-visualize(mech, storage, vis = vis)
+visualize(mech, storage, vis=vis)
 
 
 

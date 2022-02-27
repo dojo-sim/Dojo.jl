@@ -16,19 +16,19 @@ function getpendulum(; timestep::T = 0.01, g::T = -9.81, m::T = 1.0, l::T = 1.0,
     bodies = [pbody]
     eqcs = [joint_between_origin_and_pbody]
 
-    mech = Mechanism(origin, bodies, eqcs, g = g, timestep = timestep, spring=spring, damper=damper)
+    mech = Mechanism(origin, bodies, eqcs, g = g, timestep= timestep, spring=spring, damper=damper)
     return mech
 end
 
-vis = Visualizer()
+vis=visualizer()
 open(vis)
-mech = getpendulum(timestep = 0.01, g = -9.81, spring = 0.0, damper = 0.0)
+mech = getpendulum(timestep=0.01, g = -9.81, spring = 0.0, damper = 0.0)
 # mech.joints[1].λsol[2]
 # reset!.(mech.joints)
 
 ϕ1 = 0.4 * π
 initialize!(mech, :pendulum, ϕ1 = ϕ1)
-storage = simulate!(mech, 1.0, record = true, verbose = false)
+storage = simulate!(mech, 1.0, record=true, verbose=false)
 visualize(mech, storage, vis=vis)
 
 ################################################################################
@@ -40,7 +40,7 @@ include(joinpath(module_dir(), "examples", "diff_tools.jl"))
 data = get_data(mech)
 set_data!(mech, data)
 sol = get_solution(mech)
-Nb = length(collect(mech.bodies))
+Nb = length(mech.bodies)
 attjac = attitude_jacobian(data, Nb)
 
 data = get_data(mech)

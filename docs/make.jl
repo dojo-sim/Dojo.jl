@@ -37,6 +37,14 @@ makedocs(
             "gradients.md",
            ],
 
+        "Environments" => [
+            "atlas_env.md",
+            "quadruped_env.md",
+            "rexhopper_env.md",
+            "classic_env.md",
+            "gym_env.md",
+        ],
+
         "Examples" => [
             "simulation.md",
             "control.md",

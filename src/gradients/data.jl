@@ -20,7 +20,7 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, body::Body{T})
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, Δt)
     # Mass
-    gravity = mechanism.gravity
+    gravity=mechanism.gravity
     ∇m = [1 / Δt * (x2 - x1) + Δt/2 * gravity - 1 / Δt * (x3 - x2) + Δt/2 * gravity;
           szeros(T,3,1)]
     # Inertia
@@ -60,7 +60,7 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, pbody::Node{T}
     # this comes from the fact that the Joint Constraint force mapping of pbody
     # depends on cbody's data (x2b, q2b)
     # This is the same for spring and damper forces.
-    timestep = mechanism.timestep
+    timestep= mechanism.timestep
 
     ∇z2_aa = szeros(T,6,6)
     ∇z2_ab = szeros(T,6,6)

@@ -13,17 +13,17 @@ using Random
 using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
 include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
-mech = getmechanism(:quadruped, timestep = 0.01, g = -9.81, friction_coefficient = 0.8, contact = true, damper = 1.0, spring = 30.0)
+mech = getmechanism(:quadruped, timestep=0.01, g = -9.81, friction_coefficient = 0.8, contact = true, damper = 1.0, spring = 30.0)
 initialize!(mech, :quadruped, tran = [0,0,0.56], rot = [0.10,0.05,0.03], θ = 0.95)
-@elapsed storage = simulate!(mech, 0.5, record = true, verbose = false)
-visualize(mech, storage, vis = vis)
+@elapsed storage = simulate!(mech, 0.5, record=true, verbose=false)
+visualize(mech, storage, vis=vis)
 
 timestep_ = 0.001
 begin

@@ -1,5 +1,6 @@
 [deps]
+IterativeLQR = "605048dd-e178-462b-beb9-98a09398ef27"
 Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 
-[compat] 
+[compat]
 Literate = "2.13.0"

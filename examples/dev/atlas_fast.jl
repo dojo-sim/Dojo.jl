@@ -10,7 +10,7 @@ Pkg.activate(module_dir())
 using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
@@ -18,7 +18,7 @@ include(joinpath(module_dir(), "examples", "loader.jl"))
 
 
 timestep_ = 0.01
-mech = getmechanism(:atlas, timestep = timestep_, g = -2.0, friction_coefficient = 0.8, contact = true,
+mech = getmechanism(:atlas, timestep= timestep_, g = -2.0, friction_coefficient = 0.8, contact = true,
     spring = 0.0, damper = 50.0, model_type = :simple)
 initialize!(mech, :atlas, tran = [0,0,1.1], rot = [0.1,0.05,0])
 
@@ -37,7 +37,7 @@ length(eqc.constraints[2]) + 4joint_limits_length(eqc.constraints[2])
 
 SVector{1,Int}([1,])
 function controller!(mechanism, k)
-    for (i,eqc) in enumerate(collect(mechanism.joints)[2:end])
+    for (i,eqc) in enumerate(mechanism.joints[2:end])
         pbody = get_body(mech, eqc.parentid)
         minJ = minimum(diag(pbody.J))
         for (i,joint) in enumerate(eqc.constraints)
@@ -51,8 +51,8 @@ function controller!(mechanism, k)
     return
 end
 
-@elapsed storage = simulate!(mech, 4.01, controller!, record = true, solver = :mehrotra!, verbose = true)
-visualize(mech, storage, vis = vis)
+@elapsed storage = simulate!(mech, 4.01, controller!, record=true, solver = :mehrotra!, verbose = true)
+visualize(mech, storage, vis=vis)
 
 
 

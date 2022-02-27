@@ -1,13 +1,19 @@
+
+# PREAMBLE
+
+# PKG_SETUP
+
+# ## setup
 using Dojo
 using IterativeLQR
 using LinearAlgebra 
 
 # ## system
-gravity = -9.81
+gravity=-9.81
 dt = 0.1
-env = make("cartpole", 
-    mode=:min, 
-    dt=dt,
+env = get_environment("cartpole", 
+    mode=:minimal, 
+    timestep=dt,
     gravity=gravity);
 
 mujoco_inertia!(env.mechanism)
@@ -16,8 +22,8 @@ mujoco_inertia!(env.mechanism)
 open(env.vis)
 
 # ## dimensions
-n = env.nx
-m = env.nu
+n = env.num_states
+m = env.num_inputs
 
 # ## states
 z1 = maximal_to_minimal(env.mechanism, cartpole_nominal_max())
@@ -49,7 +55,7 @@ obj = [[ct for t = 1:T-1]..., cT]
 
 # ## constraints
 function goal(x, u, w)
-    Δ = x - zT
+    x - zT
 end
 
 cont = IterativeLQR.Constraint()

@@ -44,7 +44,7 @@ end
     position with `cam_pos` and the `zoom`.
 """
 function set_camera!(vis::Visualizer; zoom=1.0, cam_pos=nothing)
-    camvis = vis["/Cameras/default/rotated/<object>"]
+    camvis=vis["/Cameras/default/rotated/<object>"]
     setprop!(camvis, "zoom", zoom)
     (cam_pos != nothing) && MeshCat.settransform!(camvis,
         MeshCat.compose(

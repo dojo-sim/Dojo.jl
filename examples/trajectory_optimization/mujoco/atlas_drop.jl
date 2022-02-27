@@ -6,11 +6,11 @@ mj_activate("/home/taylor/.mujoco/bin/mjkey.txt") # set location to MuJoCo key p
 using LyceumMuJoCo, LyceumMuJoCoViz 
 
 # ## load MuJoCo 
-path = joinpath(@__DIR__, "../../../env/atlas/deps/atlas_v5_10Hz.xml")
-# path = joinpath(@__DIR__, "../../../env/atlas/deps/atlas_v5_50Hz.xml")
-# path = joinpath(@__DIR__, "../../../env/atlas/deps/atlas_v5_100Hz.xml")
-# path = joinpath(@__DIR__, "../../../env/atlas/deps/atlas_v5_250Hz.xml")
-# path = joinpath(@__DIR__, "../../../env/atlas/deps/atlas_v5_1000Hz.xml")
+path = joinpath(@__DIR__, "../../../environments/atlas/deps/atlas_v5_10Hz.xml")
+# path = joinpath(@__DIR__, "../../../environments/atlas/deps/atlas_v5_50Hz.xml")
+# path = joinpath(@__DIR__, "../../../environments/atlas/deps/atlas_v5_100Hz.xml")
+# path = joinpath(@__DIR__, "../../../environments/atlas/deps/atlas_v5_250Hz.xml")
+# path = joinpath(@__DIR__, "../../../environments/atlas/deps/atlas_v5_1000Hz.xml")
 
 include("mujoco_model.jl")
 atlas = MuJoCoModel(path)

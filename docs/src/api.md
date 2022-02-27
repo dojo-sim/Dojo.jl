@@ -12,9 +12,45 @@ CurrentModule = Dojo
 Pages = ["api.md"]
 ```
 
+## Index
+
+```@index
+Pages = ["api.md"]
+```
 
 ## Mechanism
 
+```@docs
+Mechanism
+```
+
+### Bodies 
+```@docs
+Node
+Body 
+Origin
+Shape
+
+```
+
+### Joints 
+```@docs
+JointConstraint 
+Joint 
+Rotational 
+Translational
+```
+
+### Contacts 
+```@docs
+ContactConstraint
+Contact 
+ImpactContact
+LinearContact 
+NonlinearContact
+```
+
+## Representation
 ```@docs
 ```
 
@@ -23,7 +59,7 @@ Pages = ["api.md"]
 ```@docs
 ```
 
-## Simulator
+## Simulation
 
 ```@docs
 ```

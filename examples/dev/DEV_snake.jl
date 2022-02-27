@@ -13,7 +13,7 @@ using Random
 using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
@@ -28,9 +28,9 @@ v = 0.1*[1,.3,4]
 ϕ1 = π/1.5
 initialize!(mech, :snake, x = x, v = v, ω = ω, ϕ1 = ϕ1)
 
-@elapsed storage = simulate!(mech, .28, record = true, solver = :mehrotra!)
+@elapsed storage = simulate!(mech, .28, record=true, solver = :mehrotra!)
 
-visualize(mech, storage, vis = vis)
+visualize(mech, storage, vis=vis)
 
 ################################################################################
 # Differentiation
@@ -100,8 +100,8 @@ ineqcs[3].parentid
 ineqcs[4].parentid
 
 
-collect(mech.joints)
-collect(mech.bodies)
+mech.joints
+mech.bodies
 collect(mech.contacts)
 5 + 2 * 6 + 4 * 8
 12 * 2 + 6 + 1

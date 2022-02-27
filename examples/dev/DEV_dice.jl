@@ -16,15 +16,15 @@ Pkg.activate(module_dir())
 # using MeshCat
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # Include new files
 # include(joinpath(module_dir(), "examples", "loader.jl"))
 
 mech = getmechanism(:box, timestep=0.01, g=-9.81, friction_coefficient=0.2, contact=false, mode=:box)#, contact_type = :nonlinear);
-# mech = getmechanism(:box, timestep = 0.01, g = -9.81, friction_coefficient = 0.2, contact = true, mode=:box, contact_type = :linear)
-# mech = getmechanism(:box, timestep = 0.01, g = -9.81, contact = true, mode=:box, contact_type = :impact)
+# mech = getmechanism(:box, timestep=0.01, g = -9.81, friction_coefficient = 0.2, contact = true, mode=:box, contact_type = :linear)
+# mech = getmechanism(:box, timestep=0.01, g = -9.81, contact = true, mode=:box, contact_type = :impact)
 
 Random.seed!(100)
 ω = 10.0 * (rand(3) .- 0.5) * 1
@@ -44,7 +44,7 @@ include(joinpath(module_dir(), "examples", "diff_tools.jl"))
 data = get_data(mech)
 set_data!(mech, data)
 sol = get_solution(mech)
-Nb = length(collect(mech.bodies))
+Nb = length(mech.bodies)
 attjac = attitude_jacobian(data, Nb)
 
 # IFT

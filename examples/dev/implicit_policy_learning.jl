@@ -88,8 +88,8 @@ abstract type QPOptions
 end
 
 @with_kw struct QPOptions19{T} <: QPOptions
-    outer_iterations::Int=10
-    inner_iterations::Int=15
+    outer_iterations=10
+    inner_iterations=15
     residual_tol::T=1e-5
     iterations_linesearch::Int=4
     decay_relaxation::T=0.2

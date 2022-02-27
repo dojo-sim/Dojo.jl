@@ -65,7 +65,7 @@ function φ(ϕ)
 	1.0 / sqrt(1.0 + norm(ϕ)^2.0) * [1.0; ϕ]
 end
 
-function visualize!(vis, p, q; timestep = 0.1)
+function visualize!(vis, p, q; timestep=0.1)
 	setvisible!(vis["/Background"], true)
 	setprop!(vis["/Background"], "top_color", RGBA(1.0, 1.0, 1.0, 1.0))
 	setprop!(vis["/Background"], "bottom_color", RGBA(1.0, 1.0, 1.0, 1.0))
@@ -125,7 +125,7 @@ function visualize!(vis, p, q; timestep = 0.1)
     MeshCat.setanimation!(vis, anim)
 end
 
-vis = Visualizer()
+vis=visualizer()
 render(vis)
 
 nq = 4
@@ -225,7 +225,7 @@ for t = 1:T
 	push!(x, newton(x[end], u1, h))
 end
 
-visualize!(vis, nothing, x, timestep = h)
+visualize!(vis, nothing, x, timestep= h)
 
 am = [angular_momentum(xt) - angular_momentum(x[1]) for xt in x]
 plot(hcat(am...)')
@@ -294,6 +294,6 @@ for t = 1:T
 	push!(H, rotation_matrix(q[end]) * DLT2(h, J, q[end-1], q[end]))
 end
 
-visualize!(vis, nothing, q, timestep = h)
+visualize!(vis, nothing, q, timestep= h)
 
 plot(hcat(H...)')

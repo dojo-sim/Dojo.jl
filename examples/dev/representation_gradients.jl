@@ -5,11 +5,11 @@ using Dojo
 using Test
 
 # Open visualizer
-vis = Visualizer()
+vis=visualizer()
 open(vis)
 
 # pendulum
-mech = get_mechanism(:npendulum, timestep = 0.01, gravity = -9.81 * 0.0, Nb=5)#, spring = 100.0, damper = 5.0)
+mech = get_mechanism(:npendulum, timestep=0.01, gravity=-9.81 * 0.0, Nb=5)#, spring = 100.0, damper = 5.0)
 Random.seed!(100)
 ϕ1 = 0.0#0.3π
 initialize!(mech, :npendulum, ϕ1 = ϕ1)
@@ -33,7 +33,7 @@ mech.joints[4].parent_id
 mech.joints[4].child_id		
 
 # sphere
-mech = get_mechanism(:sphere, timestep = 0.01, gravity = -9.81)
+mech = get_mechanism(:sphere, timestep=0.01, gravity=-9.81)
 initialize!(mech, :sphere)
 
 # half cheetah
@@ -57,8 +57,8 @@ reverse(mech.system.dfs_list)
 # mech = get_ant(;timestep=0.01, gravity=0.0)
 # initialize_ant!(mech)
 
-storage = simulate!(mech, 1.0, record = true, verbose = false)
-visualize(mech, storage, vis = vis)
+storage = simulate!(mech, 1.0, record=true, verbose=false)
+visualize(mech, storage, vis=vis)
 
 child_ids = [id for id in recursivedirectchildren!(mech.system, joint.id) if get_node(mech, id) isa JointConstraint]
 child_joints = [get_node(mech, id) for id in recursivedirectchildren!(mech.system, joint.id) if get_node(mech, id) isa JointConstraint]

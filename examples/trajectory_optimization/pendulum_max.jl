@@ -1,22 +1,29 @@
+# PREAMBLE
+
+# PKG_SETUP
+
+# ## setup
+using Dojo
 using IterativeLQR
+using LinearAlgebra
 
 # ## system
 dt = 0.05
-gravity = -9.81
+gravity=-9.81
 max_torque = 200.0
 max_speed = 8.0
-env = make("pendulum", 
-    mode=:max, 
+env = get_environment("pendulum", 
+    mode=:maximal, 
     max_speed=max_speed, 
     max_torque=max_torque,
     damper=1.0,
-    dt=dt,
+    timestep=dt,
     gravity=gravity,
     vis=vis);
 
 # ## dimensions
-n = env.nx
-m = env.nu
+n = env.num_states
+m = env.num_inputs
 
 # ## states
 z1 = pendulum_nominal_max()
