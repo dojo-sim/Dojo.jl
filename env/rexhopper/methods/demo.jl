@@ -132,3 +132,40 @@ data0 = get_data(mech)
 
 scn(residual_violation(mech), digits=0)
 residual_violation(mech)
+
+set_entries!(mech)
+fv0 = full_vector(mech.system)
+fM0 = full_matrix(mech.system)
+Δv0 = fM0 \ fv0
+
+ldu_factorization!(mech.system)    # factorize system, modifies the matrix in place
+ldu_backsubstitution!(mech.system) # solve system, modifies the vector in place
+Δv1 = full_vector(mech.system)
+
+
+
+mech.system.vector_entries
+res = norm(fv0, Inf)
+Δ0 = norm(Δv0, Inf)
+
+using Plots
+plot(Gray.(fM0))
+
+findmax(fv0)
+fM0[:,111]
+plot(Gray.(1e1abs.(reshape(Δv0, (6,47)))))
+plot(Gray.(1e1abs.(reshape(Δv1, (6,47)))))
+plot(Gray.(1e10abs.(reshape(Δv0 - Δv1, (6,47)))))
+norm(Δv0 - Δv1, Inf)
+
+plot(Gray.(1e1abs.(reshape(fv0, (6,47)))))
+plot(Gray.(1e1abs.(reshape(fM0[:,111], (6,47)))))
+
+fv0[111]
+fM0[111,111]
+Δv0[111]
+
+dc0 = mech.system.dimcol
+[sum(dc0[1:i-1])+1:sum(dc0[1:i]) for i in 1:length(dc0)][14]
+
+getfield.(mech.bodies, :id)
