@@ -26,7 +26,7 @@ The following people are involved in the development of Dojo:
 * [Taylor Howell](https://thowell.github.io/) (main developement, contact modeling, interior-point solver, gradients)
 * [Jan Bruedigam](https://github.com/janbruedigam) (main developemnt, maximal representation and graph-based solver)
 * [Zico Kolter](https://zicokolter.com/) (implicit differentiation)
-* [Zachary Manchester](https://www.ri.cmu.edu/ri-faculty/zachary-manchester/) (physics and algorithms)
+* [Zachary Manchester](https://www.ri.cmu.edu/ri-faculty/zachary-manchester/) (principal investigator, physics and algorithms)
 \*all contributors are affiliated with the [Robotic Exploration Lab](https://roboticexplorationlab.org/).
  
 If this project is useful for your work please consider
