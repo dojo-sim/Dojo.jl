@@ -24,53 +24,89 @@ Pages = ["api.md"]
 Mechanism
 ```
 
-### Bodies 
+### Nodes 
 ```@docs
 Node
-Body 
+Body
 Origin
+Constraint
 Shape
-
+EmptyShape 
+Mesh
+Box
+Cylinder 
+Capsule
+Sphere
+Pyramid
+Shapes
 ```
 
-### Joints 
+### Joints
 ```@docs
-JointConstraint 
 Joint 
 Rotational 
 Translational
+JointConstraint 
+Fixed
+Prismatic
+Planar
+FixedOrientation
+Revolute
+Cylindrical
+PlanarAxis
+FreeRevolute
+Orbital
+PrismaticOrbital
+PlanarOrbital
+FreeOrbital
+Spherical
+CylindricalFree
+PlanarFree
 ```
 
-### Contacts 
+### Contacts
 ```@docs
-ContactConstraint
 Contact 
 ImpactContact
 LinearContact 
 NonlinearContact
+ContactConstraint
 ```
 
-## Representation
+### Representations
 ```@docs
+State
 ```
 
-## Environments
+### Graph 
+```@docs 
+System
+Entry
+```
 
+## Environments 
 ```@docs
+Ant
+Atlas 
+Box 
+Cartpole
+HalfCheetah
+Hopper 
+Pendulum
+Quadruped 
+RexHopper 
+Walker 
 ```
 
 ## Simulation
-
 ```@docs
 ```
 
 ## Gradients
-
 ```@docs
 ```
 
 ## Visualization
-
 ```@docs
 ```
 
