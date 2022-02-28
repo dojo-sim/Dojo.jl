@@ -25,7 +25,8 @@ The second-order-cone product is:
 $$\beta \circ \eta = (\beta^T \eta, \beta_{(1)} \eta_{(2:n)} + \eta_{(1)} \beta_{(2:n)}),$$
 
 and,
-$$\mathbf{e} = (1, 0, \dots, 0) \label{soc_identity},$$
+
+$$\mathbf{e} = (1, 0, \dots, 0),$$
 
 is its corresponding identity element. Friction is recovered from the solution: $b = \beta^*_{(2:3)}$. The benefits of this model are increased physical fidelity and fewer optimization variables, without substantial increase in computational cost.
 
