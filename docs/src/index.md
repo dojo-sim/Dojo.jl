@@ -27,7 +27,8 @@ The following people are involved in the development of Dojo:
 * [Jan Bruedigam](https://github.com/janbruedigam) (main developemnt, maximal representation and graph-based solver)
 * [Zico Kolter](https://zicokolter.com/) (implicit differentiation)
 * [Zachary Manchester](https://www.ri.cmu.edu/ri-faculty/zachary-manchester/) (principal investigator, physics and algorithms)
-\*Development by the [Robotic Exploration Lab](https://roboticexplorationlab.org/).
+
+Development by the [Robotic Exploration Lab](https://roboticexplorationlab.org/).
  
 If this project is useful for your work please consider
 * [Citing](citing.md) the relevant papers
