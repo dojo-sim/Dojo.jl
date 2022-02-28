@@ -18,3 +18,9 @@ enforces physical behavior that impulses are repulsive (e.g., the floor does not
 $$\gamma \circ \phi(z) = 0,$$
 
 where $\circ$ is an element-wise product operator, enforces zero force if the body is not in contact and allows non-zero force during contact.
+
+
+### Constructor
+```@docs
+ImpactContact
+```
