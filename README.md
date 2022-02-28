@@ -27,7 +27,7 @@ A differentiable simulator for robotics.
 ### Tippe top
 <img src="examples/animations/tippetop.gif" width="150"/>
 
-### Tippe top
+### Pendulum swing-up
 <img src="examples/animations/pendulum.gif" width="150"/>
 
 ## Trajectory Optimization
