@@ -1,4 +1,12 @@
-# assemble Jacobian (i.e., A from "Ax = b")
+"""
+    full_matrix(system) 
+
+    returns matrix from a simulation step's linear system (i.e., A from "Ax = b")
+
+    system: System
+"""
+full_matrix(system::System) = full_matrix(system.matrix_entries, system.dimrow, system.dimcol)
+
 function full_matrix(matrix_entries::SparseMatrixCSC, dimrow, dimcol)
     range_row = [1:dimrow[1]]
     for (i,dim) in enumerate(collect(Iterators.rest(dimrow, 2)))
@@ -18,7 +26,12 @@ function full_matrix(matrix_entries::SparseMatrixCSC, dimrow, dimcol)
     return A
 end
 
-full_matrix(system::System) = full_matrix(system.matrix_entries, system.dimrow, system.dimcol)
-
 # assemble gradient (i.e., b from "Ax = b")
+"""
+    full_vector(system) 
+
+    returns residual vector from a simulation step's linear system (i.e., b from "Ax = b")
+
+    system: System
+"""
 full_vector(system) = vcat(getfield.(system.vector_entries,:value)...)

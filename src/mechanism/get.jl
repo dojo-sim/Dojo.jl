@@ -133,26 +133,6 @@ function get_next_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,N
 	return z_next
 end
 
-"""
-    get_maximal_gradients!(mechanism, z, u; opts) 
-
-    return maximal gradients for mechanism 
-    note: this requires simulating the mechanism for one time step
-
-    mechanism: Mechanism
-    z: state 
-    u: input
-    opts: SolverOptions
-"""
-function get_maximal_gradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
-    opts=SolverOptions()) where {T,Nn,Ne,Nb,Ni}
-
-    step!(mechanism, z, u, opts=opts)
-    jacobian_state, jacobian_control = get_maximal_gradients(mechanism)
-
-    return jacobian_state, jacobian_control
-end
-
 # minimal 
 """
     get_minimal_state(mechanism) 

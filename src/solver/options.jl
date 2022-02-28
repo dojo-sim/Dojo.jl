@@ -3,15 +3,15 @@
 
     Options and tolerances of primal-dual interior point solver.
 
-    rtol - defaults to 1e-6 - tolerance on residual violations (equality constraints)
-    btol - defaults to 1e-3 - tolerance on bilinear violations (complementarity constraints)
-    ls_scale - defaults to 0.5 - line search scaling factor (α_new ← ls_scale * α_current)
-    max_iter - defaults to 50 - maximum number of Newton iterations
-    max_ls - defaults to 10 - maximum number of line search steps
-    undercut - defaults to Inf - complementarity slackness target; solver will aim at reaching complementarity violation = btol / undercut
-    no_progress_max - defaults to 3 - number of Newton's iterations without progress trigerring the rescaling of the target complementarity violation
-    no_progress_undercut - defaults to 10 - undercut scaling factor (target_new ← target_current / no_progress_undercut)
-    verbose - defaults to false - flag for printing the status of the solver during the solve
+    rtol: tolerance on residual violations (equality constraints); defaults to 1e-6
+    btol: tolerance on bilinear violations (complementarity constraints); defaults to 1e-3
+    ls_scale: line search scaling factor (α_new ← ls_scale * α_current); defaults to 0.5
+    max_iter: maximum number of Newton iterations; defaults to 50
+    max_ls: maximum number of line search steps; defaults to 10
+    undercut: complementarity slackness target; solver will aim at reaching complementarity violation = btol / undercut; defaults to Inf
+    no_progress_max: number of Newton's iterations without progress trigerring the rescaling of the target complementarity violation; defaults to 3
+    no_progress_undercut: undercut scaling factor (target_new ← target_current / no_progress_undercut); defaults to 10
+    verbose: flag for printing the status of the solver during the solve; defaults to false
 """
 @with_kw mutable struct SolverOptions{T}
     rtol::T=1.0e-6

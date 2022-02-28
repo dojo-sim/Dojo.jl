@@ -1,9 +1,16 @@
 """
-    Ordered list of ids from root to leaves, all nodes are visited a single time
-    excluding: origin & joints forming a loop which are not visited.
+    root_to_leaves_ordering(mechanism; exclude_origin, exclude_loop_joints)
+
+    ordered list of ids from root to leaves, all nodes are visited a single time
+        excluding: origin, joints forming a loop which are not visited
+    
+    mechanism: Mechanism 
+    exclude_origin: flag to exclude origin from traversal 
+    exclude_loop_joints: flag to exclude loop joints from traversal
 """
 function root_to_leaves_ordering(mechanism::Mechanism{T};
-        exclude_origin::Bool=true, exclude_loop_joints::Bool=true) where T
+        exclude_origin::Bool=true, 
+        exclude_loop_joints::Bool=true) where T
     nodes = [mechanism.origin; mechanism.bodies; mechanism.joints; mechanism.contacts]
     loop_joints = get_loop_joints(mechanism.bodies, mechanism.joints)
     return root_to_leaves_ordering(nodes, loop_joints,
@@ -11,7 +18,8 @@ function root_to_leaves_ordering(mechanism::Mechanism{T};
 end
 
 function root_to_leaves_ordering(nodes::Vector{Node{T}}, loop_joints;
-        exclude_origin::Bool=true, exclude_loop_joints::Bool=true) where T
+        exclude_origin::Bool=true, 
+        exclude_loop_joints::Bool=true) where T
     ids = Vector{Int64}()
     stack = [0]
     while length(stack) > 0

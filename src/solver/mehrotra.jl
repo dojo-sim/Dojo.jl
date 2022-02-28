@@ -1,7 +1,7 @@
 """
     mehrotra!(mechanism; opts)
 
-    interior-point solver for simulation feasibility problem
+    interior-point solver for simulation-step feasibility problem
 
     mechanism: Mechanism
     opts: SolverOptions
@@ -22,6 +22,7 @@ function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
 
     bvio = bilinear_violation(mechanism) # does not require to apply set_entries!
     rvio = residual_violation(mechanism) # does not require to apply set_entries!
+    
 	opts.verbose && solver_header()
     for n = Base.OneTo(opts.max_iter)
         opts.verbose && solver_status(mechanism, α, rvio, bvio, n, μtarget, undercut)

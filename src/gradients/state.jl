@@ -1,3 +1,11 @@
+"""
+	maximal_to_minimal_jacobian(mechanism, z)
+
+	Jacobian of mapping from maximal to minimal representation
+
+	mechanism: Mechanism 
+	z: maximal state
+"""
 function maximal_to_minimal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) where {T,Nn,Ne,Nb,Ni,Tz}
 	J = zeros(minimal_dimension(mechanism), maximal_dimension(mechanism) - Nb)
 	timestep= mechanism.timestep
@@ -49,6 +57,26 @@ function maximal_to_minimal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::Abs
 	return J
 end
 
+"""
+    get_maximal_gradients!(mechanism, z, u; opts) 
+
+    return maximal gradients for mechanism 
+    note: this requires simulating the mechanism for one time step
+
+    mechanism: Mechanism
+    z: state 
+    u: input
+    opts: SolverOptions
+"""
+function get_maximal_gradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, u::AbstractVector{T};
+    opts=SolverOptions()) where {T,Nn,Ne,Nb,Ni}
+
+    step!(mechanism, z, u, opts=opts)
+    jacobian_state, jacobian_control = get_maximal_gradients(mechanism)
+
+    return jacobian_state, jacobian_control
+end
+
 function get_maximal_gradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	timestep= mechanism.timestep
 	nu = input_dimension(mechanism)
@@ -97,7 +125,15 @@ function get_maximal_gradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,
 	return jacobian_state, jacobian_control
 end
 
-function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
+"""
+	minimal_to_maximal_jacobian(mechanism, y)
+
+	Jacobian of mapping from minimal to maximal representation
+
+	mechanism: Mechanism 
+	y: minimal state
+"""
+function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, y::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
 	timestep= mechanism.timestep
 	J = zeros(maximal_dimension(mechanism, attjac=true), minimal_dimension(mechanism))
 
@@ -143,7 +179,7 @@ function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::Abs
 end
 
 """
-    get_minimal_gradients!(mechanism, z, u; opts) 
+    get_minimal_gradients!(mechanism, y, u; opts) 
 
     return minimal gradients for mechanism 
     note: this requires simulating the mechanism for one time step

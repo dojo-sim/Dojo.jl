@@ -8,7 +8,7 @@ using Dojo
 # ## Simulation
 timestep=0.01
 gravity=0.0
-mech = get_dzhanibekov(
+mech = get_mechanism(:dzhanibekov,
         timestep=timestep, 
         gravity=gravity);
 

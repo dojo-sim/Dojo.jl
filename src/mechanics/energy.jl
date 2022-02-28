@@ -1,6 +1,11 @@
 
 """
-    Total mechanical energy of a mechanism.
+    mechanical_energy(mechanism, storage)
+
+    mechanism's total mechanical energy
+
+    mechanism: Mechanism 
+    storage: Storage
 """
 function mechanical_energy(mechanism::Mechanism, storage::Storage)
     ke = kinetic_energy(mechanism, storage)
@@ -10,7 +15,12 @@ function mechanical_energy(mechanism::Mechanism, storage::Storage)
 end
 
 """
-    Kinetic energy of a mechanism due to linear and angular velocity.
+    kinetic_energy(mechanism, storage)
+
+    mechanism's kinetic energy from linear and angular velocity
+
+    mechanism: Mechanism 
+    storage: Storage
 """
 function kinetic_energy(mechanism::Mechanism, storage::Storage{T,N}) where {T,N}
     ke = zeros(T,N)
@@ -20,9 +30,6 @@ function kinetic_energy(mechanism::Mechanism, storage::Storage{T,N}) where {T,N}
     return ke
 end
 
-"""
-    Kinetic energy of a mechanism due to linear and angular velocity.
-"""
 function kinetic_energy(mechanism::Mechanism, storage::Storage{T,N}, t::Int) where {T,N}
     ke = 0.0
     for (i,body) in enumerate(mechanism.bodies)
@@ -35,7 +42,12 @@ function kinetic_energy(mechanism::Mechanism, storage::Storage{T,N}, t::Int) whe
 end
 
 """
-    Potential energy of a mechanism due to gravity and springs in the joints.
+    potential_energy(mechanism, storage)
+
+    mechanism's potential energy from gravity and springs
+
+    mechanism: Mechanism 
+    storage: Storage
 """
 function potential_energy(mechanism::Mechanism, storage::Storage{T,N}) where {T,N}
     pe = zeros(T,N)
@@ -45,9 +57,6 @@ function potential_energy(mechanism::Mechanism, storage::Storage{T,N}) where {T,
     return pe
 end
 
-"""
-    Potential energy of a mechanism due to gravity and springs in the joints.
-"""
 function potential_energy(mechanism::Mechanism{T,Nn,Ne,Nb}, storage::Storage{T,Ns}, t::Int) where {T,Nn,Ne,Nb,Ns}
     pe = 0.0
 

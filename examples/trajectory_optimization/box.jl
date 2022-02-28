@@ -10,7 +10,7 @@ using LinearAlgebra
 # ## system
 gravity=-9.81
 dt = 0.1
-env = get_environment("block", 
+env = get_environment(:block, 
     representation=:maximal, 
     timestep=dt,
     friction_coefficient=0.5,

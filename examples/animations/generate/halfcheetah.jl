@@ -14,7 +14,7 @@ end
 MeshCat.setanimation!(env.vis, anim)
 
 # ## Ghost
-env = get_environment("halfcheetah", timestep=0.05)
+env = get_environment(:halfcheetah, timestep=0.05)
 open(env.vis)
 setvisible!(env.vis[:robot], false)
 timesteps = [1, 50, 60, 70, 80, 90, 100, 108, T]
@@ -32,7 +32,7 @@ end
 
 
 ## test random policy
-env = get_environment("halfcheetah", representation=:minimal, g=-9.81, timestep=0.05)
+env = get_environment(:halfcheetah, representation=:minimal, g=-9.81, timestep=0.05)
 initialize!(env.mechanism, :halfcheetah)
 open(env.vis)
 # storage = simulate!(env.mechanism, 1.0, record=true, verbose=false)

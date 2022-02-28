@@ -144,7 +144,6 @@ include(joinpath("..", "environments", "mechanisms.jl"))
 include(joinpath("..", "environments", "environment.jl"))
 include(joinpath("..", "environments", "dynamics.jl"))
 include(joinpath("..", "environments", "utilities.jl"))
-
 include(joinpath("..", "environments", "include.jl"))
 
 # Bodies
@@ -204,12 +203,15 @@ export
 
 # Maximal
 export
+    set_maximal_state!,
     set_maximal_configurations!,
     set_maximal_velocities!,
+    get_maximal_state,
     maximal_dimension
 
 # Minimal
 export
+    set_minimal_state!,
     set_minimal_coordinates!,
     set_minimal_velocities!,
     get_minimal_state,

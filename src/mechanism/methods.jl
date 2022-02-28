@@ -19,14 +19,29 @@ function parent_joints(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, body::Body) where {T
 end
 
 # dimensions
+"""
+    minimal_dimension(mechanism) 
+
+    dimension of a mechanism's minimal representation 
+
+    mechanism: Mechanism
+"""
 function minimal_dimension(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
     nx = 0
     free_rot_base = false # we are going to check if the link attached to the base has free orientation
-    nx = 2 * input_dimension(mechanism, ignore_floating_base = false)
+    nx = 2 * input_dimension(mechanism, 
+        ignore_floating_base=false)
     free_rot_base && (nx += 1)
     return nx
 end
 
+"""
+    maximal_dimension(mechanism) 
+
+    dimension of a mechanism's maximal representation 
+
+    mechanism: Mechanism 
+"""
 maximal_dimension(mechanism::Mechanism{T,Nn,Ne,Nb}; attjac::Bool=false) where {T,Nn,Ne,Nb} = attjac ? 12Nb : 13Nb
 
 """ 

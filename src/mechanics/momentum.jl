@@ -1,6 +1,19 @@
 """
-    Linear and angular momentum of a body using Legendre transform.
+    momentum(mechanism, storage) 
+
+    mechanism's linear and angular momentum 
+
+    mechanism: Mechanism 
+    storage: Storage 
 """
+function momentum(mechanism::Mechanism, storage::Storage{T,N}) where {T,N}
+    m = [szeros(T,6) for i = 1:N]
+    for i = 1:N
+        m[i] = momentum(mechanism, storage, i)
+    end
+    return m # in world frame
+end
+
 function momentum(mechanism::Mechanism{T}, body::Body{T}) where T
     timestep= mechanism.timestep
     state = body.state
@@ -51,14 +64,6 @@ function momentum(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, storage::Storage{T,Ns}, t
     end
 
     return [p_linear; p_angular] # in world frame
-end
-
-function momentum(mechanism::Mechanism, storage::Storage{T,N}) where {T,N}
-    m = [szeros(T,6) for i = 1:N]
-    for i = 1:N
-        m[i] = momentum(mechanism, storage, i)
-    end
-    return m # in world frame
 end
 
 function center_of_mass(mechanism::Mechanism{T}, storage::Storage{T,N}, t::Int) where {T,N}

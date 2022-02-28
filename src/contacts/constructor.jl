@@ -41,17 +41,15 @@ mutable struct ContactConstraint{T,N,Nc,Cs,N½} <: Constraint{T,N}
 end
 
 """
-    contact_constraint(bodies::Vector{Body{T}}) 
+    contact_constraint(bodies::Vector{Body}) 
 
     generate ContactConstraints for each Body in list
 
-    provide:
-
-    normal - surface normal for each contact point
-    friction coefficient - value of coefficient of friction for each contact point (optional for `ImpactContact`)
-    contact_points - the offset with respect to the center of Body for each contact point (optional)
-    offset - offset for each contact point (optional)
-    contact_type - `:nonlinear`, `:linear`, `:impact`
+    normal: surface normal for each contact point
+    friction coefficient: value of coefficient of friction for each contact point (optional for ImpactContact)
+    contact_points: the offset with respect to the center of Body for each contact point (optional)
+    offset: position offset for each contact point (optional)
+    contact_type: :nonlinear, :linear, :impact
 """
 function contact_constraint(bodies::Vector{Body{T}},
         normal::AbstractVector{<:AbstractVector};

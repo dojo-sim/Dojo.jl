@@ -1,16 +1,31 @@
-function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
+""" 
+	minimal_to_maximal(mechanism, y) 
+
+	convert minimal to maximal representation
+
+	mechanism: Mechanism 
+	y: minimal state
+"""
+function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, y::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
 	off = 0
 	for id in mechanism.root_to_leaves
 		(id > Ne) && continue # only treat joints
 		joint = mechanism.joints[id]
 		nu = input_dimension(joint)
-		set_minimal_coordinates_velocities!(mechanism, joint, xmin=x[off .+ SUnitRange(1, 2nu)])
+		set_minimal_coordinates_velocities!(mechanism, joint, xmin=y[off .+ SUnitRange(1, 2nu)])
 		off += 2nu
 	end
-	z = get_maximal_state(mechanism)
-	return z
+	return get_maximal_state(mechanism)
 end
 
+""" 
+	maximal_to_minimal(mechanism, z)
+
+	convert maximal to minimal representation
+
+	mechanism: Mechanism 
+	z: maximal state
+"""
 function maximal_to_minimal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) where {T,Nn,Ne,Nb,Ni,Tz}
 	x = []
 	for id in mechanism.root_to_leaves

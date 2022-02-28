@@ -11,7 +11,7 @@ using LinearAlgebra
 # ## system
 gravity=-9.81
 timestep = 0.1
-env = get_environment("cartpole", 
+env = get_environment(:cartpole, 
     representation=:maximal, 
     timestep=timestep,
     gravity=gravity);

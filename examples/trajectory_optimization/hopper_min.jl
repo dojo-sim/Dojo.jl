@@ -10,7 +10,7 @@ using LinearAlgebra
 # ## system
 timestep = 0.05
 gravity=-9.81
-env = get_environment("raiberthopper",
+env = get_environment(:raiberthopper,
     representation=:minimal,
     timestep=timestep,
     gravity=gravity);

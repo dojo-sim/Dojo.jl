@@ -23,7 +23,7 @@ include("../ags.jl")
 
 
 opts_grad = SolverOptions(rtol = 1e-4, btol = 1e-3, undercut = 2.0)
-env = get_environment("halfcheetah", vis=vis, dt = 0.05, opts_grad = opts_grad)
+env = get_environment(halfcheetah", vis=vis, dt = 0.05, opts_grad = opts_grad)
 obs = reset(env)
 render(env)
 input_size = length(obs)

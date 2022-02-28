@@ -9,7 +9,7 @@ using LinearAlgebra
 include(joinpath(@__DIR__, "algorithms/ars.jl")) # augmented random search
 
 # ## Environment
-env = get_environment("halfcheetah", 
+env = get_environment(:halfcheetah, 
     timestep=0.05)
 obs = reset(env)
 

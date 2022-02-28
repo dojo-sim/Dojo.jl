@@ -49,10 +49,10 @@ end
 
     construct existing environment 
 
-    model: String, name of of environment 
+    model: name of of environment 
     kwargs: environment specific parameters
 """
-function get_environment(model::String; kwargs...)
+function get_environment(model; kwargs...)
     return eval(Symbol(model))(; kwargs...)
 end
 

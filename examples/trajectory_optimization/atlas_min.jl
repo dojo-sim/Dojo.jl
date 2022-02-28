@@ -1,33 +1,33 @@
+# PREAMBLE
+
+# PKG_SETUP
+
+# ## setup
 using Dojo
 using IterativeLQR
-using LinearAlgebra
+using LinearAlgebra 
+
+# ## visualizer
+vis = Visualizer() 
+open(vis)
 
 # ## system
 include(joinpath(@__DIR__, "../../environments/atlas/methods/template.jl"))
 
-gravity=-9.81
-dt = 0.05
+gravity = -9.81
+timestep = 0.05
 friction_coefficient = 0.8
 damper = 50.0
 spring = 0.0
 model_type = :armless
-env = get_environment("atlas",
+env = get_environment(:atlas,
     representation=:minimal,
-    timestep=dt,
+    timestep=timestep,
     gravity=gravity,
     friction_coefficient=friction_coefficient,
     damper=damper,
     spring=spring,
 	model_type=model_type)
-quadruped()
-
-# ## visualizer
-open(env.vis)
-
-# ## simulate (test)
-# initialize!(env.mechanism, :quadruped)
-# storage = simulate!(env.mechanism, 0.5, record=true, verbose=false)
-# visualize(env.mechanism, storage, vis=env.vis)
 
 # ## dimensions
 n = env.num_states
@@ -37,35 +37,58 @@ d = 0
 # ## reference trajectory
 N = 1
 initialize!(env.mechanism, :atlas)
-xref = atlas_trajectory(env.mechanism; timestep=dt, r=0.0, x=0.03, z=0.85, N=12, Ncycles=N)
+xref = atlas_trajectory(env.mechanism; 
+	timestep=timestep, 
+	r=0.0, 
+	x=0.03, 
+	z=0.85, 
+	N=12, 
+	Ncycles=N)
 zref = [minimal_to_maximal(env.mechanism, x) for x in xref]
 visualize(env, xref)
-#
-# storage = simulate!(env.mechanism, 0.1, record=true)
-# visualize(env.mechanism, storage, vis=env.vis)
-# center_of_mass(env.mechanism, storage, 1)
 
 ## gravity compensation TODO: solve optimization problem instead
-mech = get_mechanism(:atlas, timestep=dt, gravity=gravity, friction_coefficient=friction_coefficient, damper=1000.0,
-	spring=spring, model_type=model_type)
+mech = get_mechanism(:atlas, 
+	timestep=timestep, 
+	gravity=gravity, 
+	friction_coefficient=friction_coefficient, 
+	damper=1000.0,
+	spring=spring, 
+	model_type=model_type)
+
 initialize!(mech, :atlas)
-storage = simulate!(mech, 0.10, record=true, verbose=false)
-visualize(mech, storage, vis=env.vis)
-# ugc = gravity_compensation(mech)
-# u_control = ugc[6 .+ (1:15)]
+storage = simulate!(mech, 0.10, 
+	record=true, 
+	verbose=false)
+
+visualize(mech, storage, 
+	vis=env.vis)
+
 F_damper = get_damper_impulses(env.mechanism)
 u_damper = F_damper * env.mechanism.timestep
 u_control = u_damper[6 .+ (1:15)]
 
-mech = get_mechanism(:atlas, timestep=dt, gravity=gravity, friction_coefficient=friction_coefficient, damper=0.0,
-	spring=spring, model_type=model_type)
+mech = get_mechanism(:atlas, 
+	timestep=timestep, 
+	gravity=gravity, 
+	friction_coefficient=friction_coefficient, 
+	damper=0.0,
+	spring=spring, 
+	model_type=model_type)
+
 function controller!(mechanism, k)
     set_input!(mechanism, u_damper)
     return
 end
-initialize!(mech, :atlas, tran=[0,0,0.0])
-storage = simulate!(mech, 0.50, controller!, record=true, verbose=false)
-visualize(mech, storage, vis=env.vis)
+
+initialize!(mech, :atlas, 
+	body_position=[0,0,0.0])
+storage = simulate!(mech, 0.50, controller!, 
+	record=true, 
+	verbose=false)
+
+visualize(mech, storage, 
+	vis=env.vis)
 
 function get_damper_impulses(mechanism::Mechanism{T}) where T
 	joints = mechanism.joints
@@ -94,17 +117,6 @@ function get_damper_impulses(mechanism::Mechanism{T}) where T
 	return u
 end
 
-
-# joint0 = env.mechanism.joints.values[1]
-# body0 = get_body(env.mechanism, joint0.parent_id)
-# df = damper_impulses(mech, joint0, body0)
-# nullspace_mask(joint0.constraints[1])# * df[1:3]
-# nullspace_mask(joint0.constraints[2])# * df[4:6]
-# nf, nF = size(nullspace_mask(joint0.constraints[1]))
-# nf
-# null
-# u = get_damper_impulses(env.mechanism)
-
 # ## horizon
 T = N * (25 - 1) + 1
 
@@ -126,8 +138,8 @@ visualize(env, x̄)
 
 # ## objective
 qt = [0.3; 0.05; 0.05; 0.01 * ones(3); 0.01 * ones(3); 0.01 * ones(3); fill(0.002, 30)...]
-ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(dt * qt) * (x - xref[t]) + transpose(u) * Diagonal(dt * 0.002 * ones(m)) * u for t = 1:T-1]
-oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(dt * qt) * (x - xref[end])
+ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(timestep * qt) * (x - xref[t]) + transpose(u) * Diagonal(timestep * 0.002 * ones(m)) * u for t = 1:T-1]
+oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(timestep * qt) * (x - xref[end])
 
 cts = IterativeLQR.Cost.(ots, n, m, d)
 cT = IterativeLQR.Cost(oT, n, 0, 0)
@@ -151,7 +163,7 @@ IterativeLQR.initialize_states!(prob, x̄)
 
 # ## solve
 IterativeLQR.solve!(prob,
-    verbose = true,
+    verbose=true,
 	linesearch=:armijo,
     α_min=1.0e-5,
     obj_tol=1.0e-3,
@@ -174,7 +186,10 @@ x_sol, u_sol = IterativeLQR.get_trajectory(prob)
 x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]
 visualize(env, x_view)
 
-set_camera!(env.vis, zoom=5, cam_pos=[0,-5,0])
+set_camera!(env.vis, 
+	zoom=5.0, 
+	cam_pos=[0.0, -5.0, 0.0])
+
 z = [minimal_to_maximal(env.mechanism, x) for x in x_sol]
 t = 1 #10, 20, 30, 41
 set_robot(env.vis, env.mechanism, z[t])

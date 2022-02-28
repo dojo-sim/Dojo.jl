@@ -9,7 +9,7 @@ using LinearAlgebra
 include(joinpath(@__DIR__, "algorithms/ars.jl")) # augmented random search
 
 # ## Ant
-env = get_environment("ant", 
+env = get_environment(:ant, 
     representation=:minimal, 
     gravity=-9.81, 
     timestep=0.05, 
