@@ -14,12 +14,12 @@ mech = get_mechanism(:dzhanibekov,
 
 # ## Simulate
 initialize_dzhanibekov!(mech,
-    angular_velocity=[8.0; 0.01; 0.0])
+    angular_velocity=[8.0; 0.01; 0.0]);
 storage = simulate!(mech, 8.00,
     record=true,
-    verbose=false)
+    verbose=false);
 
 # ## Visualizers
 vis = Visualizer()
-open(vis)
-visualize(mech, storage, vis=vis)
+render(vis)
+visualize(mech, storage, vis=vis);
