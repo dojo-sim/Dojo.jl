@@ -2,6 +2,16 @@ push!(LOAD_PATH, "../src/")
 
 using Documenter#, Dojo
 
+# # copy animations from src/examples/animations to docs/src/animations
+# path_doc_animations = joinpath(@__DIR__, "src/animations")
+# !isdir(path_doc_animations) && mkdir(path_doc_animations)
+# path_animations = joinpath(@__DIR__, "../examples/animations")
+# files = readdir(path_animations)
+# filter!(x -> endswith(x, ".gif"), files)
+# for file in files
+#     cp(joinpath(path_animations, file), joinpath(path_doc_animations, file))
+# end
+
 makedocs(
     modules = [Dojo],
     format = Documenter.HTML(prettyurls = false),
