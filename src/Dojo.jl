@@ -45,7 +45,7 @@ include(joinpath("graph", "dfs.jl"))
 include(joinpath("graph", "cycles.jl"))
 include(joinpath("graph", "ldu.jl"))
 
-# Node 
+# Node
 include(joinpath("mechanism", "node.jl"))
 include(joinpath("mechanism", "id.jl"))
 
@@ -129,7 +129,7 @@ include(joinpath("visuals", "set.jl"))
 include(joinpath("visuals", "convert.jl"))
 include(joinpath("visuals", "colors.jl"))
 
-# Data 
+# Data
 include(joinpath("mechanism", "data.jl"))
 
 # Gradients
@@ -147,7 +147,7 @@ include(joinpath("..", "environments", "utilities.jl"))
 include(joinpath("..", "environments", "include.jl"))
 
 # Bodies
-export 
+export
     Body,
     Origin,
     Box,
@@ -184,31 +184,31 @@ export
 # Contacts
 export
     ContactConstraint,
-    ImpactContact, 
-    LinearContact, 
+    ImpactContact,
+    LinearContact,
     NonlinearContact,
     get_contact_constraint
 
 # Inputs
-export 
+export
     set_input!,
     add_input!,
     input_dimension
 
 # Mechanism
-export 
+export
     Mechanism,
     get_mechanism,
     initialize!
-    
-# Maximal 
+
+# Maximal
 export
     set_maximal_coordinates!,
     set_maximal_velocities!,
     maximal_dimension
 
 # Minimal
-export 
+export
     set_minimal_coordinates!,
     set_minimal_velocities!,
     get_minimal_state,
@@ -231,7 +231,7 @@ export
     Environment
 
 # Orientation
-export 
+export
     UnitQuaternion,
     RotX,
     RotY,
@@ -239,16 +239,16 @@ export
     attitude_jacobian
 
 # Data
-export 
+export
     get_data,
     set_data!,
     get_solution
 
 # Gradients
-export 
+export
     maximal_to_minimal_jacobian,
     minimal_to_maximal_jacobian
-    
+
 # Mechanics
 export
     kinetic_energy,
@@ -262,16 +262,16 @@ export
     SolverOptions
 
 # Linear System "Ax = b"
-export 
+export
     full_matrix,
     full_data_matrix
 
-# Visuals 
-export 
-    Visualizer, 
+# Visuals
+export
+    Visualizer,
     set_background!,
     set_floor!,
-    set_surface!, 
+    set_surface!,
     set_light!,
     set_camera!
     RGBA

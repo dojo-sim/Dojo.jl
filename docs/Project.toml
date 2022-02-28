@@ -1,5 +1,6 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+Dojo = "ac60b53e-8d92-4c83-b960-e78698fa1916"
 
 [compat]
 Documenter = "0.27.12"

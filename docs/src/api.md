@@ -24,29 +24,28 @@ Pages = ["api.md"]
 Mechanism
 ```
 
-### Bodies 
+### Bodies
 ```@docs
 Node
-Body 
+Body
 Origin
 Shape
-
 ```
 
-### Joints 
+### Joints
 ```@docs
-JointConstraint 
-Joint 
-Rotational 
+JointConstraint
+Joint
+Rotational
 Translational
 ```
 
-### Contacts 
+### Contacts
 ```@docs
 ContactConstraint
-Contact 
+Contact
 ImpactContact
-LinearContact 
+LinearContact
 NonlinearContact
 ```
 
@@ -62,6 +61,7 @@ NonlinearContact
 ## Simulation
 
 ```@docs
+Dojo.SolverOptions
 ```
 
 ## Gradients
@@ -73,5 +73,3 @@ NonlinearContact
 
 ```@docs
 ```
-
-
