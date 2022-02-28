@@ -1,6 +1,10 @@
 # Overview
 
 ### Models
+Impact and friction behaviors are modeled, along with the system’s dynamics, as an NCP. This model simulates hard contact without requiring system-specific solver tuning. Additionally, contacts between a system and the environment are treated as a single graph node connected to a rigid body (see below). As a result, the simulator retains efficient linear-time complexity for open-chain mechanical systems.
+
+![graph](./assets/graph.png)
+
 Three contact models are implemented in Dojo:
 - [`ImpactContact`](@ref) enforces frictionless contact,
 - [`NonlinearContact`](@ref) enforces contact with a non-linear cone of friction (second-order cone),

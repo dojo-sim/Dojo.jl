@@ -61,7 +61,8 @@ makedocs(
         "Contact Models" => [
             "contact_models.md",
             "impact.md",
-            "friction.md",
+            "nonlinear_friction.md",
+            "linearized_friction.md",
         ],
 
         "Interior-Point Solver" => [
