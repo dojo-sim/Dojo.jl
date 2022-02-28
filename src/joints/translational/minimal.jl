@@ -64,7 +64,7 @@ function set_minimal_coordinates!(joint::Translational,
 
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
     xb = xa + vector_rotate(pa + Aᵀ * Δx, qa) - vector_rotate(pb, qb)
-    set_maximal_coordinates!(cnode; x=xb, q=cnode.state.q2)
+    set_maximal_configurations!(cnode; x=xb, q=cnode.state.q2)
     set_previous_configuration!(cnode, timestep)
     return nothing
 end

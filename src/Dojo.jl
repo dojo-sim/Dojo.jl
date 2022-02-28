@@ -45,8 +45,9 @@ include(joinpath("graph", "dfs.jl"))
 include(joinpath("graph", "cycles.jl"))
 include(joinpath("graph", "ldu.jl"))
 
-# Node
+# Graph objects
 include(joinpath("mechanism", "node.jl"))
+include(joinpath("mechanism", "edge.jl"))
 include(joinpath("mechanism", "id.jl"))
 
 # Bodies
@@ -179,7 +180,7 @@ export
     Spherical,
     CylindricalFree,
     PlanarFree,
-    get_joint_constraint
+    get_joint
 
 # Contacts
 export
@@ -187,7 +188,7 @@ export
     ImpactContact,
     LinearContact,
     NonlinearContact,
-    get_contact_constraint
+    get_contact
 
 # Inputs
 export
@@ -203,7 +204,7 @@ export
 
 # Maximal
 export
-    set_maximal_coordinates!,
+    set_maximal_configurations!,
     set_maximal_velocities!,
     maximal_dimension
 

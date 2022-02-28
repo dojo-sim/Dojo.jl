@@ -80,7 +80,7 @@ function get_humanoid(;
             contact_points=contacts, 
             offset=offsets)
 
-        set_minimal_coordinates!(mech, get_joint_constraint(mech, :auto_generated_floating_joint), [0;0;1.2;0.1;0.;0.])
+        set_minimal_coordinates!(mech, get_joint(mech, :auto_generated_floating_joint), [0;0;1.2;0.1;0.;0.])
         # mech = Mechanism(origin, bodies, eqs, [contacts_left; contacts_right], 
             # gravity=gravity, 
             # timestep=timestep, 
@@ -96,8 +96,10 @@ function get_humanoid(;
 end
 
 function initialize_humanoid!(mechanism::Mechanism{T}; 
-    tran=[0,0,1.5], 
-    rot=[0.1,0,0]) where T
-    set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [tran; rot])
+    body_position=[0.0, 0.0, 1.5], 
+    body_orientation=[0.1, 0.0, 0.0]) where T
+    set_minimal_coordinates!(mechanism, 
+        get_joint(mechanism, :auto_generated_floating_joint), 
+        [body_position; body_orientation])
     zero_velocity!(mechanism)
 end

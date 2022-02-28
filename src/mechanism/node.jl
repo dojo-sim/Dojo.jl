@@ -1,4 +1,6 @@
-abstract type Node{T} end
+"""
+    Node{T}
 
-abstract type Constraint{T,N} <: Node{T} end
-Base.length(::Constraint{T,N}) where {T,N} = N
+    Abstract type for graph node object
+"""
+abstract type Node{T} end

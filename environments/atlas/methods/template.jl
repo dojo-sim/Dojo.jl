@@ -44,10 +44,10 @@ function IKatlas(mechanism::Mechanism, p_base, p_foot; leg::Symbol = :r)
 end
 
 function AtlasIKerror(mechanism::Mechanism, p_base, p_foot, θ; leg::Symbol = :r)
-	set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [p_base; zeros(3)])
-	set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, Symbol(leg, :_leg_hpxyz)), [0.0, -θ[1], 0.0])
-	set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, Symbol(leg, :_leg_kny)), [θ[2]])
-	set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, Symbol(leg, :_leg_akxy)), [θ[1]-θ[2], 0.0])
+	set_minimal_coordinates!(mechanism, get_joint(mechanism, :auto_generated_floating_joint), [p_base; zeros(3)])
+	set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol(leg, :_leg_hpxyz)), [0.0, -θ[1], 0.0])
+	set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol(leg, :_leg_kny)), [θ[2]])
+	set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol(leg, :_leg_akxy)), [θ[1]-θ[2], 0.0])
 
 	foot = get_body(mechanism, Symbol(leg, :_foot))
 	foot_contacts = mechanism.contacts[findall(x -> x.parent_id == foot.id, mechanism.contacts)]
@@ -81,24 +81,24 @@ function atlas_trajectory(mechanism::Mechanism{T}; timestep=0.05, β=0.5,
 	X = [zeros(nx) for i = 1:2N]
 	for i = 1:2N
 
-		set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [p_base; 0.0; αtorso; 0.0])
-		set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :back_bkxyz), [0.0, -αtorso, 0.0])
-		set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :l_leg_hpxyz), [0.0, -θL[i][1], 0.0])
-		set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :l_leg_kny), [θL[i][2]])
-		set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :l_leg_akxy), [θL[i][1]-θL[i][2], 0.0])
+		set_minimal_coordinates!(mechanism, get_joint(mechanism, :auto_generated_floating_joint), [p_base; 0.0; αtorso; 0.0])
+		set_minimal_coordinates!(mechanism, get_joint(mechanism, :back_bkxyz), [0.0, -αtorso, 0.0])
+		set_minimal_coordinates!(mechanism, get_joint(mechanism, :l_leg_hpxyz), [0.0, -θL[i][1], 0.0])
+		set_minimal_coordinates!(mechanism, get_joint(mechanism, :l_leg_kny), [θL[i][2]])
+		set_minimal_coordinates!(mechanism, get_joint(mechanism, :l_leg_akxy), [θL[i][1]-θL[i][2], 0.0])
 
-		set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :r_leg_hpxyz), [0.0, -θR[i][1], 0.0])
-		set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :r_leg_kny), [θR[i][2]])
-		set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :r_leg_akxy), [θR[i][1]-θR[i][2], 0.0])
+		set_minimal_coordinates!(mechanism, get_joint(mechanism, :r_leg_hpxyz), [0.0, -θR[i][1], 0.0])
+		set_minimal_coordinates!(mechanism, get_joint(mechanism, :r_leg_kny), [θR[i][2]])
+		set_minimal_coordinates!(mechanism, get_joint(mechanism, :r_leg_akxy), [θR[i][1]-θR[i][2], 0.0])
 
-		set_minimal_velocities!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [zeros(3); zeros(3)])
-		set_minimal_velocities!(mechanism, get_joint_constraint(mechanism, :l_leg_hpxyz), [0.0, -ωL[i][1], 0.0])
-		set_minimal_velocities!(mechanism, get_joint_constraint(mechanism, :l_leg_kny), [ωL[i][2]])
-		set_minimal_velocities!(mechanism, get_joint_constraint(mechanism, :l_leg_akxy), [ωL[i][1]-ωL[i][2], 0.0])
+		set_minimal_velocities!(mechanism, get_joint(mechanism, :auto_generated_floating_joint), [zeros(3); zeros(3)])
+		set_minimal_velocities!(mechanism, get_joint(mechanism, :l_leg_hpxyz), [0.0, -ωL[i][1], 0.0])
+		set_minimal_velocities!(mechanism, get_joint(mechanism, :l_leg_kny), [ωL[i][2]])
+		set_minimal_velocities!(mechanism, get_joint(mechanism, :l_leg_akxy), [ωL[i][1]-ωL[i][2], 0.0])
 
-		set_minimal_velocities!(mechanism, get_joint_constraint(mechanism, :r_leg_hpxyz), [0.0, -ωR[i][1], 0.0])
-		set_minimal_velocities!(mechanism, get_joint_constraint(mechanism, :r_leg_kny), [ωR[i][2]])
-		set_minimal_velocities!(mechanism, get_joint_constraint(mechanism, :r_leg_akxy), [ωR[i][1]-ωR[i][2], 0.0])
+		set_minimal_velocities!(mechanism, get_joint(mechanism, :r_leg_hpxyz), [0.0, -ωR[i][1], 0.0])
+		set_minimal_velocities!(mechanism, get_joint(mechanism, :r_leg_kny), [ωR[i][2]])
+		set_minimal_velocities!(mechanism, get_joint(mechanism, :r_leg_akxy), [ωR[i][1]-ωR[i][2], 0.0])
 		X[i] .= get_minimal_state(mechanism)
 	end
 
@@ -153,24 +153,24 @@ function atlas_jump(mechanism::Mechanism{T}; timestep=0.05, αtorso=0.0, z=0.95,
 	nx = minimal_dimension(mechanism)
 	X = [zeros(nx) for i = 1:N]
 	for i = 1:N
-		set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [pbase[i]; 0.0; αtorso; 0.0])
-		set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :back_bkxyz), [0.0, -αtorso, 0.0])
-		set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :l_leg_hpxyz), [0.0, -θL[i][1], 0.0])
-		set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :l_leg_kny), [θL[i][2]])
-		set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :l_leg_akxy), [θL[i][1]-θL[i][2], 0.0])
+		set_minimal_coordinates!(mechanism, get_joint(mechanism, :auto_generated_floating_joint), [pbase[i]; 0.0; αtorso; 0.0])
+		set_minimal_coordinates!(mechanism, get_joint(mechanism, :back_bkxyz), [0.0, -αtorso, 0.0])
+		set_minimal_coordinates!(mechanism, get_joint(mechanism, :l_leg_hpxyz), [0.0, -θL[i][1], 0.0])
+		set_minimal_coordinates!(mechanism, get_joint(mechanism, :l_leg_kny), [θL[i][2]])
+		set_minimal_coordinates!(mechanism, get_joint(mechanism, :l_leg_akxy), [θL[i][1]-θL[i][2], 0.0])
 
-		set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :r_leg_hpxyz), [0.0, -θR[i][1], 0.0])
-		set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :r_leg_kny), [θR[i][2]])
-		set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :r_leg_akxy), [θR[i][1]-θR[i][2], 0.0])
+		set_minimal_coordinates!(mechanism, get_joint(mechanism, :r_leg_hpxyz), [0.0, -θR[i][1], 0.0])
+		set_minimal_coordinates!(mechanism, get_joint(mechanism, :r_leg_kny), [θR[i][2]])
+		set_minimal_coordinates!(mechanism, get_joint(mechanism, :r_leg_akxy), [θR[i][1]-θR[i][2], 0.0])
 
-		# set_minimal_velocities!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [zeros(3); zeros(3)])
-		# set_minimal_velocities!(mechanism, get_joint_constraint(mechanism, :l_leg_hpxyz), [0.0, -ωL[i][1], 0.0])
-		# set_minimal_velocities!(mechanism, get_joint_constraint(mechanism, :l_leg_kny), [ωL[i][2]])
-		# set_minimal_velocities!(mechanism, get_joint_constraint(mechanism, :l_leg_akxy), [ωL[i][1]-ωL[i][2], 0.0])
+		# set_minimal_velocities!(mechanism, get_joint(mechanism, :auto_generated_floating_joint), [zeros(3); zeros(3)])
+		# set_minimal_velocities!(mechanism, get_joint(mechanism, :l_leg_hpxyz), [0.0, -ωL[i][1], 0.0])
+		# set_minimal_velocities!(mechanism, get_joint(mechanism, :l_leg_kny), [ωL[i][2]])
+		# set_minimal_velocities!(mechanism, get_joint(mechanism, :l_leg_akxy), [ωL[i][1]-ωL[i][2], 0.0])
 		#
-		# set_minimal_velocities!(mechanism, get_joint_constraint(mechanism, :r_leg_hpxyz), [0.0, -ωR[i][1], 0.0])
-		# set_minimal_velocities!(mechanism, get_joint_constraint(mechanism, :r_leg_kny), [ωR[i][2]])
-		# set_minimal_velocities!(mechanism, get_joint_constraint(mechanism, :r_leg_akxy), [ωR[i][1]-ωR[i][2], 0.0])
+		# set_minimal_velocities!(mechanism, get_joint(mechanism, :r_leg_hpxyz), [0.0, -ωR[i][1], 0.0])
+		# set_minimal_velocities!(mechanism, get_joint(mechanism, :r_leg_kny), [ωR[i][2]])
+		# set_minimal_velocities!(mechanism, get_joint(mechanism, :r_leg_akxy), [ωR[i][1]-ωR[i][2], 0.0])
 		X[i] .= get_minimal_state(mechanism)
 	end
 

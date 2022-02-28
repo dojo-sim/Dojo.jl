@@ -36,7 +36,7 @@ function update_state!(body::Body{T}, timestep) where T
 end
 
 # maximal
-function set_maximal_coordinates!(body::Body; 
+function set_maximal_configurations!(body::Body; 
     x::AbstractVector=SA[0.0; 0.0; 0.0], 
     q::UnitQuaternion=one(UnitQuaternion))
 
@@ -56,7 +56,7 @@ function set_maximal_velocities!(body::Body;
     return body.state.v15, body.state.ϕ15
 end
 
-function set_maximal_coordinates!(pbody::Node, cbody::Body;
+function set_maximal_configurations!(pbody::Node, cbody::Body;
     parent_vertex::AbstractVector=SA[0.0; 0.0; 0.0], 
     child_vertex::AbstractVector=SA[0.0; 0.0; 0.0],
     Δx::AbstractVector=SA[0.0; 0.0; 0.0], 
@@ -66,7 +66,7 @@ function set_maximal_coordinates!(pbody::Node, cbody::Body;
     q2 = pbody.state.q2 * Δq
     x2 = pbody.state.x2 + vector_rotate(parent_vertex + Δx, q1) - vector_rotate(child_vertex, q2)
 
-    return set_maximal_coordinates!(cbody; x=x2, q=q2)
+    return set_maximal_configurations!(cbody; x=x2, q=q2)
 end
 
 function set_maximal_velocities!(pbody::Node, cbody::Body;

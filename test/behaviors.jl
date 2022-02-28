@@ -47,9 +47,8 @@ end
             model="fourbar", 
             timestep=timestep)
         Dojo.initialize!(mech, :fourbar, 
-            θ=0.1, 
-            ω1=3.0, 
-            ω2=-3.0)
+            angle=0.1, 
+            angular_velocity=[3.0, -3.0]) 
         loopjoints = mech.joints[end:end]
         Dojo.root_to_leaves_ordering(mech) == [2, 7, 3, 6, 1, 8, 4, 9]
 

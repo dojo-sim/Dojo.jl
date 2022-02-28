@@ -1,6 +1,8 @@
-################################################################################
-# Atlas
-################################################################################
+"""
+    Atlas <: Environment
+
+    humanoid robot designed by Boston Dynamics (v5)
+"""
 struct Atlas end
 
 function atlas(; 

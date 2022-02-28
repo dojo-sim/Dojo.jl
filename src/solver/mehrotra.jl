@@ -1,3 +1,11 @@
+"""
+    mehrotra!(mechanism; opts)
+
+    interior-point solver for simulation feasibility problem
+
+    mechanism: Mechanism
+    opts: SolverOptions
+"""
 function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
 	reset!.(mechanism.contacts, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
 	reset!.(mechanism.joints,   scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
@@ -65,12 +73,6 @@ function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
     return status
 end
 
-function solver_header()
-	println("                                                 ")
-	println("n    bvio    rvio     α       μ     |res|∞   |Δ|∞")
-	println("–––––––––––––––––––––––––––––––––––––––––––––––––")
-end
-
 function solver_status(mechanism::Mechanism, α, rvio, bvio, n, μtarget, undercut)
     fv = full_vector(mechanism.system)
     Δvar = norm(fv, Inf)
@@ -90,8 +92,9 @@ function solver_status(mechanism::Mechanism, α, rvio, bvio, n, μtarget, underc
         )
 end
 
-function initial_state!(contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
-    initialize_positive_orthant!(contact.impulses[1], contact.impulses_dual[1])
-    initialize_positive_orthant!(contact.impulses[2], contact.impulses_dual[2])
-    return nothing
+function solver_header()
+	println("                                                 ")
+	println("n    bvio    rvio     α       μ     |res|∞   |Δ|∞")
+	println("–––––––––––––––––––––––––––––––––––––––––––––––––")
 end
+

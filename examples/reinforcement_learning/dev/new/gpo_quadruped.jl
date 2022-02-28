@@ -164,7 +164,7 @@ end
 
 
 ## test random policy
-env = get_environment("halfcheetah", mode=:minimal, g=-9.81, timestep=0.05)
+env = get_environment("halfcheetah", representation=:minimal, g=-9.81, timestep=0.05)
 initialize!(env.mechanism, :halfcheetah)
 open(env.vis)
 # storage = simulate!(env.mechanism, 1.0, record=true, verbose=false)

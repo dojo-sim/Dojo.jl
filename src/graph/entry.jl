@@ -1,3 +1,9 @@
+"""
+    Entry{ET}
+
+    value: data 
+    isinverted: flag indicating if matrix value has been inverted
+"""
 mutable struct Entry{ET}
     value::ET
     isinverted::Bool

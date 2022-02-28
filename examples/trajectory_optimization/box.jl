@@ -11,7 +11,7 @@ using LinearAlgebra
 gravity=-9.81
 dt = 0.1
 env = get_environment("block", 
-    mode=:maximal, 
+    representation=:maximal, 
     timestep=dt,
     friction_coefficient=0.5,
     gravity=gravity)
@@ -33,9 +33,9 @@ T = 11
 
 # ## model
 dyn = IterativeLQR.Dynamics(
-    (y, x, u, w) -> f(y, env, x, u, w), 
-    (dx, x, u, w) -> fx(dx, env, x, u, w),
-    (du, x, u, w) -> fu(du, env, x, u, w),
+    (y, x, u, w) -> dynamics(y, env, x, u, w), 
+    (dx, x, u, w) -> dynamics_jacobian_state(dx, env, x, u, w),
+    (du, x, u, w) -> dynamics_jacobian_input(du, env, x, u, w),
     n, n, m)
 model = [dyn for t = 1:T-1]
 
@@ -87,6 +87,13 @@ z_sol, u_sol = IterativeLQR.get_trajectory(prob)
 # ## visualize
 v, anim = visualize(env, [[z_sol[1] for t = 1:10]..., z_sol..., [z_sol[end] for t = 1:10]...])
 
-set_camera!(env.vis, zoom=50.0, cam_pos=[100,0,0])
-set_floor!(env.vis, x=0.0, y=4, z=0.02, color=RGBA(0.7,0.7,0.7,1))
+set_camera!(env.vis, 
+    zoom=50.0, 
+    cam_pos=[100.0, 0.0, 0.0])
+    
+set_floor!(env.vis, 
+    x=0.0, 
+    y=4.0, 
+    z=0.02, 
+    color=RGBA(0.7, 0.7, 0.7, 1.0))
 

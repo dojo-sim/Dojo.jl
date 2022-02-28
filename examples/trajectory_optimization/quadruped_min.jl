@@ -9,7 +9,7 @@ using LinearAlgebra
 
 # ## system
 gravity=-9.81
-dt = 0.05
+timestep = 0.05
 friction_coefficient = 0.8
 damper = 5.0
 spring = 0.0
@@ -35,15 +35,32 @@ m = env.num_inputs
 # ## reference trajectory
 N = 2
 initialize!(env.mechanism, :quadruped)
-xref = quadruped_trajectory(env.mechanism, r=0.05, z=0.29; Δx=-0.04, Δfront=0.10, N=10, Ncycles=N)
+xref = quadruped_trajectory(env.mechanism, 
+    r=0.05, 
+    z=0.29; 
+    Δx=-0.04, 
+    Δfront=0.10, 
+    N=10, 
+    Ncycles=N)
 zref = [minimal_to_maximal(env.mechanism, x) for x in xref]
 visualize(env, xref)
 
-## gravity compensation TODO: solve optimization problem instead
-mech = get_mechanism(:quadruped, timestep=dt, gravity=gravity, friction_coefficient=0.8, damper=5.0, spring=0.0)
+# ## gravity compensation 
+## TODO: solve optimization problem instead
+mech = get_mechanism(:quadruped, 
+    timestep=timestep, 
+    gravity=gravity, 
+    friction_coefficient=friction_coefficient, 
+    damper=damper, 
+    spring=spring)
+
 initialize!(mech, :quadruped)
-storage = simulate!(mech, 1.0, record=true, verbose=false)
-visualize(mech, storage, vis=env.vis)
+storage = simulate!(mech, 1.0, 
+    record=true, 
+    verbose=false)
+
+visualize(mech, storage, 
+    vis=env.vis)
 ugc = gravity_compensation(mech)
 u_control = ugc[6 .+ (1:12)]
 
@@ -52,9 +69,9 @@ T = N * (21 - 1) + 1
 
 # ## model
 dyn = IterativeLQR.Dynamics(
-    (y, x, u, w) -> f(y, env, x, u, w),
-    (dx, x, u, w) -> fx(dx, env, x, u, w),
-    (du, x, u, w) -> fu(du, env, x, u, w),
+    (y, x, u, w) -> dynamics(y, env, x, u, w),
+    (dx, x, u, w) -> dynamics_jacobian_state(dx, env, x, u, w),
+    (du, x, u, w) -> dynamics_jacobian_input(du, env, x, u, w),
     n, n, m)
 
 model = [dyn for t = 1:T-1]
@@ -67,8 +84,8 @@ visualize(env, x̄)
 
 # ## objective
 qt = [0.3; 0.05; 0.05; 0.01 * ones(3); 0.01 * ones(3); 0.01 * ones(3); fill([0.2, 0.001], 12)...]
-ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(dt * qt) * (x - xref[t]) + transpose(u) * Diagonal(dt * 0.01 * ones(m)) * u for t = 1:T-1]
-oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(dt * qt) * (x - xref[end])
+ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(timestep * qt) * (x - xref[t]) + transpose(u) * Diagonal(timestep * 0.01 * ones(m)) * u for t = 1:T-1]
+oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(timestep * qt) * (x - xref[end])
 
 cts = IterativeLQR.Cost.(ots, n, m)
 cT = IterativeLQR.Cost(oT, n, 0)
@@ -114,4 +131,6 @@ x_sol, u_sol = IterativeLQR.get_trajectory(prob)
 x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]
 visualize(env, x_view)
 
-set_camera!(env.vis, cam_pos=[0,-3,2], zoom=3)
+set_camera!(env.vis, 
+    cam_pos=[0.0, -3.0, 2.0], 
+    zoom=3.0)

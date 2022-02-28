@@ -10,10 +10,10 @@ using LinearAlgebra
 
 # ## system
 gravity=-9.81
-dt = 0.1
+timestep = 0.1
 env = get_environment("cartpole", 
-    mode=:maximal, 
-    timestep=dt,
+    representation=:maximal, 
+    timestep=timestep,
     gravity=gravity);
 
 mujoco_inertia!(env.mechanism)
@@ -34,9 +34,9 @@ T = 26
 
 # ## model
 dyn = IterativeLQR.Dynamics(
-    (y, x, u, w) -> f(y, env, x, u, w), 
-    (dx, x, u, w) -> fx(dx, env, x, u, w),
-    (du, x, u, w) -> fu(du, env, x, u, w),
+    (y, x, u, w) -> dynamics(y, env, x, u, w), 
+    (dx, x, u, w) -> dynamics_jacobian_state(dx, env, x, u, w),
+    (du, x, u, w) -> dynamics_jacobian_input(du, env, x, u, w),
     n, n, m)
 model = [dyn for t = 1:T-1]
 

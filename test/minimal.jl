@@ -36,7 +36,7 @@ joint_types = [
 	x = srand(1)
 	Δx = Dojo.zerodimstaticadjoint(Dojo.nullspace_mask(tra2)) * x
 	Δq = UnitQuaternion(rand(4)...)
-	Dojo.set_maximal_coordinates!(pbody, cbody; 
+	Dojo.set_maximal_configurations!(pbody, cbody; 
 		parent_vertex=tra2.vertices[1], 
 		child_vertex=tra2.vertices[2], 
 		Δx=Δx, 
@@ -391,9 +391,9 @@ end
 		gravity=-9.81, 
 		num_bodies=1)
 
-	ϕ1 = 0.3 * π
+	base_angle = 0.3 * π
 	Dojo.initialize!(mechanism, :npendulum, 
-		ϕ1=ϕ1)
+		base_angle=base_angle)
 	storage = Dojo.simulate!(mechanism, 1.0, 
 		record=true, 
 		verbose=false)
@@ -422,9 +422,9 @@ end
 		timestep=0.1, 
 		gravity=-9.81, 
 		num_bodies=2)
-	ϕ1 = 0.3 * π
+	base_angle = 0.3 * π
 	Dojo.initialize!(mechanism, :npendulum, 
-		ϕ1=ϕ1)
+		base_angle=base_angle)
 	storage = Dojo.simulate!(mechanism, 1.0, 
 		record=true, 
 		verbose=false)
@@ -515,8 +515,8 @@ end
 		spring=1.0, 
 		contact_feet=true)
 	Dojo.initialize_atlasstance!(mechanism, 
-		tran=[0,0,0.5], 
-		rot=[0.0,0.0,0.0])
+		body_position=[0,0,0.5], 
+		body_orientation=[0.0,0.0,0.0])
 	storage = Dojo.simulate!(mechanism, 1.0, ctrl!, 
 		record=true, 
 		verbose=false)
@@ -556,9 +556,9 @@ end
 		num_bodies=5)
 
 	Random.seed!(100)
-	ϕ1 = 0.3π
+	base_angle = 0.3π
 	Dojo.initialize!(mech, :npendulum, 
-		ϕ1=ϕ1)
+		base_angle=base_angle)
 	storage = Dojo.simulate!(mech, 1.0, 
 		record=true, 
 		verbose=false)

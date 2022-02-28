@@ -155,7 +155,7 @@ function get_nerf(; timestep::T=0.01, gravity=[0.0; 0.0; -9.81], cf::T=0.8, radi
         body = get_body(mechanism, :sphere)
         models = [NerfContact111(body, normal, nerf; p=szeros(T, 3), offset=offset) for offset in offsets]
         contacts = [ContactConstraint((model, body.id, nothing); name=Symbol(:nerf_contact, i)) for (i,model) in enumerate(models)]
-        set_position!(mechanism, get_joint_constraint(mechanism, :floating_joint), [0;0;2radius;zeros(3)])
+        set_position!(mechanism, get_joint(mechanism, :floating_joint), [0;0;2radius;zeros(3)])
         mechanism = Mechanism(origin, bodies, joints, contacts, gravity=gravity, timestep=timestep)
     end
     return mechanism
@@ -165,7 +165,7 @@ function initialize_nerf!(mechanism::Mechanism; x::AbstractVector{T}=zeros(3),
         q::UnitQuaternion{T}=one(UnitQuaternion), v::AbstractVector{T}=zeros(3),
         ω::AbstractVector{T}=zeros(3)) where T
     r = mechanism.bodies[1].shape.r
-    joint = get_joint_constraint(mechanism, :floating_joint)
+    joint = get_joint(mechanism, :floating_joint)
     zero_velocity!(mechanism)
     set_position!(mechanism, joint, [x+[0,0,r] rotation_vector(q)])
     set_minimal_velocities!(mechanism, joint, [v; ω])

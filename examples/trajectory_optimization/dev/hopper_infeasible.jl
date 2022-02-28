@@ -74,13 +74,13 @@ end
 function fdx(fx, x, u, w)
 	u_control = u[1:3]
     s = u[3 .+ (1:n)]
-	fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)[1])
+	fx .= copy(get_minimal_gradients!(mech, minimal_to_maximal(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)[1])
 end
 
 function fdu(fu, x, u, w)
 	u_control = u[1:3]
     s = u[3 .+ (1:n)]
-	∇u = copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)[2])
+	∇u = copy(get_minimal_gradients!(mech, minimal_to_maximal(mech, x), u_mask'*u_control, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)[2])
 	fu .= [∇u * u_mask' I(n)]
 end
 

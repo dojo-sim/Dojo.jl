@@ -22,16 +22,16 @@ function get_hopper(;
     joints = deepcopy(mech.joints)
 
     if limits
-        thigh = get_joint_constraint(mech, :thigh)
+        thigh = get_joint(mech, :thigh)
         joints[thigh.id] = add_limits(mech, thigh, 
             rot_limits=[SVector{1}(joint_limits[1][1]), SVector{1}(joint_limits[2][1])])
 
         @warn "uncomment limits"
-        # leg = get_joint_constraint(mech, "leg")
+        # leg = get_joint(mech, "leg")
         # joints[leg.id] = add_limits(mech, leg, 
             # rot_limits=[SVector{1}(joint_limits[1][2]), SVector{1}(joint_limits[2][2])])
         #
-        # foot = get_joint_constraint(mech, "foot")
+        # foot = get_joint(mech, "foot")
         # joints[foot.id] = add_limits(mech, foot, 
             # rot_limits=[SVector{1}(joint_limits[1][3]), SVector{1}(joint_limits[2][3])])
 
@@ -74,7 +74,7 @@ function get_hopper(;
                     offset=o))
             end
         end
-        set_minimal_coordinates!(mech, get_joint_constraint(mech, :floating_joint), [1.25, 0.0, 0.0])
+        set_minimal_coordinates!(mech, get_joint(mech, :floating_joint), [1.25, 0.0, 0.0])
         mech = Mechanism(origin, bodies, joints, [models...], 
             gravity=gravity, 
             timestep=timestep, 
@@ -85,13 +85,13 @@ function get_hopper(;
 end
 
 function initialize_hopper!(mechanism::Mechanism{T}; 
-    x=0.0, 
-    z=0.0, 
-    θ=0.0) where T
+    body_position=[0.0, 0.0],
+    body_orientation=0.0) where T
+    #TODO add leg length
 
     set_minimal_coordinates!(mechanism,
-                 get_joint_constraint(mechanism, :floating_joint),
-                 [z + 1.25 , -x, -θ])
+                 get_joint(mechanism, :floating_joint),
+                 [body_position[2] + 1.25 , -body_position[1], -body_orientation])
     for joint in mechanism.joints
         (joint.name != :floating_joint) && set_minimal_coordinates!(mechanism, joint, zeros(input_dimension(joint)))
     end

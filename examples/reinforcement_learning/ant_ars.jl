@@ -9,10 +9,20 @@ using LinearAlgebra
 include(joinpath(@__DIR__, "algorithms/ars.jl")) # augmented random search
 
 # ## Ant
-env = get_environment("ant", mode=:minimal, g=-9.81, timestep=0.05, damper=50.0, spring=25.0, friction_coefficient = 0.5,
-    contact=true, contact_body=true)
+env = get_environment("ant", 
+    representation=:minimal, 
+    gravity=-9.81, 
+    timestep=0.05, 
+    damper=50.0, 
+    spring=25.0, 
+    friction_coefficient=0.5,
+    contact_feet=true, 
+    contact_body=true)
+
 obs = reset(env)
-initialize_ant!(env.mechanism, pos = [1.3,0,0], rot = [0,0,0.])
+initialize_ant!(env.mechanism, 
+    body_position=[1.3, 0.0, 0.0], 
+    body_orientation=[0.0, 0.0, 0.0])
 env.state .= get_minimal_state(env.mechanism)
 render(env)
 
@@ -20,7 +30,12 @@ render(env)
 open(env.vis)
 
 # ## Set up policy
-hp = HyperParameters(main_loop_size=100, horizon=150, n_directions=6, b=6, step_size=0.02)
+hp = HyperParameters(
+        main_loop_size=100, 
+        horizon=150, 
+        n_directions=6, 
+        b=6, 
+        step_size=0.02)
 input_size = length(obs)
 output_size = length(env.input_previous)
 normalizer = Normalizer(input_size)
@@ -32,13 +47,25 @@ policies = Matrix{Float64}[]
 N = 5
 for i = 1:N
     ## Reset environment
-    env = get_environment("ant", mode=:minimal, g=-9.81, timestep=0.05, damper=50.0, spring=25.0, friction_coefficient = 0.5,
-        contact=true, contact_body=true)
+    env = get_environment("ant", 
+        representation=:minimal, 
+        gravity=-9.81, 
+        timestep=0.05, 
+        damper=50.0, 
+        spring=25.0, 
+        friction_coefficient=0.5,
+        contact_feet=true, 
+        contact_body=true)
     obs = reset(env)
 
     ## Random policy
     Random.seed!(i)
-    hp = HyperParameters(main_loop_size=100, horizon=150, n_directions=6, b=6, step_size=0.02)
+    hp = HyperParameters(
+        main_loop_size=100, 
+        horizon=150, 
+        n_directions=6, 
+        b=6, 
+        step_size=0.02)
     input_size = length(obs)
     output_size = length(env.input_previous)
     normalizer = Normalizer(input_size)
@@ -60,7 +87,8 @@ end
 
 # ## Training statistics
 N_best = 3
-max_idx = sortperm(rewards, lt=Base.isgreater)
+max_idx = sortperm(rewards, 
+    lt=Base.isgreater)
 train_time_best = (train_times[max_idx])[1:N_best]
 rewards_best = (rewards[max_idx])[1:N_best]
 policies_best = (policies[max_idx])[1:N_best]

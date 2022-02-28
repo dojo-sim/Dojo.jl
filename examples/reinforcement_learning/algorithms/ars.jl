@@ -192,7 +192,7 @@ function display_random_policy(env::Environment, hp::HyperParameters; rendering 
         rendering && render(env)
         sleep(env.mechanism.timestep)
         push!(traj, copy(env.state))
-        action = sample(env.action_space)
+        action = sample(env.input_space)
         obs, reward, done, _ = step(env, action)
         reward_evaluation += reward
         num_plays += 1

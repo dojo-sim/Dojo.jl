@@ -17,17 +17,16 @@ function get_fourbar(;
 end
 
 function initialize_fourbar!(mechanism::Mechanism; 
-    θ=0.0, 
-    ω1=0.0, 
-    ω2=0.0) where T
+    angle=0.0, 
+    angular_velocity=szeros(2)) where T
 
     zero_velocity!(mechanism)
-    set_minimal_coordinates_velocities!(mechanism, get_joint_constraint(mechanism, :jointb1); 
-        xmin=[ -θ, ω2])
-    set_minimal_coordinates_velocities!(mechanism, get_joint_constraint(mechanism, :joint12); 
-        xmin=[+2θ, 0])
-    set_minimal_coordinates_velocities!(mechanism, get_joint_constraint(mechanism, :jointb3); 
-        xmin=[ +θ, ω1])
-    set_minimal_coordinates_velocities!(mechanism, get_joint_constraint(mechanism, :joint34); 
-        xmin=[-2θ, 0])
+    set_minimal_coordinates_velocities!(mechanism, get_joint(mechanism, :jointb1); 
+        xmin=[ -angle, angular_velocity[2]])
+    set_minimal_coordinates_velocities!(mechanism, get_joint(mechanism, :joint12); 
+        xmin=[+2angle, 0])
+    set_minimal_coordinates_velocities!(mechanism, get_joint(mechanism, :jointb3); 
+        xmin=[ +angle, angular_velocity[1]])
+    set_minimal_coordinates_velocities!(mechanism, get_joint(mechanism, :joint34); 
+        xmin=[-2angle, 0])
 end

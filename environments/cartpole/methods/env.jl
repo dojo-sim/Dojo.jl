@@ -1,6 +1,9 @@
-################################################################################
-# Cart-pole
-################################################################################
+"""
+    Cartpole <: Environment
+
+    classic system with one translational (cart) and one rotational (pole) degree of freedom
+    https://underactuated.mit.edu/acrobot.html#cart_pole
+"""
 struct Cartpole end
 
 function cartpole(; 

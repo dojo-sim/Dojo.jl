@@ -55,7 +55,7 @@ visualize(mech, storage, vis=vis)
 timestep=0.05
 mech = get_mechanism(:quadruped, timestep=timestep, g = -9.0, friction_coefficient = 0.5, contact = true, spring = 100.0, damper = 2.0)
 initialize!(mech, :quadruped)
-set_state!(mech, zref[1])
+set_maximal_state!(mech, zref[1])
 
 function controller!(mechanism, k)
 	set_spring_offset!(mechanism, xref[k])
@@ -115,7 +115,7 @@ visualize(mech, storage, vis=vis)
 mech = get_mechanism(:quadruped, timestep=0.01, g = 0.0, spring = 10.0, damper = 1.0, contact = true)
 initialize!(mech, :quadruped)
 z0 = minimal_to_maximal(mech, zref[1])
-set_state!(mech, z0)
+set_maximal_state!(mech, z0)
 
 visualize_maximal(mech, z0, vis)
 function controller!(mechanism, k)
@@ -185,11 +185,11 @@ function fd(y, x, u, w)
 end
 
 function fdx(fx, x, u, w)
-	fx .= copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)[1])
+	fx .= copy(get_minimal_gradients!(mech, minimal_to_maximal(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)[1])
 end
 
 function fdu(fu, x, u, w)
-	∇u = copy(get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)[2])
+	∇u = copy(get_minimal_gradients!(mech, minimal_to_maximal(mech, x), u_mask'*u, ϵ = 3e-4, btol = 3e-4, undercut = 1.5, verbose=false)[2])
 	fu .= ∇u * u_mask'
 end
 

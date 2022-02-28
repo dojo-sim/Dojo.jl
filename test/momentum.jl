@@ -83,7 +83,9 @@ mech = get_mechanism(:pendulum,
 
 ϕ0 = 0.7
 ω0 = 5.0
-initialize!(mech, :pendulum, ϕ1=ϕ0, ω1=ω0)
+initialize!(mech, :pendulum, 
+    angle=ϕ0, 
+    angular_velocity=ω0)
 
 storage = simulate!(mech, 5.0, nocontrol!, 
     record=true, 
@@ -244,9 +246,9 @@ v0 = 100.0 * [1, 2, 3] * timestep0
 q10 = UnitQuaternion(RotX(0.5*π))
 
 initialize!(mech, :snake, 
-    q1=q10, 
-    v=v0, 
-    ω=ω0)
+    base_orientation=q10, 
+    base_linear_velocity=v0, 
+    base_angular_velocity=ω0)
 storage = simulate!(mech, 1.50, 
     record=true, 
     verbose=false, 
@@ -281,9 +283,9 @@ end
         q10 = UnitQuaternion(RotX(0.5 * π))
 
         initialize!(mech, :snake, 
-            q1=q10, 
-            v=v0, 
-            ω=ω0)
+            base_orientation=q10, 
+            base_linear_velocity=v0, 
+            base_angular_velocity=ω0)
         storage = simulate!(mech, 1.50, controller!, 
             record=true, 
             verbose=false, 
@@ -331,9 +333,9 @@ v0 = 100.0 * [1, 2, 3] * timestep0
 q10 = UnitQuaternion(RotX(0.5*π))
 
 initialize!(mech, :twister, 
-    q1=q10, 
-    v=v0, 
-    ω=ω0)
+    base_orientation=q10, 
+    base_linear_velocity=v0, 
+    base_angular_velocity=ω0)
 storage = simulate!(mech, 2.5, 
     record=true, 
     verbose=false, 
@@ -367,9 +369,9 @@ end
         ω0 = 10.0 * [1, 2, 3.0] * timestep0
         q10 = UnitQuaternion(RotX(0.5*π))
         initialize!(mech, :twister, 
-            q1=q10, 
-            v=v0, 
-            ω=ω0)
+            base_orientation=q10, 
+            base_linear_velocity=v0, 
+            base_angular_velocity=ω0)
         storage = simulate!(mech, 1.50, 
             record=true, 
             verbose=false, 

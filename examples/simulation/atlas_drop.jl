@@ -18,12 +18,12 @@ mech = get_mechanism(:atlas,
 
 # ## Simulate
 initialize_atlasstance!(mech, 
-    tran=[0,0,0.5], 
-    rot=[0.0,0.2,0.1])
+    body_position=[0.0, 0.0, 0.5], 
+    body_orientation=[0.0, 0.2, 0.1])
 
 storage = simulate!(mech, 5.0, 
     record=true, 
-    opts=SolverOptions(rtol=1.0e-6, btol=1e-6, verbose=true))
+    opts=SolverOptions(rtol=1.0e-6, btol=1.0e-6, verbose=true))
 
 # ## Visualize
 vis=visualizer()

@@ -492,8 +492,8 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         cjoint.rotational.axis_offset = axis_offset # in parent's (parentbody) frame
 
         # actual body properties
-        set_maximal_coordinates!(cnode) # set everything to zero
-        set_maximal_coordinates!(pnode, cnode, parent_vertex = parent_vertex, child_vertex = child_vertex, Δq = axis_offset)
+        set_maximal_configurations!(cnode) # set everything to zero
+        set_maximal_configurations!(pnode, cnode, parent_vertex = parent_vertex, child_vertex = child_vertex, Δq = axis_offset)
         xbody = cnode.state.x2
         qbody = cnode.state.q2
 
@@ -520,7 +520,7 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
             parentpbody = get_body(mechanism, parent_id1)
 
             grandparent_id1 = get_parent_id(mechanism, parent_id1, loopjoints)
-            parentconstraint1 = get_joint_constraint(mechanism, grandparent_id1)
+            parentconstraint1 = get_joint(mechanism, grandparent_id1)
 
             xparentpbody = parentpbody.state.x2 # in world frame
             qparentpbody = parentpbody.state.q2 # in world frame
@@ -531,7 +531,7 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         parentcbody = get_body(mechanism, parent_id2)
 
         grandparent_id2 = get_parent_id(mechanism, parent_id2, loopjoints)
-        parentconstraint2 = get_joint_constraint(mechanism, grandparent_id2)
+        parentconstraint2 = get_joint(mechanism, grandparent_id2)
 
         xparentcbody = parentcbody.state.x2 # in world frame
         qparentcbody = parentcbody.state.q2 # in world frame
@@ -572,7 +572,7 @@ function get_parent_id(mechanism, id, loopjoints)
     system = mechanism.system
     conns = connections(system, id)
     for connsid in conns
-        constraint = get_joint_constraint(mechanism, connsid)
+        constraint = get_joint(mechanism, connsid)
         if constraint ∉ loopjoints && id == constraint.child_id
             return connsid
         end

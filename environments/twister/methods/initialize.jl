@@ -68,12 +68,12 @@ function get_twister(;
 end
 
 function initialize_twister!(mechanism::Mechanism{T}; 
-    x=[0.0, -1.0, 0.0],
-    v=zeros(3), 
-    ω=zeros(3),
-    Δω=zeros(3), 
-    Δv=zeros(3),
-    q1=UnitQuaternion(RotX(0.6 * π))) where T
+    base_position=[0.0, -1.0, 0.0],
+    base_orientation=UnitQuaternion(RotX(0.6 * π)),
+    base_linear_velocity=zeros(3), 
+    base_angular_velocity=zeros(3),
+    relative_linear_velocity=zeros(3), 
+    relative_angular_velocity=zeros(3)) where T
 
     bodies = mechanism.bodies
     pbody = bodies[1]
@@ -82,23 +82,23 @@ function initialize_twister!(mechanism::Mechanism{T};
     vert12 = -vert11
 
     # set position and velocities
-    set_maximal_coordinates!(mechanism.origin, pbody, 
-        child_vertex=x, 
-        Δq=q1)
+    set_maximal_configurations!(mechanism.origin, pbody, 
+        child_vertex=base_position, 
+        Δq=base_orientation)
     set_maximal_velocities!(pbody, 
-        v=v, 
-        ω=ω)
+        v=base_linear_velocity, 
+        ω=base_angular_velocity)
 
     previd = pbody.id
     for body in mechanism.bodies[2:end]
-        set_maximal_coordinates!(get_body(mechanism, previd), body, 
+        set_maximal_configurations!(get_body(mechanism, previd), body, 
             parent_vertex=vert12, 
             child_vertex=vert11)
         set_maximal_velocities!(get_body(mechanism, previd), body, 
             parent_vertex=vert12, 
             child_vertex=vert11,
-            Δv=Δv, 
-            Δω=Δω)
+            Δv=relative_linear_velocity, 
+            Δω=relative_angular_velocity)
         previd = body.id
     end
 end

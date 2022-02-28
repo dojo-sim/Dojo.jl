@@ -22,35 +22,35 @@ function get_ant(;
     joints = deepcopy(mech.joints)
 
     if limits
-        hiparent_vertex = get_joint_constraint(mech, :hip_1)
+        hiparent_vertex = get_joint(mech, :hip_1)
         joints[hiparent_vertex.id] = add_limits(mech, hiparent_vertex, 
             rot_limits=[SVector{1}(joint_limits[1][1]), SVector{1}(joint_limits[2][1])])
 
-        ankle1 = get_joint_constraint(mech, :ankle_1)
+        ankle1 = get_joint(mech, :ankle_1)
         joints[ankle1.id] = add_limits(mech, ankle1, 
             rot_limits=[SVector{1}(joint_limits[1][2]), SVector{1}(joint_limits[2][2])])
 
-        hip2 = get_joint_constraint(mech, :hip_2)
+        hip2 = get_joint(mech, :hip_2)
         joints[hip2.id] = add_limits(mech, hip2, 
             rot_limits=[SVector{1}(joint_limits[1][3]), SVector{1}(joint_limits[2][3])])
 
-        ankle2 = get_joint_constraint(mech, :ankle_2)
+        ankle2 = get_joint(mech, :ankle_2)
         joints[ankle2.id] = add_limits(mech, ankle2, 
             rot_limits=[SVector{1}(joint_limits[1][4]), SVector{1}(joint_limits[2][4])])
 
-        hip3 = get_joint_constraint(mech, :hip_3)
+        hip3 = get_joint(mech, :hip_3)
         joints[hip3.id] = add_limits(mech, hip3, 
             rot_limits=[SVector{1}(joint_limits[1][5]), SVector{1}(joint_limits[2][5])])
 
-        ankle3 = get_joint_constraint(mech, :ankle_3)
+        ankle3 = get_joint(mech, :ankle_3)
         joints[ankle3.id] = add_limits(mech, ankle3, 
             rot_limits=[SVector{1}(joint_limits[1][6]), SVector{1}(joint_limits[2][6])])
 
-        hip4 = get_joint_constraint(mech, :hip_4)
+        hip4 = get_joint(mech, :hip_4)
         joints[hip4.id] = add_limits(mech, hip4, 
             rot_limits=[SVector{1}(joint_limits[1][7]), SVector{1}(joint_limits[2][7])])
 
-        ankle4 = get_joint_constraint(mech, :ankle_4)
+        ankle4 = get_joint(mech, :ankle_4)
         joints[ankle4.id] = add_limits(mech, ankle4, 
             rot_limits=[SVector{1}(joint_limits[1][8]), SVector{1}(joint_limits[2][8])])
 
@@ -101,21 +101,20 @@ function get_ant(;
 end
 
 function initialize_ant!(mechanism::Mechanism; 
-        ankle=0.25, 
-        alt=0.15, 
-        pos=[0.0; 0.0; 0.48 + alt], 
-        rot=[0.0; 0.0; 0.00 * π]) where T
+        body_position=[0.0; 0.0; 0.63], 
+        body_orientation=[0.0; 0.0; 0.0 * π],
+        ankle_orientation=0.25) where T
         
-    set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :auto_generated_floating_joint), [pos; rot])
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :auto_generated_floating_joint), [body_position; body_orientation])
 
     for i in [1,4]
-        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, Symbol("hip_$i")), [0.0 * π])
-        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, Symbol("ankle_$i")), [ankle * π])
+        set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol("hip_$i")), [0.0 * π])
+        set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol("ankle_$i")), [ankle_orientation * π])
     end
 
     for i in [2,3]
-        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, Symbol("hip_$i")), [0.0 * π])
-        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, Symbol("ankle_$i")), [-ankle * π])
+        set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol("hip_$i")), [0.0 * π])
+        set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol("ankle_$i")), [-ankle_orientation * π])
     end
 
     zero_velocity!(mechanism)

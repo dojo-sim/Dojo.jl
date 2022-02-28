@@ -80,7 +80,7 @@ end
 function fz(dz, y, x, u, w)
     u_ctrl = u[1:3]
     s = u[3 .+ (1:nx)]
-	dx, du = get_minimal_gradients(mech, minimal_to_maximal(mech, x), u_mask'*u_ctrl, ϵ = 1e-6, btol = 3e-3, undercut = 1.5, verbose=false)
+	dx, du = get_minimal_gradients!(mech, minimal_to_maximal(mech, x), u_mask'*u_ctrl, ϵ = 1e-6, btol = 3e-3, undercut = 1.5, verbose=false)
     dz .= [-dx -du * transpose(u_mask) I(nx) I(nx)]
 end
 

@@ -25,7 +25,7 @@ initialize!(mech, :pendulum, ϕ1 = 0.7)
 jointid = mech.joints[1].id
 angles = zeros(1)
 function controller!(mechanism, k)
-    j1 = get_joint_constraint(mechanism, jointid)
+    j1 = get_joint(mechanism, jointid)
     θ1 = minimal_coordinates(mechanism, j1)[1]
     dθ1 = minimal_velocities(mechanism, j1)[1]
     u1 = (100.0*(angles[1]-θ1) + 5.0*(0-dθ1)) * mechanism.timestep

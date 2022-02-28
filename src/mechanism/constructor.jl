@@ -1,3 +1,22 @@
+"""
+    Mechanism{T}
+
+    Multi-rigid-body system. 
+
+    origin: global reference frame represented with Origin
+    joints: list of JointConstraint objects
+    bodies: list of Body objects
+    contacts: list of ContactConstraint objects
+    system: graph-based representation for mechanism
+    residual_entries: containt entries for linear system residual
+    matrix_entries: contains entries for linear system matrix
+    diagonal_inverses: contains inverted matrices computing during LU factorization
+	data_matrix: contains parameter information that is fixed during simulation
+	root_to_leaves: list of node connections traversing from root node to leaves
+    timestep: time discretization
+    gravity: force vector resulting from gravitational potential
+    μ: complementarity violation (contact softness)
+"""
 mutable struct Mechanism{T,Nn,Ne,Nb,Ni}
     origin::Origin{T}
     joints::Vector{<:JointConstraint{T}}
@@ -18,7 +37,10 @@ mutable struct Mechanism{T,Nn,Ne,Nb,Ni}
 end
 
 function Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:JointConstraint{T}}, contacts::Vector{<:ContactConstraint{T}};
-    spring=0.0, damper=0.0, timestep::T=0.01, gravity=[0.0; 0.0;-9.81]) where T
+    spring=0.0, 
+    damper=0.0, 
+    timestep=0.01, 
+    gravity=[0.0; 0.0;-9.81]) where T
 
     # reset ids
     resetGlobalID()
@@ -52,7 +74,8 @@ function Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:
 	loop_joints = get_loop_joints(bodies, joints)
 	nodes = [origin; bodies; joints; contacts]
 	root_to_leaves = root_to_leaves_ordering(nodes, loop_joints,
-		    exclude_origin=true, exclude_loop_joints=false)
+		    exclude_origin=true, 
+            exclude_loop_joints=false)
 
     # springs and dampers
     joints = set_spring_damper_values!(joints, spring, damper)
@@ -64,7 +87,10 @@ end
 Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:JointConstraint{T}}; kwargs...) where T =
 	Mechanism(origin, bodies, joints, ContactConstraint{T}[]; kwargs...)
 
-function Mechanism(filename::String, floating::Bool=false, T=Float64; kwargs...)
+function Mechanism(filename::String, 
+    floating::Bool=false, 
+    T=Float64; 
+    kwargs...)
     # parse urdf
     origin, links, joints, loopjoints = parse_urdf(filename, floating, T)
 

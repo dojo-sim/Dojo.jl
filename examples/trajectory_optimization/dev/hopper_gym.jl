@@ -24,9 +24,9 @@ Tm = convert(Int, floor((T-1) / 2))
 
 # ## model
 dyn = IterativeLQR.Dynamics(
-    (y, x, u, w) -> f(y, env, x, u, w),
-    (dx, x, u, w) -> fx(dx, env, x, u, w),
-    (du, x, u, w) -> fu(du, env, x, u, w),
+    (y, x, u, w) -> dynamics(y, env, x, u, w),
+    (dx, x, u, w) -> dynamics_jacobian_state(dx, env, x, u, w),
+    (du, x, u, w) -> dynamics_jacobian_input(du, env, x, u, w),
     nx, nx, nu, d)
 model = [dyn for t = 1:T-1] 
 

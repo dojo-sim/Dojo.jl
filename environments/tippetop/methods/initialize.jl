@@ -37,7 +37,7 @@ function get_tippetop(;
                 offset=[0.0, 0.0, radius * α], 
                 contact_type=contact_type)
             ]
-        set_minimal_coordinates!(mechanism, get_joint_constraint(mechanism, :floating_joint), [0.0; 0.0; radius; zeros(3)])
+        set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_joint), [0.0; 0.0; radius; zeros(3)])
         mechanism = Mechanism(origin, bodies, joints, contacts,
             gravity=gravity, 
             timestep=timestep)
@@ -52,7 +52,7 @@ function initialize_tippetop!(mechanism::Mechanism{T};
     v=zeros(3),
     ω=zeros(3)) where T
 
-    joint2 = get_joint_constraint(mechanism, :fixed_joint)
+    joint2 = get_joint(mechanism, :fixed_joint)
     radius = joint2.constraints[1].vertices[1][3]
     origin = mechanism.origin
     pbody = get_body(mech, :sphere1)
@@ -60,12 +60,12 @@ function initialize_tippetop!(mechanism::Mechanism{T};
 
     zero_velocity!(mechanism)
    
-    set_maximal_coordinates!(origin, pbody; 
+    set_maximal_configurations!(origin, pbody; 
         parent_vertex=[0.0; 0.0; radius], 
         child_vertex=[0.0; 0.0; 0.0], 
         Δx=x, 
         Δq=q)
-    set_maximal_coordinates!(pbody,  cbody; 
+    set_maximal_configurations!(pbody,  cbody; 
         parent_vertex=[0.0; 0.0; radius], 
         child_vertex=[0.0; 0.0; 0.0], 
         Δx=[0.0; 0.0; 0.0], 

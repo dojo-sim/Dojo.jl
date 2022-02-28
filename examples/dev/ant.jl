@@ -27,18 +27,18 @@ visualize(mech, storage, vis=vis)
 
 env = get_environment("ant", vis=vis)
 
-env.action_space
+env.input_space
 seed(env, s = 11)
 obs = reset(env)[2]
 render(env)
 
-1000*sample(env.action_space)
+1000*sample(env.input_space)
 collect(env.mechanism.joints)[1]
 for i = 1:25
     render(env)
     sleep(0.05)
-    # action = 120*env.mechanism.timestep*ones(6)#1000*sample(env.action_space) # your agent here (this takes random actions)
-    action = sample(env.action_space)#1000*sample(env.action_space) # your agent here (this takes random actions)
+    # action = 120*env.mechanism.timestep*ones(6)#1000*sample(env.input_space) # your agent here (this takes random actions)
+    action = sample(env.input_space)#1000*sample(env.input_space) # your agent here (this takes random actions)
     obs, r, done, info = step(env, action)
     @show r
 
@@ -50,8 +50,8 @@ close(env)
 
 env.mechanism.joints
 input_dimension(env.mechanism)
-sample(env.action_space)
-# sample(env.action_space)
+sample(env.input_space)
+# sample(env.input_space)
 
 
 

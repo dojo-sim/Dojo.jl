@@ -1,14 +1,26 @@
 """
     Shape{T} 
 
-    Subtypes contain geometric and visual information for a Body{T} object.
+    Abstract type; Subtypes contain geometric and visual information for a Body.
 """
 abstract type Shape{T} end
 
+"""
+    EmptyShape{T} <: Shape{T}
+
+    Contains no geometric or visual information
+"""
 struct EmptyShape{T} <: Shape{T}
     EmptyShape() = new{Float64}()
 end
 
+#TODO: change to MeshShape
+
+"""
+    Mesh{T} <: Shape{T}
+
+    Contains geometric and visual information based on .obj file
+"""
 mutable struct Mesh{T} <: Shape{T}
     position_offset::SVector{3,T}
     axis_offset::UnitQuaternion{T}
@@ -37,6 +49,17 @@ mutable struct Mesh{T} <: Shape{T}
     end
 end
 
+"""
+    Box{T} <: Shape{T}
+
+    Cuboid geometry 
+
+    position_offset: geometry origin offset from center of mass
+    axis_offset: orientation offset from body frame
+    xyz: dimensions (meters)
+    scale: scaling
+    color: RGBA
+"""
 mutable struct Box{T} <: Shape{T}
     position_offset::SVector{3,T}
     axis_offset::UnitQuaternion{T}
@@ -51,7 +74,7 @@ mutable struct Box{T} <: Shape{T}
             scale::AbstractVector=sones(3), 
             color=RGBA(0.75, 0.75, 0.75))
         T = promote_type(eltype.((x, y, z, position_offset, axis_offset))...)
-        new{T}(position_offset, axis_offset, [x;y;z], scale, color)
+        new{T}(position_offset, axis_offset, [x; y; z], scale, color)
     end
 
     function Box(x::Real, y::Real, z::Real, m::Real;
@@ -66,6 +89,17 @@ mutable struct Box{T} <: Shape{T}
     end
 end
 
+"""
+    Cylinder{T} <: Shape{T}
+
+    cylinder geometry 
+    
+    position_offset: geometry origin offset from center of mass
+    axis_offset: orientation offset from body frame
+    rh: radius and height dimensions (meters)
+    scale: scaling
+    color: RGBA
+"""
 mutable struct Cylinder{T} <: Shape{T}
     position_offset::SVector{3,T}
     axis_offset::UnitQuaternion{T}
@@ -96,6 +130,17 @@ mutable struct Cylinder{T} <: Shape{T}
     end
 end
 
+"""
+    Capsule{T} <: Shape{T}
+
+    capsule geometry 
+    
+    position_offset: geometry origin offset from center of mass
+    axis_offset: orientation offset from body frame
+    rh: radius and height dimensions (meters)
+    scale: scaling
+    color: RGBA
+"""
 mutable struct Capsule{T} <: Shape{T}
     position_offset::SVector{3,T}
     axis_offset::UnitQuaternion{T}
@@ -137,6 +182,18 @@ mutable struct Capsule{T} <: Shape{T}
     end
 end
 
+"""
+    Shapes{T} <: Shape{T}
+
+    composite geometry
+    
+    shape: list of Shape objects
+    position_offset: geometry origin offset from center of mass
+    axis_offset: orientation offset from body frame
+    xyz: dimensions (meters)
+    scale: scaling
+    color: RGBA
+"""
 mutable struct Shapes{T} <: Shape{T}
     shape::Vector 
     position_offset::SVector{3,T}
@@ -163,10 +220,20 @@ mutable struct Shapes{T} <: Shape{T}
     end
 end
 
+"""
+    Sphere{T} <: Shape{T}
+
+    sphere geometry 
+    
+    position_offset: geometry origin offset from center of mass
+    axis_offset: orientation offset from body frame
+    r: radius (meters)
+    scale: scaling
+    color: RGBA
+"""
 mutable struct Sphere{T} <: Shape{T}
     position_offset::SVector{3,T}
     axis_offset::UnitQuaternion{T}
-
     r::T
     scale::SVector{3,T}
     color::RGBA
@@ -192,10 +259,20 @@ mutable struct Sphere{T} <: Shape{T}
     end
 end
 
+"""
+    Pyramid{T} <: Shape{T}
+
+    pyramid geometry 
+    
+    position_offset: geometry origin offset from center of mass
+    axis_offset: orientation offset from body frame
+    wh: width and height dimensions (meters)
+    scale: scaling
+    color: RGBA
+"""
 mutable struct Pyramid{T} <: Shape{T}
     position_offset::SVector{3,T}
     axis_offset::UnitQuaternion{T}
-
     wh::SVector{2,T}
     scale::SVector{3,T}
     color::RGBA

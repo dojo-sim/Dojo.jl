@@ -1,4 +1,4 @@
-function get_walker2d(; 
+function get_walker(; 
     timestep=0.01, 
     gravity=[0.0; 0.0; -9.81], 
     friction_coefficient=0.5,
@@ -11,7 +11,7 @@ function get_walker2d(;
                   [150.0, 150.0,  45.0, 150.0, 150.0,  45.0] * π / 180.0],
     T=Float64)
 
-    path = joinpath(@__DIR__, "../deps/walker2d.urdf")
+    path = joinpath(@__DIR__, "../deps/walker.urdf")
     mech = Mechanism(path, false, T, 
         gravity=gravity, 
         timestep=timestep, 
@@ -22,27 +22,27 @@ function get_walker2d(;
     joints = deepcopy(mech.joints)
 
     if limits
-        thigh = get_joint_constraint(mech, :thigh)
+        thigh = get_joint(mech, :thigh)
         joints[thigh.id] = add_limits(mech, thigh, 
             rot_limits=[SVector{1}(joint_limits[1][1]), SVector{1}(joint_limits[2][1])])
 
-        leg = get_joint_constraint(mech, :leg)
+        leg = get_joint(mech, :leg)
         joints[leg.id] = add_limits(mech, leg, 
             rot_limits=[SVector{1}(joint_limits[1][2]), SVector{1}(joint_limits[2][2])])
 
-        foot = get_joint_constraint(mech, :foot)
+        foot = get_joint(mech, :foot)
         joints[foot.id] = add_limits(mech, foot, 
             rot_limits=[SVector{1}(joint_limits[1][3]), SVector{1}(joint_limits[2][3])])
 
-        thigh_left = get_joint_constraint(mech, :thigh_left)
+        thigh_left = get_joint(mech, :thigh_left)
         joints[thigh_left.id] = add_limits(mech, thigh_left, 
             rot_limits=[SVector{1}(joint_limits[1][4]), SVector{1}(joint_limits[2][4])])
 
-        leg_left = get_joint_constraint(mech, :leg_left)
+        leg_left = get_joint(mech, :leg_left)
         joints[leg_left.id] = add_limits(mech, leg_left, 
             rot_limits=[SVector{1}(joint_limits[1][5]), SVector{1}(joint_limits[2][5])])
 
-        foot_left = get_joint_constraint(mech, :foot_left)
+        foot_left = get_joint(mech, :foot_left)
         joints[foot_left.id] = add_limits(mech, foot_left, 
             rot_limits=[SVector{1}(joint_limits[1][6]), SVector{1}(joint_limits[2][6])])
 
@@ -85,7 +85,7 @@ function get_walker2d(;
                     offset=o))
             end
         end
-        set_minimal_coordinates!(mech, get_joint_constraint(mech, :floating_joint), [1.25, 0.0, 0.0])
+        set_minimal_coordinates!(mech, get_joint(mech, :floating_joint), [1.25, 0.0, 0.0])
         mech = Mechanism(origin, bodies, joints, [models...], 
             gravity=gravity, 
             timestep=timestep, 
@@ -95,14 +95,13 @@ function get_walker2d(;
     return mech
 end
 
-function initialize_walker2d!(mechanism::Mechanism; 
-    x::T=0.0, 
-    z::T=0.0, 
-    θ::T=0.0) where T
+function initialize_walker!(mechanism::Mechanism; 
+    body_position=[0.0, 0.0],
+    body_orientation=0.0) where T
     
     set_minimal_coordinates!(mechanism,
-                 get_joint_constraint(mechanism, :floating_joint),
-                 [z + 1.25 , -x, -θ])
+                 get_joint(mechanism, :floating_joint),
+                 [body_position[2] + 1.25 , -body_position[1], -body_orientation])
     for joint in mechanism.joints
         (joint.name != :floating_joint) && set_minimal_coordinates!(mechanism, joint, zeros(input_dimension(joint)))
     end

@@ -1,6 +1,8 @@
-################################################################################
-# HalfCheetah
-################################################################################
+"""
+    HalfCheetah <: Environment
+
+    planar cheetah-like robot, based on https://gym.openai.com/envs/HalfCheetah-v2/
+"""
 struct HalfCheetah end
 
 function halfcheetah(; 
@@ -82,7 +84,7 @@ function reset(env::Environment{HalfCheetah};
     else
         # initialize above the ground to make sure that with random initialization we do not violate the ground constraint.
         initialize!(env.mechanism, :halfcheetah, 
-            z=0.25)
+            body_position=[0.0, 0.25])
         x0 = get_minimal_state(env.mechanism)
         nx = minimal_dimension(env.mechanism)
         nz = maximal_dimension(env.mechanism)
@@ -91,7 +93,7 @@ function reset(env::Environment{HalfCheetah};
         high = reset_noise_scale
         x = x0 + (high - low) .* rand(env.rng[1], nx) .+ low # we ignored the normal distribution on the velocities
         z = minimal_to_maximal(env.mechanism, x)
-        set_state!(env.mechanism, z)
+        set_maximal_state!(env.mechanism, z)
         if env.representation == :minimal
             env.state .= get_minimal_state(env.mechanism)
         elseif env.representation == :maximal

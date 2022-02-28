@@ -23,15 +23,16 @@ function controller!(mechanism, k)
     K = [10.0 0.5] * 0.1
 
     off = 0
-    for (i, eqc) in enumerate(mechanism.joints)
-        nu = input_dimension(eqc)
+    for joint in mechanism.joints
+        nu = input_dimension(joint)
+        
         ## Get joint configuration + velocity
         xi = x[off .+ (1:2nu)]
         xi_goal = x_goal[off .+ (1:2nu)]
         
         ## Control
         ui = -K * (xi - xi_goal) 
-        set_input!(eqc, ui)
+        set_input!(joint, ui)
 
         off += nu
     end
@@ -39,8 +40,8 @@ end
 
 # ##Simulate
 initialize!(mechanism, :pendulum, 
-    ϕ1=0.0 * π, 
-    ω1=0.0)
+    angle=0.0 * π, 
+    angular_velocity=0.0)
 
 storage = simulate!(mechanism, 10.0, controller!, 
     record=true, 

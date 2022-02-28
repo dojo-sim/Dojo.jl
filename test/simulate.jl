@@ -24,7 +24,7 @@ end
         timestep=0.1);
     Dojo.reset(env);
     Dojo.initialize_pendulum!(env.mechanism,
-        ϕ1=0.25 * π)
+        angle=0.25 * π)
     storage = Dojo.simulate!(env.mechanism, 1.0, 
         record=true, 
         verbose=false)

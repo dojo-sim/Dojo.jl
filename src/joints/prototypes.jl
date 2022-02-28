@@ -1,167 +1,461 @@
-# fixed connection between two bodies.
-Fixed(pbody::Node{T}, cbody::Node{T}; parent_vertex=szeros(T, 3), child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T})) where T =
-    Translational{T,3}(pbody, cbody; parent_vertex, child_vertex),
-    Rotational{T,3}(pbody, cbody; axis_offset)
+"""
+    Fixed{T} <: JointConstraint{T}
 
-# prismatic joint between two bodies.
-Prismatic(pbody::Node{T}, cbody::Node{T}, axis; parent_vertex=szeros(T, 3), child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
+    fixed connection between two bodies
+"""
+Fixed(pbody::Node{T}, cbody::Node{T}; 
+    parent_vertex=szeros(T, 3), 
+    child_vertex=szeros(T, 3),
+    axis_offset=one(UnitQuaternion{T})) where T =
+    Translational{T,3}(pbody, cbody; 
+        parent_vertex, 
+        child_vertex),
+    Rotational{T,3}(pbody, cbody; 
+        axis_offset)
+
+"""
+    Prismatic{T} <: JointConstraint{T}
+
+    one translational degree of freedom between two bodies
+"""
+Prismatic(pbody::Node{T}, cbody::Node{T}, axis; 
+    parent_vertex=szeros(T, 3), 
+    child_vertex=szeros(T, 3),
+    axis_offset=one(UnitQuaternion{T}), 
+    spring=zero(T), 
+    damper=zero(T),
     tra_spring_offset=szeros(T,1),
     tra_joint_limits=[szeros(T,0), szeros(T,0)]) where T =
-    Translational{T,2}(pbody, cbody; parent_vertex, child_vertex, axis, spring, damper,
-        spring_offset=tra_spring_offset, joint_limits=tra_joint_limits),
-    Rotational{T,3}(pbody, cbody; axis_offset, spring, damper)
+    Translational{T,2}(pbody, cbody; 
+        parent_vertex, 
+        child_vertex, 
+        axis, 
+        spring, 
+        damper,
+        spring_offset=tra_spring_offset, 
+        joint_limits=tra_joint_limits),
+    Rotational{T,3}(pbody, cbody; 
+        axis_offset, 
+        spring, 
+        damper)
 
-# planar joint between two bodies.
-Planar(pbody::Node{T}, cbody::Node{T}, axis; parent_vertex=szeros(T, 3), child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
+"""
+    Planar{T} <: JointConstraint{T} 
+
+    two translational degree of freedom between two bodies
+"""
+Planar(pbody::Node{T}, cbody::Node{T}, axis; 
+    parent_vertex=szeros(T, 3), 
+    child_vertex=szeros(T, 3),
+    axis_offset=one(UnitQuaternion{T}), 
+    spring=zero(T), 
+    damper=zero(T),
     tra_spring_offset=szeros(T,2),
     tra_joint_limits=[szeros(T,0), szeros(T,0)]) where T =
-    Translational{T,1}(pbody, cbody; parent_vertex, child_vertex, axis, spring, damper,
-        spring_offset=tra_spring_offset, joint_limits=tra_joint_limits),
-    Rotational{T,3}(pbody, cbody; axis_offset, spring, damper)
+    Translational{T,1}(pbody, cbody; 
+        parent_vertex, 
+        child_vertex, 
+        axis, 
+        spring, 
+        damper,
+        spring_offset=tra_spring_offset, 
+        joint_limits=tra_joint_limits),
+    Rotational{T,3}(pbody, cbody; 
+        axis_offset, 
+        spring, 
+        damper)
 
-# fixed orientation between two bodies (chicken's head).
-FixedOrientation(pbody::Node{T}, cbody::Node{T}; axis_offset=one(UnitQuaternion{T}),
-    spring=zero(T), damper=zero(T),
+"""
+    FixedOrientation{T} <: JointConstraint{T} 
+
+    three translational degree of freedom between two bodies
+"""
+FixedOrientation(pbody::Node{T}, cbody::Node{T}; 
+    axis_offset=one(UnitQuaternion{T}),
+    spring=zero(T), 
+    damper=zero(T),
     tra_spring_offset=szeros(T,3),
     tra_joint_limits=[szeros(T,0), szeros(T,0)]) where T =
-    Translational{T,0}(pbody, cbody; spring, damper,
-        spring_offset=tra_spring_offset, joint_limits=tra_joint_limits),
-    Rotational{T,3}(pbody, cbody; axis_offset, spring, damper)
+    Translational{T,0}(pbody, cbody; 
+        spring, 
+        damper,
+        spring_offset=tra_spring_offset, 
+        joint_limits=tra_joint_limits),
+    Rotational{T,3}(pbody, cbody; 
+        axis_offset, 
+        spring, 
+        damper)
 
-# revolute joint between two bodies (pin, continuous, hinge joint).
-Revolute(pbody::Node{T}, cbody::Node{T}, axis; parent_vertex=szeros(T, 3), child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
+"""
+    Revolute{T} <: JointConstraint{T} 
+
+    one rotational degree of freedom between two bodies
+"""
+Revolute(pbody::Node{T}, cbody::Node{T}, axis; 
+    parent_vertex=szeros(T, 3), 
+    child_vertex=szeros(T, 3),
+    axis_offset=one(UnitQuaternion{T}), 
+    spring=zero(T), 
+    damper=zero(T),
     rot_spring_offset=szeros(T,1),
     rot_joint_limits=[szeros(T,0), szeros(T,0)],
     spring_type=:linear) where T =
-    Translational{T,3}(pbody, cbody; parent_vertex, child_vertex, spring, damper),
-    Rotational{T,2}(pbody, cbody; axis, axis_offset, spring, damper,
-        spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
+    Translational{T,3}(pbody, cbody; 
+        parent_vertex, 
+        child_vertex, 
+        spring, 
+        damper),
+    Rotational{T,2}(pbody, cbody; 
+        axis, 
+        axis_offset, 
+        spring, 
+        damper,
+        spring_offset=rot_spring_offset, 
+        joint_limits=rot_joint_limits, 
+        spring_type=spring_type)
 
-# cylindrical joint between two bodies.
-Cylindrical(pbody::Node{T}, cbody::Node{T}, axis; parent_vertex=szeros(T, 3), child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
-    tra_spring_offset=szeros(T,1), rot_spring_offset=szeros(T,1),
-    rot_joint_limits=[szeros(T,0), szeros(T,0)], tra_joint_limits=[szeros(T,0), szeros(T,0)],
+"""
+    Cylindrical{T} <: JointConstraint{T} 
+
+    one translational and one rotational degree of freedom between two bodies
+"""
+Cylindrical(pbody::Node{T}, cbody::Node{T}, axis; 
+    parent_vertex=szeros(T, 3), 
+    child_vertex=szeros(T, 3),
+    axis_offset=one(UnitQuaternion{T}), 
+    spring=zero(T), 
+    damper=zero(T),
+    tra_spring_offset=szeros(T,1), 
+    rot_spring_offset=szeros(T,1),
+    rot_joint_limits=[szeros(T,0), szeros(T,0)], 
+    tra_joint_limits=[szeros(T,0), szeros(T,0)],
     spring_type=:linear) where T =
-    Translational{T,2}(pbody, cbody; parent_vertex, child_vertex, axis, spring, damper,
-        spring_offset=tra_spring_offset, joint_limits=tra_joint_limits),
-    Rotational{T,2}(pbody, cbody; axis, axis_offset, spring, damper,
-        spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
+    Translational{T,2}(pbody, cbody; 
+        parent_vertex, 
+        child_vertex, 
+        axis, 
+        spring, 
+        damper,
+        spring_offset=tra_spring_offset, 
+        joint_limits=tra_joint_limits),
+    Rotational{T,2}(pbody, cbody; 
+        axis, 
+        axis_offset, 
+        spring, 
+        damper,
+        spring_offset=rot_spring_offset, 
+        joint_limits=rot_joint_limits, 
+        spring_type=spring_type)
 
-# planar joint between two bodies with a rotation axis perpendicular to the plane (turtle bot).
-PlanarAxis(pbody::Node{T}, cbody::Node{T}, axis; parent_vertex=szeros(T, 3), child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
-    tra_spring_offset=szeros(T,2), rot_spring_offset=szeros(T,1),
-    rot_joint_limits=[szeros(T,0), szeros(T,0)], tra_joint_limits=[szeros(T,0), szeros(T,0)],
+"""
+    PlanarAxis{T} <: JointConstraint{T} 
+
+    two translational and one rotational degree of freedom between two bodies
+"""
+PlanarAxis(pbody::Node{T}, cbody::Node{T}, axis; 
+    parent_vertex=szeros(T, 3), 
+    child_vertex=szeros(T, 3),
+    axis_offset=one(UnitQuaternion{T}), 
+    spring=zero(T), 
+    damper=zero(T),
+    tra_spring_offset=szeros(T,2), 
+    rot_spring_offset=szeros(T,1),
+    rot_joint_limits=[szeros(T,0), szeros(T,0)], 
+    tra_joint_limits=[szeros(T,0), szeros(T,0)],
     spring_type=:linear) where T =
-    Translational{T,1}(pbody, cbody; parent_vertex, child_vertex, axis, spring, damper,
-        spring_offset=tra_spring_offset, joint_limits=tra_joint_limits),
-    Rotational{T,2}(pbody, cbody; axis, axis_offset, spring, damper,
-        spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
+    Translational{T,1}(pbody, cbody; 
+        parent_vertex, 
+        child_vertex, 
+        axis, 
+        spring, 
+        damper,
+        spring_offset=tra_spring_offset, 
+        joint_limits=tra_joint_limits),
+    Rotational{T,2}(pbody, cbody; 
+        axis, 
+        axis_offset, 
+        spring, 
+        damper,
+        spring_offset=rot_spring_offset, 
+        joint_limits=rot_joint_limits, 
+        spring_type=spring_type)
 
-# joint between two bodies with free translation and rotation along one axis.
-FreeRevolute(pbody::Node{T}, cbody::Node{T}, axis; parent_vertex=szeros(T, 3), child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
-    tra_spring_offset=szeros(T,3), rot_spring_offset=szeros(T,1),
-    rot_joint_limits=[szeros(T,0), szeros(T,0)], tra_joint_limits=[szeros(T,0), szeros(T,0)],
+"""
+    FreeRevolute{T} <: JointConstraint{T} 
+
+    free translation with rotation along one axis
+"""
+FreeRevolute(pbody::Node{T}, cbody::Node{T}, axis; 
+    parent_vertex=szeros(T, 3), 
+    child_vertex=szeros(T, 3),
+    axis_offset=one(UnitQuaternion{T}), 
+    spring=zero(T), 
+    damper=zero(T),
+    tra_spring_offset=szeros(T,3), 
+    rot_spring_offset=szeros(T,1),
+    rot_joint_limits=[szeros(T,0), szeros(T,0)], 
+    tra_joint_limits=[szeros(T,0), szeros(T,0)],
     spring_type=:linear) where T =
-    Translational{T,0}(pbody, cbody; spring, damper,
-        spring_offset=tra_spring_offset, joint_limits=tra_joint_limits),
-    Rotational{T,2}(pbody, cbody; axis, axis_offset, spring, damper,
-        spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
+    Translational{T,0}(pbody, cbody; 
+        spring, 
+        damper,
+        spring_offset=tra_spring_offset, 
+        joint_limits=tra_joint_limits),
+    Rotational{T,2}(pbody, cbody; 
+        axis, 
+        axis_offset, 
+        spring, 
+        damper,
+        spring_offset=rot_spring_offset, 
+        joint_limits=rot_joint_limits, 
+        spring_type=spring_type)
 
-# rotational between two bodies with a 2 rotational degrees of freedom (skull-eye joint).
-Orbital(pbody::Node{T}, cbody::Node{T}, axis; parent_vertex=szeros(T, 3), child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
+"""
+    Orbital{T} <: JointConstraint{T} 
+
+    two rotational degrees of freedom between two bodies
+"""
+Orbital(pbody::Node{T}, cbody::Node{T}, axis; 
+    parent_vertex=szeros(T, 3), 
+    child_vertex=szeros(T, 3),
+    axis_offset=one(UnitQuaternion{T}), 
+    spring=zero(T), 
+    damper=zero(T),
     rot_spring_offset=szeros(T,2),
     rot_joint_limits=[szeros(T,0), szeros(T,0)],
     spring_type=:linear) where T =
-    Translational{T,3}(pbody, cbody; parent_vertex, child_vertex, axis, spring, damper),
-    Rotational{T,1}(pbody, cbody; axis, axis_offset, spring, damper,
-        spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
+    Translational{T,3}(pbody, cbody; 
+        parent_vertex, 
+        child_vertex, 
+        axis, 
+        spring, 
+        damper),
+    Rotational{T,1}(pbody, cbody; 
+        axis, 
+        axis_offset, 
+        spring, 
+        damper,
+        spring_offset=rot_spring_offset, 
+        joint_limits=rot_joint_limits, 
+        spring_type=spring_type)
 
-# prismatic joint between two bodies with a 2 rotational degrees of freedom (skull-eye joint).
-PrismaticOrbital(pbody::Node{T}, cbody::Node{T}, axis; parent_vertex=szeros(T, 3), child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
-    tra_spring_offset=szeros(T,1), rot_spring_offset=szeros(T,2),
-    rot_joint_limits=[szeros(T,0), szeros(T,0)], tra_joint_limits=[szeros(T,0), szeros(T,0)],
+"""
+    PrismaticOrbital{T} <: JointConstraint{T} 
+
+    one translational and two rotational degrees of freedom between two bodies
+"""
+PrismaticOrbital(pbody::Node{T}, cbody::Node{T}, axis; 
+    parent_vertex=szeros(T, 3), 
+    child_vertex=szeros(T, 3),
+    axis_offset=one(UnitQuaternion{T}), 
+    spring=zero(T), 
+    damper=zero(T),
+    tra_spring_offset=szeros(T,1), 
+    rot_spring_offset=szeros(T,2),
+    rot_joint_limits=[szeros(T,0), szeros(T,0)], 
+    tra_joint_limits=[szeros(T,0), szeros(T,0)],
     spring_type=:linear) where T =
-    Translational{T,2}(pbody, cbody; parent_vertex, child_vertex, axis, spring, damper,
-        spring_offset=tra_spring_offset, joint_limits=tra_joint_limits),
-    Rotational{T,1}(pbody, cbody; axis, axis_offset, spring, damper,
-        spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
+    Translational{T,2}(pbody, cbody; 
+        parent_vertex, 
+        child_vertex, 
+        axis, 
+        spring, 
+        damper,
+        spring_offset=tra_spring_offset, 
+        joint_limits=tra_joint_limits),
+    Rotational{T,1}(pbody, cbody; 
+        axis, 
+        axis_offset, 
+        spring, 
+        damper,
+        spring_offset=rot_spring_offset, 
+        joint_limits=rot_joint_limits, 
+        spring_type=spring_type)
 
-# planar joint between two bodies with a 2 rotational degrees of freedom (skull-eye joint).
-PlanarOrbital(pbody::Node{T}, cbody::Node{T}, axis; parent_vertex=szeros(T, 3), child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
-    tra_spring_offset=szeros(T,2), rot_spring_offset=szeros(T,2),
-    rot_joint_limits=[szeros(T,0), szeros(T,0)], tra_joint_limits=[szeros(T,0), szeros(T,0)],
+"""
+    PlanarOrbital{T} <: JointConstraint{T} 
+
+    two translational and two rotational degrees of freedom between two bodies
+"""
+PlanarOrbital(pbody::Node{T}, cbody::Node{T}, axis; 
+    parent_vertex=szeros(T, 3), 
+    child_vertex=szeros(T, 3),
+    axis_offset=one(UnitQuaternion{T}), 
+    spring=zero(T), 
+    damper=zero(T),
+    tra_spring_offset=szeros(T,2), 
+    rot_spring_offset=szeros(T,2),
+    rot_joint_limits=[szeros(T,0), szeros(T,0)], 
+    tra_joint_limits=[szeros(T,0), szeros(T,0)],
     spring_type=:linear) where T =
-    Translational{T,1}(pbody, cbody; parent_vertex, child_vertex, axis, spring, damper,
-        spring_offset=tra_spring_offset, joint_limits=tra_joint_limits),
-    Rotational{T,1}(pbody, cbody; axis, axis_offset, spring, damper,
-        spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
+    Translational{T,1}(pbody, cbody; 
+        parent_vertex, 
+        child_vertex, 
+        axis, 
+        spring, 
+        damper,
+        spring_offset=tra_spring_offset, 
+        joint_limits=tra_joint_limits),
+    Rotational{T,1}(pbody, cbody; 
+        axis, 
+        axis_offset, 
+        spring, 
+        damper,
+        spring_offset=rot_spring_offset, 
+        joint_limits=rot_joint_limits, 
+        spring_type=spring_type)
 
-# free joint between two bodies with a 2 rotational degrees of freedom (skull-eye joint).
-FreeOrbital(pbody::Node{T}, cbody::Node{T}, axis; parent_vertex=szeros(T, 3), child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
-    tra_spring_offset=szeros(T,3), rot_spring_offset=szeros(T,2),
-    rot_joint_limits=[szeros(T,0), szeros(T,0)], tra_joint_limits=[szeros(T,0), szeros(T,0)],
+"""
+    FreeOrbital{T} <: JointConstraint{T} 
+
+    three translational and two rotational degrees of freedom between two bodies
+"""
+FreeOrbital(pbody::Node{T}, cbody::Node{T}, axis; 
+    parent_vertex=szeros(T, 3), 
+    child_vertex=szeros(T, 3),
+    axis_offset=one(UnitQuaternion{T}), 
+    spring=zero(T), 
+    damper=zero(T),
+    tra_spring_offset=szeros(T,3), 
+    rot_spring_offset=szeros(T,2),
+    rot_joint_limits=[szeros(T,0), szeros(T,0)], 
+    tra_joint_limits=[szeros(T,0), szeros(T,0)],
     spring_type=:linear) where T =
-    Translational{T,0}(pbody, cbody; spring, damper,
-        spring_offset=tra_spring_offset, joint_limits=tra_joint_limits),
-    Rotational{T,1}(pbody, cbody; axis, axis_offset, spring, damper,
-        spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
+    Translational{T,0}(pbody, cbody; 
+        spring, 
+        damper,
+        spring_offset=tra_spring_offset, 
+        joint_limits=tra_joint_limits),
+    Rotational{T,1}(pbody, cbody; 
+        axis, 
+        axis_offset, 
+        spring, 
+        damper,
+        spring_offset=rot_spring_offset, 
+        joint_limits=rot_joint_limits, 
+        spring_type=spring_type)
 
-# spherical joint between two bodies (ball-and-socket joint).
-Spherical(pbody::Node{T}, cbody::Node{T}; parent_vertex=szeros(T, 3), child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
-    rot_spring_offset=szeros(T,3), rot_joint_limits=[szeros(T,0), szeros(T,0)],
+"""
+    Spherical{T} <: JointConstraint{T} 
+
+    three rotational degrees of freedom between two bodies
+"""
+Spherical(pbody::Node{T}, cbody::Node{T}; 
+    parent_vertex=szeros(T, 3), 
+    child_vertex=szeros(T, 3),
+    axis_offset=one(UnitQuaternion{T}), 
+    spring=zero(T), 
+    damper=zero(T),
+    rot_spring_offset=szeros(T,3), 
+    rot_joint_limits=[szeros(T,0), szeros(T,0)],
     spring_type=:linear) where T =
-    Translational{T,3}(pbody, cbody; parent_vertex, child_vertex, spring, damper),
-    Rotational{T,0}(pbody, cbody; axis_offset, spring, damper,
-        spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
+    Translational{T,3}(pbody, cbody; 
+        parent_vertex, 
+        child_vertex, 
+        spring, 
+        damper),
+    Rotational{T,0}(pbody, cbody; 
+        axis_offset, 
+        spring, 
+        damper,
+        spring_offset=rot_spring_offset, 
+        joint_limits=rot_joint_limits, 
+        spring_type=spring_type)
 
-# cylindrical joint between two bodies with unconstrained orientation (point-on-line).
-CylindricalFree(pbody::Node{T}, cbody::Node{T}, axis; parent_vertex=szeros(T, 3), child_vertex=szeros(T, 3),
+"""
+    CylindricalFree{T} <: JointConstraint{T} 
+
+    one translational and three rotational degrees of freedom between two bodies
+"""
+CylindricalFree(pbody::Node{T}, cbody::Node{T}, axis; 
+    parent_vertex=szeros(T, 3), 
+    child_vertex=szeros(T, 3),
     spring=zero(T), damper=zero(T),
-    tra_spring_offset=szeros(T,1), rot_spring_offset=szeros(T,3),
-    rot_joint_limits=[szeros(T,0), szeros(T,0)], tra_joint_limits=[szeros(T,0), szeros(T,0)],
+    tra_spring_offset=szeros(T,1), 
+    rot_spring_offset=szeros(T,3),
+    rot_joint_limits=[szeros(T,0), szeros(T,0)], 
+    tra_joint_limits=[szeros(T,0), szeros(T,0)],
     spring_type=:linear) where T =
-    Translational{T,2}(pbody, cbody; parent_vertex, child_vertex, axis, spring, damper,
-        spring_offset=tra_spring_offset, joint_limits=tra_joint_limits),
-    Rotational{T,0}(pbody, cbody; spring, damper,
-        spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
+    Translational{T,2}(pbody, cbody; 
+        parent_vertex, 
+        child_vertex, 
+        axis, 
+        spring, 
+        damper,
+        spring_offset=tra_spring_offset, 
+        joint_limits=tra_joint_limits),
+    Rotational{T,0}(pbody, cbody; 
+        spring, 
+        damper,
+        spring_offset=rot_spring_offset, 
+        joint_limits=rot_joint_limits, 
+        spring_type=spring_type)
 
-# planar joint between two bodies with unconstrained orientation.
-PlanarFree(pbody::Node{T}, cbody::Node{T}, axis; parent_vertex=szeros(T, 3), child_vertex=szeros(T, 3),
-    spring=zero(T), damper= zero(T),
-    tra_spring_offset=szeros(T,2), rot_spring_offset=szeros(T,3),
-    rot_joint_limits=[szeros(T,0), szeros(T,0)], tra_joint_limits=[szeros(T,0), szeros(T,0)],
+"""
+    PlanarFree{T} <: JointConstraint{T} 
+
+    two translational and three rotational degrees of freedom between two bodies
+"""
+PlanarFree(pbody::Node{T}, cbody::Node{T}, axis; 
+    parent_vertex=szeros(T, 3), 
+    child_vertex=szeros(T, 3),
+    spring=zero(T), 
+    damper= zero(T),
+    tra_spring_offset=szeros(T,2), 
+    rot_spring_offset=szeros(T,3),
+    rot_joint_limits=[szeros(T,0), szeros(T,0)], 
+    tra_joint_limits=[szeros(T,0), szeros(T,0)],
     spring_type=:linear) where T =
-    Translational{T,1}(pbody, cbody; parent_vertex, child_vertex, axis,
-        spring, damper, spring_offset=tra_spring_offset, joint_limits=tra_joint_limits),
-    Rotational{T,0}(pbody, cbody; spring, damper,
-        spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
+    Translational{T,1}(pbody, cbody; 
+        parent_vertex, 
+        child_vertex, 
+        axis,
+        spring, 
+        damper, 
+        spring_offset=tra_spring_offset, 
+        joint_limits=tra_joint_limits),
+    Rotational{T,0}(pbody, cbody; 
+        spring, 
+        damper,
+        spring_offset=rot_spring_offset, 
+        joint_limits=rot_joint_limits, 
+        spring_type=spring_type)
 
-# unconstrained connection between two bodies (connection between floating base and origin).
-Floating(pbody::Node{T}, cbody::Node{T}; spring=zero(T), damper=zero(T),
-    tra_spring_offset=szeros(T,3), rot_spring_offset=szeros(T,3),
-    rot_joint_limits=[szeros(T,0), szeros(T,0)], tra_joint_limits=[szeros(T,0), szeros(T,0)],
+"""
+    Floating{T} <: JointConstraint{T} 
+
+    no restricted degrees of freedom between two bodies
+"""
+Floating(pbody::Node{T}, cbody::Node{T}; 
+    spring=zero(T), 
+    damper=zero(T),
+    tra_spring_offset=szeros(T,3), 
+    rot_spring_offset=szeros(T,3),
+    rot_joint_limits=[szeros(T,0), szeros(T,0)], 
+    tra_joint_limits=[szeros(T,0), szeros(T,0)],
     spring_type=:linear) where T =
-    Translational{T,0}(pbody, cbody; spring, damper,
-        spring_offset=tra_spring_offset, joint_limits=tra_joint_limits),
-    Rotational{T,0}(pbody, cbody; spring, damper,
-        spring_offset=rot_spring_offset, joint_limits=rot_joint_limits, spring_type=spring_type)
+    Translational{T,0}(pbody, cbody; 
+        spring, 
+        damper,
+        spring_offset=tra_spring_offset, 
+        joint_limits=tra_joint_limits),
+    Rotational{T,0}(pbody, cbody; 
+        spring, 
+        damper,
+        spring_offset=rot_spring_offset, 
+        joint_limits=rot_joint_limits, 
+        spring_type=spring_type)
 
-function Prototype(joint_type::Symbol, pbody::Node{T}, cbody::Node{T}, axis; parent_vertex=szeros(T, 3), child_vertex=szeros(T, 3),
-        axis_offset=one(UnitQuaternion{T}), spring=zero(T), damper=zero(T),
-        tra_spring_offset=nothing, rot_spring_offset=nothing,
-        tra_joint_limits=[szeros(T,0), szeros(T,0)], rot_joint_limits=[szeros(T,0), szeros(T,0)],
+function Prototype(joint_type::Symbol, pbody::Node{T}, cbody::Node{T}, axis; 
+        parent_vertex=szeros(T, 3), 
+        child_vertex=szeros(T, 3),
+        axis_offset=one(UnitQuaternion{T}), 
+        spring=zero(T), 
+        damper=zero(T),
+        tra_spring_offset=nothing, 
+        rot_spring_offset=nothing,
+        tra_joint_limits=[szeros(T,0), szeros(T,0)], 
+        rot_joint_limits=[szeros(T,0), szeros(T,0)],
         spring_type=:linear) where T
 
     N̄tra, N̄rot = nullspace_dimension(joint_type)

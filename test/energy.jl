@@ -2,6 +2,7 @@
 ϵ0 = 1.0e-12
 timestep0 = 1.0e-2
 start0 = Int(floor(1 / timestep0)) + 1
+
 joint_types = [
     :Fixed,
     :Prismatic,
@@ -103,8 +104,8 @@ mech = get_mechanism(:pendulum,
 ω0 = 0.0
 
 initialize!(mech, :pendulum, 
-    ϕ1=ϕ0, 
-    ω1=ω0)
+    angle=ϕ0, 
+    angular_velocity=ω0)
 storage = simulate!(mech, 25.0, controller!, 
     record=true, 
     verbose=false,
@@ -147,7 +148,7 @@ mech = get_mechanism(:slider,
 
 z0 = 0.5
 initialize!(mech, :slider, 
-    z1=z0)
+    position=z0)
 
 # Analytical
 pbody = mech.bodies[1]
@@ -203,7 +204,7 @@ mech = get_mechanism(:slider,
 
 z0 = 0.5
 initialize!(mech, :slider, 
-    z1=z0)
+    position=z0)
 
 storage = simulate!(mech, 1.5,  nocontrol!, 
     record=true, 
@@ -249,7 +250,7 @@ mech = get_mechanism(:slider,
 
 z0 = 0.1
 initialize!(mech, :slider, 
-    z1=z0)
+    position=z0)
 
 storage = simulate!(mech, 10.0,  nocontrol!, 
     record=true, 
@@ -311,8 +312,8 @@ initialize!(mech, :humanoid)
 bodies = mech.bodies
 for body in mech.bodies
     set_maximal_velocities!(body, 
-        ω=0.5*rand(3))
-    # set_maximal_velocities!(body, v=1.0*rand(3))
+        ω=0.5 * rand(3))
+    # set_maximal_velocities!(body, v=1.0 * rand(3))
 end
 
 for joint in mech.joints 
@@ -362,7 +363,7 @@ mech = get_mechanism(:atlas,
 initialize!(mech, :atlas)
 bodies = mech.bodies
 set_maximal_velocities!.(bodies, 
-    ω=1.0*rand(3))
+    ω=1.0 * rand(3))
 
 storage = simulate!(mech, 5.0, humanoid_controller!, 
     record=true, 
@@ -482,9 +483,9 @@ v0 = 10.0 * [1, 2, 3] * timestep0
 q10 = UnitQuaternion(RotX(0.5*π))
 
 initialize!(mech, :snake, 
-    q1=q10, 
-    v=v0, 
-    ω=ω0)
+    base_orientation=q10, 
+    base_linear_velocity=v0, 
+    base_angular_velocity=ω0)
 storage = simulate!(mech, 3.0, snake_controller!, 
     record=true, 
     verbose=false,
@@ -524,9 +525,9 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
         q10 = UnitQuaternion(RotX(0.5*π))
 
         initialize!(mech, :snake, 
-            q1=q10, 
-            v=v0, 
-            ω=ω0)
+            base_orientation=q10, 
+            base_linear_velocity=v0, 
+            base_angular_velocity=ω0)
         storage = simulate!(mech, 3.0, snake_controller!, 
             record=true, 
             verbose=false,
@@ -588,9 +589,9 @@ v0 = 10.0 * [1, 2, 3] * timestep0
 q10 = UnitQuaternion(RotX(0.5*π))
 
 initialize!(mech, :twister, 
-    q1=q10, 
-    v=v0, 
-    ω=ω0)
+    base_orientation=q10, 
+    base_linear_velocity=v0, 
+    base_angular_velocity=ω0)
 storage = simulate!(mech, 3.0, twister_controller!, 
     record=true, 
     verbose=false,
@@ -629,9 +630,9 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
         q10 = UnitQuaternion(RotX(0.5*π))
 
         initialize!(mech, :twister, 
-            q1=q10, 
-            v=v0, 
-            ω=ω0)
+            base_orientation=q10, 
+            base_linear_velocity=v0, 
+            base_angular_velocity=ω0)
         storage = simulate!(mech, 3.0, snake_controller!, 
             record=true, 
             verbose=false,

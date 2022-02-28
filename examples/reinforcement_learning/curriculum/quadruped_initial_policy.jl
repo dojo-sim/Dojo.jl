@@ -122,7 +122,7 @@ function linear_rollout(mechanism::Mechanism, A::AbstractVector; u_sol=u_sol, N:
 		u[i] = linear_policy(z[i], i, A, u_sol, N=N, n=n)
 		z[i+1] = get_next_state(mechanism)
 		dzdz[i], dzdu[i] = get_maximal_gradients(mechanism)
-		set_state!(mech, z[i+1])
+		set_maximal_state!(mech, z[i+1])
 	end
 	return z, u, dzdz, dzdu
 end
@@ -369,10 +369,10 @@ constraint_jacobian_configuration2(mech, joint)
 
 
 @benchmark fx0, fu0 = get_maximal_gradients(mech)
-z = get_current_state(mech)
+z = get_maximal_state(mech)
 u = rand(input_dimension(mech))
 fx0, fu0 = get_maximal_gradients!(mech, z, u)
-fx0, fu0 = get_minimal_gradients(mech, z, u)
+fx0, fu0 = get_minimal_gradients!(mech, z, u)
 fx1, fu1 = get_maximal_gradients(mech)
 
 attjac2 = cat([cat(I(6), LVᵀmat(body.state.q2), I(3), dims=(1,2)) for body in mech.bodies]..., dims=(1,2))
@@ -397,7 +397,7 @@ norm(attjac3' * fu1 - fu0, Inf)
 
 maximal_dimension(mech, attjac=true)
 
-z = get_current_state(mech)
+z = get_maximal_state(mech)
 z_next = get_next_state(mech)
 x = maximal_to_minimal(mech, z)
 minimal_to_maximal_jacobian(mech, x)

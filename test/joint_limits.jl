@@ -44,7 +44,7 @@
         damper=0.0)
 
     initialize!(mech, :pendulum, 
-        ϕ1=0.4 * π)
+        angle=0.4 * π)
     storage = simulate!(mech, 1.0, 
         record=true, 
         opts=SolverOptions(btol=1e-5, rtol=1e-5))

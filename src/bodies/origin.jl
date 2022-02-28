@@ -3,10 +3,10 @@
 
     Global reference frame
 
-    id - always 0 
-    name - always :origin 
-    state - defaults to zero values
-    shape - empty
+    id: always 0 
+    name: always :origin 
+    state: State; defaults to zero values
+    shape: Shape; defaults to EmptyShape
 """
 mutable struct Origin{T} <: Node{T}
     id::Int64

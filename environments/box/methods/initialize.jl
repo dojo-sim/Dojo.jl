@@ -77,7 +77,7 @@ function initialize_box!(mechanism::Mechanism{T};
 
     z = halfside + offset
 
-    set_maximal_coordinates!(body, 
+    set_maximal_configurations!(body, 
         x=x + [0.0, 0.0, z], 
         q=q)
     set_maximal_velocities!(body, 

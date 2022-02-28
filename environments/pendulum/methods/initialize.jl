@@ -39,11 +39,11 @@ function get_pendulum(;
 end
 
 function initialize_pendulum!(mechanism::Mechanism; 
-    ϕ1=0.7, 
-    ω1=0.0) where T
+    angle=0.7, 
+    angular_velocity=0.0) where T
     joint = mechanism.joints[1]
     set_minimal_coordinates_velocities!(mechanism, joint; 
-        xmin=[ϕ1, ω1])
+        xmin=[angle, angular_velocity])
 end
 
 function get_npendulum(; 
@@ -91,10 +91,10 @@ function get_npendulum(;
 end
 
 function initialize_npendulum!(mechanism::Mechanism{T}; 
-    ϕ1=π / 4.0, 
-    ω=[0.0, 0.0, 0.0],
-    Δv=[0.0, 0.0, 0.0], 
-    Δω=[0.0, 0.0, 0.0]) where T
+    base_angle=π / 4.0, 
+    base_angular_velocity=[0.0, 0.0, 0.0],
+    relative_linear_velocity=[0.0, 0.0, 0.0], 
+    relative_angular_velocity=[0.0, 0.0, 0.0]) where T
 
     pbody = mechanism.bodies[1]
     joint = mechanism.joints[1]
@@ -102,21 +102,21 @@ function initialize_npendulum!(mechanism::Mechanism{T};
     vert12 = -vert11
 
     # set position and velocities
-    set_maximal_coordinates!(mechanism.origin, pbody, 
+    set_maximal_configurations!(mechanism.origin, pbody, 
         child_vertex=vert11, 
-        Δq=UnitQuaternion(RotX(ϕ1)))
+        Δq=UnitQuaternion(RotX(base_angle)))
     set_maximal_velocities!(pbody, 
-        ω=ω)
+        ω=base_angular_velocity)
 
     previd = pbody.id
-    for (i,body) in enumerate(Iterators.drop(mechanism.bodies, 1))
-        set_maximal_coordinates!(get_body(mechanism, previd), body, 
+    for (i, body) in enumerate(Iterators.drop(mechanism.bodies, 1))
+        set_maximal_configurations!(get_body(mechanism, previd), body, 
             parent_vertex=vert12, 
             child_vertex=vert11)
         set_maximal_velocities!(get_body(mechanism, previd), body, 
             parent_vertex=vert12, 
             child_vertex=vert11,
-            Δv=Δv, Δω=1 / i * Δω)
+            Δv=relative_linear_velocity, Δω=1 / i * relative_angular_velocity)
         previd = body.id
     end
 end

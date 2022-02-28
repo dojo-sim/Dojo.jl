@@ -1,11 +1,18 @@
+"""
+    simulate!(mechanism, steps, storage, control!;
+        record, verbose, abort_upon_failure, opts)
 
-function initialize_simulation!(mechanism::Mechanism)
-    initialize_state!(mechanism)
-    for body in mechanism.bodies
-        set_velocity_solution!(body)
-    end
-end
+    simulate a mechanism
 
+    mechanism: Mechanism 
+    steps: range of steps to simulate 
+    storage: Storage
+    control!: Function setting inputs for mechanism
+    record: flag for recording simulation to storage
+    verbose: flag for printing during simulation 
+    abort_upon_failure: flag for terminating simulation is solver fails to meet tolerances
+    opts: SolverOptions
+"""
 function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Storage,
         control!::Function=(m, k) -> nothing;
         record::Bool=true,
@@ -14,6 +21,7 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
         opts=SolverOptions(verbose=verbose))
 
     initialize_simulation!(mechanism)
+
     for k = steps
         control!(mechanism, k)
         for joint in mechanism.joints input_impulse!(joint, mechanism) end
@@ -31,9 +39,19 @@ function simulate!(mechanism::Mechanism{T}, tend::T, args...;
         verbose::Bool=false,
         abort_upon_failure::Bool=false,
         opts=SolverOptions(verbose=verbose)) where T
+
     steps = Base.OneTo(Int64(ceil(tend / mechanism.timestep)))
     record ? (storage = Storage{T}(steps, length(mechanism.bodies))) : (storage = Storage{T}())
+
     storage = simulate!(mechanism, steps, storage, args...; verbose=verbose,
         record=record, abort_upon_failure=abort_upon_failure, opts=opts)
+        
     return storage
+end
+
+function initialize_simulation!(mechanism::Mechanism)
+    initialize_state!(mechanism)
+    for body in mechanism.bodies
+        set_velocity_solution!(body)
+    end
 end

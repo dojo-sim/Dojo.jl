@@ -14,9 +14,10 @@ mech = get_dzhanibekov(
 
 # ## Simulate
 initialize_dzhanibekov!(mech, 
-    ω=[15.0; 0.01; 0.0])
+    angular_velocity=[15.0; 0.01; 0.0])
 storage = simulate!(mech, 4.65, 
-    record=true, verbose=false)
+    record=true, 
+    verbose=false)
 
 # ## Visualizers
 vis=visualizer()
