@@ -10,30 +10,37 @@ Load the `Dojo` package.
 using Dojo
 ```
 
-Define the simulation timestep, and other parameters like the gravity.
+Define the simulation time step, and other parameters like the gravity.
 ```julia
 timestep=0.01
 gravity=0.0
 ```
 
-We want to simulate the
+We use the mechanism called `:dzhanibekov`.
 ```julia
 mech = get_mechanism(:dzhanibekov,
         timestep=timestep,
         gravity=gravity);
+```
 
-# ## Simulate
+We initialize the system with a given initial angular velocity.
+```julia
 initialize_dzhanibekov!(mech,
     angular_velocity=[15.0; 0.01; 0.0])
-storage = simulate!(mech, 4.65,
+```
+
+We simulate this system for 4 seconds, we record the resulting trajectory in `storage`,
+```julia
+storage = simulate!(mech, 4.00,
     record=true,
     verbose=false)
+```
 
-# ## Visualizers
-vis=visualizer()
-render(vis)
-visualize(mech, storage,
-    vis=vis)
+We visualize the trajectory in the browser,
+```julia
+vis = Visualizer()
+open(vis)
+visualize(mech, storage, vis=vis)
 ```
 
 And voila! You should see something like this;

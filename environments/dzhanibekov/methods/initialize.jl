@@ -1,7 +1,7 @@
 function get_dzhanibekov(;
     timestep=0.01,
     gravity=-9.81,
-    color=magenta) where T
+    color=RGBA(0.9,0.9,0.9,1)) where T
 
     radius = 0.1
     body_length = 1.0
@@ -34,6 +34,6 @@ function initialize_dzhanibekov!(mechanism::Mechanism{T,Nn,Ne,Nb};
 
     zero_velocity!(mechanism)
     set_minimal_coordinates_velocities!(mechanism, get_joint(mechanism, :floating);
-        xmin=[szeros(6); linear_velocity; angular_velocity])
+        xmin=[0;0;1;0;0;0; linear_velocity; angular_velocity])
     set_minimal_coordinates_velocities!(mechanism, get_joint(mechanism, :fixed))
 end

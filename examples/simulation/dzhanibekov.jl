@@ -14,8 +14,8 @@ mech = get_mechanism(:dzhanibekov,
 
 # ## Simulate
 initialize_dzhanibekov!(mech,
-    angular_velocity=[15.0; 0.01; 0.0])
-storage = simulate!(mech, 4.00,
+    angular_velocity=[8.0; 0.01; 0.0])
+storage = simulate!(mech, 8.00,
     record=true,
     verbose=false)
 
