@@ -16,9 +16,9 @@ $$\text{minimize}_{\beta} \quad [v^T  -v^T] \beta, \\
 \text{subject to} \quad \beta^T \mathbf{1} \leq \mu \gamma, \\
 \beta \geq 0,$$
 
-which satisfies the LCP formulation, is instead solved. Here, the friction cone is linearized (Fig. \ref{friction_cones}) and the friction vector, $\beta \in \mathbf{R}^{4}$, is correspondingly overparameterized and subject to additional non-negative constraints \cite{stewart1996implicit}.
+which satisfies the LCP formulation, is instead solved. Here, the friction cone is linearized and the friction vector, $\beta \in \mathbf{R}^{4}$, is correspondingly overparameterized and subject to additional non-negative constraints.
 
-The optimality conditions of \eqref{mdp_linear} and constraints used in the LCP are:
+The optimality conditions of the above problem and constraints used in the LCP are:
 
 $$[v^T  -v^T]^T + \psi \mathbf{1} - \eta = 0, \\
 \mu \gamma -\beta^T \textbf{1} \geq 0,\\
