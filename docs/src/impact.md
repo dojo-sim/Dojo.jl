@@ -21,6 +21,4 @@ where $\circ$ is an element-wise product operator, enforces zero force if the bo
 
 
 ### Constructor
-```@docs
-ImpactContact
-```
+[`ImpactContact`](@ref)

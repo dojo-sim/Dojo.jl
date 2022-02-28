@@ -7,18 +7,18 @@ A differentiable simulator for robotics.
 
 # Examples (RSS 2022)
 
-## Simulation 
+## Simulation
 
-### Atlas drop 
+### Atlas drop
 <img src="examples/animations/atlas_drop.gif" width="100"/>
 
 ### Astronaut
 <img src="examples/animations/astronaut.gif" width="200"/>
 
-### Friction-cone comparison 
+### Friction-cone comparison
 - blue = nonlinear friction cone
 - orange = linear friction cone
-- magenta = MuJoCo friction model 
+- magenta = MuJoCo friction model
 <img src="examples/animations/cone_compare_mujoco.gif" height="150"/>
 
 ### Dzhanibekov effect
@@ -27,28 +27,31 @@ A differentiable simulator for robotics.
 ### Tippe top
 <img src="examples/animations/tippetop.gif" width="150"/>
 
-## Trajectory Optimization 
+### Pendulum swing-up
+<img src="examples/animations/pendulum.gif" width="150"/>
 
-### Box 
+## Trajectory Optimization
+
+### Box
 <img src="examples/animations/box_right.gif" width="200"/>
 
 <img src="examples/animations/box_up.gif" width="95"/>
 
-### Hopper 
+### Hopper
 <img src="examples/animations/hopper_max.gif" width="100"/>
 
-### Quadruped 
+### Quadruped
 <img src="examples/animations/quadruped_min.gif" width="200"/>
 
 ### Atlas
 <img src="examples/animations/atlas_ilqr.gif" width="200"/>
 
-### Cart-pole 
+### Cart-pole
 <img src="examples/animations/cartpole_max.gif" width="200"/>
 
-## Reinforcement Learning 
+## Reinforcement Learning
 
-### Half Cheetah 
+### Half Cheetah
 <img src="examples/animations/halfcheetah_ars.gif" width="600"/>
 
 ### Ant
@@ -65,9 +68,9 @@ Learning friction coefficient:
 ### Toss
 <img src="examples/animations/box_toss.gif" width="300"/>
 
-## Installation 
+## Installation
 
-`Dojo` can be added via the Julia package manager (type `]`): 
+`Dojo` can be added via the Julia package manager (type `]`):
 ```julia
 pkg> add Dojo
 ```
@@ -88,6 +91,3 @@ pkg> add Dojo#main
 
 ## How To Contribute
 Please submit a pull request, open an issue, or reach out to: thowell@stanford.edu (Taylor) or simonlc@stanford.edu (Simon)
-
-
-
