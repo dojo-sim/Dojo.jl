@@ -1,22 +1,26 @@
 # Defining a Controller
 Here, we explain how to write a controller and simulate its effect on a dynamical system
-i.e. a [`mechanism`](@ref).
+i.e. a [`Mechanism`](@ref).
 We focus on a simple pendulum swing-up.
 
+Load Dojo and use the pendulum mechanism with desired simulation time step, desired gravity and desired damping at the joint.
 
-
-
-# ## Setup
+```julia
 using Dojo
 
-# ## Mechanism
 mechanism = get_mechanism(:pendulum,
     timestep=0.01,
     gravity=-9.81,
-    damper=5.0,
-    spring=0.0)
+    damper=5.0)
+```
 
-# ## Controller
+Define the controller. This is a method that takes 2 input arguments:
+- a [`Mechanism`](@ref),
+- an integer `k` indicating the current simulation step.
+The controller computes the control inputs based on the current state `x`, the goal state `x_goal` and a proportional gain `K`.
+
+
+```julia
 function controller!(mechanism, k)
     ## Target state
     x_goal = [1.0 * π; 0.0]
@@ -27,32 +31,34 @@ function controller!(mechanism, k)
     ## Gains
     K = [5.0 0.5] * 0.1
 
-    off = 0
-    for joint in mechanism.joints
-        nu = input_dimension(joint)
-
-        ## Get joint configuration + velocity
-        xi = x[off .+ (1:2nu)]
-        xi_goal = x_goal[off .+ (1:2nu)]
-
-        ## Control
-        ui = -K * (xi - xi_goal)
-        set_input!(joint, ui)
-
-        off += nu
-    end
+    # Control inputs
+    u =  -K * (x - x_goal)
+    set_input!(mechanism, u)
 end
+```
 
-# ##Simulate
+We initialize the pendulum in the lower position, and we will let the controller perform the swing-up movement.
+```julia
 initialize!(mechanism, :pendulum,
     angle=0.0 * π,
     angular_velocity=0.0);
+```
 
+We simulate the system for 2 seconds using the `controller!`.
+```julia
 storage = simulate!(mechanism, 2.0, controller!,
     record=true,
     verbose=true);
+```
 
-# ## Visualize
+We visualize the results.
+```julia
 vis = Visualizer()
-render(vis)
+open(vis)
 visualize(mechanism, storage, vis=vis);
+```
+
+You should get something like this,
+```@raw html
+<img src="./../../examples/animations/pendulum.gif" width="300"/>
+```

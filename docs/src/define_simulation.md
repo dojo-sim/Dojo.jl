@@ -1,5 +1,5 @@
 # Defining a Simulation
-Here, we explain how to simulate a dynamical system i.e. a [`mechanism`](@ref) forward in time.
+Here, we explain how to simulate a dynamical system i.e. a [`Mechanism`](@ref) forward in time.
 The example that we are trying to replicate the Dzhanibekov effect shown below.
 
 ![dzhanibekov](./assets/dzhanibekov_nasa.gif)
@@ -45,4 +45,6 @@ visualize(mech, storage, vis=vis)
 
 And voila! You should see something like this;
 
-![dzhanibekov](./../../examples/animations/dzhanibekov.gif)
+```@raw html
+<img src="./../../examples/animations/dzhanibekov.gif" width="300"/>
+```

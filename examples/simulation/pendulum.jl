@@ -23,20 +23,9 @@ function controller!(mechanism, k)
     ## Gains
     K = [5.0 0.5] * 0.1
 
-    off = 0
-    for joint in mechanism.joints
-        nu = input_dimension(joint)
-
-        ## Get joint configuration + velocity
-        xi = x[off .+ (1:2nu)]
-        xi_goal = x_goal[off .+ (1:2nu)]
-
-        ## Control
-        ui = -K * (xi - xi_goal)
-        set_input!(joint, ui)
-
-        off += nu
-    end
+    # Control inputs
+    u =  -K * (x - x_goal)
+    set_input!(mechanism, u)
 end
 
 # ##Simulate
