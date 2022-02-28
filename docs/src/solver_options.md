@@ -1,9 +1,7 @@
 # Solver Options
 
-The solver we implemented has several options all accessible via [`SolverOptions`](@ref). Here is a list describing what they are, their typical values and their impact on the solver's behavior.
+The solver we implemented has several options all accessible via [`SolverOptions`](@ref). Here is a list describing their impact on the solver's behavior, their typical values and if they need to be tuned.
 
-
-Increasing $b_{tol}$ results in smoothed contact dynamics.
 
 | option                  | min $\cdot$ default $\cdot$ max values | effect | require tuning |
 | ----------------------- | -------------------------------------- | ------ | -------------- |
