@@ -1,6 +1,6 @@
 push!(LOAD_PATH, "../src/")
 
-using Documenter, Dojo
+using Documenter#, Dojo
 
 makedocs(
     modules = [Dojo],
