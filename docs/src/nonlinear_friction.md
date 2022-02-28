@@ -45,6 +45,4 @@ v^{(i)}(z, z_{+}) - \eta_{(2:3)}^{(i)} = 0, \quad i = 1, \dots, P, \\
 where $u \in \mathbf{R}^m$ is the control input at the current time step, $\lambda = (\beta^{(1)}_{(2:3)}, \gamma^{(1)}, \dots, \beta^{(P)}_{(2:3)}, \gamma^{(P)}) \in \mathbf{\Lambda}$ is the concatenation of impact and friction impulses, $B : \mathbf{Z} \rightarrow \mathbf{R}^{6N \times m}$ is the input Jacobian mapping control inputs into maximal coordinates, $C : \mathbf{Z} \rightarrow \mathbf{R}^{\text{dim}(\mathbf{\Lambda}) \times 6N}$ is a contact Jacobian mapping between maximal coordinates and contact surfaces, $s \in \mathbf{R}^P$ is a slack variable introduced for convenience, and $v^{(i)} : \mathbf{Z} \times \mathbf{Z} \rightarrow \mathbf{R}^2$ is the tangential velocity at contact point $i$. Joint limits and internal friction are readily incorporated into this problem formulation.
 
 ### Constructor
-```@docs
-NonlinearContact
-```
+[`NonlinearContact`](@ref)

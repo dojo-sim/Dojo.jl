@@ -29,6 +29,4 @@ $$[v^T  -v^T]^T + \psi \mathbf{1} - \eta = 0, \\
 where $\psi \in \mathbf{R}$ and $\eta \in \mathbf{R}^{4}$ are the dual variables associated with the friction cone and positivity constraints, respectively, and $\textbf{1}$ is a vector of ones.
 
 ### Constructor
-```@docs
-LinearContact
-```
+[`LinearContact`](@ref)
