@@ -59,6 +59,7 @@ makedocs(
         ],
 
         "Contact Models" => [
+            "contact_models.md",
             "impact.md",
             "friction.md",
         ],
