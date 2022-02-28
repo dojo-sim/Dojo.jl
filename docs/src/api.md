@@ -34,7 +34,11 @@ get_minimal_state
 set_maximal_state!
 set_minimal_state!
 set_input!
+maximal_dimension 
+minimal_dimension
 input_dimension
+zero_velocity!
+root_to_leaves_ordering
 ```
 
 ### Nodes
@@ -60,6 +64,7 @@ Joint
 Rotational
 Translational
 JointConstraint
+Floating
 Fixed
 Prismatic
 Planar
@@ -84,24 +89,37 @@ ImpactContact
 LinearContact
 NonlinearContact
 ContactConstraint
+contact_constraint
+contact_location
+get_sdf 
 ```
 
 ### Representations
 ```@docs
 State
+minimal_to_maximal
+maximal_to_minimal
+```
+
+### Mechanics 
+```@docs 
+mechanical_energy 
+kinetic_energy 
+potential_energy 
+momentum
 ```
 
 ### Graph
 ```@docs
 System
 Entry
+full_matrix 
+full_vector
 ```
 
 ## Environments
 ```@docs
 Environment
-Space
-BoxSpace
 Ant
 Atlas
 Block
@@ -110,6 +128,7 @@ HalfCheetah
 Hopper
 Pendulum
 Quadruped
+RaibertHopper
 RexHopper
 Walker
 get_environment
@@ -118,19 +137,26 @@ get_observation
 cost
 is_done
 reset
+dynamics
+dynamics_jacobian_state 
+dynamics_jacobian_input
+Space
+BoxSpace
 ```
 
 ## Simulate
 ```@docs
-    Storage
-    step!
-    simulate!
+Storage
+step!
+simulate!
 ```
 
 ## Gradients
 ```@docs
 get_maximal_gradients!
 get_minimal_gradients!
+maximal_to_minimal_jacobian
+minimal_to_maximal_jacobian
 ```
 
 ## Solver
