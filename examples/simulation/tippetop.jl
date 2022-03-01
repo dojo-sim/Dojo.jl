@@ -6,25 +6,25 @@
 using Dojo
 
 # ## Mechanism
-mech = get_mechanism(:tippetop, 
-    timestep=0.01, 
-    gravity=-9.81, 
-    contact=true, 
+mech = get_mechanism(:tippetop,
+    timestep=0.01,
+    gravity=-9.81,
+    friction_coefficient=0.4,
+    contact=true,
     contact_type=:nonlinear)
 
 # ## Simulate
-initialize!(mech, :tippetop, 
-    x=[0.0, 0.0, 1.0], 
-    q=UnitQuaternion(RotX(0.01 * π)), 
+initialize!(mech, :tippetop,
+    x=[0.0, 0.0, 1.0],
+    θ=[0,0.01,0],
     ω=[0.0, 0.01, 50.0])
 
-storage = simulate!(mech, 25.0, 
-    record=true, 
-    verbose=false, 
-    opts=SolverOptions(verbose=false, btol=1e-6))
+storage = simulate!(mech, 10.0,
+    record=true,
+    verbose=false,
+    opts=SolverOptions(verbose=false, btol=1e-5))
 
 # ## Open visualizer
-vis=visualizer()
-open(vis)
-visualize(mech, storage, 
-    vis=vis)
+# vis = Visualizer()
+# render(vis)
+visualize(mech, storage, vis=vis)
