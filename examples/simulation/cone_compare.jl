@@ -6,7 +6,7 @@
 using Dojo
 
 # ## Visualizer
-vis=visualizer()
+vis= Visualizer()
 open(vis)
 set_camera!(vis, 
     cam_pos=[-0.01, 0.0, 90.0], 

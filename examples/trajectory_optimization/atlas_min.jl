@@ -173,7 +173,7 @@ IterativeLQR.solve!(prob,
     ρ_init=1.0,
     ρ_scale=10.0)
 
-vis=visualizer()
+vis= Visualizer()
 open(env.vis)
 
 # ## solution

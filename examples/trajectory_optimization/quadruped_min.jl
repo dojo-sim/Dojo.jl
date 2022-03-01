@@ -118,7 +118,7 @@ IterativeLQR.initialize_states!(prob, x̄)
 # ## solve
 @time IterativeLQR.solve!(prob)
 
-vis=visualizer()
+vis= Visualizer()
 open(env.vis)
 
 # ## solution

@@ -187,7 +187,7 @@ end
 ################################################################################
 # Compute trajectory
 ################################################################################
-# vis=visualizer()
+# vis= Visualizer()
 # open(vis)
 
 # mech = get_mechanism(:atlas, timestep=0.05, model_type=:armless, damper=1000.0)
