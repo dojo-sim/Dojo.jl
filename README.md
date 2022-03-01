@@ -85,7 +85,7 @@ pkg> add Dojo#main
 
 ## Citing
 ```
-@article{howell2022dojo,
+@article{howelllecleach2022dojo,
 	title={Dojo: {A} {D}ifferentiable {S}imulator for {R}obotics},
 	author={Howell, Taylor A. and Le Cleac'h, Simon and Kolter, J. Zico and Schwager, Mac and Manchester, Zachary},
 	year={2022}

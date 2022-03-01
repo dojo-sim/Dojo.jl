@@ -75,7 +75,7 @@ end
             gravity=gravity);
 
     # Simulate
-    Dojo.initialize!(:dzhanibekov, mech,
+    Dojo.initialize!(mech, :dzhanibekov,
         angular_velocity=[15.0; 0.01; 0.0])
     storage = Dojo.simulate!(mech, 4.00,
         record=true,

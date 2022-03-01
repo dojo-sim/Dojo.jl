@@ -20,7 +20,8 @@ function ant(;
     vis=Visualizer(), 
     name=:robot,
     opts_step=SolverOptions(), 
-    opts_grad=SolverOptions()) where T
+    opts_grad=SolverOptions(),
+    T=Float64)
 
     mechanism = get_ant(
         timestep=timestep, 

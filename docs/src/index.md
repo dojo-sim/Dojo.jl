@@ -32,7 +32,7 @@ __Primary Development__
 
 * [Zico Kolter](https://zicokolter.com/)
 * [Mac Schwager](https://web.stanford.edu/~schwager/)
-* [Zachary Manchester](https://www.ri.cmu.edu/ri-faculty/zachary-manchester/) 
+* [Zachary Manchester](https://www.ri.cmu.edu/ri-faculty/zachary-manchester/) (principal investigator)
 
 Development by the [Robotic Exploration Lab](https://roboticexplorationlab.org/).
  

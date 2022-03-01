@@ -1,6 +1,6 @@
 # Defining a Controller
 Here, we explain how to write a controller and simulate its effect on a dynamical system
-i.e. a [`Mechanism`](@ref).
+i.e., a [`Mechanism`](@ref).
 We focus on a simple pendulum swing-up.
 
 Load Dojo and use the pendulum mechanism with desired simulation time step, desired gravity and desired damping at the joint.
@@ -16,12 +16,12 @@ mechanism = get_mechanism(:pendulum,
 
 Define the controller. This is a method that takes 2 input arguments:
 - a [`Mechanism`](@ref),
-- an integer `k` indicating the current simulation step.
+- an integer `t` indicating the current simulation step.
 The controller computes the control inputs based on the current state `x`, the goal state `x_goal` and a proportional gain `K`.
 
 
 ```julia
-function controller!(mechanism, k)
+function controller!(mechanism, t)
     ## Target state
     x_goal = [1.0 * π; 0.0]
 

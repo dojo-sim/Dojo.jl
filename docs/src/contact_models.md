@@ -11,10 +11,10 @@ Three contact models are implemented in Dojo:
 - [`LinearContact`](@ref) enforces contact with a linearized cone of friction (pyramidal cone).
 ![linearized_cone](./assets/linearized_cone.png)
 
-All 3 of these contact models implement hard contact i.e. no interpenetration. This means that for both the nonlinear and linearized cones, we concatenate the constraints resulting from friction with the impact constraints.
+All 3 of these contact models implement hard contact i.e., no interpenetration. This means that for both the nonlinear and linearized cones, we concatenate the constraints resulting from friction with the impact constraints.
 
 ### Implementation
-Dojo currently supports contact constraints occurring between a sphere and the ground i.e. a horizontal half-space of altitude 0.0. Each spherical contact is attached to a single [`Body`](@ref).
+Dojo currently supports contact constraints occurring between a sphere and the ground i.e., a horizontal half-space of altitude 0.0. Each spherical contact is attached to a single [`Body`](@ref).
 
 To create a new point of contact, we need to define:
 - the [`Body`](@ref) to which the contact constraint is attached

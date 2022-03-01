@@ -1,9 +1,8 @@
 # Defining a Simulation
-Here, we explain how to simulate a dynamical system i.e. a [`Mechanism`](@ref) forward in time.
+Here, we explain how to simulate a dynamical system i.e., a [`Mechanism`](@ref) forward in time.
 The example that we are trying to replicate the Dzhanibekov effect shown below.
 
 ![dzhanibekov](./assets/dzhanibekov_nasa.gif)
-
 
 Load the `Dojo` package.
 ```julia
@@ -25,13 +24,13 @@ mech = get_mechanism(:dzhanibekov,
 
 We initialize the system with a given initial angular velocity.
 ```julia
-initialize_dzhanibekov!(mech,
+initialize!(mech, :dzhanibekov,
     angular_velocity=[15.0; 0.01; 0.0])
 ```
 
-We simulate this system for 4 seconds, we record the resulting trajectory in `storage`,
+We simulate this system for 5 seconds, we record the resulting trajectory in `storage`,
 ```julia
-storage = simulate!(mech, 4.00,
+storage = simulate!(mech, 5.0,
     record=true,
     verbose=false)
 ```

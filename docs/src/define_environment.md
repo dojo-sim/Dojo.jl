@@ -215,3 +215,20 @@ function is_done(env::Environment{Ant}, x)
     !(all(isfinite.(env.state)) && (env.state[3] >= 0.2) && (env.state[3] <= 1.0))
 end
 ```
+
+# Random controls
+
+We apply random controls to the robot via the environment interface:
+```julia
+y = [copy(env.state)] # state trajectory
+for t = 1:100
+    step(env, env.state, randn(env.num_inputs))
+    push!(y, copy(env.state)) 
+end
+visualize(env, y)
+```
+
+The result should be something like this:
+```@raw html
+<img src="./../../examples/animations/ant_random.gif" width="300"/>
+```

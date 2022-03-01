@@ -21,12 +21,13 @@ env = get_environment(:ant,
 
 obs = reset(env)
 initialize_ant!(env.mechanism, 
-    body_position=[1.3, 0.0, 0.0], 
+    body_position=[0.0, 0.0, 1.0], 
     body_orientation=[0.0, 0.0, 0.0])
 env.state .= get_minimal_state(env.mechanism)
 render(env)
 
 # ## Open visualizer
+initialize!(env.mechanism, :ant)
 open(env.vis)
 
 # ## Set up policy

@@ -1,10 +1,23 @@
 # Contributing
 
-Contributions are always welcome:
+Contributions are always welcome!
 
 * If you want to contribute features, bug fixes, etc, please take a look at our __Code Style Guide__ below
 * Please report any issues and bugs that you encounter in [Issues](https://github.com/dojo-sim/Dojo.jl/issues)
 * As an open source project we are also interested in any projects and applications that use Dojo. Please let us know via email to: thowell@stanford.edu or simonlc@stanford.edu
+
+## Potentially Useful Contributions 
+Here are a list of current to-do's that would make awesome contributions:
+
+- improved parsing of URDF files
+    - joint limits, friction coefficients
+- improved collision detection 
+    - body-to-body contact 
+    - general convex shapes 
+    - curved surfaces 
+- GPU support 
+- nice REPL interface
+- interactive GUI
 
 ## Code Style Guide
 

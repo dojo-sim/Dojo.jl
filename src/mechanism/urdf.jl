@@ -331,7 +331,7 @@ function parse_joints(xjoints, ldict, floating, T)
     return origin, links, joints
 end
 
-# TODO This might be missing the detection of a direct loop, i.e. only two links connected by two joints
+# TODO This might be missing the detection of a direct loop, i.e., only two links connected by two joints
 # TODO Also only works for a single loop closure in a cycle (so no ladders)
 function parse_loop_joints(xloopjoints, origin, joints, ldict, T)
     loopjoints = JointConstraint{T}[]
