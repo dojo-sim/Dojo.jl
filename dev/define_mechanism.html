@@ -53,10 +53,10 @@
     set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_joint), [0.0; 0.0; radius; zeros(3)])
     return mechanism
 end</code></pre><h3 id="Initialize-Mechanism"><a class="docs-heading-anchor" href="#Initialize-Mechanism">Initialize Mechanism</a><a id="Initialize-Mechanism-1"></a><a class="docs-heading-anchor-permalink" href="#Initialize-Mechanism" title="Permalink"></a></h3><p>The second method that we need to define is <code>initialize_...</code> where <code>...</code> is the name of the mechanism. So here we define <code>initialize_tippetop</code>. This function initialize the dynamical system to a certain state. This means that we set the position orientation, linear and angular velocity of each body in the mechanism.</p><pre><code class="language-julia hljs">function initialize_tippetop!(mechanism::Mechanism{T};
-    x=zeros(3),
-    θ=zeros(3),
-    v=zeros(3),
-    ω=zeros(3)) where T
+    body_position=zeros(3),
+    body_orientation=zeros(3),
+    body_linear_velocity=zeros(3),
+    body_angular_velocity=zeros(3)) where T
 
     # we retrieve the joints from the mechanism by their names
     floating_joint = get_joint(mechanism, :floating_joint)
@@ -66,8 +66,9 @@ end</code></pre><h3 id="Initialize-Mechanism"><a class="docs-heading-anchor" hre
     # we set all the bodies&#39; velocities to zeros
     zero_velocity!(mechanism)
     # we set to minimal coordinates of the floating joint
-    set_minimal_coordinates_velocities!(mechanism, floating_joint, xmin=[x; θ; v; ω])
+    set_minimal_coordinates_velocities!(mechanism, floating_joint,
+        xmin=[body_position; body_orientation; body_linear_velocity; body_angular_velocity])
     # we set to minimal coordinates of the fixed joint (this joint has zero minimal coordinate).
     set_minimal_coordinates_velocities!(mechanism, fixed_joint)
     return nothing
-end</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="index.html">« Get Started</a><a class="docs-footer-nextpage" href="load_mechanism.html">Loading Mechanism via URDF »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.13 on <span class="colophon-date" title="Tuesday 1 March 2022 01:28">Tuesday 1 March 2022</span>. Using Julia version 1.6.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="index.html">« Get Started</a><a class="docs-footer-nextpage" href="load_mechanism.html">Loading Mechanism via URDF »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.13 on <span class="colophon-date" title="Tuesday 1 March 2022 01:36">Tuesday 1 March 2022</span>. Using Julia version 1.6.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
