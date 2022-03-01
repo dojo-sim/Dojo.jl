@@ -60,7 +60,7 @@ line_mat_lc = LineBasicMaterial(color=color_lc, linewidth=10.0)
 points_lc = Vector{Point{3,Float64}}()
 for (i, xt) in enumerate(storage_lc.x[1])
     k = xt
-    push!(points_lc, Point(k[1], k[2] + 0.04, k[3]))
+    push!(points_lc, Point(k...))
 end
 setobject!(vis[:path_lc], MeshCat.Line(points_lc, line_mat_lc))
 
@@ -86,15 +86,12 @@ storage_nc = simulate!(mech_nc, 4.0,
     opts=opts)
 
 # ## Visualize
-for (i, x) in enumerate(storage_nc.x[1])
-    storage_nc.x[1][i] += [0.0; 0.0; 0.1]
-end
-
 line_mat_nc = LineBasicMaterial(color=color_nc, linewidth=25.0)
 points_nc = Vector{Point{3,Float64}}()
 for (i, xt) in enumerate(storage_nc.x[1])
     k = xt
-    push!(points_nc, Point(k[1], k[2] - 0.04, k[3] + 0.0))
+    @show k[3]
+    push!(points_nc, Point(k...))
 end
 setobject!(vis[:path_nc], MeshCat.Line(points_nc, line_mat_nc))
 
@@ -103,39 +100,78 @@ vis, anim = visualize(mech_nc, storage_nc,
     name=:nc,
     animation=anim)
 
-# ## MuJoCo cone
-color_mj = magenta;
+# ## MuJoCo pyramidal cone
+color_mjlc = magenta;
 
-mech_mj = get_mechanism(:box,
+mech_mjlc = get_mechanism(:box,
     timestep=timestep,
     gravity=gravity,
     friction_coefficient=friction_coefficient,
     contact_type=:linear,
-    mode=:box, color=color_mj);
+    mode=:box, color=color_mjlc);
 
 # ## Load
-initialize!(mech_mj, :box,
+initialize!(mech_mjlc, :box,
     x=x0,
     q=one(UnitQuaternion),
     v=v0,
     ω=ω0)
-file = jldopen(joinpath(@__DIR__, "../MuJoCo_benchmark/results/cone_compare.jld2"))
-storage_mj = generate_storage(mech_mj, [get_maximal_state(mech_mj), file["ztraj"]...])
+file = jldopen(joinpath(@__DIR__, "../mujoco_benchmark/results/cone_compare_pyramidal.jld2"))
+storage_mjlc = generate_storage(mech_mjlc, [get_maximal_state(mech_mjlc), file["ztraj"]...])
 
 # ## Visualize
-vis, anim = visualize(mech_mj, storage_mj,
+vis, anim = visualize(mech_mjlc, storage_mjlc,
     vis=vis,
-    name=:mj,
+    name=:mjlc,
     animation=anim)
 
-line_mat_mj = LineBasicMaterial(color=color_mj, linewidth=25.0)
-points_mj = Vector{Point{3,Float64}}()
-for (i, xt) in enumerate(storage_mj.x[1])
+line_mat_mjlc = LineBasicMaterial(color=color_mjlc, linewidth=25.0)
+points_mjlc = Vector{Point{3,Float64}}()
+for (i, xt) in enumerate(storage_mjlc.x[1])
     k = xt
-    push!(points_mj, Point(k[1], k[2], k[3]))
+    push!(points_mjlc, Point(k[1], k[2], k[3]))
 end
-setobject!(vis[:path_mj], MeshCat.Line(points_mj, line_mat_mj))
+setobject!(vis[:path_mjlc], MeshCat.Line(points_mjlc, line_mat_mjlc))
+
+
+# ## MuJoCo elliptic cone
+color_mjnc = RGBA(0,0,0);
+
+mech_mjnc = get_mechanism(:box,
+    timestep=timestep,
+    gravity=gravity,
+    friction_coefficient=friction_coefficient,
+    contact_type=:linear,
+    mode=:box, color=color_mjnc);
+
+# ## Load
+initialize!(mech_mjnc, :box,
+    x=x0,
+    q=one(UnitQuaternion),
+    v=v0,
+    ω=ω0)
+file = jldopen(joinpath(@__DIR__, "../mujoco_benchmark/results/cone_compare_elliptic.jld2"))
+storage_mjnc = generate_storage(mech_mjnc, [get_maximal_state(mech_mjnc), file["ztraj"]...])
+
+# ## Visualize
+vis, anim = visualize(mech_mjnc, storage_mjnc,
+    vis=vis,
+    name=:mjnc,
+    animation=anim)
+
+line_mat_mjnc = LineBasicMaterial(color=color_mjnc, linewidth=25.0)
+points_mjnc = Vector{Point{3,Float64}}()
+for (i, xt) in enumerate(storage_mjnc.x[1])
+    k = xt
+    push!(points_mjnc, Point(k[1], k[2], k[3]))
+end
+setobject!(vis[:path_mjnc], MeshCat.Line(points_mjnc, line_mat_mjnc))
 
 settransform!(vis[:lc], MeshCat.Translation(0,+0.04,0))
+settransform!(vis[:path_lc], MeshCat.Translation(0,+0.04,0))
 settransform!(vis[:nc], MeshCat.Translation(0,-0.04,0))
-settransform!(vis[:mj], MeshCat.Translation(0,+0.00,0))
+settransform!(vis[:path_nc], MeshCat.Translation(0,-0.04,0))
+settransform!(vis[:mjlc], MeshCat.Translation(0,+0.00,0))
+# settransform!(vis[:mjnc], MeshCat.Translation(0,-0.08,-0.02))
+settransform!(vis[:mjnc], MeshCat.Translation(0,-0.08,0))
+settransform!(vis[:path_mjnc], MeshCat.Translation(0,-0.08,0))
