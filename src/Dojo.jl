@@ -7,7 +7,6 @@ using LinearAlgebra
 using Random
 using StaticArrays
 using SparseArrays
-using FiniteDiff
 using StaticArrays: SUnitRange
 using Rotations
 using Rotations: RotationError, params, lmult, rmult, tmat, vmat, hmat, skew, pure_quaternion

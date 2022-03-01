@@ -1,7 +1,7 @@
 
-# PREAMBLE
-
-# PKG_SETUP
+using Pkg
+Pkg.activate(@__DIR__)
+Pkg.instantiate()
 
 # ## setup
 using Dojo

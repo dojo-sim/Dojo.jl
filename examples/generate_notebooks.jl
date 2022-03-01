@@ -2,7 +2,12 @@ using Literate
 
 function preprocess(str)
     str = replace(str, "# PREAMBLE" => "")
-    str = replace(str, "# PKG_SETUP" => "")
+    str = replace(str, "# PKG_SETUP" =>
+    """
+    using Pkg
+    Pkg.activate(@__DIR__)
+    Pkg.instantiate()
+    """)
     return str
 end
 
