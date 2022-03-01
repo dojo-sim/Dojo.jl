@@ -22,7 +22,6 @@ In case ``(\partial r / \partial w)^{-1}`` is not well defined, (e.g., not full 
 
 Often, Newton's method is employed to find solutions to the implicit equation and custom linear-system solvers can efficiently compute search directions for this purpose. Importantly, the factorization of ``\partial r / \partial w`` used to find a solution can be reused to compute (1) at very low computational cost using only back-substitution. Additionally, each element of the problem-data sensitivity can be computed in parallel.
 
-
 ## Dojo's Gradient
 At a solution point, ``w^*(\theta, \kappa)``, the sensitivity of the solution with respect to the problem data, i.e., ``\partial w^* / \partial \theta``, is efficiently computed using the implicit-function theorem (1) to differentiate through the solver's residual.
 
@@ -32,11 +31,10 @@ The problem data for each simulation step include: the previous and current conf
 
 In many robotics scenarios, we are interested in gradient information through contact events. Instead of computing gradients for hard contact with zero or very small central-path parameters, we use a relaxed value from intermediate solutions ``w^*(\theta, \kappa > 0)`` corresponding to a soft contact model. In practice, we find that these smooth gradients greatly improve the performance of gradient-based optimization methods.
 
-
 ## Gradient Comparison
 
 ```@raw html
-<img src="./assets/gradient_comparison.png" width="600"/>
+<img src="./assets/gradient_comparison.png" width="500"/>
 ```
 
 Gradient comparison between randomized smoothing and Dojo's smooth gradients. The dynamics for a box in the ``XY`` plane that is resting on a flat surface and displaced an amount ``\Delta`` by an input ``F`` (top left). Its corresponding exact gradients are shown in black. Gradient bundles (right column) are computed using sampling schemes with varying covariances ``\Sigma`` and ``500`` samples. Dojo's gradients (middle column) are computed for different values of ``\kappa``, corresponding to the smoothness of the contact model. Compared to the 500-sample gradient bundle, Dojo's gradients are not noisy and are a 100 times faster to compute with a single worker.

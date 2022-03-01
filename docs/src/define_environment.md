@@ -216,7 +216,7 @@ function is_done(env::Environment{Ant}, x)
 end
 ```
 
-# Random controls
+### Random controls
 
 We apply random controls to the robot via the environment interface:
 ```julia
