@@ -16,7 +16,7 @@ mech = get_mechanism(:tippetop,
 # ## Simulate
 initialize!(mech, :tippetop,
     x=[0.0, 0.0, 1.0],
-    q=UnitQuaternion(RotX(0.01 * π)),
+    θ=[0,0.01,0],
     ω=[0.0, 0.01, 50.0])
 
 storage = simulate!(mech, 10.0,
@@ -25,6 +25,6 @@ storage = simulate!(mech, 10.0,
     opts=SolverOptions(verbose=false, btol=1e-5))
 
 # ## Open visualizer
-vis = Visualizer()
-render(vis)
+# vis = Visualizer()
+# render(vis)
 visualize(mech, storage, vis=vis)
