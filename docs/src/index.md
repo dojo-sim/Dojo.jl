@@ -1,10 +1,11 @@
-# [Dojo](https://github.com/dojo-sim/Dojo.jl)
-A differentiable simulator for robotics
+# Get Started 
+
+__[Dojo](https://github.com/dojo-sim/Dojo.jl) is a differentiable simulator for robotics__, prioritizing accurate physics and useful gradients. The simulator is written in pure Julia in order to be both performant and easy to use.
 
 ## Features
-* __Maximal-Coordinates Representation__
-* __Smooth Gradients__
-* __Open Source__: Our code is available on [GitHub](https://github.com/dojo-sim/Dojo.jl) and distributed under the MIT Licence.
+* __Maximal-Coordinates Representation__: Fast and efficient conversion between [maximal](maximal_representation.md) and [minimal](minimal_representation.md) representations
+* __Smooth Gradients__: Simulation with [hard contact](impact.md) and useful [gradients](gradients.md) through contact events
+* __Open Source__: Code is available on [GitHub](https://github.com/dojo-sim/Dojo.jl) and distributed under the MIT Licence.
 * __Python Interface__: [dojopy](https://github.com/dojo-sim/dojopy)
 
 ## Installation
@@ -22,11 +23,16 @@ If you want to install the latest version from main run
 ## Credits
 
 The following people are involved in the development of Dojo:
+
+__Primary Development__
 * [Simon Le Cleac'h](https://simon-lc.github.io/) (main developement, contact modeling, interior-point solver, gradients)
 * [Taylor Howell](https://thowell.github.io/) (main developement, contact modeling, interior-point solver, gradients)
 * [Jan Bruedigam](https://github.com/janbruedigam) (main developemnt, maximal representation and graph-based solver)
-* [Zico Kolter](https://zicokolter.com/) (implicit differentiation)
-* [Zachary Manchester](https://www.ri.cmu.edu/ri-faculty/zachary-manchester/) (principal investigator, physics and algorithms)
+
+
+* [Zico Kolter](https://zicokolter.com/)
+* [Mac Schwager](https://web.stanford.edu/~schwager/)
+* [Zachary Manchester](https://www.ri.cmu.edu/ri-faculty/zachary-manchester/) 
 
 Development by the [Robotic Exploration Lab](https://roboticexplorationlab.org/).
  
