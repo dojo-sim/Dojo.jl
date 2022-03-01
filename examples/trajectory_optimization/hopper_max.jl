@@ -1,5 +1,5 @@
 using Pkg
-Pkg.activate(@__DIR__)
+Pkg.activate(joinpath(@__DIR__, ".."))
 Pkg.instantiate()
 
 # ## setup
@@ -9,7 +9,7 @@ using LinearAlgebra
 
 # ## system
 timestep = 0.05
-gravity=-9.81
+gravity = -9.81
 env = get_environment(:raiberthopper,
     representation=:maximal,
     timestep=timestep,
@@ -51,9 +51,9 @@ ot1 = (x, u, w) -> 1 * (transpose(x - zM) * Diagonal(vcat([[1.0 * ones(3); 0.01 
 ot2 = (x, u, w) -> 1 * (transpose(x - zT) * Diagonal(vcat([[1.0 * ones(3); 0.01 * ones(3); 0.1 * ones(4); 0.01 * ones(3)] for i=1:2]...)) * (x - zT) + transpose(u) * Diagonal(1.0e-2 * [1.0; 1.0; 1.0]) * u)
 oT = (x, u, w) -> transpose(x - zT) * Diagonal(vcat([[1.0 * ones(3); 0.01 * ones(3); 0.1 * ones(4); 0.01 * ones(3)] for i=1:2]...)) * (x - zT)
 
-ct1 = Cost(ot1, n, m)
-ct2 = Cost(ot2, n, m)
-cT = Cost(oT, n, 0)
+ct1 = IterativeLQR.Cost(ot1, n, m)
+ct2 = IterativeLQR.Cost(ot2, n, m)
+cT = IterativeLQR.Cost(oT, n, 0)
 obj = [[ct1 for t = 1:Tm]..., [ct2 for t = 1:Tm]..., cT]
 
 # ## constraints
@@ -66,9 +66,9 @@ cont = IterativeLQR.Constraint()
 conT = IterativeLQR.Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
-# ## problem
-prob = IterativeLQR.solver(model, obj, cons, 
-    opts=Options(
+# ## solver
+solver = IterativeLQR.solver(model, obj, cons, 
+    opts=IterativeLQR.Options(
         linesearch=:armijo,
         α_min=1.0e-5,
         obj_tol=1.0e-3,
@@ -80,17 +80,17 @@ prob = IterativeLQR.solver(model, obj, cons,
         ρ_scale=10.0,
         verbose=true))
 
-IterativeLQR.initialize_controls!(prob, ū)
-IterativeLQR.initialize_states!(prob, x̄)
+IterativeLQR.initialize_controls!(solver, ū)
+IterativeLQR.initialize_states!(solver, x̄)
 
 # ## solve
-@time IterativeLQR.solve!(prob)
+@time IterativeLQR.solve!(solver)
 
 # ## solution
-x_sol, u_sol = IterativeLQR.get_trajectory(prob)
-@show IterativeLQR.eval_obj(prob.m_data.obj.costs, prob.m_data.x, prob.m_data.u, prob.m_data.w)
-@show prob.s_data.iter[1]
-@show norm(goal(prob.m_data.x[T], zeros(0), zeros(0)), Inf)
+x_sol, u_sol = IterativeLQR.get_trajectory(solver)
+@show IterativeLQR.eval_obj(solver.m_data.obj.costs, solver.m_data.x, solver.m_data.u, solver.m_data.w)
+@show solver.s_data.iter[1]
+@show norm(goal(solver.m_data.x[T], zeros(0), zeros(0)), Inf)
 
 # ## visualize
 visualize(env, [[x_sol[1] for t = 1:10]..., x_sol..., [x_sol[end] for t = 1:10]...])

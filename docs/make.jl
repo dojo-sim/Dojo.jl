@@ -4,7 +4,7 @@ using Documenter, Dojo
 
 makedocs(
     modules = [Dojo],
-    format = Documenter.HTML(prettyurls = false),
+    format = Documenter.HTML(prettyurls=false),
     sitename = "Dojo",
     pages = [
         ##############################################

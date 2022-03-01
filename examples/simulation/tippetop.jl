@@ -1,5 +1,5 @@
 using Pkg
-Pkg.activate(@__DIR__)
+Pkg.activate(joinpath(@__DIR__, ".."))
 Pkg.instantiate()
 
 # ## Setup
@@ -25,6 +25,7 @@ storage = simulate!(mech, 10.0,
     opts=SolverOptions(verbose=false, btol=1e-5))
 
 # ## Open visualizer
-# vis = Visualizer()
-# render(vis)
-visualize(mech, storage, vis=vis)
+vis = Visualizer()
+render(vis)
+visualize(mech, storage, 
+    vis=vis)

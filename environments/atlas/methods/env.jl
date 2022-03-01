@@ -21,7 +21,8 @@ function atlas(;
     name=:robot,
     infeasible_control=false,
     opts_step=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5),
-    opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5)) where T
+    opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5),
+    T=Float64)
 
     mechanism = get_mechanism(:atlas, 
         timestep=timestep, 

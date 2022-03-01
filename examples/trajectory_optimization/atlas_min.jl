@@ -1,5 +1,5 @@
 using Pkg
-Pkg.activate(@__DIR__)
+Pkg.activate(joinpath(@__DIR__, ".."))
 Pkg.instantiate()
 
 # ## setup
@@ -45,9 +45,11 @@ xref = atlas_trajectory(env.mechanism;
 	N=12, 
 	Ncycles=N)
 zref = [minimal_to_maximal(env.mechanism, x) for x in xref]
+
+# ## visualize reference
 visualize(env, xref)
 
-## gravity compensation TODO: solve optimization problem instead
+# ## gravity compensation TODO: solve optimization solver instead
 mech = get_mechanism(:atlas, 
 	timestep=timestep, 
 	gravity=gravity, 
@@ -57,7 +59,7 @@ mech = get_mechanism(:atlas,
 	model_type=model_type)
 
 initialize!(mech, :atlas)
-storage = simulate!(mech, 0.10, 
+storage = simulate!(mech, 0.1, 
 	record=true, 
 	verbose=false)
 
@@ -76,7 +78,7 @@ mech = get_mechanism(:atlas,
 	spring=spring, 
 	model_type=model_type)
 
-function controller!(mechanism, k)
+function controller!(mechanism, t)
     set_input!(mechanism, u_damper)
     return
 end
@@ -156,40 +158,34 @@ cont = IterativeLQR.Constraint()
 conT = IterativeLQR.Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
-# ## problem
-prob = IterativeLQR.problem_data(model, obj, cons)
-IterativeLQR.initialize_controls!(prob, ū)
-IterativeLQR.initialize_states!(prob, x̄)
+# ## solver
+solver = IterativeLQR.solver(model, obj, cons,
+	opts=IterativeLQR.Options(
+		verbose=true,
+		linesearch=:armijo,
+		α_min=1.0e-5,
+		obj_tol=1.0e-3,
+		grad_tol=1.0e-3,
+		max_iter=100,
+		max_al_iter=5,
+		ρ_init=1.0,
+		ρ_scale=10.0))
+IterativeLQR.initialize_controls!(solver, ū)
+IterativeLQR.initialize_states!(solver, x̄)
 
 # ## solve
-IterativeLQR.solve!(prob,
-    verbose=true,
-	linesearch=:armijo,
-    α_min=1.0e-5,
-    obj_tol=1.0e-3,
-    grad_tol=1.0e-3,
-    max_iter=100,
-    max_al_iter=5,
-    ρ_init=1.0,
-    ρ_scale=10.0)
+IterativeLQR.solve!(solver)
 
 vis= Visualizer()
 open(env.vis)
 
 # ## solution
-x_sol, u_sol = IterativeLQR.get_trajectory(prob)
-@show IterativeLQR.eval_obj(prob.m_data.obj.costs, prob.m_data.x, prob.m_data.u, prob.m_data.w)
-@show prob.s_data.iter[1]
-@show norm(goal(prob.m_data.x[T], zeros(0), zeros(0)), Inf)
+x_sol, u_sol = IterativeLQR.get_trajectory(solver)
+@show IterativeLQR.eval_obj(solver.m_data.obj.costs, solver.m_data.x, solver.m_data.u, solver.m_data.w)
+@show solver.s_data.iter[1]
+@show norm(goal(solver.m_data.x[T], zeros(0), zeros(0)), Inf)
 
 # ## visualize
 x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]
 visualize(env, x_view)
 
-set_camera!(env.vis, 
-	zoom=5.0, 
-	cam_pos=[0.0, -5.0, 0.0])
-
-z = [minimal_to_maximal(env.mechanism, x) for x in x_sol]
-t = 1 #10, 20, 30, 41
-set_robot(env.vis, env.mechanism, z[t])

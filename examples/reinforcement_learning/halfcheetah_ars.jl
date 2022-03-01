@@ -1,11 +1,12 @@
 using Pkg
-Pkg.activate(@__DIR__)
+Pkg.activate(joinpath(@__DIR__, ".."))
 Pkg.instantiate()
 
 # ## Setup
 using Dojo
 using Random
 using LinearAlgebra 
+using JLD2
 include(joinpath(@__DIR__, "algorithms/ars.jl")) # augmented random search
 
 # ## Environment
@@ -23,7 +24,7 @@ policies = Matrix{Float64}[]
 N = 5
 for i = 1:N
     ## Reset environment
-    env = get_environment("halfcheetah", 
+    env = get_environment(:halfcheetah, 
         timestep=0.05)
     obs = reset(env)
 

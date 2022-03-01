@@ -1,5 +1,5 @@
 using Pkg
-Pkg.activate(@__DIR__)
+Pkg.activate(joinpath(@__DIR__, ".."))
 Pkg.instantiate()
 
 # ## Setup
@@ -17,7 +17,7 @@ mech = get_mechanism(:atlas,
     model_type=:v2)
 
 # ## Simulate
-Dojo.initialize_atlasstance!(mech, 
+Dojo.initialize!(mech, :atlas_stance,
     body_position=[0.0, 0.0, 0.5], 
     body_orientation=[0.0, 0.2, 0.1])
 
@@ -32,6 +32,6 @@ visualize(mech, storage,
     vis=vis, show_contact=true)
 
 # ## Contact interpenetration 
-res = get_sdf(mech, storage)
+res = get_sdf(mech, storage) # distance from floor to each contact
 minimum(minimum([min.(0.0, r) for r in res]))
 

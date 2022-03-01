@@ -1,6 +1,6 @@
 
 using Pkg
-Pkg.activate(@__DIR__)
+Pkg.activate(joinpath(@__DIR__, ".."))
 Pkg.instantiate()
 
 # ## setup
@@ -16,7 +16,7 @@ env = get_environment(:cartpole,
     timestep=timestep,
     gravity=gravity);
 
-mujoco_inertia!(env.mechanism)
+## mujoco_inertia!(env.mechanism)
 
 # ## visualizer 
 open(env.vis) 
@@ -42,15 +42,15 @@ model = [dyn for t = 1:T-1]
 
 # ## rollout
 ū = [t < 5 ? 1.0 * rand(m) : (t < 10 ? -1.0 * rand(m) : zeros(m)) for t = 1:T-1]
-x̄ = rollout(model, z1, ū)
+x̄ = IterativeLQR.rollout(model, z1, ū)
 visualize(env, x̄)
 
 # ## objective
 ot = (x, u, w) -> transpose(x - zT) * Diagonal(1.0e-1 * ones(n)) * (x - zT) + transpose(u) * Diagonal(1.0e-3 * ones(m)) * u
 oT = (x, u, w) -> transpose(x - zT) * Diagonal(1.0e-1 * ones(n)) * (x - zT)
 
-ct = Cost(ot, n, m)
-cT = Cost(oT, n, 0)
+ct = IterativeLQR.Cost(ot, n, m)
+cT = IterativeLQR.Cost(oT, n, 0)
 obj = [[ct for t = 1:T-1]..., cT]
 
 # ## constraints
@@ -62,22 +62,22 @@ cont = IterativeLQR.Constraint()
 conT = IterativeLQR.Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
-# ## problem 
-prob = IterativeLQR.solver(model, obj, cons,
+# ## solver 
+solver = IterativeLQR.solver(model, obj, cons,
     opts=Options(
         max_al_iter=10,
         verbose=false))
-IterativeLQR.initialize_controls!(prob, ū)
-IterativeLQR.initialize_states!(prob, x̄)
+IterativeLQR.initialize_controls!(solver, ū)
+IterativeLQR.initialize_states!(solver, x̄)
 
 # ## solve
-@time IterativeLQR.solve!(prob)
+@time IterativeLQR.solve!(solver)
 
 # ## solution
-z_sol, u_sol = IterativeLQR.get_trajectory(prob)
-@show IterativeLQR.eval_obj(prob.m_data.obj.costs, prob.m_data.x, prob.m_data.u, prob.m_data.w)
-@show prob.s_data.iter[1]
-@show norm(goal(prob.m_data.x[T], zeros(0), zeros(0)), Inf)
+z_sol, u_sol = IterativeLQR.get_trajectory(solver)
+@show IterativeLQR.eval_obj(solver.m_data.obj.costs, solver.m_data.x, solver.m_data.u, solver.m_data.w)
+@show solver.s_data.iter[1]
+@show norm(goal(solver.m_data.x[T], zeros(0), zeros(0)), Inf)
 
 # ## visualize
 visualize(env, [[z_sol[1] for t = 1:10]..., z_sol..., [z_sol[end] for t = 1:10]...])

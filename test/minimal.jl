@@ -514,7 +514,7 @@ end
 		damper=100.0, 
 		spring=1.0, 
 		contact_feet=true)
-	Dojo.initialize_atlasstance!(mechanism, 
+	Dojo.initialize!(mechanism, :atlas_stance,
 		body_position=[0,0,0.5], 
 		body_orientation=[0.0,0.0,0.0])
 	storage = Dojo.simulate!(mechanism, 1.0, ctrl!, 

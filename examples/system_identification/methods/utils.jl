@@ -131,8 +131,8 @@ function datafilenamesphere(; N::Int=10, friction_coefficient=0.1, radius=0.5)
     "sphere_dim_N:$(N)_friction_coefficient:$(friction_coefficient)_radius:$(radius).jld2"
 end
 
-function datafilenamebox2d(; N::Int=10, friction_coefficient=0.1, radius=0.05, side=0.50)
-    "box2d_dim_N:$(N)_friction_coefficient:$(friction_coefficient)_radius:$(radius)_side:$(side).jld2"
+function datafilenamebox2D(; N::Int=10, friction_coefficient=0.1, radius=0.05, side=0.50)
+    "box2D_dim_N:$(N)_friction_coefficient:$(friction_coefficient)_radius:$(radius)_side:$(side).jld2"
 end
 
 function datafilenamebox(; N::Int=10, friction_coefficient=0.1, radius=0., side=0.50)
@@ -157,7 +157,7 @@ function initial_state_sphere(;
 	return Dict(:x => x, :v => v , :ω => ω)
 end
 
-function initial_state_box2d(;
+function initial_state_box2D(;
 		xlims=[[0,0.2], [1,0.4]],
         vlims=[-ones(2), ones(2)],
 		θlims=[-π, π],

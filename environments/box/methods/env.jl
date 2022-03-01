@@ -19,7 +19,8 @@ function block(;
     name::Symbol=:robot,
     control_scaling=Diagonal(ones(3)),
     opts_step=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5), 
-    opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5)) where T
+    opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5),
+    T=Float64)
 
     mechanism = get_box(
         timestep=timestep, 

@@ -1,4 +1,4 @@
-function get_box2d(; 
+function get_box2D(; 
     timestep=0.01, 
     gravity=[0.0; 0.0; -9.81], 
     friction_coefficient=0.8, 
@@ -6,7 +6,7 @@ function get_box2d(;
     side=0.5,
     contact=true,
     contact_type=:nonlinear,
-    mode=:box2d,
+    mode=:box2D,
     T=Float64) 
 
     # Parameters
@@ -23,7 +23,7 @@ function get_box2d(;
         # Corner vectors
         if mode == :particle
             corners = [[0.0, 0.0, 0.0]]
-        elseif mode == :box2d
+        elseif mode == :box2D
             corners = [
                 [[0.0,  side / 2.0,  side / 2.0]]
                 [[0.0,  side / 2.0, -side / 2.0]]
@@ -31,7 +31,7 @@ function get_box2d(;
                 [[0.0, -side / 2.0, -side / 2.0]]
             ]
         else
-            @error "incorrect mode specified, try :particle or :box2d"
+            @error "incorrect mode specified, try :particle or :box2D"
         end
         n = length(corners)
         normal = [[0.0, 0.0, 1.0] for i = 1:n]
@@ -55,7 +55,7 @@ function get_box2d(;
     return mech
 end
 
-function initialize_box2d!(mechanism::Mechanism{T}; 
+function initialize_box2D!(mechanism::Mechanism{T}; 
     position=[0.0, 1.0],
     linear_velocity=[0.0, 0.0], 
     orientation=0.0, 

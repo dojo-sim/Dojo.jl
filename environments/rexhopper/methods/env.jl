@@ -66,16 +66,17 @@ function rexhopper(;
     fu = zeros(nx, nu)
 
     u_prev = zeros(nu)
-    control_mask = infeasible_control ? I(nu) : cat(zeros(3,3), I(3), 1, 0, 1, zeros(5,5), dims=(1,2))
-    motor_gear = ones(nu)
-    control_scaling = Diagonal(motor_gear)
+    control_map = infeasible_control ? 1.0 * I(nu) : cat(zeros(3, 3), 1.0 * I(3), 1.0, 0.0, 1.0, zeros(5, 5), dims=(1,2))
 
     build_robot(mechanism, vis=vis, name=name)
 
     TYPES = [RexHopper, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
-    env = Environment{TYPES...}(mechanism, representation, aspace, ospace,
+    env = Environment{TYPES...}(mechanism, 
+        representation, 
+        aspace, 
+        ospace,
         x, fx, fu,
-        u_prev, control_mask' * control_scaling,
+        u_prev, control_map,
         nx, nu, no,
         info,
         [rng], vis,

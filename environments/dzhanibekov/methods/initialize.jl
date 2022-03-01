@@ -1,7 +1,8 @@
 function get_dzhanibekov(;
     timestep=0.01,
     gravity=-9.81,
-    color=RGBA(0.9,0.9,0.9,1)) where T
+    color=RGBA(0.9,0.9,0.9,1),
+    T=Float64)
 
     radius = 0.1
     body_length = 1.0

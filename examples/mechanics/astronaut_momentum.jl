@@ -1,9 +1,10 @@
 using Pkg
-Pkg.activate(@__DIR__)
+Pkg.activate(joinpath(@__DIR__, ".."))
 Pkg.instantiate()
 
 # ## Setup
 using Dojo 
+using JLD2
 include("methods/simulation.jl")
 include("methods/process.jl")
 include("methods/benchmark.jl")

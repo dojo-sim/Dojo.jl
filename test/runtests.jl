@@ -23,3 +23,6 @@ include("mechanism.jl")
 include("simulate.jl")
 include("visuals.jl")
 include("utilities.jl")
+
+include("mechanisms.jl")
+include("environments.jl")

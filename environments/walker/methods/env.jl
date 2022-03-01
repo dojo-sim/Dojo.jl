@@ -5,12 +5,32 @@
 """
 struct Walker end
 
-function walker(; mode::Symbol=:minimal, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
-    friction_coefficient::T=1.9, spring=0.0, damper=0.1,
-    seed=1, contact::Bool=true, info=nothing, vis::Visualizer=Visualizer(), name::Symbol=:robot,
-    opts_step=SolverOptions(), opts_grad=SolverOptions()) where T
+function walker(; 
+    mode::Symbol=:minimal, 
+    timestep=0.05, 
+    gravity=[0.0; 0.0; -9.81],
+    friction_coefficient=1.9, 
+    spring=0.0, 
+    damper=0.1,
+    seed=1, 
+    contact_feet=true, 
+    contact_body=true,
+    info=nothing, 
+    vis=Visualizer(), 
+    name=:robot,
+    opts_step=SolverOptions(), 
+    opts_grad=SolverOptions(),
+    T=Float64)
 
-    mechanism = get_walker(timestep=dt, gravity=gravity, friction_coefficient=friction_coefficient, spring=spring, damper=damper, contact=contact)
+    mechanism = get_walker(
+        timestep=timestep, 
+        gravity=gravity, 
+        friction_coefficient=friction_coefficient, 
+        spring=spring, 
+        damper=damper, 
+        contact_feet=contact_feet,
+        contact_body=contact_body)
+
     initialize_walker!(mechanism)
 
     if mode == :minimal
@@ -40,9 +60,11 @@ function walker(; mode::Symbol=:minimal, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
     u_prev = zeros(nu)
     control_mask = [zeros(nu, 3) I(nu)]
     motor_gear = [100, 100, 100, 100, 100, 100.]
-    control_scaling = Diagonal(dt * motor_gear)
+    control_scaling = Diagonal(timestep * motor_gear)
 
-    build_robot(mechanism, vis=vis, name=name)
+    build_robot(mechanism, 
+        vis=vis, 
+        name=name)
 
     TYPES = [Walker, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
     env = Environment{TYPES...}(mechanism, mode, aspace, ospace,
@@ -61,7 +83,8 @@ function reset(env::Environment{Walker}; x=nothing, reset_noise_scale = 0.005)
         env.state .= x
     else
         # initialize above the ground to make sure that with random initialization we do not violate the ground constraint.
-        initialize!(env.mechanism, :walker, z = 0.25)
+        initialize!(env.mechanism, :walker, 
+            z=0.25)
         x0 = get_minimal_state(env.mechanism)
         nx = minimal_dimension(env.mechanism)
 
@@ -80,7 +103,8 @@ function reset(env::Environment{Walker}; x=nothing, reset_noise_scale = 0.005)
     return get_observation(env)
 end
 
-function get_observation(env::Environment{Walker}; full_state::Bool=false)
+function get_observation(env::Environment{Walker}; 
+    full_state=false)
     full_state && (return env.state)
     nx = minimal_dimension(env.mechanism)
     if env.representation == :minimal
@@ -124,19 +148,3 @@ function is_done(::Environment{Walker}, x)
     done = !((height > 0.8) && (height < 2.0) && (abs(ang) < 1.0))
     return done
 end
-
-
-#
-# env.state
-# i_torso = findfirst(body -> body.name == "torso", collect(env.mechanism.bodies))
-# z_torso = z[(i_torso-1)*13 .+ (1:13)]
-# x_velocity = z_torso[4]
-# z[3*13 + 4] = 324.0
-# z
-# set_maximal_state!(env.mechanism, z)
-#
-# initialize!(env.mechanism, :walker, x = 111.0, z = 1.0, θ=0.18)
-# x = get_minimal_state(env.mechanism)
-# z = get_maximal_state(env.mechanism)
-# is_done(env, x)
-#

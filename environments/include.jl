@@ -4,7 +4,7 @@
 include("ant/methods/initialize.jl")
 include("atlas/methods/initialize.jl")
 include("box/methods/initialize.jl")
-include("box2d/methods/initialize.jl")
+include("box2D/methods/initialize.jl")
 include("cartpole/methods/initialize.jl")
 include("dzhanibekov/methods/initialize.jl")
 include("fourbar/methods/initialize.jl")

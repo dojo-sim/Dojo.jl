@@ -79,7 +79,7 @@ function initialize_raiberthopper!(mech::Mechanism{T,Nn,Ne,Nb};
     pbody = mech.bodies[1]
     cbody = mech.bodies[2]
     joint2 = mech.joints[2]
-    tra2 = joint2.constraints[1]
+    tra2 = joint2.translational
 
     # origin to body
     set_maximal_configurations!(mech.origin, pbody, 
