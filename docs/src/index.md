@@ -5,7 +5,7 @@ __[Dojo](https://github.com/dojo-sim/Dojo.jl) is a differentiable simulator for 
 ## Features
 * __Maximal-Coordinates Representation__: Fast and efficient conversion between [maximal](maximal_representation.md) and [minimal](minimal_representation.md) representations
 * __Smooth Gradients__: Simulation with [hard contact](impact.md) and useful [gradients](gradients.md) through contact events
-* __Open Source__: Code is available on [GitHub](https://github.com/dojo-sim/Dojo.jl) and distributed under the MIT Licence.
+* __Open Source__: Code is available on [GitHub](https://github.com/dojo-sim/Dojo.jl) and distributed under the MIT Licence
 * __Python Interface__: [dojopy](https://github.com/dojo-sim/dojopy)
 
 ## Installation
@@ -32,7 +32,7 @@ __Primary Development__
 
 * [Zico Kolter](https://zicokolter.com/)
 * [Mac Schwager](https://web.stanford.edu/~schwager/)
-* [Zachary Manchester](https://www.ri.cmu.edu/ri-faculty/zachary-manchester/) 
+* [Zachary Manchester](https://www.ri.cmu.edu/ri-faculty/zachary-manchester/) (principal investigator)
 
 Development by the [Robotic Exploration Lab](https://roboticexplorationlab.org/).
  
@@ -41,4 +41,4 @@ If this project is useful for your work please consider
 * Leaving a star on the [GitHub repository](https://github.com/dojo-sim/Dojo.jl)
 
 ## Licence
-Dojo.jl is licensed under the MIT License For more details click [here](https://github.com/dojo-sim/Dojo.jl/blob/main/LICENSE.md).
+Dojo.jl is licensed under the MIT License. For more details click [here](https://github.com/dojo-sim/Dojo.jl/blob/main/LICENSE.md).

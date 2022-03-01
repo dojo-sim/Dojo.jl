@@ -20,7 +20,8 @@ function ant(;
     vis=Visualizer(), 
     name=:robot,
     opts_step=SolverOptions(), 
-    opts_grad=SolverOptions()) where T
+    opts_grad=SolverOptions(),
+    T=Float64)
 
     mechanism = get_ant(
         timestep=timestep, 
@@ -66,7 +67,8 @@ function ant(;
     TYPES = [Ant, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
     env = Environment{TYPES...}(mechanism, representation, aspace, ospace,
         x, fx, fu,
-        u_prev, control_mask, control_scaling,
+        u_prev, 
+        control_mask' * control_scaling,
         nx, nu, no,
         info,
         [rng], vis,
@@ -85,7 +87,7 @@ function step(env::Environment{Ant}, x, u;
 
     x0 = copy(x)
     env.input_previous .= u  # for rendering in Gym
-	u_scaled = env.control_mask' * env.control_scaling * u
+	u_scaled = env.control_map * u
 
     z0 = env.representation == :minimal ? minimal_to_maximal(mechanism, x0) : x0
     z1 = step!(mechanism, z0, u_scaled; opts=env.opts_step)
@@ -124,7 +126,7 @@ function step(env::Environment{Ant}, x, u;
             fx, fu = get_maximal_gradients!(env.mechanism, z0, u_scaled, opts=env.opts_grad)
         end
         env.dynamics_jacobian_state .= fx
-        env.dynamics_jacobian_input .= fu * env.control_mask' * env.control_scaling
+        env.dynamics_jacobian_input .= fu * env.control_map
     end
 
     info = Dict()

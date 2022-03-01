@@ -7,7 +7,7 @@ For a single contact point, this physical phenomenon can be modeled by the follo
 
 ```math
 \begin{align*}
-\text{minimize}_{b} & \quad v^T b \\
+\underset{b}{\text{minimize}} & \quad v^T b \\
 \text{subject to}   & \quad \|b\|_2 \leq \mu \gamma,
 \end{align*}
 ```
@@ -19,7 +19,7 @@ This above problem is naturally a convex second-order cone program, and can be e
 
 ```math
 \begin{align*}
-\text{minimize}_{\beta} & \quad [v^T  -v^T] \beta, \\
+\underset{\beta}{\text{minimize}} & \quad [v^T  -v^T] \beta, \\
 \text{subject to}       & \quad \beta^T \mathbf{1} \leq \mu \gamma, \\
                         & \quad \beta \geq 0,
 \end{align*}

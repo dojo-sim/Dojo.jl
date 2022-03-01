@@ -103,16 +103,16 @@ end
 function initialize_ant!(mechanism::Mechanism; 
         body_position=[0.0; 0.0; 0.63], 
         body_orientation=[0.0; 0.0; 0.0 * π],
-        ankle_orientation=0.25) where T
+        ankle_orientation=0.25)
         
     set_minimal_coordinates!(mechanism, get_joint(mechanism, :auto_generated_floating_joint), [body_position; body_orientation])
 
-    for i in [1,4]
+    for i in [1, 4]
         set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol("hip_$i")), [0.0 * π])
         set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol("ankle_$i")), [ankle_orientation * π])
     end
 
-    for i in [2,3]
+    for i in [2, 3]
         set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol("hip_$i")), [0.0 * π])
         set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol("ankle_$i")), [-ankle_orientation * π])
     end

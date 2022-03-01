@@ -22,22 +22,14 @@ makedocs(
             "define_controller.md",
            ],
 
-        "Creating Environments" => [
-            "define_environment.md",
+        "Environments" => [
             "load_environment.md",
+            "define_environment.md",
         ],
 
         "Gradients from Simulator" => [
             "gradients.md",
            ],
-
-        "Environments" => [
-            "atlas_env.md",
-            "quadruped_env.md",
-            "rexhopper_env.md",
-            "classic_env.md",
-            "gym_env.md",
-        ],
 
         "Examples" => [
             "simulation.md",

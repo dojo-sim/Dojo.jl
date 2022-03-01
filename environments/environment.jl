@@ -12,8 +12,7 @@
     dynamics_jacobian_state: dynamics Jacobian wrt to state
     dynamics_jacobian_input: dynamics Jacobian wrt to input
     input_previous: input applied to mechanism at previous time step
-	control_mask: mapping for inputs to mechanism translational and rotational dynamics
-    control_scaling: scaling for each input
+	control_map: mapping for inputs to mechanism translational and rotational dynamics
     num_states: dimension of minimal or maximal state
     num_inputs: dimension of inputs
     num_observations: dimension of observation
@@ -23,7 +22,7 @@
     opts_step: SolverOptions
     opts_grad: SolverOptions
 """
-struct Environment{X,T,M,A,O,I}
+mutable struct Environment{X,T,M,A,O,I}
     mechanism::M
     representation::Symbol
     input_space::A
@@ -32,8 +31,7 @@ struct Environment{X,T,M,A,O,I}
     dynamics_jacobian_state::Matrix{T}
     dynamics_jacobian_input::Matrix{T}
     input_previous::Vector{T}
-	control_mask::Matrix{T}
-    control_scaling::Diagonal{T,Vector{T}} # could be merged with control mask
+	control_map::Matrix{T}
     num_states::Int
     num_inputs::Int
     num_observations::Int
@@ -75,7 +73,7 @@ function step(env::Environment, x, u;
     x0 = x
     # u = clip(env.input_space, u) # control limits
     env.input_previous .= u  # for rendering in Gym
-	u_scaled = env.control_mask' * env.control_scaling * u
+	u_scaled = env.control_map * u
 
     z0 = env.representation == :minimal ? minimal_to_maximal(mechanism, x0) : x0
     z1 = step!(mechanism, z0, u_scaled; opts=env.opts_step)
@@ -95,7 +93,7 @@ function step(env::Environment, x, u;
             fx, fu = get_maximal_gradients!(env.mechanism, z0, u_scaled, opts=env.opts_grad)
         end
         env.dynamics_jacobian_state .= fx
-        env.dynamics_jacobian_input .= fu * env.control_mask' * env.control_scaling
+        env.dynamics_jacobian_input .= fu * env.control_map
     end
 
     info = Dict()
