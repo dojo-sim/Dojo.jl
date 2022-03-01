@@ -5,7 +5,7 @@ using Random
 using MeshCat
 
 # Open visualizer
-vis=visualizer()
+vis= Visualizer()
 open(vis)
 
 # Include new files

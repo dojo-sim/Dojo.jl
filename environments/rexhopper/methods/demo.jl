@@ -1,5 +1,5 @@
 
-vis=visualizer()
+vis= Visualizer()
 open(vis)
 include("env.jl")
 include("initialize.jl")

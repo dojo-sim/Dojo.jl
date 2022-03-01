@@ -8,7 +8,7 @@ using JLD2
 ################################################################################
 include("methods.jl")
 
-vis=visualizer()
+vis= Visualizer()
 open(vis)
 
 file = jldopen(joinpath(@__DIR__, "..", "results", "sol_best6.jld2"))
@@ -25,7 +25,7 @@ t = 50
 vis, anim = cube_morphing(Dsol[t:t], vis=vis, fps=20, rot=0.00, background=false,
 	vis_truth=true, vis_learned=false, translate=false, cam_pos=cam_pos, alt=-1, b0=0, b1=0)
 
-vis=visualizer()
+vis= Visualizer()
 open(vis)
 
 vis, anim = cone_morphing(Dsol, vis=vis, fps=20, rot=0.03,
@@ -44,7 +44,7 @@ include(joinpath(@__DIR__, "..", "utils.jl"))
 include(joinpath(@__DIR__, "methods.jl"))
 
 # open visualizer
-vis=visualizer()
+vis= Visualizer()
 open(vis)
 
 S = 7

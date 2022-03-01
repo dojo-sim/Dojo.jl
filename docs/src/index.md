@@ -27,7 +27,7 @@ The following people are involved in the development of Dojo:
 __Primary Development__
 * [Simon Le Cleac'h](https://simon-lc.github.io/) (main developement, contact modeling, interior-point solver, gradients)
 * [Taylor Howell](https://thowell.github.io/) (main developement, contact modeling, interior-point solver, gradients)
-* [Jan Bruedigam](https://github.com/janbruedigam) (main developemnt, maximal representation and graph-based solver)
+* [Jan Bruedigam](https://github.com/janbruedigam) (main development, maximal representation and graph-based solver)
 
 
 * [Zico Kolter](https://zicokolter.com/)

@@ -2,12 +2,17 @@ using Literate
 
 function preprocess(str)
     str = replace(str, "# PREAMBLE" => "")
-    str = replace(str, "# PKG_SETUP" => "")
+    str = replace(str, "# PKG_SETUP" =>
+    """
+    using Pkg
+    Pkg.activate(@__DIR__)
+    Pkg.instantiate()
+    """)
     return str
 end
 
 exampledir = @__DIR__
-for subdir in ["simulation", "trajectory_optimization", "reinforcement_learning"]
+for subdir in ["simulation", "trajectory_optimization", "reinforcement_learning", "gradients", "mechanics"]
     root = joinpath(exampledir, subdir)
     isdir(root) || continue
     @show subdir

@@ -1,12 +1,12 @@
-# PREAMBLE
-
-# PKG_SETUP
+using Pkg
+Pkg.activate(@__DIR__)
+Pkg.instantiate()
 
 # ## Setup
 using Dojo
 
 # ## Visualizer
-vis = Visualizer()
+vis= Visualizer()
 open(vis)
 set_camera!(vis,
     cam_pos=[-0.01, 0.0, 90.0],
