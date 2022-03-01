@@ -13,7 +13,7 @@ A differentiable simulator for robotics.
 <img src="examples/animations/atlas_drop.gif" width="100"/>
 
 ### REx Hopper drop
-<img src="examples/animations/rexhopper_square.gif" width="100"/>
+<img src="examples/animations/rexhopper.gif" width="100"/>
 
 ### Astronaut
 <img src="examples/animations/astronaut.gif" width="200"/>
