@@ -43,7 +43,7 @@ end
     for timestep in [0.10, 0.05, 0.01, 0.005]
         # Mechanism
         timestep = 0.10
-        mech = Dojo.get_fourbar(
+        mech = Dojo.get_mechanism(:fourbar,
             model="fourbar",
             timestep=timestep)
         Dojo.initialize!(mech, :fourbar,
@@ -70,18 +70,18 @@ end
     # Simulation
     timestep=0.01
     gravity=0.0
-    mech = get_mechanism(:dzhanibekov,
+    mech = Dojo.get_mechanism(:dzhanibekov,
             timestep=timestep,
             gravity=gravity);
 
     # Simulate
-    initialize_dzhanibekov!(mech,
+    Dojo.initialize!(:dzhanibekov, mech,
         angular_velocity=[15.0; 0.01; 0.0])
-    storage = simulate!(mech, 4.00,
+    storage = Dojo.simulate!(mech, 4.00,
         record=true,
         verbose=false)
 
     # The x position of the side body oscillate between a positive and negative
     # value when we observe the Dhanibekov effect. Otherwise, it always remains in the positive position.
-    @test minimum([x[1] for x in storage.x[2]]) < -0.05
+    @test Dojo.minimum([x[1] for x in storage.x[2]]) < -0.05
 end

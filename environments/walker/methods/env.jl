@@ -47,7 +47,7 @@ function walker(; mode::Symbol=:minimal, dt::T=0.05, gravity=[0.0; 0.0; -9.81],
     TYPES = [Walker, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
     env = Environment{TYPES...}(mechanism, mode, aspace, ospace,
         x, fx, fu,
-        u_prev, control_mask, control_scaling,
+        u_prev, control_mask' * control_scaling,
         nx, nu, no,
         info,
         [rng], vis,

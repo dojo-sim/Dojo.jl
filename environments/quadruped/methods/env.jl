@@ -68,7 +68,7 @@ function quadruped(;
     TYPES = [Quadruped, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
     Environment{TYPES...}(mechanism, representation, aspace, ospace,
         x, fx, fu,
-        u_prev, control_mask, control_scaling,
+        u_prev, control_mask' * control_scaling,
         nx, nu, no,
         info,
         [rng], vis,

@@ -65,7 +65,7 @@ function pendulum(;
     TYPES = [T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
     env = Environment{Pendulum, TYPES...}(mechanism, representation, aspace, ospace,
         x, fx, fu,
-        u_prev, control_mask, control_scaling, nx, nu, no, info,
+        u_prev, control_mask' * control_scaling, nx, nu, no, info,
         rng, vis, opts_step, opts_grad)
     return env
 end
