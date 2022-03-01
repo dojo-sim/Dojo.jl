@@ -81,10 +81,10 @@ The second method that we need to define is `initialize_...` where `...` is the 
 
 ```julia
 function initialize_tippetop!(mechanism::Mechanism{T};
-    x=zeros(3),
-    θ=zeros(3),
-    v=zeros(3),
-    ω=zeros(3)) where T
+    body_position=zeros(3),
+    body_orientation=zeros(3),
+    body_linear_velocity=zeros(3),
+    body_angular_velocity=zeros(3)) where T
 
     # we retrieve the joints from the mechanism by their names
     floating_joint = get_joint(mechanism, :floating_joint)
@@ -94,7 +94,8 @@ function initialize_tippetop!(mechanism::Mechanism{T};
     # we set all the bodies' velocities to zeros
     zero_velocity!(mechanism)
     # we set to minimal coordinates of the floating joint
-    set_minimal_coordinates_velocities!(mechanism, floating_joint, xmin=[x; θ; v; ω])
+    set_minimal_coordinates_velocities!(mechanism, floating_joint,
+        xmin=[body_position; body_orientation; body_linear_velocity; body_angular_velocity])
     # we set to minimal coordinates of the fixed joint (this joint has zero minimal coordinate).
     set_minimal_coordinates_velocities!(mechanism, fixed_joint)
     return nothing
