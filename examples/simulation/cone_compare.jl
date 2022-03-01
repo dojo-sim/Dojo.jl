@@ -88,29 +88,62 @@ vis, anim = visualize(mech_nc, storage_nc,
     name=:nc,
     animation=anim)
 
-# ## MuJoCo cone
-color_mj = magenta;
+# ## MuJoCo pyramidal cone
+color_mjlc = magenta;
 
-mech_mj = get_mechanism(:box,
+mech_mjlc = get_mechanism(:box,
     timestep=timestep,
     gravity=gravity,
     friction_coefficient=friction_coefficient,
     contact_type=:linear,
-    mode=:box, color=color_mj);
+    mode=:box, color=color_mjlc);
 
 # ## Load
-initialize!(mech_mj, :box,
+initialize!(mech_mjlc, :box,
     x=x0,
     q=one(UnitQuaternion),
     v=v0,
     ω=ω0)
-file = jldopen(joinpath(@__DIR__, "../MuJoCo_benchmark/results/cone_compare.jld2"))
-storage_mj = generate_storage(mech_mj, [get_maximal_state(mech_mj), file["ztraj"]...])
+file = jldopen(joinpath(@__DIR__, "../mujoco_benchmark/results/cone_compare_pyramidal.jld2"))
+storage_mjlc = generate_storage(mech_mjlc, [get_maximal_state(mech_mjlc), file["ztraj"]...])
 
 # ## Visualize
-vis, anim = visualize(mech_mj, storage_mj,
+vis, anim = visualize(mech_mjlc, storage_mjlc,
     vis=vis,
-    name=:mj,
+    name=:mjlc,
     animation=anim)
 
+line_mat_mjlc = LineBasicMaterial(color=color_mjlc, linewidth=25.0)
+points_mjlc = Vector{Point{3,Float64}}()
+for (i, xt) in enumerate(storage_mjlc.x[1])
+    k = xt
+    push!(points_mjlc, Point(k[1], k[2], k[3]))
+end
+setobject!(vis[:path_mjlc], MeshCat.Line(points_mjlc, line_mat_mjlc))
+
+
+# ## MuJoCo elliptic cone
+color_mjnc = RGBA(0,0,0);
+
+mech_mjnc = get_mechanism(:box,
+    timestep=timestep,
+    gravity=gravity,
+    friction_coefficient=friction_coefficient,
+    contact_type=:linear,
+    mode=:box, color=color_mjnc);
+
+# ## Load
+initialize!(mech_mjnc, :box,
+    x=x0,
+    q=one(UnitQuaternion),
+    v=v0,
+    ω=ω0)
+file = jldopen(joinpath(@__DIR__, "../mujoco_benchmark/results/cone_compare_elliptic.jld2"))
+storage_mjnc = generate_storage(mech_mjnc, [get_maximal_state(mech_mjnc), file["ztraj"]...])
+
+# ## Visualize
+vis, anim = visualize(mech_mjnc, storage_mjnc,
+    vis=vis,
+    name=:mjnc,
+    animation=anim)
 
