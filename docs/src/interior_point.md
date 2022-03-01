@@ -8,38 +8,46 @@ The primary advantages of this algorithm are the correction to the classic Newto
 ### Problem formulation
 The solver aims to satisfy instantiations of the following problem:
 
-$$\text{find}\quad  x, y, z \\
-\text{subject to}\quad  c(x, y, z; \theta) = 0, \\
-y^{(i)} \circ z^{(i)} = \kappa \mathbf{e}, \quad i = 1,\dots,n, \\
-y^{(i)}, z^{(i)} \in \mathcal{K}, \quad i = 1,\dots, n,$$
+```math
+\begin{align*}
+\text{find} & \quad  x, y, z \\
+\text{subject to} & \quad  c(x, y, z; \theta) = 0, \\
+& \quad y^{(i)} \circ z^{(i)} = \kappa \mathbf{e}, && \quad i = 1,\dots,n, \\
+& \quad y^{(i)}, z^{(i)} \in \mathcal{K}, && \quad i = 1,\dots, n,
+\end{align*}
+```
 
-with decision variables $x \in \mathbf{R}^k$ and $y, z \in \mathbf{R}^m$, equality-constraint set $c : \mathbf{R}^k \times \mathbf{R}^m \times \mathbf{R}^m \times \mathbf{R}^l \rightarrow \mathbf{R}^h$, problem data $\theta \in \mathbf{R}^l$; and where $\mathcal{K}$ is the Cartesian product of $n$ total positive-orthant and second-order cones. The variables are partitioned: $x = (x^{(1)}, \dots, x^{(p)})$, where $i = 1$ are Euclidean variables and $i = 2, \dots, p$ are each quaternion variables; and $y = (y^{(1)}, \dots, y^{(n)})$, $z = (z^{(1)}, \dots, z^{(n)})$, where $j = 1$ is the positive-orthant and the remaining $j = 2, \dots, n$ are second-order cones. For convenience, we denote $w = (x, y, z)$.
+with decision variables ``x \in \mathbf{R}^k`` and ``y, z \in \mathbf{R}^m``, equality-constraint set ``c : \mathbf{R}^k \times \mathbf{R}^m \times \mathbf{R}^m \times \mathbf{R}^l \rightarrow \mathbf{R}^h``, problem data ``\theta \in \mathbf{R}^l``; and where ``\mathcal{K}`` is the Cartesian product of ``n`` total positive-orthant and second-order cones. The variables are partitioned: ``x = (x^{(1)}, \dots, x^{(p)})``, where ``i = 1`` are Euclidean variables and ``i = 2, \dots, p`` are each quaternion variables; and ``y = (y^{(1)}, \dots, y^{(n)})``, ``z = (z^{(1)}, \dots, z^{(n)})``, where ``j = 1`` is the positive-orthant and the remaining ``j = 2, \dots, n`` are second-order cones. For convenience, we denote ``w = (x, y, z)``.
 
-The algorithm aims to satisfy a sequence of relaxed problems with $\kappa > 0$ and $\kappa \rightarrow 0$ in order to reliably converge to a solution of the original problem (i.e., $\kappa = 0$). This continuation approach helps avoid premature ill-conditioning and is the basis for numerous convex and non-convex general-purpose interior-point solvers.
+The algorithm aims to satisfy a sequence of relaxed problems with ``\kappa > 0`` and ``\kappa \rightarrow 0`` in order to reliably converge to a solution of the original problem (i.e., ``\kappa = 0``). This continuation approach helps avoid premature ill-conditioning and is the basis for numerous convex and non-convex general-purpose interior-point solvers.
 
 ### Violation metrics:
 Two metrics are used to measure progress:
 The constraint violation,
 
-$$r_{\text{vio}} = \| c(w; \theta) \|_{\infty},$$
+```math
+r_{\text{vio}} = \| c(w; \theta) \|_{\infty},
+```
 
 and complementarity violation,
 
-$$b_{\text{vio}} = {\text{max}}_i \{\| y^{(i)} \circ z^{(i)} \|_{\infty}\}.$$
+```math
+b_{\text{vio}} = {\text{max}}_i \{\| y^{(i)} \circ z^{(i)} \|_{\infty}\}.
+```
 
-The NCP is considered solved when $r_{\text{vio}} < r_{\text{tol}}$ and $b_{\text{vio}} < b_{\text{tol}}$.
+The NCP is considered solved when ``r_{\text{vio}} < r_{\text{tol}}`` and ``b_{\text{vio}} < b_{\text{tol}}``.
 !!! info "solver options"
     Both `r_tol` and `b_tol` are options that can easily be accessed and modified via [`SolverOptions`](@ref).
 
 ### Newton Steps
-The main loop of the solver performs Newton's method on the equality-constraint set $c$ and the bilinear constraints. The solver typically converges in about 10 iterations.
+The main loop of the solver performs Newton's method on the equality-constraint set ``c`` and the bilinear constraints. The solver typically converges in about 10 iterations.
 !!! info "solver options"
     The maximal number of Newton's iterations `max_iter` can be set via [`SolverOptions`](@ref).
 
 ### Line Search
-Newton's method provides a search direction, then we perform a line search along this search direction to detemine the step length $\alpha$. We use a backtracking line search that accepts the step whenever it decreases $c_{\text{vio}}$ or $b_{\text{vio}}$.
-The line search starts with a step $\alpha=1$, if the step acceptance conditions are not met the step is decreased geometrically:
-$$\alpha \leftarrow \alpha \times s $$. The line search takes at most `max_ls` backtracking steps.
+Newton's method provides a search direction, then we perform a line search along this direction to detemine the step length ``\alpha``. We use a backtracking line search that accepts the step whenever it decreases ``c_{\text{vio}}`` or ``b_{\text{vio}}``.
+The line search starts with a step ``\alpha=1``, if the step acceptance conditions are not met the step is decreased geometrically:
+``\alpha \leftarrow s \cdot \alpha``. The line search takes at most `max_ls` backtracking steps.
 
 !!! info "solver options"
-    The scaling parameter $s$ is called `ls_scale` and the maximum number of line search iteration `max_ls` can be set via [`SolverOptions`](@ref).
+    The scaling parameter ``s`` is called `ls_scale` and the maximum number of line search iteration `max_ls` can be set via [`SolverOptions`](@ref).

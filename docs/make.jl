@@ -10,12 +10,7 @@ makedocs(
         ##############################################
         ## MAKE SURE TO SYNC WITH docs/src/index.md ##
         ##############################################
-        "Basics" => [
-            "index.md",
-            "install.md",
-            "get_started.md",
-            "notations.md",
-           ],
+        "index.md",
 
         "Creating a Mechanism" => [
             "define_mechanism.md",
@@ -46,7 +41,6 @@ makedocs(
 
         "Examples" => [
             "simulation.md",
-            "control.md",
             "trajectory_optimization.md",
             "reinforcement_learning.md",
             "system_identification.md",

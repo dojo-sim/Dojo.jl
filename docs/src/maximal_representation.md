@@ -2,7 +2,9 @@
 
 The ``i``-th body in a mechanism with ``N`` bodies has state:  
 
-``z^{(i)} = (x^{(i)}, v^{(i)}, q^{(i)}, \omega^{(i)}) \in \mathbf{R}^3 \times \mathbf{R}^3 \times \mathbf{H} \times \mathbf{R}^3``,  
+```math 
+z^{(i)} = (x^{(i)}, v^{(i)}, q^{(i)}, \omega^{(i)}) \in \mathbf{R}^3 \times \mathbf{R}^3 \times \mathbf{H} \times \mathbf{R}^3,
+``` 
 
 represented in maximal coordinates, where ``\mathbf{H}`` is the space of unit quaternions. 
 
@@ -13,7 +15,9 @@ represented in maximal coordinates, where ``\mathbf{H}`` is the space of unit qu
 
 The mechanism state:   
 
-``z = (z^{(1)}, \dots, z^{(N)})``.
+```math 
+z = (z^{(1)}, \dots, z^{(N)}).
+```
 
 is the concatentation of all body states.
 
