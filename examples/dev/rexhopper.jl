@@ -22,4 +22,4 @@ storage = simulate!(mechanism, 1.5, record=true, opts=SolverOptions(undercut=10.
     btol=1.0e-4, rtol=1.0e-4, verbose=false));
 
 # Visualize
-visualize(mechanism, storage, vis=vis, show_contact=true, build=false);
+visualize(mechanism, storage, vis=vis, show_contact=true, build=true);
