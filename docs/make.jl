@@ -20,7 +20,6 @@ makedocs(
         "Creating a Mechanism" => [
             "define_mechanism.md",
             "load_mechanism.md",
-            "mechanism_interfaces.md",
            ],
 
         "Creating a Simulation" => [
