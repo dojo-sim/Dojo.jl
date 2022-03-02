@@ -135,7 +135,7 @@ function get_quadruped(;
             push!(contacts, hip_contacts1, hip_contacts2, hip_contacts3, hip_contacts4)
         end
 
-        set_minimal_coordinates!(mech, get_joint(mech, :auto_generated_floating_joint), [0.0; 0.0; 0.32; 0.0; 0.0; 0.0])
+        set_minimal_coordinates!(mech, get_joint(mech, :floating_base), [0.0; 0.0; 0.32; 0.0; 0.0; 0.0])
         
         mech = Mechanism(origin, bodies, eqs, contacts, 
             gravity=gravity, 
@@ -176,7 +176,7 @@ function initialize_quadruped!(mechanism::Mechanism{T};
 
     body_position += [0.0, 0.0, 0.32]
     zero_velocity!(mechanism)
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :auto_generated_floating_joint), 
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base), 
         [body_position; body_orientation])
 
     set_minimal_coordinates!(mechanism, get_joint(mechanism, :FR_hip_joint), [0.0])
@@ -195,7 +195,7 @@ function initialize_quadruped!(mechanism::Mechanism{T};
     set_minimal_coordinates!(mechanism, get_joint(mechanism, :RL_thigh_joint), [link_angle])
     set_minimal_coordinates!(mechanism, get_joint(mechanism, :RL_calf_joint), [-1.5 * link_angle])
 
-    set_minimal_velocities!(mechanism, get_joint(mechanism, :auto_generated_floating_joint), 
+    set_minimal_velocities!(mechanism, get_joint(mechanism, :floating_base), 
         [body_linear_velocity; body_angular_velocity])
 
     set_minimal_velocities!(mechanism, get_joint(mechanism, :FR_hip_joint), [0.0])

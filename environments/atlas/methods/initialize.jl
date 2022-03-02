@@ -180,7 +180,7 @@ function get_atlas(;
             name=Symbol(name)))
     end
 
-    set_minimal_coordinates!(mech, get_joint(mech, :auto_generated_floating_joint), [0.0; 0.0; 0.9385; 0.0; 0.0; 0.0])
+    set_minimal_coordinates!(mech, get_joint(mech, :floating_base), [0.0; 0.0; 0.9385; 0.0; 0.0; 0.0])
     
     mech = Mechanism(origin, bodies, eqs, contacts, 
         gravity=gravity, 
@@ -205,7 +205,7 @@ function initialize_atlas!(mechanism::Mechanism;
     # positions
     try
         set_minimal_coordinates!(mechanism,
-                get_joint(mechanism, :auto_generated_floating_joint),
+                get_joint(mechanism, :floating_base),
                 [body_position; body_orientation])
         set_minimal_coordinates!(mechanism, get_joint(mechanism, :back_bkxyz), [0.0, 0.0, 0.0])
         set_minimal_coordinates!(mechanism, get_joint(mechanism, :l_leg_hpxyz), [0.0, -hip_orientation, 0.0])
@@ -235,7 +235,7 @@ function initialize_atlas_stance!(mechanism::Mechanism;
 
     # positions
     try
-        set_minimal_coordinates!(mech, get_joint(mech, :auto_generated_floating_joint), [body_position; body_orientation])
+        set_minimal_coordinates!(mech, get_joint(mech, :floating_base), [body_position; body_orientation])
 
         # set_minimal_coordinates!(mech, get_joint(mech, :l_leg_hpxyz), [0.0, -hip_orientation, 0.0])
         # set_minimal_coordinates!(mech, get_joint(mech, :r_leg_hpxyz), [0.0, -hip_orientation, 0.0])

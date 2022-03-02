@@ -60,3 +60,91 @@ function input_dimension(mechanism::Mechanism{T,Nn,Ne,Nb,Ni};
     return nu
 end
 
+"""
+    set_floating_base(mechanism, name) 
+
+    returns a mechanism with modified joints having body identified with 'name' as the floating base
+
+    mechanism: Mechanism 
+    name: Symbol, identifier for floating-base body
+"""
+function set_floating_base(mechanism::Mechanism, name::Symbol)
+    # copy 
+    mechanism = deepcopy(mechanism)
+
+    # original floating base
+    body1 = mechanism.origin
+
+    # new floating base
+    body2 = get_body(mechanism, name)
+
+    # find joint for new floating base
+    body = body2
+    joint = mechanism.joints[findall(j -> j.child_id == body.id, mechanism.joints)[1]]
+    joint_list = JointConstraint[] 
+    push!(joint_list, joint)
+
+    while joint_list[end].parent_id != body1.id 
+        @show length(joint_list)
+        push!(joint_list, mechanism.joints[findall(j -> j.child_id == joint_list[end].parent_id, mechanism.joints)[1]])
+    end
+
+    @show [j.name for j in joint_list] 
+    @show [(get_body(mechanism, j.parent_id).name, get_body(mechanism, j.child_id).name) for j in joint_list]
+
+    # reverse JointConstraint (p_old -> c_old) to (c_old -> p_old)
+    new_joint_list = JointConstraint[]
+    for j in joint_list
+        j = deepcopy(j)
+        if j.parent_id == body1.id 
+            j.child_id = body2.id 
+            push!(new_joint_list, j)
+            continue 
+        else
+            parent_id = j.parent_id 
+            child_id = j.child_id
+            pbody = get_body(mechanism, parent_id)
+            cbody = get_body(mechanism, child_id)
+
+            # translational conversion 
+            t = j.translational
+            t_reverse = Translational{typeof(t).parameters[1], typeof(t).parameters[2]}(cbody, pbody;
+                    parent_vertex=t.vertices[2], 
+                    child_vertex=t.vertices[1], 
+                    axis=-t.axis,
+                    spring=t.spring, 
+                    damper=t.damper, 
+                    spring_offset=t.spring_offset,
+                    joint_limits=t.joint_limits,
+                    spring_type=t.spring_type)[1]
+
+            r = j.rotational
+            r_reverse = Rotational{typeof(r).parameters[1], typeof(r).parameters[2]}(cbody, pbody;
+                    axis=-r.axis,
+                    axis_offset=inv(r.axis_offset),
+                    spring=r.spring, 
+                    damper=r.damper, 
+                    spring_offset=r.spring_offset,
+                    joint_limits=r.joint_limits,
+                    spring_type=r.spring_type)[1]
+
+            j.parent_id = child_id 
+            j.child_id = parent_id
+            j.translational = t_reverse 
+            j.rotational = r_reverse
+        end
+        push!(new_joint_list, j)
+    end
+
+    # set joints
+    for j in new_joint_list 
+        mechanism.joints[j.id] = j 
+    end
+
+    return Mechanism(mechanism.origin, mechanism.bodies, mechanism.joints, mechanism.contacts, 
+        gravity=mechanism.gravity, 
+        timestep=mechanism.timestep, 
+        # constructor will skip setting springs and dampers, using previously defined mech.joints
+        spring=-1.0, 
+        damper=-1.0)
+end

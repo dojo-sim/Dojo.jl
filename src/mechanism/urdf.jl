@@ -324,7 +324,7 @@ function parse_joints(xjoints, ldict, floating, T)
     end
 
     if floating
-        originjoint = JointConstraint(Floating(origin, ldict[Symbol(floatingname)]), name=:auto_generated_floating_joint)
+        originjoint = JointConstraint(Floating(origin, ldict[Symbol(floatingname)]), name=:floating_base)
         joints = [originjoint; joints] # For proper parsing the first joint must be connected to the origin
     end
 

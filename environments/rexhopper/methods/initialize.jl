@@ -89,7 +89,7 @@ function get_rexhopper(;
             contact_type=contact_type,
             name=:torso_right))
 
-        set_minimal_coordinates!(mech, get_joint(mech, :auto_generated_floating_joint), [0,0,1.0, 0,0,0])
+        set_minimal_coordinates!(mech, get_joint(mech, :floating_base), [0,0,1.0, 0,0,0])
         mech = Mechanism(origin, bodies, joints, [models...],
             gravity=gravity,
             timestep=timestep,
@@ -113,7 +113,7 @@ function initialize_rexhopper!(mechanism::Mechanism{T};
     end
 
     set_minimal_coordinates!(mechanism, get_joint(mechanism,
-        :auto_generated_floating_joint), [body_position; body_orientation])
+        :floating_base), [body_position; body_orientation])
     set_minimal_velocities!(mechanism, get_joint(mechanism,
-        :auto_generated_floating_joint), [body_linear_velocity; body_angular_velocity])
+        :floating_base), [body_linear_velocity; body_angular_velocity])
 end

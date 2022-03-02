@@ -118,7 +118,7 @@ function get_rexhopper(;
             contact_type=contact_type,
             name=:torso))
 
-        set_minimal_coordinates!(mech, get_joint(mech, :auto_generated_floating_joint), [0,0,1.0, 0,0,0])
+        set_minimal_coordinates!(mech, get_joint(mech, :floating_base), [0,0,1.0, 0,0,0])
         mech = Mechanism(origin, bodies, joints, [contacts...],
             gravity=gravity,
             timestep=timestep,

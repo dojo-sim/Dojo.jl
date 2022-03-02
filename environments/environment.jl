@@ -158,7 +158,8 @@ function reset(env::Environment{X};
     return get_observation(env)
 end
 
-function render(env::Environment, mode="human")
+function MeshCat.render(env::Environment, 
+    mode="human")
     z = env.representation == :minimal ? minimal_to_maximal(env.mechanism, env.state) : env.state
     set_robot(env.vis, env.mechanism, z, name=:robot)
     return nothing

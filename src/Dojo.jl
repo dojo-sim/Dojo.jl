@@ -17,6 +17,7 @@ using Colors: RGBA, RGB
 using FFMPEG
 using LightXML
 using MeshCat
+import MeshCat: render
 using Meshing
 using GeometryBasics
 using LightGraphs

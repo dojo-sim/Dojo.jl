@@ -145,6 +145,7 @@ end
 function impulses_jacobian_velocity!(mechanism, body::Body, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
 
     # relative
+    # @show joint.name
     relative = (body.id == joint.parent_id ? :parent : (body.id == joint.child_id ? :child : error()))
 
     # time step

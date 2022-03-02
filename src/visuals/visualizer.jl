@@ -3,7 +3,7 @@
 
     visualize mechanism using trajectory from storage 
 
-    mechansim: Mechanism 
+    mechanism: Mechanism 
     storage: Storage 
     vis: Visualizer 
     build: flag to construct mechanism visuals (only needs to be built once)
@@ -344,4 +344,3 @@ function MeshCat.setobject!(subvisshape, visshape, shape::Mesh; transparent=fals
         setobject!(subvisshape, visshape)
     end
 end
-

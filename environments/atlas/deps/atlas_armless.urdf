@@ -218,7 +218,7 @@
     </visual>
   </link>
 
-  <joint name="auto_generated_floating_joint" type="floating">
+  <joint name="floating_base" type="floating">
 		<parent link="base"/>
 		<child link="utorso"/>
 		<origin rpy="0.00000 0.00000 0.00000" xyz="0.00000 0.00000 0.00000"/>

@@ -78,7 +78,7 @@ function Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:
             exclude_loop_joints=false)
 
     # springs and dampers
-    joints = set_spring_damper_values!(joints, spring, damper)
+    (minimum(spring) > 0.0 && minimum(damper) > 0.0) && set_spring_damper_values!(joints, spring, damper)
 
     Mechanism{T,Nn,Ne,Nb,Ni}(origin, joints, bodies, contacts, system, residual_entries,
 		matrix_entries, diagonal_inverses, data_matrix, root_to_leaves, timestep, get_gravity(gravity), 0.0)
