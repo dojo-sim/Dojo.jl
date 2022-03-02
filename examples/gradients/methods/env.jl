@@ -1,4 +1,4 @@
-function box2d_dojo(mechanism::Mechanism, F; 
+function box2D_dojo(mechanism::Mechanism, F; 
     rtol=1e-10, 
     btol=1e-10, 
     undercut=1.0, 
@@ -15,7 +15,7 @@ function box2d_dojo(mechanism::Mechanism, F;
         no_progress_undercut=no_progress_undercut, 
         verbose=false)
 
-    initialize!(mechanism, :box2d, 
+    initialize!(mechanism, :box2D, 
         x=[0.0, 0.0], 
         v=[0.0, 0.0], 
         θ=0.0, 
@@ -38,7 +38,7 @@ function box2d_dojo(mechanism::Mechanism, F;
     return Δx, ∂x∂F
 end
 
-function box2d_gradientbundle(mechanism::Mechanism, F; 
+function box2D_gradientbundle(mechanism::Mechanism, F; 
     N::Int=100, 
     Σ=1e-6*I, 
     rtol=1e-10, 
@@ -56,7 +56,7 @@ function box2d_gradientbundle(mechanism::Mechanism, F;
             undercut=undercut, 
             no_progress_undercut=no_progress_undercut)
 
-    initialize!(mechanism, :box2d, 
+    initialize!(mechanism, :box2D, 
         x=[0.0, 0.0], 
         v=[0.0, 0.0], 
         θ=0.0, 

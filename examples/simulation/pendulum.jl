@@ -1,5 +1,5 @@
 using Pkg
-Pkg.activate(@__DIR__)
+Pkg.activate(joinpath(@__DIR__, ".."))
 Pkg.instantiate()
 
 # ## Setup
@@ -13,7 +13,7 @@ mechanism = get_mechanism(:pendulum,
     spring=0.0)
 
 # ## Controller
-function controller!(mechanism, k)
+function controller!(mechanism, t)
     ## Target state
     x_goal = [1.0 * π; 0.0]
 
@@ -24,7 +24,7 @@ function controller!(mechanism, k)
     K = [5.0 0.5] * 0.1
 
     # Control inputs
-    u =  -K * (x - x_goal)
+    u = -K * (x - x_goal)
     set_input!(mechanism, u)
 end
 
@@ -40,4 +40,5 @@ storage = simulate!(mechanism, 2.0, controller!,
 # ## Visualize
 vis = Visualizer()
 render(vis)
-visualize(mechanism, storage, vis=vis);
+visualize(mechanism, storage, 
+    vis=vis);

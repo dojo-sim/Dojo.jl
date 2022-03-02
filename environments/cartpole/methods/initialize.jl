@@ -2,7 +2,8 @@ function get_cartpole(;
     timestep=0.1, 
     gravity=[0.0; 0.0; -9.81], 
     spring=0.0, 
-    damper=0.0) where T
+    damper=0.0,
+    T=Float64)
 
     # Parameters
     slider_axis = [0.0; 1.0; 0.0]

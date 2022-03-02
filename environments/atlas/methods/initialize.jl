@@ -223,7 +223,7 @@ function initialize_atlas!(mechanism::Mechanism;
     return nothing
 end
 
-function initialize_atlasstance!(mechanism::Mechanism;
+function initialize_atlas_stance!(mechanism::Mechanism;
     body_position=[0.0, 0.0, 0.2],
     body_orientation=[0.0, 0.0, 0.0],
     link_linear_velocity=[zeros(3)  for i=1:length(mechanism.bodies)],

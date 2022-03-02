@@ -1,5 +1,5 @@
 using Pkg
-Pkg.activate(@__DIR__)
+Pkg.activate(joinpath(@__DIR__, ".."))
 Pkg.instantiate()
 
 # ## setup
@@ -66,13 +66,15 @@ function goal(x, u, w)
     x - zT
 end
 
-cont = Constraint(ctrl_lmt, n, m, idx_ineq=collect(1:2))
-conT = Constraint(goal, n, 0)
+cont = IterativeLQR.Constraint(ctrl_lmt, n, m, 
+    idx_ineq=collect(1:2))
+conT = IterativeLQR.Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
-# ## problem 
-prob = IterativeLQR.solver(model, obj, cons, 
-    opts=Options(verbose = true,
+# ## solver 
+solver = IterativeLQR.solver(model, obj, cons, 
+    opts=IterativeLQR.Options(
+        verbose=true,
         linesearch=:armijo,
         α_min=1.0e-5,
         obj_tol=1.0e-3,
@@ -81,14 +83,14 @@ prob = IterativeLQR.solver(model, obj, cons,
         max_al_iter=5,
         ρ_init=1.0,
         ρ_scale=10.0))
-IterativeLQR.initialize_controls!(prob, ū)
-IterativeLQR.initialize_states!(prob, x̄)
+IterativeLQR.initialize_controls!(solver, ū)
+IterativeLQR.initialize_states!(solver, x̄)
 
 # ## solve
-IterativeLQR.solve!(prob)
+IterativeLQR.solve!(solver)
 
 # ## solution
-x_sol, u_sol = IterativeLQR.get_trajectory(prob)
+x_sol, u_sol = IterativeLQR.get_trajectory(solver)
 visualize(env, x_sol)
 
 

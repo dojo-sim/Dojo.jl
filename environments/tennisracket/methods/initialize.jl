@@ -3,10 +3,10 @@ function get_tennisracket(;
     gravity=[0.0; 0.0; -9.81],
     T=Float64) 
 
-    origin = Origin{T}(name="origin")
+    origin = Origin{T}(name=:origin)
     mass = 1.0
     h = 1.0
-    bodies = [Box(h / 25.0, h / 2, h, mass, color=RGBA(1.0, 0.0, 0.0), name=:box)]
+    bodies = [Box(h / 25.0, h / 2.0, h, mass, color=RGBA(1.0, 0.0, 0.0), name=:box)]
     joints = [JointConstraint(Floating(origin, bodies[1]), name=:floating_joint)]
     mechanism = Mechanism(origin, bodies, joints, 
         timestep=timestep, 

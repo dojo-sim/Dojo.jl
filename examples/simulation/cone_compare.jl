@@ -1,5 +1,5 @@
 using Pkg
-Pkg.activate(@__DIR__)
+Pkg.activate(joinpath(@__DIR__, ".."))
 Pkg.instantiate()
 
 # ## Setup
@@ -22,8 +22,8 @@ set_light!(vis,
 ################################################################################
 # Nonlinear Friction Cone vs. Linearized Friction Cone
 ################################################################################
-timestep=0.01
-gravity=-9.81
+timestep = 0.01
+gravity = -9.81
 friction_coefficient = 0.25
 x0 = [-1.5, -0.50, 0.25]
 v0 = [4, 0.80, 0.0]
@@ -56,13 +56,6 @@ via, anim = visualize(mech_lc, storage_lc,
     vis=vis,
     name=:lc)
 
-line_mat_lc = LineBasicMaterial(color=color_lc, linewidth=10.0)
-points_lc = Vector{Point{3,Float64}}()
-for (i, xt) in enumerate(storage_lc.x[1])
-    k = xt
-    push!(points_lc, Point(k...))
-end
-setobject!(vis[:path_lc], MeshCat.Line(points_lc, line_mat_lc))
 
 # ## Nonlinear cone
 color_nc = cyan;
@@ -86,14 +79,9 @@ storage_nc = simulate!(mech_nc, 4.0,
     opts=opts)
 
 # ## Visualize
-line_mat_nc = LineBasicMaterial(color=color_nc, linewidth=25.0)
-points_nc = Vector{Point{3,Float64}}()
-for (i, xt) in enumerate(storage_nc.x[1])
-    k = xt
-    @show k[3]
-    push!(points_nc, Point(k...))
+for (i, x) in enumerate(storage_nc.x[1])
+    storage_nc.x[1][i] += [0.0; 0.0; 0.1]
 end
-setobject!(vis[:path_nc], MeshCat.Line(points_nc, line_mat_nc))
 
 vis, anim = visualize(mech_nc, storage_nc,
     vis=vis,
@@ -159,19 +147,3 @@ vis, anim = visualize(mech_mjnc, storage_mjnc,
     name=:mjnc,
     animation=anim)
 
-line_mat_mjnc = LineBasicMaterial(color=color_mjnc, linewidth=25.0)
-points_mjnc = Vector{Point{3,Float64}}()
-for (i, xt) in enumerate(storage_mjnc.x[1])
-    k = xt
-    push!(points_mjnc, Point(k[1], k[2], k[3]))
-end
-setobject!(vis[:path_mjnc], MeshCat.Line(points_mjnc, line_mat_mjnc))
-
-settransform!(vis[:lc], MeshCat.Translation(0,+0.04,0))
-settransform!(vis[:path_lc], MeshCat.Translation(0,+0.04,0))
-settransform!(vis[:nc], MeshCat.Translation(0,-0.04,0))
-settransform!(vis[:path_nc], MeshCat.Translation(0,-0.04,0))
-settransform!(vis[:mjlc], MeshCat.Translation(0,+0.00,0))
-# settransform!(vis[:mjnc], MeshCat.Translation(0,-0.08,-0.02))
-settransform!(vis[:mjnc], MeshCat.Translation(0,-0.08,0))
-settransform!(vis[:path_mjnc], MeshCat.Translation(0,-0.08,0))

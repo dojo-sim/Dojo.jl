@@ -146,7 +146,7 @@ for (spring, damper) in [(0.0, 0.0), (2.0, 0.3)]
 		contact=false)
 	test_data_system(:box, 
 		contact=false)
-	test_data_system(:box2d, 
+	test_data_system(:box2D, 
 		contact=false)
 	test_data_system(:slider, 
 		spring=spring, 
@@ -215,7 +215,7 @@ for (spring, damper) in [(0.0, 0.0), (2.0, 0.3)]
 		contact=true)
 	test_data_system(:box, 
 		contact=true)
-	test_data_system(:box2d, 
+	test_data_system(:box2D, 
 		contact=true)
 	test_data_system(:slider, 
 		spring=spring, 

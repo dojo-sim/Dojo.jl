@@ -1,5 +1,5 @@
 using Pkg
-Pkg.activate(@__DIR__)
+Pkg.activate(joinpath(@__DIR__, ".."))
 Pkg.instantiate()
 
 # ## setup
@@ -8,7 +8,7 @@ using IterativeLQR
 using LinearAlgebra
 
 # ## system
-gravity=-9.81
+gravity = -9.81
 timestep = 0.05
 friction_coefficient = 0.8
 damper = 5.0
@@ -46,7 +46,7 @@ zref = [minimal_to_maximal(env.mechanism, x) for x in xref]
 visualize(env, xref)
 
 # ## gravity compensation 
-## TODO: solve optimization problem instead
+## TODO: solve optimization solver instead
 mech = get_mechanism(:quadruped, 
     timestep=timestep, 
     gravity=gravity, 
@@ -89,7 +89,7 @@ oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(timestep * qt) * (x - xref
 
 cts = IterativeLQR.Cost.(ots, n, m)
 cT = IterativeLQR.Cost(oT, n, 0)
-obj = [cts..., cT]
+obj = [[cts for t = 1:T-1]..., cT]
 
 # ## constraints
 function goal(x, u, w)
@@ -101,8 +101,8 @@ cont = IterativeLQR.Constraint()
 conT = IterativeLQR.Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
-# ## problem
-prob = IterativeLQR.solver(model, obj, cons, 
+# ## solver
+solver = IterativeLQR.solver(model, obj, cons, 
     opts=Options(verbose=false,
         linesearch=:armijo,
         α_min=1.0e-5,
@@ -112,22 +112,21 @@ prob = IterativeLQR.solver(model, obj, cons,
         max_al_iter=5,
         ρ_init=1.0,
         ρ_scale=10.0))
-IterativeLQR.initialize_controls!(prob, ū)
-IterativeLQR.initialize_states!(prob, x̄)
+IterativeLQR.initialize_controls!(solver, ū)
+IterativeLQR.initialize_states!(solver, x̄)
 
 # ## solve
-@time IterativeLQR.solve!(prob)
-
-vis= Visualizer()
-open(env.vis)
+@time IterativeLQR.solve!(solver)
 
 # ## solution
-x_sol, u_sol = IterativeLQR.get_trajectory(prob)
-@show IterativeLQR.eval_obj(prob.m_data.obj.costs, prob.m_data.x, prob.m_data.u, prob.m_data.w)
-@show prob.s_data.iter[1]
-@show norm(goal(prob.m_data.x[T], zeros(0), zeros(0)), Inf)
+x_sol, u_sol = IterativeLQR.get_trajectory(solver)
+@show IterativeLQR.eval_obj(solver.m_data.obj.costs, solver.m_data.x, solver.m_data.u, solver.m_data.w)
+@show solver.s_data.iter[1]
+@show norm(goal(solver.m_data.x[T], zeros(0), zeros(0)), Inf)
 
 # ## visualize
+vis= Visualizer()
+open(env.vis)
 x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]
 visualize(env, x_view)
 

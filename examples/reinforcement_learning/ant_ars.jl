@@ -1,11 +1,12 @@
 using Pkg
-Pkg.activate(@__DIR__)
+Pkg.activate(joinpath(@__DIR__, ".."))
 Pkg.instantiate()
 
 # ## Setup
 using Dojo
 using Random
 using LinearAlgebra 
+using JLD2
 include(joinpath(@__DIR__, "algorithms/ars.jl")) # augmented random search
 
 # ## Ant
@@ -20,7 +21,7 @@ env = get_environment(:ant,
     contact_body=true)
 
 obs = reset(env)
-initialize_ant!(env.mechanism, 
+initialize!(env.mechanism, :ant,
     body_position=[0.0, 0.0, 1.0], 
     body_orientation=[0.0, 0.0, 0.0])
 env.state .= get_minimal_state(env.mechanism)
@@ -48,7 +49,7 @@ policies = Matrix{Float64}[]
 N = 5
 for i = 1:N
     ## Reset environment
-    env = get_environment("ant", 
+    env = get_environment(:ant, 
         representation=:minimal, 
         gravity=-9.81, 
         timestep=0.05, 

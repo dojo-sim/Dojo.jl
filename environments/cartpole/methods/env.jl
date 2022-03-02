@@ -16,7 +16,8 @@ function cartpole(;
     name=:robot,
     control_scaling=Diagonal(ones(1)),
     opts_step=SolverOptions(), 
-    opts_grad=SolverOptions()) where T
+    opts_grad=SolverOptions(),
+    T=Float64)
 
     mechanism = get_cartpole(
         timestep=timestep, 

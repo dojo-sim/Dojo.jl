@@ -40,9 +40,9 @@ include(joinpath("graph", "entry.jl"))
 include(joinpath("graph", "system.jl"))
 include(joinpath("graph", "linear_system.jl"))
 include(joinpath("graph", "adjacency.jl"))
-include(joinpath("graph", "dfs.jl"))
+include(joinpath("graph", "depth_first_search.jl"))
 include(joinpath("graph", "cycles.jl"))
-include(joinpath("graph", "ldu.jl"))
+include(joinpath("graph", "ldu_factorization.jl"))
 
 # Graph objects
 include(joinpath("mechanism", "node.jl"))
@@ -106,7 +106,7 @@ include(joinpath("contacts", "cone.jl"))
 include(joinpath("contacts", "impact.jl"))
 include(joinpath("contacts", "linear.jl"))
 include(joinpath("contacts", "nonlinear.jl"))
-include(joinpath("contacts", "utils.jl"))
+include(joinpath("contacts", "utilities.jl"))
 
 # Solver
 include(joinpath("solver", "linear_system.jl"))
@@ -186,7 +186,8 @@ export
     ImpactContact,
     LinearContact,
     NonlinearContact,
-    get_contact
+    get_contact,
+    get_sdf
 
 # Inputs
 export
@@ -226,11 +227,26 @@ export
 # Simulation
 export
     simulate!,
-    step!
+    step!,
+    generate_storage
 
-# Environments
+# Environment
 export
-    Environment
+    Environment,
+    dynamics, 
+    dynamics_jacobian_state,
+    dynamics_jacobian_input,
+    get_environment, 
+    step,
+    get_observation, 
+    cost,
+    is_done, 
+    reset,
+    render, 
+    seed, 
+    close, 
+    Space, 
+    BoxSpace 
 
 # Orientation
 export
@@ -271,12 +287,16 @@ export
 # Visuals
 export
     Visualizer,
+    visualize,
     set_background!,
     set_floor!,
     set_surface!,
     set_light!,
-    set_camera!
-    RGBA
+    set_camera!,
+    RGBA,
+    orange, 
+    cyan, 
+    magenta
 
 # Static
 export

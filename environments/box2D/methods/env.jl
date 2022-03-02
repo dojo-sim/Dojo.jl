@@ -1,9 +1,9 @@
 ################################################################################
 # Box (2D)
 ################################################################################
-struct Box2d end
+struct Box2D end
 
-function box2d(; 
+function box2D(; 
     representation=:minimal, 
     timestep=0.05, 
     gravity=[0.0; 0.0; -9.81], 
@@ -18,12 +18,12 @@ function box2d(;
     opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5),
     T=Float64)
 
-    mechanism = get_mechanism(:box2d, 
+    mechanism = get_mechanism(:box2D, 
         timestep=timestep, 
         gravity=gravity,
         friction_coefficient=friction_coefficient)
         
-    initialize!(mechanism, :box2d)
+    initialize!(mechanism, :box2D)
 
     if representation == :minimal
         nx = minimal_dimension(mechanism)
