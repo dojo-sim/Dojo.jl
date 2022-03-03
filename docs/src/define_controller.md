@@ -60,5 +60,5 @@ visualize(mechanism, storage, vis=vis);
 
 You should get something like this,
 ```@raw html
-<img src="./../../examples/animations/pendulum.gif" width="300"/>
+<img src="./assets/animations/pendulum.gif" width="300"/>
 ```

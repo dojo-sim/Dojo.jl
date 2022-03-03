@@ -116,7 +116,7 @@ function get_atlas(;
             name=Symbol("r_" .* name)))
 
         # pelvis
-        location = [0.05; 0.0; -0.1]
+        location = [0.0; 0.0; 0.05]
         normal = [0.0; 0.0; 1.0]
         offset = [0.0; 0.0; 0.19]
         name = "pelvis"

@@ -34,6 +34,10 @@ __Primary Development__
 * [Mac Schwager](https://web.stanford.edu/~schwager/)
 * [Zachary Manchester](https://www.ri.cmu.edu/ri-faculty/zachary-manchester/) (principal investigator)
 
+__Additional Contributions__
+* [Suvansh Sanjeev](https://suvan.sh/) (PyTorch interface)
+* [Benjamin Bokser](http://www.benbokser.com/) (REx Hopper)
+
 Development by the [Robotic Exploration Lab](https://roboticexplorationlab.org/).
  
 If this project is useful for your work please consider

@@ -230,5 +230,5 @@ visualize(env, y)
 
 The result should be something like this:
 ```@raw html
-<img src="./../../examples/animations/ant_random.gif" width="300"/>
+<img src="./assets/animations/ant_random.gif" width="300"/>
 ```

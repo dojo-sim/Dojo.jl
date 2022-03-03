@@ -39,6 +39,7 @@ minimal_dimension
 input_dimension
 zero_velocity!
 root_to_leaves_ordering
+set_floating_base
 ```
 
 ### Nodes

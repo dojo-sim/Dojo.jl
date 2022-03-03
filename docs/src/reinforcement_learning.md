@@ -2,18 +2,18 @@
 
 Policy optimization is performed using the reinforcement-learning algorithm [augmented random search (ARS)](https://arxiv.org/abs/1803.07055) to optimize static linear policies for locomotion. A number of [Gym-like environments](https://gym.openai.com/) are created with Dojo for this application.
 
-## [Half Cheetah](../../examples/reinforcement_learning/halfcheetah_ars.jl)
+## [Half Cheetah](https://github.com/dojo-sim/Dojo.jl/blob/main/examples/reinforcement_learning/halfcheetah_ars.jl)
 
 ```@raw html
-<img src="../../examples/animations/halfcheetah_ars.gif" width="600"/>
+<img src="./assets/animations/halfcheetah_ars.gif" width="600"/>
 ```
 
 The cheetah-like robot has rewards on forward velocity and costs on control usage. 
 
-## [Ant](../../examples/reinforcement_learning/ant_ars.jl) 
+## [Ant](https://github.com/dojo-sim/Dojo.jl/blob/main/examples/reinforcement_learning/ant_ars.jl) 
 
 ```@raw html
-<img src="../../examples/animations/ant_ars_no_grid.gif" width="300"/>
+<img src="./assets/animations/ant_ars_no_grid.gif" width="300"/>
 ```
 
 The insect-like robot has rewards on forward velocity and survival and costs on control usage and contact forces.

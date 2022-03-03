@@ -45,5 +45,5 @@ visualize(mech, storage, vis=vis)
 And voila! You should see something like this;
 
 ```@raw html
-<img src="./../../examples/animations/dzhanibekov.gif" width="300"/>
+<img src="./assets/animations/dzhanibekov.gif" width="300"/>
 ```

@@ -14,14 +14,14 @@ mech = get_mechanism(:atlas,
     spring=1.0, 
     contact_feet=true, 
     contact_body=true, 
-    model_type=:v2)
+    model_type=:simple)
 
 # ## Simulate
 Dojo.initialize!(mech, :atlas_stance,
-    body_position=[0.0, 0.0, 0.5], 
+    body_position=[0.0, 0.0, 1.0], 
     body_orientation=[0.0, 0.2, 0.1])
 
-storage = simulate!(mech, 5.0, 
+storage = simulate!(mech, 2.5, 
     record=true, 
     opts=SolverOptions(rtol=1.0e-6, btol=1.0e-6, verbose=true))
 
