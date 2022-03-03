@@ -3,7 +3,7 @@
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://dojo-sim.github.io/Dojo.jl/dev)
 
 # Dojo
-A differentiable simulator for robotics
+A differentiable physics simulator for robotics
 
 # Examples (RSS 2022)
 
@@ -85,9 +85,10 @@ pkg> add Dojo#main
 
 ## Citing
 ```
-@article{howelllecleach2022dojo,
-	title={Dojo: {A} {D}ifferentiable {S}imulator for {R}obotics},
-	author={Howell, Taylor A. and Le Cleac'h, Simon and Kolter, J. Zico and Schwager, Mac and Manchester, Zachary},
+@article{howelllecleach2022,
+	title={Dojo: A Differentiable Simulator for Robotics},
+	author={Taylor, A. Howell and Le Cleac'h, Simon and Kolter, Zico and Schwager, Mac and Manchester, Zachary},
+	journal={arXiv preprint arXiv:2203.00806},
 	year={2022}
 }
 ```
