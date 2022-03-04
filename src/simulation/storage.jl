@@ -90,13 +90,13 @@ end
 
 function get_maximal_state(storage::Storage{T,N}, i::Int) where {T,N}
 	Nb = length(storage.x)
-	z = zeros(13*Nb)
+	z = zeros(13 * Nb)
 	for j = 1:Nb
 		x2 = storage.x[j][i]
 		q2 = storage.q[j][i]
 		v15 = storage.v[j][i]
 		ϕ15 = storage.ω[j][i]
-		z[13*(j-1) .+ (1:13)] = [x2; v15; vector(q2); ϕ15]
+		z[13 * (j-1) .+ (1:13)] = [x2; v15; vector(q2); ϕ15]
 	end
 	return z
 end

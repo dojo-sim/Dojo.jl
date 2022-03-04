@@ -52,8 +52,8 @@ for i = 1:N
     push!(policies, policy.θ)
 end
 
-## @save joinpath(@__DIR__, "halfcheetah_rl.jld2") train_times rewards policies
-## @load joinpath(@__DIR__, "halfcheetah_rl.jld2") train_times rewards policies
+## @save joinpath(@__DIR__, "results/halfcheetah_rl.jld2") train_times rewards policies
+@load joinpath(@__DIR__, "results/halfcheetah_rl.jld2") train_times rewards policies
 
 # Training statistics
 N_best = 3
@@ -80,13 +80,14 @@ input_size = length(obs)
 output_size = length(env.input_previous)
 normalizer = Normalizer(input_size)
 
+θ = policies_best[2]
 traj = display_policy(env,
     ## policy,
     Policy(hp, θ),
     normalizer, hp)
 
 for t = 1:length(traj)
-    traj[t][2] += 3.25
+    traj[t][2] += 2.0
 end
 
 # ## Visualizer policy

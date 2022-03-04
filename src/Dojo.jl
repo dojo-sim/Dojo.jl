@@ -201,7 +201,8 @@ export
 export
     Mechanism,
     get_mechanism,
-    initialize!
+    initialize!,
+    set_floating_base
 
 # Maximal
 export

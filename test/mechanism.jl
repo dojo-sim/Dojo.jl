@@ -47,7 +47,7 @@
 
     # set state
     z = Dojo.get_maximal_state(env.mechanism)
-    env2 = Dojo.get_environment("halfcheetah", 
+    env2 = Dojo.get_environment(:halfcheetah, 
         timestep=timestep, 
         gravity=-10.0);
     Dojo.reset(env);
@@ -58,7 +58,7 @@
     @test norm(z - Dojo.get_maximal_state(env2.mechanism)) < 1.0e-8
 
     # change atlas floating base 
-    mech = get_atlas()
+    mech = get_mechanism(:atlas)
     j = get_joint(mech, :floating_base)
     base_origin = get_body(mech, j.child_id).name 
 

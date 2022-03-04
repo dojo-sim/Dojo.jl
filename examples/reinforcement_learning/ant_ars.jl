@@ -86,6 +86,7 @@ for i = 1:N
 end
 
 ## @save joinpath(@__DIR__, "results/ant_rl.jld2") train_times rewards policies
+@load joinpath(@__DIR__, "results/ant_rl.jld2") train_times rewards policies
 
 # ## Training statistics
 N_best = 3
@@ -106,8 +107,20 @@ policies_best = (policies[max_idx])[1:N_best]
 ## @save joinpath(@__DIR__, "ant_policy.jld2") θ
 ## @load joinpath(@__DIR__, "ant_policy.jld2") θ
 
+# ## Recover policy
+hp = HyperParameters(
+        main_loop_size=30, 
+        horizon=80, 
+        n_directions=6, 
+        b=6, 
+        step_size=0.02)
+input_size = length(obs)
+output_size = length(env.input_previous)
+normalizer = Normalizer(input_size)
+θ = policies_best[2] 
+
 # ## Visualize policy
 ## traj = display_random_policy(env, hp)
-traj = display_policy(env, policy, normalizer, hp)
+traj = display_policy(env, Policy(hp, θ), normalizer, hp)
 visualize(env, traj)
-
+open(env.vis)

@@ -97,7 +97,8 @@ With the environment instantiated, we can interact with it by overloading the fo
 Simulate environment forward one time step:
 ```julia
 function step(env::Environment{Ant}, x, u; 
-    diff=false)
+    gradients=false,
+    attitude_decompress=false)
 
     # mechanism
     mechanism = env.mechanism
@@ -128,11 +129,17 @@ function step(env::Environment{Ant}, x, u;
     done = is_done(env, z1, u_scaled)
 
     # gradients
-    if diff
+    if gradients
         if env.representation == :minimal
             fx, fu = get_minimal_gradients!(env.mechanism, z0, u_scaled, opts=env.opts_grad)
         elseif env.representation == :maximal
             fx, fu = get_maximal_gradients!(env.mechanism, z0, u_scaled, opts=env.opts_grad)
+            if attitude_decompress
+                A0 = attitude_jacobian(z0, length(env.mechanism.bodies))
+                A1 = attitude_jacobian(z1, length(env.mechanism.bodies))
+                fx = A1 * fx * A0'
+                fu = A1 * fu
+            end
         end
         env.dynamics_jacobian_state .= fx
         env.dynamics_jacobian_input .= fu * env.control_map
