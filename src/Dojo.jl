@@ -13,6 +13,7 @@ using Rotations: RotationError, params, lmult, rmult, tmat, vmat, hmat, skew, pu
 using Parameters
 using Statistics
 
+using Colors
 using Colors: RGBA, RGB
 using FFMPEG
 using LightXML

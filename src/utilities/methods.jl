@@ -2,6 +2,10 @@ function module_dir()
     return joinpath(@__DIR__, "..", "..")
 end
 
+function string_to_symbol(x) 
+	typeof(x) <: String ? (return Symbol(x)) : (return x)
+end
+
 function scn(a::Float64; digits=1, exp_digits=1)
 	isnan(a) && return " NaN" * " "^(digits + exp_digits)
 	@assert digits >= 0

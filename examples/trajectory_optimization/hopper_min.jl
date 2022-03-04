@@ -69,7 +69,7 @@ conT = IterativeLQR.Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
 # ## solver
-solver = IterativeLQR.solver(model, obj, cons, 
+s = IterativeLQR.solver(model, obj, cons, 
     opts=Options(
         linesearch=:armijo,
         α_min=1.0e-5,
@@ -81,17 +81,17 @@ solver = IterativeLQR.solver(model, obj, cons,
         ρ_init=1.0,
         ρ_scale=10.0,
         verbose=true))
-IterativeLQR.initialize_controls!(solver, ū)
-IterativeLQR.initialize_states!(solver, x̄)
+IterativeLQR.initialize_controls!(s, ū)
+IterativeLQR.initialize_states!(s, x̄)
 
 # ## solve
-@time IterativeLQR.solve!(solver)
+@time IterativeLQR.solve!(s)
 
 # ## solution
-x_sol, u_sol = IterativeLQR.get_trajectory(solver)
-@show IterativeLQR.eval_obj(solver.m_data.obj.costs, solver.m_data.x, solver.m_data.u, solver.m_data.w)
-@show solver.s_data.iter[1]
-@show norm(goal(solver.m_data.x[T], zeros(0), zeros(0)), Inf)
+x_sol, u_sol = IterativeLQR.get_trajectory(s)
+@show IterativeLQR.eval_obj(s.m_data.obj.costs, s.m_data.x, s.m_data.u, s.m_data.w)
+@show s.s_data.iter[1]
+@show norm(goal(s.m_data.x[T], zeros(0), zeros(0)), Inf)
 
 # ## visualize
 visualize(env, x_sol)

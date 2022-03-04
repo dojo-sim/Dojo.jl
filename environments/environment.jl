@@ -51,21 +51,23 @@ end
     kwargs: environment specific parameters
 """
 function get_environment(model; kwargs...)
-    return eval(Symbol(model))(; kwargs...)
+    return eval(string_to_symbol(model))(; string_to_symbol(kwargs)...)
 end
 
 """
-    step(env, x, u; diff)
+    step(env, x, u; gradients, attitude_decompress)
 
     simulates environment one time step 
 
     env: Environment 
     x: state 
     u: input 
-    diff: flag for computing gradients of dynamics
+    gradients: flag for computing gradients of dynamics
+    attitude_decompress: flag for pre- and post-concatenating Jacobians with attitude Jacobians
 """
 function step(env::Environment, x, u; 
-    diff=false)
+    gradients=false,
+    attitude_decompress=false)
 
     mechanism = env.mechanism
     timestep= mechanism.timestep
@@ -86,11 +88,17 @@ function step(env::Environment, x, u;
 	done = is_done(env, x)
 
     # Gradients
-    if diff
+    if gradients
         if env.representation == :minimal
             fx, fu = get_minimal_gradients!(env.mechanism, z0, u_scaled, opts=env.opts_grad)
         elseif env.representation == :maximal
             fx, fu = get_maximal_gradients!(env.mechanism, z0, u_scaled, opts=env.opts_grad)
+            if attitude_decompress
+                A0 = attitude_jacobian(z0, length(env.mechanism.bodies))
+                A1 = attitude_jacobian(z1, length(env.mechanism.bodies))
+                fx = A1 * fx * A0'
+                fu = A1 * fu
+            end
         end
         env.dynamics_jacobian_state .= fx
         env.dynamics_jacobian_input .= fu * env.control_map
@@ -100,7 +108,13 @@ function step(env::Environment, x, u;
     return get_observation(env), -costs, done, info
 end
 
-step(env::Environment, u; diff::Bool=false) = step(env, env.state, u; diff=diff)
+function step(env::Environment, u; 
+    gradients=false, 
+    attitude_decompress=false) 
+    step(env, env.state, u; 
+        gradients=gradients, 
+        attitude_decompress=attitude_decompress)
+end
 
 """
     get_observation(env) 
@@ -215,9 +229,6 @@ end
 function clip(s::BoxSpace, u)
     clamp.(u, s.low, s.high)
 end
-
-
-
 
 
 

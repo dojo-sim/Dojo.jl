@@ -49,7 +49,7 @@ zref = [minimal_to_maximal(env.mechanism, x) for x in xref]
 # ## visualize reference
 visualize(env, xref)
 
-# ## gravity compensation TODO: solve optimization solver instead
+# ## gravity compensation TODO: solve optimization s instead
 mech = get_mechanism(:atlas, 
 	timestep=timestep, 
 	gravity=gravity, 
@@ -159,7 +159,7 @@ conT = IterativeLQR.Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
 # ## solver
-solver = IterativeLQR.solver(model, obj, cons,
+s = IterativeLQR.solver(model, obj, cons,
 	opts=IterativeLQR.Options(
 		verbose=true,
 		linesearch=:armijo,
@@ -170,20 +170,20 @@ solver = IterativeLQR.solver(model, obj, cons,
 		max_al_iter=5,
 		ρ_init=1.0,
 		ρ_scale=10.0))
-IterativeLQR.initialize_controls!(solver, ū)
-IterativeLQR.initialize_states!(solver, x̄)
+IterativeLQR.initialize_controls!(s, ū)
+IterativeLQR.initialize_states!(s, x̄)
 
 # ## solve
-IterativeLQR.solve!(solver)
+IterativeLQR.solve!(s)
 
 vis= Visualizer()
 open(env.vis)
 
 # ## solution
-x_sol, u_sol = IterativeLQR.get_trajectory(solver)
-@show IterativeLQR.eval_obj(solver.m_data.obj.costs, solver.m_data.x, solver.m_data.u, solver.m_data.w)
-@show solver.s_data.iter[1]
-@show norm(goal(solver.m_data.x[T], zeros(0), zeros(0)), Inf)
+x_sol, u_sol = IterativeLQR.get_trajectory(s)
+@show IterativeLQR.eval_obj(s.m_data.obj.costs, s.m_data.x, s.m_data.u, s.m_data.w)
+@show s.s_data.iter[1]
+@show norm(goal(s.m_data.x[T], zeros(0), zeros(0)), Inf)
 
 # ## visualize
 x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]

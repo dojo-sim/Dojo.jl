@@ -3,11 +3,12 @@
     
     constructs mechanism
 
-    model: Symbol 
+    model: name of mechanism 
     kwargs: mechanism specific parameters
 """
-function get_mechanism(model::Symbol; kwargs...)
-    mech = eval(Symbol(:get, :_, model))(; kwargs...)
+function get_mechanism(model; kwargs...)
+    # convert potential strings to symbols    
+    mech = eval(Symbol(:get, :_, string_to_symbol(model)))(; string_to_symbol(kwargs)...)
     return mech
 end
 
@@ -17,10 +18,10 @@ end
     state initialization for mechanism 
 
     mechanism: Mechanism 
-    model: Symbol 
+    model: name of mechanism 
     kwargs: mechanism specific parameters
 """
-function initialize!(mechanism::Mechanism, model::Symbol; kwargs...)
-    eval(Symbol(:initialize, :_, model, :!))(mechanism; kwargs...)
+function initialize!(mechanism::Mechanism, model; kwargs...)
+    eval(Symbol(:initialize, :_, string_to_symbol(model), :!))(mechanism; kwargs...)
 end
 

@@ -16,7 +16,7 @@ function block(;
     seed=1, 
     vis=Visualizer(), 
     info=nothing, 
-    name::Symbol=:robot,
+    name=:robot,
     control_scaling=Diagonal(ones(3)),
     opts_step=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5), 
     opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5),

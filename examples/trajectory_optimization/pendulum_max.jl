@@ -35,8 +35,8 @@ T = 51
 # ## model
 dyn = IterativeLQR.Dynamics(
     (y, x, u, w) -> dynamics(y, env, x, u, w), 
-    (dx, x, u, w) -> dynamics_jacobian_state(dx, env, x, u, w),
-    (du, x, u, w) -> dynamics_jacobian_input(du, env, x, u, w),
+    (dx, x, u, w) -> dynamics_jacobian_state(dx, env, x, u, w, attitude_decompress=true),
+    (du, x, u, w) -> dynamics_jacobian_input(du, env, x, u, w, attitude_decompress=true),
     n, n, m)
 
 model = [dyn for t = 1:T-1]
@@ -71,8 +71,8 @@ cont = IterativeLQR.Constraint(ctrl_lmt, n, m,
 conT = IterativeLQR.Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
-# ## solver 
-solver = IterativeLQR.solver(model, obj, cons, 
+# ## solver
+s = IterativeLQR.solver(model, obj, cons, 
     opts=IterativeLQR.Options(
         verbose=true,
         linesearch=:armijo,
@@ -83,14 +83,14 @@ solver = IterativeLQR.solver(model, obj, cons,
         max_al_iter=5,
         ρ_init=1.0,
         ρ_scale=10.0))
-IterativeLQR.initialize_controls!(solver, ū)
-IterativeLQR.initialize_states!(solver, x̄)
+IterativeLQR.initialize_controls!(s, ū)
+IterativeLQR.initialize_states!(s, x̄)
 
 # ## solve
-IterativeLQR.solve!(solver)
+IterativeLQR.solve!(s)
 
 # ## solution
-x_sol, u_sol = IterativeLQR.get_trajectory(solver)
+x_sol, u_sol = IterativeLQR.get_trajectory(s)
 visualize(env, x_sol)
 
 

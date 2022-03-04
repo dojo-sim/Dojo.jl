@@ -6,7 +6,7 @@
 struct Walker end
 
 function walker(; 
-    mode::Symbol=:minimal, 
+    mode=:minimal, 
     timestep=0.05, 
     gravity=[0.0; 0.0; -9.81],
     friction_coefficient=1.9, 

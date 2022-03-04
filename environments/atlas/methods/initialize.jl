@@ -7,7 +7,7 @@ function get_atlas(;
         damper=0.0, 
         contact_feet=true, 
         contact_body=false, 
-        model_type::Symbol=:simple,
+        model_type=:simple,
         T=Float64)
 
     path = joinpath(@__DIR__, "../deps/atlas_$(string(model_type)).urdf")

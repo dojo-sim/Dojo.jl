@@ -19,9 +19,10 @@ A differentiable physics simulator for robotics
 <img src="examples/animations/astronaut.gif" width="200"/>
 
 ### Friction-cone comparison
-- blue = nonlinear friction cone
-- orange = linear friction cone
-- magenta = MuJoCo friction model
+- blue = Dojo nonlinear friction cone
+- orange = Dojo linear friction cone
+- black = MuJoCo nonlinear friction cone
+- magenta = MuJoCo linear friction model
 <img src="examples/animations/cone_compare_mujoco.gif" height="150"/>
 
 ### Dzhanibekov effect
@@ -89,6 +90,7 @@ pkg> add Dojo#main
 	title={Dojo: A Differentiable Simulator for Robotics},
 	author={Taylor, A. Howell and Le Cleac'h, Simon and Kolter, Zico and Schwager, Mac and Manchester, Zachary},
 	journal={arXiv preprint arXiv:2203.00806},
+	url={https://arxiv.org/abs/2203.00806},
 	year={2022}
 }
 ```

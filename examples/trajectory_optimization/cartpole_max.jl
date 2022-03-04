@@ -9,7 +9,7 @@ using IterativeLQR
 using LinearAlgebra 
 
 # ## system
-gravity=-9.81
+gravity = -9.81
 timestep = 0.1
 env = get_environment(:cartpole, 
     representation=:maximal, 
@@ -26,8 +26,8 @@ n = env.num_states
 m = env.num_inputs
 
 # ## states
-z1 = cartpole_nominal_max()
-zT = cartpole_goal_max()
+z1 = Dojo.cartpole_nominal_max()
+zT = Dojo.cartpole_goal_max()
 
 # ## horizon
 T = 26
@@ -35,8 +35,8 @@ T = 26
 # ## model
 dyn = IterativeLQR.Dynamics(
     (y, x, u, w) -> dynamics(y, env, x, u, w), 
-    (dx, x, u, w) -> dynamics_jacobian_state(dx, env, x, u, w),
-    (du, x, u, w) -> dynamics_jacobian_input(du, env, x, u, w),
+    (dx, x, u, w) -> dynamics_jacobian_state(dx, env, x, u, w, attitude_decompress=true),
+    (du, x, u, w) -> dynamics_jacobian_input(du, env, x, u, w, attitude_decompress=true),
     n, n, m)
 model = [dyn for t = 1:T-1]
 
@@ -62,22 +62,25 @@ cont = IterativeLQR.Constraint()
 conT = IterativeLQR.Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
-# ## solver 
-solver = IterativeLQR.solver(model, obj, cons,
-    opts=Options(
+# ## solver
+s = IterativeLQR.solver(model, obj, cons,
+    opts=IterativeLQR.Options(
         max_al_iter=10,
-        verbose=false))
-IterativeLQR.initialize_controls!(solver, ū)
-IterativeLQR.initialize_states!(solver, x̄)
+        verbose=true))
+IterativeLQR.initialize_controls!(s, ū)
+IterativeLQR.initialize_states!(s, x̄)
 
 # ## solve
-@time IterativeLQR.solve!(solver)
+@time IterativeLQR.solve!(s)
 
 # ## solution
-z_sol, u_sol = IterativeLQR.get_trajectory(solver)
-@show IterativeLQR.eval_obj(solver.m_data.obj.costs, solver.m_data.x, solver.m_data.u, solver.m_data.w)
-@show solver.s_data.iter[1]
-@show norm(goal(solver.m_data.x[T], zeros(0), zeros(0)), Inf)
+z_sol, u_sol = IterativeLQR.get_trajectory(s)
+@show IterativeLQR.eval_obj(s.m_data.obj.costs, s.m_data.x, s.m_data.u, s.m_data.w)
+@show s.s_data.iter[1]
+@show norm(goal(s.m_data.x[T], zeros(0), zeros(0)), Inf)
 
 # ## visualize
-visualize(env, [[z_sol[1] for t = 1:10]..., z_sol..., [z_sol[end] for t = 1:10]...])
+z_vis = [[z_sol[1] for t = 1:10]..., z_sol..., [z_sol[end] for t = 1:10]...]
+open(env.vis)
+visualize(env, z_vis)
+set_floor!(env.vis, alt=-1.0)

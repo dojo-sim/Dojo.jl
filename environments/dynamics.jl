@@ -9,8 +9,12 @@
 	u: input 
 	w: system parameters
 """
-function dynamics(y, env::Environment, x, u, w)
-	step(env, x, u)[1]
+function dynamics(y, env::Environment, x, u, w; 
+	gradients=false, 
+	attitude_decompress=false)
+	step(env, x, u, 
+		gradients=gradients, 
+		attitude_decompress=attitude_decompress)[1]
     y .= env.state
 end
 
@@ -25,8 +29,11 @@ end
 	u: input 
 	w: system parameters
 """
-function dynamics_jacobian_state(dx, env::Environment, x, u, w)
-	step(env, x, u, diff=true)
+function dynamics_jacobian_state(dx, env::Environment, x, u, w; 
+	attitude_decompress=false)
+	step(env, x, u, 
+		gradients=true, 
+		attitude_decompress=attitude_decompress)
     dx .= env.dynamics_jacobian_state
 end
 
@@ -41,7 +48,8 @@ end
 	u: input 
 	w: system parameters
 """
-function dynamics_jacobian_input(du, env::Environment, x, u, w)
+function dynamics_jacobian_input(du, env::Environment, x, u, w; 
+	attitude_decompress=false)
 	# step(env, x, u, diff=true) # this is run in dynamics_jacobian_state
 	du .= env.dynamics_jacobian_input
 end
