@@ -6,13 +6,15 @@ Pkg.instantiate()
 using Dojo
 using IterativeLQR
 using LinearAlgebra 
+using Statistics
+using FiniteDiff
 
 # ## visualizer
 vis = Visualizer() 
 open(vis)
 
 # ## system
-include(joinpath(@__DIR__, "../../environments/atlas/methods/template.jl"))
+include(joinpath(pathof(Dojo), "../../environments/atlas/methods/template.jl"))
 
 gravity = -9.81
 timestep = 0.05
@@ -143,8 +145,8 @@ qt = [0.3; 0.05; 0.05; 0.01 * ones(3); 0.01 * ones(3); 0.01 * ones(3); fill(0.00
 ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(timestep * qt) * (x - xref[t]) + transpose(u) * Diagonal(timestep * 0.002 * ones(m)) * u for t = 1:T-1]
 oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(timestep * qt) * (x - xref[end])
 
-cts = IterativeLQR.Cost.(ots, n, m, d)
-cT = IterativeLQR.Cost(oT, n, 0, 0)
+cts = IterativeLQR.Cost.(ots, n, m; nw=d)
+cT = IterativeLQR.Cost(oT, n, 0; nw=0)
 obj = [cts..., cT]
 
 # ## constraints
