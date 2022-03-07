@@ -15,6 +15,33 @@ open(vis)
 
 # ## system
 include(joinpath(pathof(Dojo), "../../environments/atlas/methods/template.jl"))
+	
+function get_damper_impulses(mechanism::Mechanism{T}) where T
+	joints = mechanism.joints
+	# set the controls in the equality constraints
+	off = 0
+	nu = input_dimension(mechanism)
+	u = zeros(nu)
+	for joint in joints
+		pbody = get_body(mechanism, joint.parent_id)
+		if typeof(pbody) <: Body
+			F = damper_impulses(mechanism, joint, pbody)
+			oF = 0
+			for joint in [joint.translational, joint.rotational]
+				nf, nF = size(nullspace_mask(joint))
+				u[off .+ (1:nf)] .= nullspace_mask(joint) * F[oF .+ (1:nF)]
+				off += nf
+				oF += nF
+			end
+		else
+			for joint in [joint.translational, joint.rotational]
+				nf, nF = size(nullspace_mask(joint))
+				off += nf
+			end
+		end
+	end
+	return u
+end
 
 gravity = -9.81
 timestep = 0.05
@@ -93,33 +120,6 @@ storage = simulate!(mech, 0.50, controller!,
 
 visualize(mech, storage, 
 	vis=env.vis)
-
-function get_damper_impulses(mechanism::Mechanism{T}) where T
-	joints = mechanism.joints
-	# set the controls in the equality constraints
-	off = 0
-	nu = input_dimension(mechanism)
-	u = zeros(nu)
-	for joint in joints
-		pbody = get_body(mechanism, joint.parent_id)
-		if typeof(pbody) <: Body
-			F = damper_impulses(mechanism, joint, pbody)
-			oF = 0
-			for joint in [joint.translational, joint.rotational]
-				nf, nF = size(nullspace_mask(joint))
-				u[off .+ (1:nf)] .= nullspace_mask(joint) * F[oF .+ (1:nF)]
-				off += nf
-				oF += nF
-			end
-		else
-			for joint in [joint.translational, joint.rotational]
-				nf, nF = size(nullspace_mask(joint))
-				off += nf
-			end
-		end
-	end
-	return u
-end
 
 # ## horizon
 T = N * (25 - 1) + 1
