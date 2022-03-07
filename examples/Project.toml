@@ -1,4 +1,6 @@
 [deps]
+Dojo = "ac60b53e-8d92-4c83-b960-e78698fa1916"
+Folds = "41a02a25-b8f0-4f67-bc48-60067656b558"
 IterativeLQR = "605048dd-e178-462b-beb9-98a09398ef27"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
@@ -7,7 +9,7 @@ Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 
 [compat]
 IterativeLQR = "0.1.1"
+JLD2 = "0.4.21"
 Literate = "2.13.0"
 PGFPlots = "3.4.1"
 Plots = "1.25.11"
-JLD2 = "0.4.21"
