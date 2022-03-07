@@ -4,7 +4,9 @@
 
 # Dojo
 A differentiable physics simulator for robotics
-
+- arXiv preprint: https://arxiv.org/abs/2203.00806
+- Python interface: https://github.com/dojo-sim/dojopy
+- Site: https://sites.google.com/view/dojo-sim
 # Examples (RSS 2022)
 
 ## Simulation

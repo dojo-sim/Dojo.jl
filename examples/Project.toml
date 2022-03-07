@@ -7,7 +7,7 @@ Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 
 [compat]
 IterativeLQR = "0.1.1"
+JLD2 = "0.4.21"
 Literate = "2.13.0"
 PGFPlots = "3.4.1"
 Plots = "1.25.11"
-JLD2 = "0.4.21"

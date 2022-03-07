@@ -18,7 +18,7 @@ env = get_environment(:ant,
     spring=25.0, 
     friction_coefficient=0.5,
     contact_feet=true, 
-    contact_body=true)
+    contact_body=true);
 
 obs = reset(env)
 initialize!(env.mechanism, :ant,
@@ -117,7 +117,7 @@ hp = HyperParameters(
 input_size = length(obs)
 output_size = length(env.input_previous)
 normalizer = Normalizer(input_size)
-θ = policies_best[2] 
+θ = policies_best[1] 
 
 # ## Visualize policy
 ## traj = display_random_policy(env, hp)
