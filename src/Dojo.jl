@@ -180,7 +180,8 @@ export
     Spherical,
     CylindricalFree,
     PlanarFree,
-    get_joint
+    get_joint,
+    nullspace_mask
 
 # Contacts
 export
@@ -189,7 +190,9 @@ export
     LinearContact,
     NonlinearContact,
     get_contact,
-    get_sdf
+    get_sdf,
+    contact_location,
+    damper_impulses
 
 # Inputs
 export
