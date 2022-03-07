@@ -65,7 +65,7 @@ end
     gradients: flag for computing gradients of dynamics
     attitude_decompress: flag for pre- and post-concatenating Jacobians with attitude Jacobians
 """
-function step(env::Environment, x, u; 
+function Base.step(env::Environment, x, u;
     gradients=false,
     attitude_decompress=false)
 
@@ -108,7 +108,7 @@ function step(env::Environment, x, u;
     return get_observation(env), -costs, done, info
 end
 
-function step(env::Environment, u; 
+function Base.step(env::Environment, u;
     gradients=false, 
     attitude_decompress=false) 
     step(env, env.state, u; 
@@ -155,7 +155,7 @@ is_done(env::Environment, x) = false
     env: Environment
     x: state
 """
-function reset(env::Environment{X}; 
+function Base.reset(env::Environment{X};
     x=nothing) where X
 
     initialize!(env.mechanism, type2symbol(X))
