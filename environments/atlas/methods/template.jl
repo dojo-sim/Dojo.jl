@@ -57,7 +57,7 @@ function AtlasIKerror(mechanism::Mechanism, p_base, p_foot, θ; leg::Symbol = :r
 end
 
 function atlas_trajectory(mechanism::Mechanism{T}; timestep=0.05, β=0.5,
-		αtorso=0.15, Δx=0.0, r=0.10, x=0.00, z=0.85, N=12, Ncycleseed=1) where T
+		αtorso=0.15, Δx=0.0, r=0.10, x=0.00, z=0.85, N=12, Ncycles=1, Ncycleseed=1) where T
 	pL = [Δx, + 0.1145, 0]
 	pR = [Δx, - 0.1145, 0]
 
