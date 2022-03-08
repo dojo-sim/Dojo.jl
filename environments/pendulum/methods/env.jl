@@ -70,7 +70,7 @@ function pendulum(;
     return env
 end
 
-function reset(env::Environment{Pendulum}; 
+function Base.reset(env::Environment{Pendulum}; 
     x=nothing)
 
     initialize!(env.mechanism, :pendulum)

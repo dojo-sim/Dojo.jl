@@ -76,7 +76,7 @@ function hopper(;
     return env
 end
 
-function reset(env::Environment{Hopper}; 
+function Base.reset(env::Environment{Hopper}; 
     x=nothing, reset_noise_scale=0.005)
 
     if x != nothing

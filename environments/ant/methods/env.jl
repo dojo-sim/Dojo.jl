@@ -144,7 +144,7 @@ function step(env::Environment{Ant}, x, u;
 end
 
 # TODO add random noise
-function reset(env::Environment{Ant}; 
+function Base.reset(env::Environment{Ant}; 
     x=nothing)
 
     initialize!(env.mechanism, type2symbol(Ant))

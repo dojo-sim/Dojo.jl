@@ -78,7 +78,7 @@ function walker(;
     return env
 end
 
-function reset(env::Environment{Walker}; x=nothing, reset_noise_scale = 0.005)
+function Base.reset(env::Environment{Walker}; x=nothing, reset_noise_scale = 0.005)
     if x != nothing
         env.state .= x
     else

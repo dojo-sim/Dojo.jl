@@ -154,7 +154,7 @@ end
 
 Return environment to nominal state:
 ```julia
-function reset(env::Environment{Ant}; 
+function Base.reset(env::Environment{Ant}; 
     x=nothing)
 
     # initialize
