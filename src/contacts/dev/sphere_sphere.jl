@@ -1,8 +1,8 @@
-using LinearAlgebra 
-using MeshCat
-using GeometryBasics
-using Colors
-using CoordinateTransformations
+# using LinearAlgebra 
+# using MeshCat
+# using GeometryBasics
+# using Colors
+# using CoordinateTransformations
 
 vis = Visualizer()
 open(vis)
@@ -76,3 +76,4 @@ setobject!(vis[:cs1], cs1, MeshPhongMaterial(color=Colors.RGBA(0.0, 0.0, 0.0, 1.
 setobject!(vis[:cs2], cs2, MeshPhongMaterial(color=Colors.RGBA(0.0, 0.0, 0.0, 1.0)))
 settransform!(vis[:cs1], Translation(c1))
 settransform!(vis[:cs2], Translation(c2))
+
