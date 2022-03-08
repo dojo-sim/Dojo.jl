@@ -2,14 +2,6 @@ using LinearAlgebra
 using Plots
 using FiniteDiff
 
-# log potential
-lmin = -6
-lmax = 1
-x = exp.(log(10) * lmin:0.1:lmax)
-plot(x)
-plot(x, log.(x))
-
-
 
 function pack_vars(p3, γ)
     return [p3; γ]
