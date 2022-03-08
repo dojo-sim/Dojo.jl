@@ -3,12 +3,13 @@
 ################################################################################
 using LinearAlgebra
 using Statistics
+using Folds
 
 import LinearAlgebra.normalize
-import GeometryBasics.update
+import Dojo.GeometryBasics.update
 
 # ARS options: hyper parameters
-@with_kw struct HyperParameters{T}
+Base.@kwdef struct HyperParameters{T}
     main_loop_size::Int = 100
     horizon::Int = 200
     step_size::T = 0.02
@@ -114,16 +115,19 @@ function rollout_policy(θ::Matrix, env::Environment, normalizer::Normalizer, hp
 end
 
 function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T},
-        hp::HyperParameters{T}; distributed=false) where T
+        hp::HyperParameters{T}; distributed=false, usefolds=false, foldsexec=Folds.ThreadedEx(;basesize=1)) where T
     println("Training linear policy with Augmented Random Search (ARS)\n ")
     if distributed
         envs = [deepcopy(env) for i = 1:(2 * hp.n_directions)]
         normalizers = [deepcopy(normalizer) for i = 1:(2 * hp.n_directions)]
         hps = [deepcopy(hp) for i = 1:(2 * hp.n_directions)]
         print("  $(nprocs()) processors")
+    elseif usefolds
+        envs = [deepcopy(env) for i = 1:(2*hp.n_directions)]
+        print("  $(Threads.nthreads()) threads with Folds")
     else
-        envs = [deepcopy(env) for i = 1:Threads.nthreads()]
-        print("  $(Threads.nthreads()) threads")
+        envs = [deepcopy(env) for i = 1:(Threads.nthreads())]
+        print(" $(Threads.nthreads()) ")
     end
 
     # pre-allocate for rewards
@@ -134,14 +138,20 @@ function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T},
         θs, δs = sample_policy(policy)
 
         # evaluate policies
-        if distributed
-            rewards .= pmap(rollout_policy, θs, envs, normalizers, hps)
-        else
-            Threads.@threads for k = 1:(2 * hp.n_directions)
-                rewards[k] = rollout_policy(θs[k], envs[Threads.threadid()], normalizer, hp)
+        roll_time = @elapsed begin
+            if distributed
+                rewards .= pmap(rollout_policy, θs, envs, normalizers, hps)
+            elseif usefolds
+                @assert length(envs) == size(θs, 1) "$(length(envs))"
+                Folds.map!(rewards, θs, envs, foldsexec) do θ, env
+                    rollout_policy(θ, env, normalizer, hp)
+                end
+            else
+                Threads.@threads for k = 1:(2 * hp.n_directions)
+                    rewards[k] = rollout_policy(θs[k], envs[Threads.threadid()], normalizer, hp)
+                end
             end
         end
-
         # reward evaluation
         r_max = [max(rewards[k], rewards[hp.n_directions + k]) for k = 1:hp.n_directions]
         σ_r = std(rewards)
@@ -152,7 +162,7 @@ function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T},
         update(policy, rollouts, σ_r)
 
         # finish, print:
-        println("episode $episode reward_evaluation $(mean(rewards))")
+        println("episode $episode reward_evaluation $(mean(rewards)). Took $(roll_time) seconds")
     end
 
     return nothing
