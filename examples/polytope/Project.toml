@@ -1,0 +1,4 @@
+name = "polytope"
+uuid = "18745f7e-7885-4119-adbd-0b6badffc101"
+authors = ["simon-lc <simonlc@stanford.edu>"]
+version = "0.1.0"
