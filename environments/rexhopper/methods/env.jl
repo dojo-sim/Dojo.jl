@@ -85,7 +85,7 @@ function rexhopper(;
     return env
 end
 
-function reset(env::Environment{RexHopper}; 
+function Base.reset(env::Environment{RexHopper}; 
     x=nothing)
 
     if x != nothing
