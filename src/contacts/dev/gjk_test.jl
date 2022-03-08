@@ -20,7 +20,7 @@ s2 = GeometryBasics.HyperSphere(GeometryBasics.Point(0.0, 0.0, 0.0, 0.0), 1.0)
 
 vis = Visualizer()
 open(vis)
-
+p2
 
 result1 = EnhancedGJK.gjk(r1, r2)
 result2 = GeometryTypes.gjk(s1, s2)
