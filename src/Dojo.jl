@@ -23,6 +23,9 @@ using Meshing
 using GeometryBasics
 using LightGraphs
 
+using EnhancedGJK
+using CoordinateTransformations
+
 using JLD2
 using DocStringExtensions
 
