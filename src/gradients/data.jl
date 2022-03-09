@@ -154,15 +154,17 @@ function body_constraint_jacobian_contact_data(mechanism::Mechanism, body::Body{
     Nd = data_dim(contact)
     model = contact.model
     offset = model.offset
-    x3, q3 = next_configuration(body.state, mechanism.timestep)
+    xp3, qp3 = next_configuration(get_body(mechanism, contact.parent_id).state, mechanism.timestep)
+    xc3, qc3 = next_configuration(get_body(mechanism, contact.child_id).state, mechanism.timestep)
+
     γ = contact.impulses[2]
 
     ∇friction_coefficient = szeros(T,3,1)
 
-    X = force_mapping(model, x3, q3)
+    X = force_mapping(model, xp3, qp3, xc3, qc3)
     # this what we differentiate: Qᵀγ = - skew(p - vector_rotate(offset, inv(q3))) * VRmat(q3) * LᵀVᵀmat(q3) * X' * γ
-    ∇p = - ∂skew∂p(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ)
-    ∇off = - ∂skew∂p(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ) * -∂vector_rotate∂p(offset, inv(q3))
+    ∇p = - ∂skew∂p(VRmat(qp3) * LᵀVᵀmat(qp3) * X' * γ)
+    ∇off = - ∂skew∂p(VRmat(qp3) * LᵀVᵀmat(qp3) * X' * γ) * -∂vector_rotate∂p(offset, inv(qp3))
 
     ∇X = szeros(T,3,Nd)
     ∇Q = -[∇friction_coefficient ∇off ∇p]

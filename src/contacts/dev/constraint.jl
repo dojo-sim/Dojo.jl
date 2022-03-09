@@ -1,3 +1,6 @@
+
+
+
 function sdf_capsule_capsule_constraint(xa, qa, ha, ra, xb, qb, hb, rb)
     sdf_capsule_capsule(xa, qa, ha, ra, xb, qb, hb, rb)
 end
@@ -164,7 +167,6 @@ h = 0.1
 x_shift = [0.0; 0.0; 1.0]
 tangential_velocity(p1, o1, p1 + x_shift * h, o1, h1, r1, p2, o2, p2, o2, h2, r2, h)
 
-
 ## constraints 
 function constraint(model, s::AbstractVector{T}, γ::AbstractVector{T},
     x3a::AbstractVector{T}, q3a::UnitQuaternion{T}, x2a::AbstractVector{T}, q2a::UnitQuaternion{T},
@@ -179,3 +181,4 @@ function constraint(model, s::AbstractVector{T}, γ::AbstractVector{T},
         model.friction_coefficient * γ[1] - γ[2],
         (vp - s[@SVector [3,4]])...)
 end
+

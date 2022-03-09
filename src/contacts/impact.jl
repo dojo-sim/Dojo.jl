@@ -24,45 +24,57 @@ mutable struct ImpactContact{T,N} <: Contact{T,N}
 end
 
 function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:ImpactContact{T,N}}
+    # contact model
     model = contact.model
-    body = get_body(mechanism, contact.parent_id)
-    x3, q3 = next_configuration(body.state, mechanism.timestep)
-    SVector{1,T}(model.surface_normal_projector * (x3 + vector_rotate(model.contact_point,q3) - model.offset) - contact.impulses_dual[2][1])
+
+    # parent
+    pbody = get_body(mechanism, contact.parent_id)
+    xp3, qp3 = next_configuration(pbody.state, mechanism.timestep)
+
+    # child
+    cbody = get_body(mechanism, contact.child_id)
+    xc3, qc3 = next_configuration(cbody.state, mechanism.timestep)
+
+    # constraint 
+    SVector{1,T}(distance(model, xp3, qp3, xc3, qc3) - contact.impulses_dual[2][1])
 end
 
-function constraint_jacobian_configuration(model::ImpactContact, x3::AbstractVector, q3::UnitQuaternion,
-    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, 
-    λ, timestep)
-    X = model.surface_normal_projector
-    Q = model.surface_normal_projector * ∂vector_rotate∂q(model.contact_point, q3)
+function constraint_jacobian_configuration(model::ImpactContact, 
+    xp3::AbstractVector, vp25::AbstractVector, qp3::UnitQuaternion, ϕp25::AbstractVector,
+    xc3::AbstractVector, vc25::AbstractVector, qc3::UnitQuaternion, ϕc25::AbstractVector, 
+    timestep)
+
+    X = ∂distance∂xp(model, xp3, qp3, x3c, qc3)
+    Q = ∂distance∂qp(model, xp3, qp3, x3c, qc3)
+
     return [X Q]
 end
 
-function constraint_jacobian_velocity(model::ImpactContact, x3::AbstractVector, q3::UnitQuaternion,
-    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, 
-    λ, timestep)
-    V = model.surface_normal_projector * timestep
-    Ω = model.surface_normal_projector * ∂vector_rotate∂q(model.contact_point, q3) * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)
+function constraint_jacobian_velocity(model::ImpactContact, 
+    xp3::AbstractVector, vp25::AbstractVector, qp3::UnitQuaternion, ϕp25::AbstractVector,
+    xc3::AbstractVector, vc25::AbstractVector, qc3::UnitQuaternion, ϕc25::AbstractVector, 
+    timestep)
+
+    # recover current orientation 
+    qp2 = next_orientation(qp3, -ϕp25, timestep)
+
+    # Jacobian
+    V = ∂distance∂xp(model, xp3, qp3, xc3, qc3) * timestep
+    Ω = ∂distance∂qp(model, xp3, qp3, xc3, qc3) * rotational_integrator_jacobian_velocity(qp2, ϕp25, timestep)
+
     return [V Ω]
 end
 
-function force_mapping(model::ImpactContact, x::AbstractVector, q::UnitQuaternion)
+function force_mapping(model::ImpactContact, xp::AbstractVector, qp::UnitQuaternion, xc::AbstractVector, qc::UnitQuaternion)
     X = model.surface_normal_projector
     return X
 end
 
-function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
-    contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:ImpactContact{T,N},N½}
-    # ∇impulses[dual .* impulses - μ; g - s] = [diag(dual); -diag(0,1,1)]
-    # ∇dual[dual .* impulses - μ; g - s] = [diag(impulses); -diag(1,0,0)]
-    γ = contact.impulses[2] +  REG * neutral_vector(contact.model)
+function complementarity_jacobian(contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:ImpactContact{T,N},N½}
+    γ = contact.impulses[2] + REG * neutral_vector(contact.model)
     s = contact.impulses_dual[2] + REG * neutral_vector(contact.model)
-
     ∇s = hcat(γ, -Diagonal(sones(N½)))
     ∇γ = hcat(s, -Diagonal(szeros(N½)))
-    matrix_entry.value = hcat(∇s, ∇γ)
-
-    # [-dual .* impulses + μ; -g + s]
-    vector_entry.value = vcat(-complementarityμ(mechanism, contact), -constraint(mechanism, contact))
-    return
+    return [∇s ∇γ]
 end
+

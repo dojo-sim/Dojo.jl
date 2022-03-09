@@ -190,9 +190,9 @@ function off_diagonal_jacobians(mechanism, pbody::Body, cbody::Body)
             for element in (joint.translational, joint.rotational)
                 Nj = length(element)
                 if cbody.id == joint.child_id
-                    joint.spring && (dimpulse_map_parentb -= spring_jacobian_velocity(:parent, :child, element, pbody, cbody, timestep)) #should be useless
+                    # joint.spring && (dimpulse_map_parentb -= spring_jacobian_velocity(:parent, :child, element, pbody, cbody, timestep)) #should be useless
                     joint.damper && (dimpulse_map_parentb -= damper_jacobian_velocity(:parent, :child, element, pbody, cbody, timestep))
-                    joint.spring && (dimpulse_map_childa -= spring_jacobian_velocity(:child, :parent, element, pbody, cbody, timestep)) #should be useless
+                    # joint.spring && (dimpulse_map_childa -= spring_jacobian_velocity(:child, :parent, element, pbody, cbody, timestep)) #should be useless
                     joint.damper && (dimpulse_map_childa -= damper_jacobian_velocity(:child, :parent, element, pbody, cbody, timestep))
                 end
                 off += Nj

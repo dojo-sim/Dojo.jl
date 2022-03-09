@@ -108,6 +108,8 @@ include(joinpath("joints", "impulses.jl"))
 # Contacts
 include(joinpath("contacts", "constraints.jl"))
 include(joinpath("contacts", "cone.jl"))
+include(joinpath("contacts", "velocity.jl"))
+include(joinpath("contacts", "distance.jl"))
 include(joinpath("contacts", "impact.jl"))
 include(joinpath("contacts", "linear.jl"))
 include(joinpath("contacts", "nonlinear.jl"))
@@ -168,6 +170,7 @@ export
     Rotational,
     Translational,
     JointConstraint,
+    Floating,
     Fixed,
     Prismatic,
     Planar,
