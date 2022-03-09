@@ -257,6 +257,7 @@ export
 # Orientation
 export
     Quaternion,
+    QuatRotation,
     RotX,
     RotY,
     RotZ,

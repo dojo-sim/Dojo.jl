@@ -1,7 +1,10 @@
+Quaternions.Quaternion(q::Rotation) = Quaternion(QuatRotation(q))
+# Base.rand(::Type{Quaternion}) = rand(Quaternion{Float64})
+MeshCat.LinearMap(q::Quaternion) = MeshCat.LinearMap(QuatRotation(q))
+MeshCat.js_quaternion(q::Quaternion) = [q.v1, q.v2, q.v3, q.s]
+
 quateltype(x) = eltype(x) # TODO not super elegant
 quateltype(::Quaternion{T}) where T = T
-
-Quaternion(q::Rotation) = Quaternion(QuatRotation(q))
 
 vector(q::Quaternion) = SA[q.s, q.v1, q.v2, q.v3]
 vector(q::AbstractVector) = q 
@@ -214,8 +217,3 @@ end
 function ∂skew∂p(λ) # 𝞉(skew(p)*λ)/∂p
 	skew(-λ)
 end
-
-
-# MeshCat fixes
-MeshCat.LinearMap(q::Quaternion) = MeshCat.LinearMap(QuatRotation(q))
-MeshCat.js_quaternion(q::Quaternion) = [q.v1, q.v2, q.v3, q.s]
