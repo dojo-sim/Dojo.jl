@@ -1,22 +1,5 @@
-# Quaternion(w::T, v::StaticVector{3,T}, normalize::Bool = true) where T = Quaternion{T}(w, v[1], v[2], v[3], normalize)
-# Quaternion(w::T, v::Vector{T}, normalize::Bool = true) where T = (@assert length(v)==3; Quaternion{T}(w, v[1], v[2], v[3], normalize))
-# Quaternion(v::StaticVector{3,T}) where T = pure_quaternion(v)
-# Quaternion(v::Vector) = (@assert length(v)==3; pure_quaternion(v))
-
-# imag(q::Quaternion) = vector(q)
-
-# Remove once added to Rotations.jl
-# function Base.:/(q::Quaternion, w::Real)
-#     return Quaternion(q.s/w, q.v1/w, q.v2/w, q.v3/w, false)
-# end
-
-MeshCat.LinearMap(q::Quaternion) = MeshCat.LinearMap(QuatRotation(q))
-MeshCat.js_quaternion(q::Quaternion) = [q.v1, q.v2, q.v3, q.s]
-
-quateltype(x) = eltype(x)
+quateltype(x) = eltype(x) # TODO not super elegant
 quateltype(::Quaternion{T}) where T = T
-
-Base.rand(::Type{Quaternion}) = Quaternion(rand(QuatRotation))
 
 Quaternion(q::Rotation) = Quaternion(QuatRotation(q))
 
@@ -231,3 +214,8 @@ end
 function ∂skew∂p(λ) # 𝞉(skew(p)*λ)/∂p
 	skew(-λ)
 end
+
+
+# MeshCat fixes
+MeshCat.LinearMap(q::Quaternion) = MeshCat.LinearMap(QuatRotation(q))
+MeshCat.js_quaternion(q::Quaternion) = [q.v1, q.v2, q.v3, q.s]

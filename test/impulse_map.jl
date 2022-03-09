@@ -5,13 +5,13 @@
     mech = Dojo.get_mechanism(:pendulum)
     joint0 = mech.joints[1]
     rot0 = joint0.rotational
-    rot0.axis_offset = rand(Quaternion)
+    rot0.axis_offset = rand(QuatRotation).q
 
 
     xa = rand(3)
-    qa = rand(Quaternion)
+    qa = rand(QuatRotation).q
     xb = rand(3)
-    qb = rand(Quaternion)
+    qb = rand(QuatRotation).q
 
     # displacement_jacobian_configuration
     X0, Q0 = Dojo.displacement_jacobian_configuration(:parent, rot0, xa, qa, xb, qb, 
@@ -42,9 +42,9 @@ end
     tra0 = joint0.translational
 
     xa = rand(3)
-    qa = rand(Quaternion)
+    qa = rand(QuatRotation).q
     xb = rand(3)
-    qb = rand(Quaternion)
+    qb = rand(QuatRotation).q
 
     # displacement_jacobian_configuration
     X0, Q0 = Dojo.displacement_jacobian_configuration(:parent, tra0, xa, qa, xb, qb, 
@@ -77,12 +77,12 @@ end
     mech = Dojo.get_mechanism(:pendulum)
     joint0 = mech.joints[1]
     rot0 = joint0.rotational
-    rot0.axis_offset = rand(Quaternion)
+    rot0.axis_offset = rand(QuatRotation).q
 
     xa = rand(3)
-    qa = rand(Quaternion)
+    qa = rand(QuatRotation).q
     xb = rand(3)
-    qb = rand(Quaternion)
+    qb = rand(QuatRotation).q
 
     p0 = rand(3)
     J0 = Dojo.impulse_transform_jacobian(:parent, :parent, rot0, xa, qa, xb, qb, p0)
@@ -124,9 +124,9 @@ end
     tra0 = joint0.translational
 
     xa = rand(3)
-    qa = rand(Quaternion)
+    qa = rand(QuatRotation).q
     xb = rand(3)
-    qb = rand(Quaternion)
+    qb = rand(QuatRotation).q
 
     p0 = rand(3)
     J0 = Dojo.impulse_transform_jacobian(:parent, :parent, tra0, xa, qa, xb, qb, p0)
@@ -172,9 +172,9 @@ end
     tra0 = joint0.translational
 
     xa = rand(3)
-    qa = rand(Quaternion)
+    qa = rand(QuatRotation).q
     xb = rand(3)
-    qb = rand(Quaternion)
+    qb = rand(QuatRotation).q
     λ = rand(3)
     η = rand(0)
     Dojo.impulse_map(:parent, tra0, xa, qa, xb, qb, η)
@@ -230,13 +230,13 @@ end
     mech = Dojo.get_mechanism(:pendulum)
     joint0 = mech.joints[1]
     rot0 = joint0.rotational
-    rot0.axis_offset = rand(Quaternion)
+    rot0.axis_offset = rand(QuatRotation).q
 
 
     xa = rand(3)
-    qa = rand(Quaternion)
+    qa = rand(QuatRotation).q
     xb = rand(3)
-    qb = rand(Quaternion)
+    qb = rand(QuatRotation).q
     λ = rand(2)
     η = rand(0)
     Dojo.impulse_map(:parent, rot0, xa, qa, xb, qb, η)

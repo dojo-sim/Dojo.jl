@@ -35,7 +35,7 @@ joint_types = [
 
 	x = srand(1)
 	Δx = Dojo.zerodimstaticadjoint(Dojo.nullspace_mask(tra2)) * x
-	Δq = rand(Quaternion)
+	Δq = rand(QuatRotation).q
 	Dojo.set_maximal_configurations!(pbody, cbody; 
 		parent_vertex=tra2.vertices[1], 
 		child_vertex=tra2.vertices[2], 
@@ -223,7 +223,7 @@ end
 
 		timestep = mech.timestep
 		for joint in mech.joints
-		    joint.rotational.axis_offset = rand(Quaternion)
+		    joint.rotational.axis_offset = rand(QuatRotation).q
 		end
 	    joint0 = mech.joints[1]
 	    tra0 = joint0.translational

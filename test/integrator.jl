@@ -2,7 +2,7 @@
     Random.seed!(100)
     x0 = srand(3)
     v0 = srand(3)
-    q0 = rand(Quaternion)
+    q0 = rand(QuatRotation).q
     ϕ0 = srand(3)
     timestep0 = 0.01
     x1 = Dojo.next_position(x0, v0, timestep0)

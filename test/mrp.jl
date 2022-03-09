@@ -1,5 +1,5 @@
 @testset "Modified Rodrigues Parameters" begin
-    q = rand(Quaternion)
+    q = rand(QuatRotation).q
     @test norm(Dojo.dmrpdq(Dojo.vector(q)) -
         FiniteDiff.finite_difference_jacobian(Dojo.mrp, Dojo.vector(q)), Inf) < 1.0e-5
     @test norm(Dojo.daxisdq(Dojo.vector(q)) -
