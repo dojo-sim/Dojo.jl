@@ -145,6 +145,7 @@ include(joinpath("..", "environments", "environment.jl"))
 include(joinpath("..", "environments", "dynamics.jl"))
 include(joinpath("..", "environments", "utilities.jl"))
 include(joinpath("..", "environments", "include.jl"))
+include(joinpath("..", "environments", "rlenv.jl"))
 
 # Bodies
 export
