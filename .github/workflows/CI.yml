@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         version:
-          - '1.6'
+          - '1.7'
         os:
           - ubuntu-latest
 #           - macOS-latest
@@ -26,11 +26,6 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-#       - name: Add registries
-#         run: |
-#           julia --color=yes -e 'using Pkg; pkg"registry add https://github.com/JuliaRegistries/General.git"'
-#           julia --color=yes -e 'using Pkg; pkg"registry add https://github.com/Lyceum/LyceumRegistry.git"'
-#         shell: bash
       - uses: julia-actions/julia-runtest@latest
       - uses: julia-actions/julia-uploadcodecov@latest
         env:

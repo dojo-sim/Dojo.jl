@@ -3,11 +3,12 @@
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://dojo-sim.github.io/Dojo.jl/dev)
 
 # Dojo
-A differentiable physics simulator for robotics
+A differentiable simulator for robotics
 - arXiv preprint: https://arxiv.org/abs/2203.00806
 - Python interface: https://github.com/dojo-sim/dojopy
-- Site: https://sites.google.com/view/dojo-sim
-# Examples (RSS 2022)
+- site: https://sites.google.com/view/dojo-sim
+
+# Examples
 
 ## Simulation
 

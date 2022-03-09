@@ -47,7 +47,7 @@
         angle=0.4 * π)
     storage = simulate!(mech, 1.0, 
         record=true, 
-        opts=SolverOptions(btol=1e-5, rtol=1e-5))
+        opts=SolverOptions(btol=1.0e-5, rtol=1.0e-5))
 
     @test norm(Dojo.get_minimal_state(mech)[1] - 0.25 * π) < 1.0e-3
 end

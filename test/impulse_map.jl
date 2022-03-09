@@ -7,7 +7,6 @@
     rot0 = joint0.rotational
     rot0.axis_offset = UnitQuaternion(rand(4)...)
 
-
     xa = rand(3)
     qa = UnitQuaternion(rand(4)...)
     xb = rand(3)
