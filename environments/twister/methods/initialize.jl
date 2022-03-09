@@ -69,7 +69,7 @@ end
 
 function initialize_twister!(mechanism::Mechanism{T}; 
     base_position=[0.0, -1.0, 0.0],
-    base_orientation=UnitQuaternion(RotX(0.6 * π)),
+    base_orientation=Quaternion(RotX(0.6 * π)),
     base_linear_velocity=zeros(3), 
     base_angular_velocity=zeros(3),
     relative_linear_velocity=zeros(3), 

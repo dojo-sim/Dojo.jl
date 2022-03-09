@@ -38,7 +38,7 @@ end
 # maximal
 function set_maximal_configurations!(body::Body; 
     x::AbstractVector=SA[0.0; 0.0; 0.0], 
-    q::UnitQuaternion=one(UnitQuaternion))
+    q::Quaternion=one(Quaternion))
 
     body.state.x2 = x
     body.state.q2 = q
@@ -60,7 +60,7 @@ function set_maximal_configurations!(pbody::Node, cbody::Body;
     parent_vertex::AbstractVector=SA[0.0; 0.0; 0.0], 
     child_vertex::AbstractVector=SA[0.0; 0.0; 0.0],
     Δx::AbstractVector=SA[0.0; 0.0; 0.0], 
-    Δq::UnitQuaternion=one(UnitQuaternion))
+    Δq::Quaternion=one(Quaternion))
 
     q1 = pbody.state.q2
     q2 = pbody.state.q2 * Δq

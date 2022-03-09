@@ -35,7 +35,7 @@ joint_types = [
 
 	x = srand(1)
 	Δx = Dojo.zerodimstaticadjoint(Dojo.nullspace_mask(tra2)) * x
-	Δq = UnitQuaternion(rand(4)...)
+	Δq = rand(Quaternion)
 	Dojo.set_maximal_configurations!(pbody, cbody; 
 		parent_vertex=tra2.vertices[1], 
 		child_vertex=tra2.vertices[2], 
@@ -223,7 +223,7 @@ end
 
 		timestep = mech.timestep
 		for joint in mech.joints
-		    joint.rotational.axis_offset = UnitQuaternion(rand(4)...)
+		    joint.rotational.axis_offset = rand(Quaternion)
 		end
 	    joint0 = mech.joints[1]
 	    tra0 = joint0.translational
@@ -283,12 +283,12 @@ end
 
 			xa = SVector{3}(zp[1:3])
 			va = SVector{3}(zp[3 .+ (1:3)])
-			qa = UnitQuaternion(zp[6 .+ (1:4)]..., false)
+			qa = Quaternion(zp[6 .+ (1:4)]...)
 			ωa = SVector{3}(zp[10 .+ (1:3)])
 
 			xb = SVector{3}(zc[1:3])
 			vb = SVector{3}(zc[3 .+ (1:3)])
-			qb = UnitQuaternion(zc[6 .+ (1:4)]..., false)
+			qb = Quaternion(zc[6 .+ (1:4)]...)
 			ωb = SVector{3}(zc[10 .+ (1:3)])
 
 			Dojo.minimal_velocities(joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
@@ -296,13 +296,13 @@ end
 			# Jacobians
 			∇0 = Dojo.minimal_velocities_jacobian_configuration(:parent, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 			∇1 = FiniteDiff.finite_difference_jacobian(
-				xq -> Dojo.minimal_velocities(joint, xq[Dojo.SUnitRange(1,3)], va, UnitQuaternion(xq[4:7]..., false), ωa, xb, vb, qb, ωb, timestep),
+				xq -> Dojo.minimal_velocities(joint, xq[Dojo.SUnitRange(1,3)], va, Quaternion(xq[4:7]...), ωa, xb, vb, qb, ωb, timestep),
 				[xa; Dojo.vector(qa)]) * cat(I(3), Dojo.LVᵀmat(qa), dims=(1,2))
 			@test norm(∇0 - ∇1, Inf) < 1e-5
 
 			∇0 = Dojo.minimal_velocities_jacobian_configuration(:child, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 			∇1 = FiniteDiff.finite_difference_jacobian(
-				xq -> Dojo.minimal_velocities(joint, xa, va, qa, ωa, xq[Dojo.SUnitRange(1,3)], vb, UnitQuaternion(xq[4:7]..., false), ωb, timestep),
+				xq -> Dojo.minimal_velocities(joint, xa, va, qa, ωa, xq[Dojo.SUnitRange(1,3)], vb, Quaternion(xq[4:7]...), ωb, timestep),
 				[xb; Dojo.vector(qb)]) * cat(I(3), Dojo.LVᵀmat(qb), dims=(1,2))
 			@test norm(∇0 - ∇1, Inf) < 1e-5
 
@@ -342,25 +342,25 @@ end
 
 			xa = SVector{3}(zp[1:3])
 			# va = SVector{3}(zp[3 .+ (1:3)])
-			qa = UnitQuaternion(zp[6 .+ (1:4)]..., false)
+			qa = Quaternion(zp[6 .+ (1:4)]...)
 			# ωa = SVector{3}(zp[10 .+ (1:3)])
 
 			xb = SVector{3}(zc[1:3])
 			# vb = SVector{3}(zc[3 .+ (1:3)])
-			qb = UnitQuaternion(zc[6 .+ (1:4)]..., false)
+			qb = Quaternion(zc[6 .+ (1:4)]...)
 			# ωb = SVector{3}(zc[10 .+ (1:3)])
 
 			Dojo.minimal_coordinates(joint, xa, qa, xb, qb)
 
 			∇0 = Dojo.minimal_coordinates_jacobian_configuration(:parent, joint, xa, qa, xb, qb)
 			∇1 = FiniteDiff.finite_difference_jacobian(
-				xq -> Dojo.minimal_coordinates(joint, xq[1:3], UnitQuaternion(xq[4:7]..., false), xb, qb),
+				xq -> Dojo.minimal_coordinates(joint, xq[1:3], Quaternion(xq[4:7]...), xb, qb),
 				[xa; Dojo.vector(qa)]) * cat(I(3), Dojo.LVᵀmat(qa), dims=(1,2))
 			@test norm(∇0 - ∇1, Inf) < 1e-6
 
 			∇0 = Dojo.minimal_coordinates_jacobian_configuration(:child, joint, xa, qa, xb, qb)
 			∇1 = FiniteDiff.finite_difference_jacobian(
-				xq -> Dojo.minimal_coordinates(joint, xa, qa, xq[1:3], UnitQuaternion(xq[4:7]..., false)),
+				xq -> Dojo.minimal_coordinates(joint, xa, qa, xq[1:3], Quaternion(xq[4:7]...)),
 				[xb; Dojo.vector(qb)]) * cat(I(3), Dojo.LVᵀmat(qb), dims=(1,2))
 			@test norm(∇0 - ∇1, Inf) < 1e-6
 		end

@@ -2,8 +2,8 @@
 # Displacements
 ################################################################################
 function displacement(joint::Translational, 
-    xa::AbstractVector, qa::UnitQuaternion, 
-    xb::AbstractVector, qb::UnitQuaternion; 
+    xa::AbstractVector, qa::Quaternion, 
+    xb::AbstractVector, qb::Quaternion; 
     rotate::Bool = true)
 
     vertices = joint.vertices
@@ -12,8 +12,8 @@ function displacement(joint::Translational,
 end
 
 function displacement_jacobian_configuration(relative::Symbol, joint::Translational{T}, 
-    xa::AbstractVector, qa::UnitQuaternion, 
-    xb::AbstractVector, qb::UnitQuaternion; 
+    xa::AbstractVector, qa::Quaternion, 
+    xb::AbstractVector, qb::Quaternion; 
     attjac=true) where T
 
     vertices = joint.vertices
@@ -36,12 +36,12 @@ end
 ################################################################################
 # Coordinates
 ################################################################################
-function minimal_coordinates(joint::Translational, xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion)
+function minimal_coordinates(joint::Translational, xa::AbstractVector, qa::Quaternion, xb::AbstractVector, qb::Quaternion)
     return nullspace_mask(joint) * displacement(joint, xa, qa, xb, qb)
 end
 
 function minimal_coordinates_jacobian_configuration(relative::Symbol, joint::Translational,
-        xa::AbstractVector, qa::UnitQuaternion, xb::AbstractVector, qb::UnitQuaternion; attjac::Bool=true)
+        xa::AbstractVector, qa::Quaternion, xb::AbstractVector, qb::Quaternion; attjac::Bool=true)
     X, Q = displacement_jacobian_configuration(relative, joint, xa, qa, xb, qb, attjac=attjac)
 	return nullspace_mask(joint) * [X Q]
 end
@@ -73,8 +73,8 @@ end
 # Velocities
 ################################################################################
 function minimal_velocities(joint::Translational,
-		xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
-		xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
+		xa::AbstractVector, va::AbstractVector, qa::Quaternion, ϕa::AbstractVector,
+		xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ϕb::AbstractVector,
 		timestep)
 	A = nullspace_mask(joint)
 
@@ -95,8 +95,8 @@ function minimal_velocities(joint::Translational,
 end
 
 function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Translational,
-    xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
-    xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
+    xa::AbstractVector, va::AbstractVector, qa::Quaternion, ϕa::AbstractVector,
+    xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ϕb::AbstractVector,
     timestep)
     A = nullspace_mask(joint)
 
@@ -139,8 +139,8 @@ function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Tran
 end
 
 function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Translational,
-    xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
-    xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
+    xa::AbstractVector, va::AbstractVector, qa::Quaternion, ϕa::AbstractVector,
+    xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ϕb::AbstractVector,
     timestep)
     A = nullspace_mask(joint)
 

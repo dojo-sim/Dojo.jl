@@ -8,8 +8,8 @@
 ################################################################################
 function impulse_transform_jacobian(relative::Symbol, jacobian::Symbol,
     joint::Translational{T,Nλ},
-    xa::AbstractVector, qa::UnitQuaternion, 
-    xb::AbstractVector, qb::UnitQuaternion, p; 
+    xa::AbstractVector, qa::Quaternion, 
+    xb::AbstractVector, qb::Quaternion, p; 
     attjac=true) where {T,Nλ}
 
     Z3 = szeros(T,3,3)

@@ -8,8 +8,8 @@
 ################################################################################
 function impulse_transform_jacobian(relative::Symbol, jacobian::Symbol,
     joint::Rotational{T,Nλ},
-    xa::AbstractVector, qa::UnitQuaternion, 
-    xb::AbstractVector, qb::UnitQuaternion, p; attjac=true) where {T,Nλ}
+    xa::AbstractVector, qa::Quaternion, 
+    xb::AbstractVector, qb::Quaternion, p; attjac=true) where {T,Nλ}
 
     if relative == :parent 
         if jacobian == :parent 

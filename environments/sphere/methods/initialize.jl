@@ -33,7 +33,7 @@ end
 
 function initialize_sphere!(mechanism::Mechanism{T}; 
     x=zeros(3),
-    q=one(UnitQuaternion), 
+    q=one(Quaternion), 
     v=zeros(3),
     ω=zeros(3)) where T
 

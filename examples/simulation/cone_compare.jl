@@ -43,7 +43,7 @@ mech_lc = get_mechanism(:box,
 # ## Simulate
 initialize!(mech_lc, :box,
     x=x0,
-    q=one(UnitQuaternion),
+    q=one(Quaternion),
     v=v0,
     ω=ω0)
 
@@ -70,7 +70,7 @@ mech_nc = get_mechanism(:box,
 # ## Simulate
 initialize!(mech_nc, :box,
     x=x0,
-    q=one(UnitQuaternion),
+    q=one(Quaternion),
     v=v0,
     ω=ω0)
 
@@ -101,7 +101,7 @@ mech_mjlc = get_mechanism(:box,
 # ## Load
 initialize!(mech_mjlc, :box,
     x=x0,
-    q=one(UnitQuaternion),
+    q=one(Quaternion),
     v=v0,
     ω=ω0)
 file = jldopen(joinpath(@__DIR__, "../mujoco_benchmark/results/cone_compare_pyramidal.jld2"))
@@ -135,7 +135,7 @@ mech_mjnc = get_mechanism(:box,
 # ## Load
 initialize!(mech_mjnc, :box,
     x=x0,
-    q=one(UnitQuaternion),
+    q=one(Quaternion),
     v=v0,
     ω=ω0)
 file = jldopen(joinpath(@__DIR__, "../mujoco_benchmark/results/cone_compare_elliptic.jld2"))

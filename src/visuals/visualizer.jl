@@ -76,7 +76,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
                     (radius == 0.0) && (radius = 0.01)
                     contact_shape = Sphere(radius,
                         position_offset=contact.model.contact_point,
-                        axis_offset=one(UnitQuaternion), 
+                        axis_offset=one(Quaternion), 
                         color=RGBA(1.0, 0.0, 0.0, 0.5))
                     visshape = convert_shape(contact_shape)
                     subvisshape = nothing
@@ -97,7 +97,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
     visshape = convert_shape(shape)
     if visshape !== nothing
         subvisshape = vis[name][:bodies][Symbol(:origin, "_id")]
-        shapetransform = transform(szeros(T,3), one(UnitQuaternion{T}), shape)
+        shapetransform = transform(szeros(T,3), one(Quaternion{T}), shape)
         settransform!(subvisshape, shapetransform)
     end
 
@@ -170,7 +170,7 @@ function build_robot(mechanism::Mechanism; vis::Visualizer=Visualizer(),
                     (radius == 0.0) && (radius = 0.01)
                     contact_shape = Sphere(radius,
                         position_offset=(contact.model.contact_point),
-                        axis_offset=one(UnitQuaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
+                        axis_offset=one(Quaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
                     visshape = convert_shape(contact_shape)
                     subvisshape = nothing
                     if visshape !== nothing
@@ -254,7 +254,7 @@ function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T};
                     (radius == 0.0) && (radius = 0.01)
                     contact_shape = Sphere(radius,
                         position_offset=(contact.model.contact_point),
-                        axis_offset=one(UnitQuaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
+                        axis_offset=one(Quaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
                     visshape = convert_shape(contact_shape)
                     subvisshape = nothing
                     showshape = false
@@ -274,7 +274,7 @@ function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T};
     visshape = convert_shape(shape)
     if visshape !== nothing
         subvisshape = vis[name][:bodies][Symbol(:origin, "_id")]
-        shapetransform = transform(szeros(T,3), one(UnitQuaternion{T}), shape)
+        shapetransform = transform(szeros(T,3), one(Quaternion{T}), shape)
         settransform!(subvisshape, shapetransform)
     end
     return vis

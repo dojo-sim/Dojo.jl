@@ -8,7 +8,7 @@
     q: body orientation
 """
 function get_sdf(contact::ContactConstraint{T,N,Nc,Cs}, x::AbstractVector{T},
-    q::UnitQuaternion{T}) where {T,N,Nc,Cs<:Contact{T,N}}
+    q::Quaternion{T}) where {T,N,Nc,Cs<:Contact{T,N}}
     model = contact.model
     return model.surface_normal_projector * (x + vector_rotate(model.contact_point, q) - model.offset)
 end
@@ -32,7 +32,7 @@ end
     q: body orientation 
 """
 function contact_location(contact::ContactConstraint{T,N,Nc,Cs}, x::AbstractVector{T},
-    q::UnitQuaternion{T}) where {T,N,Nc,Cs<:Contact{T,N}}
+    q::Quaternion{T}) where {T,N,Nc,Cs<:Contact{T,N}}
     model = contact.model
     return x + vector_rotate(model.contact_point,q) - model.offset
 end

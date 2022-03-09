@@ -25,7 +25,7 @@ for t = 1:length(z_vis)
     u = (t == length(z_vis) ? 0.5 * u_vis[end] ./ u_max : 0.5 * u_vis[t] ./ u_max)
     MeshCat.atframe(anim, t) do
         
-        settransform!(v[:robot], MeshCat.compose(MeshCat.Translation(z[2], z[1], z[3]), MeshCat.LinearMap(UnitQuaternion(z[6 .+ (1:4)]...))))
+        settransform!(v[:robot], MeshCat.compose(MeshCat.Translation(z[2], z[1], z[3]), MeshCat.LinearMap(Quaternion(z[6 .+ (1:4)]...))))
         settransform!(force_vis,
             Point(z[2] - u[2] - shift[2], z[1] - u[1] - shift[1], z[3] - u[3] - shift[3]),
             Vec(u[2], u[1], u[3]),
