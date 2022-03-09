@@ -76,7 +76,7 @@ function ant(;
     return env
 end
 
-function step(env::Environment{Ant}, x, u; 
+function Base.step(env::Environment{Ant}, x, u; 
     gradients=false,
     attitude_decompress=false)
 

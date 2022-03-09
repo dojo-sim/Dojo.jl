@@ -4,7 +4,7 @@
     env = Dojo.get_environment("pendulum", 
         timestep=timestep, 
         gravity=-10.0);
-    Dojo.reset(env);
+    reset(env);
     Dojo.initialize_pendulum!(env.mechanism, 
         angle=0.25 * π)
     u1 = rand(Dojo.input_dimension(env.mechanism))
@@ -33,7 +33,7 @@
     env = Dojo.get_environment("halfcheetah", 
         timestep=timestep, 
         gravity=-10.0);
-    Dojo.reset(env);
+    reset(env);
 
     # get body 
     @test Dojo.get_body(env.mechanism, :origin).name == :origin
@@ -50,7 +50,7 @@
     env2 = Dojo.get_environment(:halfcheetah, 
         timestep=timestep, 
         gravity=-10.0);
-    Dojo.reset(env);
+    reset(env);
     Dojo.set_maximal_state!(env2.mechanism, zeros(Dojo.maximal_dimension(env2.mechanism)))
     z2 = Dojo.get_maximal_state(env2.mechanism)
     @test norm(z2) < 1.0e-8
