@@ -76,7 +76,7 @@ me0 = mechanical_energy(mech, storage)[start0:end]
 # Test mechanical energy conservation
 # With spring the error is or the order of timestep, but there is no drift
 @testset "Energy: Dice" begin
-    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-8
+    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1.0e-8
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
 
@@ -124,7 +124,7 @@ me0 = mechanical_energy(mech, storage)[start0:end]
 # Test mechanical energy conservation
 # With spring the error is or the order of timestep, but there is no drift
 @testset "Energy: Pendulum" begin
-    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-2
+    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1.0e-2
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
 
@@ -174,12 +174,12 @@ me0 = mechanical_energy(mech, storage)[start0:end]
 
 @testset "Energy: Slider" begin
     # Test maximum amplitude and velocity
-    @test norm(maximum([x[3] for x in storage.x[1]]) - zmax + 0.5) < 1e-4
-    @test norm(maximum([vl[3] for vl in storage.vl[1]]) - vmax) < 1e-4
+    @test norm(maximum([x[3] for x in storage.x[1]]) - zmax + 0.5) < 1.0e-4
+    @test norm(maximum([vl[3] for vl in storage.vl[1]]) - vmax) < 1.0e-4
 
     # Test mechanical energy conservation
     # With spring the error is or the order of timestep, but there is no drift
-    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-3
+    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1.0e-3
     # @show norm((me0 .- me0[1]) ./ mean(me0), Inf)
 end
 
@@ -224,9 +224,9 @@ me0 = mechanical_energy(mech, storage)[start0:end]
 # Test mechanical energy conservation
 # For gravity the conservation is perfect
 @testset "Energy: Slider" begin
-    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-6
+    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1.0e-6
 end
-norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-6
+norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1.0e-6
 
 
 ################################################################################
@@ -269,7 +269,7 @@ me0 = mechanical_energy(mech, storage)[start0:end]
 
 # Test mechanical energy conservation
 @testset "Energy: Slider" begin
-    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-3
+    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1.0e-3
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
 
@@ -337,7 +337,7 @@ me0 = mechanical_energy(mech, storage)[start0:end]
 
 # Test mechanical energy conservation
 @testset "Energy: Humanoid" begin
-    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 2e-3
+    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 2.0e-3
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
 
@@ -382,7 +382,7 @@ me0 = mechanical_energy(mech, storage)[start0:end]
 
 # Test mechanical energy conservation
 @testset "Energy: Atlas" begin
-    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 3e-3
+    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 3.0e-3
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
 
@@ -438,7 +438,7 @@ me0 = mechanical_energy(mech, storage)[start0:end]
 
 # Test mechanical energy conservation
 @testset "Energy: Quadruped" begin
-    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-2
+    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1.0e-2
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
 
@@ -503,7 +503,7 @@ me0 = mechanical_energy(mech, storage)[start0:end]
 
 # Test mechanical energy conservation
 @testset "Energy: Snake" begin
-    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-3
+    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1.0e-3
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
 
@@ -544,7 +544,7 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
         # plot([(i-1) * timestep0 for i in 1:length(me0)], me0 .- me0[1])
 
         # Test mechanical energy conservation
-        @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-2
+        @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1.0e-2
         norm((me0 .- me0[1]) ./ mean(me0), Inf)
     end
 end
@@ -609,7 +609,7 @@ me0 = mechanical_energy(mech, storage)[start0:end]
 
 # Test mechanical energy conservation
 @testset "Energy: Twister" begin
-    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-3
+    @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1.0e-3
 end
 norm((me0 .- me0[1]) ./ mean(me0), Inf)
 
@@ -649,7 +649,7 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
         # plot([(i-1) * timestep0 for i in 1:length(me0)], me0 .- me0[1])
 
         # Test mechanical energy conservation
-        @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1e-2
+        @test norm((me0 .- me0[1]) ./ mean(me0), Inf) < 1.0e-2
         norm((me0 .- me0[1]) ./ mean(me0), Inf)
     end
 end

@@ -7,7 +7,6 @@
     rot0 = joint0.rotational
     rot0.axis_offset = rand(QuatRotation).q
 
-
     xa = rand(3)
     qa = rand(QuatRotation).q
     xb = rand(3)

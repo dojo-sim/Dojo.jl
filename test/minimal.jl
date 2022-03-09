@@ -41,7 +41,7 @@ joint_types = [
 		child_vertex=tra2.vertices[2], 
 		Δx=Δx, 
 		Δq=Δq)
-	@test norm(Dojo.minimal_coordinates(tra2, pbody, cbody) - x[1], Inf) < 1e-10
+	@test norm(Dojo.minimal_coordinates(tra2, pbody, cbody) - x[1], Inf) < 1.0e-8
 
 	v = srand(1)
 	Δv = Dojo.zerodimstaticadjoint(Dojo.nullspace_mask(tra2)) * v
@@ -51,7 +51,7 @@ joint_types = [
 		child_vertex=tra2.vertices[2], 
 		Δv=Δv, 
 		Δω=Δω)
-	@test norm(Dojo.minimal_velocities(tra2, pbody, cbody, timestep) - v[1], Inf) < 1e-10
+	@test norm(Dojo.minimal_velocities(tra2, pbody, cbody, timestep) - v[1], Inf) < 1.0e-8
 end
 
 ################################################################################
@@ -67,12 +67,12 @@ end
 	z0 = Dojo.minimal_to_maximal(mech, x0)
 	x1 = Dojo.maximal_to_minimal(mech, z0)
 
-	@test norm(x0[1:3] - x1[1:3], Inf) < 1e-10
-	@test norm(x0[4:6] - x1[4:6]) < 1e-10
-	@test norm(x0[7:9] - x1[7:9], Inf) < 1e-10
-	@test norm(x0[11:12] - x1[11:12], Inf) < 1e-10
-	@test norm(x0[13] - x1[13], Inf) < 1e-10
-	@test norm(x0[14] - x1[14], Inf) < 1e-10
+	@test norm(x0[1:3] - x1[1:3], Inf) < 1.0e-8
+	@test norm(x0[4:6] - x1[4:6]) < 1.0e-8
+	@test norm(x0[7:9] - x1[7:9], Inf) < 1.0e-8
+	@test norm(x0[11:12] - x1[11:12], Inf) < 1.0e-8
+	@test norm(x0[13] - x1[13], Inf) < 1.0e-8
+	@test norm(x0[14] - x1[14], Inf) < 1.0e-8
 end
 
 # box
@@ -94,7 +94,7 @@ end
 	x0 = rand(nx)
 	z0 = Dojo.minimal_to_maximal(mech, x0)
 	x1 = Dojo.maximal_to_minimal(mech, z0)
-	@test norm(x0 - x1, Inf) < 1e-10
+	@test norm(x0 - x1, Inf) < 1.0e-8
 end
 
 # halfcheetah
@@ -105,7 +105,7 @@ end
 	x0 = rand(nx)
 	z0 = Dojo.minimal_to_maximal(mech, x0)
 	x1 = Dojo.maximal_to_minimal(mech, z0)
-	@test norm(x0 - x1, Inf) < 1e-10
+	@test norm(x0 - x1, Inf) < 1.0e-8
 end
 
 # nslider
@@ -118,7 +118,7 @@ end
 	x0 = rand(nx)
 	z0 = Dojo.minimal_to_maximal(mech, x0)
 	x1 = Dojo.maximal_to_minimal(mech, z0)
-	@test norm(x0 - x1, Inf) < 1e-10
+	@test norm(x0 - x1, Inf) < 1.0e-8
 end
 
 # npendulum
@@ -134,7 +134,7 @@ end
 		x0 = rand(nx)
 		z0 = Dojo.minimal_to_maximal(mech, x0)
 		x1 = Dojo.maximal_to_minimal(mech, z0)
-		@test norm(x0 - x1, Inf) < 1e-10
+		@test norm(x0 - x1, Inf) < 1.0e-8
 	end
 end
 
@@ -154,7 +154,7 @@ end
 		x0 = rand(nx)
 		z0 = Dojo.minimal_to_maximal(mech, x0)
 		x1 = Dojo.maximal_to_minimal(mech, z0)
-		@test norm(x0 - x1, Inf) < 1e-10
+		@test norm(x0 - x1, Inf) < 1.0e-8
 	end
 end
 
@@ -171,7 +171,7 @@ end
 		x0 = rand(nx)
 		z0 = Dojo.minimal_to_maximal(mech, x0)
 		x1 = Dojo.maximal_to_minimal(mech, z0)
-		@test norm(x0 - x1, Inf) < 1e-10
+		@test norm(x0 - x1, Inf) < 1.0e-8
 	end
 end
 
@@ -183,7 +183,7 @@ end
 	x0 = rand(nx)
 	z0 = Dojo.minimal_to_maximal(mech, x0)
 	x1 = Dojo.maximal_to_minimal(mech, z0)
-	@test norm(x0 - x1, Inf) < 1e-10
+	@test norm(x0 - x1, Inf) < 1.0e-8
 end
 
 # quadruped
@@ -194,7 +194,7 @@ end
 	x0 = rand(nx)
 	z0 = Dojo.minimal_to_maximal(mech, x0)
 	x1 = Dojo.maximal_to_minimal(mech, z0)
-	@test norm(x0 - x1, Inf) < 1e-10
+	@test norm(x0 - x1, Inf) < 1.0e-8
 end
 
 # atlas
@@ -209,7 +209,7 @@ end
 	x0 = rand(nx)
 	z0 = Dojo.minimal_to_maximal(mech, x0)
 	x1 = Dojo.maximal_to_minimal(mech, z0)
-	@test norm(x0 - x1, Inf) < 1e-10
+	@test norm(x0 - x1, Inf) < 1.0e-8
 end
 
 ################################################################################
@@ -298,25 +298,25 @@ end
 			∇1 = FiniteDiff.finite_difference_jacobian(
 				xq -> Dojo.minimal_velocities(joint, xq[Dojo.SUnitRange(1,3)], va, Quaternion(xq[4:7]...), ωa, xb, vb, qb, ωb, timestep),
 				[xa; Dojo.vector(qa)]) * cat(I(3), Dojo.LVᵀmat(qa), dims=(1,2))
-			@test norm(∇0 - ∇1, Inf) < 1e-5
+			@test norm(∇0 - ∇1, Inf) < 1.0e-5
 
 			∇0 = Dojo.minimal_velocities_jacobian_configuration(:child, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 			∇1 = FiniteDiff.finite_difference_jacobian(
 				xq -> Dojo.minimal_velocities(joint, xa, va, qa, ωa, xq[Dojo.SUnitRange(1,3)], vb, Quaternion(xq[4:7]...), ωb, timestep),
 				[xb; Dojo.vector(qb)]) * cat(I(3), Dojo.LVᵀmat(qb), dims=(1,2))
-			@test norm(∇0 - ∇1, Inf) < 1e-5
+			@test norm(∇0 - ∇1, Inf) < 1.0e-5
 
 			∇0 = Dojo.minimal_velocities_jacobian_velocity(:parent, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 			∇1 = FiniteDiff.finite_difference_jacobian(
 				vϕ -> Dojo.minimal_velocities(joint, xa, vϕ[Dojo.SUnitRange(1,3)], qa, vϕ[Dojo.SUnitRange(4,6)], xb, vb, qb, ωb, timestep),
 				[va; ωa])
-			@test norm(∇0 - ∇1, Inf) < 1e-5
+			@test norm(∇0 - ∇1, Inf) < 1.0e-5
 
 			∇0 = Dojo.minimal_velocities_jacobian_velocity(:child, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 			∇1 = FiniteDiff.finite_difference_jacobian(
 				vϕ -> Dojo.minimal_velocities(joint, xa, va, qa, ωa, xb, vϕ[Dojo.SUnitRange(1,3)], qb, vϕ[Dojo.SUnitRange(4,6)], timestep),
 				[vb; ωb])
-			@test norm(∇0 - ∇1, Inf) < 1e-5
+			@test norm(∇0 - ∇1, Inf) < 1.0e-5
 		end
 	end
 end
@@ -356,13 +356,13 @@ end
 			∇1 = FiniteDiff.finite_difference_jacobian(
 				xq -> Dojo.minimal_coordinates(joint, xq[1:3], Quaternion(xq[4:7]...), xb, qb),
 				[xa; Dojo.vector(qa)]) * cat(I(3), Dojo.LVᵀmat(qa), dims=(1,2))
-			@test norm(∇0 - ∇1, Inf) < 1e-6
+			@test norm(∇0 - ∇1, Inf) < 1.0e-6
 
 			∇0 = Dojo.minimal_coordinates_jacobian_configuration(:child, joint, xa, qa, xb, qb)
 			∇1 = FiniteDiff.finite_difference_jacobian(
 				xq -> Dojo.minimal_coordinates(joint, xa, qa, xq[1:3], Quaternion(xq[4:7]...)),
 				[xb; Dojo.vector(qb)]) * cat(I(3), Dojo.LVᵀmat(qb), dims=(1,2))
-			@test norm(∇0 - ∇1, Inf) < 1e-6
+			@test norm(∇0 - ∇1, Inf) < 1.0e-6
 		end
 	end
 end
@@ -378,7 +378,7 @@ end
 		J = FiniteDiff.finite_difference_jacobian(y -> Dojo.minimal_to_maximal(mechanism, y), x)
 		z = minimal_to_maximal(mechanism, x)
 		G = attitude_jacobian(z, length(mechanism.bodies))
-		return G'*J
+		return G' * J
 	end
 
 	function ctrl!(mechanism, k)
@@ -402,7 +402,7 @@ end
 	z = Dojo.get_maximal_state(mechanism)
 	u = zeros(Dojo.input_dimension(mechanism))
 
-	@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 # NOTE: this won't necessarily pass
+	@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 
 	@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-5
 
 	M_fd = maximal_to_minimal_jacobian_fd(mechanism, z)
@@ -433,7 +433,7 @@ end
 	z = Dojo.get_maximal_state(mechanism)
 	u = zeros(Dojo.input_dimension(mechanism))
 
-	@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 # NOTE: this won't necessarily pass
+	@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 
 	@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-5
 
 	M_fd = maximal_to_minimal_jacobian_fd(mechanism, z)
@@ -461,7 +461,7 @@ end
 	x = Dojo.get_minimal_state(mechanism)
 	u = zeros(Dojo.input_dimension(mechanism))
 
-	@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 # NOTE: this won't necessarily pass
+	@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 
 	@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-5
 
 	M_fd = maximal_to_minimal_jacobian_fd(mechanism, z)
@@ -489,7 +489,7 @@ end
 	x = Dojo.get_minimal_state(mechanism)
 	u = zeros(Dojo.input_dimension(mechanism))
 
-	@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 # NOTE: this won't necessarily pass
+	@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 
 	@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-5
 
 	M_fd = maximal_to_minimal_jacobian_fd(mechanism, z)
@@ -525,7 +525,7 @@ end
 	x = Dojo.get_minimal_state(mechanism)
 	u = zeros(Dojo.input_dimension(mechanism))
 
-	@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 # NOTE: this won't necessarily pass
+	@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 
 	@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-5
 
 	M_fd = maximal_to_minimal_jacobian_fd(mechanism, z)
