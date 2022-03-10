@@ -84,8 +84,8 @@ function set_minimal_velocities!(mechanism, joint::JointConstraint{T,N,Nc}, vϕ)
 end
 
 function get_child_velocity(joint::JointConstraint,
-    xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
-    xb::AbstractVector, qb::UnitQuaternion, 
+    xa::AbstractVector, va::AbstractVector, qa::Quaternion, ϕa::AbstractVector,
+    xb::AbstractVector, qb::Quaternion, 
     timestep;
     Δv=szeros(input_dimension(joint.translational)),
     Δϕ=szeros(input_dimension(joint.rotational)))
@@ -169,7 +169,7 @@ function set_minimal_coordinates_velocities!(joint::JointConstraint,
     # parent state
     xa = SVector{3}(zp[1:3])
     va = SVector{3}(zp[3 .+ (1:3)])
-    qa = UnitQuaternion(zp[6 .+ (1:4)]..., false)
+    qa = Quaternion(zp[6 .+ (1:4)]...)
     ϕa = SVector{3}(zp[10 .+ (1:3)])
 
     # positions
@@ -202,7 +202,7 @@ function set_minimal_coordinates_velocities!(joint::JointConstraint,
 end
 
 function minimal_coordinates_velocities_jacobian_parent(joint::JointConstraint{T},
-    xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+    xa::AbstractVector, va::AbstractVector, qa::Quaternion, ϕa::AbstractVector,
     timestep;
     Δx=szeros(input_dimension(joint.translational)),
     Δθ=szeros(input_dimension(joint.rotational)),
@@ -307,7 +307,7 @@ function set_minimal_coordinates_velocities_jacobian_parent(joint::JointConstrai
 end
 
 function minimal_coordinates_velocities_jacobian_minimal(joint::JointConstraint{T},
-    xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
+    xa::AbstractVector, va::AbstractVector, qa::Quaternion, ϕa::AbstractVector,
     timestep;
     Δx=szeros(input_dimension(joint.translational)),
     Δθ=szeros(input_dimension(joint.rotational)),

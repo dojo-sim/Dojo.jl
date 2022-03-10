@@ -1,6 +1,6 @@
 function constraint(joint::Joint{T,Nλ,Nb,N,Nb½},
-        xa::AbstractVector, qa::UnitQuaternion,
-        xb::AbstractVector, qb::UnitQuaternion,
+        xa::AbstractVector, qa::Quaternion,
+        xb::AbstractVector, qb::Quaternion,
         η, μ) where {T,Nλ,Nb,N,Nb½}
 
     e1 = joint_constraint(joint, xa, qa, xb, qb, η)
@@ -17,8 +17,8 @@ function constraint(joint::Joint{T,Nλ,Nb,N,Nb½},
 end
 
 function constraint_jacobian_configuration(relative::Symbol, joint::Joint{T,Nλ,Nb},
-        xa::AbstractVector, qa::UnitQuaternion,
-        xb::AbstractVector, qb::UnitQuaternion,
+        xa::AbstractVector, qa::Quaternion,
+        xb::AbstractVector, qb::Quaternion,
         η) where {T,Nλ,Nb}
 
     ∇comp = szeros(T,Nb,7)

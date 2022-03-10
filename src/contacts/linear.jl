@@ -54,8 +54,8 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N
         (model.surface_projector * vp + ψ * sones(4) - sβ)...)
 end
 
-function constraint_jacobian_configuration(model::LinearContact, x3::AbstractVector, q3::UnitQuaternion,
-    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, 
+function constraint_jacobian_configuration(model::LinearContact, x3::AbstractVector, q3::Quaternion,
+    x2::AbstractVector, v25::AbstractVector, q2::Quaternion, ϕ25::AbstractVector, 
     λ, timestep)
     V = [model.surface_normal_projector;
          szeros(1,3);
@@ -68,8 +68,8 @@ function constraint_jacobian_configuration(model::LinearContact, x3::AbstractVec
     return [V Ω]
 end
 
-function constraint_jacobian_velocity(model::LinearContact, x3::AbstractVector, q3::UnitQuaternion,
-    x2::AbstractVector, v25::AbstractVector, q2::UnitQuaternion, ϕ25::AbstractVector, 
+function constraint_jacobian_velocity(model::LinearContact, x3::AbstractVector, q3::Quaternion,
+    x2::AbstractVector, v25::AbstractVector, q2::Quaternion, ϕ25::AbstractVector, 
     λ, timestep)
     V = [model.surface_normal_projector * timestep;
          szeros(1,3);

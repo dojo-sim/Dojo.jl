@@ -158,7 +158,7 @@ function ghost(env::Environment{Cartpole}, z_sol;
         for (i, xt) in enumerate(z_sol)
             z_pendulum = xt[13 .+ (1:13)]
             x = z_pendulum[1:3]
-            q = UnitQuaternion(z_pendulum[6 .+ (1:4)]...)
+            q = Quaternion(z_pendulum[6 .+ (1:4)]...)
             k = x + vector_rotate([0.0; 0.0; -0.5], q)
 
             push!(points, Point(k[1], k[2], k[3]))

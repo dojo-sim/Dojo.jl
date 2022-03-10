@@ -4,6 +4,7 @@ using LinearAlgebra
 using Random
 using SparseArrays
 using BenchmarkTools
+using Rotations
 
 using Dojo
 using Test

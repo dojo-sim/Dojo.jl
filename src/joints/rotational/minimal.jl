@@ -2,8 +2,8 @@
 # Displacements
 ################################################################################
 function displacement(joint::Rotational,
-        xa::AbstractVector, qa::UnitQuaternion,
-        xb::AbstractVector, qb::UnitQuaternion;
+        xa::AbstractVector, qa::Quaternion,
+        xb::AbstractVector, qb::Quaternion;
         vmat=true)
 
     q = inv(joint.axis_offset) * inv(qa) * qb
@@ -11,8 +11,8 @@ function displacement(joint::Rotational,
 end
 
 function displacement_jacobian_configuration(relative::Symbol, joint::Rotational,
-        xa::AbstractVector{T}, qa::UnitQuaternion,
-        xb::AbstractVector{T}, qb::UnitQuaternion;
+        xa::AbstractVector{T}, qa::Quaternion,
+        xb::AbstractVector{T}, qb::Quaternion;
         attjac::Bool=true, vmat=true) where T
     X = szeros(T, 3, 3)
     if relative == :parent
@@ -30,15 +30,15 @@ end
 # Coordinates
 ################################################################################
 function minimal_coordinates(joint::Rotational,
-        xa::AbstractVector, qa::UnitQuaternion,
-        xb::AbstractVector, qb::UnitQuaternion)
+        xa::AbstractVector, qa::Quaternion,
+        xb::AbstractVector, qb::Quaternion)
 
     return nullspace_mask(joint) * rotation_vector(displacement(joint, xa, qa, xb, qb, vmat=false))
 end
 
 function minimal_coordinates_jacobian_configuration(relative::Symbol, joint::Rotational{T},
-        xa::AbstractVector, qa::UnitQuaternion,
-        xb::AbstractVector, qb::UnitQuaternion;
+        xa::AbstractVector, qa::Quaternion,
+        xb::AbstractVector, qb::Quaternion;
         attjac::Bool=true) where T
 
     A = nullspace_mask(joint)
@@ -71,8 +71,8 @@ end
 # Velocities
 ################################################################################
 function minimal_velocities(joint::Rotational,
-		xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
-		xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
+		xa::AbstractVector, va::AbstractVector, qa::Quaternion, ϕa::AbstractVector,
+		xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ϕb::AbstractVector,
 		timestep)
 
 	axis_offset = joint.axis_offset
@@ -91,8 +91,8 @@ function minimal_velocities(joint::Rotational,
 end
 
 function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Rotational{T},
-	xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
-	xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
+	xa::AbstractVector, va::AbstractVector, qa::Quaternion, ϕa::AbstractVector,
+	xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ϕb::AbstractVector,
 	timestep) where T
 	
 	axis_offset = joint.axis_offset
@@ -124,8 +124,8 @@ function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Rota
 end
 
 function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Rotational{T},
-	xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ϕa::AbstractVector,
-	xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ϕb::AbstractVector,
+	xa::AbstractVector, va::AbstractVector, qa::Quaternion, ϕa::AbstractVector,
+	xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ϕb::AbstractVector,
 	timestep) where T
 	
 	axis_offset = joint.axis_offset

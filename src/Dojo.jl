@@ -8,8 +8,7 @@ using Random
 using StaticArrays
 using SparseArrays
 using StaticArrays: SUnitRange
-using Rotations
-using Rotations: RotationError, params, lmult, rmult, tmat, vmat, hmat, skew, pure_quaternion
+using Quaternions
 using Parameters
 using Statistics
 
@@ -256,10 +255,7 @@ export
 
 # Orientation
 export
-    UnitQuaternion,
-    RotX,
-    RotY,
-    RotZ,
+    Quaternion,
     attitude_jacobian
 
 # Data

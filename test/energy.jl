@@ -480,7 +480,7 @@ mech = get_mechanism(:snake,
 
 v0 = 10.0 * [1, 2, 3] * timestep0
 ω0 = 10.0 * [1, 2, 3] * timestep0
-q10 = UnitQuaternion(RotX(0.5*π))
+q10 = Dojo.RotX(0.5*π)
 
 initialize!(mech, :snake, 
     base_orientation=q10, 
@@ -522,7 +522,7 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 
         v0 = 10.0 * [1, 2, 3] * timestep0
         ω0 = 10.0 * [1, 2, 3] * timestep0
-        q10 = UnitQuaternion(RotX(0.5*π))
+        q10 = Dojo.RotX(0.5*π)
 
         initialize!(mech, :snake, 
             base_orientation=q10, 
@@ -586,7 +586,7 @@ mech = get_mechanism(:twister,
 
 v0 = 10.0 * [1, 2, 3] * timestep0
 ω0 = 10.0 * [1, 2, 3] * timestep0
-q10 = UnitQuaternion(RotX(0.5*π))
+q10 = Dojo.RotX(0.5*π)
 
 initialize!(mech, :twister, 
     base_orientation=q10, 
@@ -627,7 +627,7 @@ norm((me0 .- me0[1]) ./ mean(me0), Inf)
 
         v0 = 10.0 * [1, 2, 3] * timestep0
         ω0 = 10.0 * [1, 2, 3] * timestep0
-        q10 = UnitQuaternion(RotX(0.5*π))
+        q10 = Dojo.RotX(0.5*π)
 
         initialize!(mech, :twister, 
             base_orientation=q10, 

@@ -6,7 +6,7 @@ function get_pendulum(;
     spring=0.0,
     damper=0.0,
     spring_offset=szeros(1),
-    axis_offset=one(UnitQuaternion),
+    axis_offset=one(Quaternion),
     T=Float64)
 
     # Parameters
@@ -106,7 +106,7 @@ function initialize_npendulum!(mechanism::Mechanism{T};
     # set position and velocities
     set_maximal_configurations!(mechanism.origin, pbody,
         child_vertex=vert11,
-        Δq=UnitQuaternion(RotX(base_angle)))
+        Δq=RotX(base_angle))
     set_maximal_velocities!(pbody,
         ω=base_angular_velocity)
 

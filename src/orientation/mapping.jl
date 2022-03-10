@@ -1,5 +1,5 @@
 function quaternion_map(ω, timestep)
-    return UnitQuaternion(sqrt(4 / timestep^2 - dot(ω, ω)), ω, false)
+    return Quaternion(sqrt(4 / timestep^2 - dot(ω, ω)), ω)
 end
 
 function quaternion_map_jacobian(ω::SVector{3}, timestep)
@@ -8,7 +8,7 @@ function quaternion_map_jacobian(ω::SVector{3}, timestep)
 end
 
 function cayley(ω)
-    UnitQuaternion(1.0 / sqrt(1.0 + ω' * ω) * [1.0; ω], false)
+    Quaternion(1.0 / sqrt(1.0 + ω' * ω) * [1.0; ω])
 end
 
 function cayley_jacobian(ω)

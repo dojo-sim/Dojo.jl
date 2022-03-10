@@ -2,7 +2,7 @@
     Random.seed!(100)
     x0 = srand(3)
     v0 = srand(3)
-    q0 = UnitQuaternion(rand(4)...)
+    q0 = rand(QuatRotation).q
     ϕ0 = srand(3)
     timestep0 = 0.01
     x1 = Dojo.next_position(x0, v0, timestep0)
@@ -20,7 +20,7 @@
     @test norm(FD∂i∂x - Dojo.linear_integrator_jacobian_position(), Inf) < 1.0e-6
     # ∇q
     FD∂i∂q = FiniteDiff.finite_difference_jacobian(q0 ->
-        Dojo.vector(Dojo.next_orientation(UnitQuaternion(q0..., false), ϕ0, timestep0)),
+        Dojo.vector(Dojo.next_orientation(Quaternion(q0...), ϕ0, timestep0)),
         Dojo.vector(q0))
     @test norm(FD∂i∂q - Dojo.rotational_integrator_jacobian_orientation(q0, ϕ0, timestep0, attjac=false), Inf) < 1.0e-6
 
@@ -35,7 +35,7 @@
     con0 = [x0; Dojo.vector(q0)]
     FDcon = FiniteDiff.finite_difference_jacobian(con0 ->
         [Dojo.next_position(SVector{3}(con0[1:3]), v0, timestep0);
-        Dojo.vector(Dojo.next_orientation(UnitQuaternion(con0[4:7]..., false), ϕ0, timestep0))], con0)
-    @test norm(FDcon - Dojo.integrator_jacobian_configuration(q0, ϕ0, timestep0, attjac=false), Inf) < 1.0e-6
-    @test norm(FDcon * cat(I(3), Dojo.LVᵀmat(q0), dims=(1,2)) - Dojo.integrator_jacobian_configuration(q0, ϕ0, timestep0, attjac=true), Inf) < 1.0e-6
+        Dojo.vector(Dojo.next_orientation(Quaternion(con0[4:7]...), ϕ0, timestep0))], con0)
+    @test norm(FDcon - Dojo.integrator_jacobian_configuration(q0, ϕ0, timestep0, attjac=false), Inf) < 1e-8
+    @test norm(FDcon * cat(I(3), Dojo.LVᵀmat(q0), dims=(1,2)) - Dojo.integrator_jacobian_configuration(q0, ϕ0, timestep0, attjac=true), Inf) < 1e-8
 end

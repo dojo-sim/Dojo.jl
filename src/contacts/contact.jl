@@ -15,14 +15,15 @@ constraint_jacobian_velocity(model::Contact, body::Body, id, λ, timestep) = con
 # impulses
 impulse_map(model::Contact, body::Body, id, λ, timestep) = impulse_map(model, next_configuration(body.state, timestep)..., λ)
 
-function impulse_map(model::Contact, x::AbstractVector, q::UnitQuaternion, λ)
+function impulse_map(model::Contact, x::AbstractVector, q::Quaternion, λ)
     X = force_mapping(model, x, q)
-    Q = - X * q * skew(model.contact_point - vector_rotate(model.offset, inv(q)))
+    # Q = - X * q * skew(model.contact_point - vector_rotate(model.offset, inv(q)))
+    Q = - X * rotation_matrix(q) * skew(model.contact_point - vector_rotate(model.offset, inv(q)))
     return [X'; Q']
 end
 
 # force mapping 
-function force_mapping(model::Contact, x::AbstractVector, q::UnitQuaternion)
+function force_mapping(model::Contact, x::AbstractVector, q::Quaternion)
     X = [model.surface_normal_projector;
          szeros(1,3);
          model.surface_projector]

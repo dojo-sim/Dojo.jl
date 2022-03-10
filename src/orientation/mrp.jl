@@ -1,4 +1,4 @@
-function mrp(q::UnitQuaternion)
+function mrp(q::Quaternion)
     q̄ = vector(q)
     return q̄[2:4] ./ (q̄[1] + 1.0) 
 end
@@ -77,4 +77,4 @@ function drotation_vectordq(q::AbstractVector)
     end
 end
 
-drotation_vectordq(q::UnitQuaternion) = drotation_vectordq(vector(q))
+drotation_vectordq(q::Quaternion) = drotation_vectordq(vector(q))

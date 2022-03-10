@@ -91,7 +91,7 @@ function initialize_raiberthopper!(mech::Mechanism{T,Nn,Ne,Nb};
     # body to foot
     set_maximal_configurations!(pbody, cbody, 
         Δx=[0.0; 0.0; -leg_length], 
-        Δq=UnitQuaternion(RotX(0.0)))
+        Δq=RotX(0.0))
     set_maximal_velocities!(pbody, cbody, 
         parent_vertex=tra2.vertices[1], 
         child_vertex=tra2.vertices[2], 
