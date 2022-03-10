@@ -39,3 +39,4 @@ function (env::DojoRLEnv)(a)
     env.info = i
     return nothing
 end
+(env::DojoRLEnv)(a::AbstractFloat) = env([a])
