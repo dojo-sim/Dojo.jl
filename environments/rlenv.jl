@@ -23,7 +23,7 @@ RLBase.is_terminated(env::DojoRLEnv) = env.done
 
 RLBase.reset!(env::DojoRLEnv) = reset(env.dojoenv)
 
-RLBase.reward(env::DojoRLEnv) = error()
+RLBase.reward(env::DojoRLEnv) = env.reward
 RLBase.state(env::DojoRLEnv) = env.state
 
 Random.seed!(env::DojoRLEnv, seed) = Dojo.seed(env.dojoenv, seed)
@@ -33,7 +33,7 @@ Random.seed!(env::DojoRLEnv, seed) = Dojo.seed(env.dojoenv, seed)
 
 function (env::DojoRLEnv)(a)
     s, r, d, i = step(env.dojoenv, a)
-    env.state = s
+    env.state .= s
     env.reward = r
     env.done = d
     env.info = i

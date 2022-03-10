@@ -179,8 +179,8 @@ function MeshCat.render(env::Environment,
     return nothing
 end
 
-function seed(env::Environment; s=0)
-    env.rng[1] = MersenneTwister(seed)
+function seed(env::Environment, s=0)
+    env.rng[1] = MersenneTwister(s)
     return nothing
 end
 
@@ -227,6 +227,7 @@ function contains(s::BoxSpace{T,N}, v::AbstractVector{T}) where {T,N}
 end
 
 # For compat with RLBase
+Base.length(s::BoxSpace) = s.n
 Base.in(v::AbstractVector{T}, s::BoxSpace{T,N}) where {T,N} = all(v .>= s.low) && all(v .<= s.high)
 Random.rand(rng::Random.AbstractRNG, s::BoxSpace{T,N}) where {T,N} = return rand(rng, T,N) .* (s.high .- s.low) .+ s.low
 
