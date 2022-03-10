@@ -39,7 +39,7 @@ function walker(;
         nx = maximal_dimension(mechanism)
     end
     nu = 6
-    no = nx
+    no = nx-1 # full_state is false by default
 
     # values taken from Mujoco's model, combining the control range -1, 1 and the motor gears.
     aspace = BoxSpace(nu, 
