@@ -25,7 +25,7 @@ function test_get_set_data(mechanism::Mechanism)
     data0 = rand(Nd)
     Dojo.set_data!(mechanism, data0)
     data1 = Dojo.get_data(mechanism)
-    @test norm(data0 - data1) < 1e-10
+    @test norm(data0 - data1) < 1.0e-8
 end
 
 @testset "get and set data" begin
@@ -132,7 +132,7 @@ function test_data_system(model::Symbol;
 
 	# Test
 	@testset "Data Jacobian: $(String(model))" begin
-		@test norm(datajac0 - datajac1, Inf) < 1e-6
+		@test norm(datajac0 - datajac1, Inf) < 1.0e-6
 	end
     return nothing
 end

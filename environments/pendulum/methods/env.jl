@@ -70,7 +70,7 @@ function pendulum(;
     return env
 end
 
-function reset(env::Environment{Pendulum}; 
+function Base.reset(env::Environment{Pendulum}; 
     x=nothing)
 
     initialize!(env.mechanism, :pendulum)
@@ -99,7 +99,7 @@ function get_observation(env::Environment{Pendulum})
     end
 end
 
-function step(env::Environment{Pendulum}, x, u; 
+function Base.step(env::Environment{Pendulum}, x, u; 
     gradients=false,
     attitude_decompress=false)
     mechanism = env.mechanism

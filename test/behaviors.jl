@@ -34,8 +34,8 @@ end
             opts=SolverOptions(btol=1e-6, rtol=1e-6,
             verbose=false))
 
-        @test norm(storage.v[1][end], Inf) < 1e-12
-        @test norm(storage.x[1][end][3] - 0.25, Inf) < 1e-3
+        @test norm(storage.v[1][end], Inf) < 1.0e-8
+        @test norm(storage.x[1][end][3] - 0.25, Inf) < 1.0e-3
     end
 end
 

@@ -64,8 +64,8 @@ mang0= [Vector(m - m0[1])[4:6] for m in m0]
 # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mlin0...)')
 # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
 @testset "Momentum: Box" begin
-    @test all(norm.(mlin0, Inf) .< 1e-11)
-    @test all(norm.(mang0, Inf) .< 1e-11)
+    @test all(norm.(mlin0, Inf) .< 1.0e-7)
+    @test all(norm.(mang0, Inf) .< 1.0e-7)
 end
 
 ################################################################################
@@ -101,7 +101,7 @@ mang0= [Vector(m - m0[1])[4:6] for m in m0]
 # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
 # @test all(norm.(mlin0, Inf) .< 1e-11)
 @testset "Momentum: Pendulum" begin
-    @test all(norm.(mang0, Inf) .< 1e-11)
+    @test all(norm.(mang0, Inf) .< 1.0e-7)
 end
 
 ################################################################################
@@ -140,8 +140,8 @@ mang0= [Vector(m - m0[1])[4:6] for m in m0]
 # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mlin0...)')
 # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
 @testset "Momentum: Humanoid" begin
-    @test all(norm.(mlin0, Inf) .< 1e-8)
-    @test all(norm.(mang0, Inf) .< 1e-8)
+    @test all(norm.(mlin0, Inf) .< 1.0e-8)
+    @test all(norm.(mang0, Inf) .< 1.0e-8)
 end
 
 ################################################################################
@@ -177,8 +177,8 @@ mang0= [Vector(m - m0[1])[4:6] for m in m0]
 # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mlin0...)')
 # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
 @testset "Momentum: Atlas" begin
-    @test all(norm.(mlin0, Inf) .< 1e-8)
-    @test all(norm.(mang0, Inf) .< 1e-8)
+    @test all(norm.(mlin0, Inf) .< 1.0e-8)
+    @test all(norm.(mang0, Inf) .< 1.0e-8)
 end
 
 ################################################################################
@@ -214,8 +214,8 @@ mang0= [Vector(m - m0[1])[4:6] for m in m0]
 # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mlin0...)')
 # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
 @testset "Momentum: Quadruped" begin
-    @test all(norm.(mlin0, Inf) .< 1e-8)
-    @test all(norm.(mang0, Inf) .< 1e-8)
+    @test all(norm.(mlin0, Inf) .< 1.0e-8)
+    @test all(norm.(mang0, Inf) .< 1.0e-8)
 end
 
 ################################################################################
@@ -262,8 +262,8 @@ mang0= [Vector(m - m0[1])[4:6] for m in m0]
 # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mlin0...)')
 # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
 @testset "Momentum: Snake" begin
-    @test all(norm.(mlin0, Inf) .< 1e-8)
-    @test all(norm.(mang0, Inf) .< 1e-8)
+    @test all(norm.(mlin0, Inf) .< 1.0e-8)
+    @test all(norm.(mang0, Inf) .< 1.0e-8)
 end
 
 @testset "Momentum: Snake" begin
@@ -300,8 +300,8 @@ end
         # plt = plot()
         # plot!([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
         # display(plt)
-        @test all(norm.(mlin0, Inf) .< 1e-8)
-        @test all(norm.(mang0, Inf) .< 1e-8)
+        @test all(norm.(mlin0, Inf) .< 1.0e-8)
+        @test all(norm.(mang0, Inf) .< 1.0e-8)
     end
 end
 
@@ -349,8 +349,8 @@ mang0= [Vector(m - m0[1])[4:6] for m in m0]
 # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mlin0...)')
 # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
 @testset "Momentum: Twister" begin
-    @test all(norm.(mlin0, Inf) .< 1e-8)
-    @test all(norm.(mang0, Inf) .< 1e-8)
+    @test all(norm.(mlin0, Inf) .< 1.0e-8)
+    @test all(norm.(mang0, Inf) .< 1.0e-8)
 end
 
 @testset "Momentum: Twister" begin
@@ -382,7 +382,7 @@ end
         mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
         mang0= [Vector(m - m0[1])[4:6] for m in m0]
 
-        @test all(norm.(mlin0, Inf) .< 1e-8)
-        @test all(norm.(mang0, Inf) .< 1e-8)
+        @test all(norm.(mlin0, Inf) .< 1.0e-8)
+        @test all(norm.(mang0, Inf) .< 1.0e-8)
     end
 end
