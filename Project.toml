@@ -47,7 +47,8 @@ julia = "1.6, 1.7"
 [extras]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
+Rotations = "6038ab10-8711-5258-84ad-4b1120ba62dc"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["BenchmarkTools", "FiniteDiff", "Test"]
+test = ["BenchmarkTools", "FiniteDiff", "Rotations", "Test"]
