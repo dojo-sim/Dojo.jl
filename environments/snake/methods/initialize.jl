@@ -70,7 +70,7 @@ end
 
 function initialize_snake!(mechanism::Mechanism{T};
     base_position=[0.0, -0.5, 0.0],
-    base_orientation=Quaternion(RotX(0.6 * π)),
+    base_orientation=RotX(0.6 * π),
     base_linear_velocity=zeros(3),
     base_angular_velocity=zeros(3),
     relative_linear_velocity=zeros(3),

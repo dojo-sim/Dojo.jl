@@ -106,7 +106,7 @@ function initialize_npendulum!(mechanism::Mechanism{T};
     # set position and velocities
     set_maximal_configurations!(mechanism.origin, pbody,
         child_vertex=vert11,
-        Δq=Quaternion(RotX(base_angle)))
+        Δq=RotX(base_angle))
     set_maximal_velocities!(pbody,
         ω=base_angular_velocity)
 

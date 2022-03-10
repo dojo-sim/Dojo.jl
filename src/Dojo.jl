@@ -8,7 +8,6 @@ using Random
 using StaticArrays
 using SparseArrays
 using StaticArrays: SUnitRange
-using Rotations
 using Quaternions
 using Parameters
 using Statistics
@@ -257,10 +256,6 @@ export
 # Orientation
 export
     Quaternion,
-    QuatRotation,
-    RotX,
-    RotY,
-    RotZ,
     attitude_jacobian
 
 # Data

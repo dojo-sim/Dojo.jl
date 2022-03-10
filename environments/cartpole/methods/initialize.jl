@@ -17,7 +17,7 @@ function get_cartpole(;
     # Links
     origin = Origin{Float64}()
     slider = Capsule(1.5 * radius, slider_length, slider_mass, 
-        axis_offset=Quaternion(RotX(0.5 * π)), 
+        axis_offset=RotX(0.5 * π), 
         color=RGBA(0.7, 0.7, 0.7, 1.0))
     pendulum = Capsule(radius, pendulum_length, pendulum_mass, 
         color=RGBA(0.7, 0.7, 0.7, 1.0))
@@ -56,14 +56,14 @@ function initialize_cartpole!(mech::Mechanism{T,Nn,Ne,Nb};
     if mode == :down
         set_maximal_configurations!(mech.bodies[1], mech.bodies[2], 
             Δx=[0.0; 0.0; -0.5 * pendulum_length], 
-            Δq=Quaternion(RotX(π)))
+            Δq=RotX(π))
         set_maximal_velocities!(mech.bodies[2], 
             v=zeros(3), 
             ω=zeros(3))
     elseif mode == :up
         set_maximal_configurations!(mech.bodies[1], mech.bodies[2], 
             Δx=[0.0; 0.0; 0.5 * pendulum_length], 
-            Δq=Quaternion(RotX(π)))
+            Δq=RotX(π))
         set_maximal_velocities!(mech.bodies[2], 
             v=zeros(3), 
             ω=zeros(3))

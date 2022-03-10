@@ -55,7 +55,7 @@ function initialize_orbital!(mechanism::Mechanism{T};
     # set position and velocities
     set_maximal_configurations!(mechanism.origin, pbody, 
         child_vertex=vert11, 
-        Δq=Quaternion(RotX(0.0)))
+        Δq=RotX(0.0))
 
     set_minimal_coordinates!(mechanism, mechanism.joints[2], orientation)
 

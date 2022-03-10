@@ -101,7 +101,7 @@ function set_camera!(vis::Visualizer;
     setprop!(camvis, "zoom", zoom)
     (cam_pos != nothing) && MeshCat.settransform!(camvis,
         MeshCat.compose(
-            MeshCat.LinearMap(Rotations.RotX(-1/2 * pi)),
+            MeshCat.LinearMap(Dojo.RotX(-1/2 * pi)),
             MeshCat.Translation(cam_pos...),
         ))
     return nothing

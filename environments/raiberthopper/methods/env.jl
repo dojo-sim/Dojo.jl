@@ -142,7 +142,7 @@ function visualize(env::Environment{RaibertHopper}, traj::Vector{Vector{T}};
                 name=name)
             step = range(0.0, stop=norm(dir), length=n_leg)
             for i = 1:n_leg
-                MeshCat.settransform!(env.vis["leg$i"], MeshCat.compose(MeshCat.Translation(step[i] .* dir_norm + x_foot), MeshCat.LinearMap(Rotations.RotY(0.0))))
+                MeshCat.settransform!(env.vis["leg$i"], MeshCat.compose(MeshCat.Translation(step[i] .* dir_norm + x_foot), MeshCat.LinearMap(Dojo.RotY(0.0))))
             end
         end
     end
