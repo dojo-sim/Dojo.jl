@@ -48,7 +48,7 @@ function linesearch(vars, data, Δ, r)
 end
 
 function soft_step(vars, data)
-    for k = 1:5
+    for k = 1:2
         for i = 1:10
             r = residual(vars, data)
             (norm(r, Inf) < 1e-6) && break
@@ -101,7 +101,7 @@ jacobian_residual(vars0, data0)
 soft_step(vars0, data0)
 P0, Γ0 = soft_simulate(vars0, data0, 100)
 
-plot([p[3] for p in P0])
+plot([p[3] for p in P0], linewidth=3.0, xlabel="time step", ylabel="altitude")
 P3 = [p[3] for p in P0]
 plot(log.(10, abs.(P3)))
 
@@ -117,13 +117,22 @@ plot([X1;X2], [0.5*((X1 .- 1).^2 .- 1); -log.(X2 .+ 1)])
 function soft_potential(y, ρ)
     if y > 0
         p = -log(y+ρ) + log(ρ)
-        # p = -ρ*log(y)
     else
         p = 1/(2ρ)*(y-1)^2 - 1/(2ρ)
-        # p = 0
     end
     return p
 end
+
+function gradient_soft_potential(y, ρ)
+    if y > 0
+        g = -1/(y+ρ)
+    else
+        g = 1/ρ * (y-1)
+    end
+    return g
+end
+
+
 
 plt = plot()
 Y = 0:0.01:10
