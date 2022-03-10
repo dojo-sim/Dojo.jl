@@ -51,7 +51,7 @@ function parse_pose(xpose, T)
     else
         x = parse_vector(xpose, "xyz", T, default = "0 0 0")
         rpy = parse_vector(xpose, "rpy", T, default = "0 0 0")
-        q = Quaternion(RotZYX(rpy[3], rpy[2], rpy[1]))
+        q = RotZ(rpy[3])*RotY(rpy[2])*RotX(rpy[1]) # Quaternion(RotZYX(rpy[3], rpy[2], rpy[1]))
     end
 
     return x, q

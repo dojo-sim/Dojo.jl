@@ -176,7 +176,7 @@ function initial_state_box(;
 	x = xlims[1] + rand(3) .* (xlims[2] - xlims[1])
 	v = vlims[1] + rand(3) .* (vlims[2] - vlims[1])
 	ω = ωlims[1] + rand(3) .* (ωlims[2] - ωlims[1])
-	return Dict(:x => x, :v => v , :q => rand(QuatRotation).q, :ω => ω)
+	return Dict(:x => x, :v => v , :q => normalize(rand(Quaternion{Float64})), :ω => ω)
 end
 
 function build_pairs(mechanism::Mechanism, trajs::AbstractVector)

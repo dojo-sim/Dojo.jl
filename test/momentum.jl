@@ -244,7 +244,7 @@ end
 
     v0 = 100.0 * [1, 2, 3] * timestep0
     ω0 = 100.0 * [1, 2, 3.0] * timestep0
-    q10 = Quaternion(RotX(0.5*π))
+    q10 = Dojo.RotX(0.5*π)
 
     initialize!(mech, :snake, 
         base_orientation=q10, 
@@ -279,7 +279,7 @@ end
 
         v0 = 10.0 * [1, 2, 3] * timestep0
         ω0 = 10.0 * [1, 2, 3.0] * timestep0
-        q10 = Quaternion(RotX(0.5 * π))
+        q10 = Dojo.RotX(0.5 * π)
 
         initialize!(mech, :snake, 
             base_orientation=q10, 
@@ -329,7 +329,7 @@ end
 
     v0 = 100.0 * [1, 2, 3] * timestep0
     ω0 = 100.0 * [1, 2, 3.0] * timestep0
-    q10 = Quaternion(RotX(0.5*π))
+    q10 = Dojo.RotX(0.5*π)
 
     initialize!(mech, :twister, 
         base_orientation=q10, 
@@ -364,7 +364,7 @@ end
 
         v0 = 10.0 * [1, 2, 3] * timestep0
         ω0 = 10.0 * [1, 2, 3.0] * timestep0
-        q10 = Quaternion(RotX(0.5*π))
+        q10 = Dojo.RotX(0.5*π)
         initialize!(mech, :twister, 
             base_orientation=q10, 
             base_linear_velocity=v0, 

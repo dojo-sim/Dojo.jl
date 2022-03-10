@@ -6,6 +6,7 @@ using Random
 using SparseArrays
 using StaticArrays
 using FiniteDiff
+using Rotations
 
 using Dojo
 

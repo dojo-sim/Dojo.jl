@@ -74,7 +74,7 @@ function initialize_box2D!(mechanism::Mechanism{T};
 
     set_maximal_configurations!(body, 
         x=[0.0; position] + [0.0, 0.0 , z], 
-        q=Quaternion(RotX(orientation)))
+        q=RotX(orientation))
     set_maximal_velocities!(body, 
         v=[0.0; linear_velocity], 
         ω=[angular_velocity, 0.0, 0.0])

@@ -1,7 +1,9 @@
-Quaternions.Quaternion(q::Rotation) = Quaternion(QuatRotation(q))
-# Base.rand(::Type{Quaternion}) = rand(Quaternion{Float64})
-MeshCat.LinearMap(q::Quaternion) = MeshCat.LinearMap(QuatRotation(q))
+MeshCat.LinearMap(q::Quaternion) = MeshCat.LinearMap(rotation_matrix(q))
 MeshCat.js_quaternion(q::Quaternion) = [q.v1, q.v2, q.v3, q.s]
+
+RotX(θ) = Quaternion(cos(θ/2), sin(θ/2), 0, 0)
+RotY(θ) = Quaternion(cos(θ/2), 0, sin(θ/2), 0)
+RotZ(θ) = Quaternion(cos(θ/2), 0, 0, sin(θ/2))
 
 quateltype(x) = eltype(x) # TODO not super elegant
 quateltype(::Quaternion{T}) where T = T
