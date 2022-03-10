@@ -136,7 +136,7 @@ function cost(env::Environment{Walker}, x, u;
     return c
 end
 
-function is_done(::Environment{Walker}, x)
+function is_done(env::Environment{Walker}, x)
     nx = minimal_dimension(env.mechanism)
     if env.representation == :minimal
         x0 = x
