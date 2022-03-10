@@ -180,7 +180,8 @@ export
     Spherical,
     CylindricalFree,
     PlanarFree,
-    get_joint
+    get_joint,
+    nullspace_mask
 
 # Contacts
 export
@@ -189,7 +190,9 @@ export
     LinearContact,
     NonlinearContact,
     get_contact,
-    get_sdf
+    get_sdf,
+    contact_location,
+    damper_impulses
 
 # Inputs
 export
@@ -240,11 +243,11 @@ export
     dynamics_jacobian_state,
     dynamics_jacobian_input,
     get_environment, 
-    step,
+    #step,
     get_observation, 
     cost,
     is_done, 
-    reset,
+    #reset,
     render, 
     seed, 
     close, 

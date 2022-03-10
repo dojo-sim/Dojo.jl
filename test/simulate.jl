@@ -3,7 +3,7 @@
     env = Dojo.get_environment("pendulum", 
         timestep=0.1, 
         gravity=0.0);
-    Dojo.reset(env);
+    reset(env);
 
     # step (no control)
     z1 = Dojo.get_maximal_state(env.mechanism)
@@ -22,7 +22,7 @@ end
     # get environment and simulate
     env = Dojo.get_environment("pendulum",
         timestep=0.1);
-    Dojo.reset(env);
+    reset(env);
     Dojo.initialize_pendulum!(env.mechanism,
         angle=0.25 * π)
     storage = Dojo.simulate!(env.mechanism, 1.0, 

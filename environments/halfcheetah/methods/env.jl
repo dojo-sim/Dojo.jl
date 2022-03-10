@@ -77,7 +77,7 @@ function halfcheetah(;
     return env
 end
 
-function reset(env::Environment{HalfCheetah}; 
+function Base.reset(env::Environment{HalfCheetah}; 
     x=nothing, reset_noise_scale=0.1)
     if x != nothing
         env.state .= x

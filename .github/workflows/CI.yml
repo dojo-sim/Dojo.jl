@@ -5,17 +5,15 @@ on:
       - main
     tags: '*'
   pull_request:
-#   schedule:
-#     - cron: '42 10,22 * * *'
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
-    if: ${{ contains(github.event.head_commit.message, 'run_ci') }}
+#    if: ${{ contains(github.event.head_commit.message, 'run_ci') }}
     strategy:
       matrix:
         version:
-          - '1.6'
+          - '1.7'
         os:
           - ubuntu-latest
 #           - macOS-latest
@@ -28,11 +26,6 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-#       - name: Add registries
-#         run: |
-#           julia --color=yes -e 'using Pkg; pkg"registry add https://github.com/JuliaRegistries/General.git"'
-#           julia --color=yes -e 'using Pkg; pkg"registry add https://github.com/Lyceum/LyceumRegistry.git"'
-#         shell: bash
       - uses: julia-actions/julia-runtest@latest
       - uses: julia-actions/julia-uploadcodecov@latest
         env:
