@@ -13,7 +13,7 @@
             verbose=false)
 
     res = get_sdf(mech, storage) # distance from floor to each contact
-    @test minimum(minimum([min.(0.0, r) for r in res])) > -1e-3
+    @test minimum(minimum([min.(0.0, r) for r in res])) >= 0.0
 end
 
 @testset "Box toss" begin
