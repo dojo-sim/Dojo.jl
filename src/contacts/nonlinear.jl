@@ -59,7 +59,7 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}) where 
         (vt - s[@SVector [3,4]])...)
 end
 
-function complementarity_jacobian(contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
+function constraint_jacobian(contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
     friction_coefficient = contact.model.friction_coefficient
     γ = contact.impulses[2] + REG * neutral_vector(contact.model) # TODO need to check this is legit
     s = contact.impulses_dual[2] + REG * neutral_vector(contact.model) # TODO need to check this is legit

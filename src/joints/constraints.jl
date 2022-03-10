@@ -86,7 +86,7 @@ mutable struct JointConstraint{T,N,Nc,TJ,RJ} <: Constraint{T,N}
 end
 
 # constraints
-@generated function constraint(mechanism, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
+@generated function constraint(mechanism, joint::JointConstraint)
     pbody = :(get_body(mechanism, joint.parent_id))
     cbody = :(get_body(mechanism, joint.child_id))
     tra = :(constraint(joint.translational,
@@ -99,13 +99,13 @@ end
 end
 
 # constraints Jacobians
-@generated function constraint_jacobian_configuration(mechanism, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
-    tra = :(constraint_jacobian_configuration(joint.translational, joint.impulses[2][joint_impulse_index(joint, 1)]))
-    rot = :(constraint_jacobian_configuration(joint.rotational, joint.impulses[2][joint_impulse_index(joint, 2)]))
+@generated function constraint_jacobian(joint::JointConstraint) 
+    tra = :(constraint_jacobian(joint.translational, joint.impulses[2][joint_impulse_index(joint, 1)]))
+    rot = :(constraint_jacobian(joint.rotational, joint.impulses[2][joint_impulse_index(joint, 2)]))
     return :(cat($tra, $rot, dims=(1,2)))
 end
 
-@generated function constraint_jacobian_configuration(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
+@generated function constraint_jacobian_configuration(mechanism, joint::JointConstraint, body::Body)
     relative = :(body.id == joint.parent_id ? :parent : :child)
     pbody = :(get_body(mechanism, joint.parent_id))
     cbody = :(get_body(mechanism, joint.child_id))
@@ -128,7 +128,7 @@ function impulses!(mechanism, body::Body, joint::JointConstraint)
     return
 end
 
-@generated function impulse_map(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}
+@generated function impulse_map(mechanism, joint::JointConstraint, body::Body)
     relative = :(body.id == joint.parent_id ? :parent : :child)
     pbody = :(get_body(mechanism, joint.parent_id))
     cbody = :(get_body(mechanism, joint.child_id))
@@ -142,10 +142,9 @@ end
 end
 
 # impulses Jacobians
-function impulses_jacobian_velocity!(mechanism, body::Body, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
+function impulses_jacobian_velocity!(mechanism, body::Body, joint::JointConstraint)
 
     # relative
-    # @show joint.name
     relative = (body.id == joint.parent_id ? :parent : (body.id == joint.child_id ? :child : error()))
 
     # time step
@@ -167,16 +166,16 @@ function impulses_jacobian_velocity!(mechanism, body::Body, joint::JointConstrai
 end
 
 # off-diagonal Jacobians
-function off_diagonal_jacobians(mechanism, body::Body{T}, joint::JointConstraint{T,N}) where {T,N}
+function off_diagonal_jacobians(mechanism, body::Body{T}, joint::JointConstraint)
     return -impulse_map(mechanism, joint, body), constraint_jacobian_configuration(mechanism, joint, body) * integrator_jacobian_velocity(body, mechanism.timestep)
 end
 
-function off_diagonal_jacobians(mechanism, joint::JointConstraint{T,N}, body::Body{T}) where {T,N}
+function off_diagonal_jacobians(mechanism, joint::JointConstraint, body::Body)
     return constraint_jacobian_configuration(mechanism, joint, body) * integrator_jacobian_velocity(body, mechanism.timestep), -impulse_map(mechanism, joint, body)
 end
 
 function off_diagonal_jacobians(mechanism, pbody::Body, cbody::Body)
-    timestep= mechanism.timestep
+    timestep = mechanism.timestep
 
     dimpulse_map_parentb = szeros(6, 6)
     dimpulse_map_childa = szeros(6, 6)
@@ -190,9 +189,7 @@ function off_diagonal_jacobians(mechanism, pbody::Body, cbody::Body)
             for element in (joint.translational, joint.rotational)
                 Nj = length(element)
                 if cbody.id == joint.child_id
-                    # joint.spring && (dimpulse_map_parentb -= spring_jacobian_velocity(:parent, :child, element, pbody, cbody, timestep)) #should be useless
                     joint.damper && (dimpulse_map_parentb -= damper_jacobian_velocity(:parent, :child, element, pbody, cbody, timestep))
-                    # joint.spring && (dimpulse_map_childa -= spring_jacobian_velocity(:child, :parent, element, pbody, cbody, timestep)) #should be useless
                     joint.damper && (dimpulse_map_childa -= damper_jacobian_velocity(:child, :parent, element, pbody, cbody, timestep))
                 end
                 off += Nj
@@ -201,9 +198,7 @@ function off_diagonal_jacobians(mechanism, pbody::Body, cbody::Body)
             for element in (joint.translational, joint.rotational)
                 Nj = length(element)
                 if pbody.id == joint.child_id
-                    # joint.spring && (dimpulse_map_parentb -= spring_parent_jacobian_velocity_child(element, cbody, pbody, timestep)) #should be useless
                     joint.damper && (dimpulse_map_parentb -= damper_jacobian_velocity(:parent, :child, element, cbody, pbody, timestep))
-                    # joint.spring && (dimpulse_map_childa -= spring_child_jacobian_velocity_parent(element, cbody, pbody, timestep)) #should be useless
                     joint.damper && (dimpulse_map_childa -= damper_jacobian_velocity(:child, :parent, element, cbody, pbody, timestep))
                 end
                 off += Nj
@@ -213,37 +208,59 @@ function off_diagonal_jacobians(mechanism, pbody::Body, cbody::Body)
     return dimpulse_map_parentb, dimpulse_map_childa
 end
 
+# linear system 
+function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry, joint::JointConstraint)
+    matrix_entry.value = constraint_jacobian(joint)
+    vector_entry.value = -constraint(mechanism, joint)
+end
+
 # springs
-function spring_impulses(mechanism, joint::JointConstraint{T}, body::Body;
+function spring_impulses(mechanism, joint::JointConstraint{T}, body::Body{T};
     unitary::Bool=false) where T
+
     relative = (body.id == joint.parent_id ? :parent : :child)
     impulses = szeros(T,6)
+
+    pbody = get_body(mechanism, joint.parent_id)
+    cbody = get_body(mechanism, joint.child_id)
+
     impulses += spring_impulses(relative, joint.translational,
-        get_body(mechanism, joint.parent_id),
-        get_body(mechanism, joint.child_id),
+        pbody,
+        cbody, 
         mechanism.timestep,
         unitary=unitary)
+
     impulses += spring_impulses(relative, joint.rotational,
-        get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id),
+        pbody, 
+        cbody,
         mechanism.timestep,
         unitary=unitary)
+
     return impulses
 end
 
 # dampers
 function damper_impulses(mechanism, joint::JointConstraint{T}, body::Body;
     unitary::Bool=false) where T
+
     relative = (body.id == joint.parent_id ? :parent : :child)
     impulses = szeros(T,6)
+
+    pbody = get_body(mechanism, joint.parent_id)
+    cbody = get_body(mechanism, joint.child_id)
+
     impulses += damper_impulses(relative, joint.translational,
-        get_body(mechanism, joint.parent_id), get_body(mechanism, joint.child_id),
+        pbody, 
+        cbody,
         mechanism.timestep,
         unitary=unitary)
+
     impulses += damper_impulses(relative, joint.rotational,
-        get_body(mechanism, joint.parent_id),
-        get_body(mechanism, joint.child_id),
+        pbody,
+        cbody,
         mechanism.timestep,
         unitary=unitary)
+        
     return impulses
 end
 

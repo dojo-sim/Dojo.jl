@@ -62,7 +62,7 @@ include(joinpath("bodies", "origin.jl"))
 include(joinpath("bodies", "set.jl"))
 
 # Mechanism
-include(joinpath("joints", "constraint.jl"))
+include(joinpath("joints", "constraints.jl"))
 include(joinpath("contacts", "constructor.jl"))
 include(joinpath("contacts", "contact.jl"))
 

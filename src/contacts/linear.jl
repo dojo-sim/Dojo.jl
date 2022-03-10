@@ -33,6 +33,28 @@ mutable struct LinearContact{T,N} <: Contact{T,N}
     end
 end
 
+function constraint_jacobian(contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:LinearContact{T,N},N½}
+    friction_coefficient = contact.model.friction_coefficient
+    γ = contact.impulses[2] + REG * neutral_vector(contact.model)
+    s = contact.impulses_dual[2] + REG * neutral_vector(contact.model)
+
+    ∇s1 = Diagonal(γ) # 6x6
+    ∇s2 = Diagonal(-sones(T, 6))
+    ∇s = vcat(∇s1, ∇s2) # 12x6
+
+    ∇γ1 = Diagonal(s) # 6x6
+    ∇γ2 = @SMatrix[0.0                  0.0  0.0  0.0  0.0  0.0;
+                   friction_coefficient 0.0 -1.0 -1.0 -1.0 -1.0;
+                   0.0                  1.0  0.0  0.0  0.0  0.0;
+                   0.0                  1.0  0.0  0.0  0.0  0.0;
+                   0.0                  1.0  0.0  0.0  0.0  0.0;
+                   0.0                  1.0  0.0  0.0  0.0  0.0;]
+
+    ∇γ = vcat(∇γ1, ∇γ2) # 12x6
+
+    return [∇s ∇γ]
+end
+
 function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:LinearContact{T,N},N½}
     # contact model 
     model = contact.model
@@ -63,27 +85,5 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}) where 
         d - sγ,
         model.friction_coefficient * γ - sum(β) - sψ,
         (vt + ψ * sones(4) - sβ)...)
-end
-
-function complementarity_jacobian(contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:LinearContact{T,N},N½}
-    friction_coefficient = contact.model.friction_coefficient
-    γ = contact.impulses[2] + REG * neutral_vector(contact.model)
-    s = contact.impulses_dual[2] + REG * neutral_vector(contact.model)
-
-    ∇s1 = Diagonal(γ) # 6x6
-    ∇s2 = Diagonal(-sones(T, 6))
-    ∇s = vcat(∇s1, ∇s2) # 12x6
-
-    ∇γ1 = Diagonal(s) # 6x6
-    ∇γ2 = @SMatrix[0.0                  0.0  0.0  0.0  0.0  0.0;
-                   friction_coefficient 0.0 -1.0 -1.0 -1.0 -1.0;
-                   0.0                  1.0  0.0  0.0  0.0  0.0;
-                   0.0                  1.0  0.0  0.0  0.0  0.0;
-                   0.0                  1.0  0.0  0.0  0.0  0.0;
-                   0.0                  1.0  0.0  0.0  0.0  0.0;]
-
-    ∇γ = vcat(∇γ1, ∇γ2) # 12x6
-
-    return [∇s ∇γ]
 end
 

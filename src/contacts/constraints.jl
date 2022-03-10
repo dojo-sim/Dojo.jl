@@ -38,18 +38,27 @@ function impulse_map(mechanism, contact::ContactConstraint, body::Body)
 end
 
 function impulse_map_jacobian_configuration(mechanism, body::Body{T}, contact::ContactConstraint{T}) where T
+    # contact model 
+    model = contact.model
+
+    # parent 
     xp, qp = next_configuration(get_body(mechanism, contact.parent_id).state, mechanism.timestep)
+
+    # child
     xc, qc = next_configuration(get_body(mechanism, contact.child_id).state, mechanism.timestep)
 
-    model = contact.model
+    # contact impulse
     X = force_mapping(model, xp, qp, xc, qc)
     λ = X' * contact.impulses[2]
+
+    # Jacobian 
+    Z3 = szeros(T,3,3)
+    Z4 = szeros(T,3,4)
 
     ∇Q = skew(model.contact_point - vector_rotate(model.offset, inv(qp))) * VRmat(qp) * ∂LᵀVᵀmat∂q(λ)
     ∇Q += skew(model.contact_point - vector_rotate(model.offset, inv(qp))) * ∂VRmat∂q(LᵀVᵀmat(qp) * λ)
     ∇Q += -∂skew∂p(VRmat(qp) * LᵀVᵀmat(qp) * λ) * ∂rotation_matrix_inv∂q(qp, model.offset)
-    Z3 = szeros(T,3,3)
-    Z4 = szeros(T,3,4)
+    
     return [Z3 Z4;
             Z3 ∇Q]
 end
@@ -74,8 +83,7 @@ end
 
 # linear system entries
 function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry, contact::ContactConstraint)
-    # [-impulses .* impulses + μ; -g + s]
-    matrix_entry.value = complementarity_jacobian(contact)
+    matrix_entry.value = constraint_jacobian(contact)
     vector_entry.value = vcat(-complementarityμ(mechanism, contact), -constraint(mechanism, contact))
     return
 end

@@ -39,6 +39,14 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N
     SVector{1,T}(distance(model, xp3, qp3, xc3, qc3) - contact.impulses_dual[2][1])
 end
 
+function constraint_jacobian(contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:ImpactContact{T,N},N½}
+    γ = contact.impulses[2] + REG * neutral_vector(contact.model)
+    s = contact.impulses_dual[2] + REG * neutral_vector(contact.model)
+    ∇s = hcat(γ, -Diagonal(sones(N½)))
+    ∇γ = hcat(s, -Diagonal(szeros(N½)))
+    return [∇s ∇γ]
+end
+
 function constraint_jacobian_configuration(model::ImpactContact, 
     xp3::AbstractVector, vp25::AbstractVector, qp3::UnitQuaternion, ϕp25::AbstractVector,
     xc3::AbstractVector, vc25::AbstractVector, qc3::UnitQuaternion, ϕc25::AbstractVector, 
@@ -68,13 +76,5 @@ end
 function force_mapping(model::ImpactContact, xp::AbstractVector, qp::UnitQuaternion, xc::AbstractVector, qc::UnitQuaternion)
     X = model.surface_normal_projector
     return X
-end
-
-function complementarity_jacobian(contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:ImpactContact{T,N},N½}
-    γ = contact.impulses[2] + REG * neutral_vector(contact.model)
-    s = contact.impulses_dual[2] + REG * neutral_vector(contact.model)
-    ∇s = hcat(γ, -Diagonal(sones(N½)))
-    ∇γ = hcat(s, -Diagonal(szeros(N½)))
-    return [∇s ∇γ]
 end
 
