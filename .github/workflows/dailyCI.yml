@@ -11,7 +11,7 @@ jobs:
       matrix:
         version:
           - '1.6' # LTS
-          - '1.7' # Current Stable
+          - '1' # Current Stable
           - 'nightly' # Upcoming
         os:
           - ubuntu-latest
