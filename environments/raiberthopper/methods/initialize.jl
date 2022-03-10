@@ -41,8 +41,7 @@ function get_raiberthopper(;
         foot_contacts = contact_constraint(foot, contact_normal, 
             friction_coefficient=friction_coefficient,
             contact_point=[0.0; 0.0; 0.0], 
-            offset=[0.0; 0.0; 
-            foot_radius])
+            contact_radius=foot_radius)
 
         contacts = [foot_contacts]
 
@@ -51,7 +50,7 @@ function get_raiberthopper(;
             body_contacts = contact_constraint(body, contact_normal, 
                 friction_coefficient=friction_coefficient,
                 contact_point=[0.0; 0.0; 0.0], 
-                offset=[0.0; 0.0; body_radius])
+                contact_radius=body_radius)
             push!(contacts, body_contacts)
         end
         

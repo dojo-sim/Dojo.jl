@@ -166,7 +166,7 @@ function impulses_jacobian_velocity!(mechanism, body::Body, joint::JointConstrai
 end
 
 # off-diagonal Jacobians
-function off_diagonal_jacobians(mechanism, body::Body{T}, joint::JointConstraint)
+function off_diagonal_jacobians(mechanism, body::Body, joint::JointConstraint)
     return -impulse_map(mechanism, joint, body), constraint_jacobian_configuration(mechanism, joint, body) * integrator_jacobian_velocity(body, mechanism.timestep)
 end
 
@@ -175,41 +175,50 @@ function off_diagonal_jacobians(mechanism, joint::JointConstraint, body::Body)
 end
 
 function off_diagonal_jacobians(mechanism, pbody::Body, cbody::Body)
+    # time step 
     timestep = mechanism.timestep
 
-    dimpulse_map_parentb = szeros(6, 6)
-    dimpulse_map_childa = szeros(6, 6)
+    # dimensions
     Ne = length(mechanism.joints)
+    Nb = length(mechanism.bodies)
+    Nc = length(mechanism.contacts)
+
+    # Jacobian
+    jacobian_parent_child = szeros(6, 6)
+    jacobian_child_parent = szeros(6, 6)
 
     for connectionid in connections(mechanism.system, pbody.id)
-        !(connectionid <= Ne) && continue # body
-        joint = get_node(mechanism, connectionid)
-        off = 0
-        if pbody.id == joint.parent_id
-            for element in (joint.translational, joint.rotational)
-                Nj = length(element)
-                if cbody.id == joint.child_id
-                    joint.damper && (dimpulse_map_parentb -= damper_jacobian_velocity(:parent, :child, element, pbody, cbody, timestep))
-                    joint.damper && (dimpulse_map_childa -= damper_jacobian_velocity(:child, :parent, element, pbody, cbody, timestep))
+        # joints
+        if connectionid <= Ne
+            joint = get_node(mechanism, connectionid)
+            if pbody.id == joint.parent_id
+                for element in (joint.translational, joint.rotational)
+                    if cbody.id == joint.child_id
+                        joint.damper && (jacobian_parent_child -= damper_jacobian_velocity(:parent, :child, element, pbody, cbody, timestep))
+                        joint.damper && (jacobian_child_parent -= damper_jacobian_velocity(:child, :parent, element, pbody, cbody, timestep))
+                    end
                 end
-                off += Nj
-            end
-        elseif cbody.id == joint.parent_id
-            for element in (joint.translational, joint.rotational)
-                Nj = length(element)
-                if pbody.id == joint.child_id
-                    joint.damper && (dimpulse_map_parentb -= damper_jacobian_velocity(:parent, :child, element, cbody, pbody, timestep))
-                    joint.damper && (dimpulse_map_childa -= damper_jacobian_velocity(:child, :parent, element, cbody, pbody, timestep))
+            elseif cbody.id == joint.parent_id
+                for element in (joint.translational, joint.rotational)
+                    if pbody.id == joint.child_id
+                        joint.damper && (jacobian_parent_child -= damper_jacobian_velocity(:parent, :child, element, cbody, pbody, timestep))
+                        joint.damper && (jacobian_child_parent -= damper_jacobian_velocity(:child, :parent, element, cbody, pbody, timestep))
+                    end
                 end
-                off += Nj
             end
         end
+        
+        # contacts
+        if connectionid > Ne + Nb
+            nothing
+        end
     end
-    return dimpulse_map_parentb, dimpulse_map_childa
+
+    return jacobian_parent_child, jacobian_child_parent
 end
 
 # linear system 
-function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry, joint::JointConstraint)
+function set_matrix_vector_entries!(mechanism, matrix_entry::Entry, vector_entry::Entry, joint::JointConstraint)
     matrix_entry.value = constraint_jacobian(joint)
     vector_entry.value = -constraint(mechanism, joint)
 end

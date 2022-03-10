@@ -4,21 +4,16 @@
     contact object for impact and friction with a linearized friction cone
 
     friction_coefficient: value of friction coefficient
-    surface_projector: mapping from world frame to surface tangent frame 
-    surface_normal_projector: inverse/complement of surface_projector
-    contact_point: position of contact on Body relative to center of mass 
-    offset: position of contact relative to contact_point
+    collision: Collision
 """
 mutable struct LinearContact{T,N} <: Contact{T,N}
     friction_coefficient::T
-    surface_projector::SMatrix{4,3,T,12}
-    surface_normal_projector::Adjoint{T,SVector{3,T}} # inverse matrix
-    contact_point::SVector{3,T}
-    offset::SVector{3,T}
+    collision::Collision{T,4,3,12}
 
     function LinearContact(body::Body{T}, normal::AbstractVector, friction_coefficient; 
         contact_point=szeros(T, 3), 
-        offset::AbstractVector=szeros(T, 3)) where T
+        contact_radius=0.0) where T
+        # projectors
         V1, V2, V3 = orthogonal_columns(normal)
         A = [V1 V2 V3]
         Ainv = inv(A)
@@ -29,7 +24,9 @@ mutable struct LinearContact{T,N} <: Contact{T,N}
              0.0  1.0  0.0
              0.0 -1.0  0.0
         ]
-        new{Float64,12}(friction_coefficient, surface_projector, surface_normal_projector, contact_point, offset)
+        # collision 
+        collision = SphereFloorCollision(surface_projector, surface_normal_projector, SVector{3}(contact_point), contact_radius)
+        new{Float64,12}(friction_coefficient, collision)
     end
 end
 
@@ -68,7 +65,7 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}) where 
     xc3, vc25, qc3, ϕc25 = next_configuration_velocity(cbody.state, mechanism.timestep)
 
     # distance 
-    d = distance(model, xp3, qp3, xc3, qc3)
+    d = distance(model.collision, xp3, qp3, xc3, qc3)
 
     # relative tangential velocity
     vt = relative_tangential_velocity(model, xp3, qp3, vp25, ϕp25, xc3, qc3, vc25, ϕc25)

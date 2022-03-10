@@ -12,8 +12,8 @@ function constraint_jacobian_configuration(model::Contact,
     timestep)
 
     # distance Jacobian 
-    ∂d∂x = ∂distance∂xp(model, xp3, qp3, xc3, qc3)
-    ∂d∂q = ∂distance∂qp(model, xp3, qp3, xc3, qc3)
+    ∂d∂x = ∂distance∂xp(model.collision, xp3, qp3, xc3, qc3)
+    ∂d∂q = ∂distance∂qp(model.collision, xp3, qp3, xc3, qc3)
 
     # contact point velocity Jacobian 
     ∂v∂x3 = ∂contact_point_velocity∂x(model, xp3, qp3, vp25, ϕp25)
@@ -22,13 +22,13 @@ function constraint_jacobian_configuration(model::Contact,
     X = [
             ∂d∂x;
             szeros(1, 3);
-            model.surface_projector * ∂v∂x3;
+            model.collision.surface_projector * ∂v∂x3;
         ]
 
     Q = [
             ∂d∂q;
             szeros(1, 4);
-            model.surface_projector * ∂v∂q3
+            model.collision.surface_projector * ∂v∂q3
         ]
 
     return [X Q]
@@ -40,8 +40,8 @@ function constraint_jacobian_velocity(model::Contact,
     timestep)
 
     # distance Jacobian
-    ∂d∂x = ∂distance∂xp(model, xp3, qp3, xc3, qc3)
-    ∂d∂q = ∂distance∂qp(model, xp3, qp3, xc3, qc3)
+    ∂d∂x = ∂distance∂xp(model.collision, xp3, qp3, xc3, qc3)
+    ∂d∂q = ∂distance∂qp(model.collision, xp3, qp3, xc3, qc3)
 
     # contact point velocity Jacobian 
     ∂v∂q3 = ∂contact_point_velocity∂q(model, xp3, qp3, vp25, ϕp25)
@@ -54,13 +54,13 @@ function constraint_jacobian_velocity(model::Contact,
     V = [
             ∂d∂x * timestep;
             szeros(1, 3);
-            model.surface_projector * ∂v∂v25
+            model.collision.surface_projector * ∂v∂v25
         ]
    
     Ω = [
             ∂d∂q * rotational_integrator_jacobian_velocity(qp2, ϕp25, timestep);
             szeros(1, 3);
-            model.surface_projector * (∂v∂ϕ25 + ∂v∂q3 * rotational_integrator_jacobian_velocity(qp2, ϕp25, timestep))
+            model.collision.surface_projector * (∂v∂ϕ25 + ∂v∂q3 * rotational_integrator_jacobian_velocity(qp2, ϕp25, timestep))
         ]
 
     return [V Ω]
@@ -75,15 +75,16 @@ end
 
 function impulse_map(model::Contact, xp::AbstractVector, qp::UnitQuaternion, xc::AbstractVector, qc::UnitQuaternion,)
     X = force_mapping(model, xp, qp, xc, qc)
-    Q = - X * qp * skew(model.contact_point - vector_rotate(model.offset, inv(qp)))
+    offset = model.collision.surface_normal_projector' * model.collision.contact_radius
+    Q = - X * qp * skew(model.collision.contact_point - vector_rotate(offset, inv(qp))) 
     return [X'; Q']
 end
 
 # force mapping 
 function force_mapping(model::Contact, xp::AbstractVector, qp::UnitQuaternion, xc::AbstractVector, qc::UnitQuaternion)
-    X = [model.surface_normal_projector;
+    X = [model.collision.surface_normal_projector;
          szeros(1,3);
-         model.surface_projector]
+         model.collision.surface_projector]
     return X
 end
 

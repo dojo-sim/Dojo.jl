@@ -7,18 +7,16 @@
     surface_projector: mapping from world frame to surface tangent frame 
     surface_normal_projector: inverse/complement of surface_projector
     contact_point: position of contact on Body relative to center of mass 
-    offset: position of contact relative to contact_point
+    contact radius: radius of contact
 """
 mutable struct NonlinearContact{T,N} <: Contact{T,N}
     friction_coefficient::T
-    surface_projector::SMatrix{2,3,T,6}
-    surface_normal_projector::Adjoint{T,SVector{3,T}} # inverse matrix
-    contact_point::SVector{3,T}
-    offset::SVector{3,T}
+    collision::Collision{T,2,3,6}
 
     function NonlinearContact(body::Body{T}, normal::AbstractVector, friction_coefficient; 
         contact_point=szeros(T, 3), 
-        offset::AbstractVector=szeros(T, 3)) where T
+        contact_radius=0.0) where T
+        # projectors
         V1, V2, V3 = orthogonal_columns(normal)
         A = [V1 V2 V3]
         Ainv = inv(A)
@@ -27,7 +25,9 @@ mutable struct NonlinearContact{T,N} <: Contact{T,N}
             1.0 0.0 0.0
             0.0 1.0 0.0
         ]
-        new{T,8}(friction_coefficient, surface_projector, surface_normal_projector, contact_point, offset)
+        # collision 
+        collision = SphereFloorCollision(surface_projector, surface_normal_projector, SVector{3}(contact_point), contact_radius)
+        new{T,8}(friction_coefficient, collision)
     end
 end
 
@@ -44,7 +44,7 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}) where 
     xc3, vc25, qc3, ϕc25 = next_configuration_velocity(cbody.state, mechanism.timestep)
 
     # distance 
-    d = distance(model, xp3, qp3, xc3, qc3)
+    d = distance(model.collision, xp3, qp3, xc3, qc3)
 
     # relative tangential velocity
     vt = relative_tangential_velocity(model, xp3, qp3, vp25, ϕp25, xc3, qc3, vc25, ϕc25)

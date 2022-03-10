@@ -67,29 +67,29 @@ function get_halfcheetah(;
                 # torso
                 pf = [+0.5 * body.shape.shape[1].rh[2]; 0.0; 0.0]
                 pb = [-0.5 * body.shape.shape[1].rh[2]; 0.0; 0.0]
-                o = [0;0; body.shape.shape[1].rh[1]]
+                o = body.shape.shape[1].rh[1]
                 push!(models, contact_constraint(body, normal, 
                     friction_coefficient=friction_coefficient, 
                     contact_point=pf, 
-                    offset=o))
+                    contact_radius=o))
                 push!(models, contact_constraint(body, normal, 
                     friction_coefficient=friction_coefficient, 
-                    contact_point=pb, offset=o))
+                    contact_point=pb, contact_radius=o))
 
                 # head
                 pf = [+0.5 * body.shape.shape[1].rh[2] + 0.214; 0.0; 0.1935]
-                o = [0;0; body.shape.shape[2].rh[1]]
+                o = body.shape.shape[2].rh[1]
                 push!(models, contact_constraint(body, normal, 
                     friction_coefficient=friction_coefficient, 
                     contact_point=pf, 
-                    offset=o))
+                    contact_radius=o))
             else
                 p = [0;0; -0.5 * body.shape.rh[2]]
-                o = [0;0; body.shape.rh[1]]
+                o = body.shape.rh[1]
                 push!(models, contact_constraint(body, normal, 
                     friction_coefficient=friction_coefficient, 
                     contact_point=p, 
-                    offset=o))
+                    contact_radius=o))
             end
         end
         set_minimal_coordinates!(mech, get_joint(mech, :floating_joint), [0.576509, 0.0, 0.02792])

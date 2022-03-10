@@ -4,27 +4,27 @@
 
 simdata_dim(mechanism::Mechanism) = sum(simdata_dim.(mech.contacts))
 simdata_dim(contact::ContactConstraint) = sum(simdata_dim.(contact.constraints))
-simdata_dim(model::NonlinearContact) = 7 # [friction_coefficient, p, offset]
-simdata_dim(model::LinearContact) = 7 # [friction_coefficient, p, offset]
-simdata_dim(model::ImpactContact) = 6 # [p, offset]
+simdata_dim(model::NonlinearContact) = 5 # [friction_coefficient, p, contact_radius]
+simdata_dim(model::LinearContact) = 5 # [friction_coefficient, p, contact_radius]
+simdata_dim(model::ImpactContact) = 4 # [p, contact_radius]
 
 function set_simulator_data!(model::NonlinearContact, data::AbstractVector)
 	model.friction_coefficient = data[1]
-    model.offset = data[SVector{3,Int}(2:4)]
-    model.contact_point = data[SVector{3,Int}(5:7)]
+    model.collision.contact_radius = norm(data[SVector{3,Int}(2:4)]) #TODO: Confirm this is correct
+    model.collision.contact_point = data[SVector{3,Int}(5:7)]
     return nothing
 end
 
 function set_simulator_data!(model::LinearContact, data::AbstractVector)
 	model.friction_coefficient = data[1]
-    model.offset = data[SVector{3,Int}(2:4)]
-    model.contact_point = data[SVector{3,Int}(5:7)]
+    model.collision.contact_radius = norm(data[SVector{3,Int}(2:4)]) #TODO: Confirm this is correct
+    model.collision.contact_point = data[SVector{3,Int}(5:7)]
     return nothing
 end
 
 function set_simulator_data!(model::ImpactContact, data::AbstractVector)
-    model.offset = data[SVector{3,Int}(2:4)]
-    model.contact_point = data[SVector{3,Int}(5:7)]
+    model.collision.contact_radius = norm(data[SVector{3,Int}(2:4)]) #TODO: Confirm this is correct
+    model.collision.contact_point = data[SVector{3,Int}(5:7)]
     return nothing
 end
 
@@ -40,15 +40,15 @@ function set_simulator_data!(mechanism::Mechanism, data::AbstractVector)
 end
 
 function get_simulator_data(model::NonlinearContact)
-	return [model.friction_coefficient; model.offset; model.contact_point]
+	return [model.friction_coefficient; model.collision.contact_radius; model.collision.contact_point]
 end
 
 function get_simulator_data(modelset::LinearContact)
-	return [model.friction_coefficient; model.off; model.contact_point]
+	return [model.friction_coefficient; model.collision.contact_radius; model.collision.contact_point]
 end
 
 function get_simulator_data(model::ImpactContact)
-	return [model.offset; model.contact_point]
+	return [model.collision.contact_radius; model.collision.contact_point]
 end
 
 function get_simulator_data(mechanism::Mechanism{T}) where T
@@ -95,8 +95,8 @@ end
 
 function ∂g∂simdata(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:NonlinearContact{T,N}}
     model = contact.model
-	p = model.contact_point
-	offset = model.offset
+	p = model.collision.contact_point
+	offset = model.collision.surface_normal_projector' * model.collision.contact_radius
     body = get_body(mechanism, contact.parent_id)
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, mechanism.timestep)
@@ -105,8 +105,8 @@ function ∂g∂simdata(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where 
 
 	# Contribution to Injointonstraint
 	∇friction_coefficient = SA[0,γ[1],0,0]
-	∇off = [-model.surface_normal_projector; szeros(T,1,3); -model.surface_projector * skew(vector_rotate(ϕ25, q3))]
-	∇p = [model.surface_normal_projector * ∂vector_rotate∂p(model.contact_point, q3); szeros(T,1,3); model.surface_projector * skew(vector_rotate(ϕ25, q3)) * ∂vector_rotate∂p(model.contact_point, q3)]
+	∇off = [-model.collision.surface_normal_projector; szeros(T,1,3); -model.surface_projector * skew(vector_rotate(ϕ25, q3))]
+	∇p = [model.collision.surface_normal_projector * ∂vector_rotate∂p(model.collision.contact_point, q3); szeros(T,1,3); model.surface_projector * skew(vector_rotate(ϕ25, q3)) * ∂vector_rotate∂p(model.collision.contact_point, q3)]
 	∇contact = [∇friction_coefficient ∇off ∇p]
 
 	# Contribution to Body dynamics

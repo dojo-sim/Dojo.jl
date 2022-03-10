@@ -33,7 +33,7 @@ function get_humanoid(;
         pflr = vector_rotate([ 0.5 * left_foot.shape.shape[1].rh[2] + 0.03500; +0.01; 0.0], qlr)
 		pblr = vector_rotate([-0.5 * left_foot.shape.shape[1].rh[2] + 0.03500; +0.01; 0.0], qlr)
         p = [0.0,0.054,0.]
-        o = [0.0; 0.0; left_foot.shape.shape[1].rh[1]]
+        o = left_foot.shape.shape[1].rh[1]
         contacts = [
 					p,
                     # pfll,
@@ -41,46 +41,48 @@ function get_humanoid(;
                     # pflr,
                     # pblr,
                    ]
-        offsets = [
+        contact_radius = [
                     o,
                     # o,
                     # o,
                     # o,
                   ]
         n = length(contacts)
-        normal = [[0;0;1.0] for i = 1:n]
+        normal = [[0.0; 0.0; 1.0] for i = 1:n]
         friction_coefficients = friction_coefficient * ones(T, n)
 
         contacts_left = contact_constraint(left_foot, normal, 
             friction_coefficient=friction_coefficients, 
-            contact_points=contacts, offset=offsets)
+            contact_points=contacts, 
+            contact_radius=contact_radius)
 
         right_foot = get_body(mech, :right_foot)
 
         pfr = [0.5 * right_foot.shape.shape[1].rh[2]; 0.0; 0.0]
-        ofr = [0.0; 0.0; right_foot.shape.shape[1].rh[1]]
+        ofr = right_foot.shape.shape[1].rh[1]
         pbr = [-0.5 * right_foot.shape.shape[1].rh[2]; 0.0; 0.0]
-        obr = [0.0; 0.0; right_foot.shape.shape[1].rh[1]]
+        obr = right_foot.shape.shape[1].rh[1]
 
         contacts = [
                     pfr,
                     pbr,
                    ]
-        offsets = [
-                    ofr,
-                    obr,
-                  ]
+
+        contact_radius = [
+                            ofr,
+                            obr,
+                         ]
                   
         n = length(contacts)
-        normal = [[0;0;1.0] for i = 1:n]
+        normal = [[0.0; 0.0; 1.0] for i = 1:n]
         friction_coefficients = friction_coefficient * ones(T, n)
 
         contacts_right = contact_constraint(right_foot, normal, 
             friction_coefficient=friction_coefficients, 
             contact_points=contacts, 
-            offset=offsets)
+            contact_radius=contact_radius)
 
-        set_minimal_coordinates!(mech, get_joint(mech, :floating_base), [0;0;1.2;0.1;0.;0.])
+        set_minimal_coordinates!(mech, get_joint(mech, :floating_base), [0.0; 0.0; 1.2; 0.1; 0.0; 0.0])
         # mech = Mechanism(origin, bodies, eqs, [contacts_left; contacts_right], 
             # gravity=gravity, 
             # timestep=timestep, 
@@ -92,6 +94,7 @@ function get_humanoid(;
             spring=spring, 
             damper=damper)
     end
+
     return mech
 end
 

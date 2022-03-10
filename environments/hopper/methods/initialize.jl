@@ -56,22 +56,22 @@ function get_hopper(;
                 # torso
                 pf = [0.0, 0.0, +0.5 * body.shape.rh[2]]
                 pb = [0.0, 0.0, -0.5 * body.shape.rh[2]]
-                o = [0.0; 0.0; body.shape.rh[1]]
+                o = body.shape.rh[1]
                 push!(models, contact_constraint(body, normal, 
                     friction_coefficient=friction_coefficient, 
                     contact_point=pf, 
-                    offset=o))
+                    contact_radius=o))
                 push!(models, contact_constraint(body, normal, 
                     friction_coefficient=friction_coefficient, 
                     contact_point=pb, 
-                    offset=o))
+                    contact_radius=o))
             else
                 p = [0.0; 0.0; 0.5 * body.shape.rh[2]]
-                o = [0.0; 0.0; body.shape.rh[1]]
+                o = body.shape.rh[1]
                 push!(models, contact_constraint(body, normal, 
                     friction_coefficient=friction_coefficient, 
                     contact_point=p, 
-                    offset=o))
+                    contact_radius=o))
             end
         end
         set_minimal_coordinates!(mech, get_joint(mech, :floating_joint), [1.25, 0.0, 0.0])

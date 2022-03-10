@@ -1,6 +1,3 @@
-using Dojo
-using Test
-
 joint_types = [
     :Fixed,
     :Prismatic,
