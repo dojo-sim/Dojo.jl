@@ -196,7 +196,7 @@ end
 abstract type Space{T,N} end
 
 """ 
-    BoxSpace{T,N} <: Environment{T,N}
+    BoxSpace{T,N} <: Space{T,N}
 
     domain with lower and upper limits 
 
@@ -225,6 +225,10 @@ end
 function contains(s::BoxSpace{T,N}, v::AbstractVector{T}) where {T,N}
     all(v .>= s.low) && all(v .<= s.high)
 end
+
+# For compat with RLBase
+Base.in(v::AbstractVector{T}, s::BoxSpace{T,N}) where {T,N} = all(v .>= s.low) && all(v .<= s.high)
+Random.rand(rng::Random.AbstractRNG, s::BoxSpace{T,N}) where {T,N} = return rand(rng, T,N) .* (s.high .- s.low) .+ s.low
 
 function clip(s::BoxSpace, u)
     clamp.(u, s.low, s.high)

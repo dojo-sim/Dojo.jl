@@ -1,24 +1,24 @@
 using ReinforcementLearningBase: RLBase
 
-mutable struct DojoRLEnv <: RLBase.AbstractEnv
-    dojoenv
-    action_space
-    observation_space
-    state
-    reward
+mutable struct DojoRLEnv{T} <: RLBase.AbstractEnv
+    dojoenv::Environment
+    state::Vector{T}
+    reward::T
     done::Bool
     info::Dict
 end
 
-function DojoRLEnv(dojoenv::Environment)
-    action_space = convert(RLBase.Space, dojoenv.input_space)
-    observation_space = convert(RLBase.Space, dojoenv.observation_space)
+function DojoRLEnv(dojoenv::Environment{X,T}) where {X,T}
     state = reset(dojoenv)
-    return DojoRLEnv(dojoenv, action_space, observation_space, state, 0.0, false, Dict())
+    return DojoRLEnv{T}(dojoenv, state, convert(T, 0.0), false, Dict())
 end
 
-RLBase.action_space(env::DojoRLEnv) = env.action_space
-RLBase.state_space(env::DojoRLEnv) = env.observation_space
+function DojoRLEnv(name::String; kwargs...)
+    DojoRLEnv(Dojo.get_environment(name; kwargs...))
+end
+
+RLBase.action_space(env::DojoRLEnv) = env.dojoenv.input_space
+RLBase.state_space(env::DojoRLEnv) = env.dojoenv.observation_space
 RLBase.is_terminated(env::DojoRLEnv) = env.done
 
 RLBase.reset!(env::DojoRLEnv) = reset(env.dojoenv)
@@ -27,6 +27,9 @@ RLBase.reward(env::DojoRLEnv) = error()
 RLBase.state(env::DojoRLEnv) = env.state
 
 Random.seed!(env::DojoRLEnv, seed) = Dojo.seed(env.dojoenv, seed)
+
+# TODO:
+# RLBase.ChanceStyle(env::DojoRLEnv) = RLBase.DETERMINISTIC
 
 function (env::DojoRLEnv)(a)
     s, r, d, i = step(env.dojoenv, a)
