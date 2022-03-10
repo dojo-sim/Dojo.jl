@@ -18,12 +18,12 @@ end
 
 @testset "Box toss" begin
     for timestep in [0.10, 0.05, 0.01, 0.005]
-        mech = get_mechanism(:box,
+        mech = get_mechanism(:block,
             timestep=timestep,
             gravity=-9.81,
             friction_coefficient = 0.1)
 
-        initialize!(mech, :box,
+        initialize!(mech, :block,
             x=[0.0, 0.0, 0.5],
             v=[1.0, 1.5, 1.0],
             ω=[5.0, 4.0, 2.0] .* timestep)

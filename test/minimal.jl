@@ -122,7 +122,7 @@ end
 
 	# box
 	@testset "Box" begin
-		mech = Dojo.get_mechanism(:box)
+		mech = Dojo.get_mechanism(:block)
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
 		x0 = rand(nx)

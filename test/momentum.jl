@@ -43,14 +43,14 @@ joint_types = [
 # no control
 ################################################################################
 @testset "Box" begin
-    mech = get_mechanism(:box, 
+    mech = get_mechanism(:block, 
         timestep=timestep0, 
         gravity=gravity0, 
         contact=false)
 
     v0 = [1,2,3.0]
     ω0 = [10,10,10.0]
-    initialize!(mech, :box, 
+    initialize!(mech, :block, 
         v=v0, ω=ω0)
 
     storage = simulate!(mech, 5.0, nocontrol!, 

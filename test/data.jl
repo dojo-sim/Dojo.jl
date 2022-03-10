@@ -141,7 +141,7 @@ end
 	for (spring, damper) in [(0.0, 0.0), (2.0, 0.3)]
 		test_data_system(:sphere, 
 			contact=false)
-		test_data_system(:box, 
+		test_data_system(:block, 
 			contact=false)
 		test_data_system(:box2D, 
 			contact=false)
@@ -212,7 +212,7 @@ end
 	for (spring, damper) in [(0.0, 0.0), (2.0, 0.3)]
 		test_data_system(:sphere, 
 			contact=true)
-		test_data_system(:box, 
+		test_data_system(:block, 
 			contact=true)
 		test_data_system(:box2D, 
 			contact=true)

@@ -98,14 +98,14 @@ end
 @testset "Dice" begin
     gravity0 = -10.0
 
-    mech = get_mechanism(:box, 
+    mech = get_mechanism(:block, 
         timestep=timestep0, 
         gravity=gravity0, 
         contact=false)
 
     v0 = [1,2,3.0]
     ω0 = [1,1,1.0]
-    initialize!(mech, :box, 
+    initialize!(mech, :block, 
         v=v0, 
         ω=ω0)
 
