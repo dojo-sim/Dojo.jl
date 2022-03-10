@@ -1,4 +1,4 @@
-@testset "Modified Rodrigues Parameters" begin
+@testset "FiniteDiff comparison" begin
     q = rand(QuatRotation).q
     @test norm(Dojo.dmrpdq(Dojo.vector(q)) -
         FiniteDiff.finite_difference_jacobian(Dojo.mrp, Dojo.vector(q)), Inf) < 1.0e-5

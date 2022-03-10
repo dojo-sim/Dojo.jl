@@ -1,4 +1,4 @@
-@testset "Mechanism: Miscellaneous methods" begin 
+@testset "Pendulum" begin
     # get pendulum environment and simulate
     timestep=0.1
     env = Dojo.get_environment("pendulum", 
@@ -68,7 +68,6 @@
 
     @test base_origin != base_new 
     @test base_new == :head
-
-    #TODO: get and set methods
 end
 
+#TODO: get and set methods

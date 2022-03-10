@@ -1,4 +1,4 @@
-@testset "Visualizer: Utilities" begin
+@testset "Utilities" begin
     # create visualizer
     vis = Dojo.Visualizer();
 
@@ -23,7 +23,7 @@
     @test true
 end
 
-@testset "Visualizer: MeshCat mechanism" begin
+@testset "MeshCat mechanism" begin
     # create visualizer
     vis = Dojo.Visualizer();
     # get environment and simulate
@@ -36,9 +36,12 @@ end
     # visualize simulation
     Dojo.visualize(env.mechanism, storage, 
         vis=vis)
+
+    # test that methods don't fail
+    @test true
 end
 
-@testset "Visualizer: URDF mesh" begin
+@testset "URDF mesh" begin
     # create visualizer
     vis = Dojo.Visualizer();
     # get environment and simulate
@@ -54,6 +57,7 @@ end
     Dojo.visualize(env.mechanism, storage, 
         vis=vis, 
         show_contact=true)
+
     # test that methods don't fail
     @test true
 end

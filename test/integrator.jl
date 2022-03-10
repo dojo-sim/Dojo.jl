@@ -1,4 +1,4 @@
-@testset "Integrator" begin
+@testset "FiniteDiff comparison" begin
     Random.seed!(100)
     x0 = srand(3)
     v0 = srand(3)
