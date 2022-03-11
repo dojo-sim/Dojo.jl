@@ -89,7 +89,7 @@ function force_mapping(relative::Symbol, model::ImpactContact,
     xp::AbstractVector, qp::UnitQuaternion, 
     xc::AbstractVector, qc::UnitQuaternion)
 
-    X = contact_normal(relative, model.collision, xp, qp, xc, qc)
+    X = contact_normal(relative, model.collision, xp, qp, xc, qc)'
 
     return X
 end
@@ -100,7 +100,7 @@ function ∂force_mapping∂x(relative::Symbol, jacobian::Symbol,
     xc::AbstractVector, qc::UnitQuaternion,
     λ::AbstractVector)
 
-    X = ∂contact_normal∂x(relative, jacobian, model.collision, xp, qp, xc, qc, λ)
+    X = ∂contact_normal∂x(relative, jacobian, model.collision, xp, qp, xc, qc, λ)'
 
     return X
 end
@@ -111,7 +111,7 @@ function ∂force_mapping∂q(relative::Symbol, jacobian::Symbol,
     xc::AbstractVector, qc::UnitQuaternion,
     λ::AbstractVector)
 
-    X = ∂contact_normal∂q(relative, jacobian, model.collision, xp, qp, xc, qc, λ)
+    X = ∂contact_normal∂q(relative, jacobian, model.collision, xp, qp, xc, qc, λ)'
 
     return X
 end

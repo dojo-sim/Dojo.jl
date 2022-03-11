@@ -43,32 +43,11 @@ end
 function impulse_map_jacobian_configuration(mechanism, body::Body{T}, contact::ContactConstraint{T}) where T
     relative = (body.id == contact.parent_id ? :parent : :child)
 
-    # contact model 
-    model = contact.model
-
-    # parent 
-    xp, qp = next_configuration(get_body(mechanism, contact.parent_id).state, mechanism.timestep)
-
-    # child
-    xc, qc = next_configuration(get_body(mechanism, contact.child_id).state, mechanism.timestep)
-
-    # contact impulse
-    X = force_mapping(relative, model, xp, qp, xc, qc)
-    λ = X' * contact.impulses[2]
-
-    # offset 
-    offset = model.collision.contact_normal' * model.collision.contact_radius
-
-    # Jacobian 
-    Z3 = szeros(T,3,3)
-    Z4 = szeros(T,3,4)
-
-    ∇Q = skew(model.collision.contact_origin - vector_rotate(offset, inv(qp))) * VRmat(qp) * ∂LᵀVᵀmat∂q(λ)
-    ∇Q += skew(model.collision.contact_origin - vector_rotate(offset, inv(qp))) * ∂VRmat∂q(LᵀVᵀmat(qp) * λ)
-    ∇Q += -∂skew∂p(VRmat(qp) * LᵀVᵀmat(qp) * λ) * ∂rotation_matrix_inv∂q(qp, offset)
-    
-    return [Z3 Z4;
-            Z3 ∇Q]
+    return impulse_map_jacobian(relative, relative, contact.model, 
+        get_body(mechanism, contact.parent_id), 
+        get_body(mechanism, contact.child_id), 
+        contact.impulses[2], 
+        mechanism.timestep)
 end
 
 function impulses_jacobian_velocity!(mechanism, body::Body, contact::ContactConstraint)

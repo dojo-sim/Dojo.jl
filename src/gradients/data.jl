@@ -163,8 +163,8 @@ function body_constraint_jacobian_contact_data(mechanism::Mechanism, body::Body{
     ∇friction_coefficient = szeros(T,3,1)
 
     X = force_mapping(:parent, model, xp3, qp3, xc3, qc3)
-    ∇p = - ∂skew∂p(VRmat(qp3) * LᵀVᵀmat(qp3) * X' * γ)
-    ∇contact_radius = - ∂skew∂p(VRmat(qp3) * LᵀVᵀmat(qp3) * X' * γ) * -∂vector_rotate∂p(offset, inv(qp3)) * model.collision.contact_normal'
+    ∇p = - ∂skew∂p(VRmat(qp3) * LᵀVᵀmat(qp3) * X * γ)
+    ∇contact_radius = - ∂skew∂p(VRmat(qp3) * LᵀVᵀmat(qp3) * X * γ) * -∂vector_rotate∂p(offset, inv(qp3)) * model.collision.contact_normal'
 
     ∇X = szeros(T,3,Nd)
     ∇Q = -[∇friction_coefficient ∇contact_radius ∇p]

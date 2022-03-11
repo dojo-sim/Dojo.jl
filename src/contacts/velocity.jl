@@ -26,30 +26,30 @@ end
 function relative_tangential_velocity(model::Contact, xp, qp, vp, ϕp, xc, qc, vc, ϕc)
     vp = contact_point_velocity(model, xp, qp, vp, ϕp)
     vc = contact_point_velocity(model, xc, qc, vc, ϕc)
-    return model.collision.contact_tangent * (vp - vc)
+    return contact_tangent(model.collision, xp, qp, xc, qc) * (vp - vc)
 end
 
 function ∂relative_tangential_velocity∂x(jacobian::Symbol, model::Contact, xp, qp, vp, ϕp, xc, qc, vc, ϕc)
     if jacobian == :parent 
-        return model.collision.contact_tangent * ∂contact_point_velocity∂x(model, xp, qp, vp, ϕp)
+        return contact_tangent(model.collision, xp, qp, xc, qc) * ∂contact_point_velocity∂x(model, xp, qp, vp, ϕp)
     elseif jacobian == :child 
-        return model.collision.contact_tangent * -1.0 * ∂contact_point_velocity∂x(model, xc, qc, vc, ϕc)
+        return contact_tangent(model.collision, xp, qp, xc, qc) * -1.0 * ∂contact_point_velocity∂x(model, xc, qc, vc, ϕc)
     end
 end
 
 function ∂relative_tangential_velocity∂q(jacobian::Symbol, model::Contact, xp, qp, vp, ϕp, xc, qc, vc, ϕc)
     if jacobian == :parent 
-        return model.collision.contact_tangent * ∂contact_point_velocity∂q(model, xp, qp, vp, ϕp)
+        return contact_tangent(model.collision, xp, qp, xc, qc) * ∂contact_point_velocity∂q(model, xp, qp, vp, ϕp)
     elseif jacobian == :child 
-        return model.collision.contact_tangent * -1.0 * ∂contact_point_velocity∂q(model, xc, qc, vc, ϕc)
+        return contact_tangent(model.collision, xp, qp, xc, qc) * -1.0 * ∂contact_point_velocity∂q(model, xc, qc, vc, ϕc)
     end
 end
 
 function ∂relative_tangential_velocity∂v(jacobian::Symbol, model::Contact, xp, qp, vp, ϕp, xc, qc, vc, ϕc)
     if jacobian == :parent 
-        return model.collision.contact_tangent * ∂contact_point_velocity∂v(model, xp, qp, vp, ϕp)
+        return contact_tangent(model.collision, xp, qp, xc, qc) * ∂contact_point_velocity∂v(model, xp, qp, vp, ϕp)
     elseif jacobian == :child 
-        return model.collision.contact_tangent * -1.0 * ∂contact_point_velocity∂v(model, xc, qc, vc, ϕc)
+        return contact_tangent(model.collision, xp, qp, xc, qc) * -1.0 * ∂contact_point_velocity∂v(model, xc, qc, vc, ϕc)
     end
 end
 

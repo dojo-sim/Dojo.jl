@@ -39,10 +39,10 @@ end
 # contact point in world frame
 function contact_point(relative::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc) 
     if relative == :parent
-        return xp + vector_rotate(model.collision.contact_origin, qp) - model.collision.contact_normal' * model.collision.contact_radius
+        return xp + vector_rotate(collision.contact_origin, qp) - collision.contact_normal' * collision.contact_radius
     elseif relative == :child 
-        projector = model.collision.contact_tangent' * model.collision.contact_tangent 
-        return projector * (xp + vector_rotate(model.collision.contact_origin, qp))
+        projector = collision.contact_tangent' * collision.contact_tangent 
+        return projector * (xp + vector_rotate(collision.contact_origin, qp))
     end
 end
 
@@ -55,7 +55,7 @@ function ∂contact_point∂x(relative::Symbol, jacobian::Symbol, collision::Sph
         end
     elseif relative == :child 
         if jacobian == :parent 
-            projector = model.collision.contact_tangent' * model.collision.contact_tangent 
+            projector = collision.contact_tangent' * collision.contact_tangent 
             return projector
         elseif jacobian == :child 
             return szeros(eltype(xp), 3, 3)
@@ -66,12 +66,12 @@ end
 function ∂contact_point∂q(relative::Symbol, jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc)
     if relative == :parent 
         if jacobian == :parent 
-            return ∂vector_rotate∂q(model.collision.contact_origin, qp)
+            return ∂vector_rotate∂q(collision.contact_origin, qp)
         end
     elseif relative == :child 
         if jacobian == :parent 
-            projector = model.collision.contact_tangent' * model.collision.contact_tangent 
-            return projector * ∂vector_rotate∂q(model.collision.contact_origin, qp)
+            projector = collision.contact_tangent' * collision.contact_tangent 
+            return projector * ∂vector_rotate∂q(collision.contact_origin, qp)
         elseif jacobian == :child 
             return szeros(eltype(qp), 3, 4)
         end
@@ -90,13 +90,13 @@ end
 function ∂contact_normal∂x(relative::Symbol, jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
     contact_normal = collision.contact_normal
     no, ni = size(contact_normal)
-    return szeros(eltype(contact_normal), no, 3)
+    return szeros(eltype(contact_normal), 3, 3)
 end
 
 function ∂contact_normal∂q(relative::Symbol, jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
     contact_normal = collision.contact_normal
     no, ni = size(contact_normal)
-    return szeros(eltype(contact_normal), no, 4)
+    return szeros(eltype(contact_normal), 4, 3)
 end
 
 # tangent projection
@@ -111,12 +111,12 @@ end
 function ∂contact_tangent∂x(relative::Symbol, jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
     contact_tangent = collision.contact_tangent
     no, ni = size(contact_tangent)
-    return szeros(eltype(contact_tangent), no, 3)
+    return szeros(eltype(contact_tangent), 3, 3)
 end
 
 function ∂contact_tangent∂q(relative::Symbol, jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
     contact_tangent = collision.contact_tangent
     no, ni = size(contact_tangent)
-    return szeros(eltype(contact_tangent), no, 4)
+    return szeros(eltype(contact_tangent), 4, 3)
 end
 
