@@ -50,15 +50,19 @@ function constraint_jacobian_velocity(relative::Symbol, model::Contact,
 
     # recover current orientation 
     if relative == :parent 
+        x = next_position(xp, -vp, timestep)
+        ∂x∂v = linear_integrator_jacobian_velocity(x, vp, timestep)
         q = next_orientation(qp, -ϕp, timestep)
         ∂q∂ϕ = rotational_integrator_jacobian_velocity(q, ϕp, timestep);
     elseif relative == :child 
+        x = next_position(xc, -vc, timestep)
+        ∂x∂v = linear_integrator_jacobian_velocity(x, vc, timestep)
         q = next_orientation(qc, -ϕc, timestep)
         ∂q∂ϕ = rotational_integrator_jacobian_velocity(q, ϕc, timestep);
     end
     
     V = [
-            ∂d∂x * timestep;
+            ∂d∂x * ∂x∂v;
             szeros(1, 3);
             ∂vt∂v
         ]
@@ -91,9 +95,39 @@ function force_mapping(relative::Symbol, model::Contact,
     xc::AbstractVector, qc::UnitQuaternion)
 
     X = [
-            model.collision.contact_normal;
+            contact_normal(relative, model.collision, xp, qp, xc, qc);
             szeros(1, 3);
-            model.collision.contact_tangent
+            contact_tangent(relative, model.collision, xp, qp, xc, qc);
+        ]
+
+    return X
+end
+
+function ∂force_mapping∂x(relative::Symbol, jacobian::Symbol,
+    model::Contact, 
+    xp::AbstractVector, qp::UnitQuaternion, 
+    xc::AbstractVector, qc::UnitQuaternion,
+    λ::AbstractVector)
+
+    X = [
+            ∂contact_normal∂x(relative, jacobian, model.collision, xp, qp, xc, qc, λ);
+            szeros(1, 3);
+            ∂contact_tangent∂x(relative, jacobian, model.collision, xp, qp, xc, qc, λ);
+        ]
+
+    return X
+end
+
+function ∂force_mapping∂q(relative::Symbol, jacobian::Symbol,
+    model::Contact, 
+    xp::AbstractVector, qp::UnitQuaternion, 
+    xc::AbstractVector, qc::UnitQuaternion,
+    λ::AbstractVector)
+
+    X = [
+            ∂contact_normal∂q(relative, jacobian, model.collision, xp, qp, xc, qc, λ);
+            szeros(1, 3);
+            ∂contact_tangent∂q(relative, jacobian, model.collision, xp, qp, xc, qc, λ);
         ]
 
     return X

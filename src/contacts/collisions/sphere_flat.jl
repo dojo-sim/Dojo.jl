@@ -87,13 +87,13 @@ function contact_normal(relative::Symbol, collision::SphereFlatCollision, xp, qp
     end
 end
 
-function ∂contact_normal∂x(relative::Symbol, jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, Δv)
+function ∂contact_normal∂x(relative::Symbol, jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
     contact_normal = collision.contact_normal
     no, ni = size(contact_normal)
     return szeros(eltype(contact_normal), no, 3)
 end
 
-function ∂contact_normal∂q(relative::Symbol, jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, Δv)
+function ∂contact_normal∂q(relative::Symbol, jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
     contact_normal = collision.contact_normal
     no, ni = size(contact_normal)
     return szeros(eltype(contact_normal), no, 4)
@@ -108,13 +108,13 @@ function contact_tangent(relative::Symbol, collision::SphereFlatCollision, xp, q
     end
 end
 
-function ∂contact_tangent∂x(relative::Symbol, jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, Δv)
+function ∂contact_tangent∂x(relative::Symbol, jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
     contact_tangent = collision.contact_tangent
     no, ni = size(contact_tangent)
     return szeros(eltype(contact_tangent), no, 3)
 end
 
-function ∂contact_tangent∂q(relative::Symbol, jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, Δv)
+function ∂contact_tangent∂q(relative::Symbol, jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
     contact_tangent = collision.contact_tangent
     no, ni = size(contact_tangent)
     return szeros(eltype(contact_tangent), no, 4)

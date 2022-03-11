@@ -1,4 +1,3 @@
-
 # constraint Jacobian 
 function constraint_jacobian_configuration(mechanism, contact::ContactConstraint, body::Body)
     relative = (body.id == contact.parent_id ? :parent : :child)

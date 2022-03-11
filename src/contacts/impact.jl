@@ -67,15 +67,19 @@ function constraint_jacobian_velocity(relative::Symbol, model::ImpactContact,
 
     # recover current orientation 
     if relative == :parent
+        x = next_position(xp, -vp, timestep)
+        ∂x∂v = linear_integrator_jacobian_velocity(x, vp, timestep)
         q = next_orientation(qp, -ϕp, timestep)
         ∂q∂ϕ = rotational_integrator_jacobian_velocity(q, ϕp, timestep)
     elseif relative == :child 
+        x = next_position(xc, -vc, timestep)
+        ∂x∂v = linear_integrator_jacobian_velocity(x, vc, timestep)
         q = next_orientation(qc, -ϕc, timestep)
         ∂q∂ϕ = rotational_integrator_jacobian_velocity(q, ϕc, timestep)
     end
 
     # Jacobian
-    V = ∂distance∂x(relative, model.collision, xp, qp, xc, qc) * timestep
+    V = ∂distance∂x(relative, model.collision, xp, qp, xc, qc) * ∂x∂v
     Ω = ∂distance∂q(relative, model.collision, xp, qp, xc, qc) * ∂q∂ϕ
 
     return [V Ω]
@@ -84,7 +88,33 @@ end
 function force_mapping(relative::Symbol, model::ImpactContact, 
     xp::AbstractVector, qp::UnitQuaternion, 
     xc::AbstractVector, qc::UnitQuaternion)
-    X = model.collision.contact_normal
+
+    X = contact_normal(relative, model.collision, xp, qp, xc, qc)
+
     return X
 end
+
+function ∂force_mapping∂x(relative::Symbol, jacobian::Symbol,
+    model::ImpactContact, 
+    xp::AbstractVector, qp::UnitQuaternion, 
+    xc::AbstractVector, qc::UnitQuaternion,
+    λ::AbstractVector)
+
+    X = ∂contact_normal∂x(relative, jacobian, model.collision, xp, qp, xc, qc, λ)
+
+    return X
+end
+
+function ∂force_mapping∂q(relative::Symbol, jacobian::Symbol,
+    model::ImpactContact, 
+    xp::AbstractVector, qp::UnitQuaternion, 
+    xc::AbstractVector, qc::UnitQuaternion,
+    λ::AbstractVector)
+
+    X = ∂contact_normal∂q(relative, jacobian, model.collision, xp, qp, xc, qc, λ)
+
+    return X
+end
+
+
 
