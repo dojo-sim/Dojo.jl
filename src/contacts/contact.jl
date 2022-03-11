@@ -11,24 +11,26 @@ function constraint_jacobian_configuration(model::Contact,
     xc::AbstractVector, vc::AbstractVector, qc::UnitQuaternion, ϕc::AbstractVector, 
     timestep)
 
+    relative = :parent 
+
     # distance Jacobian 
-    ∂d∂x = ∂distance∂xp(model.collision, xp, qp, xc, qc)
-    ∂d∂q = ∂distance∂qp(model.collision, xp, qp, xc, qc)
+    ∂d∂x = ∂distance∂x(relative, model.collision, xp, qp, xc, qc)
+    ∂d∂q = ∂distance∂q(relative, model.collision, xp, qp, xc, qc)
 
     # contact point velocity Jacobian 
-    ∂v∂x = ∂contact_point_velocity∂x(model, xp, qp, vp, ϕp)
-    ∂v∂q = ∂contact_point_velocity∂q(model, xp, qp, vp, ϕp)
+    ∂vt∂x = ∂relative_tangential_velocity∂x(relative, model, xp, qp, vp, ϕp, xc, qc, vc, ϕc)#∂contact_point_velocity∂x(model, xp, qp, vp, ϕp)
+    ∂vt∂q = ∂relative_tangential_velocity∂q(relative, model, xp, qp, vp, ϕp, xc, qc, vc, ϕc)#∂contact_point_velocity∂q(model, xp, qp, vp, ϕp)
 
     X = [
             ∂d∂x;
             szeros(1, 3);
-            model.collision.contact_tangent * ∂v∂x;
+            ∂vt∂x;
         ]
 
     Q = [
             ∂d∂q;
             szeros(1, 4);
-            model.collision.contact_tangent * ∂v∂q
+            ∂vt∂q
         ]
 
     return [X Q]
@@ -39,28 +41,36 @@ function constraint_jacobian_velocity(model::Contact,
     xc::AbstractVector, vc::AbstractVector, qc::UnitQuaternion, ϕc::AbstractVector, 
     timestep)
 
+    relative = :parent
+
     # distance Jacobian
-    ∂d∂x = ∂distance∂xp(model.collision, xp, qp, xc, qc)
-    ∂d∂q = ∂distance∂qp(model.collision, xp, qp, xc, qc)
+    ∂d∂x = ∂distance∂x(relative, model.collision, xp, qp, xc, qc)
+    ∂d∂q = ∂distance∂q(relative, model.collision, xp, qp, xc, qc)
 
     # contact point velocity Jacobian 
-    ∂v∂q = ∂contact_point_velocity∂q(model, xp, qp, vp, ϕp)
-    ∂v∂v = ∂contact_point_velocity∂v(model, xp, qp, vp, ϕp)
-    ∂v∂ϕ = ∂contact_point_velocity∂ϕ(model, xp, qp, vp, ϕp)
+    ∂vt∂q = ∂relative_tangential_velocity∂q(relative, model, xp, qp, vp, ϕp, xc, qc, vc, ϕc)
+    ∂vt∂v = ∂relative_tangential_velocity∂v(relative, model, xp, qp, vp, ϕp, xc, qc, vc, ϕc)
+    ∂vt∂ϕ = ∂relative_tangential_velocity∂ϕ(relative, model, xp, qp, vp, ϕp, xc, qc, vc, ϕc)
 
     # recover current orientation 
-    qp_prev = next_orientation(qp, -ϕp, timestep)
+    if relative == :parent 
+        qp_prev = next_orientation(qp, -ϕp, timestep)
+        ∂q_prev∂ϕ = rotational_integrator_jacobian_velocity(qp_prev, ϕp, timestep);
+    elseif relative == :child 
+        qp_prev = next_orientation(qc, -ϕc, timestep)
+        ∂q_prev∂ϕ = rotational_integrator_jacobian_velocity(qp_prev, ϕc, timestep);
+    end
     
     V = [
             ∂d∂x * timestep;
             szeros(1, 3);
-            model.collision.contact_tangent * ∂v∂v
+            ∂vt∂v
         ]
    
     Ω = [
-            ∂d∂q * rotational_integrator_jacobian_velocity(qp_prev, ϕp, timestep);
+            ∂d∂q * ∂q_prev∂ϕ;
             szeros(1, 3);
-            model.collision.contact_tangent * (∂v∂ϕ + ∂v∂q * rotational_integrator_jacobian_velocity(qp_prev, ϕp, timestep))
+            ∂vt∂ϕ + ∂vt∂q * ∂q_prev∂ϕ;
         ]
 
     return [V Ω]
