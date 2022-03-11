@@ -1,6 +1,6 @@
 name = "Dojo"
 uuid = "ac60b53e-8d92-4c83-b960-e78698fa1916"
-authors = ["simonlc <simonlc@stanford.edu>", "thowell <thowell@stanford.edu>", "Jan Bruedigam"]
+authors = ["simonlc <simonlc@stanford.edu>", "thowell <thowell@stanford.edu>", "Jan Bruedigam <jan.bruedigam@tum.de>"]
 version = "0.1.0"
 
 [deps]
@@ -43,3 +43,12 @@ Quaternions = "<0.5.3, 0.5.3"
 Scratch = "1.1"
 StaticArrays = "1.2"
 julia = "1.6, 1.7"
+
+[extras]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
+Rotations = "6038ab10-8711-5258-84ad-4b1120ba62dc"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["BenchmarkTools", "FiniteDiff", "Rotations", "Test"]

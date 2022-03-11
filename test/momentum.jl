@@ -11,7 +11,7 @@ function controller!(mechanism, k;
 end
 nocontrol!(mechanism, k) = controller!(mechanism, k, U=0.0)
 
-# Data
+# Parameters
 ϵ0 = 1e-12
 timestep0 = 0.01
 gravity0= 0.0
@@ -42,28 +42,28 @@ joint_types = [
 # no spring and damper
 # no control
 ################################################################################
-mech = get_mechanism(:box, 
-    timestep=timestep0, 
-    gravity=gravity0, 
-    contact=false)
+@testset "Box" begin
+    mech = get_mechanism(:block, 
+        timestep=timestep0, 
+        gravity=gravity0, 
+        contact=false)
 
-v0 = [1,2,3.0]
-ω0 = [10,10,10.0]
-initialize!(mech, :box, 
-    v=v0, ω=ω0)
+    v0 = [1,2,3.0]
+    ω0 = [10,10,10.0]
+    initialize!(mech, :block, 
+        v=v0, ω=ω0)
 
-storage = simulate!(mech, 5.0, nocontrol!, 
-    record=true, 
-    verbose=false, 
-    opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
-# visualize(mech, storage, vis = vis)
+    storage = simulate!(mech, 5.0, nocontrol!, 
+        record=true, 
+        verbose=false, 
+        opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+    # visualize(mech, storage, vis = vis)
 
-m0 = momentum(mech, storage)[5:end]
-mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
-mang0= [Vector(m - m0[1])[4:6] for m in m0]
-# plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mlin0...)')
-# plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
-@testset "Momentum: Box" begin
+    m0 = momentum(mech, storage)[5:end]
+    mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
+    mang0= [Vector(m - m0[1])[4:6] for m in m0]
+    # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mlin0...)')
+    # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
     @test all(norm.(mlin0, Inf) .< 1.0e-7)
     @test all(norm.(mang0, Inf) .< 1.0e-7)
 end
@@ -77,30 +77,30 @@ end
 # no spring and damper
 # no control
 ################################################################################
-mech = get_mechanism(:pendulum, 
-    timestep=timestep0, 
-    gravity=gravity0)
+@testset "Pendulum" begin
+    mech = get_mechanism(:pendulum, 
+        timestep=timestep0, 
+        gravity=gravity0)
 
-ϕ0 = 0.7
-ω0 = 5.0
-initialize!(mech, :pendulum, 
-    angle=ϕ0, 
-    angular_velocity=ω0)
+    ϕ0 = 0.7
+    ω0 = 5.0
+    initialize!(mech, :pendulum, 
+        angle=ϕ0, 
+        angular_velocity=ω0)
 
-storage = simulate!(mech, 5.0, nocontrol!, 
-    record=true, 
-    verbose=false, 
-    opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+    storage = simulate!(mech, 5.0, nocontrol!, 
+        record=true, 
+        verbose=false, 
+        opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 
-# visualize(mech, storage, vis = vis)
+    # visualize(mech, storage, vis = vis)
 
-m0 = momentum(mech, storage)[10:end]
-mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
-mang0= [Vector(m - m0[1])[4:6] for m in m0]
-# plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mlin0...)')
-# plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
-# @test all(norm.(mlin0, Inf) .< 1e-11)
-@testset "Momentum: Pendulum" begin
+    m0 = momentum(mech, storage)[10:end]
+    mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
+    mang0= [Vector(m - m0[1])[4:6] for m in m0]
+    # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mlin0...)')
+    # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
+    # @test all(norm.(mlin0, Inf) .< 1e-11)
     @test all(norm.(mang0, Inf) .< 1.0e-7)
 end
 
@@ -113,33 +113,33 @@ end
 # with spring and damper
 # with control
 ################################################################################
-spring0 = 1.0
-damper0 = 1.0
-mech = get_mechanism(:humanoid, 
-    timestep=timestep0, 
-    gravity=gravity0, 
-    spring=spring0, 
-    damper=damper0, 
-    contact_feet=false,
-    contact_body=false)
+@testset "Humanoid" begin
+    spring0 = 1.0
+    damper0 = 1.0
+    mech = get_mechanism(:humanoid, 
+        timestep=timestep0, 
+        gravity=gravity0, 
+        spring=spring0, 
+        damper=damper0, 
+        contact_feet=false,
+        contact_body=false)
 
-initialize!(mech, :humanoid)
-bodies = mech.bodies
-set_maximal_velocities!.(bodies, ω=1e-0rand(3))
+    initialize!(mech, :humanoid)
+    bodies = mech.bodies
+    set_maximal_velocities!.(bodies, ω=1e-0rand(3))
 
-storage = simulate!(mech, 10.0, controller!, 
-    record=true, 
-    verbose=false, 
-    opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+    storage = simulate!(mech, 10.0, controller!, 
+        record=true, 
+        verbose=false, 
+        opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 
-# visualize(mech, storage, vis = vis)
+    # visualize(mech, storage, vis = vis)
 
-m0 = momentum(mech, storage)[1:end]
-mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
-mang0= [Vector(m - m0[1])[4:6] for m in m0]
-# plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mlin0...)')
-# plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
-@testset "Momentum: Humanoid" begin
+    m0 = momentum(mech, storage)[1:end]
+    mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
+    mang0= [Vector(m - m0[1])[4:6] for m in m0]
+    # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mlin0...)')
+    # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
     @test all(norm.(mlin0, Inf) .< 1.0e-8)
     @test all(norm.(mang0, Inf) .< 1.0e-8)
 end
@@ -153,30 +153,30 @@ end
 # with spring and damper
 # with control
 ################################################################################
-spring0 = 10.0
-damper0 = 1.0
-mech = get_mechanism(:atlas, 
-    timestep=timestep0, 
-    gravity=gravity0, 
-    spring=spring0, 
-    damper=damper0, 
-    contact_feet=false,
-    contact_body=false)
+@testset "Atlas" begin
+    spring0 = 10.0
+    damper0 = 1.0
+    mech = get_mechanism(:atlas, 
+        timestep=timestep0, 
+        gravity=gravity0, 
+        spring=spring0, 
+        damper=damper0, 
+        contact_feet=false,
+        contact_body=false)
 
-initialize!(mech, :atlas)
-storage = simulate!(mech, 5.0, controller!, 
-    record=true, 
-    verbose=false, 
-    opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+    initialize!(mech, :atlas)
+    storage = simulate!(mech, 5.0, controller!, 
+        record=true, 
+        verbose=false, 
+        opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 
-# visualize(mech, storage, vis = vis)
+    # visualize(mech, storage, vis = vis)
 
-m0 = momentum(mech, storage)[1:end]
-mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
-mang0= [Vector(m - m0[1])[4:6] for m in m0]
-# plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mlin0...)')
-# plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
-@testset "Momentum: Atlas" begin
+    m0 = momentum(mech, storage)[1:end]
+    mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
+    mang0= [Vector(m - m0[1])[4:6] for m in m0]
+    # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mlin0...)')
+    # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
     @test all(norm.(mlin0, Inf) .< 1.0e-8)
     @test all(norm.(mang0, Inf) .< 1.0e-8)
 end
@@ -190,30 +190,30 @@ end
 # with spring and damper
 # with control
 ################################################################################
-spring0 = 0.3
-damper0 = 0.1
-mech = get_mechanism(:quadruped, 
-    timestep=timestep0, 
-    gravity=gravity0, 
-    spring=spring0, 
-    damper=damper0, 
-    contact_feet=false,
-    contact_body=false)
+@testset "Quadruped" begin
+    spring0 = 0.3
+    damper0 = 0.1
+    mech = get_mechanism(:quadruped, 
+        timestep=timestep0, 
+        gravity=gravity0, 
+        spring=spring0, 
+        damper=damper0, 
+        contact_feet=false,
+        contact_body=false)
 
-initialize!(mech, :quadruped)
-storage = simulate!(mech, 5.0, controller!, 
-    record=true, 
-    verbose=false, 
-    opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+    initialize!(mech, :quadruped)
+    storage = simulate!(mech, 5.0, controller!, 
+        record=true, 
+        verbose=false, 
+        opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 
-# visualize(mech, storage, vis = vis)
+    # visualize(mech, storage, vis = vis)
 
-m0 = momentum(mech, storage)[1:end]
-mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
-mang0= [Vector(m - m0[1])[4:6] for m in m0]
-# plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mlin0...)')
-# plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
-@testset "Momentum: Quadruped" begin
+    m0 = momentum(mech, storage)[1:end]
+    mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
+    mang0= [Vector(m - m0[1])[4:6] for m in m0]
+    # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mlin0...)')
+    # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
     @test all(norm.(mlin0, Inf) .< 1.0e-8)
     @test all(norm.(mang0, Inf) .< 1.0e-8)
 end
@@ -227,46 +227,45 @@ end
 # with spring and damper
 # with control
 ################################################################################
-Nb0 = 5
-spring0 = 0.0 * 4e0
-damper0 = 0.0 * 2e+1
+@testset "Snake" begin
+    Nb0 = 5
+    spring0 = 0.0 * 4e0
+    damper0 = 0.0 * 2e+1
 
-mech = get_mechanism(:snake, 
-    timestep=timestep0, 
-    gravity=gravity0, 
-    num_bodies=Nb0, 
-    spring=spring0, 
-    damper=damper0,
-    joint_type=:Revolute, 
-    contact=false, 
-    radius=0.05);
+    mech = get_mechanism(:snake, 
+        timestep=timestep0, 
+        gravity=gravity0, 
+        num_bodies=Nb0, 
+        spring=spring0, 
+        damper=damper0,
+        joint_type=:Revolute, 
+        contact=false, 
+        radius=0.05);
 
-v0 = 100.0 * [1, 2, 3] * timestep0
-ω0 = 100.0 * [1, 2, 3.0] * timestep0
-q10 = Dojo.RotX(0.5*π)
+    v0 = 100.0 * [1, 2, 3] * timestep0
+    ω0 = 100.0 * [1, 2, 3.0] * timestep0
+    q10 = Dojo.RotX(0.5*π)
 
-initialize!(mech, :snake, 
-    base_orientation=q10, 
-    base_linear_velocity=v0, 
-    base_angular_velocity=ω0)
-storage = simulate!(mech, 1.50, 
-    record=true, 
-    verbose=false, 
-    opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+    initialize!(mech, :snake, 
+        base_orientation=q10, 
+        base_linear_velocity=v0, 
+        base_angular_velocity=ω0)
+    storage = simulate!(mech, 1.50, 
+        record=true, 
+        verbose=false, 
+        opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 
-# visualize(mech, storage, vis = vis)
+    # visualize(mech, storage, vis = vis)
 
-m0 = momentum(mech, storage)[5:end]
-mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
-mang0= [Vector(m - m0[1])[4:6] for m in m0]
-# plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mlin0...)')
-# plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
-@testset "Momentum: Snake" begin
+    m0 = momentum(mech, storage)[5:end]
+    mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
+    mang0= [Vector(m - m0[1])[4:6] for m in m0]
+    # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mlin0...)')
+    # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
     @test all(norm.(mlin0, Inf) .< 1.0e-8)
     @test all(norm.(mang0, Inf) .< 1.0e-8)
-end
 
-@testset "Momentum: Snake" begin
+    
     for joint_type in joint_types
         mech = get_mechanism(:snake, 
             timestep=timestep0, 
@@ -313,47 +312,45 @@ end
 # no gravity
 # with spring and damper
 ################################################################################
+@testset "Twister" begin
+    Nb0 = 5
+    spring0 = 1.0 * 4e0
+    damper0 = 1.0 * 2e+1
 
-Nb0 = 5
-spring0 = 1.0 * 4e0
-damper0 = 1.0 * 2e+1
+    mech = get_mechanism(:twister, 
+        timestep=timestep0, 
+        gravity=gravity0, 
+        num_bodies=Nb0, 
+        spring=spring0, 
+        damper=damper0,
+        joint_type=:FixedOrientation, 
+        contact=false, 
+        radius=0.05);
 
-mech = get_mechanism(:twister, 
-    timestep=timestep0, 
-    gravity=gravity0, 
-    num_bodies=Nb0, 
-    spring=spring0, 
-    damper=damper0,
-    joint_type=:FixedOrientation, 
-    contact=false, 
-    radius=0.05);
+    v0 = 100.0 * [1, 2, 3] * timestep0
+    ω0 = 100.0 * [1, 2, 3.0] * timestep0
+    q10 = Dojo.RotX(0.5*π)
 
-v0 = 100.0 * [1, 2, 3] * timestep0
-ω0 = 100.0 * [1, 2, 3.0] * timestep0
-q10 = Dojo.RotX(0.5*π)
+    initialize!(mech, :twister, 
+        base_orientation=q10, 
+        base_linear_velocity=v0, 
+        base_angular_velocity=ω0)
+    storage = simulate!(mech, 2.5, 
+        record=true, 
+        verbose=false, 
+        opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 
-initialize!(mech, :twister, 
-    base_orientation=q10, 
-    base_linear_velocity=v0, 
-    base_angular_velocity=ω0)
-storage = simulate!(mech, 2.5, 
-    record=true, 
-    verbose=false, 
-    opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
+    # visualize(mech, storage, vis = vis)
 
-# visualize(mech, storage, vis = vis)
-
-m0 = momentum(mech, storage)[5:end]
-mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
-mang0= [Vector(m - m0[1])[4:6] for m in m0]
-# plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mlin0...)')
-# plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
-@testset "Momentum: Twister" begin
+    m0 = momentum(mech, storage)[5:end]
+    mlin0 = [Vector(m - m0[1])[1:3] for m in m0]
+    mang0= [Vector(m - m0[1])[4:6] for m in m0]
+    # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mlin0...)')
+    # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
     @test all(norm.(mlin0, Inf) .< 1.0e-8)
     @test all(norm.(mang0, Inf) .< 1.0e-8)
-end
 
-@testset "Momentum: Twister" begin
+    
     for joint_type in joint_types
         mech = get_mechanism(:twister, 
             timestep=timestep0, 

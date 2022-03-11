@@ -64,7 +64,7 @@ function generate_hardware_dataset(;N::Int=10,
 	timestep= 1/148 * S
 	gscaled = -9.81*20
 
-    mechanism = get_mechanism(:box, timestep=timestep, gravity=gravityscaled);
+    mechanism = get_mechanism(:block, timestep=timestep, gravity=gravityscaled);
     trajs = []
 	pairs = []
     for i = 1:N

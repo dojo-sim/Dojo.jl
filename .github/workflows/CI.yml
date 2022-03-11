@@ -9,15 +9,15 @@ jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
-#    if: ${{ contains(github.event.head_commit.message, 'run_ci') }}
     strategy:
       matrix:
         version:
-          - '1.7'
+          - '1.6' # LTS
+          - '1' # Current Stable
         os:
           - ubuntu-latest
-#           - macOS-latest
-#           - windows-latest
+          - macOS-latest
+          - windows-latest
         arch:
           - x64
     steps:
@@ -26,6 +26,7 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
+      # - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-runtest@latest
       - uses: julia-actions/julia-uploadcodecov@latest
         env:

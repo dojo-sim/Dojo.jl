@@ -39,7 +39,7 @@ function hopper(;
         nx = maximal_dimension(mechanism)
     end
     nu = 3
-    no = nx
+    no = nx - 1 # full_state is not being returned by default 
 
     # values taken from Mujoco's model, combining the control range -1, 1 and the motor gears.
     aspace = BoxSpace(nu, 
@@ -140,7 +140,7 @@ function cost(env::Environment{Hopper}, x, u;
     return c
 end
 
-function is_done(::Environment{Hopper}, x)
+function is_done(env::Environment{Hopper}, x)
     nx = minimal_dimension(env.mechanism)
     if env.representation == :minimal
         x0 = x
