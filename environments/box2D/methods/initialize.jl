@@ -40,7 +40,7 @@ function get_box2D(;
 
         contacts = contact_constraint(pbody, normal, 
             friction_coefficient=friction_coefficient, 
-            contact_points=corners, 
+            contact_origins=corners, 
             contact_radius=contact_radius, 
             contact_type=contact_type)
 
@@ -63,7 +63,7 @@ function initialize_box2D!(mechanism::Mechanism{T};
 
     if length(mechanism.contacts) > 0
         model = mechanism.contacts[1].model
-        side = model.collision.contact_point[2]
+        side = model.collision.contact_origin[2]
         offset = model.collision.contact_radius
         z = side + offset
     else

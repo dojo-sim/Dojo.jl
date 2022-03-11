@@ -50,12 +50,12 @@ function get_atlas(;
 
         foot_contacts1 = contact_constraint(get_body(mech, :l_foot), normal, 
             friction_coefficient=friction_coefficients, 
-            contact_points=locations, 
+            contact_origins=locations, 
             contact_radius=contact_radius, 
             names=[Symbol("l_" .* name) for name in names])
         foot_contacts2 = contact_constraint(get_body(mech, :r_foot), normal, 
             friction_coefficient=friction_coefficients, 
-            contact_points=locations, 
+            contact_origins=locations, 
             contact_radius=contact_radius, 
             names=[Symbol("r_" .* name) for name in names])
         contacts = [contacts..., foot_contacts1..., foot_contacts2...]
@@ -70,12 +70,12 @@ function get_atlas(;
 
         push!(contacts, contact_constraint(get_body(mech, :l_hand), normal, 
             friction_coefficient=friction_coefficient, 
-            contact_point=location, 
+            contact_origin=location, 
             contact_radius=contact_radius, 
             name=Symbol("l_" .* name)))
         push!(contacts, contact_constraint(get_body(mech, :r_hand), normal, 
             friction_coefficient=friction_coefficient, 
-            contact_point=location, 
+            contact_origin=location, 
             contact_radius=contact_radius, 
             name=Symbol("r_" .* name)))
 
@@ -87,12 +87,12 @@ function get_atlas(;
 
         push!(contacts, contact_constraint(get_body(mech, :l_lleg), normal, 
             friction_coefficient=friction_coefficient, 
-            contact_point=location, 
+            contact_origin=location, 
             contact_radius=contact_radius, 
             name=Symbol("l_" .* name)))
         push!(contacts, contact_constraint(get_body(mech, :r_lleg), normal, 
             friction_coefficient=friction_coefficient, 
-            contact_point=location, 
+            contact_origin=location, 
             contact_radius=contact_radius, 
             name=Symbol("r_" .* name)))
 
@@ -106,12 +106,12 @@ function get_atlas(;
 
         push!(contacts, contact_constraint(get_body(mech, :l_clav), normal, 
             friction_coefficient=friction_coefficient, 
-            contact_point=location_l, 
+            contact_origin=location_l, 
             contact_radius=contact_radius, 
             name=Symbol("l_" .* name)))
         push!(contacts, contact_constraint(get_body(mech, :r_clav), normal, 
             friction_coefficient=friction_coefficient, 
-            contact_point=location_r, 
+            contact_origin=location_r, 
             contact_radius=contact_radius, 
             name=Symbol("r_" .* name)))
 
@@ -123,7 +123,7 @@ function get_atlas(;
 
         push!(contacts, contact_constraint(get_body(mech, :pelvis), normal, 
             friction_coefficient=friction_coefficient, 
-            contact_point=location, 
+            contact_origin=location, 
             contact_radius=contact_radius, 
             name=Symbol(name)))
 
@@ -135,12 +135,12 @@ function get_atlas(;
 
         push!(contacts, contact_constraint(get_body(mech, :l_uarm), normal, 
             friction_coefficient=friction_coefficient, 
-            contact_point=location, 
+            contact_origin=location, 
             contact_radius=contact_radius, 
             name=Symbol("l_" .* name)))
         push!(contacts, contact_constraint(get_body(mech, :r_uarm), normal, 
             friction_coefficient=friction_coefficient, 
-            contact_point=location, 
+            contact_origin=location, 
             contact_radius=contact_radius, 
             name=Symbol("r_" .* name)))
 
@@ -152,7 +152,7 @@ function get_atlas(;
 
         push!(contacts, contact_constraint(get_body(mech, :head), normal, 
             friction_coefficient=friction_coefficient, 
-            contact_point=location, 
+            contact_origin=location, 
             contact_radius=contact_radius, 
             name=Symbol(name)))
 
@@ -164,7 +164,7 @@ function get_atlas(;
 
         push!(contacts, contact_constraint(get_body(mech, :utorso), normal, 
             friction_coefficient=friction_coefficient, 
-            contact_point=location, 
+            contact_origin=location, 
             contact_radius=contact_radius, 
             name=Symbol(name)))
 
@@ -175,7 +175,7 @@ function get_atlas(;
 
         push!(contacts, contact_constraint(get_body(mech, :utorso), normal, 
             friction_coefficient=friction_coefficient, 
-            contact_point=location, 
+            contact_origin=location, 
             contact_radius=contact_radius, 
             name=Symbol(name)))
     end

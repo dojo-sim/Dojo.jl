@@ -11,20 +11,20 @@ simdata_dim(model::ImpactContact) = 4 # [p, contact_radius]
 function set_simulator_data!(model::NonlinearContact, data::AbstractVector)
 	model.friction_coefficient = data[1]
     model.collision.contact_radius = norm(data[SVector{3,Int}(2:4)]) #TODO: Confirm this is correct
-    model.collision.contact_point = data[SVector{3,Int}(5:7)]
+    model.collision.contact_origin = data[SVector{3,Int}(5:7)]
     return nothing
 end
 
 function set_simulator_data!(model::LinearContact, data::AbstractVector)
 	model.friction_coefficient = data[1]
     model.collision.contact_radius = norm(data[SVector{3,Int}(2:4)]) #TODO: Confirm this is correct
-    model.collision.contact_point = data[SVector{3,Int}(5:7)]
+    model.collision.contact_origin = data[SVector{3,Int}(5:7)]
     return nothing
 end
 
 function set_simulator_data!(model::ImpactContact, data::AbstractVector)
     model.collision.contact_radius = norm(data[SVector{3,Int}(2:4)]) #TODO: Confirm this is correct
-    model.collision.contact_point = data[SVector{3,Int}(5:7)]
+    model.collision.contact_origin = data[SVector{3,Int}(5:7)]
     return nothing
 end
 
@@ -40,15 +40,15 @@ function set_simulator_data!(mechanism::Mechanism, data::AbstractVector)
 end
 
 function get_simulator_data(model::NonlinearContact)
-	return [model.friction_coefficient; model.collision.contact_radius; model.collision.contact_point]
+	return [model.friction_coefficient; model.collision.contact_radius; model.collision.contact_origin]
 end
 
 function get_simulator_data(modelset::LinearContact)
-	return [model.friction_coefficient; model.collision.contact_radius; model.collision.contact_point]
+	return [model.friction_coefficient; model.collision.contact_radius; model.collision.contact_origin]
 end
 
 function get_simulator_data(model::ImpactContact)
-	return [model.collision.contact_radius; model.collision.contact_point]
+	return [model.collision.contact_radius; model.collision.contact_origin]
 end
 
 function get_simulator_data(mechanism::Mechanism{T}) where T
@@ -95,7 +95,7 @@ end
 
 function ∂g∂simdata(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:NonlinearContact{T,N}}
     model = contact.model
-	p = model.collision.contact_point
+	p = model.collision.contact_origin
 	offset = model.collision.contact_normal' * model.collision.contact_radius
     body = get_body(mechanism, contact.parent_id)
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
@@ -106,7 +106,7 @@ function ∂g∂simdata(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where 
 	# Contribution to Injointonstraint
 	∇friction_coefficient = SA[0,γ[1],0,0]
 	∇off = [-model.collision.contact_normal; szeros(T,1,3); -model.contact_tangent * skew(vector_rotate(ϕ25, q3))]
-	∇p = [model.collision.contact_normal * ∂vector_rotate∂p(model.collision.contact_point, q3); szeros(T,1,3); model.contact_tangent * skew(vector_rotate(ϕ25, q3)) * ∂vector_rotate∂p(model.collision.contact_point, q3)]
+	∇p = [model.collision.contact_normal * ∂vector_rotate∂p(model.collision.contact_origin, q3); szeros(T,1,3); model.contact_tangent * skew(vector_rotate(ϕ25, q3)) * ∂vector_rotate∂p(model.collision.contact_origin, q3)]
 	∇contact = [∇friction_coefficient ∇off ∇p]
 
 	# Contribution to Body dynamics

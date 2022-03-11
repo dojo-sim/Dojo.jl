@@ -58,8 +58,8 @@ function impulse_map_jacobian_configuration(mechanism, body::Body{T}, contact::C
     Z3 = szeros(T,3,3)
     Z4 = szeros(T,3,4)
 
-    ∇Q = skew(model.collision.contact_point - vector_rotate(offset, inv(qp))) * VRmat(qp) * ∂LᵀVᵀmat∂q(λ)
-    ∇Q += skew(model.collision.contact_point - vector_rotate(offset, inv(qp))) * ∂VRmat∂q(LᵀVᵀmat(qp) * λ)
+    ∇Q = skew(model.collision.contact_origin - vector_rotate(offset, inv(qp))) * VRmat(qp) * ∂LᵀVᵀmat∂q(λ)
+    ∇Q += skew(model.collision.contact_origin - vector_rotate(offset, inv(qp))) * ∂VRmat∂q(LᵀVᵀmat(qp) * λ)
     ∇Q += -∂skew∂p(VRmat(qp) * LᵀVᵀmat(qp) * λ) * ∂rotation_matrix_inv∂q(qp, offset)
     
     return [Z3 Z4;

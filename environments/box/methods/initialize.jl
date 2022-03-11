@@ -43,7 +43,7 @@ function get_box(;
 
         contacts = contact_constraint(pbody, normal, 
             friction_coefficient=friction_coefficient, 
-            contact_points=corners, 
+            contact_origins=corners, 
             contact_radius=contact_radius, 
             contact_type=contact_type)
 

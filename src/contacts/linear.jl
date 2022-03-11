@@ -11,7 +11,7 @@ mutable struct LinearContact{T,N} <: Contact{T,N}
     collision::Collision{T,4,3,12}
 
     function LinearContact(body::Body{T}, normal::AbstractVector, friction_coefficient; 
-        contact_point=szeros(T, 3), 
+        contact_origin=szeros(T, 3), 
         contact_radius=0.0) where T
         # projectors
         V1, V2, V3 = orthogonal_columns(normal)
@@ -26,7 +26,7 @@ mutable struct LinearContact{T,N} <: Contact{T,N}
             -1.0  0.0
         ]
         # collision 
-        collision = SphereFloorCollision(parameterization * contact_tangent, contact_normal, SVector{3}(contact_point), contact_radius)
+        collision = SphereFloorCollision(parameterization * contact_tangent, contact_normal, SVector{3}(contact_origin), contact_radius)
         new{Float64,12}(friction_coefficient, collision)
     end
 end
@@ -59,17 +59,17 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}) where 
 
     # parent
     pbody = get_body(mechanism, contact.parent_id)
-    xp3, vp25, qp3, ϕp25 = next_configuration_velocity(pbody.state, mechanism.timestep)
+    xp, vp, qp, ϕp = next_configuration_velocity(pbody.state, mechanism.timestep)
 
     # child 
     cbody = get_body(mechanism, contact.child_id)
-    xc3, vc25, qc3, ϕc25 = next_configuration_velocity(cbody.state, mechanism.timestep)
+    xc, vc, qc, ϕc = next_configuration_velocity(cbody.state, mechanism.timestep)
 
     # distance 
-    d = distance(model.collision, xp3, qp3, xc3, qc3)
+    d = distance(model.collision, xp, qp, xc, qc)
 
     # relative tangential velocity
-    vt = relative_tangential_velocity(model, xp3, qp3, vp25, ϕp25, xc3, qc3, vc25, ϕc25)
+    vt = relative_tangential_velocity(model, xp, qp, vp, ϕp, xc, qc, vc, ϕc)
 
     # unpack contact variables
     γ = contact.impulses[2][1]

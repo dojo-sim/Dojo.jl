@@ -7,60 +7,60 @@ abstract type Contact{T,N} end
 
 # constraint Jacobians
 function constraint_jacobian_configuration(model::Contact, 
-    xp3::AbstractVector, vp25::AbstractVector, qp3::UnitQuaternion, ϕp25::AbstractVector, 
-    xc3::AbstractVector, vc25::AbstractVector, qc3::UnitQuaternion, ϕc25::AbstractVector, 
+    xp::AbstractVector, vp::AbstractVector, qp::UnitQuaternion, ϕp::AbstractVector, 
+    xc::AbstractVector, vc::AbstractVector, qc::UnitQuaternion, ϕc::AbstractVector, 
     timestep)
 
     # distance Jacobian 
-    ∂d∂x = ∂distance∂xp(model.collision, xp3, qp3, xc3, qc3)
-    ∂d∂q = ∂distance∂qp(model.collision, xp3, qp3, xc3, qc3)
+    ∂d∂x = ∂distance∂xp(model.collision, xp, qp, xc, qc)
+    ∂d∂q = ∂distance∂qp(model.collision, xp, qp, xc, qc)
 
     # contact point velocity Jacobian 
-    ∂v∂x3 = ∂contact_point_velocity∂x(model, xp3, qp3, vp25, ϕp25)
-    ∂v∂q3 = ∂contact_point_velocity∂q(model, xp3, qp3, vp25, ϕp25)
+    ∂v∂x = ∂contact_point_velocity∂x(model, xp, qp, vp, ϕp)
+    ∂v∂q = ∂contact_point_velocity∂q(model, xp, qp, vp, ϕp)
 
     X = [
             ∂d∂x;
             szeros(1, 3);
-            model.collision.contact_tangent * ∂v∂x3;
+            model.collision.contact_tangent * ∂v∂x;
         ]
 
     Q = [
             ∂d∂q;
             szeros(1, 4);
-            model.collision.contact_tangent * ∂v∂q3
+            model.collision.contact_tangent * ∂v∂q
         ]
 
     return [X Q]
 end
 
 function constraint_jacobian_velocity(model::Contact, 
-    xp3::AbstractVector, vp25::AbstractVector, qp3::UnitQuaternion, ϕp25::AbstractVector, 
-    xc3::AbstractVector, vc25::AbstractVector, qc3::UnitQuaternion, ϕc25::AbstractVector, 
+    xp::AbstractVector, vp::AbstractVector, qp::UnitQuaternion, ϕp::AbstractVector, 
+    xc::AbstractVector, vc::AbstractVector, qc::UnitQuaternion, ϕc::AbstractVector, 
     timestep)
 
     # distance Jacobian
-    ∂d∂x = ∂distance∂xp(model.collision, xp3, qp3, xc3, qc3)
-    ∂d∂q = ∂distance∂qp(model.collision, xp3, qp3, xc3, qc3)
+    ∂d∂x = ∂distance∂xp(model.collision, xp, qp, xc, qc)
+    ∂d∂q = ∂distance∂qp(model.collision, xp, qp, xc, qc)
 
     # contact point velocity Jacobian 
-    ∂v∂q3 = ∂contact_point_velocity∂q(model, xp3, qp3, vp25, ϕp25)
-    ∂v∂v25 = ∂contact_point_velocity∂v(model, xp3, qp3, vp25, ϕp25)
-    ∂v∂ϕ25 = ∂contact_point_velocity∂ϕ(model, xp3, qp3, vp25, ϕp25)
+    ∂v∂q = ∂contact_point_velocity∂q(model, xp, qp, vp, ϕp)
+    ∂v∂v = ∂contact_point_velocity∂v(model, xp, qp, vp, ϕp)
+    ∂v∂ϕ = ∂contact_point_velocity∂ϕ(model, xp, qp, vp, ϕp)
 
     # recover current orientation 
-    qp2 = next_orientation(qp3, -ϕp25, timestep)
+    qp_prev = next_orientation(qp, -ϕp, timestep)
     
     V = [
             ∂d∂x * timestep;
             szeros(1, 3);
-            model.collision.contact_tangent * ∂v∂v25
+            model.collision.contact_tangent * ∂v∂v
         ]
    
     Ω = [
-            ∂d∂q * rotational_integrator_jacobian_velocity(qp2, ϕp25, timestep);
+            ∂d∂q * rotational_integrator_jacobian_velocity(qp_prev, ϕp, timestep);
             szeros(1, 3);
-            model.collision.contact_tangent * (∂v∂ϕ25 + ∂v∂q3 * rotational_integrator_jacobian_velocity(qp2, ϕp25, timestep))
+            model.collision.contact_tangent * (∂v∂ϕ + ∂v∂q * rotational_integrator_jacobian_velocity(qp_prev, ϕp, timestep))
         ]
 
     return [V Ω]
@@ -76,7 +76,7 @@ end
 function impulse_map(model::Contact, xp::AbstractVector, qp::UnitQuaternion, xc::AbstractVector, qc::UnitQuaternion,)
     X = force_mapping(model, xp, qp, xc, qc)
     offset = model.collision.contact_normal' * model.collision.contact_radius
-    Q = - X * qp * skew(model.collision.contact_point - vector_rotate(offset, inv(qp))) 
+    Q = - X * qp * skew(model.collision.contact_origin - vector_rotate(offset, inv(qp))) 
     return [X'; Q']
 end
 

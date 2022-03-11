@@ -1,6 +1,6 @@
 # contact point velocity
 function contact_point_velocity(model::Contact, x, q, v, ϕ)
-    return v + skew(vector_rotate(ϕ, q)) * (vector_rotate(model.collision.contact_point, q) - model.collision.contact_normal' * model.collision.contact_radius)
+    return v + skew(vector_rotate(ϕ, q)) * (vector_rotate(model.collision.contact_origin, q) - model.collision.contact_normal' * model.collision.contact_radius)
 end
 
 function ∂contact_point_velocity∂x(model::Contact, x, q, v, ϕ)
@@ -8,8 +8,8 @@ function ∂contact_point_velocity∂x(model::Contact, x, q, v, ϕ)
 end
 
 function ∂contact_point_velocity∂q(model::Contact, x, q, v, ϕ)
-    ∂v∂q = skew(vector_rotate(ϕ, q)) * ∂vector_rotate∂q(model.collision.contact_point, q)
-    ∂v∂q += skew(model.collision.contact_normal' * model.collision.contact_radius - vector_rotate(model.collision.contact_point, q)) * ∂vector_rotate∂q(ϕ, q)
+    ∂v∂q = skew(vector_rotate(ϕ, q)) * ∂vector_rotate∂q(model.collision.contact_origin, q)
+    ∂v∂q += skew(model.collision.contact_normal' * model.collision.contact_radius - vector_rotate(model.collision.contact_origin, q)) * ∂vector_rotate∂q(ϕ, q)
     return ∂v∂q
 end
 
@@ -18,7 +18,7 @@ function ∂contact_point_velocity∂v(model::Contact, x, q, v, ϕ)
 end
 
 function ∂contact_point_velocity∂ϕ(model::Contact, x, q, v, ϕ)
-    ∂v∂ϕ = skew(model.collision.contact_normal' * model.collision.contact_radius - vector_rotate(model.collision.contact_point, q)) * ∂vector_rotate∂p(ϕ, q)
+    ∂v∂ϕ = skew(model.collision.contact_normal' * model.collision.contact_radius - vector_rotate(model.collision.contact_origin, q)) * ∂vector_rotate∂p(ϕ, q)
     return ∂v∂ϕ
 end
 

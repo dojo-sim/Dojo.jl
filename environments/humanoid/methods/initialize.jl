@@ -53,7 +53,7 @@ function get_humanoid(;
 
         contacts_left = contact_constraint(left_foot, normal, 
             friction_coefficient=friction_coefficients, 
-            contact_points=contacts, 
+            contact_origins=contacts, 
             contact_radius=contact_radius)
 
         right_foot = get_body(mech, :right_foot)
@@ -79,7 +79,7 @@ function get_humanoid(;
 
         contacts_right = contact_constraint(right_foot, normal, 
             friction_coefficient=friction_coefficients, 
-            contact_points=contacts, 
+            contact_origins=contacts, 
             contact_radius=contact_radius)
 
         set_minimal_coordinates!(mech, get_joint(mech, :floating_base), [0.0; 0.0; 1.2; 0.1; 0.0; 0.0])

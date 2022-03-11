@@ -59,18 +59,18 @@ function get_hopper(;
                 o = body.shape.rh[1]
                 push!(models, contact_constraint(body, normal, 
                     friction_coefficient=friction_coefficient, 
-                    contact_point=pf, 
+                    contact_origin=pf, 
                     contact_radius=o))
                 push!(models, contact_constraint(body, normal, 
                     friction_coefficient=friction_coefficient, 
-                    contact_point=pb, 
+                    contact_origin=pb, 
                     contact_radius=o))
             else
                 p = [0.0; 0.0; 0.5 * body.shape.rh[2]]
                 o = body.shape.rh[1]
                 push!(models, contact_constraint(body, normal, 
                     friction_coefficient=friction_coefficient, 
-                    contact_point=p, 
+                    contact_origin=p, 
                     contact_radius=o))
             end
         end

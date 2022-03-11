@@ -9,7 +9,7 @@ mutable struct ImpactContact{T,N} <: Contact{T,N}
     collision::Collision{T,0,3,0}
 
     function ImpactContact(body::Body{T}, normal::AbstractVector{T}; 
-        contact_point=szeros(T, 3), 
+        contact_origin=szeros(T, 3), 
         contact_radius=0.0) where T
         # projector
         V1, V2, V3 = orthogonal_columns(normal) #
@@ -17,7 +17,7 @@ mutable struct ImpactContact{T,N} <: Contact{T,N}
         Ainv = inv(A)
         contact_normal = Ainv[3, SA[1; 2; 3]]'
         # collision 
-        collision = SphereFloorCollision(szeros(T, 0, 3), contact_normal, SVector{3}(contact_point), contact_radius)
+        collision = SphereFloorCollision(szeros(T, 0, 3), contact_normal, SVector{3}(contact_origin), contact_radius)
         new{Float64,2}(collision)
     end
 end
@@ -28,14 +28,14 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N
 
     # parent
     pbody = get_body(mechanism, contact.parent_id)
-    xp3, qp3 = next_configuration(pbody.state, mechanism.timestep)
+    xp, qp = next_configuration(pbody.state, mechanism.timestep)
 
     # child
     cbody = get_body(mechanism, contact.child_id)
-    xc3, qc3 = next_configuration(cbody.state, mechanism.timestep)
+    xc, qc = next_configuration(cbody.state, mechanism.timestep)
 
     # constraint 
-    SVector{1,T}(distance(model.collision, xp3, qp3, xc3, qc3) - contact.impulses_dual[2][1])
+    SVector{1,T}(distance(model.collision, xp, qp, xc, qc) - contact.impulses_dual[2][1])
 end
 
 function constraint_jacobian(contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:ImpactContact{T,N},N½}
@@ -47,27 +47,27 @@ function constraint_jacobian(contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T
 end
 
 function constraint_jacobian_configuration(model::ImpactContact, 
-    xp3::AbstractVector, vp25::AbstractVector, qp3::UnitQuaternion, ϕp25::AbstractVector,
-    xc3::AbstractVector, vc25::AbstractVector, qc3::UnitQuaternion, ϕc25::AbstractVector, 
+    xp::AbstractVector, vp::AbstractVector, qp::UnitQuaternion, ϕp::AbstractVector,
+    xc::AbstractVector, vc::AbstractVector, qc::UnitQuaternion, ϕc::AbstractVector, 
     timestep)
 
-    X = ∂distance∂xp(model.collision, xp3, qp3, x3c, qc3)
-    Q = ∂distance∂qp(model.collision, xp3, qp3, x3c, qc3)
+    X = ∂distance∂xp(model.collision, xp, qp, xc, qc)
+    Q = ∂distance∂qp(model.collision, xp, qp, xc, qc)
 
     return [X Q]
 end
 
 function constraint_jacobian_velocity(model::ImpactContact, 
-    xp3::AbstractVector, vp25::AbstractVector, qp3::UnitQuaternion, ϕp25::AbstractVector,
-    xc3::AbstractVector, vc25::AbstractVector, qc3::UnitQuaternion, ϕc25::AbstractVector, 
+    xp::AbstractVector, vp::AbstractVector, qp::UnitQuaternion, ϕp::AbstractVector,
+    xc::AbstractVector, vc::AbstractVector, qc::UnitQuaternion, ϕc::AbstractVector, 
     timestep)
 
     # recover current orientation 
-    qp2 = next_orientation(qp3, -ϕp25, timestep)
+    qp_prev = next_orientation(qp, -ϕp, timestep)
 
     # Jacobian
-    V = ∂distance∂xp(model.collision, xp3, qp3, xc3, qc3) * timestep
-    Ω = ∂distance∂qp(model.collision, xp3, qp3, xc3, qc3) * rotational_integrator_jacobian_velocity(qp2, ϕp25, timestep)
+    V = ∂distance∂xp(model.collision, xp, qp, xc, qc) * timestep
+    Ω = ∂distance∂qp(model.collision, xp, qp, xc, qc) * rotational_integrator_jacobian_velocity(qp_prev, ϕp, timestep)
 
     return [V Ω]
 end

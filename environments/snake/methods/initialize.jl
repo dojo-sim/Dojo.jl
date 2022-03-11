@@ -47,11 +47,11 @@ function get_snake(;
 
         contacts1 = contact_constraint(bodies, normal,
             friction_coefficient=friction_coefficient,
-            contact_points=fill(vert11, n),
+            contact_origins=fill(vert11, n),
             contact_type=contact_type) # we need to duplicate point for prismatic joint for instance
         contacts2 = contact_constraint(bodies, normal,
             friction_coefficient=friction_coefficient,
-            contact_points=fill(vert12, n),
+            contact_origins=fill(vert12, n),
             contact_type=contact_type)
         mech = Mechanism(origin, bodies, joints, [contacts1; contacts2],
             gravity=gravity,

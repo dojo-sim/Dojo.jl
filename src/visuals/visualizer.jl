@@ -75,7 +75,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
                     radius = abs(contact.model.collision.contact_radius)
                     (radius == 0.0) && (radius = 0.01)
                     contact_shape = Sphere(radius,
-                        position_offset=contact.model.collision.contact_point,
+                        position_offset=contact.model.collision.contact_origin,
                         axis_offset=one(UnitQuaternion), 
                         color=RGBA(1.0, 0.0, 0.0, 0.5))
                     visshape = convert_shape(contact_shape)
@@ -169,7 +169,7 @@ function build_robot(mechanism::Mechanism; vis::Visualizer=Visualizer(),
                     radius = abs(contact.model.collision.contact_radius)
                     (radius == 0.0) && (radius = 0.01)
                     contact_shape = Sphere(radius,
-                        position_offset=(contact.model.collision.contact_point),
+                        position_offset=(contact.model.collision.contact_origin),
                         axis_offset=one(UnitQuaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
                     visshape = convert_shape(contact_shape)
                     subvisshape = nothing
@@ -253,7 +253,7 @@ function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T};
                     radius = abs(contact.model.collision.contact_radius)
                     (radius == 0.0) && (radius = 0.01)
                     contact_shape = Sphere(radius,
-                        position_offset=(contact.model.collision.contact_point),
+                        position_offset=(contact.model.collision.contact_origin),
                         axis_offset=one(UnitQuaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
                     visshape = convert_shape(contact_shape)
                     subvisshape = nothing
