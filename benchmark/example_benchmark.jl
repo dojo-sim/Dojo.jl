@@ -20,6 +20,7 @@ Dojo.initialize!(mech, :atlas_stance,
 SUITE["atlas"] = @benchmarkable simulate!($mech, 2.5, opts=SolverOptions(rtol=1.0e-6, btol=1.0e-6)) samples=2
 
 
+
 ###############################
 ### Example benchmark for Pendulum
 ###############################
