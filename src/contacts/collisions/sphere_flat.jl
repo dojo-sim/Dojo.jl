@@ -10,19 +10,19 @@
 """
 mutable struct SphereFlatCollision{T,O,I,OI} <: Collision{T,O,I,OI}
     contact_tangent::SMatrix{O,I,T,OI}
-    contact_normal::SVector{I,T}
+    contact_normal::Adjoint{T,SVector{I,T}}
     contact_origin::SVector{I,T}
     contact_radius::T
 end 
 
 # distance
 function distance(collision::SphereFlatCollision, xp, qp, xc, qc)
-    collision.contact_normal' * (xp + vector_rotate(collision.contact_origin, qp)) - collision.contact_radius
+    collision.contact_normal * (xp + vector_rotate(collision.contact_origin, qp)) - collision.contact_radius
 end
 
 function ∂distance∂x(relative::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc)
     if relative == :parent
-        return collision.contact_normal'
+        return collision.contact_normal
     elseif relative == :child 
         return szeros(eltype(xc), 1, 3) 
     end
@@ -30,7 +30,7 @@ end
 
 function ∂distance∂q(relative::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc)
     if relative == :parent
-        return collision.contact_normal' * ∂vector_rotate∂q(collision.contact_origin, qp)
+        return collision.contact_normal * ∂vector_rotate∂q(collision.contact_origin, qp)
     elseif relative == :child 
         return szeros(eltype(qc), 1, 4)
     end

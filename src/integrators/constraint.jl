@@ -68,14 +68,14 @@ end
 function integrator_jacobian_velocity(body::Body{T}, timestep) where T
     state = body.state
     x2, v25, q2, ϕ25 = current_configuration_velocity(state)
-    integrator_jacobian_velocity(q2, ϕ25, timestep)
+    integrator_jacobian_velocity(x2, v25, q2, ϕ25, timestep)
 end
 
 function integrator_jacobian_configuration(body::Body{T},
         timestep; attjac::Bool=true) where T
     state = body.state
     x2, v25, q2, ϕ25 = current_configuration_velocity(state)
-    integrator_jacobian_configuration(q2, ϕ25, timestep; attjac=attjac)
+    integrator_jacobian_configuration(x2, v25, q2, ϕ25, timestep; attjac=attjac)
 end
 
 # linear system 

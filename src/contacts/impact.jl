@@ -11,13 +11,16 @@ mutable struct ImpactContact{T,N} <: Contact{T,N}
     function ImpactContact(body::Body{T}, normal::AbstractVector{T}; 
         contact_origin=szeros(T, 3), 
         contact_radius=0.0) where T
+        
         # projector
         V1, V2, V3 = orthogonal_columns(normal) #
         A = [V1 V2 V3]
         Ainv = inv(A)
         contact_normal = Ainv[3, SA[1; 2; 3]]'
+
         # collision 
-        collision = SphereFloorCollision(szeros(T, 0, 3), contact_normal, SVector{3}(contact_origin), contact_radius)
+        collision = SphereFlatCollision(szeros(T, 0, 3), contact_normal, SVector{3}(contact_origin), contact_radius)
+
         new{Float64,2}(collision)
     end
 end
@@ -46,33 +49,41 @@ function constraint_jacobian(contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T
     return [∇s ∇γ]
 end
 
-function constraint_jacobian_configuration(model::ImpactContact, 
+function constraint_jacobian_configuration(relative::Symbol, model::ImpactContact, 
     xp::AbstractVector, vp::AbstractVector, qp::UnitQuaternion, ϕp::AbstractVector,
     xc::AbstractVector, vc::AbstractVector, qc::UnitQuaternion, ϕc::AbstractVector, 
     timestep)
 
-    X = ∂distance∂xp(model.collision, xp, qp, xc, qc)
-    Q = ∂distance∂qp(model.collision, xp, qp, xc, qc)
+    X = ∂distance∂x(relative, model.collision, xp, qp, xc, qc)
+    Q = ∂distance∂q(relative, model.collision, xp, qp, xc, qc)
 
     return [X Q]
 end
 
-function constraint_jacobian_velocity(model::ImpactContact, 
+function constraint_jacobian_velocity(relative::Symbol, model::ImpactContact, 
     xp::AbstractVector, vp::AbstractVector, qp::UnitQuaternion, ϕp::AbstractVector,
     xc::AbstractVector, vc::AbstractVector, qc::UnitQuaternion, ϕc::AbstractVector, 
     timestep)
 
     # recover current orientation 
-    qp_prev = next_orientation(qp, -ϕp, timestep)
+    if relative == :parent
+        q = next_orientation(qp, -ϕp, timestep)
+        ∂q∂ϕ = rotational_integrator_jacobian_velocity(q, ϕp, timestep)
+    elseif relative == :child 
+        q = next_orientation(qc, -ϕc, timestep)
+        ∂q∂ϕ = rotational_integrator_jacobian_velocity(q, ϕc, timestep)
+    end
 
     # Jacobian
-    V = ∂distance∂xp(model.collision, xp, qp, xc, qc) * timestep
-    Ω = ∂distance∂qp(model.collision, xp, qp, xc, qc) * rotational_integrator_jacobian_velocity(qp_prev, ϕp, timestep)
+    V = ∂distance∂x(relative, model.collision, xp, qp, xc, qc) * timestep
+    Ω = ∂distance∂q(relative, model.collision, xp, qp, xc, qc) * ∂q∂ϕ
 
     return [V Ω]
 end
 
-function force_mapping(model::ImpactContact, xp::AbstractVector, qp::UnitQuaternion, xc::AbstractVector, qc::UnitQuaternion)
+function force_mapping(relative::Symbol, model::ImpactContact, 
+    xp::AbstractVector, qp::UnitQuaternion, 
+    xc::AbstractVector, qc::UnitQuaternion)
     X = model.collision.contact_normal
     return X
 end

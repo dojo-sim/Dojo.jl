@@ -13,6 +13,7 @@ mutable struct LinearContact{T,N} <: Contact{T,N}
     function LinearContact(body::Body{T}, normal::AbstractVector, friction_coefficient; 
         contact_origin=szeros(T, 3), 
         contact_radius=0.0) where T
+
         # projectors
         V1, V2, V3 = orthogonal_columns(normal)
         A = [V1 V2 V3]
@@ -25,8 +26,10 @@ mutable struct LinearContact{T,N} <: Contact{T,N}
              1.0  0.0
             -1.0  0.0
         ]
+
         # collision 
-        collision = SphereFloorCollision(parameterization * contact_tangent, contact_normal, SVector{3}(contact_origin), contact_radius)
+        collision = SphereFlatCollision(parameterization * contact_tangent, contact_normal, SVector{3}(contact_origin), contact_radius)
+        
         new{Float64,12}(friction_coefficient, collision)
     end
 end

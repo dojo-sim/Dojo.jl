@@ -16,6 +16,7 @@ mutable struct NonlinearContact{T,N} <: Contact{T,N}
     function NonlinearContact(body::Body{T}, normal::AbstractVector, friction_coefficient; 
         contact_origin=szeros(T, 3), 
         contact_radius=0.0) where T
+
         # projectors
         V1, V2, V3 = orthogonal_columns(normal)
         A = [V1 V2 V3]
@@ -24,7 +25,8 @@ mutable struct NonlinearContact{T,N} <: Contact{T,N}
         contact_tangent = Ainv[SA[1; 2], SA[1; 2; 3]]
         
         # collision 
-        collision = SphereFloorCollision(contact_tangent, contact_normal, SVector{3}(contact_origin), contact_radius)
+        collision = SphereFlatCollision(contact_tangent, contact_normal, SVector{3}(contact_origin), contact_radius)
+        
         new{T,8}(friction_coefficient, collision)
     end
 end
