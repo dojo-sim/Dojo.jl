@@ -17,15 +17,16 @@ mutable struct LinearContact{T,N} <: Contact{T,N}
         V1, V2, V3 = orthogonal_columns(normal)
         A = [V1 V2 V3]
         Ainv = inv(A)
-        surface_normal_projector = Ainv[3, SA[1; 2; 3]]'
-        surface_projector = SA{T}[
-             1.0  0.0  0.0
-            -1.0  0.0  0.0
-             0.0  1.0  0.0
-             0.0 -1.0  0.0
+        contact_normal = Ainv[3, SA[1; 2; 3]]'
+        contact_tangent = Ainv[SA[1; 2], SA[1; 2; 3]]
+        parameterization = SA{T}[
+             0.0  1.0
+             0.0 -1.0
+             1.0  0.0
+            -1.0  0.0
         ]
         # collision 
-        collision = SphereFloorCollision(surface_projector, surface_normal_projector, SVector{3}(contact_point), contact_radius)
+        collision = SphereFloorCollision(parameterization * contact_tangent, contact_normal, SVector{3}(contact_point), contact_radius)
         new{Float64,12}(friction_coefficient, collision)
     end
 end

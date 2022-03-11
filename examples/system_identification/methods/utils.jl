@@ -96,7 +96,7 @@ end
 function ∂g∂simdata(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:NonlinearContact{T,N}}
     model = contact.model
 	p = model.collision.contact_point
-	offset = model.collision.surface_normal_projector' * model.collision.contact_radius
+	offset = model.collision.contact_normal' * model.collision.contact_radius
     body = get_body(mechanism, contact.parent_id)
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, mechanism.timestep)
@@ -105,8 +105,8 @@ function ∂g∂simdata(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where 
 
 	# Contribution to Injointonstraint
 	∇friction_coefficient = SA[0,γ[1],0,0]
-	∇off = [-model.collision.surface_normal_projector; szeros(T,1,3); -model.surface_projector * skew(vector_rotate(ϕ25, q3))]
-	∇p = [model.collision.surface_normal_projector * ∂vector_rotate∂p(model.collision.contact_point, q3); szeros(T,1,3); model.surface_projector * skew(vector_rotate(ϕ25, q3)) * ∂vector_rotate∂p(model.collision.contact_point, q3)]
+	∇off = [-model.collision.contact_normal; szeros(T,1,3); -model.contact_tangent * skew(vector_rotate(ϕ25, q3))]
+	∇p = [model.collision.contact_normal * ∂vector_rotate∂p(model.collision.contact_point, q3); szeros(T,1,3); model.contact_tangent * skew(vector_rotate(ϕ25, q3)) * ∂vector_rotate∂p(model.collision.contact_point, q3)]
 	∇contact = [∇friction_coefficient ∇off ∇p]
 
 	# Contribution to Body dynamics

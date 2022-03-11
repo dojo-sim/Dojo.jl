@@ -4,8 +4,8 @@
     contact object for impact and friction with a nonlinear friction cone
 
     friction_coefficient: value of friction coefficient
-    surface_projector: mapping from world frame to surface tangent frame 
-    surface_normal_projector: inverse/complement of surface_projector
+    contact_tangent: mapping from world frame to surface tangent frame 
+    contact_normal: inverse/complement of contact_tangent
     contact_point: position of contact on Body relative to center of mass 
     contact radius: radius of contact
 """
@@ -20,13 +20,11 @@ mutable struct NonlinearContact{T,N} <: Contact{T,N}
         V1, V2, V3 = orthogonal_columns(normal)
         A = [V1 V2 V3]
         Ainv = inv(A)
-        surface_normal_projector = Ainv[3, SA[1; 2; 3]]'
-        surface_projector = SA{T}[
-            1.0 0.0 0.0
-            0.0 1.0 0.0
-        ]
+        contact_normal = Ainv[3, SA[1; 2; 3]]'
+        contact_tangent = Ainv[SA[1; 2], SA[1; 2; 3]]
+        
         # collision 
-        collision = SphereFloorCollision(surface_projector, surface_normal_projector, SVector{3}(contact_point), contact_radius)
+        collision = SphereFloorCollision(contact_tangent, contact_normal, SVector{3}(contact_point), contact_radius)
         new{T,8}(friction_coefficient, collision)
     end
 end

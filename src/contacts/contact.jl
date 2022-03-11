@@ -22,13 +22,13 @@ function constraint_jacobian_configuration(model::Contact,
     X = [
             ∂d∂x;
             szeros(1, 3);
-            model.collision.surface_projector * ∂v∂x3;
+            model.collision.contact_tangent * ∂v∂x3;
         ]
 
     Q = [
             ∂d∂q;
             szeros(1, 4);
-            model.collision.surface_projector * ∂v∂q3
+            model.collision.contact_tangent * ∂v∂q3
         ]
 
     return [X Q]
@@ -54,13 +54,13 @@ function constraint_jacobian_velocity(model::Contact,
     V = [
             ∂d∂x * timestep;
             szeros(1, 3);
-            model.collision.surface_projector * ∂v∂v25
+            model.collision.contact_tangent * ∂v∂v25
         ]
    
     Ω = [
             ∂d∂q * rotational_integrator_jacobian_velocity(qp2, ϕp25, timestep);
             szeros(1, 3);
-            model.collision.surface_projector * (∂v∂ϕ25 + ∂v∂q3 * rotational_integrator_jacobian_velocity(qp2, ϕp25, timestep))
+            model.collision.contact_tangent * (∂v∂ϕ25 + ∂v∂q3 * rotational_integrator_jacobian_velocity(qp2, ϕp25, timestep))
         ]
 
     return [V Ω]
@@ -75,16 +75,16 @@ end
 
 function impulse_map(model::Contact, xp::AbstractVector, qp::UnitQuaternion, xc::AbstractVector, qc::UnitQuaternion,)
     X = force_mapping(model, xp, qp, xc, qc)
-    offset = model.collision.surface_normal_projector' * model.collision.contact_radius
+    offset = model.collision.contact_normal' * model.collision.contact_radius
     Q = - X * qp * skew(model.collision.contact_point - vector_rotate(offset, inv(qp))) 
     return [X'; Q']
 end
 
 # force mapping 
 function force_mapping(model::Contact, xp::AbstractVector, qp::UnitQuaternion, xc::AbstractVector, qc::UnitQuaternion)
-    X = [model.collision.surface_normal_projector;
+    X = [model.collision.contact_normal;
          szeros(1,3);
-         model.collision.surface_projector]
+         model.collision.contact_tangent]
     return X
 end
 

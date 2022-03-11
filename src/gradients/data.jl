@@ -153,7 +153,7 @@ function body_constraint_jacobian_contact_data(mechanism::Mechanism, body::Body{
         contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
     Nd = data_dim(contact)
     model = contact.model
-    offset = model.collision.surface_normal_projector' * model.collision.contact_radius
+    offset = model.collision.contact_normal' * model.collision.contact_radius
     xp3, qp3 = next_configuration(get_body(mechanism, contact.parent_id).state, mechanism.timestep)
     xc3, qc3 = next_configuration(get_body(mechanism, contact.child_id).state, mechanism.timestep)
 
@@ -164,7 +164,7 @@ function body_constraint_jacobian_contact_data(mechanism::Mechanism, body::Body{
     X = force_mapping(model, xp3, qp3, xc3, qc3)
     # this what we differentiate: Qᵀγ = - skew(p - vector_rotate(offset, inv(q3))) * VRmat(q3) * LᵀVᵀmat(q3) * X' * γ
     ∇p = - ∂skew∂p(VRmat(qp3) * LᵀVᵀmat(qp3) * X' * γ)
-    ∇off = - model.collision.surface_normal_projector * ∂skew∂p(VRmat(qp3) * LᵀVᵀmat(qp3) * X' * γ) * -∂vector_rotate∂p(offset, inv(qp3)) #TODO: confirm the reprojection
+    ∇off = - model.collision.contact_normal * ∂skew∂p(VRmat(qp3) * LᵀVᵀmat(qp3) * X' * γ) * -∂vector_rotate∂p(offset, inv(qp3)) #TODO: confirm the reprojection
 
     ∇X = szeros(T,3,Nd)
     ∇Q = -[∇friction_coefficient ∇off ∇p]
@@ -175,15 +175,15 @@ function contact_constraint_jacobian_contact_data(mechanism::Mechanism, contact:
     Nd = data_dim(contact)
     model = contact.model
     p = model.collision.contact_point
-    offset = model.collision.surface_normal_projector' * model.collision.contact_radius
+    offset = model.collision.contact_normal' * model.collision.contact_radius
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, mechanism.timestep)
     s = contact.impulses_dual[2]
     γ = contact.impulses[2]
 
     ∇friction_coefficient = SA[0,γ[1],0,0]
-    ∇off = model.collision.surface_normal_projector * [-model.collision.surface_normal_projector; szeros(T,1,3); -model.surface_projector * skew(vector_rotate(ϕ25, q3))] #TODO: confirm reprojection is correct
-    ∇p = [model.collision.surface_normal_projector * ∂vector_rotate∂p(model.collision.contact_point, q3); szeros(T,1,3); model.surface_projector * skew(vector_rotate(ϕ25, q3)) * ∂vector_rotate∂p(model.collision.contact_point, q3)]
+    ∇off = model.collision.contact_normal * [-model.collision.contact_normal; szeros(T,1,3); -model.contact_tangent * skew(vector_rotate(ϕ25, q3))] #TODO: confirm reprojection is correct
+    ∇p = [model.collision.contact_normal * ∂vector_rotate∂p(model.collision.contact_point, q3); szeros(T,1,3); model.contact_tangent * skew(vector_rotate(ϕ25, q3)) * ∂vector_rotate∂p(model.collision.contact_point, q3)]
 
     ∇compμ = szeros(T,N½,Nd)
     ∇g = -[∇friction_coefficient ∇off ∇p]

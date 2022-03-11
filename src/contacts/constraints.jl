@@ -52,7 +52,7 @@ function impulse_map_jacobian_configuration(mechanism, body::Body{T}, contact::C
     λ = X' * contact.impulses[2]
 
     # offset 
-    offset = model.collision.surface_normal_projector' * model.collision.contact_radius
+    offset = model.collision.contact_normal' * model.collision.contact_radius
 
     # Jacobian 
     Z3 = szeros(T,3,3)

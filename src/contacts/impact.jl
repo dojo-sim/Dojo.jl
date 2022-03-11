@@ -15,9 +15,9 @@ mutable struct ImpactContact{T,N} <: Contact{T,N}
         V1, V2, V3 = orthogonal_columns(normal) #
         A = [V1 V2 V3]
         Ainv = inv(A)
-        surface_normal_projector = Ainv[3, SA[1; 2; 3]]'
+        contact_normal = Ainv[3, SA[1; 2; 3]]'
         # collision 
-        collision = SphereFloorCollision(szeros(T, 0, 3), surface_normal_projector, SVector{3}(contact_point), contact_radius)
+        collision = SphereFloorCollision(szeros(T, 0, 3), contact_normal, SVector{3}(contact_point), contact_radius)
         new{Float64,2}(collision)
     end
 end
@@ -73,7 +73,7 @@ function constraint_jacobian_velocity(model::ImpactContact,
 end
 
 function force_mapping(model::ImpactContact, xp::AbstractVector, qp::UnitQuaternion, xc::AbstractVector, qc::UnitQuaternion)
-    X = model.collision.surface_normal_projector
+    X = model.collision.contact_normal
     return X
 end
 
