@@ -105,6 +105,29 @@ function quadruped_trajectory(mechanism::Mechanism{T}; timestep=0.05, Δx = -0.0
 	return X
 end
 
+function gravity_compensation(mechanism::Mechanism)
+    # only works with revolute joints for now
+    nu = control_dimension(mechanism)
+    u = zeros(nu)
+    off  = 0
+    for joint in mechanism.joints
+        nu = control_dimension(joint)
+        if joint.parent_id != 0
+            body = get_body(mechanism, joint.parent_id)
+            rot = joint.rotational
+            A = Matrix(nullspace_mask(rot))
+            input = spring_impulses(mechanism, joint, body)
+            F = input[1:3]
+            τ = input[4:6]
+            u[off .+ (1:nu)] = -A * τ
+        else
+            @warn "need to treat the joint to origin"
+        end
+        off += nu
+    end
+    return u
+end
+
 
 # ################################################################################
 # # Compute trajectory
