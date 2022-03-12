@@ -15,8 +15,8 @@ function dmrpdq(q::AbstractVector)
     di = 1 / (s + 1)
 
     [-v[1] * d1  di 0.0 0.0; 
-     -v[2] * d1 0.0 di 0.0;
-     -v[3] * d1 0.0 0.0 di]
+     -v[2] * d1  0.0 di 0.0;
+     -v[3] * d1  0.0 0.0 di]
 end
 
 function axis(q)
