@@ -17,8 +17,12 @@ function DojoRLEnv(name::String; kwargs...)
     DojoRLEnv(Dojo.get_environment(name; kwargs...))
 end
 
-RLBase.action_space(env::DojoRLEnv) = env.dojoenv.input_space
-RLBase.state_space(env::DojoRLEnv) = env.dojoenv.observation_space
+function Base.convert(::Type{RLBase.Space}, s::BoxSpace)
+    RLBase.Space([BoxSpace(1; low = s.low[i:i], high = s.high[i:i]) for i in 1:s.n])
+end
+
+RLBase.action_space(env::DojoRLEnv) = convert(RLBase.Space, env.dojoenv.input_space)
+RLBase.state_space(env::DojoRLEnv) = convert(RLBase.Space, env.dojoenv.observation_space)
 RLBase.is_terminated(env::DojoRLEnv) = env.done
 
 RLBase.reset!(env::DojoRLEnv) = reset(env.dojoenv)
@@ -39,4 +43,4 @@ function (env::DojoRLEnv)(a)
     env.info = i
     return nothing
 end
-(env::DojoRLEnv)(a::AbstractFloat) = env([a])
+(env::DojoRLEnv)(a::Number) = env([a])
