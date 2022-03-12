@@ -83,7 +83,7 @@ function impulse_map(relative::Symbol, model::Contact, pbody::Node, cbody::Node,
 
     # mapping
     X = force_mapping(relative, model, xp, qp, xc, qc)
-    c = contact_point(relative, model.collision, xp, qp, xc, qc)
+    c = contact_point(model.collision, xp, qp, xc, qc)
 
     if relative == :parent 
         r = c - xp
@@ -113,7 +113,7 @@ function impulse_map_jacobian(relative::Symbol, jacobian::Symbol, model::Contact
     Xq = ∂force_mapping∂q(relative, jacobian, model, xp, qp, xc, qc, λ)
 
     # contact point
-    c = contact_point(relative, model.collision, xp, qp, xc, qc)
+    c = contact_point(model.collision, xp, qp, xc, qc)
 
     # torque Jacobian
     if relative == :parent 
@@ -125,10 +125,10 @@ function impulse_map_jacobian(relative::Symbol, jacobian::Symbol, model::Contact
     end
 
     Qx = inv(q) * skew(r) * Xx 
-    Qx -= inv(q) * skew(X * λ) * (∂contact_point∂x(relative, relative, model.collision, xp, qp, xc, qc) - (relative == jacobian ? 1.0 : 0.0) * I(3)) 
+    Qx -= inv(q) * skew(X * λ) * (∂contact_point∂x(relative, model.collision, xp, qp, xc, qc) - (relative == jacobian ? 1.0 : 0.0) * I(3)) 
 
     Qq = inv(q) * skew(r) * Xq 
-    Qq -= inv(q) * skew(X * λ) * ∂contact_point∂q(relative, relative, model.collision, xp, qp, xc, qc) 
+    Qq -= inv(q) * skew(X * λ) * ∂contact_point∂q(relative, model.collision, xp, qp, xc, qc) 
     Qq += ∂rotation_matrix∂q(inv(q), skew(r) * X * λ) * Tmat()
 
     return [
@@ -138,37 +138,37 @@ function impulse_map_jacobian(relative::Symbol, jacobian::Symbol, model::Contact
 end
 
 # force mapping 
-function force_mapping(relative::Symbol, model::Contact, 
+function force_mapping(model::Contact, 
     xp::AbstractVector, qp::UnitQuaternion, 
     xc::AbstractVector, qc::UnitQuaternion)
 
     X = [
-            contact_normal(relative, model.collision, xp, qp, xc, qc)' szeros(3, 1) contact_tangent(relative, model.collision, xp, qp, xc, qc)'
+            contact_normal(model.collision, xp, qp, xc, qc)' szeros(3, 1) contact_tangent(model.collision, xp, qp, xc, qc)'
         ]
 
     return X
 end
 
-function ∂force_mapping∂x(relative::Symbol, jacobian::Symbol,
+function ∂force_mapping∂x(jacobian::Symbol,
     model::Contact, 
     xp::AbstractVector, qp::UnitQuaternion, 
     xc::AbstractVector, qc::UnitQuaternion,
     λ::AbstractVector)
 
-    X = ∂contact_normal∂x(relative, jacobian, model.collision, xp, qp, xc, qc, λ)' 
-    X += ∂contact_tangent∂x(relative, jacobian, model.collision, xp, qp, xc, qc, λ)'
+    X = ∂contact_normal_vjp∂x(jacobian, model.collision, xp, qp, xc, qc, λ[SA[1]])' 
+    X += ∂contact_tangent_vjp∂x(jacobian, model.collision, xp, qp, xc, qc, λ[SUnitRange(3, length(λ))])'
    
     return X
 end
 
-function ∂force_mapping∂q(relative::Symbol, jacobian::Symbol,
+function ∂force_mapping∂q(jacobian::Symbol,
     model::Contact, 
     xp::AbstractVector, qp::UnitQuaternion, 
     xc::AbstractVector, qc::UnitQuaternion,
     λ::AbstractVector)
 
-    X = ∂contact_normal∂q(relative, jacobian, model.collision, xp, qp, xc, qc, λ[SA[1]])' 
-    X += ∂contact_tangent∂q(relative, jacobian, model.collision, xp, qp, xc, qc, λ[SUnitRange(3, length(λ))])'
+    X = ∂contact_normal_vjp∂q(jacobian, model.collision, xp, qp, xc, qc, λ[SA[1]])' 
+    X += ∂contact_tangent_vjp∂q(jacobian, model.collision, xp, qp, xc, qc, λ[SUnitRange(3, length(λ))])'
 
     return X
 end

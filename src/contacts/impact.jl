@@ -85,33 +85,33 @@ function constraint_jacobian_velocity(relative::Symbol, model::ImpactContact,
     return [V Ω]
 end
 
-function force_mapping(relative::Symbol, model::ImpactContact, 
+function force_mapping(model::ImpactContact, 
     xp::AbstractVector, qp::UnitQuaternion, 
     xc::AbstractVector, qc::UnitQuaternion)
 
-    X = contact_normal(relative, model.collision, xp, qp, xc, qc)'
+    X = contact_normal(model.collision, xp, qp, xc, qc)'
 
     return X
 end
 
-function ∂force_mapping∂x(relative::Symbol, jacobian::Symbol,
+function ∂force_mapping∂x(jacobian::Symbol,
     model::ImpactContact, 
     xp::AbstractVector, qp::UnitQuaternion, 
     xc::AbstractVector, qc::UnitQuaternion,
     λ::AbstractVector)
 
-    X = ∂contact_normal∂x(relative, jacobian, model.collision, xp, qp, xc, qc, λ)'
+    X = ∂contact_normal_vjp∂x(jacobian, model.collision, xp, qp, xc, qc, λ[SA[1]])'
 
     return X
 end
 
-function ∂force_mapping∂q(relative::Symbol, jacobian::Symbol,
+function ∂force_mapping∂q(jacobian::Symbol,
     model::ImpactContact, 
     xp::AbstractVector, qp::UnitQuaternion, 
     xc::AbstractVector, qc::UnitQuaternion,
     λ::AbstractVector)
 
-    X = ∂contact_normal∂q(relative, jacobian, model.collision, xp, qp, xc, qc, λ)'
+    X = ∂contact_normal_vjp∂q(jacobian, model.collision, xp, qp, xc, qc, λ[SA[1]])'
 
     return X
 end
