@@ -191,7 +191,8 @@ export
     get_contact,
     get_sdf,
     contact_location,
-    damper_impulses
+    damper_impulses,
+    contact_constraint
 
 # Inputs
 export
