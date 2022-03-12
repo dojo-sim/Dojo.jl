@@ -20,7 +20,7 @@ using MeshCat
 import MeshCat: render
 using Meshing
 using GeometryBasics
-using LightGraphs
+using Graphs
 
 using JLD2
 using DocStringExtensions
