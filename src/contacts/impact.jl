@@ -85,16 +85,20 @@ function constraint_jacobian_velocity(relative::Symbol, model::ImpactContact,
     return [V Ω]
 end
 
-function force_mapping(model::ImpactContact, 
+function force_mapping(relative::Symbol, model::ImpactContact, 
     xp::AbstractVector, qp::UnitQuaternion, 
     xc::AbstractVector, qc::UnitQuaternion)
 
     X = contact_normal(model.collision, xp, qp, xc, qc)'
 
-    return X
+    if relative == :parent 
+        return X 
+    elseif relative == :child 
+        return -1.0 * X 
+    end
 end
 
-function ∂force_mapping∂x(jacobian::Symbol,
+function ∂force_mapping∂x(relative::Symbol, jacobian::Symbol,
     model::ImpactContact, 
     xp::AbstractVector, qp::UnitQuaternion, 
     xc::AbstractVector, qc::UnitQuaternion,
@@ -102,7 +106,11 @@ function ∂force_mapping∂x(jacobian::Symbol,
 
     X = ∂contact_normal_vjp∂x(jacobian, model.collision, xp, qp, xc, qc, λ[SA[1]])'
 
-    return X
+    if relative == :parent 
+        return X 
+    elseif relative == :child 
+        return -1.0 * X 
+    end
 end
 
 function ∂force_mapping∂q(jacobian::Symbol,
@@ -113,7 +121,11 @@ function ∂force_mapping∂q(jacobian::Symbol,
 
     X = ∂contact_normal_vjp∂q(jacobian, model.collision, xp, qp, xc, qc, λ[SA[1]])'
 
-    return X
+    if relative == :parent 
+        return X 
+    elseif relative == :child 
+        return -1.0 * X 
+    end
 end
 
 
