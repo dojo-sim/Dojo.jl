@@ -37,20 +37,20 @@ joint_types = [
 		x = srand(1)
 		Δx = Dojo.zerodimstaticadjoint(Dojo.nullspace_mask(tra2)) * x
 		Δq = rand(QuatRotation).q
-		Dojo.set_maximal_configurations!(pbody, cbody; 
-			parent_vertex=tra2.vertices[1], 
-			child_vertex=tra2.vertices[2], 
-			Δx=Δx, 
+		Dojo.set_maximal_configurations!(pbody, cbody;
+			parent_vertex=tra2.vertices[1],
+			child_vertex=tra2.vertices[2],
+			Δx=Δx,
 			Δq=Δq)
 		@test norm(Dojo.minimal_coordinates(tra2, pbody, cbody) - x[1], Inf) < 1.0e-8
 
 		v = srand(1)
 		Δv = Dojo.zerodimstaticadjoint(Dojo.nullspace_mask(tra2)) * v
 		Δω = rand(3)
-		Dojo.set_maximal_velocities!(pbody, cbody; 
-			parent_vertex=tra2.vertices[1], 
-			child_vertex=tra2.vertices[2], 
-			Δv=Δv, 
+		Dojo.set_maximal_velocities!(pbody, cbody;
+			parent_vertex=tra2.vertices[1],
+			child_vertex=tra2.vertices[2],
+			Δv=Δv,
 			Δω=Δω)
 		@test norm(Dojo.minimal_velocities(tra2, pbody, cbody, timestep) - v[1], Inf) < 1.0e-8
 	end
@@ -58,9 +58,9 @@ joint_types = [
 	@testset "Minimal coordinates" begin
 		for joint_type in joint_types
 			mech = Dojo.get_snake(
-					num_bodies=10, 
+					num_bodies=10,
 					joint_type=joint_type)
-	
+
 			timestep = mech.timestep
 			for joint in mech.joints
 				joint.rotational.axis_offset = rand(QuatRotation).q
@@ -70,25 +70,25 @@ joint_types = [
 			rot0 = joint0.rotational
 			pnodes0 = [mech.origin; mech.bodies[1:end-1]]
 			cnodes0 = mech.bodies
-	
+
 			Random.seed!(100)
 			Δθ = rand(input_dimension(rot0))
 			Δx = rand(input_dimension(tra0))
 			Δϕ = rand(input_dimension(rot0))
 			Δv = rand(input_dimension(tra0))
 			for i = 1:10
-				Dojo.set_minimal_coordinates!(rot0, pnodes0[i], cnodes0[i],  timestep, 
+				Dojo.set_minimal_coordinates!(rot0, pnodes0[i], cnodes0[i],  timestep,
 					Δθ=Δθ)
 				Δθ0 = Dojo.minimal_coordinates(rot0, pnodes0[i], cnodes0[i])
 				@test norm(Δθ0 - Δθ, Inf) < 1.0e-7
-	
-				Dojo.set_minimal_coordinates!(tra0, pnodes0[i], cnodes0[i], timestep, 
+
+				Dojo.set_minimal_coordinates!(tra0, pnodes0[i], cnodes0[i], timestep,
 					Δx=Δx)
 				Δx0 = Dojo.minimal_coordinates(tra0, pnodes0[i], cnodes0[i])
 				@test norm(Δx0 - Δx, Inf) < 1.0e-7
-	
-				Dojo.set_minimal_velocities!(joint0, pnodes0[i], cnodes0[i], timestep, 
-					Δv=Δv, 
+
+				Dojo.set_minimal_velocities!(joint0, pnodes0[i], cnodes0[i], timestep,
+					Δv=Δv,
 					Δϕ=Δϕ)
 				Δϕ0 = Dojo.minimal_velocities(rot0, pnodes0[i], cnodes0[i], timestep)
 				Δv0 = Dojo.minimal_velocities(tra0, pnodes0[i], cnodes0[i], timestep)
@@ -156,7 +156,7 @@ end
 	# nslider
 	@testset "Nslider" begin
 		Nb0 = 5
-		mech = Dojo.get_mechanism(:nslider, 
+		mech = Dojo.get_mechanism(:nslider,
 			num_bodies=Nb0)
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
@@ -171,8 +171,8 @@ end
 		for joint_type in joint_types
 			# @show joint_type
 			Nb0 = 5
-			mech = Dojo.get_mechanism(:npendulum, 
-				num_bodies=Nb0, 
+			mech = Dojo.get_mechanism(:npendulum,
+				num_bodies=Nb0,
 				joint_type=joint_type)
 			Random.seed!(100)
 			nx = Dojo.minimal_dimension(mech)
@@ -188,11 +188,11 @@ end
 		for joint_type in joint_types
 			# @show joint_type
 			Nb0 = 5
-			mech = Dojo.get_mechanism(:snake, 
-				num_bodies=Nb0, 
+			mech = Dojo.get_mechanism(:snake,
+				num_bodies=Nb0,
 				joint_type=joint_type)
-			mech = Dojo.get_mechanism(:snake, 
-				num_bodies=Nb0, 
+			mech = Dojo.get_mechanism(:snake,
+				num_bodies=Nb0,
 				joint_type=:Fixed)
 			Random.seed!(100)
 			nx = Dojo.minimal_dimension(mech)
@@ -208,8 +208,8 @@ end
 		for joint_type in joint_types
 			# @show joint_type
 			Nb0 = 5
-			mech = Dojo.get_mechanism(:twister, 
-				num_bodies=Nb0, 
+			mech = Dojo.get_mechanism(:twister,
+				num_bodies=Nb0,
 				joint_type=joint_type)
 			Random.seed!(100)
 			nx = Dojo.minimal_dimension(mech)
@@ -244,9 +244,9 @@ end
 
 	# atlas
 	@testset "Atlas" begin
-		mech = Dojo.get_mechanism(:atlas, 
-			model_type=:simple, 
-			contact_feet=true, 
+		mech = Dojo.get_mechanism(:atlas,
+			model_type=:simple,
+			contact_feet=true,
 			damper=10.0)
 
 		Random.seed!(100)
@@ -275,7 +275,7 @@ end
 
 				# extract body states
 				Ne = Dojo.length(mech.joints)
-				if Dojo.get_body(mech, jointcon.parent_id).name == :origin 
+				if Dojo.get_body(mech, jointcon.parent_id).name == :origin
 					zp = [mech.origin.state.x2; mech.origin.state.v15; Dojo.vector(mech.origin.state.q2); mech.origin.state.ϕ15]
 				else
 					zp = z[(jointcon.parent_id - Ne - 1) * 13 .+ (1:13)]
@@ -334,7 +334,7 @@ end
 
 				# extract body states
 				Ne = Dojo.length(mech.joints)
-				if Dojo.get_body(mech, jointcon.parent_id).name == :origin 
+				if Dojo.get_body(mech, jointcon.parent_id).name == :origin
 					zp = [mech.origin.state.x2; mech.origin.state.v15; Dojo.vector(mech.origin.state.q2); mech.origin.state.ϕ15]
 				else
 					zp = z[(jointcon.parent_id - Ne - 1) * 13 .+ (1:13)]
@@ -387,23 +387,23 @@ end
 		end
 
 		# n-pendulum
-		mechanism = Dojo.get_mechanism(:npendulum, 
-			timestep=0.1, 
-			gravity=-9.81, 
+		mechanism = Dojo.get_mechanism(:npendulum,
+			timestep=0.1,
+			gravity=-9.81,
 			num_bodies=1)
 
 		base_angle = 0.3 * π
-		Dojo.initialize!(mechanism, :npendulum, 
+		Dojo.initialize!(mechanism, :npendulum,
 			base_angle=base_angle)
-		storage = Dojo.simulate!(mechanism, 1.0, 
-			record=true, 
+		storage = Dojo.simulate!(mechanism, 1.0,
+			record=true,
 			verbose=false)
 
 		x = Dojo.get_minimal_state(mechanism)
 		z = Dojo.get_maximal_state(mechanism)
 		u = zeros(Dojo.input_dimension(mechanism))
 
-		@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 
+		@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5
 		@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-5
 
 		M_fd = maximal_to_minimal_jacobian_fd(mechanism, z)
@@ -415,26 +415,26 @@ end
 		N_a = Dojo.minimal_to_maximal_jacobian(mechanism, Dojo.maximal_to_minimal(mechanism, z))
 		@test size(N_fd) == size(N_a)
 		@test norm(N_fd - N_a, Inf) < 1.0e-5
-		@test abs(sum(diag(M_fd * N_fd)) - Dojo.minimal_dimension(mechanism)) < 1.0e-5
-		@test abs(sum(diag(M_a * N_a)) - Dojo.minimal_dimension(mechanism)) < 1.0e-5
+		@test norm(diag(M_fd * N_fd) .- 1.0, Inf) < 5.0e-5
+		@test norm(diag(M_a * N_a) .- 1.0, Inf) < 5.0e-5
 
 		# n-pendulum
-		mechanism = Dojo.get_mechanism(:npendulum, 
-			timestep=0.1, 
-			gravity=-9.81, 
+		mechanism = Dojo.get_mechanism(:npendulum,
+			timestep=0.1,
+			gravity=-9.81,
 			num_bodies=2)
 		base_angle = 0.3 * π
-		Dojo.initialize!(mechanism, :npendulum, 
+		Dojo.initialize!(mechanism, :npendulum,
 			base_angle=base_angle)
-		storage = Dojo.simulate!(mechanism, 1.0, 
-			record=true, 
+		storage = Dojo.simulate!(mechanism, 1.0,
+			record=true,
 			verbose=false)
 
 		x = Dojo.get_minimal_state(mechanism)
 		z = Dojo.get_maximal_state(mechanism)
 		u = zeros(Dojo.input_dimension(mechanism))
 
-		@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 
+		@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5
 		@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-5
 
 		M_fd = maximal_to_minimal_jacobian_fd(mechanism, z)
@@ -446,23 +446,23 @@ end
 		N_a = Dojo.minimal_to_maximal_jacobian(mechanism, Dojo.maximal_to_minimal(mechanism, z))
 		@test size(N_fd) == size(N_a)
 		@test norm(N_fd - N_a, Inf) < 1.0e-5
-		@test abs(sum(diag(M_fd * N_fd)) - Dojo.minimal_dimension(mechanism)) < 1.0e-5
-		@test abs(sum(diag(M_a * N_a)) - Dojo.minimal_dimension(mechanism)) < 1.0e-5
+		@test norm(diag(M_fd * N_fd) .- 1.0, Inf) < 5.0e-5
+		@test norm(diag(M_a * N_a) .- 1.0, Inf) < 5.0e-5
 
 		# sphere
-		mechanism = Dojo.get_mechanism(:sphere, 
-			timestep=0.01, 
+		mechanism = Dojo.get_mechanism(:sphere,
+			timestep=0.01,
 			gravity=-9.81)
 		Dojo.initialize!(mechanism, :sphere)
-		storage = Dojo.simulate!(mechanism, 1.0, 
-			record=true, 
+		storage = Dojo.simulate!(mechanism, 1.0,
+			record=true,
 			verbose=false)
 
 		z = Dojo.get_maximal_state(mechanism)
 		x = Dojo.get_minimal_state(mechanism)
 		u = zeros(Dojo.input_dimension(mechanism))
 
-		@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 
+		@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5
 		@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-5
 
 		M_fd = maximal_to_minimal_jacobian_fd(mechanism, z)
@@ -474,23 +474,23 @@ end
 		N_a = Dojo.minimal_to_maximal_jacobian(mechanism, Dojo.maximal_to_minimal(mechanism, z))
 		@test size(N_fd) == size(N_a)
 		@test norm(N_fd - N_a, Inf) < 1.0e-6
-		@test abs(sum(diag(M_fd * N_fd)) - Dojo.minimal_dimension(mechanism)) < 1.0e-5
-		@test abs(sum(diag(M_a * N_a)) - Dojo.minimal_dimension(mechanism)) < 1.0e-5
+		@test norm(diag(M_fd * N_fd) .- 1.0, Inf) < 5.0e-5
+		@test norm(diag(M_a * N_a) .- 1.0, Inf) < 5.0e-5
 
 		# half cheetah
-		mechanism = Dojo.get_mechanism(:halfcheetah, 
-			timestep=0.01, 
+		mechanism = Dojo.get_mechanism(:halfcheetah,
+			timestep=0.01,
 			gravity=-9.81)
 		Dojo.initialize!(mechanism, :halfcheetah)
-		storage = Dojo.simulate!(mechanism, 1.0, ctrl!, 
-			record=true, 
+		storage = Dojo.simulate!(mechanism, 1.0, ctrl!,
+			record=true,
 			verbose=false)
 
 		z = Dojo.get_maximal_state(mechanism)
 		x = Dojo.get_minimal_state(mechanism)
 		u = zeros(Dojo.input_dimension(mechanism))
 
-		@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 
+		@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5
 		@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-5
 
 		M_fd = maximal_to_minimal_jacobian_fd(mechanism, z)
@@ -503,30 +503,30 @@ end
 		@test size(N_fd) == size(N_a)
 		@test norm(N_fd - N_a, Inf) < 1.0e-5
 
-		@test abs(sum(diag(M_fd * N_fd)) - Dojo.minimal_dimension(mechanism)) < 1.0e-5
-		@test abs(sum(diag(M_a * N_a)) - Dojo.minimal_dimension(mechanism)) < 1.0e-5
-		@test abs(sum(diag(M_a * N_fd)) - Dojo.minimal_dimension(mechanism)) < 1.0e-5
+		@test norm(diag(M_fd * N_fd) .- 1.0, Inf) < 5.0e-5
+		@test norm(diag(M_a * N_a) .- 1.0, Inf) < 5.0e-5
+		@test norm(diag(M_a * N_fd) .- 1.0, Inf) < 5.0e-5
 
 		# atlas
-		mechanism = Dojo.get_mechanism(:atlas, 
-			timestep=0.01, 
-			gravity=-9.81, 
-			friction_coefficient=0.5, 
-			damper=100.0, 
-			spring=1.0, 
+		mechanism = Dojo.get_mechanism(:atlas,
+			timestep=0.01,
+			gravity=-9.81,
+			friction_coefficient=0.5,
+			damper=100.0,
+			spring=1.0,
 			contact_feet=true)
 		Dojo.initialize!(mechanism, :atlas_stance,
-			body_position=[0,0,0.5], 
+			body_position=[0,0,0.5],
 			body_orientation=[0.0,0.0,0.0])
-		storage = Dojo.simulate!(mechanism, 1.0, ctrl!, 
-			record=true, 
+		storage = Dojo.simulate!(mechanism, 1.0, ctrl!,
+			record=true,
 			verbose=false)
 
 		z = Dojo.get_maximal_state(mechanism)
 		x = Dojo.get_minimal_state(mechanism)
 		u = zeros(Dojo.input_dimension(mechanism))
 
-		@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5 
+		@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5
 		@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-5
 
 		M_fd = maximal_to_minimal_jacobian_fd(mechanism, z)
@@ -539,8 +539,8 @@ end
 		@test size(N_fd) == size(N_a)
 		@test norm(N_fd - N_a, Inf) < 5.0e-5
 
-		@test abs(sum(diag(M_fd * N_fd)) - Dojo.minimal_dimension(mechanism)) < 1.0e-5
-		@test abs(sum(diag(M_a * N_a)) - Dojo.minimal_dimension(mechanism)) < 1.0e-5
+		@test norm(diag(M_fd * N_fd) .- 1.0, Inf) < 5.0e-5
+		@test norm(diag(M_a * N_a) .- 1.0, Inf) < 5.0e-5
 	end
 
 	@testset "Maximal to minimal Jacobian" begin
@@ -551,17 +551,17 @@ end
 		end
 
 		# 5-link pendulum
-		mech = Dojo.get_mechanism(:npendulum, 
-			timestep=0.01, 
-			gravity=-9.81, 
+		mech = Dojo.get_mechanism(:npendulum,
+			timestep=0.01,
+			gravity=-9.81,
 			num_bodies=5)
 
 		Random.seed!(100)
 		base_angle = 0.3π
-		Dojo.initialize!(mech, :npendulum, 
+		Dojo.initialize!(mech, :npendulum,
 			base_angle=base_angle)
-		storage = Dojo.simulate!(mech, 1.0, 
-			record=true, 
+		storage = Dojo.simulate!(mech, 1.0,
+			record=true,
 			verbose=false)
 
 		Dojo.maximal_dimension(mech) == 13
@@ -575,12 +575,12 @@ end
 		@test norm(M_fd - M_a, Inf) < 1.0e-6
 
 		# # sphere
-		mech = Dojo.get_mechanism(:sphere, 
-			timestep=0.01, 
+		mech = Dojo.get_mechanism(:sphere,
+			timestep=0.01,
 			gravity=-9.81)
 		Dojo.initialize!(mech, :sphere)
-		storage = Dojo.simulate!(mech, 1.0, 
-			record=true, 
+		storage = Dojo.simulate!(mech, 1.0,
+			record=true,
 			verbose=false)
 
 		Dojo.maximal_dimension(mech)
