@@ -35,31 +35,31 @@ m = env.num_inputs
 # ## reference trajectory
 N = 2
 initialize!(env.mechanism, :quadruped)
-xref = quadruped_trajectory(env.mechanism, 
-    r=0.05, 
-    z=0.29; 
-    Δx=-0.04, 
-    Δfront=0.10, 
-    N=10, 
+xref = quadruped_trajectory(env.mechanism,
+    r=0.05,
+    z=0.29;
+    Δx=-0.04,
+    Δfront=0.10,
+    N=10,
     Ncycles=N)
 zref = [minimal_to_maximal(env.mechanism, x) for x in xref]
 visualize(env, xref)
 
-# ## gravity compensation 
+# ## gravity compensation
 ## TODO: solve optimization problem instead
-mech = get_mechanism(:quadruped, 
-    timestep=timestep, 
-    gravity=gravity, 
-    friction_coefficient=friction_coefficient, 
-    damper=damper, 
+mech = get_mechanism(:quadruped,
+    timestep=timestep,
+    gravity=gravity,
+    friction_coefficient=friction_coefficient,
+    damper=damper,
     spring=spring)
 
 initialize!(mech, :quadruped)
-storage = simulate!(mech, 1.0, 
-    record=true, 
+storage = simulate!(mech, 1.0,
+    record=true,
     verbose=false)
 
-visualize(mech, storage, 
+visualize(mech, storage,
     vis=env.vis)
 ugc = gravity_compensation(mech)
 u_control = ugc[6 .+ (1:12)]
@@ -102,7 +102,7 @@ conT = IterativeLQR.Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
 # ## solver
-s = IterativeLQR.solver(model, obj, cons, 
+s = IterativeLQR.solver(model, obj, cons,
     opts=Options(verbose=false,
         linesearch=:armijo,
         α_min=1.0e-5,
@@ -130,6 +130,6 @@ open(env.vis)
 x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]
 visualize(env, x_view)
 
-set_camera!(env.vis, 
-    cam_pos=[0.0, -3.0, 2.0], 
+set_camera!(env.vis,
+    cam_pos=[0.0, -3.0, 2.0],
     zoom=3.0)
