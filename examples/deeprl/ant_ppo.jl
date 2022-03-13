@@ -58,7 +58,7 @@ function RL.Experiment(
         trajectory = PPOTrajectory(;
             capacity = UPDATE_FREQ,
             state = Matrix{Float32} => (ns, N_ENV),
-            action = Vector{Float32} => (N_ENV,),
+            action = Matrix{Float32} => (na, N_ENV),
             action_log_prob = Vector{Float32} => (N_ENV,),
             reward = Vector{Float32} => (N_ENV,),
             terminal = Vector{Bool} => (N_ENV,),
