@@ -3,6 +3,7 @@ using Flux
 using Flux.Losses
 
 using Random
+using Distributions
 using Dojo
 
 function RL.Experiment(
@@ -37,26 +38,28 @@ function RL.Experiment(
                     logσ = Chain(Dense(64, na; init = glorot_uniform(rng)), vec),
                 ),                
                 critic = Chain(
-                    Dense(ns, 256, relu; init = glorot_uniform(rng)),
-                    Dense(256, 1; init = glorot_uniform(rng)),
+                    Dense(ns, 64, relu; init = glorot_uniform(rng)),
+                    Dense(64, 64, relu; init = glorot_uniform(rng)),                    
+                    Dense(64, 1; init = glorot_uniform(rng)),
                 ),
                 optimizer = ADAM(1e-3),
             ),
             γ = 0.99f0,
             λ = 0.95f0,
-            clip_range = 0.1f0,
+            clip_range = 0.2f0,
             max_grad_norm = 0.5f0,
-            n_epochs = 4,
-            n_microbatches = 4,
+            n_epochs = 10,
+            n_microbatches = 32,
             actor_loss_weight = 1.0f0,
             critic_loss_weight = 0.5f0,
             entropy_loss_weight = 0.001f0,
+            dist = Normal,            
             update_freq = UPDATE_FREQ,
         ),    
         trajectory = PPOTrajectory(;
             capacity = UPDATE_FREQ,
             state = Matrix{Float32} => (ns, N_ENV),
-            action = Vector{Int} => (N_ENV,),
+            action = Vector{Float32} => (N_ENV,),
             action_log_prob = Vector{Float32} => (N_ENV,),
             reward = Vector{Float32} => (N_ENV,),
             terminal = Vector{Bool} => (N_ENV,),
