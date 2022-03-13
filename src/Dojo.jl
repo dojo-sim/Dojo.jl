@@ -191,7 +191,8 @@ export
     get_contact,
     get_sdf,
     contact_location,
-    damper_impulses
+    damper_impulses,
+    contact_constraint
 
 # Inputs
 export
@@ -204,7 +205,8 @@ export
     Mechanism,
     get_mechanism,
     initialize!,
-    set_floating_base
+    set_floating_base,
+    zero_velocity!
 
 # Maximal
 export
