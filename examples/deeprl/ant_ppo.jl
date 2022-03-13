@@ -28,13 +28,17 @@ function RL.Experiment(
     agent = Agent(
         policy = PPOPolicy(
             approximator = ActorCritic(
-                actor = Chain(
-                    Dense(ns, 256, relu; init = glorot_uniform(rng)),
-                    Dense(256, na; init = glorot_uniform(rng)),
-                ),
+                actor = GaussianNetwork(
+                    pre = Chain(
+                        Dense(ns, 64, relu; init = glorot_uniform(rng)),
+                        Dense(64, 64, relu; init = glorot_uniform(rng)),
+                    ),
+                    μ = Chain(Dense(64, na, tanh; init = glorot_uniform(rng)), vec),
+                    logσ = Chain(Dense(64, na; init = glorot_uniform(rng)), vec),
+                ),                
                 critic = Chain(
                     Dense(ns, 256, relu; init = glorot_uniform(rng)),
-                    Dense(256, 1; init = glorot_uniform(rng)),
+                    Dense(256, na; init = glorot_uniform(rng)),
                 ),
                 optimizer = ADAM(1e-3),
             ),
