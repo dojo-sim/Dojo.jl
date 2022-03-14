@@ -18,7 +18,7 @@
             attjac=true)
         J0 = [X0 Q0]
         attjac = cat(I(3),Dojo.LVᵀmat(qa), dims=(1,2))
-        J1 = FiniteDiff.finite_difference_jacobian(
+        J1 = ForwardDiff.jacobian(
             z -> Dojo.displacement(rot0, z[1:3], Quaternion(z[4:7]...), xb, qb),
             [xa; Dojo.vector(qa)]
             ) * attjac
@@ -29,7 +29,7 @@
             attjac=true)
         J0 = [X0 Q0]
         attjac = cat(I(3),Dojo.LVᵀmat(qb), dims=(1,2))
-        J1 = FiniteDiff.finite_difference_jacobian(
+        J1 = ForwardDiff.jacobian(
             z -> Dojo.displacement(rot0, xa, qa, z[1:3], Quaternion(z[4:7]...)),
             [xb; Dojo.vector(qb)]
             ) * attjac
@@ -51,7 +51,7 @@
             attjac=true)
         J0 = [X0 Q0]
         attjac = cat(I(3),Dojo.LVᵀmat(qa), dims=(1,2))
-        J1 = FiniteDiff.finite_difference_jacobian(
+        J1 = ForwardDiff.jacobian(
             z -> Dojo.displacement(tra0, z[1:3], Quaternion(z[4:7]...), xb, qb),
             [xa; Dojo.vector(qa)]
             ) * attjac
@@ -62,7 +62,7 @@
             attjac=true)
         J0 = [X0 Q0]
         attjac = cat(I(3),Dojo.LVᵀmat(qb), dims=(1,2))
-        J1 = FiniteDiff.finite_difference_jacobian(
+        J1 = ForwardDiff.jacobian(
             z -> Dojo.displacement(tra0, xa, qa, z[1:3], Quaternion(z[4:7]...)),
             [xb; Dojo.vector(qb)]
             ) * attjac
@@ -88,7 +88,7 @@ end
         p0 = rand(3)
         J0 = Dojo.impulse_transform_jacobian(:parent, :parent, rot0, xa, qa, xb, qb, p0)
         attjac = cat(I(3),Dojo.LVᵀmat(qa), dims=(1,2))
-        J1 = FiniteDiff.finite_difference_jacobian(
+        J1 = ForwardDiff.jacobian(
             z -> Dojo.impulse_transform(:parent, rot0, z[1:3], Quaternion(z[4:7]...), xb, qb) * p0,
             [xa; Dojo.vector(qa)]
             ) * attjac
@@ -96,7 +96,7 @@ end
 
         J0 = Dojo.impulse_transform_jacobian(:parent, :child, rot0, xa, qa, xb, qb, p0)
         attjac = cat(I(3),Dojo.LVᵀmat(qb), dims=(1,2))
-        J1 = FiniteDiff.finite_difference_jacobian(
+        J1 = ForwardDiff.jacobian(
             z -> Dojo.impulse_transform(:parent, rot0, xa, qa, z[1:3], Quaternion(z[4:7]...)) * p0,
             [xb; Dojo.vector(qb)]
             ) * attjac
@@ -104,7 +104,7 @@ end
 
         J0 = Dojo.impulse_transform_jacobian(:child, :parent, rot0, xa, qa, xb, qb, p0)
         attjac = cat(I(3),Dojo.LVᵀmat(qa), dims=(1,2))
-        J1 = FiniteDiff.finite_difference_jacobian(
+        J1 = ForwardDiff.jacobian(
             z -> Dojo.impulse_transform(:child, rot0, z[1:3], Quaternion(z[4:7]...), xb, qb) * p0,
             [xa; Dojo.vector(qa)]
             ) * attjac
@@ -112,7 +112,7 @@ end
 
         J0 = Dojo.impulse_transform_jacobian(:child, :child, rot0, xa, qa, xb, qb, p0)
         attjac = cat(I(3),Dojo.LVᵀmat(qb), dims=(1,2))
-        J1 = FiniteDiff.finite_difference_jacobian(
+        J1 = ForwardDiff.jacobian(
             z -> Dojo.impulse_transform(:child, rot0, xa, qa, z[1:3], Quaternion(z[4:7]...)) * p0,
             [xb; Dojo.vector(qb)]
             ) * attjac
@@ -132,7 +132,7 @@ end
         p0 = rand(3)
         J0 = Dojo.impulse_transform_jacobian(:parent, :parent, tra0, xa, qa, xb, qb, p0)
         attjac = cat(I(3),Dojo.LVᵀmat(qa), dims=(1,2))
-        J1 = FiniteDiff.finite_difference_jacobian(
+        J1 = ForwardDiff.jacobian(
             z -> Dojo.impulse_transform(:parent, tra0, z[1:3], Quaternion(z[4:7]...), xb, qb) * p0,
             [xa; Dojo.vector(qa)]
             ) * attjac
@@ -140,7 +140,7 @@ end
 
         J0 = Dojo.impulse_transform_jacobian(:parent, :child, tra0, xa, qa, xb, qb, p0)
         attjac = cat(I(3), Dojo.LVᵀmat(qb), dims=(1,2))
-        J1 = FiniteDiff.finite_difference_jacobian(
+        J1 = ForwardDiff.jacobian(
             z -> Dojo.impulse_transform(:parent, tra0, xa, qa, z[1:3], Quaternion(z[4:7]...)) * p0,
             [xb; Dojo.vector(qb)]
             ) * attjac
@@ -148,7 +148,7 @@ end
 
         J0 = Dojo.impulse_transform_jacobian(:child, :parent, tra0, xa, qa, xb, qb, p0)
         attjac = cat(I(3), Dojo.LVᵀmat(qa), dims=(1,2))
-        J1 = FiniteDiff.finite_difference_jacobian(
+        J1 = ForwardDiff.jacobian(
             z -> Dojo.impulse_transform(:child, tra0, z[1:3], Quaternion(z[4:7]...), xb, qb) * p0,
             [xa; Dojo.vector(qa)]
             ) * attjac
@@ -156,7 +156,7 @@ end
 
         J0 = Dojo.impulse_transform_jacobian(:child, :child, tra0, xa, qa, xb, qb, p0)
         attjac = cat(I(3),Dojo.LVᵀmat(qb), dims=(1,2))
-        J1 = FiniteDiff.finite_difference_jacobian(
+        J1 = ForwardDiff.jacobian(
             z -> Dojo.impulse_transform(:child, tra0, xa, qa, z[1:3], Quaternion(z[4:7]...)) * p0,
             [xb; Dojo.vector(qb)]
             ) * attjac
@@ -196,7 +196,7 @@ end
         # impulse_map_parent_jacobian_parent
         J0 = Dojo.impulse_map_jacobian(:parent, :parent, rot0, pbody, cbody, λ)
         attjac = cat(I(3),Dojo.LVᵀmat(qa), dims=(1,2))
-        J1 = FiniteDiff.finite_difference_jacobian(
+        J1 = ForwardDiff.jacobian(
             z -> Dojo.impulse_map(:parent, rot0, z[1:3], Quaternion(z[4:7]...), xb, qb, 0) * λ,
             [xa; Dojo.vector(qa)]
             ) * attjac
@@ -205,7 +205,7 @@ end
         # impulse_map_parent_jacobian_child
         J0 = Dojo.impulse_map_jacobian(:parent, :child, rot0, pbody, cbody, λ)
         attjac = cat(I(3), Dojo.LVᵀmat(qb), dims=(1,2))
-        J1 = FiniteDiff.finite_difference_jacobian(
+        J1 = ForwardDiff.jacobian(
             z -> Dojo.impulse_map(:parent, rot0, xa, qa, z[1:3], Quaternion(z[4:7]...), 0) * λ,
             [xb; Dojo.vector(qb)]
             ) * attjac
@@ -214,7 +214,7 @@ end
         # impulse_map_child_jacobian_parent
         J0 = Dojo.impulse_map_jacobian(:child, :parent, rot0, pbody, cbody, λ)
         attjac = cat(I(3), Dojo.LVᵀmat(qa), dims=(1,2))
-        J1 = FiniteDiff.finite_difference_jacobian(
+        J1 = ForwardDiff.jacobian(
             z -> Dojo.impulse_map(:child, rot0, z[1:3], Quaternion(z[4:7]...), xb, qb, 0) * λ,
             [xa; Dojo.vector(qa)]
             ) * attjac
@@ -223,7 +223,7 @@ end
         # impulse_map_child_jacobian_child
         J0 = Dojo.impulse_map_jacobian(:child, :child, rot0, pbody, cbody, λ)
         attjac = cat(I(3), Dojo.LVᵀmat(qb), dims=(1,2))
-        J1 = FiniteDiff.finite_difference_jacobian(
+        J1 = ForwardDiff.jacobian(
             z -> Dojo.impulse_map(:child, rot0, xa, qa, z[1:3], Quaternion(z[4:7]...), 0) * λ,
             [xb; Dojo.vector(qb)]
             ) * attjac
@@ -256,7 +256,7 @@ end
         J0 = Dojo.impulse_map_jacobian(:parent, :parent, tra0, pbody, cbody, λ)
 
         attjac = cat(I(3),Dojo.LVᵀmat(qa), dims=(1,2))
-        J1 = FiniteDiff.finite_difference_jacobian(
+        J1 = ForwardDiff.jacobian(
             z -> Dojo.impulse_map(:parent, tra0, z[1:3], Quaternion(z[4:7]...), xb, qb, 0) * λ,
             [xa; Dojo.vector(qa)]
             ) * attjac
@@ -265,7 +265,7 @@ end
         # impulse_map_parent_jacobian_child
         J0 = Dojo.impulse_map_jacobian(:parent, :child, tra0, pbody, cbody, λ)
         attjac = cat(I(3), Dojo.LVᵀmat(qb), dims=(1,2))
-        J1 = FiniteDiff.finite_difference_jacobian(
+        J1 = ForwardDiff.jacobian(
             z -> Dojo.impulse_map(:parent, tra0, xa, qa, z[1:3], Quaternion(z[4:7]...), 0) * λ,
             [xb; Dojo.vector(qb)]
             ) * attjac
@@ -274,7 +274,7 @@ end
         # impulse_map_child_jacobian_parent
         J0 = Dojo.impulse_map_jacobian(:child, :parent, tra0, pbody, cbody, λ)
         attjac = cat(I(3), Dojo.LVᵀmat(qa), dims=(1,2))
-        J1 = FiniteDiff.finite_difference_jacobian(
+        J1 = ForwardDiff.jacobian(
             z -> Dojo.impulse_map(:child, tra0, z[1:3], Quaternion(z[4:7]...), xb, qb, 0) * λ,
             [xa; Dojo.vector(qa)]
             ) * attjac
@@ -283,7 +283,7 @@ end
         # impulse_map_child_jacobian_child
         J0 = Dojo.impulse_map_jacobian(:child, :child, tra0, pbody, cbody, λ)
         attjac = cat(I(3), Dojo.LVᵀmat(qb), dims=(1,2))
-        J1 = FiniteDiff.finite_difference_jacobian(
+        J1 = ForwardDiff.jacobian(
             z -> Dojo.impulse_map(:child, tra0, xa, qa, z[1:3], Quaternion(z[4:7]...), 0) * λ,
             [xb; Dojo.vector(qb)]
             ) * attjac
