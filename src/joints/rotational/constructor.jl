@@ -20,7 +20,7 @@ mutable struct Rotational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N,Nb½}
     axis_mask1::Adjoint{T,SVector{3,T}} # in pbody's frame
     axis_mask2::Adjoint{T,SVector{3,T}} # in pbody's frame
     axis_mask3::Adjoint{T,SVector{3,T}} # in pbody's frame
-    axis_offset::UnitQuaternion{T} # in pbody's frame
+    axis_offset::Quaternion{T} # in pbody's frame
     spring::T
     damper::T
     spring_offset::SVector{N̄λ,T}
@@ -31,7 +31,7 @@ end
 
 function Rotational{T,Nλ}(pbody::Node, cbody::Node;
         axis::AbstractVector=szeros(T,3), 
-        axis_offset::UnitQuaternion=one(UnitQuaternion{T}),
+        axis_offset::Quaternion=one(Quaternion{T}),
         spring=zero(T), 
         damper=zero(T), 
         spring_offset=szeros(T,3-Nλ),

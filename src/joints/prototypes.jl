@@ -6,7 +6,7 @@
 Fixed(pbody::Node{T}, cbody::Node{T}; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T})) where T =
+    axis_offset=one(Quaternion{T})) where T =
     Translational{T,3}(pbody, cbody; 
         parent_vertex, 
         child_vertex),
@@ -21,7 +21,7 @@ Fixed(pbody::Node{T}, cbody::Node{T};
 Prismatic(pbody::Node{T}, cbody::Node{T}, axis; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T}), 
+    axis_offset=one(Quaternion{T}), 
     spring=zero(T), 
     damper=zero(T),
     tra_spring_offset=szeros(T,1),
@@ -47,7 +47,7 @@ Prismatic(pbody::Node{T}, cbody::Node{T}, axis;
 Planar(pbody::Node{T}, cbody::Node{T}, axis; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T}), 
+    axis_offset=one(Quaternion{T}), 
     spring=zero(T), 
     damper=zero(T),
     tra_spring_offset=szeros(T,2),
@@ -71,7 +71,7 @@ Planar(pbody::Node{T}, cbody::Node{T}, axis;
     three translational degree of freedom between two bodies
 """
 FixedOrientation(pbody::Node{T}, cbody::Node{T}; 
-    axis_offset=one(UnitQuaternion{T}),
+    axis_offset=one(Quaternion{T}),
     spring=zero(T), 
     damper=zero(T),
     tra_spring_offset=szeros(T,3),
@@ -94,7 +94,7 @@ FixedOrientation(pbody::Node{T}, cbody::Node{T};
 Revolute(pbody::Node{T}, cbody::Node{T}, axis; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T}), 
+    axis_offset=one(Quaternion{T}), 
     spring=zero(T), 
     damper=zero(T),
     rot_spring_offset=szeros(T,1),
@@ -122,7 +122,7 @@ Revolute(pbody::Node{T}, cbody::Node{T}, axis;
 Cylindrical(pbody::Node{T}, cbody::Node{T}, axis; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T}), 
+    axis_offset=one(Quaternion{T}), 
     spring=zero(T), 
     damper=zero(T),
     tra_spring_offset=szeros(T,1), 
@@ -155,7 +155,7 @@ Cylindrical(pbody::Node{T}, cbody::Node{T}, axis;
 PlanarAxis(pbody::Node{T}, cbody::Node{T}, axis; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T}), 
+    axis_offset=one(Quaternion{T}), 
     spring=zero(T), 
     damper=zero(T),
     tra_spring_offset=szeros(T,2), 
@@ -188,7 +188,7 @@ PlanarAxis(pbody::Node{T}, cbody::Node{T}, axis;
 FreeRevolute(pbody::Node{T}, cbody::Node{T}, axis; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T}), 
+    axis_offset=one(Quaternion{T}), 
     spring=zero(T), 
     damper=zero(T),
     tra_spring_offset=szeros(T,3), 
@@ -218,7 +218,7 @@ FreeRevolute(pbody::Node{T}, cbody::Node{T}, axis;
 Orbital(pbody::Node{T}, cbody::Node{T}, axis; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T}), 
+    axis_offset=one(Quaternion{T}), 
     spring=zero(T), 
     damper=zero(T),
     rot_spring_offset=szeros(T,2),
@@ -247,7 +247,7 @@ Orbital(pbody::Node{T}, cbody::Node{T}, axis;
 PrismaticOrbital(pbody::Node{T}, cbody::Node{T}, axis; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T}), 
+    axis_offset=one(Quaternion{T}), 
     spring=zero(T), 
     damper=zero(T),
     tra_spring_offset=szeros(T,1), 
@@ -280,7 +280,7 @@ PrismaticOrbital(pbody::Node{T}, cbody::Node{T}, axis;
 PlanarOrbital(pbody::Node{T}, cbody::Node{T}, axis; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T}), 
+    axis_offset=one(Quaternion{T}), 
     spring=zero(T), 
     damper=zero(T),
     tra_spring_offset=szeros(T,2), 
@@ -313,7 +313,7 @@ PlanarOrbital(pbody::Node{T}, cbody::Node{T}, axis;
 FreeOrbital(pbody::Node{T}, cbody::Node{T}, axis; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T}), 
+    axis_offset=one(Quaternion{T}), 
     spring=zero(T), 
     damper=zero(T),
     tra_spring_offset=szeros(T,3), 
@@ -343,7 +343,7 @@ FreeOrbital(pbody::Node{T}, cbody::Node{T}, axis;
 Spherical(pbody::Node{T}, cbody::Node{T}; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(UnitQuaternion{T}), 
+    axis_offset=one(Quaternion{T}), 
     spring=zero(T), 
     damper=zero(T),
     rot_spring_offset=szeros(T,3), 
@@ -449,7 +449,7 @@ Floating(pbody::Node{T}, cbody::Node{T};
 function Prototype(joint_type::Symbol, pbody::Node{T}, cbody::Node{T}, axis; 
         parent_vertex=szeros(T, 3), 
         child_vertex=szeros(T, 3),
-        axis_offset=one(UnitQuaternion{T}), 
+        axis_offset=one(Quaternion{T}), 
         spring=zero(T), 
         damper=zero(T),
         tra_spring_offset=nothing, 

@@ -55,13 +55,13 @@ function unpack_maximal_state(z::AbstractVector, i::Int)
 	zi = z[(i-1) * 13 .+ (1:13)]
 	x2 = zi[SUnitRange(1,3)]
 	v15 = zi[SUnitRange(4,6)]
-	q2 = UnitQuaternion(zi[7:10]..., false)
+	q2 = Quaternion(zi[7:10]...)
 	ϕ15 = zi[SUnitRange(11,13)]
 	return x2, v15, q2, ϕ15
 end
 
 function pack_maximal_state!(z::AbstractVector, 
-	x2::AbstractVector, v15::AbstractVector, q2::UnitQuaternion, ϕ15::AbstractVector, 
+	x2::AbstractVector, v15::AbstractVector, q2::Quaternion, ϕ15::AbstractVector, 
 	i::Int)
 
 	z[(i-1) * 13 .+ (1:3)] = x2

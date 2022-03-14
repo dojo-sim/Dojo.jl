@@ -41,7 +41,7 @@ function ant(;
         nx = maximal_dimension(mechanism)
     end
     nu = 8
-    no = nx
+    no = nx + length(mechanism.contacts)
 
     aspace = BoxSpace(nu, 
         low=(-ones(nu)), 

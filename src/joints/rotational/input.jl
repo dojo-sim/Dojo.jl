@@ -21,8 +21,8 @@ end
 
 function input_jacobian_control(relative::Symbol, 
     joint::Rotational{T}, 
-    xa::AbstractVector, qa::UnitQuaternion,
-    xb::AbstractVector, qb::UnitQuaternion) where T
+    xa::AbstractVector, qa::Quaternion,
+    xb::AbstractVector, qb::Quaternion) where T
 
     if relative == :parent
         BFa = szeros(T, 3, 3)
@@ -37,8 +37,8 @@ end
 
 function input_jacobian_configuration(relative::Symbol, 
     joint::Rotational{T}, 
-    xa::AbstractVector, qa::UnitQuaternion,
-    xb::AbstractVector, qb::UnitQuaternion) where T
+    xa::AbstractVector, qa::Quaternion,
+    xb::AbstractVector, qb::Quaternion) where T
 
     τ = joint.input
 

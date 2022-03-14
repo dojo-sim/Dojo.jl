@@ -1,4 +1,4 @@
-@testset "Behavior: Quadruped simulation" begin
+@testset "Quadruped" begin
     mech = get_mechanism(:quadruped,
         timestep=0.05,
         gravity=-9.81,
@@ -8,24 +8,22 @@
 
     initialize!(mech, :quadruped)
 
-    try
-        storage = simulate!(mech, 5.0,
+    storage = simulate!(mech, 5.0,
             record=true,
             verbose=false)
-        @test true
-    catch
-        @test false
-    end
+
+    res = get_sdf(mech, storage) # distance from floor to each contact
+    @test minimum(minimum([min.(0.0, r) for r in res])) >= 0.0
 end
 
-@testset "Behavior: Box toss" begin
+@testset "Box toss" begin
     for timestep in [0.10, 0.05, 0.01, 0.005]
-        mech = get_mechanism(:box,
+        mech = get_mechanism(:block,
             timestep=timestep,
             gravity=-9.81,
             friction_coefficient = 0.1)
 
-        initialize!(mech, :box,
+        initialize!(mech, :block,
             x=[0.0, 0.0, 0.5],
             v=[1.0, 1.5, 1.0],
             ω=[5.0, 4.0, 2.0] .* timestep)
@@ -39,7 +37,7 @@ end
     end
 end
 
-@testset "Behavior: Four-bar linkage" begin
+@testset "Four-bar linkage" begin
     for timestep in [0.10, 0.05, 0.01, 0.005]
         mech = Dojo.get_mechanism(:fourbar,
             model="fourbar",
@@ -63,7 +61,7 @@ end
     end
 end
 
-@testset "Behavior: Tennis Racket" begin
+@testset "Tennis racket" begin
     # Simulation
     timestep=0.01
     gravity=0.0

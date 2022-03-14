@@ -4,7 +4,7 @@
     contains maximal-representation trajectories
 
     x: position 
-    q: orientation (UnitQuaternion)
+    q: orientation (Quaternion)
     v: linear velocity (midpoint) 
     ω: angular velocity (midpoint)
     px: linear momentum
@@ -14,7 +14,7 @@
 """
 struct Storage{T,N}
     x::Vector{Vector{SVector{3,T}}}
-    q::Vector{Vector{UnitQuaternion{T}}}
+    q::Vector{Vector{Quaternion{T}}}
     v::Vector{Vector{SVector{3,T}}}
     ω::Vector{Vector{SVector{3,T}}}
     px::Vector{Vector{SVector{3,T}}}
@@ -24,7 +24,7 @@ struct Storage{T,N}
 
     function Storage{T}(steps, nbodies) where T
         x = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
-        q = [[one(UnitQuaternion{T}) for i = steps] for j = 1:nbodies]
+        q = [[one(Quaternion{T}) for i = steps] for j = 1:nbodies]
         v = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
         ω = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
         px = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
@@ -74,7 +74,7 @@ function generate_storage(mechanism::Mechanism, z)
         for i = 1:M 
             storage.x[i][t] = z[t][off .+ (1:3)]
             storage.v[i][t] = z[t][off .+ (4:6)]
-            storage.q[i][t] = UnitQuaternion(z[t][off .+ (7:10)]..., false)
+            storage.q[i][t] = Quaternion(z[t][off .+ (7:10)]...)
             storage.ω[i][t] = z[t][off .+ (11:13)]
             off += 13
         end

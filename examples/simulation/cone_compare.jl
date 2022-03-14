@@ -32,7 +32,7 @@ opts = SolverOptions(rtol=1.0e-6, btol=1.0e-6)
 
 # ## Linear cone
 color_lc = orange;
-mech_lc = get_mechanism(:box,
+mech_lc = get_mechanism(:block,
     timestep=timestep,
     gravity=gravity,
     friction_coefficient=friction_coefficient,
@@ -41,9 +41,9 @@ mech_lc = get_mechanism(:box,
     color=color_lc);
 
 # ## Simulate
-initialize!(mech_lc, :box,
+initialize!(mech_lc, :block,
     x=x0,
-    q=one(UnitQuaternion),
+    q=one(Quaternion),
     v=v0,
     ω=ω0)
 
@@ -59,7 +59,7 @@ via, anim = visualize(mech_lc, storage_lc,
 
 # ## Nonlinear cone
 color_nc = cyan;
-mech_nc = get_mechanism(:box,
+mech_nc = get_mechanism(:block,
     timestep=timestep,
     gravity=gravity,
     friction_coefficient=friction_coefficient,
@@ -68,9 +68,9 @@ mech_nc = get_mechanism(:box,
     color=color_nc);
 
 # ## Simulate
-initialize!(mech_nc, :box,
+initialize!(mech_nc, :block,
     x=x0,
-    q=one(UnitQuaternion),
+    q=one(Quaternion),
     v=v0,
     ω=ω0)
 
@@ -91,7 +91,7 @@ vis, anim = visualize(mech_nc, storage_nc,
 # ## MuJoCo pyramidal cone
 color_mjlc = magenta;
 
-mech_mjlc = get_mechanism(:box,
+mech_mjlc = get_mechanism(:block,
     timestep=timestep,
     gravity=gravity,
     friction_coefficient=friction_coefficient,
@@ -99,9 +99,9 @@ mech_mjlc = get_mechanism(:box,
     mode=:box, color=color_mjlc);
 
 # ## Load
-initialize!(mech_mjlc, :box,
+initialize!(mech_mjlc, :block,
     x=x0,
-    q=one(UnitQuaternion),
+    q=one(Quaternion),
     v=v0,
     ω=ω0)
 file = jldopen(joinpath(@__DIR__, "../mujoco_benchmark/results/cone_compare_pyramidal.jld2"))
@@ -125,7 +125,7 @@ setobject!(vis[:path_mjlc], MeshCat.Line(points_mjlc, line_mat_mjlc))
 # ## MuJoCo elliptic cone
 color_mjnc = RGBA(0,0,0);
 
-mech_mjnc = get_mechanism(:box,
+mech_mjnc = get_mechanism(:block,
     timestep=timestep,
     gravity=gravity,
     friction_coefficient=friction_coefficient,
@@ -133,9 +133,9 @@ mech_mjnc = get_mechanism(:box,
     mode=:box, color=color_mjnc);
 
 # ## Load
-initialize!(mech_mjnc, :box,
+initialize!(mech_mjnc, :block,
     x=x0,
-    q=one(UnitQuaternion),
+    q=one(Quaternion),
     v=v0,
     ω=ω0)
 file = jldopen(joinpath(@__DIR__, "../mujoco_benchmark/results/cone_compare_elliptic.jld2"))

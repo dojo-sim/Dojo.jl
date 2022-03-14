@@ -8,8 +8,7 @@ using Random
 using StaticArrays
 using SparseArrays
 using StaticArrays: SUnitRange
-using Rotations
-using Rotations: RotationError, params, lmult, rmult, tmat, vmat, hmat, skew, pure_quaternion
+using Quaternions
 using Parameters
 using Statistics
 
@@ -21,7 +20,7 @@ using MeshCat
 import MeshCat: render
 using Meshing
 using GeometryBasics
-using LightGraphs
+using Graphs
 
 using JLD2
 using DocStringExtensions
@@ -192,7 +191,8 @@ export
     get_contact,
     get_sdf,
     contact_location,
-    damper_impulses
+    damper_impulses,
+    contact_constraint
 
 # Inputs
 export
@@ -205,7 +205,8 @@ export
     Mechanism,
     get_mechanism,
     initialize!,
-    set_floating_base
+    set_floating_base,
+    zero_velocity!
 
 # Maximal
 export
@@ -256,10 +257,7 @@ export
 
 # Orientation
 export
-    UnitQuaternion,
-    RotX,
-    RotY,
-    RotZ,
+    Quaternion,
     attitude_jacobian
 
 # Data

@@ -22,7 +22,7 @@ function block(;
     opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5),
     T=Float64)
 
-    mechanism = get_box(
+    mechanism = get_block(
         timestep=timestep, 
         gravity=gravity, 
         friction_coefficient=friction_coefficient, 
@@ -30,7 +30,7 @@ function block(;
         contact=contact, 
         contact_type=contact_type)
 
-    initialize_box!(mechanism)
+    initialize_block!(mechanism)
 
     if representation == :minimal
         nx = minimal_dimension(mechanism)

@@ -1,4 +1,4 @@
-@testset "Simulate: step!" begin 
+@testset "step!" begin 
     # get environment and simulate
     env = Dojo.get_environment("pendulum", 
         timestep=0.1, 
@@ -18,7 +18,7 @@
     @test norm(z2 - z1) > 1.0e-6
 end
 
-@testset "Simulate: Storage" begin 
+@testset "Storage" begin 
     # get environment and simulate
     env = Dojo.get_environment("pendulum",
         timestep=0.1);

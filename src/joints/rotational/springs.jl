@@ -3,8 +3,8 @@
 ################################################################################
 
 function spring_force(relative::Symbol, joint::Rotational{T}, 
-        xa::AbstractVector, qa::UnitQuaternion,
-        xb::AbstractVector, qb::UnitQuaternion; 
+        xa::AbstractVector, qa::Quaternion,
+        xb::AbstractVector, qb::Quaternion; 
         rotate::Bool=true, 
         unitary::Bool=false) where T
 
@@ -30,8 +30,8 @@ function spring_impulses(relative::Symbol, joint::Rotational, pbody::Node, cbody
 end
 
 function spring_impulses(relative::Symbol, joint::Rotational, 
-    xa::AbstractVector, qa::UnitQuaternion, 
-    xb::AbstractVector, qb::UnitQuaternion, 
+    xa::AbstractVector, qa::Quaternion, 
+    xb::AbstractVector, qb::Quaternion, 
     timestep; 
     unitary::Bool=false)
     timestep * spring_force(relative, joint, xa, qa, xb, qb; unitary=unitary)
@@ -44,8 +44,8 @@ spring_impulses(relative::Symbol, joint::Rotational{T,3}, pbody::Node, cbody::No
 ################################################################################
 
 function spring_jacobian_configuration(relative::Symbol, jacobian::Symbol, joint::Rotational{T}, 
-    xa::AbstractVector, qa::UnitQuaternion,
-    xb::AbstractVector, qb::UnitQuaternion,
+    xa::AbstractVector, qa::Quaternion,
+    xb::AbstractVector, qb::Quaternion,
     timestep::T; 
     rotate::Bool=true, 
     unitary::Bool=false, 

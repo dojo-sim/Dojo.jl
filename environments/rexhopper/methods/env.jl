@@ -93,7 +93,7 @@ function Base.reset(env::Environment{RexHopper};
     else
         # initialize above the ground to make sure that with random initialization we do not violate the ground constraint.
         initialize!(env.mechanism, :rexhopper)
-        x0 = get_minimal_state(env.mechanism)
+        x = get_minimal_state(env.mechanism)
         nx = minimal_dimension(env.mechanism)
         z = minimal_to_maximal(env.mechanism, x)
         set_maximal_state!(env.mechanism, z)

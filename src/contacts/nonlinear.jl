@@ -41,7 +41,7 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N
 end
 
 function constraint(model::NonlinearContact, s::AbstractVector{T}, γ::AbstractVector{T},
-        x3::AbstractVector{T}, q3::UnitQuaternion{T}, 
+        x3::AbstractVector{T}, q3::Quaternion{T}, 
         v25::AbstractVector{T}, ϕ25::AbstractVector{T}) where T
 
     # transforms the velocities of the origin of the link into velocities
@@ -53,8 +53,8 @@ function constraint(model::NonlinearContact, s::AbstractVector{T}, γ::AbstractV
 end
 
 function constraint_jacobian_velocity(model::NonlinearContact{T}, 
-    x3::AbstractVector{T}, q3::UnitQuaternion{T},
-    x2::AbstractVector{T}, v25::AbstractVector{T}, q2::UnitQuaternion{T}, ϕ25::AbstractVector{T}, 
+    x3::AbstractVector{T}, q3::Quaternion{T},
+    x2::AbstractVector{T}, v25::AbstractVector{T}, q2::Quaternion{T}, ϕ25::AbstractVector{T}, 
     λ, timestep::T) where T
     V = [model.surface_normal_projector * timestep;
         szeros(1,3);
@@ -70,8 +70,8 @@ function constraint_jacobian_velocity(model::NonlinearContact{T},
 end
 
 function constraint_jacobian_configuration(model::NonlinearContact{T}, 
-    x3::AbstractVector{T}, q3::UnitQuaternion{T},
-    x2::AbstractVector{T}, v25::AbstractVector{T}, q2::UnitQuaternion{T}, ϕ25::AbstractVector{T}, 
+    x3::AbstractVector{T}, q3::Quaternion{T},
+    x2::AbstractVector{T}, v25::AbstractVector{T}, q2::Quaternion{T}, ϕ25::AbstractVector{T}, 
     λ, timestep::T) where T
     X = [model.surface_normal_projector;
         szeros(1,3);

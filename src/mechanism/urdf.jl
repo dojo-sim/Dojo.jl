@@ -47,11 +47,11 @@ end
 
 function parse_pose(xpose, T)
     if xpose === nothing
-        x, q = zeros(T, 3), one(UnitQuaternion{T})
+        x, q = zeros(T, 3), one(Quaternion{T})
     else
         x = parse_vector(xpose, "xyz", T, default = "0 0 0")
         rpy = parse_vector(xpose, "rpy", T, default = "0 0 0")
-        q = UnitQuaternion(RotZYX(rpy[3], rpy[2], rpy[1]))
+        q = RotZ(rpy[3])*RotY(rpy[2])*RotX(rpy[1]) # Quaternion(RotZYX(rpy[3], rpy[2], rpy[1]))
     end
 
     return x, q
@@ -60,7 +60,7 @@ end
 function parse_inertia(xinertial, T)
     if xinertial === nothing
         x = zeros(T, 3)
-        q = one(UnitQuaternion{T})
+        q = one(Quaternion{T})
         m = zero(T)
         J = zeros(T, 3, 3)
     else
@@ -212,10 +212,10 @@ end
 
 # TODO: fix axis
 function joint_selector(joint_type, pbody, cbody, T;
-        axis = SA{T}[1;0;0], parent_vertex = szeros(T,3), child_vertex = szeros(T,3), axis_offset = one(UnitQuaternion{T}), name = Symbol("joint_" * randstring(4)))
+        axis = SA{T}[1;0;0], parent_vertex = szeros(T,3), child_vertex = szeros(T,3), axis_offset = one(Quaternion{T}), name = Symbol("joint_" * randstring(4)))
 
     # TODO @warn "this is not great"
-    axis = inv(axis_offset) * axis
+    axis = vector_rotate(axis, axis_offset) # inv(axis_offset) * axis
 
     # TODO limits for revolute joint?
     if joint_type == "revolute" || joint_type == "continuous"
@@ -419,7 +419,7 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
     system = mechanism.system
     timestep= mechanism.timestep
     xjointlist = Dict{Int64,SVector{3,T}}() # stores id, x in world frame
-    qjointlist = Dict{Int64,UnitQuaternion{T}}() # stores id, q in world frame
+    qjointlist = Dict{Int64,Quaternion{T}}() # stores id, q in world frame
 
     for id in root_to_leaves_ordering(mechanism, exclude_origin=true, exclude_loop_joints=true)
         node = get_node(mechanism, id)
@@ -450,10 +450,10 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         # Parent joint
         if pnode.id == 0 # parent body is origin
             # x_pjoint = SA{T}[0; 0; 0]
-            # q_pjoint = one(UnitQuaternion{T})
+            # q_pjoint = one(Quaternion{T})
             # # axis_pjoint = SA{T}[1; 0; 0]
             xparentjoint = SA{T}[0; 0; 0]
-            qparentjoint = one(UnitQuaternion{T})
+            qparentjoint = one(Quaternion{T})
         else
             pjoint = get_node(mechanism, get_parent_id(mechanism, pnode.id, loopjoints))
             # x_pjoint = pjoint.translational.vertices[1] # stored in parent_vertex
@@ -512,10 +512,10 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
             parentpbody = mechanism.origin
 
             xparentpbody = SA{T}[0; 0; 0]
-            qparentpbody = one(UnitQuaternion{T})
+            qparentpbody = one(Quaternion{T})
 
             xparentjoint1 = SA{T}[0; 0; 0]
-            qparentjoint1 = one(UnitQuaternion{T})
+            qparentjoint1 = one(Quaternion{T})
         else
             parentpbody = get_body(mechanism, parent_id1)
 
