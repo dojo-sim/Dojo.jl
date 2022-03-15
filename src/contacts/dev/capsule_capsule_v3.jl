@@ -83,26 +83,25 @@ end
     θ = (xa, qa, xb, qb, ax, ay, az, bx, by, bz) ∈ R^16
 """
 
-nz = 8 
-ny = 4 
+nz = 12
+ny = 12
 nw = nz + ny 
-nθ = 20
+nθ = 18
 @variables z[1:nz] y[1:ny] θ[1:nθ] κ[1:1]
 
 function unpack_primals(z) 
     pa = z[0 .+ (1:3)]
     pb = z[3 .+ (1:3)]
-    sa = z[6 .+ (1:1)]
-    sb = z[7 .+ (1:1)]
-
+    sa = z[6 .+ (1:3)]
+    sb = z[9 .+ (1:3)]
     return pa, pb, sa, sb 
 end
 
 function unpack_duals(y)
-   λa = y[0 .+ (1:1)]
-   λb = y[1 .+ (1:1)]
-   νa = y[2 .+ (1:1)]
-   νb = y[3 .+ (1:1)]
+   λa = y[0 .+ (1:3)]
+   λb = y[3 .+ (1:3)]
+   νa = y[6 .+ (1:3)]
+   νb = y[9 .+ (1:3)]
 
    return λa, λb, νa, νb
 end
@@ -112,14 +111,12 @@ function unpack_data(θ)
     qa = θ[3 .+ (1:4)]
     xb = θ[7 .+ (1:3)]
     qb = θ[10 .+ (1:4)]
-    ax = θ[14 .+ (1:1)]
-    ay = θ[15 .+ (1:1)]
-    az = θ[16 .+ (1:1)]
-    bx = θ[17 .+ (1:1)]
-    by = θ[18 .+ (1:1)]
-    bz = θ[19 .+ (1:1)]
+    ra = θ[14 .+ (1:1)]
+    ha = θ[15 .+ (1:1)]
+    rb = θ[16 .+ (1:1)]
+    hb = θ[17 .+ (1:1)]
     
-    return xa, qa, xb, qb, ax, ay, az, bx, by, bz
+    return xa, qa, xb, qb, ra, ha, rb, hb
 end
 
 function objective(z)
@@ -130,10 +127,19 @@ end
 
 function constraints(z, θ) 
     pa, pb, sa, sb = unpack_primals(z)
-    xa, qa, xb, qb, ax, ay, az, bx, by, bz = unpack_data(θ)
+    xa, qa, xb, qb, ra, ha, rb, hb = unpack_data(θ)
+
+    da = pa - xa 
+    db = pb - xb 
+
     [
-        sa[1] - (1.0^2 - (pa - xa)' * rotation_matrix(qa) * Diagonal([1.0 / ax[1]^2, 1.0 / ay[1]^2, 1.0 / az[1]^2]) * rotation_matrix(qa)' * (pa - xa));
-        sb[1] - (1.0^2 - (pb - xb)' * rotation_matrix(qb) * Diagonal([1.0 / bx[1]^2, 1.0 / by[1]^2, 1.0 / bz[1]^2]) * rotation_matrix(qb)' * (pb - xb)); 
+        sa[1] - (ra[1] - norm(da[1:2]));
+        sa[2] - (0.5 * ha[1] + sa[1] - da[3]);
+        sa[3] - (da[3] + 0.5 * ha[1] + sa[1]);
+
+        sb[1] - (rb[1] - norm(db[1:2]));
+        sb[2] - (0.5 * hb[1] + sb[1] - db[3]);
+        sb[3] - (db[3] + 0.5 * hb[1] + sb[1]);
     ]
 end
 
@@ -153,24 +159,30 @@ function lagrangian(z, y, θ)
 
     # constraints
     c = constraints(z, θ)
-    L += sum([λa[1] λb[1]] * c)
+    L += sum([λa[1] λa[2] λa[3] λb[1] λb[2] λb[3]] * c)
 
     # inequalities 
-    L -= sa[1] * νa[1] 
+    L -= sa[1] * νa[1]
+    L -= sa[2] * νa[2]
+    L -= sa[3] * νa[3]
+
     L -= sb[1] * νb[1] 
+    L -= sb[2] * νb[2] 
+    L -= sb[3] * νb[3] 
 
     return L 
 end
 
 L = lagrangian(z, y, θ)
 Lz = Symbolics.gradient(L, z)
+
 function residual(w, θ, κ)
     # primals 
-    z = w[1:8]
+    z = w[1:12]
     pa, pb, sa, sb = unpack_primals(z)
 
     # duals 
-    y = w[8 .+ (1:4)]
+    y = w[12 .+ (1:12)]
     λa, λb, νa, νb = unpack_duals(y)
 
     # Lagrangian 
@@ -179,7 +191,11 @@ function residual(w, θ, κ)
     con = constraints(z, θ) 
     comp = [
             sa[1] * νa[1]; 
+            sa[2] * νa[2]; 
+            sa[3] * νa[3]; 
             sb[1] * νb[1];
+            sb[2] * νb[2];
+            sb[3] * νb[3];
            ]
 
     res = [
@@ -206,58 +222,57 @@ rw0 = zeros(nw, nw)
 rθ0 = zeros(nw, nθ)
 
 # random 
-w0 = randn(nw) 
-θ0 = randn(nθ) 
-κ0 = randn(1)
+# w0 = randn(nw) 
+# θ0 = randn(nθ) 
+# κ0 = randn(1)
 
-r_func(r0, w0, θ0, κ0)
-rw_func(rw0, w0, θ0)
-rθ_func(rθ0, w0, θ0)
+# r_func(r0, w0, θ0, κ0)
+# rw_func(rw0, w0, θ0)
+# rθ_func(rθ0, w0, θ0)
 
 function rw_func_reg(rw, w, θ) 
     rw_func(rw, w, θ)
-    rw .+= Diagonal([1.0e-5 * ones(8); -1.0e-5 * ones(4)])
+    rw .+= Diagonal([1.0e-5 * ones(12); -1.0e-5 * ones(12)])
     return 
 end
 
-(rw0 + Diagonal([1.0e-5 * ones(8); -1.0e-5 * ones(4)])) \ rθ0
+# (rw0 + Diagonal([1.0e-5 * ones(8); -1.0e-5 * ones(4)])) \ rθ0
 
 ## setup 
-xa = [0.0; 0.0; 0.0]
+xa = [-1.0; 0.0; 0.0]
 qa = UnitQuaternion(RotY(0.0) * RotX(0.0 * π))
 qa = [qa.w; qa.x; qa.y; qa.z]
-ax = 0.1
-ay = 0.5
-az = 0.1
+ra = 0.1
+ha = 0.2
 
 xb = [1.0; 0.0; 0.0]
-qb = UnitQuaternion(RotZ(0.25 * π) * RotY(0.2 * π) * RotX(0.0))
+qb = UnitQuaternion(RotZ(0.0 * π) * RotY(0.0) * RotX(0.0))
 qb = [qb.w; qb.x; qb.y; qb.z]
-bx = 0.35
-by = 0.1
-bz = 0.1
+rb = 0.1 
+hb = 0.2
 
 ## initialization 
-w0 = [xa; xb; 1.0; 1.0; 0.0; 0.0; 1.0; 1.0]
-θ0 = [xa; qa; xb; qb; ax; ay; az; bx; by; bz]
+w0 = [xa + 1.0e-1 * randn(3); xb + 1.0e-1 * randn(3); ones(6)...; zeros(6)...; ones(6)...]
+θ0 = [xa; qa; xb; qb; ra; ha; rb; hb]
+κ0 = [1.0]
 
 r_func(r0, w0, θ0, κ0)
 rw_func_reg(rw0, w0, θ0)
 # rw_func(rw0, w0, θ0)
 rθ_func(rθ0, w0, θ0)
-
+cond(rw0)
 rw0 \ rθ0
 
 ## solver 
 idx = RoboDojo.IndicesOptimization(
     nw, nw,
-    [[7, 8], [11, 12]], [[7, 8], [11, 12]],
+    [collect(7:12), collect(19:24)], [collect(7:12), collect(19:24)],
     Vector{Vector{Vector{Int}}}(), Vector{Vector{Vector{Int}}}(),
-    collect(1:10),
-    collect(11:12),
+    collect(1:18),
+    collect(19:24),
     Vector{Int}(),
     Vector{Vector{Int}}(),
-    collect(11:12),
+    collect(19:24),
 )
 
 ip = RoboDojo.interior_point(w0, θ0;
@@ -268,12 +283,12 @@ ip = RoboDojo.interior_point(w0, θ0;
     rz = zeros(idx.nΔ, idx.nΔ),
     rθ = zeros(idx.nΔ, length(θ0)),
     opts = RoboDojo.InteriorPointOptions(
-            undercut=Inf,
+            undercut=10.0,
             γ_reg=0.1,
             r_tol=1e-6,
             κ_tol=1e-6,  
-            max_ls=25,
-            ϵ_min=0.25,
+            max_ls=50,
+            ϵ_min=0.01,
             diff_sol=true,
             verbose=true))
 
