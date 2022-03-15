@@ -1,4 +1,4 @@
-# @testset "FiniteDiff comparison" begin
+@testset "FiniteDiff comparison" begin
     Random.seed!(100)
     x0 = srand(3)
     v0 = srand(3)
@@ -38,4 +38,4 @@
         Dojo.vector(Dojo.next_orientation(Quaternion(con0[4:7]...), ϕ0, timestep0))], con0)
     @test norm(FDcon - Dojo.integrator_jacobian_configuration(q0, ϕ0, timestep0, attjac=false), Inf) < 1e-8
     @test norm(FDcon * cat(I(3), Dojo.LVᵀmat(q0), dims=(1,2)) - Dojo.integrator_jacobian_configuration(q0, ϕ0, timestep0, attjac=true), Inf) < 1e-8
-# end
+end
