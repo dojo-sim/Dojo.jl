@@ -7,7 +7,7 @@ m = 4;  n = 5
 A = randn(m, n); b = randn(m, 1)
 
 # Create a (column vector) variable of size n x 1.
-x = Variable(n)
+x = Convex.Variable(n)
 
 # The problem is to minimize ||Ax - b||^2 subject to x >= 0
 # This can be done by: minimize(objective, constraints)
@@ -108,3 +108,50 @@ problem.status # :Optimal, :Infeasible, :Unbounded etc.
 problem.optval
 pa
 pb
+
+## line segment 
+za = Convex.Variable(3) 
+zb = Convex.Variable(3)
+ta = Convex.Variable(1)
+tb = Convex.Variable(1) 
+
+xa = [-1.0; 0.0; 0.0]
+qa = UnitQuaternion(RotY(-0.25 * π) * RotX(0.0 * π))
+qa = [qa.w; qa.x; qa.y; qa.z]
+
+xb = [1.0; 0.0; 0.0]
+qb = UnitQuaternion(RotZ(0.0 * π) * RotY(0.0 * π) * RotX(0.0))
+qb = [qb.w; qb.x; qb.y; qb.z]
+ra = 0.1
+ha = 1.0
+rb = 0.1
+hb = 1.0
+
+p1a = xa + rotation_matrix(qa) * [0.0; 0.0; 0.5 * ha]
+p2a = xa + rotation_matrix(qa) * [0.0; 0.0; -0.5 * ha]
+
+p1b = xb + rotation_matrix(qb) * [0.0; 0.0;  0.5 * hb]
+p2b = xb + rotation_matrix(qb) * [0.0; 0.0; -0.5 * hb]
+
+
+problem = minimize(norm(za - zb), 
+    [
+        za == ta * p1a + (1.0 - ta) * p2a,
+        zb == tb * p1b + (1.0 - tb) * p2b,
+        ta >= 0.0, 
+        ta <= 1.0, 
+        tb >= 0.0, 
+        tb <= 1.0,
+    ])
+
+
+# Solve the problem by calling solve!
+solve!(problem, ECOS.Optimizer; silent_solver = false)
+
+# Check the status of the problem
+problem.status # :Optimal, :Infeasible, :Unbounded etc.
+
+# Get the optimum value
+problem.optval
+za
+zb
