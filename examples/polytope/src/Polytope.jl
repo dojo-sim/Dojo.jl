@@ -14,7 +14,7 @@ using Random
 using StaticArrays
 
 global OSF_PATH = joinpath("/home/simon/research/repos/osf-pytorch")
-include("setup.jl")
+# include("setup.jl")
 using PyCall
 
 include("utils.jl")
