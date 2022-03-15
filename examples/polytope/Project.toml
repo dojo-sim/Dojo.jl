@@ -1,11 +1,12 @@
-authors = ["simon-lc <simonlc@stanford.edu>"]
 name = "Polytope"
 uuid = "18745f7e-7885-4119-adbd-0b6badffc101"
+authors = ["simon-lc <simonlc@stanford.edu>"]
 version = "0.1.0"
 
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
+FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
 GLPK = "60bf3e95-4087-53dc-ae20-288a0d20c6a6"
 GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
