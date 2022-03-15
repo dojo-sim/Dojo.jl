@@ -72,7 +72,7 @@ function low_variance_sampling(polytope, nerf_object; N::Int, δx=0.002)
     typical_volume = typical_length^3
 
     n = length(vertices)
-    (n == 0) && return 0.0, zeros(3), [0,0,1]
+    (n == 0) && return 0.0, zeros(3), [0,0,1], [0,0,0]
     for i = 1:N
         p = (vertices[(i-1) % n + 1] + barycenter) / (2 + Int(floor(i/n)))
         points[(i-1)*6+1,:] = p + [-δx,0,0]
@@ -96,62 +96,68 @@ function low_variance_sampling(polytope, nerf_object; N::Int, δx=0.002)
 
     impact_normal = -mean(points, dims=1)[1,:]
     impact_normal /= norm(impact_normal)
-    return ϕ, ∇ϕ, impact_normal
+    return ϕ, ∇ϕ, impact_normal, barycenter
 end
 
-Dojo.@with_kw mutable struct SimulationOptions11{T}
-    impact_damper::T=100.0
+Dojo.@with_kw mutable struct SimulationOptions14{T}
+    impact_damper::Vector{T}=[1,1,100.0]
     impact_spring::T=30.0
     friction_coefficient::T=10.0
     friction_tanh::T=100.0
+    angular_damping::T=1.0
+    angular_friction::T=1.0
 end
 
-function integrator(y0; opts=SimulationOptions11())
+function integrator(y0; opts=SimulationOptions14())
     x = y0[1:3]
     v = y0[4:6]
     q = Quaternion(y0[7:10]..., false)
     ω = y0[11:13]
 
-    ϕ, ∇ϕ, impact_normal = contact_potential(p0, q0, hull, nerf_object; N=100, δx=0.004)
-    # ϕ = max(ϕ - 1, 0)
+    ϕ, ∇ϕ, impact_normal, barycenter = contact_potential(x, q, hull, nerf_object; N=100, δx=0.004)
+    ϕimp = max(ϕ-0.5,0)
     impact_normal = [0,0,1]
-    v_normal = v' * impact_normal * impact_normal
-    v_tangential = v - v_normal
+    barycenter_w = Dojo.vector_rotate(barycenter, q)
+    vc = v + Dojo.vector_rotate(Dojo.skew(-barycenter) * ω, q)
+    vc_normal = vc' * impact_normal * impact_normal
+    vc_tangential = vc - vc_normal
 
-    # N = [g +
-    #     1/m * impact_normal .* -opts.impact_damper * ϕ0 .* v0 +
-    #     1/m * impact_normal * opts.impact_spring * ϕ0 +
-    #     -1/m * opts.friction_coefficient * atan(opts.friction_tanh * norm(v0_tangential)) * v0_tangential/norm(v0_tangential) * ϕ0;
-    #     zeros(3)]
-    # y1 = (I - 0.5B) \ ((I + 0.5B) * y0) + A \ (N - (I - 0.5B) \ ((I + 0.5B) * N))
-    F = g +
-        1/m * impact_normal .* -opts.impact_damper * ϕ .* v +
-        1/m * impact_normal * opts.impact_spring * ϕ +
-        -1/m * opts.friction_coefficient * atan(opts.friction_tanh * norm(v_tangential)) * v_tangential/norm(v_tangential) * ϕ;
-    τ = zeros(3)
+    # F_impact = impact_normal .* -opts.impact_damper * ϕ .* vc
+    F_impact = -opts.impact_damper * ϕ .* vc
+    F_impact += impact_normal * opts.impact_spring * ϕimp^2/(3+ϕimp)
+    F_impact += -opts.friction_coefficient * atan(opts.friction_tanh * norm(vc_tangential)) * vc_tangential/(1e-3 + norm(vc_tangential)) * ϕ
+    F = m*g + F_impact
+
+    τ_w = Dojo.skew(barycenter_w) * F_impact
+    τ = Dojo.vector_rotate(τ_w, inv(q))
+    τ -= opts.angular_damping * ω  * ϕ
+    τ -= opts.angular_friction * atan(opts.friction_tanh * norm(ω)) * ω/(1e-3 + norm(ω)) * ϕ
 
     M = cat(m*Diagonal(ones(3)), J, dims=(1,2)) # mass matrix
     a = M \ ([F; τ] - [zeros(3); Dojo.skew(ω)* J * ω])
-    x1 = x + h * v
+
     v1 = v + h * a[1:3]
-    q1 = Dojo.next_orientation(q, SVector{3}(ω), h)
+    x1 = x + h * (v+v1)/2
     ω1 = ω + h * a[4:6]
+    q1 = Dojo.next_orientation(q, SVector{3}((ω+ω1)/2), h)
     y1 = [x1; v1; Dojo.vector(q1); ω1]
-    return y1, ϕ, ∇ϕ
+    return y1, ϕ, ∇ϕ, τ
 end
 
-function exp_simulation(y0, N; opts=SimulationOptions11())
-    Y = [y0]
-    Φ = []
-    ∇Φ = []
+function exp_simulation(y0, N; opts=SimulationOptions14())
+    y = [y0]
+    ϕ = []
+    ∇ϕ = []
+    τ = []
     for i = 1:N
         @show i
-        y0, ϕ0, ∇ϕ0 = integrator(y0, opts=opts)
-        push!(Y, y0)
-        push!(Φ, ϕ0)
-        push!(∇Φ, ∇ϕ0)
+        y0, ϕ0, ∇ϕ0, τ0 = integrator(y0, opts=opts)
+        push!(y, y0)
+        push!(ϕ, ϕ0)
+        push!(∇ϕ, ∇ϕ0)
+        push!(τ, τ0)
     end
-    return Y, Φ, ∇Φ
+    return y, ϕ, ∇ϕ, τ
 end
 
 set_light!(vis)
@@ -159,32 +165,41 @@ set_floor!(vis, color=RGBA(0.4,0.4,0.4,0.4))
 set_background!(vis)
 
 
-h = 0.01
+h = 0.005
 m = 1.0
-J = Diagonal(ones(3))
+J = 1Diagonal(ones(3))
 g = [0,0,-9.81]
 A = [zeros(3,3) -1e-10I(3); -I(3) zeros(3,3)]
 B = -A * h
-H = 400
+H = 1000
 
 x0 = [0,0,1.0]
-v0 = [0,0,0.0]
-q0 = Quaternion(1,0,0,0.0,false)
-ω0 = [0,0,0.0]
+v0 = [0,2,3.0]
+q0 = rand(4)
+q0 ./= norm(q0)
+q0 = Quaternion(q0...)
+ω0 = [1.5,0,0.0]
 y0 = [x0; v0; Dojo.vector(q0); ω0]
 
-opts = SimulationOptions11(
-    impact_damper=100.0,
-    impact_spring=30.0,
-    friction_coefficient=5.0,
+opts = SimulationOptions14(
+    impact_damper=[1,1,60.0],
+    impact_spring=20.0,
+    friction_coefficient=1.0,
     friction_tanh=1000.0,
+    angular_damping=1.0,
+    angular_friction=0.2,
 )
 Y0, Φ0, ∇Φ0 = exp_simulation(y0, H, opts=opts)
-plot([i*h for i=0:H], [p[6] for p in Y0], linewidth=3.0, xlabel="time", label="altitude")
-plot([i*h for i=0:H], [p[5] for p in Y0], linewidth=3.0, xlabel="time", label="altitude")
-plot!([i*h for i=1:H], Φ0, linewidth=3.0, xlabel="time", label="ϕ", color=:red)
+plt = plot(layout=(3,1))
+plot!(plt[1,1], [i*h for i=0:H], [y[1] for y in Y0], linewidth=3.0, xlabel="time", label="x", color=:blue)
+plot!(plt[1,1], [i*h for i=0:H], [y[2] for y in Y0], linewidth=3.0, xlabel="time", label="y", color=:blue)
+plot!(plt[1,1], [i*h for i=0:H], [y[3] for y in Y0], linewidth=3.0, xlabel="time", label="z", color=:blue)
+plot!(plt[2,1], [i*h for i=0:H], [y[7] for y in Y0], linewidth=3.0, xlabel="time", label="q1", color=:green)
+plot!(plt[2,1], [i*h for i=0:H], [y[8] for y in Y0], linewidth=3.0, xlabel="time", label="q2", color=:green)
+plot!(plt[2,1], [i*h for i=0:H], [y[9] for y in Y0], linewidth=3.0, xlabel="time", label="q3", color=:green)
+plot!(plt[2,1], [i*h for i=0:H], [y[10] for y in Y0], linewidth=3.0, xlabel="time", label="q4", color=:green)
+plot!(plt[3,1], [i*h for i=1:H], Φ0, linewidth=3.0, xlabel="time", label="ϕ", color=:red)
 # plot!([i*h for i=1:H], [p[3] for p in ∇Φ0], linewidth=3.0, xlabel="time", label="∇ϕ", color=:green)
-
 
 setobject!(vis[:animated], mesh,
     MeshPhongMaterial(color=RGBA{Float32}(1, 1, 1, 1.0)))
@@ -192,11 +207,10 @@ setobject!(vis[:animated], mesh,
 animation = MeshCat.Animation(Int(floor(1/h)))
 for i = 1:H
     atframe(animation, i) do
-        settransform!(vis[:animated], MeshCat.Translation(Y0[i][4:6]))
+        set_robot!(Y0[i][1:3], Quaternion(Y0[i][7:10]...), vis, name=:animated)
     end
 end
 setanimation!(vis, animation)
-
 
 
 
