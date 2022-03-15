@@ -16,6 +16,7 @@ nerf_object = py"generate_test_nerf"()
 results_dir = joinpath(module_dir(), "results")
 vertices = jldopen(joinpath(results_dir, "bunny_mesh.jld2"))["vertices"]
 mesh = jldopen(joinpath(results_dir, "bunny_mesh.jld2"))["mesh"]
+tight_mesh = jldopen(joinpath(results_dir, "bunny_tight_mesh.jld2"))["mesh"]
 hull_vrep = removevredundancy(vrep(vertices), GLPK.Optimizer)
 hull = polyhedron(hull_vrep)
 hull_hrep = hrep(hull)
@@ -27,13 +28,13 @@ open(vis)
 # Methods
 ################################################################################
 
-function build_polytope!(poly::Polyhedron, vis::Visualizer; name::Symbol=:robot)
+function build_polytope!(poly::Polyhedron, vis::Visualizer; name::Symbol=:robot, color=RGBA(1,1,1,1.0))
     mesh = Polyhedra.Mesh(poly)
-    build_mesh!(mesh, vis; name=name)
+    build_mesh!(mesh, vis; name=name, color=color)
 end
 
-function build_mesh!(mesh, vis::Visualizer; name::Symbol=:robot)
-    setobject!(vis[name], mesh, MeshPhongMaterial(color=RGBA{Float32}(1, 1, 1, 0.7)))
+function build_mesh!(mesh, vis::Visualizer; name::Symbol=:robot, color=RGBA(1,1,1,1.0))
+    setobject!(vis[name], mesh, MeshPhongMaterial(color=color))
     return nothing
 end
 
@@ -161,7 +162,7 @@ function exp_simulation(y0, N; opts=SimulationOptions14())
 end
 
 set_light!(vis)
-set_floor!(vis, color=RGBA(0.4,0.4,0.4,0.4))
+set_floor!(vis, color=RGBA(0.4,0.4,0.4,0.8), z=0.5)
 set_background!(vis)
 
 
@@ -204,13 +205,22 @@ plot!(plt[3,1], [i*h for i=1:H], Φ0, linewidth=3.0, xlabel="time", label="ϕ", 
 setobject!(vis[:animated], mesh,
     MeshPhongMaterial(color=RGBA{Float32}(1, 1, 1, 1.0)))
 
+build_mesh!(mesh, vis, name=:mesh, color=RGBA(1,1,1,0.4))
+build_mesh!(tight_mesh, vis, name=:tight_mesh, color=RGBA(0.4,0.0,0.8,0.6))
+build_polytope!(hull, vis, name=:hull, color=RGBA(1,0.3,0.3,0.6))
 animation = MeshCat.Animation(Int(floor(1/h)))
 for i = 1:H
     atframe(animation, i) do
-        set_robot!(Y0[i][1:3], Quaternion(Y0[i][7:10]...), vis, name=:animated)
+        set_robot!(Y0[i][1:3], Quaternion(Y0[i][7:10]...), vis, name=:mesh)
+        set_robot!(Y0[i][1:3], Quaternion(Y0[i][7:10]...), vis, name=:tight_mesh)
+        set_robot!(Y0[i][1:3], Quaternion(Y0[i][7:10]...), vis, name=:hull)
     end
 end
 setanimation!(vis, animation)
+
+
+
+
 
 
 
@@ -221,8 +231,8 @@ contact_potential(x0, q0, hull, nerf_object, N=1000, δx=0.005)
 ΔX = Vector(0.0001:0.0005:0.02)
 plot(ΔX, [contact_potential(x0, q0, hull, nerf_object, N=1000, δx=δx)[2][1] for δx ∈ ΔX])
 
-X = Vector(0.0:0.1:1.0)
-plot(X, [contact_potential([0,0,x], q0, hull, nerf_object, N=1000, δx=0.004)[1] for x ∈ X])
+X = Vector(0.0:0.0002:1.0)
+plot(X, [contact_potential([0,0,x], q0, hull, nerf_object, N=100, δx=0.004)[1] for x ∈ X])
 
 X = -1.0:0.01:1.0
 plot(X, 2 .* atan.(100*X)/π)

@@ -23,8 +23,19 @@ densities = grid_density(nerf_object, xrange, yrange, zrange)
 vertices, faces = isosurface(densities, NaiveSurfaceNets(iso=1)) # iso=65
 mesh = GeometryBasics.Mesh(densities, NaiveSurfaceNets(iso=1)) # iso=65
 results_dir = joinpath(module_dir(), "results")
-# jldsave(joinpath(results_dir, "bunny_mesh.jld2"), mesh=mesh, densities=densities,
-#     vertices=vertices, faces=faces)
+jldsave(joinpath(results_dir, "bunny_mesh.jld2"), mesh=mesh, densities=densities,
+    vertices=vertices, faces=faces)
+
+N = 100
+xrange = range(-1.0, stop=1.0, length=N)
+yrange = range(-1.0, stop=1.0, length=N)
+zrange = range(-1.0, stop=1.0, length=N)
+densities = grid_density(nerf_object, xrange, yrange, zrange)
+vertices, faces = isosurface(densities, NaiveSurfaceNets(iso=65)) # iso=65
+mesh = GeometryBasics.Mesh(densities, NaiveSurfaceNets(iso=65)) # iso=65
+results_dir = joinpath(module_dir(), "results")
+jldsave(joinpath(results_dir, "bunny_tight_mesh.jld2"), mesh=mesh, densities=densities,
+    vertices=vertices, faces=faces)
 
 # densities = jldopen(joinpath(results_dir, "bunny_mesh.jld2"))["densities"]
 # mesh = jldopen(joinpath(results_dir, "bunny_mesh.jld2"))["mesh"]
