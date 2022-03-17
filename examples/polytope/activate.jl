@@ -1,7 +1,7 @@
-function module_dir()
+function example_dir()
     @__DIR__
 end
 
 using Pkg
-Pkg.activate(module_dir())
+Pkg.activate(example_dir())
 using Polytope

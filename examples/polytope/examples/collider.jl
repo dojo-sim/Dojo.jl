@@ -1,6 +1,7 @@
 using LinearAlgebra
 using Plots
 using FiniteDiff
+using JLD2
 using Dojo
 using PyCall
 
@@ -25,7 +26,9 @@ open(vis)
 halfspace_origin = [0,0,0.1]
 normal = [0.2,0,1.0]
 halfspace = HalfSpaceCollider(halfspace_origin, normal)
-# soft = SoftCollider(nerf_object, mesh, N=5000)
+soft = SoftCollider(nerf_object, mesh, N=5000)
+
+# jldsave(joinpath(example_dir(), "results", "soft.jld2"), soft=soft)
 
 @time collision(halfspace, soft)
 

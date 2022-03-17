@@ -2,14 +2,12 @@ module Polytope
 
 using BenchmarkTools
 using GeometryBasics
-using GLPK
 using JLD2
 using LinearAlgebra
 using MeshCat
 using Meshing
 using Pkg
 using Plots
-using Polyhedra
 using Random
 using StaticArrays
 

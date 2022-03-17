@@ -1,6 +1,22 @@
-
 abstract type Collider{T} end
+abstract type ColliderOptions{T} end
 
+################################################################################
+# ColliderOptions
+################################################################################
+Dojo.@with_kw mutable struct ColliderOptions18{T} <: ColliderOptions{T}
+    impact_damper::T=300.0
+    impact_spring::T=100.0
+    sliding_friction::T=0.2
+    rolling_drag::T=0.5
+    rolling_friction::T=0.04
+    coulomb_smoothing::T=1000.0
+    coulomb_regularizer::T=1e-3
+end
+
+################################################################################
+# HalfSpaceCollider
+################################################################################
 mutable struct HalfSpaceCollider28{T} <: Collider{T}
     origin::Vector{T}
     normal::Vector{T}
@@ -18,7 +34,10 @@ function inside(halfspace::HalfSpaceCollider28, p)
     return c <= 0.0
 end
 
-mutable struct SoftCollider25{T,N} <: Collider{T}
+################################################################################
+# SoftCollider
+################################################################################
+mutable struct SoftCollider26{T,N} <: Collider{T}
     x::AbstractVector{T}
     q::Quaternion{T}
     mass::T
@@ -29,15 +48,16 @@ mutable struct SoftCollider25{T,N} <: Collider{T}
     gradients::Vector{SVector{3,T}}
     nerf_object::Any
     mesh::GeometryBasics.Mesh
+    options::ColliderOptions{T}
 end
 
-function SoftCollider(nerf_object, mesh; N=1000, T=Float64)
+function SoftCollider(nerf_object, mesh; N=1000, opts=ColliderOptions18(), T=Float64)
     x = szeros(T,3)
     q = Quaternion(1,0,0,0.0)
     mass, inertia, center_of_mass = inertia_properties(nerf_object)
     particles, densities, gradients = sample_soft(nerf_object, N)
-    return SoftCollider25{T,N}(x, q, mass, inertia, center_of_mass, particles,
-        densities, gradients, nerf_object, mesh)
+    return SoftCollider26{T,N}(x, q, mass, inertia, center_of_mass, particles,
+        densities, gradients, nerf_object, mesh, opts)
 end
 
 function sample_soft(nerf_object, N::Int, T=Float64, min_density=1.0, max_density=105.0)
@@ -75,7 +95,7 @@ function finite_difference_gradient(nerf_object, particle; δ=0.01, n::Int=5)
     return gradient
 end
 
-function collision(halfspace::HalfSpaceCollider28{T}, collider::SoftCollider25{T,N}) where {T,N}
+function collision(halfspace::HalfSpaceCollider28{T}, collider::SoftCollider26{T,N}) where {T,N}
     ϕ = 0.0
     ∇ϕ = zeros(3)
     contact_normal = halfspace.normal
