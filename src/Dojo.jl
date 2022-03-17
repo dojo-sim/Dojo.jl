@@ -31,6 +31,7 @@ using DocStringExtensions
 # Utilities
 include(joinpath("utilities", "methods.jl"))
 include(joinpath("utilities", "custom_static.jl"))
+include(joinpath("utilities", "normalize.jl"))
 
 # Orientation
 include(joinpath("orientation", "quaternion.jl"))

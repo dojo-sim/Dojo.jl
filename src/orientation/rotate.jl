@@ -2,8 +2,8 @@
 quaternion_rotate(q1::UnitQuaternion,q2::UnitQuaternion) = q2 * q1 / q2
 
 # rotate vector
-vector_rotate(v::Vector,q::UnitQuaternion) = imag(quaternion_rotate(pure_quaternion(v), q))
-vector_rotate(v::StaticVector,q::UnitQuaternion) = q * v
+vector_rotate(v::Vector, q::UnitQuaternion) = imag(quaternion_rotate(pure_quaternion(v), q))
+vector_rotate(v::StaticVector, q::UnitQuaternion) = q * v
 ∂vector_rotate∂p(p::AbstractVector, q::UnitQuaternion) = VRᵀmat(q) * LVᵀmat(q)
 ∂vector_rotate∂q(p::AbstractVector, q::UnitQuaternion) = VLmat(q) * Lmat(UnitQuaternion(p)) * Tmat() + VRᵀmat(q) * Rmat(UnitQuaternion(p))
 
