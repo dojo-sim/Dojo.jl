@@ -1,7 +1,11 @@
 name: dailyCI
 on:
   schedule:
-    - cron: '00 10,22 * * *'
+#      Every day at 10AM and 10PM UTC
+#     - cron: '00 10,22 * * *'
+#      Every Monday at 1PM UTC (6AM PST)
+    - cron: '0 13 * * 1'
+
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
