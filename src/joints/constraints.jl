@@ -209,45 +209,45 @@ function off_diagonal_jacobians(mechanism, pbody::Body, cbody::Body)
         end
         
         # contacts
-        if connectionid > Ne + Nb
-            contact = get_node(mechanism, connectionid)
-            if pbody.id == contact.parent_id
-                if cbody.id == contact.child_id
-                    Jpc = impulse_map_jacobian(:parent, :child, contact.model, 
-                            pbody, 
-                            cbody, 
-                            contact.impulses[2], 
-                            mechanism.timestep) * integrator_jacobian_velocity(cbody, timestep)
+        # if connectionid > Ne + Nb
+        #     contact = get_node(mechanism, connectionid)
+        #     if pbody.id == contact.parent_id
+        #         if cbody.id == contact.child_id
+        #             Jpc = impulse_map_jacobian(:parent, :child, contact.model, 
+        #                     pbody, 
+        #                     cbody, 
+        #                     contact.impulses[2], 
+        #                     mechanism.timestep) * integrator_jacobian_velocity(cbody, timestep)
 
-                    Jcp = impulse_map_jacobian(:child, :parent, contact.model, 
-                            pbody, 
-                            cbody, 
-                            contact.impulses[2], 
-                            mechanism.timestep) * integrator_jacobian_velocity(pbody, timestep)
-                    # impulse_map_jacobian_configuration(mechanism, body, contact) * integrator_jacobian_velocity(body, timestep)
-                    # impulse_map(mechanism, contact, body) * contact.impulses[2]
-                    jacobian_parent_child -= Jpc#damper_jacobian_velocity(:parent, :child, element, pbody, cbody, timestep)
-                    jacobian_child_parent -= Jcp#damper_jacobian_velocity(:child, :parent, element, pbody, cbody, timestep)
-                end
-            elseif cbody.id == contact.parent_id
-                if pbody.id == contact.child_id
-                    Jpc = impulse_map_jacobian(:parent, :child, contact.model, 
-                            cbody, 
-                            pbody, 
-                            contact.impulses[2], 
-                            mechanism.timestep) * integrator_jacobian_velocity(pbody, timestep)
+        #             Jcp = impulse_map_jacobian(:child, :parent, contact.model, 
+        #                     pbody, 
+        #                     cbody, 
+        #                     contact.impulses[2], 
+        #                     mechanism.timestep) * integrator_jacobian_velocity(pbody, timestep)
+        #             # impulse_map_jacobian_configuration(mechanism, body, contact) * integrator_jacobian_velocity(body, timestep)
+        #             # impulse_map(mechanism, contact, body) * contact.impulses[2]
+        #             jacobian_parent_child -= Jpc#damper_jacobian_velocity(:parent, :child, element, pbody, cbody, timestep)
+        #             jacobian_child_parent -= Jcp#damper_jacobian_velocity(:child, :parent, element, pbody, cbody, timestep)
+        #         end
+        #     elseif cbody.id == contact.parent_id
+        #         if pbody.id == contact.child_id
+        #             Jpc = impulse_map_jacobian(:parent, :child, contact.model, 
+        #                     cbody, 
+        #                     pbody, 
+        #                     contact.impulses[2], 
+        #                     mechanism.timestep) * integrator_jacobian_velocity(pbody, timestep)
 
-                    Jcp = impulse_map_jacobian(:child, :parent, contact.model, 
-                            cbody, 
-                            bbody, 
-                            contact.impulses[2], 
-                            mechanism.timestep) * integrator_jacobian_velocity(cbody, timestep)
+        #             Jcp = impulse_map_jacobian(:child, :parent, contact.model, 
+        #                     cbody, 
+        #                     bbody, 
+        #                     contact.impulses[2], 
+        #                     mechanism.timestep) * integrator_jacobian_velocity(cbody, timestep)
 
-                    jacobian_parent_child -= Jpc #damper_jacobian_velocity(:parent, :child, element, cbody, pbody, timestep)
-                    jacobian_child_parent -= Jcp #damper_jacobian_velocity(:child, :parent, element, cbody, pbody, timestep)
-                end
-            end
-        end
+        #             jacobian_parent_child -= Jpc #damper_jacobian_velocity(:parent, :child, element, cbody, pbody, timestep)
+        #             jacobian_child_parent -= Jcp #damper_jacobian_velocity(:child, :parent, element, cbody, pbody, timestep)
+        #         end
+        #     end
+        # end
     end
 
     return jacobian_parent_child, jacobian_child_parent

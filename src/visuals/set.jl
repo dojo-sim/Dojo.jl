@@ -107,6 +107,43 @@ function set_camera!(vis::Visualizer;
     return nothing
 end
 
+"""
+    set_arrow!(vis, origin, direction; color, shaft_radius, max_head_radius, scaling, name)
+
+    adds an arrow object to scene 
+
+    vis: Visualizer 
+    origin: point defining arrow base 
+    direction: vector defining arrow 
+    color: RGBA 
+    shaft_radius: dimension of arrow shaft 
+    max_head_radius: dimension of arrow head base 
+    scaling: parameter that scales the entire arrow 
+    name: Symbol
+"""
+function set_arrow!(vis, origin, direction; 
+    color=Colors.RGBA(1.0, 0.0, 0.0, 1.0), 
+    shaft_radius=0.0125, 
+    max_head_radius=0.025, 
+    scaling=0.2, 
+    name=:name)
+
+    # create arrow
+    force_vis = ArrowVisualizer(vis[name])
+    setobject!(force_vis, MeshPhongMaterial(color=color))
+
+    # direction 
+    scaled_direction = scaling * direction 
+
+    # set 
+    settransform!(force_vis,
+        Point(origin...),
+        Vec(scaled_direction...),
+        shaft_radius=shaft_radius,
+        max_head_radius=max_head_radius)
+
+end
+
 function set_background!(vis::Visualizer; top_color=RGBA(1,1,1.0), bottom_color=RGBA(1,1,1.0))
     setprop!(vis["/Background"], "top_color", top_color)
     setprop!(vis["/Background"], "bottom_color", bottom_color)

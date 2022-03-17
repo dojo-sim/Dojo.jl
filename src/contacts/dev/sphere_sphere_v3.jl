@@ -68,28 +68,7 @@ set_arrow!(vis, pa, vec(t[2, :]), name=:parent_tangent2, color=RGBA(0.0, 0.0, 1.
 set_arrow!(vis, pb, -1.0 * vec(t[1, :]), name=:child_tangent1, color=RGBA(0.0, 1.0, 0.0, 1.0))
 set_arrow!(vis, pb, -1.0 * vec(t[2, :]), name=:child_tangent2, color=RGBA(0.0, 0.0, 1.0, 1.0))
 
-function set_arrow!(vis, origin, direction; 
-    color=Colors.RGBA(1.0, 0.0, 0.0, 1.0), 
-    shaft_radius=0.0125, 
-    max_head_radius=0.025, 
-    scaling=0.2, 
-    name=:name)
 
-    # create arrow
-    force_vis = ArrowVisualizer(vis[name])
-    setobject!(force_vis, MeshPhongMaterial(color=color))
-
-    # direction 
-    scaled_direction = scaling * direction 
-
-    # set 
-    settransform!(force_vis,
-        Point(origin...),
-        Vec(scaled_direction...),
-        shaft_radius=shaft_radius,
-        max_head_radius=max_head_radius)
-
-end
 
 
 ## Jacobians contact_normal(collision, xa, UnitQuaternion(qa..., false), xb, UnitQuaternion(qb..., false))
