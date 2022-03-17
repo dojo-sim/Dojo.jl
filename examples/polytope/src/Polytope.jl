@@ -18,4 +18,5 @@ global OSF_PATH = joinpath("/home/simon/research/repos/osf-pytorch")
 using PyCall
 
 include("utils.jl")
+include("visualize.jl")
 end # module
