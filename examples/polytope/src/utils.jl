@@ -46,3 +46,25 @@ function naive_sample(poly, N::Int; rng::Int=0)
     end
     return points
 end
+
+function inertia_properties(nerf_object; n=30, scale=1e-1)
+    xrange = range(-1.0, stop=1.0, length=n)
+    yrange = range(-1.0, stop=1.0, length=n)
+    zrange = range(-1.0, stop=1.0, length=n)
+    particle_volume = (2/n)^3
+    particles = grid_points(xrange, yrange, zrange)
+    masses = particle_volume * scale .* py"density_query"(nerf_object, particles)
+
+    mass = sum(masses)
+    center_of_mass = zeros(3)
+    for i = 1:n^3
+        center_of_mass += masses[i] * particles[i,:]
+    end
+    center_of_mass /= mass
+    inertia = zeros(3,3)
+    for i = 1:n^3
+        v = (particles[i,:] - center_of_mass)
+        inertia += masses[i] * v * v'
+    end
+    return mass, inertia, center_of_mass
+end
