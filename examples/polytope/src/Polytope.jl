@@ -18,4 +18,5 @@ using PyCall
 include("collider.jl")
 include("utils.jl")
 include("visualize.jl")
+include("integrator.jl")
 end # module
