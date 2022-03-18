@@ -1,7 +1,7 @@
 ################################################################################
 # Methods
 ################################################################################
-function implicit_integrator(collider, soft, timestep, z)
+function implicit_integrator(fixed_collider, soft, timestep, z)
     opts = soft.options
 	x2, v15, q2, ϕ15 = unpack_maximal_state(z, 1)
 	x1 = Dojo.next_position(x2, -v15, timestep)
@@ -9,7 +9,7 @@ function implicit_integrator(collider, soft, timestep, z)
 
     soft.x = x2
     soft.q = q2
-    ψ, ∇ψ, impact_normal, barycenter = collision(collider, soft)
+    ψ, impact_normal, barycenter = collision(fixed_collider, soft)
     coulomb_direction(v) = - atan(opts.coulomb_smoothing * norm(v)) * v/(opts.coulomb_regularizer + norm(v))
 
     function residual(vϕ)
@@ -80,12 +80,12 @@ function inegrator_line_search(x, res, Δ, residual)
     return α
 end
 
-function implicit_simulation(collider, soft, timestep, N, z0)
+function implicit_simulation(fixed_collider, soft, timestep, N, z0)
     z = [z0]
     ψ = []
     for i = 1:N
         @show i
-        z0, ψ0 = implicit_integrator(collider, soft, timestep, z0)
+        z0, ψ0 = implicit_integrator(fixed_collider, soft, timestep, z0)
         push!(z, z0)
         push!(ψ, ψ0)
     end

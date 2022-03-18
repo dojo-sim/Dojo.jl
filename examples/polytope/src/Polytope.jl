@@ -1,6 +1,7 @@
 module Polytope
 
 using BenchmarkTools
+using FiniteDiff
 using GeometryBasics
 using JLD2
 using LinearAlgebra

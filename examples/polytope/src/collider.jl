@@ -55,7 +55,7 @@ end
 ################################################################################
 # SoftCollider
 ################################################################################
-mutable struct SoftCollider27{T,N} <: Collider{T}
+mutable struct SoftCollider28{T,N} <: Collider{T}
     x::AbstractVector{T}
     q::Quaternion{T}
     mass::T
@@ -63,8 +63,9 @@ mutable struct SoftCollider27{T,N} <: Collider{T}
     center_of_mass::AbstractVector{T}
     particles::Vector{SVector{3,T}}
     densities::Vector{T}
-    gradients::Vector{SVector{3,T}}
-    collision_weights::Vector{T} # contribution to collision force F = spring_constant * collision_weight
+    density_gradients::Vector{SVector{3,T}}
+    weights::Vector{T} # contribution to collision force F = spring_constant * collision_weight
+    weight_gradients::Vector{SVector{3,T}}
     nerf_object::Any
     mesh::GeometryBasics.Mesh
     options::ColliderOptions{T}
@@ -74,16 +75,17 @@ function SoftCollider(nerf_object, mesh; N=1000, density_scale=0.1, opts=Collide
     x = szeros(T,3)
     q = Quaternion(1,0,0,0.0)
     mass, inertia, center_of_mass = inertia_properties(nerf_object, density_scale=density_scale)
-    particles, densities, gradients = sample_soft(nerf_object, N)
-    collision_weights = densities ./ sum(densities) * mass
-    return SoftCollider27{T,N}(x, q, mass, inertia, center_of_mass, particles,
-        densities, gradients, collision_weights, nerf_object, mesh, opts)
+    particles, densities, density_gradients = sample_soft(nerf_object, N)
+    weights = densities ./ sum(densities) * mass
+    weight_gradients = density_gradients ./ sum(densities) * mass
+    return SoftCollider28{T,N}(x, q, mass, inertia, center_of_mass, particles,
+        densities, density_gradients, weights, weight_gradients, nerf_object, mesh, opts)
 end
 
 function sample_soft(nerf_object, N::Int, T=Float64, min_density=1.0, max_density=105.0)
     particles = Vector{SVector{3,T}}(undef, N)
     densities = zeros(T,N)
-    gradients = Vector{SVector{3,T}}(undef, N)
+    density_gradients = Vector{SVector{3,T}}(undef, N)
 
     n = Int(floor((100N)^(1/3)))
     xrange = range(-1.0, stop=1.0, length=n)
@@ -99,9 +101,9 @@ function sample_soft(nerf_object, N::Int, T=Float64, min_density=1.0, max_densit
     for i = 1:N
         particles[i] = good_particles[Int(floor(i*Ng/N)),:]
         densities[i] = good_densities[Int(floor(i*Ng/N))]
-        gradients[i] = finite_difference_gradient(nerf_object, particles[i])
+        density_gradients[i] = finite_difference_gradient(nerf_object, particles[i])
     end
-    return particles, densities, gradients
+    return particles, densities, density_gradients
 end
 
 function finite_difference_gradient(nerf_object, particle; δ=0.01, n::Int=5)
@@ -118,7 +120,7 @@ end
 ################################################################################
 # collision
 ################################################################################
-function collision(collider::Collider{T}, soft_collider::SoftCollider27{T,N}) where {T,N}
+function collision(collider::Collider{T}, soft_collider::SoftCollider28{T,N}) where {T,N}
     ψ = 0.0
     ∇ψ = zeros(3)
     barycenter = zeros(3)
@@ -127,29 +129,88 @@ function collision(collider::Collider{T}, soft_collider::SoftCollider27{T,N}) wh
     for i = 1:N
         particle = soft_collider.particles[i]
         p = soft_collider.x + Dojo.vector_rotate(particle, soft_collider.q)
-        if inside(halfspace, p)
-            active +=1
-            collision_weight = soft_collider.collision_weights[i]
-            gradient = soft_collider.gradients[i]
-            ψ += collision_weight
-            ∇ψ += collision_weight * gradient
-            barycenter += collision_weight * particle
+        if inside(collider, p)
+            active += 1
+            weight = soft_collider.weights[i]
+            weight_gradient = soft_collider.weight_gradients[i]
+            ψ += weight
+            barycenter += weight * particle
         end
     end
     if active > 0
-        ∇ψ /= ψ * N
         barycenter /= ψ
-        ψ /= N
     end
     contact_normal = collision_normal(collider, soft_collider, barycenter)
-    return ψ, ∇ψ, contact_normal, barycenter
+    return ψ, contact_normal, barycenter
+end
+using LinearAlgebra
+
+function cross_collision(collider1::SoftCollider28{T,N1}, collider2::SoftCollider28{T,N2}) where {T,N1,N2}
+    # returns
+    # the particles of collider 1 in world frame
+    # cross weights of collider1 and collider2
+    # contact_normals for each particle
+    # barycenter of contact of collider1 into collider2
+    # contact normal from collider1 to collider2
+
+    particles_w = zeros(Float32,N1,3)
+    particles_2 = zeros(Float32,N1,3)
+    for i = 1:N1
+        pw = collider1.x + Dojo.vector_rotate(collider1.particles[i], collider1.q)
+        p2 = Dojo.vector_rotate(pw - collider2.x, inv(collider2.q))
+        particles_w[i,:] = pw
+        particles_2[i,:] = p2
+    end
+    densities = py"density_query"(nerf_object, convert.(Float32, particles_2))
+    weights = densities ./ sum(collider2.densities) * collider2.mass
+
+    ψ = 0.0
+    barycenter_w = zeros(3)
+    contact_normal_w = zeros(3)
+    for i = 1:N1
+        weight_product = collider1.weights[i] * weights[i]
+        ψ += weight_product
+        barycenter_w += weight_product * particles_w[i,:]
+        contact_normal_w += weight_product * Dojo.vector_rotate(-collider1.weight_gradients[i], collider1.q)
+    end
+    barycenter_w ./= (1e-20 + ψ)
+    contact_normal_w /= (1e-20 + norm(contact_normal_w))
+    return ψ, contact_normal_w, barycenter_w
 end
 
-function collision_normal(collider::HalfSpaceCollider28{T}, soft_collider::SoftCollider27{T,N}, barycenter) where {T,N}
+function collision(collider1::SoftCollider28{T,N1}, collider2::SoftCollider28{T,N2}) where {T,N1,N2}
+    # contact_normal = direction of force applied by collider1 on collider2
+    ψ1, contact_normal1w, barycenter1w = cross_collision(collider1, collider2) # weigths of collider2 at particle1
+    ψ2, contact_normal2w, barycenter2w = cross_collision(collider2, collider1) # weigths of collider1 at particle2
+    ψ = ψ1 + ψ2
+    contact_normal_w = (ψ1 * contact_normal1w + ψ2 * -contact_normal2w)
+    contact_normal_w /= (1e-20 + norm(contact_normal_w))
+    @show barycenter1w
+    @show barycenter2w
+    barycenter_w = (ψ1 * barycenter1w + ψ2 * barycenter2w) / (1e-20 + ψ)
+    @show barycenter_w
+    barycenter_2 = Dojo.vector_rotate(barycenter_w - collider2.x, inv(collider2.q))
+    ∇ψ = zeros(3)
+    return ψ, contact_normal_w, barycenter_2
+end
+
+function collision_normal(collider::HalfSpaceCollider28{T}, soft_collider::SoftCollider28{T,N}, barycenter) where {T,N}
     collider.normal
 end
 
-function collision_normal(collider::SphereCollider28{T}, soft_collider::SoftCollider27{T,N}, barycenter) where {T,N}
+function collision_normal(collider::SphereCollider28{T}, soft_collider::SoftCollider28{T,N}, barycenter) where {T,N}
     normal = barycenter - collider.origin
-    return normal ./ norm(normal)
+    return normal ./ (1e-20 + norm(normal))
 end
+
+α = 0.2
+soft1 = deepcopy(soft)
+soft2 = deepcopy(soft)
+soft1.x = α*[0,0,-1.0]
+soft2.x = α*[0,0,+1.0]
+soft1.q = Quaternion(0,1,0,0.0)
+soft2.q = Quaternion(1,0,0,0.0)
+cross_collision(soft1, soft2)
+cross_collision(soft2, soft1)
+collision(soft1, soft2)
+collision(soft1, soft2)

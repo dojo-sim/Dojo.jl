@@ -3,6 +3,12 @@ function build_mesh!(mesh, vis::Visualizer; name::Symbol=:robot, color=RGBA(1,1,
     return nothing
 end
 
+function build_sphere!(sphere, vis::Visualizer; name::Symbol=:robot, color=RGBA(1,1,1,1.0))
+    setobject!(vis[name], HyperSphere(Point(sphere.origin...), sphere.radius),
+        MeshPhongMaterial(color=color))
+    return nothing
+end
+
 function set_robot!(x, q, vis::Visualizer; name::Symbol=:robot)
     settransform!(vis[name], MeshCat.compose(
         MeshCat.Translation(x),
