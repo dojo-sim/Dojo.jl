@@ -12,3 +12,30 @@
     @test norm(Dojo.drotation_vectordq(Dojo.vector(q)) -
         FiniteDiff.finite_difference_jacobian(Dojo.rotation_vector, Dojo.vector(q))) < 1.0e-5
 end
+
+
+@testset "axes pair to quaternion" begin
+    n1 = [0,0,0.0]
+    n2 = [0,0,0.0]
+    q = axes_pair_to_quaternion(n1, n2)
+    @test norm(n2 - vector_rotate(n1, q), Inf) < 1e-10
+
+    n1 = rand(3)
+    n1 /= norm(n1)
+    n2 = n1
+    q = axes_pair_to_quaternion(n1, n2)
+    @test norm(n2 - vector_rotate(n1, q), Inf) < 1e-10
+
+    n1 = rand(3)
+    n1 /= norm(n1)
+    n2 = -n1
+    q = axes_pair_to_quaternion(n1, n2)
+    @test norm(n2 - vector_rotate(n1, q), Inf) < 1e-5
+
+    n1 = rand(3)
+    n1 /= norm(n1)
+    n2 = rand(3)
+    n2 /= norm(n2)
+    q = axes_pair_to_quaternion(n1, n2)
+    @test norm(n2 - vector_rotate(n1, q), Inf) < 1e-10
+end
