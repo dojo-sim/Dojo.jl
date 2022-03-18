@@ -1,4 +1,4 @@
-function grid_points(xrange, yrange, zrange)
+function grid_particles(xrange, yrange, zrange)
     nx = length(xrange)
     ny = length(yrange)
     nz = length(zrange)
@@ -16,12 +16,12 @@ function grid_points(xrange, yrange, zrange)
     return points
 end
 
-function slice_points(xrange, yrange, z)
-    grid_points(xrange, yrange, z:z)
+function slice_particles(xrange, yrange, z)
+    grid_particles(xrange, yrange, z:z)
 end
 
 function grid_density(nerf_object, xrange, yrange, zrange)
-    points = grid_points(xrange, yrange, zrange)
+    points = grid_particles(xrange, yrange, zrange)
     density = py"density_query"(nerf_object, points)
     nx = length(xrange)
     ny = length(yrange)
@@ -34,26 +34,13 @@ function slice_density(nerf_object, xrange, yrange, z)
     grid_density(nerf_object, xrange, yrange, z:z)[:,:,1]
 end
 
-function naive_sample(poly, N::Int; rng::Int=0)
-    Random.seed!(rng)
-    points = zeros(Float32, N, 3)
-    vertices = poly.vrep.points.points
-    n = length(vertices)
-    @assert n != 0
-    Threads.@threads for i = 1:N
-        θ = rand()
-        points[i,:] = θ*vertices[rand(1:n)] + (1-θ)*vertices[rand(1:n)]
-    end
-    return points
-end
-
-function inertia_properties(nerf_object; n=30, scale=1e-1)
+function inertia_properties(nerf_object; n=30, density_scale=1e-1)
     xrange = range(-1.0, stop=1.0, length=n)
     yrange = range(-1.0, stop=1.0, length=n)
     zrange = range(-1.0, stop=1.0, length=n)
     particle_volume = (2/n)^3
-    particles = grid_points(xrange, yrange, zrange)
-    masses = particle_volume * scale .* py"density_query"(nerf_object, particles)
+    particles = grid_particles(xrange, yrange, zrange)
+    masses = density_scale * particle_volume * py"density_query"(nerf_object, particles)
 
     mass = sum(masses)
     center_of_mass = zeros(3)
