@@ -3,6 +3,9 @@ module Dojo
 # constants
 global REG = 1.0e-10
 
+#TODO: remove 
+using FiniteDiff
+
 using LinearAlgebra
 using Random
 using StaticArrays
@@ -110,6 +113,7 @@ include(joinpath("contacts", "constraints.jl"))
 include(joinpath("contacts", "cone.jl"))
 include(joinpath("contacts", "collisions", "collision.jl"))
 include(joinpath("contacts", "collisions", "sphere_flat.jl"))
+include(joinpath("contacts", "collisions", "sphere_sphere.jl"))
 include(joinpath("contacts", "velocity.jl"))
 include(joinpath("contacts", "impact.jl"))
 include(joinpath("contacts", "linear.jl"))

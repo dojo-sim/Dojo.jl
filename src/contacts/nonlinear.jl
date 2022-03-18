@@ -12,23 +12,23 @@
 mutable struct NonlinearContact{T,N} <: Contact{T,N}
     friction_coefficient::T
     collision::Collision{T,2,3,6}
+end
 
-    function NonlinearContact(body::Body{T}, normal::AbstractVector, friction_coefficient; 
-        contact_origin=szeros(T, 3), 
-        contact_radius=0.0) where T
+function NonlinearContact(body::Body{T}, normal::AbstractVector, friction_coefficient; 
+    contact_origin=szeros(T, 3), 
+    contact_radius=0.0) where T
 
-        # projectors
-        V1, V2, V3 = orthogonal_columns(normal)
-        A = [V1 V2 V3]
-        Ainv = inv(A)
-        contact_normal = Ainv[3, SA[1; 2; 3]]'
-        contact_tangent = Ainv[SA[1; 2], SA[1; 2; 3]]
-        
-        # collision 
-        collision = SphereFlatCollision(contact_tangent, contact_normal, SVector{3}(contact_origin), contact_radius)
-        
-        new{T,8}(friction_coefficient, collision)
-    end
+    # projectors
+    V1, V2, V3 = orthogonal_columns(normal)
+    A = [V1 V2 V3]
+    Ainv = inv(A)
+    contact_normal = Ainv[3, SA[1; 2; 3]]'
+    contact_tangent = Ainv[SA[1; 2], SA[1; 2; 3]]
+    
+    # collision 
+    collision = SphereFlatCollision(contact_tangent, contact_normal, SVector{3}(contact_origin), contact_radius)
+    
+    NonlinearCollision{T,8}(friction_coefficient, collision)
 end
 
 function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}

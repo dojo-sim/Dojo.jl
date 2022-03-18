@@ -9,29 +9,29 @@
 mutable struct LinearContact{T,N} <: Contact{T,N}
     friction_coefficient::T
     collision::Collision{T,4,3,12}
+end
 
-    function LinearContact(body::Body{T}, normal::AbstractVector, friction_coefficient; 
-        contact_origin=szeros(T, 3), 
-        contact_radius=0.0) where T
+function LinearContact(body::Body{T}, normal::AbstractVector, friction_coefficient; 
+    contact_origin=szeros(T, 3), 
+    contact_radius=0.0) where T
 
-        # projectors
-        V1, V2, V3 = orthogonal_columns(normal)
-        A = [V1 V2 V3]
-        Ainv = inv(A)
-        contact_normal = Ainv[3, SA[1; 2; 3]]'
-        contact_tangent = Ainv[SA[1; 2], SA[1; 2; 3]]
-        parameterization = SA{T}[
-             0.0  1.0
-             0.0 -1.0
-             1.0  0.0
-            -1.0  0.0
-        ]
+    # projectors
+    V1, V2, V3 = orthogonal_columns(normal)
+    A = [V1 V2 V3]
+    Ainv = inv(A)
+    contact_normal = Ainv[3, SA[1; 2; 3]]'
+    contact_tangent = Ainv[SA[1; 2], SA[1; 2; 3]]
+    parameterization = SA{T}[
+         0.0  1.0
+         0.0 -1.0
+         1.0  0.0
+        -1.0  0.0
+    ]
 
-        # collision 
-        collision = SphereFlatCollision(parameterization * contact_tangent, contact_normal, SVector{3}(contact_origin), contact_radius)
-        
-        new{Float64,12}(friction_coefficient, collision)
-    end
+    # collision 
+    collision = SphereFlatCollision(parameterization * contact_tangent, contact_normal, SVector{3}(contact_origin), contact_radius)
+    
+    new{Float64,12}(friction_coefficient, collision)
 end
 
 function constraint_jacobian(contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:LinearContact{T,N},N½}

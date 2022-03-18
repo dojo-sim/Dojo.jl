@@ -7,22 +7,22 @@
 """
 mutable struct ImpactContact{T,N} <: Contact{T,N}
     collision::Collision{T,0,3,0}
+end
 
-    function ImpactContact(body::Body{T}, normal::AbstractVector{T}; 
-        contact_origin=szeros(T, 3), 
-        contact_radius=0.0) where T
-        
-        # projector
-        V1, V2, V3 = orthogonal_columns(normal) #
-        A = [V1 V2 V3]
-        Ainv = inv(A)
-        contact_normal = Ainv[3, SA[1; 2; 3]]'
+function ImpactContact(body::Body{T}, normal::AbstractVector{T}; 
+    contact_origin=szeros(T, 3), 
+    contact_radius=0.0) where T
+    
+    # projector
+    V1, V2, V3 = orthogonal_columns(normal) #
+    A = [V1 V2 V3]
+    Ainv = inv(A)
+    contact_normal = Ainv[3, SA[1; 2; 3]]'
 
-        # collision 
-        collision = SphereFlatCollision(szeros(T, 0, 3), contact_normal, SVector{3}(contact_origin), contact_radius)
+    # collision 
+    collision = SphereFlatCollision(szeros(T, 0, 3), contact_normal, SVector{3}(contact_origin), contact_radius)
 
-        new{Float64,2}(collision)
-    end
+    new{Float64,2}(collision)
 end
 
 function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:ImpactContact{T,N}}

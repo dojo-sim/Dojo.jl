@@ -30,7 +30,7 @@ mutable struct ContactConstraint{T,N,Nc,Cs,N½} <: Constraint{T,N}
     function ContactConstraint(data; 
         name::Symbol=Symbol("contact_" * randstring(4)))
 
-        model, parent_id, _ = data
+        model, parent_id, child_id = data
         T = typeof(model).parameters[1]
 
         N = length(model)
@@ -38,7 +38,7 @@ mutable struct ContactConstraint{T,N,Nc,Cs,N½} <: Constraint{T,N}
 
         impulses = [neutral_vector(model) for i = 1:2]
         impulses_dual = [neutral_vector(model) for i = 1:2]
-        new{T,N,1,typeof(model),N½}(getGlobalID(), name, model, parent_id, 0, impulses, impulses_dual)
+        new{T,N,1,typeof(model),N½}(getGlobalID(), name, model, parent_id, child_id, impulses, impulses_dual)
     end
 end
 

@@ -3,7 +3,7 @@ function normalize(x)
     if mag > 0.0 
         return x ./ mag 
     else 
-        return one(x) ./ length(x)
+        return ones(length(x)) ./ length(x)
     end
 end
 

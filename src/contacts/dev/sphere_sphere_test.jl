@@ -26,6 +26,8 @@ mech = Mechanism(origin, bodies, joints, contacts,
 mech.bodies[1].state.x2 = [0.0, 0.25, 0.5]
 mech.bodies[2].state.x2 = [0.0, -0.25, 1.0]
 
+@show adjacency_matrix(mech.joints, mech.bodies, mech.contacts) 
+
 storage = simulate!(mech, 1.0, 
     verbose=true, 
     record=true)

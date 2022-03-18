@@ -1,4 +1,3 @@
-using StaticArrays
 """
     SphereSphereCollision 
 
@@ -142,7 +141,7 @@ end
 
 function ∂contact_point∂q(relative::Symbol, jacobian::Symbol, collision::SphereSphereCollision, xp, qp, xc, qc)
     if jacobian == :parent
-        return FiniteDiff.finite_difference_jacobian(q -> contact_point(relative, collision, xp, UnitQuaternion(q..., false), xc, qc), vector(xp))
+        return FiniteDiff.finite_difference_jacobian(q -> contact_point(relative, collision, xp, UnitQuaternion(q..., false), xc, qc), vector(qp))
     elseif jacobian == :child 
         return FiniteDiff.finite_difference_jacobian(q -> contact_point(relative, collision, xp, qp, xc, UnitQuaternion(q..., false)), vector(qc))
     end
@@ -198,9 +197,9 @@ function ∂contact_normal_jvp∂x(jacobian::Symbol, collision::SphereSphereColl
     @assert length(λ) == 3
 
     if jacobian == :parent 
-        return λ' * FiniteDiff.finite_difference_jacobian(x -> contact_normal(collision, x, UnitQuaternion(qa..., false), xb, UnitQuaternion(qb..., false))[1, :]', xa)
+        return λ' * FiniteDiff.finite_difference_jacobian(x -> contact_normal(collision, x, qp, xc, qc)[1, :]', xp)
     elseif jacobian == :child 
-        return λ' * FiniteDiff.finite_difference_jacobian(x -> contact_normal(collision, xa, UnitQuaternion(qa..., false), x, UnitQuaternion(qb..., false))[1, :]', xb)
+        return λ' * FiniteDiff.finite_difference_jacobian(x -> contact_normal(collision, xp, qp, x, qc)[1, :]', xc)
     end
     # # contact origin points
     # cop = contact_point_origin(xp, qp, collision.contact_origin_parent) 
@@ -224,9 +223,9 @@ function ∂contact_normal_vjp∂x(jacobian::Symbol, collision::SphereSphereColl
     @assert length(λ) == 1
 
     if jacobian == :parent 
-        return FiniteDiff.finite_difference_jacobian(x -> (λ[1] * contact_normal(collision, x, UnitQuaternion(qa..., false), xb, UnitQuaternion(qb..., false)))', xa)'
+        return FiniteDiff.finite_difference_jacobian(x -> (λ[1] * contact_normal(collision, x, qp, xc, qc))', xp)'
     elseif jacobian == :child 
-        return FiniteDiff.finite_difference_jacobian(x -> (λ[1] * contact_normal(collision, xa, UnitQuaternion(qa..., false), x, UnitQuaternion(qb..., false)))', xb)'
+        return FiniteDiff.finite_difference_jacobian(x -> (λ[1] * contact_normal(collision, xp, qp, x, qc))', xc)'
     end
 
     # # contact origin points
@@ -249,9 +248,9 @@ function ∂contact_normal_jvp∂q(jacobian::Symbol, collision::SphereSphereColl
     @assert length(λ) == 3
 
     if jacobian == :parent 
-        return λ' * FiniteDiff.finite_difference_jacobian(q -> contact_normal(collision, xa, UnitQuaternion(q..., false), xb, UnitQuaternion(qb..., false))[1, :]', qa)
+        return λ' * FiniteDiff.finite_difference_jacobian(q -> contact_normal(collision, xp, UnitQuaternion(q..., false), xc, qc)[1, :]', vector(qp))
     elseif jacobian == :child 
-        return λ' * FiniteDiff.finite_difference_jacobian(q -> contact_normal(collision, xa, UnitQuaternion(qa..., false), xb, UnitQuaternion(q..., false))[1, :]', qb)
+        return λ' * FiniteDiff.finite_difference_jacobian(q -> contact_normal(collision, xp, qp, xc, UnitQuaternion(q..., false))[1, :]', vector(qc))
     end
 
     # # contact origin points
@@ -276,9 +275,9 @@ function ∂contact_normal_vjp∂q(jacobian::Symbol, collision::SphereSphereColl
     @assert length(λ) == 1
 
     if jacobian == :parent 
-        return FiniteDiff.finite_difference_jacobian(q -> (λ[1] * contact_normal(collision, xa, UnitQuaternion(q..., false), xb, UnitQuaternion(qb..., false)))', qa)'
+        return FiniteDiff.finite_difference_jacobian(q -> (λ[1] * contact_normal(collision, xp, UnitQuaternion(q..., false), xc, qc))', vector(qp))'
     elseif jacobian == :child 
-        return FiniteDiff.finite_difference_jacobian(q -> (λ[1] * contact_normal(collision, xa, UnitQuaternion(qa..., false), x, UnitQuaternion(q..., false)))', qb)'
+        return FiniteDiff.finite_difference_jacobian(q -> (λ[1] * contact_normal(collision, xp, qp, xc, UnitQuaternion(q..., false)))', vector(qc))'
     end
 
     # # contact origin points
@@ -312,6 +311,7 @@ function contact_tangent(collision::SphereSphereCollision, xp, qp, xc, qc)
     v3 = skew(v2) * n # tangent
 
     return [v2'; v3']
+    # return szeros(0, 3)
 end
 
 # contact_tangent * λ
@@ -319,23 +319,23 @@ function ∂contact_tangent_jvp∂x(jacobian::Symbol, collision::SphereSphereCol
     @assert length(λ) == 3
     
     if jacobian == :parent 
-        T1 = λ' * FiniteDiff.finite_difference_jacobian(x -> contact_tangent(collision, x, UnitQuaternion(qa..., false), xb, UnitQuaternion(qb..., false))[1, :]', xa)
-        T2 = λ' * FiniteDiff.finite_difference_jacobian(x -> contact_tangent(collision, x, UnitQuaternion(qa..., false), xb, UnitQuaternion(qb..., false))[2, :]', xa)
+        T1 = λ' * FiniteDiff.finite_difference_jacobian(x -> contact_tangent(collision, x, qp, xp, qc)[1, :]', xp)
+        T2 = λ' * FiniteDiff.finite_difference_jacobian(x -> contact_tangent(collision, x, qp, xp, qc)[2, :]', xp)
         return [T1; T2]
     elseif jacobian == :child 
-        T1 = λ' * FiniteDiff.finite_difference_jacobian(x -> contact_tangent(collision, xa, UnitQuaternion(qa..., false), x, UnitQuaternion(qb..., false))[1, :]', xb)
-        T2 = λ' * FiniteDiff.finite_difference_jacobian(x -> contact_tangent(collision, xa, UnitQuaternion(qa..., false), x, UnitQuaternion(qb..., false))[2, :]', xb)
+        T1 = λ' * FiniteDiff.finite_difference_jacobian(x -> contact_tangent(collision, xp, qp, x, qc)[1, :]', xc)
+        T2 = λ' * FiniteDiff.finite_difference_jacobian(x -> contact_tangent(collision, xp, qp, x, qc)[2, :]', xc)
         return [T1; T2]
     end
 end
 
 # λ' * contact_tangent
 function ∂contact_tangent_vjp∂x(jacobian::Symbol, collision::SphereSphereCollision, xp, qp, xc, qc, λ)
-    @assert length(λ) == 2 || length(λ) == 4
+    @assert length(λ) == 2 || length(λ) == 4 || length(λ) == 0
     if jacobian == :parent 
-        return FiniteDiff.finite_difference_jacobian(x -> (λ' * contact_tangent(collision, x, UnitQuaternion(qa..., false), xb, UnitQuaternion(qb..., false)))', xa)'
+        return FiniteDiff.finite_difference_jacobian(x -> (λ' * contact_tangent(collision, x, qp, xc, qc))', xp)'
     elseif jacobian == :child 
-        return FiniteDiff.finite_difference_jacobian(x -> (λ' * contact_tangent(collision, xa, UnitQuaternion(qa..., false), x, UnitQuaternion(qb..., false)))', xb)'
+        return FiniteDiff.finite_difference_jacobian(x -> (λ' * contact_tangent(collision, xp, qp, x, qc))', xc)'
     end
 end
 
@@ -343,23 +343,23 @@ end
 function ∂contact_tangent_jvp∂q(jacobian::Symbol, collision::SphereSphereCollision, xp, qp, xc, qc, λ)
     @assert length(λ) == 3
     if jacobian == :parent 
-        T1 = λ' * FiniteDiff.finite_difference_jacobian(q -> contact_tangent(collision, xa, UnitQuaternion(q..., false), xb, UnitQuaternion(qb..., false))[1, :]', qa)
-        T2 = λ' * FiniteDiff.finite_difference_jacobian(q -> contact_tangent(collision, xa, UnitQuaternion(q..., false), xb, UnitQuaternion(qb..., false))[2, :]', qa)
+        T1 = λ' * FiniteDiff.finite_difference_jacobian(q -> contact_tangent(collision, xp, UnitQuaternion(q..., false), xc, qc)[1, :]', vector(qp))
+        T2 = λ' * FiniteDiff.finite_difference_jacobian(q -> contact_tangent(collision, xp, UnitQuaternion(q..., false), xc, qc)[2, :]', vector(qp))
         return [T1; T2]
     elseif jacobian == :child 
-        T1 = λ' * FiniteDiff.finite_difference_jacobian(q -> contact_tangent(collision, xa, UnitQuaternion(qa..., false), xb, UnitQuaternion(q..., false))[1, :]', qb)
-        T2 = λ' * FiniteDiff.finite_difference_jacobian(q -> contact_tangent(collision, xa, UnitQuaternion(qa..., false), xb, UnitQuaternion(q..., false))[2, :]', qb)
+        T1 = λ' * FiniteDiff.finite_difference_jacobian(q -> contact_tangent(collision, xp, qp, xc, UnitQuaternion(q..., false))[1, :]', vector(qc))
+        T2 = λ' * FiniteDiff.finite_difference_jacobian(q -> contact_tangent(collision, xp, qp, xc, UnitQuaternion(q..., false))[2, :]', vector(qc))
         return [T1; T2]
     end
 end
 
 # λ' * contact_tangent
 function ∂contact_tangent_vjp∂q(jacobian::Symbol, collision::SphereSphereCollision, xp, qp, xc, qc, λ)
-    @assert length(λ) == 2 || length(λ) == 4
+    @assert length(λ) == 2 || length(λ) == 4 || length(λ) == 0
     if jacobian == :parent 
-        return FiniteDiff.finite_difference_jacobian(q -> (λ' * contact_tangent(collision, xa, UnitQuaternion(q..., false), xb, UnitQuaternion(qb..., false)))', qa)'
+        return FiniteDiff.finite_difference_jacobian(q -> (λ' * contact_tangent(collision, xp, UnitQuaternion(q..., false), xc, qc))', vector(qp))'
     elseif jacobian == :child 
-        return FiniteDiff.finite_difference_jacobian(q -> (λ' * contact_tangent(collision, xa, UnitQuaternion(qa..., false), x, UnitQuaternion(q..., false)))', qb)'
+        return FiniteDiff.finite_difference_jacobian(q -> (λ' * contact_tangent(collision, xp, qp, xc, UnitQuaternion(q..., false)))', vector(qc))'
     end
 end
 
