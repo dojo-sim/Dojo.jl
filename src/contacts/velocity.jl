@@ -59,7 +59,10 @@ function ∂relative_tangential_velocity∂x(jacobian::Symbol, model::Contact, x
         X -= contact_tangent(model.collision, xp, qp, xc, qc) * ∂contact_point_velocity∂c(model, xc, qc, vc, ϕc, cc) * ∂contact_point∂x(:child, jacobian, model.collision, xp, qp, xc, qc)
     end
 
-    X += ∂contact_tangent_jvp∂x(jacobian, model.collision, xp, qp, xc, qc, Δv)
+    X += [
+        Δv' * ∂contact_tangent_one_tangent∂x(jacobian, model.collision, xp, qp, xc, qc);
+        Δv' * ∂contact_tangent_two_tangent∂x(jacobian, model.collision, xp, qp, xc, qc);
+    ]
 
     return X
 end
@@ -86,7 +89,11 @@ function ∂relative_tangential_velocity∂q(jacobian::Symbol, model::Contact, x
         X -= contact_tangent(model.collision, xp, qp, xc, qc) * ∂contact_point_velocity∂c(model, xc, qc, vc, ϕc, cc) * ∂contact_point∂q(:child, jacobian, model.collision, xp, qp, xc, qc)
     end
 
-    X += ∂contact_tangent_jvp∂q(jacobian, model.collision, xp, qp, xc, qc, Δv)
+    # X += ∂contact_tangent_jvp∂q(jacobian, model.collision, xp, qp, xc, qc, Δv)
+    X += [
+        Δv' * ∂contact_tangent_one_transpose∂q(jacobian, model.collision, xp, qp, xc, qc);
+        Δv' * ∂contact_tangent_two_transpose∂q(jacobian, model.collision, xp, qp, xc, qc);
+    ]
 
     return X
 end

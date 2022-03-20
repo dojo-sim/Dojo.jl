@@ -161,8 +161,10 @@ function ∂force_mapping_jvp∂x(relative::Symbol, jacobian::Symbol,
     λ::AbstractVector)
 
     X = λ[1] * ∂contact_normal_transpose∂x(jacobian, model.collision, xp, qp, xc, qc)
-    X += ∂contact_tangent_vjp∂x(jacobian, model.collision, xp, qp, xc, qc, λ[SUnitRange(3, length(λ))])'
-   
+    # X += ∂contact_tangent_vjp∂x(jacobian, model.collision, xp, qp, xc, qc, λ[SUnitRange(3, length(λ))])'
+    X += λ[3] * ∂contact_tangent_one_transpose∂x(jacobian, model.collision, xp, qp, xc, qc)
+    X += λ[4] * ∂contact_tangent_two_transpose∂x(jacobian, model.collision, xp, qp, xc, qc)
+
     if relative == :parent 
         return X 
     elseif relative == :child 
@@ -177,8 +179,11 @@ function ∂force_mapping_jvp∂q(relative::Symbol, jacobian::Symbol,
     xc::AbstractVector, qc::UnitQuaternion,
     λ::AbstractVector)
 
-    X = ∂contact_normal_transpose∂q(jacobian, model.collision, xp, qp, xc, qc)
-    X += ∂contact_tangent_vjp∂q(jacobian, model.collision, xp, qp, xc, qc, λ[SUnitRange(3, length(λ))])'
+    X = λ[1] * ∂contact_normal_transpose∂q(jacobian, model.collision, xp, qp, xc, qc)
+    # X += ∂contact_tangent_vjp∂q(jacobian, model.collision, xp, qp, xc, qc, λ[SUnitRange(3, length(λ))])'
+    X += λ[3] * ∂contact_tangent_one_transpose∂q(jacobian, model.collision, xp, qp, xc, qc)
+    X += λ[4] * ∂contact_tangent_two_transpose∂q(jacobian, model.collision, xp, qp, xc, qc)
+
 
     if relative == :parent 
         return X 

@@ -96,35 +96,18 @@ function contact_tangent(collision::SphereFlatCollision, xp, qp, xc, qc)
     return collision.contact_tangent # {2,4} x 3
 end
 
-# contact_tangent * λ
-function ∂contact_tangent_jvp∂x(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
-    no, ni = size(collision.contact_tangent)
-    @assert length(λ) == ni
-    contact_tangent = collision.contact_tangent
-    return szeros(eltype(collision.contact_tangent), no, 3)
+function ∂contact_tangent_one_transpose∂x(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc)
+    return szeros(eltype(collision.contact_tangent), 3, 3)
 end
 
-# λ' * contact_tangent
-function ∂contact_tangent_vjp∂x(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
-    no, ni = size(collision.contact_tangent)
-    @assert length(λ) == no
-    contact_tangent = collision.contact_tangent
-    return szeros(eltype(collision.contact_tangent), 3, ni)
+function ∂contact_tangent_two_transpose∂x(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc)
+    return szeros(eltype(collision.contact_tangent), 3, 3)
 end
 
-# contact_tangent * λ
-function ∂contact_tangent_jvp∂q(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
-    no, ni = size(collision.contact_tangent)
-    @assert length(λ) == ni
-    contact_tangent = collision.contact_tangent
-    return szeros(eltype(collision.contact_tangent), no, 4)
+function ∂contact_tangent_one_transpose∂q(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc)
+    return szeros(eltype(collision.contact_tangent), 3, 4)
 end
 
-# λ' * contact_tangent
-function ∂contact_tangent_vjp∂q(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
-    no, ni = size(collision.contact_tangent)
-    @assert length(λ) == no
-    contact_tangent = collision.contact_tangent
-    return szeros(eltype(collision.contact_tangent), 4, ni)
+function ∂contact_tangent_two_transpose∂q(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc)
+    return szeros(eltype(collision.contact_tangent), 3, 4)
 end
-
