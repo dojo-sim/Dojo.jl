@@ -1,4 +1,18 @@
+"""
+    Collision 
+
+    abstract type defining interaction between two bodies
+"""
 abstract type Collision{T,O,I,OI} end 
+
+# contact point origin 
+function contact_point_origin(x, q, k) 
+    x + vector_rotate(k, q)
+end
+
+∂contact_point_origin∂x(x, q, k) = 1.0 * I(3)
+∂contact_point_origin∂q(x, q, k) = ∂vector_rotate∂q(k, q)
+∂contact_point_origin∂k(x, q, k) = ∂vector_rotate∂p(k, q)
 
 # normal projection (from child to parent)
 function contact_normal(collision::Collision, xp, qp, xc, qc)
@@ -79,110 +93,6 @@ function ∂contact_normal_transpose∂q(jacobian::Symbol, collision::Collision,
         return -1.0 * Q
     end
 end
-
-
-# # contact_normal * λ
-# function ∂contact_normal_jvp∂x(jacobian::Symbol, collision::Collision, xp, qp, xc, qc, λ)
-#     @assert length(λ) == 3
-
-#     if jacobian == :parent 
-#         return λ' * FiniteDiff.finite_difference_jacobian(x -> contact_normal(collision, x, qp, xc, qc)', xp)
-#     elseif jacobian == :child 
-#         return λ' * FiniteDiff.finite_difference_jacobian(x -> contact_normal(collision, xp, qp, x, qc)', xc)
-#     end
-#     # # contact origin points
-#     # cop = contact_point_origin(xp, qp, collision.contact_origin_parent) 
-#     # coc = contact_point_origin(xc, qc, collision.contact_origin_child)
-
-#     # # unnormalized direction 
-#     # dir = cop - coc 
-
-#     # # Jacobians
-#     # if jacobian == :parent 
-#     #     X = λ' * ∂normalize∂x(dir) *  1.0 * ∂contact_point_origin∂x(xp, qp, collision.contact_origin_parent) 
-#     # elseif jacobian == :child 
-#     #     X = λ' * ∂normalize∂x(dir) * -1.0 * ∂contact_point_origin∂x(xc, qc, collision.contact_origin_child)
-#     # end
-
-#     # return X
-# end
-
-# # λ' * contact_normal
-# function ∂contact_normal_vjp∂x(jacobian::Symbol, collision::Collision, xp, qp, xc, qc, λ)
-#     @assert length(λ) == 1
-
-#     if jacobian == :parent 
-#         return FiniteDiff.finite_difference_jacobian(x -> (λ[1] * contact_normal(collision, x, qp, xc, qc))', xp)'
-#     elseif jacobian == :child 
-#         return FiniteDiff.finite_difference_jacobian(x -> (λ[1] * contact_normal(collision, xp, qp, x, qc))', xc)'
-#     end
-
-#     # # contact origin points
-#     # cop = contact_point_origin(xp, qp, collision.contact_origin_parent) 
-#     # coc = contact_point_origin(xc, qc, collision.contact_origin_child)
-
-#     # # unnormalized direction 
-#     # dir = cop - coc 
-
-#     # # Jacobians
-#     # if jacobian == :parent 
-#     #     X = λ[1] * (∂normalize∂x(dir) *  1.0 * ∂contact_point_origin∂x(xp, qp, collision.contact_origin_parent))'
-#     # elseif jacobian == :child 
-#     #     X = λ[1] * (∂normalize∂x(dir) * -1.0 * ∂contact_point_origin∂x(xc, qc, collision.contact_origin_child))'
-#     # end
-# end
-
-# # contact_normal * λ
-# function ∂contact_normal_jvp∂q(jacobian::Symbol, collision::Collision, xp, qp, xc, qc, λ)
-#     @assert length(λ) == 3
-
-#     if jacobian == :parent 
-#         return λ' * FiniteDiff.finite_difference_jacobian(q -> contact_normal(collision, xp, UnitQuaternion(q..., false), xc, qc)[1, :]', vector(qp))
-#     elseif jacobian == :child 
-#         return λ' * FiniteDiff.finite_difference_jacobian(q -> contact_normal(collision, xp, qp, xc, UnitQuaternion(q..., false))[1, :]', vector(qc))
-#     end
-
-#     # # contact origin points
-#     # cop = contact_point_origin(xp, qp, collision.contact_origin_parent) 
-#     # coc = contact_point_origin(xc, qc, collision.contact_origin_child)
-
-#     # # unnormalized direction 
-#     # dir = cop - coc 
-
-#     # # Jacobians
-#     # if jacobian == :parent 
-#     #     Q = λ' * ∂normalize∂x(dir) *  1.0 * ∂contact_point_origin∂q(xp, qp, collision.contact_origin_parent) 
-#     # elseif jacobian == :child 
-#     #     Q = λ' * ∂normalize∂x(dir) * -1.0 * ∂contact_point_origin∂q(xc, qc, collision.contact_origin_child)
-#     # end
-
-#     # return Q
-# end
-
-# # λ' * contact_normal
-# function ∂contact_normal_vjp∂q(jacobian::Symbol, collision::Collision, xp, qp, xc, qc, λ)
-#     @assert length(λ) == 1
-
-#     if jacobian == :parent 
-#         return FiniteDiff.finite_difference_jacobian(q -> (λ[1] * contact_normal(collision, xp, UnitQuaternion(q..., false), xc, qc))', vector(qp))'
-#     elseif jacobian == :child 
-#         return FiniteDiff.finite_difference_jacobian(q -> (λ[1] * contact_normal(collision, xp, qp, xc, UnitQuaternion(q..., false)))', vector(qc))'
-#     end
-
-#     # # contact origin points
-#     # cop = contact_point_origin(xp, qp, collision.contact_origin_parent) 
-#     # coc = contact_point_origin(xc, qc, collision.contact_origin_child)
-
-#     # # unnormalized direction 
-#     # dir = cop - coc 
-
-#     # # Jacobians
-#     # if jacobian == :parent 
-#     #     Q = (λ[1] * ∂normalize∂x(dir) *  1.0 * ∂contact_point_origin∂q(xp, qp, collision.contact_origin_parent))'
-#     # elseif jacobian == :child 
-#     #     Q = (λ[1] * ∂normalize∂x(dir) * -1.0 * ∂contact_point_origin∂q(xc, qc, collision.contact_origin_child))'
-#     # end    
-# end
 
 # tangent projection (in child frame)
 function contact_tangent(collision::Collision, xp, qp, xc, qc)

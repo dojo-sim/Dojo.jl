@@ -146,34 +146,6 @@ function force_mapping(relative::Symbol, model::Contact,
         contact_normal(model.collision, xp, qp, xc, qc)' szeros(3, 1) contact_tangent(model.collision, xp, qp, xc, qc)'
     ]
 
-    # if norm(X - X_alt, Inf) > 1.0e-4
-    #     dis = distance(model.collision, xp, qp, xc, qc)
-    #     p1 = contact_point(:parent, model.collision, xp, qp, xc, qc) 
-    #     p2 = contact_point(:child,  model.collision, xp, qp, xc, qc) 
-
-    #     # contact origin points
-    #     o1 = contact_point_origin(xp, qp, collision.contact_origin_parent) 
-    #     o2 = contact_point_origin(xc, qc, collision.contact_origin_child)
-
-    #     # direction of minimum distance (child to parent)
-    #     d = o1 - o2 
-    #     dir = normalize(d)
-
-    #     Nalt = contact_normal(model.collision, xp, qp, xc, qc)
-    #     N = contact_normal(model.collision, xp, qp, xc, qc)
-    #     @show dis
-    #     @show Nalt
-    #     @show N
-    #     @show xp 
-    #     @show xc
-    #     @show p1 
-    #     @show p2
-    #     @show o1 
-    #     @show o2 
-    #     @show d
-    #     @show dir
-    # end
-
     if relative == :parent 
         return X
     elseif relative == :child 
@@ -188,7 +160,6 @@ function ∂force_mapping_jvp∂x(relative::Symbol, jacobian::Symbol,
     xc::AbstractVector, qc::UnitQuaternion,
     λ::AbstractVector)
 
-    # X = ∂contact_normal_vjp∂x(jacobian, model.collision, xp, qp, xc, qc, λ[SA[1]])' 
     X = λ[1] * ∂contact_normal_transpose∂x(jacobian, model.collision, xp, qp, xc, qc)
     X += ∂contact_tangent_vjp∂x(jacobian, model.collision, xp, qp, xc, qc, λ[SUnitRange(3, length(λ))])'
    
@@ -206,7 +177,6 @@ function ∂force_mapping_jvp∂q(relative::Symbol, jacobian::Symbol,
     xc::AbstractVector, qc::UnitQuaternion,
     λ::AbstractVector)
 
-    # X = ∂contact_normal_vjp∂q(jacobian, model.collision, xp, qp, xc, qc, λ[SA[1]])' 
     X = ∂contact_normal_transpose∂q(jacobian, model.collision, xp, qp, xc, qc)
     X += ∂contact_tangent_vjp∂q(jacobian, model.collision, xp, qp, xc, qc, λ[SUnitRange(3, length(λ))])'
 
