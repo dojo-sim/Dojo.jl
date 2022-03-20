@@ -143,13 +143,41 @@ function force_mapping(relative::Symbol, model::Contact,
     xc::AbstractVector, qc::UnitQuaternion)
 
     X = [
-            contact_normal(model.collision, xp, qp, xc, qc)' szeros(3, 1) contact_tangent(model.collision, xp, qp, xc, qc)'
-        ]
+        contact_normal(model.collision, xp, qp, xc, qc)' szeros(3, 1) contact_tangent(model.collision, xp, qp, xc, qc)'
+    ]
+
+    # if norm(X - X_alt, Inf) > 1.0e-4
+    #     dis = distance(model.collision, xp, qp, xc, qc)
+    #     p1 = contact_point(:parent, model.collision, xp, qp, xc, qc) 
+    #     p2 = contact_point(:child,  model.collision, xp, qp, xc, qc) 
+
+    #     # contact origin points
+    #     o1 = contact_point_origin(xp, qp, collision.contact_origin_parent) 
+    #     o2 = contact_point_origin(xc, qc, collision.contact_origin_child)
+
+    #     # direction of minimum distance (child to parent)
+    #     d = o1 - o2 
+    #     dir = normalize(d)
+
+    #     Nalt = contact_normal(model.collision, xp, qp, xc, qc)
+    #     N = contact_normal(model.collision, xp, qp, xc, qc)
+    #     @show dis
+    #     @show Nalt
+    #     @show N
+    #     @show xp 
+    #     @show xc
+    #     @show p1 
+    #     @show p2
+    #     @show o1 
+    #     @show o2 
+    #     @show d
+    #     @show dir
+    # end
 
     if relative == :parent 
-        return X 
+        return X
     elseif relative == :child 
-        return -1.0 * X 
+        return -1.0 * X
     end
 end
 

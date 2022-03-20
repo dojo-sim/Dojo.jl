@@ -5,7 +5,9 @@ open(vis)
 origin = Origin{Float64}()
 pbody = Sphere(0.5, 1.0)
 cbody = Sphere(0.5, 1.0)
-joint0to1 = JointConstraint(Fixed(origin, pbody))
+# joint0to1 = JointConstraint(Fixed(origin, pbody))
+joint0to1 = JointConstraint(Floating(origin, pbody))
+
 # joint1to2 = JointConstraint(Prismatic(pbody, cbody, [0.0; 0.0; 1.0]))
 bodies = [pbody, cbody]
 joints = [joint0to1]#, joint1to2]
@@ -31,16 +33,26 @@ body_body_contact = NonlinearContact{Float64,8}(0.5, collision)
 # contacts = [contact_p, contact_c]
 contacts = [ContactConstraint((body_body_contact, pbody.id, cbody.id), name=:body_body)]
 
+# mech = Mechanism(origin, bodies, joints, contacts,
+#             gravity=1.0 * -9.81, 
+#             timestep=0.1)
+
+# mech.bodies[1].state.x2 = [0.0, 0.0, 0.0]
+# mech.bodies[2].state.x2 = [0.0, 0.0, 5.0]
+
 mech = Mechanism(origin, bodies, joints, contacts,
             gravity=0.0 * -9.81, 
             timestep=0.01)
 
 mech.bodies[1].state.x2 = [0.0, 0.0, 0.0]
-mech.bodies[2].state.x2 = [0.0, 0.0, 5.0]
+mech.bodies[2].state.x2 = [2.0, 2.0, 2.0]
+mech.bodies[1].state.v15 = [0.0, 0.0, 0.0]
+mech.bodies[2].state.v15 = [-1.0, -1.0, -1.0]
 
 distance(mech.contacts[1].model.collision, 
     mech.bodies[1].state.x2, mech.bodies[1].state.q2,
     mech.bodies[2].state.x2, mech.bodies[2].state.q2,)
+    
 contact_point(:parent, mech.contacts[1].model.collision, 
     mech.bodies[1].state.x2, mech.bodies[1].state.q2,
     mech.bodies[2].state.x2, mech.bodies[2].state.q2,)
@@ -62,7 +74,7 @@ mech.contacts[1].impulses_dual[2]
 
 @show adjacency_matrix(mech.joints, mech.bodies, mech.contacts) 
 
-storage = simulate!(mech, 1.0, 
+storage = simulate!(mech, 2.5, 
     verbose=true, 
     record=true)
 
