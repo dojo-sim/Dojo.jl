@@ -104,7 +104,9 @@ function ∂force_mapping∂x(relative::Symbol, jacobian::Symbol,
     xc::AbstractVector, qc::UnitQuaternion,
     λ::AbstractVector)
 
-    X = ∂contact_normal_vjp∂x(jacobian, model.collision, xp, qp, xc, qc, λ[SA[1]])'
+    # X = ∂contact_normal_vjp∂x(jacobian, model.collision, xp, qp, xc, qc, λ[SA[1]])'
+    X = λ[1] * ∂contact_normal_transpose∂x(jacobian, model.collision, xp, qp, xc, qc)
+
 
     if relative == :parent 
         return X 
@@ -119,7 +121,8 @@ function ∂force_mapping∂q(jacobian::Symbol,
     xc::AbstractVector, qc::UnitQuaternion,
     λ::AbstractVector)
 
-    X = ∂contact_normal_vjp∂q(jacobian, model.collision, xp, qp, xc, qc, λ[SA[1]])'
+    # X = ∂contact_normal_vjp∂q(jacobian, model.collision, xp, qp, xc, qc, λ[SA[1]])'
+    X = λ[1] * ∂contact_normal_transpose∂q(jacobian, model.collision, xp, qp, xc, qc)
 
     if relative == :parent 
         return X 

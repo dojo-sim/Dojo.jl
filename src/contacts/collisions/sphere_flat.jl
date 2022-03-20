@@ -83,35 +83,43 @@ function contact_normal(collision::SphereFlatCollision, xp, qp, xc, qc)
     return collision.contact_normal
 end
 
-# contact_normal * λ
-function ∂contact_normal_jvp∂x(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
-    no, ni = size(collision.contact_normal)
-    @assert length(λ) == ni
-    return szeros(eltype(collision.contact_normal), no, 3)
+function ∂contact_normal_transpose∂x(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
+    return szeros(eltype(collision.contact_normal), 3, 3)
 end
+
+function ∂contact_normal_transpose∂q(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
+    return szeros(eltype(collision.contact_normal), 3, 4)
+end
+
+# # contact_normal * λ
+# function ∂contact_normal_jvp∂x(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
+#     no, ni = size(collision.contact_normal)
+#     @assert length(λ) == ni
+#     return szeros(eltype(collision.contact_normal), no, 3)
+# end
+
+# # λ' * contact_normal
+# function ∂contact_normal_vjp∂x(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
+#     no, ni = size(collision.contact_normal)
+#     @assert length(λ) == no
+#     return szeros(eltype(collision.contact_normal), 3, ni)
+# end
+
+# contact_normal * λ
+# function ∂contact_normal_jvp∂q(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
+#     no, ni = size(collision.contact_normal)
+#     @assert length(λ) == ni
+#     contact_normal = collision.contact_normal
+#     return szeros(eltype(collision.contact_normal), no, 4)
+# end
 
 # λ' * contact_normal
-function ∂contact_normal_vjp∂x(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
-    no, ni = size(collision.contact_normal)
-    @assert length(λ) == no
-    return szeros(eltype(collision.contact_normal), 3, ni)
-end
-
-# contact_normal * λ
-function ∂contact_normal_jvp∂q(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
-    no, ni = size(collision.contact_normal)
-    @assert length(λ) == ni
-    contact_normal = collision.contact_normal
-    return szeros(eltype(collision.contact_normal), no, 4)
-end
-
-# λ' * contact_normal
-function ∂contact_normal_vjp∂q(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
-    no, ni = size(collision.contact_normal)
-    @assert length(λ) == no
-    contact_normal = collision.contact_normal
-    return szeros(eltype(collision.contact_normal), 4, ni)
-end
+# function ∂contact_normal_vjp∂q(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
+#     no, ni = size(collision.contact_normal)
+#     @assert length(λ) == no
+#     contact_normal = collision.contact_normal
+#     return szeros(eltype(collision.contact_normal), 4, ni)
+# end
 
 # tangent projection
 function contact_tangent(collision::SphereFlatCollision, xp, qp, xc, qc)

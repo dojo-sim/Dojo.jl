@@ -179,26 +179,3 @@ function ∂contact_point∂q(relative::Symbol, jacobian::Symbol, collision::Sph
     # end
 end
 
-# # normal projection (from child to parent)
-# function contact_normal(collision::SphereSphereCollision, xp, qp, xc, qc)
-#     # # contact origin points
-#     cop = contact_point_origin(xp, qp, collision.contact_origin_parent) 
-#     coc = contact_point_origin(xc, qc, collision.contact_origin_child)
-
-#     # # unnormalized direction 
-#     # dir0 = cop - coc
-
-#     # # contact origin points
-#     # cop = contact_point(:parent, collision, xp, qp, xc, qc) 
-#     # coc = contact_point(:child,  collision, xp, qp, xc, qc)
- 
-#     # unnormalized direction 
-#     dir = cop - coc
-
-#     # distance 
-#     dis = distance(collision, xp, qp, xc, qc) 
-
-#     # normalized direction
-#     return normalize(dir)'
-# end
-
