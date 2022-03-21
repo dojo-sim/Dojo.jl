@@ -12,25 +12,40 @@ joint0to1 = JointConstraint(Fixed(origin, pbody))
 bodies = [pbody, cbody]
 joints = [joint0to1]#, joint1to2]
 
-collision = SphereSphereCollision{Float64,2,3,6}(
+impact_collision = SphereSphereCollision{Float64,0,3,0}(
         szeros(3),
         szeros(3),
         pbody.shape.r, 
         cbody.shape.r)
 
-body_body_contact = NonlinearContact{Float64,8}(0.5, collision)
+linear_collision = SphereSphereCollision{Float64,4,3,12}(
+        szeros(3),
+        szeros(3),
+        pbody.shape.r, 
+        cbody.shape.r)
 
-# contact_p = contact_constraint(pbody, [0.0, 0.0, 1.0], 
-#     friction_coefficient=0.5, 
-#     contact_origin=[0.0, 0.0, 0.0], 
-#     contact_radius=0.1,
-#     contact_type=:nonlinear)
-# contact_c = contact_constraint(cbody, [0.0, 0.0, 1.0], 
-#     friction_coefficient=0.5, 
-#     contact_origin=[0.0, 0.0, 0.0], 
-#     contact_radius=0.1,
-#     contact_type=:nonlinear)
-# contacts = [contact_p, contact_c]
+nonlinear_collision = SphereSphereCollision{Float64,2,3,6}(
+    szeros(3),
+    szeros(3),
+    pbody.shape.r, 
+    cbody.shape.r)
+
+linear_parameterization = SA{Float64}[
+        0.0  1.0
+        0.0 -1.0
+        1.0  0.0
+       -1.0  0.0
+]
+
+nonlinear_parameterization = SA{Float64}[
+        1.0  0.0
+        0.0  1.0
+]
+
+body_body_contact = ImpactContact{Float64,2}(szeros(Float64, 0, 3), impact_collision)
+# body_body_contact = LinearContact{Float64,12}(0.5, linear_parameterization, linear_collision)
+# body_body_contact = NonlinearContact{Float64,8}(0.5, nonlinear_parameterization, nonlinear_collision)
+
 contacts = [ContactConstraint((body_body_contact, pbody.id, cbody.id), name=:body_body)]
 
 mech = Mechanism(origin, bodies, joints, contacts,
@@ -80,6 +95,3 @@ storage = simulate!(mech, 2.5,
 
 visualize(mech, storage, 
     vis=vis)
-
-mech.contacts[1].impulses[2]
-mech.contacts[1].impulses_dual[2]

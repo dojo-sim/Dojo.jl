@@ -8,6 +8,7 @@
 """
 mutable struct LinearContact{T,N} <: Contact{T,N}
     friction_coefficient::T
+    friction_parameterization::SMatrix{4,2,T,8}
     collision::Collision{T,4,3,12}
 end
 
@@ -15,12 +16,14 @@ function LinearContact(body::Body{T}, normal::AbstractVector, friction_coefficie
     contact_origin=szeros(T, 3), 
     contact_radius=0.0) where T
 
-    # projectors
+    # contact directions
     V1, V2, V3 = orthogonal_columns(normal)
     A = [V1 V2 V3]
     Ainv = inv(A)
     contact_normal = Ainv[3, SA[1; 2; 3]]'
     contact_tangent = Ainv[SA[1; 2], SA[1; 2; 3]]
+
+    # friction parameterization
     parameterization = SA{T}[
          0.0  1.0
          0.0 -1.0
@@ -31,7 +34,7 @@ function LinearContact(body::Body{T}, normal::AbstractVector, friction_coefficie
     # collision 
     collision = SphereFlatCollision(parameterization * contact_tangent, contact_normal, SVector{3}(contact_origin), contact_radius)
     
-    new{Float64,12}(friction_coefficient, collision)
+    LinearContact{Float64,12}(friction_coefficient, parameterization, collision)
 end
 
 function constraint_jacobian(contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:LinearContact{T,N},N½}
@@ -85,6 +88,6 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}) where 
     SVector{N½,T}(
         d - sγ,
         model.friction_coefficient * γ - sum(β) - sψ,
-        (vt + ψ * sones(4) - sβ)...)
+        (model.friction_parameterization * vt + ψ * sones(4) - sβ)...)
 end
 

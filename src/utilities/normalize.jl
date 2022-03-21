@@ -9,6 +9,7 @@ end
 
 function ∂normalize∂x(x)
     mag = norm(x)
+    n = length(x)
     if mag > 0.0 
         n = length(x)
         return 1.0 * I(n) ./ mag - x * transpose(x) ./ mag^3

@@ -6,6 +6,7 @@
     collision: Collision
 """
 mutable struct ImpactContact{T,N} <: Contact{T,N}
+    friction_parameterization::SMatrix{0,2,T,0}
     collision::Collision{T,0,3,0}
 end
 
@@ -13,16 +14,19 @@ function ImpactContact(body::Body{T}, normal::AbstractVector{T};
     contact_origin=szeros(T, 3), 
     contact_radius=0.0) where T
     
-    # projector
+    # contact directions
     V1, V2, V3 = orthogonal_columns(normal) #
     A = [V1 V2 V3]
     Ainv = inv(A)
     contact_normal = Ainv[3, SA[1; 2; 3]]'
 
+    # friction parametrization
+    parameterization = szeros(T, 0, 2)
+
     # collision 
     collision = SphereFlatCollision(szeros(T, 0, 3), contact_normal, SVector{3}(contact_origin), contact_radius)
 
-    new{Float64,2}(collision)
+    ImpactContact{Float64,2}(parameterization, collision)
 end
 
 function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:ImpactContact{T,N}}
@@ -98,13 +102,13 @@ function force_mapping(relative::Symbol, model::ImpactContact,
     end
 end
 
-function ∂force_mapping∂x(relative::Symbol, jacobian::Symbol,
+function ∂force_mapping_jvp∂x(relative::Symbol, jacobian::Symbol,
     model::ImpactContact, 
     xp::AbstractVector, qp::UnitQuaternion, 
     xc::AbstractVector, qc::UnitQuaternion,
     λ::AbstractVector)
 
-    X = λ[1] * ∂contact_normal_transpose∂x(jacobian, model.collision, xp, qp, xc, qc)
+    X = ∂contact_normal_transpose∂x(jacobian, model.collision, xp, qp, xc, qc) * λ[1]
 
     if relative == :parent 
         return X 
@@ -113,13 +117,13 @@ function ∂force_mapping∂x(relative::Symbol, jacobian::Symbol,
     end
 end
 
-function ∂force_mapping∂q(jacobian::Symbol,
+function ∂force_mapping_jvp∂q(relative::Symbol, jacobian::Symbol,
     model::ImpactContact, 
     xp::AbstractVector, qp::UnitQuaternion, 
     xc::AbstractVector, qc::UnitQuaternion,
     λ::AbstractVector)
 
-    X = λ[1] * ∂contact_normal_transpose∂q(jacobian, model.collision, xp, qp, xc, qc)
+    X = ∂contact_normal_transpose∂q(jacobian, model.collision, xp, qp, xc, qc) * λ[1]
 
     if relative == :parent 
         return X 

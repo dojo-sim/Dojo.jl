@@ -83,11 +83,11 @@ function contact_normal(collision::SphereFlatCollision, xp, qp, xc, qc)
     return collision.contact_normal
 end
 
-function ∂contact_normal_transpose∂x(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
+function ∂contact_normal_transpose∂x(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc)
     return szeros(eltype(collision.contact_normal), 3, 3)
 end
 
-function ∂contact_normal_transpose∂q(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc, λ)
+function ∂contact_normal_transpose∂q(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc)
     return szeros(eltype(collision.contact_normal), 3, 4)
 end
 

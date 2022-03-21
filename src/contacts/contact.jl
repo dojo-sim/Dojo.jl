@@ -22,13 +22,13 @@ function constraint_jacobian_configuration(relative::Symbol, model::Contact,
     X = [
             ∂d∂x;
             szeros(1, 3);
-            ∂vt∂x;
+            model.friction_parameterization * ∂vt∂x;
         ]
 
     Q = [
             ∂d∂q;
             szeros(1, 4);
-            ∂vt∂q
+            model.friction_parameterization * ∂vt∂q
         ]
 
     return [X Q]
@@ -143,7 +143,7 @@ function force_mapping(relative::Symbol, model::Contact,
     xc::AbstractVector, qc::UnitQuaternion)
 
     X = [
-        contact_normal(model.collision, xp, qp, xc, qc)' szeros(3, 1) contact_tangent(model.collision, xp, qp, xc, qc)'
+        contact_normal(model.collision, xp, qp, xc, qc)' szeros(3, 1) contact_tangent(model.collision, xp, qp, xc, qc)' * model.friction_parameterization'
     ]
 
     if relative == :parent 
@@ -160,10 +160,13 @@ function ∂force_mapping_jvp∂x(relative::Symbol, jacobian::Symbol,
     xc::AbstractVector, qc::UnitQuaternion,
     λ::AbstractVector)
 
-    X = λ[1] * ∂contact_normal_transpose∂x(jacobian, model.collision, xp, qp, xc, qc)
-    # X += ∂contact_tangent_vjp∂x(jacobian, model.collision, xp, qp, xc, qc, λ[SUnitRange(3, length(λ))])'
-    X += λ[3] * ∂contact_tangent_one_transpose∂x(jacobian, model.collision, xp, qp, xc, qc)
-    X += λ[4] * ∂contact_tangent_two_transpose∂x(jacobian, model.collision, xp, qp, xc, qc)
+    # normal
+    X = ∂contact_normal_transpose∂x(jacobian, model.collision, xp, qp, xc, qc) * λ[1]
+
+    # tangent
+    λ_tangent = model.friction_parameterization' * λ[SUnitRange(3, length(λ))]
+    X += ∂contact_tangent_one_transpose∂x(jacobian, model.collision, xp, qp, xc, qc) * λ_tangent[1]
+    X += ∂contact_tangent_two_transpose∂x(jacobian, model.collision, xp, qp, xc, qc) * λ_tangent[2]
 
     if relative == :parent 
         return X 
@@ -179,11 +182,13 @@ function ∂force_mapping_jvp∂q(relative::Symbol, jacobian::Symbol,
     xc::AbstractVector, qc::UnitQuaternion,
     λ::AbstractVector)
 
-    X = λ[1] * ∂contact_normal_transpose∂q(jacobian, model.collision, xp, qp, xc, qc)
-    # X += ∂contact_tangent_vjp∂q(jacobian, model.collision, xp, qp, xc, qc, λ[SUnitRange(3, length(λ))])'
-    X += λ[3] * ∂contact_tangent_one_transpose∂q(jacobian, model.collision, xp, qp, xc, qc)
-    X += λ[4] * ∂contact_tangent_two_transpose∂q(jacobian, model.collision, xp, qp, xc, qc)
+    # normal
+    X = ∂contact_normal_transpose∂q(jacobian, model.collision, xp, qp, xc, qc) * λ[1]
 
+    # tangent
+    λ_tangent = model.friction_parameterization' * λ[SUnitRange(3, length(λ))]
+    X += ∂contact_tangent_one_transpose∂q(jacobian, model.collision, xp, qp, xc, qc) * λ_tangent[1]
+    X += ∂contact_tangent_two_transpose∂q(jacobian, model.collision, xp, qp, xc, qc) * λ_tangent[2]
 
     if relative == :parent 
         return X 

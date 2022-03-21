@@ -117,7 +117,7 @@ function contact_constraint(body::Body{T},
     else
         @warn "unknown contact_type"
     end
-    contacts = ContactConstraint((model, body.id, nothing); 
+    contacts = ContactConstraint((model, body.id, 0); 
         name=name)
     return contacts
 end

@@ -11,6 +11,7 @@
 """
 mutable struct NonlinearContact{T,N} <: Contact{T,N}
     friction_coefficient::T
+    friction_parameterization::SMatrix{2,2,T,4}
     collision::Collision{T,2,3,6}
 end
 
@@ -18,17 +19,23 @@ function NonlinearContact(body::Body{T}, normal::AbstractVector, friction_coeffi
     contact_origin=szeros(T, 3), 
     contact_radius=0.0) where T
 
-    # projectors
+    # contact directions
     V1, V2, V3 = orthogonal_columns(normal)
     A = [V1 V2 V3]
     Ainv = inv(A)
     contact_normal = Ainv[3, SA[1; 2; 3]]'
     contact_tangent = Ainv[SA[1; 2], SA[1; 2; 3]]
     
+    # friction parameterization
+    parameterization = SA{T}[
+         1.0  0.0
+         0.0  1.0
+    ]
+
     # collision 
     collision = SphereFlatCollision(contact_tangent, contact_normal, SVector{3}(contact_origin), contact_radius)
     
-    NonlinearCollision{T,8}(friction_coefficient, collision)
+    NonlinearContact{T,8}(friction_coefficient, parameterization, collision)
 end
 
 function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
@@ -56,7 +63,7 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}) where 
     SVector{N½,T}(
         d - s[1],
         model.friction_coefficient * γ[1] - γ[2],
-        (vt - s[@SVector [3,4]])...)
+        (model.friction_parameterization * vt - s[@SVector [3,4]])...)
 end
 
 function constraint_jacobian(contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
