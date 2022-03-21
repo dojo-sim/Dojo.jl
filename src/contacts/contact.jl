@@ -64,13 +64,13 @@ function constraint_jacobian_velocity(relative::Symbol, model::Contact,
     V = [
             ∂d∂x * ∂x∂v;
             szeros(1, 3);
-            ∂vt∂v
+            model.friction_parameterization * ∂vt∂v
         ]
    
     Ω = [
             ∂d∂q * ∂q∂ϕ;
             szeros(1, 3);
-            ∂vt∂ϕ + ∂vt∂q * ∂q∂ϕ;
+            model.friction_parameterization * (∂vt∂ϕ + ∂vt∂q * ∂q∂ϕ);
         ]
 
     return [V Ω]

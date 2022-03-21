@@ -6,7 +6,7 @@ origin = Origin{Float64}()
 pbody = Sphere(0.5, 1.0)
 cbody = Sphere(0.5, 1.0)
 joint0to1 = JointConstraint(Fixed(origin, pbody))
-# joint0to1 = JointConstraint(Floating(origin, pbody))
+joint0to1 = JointConstraint(Floating(origin, pbody))
 
 # joint1to2 = JointConstraint(Prismatic(pbody, cbody, [0.0; 0.0; 1.0]))
 bodies = [pbody, cbody]
@@ -42,11 +42,12 @@ nonlinear_parameterization = SA{Float64}[
         0.0  1.0
 ]
 
-body_body_contact = ImpactContact{Float64,2}(szeros(Float64, 0, 3), impact_collision)
-# body_body_contact = LinearContact{Float64,12}(0.5, linear_parameterization, linear_collision)
+# body_body_contact = ImpactContact{Float64,2}(szeros(Float64, 0, 3), impact_collision)
+body_body_contact = LinearContact{Float64,12}(0.5, linear_parameterization, linear_collision)
 # body_body_contact = NonlinearContact{Float64,8}(0.5, nonlinear_parameterization, nonlinear_collision)
 
 contacts = [ContactConstraint((body_body_contact, pbody.id, cbody.id), name=:body_body)]
+contacts[1].model.friction_parameterization
 
 mech = Mechanism(origin, bodies, joints, contacts,
             gravity=1.0 * -9.81, 
@@ -54,15 +55,26 @@ mech = Mechanism(origin, bodies, joints, contacts,
 
 mech.bodies[1].state.x2 = [0.0, 0.0, 0.0]
 mech.bodies[2].state.x2 = [0.0, 0.0, 5.0]
+mech.bodies[1].state.v15 = [0.0, 0.0, 0.0]
+mech.bodies[2].state.v15 = [0.0, 0.0, 0.0]
 
-# mech = Mechanism(origin, bodies, joints, contacts,
-#             gravity=0.0 * -9.81, 
-#             timestep=0.01)
+mech = Mechanism(origin, bodies, joints, contacts,
+            gravity=0.0 * -9.81, 
+            timestep=0.01)
 
-# mech.bodies[1].state.x2 = [0.0, 0.0, 0.0]
-# mech.bodies[2].state.x2 = [2.0, 2.0, 2.0]
-# mech.bodies[1].state.v15 = [0.0, 0.0, 0.0]
-# mech.bodies[2].state.v15 = [-1.0, -1.0, -1.0]
+mech.bodies[1].state.x2 = [0.0, 0.0, 0.0]
+mech.bodies[2].state.x2 = [2.0, 2.0, 2.0]
+mech.bodies[1].state.v15 = [0.0, 0.0, 0.0]
+mech.bodies[2].state.v15 = [-1.0, -1.0, -1.0]
+
+force_mapping(:parent, contacts[1].model, 
+    mech.bodies[1].state.x2, mech.bodies[1].state.q2,
+    mech.bodies[2].state.x2, mech.bodies[2].state.q2,)
+
+∂force_mapping_jvp∂q(:parent, :parent, contacts[1].model, 
+    mech.bodies[1].state.x2, mech.bodies[1].state.q2,
+    mech.bodies[2].state.x2, mech.bodies[2].state.q2, ones(6))
+
 
 distance(mech.contacts[1].model.collision, 
     mech.bodies[1].state.x2, mech.bodies[1].state.q2,
