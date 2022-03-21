@@ -18,14 +18,14 @@ function sdf_capsule_capsule_constraint_jacobian(relative, xa, qa, ha, ra, xb, q
     if relative == :parent 
         dx = FiniteDiff.finite_difference_jacobian(x -> closest_points_capsule_capsule(x, qa, ha, ra, xb, qb, hb, rb)[2], xa)
         dx -= FiniteDiff.finite_difference_jacobian(x -> closest_points_capsule_capsule(x, qa, ha, ra, xb, qb, hb, rb)[1], xa)
-        dq = FiniteDiff.finite_difference_jacobian(q -> closest_points_capsule_capsule(xa, UnitQuaternion(q..., false), ha, ra, xb, qb, hb, rb)[2], vector(qa))
-        dq -= FiniteDiff.finite_difference_jacobian(q -> closest_points_capsule_capsule(xa, UnitQuaternion(q..., false), ha, ra, xb, qb, hb, rb)[1], vector(qa))
+        dq = FiniteDiff.finite_difference_jacobian(q -> closest_points_capsule_capsule(xa, Quaternion(q..., false), ha, ra, xb, qb, hb, rb)[2], vector(qa))
+        dq -= FiniteDiff.finite_difference_jacobian(q -> closest_points_capsule_capsule(xa, Quaternion(q..., false), ha, ra, xb, qb, hb, rb)[1], vector(qa))
         attjac && (Q *= LVᵀmat(qa))
     elseif relative == :child 
         dx = FiniteDiff.finite_difference_jacobian(x -> closest_points_capsule_capsule(xa, qa, ha, ra, x, qb, hb, rb)[2], xb)
         dx -= FiniteDiff.finite_difference_jacobian(x -> closest_points_capsule_capsule(xa, qa, ha, ra, x, qb, hb, rb)[1], xb)
-        dq = FiniteDiff.finite_difference_jacobian(q -> closest_points_capsule_capsule(xa, qa, ha, ra, xb, UnitQuaternion(q..., false), hb, rb)[2], vector(qb))
-        dq -= FiniteDiff.finite_difference_jacobian(q -> closest_points_capsule_capsule(xa, qa, ha, ra, xb, UnitQuaternion(q..., false), hb, rb)[1], vector(qb))
+        dq = FiniteDiff.finite_difference_jacobian(q -> closest_points_capsule_capsule(xa, qa, ha, ra, xb, Quaternion(q..., false), hb, rb)[2], vector(qb))
+        dq -= FiniteDiff.finite_difference_jacobian(q -> closest_points_capsule_capsule(xa, qa, ha, ra, xb, Quaternion(q..., false), hb, rb)[1], vector(qb))
         attjac && (Q *= LVᵀmat(qb))
     end
 
@@ -37,10 +37,10 @@ Jc = constraint_jacobian(:child, p1, o1, h1, r1, p2, o2, h2, r2, attjac=false)
 
 using FiniteDiff
 Jpx = FiniteDiff.finite_difference_jacobian(x -> constraint(x, o1, h1, r1, p2, o2, h2, r2), p1)
-Jpq = FiniteDiff.finite_difference_jacobian(q -> constraint(p1, UnitQuaternion(q..., false), h1, r1, p2, o2, h2, r2), vector(o1))
+Jpq = FiniteDiff.finite_difference_jacobian(q -> constraint(p1, Quaternion(q..., false), h1, r1, p2, o2, h2, r2), vector(o1))
 
 Jcx = FiniteDiff.finite_difference_jacobian(x -> constraint(p1, o1, h1, r1, x, o2, h2, r2), p2)
-Jcq = FiniteDiff.finite_difference_jacobian(q -> constraint(p1, o1, h1, r1, p2, UnitQuaternion(q..., false), h2, r2), vector(o2))
+Jcq = FiniteDiff.finite_difference_jacobian(q -> constraint(p1, o1, h1, r1, p2, Quaternion(q..., false), h2, r2), vector(o2))
 
 norm(Jp - [Jpx Jpq])
 norm(Jc - [Jcx Jcq])
@@ -67,11 +67,11 @@ function force_mapping_jacobian(relative, jacobian, xa, qa, ha, ra, xb, qb, hb, 
     attjac=false)
     if jacobian == :parent 
         dx = FiniteDiff.finite_difference_jacobian(x -> force_mapping(relative, x, qa, ha, ra, xb, qb, hb, rb) * λ, xa)
-        dq = FiniteDiff.finite_difference_jacobian(q -> force_mapping(relative, xa, UnitQuaternion(q..., false), ha, ra, xb, qb, hb, rb) * λ, vector(qa))
+        dq = FiniteDiff.finite_difference_jacobian(q -> force_mapping(relative, xa, Quaternion(q..., false), ha, ra, xb, qb, hb, rb) * λ, vector(qa))
         attjac && (dq *= LVᵀmat(qa))
     elseif jacobian == :child 
         dx = FiniteDiff.finite_difference_jacobian(x -> force_mapping(relative, xa, qa, ha, ra, x, qb, hb, rb) * λ, xb)
-        dq = FiniteDiff.finite_difference_jacobian(q -> force_mapping(relative, xa, qa, ha, ra, xb, UnitQuaternion(q..., false), hb, rb) * λ, vector(qb))
+        dq = FiniteDiff.finite_difference_jacobian(q -> force_mapping(relative, xa, qa, ha, ra, xb, Quaternion(q..., false), hb, rb) * λ, vector(qb))
         attjac && (dq *= LVᵀmat(qa))
     end
     return [dx dq]
@@ -104,11 +104,11 @@ function torque_mapping_jacobian(relative, jacobian, xa, qa, ha, ra, xb, qb, hb,
     attjac=false)
     if jacobian == :parent 
         dx = FiniteDiff.finite_difference_jacobian(x -> torque_mapping(relative, x, qa, ha, ra, xb, qb, hb, rb) * λ, xa)
-        dq = FiniteDiff.finite_difference_jacobian(q -> torque_mapping(relative, xa, UnitQuaternion(q..., false), ha, ra, xb, qb, hb, rb) * λ, vector(qa))
+        dq = FiniteDiff.finite_difference_jacobian(q -> torque_mapping(relative, xa, Quaternion(q..., false), ha, ra, xb, qb, hb, rb) * λ, vector(qa))
         attjac && (dq *= LVᵀmat(qa))
     elseif jacobian == :child 
         dx = FiniteDiff.finite_difference_jacobian(x -> torque_mapping(relative, xa, qa, ha, ra, x, qb, hb, rb) * λ, xb)
-        dq = FiniteDiff.finite_difference_jacobian(q -> torque_mapping(relative, xa, qa, ha, ra, xb, UnitQuaternion(q..., false), hb, rb) * λ, vector(qb))
+        dq = FiniteDiff.finite_difference_jacobian(q -> torque_mapping(relative, xa, qa, ha, ra, xb, Quaternion(q..., false), hb, rb) * λ, vector(qb))
         attjac && (dq *= LVᵀmat(qa))
     end
     return [dx dq]
@@ -169,8 +169,8 @@ tangential_velocity(p1, o1, p1 + x_shift * h, o1, h1, r1, p2, o2, p2, o2, h2, r2
 
 ## constraints 
 function constraint(model, s::AbstractVector{T}, γ::AbstractVector{T},
-    x3a::AbstractVector{T}, q3a::UnitQuaternion{T}, x2a::AbstractVector{T}, q2a::UnitQuaternion{T},
-    x3b::AbstractVector{T}, q3b::UnitQuaternion{T}, x2b::AbstractVector{T}, q2b::UnitQuaternion{T},
+    x3a::AbstractVector{T}, q3a::Quaternion{T}, x2a::AbstractVector{T}, q2a::Quaternion{T},
+    x3b::AbstractVector{T}, q3b::Quaternion{T}, x2b::AbstractVector{T}, q2b::Quaternion{T},
     h::T) where T
 
     # transforms the velocities of the origin of the link into velocities

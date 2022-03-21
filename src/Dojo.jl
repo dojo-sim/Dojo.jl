@@ -11,8 +11,7 @@ using Random
 using StaticArrays
 using SparseArrays
 using StaticArrays: SUnitRange
-using Rotations
-using Rotations: RotationError, params, lmult, rmult, tmat, vmat, hmat, skew, pure_quaternion
+using Quaternions
 using Parameters
 using Statistics
 
@@ -24,7 +23,7 @@ using MeshCat
 import MeshCat: render
 using Meshing
 using GeometryBasics
-using LightGraphs
+using Graphs
 
 using CoordinateTransformations
 
@@ -112,7 +111,7 @@ include(joinpath("joints", "impulses.jl"))
 include(joinpath("contacts", "constraints.jl"))
 include(joinpath("contacts", "cone.jl"))
 include(joinpath("contacts", "collisions", "collision.jl"))
-include(joinpath("contacts", "collisions", "sphere_flat.jl"))
+include(joinpath("contacts", "collisions", "sphere_halfspace.jl"))
 include(joinpath("contacts", "collisions", "sphere_sphere.jl"))
 include(joinpath("contacts", "velocity.jl"))
 include(joinpath("contacts", "impact.jl"))
@@ -203,7 +202,8 @@ export
     get_contact,
     get_sdf,
     contact_location,
-    damper_impulses
+    damper_impulses,
+    contact_constraint
 
 # Collision
 export 
@@ -212,7 +212,7 @@ export
     distance, 
     contact_point,
     contact_normal, 
-    contact_tangent,
+    contact_tangent
 
 # Inputs
 export
@@ -225,7 +225,8 @@ export
     Mechanism,
     get_mechanism,
     initialize!,
-    set_floating_base
+    set_floating_base,
+    zero_velocity!
 
 # Maximal
 export
@@ -276,10 +277,7 @@ export
 
 # Orientation
 export
-    UnitQuaternion,
-    RotX,
-    RotY,
-    RotZ,
+    Quaternion,
     attitude_jacobian
 
 # Data

@@ -3,8 +3,8 @@
 ################################################################################
 
 function spring_force(relative::Symbol, joint::Translational{T},
-    xa::AbstractVector, qa::UnitQuaternion,
-    xb::AbstractVector, qb::UnitQuaternion;
+    xa::AbstractVector, qa::Quaternion,
+    xb::AbstractVector, qb::Quaternion;
     unitary::Bool=false) where T
 
     spring = unitary ? 1.0 : joint.spring
@@ -22,8 +22,8 @@ function spring_impulses(relative::Symbol, joint::Translational, pbody::Node, cb
 end
 
 function spring_impulses(relative::Symbol, joint::Translational,
-    xa::AbstractVector, qa::UnitQuaternion,
-    xb::AbstractVector, qb::UnitQuaternion,
+    xa::AbstractVector, qa::Quaternion,
+    xb::AbstractVector, qb::Quaternion,
     timestep; unitary::Bool=false)
     timestep * impulse_transform(relative, joint, xa, qa, xb, qb) * spring_force(relative, joint, xa, qa, xb, qb; unitary=unitary)[SVector{3,Int}(1,2,3)]
 end
@@ -36,8 +36,8 @@ spring_impulses(relative::Symbol, joint::Translational{T,3}, pbody::Node, cbody:
 
 function spring_force_jacobian_configuration(jacobian_relative::Symbol,
         joint::Translational{T},
-        xa::AbstractVector, qa::UnitQuaternion,
-        xb::AbstractVector, qb::UnitQuaternion;
+        xa::AbstractVector, qa::Quaternion,
+        xb::AbstractVector, qb::Quaternion;
         unitary::Bool=false, 
         attjac=true) where T
     spring = unitary ? 1.0 : joint.spring
@@ -46,8 +46,8 @@ end
 
 function spring_jacobian_configuration(relative::Symbol, jacobian_relative::Symbol,
     joint::Translational{T},
-    xa::AbstractVector, qa::UnitQuaternion,
-    xb::AbstractVector, qb::UnitQuaternion,
+    xa::AbstractVector, qa::Quaternion,
+    xb::AbstractVector, qb::Quaternion,
     timestep::T; 
     unitary::Bool=false, 
     attjac=true) where T

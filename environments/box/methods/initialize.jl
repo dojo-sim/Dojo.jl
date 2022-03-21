@@ -1,4 +1,4 @@
-function get_box(; 
+function get_block(; 
     timestep=0.01, 
     gravity=[0.0; 0.0; -9.81],
     friction_coefficient=0.8, 
@@ -58,9 +58,9 @@ function get_box(;
     return mech
 end
 
-function initialize_box!(mechanism::Mechanism{T};
+function initialize_block!(mechanism::Mechanism{T};
         x=[0.0, 0.0, 1.0],
-        q=UnitQuaternion(1.0, 0.0, 0.0, 0.0),
+        q=Quaternion(1.0, 0.0, 0.0, 0.0),
         v=[1.0, 0.3, 0.2],
         ω=[2.5, -1.0, 2.0]) where T
          

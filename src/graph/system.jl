@@ -56,7 +56,7 @@ struct System{N}
         acyclic_children = [Int64[] for i=1:N]
         cycles = [Vector{Int64}[] for i=1:N]
         parents = [Int64[] for i=1:N]
-        edgelist = LightGraphs.SimpleEdge{Int64}[]
+        edgelist = Graphs.SimpleEdge{Int64}[]
 
         for (i,graph) in enumerate(graphs)
             root = roots[i]

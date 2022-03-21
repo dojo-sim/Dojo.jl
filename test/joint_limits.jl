@@ -1,4 +1,4 @@
-@testset "Joint limits: Pendulum" begin
+@testset "Pendulum" begin
     #TODO: move to environments
     function get_pendulum_limited(; 
         timestep=0.01, 

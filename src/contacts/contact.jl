@@ -7,8 +7,8 @@ abstract type Contact{T,N} end
 
 # constraint Jacobians
 function constraint_jacobian_configuration(relative::Symbol, model::Contact, 
-    xp::AbstractVector, vp::AbstractVector, qp::UnitQuaternion, ϕp::AbstractVector, 
-    xc::AbstractVector, vc::AbstractVector, qc::UnitQuaternion, ϕc::AbstractVector, 
+    xp::AbstractVector, vp::AbstractVector, qp::Quaternion, ϕp::AbstractVector, 
+    xc::AbstractVector, vc::AbstractVector, qc::Quaternion, ϕc::AbstractVector, 
     timestep)
 
     # distance Jacobian 
@@ -35,8 +35,8 @@ function constraint_jacobian_configuration(relative::Symbol, model::Contact,
 end
 
 function constraint_jacobian_velocity(relative::Symbol, model::Contact, 
-    xp::AbstractVector, vp::AbstractVector, qp::UnitQuaternion, ϕp::AbstractVector, 
-    xc::AbstractVector, vc::AbstractVector, qc::UnitQuaternion, ϕc::AbstractVector, 
+    xp::AbstractVector, vp::AbstractVector, qp::Quaternion, ϕp::AbstractVector, 
+    xc::AbstractVector, vc::AbstractVector, qc::Quaternion, ϕc::AbstractVector, 
     timestep)
 
     # distance Jacobian
@@ -124,11 +124,11 @@ function impulse_map_jacobian(relative::Symbol, jacobian::Symbol, model::Contact
         q = qc
     end
 
-    Qx = inv(q) * skew(r) * Xx 
-    Qx -= inv(q) * skew(X * λ) * (∂contact_point∂x(relative, jacobian, model.collision, xp, qp, xc, qc) - (relative == jacobian ? 1.0 : 0.0) * I(3)) 
+    Qx = rotation_matrix(inv(q)) * skew(r) * Xx 
+    Qx -= rotation_matrix(inv(q)) * skew(X * λ) * (∂contact_point∂x(relative, jacobian, model.collision, xp, qp, xc, qc) - (relative == jacobian ? 1.0 : 0.0) * I(3)) 
    
-    Qq = inv(q) * skew(r) * Xq 
-    Qq -= inv(q) * skew(X * λ) * ∂contact_point∂q(relative, jacobian, model.collision, xp, qp, xc, qc) 
+    Qq = rotation_matrix(inv(q)) * skew(r) * Xq 
+    Qq -= rotation_matrix(inv(q)) * skew(X * λ) * ∂contact_point∂q(relative, jacobian, model.collision, xp, qp, xc, qc) 
     Qq += ∂rotation_matrix∂q(inv(q), skew(r) * X * λ) * Tmat()
 
     return [
@@ -139,8 +139,8 @@ end
 
 # force mapping 
 function force_mapping(relative::Symbol, model::Contact, 
-    xp::AbstractVector, qp::UnitQuaternion, 
-    xc::AbstractVector, qc::UnitQuaternion)
+    xp::AbstractVector, qp::Quaternion, 
+    xc::AbstractVector, qc::Quaternion)
 
     X = [
         contact_normal(model.collision, xp, qp, xc, qc)' szeros(3, 1) contact_tangent(model.collision, xp, qp, xc, qc)' * model.friction_parameterization'
@@ -156,8 +156,8 @@ end
 # mapping * λ
 function ∂force_mapping_jvp∂x(relative::Symbol, jacobian::Symbol,
     model::Contact, 
-    xp::AbstractVector, qp::UnitQuaternion, 
-    xc::AbstractVector, qc::UnitQuaternion,
+    xp::AbstractVector, qp::Quaternion, 
+    xc::AbstractVector, qc::Quaternion,
     λ::AbstractVector)
 
     # normal
@@ -178,8 +178,8 @@ end
 # mapping * λ
 function ∂force_mapping_jvp∂q(relative::Symbol, jacobian::Symbol,
     model::Contact, 
-    xp::AbstractVector, qp::UnitQuaternion, 
-    xc::AbstractVector, qc::UnitQuaternion,
+    xp::AbstractVector, qp::Quaternion, 
+    xc::AbstractVector, qc::Quaternion,
     λ::AbstractVector)
 
     # normal

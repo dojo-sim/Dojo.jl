@@ -22,7 +22,7 @@ open(vis)
 S = 7
 timestep= 1/148 * S
 gscaled = -9.81*20
-mech = get_mechanism(:box, 
+mech = get_mechanism(:block, 
 	timestep=timestep, 
 	gravity=gravityscaled, 
 	friction_coefficient=0.2, 
@@ -31,7 +31,7 @@ mech = get_mechanism(:box,
 	mode=:box);
 
 # ## Simualate
-initialize!(mech, :box, 
+initialize!(mech, :block, 
 	x=[0.0, -1.0, 1.0], 
 	v=[0.0, 2.0, 1.0], 
 	ω=[2.0, 5.0, 10.0])
@@ -61,18 +61,18 @@ data0 = params0[:data]
 ################################################################################
 ## Optimization Objective: Evaluation & Gradient
 ################################################################################
-clean_loss(:box, pairs0, data0, 
+clean_loss(:block, pairs0, data0, 
 	n_sample=250,
 	opts=SolverOptions(btol=3e-4, rtol=3e-4), 
 	timestep=timestep, 
 	gravity=gravityscaled)
 
-[clean_loss(:box, pairs0, data0 + [i;zeros(55)],
+[clean_loss(:block, pairs0, data0 + [i;zeros(55)],
 	opts=SolverOptions(btol=3e-4, rtol=3e-4), 
 	timestep=timestep, 
 	gravity=gravityscaled)
 	for i in Vector(-0.10:0.01:0.1)]
-[clean_loss(:box, pairs0, data0 + [0;i;zeros(54)],
+[clean_loss(:block, pairs0, data0 + [0;i;zeros(54)],
 	opts=SolverOptions(btol=3e-4, rtol=3e-4), 
 	timestep=timestep, 
 	gravity=gravityscaled)
@@ -108,7 +108,7 @@ lower = [0.00, 0.05]
 upper = [0.80, 1.50]
 
 function f0(d; rot=0)
-	return clean_loss(:box, pairs0, d2data(d), 
+	return clean_loss(:block, pairs0, d2data(d), 
 		n_sample=200, 
 		timestep=timestep, 
 		gravity=gravityscaled, 
@@ -118,7 +118,7 @@ end
 
 function fgH0(d; 
 	rot=0)
-	f, g, H = clean_loss(:box, pairs0, d2data(d), 
+	f, g, H = clean_loss(:block, pairs0, d2data(d), 
 		n_sample=200, 
 		timestep=timestep, 
 		gravity=gravityscaled, 
@@ -151,7 +151,7 @@ dsol #[0.171, 0.933]
 using Plots; pyplot()
 x=range(0.00,stop=0.80,length=10)
 y=range(0.10,stop=1.50,length=10)
-f(x,y) = log(10, clean_loss(:box, pairs0, d2data([x,y]), n_sample=50, timestep=timestep, gravity=gravityscaled,
+f(x,y) = log(10, clean_loss(:block, pairs0, d2data([x,y]), n_sample=50, timestep=timestep, gravity=gravityscaled,
 	opts=SolverOptions(btol=3e-4, rtol=3e-4))[1])
 plot(x,y,f,st=:surface,camera=(25,75))
 
@@ -212,11 +212,11 @@ upper = [0.80,
 	-0.05, -0.05, +1.50]
 
 function f0(d; rot=0, n_sample=50)
-	return clean_loss(:box, pairs0, d2data(d), n_sample=n_sample, timestep=timestep, gravity=gravityscaled, rot=rot, opts=SolverOptions(btol=3e-4, rtol=3e-4))[1]
+	return clean_loss(:block, pairs0, d2data(d), n_sample=n_sample, timestep=timestep, gravity=gravityscaled, rot=rot, opts=SolverOptions(btol=3e-4, rtol=3e-4))[1]
 end
 
 function fgH0(d; rot=0, n_sample=50)
-	f, g, H = clean_loss(:box, pairs0, d2data(d), n_sample=n_sample, timestep=timestep, gravity=gravityscaled, rot=rot, opts=SolverOptions(btol=3e-4, rtol=3e-4))
+	f, g, H = clean_loss(:block, pairs0, d2data(d), n_sample=n_sample, timestep=timestep, gravity=gravityscaled, rot=rot, opts=SolverOptions(btol=3e-4, rtol=3e-4))
 	return f, ∇d2data' * g, ∇d2data' * H * ∇d2data
 end
 dsol, Dsol = quasi_newton_solve(f0, fgH0, d0, iter=50, gtol=1e-8, ftol=1e-6,

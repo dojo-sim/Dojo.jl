@@ -1,15 +1,22 @@
 name: dailyCI
 on:
   schedule:
-    - cron: '00 10,22 * * *'
+#      Every day at 10AM and 10PM UTC
+#     - cron: '00 10,22 * * *'
+#      Every Monday at 1PM UTC (6AM PST)
+    - cron: '0 13 * * 1'
+
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.version == 'nightly'}}
     strategy:
       matrix:
         version:
-          - '1.6'
+          - '1.6' # LTS
+          - '1' # Current Stable
+          - 'nightly' # Upcoming
         os:
           - ubuntu-latest
           - macOS-latest
@@ -22,6 +29,7 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
+      # - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-runtest@latest
       - uses: julia-actions/julia-uploadcodecov@latest
         env:

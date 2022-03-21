@@ -54,8 +54,8 @@ function constraint_jacobian(contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T
 end
 
 function constraint_jacobian_configuration(relative::Symbol, model::ImpactContact, 
-    xp::AbstractVector, vp::AbstractVector, qp::UnitQuaternion, ϕp::AbstractVector,
-    xc::AbstractVector, vc::AbstractVector, qc::UnitQuaternion, ϕc::AbstractVector, 
+    xp::AbstractVector, vp::AbstractVector, qp::Quaternion, ϕp::AbstractVector,
+    xc::AbstractVector, vc::AbstractVector, qc::Quaternion, ϕc::AbstractVector, 
     timestep)
 
     X = ∂distance∂x(relative, model.collision, xp, qp, xc, qc)
@@ -65,8 +65,8 @@ function constraint_jacobian_configuration(relative::Symbol, model::ImpactContac
 end
 
 function constraint_jacobian_velocity(relative::Symbol, model::ImpactContact, 
-    xp::AbstractVector, vp::AbstractVector, qp::UnitQuaternion, ϕp::AbstractVector,
-    xc::AbstractVector, vc::AbstractVector, qc::UnitQuaternion, ϕc::AbstractVector, 
+    xp::AbstractVector, vp::AbstractVector, qp::Quaternion, ϕp::AbstractVector,
+    xc::AbstractVector, vc::AbstractVector, qc::Quaternion, ϕc::AbstractVector, 
     timestep)
 
     # recover current orientation 
@@ -90,8 +90,8 @@ function constraint_jacobian_velocity(relative::Symbol, model::ImpactContact,
 end
 
 function force_mapping(relative::Symbol, model::ImpactContact, 
-    xp::AbstractVector, qp::UnitQuaternion, 
-    xc::AbstractVector, qc::UnitQuaternion)
+    xp::AbstractVector, qp::Quaternion, 
+    xc::AbstractVector, qc::Quaternion)
 
     X = contact_normal(model.collision, xp, qp, xc, qc)'
 
@@ -104,8 +104,8 @@ end
 
 function ∂force_mapping_jvp∂x(relative::Symbol, jacobian::Symbol,
     model::ImpactContact, 
-    xp::AbstractVector, qp::UnitQuaternion, 
-    xc::AbstractVector, qc::UnitQuaternion,
+    xp::AbstractVector, qp::Quaternion, 
+    xc::AbstractVector, qc::Quaternion,
     λ::AbstractVector)
 
     X = ∂contact_normal_transpose∂x(jacobian, model.collision, xp, qp, xc, qc) * λ[1]
@@ -119,8 +119,8 @@ end
 
 function ∂force_mapping_jvp∂q(relative::Symbol, jacobian::Symbol,
     model::ImpactContact, 
-    xp::AbstractVector, qp::UnitQuaternion, 
-    xc::AbstractVector, qc::UnitQuaternion,
+    xp::AbstractVector, qp::Quaternion, 
+    xc::AbstractVector, qc::Quaternion,
     λ::AbstractVector)
 
     X = ∂contact_normal_transpose∂q(jacobian, model.collision, xp, qp, xc, qc) * λ[1]

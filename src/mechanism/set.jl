@@ -11,7 +11,7 @@ function set_maximal_state!(mechanism::Mechanism, z::AbstractVector)
     off = 0
     for body in mechanism.bodies
         x2, v15, q2, ϕ15 = unpack_data(z[off+1:end]); off += 13
-        q2 = UnitQuaternion(q2..., false)
+        q2 = Quaternion(q2...)
         body.state.v15 = v15
         body.state.ϕ15 = ϕ15
         body.state.x2 = x2

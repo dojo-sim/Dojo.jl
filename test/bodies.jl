@@ -1,4 +1,4 @@
-@testset "Bodies: Shapes" begin
+@testset "Shape convertion" begin
     # shapes
     box = Dojo.Box(1.0, 1.0, 1.0)
     cylinder = Dojo.Cylinder(1.0, 1.0)
@@ -8,7 +8,7 @@
     pyramid = Dojo.Pyramid(1.0, 1.0)
     mesh = Dojo.Mesh(joinpath(@__DIR__, "../environments/atlas/deps/mesh/head.obj"))
 
-    # convert 
+    # convert
     box_geom = Dojo.convert_shape(box)
     cylinder_geom = Dojo.convert_shape(cylinder)
     capsule_geom = Dojo.convert_shape(capsule)
@@ -18,5 +18,3 @@
     mesh_geom = Dojo.convert_shape(mesh)
     @test true
 end
-
-

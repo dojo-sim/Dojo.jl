@@ -72,7 +72,7 @@ function d2data(d)
 			]
 	return data
 end
-mech = get_mechanism(:box, timestep=timestep/S, gravity=gravityscaled, friction_coefficient=Dsol[end][1], radius=0.00, side=2.0, mode=:box);
+mech = get_mechanism(:block, timestep=timestep/S, gravity=gravityscaled, friction_coefficient=Dsol[end][1], radius=0.00, side=2.0, mode=:box);
 set_simulator_data!(mech, d2data(Dsol[end]))
 id = 7#4,6,7,8
 traj_truth = trajs1[id]
@@ -81,7 +81,7 @@ v15 = traj_truth.v[1][1]
 q2 = traj_truth.q[1][1]
 ϕ15 = traj_truth.ω[1][1]
 
-initialize!(mech, :box, x=x2, v=v15, q=q2, ω=ϕ15)
+initialize!(mech, :block, x=x2, v=v15, q=q2, ω=ϕ15)
 traj_sim = simulate!(mech, 0.80, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
 

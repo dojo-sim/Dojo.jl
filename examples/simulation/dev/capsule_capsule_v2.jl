@@ -1,13 +1,13 @@
 # https://wickedengine.net/2020/04/26/capsule-collision-detection/
 
 p1 = [0.0, 0.0, 0.0] 
-o1 = one(UnitQuaternion)
+o1 = one(Quaternion)
 h1 = 1.0 
 r1 = 0.1 
 
 p2 = [1.0, 0.0, 0.0] 
-o2 = one(UnitQuaternion)
-# o2 = UnitQuaternion(RotZ(0.41) * RotY(-0.3 * π))
+o2 = one(Quaternion)
+# o2 = Quaternion(RotZ(0.41) * RotY(-0.3 * π))
 h2 = 1.0 
 r2 = 0.1 
 

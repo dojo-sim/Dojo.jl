@@ -139,7 +139,7 @@ function set_data!(body::Body, data::AbstractVector, timestep)
 	v15 = data[SUnitRange(8,10)]
 	ϕ15 = data[SUnitRange(11,13)]
 	x2 = data[SUnitRange(14,16)]
-	q2 = UnitQuaternion(data[17:20]..., false)
+	q2 = Quaternion(data[17:20]...)
 	x1 = next_position(x2, -v15, timestep)
 	q1 = next_orientation(q2, -ϕ15, timestep)
 

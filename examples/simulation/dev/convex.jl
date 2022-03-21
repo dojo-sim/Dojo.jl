@@ -116,11 +116,11 @@ ta = Convex.Variable(1)
 tb = Convex.Variable(1) 
 
 xa = [-1.0; 0.0; 0.0]
-qa = UnitQuaternion(RotY(-0.25 * π) * RotX(0.0 * π))
+qa = Quaternion(RotY(-0.25 * π) * RotX(0.0 * π))
 qa = [qa.w; qa.x; qa.y; qa.z]
 
 xb = [1.0; 0.0; 0.0]
-qb = UnitQuaternion(RotZ(0.0 * π) * RotY(0.0 * π) * RotX(0.0))
+qb = Quaternion(RotZ(0.0 * π) * RotY(0.0 * π) * RotX(0.0))
 qb = [qb.w; qb.x; qb.y; qb.z]
 ra = 0.1
 ha = 1.0

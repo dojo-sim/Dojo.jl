@@ -224,14 +224,14 @@ end
 
 ## setup 
 xa = [0.0; 0.0; 0.0]
-qa = UnitQuaternion(RotY(0.0) * RotX(0.0 * π))
+qa = Quaternion(RotY(0.0) * RotX(0.0 * π))
 qa = [qa.w; qa.x; qa.y; qa.z]
 ax = 0.1
 ay = 0.5
 az = 0.1
 
 xb = [1.0; 0.0; 0.0]
-qb = UnitQuaternion(RotZ(0.25 * π) * RotY(0.2 * π) * RotX(0.0))
+qb = Quaternion(RotZ(0.25 * π) * RotY(0.2 * π) * RotX(0.0))
 qb = [qb.w; qb.x; qb.y; qb.z]
 bx = 0.35
 by = 0.1
@@ -296,13 +296,13 @@ pb = ip.z[3 .+ (1:3)]
 sa = GeometryBasics.Sphere(Point(0.0, 0.0, 0.0), 1.0)
 color1 = Colors.RGBA(0.7, 0.7, 0.7, 0.5);
 setobject!(vis[:spherea], sa, MeshPhongMaterial(color=color1))
-settransform!(vis[:spherea], compose(Translation(xa...), LinearMap(UnitQuaternion(qa...) * Diagonal([ax, ay, az]))))
+settransform!(vis[:spherea], compose(Translation(xa...), LinearMap(Quaternion(qa...) * Diagonal([ax, ay, az]))))
 
 # sphere b
 sb = GeometryBasics.Sphere(Point(0.0, 0.0, 0.0), 1.0)
 color2 = Colors.RGBA(0.7, 0.7, 0.7, 0.5);
 setobject!(vis[:sb], sb, MeshPhongMaterial(color=color2))
-settransform!(vis[:sb], compose(Translation(xb...), LinearMap(UnitQuaternion(qb...) * Diagonal([bx, by, bz]))))
+settransform!(vis[:sb], compose(Translation(xb...), LinearMap(Quaternion(qb...) * Diagonal([bx, by, bz]))))
 
 # closest points
 color_cp = Colors.RGBA(0.0, 0.0, 0.0, 1.0);

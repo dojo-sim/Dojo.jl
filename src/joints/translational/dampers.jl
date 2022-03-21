@@ -3,8 +3,8 @@
 ################################################################################
 
 function damper_force(joint::Translational{T}, 
-        xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
-        xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector, 
+        xa::AbstractVector, va::AbstractVector, qa::Quaternion, ωa::AbstractVector,
+        xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ωb::AbstractVector, 
         timestep; 
         unitary::Bool=false) where T
 
@@ -16,8 +16,8 @@ function damper_force(joint::Translational{T},
 end
 
 function damper_force(relative::Symbol, joint::Translational{T}, 
-    xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
-    xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector, 
+    xa::AbstractVector, va::AbstractVector, qa::Quaternion, ωa::AbstractVector,
+    xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ωb::AbstractVector, 
     timestep; 
     unitary::Bool=false) where T
 
@@ -42,8 +42,8 @@ damper_impulses(relative::Symbol, joint::Translational{T,3}, pbody::Node, cbody:
 
 function damper_force_jacobian_configuration(jacobian_relative::Symbol, 
         joint::Translational{T}, 
-        xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
-        xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector, 
+        xa::AbstractVector, va::AbstractVector, qa::Quaternion, ωa::AbstractVector,
+        xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ωb::AbstractVector, 
         timestep; 
         unitary::Bool=false) where T
 
@@ -56,8 +56,8 @@ end
 
 function damper_force_jacobian_velocity(jacobian_relative::Symbol, 
     joint::Translational{T}, 
-    xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector,
-    xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector, 
+    xa::AbstractVector, va::AbstractVector, qa::Quaternion, ωa::AbstractVector,
+    xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ωb::AbstractVector, 
     timestep; 
     unitary::Bool=false) where T
 
@@ -70,8 +70,8 @@ end
 
 function damper_jacobian_configuration(relative::Symbol, jacobian_relative::Symbol,
         joint::Translational{T}, 
-        xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector, 
-        xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector,
+        xa::AbstractVector, va::AbstractVector, qa::Quaternion, ωa::AbstractVector, 
+        xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ωb::AbstractVector,
         timestep::T; 
         unitary::Bool=false) where T
 
@@ -99,8 +99,8 @@ end
 
 function damper_jacobian_velocity(relative::Symbol, jacobian_relative::Symbol,
         joint::Translational{T}, 
-        xa::AbstractVector, va::AbstractVector, qa::UnitQuaternion, ωa::AbstractVector, 
-        xb::AbstractVector, vb::AbstractVector, qb::UnitQuaternion, ωb::AbstractVector,
+        xa::AbstractVector, va::AbstractVector, qa::Quaternion, ωa::AbstractVector, 
+        xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ωb::AbstractVector,
         timestep::T; 
         unitary::Bool=false) where T
 

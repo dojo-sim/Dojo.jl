@@ -8,7 +8,7 @@
     q: body orientation
 """
 function get_sdf(contact::ContactConstraint{T,N,Nc,Cs}, x::AbstractVector{T},
-    q::UnitQuaternion{T}) where {T,N,Nc,Cs<:Contact{T,N}}
+    q::Quaternion{T}) where {T,N,Nc,Cs<:Contact{T,N}}
     model = contact.model
     return model.collision.contact_normal * (x + vector_rotate(model.collision.contact_origin, q)) - model.collision.contact_radius
 end
@@ -32,7 +32,7 @@ end
     q: body orientation 
 """
 function contact_location(contact::ContactConstraint{T,N,Nc,Cs}, x::AbstractVector{T},
-    q::UnitQuaternion{T}) where {T,N,Nc,Cs<:Contact{T,N}}
+    q::Quaternion{T}) where {T,N,Nc,Cs<:Contact{T,N}}
     model = contact.model
     return x + vector_rotate(model.collision.contact_origin, q) - model.collision.contact_normal' * model.collision.contact_radius 
 end

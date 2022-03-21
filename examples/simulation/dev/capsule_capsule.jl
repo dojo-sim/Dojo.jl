@@ -2,21 +2,21 @@
 
 struct CapsuleContact{T}
     position::Vector{T} 
-    orientation::UnitQuaternion{T}
+    orientation::Quaternion{T}
     height::T 
     radius::T 
 end
 
 p1 = [0.0, 0.0, 0.0] 
-# o1 = one(UnitQuaternion)
-o1 = UnitQuaternion(RotX(0.6) * RotY(0.0 * π))
+# o1 = one(Quaternion)
+o1 = Quaternion(RotX(0.6) * RotY(0.0 * π))
 h1 = 1.0 
 r1 = 0.1 
 cap1 = CapsuleContact(p1, o1, h1, r1)
 
 p2 = [1.0, 0.0, 0.0] 
-o2 = one(UnitQuaternion)
-o2 = UnitQuaternion(RotZ(0.0) * RotY(-0.25 * π))
+o2 = one(Quaternion)
+o2 = Quaternion(RotZ(0.0) * RotY(-0.25 * π))
 h2 = 1.0 
 r2 = 0.1 
 cap2 = CapsuleContact(p2, o2, h2, r2)

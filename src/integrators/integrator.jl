@@ -12,33 +12,33 @@ initial_configuration_velocity(state::State) = (current_position(state), state.v
 
 # next
 next_position(x2::SVector{3,T}, v25::SVector{3,T}, timestep::T) where T = x2 + v25 * timestep
-next_orientation(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, timestep::T) where T = q2 * quaternion_map(ϕ25, timestep) * timestep / 2
+next_orientation(q2::Quaternion{T}, ϕ25::SVector{3,T}, timestep::T) where T = q2 * quaternion_map(ϕ25, timestep) * timestep / 2
 next_position(state::State, timestep) = next_position(state.x2, state.vsol[2], timestep)
 next_orientation(state::State, timestep) = next_orientation(state.q2, state.ϕsol[2], timestep)
 next_configuration(state::State, timestep) = (next_position(state, timestep), next_orientation(state, timestep))
 next_configuration_velocity(state::State, timestep) = (next_position(state, timestep), state.vsol[2], next_orientation(state, timestep), state.ϕsol[2])
 
 # angular velocity
-function angular_velocity(q1::UnitQuaternion, q2::UnitQuaternion, timestep)
+function angular_velocity(q1::Quaternion, q2::Quaternion, timestep)
     2.0 / timestep  * Vmat() * Lᵀmat(q1) * vector(q2)
 end
 
-function ∂angular_velocity∂q1(q1::UnitQuaternion, q2::UnitQuaternion, timestep)
+function ∂angular_velocity∂q1(q1::Quaternion, q2::Quaternion, timestep)
     2.0 / timestep  * Vmat() * Rmat(q2) * Tmat()
 end
 
-function ∂angular_velocity∂q2(q1::UnitQuaternion, q2::UnitQuaternion, timestep)
+function ∂angular_velocity∂q2(q1::Quaternion, q2::Quaternion, timestep)
     2.0 / timestep  * Vmat() * Lᵀmat(q1)
 end
 
 # Jacobians
-function integrator_jacobian_velocity(x2::AbstractVector{T}, v25::AbstractVector{T}, q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, timestep::T) where T
+function integrator_jacobian_velocity(x2::AbstractVector{T}, v25::AbstractVector{T}, q2::Quaternion{T}, ϕ25::SVector{3,T}, timestep::T) where T
     V = [linear_integrator_jacobian_velocity(x2, v25, timestep) szeros(T,3,3)]
     Ω = [szeros(T,4,3) rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)]
     return [V; Ω] # 7x6
 end
 
-function integrator_jacobian_configuration(x2::AbstractVector{T}, v25::AbstractVector{T}, q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, timestep::T; 
+function integrator_jacobian_configuration(x2::AbstractVector{T}, v25::AbstractVector{T}, q2::Quaternion{T}, ϕ25::SVector{3,T}, timestep::T; 
     attjac::Bool=true) where T
 
     Z = attjac ? szeros(T,3,3) : szeros(T,3,4)
@@ -55,14 +55,14 @@ function linear_integrator_jacobian_velocity(x2::AbstractVector{T}, v2::Abstract
     return timestep * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
 end
 
-function rotational_integrator_jacobian_orientation(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, timestep::T; 
+function rotational_integrator_jacobian_orientation(q2::Quaternion{T}, ϕ25::SVector{3,T}, timestep::T; 
     attjac::Bool = true) where T
     M = Rmat(quaternion_map(ϕ25, timestep) * timestep / 2)
     attjac && (M *= LVᵀmat(q2))
     return M
 end
 
-function rotational_integrator_jacobian_velocity(q2::UnitQuaternion{T}, ϕ25::SVector{3,T}, timestep::T) where T
+function rotational_integrator_jacobian_velocity(q2::Quaternion{T}, ϕ25::SVector{3,T}, timestep::T) where T
     return Lmat(q2) * quaternion_map_jacobian(ϕ25, timestep) * timestep / 2
 end
 

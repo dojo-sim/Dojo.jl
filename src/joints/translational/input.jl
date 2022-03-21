@@ -32,8 +32,8 @@ end
 
 function input_jacobian_control(relative::Symbol, 
     joint::Translational, 
-    xa::AbstractVector, qa::UnitQuaternion,
-    xb::AbstractVector, qb::UnitQuaternion) where T
+    xa::AbstractVector, qa::Quaternion,
+    xb::AbstractVector, qb::Quaternion) where T
 
     Ta = impulse_transform(relative, joint, xa, qa, xb, qb)
     X = Ta[1:3,1:3]
@@ -43,8 +43,8 @@ end
 
 function input_jacobian_configuration(relative::Symbol, 
     joint::Translational{T}, 
-    xa::AbstractVector, qa::UnitQuaternion,
-    xb::AbstractVector, qb::UnitQuaternion) where T
+    xa::AbstractVector, qa::Quaternion,
+    xb::AbstractVector, qb::Quaternion) where T
 
     # d[Faw;2τaa]/d[xa,qa]
     ∇aa = impulse_transform_jacobian(:parent, relative, joint, xa, qa, xb, qb, joint.input)

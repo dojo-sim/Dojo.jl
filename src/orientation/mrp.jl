@@ -1,4 +1,4 @@
-function mrp(q::UnitQuaternion)
+function mrp(q::Quaternion)
     q̄ = vector(q)
     return q̄[2:4] ./ (q̄[1] + 1.0) 
 end
@@ -15,8 +15,8 @@ function dmrpdq(q::AbstractVector)
     di = 1 / (s + 1)
 
     [-v[1] * d1  di 0.0 0.0; 
-     -v[2] * d1 0.0 di 0.0;
-     -v[3] * d1 0.0 0.0 di]
+     -v[2] * d1  0.0 di 0.0;
+     -v[3] * d1  0.0 0.0 di]
 end
 
 function axis(q)
@@ -77,4 +77,4 @@ function drotation_vectordq(q::AbstractVector)
     end
 end
 
-drotation_vectordq(q::UnitQuaternion) = drotation_vectordq(vector(q))
+drotation_vectordq(q::Quaternion) = drotation_vectordq(vector(q))

@@ -128,19 +128,19 @@ function datafilename(model::Symbol; kwargs...)
 end
 
 function datafilenamesphere(; N::Int=10, friction_coefficient=0.1, radius=0.5)
-    "sphere_dim_N:$(N)_friction_coefficient:$(friction_coefficient)_radius:$(radius).jld2"
+    "sphere_dim_N_$(N)_friction_coefficient_$(friction_coefficient)_radius_$(radius).jld2"
 end
 
 function datafilenamebox2D(; N::Int=10, friction_coefficient=0.1, radius=0.05, side=0.50)
-    "box2D_dim_N:$(N)_friction_coefficient:$(friction_coefficient)_radius:$(radius)_side:$(side).jld2"
+    "box2D_dim_N_$(N)_friction_coefficient_$(friction_coefficient)_radius_$(radius)_side_$(side).jld2"
 end
 
 function datafilenamebox(; N::Int=10, friction_coefficient=0.1, radius=0., side=0.50)
-    "box_dim_N:$(N)_friction_coefficient:$(friction_coefficient)_radius:$(radius)_side:$(side).jld2"
+    "box_dim_N_$(N)_friction_coefficient_$(friction_coefficient)_radius_$(radius)_side_$(side).jld2"
 end
 
 function datafilenamehardwarebox(; N::Int=10, s=1)
-    "hardwarebox_dim_N:$(N)_sample_S:$(S).jld2"
+    "hardwarebox_dim_N_$(N)_sample_S_$(S).jld2"
 end
 
 function initial_state(model::Symbol; kwargs...)
@@ -176,7 +176,7 @@ function initial_state_box(;
 	x = xlims[1] + rand(3) .* (xlims[2] - xlims[1])
 	v = vlims[1] + rand(3) .* (vlims[2] - vlims[1])
 	ω = ωlims[1] + rand(3) .* (ωlims[2] - ωlims[1])
-	return Dict(:x => x, :v => v , :q => rand(UnitQuaternion), :ω => ω)
+	return Dict(:x => x, :v => v , :q => normalize(rand(Quaternion{Float64})), :ω => ω)
 end
 
 function build_pairs(mechanism::Mechanism, trajs::AbstractVector)
