@@ -60,8 +60,8 @@ function ∂relative_tangential_velocity∂x(jacobian::Symbol, model::Contact, x
     end
 
     X += [
-        Δv' * ∂contact_tangent_one_tangent∂x(jacobian, model.collision, xp, qp, xc, qc);
-        Δv' * ∂contact_tangent_two_tangent∂x(jacobian, model.collision, xp, qp, xc, qc);
+        Δv' * ∂contact_tangent_one_transpose∂x(jacobian, model.collision, xp, qp, xc, qc);
+        Δv' * ∂contact_tangent_two_transpose∂x(jacobian, model.collision, xp, qp, xc, qc);
     ]
 
     return X

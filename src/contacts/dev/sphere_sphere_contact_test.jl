@@ -12,23 +12,23 @@ joint0to1 = JointConstraint(Floating(origin, pbody))
 bodies = [pbody, cbody]
 joints = [joint0to1]#, joint1to2]
 
-impact_collision = SphereSphereCollision{Float64,0,3,0}(
+# impact_collision = SphereSphereCollision{Float64,0,3,0}(
+#         szeros(3),
+#         szeros(3),
+#         pbody.shape.r, 
+#         cbody.shape.r)
+
+linear_collision = SphereSphereCollision{Float64,2,3,6}(
         szeros(3),
         szeros(3),
         pbody.shape.r, 
         cbody.shape.r)
 
-linear_collision = SphereSphereCollision{Float64,4,3,12}(
-        szeros(3),
-        szeros(3),
-        pbody.shape.r, 
-        cbody.shape.r)
-
-nonlinear_collision = SphereSphereCollision{Float64,2,3,6}(
-    szeros(3),
-    szeros(3),
-    pbody.shape.r, 
-    cbody.shape.r)
+# nonlinear_collision = SphereSphereCollision{Float64,2,3,6}(
+#     szeros(3),
+#     szeros(3),
+#     pbody.shape.r, 
+#     cbody.shape.r)
 
 linear_parameterization = SA{Float64}[
         0.0  1.0
@@ -37,10 +37,10 @@ linear_parameterization = SA{Float64}[
        -1.0  0.0
 ]
 
-nonlinear_parameterization = SA{Float64}[
-        1.0  0.0
-        0.0  1.0
-]
+# nonlinear_parameterization = SA{Float64}[
+#         1.0  0.0
+#         0.0  1.0
+# ]
 
 # body_body_contact = ImpactContact{Float64,2}(szeros(Float64, 0, 3), impact_collision)
 body_body_contact = LinearContact{Float64,12}(0.5, linear_parameterization, linear_collision)
@@ -74,7 +74,6 @@ force_mapping(:parent, contacts[1].model,
 ∂force_mapping_jvp∂q(:parent, :parent, contacts[1].model, 
     mech.bodies[1].state.x2, mech.bodies[1].state.q2,
     mech.bodies[2].state.x2, mech.bodies[2].state.q2, ones(6))
-
 
 distance(mech.contacts[1].model.collision, 
     mech.bodies[1].state.x2, mech.bodies[1].state.q2,

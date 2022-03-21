@@ -9,7 +9,7 @@
 mutable struct LinearContact{T,N} <: Contact{T,N}
     friction_coefficient::T
     friction_parameterization::SMatrix{4,2,T,8}
-    collision::Collision{T,4,3,12}
+    collision::Collision{T,2,3,6}
 end
 
 function LinearContact(body::Body{T}, normal::AbstractVector, friction_coefficient; 
@@ -32,7 +32,7 @@ function LinearContact(body::Body{T}, normal::AbstractVector, friction_coefficie
     ]
 
     # collision 
-    collision = SphereFlatCollision(parameterization * contact_tangent, contact_normal, SVector{3}(contact_origin), contact_radius)
+    collision = SphereFlatCollision(contact_tangent, contact_normal, SVector{3}(contact_origin), contact_radius)
     
     LinearContact{Float64,12}(friction_coefficient, parameterization, collision)
 end
