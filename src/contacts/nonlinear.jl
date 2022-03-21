@@ -33,7 +33,7 @@ function NonlinearContact(body::Body{T}, normal::AbstractVector, friction_coeffi
     ]
 
     # collision 
-    collision = SphereFlatCollision(contact_tangent, contact_normal, SVector{3}(contact_origin), contact_radius)
+    collision = SphereHalfSpaceCollision(contact_tangent, contact_normal, SVector{3}(contact_origin), contact_radius)
     
     NonlinearContact{T,8}(friction_coefficient, parameterization, collision)
 end

@@ -1,5 +1,5 @@
 """
-    SphereFlatCollision 
+    SphereHalfSpaceCollision 
 
     collision between a spherical contact and a flat surface
 
@@ -8,7 +8,7 @@
     contact_origin: position of contact on Body relative to center of mass 
     contact_radius: radius of contact
 """
-mutable struct SphereFlatCollision{T,O,I,OI} <: Collision{T,O,I,OI}
+mutable struct SphereHalfSpaceCollision{T,O,I,OI} <: Collision{T,O,I,OI}
     contact_tangent::SMatrix{O,I,T,OI}
     contact_normal::Adjoint{T,SVector{I,T}}
     contact_origin::SVector{I,T}
@@ -16,11 +16,11 @@ mutable struct SphereFlatCollision{T,O,I,OI} <: Collision{T,O,I,OI}
 end 
 
 # distance
-function distance(collision::SphereFlatCollision, xp, qp, xc, qc)
+function distance(collision::SphereHalfSpaceCollision, xp, qp, xc, qc)
     collision.contact_normal * (xp + vector_rotate(collision.contact_origin, qp)) - collision.contact_radius
 end
 
-function ∂distance∂x(gradient::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc)
+function ∂distance∂x(gradient::Symbol, collision::SphereHalfSpaceCollision, xp, qp, xc, qc)
     if gradient == :parent
         return collision.contact_normal
     elseif gradient == :child 
@@ -28,7 +28,7 @@ function ∂distance∂x(gradient::Symbol, collision::SphereFlatCollision, xp, q
     end
 end
 
-function ∂distance∂q(gradient::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc)
+function ∂distance∂q(gradient::Symbol, collision::SphereHalfSpaceCollision, xp, qp, xc, qc)
     if gradient == :parent
         return collision.contact_normal * ∂vector_rotate∂q(collision.contact_origin, qp)
     elseif gradient == :child 
@@ -37,7 +37,7 @@ function ∂distance∂q(gradient::Symbol, collision::SphereFlatCollision, xp, q
 end
 
 # contact point in world frame
-function contact_point(relative::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc) 
+function contact_point(relative::Symbol, collision::SphereHalfSpaceCollision, xp, qp, xc, qc) 
     if relative == :parent
         return xp + vector_rotate(collision.contact_origin, qp) - collision.contact_normal' * collision.contact_radius
     elseif relative == :child 
@@ -46,7 +46,7 @@ function contact_point(relative::Symbol, collision::SphereFlatCollision, xp, qp,
     end
 end
 
-function ∂contact_point∂x(relative::Symbol, jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc)
+function ∂contact_point∂x(relative::Symbol, jacobian::Symbol, collision::SphereHalfSpaceCollision, xp, qp, xc, qc)
     if relative == :parent 
         if jacobian == :parent 
             return 1.0 * I(3)
@@ -63,7 +63,7 @@ function ∂contact_point∂x(relative::Symbol, jacobian::Symbol, collision::Sph
     end
 end
 
-function ∂contact_point∂q(relative::Symbol, jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc)
+function ∂contact_point∂q(relative::Symbol, jacobian::Symbol, collision::SphereHalfSpaceCollision, xp, qp, xc, qc)
     if relative == :parent 
         if jacobian == :parent 
             return ∂vector_rotate∂q(collision.contact_origin, qp)
@@ -79,35 +79,35 @@ function ∂contact_point∂q(relative::Symbol, jacobian::Symbol, collision::Sph
 end
 
 # normal projection (from child to parent)
-function contact_normal(collision::SphereFlatCollision, xp, qp, xc, qc)
+function contact_normal(collision::SphereHalfSpaceCollision, xp, qp, xc, qc)
     return collision.contact_normal
 end
 
-function ∂contact_normal_transpose∂x(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc)
+function ∂contact_normal_transpose∂x(jacobian::Symbol, collision::SphereHalfSpaceCollision, xp, qp, xc, qc)
     return szeros(eltype(collision.contact_normal), 3, 3)
 end
 
-function ∂contact_normal_transpose∂q(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc)
+function ∂contact_normal_transpose∂q(jacobian::Symbol, collision::SphereHalfSpaceCollision, xp, qp, xc, qc)
     return szeros(eltype(collision.contact_normal), 3, 4)
 end
 
 # tangent projection
-function contact_tangent(collision::SphereFlatCollision, xp, qp, xc, qc)
+function contact_tangent(collision::SphereHalfSpaceCollision, xp, qp, xc, qc)
     return collision.contact_tangent # {2,4} x 3
 end
 
-function ∂contact_tangent_one_transpose∂x(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc)
+function ∂contact_tangent_one_transpose∂x(jacobian::Symbol, collision::SphereHalfSpaceCollision, xp, qp, xc, qc)
     return szeros(eltype(collision.contact_tangent), 3, 3)
 end
 
-function ∂contact_tangent_two_transpose∂x(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc)
+function ∂contact_tangent_two_transpose∂x(jacobian::Symbol, collision::SphereHalfSpaceCollision, xp, qp, xc, qc)
     return szeros(eltype(collision.contact_tangent), 3, 3)
 end
 
-function ∂contact_tangent_one_transpose∂q(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc)
+function ∂contact_tangent_one_transpose∂q(jacobian::Symbol, collision::SphereHalfSpaceCollision, xp, qp, xc, qc)
     return szeros(eltype(collision.contact_tangent), 3, 4)
 end
 
-function ∂contact_tangent_two_transpose∂q(jacobian::Symbol, collision::SphereFlatCollision, xp, qp, xc, qc)
+function ∂contact_tangent_two_transpose∂q(jacobian::Symbol, collision::SphereHalfSpaceCollision, xp, qp, xc, qc)
     return szeros(eltype(collision.contact_tangent), 3, 4)
 end

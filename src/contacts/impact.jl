@@ -24,7 +24,7 @@ function ImpactContact(body::Body{T}, normal::AbstractVector{T};
     parameterization = szeros(T, 0, 2)
 
     # collision 
-    collision = SphereFlatCollision(szeros(T, 0, 3), contact_normal, SVector{3}(contact_origin), contact_radius)
+    collision = SphereHalfSpaceCollision(szeros(T, 0, 3), contact_normal, SVector{3}(contact_origin), contact_radius)
 
     ImpactContact{Float64,2}(parameterization, collision)
 end

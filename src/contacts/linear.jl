@@ -32,7 +32,7 @@ function LinearContact(body::Body{T}, normal::AbstractVector, friction_coefficie
     ]
 
     # collision 
-    collision = SphereFlatCollision(contact_tangent, contact_normal, SVector{3}(contact_origin), contact_radius)
+    collision = SphereHalfSpaceCollision(contact_tangent, contact_normal, SVector{3}(contact_origin), contact_radius)
     
     LinearContact{Float64,12}(friction_coefficient, parameterization, collision)
 end

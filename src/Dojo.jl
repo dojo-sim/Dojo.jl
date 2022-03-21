@@ -205,6 +205,11 @@ export
     contact_location,
     damper_impulses
 
+# Collision
+export 
+    SphereHalfSpaceCollision,
+    SphereSphereCollision
+
 # Inputs
 export
     set_input!,
