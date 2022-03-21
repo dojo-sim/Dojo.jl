@@ -9,6 +9,13 @@ vector_rotate(v::AbstractVector,q::Quaternion) = Vmat(quaternion_rotate(Quaterni
 
 # rotation matrix
 rotation_matrix(q::Quaternion) = VRᵀmat(q) * LVᵀmat(q)
-∂rotation_matrix∂q(q::Quaternion, p::AbstractVector) = ∂VRᵀmat∂q(LVᵀmat(q) * p) + VRᵀmat(q) * ∂LVᵀmat∂q(p)
-∂rotation_matrix_inv∂q(q::Quaternion, p::AbstractVector) = ∂rotation_matrix∂q(inv(q), p) * Tmat()
-
+function ∂rotation_matrix∂q(q::Quaternion, p::AbstractVector; attjac::Bool=false)
+    M = ∂VRᵀmat∂q(LVᵀmat(q) * p) + VRᵀmat(q) * ∂LVᵀmat∂q(p)
+    attjac && (M *= LVᵀmat(q))
+    return M
+end
+function ∂rotation_matrix_inv∂q(q::Quaternion, p::AbstractVector; attjac::Bool=false)
+    M = ∂rotation_matrix∂q(inv(q), p) * Tmat()
+    attjac && (M *= LVᵀmat(q))
+    return M
+end

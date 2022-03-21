@@ -1,25 +1,25 @@
-function test_solmat(model; 
-    ϵ=1.0e-6, 
-    tsim=0.1, 
+function test_solmat(model;
+    ϵ=1.0e-6,
+    tsim=0.1,
     ctrl=(m, k)->nothing,
-    timestep=0.01, 
-    gravity=[0.0; 0.0; -9.81], 
-    verbose=false, 
+    timestep=0.01,
+    gravity=[0.0; 0.0; -9.81],
+    verbose=false,
     T=Float64,
     kwargs...)
 
     @testset "$(string(model))" begin
         # mechanism
-        mechanism = get_mechanism(model, 
-            timestep=timestep, 
-            gravity=gravity; 
+        mechanism = get_mechanism(model,
+            timestep=timestep,
+            gravity=gravity;
             kwargs...)
         initialize!(mechanism, model)
 
         # simulate
         storage = simulate!(mechanism, tsim, ctrl,
-            record=true, 
-            verbose=verbose, 
+            record=true,
+            verbose=verbose,
             opts=SolverOptions(rtol=ϵ, btol=ϵ))
 
         # Set data
@@ -32,16 +32,16 @@ function test_solmat(model;
         # IFT
         solmat = Dojo.full_matrix(mechanism.system)
         # finite diff
-        fd_solmat = finite_difference_solution_matrix(mechanism, data, sol, 
-            δ=1.0e-5, 
+        fd_solmat = finite_difference_solution_matrix(mechanism, data, sol,
+            δ=1.0e-5,
             verbose=verbose)
         @test norm(fd_solmat + solmat, Inf) < ϵ
     end
     return nothing
 end
 
-function finite_difference_solution_matrix(mechanism::Mechanism, data::AbstractVector, sol::AbstractVector; 
-    δ=1.0e-8, 
+function finite_difference_solution_matrix(mechanism::Mechanism, data::AbstractVector, sol::AbstractVector;
+    δ=1.0e-8,
     verbose=false)
 
     nsol = length(sol)
@@ -63,10 +63,10 @@ function finite_difference_solution_matrix(mechanism::Mechanism, data::AbstractV
     return jac
 end
 
-function control!(mechanism, k; 
+function control!(mechanism, k;
     u=0.1)
     for joint in mechanism.joints
-        nu = Dojo.input_dimension(joint, 
+        nu = Dojo.input_dimension(joint,
             ignore_floating_base=false)
         su = mechanism.timestep * u * sones(nu)
         Dojo.set_input!(joint, su)
@@ -81,7 +81,7 @@ end
     test_solmat(:atlas,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
     test_solmat(:atlas,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1e3, damper=5e2)
     test_solmat(:quadruped,  tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
-    test_solmat(:block,        tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
+    test_solmat(:block,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
     test_solmat(:snake,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
     test_solmat(:slider,     tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
     test_solmat(:pendulum,   tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
@@ -101,7 +101,7 @@ end
     test_solmat(:atlas,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
     test_solmat(:atlas,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1e3, damper=5e2)
     test_solmat(:quadruped,  tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
-    test_solmat(:block,        tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
+    test_solmat(:block,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
     test_solmat(:snake,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
     test_solmat(:slider,     tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
     test_solmat(:pendulum,   tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
@@ -115,3 +115,39 @@ end
     test_solmat(:ant,        tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
     test_solmat(:halfcheetah,tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
 end
+
+tsim = 0.1
+test_solmat(:atlas,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
+test_solmat(:atlas,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
+test_solmat(:atlas,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1e3, damper=5e2)
+test_solmat(:quadruped,  tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
+test_solmat(:block,        tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
+test_solmat(:snake,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
+test_solmat(:slider,     tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
+test_solmat(:pendulum,   tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
+test_solmat(:npendulum,  tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
+test_solmat(:nslider,    tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
+test_solmat(:twister,    tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
+test_solmat(:sphere,     tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, contact_type=:nonlinear)
+test_solmat(:sphere,     tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, contact_type=:linear)
+test_solmat(:sphere,     tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, contact_type=:impact)
+test_solmat(:ant,        tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
+test_solmat(:halfcheetah,tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
+
+tsim = 0.4
+test_solmat(:atlas,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
+test_solmat(:atlas,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1e3, damper=5e2)
+test_solmat(:quadruped,  tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
+test_solmat(:block,        tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
+test_solmat(:snake,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
+test_solmat(:slider,     tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
+test_solmat(:pendulum,   tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
+test_solmat(:npendulum,  tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
+test_solmat(:nslider,    tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
+test_solmat(:twister,    tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
+test_solmat(:sphere,     tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
+test_solmat(:sphere,     tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, contact_type=:nonlinear)
+test_solmat(:sphere,     tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, contact_type=:linear)
+test_solmat(:sphere,     tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, contact_type=:impact)
+test_solmat(:ant,        tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
+test_solmat(:halfcheetah,tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)

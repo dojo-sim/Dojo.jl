@@ -2,7 +2,7 @@
 # Control Input
 ################################################################################
 
-function input_impulse!(joint::Rotational{T}, pbody::Node, cbody::Node, 
+function input_impulse!(joint::Rotational{T}, pbody::Node, cbody::Node,
     timestep::T, clear::Bool) where T
 
     τ = joint.input
@@ -11,6 +11,16 @@ function input_impulse!(joint::Rotational{T}, pbody::Node, cbody::Node,
 
     pbody.state.τ2 += -τ
     cbody.state.τ2 += vector_rotate(vector_rotate(τ, qa),inv(qb))
+    # println("ϕ ", scn.(angular_velocity(qa, qb, 0.05)))
+    # cbody.state.τ2 += 2e-3*SVector{3}(1.0,0,0)
+    # cbody.state.τ2 += 2e-3*SVector{3}(0,1.0,0)
+    # cbody.state.τ2 += 2e-3*SVector{3}(0,0,1.0)
+    # cbody.state.τ2 += τ
+    # @show cbody.id
+    # @show τ
+    # @show scn.(vector_rotate(vector_rotate(τ, qa),inv(qb)))
+    # @show qa
+    # @show qb
     clear && (joint.input = szeros(T,3))
     return
 end
@@ -19,8 +29,8 @@ end
 # Control Jacobian
 ################################################################################
 
-function input_jacobian_control(relative::Symbol, 
-    joint::Rotational{T}, 
+function input_jacobian_control(relative::Symbol,
+    joint::Rotational{T},
     xa::AbstractVector, qa::Quaternion,
     xb::AbstractVector, qb::Quaternion) where T
 
@@ -28,15 +38,15 @@ function input_jacobian_control(relative::Symbol,
         BFa = szeros(T, 3, 3)
         Bτa = -I
         return [BFa; Bτa]
-    elseif relative == :child 
+    elseif relative == :child
         BFb = szeros(T, 3, 3)
         Bτb = rotation_matrix(inv(qb)) * rotation_matrix(qa)
         return [BFb; Bτb]
     end
 end
 
-function input_jacobian_configuration(relative::Symbol, 
-    joint::Rotational{T}, 
+function input_jacobian_configuration(relative::Symbol,
+    joint::Rotational{T},
     xa::AbstractVector, qa::Quaternion,
     xb::AbstractVector, qb::Quaternion) where T
 
@@ -52,7 +62,7 @@ function input_jacobian_configuration(relative::Symbol,
         τbXa = szeros(T,3,3)
         τbQa = rotation_matrix(inv(qb)) * ∂rotation_matrix∂q(qa, τ)#*LVᵀmat(qa)
         return FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa
-    elseif relative == :child 
+    elseif relative == :child
         FaXb = szeros(T,3,3)
         FaQb = szeros(T,3,4)
         τaXb = szeros(T,3,3)

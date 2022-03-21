@@ -39,3 +39,21 @@ end
     q = Dojo.axes_pair_to_quaternion(n1, n2)
     @test norm(n2 - Dojo.vector_rotate(n1, q), Inf) < 1e-10
 end
+
+@testset "rotation matrix jacobian" begin
+    p0 = rand(3)
+    q0 = rand(QuatRotation).q
+    J0 = Dojo.∂rotation_matrix∂q(q0, p0)
+    J2 = Dojo.∂rotation_matrix∂q(q0, p0, attjac=true)
+    J1 = FiniteDiff.finite_difference_jacobian(q0 -> Dojo.rotation_matrix(Quaternion(q0...,true))*p0, Dojo.vector(q0))
+    J3 = J1 * Dojo.LVᵀmat(q0)
+    @test norm(J0 - J1, Inf) < 1e-6
+    @test norm(J2 - J3, Inf) < 1e-6
+
+    J4 = Dojo.∂rotation_matrix_inv∂q(q0, p0)
+    J6 = Dojo.∂rotation_matrix_inv∂q(q0, p0, attjac=true)
+    J5 = FiniteDiff.finite_difference_jacobian(q0 -> Dojo.rotation_matrix(inv(Quaternion(q0...,true)))*p0, Dojo.vector(q0))
+    J7 = J5 * Dojo.LVᵀmat(q0)
+    @test norm(J4 - J5, Inf) < 1e-6
+    @test norm(J6 - J7, Inf) < 1e-6
+end

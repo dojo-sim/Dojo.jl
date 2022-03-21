@@ -9,7 +9,7 @@ quateltype(x) = eltype(x) # TODO not super elegant
 quateltype(::Quaternion{T}) where T = T
 
 vector(q::Quaternion) = SA[q.s, q.v1, q.v2, q.v3]
-vector(q::AbstractVector) = q 
+vector(q::AbstractVector) = q
 
 function Lmat(q::Quaternion)
     SA[
