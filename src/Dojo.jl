@@ -208,7 +208,11 @@ export
 # Collision
 export 
     SphereHalfSpaceCollision,
-    SphereSphereCollision
+    SphereSphereCollision,
+    distance, 
+    contact_point,
+    contact_normal, 
+    contact_tangent,
 
 # Inputs
 export
@@ -325,5 +329,9 @@ export
     szeros,
     sones,
     srand
+
+# Utilities
+export 
+    normalize
 
 end
