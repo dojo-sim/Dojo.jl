@@ -7,8 +7,12 @@ using Dojo
 using Random
 using LinearAlgebra 
 using Plots
+using FiniteDiff
+using JLD2
+using Dojo: Storage
 
 include("methods/utils.jl")
+include("data/data.jl")
 include("methods/data_processing.jl")
 include("methods/quasi_newton.jl")
 include("hardware_examples/methods.jl")

@@ -20,11 +20,11 @@ end
 
 function toss2z(toss, timestep; s=1)
 	N = length(toss)
-	M = Int((N-1 - (N-1)%S) / S)
+	M = Int((N-1 - (N-1)%s) / s)
 	z = []
 	for i = 1:M
-		vec1 = toss[1+S*(i-1)]
-		vec2 = toss[1+S*i]
+		vec1 = toss[1+s*(i-1)]
+		vec2 = toss[1+s*i]
 
 		x1 = vec1[1:3]
 		q1 = vec1[4:7]
@@ -61,18 +61,18 @@ function generate_hardware_dataset(;N::Int=10,
 		s=1,
 		)
 	H = 1.00
-	timestep= 1/148 * S
+	timestep= 1/148 * s
 	gscaled = -9.81*20
 
-    mechanism = get_mechanism(:block, timestep=timestep, gravity=gravityscaled);
+    mechanism = get_mechanism(:block, timestep=timestep, gravity=gscaled);
     trajs = []
 	pairs = []
     for i = 1:N
-		file = jldopen(joinpath(module_dir(), "examples", "real2sim", "data", "tosses_jld2", "$(i).jld2"))
+		file = jldopen(joinpath(Dojo.module_dir(), "examples", "system_identification", "data", "tosses_jld2", "$(i).jld2"))
 		toss = file["toss"]
 		# z = toss2z(toss[1:7], timestep)
 		# z = toss2z(toss[end-10:end], timestep)
-		z = toss2z(toss, timestep, S=S)
+		z = toss2z(toss, timestep, s=s)
 		storage = generate_storage(mech, z)
 		push!(pairs, build_pairs(z)...)
         push!(trajs, storage)
