@@ -279,3 +279,13 @@ set_minimal_state!(mech, y)
 storage = simulate!(mech, 3.3, record=true)
 visualize(mech, storage, vis=vis)
 get_minimal_state(mech)
+
+
+
+
+mech = get_quadruped(damper=0.1, timestep=0.02)
+initialize!(mech, :quadruped)
+
+storage = simulate!(mech, 3.3, record=true, verbose=true)
+Main.@profiler storage = simulate!(mech, 0.08, record=true, verbose=true)
+visualize(mech, storage, vis=vis)
