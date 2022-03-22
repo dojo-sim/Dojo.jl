@@ -48,11 +48,11 @@ function get_twister(;
         friction_coefficient = friction_coefficient * ones(n)
         contacts1 = contact_constraint(bodies[1], normal[1], 
             friction_coefficient=friction_coefficient[1], 
-            contact_point=vert11, 
+            contact_origin=vert11, 
             contact_type=contact_type) # to avoid duplicating the contact points
         contacts2 = contact_constraint(bodies, normal, 
             friction_coefficient=friction_coefficient, 
-            contact_points=fill(vert12, n), 
+            contact_origins=fill(vert12, n), 
             contact_type=contact_type)
         mech = Mechanism(origin, bodies, joints, [contacts1; contacts2], 
             gravity=gravity, 

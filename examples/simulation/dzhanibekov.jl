@@ -17,7 +17,7 @@ initialize!(mech, :dzhanibekov,
     angular_velocity=[8.0; 0.01; 0.0]);
 storage = simulate!(mech, 8.0,
     record=true,
-    verbose=false);
+    verbose=true)
 
 # ## Visualizers
 vis = Visualizer()

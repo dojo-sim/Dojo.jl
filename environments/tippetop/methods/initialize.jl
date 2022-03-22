@@ -29,17 +29,17 @@ function get_tippetop(;
     mechanism.bodies[1].inertia = Diagonal([1.9, 2.1, 2.0])
 
     if contact
-        contact_point = [0.0, 0.0, 0.0]
+        contact_origin = [0.0, 0.0, 0.0]
         normal = [0.0, 0.0, 1.0]
         contacts = [
             contact_constraint(get_body(mechanism, :sphere1), normal,
                 friction_coefficient=friction_coefficient,
-                contact_point=contact_point, offset=[0.0, 0.0, radius],
+                contact_origin=contact_origin, contact_radius=radius,
                 contact_type=contact_type),
             contact_constraint(get_body(mechanism, :sphere2), normal,
                 friction_coefficient=friction_coefficient,
-                contact_point=contact_point,
-                offset=[0.0, 0.0, radius * α],
+                contact_origin=contact_origin,
+                contact_radius=radius * α,
                 contact_type=contact_type)
             ]
         set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_joint), [0.0; 0.0; radius; zeros(3)])

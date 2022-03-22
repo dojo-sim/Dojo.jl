@@ -38,13 +38,13 @@ function get_block(;
         end
         n = length(corners)
         normal = [[0.0, 0.0, 1.0] for i = 1:n]
-        offset = [[0.0, 0.0, radius] for i = 1:n]
+        contact_radius = [radius for i = 1:n]
         friction_coefficient = friction_coefficient * ones(n)
 
         contacts = contact_constraint(pbody, normal, 
             friction_coefficient=friction_coefficient, 
-            contact_points=corners, 
-            offset=offset, 
+            contact_origins=corners, 
+            contact_radius=contact_radius, 
             contact_type=contact_type)
 
         mech = Mechanism(origin, bodies, joints, contacts, 
@@ -70,7 +70,7 @@ function initialize_block!(mechanism::Mechanism{T};
 
     if length(mechanism.contacts) > 0
         model = mechanism.contacts[1].model
-        offset = model.offset[3]
+        offset = model.collision.contact_radius
     else
         offset = 0.0
     end

@@ -3,66 +3,134 @@
 
     contact object for impact (i.e., no friction)
 
-    surface_normal_projector: mapping from world frame to surface tangent frame 
-    contact_point: position of contact on Body relative to center of mass 
-    offset: position of contact relative to contact_point
+    collision: Collision
 """
 mutable struct ImpactContact{T,N} <: Contact{T,N}
-    surface_normal_projector::Adjoint{T,SVector{3,T}}
-    contact_point::SVector{3,T}
-    offset::SVector{3,T}
+    friction_parameterization::SMatrix{0,2,T,0}
+    collision::Collision{T,0,3,0}
+end
 
-    function ImpactContact(body::Body{T}, normal::AbstractVector; 
-        contact_point=szeros(T, 3), 
-        offset::AbstractVector=szeros(T, 3)) where T
-        V1, V2, V3 = orthogonal_columns(normal) #
-        A = [V1 V2 V3]
-        Ainv = inv(A)
-        surface_normal_projector = Ainv[3,SA[1; 2; 3]]'
-        new{Float64,2}(surface_normal_projector, contact_point, offset)
-    end
+function ImpactContact(body::Body{T}, normal::AbstractVector{T}; 
+    contact_origin=szeros(T, 3), 
+    contact_radius=0.0) where T
+    
+    # contact directions
+    V1, V2, V3 = orthogonal_columns(normal) #
+    A = [V1 V2 V3]
+    Ainv = inv(A)
+    contact_normal = Ainv[3, SA[1; 2; 3]]'
+
+    # friction parametrization
+    parameterization = szeros(T, 0, 2)
+
+    # collision 
+    collision = SphereHalfSpaceCollision(szeros(T, 0, 3), contact_normal, SVector{3}(contact_origin), contact_radius)
+
+    ImpactContact{Float64,2}(parameterization, collision)
 end
 
 function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:ImpactContact{T,N}}
+    # contact model
     model = contact.model
-    body = get_body(mechanism, contact.parent_id)
-    x3, q3 = next_configuration(body.state, mechanism.timestep)
-    SVector{1,T}(model.surface_normal_projector * (x3 + vector_rotate(model.contact_point,q3) - model.offset) - contact.impulses_dual[2][1])
+
+    # parent
+    pbody = get_body(mechanism, contact.parent_id)
+    xp, qp = next_configuration(pbody.state, mechanism.timestep)
+
+    # child
+    cbody = get_body(mechanism, contact.child_id)
+    xc, qc = next_configuration(cbody.state, mechanism.timestep)
+
+    # constraint 
+    SVector{1,T}(distance(model.collision, xp, qp, xc, qc) - contact.impulses_dual[2][1])
 end
 
-function constraint_jacobian_configuration(model::ImpactContact, x3::AbstractVector, q3::Quaternion,
-    x2::AbstractVector, v25::AbstractVector, q2::Quaternion, ϕ25::AbstractVector, 
-    λ, timestep)
-    X = model.surface_normal_projector
-    Q = model.surface_normal_projector * ∂vector_rotate∂q(model.contact_point, q3)
+function constraint_jacobian(contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:ImpactContact{T,N},N½}
+    γ = contact.impulses[2] + REG * neutral_vector(contact.model)
+    s = contact.impulses_dual[2] + REG * neutral_vector(contact.model)
+    ∇s = hcat(γ, -Diagonal(sones(N½)))
+    ∇γ = hcat(s, -Diagonal(szeros(N½)))
+    return [∇s ∇γ]
+end
+
+function constraint_jacobian_configuration(relative::Symbol, model::ImpactContact, 
+    xp::AbstractVector, vp::AbstractVector, qp::Quaternion, ϕp::AbstractVector,
+    xc::AbstractVector, vc::AbstractVector, qc::Quaternion, ϕc::AbstractVector, 
+    timestep)
+
+    X = ∂distance∂x(relative, model.collision, xp, qp, xc, qc)
+    Q = ∂distance∂q(relative, model.collision, xp, qp, xc, qc)
+
     return [X Q]
 end
 
-function constraint_jacobian_velocity(model::ImpactContact, x3::AbstractVector, q3::Quaternion,
-    x2::AbstractVector, v25::AbstractVector, q2::Quaternion, ϕ25::AbstractVector, 
-    λ, timestep)
-    V = model.surface_normal_projector * timestep
-    Ω = model.surface_normal_projector * ∂vector_rotate∂q(model.contact_point, q3) * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)
+function constraint_jacobian_velocity(relative::Symbol, model::ImpactContact, 
+    xp::AbstractVector, vp::AbstractVector, qp::Quaternion, ϕp::AbstractVector,
+    xc::AbstractVector, vc::AbstractVector, qc::Quaternion, ϕc::AbstractVector, 
+    timestep)
+
+    # recover current orientation 
+    if relative == :parent
+        x = next_position(xp, -vp, timestep)
+        ∂x∂v = linear_integrator_jacobian_velocity(x, vp, timestep)
+        q = next_orientation(qp, -ϕp, timestep)
+        ∂q∂ϕ = rotational_integrator_jacobian_velocity(q, ϕp, timestep)
+    elseif relative == :child 
+        x = next_position(xc, -vc, timestep)
+        ∂x∂v = linear_integrator_jacobian_velocity(x, vc, timestep)
+        q = next_orientation(qc, -ϕc, timestep)
+        ∂q∂ϕ = rotational_integrator_jacobian_velocity(q, ϕc, timestep)
+    end
+
+    # Jacobian
+    V = ∂distance∂x(relative, model.collision, xp, qp, xc, qc) * ∂x∂v
+    Ω = ∂distance∂q(relative, model.collision, xp, qp, xc, qc) * ∂q∂ϕ
+
     return [V Ω]
 end
 
-function force_mapping(model::ImpactContact, x::AbstractVector, q::Quaternion)
-    X = model.surface_normal_projector
-    return X
+function force_mapping(relative::Symbol, model::ImpactContact, 
+    xp::AbstractVector, qp::Quaternion, 
+    xc::AbstractVector, qc::Quaternion)
+
+    X = contact_normal(model.collision, xp, qp, xc, qc)'
+
+    if relative == :parent 
+        return X 
+    elseif relative == :child 
+        return -1.0 * X 
+    end
 end
 
-function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
-    contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:ImpactContact{T,N},N½}
-    # ∇impulses[dual .* impulses - μ; g - s] = [diag(dual); -diag(0,1,1)]
-    # ∇dual[dual .* impulses - μ; g - s] = [diag(impulses); -diag(1,0,0)]
-    γ = contact.impulses[2] +  REG * neutral_vector(contact.model)
-    s = contact.impulses_dual[2] + REG * neutral_vector(contact.model)
+function ∂force_mapping_jvp∂x(relative::Symbol, jacobian::Symbol,
+    model::ImpactContact, 
+    xp::AbstractVector, qp::Quaternion, 
+    xc::AbstractVector, qc::Quaternion,
+    λ::AbstractVector)
 
-    ∇s = hcat(γ, -Diagonal(sones(N½)))
-    ∇γ = hcat(s, -Diagonal(szeros(N½)))
-    matrix_entry.value = hcat(∇s, ∇γ)
+    X = ∂contact_normal_transpose∂x(jacobian, model.collision, xp, qp, xc, qc) * λ[1]
 
-    # [-dual .* impulses + μ; -g + s]
-    vector_entry.value = vcat(-complementarityμ(mechanism, contact), -constraint(mechanism, contact))
-    return
+    if relative == :parent 
+        return X 
+    elseif relative == :child 
+        return -1.0 * X 
+    end
 end
+
+function ∂force_mapping_jvp∂q(relative::Symbol, jacobian::Symbol,
+    model::ImpactContact, 
+    xp::AbstractVector, qp::Quaternion, 
+    xc::AbstractVector, qc::Quaternion,
+    λ::AbstractVector)
+
+    X = ∂contact_normal_transpose∂q(jacobian, model.collision, xp, qp, xc, qc) * λ[1]
+
+    if relative == :parent 
+        return X 
+    elseif relative == :child 
+        return -1.0 * X 
+    end
+end
+
+
+

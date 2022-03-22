@@ -28,11 +28,11 @@ end
 constraint(joint::Joint, pbody::Node, cbody::Node, λ, μ, timestep) = constraint(joint, next_configuration(pbody.state, timestep)..., next_configuration(cbody.state, timestep)..., λ, μ)
 
 # constraint Jacobians
-function constraint_jacobian_configuration(joint::Joint{T,Nλ,0}, η) where {T,Nλ}
+function constraint_jacobian(joint::Joint{T,Nλ,0}, η) where {T,Nλ}
     return Diagonal(REG * sones(T,Nλ))
 end
 
-function constraint_jacobian_configuration(joint::Joint{T,Nλ,Nb}, η) where {T,Nλ,Nb}
+function constraint_jacobian(joint::Joint{T,Nλ,Nb}, η) where {T,Nλ,Nb}
     s, γ = split_impulses(joint, η)
     c1 = [Diagonal(γ + REG * sones(T, Nb)); Diagonal(sones(Nb)); szeros(Nλ, Nb)]
     c2 = [Diagonal(s + REG * sones(T, Nb)); szeros(Nb, Nb); szeros(Nλ, Nb)]

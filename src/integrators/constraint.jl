@@ -65,16 +65,21 @@ function constraint_jacobian_configuration(mechanism::Mechanism{T,Nn,Ne,Nb}, bod
     return state.D
 end
 
-
 function integrator_jacobian_velocity(body::Body{T}, timestep) where T
     state = body.state
     x2, v25, q2, ϕ25 = current_configuration_velocity(state)
-    integrator_jacobian_velocity(q2, ϕ25, timestep)
+    integrator_jacobian_velocity(x2, v25, q2, ϕ25, timestep)
 end
 
 function integrator_jacobian_configuration(body::Body{T},
         timestep; attjac::Bool=true) where T
     state = body.state
     x2, v25, q2, ϕ25 = current_configuration_velocity(state)
-    integrator_jacobian_configuration(q2, ϕ25, timestep; attjac=attjac)
+    integrator_jacobian_configuration(x2, v25, q2, ϕ25, timestep; attjac=attjac)
+end
+
+# linear system 
+function set_matrix_vector_entries!(mechanism, matrix_entry::Entry, vector_entry::Entry, body::Body)
+    matrix_entry.value = constraint_jacobian_configuration(mechanism, body)
+    vector_entry.value = -constraint(mechanism, body)
 end

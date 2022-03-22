@@ -118,7 +118,8 @@ function visualize(env::Environment{RaibertHopper}, traj::Vector{Vector{T}};
     env.mechanism.bodies[2].shape.color = foot_color
 
     # build system
-    build_robot(env.vis, env.mechanism, 
+    build_robot(env.mechanism, 
+        vis=env.vis, 
         name=name)
 
     n_leg = 100

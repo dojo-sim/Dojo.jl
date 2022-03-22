@@ -40,6 +40,7 @@ function ant(;
     elseif representation == :maximal
         nx = maximal_dimension(mechanism)
     end
+
     nu = 8
     no = nx + length(mechanism.contacts)
 

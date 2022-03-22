@@ -10,13 +10,13 @@ using Rotations
 
 using Dojo
 
-
 @testset "Integrator"                    verbose=true begin include("integrator.jl") end
 @testset "Minimal Coordinates"           verbose=true begin include("minimal.jl") end
 @testset "Modified Rodrigues Parameters" verbose=true begin include("mrp.jl") end
 @testset "Damper"                        verbose=true begin include("damper.jl") end
 @testset "Jacobian (Solution Matrix)"    verbose=true begin include("jacobian.jl") end
 @testset "Data"                          verbose=true begin include("data.jl") end
+@testset "Collisions"                    verbose=true begin include("collisions.jl") end
 @testset "Momentum"                      verbose=true begin include("momentum.jl") end
 @testset "Energy"                        verbose=true begin include("energy.jl") end
 @testset "Behavior"                      verbose=true begin include("behaviors.jl") end

@@ -23,12 +23,12 @@ n = env.num_states
 m = env.num_inputs
 
 # ## states
-z1 = maximal_to_minimal(env.mechanism, raiberthopper_nominal_max())
-zM = maximal_to_minimal(env.mechanism, raiberthopper_offset_max(0.5, 0.5, 0.5))
-zT = maximal_to_minimal(env.mechanism, raiberthopper_offset_max(0.5, 0.5, 0.0))
+z1 = maximal_to_minimal(env.mechanism, Dojo.raiberthopper_nominal_max())
+zM = maximal_to_minimal(env.mechanism, Dojo.raiberthopper_offset_max(0.5, 0.5, 0.5))
+zT = maximal_to_minimal(env.mechanism, Dojo.raiberthopper_offset_max(0.5, 0.5, 0.0))
 
 # ## nominal control
-u_control = [0.0; 0.0; env.mechanism.bodies[1].m * env.mechanism.gravity * env.mechanism.timestep]
+u_control = [0.0; 0.0; env.mechanism.bodies[1].mass * env.mechanism.gravity[3] * env.mechanism.timestep]
 
 # ## horizon
 T = 21
@@ -44,7 +44,7 @@ dyn = IterativeLQR.Dynamics(
 model = [dyn for t = 1:T-1]
 
 # ## rollout
-ū = [[0.0; 0.0; env.mechanism.bodies[1].m * env.mechanism.gravity * env.mechanism.timestep + 0.0 * randn(1)[1]] for t = 1:T-1]
+ū = [[0.0; 0.0; env.mechanism.bodies[1].mass * env.mechanism.gravity[3] * env.mechanism.timestep + 0.0 * randn(1)[1]] for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, z1, ū)
 visualize(env, x̄)
 
@@ -53,9 +53,9 @@ ot1 = (x, u, w) -> 1 * (transpose(x - zM) * Diagonal([1.0 * ones(3); 0.01 * ones
 ot2 = (x, u, w) -> 1 * (transpose(x - zT) * Diagonal([1.0 * ones(3); 0.01 * ones(3); 0.1 * ones(3); 0.01 * ones(3); 1.0; 0.01]) * (x - zT) + transpose(u) * Diagonal(1.0e-2 * [1.0; 1.0; 1.0]) * u)
 oT = (x, u, w) -> transpose(x - zT) * Diagonal([1.0 * ones(3); 0.01 * ones(3); 0.1 * ones(3); 0.01 * ones(3); 1.0; 0.01]) * (x - zT)
 
-ct1 = Cost(ot1, n, m)
-ct2 = Cost(ot2, n, m)
-cT = Cost(oT, n, 0)
+ct1 = IterativeLQR.Cost(ot1, n, m)
+ct2 = IterativeLQR.Cost(ot2, n, m)
+cT = IterativeLQR.Cost(oT, n, 0)
 obj = [[ct1 for t = 1:Tm]..., [ct2 for t = 1:Tm]..., cT]
 
 # ## constraints

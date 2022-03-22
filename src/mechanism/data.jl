@@ -18,9 +18,9 @@ data_dim(body::Body; attjac::Bool=true) = attjac ? 19 : 20 # 1+6+6+6 or 1+6+6+7 
 
 # Contact
 data_dim(contact::ContactConstraint) = data_dim(contact.model)
-data_dim(model::NonlinearContact) = 7 # [friction_coefficient, offset, p]
-data_dim(model::LinearContact) = 7 # [friction_coefficient, offset, p]
-data_dim(model::ImpactContact) = 6 # [offset, p]
+data_dim(model::NonlinearContact) = 5 # [friction_coefficient, contact_radius, p]
+data_dim(model::LinearContact) = 5 # [friction_coefficient, contact_radius, p]
+data_dim(model::ImpactContact) = 4 # [contact_radius, p]
 
 
 ################################################################################
@@ -82,9 +82,9 @@ function get_data(body::Body)
 end
 
 # Contacts
-get_data(model::NonlinearContact) = [model.friction_coefficient; model.offset; model.contact_point]
-get_data(model::LinearContact) = [model.friction_coefficient; model.offset; model.contact_point]
-get_data(model::ImpactContact) = [model.offset; model.contact_point]
+get_data(model::NonlinearContact) = [model.friction_coefficient; model.collision.contact_radius; model.collision.contact_origin]
+get_data(model::LinearContact) = [model.friction_coefficient; model.collision.contact_radius; model.collision.contact_origin]
+get_data(model::ImpactContact) = [model.collision.contact_radius; model.collision.contact_origin]
 get_data(contact::ContactConstraint) = get_data(contact.model)
 
 
@@ -159,21 +159,21 @@ end
 # Contact
 function set_data!(model::NonlinearContact, data::AbstractVector)
 	model.friction_coefficient = data[1]
-    model.offset = data[SVector{3,Int}(2:4)]
-    model.contact_point = data[SVector{3,Int}(5:7)]
+    model.collision.contact_radius = data[2]
+    model.collision.contact_origin = data[SVector{3,Int}(3:5)]
     return nothing
 end
 
 function set_data!(model::LinearContact, data::AbstractVector)
 	model.friction_coefficient = data[1]
-    model.offset = data[SVector{3,Int}(2:4)]
-    model.contact_point = data[SVector{3,Int}(5:7)]
+    model.collision.contact_radius = data[2]
+    model.collision.contact_origin = data[SVector{3,Int}(3:5)]
     return nothing
 end
 
 function set_data!(model::ImpactContact, data::AbstractVector)
-    model.offset = data[SVector{3,Int}(1:3)]
-    model.contact_point = data[SVector{3,Int}(4:6)]
+    model.collision.contact_radius = data[1]
+    model.collision.contact_origin = data[SVector{3,Int}(2:4)]
     return nothing
 end
 

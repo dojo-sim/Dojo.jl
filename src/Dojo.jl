@@ -3,6 +3,9 @@ module Dojo
 # constants
 global REG = 1.0e-10
 
+#TODO: remove 
+using FiniteDiff
+
 using LinearAlgebra
 using Random
 using StaticArrays
@@ -22,12 +25,15 @@ using Meshing
 using GeometryBasics
 using Graphs
 
+using CoordinateTransformations
+
 using JLD2
 using DocStringExtensions
 
 # Utilities
 include(joinpath("utilities", "methods.jl"))
 include(joinpath("utilities", "custom_static.jl"))
+include(joinpath("utilities", "normalize.jl"))
 
 # Orientation
 include(joinpath("orientation", "quaternion.jl"))
@@ -58,7 +64,7 @@ include(joinpath("bodies", "origin.jl"))
 include(joinpath("bodies", "set.jl"))
 
 # Mechanism
-include(joinpath("joints", "constraint.jl"))
+include(joinpath("joints", "constraints.jl"))
 include(joinpath("contacts", "constructor.jl"))
 include(joinpath("contacts", "contact.jl"))
 
@@ -104,6 +110,10 @@ include(joinpath("joints", "impulses.jl"))
 # Contacts
 include(joinpath("contacts", "constraints.jl"))
 include(joinpath("contacts", "cone.jl"))
+include(joinpath("contacts", "collisions", "collision.jl"))
+include(joinpath("contacts", "collisions", "sphere_halfspace.jl"))
+include(joinpath("contacts", "collisions", "sphere_sphere.jl"))
+include(joinpath("contacts", "velocity.jl"))
 include(joinpath("contacts", "impact.jl"))
 include(joinpath("contacts", "linear.jl"))
 include(joinpath("contacts", "nonlinear.jl"))
@@ -164,6 +174,7 @@ export
     Rotational,
     Translational,
     JointConstraint,
+    Floating,
     Fixed,
     Prismatic,
     Planar,
@@ -193,6 +204,15 @@ export
     contact_location,
     damper_impulses,
     contact_constraint
+
+# Collision
+export 
+    SphereHalfSpaceCollision,
+    SphereSphereCollision,
+    distance, 
+    contact_point,
+    contact_normal, 
+    contact_tangent
 
 # Inputs
 export
@@ -307,5 +327,9 @@ export
     szeros,
     sones,
     srand
+
+# Utilities
+export 
+    normalize
 
 end

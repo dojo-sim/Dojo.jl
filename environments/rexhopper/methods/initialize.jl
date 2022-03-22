@@ -50,42 +50,42 @@ function get_rexhopper(;
         ankle_radius = 0.025
         base_radius = 0.14
         p = [0.1685; 0.0025; -0.0055]
-        o = [0;0; foot_radius]
+        o = foot_radius
         push!(models, contact_constraint(link3, normal,
             friction_coefficient=friction_coefficient,
-            contact_point=p,
-            offset=o,
+            contact_origin=p,
+            contact_radius=o,
             contact_type=contact_type,
             name=:foot))
         p = [-0.10; -0.002; 0.01]
-        o = [0;0; ankle_radius]
+        o = ankle_radius
         push!(models, contact_constraint(link3, normal,
             friction_coefficient=friction_coefficient,
-            contact_point=p,
-            offset=o,
+            contact_origin=p,
+            contact_radius=o,
             contact_type=contact_type,
             name=:ankle3))
         p = [0.24; 0.007; 0.005]
         push!(models, contact_constraint(link2, normal,
             friction_coefficient=friction_coefficient,
-            contact_point=p,
-            offset=o,
+            contact_origin=p,
+            contact_radius=o,
             contact_type=contact_type,
             name=:ankle2))
         base_link = get_body(mech, :base_link)
         pl = [0.0; +0.075; 0.03]
         pr = [0.0; -0.075; 0.03]
-        o = [0;0; base_radius]
+        o = base_radius
         push!(models, contact_constraint(base_link, normal,
             friction_coefficient=friction_coefficient,
-            contact_point=pl,
-            offset=o,
+            contact_origin=pl,
+            contact_radius=o,
             contact_type=contact_type,
             name=:torso_left))
         push!(models, contact_constraint(base_link, normal,
             friction_coefficient=friction_coefficient,
-            contact_point=pr,
-            offset=o,
+            contact_origin=pr,
+            contact_radius=o,
             contact_type=contact_type,
             name=:torso_right))
 
