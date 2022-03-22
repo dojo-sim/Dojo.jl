@@ -116,7 +116,8 @@ end
     name: unique identifier 
     color: RGBA
 """
-function build_robot(mechanism::Mechanism; vis::Visualizer=Visualizer(),
+function build_robot(mechanism::Mechanism; 
+    vis::Visualizer=Visualizer(),
     show_joint=false,
     joint_radius=0.1,
     show_contact=false, 
