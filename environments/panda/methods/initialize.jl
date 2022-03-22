@@ -1,4 +1,3 @@
-
 function get_panda(;
         timestep=0.01,
         gravity=-9.81,
@@ -6,6 +5,9 @@ function get_panda(;
         spring=0.0,
         damper=0.01, # this value comes from the official URDF https://github.com/frankaemika/franka_ros/blob/develop/franka_gazebo/test/launch/panda-gazebo.urdf
         contact=false,
+        limits=true,
+        joint_limits=[[-2.9671, -1.8326, -2.9671, -0.25, -0.25, -0.25, -0.25],
+                      [ 2.9671,  1.8326,  2.9671,  0.25,  0.25,  0.25,  0.25]],
         T=Float64)
 
     path = joinpath(@__DIR__, "../deps/panda.urdf")
@@ -25,79 +27,100 @@ function get_panda(;
         joint.rotational.damper=damper
     end
 
+    # joint limits
+    joints = deepcopy(mech.joints)
+    if limits
+        for (i,joint) in enumerate(joints)
+            id = joint.id
+            if input_dimension(joint) > 0
+                joints[i] = add_limits(mech, joint,
+                    rot_limits=[SVector{1}(joint_limits[1][id-1]), SVector{1}(joint_limits[2][id-1])])
+            end
+        end
+        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...],
+            gravity=gravity,
+            timestep=timestep,
+            spring=spring,
+            damper=damper)
+    end
+
+
     origin = Origin{T}()
     bodies = mech.bodies
-    eqs = mech.joints
-
+    joints = mech.joints
     contacts = ContactConstraint{T}[]
 
-    # if contact
-    #     # Foot contact
-    #     locations = [
-    #         [-0.08; -0.04; 0.015],
-    #         [+0.12; -0.02; 0.015],
-    #         [-0.08; +0.04; 0.015],
-    #         [+0.12; +0.02; 0.015],
-    #         ]
-    #     n = length(locations)
-    #     normal = [[0.0; 0.0; 1.0] for i = 1:n]
-    #     offset = [[0.0; 0.0; 0.025] for i = 1:n]
-    #     friction_coefficients = friction_coefficient * ones(T, n)
-    #
-    #     names = ["RR", "FR", "RL", "RR"]
-    #
-    #     foot_contacts1 = contact_constraint(get_body(mech, :l_foot), normal,
-    #         friction_coefficient=friction_coefficients,
-    #         contact_points=locations,
-    #         offset=offset,
-    #         names=[Symbol("l_" .* name) for name in names])
-    #     foot_contacts2 = contact_constraint(get_body(mech, :r_foot), normal,
-    #         friction_coefficient=friction_coefficients,
-    #         contact_points=locations,
-    #         offset=offset,
-    #         names=[Symbol("r_" .* name) for name in names])
-    #     contacts = [contacts..., foot_contacts1..., foot_contacts2...]
-    # end
+    if contact
+        # spherical end-effector contact
+        location1 = [-0.01; 0.004; 0.01]
+        normal = [0.0; 0.0; 1.0]
+        offset = [0.0; 0.0; 0.05]
+        contact = contact_constraint(
+            get_body(mech, :link7),
+            normal,
+            friction_coefficient=friction_coefficient,
+            contact_point=location1,
+            offset=offset,
+            name=:end_effector)
+        push!(contacts, contact)
 
-    # set_minimal_coordinates!(mech, get_joint(mech, :panda_joint0), [0.0; 0.0])
+        # spherical end-effector contact
+        location = location1 + [0.00,0.,0.03]
+        normal = [0.0; 0.0; 1.0]
+        offset = [0.0; 0.0; 0.01]
+        contact = contact_constraint(
+            get_body(mech, :link7),
+            normal,
+            friction_coefficient=friction_coefficient,
+            contact_point=location,
+            offset=offset,
+            name=:end_effector)
+        push!(contacts, contact)
 
-    # mech = Mechanism(origin, bodies, eqs, contacts,
-    #     gravity=gravity,
-    #     timestep=timestep,
-    #     spring=spring,
-    #     damper=damper)
+        # spherical end-effector contact
+        location = location1 + [0,0,0]
+        normal = [0.0; 0.0; 1.0]
+        offset = [0.0; 0.0; 0.01]
+        contact = contact_constraint(
+            get_body(mech, :link7),
+            normal,
+            friction_coefficient=friction_coefficient,
+            contact_point=location,
+            offset=offset,
+            name=:end_effector)
+        push!(contacts, contact)
 
+        # spherical end-effector contact
+        location = location1 + [0,0,0]
+        normal = [0.0; 0.0; 1.0]
+        offset = [0.0; 0.0; 0.01]
+        contact = contact_constraint(
+            get_body(mech, :link7),
+            normal,
+            friction_coefficient=friction_coefficient,
+            contact_point=location,
+            offset=offset,
+            name=:end_effector)
+        push!(contacts, contact)
+    end
+
+
+    mech = Mechanism(origin, bodies, joints, contacts,
+        gravity=gravity,
+        timestep=timestep,
+        spring=spring,
+        damper=damper)
+
+    set_minimal_state!(mech, szeros(minimal_dimension(mech)))
     return mech
 end
 
-function initialize_panda!(mechanism::Mechanism;
-    model_type=:simple,
-    body_position=[0.0, 0.0, 0.2],
-    body_orientation=[0.0, 0.0, 0.0],
-    link_linear_velocity=[zeros(3)  for i=1:length(mechanism.bodies)],
-    link_angular_velocity=[zeros(3) for i=1:length(mechanism.bodies)],
-    hip_orientation=0.0,
-    knee_orientation=0.0) where T
-
-    body_position += (model_type == :armless) ? [0.0, 0.0, 0.9385 + 0.14853] : [0.0, 0.0, 0.9385]
-
-    # positions
-    try
-        set_minimal_coordinates!(mechanism,
-                get_joint(mechanism, :floating_base),
-                [body_position; body_orientation])
-        set_minimal_coordinates!(mechanism, get_joint(mechanism, :back_bkxyz), [0.0, 0.0, 0.0])
-        set_minimal_coordinates!(mechanism, get_joint(mechanism, :l_leg_hpxyz), [0.0, -hip_orientation, 0.0])
-        set_minimal_coordinates!(mechanism, get_joint(mechanism, :r_leg_hpxyz), [0.0, -hip_orientation, 0.0])
-        set_minimal_coordinates!(mechanism, get_joint(mechanism, :l_leg_kny), [knee_orienation])
-        set_minimal_coordinates!(mechanism, get_joint(mechanism, :r_leg_kny), [knee_orienation])
-        set_minimal_coordinates!(mechanism, get_joint(mechanism, :l_leg_akxy), [hip_orientation-knee_orienation, 0.0])
-        set_minimal_coordinates!(mechanism, get_joint(mechanism, :r_leg_akxy), [hip_orientation-knee_orienation, 0.0])
-    catch
-        nothing
-    end
+function initialize_panda!(mechanism::Mechanism{T};
+    joint_angles=zeros(7),
+    joint_velocities=zeros(7)) where T
 
     zero_velocity!(mechanism)
-
+    y = vcat([[joint_angles[i], joint_velocities[i]] for i=1:7]...)
+    set_minimal_state!(mechanism, y)
     return nothing
 end

@@ -4,6 +4,70 @@ using Plots
 vis = Visualizer()
 open(vis)
 
+
+mech = Dojo.get_mechanism(:panda,
+    timestep=0.05,
+    gravity=-9.81,
+    spring=0.0,
+    damper=0.1,
+    contact=true,
+    limits=true,
+    )
+function ctrl!(m,k)
+    nu = input_dimension(mech)
+    set_input!(m, [0.10; szeros(nu-1)])
+    @show "ffff"
+    return nothing
+end
+
+
+initialize_panda!(mech, joint_angles=[0,0,0,0,0,0,0.0], joint_velocities=[0,0,0,0,0,0,0.0])
+
+storage = simulate!(mech, 2.0, ctrl!, record=true)
+visualize(mech, storage, vis=vis, show_contact=true)
+get_minimal_state(mech)
+storage.ω[1]
+plot([-ϕ[3] for ϕ in storage.ω[1]])
+
+
+
+
+
+a = 10
+a = 10
+a = 10
+a = 10
+a = 10
+a = 10
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # mech = get_snake(damper=0.1)
 # initialize!(mech, :snake)
 mech = get_twister(damper=0.0, joint_type=:Revolute, num_bodies=3)
