@@ -2,8 +2,8 @@
 # Simulator Data
 ################################################################################
 
-simdata_dim(mechanism::Mechanism) = sum(simdata_dim.(mech.contacts))
-simdata_dim(contact::ContactConstraint) = sum(simdata_dim.(contact.constraints))
+simdata_dim(mechanism::Mechanism) = sum(simdata_dim.(mechanism.contacts))
+simdata_dim(contact::ContactConstraint) = sum(simdata_dim(contact.model))
 simdata_dim(model::NonlinearContact) = 5 # [friction_coefficient, p, contact_radius]
 simdata_dim(model::LinearContact) = 5 # [friction_coefficient, p, contact_radius]
 simdata_dim(model::ImpactContact) = 4 # [p, contact_radius]
@@ -140,7 +140,7 @@ function datafilenamebox(; N::Int=10, friction_coefficient=0.1, radius=0., side=
 end
 
 function datafilenamehardwarebox(; N::Int=10, s=1)
-    "hardwarebox_dim_N_$(N)_sample_S_$(S).jld2"
+    "hardwarebox_dim_N_$(N)_sample_S_$(s).jld2"
 end
 
 function initial_state(model::Symbol; kwargs...)
@@ -221,7 +221,7 @@ function generate_dataset(model::Symbol;
 	data = get_simulator_data(mechanism)
     params = Dict(:N => N, :H => H, :timestep => timestep, :g => g, :data => data)
     pairs = build_pairs(mechanism, trajs)
-    jldsave(joinpath(@__DIR__, "data", "dataset", datafilename(model; N = N, mech_kwargs...));
+    jldsave(joinpath(@__DIR__, "..", "data", "dataset", datafilename(model; N = N, mech_kwargs...));
         params=params, trajs=trajs, pairs=pairs)
     return nothing
 end
@@ -231,7 +231,7 @@ end
 # Load Dataset
 ################################################################################
 function open_dataset(model::Symbol; kwargs...)
-    dataset = jldopen(joinpath(@__DIR__, "data", "dataset", datafilename(model; kwargs...)))
+    dataset = jldopen(joinpath(@__DIR__, "..","data", "dataset", datafilename(model; kwargs...)))
     params = dataset["params"]
     trajs = dataset["trajs"]
     pairs = dataset["pairs"]
@@ -276,7 +276,7 @@ function getSimulatorMaxGradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::Abstr
 	return data_jacobian̄
 end
 
-function clean_loss(model::Symbol, pairs, data; timestep=0.05, g=-9.81,
+function clean_loss(model::Symbol, pairs, data; timestep=0.05, gravity=-9.81,
 		opts=SolverOptions(btol=1e-6, rtol=1e-6), n_sample = 20, rot = 0.0)
 	mechanism = get_mechanism(model, timestep=timestep, gravity=gravity)
 	nsd = simdata_dim(mechanism)

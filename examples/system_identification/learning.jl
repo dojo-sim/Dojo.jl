@@ -9,7 +9,13 @@ using LinearAlgebra
 using Plots
 using FiniteDiff
 using JLD2
-using Dojo: Storage
+using Dojo: Storage, RotZ
+using MeshCat
+using GeometryBasics
+
+# ## Open visualizer
+vis= Visualizer()
+open(vis)
 
 include("methods/utils.jl")
 include("data/data.jl")
@@ -18,14 +24,11 @@ include("methods/quasi_newton.jl")
 include("hardware_examples/methods.jl")
 include("hardware_examples/visualization.jl")
 
-# ## Open visualizer
-vis= Visualizer()
-open(vis)
 
 # ## Mechanism
 S = 7
 timestep= 1/148 * S
-gscaled = -9.81*20
+gravityscaled = -9.81*20
 mech = get_mechanism(:block, 
 	timestep=timestep, 
 	gravity=gravityscaled, 
@@ -49,14 +52,14 @@ visualize(mech, storage, vis=vis, show_contact=true)
 ################################################################################
 ## Generate & Save Dataset
 ################################################################################
-generate_hardware_dataset(N=400, sleep_ratio=0.0002, S=S)
-generate_hardware_dataset(N=400, sleep_ratio=0.0002, S=1)
+generate_hardware_dataset(N=400, sleep_ratio=0.0002, s=S)
+generate_hardware_dataset(N=400, sleep_ratio=0.0002, s=1)
 
 ################################################################################
 ## Load Dataset
 ################################################################################
-params0, trajs0, pairs0 = open_dataset(:hardwarebox; N=400, S=S)
-params1, trajs1, pairs1 = open_dataset(:hardwarebox; N=400, S=1)
+params0, trajs0, pairs0 = open_dataset(:hardwarebox; N=400, s=S)
+params1, trajs1, pairs1 = open_dataset(:hardwarebox; N=400, s=1)
 
 pairs0
 params0

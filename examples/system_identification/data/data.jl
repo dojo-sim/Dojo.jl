@@ -33,7 +33,7 @@ function toss2z(toss, timestep; s=1)
 		q2 = vec2[4:7]
 
 		v15 = (x2 - x1) / timestep
-		ϕ15 = angular_velocity(Quaternion(q1...),
+		ϕ15 = Dojo.angular_velocity(Quaternion(q1...),
 			Quaternion(q2...), timestep)
 
 		z2 = [x2; v15; q2; ϕ15]
@@ -73,7 +73,7 @@ function generate_hardware_dataset(;N::Int=10,
 		# z = toss2z(toss[1:7], timestep)
 		# z = toss2z(toss[end-10:end], timestep)
 		z = toss2z(toss, timestep, s=s)
-		storage = generate_storage(mech, z)
+		storage = generate_storage(mechanism, z)
 		push!(pairs, build_pairs(z)...)
         push!(trajs, storage)
         visualize(mechanism, storage, vis=vis, show_contact=show_contact)
@@ -89,7 +89,7 @@ function generate_hardware_dataset(;N::Int=10,
 		0.2, 0,0,0, -1, +1, +1,
 		0.2, 0,0,0, -1, -1, +1]
     params = Dict(:N => N, :H => H, :timestep => timestep, :g => gscaled, :data => data)
-    jldsave(joinpath(@__DIR__, "dataset", datafilename(:hardwarebox; N = N, S = S));
+    jldsave(joinpath(@__DIR__, "dataset", datafilename(:hardwarebox; N = N, s = s));
         params=params, trajs=trajs, pairs=pairs)
     return nothing
 end

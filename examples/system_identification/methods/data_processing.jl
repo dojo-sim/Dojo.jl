@@ -14,9 +14,9 @@ function newton_solve(f, g, H, x0; ftol=-Inf, gtol=1e-4, iter=100,
         x = clamp.(x + α*p, lower, upper)
         push!(X, copy(x))
         println("k:", k,
-            "   f:", scn(fe, digits=3),
-            "   ∇:", scn.(norm(ge, Inf)),
-            "   α:", scn.(α),
+            "   f:", Dojo.scn(fe, digits=3),
+            "   ∇:", Dojo.scn.(norm(ge, Inf)),
+            "   α:", Dojo.scn.(α),
             # "   g:", scn.(-g(x, rot=rot)),
             # "   p:", scn.(p),
             # "   x:", scn.(x),
