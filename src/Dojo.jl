@@ -25,9 +25,13 @@ using Meshing
 using GeometryBasics
 using Graphs
 
+# TODO: replace with Mehrotra.jl
+import RoboDojo: IndicesOptimization, InteriorPoint, interior_point, Euclidean, InteriorPointOptions, interior_point_solve!
+
 using CoordinateTransformations
 
 using JLD2
+using Scratch 
 using DocStringExtensions
 
 # Utilities

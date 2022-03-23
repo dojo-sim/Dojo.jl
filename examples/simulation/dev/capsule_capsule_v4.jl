@@ -1,5 +1,5 @@
 using Symbolics 
-using RoboDojo
+# using RoboDojo
 using LinearAlgebra
 using SparseArrays
 
@@ -80,7 +80,7 @@ function objective(w, θ)
 
     d = pa - pb 
 
-    return dot(d, d) + 1.0e-5 * (t[1] - 0.5)^2 + 1.0e-5 * (t[2] - 0.5)^2
+    return dot(d, d)
 end
 
 function constraints(w, θ) 
@@ -167,7 +167,8 @@ end
 ## setup 
 xa = [-1.0; 0.0; 0.0]
 qa = Quaternion(RotY(0.0 * π) * RotX(0.0 * π))
-qa = [qa.w; qa.x; qa.y; qa.z]
+vector(qa)
+qa = vector(qa)
 ra = 0.1
 ha = 0.2
 
@@ -176,7 +177,7 @@ pa2 = xa + rotation_matrix(qa) * [0.0; 0.0; -0.5 * ha]
 
 xb = [1.0; 0.0; 0.0]
 qb = Quaternion(RotZ(0.0 * π) * RotY(0.0 * π) * RotX(0.0))
-qb = [qb.w; qb.x; qb.y; qb.z]
+qb = vector(qb)
 rb = 0.1 
 hb = 0.2
 pb1 = xb + rotation_matrix(qb) * [0.0; 0.0;  0.5 * hb]
@@ -196,7 +197,7 @@ rw0 \ r0
 rw0 \ rθ0
 
 ## solver 
-idx = RoboDojo.IndicesOptimization(
+idx = IndicesOptimization(
     nw, nw, 
     [collect(1:4), collect(7:10)], [collect(1:4), collect(7:10)],
     Vector{Vector{Vector{Int}}}(), Vector{Vector{Vector{Int}}}(),
@@ -207,8 +208,8 @@ idx = RoboDojo.IndicesOptimization(
     collect(7:10),
 )
 
-ip = RoboDojo.interior_point(w0, θ0;
-    s = RoboDojo.Euclidean(length(w0)),
+ip = interior_point(w0, θ0;
+    s = Euclidean(length(w0)),
     idx = idx,
     r! = r_func, 
     rz! = rw_func_reg, 
@@ -216,7 +217,7 @@ ip = RoboDojo.interior_point(w0, θ0;
     r  = zeros(idx.nΔ),
     rz = zeros(idx.nΔ, idx.nΔ),
     rθ = zeros(idx.nΔ, length(θ0)),
-    opts = RoboDojo.InteriorPointOptions(
+    opts = InteriorPointOptions(
             undercut=5.0,
             γ_reg=0.1,
             r_tol=1e-5,
@@ -226,13 +227,14 @@ ip = RoboDojo.interior_point(w0, θ0;
             diff_sol=true,
             verbose=true))
 
-RoboDojo.interior_point_solve!(ip)
+interior_point_solve!(ip)
 
 ta = ip.z[1]
 tb = ip.z[2]
 pa = pa1 + ta * (pa2 - pa1)
 pb = pb1 + tb * (pb2 - pb1)
-
+dir = pa - pb 
+dir ./= norm(dir)
 
 # visualize 
 vis = Visualizer() 
@@ -268,5 +270,5 @@ cs1 = GeometryBasics.Sphere(Point(0.0, 0.0, 0.0), 0.025)
 cs2 = GeometryBasics.Sphere(Point(0.0, 0.0, 0.0), 0.025)
 setobject!(vis[:cs1], cs1, MeshPhongMaterial(color=color_cp))
 setobject!(vis[:cs2], cs2, MeshPhongMaterial(color=color_cp))
-settransform!(vis[:cs1], Translation(pa - dir * 0.0 * ra))
-settransform!(vis[:cs2], Translation(pb + dir * 0.0 * rb))
+settransform!(vis[:cs1], Translation(pa - dir * ra))
+settransform!(vis[:cs2], Translation(pb + dir * rb))

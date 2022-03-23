@@ -178,3 +178,65 @@ function ∂contact_point∂q(relative::Symbol, jacobian::Symbol, collision::Sph
     return Q
 end
 
+function contact_normal(collision::SphereSphereCollision, xp, qp, xc, qc)
+    # contact origin points
+    cop = contact_point_origin(xp, qp, collision.origin_parent) 
+    coc = contact_point_origin(xc, qc, collision.origin_child)
+ 
+    # unnormalized direction 
+    dir = cop - coc
+
+    # distance 
+    dis = distance(collision, xp, qp, xc, qc)
+
+    # normalized direction
+    if dis >= 0.0
+        return normalize(dir)'
+    else 
+        return -1.0 * normalize(dir)'
+    end
+end
+
+function ∂contact_normal_transpose∂x(jacobian::Symbol, collision::SphereSphereCollision, xp, qp, xc, qc)
+    # contact origin points
+    cop = contact_point_origin(xp, qp, collision.origin_parent) 
+    coc = contact_point_origin(xc, qc, collision.origin_child)
+
+    # unnormalized direction 
+    dir = cop - coc
+
+    # Jacobians
+    X = ∂normalize∂x(dir) * (∂contact_point_origin∂x(xp, qp, collision.origin_parent) - ∂contact_point_origin∂x(xc, qc, collision.origin_child))
+    
+    # distance 
+    dis = distance(collision, xp, qp, xc, qc)
+
+    # normalized direction
+    if dis >= 0.0
+        return X
+    else 
+        return -1.0 * X
+    end
+end
+
+function ∂contact_normal_transpose∂q(jacobian::Symbol, collision::SphereSphereCollision, xp, qp, xc, qc)
+    # contact origin points
+    cop = contact_point_origin(xp, qp, collision.origin_parent) 
+    coc = contact_point_origin(xc, qc, collision.origin_child)
+
+    # unnormalized direction 
+    dir = cop - coc 
+
+    Q = ∂normalize∂x(dir) * (∂contact_point_origin∂q(xp, qp, collision.origin_parent) - ∂contact_point_origin∂q(xc, qc, collision.origin_child))
+
+    # distance 
+    dis = distance(collision, xp, qp, xc, qc)
+
+    # normalized direction
+    if dis >= 0.0
+        return Q
+    else 
+        return -1.0 * Q
+    end
+end
+
