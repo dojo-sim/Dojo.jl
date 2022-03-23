@@ -6,8 +6,12 @@ function get_panda(;
         damper=0.01, # this value comes from the official URDF https://github.com/frankaemika/franka_ros/blob/develop/franka_gazebo/test/launch/panda-gazebo.urdf
         contact=false,
         limits=true,
-        joint_limits=[[-2.9671, -1.8326, -2.9671, -0.25, -0.25, -0.25, -0.25],
-                      [ 2.9671,  1.8326,  2.9671,  0.25,  0.25,  0.25,  0.25]],
+        # joint_limits=[[-0.25, -0.25, -0.25, -0.25, -0.25, -0.25, -0.25],
+        #               [ 0.25,  0.25,  0.25,  0.25,  0.25,  0.25,  0.25]],
+        # joint_limits=[[-2.9671, -1.8326, -2.9671, -0.4000, -2.9671, -3.8223, -2.9671],
+        #               [ 2.9671,  1.8326,  2.9671,  3.1416,  2.9671,  0.0873,  2.9671]],
+        joint_limits=[[-2.8973, -1.7628, -2.8973, -0.0698, -2.8973, -3.7525, -2.8973],
+                      [ 2.8973,  1.7628,  2.8973,  3.0718,  2.8973,  0.0175,  2.8973]],
         T=Float64)
 
     path = joinpath(@__DIR__, "../deps/panda.urdf")
@@ -116,7 +120,7 @@ function get_panda(;
 end
 
 function initialize_panda!(mechanism::Mechanism{T};
-    joint_angles=zeros(7),
+    joint_angles=[2.9671,  1.8326,  2.9671, -0.4000,  2.9671,  3.8223,  2.9671],
     joint_velocities=zeros(7)) where T
 
     zero_velocity!(mechanism)

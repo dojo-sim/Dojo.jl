@@ -3,7 +3,7 @@ module Dojo
 # constants
 global REG = 1.0e-10
 
-#TODO: remove 
+#TODO: remove
 using FiniteDiff
 
 using LinearAlgebra
@@ -206,12 +206,12 @@ export
     contact_constraint
 
 # Collision
-export 
+export
     SphereHalfSpaceCollision,
     SphereSphereCollision,
-    distance, 
+    distance,
     contact_point,
-    contact_normal, 
+    contact_normal,
     contact_tangent
 
 # Inputs
@@ -260,20 +260,20 @@ export
 # Environment
 export
     Environment,
-    dynamics, 
+    dynamics,
     dynamics_jacobian_state,
     dynamics_jacobian_input,
-    get_environment, 
+    get_environment,
     #step,
-    get_observation, 
+    get_observation,
     cost,
-    is_done, 
+    is_done,
     #reset,
-    render, 
-    seed, 
-    close, 
-    Space, 
-    BoxSpace 
+    render,
+    seed,
+    close,
+    Space,
+    BoxSpace
 
 # Orientation
 export
@@ -318,8 +318,8 @@ export
     set_light!,
     set_camera!,
     RGBA,
-    orange, 
-    cyan, 
+    orange,
+    cyan,
     magenta
 
 # Static
@@ -329,7 +329,7 @@ export
     srand
 
 # Utilities
-export 
+export
     normalize
 
 end

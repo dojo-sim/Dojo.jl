@@ -13,11 +13,11 @@ function damper_force(relative::Symbol, joint::Rotational{T}, qa::Quaternion, ϕ
 
     velocity = minimal_velocities(joint, szeros(3), szeros(3), qa, ϕa, szeros(3), szeros(3), qb, ϕb, timestep)
     if relative == :parent
-        force = 10.0000 * damper * Aᵀ * velocity # currently assumes same damper constant in all directions
+        force = 2.0000 * damper * Aᵀ * velocity # currently assumes same damper constant in all directions
         rotate && (force = vector_rotate(force, axis_offset)) # rotate back to frame a
         return [szeros(T, 3); force]
     elseif relative == :child
-        force = - 10.0000 * damper * Aᵀ * velocity # currently assumes same damper constant in all directions
+        force = - 2.0000 * damper * Aᵀ * velocity # currently assumes same damper constant in all directions
         rotate && (force = vector_rotate(force, inv(qb) * qa * axis_offset)) # rotate back to frame b
         return [szeros(T, 3); force]
     end
@@ -49,9 +49,9 @@ function damper_jacobian_configuration(relative::Symbol, jacobian::Symbol,
     ∂vel = minimal_velocities_jacobian_configuration(jacobian, joint, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)[:, SUnitRange(4,6)]
 
     if relative == :parent
-        Q = rotation_matrix(axis_offset) * 10.0000 * joint.damper * Aᵀ * ∂vel
+        Q = rotation_matrix(axis_offset) * 2.0000 * joint.damper * Aᵀ * ∂vel
     elseif relative == :child
-        Q = rotation_matrix(inv(qb) * qa * axis_offset) * -10.0000 * joint.damper * Aᵀ * ∂vel
+        Q = rotation_matrix(inv(qb) * qa * axis_offset) * -2.0000 * joint.damper * Aᵀ * ∂vel
         if jacobian == :parent
             Q += rotation_matrix(inv(qb)) * ∂rotation_matrix∂q(qa, vector_rotate(force, axis_offset), attjac=true)
         elseif jacobian == :child
@@ -74,9 +74,9 @@ function damper_jacobian_velocity(relative::Symbol, jacobian::Symbol,
     ∂vel = minimal_velocities_jacobian_velocity(jacobian, joint, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
 
     if relative == :parent
-        VΩ = ∂vector_rotate∂p(force, axis_offset) * 10.0000 * joint.damper * Aᵀ * ∂vel
+        VΩ = ∂vector_rotate∂p(force, axis_offset) * 2.0000 * joint.damper * Aᵀ * ∂vel
     elseif relative == :child
-        VΩ = ∂vector_rotate∂p(force, inv(qb) * qa * axis_offset) * -10.0000 * joint.damper * Aᵀ * ∂vel
+        VΩ = ∂vector_rotate∂p(force, inv(qb) * qa * axis_offset) * -2.0000 * joint.damper * Aᵀ * ∂vel
     end
     return timestep * [szeros(T, 3, 6); VΩ]
 end

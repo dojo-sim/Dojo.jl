@@ -9,28 +9,27 @@ mech = Dojo.get_mechanism(:panda,
     timestep=0.05,
     gravity=-9.81,
     spring=0.0,
-    damper=0.1,
+    damper=2.0,
     contact=true,
     limits=true,
     )
+# for joint in mech.joints
+#     joint.rotational.axis_offset = Quaternion(1,0,0,0.0,true)
+# end
 function ctrl!(m,k)
-    nu = input_dimension(mech)
-    set_input!(m, [0.10; szeros(nu-1)])
-    @show "ffff"
+    nu = input_dimension(m)
+    set_input!(m, -0.00rand(7))
     return nothing
 end
 
 
-initialize_panda!(mech, joint_angles=[0,0,0,0,0,0,0.0], joint_velocities=[0,0,0,0,0,0,0.0])
+initialize_panda!(mech, joint_angles=[0,-0.8,0,1.6,0,-2.4,0], joint_velocities=[0,0,0,0,0,0,0.0])
 
-storage = simulate!(mech, 2.0, ctrl!, record=true)
+storage = simulate!(mech, 3.0, ctrl!, record=true, opts=SolverOptions(btol=1e-4))
 visualize(mech, storage, vis=vis, show_contact=true)
 get_minimal_state(mech)
-storage.ω[1]
-plot([-ϕ[3] for ϕ in storage.ω[1]])
 
-
-
+convert_frames_to_video_and_gif("panda_drop2")
 
 
 a = 10
