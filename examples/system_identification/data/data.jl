@@ -33,7 +33,7 @@ function toss2z(toss, timestep; s=1)
 		q2 = vec2[4:7]
 
 		v15 = (x2 - x1) / timestep
-		ϕ15 = ω_finite_difference(Quaternion(q1...),
+		ϕ15 = angular_velocity(Quaternion(q1...),
 			Quaternion(q2...), timestep)
 
 		z2 = [x2; v15; q2; ϕ15]
