@@ -2,7 +2,7 @@ mechanisms = [
     :ant, 
     :atlas,
     :block, 
-    :box2D,
+    :block2D,
     :cartpole,
     :dzhanibekov,
     :fourbar, 
