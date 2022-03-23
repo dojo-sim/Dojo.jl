@@ -3,7 +3,7 @@
 ################################################################################
 struct Block2D end
 
-function block2D(;
+function block2d(;
     representation=:minimal,
     timestep=0.05,
     gravity=[0.0; 0.0; -9.81],
@@ -18,12 +18,12 @@ function block2D(;
     opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5),
     T=Float64)
 
-    mechanism = get_mechanism(:block2D,
+    mechanism = get_mechanism(:block2d,
         timestep=timestep,
         gravity=gravity,
         friction_coefficient=friction_coefficient)
 
-    initialize!(mechanism, :block2D)
+    initialize!(mechanism, :block2d)
 
     if representation == :minimal
         nx = minimal_dimension(mechanism)
@@ -53,7 +53,7 @@ function block2D(;
 
     build_robot(mechanism, vis=vis, name=name)
 
-    TYPES = [Quadruped, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
+    TYPES = [Block2D, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
     Environment{TYPES...}(mechanism, representation, aspace, ospace,
         x, fx, fu,
         u_prev, control_mask' * control_scaling,
