@@ -1,5 +1,6 @@
 @testset "FiniteDiff comparison" begin
-    q = rand(QuatRotation).q
+    q = [1,2,3,4.0]
+    q = Quaternion(q ./ norm(q)...,true)
     @test norm(Dojo.dmrpdq(Dojo.vector(q)) -
         FiniteDiff.finite_difference_jacobian(Dojo.mrp, Dojo.vector(q)), Inf) < 1.0e-5
     @test norm(Dojo.daxisdq(Dojo.vector(q)) -
