@@ -164,7 +164,7 @@ function body_constraint_jacobian_contact_data(mechanism::Mechanism, body::Body{
 
     X = force_mapping(:parent, model, xp3, qp3, xc3, qc3)
     ∇p = - ∂skew∂p(VRmat(qp3) * LᵀVᵀmat(qp3) * X * γ)
-    ∇contact_radius = - ∂skew∂p(VRmat(qp3) * LᵀVᵀmat(qp3) * X * γ) * -∂vector_rotate∂p(offset, inv(qp3)) * model.collision.contact_normal'
+    ∇contact_radius = - ∂skew∂p(VRmat(qp3) * LᵀVᵀmat(qp3) * X * γ) * -rotation_matrix(inv(qp3)) * model.collision.contact_normal'
 
     ∇X = szeros(T,3,Nd)
     ∇Q = -[∇friction_coefficient ∇contact_radius ∇p]
@@ -183,7 +183,7 @@ function contact_constraint_jacobian_contact_data(mechanism::Mechanism, contact:
 
     ∇friction_coefficient = SA[0,γ[1],0,0]
     ∇contact_radius = [-model.collision.contact_normal; szeros(T,1,3); -model.collision.contact_tangent * skew(vector_rotate(ϕp25, qp3))] * model.collision.contact_normal'
-    ∇p = [model.collision.contact_normal * ∂vector_rotate∂p(model.collision.contact_origin, qp3); szeros(T,1,3); model.collision.contact_tangent * skew(vector_rotate(ϕp25, qp3)) * ∂vector_rotate∂p(model.collision.contact_origin, qp3)]
+    ∇p = [model.collision.contact_normal * rotation_matrix(qp3); szeros(T,1,3); model.collision.contact_tangent * skew(vector_rotate(ϕp25, qp3)) * rotation_matrix(qp3)]
 
     ∇compμ = szeros(T,N½,Nd)
     ∇g = -[∇friction_coefficient ∇contact_radius ∇p]
@@ -257,7 +257,7 @@ function indirect_link(id1, id2, nodes::Vector{S}) where {S<:Node}
     return ids
 end
 
-function create_data_matrix(joints::Vector{<:JointConstraint}, bodies::Vector{B}, contacts::Vector{<:ContactConstraint}; 
+function create_data_matrix(joints::Vector{<:JointConstraint}, bodies::Vector{B}, contacts::Vector{<:ContactConstraint};
         force_static::Bool=false) where {T,B<:Body{T}}
     nodes = [joints; bodies; contacts]
     A = data_adjacency_matrix(joints, bodies, contacts)

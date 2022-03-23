@@ -106,14 +106,14 @@ function ∂g∂simdata(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where 
 	# Contribution to Injointonstraint
 	∇friction_coefficient = SA[0,γ[1],0,0]
 	∇off = [-model.collision.contact_normal; szeros(T,1,3); -model.contact_tangent * skew(vector_rotate(ϕ25, q3))]
-	∇p = [model.collision.contact_normal * ∂vector_rotate∂p(model.collision.contact_origin, q3); szeros(T,1,3); model.contact_tangent * skew(vector_rotate(ϕ25, q3)) * ∂vector_rotate∂p(model.collision.contact_origin, q3)]
+	∇p = [model.collision.contact_normal * rotation_matrix(q3); szeros(T,1,3); model.contact_tangent * skew(vector_rotate(ϕ25, q3)) * rotation_matrix(q3)]
 	∇contact = [∇friction_coefficient ∇off ∇p]
 
 	# Contribution to Body dynamics
 	∇friction_coefficient = szeros(T,3)
 	X = force_mapping(model, x3, q3)
 	# this what we differentiate: Qᵀγ = - skew(p - vector_rotate(offset, inv(q3))) * VRmat(q3) * LᵀVᵀmat(q3) * X' * γ
-	∇off = - ∂skew∂p(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ) * -∂vector_rotate∂p(offset, inv(q3))
+	∇off = - ∂skew∂p(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ) * -rotation_matrix(inv(q3))
 	∇p = - ∂skew∂p(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ)
 	∇body = [∇friction_coefficient ∇off ∇p]
 	return ∇contact, ∇body

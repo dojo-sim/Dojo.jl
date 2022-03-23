@@ -7,7 +7,7 @@ function minimal_coordinates(joint::JointConstraint, pbody::Node, cbody::Node)
 	return [Δx; Δθ]
 end
 
-function set_minimal_coordinates!(joint::JointConstraint, pnode::Node, cnode::Node,  
+function set_minimal_coordinates!(joint::JointConstraint, pnode::Node, cnode::Node,
         timestep;
         Δx::AbstractVector=szeros(input_dimension(joint.translational)),
         Δθ::AbstractVector=szeros(input_dimension(joint.rotational)))
@@ -31,7 +31,7 @@ function set_minimal_coordinates!(mechanism, joint::JointConstraint{T,N,Nc}, xθ
     set_minimal_coordinates!(joint, pbody, cbody, mechanism.timestep, Δx=Δx, Δθ=Δθ)
 
     # recursive update down the kinematic chain
-    if iter 
+    if iter
         current = get_minimal_coordinates(mechanism)
         for id in recursivedirectchildren!(mechanism.system, joint.id)
             node = get_node(mechanism, id)
@@ -56,13 +56,13 @@ function set_minimal_velocities!(joint::JointConstraint, pnode::Node, cnode::Nod
         Δϕ=szeros(input_dimension(joint.rotational)))
 
     # get
-	vb, ϕb = get_child_velocity(joint, 
+	vb, ϕb = get_child_velocity(joint,
         initial_configuration_velocity(pnode.state)...,
-	 	current_configuration(cnode.state)..., 
-        timestep, 
+	 	current_configuration(cnode.state)...,
+        timestep,
         Δv=Δv, Δϕ=Δϕ)
 
-    # set 
+    # set
 	set_maximal_velocities!(cnode; v=vb, ω=ϕb)
 	set_previous_configuration!(cnode, timestep)
 
@@ -77,15 +77,15 @@ function set_minimal_velocities!(mechanism, joint::JointConstraint{T,N,Nc}, vϕ)
     # unpack
     Δv = vϕ[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])]
     Δϕ = vϕ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])]
-    
-    # set 
+
+    # set
     set_minimal_velocities!(joint, pbody, cbody, mechanism.timestep, Δv=Δv, Δϕ=Δϕ)
     return
 end
 
 function get_child_velocity(joint::JointConstraint,
     xa::AbstractVector, va::AbstractVector, qa::Quaternion, ϕa::AbstractVector,
-    xb::AbstractVector, qb::Quaternion, 
+    xb::AbstractVector, qb::Quaternion,
     timestep;
     Δv=szeros(input_dimension(joint.translational)),
     Δϕ=szeros(input_dimension(joint.rotational)))
@@ -100,7 +100,7 @@ function get_child_velocity(joint::JointConstraint,
 
     Δx = minimal_coordinates(joint.translational, xa, qa, xb, qb)
     Δq = inv(axis_offset) * inv(qa) * qb
-    
+
     # 1 step backward in time
     xa1 = next_position(xa, -va, timestep)
     qa1 = next_orientation(qa, -ϕa, timestep)
@@ -111,7 +111,7 @@ function get_child_velocity(joint::JointConstraint,
 
     qb1 = qa1 * axis_offset * Δq1
     xb1 = xa1 + vector_rotate(pa + Atra * Δx1, qa1) - vector_rotate(pb, qb1)
-    
+
     # Finite difference
     vb = (xb - xb1) / timestep
     ϕb = angular_velocity(qb1, qb, timestep)
@@ -130,26 +130,26 @@ end
 
 function set_minimal_coordinates_velocities!(mechanism::Mechanism, joint::JointConstraint;
         xmin::AbstractVector=szeros(2*input_dimension(joint)))
-    
+
     pnode = get_body(mechanism, joint.parent_id)
     cnode = get_body(mechanism, joint.child_id)
 
-    xa = pnode.state.x2 
-    va = pnode.state.v15 
-    qa = pnode.state.q2 
-    ϕa = pnode.state.ϕ15 
+    xa = pnode.state.x2
+    va = pnode.state.v15
+    qa = pnode.state.q2
+    ϕa = pnode.state.ϕ15
 
     za = [xa; va; vector(qa); ϕa]
 
     set_minimal_coordinates_velocities!(joint, pnode, cnode, mechanism.timestep; xmin=xmin, zp=za)
 end
 
-function set_minimal_coordinates_velocities!(joint::JointConstraint, 
-        pbody::Node, cbody::Node, 
+function set_minimal_coordinates_velocities!(joint::JointConstraint,
+        pbody::Node, cbody::Node,
         timestep;
         zp::AbstractVector=[pbody.state.x2; pbody.state.v15; vector(pbody.state.q2); pbody.state.ϕ15],
         xmin::AbstractVector=szeros(2*input_dimension(joint)))
-    
+
     nu = input_dimension(joint)
 
     Δx = xmin[SUnitRange(joint.minimal_index[1]...)]
@@ -187,16 +187,16 @@ function set_minimal_coordinates_velocities!(joint::JointConstraint,
 
     qb1 = qa1 * axis_offset * Δq1
     xb1 = xa1 + vector_rotate(pa + Atra * Δx1, qa1) - vector_rotate(pb, qb1)
-    
+
     # finite-difference velocity
     vb = (xb - xb1) / timestep
     ϕb = angular_velocity(qb1, qb, timestep)
-    
+
     # set child state
-    cbody.state.x2 = xb 
-    cbody.state.v15 = vb 
-    cbody.state.q2 = qb 
-    cbody.state.ϕ15 = ϕb 
+    cbody.state.x2 = xb
+    cbody.state.v15 = vb
+    cbody.state.q2 = qb
+    cbody.state.ϕ15 = ϕb
 
     return [xb; vb; vector(qb); ϕb]
 end
@@ -227,12 +227,12 @@ function minimal_coordinates_velocities_jacobian_parent(joint::JointConstraint{T
     qa1 = next_orientation(qa, -ϕa, timestep)
 
     # step backward in time
-    Δx1 = Δx .- Δv * timestep  
+    Δx1 = Δx .- Δv * timestep
     Δq1 = Δq * inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))
-    
+
     qb1 = qa1 * axis_offset * Δq1
     xb1 = xa1 + vector_rotate(pa + Atra * Δx1, qa1) - vector_rotate(pb, qb1)
-    
+
     # Jacobians
 
     ∂xb∂xa = 1.0 * I(3)
@@ -253,7 +253,7 @@ function minimal_coordinates_velocities_jacobian_parent(joint::JointConstraint{T
     ∂qb∂ϕa = szeros(T, 4, 3)
 
     ∂vb∂xa = szeros(T, 3, 3)
-    
+
     ∂vb∂va = 1.0 * I(3)
 
     ∂vb∂qa = 1.0 / timestep * ∂vector_rotate∂q(pa + Atra * Δx, qa)
@@ -261,16 +261,16 @@ function minimal_coordinates_velocities_jacobian_parent(joint::JointConstraint{T
     ∂vb∂qa += -1.0 / timestep * ∂vector_rotate∂q(pa + Atra * Δx1, qa1) * rotational_integrator_jacobian_orientation(qa, -ϕa, timestep, attjac=false)
     ∂vb∂qa += 1.0 / timestep * ∂vector_rotate∂q(pb, qb1) * Rmat(axis_offset * Δq1) * rotational_integrator_jacobian_orientation(qa, -ϕa, timestep, attjac=false)
 
-    ∂vb∂ϕa = 1.0 / timestep * ∂vector_rotate∂q(pa + Atra * Δx1, qa1) * rotational_integrator_jacobian_velocity(qa, -ϕa, timestep) 
-    ∂vb∂ϕa += -1.0 / timestep * ∂vector_rotate∂q(pb, qb1) * Rmat(axis_offset * Δq1) * rotational_integrator_jacobian_velocity(qa, -ϕa, timestep) 
-    
-    ∂ϕb∂xa = szeros(T, 3, 3) 
+    ∂vb∂ϕa = 1.0 / timestep * ∂vector_rotate∂q(pa + Atra * Δx1, qa1) * rotational_integrator_jacobian_velocity(qa, -ϕa, timestep)
+    ∂vb∂ϕa += -1.0 / timestep * ∂vector_rotate∂q(pb, qb1) * Rmat(axis_offset * Δq1) * rotational_integrator_jacobian_velocity(qa, -ϕa, timestep)
+
+    ∂ϕb∂xa = szeros(T, 3, 3)
 
     ∂ϕb∂va = szeros(T, 3, 3)
 
-    ∂ϕb∂qa = ∂angular_velocity∂q1(qb1, qb, timestep) * Rmat(axis_offset * Δq1) * rotational_integrator_jacobian_orientation(qa, -ϕa, timestep, attjac=false) 
+    ∂ϕb∂qa = ∂angular_velocity∂q1(qb1, qb, timestep) * Rmat(axis_offset * Δq1) * rotational_integrator_jacobian_orientation(qa, -ϕa, timestep, attjac=false)
     ∂ϕb∂qa += ∂angular_velocity∂q2(qb1, qb, timestep) * Rmat(axis_offset * Δq)
-    
+
     ∂ϕb∂ϕa = -1.0 * ∂angular_velocity∂q1(qb1, qb, timestep) * Rmat(axis_offset * Δq1) * rotational_integrator_jacobian_velocity(qa, -ϕa, timestep)
 
     [
@@ -281,7 +281,7 @@ function minimal_coordinates_velocities_jacobian_parent(joint::JointConstraint{T
     ]
 end
 
-function set_minimal_coordinates_velocities_jacobian_parent(joint::JointConstraint, 
+function set_minimal_coordinates_velocities_jacobian_parent(joint::JointConstraint,
     pnode::Node, cnode::Node, timestep)
 
     xmin = minimal_coordinates_velocities(joint, pnode, cnode, timestep)
@@ -326,47 +326,47 @@ function minimal_coordinates_velocities_jacobian_minimal(joint::JointConstraint{
     Δq = axis_angle_to_quaternion(Arot * Δθ)
 	qb = qa * axis_offset * Δq
     xb = xa + vector_rotate(pa + Atra * Δx, qa) - vector_rotate(pb, qb)
-    
+
     # step backward in time
     xa1 = next_position(xa, -va, timestep)
     qa1 = next_orientation(qa, -ϕa, timestep)
 
     # step backward in time
     Δq = axis_angle_to_quaternion(Arot * Δθ)
-    Δx1 = Δx .- Δv * timestep  
+    Δx1 = Δx .- Δv * timestep
     Δq1 = Δq * inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))
-    
+
     qb1 = qa1 * axis_offset * Δq1
     xb1 = xa1 + vector_rotate(pa + Atra * Δx1, qa1) - vector_rotate(pb, qb1)
-    
+
     # Jacobians
-    ∂xb∂Δx = ∂vector_rotate∂p(pa + Atra * Δx, qa) * Atra
+    ∂xb∂Δx = rotation_matrix(qa) * Atra
     ∂xb∂Δθ = -∂vector_rotate∂q(pb, qb) * Lmat(qa * axis_offset) * daxis_angle_to_quaterniondx(Arot * Δθ) * Arot
     ∂xb∂Δv = szeros(T, 3, input_dimension(joint.translational))
     ∂xb∂Δϕ = szeros(T, 3, input_dimension(joint.rotational))
 
     ∂qb∂Δx = szeros(T, 4, input_dimension(joint.translational))
     ∂qb∂Δθ = Lmat(qa * axis_offset) * daxis_angle_to_quaterniondx(Arot * Δθ) * Arot
-    ∂qb∂Δv = szeros(T, 4, input_dimension(joint.translational)) 
+    ∂qb∂Δv = szeros(T, 4, input_dimension(joint.translational))
     ∂qb∂Δϕ = szeros(T, 4, input_dimension(joint.rotational))
 
-    ∂vb∂Δx = 1 / timestep * ∂vector_rotate∂p(pa + Atra * Δx, qa) * Atra
-    ∂vb∂Δx += -1 / timestep * ∂vector_rotate∂p(pa + Atra * Δx1, qa1) * Atra
-    
+    ∂vb∂Δx = 1 / timestep * rotation_matrix(qa) * Atra
+    ∂vb∂Δx += -1 / timestep * rotation_matrix(qa1) * Atra
+
     ∂vb∂Δθ = -1.0 / timestep * ∂vector_rotate∂q(pb, qb) * Lmat(qa * axis_offset) * daxis_angle_to_quaterniondx(Arot * Δθ) * Arot
     ∂vb∂Δθ += 1.0 / timestep * ∂vector_rotate∂q(pb, qb1) * Rmat(inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))) * Lmat(qa1 * axis_offset) * daxis_angle_to_quaterniondx(Arot * Δθ) * Arot
-    
-    ∂vb∂Δv = ∂vector_rotate∂p(pa + Atra * Δx1, qa1) * Atra
-    
+
+    ∂vb∂Δv = rotation_matrix(qa1) * Atra
+
     ∂vb∂Δϕ = ∂vector_rotate∂q(pb, qb1) * Lmat(qa1 * axis_offset * Δq) * Tmat() * daxis_angle_to_quaterniondx(Arot * Δϕ * timestep) * Arot
-    
+
     ∂ϕb∂Δx = szeros(T, 3, input_dimension(joint.translational))
 
     ∂ϕb∂Δθ = ∂angular_velocity∂q1(qb1, qb, timestep) * Rmat(inv(axis_angle_to_quaternion(Arot * Δϕ * timestep))) * Lmat(qa1 * axis_offset) * daxis_angle_to_quaterniondx(Arot * Δθ) * Arot
     ∂ϕb∂Δθ += ∂angular_velocity∂q2(qb1, qb, timestep) * Lmat(qa * axis_offset) * daxis_angle_to_quaterniondx(Arot * Δθ) * Arot
-    
+
     ∂ϕb∂Δv = szeros(3, input_dimension(joint.translational))
-    
+
     ∂ϕb∂Δϕ = ∂angular_velocity∂q1(qb1, qb, timestep) * Lmat(qa1 * axis_offset * Δq) * Tmat() * daxis_angle_to_quaterniondx(Arot * Δϕ * timestep) * Arot * timestep
 
     [
@@ -377,7 +377,7 @@ function minimal_coordinates_velocities_jacobian_minimal(joint::JointConstraint{
     ]
 end
 
-function set_minimal_coordinates_velocities_jacobian_minimal(joint::JointConstraint, 
+function set_minimal_coordinates_velocities_jacobian_minimal(joint::JointConstraint,
     pnode::Node, cnode::Node, timestep)
 
     xmin = minimal_coordinates_velocities(joint, pnode, cnode, timestep)
@@ -400,4 +400,3 @@ function set_minimal_coordinates_velocities_jacobian_minimal(joint::JointConstra
     J = cat(Diagonal(sones(6)), LVᵀmat(qb)', Diagonal(sones(3)), dims=(1,2)) * J
     return J
 end
-

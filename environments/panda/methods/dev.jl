@@ -7,29 +7,42 @@ open(vis)
 
 mech = Dojo.get_mechanism(:panda,
     timestep=0.05,
-    gravity=-9.81,
+    gravity=-0*9.81,
     spring=0.0,
-    damper=2.0,
+    damper=10.0,
     contact=true,
     limits=true,
     )
 # for joint in mech.joints
 #     joint.rotational.axis_offset = Quaternion(1,0,0,0.0,true)
 # end
-function ctrl!(m,k)
+function ctrl!(m, k; kp=10.0, kd=5.0)
     nu = input_dimension(m)
-    set_input!(m, -0.00rand(7))
+    pref = [0,-0.8,0,1.6,0,-2.4,0,0,0]
+    y = get_minimal_state(m)
+    p = y[1:2:end]
+    v = y[2:2:end]
+    u = kp * [1,1,1,1,1,1,1,-1,-1] .* (pref - p) - kd * v
+    @show norm(p-pref)
+    set_input!(m, u*m.timestep)
     return nothing
 end
 
+input_dimension(mech.joints[2].rotational)
+initialize_panda!(mech,
+    joint_angles=[2.0,-0.5,0.3,1.3,0.3,-2.0,0,0,0],
+    joint_velocities=[0,0,0,0,0,0,0,0,0.0])
 
-initialize_panda!(mech, joint_angles=[0,-0.8,0,1.6,0,-2.4,0], joint_velocities=[0,0,0,0,0,0,0.0])
-
-storage = simulate!(mech, 3.0, ctrl!, record=true, opts=SolverOptions(btol=1e-4))
+storage = simulate!(mech, 6.0, ctrl!, record=true, opts=SolverOptions(btol=1e-4))
 visualize(mech, storage, vis=vis, show_contact=true)
-get_minimal_state(mech)
 
-convert_frames_to_video_and_gif("panda_drop2")
+convert_frames_to_video_and_gif("panda_pd_control")
+
+
+env = get_environment(:panda)
+x = srand(minimal_dimension(env.mechanism))
+u = srand(input_dimension(env.mechanism))
+step(env, x, u)
 
 
 a = 10

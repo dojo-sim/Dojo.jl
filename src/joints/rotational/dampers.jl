@@ -74,9 +74,9 @@ function damper_jacobian_velocity(relative::Symbol, jacobian::Symbol,
     ∂vel = minimal_velocities_jacobian_velocity(jacobian, joint, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
 
     if relative == :parent
-        VΩ = ∂vector_rotate∂p(force, axis_offset) * 2.0000 * joint.damper * Aᵀ * ∂vel
+        VΩ = rotation_matrix(axis_offset) * 2.0000 * joint.damper * Aᵀ * ∂vel
     elseif relative == :child
-        VΩ = ∂vector_rotate∂p(force, inv(qb) * qa * axis_offset) * -2.0000 * joint.damper * Aᵀ * ∂vel
+        VΩ = rotation_matrix(inv(qb) * qa * axis_offset) * -2.0000 * joint.damper * Aᵀ * ∂vel
     end
     return timestep * [szeros(T, 3, 6); VΩ]
 end
