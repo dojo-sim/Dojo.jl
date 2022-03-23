@@ -65,7 +65,7 @@ z0 = [x2; v15; Dojo.vector(q2); ϕ15]
 ψ, impact_normal, barycenter = collision(sphere, soft)
 
 
-soft.options = ColliderOptions19(
+soft.options = ColliderOptions110(
     impact_damper=1e7,
     impact_spring=1e7,
     sliding_drag=0.0,

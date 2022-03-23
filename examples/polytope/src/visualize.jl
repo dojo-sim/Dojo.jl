@@ -17,7 +17,7 @@ function set_robot!(x, q, vis::Visualizer; name::Symbol=:robot)
     return nothing
 end
 
-function build_collider!(collider::SoftCollider27{N,T}, vis::Visualizer;
+function build_collider!(collider::SoftCollider110{N,T}, vis::Visualizer;
         name::Symbol=:collider, visualize_particle::Bool=false,
         mesh_color=RGBA(1,1,1,0.3),
         particle_color=RGBA(0.8,0.8,0.8,1.0),

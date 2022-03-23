@@ -1,8 +1,8 @@
-using LinearAlgebra
-using Plots
+using Dojo
 using FiniteDiff
 using JLD2
-using Dojo
+using LinearAlgebra
+using Plots
 using PyCall
 
 ################################################################################
@@ -48,3 +48,17 @@ set_light!(vis)
 set_background!(vis)
 set_floor!(vis, alt=-0.5)
 build_collider!(soft, vis, visualize_particle=false)
+
+
+
+# α = 0.2
+# soft1 = deepcopy(soft)
+# soft2 = deepcopy(soft)
+# soft1.x = α*[0,0,-1.0]
+# soft2.x = α*[0,0,+1.0]
+# soft1.q = Quaternion(0,1,0,0.0)
+# soft2.q = Quaternion(1,0,0,0.0)
+# cross_collision(soft1, soft2)
+# cross_collision(soft2, soft1)
+# collision(soft1, soft2)
+# collision(soft1, soft2)

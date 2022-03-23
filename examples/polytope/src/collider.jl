@@ -4,7 +4,7 @@ abstract type ColliderOptions{T} end
 ################################################################################
 # ColliderOptions
 ################################################################################
-Dojo.@with_kw mutable struct ColliderOptions19{T} <: ColliderOptions{T}
+@with_kw mutable struct ColliderOptions110{T} <: ColliderOptions{T}
     impact_damper::T=1e7
     impact_spring::T=1e7
     sliding_drag::T=0.0
@@ -18,17 +18,17 @@ end
 ################################################################################
 # HalfSpaceCollider
 ################################################################################
-mutable struct HalfSpaceCollider28{T} <: Collider{T}
+mutable struct HalfSpaceCollider110{T} <: Collider{T}
     origin::Vector{T}
     normal::Vector{T}
 end
 
 function HalfSpaceCollider(origin, normal)
     normal /= norm(normal)
-    return HalfSpaceCollider28(origin, normal)
+    return HalfSpaceCollider110(origin, normal)
 end
 
-function inside(collider::HalfSpaceCollider28, p)
+function inside(collider::HalfSpaceCollider110, p)
     origin = collider.origin
     normal = collider.normal
     c = (p - origin)' * normal
@@ -38,16 +38,16 @@ end
 ################################################################################
 # SphereCollider
 ################################################################################
-mutable struct SphereCollider28{T} <: Collider{T}
+mutable struct SphereCollider110{T} <: Collider{T}
     origin::Vector{T}
     radius::T
 end
 
 function SphereCollider(origin, radius)
-    return SphereCollider28(origin, radius)
+    return SphereCollider110(origin, radius)
 end
 
-function inside(collider::SphereCollider28, p)
+function inside(collider::SphereCollider110, p)
     origin = collider.origin
     return norm(p - origin) <= radius
 end
@@ -55,7 +55,7 @@ end
 ################################################################################
 # SoftCollider
 ################################################################################
-mutable struct SoftCollider28{T,N} <: Collider{T}
+mutable struct SoftCollider110{T,N} <: Collider{T}
     x::AbstractVector{T}
     q::Quaternion{T}
     mass::T
@@ -71,14 +71,14 @@ mutable struct SoftCollider28{T,N} <: Collider{T}
     options::ColliderOptions{T}
 end
 
-function SoftCollider(nerf_object, mesh; N=1000, density_scale=0.1, opts=ColliderOptions19(), T=Float64)
+function SoftCollider(nerf_object, mesh; N=1000, density_scale=0.1, opts=ColliderOptions110(), T=Float64)
     x = szeros(T,3)
     q = Quaternion(1,0,0,0.0)
     mass, inertia, center_of_mass = inertia_properties(nerf_object, density_scale=density_scale)
     particles, densities, density_gradients = sample_soft(nerf_object, N)
     weights = densities ./ sum(densities) * mass
     weight_gradients = density_gradients ./ sum(densities) * mass
-    return SoftCollider28{T,N}(x, q, mass, inertia, center_of_mass, particles,
+    return SoftCollider110{T,N}(x, q, mass, inertia, center_of_mass, particles,
         densities, density_gradients, weights, weight_gradients, nerf_object, mesh, opts)
 end
 
@@ -120,7 +120,7 @@ end
 ################################################################################
 # collision
 ################################################################################
-function collision(collider::Collider{T}, soft_collider::SoftCollider28{T,N}) where {T,N}
+function collision(collider::Collider{T}, soft_collider::SoftCollider110{T,N}) where {T,N}
     ψ = 0.0
     ∇ψ = zeros(3)
     barycenter = zeros(3)
@@ -145,7 +145,7 @@ function collision(collider::Collider{T}, soft_collider::SoftCollider28{T,N}) wh
 end
 using LinearAlgebra
 
-function cross_collision(collider1::SoftCollider28{T,N1}, collider2::SoftCollider28{T,N2}) where {T,N1,N2}
+function cross_collision(collider1::SoftCollider110{T,N1}, collider2::SoftCollider110{T,N2}) where {T,N1,N2}
     # returns
     # the particles of collider 1 in world frame
     # cross weights of collider1 and collider2
@@ -178,7 +178,7 @@ function cross_collision(collider1::SoftCollider28{T,N1}, collider2::SoftCollide
     return ψ, contact_normal_w, barycenter_w
 end
 
-function collision(collider1::SoftCollider28{T,N1}, collider2::SoftCollider28{T,N2}) where {T,N1,N2}
+function collision(collider1::SoftCollider110{T,N1}, collider2::SoftCollider110{T,N2}) where {T,N1,N2}
     # contact_normal = direction of force applied by collider1 on collider2
     ψ1, contact_normal1w, barycenter1w = cross_collision(collider1, collider2) # weigths of collider2 at particle1
     ψ2, contact_normal2w, barycenter2w = cross_collision(collider2, collider1) # weigths of collider1 at particle2
@@ -194,23 +194,11 @@ function collision(collider1::SoftCollider28{T,N1}, collider2::SoftCollider28{T,
     return ψ, contact_normal_w, barycenter_2
 end
 
-function collision_normal(collider::HalfSpaceCollider28{T}, soft_collider::SoftCollider28{T,N}, barycenter) where {T,N}
+function collision_normal(collider::HalfSpaceCollider110{T}, soft_collider::SoftCollider110{T,N}, barycenter) where {T,N}
     collider.normal
 end
 
-function collision_normal(collider::SphereCollider28{T}, soft_collider::SoftCollider28{T,N}, barycenter) where {T,N}
+function collision_normal(collider::SphereCollider110{T}, soft_collider::SoftCollider110{T,N}, barycenter) where {T,N}
     normal = barycenter - collider.origin
     return normal ./ (1e-20 + norm(normal))
 end
-
-α = 0.2
-soft1 = deepcopy(soft)
-soft2 = deepcopy(soft)
-soft1.x = α*[0,0,-1.0]
-soft2.x = α*[0,0,+1.0]
-soft1.q = Quaternion(0,1,0,0.0)
-soft2.q = Quaternion(1,0,0,0.0)
-cross_collision(soft1, soft2)
-cross_collision(soft2, soft1)
-collision(soft1, soft2)
-collision(soft1, soft2)
