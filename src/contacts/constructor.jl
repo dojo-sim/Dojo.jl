@@ -1,17 +1,19 @@
+abstract type ContactConstraint{T,N,Nc,Cs} <: Constraint{T,N} end
+
 """
-    ContactConstraint{T} <: Constraint{T}
+    RigidContactConstraint{T,N,Nc,Cs} <: ContactConstraint{T,N,Nc,Cs}
 
     constraint containing information for contact node.
 
-    id: unique identifying number 
-    name: unique identifying name 
-    model: type of contact model: ImpactContact, LinearContact, NonlinearContact 
-    parent_id: identifying number of Body experiencing contact 
+    id: unique identifying number
+    name: unique identifying name
+    model: type of contact model: ImpactContact, LinearContact, NonlinearContact
+    parent_id: identifying number of Body experiencing contact
     child_id: always 0
-    impulses: contact impulses applied to Body 
-    impulses_dual: dual contact impulses, used by solver to enforce correct contact behaviors 
+    impulses: contact impulses applied to Body
+    impulses_dual: dual contact impulses, used by solver to enforce correct contact behaviors
 """
-mutable struct ContactConstraint{T,N,Nc,Cs,N½} <: Constraint{T,N}
+mutable struct RigidContactConstraint{T,N,Nc,Cs,N½} <: ContactConstraint{T,N,Nc,Cs}
     # ID
     id::Int64
     name::Symbol
@@ -27,7 +29,7 @@ mutable struct ContactConstraint{T,N,Nc,Cs,N½} <: Constraint{T,N}
     impulses::Vector{SVector{N½,T}}
     impulses_dual::Vector{SVector{N½,T}}
 
-    function ContactConstraint(data; 
+    function RigidContactConstraint(data;
         name::Symbol=Symbol("contact_" * randstring(4)))
 
         model, parent_id, child_id = data
@@ -43,9 +45,50 @@ mutable struct ContactConstraint{T,N,Nc,Cs,N½} <: Constraint{T,N}
 end
 
 """
-    contact_constraint(bodies::Vector{Body}) 
+    SoftContactConstraint{T,N,Nc,Cs} <: ContactConstraint{T,N,Nc,Cs}
 
-    generate ContactConstraints for each Body in list
+    constraint containing information for contact node.
+
+    id: unique identifying number
+    name: unique identifying name
+    model: type of contact model: ImpactContact, LinearContact, NonlinearContact
+    parent_id: identifying number of Body experiencing contact
+    child_id: always 0
+    impulses: contact impulses applied to Body
+    impulses_dual: dual contact impulses, used by solver to enforce correct contact behaviors
+"""
+mutable struct SoftContactConstraint{T,N,Nc,Cs} <: ContactConstraint{T,N,Nc,Cs}
+    # ID
+    id::Int64
+    name::Symbol
+
+    # contact model
+    model::Cs
+
+    # neighbor IDs
+    parent_id::Int
+    child_id::Int
+
+    # variables
+    impulses::Vector{SVector{N,T}}
+
+    function SoftContactConstraint(data;
+        name::Symbol=Symbol("contact_" * randstring(4)))
+
+        model, parent_id, child_id = data
+        T = typeof(model).parameters[1]
+
+        N = length(model)
+
+        impulses = [szeros(T,N) for i = 1:2]
+        new{T,N,1,typeof(model)}(getGlobalID(), name, model, parent_id, child_id, impulses)
+    end
+end
+
+"""
+    contact_constraint(bodies::Vector{Body})
+
+    generate RigidContactConstraints for each Body in list
 
     normal: surface normal for each contact point
     friction coefficient: value of coefficient of friction for each contact point (optional for ImpactContact)
@@ -65,11 +108,11 @@ function contact_constraint(bodies::Vector{Body{T}},
     @assert n == length(bodies) == length(normal) == length(friction_coefficient) == length(contact_origins) == length(contact_radius)
     contacts = Vector{ContactConstraint}()
     for i = 1:n
-        contact = contact_constraint(bodies[i], normal[i], 
-            friction_coefficient=friction_coefficient[i], 
+        contact = contact_constraint(bodies[i], normal[i],
+            friction_coefficient=friction_coefficient[i],
             contact_origin=contact_origins[i],
-            contact_radius=contact_radius[i], 
-            name=names[i], 
+            contact_radius=contact_radius[i],
+            name=names[i],
             contact_type=contact_type)
         push!(contacts, contact)
     end
@@ -86,11 +129,11 @@ function contact_constraint(body::Body{T},
         contact_type::Symbol=:nonlinear) where T
     n = length(normal)
     @assert n == length(normal) == length(friction_coefficient) == length(contact_origins) == length(contact_radius)
-    return contact_constraint(fill(body, n), normal, 
-        friction_coefficient=friction_coefficient, 
-        contact_origins=contact_origins, 
+    return contact_constraint(fill(body, n), normal,
+        friction_coefficient=friction_coefficient,
+        contact_origins=contact_origins,
         contact_radius=contact_radius,
-        names=names, 
+        names=names,
         contact_type=contact_type)
 end
 
@@ -103,21 +146,27 @@ function contact_constraint(body::Body{T},
         contact_type::Symbol=:nonlinear) where T
 
     if contact_type == :nonlinear
-        model = NonlinearContact(body, normal, friction_coefficient, 
-            contact_origin=contact_origin, 
+        model = NonlinearContact(body, normal, friction_coefficient,
+            contact_origin=contact_origin,
             contact_radius=contact_radius)
+        contact = RigidContactConstraint((model, body.id, 0); name=name)
     elseif contact_type == :linear
-        model = LinearContact(body, normal, friction_coefficient, 
-            contact_origin=contact_origin, 
+        model = LinearContact(body, normal, friction_coefficient,
+            contact_origin=contact_origin,
             contact_radius=contact_radius)
+        contact = RigidContactConstraint((model, body.id, 0); name=name)
     elseif contact_type == :impact
-        model = ImpactContact(body, normal, 
-            contact_origin=contact_origin, 
+        model = ImpactContact(body, normal,
+            contact_origin=contact_origin,
             contact_radius=contact_radius)
+        contact = RigidContactConstraint((model, body.id, 0); name=name)
+    elseif contact_type == :soft
+        model = SoftContact(body, normal,
+            contact_origin=contact_origin,
+            contact_radius=contact_radius)
+        contact = SoftContactConstraint((model, body.id, 0); name=name)
     else
         @warn "unknown contact_type"
     end
-    contacts = ContactConstraint((model, body.id, 0); 
-        name=name)
-    return contacts
+    return contact
 end

@@ -64,10 +64,8 @@ function update!(joint::JointConstraint)
     return
 end
 
-function update!(contact::ContactConstraint)
+function update!(contact::RigidContactConstraint)
     contact.impulses_dual[1] = contact.impulses_dual[2]
     contact.impulses[1] = contact.impulses[2]
     return
 end
-
-

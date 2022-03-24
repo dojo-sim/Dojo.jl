@@ -10,7 +10,7 @@ end
 
 correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, node::Node) = nothing
 
-function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, ::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, ::RigidContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
 	Δs = step_entry.value[1:N½]
     Δγ = step_entry.value[N½ .+ (1:N½)]
 	μ = mechanism.μ
@@ -18,7 +18,7 @@ function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::En
     return
 end
 
-function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
+function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, contact::RigidContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
 	cont = contact.model
 	μ = mechanism.μ
 	Δs = step_entry.value[1:N½]

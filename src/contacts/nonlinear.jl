@@ -4,9 +4,9 @@
     contact object for impact and friction with a nonlinear friction cone
 
     friction_coefficient: value of friction coefficient
-    contact_tangent: mapping from world frame to surface tangent frame 
+    contact_tangent: mapping from world frame to surface tangent frame
     contact_normal: inverse/complement of contact_tangent
-    contact_origin: position of contact on Body relative to center of mass 
+    contact_origin: position of contact on Body relative to center of mass
     contact radius: radius of contact
 """
 mutable struct NonlinearContact{T,N} <: Contact{T,N}
@@ -15,8 +15,8 @@ mutable struct NonlinearContact{T,N} <: Contact{T,N}
     collision::Collision{T,2,3,6}
 end
 
-function NonlinearContact(body::Body{T}, normal::AbstractVector, friction_coefficient; 
-    contact_origin=szeros(T, 3), 
+function NonlinearContact(body::Body{T}, normal::AbstractVector, friction_coefficient;
+    contact_origin=szeros(T, 3),
     contact_radius=0.0) where T
 
     # contact directions
@@ -25,24 +25,24 @@ function NonlinearContact(body::Body{T}, normal::AbstractVector, friction_coeffi
     Ainv = inv(A)
     contact_normal = Ainv[3, SA[1; 2; 3]]'
     contact_tangent = Ainv[SA[1; 2], SA[1; 2; 3]]
-    
+
     # friction parameterization
     parameterization = SA{T}[
          1.0  0.0
          0.0  1.0
     ]
 
-    # collision 
+    # collision
     collision = SphereHalfSpaceCollision(contact_tangent, contact_normal, SVector{3}(contact_origin), contact_radius)
-    
+
     NonlinearContact{T,8}(friction_coefficient, parameterization, collision)
 end
 
-function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
+function constraint(mechanism, contact::RigidContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
     # contact model
     model = contact.model
 
-    # parent 
+    # parent
     pbody = get_body(mechanism, contact.parent_id)
     xp, vp, qp, ϕp = next_configuration_velocity(pbody.state, mechanism.timestep)
 
@@ -50,13 +50,13 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}) where 
     cbody = get_body(mechanism, contact.child_id)
     xc, vc, qc, ϕc = next_configuration_velocity(cbody.state, mechanism.timestep)
 
-    # distance 
+    # distance
     d = distance(model.collision, xp, qp, xc, qc)
 
     # relative tangential velocity
     vt = relative_tangential_velocity(model, xp, qp, vp, ϕp, xc, qc, vc, ϕc)
 
-    # unpack contact variables 
+    # unpack contact variables
     γ = contact.impulses[2]
     s = contact.impulses_dual[2]
 
@@ -66,7 +66,7 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}) where 
         (model.friction_parameterization * vt - s[@SVector [3,4]])...)
 end
 
-function constraint_jacobian(contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
+function constraint_jacobian(contact::RigidContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
     friction_coefficient = contact.model.friction_coefficient
     γ = contact.impulses[2] + REG * neutral_vector(contact.model) # TODO need to check this is legit
     s = contact.impulses_dual[2] + REG * neutral_vector(contact.model) # TODO need to check this is legit

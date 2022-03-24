@@ -15,8 +15,7 @@ using Random
 using StaticArrays
 
 global const OSF_PATH = joinpath("/home/simon/research/repos/osf-pytorch")
-# global OSF_PATH = joinpath("/home/simon/research/repos/osf-pytorch")
-# include("setup.jl")
+include("setup.jl")
 using PyCall
 
 include("collider.jl")

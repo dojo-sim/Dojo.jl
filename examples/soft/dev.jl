@@ -143,7 +143,7 @@ end
 end
 
 @inline function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry,
-    contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NerfContact{T,N},N½}
+    contact::RigidContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NerfContact{T,N},N½}
     # ∇impulses[dual .* impulses - μ; g - s] = [diag(dual); -diag(0,1,1)]
     # ∇dual[dual .* impulses - μ; g - s] = [diag(impulses); -diag(1,0,0)]
     γ = contact.impulses[2]
@@ -191,7 +191,7 @@ function initialize_nerf!(mechanism::Mechanism; x::AbstractVector{T}=zeros(3),
     set_velocity!(mechanism, joint, [v; ω])
 end
 
-function feasibility_linesearch!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
+function feasibility_linesearch!(α, mechanism, contact::RigidContactConstraint{T,N,Nc,Cs,N½},
         vector_entry::Entry, τort, τsoc; scaling::Bool = false) where {T,N,Nc,Cs<:Union{NerfContact{T,N},ImpactContact{T,N},LinearContact{T,N}},N½}
     s = contact.impulses_dual[2]
     γ = contact.impulses[2]

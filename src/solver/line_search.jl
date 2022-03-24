@@ -31,9 +31,9 @@ function line_search!(mechanism::Mechanism, α, rvio, bvio, opts)
     return rvio_cand, bvio_cand
 end
 
-function cone_line_search!(mechanism::Mechanism; 
-    τort::T=0.95, 
-    τsoc::T=0.95, 
+function cone_line_search!(mechanism::Mechanism;
+    τort::T=0.95,
+    τsoc::T=0.95,
     scaling::Bool=false) where T
 
     system = mechanism.system
@@ -49,8 +49,8 @@ function cone_line_search!(mechanism::Mechanism;
     return α
 end
 
-function cone_line_search!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
-        vector_entry::Entry, τort, τsoc; 
+function cone_line_search!(α, mechanism, contact::RigidContactConstraint{T,N,Nc,Cs,N½},
+        vector_entry::Entry, τort, τsoc;
         scaling::Bool=false) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
 
     s = contact.impulses_dual[2]
@@ -65,9 +65,9 @@ function cone_line_search!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N
     return min(α, αs_soc, αγ_soc, αs_ort, αγ_ort)
 end
 
-function cone_line_search!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
-        vector_entry::Entry, τort, τsoc; 
-        scaling::Bool=false) where {T,N,Nc,Cs<:Union{ImpactContact{T,N},LinearContact{T,N}},N½}
+function cone_line_search!(α, mechanism, contact::RigidContactConstraint{T,N,Nc,Cs,N½},
+        vector_entry::Entry, τort, τsoc;
+        scaling::Bool=false) where {T,N,Nc,Cs<:Union{ImpactContact{T,N},LinearContact{T,N},SoftContact{T,N}},N½}
 
     s = contact.impulses_dual[2]
     γ = contact.impulses[2]
@@ -82,7 +82,7 @@ function cone_line_search!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N
 end
 
 function cone_line_search!(α, mechanism, joint::JointConstraint{T,N,Nc},
-        vector_entry::Entry, τort, τsoc; 
+        vector_entry::Entry, τort, τsoc;
         scaling::Bool=false) where {T,N,Nc}
 
     for (i, element) in enumerate([joint.translational, joint.rotational])
@@ -97,7 +97,7 @@ function cone_line_search!(α, mechanism, joint::JointConstraint{T,N,Nc},
     return α
 end
 
-function positive_orthant_step_length(λ::AbstractVector{T}, Δ::AbstractVector{T}; 
+function positive_orthant_step_length(λ::AbstractVector{T}, Δ::AbstractVector{T};
     τ::T = 0.99) where T
 
     α = 1.0
@@ -111,7 +111,7 @@ function positive_orthant_step_length(λ::AbstractVector{T}, Δ::AbstractVector{
 end
 
 function second_order_cone_step_length(λ::AbstractVector{T}, Δ::AbstractVector{T};
-        τ::T=0.99, 
+        τ::T=0.99,
         ϵ::T=1e-14) where T
 
     # check Section 8.2 CVXOPT
@@ -131,7 +131,7 @@ function second_order_cone_step_length(λ::AbstractVector{T}, Δ::AbstractVector
     if norm(ρv) - ρs > 0.0
         α = min(α, τ / (norm(ρv) - ρs))
     end
-    
+
     return α
 end
 
@@ -152,7 +152,7 @@ function candidate_step!(α, joint::JointConstraint, vector_entry::Entry, scale)
     return
 end
 
-function candidate_step!(α::T, contact::ContactConstraint{T,N,Nc,Cs,N½}, vector_entry::Entry, scale) where {T,N,Nc,Cs,N½}
+function candidate_step!(α::T, contact::RigidContactConstraint{T,N,Nc,Cs,N½}, vector_entry::Entry, scale) where {T,N,Nc,Cs,N½}
     contact.impulses_dual[2] = contact.impulses_dual[1] + 1 / (2^scale) * α * vector_entry.value[SVector{N½,Int64}(1:N½)]
     contact.impulses[2] = contact.impulses[1] + 1 / (2^scale) * α * vector_entry.value[SVector{N½,Int64}(N½+1:N)]
     return

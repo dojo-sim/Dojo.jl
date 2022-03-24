@@ -150,7 +150,7 @@ function body_constraint_jacobian_joint_data(mechanism::Mechanism{T}, body::Body
 end
 
 function body_constraint_jacobian_contact_data(mechanism::Mechanism, body::Body{T},
-        contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
+        contact::RigidContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
     Nd = data_dim(contact)
     model = contact.model
     contact_radius = model.collision.contact_radius
@@ -171,7 +171,7 @@ function body_constraint_jacobian_contact_data(mechanism::Mechanism, body::Body{
     return [∇X; ∇Q]
 end
 
-function contact_constraint_jacobian_contact_data(mechanism::Mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}, body::Body{T}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
+function contact_constraint_jacobian_contact_data(mechanism::Mechanism, contact::RigidContactConstraint{T,N,Nc,Cs,N½}, body::Body{T}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
     Nd = data_dim(contact)
     model = contact.model
 
@@ -191,7 +191,7 @@ function contact_constraint_jacobian_contact_data(mechanism::Mechanism, contact:
     return [∇compμ; ∇g]
 end
 
-function contact_constraint_jacobian_body_data(mechanism::Mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}, body::Body{T}) where {T,N,Nc,Cs,N½}
+function contact_constraint_jacobian_body_data(mechanism::Mechanism, contact::RigidContactConstraint{T,N,Nc,Cs,N½}, body::Body{T}) where {T,N,Nc,Cs,N½}
     Nd = data_dim(body)
     ∇compμ = szeros(T,N½,Nd)
     ∇m = szeros(T,N½,1)

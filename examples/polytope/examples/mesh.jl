@@ -1,7 +1,7 @@
 ################################################################################
 # build NeRf
 ################################################################################
-@pyinclude(joinpath(OSF_PATH, "extract_density_julia.py"))
+@pyinclude(joinpath(OSF_PATH, "extract_density_julia_cpu.py"))
 nerf_object = py"generate_test_nerf"()
 
 ################################################################################
@@ -15,15 +15,15 @@ rect = GeometryBasics.Rect(MeshCat.Vec(-0.75, -0.5, -0.7), MeshCat.Vec(1.5, 1, 1
 mesh = GeometryBasics.Mesh(x -> norm(x,0.2)-50.5, rect, MarchingCubes(), samples=(100,100,100))
 
 # NeRF density -> density tensor -> Mesh
-N = 30
+N = 100
 xrange = range(-1.0, stop=1.0, length=N)
 yrange = range(-1.0, stop=1.0, length=N)
 zrange = range(-1.0, stop=1.0, length=N)
 densities = grid_density(nerf_object, xrange, yrange, zrange)
 vertices, faces = isosurface(densities, NaiveSurfaceNets(iso=1)) # iso=65
 mesh = GeometryBasics.Mesh(densities, NaiveSurfaceNets(iso=1)) # iso=65
-results_dir = joinpath(module_dir(), "results")
-jldsave(joinpath(results_dir, "bunny_mesh.jld2"), mesh=mesh, densities=densities,
+results_dir = joinpath(example_dir(), "results")
+jldsave(joinpath(results_dir, "bunny_outer_mesh.jld2"), mesh=mesh, densities=densities,
     vertices=vertices, faces=faces)
 
 N = 100
@@ -33,8 +33,8 @@ zrange = range(-1.0, stop=1.0, length=N)
 densities = grid_density(nerf_object, xrange, yrange, zrange)
 vertices, faces = isosurface(densities, NaiveSurfaceNets(iso=65)) # iso=65
 mesh = GeometryBasics.Mesh(densities, NaiveSurfaceNets(iso=65)) # iso=65
-results_dir = joinpath(module_dir(), "results")
-jldsave(joinpath(results_dir, "bunny_tight_mesh.jld2"), mesh=mesh, densities=densities,
+results_dir = joinpath(example_dir(), "results")
+jldsave(joinpath(results_dir, "bunny_inner_mesh.jld2"), mesh=mesh, densities=densities,
     vertices=vertices, faces=faces)
 
 # densities = jldopen(joinpath(results_dir, "bunny_mesh.jld2"))["densities"]

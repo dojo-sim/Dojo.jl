@@ -7,7 +7,7 @@ data_dim(mechanism::Mechanism; attjac::Bool=true) =
 	sum(Vector{Int64}(data_dim.(mechanism.joints))) +
     sum(Vector{Int64}(data_dim.(mechanism.bodies, attjac=attjac))) +
 	sum(Vector{Int64}(data_dim.(mechanism.contacts)))
-	
+
 # Joints
 data_dim(joint::JointConstraint) = 2 + sum(data_dim.([joint.translational, joint.rotational])) # [utra, urot, spring, damper]
 data_dim(joint::Translational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = N̄λ # [utra]
@@ -21,6 +21,7 @@ data_dim(contact::ContactConstraint) = data_dim(contact.model)
 data_dim(model::NonlinearContact) = 5 # [friction_coefficient, contact_radius, p]
 data_dim(model::LinearContact) = 5 # [friction_coefficient, contact_radius, p]
 data_dim(model::ImpactContact) = 4 # [contact_radius, p]
+data_dim(model::SoftContact) = 4 # [contact_radius, p]
 
 
 ################################################################################

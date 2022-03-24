@@ -15,8 +15,8 @@ nerf_object = py"generate_test_nerf"()
 
 # Nerf data
 results_dir = joinpath(example_dir(), "results")
-mesh = jldopen(joinpath(results_dir, "bunny_mesh.jld2"))["mesh"]
-tight_mesh = jldopen(joinpath(results_dir, "bunny_tight_mesh.jld2"))["mesh"]
+outer_mesh = jldopen(joinpath(results_dir, "bunny_outer_mesh.jld2"))["mesh"]
+inner_mesh = jldopen(joinpath(results_dir, "bunny_inner_mesh.jld2"))["mesh"]
 
 vis = Visualizer()
 open(vis)
@@ -38,6 +38,7 @@ sphere = SphereCollider(sphere_origin, radius)
 # jldsave(joinpath(example_dir(), "results", "soft.jld2"), soft=soft0)
 soft0 = jldopen(joinpath(example_dir(), "results", "soft.jld2"))["soft"]
 soft1 = jldopen(joinpath(example_dir(), "results", "soft.jld2"))["soft"]
+soft2 = jldopen(joinpath(example_dir(), "results", "soft.jld2"))["soft"]
 soft1.x = [0,0,-0.13]
 soft1.q = Quaternion(1,0,0,0.,true)
 
@@ -59,15 +60,15 @@ gravity = [0,0,-9.81]
 
 x2 = [0,-1.5,0.5]
 v15 = [0,5,3.0]
-q2 = rand(4)
-# q2 = [1,0.05,0,0]
+# q2 = rand(4)
+q2 = [1,0.0,0,0]
 q2 = Quaternion(q2 ./ norm(q2)...,true)
 ϕ15 = [3.5,0,0.0]
 z0 = [x2; v15; Dojo.vector(q2); ϕ15]
 
-ψ, barycenter, contact_normal = collision(sphere, soft0)
-ψ, barycenter, contact_normal = collision(halfspace, soft0)
-ψ, barycenter, contact_normal = collision(soft1, soft0)
+ψ, barycenter, contact_normal_ = collision(sphere, soft0)
+ψ, barycenter, contact_normal_ = collision(halfspace, soft0)
+ψ, barycenter, contact_normal_ = collision(soft1, soft0)
 
 soft0.options = ColliderOptions110( # nerf nerf
     impact_damper=1e7,
@@ -77,17 +78,17 @@ soft0.options = ColliderOptions110( # nerf nerf
     rolling_drag=0.05,
     rolling_friction=0.01,
 )
-# soft0.options = ColliderOptions110( # halfspace
-#     impact_damper=3e4,
-#     impact_spring=1e4,
-#     sliding_drag=0.0,
-#     sliding_friction=0.05,
-#     rolling_drag=0.02,
-#     rolling_friction=0.02,
-# )
-# @time Z0, Φ0 = implicit_simulation(halfspace, soft0, timestep, H, z0, gravity)
-# @time Z0, Φ0 = implicit_simulation(sphere, soft0, timestep, H, z0, gravity)
-@time Z0, Φ0 = implicit_simulation(soft1, soft0, timestep, H, z0, gravity)
+soft2.options = ColliderOptions110( # halfspace
+    impact_damper=3e4,
+    impact_spring=1e4,
+    sliding_drag=0.0,
+    sliding_friction=0.2,
+    rolling_drag=0.02,
+    rolling_friction=0.02,
+)
+@time Z0, Φ0 = implicit_simulation(halfspace, soft2, timestep, H, z0, gravity)
+# @time Z0, Φ0 = implicit_simulation(sphere, soft2, timestep, H, z0, gravity)
+# @time Z0, Φ0 = implicit_simulation(soft1, soft0, timestep, H, z0, gravity)
 
 plt = plot(layout=(3,1), xlabel="time")
 plot!(plt[1,1], [i*timestep for i=0:H], [z[1] for z in Z0], linewidth=3.0, label="x", color=:blue)
@@ -101,20 +102,20 @@ plot!(plt[2,1], [i*timestep for i=0:H], [z[10] for z in Z0], linewidth=3.0, labe
 plot!(plt[3,1], [i*timestep for i=1:H], Φ0, linewidth=3.0, label="ψ", color=:red)
 
 
-build_mesh!(tight_mesh, vis, name=:tight_mesh, color=RGBA(1,1,1,1.0))
-build_mesh!(mesh, vis, name=:mesh, color=RGBA(1,1,1,0.3))
-build_mesh!(tight_mesh, vis, name=:tight_mesh_1, color=RGBA(0.2,0.2,0.2,1.0))
-build_mesh!(mesh, vis, name=:mesh_1, color=RGBA(1,1,1,0.3))
+build_mesh!(inner_mesh, vis, name=:inner_mesh, color=RGBA(1,1,1,1.0))
+build_mesh!(outer_mesh, vis, name=:outer_mesh, color=RGBA(1,1,1,0.3))
+build_mesh!(inner_mesh, vis, name=:inner_mesh_1, color=RGBA(0.2,0.2,0.2,1.0))
+build_mesh!(outer_mesh, vis, name=:outer_mesh_1, color=RGBA(1,1,1,0.3))
 build_sphere!(sphere, vis, name=:sphere, color=RGBA(0.4,0.4,0.4,1.0))
 animation = MeshCat.Animation(Int(floor(1/timestep)))
 [z[3] for z in Z0]
 [z[1] for z in Z0]
 for i = 1:H
     atframe(animation, i) do
-        set_robot!(Z0[i][1:3]-vector_rotate(soft0.center_of_mass, Quaternion(Z0[i][7:10]...)), Quaternion(Z0[i][7:10]...), vis, name=:mesh)
-        set_robot!(Z0[i][1:3]-vector_rotate(soft0.center_of_mass, Quaternion(Z0[i][7:10]...)), Quaternion(Z0[i][7:10]...), vis, name=:tight_mesh)
-        set_robot!(soft1.x - soft1.center_of_mass, soft1.q, vis, name=:mesh_1)
-        set_robot!(soft1.x - soft1.center_of_mass, soft1.q, vis, name=:tight_mesh_1)
+        set_robot!(Z0[i][1:3]-vector_rotate(soft0.center_of_mass, Quaternion(Z0[i][7:10]...)), Quaternion(Z0[i][7:10]...), vis, name=:outer_mesh)
+        set_robot!(Z0[i][1:3]-vector_rotate(soft0.center_of_mass, Quaternion(Z0[i][7:10]...)), Quaternion(Z0[i][7:10]...), vis, name=:inner_mesh)
+        set_robot!(soft1.x - soft1.center_of_mass, soft1.q, vis, name=:outer_mesh_1)
+        set_robot!(soft1.x - soft1.center_of_mass, soft1.q, vis, name=:inner_mesh_1)
     end
 end
 setanimation!(vis, animation)

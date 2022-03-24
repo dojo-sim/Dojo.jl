@@ -1,5 +1,5 @@
 # joints
-function complementarity(mechanism, joint::JointConstraint{T,N,Nc}; 
+function complementarity(mechanism, joint::JointConstraint{T,N,Nc};
     scaling::Bool=false) where {T,N,Nc}
 
     c = []
@@ -13,9 +13,9 @@ function complementarity(mechanism, joint::JointConstraint{T,N,Nc};
 end
 
 # contacts
-complementarity(mechanism, contact::ContactConstraint;  scaling=false) = contact.impulses[2] .* contact.impulses_dual[2]
+complementarity(mechanism, contact::ContactConstraint; scaling=false) = contact.impulses[2] .* contact.impulses_dual[2]
 
-function complementarity(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½};
+function complementarity(mechanism, contact::RigidContactConstraint{T,N,Nc,Cs,N½};
     scaling::Bool = false) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
     γ = contact.impulses[2]
     s = contact.impulses_dual[2]

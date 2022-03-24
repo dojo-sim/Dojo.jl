@@ -12,8 +12,8 @@ mutable struct LinearContact{T,N} <: Contact{T,N}
     collision::Collision{T,2,3,6}
 end
 
-function LinearContact(body::Body{T}, normal::AbstractVector, friction_coefficient; 
-    contact_origin=szeros(T, 3), 
+function LinearContact(body::Body{T}, normal::AbstractVector, friction_coefficient;
+    contact_origin=szeros(T, 3),
     contact_radius=0.0) where T
 
     # contact directions
@@ -31,13 +31,13 @@ function LinearContact(body::Body{T}, normal::AbstractVector, friction_coefficie
         -1.0  0.0
     ]
 
-    # collision 
+    # collision
     collision = SphereHalfSpaceCollision(contact_tangent, contact_normal, SVector{3}(contact_origin), contact_radius)
-    
+
     LinearContact{Float64,12}(friction_coefficient, parameterization, collision)
 end
 
-function constraint_jacobian(contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:LinearContact{T,N},N½}
+function constraint_jacobian(contact::RigidContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:LinearContact{T,N},N½}
     friction_coefficient = contact.model.friction_coefficient
     γ = contact.impulses[2] + REG * neutral_vector(contact.model)
     s = contact.impulses_dual[2] + REG * neutral_vector(contact.model)
@@ -59,19 +59,19 @@ function constraint_jacobian(contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T
     return [∇s ∇γ]
 end
 
-function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:LinearContact{T,N},N½}
-    # contact model 
+function constraint(mechanism, contact::RigidContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:LinearContact{T,N},N½}
+    # contact model
     model = contact.model
 
     # parent
     pbody = get_body(mechanism, contact.parent_id)
     xp, vp, qp, ϕp = next_configuration_velocity(pbody.state, mechanism.timestep)
 
-    # child 
+    # child
     cbody = get_body(mechanism, contact.child_id)
     xc, vc, qc, ϕc = next_configuration_velocity(cbody.state, mechanism.timestep)
 
-    # distance 
+    # distance
     d = distance(model.collision, xp, qp, xc, qc)
 
     # relative tangential velocity
@@ -90,4 +90,3 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}) where 
         model.friction_coefficient * γ - sum(β) - sψ,
         (model.friction_parameterization * vt + ψ * sones(4) - sβ)...)
 end
-

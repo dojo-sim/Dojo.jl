@@ -17,7 +17,7 @@ function centering!(mechanism::Mechanism, αaff::T) where T
     return ν, νaff
 end
 
-function centering!(ν, νaff, n, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}, vector_entry::Entry, αaff) where {T,N,Nc,Cs,N½}
+function centering!(ν, νaff, n, mechanism, contact::RigidContactConstraint{T,N,Nc,Cs,N½}, vector_entry::Entry, αaff) where {T,N,Nc,Cs,N½}
     s = contact.impulses_dual[2]
     γ = contact.impulses[2]
     Δs = vector_entry.value[1:N½]
