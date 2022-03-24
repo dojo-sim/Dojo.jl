@@ -23,9 +23,9 @@ n = env.num_states
 m = env.num_inputs
 
 # ## states
-z1 = raiberthopper_nominal_max()
-zM = raiberthopper_offset_max(0.5, 0.5, 0.5)
-zT = raiberthopper_offset_max(0.5, 0.5, 0.0)
+z1 = Dojo.raiberthopper_nominal_max()
+zM = Dojo.raiberthopper_offset_max(0.5, 0.5, 0.5)
+zT = Dojo.raiberthopper_offset_max(0.5, 0.5, 0.0)
 
 # ## horizon
 T = 21
@@ -41,9 +41,8 @@ dyn = IterativeLQR.Dynamics(
 model = [dyn for t = 1:T-1]
 
 # ## rollout
-ū = [[0.0; 0.0; env.mechanism.bodies[1].m * env.mechanism.gravity * env.mechanism.timestep + 0.0 * randn(1)[1]] for t = 1:T-1]
+ū = [[0.0; 0.0; env.mechanism.bodies[1].mass * env.mechanism.gravity[3] * env.mechanism.timestep + 0.0 * randn(1)[1]] for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, z1, ū)
-open(env.vis)
 visualize(env, x̄)
 
 # ## objective

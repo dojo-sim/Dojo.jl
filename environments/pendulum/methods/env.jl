@@ -54,7 +54,7 @@ function pendulum(;
     fu = zeros(nx, nu)
 
     u_prev = Inf * ones(nu)
-    control_mask = ones(1,1)
+    control_mask = ones(1, 1)
     control_scaling = Diagonal(ones(nu))
     build_robot(mechanism,
         vis=vis, 

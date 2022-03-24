@@ -6,6 +6,7 @@ Pkg.instantiate()
 using Dojo
 using IterativeLQR
 using LinearAlgebra
+using FiniteDiff 
 
 # ## system
 gravity = -9.81
@@ -87,9 +88,9 @@ qt = [0.3; 0.05; 0.05; 0.01 * ones(3); 0.01 * ones(3); 0.01 * ones(3); fill([0.2
 ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(timestep * qt) * (x - xref[t]) + transpose(u) * Diagonal(timestep * 0.01 * ones(m)) * u for t = 1:T-1]
 oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(timestep * qt) * (x - xref[end])
 
-cts = IterativeLQR.Cost.(ots, n, m)
+cts = [IterativeLQR.Cost(ot, n, m) for ot in ots]
 cT = IterativeLQR.Cost(oT, n, 0)
-obj = [[cts for t = 1:T-1]..., cT]
+obj = [cts..., cT]
 
 # ## constraints
 function goal(x, u, w)
@@ -103,7 +104,8 @@ cons = [[cont for t = 1:T-1]..., conT]
 
 # ## solver
 s = IterativeLQR.solver(model, obj, cons,
-    opts=Options(verbose=false,
+    opts=IterativeLQR.Options(
+        verbose=true,
         linesearch=:armijo,
         α_min=1.0e-5,
         obj_tol=1.0e-3,

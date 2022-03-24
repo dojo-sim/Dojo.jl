@@ -4,7 +4,7 @@
 function impulse_transform(relative::Symbol, joint::Joint, xa::AbstractVector,
         qa::Quaternion, xb::AbstractVector, qb::Quaternion) where {T}
     X, Q = displacement_jacobian_configuration(relative, joint, xa, qa, xb, qb, attjac=true)
-    Diagonal([sones(3); 0.5 * sones(3)]) * transpose([X Q])
+    Diagonal([sones(3); 0.5 * sones(3)]) * transpose([X Q]) #TODO: 0.5 Q
 end
 
 ################################################################################

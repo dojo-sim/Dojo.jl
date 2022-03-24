@@ -32,7 +32,9 @@ end
 
 # Inverse kinematics: given the position of the trunk, finds the knee and hip angles that will put the foot
 # at the p_foot location
-function IKquadruped(mechanism::Mechanism, p_trunk, p_foot; leg::Symbol = :FR)
+function IKquadruped(mechanism::Mechanism, p_trunk, p_foot; 
+	leg::Symbol=:FR)
+
 	# starting point of the local search
 	θ = [0.95, -1.5*0.95] # θhip, θknee
 	for k = 1:10
@@ -44,20 +46,31 @@ function IKquadruped(mechanism::Mechanism, p_trunk, p_foot; leg::Symbol = :FR)
 	return θ
 end
 
-function QuadrupedIKerror(mechanism::Mechanism, p_trunk, p_foot, θ; leg::Symbol = :FR)
-	set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base), [p_trunk; zeros(3)])
-	set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol(String(leg)*"_thigh_joint")), [θ[1]])
-	set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol(String(leg)*"_calf_joint")), [θ[2]])
+function QuadrupedIKerror(mechanism::Mechanism, p_trunk, p_foot, θ; 
+	leg::Symbol=:FR)
 
-	foot = get_body(mechanism, Symbol(String(leg)*"_calf"))
+	Dojo.set_minimal_coordinates!(mechanism, Dojo.get_joint(mechanism, :floating_base), [p_trunk; zeros(3)])
+	Dojo.set_minimal_coordinates!(mechanism, Dojo.get_joint(mechanism, Symbol(String(leg)*"_thigh_joint")), [θ[1]])
+	Dojo.set_minimal_coordinates!(mechanism, Dojo.get_joint(mechanism, Symbol(String(leg)*"_calf_joint")), [θ[2]])
+
+	foot = Dojo.get_body(mechanism, Symbol(String(leg)*"_calf"))
 	contacts = collect(mechanism.contacts)
 	contact = contacts[findfirst(x -> x.parent_id == foot.id, contacts)]
-	p = contact_location(contact, foot)
+	p = Dojo.contact_location(contact, foot)
 	err = p - p_foot
 	return err[[1,3]]
 end
 
-function quadruped_trajectory(mechanism::Mechanism{T}; timestep=0.05, Δx = -0.04, Δfront = 0.05, β = 0.5, r = 0.10, z = 0.29, N = 8, Ncycles = 1) where T
+function quadruped_trajectory(mechanism::Mechanism{T}; 
+	timestep=0.05, 
+	Δx = -0.04, 
+	Δfront = 0.05, 
+	β = 0.5, 
+	r = 0.10, 
+	z = 0.29, 
+	N = 8, 
+	Ncycles = 1) where T
+
 	# pFR = [+ 0.13 + Δx, - 0.13205, 0.]
 	# pFL = [+ 0.13 + Δx, + 0.13205, 0.]
 	# pRR = [- 0.23 + Δx, - 0.13205, 0.]
@@ -107,16 +120,16 @@ end
 
 function gravity_compensation(mechanism::Mechanism)
     # only works with revolute joints for now
-    nu = input_dimension(mechanism)
+    nu = Dojo.input_dimension(mechanism)
     u = zeros(nu)
     off  = 0
     for joint in mechanism.joints
-        nu = input_dimension(joint)
+        nu = Dojo.input_dimension(joint)
         if joint.parent_id != 0
-            body = get_body(mechanism, joint.parent_id)
+            body = Dojo.get_body(mechanism, joint.parent_id)
             rot = joint.rotational
             A = Matrix(nullspace_mask(rot))
-            input = spring_impulses(mechanism, joint, body)
+            input = Dojo.spring_impulses(mechanism, joint, body)
             F = input[1:3]
             τ = input[4:6]
             u[off .+ (1:nu)] = -A * τ

@@ -4,27 +4,27 @@
 
 simdata_dim(mechanism::Mechanism) = sum(simdata_dim.(mech.contacts))
 simdata_dim(contact::ContactConstraint) = sum(simdata_dim.(contact.constraints))
-simdata_dim(model::NonlinearContact) = 7 # [friction_coefficient, p, offset]
-simdata_dim(model::LinearContact) = 7 # [friction_coefficient, p, offset]
-simdata_dim(model::ImpactContact) = 6 # [p, offset]
+simdata_dim(model::NonlinearContact) = 5 # [friction_coefficient, p, contact_radius]
+simdata_dim(model::LinearContact) = 5 # [friction_coefficient, p, contact_radius]
+simdata_dim(model::ImpactContact) = 4 # [p, contact_radius]
 
 function set_simulator_data!(model::NonlinearContact, data::AbstractVector)
 	model.friction_coefficient = data[1]
-    model.offset = data[SVector{3,Int}(2:4)]
-    model.contact_point = data[SVector{3,Int}(5:7)]
+    model.collision.contact_radius = norm(data[SVector{3,Int}(2:4)]) #TODO: Confirm this is correct
+    model.collision.contact_origin = data[SVector{3,Int}(5:7)]
     return nothing
 end
 
 function set_simulator_data!(model::LinearContact, data::AbstractVector)
 	model.friction_coefficient = data[1]
-    model.offset = data[SVector{3,Int}(2:4)]
-    model.contact_point = data[SVector{3,Int}(5:7)]
+    model.collision.contact_radius = norm(data[SVector{3,Int}(2:4)]) #TODO: Confirm this is correct
+    model.collision.contact_origin = data[SVector{3,Int}(5:7)]
     return nothing
 end
 
 function set_simulator_data!(model::ImpactContact, data::AbstractVector)
-    model.offset = data[SVector{3,Int}(2:4)]
-    model.contact_point = data[SVector{3,Int}(5:7)]
+    model.collision.contact_radius = norm(data[SVector{3,Int}(2:4)]) #TODO: Confirm this is correct
+    model.collision.contact_origin = data[SVector{3,Int}(5:7)]
     return nothing
 end
 
@@ -40,15 +40,15 @@ function set_simulator_data!(mechanism::Mechanism, data::AbstractVector)
 end
 
 function get_simulator_data(model::NonlinearContact)
-	return [model.friction_coefficient; model.offset; model.contact_point]
+	return [model.friction_coefficient; model.collision.contact_radius; model.collision.contact_origin]
 end
 
 function get_simulator_data(modelset::LinearContact)
-	return [model.friction_coefficient; model.off; model.contact_point]
+	return [model.friction_coefficient; model.collision.contact_radius; model.collision.contact_origin]
 end
 
 function get_simulator_data(model::ImpactContact)
-	return [model.offset; model.contact_point]
+	return [model.collision.contact_radius; model.collision.contact_origin]
 end
 
 function get_simulator_data(mechanism::Mechanism{T}) where T
@@ -95,8 +95,8 @@ end
 
 function ∂g∂simdata(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:NonlinearContact{T,N}}
     model = contact.model
-	p = model.contact_point
-	offset = model.offset
+	p = model.collision.contact_origin
+	offset = model.collision.contact_normal' * model.collision.contact_radius
     body = get_body(mechanism, contact.parent_id)
     x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, mechanism.timestep)
@@ -105,15 +105,15 @@ function ∂g∂simdata(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where 
 
 	# Contribution to Injointonstraint
 	∇friction_coefficient = SA[0,γ[1],0,0]
-	∇off = [-model.surface_normal_projector; szeros(T,1,3); -model.surface_projector * skew(vector_rotate(ϕ25, q3))]
-	∇p = [model.surface_normal_projector * ∂vector_rotate∂p(model.contact_point, q3); szeros(T,1,3); model.surface_projector * skew(vector_rotate(ϕ25, q3)) * ∂vector_rotate∂p(model.contact_point, q3)]
+	∇off = [-model.collision.contact_normal; szeros(T,1,3); -model.contact_tangent * skew(vector_rotate(ϕ25, q3))]
+	∇p = [model.collision.contact_normal * rotation_matrix(q3); szeros(T,1,3); model.contact_tangent * skew(vector_rotate(ϕ25, q3)) * rotation_matrix(q3)]
 	∇contact = [∇friction_coefficient ∇off ∇p]
 
 	# Contribution to Body dynamics
 	∇friction_coefficient = szeros(T,3)
 	X = force_mapping(model, x3, q3)
 	# this what we differentiate: Qᵀγ = - skew(p - vector_rotate(offset, inv(q3))) * VRmat(q3) * LᵀVᵀmat(q3) * X' * γ
-	∇off = - ∂skew∂p(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ) * -∂vector_rotate∂p(offset, inv(q3))
+	∇off = - ∂skew∂p(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ) * -rotation_matrix(inv(q3))
 	∇p = - ∂skew∂p(VRmat(q3) * LᵀVᵀmat(q3) * X' * γ)
 	∇body = [∇friction_coefficient ∇off ∇p]
 	return ∇contact, ∇body
@@ -131,8 +131,8 @@ function datafilenamesphere(; N::Int=10, friction_coefficient=0.1, radius=0.5)
     "sphere_dim_N_$(N)_friction_coefficient_$(friction_coefficient)_radius_$(radius).jld2"
 end
 
-function datafilenamebox2D(; N::Int=10, friction_coefficient=0.1, radius=0.05, side=0.50)
-    "box2D_dim_N_$(N)_friction_coefficient_$(friction_coefficient)_radius_$(radius)_side_$(side).jld2"
+function datafilenameblock2d(; N::Int=10, friction_coefficient=0.1, radius=0.05, side=0.50)
+    "block2d_dim_N_$(N)_friction_coefficient_$(friction_coefficient)_radius_$(radius)_side_$(side).jld2"
 end
 
 function datafilenamebox(; N::Int=10, friction_coefficient=0.1, radius=0., side=0.50)
@@ -157,7 +157,7 @@ function initial_state_sphere(;
 	return Dict(:x => x, :v => v , :ω => ω)
 end
 
-function initial_state_box2D(;
+function initial_state_block2d(;
 		xlims=[[0,0.2], [1,0.4]],
         vlims=[-ones(2), ones(2)],
 		θlims=[-π, π],
@@ -259,9 +259,11 @@ function getSimulatorMaxGradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,
 		data_jacobian̄[13*(i-1) .+ [4:6; 11:13],:] += ∇data_vϕ[6*(i-1) .+ (1:6),:]
 
 		# Fill in gradients of x3, q3
+		x2 = body.state.x2
 		q2 = body.state.q2
+		v25 = body.state.vsol[2]
 		ϕ25 = body.state.ϕsol[2]
-		data_jacobian̄[13*(i-1) .+ (1:3),:] += linear_integrator_jacobian_velocity(timestep) * ∇data_vϕ[6*(i-1) .+ (1:3),:]
+		data_jacobian̄[13*(i-1) .+ (1:3),:] += linear_integrator_jacobian_velocity(x2, v25, timestep) * ∇data_vϕ[6*(i-1) .+ (1:3),:]
 		data_jacobian̄[13*(i-1) .+ (7:10),:] += rotational_integrator_jacobian_velocity(q2, ϕ25, timestep) * ∇data_vϕ[6*(i-1) .+ (4:6),:]
 	end
 	return data_jacobian̄

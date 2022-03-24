@@ -1,9 +1,3 @@
-function set_matrix_vector_entries!(mechanism::Mechanism, matrix_entry::Entry, vector_entry::Entry, node::Node)
-    matrix_entry.value = constraint_jacobian_configuration(mechanism, node)
-    vector_entry.value = -constraint(mechanism, node)
-    return
-end
-
 function set_entries!(mechanism::Mechanism)
     system = mechanism.system
 
