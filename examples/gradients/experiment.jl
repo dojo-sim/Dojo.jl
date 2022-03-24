@@ -14,7 +14,7 @@ contact_type = :linear
 ## contact_type = :nonlinear
 
 # ## scale system for nice plots
-mech = get_mechanism(:box2D, 
+mech = get_mechanism(:block2d, 
     timestep=0.1, 
     g=-1.0, 
     friction_coefficient=1.0, 
@@ -42,7 +42,7 @@ plt = plot(layout=(3,1), size=(500,800), legend=:topleft)
 
 # ## hard contact
 for btol = 1e-10
-    res = [box2D_dojo(mech, F, btol=btol, mode=mode) for F = Fsref]
+    res = [block2d_dojo(mech, F, btol=btol, mode=mode) for F = Fsref]
     write_csv(["F", "x", "grad"], [[Fsref[i]; res[i]...] for i=1:length(Fsref)], "data/$(filename)_dojo_"*scn(btol)[2:end]*".csv")
     x = [r[1] for r in res]
     ∇x = [r[2] for r in res]
@@ -57,7 +57,7 @@ end
 
 # ## smooth contact
 for btol in [1e-4, 1e-5, 1e-6, 1e-7, 1e-8] .* undercut
-    res = [box2D_dojo(mech, F, btol=btol, mode=mode, undercut=undercut) for F = Fsref]
+    res = [block2d_dojo(mech, F, btol=btol, mode=mode, undercut=undercut) for F = Fsref]
     write_csv(["F", "x", "grad"], [[Fsref[i]; res[i]...] for i=1:length(Fsref)], "data/$(filename)_dojo_"*scn(btol)[2:end]*".csv")
     x = [r[1] for r in res]
     ∇x = [r[2] for r in res]
@@ -70,7 +70,7 @@ end
 
 # ## gradient bundles
 for Σ in [1e-2, 1e-3, 1e-4]
-    res = [box2D_gradientbundle(mech, F, N=500, Σ=Σ*I, mode=mode) for F = Fs]
+    res = [block2d_gradientbundle(mech, F, N=500, Σ=Σ*I, mode=mode) for F = Fs]
     write_csv(["F", "x", "gb0", "gb1"], [[Fs[i]; res[i]...] for i=1:length(Fs)], "data/$(filename)_gb_"*scn(Σ)[2:end]*".csv")
     x = [r[1] for r in res]
     ∇x0 = [r[2] for r in res]

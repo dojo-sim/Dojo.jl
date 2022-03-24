@@ -34,6 +34,15 @@ function adjacency_matrix(joints::Vector{<:JointConstraint}, bodies::Vector{<:Bo
                         A[node2.id, node1.id] = 1
                     end
                 end
+
+                # for contact in contacts
+                #     if node1.id == contact.parent_id && node2.id == contact.child_id
+                #         A[node1.id, node2.id] = 1
+                #     end
+                #     if node2.id == contact.parent_id && node1.id == contact.child_id
+                #         A[node2.id, node1.id] = 1
+                #     end
+                # end
             end
         end
     end

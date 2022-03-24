@@ -50,11 +50,11 @@ function rexhopper(;
     no = nx
 
     # values taken from Mujoco's model, combining the control range -1, 1 and the motor gears.
-    aspace = BoxSpace(nu, 
-        low=(-Inf * ones(nu)), 
+    aspace = BoxSpace(nu,
+        low=(-Inf * ones(nu)),
         high=(Inf * ones(nu)))
-    ospace = BoxSpace(no, 
-        low=(-Inf * ones(no)), 
+    ospace = BoxSpace(no,
+        low=(-Inf * ones(no)),
         high=(Inf * ones(no)))
 
     rng = MersenneTwister(seed)
@@ -66,14 +66,15 @@ function rexhopper(;
     fu = zeros(nx, nu)
 
     u_prev = zeros(nu)
-    control_map = infeasible_control ? 1.0 * I(nu) : cat(zeros(3, 3), 1.0 * I(3), 1.0, 0.0, 1.0, zeros(5, 5), dims=(1,2))
+    control_map = infeasible_control ? 1.0 * I(nu) : get_control_mask(nu_inf, [4,5,6,7,9])'
+    cat(zeros(3, 3), 1.0 * I(3), 1.0, 0.0, 1.0, zeros(5, 5), dims=(1,2))
 
     build_robot(mechanism, vis=vis, name=name)
 
     TYPES = [RexHopper, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
-    env = Environment{TYPES...}(mechanism, 
-        representation, 
-        aspace, 
+    env = Environment{TYPES...}(mechanism,
+        representation,
+        aspace,
         ospace,
         x, fx, fu,
         u_prev, control_map,
@@ -85,7 +86,7 @@ function rexhopper(;
     return env
 end
 
-function Base.reset(env::Environment{RexHopper}; 
+function Base.reset(env::Environment{RexHopper};
     x=nothing)
 
     if x != nothing

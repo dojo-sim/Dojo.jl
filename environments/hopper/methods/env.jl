@@ -5,29 +5,29 @@
 """
 struct Hopper end
 
-function hopper(; 
-    representation=:minimal, 
-    timestep=0.05, 
+function hopper(;
+    representation=:minimal,
+    timestep=0.05,
     gravity=[0.0; 0.0; -9.81],
-    friction_coefficient=1.0, 
-    spring=10.0, 
+    friction_coefficient=1.0,
+    spring=10.0,
     damper=50.0,
-    seed=1, 
-    contact_foot=true, 
-    contact_body=true, 
-    info=nothing, 
-    vis=Visualizer(), 
+    seed=1,
+    contact_foot=true,
+    contact_body=true,
+    info=nothing,
+    vis=Visualizer(),
     name=:robot,
-    opts_step=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5), 
+    opts_step=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5),
     opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5),
     T=Float64)
 
     mechanism = get_hopper(
-        timestep=timestep, 
-        gravity=gravity, 
-        friction_coefficient=friction_coefficient, 
-        spring=spring, 
-        damper=damper, 
+        timestep=timestep,
+        gravity=gravity,
+        friction_coefficient=friction_coefficient,
+        spring=spring,
+        damper=damper,
         contact_foot=contact_foot,
         contact_body=contact_body)
 
@@ -39,14 +39,14 @@ function hopper(;
         nx = maximal_dimension(mechanism)
     end
     nu = 3
-    no = nx - 1 # full_state is not being returned by default 
+    no = nx - 1 # full_state is not being returned by default
 
     # values taken from Mujoco's model, combining the control range -1, 1 and the motor gears.
-    aspace = BoxSpace(nu, 
-        low=(-Inf * ones(nu)), 
+    aspace = BoxSpace(nu,
+        low=(-Inf * ones(nu)),
         high=(Inf * ones(nu)))
-    ospace = BoxSpace(no, 
-        low=(-Inf * ones(no)), 
+    ospace = BoxSpace(no,
+        low=(-Inf * ones(no)),
         high=(Inf * ones(no)))
 
     rng = MersenneTwister(seed)
@@ -76,15 +76,15 @@ function hopper(;
     return env
 end
 
-function Base.reset(env::Environment{Hopper}; 
+function Base.reset(env::Environment{Hopper};
     x=nothing, reset_noise_scale=0.005)
 
     if x != nothing
         env.state .= x
     else
         # initialize above the ground to make sure that with random initialization we do not violate the ground constraint.
-        initialize!(env.mechanism, :hopper, 
-            z=0.25)
+        initialize!(env.mechanism, :hopper,
+            body_position=[0,0.25])
         x0 = get_minimal_state(env.mechanism)
         nx = minimal_dimension(env.mechanism)
 
@@ -103,7 +103,7 @@ function Base.reset(env::Environment{Hopper};
     return get_observation(env)
 end
 
-function get_observation(env::Environment{Hopper}; 
+function get_observation(env::Environment{Hopper};
     full_state=false)
 
     full_state && (return env.state)
@@ -157,4 +157,3 @@ function is_done(env::Environment{Hopper}, x)
         )
     return done
 end
-

@@ -184,7 +184,7 @@ function seed(env::Environment; s=0)
     return nothing
 end
 
-function close(env::Environment; kwargs...)
+function Base.close(env::Environment; kwargs...)
     return nothing
 end
 

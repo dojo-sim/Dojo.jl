@@ -15,9 +15,9 @@ mech = get_mechanism(:tippetop,
 
 # ## Simulate
 initialize!(mech, :tippetop,
-    x=[0.0, 0.0, 1.0],
-    θ=[0,0.01,0],
-    ω=[0.0, 0.01, 50.0])
+    body_position=[0.0, 0.0, 1.0],
+    body_orientation=[0,0.01,0],
+    body_angular_velocity=[0.0, 0.01, 50.0])
 
 storage = simulate!(mech, 10.0,
     record=true,
@@ -27,5 +27,5 @@ storage = simulate!(mech, 10.0,
 # ## Open visualizer
 vis = Visualizer()
 render(vis)
-visualize(mech, storage, 
+visualize(mech, storage,
     vis=vis)

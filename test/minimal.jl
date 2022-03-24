@@ -629,3 +629,65 @@ end
 		@test norm(M_fd - M_a, Inf) < 1.0e-6
 	end
 end
+
+
+
+# ################################################################################
+# # Test minimal velocities
+# ################################################################################
+# mech = Dojo.get_snake(gravity=0.00, num_bodies=2, damper=0.3, spring=0.2, joint_type=:Revolute)
+# Dojo.initialize_snake!(mech)
+# function ctrl!(m,k)
+#     set_input!(m, 0.01*m.timestep*ones(minimal_dimension(m)))
+# end
+# storage = Dojo.simulate!(mech, 1.0, ctrl!)
+# Dojo.visualize(mech, storage, vis=vis)
+#
+# mech.joints[2]
+# rot0 = mech.joints[2].rotational
+#
+# timestep0 = 0.01
+# xa0 = srand(3)
+# qa0 = rand(QuatRotation).q
+# va0 = srand(3)
+# ϕa0 = srand(3)
+# xb0 = srand(3)
+# qb0 = rand(QuatRotation).q
+# vb0 = srand(3)
+# ϕb0 = srand(3)
+#
+# J0 = minimal_velocities_jacobian_configuration(:parent,
+#     rot0, xa0, va0, qa0, ϕa0, xb0, vb0, qb0, ϕb0, timestep0)
+# J1 = FiniteDiff.finite_difference_jacobian(
+#     xq -> Dojo.minimal_velocities(rot0, xq[SUnitRange(1,3)], va0, Quaternion(xq[SUnitRange(4,7)]...,true), ϕa0,
+#     xb0, vb0, qb0, ϕb0, timestep0),
+#     [xa0; vector(qa0)]) * cat(I(3), LVᵀmat(qa0), dims=(1,2))
+# norm(J0 - J1, Inf)
+# norm(J0 - J1, Inf) < 1e-4
+#
+# J0 = minimal_velocities_jacobian_configuration(:child,
+#     rot0, xa0, va0, qa0, ϕa0, xb0, vb0, qb0, ϕb0, timestep0)
+# J1 = FiniteDiff.finite_difference_jacobian(
+#     xq -> Dojo.minimal_velocities(rot0, xa0, va0, qa0, ϕa0,
+#     xq[SUnitRange(1,3)], vb0, Quaternion(xq[SUnitRange(4,7)]...,true), ϕb0, timestep0),
+#     [xb0; vector(qb0)]) * cat(I(3), LVᵀmat(qb0), dims=(1,2))
+# norm(J0 - J1, Inf)
+# norm(J0 - J1, Inf) < 1e-4
+#
+#
+# J0 = minimal_velocities_jacobian_velocity(:parent,
+#     rot0, xa0, va0, qa0, ϕa0, xb0, vb0, qb0, ϕb0, timestep0)
+# J1 = FiniteDiff.finite_difference_jacobian(
+#     vϕ -> Dojo.minimal_velocities(rot0, xa0, vϕ[SUnitRange(1,3)], qa0, vϕ[SUnitRange(4,6)], xb0, vb0, qb0, ϕb0, timestep0),
+#     [va0; ϕa0])
+# norm(J0 - J1, Inf)
+# norm(J0 - J1, Inf) < 1e-4
+#
+# J0 = minimal_velocities_jacobian_velocity(:child,
+#     rot0, xa0, va0, qa0, ϕa0, xb0, vb0, qb0, ϕb0, timestep0)
+# J1 = FiniteDiff.finite_difference_jacobian(
+#     vϕ -> Dojo.minimal_velocities(rot0, xa0, va0, qa0, ϕa0,
+#         xb0, vϕ[SUnitRange(1,3)], qb0, vϕ[SUnitRange(4,6)], timestep0),
+#     [vb0; ϕb0])
+# norm(J0 - J1, Inf)
+# norm(J0 - J1, Inf) < 1e-4

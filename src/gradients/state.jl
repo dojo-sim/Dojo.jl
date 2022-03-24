@@ -110,15 +110,17 @@ function get_maximal_gradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,
 		jacobian_control[12*(i-1) .+ [4:6; 10:12],:] += data_jacobian[index_row[id], vcat(index_control...)]
 
 		# Fill in gradients of x3, q3
+		x2 = body.state.x2
 		q2 = body.state.q2
+		v25 = body.state.vsol[2]
 		ϕ25 = body.state.ϕsol[2]
 		q3 = next_orientation(q2, ϕ25, timestep)
-		jacobian_state[12*(i-1) .+ (1:3), :] += linear_integrator_jacobian_velocity(timestep) * data_jacobian[index_row[id][1:3], vcat(index_state...)]
-		jacobian_state[12*(i-1) .+ (1:3), 12*(i-1) .+ (1:3)] += linear_integrator_jacobian_position()
+		jacobian_state[12*(i-1) .+ (1:3), :] += linear_integrator_jacobian_velocity(x2, v25, timestep) * data_jacobian[index_row[id][1:3], vcat(index_state...)]
+		jacobian_state[12*(i-1) .+ (1:3), 12*(i-1) .+ (1:3)] += linear_integrator_jacobian_position(x2, v25, timestep)
 		jacobian_state[12*(i-1) .+ (7:9), :] += LVᵀmat(q3)' * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep) * data_jacobian[index_row[id][4:6], vcat(index_state...)]
 		jacobian_state[12*(i-1) .+ (7:9), 12*(i-1) .+ (7:9)] += LVᵀmat(q3)' * rotational_integrator_jacobian_orientation(q2, ϕ25, timestep, attjac=true)
 
-		jacobian_control[12*(i-1) .+ (1:3),:] += linear_integrator_jacobian_velocity(timestep) * data_jacobian[index_row[id][1:3], vcat(index_control...)]
+		jacobian_control[12*(i-1) .+ (1:3),:] += linear_integrator_jacobian_velocity(x2, v25, timestep) * data_jacobian[index_row[id][1:3], vcat(index_control...)]
 		jacobian_control[12*(i-1) .+ (7:9),:] += LVᵀmat(q3)' * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep) * data_jacobian[index_row[id][4:6], vcat(index_control...)]
 	end
 	

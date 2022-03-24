@@ -26,8 +26,8 @@ n = env.num_states
 m = env.num_inputs
 
 # ## states
-z1 = maximal_to_minimal(env.mechanism, cartpole_nominal_max())
-zT = maximal_to_minimal(env.mechanism, cartpole_goal_max())
+z1 = maximal_to_minimal(env.mechanism, Dojo.cartpole_nominal_max())
+zT = maximal_to_minimal(env.mechanism, Dojo.cartpole_goal_max())
 
 # ## horizon
 T = 26
@@ -66,7 +66,7 @@ cons = [[cont for t = 1:T-1]..., conT]
 s = IterativeLQR.solver(model, obj, cons, 
     opts=IterativeLQR.Options(
         max_al_iter=10,
-        verbose=false))
+        verbose=true))
 IterativeLQR.initialize_controls!(s, ū)
 IterativeLQR.initialize_states!(s, x̄)
 

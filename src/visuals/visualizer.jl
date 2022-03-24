@@ -72,10 +72,10 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
         if show_contact
             for (jd, contact) in enumerate(mechanism.contacts)
                 if contact.parent_id == body.id
-                    radius = abs(contact.model.offset[3])
+                    radius = abs(contact.model.collision.contact_radius)
                     (radius == 0.0) && (radius = 0.01)
                     contact_shape = Sphere(radius,
-                        position_offset=contact.model.contact_point,
+                        position_offset=contact.model.collision.contact_origin, #TODO: generalize for collision checking
                         axis_offset=one(Quaternion), 
                         color=RGBA(1.0, 0.0, 0.0, 0.5))
                     visshape = convert_shape(contact_shape)
@@ -116,7 +116,8 @@ end
     name: unique identifier 
     color: RGBA
 """
-function build_robot(mechanism::Mechanism; vis::Visualizer=Visualizer(),
+function build_robot(mechanism::Mechanism; 
+    vis::Visualizer=Visualizer(),
     show_joint=false,
     joint_radius=0.1,
     show_contact=false, 
@@ -166,10 +167,10 @@ function build_robot(mechanism::Mechanism; vis::Visualizer=Visualizer(),
         if show_contact
             for (jd, contact) in enumerate(mechanism.contacts)
                 if contact.parent_id == body.id
-                    radius = abs(contact.model.offset[3])
+                    radius = abs(contact.model.collision.contact_radius)
                     (radius == 0.0) && (radius = 0.01)
                     contact_shape = Sphere(radius,
-                        position_offset=(contact.model.contact_point),
+                        position_offset=(contact.model.collision.contact_origin),
                         axis_offset=one(Quaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
                     visshape = convert_shape(contact_shape)
                     subvisshape = nothing
@@ -250,10 +251,10 @@ function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T};
         if show_contact
             for (jd, contact) in enumerate(mechanism.contacts)
                 if contact.parent_id == body.id
-                    radius = abs(contact.model.offset[3])
+                    radius = abs(contact.model.collision.contact_radius)
                     (radius == 0.0) && (radius = 0.01)
                     contact_shape = Sphere(radius,
-                        position_offset=(contact.model.contact_point),
+                        position_offset=(contact.model.collision.contact_origin),
                         axis_offset=one(Quaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
                     visshape = convert_shape(contact_shape)
                     subvisshape = nothing

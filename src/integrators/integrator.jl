@@ -32,26 +32,26 @@ function ∂angular_velocity∂q2(q1::Quaternion, q2::Quaternion, timestep)
 end
 
 # Jacobians
-function integrator_jacobian_velocity(q2::Quaternion, ϕ25::SVector{3}, timestep::T) where T
-    V = [linear_integrator_jacobian_velocity(timestep) szeros(T,3,3)]
+function integrator_jacobian_velocity(x2::AbstractVector, v25::AbstractVector, q2::Quaternion, ϕ25::SVector{3}, timestep::T) where T
+    V = [linear_integrator_jacobian_velocity(x2, v25, timestep) szeros(T,3,3)]
     Ω = [szeros(T,4,3) rotational_integrator_jacobian_velocity(q2, ϕ25, timestep)]
     return [V; Ω] # 7x6
 end
 
-function integrator_jacobian_configuration(q2::Quaternion, ϕ25::SVector{3}, timestep::T; 
+function integrator_jacobian_configuration(x2::AbstractVector, v25::AbstractVector, q2::Quaternion, ϕ25::SVector{3}, timestep::T; 
     attjac::Bool=true) where T
 
     Z = attjac ? szeros(T,3,3) : szeros(T,3,4)
-    X = [linear_integrator_jacobian_position() Z]
+    X = [linear_integrator_jacobian_position(x2, v25, timestep) Z]
     Q = [szeros(T,4,3) rotational_integrator_jacobian_orientation(q2, ϕ25, timestep; attjac=attjac)]
     return [X; Q] # 7x6 or 7x7
 end
 
-function linear_integrator_jacobian_position(; T=Float64)
-    return SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
+function linear_integrator_jacobian_position(x2::AbstractVector, v2::AbstractVector, timestep::T) where T
+    return SMatrix{3,3,T,9}(Diagonal(sones(T, 3)))
 end
 
-function linear_integrator_jacobian_velocity(timestep::T) where T
+function linear_integrator_jacobian_velocity(x2::AbstractVector, v2::AbstractVector, timestep::T) where T
     return timestep * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
 end
 
