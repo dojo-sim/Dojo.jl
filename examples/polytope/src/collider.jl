@@ -121,29 +121,33 @@ end
 # collision
 ################################################################################
 function collision(collider::Collider{T}, soft_collider::SoftCollider110{T,N}) where {T,N}
-    ψ = 0.0
-    ∇ψ = zeros(3)
-    barycenter = zeros(3)
+    # soft.x = position of center of mass of soft in word frame
+    # soft.q = orientation of body wrt world frame B -> qb -> W
+    # P0 'origin' of the frame used by the nerf
+    # Pcom center of mass of the body
+    # pcom = position of Pcom in the nerf frame
+    # particle = position of the particle in the nerf frame
+    # p = position of the particle in the center of mass' frame attach to the body
+    # p = x + qb * (particle - pcom)
+    x = soft_collider.x
+    q = soft_collider.q
+    center_of_mass = soft_collider.center_of_mass
+    ψ = Vector{T}()
+    active_particles = []
 
-    active = 0
     for i = 1:N
         particle = soft_collider.particles[i]
-        p = soft_collider.x + Dojo.vector_rotate(particle, soft_collider.q)
+        p = x + Dojo.vector_rotate(particle - center_of_mass, q)
         if inside(collider, p)
-            active += 1
-            weight = soft_collider.weights[i]
-            weight_gradient = soft_collider.weight_gradients[i]
-            ψ += weight
-            barycenter += weight * particle
+            push!(ψ, soft_collider.weights[i])
+            push!(active_particles, particle)
         end
     end
-    if active > 0
-        barycenter /= ψ
-    end
-    contact_normal = collision_normal(collider, soft_collider, barycenter)
-    return ψ, contact_normal, barycenter
+
+    contact_normals = [collision_normal(collider, soft_collider, p) for p in active_particles]
+    num_active = length(ψ)
+    return ψ, active_particles, contact_normals, num_active
 end
-using LinearAlgebra
 
 function cross_collision(collider1::SoftCollider110{T,N1}, collider2::SoftCollider110{T,N2}) where {T,N1,N2}
     # returns
@@ -185,20 +189,17 @@ function collision(collider1::SoftCollider110{T,N1}, collider2::SoftCollider110{
     ψ = ψ1 + ψ2
     contact_normal_w = (ψ1 * contact_normal1w + ψ2 * -contact_normal2w)
     contact_normal_w /= (1e-20 + norm(contact_normal_w))
-    @show barycenter1w
-    @show barycenter2w
     barycenter_w = (ψ1 * barycenter1w + ψ2 * barycenter2w) / (1e-20 + ψ)
-    @show barycenter_w
     barycenter_2 = Dojo.vector_rotate(barycenter_w - collider2.x, inv(collider2.q))
     ∇ψ = zeros(3)
     return ψ, contact_normal_w, barycenter_2
 end
 
-function collision_normal(collider::HalfSpaceCollider110{T}, soft_collider::SoftCollider110{T,N}, barycenter) where {T,N}
+function collision_normal(collider::HalfSpaceCollider110{T}, soft_collider::SoftCollider110{T,N}, particle) where {T,N}
     collider.normal
 end
 
-function collision_normal(collider::SphereCollider110{T}, soft_collider::SoftCollider110{T,N}, barycenter) where {T,N}
-    normal = barycenter - collider.origin
+function collision_normal(collider::SphereCollider110{T}, soft_collider::SoftCollider110{T,N}, particle) where {T,N}
+    normal = particle - collider.origin
     return normal ./ (1e-20 + norm(normal))
 end

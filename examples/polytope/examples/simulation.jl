@@ -34,12 +34,17 @@ radius = 0.2
 sphere = SphereCollider(sphere_origin, radius)
 
 
-# soft = SoftCollider(nerf_object, mesh, N=5000)
-soft = jldopen(joinpath(example_dir(), "results", "soft.jld2"))["soft"]
+# soft0 = SoftCollider(nerf_object, mesh, N=5000)
+# jldsave(joinpath(example_dir(), "results", "soft.jld2"), soft=soft0)
+soft0 = jldopen(joinpath(example_dir(), "results", "soft.jld2"))["soft"]
+soft1 = jldopen(joinpath(example_dir(), "results", "soft.jld2"))["soft"]
+soft1.x = [0,0,-0.08]
+soft1.q = Quaternion(1,0,0,0.,true)
 
-@elapsed collision(halfspace, soft)
-@elapsed collision(sphere, soft)
-@elapsed collision(soft, soft)
+
+@elapsed collision(halfspace, soft0)
+@elapsed collision(sphere, soft0)
+@elapsed collision(soft0, soft0)
 
 ################################################################################
 # Simulation
@@ -50,22 +55,20 @@ set_background!(vis)
 
 timestep = 0.01
 H = Int(floor(1.0/timestep))
-mass = soft.mass
-inertia = soft.inertia
 gravity = [0,0,-9.81]
 
 x2 = [0,-1.5,0.5]
 v15 = [0,5,3.0]
-# q2 = rand(4)
-# q2 /= norm(q2)
-# q2 = Quaternion(q2...)
+q2 = rand(4)
+q2 = Quaternion(q2 ./ norm(q2)...,true)
 ϕ15 = [3.5,0,0.0]
 z0 = [x2; v15; Dojo.vector(q2); ϕ15]
 
-ψ, impact_normal, barycenter = collision(sphere, soft)
+ψ, impact_normals, particles = collision(sphere, soft0)
+ψ, impact_normals, particles = collision(halfspace, soft0)
 
 
-soft.options = ColliderOptions110(
+soft0.options = ColliderOptions110(
     impact_damper=1e7,
     impact_spring=1e7,
     sliding_drag=0.0,
@@ -73,12 +76,10 @@ soft.options = ColliderOptions110(
     rolling_drag=0.05,
     rolling_friction=0.01,
 )
-# @time Z0, Φ0 = implicit_simulation(halfspace, soft, timestep, H, z0)
-# @time Z0, Φ0 = implicit_simulation(sphere, soft, timestep, H, z0)
-soft1 = deepcopy(soft)
-soft1.x = [0,0,-0.08]
-soft1.q = Quaternion(1,0,0,0.,true)
-@time Z0, Φ0 = implicit_simulation(soft1, soft, timestep, H, z0)
+@time Z0, Φ0 = implicit_simulation(halfspace, soft0, timestep, H, z0, gravity)
+# @time Z0, Φ0 = implicit_simulation(sphere, soft0, timestep, H, z0, gravity)
+# @time Z0, Φ0 = implicit_simulation(soft1, soft0, timestep, H, z0, gravity)
+
 plt = plot(layout=(3,1), xlabel="time")
 plot!(plt[1,1], [i*timestep for i=0:H], [z[1] for z in Z0], linewidth=3.0, label="x", color=:blue)
 plot!(plt[1,1], [i*timestep for i=0:H], [z[2] for z in Z0], linewidth=3.0, label="y", color=:blue)
@@ -90,7 +91,6 @@ plot!(plt[2,1], [i*timestep for i=0:H], [z[9] for z in Z0], linewidth=3.0, label
 plot!(plt[2,1], [i*timestep for i=0:H], [z[10] for z in Z0], linewidth=3.0, label="q4", color=:green)
 plot!(plt[3,1], [i*timestep for i=1:H], Φ0, linewidth=3.0, label="ψ", color=:red)
 
-collision(soft1, soft)
 
 build_mesh!(tight_mesh, vis, name=:tight_mesh, color=RGBA(1,1,1,1.0))
 build_mesh!(mesh, vis, name=:mesh, color=RGBA(1,1,1,0.3))
