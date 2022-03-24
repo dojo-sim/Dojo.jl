@@ -54,23 +54,38 @@ set_floor!(vis, color=RGBA(0.4,0.4,0.4,0.8), z=0.5, origin=halfspace.origin, nor
 set_background!(vis)
 
 timestep = 0.01
-H = Int(floor(1.0/timestep))
+H = Int(floor(3.00/timestep))
 gravity = [0,0,-9.81]
 
 x2 = [0,-1.5,0.5]
-v15 = [0,5,3.0]
-q2 = rand(4)
-q2 = Quaternion(q2 ./ norm(q2)...,true)
-ϕ15 = [3.5,0,0.0]
+v15 = 0*[0,5,3.0]
+# q2 = rand(4)
+# q2 = Quaternion(q2 ./ norm(q2)...,true)
+q2 = Quaternion(1,0,0,0.0)
+ϕ15 = 0*[3.5,0,0.0]
 z0 = [x2; v15; Dojo.vector(q2); ϕ15]
 
-ψ, impact_normals, particles = collision(sphere, soft0)
-ψ, impact_normals, particles = collision(halfspace, soft0)
+ψ, active_particles, contact_normals, num_active = collision(sphere, soft0)
+ψ, active_particles, contact_normals, num_active = collision(halfspace, soft0)
+soft0.x = [0,0,-0.12]
+ψ, active_particles, contact_normals, num_active = collision(halfspace, soft0)
+sum(ψ)
+soft0.x = [0,0,-0.13]
+ψ, active_particles, contact_normals, num_active = collision(halfspace, soft0)
+sum(ψ)
+contact_normals
 
-
-soft0.options = ColliderOptions110(
-    impact_damper=1e7,
-    impact_spring=1e7,
+# soft0.options = ColliderOptions110( # nerf nerf
+#     impact_damper=1e7,
+#     impact_spring=1e7,
+#     sliding_drag=0.0,
+#     sliding_friction=0.3,
+#     rolling_drag=0.05,
+#     rolling_friction=0.01,
+# )
+soft0.options = ColliderOptions110( # halfspace
+    impact_damper=1e8,
+    impact_spring=1e6,
     sliding_drag=0.0,
     sliding_friction=0.3,
     rolling_drag=0.05,
@@ -98,6 +113,8 @@ build_mesh!(tight_mesh, vis, name=:tight_mesh_1, color=RGBA(0.2,0.2,0.2,1.0))
 build_mesh!(mesh, vis, name=:mesh_1, color=RGBA(1,1,1,0.3))
 build_sphere!(sphere, vis, name=:sphere, color=RGBA(0.4,0.4,0.4,1.0))
 animation = MeshCat.Animation(Int(floor(1/timestep)))
+[z[3] for z in Z0]
+[z[1] for z in Z0]
 for i = 1:H
     atframe(animation, i) do
         set_robot!(Z0[i][1:3], Quaternion(Z0[i][7:10]...), vis, name=:mesh)
