@@ -13,8 +13,7 @@ function implicit_integrator(fixed_collider, soft, timestep, z, gravity)
 
     soft.x = x2
     soft.q = q2
-	ψ, particles, contact_normals, num_active = collision(fixed_collider, soft)
-	@show num_active
+	ψ, barycenter, contact_normal = collision(fixed_collider, soft)
     coulomb_direction(v) = - atan(opts.coulomb_smoothing * norm(v)) * v/(opts.coulomb_regularizer + norm(v))
 
     function residual(vϕ::AbstractVector{T}) where T
@@ -33,36 +32,36 @@ function implicit_integrator(fixed_collider, soft, timestep, z, gravity)
         d = [dynT; dynR]
 
 		# velocities
-		vc = [v25 + Dojo.vector_rotate(Dojo.skew(center_of_mass - particles[i]) * ϕ25, q2) for i=1:num_active] # TODO could be q3
-		vc_normal = Vector{SVector{3,T}}([vc[i]' * contact_normals[i] * contact_normals[i] for i=1:num_active])
-		vc_tangential = [vc[i] - vc_normal[i] for i=1:num_active]
+		# vc = [v25 + Dojo.vector_rotate(Dojo.skew(center_of_mass - particles[i]) * ϕ25, q2) for i=1:num_active] # TODO could be q3
+		# vc_normal = Vector{SVector{3,T}}([vc[i]' * contact_normals[i] * contact_normals[i] for i=1:num_active])
+		# vc_tangential = [vc[i] - vc_normal[i] for i=1:num_active]
+		vc = v25 + Dojo.vector_rotate(Dojo.skew(center_of_mass - barycenter) * ϕ25, q2) # TODO could be q3
+		vc_normal = vc' * contact_normal * contact_normal
+		vc_tangential = vc - vc_normal
 
         # forces
-		F_impact = [-opts.impact_damper * ψ[i] * vc_normal[i] +
-			opts.impact_spring * ψ[i] * contact_normals[i] for i=1:num_active]
-		F_friction = 0.0000* [-opts.sliding_drag * norm(F_impact[i]) * vc_tangential[i] +
-			opts.sliding_friction * norm(F_impact[i]) * coulomb_direction(vc_tangential[i]) for i=1:num_active]
-        F_contact = Vector{SVector{3,T}}([F_impact[i] + F_friction[i] for i=1:num_active])
-		F2 = mass * gravity + sum(F_contact)
-
-        # F_impact = -opts.impact_damper * ψ * vc_normal
-        # F_impact += opts.impact_spring * ψ * contact_normal
-		# F_friction = -opts.sliding_drag * norm(F_impact) * vc_tangential
-		# F_friction += opts.sliding_friction * norm(F_impact) * coulomb_direction(vc_tangential)
-        # F_contact = F_impact + F_friction
-        # F2 = mass*gravity + F_contact
+		# F_impact = [-opts.impact_damper * ψ[i] * vc_normal[i] +
+		# 	opts.impact_spring * ψ[i] * contact_normals[i] for i=1:num_active]
+		# F_friction = [-opts.sliding_drag * norm(F_impact[i]) * vc_tangential[i] +
+		# 	opts.sliding_friction * norm(F_impact[i]) * coulomb_direction(vc_tangential[i]) for i=1:num_active]
+        # F_contact = Vector{SVector{3,T}}([F_impact[i] + F_friction[i] for i=1:num_active])
+		# F2 = mass * gravity + sum(F_contact)
+		F_impact = -opts.impact_damper * ψ * vc_normal
+		F_impact += opts.impact_spring * ψ * contact_normal
+		F_friction = -opts.sliding_drag * norm(F_impact) * vc_tangential
+		F_friction += opts.sliding_friction * norm(F_impact) * coulomb_direction(vc_tangential)
+		F_contact = F_impact + F_friction
+		F2 = mass * gravity + F_contact
 
 		# torques
-		τ2 = Vector{SVector{3,T}}([Dojo.skew(particles[i] - center_of_mass) * Dojo.vector_rotate(F_contact[i], inv(q2)) -
-			  opts.rolling_drag * norm(F_impact[i]) * ϕ25 +
-			  opts.rolling_friction * norm(F_impact[i]) * coulomb_direction(ϕ25)
-			  for i=1:num_active]) # TODO could be q3
-		τ2 = sum(τ2) * 0.000
-
-        # τ_w = -Dojo.skew(F_contact) * barycenter_w
-        # τ2 = Dojo.vector_rotate(τ_w, inv(q2)) # TODO could be q3
-        # τ2 += -opts.rolling_drag * norm(F_impact) * ϕ25
-        # τ2 += opts.rolling_friction * norm(F_impact) * coulomb_direction(ϕ25)
+		# τ2 = Vector{SVector{3,T}}([Dojo.skew(particles[i] - center_of_mass) * Dojo.vector_rotate(F_contact[i], inv(q2)) -
+		# 	  opts.rolling_drag * norm(F_impact[i]) * ϕ25 +
+		# 	  opts.rolling_friction * norm(F_impact[i]) * coulomb_direction(ϕ25)
+		# 	  for i=1:num_active]) # TODO could be q3
+		# τ2 = sum(τ2)
+		τ2 = Dojo.skew(barycenter - center_of_mass) * Dojo.vector_rotate(F_contact, inv(q2)) # TODO could be q3
+		τ2 -= opts.rolling_drag * norm(F_impact) * ϕ25
+		τ2 += opts.rolling_friction * norm(F_impact) * coulomb_direction(ϕ25)
 
 		d -= timestep * [F2; τ2]
         return d
@@ -74,7 +73,7 @@ function implicit_integrator(fixed_collider, soft, timestep, z, gravity)
 	x3 = Dojo.next_position(x2, v25, timestep)
 	q3 = Dojo.next_orientation(q2, ϕ25, timestep)
     z1 = [x3; v25; Dojo.vector(q3); ϕ25]
-    return z1, sum(ψ)
+    return z1, ψ
 end
 
 function newton_solver(residual)

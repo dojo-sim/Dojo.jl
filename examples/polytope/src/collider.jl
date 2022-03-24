@@ -132,21 +132,24 @@ function collision(collider::Collider{T}, soft_collider::SoftCollider110{T,N}) w
     x = soft_collider.x
     q = soft_collider.q
     center_of_mass = soft_collider.center_of_mass
-    ψ = Vector{T}()
+    Ψ = Vector{T}()
     active_particles = []
-
+    barycenter = zeros(3)
     for i = 1:N
         particle = soft_collider.particles[i]
         p = x + Dojo.vector_rotate(particle - center_of_mass, q)
         if inside(collider, p)
-            push!(ψ, soft_collider.weights[i])
+            push!(Ψ, soft_collider.weights[i])
             push!(active_particles, particle)
         end
     end
-
     contact_normals = [collision_normal(collider, soft_collider, p) for p in active_particles]
-    num_active = length(ψ)
-    return ψ, active_particles, contact_normals, num_active
+    num_active = length(Ψ)
+    ψ = sum(Ψ)
+    (num_active > 0) && (barycenter = sum(Vector{SVector{3,T}}([Ψ[i] * active_particles[i] for i=1:num_active])) / ψ)
+    contact_normal = collision_normal(collider, soft_collider, barycenter)
+    # return Ψ, ψ, active_particles, barycenter, contact_normals, contact_normal, num_active
+    return ψ, barycenter, contact_normal
 end
 
 function cross_collision(collider1::SoftCollider110{T,N1}, collider2::SoftCollider110{T,N2}) where {T,N1,N2}
@@ -156,12 +159,18 @@ function cross_collision(collider1::SoftCollider110{T,N1}, collider2::SoftCollid
     # contact_normals for each particle
     # barycenter of contact of collider1 into collider2
     # contact normal from collider1 to collider2
+    x1 = collider1.x
+    x2 = collider2.x
+    q1 = collider1.q
+    q2 = collider2.q
+    center_of_mass1 = collider1.center_of_mass
+    center_of_mass2 = collider2.center_of_mass
 
     particles_w = zeros(Float32,N1,3)
     particles_2 = zeros(Float32,N1,3)
     for i = 1:N1
-        pw = collider1.x + Dojo.vector_rotate(collider1.particles[i], collider1.q)
-        p2 = Dojo.vector_rotate(pw - collider2.x, inv(collider2.q))
+        pw = x1 + Dojo.vector_rotate(collider1.particles[i] - center_of_mass1, q1)
+        p2 = center_of_mass2 + Dojo.vector_rotate(pw - x2, inv(q2))
         particles_w[i,:] = pw
         particles_2[i,:] = p2
     end
@@ -175,24 +184,24 @@ function cross_collision(collider1::SoftCollider110{T,N1}, collider2::SoftCollid
         weight_product = collider1.weights[i] * weights[i]
         ψ += weight_product
         barycenter_w += weight_product * particles_w[i,:]
-        contact_normal_w += weight_product * Dojo.vector_rotate(-collider1.weight_gradients[i], collider1.q)
+        contact_normal_w += weight_product * Dojo.vector_rotate(-collider1.weight_gradients[i], q1)
     end
     barycenter_w ./= (1e-20 + ψ)
     contact_normal_w /= (1e-20 + norm(contact_normal_w))
-    return ψ, contact_normal_w, barycenter_w
+    return ψ, barycenter_w, contact_normal_w
 end
 
 function collision(collider1::SoftCollider110{T,N1}, collider2::SoftCollider110{T,N2}) where {T,N1,N2}
     # contact_normal = direction of force applied by collider1 on collider2
-    ψ1, contact_normal1w, barycenter1w = cross_collision(collider1, collider2) # weigths of collider2 at particle1
-    ψ2, contact_normal2w, barycenter2w = cross_collision(collider2, collider1) # weigths of collider1 at particle2
+    ψ1, barycenter1w, contact_normal1w = cross_collision(collider1, collider2) # weigths of collider2 at particle1
+    ψ2, barycenter2w, contact_normal2w = cross_collision(collider2, collider1) # weigths of collider1 at particle2
     ψ = ψ1 + ψ2
     contact_normal_w = (ψ1 * contact_normal1w + ψ2 * -contact_normal2w)
     contact_normal_w /= (1e-20 + norm(contact_normal_w))
     barycenter_w = (ψ1 * barycenter1w + ψ2 * barycenter2w) / (1e-20 + ψ)
-    barycenter_2 = Dojo.vector_rotate(barycenter_w - collider2.x, inv(collider2.q))
+    barycenter_2 = collider2.center_of_mass + Dojo.vector_rotate(barycenter_w - collider2.x, inv(collider2.q))
     ∇ψ = zeros(3)
-    return ψ, contact_normal_w, barycenter_2
+    return ψ, barycenter_2, contact_normal_w
 end
 
 function collision_normal(collider::HalfSpaceCollider110{T}, soft_collider::SoftCollider110{T,N}, particle) where {T,N}
