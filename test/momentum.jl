@@ -64,8 +64,8 @@ joint_types = [
     mang0= [Vector(m - m0[1])[4:6] for m in m0]
     # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mlin0...)')
     # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
-    @test all(norm.(mlin0, Inf) .< 1.0e-7)
-    @test all(norm.(mang0, Inf) .< 1.0e-7)
+    @test all(norm.(mlin0, Inf) .< 1.0e-8)
+    @test all(norm.(mang0, Inf) .< 1.0e-8)
 end
 
 ################################################################################
@@ -101,7 +101,7 @@ end
     # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mlin0...)')
     # plot([(i-1) * timestep0 for i in 1:length(m0)], hcat(mang0...)')
     # @test all(norm.(mlin0, Inf) .< 1e-11)
-    @test all(norm.(mang0, Inf) .< 1.0e-7)
+    @test all(norm.(mang0, Inf) .< 1.0e-8)
 end
 
 ################################################################################
