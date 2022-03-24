@@ -473,8 +473,8 @@ end
 		N_a = Dojo.minimal_to_maximal_jacobian(mechanism, Dojo.maximal_to_minimal(mechanism, z))
 		@test size(N_fd) == size(N_a)
 		@test norm(N_fd - N_a, Inf) < 1.0e-5
-		@test norm(diag(M_fd * N_fd) .- 1.0, Inf) < 1.0e-8
-		@test norm(diag(M_a * N_a) .- 1.0, Inf) < 1.0e-8
+		@test norm(diag(M_fd * N_fd) .- 1.0, Inf) < 1.0e-5
+		@test norm(diag(M_a * N_a) .- 1.0, Inf) < 1.0e-5
 
 		# sphere
 		mechanism = Dojo.get_mechanism(:sphere,
