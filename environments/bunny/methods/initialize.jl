@@ -1,4 +1,4 @@
-function get_bunny(;
+function get_bunny(collider::Collider;
     timestep=0.01,
     gravity=[0.0; 0.0; -9.81],
     friction_coefficient=0.8,
@@ -9,8 +9,12 @@ function get_bunny(;
     mass = 1.0
     bodies = [Sphere(radius, mass, name=:bunny, color=RGBA(1,1,1,0.1))]
     shape0 = bodies[1].shape
-    shape1 = Mesh(joinpath(module_dir(), "environments/bunny/deps/bunny_inner_mesh.obj"), color=RGBA(0.2,0.2,0.2,1.0))
-    shape2 = Mesh(joinpath(module_dir(), "environments/bunny/deps/bunny_outer_mesh.obj"), color=RGBA(0.9,0.9,0.9,0.3))
+    shape1 = Mesh(joinpath(module_dir(), "environments/bunny/deps/bunny_inner_mesh.obj"),
+        position_offset = -collider.center_of_mass,
+        color=RGBA(0.2,0.2,0.2,1.0))
+    shape2 = Mesh(joinpath(module_dir(), "environments/bunny/deps/bunny_outer_mesh.obj"),
+        position_offset = -collider.center_of_mass,
+        color=RGBA(0.9,0.9,0.9,0.3))
     shape_vec = [shape1, shape2, shape0]
     shapes = Shapes(shape_vec)
     bodies[1].shape = shapes
@@ -35,14 +39,14 @@ function get_bunny(;
 end
 
 function initialize_bunny!(mechanism::Mechanism{T};
-    x=zeros(3),
-    q=one(Quaternion),
-    v=zeros(3),
-    ω=zeros(3)) where T
+    position=zeros(3),
+    orientation=one(Quaternion),
+    velocity=zeros(3),
+    angular_velocity=zeros(3)) where T
 
-    r = mechanism.bodies[1].shape.r
+    r = 0.50
     joint = get_joint(mechanism, :floating_joint)
     zero_velocity!(mechanism)
-    set_minimal_coordinates!(mechanism, joint, [x + [0.0, 0.0, r] rotation_vector(q)])
-    set_minimal_velocities!(mechanism, joint, [v; ω])
+    set_minimal_coordinates!(mechanism, joint, [position + [0.0, 0.0, r] rotation_vector(orientation)])
+    set_minimal_velocities!(mechanism, joint, [velocity; angular_velocity])
 end

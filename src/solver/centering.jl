@@ -12,8 +12,8 @@ function centering!(mechanism::Mechanism, αaff::T) where T
         ν, νaff, n = centering!(ν, νaff, n, mechanism, joint, get_entry(system, joint.id), αaff)
     end
 
-    ν /= n
-    νaff /= n
+    (n > 0) && (ν /= n)
+    (n > 0) && (νaff /= n)
     return ν, νaff
 end
 

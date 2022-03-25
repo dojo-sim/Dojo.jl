@@ -15,8 +15,6 @@ end
 
 abstract type Collider{T} end
 mutable struct SoftCollider250{T,N} <: Collider{T}
-    # x::AbstractVector{T}
-    # q::Quaternion{T}
     # mass::T
     # inertia::AbstractMatrix{T}
     center_of_mass::AbstractVector{T}
@@ -26,23 +24,19 @@ mutable struct SoftCollider250{T,N} <: Collider{T}
     weights::Vector{T} # contribution to collision force F = spring_constant * collision_weight
     weight_gradients::Vector{SVector{3,T}}
     nerf_object::Any
-    # mesh::GeometryBasics.Mesh
     options::ColliderOptions{T}
 end
 
 function SoftCollider(nerf_object; N=1000, density_scale=0.1, opts=ColliderOptions250(), T=Float64)
-    # x = szeros(T,3)
-    # q = Quaternion(1,0,0,0.0)
     mass, inertia, center_of_mass = inertia_properties(nerf_object, density_scale=density_scale)
-    particles, densities, density_gradients = sample_soft(nerf_object, N)
+    particles, densities, density_gradients = sample_soft(nerf_object, N, particle_noise=0.005)
     weights = densities ./ sum(densities) * mass
     weight_gradients = density_gradients ./ sum(densities) * mass
     return SoftCollider250{T,N}(
-        # x, q, mass, inertia,
+        # mass, inertia,
         center_of_mass,
         particles, densities, density_gradients,
         weights, weight_gradients, nerf_object,
-        # mesh,
         opts)
 end
 
@@ -86,6 +80,7 @@ function halfspace_collision(collider::SoftCollider250{T,N}, xp, qp, xc, qc) whe
     end
 
     num_active = length(Ψ)
+    @show num_active
     ψ = sum(Ψ)
     (ψ > 0) && (barycenter = sum(Vector{SVector{3,T}}([Ψ[i] * active_particles[i] for i=1:num_active])) / ψ)
     contact_normal = collision_normal(halfspace, collider, barycenter)
@@ -123,7 +118,7 @@ end
 
 function SoftContact(body::Body{T}, normal::AbstractVector{T};
     collider::Collider=SOFT,
-    contact_origin=szeros(T, 3),
+    contact_origin=-SOFT.center_of_mass,
     contact_radius=0.0) where T
 
     # contact directions
@@ -145,7 +140,8 @@ function constraint(mechanism, contact::SoftContactConstraint{T,N,Nc,Cs}) where 
     # contact model
     model = contact.model
     collider = model.collider
-
+    timestep = mechanism.timestep
+    opts = collider.options
     # parent
     pbody = get_body(mechanism, contact.parent_id)
     x2p, v25p, q2p, ϕ25p = current_configuration_velocity(pbody.state)
@@ -158,12 +154,28 @@ function constraint(mechanism, contact::SoftContactConstraint{T,N,Nc,Cs}) where 
     ψ, barycenter, contact_normal = halfspace_collision(collider, x2p, q2p, x2c, q2c)
     # velocities
     vc = v25p + vector_rotate(skew(collider.center_of_mass - barycenter) * ϕ25p, q2p) # TODO could be q3
-    vc_normal = vc' * contact_normal# * contact_normal
-    # vc_tangential = vc - vc_normal
-    @show ψ
+    vc_normal = vc' * contact_normal * contact_normal
+    vc_tangential = vc - vc_normal
+
+
+    # constraint
+    impulse = timestep * SVector{1,T}(
+        + ψ * opts.impact_spring * contact_normal'*contact_normal
+        - ψ * opts.impact_damper * v25p[3] #vc_normal'*contact_normal
+        )
+    VERBOSE && println(
+        # "x2p:", scn.(x2p),
+        "    ψ:", scn(ψ),
+        "    λ:", scn(contact.impulses[2][1]),
+        "    imp:", scn.(impulse),
+        # "    spr:", scn(ψ * timestep * collider.options.impact_spring * 1.0),
+        # "    err:", scn(- ψ * timestep * collider.options.impact_spring * 1.0 - contact.impulses[2][1])
+        )
+
     # constraint
     # SVector{1,T}(distance(model.collision, x3p, q3p, x3c, q3c) - contact.impulses_dual[2][1])
-    SVector{1,T}(ψ * collider.options.impact_spring * vc_normal - contact.impulses[2][1])
+    # SVector{1,T}(- ψ * timestep * collider.options.impact_spring * vc_normal - contact.impulses[2][1])
+    return SVector{1,T}(impulse[1] - contact.impulses[2][1])
 end
 
 function constraint_jacobian(contact::SoftContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:SoftContact{T,N}}
@@ -184,7 +196,9 @@ function constraint_jacobian_velocity(relative::Symbol, model::SoftContact{T},
     timestep) where T
 
     collider = model.collider
-    impact_spring = collider.options.impact_spring
+    opts = collider.options
+    impact_spring = opts.impact_spring
+    impact_damper = opts.impact_damper
     x2p = next_position(xp, -vp, timestep)
     q2p = next_orientation(qp, -ϕp, timestep)
     x2c = next_position(xc, -vc, timestep)
@@ -194,8 +208,8 @@ function constraint_jacobian_velocity(relative::Symbol, model::SoftContact{T},
 
     # recover current orientation
     if relative == :parent
-        V = ψ * impact_spring * contact_normal'
-        Ω = ψ * impact_spring * contact_normal' * rotation_matrix(q2p) * skew(collider.center_of_mass - barycenter)
+        V = -timestep * ψ * impact_damper * SMatrix{1,3,T,3}([0 0 1.0]) #ψ * timestep * impact_spring * contact_normal'
+        Ω = szeros(T,1,3) #ψ * timestep * impact_spring * contact_normal' * rotation_matrix(q2p) * skew(collider.center_of_mass - barycenter)
     elseif relative == :child
         V = szeros(T,1,3)
         Ω = szeros(T,1,3)
@@ -224,7 +238,6 @@ function ∂force_mapping_jvp∂x(relative::Symbol, jacobian::Symbol,
 
     # X = ∂contact_normal_transpose∂x(jacobian, model.collision, xp, qp, xc, qc) * λ[1]
     X = szeros(T,3,3)
-    @show size(X)
     if relative == :parent
         return X
     elseif relative == :child

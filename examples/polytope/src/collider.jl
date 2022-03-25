@@ -82,7 +82,8 @@ function SoftCollider(nerf_object, mesh; N=1000, density_scale=0.1, opts=Collide
         densities, density_gradients, weights, weight_gradients, nerf_object, mesh, opts)
 end
 
-function sample_soft(nerf_object, N::Int, T=Float64, min_density=1.0, max_density=105.0)
+function sample_soft(nerf_object, N::Int; T=Float64, min_density=1.0, max_density=105.0,
+        particle_noise=0.005)
     particles = Vector{SVector{3,T}}(undef, N)
     densities = zeros(T,N)
     density_gradients = Vector{SVector{3,T}}(undef, N)
@@ -92,6 +93,8 @@ function sample_soft(nerf_object, N::Int, T=Float64, min_density=1.0, max_densit
     yrange = range(-1.0, stop=1.0, length=n)
     zrange = range(-1.0, stop=1.0, length=n)
     candidate_particles = grid_particles(xrange, yrange, zrange)
+    candidate_particles += particle_noise * (rand(n^3, 3) .- 0.5)
+    candidate_particles = convert.(Float32, candidate_particles)
     candidate_densities = py"density_query"(nerf_object, candidate_particles)
 
     ind = findall(x -> min_density <= x <= max_density, candidate_densities)

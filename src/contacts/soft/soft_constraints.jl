@@ -27,11 +27,11 @@
 #         mechanism.timestep)
 # end
 #
-# # impulses
-# function impulses!(mechanism, body::Body, contact::SoftContactConstraint)
-#     body.state.d -= impulse_map(mechanism, contact, body) * contact.impulses[2]
-#     return
-# end
+# impulses
+function impulses!(mechanism::Mechanism{T}, body::Body, contact::SoftContactConstraint) where T
+    body.state.d -= impulse_map(mechanism, contact, body) * contact.impulses[2]
+    return
+end
 #
 # function impulse_map(mechanism, contact::SoftContactConstraint, body::Body)
 #     relative = (body.id == contact.parent_id ? :parent : :child)
