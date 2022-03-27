@@ -20,8 +20,7 @@ function line_search!(mechanism::Mechanism, α, rvio, bvio, opts)
 
         rvio_cand = residual_violation(mechanism)
         bvio_cand = bilinear_violation(mechanism)
-
-        if (rvio_cand > rvio) && (bvio_cand > bvio)
+        if (rvio_cand > rvio) && (bvio_cand >= bvio)
             scale += 1
         else
             return rvio_cand, bvio_cand
@@ -141,7 +140,7 @@ function candidate_step!(α, mechanism::Mechanism, body::Body, vector_entry::Ent
     ϕ = body.state.ϕsol[2]
     ϕdot = dot(ϕ, ϕ)
     if ϕdot > ϕmax
-        println("clipping ", scale, scn((ϕdot - ϕmax) / ϕmax), " ", scn(ϕdot), " ", scn(ϕmax), " ", body.name)
+        println("clipping ", scale, scn((ϕdot - ϕmax) / ϕmax), " ϕdot ", scn(ϕdot), " ϕmax ", scn(ϕmax), " ", body.name)
         body.state.ϕsol[2] *= ϕmax / ϕdot # this is overkill, but works better than sqrt(ϕmax/ϕdot)
     end
     return

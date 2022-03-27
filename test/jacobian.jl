@@ -115,3 +115,9 @@ end
     test_solmat(:ant,        tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
     test_solmat(:halfcheetah,tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
 end
+
+
+tsim = 0.1
+test_solmat(:bunny,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
+
+length(mech.contacts[1])

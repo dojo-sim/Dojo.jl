@@ -10,9 +10,12 @@ function get_solution(mechanism::Mechanism{T}) where {T}
         push!(sol, [v25; ϕ25]...)
     end
     for (i, contacts) in enumerate(mechanism.contacts)
-        s = contacts.impulses_dual[2]
+        @warn "need fix"
+        # s = contacts.impulses_dual[2]
+        # γ = contacts.impulses[2]
+        # push!(sol, [s; γ]...)
         γ = contacts.impulses[2]
-        push!(sol, [s; γ]...)
+        push!(sol, γ...)
     end
     return sol
 end
@@ -33,11 +36,15 @@ function set_solution!(mechanism::Mechanism{T}, sol::AbstractVector) where T
         body.state.ϕsol[2] = ϕ25
     end
     for (i,contacts) in enumerate(mechanism.contacts)
+        @warn "need fix"
+        # N = length(contacts)
+        # N½ = Int(N/2)
+        # s = sol[off .+ (1:N½)]; off += N½
+        # γ = sol[off .+ (1:N½)]; off += N½
+        # contacts.impulses_dual[2] = s
+        # contacts.impulses[2] = γ
         N = length(contacts)
-        N½ = Int(N/2)
-        s = sol[off .+ (1:N½)]; off += N½
-        γ = sol[off .+ (1:N½)]; off += N½
-        contacts.impulses_dual[2] = s
+        γ = sol[off .+ (1:N)]; off += N
         contacts.impulses[2] = γ
     end
     return nothing

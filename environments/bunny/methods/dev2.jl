@@ -25,7 +25,7 @@ initialize!(mech, :bunny,
 
 constraint(mech, mech.contacts[1])
 
-storage = simulate!(mech, 3.00, opts=SolverOptions(verbose=true, rtol=1e-4, max_iter=50))
+storage = simulate!(mech, 1.11, opts=SolverOptions(verbose=true, rtol=1e-4, max_iter=50))
 visualize(mech, storage, vis=vis)
 
 

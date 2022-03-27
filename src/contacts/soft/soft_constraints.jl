@@ -199,3 +199,12 @@ function update!(contact::SoftContactConstraint)
     contact.impulses[1] = contact.impulses[2]
     return
 end
+
+# get data
+get_data(model::SoftContact{T}) where T = [model.collision.contact_radius; model.collision.contact_origin]
+function set_data!(model::SoftContact, data::AbstractVector)
+	# model.collider.options.sliding_friction = data[1]
+    model.collision.contact_radius = data[1]
+    model.collision.contact_origin = data[SVector{3,Int}(2:4)]
+    return nothing
+end
