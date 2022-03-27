@@ -1,24 +1,19 @@
 function get_bunny(;
-    collider::Collider=SOFT,
+    collider="soft_collider.jld2",
     timestep=0.01,
     gravity=[0.0; 0.0; -9.81],
     friction_coefficient=0.8,
     radius=0.5,
     T=Float64)
 
+    deps_folder = joinpath(module_dir(), "environments/bunny/deps")
+    collider = jldopen(joinpath(deps_folder, collider))["soft"]
+    inner_mesh_path = joinpath(deps_folder, "bunny_inner_mesh.obj")
+    outer_mesh_path = joinpath(deps_folder, "bunny_outer_mesh.obj")
+    soft_body = SoftBody(collider, inner_mesh_path, outer_mesh_path, name=:bunny)
+
     origin = Origin{T}(name=:origin)
-    mass = 1.0
-    bodies = [Sphere(radius, mass, name=:bunny, color=RGBA(1,1,1,0.1))]
-    shape0 = bodies[1].shape
-    shape1 = Mesh(joinpath(module_dir(), "environments/bunny/deps/bunny_inner_mesh.obj"),
-        position_offset = -collider.center_of_mass,
-        color=RGBA(0.2,0.2,0.2,1.0))
-    shape2 = Mesh(joinpath(module_dir(), "environments/bunny/deps/bunny_outer_mesh.obj"),
-        position_offset = -collider.center_of_mass,
-        color=RGBA(0.9,0.9,0.9,0.3))
-    shape_vec = [shape1, shape2, shape0]
-    shapes = Shapes(shape_vec)
-    bodies[1].shape = shapes
+    bodies = [soft_body]
 
     joints = [JointConstraint(Floating(origin, bodies[1]), name=:floating_joint)]
     mechanism = Mechanism(origin, bodies, joints,
@@ -27,11 +22,11 @@ function get_bunny(;
 
     contact = [0.0, 0.0, 0.0]
     normal = [0.0, 0.0, 1.0]
-    contacts = [contact_constraint(get_body(mechanism, :bunny), normal,
+    contacts = [soft_contact_constraint(get_body(mechanism, :bunny), normal, collider,
         friction_coefficient=friction_coefficient,
         contact_origin=contact,
         contact_radius=radius,
-        contact_type=:soft)]
+        name=:contact_1)]
     set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_joint), [0.0; 0.0; radius; zeros(3)])
     mechanism = Mechanism(origin, bodies, joints, contacts,
         gravity=gravity,

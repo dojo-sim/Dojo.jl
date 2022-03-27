@@ -101,7 +101,7 @@ function contact_constraint(bodies::Vector{Body{T}},
         friction_coefficient::AbstractVector{T}=ones(length(normal)),
         contact_origins::AbstractVector=[szeros(T, 3) for i=1:length(normal)],
         contact_radius::AbstractVector=[0.0 for i=1:length(normal)],
-        names::Vector{Symbol}=[Symbol("contact_" * randstring(4)) for i = 1:length(normal)],
+        names::Vector{Symbol}=[Symbol("contact_" * randstring(4)) for i=1:length(normal)],
         contact_type::Symbol=:nonlinear) where T
 
     n = length(normal)
@@ -160,11 +160,6 @@ function contact_constraint(body::Body{T},
             contact_origin=contact_origin,
             contact_radius=contact_radius)
         contact = RigidContactConstraint((model, body.id, 0); name=name)
-    elseif contact_type == :soft
-        model = SoftContact(body, normal,
-            contact_origin=contact_origin,
-            contact_radius=contact_radius)
-        contact = SoftContactConstraint((model, body.id, 0); name=name)
     else
         @warn "unknown contact_type"
     end

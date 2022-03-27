@@ -12,9 +12,9 @@ using PyCall
 nerf_object = py"generate_test_nerf"()
 
 # Nerf data
-results_dir = joinpath(example_dir(), "results")
-mesh = jldopen(joinpath(results_dir, "bunny_outer_mesh.jld2"))["mesh"]
-tight_mesh = jldopen(joinpath(results_dir, "bunny_inner_mesh.jld2"))["mesh"]
+deps_folder = joinpath(module_dir(), "environments/bunny/deps")
+outer_mesh = jldopen(joinpath(deps_folder, "bunny_outer_mesh.jld2"))["mesh"]
+inner_mesh = jldopen(joinpath(deps_folder, "bunny_inner_mesh.jld2"))["mesh"]
 
 vis = Visualizer()
 open(vis)
@@ -26,9 +26,9 @@ open(vis)
 halfspace_origin = [0,0,0.1]
 normal = [0.2,0,1.0]
 halfspace = HalfSpaceCollider(halfspace_origin, normal)
-soft = SoftCollider(nerf_object, mesh, N=5000)
+soft = SoftCollider(nerf_object, N=5000)
 
-jldsave(joinpath(example_dir(), "results", "soft_collider.jld2"), soft=soft)
+jldsave(joinpath(deps_folder, "soft_collider.jld2"), soft=soft)
 
 @time collision(halfspace, soft)
 

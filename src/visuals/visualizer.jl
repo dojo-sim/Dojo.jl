@@ -1,23 +1,23 @@
 """
     visualize(mechanism, storage; vis, build, show_contact, animation, color, name)
 
-    visualize mechanism using trajectory from storage 
+    visualize mechanism using trajectory from storage
 
-    mechanism: Mechanism 
-    storage: Storage 
-    vis: Visualizer 
+    mechanism: Mechanism
+    storage: Storage
+    vis: Visualizer
     build: flag to construct mechanism visuals (only needs to be built once)
-    show_contact: flag to show contact locations on system 
-    color: RGBA 
+    show_contact: flag to show contact locations on system
+    color: RGBA
     name: unique identifier for mechanism
 """
 function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=Visualizer(),
-    build::Bool=true, 
+    build::Bool=true,
     show_joint=false,
     joint_radius=0.1,
-    show_contact=false, 
-    animation=nothing, 
-    color=nothing, 
+    show_contact=false,
+    animation=nothing,
+    color=nothing,
     name::Symbol=:robot) where {T,N}
 
     storage = deepcopy(storage)
@@ -25,11 +25,11 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
     origin = mechanism.origin
 
     # Build robot in the visualizer
-    build && build_robot(mechanism, 
-        vis=vis, 
+    build && build_robot(mechanism,
+        vis=vis,
         show_joint=show_joint,
-        show_contact=show_contact, 
-        color=color, 
+        show_contact=show_contact,
+        color=color,
         name=name)
 
     # Create animations
@@ -54,7 +54,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
             for (jd, joint) in enumerate(mechanism.joints)
                 if joint.child_id == body.id
                     radius = 0.1
-                    joint_shape = Sphere(radius, 
+                    joint_shape = Sphere(radius,
                         position_offset=joint.translational.vertices[2],
                         color=RGBA(0.0, 0.0, 1.0, 0.5))
                     visshape = convert_shape(joint_shape)
@@ -76,7 +76,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
                     (radius == 0.0) && (radius = 0.01)
                     contact_shape = Sphere(radius,
                         position_offset=contact.model.collision.contact_origin, #TODO: generalize for collision checking
-                        axis_offset=one(Quaternion), 
+                        axis_offset=one(Quaternion),
                         color=RGBA(1.0, 0.0, 0.0, 0.5))
                     visshape = convert_shape(contact_shape)
                     subvisshape = nothing
@@ -108,20 +108,20 @@ end
 """
     build_robot(mechanism; vis, show_contact, name, color)
 
-    construct visuals for mechanism 
+    construct visuals for mechanism
 
-    mechanism: Mechanism 
-    vis: Visualizer 
-    show_contact: flag to show contact locations on mechanism 
-    name: unique identifier 
+    mechanism: Mechanism
+    vis: Visualizer
+    show_contact: flag to show contact locations on mechanism
+    name: unique identifier
     color: RGBA
 """
-function build_robot(mechanism::Mechanism; 
+function build_robot(mechanism::Mechanism;
     vis::Visualizer=Visualizer(),
     show_joint=false,
     joint_radius=0.1,
-    show_contact=false, 
-    name::Symbol=:robot, 
+    show_contact=false,
+    name::Symbol=:robot,
     color=nothing) where {T,N}
 
     bodies = mechanism.bodies
@@ -142,7 +142,7 @@ function build_robot(mechanism::Mechanism;
         subvisshape = nothing
         if visshape !== nothing
             subvisshape = vis[name][:bodies][Symbol(body.name, "__id_$id")]
-            setobject!(subvisshape, visshape, shape, 
+            setobject!(subvisshape, visshape, shape,
                 transparent=(show_joint || show_contact))
         end
 
@@ -157,7 +157,7 @@ function build_robot(mechanism::Mechanism;
                     subvisshape = nothing
                     if visshape !== nothing
                         subvisshape = vis[name][:joints][Symbol(joint.name, "__id_$(jd)")]
-                        setobject!(subvisshape, visshape, joint_shape, 
+                        setobject!(subvisshape, visshape, joint_shape,
                             transparent=false)
                     end
                 end
@@ -197,18 +197,18 @@ end
 """
     set_robot(vis, mechanism, z; show_contact, name)
 
-    visualze mechanism configuration from maximal representation 
+    visualze mechanism configuration from maximal representation
 
-    vis: Visualizer 
-    mechanism: Mechanism 
-    z: maximal state 
-    show_contact: flag to show contact locations on mechanism 
+    vis: Visualizer
+    mechanism: Mechanism
+    z: maximal state
+    show_contact: flag to show contact locations on mechanism
     name: unique identifier
 """
 function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T};
     show_joint::Bool=false,
     joint_radius=0.1,
-    show_contact::Bool=true, 
+    show_contact::Bool=true,
     name::Symbol=:robot) where {T,N}
 
     (length(z) == minimal_dimension(mechanism)) && (z = minimal_to_maximal(mechanism, z))
@@ -313,7 +313,7 @@ function animate_node!(storage::Storage{T,N}, id, shape, animation, shapevisuali
     return
 end
 
-function MeshCat.setobject!(subvisshape, visshape, shapes::Shapes; 
+function MeshCat.setobject!(subvisshape, visshape, shapes::Shapes;
     transparent=false)
     for (i, s) in enumerate(shapes.shape)
         v = subvisshape["node_$i"]
@@ -326,7 +326,7 @@ function MeshCat.setobject!(subvisshape, visshape, shapes::Shapes;
     end
 end
 
-function MeshCat.setobject!(subvisshape, visshape, shape::Shape; 
+function MeshCat.setobject!(subvisshape, visshape, shape::Shape;
     transparent=false)
     setobject!(subvisshape, visshape, MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
 end

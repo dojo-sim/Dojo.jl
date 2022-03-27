@@ -65,8 +65,8 @@ function impulse_map(relative::Symbol, model::SoftContact{T}, pbody::Node, cbody
     x2c, q2c = current_configuration(cbody.state)
 
     # find barycenter
-    collider = model.collider
-    ψ, barycenter, contact_normal = halfspace_collision(collider, x2p, q2p, x2c, q2c)
+	collision = model.collision
+    ψ, barycenter, contact_normal = overlap(collision, x2p, q2p, x2c, q2c)
 
     # mapping
     # X = force_mapping(relative, model, xp, qp, xc, qc)
@@ -92,48 +92,6 @@ end
 function impulse_map_jacobian(relative::Symbol, jacobian::Symbol, model::SoftContact{T},
         pbody::Node, cbody::Node, λ, timestep) where T
     return szeros(T,6,7)
-    # # configurations
-    # x2p, q2p = current_configuration(pbody.state)
-    # x2c, q2c = current_configuration(cbody.state)
-    #
-    # # find barycenter
-    # collider = model.collider
-    # ψ, barycenter, contact_normal = halfspace_collision(collider, x2p, q2p, x2c, q2c)
-    #
-    # # mapping
-    # # X = force_mapping(relative, model, xp, qp, xc, qc)
-    # X = force_mapping(relative, model, x2p, q2p, x2c, q2c)
-    #
-    # # force Jacobian
-    # # Xx = ∂force_mapping_jvp∂x(relative, jacobian, model, xp, qp, xc, qc, λ)
-    # Xx = ∂force_mapping_jvp∂x(relative, jacobian, model, x2p, q2p, x2c, q2c, λ)
-    # # Xq = ∂force_mapping_jvp∂q(relative, jacobian, model, xp, qp, xc, qc, λ)
-    # Xq = ∂force_mapping_jvp∂q(relative, jacobian, model, x2p, q2p, x2c, q2c, λ)
-    #
-    # # contact point
-    # # c = contact_point(relative, model.collision, xp, qp, xc, qc)
-    # c = x2p + vector_rotate(collision.contact_origin + barycenter, q2p)
-    #
-    # # torque Jacobian
-    # if relative == :parent
-    #     r = c - xp
-    #     q = qp
-    # elseif relative == :child
-    #     r = c - xc
-    #     q = qc
-    # end
-    #
-    # Qx = rotation_matrix(inv(q)) * skew(r) * Xx
-    # Qx -= rotation_matrix(inv(q)) * skew(X * λ) * (∂contact_point∂x(relative, jacobian, model.collision, xp, qp, xc, qc) - (relative == jacobian ? 1.0 : 0.0) * I(3))
-    #
-    # Qq = rotation_matrix(inv(q)) * skew(r) * Xq
-    # Qq -= rotation_matrix(inv(q)) * skew(X * λ) * ∂contact_point∂q(relative, jacobian, model.collision, xp, qp, xc, qc)
-    # Qq += ∂rotation_matrix∂q(inv(q), skew(r) * X * λ) * Tmat()
-    #
-    # return [
-    #             Xx Xq;
-    #             Qx Qq;
-    #        ]
 end
 
 # off-diagonal terms for linear system
@@ -208,3 +166,56 @@ function set_data!(model::SoftContact, data::AbstractVector)
     model.collision.contact_origin = data[SVector{3,Int}(2:4)]
     return nothing
 end
+
+# constructor
+function soft_contact_constraint(body::Body{T},
+        normal::AbstractVector{T},
+        collider::Collider;
+        friction_coefficient::T=1.0,
+        contact_origin::AbstractVector{T}=szeros(T, 3),
+        contact_radius::T=0.0,
+        name::Symbol=Symbol("contact_" * randstring(4))) where T
+
+    model = SoftContact(body, normal, collider,
+        contact_origin=contact_origin,
+        contact_radius=contact_radius)
+    contact = SoftContactConstraint((model, body.id, 0); name=name)
+    return contact
+end
+
+# constructor
+function SoftBody(collider::Collider, inner_mesh_path::String, outer_mesh_path::String;
+        position_offset::AbstractVector=szeros(3),
+        axis_offset::Quaternion=one(Quaternion),
+        scale::AbstractVector=sones(3),
+        name::Symbol=Symbol("body_" * randstring(4)),
+        color=RGBA(0.2,0.2,0.2,1.0))
+    T = promote_type(quateltype.((position_offset, axis_offset))...)
+
+    shape1 = Mesh(inner_mesh_path,
+        position_offset = position_offset - collider.center_of_mass,
+        axis_offset = axis_offset,
+        color=color)
+    shape2 = Mesh(outer_mesh_path,
+        position_offset = position_offset - collider.center_of_mass,
+        axis_offset = axis_offset,
+        color=RGBA(0.9,0.9,0.9,0.3))
+    shape_vec = Vector{Shape{T}}([shape1, shape2])
+    shapes = Shapes(shape_vec)
+
+    return Body(collider.mass, collider.inertia; name=name, shape=shapes)
+end
+
+
+coulomb_direction(v, smoothing=1e3, regularizer=1e-3) = - atan(smoothing * norm(v)) * v/(regularizer + norm(v))
+function ∂coulomb_direction∂v(v, smoothing=1e3, regularizer=1e-3)
+    ∇ = - 1 / (1 + smoothing^2 * v'*v) * smoothing * v/(regularizer + norm(v)) * v'/(norm(v)+1e-20) +
+        - atan(smoothing * norm(v)) * (1/(norm(v) + regularizer) * Diagonal(sones(3)) - v*v' ./ ((norm(v)+1e-20) * (norm(v) + regularizer)^2))
+    return ∇
+end
+
+v = srand(3)
+coulomb_direction(v)
+J0 = ∂coulomb_direction∂v(v)
+J1 = FiniteDiff.finite_difference_jacobian(v-> coulomb_direction(v), v)
+norm(J0 - J1, Inf) < 1e-5
