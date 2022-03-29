@@ -6,7 +6,7 @@
 	mechanism: Mechanism 
 	y: minimal state
 """
-function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, y::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
+function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, y::AbstractVector) where {T,Nn,Ne,Nb,Ni}
 	off = 0
 	for id in mechanism.root_to_leaves
 		(id > Ne) && continue # only treat joints
