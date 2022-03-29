@@ -99,4 +99,4 @@ pkg> add Dojo#main
 ```
 
 ## How To Contribute
-Please submit a pull request, open an issue, or reach out to: thowell@stanford.edu (Taylor) or simonlc@stanford.edu (Simon) 
+Please submit a pull request, open an issue, or reach out to: thowell@stanford.edu (Taylor) or simonlc@stanford.edu (Simon)
