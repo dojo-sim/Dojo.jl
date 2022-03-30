@@ -2,13 +2,13 @@
 # ColliderOptions
 ################################################################################
 @with_kw mutable struct ColliderOptions{T}
-    impact_damper::T=1e7
-    impact_spring::T=1e7
-    sliding_drag::T=0.0
-    sliding_friction::T=0.1
-    rolling_drag::T=0.05
+    impact_damper::T=3e5
+    impact_spring::T=3e4
+    sliding_drag::T=0.1
+    sliding_friction::T=0.2
+    rolling_drag::T=0.0
     rolling_friction::T=0.01
-    coulomb_smoothing::T=10.0
+    coulomb_smoothing::T=3e1
     coulomb_regularizer::T=1e-3
 end
 
