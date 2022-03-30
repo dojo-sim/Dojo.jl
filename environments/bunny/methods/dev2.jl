@@ -36,7 +36,7 @@ constraint(mech, mech.contacts[1])
 
 storage = simulate!(mech, 6.0, opts=SolverOptions(verbose=true, rtol=1e-4, max_iter=50))
 visualize(mech, storage, vis=vis)
-
+mech.contacts[1]
 
 
 using FiniteDiff
@@ -137,3 +137,40 @@ shape2 = Mesh(joinpath(deps_folder, "bunny_outer_mesh.obj"),
 shape_vec = Vector{Shape{T}}([shape1, shape2])#, shape0]
 shapes = Shapes(shape_vec)
 bodies[1].shape = shapes
+
+
+
+using Plots
+using Dojo
+
+rectangle(w, h, x, y) = Shape(x .+ [0,w,w,0], y .+ [0,0,h,h])
+light_blue = RGBA(0.4,0.4,1.0,0.8)
+
+f(x) = x
+ϕ(x) = x
+L(x, ρ) = f(x) - ρ * log.(ϕ(x))
+X = 0:0.0001:1
+Y = -1:0.1:1
+plt = plot(ylims=(-0.2,1.0), xlims=(-0.2,1.0), yticks=[0,1], xticks=[0,1], legend=:bottomright, size=(300,300))
+plot!(plt, Y, f.(Y), linewidth=6.0, color=:black, label="f(x)")
+plot!(rectangle(-0.2,2,0,-1), opacity=.6, color=:red, label="ϕ(x) < 0")
+anim = @animate for i = 1:10
+    plot!(plt, X, [1; L.(X[2:end], 10*0.5^i)], linewidth=5.0, color=light_blue, label=false)# label="ρ = 3e-1")
+end
+gif(anim, fps=10, "/home/simon/Downloads/anim.gif")
+
+PHI = Vector(1:-0.005:0)
+plt = plot(ylims=(-0.01,1.0), xlims=(-0.01,1.0), yticks=[0,1], xticks=[0,1], legend=:topright, size=(300,300), )
+anim = @animate for i = 1:440
+    # for (j,κ) ∈ enumerate([1e-1, 5e-2, 1e-2])
+    for (j,κ) ∈ enumerate([5e-2,])
+        PHI_i = PHI[1:min(i,length(PHI))]
+        (i == 1) && plot!(plt, PHI_i, κ ./ PHI_i, color=light_blue, linewidth=1+1.5j, label="κ = $κ")
+        plot!(plt, PHI_i, κ ./ PHI_i, color=light_blue, linewidth=1+1.5j, label=nothing)
+    end
+end
+
+gif(anim, fps=40, "/home/simon/Downloads/force_solo.gif")
+
+plot!(plt, PHI, 1e-2 ./ PHI, color=light_blue, linewidth=5.0, label="κ = 1e-2")
+plot!(plt, PHI, 1e-3 ./ PHI, color=light_blue, linewidth=5.0, label="κ = 1e-3")

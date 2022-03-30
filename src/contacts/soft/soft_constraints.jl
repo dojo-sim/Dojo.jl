@@ -1,36 +1,4 @@
-# # constraint Jacobian
-# function constraint_jacobian_configuration(mechanism, contact::SoftContactConstraint, body::Body)
-#     relative = (body.id == contact.parent_id ? :parent : :child)
-#
-#     timestep = mechanism.timestep
-#     pbody = get_body(mechanism, contact.parent_id)
-#     cbody = get_body(mechanism, contact.child_id)
-#
-#     return constraint_jacobian_configuration(relative,
-#         contact.model,
-#         next_configuration_velocity(pbody.state, timestep)...,
-#         next_configuration_velocity(cbody.state, timestep)...,
-#         mechanism.timestep)
-# end
-#
-# function constraint_jacobian_velocity(mechanism, contact::SoftContactConstraint, body::Body)
-#     relative = (body.id == contact.parent_id ? :parent : :child)
-#
-#     timestep = mechanism.timestep
-#     pbody = get_body(mechanism, contact.parent_id)
-#     cbody = get_body(mechanism, contact.child_id)
-#
-#     return constraint_jacobian_velocity(relative,
-#         contact.model,
-#         next_configuration_velocity(pbody.state, timestep)...,
-#         next_configuration_velocity(cbody.state, timestep)...,
-#         mechanism.timestep)
-# end
-#
 # impulses
-
-
-
 function impulses!(mechanism::Mechanism{T}, body::Body, contact::SoftContactConstraint) where T
     body.state.d -= impulse_map(mechanism, contact, body) * contact.impulses[2]
     return
