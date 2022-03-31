@@ -17,7 +17,7 @@ env = get_environment(:block,
     gravity=gravity)
 
 # ## visualizer 
-open(env.vis) 
+render(env.vis) 
 
 # ## dimensions
 n = env.num_states
@@ -26,7 +26,7 @@ m = env.num_inputs
 # ## states
 z1 = [0.0; 0.0; 0.25; 0.0; 0.0; 0.0; 1.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0]
 zT = [1.0; 0.0; 0.25; 0.0; 0.0; 0.0; 1.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0] # right goal
-## zT = [0.0; 0.0; 0.25 + 1.0; 0.0; 0.0; 0.0; 1.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0] # up goal
+zT = [0.0; 0.0; 0.25 + 1.0; 0.0; 0.0; 0.0; 1.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0] # up goal
 
 # ## horizon
 T = 11
@@ -69,7 +69,7 @@ s = IterativeLQR.solver(model, obj, cons,
         con_tol=0.005,
         max_iter=100,
         max_al_iter=10,
-        ρ_init=1.0,
+        ρ_init=1.0,notebook(dir=joinpath(dirname(pathof(Dojo)), "..", "examples"))
         ρ_scale=10.0,
         verbose=false))
 IterativeLQR.initialize_controls!(s, ū)
