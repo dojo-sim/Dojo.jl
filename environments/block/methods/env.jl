@@ -73,3 +73,28 @@ function block(;
 
     return env
 end
+
+function visualize_force!(vis, anim, z_vis, u_vis; 
+    shift = [0.0; 0.25; 0.0], 
+    color=orange,
+    )
+
+    u_max = maximum([norm(u) for u in u_vis])
+    force_vis = Dojo.ArrowVisualizer(vis[:force])
+    setobject!(force_vis, Dojo.MeshPhongMaterial(color=color))
+  
+    for t = 1:length(z_vis)
+        z = z_vis[t]
+        u = (t == length(z_vis) ? 0.5 * u_vis[end] ./ u_max : 0.5 * u_vis[t] ./ u_max)
+        MeshCat.atframe(anim, t) do
+            settransform!(force_vis,
+                Dojo.Point(z[1] - u[1] - shift[1], z[2] - u[2] - shift[2], z[3] - u[3] - shift[3]),
+                Dojo.Vec(u[1], u[2], u[3]),
+                shaft_radius=0.05,
+                max_head_radius=0.1)
+        end 
+    end
+    MeshCat.setanimation!(vis, anim)
+
+    return vis, anim
+end
