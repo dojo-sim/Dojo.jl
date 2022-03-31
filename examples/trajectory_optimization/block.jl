@@ -69,7 +69,7 @@ s = IterativeLQR.solver(model, obj, cons,
         con_tol=0.005,
         max_iter=100,
         max_al_iter=10,
-        ρ_init=1.0,notebook(dir=joinpath(dirname(pathof(Dojo)), "..", "examples"))
+        ρ_init=1.0,
         ρ_scale=10.0,
         verbose=false))
 IterativeLQR.initialize_controls!(s, ū)
@@ -88,7 +88,7 @@ z_sol, u_sol = IterativeLQR.get_trajectory(s)
 z_vis = [[z_sol[1] for t = 1:10]..., z_sol..., [z_sol[end] for t = 1:10]...]
 u_vis = [[u_sol[1] for t = 1:10]..., u_sol..., [u_sol[end] for t = 1:10]...]
 vis, anim = visualize(env, z_vis)
-vis, anim = visualize_force!(vis, anim, z_vis, u_vis) 
+vis, anim = Dojo.visualize_block_force!(vis, anim, z_vis, u_vis) 
 
 set_camera!(env.vis, 
     zoom=50.0, 
