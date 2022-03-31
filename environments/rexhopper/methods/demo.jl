@@ -1,14 +1,26 @@
 
+using Dojo
+global REG = 1.0e-6
+
+
 vis= Visualizer()
 open(vis)
 include("env.jl")
 include("initialize.jl")
 # mech = get_rexhopper(timestep=0.01, gravity=-2.81, model="rexhopper2",
 mech = get_rexhopper(timestep=0.01, gravity= -0.99 * 9.81, model="rexhopper_no_wheel",
-    floating=true, contact=true, limits=true, spring=0.0, damper=0.2, contact_type=:linear)
+    floating=true, contact_foot=true, limits=true, spring=0.0, damper=0.5, contact_type=:linear)
 
-initialize!(mech, :rexhopper, x=[0,0,0.4])
+q0 = [1,0.5,0,0]
+q0 = Quaternion(q0 ./ norm(q0)..., true)
+initialize!(mech, :rexhopper, body_position=[0,0,0.4], body_orientation=[0.5,0.8,0.0])
 z0 = get_maximal_state(mech)
+
+storage = simulate!(mech, 0.40, record=true, abort_upon_failure=false,
+    opts=SolverOptions(rtol=1e-4, btol=1e-4, undercut=5.0, verbose=true))
+visualize(mech, storage, vis=vis, show_contact=true, build=true)
+
+
 
 # build_robot(mech, vis=vis, show_contact=true, color=RGBA(0.2, 0.2, 0.2, 1.0))
 visualize(mech, generate_storage(mech, [z0]), show_contact=true, vis=vis, build=false)
