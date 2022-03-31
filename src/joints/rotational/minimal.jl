@@ -10,9 +10,9 @@ function displacement(joint::Rotational,
     vmat ? (return Vmat(q)) : (return q)
 end
 
-function displacement_jacobian_configuration(relative::Symbol, joint::Rotational,
-        xa::AbstractVector{T}, qa::Quaternion,
-        xb::AbstractVector{T}, qb::Quaternion;
+function displacement_jacobian_configuration(relative::Symbol, joint::Rotational{T},
+        xa::AbstractVector, qa::Quaternion,
+        xb::AbstractVector, qb::Quaternion;
         attjac::Bool=true, vmat=true) where T
     X = szeros(T, 3, 3)
     if relative == :parent

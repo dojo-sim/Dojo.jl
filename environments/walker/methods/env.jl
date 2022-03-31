@@ -5,29 +5,29 @@
 """
 struct Walker end
 
-function walker(; 
-    mode=:minimal, 
-    timestep=0.05, 
+function walker(;
+    mode=:minimal,
+    timestep=0.05,
     gravity=[0.0; 0.0; -9.81],
-    friction_coefficient=1.9, 
-    spring=0.0, 
+    friction_coefficient=1.9,
+    spring=0.0,
     damper=0.1,
-    seed=1, 
-    contact_feet=true, 
+    seed=1,
+    contact_feet=true,
     contact_body=true,
-    info=nothing, 
-    vis=Visualizer(), 
+    info=nothing,
+    vis=Visualizer(),
     name=:robot,
-    opts_step=SolverOptions(), 
+    opts_step=SolverOptions(),
     opts_grad=SolverOptions(),
     T=Float64)
 
     mechanism = get_walker(
-        timestep=timestep, 
-        gravity=gravity, 
-        friction_coefficient=friction_coefficient, 
-        spring=spring, 
-        damper=damper, 
+        timestep=timestep,
+        gravity=gravity,
+        friction_coefficient=friction_coefficient,
+        spring=spring,
+        damper=damper,
         contact_feet=contact_feet,
         contact_body=contact_body)
 
@@ -42,11 +42,11 @@ function walker(;
     no = nx-1 # full_state is false by default
 
     # values taken from Mujoco's model, combining the control range -1, 1 and the motor gears.
-    aspace = BoxSpace(nu, 
-        low=(-ones(nu)), 
+    aspace = BoxSpace(nu,
+        low=(-ones(nu)),
         high=(ones(nu)))
-    ospace = BoxSpace(no, 
-        low=(-Inf * ones(no)), 
+    ospace = BoxSpace(no,
+        low=(-Inf * ones(no)),
         high=(Inf * ones(no)))
 
     rng = MersenneTwister(seed)
@@ -62,8 +62,8 @@ function walker(;
     motor_gear = [100, 100, 100, 100, 100, 100.]
     control_scaling = Diagonal(timestep * motor_gear)
 
-    build_robot(mechanism, 
-        vis=vis, 
+    build_robot(mechanism,
+        vis=vis,
         name=name)
 
     TYPES = [Walker, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
@@ -83,8 +83,8 @@ function Base.reset(env::Environment{Walker}; x=nothing, reset_noise_scale = 0.0
         env.state .= x
     else
         # initialize above the ground to make sure that with random initialization we do not violate the ground constraint.
-        initialize!(env.mechanism, :walker, 
-            z=0.25)
+        initialize!(env.mechanism, :walker,
+            body_position=[0,0.25])
         x0 = get_minimal_state(env.mechanism)
         nx = minimal_dimension(env.mechanism)
 
@@ -103,7 +103,7 @@ function Base.reset(env::Environment{Walker}; x=nothing, reset_noise_scale = 0.0
     return get_observation(env)
 end
 
-function get_observation(env::Environment{Walker}; 
+function get_observation(env::Environment{Walker};
     full_state=false)
     full_state && (return env.state)
     nx = minimal_dimension(env.mechanism)

@@ -1,8 +1,8 @@
 @testset "Collision: Sphere-sphere" begin
-    function get_two_body(; 
-        radius_body1=0.5, 
+    function get_two_body(;
+        radius_body1=0.5,
         radius_body2=0.5,
-        mass_body1=1.0, 
+        mass_body1=1.0,
         mass_body2=1.0,
         friction_type=:nonlinear,
         friction_coefficient=0.5,
@@ -28,9 +28,9 @@
             friction_parameterization = SA{Float64}[
                     1.0  0.0
                     0.0  1.0
-            ]   
+            ]
             body_body = Dojo.NonlinearContact{Float64,8}(friction_coefficient, friction_parameterization, collision)
-        elseif friction_type == :linear 
+        elseif friction_type == :linear
             friction_parameterization = SA{Float64}[
                 0.0  1.0
                 0.0 -1.0
@@ -58,14 +58,13 @@
         return mechanism
     end
 
-    function test_jacobians(mechanism; 
-        tolerance=1.0e-5)
+    function test_jacobians(mechanism)
 
-        # unpack 
+        # unpack
         collision = mechanism.contacts[1].model.collision
-        xp = mechanism.bodies[1].state.x2 
+        xp = mechanism.bodies[1].state.x2
         qp = mechanism.bodies[1].state.q2
-        xc = mechanism.bodies[2].state.x2 
+        xc = mechanism.bodies[2].state.x2
         qc = mechanism.bodies[2].state.q2
 
         for jacobian in [:parent, :child]
@@ -73,107 +72,107 @@
             dis = Dojo.distance(collision, xp, qp, xc, qc)
 
             X = Dojo.∂contact_normal_transpose∂x(jacobian, collision, xp, qp, xc, qc)
-            if jacobian == :parent 
-                FD = FiniteDiff.finite_difference_jacobian(x -> Dojo.contact_normal(collision, x, qp, xc, qc)', xp)
-            elseif jacobian == :child 
-                FD = FiniteDiff.finite_difference_jacobian(x -> Dojo.contact_normal(collision, xp, qp, x, qc)', xc)
+            if jacobian == :parent
+                FD = ForwardDiff.jacobian(x -> Dojo.contact_normal(collision, x, qp, xc, qc)', xp)
+            elseif jacobian == :child
+                FD = ForwardDiff.jacobian(x -> Dojo.contact_normal(collision, xp, qp, x, qc)', xc)
             end
 
-            @test norm((dis >= 0.0 ? 1.0 : -1.0) * X - FD, Inf) < tolerance
+            @test norm((dis >= 0.0 ? 1.0 : -1.0) * X - FD, Inf) < 1.0e-8
 
             Q = Dojo.∂contact_normal_transpose∂q(jacobian, collision, xp, qp, xc, qc)
-            if jacobian == :parent 
-                FD = FiniteDiff.finite_difference_jacobian(q -> Dojo.contact_normal(collision, xp, Quaternion(q..., false), xc, qc)', Dojo.vector(qp))
-            elseif jacobian == :child 
-                FD = FiniteDiff.finite_difference_jacobian(q -> Dojo.contact_normal(collision, xp, qp, xc, Quaternion(q..., false))', Dojo.vector(qc))
+            if jacobian == :parent
+                FD = ForwardDiff.jacobian(q -> Dojo.contact_normal(collision, xp, Quaternion(q..., false), xc, qc)', Dojo.vector(qp))
+            elseif jacobian == :child
+                FD = ForwardDiff.jacobian(q -> Dojo.contact_normal(collision, xp, qp, xc, Quaternion(q..., false))', Dojo.vector(qc))
             end
-        
-            @test norm((dis >= 0.0 ? 1.0 : -1.0) * Q - FD, Inf) < tolerance
+
+            @test norm((dis >= 0.0 ? 1.0 : -1.0) * Q - FD, Inf) < 1.0e-8
 
             X = Dojo.∂contact_tangent_one_transpose∂x(jacobian, collision, xp, qp, xc, qc)
-            if jacobian == :parent 
-                FD = FiniteDiff.finite_difference_jacobian(x -> Dojo.contact_tangent(collision, x, qp, xc, qc)[1, :]', xp)
-            elseif jacobian == :child 
-                FD = FiniteDiff.finite_difference_jacobian(x -> Dojo.contact_tangent(collision, xp, qp, x, qc)[1, :]', xc)
-            end 
+            if jacobian == :parent
+                FD = ForwardDiff.jacobian(x -> Dojo.contact_tangent(collision, x, qp, xc, qc)[1, :]', xp)
+            elseif jacobian == :child
+                FD = ForwardDiff.jacobian(x -> Dojo.contact_tangent(collision, xp, qp, x, qc)[1, :]', xc)
+            end
 
-            @test norm(FD - X, Inf) < tolerance
+            @test norm(FD - X, Inf) < 1.0e-8
 
             X = Dojo.∂contact_tangent_two_transpose∂x(jacobian, collision, xp, qp, xc, qc)
-            if jacobian == :parent 
-                FD = FiniteDiff.finite_difference_jacobian(x -> Dojo.contact_tangent(collision, x, qp, xc, qc)[2, :]', xp)
-            elseif jacobian == :child 
-                FD = FiniteDiff.finite_difference_jacobian(x -> Dojo.contact_tangent(collision, xp, qp, x, qc)[2, :]', xc)
+            if jacobian == :parent
+                FD = ForwardDiff.jacobian(x -> Dojo.contact_tangent(collision, x, qp, xc, qc)[2, :]', xp)
+            elseif jacobian == :child
+                FD = ForwardDiff.jacobian(x -> Dojo.contact_tangent(collision, xp, qp, x, qc)[2, :]', xc)
             end
 
-            @test norm(FD - X, Inf) < tolerance
+            @test norm(FD - X, Inf) < 1.0e-8
 
             Q = Dojo.∂contact_tangent_one_transpose∂q(jacobian, collision, xp, qp, xc, qc)
-            if jacobian == :parent 
-                FD = FiniteDiff.finite_difference_jacobian(q -> Dojo.contact_tangent(collision, xp, Quaternion(q..., false), xc, qc)[1, :]', Dojo.vector(qp))
-            elseif jacobian == :child 
-                FD = FiniteDiff.finite_difference_jacobian(q -> Dojo.contact_tangent(collision, xp, qp, xc, Quaternion(q..., false))[1, :]', Dojo.vector(qc))
+            if jacobian == :parent
+                FD = ForwardDiff.jacobian(q -> Dojo.contact_tangent(collision, xp, Quaternion(q..., false), xc, qc)[1, :]', Dojo.vector(qp))
+            elseif jacobian == :child
+                FD = ForwardDiff.jacobian(q -> Dojo.contact_tangent(collision, xp, qp, xc, Quaternion(q..., false))[1, :]', Dojo.vector(qc))
             end
 
-            @test norm(FD - Q, Inf) < tolerance
+            @test norm(FD - Q, Inf) < 1.0e-8
 
             Q = Dojo.∂contact_tangent_two_transpose∂q(jacobian, collision, xp, qp, xc, qc)
-            if jacobian == :parent 
-                FD = FiniteDiff.finite_difference_jacobian(q -> Dojo.contact_tangent(collision, xp, Quaternion(q..., false), xc, qc)[2, :]', Dojo.vector(qp))
-            elseif jacobian == :child 
-                FD = FiniteDiff.finite_difference_jacobian(q -> Dojo.contact_tangent(collision, xp, qp, xc, Quaternion(q..., false))[2, :]', Dojo.vector(qc))
+            if jacobian == :parent
+                FD = ForwardDiff.jacobian(q -> Dojo.contact_tangent(collision, xp, Quaternion(q..., false), xc, qc)[2, :]', Dojo.vector(qp))
+            elseif jacobian == :child
+                FD = ForwardDiff.jacobian(q -> Dojo.contact_tangent(collision, xp, qp, xc, Quaternion(q..., false))[2, :]', Dojo.vector(qc))
             end
 
-            @test norm(FD - Q, Inf) < tolerance
+            @test norm(FD - Q, Inf) < 1.0e-8
 
             # gradients
-            gradient = jacobian 
+            gradient = jacobian
 
             D = Dojo.∂distance∂x(gradient, collision, xp, qp, xc, qc)
-            if gradient == :parent 
+            if gradient == :parent
                 FD = FiniteDiff.finite_difference_jacobian(x -> Dojo.distance(collision, x, qp, xc, qc), xp)
-            elseif gradient == :child 
+            elseif gradient == :child
                 FD = FiniteDiff.finite_difference_jacobian(x -> Dojo.distance(collision, xp, qp, x, qc), xc)
             end
-        
-            @test norm(D - FD, Inf) < tolerance
+
+            @test norm(D - FD, Inf) < 1.0e-5
 
             Q = Dojo.∂distance∂q(gradient, collision, xp, qp, xc, qc)
-            if gradient == :parent 
+            if gradient == :parent
                 FD = FiniteDiff.finite_difference_jacobian(q -> Dojo.distance(collision, xp, Quaternion(q..., false), xc, qc), Dojo.vector(qp))
-            elseif gradient == :child 
+            elseif gradient == :child
                 FD = FiniteDiff.finite_difference_jacobian(q -> Dojo.distance(collision, xp, qp, xc, Quaternion(q..., false)), Dojo.vector(qc))
             end
-        
-            @test norm(Q - FD, Inf) < tolerance
+
+            @test norm(Q - FD, Inf) < 1.0e-5
 
             for relative in [:parent, :child]
                 X = Dojo.∂contact_point∂x(relative, jacobian, collision, xp, qp, xc, qc)
 
                 if jacobian == :parent
-                    FD =  FiniteDiff.finite_difference_jacobian(x -> Dojo.contact_point(relative, collision, x, qp, xc, qc), xp)
-                elseif jacobian == :child 
-                    FD = FiniteDiff.finite_difference_jacobian(x -> Dojo.contact_point(relative, collision, xp, qp, x, qc), xc)
+                    FD =  ForwardDiff.jacobian(x -> Dojo.contact_point(relative, collision, x, qp, xc, qc), xp)
+                elseif jacobian == :child
+                    FD = ForwardDiff.jacobian(x -> Dojo.contact_point(relative, collision, xp, qp, x, qc), xc)
                 end
-            
-                @test norm(X - FD, Inf) < tolerance
+
+                @test norm(X - FD, Inf) < 1.0e-8
 
                 Q = Dojo.∂contact_point∂q(relative, jacobian, collision, xp, qp, xc, qc)
 
                 if jacobian == :parent
-                    FD = FiniteDiff.finite_difference_jacobian(q -> Dojo.contact_point(relative, collision, xp, Quaternion(q..., false), xc, qc), Dojo.vector(qp))
-                elseif jacobian == :child 
-                    FD = FiniteDiff.finite_difference_jacobian(q -> Dojo.contact_point(relative, collision, xp, qp, xc, Quaternion(q..., false)), Dojo.vector(qc))
+                    FD = ForwardDiff.jacobian(q -> Dojo.contact_point(relative, collision, xp, Quaternion(q..., false), xc, qc), Dojo.vector(qp))
+                elseif jacobian == :child
+                    FD = ForwardDiff.jacobian(q -> Dojo.contact_point(relative, collision, xp, qp, xc, Quaternion(q..., false)), Dojo.vector(qc))
                 end
-            
-                @test norm(Q - FD, Inf) < tolerance 
+
+                @test norm(Q - FD, Inf) < 1.0e-8
             end
         end
     end
 
     for friction_type in [:nonlinear, :linear, :impact]
         ## z drop
-        mech = get_two_body(; 
+        mech = get_two_body(;
             friction_type=friction_type,
             gravity=-9.81)
 
@@ -225,14 +224,14 @@
             verbose=false,
             record=true)
 
-        # Jacobians    
+        # Jacobians
         test_jacobians(mech)
 
         # test no interpentration
-        @test norm(storage.x[2][end] - [0.0; 0.0; 1.0], Inf) < 1.0e-3
+        @test norm(storage.x[2][end] - [0.0; 0.0; 1.0], Inf) < 1.0e-4
 
         ## z velocity (no gravity)
-        mech = get_two_body(; 
+        mech = get_two_body(;
             friction_type=friction_type,
             gravity=0.0)
 
@@ -242,7 +241,7 @@
         mech.bodies[1].state.v15 = [0.0, 0.0, 0.0]
         mech.bodies[2].state.v15 = [0.0, 0.0, -5.0]
 
-        # initial Jacobians 
+        # initial Jacobians
         test_jacobians(mech)
 
         # simulate
@@ -250,14 +249,14 @@
             verbose=false,
             record=true)
 
-        # Jacobians 
+        # Jacobians
         test_jacobians(mech)
 
         # test no interpentration
         @test storage.x[2][end][end] > 1.0
 
         # z velocity (no gravity)
-        mech = get_two_body(; 
+        mech = get_two_body(;
             friction_type=friction_type,
             gravity=0.0)
 
@@ -267,7 +266,7 @@
         mech.bodies[1].state.v15 = [0.0, 0.0, 0.0]
         mech.bodies[2].state.v15 = [0.0, 0.0, -5.0]
 
-        # initial Jacobians 
+        # initial Jacobians
         test_jacobians(mech)
 
         # simulate
@@ -276,14 +275,14 @@
             record=true)
 
 
-        # Jacobians 
+        # Jacobians
         test_jacobians(mech)
 
         # test no interpentration
         @test storage.x[2][end][end] > 1.0
 
         ## z velocity (no gravity, floating parent)
-        mech = get_two_body(; 
+        mech = get_two_body(;
             friction_type=friction_type,
             joint_world_body1=:Floating,
             gravity=0.0)
@@ -294,7 +293,7 @@
         mech.bodies[1].state.v15 = [0.0, 0.0, 0.0]
         mech.bodies[2].state.v15 = [0.0, 0.0, -5.0]
 
-        # initial Jacobians 
+        # initial Jacobians
         test_jacobians(mech)
 
         # simulate
@@ -302,7 +301,7 @@
             verbose=false,
             record=true)
 
-        # Jacobians 
+        # Jacobians
         test_jacobians(mech)
 
         # test no interpentration
@@ -310,7 +309,7 @@
         @test storage.x[2][end][end] < 0.0
 
         ## x velocity (fixed parent)
-        mech = get_two_body(; 
+        mech = get_two_body(;
             friction_type=friction_type,
             gravity=0.0)
 
@@ -320,7 +319,7 @@
         mech.bodies[1].state.v15 = [0.0, 0.0, 0.0]
         mech.bodies[2].state.v15 = [-5.0, 0.0, 0.0]
 
-        # initial Jacobians 
+        # initial Jacobians
         test_jacobians(mech)
 
         # initial distance
@@ -362,14 +361,14 @@
             verbose=false,
             record=true)
 
-        # Jacobians 
+        # Jacobians
         test_jacobians(mech)
 
         # test no interpentration
         @test storage.x[2][end][1] > 1.0
 
         ## x velocity (floating parent)
-        mech = get_two_body(; 
+        mech = get_two_body(;
             friction_type=friction_type,
             joint_world_body1=:Floating,
             gravity=0.0)
@@ -380,7 +379,7 @@
         mech.bodies[1].state.v15 = [0.0, 0.0, 0.0]
         mech.bodies[2].state.v15 = [-5.0, 0.0, 0.0]
 
-        # initial Jacobians 
+        # initial Jacobians
         test_jacobians(mech)
 
         # simulate
@@ -388,14 +387,14 @@
             verbose=false,
             record=true)
 
-        # Jacobians 
+        # Jacobians
         test_jacobians(mech)
 
         # test no interpentration
         @test storage.x[2][end][1] - storage.x[1][end][1] > 1.0
         @test storage.x[1][end][1] < 0.0
 
-        ## y velocity (fixed parent) 
+        ## y velocity (fixed parent)
         mech = get_two_body(;
             friction_type=friction_type,
             gravity=0.0)
@@ -406,7 +405,7 @@
         mech.bodies[1].state.v15 = [0.0, 0.0, 0.0]
         mech.bodies[2].state.v15 = [0.0, -5.0, 0.0]
 
-        # initial Jacobians 
+        # initial Jacobians
         test_jacobians(mech)
 
         # initial distance
@@ -448,14 +447,14 @@
             verbose=false,
             record=true)
 
-        # Jacobians 
+        # Jacobians
         test_jacobians(mech)
 
         # test no interpentration
         @test storage.x[2][end][2] > 1.0
 
         ## y velocity (floating parent)
-        mech = get_two_body(; 
+        mech = get_two_body(;
             friction_type=friction_type,
             joint_world_body1=:Floating,
             gravity=0.0)
@@ -466,7 +465,7 @@
         mech.bodies[1].state.v15 = [0.0, 0.0, 0.0]
         mech.bodies[2].state.v15 = [0.0, -5.0, 0.0]
 
-        # initial Jacobians 
+        # initial Jacobians
         test_jacobians(mech)
 
         # simulate
@@ -474,15 +473,15 @@
             verbose=false,
             record=true)
 
-        # Jacobians 
+        # Jacobians
         test_jacobians(mech)
 
         # test no interpentration
         @test storage.x[2][end][2] - storage.x[1][end][2] > 1.0
         @test storage.x[1][end][2] < 0.0
 
-        ## xyz velocity (fixed parent) 
-        mech = get_two_body(; 
+        ## xyz velocity (fixed parent)
+        mech = get_two_body(;
             friction_type=friction_type,
             gravity=0.0)
 
@@ -492,7 +491,7 @@
         mech.bodies[1].state.v15 = [0.0, 0.0, 0.0]
         mech.bodies[2].state.v15 = [-2.0, -2.0, -2.0]
 
-        # initial Jacobians 
+        # initial Jacobians
         test_jacobians(mech)
 
         # initial distance
@@ -534,7 +533,7 @@
             verbose=false,
             record=true)
 
-        # Jacobians 
+        # Jacobians
         test_jacobians(mech)
 
         # test no interpentration
@@ -546,7 +545,7 @@
         @test norm(Dojo.normalize(storage.v[2][end]) + Dojo.normalize([-2.0, -2.0, -2.0]), Inf) < 1.0e-5
 
         ## xyz velocity (floating parent)
-        mech = get_two_body(; 
+        mech = get_two_body(;
             friction_type=friction_type,
             joint_world_body1=:Floating,
             gravity=0.0)
@@ -557,7 +556,7 @@
         mech.bodies[1].state.v15 = [0.0, 0.0, 0.0]
         mech.bodies[2].state.v15 = [-2.0, -2.0, -2.0]
 
-        # initial Jacobians 
+        # initial Jacobians
         test_jacobians(mech)
 
         # simulate
@@ -565,7 +564,7 @@
             verbose=false,
             record=true)
 
-        # Jacobians 
+        # Jacobians
         test_jacobians(mech)
 
         @test norm(storage.x[2][end] - storage.x[1][end]) > 1.0
@@ -573,8 +572,3 @@
         @test norm(Dojo.normalize(storage.v[1][end]) - Dojo.normalize([-2.0, -2.0, -2.0]), Inf) < 1.0e-5
     end
 end
-
-# vis = Visualizer() 
-# open(vis)
-# visualize(mech, storage, 
-#     vis=vis)

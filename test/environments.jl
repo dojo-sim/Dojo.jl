@@ -1,28 +1,27 @@
 environments = [
-    :ant, 
+    :ant,
     :atlas,
+    :block,
+    :block2d,
     :cartpole,
     :halfcheetah,
-    :hopper, 
+    :hopper,
+    :panda,
     :pendulum,
     :quadruped,
     :raiberthopper,
     :rexhopper,
     :walker,
-    :block
 ]
 
 throw_envs = [
-    :hopper,
-    :rexhopper,
-    :walker,
-]
+    ]
 
-@testset "$name" for name in environments 
+@testset "$name" for name in environments
     env = get_environment(name)
     if !(name in throw_envs)
         @test size(reset(env)) == (env.observation_space.n,)
-        o, r, d, i = step(env, Dojo.sample(env.input_space))
+        o, r, d, i = step(env, clamp.(Dojo.sample(env.input_space), -0.1, 0.1))
         @test size(o) == (env.observation_space.n,)
     end
-end 
+end

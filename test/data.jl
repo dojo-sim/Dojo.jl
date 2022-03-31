@@ -143,7 +143,7 @@ end
 			contact=false)
 		test_data_system(:block,
 			contact=false)
-		test_data_system(:box2D,
+		test_data_system(:block2d,
 			contact=false)
 		test_data_system(:slider,
 			spring=spring,
@@ -214,7 +214,7 @@ end
 			contact=true)
 		test_data_system(:block,
 			contact=true)
-		test_data_system(:box2D,
+		test_data_system(:block2d,
 			contact=true)
 		test_data_system(:slider,
 			spring=spring,
