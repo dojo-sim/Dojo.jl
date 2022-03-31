@@ -4,6 +4,7 @@
 using LinearAlgebra
 using Statistics
 using Folds
+using Distributed
 
 import LinearAlgebra.normalize
 import Dojo.GeometryBasics.update
