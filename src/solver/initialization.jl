@@ -1,10 +1,10 @@
-function initialize!(contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
+function initialize!(mechanism::Mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
     initialize_positive_orthant!(contact.impulses[1], contact.impulses_dual[1])
     initialize_positive_orthant!(contact.impulses[2], contact.impulses_dual[2])
     return nothing
 end
 
-function initialize!(contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:NonlinearContact{T,N}}
+function initialize!(mechanism::Mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:NonlinearContact{T,N}}
 	γort, sort = initialize_positive_orthant!(contact.impulses[1][1:1], contact.impulses_dual[1][1:1])
 	γsoc, ssoc = initialize_second_order_cone!(contact.impulses[1][2:4], contact.impulses_dual[1][2:4])
 	contact.impulses[1] = [γort; γsoc]
@@ -16,9 +16,9 @@ function initialize!(contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:No
     return nothing
 end
 
-function initialize_positive_orthant!(γ::AbstractVector{T}, s::AbstractVector{T}; 
+function initialize_positive_orthant!(γ::AbstractVector{T}, s::AbstractVector{T};
     ϵ::T = 1e-20) where T
-    
+
     δs = max(-1.5 * minimum(s), 0)
     δγ = max(-1.5 * minimum(γ), 0)
 
@@ -31,7 +31,7 @@ function initialize_positive_orthant!(γ::AbstractVector{T}, s::AbstractVector{T
 	return γ0, s0
 end
 
-function initialize_second_order_cone!(γ::AbstractVector{T}, s::AbstractVector{T}; 
+function initialize_second_order_cone!(γ::AbstractVector{T}, s::AbstractVector{T};
     ϵ::T = 1e-20) where T
 
     e = [1.0; zeros(length(γ) - 1)] # identity element

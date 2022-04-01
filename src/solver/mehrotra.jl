@@ -17,7 +17,7 @@ function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
     undercut = opts.undercut
     α = 1.0
 
-	initialize!.(mechanism.contacts) # TODO: redundant with resetVars--remove
+	[initialize!(mechanism, c) for c in mechanism.contacts] # TODO: redundant with resetVars--remove
     set_entries!(mechanism) # compute the residual
 
     bvio = bilinear_violation(mechanism) # does not require to apply set_entries!

@@ -1,5 +1,7 @@
 # impulses
 function impulses!(mechanism::Mechanism{T}, body::Body, contact::SoftContactConstraint) where T
+	# Fτ = impulse_map(mechanism, contact, body) * contact.impulses[2]
+	# @show body.name, scn.(Fτ)
     body.state.d -= impulse_map(mechanism, contact, body) * contact.impulses[2]
     return
 end
@@ -34,26 +36,23 @@ function impulse_map(relative::Symbol, model::SoftContact{T}, pbody::Node, cbody
 
     # find barycenter
 	collision = model.collision
-    ψ, barycenter, contact_normal = overlap(collision, x2p, q2p, x2c, q2c)
+	ψ, barycenter, normal = model.ψ, model.barycenter, model.normal
+    # ψ, barycenter, normal = overlap(collision, x2p, q2p, x2c, q2c)
 
     # mapping
-    # X = force_mapping(relative, model, xp, qp, xc, qc)
     X = force_mapping(relative, model, x2p, q2p, x2c, q2c)
-    # # c = contact_point(relative, model.collision, xp, qp, xc, qc)
-    # c = x2p + vector_rotate(model.contact_origin + barycenter, q2p)
-    # # @show scn.(c)
-    # if relative == :parent
-    #     r = c - xp
-    #     Q = rotation_matrix(inv(q2p)) * skew(r) * X
-    # elseif relative == :child
-    #     r = c - xc
-    #     Q = rotation_matrix(inv(q2c)) * skew(r) * X
-    # end
-
-    Q = 1.0*skew(model.contact_origin + barycenter) * rotation_matrix(inv(q2p)) * X
+    if relative == :parent
+		QF = skew(model.collider_origin + barycenter) * rotation_matrix(inv(q2p)) * X
+		Qτ = rotation_matrix(inv(q2p))
+    elseif relative == :child
+		p = x2p + Dojo.vector_rotate(model.collider_origin + barycenter, q2p)
+		pc = x2c + Dojo.vector_rotate(model.collision.sphere_origin, q2c)
+		QF = rotation_matrix(inv(q2c)) * skew(p - pc) * X
+		Qτ = -rotation_matrix(inv(q2c))
+    end
     return [
                 X szeros(T,3,3);
-                Q X;
+                QF Qτ;
            ]
 end
 
@@ -87,7 +86,14 @@ function reset!(contact::SoftContactConstraint{T,N}; scale=0.0) where {T,N}
 end
 
 # initialization
-function initialize!(contact::SoftContactConstraint)
+function initialize!(mechanism::Mechanism, contact::SoftContactConstraint)
+	pbody = get_body(mechanism, contact.parent_id)
+	cbody = get_body(mechanism, contact.child_id)
+	x2p, q2p = current_configuration(pbody.state)
+	x2c, q2c = current_configuration(cbody.state)
+	model = contact.model
+	collision = model.collision
+	model.ψ, model.barycenter, model.normal = overlap(collision, x2p, q2p, x2c, q2c)
     return nothing
 end
 
@@ -127,11 +133,11 @@ function update!(contact::SoftContactConstraint)
 end
 
 # get data
-get_data(model::SoftContact{T}) where T = [model.collision.contact_radius; model.collision.contact_origin]
+get_data(model::SoftContact{T}) where T = [model.collision.contact_radius; model.collision.collider_origin]
 function set_data!(model::SoftContact, data::AbstractVector)
 	# model.collider.options.sliding_friction = data[1]
     model.collision.contact_radius = data[1]
-    model.collision.contact_origin = data[SVector{3,Int}(2:4)]
+    model.collision.collider_origin = data[SVector{3,Int}(2:4)]
     return nothing
 end
 
@@ -140,11 +146,11 @@ function soft_contact_constraint(body::Body{T},
         normal::AbstractVector{T},
         collider::Collider;
         friction_coefficient::T=1.0,
-        contact_origin::AbstractVector{T}=szeros(T, 3),
+        collider_origin::AbstractVector{T}=szeros(T, 3),
         name::Symbol=Symbol("contact_" * randstring(4))) where T
 
     model = SoftContact(body, normal, collider,
-        contact_origin=contact_origin)
+        collider_origin=collider_origin)
     contact = SoftContactConstraint((model, body.id, 0); name=name)
     return contact
 end

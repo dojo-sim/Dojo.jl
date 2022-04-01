@@ -6,41 +6,62 @@ open(vis)
 
 
 mech = get_bunny(timestep=0.01)
-mech.contacts[1].model.collision.collider.options.impact_spring = 3e4
-mech.contacts[1].model.collision.collider.options.impact_damper = 3e5
-mech.contacts[1].model.collision.collider.options.sliding_drag = 0.10
-mech.contacts[1].model.collision.collider.options.sliding_friction = 0.2
-mech.contacts[1].model.collision.collider.options.rolling_drag = 0.0
-mech.contacts[1].model.collision.collider.options.rolling_friction = 0.01
-mech.contacts[1].model.collision.collider.options.coulomb_smoothing = 3e+1
-mech.contacts[1].model.collision.collider.options.coulomb_regularizer = 1e-3
+mech.contacts[1].model.collision.collider.options = ColliderOptions()
 
-
-VERBOSE = false
 initialize!(mech, :bunny,
     position=[0,0,0.6],
-    orientation=Quaternion(0,1,0,0.0,true),
-    velocity=[0,0.5,5.0],
-    angular_velocity=[0.5,10.0,3.0])
+    # orientation=Quaternion(0,1,0,0.0,true),
+    orientation=Quaternion(1,0,0,0.0,true),
+    velocity=0*[0,0.5,5.0],
+    angular_velocity=0*[0.5,10.0,3.0])
 
 constraint(mech, mech.contacts[1])
 
 storage = simulate!(mech, 2.0, opts=SolverOptions(verbose=true, rtol=1e-4, max_iter=50))
 visualize(mech, storage, vis=vis)
 mech.contacts[1]
+constraint(mech, mech.contacts[1])
 
 
-mech = get_bunny_sphere(timestep=0.01)
+mech = get_bunny_sphere(timestep=0.01, gravity=-9.81)
 mech.contacts[1].model.collision.collider.options = ColliderOptions()
+mech.contacts[3].model.collision.collider.options = ColliderOptions()
 
-initialize!(mech, :bunny_sphere, bunny_position=[0,0,0.10], sphere_position=[2,0,0.15])
+initialize!(mech, :bunny_sphere,
+    bunny_position=[0.1,0.1,1.5],
+    sphere_position=[0,0,0.05])
+initialize!(mech, :bunny_sphere,
+    bunny_position=[0,0,1.6],
+    bunny_velocity=[0,0,-1.0],
+    sphere_position=[0,0,0.5],
+    sphere_velocity=[0,0,0.228],
+    )
+initialize!(mech, :bunny_sphere,
+    bunny_position=[0,1.6,0],
+    bunny_velocity=[0,-1.0,0],
+    sphere_position=[0,0.5,0],
+    sphere_velocity=[0,0.228,0],
+    )
+initialize!(mech, :bunny_sphere,
+    bunny_position=[0,0,0],
+    bunny_velocity=[0,0,0],
+    sphere_position=[0,4.0,0.4],
+    sphere_velocity=[0,-15.0,0],
+    )
 
-storage = simulate!(mech, 10.0, opts=SolverOptions(verbose=true, rtol=1e-5, max_iter=50))
+
+# Main.@profiler
+@elapsed storage = simulate!(mech, 5.0, opts=SolverOptions(verbose=false, rtol=3e-4, max_iter=50))
 visualize(mech, storage, vis=vis)
 mech.contacts[1]
 
-
+mech.contacts[1]
+mech.contacts[2]
 mech.contacts[3]
+
+impulse = constraint(mech, mech.contacts[3])
+
+# convert_frames_to_video_and_gif("bunny_sphere_strike")
 
 
 using FiniteDiff
