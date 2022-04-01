@@ -33,3 +33,6 @@ Manifest.toml
 
 # Outputs
 *.txt
+
+# HTML animations are sometimes too large for github
+examples/animations/html/*.html

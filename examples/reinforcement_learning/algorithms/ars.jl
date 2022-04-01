@@ -97,7 +97,8 @@ function eval_sample_policy(θ::Matrix{T}, input::AbstractVector{T}) where T
     return θ * input
 end
 
-function rollout_policy(θ::Matrix, env::Environment, normalizer::Normalizer, hp::HyperParameters)
+function rollout_policy(θ::Matrix, env::Environment, normalizer::Normalizer, hp::HyperParameters;
+        reset=reset)
     state = reset(env)
     rewards = 0.0
     done = false
@@ -169,7 +170,7 @@ function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T},
 end
 
 # display learned policy
-function display_policy(env::Environment, policy::Policy, normalizer::Normalizer, hp::HyperParameters; rendering = false)
+function display_policy(env::Environment, policy::Policy, normalizer::Normalizer, hp::HyperParameters; rendering = false, reset=reset)
     obs = reset(env)
     traj = [copy(env.state)]
     done = false
@@ -186,7 +187,7 @@ function display_policy(env::Environment, policy::Policy, normalizer::Normalizer
         reward_evaluation += reward
         num_plays += 1
     end
-    close(env)
+    Dojo.close(env)
 
     return traj
 end
@@ -207,7 +208,7 @@ function display_random_policy(env::Environment, hp::HyperParameters; rendering 
         reward_evaluation += reward
         num_plays += 1
     end
-    close(env)
+    Dojo.close(env)
 
     return traj
 end
