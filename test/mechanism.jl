@@ -47,7 +47,7 @@
 
     # set state
     z = Dojo.get_maximal_state(env.mechanism)
-    env2 = Dojo.get_environment(:halfcheetah, 
+    env2 = DojoEnvironments.get_environment(:halfcheetah, 
         timestep=timestep, 
         gravity=-10.0);
     reset(env);
