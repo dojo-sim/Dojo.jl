@@ -76,7 +76,7 @@ end
 
 	@testset "Minimal coordinates" begin
 		for joint_type in joint_types
-			mech = Dojo.get_snake(
+			mech = DojoEnvironments.get_snake(
 					num_bodies=10,
 					joint_type=joint_type)
 
@@ -282,7 +282,7 @@ end
 ################################################################################
 @testset "Jacobians" begin
 	@testset "Minimal velocity Jacobian" begin
-		mech = Dojo.get_humanoid()
+		mech = DojoEnvironments.get_humanoid()
 		timestep= mech.timestep
 		for jointcon in mech.joints
 			for joint in [jointcon.translational, jointcon.rotational]
@@ -342,7 +342,7 @@ end
 	end
 
 	@testset "Minimal coordinate Jacobian" begin
-		mech = Dojo.get_humanoid()
+		mech = DojoEnvironments.get_humanoid()
 		for jointcon in mech.joints
 			for joint in [jointcon.translational, jointcon.rotational]
 				# generate random configuration in minimal space
@@ -635,7 +635,7 @@ end
 # ################################################################################
 # # Test minimal velocities
 # ################################################################################
-# mech = Dojo.get_snake(gravity=0.00, num_bodies=2, damper=0.3, spring=0.2, joint_type=:Revolute)
+# mech = DojoEnvironments.get_snake(gravity=0.00, num_bodies=2, damper=0.3, spring=0.2, joint_type=:Revolute)
 # DojoEnvironments.initialize_snake!(mech)
 # function ctrl!(m,k)
 #     set_input!(m, 0.01*m.timestep*ones(minimal_dimension(m)))
