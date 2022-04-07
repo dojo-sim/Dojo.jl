@@ -7,11 +7,10 @@
     collision: Collision
 """
 mutable struct SoftContact{T,N,C} <: Contact{T,N}
-    friction_parameterization::SMatrix{2,2,T,4}
     collision::C
     collider_origin::SVector{3,T} # origin of the frame in which the nerf is defined
     ψ::T # amount of violation
-    barycenter::SVector{3,T} # position of the overlap barycenter in the parent frame (=collider frame)
+    barycenter::SVector{3,T} # position of the overlap region's barycenter in the parent frame (=collider frame)
     normal::SVector{3,T} # contact normal expressed in the world frame
 end
 
@@ -26,12 +25,6 @@ function SoftContact(body::Body{T}, normal::AbstractVector{T}, collider::Collide
     contact_normal = Ainv[3, SA[1; 2; 3]]'
     contact_tangent = Ainv[SA[1; 2], SA[1; 2; 3]]
 
-    # friction parametrization
-    parameterization = SA{T}[
-         1.0  0.0
-         0.0  1.0
-    ]
-
     # collision
     if collision_type == :soft_halfspace
         collision = SoftHalfSpaceCollision(collider, contact_tangent, contact_normal, SVector{3}(collider_origin))
@@ -40,7 +33,7 @@ function SoftContact(body::Body{T}, normal::AbstractVector{T}, collider::Collide
     else
         error("Unknown collision_type")
     end
-    SoftContact{Float64,6,typeof(collision)}(parameterization, collision, collider_origin, 0.0, szeros(3), szeros(3))
+    SoftContact{Float64,6,typeof(collision)}(collision, collider_origin, 0.0, szeros(3), szeros(3))
 end
 
 function constraint(mechanism, contact::SoftContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:SoftContact{T,N}}
@@ -119,69 +112,6 @@ function constraint_jacobian_velocity(relative::Symbol, model::SoftContact{T,N},
     end
     return ∂impulse∂vϕ
 end
-
-
-# function constraint_jacobian_velocity(relative::Symbol, model::SoftContact{T,N},
-#     xp::AbstractVector, vp::AbstractVector, qp::Quaternion, ϕp::AbstractVector,
-#     xc::AbstractVector, vc::AbstractVector, qc::Quaternion, ϕc::AbstractVector,
-#     timestep) where {T,N}
-#
-#     collision = model.collision
-#     collider = collision.collider
-#     opts = collider.options
-#     smoothing = opts.coulomb_smoothing
-#     regularizer = opts.coulomb_regularizer
-#     ψ, barycenter, normal, v_normal, v_tangential, F_impact, F_friction, impulse = constraint(model,
-#         xp, vp, qp, ϕp,
-#         xc, vc, qc, ϕc,
-#         timestep, intermediate=true)
-#     # recover current orientation
-#     x2p = next_position(xp, -vp, timestep)
-#     q2p = next_orientation(qp, -ϕp, timestep)
-#     x2c = next_position(xc, -vc, timestep)
-#     q2c = next_orientation(qc, -ϕc, timestep)
-#     xp_ = x2p + vector_rotate(barycenter - collider.center_of_mass, q2p)
-#     vc_ = vc + skew(x2c - xp_) * vector_rotate(ϕc, q2c)
-#
-#     ∂v∂vp = Diagonal(sones(3))
-#     ∂v∂ϕp = rotation_matrix(q2p) * skew(collider.center_of_mass - barycenter)
-#     ∂v∂vc = -Diagonal(sones(3))
-#     ∂v∂ϕc = -skew(x2c - xp_) * rotation_matrix(q2c)
-#
-#     if relative == :parent
-#         # impact
-#         ∂F_impact∂v = -ψ * opts.impact_damper * normal * normal'
-#         FV_impact = ∂F_impact∂v * ∂v∂vp
-#         FΩ_impact = ∂F_impact∂v * ∂v∂ϕp
-#         # friction
-#         ∂F_friction∂v =  -opts.sliding_drag * v_tangential * (FV_impact * F_impact/(norm(F_impact) + 1e-20))'
-#         ∂F_friction∂v += -opts.sliding_drag * norm(F_impact) * (Diagonal(sones(3)) - normal * normal')
-#         ∂F_friction∂v +=  opts.sliding_friction *
-#             coulomb_direction(v_tangential, smoothing, regularizer) *
-#             (FV_impact * F_impact/(norm(F_impact) + 1e-20))'
-#         ∂F_friction∂v +=  opts.sliding_friction * norm(F_impact) *
-#             ∂coulomb_direction∂v(v_tangential, smoothing, regularizer) *
-#             (Diagonal(sones(3)) - normal * normal')
-#         FV_friction = ∂F_friction∂v * ∂v∂vp
-#         FΩ_friction = ∂F_friction∂v * ∂v∂ϕp
-#
-#         τV_contact = (-opts.rolling_drag * ϕp + opts.rolling_friction * coulomb_direction(ϕp, smoothing, regularizer)) *
-#             (FV_impact * F_impact/(norm(F_impact) + 1e-20))'
-#         τΩ_contact = τV_contact * ∂v∂ϕp
-#         τΩ_contact += norm(F_impact) * (-opts.rolling_drag * Diagonal(sones(3)) +
-#             opts.rolling_friction * ∂coulomb_direction∂v(ϕp, smoothing, regularizer))
-#         # contact
-#         V = [FV_impact + FV_friction; τV_contact]
-#         Ω = [FΩ_impact + FΩ_friction; τΩ_contact]
-#     elseif relative == :child
-#         # V = [-FV_impact + -FV_friction; szeros(T,3,3)]
-#         # Ω = [-FΩ_impact + -FΩ_friction; szeros(T,3,3)]
-#         V = szeros(T,N,3)
-#         Ω = szeros(T,N,3)
-#     end
-#     return timestep * [V Ω]
-# end
-
 
 function constraint_jacobian_configuration(relative::Symbol, model::SoftContact{T,N},
     xp::AbstractVector, vp::AbstractVector, qp::Quaternion, ϕp::AbstractVector,

@@ -46,7 +46,7 @@ initialize!(mech, :bunny_sphere,
     bunny_position=[0,0,0],
     bunny_velocity=[0,0,0],
     sphere_position=[0,4.0,0.4],
-    sphere_velocity=[0,-15.0,0],
+    sphere_velocity=[0,-5.0,0],
     )
 
 

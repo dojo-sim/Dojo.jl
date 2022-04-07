@@ -1,33 +1,34 @@
-# impulses
-function impulses!(mechanism::Mechanism{T}, body::Body, contact::SoftContactConstraint) where T
-	# Fτ = impulse_map(mechanism, contact, body) * contact.impulses[2]
-	# @show body.name, scn.(Fτ)
-    body.state.d -= impulse_map(mechanism, contact, body) * contact.impulses[2]
-    return
-end
-
-function impulse_map(mechanism, contact::SoftContactConstraint, body::Body)
-    relative = (body.id == contact.parent_id ? :parent : :child)
-    pbody = get_body(mechanism, contact.parent_id)
-    cbody = get_body(mechanism, contact.child_id)
-    return impulse_map(relative, contact.model, pbody, cbody, mechanism.timestep)
-end
-
-function impulse_map_jacobian_configuration(mechanism, body::Body{T}, contact::SoftContactConstraint{T}) where T
-    relative = (body.id == contact.parent_id ? :parent : :child)
-
-    return impulse_map_jacobian(relative, relative, contact.model,
-        get_body(mechanism, contact.parent_id),
-        get_body(mechanism, contact.child_id),
-        contact.impulses[2],
-        mechanism.timestep)
-end
-
-function impulses_jacobian_velocity!(mechanism, body::Body, contact::SoftContactConstraint)
-    timestep = mechanism.timestep
-    body.state.D -= impulse_map_jacobian_configuration(mechanism, body, contact) * integrator_jacobian_velocity(body, timestep)
-    return
-end
+# # impulses
+# function impulses!(mechanism::Mechanism{T}, body::Body, contact::SoftContactConstraint) where T
+# 	# Fτ = impulse_map(mechanism, contact, body) * contact.impulses[2]
+# 	# @show body.name, scn.(Fτ)
+#     body.state.d -= impulse_map(mechanism, contact, body) * contact.impulses[2]
+#     return
+# end
+#
+# function impulse_map(mechanism, contact::SoftContactConstraint, body::Body)
+#     relative = (body.id == contact.parent_id ? :parent : :child)
+#     pbody = get_body(mechanism, contact.parent_id)
+#     cbody = get_body(mechanism, contact.child_id)
+#     return impulse_map(relative, contact.model, pbody, cbody, mechanism.timestep)
+# end
+#
+# function impulse_map_jacobian_configuration(mechanism, body::Body{T},
+# 		contact::SoftContactConstraint{T}) where T
+#     relative = (body.id == contact.parent_id ? :parent : :child)
+#
+#     return impulse_map_jacobian(relative, relative, contact.model,
+#         get_body(mechanism, contact.parent_id),
+#         get_body(mechanism, contact.child_id),
+#         contact.impulses[2],
+#         mechanism.timestep)
+# end
+#
+# function impulses_jacobian_velocity!(mechanism, body::Body, contact::SoftContactConstraint)
+#     timestep = mechanism.timestep
+#     body.state.D -= impulse_map_jacobian_configuration(mechanism, body, contact) * integrator_jacobian_velocity(body, timestep)
+#     return
+# end
 
 function impulse_map(relative::Symbol, model::SoftContact{T}, pbody::Node, cbody::Node, timestep) where T
     # configurations
@@ -37,7 +38,6 @@ function impulse_map(relative::Symbol, model::SoftContact{T}, pbody::Node, cbody
     # find barycenter
 	collision = model.collision
 	ψ, barycenter, normal = model.ψ, model.barycenter, model.normal
-    # ψ, barycenter, normal = overlap(collision, x2p, q2p, x2c, q2c)
 
     # mapping
     X = force_mapping(relative, model, x2p, q2p, x2c, q2c)
@@ -97,11 +97,9 @@ function initialize!(mechanism::Mechanism, contact::SoftContactConstraint)
     return nothing
 end
 
-
 # complementarity
 complementarity(mechanism, contact::SoftContactConstraint{T,N}; scaling=false) where {T,N} = szeros(T,N)
 complementarityμ(mechanism, contact::SoftContactConstraint{T,N}; scaling=false) where {T,N} = szeros(T,N)
-
 
 # cone line search
 function cone_line_search!(α, mechanism, contact::SoftContactConstraint,
@@ -109,22 +107,16 @@ function cone_line_search!(α, mechanism, contact::SoftContactConstraint,
     return α
 end
 
-
 # centering
 function centering!(ν, νaff, n, mechanism, contact::SoftContactConstraint, vector_entry::Entry, αaff)
     return ν, νaff, n
 end
 
-
 # candidate step
 function candidate_step!(α::T, contact::SoftContactConstraint{T}, vector_entry::Entry, scale) where T
-    # @show scn(norm(vector_entry.value))
-    # @show scn.(vector_entry.value[1:3])
-    # @show scn.(contact.impulses[2][1:3])
     contact.impulses[2] = contact.impulses[1] + 1 / (2^scale) * α * vector_entry.value
     return
 end
-
 
 # update
 function update!(contact::SoftContactConstraint)
@@ -178,16 +170,9 @@ function SoftBody(collider::Collider, inner_mesh_path::String, outer_mesh_path::
     return Body(collider.mass, collider.inertia; name=name, shape=shapes)
 end
 
-
 coulomb_direction(v, smoothing=1e3, regularizer=1e-3) = - atan(smoothing * norm(v)) * v/(regularizer + norm(v))
 function ∂coulomb_direction∂v(v, smoothing=1e3, regularizer=1e-3)
     ∇ = - 1 / (1 + smoothing^2 * v'*v) * smoothing * v/(regularizer + norm(v)) * v'/(norm(v)+1e-20) +
         - atan(smoothing * norm(v)) * (1/(norm(v) + regularizer) * Diagonal(sones(3)) - v*v' ./ ((norm(v)+1e-20) * (norm(v) + regularizer)^2))
     return ∇
 end
-
-v = srand(3)
-coulomb_direction(v)
-J0 = ∂coulomb_direction∂v(v)
-J1 = FiniteDiff.finite_difference_jacobian(v-> coulomb_direction(v), v)
-norm(J0 - J1, Inf) < 1e-5
