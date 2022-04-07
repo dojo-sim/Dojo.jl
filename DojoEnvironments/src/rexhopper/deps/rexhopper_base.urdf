@@ -50,7 +50,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="environments/rexhopper/deps/mesh/base_link.obj" />
+          filename="mesh/base_link.obj" />
       </geometry>
       <material
         name="">
@@ -64,7 +64,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="environments/rexhopper/deps/mesh/base_link.obj" />
+          filename="mesh/base_link.obj" />
       </geometry>
     </collision>
   </link>
@@ -90,7 +90,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="environments/rexhopper/deps/mesh/link0.obj" />
+          filename="mesh/link0.obj" />
       </geometry>
       <material
         name="">
@@ -104,7 +104,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="environments/rexhopper/deps/mesh/link0.obj" />
+          filename="mesh/link0.obj" />
       </geometry>
     </collision>
   </link>
@@ -148,7 +148,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="environments/rexhopper/deps/mesh/link1.obj" />
+          filename="mesh/link1.obj" />
       </geometry>
       <material
         name="">
@@ -162,7 +162,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="environments/rexhopper/deps/mesh/link1.obj" />
+          filename="mesh/link1.obj" />
       </geometry>
     </collision>
   </link>
@@ -206,7 +206,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="environments/rexhopper/deps/mesh/link2.obj" />
+          filename="mesh/link2.obj" />
       </geometry>
       <material
         name="">
@@ -220,7 +220,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="environments/rexhopper/deps/mesh/link2.obj" />
+          filename="mesh/link2.obj" />
       </geometry>
     </collision>
   </link>
@@ -264,7 +264,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="environments/rexhopper/deps/mesh/link3.obj" />
+          filename="mesh/link3.obj" />
       </geometry>
       <material
         name="">
@@ -278,7 +278,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="environments/rexhopper/deps/mesh/link3.obj" />
+          filename="mesh/link3.obj" />
       </geometry>
     </collision>
   </link>
@@ -322,7 +322,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="environments/rexhopper/deps/mesh/rw0.obj" />
+          filename="mesh/rw0.obj" />
       </geometry>
       <material
         name="">
@@ -336,7 +336,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="environments/rexhopper/deps/mesh/rw0.obj" />
+          filename="mesh/rw0.obj" />
       </geometry>
     </collision>
   </link>
@@ -375,7 +375,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="environments/rexhopper/deps/mesh/rw1.obj" />
+          filename="mesh/rw1.obj" />
       </geometry>
       <material
         name="">
@@ -389,7 +389,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="environments/rexhopper/deps/mesh/rw1.obj" />
+          filename="mesh/rw1.obj" />
       </geometry>
     </collision>
   </link>
@@ -428,7 +428,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="environments/rexhopper/deps/mesh/rwz.obj" />
+          filename="mesh/rwz.obj" />
       </geometry>
       <material
         name="">
@@ -442,7 +442,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="environments/rexhopper/deps/mesh/rwz.obj" />
+          filename="mesh/rwz.obj" />
       </geometry>
     </collision>
   </link>

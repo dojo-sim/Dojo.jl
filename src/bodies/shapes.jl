@@ -319,7 +319,7 @@ function convert_shape(pyramid::Pyramid)
 end
 
 function convert_shape(mesh::Mesh)
-    return MeshFileObject(joinpath(@__DIR__, "..", "..", mesh.path))
+    return MeshFileObject(mesh.path)
 end
 
 function convert_shape(::EmptyShape)

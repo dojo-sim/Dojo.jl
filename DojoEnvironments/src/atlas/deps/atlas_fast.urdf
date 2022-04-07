@@ -24,7 +24,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="environments/atlas/deps/mesh/pelvis.obj"/>
+        <mesh filename="mesh/pelvis.obj"/>
       </geometry>
       <material name="metal"/>
     </visual>
@@ -37,7 +37,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="environments/atlas/deps/mesh/utorso.obj"/>
+        <mesh filename="mesh/utorso.obj"/>
       </geometry>
       <material name="white"/>
     </visual>
@@ -51,7 +51,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/atlas/deps/mesh/head_chull.obj"/>
+        <mesh filename="mesh/head_chull.obj"/>
       </geometry>
       <material name="dark_gray"/>
     </visual>
@@ -65,7 +65,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="environments/atlas/deps/mesh/l_uleg.obj"/>
+        <mesh filename="mesh/l_uleg.obj"/>
       </geometry>
       <material name="white"/>
     </visual>
@@ -78,7 +78,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="environments/atlas/deps/mesh/r_uleg.obj"/>
+        <mesh filename="mesh/r_uleg.obj"/>
       </geometry>
       <material name="white"/>
     </visual>
@@ -92,7 +92,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="environments/atlas/deps/mesh/l_lleg.obj"/>
+        <mesh filename="mesh/l_lleg.obj"/>
       </geometry>
       <material name="dark_gray"/>
     </visual>
@@ -105,7 +105,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="environments/atlas/deps/mesh/r_lleg.obj"/>
+        <mesh filename="mesh/r_lleg.obj"/>
       </geometry>
       <material name="dark_gray"/>
     </visual>
@@ -118,7 +118,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="environments/atlas/deps/mesh/l_foot.obj"/>
+        <mesh filename="mesh/l_foot.obj"/>
       </geometry>
       <material name="dark_gray"/>
     </visual>
@@ -167,7 +167,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="environments/atlas/deps/mesh/r_foot.obj"/>
+        <mesh filename="mesh/r_foot.obj"/>
       </geometry>
       <material name="dark_gray"/>
     </visual>
@@ -217,7 +217,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="environments/atlas/deps/mesh/r_clav.obj"/>
+        <mesh filename="mesh/r_clav.obj"/>
       </geometry>
       <material name="dark_gray"/>
     </visual>
@@ -230,7 +230,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="environments/atlas/deps/mesh/r_clav.obj"/>
+        <mesh filename="mesh/r_clav.obj"/>
       </geometry>
       <material name="dark_gray"/>
     </visual>
@@ -243,7 +243,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="environments/atlas/deps/mesh/r_scap.obj"/>
+        <mesh filename="mesh/r_scap.obj"/>
       </geometry>
       <material name="dark_gray"/>
     </visual>
@@ -256,7 +256,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="environments/atlas/deps/mesh/r_scap.obj"/>
+        <mesh filename="mesh/r_scap.obj"/>
       </geometry>
       <material name="dark_gray"/>
     </visual>
@@ -269,7 +269,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="environments/atlas/deps/mesh/r_uarm.obj"/>
+        <mesh filename="mesh/r_uarm.obj"/>
       </geometry>
       <material name="dark_gray"/>
     </visual>
@@ -282,7 +282,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="environments/atlas/deps/mesh/r_uarm.obj"/>
+        <mesh filename="mesh/r_uarm.obj"/>
       </geometry>
       <material name="dark_gray"/>
     </visual>
@@ -295,7 +295,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="environments/atlas/deps/mesh/r_larm.obj"/>
+        <mesh filename="mesh/r_larm.obj"/>
       </geometry>
       <material name="dark_gray"/>
     </visual>
@@ -308,7 +308,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="environments/atlas/deps/mesh/r_larm.obj"/>
+        <mesh filename="mesh/r_larm.obj"/>
       </geometry>
       <material name="dark_gray"/>
     </visual>
@@ -321,7 +321,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="environments/atlas/deps/mesh/r_farm.obj"/>
+        <mesh filename="mesh/r_farm.obj"/>
       </geometry>
       <material name="dark_gray"/>
     </visual>
@@ -334,7 +334,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="environments/atlas/deps/mesh/r_farm.obj"/>
+        <mesh filename="mesh/r_farm.obj"/>
       </geometry>
       <material name="dark_gray"/>
     </visual>
@@ -347,7 +347,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="environments/atlas/deps/mesh/r_hand.obj"/>
+        <mesh filename="mesh/r_hand.obj"/>
       </geometry>
       <material name="dark_gray"/>
     </visual>
@@ -360,7 +360,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="environments/atlas/deps/mesh/r_hand.obj"/>
+        <mesh filename="mesh/r_hand.obj"/>
       </geometry>
       <material name="dark_gray"/>
     </visual>

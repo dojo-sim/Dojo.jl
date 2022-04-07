@@ -24,7 +24,7 @@ function get_humanoid(;
         left_foot = get_body(mech, :left_foot)
 
 		aa = -0.43000 * [-0.44721, 0.00000, 0.89442]
-		ql = axis_angle_to_quaternion(aa)
+		ql = Dojo.axis_angle_to_quaternion(aa)
         qll = ql * RotX(-1.57080)*RotY(1.47585)*RotZ(-1.47585) # Quaternion(RotXYZ(roll=-1.57080, pitch=1.47585, yaw=-1.47585)) # roll pitch yaw
         qlr = ql * RotX(+1.57080)*RotY(1.47585)*RotZ(+1.47585) # Quaternion(RotXYZ(roll=+1.57080, pitch=1.47585, yaw=+1.47585)) # roll pitch yaw
 

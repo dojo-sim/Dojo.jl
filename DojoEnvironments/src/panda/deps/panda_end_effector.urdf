@@ -24,7 +24,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/panda/deps/mesh/visual/link0.dae"/>
+        <mesh filename="mesh/visual/link0.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
@@ -33,7 +33,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/panda/deps/mesh/collision/link0.stl"/>
+        <mesh filename="mesh/collision/link0.stl"/>
       </geometry>
     </collision>
   </link>
@@ -55,7 +55,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/panda/deps/mesh/visual/link1.dae"/>
+        <mesh filename="mesh/visual/link1.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
@@ -64,7 +64,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/panda/deps/mesh/collision/link1.stl"/>
+        <mesh filename="mesh/collision/link1.stl"/>
       </geometry>
     </collision>
   </link>
@@ -86,7 +86,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/panda/deps/mesh/visual/link2.dae"/>
+        <mesh filename="mesh/visual/link2.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
@@ -95,7 +95,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/panda/deps/mesh/collision/link2.stl"/>
+        <mesh filename="mesh/collision/link2.stl"/>
       </geometry>
     </collision>
   </link>
@@ -117,7 +117,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/panda/deps/mesh/visual/link3.dae"/>
+        <mesh filename="mesh/visual/link3.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
@@ -126,7 +126,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/panda/deps/mesh/collision/link3.stl"/>
+        <mesh filename="mesh/collision/link3.stl"/>
       </geometry>
     </collision>
   </link>
@@ -148,7 +148,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/panda/deps/mesh/visual/link4.dae"/>
+        <mesh filename="mesh/visual/link4.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
@@ -157,7 +157,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/panda/deps/mesh/collision/link4.stl"/>
+        <mesh filename="mesh/collision/link4.stl"/>
       </geometry>
     </collision>
   </link>
@@ -179,7 +179,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/panda/deps/mesh/visual/link5.dae"/>
+        <mesh filename="mesh/visual/link5.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
@@ -188,7 +188,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/panda/deps/mesh/collision/link5.stl"/>
+        <mesh filename="mesh/collision/link5.stl"/>
       </geometry>
     </collision>
   </link>
@@ -210,7 +210,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/panda/deps/mesh/visual/link6.dae"/>
+        <mesh filename="mesh/visual/link6.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
@@ -219,7 +219,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/panda/deps/mesh/collision/link6.stl"/>
+        <mesh filename="mesh/collision/link6.stl"/>
       </geometry>
     </collision>
   </link>
@@ -241,7 +241,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/panda/deps/mesh/visual/link7.dae"/>
+        <mesh filename="mesh/visual/link7.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
@@ -250,7 +250,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/panda/deps/mesh/collision/link7.stl"/>
+        <mesh filename="mesh/collision/link7.stl"/>
       </geometry>
     </collision>
   </link>
@@ -268,7 +268,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/panda/deps/mesh/visual/hand.dae"/>
+        <mesh filename="mesh/visual/hand.dae"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 1"/>
@@ -277,7 +277,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/panda/deps/mesh/collision/hand.stl"/>
+        <mesh filename="mesh/collision/hand.stl"/>
       </geometry>
     </collision>
   </link>
@@ -295,13 +295,13 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="environments/panda/deps/mesh/visual/finger.dae"/>
+        <mesh filename="mesh/visual/finger.dae"/>
       </geometry>
       <material name="panda_white"/>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="environments/panda/deps/mesh/collision/finger.stl"/>
+        <mesh filename="mesh/collision/finger.stl"/>
       </geometry>
       <material name="panda_white"/>
     </collision>
@@ -322,14 +322,14 @@
     <visual>
       <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/panda/deps/mesh/visual/finger.dae"/>
+        <mesh filename="mesh/visual/finger.dae"/>
       </geometry>
       <material name="panda_white"/>
     </visual>
     <collision>
       <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/panda/deps/mesh/collision/finger.stl"/>
+        <mesh filename="mesh/collision/finger.stl"/>
       </geometry>
       <material name="panda_white"/>
     </collision>

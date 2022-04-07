@@ -48,7 +48,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/quadruped/deps/mesh/trunk.dae" scale="1 1 1"/>
+        <mesh filename="mesh/trunk.dae" scale="1 1 1"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -77,7 +77,7 @@
     <visual>
       <origin rpy="3.14159265359 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/quadruped/deps/mesh/hip.dae" scale="1 1 1"/>
+        <mesh filename="mesh/hip.dae" scale="1 1 1"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -105,7 +105,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/quadruped/deps/mesh/thigh_mirror.dae" scale="1 1 1"/>
+        <mesh filename="mesh/thigh_mirror.dae" scale="1 1 1"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -133,7 +133,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/quadruped/deps/mesh/calf.dae" scale="1 1 1"/>
+        <mesh filename="mesh/calf.dae" scale="1 1 1"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -162,7 +162,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/quadruped/deps/mesh/hip.dae" scale="1 1 1"/>
+        <mesh filename="mesh/hip.dae" scale="1 1 1"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -190,7 +190,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/quadruped/deps/mesh/thigh.dae" scale="1 1 1"/>
+        <mesh filename="mesh/thigh.dae" scale="1 1 1"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -218,7 +218,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/quadruped/deps/mesh/calf.dae" scale="1 1 1"/>
+        <mesh filename="mesh/calf.dae" scale="1 1 1"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -247,7 +247,7 @@
     <visual>
       <origin rpy="3.14159265359 3.14159265359 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/quadruped/deps/mesh/hip.dae" scale="1 1 1"/>
+        <mesh filename="mesh/hip.dae" scale="1 1 1"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -275,7 +275,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/quadruped/deps/mesh/thigh_mirror.dae" scale="1 1 1"/>
+        <mesh filename="mesh/thigh_mirror.dae" scale="1 1 1"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -303,7 +303,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/quadruped/deps/mesh/calf.dae" scale="1 1 1"/>
+        <mesh filename="mesh/calf.dae" scale="1 1 1"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -332,7 +332,7 @@
     <visual>
       <origin rpy="0 3.14159265359 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/quadruped/deps/mesh/hip.dae" scale="1 1 1"/>
+        <mesh filename="mesh/hip.dae" scale="1 1 1"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -360,7 +360,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/quadruped/deps/mesh/thigh.dae" scale="1 1 1"/>
+        <mesh filename="mesh/thigh.dae" scale="1 1 1"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -388,7 +388,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="environments/quadruped/deps/mesh/calf.dae" scale="1 1 1"/>
+        <mesh filename="mesh/calf.dae" scale="1 1 1"/>
       </geometry>
       <material name="black"/>
     </visual>

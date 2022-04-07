@@ -161,6 +161,7 @@ export
     Body,
     Origin,
     Box,
+    Capsule,
     Cylinder,
     Sphere,
     Pyramid,
