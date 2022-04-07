@@ -33,7 +33,7 @@ jobs:
         run: |
           using Pkg;
           # dev mono repo versions
-          pkg"dev . DojoEnvironments"
+          pkg"dev . ./DojoEnvironments"
           Pkg.test("DojoEnvironments"; coverage=true)
       - uses: julia-actions/julia-uploadcodecov@latest
         env:

@@ -99,7 +99,7 @@ function test_data_system(model::Symbol;
 		kwargs...)
 
     # mechanism
-    mechanism = Dojo.get_mechanism(model,
+    mechanism = DojoEnvironments.get_mechanism(model,
 		timestep=timestep,
 		gravity=gravity;
 		kwargs...)

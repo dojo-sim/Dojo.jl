@@ -1,6 +1,6 @@
 @testset "step!" begin 
     # get environment and simulate
-    env = Dojo.get_environment("pendulum", 
+    env = DojoEnvironments.get_environment("pendulum", 
         timestep=0.1, 
         gravity=0.0);
     reset(env);
@@ -20,10 +20,10 @@ end
 
 @testset "Storage" begin 
     # get environment and simulate
-    env = Dojo.get_environment("pendulum",
+    env = DojoEnvironments.get_environment("pendulum",
         timestep=0.1);
     reset(env);
-    Dojo.initialize_pendulum!(env.mechanism,
+    DojoEnvironments.initialize_pendulum!(env.mechanism,
         angle=0.25 * π)
     storage = Dojo.simulate!(env.mechanism, 1.0, 
         record=true, 

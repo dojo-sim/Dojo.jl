@@ -1,11 +1,11 @@
 @testset "Pendulum" begin
     # get pendulum environment and simulate
     timestep=0.1
-    env = Dojo.get_environment("pendulum", 
+    env = DojoEnvironments.get_environment("pendulum", 
         timestep=timestep, 
         gravity=-10.0);
     reset(env);
-    Dojo.initialize_pendulum!(env.mechanism, 
+    DojoEnvironments.initialize_pendulum!(env.mechanism, 
         angle=0.25 * π)
     u1 = rand(Dojo.input_dimension(env.mechanism))
     z1 = Dojo.get_maximal_state(env.mechanism)
@@ -16,7 +16,7 @@
     zTs = Dojo.get_maximal_state(env.mechanism)
     @test norm(zTs - Dojo.get_maximal_state(storage, Dojo.length(storage))) < 1.0e-6
     zT = Dojo.get_next_state(env.mechanism)
-    Dojo.initialize_pendulum!(env.mechanism, 
+    DojoEnvironments.initialize_pendulum!(env.mechanism, 
         angle=0.25 * π)
     storage = Dojo.simulate!(env.mechanism, 1.0 + timestep, 
         record=true)
@@ -30,7 +30,7 @@
     @test norm(Fu1 - Fu2, Inf) < 1.0e-6 
 
     timestep=0.1
-    env = Dojo.get_environment("halfcheetah", 
+    env = DojoEnvironments.get_environment("halfcheetah", 
         timestep=timestep, 
         gravity=-10.0);
     reset(env);

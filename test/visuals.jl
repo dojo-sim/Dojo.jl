@@ -27,7 +27,7 @@ end
     # create visualizer
     vis = Dojo.Visualizer();
     # get environment and simulate
-    env = Dojo.get_environment("halfcheetah", 
+    env = DojoEnvironments.get_environment("halfcheetah", 
         timestep=0.1)
     reset(env)
     storage = Dojo.simulate!(env.mechanism, 0.25, 
@@ -45,7 +45,7 @@ end
     # create visualizer
     vis = Dojo.Visualizer();
     # get environment and simulate
-    env = Dojo.get_environment("quadruped", timestep=0.1)
+    env = DojoEnvironments.get_environment("quadruped", timestep=0.1)
     reset(env)
     storage = Dojo.simulate!(env.mechanism, 0.25, 
         record=true, 
