@@ -1,6 +1,6 @@
 name = "DojoEnvironments"
 uuid = "8728bab7-e8ae-46fd-a1b6-a8c4d00f608e"
-authors = ["rejuvyesh <mail@rejuvyesh.com>"]
+authors = ["simonlc <simonlc@stanford.edu>", "thowell <thowell@stanford.edu>", "Jan Bruedigam <jan.bruedigam@tum.de>", "rejuvyesh <mail@rejuvyesh.com>"]
 version = "0.1.0"
 
 [deps]
