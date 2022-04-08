@@ -1,0 +1,34 @@
+module OSFLoader
+
+using FiniteDiff
+using JLD2
+using LinearAlgebra
+using Pkg
+using Plots
+using PyCall
+using StaticArrays
+using Statistics
+
+global OSF_PATH = joinpath("/home/simon/research/repos/osf-pytorch")
+
+function osf_loader_dir()
+    joinpath("..", @__DIR__)
+end
+
+include("load.jl")
+include("utils.jl")
+
+export
+    load_density_script
+
+export
+    get_nerf_object,
+    grid_particles,
+    slice_particles,
+    grid_density,
+    slice_density,
+    inertia_properties,
+    sample_soft,
+    finite_difference_gradient
+
+end # module

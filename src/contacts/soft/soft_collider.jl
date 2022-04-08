@@ -27,13 +27,12 @@ mutable struct SoftCollider{T,N} <: Collider{T}
 end
 
 function SoftCollider(nerf_object; N=1000, density_scale=0.1, opts=ColliderOptions(), T=Float64)
-    mass, inertia, center_of_mass = inertia_properties(nerf_object, density_scale=density_scale)
-    particles, densities, density_gradients = sample_soft(nerf_object, N, particle_noise=0.005)
+    mass, inertia, center_of_mass = OSFLoader.inertia_properties(nerf_object, density_scale=density_scale)
+    particles, densities, density_gradients = OSFLoader.sample_soft(nerf_object, N, particle_noise=0.005)
     weights = densities ./ sum(densities) * mass
     weight_gradients = density_gradients ./ sum(densities) * mass
     return SoftCollider{T,N}(
-        mass, inertia,
-        center_of_mass,
+        mass, inertia, center_of_mass,
         particles, densities, density_gradients,
         weights, weight_gradients, nerf_object,
         opts)

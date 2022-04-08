@@ -9,3 +9,8 @@ using LinearAlgebra
     J1 = FiniteDiff.finite_difference_jacobian(v-> Dojo.coulomb_direction(v), v)
     @test norm(J0 - J1, Inf) < 1e-5
 end
+
+# solmat
+
+
+# datamat

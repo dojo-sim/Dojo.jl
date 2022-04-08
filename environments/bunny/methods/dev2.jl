@@ -4,7 +4,6 @@ vis = Visualizer()
 open(vis)
 
 
-
 mech = get_bunny(timestep=0.01)
 mech.contacts[1].model.collision.collider.options = ColliderOptions()
 
@@ -17,7 +16,8 @@ initialize!(mech, :bunny,
 
 constraint(mech, mech.contacts[1])
 
-storage = simulate!(mech, 2.0, opts=SolverOptions(verbose=true, rtol=1e-4, max_iter=50))
+@elapsed storage = simulate!(mech, 2.0,
+    opts=SolverOptions(verbose=true, rtol=1e-4))
 visualize(mech, storage, vis=vis)
 mech.contacts[1]
 constraint(mech, mech.contacts[1])
@@ -26,22 +26,6 @@ constraint(mech, mech.contacts[1])
 mech = get_bunny_sphere(timestep=0.01, gravity=-9.81)
 mech.contacts[1].model.collision.collider.options = ColliderOptions()
 mech.contacts[3].model.collision.collider.options = ColliderOptions()
-
-initialize!(mech, :bunny_sphere,
-    bunny_position=[0.1,0.1,1.5],
-    sphere_position=[0,0,0.05])
-initialize!(mech, :bunny_sphere,
-    bunny_position=[0,0,1.6],
-    bunny_velocity=[0,0,-1.0],
-    sphere_position=[0,0,0.5],
-    sphere_velocity=[0,0,0.228],
-    )
-initialize!(mech, :bunny_sphere,
-    bunny_position=[0,1.6,0],
-    bunny_velocity=[0,-1.0,0],
-    sphere_position=[0,0.5,0],
-    sphere_velocity=[0,0.228,0],
-    )
 initialize!(mech, :bunny_sphere,
     bunny_position=[0,0,0],
     bunny_velocity=[0,0,0],
@@ -51,17 +35,48 @@ initialize!(mech, :bunny_sphere,
 
 
 # Main.@profiler
-@elapsed storage = simulate!(mech, 5.0, opts=SolverOptions(verbose=false, rtol=3e-4, max_iter=50))
+@elapsed storage = simulate!(mech, 5.0,
+    opts=SolverOptions(verbose=false, rtol=1e-4))
 visualize(mech, storage, vis=vis)
-mech.contacts[1]
-
 mech.contacts[1]
 mech.contacts[2]
 mech.contacts[3]
 
-impulse = constraint(mech, mech.contacts[3])
 
-# convert_frames_to_video_and_gif("bunny_sphere_strike")
+
+mech = get_bunny_triumvirate(timestep=0.01, gravity=-9.81)
+for i in [1,2,4,5]
+    mech.contacts[i].model.collision.collider.options = ColliderOptions()
+end
+
+initialize!(mech, :bunny_triumvirate,
+    positions=[[0,0,0.], [0,2,0.], [0,4,0.]],
+    velocities=[[0,0,0.], [0,0,0.], [0,-5,0.]],
+    )
+
+
+# Main.@profiler
+@elapsed storage = simulate!(mech, 5.0, opts=SolverOptions(verbose=false, rtol=1e-4))
+visualize(mech, storage, vis=vis)
+mech.contacts[1]
+
+
+
+collider = mech.contacts[1].model.collision.collider
+
+particles_2 = zeros(Float32,10,3)
+global const OSF_PATH = joinpath("/home/simon/research/repos/osf-pytorch")
+@pyinclude(joinpath(OSF_PATH, "extract_density_julia_cpu.py"))
+nerf_object = py"generate_test_nerf"()
+py"density_query"(collider.nerf_object, particles_2)
+# py"density_query"(nerf_object, convert.(Float32, particles_2))
+
+
+
+
+
+
+
 
 
 using FiniteDiff

@@ -8,16 +8,19 @@
 """
 mutable struct SoftContact{T,N,C} <: Contact{T,N}
     collision::C
-    collider_origin::SVector{3,T} # origin of the frame in which the nerf is defined
     ψ::T # amount of violation
     barycenter::SVector{3,T} # position of the overlap region's barycenter in the parent frame (=collider frame)
     normal::SVector{3,T} # contact normal expressed in the world frame
 end
 
 function SoftContact(body::Body{T}, normal::AbstractVector{T}, collider::Collider;
-        collider_origin=-collider.center_of_mass, sphere_origin=szeros(T,3), radius::T=0.0,
+        parent_origin=-collider.center_of_mass, child_origin=szeros(T,3), radius::T=0.0,
+        child_collider=nothing, child_collider_origin=nothing,
         collision_type::Symbol=:soft_halfspace) where T
 
+    if child_collider != nothing && child_collider_origin == nothing
+        child_collider_origin = -child_collider.center_of_mass
+    end
     # contact directions
     V1, V2, V3 = orthogonal_columns(normal)
     A = [V1 V2 V3]
@@ -27,13 +30,16 @@ function SoftContact(body::Body{T}, normal::AbstractVector{T}, collider::Collide
 
     # collision
     if collision_type == :soft_halfspace
-        collision = SoftHalfSpaceCollision(collider, contact_tangent, contact_normal, SVector{3}(collider_origin))
+        collision = SoftHalfSpaceCollision(collider, contact_normal, SVector{3}(parent_origin), contact_tangent)
     elseif collision_type == :soft_sphere
-        collision = SoftSphereCollision(collider, contact_tangent, SVector{3}(collider_origin), sphere_origin, radius)
+        collision = SoftSphereCollision(collider, SVector{3}(parent_origin), child_origin, radius, contact_tangent)
+    elseif collision_type == :soft_soft
+        collision = SoftSoftCollision(collider, child_collider, SVector{3}(parent_origin), SVector{3}(child_collider_origin), contact_tangent)
     else
         error("Unknown collision_type")
     end
-    SoftContact{Float64,6,typeof(collision)}(collision, collider_origin, 0.0, szeros(3), szeros(3))
+    # SoftContact{Float64,6,typeof(collision)}(collision, collider_origin, 0.0, szeros(3), szeros(3))
+    SoftContact{Float64,6,typeof(collision)}(collision, 0.0, szeros(3), szeros(3))
 end
 
 function constraint(mechanism, contact::SoftContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:SoftContact{T,N}}
@@ -117,6 +123,7 @@ function constraint_jacobian_configuration(relative::Symbol, model::SoftContact{
     xp::AbstractVector, vp::AbstractVector, qp::Quaternion, ϕp::AbstractVector,
     xc::AbstractVector, vc::AbstractVector, qc::Quaternion, ϕc::AbstractVector,
     timestep) where {T,N}
+    @show "this might be wrong I am not sure wrt which configuration we are diffing"
     return szeros(T,N,6)
 end
 
@@ -125,35 +132,6 @@ function force_mapping(relative::Symbol, model::SoftContact,
     xc::AbstractVector, qc::Quaternion)
 
     X = Diagonal(sones(3)) # TODO hard-coded
-    if relative == :parent
-        return X
-    elseif relative == :child
-        return -1.0 * X
-    end
-end
-
-function ∂force_mapping_jvp∂x(relative::Symbol, jacobian::Symbol,
-    model::SoftContact{T},
-    xp::AbstractVector, qp::Quaternion,
-    xc::AbstractVector, qc::Quaternion,
-    λ::AbstractVector) where T
-
-    X = szeros(T,3,3)
-    if relative == :parent
-        return X
-    elseif relative == :child
-        return -1.0 * X
-    end
-end
-
-function ∂force_mapping_jvp∂q(relative::Symbol, jacobian::Symbol,
-    model::SoftContact{T},
-    xp::AbstractVector, qp::Quaternion,
-    xc::AbstractVector, qc::Quaternion,
-    λ::AbstractVector) where T
-
-    X = szeros(T,3,4)
-
     if relative == :parent
         return X
     elseif relative == :child

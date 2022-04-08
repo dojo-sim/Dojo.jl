@@ -4,7 +4,7 @@ using Plots
 ################################################################################
 # Query NeRf
 ################################################################################
-@pyinclude(joinpath(osf_path, "extract_density_julia_cpu.py"))
+@pyinclude(joinpath(OSF_PATH, "extract_density_julia_cpu.py"))
 nerf_object = py"generate_test_nerf"()
 point = rand(Float32, 100,3) ./ 5
 density = py"density_query"(nerf_object, point)

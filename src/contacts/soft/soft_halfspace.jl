@@ -10,9 +10,9 @@
 """
 mutable struct SoftHalfSpaceCollision{T,O,I,OI,N} <: SoftCollision{T,O,I,OI,N}
     collider::SoftCollider{T,N}
-    contact_tangent::SMatrix{O,I,T,OI}
     contact_normal::Adjoint{T,SVector{I,T}}
     collider_origin::SVector{I,T}
+    contact_tangent::SMatrix{O,I,T,OI}
 end
 
 function inside(collision::SoftHalfSpaceCollision{T}, p, xc, qc) where T
@@ -26,3 +26,6 @@ end
 function contact_normal(collision::SoftHalfSpaceCollision, p, xc, qc)
     return collision.contact_normal[1,:]
 end
+
+parent_origin(collision::SoftHalfSpaceCollision) = collision.collider_origin
+child_origin(collision::SoftHalfSpaceCollision{T}) where T = szeros(T,3)

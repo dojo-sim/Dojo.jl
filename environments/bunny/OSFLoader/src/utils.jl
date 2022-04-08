@@ -21,6 +21,8 @@ function slice_particles(xrange, yrange, z)
 end
 
 function grid_density(nerf_object, xrange, yrange, zrange)
+    load_density_script(mode=:cpu)
+
     points = grid_particles(xrange, yrange, zrange)
     density = py"density_query"(nerf_object, points)
     nx = length(xrange)
@@ -35,6 +37,8 @@ function slice_density(nerf_object, xrange, yrange, z)
 end
 
 function inertia_properties(nerf_object; n=30, density_scale=1e-1)
+    load_density_script(mode=:cpu)
+
     xrange = range(-1.0, stop=1.0, length=n)
     yrange = range(-1.0, stop=1.0, length=n)
     zrange = range(-1.0, stop=1.0, length=n)
@@ -56,9 +60,10 @@ function inertia_properties(nerf_object; n=30, density_scale=1e-1)
     return mass, inertia, center_of_mass
 end
 
-
 function sample_soft(nerf_object, N::Int; T=Float64, min_density=1.0, max_density=105.0,
         particle_noise=0.005)
+    load_density_script(mode=:cpu)
+
     particles = Vector{SVector{3,T}}(undef, N)
     densities = zeros(T,N)
     density_gradients = Vector{SVector{3,T}}(undef, N)
@@ -85,6 +90,8 @@ function sample_soft(nerf_object, N::Int; T=Float64, min_density=1.0, max_densit
 end
 
 function finite_difference_gradient(nerf_object, particle; δ=0.01, n::Int=5)
+    load_density_script(mode=:cpu)
+
     gradient = zeros(3)
     xrange = particle[1] .+ range(-δ, stop=δ, length=n)
     yrange = particle[2] .+ range(-δ, stop=δ, length=n)
@@ -93,4 +100,10 @@ function finite_difference_gradient(nerf_object, particle; δ=0.01, n::Int=5)
     sample_gradients = py"density_gradient_query"(nerf_object, sample_particles)
     gradient = mean(sample_gradients, dims=1)[1,:]
     return gradient
+end
+
+function get_nerf_object(;osf_path=OSFLoader.OSF_PATH)
+    load_density_script(mode=:cpu)
+    nerf_object = OSFLoader.py"generate_test_nerf"()
+    return nerf_object
 end

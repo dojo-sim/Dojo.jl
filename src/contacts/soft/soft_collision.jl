@@ -5,6 +5,12 @@
 """
 abstract type SoftCollision{T,O,I,OI,N} end
 
+
+"""
+    ψ: overlap amount in mass unit.
+    barycenter: barycenter of the overlapping particles expressed in the soft body's frame (i.e. parent frame)
+    normal: normal of the contact point pointing towards the parent body, expressed in the world frame
+"""
 function overlap(collision::SoftCollision{T,O,I,OI,N}, xp, qp, xc, qc) where {T,O,I,OI,N}
     collider = collision.collider
     center_of_mass = collider.center_of_mass

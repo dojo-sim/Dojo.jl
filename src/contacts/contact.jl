@@ -99,7 +99,8 @@ function impulse_map(relative::Symbol, model::Contact, pbody::Node, cbody::Node,
            ]
 end
 
-function impulse_map_jacobian(relative::Symbol, jacobian::Symbol, model::Contact, pbody::Node, cbody::Node, λ, timestep)
+function impulse_map_jacobian(relative::Symbol, jacobian::Symbol, model::Contact,
+        pbody::Node, cbody::Node, λ, timestep)
 
     # configurations
     xp, qp = next_configuration(pbody.state, timestep)

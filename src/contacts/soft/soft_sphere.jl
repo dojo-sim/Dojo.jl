@@ -11,10 +11,10 @@
 """
 mutable struct SoftSphereCollision{T,O,I,OI,N} <: SoftCollision{T,O,I,OI,N}
     collider::SoftCollider{T,N}
-    contact_tangent::SMatrix{O,I,T,OI}
     collider_origin::SVector{I,T}
     sphere_origin::SVector{I,T}
     contact_radius::T
+    contact_tangent::SMatrix{O,I,T,OI}
 end
 
 function inside(collision::SoftSphereCollision{T}, p, xc, qc) where T
@@ -33,3 +33,6 @@ function contact_normal(collision::SoftSphereCollision, p, xc, qc)
     normal = p - pc
     return normal ./ (1e-20 + norm(normal))
 end
+
+parent_origin(collision::SoftSphereCollision) = collision.collider_origin
+child_origin(collision::SoftSphereCollision) = collision.sphere_origin

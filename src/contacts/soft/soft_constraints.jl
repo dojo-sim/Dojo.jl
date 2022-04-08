@@ -1,35 +1,3 @@
-# # impulses
-# function impulses!(mechanism::Mechanism{T}, body::Body, contact::SoftContactConstraint) where T
-# 	# Fτ = impulse_map(mechanism, contact, body) * contact.impulses[2]
-# 	# @show body.name, scn.(Fτ)
-#     body.state.d -= impulse_map(mechanism, contact, body) * contact.impulses[2]
-#     return
-# end
-#
-# function impulse_map(mechanism, contact::SoftContactConstraint, body::Body)
-#     relative = (body.id == contact.parent_id ? :parent : :child)
-#     pbody = get_body(mechanism, contact.parent_id)
-#     cbody = get_body(mechanism, contact.child_id)
-#     return impulse_map(relative, contact.model, pbody, cbody, mechanism.timestep)
-# end
-#
-# function impulse_map_jacobian_configuration(mechanism, body::Body{T},
-# 		contact::SoftContactConstraint{T}) where T
-#     relative = (body.id == contact.parent_id ? :parent : :child)
-#
-#     return impulse_map_jacobian(relative, relative, contact.model,
-#         get_body(mechanism, contact.parent_id),
-#         get_body(mechanism, contact.child_id),
-#         contact.impulses[2],
-#         mechanism.timestep)
-# end
-#
-# function impulses_jacobian_velocity!(mechanism, body::Body, contact::SoftContactConstraint)
-#     timestep = mechanism.timestep
-#     body.state.D -= impulse_map_jacobian_configuration(mechanism, body, contact) * integrator_jacobian_velocity(body, timestep)
-#     return
-# end
-
 function impulse_map(relative::Symbol, model::SoftContact{T}, pbody::Node, cbody::Node, timestep) where T
     # configurations
     x2p, q2p = current_configuration(pbody.state)
@@ -40,18 +8,21 @@ function impulse_map(relative::Symbol, model::SoftContact{T}, pbody::Node, cbody
 	ψ, barycenter, normal = model.ψ, model.barycenter, model.normal
 
     # mapping
-    X = force_mapping(relative, model, x2p, q2p, x2c, q2c)
+    XF = force_mapping(relative, model, x2p, q2p, x2c, q2c)
     if relative == :parent
-		QF = skew(model.collider_origin + barycenter) * rotation_matrix(inv(q2p)) * X
+		# QF = skew(model.collision.collider_origin + barycenter) * rotation_matrix(inv(q2p)) * XF
+		QF = skew(parent_origin(model.collision) + barycenter) * rotation_matrix(inv(q2p)) * XF
 		Qτ = rotation_matrix(inv(q2p))
     elseif relative == :child
-		p = x2p + Dojo.vector_rotate(model.collider_origin + barycenter, q2p)
-		pc = x2c + Dojo.vector_rotate(model.collision.sphere_origin, q2c)
-		QF = rotation_matrix(inv(q2c)) * skew(p - pc) * X
+		# p = x2p + Dojo.vector_rotate(model.collision.collider_origin + barycenter, q2p)
+		p = x2p + Dojo.vector_rotate(parent_origin(model.collision) + barycenter, q2p)
+		# pc = x2c + Dojo.vector_rotate(model.collision.sphere_origin, q2c)
+		pc = x2c + Dojo.vector_rotate(child_origin(model.collision), q2c)
+		QF = rotation_matrix(inv(q2c)) * skew(p - pc) * XF
 		Qτ = -rotation_matrix(inv(q2c))
     end
     return [
-                X szeros(T,3,3);
+                XF szeros(T,3,3);
                 QF Qτ;
            ]
 end
@@ -133,6 +104,13 @@ function set_data!(model::SoftContact, data::AbstractVector)
     return nothing
 end
 
+coulomb_direction(v, smoothing=1e3, regularizer=1e-3) = - atan(smoothing * norm(v)) * v/(regularizer + norm(v))
+function ∂coulomb_direction∂v(v, smoothing=1e3, regularizer=1e-3)
+    ∇ = - 1 / (1 + smoothing^2 * v'*v) * smoothing * v/(regularizer + norm(v)) * v'/(norm(v)+1e-20) +
+        - atan(smoothing * norm(v)) * (1/(norm(v) + regularizer) * Diagonal(sones(3)) - v*v' ./ ((norm(v)+1e-20) * (norm(v) + regularizer)^2))
+    return ∇
+end
+
 # constructor
 function soft_contact_constraint(body::Body{T},
         normal::AbstractVector{T},
@@ -142,7 +120,7 @@ function soft_contact_constraint(body::Body{T},
         name::Symbol=Symbol("contact_" * randstring(4))) where T
 
     model = SoftContact(body, normal, collider,
-        collider_origin=collider_origin)
+        parent_origin=collider_origin)
     contact = SoftContactConstraint((model, body.id, 0); name=name)
     return contact
 end
@@ -168,11 +146,4 @@ function SoftBody(collider::Collider, inner_mesh_path::String, outer_mesh_path::
     shapes = Shapes(shape_vec)
 
     return Body(collider.mass, collider.inertia; name=name, shape=shapes)
-end
-
-coulomb_direction(v, smoothing=1e3, regularizer=1e-3) = - atan(smoothing * norm(v)) * v/(regularizer + norm(v))
-function ∂coulomb_direction∂v(v, smoothing=1e3, regularizer=1e-3)
-    ∇ = - 1 / (1 + smoothing^2 * v'*v) * smoothing * v/(regularizer + norm(v)) * v'/(norm(v)+1e-20) +
-        - atan(smoothing * norm(v)) * (1/(norm(v) + regularizer) * Diagonal(sones(3)) - v*v' ./ ((norm(v)+1e-20) * (norm(v) + regularizer)^2))
-    return ∇
 end
