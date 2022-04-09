@@ -19,9 +19,6 @@ deps_folder = joinpath(module_dir(), "environments/bunny/deps")
 outer_mesh = jldopen(joinpath(deps_folder, "bunny_outer_mesh.jld2"))["mesh"]
 inner_mesh = jldopen(joinpath(deps_folder, "bunny_inner_mesh.jld2"))["mesh"]
 
-vis = Visualizer()
-open(vis)
-
 ################################################################################
 # Offline
 ################################################################################

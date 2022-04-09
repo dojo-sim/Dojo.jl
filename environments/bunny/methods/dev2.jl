@@ -19,8 +19,6 @@ constraint(mech, mech.contacts[1])
 @elapsed storage = simulate!(mech, 2.0,
     opts=SolverOptions(verbose=true, rtol=1e-4))
 visualize(mech, storage, vis=vis)
-mech.contacts[1]
-constraint(mech, mech.contacts[1])
 
 
 mech = get_bunny_sphere(timestep=0.01, gravity=-9.81)
@@ -43,33 +41,34 @@ mech.contacts[2]
 mech.contacts[3]
 
 
+# run OSFLOader's activate.jl
+using OSFLoader
+# run Dojo's activate.jl
+nerf_object = OSFLoader.get_nerf_object()
 
 mech = get_bunny_triumvirate(timestep=0.01, gravity=-9.81)
 for i in [1,2,4,5]
     mech.contacts[i].model.collision.collider.options = ColliderOptions()
+    mech.contacts[i].model.collision.collider.nerf_object = deepcopy(nerf_object)
 end
 
 initialize!(mech, :bunny_triumvirate,
-    positions=[[0,0,0.], [0,2,0.], [0,4,0.]],
-    velocities=[[0,0,0.], [0,0,0.], [0,-5,0.]],
+    positions=[[0,0,0.], [0,0,1.2], [0,2,0.]],
+    velocities=[[0,0,0.], [0,0,0.], [0,-0,0.]],
     )
 
-
-# Main.@profiler
-@elapsed storage = simulate!(mech, 5.0, opts=SolverOptions(verbose=false, rtol=1e-4))
+@elapsed storage = simulate!(mech, 1.1, opts=SolverOptions(verbose=true, rtol=1e-4))
 visualize(mech, storage, vis=vis)
-mech.contacts[1]
 
 
 
-collider = mech.contacts[1].model.collision.collider
 
-particles_2 = zeros(Float32,10,3)
-global const OSF_PATH = joinpath("/home/simon/research/repos/osf-pytorch")
-@pyinclude(joinpath(OSF_PATH, "extract_density_julia_cpu.py"))
-nerf_object = py"generate_test_nerf"()
-py"density_query"(collider.nerf_object, particles_2)
-# py"density_query"(nerf_object, convert.(Float32, particles_2))
+
+
+
+
+
+
 
 
 

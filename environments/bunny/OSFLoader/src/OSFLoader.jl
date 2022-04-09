@@ -23,6 +23,7 @@ export
 
 export
     get_nerf_object,
+    density_query,
     grid_particles,
     slice_particles,
     grid_density,

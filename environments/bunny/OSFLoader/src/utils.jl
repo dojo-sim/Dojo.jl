@@ -107,3 +107,9 @@ function get_nerf_object(;osf_path=OSFLoader.OSF_PATH)
     nerf_object = OSFLoader.py"generate_test_nerf"()
     return nerf_object
 end
+
+function density_query(nerf_object, particles)
+    load_density_script(mode=:cpu)
+    densities = py"density_query"(nerf_object, convert.(Float32, particles))
+    return densities
+end

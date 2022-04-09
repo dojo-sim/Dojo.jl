@@ -58,37 +58,42 @@ function overlap(collision::SoftSoftCollision{T,O,I,OI,Np,Nc}, xp, qp, xc, qc) w
     return ψ, barycenter_p, normal_w
 end
 
-# function cross_overlap(collider1::SoftCollider{T,N1}, collider2::SoftCollider{T,N2}, x1, q1, x2, q2) where {T,N1,N2}
-#     # returns
-#     # the particles of collider 1 in world frame
-#     # sum of cross weights of collider1 and collider2
-#     # barycenter of contact of collider1 into collider2
-#     # contact normal from collider1 to collider2
-#     center_of_mass1 = collider1.center_of_mass
-#     center_of_mass2 = collider2.center_of_mass
-#
-#     particles_w = zeros(Float32,N1,3)
-#     particles_2 = zeros(Float32,N1,3)
-#     for i = 1:N1
-#         particle1 = collider1.particles[i]
-#         pw = x1 + vector_rotate(particle1 - center_of_mass1, q1)
-#         p2 = center_of_mass2 + vector_rotate(pw - x2, inv(q2))
-#         particles_w[i,:] = pw
-#         particles_2[i,:] = p2
-#     end
-#     densities = py"density_query"(collider2.nerf_object, convert.(Float32, particles_2))
-#     weights = densities ./ sum(collider2.densities) * collider2.mass
-#
-#     ψ = 0.0
-#     barycenter_w = zeros(3)
-#     normal_w = zeros(3)
-#     for i = 1:N1
-#         weight_product = collider1.weights[i] * weights[i]
-#         ψ += weight_product
-#         barycenter_w += weight_product * particles_w[i,:]
-#         normal_w += weight_product * Dojo.vector_rotate(-collider1.weight_gradients[i], q1)
-#     end
-#     barycenter_w /= (1e-20 + ψ)
-#     normal_w /= (1e-20 + norm(normal_w))
-#     return ψ, barycenter_w, normal_w
-# end
+function cross_overlap(collider1::SoftCollider{T,N1}, collider2::SoftCollider{T,N2}, x1, q1, x2, q2) where {T,N1,N2}
+    # If those 2 conditions are not met then the density query will result in a Segmentation Fault.
+    @assert collider1.nerf_object["network_query_fn"] != PyNULL()
+    @assert collider2.nerf_object["network_query_fn"] != PyNULL()
+
+    # returns
+    # the particles of collider 1 in world frame
+    # sum of cross weights of collider1 and collider2
+    # barycenter of contact of collider1 into collider2
+    # contact normal from collider1 to collider2
+    center_of_mass1 = collider1.center_of_mass
+    center_of_mass2 = collider2.center_of_mass
+
+    particles_w = zeros(Float32,N1,3)
+    particles_2 = zeros(Float32,N1,3)
+    for i = 1:N1
+        particle1 = collider1.particles[i]
+        pw = x1 + vector_rotate(particle1 - center_of_mass1, q1)
+        p2 = center_of_mass2 + vector_rotate(pw - x2, inv(q2))
+        particles_w[i,:] = pw
+        particles_2[i,:] = p2
+    end
+    densities = OSFLoader.density_query(collider2.nerf_object, particles_2)
+    weights = densities ./ sum(collider2.densities) * collider2.mass
+
+    ψ = 0.0
+    barycenter_w = zeros(3)
+    normal_w = zeros(3)
+    for i = 1:N1
+        weight_product = collider1.weights[i] * weights[i]
+        ψ += weight_product
+        barycenter_w += weight_product * particles_w[i,:]
+        normal_w += weight_product * Dojo.vector_rotate(-collider1.weight_gradients[i], q1)
+    end
+    barycenter_w /= (1e-20 + ψ)
+    normal_w /= (1e-20 + norm(normal_w))
+    @show 1e4*ψ
+    return 1e4*ψ, barycenter_w, normal_w
+end
