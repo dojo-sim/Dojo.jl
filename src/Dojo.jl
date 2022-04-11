@@ -113,6 +113,8 @@ include(joinpath("contacts", "cone.jl"))
 include(joinpath("contacts", "collisions", "collision.jl"))
 include(joinpath("contacts", "collisions", "sphere_halfspace.jl"))
 include(joinpath("contacts", "collisions", "sphere_sphere.jl"))
+include(joinpath("contacts", "collisions", "string.jl"))
+
 include(joinpath("contacts", "velocity.jl"))
 include(joinpath("contacts", "impact.jl"))
 include(joinpath("contacts", "linear.jl"))
@@ -209,6 +211,7 @@ export
 export
     SphereHalfSpaceCollision,
     SphereSphereCollision,
+    StringCollision,
     distance,
     contact_point,
     contact_normal,

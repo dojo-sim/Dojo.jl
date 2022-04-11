@@ -24,3 +24,4 @@ vis = Visualizer()
 render(vis)
 visualize(mech, storage, 
     vis=vis);
+
