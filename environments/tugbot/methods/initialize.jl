@@ -1,12 +1,7 @@
-using Dojo
-
-vis = Visualizer()
-open(vis)
-
 function get_tugbot(;
     timestep=0.01,
     gravity=[0.0; 0.0; -9.81],
-    friction_coefficient=0.8,
+    friction_coefficient=0.2,
     radius=0.2,
     object_dimension=[0.4, 0.4, 0.1],
     contact=true,
@@ -73,24 +68,3 @@ function initialize_tugbot!(mechanism::Mechanism{T};
     z_object = [object_position + [0,0,r_object]; object_velocity; vector(object_orientation); object_angular_velocity]
     set_maximal_state!(mechanism, [z_drone; z_object])
 end
-
-mech = get_tugbot(gravity=-1.81, timestep=0.10)
-
-function ctrl!(mechanism::Mechanism, k::Int; x_target=SVector{3}(0,1,3.0), kp=2.0, kd=2.0)
-    dt = mechanism.timestep
-    drone_body = get_body(mechanism, :drone)
-    drone_joint = get_joint(mechanism, :drone_joint)
-    x = current_position(drone_body.state)
-    v = current_velocity(drone_body.state)[1]
-    u_gravity = -drone_body.mass * mechanism.gravity * dt
-    u_tra = u_gravity + kp*(x_target - x)*dt - kd * dt .* v
-    u_rot = szeros(3)
-    set_input!(drone_joint, [u_tra; u_rot])
-    return nothing
-end
-
-initialize!(mech, :tugbot, drone_position=[1,0,0])
-
-
-storage = simulate!(mech, 5.2, ctrl!, record=true, verbose=true)
-visualize(mech, storage, vis=vis, show_contact=false)

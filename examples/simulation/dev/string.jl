@@ -66,8 +66,8 @@ joints = [joint]
 
 
 collision = StringCollision{Float64,0,3,0}(
-        szeros(3),
-        szeros(3),
+        1.0 * [0.0; 0.0; -0.5],
+        1.0 * [0.1; 0.0; 0.0],
         2.0)
 friction_parameterization = szeros(Float64, 0, 2)
 
@@ -85,9 +85,9 @@ mech = Mechanism(origin, bodies, joints, contacts,
             timestep=0.1)
 
 mech.bodies[1].state.x2 = [0.0, 0.0, 0.0]
-mech.bodies[2].state.x2 = [0.0, 0.0, -1.0]
+mech.bodies[2].state.x2 = [0.25, 0.5, 1.5]
 
-storage = simulate!(mech, 2.0, 
+storage = simulate!(mech, 5.0, 
     verbose=true, 
     record=true)
 
@@ -97,8 +97,6 @@ visualize(mech, storage,
     vis=vis)
 
 @test norm(mech.bodies[2].state.x2 - mech.bodies[1].state.x2) < 2.0
-
-
 
 function test_solmat(;
     ϵ=1.0e-6,
