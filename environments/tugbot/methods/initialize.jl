@@ -15,13 +15,14 @@ function get_tugbot(;
 
     origin = Origin{T}(name=:origin)
     drone_mass = 1.0
-    object_mass = 10.0
+    object_mass = 2.0
     bodies = [
         Sphere(radius, drone_mass, name=:drone),
         Box(object_dimension..., object_mass, name=:object)]
     joints = [
         JointConstraint(Floating(origin, bodies[1]), name=:drone_joint)
-        JointConstraint(Floating(origin, bodies[2]), name=:object_joint)]
+        # JointConstraint(Floating(origin, bodies[2]), name=:object_joint)
+        ]
     mechanism = Mechanism(origin, bodies, joints,
         timestep=timestep,
         gravity=gravity)
@@ -35,6 +36,17 @@ function get_tugbot(;
             contact_radius=0.0,
             contact_type=contact_type,
             name=Symbol(:contact,i)) for i=1:length(contacts)]
+
+        collision = StringCollision{Float64,0,3,0}(
+                0*[0,0,-0.2],
+                1*[0.2, 0.2, 0.05],
+                2.0)
+        parameterization = szeros(T, 0, 2)
+        body_body_contact = ImpactContact{Float64,2}(parameterization, collision)
+
+        contacts = [contacts; ContactConstraint((body_body_contact,
+            get_body(mechanism, :drone).id,
+            get_body(mechanism, :object).id,), name=:body_body)]
         mechanism = Mechanism(origin, bodies, joints, contacts,
             gravity=gravity,
             timestep=timestep)
@@ -62,10 +74,9 @@ function initialize_tugbot!(mechanism::Mechanism{T};
     set_maximal_state!(mechanism, [z_drone; z_object])
 end
 
+mech = get_tugbot(gravity=-1.81, timestep=0.10)
 
-mech = get_tugbot(gravity=-9.81, timestep=0.1)
-
-function ctrl!(mechanism::Mechanism, k::Int; x_target=SVector{3}(1,1,1.0), kp=2.0, kd=2.0)
+function ctrl!(mechanism::Mechanism, k::Int; x_target=SVector{3}(0,1,3.0), kp=2.0, kd=2.0)
     dt = mechanism.timestep
     drone_body = get_body(mechanism, :drone)
     drone_joint = get_joint(mechanism, :drone_joint)
@@ -78,6 +89,8 @@ function ctrl!(mechanism::Mechanism, k::Int; x_target=SVector{3}(1,1,1.0), kp=2.
     return nothing
 end
 
-initialize!(mech, :tugbot)
-storage = simulate!(mech, 5.0, ctrl!, record=true, verbose=true)
-visualize(mech, storage, vis=vis, show_contact=true)
+initialize!(mech, :tugbot, drone_position=[1,0,0])
+
+
+storage = simulate!(mech, 5.2, ctrl!, record=true, verbose=true)
+visualize(mech, storage, vis=vis, show_contact=false)
