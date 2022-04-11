@@ -20,7 +20,7 @@ function distance(collision::StringCollision, xp, qp, xc, qc)
     coc = contact_point_origin(xc, qc, collision.origin_child)
 
     # distance between contact origins
-    d = norm(cop - coc, 2)
+    d = norm(coc - cop, 2)
 
     # minimum distance between spheres
     return collision.length - d
@@ -32,13 +32,13 @@ function ∂distance∂x(gradient::Symbol, collision::StringCollision, xp, qp, x
     coc = contact_point_origin(xc, qc, collision.origin_child)
 
     # distance between contact origins
-    d = norm(cop - coc, 2)
-    ∂norm∂d = ∂norm∂x(cop - coc)
+    # d = norm(cop - coc, 2)
+    ∂norm∂d = ∂norm∂x(coc - cop)
 
     if gradient == :parent
-        D = -1.0 * ∂norm∂d *  1.0 * ∂contact_point_origin∂x(xp, qp, collision.origin_parent)
+        D = 1.0 * ∂norm∂d *  -1.0 * ∂contact_point_origin∂x(xp, qp, collision.origin_parent)
     elseif gradient == :child 
-        D = -1.0 * ∂norm∂d * -1.0 * ∂contact_point_origin∂x(xc, qc, collision.origin_child)
+        D = 1.0 * ∂norm∂d * 1.0 * ∂contact_point_origin∂x(xc, qc, collision.origin_child)
     end
 
     if gradient == :parent 
@@ -47,9 +47,9 @@ function ∂distance∂x(gradient::Symbol, collision::StringCollision, xp, qp, x
         FD = FiniteDiff.finite_difference_jacobian(x -> distance(collision, xp, qp, x, qc), xc)
     end
 
-    @assert norm(D - FD, Inf) < 1.0e-5
+    @assert norm(-D - FD, Inf) < 1.0e-5
 
-    return D
+    return -D
 end
 
 function ∂distance∂q(gradient::Symbol, collision::StringCollision, xp, qp, xc, qc)
@@ -58,13 +58,13 @@ function ∂distance∂q(gradient::Symbol, collision::StringCollision, xp, qp, x
     coc = contact_point_origin(xc, qc, collision.origin_child)
 
     # distance between contact origins
-    d = norm(cop - coc, 2)
-    ∂norm∂d = ∂norm∂x(cop - coc)
+    # d = norm(cop - coc, 2)
+    ∂norm∂d = ∂norm∂x(coc - cop)
     
     if gradient == :parent
-        D = -1.0 * ∂norm∂d *  1.0 * ∂contact_point_origin∂q(xp, qp, collision.origin_parent)
+        D = 1.0 * ∂norm∂d *  -1.0 * ∂contact_point_origin∂q(xp, qp, collision.origin_parent)
     elseif gradient == :child 
-        D = -1.0 * ∂norm∂d * -1.0 * ∂contact_point_origin∂q(xc, qc, collision.origin_child)
+        D = 1.0 * ∂norm∂d * 1.0 * ∂contact_point_origin∂q(xc, qc, collision.origin_child)
     end
 
     if gradient == :parent 
@@ -73,9 +73,9 @@ function ∂distance∂q(gradient::Symbol, collision::StringCollision, xp, qp, x
         FD = FiniteDiff.finite_difference_jacobian(q -> distance(collision, xp, qp, xc, Quaternion(q..., false)), vector(qc))
     end
 
-    @assert norm(D - FD, Inf) < 1.0e-5
+    @assert norm(-D - FD, Inf) < 1.0e-5
 
-    return D
+    return -D
 end
 
 # contact point in world frame
@@ -85,7 +85,7 @@ function contact_point(relative::Symbol, collision::StringCollision, xp, qp, xc,
     coc = contact_point_origin(xc, qc, collision.origin_child)
 
     # direction of minimum distance (child to parent)
-    d = cop - coc 
+    # d = cop - coc 
     # dir = normalize(d)
 
     # contact point
@@ -102,7 +102,7 @@ function ∂contact_point∂x(relative::Symbol, jacobian::Symbol, collision::Str
     coc = contact_point_origin(xc, qc, collision.origin_child)
 
     # direction of minimum distance (child to parent)
-    d = cop - coc 
+    # d = cop - coc 
     # dir = normalize(d)
 
     if relative == :parent 
@@ -140,7 +140,7 @@ function ∂contact_point∂q(relative::Symbol, jacobian::Symbol, collision::Str
     coc = contact_point_origin(xc, qc, collision.origin_child)
 
     # direction of minimum distance (child to parent)
-    d = cop - coc 
+    # d = cop - coc 
     # dir = normalize(d)
 
     if relative == :parent 
@@ -172,3 +172,73 @@ function ∂contact_point∂q(relative::Symbol, jacobian::Symbol, collision::Str
     return Q
 end
 
+function contact_normal(collision::StringCollision, xp, qp, xc, qc)
+    # contact points
+    cop = contact_point(:parent, collision, xp, qp, xc, qc)
+    coc = contact_point(:child,  collision, xp, qp, xc, qc)
+
+    # unnormalized direction
+    dir = cop - coc
+
+    # distance
+    dis = distance(collision, xp, qp, xc, qc)
+
+    # normalized direction
+    # if dis >= 0.0
+    return -normalize(dir)'
+    # else
+    #     return normalize(dir)'
+    # end
+end
+
+function ∂contact_normal_transpose∂x(jacobian::Symbol, collision::StringCollision, xp, qp, xc, qc)
+    # contact origin points
+    cop = contact_point(:parent, collision, xp, qp, xc, qc)
+    coc = contact_point(:child,  collision, xp, qp, xc, qc)
+
+    # unnormalized direction
+    dir = cop - coc
+
+    # Jacobians
+    X = ∂normalize∂x(dir) * (∂contact_point∂x(:parent, jacobian, collision, xp, qp, xc, qc) - ∂contact_point∂x(:child, jacobian, collision, xp, qp, xc, qc))
+
+    # distance
+    dis = distance(collision, xp, qp, xc, qc)
+
+    # normalized direction
+    # if dis >= 0.0
+    return -X
+    # else
+    #     return 1.0 * X
+    # end
+end
+
+function ∂contact_normal_transpose∂q(jacobian::Symbol, collision::StringCollision, xp, qp, xc, qc)
+    # contact origin points
+    cop = contact_point(:parent, collision, xp, qp, xc, qc)
+    coc = contact_point(:child,  collision, xp, qp, xc, qc)
+
+    # unnormalized direction
+    dir = cop - coc
+
+    Q = ∂normalize∂x(dir) * (∂contact_point∂q(:parent, jacobian, collision, xp, qp, xc, qc) - ∂contact_point∂q(:child, jacobian, collision, xp, qp, xc, qc))
+
+    # Jacobians
+    # if jacobian == :parent
+    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_normal(collision, xp, Quaternion(q..., false), xc, qc)', vector(qp))
+    # elseif jacobian == :child
+    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_normal(collision, xp, qp, xc, Quaternion(q..., false))', vector(qc))
+    # end
+
+    # distance
+    dis = distance(collision, xp, qp, xc, qc)
+
+    # @assert norm((dis >= 0.0 ? 1.0 : -1.0) * Q - FD, Inf) < 1.0e-2
+
+    # normalized direction
+    # if dis >= 0.0
+    return -Q
+    # else
+    #     return Q
+    # end
+end
