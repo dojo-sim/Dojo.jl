@@ -16,8 +16,11 @@ collision = SphereSphereCollision{Float64,2,3,6}(
         szeros(3),
         pbody.shape.r, 
         cbody.shape.r)
-
-body_body_contact = NonlinearContact{Float64,8}(0.5, collision)
+friction_parameterization = SA{Float64}[
+    1.0  0.0
+    0.0  1.0
+]
+body_body_contact = NonlinearContact{Float64,8}(0.5, friction_parameterization, collision)
 
 contacts = [ContactConstraint((body_body_contact, pbody.id, cbody.id), name=:body_body)]
 
@@ -66,4 +69,7 @@ storage = simulate!(mech, 2.0,
     verbose=false, 
     record=true)
 
-storage.x
+vis = Visualizer()
+render(vis)
+visualize(mech, storage, 
+    vis=vis)
