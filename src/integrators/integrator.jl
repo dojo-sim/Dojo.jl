@@ -38,7 +38,7 @@ function integrator_jacobian_velocity(x2::AbstractVector, v25::AbstractVector, q
     return [V; Ω] # 7x6
 end
 
-function integrator_jacobian_configuration(x2::AbstractVector, v25::AbstractVector, q2::Quaternion, ϕ25::SVector{3}, timestep::T; 
+function integrator_jacobian_configuration(x2::AbstractVector, v25::AbstractVector, q2::Quaternion, ϕ25::SVector{3}, timestep::T;
     attjac::Bool=true) where T
 
     Z = attjac ? szeros(T,3,3) : szeros(T,3,4)
@@ -55,7 +55,7 @@ function linear_integrator_jacobian_velocity(x2::AbstractVector, v2::AbstractVec
     return timestep * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
 end
 
-function rotational_integrator_jacobian_orientation(q2::Quaternion, ϕ25::SVector{3}, timestep::Real; 
+function rotational_integrator_jacobian_orientation(q2::Quaternion, ϕ25::SVector{3}, timestep::Real;
     attjac::Bool = true)
     M = Rmat(quaternion_map(ϕ25, timestep) * timestep / 2)
     attjac && (M *= LVᵀmat(q2))
@@ -65,5 +65,3 @@ end
 function rotational_integrator_jacobian_velocity(q2::Quaternion, ϕ25::SVector{3}, timestep::Real)
     return Lmat(q2) * quaternion_map_jacobian(ϕ25, timestep) * timestep / 2
 end
-
-

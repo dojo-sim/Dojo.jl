@@ -1,4 +1,7 @@
 using Dojo
+using Plots
+using BenchmarkTools
+
 
 vis = Visualizer()
 open(vis)
@@ -30,8 +33,6 @@ initialize!(mech, :bunny_sphere,
     sphere_position=[0,4.0,0.4],
     sphere_velocity=[0,-5.0,0],
     )
-
-
 # Main.@profiler
 @elapsed storage = simulate!(mech, 5.0,
     opts=SolverOptions(verbose=false, rtol=1e-4))
@@ -41,37 +42,66 @@ mech.contacts[2]
 mech.contacts[3]
 
 
+
+
 # run OSFLOader's activate.jl
 using OSFLoader
 # run Dojo's activate.jl
 nerf_object = OSFLoader.get_nerf_object()
 
 mech = get_bunny_triumvirate(timestep=0.01, gravity=-9.81)
-for i in [1,2,4,5]
-    mech.contacts[i].model.collision.collider.options = ColliderOptions()
+for i in [1,2,4,5,6]
+    mech.contacts[i].model.collision.collider.options = ColliderOptions(sliding_friction=0.10, coulomb_smoothing=1e2)
     mech.contacts[i].model.collision.collider.nerf_object = deepcopy(nerf_object)
 end
+mech.contacts[6].model.collision.collider.options = ColliderOptions(
+    impact_damper=3e5,
+    impact_spring=3e4,
+    sliding_drag=0.3,
+    sliding_friction=0.2,
+    rolling_drag=0.1,
+    rolling_friction=0.05,
+    coulomb_smoothing=10.0,
+    coulomb_regularizer=1e-8)
 
 initialize!(mech, :bunny_triumvirate,
-    positions=[[0,0,0.], [0,0,1.2], [0,2,0.]],
-    velocities=[[0,0,0.], [0,0,0.], [0,-0,0.]],
+    positions=[[0.2,0,0], [-0.2,0.7,0.], [0,2,0.]],
+    velocities=[[0,0,0.], [0,0,0.], [0,-5,0.]],
+    orientations=[one(Quaternion), one(Quaternion), one(Quaternion)]
     )
 
-@elapsed storage = simulate!(mech, 1.1, opts=SolverOptions(verbose=true, rtol=1e-4))
+# Main.@profiler storage = simulate!(mech, 0.10, opts=SolverOptions(verbose=true, rtol=1e-4))
+@elapsed storage = simulate!(mech, 2.0, opts=SolverOptions(verbose=true, rtol=1e-4))
 visualize(mech, storage, vis=vis)
 
+v = Vector(-1:0.01:1)
+plot([coulomb_direction(x, 1e1, 1e-8)[1] for x in v])
+coulomb_direction(-10:0.01:10, 1e3)
+# Set data
+Nb = length(mech.bodies)
+data = Dojo.get_data(mech)
+Dojo.set_data!(mech, data)
+sol = Dojo.get_solution(mech)
+attjac = Dojo.attitude_jacobian(data, Nb)
 
+# IFT
+solmat = -Dojo.full_matrix(mech.system)
+# finite diff
+fd_solmat = finite_difference_solution_matrix(mech, data, sol,
+    δ=1.0e-8)
 
+plot(Gray.(abs.(solmat)))
+plot(Gray.(abs.(fd_solmat)))
+plot(Gray.(100000abs.(solmat - fd_solmat)))
+norm(solmat - fd_solmat, Inf)
+norm(solmat[51:53,1:12] - fd_solmat[51:53,1:12], Inf)
 
+solmat[51:53,1:12]
+fd_solmat[51:53,1:12]
 
-
-
-
-
-
-
-
-
+mech.joints
+mech.bodies
+mech.contacts
 
 
 
@@ -83,14 +113,14 @@ using Plots
 
 timestep = 0.01
 model = mech.contacts[1].model
-model.collider.options.impact_spring = 1e4
-model.collider.options.impact_damper = 2e4
-model.collider.options.sliding_drag = 3e0
-model.collider.options.sliding_friction = 4e0
-model.collider.options.rolling_drag = 1e0
-model.collider.options.rolling_friction = 1e0
-model.collider.options.coulomb_smoothing = 3e0
-model.collider.options.coulomb_regularizer = 1e-0
+model.collision.collider.options.impact_spring = 1e4
+model.collision.collider.options.impact_damper = 2e4
+model.collision.collider.options.sliding_drag = 3e0
+model.collision.collider.options.sliding_friction = 4e0
+model.collision.collider.options.rolling_drag = 1e0
+model.collision.collider.options.rolling_friction = 1e0
+model.collision.collider.options.coulomb_smoothing = 3e0
+model.collision.collider.options.coulomb_regularizer = 1e-0
 
 vp = srand(3)
 xp = srand(3)
@@ -213,3 +243,85 @@ gif(anim, fps=40, "/home/simon/Downloads/force_solo.gif")
 
 plot!(plt, PHI, 1e-2 ./ PHI, color=light_blue, linewidth=5.0, label="κ = 1e-2")
 plot!(plt, PHI, 1e-3 ./ PHI, color=light_blue, linewidth=5.0, label="κ = 1e-3")
+
+
+
+
+
+
+J0, J1 = test_solmat(:bunny_triumvirate)
+
+
+
+
+function test_solmat(model;
+    ϵ=1.0e-6,
+    tsim=0.1,
+    ctrl=(m, k)->nothing,
+    timestep=0.01,
+    gravity=[0.0; 0.0; -9.81],
+    verbose=false,
+    T=Float64,
+    kwargs...)
+
+    # mechanism
+    mechanism = get_mechanism(model,
+        timestep=timestep,
+        gravity=gravity;
+        kwargs...)
+    initialize!(mechanism, model)
+
+    # simulate
+    storage = simulate!(mechanism, tsim, ctrl,
+        record=true,
+        verbose=verbose,
+        opts=SolverOptions(rtol=ϵ, btol=ϵ))
+
+    # Set data
+    Nb = length(mechanism.bodies)
+    data = Dojo.get_data(mechanism)
+    Dojo.set_data!(mechanism, data)
+    sol = Dojo.get_solution(mechanism)
+    attjac = Dojo.attitude_jacobian(data, Nb)
+
+    # IFT
+    solmat = Dojo.full_matrix(mechanism.system)
+    # finite diff
+    fd_solmat = finite_difference_solution_matrix(mechanism, data, sol,
+        δ=1.0e-5,
+        verbose=verbose)
+    return fd_solmat, solmat
+end
+
+function finite_difference_solution_matrix(mechanism::Mechanism, data::AbstractVector, sol::AbstractVector;
+    δ=1.0e-8,
+    verbose=false)
+
+    nsol = length(sol)
+    jac = zeros(nsol, nsol)
+
+    Dojo.set_data!(mechanism, data)
+    Dojo.set_solution!(mechanism, sol)
+
+    for i = 1:nsol
+        verbose && println("$i / $nsol")
+        solp = deepcopy(sol)
+        solm = deepcopy(sol)
+        solp[i] += δ
+        solm[i] -= δ
+        rp = Dojo.evaluate_residual!(deepcopy(mechanism), data, solp)
+        rm = Dojo.evaluate_residual!(deepcopy(mechanism), data, solm)
+        jac[:, i] = (rp - rm) / (2δ)
+    end
+    return jac
+end
+
+function control!(mechanism, k;
+    u=0.1)
+    for joint in mechanism.joints
+        nu = Dojo.input_dimension(joint,
+            ignore_floating_base=false)
+        su = mechanism.timestep * u * sones(nu)
+        Dojo.set_input!(joint, su)
+    end
+end

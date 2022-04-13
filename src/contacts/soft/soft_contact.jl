@@ -60,7 +60,7 @@ end
 function constraint(model::SoftContact{T},
         xp::AbstractVector, vp::AbstractVector, qp::Quaternion, ϕp::AbstractVector,
         xc::AbstractVector, vc::AbstractVector, qc::Quaternion, ϕc::AbstractVector,
-        timestep; intermediate::Bool=false) where T
+        timestep; recompute::Bool=false) where T
 
     collision = model.collision
     collider = collision.collider
@@ -75,7 +75,24 @@ function constraint(model::SoftContact{T},
     # collision
     # barycenter in soft_body frame
     # normal in world frame
+    if recompute
+        model.ψ, model.barycenter, model.normal = overlap(collision, x2p, q2p, x2c, q2c)
+    end
     ψ, barycenter, normal = model.ψ, model.barycenter, model.normal
+    # velocities
+    constraint(collider, ψ, barycenter, normal, x2p, vp, q2p, ϕp, x2c, vc, q2c, ϕc, timestep)
+end
+
+
+function constraint(collider, ψ, barycenter, normal,
+        x2p::AbstractVector, vp::AbstractVector, q2p::Quaternion, ϕp::AbstractVector,
+        x2c::AbstractVector, vc::AbstractVector, q2c::Quaternion, ϕc::AbstractVector,
+        timestep) where T
+
+    opts = collider.options
+    smoothing = opts.coulomb_smoothing
+    regularizer = opts.coulomb_regularizer
+
     # velocities
     vp_ = vp + vector_rotate(skew(collider.center_of_mass - barycenter) * ϕp, q2p)
     xp_ = x2p + Dojo.vector_rotate(barycenter - collider.center_of_mass, q2p)
@@ -97,9 +114,9 @@ function constraint(model::SoftContact{T},
 
     # constraint
     impulse = timestep * [F_contact; τ_contact]
-    !intermediate && return impulse
-    return ψ, barycenter, normal, v_normal, v_tangential, F_impact, F_friction, impulse
+    return impulse
 end
+
 
 function constraint_jacobian_velocity(relative::Symbol, model::SoftContact{T,N},
     xp::AbstractVector, vp::AbstractVector, qp::Quaternion, ϕp::AbstractVector,
@@ -116,6 +133,7 @@ function constraint_jacobian_velocity(relative::Symbol, model::SoftContact{T,N},
             vϕ -> constraint(model, xp, vp, qp, ϕp, xc, vϕ[SUnitRange(1,3)], qc, vϕ[SUnitRange(4,6)], timestep),
             [vc; ϕc])
     end
+    # @show ∂impulse∂vϕ[:,1]
     return ∂impulse∂vϕ
 end
 

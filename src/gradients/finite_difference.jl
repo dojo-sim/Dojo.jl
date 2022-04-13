@@ -9,13 +9,8 @@ function get_solution(mechanism::Mechanism{T}) where {T}
         ϕ25 = body.state.ϕsol[2]
         push!(sol, [v25; ϕ25]...)
     end
-    for (i, contacts) in enumerate(mechanism.contacts)
-        @warn "need fix"
-        # s = contacts.impulses_dual[2]
-        # γ = contacts.impulses[2]
-        # push!(sol, [s; γ]...)
-        γ = contacts.impulses[2]
-        push!(sol, γ...)
+    for (i, contact) in enumerate(mechanism.contacts)
+        sol = get_solution(sol, contact)
     end
     return sol
 end
@@ -35,19 +30,35 @@ function set_solution!(mechanism::Mechanism{T}, sol::AbstractVector) where T
         body.state.vsol[2] = v25
         body.state.ϕsol[2] = ϕ25
     end
-    for (i,contacts) in enumerate(mechanism.contacts)
-        @warn "need fix"
-        # N = length(contacts)
-        # N½ = Int(N/2)
-        # s = sol[off .+ (1:N½)]; off += N½
-        # γ = sol[off .+ (1:N½)]; off += N½
-        # contacts.impulses_dual[2] = s
-        # contacts.impulses[2] = γ
-        N = length(contacts)
-        γ = sol[off .+ (1:N)]; off += N
-        contacts.impulses[2] = γ
+    for (i,contact) in enumerate(mechanism.contacts)
+        sol, off = set_solution!(sol, off, contact)
     end
     return nothing
+end
+
+function get_solution(sol, contact::RigidContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+    s = contact.impulses_dual[2]
+    γ = contact.impulses[2]
+    push!(sol, [s; γ]...)
+end
+
+function get_solution(sol, contact::SoftContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
+    γ = contact.impulses[2]
+    push!(sol, γ...)
+end
+
+function set_solution!(sol, off::Int, contact::RigidContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
+    s = sol[off .+ (1:N½)]; off += N½
+    γ = sol[off .+ (1:N½)]; off += N½
+    contact.impulses_dual[2] = s
+    contact.impulses[2] = γ
+    return sol, off
+end
+
+function set_solution!(sol, off::Int, contact::SoftContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
+    γ = sol[off .+ (1:N)]; off += N
+    contact.impulses[2] = γ
+    return sol, off
 end
 
 function evaluate_residual!(mechanism::Mechanism, data::AbstractVector, sol::AbstractVector)

@@ -21,7 +21,7 @@ data_dim(contact::ContactConstraint) = data_dim(contact.model)
 data_dim(model::NonlinearContact) = 5 # [friction_coefficient, contact_radius, p]
 data_dim(model::LinearContact) = 5 # [friction_coefficient, contact_radius, p]
 data_dim(model::ImpactContact) = 4 # [contact_radius, p]
-data_dim(model::SoftContact) = 4 # [contact_radius, p]
+data_dim(model::SoftContact) = 4 # [friction_coefficient, p]
 
 
 ################################################################################

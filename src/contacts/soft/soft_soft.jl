@@ -17,20 +17,12 @@ mutable struct SoftSoftCollision{T,O,I,OI,N,Nc} <: SoftCollision{T,O,I,OI,N}
     contact_tangent::SMatrix{O,I,T,OI}
 end
 
-function inside(collision::SoftSoftCollision{T}, p, xc, qc) where T
-    # p = barycenter of the overlap expressed in the world frame
-    # pc = center of the sphere expressed in the world frame
-    pc = xc + Dojo.vector_rotate(collision.sphere_origin, qc)
-    c = norm(p - pc)
-    return c <= collision.contact_radius
-end
-
 # normal projection (from child to parent)
-function contact_normal(collision::SoftSoftCollision, p, xc, qc)
+function contact_normal(collider_origin, p, x, q)
     # p = barycenter of the overlap expressed in the world frame
-    # pc = center of the sphere expressed in the world frame
-    pc = xc + Dojo.vector_rotate(collision.sphere_origin, qc)
-    normal = p - pc
+    # xw = center of the collider expressed in the world frame
+    xw = x + Dojo.vector_rotate(collider_origin, q)
+    normal = xw - p
     return normal ./ (1e-20 + norm(normal))
 end
 
@@ -45,17 +37,18 @@ child_origin(collision::SoftSoftCollision) = collision.child_collider_origin
 function overlap(collision::SoftSoftCollision{T,O,I,OI,Np,Nc}, xp, qp, xc, qc) where {T,O,I,OI,Np,Nc}
     colliderp = collision.collider
     colliderc = collision.child_collider
-    center_of_massp = colliderp.center_of_mass
-    center_of_massc = colliderc.center_of_mass
 
     ψp, barycenterpw, normal_pw = cross_overlap(colliderp, colliderc, xp, qp, xc, qc) # weigths of collider2 at particle1
-    ψc, barycentercw, normal_cw = cross_overlap(colliderc, colliderp, xp, qp, xc, qc) # weigths of collider1 at particle2
+    ψc, barycentercw, normal_cw = cross_overlap(colliderc, colliderp, xc, qc, xp, qp) # weigths of collider1 at particle2
+    normal_pw = contact_normal(collision.collider_origin, barycenterpw, xp, qp)
+    normal_cw = contact_normal(collision.child_collider_origin, barycentercw, xc, qc)
+
     ψ = ψp + ψc
     normal_w = (ψp * normal_pw + ψc * -normal_cw)
     normal_w /= (1e-20 + norm(normal_w))
     barycenter_w = (ψp * barycenterpw + ψc * barycentercw) / (1e-20 + ψ)
     barycenter_p = Dojo.vector_rotate(barycenter_w - xp, inv(qp))
-    return ψ, barycenter_p, normal_w
+    return 1e5ψ, barycenter_p, normal_w
 end
 
 function cross_overlap(collider1::SoftCollider{T,N1}, collider2::SoftCollider{T,N2}, x1, q1, x2, q2) where {T,N1,N2}
@@ -94,6 +87,5 @@ function cross_overlap(collider1::SoftCollider{T,N1}, collider2::SoftCollider{T,
     end
     barycenter_w /= (1e-20 + ψ)
     normal_w /= (1e-20 + norm(normal_w))
-    @show 1e4*ψ
-    return 1e4*ψ, barycenter_w, normal_w
+    return ψ, barycenter_w, normal_w
 end

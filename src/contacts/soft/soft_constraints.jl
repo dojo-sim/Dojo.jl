@@ -10,13 +10,10 @@ function impulse_map(relative::Symbol, model::SoftContact{T}, pbody::Node, cbody
     # mapping
     XF = force_mapping(relative, model, x2p, q2p, x2c, q2c)
     if relative == :parent
-		# QF = skew(model.collision.collider_origin + barycenter) * rotation_matrix(inv(q2p)) * XF
 		QF = skew(parent_origin(model.collision) + barycenter) * rotation_matrix(inv(q2p)) * XF
 		Qτ = rotation_matrix(inv(q2p))
     elseif relative == :child
-		# p = x2p + Dojo.vector_rotate(model.collision.collider_origin + barycenter, q2p)
 		p = x2p + Dojo.vector_rotate(parent_origin(model.collision) + barycenter, q2p)
-		# pc = x2c + Dojo.vector_rotate(model.collision.sphere_origin, q2c)
 		pc = x2c + Dojo.vector_rotate(child_origin(model.collision), q2c)
 		QF = rotation_matrix(inv(q2c)) * skew(p - pc) * XF
 		Qτ = -rotation_matrix(inv(q2c))
@@ -96,11 +93,11 @@ function update!(contact::SoftContactConstraint)
 end
 
 # get data
-get_data(model::SoftContact{T}) where T = [model.collision.contact_radius; model.collision.collider_origin]
+get_data(model::SoftContact{T}) where T = [model.collision.collider.options.sliding_friction; model.collision.collider_origin]
 function set_data!(model::SoftContact, data::AbstractVector)
-	# model.collider.options.sliding_friction = data[1]
-    model.collision.contact_radius = data[1]
-    model.collision.collider_origin = data[SVector{3,Int}(2:4)]
+	@show data
+	model.collision.collider.options.sliding_friction = data[1]
+    model.collision.collider_origin = data[SUnitRange(2,4)]
     return nothing
 end
 
