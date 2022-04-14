@@ -33,7 +33,7 @@ end
 
 initialize!(mech, :tugbot, drone_position=[1,0,0])
 
-storage = simulate!(mech, 5.2, ctrl!, record=true, verbose=true)
+storage = simulate!(mech, 5.2, ctrl!, record=true, verbose=true, opts=SolverOptions(btol=1e-4, rtol=1e-3))
 visualize(mech, storage, vis=vis, show_contact=false)
 
 # Dojo.convert_frames_to_video_and_gif("tugbot")

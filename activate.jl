@@ -4,4 +4,5 @@ end
 
 using Pkg
 Pkg.activate(module_dir())
+Pkg.instantiate()
 using Dojo
