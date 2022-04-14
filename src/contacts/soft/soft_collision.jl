@@ -13,24 +13,35 @@ abstract type SoftCollision{T,O,I,OI,N} end
 """
 function overlap(collision::SoftCollision{T,O,I,OI,N}, xp, qp, xc, qc) where {T,O,I,OI,N}
     collider = collision.collider
-    Ψ = Vector{T}()
-    active_particles = []
-    barycenter = szeros(T,3)
+	num_active = 0
+	ψ = 0.0
+	barycenter = szeros(T,3)
 
     for i = 1:N
         particle = collider.particles[i]
-        p = xp + Dojo.vector_rotate(particle + collision.collider_origin, qp)
+        p = xp + vector_rotate(particle + collision.collider_origin, qp)
         if inside(collision, p, xc, qc)
-            push!(Ψ, collider.weights[i])
-            push!(active_particles, particle)
+			num_active += 1
+			wi = collider.weights[i]
+			ψ += wi
+			barycenter += wi * particle
         end
     end
-
-    num_active = length(Ψ)
-    ψ = sum(Ψ)
-    (ψ > 0) && (barycenter = sum(Vector{SVector{3,T}}([Ψ[i] * active_particles[i] for i=1:num_active])) / ψ)
-
-    p = xp + Dojo.vector_rotate(barycenter + collision.collider_origin, qp)
+	(num_active > 0) && (barycenter /= ψ)
+    p = xp + vector_rotate(barycenter + collision.collider_origin, qp)
     normal = contact_normal(collision, p, xc, qc)
     return ψ, barycenter, normal
 end
+
+
+# xp = 0.05*sones(3)
+# qp = Quaternion(1,1,0,0.0)
+# xc = 0.03*sones(3)
+# qc = Quaternion(1,0,2,0.0)
+# collision = mech.contacts[1].model.collision
+# ψ, barycenter, normal = overlap(collision, xp, qp, xc, qc)
+# ψ2, barycenter2, normal2 = overlap2(collision, xp, qp, xc, qc)
+# # @benchmark $overlap($collision, $xp, $qp, $xc, $qc)
+# ψ - ψ2
+# norm(barycenter - barycenter2)
+# norm(normal - normal2)

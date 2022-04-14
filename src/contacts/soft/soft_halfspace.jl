@@ -23,8 +23,9 @@ function inside(collision::SoftHalfSpaceCollision{T}, p, xc, qc) where T
 end
 
 # normal projection (from child to parent)
-function contact_normal(collision::SoftHalfSpaceCollision, p, xc, qc)
-    return collision.contact_normal[1,:]
+function contact_normal(collision::SoftHalfSpaceCollision{T}, p, xc, qc) where T
+    c = collision.contact_normal
+    return SVector{3,T}(c[1,1], c[1,2], c[1,3])
 end
 
 parent_origin(collision::SoftHalfSpaceCollision) = collision.collider_origin

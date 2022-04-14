@@ -37,7 +37,6 @@ function generate_dataset(model::Symbol;
 
 	data = get_data(mechanism)
     params = Dict(:N => N, :H => H, :timestep => timestep, :gravity => gravity, :data => data)
-    # pairs = build_pairs(mechanism, trajs)
     jldsave(joinpath(@__DIR__, "..", "data", "dataset", datafilename(model; N = N, mech_kwargs...));
         params=params, trajs=trajs)
     return nothing
