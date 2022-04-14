@@ -78,6 +78,9 @@ end
 function finite_difference_data_jacobian(mechanism::Mechanism, data::AbstractVector,
         sol::AbstractVector; δ = 1e-5, verbose=false)
     mechanism = deepcopy(mechanism)
+    for contact in mechanism.contacts
+        initialize!(mechanism, contact)
+    end
     Nd = data_dim(mechanism, attjac=false)
     Nr = residual_dimension(mechanism)
     jac = zeros(Nr, Nd)

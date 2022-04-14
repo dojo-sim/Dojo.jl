@@ -1,3 +1,4 @@
+
 using Dojo
 using Plots
 using BenchmarkTools
@@ -22,70 +23,34 @@ constraint(mech, mech.contacts[1])
 @elapsed storage = simulate!(mech, 5.0,
     opts=SolverOptions(verbose=false, rtol=1e-4))
 visualize(mech, storage, vis=vis)
-mech
-jacobian_data!(mech.data_matrix, mech)
+
+D = create_data_matrix(mech.joints, mech.bodies, mech.contacts)
+jacobian_data!(D, mech)
+nodes = [mech.joints; mech.bodies; mech.contacts]
+dimrow = length.(nodes)
+dimcol = data_dim.(nodes)
+datajac1 = full_matrix(D, dimrow, dimcol)
 
 
-function body_constraint_jacobian_contact_data(mechanism::Mechanism, body::Body{T},
-        contact::SoftContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs}
-    Nd = data_dim(contact)
-	∇cf = szeros(T,6,1) # sliding friction
-	∇p = szeros(T,6,3) # collider origin
-	return [∇cf ∇p]
-end
 
-function contact_constraint_jacobian_contact_data(mechanism::Mechanism,
-		contact::SoftContactConstraint{T,N,Nc,Cs}, body::Body{T}) where {T,N,Nc,Cs<:SoftContact{T,N}}
-	timestep = mechanism.timestep
-	model = contact.model
-    collision = model.collision
-	cf = [collision.collider.options.sliding_friction]
-	p = collision.collider_origin
-	xp, vp, qp, ϕp = next_configuration_velocity(body.state, timestep)
-	xc, vc, qc, ϕc = next_configuration_velocity(mechanism.origin.state, timestep)
-	function set_cf!(model, cf)
-		m = deepcopy(model)
-		m.collision.collider.options.sliding_friction = cf
-		return m
-	end
-	function set_p!(model, p)
-		m = deepcopy(model)
-		m.collision.collider_origin = p
-		return m
-	end
 
-	∇cf = FiniteDiff.finite_difference_jacobian(
-		cf -> constraint(set_cf!(model, cf[1]), xp, vp, qp, ϕp, xc, vc, qc, ϕc, timestep; recompute=true),
-		cf)
 
-	∇p = FiniteDiff.finite_difference_jacobian(
-		p -> constraint(set_p!(model, p), xp, vp, qp, ϕp, xc, vc, qc, ϕc, timestep; recompute=true),
-		p)
-	return [∇cf ∇p]
-end
 
-function contact_constraint_jacobian_body_data(mechanism::Mechanism,
-		contact::SoftContactConstraint{T,N,Nc,Cs}, body::Body{T}) where {T,N,Nc,Cs}
-    Nd = data_dim(body)
-	# [m; j; v15; ϕ15; x2; vector(q2)]
-	∇ = szeros(T,6,13)
 
-	timestep = mechanism.timestep
-	model = contact.model
-    collision = model.collision
-	xp, vp, qp, ϕp = next_configuration_velocity(body.state, timestep)
-	xc, vc, qc, ϕc = next_configuration_velocity(mechanism.origin.state, timestep)
-	x2p = current_position(body.state)
-	q2p = current_orientation(body.state)
 
-	∇x2p = FiniteDiff.finite_difference_jacobian(
-		x2p -> constraint(model, next_position(x2p, vp, timestep), vp, qp, ϕp, xc, vc, qc, ϕc, timestep; recompute=true),
-		x2p)
-	∇q2p = FiniteDiff.finite_difference_jacobian(
-		q2p -> constraint(model, xp, vp, next_orientation(Quaternion(q2p...), ϕp, timestep), ϕp, xc, vc, qc, ϕc, timestep; recompute=true),
-		vector(q2p)) * LVᵀmat(q2p)
-	return [∇ ∇x2 ∇q2]
-end
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ################################################################################
 # Analytical Jacobian
@@ -146,11 +111,9 @@ function test_data_system(model::Symbol;
 	return datajac0, datajac1
 end
 
-test_data_system(:bunny)
-get_data(mech.contacts[1].model)
-
-J0, J1 = test_solmat(:bunny, tsim=0.3)
+J0, J1 = test_data_system(:bunny)
 
 plot(Gray.(abs.(J0)))
 plot(Gray.(abs.(J1)))
-plot(Gray.(100*abs.(J1 + J0)))
+plot(Gray.(1e5*abs.(J1 - J0)))
+norm(J1 - J0)

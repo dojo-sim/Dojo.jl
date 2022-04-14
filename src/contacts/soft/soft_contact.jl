@@ -48,7 +48,7 @@ function constraint(mechanism, contact::SoftContactConstraint{T,N,Nc,Cs}) where 
     cbody = get_body(mechanism, contact.child_id)
     xp, vp, qp, ϕp = next_configuration_velocity(pbody.state, timestep)
     xc, vc, qc, ϕc = next_configuration_velocity(cbody.state, timestep)
-    impulse = constraint(contact.model, xp, vp, qp, ϕp, xc, vc, qc, ϕc, timestep)
+    impulse = soft_impulse(contact.model, xp, vp, qp, ϕp, xc, vc, qc, ϕc, timestep)
     return impulse - contact.impulses[2]
 end
 
@@ -57,7 +57,7 @@ function constraint_jacobian(contact::SoftContactConstraint{T,N,Nc,Cs}) where {T
     return ∇γ
 end
 
-function constraint(model::SoftContact{T},
+function soft_impulse(model::SoftContact{T},
         xp::AbstractVector, vp::AbstractVector, qp::Quaternion, ϕp::AbstractVector,
         xc::AbstractVector, vc::AbstractVector, qc::Quaternion, ϕc::AbstractVector,
         timestep; recompute::Bool=false) where T
@@ -80,22 +80,20 @@ function constraint(model::SoftContact{T},
     end
     ψ, barycenter, normal = model.ψ, model.barycenter, model.normal
     # velocities
-    constraint(collider, ψ, barycenter, normal, x2p, vp, q2p, ϕp, x2c, vc, q2c, ϕc, timestep)
+    soft_impulse(collision.collider_origin, collider.options, ψ, barycenter, normal, x2p, vp, q2p, ϕp, x2c, vc, q2c, ϕc, timestep)
 end
 
-
-function constraint(collider, ψ, barycenter, normal,
+function soft_impulse(collider_origin, opts, ψ, barycenter, normal,
         x2p::AbstractVector, vp::AbstractVector, q2p::Quaternion, ϕp::AbstractVector,
         x2c::AbstractVector, vc::AbstractVector, q2c::Quaternion, ϕc::AbstractVector,
         timestep) where T
 
-    opts = collider.options
     smoothing = opts.coulomb_smoothing
     regularizer = opts.coulomb_regularizer
 
     # velocities
-    vp_ = vp + vector_rotate(skew(collider.center_of_mass - barycenter) * ϕp, q2p)
-    xp_ = x2p + Dojo.vector_rotate(barycenter - collider.center_of_mass, q2p)
+    vp_ = vp + vector_rotate(skew(-collider_origin - barycenter) * ϕp, q2p)
+    xp_ = x2p + Dojo.vector_rotate(barycenter + collider_origin, q2p)
     vc_ = vc + skew(x2c - xp_) * vector_rotate(ϕc, q2c)
     v = vp_ - vc_
     v_normal = normal * normal' * v
@@ -118,31 +116,66 @@ function constraint(collider, ψ, barycenter, normal,
 end
 
 
+function soft_impulse_jacobian_contact_data(mechanism::Mechanism,
+		contact::SoftContactConstraint{T,N,Nc,Cs}, body::Body{T}) where {T,N,Nc,Cs<:SoftContact{T,N}}
+
+	timestep = mechanism.timestep
+	model = deepcopy(contact.model)
+	θ = get_data(model)
+    collision = model.collision
+	xp, vp, qp, ϕp = next_configuration_velocity(body.state, timestep)
+	xc, vc, qc, ϕc = next_configuration_velocity(mechanism.origin.state, timestep)
+	function set_data_local!(model, θ)
+		set_data!(model, θ)
+		return model
+	end
+	∇θ = FiniteDiff.finite_difference_jacobian(
+	# ∇θ = ForwardDiff.jacobian(
+		θ -> soft_impulse(set_data_local!(model, θ), xp, vp, qp, ϕp,
+			xc, vc, qc, ϕc, timestep; recompute=true),
+		θ)
+	return ∇θ
+end
+
+function soft_impulse_jacobian_configuration(mechanism::Mechanism,
+		contact::SoftContactConstraint{T,N,Nc,Cs}, body::Body{T}) where {T,N,Nc,Cs<:SoftContact{T,N}}
+
+	timestep = mechanism.timestep
+	model = contact.model
+    collision = model.collision
+	xp, vp, qp, ϕp = next_configuration_velocity(body.state, timestep)
+	xc, vc, qc, ϕc = next_configuration_velocity(mechanism.origin.state, timestep)
+	x2p = current_position(body.state)
+	q2p = current_orientation(body.state)
+
+    ∇x2p = FiniteDiff.finite_difference_jacobian(
+	# ∇x2p = ForwardDiff.jacobian(
+		x2p -> soft_impulse(model, next_position(x2p, vp, timestep), vp, qp, ϕp,
+			xc, vc, qc, ϕc, timestep; recompute=true),
+		x2p)
+	∇q2p = FiniteDiff.finite_difference_jacobian(
+	# ∇q2p = ForwardDiff.jacobian(
+		q2p -> soft_impulse(model, xp, vp, next_orientation(Quaternion(q2p...), ϕp, timestep), ϕp,
+			xc, vc, qc, ϕc, timestep; recompute=true),
+		vector(q2p)) * LVᵀmat(q2p)
+	return [∇x2p ∇q2p]
+end
+
 function constraint_jacobian_velocity(relative::Symbol, model::SoftContact{T,N},
     xp::AbstractVector, vp::AbstractVector, qp::Quaternion, ϕp::AbstractVector,
     xc::AbstractVector, vc::AbstractVector, qc::Quaternion, ϕc::AbstractVector,
     timestep) where {T,N}
 
-    impulse = constraint(model, xp, vp, qp, ϕp, xc, vc, qc, ϕc, timestep)
     if relative == :parent
         ∂impulse∂vϕ = FiniteDiff.finite_difference_jacobian(
-            vϕ -> constraint(model, xp, vϕ[SUnitRange(1,3)], qp, vϕ[SUnitRange(4,6)], xc, vc, qc, ϕc, timestep),
+            vϕ -> soft_impulse(model, xp, vϕ[SUnitRange(1,3)], qp, vϕ[SUnitRange(4,6)], xc, vc, qc, ϕc, timestep),
             [vp; ϕp])
     elseif relative == :child
         ∂impulse∂vϕ = FiniteDiff.finite_difference_jacobian(
-            vϕ -> constraint(model, xp, vp, qp, ϕp, xc, vϕ[SUnitRange(1,3)], qc, vϕ[SUnitRange(4,6)], timestep),
+            vϕ -> soft_impulse(model, xp, vp, qp, ϕp, xc, vϕ[SUnitRange(1,3)], qc, vϕ[SUnitRange(4,6)], timestep),
             [vc; ϕc])
     end
-    # @show ∂impulse∂vϕ[:,1]
     return ∂impulse∂vϕ
-end
-
-function constraint_jacobian_configuration(relative::Symbol, model::SoftContact{T,N},
-    xp::AbstractVector, vp::AbstractVector, qp::Quaternion, ϕp::AbstractVector,
-    xc::AbstractVector, vc::AbstractVector, qc::Quaternion, ϕc::AbstractVector,
-    timestep) where {T,N}
-    @show "this might be wrong I am not sure wrt which configuration we are diffing"
-    return szeros(T,N,6)
 end
 
 function force_mapping(relative::Symbol, model::SoftContact,

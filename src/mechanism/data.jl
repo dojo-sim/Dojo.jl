@@ -87,6 +87,7 @@ get_data(model::NonlinearContact) = [model.friction_coefficient; model.collision
 get_data(model::LinearContact) = [model.friction_coefficient; model.collision.contact_radius; model.collision.contact_origin]
 get_data(model::ImpactContact) = [model.collision.contact_radius; model.collision.contact_origin]
 get_data(contact::ContactConstraint) = get_data(contact.model)
+get_data(contacts::AbstractVector{<:ContactConstraint}) = vcat(get_data.(contacts)...)
 
 
 ################################################################################
@@ -183,4 +184,13 @@ function set_data!(contact::ContactConstraint, data::AbstractVector)
 	N = data_dim(model)
 	set_data!(model, data[1:N])
     return nothing
+end
+
+function set_data!(contacts::Vector{<:ContactConstraint}, data::AbstractVector)
+	c = 0
+	for contact in contacts
+		Nd = data_dim(contact)
+		set_data!(contact, data[c .+ (1:Nd)]); c += Nd
+	end
+	return nothing
 end

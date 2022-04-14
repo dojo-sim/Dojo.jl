@@ -18,10 +18,10 @@ function impulse_map(relative::Symbol, model::SoftContact{T}, pbody::Node, cbody
 		QF = rotation_matrix(inv(q2c)) * skew(p - pc) * XF
 		Qτ = -rotation_matrix(inv(q2c))
     end
-    return [
-                XF szeros(T,3,3);
-                QF Qτ;
-           ]
+	Z = szeros(T,3,3)
+	return [
+		[XF Z];
+		[QF Qτ]]
 end
 
 function impulse_map_jacobian(relative::Symbol, jacobian::Symbol, model::SoftContact{T},
@@ -95,7 +95,6 @@ end
 # get data
 get_data(model::SoftContact{T}) where T = [model.collision.collider.options.sliding_friction; model.collision.collider_origin]
 function set_data!(model::SoftContact, data::AbstractVector)
-	@show data
 	model.collision.collider.options.sliding_friction = data[1]
     model.collision.collider_origin = data[SUnitRange(2,4)]
     return nothing
@@ -116,6 +115,7 @@ function soft_contact_constraint(body::Body{T},
         collider_origin::AbstractVector{T}=szeros(T, 3),
         name::Symbol=Symbol("contact_" * randstring(4))) where T
 
+	collider.options.sliding_friction = friction_coefficient
     model = SoftContact(body, normal, collider,
         parent_origin=collider_origin)
     contact = SoftContactConstraint((model, body.id, 0); name=name)

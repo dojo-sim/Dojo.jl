@@ -1,5 +1,5 @@
 """
-   Joint{T} 
+   Joint{T}
 
    Abstract type for 3-dimensional constraint between two Body objects
 """
@@ -69,14 +69,19 @@ function impulse_map(relative::Symbol, joint::Joint{T,Nλ,Nb},
     return impulse_transform(relative, joint, xa, qa, xb, qb) * impulse_projector(joint)
 end
 
-function impulse_map(relative::Symbol, joint::Joint{T,Nλ,0},
-    xa::AbstractVector, qa::Quaternion,
-    xb::AbstractVector, qb::Quaternion,
-    η) where {T,Nλ}
-    J = constraint_jacobian_configuration(relative, joint, xa, qa, xb, qb, η)
-    G = cat(Diagonal(sones(3)), LVᵀmat(relative == :parent ? qa : qb), dims=(1,2))
-    return Diagonal([sones(3); 0.5 * sones(3)]) * transpose(J * G)
-end
+# function impulse_map(relative::Symbol, joint::Joint{T,Nλ,0},
+#     xa::AbstractVector, qa::Quaternion,
+    # xb::AbstractVector, qb::Quaternion,
+    # η) where {T,Nλ}
+#     J = constraint_jacobian_configuration(relative, joint, xa, qa, xb, qb, η)
+#     # G = cat(Diagonal(sones(3)), LVᵀmat(relative == :parent ? qa : qb), dims=(1,2))
+# 	G = LVᵀmat(relative == :parent ? qa : qb)
+# 	G = [[Diagonal(sones(3)) szeros(3,3)];
+# 		 [szeros(4,3) G]]
+#     return Diagonal([sones(3); 0.5 * sones(3)]) * transpose(J * G)
+# end
+	# return impulse_transform(relative, joint, xa, qa, xb, qb) * impulse_projector(joint)
+# end
 
 function impulse_projector(joint::Joint{T,Nλ,0}) where {T,Nλ}
     zerodimstaticadjoint(constraint_mask(joint))

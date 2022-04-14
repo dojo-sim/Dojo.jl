@@ -32,13 +32,12 @@ end
 
 function clamped_linesearch(f, x, p, fprev; rot=0.0, n_sample=50, iter=4,
         lower=-Inf, upper=Inf)
-    α = 1.0
+    α = 10.0
     for k = 1:iter
         xc = clamp.(x + α*p, lower, upper)
         (f(xc,rot=rot,n_sample=n_sample) <= fprev) && break
         α /= 3
         (k == iter) && (α = 0.01 / norm(p,Inf); @show α)
-
     end
     return α
 end
