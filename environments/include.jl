@@ -24,6 +24,7 @@ include("tennisracket/methods/initialize.jl")
 include("tippetop/methods/initialize.jl")
 include("twister/methods/initialize.jl")
 include("walker/methods/initialize.jl")
+include("tugbot/methods/initialize.jl")
 
 ################################################################################
 # Environments

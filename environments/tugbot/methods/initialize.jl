@@ -64,7 +64,7 @@ function initialize_tugbot!(mechanism::Mechanism{T};
     r_object = get_body(mechanism, :object).shape.xyz[3]/2
     joint = get_joint(mechanism, :drone_joint)
     zero_velocity!(mechanism)
-    z_drone = [drone_position + [0,0,r_drone]; drone_velocity; vector(drone_orientation); drone_angular_velocity]
-    z_object = [object_position + [0,0,r_object]; object_velocity; vector(object_orientation); object_angular_velocity]
+    z_drone = [drone_position + [0,0,r_drone]; drone_velocity; Dojo.vector(drone_orientation); drone_angular_velocity]
+    z_object = [object_position + [0,0,r_object]; object_velocity; Dojo.vector(object_orientation); object_angular_velocity]
     set_maximal_state!(mechanism, [z_drone; z_object])
 end
