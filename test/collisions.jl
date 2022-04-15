@@ -572,3 +572,198 @@
         @test norm(Dojo.normalize(storage.v[1][end]) - Dojo.normalize([-2.0, -2.0, -2.0]), Inf) < 1.0e-5
     end
 end
+
+# Sphere-Capsule 
+@testset "Collision: Sphere-capsule" begin
+    function simulate_sphere_capsule(x1, x2)
+        origin = Dojo.Origin{Float64}()
+        pbody = Dojo.Capsule(0.5, 2.0, 1.0, axis_offset=Dojo.Quaternion(sqrt(2.0) / 2.0, sqrt(2.0) / 2.0, 0.0, 0.0))
+        cbody = Dojo.Sphere(0.5, 1.0)
+        joint = Dojo.JointConstraint(Dojo.Fixed(origin, pbody))
+
+        bodies = [pbody, cbody]
+        joints = [joint]
+
+        collision = Dojo.SphereCapsuleCollision{Float64,2,3,6}(
+            szeros(3),
+            SA[0.0; 1.0; 0.0],
+            SA[0.0; -1.0; 0.0],
+            0.5,
+            0.5,
+        )
+
+        friction_parameterization = SA{Float64}[
+            1.0  0.0
+            0.0  1.0
+        ]
+        body_body_contact = Dojo.NonlinearContact{Float64,8}(0.5, friction_parameterization, collision)
+
+        contacts = [Dojo.ContactConstraint((body_body_contact, cbody.id, pbody.id), name=:body_body)]
+
+        mech = Dojo.Mechanism(origin, bodies, joints, contacts,
+                    gravity=1.0 * -9.81, 
+                    timestep=0.05)
+
+        mech.bodies[1].state.x2 = x1
+        mech.bodies[2].state.x2 = x2
+
+        storage = Dojo.simulate!(mech, 1.0, 
+            verbose=false, 
+            record=true)
+
+        return mech, storage
+    end
+
+    x2 = [[0.0, 0.0, 2.0], [0.2, 0.5, 2.0]]
+    mech, storage = simulate_sphere_capsule([0.0, 0.0, 0.0], x2[1])
+
+    d = Dojo.distance(mech.contacts[1].model.collision, 
+        storage.x[2][end], storage.q[2][end],
+        storage.x[1][end], storage.q[1][end],)
+
+    @test d > 0.0
+
+    cp = Dojo.contact_point(:parent, mech.contacts[1].model.collision, 
+        mech.bodies[2].state.x2, mech.bodies[2].state.q2,
+        mech.bodies[1].state.x2, mech.bodies[1].state.q2,)
+
+    @test norm(cp - [0.0; 0.0; 0.5], Inf) < 1.0e-2
+
+    cc = Dojo.contact_point(:child, mech.contacts[1].model.collision, 
+        mech.bodies[2].state.x2, mech.bodies[2].state.q2,
+        mech.bodies[1].state.x2, mech.bodies[1].state.q2,
+        )
+
+    @test norm(cc - [0.0; 0.0; 0.5], Inf) < 1.0e-2
+
+    cn = Dojo.contact_normal(mech.contacts[1].model.collision, 
+        mech.bodies[2].state.x2, mech.bodies[2].state.q2,
+        mech.bodies[1].state.x2, mech.bodies[1].state.q2,
+        )
+
+    @test norm(cn - [0.0 0.0 1.0], Inf) < 1.0e-3
+
+    ct = Dojo.contact_tangent(mech.contacts[1].model.collision, 
+        mech.bodies[2].state.x2, mech.bodies[2].state.q2,
+        mech.bodies[1].state.x2, mech.bodies[1].state.q2,
+        )
+
+    @test norm(ct - [0.0 -1.0 0.0; -1.0 0.0 0.0], Inf) < 1.0e-2
+
+    mech, storage = simulate_sphere_capsule([0.0, 0.0, 0.0], x2[2])
+    
+
+    d = Dojo.distance(mech.contacts[1].model.collision, 
+        storage.x[2][end], storage.q[2][end],
+        storage.x[1][end], storage.q[1][end],)
+
+    @test d > 0.0
+end
+
+# Sphere-Box 
+@testset "Collision: Sphere-box" begin
+    function simulate_sphere_box(x1, x2, v2)
+        origin = Dojo.Origin{Float64}()
+        pbody = Dojo.Box(1.0, 1.0, 1.0, 1.0)
+        cbody = Dojo.Sphere(0.5, 1.0)
+        joint = Dojo.JointConstraint(Dojo.Fixed(origin, pbody))
+
+        bodies = [pbody, cbody]
+        joints = [joint]
+
+        collision = Dojo.SphereBoxCollision{Float64,2,3,6}(
+            szeros(3),
+            SA[0.5; 0.0; 0.0],
+            SA[0.0; 0.5; 0.0],
+            SA[0.0; 0.0; 0.5],
+            0.5,
+        )
+
+        friction_parameterization = SA{Float64}[
+            1.0  0.0
+            0.0  1.0
+        ]
+        body_body_contact = Dojo.NonlinearContact{Float64,8}(0.5, friction_parameterization, collision)
+
+        contacts = [Dojo.ContactConstraint((body_body_contact, cbody.id, pbody.id), name=:body_body)]
+
+        mech = Dojo.Mechanism(origin, bodies, joints, contacts,
+                    gravity=1.0 * -9.81, 
+                    timestep=0.05)
+
+        mech.bodies[1].state.x2 = x1
+        mech.bodies[2].state.x2 = x2 
+        mech.bodies[2].state.v15 = v2
+
+        storage = Dojo.simulate!(mech, 1.0, 
+                verbose=false, 
+                record=true)
+
+        return mech, storage
+    end
+
+    x1 = [0.0, 0.0, 0.0]
+    x2 = [
+        [0.0, 0.0, 2.0],
+        [0.0, 1.0, 2.0],
+        [1.0, 1.0, 2.0],
+        [-1.0, 1.0, 2.0],
+        [-0.5; 0.5; 2.0],
+        [0.0, -1.0, 2.0],
+        [0.0, -1.0, 2.0],
+        [-1.0, -1.0, -2.0],
+        [0.0, 0.0, -2.0],
+    ]
+    v2 = [
+        [0.0, 0.0, 0.0],
+        [0.0; -1.0; -2.0],
+        [-1.0; -1.0; -2.0],
+        [1.0; -1.0; -2.0],
+        [0.0; 0.0; 0.0],
+        [0.0; 1.0; -2.0],
+        [0.0; 1.0; -2.0],
+        [5.0; 5.0; 10.0],
+        [0.0; 0.0; 10.0],
+    ]
+
+    N = length(x2) 
+
+    for i = 1:N
+        mech, storage = simulate_sphere_box(x1, x2[i], v2[i])
+
+        d = Dojo.distance(mech.contacts[1].model.collision, 
+                storage.x[2][end], storage.q[2][end],
+                storage.x[1][end], storage.q[1][end],)
+
+        @test d > 0.0
+
+        if i == 1
+            cp = Dojo.contact_point(:parent, mech.contacts[1].model.collision, 
+                mech.bodies[2].state.x2, mech.bodies[2].state.q2,
+                mech.bodies[1].state.x2, mech.bodies[1].state.q2,)
+
+            @test norm(cp - [0.0; 0.0; 0.5], Inf) < 1.0e-2
+
+            cc = Dojo.contact_point(:child, mech.contacts[1].model.collision, 
+                mech.bodies[2].state.x2, mech.bodies[2].state.q2,
+                mech.bodies[1].state.x2, mech.bodies[1].state.q2,
+                )
+
+            @test norm(cc - [0.0; 0.0; 0.5], Inf) < 1.0e-2
+
+            cn = Dojo.contact_normal(mech.contacts[1].model.collision, 
+                mech.bodies[2].state.x2, mech.bodies[2].state.q2,
+                mech.bodies[1].state.x2, mech.bodies[1].state.q2,
+                )
+
+            @test norm(cn - [0.0 0.0 1.0], Inf) < 1.0e-3
+
+            ct = Dojo.contact_tangent(mech.contacts[1].model.collision, 
+                mech.bodies[2].state.x2, mech.bodies[2].state.q2,
+                mech.bodies[1].state.x2, mech.bodies[1].state.q2,
+                )
+
+            @test norm(ct - [0.0 -1.0 0.0; -1.0 0.0 0.0], Inf) < 1.0e-2
+        end
+    end
+end
