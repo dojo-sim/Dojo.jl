@@ -152,7 +152,7 @@ mutable struct Capsule{T} <: Shape{T}
     # Capsule points in the z direction
     function Capsule(r::Real, h::Real;
             position_offset::AbstractVector=szeros(3), 
-            axis_offset::Quaternion= one(Quaternion),
+            axis_offset::Quaternion=one(Quaternion),
             scale::AbstractVector=sones(3), 
             color=RGBA(0.75, 0.75, 0.75))
         T = promote_type(quateltype.((r, h, position_offset, axis_offset))...)
