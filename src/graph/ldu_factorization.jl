@@ -9,7 +9,16 @@ function ldu_factorization_acyclic!(diagonal_v, offdiagonal_l, diagonal_c, offdi
     end
     offdiagonal_l.value = offdiagonal_l.value * invdiagonal_c
     offdiagonal_u.value = invdiagonal_c * offdiagonal_u.value
-    diagonal_v.value -= offdiagonal_l.value*diagonal_c.value * offdiagonal_u.value
+    # @show diagonal_v.value
+    # @show offdiagonal_l.value 
+    # @show diagonal_c.value 
+    # @show offdiagonal_u.value
+
+    # @show size(diagonal_c.value)
+
+    if size(diagonal_c.value)[1] != 0 && size(diagonal_c.value)[2] != 0
+        diagonal_v.value -= offdiagonal_l.value*diagonal_c.value * offdiagonal_u.value
+    end
     return
 end
 

@@ -4,7 +4,6 @@ Dojo currently implements the following collision models:
 
 - [`SphereHalfSpaceCollision`](@ref)
 
-
 - [`SphereSphereCollision`](@ref)
 
 - [`SphereCapsuleCollision`](@ref)

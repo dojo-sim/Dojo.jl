@@ -7,6 +7,7 @@ function get_panda(;
         contact=false,
         limits=true,
         model_type=:end_effector,
+        object_type=:none,
         # joint_limits=[[-0.25, -0.25, -0.25, -0.25, -0.25, -0.25, -0.25],
         #               [ 0.25,  0.25,  0.25,  0.25,  0.25,  0.25,  0.25]],
         # joint_limits=[[-2.9671, -1.8326, -2.9671, -0.4000, -2.9671, -3.8223, -2.9671],
@@ -60,24 +61,96 @@ function get_panda(;
     contacts = ContactConstraint{T}[]
 
     if contact
-        if model_type == :end_effector
+        # if model_type == :end_effector
             # TODO place the contact points for each finger of the end-effector
-        elseif model_type == :no_end_effector
+        # elseif model_type == :no_end_effector
             # spherical end-effector contact
-            location = [-0.01; 0.004; 0.01]
-            normal = [0.0; 0.0; 1.0]
-            offset = [0.0; 0.0; 0.05]
-            contact = contact_constraint(
-                get_body(mech, :link7),
-                normal,
-                friction_coefficient=friction_coefficient,
-                contact_point=location,
-                offset=offset,
-                name=:end_effector)
-            push!(contacts, contact)
-        end
+        location = [-0.01; 0.004; 0.1125]
+        normal = [0.0; 0.0; 1.0]
+        contact = contact_constraint(
+            get_body(mech, :link7),
+            normal,
+            friction_coefficient=friction_coefficient,
+            contact_origin=location,
+            contact_radius=0.05,
+            name=:end_effector)
+        push!(contacts, contact)
+        # end
     end
 
+    if object_type == :box 
+        sidex = 0.1
+        sidey = 0.1 
+        sidez = 0.25
+        box = Box(sidex, sidey, sidez, 1.0, name=:box)
+        ee = get_body(mech, :link7)
+        
+        corners = [
+                    [[ sidex / 2.0;  sidey / 2.0; -sidez / 2.0]]
+                    [[ sidex / 2.0; -sidey / 2.0; -sidez / 2.0]]
+                    [[-sidex / 2.0;  sidey / 2.0; -sidez / 2.0]]
+                    [[-sidex / 2.0; -sidey / 2.0; -sidez / 2.0]]
+                    [[ sidex / 2.0;  sidey / 2.0;  sidez / 2.0]]
+                    [[ sidex / 2.0; -sidey / 2.0;  sidez / 2.0]]
+                    [[-sidex / 2.0;  sidey / 2.0;  sidez / 2.0]]
+                    [[-sidex / 2.0; -sidey / 2.0;  sidez / 2.0]]
+                ]
+               
+        normal = [[0.0, 0.0, 1.0] for i = 1:8]
+        contact_radius = [0.0 for i = 1:8]
+        friction_coefficient = 0.5 * ones(8)
+        
+        box_contacts = contact_constraint(box, normal, 
+            friction_coefficient=friction_coefficient, 
+            contact_origins=corners, 
+            contact_radius=contact_radius, 
+            contact_type=:nonlinear)
+
+        ee_location = SA[-0.01; 0.004; 0.1125]
+        ee_radius = 0.05
+        
+        # collision = Dojo.SphereBoxCollision{Float64,2,3,6}(
+        #     [0.0; 0.0; 0.0],
+        #     SA[0.5 * sidex; 0.0; 0.0],
+        #     SA[0.0; 0.5 * sidey; 0.0],
+        #     SA[0.0; 0.0; 0.5 * sidez],
+        #     ee_radius,
+        # )
+
+        # collision = Dojo.SphereSphereCollision{Float64,2,3,6}(
+        #     SA[0.0; 0.0; 0.0],
+        #     SA[0.0; 0.0; 0.3],
+        #     0.075,
+        #     # SA[0.5 * sidex; 0.0; 0.0],
+        #     # SA[0.0; 0.5 * sidey; 0.0],
+        #     # SA[0.0; 0.0; 0.5 * sidez],
+        #     0.075,
+        # )
+
+        collision = SphereCapsuleCollision{Float64,2,3,6}(
+            szeros(3),
+            SA[0.0; 0.0; 0.5],
+            SA[0.0; 0.0; -0.5],
+            0.05,
+            0.05,
+        )
+        
+        friction_parameterization = SA{Float64}[
+            1.0  0.0
+            0.0  1.0
+        ]
+        body_body_contact = NonlinearContact{Float64,8}(0.5, friction_parameterization, collision)
+        
+        object_contacts = [
+                ContactConstraint((body_body_contact, ee.id, box.id), name=:body_body1),
+                box_contacts...,
+        ]
+
+        bodies = [bodies..., box]
+        contacts = [contacts..., object_contacts...]
+
+        joints = [joints..., JointConstraint(Floating(origin, box))]
+    end
 
     mech = Mechanism(origin, bodies, joints, contacts,
         gravity=gravity,
@@ -89,13 +162,13 @@ function get_panda(;
     return mech
 end
 
-function initialize_panda!(mechanism::Mechanism{T};
-    joint_angles=[[0,-0.8,0,1.6,0,-2.4,0]; zeros(input_dimension(mechanism)-7)],
-    joint_velocities=zeros(input_dimension(mechanism))) where T
+# function initialize_panda!(mechanism::Mechanism{T};
+#     joint_angles=[[0,-0.8,0,1.6,0,-2.4,0]; zeros(input_dimension(mechanism)-7)],
+#     joint_velocities=zeros(input_dimension(mechanism))) where T
 
-    nu = input_dimension(mechanism)
-    zero_velocity!(mechanism)
-    y = vcat([[joint_angles[i], joint_velocities[i]] for i=1:nu]...)
-    set_minimal_state!(mechanism, y)
-    return nothing
-end
+#     nu = input_dimension(mechanism)
+#     zero_velocity!(mechanism)
+#     y = vcat([[joint_angles[i], joint_velocities[i]] for i=1:nu]...)
+#     set_minimal_state!(mechanism, y)
+#     return nothing
+# end

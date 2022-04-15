@@ -4,54 +4,57 @@ using Plots
 vis = Visualizer()
 open(vis)
 
-
 mech = Dojo.get_mechanism(:panda,
     timestep=0.05,
-    gravity=-0*9.81,
+    gravity=0.0*9.81,
     spring=0.0,
     damper=10.0,
     contact=true,
     limits=true,
-    )
-# for joint in mech.joints
-#     joint.rotational.axis_offset = Quaternion(1,0,0,0.0,true)
-# end
+    object_type=:box,
+)
+
+nu = input_dimension(mech)
 function ctrl!(m, k; kp=10.0, kd=5.0)
-    nu = input_dimension(m)
-    pref = [0,-0.8,0,1.6,0,-2.4,0,0,0]
+    pref = [0,-0.8,0,1.6,0,-2.4,0.5 * π,0,0]
     y = get_minimal_state(m)
-    p = y[1:2:end]
-    v = y[2:2:end]
-    u = kp * [1,1,1,1,1,1,1,-1,-1] .* (pref - p) - kd * v
-    @show norm(p-pref)
+    p = y[12 .+ (1:2:18)]
+    v = y[12 .+ (2:2:18)]
+    u = [
+            kp * [1,1,1,1,1,1,1,-1,-1] .* (pref - p) - kd * v;
+            [0.0; 0.0; -1.0 * get_body(m, :box).mass * 9.81];
+            zeros(3);
+            
+    ]
     set_input!(m, u*m.timestep)
     return nothing
 end
 
-input_dimension(mech.joints[2].rotational)
-initialize_panda!(mech,
-    joint_angles=[2.0,-0.5,0.3,1.3,0.3,-2.0,0,0,0],
-    joint_velocities=[0,0,0,0,0,0,0,0,0.0])
+joint_angles = [2.0,-0.5,0.3,1.3,0.3,-2.0,0.5 * π,0,0]
+joint_velocities = [0,0,0,0,0,0,0,0,0]
 
-storage = simulate!(mech, 6.0, ctrl!, record=true, opts=SolverOptions(btol=1e-4))
-visualize(mech, storage, vis=vis, show_contact=true)
+y = zeros(length(get_minimal_state(mech)))
+y[1:3] = [0.5; 0.5; 0.125]
+for i = 1:9
+    y[12 + (i - 1) * 2 .+ (1:2)] = [joint_angles[i]; joint_velocities[i]]
+end
+set_minimal_state!(mech, y)
 
-convert_frames_to_video_and_gif("panda_pd_control")
+get_body(mech, :box).state.x2
 
+storage = simulate!(mech, 2.0, 
+    ctrl!, 
+    verbose=true,
+    record=true)
+
+visualize(mech, storage, vis=vis, show_contact=false)
+
+# convert_frames_to_video_and_gif("panda_pd_control")
 
 env = get_environment(:panda)
 x = srand(minimal_dimension(env.mechanism))
 u = srand(input_dimension(env.mechanism))
 step(env, x, u)
-
-
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
-a = 10
-
 
 
 
