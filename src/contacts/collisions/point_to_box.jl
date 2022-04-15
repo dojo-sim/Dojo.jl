@@ -44,7 +44,6 @@ function contact_point_box(ps, xc, qc, kx, ky, kz)
     return coc
 end
 
-
 function ∂contact_point_box∂p(ps, xc, qc, kx, ky, kz)
     cx = contact_point_origin(szeros(3), qc, kx)
     cy = contact_point_origin(szeros(3), qc, ky)

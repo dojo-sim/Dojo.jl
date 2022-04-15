@@ -9,4 +9,4 @@ If you find Dojo useful in your project, we kindly request that you cite the fol
 }
 ```
 
-A preprint can be downloaded from [arXiv]().
+A preprint can be downloaded from [arXiv](https://arxiv.org/abs/2203.00806).
