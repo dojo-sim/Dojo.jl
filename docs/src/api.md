@@ -97,6 +97,7 @@ SphereHalfSpaceCollision
 SphereSphereCollision
 SphereCapsuleCollision
 SphereBoxCollision
+StringCollision
 contact_normal 
 contact_tangent
 ```

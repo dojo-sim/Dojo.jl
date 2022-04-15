@@ -187,7 +187,7 @@ function display_policy(env::Environment, policy::Policy, normalizer::Normalizer
         reward_evaluation += reward
         num_plays += 1
     end
-    close(env)
+    Dojo.close(env)
 
     return traj
 end
@@ -208,7 +208,7 @@ function display_random_policy(env::Environment, hp::HyperParameters; rendering 
         reward_evaluation += reward
         num_plays += 1
     end
-    close(env)
+    Dojo.close(env)
 
     return traj
 end

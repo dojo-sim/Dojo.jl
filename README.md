@@ -91,7 +91,7 @@ pkg> add Dojo#main
 ```
 @article{howelllecleach2022,
 	title={Dojo: A Differentiable Simulator for Robotics},
-	author={Taylor, A. Howell and Le Cleac'h, Simon and Kolter, Zico and Schwager, Mac and Manchester, Zachary},
+	author={A. Howell, Taylor and Le Cleac'h, Simon and Kolter, Zico and Schwager, Mac and Manchester, Zachary},
 	journal={arXiv preprint arXiv:2203.00806},
 	url={https://arxiv.org/abs/2203.00806},
 	year={2022}
