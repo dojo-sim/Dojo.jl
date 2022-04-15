@@ -214,6 +214,8 @@ export
 export
     SphereHalfSpaceCollision,
     SphereSphereCollision,
+    SphereCapsuleCollision,
+    SphereBoxCollision,
     distance,
     contact_point,
     contact_normal,

@@ -93,6 +93,12 @@ ContactConstraint
 contact_constraint
 contact_location
 get_sdf 
+SphereHalfSpaceCollision
+SphereSphereCollision
+SphereCapsuleCollision
+SphereBoxCollision
+contact_normal 
+contact_tangent
 ```
 
 ### Representations
