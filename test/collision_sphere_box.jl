@@ -10,23 +10,6 @@ joint = JointConstraint(Fixed(origin, pbody))
 bodies = [pbody, cbody]
 joints = [joint]
 
-collision = SphereSphereCollision{Float64,2,3,6}(
-        szeros(3),
-        szeros(3),
-        # pbody.shape.r, 
-        0.5,
-        0.5,
-        # 0.5,
-        )
-
-collision = SphereCapsuleCollision{Float64,2,3,6}(
-    szeros(3),
-    SA[0.0; 1.0; 0.0],
-    SA[0.0; -1.0; 0.0],
-    0.5,
-    0.5,
-    )
-
 collision = SphereBoxCollision{Float64,2,3,6}(
     szeros(3),
     SA[0.5; 0.0; 0.0],
@@ -48,8 +31,37 @@ mech = Mechanism(origin, bodies, joints, contacts,
             timestep=0.05)
 
 mech.bodies[1].state.x2 = [0.0, 0.0, 0.0]
+mech.bodies[2].state.x2 = [0.0, 0.0, 2.0]
+
 mech.bodies[2].state.x2 = [0.0, 1.0, 2.0]
 mech.bodies[2].state.v15 = [0.0; -1.0; -2.0]
+
+mech.bodies[2].state.x2 = [1.0, 1.0, 2.0]
+mech.bodies[2].state.v15 = [-1.0; -1.0; -2.0]
+
+mech.bodies[2].state.x2 = [-1.0, 1.0, 2.0]
+mech.bodies[2].state.v15 = [1.0; -1.0; -2.0]
+
+mech.bodies[2].state.x2 = [-0.5; 0.5; 2.0]
+mech.bodies[2].state.v15 = [0.0; 0.0; 0.0]
+
+mech.bodies[2].state.x2 = [0.0, -1.0, 2.0]
+mech.bodies[2].state.v15 = [0.0; 1.0; -2.0]
+
+mech.bodies[2].state.x2 = [0.0, -1.0, 2.0]
+mech.bodies[2].state.v15 = [0.0; 1.0; -2.0]
+
+mech.bodies[2].state.x2 = [-1.0, -1.0, -2.0]
+mech.bodies[2].state.v15 = 4.0 * [1.0; 1.0; 2.0]
+
+mech.bodies[2].state.x2 = [0.0, 0.0, -2.0]
+mech.bodies[2].state.v15 = [0.0; 0.0; 10.0]
+
+
+
+
+
+
 
 storage = simulate!(mech, 1.0, 
     verbose=true, 
