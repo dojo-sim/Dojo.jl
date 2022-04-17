@@ -1,12 +1,12 @@
 function get_bunny(;
-    collider="soft_collider.jld2",
+    collider="bunny_collider.jld2",
     timestep=0.01,
     gravity=[0.0; 0.0; -9.81],
     friction_coefficient=0.8,
     T=Float64)
 
     deps_folder = joinpath(module_dir(), "environments/bunny/deps")
-    collider = jldopen(joinpath(deps_folder, collider))["soft"]
+    collider = jldopen(joinpath(deps_folder, collider))["collider"]
     inner_mesh_path = joinpath(deps_folder, "bunny_inner_mesh.obj")
     outer_mesh_path = joinpath(deps_folder, "bunny_outer_mesh.obj")
     soft_body = SoftBody(collider, inner_mesh_path, outer_mesh_path, name=:bunny)
@@ -46,7 +46,7 @@ function initialize_bunny!(mechanism::Mechanism{T};
 end
 
 function get_bunny_sphere(;
-    collider="soft_collider.jld2",
+    collider="bunny_collider.jld2",
     timestep=0.01,
     gravity=[0.0; 0.0; -9.81],
     friction_coefficient=0.8,
@@ -55,7 +55,7 @@ function get_bunny_sphere(;
     T=Float64)
 
     deps_folder = joinpath(module_dir(), "environments/bunny/deps")
-    collider = jldopen(joinpath(deps_folder, collider))["soft"]
+    collider = jldopen(joinpath(deps_folder, collider))["collider"]
     inner_mesh_path = joinpath(deps_folder, "bunny_inner_mesh.obj")
     outer_mesh_path = joinpath(deps_folder, "bunny_outer_mesh.obj")
 
@@ -120,7 +120,7 @@ function initialize_bunny_sphere!(mechanism::Mechanism{T};
 end
 
 function get_bunny_triumvirate(;
-    collider="soft_collider.jld2",
+    collider="bunny_collider.jld2",
     timestep=0.01,
     gravity=[0.0; 0.0; -9.81],
     friction_coefficient=0.8,
@@ -129,7 +129,7 @@ function get_bunny_triumvirate(;
     T=Float64)
 
     deps_folder = joinpath(module_dir(), "environments/bunny/deps")
-    collider1 = jldopen(joinpath(deps_folder, collider))["soft"]
+    collider1 = jldopen(joinpath(deps_folder, collider))["collider"]
     collider2 = deepcopy(collider1)
     inner_mesh_path = joinpath(deps_folder, "bunny_inner_mesh.obj")
     outer_mesh_path = joinpath(deps_folder, "bunny_outer_mesh.obj")

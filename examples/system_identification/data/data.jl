@@ -20,11 +20,11 @@ end
 
 function toss2z(toss, timestep; s=1)
 	N = length(toss)
-	M = Int((N-1 - (N-1)%S) / S)
+	M = Int((N-1 - (N-1)%s) / s)
 	z = []
 	for i = 1:M
-		vec1 = toss[1+S*(i-1)]
-		vec2 = toss[1+S*i]
+		vec1 = toss[1+s*(i-1)]
+		vec2 = toss[1+s*i]
 
 		x1 = vec1[1:3]
 		q1 = vec1[4:7]

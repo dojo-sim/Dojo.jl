@@ -38,7 +38,6 @@ function SoftContact(body::Body{T}, normal::AbstractVector{T}, collider::Collide
     else
         error("Unknown collision_type")
     end
-    # SoftContact{Float64,6,typeof(collision)}(collision, collider_origin, 0.0, szeros(3), szeros(3))
     SoftContact{Float64,6,typeof(collision)}(collision, 0.0, szeros(3), szeros(3))
 end
 
@@ -130,7 +129,6 @@ function soft_impulse_jacobian_contact_data(mechanism::Mechanism,
 		return model
 	end
 	∇θ = FiniteDiff.finite_difference_jacobian(
-	# ∇θ = ForwardDiff.jacobian(
 		θ -> soft_impulse(set_data_local!(model, θ), xp, vp, qp, ϕp,
 			xc, vc, qc, ϕc, timestep; recompute=true),
 		θ)
@@ -149,12 +147,10 @@ function soft_impulse_jacobian_configuration(mechanism::Mechanism,
 	q2p = current_orientation(body.state)
 
     ∇x2p = FiniteDiff.finite_difference_jacobian(
-	# ∇x2p = ForwardDiff.jacobian(
 		x2p -> soft_impulse(model, next_position(x2p, vp, timestep), vp, qp, ϕp,
 			xc, vc, qc, ϕc, timestep; recompute=true),
 		x2p)
 	∇q2p = FiniteDiff.finite_difference_jacobian(
-	# ∇q2p = ForwardDiff.jacobian(
 		q2p -> soft_impulse(model, xp, vp, next_orientation(Quaternion(q2p...), ϕp, timestep), ϕp,
 			xc, vc, qc, ϕc, timestep; recompute=true),
 		vector(q2p)) * LVᵀmat(q2p)

@@ -37,3 +37,16 @@ function SoftCollider(nerf_object; N=1000, density_scale=0.1, opts=ColliderOptio
         weights, weight_gradients, nerf_object,
         opts)
 end
+
+function SoftCollider(mass, inertia, center_of_mass, density_fct::Function, gradient_fct::Function;
+        N=1000, opts=ColliderOptions(), T=Float64, particle_noise=0.005)
+
+    particles, densities, density_gradients = OSFLoader.sample_soft(density_fct, gradient_fct, N, particle_noise=particle_noise)
+    weights = densities ./ sum(densities) * mass
+    weight_gradients = density_gradients ./ sum(densities) * mass
+    return SoftCollider{T,N}(
+        mass, inertia, center_of_mass,
+        particles, densities, density_gradients,
+        weights, weight_gradients, nothing,
+        opts)
+end

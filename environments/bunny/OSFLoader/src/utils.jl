@@ -60,7 +60,15 @@ function inertia_properties(nerf_object; n=30, density_scale=1e-1)
     return mass, inertia, center_of_mass
 end
 
-function sample_soft(nerf_object, N::Int; T=Float64, min_density=1.0, max_density=105.0,
+function sample_soft(nerf_object::Dict, N::Int; T=Float64, min_density=1.0, max_density=105.0,
+        particle_noise=0.005)
+    density_fct = particles -> py"density_query"(nerf_object, particles)
+    gradient_fct = particle -> finite_difference_gradient(nerf_object, particle)
+    sample_soft(density_fct, gradient_fct, N; T=T, min_density=min_density, max_density=max_density,
+        particle_noise=particle_noise)
+end
+
+function sample_soft(density_fct::Function, gradient_fct::Function, N::Int; T=Float64, min_density=1.0, max_density=105.0,
         particle_noise=0.005)
     load_density_script(mode=:cpu)
 
@@ -75,16 +83,16 @@ function sample_soft(nerf_object, N::Int; T=Float64, min_density=1.0, max_densit
     candidate_particles = grid_particles(xrange, yrange, zrange)
     candidate_particles += particle_noise * (rand(n^3, 3) .- 0.5)
     candidate_particles = convert.(Float32, candidate_particles)
-    candidate_densities = py"density_query"(nerf_object, candidate_particles)
+    candidate_densities = density_fct(candidate_particles)
 
     ind = findall(x -> min_density <= x <= max_density, candidate_densities)
     good_particles = candidate_particles[ind,:]
     good_densities = candidate_densities[ind,:]
     Ng = size(good_particles)[1]
     for i = 1:N
-        particles[i] = good_particles[Int(floor(i*Ng/N)),:]
-        densities[i] = good_densities[Int(floor(i*Ng/N))]
-        density_gradients[i] = finite_difference_gradient(nerf_object, particles[i])
+        particles[i] = good_particles[Int(ceil(i*Ng/N)),:]
+        densities[i] = good_densities[Int(ceil(i*Ng/N))]
+        density_gradients[i] = gradient_fct(particles[i])
     end
     return particles, densities, density_gradients
 end

@@ -92,50 +92,66 @@ end
 # Optimization Algorithm: Quasi Newton:
 # We learn a single coefficient of friction and a 8 contact locations [x,y,z] -> 25 params in total
 ################################################################################
-F = [f0([2.30, x]) for x in 0:0.02:1]
+F = [f0([x]) for x in 0:0.02:1]
 plot(0:0.02:1, F)
 
 function d_to_data_contacts(d)
-	bounciness = d[1]
-	friction_coefficient = d[2]
+	bounciness = data_contacts0[1]
+	friction_coefficient = d[1]
 	data_contacts = [bounciness; friction_coefficient; data_contacts0[3:5]]
+	# bounciness = d[1]
+	# friction_coefficient = d[2]
+	# data_contacts = [bounciness; friction_coefficient; data_contacts0[3:5]]
 	return data_contacts
 end
-data_mask = FiniteDiff.finite_difference_jacobian(d -> d_to_data_contacts(d), zeros(2))
+# data_mask = FiniteDiff.finite_difference_jacobian(d -> d_to_data_contacts(d), zeros(2))
+data_mask = FiniteDiff.finite_difference_jacobian(d -> d_to_data_contacts(d), zeros(1))
 
-d0 = [-2.30, 0.10]
-lower = [-3.0, 0.0]
-upper = [+3.0, 1.0]
+# d0 = [-2.30, 0.10]
+# lower = [-3.0, 0.0]
+# upper = [+3.0, 1.0]
+
+d0 = [0.1]
+lower = [0.0]
+upper = [1.0]
 
 # Main.@profiler
 dsol = quasi_newton_solve(f0, fgH0, d0, iter=1000, gtol=1e-8, ftol=1e-6,
 	lower=lower, upper=upper, reg=1e-9)
 
+losses = f0.(dsol[2])
+for (i,l) in enumerate(losses)
+	println("($(i-1),$(l/losses[1]))")
+end
 ################################################################################
 # Visualization
 ################################################################################
 mech = get_mechanism(:bunny, timestep=0.01, gravity=-9.81, friction_coefficient=0.4);
-set_data!(mech.contacts, [dsol[2][1]; data_contacts0[3:5]])
-initialize!(mech, :bunny, position=[0,-1,1.], velocity=[0,2,1.], angular_velocity=[2,2,2.])
+set_data!(mech.contacts, [data_contacts0[1]; dsol[2][1]; data_contacts0[3:5]])
+initialize!(mech, :bunny, position=[0,-1,1.], velocity=[0,3,1.], angular_velocity=[2,2,2.])
 storage = simulate!(mech, 5.0, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
 vis, anim = visualize(mech, storage, vis=vis, color=RGBA(1,1,1,1.), name=:initial)
 
 mech = get_mechanism(:bunny, timestep=0.01, gravity=-9.81, friction_coefficient=0.4);
-set_data!(mech.contacts, [dsol[1]; data_contacts0[3:5]])
-mech.bodies[1].mass /= 10
-mech.bodies[1].inertia /= 10
-initialize!(mech, :bunny, position=[0,-1,1.], velocity=[0,2,1.], angular_velocity=[2,2,2.])
+set_data!(mech.contacts, [data_contacts0[1]; dsol[1]; data_contacts0[3:5]])
+# mech.bodies[1].mass /= 10
+# mech.bodies[1].inertia /= 10
+initialize!(mech, :bunny, position=[0,-1,1.], velocity=[0,3,1.], angular_velocity=[2,2,2.])
 storage = simulate!(mech, 5.0, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
 vis, anim = visualize(mech, storage, vis=vis, animation=anim, color=RGBA(0.7,0.7,0.7,1.), name=:learned)
 
 mech = get_mechanism(:bunny, timestep=0.01, gravity=-9.81, friction_coefficient=0.4);
-set_data!(mech.contacts, θ0)
-initialize!(mech, :bunny, position=[0,-1,1.], velocity=[0,2,1.], angular_velocity=[2,2,2.])
+set_data!(mech.contacts, data_contacts0)
+initialize!(mech, :bunny, position=[0,-1,1.], velocity=[0,3,1.], angular_velocity=[2,2,2.])
 storage = simulate!(mech, 5.0, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
 vis, anim = visualize(mech, storage, vis=vis, animation=anim, color=RGBA(0.2,0.2,0.2,1.), name=:robot)
+
+z_init = get_maximal_state(storage, 1)
+storage_init = generate_storage(mech, [z_init])
+vis, anim = visualize(mech, storage_init, vis=vis, animation=anim, color=RGBA(0.2,0.2,0.2,0.3), name=:start)
 
 
 # convert_frames_to_video_and_gif("bunny_learning_friction_com")
