@@ -10,6 +10,7 @@ using StaticArrays
 using Statistics
 
 global OSF_PATH = joinpath("/home/simon/research/repos/osf-pytorch")
+global OSF_CONFIG_FOLDER = joinpath("configs/osf")
 
 function osf_loader_dir()
     joinpath("..", @__DIR__)

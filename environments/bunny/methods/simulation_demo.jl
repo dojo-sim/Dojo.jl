@@ -1,10 +1,19 @@
 using Dojo
 using Plots
 using BenchmarkTools
-
+using OSFLoader
 
 vis = Visualizer()
 open(vis)
+
+
+OSFLoader.get_nerf_object(filename="bunny_trans")
+OSFLoader.get_nerf_object(filename="bluesoap")
+OSFLoader.get_nerf_object(filename="halfsoap")
+
+
+
+
 
 
 mech = get_bunny(timestep=0.01)

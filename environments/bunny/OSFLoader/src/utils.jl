@@ -110,9 +110,11 @@ function finite_difference_gradient(nerf_object, particle; δ=0.01, n::Int=5)
     return gradient
 end
 
-function get_nerf_object(;osf_path=OSFLoader.OSF_PATH)
+function get_nerf_object(;osf_path=OSFLoader.OSF_PATH,
+        config_folder=OSFLoader.OSF_CONFIG_FOLDER, filename="bunny_trans")
+    config_path = joinpath(osf_path, config_folder, filename, filename *".txt")
     load_density_script(mode=:cpu)
-    nerf_object = OSFLoader.py"generate_test_nerf"()
+    nerf_object = OSFLoader.py"generate_test_nerf"(config_path)
     return nerf_object
 end
 

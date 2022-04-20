@@ -1,5 +1,4 @@
-┌ Warning: Building OSFLoader package
-└ @ Main ~/.julia/dev/Dojo.jl/environments/bunny/OSFLoader/deps/build.jl:1
+[ Info: Building OSFLoader package
 [ Info: Setting up PyCall
     Building Conda ─→ `~/.julia/scratchspaces/44cfe95a-1eb2-52ea-b672-e2afdf69b78f/6e47d11ea2776bc5627421d59cdcc1296c058071/build.log`
     Building PyCall → `~/.julia/scratchspaces/44cfe95a-1eb2-52ea-b672-e2afdf69b78f/1fc929f47d7c151c839c5fc1375929766fb8edcc/build.log`
@@ -7,4 +6,4 @@ Precompiling project...
 [32m  ✓ [39m[90mGR[39m
 [32m  ✓ [39mPlots
 [32m  ✓ [39mOSFLoader
-  3 dependencies successfully precompiled in 36 seconds (136 already precompiled)
+  3 dependencies successfully precompiled in 34 seconds (144 already precompiled)
