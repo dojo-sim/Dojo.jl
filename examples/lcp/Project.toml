@@ -1,6 +1,9 @@
 [deps]
+AMD = "14f7f29c-3bd6-536c-9a0b-7339e30b5a3e"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 LDLFactorizations = "40e66cde-538c-5869-a4ad-c39174c6795b"
+MeshCat = "283c5d60-a78f-5afe-a0af-af636b173e11"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 QDLDL = "bfc457fd-c171-5ab7-bd9e-d5dbfc242d63"

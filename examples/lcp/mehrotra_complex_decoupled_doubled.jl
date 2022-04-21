@@ -14,11 +14,11 @@ A = A * A'
 b = sprand(L,0.5)
 LDLT = ldl(A)  # LDLᵀ factorization of A
 
-@benchmark x = LDLT \ b   # solves Ax = b
+# @benchmark x = LDLT \ b   # solves Ax = b
 
 F = qdldl(A)
 x = solve(F, b)
-@benchmark solve!(F, b)
+# @benchmark solve!(F, b)
 
 
 
@@ -32,29 +32,32 @@ function ip_solver(r, ∇r, c, θ, nd::Int, nc::Int; rtol=1e-6, μ0=1e-3*ones(nc
 
     # Intialisation
     v = v0
+    λ = zeros(nd+nc)
+    ρ = 1.0
     μ = 1.0*ones(nc) # useless value
     iter = 0
     println("\n")
     println("j α       r        sγ       Δs       Δγ       μ")
     for j = 1:I
+        ρ = min(1e5, 1.5ρ)
+        # ρ = 1e5#min(1e5, 10ρ)
         plotting(v, μ, plt, show_plot)
         (norm(r(v, μ0, θ), Inf) < rtol) && break
         iter += 1
         g = r(v, μ0, θ)
         H = ∇r(v, 0.0, θ)
-        # Δaff = - H \ g
-        Δaff = get_direction(H, g, v)
+        Δaff, Δλaff = get_direction(H, g, v, λ, ρ)
         αaff = conesearch(v, Δaff)
         ν, σ = centering(v, nc, αaff, Δaff)
         μ = max.(ν .* σ, μ0)
 
         # Predictor Corrector
         g = r(v, μ, θ)
-        # Δ = - H \ g
-        Δ = get_direction(H, g, v)
+        Δ, Δλ = get_direction(H, g, v, λ, ρ)
         α = conesearch(v, Δ)
         α = linesearch(v, Δ, c(v, μ0, θ), c, μ, α, θ)
         v += α .* Δ
+        λ += Δλ
         Δz, ΔΓ, ΔS = unpack(Δ)
 
         # Naive
@@ -64,33 +67,48 @@ function ip_solver(r, ∇r, c, θ, nd::Int, nc::Int; rtol=1e-6, μ0=1e-3*ones(nc
 
         z, Γ, S = unpack(v)
         println("$j" *
-            "$(scn.(α[end-5:end])) " *
+            # "$(scn.(α[end-5:end])) " *
+            "$(scn(mean(α[end-5:end]))) " *
             "$(scn(norm(g[1:nd+nc],Inf), exp_digits=2)) " *
             "$(scn(norm(S'*Γ,Inf), exp_digits=2)) " *
             "$(scn(norm(ΔS,Inf), exp_digits=2)) " *
             "$(scn(norm(ΔΓ,Inf), exp_digits=2)) " *
-            "$(scn.(μ))")
+            # "$(scn.(μ))")
+            "$(scn(mean(μ)))")
     end
     println("iter $(iter)  g $(scn(norm(r(v, μ0, θ),Inf)))")
     return v, iter
 end
 
-function get_direction(H, g, v)
+function get_direction(H, g, v, λ, ρ)
     x, Γ, S = unpack(v)
     gx, gΓ, gS = unpack(g)
     Hc = compact_hessian(H, v)
     gc = [gx; gΓ + gS ./ Γ]
     Δc = - Hc \ gc
-    HcD = [1e0*I(nd+nc) Hc';
-           Hc -1e0*I(nd+nc)]
-    F = qdldl(sparse(-HcD))
-    Δc = solve(F, gc)
+
+    Hs = [Hc[1:nd,:]; 1e0*Hc[nd .+ (1:nc),:]]
+    gs = [gc[1:nd]; 1e0*gc[nd .+ (1:nc)]]
+    # Hd = [ρ*(Hs'*Hs)+1e-8*I Hs';
+    Hd = [1e-8*I Hs';
+           Hs -1e-8*I(nd+nc)]
+    F = qdldl(sparse(-Hd))
+    # Δd = solve(F, [Hs'*λ + ρ*Hs'*gs; gs])
+    Δd = solve(F, [Hs'*λ; gs])
+    # Δc = Δd[1:nd+nc]
+    Δλ = Δd[nd+nc .+ (1:nd+nc)]
+    @show norm(λ)
 
     ΔΓ = Δc[nd .+ (1:nc)]
     Δ = [Δc; - (ΔΓ .* S + gS) ./ Γ]
-    return Δ
+    return Δ, Δλ
 end
-ip_solver(r, ∇r, c, θ, nd, nc; rtol=rtol0, μ0=μi*ones(nc), v0=v0, show_plot=true)
+
+# TODO ##################################################################################
+rtol0 = 1e-10
+μ0=1e-8*ones(nc)
+ip_solver(r, ∇r, c, θ, nd, nc; rtol=rtol0, μ0=μ0, v0=v0, show_plot=true, I=40)
+# TODO ##################################################################################
 
 
 function compact_hessian(H, v)
@@ -133,7 +151,7 @@ function linesearch(v, Δ, vio0, c, μ, α, θ)
 end
 
 function conesearch(v, Δ)
-    α = ones(nc)
+    α = 1*ones(nc)
     for j = 1:500
         z, Γ, S = unpack(0.99*v + [ones(nd); α; α] .* Δ)
         for i = 1:nc

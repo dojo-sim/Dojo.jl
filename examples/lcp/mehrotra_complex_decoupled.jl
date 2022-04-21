@@ -1,3 +1,6 @@
+using Pkg
+Pkg.activate(@__DIR__)
+
 using FiniteDiff
 using Plots
 using LinearAlgebra
@@ -6,23 +9,32 @@ using ForwardDiff
 using LDLFactorizations
 using QDLDL
 using BenchmarkTools
+using AMD
+using MeshCat
 
-L = 500
-A = sprand(L,L,5/L) + I
-A = A * A'
-# A = sparse(Diagonal([1,2,3,4,-0.0]))
-b = sprand(L,0.5)
-LDLT = ldl(A)  # LDLᵀ factorization of A
+vis = Visualizer()
+open(vis)
 
-@benchmark x = LDLT \ b   # solves Ax = b
-
-F = qdldl(A)
-x = solve(F, b)
-@benchmark solve!(F, b)
-
-
+mech = get_sphere(contact_type=:linear)
+initialize!(mech, :sphere)
+simulate!(mech, 1.0)
+M = full_matrix(mech.system)
+M[1:6,1:6]
+M[1:6, 13:18]
+M[13:18, 1:6]
 
 
+function visualize_particle(x, vis; h=0.01, name=:robot, animation=MeshCat.Animation(Int(ceil(1/h))))
+    N = length(x)
+    setobject!(vis[name], HyperRectangle(-Vec(0.25,0.25,0.0), Vec(0.5,0.5,0.5)))
+    for i = 1:N
+        atframe(animation, i) do
+            settransform!(vis[name], Translation(x[i]...))
+        end
+    end
+    setanimation!(vis, animation)
+    return vis, animation
+end
 
 function ip_solver(r, ∇r, c, θ, nd::Int, nc::Int; rtol=1e-6, μ0=1e-3*ones(nc),
         v0=ones(nd+2nc), show_plot=false, I=40)
@@ -42,7 +54,6 @@ function ip_solver(r, ∇r, c, θ, nd::Int, nc::Int; rtol=1e-6, μ0=1e-3*ones(nc
         iter += 1
         g = r(v, μ0, θ)
         H = ∇r(v, 0.0, θ)
-        # Δaff = - H \ g
         Δaff = get_direction(H, g, v)
         αaff = conesearch(v, Δaff)
         ν, σ = centering(v, nc, αaff, Δaff)
@@ -50,7 +61,6 @@ function ip_solver(r, ∇r, c, θ, nd::Int, nc::Int; rtol=1e-6, μ0=1e-3*ones(nc
 
         # Predictor Corrector
         g = r(v, μ, θ)
-        # Δ = - H \ g
         Δ = get_direction(H, g, v)
         α = conesearch(v, Δ)
         α = linesearch(v, Δ, c(v, μ0, θ), c, μ, α, θ)
@@ -64,13 +74,18 @@ function ip_solver(r, ∇r, c, θ, nd::Int, nc::Int; rtol=1e-6, μ0=1e-3*ones(nc
 
         z, Γ, S = unpack(v)
         println("$j" *
-            "$(scn.(α[end-5:end])) " *
+            # "$(scn.(α[end-5:end])) " *
+            "$(scn(mean(α[end-5:end]))) " *
             "$(scn(norm(g[1:nd+nc],Inf), exp_digits=2)) " *
             "$(scn(norm(S'*Γ,Inf), exp_digits=2)) " *
             "$(scn(norm(ΔS,Inf), exp_digits=2)) " *
             "$(scn(norm(ΔΓ,Inf), exp_digits=2)) " *
-            "$(scn.(μ))")
+            "$(scn(mean(μ)))")
+            # "$(scn.(μ))")
     end
+    x, S, Γ = unpack(v)
+    β = Γ[3:6]
+    @show scn.(β)
     println("iter $(iter)  g $(scn(norm(r(v, μ0, θ),Inf)))")
     return v, iter
 end
@@ -79,24 +94,18 @@ function get_direction(H, g, v)
     x, Γ, S = unpack(v)
     gx, gΓ, gS = unpack(g)
     Hc = compact_hessian(H, v)
-    gc = [gx; gΓ + gS ./ Γ]
+    gc = [gx; gΓ - E*gS ./ Γ]
     Δc = - Hc \ gc
-    HcD = [1e0*I(nd+nc) Hc';
-           Hc -1e0*I(nd+nc)]
-    F = qdldl(sparse(-HcD))
-    Δc = solve(F, gc)
-
     ΔΓ = Δc[nd .+ (1:nc)]
     Δ = [Δc; - (ΔΓ .* S + gS) ./ Γ]
+    # Δ = - H \ g
     return Δ
 end
-ip_solver(r, ∇r, c, θ, nd, nc; rtol=rtol0, μ0=μi*ones(nc), v0=v0, show_plot=true)
-
 
 function compact_hessian(H, v)
     x, Γ, S = unpack(v)
     Hc = H[1:nd+nc, 1:nd+nc]
-    Hc[nd .+ (1:nc), nd .+ (1:nc)] += Diagonal(S ./ Γ)
+    Hc[nd .+ (1:nc), nd .+ (1:nc)] += E*Diagonal(-S ./ Γ)
     return Hc
 end
 
@@ -116,9 +125,8 @@ function plotting(v, μ, plt, show_plot)
     z, Γ, S = unpack(v)
     for i = 1:nc
         scatter!(plt, S[i:i], Γ[i:i], color=colors[i], marker=0.2, markersize=12.0,
-            markershape=marker_shapes[i]) # TODO
-        # annotate!(plt, S[i], Γ[i], string(Int(round(log(10, μ)))), color=:white) # TODO
-        annotate!(plt, S[i], Γ[i], string(i), color=:white, seriesalpha=0.4) # TODO
+            markershape=marker_shapes[i])
+        annotate!(plt, S[i], Γ[i], string(i), color=:white, seriesalpha=0.4)
     end
     show_plot && display(plt)
 end
@@ -162,10 +170,41 @@ function velocity_mapping(x, θ)
     v = (x - x1)[1:2]/h
     return [v; -v]
 end
-M = ForwardDiff.jacobian(x -> velocity_mapping(x, zeros(3nd)), ones(3))
 
-function slacks(x, γ, β, ψ, θ)
-    [ϕ(x); cf*γ-[sum(β)]; velocity_mapping(x, θ) + ψ[1]*ones(4)]
+function slacks(x, Γ, S, θ)
+    # β = Γ[1:4]
+    # ψ = Γ[5:5]
+    # γ = Γ[6:6]
+    # η = S[1:4]
+    # ζ = S[5:5]
+    # s = S[6:6]
+    # [
+    #  + η - (velocity_mapping(x, θ) + ψ[1]*ones(4))
+    #  - ζ + (cf*γ-[sum(β)]);
+    #  + s - ϕ(x);
+    #  ]
+    # β = Γ[1:4]
+    # γ = Γ[5:5]
+    # ψ = Γ[6:6]
+    # η = S[1:4]
+    # s = S[5:5]
+    # ζ = S[6:6]
+    # [
+    #  + η - (velocity_mapping(x, θ) + ψ[1]*ones(4))
+    #  + s - ϕ(x);
+    #  - ζ + (cf*γ-[sum(β)]);
+    #  ]
+    γ = Γ[1:1]
+    ψ = Γ[2:2]
+    β = Γ[3:6]
+    s = S[1:1]
+    ζ = S[2:2]
+    η = S[3:6]
+    [
+    + s - ϕ(x);
+    - ζ + (cf*γ-[sum(β)]);
+    + η - (velocity_mapping(x, θ) + ψ[1]*ones(4))
+    ]
 end
 
 function d(x, γ, β, θ)
@@ -179,25 +218,49 @@ end
 function r(v, μ, θ)
     z, Γ, S = unpack(v)
     x = z
+    # β = Γ[1:4]
+    # ψ = Γ[5:5]
+    # γ = Γ[6:6]
+    # η = S[1:4]
+    # ζ = S[5:5]
+    # s = S[6:6]
+    # β = Γ[1:4]
+    # γ = Γ[5:5]
+    # ψ = Γ[6:6]
+    # η = S[1:4]
+    # s = S[5:5]
+    # ζ = S[6:6]
     γ = Γ[1:1]
     ψ = Γ[2:2]
     β = Γ[3:6]
     s = S[1:1]
     ζ = S[2:2]
     η = S[3:6]
-    return [d(x, γ, β, θ); slacks(x, γ, β, ψ, θ) - S ; S .* Γ .- μ]
+    return [d(x, γ, β, θ); slacks(x, Γ, S, θ); S .* Γ .- μ]
 end
 
 function c(v, μ, θ)
     z, Γ, S = unpack(v)
     x = z
+    # β = Γ[1:4]
+    # ψ = Γ[5:5]
+    # γ = Γ[6:6]
+    # η = S[1:4]
+    # ζ = S[5:5]
+    # s = S[6:6]
+    # β = Γ[1:4]
+    # γ = Γ[5:5]
+    # ψ = Γ[6:6]
+    # η = S[1:4]
+    # s = S[5:5]
+    # ζ = S[6:6]
     γ = Γ[1:1]
     ψ = Γ[2:2]
     β = Γ[3:6]
     s = S[1:1]
     ζ = S[2:2]
     η = S[3:6]
-    return norm(d(x, γ, β, θ), Inf), norm(S - slacks(x, γ, β, ψ, θ), Inf), norm(S .* Γ .- μ, Inf)
+    return norm(d(x, γ, β, θ), Inf), norm(slacks(x, Γ, S, θ), Inf), norm(S .* Γ .- μ, Inf)
 end
 
 function ∇r(v, μ, θ)
@@ -212,6 +275,8 @@ nc = 6ncon
 
 cf = 0.3
 h = 0.01
+M = ForwardDiff.jacobian(x -> velocity_mapping(x, zeros(3nd)), ones(3))
+E = ForwardDiff.jacobian(S -> slacks(ones(nd), ones(nc), S, ones(3nd)), ones(nc))
 m = 1.0
 g = [0.0, 0.0, -10.0]
 x0 = [0.0, 0.0, 0.0]
@@ -224,14 +289,16 @@ marker_shapes = [:circle, :rect, :diamond, :hexagon, :utriangle, :dtriangle]
 zi = 0.2e+0
 μi = 1e-8
 rtol0 = 1e-10
-S0 = 1e-3*[μi,1,μi,μi,μi,μi]
+S0 = 1e-0*[μi,μi,μi,μi,μi,1]
+# S0 = 1e-0*[μi,1,μi,μi,μi,μi]
 # S0 = [1,μi,μi,μi,μi,μi]
-Γ0 = 1e-3*[1,μi,1,1,1,1]
+Γ0 = 1e-0*[1,1,1,1,1,μi]
+# Γ0 = 1e-0*[1,μi,1,1,1,1]
 # Γ0 = [μi,1,1,1,1,1]
 v0 = [zi*ones(nd); 1e-0*Γ0; 1e-0*S0]
-ip_solver(r, ∇r, c, θ, nd, nc; rtol=rtol0, μ0=μi*ones(nc), v0=v0, show_plot=true)
+ip_solver(r, ∇r, c, θ, nd, nc; rtol=rtol0, μ0=μi*ones(nc), v0=v0, show_plot=false, I=1)
 
-v0 = [zi*ones(nd); 1e-0*S0; μi*Γ0]
+v0 = [zi*ones(nd); 1e-0*S0; 1e-0*Γ0]
 ip_solver(r, ∇r, c, θ, nd, nc; rtol=rtol0, μ0=μi*ones(nc), v0=v0, show_plot=true)
 
 v0 = [zi*ones(nd); μi*ones(nc); 1e-0*ones(nc)]
@@ -266,10 +333,11 @@ function simulate!(x0, x1, U; rtol=1e-8, μ0=1e-5, warmstart=true, show_plot=fal
     return vs, iters
 end
 
-H = 60
-x0 = [0.5, 0.5, 0.5]
-x1 = [0.5, 0.5, 0.5]
-U = [1e-3*[1e3, 1e3, 1e2] .* (rand(3).-0.5) for i=1:H]
+cf = 1.10
+H = 222
+x0 = [0.0, 0.0, 0.1]
+x1 = [0.0, 0.01, 0.1]
+U = [1*1e-9*[1e3, 1e3, 1e2] .* (rand(3).-0.5) for i=1:H]
 ts = [i*h for i = 0:H-2]
 # rtol0 = 1e-10
 # μ0sim = 1e-8
@@ -280,28 +348,13 @@ rtol0 = 1e-6
 # warm starting works well with rtol >= μ0
 # warm starting doesn't work with rtol < μ0
 vs_w, iters_w = simulate!(x0, x1, U[1:H], rtol=rtol0, μ0=μ0sim, show_plot=false)
-vs, iters = simulate!(x0, x1, U[1:H], rtol=rtol0, μ0=μ0sim, warmstart=false, show_plot=false)
+# vs, iters = simulate!(x0, x1, U[1:H], rtol=rtol0, μ0=μ0sim, warmstart=false, show_plot=false)
 
-H0 = ∇r(0.1*ones(15), μ0sim, [x0; x1; U[1]])
-plot(Gray.(1e9abs.(H0)))
-plot(Gray.(1e9abs.(H0+H0')))
-H0[1:3,1:3]
-H0[4:9,4:9]
-H0[4:9,end-5:end]
-H0[end-5:end,4:9]
-H0[end-5:end,end-5:end]
-H0[4:9,1:3]
-H0[1:3,4:9]'
-
-Hc0 = compact_hessian(H0, rand(15))
-plot(Gray.(1e9abs.(Hc0)))
-plot(Gray.(1e9abs.(Hc0 + Hc0')))
-Hc0[1:3,1:3]
-Hc0[1:3,4:9]
-Hc0[4:9,1:3]
-Hc0[4:9,4:9]
-Hc0 + Hc0'
-
+traj = [v[1:3] for v in vs]
+traj_w = [v[1:3] for v in vs_w]
+h = 0.01
+vis, anim = visualize_particle(traj_w, vis, h=h, name=:robot_w)
+# vis, anim = visualize_particle(traj, vis, h=h, name=:robot)
 
 
 sum(iters[2:end]) / sum(iters_w[2:end])
@@ -347,3 +400,97 @@ ip_solver(r, ∇r, c, θ_fail, nd, nc; rtol=rtol0, μ0=μ0fail, show_plot=true)
 
 plt = plot(xlims=[1e-12,1e2], ylims=[1e-12,1e2], legend=false, aspectratio=1.0, axis=:log)
 plotting(v_fail, μ0fail, plt, true)
+
+
+
+
+
+
+
+
+v0 = 0.1*ones(15)
+H0 = ∇r(v0, μ0sim, [x0; x1; U[1]])
+
+impact = [1,2,3,4,10]
+H0[impact, impact]
+Hc0 = compact_hessian(H0, v0)
+Hc0 - Hc0'
+
+plot(Gray.(1e9abs.(H0)))
+plot(Gray.(1e9abs.(H0+H0')))
+plot(Gray.(1e9abs.(H0-H0')))
+H0[1:3,1:3]
+H0[4:9,4:9]
+H0[4:9,end-5:end]
+H0[end-5:end,4:9]
+H0[end-5:end,end-5:end]
+H0[4:9,1:3]
+H0[1:3,4:9]'
+
+Hc0 = compact_hessian(H0, rand(15))
+plot(Gray.(1e9abs.(Hc0)))
+plot(Gray.(1e9abs.(Hc0 + Hc0')))
+plot(Gray.(1e9abs.(Hc0 - Hc0')))
+Hc0[1:3,1:3]
+Hc0[1:3,4:9]
+Hc0[4:9,1:3]
+Hc0[4:9,4:9]
+Hc0 - Hc0'
+function permutation_matrix(p)
+    n = length(p)
+    P = zeros(n,n)
+    for i = 1:n
+        P[p[i],i] = 1
+    end
+    return P
+end
+
+function permute_matrix(A, p)
+    P = permutation_matrix(p)
+    return P' * A * P
+end
+
+P = permutation_matrix([1,2,3,6,7,8,9,4,5])
+Hp0 = P' * Hc0 * P
+plot(Gray.(1e9abs.(Hp0 - Hp0')))
+
+
+
+
+# L = 500
+# A = sprand(L,L,5/L) + I
+# A = A * A'
+# # A = sparse(Diagonal([1,2,3,4,-0.0]))
+# b = sprand(L,0.5)
+# LDLT = ldl(A)  # LDLᵀ factorization of A
+#
+# @benchmark x = LDLT \ b   # solves Ax = b
+#
+# F = qdldl(A)
+# x = solve(F, b)
+# @benchmark solve!(F, b)
+#
+
+
+A = sprand(100, 100, 1/200)
+A = A * A'
+plot(Gray.(100*abs.(Matrix(A))))
+p_amd = amd(A)
+p_symamd = symamd(A)
+p_colamd = colamd(A)
+
+Ap = permute_matrix(A, p_symamd)
+Ap = permute_matrix(A, p_amd)
+plot(Gray.(100*abs.(Matrix(A))))
+plot(Gray.(100*abs.(Matrix(Ap))))
+
+p_amd = amd(sparse(Hc0))
+p_symamd = symamd(sparse(Hc0))
+p_colamd = colamd(sparse(Hc0))
+Hc0_a = permute_matrix(Hc0, p_amd)
+Hc0_s = permute_matrix(Hc0, p_symamd)
+Hc0_c = permute_matrix(Hc0, p_colamd)
+plot(Gray.(100*abs.(Matrix(Hc0))))
+plot(Gray.(100*abs.(Matrix(Hc0_a))))
+plot(Gray.(100*abs.(Matrix(Hc0_s))))
+plot(Gray.(100*abs.(Matrix(Hc0_c))))
