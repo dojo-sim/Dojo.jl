@@ -1,13 +1,17 @@
-function unpack_vars(vars; N=N)
+#################################################################################\
+# variables
+#################################################################################\
+function unpack_vars(vars; N=N, H=H)
 	nθ = (nx+1) * nu
 	θ = vars[1:nθ]
 	xstarts = [vars[nθ + nx*(i-1) .+ (1:nx)] for i=1:N-1]
-	return θ, xstarts
+	us = (nu * H)
+	return θ, xstarts, us
 end
 
-function pack_vars(θ, xstarts; N=N)
+function pack_vars(θ, xstarts, us; N=N, H=H)
 	nθ = nu * nx
-	vars = vcat(θ, xstarts...)
+	vars = vcat(θ, xstarts..., us...)
 	return vars
 end
 # vars = rand(nva)
@@ -56,11 +60,13 @@ function policy(env::Environment, x, θ)
 end
 
 function policy_jacobian_parameters(env::Environment, x, θ)
-	FiniteDiff.finite_difference_jacobian(θ -> policy(env, x, θ), θ)
+	# FiniteDiff.finite_difference_jacobian(θ -> policy(env, x, θ), θ)
+	ForwardDiff.jacobian(θ -> policy(env, x, θ), θ)
 end
 
 function policy_jacobian_state(env::Environment, x, θ)
-	FiniteDiff.finite_difference_jacobian(x -> policy(env, x, θ), x)
+	# FiniteDiff.finite_difference_jacobian(x -> policy(env, x, θ), x)
+	ForwardDiff.jacobian(x -> policy(env, x, θ), x)
 end
 
 

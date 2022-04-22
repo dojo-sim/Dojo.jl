@@ -9,8 +9,10 @@ function augmented_lagrangian_solver(env, obj, Xref, splits, vars)
 		for j = 1:4
 			f = cost_only(env, obj, Xref, splits, vars)
 			g = FiniteDiff.finite_difference_gradient(vars -> cost_only(env, obj, Xref, splits, vars), vars)
+			# g = ForwardDiff.gradient(vars -> cost_only(env, obj, Xref, splits, vars), vars)
 			(norm(g, Inf) < 1e-3) && break
 			hess = FiniteDiff.finite_difference_hessian(vars -> cost_only(env, obj, Xref, splits, vars), vars)
+			# hess = ForwardDiff.hessian(vars -> cost_only(env, obj, Xref, splits, vars), vars)
 			Δ = - hess \ g
 			X = policy_rollout_only(env, x0, splits, vars)
 			vio = violation(X, N)
@@ -46,4 +48,19 @@ function linesearch(env, obj, Xref, splits, vars, Δ, f, vio)
 		α *= 0.5
 	end
 	return α
+end
+
+function continuation_solve(env, obj, Xref, vars, H, N)
+	x0 = Xref[1]
+	obj.ρ = 1e-3
+	for Ni in [20, 10, 5, 2]
+		splits = split_trajectory(H, Ni)
+		obj.λ = [zeros(nx) for i=1:Ni-1]
+		obj.Q *= 3
+
+		θ, xstarts = unpack_vars(vars, N=Ni)
+		vars = [θ; vcat([Xref[s[end]] for s in splits[1:Ni-1]]...)]
+		vars = augmented_lagrangian_solver(env, obj, Xref, splits, vars)
+	end
+	return vars
 end
