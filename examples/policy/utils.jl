@@ -5,17 +5,16 @@ function unpack_vars(vars; N=N, H=H)
 	nθ = (nx+1) * nu
 	θ = vars[1:nθ]
 	xstarts = [vars[nθ + nx*(i-1) .+ (1:nx)] for i=1:N-1]
-	us = (nu * H)
+	us = [vars[nθ + (N-1)*nx + (i-1)*nu .+ (1:nu)] for i=1:H-1]
 	return θ, xstarts, us
 end
 
 function pack_vars(θ, xstarts, us; N=N, H=H)
-	nθ = nu * nx
 	vars = vcat(θ, xstarts..., us...)
 	return vars
 end
 # vars = rand(nva)
-# vars - pack_vars(unpack_vars(vars)...)
+# norm(vars - pack_vars(unpack_vars(vars, N=N0, H=H0)..., N=N0, H=H0))
 
 function split_trajectory(H::Int, N::Int)
 	C = H + N - 1
@@ -30,21 +29,6 @@ function split_trajectory(H::Int, N::Int)
     return splits
 end
 
-function ctrl!(mechanism::Mechanism, k::Int; θ=nothing)
-    timestep = mechanism.timestep
-    nu = input_dimension(mechanism)
-    nx = minimal_dimension(mechanism)
-
-    x = get_minimal_state(mechanism)
-    if θ != nothing
-        u = θ * x
-    else
-        u = szeros(nu)
-    end
-    set_input!(mechanism, timestep * u)
-
-    return nothing
-end
 
 ################################################################################
 # Policy
@@ -69,7 +53,21 @@ function policy_jacobian_state(env::Environment, x, θ)
 	ForwardDiff.jacobian(x -> policy(env, x, θ), x)
 end
 
+function ctrl!(mechanism::Mechanism, k::Int; θ=nothing)
+    timestep = mechanism.timestep
+    nu = input_dimension(mechanism)
+    nx = minimal_dimension(mechanism)
 
+    x = get_minimal_state(mechanism)
+    if θ != nothing
+        u = θ * x
+    else
+        u = szeros(nu)
+    end
+    set_input!(mechanism, timestep * u)
+
+    return nothing
+end
 
 
 ################################################################################
@@ -89,30 +87,44 @@ function plot_rollout(X, Xref, splits)
 	return nothing
 end
 
-
-
-
-mutable struct AugmentedObjective115{T}
+mutable struct AugmentedObjective119{T}
 	Q::AbstractMatrix{T}
 	Qθ::AbstractMatrix{T}
     Qstart::AbstractMatrix{T}
-    R::AbstractMatrix{T}
-	λ::Vector{Vector{T}}
-	ρ::T
+	R::AbstractMatrix{T}
+	λx::Vector{Vector{T}}
+	λu::Vector{Vector{T}}
+	ρx::T
+	ρu::T
 end
 
-function constraints(X, N)
-	con = [zeros(nx) for i=1:N-1]
+function constraints(X, splits, vars)
+	N = length(splits)
+	H = splits[end][end]
+	θ, xstarts, us = unpack_vars(vars, N=N, H=H)
+	con_x = [zeros(nx) for i=1:N-1]
 	for i = 1:N-1
 		xend = X[i][end]
 		xstart = X[i+1][1]
-		con[i] = xstart - xend
+		con_x[i] = xstart - xend
 	end
-	return con
+	con_u = [zeros(nu) for i=1:H-1]
+	for i = 1:N
+		for (j,ind) in enumerate(splits[i])
+			if ind < H
+				x = X[i][j]
+				up = policy(env, x, θ)
+				uc = us[ind]
+				con_u[ind] = up - uc
+			end
+		end
+	end
+	return con_x, con_u
 end
 
-function violation(X, N)
-	con = constraints(X, N)
-	(N == 1) && return 1e-3
-	return norm([con...], Inf)
+function violation(X, splits, vars)
+	con_x, con_u = constraints(X, splits, vars)
+	return norm([con_x...; con_u...], Inf)
+	# @warn "ignore con_u"
+	# return norm([con_x...], Inf)
 end

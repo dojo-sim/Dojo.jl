@@ -3,7 +3,7 @@ function augmented_lagrangian_solver(env, obj, Xref, splits, vars)
 	x0 = Xref[1]
 	X = policy_rollout_only(env, x0, splits, vars)
 	for i = 1:20
-		(violation(X, N) < 1e-4) && break
+		(violation(X, splits, vars) < 3e-3) && break
 		println("")
 		println("i j  f       g       α       Δ       vio")
 		for j = 1:4
@@ -15,7 +15,7 @@ function augmented_lagrangian_solver(env, obj, Xref, splits, vars)
 			# hess = ForwardDiff.hessian(vars -> cost_only(env, obj, Xref, splits, vars), vars)
 			Δ = - hess \ g
 			X = policy_rollout_only(env, x0, splits, vars)
-			vio = violation(X, N)
+			vio = violation(X, splits, vars)
 			α = linesearch(env, obj, Xref, splits, vars, Δ, f, vio)
 			vars += α * Δ
 			println("$i $j " *
@@ -27,15 +27,26 @@ function augmented_lagrangian_solver(env, obj, Xref, splits, vars)
 				)
 		end
 		# Dual ascent and penalty update
-		X = policy_rollout_only(env, x0, splits, vars)
-		plot_rollout(X, Xref, splits)
-		con = constraints(X, N)
-		for i = 1:N-1
-			obj.λ[i] += obj.ρ * con[i]
-		end
-		obj.ρ = min(obj.ρ * 10, 1e6)
+		dual_ascent(env, obj, Xref, x0, splits, vars)
+		obj.ρx = min(obj.ρx * 10, 1e6)
+		obj.ρu = min(obj.ρu * 10, 1e6)
 	end
 	return vars
+end
+
+function dual_ascent(env, obj, Xref, x0, splits, vars)
+	N = length(splits)
+	H = splits[end][end]
+	X = policy_rollout_only(env, x0, splits, vars)
+	plot_rollout(X, Xref, splits)
+	con_x, con_u = constraints(X, splits, vars)
+	for i = 1:N-1
+		obj.λx[i] += obj.ρx * con_x[i]
+	end
+	for i = 1:H-1
+		obj.λu[i] += obj.ρu * con_u[i]
+	end
+	return nothing
 end
 
 function linesearch(env, obj, Xref, splits, vars, Δ, f, vio)
@@ -44,23 +55,8 @@ function linesearch(env, obj, Xref, splits, vars, Δ, f, vio)
 	for i = 1:10
 		f1 = cost_only(env, obj, Xref, splits, vars+α*Δ)
 		X1 = policy_rollout_only(env, x0, splits, vars+α*Δ)
-		(f1 <= f || violation(X1, N) <= vio) && break
+		(f1 <= f || violation(X1, splits, vars) <= vio) && break
 		α *= 0.5
 	end
 	return α
-end
-
-function continuation_solve(env, obj, Xref, vars, H, N)
-	x0 = Xref[1]
-	obj.ρ = 1e-3
-	for Ni in [20, 10, 5, 2]
-		splits = split_trajectory(H, Ni)
-		obj.λ = [zeros(nx) for i=1:Ni-1]
-		obj.Q *= 3
-
-		θ, xstarts = unpack_vars(vars, N=Ni)
-		vars = [θ; vcat([Xref[s[end]] for s in splits[1:Ni-1]]...)]
-		vars = augmented_lagrangian_solver(env, obj, Xref, splits, vars)
-	end
-	return vars
 end

@@ -1,6 +1,7 @@
 function policy_rollout_only(env::Environment, x0, splits, vars::Vector)
 	N = length(splits)
-	θ, xstarts = unpack_vars(vars, N=N)
+	H = splits[end][end]
+	θ, xstarts,us = unpack_vars(vars, N=N, H=H)
 
 	X = [[zeros(nx) for j=1:length(splits[i])] for i=1:N]
 
@@ -14,7 +15,8 @@ function policy_rollout_only(env::Environment, x0, splits, vars::Vector)
 			x = X[i][j]
 			y = X[i][j+1]
 			xref = Xref[ind]
-			u = policy(env, x, θ)
+			# u = policy(env, x, θ)
+			u = us[ind]
 			# dynamics(y, env, x, u, nothing;
 			# 	attitude_decompress=false)
 			dx = zeros(nx,nx)
@@ -25,17 +27,21 @@ function policy_rollout_only(env::Environment, x0, splits, vars::Vector)
     return X
 end
 
-function pure_policy_rollout(env::Environment, x0, splits, vars::Vector)
+function pure_policy_rollout(env::Environment, x0, splits, vars::Vector; mode::Symbol=:policy)
 	N = length(splits)
 	H = splits[end][end]
-	θ, xstarts = unpack_vars(vars, N=N)
+	θ, xstarts, us = unpack_vars(vars, N=N, H=H)
 
 	X = [zeros(nx) for i = 1:H]
 	X[1] .= deepcopy(x0)
 	for i = 1:H-1
 		x = X[i]
 		y = X[i+1]
-		u = policy(env, x, θ)
+		if mode == :policy
+			u = policy(env, x, θ)
+		else mode == :control
+			u = us[i]
+		end
 		dx = zeros(nx,nx)
 		du = zeros(nx,nu)
 		dummy_dynamics(y, dx, du, x, u)
@@ -51,7 +57,8 @@ end
 
 function cost_only(env::Environment, obj, X, Xref, splits, vars)
 	N = length(splits)
-	θ, xstarts = unpack_vars(vars, N=N)
+	H = splits[end][end]
+	θ, xstarts, us = unpack_vars(vars, N=N, H=H)
 
 	# Initialization
 	f = 0.0
@@ -61,26 +68,27 @@ function cost_only(env::Environment, obj, X, Xref, splits, vars)
 	for i = 1:N
 		for (j,ind) in enumerate(splits[i])
 			x = X[i][j]
-			# @show size(X[i])
-			# @show size(X[i])
-			# @show size(X[i][j])
-			# @show size(x)
 			xref = Xref[ind]
-			u = policy(env, x, θ)
 			f += 0.5 * (x - xref)' * obj.Q * (x - xref)
-			f += 0.5 * u' * obj.R * u
+			if ind < H
+				up = policy(env, x, θ)
+				uc = us[ind]
+				f += obj.λu[ind]' * (up - uc)
+				f += 0.5 * obj.ρu * (up - uc)' * (up - uc)
+				f += 0.5 * up' * obj.R * up
+			end
 		end
 	end
 
 	# Constraints
 	for i = 1:N-1
-		λ = obj.λ[i]
+		λx = obj.λx[i]
 		xend = X[i][end]
 		xstart = X[i+1][1]
-		f += λ' * (xstart - xend)
-		f += 0.5 * obj.ρ * (xstart - xend)' * (xstart - xend)
+		f += λx' * (xstart - xend)
+		f += 0.5 * obj.ρx * (xstart - xend)' * (xstart - xend)
 		# xref = Xref[splits[i][end]]
-		# f += λ' * (xref - xend)
+		# f += λx' * (xref - xend)
 		# f += 0.5 * obj.ρ * (xref - xend)' * (xref - xend)
 	end
 
@@ -105,7 +113,7 @@ end
 # R0 = 0*1e-2*Diagonal(ones(nu))
 # λ0 = [(i in (1,2))*ones(nx) for i=1:N-1]
 # ρ0 = 0.0
-# obj0 = AugmentedObjective115(Q0, R0, λ0, ρ0)
+# obj0 = AugmentedObjective119(Q0, R0, λ0, ρ0)
 #
 # cost(env, obj0, X0, dX0, dU0, Xref, vars0)
 # cost(env, obj0, Xref, vars0)
