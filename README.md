@@ -9,6 +9,8 @@ A differentiable simulator for robotics
 - site: https://sites.google.com/view/dojo-sim
 - video presentation: https://youtu.be/TRtOESXJxJQ
 
+[![IMAGE ALT TEXT](https://i.ytimg.com/vi/TRtOESXJxJQ/hq720.jpg?sqp=-oaymwEcCOgCEMoBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLD1RdCHZ0Z1zSkv1N-PD0Ds79lDiA)](https://youtu.be/TRtOESXJxJQ "Dojo: A Differentiable Simulator for Robotics")
+
 # Examples
 
 ## Simulation
