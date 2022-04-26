@@ -4,13 +4,15 @@
 function unpack_vars(vars; N=N, H=H)
 	nθ = (nx+1) * nu
 	θ = vars[1:nθ]
-	xstarts = [vars[nθ + nx*(i-1) .+ (1:nx)] for i=1:N-1]
-	us = [vars[nθ + (N-1)*nx + (i-1)*nu .+ (1:nu)] for i=1:H-1]
-	return θ, xstarts, us
+	# xstarts = [vars[nθ + nx*(i-1) .+ (1:nx)] for i=1:N-1]
+	us = [vars[nθ + (i-1)*nu .+ (1:nu)] for i=1:H-1]
+	# return θ, xstarts, us
+	return θ, us
 end
 
-function pack_vars(θ, xstarts, us; N=N, H=H)
-	vars = vcat(θ, xstarts..., us...)
+function pack_vars(θ, us; N=N, H=H)
+	# vars = vcat(θ, xstarts..., us...)
+	vars = vcat(θ, us...)
 	return vars
 end
 # vars = rand(nva)
@@ -87,7 +89,7 @@ function plot_rollout(X, Xref, splits)
 	return nothing
 end
 
-mutable struct AugmentedObjective119{T}
+mutable struct AugmentedObjective120{T}
 	Q::AbstractMatrix{T}
 	Qθ::AbstractMatrix{T}
     Qstart::AbstractMatrix{T}
@@ -96,12 +98,13 @@ mutable struct AugmentedObjective119{T}
 	λu::Vector{Vector{T}}
 	ρx::T
 	ρu::T
+	u_scale::T
 end
 
-function constraints(X, splits, vars)
+function constraints(X, obj, splits, vars)
 	N = length(splits)
 	H = splits[end][end]
-	θ, xstarts, us = unpack_vars(vars, N=N, H=H)
+	θ, us = unpack_vars(vars, N=N, H=H)
 	con_x = [zeros(nx) for i=1:N-1]
 	for i = 1:N-1
 		xend = X[i][end]
@@ -115,15 +118,15 @@ function constraints(X, splits, vars)
 				x = X[i][j]
 				up = policy(env, x, θ)
 				uc = us[ind]
-				con_u[ind] = up - uc
+				con_u[ind] = obj.u_scale * (up - uc)
 			end
 		end
 	end
 	return con_x, con_u
 end
 
-function violation(X, splits, vars)
-	con_x, con_u = constraints(X, splits, vars)
+function violation(X, obj, splits, vars)
+	con_x, con_u = constraints(X, obj, splits, vars)
 	return norm([con_x...; con_u...], Inf)
 	# @warn "ignore con_u"
 	# return norm([con_x...], Inf)

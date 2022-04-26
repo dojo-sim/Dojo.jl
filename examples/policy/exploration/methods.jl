@@ -1,14 +1,15 @@
 function policy_rollout_only(env::Environment, x0, splits, vars::Vector)
 	N = length(splits)
 	H = splits[end][end]
-	θ, xstarts,us = unpack_vars(vars, N=N, H=H)
+	θ, us = unpack_vars(vars, N=N, H=H)
 
 	X = [[zeros(nx) for j=1:length(splits[i])] for i=1:N]
 
 	# Initial states
 	X[1][1] .= deepcopy(x0)
 	for i = 1:N-1
-		X[i+1][1] .= deepcopy(xstarts[i])
+		# X[i+1][1] .= deepcopy(xstarts[i])
+		X[i+1][1] .= deepcopy(Xref[splits[i+1][1]])
 	end
 	for i = 1:N
 		for (j,ind) in enumerate(splits[i][1:end-1])
@@ -27,19 +28,17 @@ function policy_rollout_only(env::Environment, x0, splits, vars::Vector)
     return X
 end
 
-function pure_policy_rollout(env::Environment, x0, splits, vars::Vector; mode::Symbol=:policy)
-	N = length(splits)
-	H = splits[end][end]
-	θ, xstarts, us = unpack_vars(vars, N=N, H=H)
+function pure_policy_rollout(env::Environment, x0, N, H, vars::Vector; mode::Symbol=:policy, Hsim=H)
+	θ, us = unpack_vars(vars, N=N, H=H)
 
-	X = [zeros(nx) for i = 1:H]
+	X = [zeros(nx) for i = 1:Hsim]
 	X[1] .= deepcopy(x0)
-	for i = 1:H-1
+	for i = 1:Hsim-1
 		x = X[i]
 		y = X[i+1]
 		if mode == :policy
 			u = policy(env, x, θ)
-		else mode == :control
+		elseif mode == :control
 			u = us[i]
 		end
 		dx = zeros(nx,nx)
@@ -58,7 +57,7 @@ end
 function cost_only(env::Environment, obj, X, Xref, splits, vars)
 	N = length(splits)
 	H = splits[end][end]
-	θ, xstarts, us = unpack_vars(vars, N=N, H=H)
+	θ, us = unpack_vars(vars, N=N, H=H)
 
 	# Initialization
 	f = 0.0
@@ -73,14 +72,21 @@ function cost_only(env::Environment, obj, X, Xref, splits, vars)
 			if ind < H
 				up = policy(env, x, θ)
 				uc = us[ind]
-				f += obj.λu[ind]' * (up - uc)
-				f += 0.5 * obj.ρu * (up - uc)' * (up - uc)
+				f += obj.λu[ind]' * obj.u_scale * (up - uc)
+				f += 0.5 * obj.ρu * obj.u_scale * (up - uc)' * obj.u_scale * (up - uc)
+				f += 0.5 * (up - uc)' * obj.Qstart * (up - uc)
 				f += 0.5 * up' * obj.R * up
 			end
 		end
 	end
 
 	# Constraints
+	for i = 1:N-1
+		xend = X[i][end]
+		xstart = X[i+1][1]
+		con_x[i] = xstart - xend
+	end
+
 	for i = 1:N-1
 		λx = obj.λx[i]
 		xend = X[i][end]
@@ -93,12 +99,12 @@ function cost_only(env::Environment, obj, X, Xref, splits, vars)
 	end
 
 	# parameter regularizer
-	for i = 1:N-1
-		xstart = xstarts[i]
-		xref = Xref[splits[i][end]]
-		f += 0.5 * (xstart - xref)' * obj.Qstart * (xstart - xref)
+	# for i = 1:N-1
+		# xstart = xstarts[i]
+		# xref = Xref[splits[i][end]]
+		# f += 0.5 * (xstart - xref)' * obj.Qstart * (xstart - xref)
 		# f += 0.5 * (xstart - Xref[1])' * obj.Qstart * (xstart - Xref[1])
-	end
+	# end
 	f += 0.5 * θ' * obj.Qθ * θ
 
 	return f
@@ -113,7 +119,7 @@ end
 # R0 = 0*1e-2*Diagonal(ones(nu))
 # λ0 = [(i in (1,2))*ones(nx) for i=1:N-1]
 # ρ0 = 0.0
-# obj0 = AugmentedObjective119(Q0, R0, λ0, ρ0)
+# obj0 = AugmentedObjective120(Q0, R0, λ0, ρ0)
 #
 # cost(env, obj0, X0, dX0, dU0, Xref, vars0)
 # cost(env, obj0, Xref, vars0)
