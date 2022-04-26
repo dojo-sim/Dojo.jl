@@ -7,53 +7,40 @@ const iLQR = IterativeLQR
 using LinearAlgebra
 using Plots
 using Symbolics
-using BenchmarkTools
 
 
 # ## contact particle
+
 vis = Visualizer()
 open(vis)
 
+# mech = get_particle(timestep=0.05)
+# initialize_particle!(mech, position=[0,0,0.30], velocity=[4,0,0.0])
+# @time storage = simulate!(mech, 1.0, opts=SolverOptions(rtol=1e-4, btol=1e-4))
+# visualize(mech, storage, vis=vis)
+#
+# y0 = zeros(nx+nθ)
+# x0 = rand(nx)
+# u0 = rand(nu+nθ)
+# w0 = rand(nw)
+# f1(y0, x0, u0, w0)
+# y0
 
-include("model_contact_particle.jl")
 
+
+
+
+nx = 6
+nu = 3
+nw = 0
 timestep = 0.05
 gravity = -9.81
-rtol = 1e-7
-btol = 1e-5
-model = ContactParticle19(gravity=gravity, timestep=timestep)
-add_symbolics!(model)
-env = particle(timestep=timestep)
-
-
-nx = model.nx
-nu = model.nu
-
-x_hist = [[0,0,1,2,1,0.0]]
-for i = 1:100
-    y = zeros(nx)
-    dynamics(model, y, x_hist[end], [0,0,0.0], btol=1e-3, rtol=1e-5)
-    push!(x_hist, y)
-end
-plot(hcat(x_hist...)'[:,1:3])
-
-z_hist = [minimal_to_maximal(env.mechanism, x) for x in x_hist]
-storage_hist = generate_storage(env.mechanism, z_hist)
-visualize(env.mechanism, storage_hist, vis=vis)
-
-x = [1,1,1,1,1,1.0]
-u = [0,0,0.0]
-dx = zeros(nx,nx)
-du = zeros(nx,nu)
-dynamics_jacobian_state(model, dx, x, u; btol=1e-3, rtol=1e-5)
-dx
-dynamics_jacobian_input(model, du, x, u; btol=1e-3, rtol=1e-5)
-du
-
+opts = SolverOptions(rtol=1e-3, btol=1e-3, undercut=1.5)
+env = particle(timestep=timestep, gravity=gravity, opts_step=opts, opts_grad=opts)
 
 # ## initialization
 x1 = [0.0; 0.0; 0.25; 0.0; 0.0; 0.0]
-xT = [1.0; 2.0; 0.25; 0.0; 0.0; 0.0]
+xT = [1.0; 1.0; 0.25; 0.0; 0.0; 0.0]
 u_hover = [0.0, 0.0, 0.0]
 
 # ## (1-layer) multi-layer perceptron policy
@@ -92,8 +79,7 @@ function f1(y, x, u, w)
     x_di = x[1:nx]
     θ = u[nu .+ (1:nθ)]
     # dynamics(drone, h, x_di, u_ctrl, w);
-    # dynamics(view(y, 1:nx), env, x_di, u_ctrl, w)
-    dynamics(model, view(y, 1:nx), x_di, u_ctrl)
+    dynamics(view(y, 1:nx), env, x_di, u_ctrl, w)
     y[nx .+ (1:nθ)] .= θ
     # [
     #     y;
@@ -107,8 +93,7 @@ function f1x(dx, x, u, w)
     θ = u[nu .+ (1:nθ)]
     # dynamics(drone, h, x_di, u_ctrl, w);
     dx .= 0.0
-    # dynamics_jacobian_state(view(dx, 1:nx, 1:nx), env, x_di, u_ctrl, w)
-    dynamics_jacobian_state(model, view(dx, 1:nx, 1:nx), x_di, u_ctrl)
+    dynamics_jacobian_state(view(dx, 1:nx, 1:nx), env, x_di, u_ctrl, w)
     # [
     #     dx;
     #     zeros(nθ,nx);
@@ -121,8 +106,7 @@ function f1u(du, x, u, w)
     θ = u[nu .+ (1:nθ)]
     # dynamics(drone, h, x_di, u_ctrl, w);
     du .= 0.0
-    # dynamics_jacobian_input(view(du, 1:nx, 1:nu), env, x_di, u_ctrl, w)
-    dynamics_jacobian_input(model, view(du, 1:nx, 1:nu), x_di, u_ctrl)
+    dynamics_jacobian_input(view(du, 1:nx, 1:nu), env, x_di, u_ctrl, w)
     du[nx .+ (1:nθ), nu .+ (1:nθ)] .= I(nθ)
     # [
     #     du zeros(nx,nθ);
@@ -136,8 +120,7 @@ function ft(y, x, u, w)
     x_di = x[1:nx]
     θ = x[nx .+ (1:nθ)]
     # dynamics(drone, h, x_di, u_ctrl, w);
-    # dynamics(view(y, 1:nx), env, x_di, u_ctrl, w)
-    dynamics(model, view(y, 1:nx), x_di, u_ctrl)
+    dynamics(view(y, 1:nx), env, x_di, u_ctrl, w)
     y[nx .+ (1:nθ)] .= θ
     # [
     #     y
@@ -151,8 +134,7 @@ function ftx(dx, x, u, w)
     θ = x[nx .+ (1:nθ)]
     # dynamics(drone, h, x_di, u_ctrl, w);
     dx .= 0.0
-    # dynamics_jacobian_state(view(dx, 1:nx, 1:nx), env, x_di, u_ctrl, w)
-    dynamics_jacobian_state(model, view(dx, 1:nx, 1:nx), x_di, u_ctrl)
+    dynamics_jacobian_state(view(dx, 1:nx, 1:nx), env, x_di, u_ctrl, w)
     dx[nx .+ (1:nθ), nx .+ (1:nθ)] .= I(nθ)
     # [
     #     dx;
@@ -165,8 +147,7 @@ function ftu(du, x, u, w)
     x_di = x[1:nx]
     θ = x[nx .+ (1:nθ)]
     # dynamics(drone, h, x_di, u_ctrl, w);
-    # dynamics_jacobian_input(view(du, 1:nx, 1:nu), env, x_di, u_ctrl, w)
-    dynamics_jacobian_input(model, view(du, 1:nx, 1:nu), x_di, u_ctrl)
+    dynamics_jacobian_input(view(du, 1:nx, 1:nu), env, x_di, u_ctrl, w)
 end
 
 
@@ -181,7 +162,7 @@ dyn = [dyn1, [dynt for t = 2:T-1]...]
 function o1(x, u, w)
     J = 0.0
     q = [1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1]
-    r = [1.0e-2, 1.0e-2, 1.0e-0]
+    r = [1.0e-1, 1.0e-1, 1.0e-0]
     ex = x - xT
     J += 0.5 * transpose(ex) * Diagonal(q) * ex
     J += 1.0e-1 * transpose(u[1:nu] - u_hover) * Diagonal(r) * (u[1:nu] - u_hover)
@@ -192,7 +173,7 @@ end
 function ot(x, u, w)
     J = 0.0
     q = [1.0, 1.0, 1.0, 1.0e-1, 1.0e-1, 1.0e-1]
-    r = [1.0e-2, 1.0e-2, 1.0e-0]
+    r = [1.0e-1, 1.0e-1, 1.0e-0]
     ex = x[1:nx] - xT
     J += 0.5 * transpose(ex) * Diagonal(q) * ex
     J += 1.0e-1 * transpose(u[1:nu] - u_hover) * Diagonal(r) * (u[1:nu] - u_hover)
@@ -203,7 +184,7 @@ end
 function ott(x, u, w)
     J = 0.0
     q = [10.0, 10.0, 10.0, 1.0e-1, 1.0e-1, 1.0e-1]
-    r = [1.0e-2, 1.0e-2, 1.0e-0]
+    r = [1.0e-1, 1.0e-1, 1.0e-0]
     ex = x[1:nx] - xT
     J += 0.5 * transpose(ex) * Diagonal(q) * ex
     J += 1.0e-1 * transpose(u[1:nu] - u_hover) * Diagonal(r) * (u[1:nu] - u_hover)
@@ -265,10 +246,10 @@ cons = [con_policy1, [con_policyt for t = 2:T-1]..., iLQR.Constraint(goal, nx + 
 
 # ## problem
 opts = iLQR.Options(line_search=:armijo,
-    max_iterations=250,
+    max_iterations=75,
     max_dual_updates=10,
-    objective_tolerance=1e-3,
-    lagrangian_gradient_tolerance=1e-3,
+    objective_tolerance=1e-2,
+    lagrangian_gradient_tolerance=1e-2,
     constraint_tolerance=1e-3,
     # initial_constraint_penalty,
     # scaling_penalty,
@@ -315,11 +296,10 @@ visualize(env.mechanism, storage_sol, vis=vis)
 x_hist = [x1]
 u_hist = [u_hover]
 
-for t = 1:(3 * T)
-    push!(u_hist, policy(θ_sol, x_hist[end], xT))
+for t = 1:(2 * T)
+    push!(u_hist, policy(θ_sol, x_hist[end], [1.0, 1.0, 1.0, 0.0, 0.0, 0.0]))
     y = zeros(nx)
-    dynamics(model, y, x_hist[end], u_hist[end], btol=1e-3, rtol=1e-5)
-    # dynamics(y, env, x_hist[end], u_hist[end], zeros(0))
+    dynamics(y, env, x_hist[end], u_hist[end], zeros(nw))
     push!(x_hist, y)
 end
 

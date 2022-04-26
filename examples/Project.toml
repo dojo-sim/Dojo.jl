@@ -1,4 +1,5 @@
 [deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 Dojo = "ac60b53e-8d92-4c83-b960-e78698fa1916"
 FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
 Folds = "41a02a25-b8f0-4f67-bc48-60067656b558"
@@ -8,6 +9,7 @@ JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 PGFPlots = "3b7a836e-365b-5785-a47d-02c71176b4aa"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
 [compat]
 FiniteDiff = "2.11.0"
