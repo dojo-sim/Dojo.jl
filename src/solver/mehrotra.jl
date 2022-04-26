@@ -22,7 +22,7 @@ function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
 
     bvio = bilinear_violation(mechanism) # does not require to apply set_entries!
     rvio = residual_violation(mechanism) # does not require to apply set_entries!
-    
+
 	opts.verbose && solver_header()
     for n = Base.OneTo(opts.max_iter)
         opts.verbose && solver_status(mechanism, α, rvio, bvio, n, μtarget, undercut)
@@ -98,4 +98,3 @@ function solver_header()
 	println("n    bvio    rvio     α       μ     |res|∞   |Δ|∞")
 	println("–––––––––––––––––––––––––––––––––––––––––––––––––")
 end
-

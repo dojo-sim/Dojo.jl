@@ -9,6 +9,7 @@ JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 PGFPlots = "3b7a836e-365b-5785-a47d-02c71176b4aa"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+RoboDojo = "2859eb88-988f-4613-a49e-c643bedbc906"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
 [compat]
