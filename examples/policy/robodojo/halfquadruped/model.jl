@@ -1,5 +1,5 @@
 """
-    half-cheetah
+    half-quadruped
     q = (x, z, t, q1, ..., q8)
         x - lateral position
         z - vertical position
@@ -9,7 +9,7 @@
         q5 - leg 3 hip angle  (absolute)
         q6 - leg 3 knee angle (absolute)
 """
-mutable struct HalfCheetah{T} <: Model{T}
+mutable struct HalfQuadruped{T} <: Model{T}
     # dimensions
 	nq::Int # generalized coordinates
     nu::Int # controls
@@ -50,6 +50,8 @@ mutable struct HalfCheetah{T} <: Model{T}
 
     # joint friction
 	friction_joint::Vector{T}
+	joint_spring_stiffness::Vector{T}
+	joint_spring_offset::Vector{T}
 
     # environment
     friction_body_world::Vector{T}
@@ -57,7 +59,7 @@ mutable struct HalfCheetah{T} <: Model{T}
     gravity::T
 end
 
-function kinematics_hip(model::HalfCheetah, q; hip=:none)
+function kinematics_hip(model::HalfQuadruped, q; hip=:none)
 	x = q[1]
 	z = q[2]
     t_torso = q[3]
@@ -74,7 +76,7 @@ function kinematics_hip(model::HalfCheetah, q; hip=:none)
            ]
 end
 
-function kinematics_jacobian_hip(model::HalfCheetah, q; hip=:none)
+function kinematics_jacobian_hip(model::HalfQuadruped, q; hip=:none)
 	x = q[1]
 	z = q[2]
     t_torso = q[3]
@@ -95,7 +97,7 @@ function kinematics_jacobian_hip(model::HalfCheetah, q; hip=:none)
     return jac
 end
 
-function kinematics_thigh(model::HalfCheetah, q; leg=:none, mode = :ee)
+function kinematics_thigh(model::HalfQuadruped, q; leg=:none, mode = :ee)
 	x = q[1]
 	z = q[2]
     t_torso = q[3]
@@ -107,7 +109,7 @@ function kinematics_thigh(model::HalfCheetah, q; leg=:none, mode = :ee)
         lc_thigh = model.lc_thigh1
         hip = :hip1
     elseif leg == :leg3
-        t_shoulder = q[8]
+        t_shoulder = q[6]
         l_torso = -model.l_torso2
         le_thigh = model.l_thigh3
         lc_thigh = model.lc_thigh3
@@ -129,7 +131,7 @@ function kinematics_thigh(model::HalfCheetah, q; leg=:none, mode = :ee)
                    -l_thigh * cos(t_shoulder)]
 end
 
-function kinematics_jacobian_thigh(model::HalfCheetah, q; leg=:none, mode = :ee)
+function kinematics_jacobian_thigh(model::HalfQuadruped, q; leg=:none, mode = :ee)
 	x = q[1]
 	z = q[2]
     t_torso = q[3]
@@ -141,7 +143,7 @@ function kinematics_jacobian_thigh(model::HalfCheetah, q; leg=:none, mode = :ee)
         lc_thigh = model.lc_thigh1
         hip = :hip1
     elseif leg == :leg3
-        idx = 8
+        idx = 6
         l_torso = -model.l_torso2
         le_thigh = model.l_thigh3
         lc_thigh = model.lc_thigh3
@@ -168,7 +170,7 @@ function kinematics_jacobian_thigh(model::HalfCheetah, q; leg=:none, mode = :ee)
     return jac
 end
 
-function kinematics_calf(model::HalfCheetah, q; leg=:none, mode = :none)
+function kinematics_calf(model::HalfQuadruped, q; leg=:none, mode = :none)
 	x = q[1]
 	z = q[2]
     t_torso = q[3]
@@ -180,7 +182,7 @@ function kinematics_calf(model::HalfCheetah, q; leg=:none, mode = :none)
         le_calf = model.l_calf1
         lc_calf = model.lc_calf1
     elseif leg == :leg3
-        idx = 8
+        idx = 6
         l_torso = -model.l_torso2
         l_thigh = model.l_thigh3
         le_calf = model.l_calf3
@@ -206,7 +208,7 @@ function kinematics_calf(model::HalfCheetah, q; leg=:none, mode = :none)
                      -l_calf * cos(t_calf)]
 end
 
-function kinematics_jacobian_calf(model::HalfCheetah, q; leg=:none, mode = :none)
+function kinematics_jacobian_calf(model::HalfQuadruped, q; leg=:none, mode = :none)
 	x = q[1]
 	z = q[2]
     t_torso = q[3]
@@ -218,7 +220,7 @@ function kinematics_jacobian_calf(model::HalfCheetah, q; leg=:none, mode = :none
         le_calf = model.l_calf1
         lc_calf = model.lc_calf1
     elseif leg == :leg3
-        idx = 8
+        idx = 6
         l_torso = -model.l_torso2
         l_thigh = model.l_thigh3
         le_calf = model.l_calf3
@@ -245,7 +247,7 @@ function kinematics_jacobian_calf(model::HalfCheetah, q; leg=:none, mode = :none
     return jac
 end
 
-function kinematics(model::HalfCheetah, q)
+function kinematics(model::HalfQuadruped, q)
 	p_foot_1 = kinematics_calf(model, q, leg=:leg1, mode=:ee) # foot 1
 	p_foot_3 = kinematics_calf(model, q, leg=:leg3, mode=:ee) # foot 3
 
@@ -263,7 +265,7 @@ function kinematics(model::HalfCheetah, q)
 end
 
 # Lagrangian
-function lagrangian(model::HalfCheetah, q, q̇)
+function lagrangian(model::HalfQuadruped, q, q̇)
 	L = 0.0
 
 	# torso
@@ -298,7 +300,7 @@ function lagrangian(model::HalfCheetah, q, q̇)
 	v_thigh_3 = J_thigh_3 * q̇
 
 	L += 0.5 * model.m_thigh3 * transpose(v_thigh_3) * v_thigh_3
-	L += 0.5 * model.J_thigh3 * q̇[8]^2.0
+	L += 0.5 * model.J_thigh3 * q̇[6]^2.0
 	L -= model.m_thigh3 * model.gravity * p_thigh_3[2]
 
 	# calf 3
@@ -307,18 +309,27 @@ function lagrangian(model::HalfCheetah, q, q̇)
 	v_calf_3 = J_calf_3 * q̇
 
 	L += 0.5 * model.m_calf3 * transpose(v_calf_3) * v_calf_3
-	L += 0.5 * model.J_calf3 * q̇[9]^2.0
+	L += 0.5 * model.J_calf3 * q̇[7]^2.0
 	L -= model.m_calf3 * model.gravity * p_calf_3[2]
 
+	t_torso = q[3]
+	t_hip1 = q[4]
+	t_knee1 = q[5]
+	t_hip2 = q[6]
+	t_knee2 = q[7]
+	L -= 0.5 * joint_spring_stiffness[1] * (joint_spring_offset[1] + t_torso - t_hip1)^2
+	L -= 0.5 * joint_spring_stiffness[2] * (joint_spring_offset[2] + t_torso - t_hip2)^2
+	L -= 0.5 * joint_spring_stiffness[3] * (joint_spring_offset[3] + t_hip1 - t_knee1)^2
+	L -= 0.5 * joint_spring_stiffness[4] * (joint_spring_offset[4] + t_hip2 - t_knee2)^2
 	return L
 end
 
-function signed_distance(model::HalfCheetah, q)
+function signed_distance(model::HalfQuadruped, q)
 	k = kinematics(model, q)
     return [k[2], k[4], k[6], k[8], k[10], k[12]]
 end
 
-function input_jacobian(::HalfCheetah, q)
+function input_jacobian(::HalfQuadruped, q)
 	[1.0  0.0  0.0  0.0  0.0  0.0  0.0; # infeasible controls
 	 0.0  1.0  0.0  0.0  0.0  0.0  0.0; # infeasible controls
 	 0.0  0.0  1.0  0.0  0.0  0.0  0.0; # infeasible controls
@@ -328,7 +339,7 @@ function input_jacobian(::HalfCheetah, q)
      0.0  0.0  0.0  0.0  0.0 -1.0  1.0]
 end
 
-function contact_jacobian(model::HalfCheetah, q)
+function contact_jacobian(model::HalfQuadruped, q)
     J1 = kinematics_jacobian_calf(model, q, leg=:leg1, mode=:ee)
 	J3 = kinematics_jacobian_calf(model, q, leg=:leg3, mode=:ee)
 
@@ -349,12 +360,12 @@ function contact_jacobian(model::HalfCheetah, q)
 end
 
 # nominal configuration
-function nominal_configuration(model::HalfCheetah)
+function nominal_configuration(model::HalfQuadruped)
     [0.0; 0.5; 0.0 * π; 0.25 * π; 0.5 * π; -0.25 * π; 0.1 * π]
 end
 
 # friction coefficients
-function friction_coefficients(model::HalfCheetah)
+function friction_coefficients(model::HalfQuadruped)
     [model.friction_foot_world; model.friction_body_world]
 end
 
@@ -369,6 +380,8 @@ gravity = 9.81            # gravity
 friction_body_world = [0.5; 0.5; 0.5; 0.5] # coefficient of friction
 friction_foot_world = [0.5; 0.5] # coefficient of friction
 friction_joint = [0.1; 0.1; 0.1; 0.1]
+joint_spring_stiffness = [1.0, 1.0, 1.0, 1.0]
+joint_spring_offset = [0.0, 0.0, 0.0, 0.0]
 
 # similar to Unitree A1
 m_torso = 4.713 + 4 * 0.696
@@ -387,7 +400,7 @@ l_calf = 0.2
 lc_thigh = 0.5 * l_thigh - 0.00323
 lc_calf = 0.5 * l_calf - 0.006435
 
-halfcheetah = HalfCheetah(nq, nu, nw, nc,
+halfquadruped = HalfQuadruped(nq, nu, nw, nc,
 				l_torso1, l_torso2, m_torso, J_torso,
 
 				l_thigh, lc_thigh, m_thigh, J_thigh,
@@ -397,24 +410,26 @@ halfcheetah = HalfCheetah(nq, nu, nw, nc,
 				l_calf, lc_calf, m_calf, J_calf,
 
 	            friction_joint,
+				joint_spring_stiffness,
+				joint_spring_offset,
                 friction_body_world,
                 friction_foot_world,
                 gravity)
 
-halfcheetah_contact_kinematics = [
-	q -> kinematics_calf(halfcheetah, q, leg=:leg1, mode=:ee),
-    q -> kinematics_calf(halfcheetah, q, leg=:leg3, mode=:ee),
-    q -> kinematics_thigh(halfcheetah, q, leg=:leg1, mode=:ee),
-    q -> kinematics_thigh(halfcheetah, q, leg=:leg3, mode=:ee),
-    q -> kinematics_hip(halfcheetah, q, hip=:hip1),
-    q -> kinematics_hip(halfcheetah, q, hip=:hip2)]
+halfquadruped_contact_kinematics = [
+	q -> kinematics_calf(halfquadruped, q, leg=:leg1, mode=:ee),
+    q -> kinematics_calf(halfquadruped, q, leg=:leg3, mode=:ee),
+    q -> kinematics_thigh(halfquadruped, q, leg=:leg1, mode=:ee),
+    q -> kinematics_thigh(halfquadruped, q, leg=:leg3, mode=:ee),
+    q -> kinematics_hip(halfquadruped, q, hip=:hip1),
+    q -> kinematics_hip(halfquadruped, q, hip=:hip2)]
 
-halfcheetah_contact_kinematics_jacobians = [
- 	q -> kinematics_jacobian_calf(halfcheetah, q, leg=:leg1, mode=:ee),
-    q -> kinematics_jacobian_calf(halfcheetah, q, leg=:leg3, mode=:ee),
-    q -> kinematics_jacobian_thigh(halfcheetah, q, leg=:leg1, mode=:ee),
-    q -> kinematics_jacobian_thigh(halfcheetah, q, leg=:leg3, mode=:ee),
-    q -> kinematics_jacobian_hip(halfcheetah, q, hip=:hip1),
-    q -> kinematics_jacobian_hip(halfcheetah, q, hip=:hip2)]
+halfquadruped_contact_kinematics_jacobians = [
+ 	q -> kinematics_jacobian_calf(halfquadruped, q, leg=:leg1, mode=:ee),
+    q -> kinematics_jacobian_calf(halfquadruped, q, leg=:leg3, mode=:ee),
+    q -> kinematics_jacobian_thigh(halfquadruped, q, leg=:leg1, mode=:ee),
+    q -> kinematics_jacobian_thigh(halfquadruped, q, leg=:leg3, mode=:ee),
+    q -> kinematics_jacobian_hip(halfquadruped, q, hip=:hip1),
+    q -> kinematics_jacobian_hip(halfquadruped, q, hip=:hip2)]
 
-name(::HalfCheetah) = :halfcheetah
+name(::HalfQuadruped) = :halfquadruped
