@@ -156,8 +156,8 @@ visualize!(vis, s)
 # xT = nominal_state(dynamics_model.model)
 x1 = deepcopy(x_hist[1])
 xT = deepcopy(x_hist[end])
-xT[1] += 1.3
-xT[nq+1] += 1.0
+# xT[1] += 1.3
+xT[nq+1] += 3.0
 set_robot!(vis, dynamics_model.model, x1)
 set_robot!(vis, dynamics_model.model, xT)
 
@@ -261,7 +261,7 @@ function o1(x, u, w)
     J = 0.0
     # q = [1e-6; 1e-3ones(nq-1); 1e-3; 1e-3ones(nq-1)]
     # r = 1e-2 * ones(nu)
-    q = 1e-1 * ones(2nq)
+    q = 1e-1 * [1e-6; ones(nq-1); 1e-0; ones(nq-1)]
     r = 1e-3 * ones(nu)
     ex = x - xT
     eu = u[1:nu] - u_hover
@@ -275,7 +275,7 @@ function ot(x, u, w)
     J = 0.0
     # q = [1e-6; 1e-3ones(nq-1); 1e-0; 1e-3ones(nq-1)]
     # r = 1e-2 * ones(nu)
-    q = 1e-1 * ones(2nq)
+    q = 1e-1 * [1e-6; ones(nq-1); 1e-0; ones(nq-1)]
     r = 1e-3 * ones(nu)
     ex = x[1:nx] - xT
     eu = u[1:nu] - u_hover
@@ -289,7 +289,7 @@ function ott(x, u, w)
     J = 0.0
     # q = [1e-6; 1e-3ones(nq-1); 1e-0; 1e-3ones(nq-1)]
     # r = 1e-2 * ones(nu)
-    q = 1e-1 * ones(2nq)
+    q = 1e-1 * [1e-6; ones(nq-1); 1e-0; ones(nq-1)]
     r = 1e-3 * ones(nu)
     ex = x[1:nx] - xT
     eu = u[1:nu] - u_hover
@@ -335,7 +335,8 @@ end
 
 function goal(x, u, w)
     [
-        x[1:nx] - xT[1:nx];
+        x[nq+1:nq+1] - xT[nq+1:nq+1];
+        # x[1:nx] - xT[1:nx];
         # x[nx .+ (1:nθ)]
     ]
 end
@@ -412,16 +413,16 @@ for t = 1:10T
     push!(x_hist, y)
 end
 
-s = Simulator(halfhyena, 10T-1, h=h)
-for i = 1:10T
+s = Simulator(halfhyena, 3T-1, h=h)
+for i = 1:3T
     q = x_hist[i][1:nq]
     v = x_hist[i][nq .+ (1:nq)]
     set_state!(s, q, v, i)
 end
 visualize!(vis, s)
 
-# convert_frames_to_video_and_gif("particle_slide_po_open_loop")
-# convert_frames_to_video_and_gif("particle_slide_po_feedback")
+Dojo.convert_frames_to_video_and_gif("halfhyena_single_open_loop")
+Dojo.convert_frames_to_video_and_gif("halfhyena_single_policy")
 
 
 
@@ -438,3 +439,5 @@ visualize!(vis, s)
 # w0 = ones(nw)
 # ftx(dx0, x0, u0, w0)
 # @benchmark $ftx($dx0, $x0, $u0, $w0)
+set_light!(vis)
+set_floor!(vis)
