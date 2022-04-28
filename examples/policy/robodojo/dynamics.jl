@@ -63,12 +63,18 @@ function dynamics_jacobian_state(s::Simulator{T}, dx::AbstractMatrix{T}, x::Abst
 
     status = dynamics(s, x, u, w, diff_sol=true, verbose=verbose)
     # Fill the jacobian
+    # there are weird chain rules because RoboDojo uses q3 = fct(q1, q2)
+    # and not (q3, v25) = fct(q2, v15)
     nq = s.model.nq
     @views dx[1:nq, 1:nq] .= s.grad.∂q3∂q2[1] # ∂q3∂q2
-    @views dx[nq .+ (1:nq), 1:nq] .= s.grad.∂q3∂q2[1] ./ s.h  # ∂v25∂q2
+    @views dx[1:nq, 1:nq] .+= s.grad.∂q3∂q1[1] # ∂q3∂q2
+
+    @views dx[nq .+ (1:nq), 1:nq] .= dx[1:nq, 1:nq] ./ s.h # ∂v25∂q2
     @views dx[nq .+ (1:nq), 1:nq][1:nq+1:nq^2] .+= - 1/s.h # ∂v25∂q2
-    @views dx[1:nq, nq .+ (1:nq)] .= s.grad.∂q3∂v1[1] # ∂q3∂v15
-    @views dx[nq .+ (1:nq), nq .+ (1:nq)] .= s.grad.∂q3∂v1[1] ./ s.h # ∂v25∂v15
+
+    @views dx[1:nq, nq .+ (1:nq)] .= -s.h .* s.grad.∂q3∂q1[1] # ∂q3∂v15
+
+    @views dx[nq .+ (1:nq), nq .+ (1:nq)] .= dx[1:nq, nq .+ (1:nq)] ./ s.h # ∂v25∂v15
     return status
 end
 

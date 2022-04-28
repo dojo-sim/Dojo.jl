@@ -38,7 +38,7 @@ q1 = nominal_configuration(halfhyena)
 v1 = zeros(halfhyena.nq)
 
 # ## Time
-h = 0.05
+h = 0.03
 timestep = h
 T = 500
 
@@ -60,32 +60,15 @@ dynamics_model = Simulator(halfhyena, 1, h=h)
 dynamics_model.ip.opts.r_tol = 1e-5
 dynamics_model.ip.opts.κ_tol = 3e-2
 dynamics_model.ip.opts.undercut = 5.0
+# dynamics_model.ip.opts.r_tol = 1e-7
+# dynamics_model.ip.opts.κ_tol = 1e-5
+# dynamics_model.ip.opts.undercut = 10.0
 nq = dynamics_model.model.nq
 nx = 2nq
 nu = dynamics_model.model.nu
 nw = dynamics_model.model.nw
 
-function dynamics_jacobian_state(s::Simulator{T}, dx::AbstractMatrix{T}, x::AbstractVector{T},
-        u::AbstractVector{T}, w::AbstractVector{T};
-        verbose=false) where T
 
-    # status = dynamics(s, x, u, w, diff_sol=true, verbose=verbose)
-    # Fill the jacobian
-    # nq = s.model.nq
-    # @views dx[1:nq, 1:nq] .= s.grad.∂q3∂q2[1] # ∂q3∂q2
-    # @views dx[nq .+ (1:nq), 1:nq] .= s.grad.∂q3∂q2[1] ./ s.h  # ∂v25∂q2
-    # @views dx[nq .+ (1:nq), 1:nq][1:nq+1:nq^2] .+= - 1/s.h # ∂v25∂q2
-    # @views dx[1:nq, nq .+ (1:nq)] .= s.grad.∂q3∂v1[1] .* s.h # ∂q3∂v15
-    # @views dx[nq .+ (1:nq), nq .+ (1:nq)] .= s.grad.∂q3∂v1[1] ./ s.h # ∂v25∂v15
-    function explicit_dynamics(s, x, u, w)
-        y = zeros(2nq)
-        dynamics(dynamics_model, y, x, u, w)
-        return y
-    end
-    dx .= FiniteDiff.finite_difference_jacobian(x -> explicit_dynamics(s, x, u, w), x)
-    return true
-    # return status
-end
 
 y = zeros(2nq)
 dx = zeros(2nq,2nq)
@@ -106,26 +89,10 @@ function explicit_dynamics(dynamics_model, x, u, w)
     dynamics(dynamics_model, y, x, u, w)
     return y
 end
-
 dx0 = FiniteDiff.finite_difference_jacobian(x -> explicit_dynamics(dynamics_model, x, u, w), x)
 du0 = FiniteDiff.finite_difference_jacobian(u -> explicit_dynamics(dynamics_model, x, u, w), u)
-
-diag(dx[1:nq,1:nq] - dx0[1:nq,1:nq])
-dx[1:nq,1:nq]
-dx0[1:nq,1:nq]
-dx[1:nq,1:nq] - dx0[1:nq,1:nq]
-
-
-plot(Gray.(dx))
-plot(Gray.(dx0))
-plot(Gray.(dx - dx0))
-plot(Gray.(abs.(dx)))
-plot(Gray.(0.05abs.(dx0)))
-plot(Gray.(1e2abs.(dx - dx0)))
-
 norm(dx - dx0)
 norm(du - du0)
-
 
 # @benchmark $dynamics_jacobian_state($dynamics_model, $dx, $x, $u, $w)
 # @benchmark $dynamics_jacobian_control($dynamics_model, $du, $x, $u, $w)
@@ -135,7 +102,7 @@ norm(du - du0)
 # iLQR
 ################################################################################
 x_hist = [nominal_state(dynamics_model.model)]
-for i = 1:30
+for i = 1:75
     y = zeros(nx)
     dynamics(dynamics_model, y, x_hist[end], [0;0;0;0*ones(6)], zeros(nw))
     push!(x_hist, y)
@@ -143,7 +110,7 @@ end
 plot(hcat(x_hist...)'[:,1:3])
 
 s = Simulator(halfhyena, 100-1, h=h)
-for i = 1:30
+for i = 1:75
     q = x_hist[i][1:nq]
     v = x_hist[i][nq .+ (1:nq)]
     set_state!(s, q, v, i)
@@ -152,11 +119,8 @@ visualize!(vis, s)
 
 
 # ## initialization
-# x1 = nominal_state(dynamics_model.model)
-# xT = nominal_state(dynamics_model.model)
 x1 = deepcopy(x_hist[1])
 xT = deepcopy(x_hist[end])
-# xT[1] += 1.3
 xT[nq+1] += 3.0
 set_robot!(vis, dynamics_model.model, x1)
 set_robot!(vis, dynamics_model.model, xT)
@@ -259,10 +223,8 @@ dyn = [dyn1, [dynt for t = 2:T-1]...]
 # ## objective
 function o1(x, u, w)
     J = 0.0
-    # q = [1e-6; 1e-3ones(nq-1); 1e-3; 1e-3ones(nq-1)]
-    # r = 1e-2 * ones(nu)
-    q = 1e-1 * [1e-6; ones(nq-1); 1e-0; ones(nq-1)]
-    r = 1e-3 * ones(nu)
+    q = 1e-1 * [1e-6; ones(nq-1); 1e+1; ones(nq-1)]
+    r = 1e-1 * ones(nu)
     ex = x - xT
     eu = u[1:nu] - u_hover
     J += 0.5 * transpose(ex) * Diagonal(q) * ex
@@ -273,24 +235,8 @@ end
 
 function ot(x, u, w)
     J = 0.0
-    # q = [1e-6; 1e-3ones(nq-1); 1e-0; 1e-3ones(nq-1)]
-    # r = 1e-2 * ones(nu)
-    q = 1e-1 * [1e-6; ones(nq-1); 1e-0; ones(nq-1)]
-    r = 1e-3 * ones(nu)
-    ex = x[1:nx] - xT
-    eu = u[1:nu] - u_hover
-    J += 0.5 * transpose(ex) * Diagonal(q) * ex
-    J += 0.5 * transpose(eu) * Diagonal(r) * eu
-    J += 1e-1 * dot(x[nx .+ (1:nθ)], x[nx .+ (1:nθ)])
-    return J
-end
-
-function ott(x, u, w)
-    J = 0.0
-    # q = [1e-6; 1e-3ones(nq-1); 1e-0; 1e-3ones(nq-1)]
-    # r = 1e-2 * ones(nu)
-    q = 1e-1 * [1e-6; ones(nq-1); 1e-0; ones(nq-1)]
-    r = 1e-3 * ones(nu)
+    q = 1e-1 * [1e-6; ones(nq-1); 1e+1; ones(nq-1)]
+    r = 1e-1 * ones(nu)
     ex = x[1:nx] - xT
     eu = u[1:nu] - u_hover
     J += 0.5 * transpose(ex) * Diagonal(q) * ex
@@ -306,9 +252,8 @@ end
 
 c1 = iLQR.Cost(o1, nx, nu + nθ)
 ct = iLQR.Cost(ot, nx + nθ, nu)
-ctt = iLQR.Cost(ott, nx + nθ, nu)
 cT = iLQR.Cost(oT, nx + nθ, 0)
-obj = [c1, [ct for t = 2:16]..., [ctt for t = 17:(T - 1)]..., cT]
+obj = [c1, [ct for t = 2:(T - 1)]..., cT]
 
 
 # ## constraints
@@ -336,8 +281,6 @@ end
 function goal(x, u, w)
     [
         x[nq+1:nq+1] - xT[nq+1:nq+1];
-        # x[1:nx] - xT[1:nx];
-        # x[nx .+ (1:nθ)]
     ]
 end
 con_policy1 = iLQR.Constraint(con1, nx, nu + nθ, indices_inequality=collect(1:2nu))
@@ -375,13 +318,21 @@ iLQR.initialize_controls!(p, u_guess)
 iLQR.initialize_states!(p, x_guess)
 
 # ## solve
-@time iLQR.solve!(p)
+function continuation_callback!(solver::Solver)
+    dynamics_model.ip.opts.r_tol = max(dynamics_model.ip.opts.r_tol/3, 1e-7)
+    dynamics_model.ip.opts.κ_tol = max(dynamics_model.ip.opts.κ_tol/3, 1e-5)
+    println("r_tol $(scn(dynamics_model.ip.opts.r_tol))  " *
+        "κ_tol $(scn(dynamics_model.ip.opts.κ_tol))")
+    return nothing
+end
+
+dynamics_model.ip.opts.r_tol = 1e-5
+dynamics_model.ip.opts.κ_tol = 3e-2
+@time iLQR.constrained_ilqr_solve!(p, callback! = continuation_callback!)
+
 
 # ## solution
 x_sol, u_sol = iLQR.get_trajectory(p)
-# @show u_sol[1]
-# @show x_sol[1]
-# @show x_sol[T]
 θ_sol = u_sol[1][nu .+ (1:nθ)]
 
 # ## state
@@ -407,22 +358,24 @@ x_hist = [x1]
 u_hist = [u_hover]
 
 for t = 1:10T
-    push!(u_hist, policy(θ_sol, x_hist[end], xT))
+    push!(u_hist, [0;0;0; policy(θ_sol, x_hist[end], xT)[4:end]])
     y = zeros(nx)
     dynamics(dynamics_model, y, x_hist[end], u_hist[end], zeros(nw))
     push!(x_hist, y)
 end
 
-s = Simulator(halfhyena, 3T-1, h=h)
-for i = 1:3T
+s = Simulator(halfhyena, 10T-1, h=h)
+for i = 1:10T
     q = x_hist[i][1:nq]
     v = x_hist[i][nq .+ (1:nq)]
     set_state!(s, q, v, i)
 end
 visualize!(vis, s)
+set_light!(vis)
+set_floor!(vis)
 
-Dojo.convert_frames_to_video_and_gif("halfhyena_single_open_loop")
-Dojo.convert_frames_to_video_and_gif("halfhyena_single_policy")
+# Dojo.convert_frames_to_video_and_gif("halfhyena_single_regularized_open_loop")
+# Dojo.convert_frames_to_video_and_gif("halfhyena_single_regularized_policy")
 
 
 
@@ -439,5 +392,27 @@ Dojo.convert_frames_to_video_and_gif("halfhyena_single_policy")
 # w0 = ones(nw)
 # ftx(dx0, x0, u0, w0)
 # @benchmark $ftx($dx0, $x0, $u0, $w0)
-set_light!(vis)
-set_floor!(vis)
+
+
+# dx[1:nq,1:nq]
+# dx0[1:nq,1:nq]
+# dx[1:nq,1:nq] - dx0[1:nq,1:nq]
+# norm(dx[1:nq,1:nq] - dx0[1:nq,1:nq])
+#
+# dx[1:nq,nq .+ (1:nq)]
+# dx0[1:nq,nq .+ (1:nq)]
+# dx[1:nq,nq .+ (1:nq)] - dx0[1:nq,nq .+ (1:nq)]
+# norm(dx[1:nq,nq .+ (1:nq)] - dx0[1:nq,nq .+ (1:nq)])
+#
+# dx[nq .+ (1:nq),1:nq]
+# dx0[nq .+ (1:nq),1:nq]
+# dx[nq .+ (1:nq),1:nq] - dx0[nq .+ (1:nq),1:nq]
+# norm(dx[nq .+ (1:nq),1:nq] - dx0[nq .+ (1:nq),1:nq])
+#
+#
+#
+# plot(Gray.(dx))
+# plot(Gray.(dx0))
+# plot(Gray.(dx - dx0))
+# plot(Gray.(1e2abs.(dx - dx0)))
+# plot(Gray.(1e4abs.(dx - dx0)))
