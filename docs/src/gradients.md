@@ -1,4 +1,4 @@
-# Gradients
+# Background
 
 ## Implicit Function Theorem
 An implicit function, ``r : \mathbf{R}^{n_w} \times \mathbf{R}^{n_\theta} \rightarrow \mathbf{R}^{n_w}``, is defined as
