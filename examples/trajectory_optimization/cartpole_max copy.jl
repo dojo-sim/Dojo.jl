@@ -3,19 +3,13 @@ using Pkg
 Pkg.activate(joinpath(@__DIR__, ".."))
 Pkg.instantiate()
 
-# ## setup
 using Dojo
-using IterativeLQR
-using LinearAlgebra 
 
-# ## system
-gravity = -9.81
-timestep = 0.1
+# environment
 env = get_environment(:cartpole, 
     representation=:maximal, 
-    timestep=timestep,
-    gravity=gravity);
-
+    timestep=0.1,
+    gravity=-9.81);
 
 ## mujoco_inertia!(env.mechanism)
 

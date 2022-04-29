@@ -18,6 +18,10 @@ env = get_environment(:quadruped,
     friction_coefficient=friction_coefficient,
     damper=damper);
 
+for j in env.mechanism.joints 
+    @show j.name 
+end
+
 # ## Simulate
 initialize!(env.mechanism, :quadruped, 
     body_position=[0.0; 0.0; 0.5])

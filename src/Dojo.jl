@@ -1,7 +1,7 @@
 module Dojo
 
 # constants
-global REG = 1.0e-6
+global REG = 1.0e-10
 
 #TODO: remove
 using FiniteDiff
@@ -242,6 +242,7 @@ export
     set_maximal_configurations!,
     set_maximal_velocities!,
     get_maximal_state,
+    get_maximal_gradients!,
     maximal_dimension
 
 # Minimal
@@ -250,6 +251,7 @@ export
     set_minimal_coordinates!,
     set_minimal_velocities!,
     get_minimal_state,
+    get_minimal_gradients!,
     minimal_coordinates,
     minimal_velocities,
     minimal_dimension

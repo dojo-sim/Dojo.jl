@@ -11,6 +11,8 @@ using Rotations
 
 using Dojo
 
+global REG = 1.0e-10
+
 @testset "Integrator"                    verbose=true begin include("integrator.jl") end
 @testset "Minimal Coordinates"           verbose=true begin include("minimal.jl") end
 @testset "Modified Rodrigues Parameters" verbose=true begin include("mrp.jl") end

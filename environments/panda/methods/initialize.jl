@@ -117,23 +117,23 @@ function get_panda(;
         #     ee_radius,
         # )
 
-        # collision = Dojo.SphereSphereCollision{Float64,2,3,6}(
-        #     SA[0.0; 0.0; 0.0],
-        #     SA[0.0; 0.0; 0.3],
-        #     0.075,
-        #     # SA[0.5 * sidex; 0.0; 0.0],
-        #     # SA[0.0; 0.5 * sidey; 0.0],
-        #     # SA[0.0; 0.0; 0.5 * sidez],
-        #     0.075,
-        # )
-
-        collision = SphereCapsuleCollision{Float64,2,3,6}(
-            szeros(3),
-            SA[0.0; 0.0; 0.5],
-            SA[0.0; 0.0; -0.5],
-            0.05,
-            0.05,
+        collision = Dojo.SphereSphereCollision{Float64,2,3,6}(
+            SA[0.0; 0.0; 0.0],
+            SA[0.0; 0.0; 0.3],
+            0.075,
+            # SA[0.5 * sidex; 0.0; 0.0],
+            # SA[0.0; 0.5 * sidey; 0.0],
+            # SA[0.0; 0.0; 0.5 * sidez],
+            0.075,
         )
+
+        # collision = SphereCapsuleCollision{Float64,2,3,6}(
+        #     szeros(3),
+        #     SA[0.0; 0.0; 0.5],
+        #     SA[0.0; 0.0; -0.5],
+        #     0.05,
+        #     0.05,
+        # )
         
         friction_parameterization = SA{Float64}[
             1.0  0.0

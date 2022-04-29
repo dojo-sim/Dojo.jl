@@ -35,9 +35,11 @@ makedocs(
         "Environments" => [
             "load_environment.md",
             "define_environment.md",
+            "environment_simulation_gradients.md",
         ],
 
         "Gradients from Simulator" => [
+            "simulation_with_gradients.md",
             "gradients.md",
            ],
 
