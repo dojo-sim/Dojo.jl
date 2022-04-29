@@ -513,7 +513,7 @@ gravity = 9.81            # gravity
 friction_body_world = [0.4; 0.4; 0.4; 0.4] # coefficient of friction
 friction_foot_world = [0.4; 0.4; 0.4; 0.4] # coefficient of friction
 friction_joint = [4.5, 3.0, 1.5, 6.0, 4.5, 3.0] ./ 100 # fthigh, fcalf, ffoot, bthigh, bcalf, bfoot
-joint_spring_stiffness = [180.0, 120.0, 60.0, 240.0, 180.0, 120.0] ./ 10 # fthigh, fcalf, ffoot, bthigh, bcalf, bfoot
+joint_spring_stiffness = [180.0, 120.0, 60.0, 240.0, 180.0, 120.0] ./ 5 # fthigh, fcalf, ffoot, bthigh, bcalf, bfoot
 joint_spring_offset = [0.52, -1.11159, -0.10000, -0.65800, 1.7, -1.5] # fthigh, fcalf, ffoot, bthigh, bcalf, bfoot
 
 # similar to Unitree A1

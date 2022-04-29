@@ -1,5 +1,7 @@
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+CALIPSO = "4c24e94e-21a7-4591-8ee4-d226b67258b2"
+DirectTrajectoryOptimization = "a9f42406-efe7-414c-8b71-df971cc98041"
 Dojo = "ac60b53e-8d92-4c83-b960-e78698fa1916"
 FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
 Folds = "41a02a25-b8f0-4f67-bc48-60067656b558"

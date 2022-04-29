@@ -115,7 +115,7 @@ function dynamics(s::Simulator{T}, x::AbstractVector{T},
     # set control input
     traj.u[1] .= u .* s.h # u is a force and u * h is an impulse
     # set disturbances
-    traj.w[1] .= w
+    # traj.w[1] .= w # TODO this is not a disturbance but parameters
     # take a step
     status = step!(s, 1, verbose=verbose)
     s.ip.opts.diff_sol = false
