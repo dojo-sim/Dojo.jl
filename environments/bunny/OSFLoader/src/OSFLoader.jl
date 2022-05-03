@@ -8,6 +8,8 @@ using Plots
 using PyCall
 using StaticArrays
 using Statistics
+using MeshIO
+using GeometryBasics
 
 global OSF_PATH = joinpath("/home/simon/research/repos/osf-pytorch")
 global OSF_CONFIG_FOLDER = joinpath("configs/osf")
