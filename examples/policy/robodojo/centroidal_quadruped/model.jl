@@ -211,4 +211,4 @@ centroidal_quadruped = CentroidalQuadruped114(nq, nu, nw, nc,
 
 
 floating_base_dim(::CentroidalQuadruped114) = 6
-name(::CentroidalQuadruped114) = :centroidal_quadruped
+RoboDojo.name(::CentroidalQuadruped114) = :centroidal_quadruped

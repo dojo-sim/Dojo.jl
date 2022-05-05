@@ -228,7 +228,7 @@ function goal(x, u, w)
     [
         # x[[1,nq+1]] - xT[[1,nq+1]];
         # x[nq+1:nq+1] - xT[nq+1:nq+1];
-        1e-2 * (x[1:nq+1] - xT[1:nq+1]);
+        1e-2 * (x[1:nq+3] - xT[1:nq+3]);
     ]
 end
 
@@ -252,9 +252,10 @@ opts = iLQR.Options(line_search=:armijo,
 p = iLQR.Solver(dyn, obj, cons, options=opts, parameters=gait)
 
 # ## initialize
-θ0 = 1.0 * randn(nθ)
+γ = 0.05
+initial_disturbance = [0;0;γ; 0;0;0; 0;0;γ; 0;0;γ; 0;0;γ; 0;0;γ; zeros(nq)]
 u_guess = [t == 1 ? [u_hover;] : u_hover for t = 1:T-1]
-x_guess = iLQR.rollout(dyn, x1, u_guess, parameters)
+x_guess = iLQR.rollout(dyn, x1 + initial_disturbance, u_guess, parameters)
 
 s = Simulator(RD.centroidal_quadruped, T-1, h=h)
 for i = 1:T
@@ -263,8 +264,6 @@ for i = 1:T
     RD.set_state!(s, q, v, i)
 end
 visualize!(vis, s)
-# vis = Visualizer()
-# open(vis)
 
 iLQR.initialize_controls!(p, u_guess)
 iLQR.initialize_states!(p, x_guess)
@@ -298,12 +297,10 @@ for i = 1:T
 end
 visualize!(vis, s)
 
-# ## simulate policy
-x_hist = [x1]
-u_hist = [u_hover]
-
-# Dojo.convert_frames_to_video_and_gif("RD.centroidal_quadruped_single_regularized_open_loop")
-# Dojo.convert_frames_to_video_and_gif("RD.centroidal_quadruped_single_regularized_policy")
 
 using JLD2
 JLD2.jldsave(joinpath(@__DIR__, "centroidal_quadruped_sol.jld2"), x_sol=x_sol, u_sol=u_sol, K_sol=K_sol)
+
+
+# Dojo.convert_frames_to_video_and_gif("RD.centroidal_quadruped_single_regularized_open_loop")
+# Dojo.convert_frames_to_video_and_gif("RD.centroidal_quadruped_single_regularized_policy")
