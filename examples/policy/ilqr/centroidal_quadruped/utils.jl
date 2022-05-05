@@ -195,8 +195,8 @@ end
 
 function initial_disturbance_sampler(; configuration_amplitude=0.03, velocity_amplitude=0.01)
     nq = 18
-    configuration = configuration_amplitude * (rand(nq) .- 0.5) .* [1,1,1, 0,0,0, 1,1,1, 1,1,1, 1,1,1, 1,1,1]
-    velocity = velocity_amplitude * (rand(nq) .- 0.5) .* [1,1,1, 0,0,0, 1,1,1, 1,1,1, 1,1,1, 1,1,1]
+    configuration = configuration_amplitude * (rand(nq) .- 0.5) .* [1,1,1, 1,1,1, 1,1,1, 1,1,1, 1,1,1, 1,1,1]
+    velocity = velocity_amplitude * (rand(nq) .- 0.5) .* [1,1,1, 1,1,1, 1,1,1, 1,1,1, 1,1,1, 1,1,1]
     initial_disturbance = [configuration; velocity]
     return project_state(initial_disturbance)
 end

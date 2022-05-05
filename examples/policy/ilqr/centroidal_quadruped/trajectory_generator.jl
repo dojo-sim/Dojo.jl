@@ -139,6 +139,12 @@ for i = 1:number_sample
 end
 plot!(plt, hcat(u_ref...)'[:,1:nu], linewidth=3.0, color=:black, legend=false)
 display(plt)
+
+plt = plot()
+for i = 1:number_sample
+    plot!(plt, hcat([reshape(K, (nu*nx)) for K in K_sols[i]]...)'[:,1:nu], color=:red, legend=false)
+end
+plot!(plt, hcat([reshape(K, (nu*nx)) for K in K_ref]...)'[:,1:nu], linewidth=3.0, color=:black, legend=false)
 display(plt)
 
 ################################################################################
@@ -154,16 +160,30 @@ function feature(x)
     xfoot3 = x[13:15]
     xfoot4 = x[16:18]
 
-    # xf = [1.0; xbody[1:3]; xorient;
-    #     xfoot1 - xbody;
-    #     xfoot2 - xbody;
-    #     xfoot3 - xbody;
-    #     xfoot4 - xbody;
-    #     # x[nq .+ (1:nq)]
-    #     ]
-    xf = x[1:nq]
+    xf = [1.0; xbody[2:3]; xorient;
+        xfoot1 - xbody;
+        xfoot2 - xbody;
+        xfoot3 - xbody;
+        xfoot4 - xbody;
+        x[nq .+ (1:nq)]
+        ]
+    # xf = x[1:nq]
     return xf
 end
+
+
+function pd_policy(x, θ, x_ref, u_ref)
+    q = x[1:nq]
+    Δx = x - x_ref
+    J = input_jacobian(dynamics_model, q)
+    Δxq = Δx[1:nq]
+    Δxv = Δx[nq .+ (1:nq)]
+    Kp = 1.0
+    Kv = 0.0
+    u = u_ref + Kp * J \ Δxq + Kv * J \ Δxv
+    return u
+end
+
 
 nf = length(feature(zeros(nx)))
 ∂feature∂x = FiniteDiff.finite_difference_jacobian(x -> feature(x), rand(nx))
@@ -193,6 +213,7 @@ function policy_jacobian_parameters(x, x_ref)
     return ∂policy∂θ
 end
 
+
 u_ref0 = ones(nu)
 x_ref0 = ones(nx)
 x0 = ones(nx)
@@ -202,15 +223,15 @@ policy_jacobian_parameters(x0, x_ref0)
 policy_jacobian_state(θ0)
 
 function evaluation(θ, x_ref, u_ref, x_sols, u_sols, K_sols;
-        Qu=I(nu), Qθ=1e-8*I(nu*nf), QK=1e-7*I(nu*nx)/nu/nx, sample_number=20, batch=5)
+        Qu=I(nu), Qθ=1e-8*I(nu*nf), QK=1e-9*I(nu*nx)/nu/nx, sample_number=20, batch=5)
     T = length(x_ref)
     counter = 0
     c = 0.0
 
-    for i = 1:sample_number#in rand(1:sample_number, batch)
-        x_sol = x_sols[i]
-        u_sol = u_sols[i]
-        K_sol = K_sols[i]
+    for j = 1:sample_number#in rand(1:sample_number, batch)
+        x_sol = x_sols[j]
+        u_sol = u_sols[j]
+        K_sol = K_sols[j]
         for i = 1:T-1
             Δu = policy(x_sol[i], θ, x_ref[i], u_ref[i]) - u_sol[i]
             ΔK = reshape(policy_jacobian_state(θ) - K_sol[i], nu*nx)
@@ -225,15 +246,15 @@ function evaluation(θ, x_ref, u_ref, x_sols, u_sols, K_sols;
 end
 
 function gradient(θ, x_ref, u_ref, x_sols, u_sols, K_sols;
-        Qu=I(nu), Qθ=1e-8*I(nu*nf), QK=1e-7*I(nu*nx)/nu/nx, sample_number=20, batch=5)
+        Qu=I(nu), Qθ=1e-8*I(nu*nf), QK=1e-9*I(nu*nx)/nu/nx, sample_number=20, batch=5)
     T = length(x_ref)
     counter = 0
     grad = zeros(nu*nf)
 
-    for i = 1:sample_number#in rand(1:sample_number, batch)
-        x_sol = x_sols[i]
-        u_sol = u_sols[i]
-        K_sol = K_sols[i]
+    for j = 1:sample_number#in rand(1:sample_number, batch)
+        x_sol = x_sols[j]
+        u_sol = u_sols[j]
+        K_sol = K_sols[j]
         for i = 1:T-1
             Δu = policy(x_sol[i], θ, x_ref[i], u_ref[i]) - u_sol[i]
             Δu∂θ = policy_jacobian_parameters(x_sol[i], x_ref[i])
@@ -250,15 +271,15 @@ function gradient(θ, x_ref, u_ref, x_sols, u_sols, K_sols;
 end
 
 function hessian(θ, x_ref, u_ref, x_sols, u_sols, K_sols;
-        Qu=I(nu), Qθ=1e-8*I(nu*nf), QK=1e-7*I(nu*nx)/nu/nx, sample_number=20, batch=5)
+        Qu=I(nu), Qθ=1e-8*I(nu*nf), QK=1e-9*I(nu*nx)/nu/nx, sample_number=20, batch=5)
     T = length(x_ref)
     counter = 0
     hess = zeros(nu*nf, nu*nf)
 
-    for i = 1:sample_number#in rand(1:sample_number, batch)
-        x_sol = x_sols[i]
-        u_sol = u_sols[i]
-        K_sol = K_sols[i]
+    for j = 1:sample_number#in rand(1:sample_number, batch)
+        x_sol = x_sols[j]
+        u_sol = u_sols[j]
+        K_sol = K_sols[j]
         for i = 1:T-1
             Δu∂θ = policy_jacobian_parameters(x_sol[i], x_ref[i])
             ΔK∂θ = policy_jacobian_state_parameters()
@@ -274,17 +295,17 @@ end
 
 
 function gradient_descent(θ, x_ref, u_ref, x_sols, u_sols, K_sols;
-        number_iterations=10, α=1.0, batch=5)
+        number_iterations=10, α=1e-2, batch=5, Qu=I(nu), Qθ=1e-3*I(nu*nf), QK=1e-5*I(nu*nx)/nu/nx)
     eval_prev = -Inf
     θ_prev = deepcopy(θ)
 
-    hess = hessian(θ, x_ref, u_ref, x_sols, u_sols, K_sols, batch=batch) # constant
+    hess = hessian(θ, x_ref, u_ref, x_sols, u_sols, K_sols, batch=batch, Qu=Qu, Qθ=Qθ, QK=QK) # constant
 
     for i = 1:number_iterations
-        grad = gradient(θ, x_ref, u_ref, x_sols, u_sols, K_sols, batch=batch)
-        θ = θ - α * (hess+ 1e-6 * I) \ grad
+        grad = gradient(θ, x_ref, u_ref, x_sols, u_sols, K_sols, batch=batch, Qu=Qu, Qθ=Qθ, QK=QK)
+        θ = θ - α * (hess + 1e-6 * I) \ grad
         if (i-1) % 1 == 0
-            eval = evaluation(θ, x_ref, u_ref, x_sols, u_sols, K_sols, batch=batch)
+            eval = evaluation(θ, x_ref, u_ref, x_sols, u_sols, K_sols, batch=batch, Qu=Qu, Qθ=Qθ, QK=QK)
             @show i, eval, α
             if eval_prev > eval
                 α = clamp(α * 2.0, 1e-4, 1e0)
@@ -318,30 +339,68 @@ close(file)
 
 # θ0 = -3e-2 * rand(nu*nf)
 θ0 = gradient_descent(θ0, x_ref, u_ref, x_sols, u_sols, K_sols,
-    number_iterations=100, batch=20, α=1.0)
+    number_iterations=100, batch=20, α=10)
 θ1 = deepcopy(θ0)
 
 
 # θ0 = zeros(nu*nf)
 # ## simulate policy
 
-γ = 0.00
-x_hist = [x_ref[1] + [0;0;γ; 0;0;0; 0;0;γ; 0;0;γ; 0;0;γ; 0;0;γ; zeros(nq)]]
-u_hist = []
-
-for t = 1:3T-1
-    t_loop = (t-1)%(T-1)+1
-    # push!(u_hist, [zeros(nu_infeasible); policy(θ_sol, x_hist[end], gait[(t-1)%T+1])])
-    push!(u_hist, policy(x_hist[end], θ0, x_ref[t_loop], u_ref[t_loop]))
-    # @show policy(x_hist[end], θ0, x_ref[t_loop], u_ref[t_loop]) - u_ref[t_loop]
-    # push!(u_hist, u_ref[t_loop])
-    y = zeros(nx)
-    RD.dynamics(dynamics_model, y, x_hist[end], u_hist[end], zeros(nw))
-    push!(x_hist, y)
+function pd_policy(x, θ, x_ref, u_ref)
+    q = x[1:nq]
+    Δx = x_ref - x
+    J = input_jacobian(dynamics_model.model, q)
+    Δxq = Δx[1:nq]
+    Δxv = Δx[nq .+ (1:nq)]
+    Kp = 1e-0
+    Kv = 1e-1
+    u = u_ref + Kp * (J \ Δxq) + Kv * (J \ Δxv)
+    return u
 end
 
-s = Simulator(RD.centroidal_quadruped, 3T-1, h=h)
-for i = 1:3T
+function K_policy(x, θ, x_ref, u_ref, K_ref)
+    q = x[1:nq]
+    Δx = x_ref - x
+    u = u_ref - K_ref * Δx
+    u[1:6] .= 0.0
+    return u
+end
+
+file = JLD2.jldopen(joinpath(@__DIR__, "dataset/centroidal_quadruped_ref.jld2"))
+x_ref = file["x_sol"]
+u_ref = file["u_sol"]
+K_ref = file["K_sol"]
+close(file)
+
+γ = 0.3
+x_hist = [x_ref[1] + [0;0;γ; 0;0;γ; 0;0;γ; 0;0;γ; 0;0;γ; 0;0;γ; zeros(nq)]]
+u_hist = []
+
+M = 20
+t = 0
+for i = 1:M
+    for j = 1:T-1
+        t += 1
+        t_loop = (t-1)%(T-1)+1
+        # push!(u_hist, pd_policy(x_hist[end], θ0, x_ref[t_loop], u_ref[t_loop]))
+        x_offset = deepcopy(x_ref[t_loop])
+        x_offset[[1,7,10,13,16]] .+= (i-1) * 0.0822
+        x_offset[1 .+ [1,7,10,13,16]] .+= (i-1) * 0.01
+        push!(u_hist, K_policy(x_hist[end], θ0, x_offset, u_ref[t_loop], K_ref[t_loop]))
+        # push!(u_hist, u_ref[t_loop])
+        y = zeros(nx)
+        RD.dynamics(dynamics_model, y, x_hist[end], u_hist[end], zeros(nw))
+        push!(x_hist, y)
+    end
+end
+
+Δx = x_ref[end-1] - x_ref[1]
+mean(Δx[[1,7,10,13,16]])
+
+x_ref
+
+s = Simulator(RD.centroidal_quadruped, M*(T-1), h=h)
+for i = 1:M*(T-1)+1
     q = x_hist[i][1:nq]
     v = x_hist[i][nq .+ (1:nq)]
     RD.set_state!(s, q, v, i)
@@ -350,9 +409,15 @@ visualize!(vis, s)
 set_light!(vis)
 set_floor!(vis)
 
+plot(hcat(u_hist...)')
+
 plot(Gray.(abs.(reshape(θ0 ./ maximum(θ0), (nu,nf)))))
 spy(reshape(θ0, (nu,nf)), markersize=5.0)
 
+nf
+
+
+plot(hcat(u_hist...)')
 
 
 
@@ -369,7 +434,8 @@ function g!(G, x)
     G[2] = 200.0 * (x[2] - x[1]^2)
 end
 
-optimize(f, g!, x0, LBFGS())
+optimize(f, g!, [1,2.0], LBFGS(),
+    Optim.Options(show_trace = true))
 
 
 
