@@ -106,27 +106,13 @@ function solver_generator(dynamics_model::Simulator, gait::Vector;
 
     # ## objective
     ############################################################################
-    function o1(x, u, w)
-        J = 0.0
-        qbody = [1e-0, 1e-0, 1e+1]
-        qfoot = [1e-0, 1e-0, 1e+2]
-        q = 1e-0 * [1e-0*qbody; 1e+0*ones(3); [qfoot; qfoot; qfoot; qfoot]]
-        v = 1e-0 * [1e-3*ones(3); 1e-2*ones(3); 1e-3*ones(12)]
-        r = 1e-2 * [ones(6); [1e-1,1,1e-2]; [1e-1,1,1e-2]; [1e-1,1,1e-2]; [1e-1,1,1e-2]]
-        ex = x - w
-        eu = u[1:nu] - u_hover
-        J += 0.5 * transpose(ex) * Diagonal([q; v]) * ex
-        J += 0.5 * transpose(eu) * Diagonal(r) * eu
-        return J
-    end
-
     function ot(x, u, w)
         J = 0.0
-        qbody = [1e-0, 1e-0, 1e+1]
+        qbody = [1e-0, 1e-0, 1e+2]
         qfoot = [1e-0, 1e-0, 1e+2]
         q = 1e-0 * [1e-0*qbody; 1e+0*ones(3); [qfoot; qfoot; qfoot; qfoot]]
-        v = 1e-0 * [1e-3*ones(3); 1e-2*ones(3); 1e-3*ones(12)]
-        r = 1e-2 * [ones(6); [1e-1,1,1e-2]; [1e-1,1,1e-2]; [1e-1,1,1e-2]; [1e-1,1,1e-2]]
+        v = 3e+1 * [1e-1*ones(3); 1e-0*ones(3); 1e-1*ones(12)]
+        r = 1e-1 * [ones(6); [1e-1,1,1e-3]; [1e-1,1,1e-3]; [1e-1,1,1e-3]; [1e-1,1,1e-3]]
         ex = x[1:nx] - w
         eu = u[1:nu] - u_hover
         J += 0.5 * transpose(ex) * Diagonal([q; v]) * ex
@@ -136,13 +122,18 @@ function solver_generator(dynamics_model::Simulator, gait::Vector;
 
     function oT(x, u, w)
         J = 0.0
+        qbody = [1e-0, 1e-0, 1e+1]
+        qfoot = [1e-0, 1e-0, 1e+2]
+        q = 1e-0 * [1e-0*qbody; 1e-1*ones(3); [qfoot; qfoot; qfoot; qfoot]]
+        v = 3e+1 * [1e-1*ones(3); 1e-0*ones(3); 1e-1*ones(12)]
+        ex = x[1:nx] - w
+        J += 0.5 * transpose(ex) * Diagonal([q; v]) * ex
         return J
     end
 
-    c1 = iLQR.Cost(o1, nx, nu, num_parameter=nx)
     ct = iLQR.Cost(ot, nx, nu, num_parameter=nx)
     cT = iLQR.Cost(oT, nx, 0, num_parameter=nx)
-    obj = [c1, [ct for t = 2:(T - 1)]..., cT]
+    obj = [[ct for t = 1:(T - 1)]..., cT]
 
 
     # ## constraints

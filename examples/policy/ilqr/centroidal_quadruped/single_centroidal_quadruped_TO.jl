@@ -167,7 +167,7 @@ function o1(x, u, w)
     J = 0.0
     qbody = [1e-0, 1e-0, 1e+1]
     qfoot = [1e-0, 1e-0, 1e+2]
-    q = 1e-0 * [1e-0*qbody; 1e+0*ones(3); [qfoot; qfoot; qfoot; qfoot]]
+    q = 1e-0 * [1e-0*qbody; 1e-1*ones(3); [qfoot; qfoot; qfoot; qfoot]]
     v = 1e-0 * [1e-3*ones(3); 1e-2*ones(3); 1e-3*ones(12)]
     r = 1e-2 * [ones(6); [1e-1,1,1e-2]; [1e-1,1,1e-2]; [1e-1,1,1e-2]; [1e-1,1,1e-2]]
     ex = x - w
@@ -181,7 +181,7 @@ function ot(x, u, w)
     J = 0.0
     qbody = [1e-0, 1e-0, 1e+1]
     qfoot = [1e-0, 1e-0, 1e+2]
-    q = 1e-0 * [1e-0*qbody; 1e+0*ones(3); [qfoot; qfoot; qfoot; qfoot]]
+    q = 1e-0 * [1e-0*qbody; 1e-1*ones(3); [qfoot; qfoot; qfoot; qfoot]]
     v = 1e-0 * [1e-3*ones(3); 1e-2*ones(3); 1e-3*ones(12)]
     r = 1e-2 * [ones(6); [1e-1,1,1e-2]; [1e-1,1,1e-2]; [1e-1,1,1e-2]; [1e-1,1,1e-2]]
     ex = x[1:nx] - w
@@ -193,6 +193,12 @@ end
 
 function oT(x, u, w)
     J = 0.0
+    qbody = [1e-0, 1e-0, 1e+1]
+    qfoot = [1e-0, 1e-0, 1e+2]
+    q = 1e-0 * [1e-0*qbody; 1e-1*ones(3); [qfoot; qfoot; qfoot; qfoot]]
+    v = 1e-0 * [1e-3*ones(3); 1e-2*ones(3); 1e-3*ones(12)]
+    ex = x[1:nx] - w
+    J += 0.5 * transpose(ex) * Diagonal([q; v]) * ex
     return J
 end
 
@@ -209,8 +215,8 @@ uu = +1.0 * [1e-3*ones(nu_infeasible); 1e3ones(nu-nu_infeasible)]
 function con1(x, u, w)
     # θ = u[nu .+ (1:nθ)]
     [
-        1e-2 * (ul - u[1:nu]);
-        1e-2 * (u[1:nu] - uu);
+        1e-1 * (ul - u[1:nu]);
+        1e-1 * (u[1:nu] - uu);
         # 1.0e-2 * (u[nu_infeasible+1:nu] - policy(θ, x[1:nx], w));
     ]
 end
@@ -218,8 +224,8 @@ end
 function cont(x, u, w)
     # θ = x[nx .+ (1:nθ)]
     [
-        1e-2 * (ul - u[1:nu]);
-        1e-2 * (u[1:nu] - uu);
+        1e-1 * (ul - u[1:nu]);
+        1e-1 * (u[1:nu] - uu);
         # 1.0e-2 * (u[nu_infeasible+1:nu] - policy(θ, x[1:nx], w))
     ]
 end
@@ -228,12 +234,15 @@ function goal(x, u, w)
     [
         # x[[1,nq+1]] - xT[[1,nq+1]];
         # x[nq+1:nq+1] - xT[nq+1:nq+1];
-        1e-2 * (x[1:nq+3] - xT[1:nq+3]);
+        # 1e-1 * (ul - u[1:nu]);
+        # 1e-1 * (u[1:nu] - uu);
+        1e-1 * (x[1:nq+3] - xT[1:nq+3]);
     ]
 end
 
 con_policy1 = iLQR.Constraint(con1, nx, nu, num_parameter=nx, indices_inequality=collect(1:2nu))
 con_policyt = iLQR.Constraint(cont, nx, nu, num_parameter=nx, indices_inequality=collect(1:2nu))
+# con_policyT = iLQR.Constraint(goal, nx, nu, indices_inequality=collect(1:2nu))
 con_policyT = iLQR.Constraint(goal, nx, 0)
 
 cons = [con_policy1, [con_policyt for t = 2:T-1]..., con_policyT]
@@ -253,7 +262,7 @@ p = iLQR.Solver(dyn, obj, cons, options=opts, parameters=gait)
 
 # ## initialize
 γ = 0.05
-initial_disturbance = [0;0;γ; 0;0;0; 0;0;γ; 0;0;γ; 0;0;γ; 0;0;γ; zeros(nq)]
+initial_disturbance = [0;0;γ; γ;γ;γ; 0;0;γ; 0;0;γ; 0;0;γ; 0;0;γ; zeros(nq)]
 u_guess = [t == 1 ? [u_hover;] : u_hover for t = 1:T-1]
 x_guess = iLQR.rollout(dyn, x1 + initial_disturbance, u_guess, parameters)
 
@@ -297,6 +306,8 @@ for i = 1:T
 end
 visualize!(vis, s)
 
+build_robot!(vis, s.model, name=:goal)
+set_robot!(vis, s.model, xT, name=:goal)
 
 using JLD2
 JLD2.jldsave(joinpath(@__DIR__, "centroidal_quadruped_sol.jld2"), x_sol=x_sol, u_sol=u_sol, K_sol=K_sol)
@@ -304,3 +315,15 @@ JLD2.jldsave(joinpath(@__DIR__, "centroidal_quadruped_sol.jld2"), x_sol=x_sol, u
 
 # Dojo.convert_frames_to_video_and_gif("RD.centroidal_quadruped_single_regularized_open_loop")
 # Dojo.convert_frames_to_video_and_gif("RD.centroidal_quadruped_single_regularized_policy")
+
+u_sol[1][1:6]
+x_sol
+T
+plot(hcat)
+
+
+
+
+
+
+scatter(hcat(x_sol...)'[:,4:6])
