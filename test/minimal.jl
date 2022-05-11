@@ -44,7 +44,7 @@ end
 ################################################################################
 @testset "Get and set position and velocities" begin
 	@testset "Maximal coordinates" begin
-		mech = Dojo.get_mechanism(:raiberthopper)
+		mech = DojoEnvironments.get_mechanism(:raiberthopper)
 		timestep= mech.timestep
 		joint1 = mech.joints[1]
 		joint2 = mech.joints[2]
@@ -76,7 +76,7 @@ end
 
 	@testset "Minimal coordinates" begin
 		for joint_type in joint_types
-			mech = Dojo.get_snake(
+			mech = DojoEnvironments.get_snake(
 					num_bodies=10,
 					joint_type=joint_type)
 
@@ -124,7 +124,7 @@ end
 @testset "Minimal to maximal to minimal" begin
 	# raiberthopper
 	@testset "Raibert hopper" begin
-		mech = Dojo.get_mechanism(:raiberthopper);
+		mech = DojoEnvironments.get_mechanism(:raiberthopper);
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
 		x0 = rand(nx)
@@ -141,7 +141,7 @@ end
 
 	# box
 	@testset "Box" begin
-		mech = Dojo.get_mechanism(:block)
+		mech = DojoEnvironments.get_mechanism(:block)
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
 		x0 = rand(nx)
@@ -152,7 +152,7 @@ end
 
 	# pendulum
 	@testset "Pendulum" begin
-		mech = Dojo.get_mechanism(:pendulum)
+		mech = DojoEnvironments.get_mechanism(:pendulum)
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
 		x0 = rand(nx)
@@ -163,7 +163,7 @@ end
 
 	# halfcheetah
 	@testset "Halfcheetah" begin
-		mech = Dojo.get_mechanism(:halfcheetah)
+		mech = DojoEnvironments.get_mechanism(:halfcheetah)
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
 		x0 = rand(nx)
@@ -175,7 +175,7 @@ end
 	# nslider
 	@testset "Nslider" begin
 		Nb0 = 5
-		mech = Dojo.get_mechanism(:nslider,
+		mech = DojoEnvironments.get_mechanism(:nslider,
 			num_bodies=Nb0)
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
@@ -190,7 +190,7 @@ end
 		for joint_type in joint_types
 			# @show joint_type
 			Nb0 = 5
-			mech = Dojo.get_mechanism(:npendulum,
+			mech = DojoEnvironments.get_mechanism(:npendulum,
 				num_bodies=Nb0,
 				joint_type=joint_type)
 			Random.seed!(100)
@@ -207,10 +207,10 @@ end
 		for joint_type in joint_types
 			# @show joint_type
 			Nb0 = 5
-			mech = Dojo.get_mechanism(:snake,
+			mech = DojoEnvironments.get_mechanism(:snake,
 				num_bodies=Nb0,
 				joint_type=joint_type)
-			mech = Dojo.get_mechanism(:snake,
+			mech = DojoEnvironments.get_mechanism(:snake,
 				num_bodies=Nb0,
 				joint_type=:Fixed)
 			Random.seed!(100)
@@ -227,7 +227,7 @@ end
 		for joint_type in joint_types
 			# @show joint_type
 			Nb0 = 5
-			mech = Dojo.get_mechanism(:twister,
+			mech = DojoEnvironments.get_mechanism(:twister,
 				num_bodies=Nb0,
 				joint_type=joint_type)
 			Random.seed!(100)
@@ -241,7 +241,7 @@ end
 
 	# humanoid
 	@testset "Humanoid" begin
-		mech = Dojo.get_mechanism(:humanoid)
+		mech = DojoEnvironments.get_mechanism(:humanoid)
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
 		x0 = rand(nx)
@@ -252,7 +252,7 @@ end
 
 	# quadruped
 	@testset "Quadruped" begin
-		mech = Dojo.get_mechanism(:quadruped)
+		mech = DojoEnvironments.get_mechanism(:quadruped)
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
 		x0 = rand(nx)
@@ -263,7 +263,7 @@ end
 
 	# atlas
 	@testset "Atlas" begin
-		mech = Dojo.get_mechanism(:atlas,
+		mech = DojoEnvironments.get_mechanism(:atlas,
 			model_type=:simple,
 			contact_feet=true,
 			damper=10.0)
@@ -282,7 +282,7 @@ end
 ################################################################################
 @testset "Jacobians" begin
 	@testset "Minimal velocity Jacobian" begin
-		mech = Dojo.get_humanoid()
+		mech = DojoEnvironments.get_humanoid()
 		timestep= mech.timestep
 		for jointcon in mech.joints
 			for joint in [jointcon.translational, jointcon.rotational]
@@ -342,7 +342,7 @@ end
 	end
 
 	@testset "Minimal coordinate Jacobian" begin
-		mech = Dojo.get_humanoid()
+		mech = DojoEnvironments.get_humanoid()
 		for jointcon in mech.joints
 			for joint in [jointcon.translational, jointcon.rotational]
 				# generate random configuration in minimal space
@@ -414,7 +414,7 @@ end
 		end
 
 		# n-pendulum
-		mechanism = Dojo.get_mechanism(:npendulum,
+		mechanism = DojoEnvironments.get_mechanism(:npendulum,
 			timestep=0.1,
 			gravity=-9.81,
 			num_bodies=1)
@@ -446,7 +446,7 @@ end
 		@test norm(diag(M_a * N_a) .- 1.0, Inf) < 1.0e-8
 
 		# n-pendulum
-		mechanism = Dojo.get_mechanism(:npendulum,
+		mechanism = DojoEnvironments.get_mechanism(:npendulum,
 			timestep=0.1,
 			gravity=-9.81,
 			num_bodies=2)
@@ -477,7 +477,7 @@ end
 		@test norm(diag(M_a * N_a) .- 1.0, Inf) < 1.0e-5
 
 		# sphere
-		mechanism = Dojo.get_mechanism(:sphere,
+		mechanism = DojoEnvironments.get_mechanism(:sphere,
 			timestep=0.01,
 			gravity=-9.81)
 		Dojo.initialize!(mechanism, :sphere)
@@ -505,7 +505,7 @@ end
 		@test norm(diag(M_a * N_a) .- 1.0, Inf) < 1.0e-8
 
 		# half cheetah
-		mechanism = Dojo.get_mechanism(:halfcheetah,
+		mechanism = DojoEnvironments.get_mechanism(:halfcheetah,
 			timestep=0.01,
 			gravity=-9.81)
 		Dojo.initialize!(mechanism, :halfcheetah)
@@ -535,7 +535,7 @@ end
 		@test norm(diag(M_a * N_fd) .- 1.0, Inf) < 1.0e-5
 
 		# atlas
-		mechanism = Dojo.get_mechanism(:atlas,
+		mechanism = DojoEnvironments.get_mechanism(:atlas,
 			timestep=0.01,
 			gravity=-9.81,
 			friction_coefficient=0.5,
@@ -585,7 +585,7 @@ end
 		end
 
 		# 5-link pendulum
-		mech = Dojo.get_mechanism(:npendulum,
+		mech = DojoEnvironments.get_mechanism(:npendulum,
 			timestep=0.01,
 			gravity=-9.81,
 			num_bodies=5)
@@ -609,7 +609,7 @@ end
 		@test norm(M_fd - M_a, Inf) < 1.0e-8
 
 		# # sphere
-		mech = Dojo.get_mechanism(:sphere,
+		mech = DojoEnvironments.get_mechanism(:sphere,
 			timestep=0.01,
 			gravity=-9.81)
 		Dojo.initialize!(mech, :sphere)
@@ -635,8 +635,8 @@ end
 # ################################################################################
 # # Test minimal velocities
 # ################################################################################
-# mech = Dojo.get_snake(gravity=0.00, num_bodies=2, damper=0.3, spring=0.2, joint_type=:Revolute)
-# Dojo.initialize_snake!(mech)
+# mech = DojoEnvironments.get_snake(gravity=0.00, num_bodies=2, damper=0.3, spring=0.2, joint_type=:Revolute)
+# DojoEnvironments.initialize_snake!(mech)
 # function ctrl!(m,k)
 #     set_input!(m, 0.01*m.timestep*ones(minimal_dimension(m)))
 # end

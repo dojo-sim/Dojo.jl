@@ -3,7 +3,7 @@
 ################################################################################
 @testset "Displacement Jacobian" begin
     @testset "Rotational" begin
-        mech = Dojo.get_mechanism(:pendulum)
+        mech = DojoEnvironments.get_mechanism(:pendulum)
         joint0 = mech.joints[1]
         rot0 = joint0.rotational
         rot0.axis_offset = rand(QuatRotation).q
@@ -37,7 +37,7 @@
     end
 
     @testset "Translational" begin
-        mech = Dojo.get_mechanism(:slider)
+        mech = DojoEnvironments.get_mechanism(:slider)
         joint0 = mech.joints[1]
         tra0 = joint0.translational
 
@@ -75,7 +75,7 @@ end
 ################################################################################
 @testset "Impulse transform Jacobian: rotational" begin
     @testset "Rotational" begin
-        mech = Dojo.get_mechanism(:pendulum)
+        mech = DojoEnvironments.get_mechanism(:pendulum)
         joint0 = mech.joints[1]
         rot0 = joint0.rotational
         rot0.axis_offset = rand(QuatRotation).q
@@ -120,7 +120,7 @@ end
     end
 
     @testset "Translational" begin
-        mech = Dojo.get_mechanism(:slider)
+        mech = DojoEnvironments.get_mechanism(:slider)
         joint0 = mech.joints[1]
         tra0 = joint0.translational
 
@@ -170,7 +170,7 @@ end
 ################################################################################
 @testset "Impulse map" begin
     @testset "impulse map: rotational" begin
-        mech = Dojo.get_mechanism(:pendulum)
+        mech = DojoEnvironments.get_mechanism(:pendulum)
         joint0 = mech.joints[1]
         rot0 = joint0.rotational
         rot0.axis_offset = rand(QuatRotation).q

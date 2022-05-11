@@ -152,17 +152,18 @@ include(joinpath("gradients", "data.jl"))
 include(joinpath("gradients", "utilities.jl"))
 
 # Environments
-include(joinpath("..", "environments", "mechanisms.jl"))
-include(joinpath("..", "environments", "environment.jl"))
-include(joinpath("..", "environments", "dynamics.jl"))
-include(joinpath("..", "environments", "utilities.jl"))
-include(joinpath("..", "environments", "include.jl"))
+# include(joinpath("..", "environments", "mechanisms.jl"))
+# include(joinpath("..", "environments", "environment.jl"))
+# include(joinpath("..", "environments", "dynamics.jl"))
+# include(joinpath("..", "environments", "utilities.jl"))
+# include(joinpath("..", "environments", "include.jl"))
 
 # Bodies
 export
     Body,
     Origin,
     Box,
+    Capsule,
     Cylinder,
     Sphere,
     Pyramid,
@@ -226,7 +227,7 @@ export
 # Mechanism
 export
     Mechanism,
-    get_mechanism,
+    #get_mechanism,
     initialize!,
     set_floating_base,
     zero_velocity!
@@ -262,23 +263,23 @@ export
     step!,
     generate_storage
 
-# Environment
-export
-    Environment,
-    dynamics,
-    dynamics_jacobian_state,
-    dynamics_jacobian_input,
-    get_environment,
-    #step,
-    get_observation,
-    cost,
-    is_done,
-    #reset,
-    render,
-    seed,
-    close,
-    Space,
-    BoxSpace
+# # Environment
+# export
+#     Environment,
+#     dynamics,
+#     dynamics_jacobian_state,
+#     dynamics_jacobian_input,
+#     get_environment,
+#     #step,
+#     get_observation,
+#     cost,
+#     is_done,
+#     #reset,
+#     render,
+#     seed,
+#     close,
+#     Space,
+#     BoxSpace
 
 # Orientation
 export
