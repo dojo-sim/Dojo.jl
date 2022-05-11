@@ -39,7 +39,7 @@ end
 
 @testset "Four-bar linkage" begin
     for timestep in [0.10, 0.05, 0.01, 0.005]
-        mech = Dojo.get_mechanism(:fourbar,
+        mech = get_mechanism(:fourbar,
             model="fourbar",
             timestep=timestep)
         Dojo.initialize!(mech, :fourbar,
@@ -65,7 +65,7 @@ end
     # Simulation
     timestep=0.01
     gravity=0.0
-    mech = Dojo.get_mechanism(:dzhanibekov,
+    mech = get_mechanism(:dzhanibekov,
             timestep=timestep,
             gravity=gravity);
 

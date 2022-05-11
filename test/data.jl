@@ -26,47 +26,47 @@ function test_get_set_data(mechanism::Mechanism)
 end
 
 @testset "Get and set data" begin
-    mech = Dojo.get_snake(num_bodies=3,
+    mech = DojoEnvironments.get_snake(num_bodies=3,
 		damper=1.0,
 			spring=1.0,
 			contact_type=:nonlinear);
     test_get_set_data(mech)
 
-    mech = Dojo.get_snake(num_bodies=3,
+    mech = DojoEnvironments.get_snake(num_bodies=3,
 		damper=1.0,
 		spring=1.0,
 		contact_type=:linear);
     test_get_set_data(mech)
 
-    mech = Dojo.get_snake(num_bodies=3,
+    mech = DojoEnvironments.get_snake(num_bodies=3,
 		damper=1.0,
 		spring=1.0,
 		contact_type=:impact);
     test_get_set_data(mech)
 
-    mech = Dojo.get_pendulum(
+    mech = DojoEnvironments.get_pendulum(
 		damper=1.0,
 		spring=10.0);
     test_get_set_data(mech)
 
-    mech = Dojo.get_humanoid(
+    mech = DojoEnvironments.get_humanoid(
 		damper=1.0,
 		spring=10.0,
 		contact_feet=true);
     test_get_set_data(mech)
 
-    mech = Dojo.get_humanoid(
+    mech = DojoEnvironments.get_humanoid(
 		damper=1.0,
 		spring=10.0,
 		contact_feet=false);
     test_get_set_data(mech)
 
-    mech = Dojo.get_atlas(
+    mech = DojoEnvironments.get_atlas(
 		damper=1.0,
 		spring=10.0);
     test_get_set_data(mech)
 
-    mech = Dojo.get_quadruped(
+    mech = DojoEnvironments.get_quadruped(
 		damper=1.0,
 		spring=10.0);
     test_get_set_data(mech)
@@ -99,7 +99,7 @@ function test_data_system(model::Symbol;
 		kwargs...)
 
     # mechanism
-    mechanism = Dojo.get_mechanism(model,
+    mechanism = DojoEnvironments.get_mechanism(model,
 		timestep=timestep,
 		gravity=gravity;
 		kwargs...)

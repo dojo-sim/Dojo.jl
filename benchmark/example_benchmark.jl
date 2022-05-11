@@ -1,5 +1,5 @@
 using Dojo
-
+using DojoEnvironments
 ###############################
 ### Example benchmark for Atlas
 ###############################
