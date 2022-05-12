@@ -67,7 +67,7 @@ mech = get_mechanism(:quadruped,
     spring=spring)
 
 initialize!(mech, :quadruped)
-storage = simulate!(mech, 1.0,
+storage = simulate!(mech, 0.1,
     record=true,
     verbose=false)
 
@@ -156,6 +156,10 @@ x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]
 DojoEnvironments.visualize(env, x_view)
 
 
+
+
+
+
 mech = get_mechanism(:quadruped,
     timestep=timestep,
     contact_body=false,
@@ -164,20 +168,65 @@ mech = get_mechanism(:quadruped,
     damper=damper,
     spring=spring)
 
-x_sol
-u_sol
-for i = 1:T-1
+
+z_sim = get_maximal_state(storage)
+x_sim = [maximal_to_minimal(mech, z) for z in z_sim]
+H = length(z_sim)
+u_sim = [zeros(m) for i=1:H-1]
+
+for i = 1:H-1
     @show i
-    set_minimal_state!(mech, x_sol[i])
-    set_input!(mech, u_sol[i])
-    z = minimal_to_maximal(mech, x_sol[i])
-    u = u_sol[i]
-    step!(mech, z, u, opts=SolverOptions(rtol=1e-6, btol=2e-4))
+    set_minimal_state!(mech, x_sim[i])
+    set_input!(mech, u_sim[i])
+    z = minimal_to_maximal(mech, x_sim[i])
+    u = u_sim[i]
+    J = minimal_to_maximal_jacobian(mech, x_sim[i])
+    # step!(mech, z, u, opts=SolverOptions(rtol=1e-6, btol=2e-4))
 end
 
 full_vector(mech.system)
 
-minimal_to_maximal_jacobian(mech, rand(1))
+z = z_sim[1]
+u = u_sim[1]
+step!(mech, z, u, opts=SolverOptions(rtol=1e-8, btol=1e-6))
+z20 = get_maximal_state(mech)
+z30 = get_next_state(mech)
+x20 = maximal_to_minimal(mech, z20)
+x30 = maximal_to_minimal(mech, z30)
+
+function get_initial_configurations(mechanism::Mechanism, z::Vector{T}) where T
+    configuration_indices = [1,2,3,4,5,6,13,15,17,19,21,23,25,27,29,31,33,35]
+    set_maximal_state!(mechanism, z)
+
+    # current configuration
+    x = maximal_to_minimal(mechanism, z)
+    q2 = x[configuration_indices]
+
+    # previous configuration
+    for body in mechanism.bodies
+        x, q = previous_configuration(body.state)
+        set_maximal_configurations!(body, x=x, q=q)
+    end
+    z = get_maximal_state(mechanism)
+    x = maximal_to_minimal(mechanism, z)
+    q1 = x[configuration_indices]
+    return q1, q2
+end
+
+
+configuration_indices = [1,2,3,4,5,6,13,15,17,19,21,23,25,27,29,31,33,35]
+q10, q20 = get_initial_configurations(mech, z20)
+q30 = x30[configuration_indices]
+
+u0 = zeros(m)
+w0 = zeros(0)
+h0 = 0.0
+μ0 = 0.0
+
+θ0 = [q10, q20, u0, w0, μ0, h0]
+norm(full_vector(mech.system))
+
+
 
 mech.bodies[1]
 

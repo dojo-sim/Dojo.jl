@@ -1,9 +1,9 @@
-""" 
-	minimal_to_maximal(mechanism, y) 
+"""
+	minimal_to_maximal(mechanism, y)
 
 	convert minimal to maximal representation
 
-	mechanism: Mechanism 
+	mechanism: Mechanism
 	y: minimal state
 """
 function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, y::AbstractVector) where {T,Nn,Ne,Nb,Ni}
@@ -18,12 +18,12 @@ function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, y::AbstractVect
 	return get_maximal_state(mechanism)
 end
 
-""" 
+"""
 	maximal_to_minimal(mechanism, z)
 
 	convert maximal to minimal representation
 
-	mechanism: Mechanism 
+	mechanism: Mechanism
 	z: maximal state
 """
 function maximal_to_minimal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) where {T,Nn,Ne,Nb,Ni,Tz}
@@ -42,6 +42,7 @@ function maximal_to_minimal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVect
 			else
 				xa, va, qa, ϕa = current_configuration_velocity(mechanism.origin.state)
 			end
+			@show length(minimal_coordinates(element, xa, qa, xb, qb))
 			push!(c, minimal_coordinates(element, xa, qa, xb, qb)...)
 			push!(v, minimal_velocities(element, xa, va, qa, ϕa, xb, vb, qb, ϕb, mechanism.timestep)...)
 		end
@@ -60,8 +61,8 @@ function unpack_maximal_state(z::AbstractVector, i::Int)
 	return x2, v15, q2, ϕ15
 end
 
-function pack_maximal_state!(z::AbstractVector, 
-	x2::AbstractVector, v15::AbstractVector, q2::Quaternion, ϕ15::AbstractVector, 
+function pack_maximal_state!(z::AbstractVector,
+	x2::AbstractVector, v15::AbstractVector, q2::Quaternion, ϕ15::AbstractVector,
 	i::Int)
 
 	z[(i-1) * 13 .+ (1:3)] = x2
