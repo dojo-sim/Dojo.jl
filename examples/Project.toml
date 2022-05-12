@@ -1,5 +1,6 @@
 [deps]
 Dojo = "ac60b53e-8d92-4c83-b960-e78698fa1916"
+DojoEnvironments = "8728bab7-e8ae-46fd-a1b6-a8c4d00f608e"
 FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
 Folds = "41a02a25-b8f0-4f67-bc48-60067656b558"
 IterativeLQR = "605048dd-e178-462b-beb9-98a09398ef27"
@@ -9,9 +10,8 @@ PGFPlots = "3b7a836e-365b-5785-a47d-02c71176b4aa"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 
 [compat]
-Folds = "0.2"
 FiniteDiff = "2.11.0"
-IterativeLQR = "0.1.1"
+Folds = "0.2"
 JLD2 = "0.4.21"
 Literate = "2.13.0"
 PGFPlots = "3.4.1"

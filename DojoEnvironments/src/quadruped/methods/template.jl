@@ -4,35 +4,34 @@
 ################################################################################
 
 # Trajectory template
-function low_foot_trajectory(r::T, N::Int) where T
+function low_foot_trajectory(r::T, width_scale::T, N::Int) where T
 	# r = radius of the foot traj
 	# low foot trajectory decomposed into N-1 steps (N waypoints)
-	X = Vector(range(-r, r, length = N+1))
+	X = Vector(range(-width_scale*r, width_scale*r, length = N+1))
 	low_traj = [[x, 0, 0.0] for x in X]
 	return low_traj
 end
 
-function high_foot_trajectory(r::T, β::T, N::Int) where T
+function high_foot_trajectory(r::T, width_scale::T, height_scale::T, N::Int) where T
 	# high foot trajectory decomposed into N+1 steps (N+2 waypoints)
 	α = range(0, π, length = N+1)
 	θ = π * (1 .- cos.(α)) / 2
-	X = [r*cos(θi) for θi in θ]
-	Z = [β*r*sin(θi) for θi in θ] # the factor α flattens the foot trajectory
-	@show typeof(Z)
+	X = [width_scale*r*cos(θi) for θi in θ]
+	Z = [height_scale*r*sin(θi) for θi in θ] # the factor α flattens the foot trajectory
 	high_traj = [[X[i], 0.0, Z[i]] for i = 1:N+1]
 	return high_traj
 end
 
-function foot_trajectory(r::T, β::T, N::Int) where T
-	low_traj = low_foot_trajectory(r, N)
-	high_traj = high_foot_trajectory(r, β, N)
+function foot_trajectory(r::T, width_scale::T, height_scale::T, N::Int) where T
+	low_traj = low_foot_trajectory(r, width_scale, N)
+	high_traj = high_foot_trajectory(r, width_scale, height_scale, N)
 	traj = [low_traj[1:end-1]; high_traj[1:end-1]]
 	return traj
 end
 
 # Inverse kinematics: given the position of the trunk, finds the knee and hip angles that will put the foot
 # at the p_foot location
-function IKquadruped(mechanism::Mechanism, p_trunk, p_foot; 
+function IKquadruped(mechanism::Mechanism, p_trunk, p_foot;
 	leg::Symbol=:FR)
 
 	# starting point of the local search
@@ -46,7 +45,7 @@ function IKquadruped(mechanism::Mechanism, p_trunk, p_foot;
 	return θ
 end
 
-function QuadrupedIKerror(mechanism::Mechanism, p_trunk, p_foot, θ; 
+function QuadrupedIKerror(mechanism::Mechanism, p_trunk, p_foot, θ;
 	leg::Symbol=:FR)
 
 	Dojo.set_minimal_coordinates!(mechanism, Dojo.get_joint(mechanism, :floating_base), [p_trunk; zeros(3)])
@@ -61,14 +60,15 @@ function QuadrupedIKerror(mechanism::Mechanism, p_trunk, p_foot, θ;
 	return err[[1,3]]
 end
 
-function quadruped_trajectory(mechanism::Mechanism{T}; 
-	timestep=0.05, 
-	Δx = -0.04, 
-	Δfront = 0.05, 
-	β = 0.5, 
-	r = 0.10, 
-	z = 0.29, 
-	N = 8, 
+function quadruped_trajectory(mechanism::Mechanism{T};
+	timestep=0.05,
+	Δx = -0.04,
+	Δfront = 0.05,
+	width_scale = 1.0,
+	height_scale = 0.5,
+	r = 0.10,
+	z = 0.29,
+	N = 8,
 	Ncycles = 1) where T
 
 	# pFR = [+ 0.13 + Δx, - 0.13205, 0.]
@@ -80,7 +80,7 @@ function quadruped_trajectory(mechanism::Mechanism{T};
 	pFL = [+ 0.13 + Δx + Δfront, + 0.13205, 0.]
 	pFR = [+ 0.13 + Δx + Δfront, - 0.13205, 0.]
 
-	t = reverse(foot_trajectory(r, β, N))
+	t = reverse(foot_trajectory(r, width_scale, height_scale, N))
 	t_dephased = [t[N+1:2N]; t[1:N]]
 	# Foot positions
 	tRL = [pRL + ti for ti in t]
@@ -112,8 +112,8 @@ function quadruped_trajectory(mechanism::Mechanism{T};
 	X = vcat([deepcopy(X) for i = 1:Ncycles]...)
 	# adding forward displacement and velocity
 	for i = 1:2N*Ncycles
-		X[i][1] += (i-1) * 2r / N
-		X[i][7] += 2r / N / timestep
+		X[i][1] += (i-1) * 2 * width_scale * r / N
+		X[i][7] += 2 * width_scale * r / N / timestep
 	end
 	return X
 end
