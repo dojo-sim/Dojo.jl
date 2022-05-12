@@ -12,6 +12,14 @@ mutable struct LinearContact{T,N} <: Contact{T,N}
     collision::Collision{T,2,3,6}
 end
 
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, contact::LinearContact)
+#     summary(io, contact)
+#     println(io, "")
+#     println(io, "friction_coefficient:      "*string(contact.friction_coefficient))
+#     println(io, "friction_parameterization: "*string(contact.friction_parameterization))
+#     println(io, "collision:                 "*string(contact.collision))
+# end
+
 function LinearContact(body::Body{T}, normal::AbstractVector, friction_coefficient; 
     contact_origin=szeros(T, 3), 
     contact_radius=0.0) where T

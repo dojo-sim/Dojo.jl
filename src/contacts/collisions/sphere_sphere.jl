@@ -15,6 +15,15 @@ mutable struct SphereSphereCollision{T,O,I,OI} <: Collision{T,O,I,OI}
     radius_child::T
 end 
 
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, collision::SphereSphereCollision)
+#     summary(io, collision)
+#     println(io, "")
+#     println(io, "origin_parent: "*string(collision.origin_parent))
+#     println(io, "origin_child:  "*string(collision.origin_child))
+#     println(io, "radius_parent:  "*string(collision.radius_parent))
+#     println(io, "radius_child:  "*string(collision.radius_child))
+# end
+
 # distance
 function distance(collision::SphereSphereCollision, xp, qp, xc, qc)
     # contact origin points

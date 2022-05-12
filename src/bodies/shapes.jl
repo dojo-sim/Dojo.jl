@@ -14,6 +14,11 @@ struct EmptyShape{T} <: Shape{T}
     EmptyShape() = new{Float64}()
 end
 
+function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, shape::EmptyShape)
+    summary(io, shape)
+    println(io, "")
+end
+
 #TODO: change to MeshShape
 
 """
@@ -24,7 +29,6 @@ end
 mutable struct Mesh{T} <: Shape{T}
     position_offset::SVector{3,T}
     axis_offset::Quaternion{T}
-
     path::String
     scale::SVector{3,T}
     color::RGBA
@@ -63,7 +67,6 @@ end
 mutable struct Box{T} <: Shape{T}
     position_offset::SVector{3,T}
     axis_offset::Quaternion{T}
-
     xyz::SVector{3,T}
     scale::SVector{3,T}
     color::RGBA
@@ -103,7 +106,6 @@ end
 mutable struct Cylinder{T} <: Shape{T}
     position_offset::SVector{3,T}
     axis_offset::Quaternion{T}
-
     rh::SVector{2,T}
     scale::SVector{3,T}
     color::RGBA
@@ -144,7 +146,6 @@ end
 mutable struct Capsule{T} <: Shape{T}
     position_offset::SVector{3,T}
     axis_offset::Quaternion{T}
-
     rh::SVector{2,T}
     scale::SVector{3,T}
     color::RGBA
@@ -296,6 +297,15 @@ mutable struct Pyramid{T} <: Shape{T}
         J = 1/80 * m * diagm([4*w^2+3*h^2;4*w^2+3*h^2;8*w^2])
         return Body(m, J; name=name, shape=new{T}(position_offset, axis_offset, [w;h], scale, color))
     end
+end
+
+function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, shape::Shape)
+    summary(io, shape)
+    println(io,"")
+    println(io," position_offset: "*string(shape.position_offset))
+    println(io," axis_offset:     "*string(shape.axis_offset))
+    println(io," scale:           "*string(shape.scale))
+    println(io," color:           "*string(shape.color))
 end
 
 function convert_shape(box::Box)

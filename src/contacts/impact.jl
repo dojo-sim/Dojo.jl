@@ -10,6 +10,13 @@ mutable struct ImpactContact{T,N} <: Contact{T,N}
     collision::Collision{T,0,3,0}
 end
 
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, contact::ImpactContact)
+#     summary(io, contact)
+#     println(io, "")
+#     println(io, "friction_parameterization: "*string(contact.friction_parameterization))
+#     println(io, "collision:                 "*string(contact.collision))
+# end
+
 function ImpactContact(body::Body{T}, normal::AbstractVector{T}; 
     contact_origin=szeros(T, 3), 
     contact_radius=0.0) where T

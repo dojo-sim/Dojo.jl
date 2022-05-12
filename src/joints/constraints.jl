@@ -85,6 +85,20 @@ mutable struct JointConstraint{T,N,Nc,TJ,RJ} <: Constraint{T,N}
     end
 end
 
+function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::JointConstraint)
+    summary(io, constraint)
+    println(io, "")
+    println(io, "id:            "*string(constraint.id))
+    println(io, "name:          "*string(constraint.name))
+    println(io, "spring:        "*string(constraint.spring))
+    println(io, "damper:        "*string(constraint.damper))
+    println(io, "damper:        "*string(constraint.damper))
+    println(io, "parent_id:     "*string(constraint.parent_id))
+    println(io, "child_id:      "*string(constraint.child_id))
+    println(io, "minimal_index: "*string(constraint.minimal_index))
+    println(io, "impulses:      "*string(constraint.impulses))
+end
+
 # constraints
 @generated function constraint(mechanism, joint::JointConstraint)
     pbody = :(get_body(mechanism, joint.parent_id))

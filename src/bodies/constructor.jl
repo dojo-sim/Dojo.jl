@@ -25,6 +25,15 @@ mutable struct Body{T} <: Node{T}
     end
 end
 
+function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, body::Body)
+    summary(io, body)
+    println(io, "")
+    println(io, " id:      "*string(body.id))
+    println(io, " name:    "*string(body.name))
+    println(io, " mass:    "*string(body.mass))
+    println(io, " inertia: "*string(body.inertia))
+end
+
 Base.length(::Body) = 6
 
 # warn that body has poor inertial properties

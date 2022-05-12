@@ -25,3 +25,10 @@ mutable struct Origin{T} <: Node{T}
         new{T}(body.id, body.name, body.state, body.shape)
     end
 end
+
+function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, origin::Origin)
+    summary(io, origin)
+    println(io, "")
+    println(io, " id:      "*string(origin.id))
+    println(io, " name:    "*string(origin.name))
+end
