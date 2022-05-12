@@ -246,7 +246,8 @@ end
 #     println(io, " dtype: "*string(space.dtype))
 # end
 
-function BoxSpace(n::Int; low::AbstractVector{T} = -ones(n), high::AbstractVector{T} = ones(n)) where T
+function BoxSpace(n::Int; low::AbstractVector = -ones(n), high::AbstractVector = ones(n))
+    T = promote_type(eltype.((low, high))...)
     return BoxSpace{T,n}(n, low, high, (n,), T)
 end
 

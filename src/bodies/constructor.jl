@@ -18,9 +18,11 @@ mutable struct Body{T} <: Node{T}
     state::State{T}
     shape::Shape{T}
 
-    function Body(mass::T, inertia::AbstractMatrix; 
+    function Body(mass::Real, inertia::AbstractMatrix; 
         name::Symbol=:origin, 
-        shape::Shape=EmptyShape()) where T
+        shape::Shape=EmptyShape())
+
+        T = promote_type(eltype.((mass, inertia))...)
         new{T}(getGlobalID(), name, mass, inertia, State{T}(), shape)
     end
 end
