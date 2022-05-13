@@ -63,4 +63,4 @@ set_loose_rope(vis, [1,-1,1.0], [1,1,1.0], rope_length=10, N=N, min_altitude=-0.
 vis, anim = animate_loose_rope(vis, parent_traj, child_traj, rope_length=2.0, N=N,
     anim=anim, name=:rope2, min_altitude=0.02)
 
-convert_frames_to_video_and_gif("tugbot_rope")
+convert_frames_to_video_and_gif("ballincup")
