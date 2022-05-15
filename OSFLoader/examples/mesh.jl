@@ -15,7 +15,7 @@ results_dir = joinpath(OSFLoader.osf_loader_dir(), "assets/mesh")
 ################################################################################
 # bunny
 ################################################################################
-bunny_nerf = OSFLoader.get_nerf_object(filename="bunny_trans")
+bunny_nerf = OSFLoader.get_nerf_object(filename="bunny")
 mesh_low, mesh_high = nerf_mesh(bunny_nerf, sampling_density=100,
         normalizer=DensityFieldNormalizer(nerf=:bunny))
 setobject!(vis[:low], mesh_low, MeshPhongMaterial(color=Colors.RGBA(1,1,1,0.5)))

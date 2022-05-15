@@ -6,7 +6,7 @@ results_dir = joinpath(OSFLoader.osf_loader_dir(), "assets/scan")
 ################################################################################
 # bunny
 ################################################################################
-bunny_nerf = OSFLoader.get_nerf_object(filename="bunny_trans")
+bunny_nerf = OSFLoader.get_nerf_object(filename="bunny")
 
 p = zeros(3)
 xrange = p[1] .+ (-1:0.02:1)

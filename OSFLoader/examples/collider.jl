@@ -13,7 +13,7 @@ num_particle = 5000
 ################################################################################
 # bunny
 ################################################################################
-bunny_nerf = get_nerf_object(filename="bunny_trans")
+bunny_nerf = get_nerf_object(filename="bunny")
 bunny_normalizer = DensityFieldNormalizer(nerf=:bunny)
 mass, inertia, center_of_mass = inertia_properties(bunny_nerf; normalizer=bunny_normalizer)
 particles, densities, density_gradients = sample_soft(bunny_nerf, num_particle,

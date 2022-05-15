@@ -30,9 +30,9 @@ end
 function SoftCollider(nerf_object, normalizer; num_particle=1000,
         opts=ColliderOptions(), T=Float64)
 
-    mass, inertia, center_of_mass = inertia_properties(nerf_object,
+    mass, inertia, center_of_mass = OSFLoader.inertia_properties(nerf_object,
         normalizer=normalizer)
-    particles, densities, density_gradients = sample_soft(nerf_object, num_particle,
+    particles, densities, density_gradients = OSFLoader.sample_soft(nerf_object, num_particle,
         normalizer=normalizer, particle_noise=0.005)
 
     weights = densities ./ sum(densities) * mass
@@ -54,9 +54,11 @@ function SoftCollider(nerf_object, normalizer; num_particle=1000,
 end
 
 
-function SoftCollider(nerf::Symbol; opts=ColliderOptions(), T=Float64)
+function SoftCollider(; nerf::Symbol=:bunny, opts=ColliderOptions(), T=Float64)
 
-    dir = joinpath(osf_loader_dir(), "assets/collider", String(nerf) * ".jld2")
+    nerf_object = OSFLoader.get_nerf_object(filename=String(nerf))
+    normalizer = DensityFieldNormalizer(; nerf=nerf)
+    dir = joinpath(OSFLoader.osf_loader_dir(), "assets/collider", String(nerf) * ".jld2")
     file = JLD2.jldopen(dir)
     mass = file["mass"]
     inertia = file["inertia"]

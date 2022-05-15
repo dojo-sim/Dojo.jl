@@ -5,40 +5,45 @@ using OSFLoader
 vis = Visualizer()
 open(vis)
 
+bunny_collider = SoftCollider(nerf=:bunny, opts=ColliderOptions())
+bluesoap_collider = SoftCollider(nerf=:bluesoap, opts=ColliderOptions())
+halfsoap_collider = SoftCollider(nerf=:halfsoap, opts=ColliderOptions())
 
-OSFLoader.get_nerf_object(filename="bunny_trans")
-OSFLoader.get_nerf_object(filename="bluesoap")
-OSFLoader.get_nerf_object(filename="halfsoap")
 
 ################################################################################
-# Simulate bunny
+# Simulate nerf
 ################################################################################
-mech = get_bunny(timestep=0.01)
+mech = get_nerf(nerf=:bunny, collider_options=ColliderOptions(), timestep=0.01)
+mech = get_nerf(nerf=:bluesoap, collider_options=ColliderOptions(), timestep=0.01)
+mech = get_nerf(nerf=:halfsoap, collider_options=ColliderOptions(), timestep=0.01)
 mech.contacts[1].model.collision.collider.options = ColliderOptions()
 
-initialize!(mech, :bunny,
+initialize!(mech, :nerf,
     position=[0,0,0.6],
-    # orientation=Quaternion(0,1,0,0.0,true),
-    orientation=Quaternion(1,0,0,0.0,true),
-    velocity=0*[0,0.5,5.0],
-    angular_velocity=0*[0.5,10.0,3.0])
+    orientation=Quaternion(0,1,0,0.0,true),
+    # orientation=Quaternion(1,0,0,0.0,true),
+    velocity=1*[0,0.5,5.0],
+    angular_velocity=1*[0.5,10.0,3.0])
 
 constraint(mech, mech.contacts[1])
 
-@elapsed storage = simulate!(mech, 2.0,
+@elapsed storage = simulate!(mech, 7.0,
     opts=SolverOptions(verbose=true, rtol=1e-4))
 visualize(mech, storage, vis=vis)
 
 
 ################################################################################
-# Simulate bunny & sphere
+# Simulate nerf & sphere
 ################################################################################
-mech = get_bunny_sphere(timestep=0.01, gravity=-9.81)
+mech = get_nerf_sphere(nerf=:bunny, collider_options=ColliderOptions(), timestep=0.01, gravity=-9.81)
+mech = get_nerf_sphere(nerf=:bluesoap, collider_options=ColliderOptions(), timestep=0.01, gravity=-9.81)
+mech = get_nerf_sphere(nerf=:halfsoap, collider_options=ColliderOptions(), timestep=0.01, gravity=-9.81)
 mech.contacts[1].model.collision.collider.options = ColliderOptions()
 mech.contacts[3].model.collision.collider.options = ColliderOptions()
-initialize!(mech, :bunny_sphere,
-    bunny_position=[0,0,0],
-    bunny_velocity=[0,0,0],
+
+initialize!(mech, :nerf_sphere,
+    nerf_position=[0,0,0],
+    nerf_velocity=[0,0,0],
     sphere_position=[0,4.0,0.4],
     sphere_velocity=[0,-5.0,0],
     )
