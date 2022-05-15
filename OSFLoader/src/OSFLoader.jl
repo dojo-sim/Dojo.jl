@@ -9,20 +9,30 @@ using PyCall
 using StaticArrays
 using Statistics
 using MeshIO
+using Meshing
+using MeshCat
 using GeometryBasics
+using Quaternions
+
 
 global OSF_PATH = joinpath("/home/simon/research/repos/osf-pytorch")
 global OSF_CONFIG_FOLDER = joinpath("configs/osf")
 
 function osf_loader_dir()
-    joinpath("..", @__DIR__)
+    joinpath(@__DIR__, "..")
 end
 
+include("normalizer.jl")
+include("density.jl")
 include("load.jl")
-include("utils.jl")
+include("mesh.jl")
+include("collider.jl")
+include("scan.jl")
 
 export
-    load_density_script
+    inertia_properties,
+    sample_soft,
+    finite_difference_gradient
 
 export
     get_nerf_object,
@@ -31,8 +41,19 @@ export
     slice_particles,
     grid_density,
     slice_density,
-    inertia_properties,
-    sample_soft,
-    finite_difference_gradient
+    nerf_density
+
+export
+    load_python_script
+
+export
+    nerf_mesh
+
+export
+    DensityFieldNormalizer,
+    particle_normalization
+
+export
+    nerf_scan
 
 end # module
