@@ -43,16 +43,16 @@ function DensityFieldNormalizer(;nerf::Symbol=:identity)
         q = [1.0, 0.0, 0.0, 0.0]
         orientation_offset = Quaternion(normalize!(q))
         geometry_scaling = 2.5
-        density_low = 30.0
-        density_high = 60.0
+        density_low = 60.0
+        density_high = 90.0
         density_scale = 0.1
     elseif nerf == :halfsoap
         position_offset = [-2.5,  1.75,  4.35]
         q = [1.0, 0.0, 0.0, 0.0]
         orientation_offset = Quaternion(normalize!(q))
         geometry_scaling = 2.5
-        density_low = 10.0
-        density_high = 25.0
+        density_low = 20.0
+        density_high = 40.0
         density_scale = 0.2
     else
         @warn "unknown nerf object"

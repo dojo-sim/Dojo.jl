@@ -147,7 +147,7 @@ function SoftBody(collider::Collider, inner_mesh_path::String, outer_mesh_path::
     shape2 = Mesh(outer_mesh_path,
         position_offset = position_offset - collider.center_of_mass,
         axis_offset = axis_offset,
-        color=RGBA(0.9,0.9,0.9,0.3))
+        color=RGBA(0.9,0.9,0.9,0.5))
     shape_vec = Vector{Shape{T}}([shape1, shape2])
     shapes = Shapes(shape_vec)
 
