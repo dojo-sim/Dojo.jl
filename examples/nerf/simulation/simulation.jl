@@ -31,7 +31,6 @@ constraint(mech, mech.contacts[1])
     opts=SolverOptions(verbose=true, rtol=1e-4))
 visualize(mech, storage, vis=vis)
 
-
 ################################################################################
 # Simulate nerf & sphere
 ################################################################################
@@ -87,3 +86,5 @@ initialize!(mech, :nerf_triumvirate,
 # Main.@profiler storage = simulate!(mech, 0.10, opts=SolverOptions(verbose=true, rtol=1e-4))
 @elapsed storage = simulate!(mech, 2.0, opts=SolverOptions(verbose=true, rtol=1e-4))
 visualize(mech, storage, vis=vis)
+
+# convert_frames_to_video_and_gif("bunny_simulation")
