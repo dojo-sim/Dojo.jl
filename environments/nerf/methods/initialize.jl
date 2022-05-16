@@ -71,8 +71,8 @@ function get_nerf_sphere(;
 
     # joints
     joints = [
-        JointConstraint(Floating(origin, bodies[1]), name=:joint_origin_nerf),
         JointConstraint(Floating(origin, bodies[2]), name=:joint_origin_sphere),
+        JointConstraint(Floating(origin, bodies[1]), name=:joint_origin_nerf),
         # JointConstraint(Floating(bodies[1], bodies[2]), name=:joint_nerf_sphere),
         ]
     mechanism = Mechanism(origin, bodies, joints,
@@ -116,6 +116,7 @@ function initialize_nerf_sphere!(mechanism::Mechanism{T};
     nerf_angular_velocity=zeros(3),
     sphere_angular_velocity=zeros(3)) where T
 
+    zero_velocity!(mechanism)
     r = 0.50
     z_nerf = [nerf_position + [0,0,r]; nerf_velocity; vector(nerf_orientation); nerf_angular_velocity]
     z_sphere = [sphere_position + [0,0,r]; sphere_velocity; vector(sphere_orientation); sphere_angular_velocity]

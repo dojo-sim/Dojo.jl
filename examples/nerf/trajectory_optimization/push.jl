@@ -14,7 +14,7 @@ vis = Visualizer()
 open(vis)
 
 # ## system
-gravity = -9.81
+gravity = -0*9.81
 timestep = 0.01
 friction_coefficient = 0.01
 ################################################################################
@@ -34,9 +34,7 @@ q_sphere = Quaternion(1.0, 0.0, 0.0, 0.0, false)
 z_bluesoap = [x_bluesoap; zeros(3); vector(q_bluesoap); zeros(3)]
 z_sphere = [x_sphere; zeros(3); vector(q_sphere); zeros(3)]
 z_initial = [z_bluesoap; z_sphere]
-set_maximal_state!(mech, z_initial)
-x_initial = maximal_to_minimal(mech, z_initial)
-set_minimal_state!(mech, x_initial)
+set_maximal_state!(mech, deepcopy(z_initial))
 
 
 # initialize!(mech, :nerf_sphere,
@@ -63,6 +61,7 @@ storage = simulate!(mech, 10.0, ctrl!, opts=SolverOptions(rtol=3e-4, btol=3e-4))
 # final state
 z_final = get_maximal_state(mech)
 z_final = deepcopy(z_initial)
+z_final[14] += 1.0
 visualize(mech, storage, vis=vis)
 
 
@@ -79,18 +78,24 @@ env = get_environment(:nerf_sphere,
     representation=:minimal,
     friction_coefficient=friction_coefficient,
     timestep=timestep,
-    gravity=gravity);
+    gravity=gravity,
+    opts_step=SolverOptions(rtol=3e-3, btol=3e-3),
+    opts_grad=SolverOptions(rtol=3e-3, btol=3e-3),
+    )
 
 # ## dimensions
 n = env.num_states
 m = env.num_inputs
 
 # ## states
+z_initial
 x1 = maximal_to_minimal(env.mechanism, z_initial)
 xT = maximal_to_minimal(env.mechanism, z_final)
 
+mech
+
 # ## horizon
-T = 200
+T = 30
 
 # ## model
 dyn = IterativeLQR.Dynamics(
@@ -101,13 +106,13 @@ dyn = IterativeLQR.Dynamics(
 model = [dyn for t = 1:T-1]
 
 # ## rollout
-ū = [1.0 * [-0.2, 0.0, 0.0, 0.0, 0.0, 0.0] for t = 1:T-1]
+ū = [1.0 * [-0.0, 0.0, 0.0, 0.0, 0.0, 0.0] for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, x1, ū)
 visualize(env, x̄)
 
 # ## objective
 ot = (x, u, w) -> transpose(x - xT) * Diagonal(1.0e-1 * ones(n)) * (x - xT) +
-    transpose(u) * Diagonal(1.0e-3 * ones(m)) * u
+    transpose(u) * Diagonal(1.0e-1 * ones(m)) * u
 oT = (x, u, w) -> transpose(x - xT) * Diagonal(1.0e-1 * ones(n)) * (x - xT)
 
 ct = IterativeLQR.Cost(ot, n, m)
@@ -116,7 +121,8 @@ obj = [[ct for t = 1:T-1]..., cT]
 
 # ## constraints
 function goal(x, u, w)
-    x[[1,2,3,7,8,9,13,14,15]] - xT[[1,2,3,7,8,9,13,14,15]]
+    # x[[1,2,3,7,8,9,13,14,15]] - xT[[1,2,3,7,8,9,13,14,15]]
+    x[[1]] - xT[[1]]
 end
 
 cont = IterativeLQR.Constraint()
@@ -132,7 +138,7 @@ solver_options = IterativeLQR.Options(
     lagrangian_gradient_tolerance=1e-3,
     constraint_tolerance=1e-3,
     scaling_penalty=10.0,
-    max_penalty=1e7,
+    max_penalty=1e6,
     verbose=true)
 s = IterativeLQR.Solver(model, obj, cons, options=solver_options)
 IterativeLQR.initialize_controls!(s, ū)
@@ -143,7 +149,7 @@ function local_callback(solver; )
     u_sol = s.problem.actions
     x_sol = s.problem.states
     x_rollout = IterativeLQR.rollout(solver.problem.model.dynamics, x_sol[1], u_sol)
-    visualize(env, x_rollout, vis=env.vis)
+    visualize(env, x_rollout)
     return nothing
 end
 
@@ -161,3 +167,6 @@ visualize(env, z_sol)
 # obj = MeshFileGeometry(joinpath("/home/simon/Downloads/UM2_logo_7.obj"))
 # setobject!(vis[:logo], obj)
 # settransform!(vis[:logo], LinearMap(0.01*I))
+
+Dojo.convert_video_to_gif("/home/simon/Downloads/video_trial.mp4",
+    "/home/simon/Downloads/video_trial.gif", framerate=15, width=400)

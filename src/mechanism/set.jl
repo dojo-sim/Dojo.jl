@@ -1,15 +1,16 @@
 # maximal
-""" 
-    set_maximal_state(mechanism, z) 
+"""
+    set_maximal_state(mechanism, z)
 
-    set the maximal state of a mechanism 
+    set the maximal state of a mechanism
 
-    mechanism: Mechanism 
-    z: state 
+    mechanism: Mechanism
+    z: state
 """
 function set_maximal_state!(mechanism::Mechanism, z::AbstractVector)
     off = 0
-    for body in mechanism.bodies
+    # for body in mechanism.bodies
+	for body in mechanism.bodies
         x2, v15, q2, ϕ15 = unpack_data(z[off+1:end]); off += 13
         q2 = Quaternion(q2...)
         body.state.v15 = v15
@@ -29,13 +30,13 @@ function initialize_state!(mechanism::Mechanism)
 end
 
 # inputs
-""" 
-    set_input(mechanism, u) 
+"""
+    set_input(mechanism, u)
 
-    set input for each joint in mechanism 
+    set input for each joint in mechanism
 
-    mechanism: Mechanism 
-    u: input 
+    mechanism: Mechanism
+    u: input
 """
 function set_input!(mechanism::Mechanism{T}, u::AbstractVector) where T
 	joints = mechanism.joints
@@ -59,19 +60,19 @@ function set_input!(mechanism::Mechanism, dict::Dict)
 end
 
 # minimal
-""" 
-    set_minimal_state(mechanism, y) 
+"""
+    set_minimal_state(mechanism, y)
 
-    set the maximal state of a mechanism 
+    set the maximal state of a mechanism
 
-    mechanism: Mechanism 
-    y: state 
+    mechanism: Mechanism
+    y: state
 """
 function set_minimal_state!(mechanism::Mechanism, y::AbstractVector)
-    z = minimal_to_maximal(mechanism, y) 
+    z = minimal_to_maximal(mechanism, y)
     set_maximal_state!(mechanism, z)
 end
-    
+
 function set_minimal_coordinates!(mechanism::Mechanism, dict::Dict)
     for (id, joint) in pairs(mechanism.joints)
         set_minimal_coordinates!(mechanism, joint, dict[id])
@@ -85,12 +86,12 @@ function set_minimal_velocities!(mechanism::Mechanism, dict::Dict)
 end
 
 # velocity
-""" 
-    zero_velocity!(mechanism) 
+"""
+    zero_velocity!(mechanism)
 
-    set all mechanism body velocities to zero 
+    set all mechanism body velocities to zero
 
-    mechanism: Mechanism 
+    mechanism: Mechanism
 """
 function zero_velocity!(mechanism::Mechanism)
     for (i, body) in enumerate(mechanism.bodies)
