@@ -46,18 +46,23 @@ set_minimal_state!(mech, x_initial)
 #     sphere_orientation=q_sphere,
 #     )
 
-function ctrl!(m, k; kp=1e-0, kv=3e-1, xg_sphere=[-2,-0.5,0.5])
+function ctrl!(m, k; kp=1e-0, kv=3e-1, xg_sphere=[-2,-0.5,0.5], xg_nerf=[-2,-0.40,0.369])
     sphere = get_body(m, :sphere)
+    # nerf = get_body(m, :bluesoap)
     x_sphere = current_position(sphere.state)
     v_sphere = current_velocity(sphere.state)[1]
+    # x_nerf = current_position(nerf.state)
+    # v_nerf = current_velocity(nerf.state)[1]
     u_sphere = (xg_sphere - x_sphere) * kp - kv * v_sphere
-    set_input!(m, [u_sphere; szeros(3)])
+    u_nerf = szeros(3) # (xg_nerf - x_nerf) * kp - kv * v_nerf
+    set_input!(m, [u_nerf; szeros(3); u_sphere; szeros(3)])
     return nothing
 end
 
 storage = simulate!(mech, 10.0, ctrl!, opts=SolverOptions(rtol=3e-4, btol=3e-4))
 # final state
 z_final = get_maximal_state(mech)
+z_final = deepcopy(z_initial)
 visualize(mech, storage, vis=vis)
 
 
@@ -96,12 +101,13 @@ dyn = IterativeLQR.Dynamics(
 model = [dyn for t = 1:T-1]
 
 # ## rollout
-ū = [1.0 * [-1,0.2,0.0] for t = 1:T-1]
+ū = [1.0 * [0.0, 0.0, 0.0, 0.0, 0.0, 0.0] for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, x1, ū)
 visualize(env, x̄)
 
 # ## objective
-ot = (x, u, w) -> transpose(x - xT) * Diagonal(1.0e-1 * ones(n)) * (x - xT) + transpose(u) * Diagonal(1.0e-3 * ones(m)) * u
+ot = (x, u, w) -> transpose(x - xT) * Diagonal(1.0e-1 * ones(n)) * (x - xT) +
+    transpose(u) * Diagonal(1.0e-3 * ones(m)) * u
 oT = (x, u, w) -> transpose(x - xT) * Diagonal(1.0e-1 * ones(n)) * (x - xT)
 
 ct = IterativeLQR.Cost(ot, n, m)
@@ -110,7 +116,7 @@ obj = [[ct for t = 1:T-1]..., cT]
 
 # ## constraints
 function goal(x, u, w)
-    x - xT
+    x[[1,2,3,7,8,9,13,14,15]] - xT[[1,2,3,7,8,9,13,14,15]]
 end
 
 cont = IterativeLQR.Constraint()
@@ -125,8 +131,17 @@ s = IterativeLQR.solver(model, obj, cons,
 IterativeLQR.initialize_controls!(s, ū)
 IterativeLQR.initialize_states!(s, x̄)
 
+# ## callback
+function local_callback(solver; )
+    u_sol = solver.
+    x̄ = IterativeLQR.rollout(solver.model, x1, ū)
+    visualize(env, x̄)
+    return nothing
+end
+
+
 # ## solve
-@time IterativeLQR.solve!(s)
+@time IterativeLQR.constrained_ilqr_solve!(s, augmented_lagrangian_callback=local_callback)
 
 # ## solution
 z_sol, u_sol = IterativeLQR.get_trajectory(s)
@@ -139,3 +154,8 @@ visualize(env, z_sol)
 
 
 convert_frames_to_video_and_gif("bluesoap_push_high_friction")
+
+
+obj = MeshFileGeometry(joinpath("/home/simon/Downloads/UM2_logo_7.obj"))
+setobject!(vis[:logo], obj)
+settransform!(vis[:logo], LinearMap(0.01*I))

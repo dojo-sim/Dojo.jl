@@ -39,7 +39,7 @@ function nerf_sphere(;
         nx = maximal_dimension(mechanism)
     end
     nu_inf = input_dimension(mechanism)
-    nu = infeasible_control ? nu_inf : nu_inf - 3 # remove first 3 controls
+    nu = infeasible_control ? nu_inf : nu_inf - 6 # remove first 6 controls
     no = nx
 
     aspace = BoxSpace(nu,
@@ -56,7 +56,7 @@ function nerf_sphere(;
     fu = zeros(nx, nu)
 
     u_prev = zeros(nu)
-    control_mask = infeasible_control ? I(nu) : [zeros(nu, 6) I(nu) zeros(nu, 3)]
+    control_mask = infeasible_control ? I(nu) : [zeros(nu, 6) I(nu)]
     control_scaling = Diagonal(ones(nu))
 
     build_robot(mechanism, vis=vis, name=name)
