@@ -56,7 +56,7 @@ function nerf_sphere(;
     fu = zeros(nx, nu)
 
     u_prev = zeros(nu)
-    control_mask = infeasible_control ? I(nu) : [I(nu) zeros(nu, 3)]
+    control_mask = infeasible_control ? I(nu) : [zeros(nu, 6) I(nu) zeros(nu, 3)]
     control_scaling = Diagonal(ones(nu))
 
     build_robot(mechanism, vis=vis, name=name)

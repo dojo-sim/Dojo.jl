@@ -71,7 +71,7 @@ function get_nerf_sphere(;
 
     # joints
     joints = [
-        # JointConstraint(Floating(origin, bodies[1]), name=:joint_origin_nerf),
+        JointConstraint(Floating(origin, bodies[1]), name=:joint_origin_nerf),
         JointConstraint(Floating(origin, bodies[2]), name=:joint_origin_sphere),
         # JointConstraint(Floating(bodies[1], bodies[2]), name=:joint_nerf_sphere),
         ]
@@ -150,7 +150,11 @@ function get_nerf_triumvirate(;
     bodies = [soft_body1, soft_body2, sphere]
 
     # joints
-    joints = [JointConstraint(Floating(origin, bodies[1]), name=:joint_origin_nerf)]
+    joints = [
+        JointConstraint(Floating(origin, bodies[1]), name=:joint_origin_nerf1),
+        JointConstraint(Floating(origin, bodies[2]), name=:joint_origin_nerf2),
+        JointConstraint(Floating(origin, bodies[3]), name=:joint_origin_sphere),
+        ]
 
     mechanism = Mechanism(origin, bodies, joints,
         timestep=timestep,

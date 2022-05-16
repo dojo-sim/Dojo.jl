@@ -38,7 +38,7 @@ set_maximal_state!(mech, z_initial)
 x_initial = maximal_to_minimal(mech, z_initial)
 set_minimal_state!(mech, x_initial)
 
-#
+
 # initialize!(mech, :nerf_sphere,
 #     nerf_position=x_bluesoap - [0,0,0.5],
 #     nerf_orientation=q_bluesoap,
@@ -85,7 +85,7 @@ x1 = maximal_to_minimal(env.mechanism, z_initial)
 xT = maximal_to_minimal(env.mechanism, z_final)
 
 # ## horizon
-T = 100
+T = 200
 
 # ## model
 dyn = IterativeLQR.Dynamics(
