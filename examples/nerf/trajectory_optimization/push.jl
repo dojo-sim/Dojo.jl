@@ -101,7 +101,7 @@ dyn = IterativeLQR.Dynamics(
 model = [dyn for t = 1:T-1]
 
 # ## rollout
-ū = [1.0 * [0.0, 0.0, 0.0, 0.0, 0.0, 0.0] for t = 1:T-1]
+ū = [1.0 * [-0.2, 0.0, 0.0, 0.0, 0.0, 0.0] for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, x1, ū)
 visualize(env, x̄)
 
@@ -124,38 +124,40 @@ conT = IterativeLQR.Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
 # ## solver
-s = IterativeLQR.solver(model, obj, cons,
-    opts=IterativeLQR.Options(
-        max_al_iter=10,
-        verbose=true))
+solver_options = IterativeLQR.Options(
+    line_search=:armijo,
+    max_iterations=75,
+    max_dual_updates=8,
+    objective_tolerance=1e-3,
+    lagrangian_gradient_tolerance=1e-3,
+    constraint_tolerance=1e-3,
+    scaling_penalty=10.0,
+    max_penalty=1e7,
+    verbose=true)
+s = IterativeLQR.Solver(model, obj, cons, options=solver_options)
 IterativeLQR.initialize_controls!(s, ū)
 IterativeLQR.initialize_states!(s, x̄)
 
 # ## callback
 function local_callback(solver; )
-    u_sol = solver.
-    x̄ = IterativeLQR.rollout(solver.model, x1, ū)
-    visualize(env, x̄)
+    u_sol = s.problem.actions
+    x_sol = s.problem.states
+    x_rollout = IterativeLQR.rollout(solver.problem.model.dynamics, x_sol[1], u_sol)
+    visualize(env, x_rollout, vis=env.vis)
     return nothing
 end
 
-
 # ## solve
-@time IterativeLQR.constrained_ilqr_solve!(s, augmented_lagrangian_callback=local_callback)
+@time IterativeLQR.constrained_ilqr_solve!(s, augmented_lagrangian_callback! = local_callback)
 
 # ## solution
 z_sol, u_sol = IterativeLQR.get_trajectory(s)
-@show IterativeLQR.eval_obj(s.m_data.obj.costs, s.m_data.x, s.m_data.u, s.m_data.w)
-@show s.s_data.iter[1]
-@show norm(goal(s.m_data.x[T], zeros(0), zeros(0)), Inf)
 
 # ## visualize
 visualize(env, z_sol)
 
 
-convert_frames_to_video_and_gif("bluesoap_push_high_friction")
-
-
-obj = MeshFileGeometry(joinpath("/home/simon/Downloads/UM2_logo_7.obj"))
-setobject!(vis[:logo], obj)
-settransform!(vis[:logo], LinearMap(0.01*I))
+# convert_frames_to_video_and_gif("bluesoap_push_high_friction")
+# obj = MeshFileGeometry(joinpath("/home/simon/Downloads/UM2_logo_7.obj"))
+# setobject!(vis[:logo], obj)
+# settransform!(vis[:logo], LinearMap(0.01*I))
