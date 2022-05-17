@@ -3,7 +3,7 @@ function residual_violation(mechanism::Mechanism)
     for joint in mechanism.joints
         res = constraint(mechanism, joint)
         shift = 0
-        for element in [joint.translational, joint.rotational]
+        for element in (joint.translational, joint.rotational)
             Nλ = joint_length(element)
             Nb = limits_length(element)
             subres = res[shift + 2Nb .+ (1:Nλ)]

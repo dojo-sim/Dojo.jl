@@ -9,7 +9,7 @@ data_dim(mechanism::Mechanism; attjac::Bool=true) =
 	sum(Vector{Int64}(data_dim.(mechanism.contacts)))
 	
 # Joints
-data_dim(joint::JointConstraint) = 2 + sum(data_dim.([joint.translational, joint.rotational])) # [utra, urot, spring, damper]
+data_dim(joint::JointConstraint) = 2 + sum(data_dim.((joint.translational, joint.rotational))) # [utra, urot, spring, damper]
 data_dim(joint::Translational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = N̄λ # [utra]
 data_dim(joint::Rotational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = N̄λ # [urot]
 
@@ -64,7 +64,7 @@ get_data(mechanism::Mechanism) = vcat([get_data.(mechanism.joints);
 
 # Joints
 function get_data(joint::JointConstraint)
-	joints = [joint.translational, joint.rotational]
+	joints = (joint.translational, joint.rotational)
 	u = vcat(nullspace_mask.(joints) .* getfield.(joints, :input)...)
 	spring = joints[1].spring # assumes we have the same spring and dampers for translational and rotational joint.
 	damper = joints[1].damper # assumes we have the same spring and dampers for translational and rotational joint.
@@ -124,7 +124,7 @@ function set_data!(joint::JointConstraint, data::AbstractVector)
 	damper = data[nu+2]
 
 	set_input!(joint, u)
-	for joint in [joint.translational, joint.rotational]
+	for joint in (joint.translational, joint.rotational)
 		joint.spring=spring
 		joint.damper=damper
 	end

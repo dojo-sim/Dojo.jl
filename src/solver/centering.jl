@@ -29,7 +29,7 @@ function centering!(ν, νaff, n, mechanism, contact::ContactConstraint{T,N,Nc,C
 end
 
 function centering!(ν, νaff, n, mechanism, joint::JointConstraint{T,N,Nc}, vector_entry::Entry, αaff) where {T,N,Nc}
-    for (i, element) in enumerate([joint.translational, joint.rotational])
+    for (i, element) in enumerate((joint.translational, joint.rotational))
         s, γ = split_impulses(element, joint.impulses[2][joint_impulse_index(joint,i)])
         Δs, Δγ = split_impulses(element, vector_entry.value[joint_impulse_index(joint,i)])
         ν += dot(s, γ)

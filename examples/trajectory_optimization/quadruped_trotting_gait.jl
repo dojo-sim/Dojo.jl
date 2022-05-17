@@ -1,5 +1,5 @@
 using Pkg
-# Pkg.develop(path=joinpath(@__DIR__, "../../DojoEnvironments"))
+Pkg.develop(path=joinpath(@__DIR__, "../../DojoEnvironments"))
 Pkg.activate(joinpath(@__DIR__, ".."))
 Pkg.instantiate()
 
@@ -56,6 +56,8 @@ xref = quadruped_trajectory(env.mechanism,
 zref = [minimal_to_maximal(env.mechanism, x) for x in xref]
 DojoEnvironments.visualize(env, xref)
 
+storage = generate_storage(env.mechanism, [minimal_to_maximal(env.mechanism, x) for x in xref])
+visualize(env.mechanism, storage, vis=env.vis)
 
 # ## gravity compensation
 ## TODO: solve optimization problem instead
@@ -67,7 +69,7 @@ mech = get_mechanism(:quadruped,
     spring=spring)
 
 initialize!(mech, :quadruped)
-storage = simulate!(mech, 0.1,
+Main.@profiler storage = simulate!(mech, 0.2,
     record=true,
     verbose=false)
 
@@ -243,3 +245,143 @@ function action(mechanism::Mechanism)
 end
 
 a = action(mech)
+
+
+
+
+function constraint_jacobian_configuration(relative::Symbol, joint::Joint{T,Nλ,Nb},
+        xa::AbstractVector, qa::Quaternion,
+        xb::AbstractVector, qb::Quaternion,
+        η) where {T,Nλ,Nb}
+
+    ∇comp = szeros(T,Nb,7)
+    ∇mincoord = minimal_coordinates_jacobian_configuration(relative, joint, xa, qa, xb, qb, attjac=false)
+    ∇unlim = joint_constraint_jacobian_configuration(relative, joint, xa, qa, xb, qb, η)
+
+    # return [∇comp; ∇mincoord; -∇mincoord; ∇unlim]
+end
+
+relative = :parent
+joint = mech.joints[4].rotational
+xa = srand(3)
+xb = srand(3)
+qa = Quaternion(normalize(srand(4))...)
+qb = Quaternion(normalize(srand(4))...)
+η = 0.0
+
+constraint_jacobian_configuration(relative, joint, xa, qa, xb, qb, η)
+@benchmark $constraint_jacobian_configuration($relative, $joint, $xa, $qa, $xb, $qb, $η)
+
+
+
+
+function impulse_map(relative::Symbol, joint::Joint{T,Nλ,0},
+    xa::AbstractVector, qa::Quaternion,
+    xb::AbstractVector, qb::Quaternion,
+    η) where {T,Nλ}
+    J = constraint_jacobian_configuration(relative, joint, xa, qa, xb, qb, η)
+    G = [[Diagonal(sones(T,3)) szeros(T,3,3)]; [szeros(4,3) LVᵀmat(relative == :parent ? qa : qb)]]
+    return Diagonal([sones(3); 0.5 * sones(3)]) * transpose(J * G)
+end
+
+relative = :parent
+joint = mech.joints[4].translational
+xa = srand(3)
+xb = srand(3)
+qa = Quaternion(normalize(srand(4))...)
+qb = Quaternion(normalize(srand(4))...)
+η = 0.0
+
+
+impulse_map(relative, joint, xa, qa, xb, qb, η)
+@benchmark $impulse_map($relative, $joint, $xa, $qa, $xb, $qb, $η)
+
+
+
+
+
+
+function joint_constraint_jacobian_configuration(relative::Symbol, joint::Joint{T},
+    xa::AbstractVector, qa::Quaternion,
+    xb::AbstractVector, qb::Quaternion, η) where {T}
+    X, Q = displacement_jacobian_configuration(relative, joint, xa, qa, xb, qb, attjac=false)
+    return constraint_mask(joint) * [X Q]
+end
+
+
+relative = :parent
+joint = mech.joints[4].translational
+xa = srand(3)
+xb = srand(3)
+qa = Quaternion(normalize(srand(4))...)
+qb = Quaternion(normalize(srand(4))...)
+η = 0.0
+joint_constraint_jacobian_configuration(relative, joint, xa, qa, xb, qb, η)
+@benchmark $joint_constraint_jacobian_configuration($relative, $joint, $xa, $qa, $xb, $qb, $η)
+
+
+
+
+function displacement_jacobian_configuration(relative::Symbol, joint::Rotational{T},
+        xa::AbstractVector, qa::Quaternion,
+        xb::AbstractVector, qb::Quaternion;
+        attjac::Bool=true, vmat=true) where T
+    X = szeros(T, 3, 3)
+    if relative == :parent
+		Q = Lᵀmat(joint.axis_offset) * Rmat(qb) * Tmat()
+		attjac && (Q *= LVᵀmat(qa))
+    elseif relative == :child
+		Q = Lᵀmat(joint.axis_offset) * Lᵀmat(qa)
+		attjac && (Q *= LVᵀmat(qb))
+	end
+	# vmat && (Q = Vmat() * Q)
+	return X, Q
+end
+
+
+relative = :parent
+joint = mech.joints[4].rotational
+xa = srand(3)
+xb = srand(3)
+qa = Quaternion(normalize(srand(4))...)
+qb = Quaternion(normalize(srand(4))...)
+η = 0.0
+displacement_jacobian_configuration(relative, joint, xa, qa, xb, qb)
+Main.@code_warntype displacement_jacobian_configuration(relative, joint, xa, qa, xb, qb)
+@benchmark $displacement_jacobian_configuration($relative, $joint, $xa, $qa, $xb, $qb)
+
+
+
+
+function displacement_jacobian_configuration(relative::Symbol, joint::Translational{T},
+    xa::AbstractVector, qa::Quaternion,
+    xb::AbstractVector, qb::Quaternion;
+    attjac=true) where T
+
+    vertices = joint.vertices
+
+    if relative == :parent
+        d = xb + vector_rotate(vertices[2], qb) - (xa + vector_rotate(vertices[1], qa)) # in the world frame
+        X = -rotation_matrix(inv(qa))
+        Q = -rotation_matrix(inv(qa)) * ∂rotation_matrix∂q(qa, vertices[1])
+        Q += ∂rotation_matrix_inv∂q(qa, d)
+        attjac && (Q *= LVᵀmat(qa))
+    elseif relative == :child
+        X = rotation_matrix(inv(qa))
+        Q = rotation_matrix(inv(qa)) * ∂rotation_matrix∂q(qb, vertices[2])
+        attjac && (Q *= LVᵀmat(qb))
+    end
+
+    return X, Q
+end
+
+
+
+
+displacement_jacobian_configuration
+
+joint_constraint_jacobian_configuration
+minimal_coordinates_jacobian_configuration
+minimal_coordinates_jacobian_configuration
+minimal_velocities_jacobian_configuration
+minimal_velocities_jacobian_velocity

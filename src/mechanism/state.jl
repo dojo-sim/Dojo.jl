@@ -34,7 +34,7 @@ function maximal_to_minimal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVect
 		c = zeros(Tz,0)
 		v = zeros(Tz,0)
 		ichild = joint.child_id - Ne
-		for element in [joint.translational, joint.rotational]
+		for element in (joint.translational, joint.rotational)
 			xb, vb, qb, ϕb = unpack_maximal_state(z, ichild)
 			if joint.parent_id != 0
 				iparent = joint.parent_id - Ne
@@ -42,7 +42,6 @@ function maximal_to_minimal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVect
 			else
 				xa, va, qa, ϕa = current_configuration_velocity(mechanism.origin.state)
 			end
-			@show length(minimal_coordinates(element, xa, qa, xb, qb))
 			push!(c, minimal_coordinates(element, xa, qa, xb, qb)...)
 			push!(v, minimal_velocities(element, xa, va, qa, ϕa, xb, vb, qb, ϕb, mechanism.timestep)...)
 		end

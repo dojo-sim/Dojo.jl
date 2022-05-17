@@ -68,14 +68,14 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, pbody::Node{T}
     for i = 1:Nc
         λ = get_joint_impulses(joint, i)
         if cbody.id == joint.child_id
-            ∇z2_aa += impulse_map_jacobian(:parent, :parent, [joint.translational, joint.rotational][i],
+            ∇z2_aa += impulse_map_jacobian(:parent, :parent, (joint.translational, joint.rotational)[i],
                 pbody, cbody, λ)
-            ∇z2_ab += impulse_map_jacobian(:parent, :child, [joint.translational, joint.rotational][i],
+            ∇z2_ab += impulse_map_jacobian(:parent, :child, (joint.translational, joint.rotational)[i],
                 pbody, cbody, λ)
         elseif pbody.id == joint.child_id
-            ∇z2_aa += impulse_map_jacobian(:child, :child, [joint.translational, joint.rotational][i],
+            ∇z2_aa += impulse_map_jacobian(:child, :child, (joint.translational, joint.rotational)[i],
                 cbody, pbody, λ)
-            ∇z2_ab += impulse_map_jacobian(:child, :parent, [joint.translational, joint.rotational][i],
+            ∇z2_ab += impulse_map_jacobian(:child, :parent, (joint.translational, joint.rotational)[i],
                 cbody, pbody, λ)
         end
     end
@@ -86,17 +86,17 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, pbody::Node{T}
             if cbody.id == joint.child_id
                 ∇z2_aa += spring_jacobian_configuration(
                     :parent, :parent,
-                    [joint.translational, joint.rotational][i], pbody, cbody, timestep)
+                    (joint.translational, joint.rotational)[i], pbody, cbody, timestep)
                 ∇z2_ab += spring_jacobian_configuration(
                     :parent, :child,
-                    [joint.translational, joint.rotational][i], pbody, cbody, timestep)
+                    (joint.translational, joint.rotational)[i], pbody, cbody, timestep)
             elseif pbody.id == joint.child_id
                 ∇z2_aa += spring_jacobian_configuration(
                     :child, :child,
-                    [joint.translational, joint.rotational][i], cbody, pbody, timestep)
+                    (joint.translational, joint.rotational)[i], cbody, pbody, timestep)
                 ∇z2_ab += spring_jacobian_configuration(
                     :child, :parent,
-                    [joint.translational, joint.rotational][i], cbody, pbody, timestep)
+                    (joint.translational, joint.rotational)[i], cbody, pbody, timestep)
             end
         end
     end
@@ -106,17 +106,17 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, pbody::Node{T}
             if cbody.id == joint.child_id
                 ∇z2_aa += damper_jacobian_configuration(
                     :parent, :parent,
-                    [joint.translational, joint.rotational][i], pbody, cbody, timestep)
+                    (joint.translational, joint.rotational)[i], pbody, cbody, timestep)
                 ∇z2_ab += damper_jacobian_configuration(
                     :parent, :child,
-                    [joint.translational, joint.rotational][i], pbody, cbody, timestep)
+                    (joint.translational, joint.rotational)[i], pbody, cbody, timestep)
             elseif pbody.id == joint.child_id
                 ∇z2_aa += damper_jacobian_configuration(
                     :child, :child,
-                    [joint.translational, joint.rotational][i], cbody, pbody, timestep)
+                    (joint.translational, joint.rotational)[i], cbody, pbody, timestep)
                 ∇z2_ab += damper_jacobian_configuration(
                     :child, :parent,
-                    [joint.translational, joint.rotational][i], cbody, pbody, timestep)
+                    (joint.translational, joint.rotational)[i], cbody, pbody, timestep)
             end
         end
     end

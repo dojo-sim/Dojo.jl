@@ -16,7 +16,7 @@ function maximal_to_minimal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::Abs
 		c_shift = 0
 		v_shift = input_dimension(joint)
 		ichild = joint.child_id - Ne
-		for element in [joint.translational, joint.rotational]
+		for element in (joint.translational, joint.rotational)
 			nu_element = input_dimension(element)
 
 			c_idx = row_shift + c_shift .+ (1:nu_element)
