@@ -36,6 +36,48 @@ visualize(mech, storage, vis=vis)
 #
 
 
+using BenchmarkTools
+
+function constraint_jacobian_configuration(relative::Symbol, joint::Joint{T,Nλ,Nb},
+        xa::AbstractVector, qa::Quaternion,
+        xb::AbstractVector, qb::Quaternion,
+        η) where {T,Nλ,Nb}
+
+    ∇comp = szeros(T,Nb,7)
+    # ∇mincoord = minimal_coordinates_jacobian_configuration(relative, joint, xa, qa, xb, qb, attjac=false)
+    ∇unlim = joint_constraint_jacobian_configuration(relative, joint, xa, qa, xb, qb, η)
+
+    # return [∇comp; ∇mincoord; -∇mincoord; ∇unlim]
+end
+
+relative = :parent
+joint = mech.joints[5].rotational
+xa = srand(3)
+xb = srand(3)
+qa = Quaternion(normalize(rand(4))...)
+qb = Quaternion(normalize(rand(4))...)
+η = 0.0
+
+constraint_jacobian_configuration(relative, joint, xa, qa, xb, qb, η)
+@benchmark $constraint_jacobian_configuration($relative, $joint, $xa, $qa, $xb, $qb, $η)
+
+
+a = 10
+a = 10
+a = 10
+a = 10
+
+
+
+
+
+
+
+
+
+
+
+
 
 # function joint_impulse_index(joint::JointConstraint{T,N,Nc}, i::Int) where {T,N,Nc}
 #     s = 0

@@ -25,7 +25,9 @@ function constraint(joint::Joint{T,Nλ,0},
     joint_constraint(joint, xa, qa, xb, qb, η)
 end
 
-constraint(joint::Joint, pbody::Node, cbody::Node, λ, μ, timestep) = constraint(joint, next_configuration(pbody.state, timestep)..., next_configuration(cbody.state, timestep)..., λ, μ)
+constraint(joint::Joint, pbody::Node, cbody::Node, λ, μ, timestep) =
+	constraint(joint, next_configuration(pbody.state, timestep)...,
+	next_configuration(cbody.state, timestep)..., λ, μ)
 
 # constraint Jacobians
 function constraint_jacobian(joint::Joint{T,Nλ,0}, η) where {T,Nλ}
@@ -40,7 +42,9 @@ function constraint_jacobian(joint::Joint{T,Nλ,Nb}, η) where {T,Nλ,Nb}
     return [c1 c2 c3]
 end
 
-constraint_jacobian_configuration(relative::Symbol, joint::Joint, pbody::Node, cbody::Node, λ, timestep) = constraint_jacobian_configuration(relative, joint, next_configuration(pbody.state, timestep)..., next_configuration(cbody.state, timestep)..., λ)
+constraint_jacobian_configuration(relative::Symbol, joint::Joint, pbody::Node, cbody::Node, λ, timestep) =
+    constraint_jacobian_configuration(relative, joint, next_configuration(pbody.state, timestep)...,
+	next_configuration(cbody.state, timestep)..., λ)
 
 function constraint_jacobian_configuration(relative::Symbol, joint::Joint{T,Nλ,0},
         xa::AbstractVector, qa::Quaternion,
@@ -60,7 +64,9 @@ nullspace_mask(joint::Joint{T,2}) where T = joint.axis_mask3
 nullspace_mask(::Joint{T,3}) where T = szeros(T,0,3)
 
 # impulse maps
-impulse_map(relative::Symbol, joint::Joint, pbody::Node, cbody::Node, λ) = impulse_map(relative, joint, current_configuration(pbody.state)..., current_configuration(cbody.state)..., λ)
+impulse_map(relative::Symbol, joint::Joint, pbody::Node, cbody::Node, λ) =
+	impulse_map(relative, joint, current_configuration(pbody.state)...,
+	current_configuration(cbody.state)..., λ)
 
 function impulse_map(relative::Symbol, joint::Joint{T,Nλ,Nb},
         xa::AbstractVector, qa::Quaternion,
@@ -102,7 +108,8 @@ end
 add_input!(joint::Joint) = return
 
 function input_jacobian_control(relative::Symbol, joint::Joint, pbody::Node, cbody::Node)
-    return input_jacobian_control(relative, joint, current_configuration(pbody.state)..., current_configuration(cbody.state)...) * zerodimstaticadjoint(nullspace_mask(joint))
+    return input_jacobian_control(relative, joint, current_configuration(pbody.state)...,
+		current_configuration(cbody.state)...) * zerodimstaticadjoint(nullspace_mask(joint))
 end
 
 # minimal coordinates

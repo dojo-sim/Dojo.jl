@@ -1,5 +1,6 @@
 using Pkg
 Pkg.develop(path=joinpath(@__DIR__, "../../DojoEnvironments"))
+Pkg.develop(path=joinpath(@__DIR__, "../.."))
 Pkg.activate(joinpath(@__DIR__, ".."))
 Pkg.instantiate()
 
@@ -93,7 +94,8 @@ function ctrl!(m, k; u=u_hover)
     set_input!(m, SVector{nu}(u))
 end
 
-Main.@elapsed storage = simulate!(mech, 0.6, ctrl!,
+# Main.@elapsed storage = simulate!(mech, 0.6, ctrl!,
+Main.@profiler storage = simulate!(mech, 0.6, ctrl!,
     record=true,
     verbose=true,
     opts=SolverOptions(rtol=1e-4, btol=1e-2, undercut=5.0, verbose=false),
