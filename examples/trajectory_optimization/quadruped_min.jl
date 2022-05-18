@@ -2,11 +2,16 @@ using Pkg
 Pkg.activate(joinpath(@__DIR__, ".."))
 Pkg.instantiate()
 
+# ## visualizer
+vis = Visualizer()
+open(vis)
+
 # ## setup
 using Dojo
 using IterativeLQR
 using LinearAlgebra
-using FiniteDiff 
+using FiniteDiff
+using DojoEnvironments
 
 # ## system
 gravity = -9.81
@@ -14,20 +19,19 @@ timestep = 0.05
 friction_coefficient = 0.8
 damper = 5.0
 spring = 0.0
-env = get_environment(:quadruped,
+env = DojoEnvironments.get_environment(:quadruped,
     representation=:minimal,
     timestep=timestep,
     contact_body=false,
     gravity=gravity,
     friction_coefficient=friction_coefficient,
     damper=damper,
-    spring=spring)
+    spring=spring,
+    vis=vis)
 
 # ## template
-include(joinpath(@__DIR__, "../../environments/quadruped/methods/template.jl"))
+include(joinpath(@__DIR__, "../../DojoEnvironments/src/quadruped/methods/template.jl"))
 
-# ## visualizer
-open(env.vis)
 
 # ## dimensions
 n = env.num_states
@@ -44,7 +48,8 @@ xref = quadruped_trajectory(env.mechanism,
     N=10,
     Ncycles=N)
 zref = [minimal_to_maximal(env.mechanism, x) for x in xref]
-visualize(env, xref)
+DojoEnvironments.visualize(env, xref)
+
 
 # ## gravity compensation
 ## TODO: solve optimization problem instead
@@ -60,8 +65,7 @@ storage = simulate!(mech, 1.0,
     record=true,
     verbose=false)
 
-visualize(mech, storage,
-    vis=env.vis)
+Dojo.visualize(mech, storage, vis=env.vis)
 ugc = gravity_compensation(mech)
 u_control = ugc[6 .+ (1:12)]
 

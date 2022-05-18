@@ -1,3 +1,5 @@
+# Pkg.develop(path=joinpath(@__DIR__, "../DojoEnvironments"))
+
 using Test
 using BenchmarkTools
 

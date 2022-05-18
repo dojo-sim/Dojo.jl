@@ -113,7 +113,7 @@ end
 end
 
 # constraints Jacobians
-@generated function constraint_jacobian(joint::JointConstraint) 
+@generated function constraint_jacobian(joint::JointConstraint)
     tra = :(constraint_jacobian(joint.translational, joint.impulses[2][joint_impulse_index(joint, 1)]))
     rot = :(constraint_jacobian(joint.rotational, joint.impulses[2][joint_impulse_index(joint, 2)]))
     return :(cat($tra, $rot, dims=(1,2)))
@@ -189,7 +189,7 @@ function off_diagonal_jacobians(mechanism, joint::JointConstraint, body::Body)
 end
 
 function off_diagonal_jacobians(mechanism, pbody::Body, cbody::Body)
-    # time step 
+    # time step
     timestep = mechanism.timestep
 
     # dimensions
@@ -221,22 +221,22 @@ function off_diagonal_jacobians(mechanism, pbody::Body, cbody::Body)
                 end
             end
         end
-        
+
         # contacts
         if connectionid > Ne + Nb
             contact = get_node(mechanism, connectionid)
             if pbody.id == contact.parent_id
                 if cbody.id == contact.child_id
-                    Jpc = impulse_map_jacobian(:parent, :child, contact.model, 
-                            pbody, 
-                            cbody, 
-                            contact.impulses[2], 
+                    Jpc = impulse_map_jacobian(:parent, :child, contact.model,
+                            pbody,
+                            cbody,
+                            contact.impulses[2],
                             mechanism.timestep) * integrator_jacobian_velocity(cbody, timestep)
 
-                    Jcp = impulse_map_jacobian(:child, :parent, contact.model, 
-                            pbody, 
-                            cbody, 
-                            contact.impulses[2], 
+                    Jcp = impulse_map_jacobian(:child, :parent, contact.model,
+                            pbody,
+                            cbody,
+                            contact.impulses[2],
                             mechanism.timestep) * integrator_jacobian_velocity(pbody, timestep)
                     # impulse_map_jacobian_configuration(mechanism, body, contact) * integrator_jacobian_velocity(body, timestep)
                     # impulse_map(mechanism, contact, body) * contact.impulses[2]
@@ -245,16 +245,16 @@ function off_diagonal_jacobians(mechanism, pbody::Body, cbody::Body)
                 end
             elseif cbody.id == contact.parent_id
                 if pbody.id == contact.child_id
-                    Jpc = impulse_map_jacobian(:parent, :child, contact.model, 
-                            cbody, 
-                            pbody, 
-                            contact.impulses[2], 
+                    Jpc = impulse_map_jacobian(:parent, :child, contact.model,
+                            cbody,
+                            pbody,
+                            contact.impulses[2],
                             mechanism.timestep) * integrator_jacobian_velocity(pbody, timestep)
 
-                    Jcp = impulse_map_jacobian(:child, :parent, contact.model, 
-                            cbody, 
-                            bbody, 
-                            contact.impulses[2], 
+                    Jcp = impulse_map_jacobian(:child, :parent, contact.model,
+                            cbody,
+                            bbody,
+                            contact.impulses[2],
                             mechanism.timestep) * integrator_jacobian_velocity(cbody, timestep)
 
                     jacobian_parent_child -= Jpc #damper_jacobian_velocity(:parent, :child, element, cbody, pbody, timestep)
@@ -267,7 +267,7 @@ function off_diagonal_jacobians(mechanism, pbody::Body, cbody::Body)
     return jacobian_parent_child, jacobian_child_parent
 end
 
-# linear system 
+# linear system
 function set_matrix_vector_entries!(mechanism, matrix_entry::Entry, vector_entry::Entry, joint::JointConstraint)
     matrix_entry.value = constraint_jacobian(joint)
     vector_entry.value = -constraint(mechanism, joint)
@@ -285,12 +285,12 @@ function spring_impulses(mechanism, joint::JointConstraint{T}, body::Body{T};
 
     impulses += spring_impulses(relative, joint.translational,
         pbody,
-        cbody, 
+        cbody,
         mechanism.timestep,
         unitary=unitary)
 
     impulses += spring_impulses(relative, joint.rotational,
-        pbody, 
+        pbody,
         cbody,
         mechanism.timestep,
         unitary=unitary)
@@ -309,7 +309,7 @@ function damper_impulses(mechanism, joint::JointConstraint{T}, body::Body;
     cbody = get_body(mechanism, joint.child_id)
 
     impulses += damper_impulses(relative, joint.translational,
-        pbody, 
+        pbody,
         cbody,
         mechanism.timestep,
         unitary=unitary)
@@ -319,7 +319,7 @@ function damper_impulses(mechanism, joint::JointConstraint{T}, body::Body;
         cbody,
         mechanism.timestep,
         unitary=unitary)
-        
+
     return impulses
 end
 
@@ -382,9 +382,9 @@ end
 function get_joint_impulses(joint::JointConstraint{T,N,Nc}, i::Int) where {T,N,Nc}
     n1 = 1
     for j = 1:i-1
-        n1 += impulses_length([joint.translational, joint.rotational][j])
+        n1 += impulses_length((joint.translational, joint.rotational)[j])
     end
-    n2 = n1 - 1 + impulses_length([joint.translational, joint.rotational][i])
+    n2 = n1 - 1 + impulses_length((joint.translational, joint.rotational)[i])
 
     λi = SVector{n2-n1+1,T}(joint.impulses[2][n1:n2])
     return λi
@@ -393,16 +393,16 @@ end
 function joint_impulse_index(joint::JointConstraint{T,N,Nc}, i::Int) where {T,N,Nc}
     s = 0
     for j = 1:i-1
-        element = [joint.translational, joint.rotational][j]
+        element = (joint.translational, joint.rotational)[j] # FIXED
         s += impulses_length(element)
     end
-    joint_impulse_index([joint.translational, joint.rotational][i], s) # to be allocation free
+    joint_impulse_index((joint.translational, joint.rotational)[i], s) # FIXED
 end
 
 function reset!(joint::JointConstraint{T,N,Nc};
     scale::T=1.0) where {T,N,Nc}
     λ = []
-    for (i, element) in enumerate([joint.translational, joint.rotational])
+    for (i, element) in enumerate((joint.translational, joint.rotational))
         Nλ = joint_length(element)
         Nb = limits_length(element)
         push!(λ, [scale * sones(2Nb); szeros(Nλ)])
@@ -421,7 +421,7 @@ function set_spring_damper_values!(joints, spring, damper;
         b = (length(damper) > 1) ? damper[i] : damper
         joint.spring = k > 0.0
         joint.damper = b > 0.0
-        for element in [joint.translational, joint.rotational]
+        for element in (joint.translational, joint.rotational)
             element.spring = max(0.0, k)
             element.damper = max(0.0, b)
         end

@@ -2,7 +2,7 @@ function get_tugbot(;
     timestep=0.01,
     gravity=[0.0; 0.0; -9.81],
     friction_coefficient=0.2,
-    radius=0.2,
+    radius=0.25,
     object_dimension=[0.4, 0.4, 0.1],
     contact=true,
     contact_type=:nonlinear,
@@ -10,7 +10,7 @@ function get_tugbot(;
 
     origin = Origin{T}(name=:origin)
     drone_mass = 1.0
-    object_mass = 2.0
+    object_mass = 2.5
     bodies = [
         Sphere(radius, drone_mass, name=:drone),
         Box(object_dimension..., object_mass, name=:object)]
@@ -33,7 +33,7 @@ function get_tugbot(;
             name=Symbol(:contact,i)) for i=1:length(contacts)]
 
         collision = StringCollision{Float64,0,3,0}(
-                0*[0,0,-0.2],
+                1*[0,0,-0.1],
                 1*[0.2, 0.2, 0.05],
                 2.0)
         parameterization = szeros(T, 0, 2)

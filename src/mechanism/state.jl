@@ -1,9 +1,9 @@
-""" 
-	minimal_to_maximal(mechanism, y) 
+"""
+	minimal_to_maximal(mechanism, y)
 
 	convert minimal to maximal representation
 
-	mechanism: Mechanism 
+	mechanism: Mechanism
 	y: minimal state
 """
 function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, y::AbstractVector) where {T,Nn,Ne,Nb,Ni}
@@ -18,12 +18,12 @@ function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, y::AbstractVect
 	return get_maximal_state(mechanism)
 end
 
-""" 
+"""
 	maximal_to_minimal(mechanism, z)
 
 	convert maximal to minimal representation
 
-	mechanism: Mechanism 
+	mechanism: Mechanism
 	z: maximal state
 """
 function maximal_to_minimal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) where {T,Nn,Ne,Nb,Ni,Tz}
@@ -34,7 +34,7 @@ function maximal_to_minimal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVect
 		c = zeros(Tz,0)
 		v = zeros(Tz,0)
 		ichild = joint.child_id - Ne
-		for element in [joint.translational, joint.rotational]
+		for element in (joint.translational, joint.rotational)
 			xb, vb, qb, ωb = unpack_maximal_state(z, ichild)
 			if joint.parent_id != 0
 				iparent = joint.parent_id - Ne

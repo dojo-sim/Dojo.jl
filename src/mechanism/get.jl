@@ -154,7 +154,7 @@ function get_minimal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,N
 		v = zeros(T,0)
 		pbody = get_body(mechanism, joint.parent_id)
 		cbody = get_body(mechanism, joint.child_id)
-		for element in [joint.translational, joint.rotational]
+		for element in (joint.translational, joint.rotational)
 			pos = minimal_coordinates(element, pbody, cbody)
 			vel = minimal_velocities(element, pbody, cbody, timestep)
 			push!(c, pos...)

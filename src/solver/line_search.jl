@@ -32,9 +32,9 @@ function line_search!(mechanism::Mechanism, α, rvio, bvio, opts)
     return rvio_cand, bvio_cand
 end
 
-function cone_line_search!(mechanism::Mechanism; 
-    τort::T=0.95, 
-    τsoc::T=0.95, 
+function cone_line_search!(mechanism::Mechanism;
+    τort::T=0.95,
+    τsoc::T=0.95,
     scaling::Bool=false) where T
 
     system = mechanism.system
@@ -51,7 +51,7 @@ function cone_line_search!(mechanism::Mechanism;
 end
 
 function cone_line_search!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
-        vector_entry::Entry, τort, τsoc; 
+        vector_entry::Entry, τort, τsoc;
         scaling::Bool=false) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
 
     s = contact.impulses_dual[2]
@@ -67,7 +67,7 @@ function cone_line_search!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N
 end
 
 function cone_line_search!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
-        vector_entry::Entry, τort, τsoc; 
+        vector_entry::Entry, τort, τsoc;
         scaling::Bool=false) where {T,N,Nc,Cs<:Union{ImpactContact{T,N},LinearContact{T,N}},N½}
 
     s = contact.impulses_dual[2]
@@ -83,10 +83,10 @@ function cone_line_search!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N
 end
 
 function cone_line_search!(α, mechanism, joint::JointConstraint{T,N,Nc},
-        vector_entry::Entry, τort, τsoc; 
+        vector_entry::Entry, τort, τsoc;
         scaling::Bool=false) where {T,N,Nc}
 
-    for (i, element) in enumerate([joint.translational, joint.rotational])
+    for (i, element) in enumerate((joint.translational, joint.rotational))
         s, γ = split_impulses(element, joint.impulses[2][joint_impulse_index(joint,i)])
         Δs, Δγ = split_impulses(element,  vector_entry.value[joint_impulse_index(joint,i)])
 
@@ -98,7 +98,7 @@ function cone_line_search!(α, mechanism, joint::JointConstraint{T,N,Nc},
     return α
 end
 
-function positive_orthant_step_length(λ::AbstractVector{T}, Δ::AbstractVector{T}; 
+function positive_orthant_step_length(λ::AbstractVector{T}, Δ::AbstractVector{T};
     τ::T = 0.99) where T
 
     α = 1.0
@@ -112,7 +112,7 @@ function positive_orthant_step_length(λ::AbstractVector{T}, Δ::AbstractVector{
 end
 
 function second_order_cone_step_length(λ::AbstractVector{T}, Δ::AbstractVector{T};
-        τ::T=0.99, 
+        τ::T=0.99,
         ϵ::T=1e-14) where T
 
     # check Section 8.2 CVXOPT
@@ -132,7 +132,7 @@ function second_order_cone_step_length(λ::AbstractVector{T}, Δ::AbstractVector
     if norm(ρv) - ρs > 0.0
         α = min(α, τ / (norm(ρv) - ρs))
     end
-    
+
     return α
 end
 

@@ -3,7 +3,7 @@
 
 	Jacobian of mapping from maximal to minimal representation
 
-	mechanism: Mechanism 
+	mechanism: Mechanism
 	z: maximal state
 """
 function maximal_to_minimal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{Tz}) where {T,Nn,Ne,Nb,Ni,Tz}
@@ -16,7 +16,7 @@ function maximal_to_minimal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::Abs
 		c_shift = 0
 		v_shift = input_dimension(joint)
 		ichild = joint.child_id - Ne
-		for element in [joint.translational, joint.rotational]
+		for element in (joint.translational, joint.rotational)
 			nu_element = input_dimension(element)
 
 			c_idx = row_shift + c_shift .+ (1:nu_element)
@@ -58,13 +58,13 @@ function maximal_to_minimal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::Abs
 end
 
 """
-    get_maximal_gradients!(mechanism, z, u; opts) 
+    get_maximal_gradients!(mechanism, z, u; opts)
 
-    return maximal gradients for mechanism 
+    return maximal gradients for mechanism
     note: this requires simulating the mechanism for one time step
 
     mechanism: Mechanism
-    z: state 
+    z: state
     u: input
     opts: SolverOptions
 """
@@ -123,19 +123,19 @@ function get_maximal_gradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,
 		jacobian_control[12*(i-1) .+ (1:3),:] += linear_integrator_jacobian_velocity(x2, v25, timestep) * data_jacobian[index_row[id][1:3], vcat(index_control...)]
 		jacobian_control[12*(i-1) .+ (7:9),:] += LVᵀmat(q3)' * rotational_integrator_jacobian_velocity(q2, ω25, timestep) * data_jacobian[index_row[id][4:6], vcat(index_control...)]
 	end
-	
+
 	return jacobian_state, jacobian_control
 end
 
 """
-	minimal_to_maximal_jacobian(mechanism, y)
+	minimal_to_maximal_jacobian(mechanism, x)
 
 	Jacobian of mapping from minimal to maximal representation
 
-	mechanism: Mechanism 
+	mechanism: Mechanism
 	y: minimal state
 """
-function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, y::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
+function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
 	timestep= mechanism.timestep
 	J = zeros(maximal_dimension(mechanism, attjac=true), minimal_dimension(mechanism))
 
@@ -181,13 +181,13 @@ function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, y::Abs
 end
 
 """
-    get_minimal_gradients!(mechanism, y, u; opts) 
+    get_minimal_gradients!(mechanism, y, u; opts)
 
-    return minimal gradients for mechanism 
+    return minimal gradients for mechanism
     note: this requires simulating the mechanism for one time step
 
     mechanism: Mechanism
-    y: state 
+    y: state
     u: input
 	opts: SolverOptions
 """

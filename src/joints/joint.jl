@@ -1,5 +1,5 @@
 """
-   Joint{T} 
+   Joint{T}
 
    Abstract type for 3-dimensional constraint between two Body objects
 """
@@ -74,7 +74,7 @@ function impulse_map(relative::Symbol, joint::Joint{T,Nλ,0},
     xb::AbstractVector, qb::Quaternion,
     η) where {T,Nλ}
     J = constraint_jacobian_configuration(relative, joint, xa, qa, xb, qb, η)
-    G = cat(Diagonal(sones(3)), LVᵀmat(relative == :parent ? qa : qb), dims=(1,2))
+    G = [[Diagonal(sones(T,3)) szeros(T,3,3)]; [szeros(4,3) LVᵀmat(relative == :parent ? qa : qb)]]
     return Diagonal([sones(3); 0.5 * sones(3)]) * transpose(J * G)
 end
 
