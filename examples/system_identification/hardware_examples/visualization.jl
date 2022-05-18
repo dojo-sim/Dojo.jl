@@ -79,9 +79,9 @@ traj_truth = trajs1[id]
 x2 = traj_truth.x[1][1] - [0,0,2.0]/2
 v15 = traj_truth.v[1][1]
 q2 = traj_truth.q[1][1]
-ϕ15 = traj_truth.ω[1][1]
+ω15 = traj_truth.ω[1][1]
 
-initialize!(mech, :block, x=x2, v=v15, q=q2, ω=ϕ15)
+initialize!(mech, :block, x=x2, v=v15, q=q2, ω=ω15)
 traj_sim = simulate!(mech, 0.80, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
 

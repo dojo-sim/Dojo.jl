@@ -53,7 +53,7 @@ function save_to_storage!(mechanism::Mechanism, storage::Storage, i::Int)
         storage.x[ind][i] = state.x2 # x2
         storage.q[ind][i] = state.q2 # q2
         storage.v[ind][i] = state.v15 # v1.5
-        storage.ω[ind][i] = state.ϕ15 # ω1.5
+        storage.ω[ind][i] = state.ω15 # ω1.5
         q2 = state.q2
         p2 = momentum(mechanism, body) # p1 in world frame
         px2 = p2[SVector{3,Int}(1,2,3)] # px1 in world frame
@@ -99,8 +99,8 @@ function get_maximal_state(storage::Storage{T,N}, i::Int) where {T,N}
 		x2 = storage.x[j][i]
 		q2 = storage.q[j][i]
 		v15 = storage.v[j][i]
-		ϕ15 = storage.ω[j][i]
-		z[13 * (j-1) .+ (1:13)] = [x2; v15; vector(q2); ϕ15]
+		ω15 = storage.ω[j][i]
+		z[13 * (j-1) .+ (1:13)] = [x2; v15; vector(q2); ω15]
 	end
 	return z
 end

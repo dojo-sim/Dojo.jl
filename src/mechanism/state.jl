@@ -35,15 +35,15 @@ function maximal_to_minimal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVect
 		v = zeros(Tz,0)
 		ichild = joint.child_id - Ne
 		for element in [joint.translational, joint.rotational]
-			xb, vb, qb, ϕb = unpack_maximal_state(z, ichild)
+			xb, vb, qb, ωb = unpack_maximal_state(z, ichild)
 			if joint.parent_id != 0
 				iparent = joint.parent_id - Ne
-				xa, va, qa, ϕa = unpack_maximal_state(z, iparent)
+				xa, va, qa, ωa = unpack_maximal_state(z, iparent)
 			else
-				xa, va, qa, ϕa = current_configuration_velocity(mechanism.origin.state)
+				xa, va, qa, ωa = current_configuration_velocity(mechanism.origin.state)
 			end
 			push!(c, minimal_coordinates(element, xa, qa, xb, qb)...)
-			push!(v, minimal_velocities(element, xa, va, qa, ϕa, xb, vb, qb, ϕb, mechanism.timestep)...)
+			push!(v, minimal_velocities(element, xa, va, qa, ωa, xb, vb, qb, ωb, mechanism.timestep)...)
 		end
 		push!(x, [c; v]...)
 	end
@@ -56,18 +56,18 @@ function unpack_maximal_state(z::AbstractVector, i::Int)
 	x2 = zi[SUnitRange(1,3)]
 	v15 = zi[SUnitRange(4,6)]
 	q2 = Quaternion(zi[7:10]...)
-	ϕ15 = zi[SUnitRange(11,13)]
-	return x2, v15, q2, ϕ15
+	ω15 = zi[SUnitRange(11,13)]
+	return x2, v15, q2, ω15
 end
 
 function pack_maximal_state!(z::AbstractVector, 
-	x2::AbstractVector, v15::AbstractVector, q2::Quaternion, ϕ15::AbstractVector, 
+	x2::AbstractVector, v15::AbstractVector, q2::Quaternion, ω15::AbstractVector, 
 	i::Int)
 
 	z[(i-1) * 13 .+ (1:3)] = x2
 	z[(i-1) * 13 .+ (4:6)] = v15
 	z[(i-1) * 13 .+ (7:10)] = vector(q2)
-	z[(i-1) * 13 .+ (11:13)] = ϕ15
+	z[(i-1) * 13 .+ (11:13)] = ω15
 
 	return nothing
 end

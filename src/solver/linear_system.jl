@@ -55,7 +55,7 @@ end
 
 function update!(body::Body)
     body.state.vsol[1] = body.state.vsol[2]
-    body.state.ϕsol[1] = body.state.ϕsol[2]
+    body.state.ωsol[1] = body.state.ωsol[2]
     return
 end
 

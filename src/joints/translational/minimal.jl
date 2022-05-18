@@ -73,16 +73,16 @@ end
 # Velocities
 ################################################################################
 function minimal_velocities(joint::Translational,
-		xa::AbstractVector, va::AbstractVector, qa::Quaternion, ϕa::AbstractVector,
-		xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ϕb::AbstractVector,
+		xa::AbstractVector, va::AbstractVector, qa::Quaternion, ωa::AbstractVector,
+		xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ωb::AbstractVector,
 		timestep)
 	A = nullspace_mask(joint)
 
 	# 1 step backward in time
 	xa1 = next_position(xa, -va, timestep)
-	qa1 = next_orientation(qa, -ϕa, timestep)
+	qa1 = next_orientation(qa, -ωa, timestep)
 	xb1 = next_position(xb, -vb, timestep)
-	qb1 = next_orientation(qb, -ϕb, timestep)
+	qb1 = next_orientation(qb, -ωb, timestep)
 
 	# Coordinates
 	Δx = A * displacement(joint, xa, qa, xb, qb)
@@ -95,16 +95,16 @@ function minimal_velocities(joint::Translational,
 end
 
 function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Translational,
-    xa::AbstractVector, va::AbstractVector, qa::Quaternion, ϕa::AbstractVector,
-    xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ϕb::AbstractVector,
+    xa::AbstractVector, va::AbstractVector, qa::Quaternion, ωa::AbstractVector,
+    xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ωb::AbstractVector,
     timestep)
     A = nullspace_mask(joint)
 
     # 1 step backward in time
     xa1 = next_position(xa, -va, timestep)
-    qa1 = next_orientation(qa, -ϕa, timestep)
+    qa1 = next_orientation(qa, -ωa, timestep)
     xb1 = next_position(xb, -vb, timestep)
-    qb1 = next_orientation(qb, -ϕb, timestep)
+    qb1 = next_orientation(qb, -ωb, timestep)
 
     # Coordinates
     Δx = A * displacement(joint, xa, qa, xb, qb)
@@ -118,7 +118,7 @@ function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Tran
         X, Q = displacement_jacobian_configuration(:parent, joint, xa, qa, xb, qb, attjac=false)
         X1, Q1 = displacement_jacobian_configuration(:parent, joint, xa1, qa1, xb1, qb1, attjac=false)
         X1 *= -1.0
-        Q1 *= -1.0 * rotational_integrator_jacobian_orientation(qa, -ϕa, timestep, attjac=false)
+        Q1 *= -1.0 * rotational_integrator_jacobian_orientation(qa, -ωa, timestep, attjac=false)
         Q *= LVᵀmat(qa) 
         Q1 *= LVᵀmat(qa)
         J = 1.0 / timestep * A * [X Q]
@@ -128,7 +128,7 @@ function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Tran
         X, Q = displacement_jacobian_configuration(:child, joint, xa, qa, xb, qb, attjac=false)
         X1, Q1 = displacement_jacobian_configuration(:child, joint, xa1, qa1, xb1, qb1, attjac=false)
         X1 *= -1.0
-        Q1 *= -1.0 * rotational_integrator_jacobian_orientation(qb, -ϕb, timestep, attjac=false)
+        Q1 *= -1.0 * rotational_integrator_jacobian_orientation(qb, -ωb, timestep, attjac=false)
         Q *= LVᵀmat(qb) 
         Q1 *= LVᵀmat(qb)
         J = 1.0 / timestep * A * [X Q]
@@ -139,16 +139,16 @@ function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Tran
 end
 
 function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Translational,
-    xa::AbstractVector, va::AbstractVector, qa::Quaternion, ϕa::AbstractVector,
-    xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ϕb::AbstractVector,
+    xa::AbstractVector, va::AbstractVector, qa::Quaternion, ωa::AbstractVector,
+    xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ωb::AbstractVector,
     timestep)
     A = nullspace_mask(joint)
 
     # 1 step backward in time
     xa1 = next_position(xa, -va, timestep)
-    qa1 = next_orientation(qa, -ϕa, timestep)
+    qa1 = next_orientation(qa, -ωa, timestep)
     xb1 = next_position(xb, -vb, timestep)
-    qb1 = next_orientation(qb, -ϕb, timestep)
+    qb1 = next_orientation(qb, -ωb, timestep)
 
     # Coordinates
     Δx = A * displacement(joint, xa, qa, xb, qb)
@@ -162,12 +162,12 @@ function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Translati
     if relative == :parent
         X1, Q1 = displacement_jacobian_configuration(:parent, joint, xa1, qa1, xb1, qb1, attjac=false)
         X1 *= -timestep 
-        Q1 *= -rotational_integrator_jacobian_velocity(qa, -ϕa, timestep)
+        Q1 *= -rotational_integrator_jacobian_velocity(qa, -ωa, timestep)
         J = -1.0 / timestep * A * [X1 Q1]
     elseif relative == :child 
         X1, Q1 = displacement_jacobian_configuration(:child, joint, xa1, qa1, xb1, qb1, attjac=false)
         X1 *= -timestep 
-        Q1 *= -rotational_integrator_jacobian_velocity(qb, -ϕb, timestep)
+        Q1 *= -rotational_integrator_jacobian_velocity(qb, -ωb, timestep)
         J = -1.0 / timestep * A * [X1 Q1]
     end
 

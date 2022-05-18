@@ -14,7 +14,7 @@ data_dim(joint::Translational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄
 data_dim(joint::Rotational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = N̄λ # [urot]
 
 # Body
-data_dim(body::Body; attjac::Bool=true) = attjac ? 19 : 20 # 1+6+6+6 or 1+6+6+7 [m,flat(J),v15,ϕ15,x2,q2] with attjac
+data_dim(body::Body; attjac::Bool=true) = attjac ? 19 : 20 # 1+6+6+6 or 1+6+6+7 [m,flat(J),v15,ω15,x2,q2] with attjac
 
 # Contact
 data_dim(contact::ContactConstraint) = data_dim(contact.model)
@@ -76,9 +76,9 @@ function get_data(body::Body)
 	m = body.mass
 	j = flatten_inertia(body.inertia)
 	v15 = body.state.v15
-	ϕ15 = body.state.ϕ15
+	ω15 = body.state.ω15
 	x2, q2 = current_configuration(body.state)
-	return [m; j; v15; ϕ15; x2; vector(q2)]
+	return [m; j; v15; ω15; x2; vector(q2)]
 end
 
 # Contacts
@@ -133,22 +133,22 @@ end
 
 # Body
 function set_data!(body::Body, data::AbstractVector, timestep)
-	# [m,flat(J),x2,v15,q2,ϕ15]
+	# [m,flat(J),x2,v15,q2,ω15]
 	m = data[1]
 	J = lift_inertia(data[SUnitRange(2,7)])
 	v15 = data[SUnitRange(8,10)]
-	ϕ15 = data[SUnitRange(11,13)]
+	ω15 = data[SUnitRange(11,13)]
 	x2 = data[SUnitRange(14,16)]
 	q2 = Quaternion(data[17:20]...)
 	x1 = next_position(x2, -v15, timestep)
-	q1 = next_orientation(q2, -ϕ15, timestep)
+	q1 = next_orientation(q2, -ω15, timestep)
 
 	body.mass = m
 	body.inertia = J
 	body.state.x1 = x1
 	body.state.v15 = v15
 	body.state.q1 = q1
-	body.state.ϕ15 = ϕ15
+	body.state.ω15 = ω15
 	body.state.x2 = x2
 	body.state.q2 = q2
 	body.state.F2 = SVector{3}(0,0,0.)

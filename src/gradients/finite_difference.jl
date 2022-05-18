@@ -6,8 +6,8 @@ function get_solution(mechanism::Mechanism{T}) where {T}
     end
     for (i, body) in enumerate(mechanism.bodies)
         v25 = body.state.vsol[2]
-        ϕ25 = body.state.ϕsol[2]
-        push!(sol, [v25; ϕ25]...)
+        ω25 = body.state.ωsol[2]
+        push!(sol, [v25; ω25]...)
     end
     for (i, contacts) in enumerate(mechanism.contacts)
         s = contacts.impulses_dual[2]
@@ -28,9 +28,9 @@ function set_solution!(mechanism::Mechanism{T}, sol::AbstractVector) where T
         nv = 3
         nω = 3
         v25 = sol[off .+ (1:nv)]; off += nv
-        ϕ25 = sol[off .+ (1:nω)]; off += nω
+        ω25 = sol[off .+ (1:nω)]; off += nω
         body.state.vsol[2] = v25
-        body.state.ϕsol[2] = ϕ25
+        body.state.ωsol[2] = ω25
     end
     for (i,contacts) in enumerate(mechanism.contacts)
         N = length(contacts)

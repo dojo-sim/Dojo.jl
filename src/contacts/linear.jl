@@ -73,17 +73,17 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}) where 
 
     # parent
     pbody = get_body(mechanism, contact.parent_id)
-    xp, vp, qp, ϕp = next_configuration_velocity(pbody.state, mechanism.timestep)
+    xp, vp, qp, ωp = next_configuration_velocity(pbody.state, mechanism.timestep)
 
     # child 
     cbody = get_body(mechanism, contact.child_id)
-    xc, vc, qc, ϕc = next_configuration_velocity(cbody.state, mechanism.timestep)
+    xc, vc, qc, ωc = next_configuration_velocity(cbody.state, mechanism.timestep)
 
     # distance 
     d = distance(model.collision, xp, qp, xc, qc)
 
     # relative tangential velocity
-    vt = relative_tangential_velocity(model, xp, qp, vp, ϕp, xc, qc, vc, ϕc)
+    vt = relative_tangential_velocity(model, xp, qp, vp, ωp, xc, qc, vc, ωc)
 
     # unpack contact variables
     γ = contact.impulses[2][1]

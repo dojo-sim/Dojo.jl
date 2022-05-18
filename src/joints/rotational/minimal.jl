@@ -71,16 +71,16 @@ end
 # Velocities
 ################################################################################
 function minimal_velocities(joint::Rotational,
-		xa::AbstractVector, va::AbstractVector, qa::Quaternion, ϕa::AbstractVector,
-		xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ϕb::AbstractVector,
+		xa::AbstractVector, va::AbstractVector, qa::Quaternion, ωa::AbstractVector,
+		xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ωb::AbstractVector,
 		timestep)
 
 	axis_offset = joint.axis_offset
 	A = nullspace_mask(joint)
 
 	# 1 step backward in time
-	qa1 = next_orientation(qa, -ϕa, timestep)
-	qb1 = next_orientation(qb, -ϕb, timestep)
+	qa1 = next_orientation(qa, -ωa, timestep)
+	qb1 = next_orientation(qb, -ωb, timestep)
 
 	q = inv(axis_offset) * inv(qa) * qb
 	q1 = inv(axis_offset) * inv(qa1) * qb1
@@ -88,8 +88,8 @@ function minimal_velocities(joint::Rotational,
 end
 
 function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Rotational{T},
-	xa::AbstractVector, va::AbstractVector, qa::Quaternion, ϕa::AbstractVector,
-	xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ϕb::AbstractVector,
+	xa::AbstractVector, va::AbstractVector, qa::Quaternion, ωa::AbstractVector,
+	xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ωb::AbstractVector,
 	timestep) where T
 
 	axis_offset = joint.axis_offset
@@ -97,8 +97,8 @@ function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Rota
 	nu = input_dimension(joint)
 
 	# 1 step backward in time
-	qa1 = next_orientation(qa, -ϕa, timestep)
-	qb1 = next_orientation(qb, -ϕb, timestep)
+	qa1 = next_orientation(qa, -ωa, timestep)
+	qb1 = next_orientation(qb, -ωb, timestep)
 
 	q = inv(axis_offset) * inv(qa) * qb
 	q1 = inv(axis_offset) * inv(qa1) * qb1
@@ -106,11 +106,11 @@ function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Rota
 	X = szeros(T, nu, 3)
 
 	if relative == :parent
-		Q = 1.0 / timestep * A * drotation_vectordq(inv(q1) * q) * Rmat(q) * Tmat() * Rmat(qb1) * Lmat(inv(axis_offset)) * Tmat() * rotational_integrator_jacobian_orientation(qa, -ϕa, timestep, attjac=false)
+		Q = 1.0 / timestep * A * drotation_vectordq(inv(q1) * q) * Rmat(q) * Tmat() * Rmat(qb1) * Lmat(inv(axis_offset)) * Tmat() * rotational_integrator_jacobian_orientation(qa, -ωa, timestep, attjac=false)
 		Q += 1.0 / timestep * A * drotation_vectordq(inv(q1) * q) * Lmat(inv(q1)) * Rmat(qb) * Lmat(inv(axis_offset)) * Tmat()
 		Q *= LVᵀmat(qa)
 	elseif relative == :child
-		Q = 1.0 / timestep * A * drotation_vectordq(inv(q1) * q) * Rmat(q) * Tmat() * Lmat(inv(axis_offset) * inv(qa1)) * rotational_integrator_jacobian_orientation(qb, -ϕb, timestep, attjac=false)
+		Q = 1.0 / timestep * A * drotation_vectordq(inv(q1) * q) * Rmat(q) * Tmat() * Lmat(inv(axis_offset) * inv(qa1)) * rotational_integrator_jacobian_orientation(qb, -ωb, timestep, attjac=false)
 		Q += 1.0 / timestep * A * drotation_vectordq(inv(q1) * q) * Lmat(inv(q1) * inv(axis_offset) * inv(qa))
 		Q *= LVᵀmat(qb)
 	end
@@ -119,8 +119,8 @@ function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Rota
 end
 
 function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Rotational{T},
-	xa::AbstractVector, va::AbstractVector, qa::Quaternion, ϕa::AbstractVector,
-	xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ϕb::AbstractVector,
+	xa::AbstractVector, va::AbstractVector, qa::Quaternion, ωa::AbstractVector,
+	xb::AbstractVector, vb::AbstractVector, qb::Quaternion, ωb::AbstractVector,
 	timestep) where T
 
 	axis_offset = joint.axis_offset
@@ -128,17 +128,17 @@ function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Rotationa
 	nu = input_dimension(joint)
 
 	# 1 step backward in time
-	qa1 = next_orientation(qa, -ϕa, timestep)
-	qb1 = next_orientation(qb, -ϕb, timestep)
+	qa1 = next_orientation(qa, -ωa, timestep)
+	qb1 = next_orientation(qb, -ωb, timestep)
 
 	q = inv(axis_offset) * inv(qa) * qb
 	q1 = inv(axis_offset) * inv(qa1) * qb1
 
 	V = szeros(T, nu, 3)
 	if relative == :parent
-		Ω = 1.0 / timestep * A * drotation_vectordq(inv(q1) * q) * Rmat(q) * Tmat() * Lmat(inv(axis_offset)) * Rmat(qb1) * Tmat() * -rotational_integrator_jacobian_velocity(qa, -ϕa, timestep)
+		Ω = 1.0 / timestep * A * drotation_vectordq(inv(q1) * q) * Rmat(q) * Tmat() * Lmat(inv(axis_offset)) * Rmat(qb1) * Tmat() * -rotational_integrator_jacobian_velocity(qa, -ωa, timestep)
 	elseif relative == :child
-		Ω = 1.0 / timestep * A * drotation_vectordq(inv(q1) * q) * Rmat(q) * Tmat() * Lmat(inv(axis_offset) * inv(qa1)) * -rotational_integrator_jacobian_velocity(qb, -ϕb, timestep)
+		Ω = 1.0 / timestep * A * drotation_vectordq(inv(q1) * q) * Rmat(q) * Tmat() * Lmat(inv(axis_offset) * inv(qa1)) * -rotational_integrator_jacobian_velocity(qb, -ωb, timestep)
 	end
 	return [V Ω]
 end

@@ -61,8 +61,8 @@ function constraint_jacobian(contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T
 end
 
 function constraint_jacobian_configuration(relative::Symbol, model::ImpactContact, 
-    xp::AbstractVector, vp::AbstractVector, qp::Quaternion, ϕp::AbstractVector,
-    xc::AbstractVector, vc::AbstractVector, qc::Quaternion, ϕc::AbstractVector, 
+    xp::AbstractVector, vp::AbstractVector, qp::Quaternion, ωp::AbstractVector,
+    xc::AbstractVector, vc::AbstractVector, qc::Quaternion, ωc::AbstractVector, 
     timestep)
 
     X = ∂distance∂x(relative, model.collision, xp, qp, xc, qc)
@@ -72,26 +72,26 @@ function constraint_jacobian_configuration(relative::Symbol, model::ImpactContac
 end
 
 function constraint_jacobian_velocity(relative::Symbol, model::ImpactContact, 
-    xp::AbstractVector, vp::AbstractVector, qp::Quaternion, ϕp::AbstractVector,
-    xc::AbstractVector, vc::AbstractVector, qc::Quaternion, ϕc::AbstractVector, 
+    xp::AbstractVector, vp::AbstractVector, qp::Quaternion, ωp::AbstractVector,
+    xc::AbstractVector, vc::AbstractVector, qc::Quaternion, ωc::AbstractVector, 
     timestep)
 
     # recover current orientation 
     if relative == :parent
         x = next_position(xp, -vp, timestep)
         ∂x∂v = linear_integrator_jacobian_velocity(x, vp, timestep)
-        q = next_orientation(qp, -ϕp, timestep)
-        ∂q∂ϕ = rotational_integrator_jacobian_velocity(q, ϕp, timestep)
+        q = next_orientation(qp, -ωp, timestep)
+        ∂q∂ω = rotational_integrator_jacobian_velocity(q, ωp, timestep)
     elseif relative == :child 
         x = next_position(xc, -vc, timestep)
         ∂x∂v = linear_integrator_jacobian_velocity(x, vc, timestep)
-        q = next_orientation(qc, -ϕc, timestep)
-        ∂q∂ϕ = rotational_integrator_jacobian_velocity(q, ϕc, timestep)
+        q = next_orientation(qc, -ωc, timestep)
+        ∂q∂ω = rotational_integrator_jacobian_velocity(q, ωc, timestep)
     end
 
     # Jacobian
     V = ∂distance∂x(relative, model.collision, xp, qp, xc, qc) * ∂x∂v
-    Ω = ∂distance∂q(relative, model.collision, xp, qp, xc, qc) * ∂q∂ϕ
+    Ω = ∂distance∂q(relative, model.collision, xp, qp, xc, qc) * ∂q∂ω
 
     return [V Ω]
 end

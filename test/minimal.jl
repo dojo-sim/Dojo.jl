@@ -93,7 +93,7 @@ end
 			Random.seed!(100)
 			Δθ = rand(input_dimension(rot0))
 			Δx = rand(input_dimension(tra0))
-			Δϕ = rand(input_dimension(rot0))
+			Δω = rand(input_dimension(rot0))
 			Δv = rand(input_dimension(tra0))
 			for i = 1:10
 				Dojo.set_minimal_coordinates!(rot0, pnodes0[i], cnodes0[i],  timestep,
@@ -108,10 +108,10 @@ end
 
 				Dojo.set_minimal_velocities!(joint0, pnodes0[i], cnodes0[i], timestep,
 					Δv=Δv,
-					Δϕ=Δϕ)
-				Δϕ0 = Dojo.minimal_velocities(rot0, pnodes0[i], cnodes0[i], timestep)
+					Δω=Δω)
+				Δω0 = Dojo.minimal_velocities(rot0, pnodes0[i], cnodes0[i], timestep)
 				Δv0 = Dojo.minimal_velocities(tra0, pnodes0[i], cnodes0[i], timestep)
-				@test norm(Δϕ0 - Δϕ, Inf) < 1.0e-8
+				@test norm(Δω0 - Δω, Inf) < 1.0e-8
 				@test norm(Δv0 - Δv, Inf) < 1.0e-8
 			end
 		end
@@ -295,7 +295,7 @@ end
 				# extract body states
 				Ne = Dojo.length(mech.joints)
 				if Dojo.get_body(mech, jointcon.parent_id).name == :origin
-					zp = [mech.origin.state.x2; mech.origin.state.v15; Dojo.vector(mech.origin.state.q2); mech.origin.state.ϕ15]
+					zp = [mech.origin.state.x2; mech.origin.state.v15; Dojo.vector(mech.origin.state.q2); mech.origin.state.ω15]
 				else
 					zp = z[(jointcon.parent_id - Ne - 1) * 13 .+ (1:13)]
 				end
@@ -328,13 +328,13 @@ end
 
 				∇0 = Dojo.minimal_velocities_jacobian_velocity(:parent, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 				∇1 = force_to_jacobian_forward_diff(
-					vϕ -> Dojo.minimal_velocities(joint, xa, vϕ[Dojo.SUnitRange(1,3)], qa, vϕ[Dojo.SUnitRange(4,6)], xb, vb, qb, ωb, timestep),
+					vω -> Dojo.minimal_velocities(joint, xa, vω[Dojo.SUnitRange(1,3)], qa, vω[Dojo.SUnitRange(4,6)], xb, vb, qb, ωb, timestep),
 					[va; ωa])
 				@test norm(∇0 - ∇1, Inf) < 1.0e-8
 
 				∇0 = Dojo.minimal_velocities_jacobian_velocity(:child, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 				∇1 = force_to_jacobian_forward_diff(
-					vϕ -> Dojo.minimal_velocities(joint, xa, va, qa, ωa, xb, vϕ[Dojo.SUnitRange(1,3)], qb, vϕ[Dojo.SUnitRange(4,6)], timestep),
+					vω -> Dojo.minimal_velocities(joint, xa, va, qa, ωa, xb, vω[Dojo.SUnitRange(1,3)], qb, vω[Dojo.SUnitRange(4,6)], timestep),
 					[vb; ωb])
 				@test norm(∇0 - ∇1, Inf) < 1.0e-8
 			end
@@ -354,7 +354,7 @@ end
 				# extract body states
 				Ne = Dojo.length(mech.joints)
 				if Dojo.get_body(mech, jointcon.parent_id).name == :origin
-					zp = [mech.origin.state.x2; mech.origin.state.v15; Dojo.vector(mech.origin.state.q2); mech.origin.state.ϕ15]
+					zp = [mech.origin.state.x2; mech.origin.state.v15; Dojo.vector(mech.origin.state.q2); mech.origin.state.ω15]
 				else
 					zp = z[(jointcon.parent_id - Ne - 1) * 13 .+ (1:13)]
 				end
@@ -650,44 +650,44 @@ end
 # xa0 = srand(3)
 # qa0 = rand(QuatRotation).q
 # va0 = srand(3)
-# ϕa0 = srand(3)
+# ωa0 = srand(3)
 # xb0 = srand(3)
 # qb0 = rand(QuatRotation).q
 # vb0 = srand(3)
-# ϕb0 = srand(3)
+# ωb0 = srand(3)
 #
 # J0 = minimal_velocities_jacobian_configuration(:parent,
-#     rot0, xa0, va0, qa0, ϕa0, xb0, vb0, qb0, ϕb0, timestep0)
+#     rot0, xa0, va0, qa0, ωa0, xb0, vb0, qb0, ωb0, timestep0)
 # J1 = FiniteDiff.finite_difference_jacobian(
-#     xq -> Dojo.minimal_velocities(rot0, xq[SUnitRange(1,3)], va0, Quaternion(xq[SUnitRange(4,7)]...,true), ϕa0,
-#     xb0, vb0, qb0, ϕb0, timestep0),
+#     xq -> Dojo.minimal_velocities(rot0, xq[SUnitRange(1,3)], va0, Quaternion(xq[SUnitRange(4,7)]...,true), ωa0,
+#     xb0, vb0, qb0, ωb0, timestep0),
 #     [xa0; vector(qa0)]) * cat(I(3), LVᵀmat(qa0), dims=(1,2))
 # norm(J0 - J1, Inf)
 # norm(J0 - J1, Inf) < 1e-4
 #
 # J0 = minimal_velocities_jacobian_configuration(:child,
-#     rot0, xa0, va0, qa0, ϕa0, xb0, vb0, qb0, ϕb0, timestep0)
+#     rot0, xa0, va0, qa0, ωa0, xb0, vb0, qb0, ωb0, timestep0)
 # J1 = FiniteDiff.finite_difference_jacobian(
-#     xq -> Dojo.minimal_velocities(rot0, xa0, va0, qa0, ϕa0,
-#     xq[SUnitRange(1,3)], vb0, Quaternion(xq[SUnitRange(4,7)]...,true), ϕb0, timestep0),
+#     xq -> Dojo.minimal_velocities(rot0, xa0, va0, qa0, ωa0,
+#     xq[SUnitRange(1,3)], vb0, Quaternion(xq[SUnitRange(4,7)]...,true), ωb0, timestep0),
 #     [xb0; vector(qb0)]) * cat(I(3), LVᵀmat(qb0), dims=(1,2))
 # norm(J0 - J1, Inf)
 # norm(J0 - J1, Inf) < 1e-4
 #
 #
 # J0 = minimal_velocities_jacobian_velocity(:parent,
-#     rot0, xa0, va0, qa0, ϕa0, xb0, vb0, qb0, ϕb0, timestep0)
+#     rot0, xa0, va0, qa0, ωa0, xb0, vb0, qb0, ωb0, timestep0)
 # J1 = FiniteDiff.finite_difference_jacobian(
-#     vϕ -> Dojo.minimal_velocities(rot0, xa0, vϕ[SUnitRange(1,3)], qa0, vϕ[SUnitRange(4,6)], xb0, vb0, qb0, ϕb0, timestep0),
-#     [va0; ϕa0])
+#     vω -> Dojo.minimal_velocities(rot0, xa0, vω[SUnitRange(1,3)], qa0, vω[SUnitRange(4,6)], xb0, vb0, qb0, ωb0, timestep0),
+#     [va0; ωa0])
 # norm(J0 - J1, Inf)
 # norm(J0 - J1, Inf) < 1e-4
 #
 # J0 = minimal_velocities_jacobian_velocity(:child,
-#     rot0, xa0, va0, qa0, ϕa0, xb0, vb0, qb0, ϕb0, timestep0)
+#     rot0, xa0, va0, qa0, ωa0, xb0, vb0, qb0, ωb0, timestep0)
 # J1 = FiniteDiff.finite_difference_jacobian(
-#     vϕ -> Dojo.minimal_velocities(rot0, xa0, va0, qa0, ϕa0,
-#         xb0, vϕ[SUnitRange(1,3)], qb0, vϕ[SUnitRange(4,6)], timestep0),
-#     [vb0; ϕb0])
+#     vω -> Dojo.minimal_velocities(rot0, xa0, va0, qa0, ωa0,
+#         xb0, vω[SUnitRange(1,3)], qb0, vω[SUnitRange(4,6)], timestep0),
+#     [vb0; ωb0])
 # norm(J0 - J1, Inf)
 # norm(J0 - J1, Inf) < 1e-4
