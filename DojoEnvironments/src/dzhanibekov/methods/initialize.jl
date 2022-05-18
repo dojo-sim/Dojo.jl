@@ -11,7 +11,7 @@ function get_dzhanibekov(;
     main_body = Capsule(radius, body_length, body_mass,
         color=color, name=:main)
     side_body = Capsule(0.5 * radius, 0.35 * body_length, 0.5 * body_mass,
-        axis_offset=RotY(0.5 * π),
+        orientation_offset=RotY(0.5 * π),
         color=color, name=:side)
     links = [main_body, side_body]
 

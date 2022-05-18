@@ -14,7 +14,7 @@ mech = Dojo.get_mechanism(:panda,
     limits=true,
     )
 # for joint in mech.joints
-#     joint.rotational.axis_offset = Quaternion(1,0,0,0.0,true)
+#     joint.rotational.orientation_offset = Quaternion(1,0,0,0.0,true)
 # end
 function ctrl!(m, k; kp=10.0, kd=5.0)
     nu = input_dimension(m)
@@ -143,7 +143,7 @@ using Test
 mech = Dojo.get_mechanism(:pendulum)
 joint0 = mech.joints[1]
 rot0 = joint0.rotational
-rot0.axis_offset = rand(QuatRotation).q
+rot0.orientation_offset = rand(QuatRotation).q
 
 xa = rand(3)
 qa = rand(QuatRotation).q
@@ -282,7 +282,7 @@ mech = Dojo.get_mechanism(:panda,
     gravity=[0,0,-9.0],
     spring=0.0,
     damper=0.1)
-# mech.joints[1].rotational.axis_offset = Quaternion(1,0,0,0.0,true)
+# mech.joints[1].rotational.orientation_offset = Quaternion(1,0,0,0.0,true)
 function ctrl!(m,k)
     nu = minimal_dimension(mech)
     set_input!(m, 0.000 * 1 *sones(nu))

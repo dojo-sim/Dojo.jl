@@ -9,16 +9,16 @@ function damper_force(relative::Symbol, joint::Rotational{T}, qa::Quaternion, ω
     damper = unitary ? 1.0 : joint.damper
     A = nullspace_mask(joint)
     Aᵀ = zerodimstaticadjoint(A)
-    axis_offset = joint.axis_offset
+    orientation_offset = joint.orientation_offset
 
     velocity = minimal_velocities(joint, szeros(3), szeros(3), qa, ωa, szeros(3), szeros(3), qb, ωb, timestep)
     if relative == :parent
         force = 1.0000 * damper * Aᵀ * velocity # currently assumes same damper constant in all directions
-        rotate && (force = vector_rotate(force, axis_offset)) # rotate back to frame a
+        rotate && (force = vector_rotate(force, orientation_offset)) # rotate back to frame a
         return [szeros(T, 3); force]
     elseif relative == :child
         force = - 1.0000 * damper * Aᵀ * velocity # currently assumes same damper constant in all directions
-        rotate && (force = vector_rotate(force, inv(qb) * qa * axis_offset)) # rotate back to frame b
+        rotate && (force = vector_rotate(force, inv(qb) * qa * orientation_offset)) # rotate back to frame b
         return [szeros(T, 3); force]
     end
 end
@@ -41,7 +41,7 @@ function damper_jacobian_configuration(relative::Symbol, jacobian::Symbol,
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
     xa, va, qa, ωa = current_configuration_velocity(pbody.state)
     xb, vb, qb, ωb = current_configuration_velocity(cbody.state)
-    axis_offset = joint.axis_offset
+    orientation_offset = joint.orientation_offset
     X = szeros(T, 3, 3)
     Z = szeros(T, 3, 6)
 
@@ -49,13 +49,13 @@ function damper_jacobian_configuration(relative::Symbol, jacobian::Symbol,
     ∂vel = minimal_velocities_jacobian_configuration(jacobian, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)[:, SUnitRange(4,6)]
 
     if relative == :parent
-        Q = rotation_matrix(axis_offset) * 1.0000 * joint.damper * Aᵀ * ∂vel
+        Q = rotation_matrix(orientation_offset) * 1.0000 * joint.damper * Aᵀ * ∂vel
     elseif relative == :child
-        Q = rotation_matrix(inv(qb) * qa * axis_offset) * -1.0000 * joint.damper * Aᵀ * ∂vel
+        Q = rotation_matrix(inv(qb) * qa * orientation_offset) * -1.0000 * joint.damper * Aᵀ * ∂vel
         if jacobian == :parent
-            Q += rotation_matrix(inv(qb)) * ∂rotation_matrix∂q(qa, vector_rotate(force, axis_offset), attjac=true)
+            Q += rotation_matrix(inv(qb)) * ∂rotation_matrix∂q(qa, vector_rotate(force, orientation_offset), attjac=true)
         elseif jacobian == :child
-            Q += ∂rotation_matrix_inv∂q(qb, vector_rotate(force, qa * axis_offset), attjac=true)
+            Q += ∂rotation_matrix_inv∂q(qb, vector_rotate(force, qa * orientation_offset), attjac=true)
         end
     end
     return timestep * [Z; X Q]
@@ -68,15 +68,15 @@ function damper_jacobian_velocity(relative::Symbol, jacobian::Symbol,
     Aᵀ = zerodimstaticadjoint(nullspace_mask(joint))
     xa, va, qa, ωa = current_configuration_velocity(pbody.state)
     xb, vb, qb, ωb = current_configuration_velocity(cbody.state)
-    axis_offset = joint.axis_offset
+    orientation_offset = joint.orientation_offset
 
     force = damper_force(relative, joint, qa, ωa, qb, ωb, timestep; rotate = false)[SUnitRange(4,6)]
     ∂vel = minimal_velocities_jacobian_velocity(jacobian, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 
     if relative == :parent
-        VΩ = rotation_matrix(axis_offset) * 1.0000 * joint.damper * Aᵀ * ∂vel
+        VΩ = rotation_matrix(orientation_offset) * 1.0000 * joint.damper * Aᵀ * ∂vel
     elseif relative == :child
-        VΩ = rotation_matrix(inv(qb) * qa * axis_offset) * -1.0000 * joint.damper * Aᵀ * ∂vel
+        VΩ = rotation_matrix(inv(qb) * qa * orientation_offset) * -1.0000 * joint.damper * Aᵀ * ∂vel
     end
     return timestep * [szeros(T, 3, 6); VΩ]
 end

@@ -17,7 +17,7 @@ function get_cartpole(;
     # Links
     origin = Origin{Float64}()
     slider = Capsule(1.5 * radius, slider_length, slider_mass, 
-        axis_offset=RotX(0.5 * π), 
+        orientation_offset=RotX(0.5 * π), 
         color=RGBA(0.7, 0.7, 0.7, 1.0))
     pendulum = Capsule(radius, pendulum_length, pendulum_mass, 
         color=RGBA(0.7, 0.7, 0.7, 1.0))

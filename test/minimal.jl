@@ -82,7 +82,7 @@ end
 
 			timestep = mech.timestep
 			for joint in mech.joints
-				joint.rotational.axis_offset = rand(QuatRotation).q
+				joint.rotational.orientation_offset = rand(QuatRotation).q
 			end
 			joint0 = mech.joints[1]
 			tra0 = joint0.translational

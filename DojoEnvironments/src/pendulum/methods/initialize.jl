@@ -6,7 +6,7 @@ function get_pendulum(;
     spring=0.0,
     damper=0.0,
     spring_offset=szeros(1),
-    axis_offset=one(Quaternion),
+    orientation_offset=one(Quaternion),
     T=Float64)
 
     # Parameters
@@ -26,7 +26,7 @@ function get_pendulum(;
         spring=spring,
         damper=damper,
         rot_spring_offset=spring_offset,
-        axis_offset=axis_offset), name=:joint)
+        orientation_offset=orientation_offset), name=:joint)
 
     bodies = [body]
     joints = [joint]

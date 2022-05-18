@@ -121,7 +121,7 @@ function set_floating_base(mechanism::Mechanism, name::Symbol)
             r = j.rotational
             r_reverse = Rotational{typeof(r).parameters[1], typeof(r).parameters[2]}(cbody, pbody;
                     axis=-r.axis,
-                    axis_offset=inv(r.axis_offset),
+                    orientation_offset=inv(r.orientation_offset),
                     spring=r.spring, 
                     damper=r.damper, 
                     spring_offset=r.spring_offset,
