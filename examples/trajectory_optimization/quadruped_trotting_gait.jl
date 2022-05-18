@@ -1,5 +1,5 @@
 using Pkg
-Pkg.develop(path=joinpath(@__DIR__, "../../DojoEnvironments"))
+# Pkg.develop(path=joinpath(@__DIR__, "../../DojoEnvironments"))
 # Pkg.develop(path=joinpath(@__DIR__, "../.."))
 Pkg.activate(joinpath(@__DIR__, ".."))
 Pkg.instantiate()
@@ -49,7 +49,7 @@ end
 # ## system
 ################################################################################
 gravity = -9.81
-timestep = 0.01
+timestep = 0.02
 friction_coefficient = 0.8
 damper = 0.5
 spring = 5.0
@@ -93,8 +93,9 @@ function ctrl!(m, k; u=u_hover)
     set_input!(m, SVector{nu}(u))
 end
 
-# Main.@elapsed storage = simulate!(mech, 0.6, ctrl!,
-Main.@profiler storage = simulate!(mech, 0.6, ctrl!,
+Main.@elapsed storage = simulate!(mech, 0.6, ctrl!,
+# Main.@profiler
+# storage = simulate!(mech, 0.6, ctrl!,
     record=true,
     verbose=true,
     opts=SolverOptions(rtol=1e-4, btol=1e-2, undercut=5.0, verbose=false),
@@ -119,7 +120,7 @@ xref = quadruped_trajectory(env.mechanism,
     Δfront=0.10,
     width_scale=0.0,
     height_scale=1.0,
-    N=30,
+    N=18,
     Ncycles=N)
 zref = [minimal_to_maximal(env.mechanism, x) for x in xref]
 DojoEnvironments.visualize(env, xref)
@@ -147,35 +148,13 @@ ū = [u_hover for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, x1, ū)
 DojoEnvironments.visualize(env, x̄)
 
-
-
-
-du = zeros(n,m)
-x = zeros(n)
-u = szeros(m)
-dynamics(x, env, x̄[1], u, szeros(0), gradients=true) - x̄[2]
-
-
-for i = 1:10
-    dynamics(x, env, x̄[10], u, szeros(0), gradients=true)
-    r = x - x̄[11]
-    @show norm(r)
-    # du .= 0.0
-    # dynamics_jacobian_input(du, env, x̄[10], u, szeros(0))
-    du = FiniteDiff.finite_difference_jacobian(u -> dynamics(x, env, x̄[10], u, szeros(0), gradients=false) - x̄[11], u)
-    Δu = - 0.1*du \ r
-    u = u + Δu
-end
-
-du = szeros(n,m)
-
 # ## objective
 ############################################################################
-qt = [0.3; 0.05; 0.05;
-    0.001 * ones(3);
-    0.001 * ones(3);
-    0.001 * ones(3);
-    fill([0.2, 0.0001], 12)...]
+qt = [5.0; 0.5; 0.5;
+    1e-4 * ones(3);
+    1e-4 * ones(3);
+    1e-4 * ones(3);
+    fill([2, 1e-4], 12)...]
 ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(timestep * qt) * (x - xref[t]) +
     transpose(u - u_hover) * Diagonal(timestep * 0.01 * ones(m)) * (u - u_hover) for t = 1:T-1]
 oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(timestep * qt) * (x - xref[end])
@@ -192,8 +171,8 @@ uu = +1.0 * 1e-3*ones(nu_infeasible)
 
 function contt(x, u, w)
     [
-        1e-0 * (ul - u[1:nu_infeasible]);
-        1e-0 * (u[1:nu_infeasible] - uu);
+        1e-1 * (ul - u[1:nu_infeasible]);
+        1e-1 * (u[1:nu_infeasible] - uu);
     ]
 end
 
@@ -212,7 +191,7 @@ cons = [[con_policyt for t = 1:T-1]..., con_policyT]
 options = Options(line_search=:armijo,
         max_iterations=50,
         max_dual_updates=12,
-        min_step_size=1e-4,
+        min_step_size=1e-2,
         objective_tolerance=1e-3,
         lagrangian_gradient_tolerance=1e-3,
         constraint_tolerance=1e-4,
@@ -242,10 +221,10 @@ DojoEnvironments.visualize(env, x_view)
 
 
 
-x1 = deepcopy(xref[1])
-ū = vcat(fill(u_sol, 5)...)
-x̄ = IterativeLQR.rollout(fill(dyn, length(ū)), x1, ū)
-DojoEnvironments.visualize(env, x̄)
+# x1 = deepcopy(xref[1])
+# ū = vcat(fill(u_sol, 5)...)
+# x̄ = IterativeLQR.rollout(fill(dyn, length(ū)), x1, ū)
+# DojoEnvironments.visualize(env, x̄)
 
 
 
