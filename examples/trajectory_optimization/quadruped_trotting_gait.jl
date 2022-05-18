@@ -150,13 +150,14 @@ DojoEnvironments.visualize(env, x̄)
 
 # ## objective
 ############################################################################
-qt = [5.0; 0.5; 0.5;
-    1e-4 * ones(3);
-    1e-4 * ones(3);
-    1e-4 * ones(3);
-    fill([2, 1e-4], 12)...]
+qt = [0.3; 0.05; 0.05;
+    5e-2 * ones(3);
+    1e-3 * ones(3);
+    1e-3 * ones(3);
+    fill([2, 1e-3], 12)...]
 ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(timestep * qt) * (x - xref[t]) +
-    transpose(u - u_hover) * Diagonal(timestep * 0.01 * ones(m)) * (u - u_hover) for t = 1:T-1]
+# transpose(u - u_hover) * Diagonal(timestep * 0.01 * ones(m)) * (u - u_hover) for t = 1:T-1]
+    transpose(u) * Diagonal(timestep * 0.01 * ones(m)) * u for t = 1:T-1]
 oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(timestep * qt) * (x - xref[end])
 
 cts = [IterativeLQR.Cost(ot, n, m) for ot in ots]

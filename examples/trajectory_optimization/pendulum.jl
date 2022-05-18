@@ -1,5 +1,5 @@
 using Pkg
-Pkg.develop(path=joinpath(@__DIR__, "../../DojoEnvironments"))
+# Pkg.develop(path=joinpath(@__DIR__, "../../DojoEnvironments"))
 Pkg.activate(joinpath(@__DIR__, ".."))
 Pkg.instantiate()
 
@@ -16,14 +16,112 @@ using DojoEnvironments
 
 using BenchmarkTools
 
-mech = get_mechanism(:pendulum, limits=true)
+mech = get_mechanism(:pendulum)
 initialize!(mech, :pendulum, angle=0.1)
-# Main.@profiler
-storage = simulate!(mech, 1.0)
-storage = simulate!(mech, 1.0)
+Main.@profiler storage = simulate!(mech, 100.0)
+@btime storage = simulate!(mech, 10.0)
 
 visualize(mech, storage, vis=vis)
-#
+
+
+
+function reset2!(joint::JointConstraint{T,N,Nc}; scale::T=1.0) where {T,N,Nc}
+    Nλ_tra = joint_length(joint.translational)
+    Nb_tra = limits_length(joint.translational)
+    Nλ_rot = joint_length(joint.rotational)
+    Nb_rot = limits_length(joint.rotational)
+    joint.impulses[1] = [scale * sones(2Nb_tra); szeros(Nλ_tra); scale * sones(2Nb_rot); szeros(Nλ_rot)]
+    joint.impulses[2] = [scale * sones(2Nb_tra); szeros(Nλ_tra); scale * sones(2Nb_rot); szeros(Nλ_rot)]
+    return
+end
+
+
+joint = mech.joints[1]
+
+reset!(joint)
+Main.@code_warntype reset!(joint)
+@benchmark $reset!($joint)
+
+
+
+a = 10
+a = 10
+a = 10
+a = 10
+a = 10
+
+
+
+
+
+
+
+
+
+
+
+function constraint_jacobian_configuration(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}; reg::T=Dojo.REG) where {T,Nn,Ne,Nb}
+    state = body.state
+    timestep = mechanism.timestep
+    mass = body.mass
+    inertia = body.inertia
+
+    x2, q2 = current_configuration(state)
+    x3, q3 = next_configuration(state, timestep)
+
+    I3 = SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
+    Z33 = szeros(T, 3, 3)
+    Z34 = szeros(T, 3, 4)
+
+    # dynamics
+    dynT = I3 * mass / timestep
+    dynR = -2.0 / timestep * LVᵀmat(q2)' * Tmat() * (∂Rᵀmat∂q(Vᵀmat() * inertia * Vmat() * Lmat(q2)' * vector(q3)) + Rmat(q3)' * Vᵀmat() * inertia * Vmat() * Lmat(q2)')
+
+    state.D = [[dynT; Z33] [Z34; dynR]] * integrator_jacobian_velocity(body, timestep)
+    state.D += [[reg * I3; Z33] [Z33; reg * I3]]
+
+    # inputs
+    nothing
+
+    # impulses
+    for id in connections(mechanism.system, body.id)
+        Ne < id <= Ne + Nb && continue # body
+        impulses_jacobian_velocity!(mechanism, body, get_node(mechanism, id))
+    end
+
+    return state.D
+end
+
+body = mech.bodies[1]
+constraint_jacobian_configuration(mech, body)
+Main.@code_warntype constraint_jacobian_configuration(mech, body)
+@benchmark $constraint_jacobian_configuration($mech, $body)
+
+
+a = 10
+a = 10
+a = 10
+a = 10
+a = 10
+a = 10
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 mech = get_mechanism(:quadruped)

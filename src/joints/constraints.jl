@@ -385,16 +385,26 @@ function joint_impulse_index(joint::JointConstraint{T,N,Nc}, i::Int) where {T,N,
     joint_impulse_index((joint.translational, joint.rotational)[i], s) # FIXED
 end
 
-function reset!(joint::JointConstraint{T,N,Nc};
-    scale::T=1.0) where {T,N,Nc}
-    λ = []
-    for (i, element) in enumerate((joint.translational, joint.rotational))
-        Nλ = joint_length(element)
-        Nb = limits_length(element)
-        push!(λ, [scale * sones(2Nb); szeros(Nλ)])
-    end
-    joint.impulses[1] = vcat(λ...)
-    joint.impulses[2] = vcat(λ...)
+# function reset!(joint::JointConstraint{T,N,Nc};
+#     scale::T=1.0) where {T,N,Nc}
+#     λ = []
+#     for (i, element) in enumerate((joint.translational, joint.rotational))
+#         Nλ = joint_length(element)
+#         Nb = limits_length(element)
+#         push!(λ, [scale * sones(2Nb); szeros(Nλ)])
+#     end
+#     joint.impulses[1] = vcat(λ...)
+#     joint.impulses[2] = vcat(λ...)
+#     return
+# end
+
+function reset!(joint::JointConstraint{T,N,Nc}; scale::T=1.0) where {T,N,Nc}
+    Nλ_tra = joint_length(joint.translational)
+    Nb_tra = limits_length(joint.translational)
+    Nλ_rot = joint_length(joint.rotational)
+    Nb_rot = limits_length(joint.rotational)
+    joint.impulses[1] = [scale * sones(2Nb_tra); szeros(Nλ_tra); scale * sones(2Nb_rot); szeros(Nλ_rot)]
+    joint.impulses[2] = [scale * sones(2Nb_tra); szeros(Nλ_tra); scale * sones(2Nb_rot); szeros(Nλ_rot)]
     return
 end
 
