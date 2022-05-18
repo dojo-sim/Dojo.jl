@@ -1,6 +1,6 @@
 using Pkg
 Pkg.develop(path=joinpath(@__DIR__, "../../DojoEnvironments"))
-Pkg.develop(path=joinpath(@__DIR__, "../.."))
+# Pkg.develop(path=joinpath(@__DIR__, "../.."))
 Pkg.activate(joinpath(@__DIR__, ".."))
 Pkg.instantiate()
 
@@ -14,7 +14,6 @@ using IterativeLQR
 using LinearAlgebra
 using FiniteDiff
 using DojoEnvironments
-
 
 ################################################################################
 # Continuation
@@ -145,24 +144,30 @@ model = [dyn for t = 1:T-1]
 x1 = deepcopy(xref[1])
 ū = [u_hover for t = 1:T-1]
 
+x̄ = IterativeLQR.rollout(model, x1, ū)
+DojoEnvironments.visualize(env, x̄)
+
+
+
 
 du = zeros(n,m)
-u = srand(m)
+x = zeros(n)
+u = szeros(m)
+dynamics(x, env, x̄[1], u, szeros(0), gradients=true) - x̄[2]
+
+
 for i = 1:10
-    r = dynamics(x̄[2], env, x̄[1], u, szeros(0))
+    dynamics(x, env, x̄[10], u, szeros(0), gradients=true)
+    r = x - x̄[11]
     @show norm(r)
-    @show norm(u)
-    du .= 0.0
-    dynamics_jacobian_input(du, env, x̄[1], u, szeros(0))
-    @show norm(du)
-    Δu = - du \ r
+    # du .= 0.0
+    # dynamics_jacobian_input(du, env, x̄[10], u, szeros(0))
+    du = FiniteDiff.finite_difference_jacobian(u -> dynamics(x, env, x̄[10], u, szeros(0), gradients=false) - x̄[11], u)
+    Δu = - 0.1*du \ r
     u = u + Δu
 end
 
-
-
-x̄ = IterativeLQR.rollout(model, x1, ū)
-DojoEnvironments.visualize(env, x̄)
+du = szeros(n,m)
 
 # ## objective
 ############################################################################
