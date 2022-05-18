@@ -121,8 +121,8 @@ end
 end
 
 # impulses
-function impulses!(mechanism, body::Body, joint::JointConstraint)
-    body.state.d -= impulse_map(mechanism, joint, body) * joint.impulses[2]
+function impulses!(mechanism, body::Body, joint::JointConstraint{T,Nλ}) where {T,Nλ}
+    (Nλ > 0) && (body.state.d -= impulse_map(mechanism, joint, body) * joint.impulses[2])
     joint.spring && (body.state.d -= spring_impulses(mechanism, joint, body))
     joint.damper && (body.state.d -= damper_impulses(mechanism, joint, body))
     return
