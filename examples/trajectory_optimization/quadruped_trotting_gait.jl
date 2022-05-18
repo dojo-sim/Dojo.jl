@@ -144,6 +144,23 @@ model = [dyn for t = 1:T-1]
 # ## rollout
 x1 = deepcopy(xref[1])
 ū = [u_hover for t = 1:T-1]
+
+
+du = zeros(n,m)
+u = srand(m)
+for i = 1:10
+    r = dynamics(x̄[2], env, x̄[1], u, szeros(0))
+    @show norm(r)
+    @show norm(u)
+    du .= 0.0
+    dynamics_jacobian_input(du, env, x̄[1], u, szeros(0))
+    @show norm(du)
+    Δu = - du \ r
+    u = u + Δu
+end
+
+
+
 x̄ = IterativeLQR.rollout(model, x1, ū)
 DojoEnvironments.visualize(env, x̄)
 
@@ -330,7 +347,7 @@ function constraint_jacobian_configuration(relative::Symbol, joint::Joint{T,Nλ,
     ∇mincoord = minimal_coordinates_jacobian_configuration(relative, joint, xa, qa, xb, qb, attjac=false)
     ∇unlim = joint_constraint_jacobian_configuration(relative, joint, xa, qa, xb, qb, η)
 
-    # return [∇comp; ∇mincoord; -∇mincoord; ∇unlim]
+    return [∇comp; ∇mincoord; -∇mincoord; ∇unlim]
 end
 
 relative = :parent
