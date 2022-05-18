@@ -98,11 +98,16 @@ end
     return :(svcat($tra, $rot))
 end
 
-# constraints Jacobians
-@generated function constraint_jacobian(joint::JointConstraint)
-    tra = :(constraint_jacobian(joint.translational, joint.impulses[2][joint_impulse_index(joint, 1)]))
-    rot = :(constraint_jacobian(joint.rotational, joint.impulses[2][joint_impulse_index(joint, 2)]))
-    return :(cat($tra, $rot, dims=(1,2)))
+# # constraints Jacobians
+# @generated function constraint_jacobian(joint::JointConstraint)
+#     tra = :(constraint_jacobian(joint.translational, joint.impulses[2][joint_impulse_index(joint, 1)]))
+#     rot = :(constraint_jacobian(joint.rotational, joint.impulses[2][joint_impulse_index(joint, 2)]))
+#     return :(cat($tra, $rot, dims=(1,2)))
+# end
+function constraint_jacobian(joint::JointConstraint)
+    tra = constraint_jacobian(joint.translational, joint.impulses[2][joint_impulse_index(joint, 1)])
+    rot = constraint_jacobian(joint.rotational, joint.impulses[2][joint_impulse_index(joint, 2)])
+    return diagonal_cat(tra, rot)
 end
 
 @generated function constraint_jacobian_configuration(mechanism, joint::JointConstraint, body::Body)
@@ -379,10 +384,10 @@ end
 function joint_impulse_index(joint::JointConstraint{T,N,Nc}, i::Int) where {T,N,Nc}
     s = 0
     for j = 1:i-1
-        element = (joint.translational, joint.rotational)[j] # FIXED
+        element = (joint.translational, joint.rotational)[j]
         s += impulses_length(element)
     end
-    joint_impulse_index((joint.translational, joint.rotational)[i], s) # FIXED
+    joint_impulse_index((joint.translational, joint.rotational)[i], s)
 end
 
 # function reset!(joint::JointConstraint{T,N,Nc};
