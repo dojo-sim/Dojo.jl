@@ -93,11 +93,12 @@ function ctrl!(m, k; u=u_hover)
     set_input!(m, SVector{nu}(u))
 end
 
-Main.@elapsed storage = simulate!(mech, 0.6, ctrl!,
-Main.@profiler storage = simulate!(mech, 0.6, ctrl!,
+# Main.@elapsed storage = simulate!(mech, 0.6, ctrl!,
+@benchmark storage = simulate!(mech, 1.0, ctrl!,
+# Main.@profiler storage = simulate!(mech, 1.2, ctrl!,
     record=true,
     verbose=true,
-    opts=SolverOptions(rtol=1e-4, btol=1e-2, undercut=5.0, verbose=false),
+    opts=SolverOptions(rtol=1e-5, btol=1e-4, undercut=5.0, verbose=false),
     )
 Dojo.visualize(mech, storage, vis=env.vis)
 
