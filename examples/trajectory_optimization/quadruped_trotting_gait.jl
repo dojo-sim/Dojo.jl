@@ -93,12 +93,12 @@ function ctrl!(m, k; u=u_hover)
     set_input!(m, SVector{nu}(u))
 end
 
-Main.@elapsed storage = simulate!(mech, 0.6, ctrl!,
-# Main.@profiler
-# storage = simulate!(mech, 0.6, ctrl!,
+# Main.@elapsed storage = simulate!(mech, 0.6, ctrl!,
+@benchmark storage = simulate!(mech, 1.0, ctrl!,
+# Main.@profiler storage = simulate!(mech, 1.2, ctrl!,
     record=true,
     verbose=true,
-    opts=SolverOptions(rtol=1e-4, btol=1e-2, undercut=5.0, verbose=false),
+    opts=SolverOptions(rtol=1e-5, btol=1e-4, undercut=5.0, verbose=false),
     )
 Dojo.visualize(mech, storage, vis=env.vis)
 
@@ -150,13 +150,14 @@ DojoEnvironments.visualize(env, x̄)
 
 # ## objective
 ############################################################################
-qt = [5.0; 0.5; 0.5;
-    1e-4 * ones(3);
-    1e-4 * ones(3);
-    1e-4 * ones(3);
-    fill([2, 1e-4], 12)...]
+qt = [0.3; 0.05; 0.05;
+    5e-2 * ones(3);
+    1e-3 * ones(3);
+    1e-3 * ones(3);
+    fill([2, 1e-3], 12)...]
 ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(timestep * qt) * (x - xref[t]) +
-    transpose(u - u_hover) * Diagonal(timestep * 0.01 * ones(m)) * (u - u_hover) for t = 1:T-1]
+# transpose(u - u_hover) * Diagonal(timestep * 0.01 * ones(m)) * (u - u_hover) for t = 1:T-1]
+    transpose(u) * Diagonal(timestep * 0.01 * ones(m)) * u for t = 1:T-1]
 oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(timestep * qt) * (x - xref[end])
 
 cts = [IterativeLQR.Cost(ot, n, m) for ot in ots]

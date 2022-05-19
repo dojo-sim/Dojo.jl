@@ -33,25 +33,57 @@ function constraint(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn
     return state.d
 end
 
-function constraint_jacobian_configuration(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn,Ne,Nb}
+# function constraint_jacobian_configuration(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn,Ne,Nb}
+#     state = body.state
+#     timestep = mechanism.timestep
+#     mass = body.mass
+#     inertia = body.inertia
+#
+#     # x1, q1 = previous_configuration(state)
+#     x2, q2 = current_configuration(state)
+#     x3, q3 = next_configuration(state, timestep)
+#
+#     # dynamics
+#     dynT = I(3) * mass / timestep
+#     dynR = -2.0 / timestep * LVᵀmat(q2)' * Tmat() * (∂Rᵀmat∂q(Vᵀmat() * inertia * Vmat() * Lmat(q2)' * vector(q3)) + Rmat(q3)' * Vᵀmat() * inertia * Vmat() * Lmat(q2)')
+#
+#     Z33 = szeros(T, 3, 3)
+#     Z34 = szeros(T, 3, 4)
+#
+#     state.D = [[dynT; Z33] [Z34; dynR]] * integrator_jacobian_velocity(body, timestep)
+#     state.D += [[REG * I(3); Z33] [Z33; REG * I(3)]]
+#
+#     # inputs
+#     nothing
+#
+#     # impulses
+#     for id in connections(mechanism.system, body.id)
+#         Ne < id <= Ne + Nb && continue # body
+#         impulses_jacobian_velocity!(mechanism, body, get_node(mechanism, id))
+#     end
+#
+#     return state.D
+# end
+
+function constraint_jacobian_configuration(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}; reg::T=Dojo.REG) where {T,Nn,Ne,Nb}
     state = body.state
     timestep = mechanism.timestep
     mass = body.mass
     inertia = body.inertia
 
-    # x1, q1 = previous_configuration(state)
     x2, q2 = current_configuration(state)
     x3, q3 = next_configuration(state, timestep)
 
-    # dynamics
-    dynT = I(3) * mass / timestep
-    dynR = -2.0 / timestep * LVᵀmat(q2)' * Tmat() * (∂Rᵀmat∂q(Vᵀmat() * inertia * Vmat() * Lmat(q2)' * vector(q3)) + Rmat(q3)' * Vᵀmat() * inertia * Vmat() * Lmat(q2)')
-
+    I3 = SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
     Z33 = szeros(T, 3, 3)
     Z34 = szeros(T, 3, 4)
 
+    # dynamics
+    dynT = I3 * mass / timestep
+    dynR = -2.0 / timestep * LVᵀmat(q2)' * Tmat() * (∂Rᵀmat∂q(Vᵀmat() * inertia * Vmat() * Lmat(q2)' * vector(q3)) + Rmat(q3)' * Vᵀmat() * inertia * Vmat() * Lmat(q2)')
+
     state.D = [[dynT; Z33] [Z34; dynR]] * integrator_jacobian_velocity(body, timestep)
-    state.D += [[REG * I(3); Z33] [Z33; REG * I(3)]]
+    state.D += [[reg * I3; Z33] [Z33; reg * I3]]
 
     # inputs
     nothing

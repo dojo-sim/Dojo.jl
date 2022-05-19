@@ -112,11 +112,16 @@ end
     return :(svcat($tra, $rot))
 end
 
-# constraints Jacobians
-@generated function constraint_jacobian(joint::JointConstraint)
-    tra = :(constraint_jacobian(joint.translational, joint.impulses[2][joint_impulse_index(joint, 1)]))
-    rot = :(constraint_jacobian(joint.rotational, joint.impulses[2][joint_impulse_index(joint, 2)]))
-    return :(cat($tra, $rot, dims=(1,2)))
+# # constraints Jacobians
+# @generated function constraint_jacobian(joint::JointConstraint)
+#     tra = :(constraint_jacobian(joint.translational, joint.impulses[2][joint_impulse_index(joint, 1)]))
+#     rot = :(constraint_jacobian(joint.rotational, joint.impulses[2][joint_impulse_index(joint, 2)]))
+#     return :(cat($tra, $rot, dims=(1,2)))
+# end
+function constraint_jacobian(joint::JointConstraint)
+    tra = constraint_jacobian(joint.translational, joint.impulses[2][joint_impulse_index(joint, 1)])
+    rot = constraint_jacobian(joint.rotational, joint.impulses[2][joint_impulse_index(joint, 2)])
+    return diagonal_cat(tra, rot)
 end
 
 @generated function constraint_jacobian_configuration(mechanism, joint::JointConstraint, body::Body)
@@ -142,18 +147,31 @@ function impulses!(mechanism, body::Body, joint::JointConstraint{T,Nλ}) where {
     return
 end
 
-@generated function impulse_map(mechanism, joint::JointConstraint, body::Body)
-    relative = :(body.id == joint.parent_id ? :parent : :child)
-    pbody = :(get_body(mechanism, joint.parent_id))
-    cbody = :(get_body(mechanism, joint.child_id))
-    tra = :(impulse_map($relative, joint.translational,
-        $pbody, $cbody,
-        joint.impulses[2][joint_impulse_index(joint, 1)]))
-    rot = :(impulse_map($relative, joint.rotational,
-        $pbody, $cbody,
-        joint.impulses[2][joint_impulse_index(joint, 2)]))
-    return :(hcat($tra, $rot))
+function impulse_map(mechanism, joint::JointConstraint, body::Body)
+    relative = body.id == joint.parent_id ? :parent : :child
+    pbody = get_body(mechanism, joint.parent_id)
+    cbody = get_body(mechanism, joint.child_id)
+    tra = impulse_map(relative, joint.translational,
+        pbody, cbody,
+        joint.impulses[2][joint_impulse_index(joint, 1)])
+    rot = impulse_map(relative, joint.rotational,
+        pbody, cbody,
+        joint.impulses[2][joint_impulse_index(joint, 2)])
+    return hcat(tra, rot)
 end
+
+# @generated function impulse_map(mechanism, joint::JointConstraint, body::Body)
+#     relative = :(body.id == joint.parent_id ? :parent : :child)
+#     pbody = :(get_body(mechanism, joint.parent_id))
+#     cbody = :(get_body(mechanism, joint.child_id))
+#     tra = :(impulse_map($relative, joint.translational,
+#         $pbody, $cbody,
+#         joint.impulses[2][joint_impulse_index(joint, 1)]))
+#     rot = :(impulse_map($relative, joint.rotational,
+#         $pbody, $cbody,
+#         joint.impulses[2][joint_impulse_index(joint, 2)]))
+#     return :(hcat($tra, $rot))
+# end
 
 # impulses Jacobians
 function impulses_jacobian_velocity!(mechanism, body::Body, joint::JointConstraint)
@@ -393,22 +411,32 @@ end
 function joint_impulse_index(joint::JointConstraint{T,N,Nc}, i::Int) where {T,N,Nc}
     s = 0
     for j = 1:i-1
-        element = (joint.translational, joint.rotational)[j] # FIXED
+        element = (joint.translational, joint.rotational)[j]
         s += impulses_length(element)
     end
-    joint_impulse_index((joint.translational, joint.rotational)[i], s) # FIXED
+    joint_impulse_index((joint.translational, joint.rotational)[i], s)
 end
 
-function reset!(joint::JointConstraint{T,N,Nc};
-    scale::T=1.0) where {T,N,Nc}
-    λ = []
-    for (i, element) in enumerate((joint.translational, joint.rotational))
-        Nλ = joint_length(element)
-        Nb = limits_length(element)
-        push!(λ, [scale * sones(2Nb); szeros(Nλ)])
-    end
-    joint.impulses[1] = vcat(λ...)
-    joint.impulses[2] = vcat(λ...)
+# function reset!(joint::JointConstraint{T,N,Nc};
+#     scale::T=1.0) where {T,N,Nc}
+#     λ = []
+#     for (i, element) in enumerate((joint.translational, joint.rotational))
+#         Nλ = joint_length(element)
+#         Nb = limits_length(element)
+#         push!(λ, [scale * sones(2Nb); szeros(Nλ)])
+#     end
+#     joint.impulses[1] = vcat(λ...)
+#     joint.impulses[2] = vcat(λ...)
+#     return
+# end
+
+function reset!(joint::JointConstraint{T,N,Nc}; scale::T=1.0) where {T,N,Nc}
+    Nλ_tra = joint_length(joint.translational)
+    Nb_tra = limits_length(joint.translational)
+    Nλ_rot = joint_length(joint.rotational)
+    Nb_rot = limits_length(joint.rotational)
+    joint.impulses[1] = [scale * sones(2Nb_tra); szeros(Nλ_tra); scale * sones(2Nb_rot); szeros(Nλ_rot)]
+    joint.impulses[2] = [scale * sones(2Nb_tra); szeros(Nλ_tra); scale * sones(2Nb_rot); szeros(Nλ_rot)]
     return
 end
 
