@@ -11,7 +11,7 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
-Dojo = "0.2.1, 0.2.1"
+Dojo = "0.3.0, 0.3.0"
 MeshCat = "<0.14.2, 0.14.2"
 StaticArrays = "1.2, 1.4"
 julia = "1.6, 1.7"
