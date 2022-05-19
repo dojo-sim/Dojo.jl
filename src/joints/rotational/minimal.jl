@@ -32,9 +32,9 @@ function displacement_jacobian_configuration(relative::Symbol, joint::Rotational
 		) where T
     X = szeros(T, 3, 3)
     if relative == :parent
-		Q = Lᵀmat(joint.axis_offset) * Rmat(qb) * Tmat()
+		Q = Lᵀmat(joint.orientation_offset) * Rmat(qb) * Tmat()
     elseif relative == :child
-		Q = Lᵀmat(joint.axis_offset) * Lᵀmat(qa)
+		Q = Lᵀmat(joint.orientation_offset) * Lᵀmat(qa)
 	end
 	return X, Vmat() * Q
 end
@@ -46,10 +46,10 @@ end
 #         attjac::Bool=true, vmat=true) where T
 #     X = szeros(T, 3, 3)
 #     if relative == :parent
-# 		Q = Lᵀmat(joint.axis_offset) * Rmat(qb) * Tmat()
+# 		Q = Lᵀmat(joint.orientation_offset) * Rmat(qb) * Tmat()
 # 		attjac && (Q *= LVᵀmat(qa))
 #     elseif relative == :child
-# 		Q = Lᵀmat(joint.axis_offset) * Lᵀmat(qa)
+# 		Q = Lᵀmat(joint.orientation_offset) * Lᵀmat(qa)
 # 		attjac && (Q *= LVᵀmat(qb))
 # 	end
 # 	vmat && (Q = Vmat() * Q)
