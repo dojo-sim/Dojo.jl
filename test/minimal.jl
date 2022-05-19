@@ -20,16 +20,6 @@ joint_types = [
     :PlanarFree
     ]
 
-# TODO this is necessary, because some conversions do not return a vector for scalar values
-# See TODO below for removing finite diff
-function force_to_jacobian_finite_diff(f,x)
-	if typeof(f(x)) <: AbstractVector
-		return FiniteDiff.finite_difference_jacobian(f,x)
-	else
-		return FiniteDiff.finite_difference_jacobian(x -> [f(x)],x)
-	end
-end
-
 
 function force_to_jacobian_forward_diff(f,x)
 	if typeof(f(x)) <: AbstractVector
@@ -389,21 +379,21 @@ end
 
 	@testset "Minimal to maximal Jacobian" begin
 		function maximal_to_minimal_jacobian_fd(mechanism::Mechanism, z)
-			J = force_to_jacobian_forward_diff(y -> Dojo.maximal_to_minimal(mechanism, y), z)
+			J = ForwardDiff.jacobian(y -> Dojo.maximal_to_minimal(mechanism, y), z)
 			G = attitude_jacobian(z, length(mechanism.bodies))
 			return J * G
 		end
 
 		# TODO switch to ForwardDiff once it works
 		function maximal_to_minimal_jacobian_fd_finite_diff(mechanism::Mechanism, z)
-			J = force_to_jacobian_finite_diff(y -> Dojo.maximal_to_minimal(mechanism, y), z)
+			J = FiniteDiff.finite_difference_jacobian(y -> Dojo.maximal_to_minimal(mechanism, y), z)
 			G = attitude_jacobian(z, length(mechanism.bodies))
 			return J * G
 		end
 
 		# TODO switch to ForwardDiff once it works
 		function minimal_to_maximal_jacobian_fd(mechanism::Mechanism, x)
-			J = force_to_jacobian_finite_diff(y -> Dojo.minimal_to_maximal(mechanism, y), x)
+			J = FiniteDiff.finite_difference_jacobian(y -> Dojo.minimal_to_maximal(mechanism, y), x)
 			z = minimal_to_maximal(mechanism, x)
 			G = attitude_jacobian(z, length(mechanism.bodies))
 			return G' * J
@@ -573,13 +563,13 @@ end
 	@testset "Maximal to minimal Jacobian" begin
 
 		function maximal_to_minimal_jacobian_fd_finite_diff(mechanism::Mechanism, z)
-			J = force_to_jacobian_finite_diff(y -> maximal_to_minimal(mechanism, y), z)
+			J = FiniteDiff.finite_difference_jacobian(y -> maximal_to_minimal(mechanism, y), z)
 			G = attitude_jacobian(z, length(mechanism.bodies))
 			return J * G
 		end
 
 		function maximal_to_minimal_jacobian_fd(mechanism::Mechanism, z)
-			J = force_to_jacobian_forward_diff(y -> maximal_to_minimal(mechanism, y), z)
+			J = ForwardDiff.jacobian(y -> maximal_to_minimal(mechanism, y), z)
 			G = attitude_jacobian(z, length(mechanism.bodies))
 			return J * G
 		end
