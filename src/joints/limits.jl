@@ -54,7 +54,7 @@ function add_limits(mech::Mechanism, joint::JointConstraint;
     N̄λ = 3 - Nλ
     N = Nλ + 2Nb
     rot_limit = (Rotational{T,Nλ,Nb,N,Nb½,N̄λ}(rot.axis, rot.axis_mask1, rot.axis_mask2, rot.axis_mask3,
-        rot.axis_offset, rot.spring, rot.damper, rot.spring_offset, rot_limits,
+        rot.orientation_offset, rot.spring, rot.damper, rot.spring_offset, rot_limits,
         rot.spring_type, rot.input), joint.parent_id, joint.child_id)
 
     JointConstraint((tra_limit, rot_limit); name=joint.name)

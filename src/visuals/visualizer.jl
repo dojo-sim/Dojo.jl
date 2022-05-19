@@ -76,7 +76,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
                     (radius == 0.0) && (radius = 0.01)
                     contact_shape = Sphere(radius,
                         position_offset=contact.model.collision.contact_origin, #TODO: generalize for collision checking
-                        axis_offset=one(Quaternion), 
+                        orientation_offset=one(Quaternion), 
                         color=RGBA(1.0, 0.0, 0.0, 0.5))
                     visshape = convert_shape(contact_shape)
                     subvisshape = nothing
@@ -171,7 +171,7 @@ function build_robot(mechanism::Mechanism;
                     (radius == 0.0) && (radius = 0.01)
                     contact_shape = Sphere(radius,
                         position_offset=(contact.model.collision.contact_origin),
-                        axis_offset=one(Quaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
+                        orientation_offset=one(Quaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
                     visshape = convert_shape(contact_shape)
                     subvisshape = nothing
                     if visshape !== nothing
@@ -255,7 +255,7 @@ function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T};
                     (radius == 0.0) && (radius = 0.01)
                     contact_shape = Sphere(radius,
                         position_offset=(contact.model.collision.contact_origin),
-                        axis_offset=one(Quaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
+                        orientation_offset=one(Quaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
                     visshape = convert_shape(contact_shape)
                     subvisshape = nothing
                     showshape = false
@@ -284,7 +284,7 @@ end
 function transform(x, q, shape)
     scale_transform = MeshCat.LinearMap(diagm(shape.scale))
     x_transform = MeshCat.Translation(x + vector_rotate(shape.position_offset, q))
-    q_transform = MeshCat.LinearMap(q * shape.axis_offset)
+    q_transform = MeshCat.LinearMap(q * shape.orientation_offset)
     return MeshCat.compose(x_transform, q_transform, scale_transform)
 end
 
@@ -297,7 +297,7 @@ function set_node!(x, q, id, shape, shapevisualizer, showshape) where {T,N}
         # If this changes, do similarily to origin
         setprop!(shapevisualizer, "scale", MeshCat.js_scaling(shape.scale))
         setprop!(shapevisualizer, "position", MeshCat.js_position(x + vector_rotate(shape.position_offset, q)))
-        setprop!(shapevisualizer, "quaternion", MeshCat.js_quaternion(q * shape.axis_offset))
+        setprop!(shapevisualizer, "quaternion", MeshCat.js_quaternion(q * shape.orientation_offset))
     end
     return
 end
@@ -320,7 +320,7 @@ function MeshCat.setobject!(subvisshape, visshape, shapes::Shapes;
         setobject!(v, visshape[i], s, transparent=transparent)
         scale_transform = MeshCat.LinearMap(diagm(s.scale))
         x_transform = MeshCat.Translation(s.position_offset)
-        q_transform = MeshCat.LinearMap(s.axis_offset)
+        q_transform = MeshCat.LinearMap(s.orientation_offset)
         t = MeshCat.compose(x_transform, q_transform, scale_transform)
         settransform!(v, t)
     end

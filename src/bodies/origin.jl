@@ -21,7 +21,21 @@ mutable struct Origin{T} <: Node{T}
         new{T}(getGlobalID(), name, state, shape)
     end
 
+    function Origin(; 
+        name::Symbol=:origin, 
+        state=State{Float64}(), 
+        shape::Shape=EmptyShape())
+        Origin{Float64}(; name, state, shape)
+    end
+
     function Origin(body::Body{T}) where T
         new{T}(body.id, body.name, body.state, body.shape)
     end
+end
+
+function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, origin::Origin)
+    summary(io, origin)
+    println(io, "")
+    println(io, " id:      "*string(origin.id))
+    println(io, " name:    "*string(origin.name))
 end

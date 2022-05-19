@@ -91,7 +91,7 @@ end
 mech = get_mechanism(:pendulum)
 initialize!(mech, :pendulum)
 
-mech.bodies[1].state.ϕsol[2] = 0.5*srand(3)
+mech.bodies[1].state.ωsol[2] = 0.5*srand(3)
 mech.bodies[1].impulses[2] = 0.5*sones(1)
 mech.bodies[1].impulses_dual[2] = 0.1*sones(1)
 # simulate

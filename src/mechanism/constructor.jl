@@ -36,6 +36,15 @@ mutable struct Mechanism{T,Nn,Ne,Nb,Ni}
     μ::T
 end
 
+function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, mechanism::Mechanism{T,Nn,Nb,Ne,Ni}) where {T,Nn,Nb,Ne,Ni}
+    summary(io, mechanism)
+    println(io, " with ", Nb, " bodies, ", Ne, " joints, and ", Ni, " contacts")
+    println(io, " root_to_leaves:     "*string(mechanism.root_to_leaves))
+    println(io, " timestep:           "*string(mechanism.timestep))
+    println(io, " gravity:            "*string(mechanism.gravity))
+    println(io, " μ:                  "*string(mechanism.μ))
+end
+
 function Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:JointConstraint{T}}, contacts::Vector{<:ContactConstraint{T}};
     spring=0.0, 
     damper=0.0, 

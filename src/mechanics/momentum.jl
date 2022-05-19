@@ -24,7 +24,7 @@ function momentum(mechanism::Mechanism{T}, body::Body{T}) where T
     x3, q3 = next_configuration(state, timestep)
 
     v15 = body.state.vsol[2] # v1.5
-    ω15 = body.state.ϕsol[2] # ω1.5
+    ω15 = body.state.ωsol[2] # ω1.5
 
     D2x = 1 / timestep * mass * (x3 - x2) - 0.5 * timestep * mass * mechanism.gravity
     D2q = -2.0 / timestep * LVᵀmat(q2)' * Tmat() * Rmat(q3)' * Vᵀmat() * inertia * Vmat() * Lmat(q2)' * vector(q3)

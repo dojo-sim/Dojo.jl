@@ -14,6 +14,11 @@ struct EmptyShape{T} <: Shape{T}
     EmptyShape() = new{Float64}()
 end
 
+function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, shape::EmptyShape)
+    summary(io, shape)
+    println(io, "")
+end
+
 #TODO: change to MeshShape
 
 """
@@ -23,29 +28,28 @@ end
 """
 mutable struct Mesh{T} <: Shape{T}
     position_offset::SVector{3,T}
-    axis_offset::Quaternion{T}
-
+    orientation_offset::Quaternion{T}
     path::String
     scale::SVector{3,T}
     color::RGBA
 
     function Mesh(path::String;
             position_offset::AbstractVector=szeros(3), 
-            axis_offset::Quaternion=one(Quaternion),
+            orientation_offset::Quaternion=one(Quaternion),
             scale::AbstractVector=sones(3), 
             color=RGBA(0.75, 0.75, 0.75))
-        T = promote_type(quateltype.((position_offset, axis_offset))...)
-        new{T}(position_offset, axis_offset, path, scale, color)
+        T = promote_type(quateltype.((position_offset, orientation_offset))...)
+        new{T}(position_offset, orientation_offset, path, scale, color)
     end
 
     function Mesh(path::String, m::Real, J::AbstractMatrix;
             position_offset::AbstractVector=szeros(3), 
-            axis_offset::Quaternion=one(Quaternion),
+            orientation_offset::Quaternion=one(Quaternion),
             scale::AbstractVector=sones(3), 
             name::Symbol=Symbol("body_" * randstring(4)), 
             color=RGBA(0.75, 0.75, 0.75))
-        T = promote_type(quateltype.((m, J, position_offset, axis_offset))...)
-        return Body(m, J; name=name, shape=new{T}(position_offset, axis_offset, path, scale, color))
+        T = promote_type(quateltype.((m, J, position_offset, orientation_offset))...)
+        return Body(m, J; name=name, shape=new{T}(position_offset, orientation_offset, path, scale, color))
     end
 end
 
@@ -55,37 +59,36 @@ end
     Cuboid geometry 
 
     position_offset: geometry origin offset from center of mass
-    axis_offset: orientation offset from body frame
+    orientation_offset: orientation offset from body frame
     xyz: dimensions (meters)
     scale: scaling
     color: RGBA
 """
 mutable struct Box{T} <: Shape{T}
     position_offset::SVector{3,T}
-    axis_offset::Quaternion{T}
-
+    orientation_offset::Quaternion{T}
     xyz::SVector{3,T}
     scale::SVector{3,T}
     color::RGBA
 
     function Box(x::Real, y::Real, z::Real;
             position_offset::AbstractVector=szeros(3), 
-            axis_offset::Quaternion=one(Quaternion),
+            orientation_offset::Quaternion=one(Quaternion),
             scale::AbstractVector=sones(3), 
             color=RGBA(0.75, 0.75, 0.75))
-        T = promote_type(quateltype.((x, y, z, position_offset, axis_offset))...)
-        new{T}(position_offset, axis_offset, [x; y; z], scale, color)
+        T = promote_type(quateltype.((x, y, z, position_offset, orientation_offset))...)
+        new{T}(position_offset, orientation_offset, [x; y; z], scale, color)
     end
 
     function Box(x::Real, y::Real, z::Real, m::Real;
             position_offset::AbstractVector=szeros(3), 
-            axis_offset::Quaternion=one(Quaternion),
+            orientation_offset::Quaternion=one(Quaternion),
             scale::AbstractVector=sones(3), 
             name::Symbol=Symbol("body_" * randstring(4)), 
             color=RGBA(0.75, 0.75, 0.75))
-        T = promote_type(quateltype.((x, y, z, m, position_offset, axis_offset))...)
+        T = promote_type(quateltype.((x, y, z, m, position_offset, orientation_offset))...)
         J = 1 / 12 * m * diagm([y^2 + z^2; x^2 + z^2; x^2 + y^2])
-        return Body(m, J; name=name, shape=new{T}(position_offset, axis_offset, [x;y;z], scale, color))
+        return Body(m, J; name=name, shape=new{T}(position_offset, orientation_offset, [x;y;z], scale, color))
     end
 end
 
@@ -95,15 +98,14 @@ end
     cylinder geometry 
     
     position_offset: geometry origin offset from center of mass
-    axis_offset: orientation offset from body frame
+    orientation_offset: orientation offset from body frame
     rh: radius and height dimensions (meters)
     scale: scaling
     color: RGBA
 """
 mutable struct Cylinder{T} <: Shape{T}
     position_offset::SVector{3,T}
-    axis_offset::Quaternion{T}
-
+    orientation_offset::Quaternion{T}
     rh::SVector{2,T}
     scale::SVector{3,T}
     color::RGBA
@@ -111,22 +113,22 @@ mutable struct Cylinder{T} <: Shape{T}
     # Cylinder points in the z direction
     function Cylinder(r::Real, h::Real;
             position_offset::AbstractVector=szeros(3), 
-            axis_offset::Quaternion=one(Quaternion),
+            orientation_offset::Quaternion=one(Quaternion),
             scale::AbstractVector=sones(3), 
             color=RGBA(0.75, 0.75, 0.75))
-        T = promote_type(quateltype.((r, h, position_offset, axis_offset))...)
-        new{T}(position_offset, axis_offset, [r;h], scale, color)
+        T = promote_type(quateltype.((r, h, position_offset, orientation_offset))...)
+        new{T}(position_offset, orientation_offset, [r;h], scale, color)
     end
 
     function Cylinder(r::Real, h::Real, m::Real;
             position_offset::AbstractVector=szeros(3), 
-            axis_offset::Quaternion=one(Quaternion),
+            orientation_offset::Quaternion=one(Quaternion),
             scale::AbstractVector=sones(3), 
             name::Symbol=Symbol("body_" * randstring(4)), 
             color=RGBA(0.75, 0.75, 0.75))
-        T = promote_type(quateltype.((r, h, m, position_offset, axis_offset))...)
+        T = promote_type(quateltype.((r, h, m, position_offset, orientation_offset))...)
         J = 1 / 2 * m * diagm([r^2 + 1 / 6 * h^2; r^2 + 1 / 6 * h^2; r^2])
-        return Body(m, J; name=name, shape=new{T}(position_offset, axis_offset, [r;h], scale, color))
+        return Body(m, J; name=name, shape=new{T}(position_offset, orientation_offset, [r;h], scale, color))
     end
 end
 
@@ -136,15 +138,14 @@ end
     capsule geometry 
     
     position_offset: geometry origin offset from center of mass
-    axis_offset: orientation offset from body frame
+    orientation_offset: orientation offset from body frame
     rh: radius and height dimensions (meters)
     scale: scaling
     color: RGBA
 """
 mutable struct Capsule{T} <: Shape{T}
     position_offset::SVector{3,T}
-    axis_offset::Quaternion{T}
-
+    orientation_offset::Quaternion{T}
     rh::SVector{2,T}
     scale::SVector{3,T}
     color::RGBA
@@ -152,20 +153,20 @@ mutable struct Capsule{T} <: Shape{T}
     # Capsule points in the z direction
     function Capsule(r::Real, h::Real;
             position_offset::AbstractVector=szeros(3), 
-            axis_offset::Quaternion= one(Quaternion),
+            orientation_offset::Quaternion= one(Quaternion),
             scale::AbstractVector=sones(3), 
             color=RGBA(0.75, 0.75, 0.75))
-        T = promote_type(quateltype.((r, h, position_offset, axis_offset))...)
-        new{T}(position_offset, axis_offset, [r; h], scale, color)
+        T = promote_type(quateltype.((r, h, position_offset, orientation_offset))...)
+        new{T}(position_offset, orientation_offset, [r; h], scale, color)
     end
 
     function Capsule(r::Real, h::Real, m::Real;
             position_offset::AbstractVector=szeros(3), 
-            axis_offset::Quaternion=one(Quaternion),
+            orientation_offset::Quaternion=one(Quaternion),
             scale::AbstractVector=sones(3), 
             name::Symbol=Symbol("body_" * randstring(4)), 
             color=RGBA(0.75, 0.75, 0.75))
-        T = promote_type(quateltype.((r, h, m, position_offset, axis_offset))...)
+        T = promote_type(quateltype.((r, h, m, position_offset, orientation_offset))...)
 
         mass_cylinder = π * h * r^2.0
         mass_hemisphere = π * 2.0 / 3.0 * r^3.0 
@@ -178,7 +179,7 @@ mutable struct Capsule{T} <: Shape{T}
 
         J = m * diagm([Ixx; Ixx; Izz])
 
-        return Body(m, J; name=name, shape=new{T}(position_offset, axis_offset, [r; h], scale, color))
+        return Body(m, J; name=name, shape=new{T}(position_offset, orientation_offset, [r; h], scale, color))
     end
 end
 
@@ -189,7 +190,7 @@ end
     
     shape: list of Shape objects
     position_offset: geometry origin offset from center of mass
-    axis_offset: orientation offset from body frame
+    orientation_offset: orientation offset from body frame
     xyz: dimensions (meters)
     scale: scaling
     color: RGBA
@@ -197,26 +198,26 @@ end
 mutable struct Shapes{T} <: Shape{T}
     shape::Vector 
     position_offset::SVector{3,T}
-    axis_offset::Quaternion{T}
+    orientation_offset::Quaternion{T}
     scale::SVector{3,T}
     color::RGBA
 
     function Shapes(shapes::Vector{Shape{T}}; 
         position_offset::AbstractVector=szeros(3), 
-        axis_offset::Quaternion=one(Quaternion),
+        orientation_offset::Quaternion=one(Quaternion),
         scale::AbstractVector=sones(3), 
         name::Symbol=Symbol("body_" * randstring(4)), 
         color=RGBA(0.75, 0.75, 0.75)) where T
-        new{T}(shapes, position_offset, axis_offset, scale, color)
+        new{T}(shapes, position_offset, orientation_offset, scale, color)
     end
 
     function Shapes(shapes::Vector, m::T, J; 
         position_offset::AbstractVector=szeros(3), 
-        axis_offset::Quaternion=one(Quaternion),
+        orientation_offset::Quaternion=one(Quaternion),
         scale::AbstractVector=sones(3), 
         name::Symbol=Symbol("body_" * randstring(4)), 
         color=RGBA(0.75, 0.75, 0.75)) where T
-        Body(m, J; name=name, shape=new{T}(shapes, position_offset, axis_offset, scale, color))
+        Body(m, J; name=name, shape=new{T}(shapes, position_offset, orientation_offset, scale, color))
     end
 end
 
@@ -226,36 +227,36 @@ end
     sphere geometry 
     
     position_offset: geometry origin offset from center of mass
-    axis_offset: orientation offset from body frame
+    orientation_offset: orientation offset from body frame
     r: radius (meters)
     scale: scaling
     color: RGBA
 """
 mutable struct Sphere{T} <: Shape{T}
     position_offset::SVector{3,T}
-    axis_offset::Quaternion{T}
+    orientation_offset::Quaternion{T}
     r::T
     scale::SVector{3,T}
     color::RGBA
 
     function Sphere(r::Real;
             position_offset::AbstractVector=szeros(3), 
-            axis_offset::Quaternion=one(Quaternion),
+            orientation_offset::Quaternion=one(Quaternion),
             scale::AbstractVector=sones(3), 
             color=RGBA(0.75, 0.75, 0.75))
-        T = promote_type(quateltype.((r, position_offset, axis_offset))...)
-        new{T}(position_offset, axis_offset, r, scale, color)
+        T = promote_type(quateltype.((r, position_offset, orientation_offset))...)
+        new{T}(position_offset, orientation_offset, r, scale, color)
     end
 
     function Sphere(r::Real, m::Real;
             position_offset::AbstractVector=szeros(3), 
-            axis_offset::Quaternion=one(Quaternion),
+            orientation_offset::Quaternion=one(Quaternion),
             scale::AbstractVector=sones(3), 
             name::Symbol=Symbol("body_" * randstring(4)), 
             color=RGBA(0.75, 0.75, 0.75))
-        T = promote_type(quateltype.((r, m, position_offset, axis_offset))...)
+        T = promote_type(quateltype.((r, m, position_offset, orientation_offset))...)
         J = 2 / 5 * m * diagm([r^2 for i = 1:3])
-        return Body(m, J; name=name, shape=new{T}(position_offset, axis_offset, r, scale, color))
+        return Body(m, J; name=name, shape=new{T}(position_offset, orientation_offset, r, scale, color))
     end
 end
 
@@ -265,14 +266,14 @@ end
     pyramid geometry 
     
     position_offset: geometry origin offset from center of mass
-    axis_offset: orientation offset from body frame
+    orientation_offset: orientation offset from body frame
     wh: width and height dimensions (meters)
     scale: scaling
     color: RGBA
 """
 mutable struct Pyramid{T} <: Shape{T}
     position_offset::SVector{3,T}
-    axis_offset::Quaternion{T}
+    orientation_offset::Quaternion{T}
     wh::SVector{2,T}
     scale::SVector{3,T}
     color::RGBA
@@ -280,22 +281,31 @@ mutable struct Pyramid{T} <: Shape{T}
     # Pyramid points in the z direction, Center of mass at 1/4 h
     function Pyramid(w::Real, h::Real;
             position_offset::AbstractVector=szeros(3), 
-            axis_offset::Quaternion=one(Quaternion),
+            orientation_offset::Quaternion=one(Quaternion),
             scale::AbstractVector=sones(3), 
             color=RGBA(0.75, 0.75, 0.75))
-        T = promote_type(quateltype.((w, h, position_offset, axis_offset))...)
-        new{T}(position_offset, axis_offset, [w;h], scale, color)
+        T = promote_type(quateltype.((w, h, position_offset, orientation_offset))...)
+        new{T}(position_offset, orientation_offset, [w;h], scale, color)
     end
 
     function Pyramid(w::Real, h::Real, m::Real;
             position_offset::AbstractVector=szeros(3), 
-            axis_offset::Quaternion=one(Quaternion),
+            orientation_offset::Quaternion=one(Quaternion),
             scale::AbstractVector=sones(3), 
             name::Symbol=Symbol("body_" * randstring(4)), color=RGBA(0.75, 0.75, 0.75))
-        T = promote_type(quateltype.((w, h, m, position_offset, axis_offset))...)
+        T = promote_type(quateltype.((w, h, m, position_offset, orientation_offset))...)
         J = 1/80 * m * diagm([4*w^2+3*h^2;4*w^2+3*h^2;8*w^2])
-        return Body(m, J; name=name, shape=new{T}(position_offset, axis_offset, [w;h], scale, color))
+        return Body(m, J; name=name, shape=new{T}(position_offset, orientation_offset, [w;h], scale, color))
     end
+end
+
+function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, shape::Shape)
+    summary(io, shape)
+    println(io,"")
+    println(io," position_offset: "*string(shape.position_offset))
+    println(io," orientation_offset:     "*string(shape.orientation_offset))
+    println(io," scale:           "*string(shape.scale))
+    println(io," color:           "*string(shape.color))
 end
 
 function convert_shape(box::Box)
