@@ -103,7 +103,7 @@ end
 
 function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, system::System{N}) where {N}
     println(io, "System with "*string(N)*" nodes:")
-    SparseArrays._show_with_braille_patterns(io, system.matrix_entries)
+    # SparseArrays._show_with_braille_patterns(io, system.matrix_entries) # TODO this fails on Julia 1.6
 end
 
 children(system, v) = outneighbors(system.dfs_graph, v)
