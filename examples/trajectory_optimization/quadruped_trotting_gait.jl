@@ -52,7 +52,7 @@ gravity = -9.81
 timestep = 0.02
 friction_coefficient = 0.8
 damper = 0.5
-spring = 5.0
+spring = 1.0
 env = get_environment(:quadruped,
     representation=:minimal,
     timestep=timestep,
@@ -87,14 +87,14 @@ mech = get_mechanism(:quadruped,
 
 initialize!(mech, :quadruped, body_position=[0,0,0.0])
 # u_hover = [0.05;0;1.13; 0;-0.01;0; zeros(12)]
-u_hover = [0.02;0;0.6; 0;0;0; zeros(12)]
+u_hover = [0.02;0;1.9; 0;0;0; zeros(12)]
 function ctrl!(m, k; u=u_hover)
     nu = input_dimension(m)
     set_input!(m, SVector{nu}(u))
 end
 
-# Main.@elapsed storage = simulate!(mech, 0.6, ctrl!,
-@benchmark storage = simulate!(mech, 1.0, ctrl!,
+Main.@elapsed storage = simulate!(mech, 0.6, ctrl!,
+# @benchmark storage = simulate!(mech, 1.0, ctrl!,
 # Main.@profiler storage = simulate!(mech, 1.2, ctrl!,
     record=true,
     verbose=true,
@@ -116,7 +116,7 @@ initialize!(env.mechanism, :quadruped)
 xref = quadruped_trajectory(env.mechanism,
     r=0.08,
     z=0.29;
-    Δx=-0.04,
+    Δx=-0.02,
     Δfront=0.10,
     width_scale=0.0,
     height_scale=1.0,
@@ -156,8 +156,7 @@ qt = [0.3; 0.05; 0.05;
     1e-3 * ones(3);
     fill([2, 1e-3], 12)...]
 ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(timestep * qt) * (x - xref[t]) +
-# transpose(u - u_hover) * Diagonal(timestep * 0.01 * ones(m)) * (u - u_hover) for t = 1:T-1]
-    transpose(u) * Diagonal(timestep * 0.01 * ones(m)) * u for t = 1:T-1]
+    transpose(u) * Diagonal(timestep * 0.1 * ones(m)) * u for t = 1:T-1]
 oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(timestep * qt) * (x - xref[end])
 
 cts = [IterativeLQR.Cost(ot, n, m) for ot in ots]
@@ -178,7 +177,7 @@ function contt(x, u, w)
 end
 
 function goal(x, u, w)
-    Δ = 1e-2 * (x - xref[end])[[1:6;13:2:36]]
+    Δ = 1e-1 * (x - xref[end])[[1:6;13:2:36]]
     return Δ
 end
 
@@ -195,7 +194,7 @@ options = Options(line_search=:armijo,
         min_step_size=1e-2,
         objective_tolerance=1e-3,
         lagrangian_gradient_tolerance=1e-3,
-        constraint_tolerance=1e-4,
+        constraint_tolerance=1e-3,
         initial_constraint_penalty=1e-1,
         scaling_penalty=10.0,
         max_penalty=1e4,
