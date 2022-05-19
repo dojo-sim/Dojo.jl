@@ -53,7 +53,8 @@ function damper_jacobian_configuration(relative::Symbol, jacobian::Symbol,
     elseif relative == :child
         Q = rotation_matrix(inv(qb) * qa * axis_offset) * -1.0000 * joint.damper * Aᵀ * ∂vel
         if jacobian == :parent
-            Q += rotation_matrix(inv(qb)) * ∂rotation_matrix∂q(qa, vector_rotate(force, axis_offset), attjac=true)
+            # Q += rotation_matrix(inv(qb)) * ∂rotation_matrix∂q(qa, vector_rotate(force, axis_offset), attjac=true)
+            Q += rotation_matrix(inv(qb)) * ∂rotation_matrix∂q(qa, vector_rotate(force, axis_offset)) * LVᵀmat(qa) # ATTJAC
         elseif jacobian == :child
             # Q += ∂rotation_matrix_inv∂q(qb, vector_rotate(force, qa * axis_offset), attjac=true)
             Q += ∂rotation_matrix_inv∂q(qb, vector_rotate(force, qa * axis_offset)) * LVᵀmat(qb) # ATTJAC
