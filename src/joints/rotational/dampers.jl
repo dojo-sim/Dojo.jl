@@ -55,7 +55,8 @@ function damper_jacobian_configuration(relative::Symbol, jacobian::Symbol,
         if jacobian == :parent
             Q += rotation_matrix(inv(qb)) * ∂rotation_matrix∂q(qa, vector_rotate(force, axis_offset), attjac=true)
         elseif jacobian == :child
-            Q += ∂rotation_matrix_inv∂q(qb, vector_rotate(force, qa * axis_offset), attjac=true)
+            # Q += ∂rotation_matrix_inv∂q(qb, vector_rotate(force, qa * axis_offset), attjac=true)
+            Q += ∂rotation_matrix_inv∂q(qb, vector_rotate(force, qa * axis_offset)) * LVᵀmat(qb) # ATTJAC
         end
     end
     return timestep * [Z; X Q]

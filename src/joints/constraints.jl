@@ -133,18 +133,31 @@ function impulses!(mechanism, body::Body, joint::JointConstraint{T,Nλ}) where {
     return
 end
 
-@generated function impulse_map(mechanism, joint::JointConstraint, body::Body)
-    relative = :(body.id == joint.parent_id ? :parent : :child)
-    pbody = :(get_body(mechanism, joint.parent_id))
-    cbody = :(get_body(mechanism, joint.child_id))
-    tra = :(impulse_map($relative, joint.translational,
-        $pbody, $cbody,
-        joint.impulses[2][joint_impulse_index(joint, 1)]))
-    rot = :(impulse_map($relative, joint.rotational,
-        $pbody, $cbody,
-        joint.impulses[2][joint_impulse_index(joint, 2)]))
-    return :(hcat($tra, $rot))
+function impulse_map(mechanism, joint::JointConstraint, body::Body)
+    relative = body.id == joint.parent_id ? :parent : :child
+    pbody = get_body(mechanism, joint.parent_id)
+    cbody = get_body(mechanism, joint.child_id)
+    tra = impulse_map(relative, joint.translational,
+        pbody, cbody,
+        joint.impulses[2][joint_impulse_index(joint, 1)])
+    rot = impulse_map(relative, joint.rotational,
+        pbody, cbody,
+        joint.impulses[2][joint_impulse_index(joint, 2)])
+    return hcat(tra, rot)
 end
+
+# @generated function impulse_map(mechanism, joint::JointConstraint, body::Body)
+#     relative = :(body.id == joint.parent_id ? :parent : :child)
+#     pbody = :(get_body(mechanism, joint.parent_id))
+#     cbody = :(get_body(mechanism, joint.child_id))
+#     tra = :(impulse_map($relative, joint.translational,
+#         $pbody, $cbody,
+#         joint.impulses[2][joint_impulse_index(joint, 1)]))
+#     rot = :(impulse_map($relative, joint.rotational,
+#         $pbody, $cbody,
+#         joint.impulses[2][joint_impulse_index(joint, 2)]))
+#     return :(hcat($tra, $rot))
+# end
 
 # impulses Jacobians
 function impulses_jacobian_velocity!(mechanism, body::Body, joint::JointConstraint)
