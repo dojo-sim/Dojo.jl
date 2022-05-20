@@ -1,36 +1,74 @@
+using Pkg
+Pkg.activate(joinpath(@__DIR__, "../.."))
+Pkg.instantiate()
+
+# ## visualizer
+vis = Visualizer()
+open(vis)
+
+# ## setup
+using Dojo
+using IterativeLQR
+using LinearAlgebra
+using FiniteDiff
+using DojoEnvironments
+using JLD2
+
+# ## scripts
+include(joinpath(module_dir(), "examples/policy/methods/continuation.jl"))
+include(joinpath(module_dir(), "examples/policy/methods/tvlqr.jl"))
+include(joinpath(module_dir(), "DojoEnvironments/src",
+    "quadruped/methods/template.jl"))
 
 
+################################################################################
+# ## system
+################################################################################
+gravity = -9.81
+timestep = 0.02
+friction_coefficient = 0.8
+damper = 0.5
+spring = 1.0
+env = get_environment(:quadruped,
+    representation=:minimal,
+    timestep=timestep,
+    contact_body=false,
+    gravity=gravity,
+    friction_coefficient=friction_coefficient,
+    damper=damper,
+    spring=spring,
+    infeasible_control=true,
+    vis=vis)
 
+# ## dimensions
+nx = env.num_states
+nu = env.num_inputs
+nu_infeasible = 6
 
+################################################################################
+# Load trajectory and gains
+################################################################################
+file = JLD2.jldopen(joinpath(@__DIR__, "../data/trotting_forward.jld2"))
+x_ref = file["x"]
+u_ref = file["u"]
+JLD2.close(file)
 
-maximum(abs.(vcat(u_sol...)))
+file = JLD2.jldopen(joinpath(@__DIR__, "../data/tvlqr_gains.jld2"))
+K_tvlqr = file["K"]
+JLD2.close(file)
 
-dynamics_jacobian_state(dx, env, x, u, w)
-dynamics_jacobian_input(du, env, x, u, w)
-A = [zeros(n,n) for i = 1:T-1]
-B = [zeros(n,m) for i = 1:T-1]
-for i = 1:T-1
-    dynamics_jacobian_state(A[i], env, x_sol[i], u_sol[i], zeros(0))
-    dynamics_jacobian_input(B[i], env, x_sol[i], u_sol[i], zeros(0))
-end
-qt = [0.3; 0.05; 0.05;
-    5e-1 * ones(3);
-    1e-6 * ones(3);
-    1e-6 * ones(3);
-    fill([2, 1e-6], 12)...]
+file = JLD2.jldopen(joinpath(@__DIR__, "../data/tuned_gains.jld2"))
+K_tuned = file["K"]
+JLD2.close(file)
 
-rt = timestep * 100.0 * ones(m)
+T = length(x_ref)
 
-Q = [Diagonal(qt) for i = 1:T]
-R = [Diagonal(rt) for i = 1:T-1]
-
-K_tv, P_tv = tvlqr(A,B,Q,R)
 
 ################################################################################
 # Simulate accurately the TVLQR policy
 ################################################################################
 # divide timestep
-S = 5
+S = 1
 mech_sim = get_mechanism(:quadruped,
     contact_body=true,
     timestep=timestep/S,
@@ -47,98 +85,36 @@ function ctrl!(m, k; x_sol=x_sol, u_sol=u_sol, K_sol=K_sol)
     ind = (Int(floor((k-1)/S))) % N + 1
 
     x = get_minimal_state(m)
-    x[1] -= 0.15
-    u = u_sol[ind] - K_tv[ind] * (x - x_sol[ind])
+    # x[1] -= 0.15
+    u = u_sol[ind] - K_sol[ind] * (x - x_sol[ind])
     u = clamp.(u, -0.2, +0.2)
     u = [zeros(6); u[7:end]] / S
     set_input!(m, SVector{nu}(u))
 end
 
-x1_roll = deepcopy(xref[1])
-x1_roll[3] += 0.3
-x1_roll[4] += 0.1
-set_minimal_state!(mech_sim, x1_roll)
-
-Main.@elapsed storage = simulate!(mech_sim, 3.0, ctrl!,
-    record=true,
-    opts=SolverOptions(rtol=1e-5, btol=1e-4, undercut=5.0),
-    )
-Dojo.visualize(mech_sim, storage, vis=vis, build=false)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-maximum(abs.(vcat(u_sol...)))
-
-A = [zeros(n,n) for i = 1:T-1]
-B = [zeros(n,m) for i = 1:T-1]
-for i = 1:T-1
-    dynamics_jacobian_state(A[i], env, deepcopy(x_sol)[i], deepcopy(u_sol)[i], zeros(0))
-    dynamics_jacobian_input(B[i], env, deepcopy(x_sol)[i], deepcopy(u_sol)[i], zeros(0))
-end
-qt = [0.1; 0.005; 0.005;
-    1e-1 * ones(3);
-    1e-9 * ones(3);
-    1e-9 * ones(3);
-    fill([2, 1e-9], 12)...]
-
-rt = timestep * 100.0 * ones(m)
-
-Q = [Diagonal(qt) for i = 1:T]
-R = [Diagonal(rt) for i = 1:T-1]
-
-K_tv, P_tv = tvlqr(A,B,Q,R)
-
-################################################################################
-# Simulate accurately the TVLQR policy
-################################################################################
-# divide timestep
-S = 5
-mech_sim = get_mechanism(:quadruped,
-    contact_body=true,
-    timestep=timestep/S,
-    gravity=gravity,
-    friction_coefficient=friction_coefficient,
-    damper=damper,
-    spring=spring)
-
-# controller
-function ctrl!(m, k; x_sol=x_sol, u_sol=u_sol, K_sol=K_sol)
-    N = length(u_sol)
-    nu = input_dimension(m)
-    @show Int(floor((k-1)/S))
-    ind = (Int(floor((k-1)/S))) % N + 1
-
-    x = get_minimal_state(m)
-    x[1] -= 0.15
-    u = u_sol[ind] - K_tv[ind] * (x - deepcopy(x_sol)[ind])
-    u = clamp.(u, -2, +2)
-    u = [zeros(6); u[7:end]] / S
-    set_input!(m, SVector{nu}(u))
-end
+controller_tvlqr!(m, k) = ctrl!(m, k; K_sol=K_tvlqr)
+controller_tuned!(m, k) = ctrl!(m, k; K_sol=K_tuned)
 
 x1_roll = deepcopy(xref[1])
-x1_roll[3] += 0.0
+x1_roll[3] += 0.25
 x1_roll[4] += 0.0
 set_minimal_state!(mech_sim, x1_roll)
-
-Main.@elapsed storage = simulate!(mech_sim, 3.0, ctrl!,
+Main.@elapsed storage_tvlqr = simulate!(mech_sim, 4.0, controller_tvlqr!,
     record=true,
     opts=SolverOptions(rtol=1e-5, btol=1e-4, undercut=5.0),
     )
-Dojo.visualize(mech_sim, storage, vis=vis, build=false)
 
-convert_frames_to_video_and_gif("quadruped_tvlqr_forward")
+x1_roll = deepcopy(xref[1])
+x1_roll[3] += 0.25
+x1_roll[4] += 0.0
+set_minimal_state!(mech_sim, x1_roll)
+Main.@elapsed storage_tuned = simulate!(mech_sim, 4.0, controller_tuned!,
+    record=true,
+    opts=SolverOptions(rtol=1e-5, btol=1e-4, undercut=5.0),
+    )
+
+vis, anim = Dojo.visualize(mech_sim, storage_tvlqr, vis=vis, build=false, name=:tvlqr)
+vis, anim = Dojo.visualize(mech_sim, storage_tuned, vis=vis, animation=anim, build=false, name=:tuned)
+
+settransform!(vis[:tuned], Translation(0,0.5,0))
+# convert_frames_to_video_and_gif("quadruped_tuned_vs_tvlqr_facing")

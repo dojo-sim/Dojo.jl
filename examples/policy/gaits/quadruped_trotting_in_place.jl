@@ -175,8 +175,8 @@ DojoEnvironments.visualize(env, x_view)
 ################################################################################
 # Save
 ################################################################################
-JLD2.jldsave(joinpath(@__DIR__, "../data/trotting_in_place.jl"), x=x_sol, u=u_sol)
-file = JLD2.jldopen(joinpath(@__DIR__, "../data/trotting_in_place.jl"))
+JLD2.jldsave(joinpath(@__DIR__, "../data/trotting_in_place.jld2"), x=x_sol, u=u_sol)
+file = JLD2.jldopen(joinpath(@__DIR__, "../data/trotting_in_place.jld2"))
 file["x"]
 file["u"]
 JLD2.close(file)

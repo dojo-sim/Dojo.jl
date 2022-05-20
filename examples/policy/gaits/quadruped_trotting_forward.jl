@@ -70,12 +70,13 @@ Dojo.visualize(mech, storage, vis=env.vis)
 ################################################################################
 # ## reference trajectory
 ################################################################################
+width_scale = 0.6
 xref = quadruped_trajectory(env.mechanism,
     r=0.08,
     z=0.29;
     Δx=-0.02,
     Δfront=0.10,
-    width_scale=0.6,
+    width_scale=width_scale,
     height_scale=1.0,
     N=18,
     Ncycles=1)
@@ -176,8 +177,8 @@ DojoEnvironments.visualize(env, x_view)
 ################################################################################
 # Save
 ################################################################################
-JLD2.jldsave(joinpath(@__DIR__, "../data/trotting_forward.jl"), x=x_sol, u=u_sol)
-file = JLD2.jldopen(joinpath(@__DIR__, "../data/trotting_forward.jl"))
+JLD2.jldsave(joinpath(@__DIR__, "../data/trotting_forward.jld2"), x=x_sol, u=u_sol)
+file = JLD2.jldopen(joinpath(@__DIR__, "../data/trotting_forward.jld2"))
 file["x"]
 file["u"]
 JLD2.close(file)
