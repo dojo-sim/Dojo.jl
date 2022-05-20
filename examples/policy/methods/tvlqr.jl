@@ -26,6 +26,7 @@ function tvlqr(x, u, env;
 
     A = [zeros(nx,nx) for i = 1:T-1]
     B = [zeros(nx,nu) for i = 1:T-1]
+
     for i = 1:T-1
         dynamics_jacobian_state(A[i], env, x[i], u[i], zeros(0))
         dynamics_jacobian_input(B[i], env, x[i], u[i], zeros(0))
