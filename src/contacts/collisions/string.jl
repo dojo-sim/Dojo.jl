@@ -13,6 +13,14 @@ mutable struct StringCollision{T,O,I,OI} <: Collision{T,O,I,OI}
     length::T
 end
 
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, collision::StringCollision)
+#     summary(io, collision)
+#     println(io, "")
+#     println(io, "origin_parent: "*string(collision.origin_parent))
+#     println(io, "origin_child:  "*string(collision.origin_child))
+#     println(io, "length:  "*string(collision.length))
+# end
+
 # distance
 function distance(collision::StringCollision, xp, qp, xc, qc)
     # contact origin points

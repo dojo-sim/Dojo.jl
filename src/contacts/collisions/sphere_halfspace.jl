@@ -15,6 +15,15 @@ mutable struct SphereHalfSpaceCollision{T,O,I,OI} <: Collision{T,O,I,OI}
     contact_radius::T
 end 
 
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, collision::SphereHalfSpaceCollision)
+#     summary(io, collision)
+#     println(io, "")
+#     println(io, "contact_tangent: "*string(collision.contact_tangent))
+#     println(io, "contact_normal:  "*string(collision.contact_normal))
+#     println(io, "contact_origin:  "*string(collision.contact_origin))
+#     println(io, "contact_radius:  "*string(collision.contact_radius))
+# end
+
 # distance
 function distance(collision::SphereHalfSpaceCollision, xp, qp, xc, qc)
     collision.contact_normal * (xp + vector_rotate(collision.contact_origin, qp)) - collision.contact_radius

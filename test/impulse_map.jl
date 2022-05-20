@@ -6,7 +6,7 @@
         mech = DojoEnvironments.get_mechanism(:pendulum)
         joint0 = mech.joints[1]
         rot0 = joint0.rotational
-        rot0.axis_offset = rand(QuatRotation).q
+        rot0.orientation_offset = rand(QuatRotation).q
 
         xa = rand(3)
         qa = rand(QuatRotation).q
@@ -78,7 +78,7 @@ end
         mech = DojoEnvironments.get_mechanism(:pendulum)
         joint0 = mech.joints[1]
         rot0 = joint0.rotational
-        rot0.axis_offset = rand(QuatRotation).q
+        rot0.orientation_offset = rand(QuatRotation).q
 
         xa = rand(3)
         qa = rand(QuatRotation).q
@@ -173,7 +173,7 @@ end
         mech = DojoEnvironments.get_mechanism(:pendulum)
         joint0 = mech.joints[1]
         rot0 = joint0.rotational
-        rot0.axis_offset = rand(QuatRotation).q
+        rot0.orientation_offset = rand(QuatRotation).q
 
 
         xa = rand(3)

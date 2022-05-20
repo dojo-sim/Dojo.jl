@@ -142,26 +142,26 @@ end
 function get_shape(shapenode, x, q, color, T; path_prefix)
     if name(shapenode) == "box"
         xyz = parse_vector(shapenode, "size", T, default = "1 1 1")
-        shape = Box(xyz..., zero(T), color = color, position_offset = x, axis_offset = q)
+        shape = Box(xyz..., zero(T), color = color, position_offset = x, orientation_offset = q)
     elseif name(shapenode) == "cylinder"
         r = parse_scalar(shapenode, "radius", T, default = "0.5")
         l = parse_scalar(shapenode, "length", T, default = "1")
-        shape = Cylinder(r, l, zero(T), color = color, position_offset = x, axis_offset = q)
+        shape = Cylinder(r, l, zero(T), color = color, position_offset = x, orientation_offset = q)
     elseif name(shapenode) == "pyramid"
         w = parse_scalar(shapenode, "width", T, default = "1")
         h = parse_scalar(shapenode, "height", T, default = "1")
-        shape = Cylinder(w, h, zero(T), color = color, position_offset = x, axis_offset = q)
+        shape = Cylinder(w, h, zero(T), color = color, position_offset = x, orientation_offset = q)
     elseif name(shapenode) == "sphere"
         r = parse_scalar(shapenode, "radius", T, default = "0.5")
-        shape = Sphere(r, zero(T), color = color, position_offset = x, axis_offset = q)
+        shape = Sphere(r, zero(T), color = color, position_offset = x, orientation_offset = q)
     elseif name(shapenode) == "mesh"
         path = attribute(shapenode, "filename")
         scale = parse_vector(shapenode, "scale", T, default = "1 1 1")
-        shape = Mesh(normpath(joinpath(path_prefix, path)), zero(T), zeros(T, 3, 3), scale=scale, color = color, position_offset = x, axis_offset = q)
+        shape = Mesh(normpath(joinpath(path_prefix, path)), zero(T), zeros(T, 3, 3), scale=scale, color = color, position_offset = x, orientation_offset = q)
     elseif name(shapenode) == "capsule"
         r = parse_scalar(shapenode, "radius", T, default = "0.5")
         l = parse_scalar(shapenode, "length", T, default = "1")
-        shape = Capsule(r, l, zero(T), color = color, position_offset = x, axis_offset = q)
+        shape = Capsule(r, l, zero(T), color = color, position_offset = x, orientation_offset = q)
     else
         @info "Unknown geometry."
         shape = nothing
@@ -212,36 +212,36 @@ end
 
 # TODO: fix axis
 function joint_selector(joint_type, pbody, cbody, T;
-        axis = SA{T}[1;0;0], parent_vertex = szeros(T,3), child_vertex = szeros(T,3), axis_offset = one(Quaternion{T}), name = Symbol("joint_" * randstring(4)))
+        axis = SA{T}[1;0;0], parent_vertex = szeros(T,3), child_vertex = szeros(T,3), orientation_offset = one(Quaternion{T}), name = Symbol("joint_" * randstring(4)))
 
     # TODO @warn "this is not great"
-    axis = vector_rotate(axis, axis_offset) # inv(axis_offset) * axis
+    axis = vector_rotate(axis, orientation_offset) # inv(orientation_offset) * axis
 
     # TODO limits for revolute joint?
     if joint_type == "revolute" || joint_type == "continuous"
-        joint = JointConstraint(Revolute(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
+        joint = JointConstraint(Revolute(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset = orientation_offset), name=name)
     elseif joint_type == "prismatic"
-        joint = JointConstraint(Prismatic(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
+        joint = JointConstraint(Prismatic(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset = orientation_offset), name=name)
     elseif joint_type == "planar"
-        joint = JointConstraint(Planar(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
+        joint = JointConstraint(Planar(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset = orientation_offset), name=name)
     elseif joint_type == "planarfree"
         joint = JointConstraint(PlanarFree(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex), name=name)
     elseif joint_type == "fixed"
-        joint = JointConstraint(Fixed(pbody, cbody; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
+        joint = JointConstraint(Fixed(pbody, cbody; parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset = orientation_offset), name=name)
     elseif joint_type == "floating"
         joint = JointConstraint(Floating(pbody, cbody), name=name)
     elseif joint_type == "orbital"
-        joint = JointConstraint(Orbital(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
+        joint = JointConstraint(Orbital(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset = orientation_offset), name=name)
     elseif joint_type == "ball"
-        joint = JointConstraint(Spherical(pbody, cbody; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
+        joint = JointConstraint(Spherical(pbody, cbody; parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset = orientation_offset), name=name)
     elseif joint_type == "fixedorientation"
-        joint = JointConstraint(FixedOrientation(pbody, cbody; axis_offset = axis_offset), name=name)
+        joint = JointConstraint(FixedOrientation(pbody, cbody; orientation_offset = orientation_offset), name=name)
     elseif joint_type == "cylindrical"
-        joint = JointConstraint(Cylindrical(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
+        joint = JointConstraint(Cylindrical(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset = orientation_offset), name=name)
     elseif joint_type == "cylindricalfree"
         joint = JointConstraint(CylindricalFree(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex), name=name)
     elseif joint_type == "planaraxis"
-        joint = JointConstraint(PlanarAxis(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset = axis_offset), name=name)
+        joint = JointConstraint(PlanarAxis(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset = orientation_offset), name=name)
     else
         @error "Unknown joint type"
     end
@@ -256,7 +256,7 @@ function parse_joint(xjoint, plink, clink, T)
     parent_vertex = x
     name = Symbol(attribute(xjoint, "name"))
 
-    return joint_selector(joint_type, plink, clink, T, axis = axis, parent_vertex = parent_vertex, axis_offset = q, name = name)
+    return joint_selector(joint_type, plink, clink, T, axis = axis, parent_vertex = parent_vertex, orientation_offset = q, name = name)
 end
 
 function parse_loop_joint(xjoint, pbody, cbody, T)
@@ -271,7 +271,7 @@ function parse_loop_joint(xjoint, pbody, cbody, T)
     child_vertex = x2
     name = Symbol(attribute(xjoint, "name"))
 
-    return joint_selector(joint_type, pbody, cbody, T, axis = axis, parent_vertex = parent_vertex, child_vertex = child_vertex, axis_offset = q1, name = name)
+    return joint_selector(joint_type, pbody, cbody, T, axis = axis, parent_vertex = parent_vertex, child_vertex = child_vertex, orientation_offset = q1, name = name)
 end
 
 function parse_joints(xjoints, ldict, floating, T)
@@ -429,7 +429,7 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         # Child joint (joint of interest here)
         cjoint = node
         x_cjoint = cjoint.translational.vertices[1] # stored in parent_vertex
-        q_cjoint = cjoint.rotational.axis_offset # stored in axis_offset
+        q_cjoint = cjoint.rotational.orientation_offset # stored in orientation_offset
         # axis_pjoint = #
 
         # Child body (body of interest here)
@@ -457,7 +457,7 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         else
             pjoint = get_node(mechanism, get_parent_id(mechanism, pnode.id, loopjoints))
             # x_pjoint = pjoint.translational.vertices[1] # stored in parent_vertex
-            # q_pjoint = pjoint.rotational.axis_offset # stored in axis_offset
+            # q_pjoint = pjoint.rotational.orientation_offset # stored in orientation_offset
             # # axis_pjoint = #
             xparentjoint = xjointlist[pjoint.id] # in world frame
             qparentjoint = qjointlist[pjoint.id] # in world frame
@@ -475,7 +475,7 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         qjointlist[cjoint.id] = qjoint
 
         # difference to parent body (parentbody)
-        axis_offset = qjointlocal * qbodylocal
+        orientation_offset = qjointlocal * qbodylocal
 
         # actual joint properties
         parent_vertex = xjointlocal # in parent's (parentbody) frame
@@ -489,18 +489,18 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         cjoint.rotational.axis_mask3 = SVector{3}(V3)'
         cjoint.rotational.axis_mask1 = SVector{3}(V1)'
         cjoint.rotational.axis_mask2 = SVector{3}(V2)'
-        cjoint.rotational.axis_offset = axis_offset # in parent's (parentbody) frame
+        cjoint.rotational.orientation_offset = orientation_offset # in parent's (parentbody) frame
 
         # actual body properties
         set_maximal_configurations!(cnode) # set everything to zero
-        set_maximal_configurations!(pnode, cnode, parent_vertex = parent_vertex, child_vertex = child_vertex, Δq = axis_offset)
+        set_maximal_configurations!(pnode, cnode, parent_vertex = parent_vertex, child_vertex = child_vertex, Δq = orientation_offset)
         xbody = cnode.state.x2
         qbody = cnode.state.q2
 
         # shape relative
         if !(typeof(shape) <: EmptyShape)
             shape.position_offset = vector_rotate(xjoint + vector_rotate(shape.position_offset, qjoint) - xbody, inv(qbody))
-            shape.axis_offset = axis_offset \ qjointlocal * shape.axis_offset
+            shape.orientation_offset = orientation_offset \ qjointlocal * shape.orientation_offset
         end
     end
 
@@ -546,10 +546,10 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         # urdf joint's x and q in parent's (parentbody) frame
         xjointlocal1 = vector_rotate(xparentjoint1 + vector_rotate(constraint.translational.vertices[1], qparentjoint1) - xparentpbody, inv(qparentpbody))
         xjointlocal2 = vector_rotate(xparentjoint2 + vector_rotate(constraint.translational.vertices[2], qparentjoint2) - xparentcbody, inv(qparentcbody))
-        qjointlocal1 = qparentpbody \ qparentjoint1 * constraint.rotational.axis_offset
+        qjointlocal1 = qparentpbody \ qparentjoint1 * constraint.rotational.orientation_offset
 
         # difference to parent body (parentbody)
-        axis_offset1 = qjointlocal1 * qparentcbody #  qparentcbody = body in for loop above
+        orientation_offset1 = qjointlocal1 * qparentcbody #  qparentcbody = body in for loop above
 
         # actual joint properties
         parent_vertex = xjointlocal1 # in parent's (parentpbody) frame
@@ -564,7 +564,7 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         constraint.rotational.axis_mask1 = SVector{3}(V1)'
         constraint.rotational.axis_mask2 = SVector{3}(V2)'
 
-        constraint.rotational.axis_offset = axis_offset1 # in parent's (parentpbody) frame
+        constraint.rotational.orientation_offset = orientation_offset1 # in parent's (parentpbody) frame
     end
 end
 

@@ -22,32 +22,32 @@ function maximal_to_minimal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::Abs
 			c_idx = row_shift + c_shift .+ (1:nu_element)
 			v_idx = row_shift + v_shift .+ (1:nu_element)
 
-			xb, vb, qb, ϕb = unpack_maximal_state(z, ichild)
+			xb, vb, qb, ωb = unpack_maximal_state(z, ichild)
 
 			xb_idx = collect((ichild-1)*12 .+ (1:3))
 			vb_idx = collect((ichild-1)*12 .+ (4:6))
 			qb_idx = collect((ichild-1)*12 .+ (7:9))
-			ϕb_idx = collect((ichild-1)*12 .+ (10:12))
+			ωb_idx = collect((ichild-1)*12 .+ (10:12))
 
 			if joint.parent_id != 0
 				iparent = joint.parent_id - Ne
-				xa, va, qa, ϕa = unpack_maximal_state(z, iparent)
+				xa, va, qa, ωa = unpack_maximal_state(z, iparent)
 
 				xa_idx = collect((iparent-1)*12 .+ (1:3))
 				va_idx = collect((iparent-1)*12 .+ (4:6))
 				qa_idx = collect((iparent-1)*12 .+ (7:9))
-				ϕa_idx = collect((iparent-1)*12 .+ (10:12))
+				ωa_idx = collect((iparent-1)*12 .+ (10:12))
 
 				J[c_idx, [xa_idx; qa_idx]] = minimal_coordinates_jacobian_configuration(:parent, element, xa, qa, xb, qb)
-				J[v_idx, [xa_idx; qa_idx]] = minimal_velocities_jacobian_configuration(:parent, element, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
-				J[v_idx, [va_idx; ϕa_idx]] = minimal_velocities_jacobian_velocity(:parent, element, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
+				J[v_idx, [xa_idx; qa_idx]] = minimal_velocities_jacobian_configuration(:parent, element, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
+				J[v_idx, [va_idx; ωa_idx]] = minimal_velocities_jacobian_velocity(:parent, element, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 			else
-				xa, va, qa, ϕa = current_configuration_velocity(mechanism.origin.state)
+				xa, va, qa, ωa = current_configuration_velocity(mechanism.origin.state)
 			end
 
 			J[c_idx, [xb_idx; qb_idx]] = minimal_coordinates_jacobian_configuration(:child, element, xa, qa, xb, qb)
-			J[v_idx, [xb_idx; qb_idx]] = minimal_velocities_jacobian_configuration(:child, element, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
-			J[v_idx, [vb_idx; ϕb_idx]] = minimal_velocities_jacobian_velocity(:child, element, xa, va, qa, ϕa, xb, vb, qb, ϕb, timestep)
+			J[v_idx, [xb_idx; qb_idx]] = minimal_velocities_jacobian_configuration(:child, element, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
+			J[v_idx, [vb_idx; ωb_idx]] = minimal_velocities_jacobian_velocity(:child, element, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 
 			c_shift += nu_element
 			v_shift += nu_element
@@ -91,7 +91,7 @@ function get_maximal_gradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,
 	index_row = [1+sum(dimrow[1:i-1]):sum(dimrow[1:i]) for i in 1:length(dimrow)]
 	index_col = [1+sum(dimcol[1:i-1]):sum(dimcol[1:i]) for i in 1:length(dimcol)]
 
-	index_state = [index_col[body.id][[14:16; 8:10; 17:19; 11:13]] for body in mechanism.bodies] # ∂ x2 v15 q2 ϕ15
+	index_state = [index_col[body.id][[14:16; 8:10; 17:19; 11:13]] for body in mechanism.bodies] # ∂ x2 v15 q2 ω15
 	index_control = [index_col[joint.id][1:input_dimension(joint)] for joint in mechanism.joints] # ∂ u
 
 	datamat = full_matrix(mechanism.data_matrix, dimrow, dimcol)
@@ -105,7 +105,7 @@ function get_maximal_gradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,
 	jacobian_control = zeros(12Nb,nu)
 	for (i, body) in enumerate(mechanism.bodies)
 		id = body.id
-		# Fill in gradients of v25, ϕ25
+		# Fill in gradients of v25, ω25
 		jacobian_state[12*(i-1) .+ [4:6; 10:12],:] += data_jacobian[index_row[id], vcat(index_state...)]
 		jacobian_control[12*(i-1) .+ [4:6; 10:12],:] += data_jacobian[index_row[id], vcat(index_control...)]
 
@@ -113,15 +113,15 @@ function get_maximal_gradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,
 		x2 = body.state.x2
 		q2 = body.state.q2
 		v25 = body.state.vsol[2]
-		ϕ25 = body.state.ϕsol[2]
-		q3 = next_orientation(q2, ϕ25, timestep)
+		ω25 = body.state.ωsol[2]
+		q3 = next_orientation(q2, ω25, timestep)
 		jacobian_state[12*(i-1) .+ (1:3), :] += linear_integrator_jacobian_velocity(x2, v25, timestep) * data_jacobian[index_row[id][1:3], vcat(index_state...)]
 		jacobian_state[12*(i-1) .+ (1:3), 12*(i-1) .+ (1:3)] += linear_integrator_jacobian_position(x2, v25, timestep)
-		jacobian_state[12*(i-1) .+ (7:9), :] += LVᵀmat(q3)' * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep) * data_jacobian[index_row[id][4:6], vcat(index_state...)]
-		jacobian_state[12*(i-1) .+ (7:9), 12*(i-1) .+ (7:9)] += LVᵀmat(q3)' * rotational_integrator_jacobian_orientation(q2, ϕ25, timestep, attjac=true)
+		jacobian_state[12*(i-1) .+ (7:9), :] += LVᵀmat(q3)' * rotational_integrator_jacobian_velocity(q2, ω25, timestep) * data_jacobian[index_row[id][4:6], vcat(index_state...)]
+		jacobian_state[12*(i-1) .+ (7:9), 12*(i-1) .+ (7:9)] += LVᵀmat(q3)' * rotational_integrator_jacobian_orientation(q2, ω25, timestep, attjac=true)
 
 		jacobian_control[12*(i-1) .+ (1:3),:] += linear_integrator_jacobian_velocity(x2, v25, timestep) * data_jacobian[index_row[id][1:3], vcat(index_control...)]
-		jacobian_control[12*(i-1) .+ (7:9),:] += LVᵀmat(q3)' * rotational_integrator_jacobian_velocity(q2, ϕ25, timestep) * data_jacobian[index_row[id][4:6], vcat(index_control...)]
+		jacobian_control[12*(i-1) .+ (7:9),:] += LVᵀmat(q3)' * rotational_integrator_jacobian_velocity(q2, ω25, timestep) * data_jacobian[index_row[id][4:6], vcat(index_control...)]
 	end
 
 	return jacobian_state, jacobian_control
@@ -144,8 +144,8 @@ function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::Abs
 	for cnode in mechanism.bodies
 		for joint in parent_joints(mechanism, cnode)
 			pnode = get_node(mechanism, joint.parent_id, origin=true)
-			partials[[cnode.id, joint.id]] = set_minimal_coordinates_velocities_jacobian_minimal(joint, pnode, cnode, timestep) # 12 x 2nu (xvqϕ x Δxθvϕ)
-			partials[[cnode.id, pnode.id]] = set_minimal_coordinates_velocities_jacobian_parent(joint, pnode, cnode, timestep) # 12 x 12 (xvqϕ x xvqϕ)
+			partials[[cnode.id, joint.id]] = set_minimal_coordinates_velocities_jacobian_minimal(joint, pnode, cnode, timestep) # 12 x 2nu (xvqω x Δxθvω)
+			partials[[cnode.id, pnode.id]] = set_minimal_coordinates_velocities_jacobian_parent(joint, pnode, cnode, timestep) # 12 x 12 (xvqω x xvqω)
 		end
 	end
 

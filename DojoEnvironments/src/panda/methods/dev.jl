@@ -14,7 +14,7 @@ mech = Dojo.get_mechanism(:panda,
     limits=true,
     )
 # for joint in mech.joints
-#     joint.rotational.axis_offset = Quaternion(1,0,0,0.0,true)
+#     joint.rotational.orientation_offset = Quaternion(1,0,0,0.0,true)
 # end
 function ctrl!(m, k; kp=10.0, kd=5.0)
     nu = input_dimension(m)
@@ -116,7 +116,7 @@ storage = simulate!(mech, 5.0, Dojo.ctrl!, record=true)
 visualize(mech, storage, vis=vis)
 get_minimal_state(mech)
 storage.ω[1]
-plot([-ϕ[1] for ϕ in storage.ω[1]])
+plot([-ω[1] for ω in storage.ω[1]])
 
 xa = szeros(3)
 qa = Quaternions.QuaternionF64(1.0, 0.0, 0.0, 0.0, true)
@@ -143,7 +143,7 @@ using Test
 mech = Dojo.get_mechanism(:pendulum)
 joint0 = mech.joints[1]
 rot0 = joint0.rotational
-rot0.axis_offset = rand(QuatRotation).q
+rot0.orientation_offset = rand(QuatRotation).q
 
 xa = rand(3)
 qa = rand(QuatRotation).q
@@ -282,7 +282,7 @@ mech = Dojo.get_mechanism(:panda,
     gravity=[0,0,-9.0],
     spring=0.0,
     damper=0.1)
-# mech.joints[1].rotational.axis_offset = Quaternion(1,0,0,0.0,true)
+# mech.joints[1].rotational.orientation_offset = Quaternion(1,0,0,0.0,true)
 function ctrl!(m,k)
     nu = minimal_dimension(mech)
     set_input!(m, 0.000 * 1 *sones(nu))
@@ -298,7 +298,7 @@ storage = simulate!(mech, 3.0, Dojo.ctrl!, record=true)
 visualize(mech, storage, vis=vis)
 get_minimal_state(mech)
 storage.ω[1]
-plot([-ϕ[3] for ϕ in storage.ω[1]])
+plot([-ω[3] for ω in storage.ω[1]])
 
 
 
@@ -313,8 +313,8 @@ damper_impulses(:child, joint.rotational,
     get_body(mech, joint.child_id),
     mech.timestep,
     unitary=false)
-damper_force(:child, joint.rotational, current_configuration(pbody.state)[2], pbody.state.ϕsol[2],
-    current_configuration(cbody.state)[2], cbody.state.ϕsol[2], 0.01, unitary=false)
+damper_force(:child, joint.rotational, current_configuration(pbody.state)[2], pbody.state.ωsol[2],
+    current_configuration(cbody.state)[2], cbody.state.ωsol[2], 0.01, unitary=false)
 
 function min_vel(qb)
     xa = SVector{3}([0.0, 0.0, 0.0])
@@ -333,8 +333,8 @@ function get_damping(θ, ω)
     y = [θ, ω]
     set_minimal_state!(mech, y)
     imp = damper_impulses(mech, joint, body)
-    # imp = damper_force(:child, joint.rotational, current_configuration(pbody.state)[2], pbody.state.ϕsol[2],
-    #     current_configuration(cbody.state)[2], cbody.state.ϕsol[2], 0.01, unitary=false)
+    # imp = damper_force(:child, joint.rotational, current_configuration(pbody.state)[2], pbody.state.ωsol[2],
+    #     current_configuration(cbody.state)[2], cbody.state.ωsol[2], 0.01, unitary=false)
     return imp[6]
 end
 ys = [[2π*x,0] for x in 0:0.005:2]

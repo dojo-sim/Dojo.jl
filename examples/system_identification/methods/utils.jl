@@ -98,15 +98,15 @@ function ∂g∂simdata(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where 
 	p = model.collision.contact_origin
 	offset = model.collision.contact_normal' * model.collision.contact_radius
     body = get_body(mechanism, contact.parent_id)
-    x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
+    x2, v25, q2, ω25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, mechanism.timestep)
 	s = contact.impulses_dual[2]
 	γ = contact.impulses[2]
 
 	# Contribution to Injointonstraint
 	∇friction_coefficient = SA[0,γ[1],0,0]
-	∇off = [-model.collision.contact_normal; szeros(T,1,3); -model.contact_tangent * skew(vector_rotate(ϕ25, q3))]
-	∇p = [model.collision.contact_normal * rotation_matrix(q3); szeros(T,1,3); model.contact_tangent * skew(vector_rotate(ϕ25, q3)) * rotation_matrix(q3)]
+	∇off = [-model.collision.contact_normal; szeros(T,1,3); -model.contact_tangent * skew(vector_rotate(ω25, q3))]
+	∇p = [model.collision.contact_normal * rotation_matrix(q3); szeros(T,1,3); model.contact_tangent * skew(vector_rotate(ω25, q3)) * rotation_matrix(q3)]
 	∇contact = [∇friction_coefficient ∇off ∇p]
 
 	# Contribution to Body dynamics
@@ -252,19 +252,19 @@ function getSimulatorMaxGradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,
 	solmat = full_matrix(mechanism.system)
 
 	data_jacobian = - solmat \ datamat
-	∇data_vϕ = data_jacobian[njoints .+ (1:6Nb),:]
+	∇data_vω = data_jacobian[njoints .+ (1:6Nb),:]
 	data_jacobian̄ = zeros(13Nb,nsd)
 	for (i, body) in enumerate(mechanism.bodies)
-		# Fill in gradients of v25, ϕ25
-		data_jacobian̄[13*(i-1) .+ [4:6; 11:13],:] += ∇data_vϕ[6*(i-1) .+ (1:6),:]
+		# Fill in gradients of v25, ω25
+		data_jacobian̄[13*(i-1) .+ [4:6; 11:13],:] += ∇data_vω[6*(i-1) .+ (1:6),:]
 
 		# Fill in gradients of x3, q3
 		x2 = body.state.x2
 		q2 = body.state.q2
 		v25 = body.state.vsol[2]
-		ϕ25 = body.state.ϕsol[2]
-		data_jacobian̄[13*(i-1) .+ (1:3),:] += linear_integrator_jacobian_velocity(x2, v25, timestep) * ∇data_vϕ[6*(i-1) .+ (1:3),:]
-		data_jacobian̄[13*(i-1) .+ (7:10),:] += rotational_integrator_jacobian_velocity(q2, ϕ25, timestep) * ∇data_vϕ[6*(i-1) .+ (4:6),:]
+		ω25 = body.state.ωsol[2]
+		data_jacobian̄[13*(i-1) .+ (1:3),:] += linear_integrator_jacobian_velocity(x2, v25, timestep) * ∇data_vω[6*(i-1) .+ (1:3),:]
+		data_jacobian̄[13*(i-1) .+ (7:10),:] += rotational_integrator_jacobian_velocity(q2, ω25, timestep) * ∇data_vω[6*(i-1) .+ (4:6),:]
 	end
 	return data_jacobian̄
 end

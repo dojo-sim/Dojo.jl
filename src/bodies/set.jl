@@ -2,14 +2,14 @@ function set_velocity_solution!(body::Body)
     state = body.state
     state.vsol[1] = state.v15
     state.vsol[2] = state.v15
-    state.ϕsol[1] = state.ϕ15
-    state.ϕsol[2] = state.ϕ15
+    state.ωsol[1] = state.ω15
+    state.ωsol[2] = state.ω15
 end
 
 function set_previous_configuration!(body::Body{T}, timestep::T) where {T}
-    x2, v15, q2, ϕ15 = initial_configuration_velocity(body.state)
+    x2, v15, q2, ω15 = initial_configuration_velocity(body.state)
     body.state.x1 = next_position(x2, -v15, timestep)
-    body.state.q1 = next_orientation(q2, -ϕ15, timestep)
+    body.state.q1 = next_orientation(q2, -ω15, timestep)
 end
 
 function initialize_state!(body::Body{T}, timestep) where T
@@ -26,10 +26,10 @@ function update_state!(body::Body{T}, timestep) where T
     state.q1 = state.q2
 
     state.v15 = state.vsol[2]
-    state.ϕ15 = state.ϕsol[2]
+    state.ω15 = state.ωsol[2]
 
     state.x2 = next_position(state.x2, state.vsol[2], timestep)
-    state.q2 = next_orientation(state.q2, state.ϕsol[2], timestep)
+    state.q2 = next_orientation(state.q2, state.ωsol[2], timestep)
 
     state.F2 = szeros(T,3)
     state.τ2 = szeros(T,3)
@@ -51,9 +51,9 @@ function set_maximal_velocities!(body::Body;
     ω::AbstractVector=SA[0.0; 0.0; 0.0])
 
     body.state.v15 = v
-    body.state.ϕ15 = ω
+    body.state.ω15 = ω
 
-    return body.state.v15, body.state.ϕ15
+    return body.state.v15, body.state.ω15
 end
 
 function set_maximal_configurations!(pbody::Node, cbody::Body;
@@ -78,7 +78,7 @@ function set_maximal_velocities!(pbody::Node, cbody::Body;
     x1 = pbody.state.x2
     v1 = pbody.state.v15
     q1 = pbody.state.q2
-    ω1 = pbody.state.ϕ15
+    ω1 = pbody.state.ω15
 
     x2 = cbody.state.x2
     q2 = cbody.state.q2

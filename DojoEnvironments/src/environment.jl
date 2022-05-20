@@ -42,6 +42,28 @@ mutable struct Environment{X,T,M,A,O,I}
     opts_grad::SolverOptions{T}
 end
 
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, environment::Environment)
+#     summary(io, environment)
+#     println(io, "")
+#     println(io, " mechanism:               "*string(environment.mechanism))
+#     println(io, " representation:          "*string(environment.representation))
+#     println(io, " input_space:             "*string(environment.input_space))
+#     println(io, " observation_space:       "*string(environment.observation_space))
+#     println(io, " state:                   "*string(environment.state))
+#     println(io, " dynamics_jacobian_state: "*string(environment.dynamics_jacobian_state))
+#     println(io, " dynamics_jacobian_input: "*string(environment.dynamics_jacobian_input))
+#     println(io, " input_previous:          "*string(environment.input_previous))
+# 	println(io, " control_map:             "*string(environment.control_map))
+#     println(io, " num_states:              "*string(environment.num_states))
+#     println(io, " num_inputs:              "*string(environment.num_inputs))
+#     println(io, " num_observations:        "*string(environment.num_observations))
+#     println(io, " info:                    "*string(environment.info))
+#     println(io, " rng:                     "*string(environment.rng))
+#     println(io, " vis:                     "*string(environment.vis))
+#     println(io, " opts_step:               "*string(environment.opts_step))
+#     println(io, " opts_grad:               "*string(environment.opts_grad))
+# end
+
 """
     get_environment(model; kwargs...)
 
@@ -214,7 +236,18 @@ mutable struct BoxSpace{T,N} <: Space{T,N}
     dtype::DataType # this is always T, it's needed to interface with Stable-Baselines
 end
 
-function BoxSpace(n::Int; low::AbstractVector{T} = -ones(n), high::AbstractVector{T} = ones(n)) where T
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, space::BoxSpace)
+#     summary(io, space)
+#     println(io, "")
+#     println(io, " n:     "*string(space.n))
+#     println(io, " low:   "*string(space.law))
+#     println(io, " high:  "*string(space.high))
+#     println(io, " shape: "*string(space.shape))
+#     println(io, " dtype: "*string(space.dtype))
+# end
+
+function BoxSpace(n::Int; low::AbstractVector = -ones(n), high::AbstractVector = ones(n))
+    T = promote_type(eltype.((low, high))...)
     return BoxSpace{T,n}(n, low, high, (n,), T)
 end
 

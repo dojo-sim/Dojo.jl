@@ -22,7 +22,7 @@ radius_ball = 0.5 * rod_separation
 # Bodies
 origin = Origin{T}()
 connector = Capsule(radius_connector, length_connector, mass_connector, 
-    axis_offset=Quaternion(0.707107, 0.707107, 0.0,  0.0),
+    orientation_offset=Quaternion(0.707107, 0.707107, 0.0,  0.0),
     name=:connector)
 
 rods = [Capsule(radius_rod, length_rod, mass_rod, 
