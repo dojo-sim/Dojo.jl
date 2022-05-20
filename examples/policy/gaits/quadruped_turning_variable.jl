@@ -70,7 +70,8 @@ Dojo.visualize(mech, storage, vis=env.vis)
 ################################################################################
 # ## reference trajectory
 ################################################################################
-velocity = 0.13
+velocity = 0.19
+rotational_velocity = 0.25
 width_scale = 0.6
 radius = 0.08
 width_scale = ((2Tm-1) * timestep) * velocity /(2 * radius)
@@ -84,11 +85,13 @@ xref = quadruped_trajectory(env.mechanism,
     height_scale=1.0,
     N=Tm,
     Ncycles=1)
-DojoEnvironments.visualize(env, xref)
-
 # ## horizon
 T = length(xref)
 
+for i = 1:T
+    xref[i][6] += rotational_velocity * timestep * i
+end
+DojoEnvironments.visualize(env, xref)
 
 ################################################################################
 # ## ILQR problem
@@ -104,20 +107,28 @@ model = [dyn for t = 1:T-1]
 
 # ## rollout
 x1 = deepcopy(xref[1])
-ū = [u_hover for t = 1:T-1]
+# ū = [u_hover for t = 1:T-1]
+
+# reload traj when available
+filename = "planar_v_$(round(0.16, digits=2))_ω_$(round(0.25, digits=2)).jld2"
+file = JLD2.jldopen(joinpath(@__DIR__, "../data", filename))
+ū = file["u"]
+JLD2.close(file)
+
 
 x̄ = IterativeLQR.rollout(model, x1, ū)
 DojoEnvironments.visualize(env, x̄)
 
+
 # ## objective
 ############################################################################
 qt = [0.3; 0.05; 0.05;
-    5e-1 * ones(3);
+    5e-0 * [1,1,1];
     1e-3 * ones(3);
     1e-3 * ones(3);
-    fill([2, 1e-3], 12)...]
+    fill([4, 1e-3], 12)...]
 ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(timestep * qt) * (x - xref[t]) +
-    transpose(u) * Diagonal(timestep * 0.3 * ones(m)) * u for t = 1:T-1]
+    transpose(u) * Diagonal(timestep * 0.5 * ones(m)) * u for t = 1:T-1]
 oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(timestep * qt) * (x - xref[end])
 
 cts = [IterativeLQR.Cost(ot, n, m) for ot in ots]
@@ -152,12 +163,12 @@ cons = [[con_policyt for t = 1:T-1]..., con_policyT]
 options = Options(line_search=:armijo,
         max_iterations=50,
         max_dual_updates=12,
-        min_step_size=1e-2,
+        min_step_size=1e-4,
         objective_tolerance=1e-3,
         lagrangian_gradient_tolerance=1e-3,
         constraint_tolerance=1e-3,
         initial_constraint_penalty=1e-1,
-        scaling_penalty=10.0,
+        scaling_penalty=3.0,
         max_penalty=1e4,
         verbose=true)
 
@@ -181,8 +192,21 @@ DojoEnvironments.visualize(env, x_view)
 ################################################################################
 # Save
 ################################################################################
-JLD2.jldsave(joinpath(@__DIR__, "../data/trotting_forward.jld2"), x=x_sol, u=u_sol)
-file = JLD2.jldopen(joinpath(@__DIR__, "../data/trotting_forward.jld2"))
+filename = "planar_v_$(round(velocity, digits=2))_ω_$(round(rotational_velocity, digits=2)).jld2"
+JLD2.jldsave(joinpath(@__DIR__, "../data", filename), x=x_sol, u=u_sol)
+file = JLD2.jldopen(joinpath(@__DIR__, "../data", filename))
 file["x"]
 file["u"]
 JLD2.close(file)
+
+
+
+
+
+# using BenchmarkTools
+# y = zeros(n)
+# dx = zeros(n,n)
+# du = zeros(n,m)
+# @benchmark dynamics(y, env, x1, u_hover, zeros(0))
+# @benchmark dynamics_jacobian_state(dx, env, x1, u_hover, zeros(0))
+# @benchmark dynamics_jacobian_input(du, env, x1, u_hover, zeros(0))

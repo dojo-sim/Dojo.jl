@@ -58,23 +58,8 @@ T = length(x_ref)
 ################################################################################
 # TVLQR
 ################################################################################
-A = [zeros(nx,nx) for i = 1:T-1]
-B = [zeros(nx,nu) for i = 1:T-1]
-for i = 1:T-1
-    dynamics_jacobian_state(A[i], env, x_ref[i], u_ref[i], zeros(0))
-    dynamics_jacobian_input(B[i], env, x_ref[i], u_ref[i], zeros(0))
-end
 
-q_tracking = [0.3; 0.05; 0.05;
-    5e-1 * ones(3);
-    1e-6 * ones(3);
-    1e-6 * ones(3);
-    fill([2, 1e-6], 12)...]
-r_tracking = timestep * 100.0 * ones(nu)
-
-Q = [Diagonal(q_tracking) for i = 1:T]
-R = [Diagonal(r_tracking) for i = 1:T-1]
-K_tv, P_tv = tvlqr(A,B,Q,R)
+K_tv, P_tv = tvlqr(x_ref, u_ref, env; q_tracking=q_tracking, r_tracking=r_tracking)
 
 ################################################################################
 # tuning

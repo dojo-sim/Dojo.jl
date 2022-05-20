@@ -8,7 +8,7 @@ function reset!(env::Environment; rtol=1e-4, btol=1e-2, undercut=5.0)
     return nothing
 end
 
-function continuation_callback!(solver::Solver, env::Environment; ρ=3, build::Bool=false)
+function continuation_callback!(solver::Solver, env::Environment; ρ=2, build::Bool=false)
     # contact smoothness continuation
     env.opts_step.rtol = max(1e-6, env.opts_step.rtol/ρ)
     env.opts_step.btol = max(1e-4, env.opts_step.btol/ρ)

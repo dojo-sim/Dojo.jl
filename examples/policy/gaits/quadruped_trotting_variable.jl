@@ -70,7 +70,7 @@ Dojo.visualize(mech, storage, vis=env.vis)
 ################################################################################
 # ## reference trajectory
 ################################################################################
-velocity = 0.13
+velocity = 0.28
 width_scale = 0.6
 radius = 0.08
 width_scale = ((2Tm-1) * timestep) * velocity /(2 * radius)
@@ -109,15 +109,16 @@ ū = [u_hover for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, x1, ū)
 DojoEnvironments.visualize(env, x̄)
 
+
 # ## objective
 ############################################################################
 qt = [0.3; 0.05; 0.05;
-    5e-1 * ones(3);
+    5e-0 * ones(3);
     1e-3 * ones(3);
     1e-3 * ones(3);
-    fill([2, 1e-3], 12)...]
+    fill([4, 1e-3], 12)...]
 ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(timestep * qt) * (x - xref[t]) +
-    transpose(u) * Diagonal(timestep * 0.3 * ones(m)) * u for t = 1:T-1]
+    transpose(u) * Diagonal(timestep * 0.5 * ones(m)) * u for t = 1:T-1]
 oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(timestep * qt) * (x - xref[end])
 
 cts = [IterativeLQR.Cost(ot, n, m) for ot in ots]
@@ -181,8 +182,21 @@ DojoEnvironments.visualize(env, x_view)
 ################################################################################
 # Save
 ################################################################################
-JLD2.jldsave(joinpath(@__DIR__, "../data/trotting_forward.jld2"), x=x_sol, u=u_sol)
-file = JLD2.jldopen(joinpath(@__DIR__, "../data/trotting_forward.jld2"))
+filename = "trotting_variable_$(round(velocity, digits=2)).jld2"
+JLD2.jldsave(joinpath(@__DIR__, "../data", filename), x=x_sol, u=u_sol)
+file = JLD2.jldopen(joinpath(@__DIR__, "../data", filename))
 file["x"]
 file["u"]
 JLD2.close(file)
+
+
+
+
+
+# using BenchmarkTools
+# y = zeros(n)
+# dx = zeros(n,n)
+# du = zeros(n,m)
+# @benchmark dynamics(y, env, x1, u_hover, zeros(0))
+# @benchmark dynamics_jacobian_state(dx, env, x1, u_hover, zeros(0))
+# @benchmark dynamics_jacobian_input(du, env, x1, u_hover, zeros(0))
