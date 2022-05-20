@@ -16,9 +16,9 @@ function ldu_factorization_acyclic!(diagonal_v, offdiagonal_l, diagonal_c, offdi
 
     # @show size(diagonal_c.value)
 
-    # if size(diagonal_c.value)[1] != 0 && size(diagonal_c.value)[2] != 0
-    diagonal_v.value -= offdiagonal_l.value*diagonal_c.value * offdiagonal_u.value
-    # end
+    if length(diagonal_c.value) > 0 # mutliplication of matrices of size 0 is ambiguous; e.g. 6x0 * 0x0 * 0x6 = ???
+        diagonal_v.value -= offdiagonal_l.value * diagonal_c.value * offdiagonal_u.value
+    end
     return
 end
 

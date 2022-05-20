@@ -1,7 +1,7 @@
 module Dojo
 
 # constants
-global REG = 1.0e-10
+global REG = 1.0e-6
 
 #TODO: remove
 using FiniteDiff
@@ -112,7 +112,7 @@ include(joinpath("contacts", "constraints.jl"))
 include(joinpath("contacts", "cone.jl"))
 include(joinpath("contacts", "collisions", "collision.jl"))
 include(joinpath("contacts", "collisions", "point_to_segment.jl"))
-include(joinpath("contacts", "collisions", "point_to_box.jl"))
+include(joinpath("contacts", "collisions", "point_to_box_v2.jl"))
 include(joinpath("contacts", "collisions", "sphere_halfspace.jl"))
 include(joinpath("contacts", "collisions", "sphere_sphere.jl"))
 include(joinpath("contacts", "collisions", "sphere_capsule.jl"))

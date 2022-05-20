@@ -11,13 +11,13 @@ function contact_point_box(ps, xc, qc, kx, ky, kz)
     # origin is opposite corner
     origin = xc - cx - cy - cz
 
-    tx = dot(ps - origin, v1) / dot(v1, v1) 
-    ty = dot(ps - origin, v2) / dot(v2, v2) 
-    tz = dot(ps - origin, v3) / dot(v3, v3)
+    @show tx = dot(ps - origin, v1) / dot(v1, v1) 
+    @show ty = dot(ps - origin, v2) / dot(v2, v2) 
+    @show tz = dot(ps - origin, v3) / dot(v3, v3)
 
     coc = origin
     
-    if tx > 1.0 
+    if tx >= 1.0 
         coc += v1 
     elseif tx < 0.0 
         nothing 
@@ -25,7 +25,7 @@ function contact_point_box(ps, xc, qc, kx, ky, kz)
         coc += tx * v1 
     end
 
-    if ty > 1.0 
+    if ty >= 1.0 
         coc += v2
     elseif ty < 0.0 
         nothing 
@@ -33,7 +33,7 @@ function contact_point_box(ps, xc, qc, kx, ky, kz)
         coc += ty * v2
     end
 
-    if tz > 1.0 
+    if tz >= 1.0 
         coc += v3 
     elseif tz < 0.0 
         nothing 
@@ -61,7 +61,7 @@ function ∂contact_point_box∂p(ps, xc, qc, kx, ky, kz)
 
     P = szeros(3, 3)
     
-    if tx > 1.0 
+    if tx >= 1.0 
         # coc += v1 
         # X += 
     elseif tx < 0.0 
@@ -72,7 +72,7 @@ function ∂contact_point_box∂p(ps, xc, qc, kx, ky, kz)
         P += v1 * 1.0 / dot(v1, v1) * v1' 
     end
 
-    if ty > 1.0 
+    if ty >= 1.0 
         # coc += v2
     elseif ty < 0.0 
         # nothing 
@@ -81,7 +81,7 @@ function ∂contact_point_box∂p(ps, xc, qc, kx, ky, kz)
         P += v2 * 1.0 / dot(v2, v2) * v2'
     end
 
-    if tz > 1.0 
+    if tz >= 1.0 
         # coc += v3 
     elseif tz < 0.0 
         # nothing 
@@ -111,7 +111,7 @@ function ∂contact_point_box∂x(ps, xc, qc, kx, ky, kz)
 
     X = 1.0 * I(3)
     
-    if tx > 1.0 
+    if tx >= 1.0 
         # coc += v1 
     elseif tx < 0.0 
         # nothing 
@@ -120,7 +120,7 @@ function ∂contact_point_box∂x(ps, xc, qc, kx, ky, kz)
         X += v1 * 1.0 / dot(v1, v1) * v1' * -1.0
     end
 
-    if ty > 1.0 
+    if ty >= 1.0 
         # coc += v2
     elseif ty < 0.0 
         # nothing 
@@ -163,7 +163,7 @@ function ∂contact_point_box∂q(ps, xc, qc, kx, ky, kz)
 
     Q = -0.5 * (∂v1∂q + ∂v2∂q + ∂v3∂q)
 
-    if tx > 1.0 
+    if tx >= 1.0 
         # coc += v1 
         Q += ∂v1∂q
     elseif tx < 0.0 
@@ -176,7 +176,7 @@ function ∂contact_point_box∂q(ps, xc, qc, kx, ky, kz)
         Q += v1 * 1.0 / dot(v1, v1) * v1' * -0.5 * ∂v1∂q
     end
 
-    if ty > 1.0 
+    if ty >= 1.0 
         # coc += v2
         Q += ∂v2∂q
     elseif ty < 0.0 
@@ -189,7 +189,7 @@ function ∂contact_point_box∂q(ps, xc, qc, kx, ky, kz)
         Q += v2 * 1.0 / dot(v2, v2) * v2' * -0.5 * ∂v2∂q
     end
 
-    if tz > 1.0 
+    if tz >= 1.0 
         # coc += v3 
         Q += ∂v3∂q
     elseif tz < 0.0 
@@ -205,3 +205,33 @@ function ∂contact_point_box∂q(ps, xc, qc, kx, ky, kz)
     return Q
     # FiniteDiff.finite_difference_jacobian(q -> contact_point_box(ps, xc, Quaternion(q..., false), kx, ky, kz), vector(qc))
 end
+
+# x_min = -1.0 
+# x_max = 1.0 
+# z_min = -1.0 
+# z_max = 1.0 
+
+# p = [-1.0; 1.0] #.- 1.0e-6
+
+# function klamp(t, a, b) 
+#     if t <= a 
+#         return a 
+#     elseif b <= t 
+#         return b 
+#     else
+#         da = abs(t - a) 
+#         db = abs(t - b)
+
+#         if da < db 
+#             return a 
+#         else
+#             return b
+#         end
+#     end
+# end
+
+# function nearest_point(p, x_min, x_max, z_min, z_max) 
+#     return [klamp(p[1], x_min, x_max), klamp(p[2], z_min, z_max)]
+# end
+
+# nearest_point(p, x_min, x_max, z_min, z_max)

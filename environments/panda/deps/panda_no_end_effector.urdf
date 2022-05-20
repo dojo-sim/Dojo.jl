@@ -223,7 +223,7 @@
       </geometry>
     </collision>
   </link>
-  <joint name="joint7" type="revolute">
+  <!-- <joint name="joint7" type="revolute">
     <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.8973" soft_upper_limit="2.8973"/>
     <origin rpy="1.57079632679 0 0" xyz="0.088 0 0"/>
     <parent link="link6"/>
@@ -253,7 +253,7 @@
         <mesh filename="environments/panda/deps/mesh/collision/link7.stl"/>
       </geometry>
     </collision>
-  </link>
+  </link> -->
   <!-- <joint name="joint8" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 0.107"/>
     <parent link="link7"/>

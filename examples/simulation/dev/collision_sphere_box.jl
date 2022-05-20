@@ -4,10 +4,11 @@ using Dojo
 origin = Origin{Float64}()
 pbody = Box(1.0, 1.0, 1.0, 1.0)
 cbody = Sphere(0.5, 1.0)
-joint = JointConstraint(Floating(origin, pbody))
+joint1 = JointConstraint(Floating(origin, pbody))
+joint2 = JointConstraint(Floating(origin, cbody))
 
 bodies = [pbody, cbody]
-joints = [joint]
+joints = [joint1, joint2]
 
 side = 1.0
 corners = [
@@ -66,19 +67,20 @@ contacts = [
 
 mech = Mechanism(origin, bodies, joints, contacts,
             gravity=1.0 * -9.81, 
-            timestep=0.05)
+            timestep=0.01)
 
 mech.bodies[1].state.x2 = [0.0, 0.0, 1.5]
 q = rand(4) 
 q ./= norm(q) 
 mech.bodies[1].state.q2 = Quaternion(q..., true)
-mech.bodies[2].state.x2 = [0.0, 0.0, 3.0]
+mech.bodies[2].state.x2 = [0.3, 0.25, 3.0]
 
 storage = simulate!(mech, 5.0, 
     verbose=true, 
-    record=true)
+    record=true,
+    opts=SolverOptions(verbose=true, rtol=1.0e-5, btol=1.0e-5))
 
 vis = Visualizer()
 visualize(mech, storage, 
     vis=vis)
-open(vis)
+render(vis)
