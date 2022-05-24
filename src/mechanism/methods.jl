@@ -148,3 +148,32 @@ function set_floating_base(mechanism::Mechanism, name::Symbol)
         spring=-1.0, 
         damper=-1.0)
 end
+
+# function reduce_fixed_joints(origin, bodies, joints) where T
+#     for joint in joints
+#         if joint <: JointConstraint{T,6} # i.e., Fixed joint
+#             parent_body = get_body(mechanism, joint.parent_id)
+#             child_body = get_body(mechanism, joint.child_id)
+
+#             v1, v2 = joint.translational.vertices
+#             q_offset = joint.rotational.orientation_offset
+#             parent_m, child_m = parent_body.mass, child_body.mass
+#             parent_J, child_J = parent_body.inertia, child_body.inertia
+
+#             child_body_com = v1 + vector_rotate(v1,q_offset) # in parent_body's frame
+#             new_body_com = child_body_com*child_m/(parent_m+child_m) # in parent_body's frame
+#             new_body_m = parent_m + child_m
+#             new_body_J1 = parent_J + parent_m*skew(new_body_com)'*skew(new_body_com) # in parent_body's frame
+#             new_body_J2 = matrix_rotate(child_J,q_offset) + child_m*skew(-new_body_com)'*skew(-new_body_com)
+#             new_body_J = new_body_J1 + new_body_J2
+
+#             for joint2 in mechanism.joints
+#                 if joint2.child_id == parent_body.id
+
+#                 elseif joint2.parent_id == child_body.id
+
+#                 end
+#             end
+#         end
+#     end
+# end
