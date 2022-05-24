@@ -24,3 +24,16 @@ srand(N)= @SVector rand(N)
 # TODO: check StaticArray bug fix, then remove
 zerodimstaticadjoint(A) = A'
 zerodimstaticadjoint(::SMatrix{0,N,T,0}) where {T,N} = SMatrix{N,0,T,0}()
+
+function diagonal_cat(a::AbstractMatrix{T}, b::AbstractMatrix{T}) where T
+    diagonal_cat(dense(a), dense(b))
+end
+
+function diagonal_cat(a::SMatrix{Na,Na,T,Ma}, b::SMatrix{Nb,Nb,T,Mb}) where {T,Na,Nb,Ma,Mb}
+    [[a szeros(Na,Nb)]; [szeros(Nb,Na) b]]
+end
+
+dense(a::AbstractMatrix{T}) where T = a
+function dense(a::Diagonal{T,SVector{N, T}}) where {T,N}
+    SMatrix{N,N,T,N^2}(a)
+end

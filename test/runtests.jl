@@ -1,5 +1,3 @@
-# Pkg.develop(path=joinpath(@__DIR__, "../DojoEnvironments"))
-
 using Test
 using BenchmarkTools
 
@@ -31,5 +29,3 @@ using DojoEnvironments
 @testset "Simulate"                      verbose=true begin include("simulate.jl") end
 @testset "Visuals"                       verbose=true begin include("visuals.jl") end
 @testset "Utilities"                     verbose=true begin include("utilities.jl") end
-#@testset "Mechanisms"                    verbose=true begin include("mechanisms.jl") end
-#@testset "Environments"                  verbose=true begin include("environments.jl") end

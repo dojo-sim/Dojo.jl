@@ -1,10 +1,10 @@
 """
-    momentum(mechanism, storage) 
+    momentum(mechanism, storage)
 
-    mechanism's linear and angular momentum 
+    mechanism's linear and angular momentum
 
-    mechanism: Mechanism 
-    storage: Storage 
+    mechanism: Mechanism
+    storage: Storage
 """
 function momentum(mechanism::Mechanism, storage::Storage{T,N}) where {T,N}
     m = [szeros(T,6) for i = 1:N]
@@ -17,7 +17,7 @@ end
 function momentum(mechanism::Mechanism{T}, body::Body{T}) where T
     timestep= mechanism.timestep
     state = body.state
-    mass = body.mass 
+    mass = body.mass
     inertia = body.inertia
     # x1, q1 = previous_configuration(state)
     x2, q2 = current_configuration(state)
@@ -32,8 +32,10 @@ function momentum(mechanism::Mechanism{T}, body::Body{T}) where T
     p_angular_body = D2q - 0.5 * state.τ2
 
     for joint in mechanism.joints
-        if body.id ∈ [joint.parent_id, joint.child_id]
-            f_joint = impulse_map(mechanism, joint, body) * joint.impulses[2] # computed at t = 1.5
+        if body.id ∈ (joint.parent_id, joint.child_id)
+
+            f_joint = szeros(T,6)
+            (length(joint) > 0) && (f_joint += impulse_map(mechanism, joint, body) * joint.impulses[2]) # computed at t = 1.5
 
             joint.spring && (f_joint += spring_impulses(mechanism, joint, body)) # computed at t = 1.5
             joint.damper && (f_joint += damper_impulses(mechanism, joint, body)) # computed at t = 1.5

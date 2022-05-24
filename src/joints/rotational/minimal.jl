@@ -10,10 +10,10 @@ function displacement(joint::Rotational,
     vmat ? (return Vmat(q)) : (return q)
 end
 
-function displacement_jacobian_configuration(relative::Symbol, joint::Rotational{T},
+function displacement_jacobian_configuration_unstable(relative::Symbol, joint::Rotational{T},
         xa::AbstractVector, qa::Quaternion,
         xb::AbstractVector, qb::Quaternion;
-        attjac::Bool=true, vmat=true) where T
+        attjac::Bool=true, vmat::Bool=true) where T
     X = szeros(T, 3, 3)
     if relative == :parent
 		Q = Lᵀmat(joint.orientation_offset) * Rmat(qb) * Tmat()
@@ -25,6 +25,36 @@ function displacement_jacobian_configuration(relative::Symbol, joint::Rotational
 	vmat && (Q = Vmat() * Q)
 	return X, Q
 end
+
+function displacement_jacobian_configuration(relative::Symbol, joint::Rotational{T},
+        xa::AbstractVector, qa::Quaternion,
+        xb::AbstractVector, qb::Quaternion;
+		) where T
+    X = szeros(T, 3, 3)
+    if relative == :parent
+		Q = Lᵀmat(joint.orientation_offset) * Rmat(qb) * Tmat()
+    elseif relative == :child
+		Q = Lᵀmat(joint.orientation_offset) * Lᵀmat(qa)
+	end
+	return X, Vmat() * Q
+end
+
+
+# function displacement_jacobian_configuration(relative::Symbol, joint::Rotational{T},
+#         xa::AbstractVector, qa::Quaternion,
+#         xb::AbstractVector, qb::Quaternion;
+#         attjac::Bool=true, vmat=true) where T
+#     X = szeros(T, 3, 3)
+#     if relative == :parent
+# 		Q = Lᵀmat(joint.orientation_offset) * Rmat(qb) * Tmat()
+# 		attjac && (Q *= LVᵀmat(qa))
+#     elseif relative == :child
+# 		Q = Lᵀmat(joint.orientation_offset) * Lᵀmat(qa)
+# 		attjac && (Q *= LVᵀmat(qb))
+# 	end
+# 	vmat && (Q = Vmat() * Q)
+# 	return X, Q
+# end
 
 ################################################################################
 # Coordinates
@@ -43,7 +73,7 @@ function minimal_coordinates_jacobian_configuration(relative::Symbol, joint::Rot
 
     A = nullspace_mask(joint)
     q = displacement(joint, xa, qa, xb, qb, vmat=false)
-    X, Q = displacement_jacobian_configuration(relative, joint, xa, qa, xb, qb, attjac=attjac, vmat=false)
+    X, Q = displacement_jacobian_configuration_unstable(relative, joint, xa, qa, xb, qb, attjac=attjac, vmat=false)
     ∂rv∂q = drotation_vectordq(q)
 
 	return A * [X ∂rv∂q * Q]

@@ -25,22 +25,26 @@ function constraint(joint::Joint{T,Nλ,0},
     joint_constraint(joint, xa, qa, xb, qb, η)
 end
 
-constraint(joint::Joint, pbody::Node, cbody::Node, λ, μ, timestep) = constraint(joint, next_configuration(pbody.state, timestep)..., next_configuration(cbody.state, timestep)..., λ, μ)
+constraint(joint::Joint, pbody::Node, cbody::Node, λ, μ, timestep) =
+	constraint(joint, next_configuration(pbody.state, timestep)...,
+	next_configuration(cbody.state, timestep)..., λ, μ)
 
 # constraint Jacobians
-function constraint_jacobian(joint::Joint{T,Nλ,0}, η) where {T,Nλ}
-    return Diagonal(REG * sones(T,Nλ))
+function constraint_jacobian(joint::Joint{T,Nλ,0}, η; reg::T=Dojo.REG) where {T,Nλ}
+    return Diagonal(reg * sones(T,Nλ))
 end
 
-function constraint_jacobian(joint::Joint{T,Nλ,Nb}, η) where {T,Nλ,Nb}
+function constraint_jacobian(joint::Joint{T,Nλ,Nb}, η; reg::T=Dojo.REG) where {T,Nλ,Nb}
     s, γ = split_impulses(joint, η)
-    c1 = [Diagonal(γ + REG * sones(T, Nb)); Diagonal(sones(Nb)); szeros(Nλ, Nb)]
-    c2 = [Diagonal(s + REG * sones(T, Nb)); szeros(Nb, Nb); szeros(Nλ, Nb)]
-    c3 = [szeros(Nb, Nλ); szeros(Nb, Nλ); Diagonal(REG * sones(T, Nλ))]
+    c1 = [Diagonal(γ + reg * sones(T, Nb)); Diagonal(sones(Nb)); szeros(Nλ, Nb)]
+    c2 = [Diagonal(s + reg * sones(T, Nb)); szeros(Nb, Nb); szeros(Nλ, Nb)]
+    c3 = [szeros(Nb, Nλ); szeros(Nb, Nλ); Diagonal(reg * sones(T, Nλ))]
     return [c1 c2 c3]
 end
 
-constraint_jacobian_configuration(relative::Symbol, joint::Joint, pbody::Node, cbody::Node, λ, timestep) = constraint_jacobian_configuration(relative, joint, next_configuration(pbody.state, timestep)..., next_configuration(cbody.state, timestep)..., λ)
+constraint_jacobian_configuration(relative::Symbol, joint::Joint, pbody::Node, cbody::Node, λ, timestep) =
+    constraint_jacobian_configuration(relative, joint, next_configuration(pbody.state, timestep)...,
+	next_configuration(cbody.state, timestep)..., λ)
 
 function constraint_jacobian_configuration(relative::Symbol, joint::Joint{T,Nλ,0},
         xa::AbstractVector, qa::Quaternion,
@@ -60,7 +64,9 @@ nullspace_mask(joint::Joint{T,2}) where T = joint.axis_mask3
 nullspace_mask(::Joint{T,3}) where T = szeros(T,0,3)
 
 # impulse maps
-impulse_map(relative::Symbol, joint::Joint, pbody::Node, cbody::Node, λ) = impulse_map(relative, joint, current_configuration(pbody.state)..., current_configuration(cbody.state)..., λ)
+impulse_map(relative::Symbol, joint::Joint, pbody::Node, cbody::Node, λ) =
+	impulse_map(relative, joint, current_configuration(pbody.state)...,
+	current_configuration(cbody.state)..., λ)
 
 function impulse_map(relative::Symbol, joint::Joint{T,Nλ,Nb},
         xa::AbstractVector, qa::Quaternion,
@@ -102,7 +108,8 @@ end
 add_input!(joint::Joint) = return
 
 function input_jacobian_control(relative::Symbol, joint::Joint, pbody::Node, cbody::Node)
-    return input_jacobian_control(relative, joint, current_configuration(pbody.state)..., current_configuration(cbody.state)...) * zerodimstaticadjoint(nullspace_mask(joint))
+    return input_jacobian_control(relative, joint, current_configuration(pbody.state)...,
+		current_configuration(cbody.state)...) * zerodimstaticadjoint(nullspace_mask(joint))
 end
 
 # minimal coordinates
@@ -138,3 +145,17 @@ function joint_impulse_index(joint::Joint{T,Nλ,Nb,N}, s::Int) where {T,Nλ,Nb,N
 end
 
 input_dimension(joint::Joint{T,N}) where {T,N} = 3 - N
+
+function displacement_jacobian_configuration(relative::Symbol, joint::Joint{T},
+        xa::AbstractVector, qa::Quaternion,
+        xb::AbstractVector, qb::Quaternion;
+        attjac::Bool=true) where T
+    X, Q = displacement_jacobian_configuration(relative, joint, xa, qa, xb, qb)
+	G = relative == :parent ? LVᵀmat(qa) : LVᵀmat(qb)
+	if attjac
+		Q = Q * G
+		return X, Q::SMatrix{3,3,T,9}
+	else
+		return X, Q::SMatrix{3,4,T,12}
+	end
+end

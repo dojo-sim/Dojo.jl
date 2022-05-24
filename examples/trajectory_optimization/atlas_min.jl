@@ -27,14 +27,14 @@ function get_damper_impulses(mechanism::Mechanism{T}) where T
 		if typeof(pbody) <: Body
 			F = damper_impulses(mechanism, joint, pbody)
 			oF = 0
-			for joint in [joint.translational, joint.rotational]
+			for joint in (joint.translational, joint.rotational)
 				nf, nF = size(nullspace_mask(joint))
 				u[off .+ (1:nf)] .= nullspace_mask(joint) * F[oF .+ (1:nF)]
 				off += nf
 				oF += nF
 			end
 		else
-			for joint in [joint.translational, joint.rotational]
+			for joint in (joint.translational, joint.rotational)
 				nf, nF = size(nullspace_mask(joint))
 				off += nf
 			end

@@ -1,9 +1,9 @@
 ################################################################################
 # Displacements
 ################################################################################
-function displacement(joint::Translational, 
-    xa::AbstractVector, qa::Quaternion, 
-    xb::AbstractVector, qb::Quaternion; 
+function displacement(joint::Translational,
+    xa::AbstractVector, qa::Quaternion,
+    xb::AbstractVector, qb::Quaternion;
     rotate::Bool = true)
 
     vertices = joint.vertices
@@ -11,10 +11,9 @@ function displacement(joint::Translational,
     rotate && (return vector_rotate(d, inv(qa))) : (return d)
 end
 
-function displacement_jacobian_configuration(relative::Symbol, joint::Translational{T}, 
-    xa::AbstractVector, qa::Quaternion, 
-    xb::AbstractVector, qb::Quaternion; 
-    attjac=true) where T
+function displacement_jacobian_configuration(relative::Symbol, joint::Translational{T},
+    xa::AbstractVector, qa::Quaternion,
+    xb::AbstractVector, qb::Quaternion) where T
 
     vertices = joint.vertices
 
@@ -23,15 +22,34 @@ function displacement_jacobian_configuration(relative::Symbol, joint::Translatio
         X = -rotation_matrix(inv(qa))
         Q = -rotation_matrix(inv(qa)) * ∂rotation_matrix∂q(qa, vertices[1])
         Q += ∂rotation_matrix_inv∂q(qa, d)
-        attjac && (Q *= LVᵀmat(qa))
     elseif relative == :child
         X = rotation_matrix(inv(qa))
         Q = rotation_matrix(inv(qa)) * ∂rotation_matrix∂q(qb, vertices[2])
-        attjac && (Q *= LVᵀmat(qb))
     end
-
-    return X, Q
+	return X, Q
 end
+
+# function displacement_jacobian_configuration(relative::Symbol, joint::Translational{T},
+#     xa::AbstractVector, qa::Quaternion,
+#     xb::AbstractVector, qb::Quaternion;
+#     attjac=true) where T
+#
+#     vertices = joint.vertices
+#
+#     if relative == :parent
+#         d = xb + vector_rotate(vertices[2], qb) - (xa + vector_rotate(vertices[1], qa)) # in the world frame
+#         X = -rotation_matrix(inv(qa))
+#         Q = -rotation_matrix(inv(qa)) * ∂rotation_matrix∂q(qa, vertices[1])
+#         Q += ∂rotation_matrix_inv∂q(qa, d)
+#         attjac && (Q *= LVᵀmat(qa))
+#     elseif relative == :child
+#         X = rotation_matrix(inv(qa))
+#         Q = rotation_matrix(inv(qa)) * ∂rotation_matrix∂q(qb, vertices[2])
+#         attjac && (Q *= LVᵀmat(qb))
+#     end
+#
+#     return X, Q
+# end
 
 ################################################################################
 # Coordinates
@@ -49,8 +67,8 @@ end
 ################################################################################
 # Coordinates
 ################################################################################
-function set_minimal_coordinates!(joint::Translational, 
-    pnode::Node, cnode::Node,  
+function set_minimal_coordinates!(joint::Translational,
+    pnode::Node, cnode::Node,
     timestep;
     Δx::AbstractVector=szeros(input_dimension(joint)))
 
@@ -119,17 +137,17 @@ function minimal_velocities_jacobian_configuration(relative::Symbol, joint::Tran
         X1, Q1 = displacement_jacobian_configuration(:parent, joint, xa1, qa1, xb1, qb1, attjac=false)
         X1 *= -1.0
         Q1 *= -1.0 * rotational_integrator_jacobian_orientation(qa, -ωa, timestep, attjac=false)
-        Q *= LVᵀmat(qa) 
+        Q *= LVᵀmat(qa)
         Q1 *= LVᵀmat(qa)
         J = 1.0 / timestep * A * [X Q]
         J += 1.0 / timestep * A * [X1 Q1]
-    elseif relative == :child 
+    elseif relative == :child
         1.0 / timestep * (Δx - Δx1)
         X, Q = displacement_jacobian_configuration(:child, joint, xa, qa, xb, qb, attjac=false)
         X1, Q1 = displacement_jacobian_configuration(:child, joint, xa1, qa1, xb1, qb1, attjac=false)
         X1 *= -1.0
         Q1 *= -1.0 * rotational_integrator_jacobian_orientation(qb, -ωb, timestep, attjac=false)
-        Q *= LVᵀmat(qb) 
+        Q *= LVᵀmat(qb)
         Q1 *= LVᵀmat(qb)
         J = 1.0 / timestep * A * [X Q]
         J += 1.0 / timestep * A * [X1 Q1]
@@ -152,7 +170,7 @@ function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Translati
 
     # Coordinates
     Δx = A * displacement(joint, xa, qa, xb, qb)
-    
+
     # Previous step coordinates
     Δx1 = A * displacement(joint, xa1, qa1, xb1, qb1)
 
@@ -161,12 +179,12 @@ function minimal_velocities_jacobian_velocity(relative::Symbol, joint::Translati
 
     if relative == :parent
         X1, Q1 = displacement_jacobian_configuration(:parent, joint, xa1, qa1, xb1, qb1, attjac=false)
-        X1 *= -timestep 
+        X1 *= -timestep
         Q1 *= -rotational_integrator_jacobian_velocity(qa, -ωa, timestep)
         J = -1.0 / timestep * A * [X1 Q1]
-    elseif relative == :child 
+    elseif relative == :child
         X1, Q1 = displacement_jacobian_configuration(:child, joint, xa1, qa1, xb1, qb1, attjac=false)
-        X1 *= -timestep 
+        X1 *= -timestep
         Q1 *= -rotational_integrator_jacobian_velocity(qb, -ωb, timestep)
         J = -1.0 / timestep * A * [X1 Q1]
     end
