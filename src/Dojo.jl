@@ -151,6 +151,13 @@ include(joinpath("gradients", "state.jl"))
 include(joinpath("gradients", "data.jl"))
 include(joinpath("gradients", "utilities.jl"))
 
+# Environments
+include(joinpath("..", "DojoEnvironments/src", "mechanisms.jl"))
+include(joinpath("..", "DojoEnvironments/src", "environment.jl"))
+include(joinpath("..", "DojoEnvironments/src", "dynamics.jl"))
+include(joinpath("..", "DojoEnvironments/src", "utilities.jl"))
+include(joinpath("..", "DojoEnvironments/src", "include.jl"))
+
 # Bodies
 export
     Body,
@@ -231,7 +238,8 @@ export
     set_maximal_velocities!,
     get_maximal_state,
     get_maximal_gradients!,
-    maximal_dimension
+    maximal_dimension,
+    get_mechanism
 
 # Minimal
 export
