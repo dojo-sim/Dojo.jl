@@ -31,9 +31,7 @@
 
         mech = Mechanism(origin, bodies, joints, 
             gravity=gravity, 
-            timestep=timestep, 
-            spring=spring, 
-            damper=damper)
+            timestep=timestep)
         return mech
     end
 

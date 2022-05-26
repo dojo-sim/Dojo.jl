@@ -41,19 +41,19 @@ function get_block(;
         contact_radius = [radius for i = 1:n]
         friction_coefficient = friction_coefficient * ones(n)
 
-        contacts = contact_constraint(pbody, normal, 
-            friction_coefficient=friction_coefficient, 
+        contacts = contact_constraint(pbody, normal;
+            friction_coefficient, 
             contact_origins=corners, 
-            contact_radius=contact_radius, 
-            contact_type=contact_type)
+            contact_radius, 
+            contact_type)
 
-        mech = Mechanism(origin, bodies, joints, contacts, 
-            gravity=gravity, 
-            timestep=timestep)
+        mech = Mechanism(origin, bodies, joints, contacts;
+            gravity, 
+            timestep)
     else
-        mech = Mechanism(origin, bodies, joints, 
-            gravity=gravity, 
-            timestep=timestep)
+        mech = Mechanism(origin, bodies, joints;
+            gravity, 
+            timestep)
     end
     return mech
 end

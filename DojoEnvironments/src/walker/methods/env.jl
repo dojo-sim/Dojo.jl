@@ -11,7 +11,8 @@ function walker(;
     gravity=[0.0; 0.0; -9.81],
     friction_coefficient=1.9,
     spring=0.0,
-    damper=0.1,
+    damper=0.0,
+    parse_damper=true,
     seed=1,
     contact_feet=true,
     contact_body=true,
@@ -22,14 +23,15 @@ function walker(;
     opts_grad=SolverOptions(),
     T=Float64)
 
-    mechanism = get_walker(
-        timestep=timestep,
-        gravity=gravity,
-        friction_coefficient=friction_coefficient,
-        spring=spring,
-        damper=damper,
-        contact_feet=contact_feet,
-        contact_body=contact_body)
+    mechanism = get_walker(;
+        timestep,
+        gravity,
+        friction_coefficient,
+        spring,
+        damper,
+        parse_damper,
+        contact_feet,
+        contact_body)
 
     initialize_walker!(mechanism)
 

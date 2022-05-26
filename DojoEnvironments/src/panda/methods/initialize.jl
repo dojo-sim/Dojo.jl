@@ -3,7 +3,8 @@ function get_panda(;
         gravity=-9.81,
         friction_coefficient=0.8,
         spring=0.0,
-        damper=0.01, # this value comes from the official URDF https://github.com/frankaemika/franka_ros/blob/develop/franka_gazebo/test/launch/panda-gazebo.urdf
+        damper=0.0,
+        parse_damper=true,
         contact=false,
         limits=true,
         model_type=:end_effector,
@@ -16,24 +17,18 @@ function get_panda(;
         T=Float64)
 
     path = joinpath(@__DIR__, "../deps/panda_$(String(model_type)).urdf")
-    mech = Mechanism(path, false, T,
-        gravity=gravity,
-        timestep=timestep,
-        spring=spring,
-        damper=damper)
+    mech = Mechanism(path; floating=false, T,
+        gravity,
+        timestep,
+        parse_damper)
 
     # Adding springs and dampers
-    for joint in mech.joints
-        joint.damper = true
-        joint.spring = true
-        joint.translational.spring=spring
-        joint.translational.damper=damper
-        joint.rotational.spring=spring
-        joint.rotational.damper=damper
-    end
+    set_springs!(mech.joints, spring)
+    set_dampers!(mech.joints, damper)
 
     # joint limits
     joints = deepcopy(mech.joints)
+
     if limits
         for (i,joint) in enumerate(joints)
             id = joint.id
@@ -46,11 +41,9 @@ function get_panda(;
                     tra_limits=[SVector{1}(0.00), SVector{1}(0.04)])
             end
         end
-        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...],
-            gravity=gravity,
-            timestep=timestep,
-            spring=spring,
-            damper=damper)
+        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...];
+            gravity,
+            timestep)
     end
 
 
@@ -69,21 +62,19 @@ function get_panda(;
             offset = [0.0; 0.0; 0.05]
             contact = contact_constraint(
                 get_body(mech, :link7),
-                normal,
-                friction_coefficient=friction_coefficient,
+                normal;
+                friction_coefficient,
                 contact_point=location,
-                offset=offset,
+                offset,
                 name=:end_effector)
             push!(contacts, contact)
         end
     end
 
 
-    mech = Mechanism(origin, bodies, joints, contacts,
-        gravity=gravity,
-        timestep=timestep,
-        spring=spring,
-        damper=damper)
+    mech = Mechanism(origin, bodies, joints, contacts;
+        gravity,
+        timestep)
 
     set_minimal_state!(mech, szeros(minimal_dimension(mech)))
     return mech

@@ -5,31 +5,25 @@ function get_atlas(;
         friction_coefficient=0.8, 
         spring=0.0,
         damper=0.0, 
+        parse_damper=true, 
         contact_feet=true, 
         contact_body=false, 
         model_type=:simple,
         T=Float64)
 
     path = joinpath(@__DIR__, "../deps/atlas_$(string(model_type)).urdf")
-    mech = Mechanism(path, !(model_type==:armless), T, 
-        gravity=gravity, 
-        timestep=timestep, 
-        spring=spring, 
-        damper=damper)
+    mech = Mechanism(path; floating=!(model_type==:armless), T,
+        gravity, 
+        timestep,
+        parse_damper)
 
     # Adding springs and dampers
-    for joint in mech.joints[2:end]
-        joint.damper = true
-        joint.spring = true
-        joint.translational.spring=spring
-        joint.translational.damper=damper
-        joint.rotational.spring=spring
-        joint.rotational.damper=damper
-    end
+    set_springs!(mech.joints, spring)
+    set_dampers!(mech.joints, damper)
 
     origin = Origin{T}()
     bodies = mech.bodies
-    eqs = mech.joints
+    joints = mech.joints
 
     contacts = ContactConstraint{T}[]
 
@@ -48,15 +42,15 @@ function get_atlas(;
         
         names = ["RR", "FR", "RL", "RR"]
 
-        foot_contacts1 = contact_constraint(get_body(mech, :l_foot), normal, 
+        foot_contacts1 = contact_constraint(get_body(mech, :l_foot), normal; 
             friction_coefficient=friction_coefficients, 
             contact_origins=locations, 
-            contact_radius=contact_radius, 
+            contact_radius, 
             names=[Symbol("l_" .* name) for name in names])
-        foot_contacts2 = contact_constraint(get_body(mech, :r_foot), normal, 
+        foot_contacts2 = contact_constraint(get_body(mech, :r_foot), normal; 
             friction_coefficient=friction_coefficients, 
             contact_origins=locations, 
-            contact_radius=contact_radius, 
+            contact_radius, 
             names=[Symbol("r_" .* name) for name in names])
         contacts = [contacts..., foot_contacts1..., foot_contacts2...]
     end
@@ -68,15 +62,15 @@ function get_atlas(;
         contact_radius = 0.06
         name = "hand"
 
-        push!(contacts, contact_constraint(get_body(mech, :l_hand), normal, 
-            friction_coefficient=friction_coefficient, 
+        push!(contacts, contact_constraint(get_body(mech, :l_hand), normal; 
+            friction_coefficient, 
             contact_origin=location, 
-            contact_radius=contact_radius, 
+            contact_radius, 
             name=Symbol("l_" .* name)))
-        push!(contacts, contact_constraint(get_body(mech, :r_hand), normal, 
-            friction_coefficient=friction_coefficient, 
+        push!(contacts, contact_constraint(get_body(mech, :r_hand), normal;
+            friction_coefficient, 
             contact_origin=location, 
-            contact_radius=contact_radius, 
+            contact_radius, 
             name=Symbol("r_" .* name)))
 
         # knee 
@@ -85,15 +79,15 @@ function get_atlas(;
         contact_radius = 0.075
         name = "knee"
 
-        push!(contacts, contact_constraint(get_body(mech, :l_lleg), normal, 
-            friction_coefficient=friction_coefficient, 
+        push!(contacts, contact_constraint(get_body(mech, :l_lleg), normal; 
+            friction_coefficient, 
             contact_origin=location, 
-            contact_radius=contact_radius, 
+            contact_radius, 
             name=Symbol("l_" .* name)))
-        push!(contacts, contact_constraint(get_body(mech, :r_lleg), normal, 
-            friction_coefficient=friction_coefficient, 
+        push!(contacts, contact_constraint(get_body(mech, :r_lleg), normal; 
+            friction_coefficient, 
             contact_origin=location, 
-            contact_radius=contact_radius, 
+            contact_radius, 
             name=Symbol("r_" .* name)))
 
         # clavicals 
@@ -104,15 +98,15 @@ function get_atlas(;
         contact_radius = 0.11
         name = "clav"
 
-        push!(contacts, contact_constraint(get_body(mech, :l_clav), normal, 
-            friction_coefficient=friction_coefficient, 
+        push!(contacts, contact_constraint(get_body(mech, :l_clav), normal;
+            friction_coefficient, 
             contact_origin=location_l, 
-            contact_radius=contact_radius, 
+            contact_radius, 
             name=Symbol("l_" .* name)))
-        push!(contacts, contact_constraint(get_body(mech, :r_clav), normal, 
-            friction_coefficient=friction_coefficient, 
+        push!(contacts, contact_constraint(get_body(mech, :r_clav), normal; 
+            friction_coefficient, 
             contact_origin=location_r, 
-            contact_radius=contact_radius, 
+            contact_radius, 
             name=Symbol("r_" .* name)))
 
         # pelvis
@@ -121,10 +115,10 @@ function get_atlas(;
         contact_radius = 0.19
         name = "pelvis"
 
-        push!(contacts, contact_constraint(get_body(mech, :pelvis), normal, 
-            friction_coefficient=friction_coefficient, 
+        push!(contacts, contact_constraint(get_body(mech, :pelvis), normal; 
+            friction_coefficient, 
             contact_origin=location, 
-            contact_radius=contact_radius, 
+            contact_radius, 
             name=Symbol(name)))
 
         # elbow 
@@ -133,15 +127,15 @@ function get_atlas(;
         contact_radius = 0.085
         name = "elbow"
 
-        push!(contacts, contact_constraint(get_body(mech, :l_uarm), normal, 
-            friction_coefficient=friction_coefficient, 
+        push!(contacts, contact_constraint(get_body(mech, :l_uarm), normal; 
+            friction_coefficient, 
             contact_origin=location, 
-            contact_radius=contact_radius, 
+            contact_radius, 
             name=Symbol("l_" .* name)))
-        push!(contacts, contact_constraint(get_body(mech, :r_uarm), normal, 
-            friction_coefficient=friction_coefficient, 
+        push!(contacts, contact_constraint(get_body(mech, :r_uarm), normal; 
+            friction_coefficient, 
             contact_origin=location, 
-            contact_radius=contact_radius, 
+            contact_radius, 
             name=Symbol("r_" .* name)))
 
         # head
@@ -150,10 +144,10 @@ function get_atlas(;
         contact_radius = 0.175
         name = "head"
 
-        push!(contacts, contact_constraint(get_body(mech, :head), normal, 
-            friction_coefficient=friction_coefficient, 
+        push!(contacts, contact_constraint(get_body(mech, :head), normal;
+            friction_coefficient, 
             contact_origin=location, 
-            contact_radius=contact_radius, 
+            contact_radius, 
             name=Symbol(name)))
 
         # backpack
@@ -162,10 +156,10 @@ function get_atlas(;
         contact_radius = 0.15
         name = "backpack_bottom"
 
-        push!(contacts, contact_constraint(get_body(mech, :utorso), normal, 
-            friction_coefficient=friction_coefficient, 
+        push!(contacts, contact_constraint(get_body(mech, :utorso), normal; 
+            friction_coefficient, 
             contact_origin=location, 
-            contact_radius=contact_radius, 
+            contact_radius, 
             name=Symbol(name)))
 
         location = [-0.095; 0.0; -0.2]
@@ -173,20 +167,18 @@ function get_atlas(;
         contact_radius = 0.15
         name = "backpack_top"
 
-        push!(contacts, contact_constraint(get_body(mech, :utorso), normal, 
-            friction_coefficient=friction_coefficient, 
+        push!(contacts, contact_constraint(get_body(mech, :utorso), normal; 
+            friction_coefficient, 
             contact_origin=location, 
-            contact_radius=contact_radius, 
+            contact_radius, 
             name=Symbol(name)))
     end
 
     set_minimal_coordinates!(mech, get_joint(mech, :floating_base), [0.0; 0.0; 0.9385; 0.0; 0.0; 0.0])
     
-    mech = Mechanism(origin, bodies, eqs, contacts, 
-        gravity=gravity, 
-        timestep=timestep, 
-        spring=spring, 
-        damper=damper)
+    mech = Mechanism(origin, bodies, joints, contacts;
+        gravity, 
+        timestep)
     
     return mech
 end

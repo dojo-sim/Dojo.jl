@@ -11,22 +11,22 @@ function get_sphere(;
     mass = 1.0
     bodies = [Sphere(radius, mass, name=:sphere)]
     joints = [JointConstraint(Floating(origin, bodies[1]), name=:floating_joint)]
-    mechanism = Mechanism(origin, bodies, joints, 
-        timestep=timestep, 
-        gravity=gravity)
+    mechanism = Mechanism(origin, bodies, joints;
+        timestep, 
+        gravity)
 
     if contact
         contact = [0.0, 0.0, 0.0]
         normal = [0.0, 0.0, 1.0]
-        contacts = [contact_constraint(get_body(mechanism, :sphere), normal, 
-            friction_coefficient=friction_coefficient,
+        contacts = [contact_constraint(get_body(mechanism, :sphere), normal; 
+            friction_coefficient,
             contact_origin=contact, 
             contact_radius=radius, 
-            contact_type=contact_type)]
+            contact_type)]
         set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_joint), [0.0; 0.0; radius; zeros(3)])
-        mechanism = Mechanism(origin, bodies, joints, contacts, 
-            gravity=gravity, 
-            timestep=timestep)
+        mechanism = Mechanism(origin, bodies, joints, contacts;
+            gravity, 
+            timestep)
     end
     return mechanism
 end

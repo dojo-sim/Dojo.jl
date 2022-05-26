@@ -249,18 +249,18 @@ function joint_selector(joint_type, pbody, cbody, T;
     return joint
 end
 
-function parse_joint(xjoint, plink, clink, T)
+function parse_joint(xjoint, plink, clink, T, parse_damper)
     joint_type = attribute(xjoint, "type")
     x, q = parse_pose(find_element(xjoint, "origin"), T)
     axis = parse_vector(find_element(xjoint, "axis"), "xyz", T; default = "1 0 0")
     parent_vertex = x
     name = Symbol(attribute(xjoint, "name"))
-    damper = parse_scalar(find_element(xjoint, "dynamics"), "damping", T; default = "0")
+    parse_damper ? damper = parse_scalar(find_element(xjoint, "dynamics"), "damping", T; default = "0") : damper = 0
 
     return joint_selector(joint_type, plink, clink, T; axis, parent_vertex, orientation_offset = q, name, damper)
 end
 
-function parse_loop_joint(xjoint, pbody, cbody, T)
+function parse_loop_joint(xjoint, pbody, cbody, T, parse_damper)
     find_element(xjoint, "link1")
     find_element(xjoint, "link2")
 
@@ -271,12 +271,12 @@ function parse_loop_joint(xjoint, pbody, cbody, T)
     parent_vertex = x1
     child_vertex = x2
     name = Symbol(attribute(xjoint, "name"))
-    damper = parse_scalar(find_element(xjoint, "dynamics"), "damping", T; default = "0")
+    parse_damper ? damper = parse_scalar(find_element(xjoint, "dynamics"), "damping", T; default = "0") : damper = 0
 
     return joint_selector(joint_type, pbody, cbody, T; axis, parent_vertex, child_vertex, orientation_offset = q1, name, damper)
 end
 
-function parse_joints(xjoints, ldict, floating, T)
+function parse_joints(xjoints, ldict, floating, T, parse_damper)
     origins = Origin{T}[]
     links = Body{T}[]
     joints = JointConstraint{T}[]
@@ -317,10 +317,10 @@ function parse_joints(xjoints, ldict, floating, T)
         plink = ldict[Symbol(attribute(xplink, "link"))]
         if plink.id == origin.id
             plink = origin
-            joint = parse_joint(xjoint, plink, clink, T)
+            joint = parse_joint(xjoint, plink, clink, T, parse_damper)
             joints = [joint; joints] # For proper parsing the first joint must be connected to the origin
         else
-            joint = parse_joint(xjoint, plink, clink, T)
+            joint = parse_joint(xjoint, plink, clink, T, parse_damper)
             push!(joints, joint)
         end
     end
@@ -335,7 +335,7 @@ end
 
 # TODO This might be missing the detection of a direct loop, i.e., only two links connected by two joints
 # TODO Also only works for a single loop closure in a cycle (so no ladders)
-function parse_loop_joints(xloopjoints, origin, joints, ldict, T)
+function parse_loop_joints(xloopjoints, origin, joints, ldict, T, parse_damper)
     loopjoints = JointConstraint{T}[]
 
     for xloopjoint in xloopjoints
@@ -387,14 +387,14 @@ function parse_loop_joints(xloopjoints, origin, joints, ldict, T)
             foundflag && break
         end
 
-        loopjoint = parse_loop_joint(xloopjoint, pbody, cbody, T)
+        loopjoint = parse_loop_joint(xloopjoint, pbody, cbody, T, parse_damper)
         push!(loopjoints, loopjoint)
     end
 
     return joints, loopjoints
 end
 
-function parse_urdf(filename, floating, ::Type{T}) where T
+function parse_urdf(filename, floating, ::Type{T}, parse_damper) where T
     xdoc = LightXML.parse_file(filename)
     xroot = LightXML.root(xdoc)
     @assert LightXML.name(xroot) == "robot"
@@ -405,9 +405,9 @@ function parse_urdf(filename, floating, ::Type{T}) where T
 
     materialdict = parse_robotmaterials(xroot, T)
     ldict = parse_links(xlinks, materialdict, T; path_prefix=dirname(filename))
-    origin, links, joints = parse_joints(xjoints, ldict, floating, T)
+    origin, links, joints = parse_joints(xjoints, ldict, floating, T, parse_damper)
 
-    joints, loopjoints = parse_loop_joints(xloopjoints, origin, joints, ldict, T)
+    joints, loopjoints = parse_loop_joints(xloopjoints, origin, joints, ldict, T, parse_damper)
 
     free(xdoc)
 

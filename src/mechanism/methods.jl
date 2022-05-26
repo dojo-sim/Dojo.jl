@@ -139,10 +139,7 @@ function set_floating_base(mechanism::Mechanism, name::Symbol)
 
     return Mechanism(mechanism.origin, mechanism.bodies, mechanism.joints, mechanism.contacts,
         gravity=mechanism.gravity,
-        timestep=mechanism.timestep,
-        # constructor will skip setting springs and dampers, using previously defined mech.joints
-        spring=-1.0,
-        damper=-1.0)
+        timestep=mechanism.timestep)
 end
 
 # function reduce_fixed_joints(origin, bodies, joints) where T

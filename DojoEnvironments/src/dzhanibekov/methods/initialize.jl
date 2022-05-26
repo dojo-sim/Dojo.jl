@@ -24,9 +24,9 @@ function get_dzhanibekov(;
 
     links[1].inertia = Diagonal([3e-2, 1e-3, 1e-1])
     # Mechanism
-    return Mechanism(origin, links, joints,
-        gravity=gravity,
-        timestep=timestep)
+    return Mechanism(origin, links, joints;
+        gravity,
+        timestep)
 end
 
 function initialize_dzhanibekov!(mechanism::Mechanism{T,Nn,Ne,Nb};

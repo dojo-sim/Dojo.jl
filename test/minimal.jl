@@ -253,10 +253,10 @@ end
 
 	# atlas
 	@testset "Atlas" begin
-		mech = DojoEnvironments.get_mechanism(:atlas,
+		mech = DojoEnvironments.get_mechanism(:atlas;
 			model_type=:simple,
 			contact_feet=true,
-			damper=10.0)
+			parse_damper=false)
 
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)

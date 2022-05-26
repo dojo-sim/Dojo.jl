@@ -13,7 +13,8 @@ function rexhopper(;
     gravity=[0.0; 0.0; -9.81],
     friction_coefficient=1.0,
     spring=0.0,
-    damper=1.0,
+    damper=0.0,
+    parse_damper=true,
     contact_type=:nonlinear,
     contact_foot=true,
     contact_body=true,
@@ -26,17 +27,17 @@ function rexhopper(;
     opts_grad=SolverOptions(rtol=1.0e-4, btol=1.0e-4, undercut=10.0),
     T=Float64)
 
-    mechanism = get_rexhopper(
-        model=model,
-        limits=limits,
-        contact_type=contact_type,
-        timestep=timestep,
-        gravity=gravity,
-        friction_coefficient=friction_coefficient,
-        spring=spring,
-        damper=damper,
-        contact_foot=contact_foot,
-        contact_body=contact_body)
+    mechanism = get_rexhopper(;
+        model,
+        limits,
+        contact_type,
+        timestep,
+        gravity,
+        friction_coefficient,
+        spring,
+        parse_damper,
+        contact_foot,
+        contact_body)
 
     initialize_rexhopper!(mechanism)
 

@@ -389,7 +389,7 @@ end
         timestep=timestep0,
         gravity=gravity0,
         spring=spring0,
-        damper=damper0,
+        parse_damper=false,
         contact_feet=false,
         contact_body=false)
 
@@ -435,7 +435,7 @@ end
         timestep=timestep0,
         gravity=gravity0,
         spring=spring0,
-        damper=damper0,
+        parse_damper=false,
         contact_feet=false,
         contact_body=false,
         limits=false)

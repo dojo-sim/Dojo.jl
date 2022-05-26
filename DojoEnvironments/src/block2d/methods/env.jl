@@ -18,10 +18,10 @@ function block2d(;
     opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5),
     T=Float64)
 
-    mechanism = get_mechanism(:block2d,
-        timestep=timestep,
-        gravity=gravity,
-        friction_coefficient=friction_coefficient)
+    mechanism = get_mechanism(:block2d;
+        timestep,
+        gravity,
+        friction_coefficient)
 
     initialize!(mechanism, :block2d)
 

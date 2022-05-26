@@ -10,6 +10,8 @@ function cartpole(;
     representation=:minimal, 
     timestep=0.05, 
     gravity=[0.0; 0.0; -9.81],
+    spring=0.0, 
+    damper=0.0,
     seed=1, 
     vis=Visualizer(), 
     info=nothing, 
@@ -19,9 +21,11 @@ function cartpole(;
     opts_grad=SolverOptions(),
     T=Float64)
 
-    mechanism = get_cartpole(
-        timestep=timestep, 
-        gravity=gravity)
+    mechanism = get_cartpole(;
+        timestep, 
+        gravity,
+        spring,
+        damper)
     initialize_cartpole!(mechanism)
 
     if representation == :minimal

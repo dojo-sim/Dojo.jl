@@ -440,24 +440,6 @@ function reset!(joint::JointConstraint{T,N,Nc}; scale::T=1.0) where {T,N,Nc}
     return
 end
 
-function set_spring_damper_values!(joints, spring, damper;
-    ignore_origin::Bool=true)
-    i = 1
-    for joint in joints
-        (ignore_origin && joint.parent_id == 0) && continue
-        k = (length(spring) > 1) ? spring[i] : spring
-        b = (length(damper) > 1) ? damper[i] : damper
-        joint.spring = k > 0.0
-        joint.damper = b > 0.0
-        for element in (joint.translational, joint.rotational)
-            element.spring = max(0.0, k)
-            element.damper = max(0.0, b)
-        end
-        i += 1
-    end
-    return joints
-end
-
 function input_dimension(joint::JointConstraint{T,N,Nc};
     ignore_floating_base::Bool=false) where {T,N,Nc}
     ignore_floating_base && (N == 0) && return 0

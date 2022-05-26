@@ -58,7 +58,7 @@
     @test norm(z - Dojo.get_maximal_state(env2.mechanism)) < 1.0e-8
 
     # change atlas floating base 
-    mech = get_mechanism(:atlas)
+    mech = get_mechanism(:atlas,parse_damper=false)
     j = get_joint(mech, :floating_base)
     base_origin = get_body(mech, j.child_id).name 
 

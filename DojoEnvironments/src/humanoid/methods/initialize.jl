@@ -4,21 +4,25 @@ function get_humanoid(;
     friction_coefficient=0.8, 
     spring=0.0, 
     damper=0.0,
+    parse_damper=true,
 	contact_feet=true, 
     contact_body=false,
     T=Float64)
 
     path = joinpath(@__DIR__, "../deps/humanoid.urdf")
-    mech = Mechanism(path, true, T, 
-        gravity=gravity, 
-        timestep=timestep, 
-        spring=spring, 
-        damper=damper)
+    mech = Mechanism(path; floating=true, T,
+        gravity, 
+        timestep,
+        parse_damper)
+
+    # Adding springs and dampers
+    set_springs!(mech.joints, spring)
+    set_dampers!(mech.joints, damper)
 
     if contact_feet
         origin = Origin{T}()
         bodies = mech.bodies
-        eqs = mech.joints
+        joints = mech.joints
 
         # Foot contact
         left_foot = get_body(mech, :left_foot)
@@ -51,10 +55,10 @@ function get_humanoid(;
         normal = [[0.0; 0.0; 1.0] for i = 1:n]
         friction_coefficients = friction_coefficient * ones(T, n)
 
-        contacts_left = contact_constraint(left_foot, normal, 
+        contacts_left = contact_constraint(left_foot, normal; 
             friction_coefficient=friction_coefficients, 
             contact_origins=contacts, 
-            contact_radius=contact_radius)
+            contact_radius)
 
         right_foot = get_body(mech, :right_foot)
 
@@ -77,22 +81,19 @@ function get_humanoid(;
         normal = [[0.0; 0.0; 1.0] for i = 1:n]
         friction_coefficients = friction_coefficient * ones(T, n)
 
-        contacts_right = contact_constraint(right_foot, normal, 
+        contacts_right = contact_constraint(right_foot, normal; 
             friction_coefficient=friction_coefficients, 
             contact_origins=contacts, 
-            contact_radius=contact_radius)
+            contact_radius)
 
         set_minimal_coordinates!(mech, get_joint(mech, :floating_base), [0.0; 0.0; 1.2; 0.1; 0.0; 0.0])
-        # mech = Mechanism(origin, bodies, eqs, [contacts_left; contacts_right], 
-            # gravity=gravity, 
-            # timestep=timestep, 
-            # spring=spring, 
-            # damper=damper)
-        mech = Mechanism(origin, bodies, eqs, [contacts_left; ], 
-            gravity=gravity, 
-            timestep=timestep, 
-            spring=spring, 
-            damper=damper)
+
+        # mech = Mechanism(origin, bodies, joints, [contacts_left; contacts_right];
+            # gravity, 
+            # timestep)
+        mech = Mechanism(origin, bodies, joints, [contacts_left; ];
+            gravity, 
+            timestep)
     end
 
     return mech

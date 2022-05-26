@@ -3,7 +3,8 @@ function get_ant(;
     gravity=[0.0; 0.0; -9.81], 
     friction_coefficient=0.5,
     spring=0.0, 
-    damper=1.0, 
+    damper=0.0, 
+    parse_damper=true, 
     contact_feet=true, 
     contact_body=true,
     limits::Bool=true,
@@ -12,15 +13,18 @@ function get_ant(;
     T=Float64)
 
     path = joinpath(@__DIR__, "../deps/ant.urdf")
-    mech = Mechanism(path, true, T, 
-        gravity=gravity, 
-        timestep=timestep, 
-        spring=spring, 
-        damper=damper)
+    mech = Mechanism(path; floating=true, T,
+        gravity, 
+        timestep, 
+        parse_damper)
+
+    # Adding springs and dampers
+    set_springs!(mech.joints, spring)
+    set_dampers!(mech.joints, damper)
 
     # joint limits
     joints = deepcopy(mech.joints)
-
+    
     if limits
         hiparent_vertex = get_joint(mech, :hip_1)
         joints[hiparent_vertex.id] = add_limits(mech, hiparent_vertex, 
@@ -54,11 +58,9 @@ function get_ant(;
         joints[ankle4.id] = add_limits(mech, ankle4, 
             rot_limits=[SVector{1}(joint_limits[1][8]), SVector{1}(joint_limits[2][8])])
 
-        mech = Mechanism(Origin{T}(), mech.bodies, [joints...], 
-            gravity=gravity, 
-            timestep=timestep, 
-            spring=spring, 
-            damper=damper)
+        mech = Mechanism(Origin{T}(), mech.bodies, [joints...];
+            gravity, 
+            timestep)
     end
 
     if contact_feet
@@ -72,29 +74,28 @@ function get_ant(;
         foot = [get_body(mech, name) for name in foot_names]
         p = [[0.2; 0.2; 0.0], [-0.2; 0.2; 0.0], [-0.2; -0.2; 0.0], [0.2; -0.2; 0.0]]
         o = [f.shape.rh[1] for f in foot]
-        contacts = [contact_constraint(foot[i], normal, friction_coefficient=friction_coefficient, contact_origin=p[i], contact_radius=o[i]) for i = 1:length(foot_names)]
+        contacts = [contact_constraint(foot[i], normal; friction_coefficient, contact_origin=p[i], contact_radius=o[i]) for i = 1:length(foot_names)]
 
         if contact_body
             # torso contact
             torso = get_body(mech, :torso)
             p = [0.0; 0.0; 0.0]
             o = torso.shape.r
-            torso_contacts = contact_constraint(torso, normal, friction_coefficient=friction_coefficient, contact_origin=p, contact_radius=o)
+            torso_contacts = contact_constraint(torso, normal; friction_coefficient, contact_origin=p, contact_radius=o)
 
             # elbow contact
             elbow_names = [:aux_1, :aux_2, :aux_3, :aux_4]
             elbow = [get_body(mech, e) for e in elbow_names]
             p = [-[0.1; 0.1; 0.0], -[-0.1; 0.1; 0.0], -[-0.1;-0.1; 0.0], -[0.1; -0.1; 0.0]]
             o = [e.shape.rh[1] for e in elbow]
-            elbow_contacts = [contact_constraint(elbow[i], normal, friction_coefficient=friction_coefficient, contact_origin=p[i], contact_radius=o[i]) for i = 1:length(elbow_names)]
+            elbow_contacts = [contact_constraint(elbow[i], normal; friction_coefficient, contact_origin=p[i], contact_radius=o[i]) for i = 1:length(elbow_names)]
 
             contacts = [contacts..., torso_contacts, elbow_contacts...]
         end
-        mech = Mechanism(origin, bodies, joints, contacts, 
-        gravity=gravity, 
-        timestep=timestep, 
-        spring=spring, 
-        damper=damper)
+
+        mech = Mechanism(origin, bodies, joints, contacts; 
+        gravity, 
+        timestep)
     end
 
     return mech

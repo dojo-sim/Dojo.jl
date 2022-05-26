@@ -41,7 +41,8 @@ end
     for timestep in [0.10, 0.05, 0.01, 0.005]
         mech = get_mechanism(:fourbar,
             model="fourbar",
-            timestep=timestep)
+            timestep=timestep,
+            damper=1.0)
         Dojo.initialize!(mech, :fourbar,
             angle=0.25)
         loopjoints = mech.joints[end:end]

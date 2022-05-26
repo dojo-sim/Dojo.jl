@@ -28,18 +28,20 @@ function get_orbital(;
                 JointConstraint(Orbital(bodies[i - 1], bodies[i], ex; 
                 parent_vertex=vert12, 
                 child_vertex=vert11, 
-                spring=spring, 
-                damper=damper)) for i = 2:num_bodies]
+                spring, 
+                damper)) for i = 2:num_bodies]
             ]
     else
         joints = [jointb1]
     end
 
-    mech = Mechanism(origin, bodies, joints, 
-        gravity=gravity, 
-        timestep=timestep, 
-        spring=spring, 
-        damper=damper)
+    # Adding springs and dampers
+    set_springs!(joints, spring)
+    set_dampers!(joints, damper)
+
+    mech = Mechanism(origin, bodies, joints;
+        gravity, 
+        timestep)
 
     return mech
 end

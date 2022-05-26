@@ -25,7 +25,7 @@ function get_snake(;
     bodies = [Box(3 * radius, 2 * radius, length, length, color=RGBA(0.9, 0.9, 0.9)) for i = 1:num_bodies]
 
     # Constraints
-    jointb1 = JointConstraint(Floating(origin, bodies[1],
+    jointb1 = JointConstraint(Floating(origin, bodies[1];
         spring=0.0,
         damper=0.0))
 
@@ -33,8 +33,8 @@ function get_snake(;
         joints = [JointConstraint(Prototype(joint_type, bodies[i - 1], bodies[i], ex;
             parent_vertex=vert12,
             child_vertex=vert11,
-            spring=spring,
-            damper=damper)) for i = 2:num_bodies]
+            spring,
+            damper)) for i = 2:num_bodies]
         joints = [jointb1; joints]
     else
         joints = [jointb1]
@@ -45,25 +45,21 @@ function get_snake(;
         normal = [[0.0; 0.0; 1.0] for i = 1:n]
         friction_coefficient = friction_coefficient * ones(n)
 
-        contacts1 = contact_constraint(bodies, normal,
-            friction_coefficient=friction_coefficient,
+        contacts1 = contact_constraint(bodies, normal;
+            friction_coefficient,
             contact_origins=fill(vert11, n),
-            contact_type=contact_type) # we need to duplicate point for prismatic joint for instance
-        contacts2 = contact_constraint(bodies, normal,
-            friction_coefficient=friction_coefficient,
+            contact_type) # we need to duplicate point for prismatic joint for instance
+        contacts2 = contact_constraint(bodies, normal;
+            friction_coefficient,
             contact_origins=fill(vert12, n),
-            contact_type=contact_type)
-        mech = Mechanism(origin, bodies, joints, [contacts1; contacts2],
-            gravity=gravity,
-            timestep=timestep,
-            spring=spring,
-            damper=damper)
+            contact_type)
+        mech = Mechanism(origin, bodies, joints, [contacts1; contacts2];
+            gravity,
+            timestep)
     else
-        mech = Mechanism(origin, bodies, joints,
-            gravity=gravity,
-            timestep=timestep,
-            spring=spring,
-            damper=damper)
+        mech = Mechanism(origin, bodies, joints;
+            gravity,
+            timestep)
     end
     return mech
 end

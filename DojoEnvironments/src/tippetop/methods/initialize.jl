@@ -21,9 +21,9 @@ function get_tippetop(;
                 parent_vertex=[0,0,radius],
                 child_vertex=zeros(3)),
                 name = :fixed_joint)]
-    mechanism = Mechanism(origin, bodies, joints,
-        timestep=timestep,
-        gravity=gravity)
+    mechanism = Mechanism(origin, bodies, joints;
+        timestep,
+        gravity)
 
     # modify inertias
     mechanism.bodies[1].inertia = Diagonal([1.9, 2.1, 2.0])
@@ -32,20 +32,21 @@ function get_tippetop(;
         contact_origin = [0.0, 0.0, 0.0]
         normal = [0.0, 0.0, 1.0]
         contacts = [
-            contact_constraint(get_body(mechanism, :sphere1), normal,
-                friction_coefficient=friction_coefficient,
-                contact_origin=contact_origin, contact_radius=radius,
-                contact_type=contact_type),
-            contact_constraint(get_body(mechanism, :sphere2), normal,
-                friction_coefficient=friction_coefficient,
-                contact_origin=contact_origin,
+            contact_constraint(get_body(mechanism, :sphere1), normal;
+                friction_coefficient,
+                contact_origin, 
+                contact_radius=radius,
+                contact_type),
+            contact_constraint(get_body(mechanism, :sphere2), normal;
+                friction_coefficient,
+                contact_origin,
                 contact_radius=radius * α,
-                contact_type=contact_type)
+                contact_type)
             ]
         set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_joint), [0.0; 0.0; radius; zeros(3)])
-        mechanism = Mechanism(origin, bodies, joints, contacts,
-            gravity=gravity,
-            timestep=timestep)
+        mechanism = Mechanism(origin, bodies, joints, contacts;
+            gravity,
+            timestep)
     end
 
     return mechanism

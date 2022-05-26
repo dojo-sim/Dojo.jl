@@ -46,8 +46,6 @@ function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, mechanism::Mechanis
 end
 
 function Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:JointConstraint{T}}, contacts::Vector{<:ContactConstraint{T}};
-    spring=0.0, 
-    damper=0.0, 
     timestep=0.01, 
     gravity=[0.0; 0.0;-9.81]) where T
 
@@ -86,9 +84,6 @@ function Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:
 		    exclude_origin=true, 
             exclude_loop_joints=false)
 
-    # springs and dampers
-    (minimum(spring) > 0.0 && minimum(damper) > 0.0) && set_spring_damper_values!(joints, spring, damper)
-
     Mechanism{T,Nn,Ne,Nb,Ni}(origin, joints, bodies, contacts, system, residual_entries,
 		matrix_entries, diagonal_inverses, data_matrix, root_to_leaves, timestep, get_gravity(gravity), 0.0)
 end
@@ -96,12 +91,13 @@ end
 Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:JointConstraint{T}}; kwargs...) where T =
 	Mechanism(origin, bodies, joints, ContactConstraint{T}[]; kwargs...)
 
-function Mechanism(filename::String, 
+function Mechanism(filename::String; 
     floating::Bool=false, 
-    T=Float64; 
+    T=Float64,
+    parse_damper=true, 
     kwargs...)
     # parse urdf
-    origin, links, joints, loopjoints = parse_urdf(filename, floating, T)
+    origin, links, joints, loopjoints = parse_urdf(filename, floating, T, parse_damper)
 
     # create mechanism
     mechanism = Mechanism(origin, links, [joints; loopjoints]; kwargs...)

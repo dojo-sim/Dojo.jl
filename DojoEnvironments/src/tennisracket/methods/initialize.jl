@@ -8,9 +8,9 @@ function get_tennisracket(;
     h = 1.0
     bodies = [Box(h / 25.0, h / 2.0, h, mass, color=RGBA(1.0, 0.0, 0.0), name=:box)]
     joints = [JointConstraint(Floating(origin, bodies[1]), name=:floating_joint)]
-    mechanism = Mechanism(origin, bodies, joints, 
-        timestep=timestep, 
-        gravity=gravity)
+    mechanism = Mechanism(origin, bodies, joints; 
+        timestep, 
+        gravity)
     return mechanism
 end
 
