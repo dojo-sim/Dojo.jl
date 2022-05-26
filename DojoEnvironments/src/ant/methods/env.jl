@@ -11,7 +11,8 @@ function ant(;
     gravity=[0.0; 0.0; -9.81],
     friction_coefficient=0.5, 
     spring=0.0, 
-    damper=1.0, 
+    damper=0.0, 
+    parse_damper=true, 
     seed=1,
     contact_feet=true, 
     contact_body=true,
@@ -23,15 +24,16 @@ function ant(;
     opts_grad=SolverOptions(),
     T=Float64)
 
-    mechanism = get_ant(
-        timestep=timestep, 
-        gravity=gravity, 
-        friction_coefficient=friction_coefficient, 
-        spring=spring, 
-        damper=damper, 
-        contact_feet=contact_feet, 
-        contact_body=contact_body, 
-        limits=limits)
+    mechanism = get_ant(;
+        timestep, 
+        gravity, 
+        friction_coefficient, 
+        spring, 
+        damper, 
+        parse_damper, 
+        contact_feet, 
+        contact_body, 
+        limits)
 
     initialize_ant!(mechanism)
 

@@ -43,7 +43,7 @@ joint_types = [
 # no control
 ################################################################################
 @testset "Box" begin
-    mech = get_mechanism(:block,
+    mech = get_mechanism(:block;
         timestep=timestep0,
         gravity=gravity0,
         contact=false)
@@ -78,7 +78,7 @@ end
 # no control
 ################################################################################
 @testset "Pendulum" begin
-    mech = get_mechanism(:pendulum,
+    mech = get_mechanism(:pendulum;
         timestep=timestep0,
         gravity=gravity0)
 
@@ -116,7 +116,7 @@ end
 @testset "Humanoid" begin
     spring0 = 1.0
     damper0 = 1.0
-    mech = get_mechanism(:humanoid,
+    mech = get_mechanism(:humanoid;
         timestep=timestep0,
         gravity=gravity0,
         spring=spring0,
@@ -156,7 +156,7 @@ end
 @testset "Atlas" begin
     spring0 = 10.0
     damper0 = 1.0
-    mech = get_mechanism(:atlas,
+    mech = get_mechanism(:atlas;
         timestep=timestep0,
         gravity=gravity0,
         spring=spring0,
@@ -193,7 +193,7 @@ end
 @testset "Quadruped" begin
     spring0 = 0.3
     damper0 = 0.1
-    mech = get_mechanism(:quadruped,
+    mech = get_mechanism(:quadruped;
         timestep=timestep0,
         gravity=gravity0,
         spring=spring0,
@@ -232,7 +232,7 @@ end
     spring0 = 1.0 * 4e0
     damper0 = 1.0 * 2e+1
 
-    mech = get_mechanism(:snake,
+    mech = get_mechanism(:snake;
         timestep=timestep0,
         gravity=gravity0,
         num_bodies=Nb0,
@@ -267,7 +267,7 @@ end
 
 
     for joint_type in joint_types
-        mech = get_mechanism(:snake,
+        mech = get_mechanism(:snake;
             timestep=timestep0,
             gravity=gravity0,
             num_bodies=Nb0,

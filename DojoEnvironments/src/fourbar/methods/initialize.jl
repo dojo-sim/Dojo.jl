@@ -3,15 +3,19 @@ function get_fourbar(;
     gravity=[0.0; 0.0; -9.81],
     model=:fourbar, 
     spring=0.0, 
-    damper=1.0,
+    damper=0.0,
+    parse_damper=true,
     T=Float64)
 
     path = joinpath(@__DIR__, "../deps/$(String(model)).urdf")
-    mech = Mechanism(path, false, T, 
-        gravity=gravity, 
-        timestep=timestep, 
-        spring=spring, 
-        damper=damper)
+    mech = Mechanism(path; floating=false, T,
+        gravity, 
+        timestep, 
+        parse_damper)
+
+    # Adding springs and dampers
+    set_springs!(mech.joints, spring)
+    set_dampers!(mech.joints, damper)
 
     return mech
 end

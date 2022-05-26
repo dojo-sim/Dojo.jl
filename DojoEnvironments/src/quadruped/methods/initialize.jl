@@ -4,6 +4,7 @@ function get_quadruped(;
     friction_coefficient=0.8, 
     spring=0.0,
     damper=0.0, 
+    parse_damper=true, 
     contact_feet=true, 
     contact_body=true, 
     limits=true,
@@ -13,21 +14,14 @@ function get_quadruped(;
                   [ 0.5,  1.5, -1.0,]],
     T=Float64)
 
-    mech = Mechanism(path, true, T, 
-        gravity=gravity, 
-        timestep=timestep, 
-        spring=spring, 
-        damper=damper)
+    mech = Mechanism(path; floating=true, T,
+        gravity, 
+        timestep, 
+        parse_damper)
 
     # Adding springs and dampers
-    for joint in mech.joints[2:end]
-        joint.damper = true
-        joint.spring = true
-        joint.translational.spring=spring
-        joint.translational.damper=damper
-        joint.rotational.spring=spring
-        joint.rotational.damper=damper
-    end
+    set_springs!(mech.joints, spring)
+    set_dampers!(mech.joints, damper)
 
     # joint limits
     joints = deepcopy(mech.joints)
@@ -45,11 +39,9 @@ function get_quadruped(;
             joints[calf_joint.id] = add_limits(mech, calf_joint,
                 rot_limits=[SVector{1}(joint_limits[1][3]), SVector{1}(joint_limits[2][3])])
         end
-        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...], 
-            gravity=gravity,
-            timestep=timestep, 
-            spring=spring, 
-            damper=damper)
+        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...];
+            gravity,
+            timestep)
     end
 
     origin = Origin{T}()
@@ -69,22 +61,22 @@ function get_quadruped(;
         elbow_contact_radius = 0.023
 
         foot_contacts1 = contact_constraint(get_body(mech,:FR_calf), normal; 
-            friction_coefficient=friction_coefficient, 
+            friction_coefficient, 
             contact_origin=foot_contact, 
             contact_radius=foot_contact_radius, 
             name=:FR_contact)
         foot_contacts2 = contact_constraint(get_body(mech,:FL_calf), normal; 
-            friction_coefficient=friction_coefficient, 
+            friction_coefficient, 
             contact_origin=foot_contact, 
             contact_radius=foot_contact_radius, 
             name=:FL_contact)
         foot_contacts3 = contact_constraint(get_body(mech,:RR_calf), normal; 
-            friction_coefficient=friction_coefficient, 
+            friction_coefficient, 
             contact_origin=foot_contact, 
             contact_radius=foot_contact_radius, 
             name=:RR_contact)
         foot_contacts4 = contact_constraint(get_body(mech,:RL_calf), normal; 
-            friction_coefficient=friction_coefficient, 
+            friction_coefficient, 
             contact_origin=foot_contact, 
             contact_radius=foot_contact_radius, 
             name=:RL_contact)
@@ -92,43 +84,43 @@ function get_quadruped(;
 
         if contact_body
             elbow_contacts1 = contact_constraint(get_body(mech,:FR_thigh), normal; 
-                friction_coefficient=friction_coefficient, 
+                friction_coefficient, 
                 contact_origin=elbow_contactR, 
                 contact_radius=elbow_contact_radius, 
                 name=:FR_hip_contact)
             elbow_contacts2 = contact_constraint(get_body(mech,:FL_thigh), normal; 
-                friction_coefficient=friction_coefficient, 
+                friction_coefficient, 
                 contact_origin=elbow_contactL, 
                 contact_radius=elbow_contact_radius, 
                 name=:FL_hip_contact)
             elbow_contacts3 = contact_constraint(get_body(mech,:RR_thigh), normal; 
-                friction_coefficient=friction_coefficient, 
+                friction_coefficient, 
                 contact_origin=elbow_contactR, 
                 contact_radius=elbow_contact_radius, 
                 name=:RR_hip_contact)
             elbow_contacts4 = contact_constraint(get_body(mech,:RL_thigh), normal; 
-                friction_coefficient=friction_coefficient, 
+                friction_coefficient, 
                 contact_origin=elbow_contactL, 
                 contact_radius=elbow_contact_radius, 
                 name=:RL_hip_contact)
             push!(contacts, elbow_contacts1, elbow_contacts2, elbow_contacts3, elbow_contacts4)
             hip_contacts1 = contact_constraint(get_body(mech,:FR_hip), normal; 
-                friction_coefficient=friction_coefficient, 
+                friction_coefficient, 
                 contact_origin=-hip_contact, 
                 contact_radius=hip_contact_radius, 
                 name=:FR_hip_contact)
             hip_contacts2 = contact_constraint(get_body(mech,:FL_hip), normal; 
-                friction_coefficient=friction_coefficient, 
+                friction_coefficient, 
                 contact_origin=+hip_contact, 
                 contact_radius=hip_contact_radius, 
                 name=:FL_hip_contact)
             hip_contacts3 = contact_constraint(get_body(mech,:RR_hip), normal; 
-                friction_coefficient=friction_coefficient, 
+                friction_coefficient, 
                 contact_origin=-hip_contact, 
                 contact_radius=hip_contact_radius, 
                 name=:RR_hip_contact)
             hip_contacts4 = contact_constraint(get_body(mech,:RL_hip), normal; 
-                friction_coefficient=friction_coefficient, 
+                friction_coefficient, 
                 contact_origin=+hip_contact, 
                 contact_radius=hip_contact_radius, 
                 name=:RL_hip_contact)
@@ -137,11 +129,9 @@ function get_quadruped(;
 
         set_minimal_coordinates!(mech, get_joint(mech, :floating_base), [0.0; 0.0; 0.32; 0.0; 0.0; 0.0])
         
-        mech = Mechanism(origin, bodies, eqs, contacts, 
-            gravity=gravity, 
-            timestep=timestep, 
-            spring=spring, 
-            damper=damper)
+        mech = Mechanism(origin, bodies, eqs, contacts;
+            gravity, 
+            timestep)
     end
 
     # Spring Offset

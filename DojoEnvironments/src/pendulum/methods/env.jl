@@ -14,6 +14,7 @@ function pendulum(;
     gravity=-10.0, 
     mass=1.0, 
     len=1.0, 
+    spring=0.0,
     damper=0.0, 
     seed=1, 
     vis=Visualizer(), 
@@ -22,12 +23,12 @@ function pendulum(;
     opts_grad=SolverOptions(),
     T=Float64)
 
-    mechanism = get_mechanism(:pendulum, 
-        timestep=timestep, 
-        gravity=gravity, 
-        mass=mass, 
-        len=len, 
-        damper=damper)
+    mechanism = get_mechanism(:pendulum;
+        timestep, 
+        gravity, 
+        mass, 
+        len, 
+        damper)
 
     initialize!(mechanism, :pendulum)
 

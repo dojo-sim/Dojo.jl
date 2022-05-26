@@ -197,10 +197,10 @@ end
 		for joint_type in joint_types
 			# @show joint_type
 			Nb0 = 5
-			mech = DojoEnvironments.get_mechanism(:snake,
+			mech = DojoEnvironments.get_mechanism(:snake;
 				num_bodies=Nb0,
 				joint_type=joint_type)
-			mech = DojoEnvironments.get_mechanism(:snake,
+			mech = DojoEnvironments.get_mechanism(:snake;
 				num_bodies=Nb0,
 				joint_type=:Fixed)
 			Random.seed!(100)
@@ -253,10 +253,10 @@ end
 
 	# atlas
 	@testset "Atlas" begin
-		mech = DojoEnvironments.get_mechanism(:atlas,
+		mech = DojoEnvironments.get_mechanism(:atlas;
 			model_type=:simple,
 			contact_feet=true,
-			damper=10.0)
+			parse_damper=false)
 
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
@@ -495,7 +495,7 @@ end
 		@test norm(diag(M_a * N_a) .- 1.0, Inf) < 1.0e-8
 
 		# half cheetah
-		mechanism = DojoEnvironments.get_mechanism(:halfcheetah,
+		mechanism = DojoEnvironments.get_mechanism(:halfcheetah;
 			timestep=0.01,
 			gravity=-9.81)
 		Dojo.initialize!(mechanism, :halfcheetah)
@@ -525,7 +525,7 @@ end
 		@test norm(diag(M_a * N_fd) .- 1.0, Inf) < 1.0e-5
 
 		# atlas
-		mechanism = DojoEnvironments.get_mechanism(:atlas,
+		mechanism = DojoEnvironments.get_mechanism(:atlas;
 			timestep=0.01,
 			gravity=-9.81,
 			friction_coefficient=0.5,

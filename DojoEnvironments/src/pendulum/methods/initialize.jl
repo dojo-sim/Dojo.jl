@@ -21,21 +21,19 @@ function get_pendulum(;
 
     # Constraints
     joint = JointConstraint(Revolute(origin, body, joint_axis;
-        parent_vertex=parent_vertex,
-        child_vertex=child_vertex,
-        spring=spring,
-        damper=damper,
+        parent_vertex,
+        child_vertex,
+        spring,
+        damper,
         rot_spring_offset=spring_offset,
-        orientation_offset=orientation_offset), name=:joint)
+        orientation_offset), name=:joint)
 
     bodies = [body]
     joints = [joint]
 
-    mech = Mechanism(origin, bodies, joints,
-        gravity=gravity,
-        timestep=timestep,
-        spring=spring,
-        damper=damper)
+    mech = Mechanism(origin, bodies, joints;
+        gravity,
+        timestep)
 
     return mech
 end
@@ -73,22 +71,22 @@ function get_npendulum(;
     # Constraints
     jointb1 = JointConstraint(Prototype(basetype, origin, bodies[1], ex;
         child_vertex=vert11,
-        spring=spring,
-        damper=damper))
+        spring,
+        damper))
     if num_bodies > 1
         joints = [JointConstraint(Prototype(joint_type, bodies[i - 1], bodies[i], ex;
             parent_vertex=vert12,
             child_vertex=vert11,
-            spring=spring,
-            damper=damper)) for i = 2:num_bodies]
+            spring,
+            damper)) for i = 2:num_bodies]
         joints = [jointb1; joints]
     else
         joints = [jointb1]
     end
 
-    mech = Mechanism(origin, bodies, joints,
-        gravity=gravity,
-        timestep=timestep)
+    mech = Mechanism(origin, bodies, joints;
+        gravity,
+        timestep)
     return mech
 end
 

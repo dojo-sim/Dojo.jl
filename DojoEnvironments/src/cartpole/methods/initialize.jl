@@ -26,18 +26,18 @@ function get_cartpole(;
     # Joint Constraints
     joint_origin_slider = JointConstraint(Prismatic(origin, slider, slider_axis; 
         parent_vertex=szeros(Float64, 3), 
-        child_vertex=szeros(Float64, 3)))
+        child_vertex=szeros(Float64, 3),
+        spring=spring, damper=damper))
     joint_slider_pendulum = JointConstraint(Revolute(slider, pendulum, pendulum_axis; 
         parent_vertex=szeros(Float64, 3), 
-        child_vertex=[0.0; 0.0; 0.5 * pendulum_length]))
+        child_vertex=[0.0; 0.0; 0.5 * pendulum_length],
+        spring=spring, damper=damper))
     joints = [joint_origin_slider, joint_slider_pendulum]
 
     # Mechanism
-    mech = Mechanism(origin, links, joints, 
-        gravity=gravity, 
-        timestep=timestep, 
-        spring=spring, 
-        damper=damper)
+    mech = Mechanism(origin, links, joints;
+        gravity, 
+        timestep)
 
     return mech
 end

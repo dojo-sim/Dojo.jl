@@ -3,10 +3,13 @@ Base.:*(u::AbstractVector, v::SVector{1,T}) where T = u * v[1]
 Base.vcat(v::Adjoint{T,SVector{N,T}}, E::UniformScaling) where {T, N} = vcat(v, SMatrix{N,N,T,N*N}(E))
 Base.vcat(A::SMatrix{N1,N2,T,N1N2}, E::UniformScaling) where {T, N1, N2, N1N2} = vcat(A, SMatrix{N2,N2,T,N2*N2}(E))
 
+# svcat(a::T) where T = SA[a]
+# svcat(a::StaticArray) = a
 svcat(a::T, b::T) where T = SA[a; b]
 svcat(a::StaticArray, b::StaticArray) = vcat(a, b)
 svcat(a::StaticArray{Tuple{N},T,1}, b::T) where {T,N} = vcat(a, SA[b])
 svcat(a::T, b::StaticArray{Tuple{N},T,1}) where {T,N} = vcat(SA[a], b)
+# svcat(a, b, c...) = svcat(svcat(a, b), svcat(c...))
 
 szeros(::Type{T}, N) where T = @SVector zeros(T, N)
 szeros(N)= @SVector zeros(N)

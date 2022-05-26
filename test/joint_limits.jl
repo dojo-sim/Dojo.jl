@@ -29,11 +29,9 @@
         bodies = [pbody]
         joints = [joint_between_origin_and_pbody]
 
-        mech = Mechanism(origin, bodies, joints, 
-            gravity=gravity, 
-            timestep=timestep, 
-            spring=spring, 
-            damper=damper)
+        mech = Mechanism(origin, bodies, joints;
+            gravity, 
+            timestep)        
         return mech
     end
 

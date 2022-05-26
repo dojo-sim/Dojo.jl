@@ -1,8 +1,8 @@
 @testset "Pendulum" begin
     # get pendulum environment and simulate
     timestep=0.1
-    env = DojoEnvironments.get_environment("pendulum", 
-        timestep=timestep, 
+    env = DojoEnvironments.get_environment("pendulum";
+        timestep, 
         gravity=-10.0);
     reset(env);
     DojoEnvironments.initialize_pendulum!(env.mechanism, 
@@ -30,8 +30,8 @@
     @test norm(Fu1 - Fu2, Inf) < 1.0e-6 
 
     timestep=0.1
-    env = DojoEnvironments.get_environment("halfcheetah", 
-        timestep=timestep, 
+    env = DojoEnvironments.get_environment("halfcheetah";
+        timestep, 
         gravity=-10.0);
     reset(env);
 
@@ -47,8 +47,8 @@
 
     # set state
     z = Dojo.get_maximal_state(env.mechanism)
-    env2 = DojoEnvironments.get_environment(:halfcheetah, 
-        timestep=timestep, 
+    env2 = DojoEnvironments.get_environment(:halfcheetah;
+        timestep, 
         gravity=-10.0);
     reset(env);
     Dojo.set_maximal_state!(env2.mechanism, zeros(Dojo.maximal_dimension(env2.mechanism)))
@@ -58,7 +58,7 @@
     @test norm(z - Dojo.get_maximal_state(env2.mechanism)) < 1.0e-8
 
     # change atlas floating base 
-    mech = get_mechanism(:atlas)
+    mech = get_mechanism(:atlas; parse_damper=false)
     j = get_joint(mech, :floating_base)
     base_origin = get_body(mech, j.child_id).name 
 

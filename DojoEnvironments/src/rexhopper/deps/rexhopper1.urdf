@@ -98,5 +98,6 @@
       link="rw1" />
     <axis
       xyz="-1 0 0" />
+    <dynamics damping="1.0" />
   </joint>
 </robot>

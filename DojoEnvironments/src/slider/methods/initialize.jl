@@ -18,17 +18,15 @@ function get_slider(;
     # Constraints
     joint_between_origin_and_pbody = JointConstraint(Prismatic(origin, pbody, joint_axis; 
         child_vertex=child_vertex, 
-        spring=spring, 
-        damper=damper))
+        spring, 
+        damper))
 
     bodies = [pbody]
     joints = [joint_between_origin_and_pbody]
 
-    mech = Mechanism(origin, bodies, joints, 
-        gravity=gravity, 
-        timestep=timestep, 
-        spring=spring, 
-        damper=damper)
+    mech = Mechanism(origin, bodies, joints;
+        gravity, 
+        timestep)
 
     return mech
 end
@@ -72,16 +70,16 @@ function get_nslider(;
             [JointConstraint(Prismatic(bodies[i - 1], bodies[i], ex; 
                 parent_vertex=vert12, 
                 child_vertex=vert11, 
-                spring=spring, 
+                spring, 
                 damper=damper)) for i = 2:num_bodies]
             ]
     else
         joints = [jointb1]
     end
 
-    mech = Mechanism(origin, bodies, joints, 
-        gravity=gravity, 
-        timestep=timestep)
+    mech = Mechanism(origin, bodies, joints;
+        gravity, 
+        timestep)
 
     return mech
 end

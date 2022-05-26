@@ -11,8 +11,9 @@ function quadruped(;
     timestep=0.05, 
     gravity=[0.0; 0.0; -9.81], 
     friction_coefficient=0.8,
-    damper=10.0, 
+    damper=0.0, 
     spring=0.0, 
+    parse_damper=true,
     info=nothing,
     seed=1, 
     contact_feet=true,
@@ -24,14 +25,15 @@ function quadruped(;
     opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5),
     T=Float64)
 
-    mechanism = get_mechanism(:quadruped, 
-        timestep=timestep, 
-        contact_feet=contact_feet,
-        contact_body=contact_body, 
-        gravity=gravity, 
-        friction_coefficient=friction_coefficient, 
-        damper=damper, 
-        spring=spring)
+    mechanism = get_mechanism(:quadruped;
+        timestep, 
+        contact_feet,
+        contact_body, 
+        gravity, 
+        friction_coefficient, 
+        parse_damper,
+        damper, 
+        spring)
 
     initialize!(mechanism, :quadruped)
 

@@ -27,8 +27,8 @@ function get_raiberthopper(;
     joint_body_foot = JointConstraint(Prismatic(body, foot, leg_axis;
         parent_vertex=szeros(Float64, 3), 
         child_vertex=szeros(Float64, 3), 
-        spring=spring, 
-        damper=damper))
+        spring, 
+        damper))
     joints = [joint_origin_body, joint_body_foot]
 
     # Mechanism
@@ -38,8 +38,8 @@ function get_raiberthopper(;
         friction_coefficient = 0.5
 
         # foot
-        foot_contacts = contact_constraint(foot, contact_normal, 
-            friction_coefficient=friction_coefficient,
+        foot_contacts = contact_constraint(foot, contact_normal; 
+            friction_coefficient,
             contact_origin=[0.0; 0.0; 0.0], 
             contact_radius=foot_radius)
 
@@ -47,24 +47,20 @@ function get_raiberthopper(;
 
         # body
         if contact_body
-            body_contacts = contact_constraint(body, contact_normal, 
-                friction_coefficient=friction_coefficient,
+            body_contacts = contact_constraint(body, contact_normal; 
+                friction_coefficient,
                 contact_origin=[0.0; 0.0; 0.0], 
                 contact_radius=body_radius)
             push!(contacts, body_contacts)
         end
         
-        mech = Mechanism(origin, links, joints, contacts, 
-            gravity=gravity, 
-            timestep=timestep, 
-            spring=spring, 
-            damper=damper)
+        mech = Mechanism(origin, links, joints, contacts; 
+            gravity, 
+            timestep)
     else
-        mech = Mechanism(origin, links, joints, 
-            gravity=gravity, 
-            timestep=timestep, 
-            spring=spring, 
-            damper=damper)
+        mech = Mechanism(origin, links, joints;
+            gravity, 
+            timestep)
     end
     return mech
 end

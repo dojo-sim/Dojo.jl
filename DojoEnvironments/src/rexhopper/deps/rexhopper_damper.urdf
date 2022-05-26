@@ -330,6 +330,7 @@
       link="rw0" />
     <axis
       xyz="1 0 0" />
+    <dynamics damping="1.0" />
   </joint>
   <!-- <link
     name="rw1">
