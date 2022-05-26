@@ -16,6 +16,7 @@ env = get_environment(:cartpole,
     timestep=timestep,
     gravity=gravity);
 
+
 ## mujoco_inertia!(env.mechanism)
 
 # ## visualizer 

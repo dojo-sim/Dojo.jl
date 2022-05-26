@@ -18,6 +18,10 @@ env = get_environment(:quadruped,
     friction_coefficient=friction_coefficient,
     damper=damper);
 
+for j in env.mechanism.joints 
+    @show j.name 
+end
+
 # ## Simulate
 initialize!(env.mechanism, :quadruped, 
     body_position=[0.0; 0.0; 0.5])
@@ -27,7 +31,7 @@ storage = simulate!(env.mechanism, 2.0,
     opts=SolverOptions(rtol=1.0e-4, btol=1.0e-4, verbose=false));
 
 # ## Visualizer
-render(env.vis)
+open(env.vis)
 
 # ## Visualize
 visualize(env.mechanism, storage, 

@@ -4,7 +4,7 @@ function constraint(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn
 
     mass = body.mass
     inertia = body.inertia
-    gravity=mechanism.gravity
+    gravity = mechanism.gravity
 
     x1, q1 = previous_configuration(state)
     x2, q2 = current_configuration(state)

@@ -93,6 +93,13 @@ ContactConstraint
 contact_constraint
 contact_location
 get_sdf 
+Collision
+SphereHalfSpaceCollision
+SphereSphereCollision
+SphereCapsuleCollision
+SphereBoxCollision
+contact_normal 
+contact_tangent
 ```
 
 ### Representations
@@ -127,6 +134,7 @@ Block
 Cartpole
 HalfCheetah
 Hopper
+Panda
 Pendulum
 Quadruped
 RaibertHopper
@@ -175,4 +183,5 @@ set_camera!
 set_light!
 set_surface!
 set_floor!
+set_arrow!
 ```

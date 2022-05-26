@@ -61,6 +61,7 @@ makedocs(
             "impact.md",
             "nonlinear_friction.md",
             "linearized_friction.md",
+            "collisions.md",
         ],
 
         "Interior-Point Solver" => [
