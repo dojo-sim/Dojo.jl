@@ -10,9 +10,9 @@ function test_solmat(model;
 
     @testset "$(string(model))" begin
         # mechanism
-        mechanism = get_mechanism(model,
-            timestep=timestep,
-            gravity=gravity;
+        mechanism = get_mechanism(model;
+            timestep,
+            gravity,
             kwargs...)
         initialize!(mechanism, model)
 

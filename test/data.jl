@@ -97,8 +97,8 @@ function test_data_system(model::Symbol;
 
     # mechanism
       mechanism = DojoEnvironments.get_mechanism(model;
-		timestep=timestep,
-		gravity=gravity,
+		timestep,
+		gravity,
 		kwargs...)
     Dojo.initialize!(mechanism, model)
     # simulate

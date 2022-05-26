@@ -51,10 +51,9 @@
         contacts = [Dojo.ContactConstraint((body_body, pbody.id, cbody.id), name=:body_body)]
 
         # z-drop (w/ gravity)
-        mechanism = Dojo.Mechanism(origin, bodies, joints, contacts,
-                    gravity=gravity,
-                    timestep=timestep)
-
+        mechanism = Dojo.Mechanism(origin, bodies, joints, contacts;
+                    gravity,
+                    timestep)
         return mechanism
     end
 
@@ -596,7 +595,7 @@ end
 
     contacts = [ContactConstraint((body_body_contact, pbody.id, cbody.id), name=:body_body)]
 
-    mech = Mechanism(origin, bodies, joints, contacts,
+    mech = Mechanism(origin, bodies, joints, contacts;
                 gravity=1.0 * -9.81, 
                 timestep=0.1)
 
