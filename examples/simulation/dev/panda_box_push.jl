@@ -1,11 +1,16 @@
 using MeshCat
 using GeometryBasics
-# using Plots
+
+using Dojo
+using DojoEnvironments
 
 vis = Visualizer()
 render(vis)
 
-mech = DojoEnvironments.get_mechanism(:panda,
+include(joinpath(@__DIR__, "..", "..", "..", "DojoEnvironments/src/utilities.jl"))
+include(joinpath(@__DIR__, "..", "..", "..", "DojoEnvironments/src/panda/methods/initialize.jl"))
+
+mech = get_panda(
     timestep=0.01,
     gravity=0.0 * 9.81,
     spring=1.0,
@@ -46,7 +51,7 @@ set_minimal_state!(mech, y)
 box_body = get_body(mech, :box)
 box_body.state.q2 =  RotZ(0.25 * π)
 
-storage = simulate!(mech, 2.5, 
+storage = simulate!(mech, 5.0, 
     ctrl!, 
     verbose=true,
     opts=SolverOptions(verbose=true, rtol=1.0e-6, btol=1.0e-6));

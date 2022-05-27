@@ -53,7 +53,6 @@ function get_panda(;
     joints = mech.joints
     contacts = ContactConstraint{T}[]
 
-<<<<<<< HEAD
     # if contact
     #     # if model_type == :end_effector
     #         # TODO place the contact points for each finger of the end-effector
@@ -113,26 +112,6 @@ function get_panda(;
             sidez,
             ee_radius,
         )
-=======
-    if contact
-        if model_type == :end_effector
-            # TODO place the contact points for each finger of the end-effector
-        elseif model_type == :no_end_effector
-            # spherical end-effector contact
-            location = [-0.01; 0.004; 0.01]
-            normal = [0.0; 0.0; 1.0]
-            offset = [0.0; 0.0; 0.05]
-            contact = contact_constraint(
-                get_body(mech, :link7),
-                normal;
-                friction_coefficient,
-                contact_point=location,
-                offset,
-                name=:end_effector)
-            push!(contacts, contact)
-        end
-    end
->>>>>>> 65fa03026a6a25f1f4db0fd3a2791c3735426454
 
         # collision = Dojo.SphereSphereCollision{Float64,2,3,6}(
         #     SA[0.0; 0.0; 0.0],
