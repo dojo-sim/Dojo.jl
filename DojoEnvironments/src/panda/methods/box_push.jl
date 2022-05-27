@@ -5,7 +5,7 @@ using GeometryBasics
 vis = Visualizer()
 render(vis)
 
-mech = Dojo.get_mechanism(:panda,
+mech = DojoEnvironments.get_mechanism(:panda,
     timestep=0.01,
     gravity=0.0 * 9.81,
     spring=1.0,

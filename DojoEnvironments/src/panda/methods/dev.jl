@@ -5,7 +5,7 @@ vis = Visualizer()
 open(vis)
 
 
-mech = Dojo.get_mechanism(:panda,
+mech = DojoEnvironments.get_mechanism(:panda,
     timestep=0.05,
     gravity=-0*9.81,
     spring=0.0,
@@ -98,7 +98,7 @@ Lmat(q)' -  Lmat(inv(q))
 
 
 
-mech = Dojo.get_mechanism(:pendulum,
+mech = DojoEnvironments.get_mechanism(:pendulum,
     timestep=0.01,
     gravity=-0.0,
     spring=0.0,
@@ -140,7 +140,7 @@ using Rotations
 using FiniteDiff
 using Test
 
-mech = Dojo.get_mechanism(:pendulum)
+mech = DojoEnvironments.get_mechanism(:pendulum)
 joint0 = mech.joints[1]
 rot0 = joint0.rotational
 rot0.orientation_offset = rand(QuatRotation).q
@@ -277,7 +277,7 @@ vis = Visualizer()
 open(vis)
 
 
-mech = Dojo.get_mechanism(:panda,
+mech = DojoEnvironments.get_mechanism(:panda,
     timestep=0.01,
     gravity=[0,0,-9.0],
     spring=0.0,

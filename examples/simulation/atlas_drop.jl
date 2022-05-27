@@ -4,9 +4,10 @@ Pkg.instantiate()
 
 # ## Setup
 using Dojo
+using DojoEnvironments
 
 # ## Mechanism
-mech = get_mechanism(:atlas, 
+mech = DojoEnvironments.get_mechanism(:atlas, 
     timestep=0.1, 
     gravity=-9.81, 
     friction_coefficient=0.5, 
