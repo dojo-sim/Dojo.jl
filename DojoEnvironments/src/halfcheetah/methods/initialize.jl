@@ -6,17 +6,21 @@ function get_halfcheetah(;
     contact_body=true,
     limits=true,
     spring=[240.0, 180.0, 120.0, 180.0, 120.0, 60.0],
-    damper=[6.0, 4.5, 3.0, 4.5, 3.0, 1.5],
+    damper=0.0,
+    parse_damper=true,
     joint_limits=[[-0.52, -0.785, -0.400, -1.0, -1.20, -0.5],
                   [ 1.05,  0.785,  0.785,  0.7,  0.87,  0.5]],
     T=Float64)
     
     path = joinpath(@__DIR__, "../deps/halfcheetah.urdf")
-    mech = Mechanism(path, false, T, 
-        gravity=gravity, 
-        timestep=timestep, 
-        spring=spring, 
-        damper=damper)
+    mech = Mechanism(path; floating=false, T,
+        gravity, 
+        timestep, 
+        parse_damper)
+
+    # Adding springs and dampers
+    set_springs!(mech.joints, spring)
+    set_dampers!(mech.joints, damper)
 
     # joint limits
     joints = deepcopy(mech.joints)
@@ -46,11 +50,9 @@ function get_halfcheetah(;
         joints[ffoot.id] = add_limits(mech, ffoot, 
             rot_limits=[SVector{1}(joint_limits[1][6]), SVector{1}(joint_limits[2][6])])
 
-        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...], 
-            gravity=gravity, 
-            timestep=timestep, 
-            spring=spring, 
-            damper=damper)
+        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...];
+            gravity, 
+            timestep)
     end
 
     if contact_feet
@@ -68,36 +70,37 @@ function get_halfcheetah(;
                 pf = [+0.5 * body.shape.shape[1].rh[2]; 0.0; 0.0]
                 pb = [-0.5 * body.shape.shape[1].rh[2]; 0.0; 0.0]
                 o = body.shape.shape[1].rh[1]
-                push!(models, contact_constraint(body, normal, 
-                    friction_coefficient=friction_coefficient, 
+                push!(models, contact_constraint(body, normal; 
+                    friction_coefficient, 
                     contact_origin=pf, 
                     contact_radius=o))
-                push!(models, contact_constraint(body, normal, 
-                    friction_coefficient=friction_coefficient, 
-                    contact_origin=pb, contact_radius=o))
+                push!(models, contact_constraint(body, normal; 
+                    friction_coefficient, 
+                    contact_origin=pb, 
+                    contact_radius=o))
 
                 # head
                 pf = [+0.5 * body.shape.shape[1].rh[2] + 0.214; 0.0; 0.1935]
                 o = body.shape.shape[2].rh[1]
-                push!(models, contact_constraint(body, normal, 
-                    friction_coefficient=friction_coefficient, 
+                push!(models, contact_constraint(body, normal; 
+                    friction_coefficient, 
                     contact_origin=pf, 
                     contact_radius=o))
             else
                 p = [0;0; -0.5 * body.shape.rh[2]]
                 o = body.shape.rh[1]
-                push!(models, contact_constraint(body, normal, 
-                    friction_coefficient=friction_coefficient, 
+                push!(models, contact_constraint(body, normal;
+                    friction_coefficient, 
                     contact_origin=p, 
                     contact_radius=o))
             end
         end
+
         set_minimal_coordinates!(mech, get_joint(mech, :floating_joint), [0.576509, 0.0, 0.02792])
-        mech = Mechanism(origin, bodies, joints, [models...], 
-            gravity=gravity, 
-            timestep=timestep, 
-            spring=spring, 
-            damper=damper)
+
+        mech = Mechanism(origin, bodies, joints, [models...];
+            gravity, 
+            timestep)
     end
     return mech
 end

@@ -9,15 +9,19 @@ function get_rexhopper(;
     floating=true,
     contact_type=:nonlinear,
     spring=0.0,
-    damper=1.0,
+    damper=0.0,
+    parse_damper=true,
     T=Float64)
 
     path = joinpath(@__DIR__, "../deps/$(String(model)).urdf")
-    mech = Mechanism(path, floating, T,
-        gravity=gravity,
-        timestep=timestep,
-        spring=spring,
-        damper=damper)
+    mech = Mechanism(path; floating, T,
+        gravity,
+        timestep,
+        parse_damper)
+
+    # Adding springs and dampers
+    set_springs!(mech.joints, spring)
+    set_dampers!(mech.joints, damper)
 
     # joint limits
     joints = deepcopy(mech.joints)
@@ -29,11 +33,9 @@ function get_rexhopper(;
             rot_limits=[SVector{1}(-0.7597), SVector{1}(1.8295)])
         joints[joint3.id] = add_limits(mech, joint3,
             rot_limits=[SVector{1}(-1.8295), SVector{1}(0.7597)])
-        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...],
-            gravity=gravity,
-            timestep=timestep,
-            spring=spring,
-            damper=damper)
+        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...];
+            gravity,
+            timestep)
     end
 
     if contact_foot
@@ -51,50 +53,49 @@ function get_rexhopper(;
         base_radius = 0.14
         p = [0.1685; 0.0025; -0.0055]
         o = foot_radius
-        push!(models, contact_constraint(link3, normal,
-            friction_coefficient=friction_coefficient,
+        push!(models, contact_constraint(link3, normal;
+            friction_coefficient,
             contact_origin=p,
             contact_radius=o,
-            contact_type=contact_type,
+            contact_type,
             name=:foot))
         p = [-0.10; -0.002; 0.01]
         o = ankle_radius
-        push!(models, contact_constraint(link3, normal,
-            friction_coefficient=friction_coefficient,
+        push!(models, contact_constraint(link3, normal;
+            friction_coefficient,
             contact_origin=p,
             contact_radius=o,
-            contact_type=contact_type,
+            contact_type,
             name=:ankle3))
         p = [0.24; 0.007; 0.005]
-        push!(models, contact_constraint(link2, normal,
-            friction_coefficient=friction_coefficient,
+        push!(models, contact_constraint(link2, normal;
+            friction_coefficient,
             contact_origin=p,
             contact_radius=o,
-            contact_type=contact_type,
+            contact_type,
             name=:ankle2))
         base_link = get_body(mech, :base_link)
         pl = [0.0; +0.075; 0.03]
         pr = [0.0; -0.075; 0.03]
         o = base_radius
-        push!(models, contact_constraint(base_link, normal,
-            friction_coefficient=friction_coefficient,
+        push!(models, contact_constraint(base_link, normal;
+            friction_coefficient,
             contact_origin=pl,
             contact_radius=o,
-            contact_type=contact_type,
+            contact_type,
             name=:torso_left))
-        push!(models, contact_constraint(base_link, normal,
-            friction_coefficient=friction_coefficient,
+        push!(models, contact_constraint(base_link, normal;
+            friction_coefficient,
             contact_origin=pr,
             contact_radius=o,
-            contact_type=contact_type,
+            contact_type,
             name=:torso_right))
 
         set_minimal_coordinates!(mech, get_joint(mech, :floating_base), [0,0,1.0, 0,0,0])
-        mech = Mechanism(origin, bodies, joints, [models...],
-            gravity=gravity,
-            timestep=timestep,
-            spring=spring,
-            damper=damper)
+
+        mech = Mechanism(origin, bodies, joints, [models...];
+            gravity,
+            timestep)
     end
     return mech
 end

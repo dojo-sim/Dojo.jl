@@ -94,6 +94,7 @@
 		<child link="torso"/>
 		<origin rpy="0.00000 0.00000 0.00000" xyz="0.00000 0.00000 0.00000"/>
 		<axis xyz="0.00000 1.00000 0.00000"/>
+		<dynamics damping="50.0"/>
 	</joint>
 	<joint name="thigh" type="revolute">
 		<parent link="torso"/>
@@ -101,6 +102,7 @@
 		<dynamics damping="1.0" friction="0.0001"/>
 		<origin rpy="0.00000 0.00000 0.00000" xyz="0.00000 0.00000 -0.20000"/>
 		<axis xyz="0.00000 1.00000 0.00000"/>
+		<dynamics damping="50.0"/>
 	</joint>
 	<joint name="leg" type="revolute">
 		<parent link="thigh"/>
@@ -108,6 +110,7 @@
 		<dynamics damping="1.0" friction="0.0001"/>
 		<origin rpy="0.00000 0.00000 0.00000" xyz="0.0000 0.00000 -0.45000"/>
 		<axis xyz="0.00000 1.00000 0.00000"/>
+		<dynamics damping="50.0"/>
 	</joint>
 	<joint name="foot" type="revolute">
 		<parent link="leg"/>
@@ -115,6 +118,7 @@
 		<dynamics damping="1.0" friction="0.0001"/>
 		<origin rpy="0.00000 0.00000 0.00000" xyz="0.00000 0.00000 -0.50000"/>
 		<axis xyz="0.00000 1.00000 0.00000"/>
+		<dynamics damping="50.0"/>
 	</joint>
 
 </robot>

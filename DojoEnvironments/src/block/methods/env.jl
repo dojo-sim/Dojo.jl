@@ -22,13 +22,13 @@ function block(;
     opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5),
     T=Float64)
 
-    mechanism = get_block(
-        timestep=timestep, 
-        gravity=gravity, 
-        friction_coefficient=friction_coefficient, 
-        side=side, 
-        contact=contact, 
-        contact_type=contact_type)
+    mechanism = get_block(;
+        timestep, 
+        gravity, 
+        friction_coefficient, 
+        side, 
+        contact, 
+        contact_type)
 
     initialize_block!(mechanism)
 

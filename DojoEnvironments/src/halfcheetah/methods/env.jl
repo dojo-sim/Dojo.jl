@@ -11,7 +11,8 @@ function halfcheetah(;
     gravity=[0.0; 0.0; -9.81],
     friction_coefficient=0.4, 
     spring=[240.0, 180.0, 120.0, 180.0, 120.0, 60.0], 
-    damper=2.5 * [6., 4.5, 3., 4.5, 3., 1.5],
+    damper=0.0,
+    parse_damper=true,
     limits=true,
     seed=1, 
     contact_feet=true, 
@@ -23,15 +24,16 @@ function halfcheetah(;
     opts_grad=SolverOptions(),
     T=Float64)
 
-    mechanism = get_halfcheetah(
-        timestep=timestep, 
-        gravity=gravity, 
-        friction_coefficient=friction_coefficient, 
-        spring=spring, 
-        damper=damper, 
-        contact_feet=contact_feet, 
-        contact_body=contact_body, 
-        limits=limits)
+    mechanism = get_halfcheetah(;
+        timestep, 
+        gravity, 
+        friction_coefficient, 
+        spring, 
+        damper, 
+        parse_damper, 
+        contact_feet, 
+        contact_body, 
+        limits)
     initialize_halfcheetah!(mechanism)
 
     if representation == :minimal

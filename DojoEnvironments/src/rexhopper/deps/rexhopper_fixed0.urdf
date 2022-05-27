@@ -102,6 +102,7 @@
       upper="3.14"
       effort="0"
       velocity="0" />
+    <dynamics damping="1.0" />
   </joint>
   <link
     name="link1">
@@ -160,6 +161,7 @@
       upper="1.8295"
       effort="0"
       velocity="0" />
+    <dynamics damping="1.0" />
   </joint>
   <link
     name="link2">
@@ -218,6 +220,7 @@
       upper="3.14"
       effort="0"
       velocity="0" />
+    <dynamics damping="1.0" />
   </joint>
   <link
     name="link3">
@@ -276,6 +279,7 @@
       upper="0.7597"
       effort="0"
       velocity="0" />
+    <dynamics damping="1.0" />
   </joint>
   <link
     name="rw0">
@@ -329,6 +333,7 @@
       link="rw0" />
     <axis
       xyz="1 0 0" />
+    <dynamics damping="1.0" />
   </joint>
   <link
     name="rw1">
@@ -382,6 +387,7 @@
       link="rw1" />
     <axis
       xyz="-1 0 0" />
+    <dynamics damping="1.0" />
   </joint>
   <link
     name="rwz">
@@ -435,5 +441,6 @@
       link="rwz" />
     <axis
       xyz="0 0 1" />
+    <dynamics damping="1.0" />
   </joint>
 </robot>

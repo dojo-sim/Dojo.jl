@@ -10,8 +10,9 @@ function panda(;
     timestep=0.01,
     gravity=[0.0; 0.0; -9.81],
     friction_coefficient=0.8,
-    damper=10.0,
+    damper=0.0,
     spring=0.0,
+    parse_damper=true,
     info=nothing,
     model_type=:end_effector,
     seed=1,
@@ -24,15 +25,16 @@ function panda(;
     opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5),
     T=Float64)
 
-    mechanism = get_mechanism(:panda,
-        timestep=timestep,
-        gravity=gravity,
-        friction_coefficient=friction_coefficient,
-        damper=damper,
-        spring=spring,
-        contact=contact,
-        limits=limits,
-        model_type=model_type)
+    mechanism = get_mechanism(:panda;
+        timestep,
+        gravity,
+        friction_coefficient,
+        damper,
+        spring,
+        parse_damper,
+        contact,
+        limits,
+        model_type)
 
     initialize!(mechanism, :panda)
 

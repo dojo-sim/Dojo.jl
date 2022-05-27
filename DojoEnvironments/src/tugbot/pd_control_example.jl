@@ -19,7 +19,7 @@ using Quaternions
 vis = Visualizer()
 open(vis)
 
-mech = DojoEnvironments.get_mechanism(:tugbot, gravity=-1.81, timestep=0.10, radius=0.32)
+mech = DojoEnvironments.get_mechanism(:tugbot; gravity=-1.81, timestep=0.10, radius=0.32)
 
 function ctrl!(mechanism::Mechanism, k::Int; x_target=SVector{3}(0,3,3.0), kp=1.5, kd=2.0)
     dt = mechanism.timestep

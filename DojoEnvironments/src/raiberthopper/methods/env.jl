@@ -9,6 +9,8 @@ function raiberthopper(;
     representation=:minimal, 
     timestep=0.05, 
     gravity=[0.0; 0.0; -9.81],
+    spring=0.0, 
+    damper=0.1, 
     control_scaling=Diagonal(ones(3)),
     seed=1, 
     contact_foot=true, 
@@ -20,11 +22,13 @@ function raiberthopper(;
     opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5),
     T=Float64)
 
-    mechanism = get_raiberthopper(
-        timestep=timestep, 
-        gravity=gravity,
-        contact_foot=contact_foot,
-        contact_body=contact_body)
+    mechanism = get_raiberthopper(;
+        timestep, 
+        gravity,
+        spring, 
+        damper, 
+        contact_foot,
+        contact_body)
     initialize_raiberthopper!(mechanism)
 
     if representation == :minimal

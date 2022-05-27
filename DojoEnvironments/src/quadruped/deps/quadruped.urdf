@@ -58,7 +58,7 @@
     <parent link="trunk"/>
     <child link="FR_hip"/>
     <axis xyz="1 0 0"/>
-    <dynamics damping="0" friction="0"/>
+    <dynamics damping="1.0" friction="0"/>
     <limit effort="20" lower="-0.802851455917" upper="0.802851455917" velocity="52.4"/>
   </joint>
   <link name="FR_hip">
@@ -86,7 +86,7 @@
     <parent link="FR_hip"/>
     <child link="FR_thigh"/>
     <axis xyz="0 1 0"/>
-    <dynamics damping="0" friction="0"/>
+    <dynamics damping="1.0" friction="0"/>
     <limit effort="55" lower="-1.0471975512" upper="4.18879020479" velocity="28.6"/>
   </joint>
   <link name="FR_thigh">
@@ -114,7 +114,7 @@
     <parent link="FR_thigh"/>
     <child link="FR_calf"/>
     <axis xyz="0 1 0"/>
-    <dynamics damping="0" friction="0"/>
+    <dynamics damping="1.0" friction="0"/>
     <limit effort="55" lower="-2.69653369433" upper="-0.916297857297" velocity="28.6"/>
   </joint>
   <link name="FR_calf">
@@ -143,7 +143,7 @@
     <parent link="trunk"/>
     <child link="FL_hip"/>
     <axis xyz="1 0 0"/>
-    <dynamics damping="0" friction="0"/>
+    <dynamics damping="1.0" friction="0"/>
     <limit effort="20" lower="-0.802851455917" upper="0.802851455917" velocity="52.4"/>
   </joint>
   <link name="FL_hip">
@@ -171,7 +171,7 @@
     <parent link="FL_hip"/>
     <child link="FL_thigh"/>
     <axis xyz="0 1 0"/>
-    <dynamics damping="0" friction="0"/>
+    <dynamics damping="1.0" friction="0"/>
     <limit effort="55" lower="-1.0471975512" upper="4.18879020479" velocity="28.6"/>
   </joint>
   <link name="FL_thigh">
@@ -199,7 +199,7 @@
     <parent link="FL_thigh"/>
     <child link="FL_calf"/>
     <axis xyz="0 1 0"/>
-    <dynamics damping="0" friction="0"/>
+    <dynamics damping="1.0" friction="0"/>
     <limit effort="55" lower="-2.69653369433" upper="-0.916297857297" velocity="28.6"/>
   </joint>
   <link name="FL_calf">
@@ -228,7 +228,7 @@
     <parent link="trunk"/>
     <child link="RR_hip"/>
     <axis xyz="1 0 0"/>
-    <dynamics damping="0" friction="0"/>
+    <dynamics damping="1.0" friction="0"/>
     <limit effort="20" lower="-0.802851455917" upper="0.802851455917" velocity="52.4"/>
   </joint>
   <link name="RR_hip">
@@ -256,7 +256,7 @@
     <parent link="RR_hip"/>
     <child link="RR_thigh"/>
     <axis xyz="0 1 0"/>
-    <dynamics damping="0" friction="0"/>
+    <dynamics damping="1.0" friction="0"/>
     <limit effort="55" lower="-1.0471975512" upper="4.18879020479" velocity="28.6"/>
   </joint>
   <link name="RR_thigh">
@@ -284,7 +284,7 @@
     <parent link="RR_thigh"/>
     <child link="RR_calf"/>
     <axis xyz="0 1 0"/>
-    <dynamics damping="0" friction="0"/>
+    <dynamics damping="1.0" friction="0"/>
     <limit effort="55" lower="-2.69653369433" upper="-0.916297857297" velocity="28.6"/>
   </joint>
   <link name="RR_calf">
@@ -313,7 +313,7 @@
     <parent link="trunk"/>
     <child link="RL_hip"/>
     <axis xyz="1 0 0"/>
-    <dynamics damping="0" friction="0"/>
+    <dynamics damping="1.0" friction="0"/>
     <limit effort="20" lower="-0.802851455917" upper="0.802851455917" velocity="52.4"/>
   </joint>
   <link name="RL_hip">
@@ -341,7 +341,7 @@
     <parent link="RL_hip"/>
     <child link="RL_thigh"/>
     <axis xyz="0 1 0"/>
-    <dynamics damping="0" friction="0"/>
+    <dynamics damping="1.0" friction="0"/>
     <limit effort="55" lower="-1.0471975512" upper="4.18879020479" velocity="28.6"/>
   </joint>
   <link name="RL_thigh">
@@ -369,7 +369,7 @@
     <parent link="RL_thigh"/>
     <child link="RL_calf"/>
     <axis xyz="0 1 0"/>
-    <dynamics damping="0" friction="0"/>
+    <dynamics damping="1.0" friction="0"/>
     <limit effort="55" lower="-2.69653369433" upper="-0.916297857297" velocity="28.6"/>
   </joint>
   <link name="RL_calf">

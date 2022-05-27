@@ -171,6 +171,7 @@
 		<!-- <origin rpy="0.00000 -0.00 0.00000" xyz="-0.50000 0.00000 0.00000"/> -->
 		<origin rpy="0.00000 -0.65800 0.00000" xyz="-0.50000 0.00000 0.00000"/>
 		<axis xyz="0.00000 1.00000 0.00000"/>
+		<dynamics damping="6.0"/>
 	</joint>
 	<joint name="bshin" type="revolute">
 		<parent link="bthigh"/>
@@ -179,6 +180,7 @@
 		<!-- <origin rpy="0.00000 0.0 0.00000" xyz="0.0000 0.00000 -0.29000"/> -->
 		<origin rpy="0.00000 1.7 0.00000" xyz="0.0000 0.00000 -0.29000"/>
 		<axis xyz="0.00000 1.00000 0.00000"/>
+		<dynamics damping="4.5"/>
 	</joint>
 	<joint name="bfoot" type="revolute">
 		<parent link="bshin"/>
@@ -187,6 +189,7 @@
 		<!-- <origin rpy="0.00000 0.000 0.00000" xyz="-0.00000 0.00000 -0.29000"/> -->
 		<origin rpy="0.00000 -1.5 0.00000" xyz="-0.00000 0.00000 -0.29000"/>
 		<axis xyz="0.00000 1.00000 0.00000"/>
+		<dynamics damping="3.0"/>
 	</joint>
 	<joint name="fthigh" type="revolute">
 		<parent link="torso"/>
@@ -195,6 +198,7 @@
 		<!-- <origin rpy="0.00000 0.00000 0.00000" xyz="0.50000 0.00000 0.00000"/> -->
 		<origin rpy="0.00000 0.52000 0.00000" xyz="0.50000 0.00000 0.00000"/>
 		<axis xyz="0.00000 1.00000 0.00000"/>
+		<dynamics damping="4.5"/>
 	</joint>
 	<joint name="fshin" type="revolute">
 		<parent link="fthigh"/>
@@ -203,6 +207,7 @@
 		<!-- <origin rpy="0.00000 0.00000 0.00000" xyz="-0.00000 0.00000 -0.26600"/> -->
 		<origin rpy="0.00000 -1.11159 0.00000" xyz="-0.00000 0.00000 -0.26600"/>
 		<axis xyz="0.00000 1.00000 0.00000"/>
+		<dynamics damping="3.0"/>
 	</joint>
 	<joint name="ffoot" type="revolute">
 		<parent link="fshin"/>
@@ -211,6 +216,7 @@
 		<!-- <origin rpy="0.00000 -0.00000 0.00000" xyz="0.00000 0.00000 -0.21200"/> -->
 		<origin rpy="0.00000 -0.10000 0.00000" xyz="0.00000 0.00000 -0.21200"/>
 		<axis xyz="0.00000 1.00000 0.00000"/>
+		<dynamics damping="1.5"/>
 	</joint>
 
 </robot>

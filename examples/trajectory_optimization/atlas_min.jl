@@ -104,8 +104,8 @@ mech = get_mechanism(:atlas,
 	timestep=timestep, 
 	gravity=gravity, 
 	friction_coefficient=friction_coefficient, 
-	damper=0.0,
 	spring=spring, 
+	parse_damper=false,
 	model_type=model_type)
 
 function controller!(mechanism, t)

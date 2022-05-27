@@ -3,7 +3,8 @@ function get_panda(;
         gravity=-9.81,
         friction_coefficient=0.8,
         spring=0.0,
-        damper=0.01, # this value comes from the official URDF https://github.com/frankaemika/franka_ros/blob/develop/franka_gazebo/test/launch/panda-gazebo.urdf
+        damper=0.0,
+        parse_damper=true,
         contact=false,
         limits=true,
         model_type=:end_effector,
@@ -17,24 +18,18 @@ function get_panda(;
         T=Float64)
 
     path = joinpath(@__DIR__, "../deps/panda_$(String(model_type)).urdf")
-    mech = Mechanism(path, false, T,
-        gravity=gravity,
-        timestep=timestep,
-        spring=spring,
-        damper=damper)
+    mech = Mechanism(path; floating=false, T,
+        gravity,
+        timestep,
+        parse_damper)
 
     # Adding springs and dampers
-    for joint in mech.joints
-        joint.damper = true
-        joint.spring = true
-        joint.translational.spring=spring
-        joint.translational.damper=damper
-        joint.rotational.spring=spring
-        joint.rotational.damper=damper
-    end
+    set_springs!(mech.joints, spring)
+    set_dampers!(mech.joints, damper)
 
     # joint limits
     joints = deepcopy(mech.joints)
+
     if limits
         for (i,joint) in enumerate(joints)
             id = joint.id
@@ -47,11 +42,9 @@ function get_panda(;
                     tra_limits=[SVector{1}(0.00), SVector{1}(0.04)])
             end
         end
-        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...],
-            gravity=gravity,
-            timestep=timestep,
-            spring=spring,
-            damper=damper)
+        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...];
+            gravity,
+            timestep)
     end
 
 
@@ -60,6 +53,7 @@ function get_panda(;
     joints = mech.joints
     contacts = ContactConstraint{T}[]
 
+<<<<<<< HEAD
     # if contact
     #     # if model_type == :end_effector
     #         # TODO place the contact points for each finger of the end-effector
@@ -119,6 +113,26 @@ function get_panda(;
             sidez,
             ee_radius,
         )
+=======
+    if contact
+        if model_type == :end_effector
+            # TODO place the contact points for each finger of the end-effector
+        elseif model_type == :no_end_effector
+            # spherical end-effector contact
+            location = [-0.01; 0.004; 0.01]
+            normal = [0.0; 0.0; 1.0]
+            offset = [0.0; 0.0; 0.05]
+            contact = contact_constraint(
+                get_body(mech, :link7),
+                normal;
+                friction_coefficient,
+                contact_point=location,
+                offset,
+                name=:end_effector)
+            push!(contacts, contact)
+        end
+    end
+>>>>>>> 65fa03026a6a25f1f4db0fd3a2791c3735426454
 
         # collision = Dojo.SphereSphereCollision{Float64,2,3,6}(
         #     SA[0.0; 0.0; 0.0],
@@ -155,11 +169,9 @@ function get_panda(;
         joints = [joints..., JointConstraint(Floating(origin, box))]
     end
 
-    mech = Mechanism(origin, bodies, joints, contacts,
-        gravity=gravity,
-        timestep=timestep,
-        spring=spring,
-        damper=damper)
+    mech = Mechanism(origin, bodies, joints, contacts;
+        gravity,
+        timestep)
 
     set_minimal_state!(mech, szeros(minimal_dimension(mech)))
     return mech

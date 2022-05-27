@@ -8,12 +8,12 @@ struct Youbot end
 using Dojo
 
 
-# path = "DojoEnvironments/src/youbot/deps/youbot_arm_only.urdf"
+path = "DojoEnvironments/src/youbot/deps/youbot_arm_only.urdf"
 # path = "DojoEnvironments/src/youbot/deps/youbot_base_only.urdf"
 # path = "DojoEnvironments/src/youbot/deps/youbot.urdf"
 # path = "DojoEnvironments/src/youbot/deps/youbot_dual_arm.urdf"
-path = "DojoEnvironments/src/youbot/deps/youbot_with_cam3d.urdf"
-mech = Mechanism(path, gravity = -0.1, timestep = 0.001)
+# path = "DojoEnvironments/src/youbot/deps/youbot_with_cam3d.urdf"
+mech = Mechanism(path; gravity = -9.81, timestep = 0.001)
 
 # joint1 = get_joint(mech,:link1_joint)
 # joint2 = get_joint(mech,:link2_joint)

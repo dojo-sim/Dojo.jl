@@ -13,7 +13,7 @@ function get_block2d(;
     axis = [1.0, 0.0, 0.0]
 
     origin = Origin{T}()
-    pbody = Box(side, side, side, 1.,
+    pbody = Box(side, side, side, 1.;
         color=RGBA(1., 1., 0.))
     joint1 = JointConstraint(PlanarAxis(origin, pbody, axis))
     bodies = [pbody]
@@ -38,19 +38,19 @@ function get_block2d(;
         contact_radius = [radius for i = 1:n]
         friction_coefficient = friction_coefficient * ones(n)
 
-        contacts = contact_constraint(pbody, normal,
-            friction_coefficient=friction_coefficient,
+        contacts = contact_constraint(pbody, normal;
+            friction_coefficient,
             contact_origins=corners,
-            contact_radius=contact_radius,
-            contact_type=contact_type)
+            contact_radius,
+            contact_type)
 
-        mech = Mechanism(origin, bodies, joints, contacts,
-            gravity=gravity,
-            timestep=timestep)
+        mech = Mechanism(origin, bodies, joints, contacts;
+            gravity,
+            timestep)
     else
-        mech = Mechanism(origin, bodies, joints,
-            gravity=gravity,
-            timestep=timestep)
+        mech = Mechanism(origin, bodies, joints;
+            gravity,
+            timestep)
     end
     return mech
 end

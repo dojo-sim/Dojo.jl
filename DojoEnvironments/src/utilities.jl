@@ -20,3 +20,43 @@ function get_control_mask(n_inputs, indices)
     end
     return m
 end
+
+function set_springs!(joints, spring::Real)
+    if spring > 0
+        for joint in joints[2:end]
+            joint.spring = true
+            joint.translational.spring=spring
+            joint.rotational.spring=spring
+        end
+    end
+end
+
+function set_springs!(joints, springs::AbstractArray)
+    for (i,spring) in enumerate(springs)
+        if spring > 0
+            joints[i+1].spring = true
+            joints[i+1].translational.spring=spring
+            joints[i+1].rotational.spring=spring
+        end
+    end
+end
+
+function set_dampers!(joints, damper::Real)
+    if damper > 0
+        for joint in joints[2:end]
+            joint.damper = true
+            joint.translational.damper=damper
+            joint.rotational.damper=damper
+        end
+    end
+end
+
+function set_dampers!(joints, dampers::AbstractArray)
+    for (i,damper) in enumerate(dampers)
+        if damper > 0
+            joints[i+1].damper = true
+            joints[i+1].translational.damper=damper
+            joints[i+1].rotational.damper=damper
+        end
+    end
+end

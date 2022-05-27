@@ -6,17 +6,21 @@ function get_walker(;
     contact_body=true,
     limits=true,
     spring=0.0,
-    damper=0.1,
+    damper=0.0,
+    parse_damper=true,
     joint_limits=[[  0.0,   0.0, -45.0,   0.0,   0.0, -45.0] * π / 180.0,
                   [150.0, 150.0,  45.0, 150.0, 150.0,  45.0] * π / 180.0],
     T=Float64)
 
     path = joinpath(@__DIR__, "../deps/walker.urdf")
-    mech = Mechanism(path, false, T, 
-        gravity=gravity, 
-        timestep=timestep, 
-        spring=spring, 
-        damper=damper)
+    mech = Mechanism(path; floating=false, T,
+        gravity, 
+        timestep,
+        parse_damper)
+
+    # Adding springs and dampers
+    set_springs!(mech.joints, spring)
+    set_dampers!(mech.joints, damper)
 
     # joint limits
     joints = deepcopy(mech.joints)
@@ -46,11 +50,9 @@ function get_walker(;
         joints[foot_left.id] = add_limits(mech, foot_left, 
             rot_limits=[SVector{1}(joint_limits[1][6]), SVector{1}(joint_limits[2][6])])
 
-        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...], 
-            gravity=gravity, 
-            timestep=timestep, 
-            spring=spring, 
-            damper=damper)
+        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...];
+            gravity, 
+            timestep)
     end
 
     if contact_feet
@@ -68,29 +70,29 @@ function get_walker(;
                 pf = [0.0, 0.0, 0.5 * body.shape.rh[2]]
                 pb = [0.0, 0.0, -0.5 * body.shape.rh[2]]
                 o = body.shape.rh[1]
-                push!(models, contact_constraint(body, normal, 
-                    friction_coefficient=friction_coefficient, 
+                push!(models, contact_constraint(body, normal;
+                    friction_coefficient, 
                     contact_origin=pf, 
                     contact_radius=o))
-                push!(models, contact_constraint(body, normal, 
-                    friction_coefficient=friction_coefficient, 
+                push!(models, contact_constraint(body, normal;
+                    friction_coefficient, 
                     contact_origin=pb, 
                     contact_radius=o))
             else
                 p = [0.0; 0.0; 0.5 * body.shape.rh[2]]
                 o = body.shape.rh[1]
-                push!(models, contact_constraint(body, normal, 
-                    friction_coefficient=friction_coefficient, 
+                push!(models, contact_constraint(body, normal;
+                    friction_coefficient, 
                     contact_origin=p, 
                     contact_radius=o))
             end
         end
+
         set_minimal_coordinates!(mech, get_joint(mech, :floating_joint), [1.25, 0.0, 0.0])
-        mech = Mechanism(origin, bodies, joints, [models...], 
-            gravity=gravity, 
-            timestep=timestep, 
-            spring=spring, 
-            damper=damper)
+
+        mech = Mechanism(origin, bodies, joints, [models...];
+            gravity, 
+            timestep)
     end
     return mech
 end

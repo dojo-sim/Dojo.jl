@@ -11,7 +11,8 @@ function hopper(;
     gravity=[0.0; 0.0; -9.81],
     friction_coefficient=1.0,
     spring=10.0,
-    damper=50.0,
+    damper=0.0,
+    parse_damper=true,
     seed=1,
     contact_foot=true,
     contact_body=true,
@@ -22,14 +23,15 @@ function hopper(;
     opts_grad=SolverOptions(rtol=3.0e-4, btol=3.0e-4, undercut=1.5),
     T=Float64)
 
-    mechanism = get_hopper(
-        timestep=timestep,
-        gravity=gravity,
-        friction_coefficient=friction_coefficient,
-        spring=spring,
-        damper=damper,
-        contact_foot=contact_foot,
-        contact_body=contact_body)
+    mechanism = get_hopper(;
+        timestep,
+        gravity,
+        friction_coefficient,
+        spring,
+        damper,
+        parse_damper,
+        contact_foot,
+        contact_body)
 
     initialize_hopper!(mechanism)
 
