@@ -14,6 +14,8 @@ using IterativeLQR
 using LinearAlgebra
 using FiniteDiff
 using DojoEnvironments
+using Plots
+
 
 ################################################################################
 # Continuation
@@ -51,8 +53,8 @@ end
 gravity = -9.81
 timestep = 0.02
 friction_coefficient = 0.8
-damper = 0.5
-spring = 5.0
+damper = 0.0*0.5
+spring = 0.0*5.0
 env = get_environment(:quadruped,
     representation=:minimal,
     timestep=timestep,
@@ -111,7 +113,7 @@ xref = quadruped_trajectory(env.mechanism,
     Δfront=0.10,
     width_scale=0.0,
     height_scale=1.0,
-    N=2,
+    N=1,
     Ncycles=N)
 zref = [minimal_to_maximal(env.mechanism, x) for x in xref]
 DojoEnvironments.visualize(env, xref)
@@ -151,6 +153,7 @@ ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(timestep * qt) * (x - xref
     transpose(u) * Diagonal(timestep * 0.01 * ones(m)) * u for t = 1:T-1]
 oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(timestep * qt) * (x - xref[end])
 
+
 cts = [IterativeLQR.Cost(ot, n, m) for ot in ots]
 cT = IterativeLQR.Cost(oT, n, 0)
 obj = [cts..., cT]
@@ -163,13 +166,13 @@ uu = +1.0 * 1e-3*ones(nu_infeasible)
 
 function contt(x, u, w)
     [
-        1e-3 * (ul - u[1:nu_infeasible]);
-        1e-3 * (u[1:nu_infeasible] - uu);
+        1e-1 * (ul - u[1:nu_infeasible]);
+        1e-1 * (u[1:nu_infeasible] - uu);
     ]
 end
 
 function goal(x, u, w)
-    Δ = 1e-2 * (x - xref[end])[[1:6;13:2:36]]
+    Δ = 1e-1 * (x - xref[end])
     return Δ
 end
 
@@ -209,3 +212,91 @@ x_sol, u_sol = IterativeLQR.get_trajectory(s)
 # ## visualize
 x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]
 DojoEnvironments.visualize(env, x_view)
+
+################################################################################
+# TVLQR
+################################################################################
+N = 100
+x_tv = [fill(x_sol[1:end-1], N)...; [x_sol[end]]]
+u_tv = [fill(u_sol, N)...;]
+
+K_tv, P_tv = tvlqr(x_tv, u_tv, env;
+        q_tracking=[0.3; 0.05; 0.05;
+            5e-1 * ones(3);
+            1e-6 * ones(3);
+            1e-6 * ones(3);
+            fill([2, 1e-6], 12)...],
+        r_tracking=env.mechanism.timestep * 100 * ones(length(u_tv[1])))
+
+nu = input_dimension(mech)
+nx = minimal_dimension(mech)
+plot(hcat([reshape(K, nu*nx) for K in K_tv]...)')
+plot(hcat(x_sol...)')
+plot(hcat(u_sol...)')
+
+plot(hcat(x_tv...)')
+plot(hcat(u_tv...)')
+
+################################################################################
+# Test Policy
+################################################################################
+
+initialize!(mech, :quadruped, body_position=[0,0,0.0])
+function ctrl!(mechanism, k)
+    nu = input_dimension(mechanism)
+    x = get_minimal_state(mechanism)
+    u = u_sol[1] + K_tv[1] * (x_sol[1] - x)
+    set_input!(mechanism, SVector{nu}(u))
+end
+
+storage = simulate!(mech, 1.0, ctrl!,
+    record=true,
+    verbose=true,
+    opts=SolverOptions(rtol=1e-5, btol=1e-4, undercut=5.0, verbose=false),
+    )
+Dojo.visualize(mech, storage, vis=env.vis)
+
+
+################################################################################
+# CIMPC compat
+################################################################################
+
+mutable struct TVLQRPolicy114{T}
+    K::Vector{Matrix{T}}
+    x::Vector{Vector{T}}
+    u::Vector{Vector{T}}
+    timestep::T
+    H::Int
+end
+
+policy = TVLQRPolicy114(K_tv[1:T-1], x_sol[1:T-1], u_sol[1:T-1], timestep, T-1)
+
+function exec_policy(p::TVLQRPolicy114{T}, x::Vector{T}, t::T) where {T}
+    timestep = p.timestep
+    i = floor(t/timestep) % H + 1
+    ceil(t/timestep)
+    u = p.u[i] + p.K[i] * (p.x[i] - x)
+    return u / timestep # force
+end
+
+JLD2.jldsave(joinpath(@__DIR__, "tvlqr_policies", "standing_tvlqr_policy.jld2"),
+    policy=policy,
+    K=K_tv[1:T-1],
+    x=x_sol[1:T-1],
+    u=u_sol[1:T-1],
+    timestep=timestep,
+    H=T-1)
+
+file = JLD2.jldopen(joinpath(@__DIR__, "tvlqr_policies", "standing_tvlqr_policy.jld2"))
+policy = file["policy"]
+K = file["K"]
+x = file["x"]
+u = file["u"]
+timestep = file["timestep"]
+H = file["H"]
+JLD2.close(file)
+
+H = 4
+for t in 0:0.0035:0.3
+    @show floor(t/timestep) % H + 1
+end
