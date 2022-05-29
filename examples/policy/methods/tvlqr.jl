@@ -21,6 +21,8 @@ function tvlqr(x, u, env;
             1e-6 * ones(3);
             fill([2, 1e-6], 12)...],
         r_tracking=env.mechanism.timestep * 100 * ones(length(u[1])))
+
+    T = length(x)
     nx = length(x[1])
     nu = length(u[1])
 
