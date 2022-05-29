@@ -142,31 +142,66 @@ function set_floating_base(mechanism::Mechanism, name::Symbol)
         timestep=mechanism.timestep)
 end
 
-# function reduce_fixed_joints(origin, bodies, joints) where T
-#     for joint in joints
-#         if joint <: JointConstraint{T,6} # i.e., Fixed joint
-#             parent_body = get_body(mechanism, joint.parent_id)
-#             child_body = get_body(mechanism, joint.child_id)
+# function reduce_fixed_joints(origin, bodies, joints)
+#     remaining_bodies = ones(Bool,length(bodies))
+#     remaining_joints = ones(Bool,length(joints))
 
+#     for (j,joint) in enumerate(joints)
+#         if typeof(joint) <: JointConstraint{T,6} where T # i.e., Fixed joint
+#             parent_body = get_origin_or_body_from_id(joint.parent_id, origin, bodies)
+#             child_body = get_origin_or_body_from_id(joint.child_id, origin, bodies)
+            
 #             v1, v2 = joint.translational.vertices
 #             q_offset = joint.rotational.orientation_offset
-#             parent_m, child_m = parent_body.mass, child_body.mass
-#             parent_J, child_J = parent_body.inertia, child_body.inertia
 
 #             child_body_com = v1 + vector_rotate(v1,q_offset) # in parent_body's frame
-#             new_body_com = child_body_com*child_m/(parent_m+child_m) # in parent_body's frame
-#             new_body_m = parent_m + child_m
-#             new_body_J1 = parent_J + parent_m*skew(new_body_com)'*skew(new_body_com) # in parent_body's frame
-#             new_body_J2 = matrix_rotate(child_J,q_offset) + child_m*skew(-new_body_com)'*skew(-new_body_com)
-#             new_body_J = new_body_J1 + new_body_J2
+#             if parent_body == origin
+#                 new_body_com = zeros(3)
+#             else
+#                 parent_m, child_m = parent_body.mass, child_body.mass
+#                 parent_J, child_J = parent_body.inertia, child_body.inertia
 
-#             for joint2 in mechanism.joints
-#                 if joint2.child_id == parent_body.id
+#                 new_body_com = child_body_com*child_m/(parent_m+child_m) # in parent_body's frame
+                
+#                 parent_body.mass = parent_m + child_m
+#                 new_body_J1 = parent_J + parent_m*skew(new_body_com)'*skew(new_body_com) # in parent_body's frame
+#                 new_body_J2 = matrix_rotate(child_J,q_offset) + child_m*skew(-new_body_com)'*skew(-new_body_com) # in parent_body's frame
+#                 parent_body.inertia = new_body_J1 + new_body_J2 # in parent_body's frame
+#             end
+            
+#             parent_body.name = Symbol(String(parent_body.name)*"_merged_with_"*String(child_body.name))
 
+#             for joint2 in joints
+#                 joint2 == joint && continue
+
+#                 v12, v22 = joint2.translational.vertices
+#                 q_offset2 = joint2.rotational.orientation_offset
+
+#                 if joint2.parent_id == parent_body.id
+#                     joint2.translational.vertices = (v12-new_body_com, v22)
+#                 elseif joint2.child_id == parent_body.id
+#                     joint2.translational.vertices = (v12,v22-new_body_com)
 #                 elseif joint2.parent_id == child_body.id
-
+#                     joint2.parent_id = parent_body.id
+#                     joint2.translational.vertices = (vector_rotate(v12,q_offset)+child_body_com-new_body_com, v22)
+#                     joint2.rotational.orientation_offset = q_offset*q_offset2 # correct?
+#                 elseif joint2.child_id == child_body.id
+#                     joint2.child_id = parent_body.id
+#                     joint2.translational.vertices = (v12,vector_rotate(v22,q_offset)+child_body_com-new_body_com)
+#                     joint2.rotational.orientation_offset = q_offset*q_offset2 # correct?
 #                 end
 #             end
+#             remaining_joints[j] = false
+#             remaining_bodies[findfirst(x->x==child_body,bodies)] = false
 #         end
+#     end
+
+#     return origin, bodies[remaining_bodies], joints[remaining_joints]
+# end
+
+# function get_origin_or_body_from_id(id, origin, bodies)
+#     origin.id == id && (return origin)
+#     for body in bodies
+#         body.id == id && (return body)
 #     end
 # end
