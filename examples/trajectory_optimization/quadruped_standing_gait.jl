@@ -274,7 +274,6 @@ policy = TVLQRPolicy114(K_tv[1:T-1], x_sol[1:T-1], u_sol[1:T-1], timestep, T-1)
 function exec_policy(p::TVLQRPolicy114{T}, x::Vector{T}, t::T) where {T}
     timestep = p.timestep
     i = floor(t/timestep) % H + 1
-    ceil(t/timestep)
     u = p.u[i] + p.K[i] * (p.x[i] - x)
     return u / timestep # force
 end
