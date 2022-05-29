@@ -28,7 +28,6 @@ using Graphs
 using CoordinateTransformations
 
 using JLD2
-using PyCall
 using DocStringExtensions
 
 # Utilities

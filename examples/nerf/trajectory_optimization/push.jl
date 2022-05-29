@@ -14,19 +14,22 @@ vis = Visualizer()
 open(vis)
 
 # ## system
-gravity = -0*9.81
+gravity = -9.81
 timestep = 0.01
-friction_coefficient = 0.01
+friction_coefficient = 0.3
 ################################################################################
 # Simulation
 ################################################################################
-mech = get_nerf_sphere(nerf=:bluesoap, timestep=timestep, gravity=gravity,
+# mech = get_nerf_sphere(nerf=:bluesoap, timestep=timestep, gravity=gravity,
+mech = get_nerf_sphere(nerf=:bunny, timestep=timestep, gravity=gravity,
     friction_coefficient=friction_coefficient,
     collider_options=ColliderOptions(sliding_friction=friction_coefficient))
 
 # initial conditions
-x_bluesoap = [0.269, -0.40, 0.369]
-q_bluesoap = Quaternion(-0.247, 0.715, 0.618, -0.211, false)
+# x_bluesoap = [0.269, -0.40, 0.369]
+x_bluesoap = [0., -0.5, 0.45]
+# q_bluesoap = Quaternion(-0.247, 0.715, 0.618, -0.211, false)
+q_bluesoap = Quaternion(normalize([1, 0, 0, 0.5])..., false)
 x_sphere = [2.0, -0.5, 0.5]
 q_sphere = Quaternion(1.0, 0.0, 0.0, 0.0, false)
 
@@ -37,14 +40,14 @@ z_initial = [z_bluesoap; z_sphere]
 set_maximal_state!(mech, deepcopy(z_initial))
 
 
-# initialize!(mech, :nerf_sphere,
-#     nerf_position=x_bluesoap - [0,0,0.5],
-#     nerf_orientation=q_bluesoap,
-#     sphere_position=x_sphere - [0,0,0.5],
-#     sphere_orientation=q_sphere,
-#     )
+initialize!(mech, :nerf_sphere,
+    nerf_position=x_bluesoap - [0,0,0.5],
+    nerf_orientation=q_bluesoap,
+    sphere_position=x_sphere - [0,0,0.5],
+    sphere_orientation=q_sphere,
+    )
 
-function ctrl!(m, k; kp=1e-0, kv=3e-1, xg_sphere=[-2,-0.5,0.5], xg_nerf=[-2,-0.40,0.369])
+function ctrl!(m, k; kp=1e-0, kv=3e-1, xg_sphere=[-2,-0.5,0.5], xg_nerf=[-1.5, 0.40,0.369])
     sphere = get_body(m, :sphere)
     # nerf = get_body(m, :bluesoap)
     x_sphere = current_position(sphere.state)
@@ -53,7 +56,8 @@ function ctrl!(m, k; kp=1e-0, kv=3e-1, xg_sphere=[-2,-0.5,0.5], xg_nerf=[-2,-0.4
     # v_nerf = current_velocity(nerf.state)[1]
     u_sphere = (xg_sphere - x_sphere) * kp - kv * v_sphere
     u_nerf = szeros(3) # (xg_nerf - x_nerf) * kp - kv * v_nerf
-    set_input!(m, [u_nerf; szeros(3); u_sphere; szeros(3)])
+    # set_input!(m, [u_nerf; szeros(3); u_sphere; szeros(3)])
+    set_input!(m, [u_sphere; szeros(3); u_nerf; szeros(3)])
     return nothing
 end
 

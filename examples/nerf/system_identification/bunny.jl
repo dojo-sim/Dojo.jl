@@ -1,3 +1,6 @@
+# using Pkg
+# Pkg.develop(path=joinpath(@__DIR__, "../../../OSFLoader"))
+
 # Load packages
 using Dojo
 using Plots
@@ -44,6 +47,7 @@ visualize(mech, storage, vis=vis, show_contact=false)
 ################################################################################
 # Generate & Save Dataset
 ################################################################################
+friction_coefficient = 0.3
 init_kwargs = Dict(:nerf => :bunny,
 				   :xlims => [[0,0,0.2], [1,1,0.4]],
 				   :vlims => [[-4,-4,-0.5], [4,4,0.]],
@@ -141,7 +145,7 @@ end
 ################################################################################
 mech = get_mechanism(:nerf, nerf=nerf, timestep=0.01, gravity=-9.81, friction_coefficient=0.4);
 set_data!(mech.contacts, [data_contacts0[1]; dsol[2][1]; data_contacts0[3:5]])
-initialize!(mech, :nerf, position=[0,-1,1.], velocity=[0,3,1.], angular_velocity=[1,1,3.])
+initialize!(mech, :nerf, position=[0,-1,1.], velocity=[0,3,3.], angular_velocity=[1,2,1.])
 storage = simulate!(mech, 6.0, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
 vis, anim = visualize(mech, storage, vis=vis, color=RGBA(1,1,1,1.), name=:initial)
@@ -150,14 +154,14 @@ mech = get_mechanism(:nerf, nerf=nerf, timestep=0.01, gravity=-9.81, friction_co
 set_data!(mech.contacts, [data_contacts0[1]; dsol[1]; data_contacts0[3:5]])
 # mech.bodies[1].mass /= 10
 # mech.bodies[1].inertia /= 10
-initialize!(mech, :nerf, position=[0,-1,1.], velocity=[0,3,1.], angular_velocity=[1,1,3.])
+initialize!(mech, :nerf, position=[0,-1,1.], velocity=[0,3,3.], angular_velocity=[1,2,1.])
 storage = simulate!(mech, 6.0, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
 vis, anim = visualize(mech, storage, vis=vis, animation=anim, color=RGBA(0.7,0.7,0.7,1.), name=:learned)
 
 mech = get_mechanism(:nerf, nerf=nerf, timestep=0.01, gravity=-9.81, friction_coefficient=0.4);
 set_data!(mech.contacts, data_contacts0)
-initialize!(mech, :nerf, position=[0,-1,1.], velocity=[0,3,1.], angular_velocity=[1,1,3.])
+initialize!(mech, :nerf, position=[0,-1,1.], velocity=[0,3,3.], angular_velocity=[1,2,1.])
 storage = simulate!(mech, 6.0, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
 vis, anim = visualize(mech, storage, vis=vis, animation=anim, color=RGBA(0.2,0.2,0.2,1.), name=:robot)
@@ -166,5 +170,11 @@ z_init = get_maximal_state(storage, 1)
 storage_init = generate_storage(mech, [z_init])
 vis, anim = visualize(mech, storage_init, vis=vis, animation=anim, color=RGBA(0.2,0.2,0.2,0.3), name=:start)
 
+# render_static(vis)
+# open("/home/simon/bunny_system_identification.html", "w") do file
+#     write(file, static_html(vis))
+# end
 
-convert_frames_to_video_and_gif("bunny_learning_friction")
+
+
+# convert_frames_to_video_and_gif("bunny_learning_friction")

@@ -9,6 +9,41 @@ bunny_collider = SoftCollider(nerf=:bunny, opts=ColliderOptions())
 bluesoap_collider = SoftCollider(nerf=:bluesoap, opts=ColliderOptions())
 halfsoap_collider = SoftCollider(nerf=:halfsoap, opts=ColliderOptions())
 
+function build_collider!(collider::SoftCollider{T,N}, vis::Visualizer;
+        name::Symbol=:collider, visualize_particle::Bool=false,
+        mesh_color=RGBA(1,1,1,0.3),
+        particle_color=RGBA(1,1,1,1.0),
+        gradient_color=RGBA(0.0,0.5,1,0.8),
+        com_color=RGBA(0,0,0,1.0),
+        ) where {T,N}
+    # setobject!(vis[name][:mesh], collider.mesh, MeshPhongMaterial(color=mesh_color))
+    setobject!(vis[name][:center_of_mass], HyperSphere(Point(collider.center_of_mass...), 0.03), MeshPhongMaterial(color=com_color))
+    if visualize_particle
+        for i = 1:length(collider.particles)
+            particle = collider.particles[i]
+            gradient = collider.density_gradients[i]
+            setobject!(vis[name][:particles]["$i"], HyperSphere(Point(particle...), 0.005), MeshPhongMaterial(color=particle_color))
+            arrow_vis = ArrowVisualizer(vis[name][:gradients]["$i"])
+            setobject!(arrow_vis, MeshPhongMaterial(color=gradient_color))
+            settransform!(arrow_vis, Point(particle...), Vec(-1e-5gradient...), shaft_radius=0.0025, max_head_radius=0.0025)
+        end
+    end
+    return nothing
+end
+
+build_collider!(bunny_collider, vis, visualize_particle=true)
+settransform!(vis[:collider], Translation(0,0,0.6))
+set_floor!(vis)
+set_light!(vis)
+set_background!(vis)
+anim = MeshCat.Animation()
+for i = 1:100
+    atframe(anim, i) do
+        settransform!(vis[:collider], compose(LinearMap(RotZ(0.01i*2π)), Translation(0,0,0.6)))
+    end
+end
+setanimation!(vis, anim)
+
 
 ################################################################################
 # Simulate nerf
@@ -87,4 +122,4 @@ initialize!(mech, :nerf_triumvirate,
 @elapsed storage = simulate!(mech, 2.0, opts=SolverOptions(verbose=true, rtol=1e-4))
 visualize(mech, storage, vis=vis)
 
-# convert_frames_to_video_and_gif("bunny_simulation")
+convert_frames_to_video_and_gif("bunny_push")
