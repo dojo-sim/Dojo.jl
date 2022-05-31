@@ -9,18 +9,18 @@ function input_impulse!(joint::Translational{T},
     xa, qa = current_configuration(pbody.state)
     xb, qb = current_configuration(cbody.state)
   
-    input = joint.input
+    input = joint.input * timestep
     Ta = impulse_transform(:parent, joint, xa, qa, xb, qb)
     Tb = impulse_transform(:child, joint, xa, qa, xb, qb)
-    Faw = Ta[1:3,1:3] * input
-    τaa = Ta[4:6,1:3] * input
-    Fbw = Tb[1:3,1:3] * input
-    τbb = Tb[4:6,1:3] * input
+    JFaw = Ta[1:3,1:3] * input
+    Jτaa = Ta[4:6,1:3] * input
+    JFbw = Tb[1:3,1:3] * input
+    Jτbb = Tb[4:6,1:3] * input
 
-    pbody.state.F2 += Faw
-    pbody.state.τ2 += τaa/2
-    cbody.state.F2 += Fbw
-    cbody.state.τ2 += τbb/2
+    pbody.state.JF2 += JFaw
+    pbody.state.Jτ2 += Jτaa/2
+    cbody.state.JF2 += JFbw
+    cbody.state.Jτ2 += Jτbb/2
     
     clear && (joint.input = szeros(T,3))
     return
@@ -33,12 +33,13 @@ end
 function input_jacobian_control(relative::Symbol, 
     joint::Translational, 
     xa::AbstractVector, qa::Quaternion,
-    xb::AbstractVector, qb::Quaternion) where T
+    xb::AbstractVector, qb::Quaternion,
+    timestep)
 
     Ta = impulse_transform(relative, joint, xa, qa, xb, qb)
     X = Ta[1:3,1:3]
     Q = 0.5 * Ta[4:6,1:3]
-    return [X; Q]
+    return [X; Q] * timestep
 end
 
 function input_jacobian_configuration(relative::Symbol, 
