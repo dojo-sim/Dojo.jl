@@ -15,6 +15,7 @@ using LinearAlgebra
 using FiniteDiff
 using DojoEnvironments
 using Plots
+using StaticArrays
 
 
 ################################################################################
@@ -51,7 +52,7 @@ end
 # ## system
 ################################################################################
 gravity = -9.81
-timestep = 0.02
+timestep = 0.01
 friction_coefficient = 0.8
 damper = 0.0*0.5
 spring = 0.0*5.0
@@ -94,12 +95,13 @@ function ctrl!(m, k; u=u_hover)
     set_input!(m, SVector{nu}(u))
 end
 
-storage = simulate!(mech, 1.0, ctrl!,
+storage = simulate!(mech, 0.27, ctrl!,
     record=true,
     verbose=true,
     opts=SolverOptions(rtol=1e-5, btol=1e-4, undercut=5.0, verbose=false),
     )
 Dojo.visualize(mech, storage, vis=env.vis)
+# z_rest = get_maximal_state(mech)
 
 ################################################################################
 # ## reference trajectory
@@ -216,7 +218,7 @@ DojoEnvironments.visualize(env, x_view)
 ################################################################################
 # TVLQR
 ################################################################################
-N = 100
+N = 300
 x_tv = [fill(x_sol[1:end-1], N)...; [x_sol[end]]]
 u_tv = [fill(u_sol, N)...;]
 
@@ -242,6 +244,7 @@ plot(hcat(u_tv...)')
 ################################################################################
 
 initialize!(mech, :quadruped, body_position=[0,0,0.0])
+set_maximal_state!(mech, z_rest)
 function ctrl!(mechanism, k)
     nu = input_dimension(mechanism)
     x = get_minimal_state(mechanism)

@@ -1,22 +1,22 @@
-function get_quadruped(; 
-    timestep=0.01, 
-    gravity=[0.0; 0.0; -9.81], 
-    friction_coefficient=0.8, 
+function get_quadruped(;
+    timestep=0.01,
+    gravity=[0.0; 0.0; -9.81],
+    friction_coefficient=0.8,
     spring=0.0,
-    damper=0.0, 
-    parse_damper=true, 
-    contact_feet=true, 
-    contact_body=true, 
+    damper=0.0,
+    parse_damper=true,
+    contact_feet=true,
+    contact_body=true,
     limits=true,
     spring_offset=true,
-    path=joinpath(@__DIR__, "../deps/quadruped.urdf"),
+    path=joinpath(@__DIR__, "../deps/gazebo_a1.urdf"),
     joint_limits=[[-0.5, -0.5, -2.5,],
                   [ 0.5,  1.5, -1.0,]],
     T=Float64)
 
     mech = Mechanism(path; floating=true, T,
-        gravity, 
-        timestep, 
+        gravity,
+        timestep,
         parse_damper)
 
     # Adding springs and dampers
@@ -60,77 +60,77 @@ function get_quadruped(;
         elbow_contactL = [-0.005; 0.023; -0.16]
         elbow_contact_radius = 0.023
 
-        foot_contacts1 = contact_constraint(get_body(mech,:FR_calf), normal; 
-            friction_coefficient, 
-            contact_origin=foot_contact, 
-            contact_radius=foot_contact_radius, 
+        foot_contacts1 = contact_constraint(get_body(mech,:FR_calf), normal;
+            friction_coefficient,
+            contact_origin=foot_contact,
+            contact_radius=foot_contact_radius,
             name=:FR_contact)
-        foot_contacts2 = contact_constraint(get_body(mech,:FL_calf), normal; 
-            friction_coefficient, 
-            contact_origin=foot_contact, 
-            contact_radius=foot_contact_radius, 
+        foot_contacts2 = contact_constraint(get_body(mech,:FL_calf), normal;
+            friction_coefficient,
+            contact_origin=foot_contact,
+            contact_radius=foot_contact_radius,
             name=:FL_contact)
-        foot_contacts3 = contact_constraint(get_body(mech,:RR_calf), normal; 
-            friction_coefficient, 
-            contact_origin=foot_contact, 
-            contact_radius=foot_contact_radius, 
+        foot_contacts3 = contact_constraint(get_body(mech,:RR_calf), normal;
+            friction_coefficient,
+            contact_origin=foot_contact,
+            contact_radius=foot_contact_radius,
             name=:RR_contact)
-        foot_contacts4 = contact_constraint(get_body(mech,:RL_calf), normal; 
-            friction_coefficient, 
-            contact_origin=foot_contact, 
-            contact_radius=foot_contact_radius, 
+        foot_contacts4 = contact_constraint(get_body(mech,:RL_calf), normal;
+            friction_coefficient,
+            contact_origin=foot_contact,
+            contact_radius=foot_contact_radius,
             name=:RL_contact)
         contacts = [contacts...; foot_contacts1; foot_contacts2; foot_contacts3; foot_contacts4]
 
         if contact_body
-            elbow_contacts1 = contact_constraint(get_body(mech,:FR_thigh), normal; 
-                friction_coefficient, 
-                contact_origin=elbow_contactR, 
-                contact_radius=elbow_contact_radius, 
+            elbow_contacts1 = contact_constraint(get_body(mech,:FR_thigh), normal;
+                friction_coefficient,
+                contact_origin=elbow_contactR,
+                contact_radius=elbow_contact_radius,
                 name=:FR_hip_contact)
-            elbow_contacts2 = contact_constraint(get_body(mech,:FL_thigh), normal; 
-                friction_coefficient, 
-                contact_origin=elbow_contactL, 
-                contact_radius=elbow_contact_radius, 
+            elbow_contacts2 = contact_constraint(get_body(mech,:FL_thigh), normal;
+                friction_coefficient,
+                contact_origin=elbow_contactL,
+                contact_radius=elbow_contact_radius,
                 name=:FL_hip_contact)
-            elbow_contacts3 = contact_constraint(get_body(mech,:RR_thigh), normal; 
-                friction_coefficient, 
-                contact_origin=elbow_contactR, 
-                contact_radius=elbow_contact_radius, 
+            elbow_contacts3 = contact_constraint(get_body(mech,:RR_thigh), normal;
+                friction_coefficient,
+                contact_origin=elbow_contactR,
+                contact_radius=elbow_contact_radius,
                 name=:RR_hip_contact)
-            elbow_contacts4 = contact_constraint(get_body(mech,:RL_thigh), normal; 
-                friction_coefficient, 
-                contact_origin=elbow_contactL, 
-                contact_radius=elbow_contact_radius, 
+            elbow_contacts4 = contact_constraint(get_body(mech,:RL_thigh), normal;
+                friction_coefficient,
+                contact_origin=elbow_contactL,
+                contact_radius=elbow_contact_radius,
                 name=:RL_hip_contact)
             push!(contacts, elbow_contacts1, elbow_contacts2, elbow_contacts3, elbow_contacts4)
-            hip_contacts1 = contact_constraint(get_body(mech,:FR_hip), normal; 
-                friction_coefficient, 
-                contact_origin=-hip_contact, 
-                contact_radius=hip_contact_radius, 
+            hip_contacts1 = contact_constraint(get_body(mech,:FR_hip), normal;
+                friction_coefficient,
+                contact_origin=-hip_contact,
+                contact_radius=hip_contact_radius,
                 name=:FR_hip_contact)
-            hip_contacts2 = contact_constraint(get_body(mech,:FL_hip), normal; 
-                friction_coefficient, 
-                contact_origin=+hip_contact, 
-                contact_radius=hip_contact_radius, 
+            hip_contacts2 = contact_constraint(get_body(mech,:FL_hip), normal;
+                friction_coefficient,
+                contact_origin=+hip_contact,
+                contact_radius=hip_contact_radius,
                 name=:FL_hip_contact)
-            hip_contacts3 = contact_constraint(get_body(mech,:RR_hip), normal; 
-                friction_coefficient, 
-                contact_origin=-hip_contact, 
-                contact_radius=hip_contact_radius, 
+            hip_contacts3 = contact_constraint(get_body(mech,:RR_hip), normal;
+                friction_coefficient,
+                contact_origin=-hip_contact,
+                contact_radius=hip_contact_radius,
                 name=:RR_hip_contact)
-            hip_contacts4 = contact_constraint(get_body(mech,:RL_hip), normal; 
-                friction_coefficient, 
-                contact_origin=+hip_contact, 
-                contact_radius=hip_contact_radius, 
+            hip_contacts4 = contact_constraint(get_body(mech,:RL_hip), normal;
+                friction_coefficient,
+                contact_origin=+hip_contact,
+                contact_radius=hip_contact_radius,
                 name=:RL_hip_contact)
             push!(contacts, hip_contacts1, hip_contacts2, hip_contacts3, hip_contacts4)
         end
 
         set_minimal_coordinates!(mech, get_joint(mech, :floating_base), [0.0; 0.0; 0.32; 0.0; 0.0; 0.0])
-        
+
         mech = Mechanism(origin, bodies, eqs, contacts;
-            gravity, 
+            gravity,
             timestep)
     end
 
@@ -156,17 +156,17 @@ function get_quadruped(;
     return mech
 end
 
-function initialize_quadruped!(mechanism::Mechanism{T}; 
+function initialize_quadruped!(mechanism::Mechanism{T};
     body_position=[0.0, 0.0, 0.0],
-    body_orientation=[0.0, 0.0, 0.0], 
-    body_linear_velocity=[0.0, 0.0, 0.0], 
-    body_angular_velocity=[0.0, 0.0, 0.0], 
+    body_orientation=[0.0, 0.0, 0.0],
+    body_linear_velocity=[0.0, 0.0, 0.0],
+    body_angular_velocity=[0.0, 0.0, 0.0],
     link_angle=0.95) where T
     #TODO: add more leg angles
 
     body_position += [0.0, 0.0, 0.32]
     zero_velocity!(mechanism)
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base), 
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base),
         [body_position; body_orientation])
 
     set_minimal_coordinates!(mechanism, get_joint(mechanism, :FR_hip_joint), [0.0])
@@ -185,7 +185,7 @@ function initialize_quadruped!(mechanism::Mechanism{T};
     set_minimal_coordinates!(mechanism, get_joint(mechanism, :RL_thigh_joint), [link_angle])
     set_minimal_coordinates!(mechanism, get_joint(mechanism, :RL_calf_joint), [-1.5 * link_angle])
 
-    set_minimal_velocities!(mechanism, get_joint(mechanism, :floating_base), 
+    set_minimal_velocities!(mechanism, get_joint(mechanism, :floating_base),
         [body_linear_velocity; body_angular_velocity])
 
     set_minimal_velocities!(mechanism, get_joint(mechanism, :FR_hip_joint), [0.0])
