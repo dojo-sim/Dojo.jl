@@ -239,7 +239,7 @@ end
 # 	mass = sum(getfield.(mech.bodies, :m))
 # 	alt = x_potato[3] - 0.48
 # 	if t > 13
-# 		u_potato = -[0, 0, mech.timestep * mass * mechanism.gravity + 20*alt + 10*x_potato[6]]
+# 		u_potato = -[0, 0, mass * mechanism.gravity + 20*alt + 10*x_potato[6]]
 # 	else
 # 		u_potato = U_potato[t]
 # 	end

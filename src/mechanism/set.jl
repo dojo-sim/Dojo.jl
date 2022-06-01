@@ -16,7 +16,7 @@ function set_maximal_state!(mechanism::Mechanism, z::AbstractVector)
         body.state.ω15 = ω15
         body.state.x2 = x2
         body.state.q2 = q2
-		initialize_state!(mechanism) # set x1, q1 and zeroes out F2 τ2
+		initialize_state!(mechanism) # set x1, q1 and zeroes out JF2 Jτ2
     end
 	# warm-start solver
 	for body in mechanism.bodies

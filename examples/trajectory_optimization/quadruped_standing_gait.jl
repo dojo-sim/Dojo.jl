@@ -55,14 +55,14 @@ timestep = 0.02
 friction_coefficient = 0.8
 damper = 0.0*0.5
 spring = 0.0*5.0
-env = get_environment(:quadruped,
+env = DojoEnvironments.get_environment(:quadruped,
     representation=:minimal,
     timestep=timestep,
     contact_body=false,
     gravity=gravity,
     friction_coefficient=friction_coefficient,
-    damper=damper,
-    spring=spring,
+    # damper=damper,
+    # spring=spring,
     infeasible_control=true,
     vis=vis)
 

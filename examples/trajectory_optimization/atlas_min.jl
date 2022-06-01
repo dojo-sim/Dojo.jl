@@ -97,7 +97,7 @@ visualize(mech, storage,
 	vis=env.vis)
 
 F_damper = get_damper_impulses(env.mechanism)
-u_damper = F_damper * env.mechanism.timestep
+u_damper = F_damper
 u_control = u_damper[6 .+ (1:15)]
 
 mech = get_mechanism(:atlas, 

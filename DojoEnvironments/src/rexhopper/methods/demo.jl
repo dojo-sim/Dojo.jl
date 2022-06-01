@@ -26,7 +26,7 @@ visualize(mech, storage, vis=vis, show_contact=true, build=true)
 visualize(mech, generate_storage(mech, [z0]), show_contact=true, vis=vis, build=false)
 
 function ctrl!(m,k)
-    set_input!(m, 0*sin(4k*m.timestep) * m.timestep * [szeros(6); sones(10)])
+    set_input!(m, 0*sin(4k) * [szeros(6); sones(10)])
     return nothing
 end
 

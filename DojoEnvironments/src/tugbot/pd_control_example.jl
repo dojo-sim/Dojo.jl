@@ -22,15 +22,14 @@ open(vis)
 mech = DojoEnvironments.get_mechanism(:tugbot; gravity=-1.81, timestep=0.10, radius=0.32)
 
 function ctrl!(mechanism::Mechanism, k::Int; x_target=SVector{3}(0,3,3.0), kp=1.5, kd=2.0)
-    dt = mechanism.timestep
     drone_body = get_body(mechanism, :drone)
     drone_joint = get_joint(mechanism, :drone_joint)
     x = Dojo.current_position(drone_body.state)
     v, ω = Dojo.current_velocity(drone_body.state)
     θ = mrp(current_orientation(mech.bodies[1].state))
-    u_gravity = -drone_body.mass * mechanism.gravity * dt
-    u_tra = u_gravity + kp*(x_target - x)*dt - kd * dt .* v
-    u_rot = -kp/5 * θ - kd/10 * dt .* ω
+    u_gravity = -drone_body.mass * mechanism.gravity
+    u_tra = u_gravity + kp*(x_target - x) - kd .* v
+    u_rot = -kp/5 * θ - kd/10 .* ω
     set_input!(drone_joint, [u_tra; u_rot])
     return nothing
 end

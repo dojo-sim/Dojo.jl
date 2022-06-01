@@ -77,9 +77,9 @@ end
 function ctrl!(mechanism, k)
 	nu = Dojo.input_dimension(mechanism)
 	if Dojo.input_dimension(mechanism.joints[1]) == 6
-		u = 0.2 * [szeros(6); mechanism.timestep * sones(nu-6)]
+		u = 0.2 * [szeros(6); sones(nu-6)]
 	else
-		u = 0.2 * mechanism.timestep * sones(nu)
+		u = 0.2 * sones(nu)
 	end
 	Dojo.set_input!(mechanism, u)
 	return
