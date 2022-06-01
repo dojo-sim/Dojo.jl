@@ -50,7 +50,7 @@ end
 
         # Simulation
         function ctrl!(m, t)
-            Dojo.set_input!(m, 1.0 * m.timestep * SVector(rand(), -rand(), 0.0, 0.0, 0.0))
+            Dojo.set_input!(m, 1.0 * SVector(rand(), -rand(), 0.0, 0.0, 0.0))
             return nothing
         end
         storage = Dojo.simulate!(mech, 5.0, ctrl!, verbose=false, record=true)

@@ -4,7 +4,7 @@ function controller!(mechanism, k;
     timestep=0.01)
     for joint in mechanism.joints
         nu = input_dimension(joint)
-        u = (nu <= 5 && k ∈ (1:100)) * U * timestep * sones(nu)
+        u = (nu <= 5 && k ∈ (1:100)) * U * sones(nu)
         set_input!(joint, u)
     end
     return

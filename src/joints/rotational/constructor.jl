@@ -26,7 +26,7 @@ mutable struct Rotational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N,Nb½}
     spring_offset::SVector{N̄λ,T}
     joint_limits::Vector{SVector{Nb½,T}} # lower and upper limits on the joint minimal coordinate angles
     spring_type::Symbol # the rotational springs can be :linear or :sinusoidal (currently not implemented), if linear then we need joint_limits to avoid the 360° singularity.
-    input::SVector{3,T}
+    input::SVector{3,T} # joint input, i.e., a torque, not an impulse
 end
 
 function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, joint::Rotational{T,N}) where {T,N}

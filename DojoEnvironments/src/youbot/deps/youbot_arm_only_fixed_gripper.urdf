@@ -320,7 +320,7 @@
 			</geometry>
 		</collision>
 	</link>
-	<joint name="gripper_finger_joint_l" type="prismatic">
+	<joint name="gripper_finger_joint_l" type="fixed">
 		<origin rpy="0 0 3.141592653589793" xyz="0.004 0.008 0.046"/>
 		<parent link="gripper_palm_link"/>
 		<child link="gripper_finger_link_l"/>
@@ -350,7 +350,7 @@
 			</geometry>
 		</collision>
 	</link>
-	<joint name="gripper_finger_joint_r" type="prismatic">
+	<joint name="gripper_finger_joint_r" type="fixed">
 		<origin rpy="0 0 0" xyz="0.004 -0.008 0.046"/>
 		<parent link="gripper_palm_link"/>
 		<child link="gripper_finger_link_r"/>

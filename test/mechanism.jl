@@ -1,3 +1,72 @@
+# rand_inertia() = (A=randn(3,3);return A*A')
+
+# function create_random_mechanism(nbodies; require_fixed_joint=false)
+#     origin = Origin()
+#     bodies = [Body(rand(),rand_inertia()) for i=1:nbodies]
+#     parent_list = [origin;bodies]
+#     joints = JointConstraint{Float64}[]
+#     fixed_joint_flag = false
+
+#     while !fixed_joint_flag
+#         joints = JointConstraint{Float64}[]
+#         for i=1:nbodies
+#             parent = parent_list[rand(1:i)]
+#             push!(joints, JointConstraint(
+#                 (Translational{Float64,rand(0:3)}(parent, bodies[i]; parent_vertex=randn(3), child_vertex=randn(3), axis=randn(3)),
+#                 Rotational{Float64,rand(0:3)}(parent, bodies[i]; orientation_offset=Quaternion(LinearAlgebra.normalize(randn(4))...)))))
+#         end
+
+#         fixed_joint_flag = !require_fixed_joint || any(typeof.(joints) .<: JointConstraint{T,6} where T)
+#     end
+
+#     return Mechanism(origin,bodies,joints)    
+# end
+
+# function create_random_mechanism(nbodies; require_fixed_joint=false)
+#     origin = Origin()
+#     bodies = [Body(1.0,I(3)) for i=1:nbodies]
+#     parent_list = [origin;bodies]
+#     joints = JointConstraint{Float64}[]
+#     fixed_joint_flag = false
+
+#     while !fixed_joint_flag
+#         joints = JointConstraint{Float64}[]
+#         for i=1:nbodies
+#             parent = parent_list[rand(1:i)]
+#             push!(joints, JointConstraint(
+#                 (Translational{Float64,rand(0:3)}(parent, bodies[i]; parent_vertex=zeros(3), child_vertex=zeros(3), axis=[1;0;0]),
+#                 Rotational{Float64,rand(0:3)}(parent, bodies[i]; ))))
+#         end
+
+#         fixed_joint_flag = !require_fixed_joint || any(typeof.(joints) .<: JointConstraint{T,6} where T)
+#     end
+
+#     return Mechanism(origin,bodies,joints)    
+# end
+
+# @testset "Merge Fixed Joints" begin
+#     mech_full = create_random_mechanism(2, require_fixed_joint=true)
+#     origin_reduced, bodies_reduced, joints_reduced = Dojo.reduce_fixed_joints(deepcopy(mech_full.origin),deepcopy.(mech_full.bodies),deepcopy.(mech_full.joints))
+#     mech_reduced = Mechanism(origin_reduced,bodies_reduced,joints_reduced)
+#     storage_full = simulate!(mech_full,5;record=true)
+#     storage_reduced = simulate!(mech_reduced,5;record=true)
+#     iddict = Dict{Int64,Int64}()
+#     for (i_r,body_reduced) in enumerate(mech_reduced.bodies)
+#         for (i_f,body_full) in enumerate(mech_full.bodies)            
+#             if string(body_reduced.name)[1:9] == string(body_full.name)
+#                 push!(iddict,i_r => i_f)
+#                 break
+#             end
+#         end
+#     end
+#     for pair in pairs(iddict)
+#         # display(norm(norm.(storage_reduced.x[pair[1]] .- storage_full.x[pair[2]])))
+#         # display(norm(norm.(storage_reduced.q[pair[1]] .- storage_full.q[pair[2]])))
+#         @test all(norm.(storage_reduced.x[pair[1]] .- storage_full.x[pair[2]]) .< 1e-8)
+#         @test all(norm.(storage_reduced.q[pair[1]] .- storage_full.q[pair[2]]) .< 1e-8)
+#     end
+# end
+
 @testset "Pendulum" begin
     # get pendulum environment and simulate
     timestep=0.1

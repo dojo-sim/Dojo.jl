@@ -10,7 +10,7 @@ function astronaut_simulation(mech::Mechanism;
 
 	function ctrl!(mechanism, k)
 		nu = input_dimension(mech)
-		u = (k*mechanism.timestep < tctrl) * control_amplitude * mechanism.timestep * [szeros(6); srand(nu-6)]
+		u = (k*mechanism.timestep < tctrl) * control_amplitude * [szeros(6); srand(nu-6)]
 		set_input!(mech, u)
 	    return
 	end

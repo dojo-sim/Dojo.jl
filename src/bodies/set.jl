@@ -15,8 +15,8 @@ end
 function initialize_state!(body::Body{T}, timestep) where T
     set_previous_configuration!(body, timestep)
     state = body.state
-    state.F2 = szeros(T,3)
-    state.τ2 = szeros(T,3)
+    state.JF2 = szeros(T,3)
+    state.Jτ2 = szeros(T,3)
 end
 
 function update_state!(body::Body{T}, timestep) where T
@@ -31,8 +31,8 @@ function update_state!(body::Body{T}, timestep) where T
     state.x2 = next_position(state.x2, state.vsol[2], timestep)
     state.q2 = next_orientation(state.q2, state.ωsol[2], timestep)
 
-    state.F2 = szeros(T,3)
-    state.τ2 = szeros(T,3)
+    state.JF2 = szeros(T,3)
+    state.Jτ2 = szeros(T,3)
 end
 
 # maximal
@@ -95,14 +95,4 @@ function set_maximal_velocities!(pbody::Node, cbody::Body;
     v2 += Δvw
 
     return set_maximal_velocities!(cbody; v = v2, ω = ω2)
-end
-
-# inputs
-function set_input!(body::Body;
-    F::AbstractVector=SA[0.0; 0.0; 0.0], 
-    τ::AbstractVector=SA[0.0; 0.0; 0.0], 
-    p::AbstractVector=SA[0.0; 0.0; 0.0])
-
-    τ += cross(p, F) # in local coordinates
-    set_input!(body.state, vector_rotate(F, body.state.q2), τ)
 end

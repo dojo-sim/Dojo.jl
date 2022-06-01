@@ -20,7 +20,7 @@
         mech = DojoEnvironments.get_snake(gravity=0.0, num_bodies=2, damper=0.3, joint_type=joint_type)
         DojoEnvironments.initialize_snake!(mech)
         function ctrl!(m,k)
-            Dojo.set_input!(m, 0.01*m.timestep*ones(Dojo.minimal_dimension(m)))
+            Dojo.set_input!(m, 0.01*ones(Dojo.minimal_dimension(m)))
         end
         storage = Dojo.simulate!(mech, 1.0, ctrl!)
         # Dojo.visualize(mech, storage, vis=vis)

@@ -364,8 +364,8 @@ end
     relative = :(body.id == joint.parent_id ? :parent : :child)
     pbody = :(get_body(mechanism, joint.parent_id))
     cbody = :(get_body(mechanism, joint.child_id))
-    rot = :(input_jacobian_control($relative, joint.translational, $pbody, $cbody))
-    tra = :(input_jacobian_control($relative, joint.rotational, $pbody, $cbody))
+    rot = :(input_jacobian_control($relative, joint.translational, $pbody, $cbody, mechanism.timestep))
+    tra = :(input_jacobian_control($relative, joint.rotational, $pbody, $cbody, mechanism.timestep))
     return :(hcat($rot, $tra))
 end
 
