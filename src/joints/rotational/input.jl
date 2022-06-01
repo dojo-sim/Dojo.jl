@@ -6,12 +6,12 @@ function input_impulse!(joint::Rotational{T}, pbody::Node, cbody::Node,
     timestep::T, clear::Bool) where T
 
     orientation_offset = joint.orientation_offset
-    τ = joint.input
+    τ = joint.input * timestep
     xa, qa = current_configuration(pbody.state)
     xb, qb = current_configuration(cbody.state)
 
-    pbody.state.τ2 += vector_rotate(-τ, orientation_offset)
-    cbody.state.τ2 += vector_rotate(τ, inv(qb) * qa * orientation_offset)
+    pbody.state.Jτ2 += vector_rotate(-τ, orientation_offset)
+    cbody.state.Jτ2 += vector_rotate(τ, inv(qb) * qa * orientation_offset)
     clear && (joint.input = szeros(T,3))
     return
 end
@@ -23,17 +23,18 @@ end
 function input_jacobian_control(relative::Symbol,
     joint::Rotational{T},
     xa::AbstractVector, qa::Quaternion,
-    xb::AbstractVector, qb::Quaternion) where T
+    xb::AbstractVector, qb::Quaternion,
+    timestep) where T
 
     orientation_offset = joint.orientation_offset
     if relative == :parent
         BFa = szeros(T, 3, 3)
         Bτa = - rotation_matrix(orientation_offset)
-        return [BFa; Bτa]
+        return [BFa; Bτa] * timestep
     elseif relative == :child
         BFb = szeros(T, 3, 3)
         Bτb = rotation_matrix(inv(qb) * qa * orientation_offset)
-        return [BFb; Bτb]
+        return [BFb; Bτb] * timestep
     end
 end
 

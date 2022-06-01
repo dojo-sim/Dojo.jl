@@ -19,7 +19,7 @@ mutable struct Body{T} <: Node{T}
     shape::Shape{T}
 
     function Body(mass::Real, inertia::AbstractMatrix; 
-        name::Symbol=:origin, 
+        name::Symbol=Symbol("body_" * randstring(4)), 
         shape::Shape=EmptyShape())
 
         T = promote_type(eltype.((mass, inertia))...)

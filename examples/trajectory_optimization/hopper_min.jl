@@ -28,7 +28,7 @@ zM = maximal_to_minimal(env.mechanism, Dojo.raiberthopper_offset_max(0.5, 0.5, 0
 zT = maximal_to_minimal(env.mechanism, Dojo.raiberthopper_offset_max(0.5, 0.5, 0.0))
 
 # ## nominal control
-u_control = [0.0; 0.0; env.mechanism.bodies[1].mass * env.mechanism.gravity[3] * env.mechanism.timestep]
+u_control = [0.0; 0.0; env.mechanism.bodies[1].mass * env.mechanism.gravity[3]]
 
 # ## horizon
 T = 21
@@ -44,7 +44,7 @@ dyn = IterativeLQR.Dynamics(
 model = [dyn for t = 1:T-1]
 
 # ## rollout
-ū = [[0.0; 0.0; env.mechanism.bodies[1].mass * env.mechanism.gravity[3] * env.mechanism.timestep + 0.0 * randn(1)[1]] for t = 1:T-1]
+ū = [[0.0; 0.0; env.mechanism.bodies[1].mass * env.mechanism.gravity[3] + 0.0 * randn(1)[1]] for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, z1, ū)
 visualize(env, x̄)
 

@@ -29,7 +29,7 @@ function controller!(mechanism, k;
     N = Int(floor(1 / timestep))
     for joint in mechanism.joints
         nu = input_dimension(joint)
-        u = (nu <= 5 && k ∈ (1:N)) * U * timestep * sones(nu)
+        u = (nu <= 5 && k ∈ (1:N)) * U * sones(nu)
         set_input!(joint, u)
     end
     return
@@ -43,7 +43,7 @@ function humanoid_controller!(mechanism, k;
     N = Int(floor(1 / timestep))
     for joint in mechanism.joints
         nu = input_dimension(joint)
-        u = (nu <= 5 && k ∈ (1:N)) * U * timestep * sones(nu)
+        u = (nu <= 5 && k ∈ (1:N)) * U * sones(nu)
         set_input!(joint, u)
     end
     return
@@ -56,7 +56,7 @@ function quadruped_controller!(mechanism, k;
     N = Int(floor(1.0 / timestep))
     for joint in mechanism.joints
         nu = input_dimension(joint)
-        u = (nu <= 5 && k ∈ (1:N)) * U * timestep * sones(nu)
+        u = (nu <= 5 && k ∈ (1:N)) * U * sones(nu)
         set_input!(joint, u)
     end
     return
@@ -68,7 +68,7 @@ function snake_controller!(mechanism, k;
     N = Int(floor(1.0 / timestep))
     for joint in mechanism.joints
         nu = input_dimension(joint)
-        u = (nu <= 5 && k ∈ (1:N)) * U * timestep * sones(nu)
+        u = (nu <= 5 && k ∈ (1:N)) * U * sones(nu)
         set_input!(joint, u)
     end
     return
@@ -80,7 +80,7 @@ function twister_controller!(mechanism, k;
     N = Int(floor(1.0 / timestep))
     for joint in mechanism.joints
         nu = input_dimension(joint)
-        u = (nu <= 5 && k ∈ (1:N)) * U * timestep * sones(nu)
+        u = (nu <= 5 && k ∈ (1:N)) * U * sones(nu)
         set_input!(joint, u)
     end
     return

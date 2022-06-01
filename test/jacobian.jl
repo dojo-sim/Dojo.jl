@@ -68,7 +68,7 @@ function control!(mechanism, k;
     for joint in mechanism.joints
         nu = Dojo.input_dimension(joint,
             ignore_floating_base=false)
-        su = mechanism.timestep * u * sones(nu)
+        su = u * sones(nu)
         Dojo.set_input!(joint, su)
     end
 end

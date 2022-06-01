@@ -95,8 +95,8 @@ get_data(contact::ContactConstraint) = get_data(contact.model)
 # Mechanism
 function set_data!(mechanism::Mechanism, data::AbstractVector)
 	# It's important to treat bodies before eqcs
-	# set_data!(body) will erase state.F2 and state.τ2
-	# set_data!(eqc) using applyinput!, will write in state.F2 and state.τ2
+	# set_data!(body) will erase state.JF2 and state.Jτ2
+	# set_data!(eqc) using applyinput!, will write in state.JF2 and state.Jτ2
 	c = 0
 	for joint in mechanism.joints
 		Nd = data_dim(joint)
@@ -151,8 +151,8 @@ function set_data!(body::Body, data::AbstractVector, timestep)
 	body.state.ω15 = ω15
 	body.state.x2 = x2
 	body.state.q2 = q2
-	body.state.F2 = SVector{3}(0,0,0.)
-	body.state.τ2 = SVector{3}(0,0,0.)
+	body.state.JF2 = SVector{3}(0,0,0.)
+	body.state.Jτ2 = SVector{3}(0,0,0.)
 	return nothing
 end
 
