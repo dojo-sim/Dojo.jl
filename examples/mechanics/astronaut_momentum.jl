@@ -26,7 +26,7 @@ open(vis)
 
 function ctrl!(mechanism, t)
 	nu = input_dimension(mechanism)
-	u = 0.3 * [zeros(6); mechanism.timestep; zeros(nu-7)]
+	u = 0.3 * [zeros(6); 1; zeros(nu-7)]
 	set_input!(mechanism, u)
 	return
 end
