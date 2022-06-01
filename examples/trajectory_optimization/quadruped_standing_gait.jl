@@ -295,7 +295,7 @@ timestep = file["timestep"]
 H = file["H"]
 JLD2.close(file)
 
-H = 4
-for t in 0:0.0035:0.3
-    @show floor(t/timestep) % H + 1
-end
+# H = 4
+# for t in 0:0.0035:0.3
+#     @show floor(t/timestep) % H + 1
+# end
