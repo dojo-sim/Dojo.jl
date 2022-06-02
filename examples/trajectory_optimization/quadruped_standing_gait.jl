@@ -53,8 +53,8 @@ end
 ################################################################################
 gravity = -9.81
 timestep = 0.01
-friction_coefficient = 0.8
-damper = 0.0*0.5
+friction_coefficient = 0.4
+damper = 1.0*1.5
 spring = 0.0*5.0
 env = DojoEnvironments.get_environment(:quadruped,
     representation=:minimal,
@@ -86,6 +86,7 @@ mech = get_mechanism(:quadruped,
     gravity=gravity,
     friction_coefficient=friction_coefficient,
     damper=damper,
+    limits=false,
     spring=spring)
 
 initialize!(mech, :quadruped, body_position=[0,0,0.0])
@@ -101,7 +102,9 @@ storage = simulate!(mech, 0.27, ctrl!,
     opts=SolverOptions(rtol=1e-5, btol=1e-4, undercut=5.0, verbose=false),
     )
 Dojo.visualize(mech, storage, vis=env.vis)
+
 # z_rest = get_maximal_state(mech)
+
 
 ################################################################################
 # ## reference trajectory
@@ -110,9 +113,9 @@ N = 1
 initialize!(env.mechanism, :quadruped)
 xref = quadruped_trajectory(env.mechanism,
     r=0.00,
-    z=0.29;
-    Δx=-0.04,
-    Δfront=0.10,
+    z=0.25;
+    Δx=-0.01,
+    Δfront=0.05,
     width_scale=0.0,
     height_scale=1.0,
     N=1,
@@ -122,7 +125,6 @@ DojoEnvironments.visualize(env, xref)
 
 # ## horizon
 T = length(zref)
-
 
 ################################################################################
 # ## ILQR problem
@@ -147,12 +149,12 @@ DojoEnvironments.visualize(env, x̄)
 ############################################################################
 qt = [0.3; 0.05; 0.05;
     5e-2 * ones(3);
-    1e-3 * ones(3);
-    1e-3 * ones(3);
-    fill([2, 1e-3], 12)...]
+    1e-0 * ones(3);
+    1e-0 * ones(3);
+    fill([2, 1e-0], 12)...]
 ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(timestep * qt) * (x - xref[t]) +
 # transpose(u - u_hover) * Diagonal(timestep * 0.01 * ones(m)) * (u - u_hover) for t = 1:T-1]
-    transpose(u) * Diagonal(timestep * 0.01 * ones(m)) * u for t = 1:T-1]
+    transpose(u) * Diagonal(timestep * 1.0 * ones(m)) * u for t = 1:T-1]
 oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(timestep * qt) * (x - xref[end])
 
 
@@ -174,7 +176,7 @@ function contt(x, u, w)
 end
 
 function goal(x, u, w)
-    Δ = 1e-1 * (x - xref[end])
+    Δ = 1e-0 * (x - xref[end])
     return Δ
 end
 
@@ -218,21 +220,41 @@ DojoEnvironments.visualize(env, x_view)
 ################################################################################
 # TVLQR
 ################################################################################
-N = 300
+N = 50
 x_tv = [fill(x_sol[1:end-1], N)...; [x_sol[end]]]
 u_tv = [fill(u_sol, N)...;]
 
+env.opts_grad = SolverOptions(rtol=1e-4, btol=1e-3)
 K_tv, P_tv = tvlqr(x_tv, u_tv, env;
-        q_tracking=[0.3; 0.05; 0.05;
-            5e-1 * ones(3);
-            1e-6 * ones(3);
-            1e-6 * ones(3);
-            fill([2, 1e-6], 12)...],
-        r_tracking=env.mechanism.timestep * 100 * ones(length(u_tv[1])))
+        q_tracking=[10;10;10;
+            1e0 * ones(3);
+            1e0 * ones(3);
+            1e0 * ones(3);
+            fill([1e0, 1e0], 12)...],
+        r_tracking=env.mechanism.timestep * 50 * ones(length(u_tv[1])))
+env.opts_grad = SolverOptions(rtol=1e-5, btol=1e-5)
+
+
+# K_tv, P_tv = tvlqr(x_tv, u_tv, env;
+#         q_tracking=[0.3; 0.05; 0.05;
+#             5e-1 * ones(3);
+#             1e-0 * ones(3);
+#             1e-0 * ones(3);
+#             fill([2, 1e-0], 12)...],
+#         r_tracking=env.mechanism.timestep * 1e1 * ones(length(u_tv[1])))
 
 nu = input_dimension(mech)
 nx = minimal_dimension(mech)
-plot(hcat([reshape(K, nu*nx) for K in K_tv]...)')
+plot(hcat([reshape(K, nu*nx) for K in K_tv]...)', legend=false)
+
+eigvals(P_tv[1])
+cond(P_tv[1])
+K_tv[1][18,35]
+K_tv[1][18,36]
+
+K_tv[1][17,33]
+K_tv[1][17,34]
+
 plot(hcat(x_sol...)')
 plot(hcat(u_sol...)')
 
@@ -243,22 +265,23 @@ plot(hcat(u_tv...)')
 # Test Policy
 ################################################################################
 
-initialize!(mech, :quadruped, body_position=[0,0,0.0])
-set_maximal_state!(mech, z_rest)
+# initialize!(mech, :quadruped, body_position=[0,0,0.])
+# set_maximal_state!(mech, z_rest)
+set_maximal_state!(mech, deepcopy(zref[1]))
 function ctrl!(mechanism, k)
     nu = input_dimension(mechanism)
     x = get_minimal_state(mechanism)
-    u = u_sol[1] + K_tv[1] * (x_sol[1] - x)
+    u = u_sol[1]/1.0 + 1.0*K_tv[1] * (x_sol[1] - x)
+    u = [zeros(6); u[7:18]]
     set_input!(mechanism, SVector{nu}(u))
 end
 
-storage = simulate!(mech, 1.0, ctrl!,
+storage = simulate!(mech, 5.0, ctrl!,
     record=true,
     verbose=true,
     opts=SolverOptions(rtol=1e-5, btol=1e-4, undercut=5.0, verbose=false),
     )
-Dojo.visualize(mech, storage, vis=env.vis)
-
+Dojo.visualize(mech, storage, vis=env.vis, build=false)
 
 ################################################################################
 # CIMPC compat

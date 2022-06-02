@@ -93,20 +93,13 @@ function ctrl!(m, k; u=u_hover)
     set_input!(m, SVector{nu}(u))
 end
 
-# Main.@elapsed storage = simulate!(mech, 0.6, ctrl!,
-@benchmark storage = simulate!(mech, 1.0, ctrl!,
-# Main.@profiler storage = simulate!(mech, 1.2, ctrl!,
+storage = simulate!(mech, 1.0, ctrl!,
     record=true,
     verbose=true,
     opts=SolverOptions(rtol=1e-5, btol=1e-4, undercut=5.0, verbose=false),
     )
 Dojo.visualize(mech, storage, vis=env.vis)
 
-
-# xtest = deepcopy(xref[1])
-# xtest[14] += 1
-# ztest = minimal_to_maximal(mech, xtest)
-# set_robot(vis, mech, ztest)
 
 ################################################################################
 # ## reference trajectory
