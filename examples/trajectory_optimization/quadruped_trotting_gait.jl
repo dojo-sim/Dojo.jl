@@ -14,6 +14,7 @@ using IterativeLQR
 using LinearAlgebra
 using FiniteDiff
 using DojoEnvironments
+using Plots
 
 ################################################################################
 # Continuation
@@ -38,7 +39,7 @@ function continuation_callback!(solver::Solver, env::Environment; ρ=1.5)
     # visualize current policy
     ū = solver.problem.actions
     x̄ = IterativeLQR.rollout(model, x1, ū)
-    DojoEnvironments.visualize(env, x̄)
+    DojoEnvironments.visualize(env, x̄, build=false)
 
     println("r_tol $(scn(env.opts_grad.rtol))  " *
         "κ_tol $(scn(env.opts_grad.btol))")
@@ -50,9 +51,9 @@ end
 ################################################################################
 gravity = -9.81
 timestep = 0.02
-friction_coefficient = 0.8
+friction_coefficient = 0.4
 damper = 0.5
-spring = 5.0
+spring = 0.0
 env = get_environment(:quadruped,
     representation=:minimal,
     timestep=timestep,
@@ -62,6 +63,8 @@ env = get_environment(:quadruped,
     damper=damper,
     spring=spring,
     infeasible_control=true,
+    opts_step=SolverOptions(rtol=1.0e-5, btol=1.0e-5, undercut=2.5),
+    opts_grad=SolverOptions(rtol=1.0e-5, btol=2.0e-4, undercut=2.5),
     vis=vis)
 
 # ## dimensions
@@ -86,27 +89,20 @@ mech = get_mechanism(:quadruped,
     spring=spring)
 
 initialize!(mech, :quadruped, body_position=[0,0,0.0])
-# u_hover = [0.05;0;1.13; 0;-0.01;0; zeros(12)]
-u_hover = [0.02;0;0.6; 0;0;0; zeros(12)]
+u_hover = [0.05;0;110.00; 0;-0.01;0; zeros(12)]
+# u_hover = [0.02;0;0.6; 0;0;0; zeros(12)]
 function ctrl!(m, k; u=u_hover)
     nu = input_dimension(m)
     set_input!(m, SVector{nu}(u))
 end
 
-# Main.@elapsed storage = simulate!(mech, 0.6, ctrl!,
-@benchmark storage = simulate!(mech, 1.0, ctrl!,
-# Main.@profiler storage = simulate!(mech, 1.2, ctrl!,
+storage = simulate!(mech, 1.0, ctrl!,
     record=true,
     verbose=true,
     opts=SolverOptions(rtol=1e-5, btol=1e-4, undercut=5.0, verbose=false),
     )
 Dojo.visualize(mech, storage, vis=env.vis)
 
-
-# xtest = deepcopy(xref[1])
-# xtest[14] += 1
-# ztest = minimal_to_maximal(mech, xtest)
-# set_robot(vis, mech, ztest)
 
 ################################################################################
 # ## reference trajectory
@@ -150,11 +146,11 @@ DojoEnvironments.visualize(env, x̄)
 
 # ## objective
 ############################################################################
-qt = [0.3; 0.05; 0.05;
-    5e-2 * ones(3);
-    1e-3 * ones(3);
-    1e-3 * ones(3);
-    fill([2, 1e-3], 12)...]
+qt = 3.0*[5; 5; 1;
+    1e-0 * ones(3);
+    1e-1 * ones(3);
+    1e-1 * ones(3);
+    fill([5, 1e-3], 12)...]
 ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(timestep * qt) * (x - xref[t]) +
 # transpose(u - u_hover) * Diagonal(timestep * 0.01 * ones(m)) * (u - u_hover) for t = 1:T-1]
     transpose(u) * Diagonal(timestep * 0.01 * ones(m)) * u for t = 1:T-1]
@@ -178,7 +174,7 @@ function contt(x, u, w)
 end
 
 function goal(x, u, w)
-    Δ = 1e-2 * (x - xref[end])[[1:6;13:2:36]]
+    Δ = 1e-2 * (x - xref[end])#[[1:6;13:2:36]]
     return Δ
 end
 
@@ -218,6 +214,119 @@ x_sol, u_sol = IterativeLQR.get_trajectory(s)
 # ## visualize
 x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]
 DojoEnvironments.visualize(env, x_view)
+
+
+
+
+################################################################################
+# TVLQR
+################################################################################
+N = 2
+x_tv = [fill(x_sol[1:end-1], N)...; [x_sol[end]]]
+u_tv = [fill(u_sol, N)...;]
+
+K_tv, P_tv = tvlqr(x_tv, u_tv, env;
+        q_tracking=[5; 5; 5;
+            5e-1 * ones(3);
+            1e-6 * ones(3);
+            1e-6 * ones(3);
+            fill([5, 1e-6], 12)...],
+        r_tracking=env.mechanism.timestep * 100 * ones(length(u_tv[1])))
+
+nu = input_dimension(mech)
+nx = minimal_dimension(mech)
+plot(hcat([reshape(K, nu*nx) for K in K_tv]...)')
+plot(hcat(x_sol...)')
+plot(hcat(u_sol...)')
+
+plot(hcat(x_tv...)')
+plot(hcat(u_tv...)')
+
+################################################################################
+# Test Policy
+################################################################################
+
+initialize!(mech, :quadruped, body_position=[0,0,0.0])
+function ctrl!(mechanism, k)
+    nu = input_dimension(mechanism)
+    x = get_minimal_state(mechanism)
+    u = u_sol[1] + K_tv[1] * (x_sol[1] - x)
+    set_input!(mechanism, SVector{nu}(u))
+end
+
+storage = simulate!(mech, 1.0, ctrl!,
+    record=true,
+    verbose=true,
+    opts=SolverOptions(rtol=1e-5, btol=1e-4, undercut=5.0, verbose=false),
+    )
+Dojo.visualize(mech, storage, vis=env.vis)
+
+
+################################################################################
+# CIMPC compat
+################################################################################
+
+mutable struct TVLQRPolicy114{T}
+    K::Vector{Matrix{T}}
+    x::Vector{Vector{T}}
+    u::Vector{Vector{T}}
+    timestep::T
+    H::Int
+end
+
+policy = TVLQRPolicy114(K_tv[1:T-1], x_sol[1:T-1], u_sol[1:T-1], timestep, T-1)
+
+function exec_policy(p::TVLQRPolicy114{T}, x::Vector{T}, t::T) where {T}
+    timestep = p.timestep
+    i = floor(t/timestep) % H + 1
+    u = p.u[i] + p.K[i] * (p.x[i] - x)
+    return u / timestep # force
+end
+
+JLD2.jldsave(joinpath(@__DIR__, "tvlqr_policies", "standing_tvlqr_policy.jld2"),
+    policy=policy,
+    K=K_tv[1:T-1],
+    x=x_sol[1:T-1],
+    u=u_sol[1:T-1],
+    timestep=timestep,
+    H=T-1)
+
+file = JLD2.jldopen(joinpath(@__DIR__, "tvlqr_policies", "standing_tvlqr_policy.jld2"))
+policy = file["policy"]
+K = file["K"]
+x = file["x"]
+u = file["u"]
+timestep = file["timestep"]
+H = file["H"]
+JLD2.close(file)
+
+H = 4
+for t in 0:0.0035:0.3
+    @show floor(t/timestep) % H + 1
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
