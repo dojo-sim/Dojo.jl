@@ -138,23 +138,57 @@ end
 function soft_impulse_jacobian_configuration(mechanism::Mechanism,
 		contact::SoftContactConstraint{T,N,Nc,Cs}, body::Body{T}) where {T,N,Nc,Cs<:SoftContact{T,N}}
 
-	timestep = mechanism.timestep
 	model = contact.model
-    collision = model.collision
-	xp, vp, qp, ϕp = next_configuration_velocity(body.state, timestep)
-	xc, vc, qc, ϕc = next_configuration_velocity(mechanism.origin.state, timestep)
-	x2p = current_position(body.state)
-	q2p = current_orientation(body.state)
+	collision = model.collision
+	timestep = mechanism.timestep
+	pbody = get_body(mechanism, contact.parent_id)
+	cbody = get_body(mechanism, contact.child_id)
+	xp, vp, qp, ϕp = next_configuration_velocity(pbody.state, timestep)
+	xc, vc, qc, ϕc = next_configuration_velocity(cbody.state, timestep)
 
-    ∇x2p = FiniteDiff.finite_difference_jacobian(
-		x2p -> soft_impulse(model, next_position(x2p, vp, timestep), vp, qp, ϕp,
+	if body.id == pbody.id
+		x2p = current_position(pbody.state)
+		q2p = current_orientation(pbody.state)
+		∇x2 = FiniteDiff.finite_difference_jacobian(
+			x2p -> soft_impulse(model, next_position(x2p, vp, timestep), vp, qp, ϕp,
 			xc, vc, qc, ϕc, timestep; recompute=true),
-		x2p)
-	∇q2p = FiniteDiff.finite_difference_jacobian(
-		q2p -> soft_impulse(model, xp, vp, next_orientation(Quaternion(q2p...), ϕp, timestep), ϕp,
+			x2p)
+		∇q2 = FiniteDiff.finite_difference_jacobian(
+			q2p -> soft_impulse(model, xp, vp, next_orientation(Quaternion(q2p...), ϕp, timestep), ϕp,
 			xc, vc, qc, ϕc, timestep; recompute=true),
-		vector(q2p)) * LVᵀmat(q2p)
-	return [∇x2p ∇q2p]
+			vector(q2p)) * LVᵀmat(q2p)
+	else
+		x2c = current_position(cbody.state)
+		q2c = current_orientation(cbody.state)
+		∇x2 = FiniteDiff.finite_difference_jacobian(
+			x2c -> soft_impulse(model, xp, vp, qp, ϕp,
+			next_position(x2c, vc, timestep), vc, qc, ϕc, timestep; recompute=true),
+			x2c)
+		∇q2 = FiniteDiff.finite_difference_jacobian(
+			q2c -> soft_impulse(model, xp, vp, xp, ϕp,
+			xc, vc, next_orientation(Quaternion(q2c...), ϕc, timestep), ϕc, timestep; recompute=true),
+			vector(q2c)) * LVᵀmat(q2c)
+	end
+	return [∇x2 ∇q2]
+end
+
+function soft_impulse_jacobian_velocity(mechanism::Mechanism,
+		contact::SoftContactConstraint{T,N,Nc,Cs}, body::Body{T}) where {T,N,Nc,Cs<:SoftContact{T,N}}
+
+	model = contact.model
+	timestep = mechanism.timestep
+	pbody = get_body(mechanism, contact.parent_id)
+	cbody = get_body(mechanism, contact.child_id)
+	xp, vp, qp, ϕp = next_configuration_velocity(pbody.state, timestep)
+	xc, vc, qc, ϕc = next_configuration_velocity(cbody.state, timestep)
+
+	relative = (body.id == pbody.id) ? :parent : :child
+
+	return constraint_jacobian_velocity(relative, model,
+	    xp, vp, qp, ϕp,
+	    xc, vc, qc, ϕc,
+	    timestep)
+    return ∂impulse∂vϕ
 end
 
 function constraint_jacobian_velocity(relative::Symbol, model::SoftContact{T,N},

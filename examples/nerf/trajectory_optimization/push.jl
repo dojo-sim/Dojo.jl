@@ -25,8 +25,8 @@ mech = get_nerf_sphere(nerf=:bluesoap, timestep=timestep, gravity=gravity,
     friction_coefficient=friction_coefficient,
     collider_options=ColliderOptions(sliding_friction=friction_coefficient))
 
-mech.contacts[end].model.collision.collider.options.impact_damper = 100.0
-mech.contacts[end].model.collision.collider.options.impact_spring = 10.0
+mech.contacts[end].model.collision.collider.options.impact_damper = 10000.0
+mech.contacts[end].model.collision.collider.options.impact_spring = 1000.0
 
 # initial conditions
 x_bluesoap = [0.269, -0.40, 0.369]
@@ -68,8 +68,8 @@ storage = simulate!(mech, 0.60, ctrl!, opts=SolverOptions(rtol=3e-4, btol=3e-4))
 # final state
 z_final = get_maximal_state(mech)
 # z_final = deepcopy(z_initial)
-# z_final[1] += 1.0
-# z_final[14] += 1.0
+# z_final[[1,2,3]] .+= 1.0
+# z_final[[14,15,16]] .+= 1.0
 visualize(mech, storage, vis=vis)
 
 visualize(mech, generate_storage(mech, [z_initial]), vis=vis)
@@ -92,8 +92,8 @@ env = get_environment(:nerf_sphere,
     opts_grad=SolverOptions(rtol=3e-3, btol=3e-3),
     )
 
-env.mechanism.contacts[end].model.collision.collider.options.impact_damper = 100.0
-env.mechanism.contacts[end].model.collision.collider.options.impact_spring = 10.0
+env.mechanism.contacts[end].model.collision.collider.options.impact_damper = 10000.0
+env.mechanism.contacts[end].model.collision.collider.options.impact_spring = 1000.0
 
 
 # ## dimensions
@@ -125,7 +125,7 @@ visualize(env, x̄)
 
 # ## objective
 ot = (x, u, w) -> transpose(x - xT) * Diagonal(1.0e-1 * ones(n)) * (x - xT) +
-    transpose(u) * Diagonal(1.0e+3 * ones(m)) * u
+    transpose(u) * Diagonal(1.0e-1 * ones(m)) * u
 oT = (x, u, w) -> transpose(x - xT) * Diagonal(1.0e-1 * ones(n)) * (x - xT)
 
 ct = IterativeLQR.Cost(ot, n, m)
@@ -135,7 +135,7 @@ obj = [[ct for t = 1:T-1]..., cT]
 # ## constraints
 function goal(x, u, w)
 	# x[[1,2,3,7,8,9,13,14,15]] - xT[[1,2,3,7,8,9,13,14,15]]
-    1e-0 * (x[[1,2,3,13,14]] - xT[[1,2,3,13,14]])
+    1e-1 * (x[[1,2,3,13,14,15]] - xT[[1,2,3,13,14,15]])
     # x[[1]] - xT[[1]]
 end
 
@@ -147,11 +147,11 @@ cons = [[cont for t = 1:T-1]..., conT]
 solver_options = IterativeLQR.Options(
     line_search=:armijo,
     max_iterations=75,
-    max_dual_updates=8,
+    max_dual_updates=16,
     objective_tolerance=1e-3,
     lagrangian_gradient_tolerance=1e-3,
     constraint_tolerance=1e-3,
-    scaling_penalty=10.0,
+    scaling_penalty=3.0,
     max_penalty=1e6,
     verbose=true)
 s = IterativeLQR.Solver(model, obj, cons, options=solver_options)
@@ -167,8 +167,10 @@ function local_callback(solver; )
     return nothing
 end
 
+
 # ## solve
-@time IterativeLQR.constrained_ilqr_solve!(s, augmented_lagrangian_callback! = local_callback)
+@time IterativeLQR.constrained_ilqr_solve!(s,
+	augmented_lagrangian_callback! = local_callback)
 
 # ## solution
 z_sol, u_sol = IterativeLQR.get_trajectory(s)
@@ -188,13 +190,15 @@ visualize(env, z_sol)
 
 
 
+################################################################################
+# gradients coming from nerf object interactions are wrong
+################################################################################
 
 
 
 
 
-
-
+mech.bodies
 
 
 
@@ -375,3 +379,9 @@ norm(du1)
 vis, anim = visualize(mech, generate_storage(mech, [z1]), vis=vis, name=:initial)
 vis, anim = visualize(mech, generate_storage(mech, [z2]), vis=vis, animation=anim, name=:final)
 z_initial
+
+
+
+
+
+impulse_map_jacobian_configuration

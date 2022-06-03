@@ -16,7 +16,8 @@ end
 function contact_constraint_jacobian_body_data(mechanism::Mechanism,
 		contact::SoftContactConstraint{T,N,Nc,Cs}, body::Body{T}) where {T,N,Nc,Cs}
 	# [m; j; v15; ϕ15; x2; vector(q2)]
-	∇ = szeros(T,6,13)
+	∇ = szeros(T,6,7)
+	∇vϕ = soft_impulse_jacobian_velocity(mechanism, contact, body)
 	∇xq = soft_impulse_jacobian_configuration(mechanism, contact, body)
-	return [∇ ∇xq]
+	return [∇ ∇vϕ ∇xq]
 end

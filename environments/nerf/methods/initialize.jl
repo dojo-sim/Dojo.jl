@@ -54,7 +54,7 @@ function get_nerf_sphere(;
     gravity=[0.0; 0.0; -9.81],
     friction_coefficient=0.8,
     radius=0.5,
-    mass=10.0,
+    mass=1.0,
     T=Float64)
 
     collider = SoftCollider(nerf=nerf, opts=collider_options)
