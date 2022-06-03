@@ -1,11 +1,11 @@
 # Defining an Environment
 
-An [`Environment`](@ref) is a convienient object for applications like reinforcement learning and trajectory optimization. 
+An [`Environment`](@ref) is a convienient object for applications like reinforcement learning and trajectory optimization.
 
 To demonstrate, we create the [`Dojo.Ant`](@ref) environment. First, we load (or [create](define_mechanism.md)) a mechanism:
 
-```julia 
-mechanism = get_mechanism(:ant) 
+```julia
+mechanism = get_mechanism(:ant)
 ```
 
 Next, we create an environment's other attributes.
@@ -27,12 +27,12 @@ no = nx
 Space (for limiting controls and observations):
 ```julia
 # limit controls to [-1.0, 1.0]
-aspace = BoxSpace(nu, 
-    low=(-ones(nu)), 
+aspace = BoxSpace(nu,
+    low=(-ones(nu)),
     high=(ones(nu)))
 # no limits on observations
-ospace = BoxSpace(no, 
-    low=(-Inf * ones(no)), 
+ospace = BoxSpace(no,
+    low=(-Inf * ones(no)),
     high=(Inf * ones(no)))
 ```
 
@@ -51,7 +51,7 @@ fx = zeros(nx, nx)
 fu = zeros(nx, nu)
 ```
 
-Control data: 
+Control data:
 ```julia
 # control vector (previous)
 u_prev = zeros(nu)
@@ -61,49 +61,49 @@ control_scaling = Diagonal(timestep * 150.0 * ones(nu))
 control_map = control_mask' * control_scaling
 ```
 
-Visuals: 
-```julia 
+Visuals:
+```julia
 # create a visualizer
-vis = Visualizer() 
+vis = Visualizer()
 ```
 
-Solver options: 
+Solver options:
 ```julia
-# simulation options 
+# simulation options
 opts_step = SolverOptions()
 # gradient options
-opts_grad = SolverOptions() 
+opts_grad = SolverOptions()
 ```
 
 Environment:
 ```julia
 TYPES = [Ant, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
 env = Environment{TYPES...}(
-    mechanism, 
-    representation, 
+    mechanism,
+    representation,
     aspace, ospace,
     x, fx, fu,
-    u_prev, 
+    u_prev,
     control_map,
     nx, nu, no,
     info,
-    [rng], 
+    [rng],
     vis,
     opts_sim, opts_grad)
 ```
 
-With the environment instantiated, we can interact with it by overloading the following methods: 
+With the environment instantiated, we can interact with it by overloading the following methods:
 
 Simulate environment forward one time step:
 ```julia
-function step(env::Environment{Ant}, x, u; 
+function step(env::Environment{Ant}, x, u;
     gradients=false,
     attitude_decompress=false)
 
     # mechanism
     mechanism = env.mechanism
 
-    # timestep 
+    # timestep
     timestep = mechanism.timestep
 
     # copy current state
@@ -111,7 +111,7 @@ function step(env::Environment{Ant}, x, u;
 
     # cache current control
     env.input_previous .= u  # for rendering in Gym
-	u_scaled = env.control_map * u
+    u_scaled = env.control_map * u
 
     # representation conversion
     z0 = env.representation == :minimal ? minimal_to_maximal(mechanism, x0) : x0
@@ -154,7 +154,7 @@ end
 
 Return environment to nominal state:
 ```julia
-function Base.reset(env::Environment{Ant}; 
+function Base.reset(env::Environment{Ant};
     x=nothing)
 
     # initialize
@@ -192,7 +192,7 @@ end
 ```
 
 Cost/reward associated with simulation step:
-```julia 
+```julia
 function cost(env::Environment{Ant}, x, u)
     # forward reward
     v = x[4] # x-direction velocity
@@ -217,8 +217,8 @@ end
 ```
 
 Determine if simulation should terminate:
-```julia 
-function is_done(env::Environment{Ant}, x) 
+```julia
+function is_done(env::Environment{Ant}, x)
     !(all(isfinite.(env.state)) && (env.state[3] >= 0.2) && (env.state[3] <= 1.0))
 end
 ```
@@ -230,7 +230,7 @@ We apply random controls to the robot via the environment interface:
 y = [copy(env.state)] # state trajectory
 for t = 1:100
     step(env, env.state, randn(env.num_inputs))
-    push!(y, copy(env.state)) 
+    push!(y, copy(env.state))
 end
 visualize(env, y)
 ```

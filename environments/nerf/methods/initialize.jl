@@ -71,8 +71,8 @@ function get_nerf_sphere(;
 
     # joints
     joints = [
-        JointConstraint(Floating(origin, bodies[2]), name=:joint_origin_sphere),
         JointConstraint(Floating(origin, bodies[1]), name=:joint_origin_nerf),
+        JointConstraint(Floating(origin, bodies[2]), name=:joint_origin_sphere),
         # JointConstraint(Floating(bodies[1], bodies[2]), name=:joint_nerf_sphere),
         ]
     mechanism = Mechanism(origin, bodies, joints,
@@ -98,6 +98,7 @@ function get_nerf_sphere(;
         get_body(mechanism, nerf).id,
         get_body(mechanism, :sphere).id); name=:contact_nerf_sphere)
     contacts = [contact_nerf_halfspace; contact_sphere_halfspace; contact_nerf_sphere]
+    # contacts = [contact_nerf_halfspace; contact_sphere_halfspace; contact_nerf_sphere]
     # contacts = [contact_nerf_sphere]
 
     mechanism = Mechanism(origin, bodies, joints, contacts,

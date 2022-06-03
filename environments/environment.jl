@@ -1,8 +1,8 @@
 """
-    Environment{T} 
+    Environment{T}
 
-    simulation object containing a mechanism along with additional information useful for 
-    reinforcement learning and trajectory optimization 
+    simulation object containing a mechanism along with additional information useful for
+    reinforcement learning and trajectory optimization
 
     mechanism: Mechanism
     representation: :minimal or :maximal state representation
@@ -45,9 +45,9 @@ end
 """
     get_environment(model; kwargs...)
 
-    construct existing environment 
+    construct existing environment
 
-    model: name of of environment 
+    model: name of of environment
     kwargs: environment specific parameters
 """
 function get_environment(model; kwargs...)
@@ -57,11 +57,11 @@ end
 """
     step(env, x, u; gradients, attitude_decompress)
 
-    simulates environment one time step 
+    simulates environment one time step
 
-    env: Environment 
-    x: state 
-    u: input 
+    env: Environment
+    x: state
+    u: input
     gradients: flag for computing gradients of dynamics
     attitude_decompress: flag for pre- and post-concatenating Jacobians with attitude Jacobians
 """
@@ -109,17 +109,17 @@ function Base.step(env::Environment, x, u;
 end
 
 function Base.step(env::Environment, u;
-    gradients=false, 
-    attitude_decompress=false) 
-    step(env, env.state, u; 
-        gradients=gradients, 
+    gradients=false,
+    attitude_decompress=false)
+    step(env, env.state, u;
+        gradients=gradients,
         attitude_decompress=attitude_decompress)
 end
 
 """
-    get_observation(env) 
+    get_observation(env)
 
-    return observation for current state 
+    return observation for current state
 
     env: Environment
 """
@@ -128,18 +128,18 @@ function get_observation(env::Environment)
 end
 
 """
-    cost(env, x, u) 
+    cost(env, x, u)
 
     return cost (-reward) for current state and input
 
     env: Environment
-    x: state 
+    x: state
     u: input
 """
 cost(env::Environment, x, u) = 0.0
 
 """
-    is_done(env) 
+    is_done(env)
 
     check for termination of simulation
 
@@ -148,7 +148,7 @@ cost(env::Environment, x, u) = 0.0
 is_done(env::Environment, x) = false
 
 """
-    reset(env; x) 
+    reset(env; x)
 
     returns environment to nominal state
 
@@ -172,7 +172,7 @@ function Base.reset(env::Environment{X};
     return get_observation(env)
 end
 
-function MeshCat.render(env::Environment, 
+function MeshCat.render(env::Environment,
     mode="human")
     z = env.representation == :minimal ? minimal_to_maximal(env.mechanism, env.state) : env.state
     set_robot(env.vis, env.mechanism, z, name=:robot)
@@ -189,20 +189,20 @@ function Base.close(env::Environment; kwargs...)
 end
 
 """
-    Space{T,N} 
+    Space{T,N}
 
     Abstract type for domains
 """
 abstract type Space{T,N} end
 
-""" 
+"""
     BoxSpace{T,N} <: Environment{T,N}
 
-    domain with lower and upper limits 
+    domain with lower and upper limits
 
-    n: dimension of domain 
-    low:: lower limit 
-    high: upper limit 
+    n: dimension of domain
+    low:: lower limit
+    high: upper limit
     shape: tuple (n,)
     dtype: type for domain
 """
@@ -229,6 +229,3 @@ end
 function clip(s::BoxSpace, u)
     clamp.(u, s.low, s.high)
 end
-
-
-
