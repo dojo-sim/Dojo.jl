@@ -221,21 +221,21 @@ DojoEnvironments.visualize(env, x_view)
 ################################################################################
 # TVLQR
 ################################################################################
-N = 2
+N = 5
 x_tv = [fill(x_sol[1:end-1], N)...; [x_sol[end]]]
 u_tv = [fill(u_sol, N)...;]
 
 K_tv, P_tv = tvlqr(x_tv, u_tv, env;
-        q_tracking=[5; 5; 5;
-            5e-1 * ones(3);
+        q_tracking=[3; 5; 5;
+            5e-0 * ones(3);
             1e-6 * ones(3);
             1e-6 * ones(3);
             fill([5, 1e-6], 12)...],
-        r_tracking=env.mechanism.timestep * 100 * ones(length(u_tv[1])))
+        r_tracking=env.mechanism.timestep * 10 * ones(length(u_tv[1])))
 
 nu = input_dimension(mech)
 nx = minimal_dimension(mech)
-plot(hcat([reshape(K, nu*nx) for K in K_tv]...)')
+plot(hcat([reshape(K, nu*nx) for K in K_tv]...)', legend=false)
 plot(hcat(x_sol...)')
 plot(hcat(u_sol...)')
 
@@ -249,12 +249,14 @@ plot(hcat(u_tv...)')
 initialize!(mech, :quadruped, body_position=[0,0,0.0])
 function ctrl!(mechanism, k)
     nu = input_dimension(mechanism)
+    i = k % (T-1) + 1
+    @show i
     x = get_minimal_state(mechanism)
-    u = u_sol[1] + K_tv[1] * (x_sol[1] - x)
+    u = u_sol[i] + K_tv[i] * (x_sol[i] - x)
     set_input!(mechanism, SVector{nu}(u))
 end
 
-storage = simulate!(mech, 1.0, ctrl!,
+storage = simulate!(mech, 15.0, ctrl!,
     record=true,
     verbose=true,
     opts=SolverOptions(rtol=1e-5, btol=1e-4, undercut=5.0, verbose=false),
@@ -283,7 +285,7 @@ function exec_policy(p::TVLQRPolicy114{T}, x::Vector{T}, t::T) where {T}
     return u / timestep # force
 end
 
-JLD2.jldsave(joinpath(@__DIR__, "tvlqr_policies", "standing_tvlqr_policy.jld2"),
+JLD2.jldsave(joinpath(@__DIR__, "tvlqr_policies", "trotting_tvlqr_policy.jld2"),
     policy=policy,
     K=K_tv[1:T-1],
     x=x_sol[1:T-1],
@@ -291,7 +293,7 @@ JLD2.jldsave(joinpath(@__DIR__, "tvlqr_policies", "standing_tvlqr_policy.jld2"),
     timestep=timestep,
     H=T-1)
 
-file = JLD2.jldopen(joinpath(@__DIR__, "tvlqr_policies", "standing_tvlqr_policy.jld2"))
+file = JLD2.jldopen(joinpath(@__DIR__, "tvlqr_policies", "trotting_tvlqr_policy.jld2"))
 policy = file["policy"]
 K = file["K"]
 x = file["x"]
