@@ -30,7 +30,7 @@ save(joinpath(results_dir, "bunny_high.obj"), mesh_high)
 bluesoap_nerf = OSFLoader.get_nerf_object(filename="bluesoap")
 density = nerf_density(bluesoap_nerf, sampling_density=100,
         normalizer=DensityFieldNormalizer(nerf=:bluesoap))
-for i = 0:100
+for i = 0:20:100
     mesh = GeometryBasics.Mesh(density, NaiveSurfaceNets(iso=i))
 end
 

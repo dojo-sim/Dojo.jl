@@ -97,10 +97,12 @@ function loss(mechanism::Mechanism, θ::AbstractVector{T}, traj::Storage{T,N},
 
 	d_contact = zeros(nz,nd)
 	z_prev = get_maximal_state(traj, indices[1])
+	Z = [deepcopy(z_prev)]
 	for i in indices
 		z = z_prev
 		z_true = get_maximal_state(traj, i+1)
 		Q = Diagonal([ones(3); 1e-1ones(3); ones(4); 1e-1ones(3)])
+		# Q = Diagonal([ones(3); 1e-10ones(3); 1e-10ones(4); 1e-10ones(3)])
 
 		if derivatives
 			z_pred, ∂_state, ∂_contact = get_contact_gradients!(mechanism, z, θ, opts=opts)
@@ -113,11 +115,12 @@ function loss(mechanism::Mechanism, θ::AbstractVector{T}, traj::Storage{T,N},
 		end
 		cost += 0.5 * (z_pred - z_true)'* Q *(z_pred - z_true)
 		z_prev = z_pred
+		push!(Z, deepcopy(z_prev))
 	end
 	if derivatives
 		return cost/ni, grad/ni, hess/ni
 	else
-		return cost/ni
+		return cost/ni, Z
 	end
 end
 

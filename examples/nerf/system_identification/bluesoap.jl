@@ -21,7 +21,8 @@ include("methods/dataset.jl")
 include("methods/loss.jl")
 
 
-mech = get_mechanism(:nerf, nerf=:bluesoap, timestep=0.01, gravity=-9.81, friction_coefficient=0.05);
+friction_coefficient = 0.05
+mech = get_mechanism(:nerf, nerf=:bluesoap, timestep=0.01, gravity=-9.81, friction_coefficient=friction_coefficient);
 mech.contacts[1].model.collision.collider.options =
 	ColliderOptions(
 	impact_damper=1e5,
