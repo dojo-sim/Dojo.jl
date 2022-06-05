@@ -68,7 +68,7 @@ Q_data = [q1 * q0 for t = 1:T]
 
 z_data = [[X_data[t]; V_data[t]; vector(Q_data[t]); Ω_data[t]] for t = 1:T]
 data_storage = generate_storage(mech, z_data)
-vis, anim = visualize(mech, data_storage, vis=vis)
+vis, anim = visualize(mech, data_storage, vis=vis, color=RGBA(0,0,0,1.0), name=:real)
 
 t1 = 1
 z1 = [[X_data[t1]; V_data[t1]; vector(Q_data[t1]); Ω_data[t1]] for t = 1:T]
@@ -88,6 +88,38 @@ vis, anim = visualize(mech, generate_storage(mech, z35), vis=vis, animation=anim
 
 soap_length = 80
 traj_length = 280
+
+################################################################################
+# simulation
+################################################################################
+mech = get_mechanism(:nerf, nerf=:bluesoap, timestep=timestep*5,
+	gravity=-9.81, friction_coefficient=0.05);
+mech.contacts[1].model.collision.collider.options =
+	ColliderOptions(
+	impact_damper=1e5,
+	impact_spring=3e4,
+	sliding_drag=0.00,
+	sliding_friction=0.22,
+	rolling_drag=0.0,
+	rolling_friction=0.2,
+	coulomb_smoothing=3e1,
+	coulomb_regularizer=1e-3,)
+
+set_maximal_state!(mech, [X_data[1]; V_data[1]/5; vector(Q_data[1]); Ω_data[1]])
+sim_storage = simulate!(mech, T*timestep*5, record=true,
+    opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
+vis, anim = visualize(mech, sim_storage, vis=vis, animation=anim, color=RGBA(1,1,1,1.0), name=:simulated)
+
+plt = plot(layout=(3,1))
+plot!(plt[1], [sim_storage.x[1][t][1] for t = 1:T], label="x_sim")
+plot!(plt[1], [X_data[t][1] for t = 1:T], label="x_real")
+
+plot!(plt[2], [sim_storage.x[1][t][2] for t = 1:T], label="y_sim")
+plot!(plt[2], [X_data[t][2] for t = 1:T], label="y_real")
+
+plot!(plt[3], [sim_storage.x[1][t][3] for t = 1:T], label="z_sim")
+plot!(plt[3], [X_data[t][3] for t = 1:T], label="z_real")
+
 
 ################################################################################
 # Generate & Save Dataset
