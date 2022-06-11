@@ -30,8 +30,8 @@ visualize(mech, storage, vis=vis)
 ################################################################################
 mech = get_mechanism(:nerf_sphere, nerf=:bunny, collider_options=ColliderOptions(),
     timestep=0.01, gravity=-9.81)
-mech.contacts[1].model.collision.collider.options = ColliderOptions()
-mech.contacts[3].model.collision.collider.options = ColliderOptions()
+mech.contacts[1].model.collision.options = ColliderOptions()
+mech.contacts[3].model.collision.options = ColliderOptions()
 
 initialize!(mech, :nerf_sphere,
     nerf_position=[0,0,0],

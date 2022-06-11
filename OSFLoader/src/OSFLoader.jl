@@ -15,7 +15,7 @@ using GeometryBasics
 using Quaternions
 
 
-global OSF_PATH = joinpath("/home/simon/research/repos/osf-pytorch")
+global OSF_PATH = joinpath(@__DIR__, "../osf-pytorch")
 global OSF_CONFIG_FOLDER = joinpath("configs/osf")
 
 function osf_loader_dir()

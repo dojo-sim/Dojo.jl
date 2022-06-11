@@ -8,8 +8,8 @@
 #$ pip install -r requirements.txt
 
 # Step 2:
-ENV["PYCALL_JL_RUNTIME_PYTHON"] = "/home/simon/research/repos/osf-pytorch/.osf_pyenv/bin/python"
-ENV["PYTHON"] = "/home/simon/research/repos/osf-pytorch/.osf_pyenv/bin/python"
+ENV["PYCALL_JL_RUNTIME_PYTHON"] = joinpath(@__DIR__, "../osf-pytorch/.osf_pyenv/bin/python")
+ENV["PYTHON"] = joinpath(@__DIR__, "../osf-pytorch/.osf_pyenv/bin/python")
 
 # Step 3:
 using Pkg
@@ -18,5 +18,5 @@ using PyCall
 
 # Step 4:
 # pushfirst!(pyimport("sys")."path", "")
-global OSF_PATH = joinpath("/home/simon/research/repos/osf-pytorch")
+global OSF_PATH = joinpath(@__DIR__, "../osf-pytorch")
 pushfirst!(pyimport("sys")."path", OSF_PATH)
