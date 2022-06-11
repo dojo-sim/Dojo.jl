@@ -6,6 +6,8 @@
     impact_spring::T=3e4
     sliding_drag::T=0.1
     sliding_friction::T=0.2
+    torsional_drag::T=0.0
+    torsional_friction::T=0.01
     rolling_drag::T=0.0
     rolling_friction::T=0.01
     coulomb_smoothing::T=3e1
@@ -24,11 +26,9 @@ mutable struct SoftCollider{T,N} <: Collider{T}
     weight_gradients::Vector{SVector{3,T}}
     nerf_object::Any
     normalizer
-    options::ColliderOptions{T}
 end
 
-function SoftCollider(nerf_object, normalizer; num_particle=1000,
-        opts=ColliderOptions(), T=Float64)
+function SoftCollider(nerf_object, normalizer; num_particle=1000, T=Float64)
 
     mass, inertia, center_of_mass = OSFLoader.inertia_properties(nerf_object,
         normalizer=normalizer)
@@ -49,7 +49,6 @@ function SoftCollider(nerf_object, normalizer; num_particle=1000,
         weight_gradients,
         nerf_object,
         normalizer,
-        opts,
         )
 end
 

@@ -15,6 +15,7 @@ mutable struct SoftSphereCollision{T,O,I,OI,N} <: SoftCollision{T,O,I,OI,N}
     sphere_origin::SVector{I,T}
     contact_radius::T
     contact_tangent::SMatrix{O,I,T,OI}
+    options::ColliderOptions{T}
 end
 
 function inside(collision::SoftSphereCollision{T}, p, xc, qc) where T

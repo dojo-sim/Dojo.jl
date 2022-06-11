@@ -49,7 +49,7 @@ end
 
 function get_nerf_sphere(;
     nerf::Symbol=:bunny,
-    collider_options=ColliderOptions(),
+    collider_options=Dojo.ColliderOptions(),
     timestep=0.01,
     gravity=[0.0; 0.0; -9.81],
     friction_coefficient=0.8,
@@ -100,8 +100,7 @@ function get_nerf_sphere(;
     contacts = [contact_nerf_halfspace; contact_sphere_halfspace; contact_nerf_sphere]
     # contacts = [contact_nerf_halfspace; contact_sphere_halfspace]
     # contacts = [contact_sphere_halfspace]
-    # contacts = [contact_nerf_halfspace; contact_sphere_halfspace][1:0]
-    # contacts = [contact_nerf_sphere]
+    # contacts = [contact_sphere_halfspace][1:0]
 
     mechanism = Mechanism(origin, bodies, joints, contacts,
         gravity=gravity,

@@ -16,7 +16,8 @@ end
 function SoftContact(body::Body{T}, normal::AbstractVector{T}, collider::Collider;
         parent_origin=-collider.center_of_mass, child_origin=szeros(T,3), radius::T=0.0,
         child_collider=nothing, child_collider_origin=nothing,
-        collision_type::Symbol=:soft_halfspace) where T
+        collision_type::Symbol=:soft_halfspace,
+		opts=ColliderOptions()) where T
 
     if child_collider != nothing && child_collider_origin == nothing
         child_collider_origin = -child_collider.center_of_mass
@@ -30,11 +31,14 @@ function SoftContact(body::Body{T}, normal::AbstractVector{T}, collider::Collide
 
     # collision
     if collision_type == :soft_halfspace
-        collision = SoftHalfSpaceCollision(collider, contact_normal, SVector{3}(parent_origin), contact_tangent)
+        collision = SoftHalfSpaceCollision(collider, contact_normal, SVector{3}(parent_origin),
+			contact_tangent, opts)
     elseif collision_type == :soft_sphere
-        collision = SoftSphereCollision(collider, SVector{3}(parent_origin), child_origin, radius, contact_tangent)
+        collision = SoftSphereCollision(collider, SVector{3}(parent_origin), child_origin, radius,
+			contact_tangent, opts)
     elseif collision_type == :soft_soft
-        collision = SoftSoftCollision(collider, child_collider, SVector{3}(parent_origin), SVector{3}(child_collider_origin), contact_tangent)
+        collision = SoftSoftCollision(collider, child_collider, SVector{3}(parent_origin),
+			SVector{3}(child_collider_origin), contact_tangent, opts)
     else
         error("Unknown collision_type")
     end
@@ -79,7 +83,8 @@ function soft_impulse(model::SoftContact{T},
     end
     ψ, barycenter, normal = model.ψ, model.barycenter, model.normal
     # velocities
-    soft_impulse(collision.collider_origin, collider.options, ψ, barycenter, normal,
+	# @show model
+    soft_impulse(collision.collider_origin, collision.options, ψ, barycenter, normal,
 		x2p, vp, q2p, ϕp, x2c, vc, q2c, ϕc, timestep)
 end
 
@@ -97,7 +102,7 @@ function soft_impulse(collider_origin, opts, ψ, barycenter, normal,
     vc_ = vc + skew(x2c - xp_) * vector_rotate(ϕc, q2c)
     v = vp_ - vc_
     v_normal = normal * normal' * v
-    v_tangential = v - v_normal
+	v_tangential = v - v_normal
     # impact
     F_impact = ψ * opts.impact_spring * normal
     F_impact -= ψ * opts.impact_damper * v_normal
@@ -107,9 +112,15 @@ function soft_impulse(collider_origin, opts, ψ, barycenter, normal,
     F_contact = F_impact + F_friction
 
     ϕ = vector_rotate(ϕp, q2p) - vector_rotate(ϕc, q2c)
-    τ_contact = -opts.rolling_drag * norm(F_impact) * ϕ
-    τ_contact += opts.rolling_friction * norm(F_impact) * coulomb_direction(ϕ, smoothing, regularizer)
-
+	ϕ_normal = normal * normal' * ϕ
+	ϕ_tangential = ϕ - ϕ_normal
+	# torsional
+	τ_rolling = -opts.torsional_drag * norm(F_impact) * ϕ_normal
+    τ_rolling += opts.torsional_friction * norm(F_impact) * coulomb_direction(ϕ_normal, smoothing, regularizer)
+	# rolling
+	τ_torsional = -opts.rolling_drag * norm(F_impact) * ϕ_tangential
+    τ_torsional += opts.rolling_friction * norm(F_impact) * coulomb_direction(ϕ_tangential, smoothing, regularizer)
+	τ_contact = τ_torsional + τ_rolling
     # constraint
     impulse = timestep * [F_contact; τ_contact]
     return impulse

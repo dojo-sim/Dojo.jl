@@ -12,7 +12,7 @@ end
 function contact_constraint_jacobian_contact_data(mechanism::Mechanism,
 		contact::SoftContactConstraint{T,N,Nc,Cs}, body::Body{T}) where {T,N,Nc,Cs<:SoftContact{T,N}}
 	# @warn "setting this to zero"
-	soft_impulse_jacobian_contact_data(mechanism, contact, body) * 0.000000000000
+	soft_impulse_jacobian_contact_data(mechanism, contact, body) * 1.000000000000
 end
 
 function contact_constraint_jacobian_body_data(mechanism::Mechanism,

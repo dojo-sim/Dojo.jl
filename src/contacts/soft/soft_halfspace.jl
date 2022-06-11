@@ -13,6 +13,7 @@ mutable struct SoftHalfSpaceCollision{T,O,I,OI,N} <: SoftCollision{T,O,I,OI,N}
     contact_normal::Adjoint{T,SVector{I,T}}
     collider_origin::SVector{I,T}
     contact_tangent::SMatrix{O,I,T,OI}
+    options::ColliderOptions{T}
 end
 
 function inside(collision::SoftHalfSpaceCollision{T}, p, xc, qc) where T

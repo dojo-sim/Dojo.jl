@@ -15,6 +15,7 @@ mutable struct SoftSoftCollision{T,O,I,OI,N,Nc} <: SoftCollision{T,O,I,OI,N}
     collider_origin::SVector{I,T}
     child_collider_origin::SVector{I,T}
     contact_tangent::SMatrix{O,I,T,OI}
+    options::ColliderOptions{T}
 end
 
 # normal projection (from child to parent)
@@ -48,13 +49,13 @@ function overlap(collision::SoftSoftCollision{T,O,I,OI,Np,Nc}, xp, qp, xc, qc) w
     normal_w /= (1e-20 + norm(normal_w))
     barycenter_w = (ψp * barycenterpw + ψc * barycentercw) / (1e-20 + ψ)
     barycenter_p = Dojo.vector_rotate(barycenter_w - xp, inv(qp))
-    return 1e5ψ, barycenter_p, normal_w
+    return ψ, barycenter_p, normal_w
 end
 
 function cross_overlap(collider1::SoftCollider{T,N1}, collider2::SoftCollider{T,N2}, x1, q1, x2, q2) where {T,N1,N2}
     # If those 2 conditions are not met then the density query will result in a Segmentation Fault.
-    @assert collider1.nerf_object["network_query_fn"] != PyNULL()
-    @assert collider2.nerf_object["network_query_fn"] != PyNULL()
+    @assert collider1.nerf_object["network_query_fn"] != OSFLoader.PyNULL()
+    @assert collider2.nerf_object["network_query_fn"] != OSFLoader.PyNULL()
 
     # returns
     # the particles of collider 1 in world frame
@@ -87,5 +88,5 @@ function cross_overlap(collider1::SoftCollider{T,N1}, collider2::SoftCollider{T,
     end
     barycenter_w /= (1e-20 + ψ)
     normal_w /= (1e-20 + norm(normal_w))
-    return ψ, barycenter_w, normal_w
+    return N1 * ψ, barycenter_w, normal_w
 end

@@ -20,17 +20,17 @@ function build_collider!(collider::SoftCollider{T,N}, vis::Visualizer;
     return nothing
 end
 
-# vis = Visualizer()
-# open(vis)
-
-set_light!(vis)
-set_background!(vis)
-nerf_object = get_nerf_object()
-# collider = SoftCollider(nerf_object, N=1000)
-# mech = get_bunny()
-# collider = mech.contacts[1].model.collision.collider
-build_collider!(collider, vis, visualize_particle=true)
-build_robot(mech, vis=vis, color=RGBA(1,0.5,0,0.4))
-set_floor!(vis, origin=[0,0,-1.0])
-set_robot(vis, mech, [-com; zeros(3); 1; zeros(3); zeros(3);], show_contact=false)
-com = mech.contacts[1].model.collision.collider_origin
+# # vis = Visualizer()
+# # open(vis)
+#
+# set_light!(vis)
+# set_background!(vis)
+# nerf_object = get_nerf_object()
+# # collider = SoftCollider(nerf_object, N=1000)
+# # mech = get_bunny()
+# # collider = mech.contacts[1].model.collision.collider
+# build_collider!(collider, vis, visualize_particle=true)
+# build_robot(mech, vis=vis, color=RGBA(1,0.5,0,0.4))
+# set_floor!(vis, origin=[0,0,-1.0])
+# set_robot(vis, mech, [-com; zeros(3); 1; zeros(3); zeros(3);], show_contact=false)
+# com = mech.contacts[1].model.collision.collider_origin
