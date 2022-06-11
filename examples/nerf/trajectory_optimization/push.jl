@@ -20,7 +20,7 @@ render(vis)
 # ## system
 gravity = -9.81
 timestep = 0.02
-friction_coefficient = 0.30
+friction_coefficient = 0.05
 ################################################################################
 # Simulation
 ################################################################################
@@ -28,9 +28,9 @@ mech = DojoEnvironments.get_mechanism(:nerf_sphere, nerf=:bluesoap, timestep=tim
 # mech = get_nerf_sphere(nerf=:bunny, timestep=timestep, gravity=gravity,
     friction_coefficient=friction_coefficient,
     collider_options=ColliderOptions(sliding_friction=friction_coefficient))
-
-mech.contacts[end].model.collision.options.impact_damper = 10000.0
-mech.contacts[end].model.collision.options.impact_spring = 1000.0
+mech.contacts
+mech.contacts[end].model.collision.options.impact_damper = 1000.0
+mech.contacts[end].model.collision.options.impact_spring = 3000.0
 
 # initial conditions
 x_bluesoap = [0.269, -0.40, 0.369]
@@ -48,13 +48,13 @@ set_maximal_state!(mech, deepcopy(z_initial))
 
 
 initialize!(mech, :nerf_sphere,
-    nerf_position=x_bluesoap - [0,0,0.5],
+    nerf_position=x_bluesoap - [-0.5,0,0.5],
     nerf_orientation=q_bluesoap,
     sphere_position=x_sphere - [0,0,0.5],
     sphere_orientation=q_sphere,
     )
 
-function ctrl!(m, k; kp=1e-0, kv=3e-1, xg_sphere=[-0,-0.5,0.5], xg_nerf=[-1.5, 0.40,0.369])
+function ctrl!(m, k; kp=2e0, kv=3e-1, xg_sphere=[-0,-0.5,0.5], xg_nerf=[-1.5, 0.40,0.369])
     sphere = get_body(m, :sphere)
     nerf = get_body(m, :bluesoap)
     x_sphere = current_position(sphere.state)
@@ -62,24 +62,19 @@ function ctrl!(m, k; kp=1e-0, kv=3e-1, xg_sphere=[-0,-0.5,0.5], xg_nerf=[-1.5, 0
     x_nerf = current_position(nerf.state)
     v_nerf = current_velocity(nerf.state)[1]
     u_sphere = (xg_sphere - x_sphere) * kp - kv * v_sphere
-	# u_nerf = szeros(3) # (xg_nerf - x_nerf) * kp - kv * v_nerf
-    u_nerf = (xg_nerf - x_nerf) * kp - kv * v_nerf
-    # set_input!(m, [u_nerf; szeros(3); u_sphere; szeros(3)])
-    set_input!(m, [u_nerf; szeros(3); u_sphere; szeros(3)])
+	u_nerf = szeros(3)
+    # u_nerf = (xg_nerf - x_nerf) * kp - kv * v_nerf
+    set_input!(m, [u_nerf; szeros(3); u_sphere; szeros(3)] / timestep)
     return nothing
 end
 
-storage = simulate!(mech, 0.60, ctrl!, opts=SolverOptions(rtol=3e-4, btol=3e-4))
+storage = simulate!(mech, 1.20, ctrl!, opts=SolverOptions(rtol=3e-4, btol=3e-4))
 # final state
 z_final = get_maximal_state(mech)
-# z_final = deepcopy(z_initial)
-# z_final[[1]] .+= 1.0
-# z_final[[1,2,3]] .+= 1.0
-# z_final[[14,15,16]] .+= 1.0
-visualize(mech, storage, vis=vis)
 
 visualize(mech, generate_storage(mech, [z_initial]), vis=vis)
 visualize(mech, generate_storage(mech, [z_final]), vis=vis)
+visualize(mech, storage, vis=vis)
 
 
 ################################################################################
@@ -93,13 +88,15 @@ env = get_environment(:nerf_sphere,
     friction_coefficient=friction_coefficient,
     timestep=timestep,
     gravity=gravity,
-    infeasible_control=true,
+	# infeasible_control=true,
+    infeasible_control=false, # it seems to work better without infeasible control because with nerf contact we can't make the contact `active at a distance` like we can with dojo-contact
     opts_step=SolverOptions(rtol=3e-3, btol=3e-3),
     opts_grad=SolverOptions(rtol=3e-3, btol=3e-3),
     )
 
-env.mechanism.contacts[end].model.collision.options.impact_damper = 10000.0
-env.mechanism.contacts[end].model.collision.options.impact_spring = 1000.0
+nu_infeasible = 6
+env.mechanism.contacts[end].model.collision.options.impact_damper = 1000.0
+env.mechanism.contacts[end].model.collision.options.impact_spring = 3000.0
 
 
 # ## dimensions
@@ -114,37 +111,7 @@ xT = maximal_to_minimal(env.mechanism, z_final)
 
 
 # ## horizon
-T = 30
-
-function finite_difference_dynamics_jacobian_state(dx, env, x, u, w)
-	function local_dynamics(x)
-		y = zeros(24)
-		dynamics(y, env, x, u, w)
-		return y
-	end
-	dx .= FiniteDiff.finite_difference_jacobian(x -> local_dynamics(x), x)
-	return nothing
-end
-
-function finite_difference_dynamics_jacobian_maximal_state(dz, env, z, u, w)
-	function local_dynamics(z)
-		y = zeros(26)
-		dynamics(y, env, z, u, w)
-		return y
-	end
-	dz .= FiniteDiff.finite_difference_jacobian(z -> local_dynamics(z), z)
-	return nothing
-end
-
-function finite_difference_dynamics_jacobian_input(du, env, x, u, w)
-	function local_dynamics(u)
-		y = zeros(24)
-		dynamics(y, env, x, u, w)
-		return y
-	end
-	du .= FiniteDiff.finite_difference_jacobian(u -> local_dynamics(u), u)
-	return nothing
-end
+T = 60
 
 # ## model
 dyn = IterativeLQR.Dynamics(
@@ -160,7 +127,9 @@ dyn = IterativeLQR.Dynamics(
 model = [dyn for t = 1:T-1]
 
 # ## rollout
-ū = [1.0 * [-0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] for t = 1:T-1]
+# ū = [1.0 * [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0] for t = 1:T-1]
+ū = [1.0 * [-1.0, 0.0, 0.0, 0.0, 0.0, 0.0] for t = 1:T-1]
+
 x̄ = IterativeLQR.rollout(model, x1, ū)
 DojoEnvironments.visualize(env, x̄)
 
@@ -173,26 +142,40 @@ ct = IterativeLQR.Cost(ot, n, m)
 cT = IterativeLQR.Cost(oT, n, 0)
 obj = [[ct for t = 1:T-1]..., cT]
 
+
 # ## constraints
+############################################################################
+# ul = -1.0 * 1e-3*ones(nu_infeasible) #TODO this is relaxed
+# uu = +1.0 * 1e-3*ones(nu_infeasible) #TODO this is relaxed
+#
+# function contt(x, u, w)
+#     [
+#         1e-1 * (ul - u[1:nu_infeasible]);
+#         1e-1 * (u[1:nu_infeasible] - uu);
+#     ]
+# end
+
 function goal(x, u, w)
 	# x[[1,2,3,7,8,9,13,14,15]] - xT[[1,2,3,7,8,9,13,14,15]]
     1e-0 * (x[[1,2,3,13,14,15]] - xT[[1,2,3,13,14,15]])
     # x[[1]] - xT[[1]]
 end
 
-cont = IterativeLQR.Constraint()
-conT = IterativeLQR.Constraint(goal, n, 0)
-cons = [[cont for t = 1:T-1]..., conT]
+# con_policyt = IterativeLQR.Constraint(contt, n, m, indices_inequality=collect(1:2nu_infeasible))
+con_policyt = IterativeLQR.Constraint()
+con_policyT = IterativeLQR.Constraint(goal, n, 0)
+
+cons = [[con_policyt for t = 1:T-1]..., con_policyT]
 
 # ## solver
 solver_options = IterativeLQR.Options(
     line_search=:armijo,
     max_iterations=75,
-    max_dual_updates=16,
+    max_dual_updates=10,
     objective_tolerance=1e-3,
     lagrangian_gradient_tolerance=1e-3,
     constraint_tolerance=1e-3,
-    scaling_penalty=3.0,
+    scaling_penalty=10.0,
     max_penalty=1e4,
     verbose=true)
 s = IterativeLQR.Solver(model, obj, cons, options=solver_options)
@@ -231,9 +214,52 @@ DojoEnvironments.visualize(env, z_sol)
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 ################################################################################
 # gradients coming from nerf object interactions are wrong
 ################################################################################
+
+
+function finite_difference_dynamics_jacobian_state(dx, env, x, u, w)
+	function local_dynamics(x)
+		y = zeros(24)
+		dynamics(y, env, x, u, w)
+		return y
+	end
+	dx .= FiniteDiff.finite_difference_jacobian(x -> local_dynamics(x), x)
+	return nothing
+end
+
+function finite_difference_dynamics_jacobian_maximal_state(dz, env, z, u, w)
+	function local_dynamics(z)
+		y = zeros(26)
+		dynamics(y, env, z, u, w)
+		return y
+	end
+	dz .= FiniteDiff.finite_difference_jacobian(z -> local_dynamics(z), z)
+	return nothing
+end
+
+function finite_difference_dynamics_jacobian_input(du, env, x, u, w)
+	function local_dynamics(u)
+		y = zeros(24)
+		dynamics(y, env, x, u, w)
+		return y
+	end
+	du .= FiniteDiff.finite_difference_jacobian(u -> local_dynamics(u), u)
+	return nothing
+end
 
 env = get_environment(:nerf_sphere,
     nerf=:bluesoap,
@@ -279,10 +305,13 @@ norm(dx0, Inf)
 norm(dx1, Inf)
 norm(dx0 - dx1, Inf)
 
-plot(Gray.(du0))
+plot(Gray.(du0 ./ timestep))
 plot(Gray.(du1))
-norm(du0, Inf)
+plot(Gray.(du0 ./ timestep - du1))
+norm(du0 ./ timestep, Inf)
 norm(du1, Inf)
+timestep
+
 norm(du0 - du1, Inf)
 
 # plot(Gray.(dz0))
@@ -326,54 +355,54 @@ a = 01
 parent_joints(env.mechanism, get_body(env.mechanism, :bluesoap))
 parent_joints(env.mechanism, get_body(env.mechanism, :sphere))
 
-
-function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
-	timestep= mechanism.timestep
-	J = zeros(maximal_dimension(mechanism, attjac=true), minimal_dimension(mechanism))
-
-	# Compute partials
-	partials = Dict{Vector{Int}, Matrix{T}}()
-	for cnode in mechanism.bodies
-		@show cnode.name
-		@show parent_joints(mechanism, cnode)
-		for joint in parent_joints(mechanism, cnode)
-			pnode = get_node(mechanism, joint.parent_id, origin=true)
-			@show pnode.name
-			partials[[cnode.id, joint.id]] = set_minimal_coordinates_velocities_jacobian_minimal(joint, pnode, cnode, timestep) # 12 x 2nu (xvqω x Δxθvω)
-			partials[[cnode.id, pnode.id]] = set_minimal_coordinates_velocities_jacobian_parent(joint, pnode, cnode, timestep) # 12 x 12 (xvqω x xvqω)
-		end
-	end
-
-	# Index
-	row = [12(i-1)+1:12i for i = 1:Nb]
-	col = [] # ordering joints from root to tree
-	col_idx = zeros(Int,Ne)
-	cnt = 0
-	for id in mechanism.root_to_leaves
-		(id > Ne) && continue # only keep joints
-		cnt += 1
-		nu = input_dimension(get_joint(mechanism, id))
-		if length(col) > 0
-			push!(col, col[end][end] .+ (1:2nu))
-		else
-			push!(col, 1:2nu)
-		end
-		col_idx[id] = cnt
-	end
-
-	 # chain partials together from root to leaves
-	for id in mechanism.root_to_leaves
-		!(Ne < id <= Ne+Nb) && continue # only treat bodies
-		cnode = get_node(mechanism, id)
-		for joint in parent_joints(mechanism, cnode)
-			pnode = get_node(mechanism, joint.parent_id, origin=true)
-			J[row[cnode.id-Ne], col[col_idx[joint.id]]] += partials[[cnode.id, joint.id]] # ∂zi∂θp(i)
-			(pnode.id == 0) && continue # avoid origin
-			J[row[cnode.id-Ne], :] += partials[[cnode.id, pnode.id]] * J[row[pnode.id-Ne], :] # ∂zi∂zp(p(i)) * ∂zp(p(i))/∂θ
-		end
-	end
-	return J
-end
+#
+# function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
+# 	timestep= mechanism.timestep
+# 	J = zeros(maximal_dimension(mechanism, attjac=true), minimal_dimension(mechanism))
+#
+# 	# Compute partials
+# 	partials = Dict{Vector{Int}, Matrix{T}}()
+# 	for cnode in mechanism.bodies
+# 		@show cnode.name
+# 		@show parent_joints(mechanism, cnode)
+# 		for joint in parent_joints(mechanism, cnode)
+# 			pnode = get_node(mechanism, joint.parent_id, origin=true)
+# 			@show pnode.name
+# 			partials[[cnode.id, joint.id]] = set_minimal_coordinates_velocities_jacobian_minimal(joint, pnode, cnode, timestep) # 12 x 2nu (xvqω x Δxθvω)
+# 			partials[[cnode.id, pnode.id]] = set_minimal_coordinates_velocities_jacobian_parent(joint, pnode, cnode, timestep) # 12 x 12 (xvqω x xvqω)
+# 		end
+# 	end
+#
+# 	# Index
+# 	row = [12(i-1)+1:12i for i = 1:Nb]
+# 	col = [] # ordering joints from root to tree
+# 	col_idx = zeros(Int,Ne)
+# 	cnt = 0
+# 	for id in mechanism.root_to_leaves
+# 		(id > Ne) && continue # only keep joints
+# 		cnt += 1
+# 		nu = input_dimension(get_joint(mechanism, id))
+# 		if length(col) > 0
+# 			push!(col, col[end][end] .+ (1:2nu))
+# 		else
+# 			push!(col, 1:2nu)
+# 		end
+# 		col_idx[id] = cnt
+# 	end
+#
+# 	 # chain partials together from root to leaves
+# 	for id in mechanism.root_to_leaves
+# 		!(Ne < id <= Ne+Nb) && continue # only treat bodies
+# 		cnode = get_node(mechanism, id)
+# 		for joint in parent_joints(mechanism, cnode)
+# 			pnode = get_node(mechanism, joint.parent_id, origin=true)
+# 			J[row[cnode.id-Ne], col[col_idx[joint.id]]] += partials[[cnode.id, joint.id]] # ∂zi∂θp(i)
+# 			(pnode.id == 0) && continue # avoid origin
+# 			J[row[cnode.id-Ne], :] += partials[[cnode.id, pnode.id]] * J[row[pnode.id-Ne], :] # ∂zi∂zp(p(i)) * ∂zp(p(i))/∂θ
+# 		end
+# 	end
+# 	return J
+# end
 
 min_to_max_jacobian_current = minimal_to_maximal_jacobian(env.mechanism, x)[1]
 

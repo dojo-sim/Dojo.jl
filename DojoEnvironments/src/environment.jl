@@ -123,7 +123,9 @@ function Base.step(env::Environment, x, u;
             end
         end
         env.dynamics_jacobian_state .= fx
-        env.dynamics_jacobian_input .= fu * env.control_map
+		# env.dynamics_jacobian_input .= fu * env.control_map
+		# @warn "unsure about the rescaling"
+        env.dynamics_jacobian_input .= fu * env.control_map ./ timestep
     end
 
     info = Dict()

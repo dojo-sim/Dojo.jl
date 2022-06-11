@@ -77,8 +77,7 @@ function soft_impulse(model::SoftContact{T},
     # collision
     # barycenter in soft_body frame
     # normal in world frame
-	# if recompute
-    if true
+	if recompute
         model.ψ, model.barycenter, model.normal = overlap(collision, x2p, q2p, x2c, q2c)
     end
     ψ, barycenter, normal = model.ψ, model.barycenter, model.normal
