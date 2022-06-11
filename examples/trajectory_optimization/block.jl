@@ -16,6 +16,7 @@ env = get_environment(:block,
     friction_coefficient=0.5,
     gravity=gravity);
 
+env.mechanism.contacts[1].model.friction_coefficient = 10.0
 # ## visualizer 
 render(env.vis) 
 

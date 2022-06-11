@@ -12,6 +12,14 @@ mutable struct LinearContact{T,N} <: Contact{T,N}
     collision::Collision{T,2,3,6}
 end
 
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, contact::LinearContact)
+#     summary(io, contact)
+#     println(io, "")
+#     println(io, "friction_coefficient:      "*string(contact.friction_coefficient))
+#     println(io, "friction_parameterization: "*string(contact.friction_parameterization))
+#     println(io, "collision:                 "*string(contact.collision))
+# end
+
 function LinearContact(body::Body{T}, normal::AbstractVector, friction_coefficient;
     contact_origin=szeros(T, 3),
     contact_radius=0.0) where T
@@ -65,17 +73,17 @@ function constraint(mechanism, contact::RigidContactConstraint{T,N,Nc,Cs,N½}) w
 
     # parent
     pbody = get_body(mechanism, contact.parent_id)
-    xp, vp, qp, ϕp = next_configuration_velocity(pbody.state, mechanism.timestep)
+    xp, vp, qp, ωp = next_configuration_velocity(pbody.state, mechanism.timestep)
 
     # child
     cbody = get_body(mechanism, contact.child_id)
-    xc, vc, qc, ϕc = next_configuration_velocity(cbody.state, mechanism.timestep)
+    xc, vc, qc, ωc = next_configuration_velocity(cbody.state, mechanism.timestep)
 
     # distance
     d = distance(model.collision, xp, qp, xc, qc)
 
     # relative tangential velocity
-    vt = relative_tangential_velocity(model, xp, qp, vp, ϕp, xc, qc, vc, ϕc)
+    vt = relative_tangential_velocity(model, xp, qp, vp, ωp, xc, qc, vc, ωc)
 
     # unpack contact variables
     γ = contact.impulses[2][1]

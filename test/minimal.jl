@@ -20,16 +20,6 @@ joint_types = [
     :PlanarFree
     ]
 
-# TODO this is necessary, because some conversions do not return a vector for scalar values
-# See TODO below for removing finite diff
-function force_to_jacobian_finite_diff(f,x)
-	if typeof(f(x)) <: AbstractVector
-		return FiniteDiff.finite_difference_jacobian(f,x)
-	else
-		return FiniteDiff.finite_difference_jacobian(x -> [f(x)],x)
-	end
-end
-
 
 function force_to_jacobian_forward_diff(f,x)
 	if typeof(f(x)) <: AbstractVector
@@ -44,7 +34,7 @@ end
 ################################################################################
 @testset "Get and set position and velocities" begin
 	@testset "Maximal coordinates" begin
-		mech = Dojo.get_mechanism(:raiberthopper)
+		mech = DojoEnvironments.get_mechanism(:raiberthopper)
 		timestep= mech.timestep
 		joint1 = mech.joints[1]
 		joint2 = mech.joints[2]
@@ -76,13 +66,13 @@ end
 
 	@testset "Minimal coordinates" begin
 		for joint_type in joint_types
-			mech = Dojo.get_snake(
+			mech = DojoEnvironments.get_snake(
 					num_bodies=10,
 					joint_type=joint_type)
 
 			timestep = mech.timestep
 			for joint in mech.joints
-				joint.rotational.axis_offset = rand(QuatRotation).q
+				joint.rotational.orientation_offset = rand(QuatRotation).q
 			end
 			joint0 = mech.joints[1]
 			tra0 = joint0.translational
@@ -93,7 +83,7 @@ end
 			Random.seed!(100)
 			Δθ = rand(input_dimension(rot0))
 			Δx = rand(input_dimension(tra0))
-			Δϕ = rand(input_dimension(rot0))
+			Δω = rand(input_dimension(rot0))
 			Δv = rand(input_dimension(tra0))
 			for i = 1:10
 				Dojo.set_minimal_coordinates!(rot0, pnodes0[i], cnodes0[i],  timestep,
@@ -108,10 +98,10 @@ end
 
 				Dojo.set_minimal_velocities!(joint0, pnodes0[i], cnodes0[i], timestep,
 					Δv=Δv,
-					Δϕ=Δϕ)
-				Δϕ0 = Dojo.minimal_velocities(rot0, pnodes0[i], cnodes0[i], timestep)
+					Δω=Δω)
+				Δω0 = Dojo.minimal_velocities(rot0, pnodes0[i], cnodes0[i], timestep)
 				Δv0 = Dojo.minimal_velocities(tra0, pnodes0[i], cnodes0[i], timestep)
-				@test norm(Δϕ0 - Δϕ, Inf) < 1.0e-8
+				@test norm(Δω0 - Δω, Inf) < 1.0e-8
 				@test norm(Δv0 - Δv, Inf) < 1.0e-8
 			end
 		end
@@ -124,7 +114,7 @@ end
 @testset "Minimal to maximal to minimal" begin
 	# raiberthopper
 	@testset "Raibert hopper" begin
-		mech = Dojo.get_mechanism(:raiberthopper);
+		mech = DojoEnvironments.get_mechanism(:raiberthopper);
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
 		x0 = rand(nx)
@@ -141,7 +131,7 @@ end
 
 	# box
 	@testset "Box" begin
-		mech = Dojo.get_mechanism(:block)
+		mech = DojoEnvironments.get_mechanism(:block)
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
 		x0 = rand(nx)
@@ -152,7 +142,7 @@ end
 
 	# pendulum
 	@testset "Pendulum" begin
-		mech = Dojo.get_mechanism(:pendulum)
+		mech = DojoEnvironments.get_mechanism(:pendulum)
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
 		x0 = rand(nx)
@@ -163,7 +153,7 @@ end
 
 	# halfcheetah
 	@testset "Halfcheetah" begin
-		mech = Dojo.get_mechanism(:halfcheetah)
+		mech = DojoEnvironments.get_mechanism(:halfcheetah)
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
 		x0 = rand(nx)
@@ -175,7 +165,7 @@ end
 	# nslider
 	@testset "Nslider" begin
 		Nb0 = 5
-		mech = Dojo.get_mechanism(:nslider,
+		mech = DojoEnvironments.get_mechanism(:nslider,
 			num_bodies=Nb0)
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
@@ -190,7 +180,7 @@ end
 		for joint_type in joint_types
 			# @show joint_type
 			Nb0 = 5
-			mech = Dojo.get_mechanism(:npendulum,
+			mech = DojoEnvironments.get_mechanism(:npendulum,
 				num_bodies=Nb0,
 				joint_type=joint_type)
 			Random.seed!(100)
@@ -207,10 +197,10 @@ end
 		for joint_type in joint_types
 			# @show joint_type
 			Nb0 = 5
-			mech = Dojo.get_mechanism(:snake,
+			mech = DojoEnvironments.get_mechanism(:snake;
 				num_bodies=Nb0,
 				joint_type=joint_type)
-			mech = Dojo.get_mechanism(:snake,
+			mech = DojoEnvironments.get_mechanism(:snake;
 				num_bodies=Nb0,
 				joint_type=:Fixed)
 			Random.seed!(100)
@@ -227,7 +217,7 @@ end
 		for joint_type in joint_types
 			# @show joint_type
 			Nb0 = 5
-			mech = Dojo.get_mechanism(:twister,
+			mech = DojoEnvironments.get_mechanism(:twister,
 				num_bodies=Nb0,
 				joint_type=joint_type)
 			Random.seed!(100)
@@ -241,7 +231,7 @@ end
 
 	# humanoid
 	@testset "Humanoid" begin
-		mech = Dojo.get_mechanism(:humanoid)
+		mech = DojoEnvironments.get_mechanism(:humanoid)
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
 		x0 = rand(nx)
@@ -252,7 +242,7 @@ end
 
 	# quadruped
 	@testset "Quadruped" begin
-		mech = Dojo.get_mechanism(:quadruped)
+		mech = DojoEnvironments.get_mechanism(:quadruped)
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
 		x0 = rand(nx)
@@ -263,10 +253,10 @@ end
 
 	# atlas
 	@testset "Atlas" begin
-		mech = Dojo.get_mechanism(:atlas,
+		mech = DojoEnvironments.get_mechanism(:atlas;
 			model_type=:simple,
 			contact_feet=true,
-			damper=10.0)
+			parse_damper=false)
 
 		Random.seed!(100)
 		nx = Dojo.minimal_dimension(mech)
@@ -282,7 +272,7 @@ end
 ################################################################################
 @testset "Jacobians" begin
 	@testset "Minimal velocity Jacobian" begin
-		mech = Dojo.get_humanoid()
+		mech = DojoEnvironments.get_humanoid()
 		timestep= mech.timestep
 		for jointcon in mech.joints
 			for joint in [jointcon.translational, jointcon.rotational]
@@ -295,7 +285,7 @@ end
 				# extract body states
 				Ne = Dojo.length(mech.joints)
 				if Dojo.get_body(mech, jointcon.parent_id).name == :origin
-					zp = [mech.origin.state.x2; mech.origin.state.v15; Dojo.vector(mech.origin.state.q2); mech.origin.state.ϕ15]
+					zp = [mech.origin.state.x2; mech.origin.state.v15; Dojo.vector(mech.origin.state.q2); mech.origin.state.ω15]
 				else
 					zp = z[(jointcon.parent_id - Ne - 1) * 13 .+ (1:13)]
 				end
@@ -328,13 +318,13 @@ end
 
 				∇0 = Dojo.minimal_velocities_jacobian_velocity(:parent, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 				∇1 = force_to_jacobian_forward_diff(
-					vϕ -> Dojo.minimal_velocities(joint, xa, vϕ[Dojo.SUnitRange(1,3)], qa, vϕ[Dojo.SUnitRange(4,6)], xb, vb, qb, ωb, timestep),
+					vω -> Dojo.minimal_velocities(joint, xa, vω[Dojo.SUnitRange(1,3)], qa, vω[Dojo.SUnitRange(4,6)], xb, vb, qb, ωb, timestep),
 					[va; ωa])
 				@test norm(∇0 - ∇1, Inf) < 1.0e-8
 
 				∇0 = Dojo.minimal_velocities_jacobian_velocity(:child, joint, xa, va, qa, ωa, xb, vb, qb, ωb, timestep)
 				∇1 = force_to_jacobian_forward_diff(
-					vϕ -> Dojo.minimal_velocities(joint, xa, va, qa, ωa, xb, vϕ[Dojo.SUnitRange(1,3)], qb, vϕ[Dojo.SUnitRange(4,6)], timestep),
+					vω -> Dojo.minimal_velocities(joint, xa, va, qa, ωa, xb, vω[Dojo.SUnitRange(1,3)], qb, vω[Dojo.SUnitRange(4,6)], timestep),
 					[vb; ωb])
 				@test norm(∇0 - ∇1, Inf) < 1.0e-8
 			end
@@ -342,7 +332,7 @@ end
 	end
 
 	@testset "Minimal coordinate Jacobian" begin
-		mech = Dojo.get_humanoid()
+		mech = DojoEnvironments.get_humanoid()
 		for jointcon in mech.joints
 			for joint in [jointcon.translational, jointcon.rotational]
 				# generate random configuration in minimal space
@@ -354,7 +344,7 @@ end
 				# extract body states
 				Ne = Dojo.length(mech.joints)
 				if Dojo.get_body(mech, jointcon.parent_id).name == :origin
-					zp = [mech.origin.state.x2; mech.origin.state.v15; Dojo.vector(mech.origin.state.q2); mech.origin.state.ϕ15]
+					zp = [mech.origin.state.x2; mech.origin.state.v15; Dojo.vector(mech.origin.state.q2); mech.origin.state.ω15]
 				else
 					zp = z[(jointcon.parent_id - Ne - 1) * 13 .+ (1:13)]
 				end
@@ -389,21 +379,21 @@ end
 
 	@testset "Minimal to maximal Jacobian" begin
 		function maximal_to_minimal_jacobian_fd(mechanism::Mechanism, z)
-			J = force_to_jacobian_forward_diff(y -> Dojo.maximal_to_minimal(mechanism, y), z)
+			J = ForwardDiff.jacobian(y -> Dojo.maximal_to_minimal(mechanism, y), z)
 			G = attitude_jacobian(z, length(mechanism.bodies))
 			return J * G
 		end
 
 		# TODO switch to ForwardDiff once it works
 		function maximal_to_minimal_jacobian_fd_finite_diff(mechanism::Mechanism, z)
-			J = force_to_jacobian_finite_diff(y -> Dojo.maximal_to_minimal(mechanism, y), z)
+			J = FiniteDiff.finite_difference_jacobian(y -> Dojo.maximal_to_minimal(mechanism, y), z)
 			G = attitude_jacobian(z, length(mechanism.bodies))
 			return J * G
 		end
 
 		# TODO switch to ForwardDiff once it works
 		function minimal_to_maximal_jacobian_fd(mechanism::Mechanism, x)
-			J = force_to_jacobian_finite_diff(y -> Dojo.minimal_to_maximal(mechanism, y), x)
+			J = FiniteDiff.finite_difference_jacobian(y -> Dojo.minimal_to_maximal(mechanism, y), x)
 			z = minimal_to_maximal(mechanism, x)
 			G = attitude_jacobian(z, length(mechanism.bodies))
 			return G' * J
@@ -414,7 +404,7 @@ end
 		end
 
 		# n-pendulum
-		mechanism = Dojo.get_mechanism(:npendulum,
+		mechanism = DojoEnvironments.get_mechanism(:npendulum,
 			timestep=0.1,
 			gravity=-9.81,
 			num_bodies=1)
@@ -446,7 +436,7 @@ end
 		@test norm(diag(M_a * N_a) .- 1.0, Inf) < 1.0e-8
 
 		# n-pendulum
-		mechanism = Dojo.get_mechanism(:npendulum,
+		mechanism = DojoEnvironments.get_mechanism(:npendulum,
 			timestep=0.1,
 			gravity=-9.81,
 			num_bodies=2)
@@ -477,7 +467,7 @@ end
 		@test norm(diag(M_a * N_a) .- 1.0, Inf) < 1.0e-5
 
 		# sphere
-		mechanism = Dojo.get_mechanism(:sphere,
+		mechanism = DojoEnvironments.get_mechanism(:sphere,
 			timestep=0.01,
 			gravity=-9.81)
 		Dojo.initialize!(mechanism, :sphere)
@@ -505,7 +495,7 @@ end
 		@test norm(diag(M_a * N_a) .- 1.0, Inf) < 1.0e-8
 
 		# half cheetah
-		mechanism = Dojo.get_mechanism(:halfcheetah,
+		mechanism = DojoEnvironments.get_mechanism(:halfcheetah;
 			timestep=0.01,
 			gravity=-9.81)
 		Dojo.initialize!(mechanism, :halfcheetah)
@@ -528,14 +518,14 @@ end
 		N_fd = minimal_to_maximal_jacobian_fd(mechanism, Dojo.maximal_to_minimal(mechanism, z))
 		N_a = Dojo.minimal_to_maximal_jacobian(mechanism, Dojo.maximal_to_minimal(mechanism, z))
 		@test size(N_fd) == size(N_a)
-		@test norm(N_fd - N_a, Inf) < 1.0e-5
+		@test norm(N_fd - N_a, Inf) < 2.0e-5 # TODO check tolerance
 
 		@test norm(diag(M_fd * N_fd) .- 1.0, Inf) < 1.0e-5
 		@test norm(diag(M_a * N_a) .- 1.0, Inf) < 1.0e-5
 		@test norm(diag(M_a * N_fd) .- 1.0, Inf) < 1.0e-5
 
 		# atlas
-		mechanism = Dojo.get_mechanism(:atlas,
+		mechanism = DojoEnvironments.get_mechanism(:atlas;
 			timestep=0.01,
 			gravity=-9.81,
 			friction_coefficient=0.5,
@@ -573,19 +563,19 @@ end
 	@testset "Maximal to minimal Jacobian" begin
 
 		function maximal_to_minimal_jacobian_fd_finite_diff(mechanism::Mechanism, z)
-			J = force_to_jacobian_finite_diff(y -> maximal_to_minimal(mechanism, y), z)
+			J = FiniteDiff.finite_difference_jacobian(y -> maximal_to_minimal(mechanism, y), z)
 			G = attitude_jacobian(z, length(mechanism.bodies))
 			return J * G
 		end
 
 		function maximal_to_minimal_jacobian_fd(mechanism::Mechanism, z)
-			J = force_to_jacobian_forward_diff(y -> maximal_to_minimal(mechanism, y), z)
+			J = ForwardDiff.jacobian(y -> maximal_to_minimal(mechanism, y), z)
 			G = attitude_jacobian(z, length(mechanism.bodies))
 			return J * G
 		end
 
 		# 5-link pendulum
-		mech = Dojo.get_mechanism(:npendulum,
+		mech = DojoEnvironments.get_mechanism(:npendulum,
 			timestep=0.01,
 			gravity=-9.81,
 			num_bodies=5)
@@ -609,7 +599,7 @@ end
 		@test norm(M_fd - M_a, Inf) < 1.0e-8
 
 		# # sphere
-		mech = Dojo.get_mechanism(:sphere,
+		mech = DojoEnvironments.get_mechanism(:sphere,
 			timestep=0.01,
 			gravity=-9.81)
 		Dojo.initialize!(mech, :sphere)
@@ -635,10 +625,10 @@ end
 # ################################################################################
 # # Test minimal velocities
 # ################################################################################
-# mech = Dojo.get_snake(gravity=0.00, num_bodies=2, damper=0.3, spring=0.2, joint_type=:Revolute)
-# Dojo.initialize_snake!(mech)
+# mech = DojoEnvironments.get_snake(gravity=0.00, num_bodies=2, damper=0.3, spring=0.2, joint_type=:Revolute)
+# DojoEnvironments.initialize_snake!(mech)
 # function ctrl!(m,k)
-#     set_input!(m, 0.01*m.timestep*ones(minimal_dimension(m)))
+#     set_input!(m, 0.01*ones(minimal_dimension(m)))
 # end
 # storage = Dojo.simulate!(mech, 1.0, ctrl!)
 # Dojo.visualize(mech, storage, vis=vis)
@@ -650,44 +640,44 @@ end
 # xa0 = srand(3)
 # qa0 = rand(QuatRotation).q
 # va0 = srand(3)
-# ϕa0 = srand(3)
+# ωa0 = srand(3)
 # xb0 = srand(3)
 # qb0 = rand(QuatRotation).q
 # vb0 = srand(3)
-# ϕb0 = srand(3)
+# ωb0 = srand(3)
 #
 # J0 = minimal_velocities_jacobian_configuration(:parent,
-#     rot0, xa0, va0, qa0, ϕa0, xb0, vb0, qb0, ϕb0, timestep0)
+#     rot0, xa0, va0, qa0, ωa0, xb0, vb0, qb0, ωb0, timestep0)
 # J1 = FiniteDiff.finite_difference_jacobian(
-#     xq -> Dojo.minimal_velocities(rot0, xq[SUnitRange(1,3)], va0, Quaternion(xq[SUnitRange(4,7)]...,true), ϕa0,
-#     xb0, vb0, qb0, ϕb0, timestep0),
+#     xq -> Dojo.minimal_velocities(rot0, xq[SUnitRange(1,3)], va0, Quaternion(xq[SUnitRange(4,7)]...,true), ωa0,
+#     xb0, vb0, qb0, ωb0, timestep0),
 #     [xa0; vector(qa0)]) * cat(I(3), LVᵀmat(qa0), dims=(1,2))
 # norm(J0 - J1, Inf)
 # norm(J0 - J1, Inf) < 1e-4
 #
 # J0 = minimal_velocities_jacobian_configuration(:child,
-#     rot0, xa0, va0, qa0, ϕa0, xb0, vb0, qb0, ϕb0, timestep0)
+#     rot0, xa0, va0, qa0, ωa0, xb0, vb0, qb0, ωb0, timestep0)
 # J1 = FiniteDiff.finite_difference_jacobian(
-#     xq -> Dojo.minimal_velocities(rot0, xa0, va0, qa0, ϕa0,
-#     xq[SUnitRange(1,3)], vb0, Quaternion(xq[SUnitRange(4,7)]...,true), ϕb0, timestep0),
+#     xq -> Dojo.minimal_velocities(rot0, xa0, va0, qa0, ωa0,
+#     xq[SUnitRange(1,3)], vb0, Quaternion(xq[SUnitRange(4,7)]...,true), ωb0, timestep0),
 #     [xb0; vector(qb0)]) * cat(I(3), LVᵀmat(qb0), dims=(1,2))
 # norm(J0 - J1, Inf)
 # norm(J0 - J1, Inf) < 1e-4
 #
 #
 # J0 = minimal_velocities_jacobian_velocity(:parent,
-#     rot0, xa0, va0, qa0, ϕa0, xb0, vb0, qb0, ϕb0, timestep0)
+#     rot0, xa0, va0, qa0, ωa0, xb0, vb0, qb0, ωb0, timestep0)
 # J1 = FiniteDiff.finite_difference_jacobian(
-#     vϕ -> Dojo.minimal_velocities(rot0, xa0, vϕ[SUnitRange(1,3)], qa0, vϕ[SUnitRange(4,6)], xb0, vb0, qb0, ϕb0, timestep0),
-#     [va0; ϕa0])
+#     vω -> Dojo.minimal_velocities(rot0, xa0, vω[SUnitRange(1,3)], qa0, vω[SUnitRange(4,6)], xb0, vb0, qb0, ωb0, timestep0),
+#     [va0; ωa0])
 # norm(J0 - J1, Inf)
 # norm(J0 - J1, Inf) < 1e-4
 #
 # J0 = minimal_velocities_jacobian_velocity(:child,
-#     rot0, xa0, va0, qa0, ϕa0, xb0, vb0, qb0, ϕb0, timestep0)
+#     rot0, xa0, va0, qa0, ωa0, xb0, vb0, qb0, ωb0, timestep0)
 # J1 = FiniteDiff.finite_difference_jacobian(
-#     vϕ -> Dojo.minimal_velocities(rot0, xa0, va0, qa0, ϕa0,
-#         xb0, vϕ[SUnitRange(1,3)], qb0, vϕ[SUnitRange(4,6)], timestep0),
-#     [vb0; ϕb0])
+#     vω -> Dojo.minimal_velocities(rot0, xa0, va0, qa0, ωa0,
+#         xb0, vω[SUnitRange(1,3)], qb0, vω[SUnitRange(4,6)], timestep0),
+#     [vb0; ωb0])
 # norm(J0 - J1, Inf)
 # norm(J0 - J1, Inf) < 1e-4

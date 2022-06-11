@@ -1,4 +1,8 @@
 # Defining a Controller
+
+!!! info
+    Inputs to systems in Dojo are **impulses**, not forces. For example, an input impulse `u = timestep * force`.
+
 Here, we explain how to write a controller and simulate its effect on a dynamical system
 i.e., a [`Mechanism`](@ref).
 We focus on a simple pendulum swing-up.

@@ -29,7 +29,7 @@ function controller!(mechanism, k;
     N = Int(floor(1 / timestep))
     for joint in mechanism.joints
         nu = input_dimension(joint)
-        u = (nu <= 5 && k ∈ (1:N)) * U * timestep * sones(nu)
+        u = (nu <= 5 && k ∈ (1:N)) * U * sones(nu)
         set_input!(joint, u)
     end
     return
@@ -43,7 +43,7 @@ function humanoid_controller!(mechanism, k;
     N = Int(floor(1 / timestep))
     for joint in mechanism.joints
         nu = input_dimension(joint)
-        u = (nu <= 5 && k ∈ (1:N)) * U * timestep * sones(nu)
+        u = (nu <= 5 && k ∈ (1:N)) * U * sones(nu)
         set_input!(joint, u)
     end
     return
@@ -56,7 +56,7 @@ function quadruped_controller!(mechanism, k;
     N = Int(floor(1.0 / timestep))
     for joint in mechanism.joints
         nu = input_dimension(joint)
-        u = (nu <= 5 && k ∈ (1:N)) * U * timestep * sones(nu)
+        u = (nu <= 5 && k ∈ (1:N)) * U * sones(nu)
         set_input!(joint, u)
     end
     return
@@ -68,7 +68,7 @@ function snake_controller!(mechanism, k;
     N = Int(floor(1.0 / timestep))
     for joint in mechanism.joints
         nu = input_dimension(joint)
-        u = (nu <= 5 && k ∈ (1:N)) * U * timestep * sones(nu)
+        u = (nu <= 5 && k ∈ (1:N)) * U * sones(nu)
         set_input!(joint, u)
     end
     return
@@ -80,7 +80,7 @@ function twister_controller!(mechanism, k;
     N = Int(floor(1.0 / timestep))
     for joint in mechanism.joints
         nu = input_dimension(joint)
-        u = (nu <= 5 && k ∈ (1:N)) * U * timestep * sones(nu)
+        u = (nu <= 5 && k ∈ (1:N)) * U * sones(nu)
         set_input!(joint, u)
     end
     return
@@ -98,7 +98,7 @@ end
 @testset "Dice" begin
     gravity0 = -10.0
 
-    mech = get_mechanism(:block,
+    mech = get_mechanism(:block;
         timestep=timestep0,
         gravity=gravity0,
         contact=false)
@@ -144,7 +144,7 @@ end
     spring0 = 1.0
     damper0 = 0.0
 
-    mech = get_mechanism(:pendulum,
+    mech = get_mechanism(:pendulum;
         timestep=timestep0,
         gravity=gravity0,
         spring=spring0,
@@ -189,7 +189,7 @@ end
     gravity0 = 0.0
     spring0 = 10.0
     damper0 = 0.0
-    mech = get_mechanism(:slider,
+    mech = get_mechanism(:slider;
         timestep=timestep0,
         gravity=gravity0,
         spring=spring0,
@@ -246,7 +246,7 @@ end
     spring0 = 0.0
     damper0 = 0.0
 
-    mech = get_mechanism(:slider,
+    mech = get_mechanism(:slider;
         timestep=timestep0,
         gravity=gravity0,
         spring=spring0,
@@ -290,7 +290,7 @@ end
     spring0 = 1.0
     damper0 = 0.0
 
-    mech = get_mechanism(:slider,
+    mech = get_mechanism(:slider;
         timestep=timestep0,
         gravity=gravity0,
         spring=spring0,
@@ -333,7 +333,7 @@ end
     spring0 = 1.0
     damper0 = 0.0
 
-    mech = get_mechanism(:humanoid,
+    mech = get_mechanism(:humanoid;
         timestep=timestep0,
         gravity=gravity0,
         spring=spring0,
@@ -385,11 +385,11 @@ end
     gravity0 = 0.0
     spring0 = 1.0
     damper0 = 0.0
-    mech = get_mechanism(:atlas,
+    mech = get_mechanism(:atlas;
         timestep=timestep0,
         gravity=gravity0,
         spring=spring0,
-        damper=damper0,
+        parse_damper=false,
         contact_feet=false,
         contact_body=false)
 
@@ -431,11 +431,11 @@ end
     spring0 = 1.0
     damper0 = 0.0
 
-    mech = get_mechanism(:quadruped,
+    mech = get_mechanism(:quadruped;
         timestep=timestep0,
         gravity=gravity0,
         spring=spring0,
-        damper=damper0,
+        parse_damper=false,
         contact_feet=false,
         contact_body=false,
         limits=false)
@@ -475,7 +475,7 @@ end
     spring0 = 0.01
     damper0 = 0.0
 
-    mech = get_mechanism(:snake,
+    mech = get_mechanism(:snake;
         timestep=timestep0,
         gravity=gravity0,
         num_bodies=Nb0,
@@ -514,7 +514,7 @@ end
 
     for joint_type in joint_types
         # @show joint_type
-        mech = get_mechanism(:snake,
+        mech = get_mechanism(:snake;
             timestep=timestep0,
             gravity=gravity0,
             num_bodies=Nb0,

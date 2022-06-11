@@ -11,11 +11,11 @@ function line_search!(mechanism::Mechanism, α, rvio, bvio, opts)
             candidate_step!(α, joint, get_entry(system, joint.id), scale)
         end
         for body in mechanism.bodies
-            ϕmax = 3.9 / mechanism.timestep^2
+            ωmax = 3.9 / mechanism.timestep^2
             candidate_step!(α, mechanism, body, get_entry(system, body.id), scale,
-                ϕmax=ϕmax, verbose=opts.verbose)
-            if dot(body.state.ϕsol[2], body.state.ϕsol[2]) > 3.91 / mechanism.timestep^2
-                error("Excessive angular velocity. Body-ID: $(string(body.name)) " * string(body.id) * ", ω: " * string(body.state.ϕsol[2]) * ".")
+                ωmax=ωmax, verbose=opts.verbose)
+            if dot(body.state.ωsol[2], body.state.ωsol[2]) > 3.91 / mechanism.timestep^2
+                error("Excessive angular velocity. Body-ID: $(string(body.name)) " * string(body.id) * ", ω: " * string(body.state.ωsol[2]) * ".")
             end
         end
 
@@ -85,7 +85,7 @@ function cone_line_search!(α, mechanism, joint::JointConstraint{T,N,Nc},
         vector_entry::Entry, τort, τsoc;
         scaling::Bool=false) where {T,N,Nc}
 
-    for (i, element) in enumerate([joint.translational, joint.rotational])
+    for (i, element) in enumerate((joint.translational, joint.rotational))
         s, γ = split_impulses(element, joint.impulses[2][joint_impulse_index(joint,i)])
         Δs, Δγ = split_impulses(element,  vector_entry.value[joint_impulse_index(joint,i)])
 
@@ -136,14 +136,14 @@ function second_order_cone_step_length(λ::AbstractVector{T}, Δ::AbstractVector
 end
 
 function candidate_step!(α, mechanism::Mechanism, body::Body, vector_entry::Entry, scale;
-    ϕmax = Inf, verbose=true)
+    ωmax = Inf, verbose=true)
     body.state.vsol[2] = body.state.vsol[1] + 1 / (2^scale) * α * vector_entry.value[SA[1; 2; 3]]
-    body.state.ϕsol[2] = body.state.ϕsol[1] + 1 / (2^scale) * α * vector_entry.value[SA[4; 5; 6]]
-    ϕ = body.state.ϕsol[2]
-    ϕdot = dot(ϕ, ϕ)
-    if ϕdot > ϕmax
-        verbose && println("clipping ", scale, scn((ϕdot - ϕmax) / ϕmax), " ", scn(ϕdot), " ", scn(ϕmax), " ", body.name)
-        body.state.ϕsol[2] *= ϕmax / ϕdot # this is overkill, but works better than sqrt(ϕmax/ϕdot)
+    body.state.ωsol[2] = body.state.ωsol[1] + 1 / (2^scale) * α * vector_entry.value[SA[4; 5; 6]]
+    ω = body.state.ωsol[2]
+    ωdot = dot(ω, ω)
+    if ωdot > ωmax
+        verbose && println("clipping ", scale, scn((ωdot - ωmax) / ωmax), " ", scn(ωdot), " ", scn(ωmax), " ", body.name)
+        body.state.ωsol[2] *= ωmax / ωdot # this is overkill, but works better than sqrt(ωmax/ωdot)
     end
     return
 end

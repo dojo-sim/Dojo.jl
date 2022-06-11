@@ -44,6 +44,18 @@ mutable struct RigidContactConstraint{T,N,Nc,Cs,N½} <: ContactConstraint{T,N,Nc
     end
 end
 
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::ContactConstraint)
+#     summary(io, constraint)
+#     println(io, "")
+#     println(io, "id:            "*string(constraint.id))
+#     println(io, "name:          "*string(constraint.name))
+#     println(io, "model:         "*string(constraint.model))
+#     println(io, "parent_id:     "*string(constraint.parent_id))
+#     println(io, "child_id:      "*string(constraint.child_id))
+#     println(io, "impulses:      "*string(constraint.impulses))
+#     println(io, "impulses_dual: "*string(constraint.impulses_dual))
+# end
+
 """
     SoftContactConstraint{T,N,Nc,Cs} <: ContactConstraint{T,N,Nc,Cs}
 

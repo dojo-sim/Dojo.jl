@@ -10,6 +10,9 @@ using ForwardDiff
 using Rotations
 
 using Dojo
+using DojoEnvironments
+
+global REG = 1.0e-10
 
 @testset "Integrator"                    verbose=true begin include("integrator.jl") end
 @testset "Minimal Coordinates"           verbose=true begin include("minimal.jl") end
@@ -28,5 +31,3 @@ using Dojo
 @testset "Simulate"                      verbose=true begin include("simulate.jl") end
 @testset "Visuals"                       verbose=true begin include("visuals.jl") end
 @testset "Utilities"                     verbose=true begin include("utilities.jl") end
-@testset "Mechanisms"                    verbose=true begin include("mechanisms.jl") end
-@testset "Environments"                  verbose=true begin include("environments.jl") end

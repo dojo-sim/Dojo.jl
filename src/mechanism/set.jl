@@ -9,15 +9,14 @@
 """
 function set_maximal_state!(mechanism::Mechanism, z::AbstractVector)
     off = 0
-    # for body in mechanism.bodies
-	for body in mechanism.bodies
-        x2, v15, q2, ϕ15 = unpack_data(z[off+1:end]); off += 13
+    for body in mechanism.bodies
+        x2, v15, q2, ω15 = unpack_data(z[off+1:end]); off += 13
         q2 = Quaternion(q2...)
         body.state.v15 = v15
-        body.state.ϕ15 = ϕ15
+        body.state.ω15 = ω15
         body.state.x2 = x2
         body.state.q2 = q2
-		initialize_state!(mechanism) # set x1, q1 and zeroes out F2 τ2
+		initialize_state!(mechanism) # set x1, q1 and zeroes out JF2 Jτ2
     end
 	# warm-start solver
 	for body in mechanism.bodies

@@ -26,47 +26,44 @@ function test_get_set_data(mechanism::Mechanism)
 end
 
 @testset "Get and set data" begin
-    mech = Dojo.get_snake(num_bodies=3,
+    mech = DojoEnvironments.get_snake(num_bodies=3,
 		damper=1.0,
 			spring=1.0,
 			contact_type=:nonlinear);
     test_get_set_data(mech)
 
-    mech = Dojo.get_snake(num_bodies=3,
+    mech = DojoEnvironments.get_snake(num_bodies=3,
 		damper=1.0,
 		spring=1.0,
 		contact_type=:linear);
     test_get_set_data(mech)
 
-    mech = Dojo.get_snake(num_bodies=3,
+    mech = DojoEnvironments.get_snake(num_bodies=3,
 		damper=1.0,
 		spring=1.0,
 		contact_type=:impact);
     test_get_set_data(mech)
 
-    mech = Dojo.get_pendulum(
+    mech = DojoEnvironments.get_pendulum(
 		damper=1.0,
 		spring=10.0);
     test_get_set_data(mech)
 
-    mech = Dojo.get_humanoid(
-		damper=1.0,
+    mech = DojoEnvironments.get_humanoid(
 		spring=10.0,
 		contact_feet=true);
     test_get_set_data(mech)
 
-    mech = Dojo.get_humanoid(
-		damper=1.0,
+    mech = DojoEnvironments.get_humanoid(
 		spring=10.0,
 		contact_feet=false);
     test_get_set_data(mech)
 
-    mech = Dojo.get_atlas(
-		damper=1.0,
-		spring=10.0);
+    mech = DojoEnvironments.get_atlas(
+		spring=10.0, damper=10.0);
     test_get_set_data(mech)
 
-    mech = Dojo.get_quadruped(
+    mech = DojoEnvironments.get_quadruped(
 		damper=1.0,
 		spring=10.0);
     test_get_set_data(mech)
@@ -80,9 +77,9 @@ end
 function ctrl!(mechanism, k)
 	nu = Dojo.input_dimension(mechanism)
 	if Dojo.input_dimension(mechanism.joints[1]) == 6
-		u = 0.2 * [szeros(6); mechanism.timestep * sones(nu-6)]
+		u = 0.2 * [szeros(6); sones(nu-6)]
 	else
-		u = 0.2 * mechanism.timestep * sones(nu)
+		u = 0.2 * sones(nu)
 	end
 	Dojo.set_input!(mechanism, u)
 	return
@@ -99,9 +96,9 @@ function test_data_system(model::Symbol;
 		kwargs...)
 
     # mechanism
-    mechanism = Dojo.get_mechanism(model,
-		timestep=timestep,
-		gravity=gravity;
+      mechanism = DojoEnvironments.get_mechanism(model;
+		timestep,
+		gravity,
 		kwargs...)
     Dojo.initialize!(mechanism, model)
     # simulate

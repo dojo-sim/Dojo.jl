@@ -6,18 +6,18 @@ function joint_constraint_jacobian_body_data(mechanism::Mechanism, joint::JointC
     ∇m = szeros(T,N,1)
     ∇J = szeros(T,N,6)
     ∇v15 = szeros(T,N,3)
-    ∇ϕ15 = szeros(T,N,3)
+    ∇ω15 = szeros(T,N,3)
     ∇z2 = -constraint_jacobian_configuration(mechanism, joint, body) *
         integrator_jacobian_configuration(body, mechanism.timestep, attjac=true)
-    ∇g = [∇m ∇J ∇v15 ∇ϕ15 ∇z2]
+    ∇g = [∇m ∇J ∇v15 ∇ω15 ∇z2]
     return ∇g
 end
 
 function body_constraint_jacobian_body_data(mechanism::Mechanism, body::Body{T}) where T
     Δt = mechanism.timestep
     N = 6
-    x1, v15, q1, ϕ15 = previous_configuration_velocity(body.state)
-    x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
+    x1, v15, q1, ω15 = previous_configuration_velocity(body.state)
+    x2, v25, q2, ω25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, Δt)
     # Mass
     gravity=mechanism.gravity
@@ -28,13 +28,13 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, body::Body{T})
     ∇J += 2 / Δt * LVᵀmat(q2)' * Tmat() * RᵀVᵀmat(q3) * ∂Jp∂J(VLᵀmat(q2) * vector(q3))
     ∇J = [szeros(T,3,6); ∇J]
 
-    # initial conditions: v15, ϕ15
+    # initial conditions: v15, ω15
     ∇v15 = body.mass * SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
     ∇q1 = -2 / Δt * LVᵀmat(q2)' * ∂LVᵀmat∂q(body.inertia * VLᵀmat(q1) * vector(q2))
     ∇q1 += -2 / Δt * LVᵀmat(q2)' * LVᵀmat(q1) * body.inertia * ∂VLᵀmat∂q(vector(q2))
-    ∇ϕ15 = ∇q1 * rotational_integrator_jacobian_velocity(q2, -ϕ15, Δt)
+    ∇ω15 = ∇q1 * rotational_integrator_jacobian_velocity(q2, -ω15, Δt)
     ∇15 = [∇v15 szeros(T,3,3);
-           szeros(T,3,3) ∇ϕ15]
+           szeros(T,3,3) ∇ω15]
 
     # current configuration: z2 = x2, q2
     # manipulator's equation contribution
@@ -68,14 +68,14 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, pbody::Node{T}
     for i = 1:Nc
         λ = get_joint_impulses(joint, i)
         if cbody.id == joint.child_id
-            ∇z2_aa += impulse_map_jacobian(:parent, :parent, [joint.translational, joint.rotational][i],
+            ∇z2_aa += impulse_map_jacobian(:parent, :parent, (joint.translational, joint.rotational)[i],
                 pbody, cbody, λ)
-            ∇z2_ab += impulse_map_jacobian(:parent, :child, [joint.translational, joint.rotational][i],
+            ∇z2_ab += impulse_map_jacobian(:parent, :child, (joint.translational, joint.rotational)[i],
                 pbody, cbody, λ)
         elseif pbody.id == joint.child_id
-            ∇z2_aa += impulse_map_jacobian(:child, :child, [joint.translational, joint.rotational][i],
+            ∇z2_aa += impulse_map_jacobian(:child, :child, (joint.translational, joint.rotational)[i],
                 cbody, pbody, λ)
-            ∇z2_ab += impulse_map_jacobian(:child, :parent, [joint.translational, joint.rotational][i],
+            ∇z2_ab += impulse_map_jacobian(:child, :parent, (joint.translational, joint.rotational)[i],
                 cbody, pbody, λ)
         end
     end
@@ -86,17 +86,17 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, pbody::Node{T}
             if cbody.id == joint.child_id
                 ∇z2_aa += spring_jacobian_configuration(
                     :parent, :parent,
-                    [joint.translational, joint.rotational][i], pbody, cbody, timestep)
+                    (joint.translational, joint.rotational)[i], pbody, cbody, timestep)
                 ∇z2_ab += spring_jacobian_configuration(
                     :parent, :child,
-                    [joint.translational, joint.rotational][i], pbody, cbody, timestep)
+                    (joint.translational, joint.rotational)[i], pbody, cbody, timestep)
             elseif pbody.id == joint.child_id
                 ∇z2_aa += spring_jacobian_configuration(
                     :child, :child,
-                    [joint.translational, joint.rotational][i], cbody, pbody, timestep)
+                    (joint.translational, joint.rotational)[i], cbody, pbody, timestep)
                 ∇z2_ab += spring_jacobian_configuration(
                     :child, :parent,
-                    [joint.translational, joint.rotational][i], cbody, pbody, timestep)
+                    (joint.translational, joint.rotational)[i], cbody, pbody, timestep)
             end
         end
     end
@@ -106,17 +106,17 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, pbody::Node{T}
             if cbody.id == joint.child_id
                 ∇z2_aa += damper_jacobian_configuration(
                     :parent, :parent,
-                    [joint.translational, joint.rotational][i], pbody, cbody, timestep)
+                    (joint.translational, joint.rotational)[i], pbody, cbody, timestep)
                 ∇z2_ab += damper_jacobian_configuration(
                     :parent, :child,
-                    [joint.translational, joint.rotational][i], pbody, cbody, timestep)
+                    (joint.translational, joint.rotational)[i], pbody, cbody, timestep)
             elseif pbody.id == joint.child_id
                 ∇z2_aa += damper_jacobian_configuration(
                     :child, :child,
-                    [joint.translational, joint.rotational][i], cbody, pbody, timestep)
+                    (joint.translational, joint.rotational)[i], cbody, pbody, timestep)
                 ∇z2_ab += damper_jacobian_configuration(
                     :child, :parent,
-                    [joint.translational, joint.rotational][i], cbody, pbody, timestep)
+                    (joint.translational, joint.rotational)[i], cbody, pbody, timestep)
             end
         end
     end
@@ -139,8 +139,8 @@ function body_constraint_jacobian_joint_data(mechanism::Mechanism{T}, body::Body
     Δt = mechanism.timestep
     Nd = data_dim(joint)
     N = 6
-    x1, v15, q1, ϕ15 = previous_configuration_velocity(body.state)
-    x2, v25, q2, ϕ25 = current_configuration_velocity(body.state)
+    x1, v15, q1, ω15 = previous_configuration_velocity(body.state)
+    x2, v25, q2, ω25 = current_configuration_velocity(body.state)
     x3, q3 = next_configuration(body.state, Δt)
     # ∇u = Diagonal(SVector{6,T}(1,1,1,2,2,2)) * input_jacobian_control(mechanism, joint, body)
     ∇u = Diagonal(SVector{6,T}(1,1,1,1,1,1)) * input_jacobian_control(mechanism, joint, body)
@@ -175,15 +175,15 @@ function contact_constraint_jacobian_contact_data(mechanism::Mechanism, contact:
     Nd = data_dim(contact)
     model = contact.model
 
-    xp3, vp25, qp3, ϕp25 = next_configuration_velocity(get_body(mechanism, contact.parent_id).state, mechanism.timestep)
-    xc3, vc25, qc3, ϕc25 = next_configuration_velocity(get_body(mechanism, contact.child_id).state, mechanism.timestep)
+    xp3, vp25, qp3, ωp25 = next_configuration_velocity(get_body(mechanism, contact.parent_id).state, mechanism.timestep)
+    xc3, vc25, qc3, ωc25 = next_configuration_velocity(get_body(mechanism, contact.child_id).state, mechanism.timestep)
 
     s = contact.impulses_dual[2]
     γ = contact.impulses[2]
 
     ∇friction_coefficient = SA[0,γ[1],0,0]
-    ∇contact_radius = [-model.collision.contact_normal; szeros(T,1,3); -model.collision.contact_tangent * skew(vector_rotate(ϕp25, qp3))] * model.collision.contact_normal'
-    ∇p = [model.collision.contact_normal * rotation_matrix(qp3); szeros(T,1,3); model.collision.contact_tangent * skew(vector_rotate(ϕp25, qp3)) * rotation_matrix(qp3)]
+    ∇contact_radius = [-model.collision.contact_normal; szeros(T,1,3); -model.collision.contact_tangent * skew(vector_rotate(ωp25, qp3))] * model.collision.contact_normal'
+    ∇p = [model.collision.contact_normal * rotation_matrix(qp3); szeros(T,1,3); model.collision.contact_tangent * skew(vector_rotate(ωp25, qp3)) * rotation_matrix(qp3)]
 
     ∇compμ = szeros(T,N½,Nd)
     ∇g = -[∇friction_coefficient ∇contact_radius ∇p]
@@ -197,10 +197,10 @@ function contact_constraint_jacobian_body_data(mechanism::Mechanism, contact::Ri
     ∇m = szeros(T,N½,1)
     ∇J = szeros(T,N½,6)
     ∇v15 = szeros(T,N½,3)
-    ∇ϕ15 = szeros(T,N½,3)
+    ∇ω15 = szeros(T,N½,3)
     ∇z3 = - constraint_jacobian_configuration(mechanism, contact, body) # minus sign coming from res = [-compμ; -constraint]
     ∇z2 = ∇z3 * integrator_jacobian_configuration(body, mechanism.timestep, attjac=true) # 4x7 * 7x6 = 4x6
-    ∇g = [∇m ∇J ∇v15 ∇ϕ15 ∇z2]
+    ∇g = [∇m ∇J ∇v15 ∇ω15 ∇z2]
     return [∇compμ; ∇g]
 end
 

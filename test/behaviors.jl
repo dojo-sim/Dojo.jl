@@ -1,5 +1,5 @@
 @testset "Quadruped" begin
-    mech = get_mechanism(:quadruped,
+    mech = get_mechanism(:quadruped;
         timestep=0.05,
         gravity=-9.81,
         friction_coefficient=0.8,
@@ -18,8 +18,8 @@ end
 
 @testset "Box toss" begin
     for timestep in [0.10, 0.05, 0.01, 0.005]
-        mech = get_mechanism(:block,
-            timestep=timestep,
+        mech = get_mechanism(:block;
+            timestep,
             gravity=-9.81,
             friction_coefficient = 0.1)
 
@@ -39,9 +39,10 @@ end
 
 @testset "Four-bar linkage" begin
     for timestep in [0.10, 0.05, 0.01, 0.005]
-        mech = Dojo.get_mechanism(:fourbar,
+        mech = get_mechanism(:fourbar;
             model="fourbar",
-            timestep=timestep)
+            timestep,
+            damper=1.0)
         Dojo.initialize!(mech, :fourbar,
             angle=0.25)
         loopjoints = mech.joints[end:end]
@@ -49,7 +50,7 @@ end
 
         # Simulation
         function ctrl!(m, t)
-            Dojo.set_input!(m, 1.0 * m.timestep * SVector(rand(), -rand(), 0.0, 0.0, 0.0))
+            Dojo.set_input!(m, 1.0 * SVector(rand(), -rand(), 0.0, 0.0, 0.0))
             return nothing
         end
         storage = Dojo.simulate!(mech, 5.0, ctrl!, verbose=false, record=true)
@@ -65,9 +66,9 @@ end
     # Simulation
     timestep=0.01
     gravity=0.0
-    mech = Dojo.get_mechanism(:dzhanibekov,
-            timestep=timestep,
-            gravity=gravity);
+    mech = get_mechanism(:dzhanibekov;
+            timestep,
+            gravity);
 
     # Simulate
     Dojo.initialize!(mech, :dzhanibekov,

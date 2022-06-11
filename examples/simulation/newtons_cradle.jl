@@ -21,8 +21,13 @@ radius_ball = 0.5 * rod_separation
 
 # Bodies
 origin = Origin{T}()
+<<<<<<< HEAD
 connector = Capsule(radius_connector, length_connector, mass_connector,
     axis_offset=Quaternion(0.707107, 0.707107, 0.0,  0.0),
+=======
+connector = Capsule(radius_connector, length_connector, mass_connector, 
+    orientation_offset=Quaternion(0.707107, 0.707107, 0.0,  0.0),
+>>>>>>> 33ccdde8d7f74c4ea3c3bffdebcc6ed65959a5be
     name=:connector)
 
 rods = [Capsule(radius_rod, length_rod, mass_rod,

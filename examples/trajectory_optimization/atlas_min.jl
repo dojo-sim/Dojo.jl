@@ -27,14 +27,14 @@ function get_damper_impulses(mechanism::Mechanism{T}) where T
 		if typeof(pbody) <: Body
 			F = damper_impulses(mechanism, joint, pbody)
 			oF = 0
-			for joint in [joint.translational, joint.rotational]
+			for joint in (joint.translational, joint.rotational)
 				nf, nF = size(nullspace_mask(joint))
 				u[off .+ (1:nf)] .= nullspace_mask(joint) * F[oF .+ (1:nF)]
 				off += nf
 				oF += nF
 			end
 		else
-			for joint in [joint.translational, joint.rotational]
+			for joint in (joint.translational, joint.rotational)
 				nf, nF = size(nullspace_mask(joint))
 				off += nf
 			end
@@ -97,15 +97,15 @@ visualize(mech, storage,
 	vis=env.vis)
 
 F_damper = get_damper_impulses(env.mechanism)
-u_damper = F_damper * env.mechanism.timestep
+u_damper = F_damper
 u_control = u_damper[6 .+ (1:15)]
 
 mech = get_mechanism(:atlas, 
 	timestep=timestep, 
 	gravity=gravity, 
 	friction_coefficient=friction_coefficient, 
-	damper=0.0,
 	spring=spring, 
+	parse_damper=false,
 	model_type=model_type)
 
 function controller!(mechanism, t)

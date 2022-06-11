@@ -1,0 +1,40 @@
+name: CI DojoEnvironments
+on:
+  push:
+    branches:
+      - main
+    tags: '*'
+  pull_request:
+jobs:
+  test:
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        version:
+          - '1.6' # LTS
+          - '1' # Current Stable
+        os:
+          - ubuntu-latest
+          - macOS-latest
+          - windows-latest
+        arch:
+          - x64
+    steps:
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+      # - uses: julia-actions/julia-buildpkg@latest
+      - uses: julia-actions/cache@v1      
+      - name: Install Julia dependencies and Test
+        shell: julia --project=monorepo {0}
+        run: |
+          using Pkg;
+          # dev mono repo versions
+          pkg"dev . ./DojoEnvironments"
+          Pkg.test("DojoEnvironments"; coverage=true)
+      - uses: julia-actions/julia-uploadcodecov@latest
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

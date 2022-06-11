@@ -21,13 +21,20 @@ jobs:
         arch:
           - x64
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       # - uses: julia-actions/julia-buildpkg@latest
-      - uses: julia-actions/julia-runtest@latest
+      - uses: julia-actions/cache@v1      
+      - name: Install Julia dependencies and Test
+        shell: julia --project=monorepo {0}
+        run: |
+          using Pkg;
+          # dev mono repo versions
+          pkg"dev . ./DojoEnvironments"
+          Pkg.test("Dojo"; coverage=true)
       - uses: julia-actions/julia-uploadcodecov@latest
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

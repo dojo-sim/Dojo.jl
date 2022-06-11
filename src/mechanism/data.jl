@@ -9,12 +9,12 @@ data_dim(mechanism::Mechanism; attjac::Bool=true) =
 	sum(Vector{Int64}(data_dim.(mechanism.contacts)))
 
 # Joints
-data_dim(joint::JointConstraint) = 2 + sum(data_dim.([joint.translational, joint.rotational])) # [utra, urot, spring, damper]
+data_dim(joint::JointConstraint) = 2 + sum(data_dim.((joint.translational, joint.rotational))) # [utra, urot, spring, damper]
 data_dim(joint::Translational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = N̄λ # [utra]
 data_dim(joint::Rotational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = N̄λ # [urot]
 
 # Body
-data_dim(body::Body; attjac::Bool=true) = attjac ? 19 : 20 # 1+6+6+6 or 1+6+6+7 [m,flat(J),v15,ϕ15,x2,q2] with attjac
+data_dim(body::Body; attjac::Bool=true) = attjac ? 19 : 20 # 1+6+6+6 or 1+6+6+7 [m,flat(J),v15,ω15,x2,q2] with attjac
 
 # Contact
 data_dim(contact::ContactConstraint) = data_dim(contact.model)
@@ -64,7 +64,7 @@ get_data(mechanism::Mechanism) = vcat([get_data.(mechanism.joints);
 
 # Joints
 function get_data(joint::JointConstraint)
-	joints = [joint.translational, joint.rotational]
+	joints = (joint.translational, joint.rotational)
 	u = vcat(nullspace_mask.(joints) .* getfield.(joints, :input)...)
 	spring = joints[1].spring # assumes we have the same spring and dampers for translational and rotational joint.
 	damper = joints[1].damper # assumes we have the same spring and dampers for translational and rotational joint.
@@ -76,9 +76,9 @@ function get_data(body::Body)
 	m = body.mass
 	j = flatten_inertia(body.inertia)
 	v15 = body.state.v15
-	ϕ15 = body.state.ϕ15
+	ω15 = body.state.ω15
 	x2, q2 = current_configuration(body.state)
-	return [m; j; v15; ϕ15; x2; vector(q2)]
+	return [m; j; v15; ω15; x2; vector(q2)]
 end
 
 # Contacts
@@ -96,8 +96,8 @@ get_data(contacts::AbstractVector{<:ContactConstraint}) = vcat(get_data.(contact
 # Mechanism
 function set_data!(mechanism::Mechanism, data::AbstractVector)
 	# It's important to treat bodies before eqcs
-	# set_data!(body) will erase state.F2 and state.τ2
-	# set_data!(eqc) using applyinput!, will write in state.F2 and state.τ2
+	# set_data!(body) will erase state.JF2 and state.Jτ2
+	# set_data!(eqc) using applyinput!, will write in state.JF2 and state.Jτ2
 	c = 0
 	for joint in mechanism.joints
 		Nd = data_dim(joint)
@@ -125,7 +125,7 @@ function set_data!(joint::JointConstraint, data::AbstractVector)
 	damper = data[nu+2]
 
 	set_input!(joint, u)
-	for joint in [joint.translational, joint.rotational]
+	for joint in (joint.translational, joint.rotational)
 		joint.spring=spring
 		joint.damper=damper
 	end
@@ -134,26 +134,26 @@ end
 
 # Body
 function set_data!(body::Body, data::AbstractVector, timestep)
-	# [m,flat(J),x2,v15,q2,ϕ15]
+	# [m,flat(J),x2,v15,q2,ω15]
 	m = data[1]
 	J = lift_inertia(data[SUnitRange(2,7)])
 	v15 = data[SUnitRange(8,10)]
-	ϕ15 = data[SUnitRange(11,13)]
+	ω15 = data[SUnitRange(11,13)]
 	x2 = data[SUnitRange(14,16)]
 	q2 = Quaternion(data[17:20]...)
 	x1 = next_position(x2, -v15, timestep)
-	q1 = next_orientation(q2, -ϕ15, timestep)
+	q1 = next_orientation(q2, -ω15, timestep)
 
 	body.mass = m
 	body.inertia = J
 	body.state.x1 = x1
 	body.state.v15 = v15
 	body.state.q1 = q1
-	body.state.ϕ15 = ϕ15
+	body.state.ω15 = ω15
 	body.state.x2 = x2
 	body.state.q2 = q2
-	body.state.F2 = SVector{3}(0,0,0.)
-	body.state.τ2 = SVector{3}(0,0,0.)
+	body.state.JF2 = SVector{3}(0,0,0.)
+	body.state.Jτ2 = SVector{3}(0,0,0.)
 	return nothing
 end
 

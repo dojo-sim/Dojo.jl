@@ -51,10 +51,9 @@
         contacts = [Dojo.ContactConstraint((body_body, pbody.id, cbody.id), name=:body_body)]
 
         # z-drop (w/ gravity)
-        mechanism = Dojo.Mechanism(origin, bodies, joints, contacts,
-                    gravity=gravity,
-                    timestep=timestep)
-
+        mechanism = Dojo.Mechanism(origin, bodies, joints, contacts;
+                    gravity,
+                    timestep)
         return mechanism
     end
 
@@ -78,7 +77,7 @@
                 FD = ForwardDiff.jacobian(x -> Dojo.contact_normal(collision, xp, qp, x, qc)', xc)
             end
 
-            @test norm((dis >= 0.0 ? 1.0 : -1.0) * X - FD, Inf) < 1.0e-8
+            @test norm((dis >= 0.0 ? 1.0 : -1.0) * X - FD, Inf) < 1.0e-6
 
             Q = Dojo.∂contact_normal_transpose∂q(jacobian, collision, xp, qp, xc, qc)
             if jacobian == :parent
@@ -87,7 +86,7 @@
                 FD = ForwardDiff.jacobian(q -> Dojo.contact_normal(collision, xp, qp, xc, Quaternion(q..., false))', Dojo.vector(qc))
             end
 
-            @test norm((dis >= 0.0 ? 1.0 : -1.0) * Q - FD, Inf) < 1.0e-8
+            @test norm((dis >= 0.0 ? 1.0 : -1.0) * Q - FD, Inf) < 1.0e-6
 
             X = Dojo.∂contact_tangent_one_transpose∂x(jacobian, collision, xp, qp, xc, qc)
             if jacobian == :parent
@@ -96,7 +95,7 @@
                 FD = ForwardDiff.jacobian(x -> Dojo.contact_tangent(collision, xp, qp, x, qc)[1, :]', xc)
             end
 
-            @test norm(FD - X, Inf) < 1.0e-8
+            @test norm(FD - X, Inf) < 1.0e-6
 
             X = Dojo.∂contact_tangent_two_transpose∂x(jacobian, collision, xp, qp, xc, qc)
             if jacobian == :parent
@@ -105,7 +104,7 @@
                 FD = ForwardDiff.jacobian(x -> Dojo.contact_tangent(collision, xp, qp, x, qc)[2, :]', xc)
             end
 
-            @test norm(FD - X, Inf) < 1.0e-8
+            @test norm(FD - X, Inf) < 1.0e-6
 
             Q = Dojo.∂contact_tangent_one_transpose∂q(jacobian, collision, xp, qp, xc, qc)
             if jacobian == :parent
@@ -114,7 +113,7 @@
                 FD = ForwardDiff.jacobian(q -> Dojo.contact_tangent(collision, xp, qp, xc, Quaternion(q..., false))[1, :]', Dojo.vector(qc))
             end
 
-            @test norm(FD - Q, Inf) < 1.0e-8
+            @test norm(FD - Q, Inf) < 1.0e-6
 
             Q = Dojo.∂contact_tangent_two_transpose∂q(jacobian, collision, xp, qp, xc, qc)
             if jacobian == :parent
@@ -123,7 +122,7 @@
                 FD = ForwardDiff.jacobian(q -> Dojo.contact_tangent(collision, xp, qp, xc, Quaternion(q..., false))[2, :]', Dojo.vector(qc))
             end
 
-            @test norm(FD - Q, Inf) < 1.0e-8
+            @test norm(FD - Q, Inf) < 1.0e-6
 
             # gradients
             gradient = jacobian
@@ -155,7 +154,7 @@
                     FD = ForwardDiff.jacobian(x -> Dojo.contact_point(relative, collision, xp, qp, x, qc), xc)
                 end
 
-                @test norm(X - FD, Inf) < 1.0e-8
+                @test norm(X - FD, Inf) < 1.0e-6
 
                 Q = Dojo.∂contact_point∂q(relative, jacobian, collision, xp, qp, xc, qc)
 
@@ -165,7 +164,7 @@
                     FD = ForwardDiff.jacobian(q -> Dojo.contact_point(relative, collision, xp, qp, xc, Quaternion(q..., false)), Dojo.vector(qc))
                 end
 
-                @test norm(Q - FD, Inf) < 1.0e-8
+                @test norm(Q - FD, Inf) < 1.0e-6
             end
         end
     end
@@ -573,9 +572,202 @@
     end
 end
 
-@testset "Collision: String" begin 
+# Sphere-Capsule 
+@testset "Collision: Sphere-capsule" begin
+    function simulate_sphere_capsule(x1, x2)
+        origin = Dojo.Origin{Float64}()
+        pbody = Dojo.Capsule(0.5, 2.0, 1.0, orientation_offset=Dojo.Quaternion(sqrt(2.0) / 2.0, sqrt(2.0) / 2.0, 0.0, 0.0))
+        cbody = Dojo.Sphere(0.5, 1.0)
+        joint = Dojo.JointConstraint(Dojo.Fixed(origin, pbody))
 
-    # Parameters
+        bodies = [pbody, cbody]
+        joints = [joint]
+
+        collision = Dojo.SphereCapsuleCollision{Float64,2,3,6}(
+            szeros(3),
+            SA[0.0; 1.0; 0.0],
+            SA[0.0; -1.0; 0.0],
+            0.5,
+            0.5,
+        )
+
+        friction_parameterization = SA{Float64}[
+            1.0  0.0
+            0.0  1.0
+        ]
+        body_body_contact = Dojo.NonlinearContact{Float64,8}(0.5, friction_parameterization, collision)
+
+        contacts = [Dojo.ContactConstraint((body_body_contact, cbody.id, pbody.id), name=:body_body)]
+
+        mech = Dojo.Mechanism(origin, bodies, joints, contacts,
+                    gravity=1.0 * -9.81, 
+                    timestep=0.05)
+
+        mech.bodies[1].state.x2 = x1
+        mech.bodies[2].state.x2 = x2
+
+        storage = Dojo.simulate!(mech, 1.0, 
+            verbose=false, 
+            record=true)
+
+        return mech, storage
+    end
+
+    x2 = [[0.0, 0.0, 2.0], [0.2, 0.5, 2.0]]
+    mech, storage = simulate_sphere_capsule([0.0, 0.0, 0.0], x2[1])
+
+    d = Dojo.distance(mech.contacts[1].model.collision, 
+        storage.x[2][end], storage.q[2][end],
+        storage.x[1][end], storage.q[1][end],)
+
+    @test d > 0.0
+
+    cp = Dojo.contact_point(:parent, mech.contacts[1].model.collision, 
+        mech.bodies[2].state.x2, mech.bodies[2].state.q2,
+        mech.bodies[1].state.x2, mech.bodies[1].state.q2,)
+
+    @test norm(cp - [0.0; 0.0; 0.5], Inf) < 1.0e-2
+
+    cc = Dojo.contact_point(:child, mech.contacts[1].model.collision, 
+        mech.bodies[2].state.x2, mech.bodies[2].state.q2,
+        mech.bodies[1].state.x2, mech.bodies[1].state.q2,
+        )
+
+    @test norm(cc - [0.0; 0.0; 0.5], Inf) < 1.0e-2
+
+    cn = Dojo.contact_normal(mech.contacts[1].model.collision, 
+        mech.bodies[2].state.x2, mech.bodies[2].state.q2,
+        mech.bodies[1].state.x2, mech.bodies[1].state.q2,
+        )
+
+    @test norm(cn - [0.0 0.0 1.0], Inf) < 1.0e-3
+
+    ct = Dojo.contact_tangent(mech.contacts[1].model.collision, 
+        mech.bodies[2].state.x2, mech.bodies[2].state.q2,
+        mech.bodies[1].state.x2, mech.bodies[1].state.q2,
+        )
+
+    @test norm(ct - [0.0 -1.0 0.0; -1.0 0.0 0.0], Inf) < 1.0e-2
+
+    mech, storage = simulate_sphere_capsule([0.0, 0.0, 0.0], x2[2])
+    
+
+    d = Dojo.distance(mech.contacts[1].model.collision, 
+        storage.x[2][end], storage.q[2][end],
+        storage.x[1][end], storage.q[1][end],)
+
+    @test d > 0.0
+end
+
+# Sphere-Box 
+@testset "Collision: Sphere-box" begin
+    function simulate_sphere_box(x1, x2, v2)
+        origin = Dojo.Origin{Float64}()
+        pbody = Dojo.Box(1.0, 1.0, 1.0, 1.0)
+        cbody = Dojo.Sphere(0.5, 1.0)
+        joint = Dojo.JointConstraint(Dojo.Fixed(origin, pbody))
+
+        bodies = [pbody, cbody]
+        joints = [joint]
+
+        collision = Dojo.SphereBoxCollision{Float64,2,3,6}(
+            szeros(3),
+            1.0,
+            1.0,
+            1.0,
+            0.5,
+        )
+
+        friction_parameterization = SA{Float64}[
+            1.0  0.0
+            0.0  1.0
+        ]
+        body_body_contact = Dojo.NonlinearContact{Float64,8}(0.5, friction_parameterization, collision)
+
+        contacts = [Dojo.ContactConstraint((body_body_contact, cbody.id, pbody.id), name=:body_body)]
+
+        mech = Dojo.Mechanism(origin, bodies, joints, contacts,
+                    gravity=1.0 * -9.81, 
+                    timestep=0.05)
+
+        mech.bodies[1].state.x2 = x1
+        mech.bodies[2].state.x2 = x2 
+        mech.bodies[2].state.v15 = v2
+
+        storage = Dojo.simulate!(mech, 1.0, 
+                verbose=false, 
+                record=true)
+
+        return mech, storage
+    end
+
+    x1 = [0.0, 0.0, 0.0]
+    x2 = [
+        [0.0, 0.0, 2.0],
+        [0.0, 1.0, 2.0],
+        [1.0, 1.0, 2.0],
+        [-1.0, 1.0, 2.0],
+        [-0.5; 0.5; 2.0],
+        [0.0, -1.0, 2.0],
+        [0.0, -1.0, 2.0],
+        [-1.0, -1.0, -2.0],
+        [0.0, 0.0, -2.0],
+    ]
+    v2 = [
+        [0.0, 0.0, 0.0],
+        [0.0; -1.0; -2.0],
+        [-1.0; -1.0; -2.0],
+        [1.0; -1.0; -2.0],
+        [0.0; 0.0; 0.0],
+        [0.0; 1.0; -2.0],
+        [0.0; 1.0; -2.0],
+        [5.0; 5.0; 10.0],
+        [0.0; 0.0; 10.0],
+    ]
+
+    N = length(x2) 
+
+    for i = 1:N
+        mech, storage = simulate_sphere_box(x1, x2[i], v2[i])
+
+        d = Dojo.distance(mech.contacts[1].model.collision, 
+                storage.x[2][end], storage.q[2][end],
+                storage.x[1][end], storage.q[1][end],)
+
+        @test d > 0.0
+
+        if i == 1
+            cp = Dojo.contact_point(:parent, mech.contacts[1].model.collision, 
+                mech.bodies[2].state.x2, mech.bodies[2].state.q2,
+                mech.bodies[1].state.x2, mech.bodies[1].state.q2,)
+
+            @test norm(cp - [0.0; 0.0; 0.5], Inf) < 1.0e-2
+
+            cc = Dojo.contact_point(:child, mech.contacts[1].model.collision, 
+                mech.bodies[2].state.x2, mech.bodies[2].state.q2,
+                mech.bodies[1].state.x2, mech.bodies[1].state.q2,
+                )
+
+            @test norm(cc - [0.0; 0.0; 0.5], Inf) < 1.0e-2
+
+            cn = Dojo.contact_normal(mech.contacts[1].model.collision, 
+                mech.bodies[2].state.x2, mech.bodies[2].state.q2,
+                mech.bodies[1].state.x2, mech.bodies[1].state.q2,
+                )
+
+            @test norm(cn - [0.0 0.0 1.0], Inf) < 1.0e-3
+
+            ct = Dojo.contact_tangent(mech.contacts[1].model.collision, 
+                mech.bodies[2].state.x2, mech.bodies[2].state.q2,
+                mech.bodies[1].state.x2, mech.bodies[1].state.q2,
+                )
+
+            @test norm(ct - [0.0 -1.0 0.0; -1.0 0.0 0.0], Inf) < 1.0e-2
+        end
+    end
+end
+
+@testset "Collision: String" begin 
     origin = Origin{Float64}()
     pbody = Sphere(0.5, 1.0)
     cbody = Sphere(0.5, 1.0)
@@ -596,7 +788,7 @@ end
 
     contacts = [ContactConstraint((body_body_contact, pbody.id, cbody.id), name=:body_body)]
 
-    mech = Mechanism(origin, bodies, joints, contacts,
+    mech = Mechanism(origin, bodies, joints, contacts;
                 gravity=1.0 * -9.81, 
                 timestep=0.1)
 

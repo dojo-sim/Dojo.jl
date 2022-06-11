@@ -34,7 +34,7 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
     record ? (return storage) : (return)
 end
 
-function simulate!(mechanism::Mechanism{T}, tend::T, args...;
+function simulate!(mechanism::Mechanism{T}, tend::Real, args...;
         record::Bool=true,
         verbose::Bool=false,
         abort_upon_failure::Bool=false,

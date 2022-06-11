@@ -7,6 +7,9 @@ A differentiable simulator for robotics
 - arXiv preprint: https://arxiv.org/abs/2203.00806
 - Python interface: https://github.com/dojo-sim/dojopy
 - site: https://sites.google.com/view/dojo-sim
+- video presentation: https://youtu.be/TRtOESXJxJQ
+
+[![IMAGE ALT TEXT](https://i.ytimg.com/vi/TRtOESXJxJQ/hq720.jpg?sqp=-oaymwEcCOgCEMoBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLD1RdCHZ0Z1zSkv1N-PD0Ds79lDiA)](https://youtu.be/TRtOESXJxJQ "Dojo: A Differentiable Simulator for Robotics")
 
 # Examples
 
@@ -22,10 +25,6 @@ A differentiable simulator for robotics
 <img src="examples/animations/astronaut.gif" width="200"/>
 
 ### Friction-cone comparison
-- blue = Dojo nonlinear friction cone
-- orange = Dojo linear friction cone
-- black = MuJoCo nonlinear friction cone
-- magenta = MuJoCo linear friction model
 <img src="examples/animations/cone_compare_mujoco.gif" height="150"/>
 
 ### Dzhanibekov effect
@@ -67,9 +66,7 @@ A differentiable simulator for robotics
 ## Real-To-Sim
 
 ### Learning
-Learning geometry:
 <img src="examples/animations/box_learning.gif" width="200"/>
-Learning friction coefficient:
 <img src="examples/animations/cone_learning.gif" width="200"/>
 
 ### Toss
@@ -91,7 +88,7 @@ pkg> add Dojo#main
 ```
 @article{howelllecleach2022,
 	title={Dojo: A Differentiable Simulator for Robotics},
-	author={Taylor, A. Howell and Le Cleac'h, Simon and Kolter, Zico and Schwager, Mac and Manchester, Zachary},
+	author={Howell, Taylor and Le Cleac'h, Simon and Kolter, Zico and Schwager, Mac and Manchester, Zachary},
 	journal={arXiv preprint arXiv:2203.00806},
 	url={https://arxiv.org/abs/2203.00806},
 	year={2022}

@@ -70,7 +70,7 @@ function potential_energy(mechanism::Mechanism{T,Nn,Ne,Nb}, storage::Storage{T,N
         parent_id = joint.parent_id
         child_id = joint.child_id
         if joint.spring 
-            for element in [joint.translational, joint.rotational]
+            for element in (joint.translational, joint.rotational)
                 if element.spring > 0
                     xb = storage.x[child_id - Ne][t] # TODO this is sketchy way to get the correct index
                     qb = storage.q[child_id - Ne][t] # TODO this is sketchy way to get the correct index

@@ -24,3 +24,17 @@
     no_progress_undercut::T=10.0
     verbose::Bool=false
 end
+
+function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, options::SolverOptions)
+    summary(io, options)
+    println(io, "")
+    println(io, " rtol:                 "*string(options.rtol))
+    println(io, " btol:                 "*string(options.btol))
+    println(io, " ls_scale:             "*string(options.ls_scale))
+    println(io, " max_iter:             "*string(options.max_iter))
+    println(io, " max_ls:               "*string(options.max_ls))
+    println(io, " undercut:             "*string(options.undercut))
+    println(io, " no_progress_max:      "*string(options.no_progress_max))
+    println(io, " no_progress_undercut: "*string(options.no_progress_undercut))
+    println(io, " verbose:              "*string(options.verbose))
+end

@@ -23,7 +23,7 @@ end
 function attitude_jacobian(data::AbstractVector, Nb::Int)
     G = zeros(0,0)
     for i = 1:Nb
-        x2, v15, q2, ϕ15 = unpack_data(data[13 * (i-1) .+ (1:13)])
+        x2, v15, q2, ω15 = unpack_data(data[13 * (i-1) .+ (1:13)])
         q2 = Quaternion(q2...)
         G = cat(G, I(6), LVᵀmat(q2), I(3), dims = (1,2))
     end
@@ -37,8 +37,8 @@ function unpack_data(data::AbstractVector)
     x2 = data[SVector{3,Int}(1:3)]
     v15 = data[SVector{3,Int}(4:6)]
     q2 = data[SVector{4,Int}(7:10)]
-    ϕ15 = data[SVector{3,Int}(11:13)]
-    return x2, v15, q2, ϕ15
+    ω15 = data[SVector{3,Int}(11:13)]
+    return x2, v15, q2, ω15
 end
 
 

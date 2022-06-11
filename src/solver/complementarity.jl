@@ -3,7 +3,7 @@ function complementarity(mechanism, joint::JointConstraint{T,N,Nc};
     scaling::Bool=false) where {T,N,Nc}
 
     c = []
-    for (i, element) in enumerate([joint.translational, joint.rotational])
+    for (i, element) in enumerate((joint.translational, joint.rotational))
         λi = joint.impulses[2][joint_impulse_index(joint, i)]
         si, γi = split_impulses(element, λi)
         push!(c, si .* γi)

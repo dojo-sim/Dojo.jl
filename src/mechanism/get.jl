@@ -110,8 +110,8 @@ function get_maximal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,N
 		x2 = body.state.x2
 		v15 = body.state.v15
 		q2 = body.state.q2
-		ϕ15 = body.state.ϕ15
-		pack_maximal_state!(z, x2, v15, q2, ϕ15, i)
+		ω15 = body.state.ω15
+		pack_maximal_state!(z, x2, v15, q2, ω15, i)
 	end
 	return z
 end
@@ -127,8 +127,8 @@ function get_next_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,N
 	timestep= mechanism.timestep
 	z_next = zeros(T, 13Nb)
 	for (i, body) in enumerate(mechanism.bodies)
-        x3, v25, q3, ϕ25 = next_configuration_velocity(body.state, timestep)
-		z_next[13 * (i-1) .+ (1:13)] = [x3; v25; vector(q3); ϕ25]
+        x3, v25, q3, ω25 = next_configuration_velocity(body.state, timestep)
+		z_next[13 * (i-1) .+ (1:13)] = [x3; v25; vector(q3); ω25]
 	end
 	return z_next
 end
@@ -154,7 +154,7 @@ function get_minimal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,N
 		v = zeros(T,0)
 		pbody = get_body(mechanism, joint.parent_id)
 		cbody = get_body(mechanism, joint.child_id)
-		for element in [joint.translational, joint.rotational]
+		for element in (joint.translational, joint.rotational)
 			pos = minimal_coordinates(element, pbody, cbody)
 			vel = minimal_velocities(element, pbody, cbody, timestep)
 			push!(c, pos...)

@@ -26,7 +26,23 @@ mutable struct Translational{T,Nλ,Nb,N,Nb½,N̄λ} <: Joint{T,Nλ,Nb,N,Nb½}
     spring_offset::SVector{N̄λ,T}
     joint_limits::Vector{SVector{Nb½,T}} # lower and upper limits on the joint minimal coordinate angles
     spring_type::Symbol # the rotational springs can be :linear or :sinusoidal, if linear then we need joint_limits to avoid the 180° singularity.
-    input::SVector{3,T}
+    input::SVector{3,T} # joint input, i.e., a force, not an impulse
+end
+
+function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, joint::Translational{T,N}) where {T,N}
+    summary(io, joint)
+    println(io,"")
+    println(io, " axis:          "*string(joint.axis))
+    println(io, " axis_mask1:    "*string(joint.axis_mask1))
+    println(io, " axis_mask2:    "*string(joint.axis_mask2))
+    println(io, " axis_mask3:    "*string(joint.axis_mask3))
+    println(io, " vertices:   "*string(joint.vertices))
+    println(io, " spring:        "*string(joint.spring))
+    println(io, " damper:        "*string(joint.damper))
+    println(io, " spring_offset: "*string(joint.spring_offset))
+    println(io, " joint_limits:  "*string(joint.joint_limits))
+    println(io, " spring_type:   "*string(joint.spring_type))
+    println(io, " input:         "*string(joint.input))
 end
 
 function Translational{T,Nλ}(pbody::Node, cbody::Node;

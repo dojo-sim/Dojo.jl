@@ -4,7 +4,7 @@ function constraint(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn
 
     mass = body.mass
     inertia = body.inertia
-    gravity=mechanism.gravity
+    gravity = mechanism.gravity
 
     x1, q1 = previous_configuration(state)
     x2, q2 = current_configuration(state)
@@ -22,7 +22,7 @@ function constraint(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn
     state.d = [dynT; dynR]
 
     # inputs
-    state.d -= [state.F2; state.τ2]
+    state.d -= [state.JF2; state.Jτ2]
 
     # impulses
     for id in connections(mechanism.system, body.id)
@@ -33,25 +33,25 @@ function constraint(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn
     return state.d
 end
 
-function constraint_jacobian_configuration(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn,Ne,Nb}
+function constraint_jacobian_configuration(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}; reg::T=Dojo.REG) where {T,Nn,Ne,Nb}
     state = body.state
-    timestep= mechanism.timestep
+    timestep = mechanism.timestep
     mass = body.mass
     inertia = body.inertia
 
-    # x1, q1 = previous_configuration(state)
     x2, q2 = current_configuration(state)
     x3, q3 = next_configuration(state, timestep)
 
-    # dynamics
-    dynT = I(3) * mass / timestep
-    dynR = -2.0 / timestep * LVᵀmat(q2)' * Tmat() * (∂Rᵀmat∂q(Vᵀmat() * inertia * Vmat() * Lmat(q2)' * vector(q3)) + Rmat(q3)' * Vᵀmat() * inertia * Vmat() * Lmat(q2)') 
-
+    I3 = SMatrix{3,3,T,9}(Diagonal(sones(T,3)))
     Z33 = szeros(T, 3, 3)
     Z34 = szeros(T, 3, 4)
 
+    # dynamics
+    dynT = I3 * mass / timestep
+    dynR = -2.0 / timestep * LVᵀmat(q2)' * Tmat() * (∂Rᵀmat∂q(Vᵀmat() * inertia * Vmat() * Lmat(q2)' * vector(q3)) + Rmat(q3)' * Vᵀmat() * inertia * Vmat() * Lmat(q2)')
+
     state.D = [[dynT; Z33] [Z34; dynR]] * integrator_jacobian_velocity(body, timestep)
-    state.D += [[REG * I(3); Z33] [Z33; REG * I(3)]]
+    state.D += [[reg * I3; Z33] [Z33; reg * I3]]
 
     # inputs
     nothing
@@ -67,18 +67,18 @@ end
 
 function integrator_jacobian_velocity(body::Body{T}, timestep) where T
     state = body.state
-    x2, v25, q2, ϕ25 = current_configuration_velocity(state)
-    integrator_jacobian_velocity(x2, v25, q2, ϕ25, timestep)
+    x2, v25, q2, ω25 = current_configuration_velocity(state)
+    integrator_jacobian_velocity(x2, v25, q2, ω25, timestep)
 end
 
 function integrator_jacobian_configuration(body::Body{T},
         timestep; attjac::Bool=true) where T
     state = body.state
-    x2, v25, q2, ϕ25 = current_configuration_velocity(state)
-    integrator_jacobian_configuration(x2, v25, q2, ϕ25, timestep; attjac=attjac)
+    x2, v25, q2, ω25 = current_configuration_velocity(state)
+    integrator_jacobian_configuration(x2, v25, q2, ω25, timestep; attjac=attjac)
 end
 
-# linear system 
+# linear system
 function set_matrix_vector_entries!(mechanism, matrix_entry::Entry, vector_entry::Entry, body::Body)
     matrix_entry.value = constraint_jacobian_configuration(mechanism, body)
     vector_entry.value = -constraint(mechanism, body)

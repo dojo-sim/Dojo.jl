@@ -5,13 +5,13 @@
 function input_impulse!(joint::Rotational{T}, pbody::Node, cbody::Node,
     timestep::T, clear::Bool) where T
 
-    axis_offset = joint.axis_offset
-    τ = joint.input
+    orientation_offset = joint.orientation_offset
+    τ = joint.input * timestep
     xa, qa = current_configuration(pbody.state)
     xb, qb = current_configuration(cbody.state)
 
-    pbody.state.τ2 += vector_rotate(-τ, axis_offset)
-    cbody.state.τ2 += vector_rotate(τ, inv(qb) * qa * axis_offset)
+    pbody.state.Jτ2 += vector_rotate(-τ, orientation_offset)
+    cbody.state.Jτ2 += vector_rotate(τ, inv(qb) * qa * orientation_offset)
     clear && (joint.input = szeros(T,3))
     return
 end
@@ -23,17 +23,18 @@ end
 function input_jacobian_control(relative::Symbol,
     joint::Rotational{T},
     xa::AbstractVector, qa::Quaternion,
-    xb::AbstractVector, qb::Quaternion) where T
+    xb::AbstractVector, qb::Quaternion,
+    timestep) where T
 
-    axis_offset = joint.axis_offset
+    orientation_offset = joint.orientation_offset
     if relative == :parent
         BFa = szeros(T, 3, 3)
-        Bτa = - rotation_matrix(axis_offset)
-        return [BFa; Bτa]
+        Bτa = - rotation_matrix(orientation_offset)
+        return [BFa; Bτa] * timestep
     elseif relative == :child
         BFb = szeros(T, 3, 3)
-        Bτb = rotation_matrix(inv(qb) * qa * axis_offset)
-        return [BFb; Bτb]
+        Bτb = rotation_matrix(inv(qb) * qa * orientation_offset)
+        return [BFb; Bτb] * timestep
     end
 end
 
@@ -42,7 +43,7 @@ function input_jacobian_configuration(relative::Symbol,
     xa::AbstractVector, qa::Quaternion,
     xb::AbstractVector, qb::Quaternion) where T
 
-    axis_offset = joint.axis_offset
+    orientation_offset = joint.orientation_offset
     τ = joint.input
 
     if relative == :parent
@@ -53,7 +54,7 @@ function input_jacobian_configuration(relative::Symbol,
         FbXa = szeros(T,3,3)
         FbQa = szeros(T,3,4)
         τbXa = szeros(T,3,3)
-        τbQa = rotation_matrix(inv(qb)) * ∂rotation_matrix∂q(qa * axis_offset, τ)#*LVᵀmat(qa)
+        τbQa = rotation_matrix(inv(qb)) * ∂rotation_matrix∂q(qa * orientation_offset, τ)#*LVᵀmat(qa)
         return FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa
     elseif relative == :child
         FaXb = szeros(T,3,3)
@@ -63,7 +64,7 @@ function input_jacobian_configuration(relative::Symbol,
         FbXb = szeros(T,3,3)
         FbQb = szeros(T,3,4)
         τbXb = szeros(T,3,3)
-        τbQb = ∂rotation_matrix_inv∂q(qb, vector_rotate(τ, qa * axis_offset))#*LVᵀmat(qb)
+        τbQb = ∂rotation_matrix_inv∂q(qb, vector_rotate(τ, qa * orientation_offset))#*LVᵀmat(qb)
         return FaXb, FaQb, τaXb, τaQb, FbXb, FbQb, τbXb, τbQb
     end
 end

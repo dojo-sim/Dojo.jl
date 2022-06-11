@@ -23,6 +23,19 @@ mutable struct CapsuleCapsuleCollision{T,O,I,OI} <: Collision{T,O,I,OI}
     height_child::T
 end 
 
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, collision::CapsuleCapsuleCollision)
+#     summary(io, collision)
+#     println(io, "")
+#     println(io, "origin_parent:      "*string(collision.origin_parent))
+#     println(io, "origin_child:       "*string(collision.origin_child))
+#     println(io, "orientation_parent: "*string(collision.orientation_parent))
+#     println(io, "orientation_child:  "*string(collision.orientation_child))
+#     println(io, "radius_parent:      "*string(collision.radius_parent))
+#     println(io, "radius_child:       "*string(collision.radius_child))
+#     println(io, "height_parent:      "*string(collision.height_parent))
+#     println(io, "height_child:       "*string(collision.height_child))
+# end
+
 # distance
 function distance(collision::CapsuleCapsuleCollision, xp, qp, xc, qc)
     # contact points

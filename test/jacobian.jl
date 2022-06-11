@@ -10,9 +10,9 @@ function test_solmat(model;
 
     @testset "$(string(model))" begin
         # mechanism
-        mechanism = get_mechanism(model,
-            timestep=timestep,
-            gravity=gravity;
+        mechanism = get_mechanism(model;
+            timestep,
+            gravity,
             kwargs...)
         initialize!(mechanism, model)
 
@@ -68,7 +68,7 @@ function control!(mechanism, k;
     for joint in mechanism.joints
         nu = Dojo.input_dimension(joint,
             ignore_floating_base=false)
-        su = mechanism.timestep * u * sones(nu)
+        su = u * sones(nu)
         Dojo.set_input!(joint, su)
     end
 end
@@ -77,8 +77,8 @@ end
 # Flying after 0.1 sec simulation
 @testset "Flying" begin
     tsim = 0.1
-    test_solmat(:atlas,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
-    test_solmat(:atlas,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
+    test_solmat(:atlas,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, parse_damper=false)
+    test_solmat(:atlas,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, parse_damper=false)
     test_solmat(:atlas,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1e3, damper=5e2)
     test_solmat(:quadruped,  tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7, spring=1.0, damper=0.2)
     test_solmat(:block,        tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)

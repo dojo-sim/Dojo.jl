@@ -30,14 +30,17 @@ makedocs(
         "Creating a Simulation" => [
             "define_simulation.md",
             "define_controller.md",
+            "simulation_with_gradients.md",
            ],
 
         "Environments" => [
             "load_environment.md",
             "define_environment.md",
+            "environment_simulation_gradients.md",
         ],
 
         "Gradients from Simulator" => [
+            "simulation_with_gradients.md",
             "gradients.md",
            ],
 
@@ -58,6 +61,7 @@ makedocs(
             "impact.md",
             "nonlinear_friction.md",
             "linearized_friction.md",
+            "collisions.md",
         ],
 
         "Interior-Point Solver" => [

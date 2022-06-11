@@ -6,12 +6,12 @@
 Fixed(pbody::Node{T}, cbody::Node{T}; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(Quaternion{T})) where T =
+    orientation_offset=one(Quaternion{T})) where T =
     Translational{T,3}(pbody, cbody; 
         parent_vertex, 
         child_vertex),
     Rotational{T,3}(pbody, cbody; 
-        axis_offset)
+        orientation_offset)
 
 """
     Prismatic{T} <: JointConstraint{T}
@@ -21,7 +21,7 @@ Fixed(pbody::Node{T}, cbody::Node{T};
 Prismatic(pbody::Node{T}, cbody::Node{T}, axis; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(Quaternion{T}), 
+    orientation_offset=one(Quaternion{T}), 
     spring=zero(T), 
     damper=zero(T),
     tra_spring_offset=szeros(T,1),
@@ -35,7 +35,7 @@ Prismatic(pbody::Node{T}, cbody::Node{T}, axis;
         spring_offset=tra_spring_offset, 
         joint_limits=tra_joint_limits),
     Rotational{T,3}(pbody, cbody; 
-        axis_offset, 
+        orientation_offset, 
         spring, 
         damper)
 
@@ -47,7 +47,7 @@ Prismatic(pbody::Node{T}, cbody::Node{T}, axis;
 Planar(pbody::Node{T}, cbody::Node{T}, axis; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(Quaternion{T}), 
+    orientation_offset=one(Quaternion{T}), 
     spring=zero(T), 
     damper=zero(T),
     tra_spring_offset=szeros(T,2),
@@ -61,7 +61,7 @@ Planar(pbody::Node{T}, cbody::Node{T}, axis;
         spring_offset=tra_spring_offset, 
         joint_limits=tra_joint_limits),
     Rotational{T,3}(pbody, cbody; 
-        axis_offset, 
+        orientation_offset, 
         spring, 
         damper)
 
@@ -71,7 +71,7 @@ Planar(pbody::Node{T}, cbody::Node{T}, axis;
     three translational degree of freedom between two bodies
 """
 FixedOrientation(pbody::Node{T}, cbody::Node{T}; 
-    axis_offset=one(Quaternion{T}),
+    orientation_offset=one(Quaternion{T}),
     spring=zero(T), 
     damper=zero(T),
     tra_spring_offset=szeros(T,3),
@@ -82,7 +82,7 @@ FixedOrientation(pbody::Node{T}, cbody::Node{T};
         spring_offset=tra_spring_offset, 
         joint_limits=tra_joint_limits),
     Rotational{T,3}(pbody, cbody; 
-        axis_offset, 
+        orientation_offset, 
         spring, 
         damper)
 
@@ -94,7 +94,7 @@ FixedOrientation(pbody::Node{T}, cbody::Node{T};
 Revolute(pbody::Node{T}, cbody::Node{T}, axis; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(Quaternion{T}), 
+    orientation_offset=one(Quaternion{T}), 
     spring=zero(T), 
     damper=zero(T),
     rot_spring_offset=szeros(T,1),
@@ -107,7 +107,7 @@ Revolute(pbody::Node{T}, cbody::Node{T}, axis;
         damper),
     Rotational{T,2}(pbody, cbody; 
         axis, 
-        axis_offset, 
+        orientation_offset, 
         spring, 
         damper,
         spring_offset=rot_spring_offset, 
@@ -122,7 +122,7 @@ Revolute(pbody::Node{T}, cbody::Node{T}, axis;
 Cylindrical(pbody::Node{T}, cbody::Node{T}, axis; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(Quaternion{T}), 
+    orientation_offset=one(Quaternion{T}), 
     spring=zero(T), 
     damper=zero(T),
     tra_spring_offset=szeros(T,1), 
@@ -140,7 +140,7 @@ Cylindrical(pbody::Node{T}, cbody::Node{T}, axis;
         joint_limits=tra_joint_limits),
     Rotational{T,2}(pbody, cbody; 
         axis, 
-        axis_offset, 
+        orientation_offset, 
         spring, 
         damper,
         spring_offset=rot_spring_offset, 
@@ -155,7 +155,7 @@ Cylindrical(pbody::Node{T}, cbody::Node{T}, axis;
 PlanarAxis(pbody::Node{T}, cbody::Node{T}, axis; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(Quaternion{T}), 
+    orientation_offset=one(Quaternion{T}), 
     spring=zero(T), 
     damper=zero(T),
     tra_spring_offset=szeros(T,2), 
@@ -173,7 +173,7 @@ PlanarAxis(pbody::Node{T}, cbody::Node{T}, axis;
         joint_limits=tra_joint_limits),
     Rotational{T,2}(pbody, cbody; 
         axis, 
-        axis_offset, 
+        orientation_offset, 
         spring, 
         damper,
         spring_offset=rot_spring_offset, 
@@ -188,7 +188,7 @@ PlanarAxis(pbody::Node{T}, cbody::Node{T}, axis;
 FreeRevolute(pbody::Node{T}, cbody::Node{T}, axis; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(Quaternion{T}), 
+    orientation_offset=one(Quaternion{T}), 
     spring=zero(T), 
     damper=zero(T),
     tra_spring_offset=szeros(T,3), 
@@ -203,7 +203,7 @@ FreeRevolute(pbody::Node{T}, cbody::Node{T}, axis;
         joint_limits=tra_joint_limits),
     Rotational{T,2}(pbody, cbody; 
         axis, 
-        axis_offset, 
+        orientation_offset, 
         spring, 
         damper,
         spring_offset=rot_spring_offset, 
@@ -218,7 +218,7 @@ FreeRevolute(pbody::Node{T}, cbody::Node{T}, axis;
 Orbital(pbody::Node{T}, cbody::Node{T}, axis; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(Quaternion{T}), 
+    orientation_offset=one(Quaternion{T}), 
     spring=zero(T), 
     damper=zero(T),
     rot_spring_offset=szeros(T,2),
@@ -232,7 +232,7 @@ Orbital(pbody::Node{T}, cbody::Node{T}, axis;
         damper),
     Rotational{T,1}(pbody, cbody; 
         axis, 
-        axis_offset, 
+        orientation_offset, 
         spring, 
         damper,
         spring_offset=rot_spring_offset, 
@@ -247,7 +247,7 @@ Orbital(pbody::Node{T}, cbody::Node{T}, axis;
 PrismaticOrbital(pbody::Node{T}, cbody::Node{T}, axis; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(Quaternion{T}), 
+    orientation_offset=one(Quaternion{T}), 
     spring=zero(T), 
     damper=zero(T),
     tra_spring_offset=szeros(T,1), 
@@ -265,7 +265,7 @@ PrismaticOrbital(pbody::Node{T}, cbody::Node{T}, axis;
         joint_limits=tra_joint_limits),
     Rotational{T,1}(pbody, cbody; 
         axis, 
-        axis_offset, 
+        orientation_offset, 
         spring, 
         damper,
         spring_offset=rot_spring_offset, 
@@ -280,7 +280,7 @@ PrismaticOrbital(pbody::Node{T}, cbody::Node{T}, axis;
 PlanarOrbital(pbody::Node{T}, cbody::Node{T}, axis; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(Quaternion{T}), 
+    orientation_offset=one(Quaternion{T}), 
     spring=zero(T), 
     damper=zero(T),
     tra_spring_offset=szeros(T,2), 
@@ -298,7 +298,7 @@ PlanarOrbital(pbody::Node{T}, cbody::Node{T}, axis;
         joint_limits=tra_joint_limits),
     Rotational{T,1}(pbody, cbody; 
         axis, 
-        axis_offset, 
+        orientation_offset, 
         spring, 
         damper,
         spring_offset=rot_spring_offset, 
@@ -313,7 +313,7 @@ PlanarOrbital(pbody::Node{T}, cbody::Node{T}, axis;
 FreeOrbital(pbody::Node{T}, cbody::Node{T}, axis; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(Quaternion{T}), 
+    orientation_offset=one(Quaternion{T}), 
     spring=zero(T), 
     damper=zero(T),
     tra_spring_offset=szeros(T,3), 
@@ -328,7 +328,7 @@ FreeOrbital(pbody::Node{T}, cbody::Node{T}, axis;
         joint_limits=tra_joint_limits),
     Rotational{T,1}(pbody, cbody; 
         axis, 
-        axis_offset, 
+        orientation_offset, 
         spring, 
         damper,
         spring_offset=rot_spring_offset, 
@@ -343,7 +343,7 @@ FreeOrbital(pbody::Node{T}, cbody::Node{T}, axis;
 Spherical(pbody::Node{T}, cbody::Node{T}; 
     parent_vertex=szeros(T, 3), 
     child_vertex=szeros(T, 3),
-    axis_offset=one(Quaternion{T}), 
+    orientation_offset=one(Quaternion{T}), 
     spring=zero(T), 
     damper=zero(T),
     rot_spring_offset=szeros(T,3), 
@@ -355,7 +355,7 @@ Spherical(pbody::Node{T}, cbody::Node{T};
         spring, 
         damper),
     Rotational{T,0}(pbody, cbody; 
-        axis_offset, 
+        orientation_offset, 
         spring, 
         damper,
         spring_offset=rot_spring_offset, 
@@ -449,7 +449,7 @@ Floating(pbody::Node{T}, cbody::Node{T};
 function Prototype(joint_type::Symbol, pbody::Node{T}, cbody::Node{T}, axis; 
         parent_vertex=szeros(T, 3), 
         child_vertex=szeros(T, 3),
-        axis_offset=one(Quaternion{T}), 
+        orientation_offset=one(Quaternion{T}), 
         spring=zero(T), 
         damper=zero(T),
         tra_spring_offset=nothing, 
@@ -461,19 +461,19 @@ function Prototype(joint_type::Symbol, pbody::Node{T}, cbody::Node{T}, axis;
     N̄tra, N̄rot = nullspace_dimension(joint_type)
     (tra_spring_offset == nothing) && (tra_spring_offset = szeros(T,N̄tra))
     (rot_spring_offset == nothing) && (rot_spring_offset = szeros(T,N̄rot))
-    (joint_type == :Fixed)            && (return            Fixed(pbody, cbody;       parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset=axis_offset))
-    (joint_type == :Prismatic)        && (return        Prismatic(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset=axis_offset, spring=spring, damper=damper, tra_spring_offset=tra_spring_offset,                                      tra_joint_limits=tra_joint_limits))
-    (joint_type == :Planar)           && (return           Planar(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset=axis_offset, spring=spring, damper=damper, tra_spring_offset=tra_spring_offset,                                      tra_joint_limits=tra_joint_limits))
-    (joint_type == :FixedOrientation) && (return FixedOrientation(pbody, cbody;                     axis_offset=axis_offset, spring=spring, damper=damper, tra_spring_offset=tra_spring_offset,                                      tra_joint_limits=tra_joint_limits))
-    (joint_type == :Revolute)         && (return         Revolute(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset=axis_offset, spring=spring, damper=damper,                                      rot_spring_offset=rot_spring_offset,                                    rot_joint_limits=rot_joint_limits, spring_type=spring_type))
-    (joint_type == :Cylindrical)      && (return      Cylindrical(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset=axis_offset, spring=spring, damper=damper, tra_spring_offset=tra_spring_offset, rot_spring_offset=rot_spring_offset, tra_joint_limits=tra_joint_limits, rot_joint_limits=rot_joint_limits, spring_type=spring_type))
-    (joint_type == :PlanarAxis)       && (return       PlanarAxis(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset=axis_offset, spring=spring, damper=damper, tra_spring_offset=tra_spring_offset, rot_spring_offset=rot_spring_offset, tra_joint_limits=tra_joint_limits, rot_joint_limits=rot_joint_limits, spring_type=spring_type))
-    (joint_type == :FreeRevolute)     && (return     FreeRevolute(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset=axis_offset, spring=spring, damper=damper, tra_spring_offset=tra_spring_offset, rot_spring_offset=rot_spring_offset, tra_joint_limits=tra_joint_limits, rot_joint_limits=rot_joint_limits, spring_type=spring_type))
-    (joint_type == :Orbital)          && (return          Orbital(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset=axis_offset, spring=spring, damper=damper,                                      rot_spring_offset=rot_spring_offset,                                    rot_joint_limits=rot_joint_limits, spring_type=spring_type))
-    (joint_type == :PrismaticOrbital) && (return PrismaticOrbital(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset=axis_offset, spring=spring, damper=damper, tra_spring_offset=tra_spring_offset, rot_spring_offset=rot_spring_offset, tra_joint_limits=tra_joint_limits, rot_joint_limits=rot_joint_limits, spring_type=spring_type))
-    (joint_type == :PlanarOrbital)    && (return    PlanarOrbital(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset=axis_offset, spring=spring, damper=damper, tra_spring_offset=tra_spring_offset, rot_spring_offset=rot_spring_offset, tra_joint_limits=tra_joint_limits, rot_joint_limits=rot_joint_limits, spring_type=spring_type))
-    (joint_type == :FreeOrbital)      && (return      FreeOrbital(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset=axis_offset, spring=spring, damper=damper, tra_spring_offset=tra_spring_offset, rot_spring_offset=rot_spring_offset, tra_joint_limits=tra_joint_limits, rot_joint_limits=rot_joint_limits, spring_type=spring_type))
-    (joint_type == :Spherical)        && (return        Spherical(pbody, cbody;       parent_vertex=parent_vertex, child_vertex=child_vertex, axis_offset=axis_offset, spring=spring, damper=damper,                                      rot_spring_offset=rot_spring_offset,                                    rot_joint_limits=rot_joint_limits, spring_type=spring_type))
+    (joint_type == :Fixed)            && (return            Fixed(pbody, cbody;       parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset=orientation_offset))
+    (joint_type == :Prismatic)        && (return        Prismatic(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset=orientation_offset, spring=spring, damper=damper, tra_spring_offset=tra_spring_offset,                                      tra_joint_limits=tra_joint_limits))
+    (joint_type == :Planar)           && (return           Planar(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset=orientation_offset, spring=spring, damper=damper, tra_spring_offset=tra_spring_offset,                                      tra_joint_limits=tra_joint_limits))
+    (joint_type == :FixedOrientation) && (return FixedOrientation(pbody, cbody;                     orientation_offset=orientation_offset, spring=spring, damper=damper, tra_spring_offset=tra_spring_offset,                                      tra_joint_limits=tra_joint_limits))
+    (joint_type == :Revolute)         && (return         Revolute(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset=orientation_offset, spring=spring, damper=damper,                                      rot_spring_offset=rot_spring_offset,                                    rot_joint_limits=rot_joint_limits, spring_type=spring_type))
+    (joint_type == :Cylindrical)      && (return      Cylindrical(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset=orientation_offset, spring=spring, damper=damper, tra_spring_offset=tra_spring_offset, rot_spring_offset=rot_spring_offset, tra_joint_limits=tra_joint_limits, rot_joint_limits=rot_joint_limits, spring_type=spring_type))
+    (joint_type == :PlanarAxis)       && (return       PlanarAxis(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset=orientation_offset, spring=spring, damper=damper, tra_spring_offset=tra_spring_offset, rot_spring_offset=rot_spring_offset, tra_joint_limits=tra_joint_limits, rot_joint_limits=rot_joint_limits, spring_type=spring_type))
+    (joint_type == :FreeRevolute)     && (return     FreeRevolute(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset=orientation_offset, spring=spring, damper=damper, tra_spring_offset=tra_spring_offset, rot_spring_offset=rot_spring_offset, tra_joint_limits=tra_joint_limits, rot_joint_limits=rot_joint_limits, spring_type=spring_type))
+    (joint_type == :Orbital)          && (return          Orbital(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset=orientation_offset, spring=spring, damper=damper,                                      rot_spring_offset=rot_spring_offset,                                    rot_joint_limits=rot_joint_limits, spring_type=spring_type))
+    (joint_type == :PrismaticOrbital) && (return PrismaticOrbital(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset=orientation_offset, spring=spring, damper=damper, tra_spring_offset=tra_spring_offset, rot_spring_offset=rot_spring_offset, tra_joint_limits=tra_joint_limits, rot_joint_limits=rot_joint_limits, spring_type=spring_type))
+    (joint_type == :PlanarOrbital)    && (return    PlanarOrbital(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset=orientation_offset, spring=spring, damper=damper, tra_spring_offset=tra_spring_offset, rot_spring_offset=rot_spring_offset, tra_joint_limits=tra_joint_limits, rot_joint_limits=rot_joint_limits, spring_type=spring_type))
+    (joint_type == :FreeOrbital)      && (return      FreeOrbital(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset=orientation_offset, spring=spring, damper=damper, tra_spring_offset=tra_spring_offset, rot_spring_offset=rot_spring_offset, tra_joint_limits=tra_joint_limits, rot_joint_limits=rot_joint_limits, spring_type=spring_type))
+    (joint_type == :Spherical)        && (return        Spherical(pbody, cbody;       parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset=orientation_offset, spring=spring, damper=damper,                                      rot_spring_offset=rot_spring_offset,                                    rot_joint_limits=rot_joint_limits, spring_type=spring_type))
     (joint_type == :CylindricalFree)  && (return  CylindricalFree(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex,                  spring=spring, damper=damper, tra_spring_offset=tra_spring_offset, rot_spring_offset=rot_spring_offset, tra_joint_limits=tra_joint_limits, rot_joint_limits=rot_joint_limits, spring_type=spring_type))
     (joint_type == :PlanarFree)       && (return       PlanarFree(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex,                  spring=spring, damper=damper, tra_spring_offset=tra_spring_offset, rot_spring_offset=rot_spring_offset, tra_joint_limits=tra_joint_limits, rot_joint_limits=rot_joint_limits, spring_type=spring_type))
     (joint_type == :Floating)         && (return         Floating(pbody, cbody;                                      spring=spring, damper=damper, tra_spring_offset=tra_spring_offset, rot_spring_offset=rot_spring_offset, tra_joint_limits=tra_joint_limits, rot_joint_limits=rot_joint_limits, spring_type=spring_type))

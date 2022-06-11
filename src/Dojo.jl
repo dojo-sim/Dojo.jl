@@ -1,7 +1,7 @@
 module Dojo
 
 # constants
-global REG = 1.0e-10
+global REG = 1.0e-10::Float64
 
 #TODO: remove
 using FiniteDiff
@@ -111,10 +111,13 @@ include(joinpath("joints", "impulses.jl"))
 include(joinpath("contacts", "constraints.jl"))
 include(joinpath("contacts", "cone.jl"))
 include(joinpath("contacts", "collisions", "collision.jl"))
+include(joinpath("contacts", "collisions", "point_to_segment.jl"))
+include(joinpath("contacts", "collisions", "point_to_box_v2.jl"))
 include(joinpath("contacts", "collisions", "sphere_halfspace.jl"))
 include(joinpath("contacts", "collisions", "sphere_sphere.jl"))
+include(joinpath("contacts", "collisions", "sphere_capsule.jl"))
+include(joinpath("contacts", "collisions", "sphere_box.jl"))
 include(joinpath("contacts", "collisions", "string.jl"))
-
 include(joinpath("contacts", "velocity.jl"))
 include(joinpath("contacts", "soft", "soft_collider.jl"))
 include(joinpath("contacts", "soft", "soft_collision.jl"))
@@ -159,18 +162,19 @@ include(joinpath("gradients", "state.jl"))
 include(joinpath("gradients", "data.jl"))
 include(joinpath("gradients", "utilities.jl"))
 
-# Environments
-include(joinpath("..", "environments", "mechanisms.jl"))
-include(joinpath("..", "environments", "environment.jl"))
-include(joinpath("..", "environments", "dynamics.jl"))
-include(joinpath("..", "environments", "utilities.jl"))
-include(joinpath("..", "environments", "include.jl"))
+# # Environments
+# include(joinpath("..", "DojoEnvironments/src", "mechanisms.jl"))
+# include(joinpath("..", "DojoEnvironments/src", "environment.jl"))
+# include(joinpath("..", "DojoEnvironments/src", "dynamics.jl"))
+# include(joinpath("..", "DojoEnvironments/src", "utilities.jl"))
+# include(joinpath("..", "DojoEnvironments/src", "include.jl"))
 
 # Bodies
 export
     Body,
     Origin,
     Box,
+    Capsule,
     Cylinder,
     Sphere,
     Pyramid,
@@ -219,6 +223,8 @@ export
 export
     SphereHalfSpaceCollision,
     SphereSphereCollision,
+    SphereCapsuleCollision,
+    SphereBoxCollision,
     StringCollision,
     distance,
     contact_point,
@@ -234,7 +240,6 @@ export
 # Mechanism
 export
     Mechanism,
-    get_mechanism,
     initialize!,
     set_floating_base,
     zero_velocity!
@@ -245,6 +250,7 @@ export
     set_maximal_configurations!,
     set_maximal_velocities!,
     get_maximal_state,
+    get_maximal_gradients!,
     maximal_dimension
 
 # Minimal
@@ -253,6 +259,7 @@ export
     set_minimal_coordinates!,
     set_minimal_velocities!,
     get_minimal_state,
+    get_minimal_gradients!,
     minimal_coordinates,
     minimal_velocities,
     minimal_dimension
@@ -267,24 +274,6 @@ export
     simulate!,
     step!,
     generate_storage
-
-# Environment
-export
-    Environment,
-    dynamics,
-    dynamics_jacobian_state,
-    dynamics_jacobian_input,
-    get_environment,
-    #step,
-    get_observation,
-    cost,
-    is_done,
-    #reset,
-    render,
-    seed,
-    close,
-    Space,
-    BoxSpace
 
 # Orientation
 export
@@ -341,6 +330,7 @@ export
 
 # Utilities
 export
+    Storage,
     normalize
 
 end

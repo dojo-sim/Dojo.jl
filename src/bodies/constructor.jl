@@ -18,11 +18,22 @@ mutable struct Body{T} <: Node{T}
     state::State{T}
     shape::Shape{T}
 
-    function Body(mass::T, inertia::AbstractMatrix; 
-        name::Symbol=:origin, 
-        shape::Shape=EmptyShape()) where T
+    function Body(mass::Real, inertia::AbstractMatrix; 
+        name::Symbol=Symbol("body_" * randstring(4)), 
+        shape::Shape=EmptyShape())
+
+        T = promote_type(eltype.((mass, inertia))...)
         new{T}(getGlobalID(), name, mass, inertia, State{T}(), shape)
     end
+end
+
+function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, body::Body)
+    summary(io, body)
+    println(io, "")
+    println(io, " id:      "*string(body.id))
+    println(io, " name:    "*string(body.name))
+    println(io, " mass:    "*string(body.mass))
+    println(io, " inertia: "*string(body.inertia))
 end
 
 Base.length(::Body) = 6
