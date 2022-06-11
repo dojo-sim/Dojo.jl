@@ -13,6 +13,7 @@ using DojoEnvironments
 # ## visualizer
 vis = Visualizer()
 render(vis)
+open(vis)
 
 # using Pkg
 # Pkg.develop(path="~/.julia/dev/Dojo.jl/DojoEnvironments")
@@ -71,7 +72,7 @@ end
 storage = simulate!(mech, 1.20, ctrl!, opts=SolverOptions(rtol=3e-4, btol=3e-4))
 # final state
 z_final = get_maximal_state(mech)
-
+z_final[2] += 1.0
 visualize(mech, generate_storage(mech, [z_initial]), vis=vis)
 visualize(mech, generate_storage(mech, [z_final]), vis=vis)
 visualize(mech, storage, vis=vis)
@@ -203,14 +204,7 @@ z_sol, u_sol = IterativeLQR.get_trajectory(s)
 DojoEnvironments.visualize(env, z_sol)
 
 
-# convert_frames_to_video_and_gif("bluesoap_push_high_friction")
-# obj = MeshFileGeometry(joinpath("/home/simon/Downloads/UM2_logo_7.obj"))
-# setobject!(vis[:logo], obj)
-# settransform!(vis[:logo], LinearMap(0.01*I))
-
-# Dojo.convert_video_to_gif("/home/simon/Downloads/video_trial.mp4",
-#     "/home/simon/Downloads/video_trial.gif", framerate=15, width=400)
-
+convert_frames_to_video_and_gif("nerf_sphere_trajopt")
 
 
 
