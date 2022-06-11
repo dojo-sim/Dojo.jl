@@ -79,7 +79,8 @@ function soft_impulse(model::SoftContact{T},
     end
     ψ, barycenter, normal = model.ψ, model.barycenter, model.normal
     # velocities
-    soft_impulse(collision.collider_origin, collider.options, ψ, barycenter, normal, x2p, vp, q2p, ϕp, x2c, vc, q2c, ϕc, timestep)
+    soft_impulse(collision.collider_origin, collider.options, ψ, barycenter, normal,
+		x2p, vp, q2p, ϕp, x2c, vc, q2c, ϕc, timestep)
 end
 
 function soft_impulse(collider_origin, opts, ψ, barycenter, normal,

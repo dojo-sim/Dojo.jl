@@ -17,11 +17,11 @@ render(vis)
 gravity = -9.81
 timestep = 0.02
 friction_coefficient = 0.30
+
 ################################################################################
 # Simulation
 ################################################################################
 mech = get_nerf_sphere(nerf=:bluesoap, timestep=timestep, gravity=gravity,
-# mech = get_nerf_sphere(nerf=:bunny, timestep=timestep, gravity=gravity,
     friction_coefficient=friction_coefficient,
     collider_options=ColliderOptions(sliding_friction=friction_coefficient))
 
@@ -30,9 +30,7 @@ mech.contacts[end].model.collision.collider.options.impact_spring = 1000.0
 
 # initial conditions
 x_bluesoap = [0.269, -0.40, 0.369]
-# x_bluesoap = [0., -0.5, 0.45]
 q_bluesoap = Quaternion(-0.247, 0.715, 0.618, -0.211, false)
-# q_bluesoap = Quaternion(normalize([1, 0, 0, 0.5])..., false)
 x_sphere = [2.0, -0.5, 0.5]
 q_sphere = Quaternion(1.0, 0.0, 0.0, 0.0, false)
 
@@ -50,7 +48,7 @@ initialize!(mech, :nerf_sphere,
     sphere_orientation=q_sphere,
     )
 
-function ctrl!(m, k; kp=1e-0, kv=3e-1, xg_sphere=[-0,-0.5,0.5], xg_nerf=[-1.5, 0.40,0.369])
+function ctrl!(m, k; kp=1e-0, kv=3e-1, xg_sphere=[0,-0.5,0.5], xg_nerf=[-1.5, 0.40,0.369])
     sphere = get_body(m, :sphere)
     nerf = get_body(m, :bluesoap)
     x_sphere = current_position(sphere.state)
@@ -58,9 +56,8 @@ function ctrl!(m, k; kp=1e-0, kv=3e-1, xg_sphere=[-0,-0.5,0.5], xg_nerf=[-1.5, 0
     x_nerf = current_position(nerf.state)
     v_nerf = current_velocity(nerf.state)[1]
     u_sphere = (xg_sphere - x_sphere) * kp - kv * v_sphere
-	# u_nerf = szeros(3) # (xg_nerf - x_nerf) * kp - kv * v_nerf
     u_nerf = (xg_nerf - x_nerf) * kp - kv * v_nerf
-    # set_input!(m, [u_nerf; szeros(3); u_sphere; szeros(3)])
+    set_input!(m, [u_nerf; szeros(3); u_sphere; szeros(3)])
     set_input!(m, [u_nerf; szeros(3); u_sphere; szeros(3)])
     return nothing
 end
@@ -68,14 +65,43 @@ end
 storage = simulate!(mech, 0.60, ctrl!, opts=SolverOptions(rtol=3e-4, btol=3e-4))
 # final state
 z_final = get_maximal_state(mech)
-# z_final = deepcopy(z_initial)
-# z_final[[1]] .+= 1.0
-# z_final[[1,2,3]] .+= 1.0
-# z_final[[14,15,16]] .+= 1.0
 visualize(mech, storage, vis=vis)
 
 visualize(mech, generate_storage(mech, [z_initial]), vis=vis)
 visualize(mech, generate_storage(mech, [z_final]), vis=vis)
+
+################################################################################
+# Optimization
+################################################################################
+nx = minimal_dimension(mech)
+nu = input_dimension(mech)
+y = zeros(nx)
+x = zeros(nx)
+u = zeros(nu)
+w = zeros(0)
+
+env = get_environment(:nerf_sphere,
+    nerf=:bluesoap,
+    vis=vis,
+    representation=:minimal,
+    # representation=:maximal,
+    friction_coefficient=friction_coefficient,
+    timestep=timestep,
+    gravity=gravity,
+    infeasible_control=true,
+    opts_step=SolverOptions(rtol=3e-3, btol=3e-3),
+    opts_grad=SolverOptions(rtol=3e-3, btol=3e-3),
+    )
+
+dynamics(y, env, x, u, w)
+z_traj = []
+for i = 1:100
+	y = zeros(nx)
+	dynamics(y, env, x, u, w)
+	x .= y
+	push!(z_traj, deepcopy(minimal_to_maximal(env.mechanism, y)))
+end
+visualize(env.mechanism, generate_storage(env.mechanism, z_traj), vis=vis)
 
 
 ################################################################################
@@ -135,15 +161,44 @@ end
 # ## model
 dyn = IterativeLQR.Dynamics(
     (y, x, u, w) -> dynamics(y, env, x, u, w),
-    (dx, x, u, w) -> dynamics_jacobian_state(dx, env, x, u, w),
-    (du, x, u, w) -> dynamics_jacobian_input(du, env, x, u, w),
+    (dx, x, u, w) -> finite_difference_dynamics_jacobian_state(dx, env, x, u, w),
+    (du, x, u, w) -> finite_difference_dynamics_jacobian_input(du, env, x, u, w),
     n, n, m)
-# dyn = IterativeLQR.Dynamics(
-#     (y, x, u, w) -> dynamics(y, env, x, u, w),
-#     (dx, x, u, w) -> finite_difference_dynamics_jacobian_state(dx, env, x, u, w),
-#     (du, x, u, w) -> finite_difference_dynamics_jacobian_input(du, env, x, u, w),
-#     n, n, m)
 model = [dyn for t = 1:T-1]
+
+x0 = zeros(nx)
+x0[3] = 3.0
+# x0[15] = 3.0
+u0 = zeros(nu)
+w0 = zeros(0)
+dx0 = zeros(nx, nx)
+du0 = zeros(nx, nu)
+finite_difference_dynamics_jacobian_state(dx0, env, x0, u0, w0)
+finite_difference_dynamics_jacobian_input(du0, env, x0, u0, w0)
+
+dx1 = zeros(nx, nx)
+du1 = zeros(nx, nu)
+dynamics_jacobian_state(dx1, env, x0, u0, w0)
+dynamics_jacobian_input(du1, env, x0, u0, w0)
+
+plot(Gray.(1e3abs.(dx0)))
+plot(Gray.(1e3abs.(dx1)))
+plot(Gray.(1e3abs.(dx1 - dx0)))
+norm(dx0 - dx1)
+
+plot(Gray.(1e3abs.(du0)))
+plot(Gray.(1e3abs.(du1)))
+plot(Gray.(1e3abs.(du1 - du0)))
+norm(du0 - du1)
+
+z0 = minimal_to_maximal(mech, x0)
+render(vis)
+visualize(mech, generate_storage(mech, [z0]), vis=vis)
+mech.bodies
+
+
+
+
 
 # ## rollout
 ū = [1.0 * [-0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] for t = 1:T-1]

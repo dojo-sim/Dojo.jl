@@ -116,8 +116,55 @@ end
     test_solmat(:halfcheetah,tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
 end
 
+vis = Visualizer()
+render(vis)
 
-tsim = 0.1
-test_solmat(:bunny,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
+tsim = 1.0
+# test_solmat(:nerf_sphere,      tsim=tsim, ctrl=(m,k)->control!(m,k,u=0.1), ϵ=1.0e-7)
 
-length(mech.contacts[1])
+model = :nerf_sphere
+# model = :nerf
+mechanism = get_mechanism(model, timestep=0.005)
+initialize!(mechanism, model, nerf_position=[0,0,2.0], sphere_position=[0,0,0.0])
+
+# simulate
+storage = simulate!(mechanism, tsim,
+    record=true,
+    verbose=true,
+    opts=SolverOptions(rtol=1e-4, btol=1e-4))
+
+visualize(mechanism, storage, vis=vis)
+# Set data
+Nb = length(mechanism.bodies)
+data = Dojo.get_data(mechanism)
+Dojo.set_data!(mechanism, data)
+sol = Dojo.get_solution(mechanism)
+attjac = Dojo.attitude_jacobian(data, Nb)
+
+# IFT
+solmat = Dojo.full_matrix(mechanism.system)
+# finite diff
+fd_solmat = finite_difference_solution_matrix(mechanism, data, sol,
+    δ=1.0e-5,
+    verbose=false)
+norm(fd_solmat + solmat, Inf)
+plot(Gray.(abs.(fd_solmat)))
+plot(Gray.(abs.(solmat)))
+plot(Gray.(1e3abs.(fd_solmat + solmat)))
+
+-solmat[7:end, 4:6]
+
+
+
+
+
+
+fd_solmat[7:end, 4:6]
+
+
+
+
+
+
+
+solmat[7:end, 4:6] + fd_solmat[7:end, 4:6]

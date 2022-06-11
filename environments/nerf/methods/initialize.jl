@@ -98,7 +98,9 @@ function get_nerf_sphere(;
         get_body(mechanism, nerf).id,
         get_body(mechanism, :sphere).id); name=:contact_nerf_sphere)
     contacts = [contact_nerf_halfspace; contact_sphere_halfspace; contact_nerf_sphere]
-    # contacts = [contact_nerf_halfspace; contact_sphere_halfspace; contact_nerf_sphere]
+    # contacts = [contact_nerf_halfspace; contact_sphere_halfspace]
+    # contacts = [contact_sphere_halfspace]
+    # contacts = [contact_nerf_halfspace; contact_sphere_halfspace][1:0]
     # contacts = [contact_nerf_sphere]
 
     mechanism = Mechanism(origin, bodies, joints, contacts,

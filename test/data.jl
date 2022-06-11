@@ -278,3 +278,68 @@ end
 		end
 	end
 end
+
+
+
+
+
+
+# mechanism
+model = :nerf_sphere
+mechanism = Dojo.get_mechanism(model, timestep=0.002)
+Dojo.initialize!(mechanism, model)
+# simulate
+Dojo.simulate!(mechanism, tsim, ctrl!,
+    record=false,
+	verbose=false,
+	opts=Dojo.SolverOptions(rtol=1e-4, btol=1e-4))
+
+# Finite Difference
+Nd = Dojo.data_dim(mechanism,
+	attjac=false)
+data0 = Dojo.get_data(mechanism)
+sol0 = Dojo.get_solution(mechanism)
+datajac0 = Dojo.finite_difference_data_jacobian(mechanism, data0, sol0)
+attjac0 = Dojo.data_attitude_jacobian(mechanism)
+datajac0 *= attjac0
+
+# Analytical
+D = Dojo.create_data_matrix(mechanism.joints, mechanism.bodies, mechanism.contacts)
+Dojo.jacobian_data!(D, mechanism)
+nodes = [mechanism.joints; mechanism.bodies; mechanism.contacts]
+dimrow = length.(nodes)
+dimcol = Dojo.data_dim.(nodes)
+datajac1 = Dojo.full_matrix(D, dimrow, dimcol)
+
+norm(datajac0 - datajac1, Inf)
+norm((datajac0 - datajac1)[:,1:64], Inf)
+
+plot(Gray.(1e3abs.(datajac0)))
+plot(Gray.(1e3abs.(datajac1)))
+plot(Gray.(1e3abs.(datajac0 - datajac1)))
+
+plot(Gray.(1e0abs.(datajac0)[13:15,24:29]))
+plot(Gray.(1e0abs.(datajac1)[13:15,24:29]))
+plot(Gray.(1e0abs.(datajac0 - datajac1)[13:15,24:29]))
+
+datajac0[13:15,24:29]
+datajac1[13:15,24:29]
+(datajac0 - datajac1)[13:15,24:29]
+
+datajac0[27:32,65:69]
+datajac1[27:32,65:69]
+
+
+mechanism.bodies[1]
+mechanism.bodies[1]
+
+length.(mechanism.contacts)
+
+length.(mechanism.contacts)
+
+data_dim(mechanism)
+data_dim.(mechanism.joints)
+data_dim.(mechanism.bodies)
+data_dim.(mechanism.contacts)
+
+mechanism.bodies

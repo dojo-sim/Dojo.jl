@@ -38,12 +38,13 @@ mech.contacts[1].model.collision.collider.options =
 	ColliderOptions(
 	impact_damper=1e5,
 	impact_spring=3e4,
-	sliding_drag=0.1,
-	sliding_friction=0.05,
+	sliding_drag=0.00,
+	sliding_friction=0.23,
 	rolling_drag=0.0,
-	rolling_friction=0.01,
+	rolling_friction=0.2,
 	coulomb_smoothing=3e1,
 	coulomb_regularizer=1e-3,)
+
 
 initialize!(mech, :nerf,
 	position=[0,0,0.25],
@@ -168,7 +169,6 @@ function f0(d; rot=0, n_sample=0, trajs=trajs0, N=1, indices=indices0, vis=vis)
 		fi, Z = loss(mechanism, d_to_data_contacts(d), trajs[i], indices,
 			opts=SolverOptions(btol=3e-4, rtol=3e-4), derivatives=false)
 		# vis, anim = visualize(mech, generate_storage(mech, Z), vis=vis, name=:rollout, color=RGBA(1,1,1,1.0))
-		# vis, anim = visualize(mech, generate_storage(mech, z_scaled), vis=vis, animation=anim)
 		# sleep(3.0)
 		f += fi
 	end
@@ -218,12 +218,12 @@ F = [f0([x]) for x in 0:0.02:1.0]
 plot(0:0.02:1.0, F)
 
 
-d0 = [0.00]
+d0 = [0.0]
 lower = [0.0]
 upper = [1.0]
 
 # Main.@profiler
-dsol = quasi_newton_solve(f0, fgH0, d0, iter=1000, gtol=1e-8, ftol=1e-6,
+@elapsed dsol = quasi_newton_solve(f0, fgH0, d0, iter=2, gtol=1e-8, ftol=1e-6,
 	lower=lower, upper=upper, reg=1e-9)
 
 losses = f0.(dsol[2])
@@ -233,45 +233,80 @@ end
 ################################################################################
 # Visualization
 ################################################################################
-mech = get_mechanism(:nerf, nerf=nerf, timestep=0.01, gravity=-9.81, friction_coefficient=0.4);
+mech = get_mechanism(:nerf, nerf=:bluesoap, timestep=timestep*time_scaling,
+	gravity=gravity, friction_coefficient=0.05);
+mech.contacts[1].model.collision.collider.options =
+	ColliderOptions(
+	impact_damper=1e5,
+	impact_spring=3e4,
+	sliding_drag=0.00,
+	sliding_friction=0.23,
+	rolling_drag=0.0,
+	rolling_friction=0.2,
+	coulomb_smoothing=3e1,
+	coulomb_regularizer=1e-3,)
+
 set_data!(mech.contacts, [data_contacts0[1]; dsol[2][1]; data_contacts0[3:5]])
-initialize!(mech, :nerf,
-	position=[0,-1,0.5],
-	velocity=[0,5,1.],
-	orientation=Quaternion(-0.2, 0.7, 0.6, -0.2, false),
-	angular_velocity=[0,2,2.])
-storage = simulate!(mech, 6.0, record=true,
+set_maximal_state!(mech, [X_data[1]; V_data[1]/time_scaling; vector(Q_data[1]); Ω_data[1]/time_scaling])
+initial_storage = simulate!(mech, 1.23, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
-vis, anim = visualize(mech, storage, vis=vis, color=RGBA(1,1,1,1.), name=:initial)
+vis, anim = visualize(mech, initial_storage, vis=vis, color=RGBA(1,1,1,1.), name=:initial)
 
 
-mech = get_mechanism(:nerf, nerf=nerf, timestep=0.01, gravity=-9.81, friction_coefficient=0.4);
+
+mech = get_mechanism(:nerf, nerf=:bluesoap, timestep=timestep*time_scaling,
+	gravity=gravity, friction_coefficient=0.05);
+mech.contacts[1].model.collision.collider.options =
+	ColliderOptions(
+	impact_damper=1e5,
+	impact_spring=3e4,
+	sliding_drag=0.00,
+	sliding_friction=0.23,
+	rolling_drag=0.0,
+	rolling_friction=0.2,
+	coulomb_smoothing=3e1,
+	coulomb_regularizer=1e-3,)
+
 set_data!(mech.contacts, [data_contacts0[1]; dsol[1]; data_contacts0[3:5]])
-# mech.bodies[1].mass /= 10
-# mech.bodies[1].inertia /= 10
-initialize!(mech, :nerf,
-	position=[0,-1,0.5],
-	velocity=[0,5,1.],
-	orientation=Quaternion(-0.2, 0.7, 0.6, -0.2, false),
-	angular_velocity=[0,2,2.])
-storage = simulate!(mech, 6.0, record=true,
+set_maximal_state!(mech, [X_data[1]; V_data[1]/time_scaling; vector(Q_data[1]); Ω_data[1]/time_scaling])
+learned_storage = simulate!(mech, 1.23, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
-vis, anim = visualize(mech, storage, vis=vis, animation=anim, color=RGBA(0.7,0.7,0.7,1.), name=:learned)
+vis, anim = visualize(mech, learned_storage, vis=vis, animation=anim, color=RGBA(0.7,0.7,0.7,1.), name=:learned)
 
-mech = get_mechanism(:nerf, nerf=nerf, timestep=0.01, gravity=-9.81, friction_coefficient=0.4);
-set_data!(mech.contacts, data_contacts0)
-initialize!(mech, :nerf,
-	position=[0,-1,0.5],
-	velocity=[0,5,1.],
-	orientation=Quaternion(-0.2, 0.7, 0.6, -0.2, false),
-	angular_velocity=[0,2,2.])
-storage = simulate!(mech, 6.0, record=true,
-    opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
-vis, anim = visualize(mech, storage, vis=vis, animation=anim, color=RGBA(0.2,0.2,0.2,1.), name=:robot)
+vis, anim = visualize(mech, scaled_storage, vis=vis, animation=anim, color=RGBA(0,0,0,1.0), name=:real)
+scaled_storage
 
-z_init = get_maximal_state(storage, 1)
-storage_init = generate_storage(mech, [z_init])
-vis, anim = visualize(mech, storage_init, vis=vis, animation=anim, color=RGBA(0.2,0.2,0.2,0.3), name=:start)
+# convert_frames_to_video_and_gif("bluesoap_learning_friction_top")
 
+################################################################################
+# Figure
+################################################################################
 
-convert_frames_to_video_and_gif("bluesoap_learning_friction_top")
+function set_ghost(vis::Visualizer, mechanism::Mechanism, storage::Storage,
+		indices::Vector{Int}; name=:robot, colors=fill(nothing, length(indices)))
+	for (i,ind) in enumerate(indices)
+		z = get_maximal_state(storage, ind)
+		build_robot(mechanism, vis=vis, name=Symbol(name, ind), color=colors[i])
+		set_robot(vis, mechanism, z, name=Symbol(name, ind), show_contact=false)
+	end
+	return nothing
+end
+
+indices = [1,16,33]
+set_ghost(vis, mech, scaled_storage, indices, name=:real,
+	colors=[RGBA(α,α,α,1.0) for α in range(0.2, 1.0, length=3)])
+
+set_ghost(vis, mech, learned_storage, indices, name=:learned,
+	colors=[RGBA(α,α,α,1.0) for α in range(0.2, 1.0, length=3)])
+
+set_ghost(vis, mech, initial_storage, indices, name=:initial,
+	colors=[RGBA(α,α,α,1.0) for α in range(0.2, 1.0, length=3)])
+
+for ind in indices
+	settransform!(vis[Symbol(:real, ind)],    Translation(2,-1,0.0))
+	settransform!(vis[Symbol(:learned, ind)], Translation(2,-1,0.0))
+	settransform!(vis[Symbol(:initial, ind)], Translation(2,-1,0.0))
+end
+
+timestep * 16
+timestep * 33
