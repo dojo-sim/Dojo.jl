@@ -36,3 +36,5 @@ Manifest.toml
 
 # HTML animations are sometimes too large for github
 examples/animations/html/*.html
+
+.osf_pyenv
