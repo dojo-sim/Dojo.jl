@@ -95,14 +95,14 @@ end
 # get data
 data_dim(model::SoftContact) = 5 # [bounciness, friction_coefficient, p]
 function get_data(model::SoftContact{T}) where T
-	options = model.collision.collider.options
+	options = model.collision.options
 	return [
 		log(options.impact_damper/options.impact_spring);
 		options.sliding_friction;
 		model.collision.collider_origin]
 end
 function set_data!(model::SoftContact, data::AbstractVector)
-	options = model.collision.collider.options
+	options = model.collision.options
 	options.impact_damper = exp(data[1]) * options.impact_spring
 	options.sliding_friction = data[2]
     model.collision.collider_origin = data[SUnitRange(3,5)]

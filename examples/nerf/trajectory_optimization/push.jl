@@ -29,8 +29,8 @@ mech = DojoEnvironments.get_mechanism(:nerf_sphere, nerf=:bluesoap, timestep=tim
     friction_coefficient=friction_coefficient,
     collider_options=ColliderOptions(sliding_friction=friction_coefficient))
 
-mech.contacts[end].model.collision.collider.options.impact_damper = 10000.0
-mech.contacts[end].model.collision.collider.options.impact_spring = 1000.0
+mech.contacts[end].model.collision.options.impact_damper = 10000.0
+mech.contacts[end].model.collision.options.impact_spring = 1000.0
 
 # initial conditions
 x_bluesoap = [0.269, -0.40, 0.369]
@@ -98,8 +98,8 @@ env = get_environment(:nerf_sphere,
     opts_grad=SolverOptions(rtol=3e-3, btol=3e-3),
     )
 
-env.mechanism.contacts[end].model.collision.collider.options.impact_damper = 10000.0
-env.mechanism.contacts[end].model.collision.collider.options.impact_spring = 1000.0
+env.mechanism.contacts[end].model.collision.options.impact_damper = 10000.0
+env.mechanism.contacts[end].model.collision.options.impact_spring = 1000.0
 
 
 # ## dimensions
@@ -123,6 +123,16 @@ function finite_difference_dynamics_jacobian_state(dx, env, x, u, w)
 		return y
 	end
 	dx .= FiniteDiff.finite_difference_jacobian(x -> local_dynamics(x), x)
+	return nothing
+end
+
+function finite_difference_dynamics_jacobian_maximal_state(dz, env, z, u, w)
+	function local_dynamics(z)
+		y = zeros(26)
+		dynamics(y, env, z, u, w)
+		return y
+	end
+	dz .= FiniteDiff.finite_difference_jacobian(z -> local_dynamics(z), z)
 	return nothing
 end
 
@@ -225,11 +235,172 @@ DojoEnvironments.visualize(env, z_sol)
 # gradients coming from nerf object interactions are wrong
 ################################################################################
 
+env = get_environment(:nerf_sphere,
+    nerf=:bluesoap,
+    vis=vis,
+    representation=:minimal,
+    # representation=:maximal,
+    friction_coefficient=friction_coefficient,
+    timestep=timestep,
+    gravity=gravity,
+    infeasible_control=true,
+    opts_step=SolverOptions(rtol=3e-3, btol=3e-3),
+    opts_grad=SolverOptions(rtol=3e-3, btol=3e-3),
+    )
+
+nx = minimal_dimension(mech)
+nz = maximal_dimension(mech)
+nu = input_dimension(mech)
+
+dx0 = zeros(nx, nx)
+dx1 = zeros(nx, nx)
+du0 = zeros(nx, nu)
+du1 = zeros(nx, nu)
+# dz0 = zeros(nz, nz)
+# dz1 = zeros(nz, nz)
+u = zeros(nu)
+w = zeros(0)
+x = get_minimal_state(mech)
+z = get_maximal_state(mech)
+
+dynamics_jacobian_state(dx0, env, x, u, w)
+dynamics_jacobian_input(du0, env, x, u, w)
+# step(env, z, u; gradients=true, attitude_decompress=true)
+# dz0 .= env.dynamics_jacobian_state
+
+finite_difference_dynamics_jacobian_state(dx1, env, x, u, w)
+finite_difference_dynamics_jacobian_input(du1, env, x, u, w)
+# finite_difference_dynamics_jacobian_maximal_state(dz1, env, z, u, w)
+
+plot(Gray.(dx0))
+plot(Gray.(dx1))
+plot(Gray.(dx1 - dx0))
+norm(dx0, Inf)
+norm(dx1, Inf)
+norm(dx0 - dx1, Inf)
+
+plot(Gray.(du0))
+plot(Gray.(du1))
+norm(du0, Inf)
+norm(du1, Inf)
+norm(du0 - du1, Inf)
+
+# plot(Gray.(dz0))
+# plot(Gray.(dz1))
+# norm(dz0, Inf)
+# norm(dz1, Inf)
+# norm(dz0 - dz1, Inf)
+
+
+fxx, fu = get_minimal_gradients!(env.mechanism, z, u, opts=env.opts_grad)
+fxz, fu = get_maximal_gradients!(env.mechanism, z, u, opts=env.opts_grad)
+
+plot(Gray.(fxx))
+plot(Gray.(fxz))
+plot(Gray.(fxx - dx1))
+norm(fxz - dx1, Inf)
+norm(fxz, Inf)
+norm(dx1, Inf)
+
+# minimal to maximal Jacobian at current time step (rhs)
+min_to_max_jacobian_current = minimal_to_maximal_jacobian(env.mechanism, x)
+plot(Gray.(min_to_max_jacobian_current))
+# maximal to minimal Jacobian at next time step (lhs)
+max_to_min_jacobian_next = maximal_to_minimal_jacobian(env.mechanism, z)
+plot(Gray.(max_to_min_jacobian_next))
+
+ide = min_to_max_jacobian_current * max_to_min_jacobian_next
+plot(Gray.(ide - I))
+
+env.mechanism
+env.mechanism.joints
+
+
+env.mechanism.bodies
+
+
+env.mechanism.contacts
+a = 01
+a = 01
+a = 01
+parent_joints(env.mechanism, get_body(env.mechanism, :bluesoap))
+parent_joints(env.mechanism, get_body(env.mechanism, :sphere))
+
+
+function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector{Tx}) where {T,Nn,Ne,Nb,Ni,Tx}
+	timestep= mechanism.timestep
+	J = zeros(maximal_dimension(mechanism, attjac=true), minimal_dimension(mechanism))
+
+	# Compute partials
+	partials = Dict{Vector{Int}, Matrix{T}}()
+	for cnode in mechanism.bodies
+		@show cnode.name
+		@show parent_joints(mechanism, cnode)
+		for joint in parent_joints(mechanism, cnode)
+			pnode = get_node(mechanism, joint.parent_id, origin=true)
+			@show pnode.name
+			partials[[cnode.id, joint.id]] = set_minimal_coordinates_velocities_jacobian_minimal(joint, pnode, cnode, timestep) # 12 x 2nu (xvqω x Δxθvω)
+			partials[[cnode.id, pnode.id]] = set_minimal_coordinates_velocities_jacobian_parent(joint, pnode, cnode, timestep) # 12 x 12 (xvqω x xvqω)
+		end
+	end
+
+	# Index
+	row = [12(i-1)+1:12i for i = 1:Nb]
+	col = [] # ordering joints from root to tree
+	col_idx = zeros(Int,Ne)
+	cnt = 0
+	for id in mechanism.root_to_leaves
+		(id > Ne) && continue # only keep joints
+		cnt += 1
+		nu = input_dimension(get_joint(mechanism, id))
+		if length(col) > 0
+			push!(col, col[end][end] .+ (1:2nu))
+		else
+			push!(col, 1:2nu)
+		end
+		col_idx[id] = cnt
+	end
+
+	 # chain partials together from root to leaves
+	for id in mechanism.root_to_leaves
+		!(Ne < id <= Ne+Nb) && continue # only treat bodies
+		cnode = get_node(mechanism, id)
+		for joint in parent_joints(mechanism, cnode)
+			pnode = get_node(mechanism, joint.parent_id, origin=true)
+			J[row[cnode.id-Ne], col[col_idx[joint.id]]] += partials[[cnode.id, joint.id]] # ∂zi∂θp(i)
+			(pnode.id == 0) && continue # avoid origin
+			J[row[cnode.id-Ne], :] += partials[[cnode.id, pnode.id]] * J[row[pnode.id-Ne], :] # ∂zi∂zp(p(i)) * ∂zp(p(i))/∂θ
+		end
+	end
+	return J
+end
+
+min_to_max_jacobian_current = minimal_to_maximal_jacobian(env.mechanism, x)[1]
+
+min_to_max_jacobian_current = minimal_to_maximal_jacobian(env.mechanism, x)
+min_to_max_jacobian_current = minimal_to_maximal_jacobian(env.mechanism, x)
 
 
 
 
-mech.bodies
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

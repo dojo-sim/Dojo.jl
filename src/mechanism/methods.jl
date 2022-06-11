@@ -13,9 +13,11 @@ end
 
 # find all the joints parents of a body
 function parent_joints(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, body::Body) where {T,Nn,Ne,Nb,Ni}
-	ids = parents(mechanism.system, body.id)
-	ids = intersect(ids, 1:Ne) # filter out the bodies
-	return [get_node(mechanism, id) for id in ids]
+	joints = Vector{JointConstraint}()
+	for joint in mechanism.joints
+		(joint.child_id == body.id) && push!(joints, joint)
+	end
+	return joints
 end
 
 # dimensions
@@ -118,8 +120,8 @@ function set_floating_base(mechanism::Mechanism, name::Symbol)
             r_reverse = Rotational{typeof(r).parameters[1], typeof(r).parameters[2]}(cbody, pbody;
                     axis=-r.axis,
                     orientation_offset=inv(r.orientation_offset),
-                    spring=r.spring, 
-                    damper=r.damper, 
+                    spring=r.spring,
+                    damper=r.damper,
                     spring_offset=r.spring_offset,
                     joint_limits=r.joint_limits,
                     spring_type=r.spring_type)[1]
@@ -150,7 +152,7 @@ end
 #         if typeof(joint) <: JointConstraint{T,6} where T # i.e., Fixed joint
 #             parent_body = get_origin_or_body_from_id(joint.parent_id, origin, bodies)
 #             child_body = get_origin_or_body_from_id(joint.child_id, origin, bodies)
-            
+
 #             v1, v2 = joint.translational.vertices
 #             q_offset = joint.rotational.orientation_offset
 
@@ -162,13 +164,13 @@ end
 #                 parent_J, child_J = parent_body.inertia, child_body.inertia
 
 #                 new_body_com = child_body_com*child_m/(parent_m+child_m) # in parent_body's frame
-                
+
 #                 parent_body.mass = parent_m + child_m
 #                 new_body_J1 = parent_J + parent_m*skew(new_body_com)'*skew(new_body_com) # in parent_body's frame
 #                 new_body_J2 = matrix_rotate(child_J,q_offset) + child_m*skew(-new_body_com)'*skew(-new_body_com) # in parent_body's frame
 #                 parent_body.inertia = new_body_J1 + new_body_J2 # in parent_body's frame
 #             end
-            
+
 #             parent_body.name = Symbol(String(parent_body.name)*"_merged_with_"*String(child_body.name))
 
 #             for joint2 in joints

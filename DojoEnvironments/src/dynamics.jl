@@ -35,7 +35,8 @@ function dynamics_jacobian_state(dx, env::Environment, x, u, w;
 	attitude_decompress=false)
 
 	timestep = env.mechanism.timestep
-	step(env, x, u/timestep,
+	# step(env, x, u/timestep,
+	step(env, x, u,
 		gradients=true,
 		attitude_decompress=attitude_decompress)
     dx .= env.dynamics_jacobian_state

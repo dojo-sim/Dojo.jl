@@ -49,8 +49,7 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, body::Body{T})
            ∇rot_x2 ∇rot_q2]
     # @show ∇z2
     # TODO
-    # # constact constraints impulses contribution
-    # @warn "000"
+    # # contact constraints impulses contribution
     return [∇m ∇J ∇15 0.0000000000*∇z2] #TODO not sure why we need to zero out this block, maybe finite diff is not correct and we try to match finite diff
 end
 

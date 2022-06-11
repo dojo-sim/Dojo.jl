@@ -280,10 +280,10 @@ end
 
 
 
-
+tsim = 0.20
 # mechanism
 model = :nerf_sphere
-mechanism = Dojo.get_mechanism(model, timestep=0.002)
+mechanism = Dojo.get_mechanism(model, timestep=0.001)
 Dojo.initialize!(mechanism, model)
 # simulate
 Dojo.simulate!(mechanism, tsim, ctrl!,
@@ -306,6 +306,7 @@ Dojo.jacobian_data!(D, mechanism)
 nodes = [mechanism.joints; mechanism.bodies; mechanism.contacts]
 dimrow = length.(nodes)
 dimcol = Dojo.data_dim.(nodes)
+cumsum(dimcol)
 datajac1 = Dojo.full_matrix(D, dimrow, dimcol)
 
 norm(datajac0 - datajac1, Inf)
@@ -314,6 +315,7 @@ norm((datajac0 - datajac1)[:,1:64], Inf)
 plot(Gray.(1e3abs.(datajac0)))
 plot(Gray.(1e3abs.(datajac1)))
 plot(Gray.(1e3abs.(datajac0 - datajac1)))
+plot(Gray.(1e0abs.(datajac0 - datajac1)))
 
 plot(Gray.(1e0abs.(datajac0)[13:15,24:29]))
 plot(Gray.(1e0abs.(datajac1)[13:15,24:29]))
@@ -325,6 +327,12 @@ datajac1[13:15,24:29]
 
 datajac0[27:32,65:69]
 datajac1[27:32,65:69]
+
+datajac0[4:6,33:35]
+datajac1[4:6,33:35]
+8 + 8 + 1
+8 + 8 + 19
+
 
 
 mechanism.bodies[1]

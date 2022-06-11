@@ -51,9 +51,6 @@ export
     nerf_mesh
 
 export
-    particle_normalization
-
-export
     nerf_scan
 
 end # module
