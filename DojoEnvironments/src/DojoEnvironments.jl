@@ -8,6 +8,7 @@ using StaticArrays
 using Dojo
 
 import Dojo: string_to_symbol, add_limits, RotX, RotY, RotZ, build_robot, initialize!, set_minimal_coordinates_velocities!, velocity_index, vector_rotate, Prototype, rotation_vector, gray_light
+import Dojo: SoftCollider, vector
 
 export
     Environment,

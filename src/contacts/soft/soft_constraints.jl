@@ -134,19 +134,19 @@ end
 # constructor
 function SoftBody(collider::Collider, inner_mesh_path::String, outer_mesh_path::String;
         position_offset::AbstractVector=szeros(3),
-        axis_offset::Quaternion=one(Quaternion),
+        orientation_offset::Quaternion=one(Quaternion),
         scale::AbstractVector=sones(3),
         name::Symbol=Symbol("body_" * randstring(4)),
         color=RGBA(0.2,0.2,0.2,1.0))
-    T = promote_type(quateltype.((position_offset, axis_offset))...)
+    T = promote_type(quateltype.((position_offset, orientation_offset))...)
 
     shape1 = Mesh(inner_mesh_path,
         position_offset = position_offset - collider.center_of_mass,
-        axis_offset = axis_offset,
+        orientation_offset = orientation_offset,
         color=color)
     shape2 = Mesh(outer_mesh_path,
         position_offset = position_offset - collider.center_of_mass,
-        axis_offset = axis_offset,
+        orientation_offset = orientation_offset,
         color=RGBA(0.9,0.9,0.9,0.5))
     shape_vec = Vector{Shape{T}}([shape1, shape2])
     shapes = Shapes(shape_vec)

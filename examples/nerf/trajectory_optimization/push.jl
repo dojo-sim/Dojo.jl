@@ -8,10 +8,14 @@ using Plots
 using OSFLoader
 using IterativeLQR
 using LinearAlgebra
+using DojoEnvironments
 
 # ## visualizer
 vis = Visualizer()
 render(vis)
+
+# using Pkg
+# Pkg.develop(path="~/.julia/dev/Dojo.jl/DojoEnvironments")
 
 # ## system
 gravity = -9.81
@@ -20,7 +24,7 @@ friction_coefficient = 0.30
 ################################################################################
 # Simulation
 ################################################################################
-mech = get_nerf_sphere(nerf=:bluesoap, timestep=timestep, gravity=gravity,
+mech = DojoEnvironments.get_mechanism(:nerf_sphere, nerf=:bluesoap, timestep=timestep, gravity=gravity,
 # mech = get_nerf_sphere(nerf=:bunny, timestep=timestep, gravity=gravity,
     friction_coefficient=friction_coefficient,
     collider_options=ColliderOptions(sliding_friction=friction_coefficient))
@@ -148,7 +152,7 @@ model = [dyn for t = 1:T-1]
 # ## rollout
 ū = [1.0 * [-0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, x1, ū)
-visualize(env, x̄)
+DojoEnvironments.visualize(env, x̄)
 
 # ## objective
 ot = (x, u, w) -> transpose(x - xT) * Diagonal(1.0e-1 * ones(n)) * (x - xT) +
@@ -190,7 +194,7 @@ function local_callback(solver; )
     u_sol = s.problem.actions
     x_sol = s.problem.states
     x_rollout = IterativeLQR.rollout(solver.problem.model.dynamics, x_sol[1], u_sol)
-    visualize(env, x_rollout)
+    DojoEnvironments.visualize(env, x_rollout)
     return nothing
 end
 
@@ -203,7 +207,7 @@ end
 z_sol, u_sol = IterativeLQR.get_trajectory(s)
 
 # ## visualize
-visualize(env, z_sol)
+DojoEnvironments.visualize(env, z_sol)
 
 
 # convert_frames_to_video_and_gif("bluesoap_push_high_friction")

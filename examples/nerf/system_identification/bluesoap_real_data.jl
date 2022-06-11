@@ -4,8 +4,6 @@ using Plots
 using Random
 using MeshCat
 using OSFLoader
-using CSV
-using DataFrames
 # using ForwardDiff
 
 # Open visualizer

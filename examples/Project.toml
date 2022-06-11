@@ -15,7 +15,7 @@ RobotVisualizer = "72694564-f60b-4882-9057-f9f0ff647ee8"
 [compat]
 FiniteDiff = "2.11.0"
 Folds = "0.2"
-IterativeLQR = "0.1.1"
+IterativeLQR = "0.2.1"
 JLD2 = "0.4.21"
 Literate = "2.13.0"
 PGFPlots = "3.4.1"
