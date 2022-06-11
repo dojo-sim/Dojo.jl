@@ -124,9 +124,9 @@ function soft_contact_constraint(body::Body{T},
         collider_origin::AbstractVector{T}=szeros(T, 3),
         name::Symbol=Symbol("contact_" * randstring(4))) where T
 
-	collider.options.sliding_friction = friction_coefficient
     model = SoftContact(body, normal, collider,
         parent_origin=collider_origin)
+	model.collision.options.sliding_friction = friction_coefficient
     contact = SoftContactConstraint((model, body.id, 0); name=name)
     return contact
 end

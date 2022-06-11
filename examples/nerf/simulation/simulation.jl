@@ -6,9 +6,9 @@ using DojoEnvironments
 vis = Visualizer()
 render(vis)
 
-bunny_collider = SoftCollider(nerf=:bunny, opts=ColliderOptions())
-bluesoap_collider = SoftCollider(nerf=:bluesoap, opts=ColliderOptions())
-halfsoap_collider = SoftCollider(nerf=:halfsoap, opts=ColliderOptions())
+bunny_collider = SoftCollider(nerf=:bunny)
+bluesoap_collider = SoftCollider(nerf=:bluesoap)
+halfsoap_collider = SoftCollider(nerf=:halfsoap)
 
 function build_collider!(collider::SoftCollider{T,N}, vis::Visualizer;
         name::Symbol=:collider, visualize_particle::Bool=false,

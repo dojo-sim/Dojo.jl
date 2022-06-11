@@ -6,7 +6,7 @@ function get_nerf(;
     friction_coefficient=0.8,
     T=Float64)
 
-    collider = Dojo.SoftCollider(nerf=nerf, opts=collider_options)
+    collider = Dojo.SoftCollider(nerf=nerf)
 
     assets_folder = joinpath(Dojo.OSFLoader.osf_loader_dir(), "assets/mesh")
     inner_mesh_path = joinpath(assets_folder, String(nerf) * "_high.obj")
@@ -57,7 +57,7 @@ function get_nerf_sphere(;
     mass=1.0,
     T=Float64)
 
-    collider = Dojo.SoftCollider(nerf=nerf, opts=collider_options)
+    collider = Dojo.SoftCollider(nerf=nerf)
 
     assets_folder = joinpath(Dojo.OSFLoader.osf_loader_dir(), "assets/mesh")
     inner_mesh_path = joinpath(assets_folder, String(nerf) * "_high.obj")
@@ -136,8 +136,8 @@ function get_nerf_triumvirate(;
     mass=10.0,
     T=Float64)
 
-    collider1 = Dojo.SoftCollider(nerf=nerf[1], opts=collider_options)
-    collider2 = Dojo.SoftCollider(nerf=nerf[2], opts=collider_options)
+    collider1 = Dojo.SoftCollider(nerf=nerf[1])
+    collider2 = Dojo.SoftCollider(nerf=nerf[2])
 
     assets_folder = joinpath(Dojo.OSFLoader.osf_loader_dir(), "assets/mesh")
     inner_mesh_path = joinpath(assets_folder, String(nerf[1]) * "_high.obj")

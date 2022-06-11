@@ -53,7 +53,7 @@ function SoftCollider(nerf_object, normalizer; num_particle=1000, T=Float64)
 end
 
 
-function SoftCollider(; nerf::Symbol=:bunny, opts=ColliderOptions(), T=Float64)
+function SoftCollider(; nerf::Symbol=:bunny, T=Float64)
 
     nerf_object = OSFLoader.get_nerf_object(filename=String(nerf))
     normalizer = DensityFieldNormalizer(; nerf=nerf)
@@ -82,6 +82,5 @@ function SoftCollider(; nerf::Symbol=:bunny, opts=ColliderOptions(), T=Float64)
         weight_gradients,
         nerf_object,
         normalizer,
-        opts,
         )
 end

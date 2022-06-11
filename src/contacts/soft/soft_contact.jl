@@ -66,8 +66,7 @@ function soft_impulse(model::SoftContact{T},
         timestep; recompute::Bool=false) where T
 
     collision = model.collision
-    collider = collision.collider
-    opts = collider.options
+    opts = collision.options
     smoothing = opts.coulomb_smoothing
     regularizer = opts.coulomb_regularizer
     x2p = next_position(xp, -vp, timestep)
