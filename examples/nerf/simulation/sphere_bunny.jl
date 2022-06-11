@@ -1,6 +1,6 @@
 using Dojo
 using Plots
-using OSFLoader
+# using OSFLoader
 using DojoEnvironments
 
 vis = Visualizer()

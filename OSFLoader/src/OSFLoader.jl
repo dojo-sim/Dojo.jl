@@ -14,6 +14,7 @@ using MeshCat
 using GeometryBasics
 using Quaternions
 
+import MeshIO.save
 
 global OSF_PATH = joinpath(@__DIR__, "../osf-pytorch")
 global OSF_CONFIG_FOLDER = joinpath("configs/osf")
@@ -50,7 +51,6 @@ export
     nerf_mesh
 
 export
-    DensityFieldNormalizer,
     particle_normalization
 
 export

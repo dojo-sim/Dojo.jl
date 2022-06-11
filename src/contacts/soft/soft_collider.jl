@@ -53,11 +53,17 @@ function SoftCollider(nerf_object, normalizer; num_particle=1000, T=Float64)
 end
 
 
-function SoftCollider(; nerf::Symbol=:bunny, T=Float64)
+function SoftCollider(; nerf::Symbol=:bunny, T=Float64, load_nerf_object::Bool=false)
 
-    nerf_object = OSFLoader.get_nerf_object(filename=String(nerf))
+    if load_nerf_object
+        nerf_object = OSFLoader.get_nerf_object(filename=String(nerf))
+    else
+        nerf_object = nothing
+    end
+
     normalizer = DensityFieldNormalizer(; nerf=nerf)
-    dir = joinpath(OSFLoader.osf_loader_dir(), "assets/collider", String(nerf) * ".jld2")
+
+    dir = joinpath(Dojo.module_dir(), "OSFLoader/assets/collider", String(nerf) * ".jld2")
     file = JLD2.jldopen(dir)
     mass = file["mass"]
     inertia = file["inertia"]
