@@ -94,17 +94,18 @@ get_data(contacts::AbstractVector{<:ContactConstraint}) = vcat(get_data.(contact
 ################################################################################
 
 # Mechanism
-function set_data!(mechanism::Mechanism, data::AbstractVector)
+function set_data!(mechanism::Mechanism, data::AbstractVector; attjac=false)
 	# It's important to treat bodies before eqcs
 	# set_data!(body) will erase state.JF2 and state.Jτ2
 	# set_data!(eqc) using applyinput!, will write in state.JF2 and state.Jτ2
+	# @warn "why are we doing joints before bodies?"
 	c = 0
 	for joint in mechanism.joints
 		Nd = data_dim(joint)
 		set_data!(joint, data[c .+ (1:Nd)]); c += Nd
 	end
 	for body in mechanism.bodies
-		Nd = data_dim(body, attjac=false)
+		Nd = data_dim(body, attjac=attjac)
 		set_data!(body, data[c .+ (1:Nd)], mechanism.timestep); c += Nd
 	end
 	for contact in mechanism.contacts

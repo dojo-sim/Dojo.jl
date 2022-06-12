@@ -24,6 +24,7 @@ function get_nerf(;
     contact = [0.0, 0.0, 0.0]
     normal = [0.0, 0.0, 1.0]
     contacts = [Dojo.soft_contact_constraint(get_body(mechanism, nerf), normal, collider,
+        collider_options=collider_options,
         friction_coefficient=friction_coefficient,
         collider_origin=-collider.center_of_mass,
         name=:contact_1)]
@@ -82,6 +83,7 @@ function get_nerf_sphere(;
     # Contacts
     normal = [0,0,1.0]
     contact_nerf_halfspace = Dojo.soft_contact_constraint(get_body(mechanism, nerf), normal, collider,
+        collider_options=collider_options,
         friction_coefficient=friction_coefficient,
         collider_origin=[0,0,0.0],
         name=:contact_nerf_halfspace)
@@ -93,6 +95,7 @@ function get_nerf_sphere(;
         name=:contact_sphere_halfspace)
     model = Dojo.SoftContact(get_body(mechanism, nerf), normal, collider, child_origin=sphere_origin,
         radius=radius, collision_type=:soft_sphere)
+    model.collision.options = collider_options
     contact_nerf_sphere = Dojo.SoftContactConstraint((
         model,
         get_body(mechanism, nerf).id,
@@ -119,7 +122,7 @@ function initialize_nerf_sphere!(mechanism::Mechanism{T};
     sphere_angular_velocity=zeros(3)) where T
 
     zero_velocity!(mechanism)
-    r = 0.50
+    r = mechanism.bodies[2].shape.r
     z_nerf = [nerf_position + [0,0,r]; nerf_velocity; vector(nerf_orientation); nerf_angular_velocity]
     z_sphere = [sphere_position + [0,0,r]; sphere_velocity; vector(sphere_orientation); sphere_angular_velocity]
     z = [z_nerf; z_sphere]
@@ -166,10 +169,12 @@ function get_nerf_triumvirate(;
     # Contacts
     normal = [0,0,1.0]
     contact_nerf1_halfspace = Dojo.soft_contact_constraint(get_body(mechanism, Symbol(nerf[1],1)), normal, collider1,
+        collider_options = collider_options,
         friction_coefficient=friction_coefficient,
         collider_origin=[0,0,0.0],
         name=:contact_nerf1_halfspace)
     contact_nerf2_halfspace = Dojo.soft_contact_constraint(get_body(mechanism, Symbol(nerf[2],2)), normal, collider2,
+        collider_options = collider_options,
         friction_coefficient=friction_coefficient,
         collider_origin=[0,0,0.0],
         name=:contact_nerf2_halfspace)
@@ -185,6 +190,9 @@ function get_nerf_triumvirate(;
         radius=radius, collision_type=:soft_sphere)
     model3 = Dojo.SoftContact(get_body(mechanism, Symbol(nerf[1],1)), normal, collider1, child_collider=collider2,
         radius=radius, collision_type=:soft_soft)
+    model1.collision.options = collider_options
+    model2.collision.options = collider_options
+    model3.collision.options = collider_options
     contact_nerf1_sphere = Dojo.SoftContactConstraint((
         model1,
         get_body(mechanism, Symbol(nerf[1],1)).id,
@@ -216,7 +224,7 @@ function initialize_nerf_triumvirate!(mechanism::Mechanism{T};
     velocities=[zeros(3) for i=1:3],
     angular_velocities=[zeros(3) for i=1:3]) where T
 
-    r = 0.50
+    r = mechanism.bodies[3].shape.r
     z_nerf1 = [positions[1] + [0,0,r]; velocities[1]; vector(orientations[1]); angular_velocities[1]]
     z_nerf2 = [positions[2] + [0,0,r]; velocities[2]; vector(orientations[2]); angular_velocities[2]]
     z_sphere = [positions[3] + [0,0,r]; velocities[3]; vector(orientations[3]); angular_velocities[3]]

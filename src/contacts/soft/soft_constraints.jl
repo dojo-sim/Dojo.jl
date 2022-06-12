@@ -97,13 +97,13 @@ data_dim(model::SoftContact) = 5 # [bounciness, friction_coefficient, p]
 function get_data(model::SoftContact{T}) where T
 	options = model.collision.options
 	return [
-		log(options.impact_damper/options.impact_spring);
+		options.torsional_friction;
 		options.sliding_friction;
 		model.collision.collider_origin]
 end
 function set_data!(model::SoftContact, data::AbstractVector)
 	options = model.collision.options
-	options.impact_damper = exp(data[1]) * options.impact_spring
+	options.torsional_friction = data[1]
 	options.sliding_friction = data[2]
     model.collision.collider_origin = data[SUnitRange(3,5)]
     return nothing
@@ -120,12 +120,15 @@ end
 function soft_contact_constraint(body::Body{T},
         normal::AbstractVector{T},
         collider::Collider;
-        friction_coefficient::T=1.0,
+		collider_options::ColliderOptions=ColliderOptions(),
+        friction_coefficient::T=collider_options.sliding_friction,
         collider_origin::AbstractVector{T}=szeros(T, 3),
         name::Symbol=Symbol("contact_" * randstring(4))) where T
 
     model = SoftContact(body, normal, collider,
         parent_origin=collider_origin)
+
+	model.collision.options = collider_options
 	model.collision.options.sliding_friction = friction_coefficient
     contact = SoftContactConstraint((model, body.id, 0); name=name)
     return contact

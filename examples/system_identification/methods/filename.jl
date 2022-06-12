@@ -25,3 +25,15 @@ end
 function datafilenameaprilcube(; N::Int=10, s=1)
     "aprilcube_dim_N_$(N)_sample_s_$(s).jld2"
 end
+
+function datafilenamenerf_sphere(;
+        N::Int=10,
+        nerf::Symbol=:bunny,
+        mass=10.0,
+        radius=0.25,
+        timestep=0.01,
+        gravity=-9.81,
+        friction_coefficient=0.3,
+        collider_options=ColliderOptions())
+    "nerf_sphere_$(nerf)_N_$(N)_friction_coefficient_$(friction_coefficient).jld2"
+end
