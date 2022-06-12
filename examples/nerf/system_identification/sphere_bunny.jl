@@ -157,9 +157,19 @@ end
 function d_to_data_body_contact(d)
 	data_body_contact = deepcopy(data_body_contact0)
 
-	data_body_contact[1] = d[1] # mass
+	mass0 = data_body_contact0[1]
+	inertia0 = data_body_contact0[2:7]
+
+	mass = d[1]
+	data_body_contact[1] = mass # mass
+	data_body_contact[2:7] .= mass / mass0 * inertia0 # inertia
 	sliding_friction = d[2]
 	data_body_contact[14 .+ [2,12]] .= sliding_friction
+
+	# mass = d[1]
+	# data_body_contact[1] = mass # mass
+	# sliding_friction = d[2]
+	# data_body_contact[14 .+ [2,12]] .= sliding_friction
 
 	# data_body_contact[1] = d[1] # mass
 
@@ -182,7 +192,7 @@ data_mask = FiniteDiff.finite_difference_jacobian(d -> d_to_data_body_contact(d)
 
 F = [f0([0.25, x]) for x in 0:0.02:0.5]
 plot(0:0.02:0.5, F)
-F = [f0([x, 0.00]) for x in 1:0.2:5]
+F = [f0([x, 0.20]) for x in 1:0.2:5]
 plot(1:0.2:5, F)
 
 # F = [f0([x]) for x in 0.25:0.15:10]
@@ -204,6 +214,7 @@ losses = f0.(dsol[2])
 for (i,l) in enumerate(losses)
 	println("($(i-1),$(l/losses[1]))")
 end
+
 ################################################################################
 # Visualization
 ################################################################################
