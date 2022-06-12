@@ -5,7 +5,7 @@ Pkg.instantiate()
 # ## setup
 using Dojo
 using Plots
-using OSFLoader
+# using OSFLoader
 using IterativeLQR
 using LinearAlgebra
 using DojoEnvironments
