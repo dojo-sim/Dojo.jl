@@ -204,7 +204,7 @@ z_sol, u_sol = IterativeLQR.get_trajectory(s)
 DojoEnvironments.visualize(env, z_sol)
 
 
-convert_frames_to_video_and_gif("nerf_sphere_trajopt")
+# convert_frames_to_video_and_gif("nerf_sphere_trajopt")
 
 
 
@@ -298,12 +298,14 @@ plot(Gray.(dx1 - dx0))
 norm(dx0, Inf)
 norm(dx1, Inf)
 norm(dx0 - dx1, Inf)
+norm(dx0 - dx1)
 
-plot(Gray.(du0 ./ timestep))
+plot(Gray.(du0))
 plot(Gray.(du1))
-plot(Gray.(du0 ./ timestep - du1))
-norm(du0 ./ timestep, Inf)
+plot(Gray.(du0 - du1))
+norm(du0, Inf)
 norm(du1, Inf)
+norm(du1 - du0, Inf)
 timestep
 
 norm(du0 - du1, Inf)
