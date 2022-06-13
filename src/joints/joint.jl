@@ -93,19 +93,20 @@ function impulse_projector(joint::Joint{T,Nλ,Nb}) where {T,Nλ,Nb}
 end
 
 # inputs
-function set_input!(joint::Joint, input::SVector)
+function set_input!(joint::Joint{T}, input::SVector) where T
+	joint.input = szeros(T,3)
     joint.input = zerodimstaticadjoint(nullspace_mask(joint)) * input
     return
 end
 
-set_input!(joint::Joint) = return
-
-function add_input!(joint::Joint, input::SVector)
-    joint.input += zerodimstaticadjoint(nullspace_mask(joint)) * input
-    return
+function get_input(joint::Joint{T}) where {T}
+	nu = input_dimension(joint)
+	input = zeros(T,nu)
+    input .= nullspace_mask(joint) * joint.input
+    return input
 end
 
-add_input!(joint::Joint) = return
+set_input!(joint::Joint) = return
 
 function input_jacobian_control(relative::Symbol, joint::Joint, pbody::Node, cbody::Node, timestep)
     return input_jacobian_control(relative, joint, current_configuration(pbody.state)...,

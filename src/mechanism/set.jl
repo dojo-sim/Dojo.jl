@@ -48,7 +48,7 @@ function set_input!(mechanism::Mechanism{T}, u::AbstractVector) where T
 	end
 	# apply the controls to each body's state
 	for joint in joints
-		input_impulse!(joint, mechanism)
+		input_impulse!(joint, mechanism, true)
 	end
 end
 

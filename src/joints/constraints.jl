@@ -353,11 +353,16 @@ function set_input!(joint::JointConstraint{T,N,Nc}, input::AbstractVector) where
     return
 end
 
-function add_input!(joint::JointConstraint{T,N,Nc}, input::AbstractVector) where {T,N,Nc}
-    @assert length(input) == input_dimension(joint)
-    add_input!(joint.translational, input[SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])])
-    add_input!(joint.rotational, input[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])])
-    return
+# inputs
+function get_input(joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
+    input = zeros(T, input_dimension(joint))
+    # translational
+    r_idx = SUnitRange(joint.minimal_index[1][1], joint.minimal_index[1][2])
+    input[r_idx] .= get_input(joint.translational)
+    # rotational
+    r_idx = SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])
+    input[r_idx] .= get_input(joint.rotational)
+    return input
 end
 
 @generated function input_jacobian_control(mechanism, joint::JointConstraint{T,N,Nc}, body::Body) where {T,N,Nc}

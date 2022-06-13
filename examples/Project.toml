@@ -1,5 +1,7 @@
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Dojo = "ac60b53e-8d92-4c83-b960-e78698fa1916"
 DojoEnvironments = "8728bab7-e8ae-46fd-a1b6-a8c4d00f608e"
 FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"

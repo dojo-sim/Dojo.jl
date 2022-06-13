@@ -6,6 +6,7 @@ using Dojo
 using Plots
 using Random
 using MeshCat
+using DojoEnvironments
 # using ForwardDiff
 
 # Open visualizer
@@ -30,12 +31,12 @@ include("methods/loss_body_contact.jl")
 timestep = 0.01
 gravity = -9.81
 torsional_friction = 0.01
-sliding_friction = 0.20
+sliding_friction = 0.10
 sphere_mass = 10.0
 sphere_radius = 0.25
 r_sphere = 1.0
 v_sphere = 4.0
-nerf_position = [0,0,0.35]
+nerf_position = [0,0.20,0.35]
 collider_options = ColliderOptions(
 	impact_damper=3e5,
 	impact_spring=3e4,
@@ -58,27 +59,42 @@ mech = get_mechanism(:nerf_sphere, nerf=:bunny,
 	gravity=gravity,
 	friction_coefficient=sliding_friction,
 	collider_options=collider_options);
-mech.contacts[1]
-q_nerf = Quaternion(normalize(rand(4))...)
-α_sphere = 2π * rand()
 
+function ctrl!(mechanism::Mechanism{T}, k::Int; kp=1*2e-0, kd=1*3e-1,
+		goal_position=[0,0,0.], goal_orientation=[0,0,0.]) where T
+
+	timestep = mechanism.timestep
+
+	sphere = get_body(mechanism, :sphere)
+    x_sphere = current_position(sphere.state)
+	axis, angle = axis_angle(current_orientation(sphere.state))
+	θ_sphere = angle .* axis
+    v_sphere, ω_sphere = current_velocity(sphere.state)
+
+	u_position = (goal_position - x_sphere) * kp - kd * v_sphere
+    u_orientation = (goal_orientation - θ_sphere) * kp - kd * ω_sphere
+	input = [szeros(6); u_position; u_orientation] / timestep
+	set_input!(mechanism, input)
+	return input
+end
+
+q_nerf = Quaternion(normalize(rand(4))...)
 initialize!(mech, :nerf_sphere,
 	nerf_position=nerf_position,
-	sphere_position=r_sphere * [cos(α_sphere), sin(α_sphere),0.],
-	sphere_velocity=v_sphere * [-cos(α_sphere), -sin(α_sphere),0.],
+	sphere_position=r_sphere * [1,0,0.],
+	sphere_velocity=[0,0,0.],
 	nerf_orientation=q_nerf,
 	sphere_orientation=one(Quaternion),
 	)
-storage = simulate!(mech, 5.0, record=true,
+storage = simulate!(mech, 2.0, ctrl!, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
 visualize(mech, storage, vis=vis, show_contact=false)
-
 
 ################################################################################
 # Generate & Save Dataset
 ################################################################################
-init_kwargs = Dict(:v_sphere => v_sphere,
-				   :r_sphere => r_sphere,
+init_kwargs = Dict(:r_sphere => r_sphere,
+				   :v_sphere => v_sphere,
 				   :nerf_position => nerf_position,
 				   )
 mech_kwargs = Dict(:nerf => :bunny,
@@ -92,11 +108,12 @@ mech_kwargs = Dict(:nerf => :bunny,
 
 generate_dataset(:nerf_sphere,
 	N=50,
+	ctrl! = ctrl!,
 	opts=SolverOptions(btol=3e-4, rtol=3e-4),
 	init_kwargs=init_kwargs,
 	mech_kwargs=mech_kwargs,
 	show_contact=false,
-	sleep_ratio=0.8,
+	sleep_ratio=0.006,
 	vis=vis,
 	)
 
@@ -122,19 +139,21 @@ get_data(mech.contacts[3])
 # Optimization Objective: Evaluation & Gradient
 ################################################################################
 model = :nerf_sphere
-indices0 = 70:100
-function f0(d; rot=0, n_sample=0, trajs=trajs0, N=15, indices=indices0)
+indices0 = 40:60
+function f0(d; rot=0, n_sample=0, trajs=trajs0, N=10, indices=indices0)
 	f = 0.0
 	mechanism = get_mechanism(model; mech_kwargs...)
 	for i = 1:N
-		fi, _ = loss(mechanism, d_to_data(d), trajs[i], indices,
+		fi, Z = loss(mechanism, d_to_data(d), trajs[i], indices,
 			opts=SolverOptions(btol=3e-4, rtol=3e-4), derivatives=false)
 		f += fi
+		# visualize(mechanism, generate_storage(mechanism, Z), vis=vis, animation=anim)
+		# sleep(1.0)
 	end
 	return f
 end
 
-function fgH0(d; rot=0, n_sample=0, trajs=trajs0, N=15, indices=indices0)
+function fgH0(d; rot=0, n_sample=0, trajs=trajs0, N=10, indices=indices0)
 	mechanism = get_mechanism(model; mech_kwargs...)
 	f = 0.0
 	g = zeros(29)
@@ -144,6 +163,9 @@ function fgH0(d; rot=0, n_sample=0, trajs=trajs0, N=15, indices=indices0)
 			opts=SolverOptions(btol=3e-4, rtol=3e-4), derivatives=true)
 		f += fi
 		g += gi
+		# for j = 1:size(H)[1]
+		# 	Hi[j,j] = clamp(Hi[j,j], 1e-3, 1e7)
+		# end
 		H += Hi
 	end
 	return f, data_mask' * g, data_mask' * H * data_mask
@@ -190,10 +212,20 @@ d_to_data_body_contact(rand(2))
 
 data_mask = FiniteDiff.finite_difference_jacobian(d -> d_to_data_body_contact(d), zeros(2))
 
-F = [f0([0.25, x]) for x in 0:0.02:0.5]
-plot(0:0.02:0.5, F)
-F = [f0([x, 0.20]) for x in 1:0.2:5]
-plot(1:0.2:5, F)
+vis, anim = visualize(mech, trajs0[7], vis=vis, name=:ref)
+f0([data0[17], 0.10])
+fgH0([data0[17], 0.10])
+
+F1 = [f0([3.22, x]) for x in 0:0.05:0.4]
+plot(0:0.05:0.4, F1)
+F1 = [f0([3.00, x]) for x in 0:0.05:0.4]
+plot(0:0.05:0.4, F1)
+F1 = [f0([0.25, x]) for x in 0:0.05:0.4]
+plot(0:0.05:0.4, F1)
+F2 = [f0([x, 0.10]) for x in 1.2:0.4:5]
+plot(1.2:0.4:5, F2)
+F2 = [f0([x, 0.00]) for x in 1.2:0.4:5]
+plot(1.2:0.4:5, F2)
 
 # F = [f0([x]) for x in 0.25:0.15:10]
 # plot(0.25:0.15:10, F)
@@ -253,3 +285,21 @@ vis, anim = visualize(mech, storage_init, vis=vis, animation=anim, color=RGBA(0.
 
 
 # convert_frames_to_video_and_gif("bunny_learning_friction")
+
+
+
+
+tra = mech.joints[1].translational
+rot = mech.joints[1].rotational
+mech = get_mechanism(:pendulum)
+mech = get_mechanism(:sphere)
+nullspace_mask(tra)
+zerodimstaticadjoint(nullspace_mask(tra)) * 10.0
+zerodimstaticadjoint(nullspace_mask(rot)) * [1,1,10.0]
+nullspace_mask(rot) * zerodimstaticadjoint(nullspace_mask(rot))
+nullspace_mask(tra)
+nullspace_mask(rot)
+
+set_input!(rot, SVector{1}(3.0))
+set_input!(rot, SVector{3}(1,2,3.0))
+get_input(rot)

@@ -4,12 +4,12 @@
 
     simulate a mechanism
 
-    mechanism: Mechanism 
-    steps: range of steps to simulate 
+    mechanism: Mechanism
+    steps: range of steps to simulate
     storage: Storage
     control!: Function setting inputs for mechanism
     record: flag for recording simulation to storage
-    verbose: flag for printing during simulation 
+    verbose: flag for printing during simulation
     abort_upon_failure: flag for terminating simulation is solver fails to meet tolerances
     opts: SolverOptions
 """
@@ -23,11 +23,11 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
     initialize_simulation!(mechanism)
 
     for k = steps
-        control!(mechanism, k)
-        for joint in mechanism.joints input_impulse!(joint, mechanism) end
+        input = control!(mechanism, k)
+        for joint in mechanism.joints input_impulse!(joint, mechanism, true) end
         status = mehrotra!(mechanism, opts=opts)
         abort_upon_failure && (status == :failed) && break
-        record && save_to_storage!(mechanism, storage, k)
+        record && save_to_storage!(mechanism, storage, k, input=input)
         (k != steps[end]) && (for body in mechanism.bodies update_state!(body, mechanism.timestep) end)
     end
 
@@ -45,7 +45,7 @@ function simulate!(mechanism::Mechanism{T}, tend::Real, args...;
 
     storage = simulate!(mechanism, steps, storage, args...; verbose=verbose,
         record=record, abort_upon_failure=abort_upon_failure, opts=opts)
-        
+
     return storage
 end
 

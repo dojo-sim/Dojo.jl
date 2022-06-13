@@ -21,9 +21,11 @@ function build_pairs(mechanism::Mechanism, traj::Storage{T,N}) where {T,N}
     end
     return pairs
 end
+(m,k) -> nothing
 
 function generate_dataset(model::Symbol;
-		N::Int=10, H=2.0, timestep=0.05, g=-9.81,
+		N::Int=10, H=2.0, timestep=0.05, gravity=-9.81,
+		ctrl!::Function=(m,k) -> nothing,
 		opts=SolverOptions(btol=1e-6, rtol=1e-6),
 		init_kwargs=Dict(), # xlims, vlims, θlims, ωlims...
 		mech_kwargs=Dict(), # friction_coefficient, radius, side...
@@ -35,7 +37,7 @@ function generate_dataset(model::Symbol;
     for i = 1:N
 		state = initial_state(model; init_kwargs...)
         initialize!(mechanism, model; state...)
-        storage = simulate!(mechanism, H, record=true, opts=opts)
+        storage = simulate!(mechanism, H, ctrl!, record=true, opts=opts)
         push!(trajs, storage)
         visualize(mechanism, storage, vis=vis, show_contact=show_contact)
 		sleep(H*sleep_ratio)

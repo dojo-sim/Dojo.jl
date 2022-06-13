@@ -3,14 +3,15 @@
 
     contains maximal-representation trajectories
 
-    x: position 
+    x: position
     q: orientation (Quaternion)
-    v: linear velocity (midpoint) 
+    v: linear velocity (midpoint)
     ω: angular velocity (midpoint)
     px: linear momentum
-    pq: angular momentum 
+    pq: angular momentum
     vl: linear velocity
     ωl: angular velocity
+	u: control input
 """
 struct Storage{T,N}
     x::Vector{Vector{SVector{3,T}}}
@@ -20,7 +21,8 @@ struct Storage{T,N}
     px::Vector{Vector{SVector{3,T}}}
     pq::Vector{Vector{SVector{3,T}}}
     vl::Vector{Vector{SVector{3,T}}}
-    ωl::Vector{Vector{SVector{3,T}}}
+	ωl::Vector{Vector{SVector{3,T}}}
+    u::Vector{Vector{T}}
 
     function Storage{T}(steps, nbodies) where T
         x = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
@@ -30,8 +32,9 @@ struct Storage{T,N}
         px = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
         pq = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
         vl = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
-        ωl = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
-        new{T,length(steps)}(x, q, v, ω, px, pq, vl, ωl)
+		ωl = [[szeros(T, 3) for i = steps] for j = 1:nbodies]
+        u = [zeros(T, 0) for i = steps]
+        new{T,length(steps)}(x, q, v, ω, px, pq, vl, ωl, u)
     end
 
     Storage(steps, nbodies) = Storage{Float64}(steps, nbodies)
@@ -47,7 +50,8 @@ end
 
 Base.length(storage::Storage{T,N}) where {T,N} = N
 
-function save_to_storage!(mechanism::Mechanism, storage::Storage, i::Int)
+function save_to_storage!(mechanism::Mechanism, storage::Storage, i::Int;
+		input=zeros(input_dimension(mechanism)))
     for (ind, body) in enumerate(mechanism.bodies)
         state = body.state
         storage.x[ind][i] = state.x2 # x2
@@ -65,6 +69,7 @@ function save_to_storage!(mechanism::Mechanism, storage::Storage, i::Int)
         storage.vl[ind][i] = v2 # v2
         storage.ωl[ind][i] = ω2 # ω2
     end
+	(input != nothing) && (storage.u[i] = input)
     return
 end
 
@@ -75,7 +80,7 @@ function generate_storage(mechanism::Mechanism, z)
 
     for t = 1:N
         off = 0
-        for i = 1:M 
+        for i = 1:M
             storage.x[i][t] = z[t][off .+ (1:3)]
             storage.v[i][t] = z[t][off .+ (4:6)]
             storage.q[i][t] = Quaternion(z[t][off .+ (7:10)]...)
@@ -103,4 +108,8 @@ function get_maximal_state(storage::Storage{T,N}, i::Int) where {T,N}
 		z[13 * (j-1) .+ (1:13)] = [x2; v15; vector(q2); ω15]
 	end
 	return z
+end
+
+function get_input(storage::Storage{T,N}, i::Int) where {T,N}
+	storage.u[i]
 end

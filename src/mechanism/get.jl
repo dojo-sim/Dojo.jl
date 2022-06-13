@@ -1,10 +1,10 @@
 # constraints
-""" 
-    get_joint(mechanism, name) 
+"""
+    get_joint(mechanism, name)
 
-    return JointConstraint from Mechanism 
+    return JointConstraint from Mechanism
 
-    mechanism: Mechanism 
+    mechanism: Mechanism
     name: unique identifier for joint
 """
 function get_joint(mechanism::Mechanism, name::Symbol)
@@ -20,12 +20,12 @@ get_joint(mechanism::Mechanism, id::Integer) = mechanism.joints[id]
 
 
 # bodies
-""" 
-    get_body(mechanism, name) 
+"""
+    get_body(mechanism, name)
 
     returns Body from Mechanism
 
-    mechanism: Mechanism 
+    mechanism: Mechanism
     name: unique identifier for body
 """
 function get_body(mechanism::Mechanism, name::Symbol)
@@ -44,12 +44,12 @@ end
 get_body(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,Ni} = id == 0 ? mechanism.origin : mechanism.bodies[id-Ne]
 
 # contacts
-""" 
-    get_contact(mechanism, name) 
+"""
+    get_contact(mechanism, name)
 
-    returns ContactConstraint from Mechanism 
+    returns ContactConstraint from Mechanism
 
-    mechanism: Mechanism 
+    mechanism: Mechanism
     name: unique identifier for contact
 """
 function get_contact(mechanism::Mechanism, name::Symbol)
@@ -66,12 +66,12 @@ get_contact(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, id::Integer) where {T,Nn,Ne,Nb,
 
 # nodes
 """
-    get_node(mechanism, name) 
+    get_node(mechanism, name)
 
-    return Node from Mechanism 
+    return Node from Mechanism
 
-    mechanism: Mechanism 
-    name: unique identifier for node 
+    mechanism: Mechanism
+    name: unique identifier for node
 """
 function get_node(mechanism::Mechanism, name::Symbol)
     node = get_body(mechanism, name)
@@ -84,7 +84,7 @@ function get_node(mechanism::Mechanism, name::Symbol)
     return node
 end
 
-function get_node(mechanism::Mechanism{T,Nn,Ne,Nb}, id::Integer; 
+function get_node(mechanism::Mechanism{T,Nn,Ne,Nb}, id::Integer;
     origin::Bool=false) where {T,Nn,Ne,Nb}
     (origin && id == 0) && return mechanism.origin
     if id <= Ne
@@ -96,13 +96,13 @@ function get_node(mechanism::Mechanism{T,Nn,Ne,Nb}, id::Integer;
     end
 end
 
-# maximal 
+# maximal
 """
-    get_maximal_state(mechanism) 
+    get_maximal_state(mechanism)
 
-    return the current maximal state of mechanism 
+    return the current maximal state of mechanism
 
-    mechanism: Mechanism 
+    mechanism: Mechanism
 """
 function get_maximal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	z = zeros(T, 13Nb)
@@ -117,11 +117,11 @@ function get_maximal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,N
 end
 
 """
-    get_next_state(mechanism) 
+    get_next_state(mechanism)
 
     return the maximal state of mechanism after one simulation step
 
-    mechanism: Mechanism 
+    mechanism: Mechanism
 """
 function get_next_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,Ni}
 	timestep= mechanism.timestep
@@ -133,11 +133,11 @@ function get_next_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,Nb,N
 	return z_next
 end
 
-# minimal 
+# minimal
 """
-    get_minimal_state(mechanism) 
+    get_minimal_state(mechanism)
 
-    return minimal state for mechanism 
+    return minimal state for mechanism
 
     mechanism: Mechanism
 """
@@ -172,4 +172,27 @@ function get_minimal_coordinates(mechanism::Mechanism{T}) where T
         push!(d, joint.id => minimal_coordinates(mechanism, joint))
     end
     return d
+end
+
+# inputs
+"""
+    get_input(mechanism)
+
+    get input for each joint in mechanism
+
+    mechanism: Mechanism
+"""
+function get_input(mechanism::Mechanism{T}) where T
+	nu = input_dimension(mechanism)
+	input = zeros(T,nu)
+
+	joints = mechanism.joints
+	# get the controls in the equality constraints
+	off = 0
+	for joint in joints
+		nu = input_dimension(joint)
+		input[off .+ (1:nu)] .= get_input(joint)
+		off += nu
+	end
+	return input
 end

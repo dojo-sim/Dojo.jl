@@ -8,7 +8,7 @@ using OSFLoader
 
 # Open visualizer
 vis = Visualizer()
-open(vis)
+render(vis)
 
 # Include new files
 methods_dir = joinpath("../../system_identification/methods")
@@ -29,11 +29,8 @@ Q
 T = length(X)
 timestep = 1/120
 gravity = -9.81
-
-mech = get_mechanism(:nerf, nerf=:bluesoap, timestep=timestep,
-	gravity=gravity, friction_coefficient=0.05);
-mech.contacts[1].model.collision.collider.options =
-	ColliderOptions(
+friction_coefficient = 0.05
+collider_options = ColliderOptions(
 	impact_damper=1e5,
 	impact_spring=3e4,
 	sliding_drag=0.00,
@@ -43,6 +40,11 @@ mech.contacts[1].model.collision.collider.options =
 	coulomb_smoothing=3e1,
 	coulomb_regularizer=1e-3,)
 
+mech = get_mechanism(:nerf, nerf=:bluesoap,
+	timestep=timestep,
+	gravity=gravity,
+	friction_coefficient=friction_coefficient,
+	collider_options=collider_options);
 
 initialize!(mech, :nerf,
 	position=[0,0,0.25],
@@ -106,23 +108,19 @@ mass_scaling = mech.bodies[1].mass / soap_mass
 ################################################################################
 # simulation
 ################################################################################
-mech = get_mechanism(:nerf, nerf=:bluesoap, timestep=timestep*time_scaling,
-	gravity=-9.81, friction_coefficient=0.05);
-mech.contacts[1].model.collision.collider.options =
-	ColliderOptions(
-	impact_damper=1e5,
-	impact_spring=3e4,
-	sliding_drag=0.00,
-	sliding_friction=0.23,
-	rolling_drag=0.0,
-	rolling_friction=0.2,
-	coulomb_smoothing=3e1,
-	coulomb_regularizer=1e-3,)
+mech = get_mechanism(:nerf, nerf=:bluesoap,
+	timestep=timestep*time_scaling,
+	gravity=gravity,
+	friction_coefficient=friction_coefficient,
+	collider_options=collider_options)
 
-set_maximal_state!(mech, [X_data[1]; V_data[1]/time_scaling; vector(Q_data[1]); Ω_data[1]/time_scaling])
+set_maximal_state!(mech,
+	[X_data[1]; V_data[1]/time_scaling;
+	vector(Q_data[1]); Ω_data[1]/time_scaling])
 sim_storage = simulate!(mech, T*timestep*time_scaling, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
-vis, anim = visualize(mech, sim_storage, vis=vis, animation=anim, color=RGBA(1,1,1,1.0), name=:simulated)
+vis, anim = visualize(mech, sim_storage, vis=vis, animation=anim,
+	color=RGBA(1,1,1,1.0), name=:simulated)
 
 plt = plot(layout=(3,1))
 plot!(plt[1], [sim_storage.x[1][t][1] for t = 1:T], label="x_sim")
@@ -138,7 +136,8 @@ plot!(plt[3], [X_data[t][3] for t = 1:T], label="z_real")
 ################################################################################
 # dynamics rescaling
 ################################################################################
-z_scaled = [[X_data[t]; V_data[t]/time_scaling; vector(Q_data[t]); Ω_data[t]/time_scaling] for t = 1:T]
+z_scaled = [[X_data[t]; V_data[t]/time_scaling;
+	vector(Q_data[t]); Ω_data[t]/time_scaling] for t = 1:T]
 scaled_storage = generate_storage(mech, z_scaled)
 trajs0 = [scaled_storage]
 
@@ -151,17 +150,13 @@ nerf = :bluesoap
 indices0 = 1:T-1
 function f0(d; rot=0, n_sample=0, trajs=trajs0, N=1, indices=indices0, vis=vis)
 	f = 0.0
-	mechanism = get_mechanism(model, nerf=nerf, timestep=timestep*time_scaling, gravity=gravity)
-	mechanism.contacts[1].model.collision.collider.options =
-		ColliderOptions(
-		impact_damper=1e5,
-		impact_spring=3e4,
-		sliding_drag=0.00,
-		sliding_friction=0.22,
-		rolling_drag=0.0,
-		rolling_friction=0.2,
-		coulomb_smoothing=3e1,
-		coulomb_regularizer=1e-3,)
+	mechanism = get_mechanism(model,
+		nerf=nerf,
+		timestep=timestep*time_scaling,
+		gravity=gravity,
+		friction_coefficient=friction_coefficient,
+		collider_options=collider_options,)
+
 	for i = 1:N
 		# f += loss(mechanism, d_to_data_contacts(d), trajs[i], indices,
 		fi, Z = loss(mechanism, d_to_data_contacts(d), trajs[i], indices,
@@ -174,17 +169,13 @@ function f0(d; rot=0, n_sample=0, trajs=trajs0, N=1, indices=indices0, vis=vis)
 end
 
 function fgH0(d; rot=0, n_sample=0, trajs=trajs0, N=1, indices=indices0)
-	mechanism = get_mechanism(model, nerf=nerf, timestep=timestep*time_scaling, gravity=gravity)
-	mechanism.contacts[1].model.collision.collider.options =
-		ColliderOptions(
-		impact_damper=1e5,
-		impact_spring=3e4,
-		sliding_drag=0.00,
-		sliding_friction=0.22,
-		rolling_drag=0.0,
-		rolling_friction=0.2,
-		coulomb_smoothing=3e1,
-		coulomb_regularizer=1e-3,)
+	mechanism = get_mechanism(model,
+		nerf=nerf,
+		timestep=timestep*time_scaling,
+		gravity=gravity,
+		friction_coefficient=friction_coefficient,
+		collider_options=collider_options,)
+
 	f = 0.0
 	g = zeros(5)
 	H = zeros(5,5)
@@ -205,9 +196,9 @@ end
 ################################################################################
 data_contacts0 = get_data(mech.contacts[1])
 function d_to_data_contacts(d)
-	bounciness = data_contacts0[1]
+	data_contacts = deepcopy(data_contacts0)
 	friction_coefficient = d[1]
-	data_contacts = [bounciness; friction_coefficient; data_contacts0[3:5]]
+	data_contacts[2] = friction_coefficient
 	return data_contacts
 end
 data_mask = FiniteDiff.finite_difference_jacobian(d -> d_to_data_contacts(d), zeros(1))
@@ -221,7 +212,7 @@ lower = [0.0]
 upper = [1.0]
 
 # Main.@profiler
-@elapsed dsol = quasi_newton_solve(f0, fgH0, d0, iter=2, gtol=1e-8, ftol=1e-6,
+@elapsed dsol = quasi_newton_solve(f0, fgH0, d0, iter=10, gtol=1e-8, ftol=1e-6,
 	lower=lower, upper=upper, reg=1e-9)
 
 losses = f0.(dsol[2])

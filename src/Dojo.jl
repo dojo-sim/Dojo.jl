@@ -235,7 +235,6 @@ export
 # Inputs
 export
     set_input!,
-    add_input!,
     input_dimension
 
 # Mechanism

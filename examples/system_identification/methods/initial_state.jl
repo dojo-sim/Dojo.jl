@@ -53,18 +53,17 @@ function initial_state_nerf(;
 end
 
 function initial_state_nerf_sphere(;
-	v_sphere=4.0,
 	r_sphere=1.0,
-	nerf_position=[0,0,0.35],
+	v_sphere=1.0,
+	nerf_position=[0,0.2,0.35],
 	)
 
 	q_nerf = Quaternion(normalize(rand(4))...)
-	α_sphere = 2π * rand()
 
 	return Dict(
 		:nerf_position => nerf_position,
-		:sphere_position => r_sphere * [cos(α_sphere), sin(α_sphere),0.],
-		:sphere_velocity => v_sphere * [-cos(α_sphere), -sin(α_sphere),0.],
+		:sphere_position => r_sphere * [1,0,0.],
+		:sphere_velocity => v_sphere * [-1,0,0.],
 		:nerf_orientation => q_nerf,
 		:sphere_orientation => one(Quaternion),
 		)

@@ -1,6 +1,6 @@
 function get_nerf(;
     nerf::Symbol=:bunny,
-    collider_options=ColliderOptions(),
+    collider_options=Dojo.ColliderOptions(),
     timestep=0.01,
     gravity=[0.0; 0.0; -9.81],
     friction_coefficient=0.8,
