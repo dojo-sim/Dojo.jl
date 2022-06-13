@@ -118,8 +118,7 @@ function loss(mechanism::Mechanism, θ::AbstractVector{T}, traj::Storage{T,N},
 			d_body_contact = [∂_body ∂_contact] + ∂_state * d_body_contact
 			attjac = attitude_jacobian(z_pred, Nb)
 			grad += (attjac * d_body_contact)' * Q * (z_pred - z_true)
-			# hess += (attjac * d_body_contact)' * Q * (attjac * d_body_contact)
-			hess += (attjac * [∂_body ∂_contact])' * Q * (attjac * [∂_body ∂_contact])
+			hess += (attjac * d_body_contact)' * Q * (attjac * d_body_contact)
 		else
 			z_pred = body_contact_step!(mechanism, z, u_true, θ, opts=opts)
 		end

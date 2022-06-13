@@ -35,7 +35,7 @@ sliding_friction = 0.10
 sphere_mass = 10.0
 sphere_radius = 0.25
 r_sphere = 1.0
-v_sphere = 4.0
+v_sphere = 2.0
 nerf_position = [0,0.20,0.35]
 collider_options = ColliderOptions(
 	impact_damper=3e5,
@@ -113,7 +113,7 @@ generate_dataset(:nerf_sphere,
 	init_kwargs=init_kwargs,
 	mech_kwargs=mech_kwargs,
 	show_contact=false,
-	sleep_ratio=0.006,
+	sleep_ratio=0.6,
 	vis=vis,
 	)
 
@@ -163,9 +163,6 @@ function fgH0(d; rot=0, n_sample=0, trajs=trajs0, N=10, indices=indices0)
 			opts=SolverOptions(btol=3e-4, rtol=3e-4), derivatives=true)
 		f += fi
 		g += gi
-		# for j = 1:size(H)[1]
-		# 	Hi[j,j] = clamp(Hi[j,j], 1e-3, 1e7)
-		# end
 		H += Hi
 	end
 	return f, data_mask' * g, data_mask' * H * data_mask
@@ -230,7 +227,7 @@ plot(1.2:0.4:5, F2)
 # F = [f0([x]) for x in 0.25:0.15:10]
 # plot(0.25:0.15:10, F)
 
-d0 = [0.25, 0.0]
+d0 = [0.25, 0.01]
 lower = [0.25, 0.0]
 upper = [10.0, 0.5]
 
@@ -250,56 +247,57 @@ end
 ################################################################################
 # Visualization
 ################################################################################
-mech = get_mechanism(:nerf, nerf=nerf, timestep=0.01, gravity=-9.81, friction_coefficient=0.4);
-set_data!(mech.contacts, [data_contacts0[1]; dsol[2][1]; data_contacts0[3:5]])
-initialize!(mech, :nerf, position=[0,-1,1.], velocity=[0,3,3.], angular_velocity=[1,2,1.])
-storage = simulate!(mech, 6.0, record=true,
+render(vis)
+q_nerf = Quaternion(normalize([1,0.5,0,0])...)
+
+# initial
+mech = get_mechanism(:nerf_sphere, nerf=:bunny; mech_kwargs...)
+set_data!(mech, d_to_data(dsol[2][1]))
+initialize!(mech, :nerf_sphere,
+	nerf_position=nerf_position,
+	sphere_position=r_sphere * [1,0,0.],
+	sphere_velocity=v_sphere * [-1,0,0.],
+	nerf_orientation=q_nerf,
+	sphere_orientation=one(Quaternion),
+	)
+storage = simulate!(mech, 2.0, ctrl!, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
 vis, anim = visualize(mech, storage, vis=vis, color=RGBA(1,1,1,1.), name=:initial)
 
-mech = get_mechanism(:nerf, nerf=nerf, timestep=0.01, gravity=-9.81, friction_coefficient=0.4);
-set_data!(mech.contacts, [data_contacts0[1]; dsol[1]; data_contacts0[3:5]])
-# mech.bodies[1].mass /= 10
-# mech.bodies[1].inertia /= 10
-initialize!(mech, :nerf, position=[0,-1,1.], velocity=[0,3,3.], angular_velocity=[1,2,1.])
-storage = simulate!(mech, 6.0, record=true,
+# learned
+mech = get_mechanism(:nerf_sphere, nerf=:bunny; mech_kwargs...)
+set_data!(mech, d_to_data(dsol[1]))
+initialize!(mech, :nerf_sphere,
+	nerf_position=nerf_position,
+	sphere_position=r_sphere * [1,0,0.],
+	sphere_velocity=v_sphere * [-1,0,0.],
+	nerf_orientation=q_nerf,
+	sphere_orientation=one(Quaternion),
+	)
+storage = simulate!(mech, 2.0, ctrl!, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
 vis, anim = visualize(mech, storage, vis=vis, animation=anim, color=RGBA(0.7,0.7,0.7,1.), name=:learned)
 
-mech = get_mechanism(:nerf, nerf=nerf, timestep=0.01, gravity=-9.81, friction_coefficient=0.4);
-set_data!(mech.contacts, data_contacts0)
-initialize!(mech, :nerf, position=[0,-1,1.], velocity=[0,3,3.], angular_velocity=[1,2,1.])
-storage = simulate!(mech, 6.0, record=true,
+# ground_truth
+mech = get_mechanism(:nerf_sphere, nerf=:bunny; mech_kwargs...)
+set_data!(mech, data0)
+initialize!(mech, :nerf_sphere,
+	nerf_position=nerf_position,
+	sphere_position=r_sphere * [1,0,0.],
+	sphere_velocity=v_sphere * [-1,0,0.],
+	nerf_orientation=q_nerf,
+	sphere_orientation=one(Quaternion),
+	)
+storage = simulate!(mech, 2.0, ctrl!, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
-vis, anim = visualize(mech, storage, vis=vis, animation=anim, color=RGBA(0.2,0.2,0.2,1.), name=:robot)
+vis, anim = visualize(mech, storage, vis=vis, animation=anim, color=RGBA(0.2,0.2,0.2,1.), name=:ground_truth)
 
-z_init = get_maximal_state(storage, 1)
-storage_init = generate_storage(mech, [z_init])
-vis, anim = visualize(mech, storage_init, vis=vis, animation=anim, color=RGBA(0.2,0.2,0.2,0.3), name=:start)
-
+################################################################################
+# Export
+################################################################################
 # render_static(vis)
 # open("/home/simon/bunny_system_identification.html", "w") do file
 #     write(file, static_html(vis))
 # end
 
-
-
 # convert_frames_to_video_and_gif("bunny_learning_friction")
-
-
-
-
-tra = mech.joints[1].translational
-rot = mech.joints[1].rotational
-mech = get_mechanism(:pendulum)
-mech = get_mechanism(:sphere)
-nullspace_mask(tra)
-zerodimstaticadjoint(nullspace_mask(tra)) * 10.0
-zerodimstaticadjoint(nullspace_mask(rot)) * [1,1,10.0]
-nullspace_mask(rot) * zerodimstaticadjoint(nullspace_mask(rot))
-nullspace_mask(tra)
-nullspace_mask(rot)
-
-set_input!(rot, SVector{1}(3.0))
-set_input!(rot, SVector{3}(1,2,3.0))
-get_input(rot)
