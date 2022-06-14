@@ -11,6 +11,7 @@ using DojoEnvironments
 
 # Open visualizer
 vis = Visualizer()
+open(vis)
 render(vis)
 
 # Include new files
@@ -113,7 +114,7 @@ generate_dataset(:nerf_sphere,
 	init_kwargs=init_kwargs,
 	mech_kwargs=mech_kwargs,
 	show_contact=false,
-	sleep_ratio=0.6,
+	sleep_ratio=0.006,
 	vis=vis,
 	)
 
@@ -139,7 +140,7 @@ get_data(mech.contacts[3])
 # Optimization Objective: Evaluation & Gradient
 ################################################################################
 model = :nerf_sphere
-indices0 = 40:60
+indices0 = 50:60
 function f0(d; rot=0, n_sample=0, trajs=trajs0, N=10, indices=indices0)
 	f = 0.0
 	mechanism = get_mechanism(model; mech_kwargs...)
@@ -248,10 +249,15 @@ end
 # Visualization
 ################################################################################
 render(vis)
+scale_vis = 0.25
 q_nerf = Quaternion(normalize([1,0.5,0,0])...)
+offset = [-0.60,0,0]
 
 # initial
 mech = get_mechanism(:nerf_sphere, nerf=:bunny; mech_kwargs...)
+for body in mech.bodies
+	body.shape.scale *= scale_vis
+end
 set_data!(mech, d_to_data(dsol[2][1]))
 initialize!(mech, :nerf_sphere,
 	nerf_position=nerf_position,
@@ -260,12 +266,20 @@ initialize!(mech, :nerf_sphere,
 	nerf_orientation=q_nerf,
 	sphere_orientation=one(Quaternion),
 	)
-storage = simulate!(mech, 2.0, ctrl!, record=true,
+initial_storage = simulate!(mech, 2.0, ctrl!, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
-vis, anim = visualize(mech, storage, vis=vis, color=RGBA(1,1,1,1.), name=:initial)
+for x in initial_storage.x
+	x .*= scale_vis
+	x .+= fill(offset, 200)
+end
+vis, anim = visualize(mech, initial_storage, vis=vis,
+	color=RGBA(1,1,1,1.), name=:initial)
 
 # learned
 mech = get_mechanism(:nerf_sphere, nerf=:bunny; mech_kwargs...)
+for body in mech.bodies
+	body.shape.scale *= scale_vis
+end
 set_data!(mech, d_to_data(dsol[1]))
 initialize!(mech, :nerf_sphere,
 	nerf_position=nerf_position,
@@ -274,12 +288,20 @@ initialize!(mech, :nerf_sphere,
 	nerf_orientation=q_nerf,
 	sphere_orientation=one(Quaternion),
 	)
-storage = simulate!(mech, 2.0, ctrl!, record=true,
+learned_storage = simulate!(mech, 2.0, ctrl!, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
-vis, anim = visualize(mech, storage, vis=vis, animation=anim, color=RGBA(0.7,0.7,0.7,1.), name=:learned)
+for x in learned_storage.x
+	x .*= scale_vis
+	x .+= fill(offset, 200)
+end
+vis, anim = visualize(mech, learned_storage, vis=vis, animation=anim,
+	color=RGBA(0.7,0.7,0.7,1.), name=:learned)
 
 # ground_truth
 mech = get_mechanism(:nerf_sphere, nerf=:bunny; mech_kwargs...)
+for body in mech.bodies
+	body.shape.scale *= scale_vis
+end
 set_data!(mech, data0)
 initialize!(mech, :nerf_sphere,
 	nerf_position=nerf_position,
@@ -288,16 +310,58 @@ initialize!(mech, :nerf_sphere,
 	nerf_orientation=q_nerf,
 	sphere_orientation=one(Quaternion),
 	)
-storage = simulate!(mech, 2.0, ctrl!, record=true,
+ground_truth_storage = simulate!(mech, 2.0, ctrl!, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
-vis, anim = visualize(mech, storage, vis=vis, animation=anim, color=RGBA(0.2,0.2,0.2,1.), name=:ground_truth)
+for x in ground_truth_storage.x
+	x .*= scale_vis
+	x .+= fill(offset, 200)
+end
+vis, anim = visualize(mech, ground_truth_storage, vis=vis, animation=anim,
+	color=RGBA(0.2,0.2,0.2,1.), name=:ground_truth)
 
 ################################################################################
 # Export
 ################################################################################
-# render_static(vis)
-# open("/home/simon/bunny_system_identification.html", "w") do file
-#     write(file, static_html(vis))
-# end
+# vis = Visualizer()
+render(vis)
+panda_mech = get_mechanism(:panda, damper=100.0, model_type=:end_effector, contact=true,
+	joint_limits=[[-10.0, -1.7628, -2.8973, -0.0698, -2.8973, -3.7525, -2.8973, -0.00],
+				  [ 10.0,  1.7628,  2.8973,  3.0718,  2.8973,  0.0175,  2.8973,  0.04]],)
 
-# convert_frames_to_video_and_gif("bunny_learning_friction")
+initialize!(panda_mech, :panda, joint_angles=[π, -0.8, 0.0, 1.6, 0.0, -3.2, 0.0, 0.0, 0.0])
+storage = simulate!(panda_mech, 0.01)
+visualize(panda_mech, storage, vis=vis)
+q_end_effector = current_orientation(get_body(panda_mech, 12).state)
+
+# visual_storage = deepcopy(initial_storage)
+# visual_storage = deepcopy(learned_storage)
+visual_storage = deepcopy(ground_truth_storage)
+
+z_panda = panda_inverse_kinematics_trajectory(panda_mech,
+	visual_storage.x[2][1:200],
+	[q_end_effector for i=1:200])
+
+panda_storage = generate_storage(panda_mech, z_panda)
+vis, anim = visualize(panda_mech, panda_storage, vis=vis, animation=anim, name=:panda,
+	show_contact=true)
+
+
+α = 1.0
+colors = [RGBA(0.2,0.2,0.2,α), RGBA(0.6,0.6,0.6,α), RGBA(1.0,1.0,1.0,α)];
+index = [1,100,200]
+i = 1
+
+panda_storage_i = generate_storage(panda_mech, [get_maximal_state(panda_storage, index[i]) for t=1:200])
+vis, anim = visualize(panda_mech, panda_storage_i, vis=vis, animation=anim, name=:panda_i,
+	show_contact=true, color=colors[i])
+
+visual_storage_i = generate_storage(mech, [get_maximal_state(visual_storage, index[i]) for t=1:200])
+vis, anim = visualize(mech, visual_storage_i, vis=vis, animation=anim, name=:sphere_bunny_i,
+	color=colors[i])
+
+# set_camera!(vis, zoom=5)
+
+
+# jldsave(joinpath(@__DIR__, "sphere_bunny.jld2"), x=storage.x[2], q=[vector(q) for q in storage.q[2]])
+# jldopen(joinpath(@__DIR__, "sphere_bunny.jld2"))["x"]
+# jldopen(joinpath(@__DIR__, "sphere_bunny.jld2"))["q"]

@@ -10,21 +10,34 @@ render(vis)
 ################################################################################
 # Simulate nerf
 ################################################################################
-mech = get_mechanism(:nerf, nerf=:bunny, collider_options=ColliderOptions(), timestep=0.01)
-mech.contacts[1].model.collision.options = ColliderOptions()
+sliding_friction = 0.01
+mech = get_mechanism(:nerf, nerf=:bunny, timestep=0.002,
+    friction_coefficient=sliding_friction,
+    collider_options=ColliderOptions(
+        impact_damper=1e6,
+        impact_spring=1e5,
+        sliding_drag=0.01,
+        sliding_friction=sliding_friction
+        ))
+mech.contacts[1].model.collision
 
 initialize!(mech, :nerf,
     position=[0,0,0.6],
-    orientation=Quaternion(0,1,0,0.0,true),
+    orientation=Quaternion(normalize([1,0.6,0,0.5])...,true),
     # orientation=Quaternion(1,0,0,0.0,true),
-    velocity=1*[0,0.5,5.0],
-    angular_velocity=1*[0.5,10.0,3.0])
+    velocity=2*[1.0,1.0,0.5],
+    angular_velocity=1*[0.5,1.0,1.0])
 
 constraint(mech, mech.contacts[1])
 
 @elapsed storage = simulate!(mech, 7.0,
     opts=SolverOptions(verbose=true, rtol=1e-4))
 visualize(mech, storage, vis=vis)
+
+render_static(vis)
+open("/home/simon/Downloads/bunny_trajectory_$(sliding_friction).html", "w") do file
+    write(file, static_html(vis))
+end
 
 ################################################################################
 # Export trajectories
@@ -40,9 +53,9 @@ qx = [vector(q)[2] for q in storage.q[1]]
 qy = [vector(q)[3] for q in storage.q[1]]
 qz = [vector(q)[4] for q in storage.q[1]]
 
-plot(x1)
-plot(x2)
-plot(x3)
+# plot(px)
+# plot(py)
+# plot(pz)
 
 df = DataFrame(
     px = px,
@@ -55,4 +68,4 @@ df = DataFrame(
     )
 print(df)
 
-CSV.write(joinpath(@__DIR__, "bunny_trajectory.csv"), df)
+CSV.write(joinpath(@__DIR__, "bunny_trajectory_$(sliding_friction).csv"), df)

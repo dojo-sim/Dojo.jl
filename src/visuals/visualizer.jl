@@ -143,7 +143,7 @@ function build_robot(mechanism::Mechanism;
         if visshape !== nothing
             subvisshape = vis[name][:bodies][Symbol(body.name, "__id_$id")]
             setobject!(subvisshape, visshape, shape,
-                transparent=(show_joint || show_contact))
+                transparent=(show_joint || show_contact), force_color=(color !== nothing))
         end
 
         if show_joint
@@ -314,10 +314,10 @@ function animate_node!(storage::Storage{T,N}, id, shape, animation, shapevisuali
 end
 
 function MeshCat.setobject!(subvisshape, visshape, shapes::Shapes;
-    transparent=false)
+    transparent=false, force_color::Bool=false)
     for (i, s) in enumerate(shapes.shape)
         v = subvisshape["node_$i"]
-        setobject!(v, visshape[i], s, transparent=transparent)
+        setobject!(v, visshape[i], s, transparent=transparent, force_color=force_color)
         scale_transform = MeshCat.LinearMap(diagm(s.scale))
         x_transform = MeshCat.Translation(s.position_offset)
         q_transform = MeshCat.LinearMap(s.orientation_offset)
@@ -327,18 +327,18 @@ function MeshCat.setobject!(subvisshape, visshape, shapes::Shapes;
 end
 
 function MeshCat.setobject!(subvisshape, visshape, shape::Shape;
-    transparent=false)
+    transparent=false, force_color::Bool=false)
     setobject!(subvisshape, visshape, MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
 end
 
-function MeshCat.setobject!(subvisshape, visshape::Vector, shape::Capsule; transparent=false)
+function MeshCat.setobject!(subvisshape, visshape::Vector, shape::Capsule; transparent=false, force_color::Bool=false)
     setobject!(subvisshape["cylinder"], visshape[1], MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
     setobject!(subvisshape["cap1"], visshape[2], MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
     setobject!(subvisshape["cap2"], visshape[3], MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
 end
 
-function MeshCat.setobject!(subvisshape, visshape, shape::Mesh; transparent=false)
-    if visshape.mtl_library == ""
+function MeshCat.setobject!(subvisshape, visshape, shape::Mesh; transparent=false, force_color::Bool=false)
+    if force_color || visshape.mtl_library == ""
         visshape = MeshFileGeometry(visshape.contents, visshape.format)
         setobject!(subvisshape, visshape, MeshPhongMaterial(color=shape.color))
     else

@@ -45,12 +45,12 @@ function contact_location(contact::ContactConstraint{T,N,Nc,Cs},
 end
 
 function contact_location(mechanism::Mechanism, contact::ContactConstraint)
-    body = mechanism.bodies[findfirst(x -> x.id == contact.parent_id, mechanism.bodies)]
+    body = get_body(mechanism, contact.parent_id)
     return contact_location(contact, body)
 end
 
 function contact_location(mechanism::Mechanism)
-    return [contact_location(mech, contact) for contact in mechanism.contacts]
+    return [contact_location(mechanism, contact) for contact in mechanism.contacts]
 end
 
 """
