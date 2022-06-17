@@ -3,15 +3,29 @@ using Dojo
 using Plots
 using Random
 using MeshCat
+using DojoEnvironments
 
 # Open visualizer
-vis= Visualizer()
-open(vis)
+vis = Visualizer()
+render(vis)
 
 # Include new files
-include( "../utils.jl")
+include( "../methods/utils.jl")
+include( "../methods/quasi_newton.jl")
 
-mech = get_mechanism(:block2d, timestep=0.05, g=-9.81, friction_coefficient=0.2, radius = 0.05, side = 0.50);
+# parameters
+timestep = 0.05
+gravity = -9.81
+radius = 0.05
+side = 0.50
+friction_coefficient = 0.2
+
+mech = get_mechanism(:block2d,
+	timestep=timestep,
+	gravity=gravity,
+	friction_coefficient=friction_coefficient,
+	radius=radius,
+	side=side);
 initialize!(mech, :block2d, x=[-1,1.], v=[2,1.], θ=0.1, ω=2.)
 storage = simulate!(mech, 5.0, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
