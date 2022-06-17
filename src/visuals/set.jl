@@ -80,10 +80,11 @@ end
 """
 function set_light!(vis::Visualizer;
     ambient=0.35,
+    fill=0.25,
     direction::String="Positive")
 
     setprop!(vis["/Lights/AmbientLight/<object>"], "intensity", ambient)
-    setprop!(vis["/Lights/FillLight/<object>"], "intensity", 0.25)
+    setprop!(vis["/Lights/FillLight/<object>"], "intensity", fill)
     setprop!(vis["/Lights/PointLight$(direction)X/<object>"], "intensity", 0.85)
     setprop!(vis["/Lights/PointLight$(direction)X/<object>"], "castShadow", true)
     return nothing
@@ -115,32 +116,32 @@ end
 """
     set_arrow!(vis, origin, direction; color, shaft_radius, max_head_radius, scaling, name)
 
-    adds an arrow object to scene 
+    adds an arrow object to scene
 
-    vis: Visualizer 
-    origin: point defining arrow base 
-    direction: vector defining arrow 
-    color: RGBA 
-    shaft_radius: dimension of arrow shaft 
-    max_head_radius: dimension of arrow head base 
-    scaling: parameter that scales the entire arrow 
+    vis: Visualizer
+    origin: point defining arrow base
+    direction: vector defining arrow
+    color: RGBA
+    shaft_radius: dimension of arrow shaft
+    max_head_radius: dimension of arrow head base
+    scaling: parameter that scales the entire arrow
     name: Symbol
 """
-function set_arrow!(vis, origin, direction; 
-    color=Colors.RGBA(1.0, 0.0, 0.0, 1.0), 
-    shaft_radius=0.0125, 
-    max_head_radius=0.025, 
-    scaling=0.2, 
+function set_arrow!(vis, origin, direction;
+    color=Colors.RGBA(1.0, 0.0, 0.0, 1.0),
+    shaft_radius=0.0125,
+    max_head_radius=0.025,
+    scaling=0.2,
     name=:name)
 
     # create arrow
     force_vis = ArrowVisualizer(vis[name])
     setobject!(force_vis, MeshPhongMaterial(color=color))
 
-    # direction 
-    scaled_direction = scaling * direction 
+    # direction
+    scaled_direction = scaling * direction
 
-    # set 
+    # set
     settransform!(force_vis,
         Point(origin...),
         Vec(scaled_direction...),
