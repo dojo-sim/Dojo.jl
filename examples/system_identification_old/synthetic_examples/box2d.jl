@@ -10,8 +10,16 @@ vis = Visualizer()
 render(vis)
 
 # Include new files
-include( "../methods/utils.jl")
-include( "../methods/quasi_newton.jl")
+methods_dir = joinpath("../../system_identification/methods")
+include(joinpath(methods_dir, "filename.jl"))
+include(joinpath(methods_dir, "initial_state.jl"))
+include(joinpath(methods_dir, "data.jl"))
+include(joinpath(methods_dir, "data_jacobian.jl"))
+include(joinpath(methods_dir, "quasi_newton.jl"))
+# include(joinpath(methods_dir, "dataset.jl"))
+# include(joinpath(methods_dir, "loss.jl"))
+include("methods/dataset.jl")
+include("methods/loss.jl")
 
 # parameters
 timestep = 0.05
