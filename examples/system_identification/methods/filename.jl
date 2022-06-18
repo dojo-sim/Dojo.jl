@@ -17,7 +17,7 @@ function datafilenameblock(; N::Int=10, timestep=0.02, gravity=-9.81,
     "block_dim_N_$(N)_friction_coefficient_$(friction_coefficient)_radius_$(radius)_side_$(side).jld2"
 end
 
-function datafilenamehardwarebox(; N::Int=10, s=1)
+function datafilenamehardwarebox(; N::Int=10, S=1)
     "hardwarebox_dim_N_$(N)_sample_S_$(S).jld2"
 end
 

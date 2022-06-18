@@ -1,15 +1,19 @@
-# Load packages
+using Pkg
+Pkg.activate(joinpath(@__DIR__, ".."))
+Pkg.instantiate()
+
+# ## Setup
 using Dojo
 using Plots
 using Random
 using MeshCat
 using DojoEnvironments
 
-# Open visualizer
+# ## Open visualizer
 vis = Visualizer()
 render(vis)
 
-# Include new files
+# ## Include methods
 methods_dir = joinpath("../../methods")
 include(joinpath(methods_dir, "filename.jl"))
 include(joinpath(methods_dir, "initial_state.jl"))

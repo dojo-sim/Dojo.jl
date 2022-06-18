@@ -6,17 +6,15 @@ function get_block(;
     side=0.5,
     contact=true,
     contact_type=:nonlinear,
-    color=RGBA(0.2, 0.2, 0.2, 1.0),
+    color=RGBA(0.9, 0.9, 0.9, 1.0),
     mode=:box,
     T=Float64)
 
     # Parameters
     origin = Origin{T}()
-    pbody = Box(side, side, side, 1.0,
-        color=color)
-    joint0to1 = JointConstraint(Floating(origin, pbody))
-    bodies = [pbody]
-    joints = [joint0to1]
+    block = Box(side, side, side, 1.0, color=color, name=:block)
+    bodies = [block]
+    joints = [JointConstraint(Floating(origin, block))]
 
     if contact
         # Corner vectors
@@ -41,11 +39,12 @@ function get_block(;
         contact_radius = [radius for i = 1:n]
         friction_coefficient = friction_coefficient * ones(n)
 
-        contacts = contact_constraint(pbody, normal;
+        contacts = contact_constraint(block, normal;
             friction_coefficient,
             contact_origins=corners,
             contact_radius,
-            contact_type)
+            contact_type,
+            names=[Symbol(:contact, i) for i=1:8])
 
         mech = Mechanism(origin, bodies, joints, contacts;
             gravity,
