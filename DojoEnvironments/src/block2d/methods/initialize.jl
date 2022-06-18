@@ -57,7 +57,7 @@ end
 
 function initialize_block2d!(mechanism::Mechanism{T};
     position=[0.0, 1.0],
-    linear_velocity=[0.0, 0.0],
+    velocity=[0.0, 0.0],
     orientation=0.0,
     angular_velocity=0.0) where T
 
@@ -76,6 +76,6 @@ function initialize_block2d!(mechanism::Mechanism{T};
         x=[0.0; position] + [0.0, 0.0 , z],
         q=RotX(orientation))
     set_maximal_velocities!(body,
-        v=[0.0; linear_velocity],
+        v=[0.0; velocity],
         ω=[angular_velocity, 0.0, 0.0])
 end

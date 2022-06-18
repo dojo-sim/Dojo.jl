@@ -9,7 +9,10 @@ function initial_state_sphere(;
 	x = xlims[1] + rand(3) .* (xlims[2] - xlims[1])
 	v = vlims[1] + rand(3) .* (vlims[2] - vlims[1])
 	ω = ωlims[1] + rand(3) .* (ωlims[2] - ωlims[1])
-	return Dict(:x => x, :v => v , :ω => ω)
+	return Dict(
+		:position => x,
+		:velocity => v ,
+		:angular_velocity => ω)
 end
 
 function initial_state_block2d(;
@@ -23,19 +26,23 @@ function initial_state_block2d(;
 	ω = ωlims[1] + rand() * (ωlims[2] - ωlims[1])
 	return Dict(
 		:position => x,
-		:linear_velocity => v ,
+		:velocity => v ,
 		:orientation => θ,
 		:angular_velocity => ω)
 end
 
-function initial_state_box(;
+function initial_state_block(;
 		xlims=[[0,0,0.2], [1,1,0.4]],
         vlims=[-2ones(3), [2,2,-1.]],
         ωlims=[-6ones(3), 6ones(3)],)
 	x = xlims[1] + rand(3) .* (xlims[2] - xlims[1])
 	v = vlims[1] + rand(3) .* (vlims[2] - vlims[1])
 	ω = ωlims[1] + rand(3) .* (ωlims[2] - ωlims[1])
-	return Dict(:x => x, :v => v , :q => normalize(rand(Quaternion{Float64})), :ω => ω)
+	return Dict(
+		:position => x,
+		:orientation => normalize(rand(Quaternion{Float64})),
+		:velocity => v ,
+		:angular_velocity => ω)
 end
 
 function initial_state_nerf(;

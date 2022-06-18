@@ -81,9 +81,8 @@ function get_contact_gradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,
 		jacobian_contact[12*(i-1) .+ (7:9),:] += LVᵀmat(q3)' * rotational_integrator_jacobian_velocity(q2, ω25, timestep) * data_jacobian[index_row[id][4:6], vcat(index_contact...)]
 	end
 
-	return jacobian_state, -jacobian_contact
+	return jacobian_state, jacobian_contact
 end
-
 
 function loss(mechanism::Mechanism, θ::AbstractVector{T}, traj::Storage{T,N},
 		indices::UnitRange{Int}; opts_step=SolverOptions(btol=1e-6, rtol=1e-6),
