@@ -138,7 +138,6 @@ end
 
 
 # ## ---------------------------------------------------------------------------
-# Optimization Algorithm: L-BFGS:
 # We learn a single coefficient of friction and a single side length -> 2 params in total
 # ## ---------------------------------------------------------------------------
 function d_to_data_contacts(d)
@@ -284,3 +283,9 @@ losses = f0.(dsol[2])
 for (i,l) in enumerate(losses)
 	println("($(i-1),$(l/losses[1]))")
 end
+
+# ## ---------------------------------------------------------------------------
+# save solution for visualization purposes
+# ## ---------------------------------------------------------------------------
+jldsave(joinpath(@__DIR__, "../..", "data", "hardware", "visualization",
+	"hardware_block_solution.jld2"), dsol=dsol)

@@ -84,7 +84,6 @@ function raw_data_to_trajectory(toss, timestep::T; S=1) where T
 	return z
 end
 
-
 function generate_hardware_dataset(model::Symbol;
 		N::Int=10,
 		H=1.0,
@@ -122,71 +121,3 @@ function generate_hardware_dataset(model::Symbol;
 		params=params, trajs=trajs)
     return nothing
 end
-
-
-# file = jldopen(joinpath(module_dir(), "examples", "system_identification",
-# 	"data", "hardware", "tosses_jld2", "0.jld2"))
-# toss = file["toss"]
-# S = 7
-# timestep = 1/148
-# z = raw_data_to_trajectory(toss, timestep, S=S)
-#
-# mech = get_mechanism()
-#
-# storage = generate_storage(mechanism, z)
-# push!(pairs, build_pairs(z)...)
-# push!(trajs, storage)
-# visualize(mechanism, storage, vis=vis, show_contact=show_contact)
-# sleep(H*sleep_ratio)
-
-
-# function build_pairs(z)
-#     pairs = []
-# 	N = length(z)
-#     for t = 1:N-1
-#         z1 = z[t]
-#         z2 = z[t+1]
-#         pair = [z1, z2]
-#         push!(pairs, pair)
-#     end
-#     return pairs
-# end
-
-# function generate_hardware_dataset(mechanism::Mechanism;
-# 		N::Int=10,
-# 		sleep_ratio = 0.0,
-# 		show_contact = true,
-# 		S=1,
-# 		)
-# 	# H = 1.00
-# 	# timestep= 1/148 * S
-# 	# gscaled = -9.81*20
-#
-#     # mechanism = get_mechanism(:block, timestep=timestep, gravity=gravityscaled);
-#     trajs = []
-# 	# pairs = []
-#     for i = 1:N
-# 		file = jldopen(joinpath(module_dir(), "examples", "system_identification", "data",
-# 			"hardware", "tosses_jld2", "$(i).jld2"))
-# 		toss = file["toss"]
-# 		z = raw_data_to_trajectory(toss, timestep, S=S)
-# 		storage = generate_storage(mechanism, z)
-# 		push!(pairs, build_pairs(z)...)
-#         push!(trajs, storage)
-#         visualize(mechanism, storage, vis=vis, show_contact=show_contact)
-# 		sleep(H*sleep_ratio)
-#     end
-# 	data = [
-# 		0.2, 0,0,0, +1, +1, -1,
-# 		0.2, 0,0,0, +1, -1, -1,
-# 		0.2, 0,0,0, -1, +1, -1,
-# 		0.2, 0,0,0, -1, -1, -1,
-# 		0.2, 0,0,0, +1, +1, +1,
-# 		0.2, 0,0,0, +1, -1, +1,
-# 		0.2, 0,0,0, -1, +1, +1,
-# 		0.2, 0,0,0, -1, -1, +1]
-#     params = Dict(:N => N, :H => H, :timestep => timestep, :g => gscaled, :data => data)
-#     jldsave(joinpath(@__DIR__, "dataset", datafilename(:hardwarebox; N = N, S = S));
-#         params=params, trajs=trajs, pairs=pairs)
-#     return nothing
-# end
