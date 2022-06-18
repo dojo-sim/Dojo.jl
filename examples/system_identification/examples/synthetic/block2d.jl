@@ -1,5 +1,5 @@
 using Pkg
-Pkg.activate(joinpath(@__DIR__, ".."))
+Pkg.activate(joinpath(@__DIR__, "../../.."))
 Pkg.instantiate()
 
 # ## Setup
@@ -21,9 +21,9 @@ include(joinpath(methods_dir, "quasi_newton.jl"))
 include(joinpath(methods_dir, "dataset.jl"))
 include(joinpath(methods_dir, "loss.jl"))
 
-################################################################################
-# parameters
-################################################################################
+# ## ---------------------------------------------------------------------------
+# ## parameters
+# ## ---------------------------------------------------------------------------
 timestep = 0.02
 gravity = -9.81
 friction_coefficient = 0.1
@@ -41,9 +41,9 @@ mech_kwargs = Dict(
 	:radius => radius,
 	:side => side)
 
-################################################################################
-# simulation example
-################################################################################
+# ## ---------------------------------------------------------------------------
+# ## simulation example
+# ## ---------------------------------------------------------------------------
 mech = get_mechanism(model; mech_kwargs...);
 initialize!(mech, model,
 	position=[-1,1.],
@@ -55,9 +55,9 @@ storage = simulate!(mech, 5.0, record=true,
 visualize(mech, storage, vis=vis, show_contact = true)
 
 
-################################################################################
-# Generate & Save Dataset
-################################################################################
+# ## ---------------------------------------------------------------------------
+# ## Generate & Save Dataset
+# ## ---------------------------------------------------------------------------
 init_kwargs = Dict(:xlims => [[0,0.2], [1,0.4]],
 				   :vlims => [-2ones(2), ones(2)],
 				   :θlims => [-π, π],
@@ -74,17 +74,17 @@ generate_dataset(model,
 	)
 
 
-################################################################################
-# Load Dataset
-################################################################################
+# ## ---------------------------------------------------------------------------
+# ## Load Dataset
+# ## ---------------------------------------------------------------------------
 params0, trajs0 = open_dataset(model; N=N, mech_kwargs...)
 data0 = params0[:data]
 nd = sum(data_dim.(mech.contacts))
 data_contacts0 = data0[end-nd+1:end]
 
-################################################################################
-# Optimization Objective: Evaluation & Gradient
-################################################################################
+# ## ---------------------------------------------------------------------------
+# ## Optimization Objective: Evaluation & Gradient
+# ## ---------------------------------------------------------------------------
 indices0 = 10:15
 function f0(d; rot=0, n_sample=0, trajs=trajs0, N=N, indices=indices0)
 	f = 0.0
@@ -115,10 +115,9 @@ function fgH0(d; rot=0, n_sample=0, trajs=trajs0, N=N, indices=indices0)
 	return f, data_mask' * g, data_mask' * H * data_mask
 end
 
-################################################################################
-# Optimization Algorithm: L-BFGS:
-# We learn a single coefficient of friction and a 4 contact locations [y,z] -> 9 params in total
-################################################################################
+# ## ---------------------------------------------------------------------------
+# ## We learn a single coefficient of friction and a 4 contact locations [y,z] -> 9 params in total
+# ## ---------------------------------------------------------------------------
 function d_to_data_contacts(d)
 	friction_coefficient = d[1]
 	data_contacts = [friction_coefficient; 0.05; 0; +d[2]; +d[3];
@@ -129,9 +128,12 @@ function d_to_data_contacts(d)
 	return data_contacts
 end
 
-
 data_mask = FiniteDiff.finite_difference_jacobian(d -> d_to_data_contacts(d), zeros(9))
 
+
+# ## ---------------------------------------------------------------------------
+# ## Cost Landscape
+# ## ---------------------------------------------------------------------------
 d1 = [0.11, +0.25, +0.25, +0.25, -0.25, -0.25, +0.25, -0.25, -0.25]
 f0(d1)
 d1 = [0.10, +0.25, +0.30, +0.25, -0.25, -0.25, +0.25, -0.25, -0.25]
@@ -147,24 +149,17 @@ F2 = [f0([d1[1]; x; d1[3:end]]) for x in X]
 plot(X, F2)
 
 
-
+# ## ---------------------------------------------------------------------------
+# ## Solve
+# ## ---------------------------------------------------------------------------
 d0 = [0.40, +0.50, +0.50, +0.50, -0.50, -0.50, +0.50, -0.50, -0.50]
 lower = [0.00, +0.05, +0.05, +0.05, -1.00, -1.00, +0.05, -1.00, -1.00]
 upper = [0.80, +1.00, +1.00, +1.00, -0.05, -0.05, +1.00, -0.05, -0.05]
 
-
 dsol = quasi_newton_solve(f0, fgH0, d0, iter=200, gtol=1e-8, ftol=1e-6,
 	lower=lower, upper=upper, reg=1e-9)
-
-
 
 losses = f0.(dsol[2])
 for (i,l) in enumerate(losses)
 	println("($(i-1),$(l/losses[1]))")
 end
-
-
-# We can learn the coefficient of friction and the side dimenson of the cube
-# form 100*0.70 seconds of recording. We use the simulator to evaluate the loss
-# and its gradients by differentiating through the simulator. With gradient
-# information we can use L-BFGS
