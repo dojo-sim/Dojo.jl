@@ -80,6 +80,9 @@ end
 data_mask = FiniteDiff.finite_difference_jacobian(d -> d_to_data_contacts(d), zeros(2))
 
 
+mech = get_mechanism(model; mech_kwargs...)
+set_data!(mech.contacts, d_to_data_contacts(dsol[1]))
+
 ################################################################################
 # # Learned vs truth: trajectory
 ################################################################################
@@ -87,9 +90,6 @@ data_mask = FiniteDiff.finite_difference_jacobian(d -> d_to_data_contacts(d), ze
 # ## Open visualizer
 vis = Visualizer()
 render(vis)
-
-mech = get_mechanism(model; mech_kwargs...)
-set_data!(mech.contacts, d_to_data_contacts(dsol[1]))
 
 id = 7
 traj_data = trajs0[id]
