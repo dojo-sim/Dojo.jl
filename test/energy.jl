@@ -106,8 +106,8 @@ end
     v0 = [1,2,3.0]
     ω0 = [1,1,1.0]
     initialize!(mech, :block,
-        v=v0,
-        ω=ω0)
+        velocity=v0,
+        angular_velocity=ω0)
 
     storage = simulate!(mech, 5.0, nocontrol!,
         record=true,
