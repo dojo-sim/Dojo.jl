@@ -26,6 +26,7 @@ radius = 0.05
 side = 0.50
 friction_coefficient = 0.1
 opts_step = SolverOptions(btol=3e-4, rtol=3e-4)
+opts_grad = SolverOptions(btol=3e-4, rtol=3e-4)
 model = :block2d
 N = 15
 
@@ -62,7 +63,7 @@ generate_dataset(model,
 	init_kwargs=init_kwargs,
 	mech_kwargs=mech_kwargs,
 	vis=vis,
-	sleep_ratio=0.1,
+	sleep_ratio=0.01,
 	)
 
 
@@ -82,7 +83,7 @@ function f0(d; rot=0, n_sample=0, trajs=trajs0, N=10, indices=indices0)
 	mechanism = get_mechanism(model; mech_kwargs...)
 	for i = 1:N
 		fi, Z = loss(mechanism, d_to_data_contacts(d), trajs[i], indices,
-			opts=SolverOptions(btol=3e-4, rtol=3e-4), derivatives=false)
+			step_opts=step_opts, opts_grad=opts_grad, derivatives=false)
 		f += fi
 		# visualize(mechanism, generate_storage(mechanism, Z), vis=vis, animation=anim)
 		# sleep(1.0)
@@ -97,7 +98,7 @@ function fgH0(d; rot=0, n_sample=0, trajs=trajs0, N=10, indices=indices0)
 	H = zeros(29,29)
 	for i = 1:N
 		fi, gi, Hi = loss(mech, d_to_data(d), trajs[i], indices,
-			opts=SolverOptions(btol=3e-4, rtol=3e-4), derivatives=true)
+			step_opts=step_opts, opts_grad=opts_grad, derivatives=true)
 		f += fi
 		g += gi
 		H += Hi
@@ -111,10 +112,10 @@ end
 ################################################################################
 function d_to_data_contacts(d)
 	friction_coefficient = d[1]
-	data_contacts = [friction_coefficient; 0;0; 0.05; 0; +d[2]; +d[3];
-			friction_coefficient; 0;0; 0.05; 0; +d[4]; +d[5];
-			friction_coefficient; 0;0; 0.05; 0; +d[6]; +d[7];
-			friction_coefficient; 0;0; 0.05; 0; +d[8]; +d[9];
+	data_contacts = [friction_coefficient; 0.05; 0; +d[2]; +d[3];
+			friction_coefficient; 0.05; 0; +d[4]; +d[5];
+			friction_coefficient; 0.05; 0; +d[6]; +d[7];
+			friction_coefficient; 0.05; 0; +d[8]; +d[9];
 			]
 	return data_contacts
 end
@@ -122,49 +123,23 @@ end
 
 data_mask = FiniteDiff.finite_difference_jacobian(d -> d_to_data_contacts(d), zeros(9))
 
+X = 0.0:0.02:0.5
+F = [f0([x; 0.25; 0.25; 0.25; -0.25; -0.25; 0.25; -0.25; -0.25]) for x in X]
+plot(X, F)
+
+d0 = [0.40, +0.50, +0.50, +0.50, -0.50, -0.50, +0.50, -0.50, -0.50]
+lower = [0.00, +0.05, +0.05, +0.05, -1.00, -1.00, +0.05, -1.00, -1.00]
 upper = [0.80, +1.00, +1.00, +1.00, -0.05, -0.05, +1.00, -0.05, -0.05]
 
-F = [f0([x; 0.25; 0.25; 0.25; -0.25; -0.25; 0.25; -0.25; -0.25]) for x in 0:0.02:1]
-plot(0:0.02:1, F)
-
-
-# d0 = [-2.30, 0.10]
-# lower = [-3.0, 0.0]
-# upper = [+3.0, 1.0]
-
-d0 = [0.1]
-lower = [0.0]
-upper = [1.0]
-
 # Main.@profiler
-dsol = quasi_newton_solve(f0, fgH0, d0, iter=1000, gtol=1e-8, ftol=1e-6,
-	lower=lower, upper=upper, reg=1e-9)
+dsol = quasi_newton_solve(f0, fgH0, d0, iter=200, gtol=1e-8, ftol=1e-6,
+	lower=lower, upper=upper, reg=1e-6)
 
 losses = f0.(dsol[2])
 for (i,l) in enumerate(losses)
 	println("($(i-1),$(l/losses[1]))")
 end
 
-
-∇d2data = FiniteDiff.finite_difference_jacobian(d -> d2data(d), zeros(9))
-
-d0 = [0.40, +0.50, +0.50, +0.50, -0.50, -0.50, +0.50, -0.50, -0.50]
-lower = [0.00, +0.05, +0.05, +0.05, -1.00, -1.00, +0.05, -1.00, -1.00]
-upper = [0.80, +1.00, +1.00, +1.00, -0.05, -0.05, +1.00, -0.05, -0.05]
-
-function f0(d; rot=0)
-	return clean_loss(:block2d, pairs0, d2data(d), n_sample=N,
-		rot=rot, opts=SolverOptions(btol=3e-4, rtol=3e-4))[1]
-end
-
-function fgH0(d; rot=0)
-	f, g, H = clean_loss(:block2d, pairs0, d2data(d), n_sample=N,
-		rot=rot, opts=SolverOptions(btol=3e-4, rtol=3e-4))
-	return f, ∇d2data' * g, ∇d2data' * H * ∇d2data
-end
-# dsol = bfgs_solve(f0, g0, H0, d0, iter=200, gtol=1e-8, ftol=3e-5,
-dsol = quasi_newton_solve(f0, fgH0, d0, iter=200, gtol=1e-8, ftol=1e-6,
-	lower=lower, upper=upper, reg=1e-6)
 
 d0
 f0(d0)

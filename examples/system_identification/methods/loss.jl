@@ -15,7 +15,7 @@
 """
 function get_contact_gradients!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, z::AbstractVector{T}, θ::AbstractVector{T};
 		opts=SolverOptions()) where {T,Nn,Ne,Nb,Ni}
-	z_next = contact_step!(mechanism, z, θ)
+	z_next = contact_step!(mechanism, z, θ, opts=opts)
     jacobian_state, jacobian_contact = get_contact_gradients(mechanism)
     return z_next, jacobian_state, jacobian_contact
 end
@@ -86,7 +86,8 @@ end
 
 
 function loss(mechanism::Mechanism, θ::AbstractVector{T}, traj::Storage{T,N},
-		indices::UnitRange{Int}; opts=SolverOptions(btol=1e-6, rtol=1e-6), derivatives::Bool=false) where {T,N}
+		indices::UnitRange{Int}; opts_step=SolverOptions(btol=1e-6, rtol=1e-6),
+		opts_grad=SolverOptions(btol=1e-6, rtol=1e-6), derivatives::Bool=false) where {T,N}
 
 	ni = length(indices)
 	nz = maximal_dimension(mechanism, attjac=true)
@@ -104,13 +105,13 @@ function loss(mechanism::Mechanism, θ::AbstractVector{T}, traj::Storage{T,N},
 		Q = Diagonal([ones(3); 1e-1ones(3); ones(4); 1e-1ones(3)])
 
 		if derivatives
-			z_pred, ∂_state, ∂_contact = get_contact_gradients!(mechanism, z, θ, opts=opts)
+			z_pred, ∂_state, ∂_contact = get_contact_gradients!(mechanism, z, θ, opts=opts_grad)
 			d_contact = ∂_contact + ∂_state * d_contact
 			attjac = attitude_jacobian(z_pred, 1)
 			grad += (attjac * d_contact)' * Q * (z_pred - z_true)
 			hess += (attjac * d_contact)' * Q * (attjac * d_contact)
 		else
-			z_pred = contact_step!(mechanism, z, θ, opts=opts)
+			z_pred = contact_step!(mechanism, z, θ, opts=opts_step)
 		end
 		cost += 0.5 * (z_pred - z_true)'* Q *(z_pred - z_true)
 		z_prev = z_pred

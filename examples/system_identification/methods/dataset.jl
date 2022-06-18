@@ -3,16 +3,16 @@
 ################################################################################
 
 function generate_dataset(model::Symbol;
-		N::Int=10, H=2.0, timestep=0.01, gravity=-9.81,
+		N::Int=10, H=2.0,
 		ctrl!::Function=(m,k) -> nothing,
 		opts=SolverOptions(btol=1e-6, rtol=1e-6),
 		init_kwargs=Dict(), # xlims, vlims, θlims, ωlims...
-		mech_kwargs=Dict(), # friction_coefficient, radius, side...
+		mech_kwargs=Dict(), # timestep, gravity, friction_coefficient, radius, side...
 		vis::Visualizer=Visualizer(),
 		sleep_ratio = 0.0,
 		show_contact = true,
 		)
-    mechanism = get_mechanism(model, timestep=timestep, gravity=gravity; mech_kwargs...);
+    mechanism = get_mechanism(model; mech_kwargs...);
     trajs = []
     for i = 1:N
 		state = initial_state(model; init_kwargs...)
@@ -85,8 +85,8 @@ end
 ################################################################################
 # Load Dataset
 ################################################################################
-function open_dataset(model::Symbol; kwargs...)
-    dataset = jldopen(joinpath(@__DIR__, "..", "data", "dataset", datafilename(model; kwargs...)))
+function open_dataset(model::Symbol; mech_kwargs...)
+    dataset = jldopen(joinpath(@__DIR__, "..", "data", "dataset", datafilename(model; mech_kwargs...)))
     params = dataset["params"]
     trajs = dataset["trajs"]
     JLD2.close(dataset)

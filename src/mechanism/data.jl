@@ -7,7 +7,7 @@ data_dim(mechanism::Mechanism; attjac::Bool=true) =
 	sum(Vector{Int64}(data_dim.(mechanism.joints))) +
     sum(Vector{Int64}(data_dim.(mechanism.bodies, attjac=attjac))) +
 	sum(Vector{Int64}(data_dim.(mechanism.contacts)))
-	
+
 # Joints
 data_dim(joint::JointConstraint) = 2 + sum(data_dim.((joint.translational, joint.rotational))) # [utra, urot, spring, damper]
 data_dim(joint::Translational{T,Nλ,Nb,N,Nb½,N̄λ}) where {T,Nλ,Nb,N,Nb½,N̄λ} = N̄λ # [utra]
@@ -182,4 +182,13 @@ function set_data!(contact::ContactConstraint, data::AbstractVector)
 	N = data_dim(model)
 	set_data!(model, data[1:N])
     return nothing
+end
+
+function set_data!(contacts::Vector{<:ContactConstraint}, data::AbstractVector)
+	c = 0
+	for contact in contacts
+		Nd = data_dim(contact)
+		set_data!(contact, data[c .+ (1:Nd)]); c += Nd
+	end
+	return nothing
 end
