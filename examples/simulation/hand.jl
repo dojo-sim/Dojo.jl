@@ -121,7 +121,7 @@ palm_rod_joint = JointConstraint(Floating(palm, rod))
 
 # thumb
 palm_thumb_a_joint = JointConstraint(Revolute(palm, thumb_a, [0.0; 1.0; 0.0]; 
-    parent_vertex=[0.0; 0.75 * palm_length; -palm_radius], 
+    parent_vertex=[0.0; 0.5 * palm_length; -palm_radius], 
     child_vertex=[0.0; 0.0; 0.5 * segment_length],
     spring=spring, 
     damper=damper
@@ -290,13 +290,31 @@ hand_mechanism = Mechanism(origin, links, joints;
 # hand_mechanism.bodies[16].state.x2 = [0.0; -0.75 * palm_length; 1.0 * (0.5 * segment_length + palm_radius + 1.0 * segment_length)]
 
 # rod 
-hand_mechanism.bodies[17].state.x2 = [palm_radius + rod_radius + 0.1; 0.0; 0.0]
+hand_mechanism.bodies[17].state.x2 = [palm_radius + rod_radius + 0.0; 0.0; 0.0]
 
-# state_minimal = get_minimal_state(hand_mechanism)
+state_minimal = get_minimal_state(hand_mechanism)
 
-# state_minimal[12] = 0.5 * π
+state_minimal[25] = 0.5 * π
+state_minimal[27] = 0.1 * π
+state_minimal[29] = 0.25 * π
 
-# set_minimal_state!(hand_mechanism, state_minimal)
+state_minimal[31] = 0.5 * π
+state_minimal[33] = 0.1 * π
+state_minimal[35] = 0.25 * π
+
+state_minimal[37] = 0.5 * π
+state_minimal[39] = 0.1 * π
+state_minimal[41] = 0.25 * π
+
+state_minimal[43] = 0.5 * π
+state_minimal[45] = 0.1 * π
+state_minimal[47] = 0.25 * π
+
+state_minimal[49] = -0.3 * π
+state_minimal[51] = -0.1 * π
+state_minimal[53] = -0.25 * π
+
+set_minimal_state!(hand_mechanism, state_minimal)
 
 # Simulate
 storage = simulate!(hand_mechanism, timestep, 
@@ -309,8 +327,8 @@ storage = simulate!(hand_mechanism, timestep,
 )
 
 # Visualize
-vis = Visualizer()
-render(vis)
+# vis = Visualizer()
+# render(vis)
 visualize(hand_mechanism, storage, 
     vis=vis, 
 )
