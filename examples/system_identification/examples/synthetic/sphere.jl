@@ -71,7 +71,7 @@ generate_dataset(model,
 	init_kwargs=init_kwargs,
 	mech_kwargs=mech_kwargs,
 	vis=vis,
-	sleep_ratio=0.01,
+	sleep_ratio=0.1,
 	)
 
 # ## ---------------------------------------------------------------------------
@@ -133,16 +133,16 @@ data_mask = FiniteDiff.finite_difference_jacobian(d -> d_to_data_contacts(d), ze
 # ## ---------------------------------------------------------------------------
 # ## Cost Landscape
 # ## ---------------------------------------------------------------------------
-d1 = [0.10, 0.5]
+d1 = [0.11, 0.5]
 f0(d1)
 f1, g1, H1 = fgH0(d1)
 - H1 \ g1
 
-X = 0.0:0.05:0.8
+X = 0.0:0.01:0.8
 F1 = [f0([x; d1[2:end]]) for x in X]
 plot(X, F1)
 
-X = 0.0:0.05:0.55
+X = 0.0:0.01:0.55
 F2 = [f0([d1[1]; x; d1[3:end]]) for x in X]
 plot(X, F2)
 
@@ -154,7 +154,7 @@ d0 = [0.00, +1.00]
 lower = [0.00, +0.05]
 upper = [0.80, +1.00]
 
-dsol = quasi_newton_solve(f0, fgH0, d0, iter=200, gtol=1e-8, ftol=1e-6,
+dsol = quasi_newton_solve(f0, fgH0, d0, iter=20, gtol=1e-8, ftol=1e-6,
 	lower=lower, upper=upper, reg=1e-9)
 
 
