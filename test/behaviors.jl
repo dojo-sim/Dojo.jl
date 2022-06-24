@@ -24,9 +24,9 @@ end
             friction_coefficient = 0.1)
 
         initialize!(mech, :block,
-            x=[0.0, 0.0, 0.5],
-            v=[1.0, 1.5, 1.0],
-            ω=[5.0, 4.0, 2.0] .* timestep)
+            position=[0.0, 0.0, 0.5],
+            velocity=[1.0, 1.5, 1.0],
+            angular_velocity=[5.0, 4.0, 2.0] .* timestep)
         storage = simulate!(mech, 5.0,
             record=true,
             opts=SolverOptions(btol=1e-6, rtol=1e-6,

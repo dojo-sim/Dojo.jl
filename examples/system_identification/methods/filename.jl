@@ -2,19 +2,22 @@ function datafilename(model::Symbol; kwargs...)
     eval(Symbol(:datafilename, model))(; kwargs...)
 end
 
-function datafilenamesphere(; N::Int=10, friction_coefficient=0.1, radius=0.5)
+function datafilenamesphere(; N::Int=10, timestep=0.02, gravity=-9.81,
+        friction_coefficient=0.1, radius=0.05)
     "sphere_dim_N_$(N)_friction_coefficient_$(friction_coefficient)_radius_$(radius).jld2"
 end
 
-function datafilenameblock2d(; N::Int=10, friction_coefficient=0.1, radius=0.05, side=0.50)
+function datafilenameblock2d(; N::Int=10, timestep=0.02, gravity=-9.81,
+        friction_coefficient=0.1, radius=0.05, side=0.50)
     "block2d_dim_N_$(N)_friction_coefficient_$(friction_coefficient)_radius_$(radius)_side_$(side).jld2"
 end
 
-function datafilenamebox(; N::Int=10, friction_coefficient=0.1, radius=0., side=0.50)
-    "box_dim_N_$(N)_friction_coefficient_$(friction_coefficient)_radius_$(radius)_side_$(side).jld2"
+function datafilenameblock(; N::Int=10, timestep=0.02, gravity=-9.81,
+        friction_coefficient=0.1, radius=0., side=0.50, mode=:box)
+    "block_dim_N_$(N)_friction_coefficient_$(friction_coefficient)_radius_$(radius)_side_$(side).jld2"
 end
 
-function datafilenamehardwarebox(; N::Int=10, s=1)
+function datafilenamehardwarebox(; N::Int=10, S=1)
     "hardwarebox_dim_N_$(N)_sample_S_$(S).jld2"
 end
 

@@ -13,10 +13,9 @@ function get_block2d(;
     axis = [1.0, 0.0, 0.0]
 
     origin = Origin{T}()
-    pbody = Box(side, side, side, 1.;
-        color=RGBA(1., 1., 0.))
-    joint1 = JointConstraint(PlanarAxis(origin, pbody, axis))
-    bodies = [pbody]
+    block = Box(side, side, side, 1.; color=RGBA(1., 1., 0.), name=:block)
+    joint1 = JointConstraint(PlanarAxis(origin, block, axis), name=:joint)
+    bodies = [block]
     joints = [joint1]
 
     if contact
@@ -38,11 +37,12 @@ function get_block2d(;
         contact_radius = [radius for i = 1:n]
         friction_coefficient = friction_coefficient * ones(n)
 
-        contacts = contact_constraint(pbody, normal;
+        contacts = contact_constraint(block, normal;
             friction_coefficient,
             contact_origins=corners,
             contact_radius,
-            contact_type)
+            contact_type,
+            names=[Symbol(:contact, i) for i=1:8])
 
         mech = Mechanism(origin, bodies, joints, contacts;
             gravity,
@@ -57,7 +57,7 @@ end
 
 function initialize_block2d!(mechanism::Mechanism{T};
     position=[0.0, 1.0],
-    linear_velocity=[0.0, 0.0],
+    velocity=[0.0, 0.0],
     orientation=0.0,
     angular_velocity=0.0) where T
 
@@ -76,6 +76,6 @@ function initialize_block2d!(mechanism::Mechanism{T};
         x=[0.0; position] + [0.0, 0.0 , z],
         q=RotX(orientation))
     set_maximal_velocities!(body,
-        v=[0.0; linear_velocity],
+        v=[0.0; velocity],
         ω=[angular_velocity, 0.0, 0.0])
 end

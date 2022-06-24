@@ -30,7 +30,7 @@ S = 1
 # we must rescale the gravity term accordingly since gravity contains length (g == kg.m.s^-2)
 length_scaling = 20.0
 timestep = 1/148 * S
-gravity = -9.81 * length_scaling
+gravity = -9.81 * scaling
 friction_coefficient = 0.16
 radius = 0.00
 side = 2.00
