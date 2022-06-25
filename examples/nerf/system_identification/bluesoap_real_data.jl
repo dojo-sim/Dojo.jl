@@ -224,7 +224,7 @@ end
 ################################################################################
 mech = get_mechanism(:nerf, nerf=:bluesoap, timestep=timestep*time_scaling,
 	gravity=gravity, friction_coefficient=0.05);
-mech.contacts[1].model.collision.collider.options =
+mech.contacts[1].model.collision.options =
 	ColliderOptions(
 	impact_damper=1e5,
 	impact_spring=3e4,
@@ -245,7 +245,7 @@ vis, anim = visualize(mech, initial_storage, vis=vis, color=RGBA(1,1,1,1.), name
 
 mech = get_mechanism(:nerf, nerf=:bluesoap, timestep=timestep*time_scaling,
 	gravity=gravity, friction_coefficient=0.05);
-mech.contacts[1].model.collision.collider.options =
+mech.contacts[1].model.collision.options =
 	ColliderOptions(
 	impact_damper=1e5,
 	impact_spring=3e4,
@@ -261,9 +261,12 @@ set_maximal_state!(mech, [X_data[1]; V_data[1]/time_scaling; vector(Q_data[1]); 
 learned_storage = simulate!(mech, 1.23, record=true,
     opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
 vis, anim = visualize(mech, learned_storage, vis=vis, animation=anim, color=RGBA(0.7,0.7,0.7,1.), name=:learned)
+# settransform!(vis[:real], Translation(0,0.0,0))
+# settransform!(vis[:learned], Translation(0.6,-0.9,0))
 
 vis, anim = visualize(mech, scaled_storage, vis=vis, animation=anim, color=RGBA(0,0,0,1.0), name=:real)
 scaled_storage
+set_floor!(vis, x=30, y=30)
 
 # convert_frames_to_video_and_gif("bluesoap_learning_friction_top")
 
@@ -299,3 +302,7 @@ end
 
 timestep * 16
 timestep * 33
+
+render(vis)
+open(vis)
+convert_frames_to_video_and_gif("bluesoap_learned_and_ground_truth")

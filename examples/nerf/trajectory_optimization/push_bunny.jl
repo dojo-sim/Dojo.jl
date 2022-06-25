@@ -271,3 +271,7 @@ end
 set_target!(vis)
 
 convert_frames_to_video_and_gif("sphere_bunny_trajopt_al0_padded")
+convert_video_to_gif("/home/simon/Downloads/bluesoap_merged.mp4", "/home/simon/Documents/video/bluesoap_merged.gif")
+convert_video_to_gif("/home/simon/Downloads/bluesoap_mask.mp4", "/home/simon/Documents/video/bluesoap_mask.gif")
+
+convert_video_to_gif()
