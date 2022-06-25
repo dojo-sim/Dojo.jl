@@ -10,7 +10,7 @@ render(vis)
 ################################################################################
 # Simulate nerf
 ################################################################################
-sliding_friction = 0.01
+sliding_friction = 0.3
 mech = get_mechanism(:nerf, nerf=:bunny, timestep=0.002,
     friction_coefficient=sliding_friction,
     collider_options=ColliderOptions(
@@ -30,7 +30,7 @@ initialize!(mech, :nerf,
 
 constraint(mech, mech.contacts[1])
 
-@elapsed storage = simulate!(mech, 7.0,
+@elapsed storage = simulate!(mech, 4.4,
     opts=SolverOptions(verbose=true, rtol=1e-4))
 visualize(mech, storage, vis=vis)
 

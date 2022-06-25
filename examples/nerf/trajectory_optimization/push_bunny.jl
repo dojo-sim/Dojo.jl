@@ -175,8 +175,10 @@ cons = [[con_policyt for t = 1:T-1]..., con_policyT]
 # ## solver
 solver_options = IterativeLQR.Options(
     line_search=:armijo,
-    max_iterations=75,
-    max_dual_updates=10,
+	# max_iterations=75,
+    max_iterations=1,
+	# max_dual_updates=10,
+    max_dual_updates=1,
     objective_tolerance=1e-3,
     lagrangian_gradient_tolerance=1e-3,
     constraint_tolerance=1e-3,
@@ -215,7 +217,7 @@ for x in sol_storage.x
 	x .*= scale_vis
 	x .+= fill(offset, 60)
 end
-vis, anim = visualize(env.mechanism, sol_storage, vis=vis)
+vis, anim = visualize(env.mechanism, sol_storage, vis=vis, color=RGBA(0.9, 0.9, 0.9, 1.0))
 
 
 
@@ -224,6 +226,21 @@ vis, anim = visualize(env.mechanism, sol_storage, vis=vis)
 ################################################################################
 # vis = Visualizer()
 # render(vis)
+
+# # initial guess
+# sol_storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in x̄])
+# for x in sol_storage.x
+# 	x .*= scale_vis
+# 	x .+= fill(offset, 60)
+# end
+
+
+padded_storage = generate_storage(mech, [
+	fill(get_maximal_state(sol_storage, 1), 30);
+	get_maximal_state(sol_storage);
+	fill(get_maximal_state(sol_storage, T), 30)])
+vis, anim = visualize(env.mechanism, padded_storage, vis=vis, color=RGBA(0.9, 0.9, 0.9, 1.0))
+
 panda_mech = get_mechanism(:panda, damper=100.0, model_type=:end_effector, contact=true,
 	joint_limits=[[-10.0, -1.7628, -2.8973, -0.0698, -2.8973, -3.7525, -2.8973, -0.00],
 				  [ 10.0,  1.7628,  2.8973,  3.0718,  2.8973,  0.0175,  2.8973,  0.04]],)
@@ -233,11 +250,11 @@ storage = simulate!(panda_mech, 0.01)
 visualize(panda_mech, storage, vis=vis, name=:panda)
 q_end_effector = current_orientation(get_body(panda_mech, 12).state)
 
-visual_storage = deepcopy(sol_storage)
+visual_storage = deepcopy(padded_storage)
 
 z_panda = panda_inverse_kinematics_trajectory(panda_mech,
-	visual_storage.x[2][1:60],
-	[q_end_effector for i=1:60])
+	visual_storage.x[2][1:T+60],
+	[q_end_effector for i=1:T+60])
 
 panda_storage = generate_storage(panda_mech, z_panda)
 vis, anim = visualize(panda_mech, panda_storage, vis=vis, animation=anim, name=:panda,
@@ -253,4 +270,4 @@ function set_target!(vis::Visualizer)
 end
 set_target!(vis)
 
-convert_frames_to_video_and_gif("nerf_trajopt_push_slow")
+convert_frames_to_video_and_gif("sphere_bunny_trajopt_al0_padded")

@@ -649,7 +649,7 @@ def create_nerf(args, metadata, render_metadata):
             exp_dir = exp_dir[2:] # remove './'
             # Find all the coarse model checkpoints.
             # exp_path = os.listdir(exp_dir)
-            exp_path = os.path.join("/home/simon/research/repos/osf-pytorch/", exp_dir)
+            exp_path = os.path.join("/home/simon/.julia/dev/Dojo.jl/OSFLoader/osf-pytorch/", exp_dir)
             # print("exp_dir ", exp_dir)
             # print("exp_path ", exp_path)
             # print("list_dir exp_path ", os.listdir(exp_path))
@@ -931,7 +931,7 @@ def config_parser():
     return parser
 
 
-def generate_test_nerf(config_path="/home/simon/research/repos/osf-pytorch/configs/osf/bunny_trans/bunny_trans.txt"):
+def generate_test_nerf(config_path="/home/simon/.julia/dev/Dojo.jl/OSFLoader/osf-pytorch/configs/osf/bunny_trans/bunny_trans.txt"):
     parser = config_parser()
     args = parser.parse_args(args=['--config', config_path])
 

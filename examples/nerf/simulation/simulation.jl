@@ -98,7 +98,7 @@ initialize!(mech, :nerf_triumvirate,
     )
 
 # Main.@profiler storage = simulate!(mech, 0.10, opts=SolverOptions(verbose=true, rtol=1e-4))
-@elapsed storage = simulate!(mech, 1.5,
+@elapsed storage = simulate!(mech, 2.5,
     opts=SolverOptions(verbose=true, rtol=3e-4, btol=3e-4))
 visualize(mech, storage, vis=vis)
 
@@ -107,5 +107,6 @@ visualize(mech, storage, vis=vis)
 ################################################################################
 vis, anim = visualize(mech, storage, vis=vis, name=:white, color=RGBA(0.9,0.9,0.9,1.0))
 vis, anim = visualize(mech, storage, vis=vis, animation=anim, name=:black, color=RGBA(0.2,0.2,0.2,1.0))
+set_floor!(vis, x=7, y=7)
 open(vis)
-# convert_frames_to_video_and_gif("triumvirate_simulation")
+convert_frames_to_video_and_gif("triumvirate_simulation_corl")

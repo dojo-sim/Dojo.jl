@@ -107,16 +107,16 @@ mech_kwargs = Dict(:nerf => :bunny,
 				   :collider_options => collider_options,
 				   )
 
-generate_dataset(:nerf_sphere,
-	N=50,
-	ctrl! = ctrl!,
-	opts=SolverOptions(btol=3e-4, rtol=3e-4),
-	init_kwargs=init_kwargs,
-	mech_kwargs=mech_kwargs,
-	show_contact=false,
-	sleep_ratio=0.006,
-	vis=vis,
-	)
+# generate_dataset(:nerf_sphere,
+# 	N=50,
+# 	ctrl! = ctrl!,
+# 	opts=SolverOptions(btol=3e-4, rtol=3e-4),
+# 	init_kwargs=init_kwargs,
+# 	mech_kwargs=mech_kwargs,
+# 	show_contact=false,
+# 	sleep_ratio=0.006,
+# 	vis=vis,
+# 	)
 
 ################################################################################
 # Load Dataset
@@ -349,7 +349,7 @@ vis, anim = visualize(panda_mech, panda_storage, vis=vis, animation=anim, name=:
 α = 1.0
 colors = [RGBA(0.2,0.2,0.2,α), RGBA(0.6,0.6,0.6,α), RGBA(1.0,1.0,1.0,α)];
 index = [1,100,200]
-i = 1
+i = 3
 
 panda_storage_i = generate_storage(panda_mech, [get_maximal_state(panda_storage, index[i]) for t=1:200])
 vis, anim = visualize(panda_mech, panda_storage_i, vis=vis, animation=anim, name=:panda_i,
@@ -365,3 +365,109 @@ vis, anim = visualize(mech, visual_storage_i, vis=vis, animation=anim, name=:sph
 # jldsave(joinpath(@__DIR__, "sphere_bunny.jld2"), x=storage.x[2], q=[vector(q) for q in storage.q[2]])
 # jldopen(joinpath(@__DIR__, "sphere_bunny.jld2"))["x"]
 # jldopen(joinpath(@__DIR__, "sphere_bunny.jld2"))["q"]
+
+
+################################################################################
+# Dataset Visualization
+################################################################################
+vis = Visualizer()
+open(vis)
+
+params0, trajs0 = open_dataset(:nerf_sphere; N=50, mech_kwargs...)
+
+scale_vis = 0.25
+offset = [-0.60,0,0]
+
+data_storage = trajs0[21]
+for x in data_storage.x
+	x .*= scale_vis
+	x .+= fill(offset, 200)
+end
+
+z_panda = panda_inverse_kinematics_trajectory(panda_mech,
+	data_storage.x[2][1:200],
+	[q_end_effector for i=1:200])
+
+panda_storage = generate_storage(panda_mech, z_panda)
+vis, anim = visualize(panda_mech, panda_storage, vis=vis, name=:panda,
+	show_contact=true)
+
+vis, anim = visualize(mech, data_storage, vis=vis, animation=anim, name=:sphere_bunny,
+	color=RGBA(0.9, 0.9, 0.9, 1))
+
+for i = 1:16
+	convert_frames_to_video_and_gif("sphere_bunny_dataset_$i")
+end
+
+
+################################################################################
+# Learning Visualization
+################################################################################
+vis = Visualizer()
+render(vis)
+open(vis)
+
+scale_vis = 0.25
+offset = [-0.60,0,0]
+
+mech = get_mechanism(:nerf_sphere, nerf=:bunny; mech_kwargs...)
+for body in mech.bodies
+	body.shape.scale *= scale_vis
+end
+
+# learned
+set_data!(mech, d_to_data(dsol[2][end]))
+initialize!(mech, :nerf_sphere,
+	nerf_position=nerf_position,
+	sphere_position=r_sphere * [1,0,0.],
+	sphere_velocity=v_sphere * [-1,0,0.],
+	nerf_orientation=q_nerf,
+	sphere_orientation=one(Quaternion),
+	)
+learned_storage = simulate!(mech, 2.0, ctrl!, record=true,
+    opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
+for x in learned_storage.x
+	x .*= scale_vis
+	x .+= fill(offset, 200)
+end
+vis, anim = visualize(mech, learned_storage, vis=vis,
+	color=RGBA(0.9,0.9,0.9,1.), name=:learned)
+
+# ground_truth
+set_data!(mech, data0)
+initialize!(mech, :nerf_sphere,
+	nerf_position=nerf_position,
+	sphere_position=r_sphere * [1,0,0.],
+	sphere_velocity=v_sphere * [-1,0,0.],
+	nerf_orientation=q_nerf,
+	sphere_orientation=one(Quaternion),
+	)
+ground_truth_storage = simulate!(mech, 2.0, ctrl!, record=true,
+    opts=SolverOptions(btol=1e-6, rtol=1e-6, verbose=false))
+for x in ground_truth_storage.x
+	x .*= scale_vis
+	x .+= fill(offset, 200)
+end
+vis, anim = visualize(mech, ground_truth_storage, vis=vis, animation=anim,
+	color=RGBA(0.2,0.2,0.2,1.), name=:ground_truth)
+
+
+z_learned_panda = panda_inverse_kinematics_trajectory(panda_mech,
+	learned_storage.x[2][1:200],
+	[q_end_effector for i=1:200])
+z_ground_truth_panda = panda_inverse_kinematics_trajectory(panda_mech,
+	ground_truth_storage.x[2][1:200],
+	[q_end_effector for i=1:200])
+
+panda_learned_storage = generate_storage(panda_mech, z_learned_panda)
+panda_ground_truth_storage = generate_storage(panda_mech, z_ground_truth_panda)
+
+vis, anim = visualize(panda_mech, panda_learned_storage, vis=vis, animation=anim, name=:learned,
+	show_contact=true, color=RGBA(0.9,0.9,0.9,1.))
+vis, anim = visualize(panda_mech, panda_ground_truth_storage, vis=vis, animation=anim, name=:ground_truth,
+	show_contact=true, color=RGBA(0.2,0.2,0.2,1.))
+
+settransform!(vis[:learned], Translation(0,0.3,0.0))
+set_floor!(vis, x=3.5, y=3.5)
+
+convert_frames_to_video_and_gif("sphere_bunny_interactive_perception_20")

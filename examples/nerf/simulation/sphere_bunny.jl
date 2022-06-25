@@ -30,17 +30,22 @@ visualize(mech, storage, vis=vis)
 # Simulate nerf & sphere
 ################################################################################
 mech = get_mechanism(:nerf_sphere, nerf=:bunny, collider_options=ColliderOptions(),
-    timestep=0.01, gravity=-9.81)
+    mass=10.0,
+    timestep=0.01,
+    gravity=-9.81)
 mech.contacts[1].model.collision.options = ColliderOptions()
 mech.contacts[3].model.collision.options = ColliderOptions()
 
 initialize!(mech, :nerf_sphere,
     nerf_position=[0,0,0],
     nerf_velocity=[0,0,0],
-    sphere_position=[0,4.0,0.4],
-    sphere_velocity=[0,-5.0,0],
+    sphere_position=[0.5,4.0,0.4],
+    sphere_velocity=[0,-7.0,0],
     )
 # Main.@profiler
 @elapsed storage = simulate!(mech, 5.0,
     opts=SolverOptions(verbose=false, rtol=1e-4))
 visualize(mech, storage, vis=vis)
+
+open(vis)
+convert_frames_to_video_and_gif("sphere_bunny_simulation_corl")

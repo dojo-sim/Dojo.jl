@@ -2,6 +2,7 @@ function get_nerf_object(;osf_path=OSFLoader.OSF_PATH,
         config_folder=OSFLoader.OSF_CONFIG_FOLDER, filename="bunny")
     config_path = joinpath(osf_path, config_folder, filename, filename *".txt")
     load_python_script(mode=:cpu)
+    @show config_path
     nerf_object = OSFLoader.py"generate_test_nerf"(config_path)
     return nerf_object
 end

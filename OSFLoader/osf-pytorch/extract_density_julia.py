@@ -649,14 +649,14 @@ def create_nerf(args, metadata, render_metadata):
             exp_dir = exp_dir[2:] # remove './'
             # Find all the coarse model checkpoints.
             # exp_path = os.listdir(exp_dir)
-            exp_path = os.path.join("/home/simon/research/repos/osf-pytorch/", exp_dir)
+            exp_path = os.path.join("/home/simon/.julia/dev/Dojo.jl/OSFLoader/osf-pytorch/", exp_dir)
             # print("exp_dir ", exp_dir)
             # print("exp_path ", exp_path)
             # print("list_dir exp_path ", os.listdir(exp_path))
             # print("checkpoints ", [os.path.join(exp_path, f) for f in sorted(os.listdir(exp_path)) if 'tar' in f])
             return [os.path.join(exp_path, f) for f in sorted(os.listdir(exp_path)) if 'tar' in f]
                     #('model_' in f and 'fine' not in f and 'optimizer' not in f)]
-        
+
         if 'exp_dir' in args.object_params[i]:
             ckpts = get_ckpts(params['exp_dir'])
         elif args.ft_path is not None and args.ft_path != 'None':
@@ -755,9 +755,9 @@ def config_parser():
     parser.add_argument('--config', is_config_file=True,
                         help='config file path')
     parser.add_argument("--expname", type=str, default='', help='experiment name')
-    parser.add_argument("--expname_ts", action="store_true", 
+    parser.add_argument("--expname_ts", action="store_true",
                         help='append timestamp to expname')
-    parser.add_argument("--basedir", type=str, default='/home/simon/research/repos/osf-pythorch/logs/',
+    parser.add_argument("--basedir", type=str, default='/home/simon/.julia/dev/Dojo.jl/OSFLoader/osf-pytorch/logs/',
                         help='where to store ckpts and logs')
     parser.add_argument("--datadir", type=str,
                         default='./data/llff/fern', help='input data directory')
@@ -791,12 +791,12 @@ def config_parser():
                         help='specific weights npy file to reload for coarse network')
     parser.add_argument("--random_seed", type=int,
                         help='fix random seed for repeatability')
-    
+
     # pre-crop options
     parser.add_argument("--precrop_iters", type=int, default=0,
                         help='number of steps to train on central crops')
     parser.add_argument("--precrop_frac", type=float,
-                        default=.5, help='fraction of img taken for central crops')    
+                        default=.5, help='fraction of img taken for central crops')
 
     # rendering options
     parser.add_argument("--N_samples", type=int, default=64,
@@ -809,7 +809,7 @@ def config_parser():
                         help='include viewdirs as model input')
     parser.add_argument("--use_lightdirs", action='store_true',
                         help='include lightdirs as model input')
-    parser.add_argument("--shadow_lightdirs_method", type=str, 
+    parser.add_argument("--shadow_lightdirs_method", type=str,
                         help='method for computing lightdirs for shadows.')
     parser.add_argument("--i_embed", type=int, default=0,
                         help='set 0 for default positional encoding, -1 for none')
@@ -855,7 +855,7 @@ def config_parser():
                         help='whether to check numerics on the rendered results.')
 
     # osf options
-    parser.add_argument('--object_params', type=yaml.safe_load, action='append', 
+    parser.add_argument('--object_params', type=yaml.safe_load, action='append',
                         help='Object parameters. See render_rays() for description.')
     parser.add_argument('--render_shadows', action='store_true',
                         help='whether to render shadows.')
@@ -931,7 +931,7 @@ def config_parser():
 
 def generate_test_nerf():
     parser = config_parser()
-    args = parser.parse_args(args=['--config', '/home/simon/research/repos/osf-pytorch/configs/osf/bunny_trans/bunny_trans.txt'])
+    args = parser.parse_args(args=['--config', '/home/simon/.julia/dev/Dojo.jl/OSFLoader/osf-pytorch/configs/osf/bunny_trans/bunny_trans.txt'])
 
     metadata, render_metadata = None, None
 
@@ -970,5 +970,3 @@ def density_gradient_query(render_kwargs_test, np_xyz):
 # if __name__ =='__main__':
 #     torch.set_default_tensor_type('torch.cuda.FloatTensor')
 #     demo()
-
-

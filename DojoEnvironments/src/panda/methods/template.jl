@@ -12,7 +12,6 @@
 			norm(err, Inf) < 1e-10 && continue
 			∇ = FiniteDiff.finite_difference_jacobian(θ -> panda_inverse_kinematics_error(mechanism, p_end_effector, q_end_effector, θ), θ)
 			θ -= (∇' * inv(∇*∇' + 1e-2*I)) * err
-			@show norm(err)
 		end
 		x = vcat([[θi, 0.0] for θi in θ]...)
 		z = minimal_to_maximal(mechanism, x)
@@ -38,6 +37,7 @@
 		traj = []
 		N = length(p_end_effector)
 		for i = 1:N
+			@show i, N
 			z, θ = panda_inverse_kinematics(mechanism::Mechanism, p_end_effector[i], q_end_effector[i]; θ0=θ)
 			push!(traj, z)
 		end

@@ -654,7 +654,7 @@ def create_nerf(args, metadata, render_metadata):
         def get_ckpts(exp_dir):
             # Find all the coarse model checkpoints.
             # exp_path = os.listdir(exp_dir)
-            exp_path = os.path.join("/home/simon/research/repos/osf-pytorch/", exp_dir)
+            exp_path = os.path.join("/home/simon/.julia/dev/Dojo.jl/OSFLoader/osf-pytorch/", exp_dir)
             print([os.path.join(exp_dir, f) for f in sorted(os.listdir(exp_dir)) if 'tar' in f])
             print([os.path.join(exp_dir, f) for f in sorted(os.listdir(exp_path)) if 'tar' in f])
             print(exp_path)
@@ -940,7 +940,7 @@ def config_parser():
 def demo():
     parser = config_parser()
     # args = parser.parse_args()
-    args = parser.parse_args(args=['--config', '/home/simon/research/repos/osf-pytorch/configs/osf/bluesoap/bluesoap.txt'])
+    args = parser.parse_args(args=['--config', '/home/simon/.julia/dev/Dojo.jl/OSFLoader/osf-pytorch/configs/osf/bluesoap/bluesoap.txt'])
 
     metadata, render_metadata = None, None
 

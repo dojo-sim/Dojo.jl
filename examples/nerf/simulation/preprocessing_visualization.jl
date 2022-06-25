@@ -5,7 +5,8 @@ using DojoEnvironments
 
 vis = Visualizer()
 render(vis)
-
+# open(vis)
+render_static(vis)
 
 ################################################################################
 # visuaize collider
@@ -23,7 +24,7 @@ function build_collider!(collider::SoftCollider{T,N}, vis::Visualizer;
     # setobject!(vis[name][:mesh], collider.mesh, MeshPhongMaterial(color=mesh_color))
     setobject!(vis[name][:center_of_mass], HyperSphere(Point(collider.center_of_mass...), 0.05), MeshPhongMaterial(color=com_color))
     if visualize_particle
-        for i = 1:10:5000#length(collider.particles)
+        for i = 1:10:length(collider.particles)
             particle = collider.particles[i]
             gradient = collider.density_gradients[i]
             setobject!(vis[name][:particles]["$i"], HyperSphere(Point(particle...), particle_radius), MeshPhongMaterial(color=particle_color))
@@ -67,13 +68,15 @@ settransform!(arrow_vis, centroid, Vec(0,0,1.0),
 ################################################################################
 # animation
 ################################################################################
-# anim = MeshCat.Animation()
-# for i = 1:100
-#     atframe(anim, i) do
-#         settransform!(vis[:collider], compose(LinearMap(RotZ(0.01i*2π)), Translation(0,0,0.6)))
-#     end
-# end
-# setanimation!(vis, anim)
+anim = MeshCat.Animation()
+for i = 1:100
+    atframe(anim, i) do
+        settransform!(vis[:collider], compose(LinearMap(RotZ(0.01i*2π)), Translation(0,0,0.6)))
+        # settransform!(vis, compose(LinearMap(RotZ(0.01i*2π)), Translation(0,0,0.6)))
+        # settransform!(vis, LinearMap(RotZ(0.01i*2π)))
+    end
+end
+setanimation!(vis, anim)
 
 
 
@@ -96,3 +99,9 @@ set_floor!(vis, x=2, y=2.0, z=0.001, color=RGBA(0.4, 0.4, 0.4, 0.4))
 set_light!(vis, fill=0.8)
 set_background!(vis)
 # open(vis)
+
+
+# render_static(vis)
+# open(joinpath(@__DIR__, "preprocessing_visualization.html"), "w") do file
+#     write(file, static_html(vis))
+# end
