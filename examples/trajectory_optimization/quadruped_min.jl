@@ -2,16 +2,16 @@ using Pkg
 Pkg.activate(joinpath(@__DIR__, ".."))
 Pkg.instantiate()
 
-# ## visualizer
-vis = Visualizer()
-open(vis)
-
 # ## setup
 using Dojo
 using IterativeLQR
 using LinearAlgebra
 using FiniteDiff
 using DojoEnvironments
+
+# ## visualizer
+vis = Visualizer()
+open(vis)
 
 # ## system
 gravity = -9.81
