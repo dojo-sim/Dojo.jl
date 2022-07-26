@@ -2,16 +2,16 @@ using Pkg
 Pkg.activate(joinpath(@__DIR__, ".."))
 Pkg.instantiate()
 
-# ## visualizer
-vis = Visualizer()
-open(vis)
-
 # ## setup
 using Dojo
 using IterativeLQR
 using LinearAlgebra
 using FiniteDiff
 using DojoEnvironments
+
+# ## visualizer
+vis = Visualizer()
+open(vis)
 
 # ## system
 gravity = -9.81
@@ -85,7 +85,7 @@ model = [dyn for t = 1:T-1]
 x1 = xref[1]
 ū = [u_control for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, x1, ū)
-visualize(env, x̄)
+DojoEnvironments.visualize(env, x̄)
 
 # ## objective
 qt = [0.3; 0.05; 0.05; 0.01 * ones(3); 0.01 * ones(3); 0.01 * ones(3); fill([0.2, 0.001], 12)...]
@@ -134,7 +134,7 @@ x_sol, u_sol = IterativeLQR.get_trajectory(s)
 vis= Visualizer()
 open(env.vis)
 x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]
-visualize(env, x_view)
+DojoEnvironments.visualize(env, x_view)
 
 set_camera!(env.vis,
     cam_pos=[0.0, -3.0, 2.0],
