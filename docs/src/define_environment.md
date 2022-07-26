@@ -4,10 +4,6 @@ An [`Environment`](@ref) is a convienient object for applications like reinforce
 
 For this example we need the following setup:
 ```julia
-using Pkg
-Pkg.activate(joinpath(@__DIR__, ".."))
-Pkg.instantiate()
-
 # ## Setup
 using Dojo
 using DojoEnvironments
