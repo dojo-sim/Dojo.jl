@@ -109,12 +109,19 @@ function set_data!(model::SoftContact, data::AbstractVector)
     return nothing
 end
 
-coulomb_direction(v, smoothing=1e3, regularizer=1e-3) = - atan(smoothing * norm(v)) * v/(regularizer + norm(v))
+coulomb_direction(v, smoothing=1e3, regularizer=1e-3) = - 2/π * atan(smoothing * norm(v)) * v/(regularizer + norm(v))
 function ∂coulomb_direction∂v(v, smoothing=1e3, regularizer=1e-3)
     ∇ = - 1 / (1 + smoothing^2 * v'*v) * smoothing * v/(regularizer + norm(v)) * v'/(norm(v)+1e-20) +
         - atan(smoothing * norm(v)) * (1/(norm(v) + regularizer) * Diagonal(sones(3)) - v*v' ./ ((norm(v)+1e-20) * (norm(v) + regularizer)^2))
-    return ∇
+    return 2/π * ∇
 end
+
+# coulomb_direction(v, smoothing=1e3, regularizer=1e-3) = - atan(smoothing * norm(v)) * v/(regularizer + norm(v))
+# function ∂coulomb_direction∂v(v, smoothing=1e3, regularizer=1e-3)
+#     ∇ = - 1 / (1 + smoothing^2 * v'*v) * smoothing * v/(regularizer + norm(v)) * v'/(norm(v)+1e-20) +
+#         - atan(smoothing * norm(v)) * (1/(norm(v) + regularizer) * Diagonal(sones(3)) - v*v' ./ ((norm(v)+1e-20) * (norm(v) + regularizer)^2))
+#     return ∇
+# end
 
 # constructor
 function soft_contact_constraint(body::Body{T},

@@ -240,6 +240,10 @@ upper = [10.0, 0.5]
 dsol = quasi_newton_solve(f0, fgH0, d0, iter=20, gtol=1e-8, ftol=1e-6,
 	lower=lower, upper=upper, reg=1e-9)
 
+dtrue = [mech.bodies[1].mass, sliding_friction]
+dsol[1]
+abs.(dsol[1] - dtrue) ./ dtrue
+
 losses = f0.(dsol[2])
 for (i,l) in enumerate(losses)
 	println("($(i-1),$(l/losses[1]))")

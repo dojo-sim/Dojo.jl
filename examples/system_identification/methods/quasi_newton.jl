@@ -3,10 +3,13 @@ using LinearAlgebra
 
 function quasi_newton_solve(f, fgH, x0; ftol=-Inf, gtol=1e-4, iter=100, α0=1.0,
         lower=-Inf, upper=Inf, reg=1e-3, reg_min=1e-9, reg_max=1e6,
-        Δrot::Int=0, n_sample0 = 50, Δn_sample=2, n_sample_max=500)
+        Δrot::Int=0, n_sample0 = 50, Δn_sample=2, n_sample_max=500, momentum=0.0)
 
     x = copy(x0)
     X = [copy(x0)]
+    nx = length(x)
+    ge = zeros(nx)
+    He = zeros(nx, nx)
     rot = 0.0
     n_sample = n_sample0
     ls_failure = false
@@ -14,7 +17,9 @@ function quasi_newton_solve(f, fgH, x0; ftol=-Inf, gtol=1e-4, iter=100, α0=1.0,
     for k = 1:iter
         rot += Δrot
         n_sample = min(n_sample + Δn_sample, n_sample_max)
-        fe, ge, He = fgH(x, rot=rot, n_sample=n_sample)
+        fe, gei, Hei = fgH(x, rot=rot, n_sample=n_sample)
+        ge = (1 - momentum) * ge + momentum * gei
+        He = (1 - momentum) * He + momentum * Hei
         He += reg * I
         if ls_failure
             reg = clamp(reg * 2, reg_min, reg_max)

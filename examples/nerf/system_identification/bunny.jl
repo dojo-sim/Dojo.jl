@@ -27,7 +27,7 @@ include("methods/loss.jl")
 
 
 mech = get_mechanism(:nerf, nerf=:bunny, timestep=0.01, gravity=-9.81, friction_coefficient=0.3);
-mech.contacts[1].model.collision.collider.options =
+mech.contacts[1].model.collision.options =
 	ColliderOptions(
 	impact_damper=3e5,
 	impact_spring=3e4,

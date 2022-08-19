@@ -122,9 +122,8 @@ function soft_impulse(collider_origin, opts, ψ, barycenter, normal,
 	τ_contact = τ_torsional + τ_rolling
     # constraint
     impulse = timestep * [F_contact; τ_contact]
-    return impulse
+	return impulse
 end
-
 
 function soft_impulse_jacobian_contact_data(mechanism::Mechanism,
 		contact::SoftContactConstraint{T,N,Nc,Cs}, body::Body{T}) where {T,N,Nc,Cs<:SoftContact{T,N}}

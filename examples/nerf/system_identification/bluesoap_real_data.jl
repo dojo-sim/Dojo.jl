@@ -4,6 +4,7 @@ using Plots
 using Random
 using MeshCat
 using OSFLoader
+using DojoEnvironments
 # using ForwardDiff
 
 # Open visualizer
@@ -36,8 +37,8 @@ collider_options = ColliderOptions(
 	sliding_drag=0.00,
 	sliding_friction=0.23,
 	rolling_drag=0.0,
-	rolling_friction=0.2,
-	coulomb_smoothing=3e1,
+	rolling_friction=0.4,
+	coulomb_smoothing=8e0,
 	coulomb_regularizer=1e-3,)
 
 mech = get_mechanism(:nerf, nerf=:bluesoap,
@@ -89,8 +90,8 @@ z35 = [[X_data[t35]; V_data[t35]; vector(Q_data[t35]); Ω_data[t35]] for t = 1:T
 vis, anim = visualize(mech, generate_storage(mech, z35), vis=vis, animation=anim, name=:a35)
 
 
-soap_pixel = 80
-traj_pixel = 280
+soap_pixel = 56
+traj_pixel = 144
 traj_length = norm(X[1] - X[end]) * 2.26 / 100
 soap_length = traj_length * soap_pixel / traj_pixel
 soap_mesh_length = norm([259,172]) / norm([16,227])
@@ -131,7 +132,6 @@ plot!(plt[2], [X_data[t][2] for t = 1:T], label="y_real")
 
 plot!(plt[3], [sim_storage.x[1][t][3] for t = 1:T], label="z_sim")
 plot!(plt[3], [X_data[t][3] for t = 1:T], label="z_real")
-
 
 ################################################################################
 # dynamics rescaling
@@ -212,9 +212,10 @@ lower = [0.0]
 upper = [1.0]
 
 # Main.@profiler
-@elapsed dsol = quasi_newton_solve(f0, fgH0, d0, iter=10, gtol=1e-8, ftol=1e-6,
-	lower=lower, upper=upper, reg=1e-9)
+@elapsed dsol = quasi_newton_solve(f0, fgH0, d0, iter=50, gtol=1e-8, ftol=1e-6,
+	lower=lower, upper=upper, reg=1e-9, momentum=0.99)
 
+dsol[1]
 losses = f0.(dsol[2])
 for (i,l) in enumerate(losses)
 	println("($(i-1),$(l/losses[1]))")
@@ -300,9 +301,18 @@ for ind in indices
 	settransform!(vis[Symbol(:initial, ind)], Translation(2,-1,0.0))
 end
 
-timestep * 16
-timestep * 33
-
-render(vis)
 open(vis)
-convert_frames_to_video_and_gif("bluesoap_learned_and_ground_truth")
+# convert_frames_to_video_and_gif("bluesoap_learned_and_ground_truth")
+
+
+
+
+# friction estimation from video
+θ00 = 50/360*2π # table angle
+g00 = 9.81 # gravity
+t00 = 22/30 # recording time
+d00 = 0.75 # distance traveled
+a00 = 2 * d00 / (g00 * t00^2) # acceleration
+μ00 = 1 / cos(θ00) * (sin(θ00) - a00) # friction
+# μ00 = 0.75
+# with system idfentification we estimate it at 0.61 

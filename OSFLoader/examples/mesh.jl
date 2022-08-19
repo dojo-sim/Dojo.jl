@@ -6,6 +6,7 @@ using MeshIO
 using Meshing
 using MeshCat
 using Quaternions
+using MeshIO
 
 vis = Visualizer()
 open(vis)
@@ -66,11 +67,17 @@ nerf = :bluesoap
 nerf_object = OSFLoader.get_nerf_object(filename=String(nerf))
 normalizer=DensityFieldNormalizer(nerf=nerf)
 density = nerf_density(nerf_object, sampling_density=100, normalizer=normalizer)
-levels = 0:1:100
+levels = [0:1:10; 20:10:100]
 for i in levels
-    mesh = GeometryBasics.Mesh(density, NaiveSurfaceNets(iso=i))
+    # mesh = GeometryBasics.Mesh(density, NaiveSurfaceNets(iso=i))
+    mesh = GeometryBasics.Mesh(density, MarchingCubes(iso=i))
     MeshCat.setobject!(vis[Symbol(i)], mesh)
+    # MeshIO.save(joinpath(@__DIR__, "bluesoap_level_$i.obj"), mesh)
 end
+mesh = GeometryBasics.Mesh(density, MarchingCubes(iso=1))
+mesh
+save(joinpath(@__DIR__, "www.obj"), mesh)
+MeshIO.save(joinpath(@__DIR__, "www.obj"), mesh)
 
 anim = MeshCat.Animation(10)
 for i in levels
@@ -82,7 +89,7 @@ for i in levels
                 setvisible!(vis[Symbol(j)], false)
             end
             settransform!(vis[Symbol(j)], MeshCat.Translation(0,0,0.6))
-            set_camera!(vis, cam_pos=[2cos(pi+4π*i/length(levels)), 2sin(pi+4π*i/length(levels)), 0.5])
+            # Dojo.set_camera!(vis, cam_pos=[2cos(pi+4π*i/length(levels)), 2sin(pi+4π*i/length(levels)), 0.5])
         end
     end
 end
@@ -92,4 +99,4 @@ set_background!(vis)
 setanimation!(vis, anim)
 
 
-convert_frames_to_video_and_gif("bunny_melting")
+# convert_frames_to_video_and_gif("bunny_melting")
