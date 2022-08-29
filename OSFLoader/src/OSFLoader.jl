@@ -11,6 +11,7 @@ using Statistics
 using MeshIO
 using Meshing
 using MeshCat
+using Meshes
 using GeometryBasics
 using Quaternions
 
