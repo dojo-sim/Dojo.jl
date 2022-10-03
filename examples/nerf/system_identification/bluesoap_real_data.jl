@@ -105,7 +105,6 @@ time_scaling = sqrt(length_scaling)
 soap_mass = 0.150
 mass_scaling = mech.bodies[1].mass / soap_mass
 
-
 ################################################################################
 # simulation
 ################################################################################
@@ -114,6 +113,7 @@ mech = get_mechanism(:nerf, nerf=:bluesoap,
 	gravity=gravity,
 	friction_coefficient=friction_coefficient,
 	collider_options=collider_options)
+mech.bodies[1].inertia
 
 set_maximal_state!(mech,
 	[X_data[1]; V_data[1]/time_scaling;
@@ -301,7 +301,7 @@ for ind in indices
 	settransform!(vis[Symbol(:initial, ind)], Translation(2,-1,0.0))
 end
 
-open(vis)
+# open(vis)
 # convert_frames_to_video_and_gif("bluesoap_learned_and_ground_truth")
 
 
@@ -315,4 +315,4 @@ d00 = 0.75 # distance traveled
 a00 = 2 * d00 / (g00 * t00^2) # acceleration
 μ00 = 1 / cos(θ00) * (sin(θ00) - a00) # friction
 # μ00 = 0.75
-# with system idfentification we estimate it at 0.61 
+# with system idfentification we estimate it at 0.61
