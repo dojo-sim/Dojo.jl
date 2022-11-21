@@ -158,6 +158,7 @@ function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::Abs
 		(id > Ne) && continue # only keep joints
 		cnt += 1
 		nu = input_dimension(get_joint(mechanism, id))
+		nu == 0 && continue # ignore fixed joints
 		if length(col) > 0
 			push!(col, col[end][end] .+ (1:2nu))
 		else
