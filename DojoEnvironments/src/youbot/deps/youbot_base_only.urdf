@@ -39,8 +39,9 @@
 	</material>
 
 	<link name="base_footprint"/>
-	<joint name="base_footprint_joint" type="fixed">
-		<origin rpy="0 0 0" xyz="0 0 0"/>
+	<joint name="base_footprint_joint" type="planaraxis">
+		<origin rpy="0 0 0" xyz="0 0 0.083"/>
+		<axis xyz="0 0 1"/>
 		<child link="base_link"/>
 		<parent link="base_footprint"/>
 	</joint>
@@ -66,36 +67,21 @@
 		</collision>
 	</link>
 	<!-- front left wheel -->
-	<joint name="caster_joint_fl" type="continuous">
-		<origin rpy="0 0 0" xyz="0.228 0.158 -0.034"/>
-		<axis xyz="0 0 1"/>
-		<limit effort="30" velocity="10"/>
-		<dynamics damping="1.0" friction="1.0"/>
-		<safety_controller k_velocity="10.0"/>
-		<parent link="base_link"/>
-		<child link="caster_link_fl"/>
-	</joint>
-	<link name="caster_link_fl">
-		<inertial>
-			<mass value="0.1"/>
-			<origin xyz="0 0 0"/>
-			<inertia ixx="0.012411765597" ixy="-0.000711733678" ixz="0.00050272983" iyy="0.015218160428" iyz="-0.000004273467" izz="0.011763977943"/>
-		</inertial>
-	</link>
 	<joint name="wheel_joint_fl" type="continuous">
 		<axis xyz="0 1 0"/>
 		<limit effort="30" velocity="10"/>
-		<origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-		<parent link="caster_link_fl"/>
+		<!-- <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/> -->
+		<origin rpy="0 0 0" xyz="0.228 0.158 -0.034"/>
+		<parent link="base_link"/>
 		<dynamics damping="1.0" friction="1.0"/>
 		<safety_controller k_velocity="10.0"/>
 		<child link="wheel_link_fl"/>
 	</joint>
 	<link name="wheel_link_fl">
 		<inertial>
-			<mass value="1.4"/>
+			<mass value="1.5"/>
 			<origin xyz="0 0 0"/>
-			<inertia ixx="0.012411765597" ixy="-0.000711733678" ixz="0.00050272983" iyy="0.015218160428" iyz="-0.000004273467" izz="0.011763977943"/>
+			<inertia ixx="0.024823531194" ixy="-0.001423467356" ixz="0.00100545966" iyy="0.030436320856" iyz="-0.000008546934" izz="0.023527955886"/>
 		</inertial>
 		<visual>
 			<origin rpy="0 0 0" xyz="0 0 0"/>
@@ -113,36 +99,20 @@
 		</collision>
 	</link>
 	<!-- front right wheel -->
-	<joint name="caster_joint_fr" type="continuous">
-		<origin rpy="0 0 0" xyz="0.228 -0.158 -0.034"/>
-		<axis xyz="0 0 1"/>
-		<limit effort="30" velocity="10"/>
-		<dynamics damping="1.0" friction="1.0"/>
-		<safety_controller k_velocity="10.0"/>
-		<parent link="base_link"/>
-		<child link="caster_link_fr"/>
-	</joint>
-	<link name="caster_link_fr">
-		<inertial>
-			<mass value="0.1"/>
-			<origin xyz="0 0 0"/>
-			<inertia ixx="0.012411765597" ixy="-0.000711733678" ixz="0.00050272983" iyy="0.015218160428" iyz="-0.000004273467" izz="0.011763977943"/>
-		</inertial>
-	</link>
 	<joint name="wheel_joint_fr" type="continuous">
 		<axis xyz="0 1 0"/>
 		<limit effort="30" velocity="10"/>
 		<dynamics damping="1.0" friction="1.0"/>
 		<safety_controller k_velocity="10.0"/>
-		<origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-		<parent link="caster_link_fr"/>
+		<origin rpy="0 0 0" xyz="0.228 -0.158 -0.034"/>
+		<parent link="base_link"/>
 		<child link="wheel_link_fr"/>
 	</joint>
 	<link name="wheel_link_fr">
 		<inertial>
-			<mass value="1.4"/>
+			<mass value="1.5"/>
 			<origin xyz="0 0 0"/>
-			<inertia ixx="0.012411765597" ixy="-0.000711733678" ixz="0.00050272983" iyy="0.015218160428" iyz="-0.000004273467" izz="0.011763977943"/>
+			<inertia ixx="0.024823531194" ixy="-0.001423467356" ixz="0.00100545966" iyy="0.030436320856" iyz="-0.000008546934" izz="0.023527955886"/>
 		</inertial>
 		<visual>
 			<origin rpy="0 0 0" xyz="0 0 0"/>
@@ -160,36 +130,20 @@
 		</collision>
 	</link>
 	<!-- back left wheel -->
-	<joint name="caster_joint_bl" type="continuous">
-		<origin rpy="0 0 0" xyz="-0.228 0.158 -0.034"/>
-		<axis xyz="0 0 1"/>
-		<limit effort="30" velocity="10"/>
-		<dynamics damping="1.0" friction="1.0"/>
-		<safety_controller k_velocity="10.0"/>
-		<parent link="base_link"/>
-		<child link="caster_link_bl"/>
-	</joint>
-	<link name="caster_link_bl">
-		<inertial>
-			<mass value="0.1"/>
-			<origin xyz="0 0 0"/>
-			<inertia ixx="0.012411765597" ixy="-0.000711733678" ixz="0.00050272983" iyy="0.015218160428" iyz="-0.000004273467" izz="0.011763977943"/>
-		</inertial>
-	</link>
 	<joint name="wheel_joint_bl" type="continuous">
 		<axis xyz="0 1 0"/>
 		<limit effort="30" velocity="10"/>
 		<dynamics damping="1.0" friction="1.0"/>
 		<safety_controller k_velocity="10.0"/>
-		<origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-		<parent link="caster_link_bl"/>
+		<origin rpy="0 0 0" xyz="-0.228 0.158 -0.034"/>
+		<parent link="base_link"/>
 		<child link="wheel_link_bl"/>
 	</joint>
 	<link name="wheel_link_bl">
 		<inertial>
-			<mass value="1.4"/>
+			<mass value="1.5"/>
 			<origin xyz="0 0 0"/>
-			<inertia ixx="0.012411765597" ixy="-0.000711733678" ixz="0.00050272983" iyy="0.015218160428" iyz="-0.000004273467" izz="0.011763977943"/>
+			<inertia ixx="0.024823531194" ixy="-0.001423467356" ixz="0.00100545966" iyy="0.030436320856" iyz="-0.000008546934" izz="0.023527955886"/>
 		</inertial>
 		<visual>
 			<origin rpy="0 0 0" xyz="0 0 0"/>
@@ -207,36 +161,20 @@
 		</collision>
 	</link>
 	<!-- back right wheel -->
-	<joint name="caster_joint_br" type="continuous">
-		<origin rpy="0 0 0" xyz="-0.228 -0.158 -0.034"/>
-		<axis xyz="0 0 1"/>
-		<limit effort="30" velocity="10"/>
-		<dynamics damping="1.0" friction="1.0"/>
-		<safety_controller k_velocity="10.0"/>
-		<parent link="base_link"/>
-		<child link="caster_link_br"/>
-	</joint>
-	<link name="caster_link_br">
-		<inertial>
-			<mass value="0.1"/>
-			<origin xyz="0 0 0"/>
-			<inertia ixx="0.012411765597" ixy="-0.000711733678" ixz="0.00050272983" iyy="0.015218160428" iyz="-0.000004273467" izz="0.011763977943"/>
-		</inertial>
-	</link>
 	<joint name="wheel_joint_br" type="continuous">
 		<axis xyz="0 1 0"/>
 		<limit effort="30" velocity="10"/>
 		<dynamics damping="1.0" friction="1.0"/>
 		<safety_controller k_velocity="10.0"/>
-		<origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-		<parent link="caster_link_br"/>
+		<origin rpy="0 0 0" xyz="-0.228 -0.158 -0.034"/>
+		<parent link="base_link"/>
 		<child link="wheel_link_br"/>
 	</joint>
 	<link name="wheel_link_br">
 		<inertial>
-			<mass value="1.4"/>
+			<mass value="1.5"/>
 			<origin xyz="0 0 0"/>
-			<inertia ixx="0.012411765597" ixy="-0.000711733678" ixz="0.00050272983" iyy="0.015218160428" iyz="-0.000004273467" izz="0.011763977943"/>
+			<inertia ixx="0.024823531194" ixy="-0.001423467356" ixz="0.00100545966" iyy="0.030436320856" iyz="-0.000008546934" izz="0.023527955886"/>
 		</inertial>
 		<visual>
 			<origin rpy="0 0 0" xyz="0 0 0"/>
@@ -260,29 +198,21 @@
 		<kp>1000000</kp>
 		<kd>100</kd>
 	</gazebo>
-	<gazebo reference="caster_link_fl">
-    </gazebo>
 	<!-- front right wheel -->
 	<gazebo reference="wheel_link_fr">
 		<kp>1000000</kp>
 		<kd>100</kd>
 	</gazebo>
-	<gazebo reference="caster_link_fr">   
-    </gazebo>
 	<!-- back left wheel -->
 	<gazebo reference="wheel_link_bl">
 		<kp>1000000</kp>
 		<kd>100</kd>
 	</gazebo>
-	<gazebo reference="caster_link_bl">
-    </gazebo>
 	<!-- back right wheel -->
 	<gazebo reference="wheel_link_br">
 		<kp>1000000</kp>
 		<kd>100</kd>
 	</gazebo>
-	<gazebo reference="caster_link_br">
-    </gazebo>
 	<!-- front left wheel -->
 	<transmission name="wheel_trans_fl">
 		<type>transmission_interface/SimpleTransmission</type>
@@ -290,15 +220,6 @@
 			<mechanicalReduction>79.23809523809524</mechanicalReduction>
 		</actuator>
 		<joint name="wheel_joint_fl">
-			<hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
-		</joint>
-	</transmission>
-	<transmission name="caster_trans_fl">
-		<type>transmission_interface/SimpleTransmission</type>
-		<actuator name="caster_motor_fl">
-			<mechanicalReduction>79.23809523809524</mechanicalReduction>
-		</actuator>
-		<joint name="caster_joint_fl">
 			<hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
 		</joint>
 	</transmission>
@@ -312,15 +233,6 @@
 			<hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
 		</joint>
 	</transmission>
-	<transmission name="caster_trans_fr">
-		<type>transmission_interface/SimpleTransmission</type>
-		<actuator name="caster_motor_fr">
-			<mechanicalReduction>79.23809523809524</mechanicalReduction>
-		</actuator>
-		<joint name="caster_joint_fr">
-			<hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
-		</joint>
-	</transmission>
 	<!-- back left wheel -->
 	<transmission name="wheel_trans_bl">
 		<type>transmission_interface/SimpleTransmission</type>
@@ -331,15 +243,6 @@
 			<hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
 		</joint>
 	</transmission>
-	<transmission name="caster_trans_bl">
-		<type>transmission_interface/SimpleTransmission</type>
-		<actuator name="caster_motor_bl">
-			<mechanicalReduction>79.23809523809524</mechanicalReduction>
-		</actuator>
-		<joint name="caster_joint_bl">
-			<hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
-		</joint>
-	</transmission>
 	<!-- back right wheel -->
 	<transmission name="wheel_trans_br">
 		<type>transmission_interface/SimpleTransmission</type>
@@ -347,15 +250,6 @@
 			<mechanicalReduction>79.23809523809524</mechanicalReduction>
 		</actuator>
 		<joint name="wheel_joint_br">
-			<hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
-		</joint>
-	</transmission>
-	<transmission name="caster_trans_br">
-		<type>transmission_interface/SimpleTransmission</type>
-		<actuator name="caster_motor_br">
-			<mechanicalReduction>79.23809523809524</mechanicalReduction>
-		</actuator>
-		<joint name="caster_joint_br">
 			<hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
 		</joint>
 	</transmission>
