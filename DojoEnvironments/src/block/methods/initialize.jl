@@ -1,22 +1,20 @@
-function get_block(; 
-    timestep=0.01, 
+function get_block(;
+    timestep=0.01,
     gravity=[0.0; 0.0; -9.81],
-    friction_coefficient=0.8, 
-    radius=0.0, 
+    friction_coefficient=0.8,
+    radius=0.0,
     side=0.5,
     contact=true,
     contact_type=:nonlinear,
-    color=RGBA(0.0, 0.0, 0.0, 1.0),
+    color=RGBA(0.9, 0.9, 0.9, 1.0),
     mode=:box,
     T=Float64)
 
     # Parameters
     origin = Origin{T}()
-    pbody = Box(side, side, side, 1.0, 
-        color=color)
-    joint0to1 = JointConstraint(Floating(origin, pbody))
-    bodies = [pbody]
-    joints = [joint0to1]
+    block = Box(side, side, side, 1.0, color=color, name=:block)
+    bodies = [block]
+    joints = [JointConstraint(Floating(origin, block))]
 
     if contact
         # Corner vectors
@@ -41,29 +39,30 @@ function get_block(;
         contact_radius = [radius for i = 1:n]
         friction_coefficient = friction_coefficient * ones(n)
 
-        contacts = contact_constraint(pbody, normal;
-            friction_coefficient, 
-            contact_origins=corners, 
-            contact_radius, 
-            contact_type)
+        contacts = contact_constraint(block, normal;
+            friction_coefficient,
+            contact_origins=corners,
+            contact_radius,
+            contact_type,
+            names=[Symbol(:contact, i) for i=1:8])
 
         mech = Mechanism(origin, bodies, joints, contacts;
-            gravity, 
+            gravity,
             timestep)
     else
         mech = Mechanism(origin, bodies, joints;
-            gravity, 
+            gravity,
             timestep)
     end
     return mech
 end
 
 function initialize_block!(mechanism::Mechanism{T};
-        x=[0.0, 0.0, 1.0],
-        q=Quaternion(1.0, 0.0, 0.0, 0.0),
-        v=[1.0, 0.3, 0.2],
-        ω=[2.5, -1.0, 2.0]) where T
-         
+        position=[0.0, 0.0, 1.0],
+        orientation=Quaternion(1.0, 0.0, 0.0, 0.0),
+        velocity=[1.0, 0.3, 0.2],
+        angular_velocity=[2.5, -1.0, 2.0]) where T
+
     body = mechanism.bodies[1]
 
     halfside = body.shape.xyz[1] / 2.0
@@ -77,10 +76,10 @@ function initialize_block!(mechanism::Mechanism{T};
 
     z = halfside + offset
 
-    set_maximal_configurations!(body, 
-        x=x + [0.0, 0.0, z], 
-        q=q)
-    set_maximal_velocities!(body, 
-        v=v, 
-        ω=ω)
+    set_maximal_configurations!(body,
+        x=position + [0.0, 0.0, z],
+        q=orientation)
+    set_maximal_velocities!(body,
+        v=velocity,
+        ω=angular_velocity)
 end
