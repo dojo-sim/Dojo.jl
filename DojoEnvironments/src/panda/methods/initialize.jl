@@ -21,7 +21,8 @@ function get_panda(;
     mech = Mechanism(path; floating=false, T,
         gravity,
         timestep,
-        parse_damper)
+        parse_damper,
+        keep_fixed_joints=false)
 
     # Adding springs and dampers
     set_springs!(mech.joints, spring)

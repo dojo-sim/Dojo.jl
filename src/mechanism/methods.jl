@@ -149,6 +149,7 @@ function reduce_fixed_joints(mechanism; kwargs...)
     return mechanism
 end
 
+# TODO currently only for non-contact mechanisms
 function reduce_fixed_joints(origin, bodies, joints)
     remaining_bodies = ones(Bool,length(bodies))
     remaining_joints = ones(Bool,length(joints))
@@ -176,9 +177,13 @@ function reduce_fixed_joints(origin, bodies, joints)
                 parent_body.inertia = new_body_J1 + new_body_J2 # in new_body's frame
             end
 
-            parent_body.shape.position_offset += -new_body_com # in new_body's frame
-            child_body.shape.position_offset += child_body_com-new_body_com # in new_body's frame
-            child_body.shape.orientation_offset *= q_offset
+            if !(typeof(parent_body.shape) <: EmptyShape)
+                parent_body.shape.position_offset += -new_body_com # in new_body's frame
+            end
+            if !(typeof(child_body.shape) <: EmptyShape)
+                child_body.shape.position_offset += child_body_com-new_body_com # in new_body's frame
+                child_body.shape.orientation_offset *= q_offset
+            end
 
             parent_body.shape = CombinedShapes([parent_body.shape;child_body.shape])
             parent_body.name = Symbol(String(parent_body.name)*"_merged_with_"*String(child_body.name))
