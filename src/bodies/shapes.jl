@@ -133,9 +133,7 @@ mutable struct Cylinder{T} <: Shape{T}
 end
 
 """
-    Capsule{T} <: Shape{T}
-
-    capsule geometry 
+    Capsule geometry created as a CombinedShapes
     
     position_offset: geometry origin offset from center of mass
     orientation_offset: orientation offset from body frame
@@ -333,16 +331,6 @@ end
 function convert_shape(::EmptyShape)
     return nothing
 end
-
-# function convert_shape(capsule::Capsule)
-#     r, h = Tuple(capsule.rh)
-#     p1 = Point(0.0, 0.0, -h / 2.0)
-#     p2 = Point(0.0, 0.0, h / 2.0)
-#     cyl = GeometryBasics.Cylinder(p1, p2, r)
-#     cap1 = GeometryBasics.Sphere(p1, r)
-#     cap2 = GeometryBasics.Sphere(p2, r)
-#     return [cyl, cap1, cap2]
-# end
 
 function convert_shape(combinedshapes::CombinedShapes)
     geom = []
