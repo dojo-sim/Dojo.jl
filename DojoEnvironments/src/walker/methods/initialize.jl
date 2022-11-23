@@ -99,7 +99,7 @@ end
 
 function initialize_walker!(mechanism::Mechanism; 
     body_position=[0.0, 0.0],
-    body_orientation=0.0) where T
+    body_orientation=0.0)
     
     set_minimal_coordinates!(mechanism,
                  get_joint(mechanism, :floating_joint),

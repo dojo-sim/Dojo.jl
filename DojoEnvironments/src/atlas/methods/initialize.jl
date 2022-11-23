@@ -190,7 +190,7 @@ function initialize_atlas!(mechanism::Mechanism;
     link_linear_velocity=[zeros(3)  for i=1:length(mechanism.bodies)],
     link_angular_velocity=[zeros(3) for i=1:length(mechanism.bodies)],
     hip_orientation=0.0, 
-    knee_orientation=0.0) where T
+    knee_orientation=0.0)
 
     body_position += (model_type == :armless) ? [0.0, 0.0, 0.9385 + 0.14853] : [0.0, 0.0, 0.9385]
 
@@ -221,7 +221,7 @@ function initialize_atlas_stance!(mech::Mechanism;
     link_linear_velocity=[zeros(3)  for i=1:length(mech.bodies)],
     link_angular_velocity=[zeros(3) for i=1:length(mech.bodies)],
     hip_orientation=0.0, 
-    knee_orienation=0.0) where T
+    knee_orienation=0.0)
     
     body_position += [0.0, 0.0, 0.9385]
 
