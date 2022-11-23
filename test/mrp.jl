@@ -1,6 +1,6 @@
 @testset "FiniteDiff comparison" begin
     q = [1,2,3,4.0]
-    q = Quaternion(q ./ norm(q)...,true)
+    q = Quaternion(q ./ norm(q)...)
     @test norm(Dojo.dmrpdq(Dojo.vector(q)) -
         ForwardDiff.jacobian(Dojo.mrp, Dojo.vector(q)), Inf) < 1.0e-8
     @test norm(Dojo.daxisdq(Dojo.vector(q)) -

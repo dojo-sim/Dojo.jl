@@ -649,7 +649,7 @@ end
 # J0 = minimal_velocities_jacobian_configuration(:parent,
 #     rot0, xa0, va0, qa0, ωa0, xb0, vb0, qb0, ωb0, timestep0)
 # J1 = FiniteDiff.finite_difference_jacobian(
-#     xq -> Dojo.minimal_velocities(rot0, xq[SUnitRange(1,3)], va0, Quaternion(xq[SUnitRange(4,7)]...,true), ωa0,
+#     xq -> Dojo.minimal_velocities(rot0, xq[SUnitRange(1,3)], va0, Quaternion(xq[SUnitRange(4,7)]...), ωa0,
 #     xb0, vb0, qb0, ωb0, timestep0),
 #     [xa0; vector(qa0)]) * cat(I(3), LVᵀmat(qa0), dims=(1,2))
 # norm(J0 - J1, Inf)
@@ -659,7 +659,7 @@ end
 #     rot0, xa0, va0, qa0, ωa0, xb0, vb0, qb0, ωb0, timestep0)
 # J1 = FiniteDiff.finite_difference_jacobian(
 #     xq -> Dojo.minimal_velocities(rot0, xa0, va0, qa0, ωa0,
-#     xq[SUnitRange(1,3)], vb0, Quaternion(xq[SUnitRange(4,7)]...,true), ωb0, timestep0),
+#     xq[SUnitRange(1,3)], vb0, Quaternion(xq[SUnitRange(4,7)]...), ωb0, timestep0),
 #     [xb0; vector(qb0)]) * cat(I(3), LVᵀmat(qb0), dims=(1,2))
 # norm(J0 - J1, Inf)
 # norm(J0 - J1, Inf) < 1e-4

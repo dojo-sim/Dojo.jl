@@ -14,7 +14,7 @@ mech = DojoEnvironments.get_mechanism(:panda,
     limits=true,
     )
 # for joint in mech.joints
-#     joint.rotational.orientation_offset = Quaternion(1,0,0,0.0,true)
+#     joint.rotational.orientation_offset = Quaternion(1,0,0,0.0)
 # end
 function ctrl!(m, k; kp=10.0, kd=5.0)
     nu = input_dimension(m)
@@ -119,7 +119,7 @@ storage.ω[1]
 plot([-ω[1] for ω in storage.ω[1]])
 
 xa = szeros(3)
-qa = Quaternions.QuaternionF64(1.0, 0.0, 0.0, 0.0, true)
+qa = Quaternions.QuaternionF64(1.0, 0.0, 0.0, 0.0)
 xb = 0*[0.0, 0.4476047997637539, 0.8771773278369399]
 qb = mech.bodies[1].state.q2
 Q = displacement_jacobian_configuration(:child, mech.joints[1].rotational,
@@ -154,7 +154,7 @@ p0 = rand(3)
 J0 = Dojo.impulse_transform_jacobian(:parent, :parent, rot0, xa, qa, xb, qb, p0)
 attjac = cat(I(3),Dojo.LVᵀmat(qa), dims=(1,2))
 J1 = FiniteDiff.finite_difference_jacobian(
-    z -> Dojo.impulse_transform(:parent, rot0, z[1:3], Quaternion(z[4:7]...,true), xb, qb) * p0,
+    z -> Dojo.impulse_transform(:parent, rot0, z[1:3], Quaternion(z[4:7]...), xb, qb) * p0,
     [xa; Dojo.vector(qa)]
     ) * attjac
 @test norm(J0 - J1, Inf) < 1.0e-7
@@ -162,7 +162,7 @@ J1 = FiniteDiff.finite_difference_jacobian(
 J0 = Dojo.impulse_transform_jacobian(:parent, :child, rot0, xa, qa, xb, qb, p0)
 attjac = cat(I(3),Dojo.LVᵀmat(qb), dims=(1,2))
 J1 = FiniteDiff.finite_difference_jacobian(
-    z -> Dojo.impulse_transform(:parent, rot0, xa, qa, z[1:3], Quaternion(z[4:7]...,true)) * p0,
+    z -> Dojo.impulse_transform(:parent, rot0, xa, qa, z[1:3], Quaternion(z[4:7]...)) * p0,
     [xb; Dojo.vector(qb)]
     ) * attjac
 @test norm(J0 - J1, Inf) < 1.0e-7
@@ -170,7 +170,7 @@ J1 = FiniteDiff.finite_difference_jacobian(
 J0 = Dojo.impulse_transform_jacobian(:child, :parent, rot0, xa, qa, xb, qb, p0)
 attjac = cat(I(3),Dojo.LVᵀmat(qa), dims=(1,2))
 J1 = FiniteDiff.finite_difference_jacobian(
-    z -> Dojo.impulse_transform(:child, rot0, z[1:3], Quaternion(z[4:7]...,true), xb, qb) * p0,
+    z -> Dojo.impulse_transform(:child, rot0, z[1:3], Quaternion(z[4:7]...), xb, qb) * p0,
     [xa; Dojo.vector(qa)]
     ) * attjac
 @test norm(J0 - J1, Inf) < 1.0e-7
@@ -178,7 +178,7 @@ J1 = FiniteDiff.finite_difference_jacobian(
 J0 = Dojo.impulse_transform_jacobian(:child, :child, rot0, xa, qa, xb, qb, p0)
 attjac = cat(I(3),Dojo.LVᵀmat(qb), dims=(1,2))
 J1 = FiniteDiff.finite_difference_jacobian(
-    z -> Dojo.impulse_transform(:child, rot0, xa, qa, z[1:3], Quaternion(z[4:7]...,true)) * p0,
+    z -> Dojo.impulse_transform(:child, rot0, xa, qa, z[1:3], Quaternion(z[4:7]...)) * p0,
     [xb; Dojo.vector(qb)]
     ) * attjac
 @test norm(J0 - J1, Inf) < 1.0e-7
@@ -191,14 +191,14 @@ p0 = rand(3)
 q0 = rand(QuatRotation).q
 J0 = Dojo.∂rotation_matrix∂q(q0, p0)
 J2 = Dojo.∂rotation_matrix∂q(q0, p0, attjac=true)
-J1 = FiniteDiff.finite_difference_jacobian(q0 -> Dojo.rotation_matrix(Quaternion(q0...,true))*p0, Dojo.vector(q0))
+J1 = FiniteDiff.finite_difference_jacobian(q0 -> Dojo.rotation_matrix(Quaternion(q0...))*p0, Dojo.vector(q0))
 J3 = J1 * Dojo.LVᵀmat(q0)
 norm(J0 - J1, Inf)
 norm(J2 - J3, Inf)
 
 J4 = Dojo.∂rotation_matrix_inv∂q(q0, p0)
 J6 = Dojo.∂rotation_matrix_inv∂q(q0, p0, attjac=true)
-J5 = FiniteDiff.finite_difference_jacobian(q0 -> Dojo.rotation_matrix(inv(Quaternion(q0...,true)))*p0, Dojo.vector(q0))
+J5 = FiniteDiff.finite_difference_jacobian(q0 -> Dojo.rotation_matrix(inv(Quaternion(q0...)))*p0, Dojo.vector(q0))
 J7 = J5 * Dojo.LVᵀmat(q0)
 norm(J4 - J5, Inf)
 norm(J6 - J7, Inf)
@@ -226,7 +226,7 @@ VRᵀmat(qra) * LVᵀmat(qra) * x - vector_rotate(x, qra)
 VLmat(qra) * RᵀVᵀmat(qra) * x - vector_rotate(x, qra)
 
 qra = [1,0,0,1.]
-qra = Quaternion(qra ./ norm(qra)..., true)
+qra = Quaternion(qra ./ norm(qra)...)
 x = [1,0,0]
 vector_rotate(x, qra)
 VLmat(qra) * RᵀVᵀmat(qra) * x
@@ -282,7 +282,7 @@ mech = DojoEnvironments.get_mechanism(:panda,
     gravity=[0,0,-9.0],
     spring=0.0,
     damper=0.1)
-# mech.joints[1].rotational.orientation_offset = Quaternion(1,0,0,0.0,true)
+# mech.joints[1].rotational.orientation_offset = Quaternion(1,0,0,0.0)
 function ctrl!(m,k)
     nu = minimal_dimension(mech)
     set_input!(m, 0.000 * 1 *sones(nu))
@@ -319,7 +319,7 @@ damper_force(:child, joint.rotational, current_configuration(pbody.state)[2], pb
 function min_vel(qb)
     xa = SVector{3}([0.0, 0.0, 0.0])
     va = SVector{3}([0.0, 0.0, 0.0])
-    qa = Quaternions.QuaternionF64(1.0, 0.0, 0.0, 0.0, true)
+    qa = Quaternions.QuaternionF64(1.0, 0.0, 0.0, 0.0)
     ωa = SVector{3}([0.0, 0.0, 0.0])
     xb = SVector{3}([0.0, 0.0, 0.0])
     vb = SVector{3}([0.0, 0.0, 0.0])

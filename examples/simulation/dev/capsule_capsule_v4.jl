@@ -259,8 +259,8 @@ setobject!(vis[:cap2][:tip], sph2, MeshPhongMaterial(color=color2))
 settransform!(vis[:cap2][:tip], Translation(0.0, 0.0, 0.5 * hb))
 
 # set configuration
-settransform!(vis[:cap1], compose(Translation(xa), LinearMap(Quaternion(qa..., false))))
-settransform!(vis[:cap2], compose(Translation(xb), LinearMap(Quaternion(qb..., false))))
+settransform!(vis[:cap1], compose(Translation(xa), LinearMap(Quaternion(qa...))))
+settransform!(vis[:cap2], compose(Translation(xb), LinearMap(Quaternion(qb...))))
 
 # closest points
 color_cp = Colors.RGBA(0.0, 0.0, 0.0, 1.0);
