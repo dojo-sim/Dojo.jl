@@ -2,6 +2,26 @@
 
 An [`Environment`](@ref) is a convienient object for applications like reinforcement learning and trajectory optimization. 
 
+For this example we need the following setup:
+```julia
+# ## Setup
+using Dojo
+using DojoEnvironments
+using Random
+using LinearAlgebra
+
+# ## Define struct
+struct Ant end
+```
+
+```julia
+# ## Define Variables
+representation = :minimal #(:minimal, :maximal)
+seed = 0
+timestep = 0.01
+T = 2.0 # Total time
+```
+
 To demonstrate, we create the [`Dojo.Ant`](@ref) environment. First, we load (or [create](define_mechanism.md)) a mechanism:
 
 ```julia 
@@ -41,6 +61,11 @@ Random number:
 rng = MersenneTwister(seed)
 ```
 
+Intialize info:
+```julia
+info = Dict()
+```
+
 Dynamics data:
 ```julia
 # state vector
@@ -77,7 +102,7 @@ opts_grad = SolverOptions()
 
 Environment:
 ```julia
-TYPES = [Ant, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
+TYPES = [Ant, typeof(T), typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
 env = Environment{TYPES...}(
     mechanism, 
     representation, 
@@ -89,7 +114,7 @@ env = Environment{TYPES...}(
     info,
     [rng], 
     vis,
-    opts_sim, opts_grad)
+    opts_step, opts_grad)
 ```
 
 With the environment instantiated, we can interact with it by overloading the following methods: 
@@ -126,7 +151,7 @@ function step(env::Environment{Ant}, x, u;
     reward = cost(env, z1, u_scaled)
 
     # check for done
-    done = is_done(env, z1, u_scaled)
+    done = is_done(env, z1)
 
     # gradients
     if gradients
@@ -232,7 +257,8 @@ for t = 1:100
     step(env, env.state, randn(env.num_inputs))
     push!(y, copy(env.state)) 
 end
-visualize(env, y)
+open(vis)
+DojoEnvironments.visualize(env, y)
 ```
 
 The result should be something like this:
