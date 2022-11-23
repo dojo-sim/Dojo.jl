@@ -143,81 +143,79 @@ end
     scale: scaling
     color: RGBA
 """
-mutable struct Capsule{T} <: Shape{T}
-    position_offset::SVector{3,T}
-    orientation_offset::Quaternion{T}
-    rh::SVector{2,T}
-    scale::SVector{3,T}
-    color::RGBA
+function Capsule(r::Real, h::Real;
+        position_offset::AbstractVector=szeros(3), 
+        orientation_offset::Quaternion=one(Quaternion),
+        scale::AbstractVector=sones(3), 
+        color=RGBA(0.75, 0.75, 0.75))
+    T = promote_type(quateltype.((r, h, position_offset, orientation_offset))...)
 
-    # Capsule points in the z direction
-    function Capsule(r::Real, h::Real;
-            position_offset::AbstractVector=szeros(3), 
-            orientation_offset::Quaternion=one(Quaternion),
-            scale::AbstractVector=sones(3), 
-            color=RGBA(0.75, 0.75, 0.75))
-        T = promote_type(quateltype.((r, h, position_offset, orientation_offset))...)
-        new{T}(position_offset, orientation_offset, [r; h], scale, color)
-    end
+    cylinder = Cylinder(r, h)
+    cap1 = Sphere(r; position_offset=[0;0;h/2])
+    cap2 = Sphere(r; position_offset=[0;0;-h/2])
+    CombinedShapes([cylinder;cap1;cap2]; position_offset, orientation_offset, scale, color)
+end
 
-    function Capsule(r::Real, h::Real, m::Real;
-            position_offset::AbstractVector=szeros(3), 
-            orientation_offset::Quaternion=one(Quaternion),
-            scale::AbstractVector=sones(3), 
-            name::Symbol=Symbol("body_" * randstring(4)), 
-            color=RGBA(0.75, 0.75, 0.75))
-        T = promote_type(quateltype.((r, h, m, position_offset, orientation_offset))...)
+function Capsule(r::Real, h::Real, m::Real;
+        position_offset::AbstractVector=szeros(3), 
+        orientation_offset::Quaternion=one(Quaternion),
+        scale::AbstractVector=sones(3), 
+        name::Symbol=Symbol("body_" * randstring(4)), 
+        color=RGBA(0.75, 0.75, 0.75))
+    T = promote_type(quateltype.((r, h, m, position_offset, orientation_offset))...)
 
-        mass_cylinder = π * h * r^2.0
-        mass_hemisphere = π * 2.0 / 3.0 * r^3.0 
-        mass_total = mass_cylinder + 2 * mass_hemisphere
-        Ixx_cylinder = mass_cylinder * (1.0 / 12.0 * h^2.0 + 1.0 / 4.0 * r^2.0)
-        Ixx_hemisphere = 83.0 / 320 * mass_hemisphere * r^2
-        d = (3.0 / 8.0 * r + 0.5 * h)
-        Ixx = Ixx_cylinder + 2.0 * (Ixx_hemisphere + mass_hemisphere * d^2.0)
-        Izz = 0.5 * mass_cylinder * r^2.0 + mass_hemisphere * (2.0 * r^2.0) / 5.0 
+    volume_cylinder = π * h * r^2.0
+    volume_hemisphere = π * 4.0 / 3.0 * r^3.0 / 2.0
+    volume_total = volume_cylinder + 2 * volume_hemisphere
+    mass_cylinder = m * volume_cylinder / volume_total
+    mass_hemisphere = m * volume_hemisphere / volume_total
+    Ixx_cylinder = mass_cylinder * (1.0 / 12.0 * h^2.0 + 1.0 / 4.0 * r^2.0)
+    Izz_cylinder = mass_cylinder * 1.0 / 2.0 * r^2.0
+    Ixx_hemisphere = 83.0 / 320 * mass_hemisphere * r^2
+    Izz_hemisphere = mass_hemisphere * 2.0 / 5.0 * r^2 / 2.0
+    d = (3.0 / 8.0 * r + 0.5 * h)
+    Ixx = Ixx_cylinder + 2.0 * (Ixx_hemisphere + mass_hemisphere * d^2.0)
+    Izz = Izz_cylinder + Izz_hemisphere * 2.0
 
-        J = m * diagm([Ixx; Ixx; Izz])
+    J = diagm([Ixx; Ixx; Izz])
 
-        return Body(m, J; name=name, shape=new{T}(position_offset, orientation_offset, [r; h], scale, color))
-    end
+    return Body(m, J; name=name, shape=Capsule(r, h; position_offset, orientation_offset, scale, color))
 end
 
 """
-    Shapes{T} <: Shape{T}
+CombinedShapes{T} <: Shape{T}
 
     composite geometry
     
-    shape: list of Shape objects
     position_offset: geometry origin offset from center of mass
     orientation_offset: orientation offset from body frame
+    shape: list of Shape objects
     xyz: dimensions (meters)
-    scale: scaling
-    color: RGBA
 """
-mutable struct Shapes{T} <: Shape{T}
-    shape::Vector 
+mutable struct CombinedShapes{T} <: Shape{T}
     position_offset::SVector{3,T}
     orientation_offset::Quaternion{T}
+    shapes::Vector{Shape{T}}
     scale::SVector{3,T}
     color::RGBA
 
-    function Shapes(shapes::Vector{Shape{T}}; 
+    function CombinedShapes(shapes::Vector{Shape{T}}; 
         position_offset::AbstractVector=szeros(3), 
         orientation_offset::Quaternion=one(Quaternion),
         scale::AbstractVector=sones(3), 
-        name::Symbol=Symbol("body_" * randstring(4)), 
         color=RGBA(0.75, 0.75, 0.75)) where T
-        new{T}(shapes, position_offset, orientation_offset, scale, color)
+
+        new{T}(position_offset, orientation_offset, shapes, scale, color)
     end
 
-    function Shapes(shapes::Vector, m::T, J; 
+    function CombinedShapes(shapes::Vector, m::T, J; 
         position_offset::AbstractVector=szeros(3), 
         orientation_offset::Quaternion=one(Quaternion),
+        name::Symbol=Symbol("body_" * randstring(4)),
         scale::AbstractVector=sones(3), 
-        name::Symbol=Symbol("body_" * randstring(4)), 
         color=RGBA(0.75, 0.75, 0.75)) where T
-        Body(m, J; name=name, shape=new{T}(shapes, position_offset, orientation_offset, scale, color))
+
+        Body(m, J; name=name, shape=new{T}(position_offset, orientation_offset, shapes, scale, color))
     end
 end
 
@@ -336,20 +334,20 @@ function convert_shape(::EmptyShape)
     return nothing
 end
 
-function convert_shape(capsule::Capsule)
-    r, h = Tuple(capsule.rh)
-    p1 = Point(0.0, 0.0, -h / 2.0)
-    p2 = Point(0.0, 0.0, h / 2.0)
-    cyl = GeometryBasics.Cylinder(p1, p2, r)
-    cap1 = GeometryBasics.Sphere(p1, r)
-    cap2 = GeometryBasics.Sphere(p2, r)
-    return [cyl, cap1, cap2]
-end
+# function convert_shape(capsule::Capsule)
+#     r, h = Tuple(capsule.rh)
+#     p1 = Point(0.0, 0.0, -h / 2.0)
+#     p2 = Point(0.0, 0.0, h / 2.0)
+#     cyl = GeometryBasics.Cylinder(p1, p2, r)
+#     cap1 = GeometryBasics.Sphere(p1, r)
+#     cap2 = GeometryBasics.Sphere(p2, r)
+#     return [cyl, cap1, cap2]
+# end
 
-function convert_shape(shapes::Shapes)
+function convert_shape(combinedshapes::CombinedShapes)
     geom = []
-    for s in shapes.shape
-        push!(geom, convert_shape(s))
+    for shape in combinedshapes.shapes
+        push!(geom, convert_shape(shape))
     end
     return geom
 end
@@ -361,7 +359,7 @@ function set_color!(shape::Shape, color)
     shape.color = color
 end
 
-function set_color!(shapes::Shapes, color)
+function set_color!(shapes::CombinedShapes, color)
     for i in eachindex(shapes)
         shapes.shape[i].color = color
     end

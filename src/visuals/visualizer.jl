@@ -313,28 +313,41 @@ function animate_node!(storage::Storage{T,N}, id, shape, animation, shapevisuali
     return
 end
 
-function MeshCat.setobject!(subvisshape, visshape, shapes::Shapes; 
-    transparent=false)
-    for (i, s) in enumerate(shapes.shape)
-        v = subvisshape["node_$i"]
-        setobject!(v, visshape[i], s, transparent=transparent)
-        scale_transform = MeshCat.LinearMap(diagm(s.scale))
-        x_transform = MeshCat.Translation(s.position_offset)
-        q_transform = MeshCat.LinearMap(s.orientation_offset)
-        t = MeshCat.compose(x_transform, q_transform, scale_transform)
-        settransform!(v, t)
-    end
-end
+# function MeshCat.setobject!(subvisshape, visshape, shapes::Shapes; 
+#     transparent=false)
+#     for (i, s) in enumerate(shapes.shape)
+#         v = subvisshape["node_$i"]
+#         setobject!(v, visshape[i], s, transparent=transparent)
+#         scale_transform = MeshCat.LinearMap(diagm(s.scale))
+#         x_transform = MeshCat.Translation(s.position_offset)
+#         q_transform = MeshCat.LinearMap(s.orientation_offset)
+#         t = MeshCat.compose(x_transform, q_transform, scale_transform)
+#         settransform!(v, t)
+#     end
+# end
 
 function MeshCat.setobject!(subvisshape, visshape, shape::Shape; 
     transparent=false)
     setobject!(subvisshape, visshape, MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
 end
 
-function MeshCat.setobject!(subvisshape, visshape::Vector, shape::Capsule; transparent=false)
-    setobject!(subvisshape["cylinder"], visshape[1], MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
-    setobject!(subvisshape["cap1"], visshape[2], MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
-    setobject!(subvisshape["cap2"], visshape[3], MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
+# function MeshCat.setobject!(subvisshape, visshape::Vector, shape::Capsule; transparent=false)
+#     setobject!(subvisshape["cylinder"], visshape[1], MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
+#     setobject!(subvisshape["cap1"], visshape[2], MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
+#     setobject!(subvisshape["cap2"], visshape[3], MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
+# end
+
+function MeshCat.setobject!(subvisshape, visshapes::Vector, shape::CombinedShapes; transparent=false)
+    for (i,visshape) in enumerate(visshapes) 
+        v = subvisshape["shape"*string(i)]
+        s = shape.shapes[i]
+        setobject!(v, visshape, MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : s.color)))
+        scale_transform = MeshCat.LinearMap(diagm(s.scale))
+        x_transform = MeshCat.Translation(s.position_offset)
+        q_transform = MeshCat.LinearMap(s.orientation_offset)
+        t = MeshCat.compose(x_transform, q_transform, scale_transform)
+        settransform!(v, t)
+    end
 end
 
 function MeshCat.setobject!(subvisshape, visshape, shape::Mesh; transparent=false)
