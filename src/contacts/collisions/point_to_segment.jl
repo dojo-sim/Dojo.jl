@@ -143,7 +143,7 @@ end
 # FiniteDiff.finite_difference_jacobian(x -> contact_point_segment(ps, x, qc, ka, kb), xc)
 
 # ∂contact_point_segment∂q(ps, xc, qc, ka, kb)
-# FiniteDiff.finite_difference_jacobian(q -> contact_point_segment(ps, xc, Quaternion(q..., false), ka, kb), vector(qc))
+# FiniteDiff.finite_difference_jacobian(q -> contact_point_segment(ps, xc, Quaternion(q...), ka, kb), vector(qc))
 
 # # case 2
 # ps = [1.0 + 100.0e-8; 0.0; 1.0] 
@@ -161,7 +161,7 @@ end
 # FiniteDiff.finite_difference_jacobian(x -> contact_point_segment(ps, x, qc, ka, kb), xc)
 
 # ∂contact_point_segment∂q(ps, xc, qc, ka, kb)
-# FiniteDiff.finite_difference_jacobian(q -> contact_point_segment(ps, xc, Quaternion(q..., false), ka, kb), vector(qc))
+# FiniteDiff.finite_difference_jacobian(q -> contact_point_segment(ps, xc, Quaternion(q...), ka, kb), vector(qc))
 
 # # case 3
 # ps = [0.0; 0.0; 1.0] 
@@ -179,7 +179,7 @@ end
 # FiniteDiff.finite_difference_jacobian(x -> contact_point_segment(ps, x, qc, ka, kb), xc)
 
 # ∂contact_point_segment∂q(ps, xc, qc, ka, kb)
-# FiniteDiff.finite_difference_jacobian(q -> contact_point_segment(ps, xc, Quaternion(q..., false), ka, kb), vector(qc))
+# FiniteDiff.finite_difference_jacobian(q -> contact_point_segment(ps, xc, Quaternion(q...), ka, kb), vector(qc))
 
 
 

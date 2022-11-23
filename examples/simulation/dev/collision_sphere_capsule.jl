@@ -51,7 +51,7 @@ mech = Mechanism(origin, bodies, joints, contacts,
 mech.bodies[1].state.x2 = [0.25, 0.25, 1.5]
 q = rand(4)
 q ./= norm(q)
-mech.bodies[1].state.q2 = Quaternion(q..., true)
+mech.bodies[1].state.q2 = Quaternion(q...)
 mech.bodies[2].state.x2 = [0.0, 0.5, 4.0]
 
 storage = simulate!(mech, 2.5, 

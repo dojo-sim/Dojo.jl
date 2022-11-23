@@ -74,9 +74,9 @@ function ∂distance∂q(gradient::Symbol, collision::SphereCapsuleCollision, xp
     end
 
     # if gradient == :parent 
-    #     FD = FiniteDiff.finite_difference_jacobian(q -> distance(collision, xp, Quaternion(q..., false), xc, qc), vector(qp))
+    #     FD = FiniteDiff.finite_difference_jacobian(q -> distance(collision, xp, Quaternion(q...), xc, qc), vector(qp))
     # elseif gradient == :child 
-    #     FD = FiniteDiff.finite_difference_jacobian(q -> distance(collision, xp, qp, xc, Quaternion(q..., false)), vector(qc))
+    #     FD = FiniteDiff.finite_difference_jacobian(q -> distance(collision, xp, qp, xc, Quaternion(q...)), vector(qc))
     # end
 
     # return FD
@@ -176,9 +176,9 @@ function ∂contact_point∂q(relative::Symbol, jacobian::Symbol, collision::Sph
     end
 
     # if jacobian == :parent
-    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_point(relative, collision, xp, Quaternion(q..., false), xc, qc), vector(qp))
+    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_point(relative, collision, xp, Quaternion(q...), xc, qc), vector(qp))
     # elseif jacobian == :child 
-    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_point(relative, collision, xp, qp, xc, Quaternion(q..., false)), vector(qc))
+    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_point(relative, collision, xp, qp, xc, Quaternion(q...)), vector(qc))
     # end
 
     # return FD

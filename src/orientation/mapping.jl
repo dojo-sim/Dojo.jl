@@ -1,5 +1,5 @@
 function quaternion_map(ω, timestep)
-    return Quaternion(sqrt(4 / timestep^2 - dot(ω, ω)), ω)
+    return Quaternion(sqrt(4 / timestep^2 - dot(ω, ω)), ω...)
 end
 
 function quaternion_map_jacobian(ω::SVector{3}, timestep)

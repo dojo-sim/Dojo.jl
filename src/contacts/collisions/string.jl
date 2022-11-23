@@ -76,9 +76,9 @@ function ∂distance∂q(gradient::Symbol, collision::StringCollision, xp, qp, x
     end
 
     # if gradient == :parent
-    #     FD = FiniteDiff.finite_difference_jacobian(q -> distance(collision, xp, Quaternion(q..., false), xc, qc), vector(qp))
+    #     FD = FiniteDiff.finite_difference_jacobian(q -> distance(collision, xp, Quaternion(q...), xc, qc), vector(qp))
     # elseif gradient == :child
-    #     FD = FiniteDiff.finite_difference_jacobian(q -> distance(collision, xp, qp, xc, Quaternion(q..., false)), vector(qc))
+    #     FD = FiniteDiff.finite_difference_jacobian(q -> distance(collision, xp, qp, xc, Quaternion(q...)), vector(qc))
     # end
 
     # @assert norm(-D - FD, Inf) < 1.0e-5
@@ -170,9 +170,9 @@ function ∂contact_point∂q(relative::Symbol, jacobian::Symbol, collision::Str
     end
 
     # if jacobian == :parent
-    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_point(relative, collision, xp, Quaternion(q..., false), xc, qc), vector(qp))
+    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_point(relative, collision, xp, Quaternion(q...), xc, qc), vector(qp))
     # elseif jacobian == :child
-    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_point(relative, collision, xp, qp, xc, Quaternion(q..., false)), vector(qc))
+    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_point(relative, collision, xp, qp, xc, Quaternion(q...)), vector(qc))
     # end
 
     # @assert norm(Q - FD, Inf) < 1.0e-5
@@ -233,9 +233,9 @@ function ∂contact_normal_transpose∂q(jacobian::Symbol, collision::StringColl
 
     # Jacobians
     # if jacobian == :parent
-    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_normal(collision, xp, Quaternion(q..., false), xc, qc)', vector(qp))
+    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_normal(collision, xp, Quaternion(q...), xc, qc)', vector(qp))
     # elseif jacobian == :child
-    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_normal(collision, xp, qp, xc, Quaternion(q..., false))', vector(qc))
+    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_normal(collision, xp, qp, xc, Quaternion(q...))', vector(qc))
     # end
 
     # distance

@@ -12,7 +12,7 @@ mech = get_rexhopper(timestep=0.01, gravity= -0.99 * 9.81, model="rexhopper_no_w
     floating=true, contact_foot=true, limits=true, spring=0.0, damper=0.5, contact_type=:linear)
 
 q0 = [1,0.5,0,0]
-q0 = Quaternion(q0 ./ norm(q0)..., true)
+q0 = Quaternion(q0 ./ norm(q0)...)
 initialize!(mech, :rexhopper, body_position=[0,0,0.4], body_orientation=[0.5,0.8,0.0])
 z0 = get_maximal_state(mech)
 
