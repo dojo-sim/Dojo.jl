@@ -139,4 +139,34 @@
     @test base_new == :head
 end
 
+@testset "Remove fixed joints" begin
+    origin = Origin()
+    box1 = Box(0.1,0.1,0.5,0.5;color=RGBA(0.8,0.8,0.8,0.5))
+    box2 = Box(0.1,0.1,0.5,0.5;color=RGBA(0.8,0.8,0.8,0.5))
+    box3 = Box(0.1,0.1,0.5,0.5;color=RGBA(1,1,0,0.5))
+    box4 = Box(0.1,0.1,0.5,0.5;color=RGBA(1,0,1,0.5))
+    joint1 = JointConstraint(Revolute(origin, box1, [1;0;0], child_vertex = [0;0;0.25]))
+    joint2 = JointConstraint(Fixed(box1, box2; parent_vertex = [0;0;-0.25], child_vertex = [0;0;0.25], orientation_offset = Dojo.RotY(pi/2)))
+    joint3 = JointConstraint(Revolute(origin, box3, [1;0;0], child_vertex = [0;0;0.25]))
+    joint4 = JointConstraint(Fixed(box3, box4; parent_vertex = [0;0;-0.25], child_vertex = [0;0;0.25], orientation_offset = Dojo.RotY(pi/2)))
+    mech = Mechanism(origin, [box1;box2;box3;box4], [joint1;joint2;joint3;joint4]) 
+
+    origin, bodies, joints = Dojo.reduce_fixed_joints(mech.origin,mech.bodies,mech.joints)
+    box1 = Box(0.1,0.1,0.5,0.5;color=RGBA(0.8,0.8,0.8,0.5))
+    box2 = Box(0.1,0.1,0.5,0.5;color=RGBA(0.8,0.8,0.8,0.5))
+    joint1 = JointConstraint(Revolute(origin, box1, [1;0;0], child_vertex = [0;0;0.25]))
+    joint2 = JointConstraint(Fixed(box1, box2; parent_vertex = [0;0;-0.25], child_vertex = [0;0;0.25], orientation_offset = Dojo.RotY(pi/2)))
+    mech = Mechanism(origin, [box1,box2,bodies[2]], [joint1,joint2,joints[2]]; gravity = -9.81, timestep = 0.01)
+
+    Dojo.zero_coordinates!(mech)
+    
+    set_minimal_coordinates!(mech,joint1,[pi/2])
+    set_minimal_coordinates!(mech,joints[2],[pi/2])
+    
+    storage = simulate!(mech, 5.0, record = true)
+
+    @test abs(storage.q[3][end].v1 - storage.q[1][end].v1) < 1.0e-5
+end
+
+
 #TODO: get and set methods
