@@ -32,12 +32,12 @@ function get_humanoid(;
         qll = ql * RotX(-1.57080)*RotY(1.47585)*RotZ(-1.47585) # Quaternion(RotXYZ(roll=-1.57080, pitch=1.47585, yaw=-1.47585)) # roll pitch yaw
         qlr = ql * RotX(+1.57080)*RotY(1.47585)*RotZ(+1.47585) # Quaternion(RotXYZ(roll=+1.57080, pitch=1.47585, yaw=+1.47585)) # roll pitch yaw
 
-        pfll = vector_rotate([ 0.5 * left_foot.shape.shapes[1].rh[2] + 0.03500; -0.03; 0.0], qll)
-        pbll = vector_rotate([-0.5 * left_foot.shape.shapes[1].rh[2] + 0.03500; -0.03; 0.0], qll)
-        pflr = vector_rotate([ 0.5 * left_foot.shape.shapes[1].rh[2] + 0.03500; +0.01; 0.0], qlr)
-		pblr = vector_rotate([-0.5 * left_foot.shape.shapes[1].rh[2] + 0.03500; +0.01; 0.0], qlr)
+        pfll = vector_rotate([ 0.5 * left_foot.shape.shapes[1].shapes[1].rh[2] + 0.03500; -0.03; 0.0], qll)
+        pbll = vector_rotate([-0.5 * left_foot.shape.shapes[1].shapes[1].rh[2] + 0.03500; -0.03; 0.0], qll)
+        pflr = vector_rotate([ 0.5 * left_foot.shape.shapes[1].shapes[1].rh[2] + 0.03500; +0.01; 0.0], qlr)
+		pblr = vector_rotate([-0.5 * left_foot.shape.shapes[1].shapes[1].rh[2] + 0.03500; +0.01; 0.0], qlr)
         p = [0.0,0.054,0.]
-        o = left_foot.shape.shapes[1].rh[1]
+        o = left_foot.shape.shapes[1].shapes[1].rh[1]
         contacts = [
 					p,
                     # pfll,
@@ -62,10 +62,10 @@ function get_humanoid(;
 
         right_foot = get_body(mech, :right_foot)
 
-        pfr = [0.5 * right_foot.shape.shapes[1].rh[2]; 0.0; 0.0]
-        ofr = right_foot.shape.shapes[1].rh[1]
-        pbr = [-0.5 * right_foot.shape.shapes[1].rh[2]; 0.0; 0.0]
-        obr = right_foot.shape.shapes[1].rh[1]
+        pfr = [0.5 * right_foot.shape.shapes[1].shapes[1].rh[2]; 0.0; 0.0]
+        ofr = right_foot.shape.shapes[1].shapes[1].rh[1]
+        pbr = [-0.5 * right_foot.shape.shapes[1].shapes[1].rh[2]; 0.0; 0.0]
+        obr = right_foot.shape.shapes[1].shapes[1].rh[1]
 
         contacts = [
                     pfr,

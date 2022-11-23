@@ -67,9 +67,9 @@ function get_walker(;
             body = get_body(mech, name)
             if name in [:foot, :foot_left] # need special case for foot
                 # torso
-                pf = [0.0, 0.0, 0.5 * body.shape.rh[2]]
-                pb = [0.0, 0.0, -0.5 * body.shape.rh[2]]
-                o = body.shape.rh[1]
+                pf = [0.0, 0.0, 0.5 * body.shape.shapes[1].rh[2]]
+                pb = [0.0, 0.0, -0.5 * body.shape.shapes[1].rh[2]]
+                o = body.shape.shapes[1].rh[1]
                 push!(models, contact_constraint(body, normal;
                     friction_coefficient, 
                     contact_origin=pf, 
@@ -79,8 +79,8 @@ function get_walker(;
                     contact_origin=pb, 
                     contact_radius=o))
             else
-                p = [0.0; 0.0; 0.5 * body.shape.rh[2]]
-                o = body.shape.rh[1]
+                p = [0.0; 0.0; 0.5 * body.shape.shapes[1].rh[2]]
+                o = body.shape.shapes[1].rh[1]
                 push!(models, contact_constraint(body, normal;
                     friction_coefficient, 
                     contact_origin=p, 
