@@ -22,7 +22,7 @@ end
 
 function initialize_fourbar!(mechanism::Mechanism; 
     angle=0.0, 
-    angular_velocity=szeros(2)) where T
+    angular_velocity=szeros(2))
 
     zero_velocity!(mechanism)
     set_minimal_coordinates_velocities!(mechanism, get_joint(mechanism, :jointb1); 

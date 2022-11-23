@@ -156,8 +156,9 @@ function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::Abs
 	cnt = 0
 	for id in mechanism.root_to_leaves
 		(id > Ne) && continue # only keep joints
-		cnt += 1
 		nu = input_dimension(get_joint(mechanism, id))
+		nu == 0 && continue # ignore fixed joints
+		cnt += 1
 		if length(col) > 0
 			push!(col, col[end][end] .+ (1:2nu))
 		else
@@ -171,6 +172,7 @@ function minimal_to_maximal_jacobian(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::Abs
 		!(Ne < id <= Ne+Nb) && continue # only treat bodies
 		cnode = get_node(mechanism, id)
 		for joint in parent_joints(mechanism, cnode)
+			input_dimension(joint) == 0 && continue
 			pnode = get_node(mechanism, joint.parent_id, origin=true)
 			J[row[cnode.id-Ne], col[col_idx[joint.id]]] += partials[[cnode.id, joint.id]] # ∂zi∂θp(i)
 			(pnode.id == 0) && continue # avoid origin

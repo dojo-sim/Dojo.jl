@@ -3,7 +3,7 @@
     box = Dojo.Box(1.0, 1.0, 1.0)
     cylinder = Dojo.Cylinder(1.0, 1.0)
     capsule = Dojo.Capsule(1.0, 1.0)
-    shapes = Dojo.Shapes([box, cylinder, capsule])
+    shapes = Dojo.CombinedShapes([box, cylinder, capsule])
     sphere = Dojo.Sphere(1.0)
     pyramid = Dojo.Pyramid(1.0, 1.0)
     mesh = Dojo.Mesh(joinpath(dirname(pathof(DojoEnvironments)), "atlas/deps/mesh/head.obj"))

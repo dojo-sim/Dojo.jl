@@ -95,6 +95,7 @@ function Mechanism(filename::String;
     floating::Bool=false, 
     T=Float64,
     parse_damper=true, 
+    keep_fixed_joints=true,
     kwargs...)
     # parse urdf
     origin, links, joints, loopjoints = parse_urdf(filename, floating, T, parse_damper)
@@ -104,6 +105,10 @@ function Mechanism(filename::String;
 
     # initialize mechanism
     set_parsed_values!(mechanism, loopjoints)
+
+    if !keep_fixed_joints
+        mechanism = reduce_fixed_joints(mechanism; kwargs...)
+    end
 
     return mechanism
 end
