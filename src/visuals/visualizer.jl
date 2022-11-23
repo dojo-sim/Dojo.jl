@@ -122,7 +122,7 @@ function build_robot(mechanism::Mechanism;
     joint_radius=0.1,
     show_contact=false, 
     name::Symbol=:robot, 
-    color=nothing) where {T,N}
+    color=nothing)
 
     bodies = mechanism.bodies
     origin = mechanism.origin
@@ -209,7 +209,7 @@ function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T};
     show_joint::Bool=false,
     joint_radius=0.1,
     show_contact::Bool=true, 
-    name::Symbol=:robot) where {T,N}
+    name::Symbol=:robot) where {T}
 
     (length(z) == minimal_dimension(mechanism)) && (z = minimal_to_maximal(mechanism, z))
     bodies = mechanism.bodies
@@ -291,7 +291,7 @@ end
 MeshCat.js_scaling(s::AbstractVector) = s
 MeshCat.js_position(p::AbstractVector) = p
 
-function set_node!(x, q, id, shape, shapevisualizer, showshape) where {T,N}
+function set_node!(x, q, id, shape, shapevisualizer, showshape)
     if showshape
         # TODO currently setting props directly because MeshCat/Rotations doesn't convert scaled rotation properly.
         # If this changes, do similarily to origin
