@@ -7,11 +7,16 @@ vector_rotate(v::AbstractVector,q::Quaternion) = Vmat(quaternion_rotate(Quaterni
 
 # rotate matrix
 function matrix_rotate(A::AbstractMatrix,q::Quaternion)
-    c1 = Vmat(quaternion_rotate(Quaternion(A[SVector{3}(1,2,3)]), q))
-    c2 = Vmat(quaternion_rotate(Quaternion(A[SVector{3}(4,5,6)]), q))
-    c3 = Vmat(quaternion_rotate(Quaternion(A[SVector{3}(7,8,9)]), q))
+    c1 = vector_rotate(A[SVector{3}(1,2,3)], q)
+    c2 = vector_rotate(A[SVector{3}(4,5,6)], q)
+    c3 = vector_rotate(A[SVector{3}(7,8,9)], q)
 
     return [c1 c2 c3]
+end
+
+# transform matrix in different frame "q*A*inv(q)"
+function matrix_transform(A::AbstractMatrix,q::Quaternion)
+    matrix_rotate(matrix_rotate(A', q)', q)
 end
 
 # rotation matrix

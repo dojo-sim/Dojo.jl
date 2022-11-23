@@ -84,6 +84,28 @@ function set_minimal_velocities!(mechanism::Mechanism, dict::Dict)
     end
 end
 
+""" 
+    zero_coordinates!(mechanism) 
+
+    set all mechanism body coordinates to zero 
+
+    mechanism: Mechanism 
+"""
+function zero_coordinates!(mechanism::Mechanism)
+    for id in root_to_leaves_ordering(mechanism, exclude_origin=true, exclude_loop_joints=true)
+        joint = get_node(mechanism, id)
+        !(joint isa JointConstraint) && continue
+        
+        cnode = get_node(mechanism, joint.child_id) 
+        pnode = get_node(mechanism, joint.parent_id, origin=true)
+        
+        parent_vertex, child_vertex = joint.translational.vertices
+        Δq = joint.rotational.orientation_offset
+        set_maximal_configurations!(cnode) # set everything to zero
+        set_maximal_configurations!(pnode, cnode; parent_vertex, child_vertex, Δq)
+    end
+end
+
 # velocity
 """ 
     zero_velocity!(mechanism) 

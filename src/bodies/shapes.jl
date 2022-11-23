@@ -195,11 +195,11 @@ CombinedShapes{T} <: Shape{T}
 mutable struct CombinedShapes{T} <: Shape{T}
     position_offset::SVector{3,T}
     orientation_offset::Quaternion{T}
-    shapes::Vector{Shape{T}}
+    shapes::Vector{<:Shape{T}}
     scale::SVector{3,T}
     color::RGBA
 
-    function CombinedShapes(shapes::Vector{Shape{T}}; 
+    function CombinedShapes(shapes::Vector{<:Shape{T}}; 
         position_offset::AbstractVector=szeros(3), 
         orientation_offset::Quaternion=one(Quaternion),
         scale::AbstractVector=sones(3), 
@@ -208,7 +208,7 @@ mutable struct CombinedShapes{T} <: Shape{T}
         new{T}(position_offset, orientation_offset, shapes, scale, color)
     end
 
-    function CombinedShapes(shapes::Vector, m::T, J; 
+    function CombinedShapes(shapes::Vector{<:Shape{T}}, m::T, J; 
         position_offset::AbstractVector=szeros(3), 
         orientation_offset::Quaternion=one(Quaternion),
         name::Symbol=Symbol("body_" * randstring(4)),

@@ -143,7 +143,10 @@ function set_floating_base(mechanism::Mechanism, name::Symbol)
 end
 
 function reduce_fixed_joints(mechanism; kwargs...)
-    Mechanism(reduce_fixed_joints(mechanism.origin, mechanism.bodies, mechanism.joints; kwargs...))
+    mechanism = Mechanism(reduce_fixed_joints(mechanism.origin, mechanism.bodies, mechanism.joints)...; kwargs...)
+    zero_coordinates!(mechanism)
+
+    return mechanism
 end
 
 function reduce_fixed_joints(origin, bodies, joints)
@@ -158,7 +161,7 @@ function reduce_fixed_joints(origin, bodies, joints)
             v1, v2 = joint.translational.vertices
             q_offset = joint.rotational.orientation_offset
 
-            child_body_com = v1 + vector_rotate(v1,q_offset) # in parent_body's frame
+            child_body_com = v1 - vector_rotate(v2,q_offset) # in parent_body's frame
             if parent_body == origin
                 new_body_com = zeros(3)
             else
@@ -168,30 +171,35 @@ function reduce_fixed_joints(origin, bodies, joints)
                 new_body_com = child_body_com*child_m/(parent_m+child_m) # in parent_body's frame
                 
                 parent_body.mass = parent_m + child_m
-                new_body_J1 = parent_J + parent_m*skew(new_body_com)'*skew(new_body_com) # in parent_body's frame
-                new_body_J2 = matrix_rotate(child_J,q_offset) + child_m*skew(-new_body_com)'*skew(-new_body_com) # in parent_body's frame
-                parent_body.inertia = new_body_J1 + new_body_J2 # in parent_body's frame
+                new_body_J1 = parent_J + parent_m*skew(-new_body_com)'*skew(-new_body_com) # in new_body's frame
+                new_body_J2 = matrix_transform(child_J,q_offset) + child_m*skew(child_body_com-new_body_com)'*skew(child_body_com-new_body_com) # in new_body's frame
+                parent_body.inertia = new_body_J1 + new_body_J2 # in new_body's frame
             end
-            
+
+            parent_body.shape.position_offset += -new_body_com # in new_body's frame
+            child_body.shape.position_offset += child_body_com-new_body_com # in new_body's frame
+            child_body.shape.orientation_offset *= q_offset
+
+            parent_body.shape = CombinedShapes([parent_body.shape;child_body.shape])
             parent_body.name = Symbol(String(parent_body.name)*"_merged_with_"*String(child_body.name))
 
             for joint2 in joints
                 joint2 == joint && continue
 
-                v12, v22 = joint2.translational.vertices
+                v21, v22 = joint2.translational.vertices
                 q_offset2 = joint2.rotational.orientation_offset
 
                 if joint2.parent_id == parent_body.id
-                    joint2.translational.vertices = (v12-new_body_com, v22)
+                    joint2.translational.vertices = (v21-new_body_com, v22)
                 elseif joint2.child_id == parent_body.id
-                    joint2.translational.vertices = (v12,v22-new_body_com)
+                    joint2.translational.vertices = (v21,v22-new_body_com)
                 elseif joint2.parent_id == child_body.id
                     joint2.parent_id = parent_body.id
-                    joint2.translational.vertices = (vector_rotate(v12,q_offset)+child_body_com-new_body_com, v22)
+                    joint2.translational.vertices = (vector_rotate(v21,q_offset)+child_body_com-new_body_com, v22)
                     joint2.rotational.orientation_offset = q_offset*q_offset2 # correct?
                 elseif joint2.child_id == child_body.id
                     joint2.child_id = parent_body.id
-                    joint2.translational.vertices = (v12,vector_rotate(v22,q_offset)+child_body_com-new_body_com)
+                    joint2.translational.vertices = (v21,vector_rotate(v22,q_offset)+child_body_com-new_body_com)
                     joint2.rotational.orientation_offset = q_offset*q_offset2 # correct?
                 end
             end
