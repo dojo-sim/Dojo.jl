@@ -48,7 +48,7 @@ initialize!(mechanism, :pendulum,
     angular_velocity=0.0);
 ```
 
-We simulate the system for 2 seconds using the `controller!`.
+We simulate the system for 20 seconds using the `controller!`.
 ```julia
 storage = simulate!(mechanism, 20.0, controller!,
     record=true,
