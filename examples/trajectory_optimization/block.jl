@@ -4,19 +4,19 @@ Pkg.instantiate()
 
 # ## setup
 using Dojo
+using DojoEnvironments
 using IterativeLQR
 using LinearAlgebra 
 
 # ## system
 gravity = -9.81
 timestep = 0.1
-env = get_environment(:block, 
+env = DojoEnvironments.get_environment(:block, 
     representation=:maximal, 
     timestep=timestep,
-    friction_coefficient=0.5,
+    friction_coefficient=0.1,
     gravity=gravity);
 
-env.mechanism.contacts[1].model.friction_coefficient = 10.0
 # ## visualizer 
 render(env.vis) 
 
@@ -41,12 +41,12 @@ dyn = IterativeLQR.Dynamics(
 model = [dyn for t = 1:T-1];
 
 # ## rollout
-ū = [[0.0; 0.0; 0.0] for t = 1:T-1]
+ū = [zeros(3) for t = 1:T-1]
 x̄ = rollout(model, z1, ū)
-visualize(env, x̄);
+DojoEnvironments.visualize(env, x̄);
 
 # ## objective
-ot = (x, u, w) -> transpose(x - zT) * Diagonal(1.0 * ones(n)) * (x - zT) + transpose(u) * Diagonal(1.0e-2 * ones(m)) * u
+ot = (x, u, w) -> transpose(x - zT) * Diagonal(1.0 * ones(n)) * (x - zT) + transpose(u) * Diagonal(1.0 * ones(m)) * u
 oT = (x, u, w) -> transpose(x - zT) * Diagonal(1.0 * ones(n)) * (x - zT)
 
 ct = Cost(ot, n, m)
@@ -71,8 +71,8 @@ s = IterativeLQR.solver(model, obj, cons,
         max_iter=100,
         max_al_iter=10,
         ρ_init=1.0,
-        ρ_scale=10.0,
-        verbose=false))
+        ρ_scale=2.0,
+        verbose=true))
 IterativeLQR.initialize_controls!(s, ū)
 IterativeLQR.initialize_states!(s, x̄);
 
@@ -88,8 +88,8 @@ z_sol, u_sol = IterativeLQR.get_trajectory(s)
 # ## visualize
 z_vis = [[z_sol[1] for t = 1:10]..., z_sol..., [z_sol[end] for t = 1:10]...]
 u_vis = [[u_sol[1] for t = 1:10]..., u_sol..., [u_sol[end] for t = 1:10]...]
-vis, anim = visualize(env, z_vis)
-vis, anim = Dojo.visualize_block_force!(vis, anim, z_vis, u_vis) 
+vis, anim = DojoEnvironments.visualize(env, z_vis)
+vis, anim = DojoEnvironments.visualize_block_force!(vis, anim, z_vis, u_vis) 
 
 set_camera!(env.vis, 
     zoom=50.0, 
