@@ -21,7 +21,8 @@ function get_panda(;
     mech = Mechanism(path; floating=false, T,
         gravity,
         timestep,
-        parse_damper)
+        parse_damper,
+        keep_fixed_joints=false)
 
     # Adding springs and dampers
     set_springs!(mech.joints, spring)
@@ -35,20 +36,20 @@ function get_panda(;
             id = joint.id
             if input_dimension(joint.translational) == 0 && input_dimension(joint.rotational) == 1
                 joints[i] = add_limits(mech, joint,
-                    rot_limits=[SVector{1}(joint_limits[1][id-1]), SVector{1}(joint_limits[2][id-1])])
+                    rot_limits=[SVector{1}(joint_limits[1][id]), SVector{1}(joint_limits[2][id])])
             end
             if input_dimension(joint.translational) == 1 && input_dimension(joint.rotational) == 0
                 joints[i] = add_limits(mech, joint,
                     tra_limits=[SVector{1}(0.00), SVector{1}(0.04)])
             end
         end
-        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...];
+        mech = Mechanism(mech.origin, mech.bodies, joints;
             gravity,
             timestep)
     end
 
 
-    origin = Origin{T}()
+    origin = mech.origin
     bodies = mech.bodies
     joints = mech.joints
     contacts = ContactConstraint{T}[]

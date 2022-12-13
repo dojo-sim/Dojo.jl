@@ -31,11 +31,11 @@ collision = SphereSphereCollision{Float64,3,3,9}(
         ra, 
         rb)
 
-pa = contact_point(:parent, collision, xa, Quaternion(qa..., false), xb, Quaternion(qb..., false))
-pb = contact_point(:child,  collision, xa, Quaternion(qa..., false), xb, Quaternion(qb..., false))
+pa = contact_point(:parent, collision, xa, Quaternion(qa...), xb, Quaternion(qb...))
+pb = contact_point(:child,  collision, xa, Quaternion(qa...), xb, Quaternion(qb...))
 
-n = contact_normal(collision,  xa, Quaternion(qa..., false), xb, Quaternion(qb..., false))
-t = contact_tangent(collision, xa, Quaternion(qa..., false), xb, Quaternion(qb..., false))
+n = contact_normal(collision,  xa, Quaternion(qa...), xb, Quaternion(qb...))
+t = contact_tangent(collision, xa, Quaternion(qa...), xb, Quaternion(qb...))
 
 # sphere a
 sa = GeometryBasics.Sphere(Point(0.0, 0.0, 0.0), ra)
@@ -71,35 +71,35 @@ set_arrow!(vis, pb, -1.0 * vec(t[2, :]), name=:child_tangent2, color=RGBA(0.0, 0
 
 
 
-## Jacobians contact_normal(collision, xa, Quaternion(qa..., false), xb, Quaternion(qb..., false))
+## Jacobians contact_normal(collision, xa, Quaternion(qa...), xb, Quaternion(qb...))
 
 
-# FiniteDiff.finite_difference_jacobian(x -> vec(contact_normal(collision, x, Quaternion(qa..., false), xb, Quaternion(qb..., false))), xa)
+# FiniteDiff.finite_difference_jacobian(x -> vec(contact_normal(collision, x, Quaternion(qa...), xb, Quaternion(qb...))), xa)
 
 λ = rand(3)
-λ' * FiniteDiff.finite_difference_jacobian(x -> contact_normal(collision, x, Quaternion(qa..., false), xb, Quaternion(qb..., false)), xa)
-λ' * FiniteDiff.finite_difference_jacobian(q -> contact_normal(collision, xa, Quaternion(q..., false), xb, Quaternion(qb..., false)), vector(qa))
+λ' * FiniteDiff.finite_difference_jacobian(x -> contact_normal(collision, x, Quaternion(qa...), xb, Quaternion(qb...)), xa)
+λ' * FiniteDiff.finite_difference_jacobian(q -> contact_normal(collision, xa, Quaternion(q...), xb, Quaternion(qb...)), vector(qa))
 
-∂contact_normal_jvp∂x(:parent, collision, xa, Quaternion(qa..., false), xb, Quaternion(qb..., false), λ)
-∂contact_normal_jvp∂q(:parent, collision, xa, Quaternion(qa..., false), xb, Quaternion(qb..., false), λ)
+∂contact_normal_jvp∂x(:parent, collision, xa, Quaternion(qa...), xb, Quaternion(qb...), λ)
+∂contact_normal_jvp∂q(:parent, collision, xa, Quaternion(qa...), xb, Quaternion(qb...), λ)
 
-contact_tangent(collision, xa, Quaternion(qa..., false), xb, Quaternion(qb..., false))
+contact_tangent(collision, xa, Quaternion(qa...), xb, Quaternion(qb...))
 
-λ' * FiniteDiff.finite_difference_jacobian(x -> contact_tangent(collision, x, Quaternion(qa..., false), xb, Quaternion(qb..., false))[1, :]', xa)
-λ' * FiniteDiff.finite_difference_jacobian(x -> contact_tangent(collision, x, Quaternion(qa..., false), xb, Quaternion(qb..., false))[2, :]', xa)
+λ' * FiniteDiff.finite_difference_jacobian(x -> contact_tangent(collision, x, Quaternion(qa...), xb, Quaternion(qb...))[1, :]', xa)
+λ' * FiniteDiff.finite_difference_jacobian(x -> contact_tangent(collision, x, Quaternion(qa...), xb, Quaternion(qb...))[2, :]', xa)
 
-λ' * FiniteDiff.finite_difference_jacobian(q -> contact_tangent(collision, xa, Quaternion(q..., false), xb, Quaternion(qb..., false))[1, :], vector(qa))
-λ' * FiniteDiff.finite_difference_jacobian(q -> contact_tangent(collision, xa, Quaternion(q..., false), xb, Quaternion(qb..., false))[2, :], vector(qa))
+λ' * FiniteDiff.finite_difference_jacobian(q -> contact_tangent(collision, xa, Quaternion(q...), xb, Quaternion(qb...))[1, :], vector(qa))
+λ' * FiniteDiff.finite_difference_jacobian(q -> contact_tangent(collision, xa, Quaternion(q...), xb, Quaternion(qb...))[2, :], vector(qa))
 
-∂contact_tangent_jvp∂x(:parent, collision, xa, Quaternion(qa..., false), xb, Quaternion(qb..., false), λ)
-∂contact_tangent_jvp∂q(:parent, collision, xa, Quaternion(qa..., false), xb, Quaternion(qb..., false), λ)
+∂contact_tangent_jvp∂x(:parent, collision, xa, Quaternion(qa...), xb, Quaternion(qb...), λ)
+∂contact_tangent_jvp∂q(:parent, collision, xa, Quaternion(qa...), xb, Quaternion(qb...), λ)
 
-∂contact_tangent_jvp∂x(:child, collision, xa, Quaternion(qa..., false), xb, Quaternion(qb..., false), λ)
-∂contact_tangent_jvp∂q(:child, collision, xa, Quaternion(qa..., false), xb, Quaternion(qb..., false), λ)
+∂contact_tangent_jvp∂x(:child, collision, xa, Quaternion(qa...), xb, Quaternion(qb...), λ)
+∂contact_tangent_jvp∂q(:child, collision, xa, Quaternion(qa...), xb, Quaternion(qb...), λ)
 
 λ = rand(2)
-∂contact_tangent_vjp∂x(:parent, collision, xa, Quaternion(qa..., false), xb, Quaternion(qb..., false), λ)
-∂contact_tangent_vjp∂q(:parent, collision, xa, Quaternion(qa..., false), xb, Quaternion(qb..., false), λ)
+∂contact_tangent_vjp∂x(:parent, collision, xa, Quaternion(qa...), xb, Quaternion(qb...), λ)
+∂contact_tangent_vjp∂q(:parent, collision, xa, Quaternion(qa...), xb, Quaternion(qb...), λ)
 
-∂contact_tangent_vjp∂x(:child, collision, xa, Quaternion(qa..., false), xb, Quaternion(qb..., false), λ)
-∂contact_tangent_vjp∂q(:child, collision, xa, Quaternion(qa..., false), xb, Quaternion(qb..., false), λ)
+∂contact_tangent_vjp∂x(:child, collision, xa, Quaternion(qa...), xb, Quaternion(qb...), λ)
+∂contact_tangent_vjp∂q(:child, collision, xa, Quaternion(qa...), xb, Quaternion(qb...), λ)

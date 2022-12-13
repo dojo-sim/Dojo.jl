@@ -67,9 +67,9 @@ function get_halfcheetah(;
             body = get_body(mech, name)
             if name == :torso # need special case for torso
                 # torso
-                pf = [+0.5 * body.shape.shape[1].rh[2]; 0.0; 0.0]
-                pb = [-0.5 * body.shape.shape[1].rh[2]; 0.0; 0.0]
-                o = body.shape.shape[1].rh[1]
+                pf = [+0.5 * body.shape.shapes[1].shapes[1].rh[2]; 0.0; 0.0]
+                pb = [-0.5 * body.shape.shapes[1].shapes[1].rh[2]; 0.0; 0.0]
+                o = body.shape.shapes[1].shapes[1].rh[1]
                 push!(models, contact_constraint(body, normal; 
                     friction_coefficient, 
                     contact_origin=pf, 
@@ -80,15 +80,15 @@ function get_halfcheetah(;
                     contact_radius=o))
 
                 # head
-                pf = [+0.5 * body.shape.shape[1].rh[2] + 0.214; 0.0; 0.1935]
-                o = body.shape.shape[2].rh[1]
+                pf = [+0.5 * body.shape.shapes[1].shapes[1].rh[2] + 0.214; 0.0; 0.1935]
+                o = body.shape.shapes[1].shapes[1].rh[1]
                 push!(models, contact_constraint(body, normal; 
                     friction_coefficient, 
                     contact_origin=pf, 
                     contact_radius=o))
             else
-                p = [0;0; -0.5 * body.shape.rh[2]]
-                o = body.shape.rh[1]
+                p = [0;0; -0.5 * body.shape.shapes[1].rh[2]]
+                o = body.shape.shapes[1].rh[1]
                 push!(models, contact_constraint(body, normal;
                     friction_coefficient, 
                     contact_origin=p, 

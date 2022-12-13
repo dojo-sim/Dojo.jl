@@ -81,9 +81,9 @@
 
             Q = Dojo.∂contact_normal_transpose∂q(jacobian, collision, xp, qp, xc, qc)
             if jacobian == :parent
-                FD = ForwardDiff.jacobian(q -> Dojo.contact_normal(collision, xp, Quaternion(q..., false), xc, qc)', Dojo.vector(qp))
+                FD = ForwardDiff.jacobian(q -> Dojo.contact_normal(collision, xp, Quaternion(q...), xc, qc)', Dojo.vector(qp))
             elseif jacobian == :child
-                FD = ForwardDiff.jacobian(q -> Dojo.contact_normal(collision, xp, qp, xc, Quaternion(q..., false))', Dojo.vector(qc))
+                FD = ForwardDiff.jacobian(q -> Dojo.contact_normal(collision, xp, qp, xc, Quaternion(q...))', Dojo.vector(qc))
             end
 
             @test norm((dis >= 0.0 ? 1.0 : -1.0) * Q - FD, Inf) < 1.0e-6
@@ -108,18 +108,18 @@
 
             Q = Dojo.∂contact_tangent_one_transpose∂q(jacobian, collision, xp, qp, xc, qc)
             if jacobian == :parent
-                FD = ForwardDiff.jacobian(q -> Dojo.contact_tangent(collision, xp, Quaternion(q..., false), xc, qc)[1, :]', Dojo.vector(qp))
+                FD = ForwardDiff.jacobian(q -> Dojo.contact_tangent(collision, xp, Quaternion(q...), xc, qc)[1, :]', Dojo.vector(qp))
             elseif jacobian == :child
-                FD = ForwardDiff.jacobian(q -> Dojo.contact_tangent(collision, xp, qp, xc, Quaternion(q..., false))[1, :]', Dojo.vector(qc))
+                FD = ForwardDiff.jacobian(q -> Dojo.contact_tangent(collision, xp, qp, xc, Quaternion(q...))[1, :]', Dojo.vector(qc))
             end
 
             @test norm(FD - Q, Inf) < 1.0e-6
 
             Q = Dojo.∂contact_tangent_two_transpose∂q(jacobian, collision, xp, qp, xc, qc)
             if jacobian == :parent
-                FD = ForwardDiff.jacobian(q -> Dojo.contact_tangent(collision, xp, Quaternion(q..., false), xc, qc)[2, :]', Dojo.vector(qp))
+                FD = ForwardDiff.jacobian(q -> Dojo.contact_tangent(collision, xp, Quaternion(q...), xc, qc)[2, :]', Dojo.vector(qp))
             elseif jacobian == :child
-                FD = ForwardDiff.jacobian(q -> Dojo.contact_tangent(collision, xp, qp, xc, Quaternion(q..., false))[2, :]', Dojo.vector(qc))
+                FD = ForwardDiff.jacobian(q -> Dojo.contact_tangent(collision, xp, qp, xc, Quaternion(q...))[2, :]', Dojo.vector(qc))
             end
 
             @test norm(FD - Q, Inf) < 1.0e-6
@@ -138,9 +138,9 @@
 
             Q = Dojo.∂distance∂q(gradient, collision, xp, qp, xc, qc)
             if gradient == :parent
-                FD = FiniteDiff.finite_difference_jacobian(q -> Dojo.distance(collision, xp, Quaternion(q..., false), xc, qc), Dojo.vector(qp))
+                FD = FiniteDiff.finite_difference_jacobian(q -> Dojo.distance(collision, xp, Quaternion(q...), xc, qc), Dojo.vector(qp))
             elseif gradient == :child
-                FD = FiniteDiff.finite_difference_jacobian(q -> Dojo.distance(collision, xp, qp, xc, Quaternion(q..., false)), Dojo.vector(qc))
+                FD = FiniteDiff.finite_difference_jacobian(q -> Dojo.distance(collision, xp, qp, xc, Quaternion(q...)), Dojo.vector(qc))
             end
 
             @test norm(Q - FD, Inf) < 1.0e-5
@@ -159,9 +159,9 @@
                 Q = Dojo.∂contact_point∂q(relative, jacobian, collision, xp, qp, xc, qc)
 
                 if jacobian == :parent
-                    FD = ForwardDiff.jacobian(q -> Dojo.contact_point(relative, collision, xp, Quaternion(q..., false), xc, qc), Dojo.vector(qp))
+                    FD = ForwardDiff.jacobian(q -> Dojo.contact_point(relative, collision, xp, Quaternion(q...), xc, qc), Dojo.vector(qp))
                 elseif jacobian == :child
-                    FD = ForwardDiff.jacobian(q -> Dojo.contact_point(relative, collision, xp, qp, xc, Quaternion(q..., false)), Dojo.vector(qc))
+                    FD = ForwardDiff.jacobian(q -> Dojo.contact_point(relative, collision, xp, qp, xc, Quaternion(q...)), Dojo.vector(qc))
                 end
 
                 @test norm(Q - FD, Inf) < 1.0e-6

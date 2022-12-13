@@ -122,7 +122,7 @@ function build_robot(mechanism::Mechanism;
     joint_radius=0.1,
     show_contact=false, 
     name::Symbol=:robot, 
-    color=nothing) where {T,N}
+    color=nothing)
 
     bodies = mechanism.bodies
     origin = mechanism.origin
@@ -209,7 +209,7 @@ function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T};
     show_joint::Bool=false,
     joint_radius=0.1,
     show_contact::Bool=true, 
-    name::Symbol=:robot) where {T,N}
+    name::Symbol=:robot) where {T}
 
     (length(z) == minimal_dimension(mechanism)) && (z = minimal_to_maximal(mechanism, z))
     bodies = mechanism.bodies
@@ -291,7 +291,7 @@ end
 MeshCat.js_scaling(s::AbstractVector) = s
 MeshCat.js_position(p::AbstractVector) = p
 
-function set_node!(x, q, id, shape, shapevisualizer, showshape) where {T,N}
+function set_node!(x, q, id, shape, shapevisualizer, showshape)
     if showshape
         # TODO currently setting props directly because MeshCat/Rotations doesn't convert scaled rotation properly.
         # If this changes, do similarily to origin
@@ -313,11 +313,11 @@ function animate_node!(storage::Storage{T,N}, id, shape, animation, shapevisuali
     return
 end
 
-function MeshCat.setobject!(subvisshape, visshape, shapes::Shapes; 
-    transparent=false)
-    for (i, s) in enumerate(shapes.shape)
-        v = subvisshape["node_$i"]
-        setobject!(v, visshape[i], s, transparent=transparent)
+function MeshCat.setobject!(subvisshape, visshapes::Vector, shape::CombinedShapes; transparent=false)
+    for (i,visshape) in enumerate(visshapes) 
+        v = subvisshape["shape"*string(i)]
+        s = shape.shapes[i]
+        setobject!(v, visshape, s; transparent)
         scale_transform = MeshCat.LinearMap(diagm(s.scale))
         x_transform = MeshCat.Translation(s.position_offset)
         q_transform = MeshCat.LinearMap(s.orientation_offset)
@@ -326,21 +326,14 @@ function MeshCat.setobject!(subvisshape, visshape, shapes::Shapes;
     end
 end
 
-function MeshCat.setobject!(subvisshape, visshape, shape::Shape; 
-    transparent=false)
+function MeshCat.setobject!(subvisshape, visshape, shape::Shape; transparent=false)
     setobject!(subvisshape, visshape, MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
-end
-
-function MeshCat.setobject!(subvisshape, visshape::Vector, shape::Capsule; transparent=false)
-    setobject!(subvisshape["cylinder"], visshape[1], MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
-    setobject!(subvisshape["cap1"], visshape[2], MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
-    setobject!(subvisshape["cap2"], visshape[3], MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
 end
 
 function MeshCat.setobject!(subvisshape, visshape, shape::Mesh; transparent=false)
     if visshape.mtl_library == ""
         visshape = MeshFileGeometry(visshape.contents, visshape.format)
-        setobject!(subvisshape, visshape, MeshPhongMaterial(color=shape.color))
+        setobject!(subvisshape, visshape, MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
     else
         setobject!(subvisshape, visshape)
     end

@@ -588,11 +588,11 @@ J0 - J1
 
 
 p = srand(3)
-q = Quaternion(normalize(srand(4))..., true)
+q = Quaternion(normalize(srand(4))...)
 inv(q)
 # q = Quaternion(1,0,0,0.0)
-# J0 = FiniteDiff.finite_difference_jacobian(q -> rotation_matrix(inv(Quaternion(q..., true))) * p, vector(q)) * LVᵀmat(q)
-J0 = FiniteDiff.finite_difference_jacobian(q -> rotation_matrix(inv(Quaternion(q..., true))) * p, vector(q))# * LVᵀmat(q)
+# J0 = FiniteDiff.finite_difference_jacobian(q -> rotation_matrix(inv(Quaternion(q...))) * p, vector(q)) * LVᵀmat(q)
+J0 = FiniteDiff.finite_difference_jacobian(q -> rotation_matrix(inv(Quaternion(q...))) * p, vector(q))# * LVᵀmat(q)
 J1 = ∂rotation_matrix_inv∂q(q, p)
 J0 - J1
 

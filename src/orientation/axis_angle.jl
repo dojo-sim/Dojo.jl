@@ -3,7 +3,7 @@ function axis_angle_to_quaternion(x)
     θ = norm(x)
     if θ > 0.0
         r = x ./ θ
-        q = Quaternion(cos(0.5 * θ), sin(0.5 * θ) * r)
+        q = Quaternion(cos(0.5 * θ), (sin(0.5 * θ) * r)...)
     else
         q = Quaternion(1.0, 0.0, 0.0, 0.0)
     end

@@ -33,7 +33,7 @@ function controller!(mechanism, t)
     x = get_minimal_state(mechanism)
 
     ## Gains
-    K = [5.0 0.5] * 0.1
+    K = [75.0 0.5] * 0.1
 
     # Control inputs
     u =  -K * (x - x_goal)
@@ -48,9 +48,9 @@ initialize!(mechanism, :pendulum,
     angular_velocity=0.0);
 ```
 
-We simulate the system for 2 seconds using the `controller!`.
+We simulate the system for 20 seconds using the `controller!`.
 ```julia
-storage = simulate!(mechanism, 2.0, controller!,
+storage = simulate!(mechanism, 20.0, controller!,
     record=true,
     verbose=true);
 ```

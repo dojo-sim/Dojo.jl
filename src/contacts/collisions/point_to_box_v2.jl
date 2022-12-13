@@ -41,7 +41,7 @@ end
 
 function ∂contact_point_box∂q(ps, xc, qc, kx, ky, kz)
     
-    FiniteDiff.finite_difference_jacobian(q -> contact_point_box(ps, xc, Quaternion(q..., false), kx, ky, kz), vector(qc))
+    FiniteDiff.finite_difference_jacobian(q -> contact_point_box(ps, xc, Quaternion(q...), kx, ky, kz), vector(qc))
 end
 
 # x_min = -1.0 

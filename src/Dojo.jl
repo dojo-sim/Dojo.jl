@@ -171,7 +171,7 @@ export
     Sphere,
     Pyramid,
     Mesh,
-    Shapes,
+    CombinedShapes,
     get_body,
     get_node
 

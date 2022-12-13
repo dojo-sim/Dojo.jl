@@ -9,12 +9,12 @@
   <!-- || by: Claudio Gaz, Marco Cognetti, Alexander Oliva,         || -->
   <!-- || Paolo Robuffo Giordano, Alessandro de Luca third-party    || -->
   <!-- =============================================================== -->
-  <link name="world"/>
+  <!-- <link name="world"/>
   <joint name="panda_joint_panda_mount" type="fixed">
     <parent link="panda_mount"/>
     <child link="panda_link0"/>
     <origin rpy="0 0 0" xyz="0 0 0"/>
-  </joint>
+  </joint> -->
   <link name="panda_link0">
     <inertial>
       <origin rpy="0 0 0" xyz="-0.0410181918537986 -0.000143266349590146 0.0499742749991159"/>

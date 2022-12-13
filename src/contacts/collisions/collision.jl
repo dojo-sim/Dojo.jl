@@ -78,9 +78,9 @@ function ∂contact_normal_transpose∂q(jacobian::Symbol, collision::Collision,
 
     # Jacobians
     # if jacobian == :parent
-    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_normal(collision, xp, Quaternion(q..., false), xc, qc)', vector(qp))
+    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_normal(collision, xp, Quaternion(q...), xc, qc)', vector(qp))
     # elseif jacobian == :child
-    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_normal(collision, xp, qp, xc, Quaternion(q..., false))', vector(qc))
+    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_normal(collision, xp, qp, xc, Quaternion(q...))', vector(qc))
     # end
 
     # distance
@@ -202,9 +202,9 @@ function ∂contact_tangent_one_transpose∂q(jacobian::Symbol, collision::Colli
     ∂t1∂q = skew(t1) * ∂contact_normal_transpose∂q(jacobian, collision, xp, qp, xc, qc)
 
     # if jacobian == :parent
-    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_tangent(collision, xp, Quaternion(q..., false), xc, qc)[1, :]', vector(qp))
+    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_tangent(collision, xp, Quaternion(q...), xc, qc)[1, :]', vector(qp))
     # elseif jacobian == :child
-    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_tangent(collision, xp, qp, xc, Quaternion(q..., false))[1, :]', vector(qc))
+    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_tangent(collision, xp, qp, xc, Quaternion(q...))[1, :]', vector(qc))
     # end
 
     # return FD
@@ -231,9 +231,9 @@ function ∂contact_tangent_two_transpose∂q(jacobian::Symbol, collision::Colli
     ∂t2∂q = skew(t1) * ∂contact_normal_transpose∂q(jacobian, collision, xp, qp, xc, qc) + ∂skew∂p(n') * ∂t1∂q
 
     # if jacobian == :parent
-    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_tangent(collision, xp, Quaternion(q..., false), xc, qc)[2, :]', vector(qp))
+    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_tangent(collision, xp, Quaternion(q...), xc, qc)[2, :]', vector(qp))
     # elseif jacobian == :child
-    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_tangent(collision, xp, qp, xc, Quaternion(q..., false))[2, :]', vector(qc))
+    #     FD = FiniteDiff.finite_difference_jacobian(q -> contact_tangent(collision, xp, qp, xc, Quaternion(q...))[2, :]', vector(qc))
     # end
 
     # @assert norm(FD - ∂t2∂q, Inf) < 1.0e-2
