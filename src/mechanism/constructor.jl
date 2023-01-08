@@ -14,6 +14,7 @@
 	data_matrix: contains parameter information that is fixed during simulation
 	root_to_leaves: list of node connections traversing from root node to leaves
     timestep: time discretization
+    input_scaling: input scaling for internal use of impulses (default: timestep)
     gravity: force vector resulting from gravitational potential
     μ: complementarity violation (contact softness)
 """
@@ -32,6 +33,7 @@ mutable struct Mechanism{T,Nn,Ne,Nb,Ni}
 	root_to_leaves::Vector{Int64}
 
     timestep::T
+    input_scaling::T
     gravity::SVector{3,T}
     μ::T
 end
@@ -46,8 +48,7 @@ function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, mechanism::Mechanis
 end
 
 function Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:JointConstraint{T}}, contacts::Vector{<:ContactConstraint{T}};
-    timestep=0.01, 
-    gravity=[0.0; 0.0;-9.81]) where T
+    timestep=0.01, input_scaling=timestep, gravity=[0.0; 0.0;-9.81]) where T
 
     # reset ids
     resetGlobalID()
@@ -85,7 +86,7 @@ function Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:
             exclude_loop_joints=false)
 
     Mechanism{T,Nn,Ne,Nb,Ni}(origin, joints, bodies, contacts, system, residual_entries,
-		matrix_entries, diagonal_inverses, data_matrix, root_to_leaves, timestep, get_gravity(gravity), 0.0)
+		matrix_entries, diagonal_inverses, data_matrix, root_to_leaves, timestep, input_scaling, get_gravity(gravity), 0.0)
 end
 
 Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:JointConstraint{T}}; kwargs...) where T =

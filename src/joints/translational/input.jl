@@ -4,12 +4,12 @@
 
 function input_impulse!(joint::Translational{T}, 
     pbody::Node, cbody::Node,
-    timestep::T, clear::Bool) where T
+    input_scaling::T, clear::Bool) where T
 
     xa, qa = current_configuration(pbody.state)
     xb, qb = current_configuration(cbody.state)
   
-    input = joint.input * timestep
+    input = joint.input * input_scaling
     Ta = impulse_transform(:parent, joint, xa, qa, xb, qb)
     Tb = impulse_transform(:child, joint, xa, qa, xb, qb)
     JFaw = Ta[1:3,1:3] * input
@@ -34,12 +34,12 @@ function input_jacobian_control(relative::Symbol,
     joint::Translational, 
     xa::AbstractVector, qa::Quaternion,
     xb::AbstractVector, qb::Quaternion,
-    timestep)
+    input_scaling)
 
     Ta = impulse_transform(relative, joint, xa, qa, xb, qb)
     X = Ta[1:3,1:3]
     Q = 0.5 * Ta[4:6,1:3]
-    return [X; Q] * timestep
+    return [X; Q] * input_scaling
 end
 
 function input_jacobian_configuration(relative::Symbol, 
