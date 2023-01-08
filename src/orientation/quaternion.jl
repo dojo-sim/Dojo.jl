@@ -1,3 +1,5 @@
+Quaternions.Quaternion(v::AbstractVector) = Quaternion(0,v[1],v[2],v[3])
+
 MeshCat.LinearMap(q::Quaternion) = MeshCat.LinearMap(rotation_matrix(q))
 MeshCat.js_quaternion(q::Quaternion) = [q.v1, q.v2, q.v3, q.s]
 
