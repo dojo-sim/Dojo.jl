@@ -168,5 +168,36 @@ end
     @test abs(storage.q[3][end].v1 - storage.q[1][end].v1) < 1.0e-5
 end
 
+@testset "Force and impulse input" begin
+    timestep = 0.01
+
+    # Force input, default scaling
+    origin0 = Origin()
+    box0 = Box(1.0,1,1,1)
+    joint0 = JointConstraint(Floating(origin0,box0))
+    mech0 = Mechanism(origin0, [box0], [joint0]; gravity = -9.81, timestep)
+    controller0!(mechanism, k) = set_input!(mechanism, [0;0;9.81;0;0;0])
+    storage0 = simulate!(mech0, 10.0, controller0!, record = true)
+
+    # Force input, default scaling explicitly set
+    origin1 = Origin()
+    box1 = Box(1.0,1,1,1)
+    joint1 = JointConstraint(Floating(origin1,box1))
+    mech1 = Mechanism(origin1, [box1], [joint1]; gravity = -9.81, timestep, input_scaling = timestep)
+    controller1!(mechanism, k) = set_input!(mechanism, [0;0;9.81;0;0;0])
+    storage1 = simulate!(mech1, 10.0, controller1!, record = true)
+
+    # Impulse input, input scaled by timestep
+    origin2 = Origin()
+    box2 = Box(1.0,1,1,1)
+    joint2 = JointConstraint(Floating(origin2,box2))
+    mech2 = Mechanism(origin2, [box2], [joint2]; gravity = -9.81, timestep, input_scaling = 1)
+    controller2!(mechanism, k) = set_input!(mechanism, [0;0;9.81*timestep;0;0;0])
+    storage2 = simulate!(mech2, 10.0, controller2!, record = true)
+
+    @test norm(storage0.x[1][end] - storage1.x[1][end]) < 1.0e-5
+    @test norm(storage1.x[1][end] - storage2.x[1][end]) < 1.0e-5
+end
+
 
 #TODO: get and set methods
