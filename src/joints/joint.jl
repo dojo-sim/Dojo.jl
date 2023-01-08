@@ -107,9 +107,9 @@ end
 
 add_input!(joint::Joint) = return
 
-function input_jacobian_control(relative::Symbol, joint::Joint, pbody::Node, cbody::Node, timestep)
+function input_jacobian_control(relative::Symbol, joint::Joint, pbody::Node, cbody::Node, input_scaling)
     return input_jacobian_control(relative, joint, current_configuration(pbody.state)...,
-		current_configuration(cbody.state)..., timestep) * zerodimstaticadjoint(nullspace_mask(joint))
+		current_configuration(cbody.state)..., input_scaling) * zerodimstaticadjoint(nullspace_mask(joint))
 end
 
 # minimal coordinates
