@@ -282,8 +282,7 @@ export
 
 # Linear System "Ax = b"
 export
-    full_matrix,
-    full_data_matrix
+    full_matrix
 
 # Visuals
 export

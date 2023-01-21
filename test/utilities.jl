@@ -26,7 +26,7 @@ display(test_joint.rotational)
 test_mechanism = Mechanism(test_origin,[test_body],[test_joint])
 display(test_mechanism)
 display(test_mechanism.matrix_entries[1])
-display(test_mechanism.system)
+# display(test_mechanism.system) # TODO Removed from tests because '_show_with_braille_patterns' fails during tests for Julia 1.6, but it works in GBS for 1.6. 
 @test true
 
 test_storage = Storage(3,4)
