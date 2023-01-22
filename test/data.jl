@@ -122,7 +122,7 @@ function test_data_system(model::Symbol;
 	nodes = [mechanism.joints; mechanism.bodies; mechanism.contacts]
 	dimrow = length.(nodes)
 	dimcol = Dojo.data_dim.(nodes)
-	datajac1 = Dojo.full_matrix(D, dimrow, dimcol)
+	datajac1 = Dojo.full_matrix(D, false, dimrow, dimcol)
 
 	# Test
 	@testset "$(String(model))" begin
@@ -134,7 +134,7 @@ end
 ################################################################################
 # Without contact and joint limits
 ################################################################################
-@testset "Data Jacobian without contact and limtis" begin
+@testset "Data Jacobian without contact and limits" begin
 	for (spring, damper) in [(0.0, 0.0), (2.0, 0.3)]
 		test_data_system(:sphere,
 			contact=false)

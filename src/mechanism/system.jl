@@ -1,7 +1,7 @@
 function create_system(origin::Origin{T}, joints::Vector{<:JointConstraint}, bodies::Vector{<:Body}, contacts::Vector{<:ContactConstraint}) where T
     adjacency = adjacency_matrix(joints, bodies, contacts)
     dims = length.([joints; bodies; contacts])
-    system = System{T}(adjacency, dims, dims)
+    system = System{T}(adjacency, dims)
 
     for joint in joints
         joint.parent_id == origin.id && (joint.parent_id = 0)

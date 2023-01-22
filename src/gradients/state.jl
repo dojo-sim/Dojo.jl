@@ -94,7 +94,7 @@ function get_maximal_gradients(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,
 	index_state = [index_col[body.id][[14:16; 8:10; 17:19; 11:13]] for body in mechanism.bodies] # ∂ x2 v15 q2 ω15
 	index_control = [index_col[joint.id][1:input_dimension(joint)] for joint in mechanism.joints] # ∂ u
 
-	datamat = full_matrix(mechanism.data_matrix, dimrow, dimcol)
+	datamat = full_matrix(mechanism.data_matrix, false, dimrow, dimcol)
 	solmat = full_matrix(mechanism.system)
 
 	# data Jacobian

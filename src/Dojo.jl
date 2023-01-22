@@ -23,7 +23,7 @@ using MeshCat
 import MeshCat: render
 using Meshing
 using GeometryBasics
-using Graphs
+using GraphBasedSystems
 
 using CoordinateTransformations
 
@@ -41,15 +41,6 @@ include(joinpath("orientation", "mrp.jl"))
 include(joinpath("orientation", "axis_angle.jl"))
 include(joinpath("orientation", "mapping.jl"))
 include(joinpath("orientation", "rotate.jl"))
-
-# Graph system
-include(joinpath("graph", "entry.jl"))
-include(joinpath("graph", "system.jl"))
-include(joinpath("graph", "linear_system.jl"))
-include(joinpath("graph", "adjacency.jl"))
-include(joinpath("graph", "depth_first_search.jl"))
-include(joinpath("graph", "cycles.jl"))
-include(joinpath("graph", "ldu_factorization.jl"))
 
 # Graph objects
 include(joinpath("mechanism", "node.jl"))
@@ -154,12 +145,6 @@ include(joinpath("gradients", "state.jl"))
 include(joinpath("gradients", "data.jl"))
 include(joinpath("gradients", "utilities.jl"))
 
-# # Environments
-# include(joinpath("..", "DojoEnvironments/src", "mechanisms.jl"))
-# include(joinpath("..", "DojoEnvironments/src", "environment.jl"))
-# include(joinpath("..", "DojoEnvironments/src", "dynamics.jl"))
-# include(joinpath("..", "DojoEnvironments/src", "utilities.jl"))
-# include(joinpath("..", "DojoEnvironments/src", "include.jl"))
 
 # Bodies
 export
@@ -297,8 +282,7 @@ export
 
 # Linear System "Ax = b"
 export
-    full_matrix,
-    full_data_matrix
+    full_matrix
 
 # Visuals
 export
