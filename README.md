@@ -3,13 +3,20 @@
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://dojo-sim.github.io/Dojo.jl/dev)
 
 # Dojo
-A differentiable simulator for robotics
+A differentiable physics engine for robotics
 - arXiv preprint: https://arxiv.org/abs/2203.00806
 - Python interface: https://github.com/dojo-sim/dojopy
 - site: https://sites.google.com/view/dojo-sim
 - video presentation: https://youtu.be/TRtOESXJxJQ
 
 [![IMAGE ALT TEXT](https://i.ytimg.com/vi/TRtOESXJxJQ/hq720.jpg?sqp=-oaymwEcCOgCEMoBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLD1RdCHZ0Z1zSkv1N-PD0Ds79lDiA)](https://youtu.be/TRtOESXJxJQ "Dojo: A Differentiable Simulator for Robotics")
+
+# Update March 2023
+- We are no longer actively developing Dojo.
+- Due to a number of improvements/changes to the engine since we originally ran experiments, many of the examples (e.g., planning, policy optimization, system identication) are no longer up to date. However, basic simulation should work as expected.
+- Additional developments on differentiable simulation:
+  - Differentiable collision detection (Kevin Tracy): [capsules](https://arxiv.org/abs/2207.00202), [convex primitives](https://arxiv.org/abs/2207.00669) 
+  - Single-level contact dynamics + collision detection (Simon Le Cleac'h): [Silico](https://arxiv.org/pdf/2212.06764.pdf)
 
 # Examples
 
@@ -88,7 +95,7 @@ pkg> add Dojo#main
 ```
 @article{howelllecleach2022,
 	title={Dojo: A Differentiable Simulator for Robotics},
-	author={Howell, Taylor and Le Cleac'h, Simon and Kolter, Zico and Schwager, Mac and Manchester, Zachary},
+	author={Howell, Taylor and Le Cleac'h, Simon and Brüdigam, Jan and Kolter, Zico and Schwager, Mac and Manchester, Zachary},
 	journal={arXiv preprint arXiv:2203.00806},
 	url={https://arxiv.org/abs/2203.00806},
 	year={2022}
