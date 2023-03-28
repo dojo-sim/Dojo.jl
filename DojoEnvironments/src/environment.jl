@@ -197,7 +197,7 @@ end
 function MeshCat.render(env::Environment, 
     mode="human")
     z = env.representation == :minimal ? minimal_to_maximal(env.mechanism, env.state) : env.state
-    set_robot(env.vis, env.mechanism, z, name=:robot)
+    Dojo.set_robot(env.vis, env.mechanism, z, name=:robot)
     return nothing
 end
 

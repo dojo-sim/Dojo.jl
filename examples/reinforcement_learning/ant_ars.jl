@@ -1,9 +1,10 @@
-using Pkg
-Pkg.activate(joinpath(@__DIR__, ".."))
-Pkg.instantiate()
+# using Pkg
+# Pkg.activate(joinpath(@__DIR__, ".."))
+# Pkg.instantiate()
 
 # ## Setup
 using Dojo
+using DojoEnvironments
 using Random
 using LinearAlgebra 
 using JLD2
@@ -85,7 +86,7 @@ for i = 1:N
     push!(policies, policy.θ)
 end
 
-## @save joinpath(@__DIR__, "results/ant_rl.jld2") train_times rewards policies
+@save joinpath(@__DIR__, "results/ant_rl.jld2") train_times rewards policies
 @load joinpath(@__DIR__, "results/ant_rl.jld2") train_times rewards policies
 
 # ## Training statistics
@@ -122,5 +123,5 @@ normalizer = Normalizer(input_size)
 # ## Visualize policy
 ## traj = display_random_policy(env, hp)
 traj = display_policy(env, Policy(hp, θ), normalizer, hp)
-visualize(env, traj)
+DojoEnvironments.visualize(env, traj)
 open(env.vis)

@@ -1,6 +1,6 @@
-using Pkg
-Pkg.activate(joinpath(@__DIR__, ".."))
-Pkg.instantiate()
+# using Pkg
+# Pkg.activate(joinpath(@__DIR__, ".."))
+# Pkg.instantiate()
 
 # ## Setup
 using Dojo
@@ -52,7 +52,7 @@ for i = 1:N
     push!(policies, policy.θ)
 end
 
-## @save joinpath(@__DIR__, "results/halfcheetah_rl.jld2") train_times rewards policies
+@save joinpath(@__DIR__, "results/halfcheetah_rl.jld2") train_times rewards policies
 @load joinpath(@__DIR__, "results/halfcheetah_rl.jld2") train_times rewards policies
 
 # Training statistics
@@ -92,7 +92,7 @@ end
 
 # ## Visualizer policy
 open(env.vis)
-visualize(env, traj)
+DojoEnvironments.visualize(env, traj)
 set_camera!(env.vis, 
     cam_pos=[0.0, -52.0, 0.0], 
     zoom=15)
