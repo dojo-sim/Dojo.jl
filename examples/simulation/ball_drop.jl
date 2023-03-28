@@ -1,9 +1,10 @@
-using Pkg
-Pkg.activate(joinpath(@__DIR__, ".."))
-Pkg.instantiate()
+# using Pkg
+# Pkg.activate(joinpath(@__DIR__, ".."))
+# Pkg.instantiate()
 
 # ## Setup
 using Dojo
+using StaticArrays
 
 timestep=1.0e-2
 gravity=-9.81
