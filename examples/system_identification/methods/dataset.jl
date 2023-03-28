@@ -49,9 +49,9 @@ end
 ################################################################################
 function convert_csv_to()
 	for k = 0:569
-		csv_path = joinpath(module_dir(), "examples", "system_identification",
+		csv_path = joinpath(@__DIR__, "examples", "system_identification",
 			"data", "hardware", "tosses_csv", "$(k).csv")
-		jld2_path = joinpath(module_dir(), "examples", "system_identification",
+		jld2_path = joinpath(@__DIR__, "examples", "system_identification",
 			"data", "hardware", "tosses_jld2", "$(k).jld2")
 		toss = split.(readlines(csv_path), ",")
 		toss = [parse.(Float64, t) for t in toss]
@@ -76,7 +76,7 @@ function raw_data_to_trajectory(toss, timestep::T; S=1) where T
 		q2 = vec2[4:7]
 
 		v15 = (x2 - x1) / timestep
-		ω15 = angular_velocity(Quaternion(q1...), Quaternion(q2...), timestep)
+		ω15 = Dojo.angular_velocity(Quaternion(q1...), Quaternion(q2...), timestep)
 
 		z2 = [x2; v15; q2; ω15]
 		push!(z, z2)
@@ -97,8 +97,7 @@ function generate_hardware_dataset(model::Symbol;
 	mechanism = get_mechanism(model; mech_kwargs...);
     trajs = []
     for i = 1:N
-		file = jldopen(joinpath(module_dir(), "examples", "system_identification", "data",
-			"hardware", "tosses_jld2", "$(i).jld2"))
+		file = jldopen(joinpath(@__DIR__, "../", "data", "hardware", "tosses_jld2", "$(i).jld2"))
 		toss = file["toss"]
 		z = raw_data_to_trajectory(toss, timestep, S=S)
 		storage = generate_storage(mechanism, z)

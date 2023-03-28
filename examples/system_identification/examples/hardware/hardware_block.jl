@@ -1,6 +1,6 @@
-using Pkg
-Pkg.activate(joinpath(@__DIR__, "../../.."))
-Pkg.instantiate()
+# using Pkg
+# Pkg.activate(joinpath(@__DIR__, "../../.."))
+# Pkg.instantiate()
 
 # ## Setup
 using Dojo
@@ -30,7 +30,7 @@ S = 1
 # we must rescale the gravity term accordingly since gravity contains length (g == kg.m.s^-2)
 length_scaling = 20.0
 timestep = 1/148 * S
-gravity = -9.81 * scaling
+gravity = -9.81 * length_scaling
 friction_coefficient = 0.16
 radius = 0.00
 side = 2.00
@@ -77,7 +77,7 @@ generate_hardware_dataset(model,
 # ## ---------------------------------------------------------------------------
 params0, trajs0 = open_dataset(model; experiment_type="hardware", N=N, mech_kwargs...)
 data0 = params0[:data]
-nd = sum(data_dim.(mech.contacts))
+nd = sum(Dojo.data_dim.(mech.contacts))
 data_contacts0 = data0[end-nd+1:end]
 
 
@@ -123,7 +123,7 @@ end
 function fgH0(d; rot=0, n_sample=0, trajs=trajs0, N=N, indices=indices0)
 	mechanism = get_mechanism(model; mech_kwargs...)
 	f = 0.0
-	nd = sum(data_dim.(mechanism.contacts))
+	nd = sum(Dojo.data_dim.(mechanism.contacts))
 	g = zeros(nd)
 	H = zeros(nd,nd)
 	for i = 1:N

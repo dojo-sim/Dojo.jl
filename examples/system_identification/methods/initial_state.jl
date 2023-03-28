@@ -40,7 +40,7 @@ function initial_state_block(;
 	ω = ωlims[1] + rand(3) .* (ωlims[2] - ωlims[1])
 	return Dict(
 		:position => x,
-		:orientation => normalize(rand(Quaternion{Float64})),
+		:orientation => rand(QuatRotation).q,
 		:velocity => v ,
 		:angular_velocity => ω)
 end
@@ -58,7 +58,7 @@ function initial_state_nerf(;
 	return Dict(
 		:position => x,
 		:velocity => v ,
-		:orientation => normalize(rand(Quaternion{Float64})),
+		:orientation => rand(QuatRotation).q,
 		:angular_velocity => ω
 		)
 end

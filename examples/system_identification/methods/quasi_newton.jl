@@ -28,13 +28,13 @@ function quasi_newton_solve(f, fgH, x0; ftol=-Inf, gtol=1e-4, iter=100, α0=1.0,
         x = clamp.(x + α*p, lower, upper)
         push!(X, copy(x))
         println("k:", k,
-            "   f:", scn(fe, digits=3),
-            "   ∇:", scn.(norm(ge, Inf)),
-            "   α:", scn.(α),
-            # "   g:", scn.(-g(x, rot=rot)),
-            # "   p:", scn.(p),
-            "   x:", scn.(x),
-            # "   H:", scn.(H),
+            "   f:", Dojo.scn(fe, digits=3),
+            "   ∇:", Dojo.scn.(norm(ge, Inf)),
+            "   α:", Dojo.scn.(α),
+            # "   g:", Dojo.scn.(-g(x, rot=rot)),
+            # "   p:", Dojo.scn.(p),
+            "   x:", Dojo.scn.(x),
+            # "   H:", Dojo.scn.(H),
             )
     end
     return x, X

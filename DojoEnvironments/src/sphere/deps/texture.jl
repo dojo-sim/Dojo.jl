@@ -3,6 +3,6 @@ function sphere_texture!(vis::Visualizer, mech::Mechanism;
     image = PngImage(imagepath)
     texture = Texture(image=image);
     material = MeshLambertMaterial(map=texture);
-    setobject!(vis[name]["bodies"]["sphere__id_1"], convert_shape(mech.bodies[1].shape), material)
+    setobject!(vis[name]["bodies"]["sphere__id_1"], Dojo.convert_shape(mech.bodies[1].shape), material)
     return nothing
 end

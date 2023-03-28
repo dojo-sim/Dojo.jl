@@ -1,6 +1,6 @@
-using Pkg
-Pkg.activate(joinpath(@__DIR__, "../../.."))
-Pkg.instantiate()
+# using Pkg
+# Pkg.activate(joinpath(@__DIR__, "../../.."))
+# Pkg.instantiate()
 
 # ## Setup
 using Dojo
@@ -8,6 +8,9 @@ using Plots
 using Random
 using MeshCat
 using DojoEnvironments
+using Rotations: QuatRotation
+using JLD2
+using FiniteDiff
 
 # ## Open visualizer
 vis = Visualizer()
@@ -79,7 +82,7 @@ generate_dataset(model,
 # ## ---------------------------------------------------------------------------
 params0, trajs0 = open_dataset(model; N=N, mech_kwargs...)
 data0 = params0[:data]
-nd = sum(data_dim.(mech.contacts))
+nd = sum(Dojo.data_dim.(mech.contacts))
 data_contacts0 = data0[end-nd+1:end]
 
 
@@ -103,7 +106,7 @@ end
 function fgH0(d; rot=0, n_sample=0, trajs=trajs0, N=N, indices=indices0)
 	mechanism = get_mechanism(model; mech_kwargs...)
 	f = 0.0
-	nd = sum(data_dim.(mechanism.contacts))
+	nd = sum(Dojo.data_dim.(mechanism.contacts))
 	g = zeros(nd)
 	H = zeros(nd,nd)
 	for i = 1:N
@@ -216,7 +219,7 @@ for traj in trajs0[1:11]
 end
 
 # Visualize Progress made during 'learning'
-for (i,d) in enumerate(dsol[2][1:8])
+for (i,d) in enumerate(dsol[2][1:6])
 	datasol = deepcopy(data0)
 	datasol[end-nd+1:end] = d_to_data_contacts(d)
 	set_data!(mech, datasol)
