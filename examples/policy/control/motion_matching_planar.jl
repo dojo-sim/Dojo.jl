@@ -1,6 +1,6 @@
-using Pkg
-Pkg.activate(joinpath(@__DIR__, "../.."))
-Pkg.instantiate()
+# using Pkg
+# Pkg.activate(joinpath(@__DIR__, "../.."))
+# Pkg.instantiate()
 
 # ## visualizer
 vis = Visualizer()
@@ -16,9 +16,9 @@ using JLD2
 using Plots
 
 # ## scripts
-include(joinpath(module_dir(), "examples/policy/methods/continuation.jl"))
-include(joinpath(module_dir(), "examples/policy/methods/tvlqr.jl"))
-include(joinpath(module_dir(), "DojoEnvironments/src",
+include(joinpath(@__DIR__, "../../..", "examples/policy/methods/continuation.jl"))
+include(joinpath(@__DIR__, "../../..", "examples/policy/methods/tvlqr.jl"))
+include(joinpath(@__DIR__, "../../..", "DojoEnvironments/src",
     "quadruped/methods/template.jl"))
 
 

@@ -1,10 +1,6 @@
-using Pkg
-Pkg.activate(joinpath(@__DIR__, "../.."))
-Pkg.instantiate()
-
-# ## visualizer
-vis = Visualizer()
-open(vis)
+# using Pkg
+# Pkg.activate(joinpath(@__DIR__, "../.."))
+# Pkg.instantiate()
 
 # ## setup
 using Dojo
@@ -14,11 +10,16 @@ using FiniteDiff
 using DojoEnvironments
 using JLD2
 using Plots
+using StaticArrays
+
+# ## visualizer
+vis = Visualizer()
+open(vis)
 
 # ## scripts
-include(joinpath(module_dir(), "examples/policy/methods/continuation.jl"))
-include(joinpath(module_dir(), "examples/policy/methods/tvlqr.jl"))
-include(joinpath(module_dir(), "DojoEnvironments/src",
+include(joinpath(@__DIR__, "../../..", "examples/policy/methods/continuation.jl"))
+include(joinpath(@__DIR__, "../../..", "examples/policy/methods/tvlqr.jl"))
+include(joinpath(@__DIR__, "../../..", "DojoEnvironments/src",
     "quadruped/methods/template.jl"))
 
 
@@ -129,8 +130,8 @@ end
 
 controller!(m, k) = ctrl!(m, k; velocities=velocities, x_lib=x_lib, u_lib=u_lib, K_lib=K_lib)
 
-# x1_roll = deepcopy(x_lib[0.10][1])
-x1_roll = deepcopy(x_lib[0.0][1])
+x1_roll = deepcopy(x_lib[0.10][1])
+# x1_roll = deepcopy(x_lib[0.0][1])
 x1_roll[3] += 0.0
 x1_roll[4] += 0.0
 set_minimal_state!(mech_sim, x1_roll)

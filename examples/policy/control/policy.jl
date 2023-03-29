@@ -1,6 +1,6 @@
-using Pkg
-Pkg.activate(joinpath(@__DIR__, "../.."))
-Pkg.instantiate()
+# using Pkg
+# Pkg.activate(joinpath(@__DIR__, "../.."))
+# Pkg.instantiate()
 
 # ## visualizer
 vis = Visualizer()
@@ -15,9 +15,9 @@ using DojoEnvironments
 using JLD2
 
 # ## scripts
-include(joinpath(module_dir(), "examples/policy/methods/continuation.jl"))
-include(joinpath(module_dir(), "examples/policy/methods/tvlqr.jl"))
-include(joinpath(module_dir(), "DojoEnvironments/src",
+include(joinpath(@__DIR__, "../../..", "examples/policy/methods/continuation.jl"))
+include(joinpath(@__DIR__, "../../..", "examples/policy/methods/tvlqr.jl"))
+include(joinpath(@__DIR__, "../../..", "DojoEnvironments/src",
     "quadruped/methods/template.jl"))
 
 
@@ -48,16 +48,16 @@ nu_infeasible = 6
 ################################################################################
 # Load trajectory and gains
 ################################################################################
-file = JLD2.jldopen(joinpath(@__DIR__, "../data/trotting_forward.jld2"))
+file = JLD2.jldopen(joinpath(@__DIR__, "../data_forward/trotting_forward.jld2"))
 x_ref = file["x"][1:36]
 u_ref = file["u"][1:35]
 JLD2.close(file)
 
-file = JLD2.jldopen(joinpath(@__DIR__, "../data/tvlqr_gains.jld2"))
+file = JLD2.jldopen(joinpath(@__DIR__, "../data_forward/tvlqr_gains.jld2"))
 K_tvlqr = file["K"]
 JLD2.close(file)
 
-file = JLD2.jldopen(joinpath(@__DIR__, "../data/tuned_gains.jld2"))
+file = JLD2.jldopen(joinpath(@__DIR__, "../data_forward/tuned_gains.jld2"))
 K_tuned = file["K"]
 JLD2.close(file)
 
@@ -95,7 +95,7 @@ end
 controller_tvlqr!(m, k) = ctrl!(m, k; K_ref=K_tvlqr)
 controller_tuned!(m, k) = ctrl!(m, k; K_ref=K_tuned)
 
-x1_roll = deepcopy(xref[1])
+x1_roll = deepcopy(x_ref[1])
 x1_roll[3] += 0.25
 x1_roll[4] += 0.0
 set_minimal_state!(mech_sim, x1_roll)
@@ -104,7 +104,7 @@ Main.@elapsed storage_tvlqr = simulate!(mech_sim, 4.0, controller_tvlqr!,
     opts=SolverOptions(rtol=1e-5, btol=1e-4, undercut=5.0),
     )
 
-x1_roll = deepcopy(xref[1])
+x1_roll = deepcopy(x_ref[1])
 x1_roll[3] += 0.25
 x1_roll[4] += 0.0
 set_minimal_state!(mech_sim, x1_roll)
@@ -116,5 +116,5 @@ Main.@elapsed storage_tuned = simulate!(mech_sim, 4.0, controller_tuned!,
 vis, anim = Dojo.visualize(mech_sim, storage_tvlqr, vis=vis, build=true, name=:tvlqr)
 vis, anim = Dojo.visualize(mech_sim, storage_tuned, vis=vis, animation=anim, build=true, name=:tuned)
 
-settransform!(vis[:tuned], Translation(0,0.5,0))
+Dojo.settransform!(vis[:tuned], Dojo.Translation(0,0.5,0))
 # convert_frames_to_video_and_gif("quadruped_tuned_vs_tvlqr_facing")
