@@ -1,9 +1,13 @@
-using Pkg
-Pkg.activate(joinpath(@__DIR__, ".."))
-Pkg.instantiate()
+# using Pkg
+# Pkg.activate(joinpath(@__DIR__, ".."))
+# Pkg.instantiate()
 
 # ## Setup
 using Dojo 
+using DojoEnvironments
+using Random
+using LinearAlgebra
+using Plots
 
 # ## Visualizer
 vis = Visualizer()
@@ -36,7 +40,8 @@ function astronaut_simulation(vis::Visualizer;
         gravity=gravity, 
         spring=spring, 
         damper=damper, 
-        contact=false)
+        contact_feet=false,
+        contact_body=false)
     initialize!(mech, :humanoid)
 
     ## Initialize bodies with random velocities
@@ -86,7 +91,7 @@ display(plt);
 # ## Momentum
 m = [Dojo.momentum(mech, s)[1:end] for s in storage]
 
-## linear
+# ## linear
 mlin = [[Vector(mi)[1:3] for mi in mt] for mt in m]
 plt = plot(ylims=(-1.0e-10, 1.0e-10), xlabel="time (s)", ylabel="linear momentum drift");
 for (i, mt) in enumerate(mlin)
@@ -95,7 +100,7 @@ for (i, mt) in enumerate(mlin)
 end
 display(plt)
 
-## angular 
+# ## angular 
 mang = [[Vector(mi)[4:6] for mi in mt] for mt in m]
 plt = plot(ylims=(-1.0e-10, 1.0e-10), xlabel="time (s)", ylabel="angular momentum drift");
 for (i, mt) in enumerate(mang)

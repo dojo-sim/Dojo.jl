@@ -39,7 +39,8 @@ function astronaut_simulation(;
 		gravity=gravity, 
 		spring=spring, 
 		damper=damper, 
-		contact=false)
+		contact_feet=false,
+		contact_body=false)
 
 	storage = []
 	tcompute = zeros(Nsim)
