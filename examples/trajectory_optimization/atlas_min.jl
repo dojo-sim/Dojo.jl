@@ -1,6 +1,6 @@
-using Pkg
-Pkg.activate(joinpath(@__DIR__, ".."))
-Pkg.instantiate()
+# using Pkg
+# Pkg.activate(joinpath(@__DIR__, ".."))
+# Pkg.instantiate()
 
 # ## setup
 using Dojo
@@ -8,13 +8,14 @@ using IterativeLQR
 using LinearAlgebra 
 using Statistics
 using FiniteDiff
+using DojoEnvironments
 
 # ## visualizer
 vis = Visualizer() 
 open(vis)
 
 # ## system
-include(joinpath(pathof(Dojo), "../../environments/atlas/methods/template.jl"))
+include(joinpath(pathof(Dojo), "../../DojoEnvironments/src/atlas/methods/template.jl"))
 	
 function get_damper_impulses(mechanism::Mechanism{T}) where T
 	joints = mechanism.joints
@@ -77,7 +78,7 @@ zref = [minimal_to_maximal(env.mechanism, x) for x in xref]
 
 # ## visualize reference
 open(env.vis)
-visualize(env, xref)
+DojoEnvironments.visualize(env, xref)
 
 # ## gravity compensation TODO: solve optimization instead
 mech = get_mechanism(:atlas, 
@@ -139,19 +140,19 @@ x1 = xref[1]
 ū = [u_control for t = 1:T-1]
 w = [zeros(d) for t = 1:T-1]
 x̄ = IterativeLQR.rollout(model, x1, ū, w)
-visualize(env, x̄)
+DojoEnvironments.visualize(env, x̄)
 
 # ## objective
 qt = [0.3; 0.05; 0.05; 0.01 * ones(3); 0.01 * ones(3); 0.01 * ones(3); fill(0.002, 30)...]
-ots = [(x, u, w) -> transpose(x - xref[t]) * Diagonal(timestep * qt) * (x - xref[t]) + transpose(u) * Diagonal(timestep * 0.002 * ones(m)) * u for t = 1:T-1]
-oT = (x, u, w) -> transpose(x - xref[end]) * Diagonal(timestep * qt) * (x - xref[end])
+ots = [(x, u) -> transpose(x - xref[t]) * Diagonal(timestep * qt) * (x - xref[t]) + transpose(u) * Diagonal(timestep * 0.002 * ones(m)) * u for t = 1:T-1]
+oT = (x, u) -> transpose(x - xref[end]) * Diagonal(timestep * qt) * (x - xref[end])
 
-cts = IterativeLQR.Cost.(ots, n, m; nw=d)
-cT = IterativeLQR.Cost(oT, n, 0; nw=0)
+cts = IterativeLQR.Cost.(ots, n, m; num_parameter=d)
+cT = IterativeLQR.Cost(oT, n, 0; num_parameter=0)
 obj = [cts..., cT]
 
 # ## constraints
-function goal(x, u, w)
+function goal(x, u)
     Δ = x - xref[end]
 	Δ[3] -= 0.40
     return Δ[collect(1:3)]
@@ -162,17 +163,17 @@ conT = IterativeLQR.Constraint(goal, n, 0)
 cons = [[cont for t = 1:T-1]..., conT]
 
 # ## solver
-s = IterativeLQR.solver(model, obj, cons,
-	opts=IterativeLQR.Options(
+s = IterativeLQR.Solver(model, obj, cons,
+	options=IterativeLQR.Options(
 		verbose=true,
-		linesearch=:armijo,
-		α_min=1.0e-5,
-		obj_tol=1.0e-3,
-		grad_tol=1.0e-3,
-		max_iter=100,
-		max_al_iter=5,
-		ρ_init=1.0,
-		ρ_scale=10.0))
+		line_search=:armijo,
+		min_step_size=1.0e-5,
+		objective_tolerance=1.0e-3,
+		lagrangian_gradient_tolerance=1.0e-3,
+		max_iterations=100,
+		max_dual_updates=5,
+		initial_constraint_penalty=1.0,
+		scaling_penalty=10.0))
 IterativeLQR.initialize_controls!(s, ū)
 IterativeLQR.initialize_states!(s, x̄)
 
@@ -184,11 +185,11 @@ open(env.vis)
 
 # ## solution
 x_sol, u_sol = IterativeLQR.get_trajectory(s)
-@show IterativeLQR.eval_obj(s.m_data.obj.costs, s.m_data.x, s.m_data.u, s.m_data.w)
-@show s.s_data.iter[1]
-@show norm(goal(s.m_data.x[T], zeros(0), zeros(0)), Inf)
+# @show IterativeLQR.eval(s.data.obj.costs, s.data.x, s.data.u, s.data.w)
+# @show s.s_data.iter[1]
+# @show norm(goal(s.m_data.x[T], zeros(0), zeros(0)), Inf)
 
 # ## visualize
 x_view = [[x_sol[1] for t = 1:15]..., x_sol..., [x_sol[end] for t = 1:15]...]
-visualize(env, x_view)
+DojoEnvironments.visualize(env, x_view)
 
