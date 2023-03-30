@@ -16,10 +16,10 @@ function block2d_dojo(mechanism::Mechanism, F;
         verbose=false)
 
     initialize!(mechanism, :block2d, 
-        x=[0.0, 0.0], 
-        v=[0.0, 0.0], 
-        θ=0.0, 
-        ω=0.0)
+        position=[0.0, 0.0], 
+        velocity=[0.0, 0.0], 
+        orientation=0.0, 
+        angular_velocity=0.0)
     z0 = get_maximal_state(mechanism)
     u0 = zeros(3)
     u0[idx] += F 
@@ -29,7 +29,7 @@ function block2d_dojo(mechanism::Mechanism, F;
 
     step!(mechanism, z0, u0, opts=opts_grad)
 
-    z1 = get_next_state(mechanism)
+    z1 = Dojo.get_next_state(mechanism)
     x0 = maximal_to_minimal(mechanism, z0)
     x1 = maximal_to_minimal(mechanism, z1)
 
@@ -57,10 +57,10 @@ function block2d_gradientbundle(mechanism::Mechanism, F;
             no_progress_undercut=no_progress_undercut)
 
     initialize!(mechanism, :block2d, 
-        x=[0.0, 0.0], 
-        v=[0.0, 0.0], 
-        θ=0.0, 
-        ω=0.0)
+        position=[0.0, 0.0], 
+        velocity=[0.0, 0.0], 
+        orientation=0.0, 
+        angular_velocity=0.0)
     z0 = get_maximal_state(mechanism)
     u0 = zeros(3)
     u0[idx] += F
@@ -75,7 +75,7 @@ function block2d_gradientbundle(mechanism::Mechanism, F;
         Σ=Σ)
     step!(mechanism, z0, u0, 
         opts=opts_grad)
-    z1 = get_next_state(mechanism)
+    z1 = Dojo.get_next_state(mechanism)
     x0 = maximal_to_minimal(mechanism, z0)
     x1 = maximal_to_minimal(mechanism, z1)
 

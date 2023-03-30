@@ -29,14 +29,14 @@ function gradient_bundle_0th(mechanism::Mechanism, z0, u0, idx;
     δu = [zeros(nu) for i=1:N]
 
     step!(mechanism, z0, u0, opts=opts)
-    z10 = get_next_state(mechanism)
+    z10 = Dojo.get_next_state(mechanism)
     x10 = maximal_to_minimal(mechanism, z10)
 
     for i = 1:N
         u = zeros(3)
         u[idx:idx] = normal_sample(u0[idx:idx], Σ)
         step!(mechanism, z0, u, opts=opts)
-        z1 = get_next_state(mechanism)
+        z1 = Dojo.get_next_state(mechanism)
         x1 = maximal_to_minimal(mechanism, z1)
         # x11 = copy(x10)
         # x11[idx] = max(0, u[idx]  - 10.0) / 10
