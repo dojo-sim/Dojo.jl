@@ -3,16 +3,16 @@ function get_cartpole(;
     gravity=[0.0; 0.0; -9.81], 
     spring=0.0, 
     damper=0.0,
+    slider_mass=1.0,
+    pendulum_mass=1.0,
+    pendulum_length=1.0,
     T=Float64)
 
     # Parameters
     slider_axis = [0.0; 1.0; 0.0]
     pendulum_axis = [1.0; 0.0; 0.0]
     slider_length = 1.0
-    pendulum_length = 1.0
     radius = 0.075
-    slider_mass = 1.0
-    pendulum_mass = 1.0
 
     # Links
     origin = Origin{Float64}()
