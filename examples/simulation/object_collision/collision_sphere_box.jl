@@ -3,7 +3,7 @@ using Dojo
 # Parameters
 origin = Origin{Float64}()
 pbody = Box(1.0, 1.0, 1.0, 1.0)
-cbody = Sphere(0.5, 1.0)
+cbody = Dojo.Sphere(0.5, 1.0)
 joint1 = JointConstraint(Floating(origin, pbody))
 joint2 = JointConstraint(Floating(origin, cbody))
 
@@ -39,9 +39,9 @@ sphere_contact = contact_constraint(cbody, [0.0; 0.0; 1.0],
 
 collision = SphereBoxCollision{Float64,2,3,6}(
     szeros(3),
-    SA[0.5; 0.0; 0.0],
-    SA[0.0; 0.5; 0.0],
-    SA[0.0; 0.0; 0.5],
+    1.0,
+    1.0,
+    2 * 1.0,
     0.5,
 )
 

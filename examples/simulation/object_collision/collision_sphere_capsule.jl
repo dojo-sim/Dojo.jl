@@ -3,7 +3,7 @@ using Dojo
 # Parameters
 origin = Origin{Float64}()
 pbody = Capsule(0.5, 2.0, 1.0, orientation_offset=Quaternion(sqrt(2.0) / 2.0, sqrt(2.0) / 2.0, 0.0, 0.0))
-cbody = Sphere(0.5, 1.0)
+cbody = Dojo.Sphere(0.5, 1.0)
 joint1 = JointConstraint(Floating(origin, pbody))
 joint2 = JointConstraint(Floating(pbody, cbody))
 

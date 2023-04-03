@@ -7,10 +7,10 @@ using DojoEnvironments
 vis = Visualizer()
 render(vis)
 
-include(joinpath(@__DIR__, "..", "..", "..", "DojoEnvironments/src/utilities.jl"))
-include(joinpath(@__DIR__, "..", "..", "..", "DojoEnvironments/src/panda/methods/initialize.jl"))
+# include(joinpath(@__DIR__, "..", "..", "..", "DojoEnvironments/src/utilities.jl"))
+# include(joinpath(@__DIR__, "..", "..", "..", "DojoEnvironments/src/panda/methods/initialize.jl"))
 
-mech = get_panda(
+mech = DojoEnvironments.get_panda(
     timestep=0.01,
     gravity=0.0 * 9.81,
     spring=1.0,
@@ -49,7 +49,7 @@ set_minimal_state!(mech, y)
 # set_minimal_state!(mech, copy(y_start))
 
 box_body = get_body(mech, :box)
-box_body.state.q2 =  RotZ(0.25 * π)
+box_body.state.q2 =  Dojo.RotZ(0.25 * π)
 
 storage = simulate!(mech, 5.0, 
     ctrl!, 
@@ -66,7 +66,7 @@ setobject!(vis["ee"], GeometryBasics.Sphere(Point3f0(0),
 for t in 1:length(storage)
     MeshCat.atframe(anim, t) do 
         MeshCat.settransform!(vis["ee"], 
-        MeshCat.Translation(storage.x[5][t] + vector_rotate(mech.contacts[1].model.collision.origin_sphere, storage.q[5][t])))
+        MeshCat.Translation(storage.x[5][t] + Dojo.vector_rotate(mech.contacts[1].model.collision.origin_sphere, storage.q[5][t])))
     end
 end
 MeshCat.setanimation!(vis, anim)

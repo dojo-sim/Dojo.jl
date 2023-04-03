@@ -4,8 +4,8 @@ using Test
 
 # Parameters
 origin = Origin{Float64}()
-pbody = Sphere(0.5, 1.0)
-cbody = Sphere(0.5, 1.0)
+pbody = Dojo.Sphere(0.5, 1.0)
+cbody = Dojo.Sphere(0.5, 1.0)
 joint = JointConstraint(Fixed(origin, pbody))
 
 bodies = [pbody, cbody]
@@ -17,20 +17,25 @@ collision = SphereSphereCollision{Float64,2,3,6}(
         pbody.shape.r, 
         cbody.shape.r)
 
+sphere_contact = contact_constraint(cbody, [0.0; 0.0; 1.0], 
+    friction_coefficient=1.0, 
+    contact_origin=SA[0.0; 0.0; 0.0], 
+    contact_radius=0.5)
+
 friction_parameterization = SA{Float64}[
     1.0  0.0
     0.0  1.0
 ]
 body_body_contact = NonlinearContact{Float64,8}(0.5, friction_parameterization, collision)
 
-contacts = [ContactConstraint((body_body_contact, pbody.id, cbody.id), name=:body_body)]
+contacts = [ContactConstraint((body_body_contact, pbody.id, cbody.id), name=:body_body), sphere_contact]
 
 mech = Mechanism(origin, bodies, joints, contacts,
             gravity=1.0 * -9.81, 
             timestep=0.1)
 
 mech.bodies[1].state.x2 = [0.0, 0.0, 0.0]
-mech.bodies[2].state.x2 = [0.0, 0.0, 2.0]
+mech.bodies[2].state.x2 = [0.0, 0.01, 2.0]
 
 # d = distance(mech.contacts[1].model.collision, 
 #     mech.bodies[1].state.x2, mech.bodies[1].state.q2,
@@ -66,7 +71,7 @@ mech.bodies[2].state.x2 = [0.0, 0.0, 2.0]
 
 # @test norm(am - [0 1 0 0; 1 0 0 1; 0 0 0 1; 0 1 1 0], Inf) < 1.0e-6
 
-storage = simulate!(mech, 2.0, 
+storage = simulate!(mech, 3.0, 
     verbose=true, 
     record=true)
 
