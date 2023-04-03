@@ -12,7 +12,7 @@ function get_cartpole(;
     pendulum_length = 1.0
     radius = 0.075
     slider_mass = 1.0
-    pendulum_mass = 0.432
+    pendulum_mass = 1.0
 
     # Links
     origin = Origin{Float64}()
@@ -24,13 +24,10 @@ function get_cartpole(;
     links = [slider, pendulum]
 
     # Joint Constraints
-    joint_origin_slider = JointConstraint(Prismatic(origin, slider, slider_axis; 
-        parent_vertex=szeros(Float64, 3), 
-        child_vertex=szeros(Float64, 3),
+    joint_origin_slider = JointConstraint(Prismatic(origin, slider, slider_axis;
         spring=spring, damper=damper))
     joint_slider_pendulum = JointConstraint(Revolute(slider, pendulum, pendulum_axis; 
-        parent_vertex=szeros(Float64, 3), 
-        child_vertex=[0.0; 0.0; 0.5 * pendulum_length],
+        child_vertex=[0.0; 0.0; -0.5 * pendulum_length],
         spring=spring, damper=damper))
     joints = [joint_origin_slider, joint_slider_pendulum]
 
@@ -43,7 +40,7 @@ function get_cartpole(;
 end
 
 function initialize_cartpole!(mech::Mechanism{T,Nn,Ne,Nb}; 
-        mode=:down, 
+        mode=:up, 
         pendulum_length=1.0) where {T,Nn,Ne,Nb}
 
     # origin to slider
@@ -63,7 +60,7 @@ function initialize_cartpole!(mech::Mechanism{T,Nn,Ne,Nb};
     elseif mode == :up
         set_maximal_configurations!(mech.bodies[1], mech.bodies[2], 
             Δx=[0.0; 0.0; 0.5 * pendulum_length], 
-            Δq=RotX(π))
+            Δq=RotX(0))
         set_maximal_velocities!(mech.bodies[2], 
             v=zeros(3), 
             ω=zeros(3))
