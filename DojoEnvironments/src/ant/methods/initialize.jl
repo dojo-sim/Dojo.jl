@@ -95,7 +95,8 @@ function get_ant(;
 
         mech = Mechanism(origin, bodies, joints, contacts; 
         gravity, 
-        timestep)
+        timestep,
+        input_scaling=1)
     end
 
     return mech

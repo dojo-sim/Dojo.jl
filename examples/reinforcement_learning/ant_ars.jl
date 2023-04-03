@@ -34,7 +34,7 @@ open(env.vis)
 
 # ## Set up policy
 hp = HyperParameters(
-        main_loop_size=100, 
+        main_loop_size=10, 
         horizon=150, 
         n_directions=6, 
         b=6, 
@@ -47,7 +47,7 @@ normalizer = Normalizer(input_size)
 train_times = Float64[]
 rewards = Float64[]
 policies = Matrix{Float64}[]
-N = 5
+N = 2
 for i = 1:N
     ## Reset environment
     env = get_environment(:ant, 
@@ -64,7 +64,7 @@ for i = 1:N
     ## Random policy
     Random.seed!(i)
     hp = HyperParameters(
-        main_loop_size=100, 
+        main_loop_size=10, 
         horizon=150, 
         n_directions=6, 
         b=6, 
@@ -90,7 +90,7 @@ end
 @load joinpath(@__DIR__, "results/ant_rl.jld2") train_times rewards policies
 
 # ## Training statistics
-N_best = 3
+N_best = 2
 max_idx = sortperm(rewards, 
     lt=Base.isgreater)
 train_time_best = (train_times[max_idx])[1:N_best]
@@ -110,8 +110,8 @@ policies_best = (policies[max_idx])[1:N_best]
 
 # ## Recover policy
 hp = HyperParameters(
-        main_loop_size=30, 
-        horizon=80, 
+        main_loop_size=10, 
+        horizon=150, 
         n_directions=6, 
         b=6, 
         step_size=0.02)
@@ -121,7 +121,7 @@ normalizer = Normalizer(input_size)
 θ = policies_best[1] 
 
 # ## Visualize policy
-## traj = display_random_policy(env, hp)
+# traj = display_random_policy(env, hp)
 traj = display_policy(env, Policy(hp, θ), normalizer, hp)
 DojoEnvironments.visualize(env, traj)
 open(env.vis)
