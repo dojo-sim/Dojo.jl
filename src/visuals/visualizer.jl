@@ -18,7 +18,8 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
     show_contact=false, 
     animation=nothing, 
     color=nothing, 
-    name::Symbol=:robot) where {T,N}
+    name::Symbol=:robot,
+    return_animation=false) where {T,N}
 
     storage = deepcopy(storage)
     bodies = mechanism.bodies
@@ -102,7 +103,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
     end
 
     setanimation!(vis, animation)
-    return vis, animation
+    return_animation ? (return vis, animation) : (return vis) 
 end
 
 """

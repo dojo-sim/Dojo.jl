@@ -2,10 +2,11 @@ function get_pendulum(;
     timestep=0.01,
     input_scaling=timestep, 
     gravity=-9.81,
-    mass=1.0,
-    length=1.0,
-    springs=0.0,
-    dampers=0.0,
+    mass=1,
+    length=1,
+    color=RGBA(1, 0, 0),
+    springs=0,
+    dampers=0,
     limits=false,
     joint_limits=Dict(),
     spring_offset=szeros(1),
@@ -15,114 +16,41 @@ function get_pendulum(;
     # mechanism
     origin = Origin{T}()
     
-    body = Box(0.1, 0.1, length, mass, name=:pendulum)
+    body = Box(0.1, 0.1, length, mass; color, name=:pendulum)
     bodies = [body]
 
     joint = JointConstraint(Revolute(origin, body, X_AXIS;
         parent_vertex=1.1*Z_AXIS, child_vertex=0.5*Z_AXIS,
-        spring, damper,
         rot_spring_offset=spring_offset, orientation_offset), 
         name=:joint)
     joints = [joint]
 
-    mech = Mechanism(origin, bodies, joints;
+    mechanism = Mechanism(origin, bodies, joints;
         gravity, timestep, input_scaling)
 
     # springs and dampers
-    set_springs!(mech.joints, springs)
-    set_dampers!(mech.joints, dampers)
+    set_springs!(mechanism.joints, springs)
+    set_dampers!(mechanism.joints, dampers)
 
     # joint limits    
     if limits
-        joints = set_limits(mech, joint_limits)
+        joints = set_limits(mechanism, joint_limits)
 
-        mech = Mechanism(Origin{T}(), mech.bodies, joints;
+        mechanism = Mechanism(Origin{T}(), mechanism.bodies, joints;
             gravity, timestep, input_scaling)
     end
 
+    # zero configuration
+    zero_coordinates!(mechanism)
+
     # construction finished
-    return mech
+    return mechanism
 end
 
 function initialize_pendulum!(mechanism::Mechanism;
     angle=0.7,
-    angular_velocity=0.0)
+    angular_velocity=0)
     joint = mechanism.joints[1]
     set_minimal_coordinates_velocities!(mechanism, joint;
         xmin=[angle, angular_velocity])
-end
-
-function get_npendulum(;
-    timestep=0.01,
-    gravity=-9.81,
-    mass=1.0,
-    len=1.0,
-    springs=0.0,
-    dampers=0.0,
-    num_bodies=5,
-    basetype=:Revolute,
-    joint_type=:Revolute,
-    T=Float64)
-
-    # Parameters
-    ex = X_AXIS
-    r = 0.05
-    vert11 = [0.0; 0.0; len / 2.0]
-    vert12 = -vert11
-
-    # Links
-    origin = Origin{T}()
-    bodies = [Box(r, r, len, mass, color=RGBA(1.0, 0.0, 0.0)) for i = 1:num_bodies]
-
-    # Constraints
-    jointb1 = JointConstraint(Prototype(basetype, origin, bodies[1], ex;
-        child_vertex=vert11,
-        spring,
-        damper))
-    if num_bodies > 1
-        joints = [JointConstraint(Prototype(joint_type, bodies[i - 1], bodies[i], ex;
-            parent_vertex=vert12,
-            child_vertex=vert11,
-            spring,
-            damper)) for i = 2:num_bodies]
-        joints = [jointb1; joints]
-    else
-        joints = [jointb1]
-    end
-
-    mech = Mechanism(origin, bodies, joints;
-        gravity,
-        timestep)
-    return mech
-end
-
-function initialize_npendulum!(mechanism::Mechanism{T};
-    base_angle=π / 4.0,
-    base_angular_velocity=[0.0, 0.0, 0.0],
-    relative_linear_velocity=[0.0, 0.0, 0.0],
-    relative_angular_velocity=[0.0, 0.0, 0.0]) where T
-
-    pbody = mechanism.bodies[1]
-    joint = mechanism.joints[1]
-    vert11 = joint.translational.vertices[2]
-    vert12 = -vert11
-
-    # set position and velocities
-    set_maximal_configurations!(mechanism.origin, pbody,
-        child_vertex=vert11,
-        Δq=RotX(base_angle))
-    set_maximal_velocities!(pbody,
-        ω=base_angular_velocity)
-
-    previd = pbody.id
-    for (i, body) in enumerate(Iterators.drop(mechanism.bodies, 1))
-        set_maximal_configurations!(get_body(mechanism, previd), body,
-            parent_vertex=vert12,
-            child_vertex=vert11)
-        set_maximal_velocities!(get_body(mechanism, previd), body,
-            parent_vertex=vert12,
-            child_vertex=vert11,
-            Δv=relative_linear_velocity, Δω=1 / i * relative_angular_velocity)
-        previd = body.id
-    end
 end

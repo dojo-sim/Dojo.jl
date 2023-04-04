@@ -67,7 +67,7 @@ end
 """
 function contact_constraint(bodies::Vector{Body{T}},
         normal::AbstractVector{<:AbstractVector};
-        friction_coefficient::AbstractVector{T}=ones(length(normal)),
+        friction_coefficient::AbstractVector=ones(T,length(normal)),
         contact_origins::AbstractVector=[szeros(T, 3) for i=1:length(normal)],
         contact_radius::AbstractVector=[0.0 for i=1:length(normal)],
         names::Vector{Symbol}=[Symbol("contact_" * randstring(4)) for i = 1:length(normal)],
@@ -91,7 +91,7 @@ end
 
 function contact_constraint(body::Body{T},
         normal::AbstractVector{<:AbstractVector};
-        friction_coefficient::AbstractVector{T}=ones(length(normal)),
+        friction_coefficient::AbstractVector=ones(T,length(normal)),
         contact_origins::AbstractVector=[szeros(T, 3) for i=1:length(normal)],
         contact_radius::AbstractVector=[0.0 for i=1:length(normal)],
         names::Vector{Symbol}=[Symbol("contact_" * randstring(4)) for i = 1:length(normal)],
@@ -107,10 +107,10 @@ function contact_constraint(body::Body{T},
 end
 
 function contact_constraint(body::Body{T},
-        normal::AbstractVector{T};
-        friction_coefficient::T=1.0,
-        contact_origin::AbstractVector{T}=szeros(T, 3),
-        contact_radius::T=0.0,
+        normal::AbstractVector;
+        friction_coefficient=T(1),
+        contact_origin::AbstractVector=szeros(T, 3),
+        contact_radius=T(0),
         name::Symbol=Symbol("contact_" * randstring(4)),
         contact_type::Symbol=:nonlinear) where T
 

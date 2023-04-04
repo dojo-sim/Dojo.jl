@@ -31,9 +31,9 @@ end
 
 function set_springs!(joints, springs::AbstractArray)
     for (i,spring) in enumerate(springs)
-        joints[i+1].spring = true
-        joints[i+1].translational.spring=spring
-        joints[i+1].rotational.spring=spring
+        joints[i].spring = true
+        joints[i].translational.spring=spring
+        joints[i].rotational.spring=spring
     end
 end
 
@@ -47,9 +47,9 @@ end
 
 function set_dampers!(joints, dampers::AbstractArray)
     for (i,damper) in enumerate(dampers)
-        joints[i+1].damper = true
-        joints[i+1].translational.damper=damper
-        joints[i+1].rotational.damper=damper
+        joints[i].damper = true
+        joints[i].translational.damper=damper
+        joints[i].rotational.damper=damper
     end
 end
 
@@ -62,7 +62,7 @@ function set_limits(mechanism, joint_limits)
             joints[joint.id] = add_limits(mechanism, joint, 
                 rot_limits=[SVector{1}(limits[1]), SVector{1}(limits[2])])
         elseif input_dimension(joint.translational) == 1 && input_dimension(joint.rotational) == 0
-            joints[i] = add_limits(mech, joint,
+            joints[joint.id] = add_limits(mechanism, joint,
                 tra_limits=[SVector{1}(limits[1]), SVector{1}(limits[2])])
         else
             @warn "joint limits can only be set for one-dimensional joints"

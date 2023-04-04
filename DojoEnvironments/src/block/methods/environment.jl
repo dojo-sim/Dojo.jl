@@ -75,7 +75,7 @@ function block(;
 end
 
 function visualize_block_force!(vis, anim, z_vis, u_vis; 
-    shift = [0.0; 0.25; 0.0], 
+    shift = [0; 0.25; 0], 
     color=orange,
     )
 

@@ -10,8 +10,8 @@ function walker(;
     timestep=0.05,
     gravity=-9.81,
     friction_coefficient=1.9,
-    springs=0.0,
-    dampers=0.0,
+    springs=0,
+    dampers=0,
     parse_dampers=true,
     seed=1,
     contact_feet=true,
@@ -147,6 +147,6 @@ function is_done(env::Environment{Walker}, x)
     end
     height = x0[1]
     ang = x0[3]
-    done = !((height > 0.8) && (height < 2.0) && (abs(ang) < 1.0))
+    done = !((height > 0.8) && (height < 2) && (abs(ang) < 1))
     return done
 end

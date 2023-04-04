@@ -9,17 +9,19 @@ mechanisms = [
     :halfcheetah,
     :hopper, 
     :humanoid,
-    :orbital, 
+    :npendulum,
+    :panda,
     :pendulum,
     :quadruped,
     :raiberthopper,
     :rexhopper, 
-    :slider,
-    :snake, 
+    :snake,
+    :sphere,
     :tennisracket,
     :tippetop,
     :twister, 
     :walker,
+    :youbot,
 ]
 
 for name in mechanisms 

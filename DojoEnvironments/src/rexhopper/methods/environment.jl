@@ -11,9 +11,9 @@ function rexhopper(;
     timestep=0.05,
     seed=1,
     gravity=-9.81,
-    friction_coefficient=1.0,
-    springs=0.0,
-    dampers=0.0,
+    friction_coefficient=1,
+    springs=0,
+    dampers=0,
     parse_dampers=true,
     contact_type=:nonlinear,
     contact_foot=true,
@@ -23,8 +23,8 @@ function rexhopper(;
     infeasible_control=false,
     vis=Visualizer(),
     name=:robot,
-    opts_step=SolverOptions(rtol=1.0e-4, btol=1.0e-4, undercut=10.0),
-    opts_grad=SolverOptions(rtol=1.0e-4, btol=1.0e-4, undercut=10.0),
+    opts_step=SolverOptions(rtol=1.0e-4, btol=1.0e-4, undercut=10),
+    opts_grad=SolverOptions(rtol=1.0e-4, btol=1.0e-4, undercut=10),
     T=Float64)
 
     mechanism = get_rexhopper(;
@@ -67,8 +67,8 @@ function rexhopper(;
     fu = zeros(nx, nu)
 
     u_prev = zeros(nu)
-    control_map = infeasible_control ? 1.0 * I(nu) : get_control_mask(nu_inf, [4,5,6,7,9])'
-    cat(zeros(3, 3), 1.0 * I(3), 1.0, 0.0, 1.0, zeros(5, 5), dims=(1,2))
+    control_map = infeasible_control ? 1 * I(nu) : get_control_mask(nu_inf, [4,5,6,7,9])'
+    cat(zeros(3, 3), 1 * I(3), 1, 0, 1, zeros(5, 5), dims=(1,2))
 
     build_robot(mechanism, vis=vis, name=name)
 

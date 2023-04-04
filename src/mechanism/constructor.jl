@@ -92,11 +92,11 @@ Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:JointCons
 function Mechanism(filename::String; 
     floating::Bool=false, 
     T=Float64,
-    parse_damper=true, 
+    parse_dampers=true, 
     keep_fixed_joints=true,
     kwargs...)
     # parse urdf
-    origin, links, joints, loopjoints = parse_urdf(filename, floating, T, parse_damper)
+    origin, links, joints, loopjoints = parse_urdf(filename, floating, T, parse_dampers)
 
     # create mechanism
     mechanism = Mechanism(origin, links, [joints; loopjoints]; kwargs...)

@@ -5,9 +5,10 @@ function get_raiberthopper(;
     body_mass=4.18,
     foot_mass=0.52,
     body_radius=0.1,
-    foot_radius=0.05
-    springs=[0.0;0.0], 
-    dampers=[0.0;0.1],
+    foot_radius=0.05,
+    color=RGBA(0.9, 0.9, 0.9),
+    springs=[0;0], 
+    dampers=[0;0.1],
     limits=false,
     joint_limits=Dict(), 
     contact_foot=true, 
@@ -17,8 +18,8 @@ function get_raiberthopper(;
     # mechanism
     origin = Origin{Float64}()
 
-    body = Sphere(body_radius, body_mass)
-    foot = Sphere(foot_radius, foot_mass)
+    body = Sphere(body_radius, body_mass; color)
+    foot = Sphere(foot_radius, foot_mass; color)
     bodies = [body, foot]
 
     joint_origin_body = JointConstraint(Floating(origin, body))
@@ -26,25 +27,25 @@ function get_raiberthopper(;
         parent_vertex=szeros(Float64, 3), child_vertex=szeros(Float64, 3)))
     joints = [joint_origin_body, joint_body_foot]
 
-    mech = Mechanism(origin, bodies, joints;
+    mechanism = Mechanism(origin, bodies, joints;
         gravity, timestep, input_scaling)
 
     # springs and dampers
-    set_springs!(mech.joints, springs)
-    set_dampers!(mech.joints, dampers)
+    set_springs!(mechanism.joints, springs)
+    set_dampers!(mechanism.joints, dampers)
 
     # joint limits    
     if limits
-        joints = set_limits(mech, joint_limits)
+        joints = set_limits(mechanism, joint_limits)
 
-        mech = Mechanism(Origin{T}(), mech.bodies, joints;
+        mechanism = Mechanism(Origin{T}(), mechanism.bodies, joints;
             gravity, timestep, input_scaling)
     end
 
     # contacts
     origin = Origin{T}()
-    bodies = mech.bodies
-    joints = mech.joints
+    bodies = mechanism.bodies
+    joints = mechanism.joints
     contacts = ContactConstraint{T}[]
 
     if contact_foot
@@ -55,7 +56,7 @@ function get_raiberthopper(;
         # foot
         foot_contacts = contact_constraint(foot, contact_normal; 
             friction_coefficient,
-            contact_origin=[0.0; 0.0; 0.0], 
+            contact_origin=[0; 0; 0], 
             contact_radius=foot_radius)
 
         contacts = [foot_contacts]
@@ -64,32 +65,37 @@ function get_raiberthopper(;
         if contact_body
             body_contacts = contact_constraint(body, contact_normal; 
                 friction_coefficient,
-                contact_origin=[0.0; 0.0; 0.0], 
+                contact_origin=[0; 0; 0], 
                 contact_radius=body_radius)
             push!(contacts, body_contacts)
         end
     end
 
-    mech = Mechanism(origin, bodies, joints, contacts; 
+    mechanism = Mechanism(origin, bodies, joints, contacts; 
         gravity, timestep, input_scaling)
+
+    # zero configuration
+    zero_coordinates!(mechanism)
+    set_minimal_coordinates!(mechanism, joint_origin_body, [0; 0; body_radius; 0; 0; 0])
+    set_minimal_coordinates!(mechanism, joint_body_foot, [2*body_radius+foot_radius])
     
     # construction finished
-    return mech
+    return mechanism
 end
 
 function initialize_raiberthopper!(mech::Mechanism{T,Nn,Ne,Nb}; 
-    body_position=[0.0, 0.0, 0.05],
+    body_position=[0, 0, 0.05],
     leg_length=0.5, 
     body_linear_velocity=zeros(3), 
     body_angular_velocity=zeros(3)) where {T,Nn,Ne,Nb}
 
-    pbody = mech.bodies[1]
-    cbody = mech.bodies[2]
-    joint2 = mech.joints[2]
+    pbody = mechanism.bodies[1]
+    cbody = mechanism.bodies[2]
+    joint2 = mechanism.joints[2]
     tra2 = joint2.translational
 
     # origin to body
-    set_maximal_configurations!(mech.origin, pbody, 
+    set_maximal_configurations!(mechanism.origin, pbody, 
         Δx=[body_position[1:2]; leg_length + body_position[3]])
     set_maximal_velocities!(pbody, 
         v=body_linear_velocity, 
@@ -97,8 +103,8 @@ function initialize_raiberthopper!(mech::Mechanism{T,Nn,Ne,Nb};
 
     # body to foot
     set_maximal_configurations!(pbody, cbody, 
-        Δx=[0.0; 0.0; -leg_length], 
-        Δq=RotX(0.0))
+        Δx=[0; 0; -leg_length], 
+        Δq=RotX(0))
     set_maximal_velocities!(pbody, cbody, 
         parent_vertex=tra2.vertices[1], 
         child_vertex=tra2.vertices[2], 

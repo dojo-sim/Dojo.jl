@@ -3,34 +3,39 @@ function get_tennisracket(;
     input_scaling=timestep, 
     gravity=-9.81,
     mass=1,
-    scale=1
-    springs=0.0,
-    dampers=0.0, 
+    scale=1,
+    color=RGBA(1, 0, 0),
+    springs=0,
+    dampers=0, 
     limits=false,
     joint_limits=Dict(),
     T=Float64) 
 
     origin = Origin{T}(name=:origin)
-    bodies = [Box(scale / 25.0, scale / 2.0, scale, mass, color=RGBA(1.0, 0.0, 0.0), name=:box)]
-    joints = [JointConstraint(Floating(origin, bodies[1]), name=:floating_joint)]
+    bodies = [Box(scale / 25, scale / 2, scale, mass; color, name=:box)]
+    joints = [JointConstraint(Floating(origin, bodies[1]); name=:floating_joint)]
 
-    mech = Mechanism(origin, bodies, joints; 
+    mechanism = Mechanism(origin, bodies, joints; 
         timestep, gravity, input_scaling)
 
     # springs and dampers
-    set_springs!(mech.joints, springs)
-    set_dampers!(mech.joints, dampers)
+    set_springs!(mechanism.joints, springs)
+    set_dampers!(mechanism.joints, dampers)
 
     # joint limits    
     if limits
-        joints = set_limits(mech, joint_limits)
+        joints = set_limits(mechanism, joint_limits)
 
-        mech = Mechanism(Origin{T}(), mech.bodies, joints;
+        mechanism = Mechanism(Origin{T}(), mechanism.bodies, joints;
             gravity, timestep, input_scaling)
     end
 
+    # zero configuration
+    zero_coordinates!(mechanism)
+    set_minimal_coordinates!(mechanism, joints[1], [0, 0, scale/2, 0, 0, 0])
+
     # construction finished
-    return mech
+    return mechanism
 end
 
 function initialize_tennisracket!(mechanism::Mechanism{T}; 

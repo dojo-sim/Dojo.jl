@@ -3,10 +3,11 @@ function get_npendulum(;
     input_scaling=timestep,
     gravity=-9.81,
     num_bodies=5,
-    mass=1.0,
-    length=1.0,
-    springs=0.0,
-    dampers=0.0,
+    mass=1,
+    length=1,
+    color=RGBA(1, 0, 0),
+    springs=0,
+    dampers=0,
     limits=false,
     joint_limits=Dict(),
     base_joint_type=:Revolute,
@@ -16,46 +17,46 @@ function get_npendulum(;
     # mechanism
     origin = Origin{T}()
 
-    bodies = [Box(0.05, 0.05, length, mass, color=RGBA(1.0, 0.0, 0.0)) for i = 1:num_bodies]
+    bodies = [Box(0.05, 0.05, length, mass; color) for i = 1:num_bodies]
 
     jointb1 = JointConstraint(Prototype(base_joint_type, origin, bodies[1], X_AXIS;
-        child_vertex=Z_AXIS*length/2,
-        spring,
-        damper))
+        parent_vertex=Z_AXIS*num_bodies, child_vertex=Z_AXIS*length/2))
 
     joints = [
         jointb1;
         [
             JointConstraint(Prototype(rest_joint_type, bodies[i - 1], bodies[i], X_AXIS;
-            parent_vertex=-Z_AXIS*length/2, child_vertex=Z_AXIS*length/2,
-            spring, damper)) for i = 2:num_bodies
+            parent_vertex=-Z_AXIS*length/2, child_vertex=Z_AXIS*length/2)) for i = 2:num_bodies
         ]
     ]
 
-    mech = Mechanism(origin, bodies, joints;
+    mechanism = Mechanism(origin, bodies, joints;
         gravity, timestep, input_scaling)
 
     # springs and dampers
-    set_springs!(mech.joints, springs)
-    set_dampers!(mech.joints, dampers)
+    set_springs!(mechanism.joints, springs)
+    set_dampers!(mechanism.joints, dampers)
 
     # joint limits    
     if limits
-        joints = set_limits(mech, joint_limits)
+        joints = set_limits(mechanism, joint_limits)
 
-        mech = Mechanism(Origin{T}(), mech.bodies, joints;
+        mechanism = Mechanism(Origin{T}(), mechanism.bodies, joints;
             gravity, timestep, input_scaling)
     end
 
+    # zero configuration
+    zero_coordinates!(mechanism)
+
     # construction finished
-    return mech
+    return mechanism
 end
 
 function initialize_npendulum!(mechanism::Mechanism{T};
-    base_angle=π / 4.0,
-    base_angular_velocity=[0.0, 0.0, 0.0],
-    relative_linear_velocity=[0.0, 0.0, 0.0],
-    relative_angular_velocity=[0.0, 0.0, 0.0]) where T
+    base_angle=π / 4,
+    base_angular_velocity=[0, 0, 0],
+    relative_linear_velocity=[0, 0, 0],
+    relative_angular_velocity=[0, 0, 0]) where T
 
     pbody = mechanism.bodies[1]
     joint = mechanism.joints[1]

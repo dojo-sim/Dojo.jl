@@ -11,8 +11,8 @@ function quadruped(;
     timestep=0.05, 
     gravity=-9.81, 
     friction_coefficient=0.8,
-    dampers=0.0, 
-    springs=0.0, 
+    dampers=0, 
+    springs=0, 
     parse_dampers=true,
     info=nothing,
     seed=1, 
@@ -91,7 +91,7 @@ function low_foot_trajectory(r::T, width_scale::T, N::Int) where T
 	# r = radius of the foot traj
 	# low foot trajectory decomposed into N-1 steps (N waypoints)
 	X = Vector(range(-width_scale*r, width_scale*r, length = N+1))
-	low_traj = [[x, 0, 0.0] for x in X]
+	low_traj = [[x, 0, 0] for x in X]
 	return low_traj
 end
 
@@ -101,7 +101,7 @@ function high_foot_trajectory(r::T, width_scale::T, height_scale::T, N::Int) whe
 	θ = π * (1 .- cos.(α)) / 2
 	X = [width_scale*r*cos(θi) for θi in θ]
 	Z = [height_scale*r*sin(θi) for θi in θ] # the factor α flattens the foot trajectory
-	high_traj = [[X[i], 0.0, Z[i]] for i = 1:N+1]
+	high_traj = [[X[i], 0, Z[i]] for i = 1:N+1]
 	return high_traj
 end
 
@@ -147,7 +147,7 @@ function quadruped_trajectory(mechanism::Mechanism{T};
 	timestep=0.05,
 	Δx = -0.04,
 	Δfront = 0.05,
-	width_scale = 1.0,
+	width_scale = 1,
 	height_scale = 0.5,
 	r = 0.10,
 	z = 0.29,
@@ -239,17 +239,17 @@ end
 # r = 0.10 # foot traj radius
 #
 # # System
-# mech = get_mechanism(:quadruped; timestep=0.05)
-# initialize!(mech, :quadruped, tran = [0,0,0.], v = [0,0,0.])
+# mechanism = get_mechanism(:quadruped; timestep=0.05)
+# initialize!(mechanism, :quadruped, tran = [0,0,0.], v = [0,0,0.])
 #
-# X = quadruped_trajectory(mech, r = 0.08, z = 0.27; timestep=0.05, Δx = -0.03, N = 9, Ncycles = 10)
-# storage = generate_storage(mech, [minimal_to_maximal(mech, x) for x in X])
-# visualize(mech, storage, vis=vis)
+# X = quadruped_trajectory(mechanism, r = 0.08, z = 0.27; timestep=0.05, Δx = -0.03, N = 9, Ncycles = 10)
+# storage = generate_storage(mechanism, [minimal_to_maximal(mechanism, x) for x in X])
+# visualize(mechanism, storage, vis=vis)
 #
-# collect(mech.contacts)
+# collect(mechanism.contacts)
 # p_trunk = [0,0,0.31]
-# p_foot = [0.2,.0,0]
-# IKquadruped(mech, p_trunk, p_foot)
+# p_foot = [0.2,,0]
+# IKquadruped(mechanism, p_trunk, p_foot)
 #
 # N = 6
 # low_traj = low_foot_trajectory(r, N)
@@ -286,10 +286,10 @@ end
 # scatter!([p[1] for p in tRR], [p[3] for p in tRR])
 
 
-# contact_location(mech, contacts[1])
-# contact_location(mech, contacts[2])
-# contact_location(mech, contacts[3])
-# contact_location(mech, contacts[4])
+# contact_location(mechanism, contacts[1])
+# contact_location(mechanism, contacts[2])
+# contact_location(mechanism, contacts[3])
+# contact_location(mechanism, contacts[4])
 
 
 
@@ -298,8 +298,8 @@ end
 #
 #
 # ## dimensions
-# Nb = length(mech.bodies)
-# n = minimal_dimension(mech)
+# Nb = length(mechanism.bodies)
+# n = minimal_dimension(mechanism)
 # m = 12
 #
 # function potato_dynamics(x, u, timestep, m, g)
@@ -310,7 +310,7 @@ end
 # 	return x̄
 # end
 #
-# trunk = get_body(mech, "trunk")
+# trunk = get_body(mechanism, "trunk")
 # x2_trunk = trunk.state.x2
 # v15_trunk = trunk.state.v15
 #
@@ -319,7 +319,7 @@ end
 # x_potato = [x2_trunk; v15_trunk]
 # X_potato = []
 # for t = 1:21
-# 	mass = sum(getfield.(mech.bodies, :m))
+# 	mass = sum(getfield.(mechanism.bodies, :m))
 # 	alt = x_potato[3] - 0.48
 # 	if t > 13
 # 		u_potato = -[0, 0, mass * mechanism.gravity + 20*alt + 10*x_potato[6]]
@@ -327,10 +327,10 @@ end
 # 		u_potato = U_potato[t]
 # 	end
 # 	push!(X_potato, x_potato)
-# 	x_potato = potato_dynamics(x_potato, u_potato, mech.timestep, mass, mechanism.gravity)
+# 	x_potato = potato_dynamics(x_potato, u_potato, mechanism.timestep, mass, mechanism.gravity)
 # end
 # plot()
-# plot!([x[1] for x in X_potato], linewidth = 5.0)
-# plot!([x[2] for x in X_potato], linewidth = 5.0)
-# plot!([x[3] for x in X_potato], linewidth = 5.0)
+# plot!([x[1] for x in X_potato], linewidth = 5)
+# plot!([x[2] for x in X_potato], linewidth = 5)
+# plot!([x[3] for x in X_potato], linewidth = 5)
 #

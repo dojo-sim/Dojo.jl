@@ -8,14 +8,14 @@ struct Pendulum end
 
 function pendulum(; 
     representation=:minimal, 
-    max_speed=8.0, 
-    max_torque=8.0,
+    max_speed=8, 
+    max_torque=8,
     timestep=0.05, 
-    gravity=-10.0, 
-    mass=1.0, 
-    len=1.0, 
-    springs=0.0,
-    dampers=0.0, 
+    gravity=-10, 
+    mass=1, 
+    len=1, 
+    springs=0,
+    dampers=0, 
     seed=1, 
     vis=Visualizer(), 
     name=:robot,
@@ -41,7 +41,7 @@ function pendulum(;
     end
     nu = input_dimension(mechanism)
 
-    high = [1.0, 1.0, max_speed]
+    high = [1, 1, max_speed]
     aspace = BoxSpace(input_dimension(mechanism), 
         low=[-timestep * max_torque], 
         high=[timestep * max_torque])
@@ -80,7 +80,7 @@ function Base.reset(env::Environment{Pendulum};
         env.state .= x
     else
         if env.representation == :minimal
-            high = [π, 1.0]
+            high = [π, 1]
             low = -high
             env.state .= rand(env.rng[1], env.num_states) .* (high .- low) .+ low
         elseif env.representation == :maximal
@@ -146,18 +146,18 @@ function angle_normalize(x)
 end
 
 function pendulum_nominal_max()
-    x1 = [0.0; 0.0; -0.5]
-    v1 = [0.0; 0.0; 0.0]
-    q1 = [1.0; 0.0; 0.0; 0.0]
-    ω1 = [0.0; 0.0; 0.0]
+    x1 = [0; 0; -0.5]
+    v1 = [0; 0; 0]
+    q1 = [1; 0; 0; 0]
+    ω1 = [0; 0; 0]
     z1 = [x1; v1; q1; ω1]
 end
 
 function pendulum_goal_max()
-    xT = [0.0; 0.0; 0.5]
-    vT = [0.0; 0.0; 0.0]
-    qT = [0.0; 1.0; 0.0; 0.0]
-    ωT = [0.0; 0.0; 0.0]
+    xT = [0; 0; 0.5]
+    vT = [0; 0; 0]
+    qT = [0; 1; 0; 0]
+    ωT = [0; 0; 0]
     zT = [xT; vT; qT; ωT]
 end
 

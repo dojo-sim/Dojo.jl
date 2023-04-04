@@ -9,7 +9,7 @@ function raiberthopper(;
     representation=:minimal, 
     timestep=0.05, 
     gravity=-9.81,
-    springs=0.0, 
+    springs=0, 
     damper=0.1, 
     control_scaling=Diagonal(ones(3)),
     seed=1, 
@@ -83,16 +83,16 @@ function raiberthopper_nominal_max(;
     foot_radius=0.05)
 
     # initial state
-    x1b1 = [0.0; 0.0; 0.5 + foot_radius]
-    v1b1 = [0.0; 0.0; 0.0]
-    q1b1 = [1.0; 0.0; 0.0; 0.0]
-    ω1b1 = [0.0; 0.0; 0.0]
+    x1b1 = [0; 0; 0.5 + foot_radius]
+    v1b1 = [0; 0; 0]
+    q1b1 = [1; 0; 0; 0]
+    ω1b1 = [0; 0; 0]
     z1b1 = [x1b1; v1b1; q1b1; ω1b1]
 
-    x1b2 = [0.0; 0.0; 0.0 + foot_radius]
-    v1b2 = [0.0; 0.0; 0.0]
-    q1b2 = [1.0; 0.0; 0.0; 0.0]
-    ω1b2 = [0.0; 0.0; 0.0]
+    x1b2 = [0; 0; 0.0 + foot_radius]
+    v1b2 = [0; 0; 0]
+    q1b2 = [1; 0; 0; 0]
+    ω1b2 = [0; 0; 0]
     z1b2 = [x1b2; v1b2; q1b2; ω1b2]
 
     z1 = [z1b1; z1b2]
@@ -145,9 +145,9 @@ function visualize(env::Environment{RaibertHopper}, traj::Vector{Vector{T}};
         MeshCat.atframe(anim, t) do
             set_robot(env.vis, env.mechanism, x, 
                 name=name)
-            step = range(0.0, stop=norm(dir), length=n_leg)
+            step = range(0, stop=norm(dir), length=n_leg)
             for i = 1:n_leg
-                MeshCat.settransform!(env.vis["leg$i"], MeshCat.compose(MeshCat.Translation(step[i] .* dir_norm + x_foot), MeshCat.LinearMap(Dojo.RotY(0.0))))
+                MeshCat.settransform!(env.vis["leg$i"], MeshCat.compose(MeshCat.Translation(step[i] .* dir_norm + x_foot), MeshCat.LinearMap(Dojo.RotY(0))))
             end
         end
     end
@@ -191,7 +191,7 @@ function ghost(env::Environment{RaibertHopper}, traj::Vector{Vector{T}};
 
     # body
     if line
-        line_mat = LineBasicMaterial(color=color=RGBA(51.0 / 255.0, 1.0, 1.0, 1.0), linewidth=25.0)
+        line_mat = LineBasicMaterial(color=color=RGBA(51.0 / 255, 1, 1, 1), linewidth=25)
         points = Vector{Point{3,Float64}}()
         for (i, xt) in enumerate(z)
             k = xt[1:3]
@@ -200,7 +200,7 @@ function ghost(env::Environment{RaibertHopper}, traj::Vector{Vector{T}};
         setobject!(env.vis[:body_traj], MeshCat.Line(points, line_mat))
 
         # foot
-        line_mat = LineBasicMaterial(color=color=RGBA(1.0, 153.0 / 255.0, 51.0 / 255.0, 1.0), linewidth=10.0)
+        line_mat = LineBasicMaterial(color=color=RGBA(1, 153.0 / 255, 51.0 / 255, 1), linewidth=10)
         points = Vector{Point{3,Float64}}()
         for (i, xt) in enumerate(z)
             k = xt[13 .+ (1:3)]

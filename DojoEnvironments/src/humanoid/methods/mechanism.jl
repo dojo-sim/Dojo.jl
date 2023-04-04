@@ -3,8 +3,8 @@ function get_humanoid(;
     input_scaling=timestep, 
     gravity=-9.81, 
     urdf=:humanoid, 
-    springs=0.0, 
-    dampers=0.0,
+    springs=0, 
+    dampers=0,
     parse_springs=true, 
     parse_dampers=true,
     limits=false,
@@ -17,42 +17,42 @@ function get_humanoid(;
 
     # mechanism
     path = joinpath(@__DIR__, "../dependencies/$(string(urdf)).urdf")
-    mech = Mechanism(path; floating=true, T,
+    mechanism = Mechanism(path; floating=true, T,
         gravity, timestep, input_scaling, 
-        parse_damper, keep_fixed_joints)
+        parse_dampers, keep_fixed_joints)
 
     # springs and dampers
-    !parse_springs && set_springs!(mech.joints, springs)
-    !parse_dampers && set_dampers!(mech.joints, dampers)
+    !parse_springs && set_springs!(mechanism.joints, springs)
+    !parse_dampers && set_dampers!(mechanism.joints, dampers)
 
     # joint limits
     if limits
-        joints = set_limits(mech, joint_limits)
+        joints = set_limits(mechanism, joint_limits)
 
-        mech = Mechanism(Origin{T}(), mech.bodies, joints;
+        mechanism = Mechanism(Origin{T}(), mechanism.bodies, joints;
             gravity, timestep, input_scaling)
     end
 
     # contacts
     origin = Origin{T}()
-    bodies = mech.bodies
-    joints = mech.joints
+    bodies = mechanism.bodies
+    joints = mechanism.joints
     contacts = ContactConstraint{T}[]
 
     if contact_feet
         # Foot contact
-        left_foot = get_body(mech, :left_foot)
+        left_foot = get_body(mechanism, :left_foot)
 
 		aa = -0.43000 * [-0.44721, 0.00000, 0.89442]
 		ql = Dojo.axis_angle_to_quaternion(aa)
         qll = ql * RotX(-1.57080)*RotY(1.47585)*RotZ(-1.47585) # Quaternion(RotXYZ(roll=-1.57080, pitch=1.47585, yaw=-1.47585)) # roll pitch yaw
         qlr = ql * RotX(+1.57080)*RotY(1.47585)*RotZ(+1.47585) # Quaternion(RotXYZ(roll=+1.57080, pitch=1.47585, yaw=+1.47585)) # roll pitch yaw
 
-        pfll = vector_rotate([ 0.5 * left_foot.shape.shapes[1].shapes[1].rh[2] + 0.03500; -0.03; 0.0], qll)
-        pbll = vector_rotate([-0.5 * left_foot.shape.shapes[1].shapes[1].rh[2] + 0.03500; -0.03; 0.0], qll)
-        pflr = vector_rotate([ 0.5 * left_foot.shape.shapes[1].shapes[1].rh[2] + 0.03500; +0.01; 0.0], qlr)
-		pblr = vector_rotate([-0.5 * left_foot.shape.shapes[1].shapes[1].rh[2] + 0.03500; +0.01; 0.0], qlr)
-        p = [0.0,0.054,0.]
+        pfll = vector_rotate([ 0.5 * left_foot.shape.shapes[1].shapes[1].rh[2] + 0.03500; -0.03; 0], qll)
+        pbll = vector_rotate([-0.5 * left_foot.shape.shapes[1].shapes[1].rh[2] + 0.03500; -0.03; 0], qll)
+        pflr = vector_rotate([ 0.5 * left_foot.shape.shapes[1].shapes[1].rh[2] + 0.03500; +0.01; 0], qlr)
+		pblr = vector_rotate([-0.5 * left_foot.shape.shapes[1].shapes[1].rh[2] + 0.03500; +0.01; 0], qlr)
+        p = [0,0.054,0.]
         o = left_foot.shape.shapes[1].shapes[1].rh[1]
         contacts_points = [
 					p,
@@ -76,11 +76,11 @@ function get_humanoid(;
             contact_origins=contacts_points, 
             contact_radius)
 
-        right_foot = get_body(mech, :right_foot)
+        right_foot = get_body(mechanism, :right_foot)
 
-        pfr = [0.5 * right_foot.shape.shapes[1].shapes[1].rh[2]; 0.0; 0.0]
+        pfr = [0.5 * right_foot.shape.shapes[1].shapes[1].rh[2]; 0; 0]
         ofr = right_foot.shape.shapes[1].shapes[1].rh[1]
-        pbr = [-0.5 * right_foot.shape.shapes[1].shapes[1].rh[2]; 0.0; 0.0]
+        pbr = [-0.5 * right_foot.shape.shapes[1].shapes[1].rh[2]; 0; 0]
         obr = right_foot.shape.shapes[1].shapes[1].rh[1]
 
         contact_points = [
@@ -102,21 +102,23 @@ function get_humanoid(;
             contact_origins=contact_points, 
             contact_radius)
 
-        contacts = [contacts_left, contacts_right]
-
-        # set_minimal_coordinates!(mech, get_joint(mech, :floating_base), [0.0; 0.0; 1.2; 0.1; 0.0; 0.0])
+        contacts = [contacts_left; contacts_right]
     end
 
-    mech = Mechanism(origin, bodies, joints, contacts;
+    mechanism = Mechanism(origin, bodies, joints, contacts;
         gravity, timestep, input_scaling)
 
+    # zero configuration
+    zero_coordinates!(mechanism)
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base), [0; 0; 1.33; 0.0; 0; 0])
+
     # construction finished
-    return mech
+    return mechanism
 end
 
 function initialize_humanoid!(mechanism::Mechanism{T}; 
-    body_position=[0.0, 0.0, 1.5], 
-    body_orientation=[0.1, 0.0, 0.0]) where T
+    body_position=[0, 0, 1.5], 
+    body_orientation=[0.1, 0, 0]) where T
     set_minimal_coordinates!(mechanism, 
         get_joint(mechanism, :floating_base), 
         [body_position; body_orientation])

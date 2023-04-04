@@ -8,8 +8,8 @@
 """
 function get_mechanism(model; kwargs...)
     # convert potential strings to symbols    
-    mech = eval(Symbol(:get, :_, string_to_symbol(model)))(; string_to_symbol(kwargs)...)
-    return mech
+    mechanism = eval(Symbol(:get, :_, string_to_symbol(model)))(; string_to_symbol(kwargs)...)
+    return mechanism
 end
 
 """

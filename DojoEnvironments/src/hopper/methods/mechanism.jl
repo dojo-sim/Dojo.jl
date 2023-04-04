@@ -3,54 +3,54 @@ function get_hopper(;
     input_scaling=timestep, 
     gravity=-9.81, 
     urdf=:hopper,
-    springs=10.0,
-    dampers=0.0,
+    springs=10,
+    dampers=0,
     parse_springs=true, 
     parse_dampers=true,
     limits=false,
     joint_limits=Dict([
-        (:thigh, [0,150] * π / 180.0), 
-        (:leg, [0,150] * π / 180.0), 
-        (:foot, [-45,45] * π / 180.0)])
+        (:thigh, [0,150] * π / 180), 
+        (:leg, [0,150] * π / 180), 
+        (:foot, [-45,45] * π / 180)]),
     keep_fixed_joints=false, 
-    friction_coefficient=2.0,
+    friction_coefficient=2,
     contact_feet=true,
     contact_body=true,
     T=Float64)
 
     # mechanism
     path = joinpath(@__DIR__, "../dependencies/$(string(urdf)).urdf")
-    mech = Mechanism(path; floating=false, T,
+    mechanism = Mechanism(path; floating=false, T,
         gravity, timestep, input_scaling, 
-        parse_damper, keep_fixed_joints)
+        parse_dampers, keep_fixed_joints)
 
     # springs and dampers
-    !parse_springs && set_springs!(mech.joints, springs)
-    !parse_dampers && set_dampers!(mech.joints, dampers)
+    !parse_springs && set_springs!(mechanism.joints, springs)
+    !parse_dampers && set_dampers!(mechanism.joints, dampers)
 
     # joint limits    
     if limits
-        joints = set_limits(mech, joint_limits)
+        joints = set_limits(mechanism, joint_limits)
 
-        mech = Mechanism(Origin{T}(), mech.bodies, joints;
+        mechanism = Mechanism(Origin{T}(), mechanism.bodies, joints;
             gravity, timestep, input_scaling)
     end
 
     # contacts
     origin = Origin{T}()
-    bodies = mech.bodies
-    joints = mech.joints
+    bodies = mechanism.bodies
+    joints = mechanism.joints
     contacts = ContactConstraint{T}[]
     
     if contact_feet
         normal = Z_AXIS
-        names = contact_body ? getfield.(mech.bodies, :name) : [:ffoot, :foot]
+        names = contact_body ? getfield.(mechanism.bodies, :name) : [:ffoot, :foot]
         for name in names
-            body = get_body(mech, name)
+            body = get_body(mechanism, name)
             if name == :foot # need special case for foot
                 # torso
-                pf = [0.0, 0.0, +0.5 * body.shape.shapes[1].rh[2]]
-                pb = [0.0, 0.0, -0.5 * body.shape.shapes[1].rh[2]]
+                pf = [0, 0, +0.5 * body.shape.shapes[1].rh[2]]
+                pb = [0, 0, -0.5 * body.shape.shapes[1].rh[2]]
                 o = body.shape.shapes[1].rh[1]
                 push!(contacts, contact_constraint(body, normal; 
                     friction_coefficient, 
@@ -61,7 +61,7 @@ function get_hopper(;
                     contact_origin=pb, 
                     contact_radius=o))
             else
-                p = [0.0; 0.0; 0.5 * body.shape.shapes[1].rh[2]]
+                p = [0; 0; 0.5 * body.shape.shapes[1].rh[2]]
                 o = body.shape.shapes[1].rh[1]
                 push!(contacts, contact_constraint(body, normal; 
                     friction_coefficient, 
@@ -69,20 +69,22 @@ function get_hopper(;
                     contact_radius=o))
             end
         end
-
-        # set_minimal_coordinates!(mech, get_joint(mech, :floating_joint), [1.25, 0.0, 0.0])
     end
 
-    mech = Mechanism(origin, bodies, joints, contacts;
+    mechanism = Mechanism(origin, bodies, joints, contacts;
         gravity, timestep, input_scaling)
 
+    # zero configuration
+    zero_coordinates!(mechanism)
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_joint), [1.25, 0, 0])
+
     # construction finished
-    return mech
+    return mechanism
 end
 
 function initialize_hopper!(mechanism::Mechanism{T}; 
-    body_position=[0.0, 0.0],
-    body_orientation=0.0) where T
+    body_position=[0, 0],
+    body_orientation=0) where T
     #TODO add leg length
 
     set_minimal_coordinates!(mechanism,

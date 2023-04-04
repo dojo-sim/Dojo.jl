@@ -10,8 +10,8 @@ function halfcheetah(;
     timestep=0.05, 
     gravity=-9.81,
     friction_coefficient=0.4, 
-    spring=[240.0, 180.0, 120.0, 180.0, 120.0, 60.0], 
-    dampers=0.0,
+    spring=[240, 180, 120, 180, 120, 60], 
+    dampers=0,
     parse_dampers=true,
     limits=true,
     seed=1, 
@@ -86,7 +86,7 @@ function Base.reset(env::Environment{HalfCheetah};
     else
         # initialize above the ground to make sure that with random initialization we do not violate the ground constraint.
         initialize!(env.mechanism, :halfcheetah, 
-            body_position=[0.0, 0.25])
+            body_position=[0, 0.25])
         x0 = get_minimal_state(env.mechanism)
         nx = minimal_dimension(env.mechanism)
         nz = maximal_dimension(env.mechanism)
@@ -107,7 +107,7 @@ function Base.reset(env::Environment{HalfCheetah};
 end
 
 function cost(env::Environment{HalfCheetah}, x, u;
-        forward_reward_weight=1.0, 
+        forward_reward_weight=1, 
         ctrl_cost_weight=0.1)
 
     if env.representation == :minimal

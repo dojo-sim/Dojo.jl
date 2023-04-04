@@ -3,8 +3,8 @@ function get_panda(;
     input_scaling=timestep, 
     gravity=-9.81,
     urdf=:panda_end_effector,
-    springs=0.0,
-    dampers=0.0,
+    springs=0,
+    dampers=0,
     parse_springs=true, 
     parse_dampers=true,
     limits=true,
@@ -17,7 +17,7 @@ function get_panda(;
         (:joint6, [-3.7525, 0.0175]),
         (:joint7, [-2.8973, 2.8973]),
         (:jointf1, [-0.00, 0.04]),
-        (:jointf2, [-0.00, 0.04])])
+        (:jointf2, [-0.00, 0.04])]),
     keep_fixed_joints=false, 
     friction_coefficient=0.8,
     contact=false,
@@ -26,26 +26,26 @@ function get_panda(;
 
     # mechanism
     path = joinpath(@__DIR__, "../dependencies/$(string(urdf)).urdf")
-    mech = Mechanism(path; floating=false, T,
+    mechanism = Mechanism(path; floating=false, T,
         gravity, timestep, input_scaling, 
-        parse_damper, keep_fixed_joints)
+        parse_dampers, keep_fixed_joints)
 
     # springs and dampers
-    !parse_springs && set_springs!(mech.joints, springs)
-    !parse_dampers && set_dampers!(mech.joints, dampers)
+    !parse_springs && set_springs!(mechanism.joints, springs)
+    !parse_dampers && set_dampers!(mechanism.joints, dampers)
 
     # joint limits    
     if limits
-        joints = set_limits(mech, joint_limits)
+        joints = set_limits(mechanism, joint_limits)
 
-        mech = Mechanism(Origin{T}(), mech.bodies, joints;
+        mechanism = Mechanism(Origin{T}(), mechanism.bodies, joints;
             gravity, timestep, input_scaling)
     end
 
     # contacts
     origin = Origin{T}()
-    bodies = mech.bodies
-    joints = mech.joints
+    bodies = mechanism.bodies
+    joints = mechanism.joints
     contacts = ContactConstraint{T}[]
 
     if contact
@@ -56,7 +56,7 @@ function get_panda(;
         location = [-0.01; 0.004; 0.1125]
         normal = Z_AXIS
         contact = contact_constraint(
-            get_body(mech, :link7),
+            get_body(mechanism, :link7),
             normal,
             friction_coefficient=friction_coefficient,
             contact_origin=location,
@@ -70,21 +70,21 @@ function get_panda(;
         sidex = 0.1
         sidey = 0.1 
         sidez = 0.25
-        box = Box(sidex, sidey, sidez, 10.0, 
+        box = Box(sidex, sidey, sidez, 10, 
             name=:box,
-            color=RGBA(1.0, 0.0, 0.0))
-        ee = get_body(mech, :link6)
+            color=RGBA(1, 0, 0))
+        ee = get_body(mechanism, :link6)
 
         
         corners = [
-                    [[ sidex / 2.0;  sidey / 2.0; -sidez / 2.0]]
-                    [[ sidex / 2.0; -sidey / 2.0; -sidez / 2.0]]
-                    [[-sidex / 2.0;  sidey / 2.0; -sidez / 2.0]]
-                    [[-sidex / 2.0; -sidey / 2.0; -sidez / 2.0]]
-                    [[ sidex / 2.0;  sidey / 2.0;  sidez / 2.0]]
-                    [[ sidex / 2.0; -sidey / 2.0;  sidez / 2.0]]
-                    [[-sidex / 2.0;  sidey / 2.0;  sidez / 2.0]]
-                    [[-sidex / 2.0; -sidey / 2.0;  sidez / 2.0]]
+                    [[ sidex / 2;  sidey / 2; -sidez / 2]]
+                    [[ sidex / 2; -sidey / 2; -sidez / 2]]
+                    [[-sidex / 2;  sidey / 2; -sidez / 2]]
+                    [[-sidex / 2; -sidey / 2; -sidez / 2]]
+                    [[ sidex / 2;  sidey / 2;  sidez / 2]]
+                    [[ sidex / 2; -sidey / 2;  sidez / 2]]
+                    [[-sidex / 2;  sidey / 2;  sidez / 2]]
+                    [[-sidex / 2; -sidey / 2;  sidez / 2]]
                 ]
                
         normal = [Z_AXIS for i = 1:8]
@@ -109,19 +109,19 @@ function get_panda(;
         )
 
         # collision = Dojo.SphereSphereCollision{Float64,2,3,6}(
-        #     SA[0.0; 0.0; 0.0],
-        #     SA[0.0; 0.0; 0.3],
+        #     SA[0; 0; 0],
+        #     SA[0; 0; 0.3],
         #     0.075,
-        #     # SA[0.5 * sidex; 0.0; 0.0],
-        #     # SA[0.0; 0.5 * sidey; 0.0],
-        #     # SA[0.0; 0.0; 0.5 * sidez],
+        #     # SA[0.5 * sidex; 0; 0],
+        #     # SA[0; 0.5 * sidey; 0],
+        #     # SA[0; 0; 0.5 * sidez],
         #     0.075,
         # )
 
         # collision = SphereCapsuleCollision{Float64,2,3,6}(
         #     szeros(3),
-        #     SA[0.0; 0.0; 0.5],
-        #     SA[0.0; 0.0; -0.5],
+        #     SA[0; 0; 0.5],
+        #     SA[0; 0; -0.5],
         #     0.05,
         #     0.05,
         # )
@@ -143,13 +143,16 @@ function get_panda(;
         joints = [joints..., JointConstraint(Floating(origin, box))]
     end
 
-    mech = Mechanism(origin, bodies, joints, contacts;
+    mechanism = Mechanism(origin, bodies, joints, contacts;
         gravity, timestep, input_scaling)
 
-    # set_minimal_state!(mech, szeros(minimal_dimension(mech)))
+    # set_minimal_state!(mechanism, szeros(minimal_dimension(mechanism)))
+
+    # zero configuration
+    zero_coordinates!(mechanism)
 
     # construction finished
-    return mech
+    return mechanism
 end
 
 function initialize_panda!(mechanism::Mechanism{T};

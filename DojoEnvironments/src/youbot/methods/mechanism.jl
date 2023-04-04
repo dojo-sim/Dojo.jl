@@ -1,31 +1,39 @@
-"""
-    Youbot <: Environment
+function get_youbot(;
+    timestep=0.01,
+    input_scaling=timestep, 
+    gravity=-9.81,
+    urdf=:youbot,
+    springs=0,
+    dampers=0,
+    parse_springs=true, 
+    parse_dampers=true,
+    limits=false,
+    joint_limits=Dict(),
+    keep_fixed_joints=false,
+    T=Float64)
 
-    Youbot robot designed by Kuka (URDF and mesh files from https://github.com/mas-group/youbot_description)
-"""
-struct Youbot end
+    # mechanism
+    path = joinpath(@__DIR__, "../dependencies/$(String(urdf)).urdf")
+    mechanism = Mechanism(path; floating=false, T,
+        gravity, timestep, input_scaling, 
+        parse_dampers, keep_fixed_joints)
 
-using Dojo
+    # springs and dampers
+    !parse_springs && set_springs!(mechanism.joints, springs)
+    !parse_dampers && set_dampers!(mechanism.joints, dampers)
 
+    # joint limits
+    if limits
+        joints = set_limits(mechanism, joint_limits)
 
-# path = "DojoEnvironments/src/youbot/deps/youbot_arm_only.urdf"
-# path = "DojoEnvironments/src/youbot/deps/youbot_arm_only_fixed_gripper.urdf"
-# path = "DojoEnvironments/src/youbot/deps/youbot_base_only.urdf"
-path = "DojoEnvironments/src/youbot/deps/youbot.urdf"
-# path = "DojoEnvironments/src/youbot/deps/youbot_dual_arm.urdf"
-# path = "DojoEnvironments/src/youbot/deps/youbot_with_cam3d.urdf"
-mech = Mechanism(path; gravity = -9.81, timestep = 0.01)
+        mechanism = Mechanism(Origin{T}(), mechanism.bodies, joints;
+            gravity, timestep, input_scaling)
+    end
 
-joint1 = get_joint(mech,:base_footprint_joint)
+    # zero configuration
+    zero_coordinates!(mechanism)
 
-set_minimal_coordinates!(mech,joint1,[0;0;1.5])
-
-function controller!(mechanism,k)
-    # set_input!(joint1, [0.1;0.1;0.4])
+    # construction finished
+    return mechanism
 end
-
-storage = simulate!(mech, 5.0, controller!, record = true)
-visualize(mech, storage)[1]
-
-
  

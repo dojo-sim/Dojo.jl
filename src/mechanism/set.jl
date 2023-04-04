@@ -62,7 +62,7 @@ end
 """ 
     set_minimal_state(mechanism, y) 
 
-    set the maximal state of a mechanism 
+    set the minimal state of a mechanism 
 
     mechanism: Mechanism 
     y: state 
