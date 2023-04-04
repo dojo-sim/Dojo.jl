@@ -1,16 +1,23 @@
 function get_tugbot(;
     timestep=0.01,
-    gravity=[0.0; 0.0; -9.81],
-    friction_coefficient=0.2,
+    input_scaling=timestep, 
+    gravity=-9.81,
+    drone_mass = 1.0,
+    object_mass = 2.5,
     radius=0.25,
     object_dimension=[0.4, 0.4, 0.1],
+    springs=0.0,
+    dampers=0.0, 
+    limits=false,
+    joint_limits=Dict(),
+    friction_coefficient=0.2,
     contact=true,
     contact_type=:nonlinear,
     T=Float64)
 
+    # mechanism
     origin = Origin{T}(name=:origin)
-    drone_mass = 1.0
-    object_mass = 2.5
+    
     bodies = [
         Sphere(radius, drone_mass, name=:drone),
         Box(object_dimension..., object_mass, name=:object)]
@@ -18,14 +25,32 @@ function get_tugbot(;
         JointConstraint(Floating(origin, bodies[1]), name=:drone_joint)
         # JointConstraint(Floating(origin, bodies[2]), name=:object_joint)
         ]
-    mechanism = Mechanism(origin, bodies, joints;
-        timestep,
-        gravity)
+
+    mech = Mechanism(origin, bodies, joints;
+        timestep, gravity, input_scaling)
+
+    # springs and dampers
+    set_springs!(mech.joints, springs)
+    set_dampers!(mech.joints, dampers)
+
+    # joint limits    
+    if limits
+        joints = set_limits(mech, joint_limits)
+
+        mech = Mechanism(Origin{T}(), mech.bodies, joints;
+            gravity, timestep, input_scaling)
+    end
+
+    # components
+    origin = Origin{T}()
+    bodies = mech.bodies
+    joints = mech.joints
+    contacts = ContactConstraint{T}[]
 
     if contact
         contacts = [[0.2, -0.2, -0.05], [-0.2, 0.2, -0.05], [0.2, 0.2, -0.05], [-0.2, -0.2, -0.05]]
-        normal = [0.0, 0.0, 1.0]
-        contacts = [contact_constraint(get_body(mechanism, :object), normal;
+        normal = Z_AXIS
+        contacts = [contact_constraint(get_body(mech, :object), normal;
             friction_coefficient,
             contact_origin=contacts[i],
             contact_radius=0.0,
@@ -40,13 +65,15 @@ function get_tugbot(;
         body_body_contact = ImpactContact{Float64,2}(parameterization, collision)
 
         contacts = [contacts; ContactConstraint((body_body_contact,
-            get_body(mechanism, :drone).id,
-            get_body(mechanism, :object).id,), name=:body_body)]
-        mechanism = Mechanism(origin, bodies, joints, contacts;
-            gravity,
-            timestep)
+            get_body(mech, :drone).id,
+            get_body(mech, :object).id,), name=:body_body)]
     end
-    return mechanism
+
+    mech = Mechanism(origin, bodies, joints, contacts;
+        gravity, timestep, input_scaling)
+
+    # construction finished
+    return mech
 end
 
 function initialize_tugbot!(mechanism::Mechanism{T};

@@ -8,8 +8,8 @@ struct RaibertHopper end
 function raiberthopper(; 
     representation=:minimal, 
     timestep=0.05, 
-    gravity=[0.0; 0.0; -9.81],
-    spring=0.0, 
+    gravity=-9.81,
+    springs=0.0, 
     damper=0.1, 
     control_scaling=Diagonal(ones(3)),
     seed=1, 

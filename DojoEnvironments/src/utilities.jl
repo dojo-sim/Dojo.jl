@@ -22,41 +22,52 @@ function get_control_mask(n_inputs, indices)
 end
 
 function set_springs!(joints, spring::Real)
-    if spring > 0
-        for joint in joints[2:end]
-            joint.spring = true
-            joint.translational.spring=spring
-            joint.rotational.spring=spring
-        end
+    for joint in joints[2:end]
+        joint.spring = true
+        joint.translational.spring=spring
+        joint.rotational.spring=spring
     end
 end
 
 function set_springs!(joints, springs::AbstractArray)
     for (i,spring) in enumerate(springs)
-        if spring > 0
-            joints[i+1].spring = true
-            joints[i+1].translational.spring=spring
-            joints[i+1].rotational.spring=spring
-        end
+        joints[i+1].spring = true
+        joints[i+1].translational.spring=spring
+        joints[i+1].rotational.spring=spring
     end
 end
 
 function set_dampers!(joints, damper::Real)
-    if damper > 0
-        for joint in joints[2:end]
-            joint.damper = true
-            joint.translational.damper=damper
-            joint.rotational.damper=damper
-        end
+    for joint in joints[2:end]
+        joint.damper = true
+        joint.translational.damper=damper
+        joint.rotational.damper=damper
     end
 end
 
 function set_dampers!(joints, dampers::AbstractArray)
     for (i,damper) in enumerate(dampers)
-        if damper > 0
-            joints[i+1].damper = true
-            joints[i+1].translational.damper=damper
-            joints[i+1].rotational.damper=damper
+        joints[i+1].damper = true
+        joints[i+1].translational.damper=damper
+        joints[i+1].rotational.damper=damper
+    end
+end
+
+function set_limits(mechanism, joint_limits)
+    joints = deepcopy(mechanism.joints)
+
+    for (joint_symbol,limits) in joint_limits 
+        joint = get_joint(mechanism, joint_symbol)
+        if input_dimension(joint.translational) == 0 && input_dimension(joint.rotational) == 1
+            joints[joint.id] = add_limits(mechanism, joint, 
+                rot_limits=[SVector{1}(limits[1]), SVector{1}(limits[2])])
+        elseif input_dimension(joint.translational) == 1 && input_dimension(joint.rotational) == 0
+            joints[i] = add_limits(mech, joint,
+                tra_limits=[SVector{1}(limits[1]), SVector{1}(limits[2])])
+        else
+            @warn "joint limits can only be set for one-dimensional joints"
         end
     end
+
+    return joints
 end

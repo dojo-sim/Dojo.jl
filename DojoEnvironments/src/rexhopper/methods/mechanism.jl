@@ -1,50 +1,49 @@
 function get_rexhopper(;
     timestep=0.01,
-    gravity=[0.0; 0.0; -9.81],
-    friction_coefficient=1.0,
-    contact_foot=true,
-    contact_body=true,
+    input_scaling=timestep, 
+    gravity=-9.81,
+    urdf=:rexhopper,
+    springs=0.0,
+    dampers=0.0,
+    parse_springs=true, 
+    parse_dampers=true,
     limits=true,
-    model=:rexhopper,
-    floating=true,
+    joint_limits=Dict([
+        (:joint1, [-0.7597,-1.8295]), 
+        (:joint3, [1.8295,0.7597])])
+    keep_fixed_joints=false, 
+    friction_coefficient=1.0,
+    contact_feet=true,
+    contact_body=true,
     contact_type=:nonlinear,
-    spring=0.0,
-    damper=0.0,
-    parse_damper=true,
     T=Float64)
 
-    path = joinpath(@__DIR__, "../deps/$(String(model)).urdf")
-    mech = Mechanism(path; floating, T,
-        gravity,
-        timestep,
-        parse_damper)
+    # mechanism
+    path = joinpath(@__DIR__, "../dependencies/$(String(urdf)).urdf")
+    mech = Mechanism(path; floating=true, T,
+        gravity, timestep, input_scaling, 
+        parse_damper, keep_fixed_joints)
 
-    # Adding springs and dampers
-    set_springs!(mech.joints, spring)
-    set_dampers!(mech.joints, damper)
+    # springs and dampers
+    !parse_springs && set_springs!(mech.joints, springs)
+    !parse_dampers && set_dampers!(mech.joints, dampers)
 
     # joint limits
-    joints = deepcopy(mech.joints)
-
     if limits
-        joint1 = get_joint(mech, :joint1)
-        joint3 = get_joint(mech, :joint3)
-        joints[joint1.id] = add_limits(mech, joint1,
-            rot_limits=[SVector{1}(-0.7597), SVector{1}(1.8295)])
-        joints[joint3.id] = add_limits(mech, joint3,
-            rot_limits=[SVector{1}(-1.8295), SVector{1}(0.7597)])
-        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...];
-            gravity,
-            timestep)
+        joints = set_limits(mech, joint_limits)
+
+        mech = Mechanism(Origin{T}(), mech.bodies, joints;
+            gravity, timestep, input_scaling)
     end
 
-    if contact_foot
-        origin = Origin{T}()
-        bodies = mech.bodies
-        joints = mech.joints
+    # contacts
+    origin = Origin{T}()
+    bodies = mech.bodies
+    joints = mech.joints
+    contacts = ContactConstraint{T}[]
 
-        normal = [0.0; 0.0; 1.0]
-        models = []
+    if contact_feet
+        normal = Z_AXIS
 
         link3 = get_body(mech, :link3)
         link2 = get_body(mech, :link2)
@@ -53,7 +52,7 @@ function get_rexhopper(;
         base_radius = 0.14
         p = [0.1685; 0.0025; -0.0055]
         o = foot_radius
-        push!(models, contact_constraint(link3, normal;
+        push!(contacts, contact_constraint(link3, normal;
             friction_coefficient,
             contact_origin=p,
             contact_radius=o,
@@ -61,14 +60,14 @@ function get_rexhopper(;
             name=:foot))
         p = [-0.10; -0.002; 0.01]
         o = ankle_radius
-        push!(models, contact_constraint(link3, normal;
+        push!(contacts, contact_constraint(link3, normal;
             friction_coefficient,
             contact_origin=p,
             contact_radius=o,
             contact_type,
             name=:ankle3))
         p = [0.24; 0.007; 0.005]
-        push!(models, contact_constraint(link2, normal;
+        push!(contacts, contact_constraint(link2, normal;
             friction_coefficient,
             contact_origin=p,
             contact_radius=o,
@@ -78,25 +77,26 @@ function get_rexhopper(;
         pl = [0.0; +0.075; 0.03]
         pr = [0.0; -0.075; 0.03]
         o = base_radius
-        push!(models, contact_constraint(base_link, normal;
+        push!(contacts, contact_constraint(base_link, normal;
             friction_coefficient,
             contact_origin=pl,
             contact_radius=o,
             contact_type,
             name=:torso_left))
-        push!(models, contact_constraint(base_link, normal;
+        push!(contacts, contact_constraint(base_link, normal;
             friction_coefficient,
             contact_origin=pr,
             contact_radius=o,
             contact_type,
             name=:torso_right))
 
-        set_minimal_coordinates!(mech, get_joint(mech, :floating_base), [0,0,1.0, 0,0,0])
-
-        mech = Mechanism(origin, bodies, joints, [models...];
-            gravity,
-            timestep)
+        # set_minimal_coordinates!(mech, get_joint(mech, :floating_base), [0,0,1.0, 0,0,0])
     end
+
+    mech = Mechanism(origin, bodies, joints, contacts;
+        gravity, timestep, input_scaling)
+
+    # construction finished
     return mech
 end
 

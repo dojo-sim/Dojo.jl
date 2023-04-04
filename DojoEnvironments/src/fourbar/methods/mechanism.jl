@@ -1,22 +1,36 @@
 function get_fourbar(; 
     timestep=0.01, 
-    gravity=[0.0; 0.0; -9.81],
-    model=:fourbar, 
-    spring=0.0, 
-    damper=0.0,
-    parse_damper=true,
+    input_scaling=timestep, 
+    gravity=-9.81,
+    urdf=:fourbar,
+    springs=0.0, 
+    dampers=0.0,
+    parse_springs=true,
+    parse_dampers=true,
+    limits=false,
+    joint_limits=Dict(),
+    keep_fixed_joints=false, 
     T=Float64)
 
-    path = joinpath(@__DIR__, "../deps/$(String(model)).urdf")
+    # mechanism
+    path = joinpath(@__DIR__, "../dependencies/$(String(urdf)).urdf")
     mech = Mechanism(path; floating=false, T,
-        gravity, 
-        timestep, 
-        parse_damper)
+        gravity, timestep, input_scaling, 
+        parse_damper, keep_fixed_joints)
 
-    # Adding springs and dampers
-    set_springs!(mech.joints, spring)
-    set_dampers!(mech.joints, damper)
+    # springs and dampers
+    !parse_springs && set_springs!(mech.joints, springs)
+    !parse_dampers && set_dampers!(mech.joints, dampers)
 
+    # joint limits
+    if limits
+        joints = set_limits(mech, joint_limits)
+
+        mech = Mechanism(Origin{T}(), mech.bodies, joints;
+            gravity, timestep, input_scaling)
+    end
+
+    # construction finished
     return mech
 end
 

@@ -8,7 +8,7 @@ struct Block end
 function block(; 
     representation=:maximal, 
     timestep=0.05, 
-    gravity=[0.0; 0.0; -9.81],
+    gravity=-9.81,
     friction_coefficient=0.8, 
     side=0.5, 
     contact=true, 

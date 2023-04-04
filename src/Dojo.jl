@@ -1,7 +1,7 @@
 module Dojo
 
 # constants
-global REG = 1.0e-10::Float64
+global const REG = 1.0e-10::Float64
 
 #TODO: remove
 using FiniteDiff

@@ -9,7 +9,7 @@ include("env.jl")
 include("initialize.jl")
 # mech = get_rexhopper(timestep=0.01, gravity=-2.81, model="rexhopper2",
 mech = get_rexhopper(timestep=0.01, gravity= -0.99 * 9.81, model="rexhopper_no_wheel",
-    floating=true, contact_foot=true, limits=true, spring=0.0, damper=0.5, contact_type=:linear)
+    floating=true, contact_foot=true, limits=true, springs=0.0, damper=0.5, contact_type=:linear)
 
 q0 = [1,0.5,0,0]
 q0 = Quaternion(q0 ./ norm(q0)...)
@@ -128,7 +128,7 @@ plot(Gray.(abs.(fd_solmat)))
 
 
 mech = get_quadruped(timestep=0.01, gravity= -9.81, contact_feet=true, contact_body=true,
-    limits=true, spring=0.0, damper=0.2)
+    limits=true, springs=0.0, damper=0.2)
 
 initialize!(mech, :quadruped, tran=[0,0,0.2], rot=[0.003,0.0003,0.])
 z0 = get_maximal_state(mech)

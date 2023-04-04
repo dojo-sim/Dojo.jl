@@ -1,41 +1,45 @@
 function get_cartpole(; 
     timestep=0.1, 
-    gravity=[0.0; 0.0; -9.81], 
-    spring=0.0, 
-    damper=0.0,
+    input_scaling=timestep, 
+    gravity=-9.81, 
     slider_mass=1.0,
     pendulum_mass=1.0,
     pendulum_length=1.0,
+    color=RGBA(0.7, 0.7, 0.7, 1.0)
+    springs=0.0, 
+    dampers=0.0,
+    limits=false,
+    joint_limits=Dict(),
     T=Float64)
 
-    # Parameters
-    slider_axis = [0.0; 1.0; 0.0]
-    pendulum_axis = [1.0; 0.0; 0.0]
-    slider_length = 1.0
-    radius = 0.075
-
-    # Links
+    # mechanism
     origin = Origin{Float64}()
-    slider = Capsule(1.5 * radius, slider_length, slider_mass, 
-        orientation_offset=RotX(0.5 * π), 
-        color=RGBA(0.7, 0.7, 0.7, 1.0))
-    pendulum = Capsule(radius, pendulum_length, pendulum_mass, 
-        color=RGBA(0.7, 0.7, 0.7, 1.0))
-    links = [slider, pendulum]
-
-    # Joint Constraints
-    joint_origin_slider = JointConstraint(Prismatic(origin, slider, slider_axis;
-        spring=spring, damper=damper))
-    joint_slider_pendulum = JointConstraint(Revolute(slider, pendulum, pendulum_axis; 
-        child_vertex=[0.0; 0.0; -0.5 * pendulum_length],
-        spring=spring, damper=damper))
+    slider = Capsule(1.5 * 0.075, 1.0, slider_mass, 
+        orientation_offset=RotX(0.5 * π), color)
+    pendulum = Capsule(radius, pendulum_length, pendulum_mass, color)
+    bodies = [slider, pendulum]
+    
+    joint_origin_slider = JointConstraint(Prismatic(origin, slider, Y_AXIS))
+    joint_slider_pendulum = JointConstraint(Revolute(slider, pendulum, X_AXIS; 
+        child_vertex=-0.5*pendulum_length*Z_AXIS))
     joints = [joint_origin_slider, joint_slider_pendulum]
 
-    # Mechanism
-    mech = Mechanism(origin, links, joints;
-        gravity, 
-        timestep)
+    mech = Mechanism(origin, bodies, joints;
+        gravity, timestep, input_scaling)
 
+    # springs and dampers
+    set_springs!(mech.joints, springs)
+    set_dampers!(mech.joints, dampers)
+
+    # joint limits    
+    if limits
+        joints = set_limits(mech, joint_limits)
+
+        mech = Mechanism(Origin{T}(), mech.bodies, joints;
+            gravity, timestep, input_scaling)
+    end
+
+    # construction finished
     return mech
 end
 

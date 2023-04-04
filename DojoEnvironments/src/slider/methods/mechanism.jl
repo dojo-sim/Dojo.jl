@@ -1,33 +1,39 @@
 function get_slider(; 
     timestep=0.01, 
+    input_scaling=timestep, 
     gravity=-9.81, 
-    spring=0.0, 
-    damper=0.0,
+    springs=0.0, 
+    dampers=0.0,
+    limits=false,
+    joint_limits=Dict(),
     T=Float64)
 
-    # Parameters
-    joint_axis = [0.0; 0.0; 1.0]
-    len = 1.0
-    width, depth = 0.1, 0.1
-    child_vertex = [0.0; 0.0; len / 2.0] # joint connection point
-
-    # Links
+    # mechanism
     origin = Origin{T}()
-    pbody = Box(width, depth, len, len)
 
-    # Constraints
-    joint_between_origin_and_pbody = JointConstraint(Prismatic(origin, pbody, joint_axis; 
-        child_vertex=child_vertex, 
-        spring, 
-        damper))
-
+    pbody = Box(0.1, 0.1, 1.0, 1.0)
     bodies = [pbody]
+
+    joint_between_origin_and_pbody = JointConstraint(Prismatic(origin, pbody, Z_AXIS; 
+        child_vertex=Z_AXIS/2))
     joints = [joint_between_origin_and_pbody]
 
     mech = Mechanism(origin, bodies, joints;
-        gravity, 
-        timestep)
+        gravity, timestep, input_scaling)
 
+    # springs and dampers
+    set_springs!(mech.joints, springs)
+    set_dampers!(mech.joints, dampers)
+
+    # joint limits    
+    if limits
+        joints = set_limits(mech, joint_limits)
+
+        mech = Mechanism(Origin{T}(), mech.bodies, joints;
+            gravity, timestep, input_scaling)
+    end
+
+    # construction finished
     return mech
 end
 
@@ -44,13 +50,13 @@ end
 function get_nslider(; 
     timestep=0.01, 
     gravity=-9.81, 
-    spring=0.0, 
-    damper=0.0, 
+    springs=0.0, 
+    dampers=0.0, 
     num_bodies=5,
     T=Float64)
 
     # Parameters
-    ex = [0.0; 0.0; 1.0]
+    ex = Z_AXIS
     h = 1.0
     r = 0.05
     vert11 = [0.0; r; 0.0]

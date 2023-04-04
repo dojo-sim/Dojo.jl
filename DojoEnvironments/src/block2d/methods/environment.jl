@@ -6,7 +6,7 @@ struct Block2D end
 function block2d(;
     representation=:minimal,
     timestep=0.05,
-    gravity=[0.0; 0.0; -9.81],
+    gravity=-9.81,
     friction_coefficient=0.8,
     info=nothing,
     seed=1,

@@ -9,9 +9,9 @@ struct Cartpole end
 function cartpole(; 
     representation=:minimal, 
     timestep=0.05, 
-    gravity=[0.0; 0.0; -9.81],
-    spring=0.0, 
-    damper=0.0,
+    gravity=-9.81,
+    springs=0.0, 
+    dampers=0.0,
     seed=1, 
     vis=Visualizer(), 
     info=nothing, 

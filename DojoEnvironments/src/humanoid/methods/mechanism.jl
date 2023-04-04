@@ -1,29 +1,45 @@
 function get_humanoid(; 
     timestep=0.01, 
-    gravity=[0.0; 0.0; -9.81], 
+    input_scaling=timestep, 
+    gravity=-9.81, 
+    urdf=:humanoid, 
+    springs=0.0, 
+    dampers=0.0,
+    parse_springs=true, 
+    parse_dampers=true,
+    limits=false,
+    joint_limits=Dict(),
+    keep_fixed_joints=false, 
     friction_coefficient=0.8, 
-    spring=0.0, 
-    damper=0.0,
-    parse_damper=true,
 	contact_feet=true, 
     contact_body=false,
     T=Float64)
 
-    path = joinpath(@__DIR__, "../deps/humanoid.urdf")
+    # mechanism
+    path = joinpath(@__DIR__, "../dependencies/$(string(urdf)).urdf")
     mech = Mechanism(path; floating=true, T,
-        gravity, 
-        timestep,
-        parse_damper)
+        gravity, timestep, input_scaling, 
+        parse_damper, keep_fixed_joints)
 
-    # Adding springs and dampers
-    set_springs!(mech.joints, spring)
-    set_dampers!(mech.joints, damper)
+    # springs and dampers
+    !parse_springs && set_springs!(mech.joints, springs)
+    !parse_dampers && set_dampers!(mech.joints, dampers)
+
+    # joint limits
+    if limits
+        joints = set_limits(mech, joint_limits)
+
+        mech = Mechanism(Origin{T}(), mech.bodies, joints;
+            gravity, timestep, input_scaling)
+    end
+
+    # contacts
+    origin = Origin{T}()
+    bodies = mech.bodies
+    joints = mech.joints
+    contacts = ContactConstraint{T}[]
 
     if contact_feet
-        origin = Origin{T}()
-        bodies = mech.bodies
-        joints = mech.joints
-
         # Foot contact
         left_foot = get_body(mech, :left_foot)
 
@@ -38,7 +54,7 @@ function get_humanoid(;
 		pblr = vector_rotate([-0.5 * left_foot.shape.shapes[1].shapes[1].rh[2] + 0.03500; +0.01; 0.0], qlr)
         p = [0.0,0.054,0.]
         o = left_foot.shape.shapes[1].shapes[1].rh[1]
-        contacts = [
+        contacts_points = [
 					p,
                     # pfll,
                     # pbll,
@@ -51,13 +67,13 @@ function get_humanoid(;
                     # o,
                     # o,
                   ]
-        n = length(contacts)
-        normal = [[0.0; 0.0; 1.0] for i = 1:n]
+        n = length(contacts_points)
+        normal = [Z_AXIS for i = 1:n]
         friction_coefficients = friction_coefficient * ones(T, n)
 
         contacts_left = contact_constraint(left_foot, normal; 
             friction_coefficient=friction_coefficients, 
-            contact_origins=contacts, 
+            contact_origins=contacts_points, 
             contact_radius)
 
         right_foot = get_body(mech, :right_foot)
@@ -67,7 +83,7 @@ function get_humanoid(;
         pbr = [-0.5 * right_foot.shape.shapes[1].shapes[1].rh[2]; 0.0; 0.0]
         obr = right_foot.shape.shapes[1].shapes[1].rh[1]
 
-        contacts = [
+        contact_points = [
                     pfr,
                     pbr,
                    ]
@@ -77,25 +93,24 @@ function get_humanoid(;
                             obr,
                          ]
                   
-        n = length(contacts)
-        normal = [[0.0; 0.0; 1.0] for i = 1:n]
+        n = length(contact_points)
+        normal = [Z_AXIS for i = 1:n]
         friction_coefficients = friction_coefficient * ones(T, n)
 
         contacts_right = contact_constraint(right_foot, normal; 
             friction_coefficient=friction_coefficients, 
-            contact_origins=contacts, 
+            contact_origins=contact_points, 
             contact_radius)
 
-        set_minimal_coordinates!(mech, get_joint(mech, :floating_base), [0.0; 0.0; 1.2; 0.1; 0.0; 0.0])
+        contacts = [contacts_left, contacts_right]
 
-        # mech = Mechanism(origin, bodies, joints, [contacts_left; contacts_right];
-            # gravity, 
-            # timestep)
-        mech = Mechanism(origin, bodies, joints, [contacts_left; ];
-            gravity, 
-            timestep)
+        # set_minimal_coordinates!(mech, get_joint(mech, :floating_base), [0.0; 0.0; 1.2; 0.1; 0.0; 0.0])
     end
 
+    mech = Mechanism(origin, bodies, joints, contacts;
+        gravity, timestep, input_scaling)
+
+    # construction finished
     return mech
 end
 

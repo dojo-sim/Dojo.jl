@@ -1,68 +1,53 @@
 function get_walker(; 
     timestep=0.01, 
-    gravity=[0.0; 0.0; -9.81], 
+    input_scaling=timestep, 
+    gravity=-9.81, 
+    urdf=:walker, 
+    springs=0.0,
+    dampers=0.0,
+    parse_springs=true, 
+    parse_dampers=true,
+    limits=true,
+    joint_limits=Dict([
+        (:thigh, [0,150] * π / 180), 
+        (:leg, [0,150] * π / 180), 
+        (:foot, [-45,45] * π / 180), 
+        (:thigh_left, [0,150] * π / 180), 
+        (:leg_left, [0,150] * π / 180), 
+        (:foot_left, [-45,45] * π / 180)])
+    keep_fixed_joints=false, 
     friction_coefficient=0.5,
     contact_feet=true,
     contact_body=true,
-    limits=true,
-    spring=0.0,
-    damper=0.0,
-    parse_damper=true,
-    joint_limits=[[  0.0,   0.0, -45.0,   0.0,   0.0, -45.0] * π / 180.0,
-                  [150.0, 150.0,  45.0, 150.0, 150.0,  45.0] * π / 180.0],
     T=Float64)
 
-    path = joinpath(@__DIR__, "../deps/walker.urdf")
+    # mechanism
+    path = joinpath(@__DIR__, "../dependencies/$(string(urdf)).urdf")
     mech = Mechanism(path; floating=false, T,
-        gravity, 
-        timestep,
-        parse_damper)
+        gravity, timestep, input_scaling, 
+        parse_damper, keep_fixed_joints)
 
-    # Adding springs and dampers
-    set_springs!(mech.joints, spring)
-    set_dampers!(mech.joints, damper)
+    # springs and dampers
+    !parse_springs && set_springs!(mech.joints, springs)
+    !parse_dampers && set_dampers!(mech.joints, dampers)
 
     # joint limits
-    joints = deepcopy(mech.joints)
-
     if limits
-        thigh = get_joint(mech, :thigh)
-        joints[thigh.id] = add_limits(mech, thigh, 
-            rot_limits=[SVector{1}(joint_limits[1][1]), SVector{1}(joint_limits[2][1])])
+        joints = set_limits(mech, joint_limits)
 
-        leg = get_joint(mech, :leg)
-        joints[leg.id] = add_limits(mech, leg, 
-            rot_limits=[SVector{1}(joint_limits[1][2]), SVector{1}(joint_limits[2][2])])
-
-        foot = get_joint(mech, :foot)
-        joints[foot.id] = add_limits(mech, foot, 
-            rot_limits=[SVector{1}(joint_limits[1][3]), SVector{1}(joint_limits[2][3])])
-
-        thigh_left = get_joint(mech, :thigh_left)
-        joints[thigh_left.id] = add_limits(mech, thigh_left, 
-            rot_limits=[SVector{1}(joint_limits[1][4]), SVector{1}(joint_limits[2][4])])
-
-        leg_left = get_joint(mech, :leg_left)
-        joints[leg_left.id] = add_limits(mech, leg_left, 
-            rot_limits=[SVector{1}(joint_limits[1][5]), SVector{1}(joint_limits[2][5])])
-
-        foot_left = get_joint(mech, :foot_left)
-        joints[foot_left.id] = add_limits(mech, foot_left, 
-            rot_limits=[SVector{1}(joint_limits[1][6]), SVector{1}(joint_limits[2][6])])
-
-        mech = Mechanism(Origin{T}(), [mech.bodies...], [joints...];
-            gravity, 
-            timestep)
+        mech = Mechanism(Origin{T}(), mech.bodies, joints;
+            gravity, timestep, input_scaling)
     end
 
-    if contact_feet
-        origin = Origin{T}()
-        bodies = mech.bodies
-        joints = mech.joints
+    # contacts
+    origin = Origin{T}()
+    bodies = mech.bodies
+    joints = mech.joints
+    contacts = ContactConstraint{T}[]
 
-        normal = [0.0; 0.0; 1.0]
+    if contact_feet
+        normal = Z_AXIS
         names = contact_body ? getfield.(mech.bodies, :name) : [:ffoot, :foot]
-        models = []
         for name in names
             body = get_body(mech, name)
             if name in [:foot, :foot_left] # need special case for foot
@@ -70,30 +55,31 @@ function get_walker(;
                 pf = [0.0, 0.0, 0.5 * body.shape.shapes[1].rh[2]]
                 pb = [0.0, 0.0, -0.5 * body.shape.shapes[1].rh[2]]
                 o = body.shape.shapes[1].rh[1]
-                push!(models, contact_constraint(body, normal;
+                push!(contacts, contact_constraint(body, normal;
                     friction_coefficient, 
                     contact_origin=pf, 
                     contact_radius=o))
-                push!(models, contact_constraint(body, normal;
+                push!(contacts, contact_constraint(body, normal;
                     friction_coefficient, 
                     contact_origin=pb, 
                     contact_radius=o))
             else
                 p = [0.0; 0.0; 0.5 * body.shape.shapes[1].rh[2]]
                 o = body.shape.shapes[1].rh[1]
-                push!(models, contact_constraint(body, normal;
+                push!(contacts, contact_constraint(body, normal;
                     friction_coefficient, 
                     contact_origin=p, 
                     contact_radius=o))
             end
         end
 
-        set_minimal_coordinates!(mech, get_joint(mech, :floating_joint), [1.25, 0.0, 0.0])
-
-        mech = Mechanism(origin, bodies, joints, [models...];
-            gravity, 
-            timestep)
+        # set_minimal_coordinates!(mech, get_joint(mech, :floating_joint), [1.25, 0.0, 0.0])
     end
+
+    mech = Mechanism(origin, bodies, joints, contacts;
+        gravity, timestep, input_scaling)
+
+    # construction finished
     return mech
 end
 

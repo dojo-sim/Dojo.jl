@@ -1,36 +1,58 @@
 function get_tippetop(;
     timestep=0.01,
-    gravity=[0.0; 0.0; -9.81],
+    input_scaling=timestep, 
+    gravity=-9.81,
+    mass=1,
+    radius=0.5,
+    scale=0.2,
+    springs=0.0,
+    dampers=0.0, 
+    limits=false,
+    joint_limits=Dict(),
     friction_coefficient=0.4,
     contact=true,
     contact_type=:nonlinear,
     T=Float64)
 
+    # mechanism
     origin = Origin{T}(name=:origin)
-    radius = 0.5
-    mass = 1.0
-    α = 0.2
+    
     bodies = [
         Sphere(radius, mass, name=:sphere1, color=gray_light),
-        Sphere(radius*α, mass*α^3, name=:sphere2, color=gray_light)]
+        Sphere(radius*scale, mass*scale^3, name=:sphere2, color=gray_light)]
+    mechanism.bodies[1].inertia = Diagonal([1.9, 2.1, 2.0])
 
     joints = [
         JointConstraint(Floating(origin, bodies[1]),
                 name=:floating_joint),
         JointConstraint(Fixed(bodies[1], bodies[2],
-                parent_vertex=[0,0,radius],
-                child_vertex=zeros(3)),
+                parent_vertex=[0,0,radius]),
                 name = :fixed_joint)]
-    mechanism = Mechanism(origin, bodies, joints;
-        timestep,
-        gravity)
 
-    # modify inertias
-    mechanism.bodies[1].inertia = Diagonal([1.9, 2.1, 2.0])
+    mechanism = Mechanism(origin, bodies, joints;
+        timestep, gravity, input_scaling)
+
+    # springs and dampers
+    set_springs!(mech.joints, springs)
+    set_dampers!(mech.joints, dampers)
+
+    # joint limits    
+    if limits
+        joints = set_limits(mech, joint_limits)
+
+        mech = Mechanism(Origin{T}(), mech.bodies, joints;
+            gravity, timestep, input_scaling)
+    end
+    
+    # contacts
+    origin = Origin{T}()
+    bodies = mech.bodies
+    joints = mech.joints
+    contacts = ContactConstraint{T}[]
 
     if contact
         contact_origin = [0.0, 0.0, 0.0]
-        normal = [0.0, 0.0, 1.0]
+        normal = Z_AXIS
         contacts = [
             contact_constraint(get_body(mechanism, :sphere1), normal;
                 friction_coefficient,
@@ -40,15 +62,16 @@ function get_tippetop(;
             contact_constraint(get_body(mechanism, :sphere2), normal;
                 friction_coefficient,
                 contact_origin,
-                contact_radius=radius * α,
+                contact_radius=radius * scale,
                 contact_type)
             ]
-        set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_joint), [0.0; 0.0; radius; zeros(3)])
-        mechanism = Mechanism(origin, bodies, joints, contacts;
-            gravity,
-            timestep)
+        # set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_joint), [0.0; 0.0; radius; zeros(3)])
     end
 
+    mechanism = Mechanism(origin, bodies, joints, contacts;
+        gravity, timestep, input_scaling)
+
+    # construction finished
     return mechanism
 end
 

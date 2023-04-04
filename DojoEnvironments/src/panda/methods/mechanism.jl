@@ -1,76 +1,70 @@
 function get_panda(;
-        timestep=0.01,
-        gravity=-9.81,
-        friction_coefficient=0.8,
-        spring=0.0,
-        damper=0.0,
-        parse_damper=true,
-        contact=false,
-        limits=true,
-        model_type=:end_effector,
-        object_type=:none,
-        # joint_limits=[[-0.25, -0.25, -0.25, -0.25, -0.25, -0.25, -0.25],
-        #               [ 0.25,  0.25,  0.25,  0.25,  0.25,  0.25,  0.25]],
-        # joint_limits=[[-2.9671, -1.8326, -2.9671, -0.4000, -2.9671, -3.8223, -2.9671],
-        #               [ 2.9671,  1.8326,  2.9671,  3.1416,  2.9671,  0.0873,  2.9671]],
-        joint_limits=[[-2.8973, -1.7628, -2.8973, -0.0698, -2.8973, -3.7525, -2.8973, -0.00],
-                      [ 2.8973,  1.7628,  2.8973,  3.0718,  2.8973,  0.0175,  2.8973,  0.04]],
-        T=Float64)
+    timestep=0.01,
+    input_scaling=timestep, 
+    gravity=-9.81,
+    urdf=:panda_end_effector,
+    springs=0.0,
+    dampers=0.0,
+    parse_springs=true, 
+    parse_dampers=true,
+    limits=true,
+    joint_limits=Dict([
+        (:joint1, [-2.8973, 2.8973]),
+        (:joint2, [-1.7628, 1.7628]),
+        (:joint3, [-2.8973, 2.8973]),
+        (:joint4, [-0.0698, 3.0718]),
+        (:joint5, [-2.8973, 2.8973]),
+        (:joint6, [-3.7525, 0.0175]),
+        (:joint7, [-2.8973, 2.8973]),
+        (:jointf1, [-0.00, 0.04]),
+        (:jointf2, [-0.00, 0.04])])
+    keep_fixed_joints=false, 
+    friction_coefficient=0.8,
+    contact=false,
+    object_type=:none,
+    T=Float64)
 
-    path = joinpath(@__DIR__, "../deps/panda_$(String(model_type)).urdf")
+    # mechanism
+    path = joinpath(@__DIR__, "../dependencies/$(string(urdf)).urdf")
     mech = Mechanism(path; floating=false, T,
-        gravity,
-        timestep,
-        parse_damper,
-        keep_fixed_joints=false)
+        gravity, timestep, input_scaling, 
+        parse_damper, keep_fixed_joints)
 
-    # Adding springs and dampers
-    set_springs!(mech.joints, spring)
-    set_dampers!(mech.joints, damper)
+    # springs and dampers
+    !parse_springs && set_springs!(mech.joints, springs)
+    !parse_dampers && set_dampers!(mech.joints, dampers)
 
-    # joint limits
-    joints = deepcopy(mech.joints)
-
+    # joint limits    
     if limits
-        for (i,joint) in enumerate(joints)
-            id = joint.id
-            if input_dimension(joint.translational) == 0 && input_dimension(joint.rotational) == 1
-                joints[i] = add_limits(mech, joint,
-                    rot_limits=[SVector{1}(joint_limits[1][id]), SVector{1}(joint_limits[2][id])])
-            end
-            if input_dimension(joint.translational) == 1 && input_dimension(joint.rotational) == 0
-                joints[i] = add_limits(mech, joint,
-                    tra_limits=[SVector{1}(0.00), SVector{1}(0.04)])
-            end
-        end
-        mech = Mechanism(mech.origin, mech.bodies, joints;
-            gravity,
-            timestep)
+        joints = set_limits(mech, joint_limits)
+
+        mech = Mechanism(Origin{T}(), mech.bodies, joints;
+            gravity, timestep, input_scaling)
     end
 
-
-    origin = mech.origin
+    # contacts
+    origin = Origin{T}()
     bodies = mech.bodies
     joints = mech.joints
     contacts = ContactConstraint{T}[]
 
-    # if contact
-    #     # if model_type == :end_effector
-    #         # TODO place the contact points for each finger of the end-effector
-    #     # elseif model_type == :no_end_effector
-    #         # spherical end-effector contact
-    #     location = [-0.01; 0.004; 0.1125]
-    #     normal = [0.0; 0.0; 1.0]
-    #     contact = contact_constraint(
-    #         get_body(mech, :link7),
-    #         normal,
-    #         friction_coefficient=friction_coefficient,
-    #         contact_origin=location,
-    #         contact_radius=0.05,
-    #         name=:end_effector)
-    #     push!(contacts, contact)
-    #     # end
-    # end
+    if contact
+        # if urdf == :end_effector
+            # TODO place the contact points for each finger of the end-effector
+        # elseif urdf == :no_end_effector
+            # spherical end-effector contact
+        location = [-0.01; 0.004; 0.1125]
+        normal = Z_AXIS
+        contact = contact_constraint(
+            get_body(mech, :link7),
+            normal,
+            friction_coefficient=friction_coefficient,
+            contact_origin=location,
+            contact_radius=0.05,
+            name=:end_effector)
+        push!(contacts, contact)
+        # end
+    end
 
     if object_type == :box 
         sidex = 0.1
@@ -93,7 +87,7 @@ function get_panda(;
                     [[-sidex / 2.0; -sidey / 2.0;  sidez / 2.0]]
                 ]
                
-        normal = [[0.0, 0.0, 1.0] for i = 1:8]
+        normal = [Z_AXIS for i = 1:8]
         contact_radius = [0.0 for i = 1:8]
         friction_coefficient = 0.5 * ones(8)
         
@@ -150,10 +144,11 @@ function get_panda(;
     end
 
     mech = Mechanism(origin, bodies, joints, contacts;
-        gravity,
-        timestep)
+        gravity, timestep, input_scaling)
 
-    set_minimal_state!(mech, szeros(minimal_dimension(mech)))
+    # set_minimal_state!(mech, szeros(minimal_dimension(mech)))
+
+    # construction finished
     return mech
 end
 

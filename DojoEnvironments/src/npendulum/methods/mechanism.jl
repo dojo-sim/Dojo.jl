@@ -1,29 +1,36 @@
-function get_pendulum(;
+function get_npendulum(;
     timestep=0.01,
-    input_scaling=timestep, 
+    input_scaling=timestep,
     gravity=-9.81,
+    num_bodies=5,
     mass=1.0,
     length=1.0,
     springs=0.0,
     dampers=0.0,
     limits=false,
     joint_limits=Dict(),
-    spring_offset=szeros(1),
-    orientation_offset=one(Quaternion),
+    base_joint_type=:Revolute,
+    rest_joint_type=:Revolute,
     T=Float64)
 
     # mechanism
     origin = Origin{T}()
-    
-    body = Box(0.1, 0.1, length, mass, name=:pendulum)
-    bodies = [body]
 
-    joint = JointConstraint(Revolute(origin, body, X_AXIS;
-        parent_vertex=1.1*Z_AXIS, child_vertex=0.5*Z_AXIS,
-        spring, damper,
-        rot_spring_offset=spring_offset, orientation_offset), 
-        name=:joint)
-    joints = [joint]
+    bodies = [Box(0.05, 0.05, length, mass, color=RGBA(1.0, 0.0, 0.0)) for i = 1:num_bodies]
+
+    jointb1 = JointConstraint(Prototype(base_joint_type, origin, bodies[1], X_AXIS;
+        child_vertex=Z_AXIS*length/2,
+        spring,
+        damper))
+
+    joints = [
+        jointb1;
+        [
+            JointConstraint(Prototype(rest_joint_type, bodies[i - 1], bodies[i], X_AXIS;
+            parent_vertex=-Z_AXIS*length/2, child_vertex=Z_AXIS*length/2,
+            spring, damper)) for i = 2:num_bodies
+        ]
+    ]
 
     mech = Mechanism(origin, bodies, joints;
         gravity, timestep, input_scaling)
@@ -41,58 +48,6 @@ function get_pendulum(;
     end
 
     # construction finished
-    return mech
-end
-
-function initialize_pendulum!(mechanism::Mechanism;
-    angle=0.7,
-    angular_velocity=0.0)
-    joint = mechanism.joints[1]
-    set_minimal_coordinates_velocities!(mechanism, joint;
-        xmin=[angle, angular_velocity])
-end
-
-function get_npendulum(;
-    timestep=0.01,
-    gravity=-9.81,
-    mass=1.0,
-    len=1.0,
-    springs=0.0,
-    dampers=0.0,
-    num_bodies=5,
-    basetype=:Revolute,
-    joint_type=:Revolute,
-    T=Float64)
-
-    # Parameters
-    ex = X_AXIS
-    r = 0.05
-    vert11 = [0.0; 0.0; len / 2.0]
-    vert12 = -vert11
-
-    # Links
-    origin = Origin{T}()
-    bodies = [Box(r, r, len, mass, color=RGBA(1.0, 0.0, 0.0)) for i = 1:num_bodies]
-
-    # Constraints
-    jointb1 = JointConstraint(Prototype(basetype, origin, bodies[1], ex;
-        child_vertex=vert11,
-        spring,
-        damper))
-    if num_bodies > 1
-        joints = [JointConstraint(Prototype(joint_type, bodies[i - 1], bodies[i], ex;
-            parent_vertex=vert12,
-            child_vertex=vert11,
-            spring,
-            damper)) for i = 2:num_bodies]
-        joints = [jointb1; joints]
-    else
-        joints = [jointb1]
-    end
-
-    mech = Mechanism(origin, bodies, joints;
-        gravity,
-        timestep)
     return mech
 end
 
