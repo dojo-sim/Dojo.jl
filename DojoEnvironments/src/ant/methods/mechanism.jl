@@ -103,21 +103,21 @@ function get_ant(;
 end
 
 function initialize_ant!(mechanism::Mechanism; 
-        body_position=[0.0; 0.0; 0.63], 
-        body_orientation=[0.0; 0.0; 0.0 * π],
-        ankle_orientation=0.25)
-        
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base), [body_position; body_orientation])
+    body_position=[0.0; 0.0; 0.63], 
+    body_orientation=[0.0; 0.0; 0.0 * π],
+    ankle_orientation=0.25)
+    
+set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base), [body_position; body_orientation])
 
-    for i in [1, 4]
-        set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol("hip_$i")), [0.0 * π])
-        set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol("ankle_$i")), [ankle_orientation * π])
-    end
+for i in [1, 4]
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol("hip_$i")), [0.0 * π])
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol("ankle_$i")), [ankle_orientation * π])
+end
 
-    for i in [2, 3]
-        set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol("hip_$i")), [0.0 * π])
-        set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol("ankle_$i")), [-ankle_orientation * π])
-    end
+for i in [2, 3]
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol("hip_$i")), [0.0 * π])
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol("ankle_$i")), [-ankle_orientation * π])
+end
 
-    zero_velocity!(mechanism)
+zero_velocity!(mechanism)
 end
