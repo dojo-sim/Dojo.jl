@@ -32,7 +32,7 @@ function get_tennisracket(;
 
     # zero configuration
     zero_coordinates!(mechanism)
-    set_minimal_coordinates!(mechanism, joints[1], [0, 0, scale/2, 0, 0, 0])
+    set_minimal_coordinates!(mechanism, joints[1], [0, 0, scale/1.9, 0, 0, 0])
 
     # construction finished
     return mechanism

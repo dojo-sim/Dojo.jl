@@ -20,7 +20,7 @@ function get_npendulum(;
     bodies = [Box(0.05, 0.05, length, mass; color) for i = 1:num_bodies]
 
     jointb1 = JointConstraint(Prototype(base_joint_type, origin, bodies[1], X_AXIS;
-        parent_vertex=Z_AXIS*num_bodies, child_vertex=Z_AXIS*length/2))
+        parent_vertex=Z_AXIS*num_bodies + [0;0;0.2], child_vertex=Z_AXIS*length/2))
 
     joints = [
         jointb1;

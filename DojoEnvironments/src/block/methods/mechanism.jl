@@ -76,7 +76,7 @@ function get_block(;
 
     # zero configuration
     zero_coordinates!(mechanism)
-    set_minimal_coordinates!(mechanism, joint, [0;edge_length/2+contact_radius; 0])
+    set_minimal_coordinates!(mechanism, joint, [0; 0; edge_length/2+contact_radius[1]; 0; 0; 0])
     
     # construction finished
     return mechanism

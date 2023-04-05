@@ -95,7 +95,10 @@ function get_rexhopper(;
         gravity, timestep, input_scaling)
 
     # zero configuration
-    zero_coordinates!(mechanism)
+    # zero_coordinates!(mechanism)
+    # for joint in mechanism.joints
+    #     !(joint.name in (:loop_joint, :floating_joint)) && set_minimal_coordinates!(mechanism, joint, zeros(input_dimension(joint)))
+    # end
     set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base), [0,0,0.35, 0,0,0])
 
     # construction finished
