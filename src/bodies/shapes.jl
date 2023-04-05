@@ -295,6 +295,42 @@ mutable struct Pyramid{T} <: Shape{T}
     end
 end
 
+"""
+    FrameShape{T} <: Shape{T}
+
+    coordinate frame geometry 
+    
+    position_offset: geometry origin offset from center of mass
+    orientation_offset: orientation offset from body frame
+    scale: scaling
+    color: not used
+"""
+mutable struct FrameShape{T} <: Shape{T}
+    position_offset::SVector{3,T}
+    orientation_offset::Quaternion{T}
+    scale::SVector{3,T}
+    color::RGBA
+
+    function FrameShape(;
+            position_offset::AbstractVector=szeros(3), 
+            orientation_offset::Quaternion=one(Quaternion),
+            scale::AbstractVector=sones(3), 
+            color=RGBA(0.75, 0.75, 0.75))
+        T = promote_type(quateltype.((position_offset, orientation_offset))...)
+        new{T}(position_offset, orientation_offset, scale, color)
+    end
+
+    function FrameShape(m::Real;
+            position_offset::AbstractVector=szeros(3), 
+            orientation_offset::Quaternion=one(Quaternion),
+            scale::AbstractVector=sones(3), 
+            name::Symbol=Symbol("body_" * randstring(4)), color=RGBA(0.75, 0.75, 0.75))
+        T = promote_type(quateltype.((m, position_offset, orientation_offset))...)
+        J = m * diagm([1;1;1])
+        return Body(m, J; name=name, shape=new{T}(position_offset, orientation_offset, scale, color))
+    end
+end
+
 function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, shape::Shape)
     summary(io, shape)
     println(io,"")
@@ -322,6 +358,10 @@ end
 function convert_shape(pyramid::Pyramid)
     w, h = Tuple(pyramid.wh)
     return GeometryBasics.Pyramid(Point(0.0, 0.0, -h / 4.0), h, w)
+end
+
+function convert_shape(frame::FrameShape)
+    return MeshCat.Triad()
 end
 
 function convert_shape(mesh::Mesh)

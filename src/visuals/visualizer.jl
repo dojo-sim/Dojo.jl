@@ -15,7 +15,8 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
     build::Bool=true, 
     show_joint=false,
     joint_radius=0.1,
-    show_contact=false, 
+    show_contact=false,
+    show_frame=false, 
     animation=nothing, 
     color=nothing, 
     name::Symbol=:robot,
@@ -26,12 +27,8 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
     origin = mechanism.origin
 
     # Build robot in the visualizer
-    build && build_robot(mechanism, 
-        vis=vis, 
-        show_joint=show_joint,
-        show_contact=show_contact, 
-        color=color, 
-        name=name)
+    build && build_robot(mechanism; 
+        vis, show_joint, show_contact, show_frame, color, name)
 
     # Create animations
     framerate = Int64(round(1/mechanism.timestep))
@@ -90,6 +87,14 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
                 end
             end
         end
+
+        if show_frame
+            frame_shape = FrameShape(scale=0.33*ones(3))
+            visshape = convert_shape(frame_shape)
+            subvisshape = vis[name][:frames][Symbol(body.name, "__id_$id")]
+            showshape = true
+            animate_node!(storage, id, frame_shape, animation, subvisshape, showshape)
+        end
     end
 
     # Origin
@@ -122,6 +127,7 @@ function build_robot(mechanism::Mechanism;
     show_joint=false,
     joint_radius=0.1,
     show_contact=false, 
+    show_frame=false,
     name::Symbol=:robot, 
     color=nothing)
 
@@ -181,6 +187,14 @@ function build_robot(mechanism::Mechanism;
                     end
                 end
             end
+        end
+
+        if show_frame
+            frame_shape = FrameShape(scale=0.33*ones(3))
+            visshape = convert_shape(frame_shape)
+            subvisshape = vis[name][:frames][Symbol(body.name, "__id_$id")]
+            setobject!(subvisshape, visshape, frame_shape, 
+                transparent=false)
         end
     end
 
@@ -329,6 +343,10 @@ end
 
 function MeshCat.setobject!(subvisshape, visshape, shape::Shape; transparent=false)
     setobject!(subvisshape, visshape, MeshPhongMaterial(color=(transparent ? RGBA(0.75, 0.75, 0.75, 0.5) : shape.color)))
+end
+
+function MeshCat.setobject!(subvisshape, visshape, shape::FrameShape; transparent=false)
+    setobject!(subvisshape, visshape)
 end
 
 function MeshCat.setobject!(subvisshape, visshape, shape::Mesh; transparent=false)
