@@ -14,7 +14,6 @@ mechanisms = [
     :pendulum,
     :quadruped,
     :raiberthopper,
-    :rexhopper, 
     :snake,
     :sphere,
     :tennisracket,
