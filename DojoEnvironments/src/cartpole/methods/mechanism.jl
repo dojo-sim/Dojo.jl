@@ -11,6 +11,7 @@ function get_cartpole(;
     dampers=0,
     limits=false,
     joint_limits=Dict(),
+    keep_fixed_joints=false, 
     T=Float64)
 
     # mechanism

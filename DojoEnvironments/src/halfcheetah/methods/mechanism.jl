@@ -15,7 +15,7 @@ function get_halfcheetah(;
         (:fthigh, [-1,0.7]), 
         (:fshin, [-1.20,0.87]), 
         (:ffoot, [-0.5,0.5])]),
-    keep_fixed_joints=false, 
+    keep_fixed_joints=true, 
     friction_coefficient=0.4,
     contact_feet=true,
     contact_body=true,

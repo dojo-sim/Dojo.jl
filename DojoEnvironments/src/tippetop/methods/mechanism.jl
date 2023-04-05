@@ -9,6 +9,7 @@ function get_tippetop(;
     dampers=0, 
     limits=false,
     joint_limits=Dict(),
+    keep_fixed_joints=false, 
     friction_coefficient=0.4,
     contact=true,
     contact_type=:nonlinear,

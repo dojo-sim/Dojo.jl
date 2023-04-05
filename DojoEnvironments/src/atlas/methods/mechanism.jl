@@ -9,7 +9,7 @@ function get_atlas(;
     parse_dampers=true, 
     limits=false,
     joint_limits=Dict(),
-    keep_fixed_joints=false, 
+    keep_fixed_joints=true, 
     friction_coefficient=0.8, 
     contact_feet=true, 
     contact_body=true, 

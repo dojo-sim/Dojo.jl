@@ -11,6 +11,7 @@ function get_raiberthopper(;
     dampers=[0;0.1],
     limits=false,
     joint_limits=Dict(), 
+    keep_fixed_joints=false, 
     contact_foot=true, 
     contact_body=true,
     T=Float64)

@@ -11,6 +11,7 @@ function get_snake(;
     limits=false,
     joint_limits=Dict(),
     joint_type=:Spherical,
+    keep_fixed_joints=false, 
     friction_coefficient=0.8,
     contact=true,
     contact_type=:nonlinear,   

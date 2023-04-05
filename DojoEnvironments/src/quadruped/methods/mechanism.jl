@@ -14,7 +14,7 @@ function get_quadruped(;
         (Symbol(group,:_thigh_joint), [-0.5,1.5]), 
         (Symbol(group,:_calf_joint), [-2.5,-1])] 
         for group in [:FR, :FL, :RR, :RL]]...)),
-    keep_fixed_joints=false, 
+    keep_fixed_joints=true, 
     friction_coefficient=0.8,
     contact_feet=true,
     contact_body=true,

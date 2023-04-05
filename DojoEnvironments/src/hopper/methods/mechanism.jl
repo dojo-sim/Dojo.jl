@@ -12,7 +12,7 @@ function get_hopper(;
         (:thigh, [0,150] * π / 180), 
         (:leg, [0,150] * π / 180), 
         (:foot, [-45,45] * π / 180)]),
-    keep_fixed_joints=false, 
+    keep_fixed_joints=true, 
     friction_coefficient=2,
     contact_feet=true,
     contact_body=true,

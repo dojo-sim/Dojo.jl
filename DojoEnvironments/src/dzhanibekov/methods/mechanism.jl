@@ -7,6 +7,7 @@ function get_dzhanibekov(;
     color=RGBA(0.9,0.9,0.9,1),
     limits=false,
     joint_limits=Dict(),
+    keep_fixed_joints=false, 
     T=Float64)
 
     # mechanism

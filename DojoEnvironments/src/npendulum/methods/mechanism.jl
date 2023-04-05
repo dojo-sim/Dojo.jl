@@ -10,6 +10,7 @@ function get_npendulum(;
     dampers=0,
     limits=false,
     joint_limits=Dict(),
+    keep_fixed_joints=false, 
     base_joint_type=:Revolute,
     rest_joint_type=:Revolute,
     T=Float64)

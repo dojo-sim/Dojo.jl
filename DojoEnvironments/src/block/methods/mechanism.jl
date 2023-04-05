@@ -9,6 +9,7 @@ function get_block(;
     dampers=0, 
     limits=false,
     joint_limits=Dict(),
+    keep_fixed_joints=false, 
     friction_coefficient=0.8,
     contact=true,
     contact_radius=0,

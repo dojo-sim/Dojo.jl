@@ -9,6 +9,7 @@ function get_tennisracket(;
     dampers=0, 
     limits=false,
     joint_limits=Dict(),
+    keep_fixed_joints=false, 
     T=Float64) 
 
     origin = Origin{T}(name=:origin)
