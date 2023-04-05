@@ -215,7 +215,7 @@ function joint_selector(joint_type, pbody, cbody, T;
         axis = SA{T}[1;0;0], parent_vertex = szeros(T,3), child_vertex = szeros(T,3), orientation_offset = one(Quaternion{T}), name = Symbol("joint_" * randstring(4)), damper = zero(T))
 
     # TODO @warn "this is not great"
-    axis = vector_rotate(axis, orientation_offset) # inv(orientation_offset) * axis
+    # axis = vector_rotate(axis, orientation_offset) # inv(orientation_offset) * axis
 
     # TODO limits for revolute joint?
     if joint_type == "revolute" || joint_type == "continuous"
@@ -484,13 +484,13 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         child_vertex = vector_rotate(-xbodylocal, inv(qbodylocal)) # in body frame (xbodylocal and qbodylocal are both relative to the same (joint) frame -> rotationg by inv(body.q) gives body frame)
         cjoint.translational.vertices = (parent_vertex, child_vertex)
 
-        V3 = vector_rotate(cjoint.rotational.axis_mask3', qjointlocal) # in parent's (parentbody) frame
-        V1 = (svd(skew(V3)).Vt)[1:1,:]
-        V2 = (svd(skew(V3)).Vt)[2:2,:]
+        # V3 = vector_rotate(cjoint.rotational.axis_mask3', qjointlocal) # in parent's (parentbody) frame
+        # V1 = (svd(skew(V3)).Vt)[1:1,:]
+        # V2 = (svd(skew(V3)).Vt)[2:2,:]
 
-        cjoint.rotational.axis_mask3 = SVector{3}(V3)'
-        cjoint.rotational.axis_mask1 = SVector{3}(V1)'
-        cjoint.rotational.axis_mask2 = SVector{3}(V2)'
+        # cjoint.rotational.axis_mask3 = SVector{3}(V3)'
+        # cjoint.rotational.axis_mask1 = SVector{3}(V1)'
+        # cjoint.rotational.axis_mask2 = SVector{3}(V2)'
         cjoint.rotational.orientation_offset = orientation_offset # in parent's (parentbody) frame
 
         # actual body properties
