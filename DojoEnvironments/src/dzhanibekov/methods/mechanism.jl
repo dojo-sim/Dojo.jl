@@ -34,7 +34,7 @@ function get_dzhanibekov(;
     if limits
         joints = set_limits(mechanism, joint_limits)
 
-        mechanism = Mechanism(Origin{T}(), mechanism.bodies, joints;
+        mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
             gravity, timestep, input_scaling)
     end
 

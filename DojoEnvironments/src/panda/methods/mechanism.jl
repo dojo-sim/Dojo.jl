@@ -38,12 +38,12 @@ function get_panda(;
     if limits
         joints = set_limits(mechanism, joint_limits)
 
-        mechanism = Mechanism(Origin{T}(), mechanism.bodies, joints;
+        mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
             gravity, timestep, input_scaling)
     end
 
     # contacts
-    origin = Origin{T}()
+    origin = mechanism.origin
     bodies = mechanism.bodies
     joints = mechanism.joints
     contacts = ContactConstraint{T}[]
@@ -145,8 +145,6 @@ function get_panda(;
 
     mechanism = Mechanism(origin, bodies, joints, contacts;
         gravity, timestep, input_scaling)
-
-    # set_minimal_state!(mechanism, szeros(minimal_dimension(mechanism)))
 
     # zero configuration
     zero_coordinates!(mechanism)

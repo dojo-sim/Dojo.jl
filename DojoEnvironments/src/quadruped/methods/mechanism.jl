@@ -53,12 +53,12 @@ function get_quadruped(;
     if limits
         joints = set_limits(mechanism, joint_limits)
 
-        mechanism = Mechanism(Origin{T}(), mechanism.bodies, joints;
+        mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
             gravity, timestep, input_scaling)
     end
 
     # contacts
-    origin = Origin{T}()
+    origin = mechanism.origin
     bodies = mechanism.bodies
     joints = mechanism.joints
     contacts = ContactConstraint{T}[]
