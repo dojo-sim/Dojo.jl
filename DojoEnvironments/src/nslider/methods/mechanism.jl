@@ -1,7 +1,8 @@
-function get_slider(; 
+function get_nslider(; 
     timestep=0.01, 
     input_scaling=timestep, 
     gravity=-9.81, 
+    num_bodies=5,
     color=RGBA(1, 0, 0),
     springs=0, 
     dampers=0,
@@ -13,12 +14,15 @@ function get_slider(;
     # mechanism
     origin = Origin{T}()
 
-    pbody = Box(0.1, 0.1, 1, 1; color)
-    bodies = [pbody]
+    bodies = [Cylinder(0.05, 1, 1; color) for i = 1:num_bodies]
 
-    joint_between_origin_and_pbody = JointConstraint(Prismatic(origin, pbody, Z_AXIS; 
-        child_vertex=Z_AXIS/2))
-    joints = [joint_between_origin_and_pbody]
+    jointb1 = JointConstraint(Prismatic(origin, bodies[1], Z_AXIS))
+    joints = [
+        jointb1;
+        [JointConstraint(Prismatic(bodies[i - 1], bodies[i], Z_AXIS; 
+            parent_vertex=-Y_AXIS*0.05, child_vertex=Y_AXIS*0.05)) for i = 2:num_bodies
+        ]
+    ]
 
     mechanism = Mechanism(origin, bodies, joints;
         gravity, timestep, input_scaling)
@@ -36,14 +40,14 @@ function get_slider(;
     end
 
     # zero coordinates
-    initialize_slider!(mechanism)
-
+    initialize_nslider!(mechanism)
+    
     # construction finished
     return mechanism
 end
 
-function initialize_slider!(mechanism::Mechanism; 
-    position=mechanism.bodies[1].shape.xyz[3], velocity=0)
+function initialize_nslider!(mechanism::Mechanism; 
+    position=mechanism.bodies[1].shape.rh[2], velocity=0)
 
     zero_velocity!(mechanism)
     zero_coordinates!(mechanism)

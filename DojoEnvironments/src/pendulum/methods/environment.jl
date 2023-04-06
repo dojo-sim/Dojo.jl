@@ -171,3 +171,11 @@ function cost(env::Environment{Pendulum}, x, u)
     end
     return c * 0.1
 end
+
+# function initialize_pendulum!(mechanism::Mechanism;
+#     angle=0.7,
+#     angular_velocity=0)
+#     joint = mechanism.joints[1]
+#     set_minimal_coordinates_velocities!(mechanism, joint;
+#         xmin=[angle, angular_velocity])
+# end

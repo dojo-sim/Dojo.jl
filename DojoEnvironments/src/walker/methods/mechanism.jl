@@ -78,22 +78,20 @@ function get_walker(;
         gravity, timestep, input_scaling)
 
     # zero configuration
-    zero_coordinates!(mechanism)
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_joint), [1.25, 0, 0])
+    initialize_walker!(mechanism)
 
     # construction finished
     return mechanism
 end
 
 function initialize_walker!(mechanism::Mechanism; 
-    body_position=[0, 0],
-    body_orientation=0)
-    
-    set_minimal_coordinates!(mechanism,
-                 get_joint(mechanism, :floating_joint),
-                 [body_position[2] + 1.25 , -body_position[1], -body_orientation])
-    for joint in mechanism.joints
-        (joint.name != :floating_joint) && set_minimal_coordinates!(mechanism, joint, zeros(input_dimension(joint)))
-    end
+    body_position=[0, 0], body_orientation=0)
+
     zero_velocity!(mechanism)
+    zero_coordinates!(mechanism)
+    
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_joint),
+        [body_position[1] + 1.25 , body_position[2], body_orientation])
+
+    return
 end

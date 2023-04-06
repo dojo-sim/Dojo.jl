@@ -74,3 +74,14 @@ function panda(;
         [rng], vis,
         opts_step, opts_grad)
 end
+
+# function initialize_panda!(mechanism::Mechanism{T};
+#     joint_angles=[[0,-0.8,0,1.6,0,-2.4,0]; zeros(input_dimension(mechanism)-7)],
+#     joint_velocities=zeros(input_dimension(mechanism))) where T
+
+#     nu = input_dimension(mechanism)
+#     zero_velocity!(mechanism)
+#     y = vcat([[joint_angles[i], joint_velocities[i]] for i=1:nu]...)
+#     set_minimal_state!(mechanism, y)
+#     return nothing
+# end

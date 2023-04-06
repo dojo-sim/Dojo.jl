@@ -73,45 +73,16 @@ function get_twister(;
         gravity, timestep, input_scaling)
 
     # zero configuration
-    zero_coordinates!(mechanism)
-    set_minimal_coordinates!(mechanism, jointb1, [0,0,radius, 0,0,0])
+    initialize_twister!(mechanism)
 
     # construction finished
     return mechanism
 end
 
-function initialize_twister!(mechanism::Mechanism{T}; 
-    base_position=[0, -1, 0],
-    base_orientation=RotX(0.6 * π),
-    base_linear_velocity=zeros(3), 
-    base_angular_velocity=zeros(3),
-    relative_linear_velocity=zeros(3), 
-    relative_angular_velocity=zeros(3)) where T
+function initialize_twister!(mechanism::Mechanism)
 
-    bodies = mechanism.bodies
-    pbody = bodies[1]
-    h = 1.0
-    vert11 = [0; 0; h / 2]
-    vert12 = -vert11
+    zero_velocity!(mechanism)
+    zero_coordinates!(mechanism)
 
-    # set position and velocities
-    set_maximal_configurations!(mechanism.origin, pbody, 
-        child_vertex=base_position, 
-        Δq=base_orientation)
-    set_maximal_velocities!(pbody, 
-        v=base_linear_velocity, 
-        ω=base_angular_velocity)
-
-    previd = pbody.id
-    for body in mechanism.bodies[2:end]
-        set_maximal_configurations!(get_body(mechanism, previd), body, 
-            parent_vertex=vert12, 
-            child_vertex=vert11)
-        set_maximal_velocities!(get_body(mechanism, previd), body, 
-            parent_vertex=vert12, 
-            child_vertex=vert11,
-            Δv=relative_linear_velocity, 
-            Δω=relative_angular_velocity)
-        previd = body.id
-    end
+    return
 end

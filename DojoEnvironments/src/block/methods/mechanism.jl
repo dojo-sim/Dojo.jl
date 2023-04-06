@@ -76,36 +76,34 @@ function get_block(;
         gravity, timestep, input_scaling)
 
     # zero configuration
-    zero_coordinates!(mechanism)
-    set_minimal_coordinates!(mechanism, joint, [0; 0; edge_length/2+contact_radius[1]; 0; 0; 0])
+    initialize_block!(mechanism)
     
     # construction finished
     return mechanism
 end
 
-function initialize_block!(mechanism::Mechanism{T};
-    position=Z_AXIS,
-    orientation=Quaternion(1, 0, 0, 0),
-    velocity=[1, 0.3, 0.2],
-    angular_velocity=[2.5, -1, 2]) where T
+function initialize_block!(mechanism::Mechanism;
+    position = zeros(3), orientation=one(Quaternion), velocity=zeros(3), angular_velocity=zeros(3))
 
-body = mechanism.bodies[1]
+    zero_velocity!(mechanism)
+    zero_coordinates!(mechanism)
+    
+    body = mechanism.bodies[1]
+    edge_length = body.shape.xyz[3]/2
 
-halfside = body.shape.xyz[1] / 2.0
+    if length(mechanism.contacts) > 0
+        model = mechanism.contacts[1].model
+        offset = model.collision.contact_radius
+    else
+        offset = 0.0
+    end
 
-if length(mechanism.contacts) > 0
-    model = mechanism.contacts[1].model
-    offset = model.collision.contact_radius
-else
-    offset = 0.0
-end
+    height = edge_length + offset
 
-z = halfside + offset
+    set_maximal_configurations!(body,
+        x=position + Z_AXIS*height, q=orientation)
+    set_maximal_velocities!(body,
+        v=velocity, ω=angular_velocity)
 
-set_maximal_configurations!(body,
-    x=position + [0, 0, z],
-    q=orientation)
-set_maximal_velocities!(body,
-    v=velocity,
-    ω=angular_velocity)
+    return
 end

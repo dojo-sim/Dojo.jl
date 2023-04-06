@@ -76,39 +76,21 @@ function get_raiberthopper(;
         gravity, timestep, input_scaling)
 
     # zero configuration
-    zero_coordinates!(mechanism)
-    set_minimal_coordinates!(mechanism, joint_origin_body, [0; 0; body_radius; 0; 0; 0])
-    set_minimal_coordinates!(mechanism, joint_body_foot, [2*body_radius+foot_radius])
+    initialize_raiberthopper!(mechanism)
     
     # construction finished
     return mechanism
 end
 
-function initialize_raiberthopper!(mech::Mechanism{T,Nn,Ne,Nb}; 
-    body_position=[0, 0, 0.05],
-    leg_length=0.5, 
-    body_linear_velocity=zeros(3), 
-    body_angular_velocity=zeros(3)) where {T,Nn,Ne,Nb}
+function initialize_raiberthopper!(mechanism::Mechanism; 
+    body_position=zeros(3), leg_length=0.5)
 
-    pbody = mechanism.bodies[1]
-    cbody = mechanism.bodies[2]
-    joint2 = mechanism.joints[2]
-    tra2 = joint2.translational
+    zero_velocity!(mechanism)
+    zero_coordinates!(mechanism)
 
-    # origin to body
-    set_maximal_configurations!(mechanism.origin, pbody, 
-        Δx=[body_position[1:2]; leg_length + body_position[3]])
-    set_maximal_velocities!(pbody, 
-        v=body_linear_velocity, 
-        ω=body_angular_velocity)
+    body_position += [0;0;leg_length+mechanism.bodies[2].shape.r]
+    set_minimal_coordinates!(mechanism, mechanism.joints[1], [body_position; 0; 0; 0])
+    set_minimal_coordinates!(mechanism, mechanism.joints[2], [-leg_length])
 
-    # body to foot
-    set_maximal_configurations!(pbody, cbody, 
-        Δx=[0; 0; -leg_length], 
-        Δq=RotX(0))
-    set_maximal_velocities!(pbody, cbody, 
-        parent_vertex=tra2.vertices[1], 
-        child_vertex=tra2.vertices[2], 
-        Δv=zeros(3), 
-        Δω=zeros(3))
+    return
 end

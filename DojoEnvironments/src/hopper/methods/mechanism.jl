@@ -75,23 +75,20 @@ function get_hopper(;
         gravity, timestep, input_scaling)
 
     # zero configuration
-    zero_coordinates!(mechanism)
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_joint), [1.25, 0, 0])
+    initialize_hopper!(mechanism)
 
     # construction finished
     return mechanism
 end
 
-function initialize_hopper!(mechanism::Mechanism{T}; 
-    body_position=[0, 0],
-    body_orientation=0) where T
-    #TODO add leg length
+function initialize_hopper!(mechanism::Mechanism; 
+    body_position=[0, 0], body_orientation=0)
 
-    set_minimal_coordinates!(mechanism,
-                 get_joint(mechanism, :floating_joint),
-                 [body_position[2] + 1.25 , -body_position[1], -body_orientation])
-    for joint in mechanism.joints
-        (joint.name != :floating_joint) && set_minimal_coordinates!(mechanism, joint, zeros(input_dimension(joint)))
-    end
     zero_velocity!(mechanism)
+    zero_coordinates!(mechanism)
+    
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_joint),
+        [body_position[1] + 1.25 , body_position[2], body_orientation])
+
+    return
 end

@@ -71,34 +71,34 @@ function get_block2d(;
         gravity, timestep, input_scaling)
 
     # zero configuration
-    zero_coordinates!(mechanism)
-    set_minimal_coordinates!(mechanism, joint, [0; edge_length/2+contact_radius[1]; 0])
+    initialize_block2d!(mechanism)
         
     # construction finished
     return mechanism
 end
 
-function initialize_block2d!(mechanism::Mechanism{T};
-    position=[0, 1],
-    velocity=[0, 0],
-    orientation=0,
-    angular_velocity=0) where T
+function initialize_block2d!(mechanism::Mechanism;
+    position = zeros(2), orientation=0, velocity=zeros(2), angular_velocity=0)
+
+    zero_velocity!(mechanism)
+    zero_coordinates!(mechanism)
+    
+    body = mechanism.bodies[1]
+    edge_length = body.shape.xyz[3]/2
 
     if length(mechanism.contacts) > 0
         model = mechanism.contacts[1].model
-        side = model.collision.contact_origin[2]
         offset = model.collision.contact_radius
-        z = side + offset
     else
-        z = 0.0
+        offset = 0.0
     end
 
-    body = mechanism.bodies[1]
+    height = edge_length + offset
 
     set_maximal_configurations!(body,
-        x=[0; position] + [0, 0.0 , z],
-        q=RotX(orientation))
+        x=[0;position] + Z_AXIS*height, q=RotX(orientation))
     set_maximal_velocities!(body,
-        v=[0; velocity],
-        ω=[angular_velocity, 0, 0])
+        v=[0;velocity], ω=[angular_velocity;0;0])
+
+    return
 end

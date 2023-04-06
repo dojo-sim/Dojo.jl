@@ -41,16 +41,20 @@ function get_pendulum(;
     end
 
     # zero configuration
-    zero_coordinates!(mechanism)
+    initialize_pendulum!(mechanism)
 
     # construction finished
     return mechanism
 end
 
 function initialize_pendulum!(mechanism::Mechanism;
-    angle=0.7,
-    angular_velocity=0)
-    joint = mechanism.joints[1]
-    set_minimal_coordinates_velocities!(mechanism, joint;
-        xmin=[angle, angular_velocity])
+    angle=pi/4, angular_velocity=0)
+
+    zero_velocity!(mechanism)
+    zero_coordinates!(mechanism)
+    
+    set_minimal_coordinates!(mechanism, mechanism.joints[1], [angle])
+    set_minimal_velocities!(mechanism, mechanism.joints[1], [angular_velocity])
+
+    return
 end

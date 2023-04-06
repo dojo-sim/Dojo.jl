@@ -1,7 +1,7 @@
 function get_dzhanibekov(;
     timestep=0.01,
     input_scaling=timestep, 
-    gravity=-9.81,
+    gravity=0,
     springs=0,
     dampers=0, 
     color=RGBA(0.9,0.9,0.9,1),
@@ -40,19 +40,22 @@ function get_dzhanibekov(;
     end
 
     # zero configuration
-    zero_coordinates!(mechanism)
-    set_minimal_coordinates!(mechanism, joint_float, [0; 0; 1; 0; 0; 0])
+    initialize_dzhanibekov!(mechanism)
 
     # construction finished
     return mechanism
 end
 
-function initialize_dzhanibekov!(mechanism::Mechanism{T,Nn,Ne,Nb};
+function initialize_dzhanibekov!(mechanism::Mechanism;
     linear_velocity=zeros(3),
-    angular_velocity=zeros(3)) where {T,Nn,Ne,Nb}
+    angular_velocity=zeros(3))
 
     zero_velocity!(mechanism)
-    set_minimal_coordinates_velocities!(mechanism, get_joint(mechanism, :floating);
-        xmin=[0;0;1;0;0;0; linear_velocity; angular_velocity])
-    set_minimal_coordinates_velocities!(mechanism, get_joint(mechanism, :fixed))
+    zero_coordinates!(mechanism)
+    
+    joint = mechanism.joints[1]
+    set_minimal_coordinates!(mechanism, joint, [Z_AXIS; zeros(3)])
+    set_minimal_velocities!(mechanism, joint, [linear_velocity; angular_velocity])
+
+    return
 end

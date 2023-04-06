@@ -31,9 +31,16 @@ function get_youbot(;
     end
 
     # zero configuration
-    zero_coordinates!(mechanism)
+    initialize_youbot!(mechanism)
 
     # construction finished
     return mechanism
 end
- 
+
+function initialize_youbot!(mechanism)
+    
+    zero_velocity!(mechanism)
+    zero_coordinates!(mechanism)
+
+    return
+end

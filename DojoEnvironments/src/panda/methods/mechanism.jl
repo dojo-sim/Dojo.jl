@@ -4,17 +4,17 @@ function get_panda(;
     gravity=-9.81,
     urdf=:panda_end_effector,
     springs=0,
-    dampers=0,
+    dampers=5,
     parse_springs=true, 
-    parse_dampers=true,
+    parse_dampers=false,
     limits=true,
     joint_limits=Dict([
         (:joint1, [-2.8973, 2.8973]),
         (:joint2, [-1.7628, 1.7628]),
         (:joint3, [-2.8973, 2.8973]),
-        (:joint4, [-0.0698, 3.0718]),
+        (:joint4, [-3.0718,-0.0698]),
         (:joint5, [-2.8973, 2.8973]),
-        (:joint6, [-3.7525, 0.0175]),
+        (:joint6, [-0.0175, 3.7525]),
         (:joint7, [-2.8973, 2.8973]),
         (:jointf1, [-0.00, 0.04]),
         (:jointf2, [-0.00, 0.04])]),
@@ -147,19 +147,22 @@ function get_panda(;
         gravity, timestep, input_scaling)
 
     # zero configuration
-    zero_coordinates!(mechanism)
+    initialize_panda!(mechanism)
 
     # construction finished
     return mechanism
 end
 
-function initialize_panda!(mechanism::Mechanism{T};
-    joint_angles=[[0,-0.8,0,1.6,0,-2.4,0]; zeros(input_dimension(mechanism)-7)],
-    joint_velocities=zeros(input_dimension(mechanism))) where T
+function initialize_panda!(mechanism::Mechanism;
+    joint_angles=[0;0.5;0;-0.5;0;0.5;0; zeros(input_dimension(mechanism)-7)],
+    joint_velocities=zeros(input_dimension(mechanism)))
+
+    zero_velocity!(mechanism)
+    zero_coordinates!(mechanism)
 
     nu = input_dimension(mechanism)
-    zero_velocity!(mechanism)
-    y = vcat([[joint_angles[i], joint_velocities[i]] for i=1:nu]...)
-    set_minimal_state!(mechanism, y)
-    return nothing
+    x = vcat([[joint_angles[i], joint_velocities[i]] for i=1:nu]...)
+    set_minimal_state!(mechanism, x)
+
+    return
 end

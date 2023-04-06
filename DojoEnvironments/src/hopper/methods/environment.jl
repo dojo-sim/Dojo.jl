@@ -159,3 +159,18 @@ function is_done(env::Environment{Hopper}, x)
         )
     return done
 end
+
+
+# function initialize_hopper!(mechanism::Mechanism{T}; 
+#     body_position=[0, 0],
+#     body_orientation=0) where T
+#     #TODO add leg length
+
+#     set_minimal_coordinates!(mechanism,
+#                  get_joint(mechanism, :floating_joint),
+#                  [body_position[2] + 1.25 , -body_position[1], -body_orientation])
+#     for joint in mechanism.joints
+#         (joint.name != :floating_joint) && set_minimal_coordinates!(mechanism, joint, zeros(input_dimension(joint)))
+#     end
+#     zero_velocity!(mechanism)
+# end

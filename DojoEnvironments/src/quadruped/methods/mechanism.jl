@@ -148,58 +148,26 @@ function get_quadruped(;
         gravity, timestep, input_scaling)
 
     # zero configuration
-    zero_coordinates!(mechanism)
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base), [0; 0; 0.43; 0; 0; 0])
+    initialize_quadruped!(mechanism)
 
     # construction finished
     return mechanism
 end
 
-function initialize_quadruped!(mechanism::Mechanism{T};
-    body_position=[0, 0, 0],
-    body_orientation=[0, 0, 0],
-    body_linear_velocity=[0, 0, 0],
-    body_angular_velocity=[0, 0, 0],
-    link_angle=0.95) where T
-    #TODO: add more leg angles
+function initialize_quadruped!(mechanism::Mechanism;
+    body_position=[0, 0, 0], body_orientation=one(Quaternion),
+    hip_angle=0, thigh_angle=pi/4, calf_angle=-pi/2)
 
-    body_position += [0, 0, 0.32]
     zero_velocity!(mechanism)
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base),
-        [body_position; body_orientation])
+    zero_coordinates!(mechanism)
 
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :FR_hip_joint), [0])
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :FR_thigh_joint), [link_angle])
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :FR_calf_joint), [-1.5 * link_angle])
+    body_position += [0, 0, 0.43]
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base), [body_position; rotation_vector(body_orientation)])
+    for group in [:FR, :FL, :RR, :RL]
+        set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol(group, :_hip_joint)), [hip_angle])
+        set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol(group, :_thigh_joint)), [thigh_angle])
+        set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol(group, :_calf_joint)), [calf_angle])
+    end
 
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :FL_hip_joint), [0])
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :FL_thigh_joint), [link_angle * 0.9])
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :FL_calf_joint), [-1.5 * link_angle])
-
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :RR_hip_joint), [0])
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :RR_thigh_joint), [link_angle * 0.9])
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :RR_calf_joint), [-1.5 * link_angle])
-
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :RL_hip_joint), [0])
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :RL_thigh_joint), [link_angle])
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :RL_calf_joint), [-1.5 * link_angle])
-
-    set_minimal_velocities!(mechanism, get_joint(mechanism, :floating_base),
-        [body_linear_velocity; body_angular_velocity])
-
-    set_minimal_velocities!(mechanism, get_joint(mechanism, :FR_hip_joint), [0])
-    set_minimal_velocities!(mechanism, get_joint(mechanism, :FR_thigh_joint), [0])
-    set_minimal_velocities!(mechanism, get_joint(mechanism, :FR_calf_joint), [0])
-
-    set_minimal_velocities!(mechanism, get_joint(mechanism, :FL_hip_joint), [0])
-    set_minimal_velocities!(mechanism, get_joint(mechanism, :FL_thigh_joint), [0])
-    set_minimal_velocities!(mechanism, get_joint(mechanism, :FL_calf_joint), [0])
-
-    set_minimal_velocities!(mechanism, get_joint(mechanism, :RR_hip_joint), [0])
-    set_minimal_velocities!(mechanism, get_joint(mechanism, :RR_thigh_joint), [0])
-    set_minimal_velocities!(mechanism, get_joint(mechanism, :RR_calf_joint), [0])
-
-    set_minimal_velocities!(mechanism, get_joint(mechanism, :RL_hip_joint), [0])
-    set_minimal_velocities!(mechanism, get_joint(mechanism, :RL_thigh_joint), [0])
-    set_minimal_velocities!(mechanism, get_joint(mechanism, :RL_calf_joint), [0])
+    return
 end

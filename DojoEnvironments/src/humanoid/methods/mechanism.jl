@@ -109,18 +109,20 @@ function get_humanoid(;
         gravity, timestep, input_scaling)
 
     # zero configuration
-    zero_coordinates!(mechanism)
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base), [0; 0; 1.33; 0.0; 0; 0])
+    initialize_humanoid!(mechanism)
 
     # construction finished
     return mechanism
 end
 
-function initialize_humanoid!(mechanism::Mechanism{T}; 
-    body_position=[0, 0, 1.5], 
-    body_orientation=[0.1, 0, 0]) where T
-    set_minimal_coordinates!(mechanism, 
-        get_joint(mechanism, :floating_base), 
-        [body_position; body_orientation])
+function initialize_humanoid!(mechanism::Mechanism; 
+    body_position=[0, 0, 1.33], body_orientation=one(Quaternion))
+
     zero_velocity!(mechanism)
+    zero_coordinates!(mechanism)
+    
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base), 
+        [body_position; rotation_vector(body_orientation)])
+
+    return
 end

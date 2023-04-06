@@ -72,26 +72,20 @@ function get_tippetop(;
         gravity, timestep, input_scaling)
 
     # zero configuration
-    zero_coordinates!(mechanism)
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_joint), [0; 0; radius; 0; 0; 0])
+    initialize_tippetop!(mechanism)
 
     # construction finished
     return mechanism
 end
 
 function initialize_tippetop!(mechanism::Mechanism{T};
-    body_position=zeros(3),
-    body_orientation=zeros(3),
-    body_linear_velocity=zeros(3),
-    body_angular_velocity=zeros(3)) where T
-
-    floating_joint = get_joint(mechanism, :floating_joint)
-    fixed_joint = get_joint(mechanism, :fixed_joint)
-    radius = fixed_joint.translational.vertices[1][3]
+    body_position=2*Z_AXIS*mechanism.bodies[1].shape.r, body_orientation=one(Quaternion),
+    body_linear_velocity=zeros(3), body_angular_velocity=zeros(3)) where T
 
     zero_velocity!(mechanism)
-    set_minimal_coordinates_velocities!(mechanism, floating_joint,
-        xmin=[body_position; body_orientation; body_linear_velocity; body_angular_velocity])
-    set_minimal_coordinates_velocities!(mechanism, fixed_joint)
-    return nothing
+    zero_coordinates!(mechanism)
+
+    floating_joint = mechanism.joints[1]
+    set_minimal_coordinates!(mechanism, floating_joint, [body_position; rotation_vector(body_orientation)])
+    set_minimal_velocities!(mechanism, floating_joint, [body_linear_velocity; body_angular_velocity])
 end

@@ -55,22 +55,21 @@ function get_sphere(;
         gravity, timestep, input_scaling)
 
     # zero configuration
-    zero_coordinates!(mechanism)
-    set_minimal_coordinates!(mechanism, joints[1], [0,0,radius, 0,0,0])
+    initialize_sphere!(mechanism)
 
     # construction finished
     return mechanism
 end
 
-function initialize_sphere!(mechanism::Mechanism{T};
-    position=zeros(3),
-    orientation=one(Quaternion),
-    velocity=zeros(3),
-    angular_velocity=zeros(3)) where T
+function initialize_sphere!(mechanism::Mechanism;
+    position=Z_AXIS*mechanism.bodies[1].shape.r, orientation=one(Quaternion),
+    velocity=zeros(3), angular_velocity=zeros(3))
 
-    r = mechanism.bodies[1].shape.r
-    joint = get_joint(mechanism, :floating_joint)
     zero_velocity!(mechanism)
-    set_minimal_coordinates!(mechanism, joint, [position + [0, 0, r]; rotation_vector(orientation)])
-    set_minimal_velocities!(mechanism, joint, [velocity; angular_velocity])
+    zero_coordinates!(mechanism)
+
+    set_minimal_coordinates!(mechanism, mechanism.joints[1], [position; rotation_vector(orientation)])
+    set_minimal_velocities!(mechanism, mechanism.joints[1], [velocity; angular_velocity])
+
+    return
 end

@@ -31,23 +31,22 @@ function get_fourbar(;
     end
 
     # zero configuration
-    zero_coordinates!(mechanism)
+    initialize_fourbar!(mechanism)
 
     # construction finished
     return mechanism
 end
 
 function initialize_fourbar!(mechanism::Mechanism; 
-    angle=0, 
-    angular_velocity=szeros(2))
+    base_angle=0, inner_angle=pi/4)
 
     zero_velocity!(mechanism)
-    set_minimal_coordinates_velocities!(mechanism, get_joint(mechanism, :jointb1); 
-        xmin=[ -angle, angular_velocity[1]])
-    set_minimal_coordinates_velocities!(mechanism, get_joint(mechanism, :joint12); 
-        xmin=[+2angle, 0])
-    set_minimal_coordinates_velocities!(mechanism, get_joint(mechanism, :jointb3); 
-        xmin=[ +angle, angular_velocity[2]])
-    set_minimal_coordinates_velocities!(mechanism, get_joint(mechanism, :joint34); 
-        xmin=[-2angle, 0])
+    zero_coordinates!(mechanism)
+    
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :jointb1), [base_angle+inner_angle])
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :jointb3), [base_angle-inner_angle])
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :joint12), [-2*inner_angle])
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :joint34), [2*inner_angle])
+
+    return
 end

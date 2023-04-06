@@ -177,3 +177,33 @@ function ghost(env::Environment{Cartpole}, z_sol;
 
     open(env.vis)
 end
+
+
+
+# function initialize_cartpole!(mech::Mechanism{T,Nn,Ne,Nb}; 
+#     mode=:up, 
+#     pendulum_length=1) where {T,Nn,Ne,Nb}
+
+#     # origin to slider
+#     set_maximal_configurations!(mechanism.origin, mechanism.bodies[1])
+#     set_maximal_velocities!(mechanism.bodies[1], 
+#         v=[0; 0; 0],
+#         ω=zeros(3))
+
+#     # slider to pendulum
+#     if mode == :down
+#         set_maximal_configurations!(mechanism.bodies[1], mechanism.bodies[2], 
+#             Δx=[0; 0; -0.5 * pendulum_length], 
+#             Δq=RotX(π))
+#         set_maximal_velocities!(mechanism.bodies[2], 
+#             v=zeros(3), 
+#             ω=zeros(3))
+#     elseif mode == :up
+#         set_maximal_configurations!(mechanism.bodies[1], mechanism.bodies[2], 
+#             Δx=[0; 0; 0.5 * pendulum_length], 
+#             Δq=RotX(0))
+#         set_maximal_velocities!(mechanism.bodies[2], 
+#             v=zeros(3), 
+#             ω=zeros(3))
+#     end
+# end

@@ -62,3 +62,28 @@ function block2d(;
         [rng], vis,
         opts_step, opts_grad)
 end
+
+# function initialize_block2d!(mechanism::Mechanism{T};
+#     position=[0, 1],
+#     velocity=[0, 0],
+#     orientation=0,
+#     angular_velocity=0) where T
+
+#     if length(mechanism.contacts) > 0
+#         model = mechanism.contacts[1].model
+#         side = model.collision.contact_origin[2]
+#         offset = model.collision.contact_radius
+#         z = side + offset
+#     else
+#         z = 0.0
+#     end
+
+#     body = mechanism.bodies[1]
+
+#     set_maximal_configurations!(body,
+#         x=[0; position] + [0, 0.0 , z],
+#         q=RotX(orientation))
+#     set_maximal_velocities!(body,
+#         v=[0; velocity],
+#         ω=[angular_velocity, 0, 0])
+# end

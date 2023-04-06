@@ -47,39 +47,19 @@ function get_npendulum(;
     end
 
     # zero configuration
-    zero_coordinates!(mechanism)
+    initialize_npendulum!(mechanism)
 
     # construction finished
     return mechanism
 end
 
-function initialize_npendulum!(mechanism::Mechanism{T};
-    base_angle=π / 4,
-    base_angular_velocity=[0, 0, 0],
-    relative_linear_velocity=[0, 0, 0],
-    relative_angular_velocity=[0, 0, 0]) where T
+function initialize_npendulum!(mechanism::Mechanism;
+    base_angle=π/4)
+    
+    zero_velocity!(mechanism)
+    zero_coordinates!(mechanism)
+    
+    set_minimal_coordinates!(mechanism, mechanism.joints[1], [base_angle])
 
-    pbody = mechanism.bodies[1]
-    joint = mechanism.joints[1]
-    vert11 = joint.translational.vertices[2]
-    vert12 = -vert11
-
-    # set position and velocities
-    set_maximal_configurations!(mechanism.origin, pbody,
-        child_vertex=vert11,
-        Δq=RotX(base_angle))
-    set_maximal_velocities!(pbody,
-        ω=base_angular_velocity)
-
-    previd = pbody.id
-    for (i, body) in enumerate(Iterators.drop(mechanism.bodies, 1))
-        set_maximal_configurations!(get_body(mechanism, previd), body,
-            parent_vertex=vert12,
-            child_vertex=vert11)
-        set_maximal_velocities!(get_body(mechanism, previd), body,
-            parent_vertex=vert12,
-            child_vertex=vert11,
-            Δv=relative_linear_velocity, Δω=1 / i * relative_angular_velocity)
-        previd = body.id
-    end
+    return
 end
