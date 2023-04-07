@@ -31,9 +31,10 @@ export
     BoxSpace
 
 include("mechanisms.jl")
-include("environment.jl")
+include("environments.jl")
 include("dynamics.jl")
 include("utilities.jl")
-include("include.jl")
+include("../mechanisms/include.jl")
+include("../environments/include.jl")
 
 end # module
