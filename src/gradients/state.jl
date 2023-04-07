@@ -196,7 +196,7 @@ end
 function get_minimal_gradients!(mechanism::Mechanism{T}, y::AbstractVector{T}, u::AbstractVector{T};
 	opts=SolverOptions()) where T
 	# simulate next state
-	step!(mechanism, y, u, opts=opts)
+	step_minimal_coordinates!(mechanism, y, u, opts=opts)
 	return get_minimal_gradients!(mechanism)
 end
 
