@@ -46,29 +46,17 @@ function get_tippetop(;
     end
     
     # contacts
-    origin = mechanism.origin
-    bodies = mechanism.bodies
-    joints = mechanism.joints
     contacts = ContactConstraint{T}[]
 
     if contact
-        contact_origin = [0, 0, 0]
-        normal = Z_AXIS
-        contacts = [
-            contact_constraint(get_body(mechanism, :sphere1), normal;
-                friction_coefficient,
-                contact_origin, 
-                contact_radius=radius,
-                contact_type),
-            contact_constraint(get_body(mechanism, :sphere2), normal;
-                friction_coefficient,
-                contact_origin,
-                contact_radius=radius * scale,
-                contact_type)
-            ]
+        n = length(bodies)
+        normals = fill(Z_AXIS,n)
+        friction_coefficients = fill(friction_coefficient,n)
+        contact_radii = [radius;radius*scale]
+        contacts = [contacts;contact_constraint(bodies, normals; friction_coefficients, contact_radii, contact_type)]
     end
 
-    mechanism = Mechanism(origin, bodies, joints, contacts;
+    mechanism = Mechanism(mechanism.origin, mechanism.bodies, mechanism.joints, contacts;
         gravity, timestep, input_scaling)
 
     # zero configuration

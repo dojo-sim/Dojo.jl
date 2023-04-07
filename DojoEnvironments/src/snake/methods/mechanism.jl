@@ -48,28 +48,21 @@ function get_snake(;
     end
 
     # contacts
-    origin = mechanism.origin
-    bodies = mechanism.bodies
-    joints = mechanism.joints
     contacts = ContactConstraint{T}[]
 
     if contact
-        n = num_bodies
-        normal = [Z_AXIS for i = 1:n]
-        friction_coefficient = friction_coefficient * ones(n)
-
-        contacts1 = contact_constraint(bodies, normal;
-            friction_coefficient,
-            contact_origins=fill(X_AXIS*length/2, n),
-            contact_type) # we need to duplicate point for prismatic joint for instance
-        contacts2 = contact_constraint(bodies, normal;
-            friction_coefficient,
-            contact_origins=fill(-X_AXIS*length/2, n),
-            contact_type)
-        contacts = [contacts1; contacts2]        
+        contact_bodies = [bodies;bodies] # we need to duplicate contacts for prismatic joint for instance
+        n = Base.length(contact_bodies)
+        normals = fill(Z_AXIS,n)
+        friction_coefficients = fill(friction_coefficient,n)
+        contact_origins = [
+            fill(X_AXIS*length/2, Int64(n/2))
+            fill(-X_AXIS*length/2, Int64(n/2))
+        ]
+        contacts = [contacts;contact_constraint(contact_bodies, normals; friction_coefficients, contact_origins, contact_type)]
     end
 
-    mechanism = Mechanism(origin, bodies, joints, [contacts1; contacts2];
+    mechanism = Mechanism(mechanism.origin, mechanism.bodies, mechanism.joints, contacts;
         gravity, timestep, input_scaling)
 
     # zero configuration

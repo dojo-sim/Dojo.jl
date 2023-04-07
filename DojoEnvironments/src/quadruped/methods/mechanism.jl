@@ -58,93 +58,51 @@ function get_quadruped(;
     end
 
     # contacts
-    origin = mechanism.origin
-    bodies = mechanism.bodies
-    joints = mechanism.joints
     contacts = ContactConstraint{T}[]
 
     if contact_feet
-        # Foot contact
-        normal = Z_AXIS
-        foot_contact = [-0.006; 0; -0.092]
-        foot_contact_radius = 0.021
-
-        foot_contacts1 = contact_constraint(get_body(mechanism,:FR_calf), normal;
-            friction_coefficient,
-            contact_origin=foot_contact,
-            contact_radius=foot_contact_radius,
-            name=:FR_contact)
-        foot_contacts2 = contact_constraint(get_body(mechanism,:FL_calf), normal;
-            friction_coefficient,
-            contact_origin=foot_contact,
-            contact_radius=foot_contact_radius,
-            name=:FL_contact)
-        foot_contacts3 = contact_constraint(get_body(mechanism,:RR_calf), normal;
-            friction_coefficient,
-            contact_origin=foot_contact,
-            contact_radius=foot_contact_radius,
-            name=:RR_contact)
-        foot_contacts4 = contact_constraint(get_body(mechanism,:RL_calf), normal;
-            friction_coefficient,
-            contact_origin=foot_contact,
-            contact_radius=foot_contact_radius,
-            name=:RL_contact)
-        contacts = [contacts...; foot_contacts1; foot_contacts2; foot_contacts3; foot_contacts4]
+        # feet contacts
+        body_names = [:FR_calf, :FL_calf, :RR_calf, :RL_calf]
+        names = [:FR_calf_contact, :FL_calf_contact, :RR_calf_contact, :RL_calf_contact]
+        contact_bodies = [get_body(mechanism, name) for name in body_names]
+        n = length(contact_bodies)
+        normals = fill(Z_AXIS,n)
+        friction_coefficients = fill(friction_coefficient,n)
+        contact_origins = fill([-0.006; 0; -0.092],n)
+        contact_radii = fill(0.021,n)
+        contacts = [contacts;contact_constraint(contact_bodies, normals; friction_coefficients, contact_origins, contact_radii, names)]
     end
 
     if contact_body
-        normal = Z_AXIS
-        hip_contact = [0; 0.05; 0]
-        hip_contact_radius = 0.05
-        elbow_contactR = [-0.005; -0.023; -0.16]
-        elbow_contactL = [-0.005; 0.023; -0.16]
-        elbow_contact_radius = 0.023
-
-        elbow_contacts1 = contact_constraint(get_body(mechanism,:FR_thigh), normal;
-            friction_coefficient,
-            contact_origin=elbow_contactR,
-            contact_radius=elbow_contact_radius,
-            name=:FR_hip_contact)
-        elbow_contacts2 = contact_constraint(get_body(mechanism,:FL_thigh), normal;
-            friction_coefficient,
-            contact_origin=elbow_contactL,
-            contact_radius=elbow_contact_radius,
-            name=:FL_hip_contact)
-        elbow_contacts3 = contact_constraint(get_body(mechanism,:RR_thigh), normal;
-            friction_coefficient,
-            contact_origin=elbow_contactR,
-            contact_radius=elbow_contact_radius,
-            name=:RR_hip_contact)
-        elbow_contacts4 = contact_constraint(get_body(mechanism,:RL_thigh), normal;
-            friction_coefficient,
-            contact_origin=elbow_contactL,
-            contact_radius=elbow_contact_radius,
-            name=:RL_hip_contact)
-        push!(contacts, elbow_contacts1, elbow_contacts2, elbow_contacts3, elbow_contacts4)
-        hip_contacts1 = contact_constraint(get_body(mechanism,:FR_hip), normal;
-            friction_coefficient,
-            contact_origin=-hip_contact,
-            contact_radius=hip_contact_radius,
-            name=:FR_hip_contact)
-        hip_contacts2 = contact_constraint(get_body(mechanism,:FL_hip), normal;
-            friction_coefficient,
-            contact_origin=+hip_contact,
-            contact_radius=hip_contact_radius,
-            name=:FL_hip_contact)
-        hip_contacts3 = contact_constraint(get_body(mechanism,:RR_hip), normal;
-            friction_coefficient,
-            contact_origin=-hip_contact,
-            contact_radius=hip_contact_radius,
-            name=:RR_hip_contact)
-        hip_contacts4 = contact_constraint(get_body(mechanism,:RL_hip), normal;
-            friction_coefficient,
-            contact_origin=+hip_contact,
-            contact_radius=hip_contact_radius,
-            name=:RL_hip_contact)
-        push!(contacts, hip_contacts1, hip_contacts2, hip_contacts3, hip_contacts4)
+        # thigh contacts
+        body_names = [:FR_thigh, :FL_thigh, :RR_thigh, :RL_thigh]
+        names = [:FR_thigh_contact, :FL_thigh_contact, :RR_thigh_contact, :RL_thigh_contact]
+        contact_bodies = [get_body(mechanism, name) for name in body_names]
+        n = length(contact_bodies)
+        normals = fill(Z_AXIS,n)
+        friction_coefficients = fill(friction_coefficient,n)
+        contact_origins = [
+            [-0.005; -0.023; -0.16],
+            [-0.005; 0.023; -0.16],
+            [-0.005; -0.023; -0.16],
+            [-0.005; 0.023; -0.16],
+        ]
+        contact_radii = fill(0.023,n)
+        contacts = [contacts;contact_constraint(contact_bodies, normals; friction_coefficients, contact_origins, contact_radii, names)]
+    
+        # hip contacts
+        body_names = [:FR_hip, :FL_hip, :RR_hip, :RL_hip]
+        names = [:FR_hip_contact, :FL_hip_contact, :RR_hip_contact, :RL_hip_contact]
+        contact_bodies = [get_body(mechanism, name) for name in body_names]
+        n = length(contact_bodies)
+        normals = fill(Z_AXIS,n)
+        friction_coefficients = fill(friction_coefficient,n)
+        contact_origins = fill([0; 0.05; 0],n)
+        contact_radii = fill(0.05,n)
+        contacts = [contacts;contact_constraint(contact_bodies, normals; friction_coefficients, contact_origins, contact_radii, names)]
     end
 
-    mechanism = Mechanism(origin, bodies, joints, contacts;
+    mechanism = Mechanism(mechanism.origin, mechanism.bodies, mechanism.joints, contacts;
         gravity, timestep, input_scaling)
 
     # zero configuration

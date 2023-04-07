@@ -40,49 +40,49 @@ function get_halfcheetah(;
     end
 
     # contacts
-    origin = mechanism.origin
-    bodies = mechanism.bodies
-    joints = mechanism.joints
     contacts = ContactConstraint{T}[]
 
     if contact_feet
-        normal = Z_AXIS
-        names = contact_body ? getfield.(mechanism.bodies, :name) : [:ffoot, :bfoot]
-        for name in names
-            body = get_body(mechanism, name)
-            if name == :torso # need special case for torso
-                # torso
-                pf = [+0.5 * body.shape.shapes[1].shapes[1].rh[2]; 0; 0]
-                pb = [-0.5 * body.shape.shapes[1].shapes[1].rh[2]; 0; 0]
-                o = body.shape.shapes[1].shapes[1].rh[1]
-                push!(contacts, contact_constraint(body, normal; 
-                    friction_coefficient, 
-                    contact_origin=pf, 
-                    contact_radius=o))
-                push!(contacts, contact_constraint(body, normal; 
-                    friction_coefficient, 
-                    contact_origin=pb, 
-                    contact_radius=o))
-
-                # head
-                pf = [+0.5 * body.shape.shapes[1].shapes[1].rh[2] + 0.214; 0; 0.1935]
-                o = body.shape.shapes[1].shapes[1].rh[1]
-                push!(contacts, contact_constraint(body, normal; 
-                    friction_coefficient, 
-                    contact_origin=pf, 
-                    contact_radius=o))
-            else
-                p = [0;0; -0.5 * body.shape.shapes[1].rh[2]]
-                o = body.shape.shapes[1].rh[1]
-                push!(contacts, contact_constraint(body, normal;
-                    friction_coefficient, 
-                    contact_origin=p, 
-                    contact_radius=o))
-            end
-        end
+        body_names = [:ffoot, :bfoot]
+        contact_bodies = [get_body(mechanism, name) for name in body_names]
+        n = length(contact_bodies)
+        normals = fill(Z_AXIS,n)
+        friction_coefficients = fill(friction_coefficient,n)
+        contact_origins = [
+            [0;0; -0.5 * contact_bodies[1].shape.shapes[1].rh[2]],
+            [0;0; -0.5 * contact_bodies[2].shape.shapes[1].rh[2]],
+        ]
+        contact_radii = [
+            contact_bodies[1].shape.shapes[1].rh[1]
+            contact_bodies[2].shape.shapes[1].rh[1]
+        ]
+        contacts = [contacts;contact_constraint(contact_bodies, normals; friction_coefficients, contact_origins, contact_radii)]
     end
 
-    mechanism = Mechanism(origin, bodies, joints, contacts;
+    if contact_body
+        body_names = getfield.(mechanism.bodies, :name)
+        body_names = deleteat!(body_names, findall(x->(x==:ffoot||x==:bfoot||x==:torso),body_names))
+        body_names = [:torso; :torso; :torso; body_names]
+        contact_bodies = [get_body(mechanism, name) for name in body_names]
+        n = length(contact_bodies)
+        normals = fill(Z_AXIS,n)
+        friction_coefficients = fill(friction_coefficient,n)
+        contact_origins = [
+            [[+0.5 * contact_bodies[1].shape.shapes[1].shapes[1].rh[2]; 0; 0]]
+            [[-0.5 * contact_bodies[2].shape.shapes[1].shapes[1].rh[2]; 0; 0]]
+            [[+0.5 * contact_bodies[3].shape.shapes[1].shapes[1].rh[2] + 0.214; 0; 0.1935]]
+            [[0;0; -0.5 * contact_bodies[i].shape.shapes[1].rh[2]] for i = 4:n]
+        ]
+        contact_radii = [
+            contact_bodies[1].shape.shapes[1].shapes[1].rh[1]
+            contact_bodies[2].shape.shapes[1].shapes[1].rh[1]
+            contact_bodies[3].shape.shapes[1].shapes[1].rh[1]
+            [contact_bodies[i].shape.shapes[1].rh[1] for i = 4:n]
+        ]
+        contacts = [contacts;contact_constraint(contact_bodies, normals; friction_coefficients, contact_origins, contact_radii)]
+    end
+
+    mechanism = Mechanism(mechanism.origin, mechanism.bodies, mechanism.joints, contacts; 
         gravity, timestep, input_scaling)
 
     # zero configuration

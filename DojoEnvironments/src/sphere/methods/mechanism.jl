@@ -17,7 +17,8 @@ function get_sphere(;
 
     # mechanism
     origin = Origin{T}(name=:origin)
-    bodies = [Sphere(radius, mass; color, name=:sphere)]
+    sphere  = Sphere(radius, mass; color, name=:sphere)
+    bodies = [sphere]
     joints = [JointConstraint(Floating(origin, bodies[1]); name=:floating_joint)]
 
     mechanism = Mechanism(origin, bodies, joints;
@@ -36,22 +37,14 @@ function get_sphere(;
     end
 
     # contacts
-    origin = mechanism.origin
-    bodies = mechanism.bodies
-    joints = mechanism.joints
     contacts = ContactConstraint{T}[]
 
     if contact
-        contact = [0, 0, 0]
-        normal = Z_AXIS
-        contacts = [contact_constraint(get_body(mechanism, :sphere), normal;
-            friction_coefficient,
-            contact_origin=contact,
-            contact_radius=radius,
-            contact_type)]
+        contact_radius = radius
+        contacts = [contacts;contact_constraint(sphere, Z_AXIS; friction_coefficient, contact_radius, contact_type)]
     end
 
-    mechanism = Mechanism(origin, bodies, joints, contacts;
+    mechanism = Mechanism(mechanism.origin, mechanism.bodies, mechanism.joints, contacts;
         gravity, timestep, input_scaling)
 
     # zero configuration

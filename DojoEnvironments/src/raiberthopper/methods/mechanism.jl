@@ -11,7 +11,8 @@ function get_raiberthopper(;
     dampers=[0;0.1],
     limits=false,
     joint_limits=Dict(), 
-    keep_fixed_joints=false, 
+    keep_fixed_joints=false,
+    friction_coefficient=0.5,
     contact_foot=true, 
     contact_body=true,
     T=Float64)
@@ -44,35 +45,21 @@ function get_raiberthopper(;
     end
 
     # contacts
-    origin = mechanism.origin
-    bodies = mechanism.bodies
-    joints = mechanism.joints
     contacts = ContactConstraint{T}[]
 
     if contact_foot
-         # Contact
-        contact_normal = Z_AXIS
-        friction_coefficient = 0.5
-
-        # foot
-        foot_contacts = contact_constraint(foot, contact_normal; 
-            friction_coefficient,
-            contact_origin=[0; 0; 0], 
-            contact_radius=foot_radius)
-
-        contacts = [foot_contacts]
-
-        # body
-        if contact_body
-            body_contacts = contact_constraint(body, contact_normal; 
-                friction_coefficient,
-                contact_origin=[0; 0; 0], 
-                contact_radius=body_radius)
-            push!(contacts, body_contacts)
-        end
+        # foot contact
+        contact_radius = foot_radius
+        contacts = [contacts;contact_constraint(foot, Z_AXIS; friction_coefficient, contact_radius)]
     end
 
-    mechanism = Mechanism(origin, bodies, joints, contacts; 
+    if contact_body
+        # body contact
+        contact_radius = body_radius
+        contacts = [contacts;contact_constraint(body, Z_AXIS; friction_coefficient, contact_radius)]
+    end
+
+    mechanism = Mechanism(mechanism.origin, mechanism.bodies, mechanism.joints, contacts; 
         gravity, timestep, input_scaling)
 
     # zero configuration

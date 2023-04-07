@@ -41,38 +41,29 @@ function get_block(;
     end
 
     # contacts
-    origin = mechanism.origin
-    bodies = mechanism.bodies
-    joints = mechanism.joints
     contacts = ContactConstraint{T}[]
 
     if contact
-        # Corner vectors
-        corners = [
-            [[ edge_length / 2;  edge_length / 2; -edge_length / 2]]
-            [[ edge_length / 2; -edge_length / 2; -edge_length / 2]]
-            [[-edge_length / 2;  edge_length / 2; -edge_length / 2]]
-            [[-edge_length / 2; -edge_length / 2; -edge_length / 2]]
-            [[ edge_length / 2;  edge_length / 2;  edge_length / 2]]
-            [[ edge_length / 2; -edge_length / 2;  edge_length / 2]]
-            [[-edge_length / 2;  edge_length / 2;  edge_length / 2]]
-            [[-edge_length / 2; -edge_length / 2;  edge_length / 2]]
+        names = [Symbol(:contact, i) for i=1:8]
+        n = length(names)
+        normals = fill(Z_AXIS,n)
+        friction_coefficients = fill(friction_coefficient,n)
+        contact_origins = [
+            [ edge_length / 2;  edge_length / 2; -edge_length / 2],
+            [ edge_length / 2; -edge_length / 2; -edge_length / 2],
+            [-edge_length / 2;  edge_length / 2; -edge_length / 2],
+            [-edge_length / 2; -edge_length / 2; -edge_length / 2],
+            [ edge_length / 2;  edge_length / 2;  edge_length / 2],
+            [ edge_length / 2; -edge_length / 2;  edge_length / 2],
+            [-edge_length / 2;  edge_length / 2;  edge_length / 2],
+            [-edge_length / 2; -edge_length / 2;  edge_length / 2],
         ]
+        contact_radii = fill(contact_radius,n)
 
-        n = length(corners)
-        normal = [Z_AXIS for i = 1:n]
-        contact_radius = [contact_radius for i = 1:n]
-        friction_coefficient = friction_coefficient * ones(n)
-
-        contacts = contact_constraint(block, normal;
-            friction_coefficient,
-            contact_origins=corners,
-            contact_radius,
-            contact_type,
-            names=[Symbol(:contact, i) for i=1:8])
+        contacts = [contacts;contact_constraint(block, normals; friction_coefficients, contact_origins, contact_radii, contact_type, names)]
     end
 
-    mechanism = Mechanism(origin, bodies, joints, contacts;
+    mechanism = Mechanism(mechanism.origin, mechanism.bodies, mechanism.joints, contacts;
         gravity, timestep, input_scaling)
 
     # zero configuration
