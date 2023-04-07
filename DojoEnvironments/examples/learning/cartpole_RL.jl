@@ -1,16 +1,43 @@
 # Copied from https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl/blob/main/src/ReinforcementLearningEnvironments/src/environments/examples/CartPoleEnv.jl
 
-using ReinforcementLearning
-using ReinforcementLearningBase
+using ReinforcementLearning # v0.10.2
 using Random
 using ClosedIntervals
-using ReinforcementLearningCore
 using StableRNGs: StableRNG
-# using Random
 using Flux
+using Flux: params, ignore
 using Flux.Losses: huber_loss
 using Dojo
 using DojoEnvironments
+
+# ##### BEGIN Redefinition because of breaking changes in ReinforcementLearning.jl repo
+function RLBase.update!(learner::BasicDQNLearner, batch::NamedTuple{SARTS})
+
+    Q = learner.approximator
+    γ = learner.γ
+    loss_func = learner.loss_func
+
+    s, a, r, t, s′ = send_to_device(device(Q), batch)
+    a = CartesianIndex.(a, 1:length(a))
+
+    gs = gradient(params(Q)) do
+        q = Q(s)[a]
+        q′ = vec(maximum(Q(s′); dims = 1))
+        G = @. r + γ * (1 - t) * q′
+        loss = loss_func(G, q)
+        ignore() do
+            learner.loss = loss
+        end
+        loss
+    end
+
+    update!(Q, gs)
+end
+
+RLBase.update!(app::NeuralNetworkApproximator, gs) =
+    Flux.Optimise.update!(app.optimizer, params(app), gs)
+# ##### END Redefinition because of breaking changes in ReinforcementLearning.jl repo
+
 
 struct CartPoleEnvParams{T}
     gravity::T
