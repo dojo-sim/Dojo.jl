@@ -43,10 +43,11 @@ function initialize_fourbar!(mechanism::Mechanism;
     zero_velocity!(mechanism)
     zero_coordinates!(mechanism)
     
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :jointb1), [base_angle+inner_angle])
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :jointb3), [base_angle-inner_angle])
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :joint12), [-2*inner_angle])
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :joint34), [2*inner_angle])
+    loop_joint_id = get_joint(mechanism, :joint24).id
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :jointb1), [base_angle+inner_angle]; exclude_ids = [loop_joint_id])
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :jointb3), [base_angle-inner_angle]; exclude_ids = [loop_joint_id])
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :joint12), [-2*inner_angle]; exclude_ids = [loop_joint_id])
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :joint34), [2*inner_angle]; exclude_ids = [loop_joint_id])
 
     return
 end
