@@ -69,7 +69,7 @@ function get_block2d(;
 end
 
 function initialize_block2d!(mechanism::Mechanism;
-    position = zeros(2), orientation=0, velocity=zeros(2), angular_velocity=0)
+    position = [0;1], orientation=0, velocity=zeros(2), angular_velocity=randn())
 
     zero_velocity!(mechanism)
     zero_coordinates!(mechanism)

@@ -306,7 +306,6 @@ export
 
 # Utilities
 export
-    Storage,
-    normalize
+    Storage
 
 end

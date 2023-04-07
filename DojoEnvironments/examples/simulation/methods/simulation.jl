@@ -37,10 +37,9 @@ function astronaut_simulation(;
     mech = get_mechanism(:humanoid, 
 		timestep=timestep, 
 		gravity=gravity, 
-		spring=spring, 
-		damper=damper, 
-		contact_feet=false,
-		contact_body=false)
+		springs=spring, 
+		dampers=damper, 
+		contact_feet=false)
 
 	storage = []
 	tcompute = zeros(Nsim)

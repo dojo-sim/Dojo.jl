@@ -1,5 +1,5 @@
 function get_cartpole(; 
-    timestep=0.1, 
+    timestep=0.01, 
     input_scaling=timestep, 
     gravity=-9.81, 
     slider_mass=1,
@@ -49,7 +49,7 @@ function get_cartpole(;
 end
 
 function initialize_cartpole!(mechanism::Mechanism; 
-    position=0, orientation=0)
+    position=0, orientation=pi/4)
 
     zero_velocity!(mechanism)
     zero_coordinates!(mechanism)

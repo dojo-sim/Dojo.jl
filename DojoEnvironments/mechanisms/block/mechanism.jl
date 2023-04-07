@@ -74,7 +74,7 @@ function get_block(;
 end
 
 function initialize_block!(mechanism::Mechanism;
-    position = zeros(3), orientation=one(Quaternion), velocity=zeros(3), angular_velocity=zeros(3))
+    position = [0;0;1], orientation=one(Quaternion), velocity=zeros(3), angular_velocity=randn(3))
 
     zero_velocity!(mechanism)
     zero_coordinates!(mechanism)

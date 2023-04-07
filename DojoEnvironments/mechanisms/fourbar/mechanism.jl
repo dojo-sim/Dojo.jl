@@ -38,7 +38,7 @@ function get_fourbar(;
 end
 
 function initialize_fourbar!(mechanism::Mechanism; 
-    base_angle=0, inner_angle=pi/4)
+    base_angle=pi/4, inner_angle=pi/4)
 
     zero_velocity!(mechanism)
     zero_coordinates!(mechanism)

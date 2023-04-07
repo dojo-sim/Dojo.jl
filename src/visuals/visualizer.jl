@@ -20,7 +20,8 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
     animation=nothing, 
     color=nothing, 
     name::Symbol=:robot,
-    return_animation=false) where {T,N}
+    return_animation=false,
+    visualize_floor=true) where {T,N}
 
     storage = deepcopy(storage)
     bodies = mechanism.bodies
@@ -28,7 +29,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
 
     # Build robot in the visualizer
     build && build_robot(mechanism; 
-        vis, show_joint, show_contact, show_frame, color, name)
+        vis, show_joint, show_contact, show_frame, color, name, visualize_floor)
 
     # Create animations
     framerate = Int64(round(1/mechanism.timestep))
@@ -129,13 +130,14 @@ function build_robot(mechanism::Mechanism;
     show_contact=false, 
     show_frame=false,
     name::Symbol=:robot, 
-    color=nothing)
+    color=nothing,
+    visualize_floor=true)
 
     bodies = mechanism.bodies
     origin = mechanism.origin
     set_background!(vis)
     set_light!(vis)
-    set_floor!(vis)
+    visualize_floor && set_floor!(vis)
 
     # Bodies and Contacts
     for (id, body) in enumerate(bodies)

@@ -55,8 +55,8 @@ function get_sphere(;
 end
 
 function initialize_sphere!(mechanism::Mechanism;
-    position=Z_AXIS*mechanism.bodies[1].shape.r, orientation=one(Quaternion),
-    velocity=zeros(3), angular_velocity=zeros(3))
+    position=2*Z_AXIS*mechanism.bodies[1].shape.r, orientation=one(Quaternion),
+    velocity=[1;0;0], angular_velocity=zeros(3))
 
     zero_velocity!(mechanism)
     zero_coordinates!(mechanism)
