@@ -140,6 +140,7 @@ include(joinpath("visuals", "colors.jl"))
 include(joinpath("mechanism", "data.jl"))
 
 # Gradients
+include(joinpath("gradients", "contact.jl"))
 include(joinpath("gradients", "finite_difference.jl"))
 include(joinpath("gradients", "state.jl"))
 include(joinpath("gradients", "data.jl"))

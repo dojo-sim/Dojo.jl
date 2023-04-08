@@ -30,5 +30,5 @@ vis = Visualizer()
 set_camera!(vis, cam_pos=[-0.01, 0.0, 100.0], zoom=30)
 set_light!(vis, ambient=0.65, direction="Positive")
 
-via, animation = visualize(mech_linear, storage_linear; vis, name=:linear, return_animation=true);
+vis, animation = visualize(mech_linear, storage_linear; vis, name=:linear, return_animation=true);
 vis = visualize(mech_nonlinear, storage_nonlinear; vis, name=:nonlinear, animation)

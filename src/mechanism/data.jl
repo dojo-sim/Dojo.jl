@@ -188,7 +188,8 @@ function set_data!(contacts::Vector{<:ContactConstraint}, data::AbstractVector)
 	c = 0
 	for contact in contacts
 		Nd = data_dim(contact)
-		set_data!(contact, data[c .+ (1:Nd)]); c += Nd
+		set_data!(contact, data[c .+ (1:Nd)])
+		c += Nd
 	end
 	return nothing
 end
