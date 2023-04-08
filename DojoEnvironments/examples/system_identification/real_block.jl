@@ -12,8 +12,7 @@ using ForwardDiff
 using LinearAlgebra
 
 # ## Include methods
-methods_dir = joinpath("methods")
-include(joinpath(methods_dir, "utils.jl"))
+include("utils.jl")
 
 
 # ## Parameters

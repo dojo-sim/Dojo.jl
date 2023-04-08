@@ -10,7 +10,7 @@ using JLD2
 using LinearAlgebra
 
 # ## Include methods
-include(joinpath("methods", "utils.jl"))
+include("utils.jl")
 
 # ## Parameters
 model = :sphere

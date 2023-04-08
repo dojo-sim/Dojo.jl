@@ -14,7 +14,6 @@ function quasi_newton_solve(f, fgH, x0; ftol=-Inf, gtol=1e-4, iter=100, α0=1.0,
         else
             reg = clamp(reg / 1.5, reg_min, reg_max)
         end
-        @show reg
         ((norm(ge, Inf) < gtol) || (fe < ftol)) && break
         p = - He \ ge
         α, ls_failure = clamped_linesearch(f, x, p, fe; α0=α0, lower_bound, upper_bound)
@@ -33,7 +32,7 @@ function clamped_linesearch(f, x, p, fprev; α0=1.0, iter=4,
         xc = clamp.(x + α*p, lower_bound, upper_bound)
         (f(xc) <= fprev) && break
         α /= 3
-        (k == iter) && (α = 0.001 / norm(p,Inf); @show α; ls_failure = true)
+        (k == iter) && (α = 0.001 / norm(p,Inf); ls_failure = true)
     end
     return α, ls_failure
 end
