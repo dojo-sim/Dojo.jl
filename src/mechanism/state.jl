@@ -12,7 +12,7 @@ function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, y::AbstractVect
 		(id > Ne) && continue # only treat joints
 		joint = mechanism.joints[id]
 		nu = input_dimension(joint)
-		set_minimal_coordinates_velocities!(mechanism, joint, xmin=y[off .+ SUnitRange(1, 2nu)])
+		set_minimal_coordinates_velocities!(mechanism, joint, xmin=y[off .+ SUnitRange(1, 2nu)]) # TODO does this actually set a state and not just convert min to max?
 		off += 2nu
 	end
 	return get_maximal_state(mechanism)
