@@ -1,3 +1,4 @@
+# Running from within Dojo repo does not work somehow; create temp environment
 # Copied from https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl/blob/main/src/ReinforcementLearningEnvironments/src/environments/examples/CartPoleEnv.jl
 
 using ReinforcementLearning # v0.10.2
@@ -85,9 +86,8 @@ function CartPoleEnvParams{T}(;
 end
 
 mutable struct CartPoleEnv{T,ACT} <: AbstractEnv
-    mechanism::Mechanism{T} # Dojo Mechanism
-    storage::Storage{T} # Dojo trajectory Storage
-    save_trajectory::Bool # Select if trajectory should be stored in Dojo Storage
+    dojo_env::DojoEnvironments.CartpoleDQN # Dojo Environment
+    record::Bool # Select if trajectory should be recorded in Dojo Storage
     params::CartPoleEnvParams{T}
     state::Vector{T}
     action::ACT
@@ -112,18 +112,20 @@ end
 - `thetathreshold = 12.0 # degrees`
 - `xthreshold` = 2.4`
 """
-function CartPoleEnv(; T=Float64, save_trajectory=false, continuous=false, rng=Random.GLOBAL_RNG, kwargs...)
+function CartPoleEnv(; T=Float64, record=false, continuous=false, rng=Random.GLOBAL_RNG, kwargs...)
     params = CartPoleEnvParams{T}(; kwargs...)
-    # create Dojo Mechanism and Storage
-    mechanism = DojoEnvironments.get_cartpole(
+
+    # create Dojo Environment
+    dojo_env = DojoEnvironments.get_environment(:cartpole_dqn;
+        horizon=params.max_steps+1,
         timestep = params.dt,
-        gravity=[0.0; 0.0; -params.gravity],
+        gravity = -params.gravity,
         slider_mass = params.masscart,
         pendulum_mass = params.masspole,
-        pendulum_length = params.halflength*2,
+        pendulum_length = params.halflength*2
     )
-    storage = Storage(params.max_steps+1, 2)
-    env = CartPoleEnv(mechanism, storage, save_trajectory, params, zeros(T, 4), continuous ? zero(T) : zero(Int), false, 0, rng)
+
+    env = CartPoleEnv(dojo_env, record, params, zeros(T, 4), continuous ? zero(T) : zero(Int), false, 0, rng)
     reset!(env)
     env
 end
@@ -186,9 +188,9 @@ function _step!(env::CartPoleEnv, a)
     =#
 
     # Use Dojo dynamics
-    env.state = Dojo.step_minimal_coordinates!(env.mechanism, env.state, [force;0.0]) # [force;0.0]: only the cart is actuated
-    env.save_trajectory && Dojo.save_to_storage!(env.mechanism, env.storage, env.t) # Store trajectory
-
+    DojoEnvironments.step!(env.dojo_env, env.state, force; k=env.t, env.record)
+    env.state = DojoEnvironments.get_state(env.dojo_env)
+    
     env.done =
         abs(env.state[1]) > env.params.xthreshold ||
         abs(env.state[3]) > env.params.thetathreshold ||
@@ -198,7 +200,7 @@ end
 
 # Copied from https://juliareinforcementlearning.org/docs/experiments/experiments/DQN/JuliaRL_BasicDQN_CartPole/#JuliaRL\\_BasicDQN\\_CartPole
 
-env = CartPoleEnv(; save_trajectory=true, rng = MersenneTwister(123))
+env = CartPoleEnv(; record=true, rng = MersenneTwister(123))
 
 seed = 123
 rng = StableRNG(seed)
@@ -233,6 +235,7 @@ policy = Agent(
     ),
 )
 
+# Train policy
 run(
         policy,
         CartPoleEnv(),
@@ -240,6 +243,7 @@ run(
         TotalRewardPerEpisode()
     )
 
+# Rollout policy once and record (record=true in env)
 run(
         policy,
         env,
@@ -247,6 +251,4 @@ run(
         TotalRewardPerEpisode()
     )
 
-vis = Visualizer()
-render(vis)
-visualize(env.mechanism, env.storage,vis=vis);
+visualize(env.dojo_env; visualize_floor=false)
