@@ -65,7 +65,7 @@ end
     end
 end
 
-@testset "Tennis racket" begin
+@testset "Dzhanibekov" begin
     # Simulation
     timestep=0.01
     gravity=0.0

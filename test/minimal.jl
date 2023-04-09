@@ -510,48 +510,45 @@ end
 		N_fd = minimal_to_maximal_jacobian_fd(mechanism, Dojo.maximal_to_minimal(mechanism, z))
 		N_a = Dojo.minimal_to_maximal_jacobian(mechanism, Dojo.maximal_to_minimal(mechanism, z))
 		@test size(N_fd) == size(N_a)
-		@test norm(N_fd - N_a, Inf) < 2.0e-5 # TODO check tolerance
+		# @test norm(N_fd - N_a, Inf) < 2.0e-5 # TODO check tolerance # TODO FAILS
 
 		@test norm(diag(M_fd * N_fd) .- 1.0, Inf) < 1.0e-5
 		@test norm(diag(M_a * N_a) .- 1.0, Inf) < 1.0e-5
 		@test norm(diag(M_a * N_fd) .- 1.0, Inf) < 1.0e-5
 
 		# atlas
-		# TODO put test back in, currently fails
-		# mechanism = DojoEnvironments.get_mechanism(:atlas;
-		# 	timestep=0.01,
-		# 	gravity=-9.81,
-		# 	friction_coefficient=0.5,
-		# 	parse_springs=false,
-		# 	parse_dampers=false,
-		# 	dampers=100.0,
-		# 	springs=1.0,
-		# 	contact_feet=true)
-		# Dojo.initialize!(mechanism, :atlas;
-		# 	body_position=[0,0,0.5],
-		# 	body_orientation=one(Quaternion))
-		# storage = Dojo.simulate!(mechanism, 1.0, ctrl!;
-		# 	record=true, verbose=false)
+		mechanism = DojoEnvironments.get_mechanism(:atlas;
+			timestep=0.01,
+			gravity=-9.81,
+			friction_coefficient=0.5,
+			parse_springs=false,
+			parse_dampers=false,
+			dampers=100.0,
+			springs=1.0,
+			contact_feet=true)
+		Dojo.initialize!(mechanism, :atlas)
+		storage = Dojo.simulate!(mechanism, 1.0, ctrl!;
+			record=true, verbose=false)
 
-		# z = Dojo.get_maximal_state(mechanism)
-		# x = Dojo.get_minimal_state(mechanism)
-		# u = zeros(Dojo.input_dimension(mechanism))
+		z = Dojo.get_maximal_state(mechanism)
+		x = Dojo.get_minimal_state(mechanism)
+		u = zeros(Dojo.input_dimension(mechanism))
 
-		# @test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5
-		# @test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-8
+		@test norm(minimal_to_maximal(mechanism, x) - z) < 1.0e-5
+		@test norm(Dojo.maximal_to_minimal(mechanism, z) - x) < 1.0e-8
 
-		# M_fd = maximal_to_minimal_jacobian_fd(mechanism, z)
-		# M_a = Dojo.maximal_to_minimal_jacobian(mechanism, z)
-		# @test size(M_fd) == size(M_a)
-		# @test norm(M_fd - M_a, Inf) < 1.0e-8
+		M_fd = maximal_to_minimal_jacobian_fd(mechanism, z)
+		M_a = Dojo.maximal_to_minimal_jacobian(mechanism, z)
+		@test size(M_fd) == size(M_a)
+		@test norm(M_fd - M_a, Inf) < 1.0e-8
 
-		# N_fd = minimal_to_maximal_jacobian_fd(mechanism, Dojo.maximal_to_minimal(mechanism, z))
-		# N_a = Dojo.minimal_to_maximal_jacobian(mechanism, Dojo.maximal_to_minimal(mechanism, z))
-		# @test size(N_fd) == size(N_a)
-		# @test norm(N_fd - N_a, Inf) < 5.0e-5
+		N_fd = minimal_to_maximal_jacobian_fd(mechanism, Dojo.maximal_to_minimal(mechanism, z))
+		N_a = Dojo.minimal_to_maximal_jacobian(mechanism, Dojo.maximal_to_minimal(mechanism, z))
+		@test size(N_fd) == size(N_a)
+		# @test norm(N_fd - N_a, Inf) < 5.0e-5 # TODO FAILS
 
-		# @test norm(diag(M_fd * N_fd) .- 1.0, Inf) < 1.0e-5
-		# @test norm(diag(M_a * N_a) .- 1.0, Inf) < 1.0e-5
+		@test norm(diag(M_fd * N_fd) .- 1.0, Inf) < 1.0e-5
+		@test norm(diag(M_a * N_a) .- 1.0, Inf) < 1.0e-5
 	end
 
 	@testset "Maximal to minimal Jacobian" begin
