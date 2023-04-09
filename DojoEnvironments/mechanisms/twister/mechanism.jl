@@ -25,7 +25,7 @@ function get_twister(;
     jointb1 = JointConstraint(Floating(origin, bodies[1]))
 
     axes = [X_AXIS, Y_AXIS, Z_AXIS]
-    joints = [
+    joints = JointConstraint{T}[
         jointb1;
         [
             JointConstraint(Prototype(joint_type, bodies[i - 1], bodies[i], axes[i%3+1]; 
@@ -73,10 +73,15 @@ function get_twister(;
     return mechanism
 end
 
-function initialize_twister!(mechanism::Mechanism)
+function initialize_twister!(mechanism::Mechanism;
+    base_position=zeros(3), base_orientation=one(Quaternion),
+    base_linear_velocity=zeros(3), base_angular_velocity=zeros(3))
 
     zero_velocity!(mechanism)
     zero_coordinates!(mechanism)
+
+    set_minimal_coordinates!(mechanism, mechanism.joints[1], [base_position; rotation_vector(base_orientation)])
+    set_minimal_velocities!(mechanism, mechanism.joints[1], [base_linear_velocity; base_angular_velocity])
 
     return
 end

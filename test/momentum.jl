@@ -54,9 +54,8 @@ joint_types = [
         velocity=v0,
         angular_velocity=ω0)
 
-    storage = simulate!(mech, 5.0, nocontrol!,
-        record=true,
-        verbose=false,
+    storage = simulate!(mech, 5.0, nocontrol!;
+        record=true, verbose=false,
         opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
     # visualize(mech, storage, vis = vis)
 
@@ -86,12 +85,10 @@ end
     ϕ0 = 0.7
     ω0 = 5.0
     initialize!(mech, :pendulum,
-        angle=ϕ0,
-        angular_velocity=ω0)
+        angle=ϕ0, angular_velocity=ω0)
 
-    storage = simulate!(mech, 5.0, nocontrol!,
-        record=true,
-        verbose=false,
+    storage = simulate!(mech, 5.0, nocontrol!;
+        record=true, verbose=false,
         opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 
     # visualize(mech, storage, vis = vis)
@@ -115,23 +112,23 @@ end
 # with control
 ################################################################################
 @testset "Humanoid" begin
-    spring0 = 1.0
-    damper0 = 1.0
+    springs0 = 1.0
+    dampers0 = 1.0
     mech = get_mechanism(:humanoid;
         timestep=timestep0,
         gravity=gravity0,
-        spring=spring0,
-        damper=damper0,
-        contact_feet=false,
-        contact_body=false)
+        parse_springs=false,
+        parse_dampers=false,
+        springs=springs0,
+        dampers=dampers0,
+        contact_feet=false)
 
     initialize!(mech, :humanoid)
     bodies = mech.bodies
     set_maximal_velocities!.(bodies, ω=1e-0rand(3))
 
-    storage = simulate!(mech, 10.0, controller!,
-        record=true,
-        verbose=false,
+    storage = simulate!(mech, 10.0, controller!;
+        record=true, verbose=false,
         opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 
     # visualize(mech, storage, vis = vis)
@@ -155,20 +152,21 @@ end
 # with control
 ################################################################################
 @testset "Atlas" begin
-    spring0 = 10.0
-    damper0 = 1.0
+    springs0 = 10.0
+    dampers0 = 1.0
     mech = get_mechanism(:atlas;
         timestep=timestep0,
         gravity=gravity0,
-        spring=spring0,
-        damper=damper0,
+        parse_springs=false,
+        parse_dampers=false,
+        springs=springs0,
+        dampers=dampers0,
         contact_feet=false,
         contact_body=false)
 
     initialize!(mech, :atlas)
-    storage = simulate!(mech, 5.0, controller!,
-        record=true,
-        verbose=false,
+    storage = simulate!(mech, 5.0, controller!;
+        record=true, verbose=false,
         opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 
     # visualize(mech, storage, vis = vis)
@@ -192,20 +190,21 @@ end
 # with control
 ################################################################################
 @testset "Quadruped" begin
-    spring0 = 0.3
-    damper0 = 0.1
+    springs0 = 0.3
+    dampers0 = 0.1
     mech = get_mechanism(:quadruped;
         timestep=timestep0,
         gravity=gravity0,
-        spring=spring0,
-        damper=damper0,
+        parse_springs=false,
+        parse_dampers=false,
+        springs=springs0,
+        dampers=dampers0,
         contact_feet=false,
         contact_body=false)
 
     initialize!(mech, :quadruped)
-    storage = simulate!(mech, 5.0, controller!,
-        record=true,
-        verbose=false,
+    storage = simulate!(mech, 5.0, controller!;
+        record=true, verbose=false,
         opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 
     # visualize(mech, storage, vis = vis)
@@ -230,15 +229,15 @@ end
 ################################################################################
 @testset "Snake" begin
     Nb0 = 5
-    spring0 = 1.0 * 4e0
-    damper0 = 1.0 * 2e+1
+    springs0 = 1.0 * 4e0
+    dampers0 = 1.0 * 2e+1
 
     mech = get_mechanism(:snake;
         timestep=timestep0,
         gravity=gravity0,
         num_bodies=Nb0,
-        spring=spring0,
-        damper=damper0,
+        springs=springs0,
+        dampers=dampers0,
         joint_type=:Revolute,
         contact=false,
         radius=0.05);
@@ -251,9 +250,8 @@ end
         base_orientation=q10,
         base_linear_velocity=v0,
         base_angular_velocity=ω0)
-    storage = simulate!(mech, 1.50,
-        record=true,
-        verbose=false,
+    storage = simulate!(mech, 1.50;
+        record=true, verbose=false,
         opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 
     # visualize(mech, storage, vis = vis)
@@ -272,8 +270,8 @@ end
             timestep=timestep0,
             gravity=gravity0,
             num_bodies=Nb0,
-            spring=spring0,
-            damper=damper0,
+            springs=springs0,
+            dampers=dampers0,
             joint_type=joint_type,
             contact=false,
             radius=0.05)
@@ -286,9 +284,8 @@ end
             base_orientation=q10,
             base_linear_velocity=v0,
             base_angular_velocity=ω0)
-        storage = simulate!(mech, 1.50, controller!,
-            record=true,
-            verbose=false,
+        storage = simulate!(mech, 1.50, controller!;
+            record=true, verbose=false,
             opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 
         # visualize(mech, storage, vis = vis)
@@ -315,15 +312,15 @@ end
 ################################################################################
 @testset "Twister" begin
     Nb0 = 5
-    spring0 = 1.0 * 4e0
-    damper0 = 1.0 * 2e+1
+    springs0 = 1.0 * 4e0
+    dampers0 = 1.0 * 2e+1
 
-    mech = get_mechanism(:twister,
+    mech = get_mechanism(:twister;
         timestep=timestep0,
         gravity=gravity0,
         num_bodies=Nb0,
-        spring=spring0,
-        damper=damper0,
+        springs=springs0,
+        dampers=dampers0,
         joint_type=:FixedOrientation,
         contact=false,
         radius=0.05);
@@ -336,9 +333,8 @@ end
         base_orientation=q10,
         base_linear_velocity=v0,
         base_angular_velocity=ω0)
-    storage = simulate!(mech, 2.5,
-        record=true,
-        verbose=false,
+    storage = simulate!(mech, 2.5;
+        record=true, verbose=false,
         opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
 
     # visualize(mech, storage, vis = vis)
@@ -353,12 +349,12 @@ end
 
 
     for joint_type in joint_types
-        mech = get_mechanism(:twister,
+        mech = get_mechanism(:twister;
             timestep=timestep0,
             gravity=gravity0,
             num_bodies=Nb0,
-            spring=spring0,
-            damper=damper0,
+            springs=springs0,
+            dampers=dampers0,
             joint_type=joint_type,
             contact=false,
             radius=0.05)
@@ -370,9 +366,8 @@ end
             base_orientation=q10,
             base_linear_velocity=v0,
             base_angular_velocity=ω0)
-        storage = simulate!(mech, 1.50,
-            record=true,
-            verbose=false,
+        storage = simulate!(mech, 1.50;
+            record=true, verbose=false,
             opts=SolverOptions(rtol=ϵ0, btol=ϵ0))
         # visualize(mech, storage, vis = vis)
 

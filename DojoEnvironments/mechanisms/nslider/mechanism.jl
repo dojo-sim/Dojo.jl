@@ -17,7 +17,7 @@ function get_nslider(;
     bodies = [Cylinder(0.05, 1, 1; color) for i = 1:num_bodies]
 
     jointb1 = JointConstraint(Prismatic(origin, bodies[1], Z_AXIS))
-    joints = [
+    joints = JointConstraint{T}[
         jointb1;
         [JointConstraint(Prismatic(bodies[i - 1], bodies[i], Z_AXIS; 
             parent_vertex=-Y_AXIS*0.05, child_vertex=Y_AXIS*0.05)) for i = 2:num_bodies

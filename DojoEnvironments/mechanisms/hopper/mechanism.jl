@@ -14,7 +14,7 @@ function get_hopper(;
         (:foot, [-45,45] * π / 180)]),
     keep_fixed_joints=true, 
     friction_coefficient=2,
-    contact_feet=true,
+    contact_foot=true,
     contact_body=true,
     T=Float64)
 
@@ -39,7 +39,7 @@ function get_hopper(;
     # contacts
     contacts = ContactConstraint{T}[]
 
-    if contact_feet
+    if contact_foot
         body_names = [:foot; :foot]
         contact_bodies = [get_body(mechanism, name) for name in body_names]
         n = length(contact_bodies)

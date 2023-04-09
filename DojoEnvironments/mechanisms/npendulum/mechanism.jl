@@ -23,7 +23,7 @@ function get_npendulum(;
     jointb1 = JointConstraint(Prototype(base_joint_type, origin, bodies[1], X_AXIS;
         parent_vertex=Z_AXIS*num_bodies + [0;0;0.2], child_vertex=Z_AXIS*length/2))
 
-    joints = [
+    joints = JointConstraint{T}[
         jointb1;
         [
             JointConstraint(Prototype(rest_joint_type, bodies[i - 1], bodies[i], X_AXIS;

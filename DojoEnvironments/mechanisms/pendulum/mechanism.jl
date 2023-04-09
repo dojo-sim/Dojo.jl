@@ -32,7 +32,7 @@ function get_pendulum(;
     set_springs!(mechanism.joints, springs)
     set_dampers!(mechanism.joints, dampers)
 
-    # joint limits    
+    # joint limits
     if limits
         joints = set_limits(mechanism, joint_limits)
 

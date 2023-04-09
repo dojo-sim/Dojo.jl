@@ -19,6 +19,9 @@ function step!(mechanism::Mechanism{T}, z::Vector{T}, u::Vector{T};
 
     # solve the 1-step simulation problem
     mehrotra!(mechanism, opts=opts)
+    # for body in mechanism.bodies 
+    #     update_state!(body, mechanism.timestep) 
+    # end
 
     # extract the next state
     z_next = get_next_state(mechanism)
@@ -47,6 +50,9 @@ function step_minimal_coordinates!(mechanism::Mechanism{T}, x::Vector{T}, u::Vec
 
     # solve the 1-step simulation problem
     mehrotra!(mechanism, opts=opts)
+    # for body in mechanism.bodies 
+    #     update_state!(body, mechanism.timestep) 
+    # end
 
     # extract the next state
     x_next = maximal_to_minimal(mechanism, get_next_state(mechanism))

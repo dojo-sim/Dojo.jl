@@ -21,40 +21,48 @@ function get_control_mask(n_inputs, indices)
     return m
 end
 
-function set_springs!(joints, spring::Real)
-    for joint in joints[2:end]
+function set_springs!(joints, value::Real)
+    for joint in joints
+        (value==0) && break
+        typeof(joint) <: JointConstraint{T,0} where T && continue # floating base
         joint.spring = true
-        joint.translational.spring=spring
-        joint.rotational.spring=spring
+        joint.translational.spring=value
+        joint.rotational.spring=value
     end
 end
 
 function set_springs!(joints, springs::AbstractArray)
-    for (i,spring) in enumerate(springs)
+    for (i,value) in enumerate(springs)
+        (value==0) && continue
+        typeof(joints[i]) <: JointConstraint{T,0} where T && continue # floating base
         joints[i].spring = true
-        joints[i].translational.spring=spring
-        joints[i].rotational.spring=spring
+        joints[i].translational.spring=value
+        joints[i].rotational.spring=value
     end
 end
 
-function set_dampers!(joints, damper::Real)
-    for joint in joints[2:end]
+function set_dampers!(joints, value::Real)
+    for joint in joints
+        (value==0) && break
+        typeof(joint) <: JointConstraint{T,0} where T && continue # floating base
         joint.damper = true
-        joint.translational.damper=damper
-        joint.rotational.damper=damper
+        joint.translational.damper=value
+        joint.rotational.damper=value
     end
 end
 
 function set_dampers!(joints, dampers::AbstractArray)
-    for (i,damper) in enumerate(dampers)
+    for (i,value) in enumerate(dampers)
+        (value==0) && continue
+        typeof(joints[i]) <: JointConstraint{T,0} where T && continue # floating base
         joints[i].damper = true
-        joints[i].translational.damper=damper
-        joints[i].rotational.damper=damper
+        joints[i].translational.damper=value
+        joints[i].rotational.damper=value
     end
 end
 
-function set_limits(mechanism, joint_limits)
-    joints = deepcopy(mechanism.joints)
+function set_limits(mechanism::Mechanism{T}, joint_limits) where T
+    joints = JointConstraint{T}[deepcopy(mechanism.joints)...]
 
     for (joint_symbol,limits) in joint_limits 
         joint = get_joint(mechanism, joint_symbol)

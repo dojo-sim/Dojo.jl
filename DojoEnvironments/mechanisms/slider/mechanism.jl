@@ -43,12 +43,14 @@ function get_slider(;
 end
 
 function initialize_slider!(mechanism::Mechanism; 
-    position=mechanism.bodies[1].shape.xyz[3], velocity=0)
+    position=0, velocity=0)
 
     zero_velocity!(mechanism)
     zero_coordinates!(mechanism)
 
-    set_minimal_coordinates!(mechanism, mechanism.joints[1], [position])
+    child_vertex = mechanism.joints[1].translational.vertices[2]
+    set_maximal_configurations!(mechanism.origin, mechanism.bodies[1];
+        child_vertex=child_vertex - Z_AXIS*position)
     set_minimal_velocities!(mechanism, mechanism.joints[1], [velocity])
 
     return

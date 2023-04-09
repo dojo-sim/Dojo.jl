@@ -17,7 +17,9 @@
         :PlanarFree
         ]
     for joint_type in joint_types
-        mech = DojoEnvironments.get_snake(gravity=0.0, num_bodies=2, damper=0.3, joint_type=joint_type)
+        mech = DojoEnvironments.get_snake(;
+        gravity=0.0, num_bodies=2, 
+        dampers=0.3, joint_type)
         DojoEnvironments.initialize_snake!(mech)
         function ctrl!(m,k)
             Dojo.set_input!(m, 0.01*ones(Dojo.minimal_dimension(m)))
