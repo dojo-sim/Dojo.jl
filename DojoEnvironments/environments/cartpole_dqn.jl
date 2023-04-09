@@ -52,7 +52,7 @@ function input_map(::CartpoleDQN, u)
     return u
 end
 
-function step!(environment::CartpoleDQN, x, u; k=1, record=false, opts=SolverOptions())
+function Dojo.step!(environment::CartpoleDQN, x, u; k=1, record=false, opts=SolverOptions())
     x = state_map(environment, x)
     u = input_map(environment, u)
     Dojo.step_minimal_coordinates!(environment.mechanism, x, u; opts)
@@ -62,12 +62,11 @@ function step!(environment::CartpoleDQN, x, u; k=1, record=false, opts=SolverOpt
 end
 
 function get_state(environment::CartpoleDQN)
-    z = Dojo.get_next_state(environment.mechanism)
-    x = maximal_to_minimal(environment.mechanism, z)
+    x = get_minimal_state(environment.mechanism)
 
     return x
 end
 
-function visualize(environment::CartpoleDQN; kwargs...)
-    visualize(environment.mechanism, environment.storage; kwargs...)
+function Dojo.visualize(environment::CartpoleDQN; kwargs...)
+    Dojo.visualize(environment.mechanism, environment.storage; kwargs...)
 end
