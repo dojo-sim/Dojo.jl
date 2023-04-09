@@ -516,7 +516,8 @@ end
 		@test norm(diag(M_a * N_a) .- 1.0, Inf) < 1.0e-5
 		@test norm(diag(M_a * N_fd) .- 1.0, Inf) < 1.0e-5
 
-		# atlas TODO put test back in
+		# atlas
+		# TODO put test back in, currently fails
 		# mechanism = DojoEnvironments.get_mechanism(:atlas;
 		# 	timestep=0.01,
 		# 	gravity=-9.81,
@@ -604,6 +605,6 @@ end
 		M_a = Dojo.maximal_to_minimal_jacobian(mech, z)
 
 		@test size(M_fd) == size(M_a)
-		@test norm(M_fd - M_a, Inf) < 2.0e-6 # TODO was 1.0e-6
+		@test norm(M_fd - M_a, Inf) < 2.0e-6 # TODO check tolerance
 	end
 end
