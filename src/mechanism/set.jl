@@ -128,12 +128,10 @@ end
 # springs + dampers
 function set_spring_offset!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector) where {T,Nn,Ne,Nb,Ni}
 	off = 0
-	for id in mechanism.root_to_leaves
-		(id > Ne) && continue # only treat joints
-		joint = mechanism.joints[id]
+    for joint in mechanism.joints
         N̄ = 3 - length(joint)
         joint.spring_offset = x[off .+ (1:N̄)]
         off += 2N̄
-	end
-	return nothing
+    end
+	return
 end
