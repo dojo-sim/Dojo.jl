@@ -8,15 +8,20 @@ using DojoEnvironments
 using Random
 using LinearAlgebra 
 using JLD2
+
+using Statistics
+
+import LinearAlgebra.normalize
+import Dojo.GeometryBasics.update
+
 include(joinpath(@__DIR__, "algorithms/ars.jl")) # augmented random search
 
 # ## Ant
-env = get_environment(:ant, 
-    representation=:minimal, 
+env = get_environment(:ant_ars;
     gravity=-9.81, 
     timestep=0.05, 
-    damper=50.0, 
-    spring=25.0, 
+    dampers=50.0, 
+    springs=25.0, 
     friction_coefficient=0.5,
     contact_feet=true, 
     contact_body=true);
@@ -24,7 +29,7 @@ env = get_environment(:ant,
 obs = reset(env)
 initialize!(env.mechanism, :ant,
     body_position=[0.0, 0.0, 1.0], 
-    body_orientation=[0.0, 0.0, 0.0])
+    body_orientation=one(Quaternion))
 env.state .= get_minimal_state(env.mechanism)
 render(env)
 
@@ -50,12 +55,11 @@ policies = Matrix{Float64}[]
 N = 2
 for i = 1:N
     ## Reset environment
-    env = get_environment(:ant, 
-        representation=:minimal, 
+    env = get_environment(:ant_ars;
         gravity=-9.81, 
         timestep=0.05, 
-        damper=50.0, 
-        spring=25.0, 
+        dampers=50.0, 
+        springs=25.0, 
         friction_coefficient=0.5,
         contact_feet=true, 
         contact_body=true)
@@ -86,8 +90,8 @@ for i = 1:N
     push!(policies, policy.θ)
 end
 
-@save joinpath(@__DIR__, "results/ant_rl.jld2") train_times rewards policies
-@load joinpath(@__DIR__, "results/ant_rl.jld2") train_times rewards policies
+# @save joinpath(@__DIR__, "results/ant_rl.jld2") train_times rewards policies
+# @load joinpath(@__DIR__, "results/ant_rl.jld2") train_times rewards policies
 
 # ## Training statistics
 N_best = 2
@@ -104,9 +108,9 @@ policies_best = (policies[max_idx])[1:N_best]
 @show std(rewards)
 
 # ## Save/Load policy
-## θ = policy.θ
-## @save joinpath(@__DIR__, "ant_policy.jld2") θ
-## @load joinpath(@__DIR__, "ant_policy.jld2") θ
+# θ = policy.θ
+# @save joinpath(@__DIR__, "ant_policy.jld2") θ
+# @load joinpath(@__DIR__, "ant_policy.jld2") θ
 
 # ## Recover policy
 hp = HyperParameters(
@@ -121,7 +125,6 @@ normalizer = Normalizer(input_size)
 θ = policies_best[1] 
 
 # ## Visualize policy
-# traj = display_random_policy(env, hp)
 traj = display_policy(env, Policy(hp, θ), normalizer, hp)
 DojoEnvironments.visualize(env, traj)
 open(env.vis)

@@ -1,13 +1,3 @@
-################################################################################
-# Augmented Random Search ARS
-################################################################################
-using LinearAlgebra
-using Statistics
-using Folds
-
-import LinearAlgebra.normalize
-import Dojo.GeometryBasics.update
-
 # ARS options: hyper parameters
 Base.@kwdef struct HyperParameters{T}
     main_loop_size::Int = 100
@@ -20,6 +10,12 @@ Base.@kwdef struct HyperParameters{T}
     env_name::String = "halfcheetah"
 end
 # assert self.b<=self.n_directions, "b must be <= n_directions"
+
+# linear policy
+mutable struct Policy{T}
+    hp::HyperParameters{T}
+    θ::Matrix{T}
+end
 
 # observation filter
 mutable struct Normalizer{T}
@@ -37,6 +33,12 @@ function Normalizer(num_inputs::Int)
     return Normalizer{eltype(n)}(n, mean, mean_diff, var)
 end
 
+function normalize(normalizer, inputs)
+    obs_mean = normalizer.mean
+    obs_std = sqrt.(normalizer.var)
+    return (inputs .- obs_mean) ./ obs_std
+end
+
 function observe(normalizer::Normalizer{T}, x::AbstractVector{T}) where T
     normalizer.n .+= 1
     last_mean = deepcopy(normalizer.mean)
@@ -45,17 +47,35 @@ function observe(normalizer::Normalizer{T}, x::AbstractVector{T}) where T
     normalizer.var .= max.(1e-2, normalizer.mean_diff ./ normalizer.n)
 end
 
-function normalize(normalizer, inputs)
-    obs_mean = normalizer.mean
-    obs_std = sqrt.(normalizer.var)
-    return (inputs .- obs_mean) ./ obs_std
+function eval_sample_policy(θ::Matrix{T}, input::AbstractVector{T}) where T
+    return θ * input
 end
 
-# linear policy
-mutable struct Policy{T}
-    hp::HyperParameters{T}
-    θ::Matrix{T}
+function rollout_policy(θ::Matrix, env::Environment, normalizer::Normalizer, hp::HyperParameters;
+    reset=reset)
+    state = reset(env)
+    rewards = 0.0
+    done = false
+    num_plays = 0
+    while !done && num_plays < hp.horizon
+        observe(normalizer, state)
+        state = normalize(normalizer, state)
+        action = eval_sample_policy(θ, state)
+        state, reward, done, _ = step(env, action)
+        reward = max(min(reward, 1), -1)
+        rewards += reward
+        num_plays += 1
+    end
+    return rewards
 end
+
+
+################################################################################
+# Augmented Random Search ARS
+################################################################################
+
+
+
 
 function Policy(input_size::Int, output_size::Int, hp::HyperParameters{T}; scale=1.0e-1) where T
     return Policy{T}(hp, scale * randn(output_size, input_size))
@@ -63,18 +83,6 @@ end
 
 function evaluate(policy::Policy{T}, input::AbstractVector{T}) where T
     return policy.θ * input
-end
-
-function positive_perturbation(policy::Policy{T}, input::AbstractVector{T}, δ::AbstractMatrix{T}) where T
-    return (policy.θ + policy.hp.noise .* δ) * input
-end
-
-function negative_perturbation(policy::Policy{T}, input::AbstractVector{T}, δ::AbstractMatrix{T}) where T
-    return (policy.θ - policy.hp.noise .* δ) * input
-end
-
-function sample_δs(policy::Policy{T}) where T
-    return [randn(size(policy.θ)) for i = 1:policy.hp.n_directions]
 end
 
 function update(policy::Policy, rollouts, σ_r)
@@ -93,43 +101,14 @@ function sample_policy(policy::Policy{T}) where T
     return [θp..., θn...], δ
 end
 
-function eval_sample_policy(θ::Matrix{T}, input::AbstractVector{T}) where T
-    return θ * input
-end
-
-function rollout_policy(θ::Matrix, env::Environment, normalizer::Normalizer, hp::HyperParameters;
-        reset=reset)
-    state = reset(env)
-    rewards = 0.0
-    done = false
-    num_plays = 0
-    while !done && num_plays < hp.horizon
-        observe(normalizer, state)
-        state = normalize(normalizer, state)
-        action = eval_sample_policy(θ, state)
-        state, reward, done, _ = step(env, action)
-        reward = max(min(reward, 1), -1)
-        rewards += reward
-        num_plays += 1
-    end
-    return rewards
-end
 
 function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T},
-        hp::HyperParameters{T}; distributed=false, usefolds=false, foldsexec=Folds.ThreadedEx(;basesize=1)) where T
-    println("Training linear policy with Augmented Random Search (ARS)\n ")
-    if distributed
-        envs = [deepcopy(env) for i = 1:(2 * hp.n_directions)]
-        normalizers = [deepcopy(normalizer) for i = 1:(2 * hp.n_directions)]
-        hps = [deepcopy(hp) for i = 1:(2 * hp.n_directions)]
-        print("  $(nprocs()) processors")
-    elseif usefolds
-        envs = [deepcopy(env) for i = 1:(2*hp.n_directions)]
-        print("  $(Threads.nthreads()) threads with Folds")
-    else
-        envs = [deepcopy(env) for i = 1:(Threads.nthreads())]
-        print(" $(Threads.nthreads()) ")
-    end
+        hp::HyperParameters{T}; ) where T
+    
+        println("Training linear policy with Augmented Random Search (ARS)\n ")
+        
+    envs = [deepcopy(env) for i = 1:(Threads.nthreads())]
+    print(" $(Threads.nthreads()) ")
 
     # pre-allocate for rewards
     rewards = zeros(2 * hp.n_directions)
@@ -140,17 +119,8 @@ function train(env::Environment, policy::Policy{T}, normalizer::Normalizer{T},
 
         # evaluate policies
         roll_time = @elapsed begin
-            if distributed
-                rewards .= pmap(rollout_policy, θs, envs, normalizers, hps)
-            elseif usefolds
-                @assert length(envs) == size(θs, 1) "$(length(envs))"
-                Folds.map!(rewards, θs, envs, foldsexec) do θ, env
-                    rollout_policy(θ, env, normalizer, hp)
-                end
-            else
-                Threads.@threads for k = 1:(2 * hp.n_directions)
-                    rewards[k] = rollout_policy(θs[k], envs[Threads.threadid()], normalizer, hp)
-                end
+            Threads.@threads for k = 1:(2 * hp.n_directions)
+                rewards[k] = rollout_policy(θs[k], envs[Threads.threadid()], normalizer, hp)
             end
         end
         # reward evaluation
@@ -192,23 +162,3 @@ function display_policy(env::Environment, policy::Policy, normalizer::Normalizer
     return traj
 end
 
-# display learned policy
-function display_random_policy(env::Environment, hp::HyperParameters; rendering = false)
-    obs = reset(env)
-    traj = [copy(env.state)]
-    done = false
-    num_plays = 1.
-    reward_evaluation = 0
-    while !done && num_plays < hp.horizon
-        rendering && render(env)
-        sleep(env.mechanism.timestep)
-        push!(traj, copy(env.state))
-        action = DojoEnvironments.sample(env.input_space)
-        obs, reward, done, _ = step(env, action)
-        reward_evaluation += reward
-        num_plays += 1
-    end
-    Dojo.close(env)
-
-    return traj
-end

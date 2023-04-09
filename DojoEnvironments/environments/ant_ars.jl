@@ -1,50 +1,47 @@
 """
-    Ant <: Environment
+    AntARS <: Environment
 
     four-legged insect-like robot, based on https://gym.openai.com/envs/Ant-v2/
 """
-struct Ant end
+abstract type AntARS end
 
-function ant(; 
-    representation=:minimal, 
+function ant_ars(;
     timestep=0.05, 
     gravity=-9.81,
-    friction_coefficient=0.5, 
-    springs=0, 
-    dampers=0, 
+    friction_coefficient=0.5,
+    springs=0,
+    dampers=0,
+    parse_springs=true,
     parse_dampers=true, 
     seed=1,
     contact_feet=true, 
     contact_body=true,
     limits::Bool=true,
-    info=nothing, 
-    vis=Visualizer(), 
+    vis=Visualizer(),
     name=:robot,
     opts_step=SolverOptions(), 
     opts_grad=SolverOptions(),
-    T=Float64)
+    T=Float64,
+    input_scaling=timestep)
 
     mechanism = get_ant(;
         timestep, 
-        gravity, 
-        friction_coefficient, 
-        spring, 
-        damper, 
-        parse_damper, 
+        input_scaling,
+        gravity,
+        springs, 
+        dampers, 
+        parse_springs, 
+        parse_dampers, 
+        limits,
+        friction_coefficient,
         contact_feet, 
-        contact_body, 
-        limits)
+        contact_body,
+        T)
 
-    initialize_ant!(mechanism)
-
-    if representation == :minimal
-        nx = minimal_dimension(mechanism)
-    elseif representation == :maximal
-        nx = maximal_dimension(mechanism)
-    end
-
+    nx = minimal_dimension(mechanism)
     nu = 8
     no = nx + length(mechanism.contacts)
+    info=nothing
 
     aspace = BoxSpace(nu, 
         low=(-ones(nu)), 
@@ -56,7 +53,7 @@ function ant(;
     rng = MersenneTwister(seed)
 
     z = get_maximal_state(mechanism)
-    x = representation == :minimal ? maximal_to_minimal(mechanism, z) : z
+    x = maximal_to_minimal(mechanism, z) 
 
     fx = zeros(nx, nx)
     fu = zeros(nx, nu)
@@ -67,8 +64,8 @@ function ant(;
 
     build_robot(mechanism, vis=vis, name=name)
 
-    TYPES = [Ant, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
-    env = Environment{TYPES...}(mechanism, representation, aspace, ospace,
+    TYPES = [AntARS, T, typeof(mechanism), typeof(aspace), typeof(ospace), typeof(info)]
+    env = Environment{TYPES...}(mechanism, :minimal, aspace, ospace,
         x, fx, fu,
         u_prev, 
         control_mask' * control_scaling,
@@ -79,7 +76,7 @@ function ant(;
     return env
 end
 
-function Base.step(env::Environment{Ant}, x, u; 
+function Base.step(env::Environment{AntARS}, x, u; 
     gradients=false,
     attitude_decompress=false)
 
@@ -147,10 +144,10 @@ function Base.step(env::Environment{Ant}, x, u;
 end
 
 # TODO add random noise
-function Base.reset(env::Environment{Ant}; 
+function Base.reset(env::Environment{AntARS}; 
     x=nothing)
 
-    initialize!(env.mechanism, type2symbol(Ant))
+    initialize!(env.mechanism, :ant)
 
     if x != nothing
         env.state .= x
@@ -170,7 +167,7 @@ function Base.reset(env::Environment{Ant};
     return get_observation(env)
 end
 
-function get_observation(env::Environment{Ant,T}) where T
+function get_observation(env::Environment{AntARS,T}) where T
     contact_force = T[]
     for contact in env.mechanism.contacts
         push!(contact_force, max(-1, min(1, contact.impulses[2][1])))
@@ -178,22 +175,6 @@ function get_observation(env::Environment{Ant,T}) where T
     return [env.state; contact_force]
 end
 
-# function initialize_ant!(mechanism::Mechanism; 
-#     body_position=[0; 0; 0.63], 
-#     body_orientation=[0; 0; 0 * π],
-#     ankle_orientation=0.25)
-    
-#     set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base), [body_position; body_orientation])
 
-#     for i in [1, 4]
-#         set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol("hip_$i")), [0 * π])
-#         set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol("ankle_$i")), [ankle_orientation * π])
-#     end
 
-#     for i in [2, 3]
-#         set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol("hip_$i")), [0 * π])
-#         set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol("ankle_$i")), [-ankle_orientation * π])
-#     end
 
-#     zero_velocity!(mechanism)
-# end
