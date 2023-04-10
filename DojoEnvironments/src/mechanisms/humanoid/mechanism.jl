@@ -71,7 +71,7 @@ end
 function initialize_humanoid!(mechanism::Mechanism; 
     body_position=[0, 0, 1.33], body_orientation=one(Quaternion))
 
-    zero_velocity!(mechanism)
+    zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
     
     set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base), 

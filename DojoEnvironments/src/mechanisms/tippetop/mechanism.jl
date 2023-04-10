@@ -5,6 +5,7 @@ function get_tippetop(;
     mass=1,
     radius=0.5,
     scale=0.2,
+    color=RGBA(0.9, 0.9, 0.9, 1.0),
     springs=0,
     dampers=0, 
     limits=false,
@@ -19,8 +20,8 @@ function get_tippetop(;
     origin = Origin{T}(name=:origin)
     
     bodies = [
-        Sphere(radius, mass; name=:sphere1, color=gray_light),
-        Sphere(radius*scale, mass*scale^3; name=:sphere2, color=gray_light)
+        Sphere(radius, mass; name=:sphere1, color),
+        Sphere(radius*scale, mass*scale^3; name=:sphere2, color)
     ]
     bodies[1].inertia = Diagonal([1.9, 2.1, 2])
 
@@ -70,7 +71,7 @@ function initialize_tippetop!(mechanism::Mechanism{T};
     body_position=2*Z_AXIS*mechanism.bodies[1].shape.r, body_orientation=one(Quaternion),
     body_linear_velocity=zeros(3), body_angular_velocity=[0.0, 0.1, 50.0]) where T
 
-    zero_velocity!(mechanism)
+    zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
 
     floating_joint = mechanism.joints[1]

@@ -40,7 +40,7 @@ end
 function initialize_fourbar!(mechanism::Mechanism; 
     base_angle=pi/4, inner_angle=pi/4)
 
-    zero_velocity!(mechanism)
+    zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
     
     loop_joint_id = get_joint(mechanism, :joint24).id

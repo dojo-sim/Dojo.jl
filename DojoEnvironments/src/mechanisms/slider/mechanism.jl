@@ -45,7 +45,7 @@ end
 function initialize_slider!(mechanism::Mechanism; 
     position=0, velocity=0)
 
-    zero_velocity!(mechanism)
+    zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
 
     child_vertex = mechanism.joints[1].translational.vertices[2]

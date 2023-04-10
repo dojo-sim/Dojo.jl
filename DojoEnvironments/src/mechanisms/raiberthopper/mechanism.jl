@@ -72,7 +72,7 @@ end
 function initialize_raiberthopper!(mechanism::Mechanism; 
     body_position=zeros(3), leg_length=0.5)
 
-    zero_velocity!(mechanism)
+    zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
 
     body_position += [0;0;leg_length+mechanism.bodies[2].shape.r]

@@ -37,7 +37,7 @@ set_input!
 maximal_dimension 
 minimal_dimension
 input_dimension
-zero_velocity!
+zero_velocities!
 root_to_leaves_ordering
 set_floating_base
 ```

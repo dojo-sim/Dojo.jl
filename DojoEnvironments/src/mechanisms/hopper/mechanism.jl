@@ -81,7 +81,7 @@ end
 function initialize_hopper!(mechanism::Mechanism; 
     body_position=[0, 0], body_orientation=0)
 
-    zero_velocity!(mechanism)
+    zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
     
     set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_joint),

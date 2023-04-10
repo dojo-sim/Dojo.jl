@@ -92,7 +92,7 @@ function initialize_tippetop!(mechanism::Mechanism{T};
     radius = fixed_joint.translational.vertices[1][3]
 
     # we set all the bodies' velocities to zeros
-    zero_velocity!(mechanism)
+    zero_velocities!(mechanism)
     # we set to minimal coordinates of the floating joint
     set_minimal_coordinates_velocities!(mechanism, floating_joint,
         xmin=[body_position; body_orientation; body_linear_velocity; body_angular_velocity])

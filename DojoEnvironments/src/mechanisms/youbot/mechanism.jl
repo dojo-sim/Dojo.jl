@@ -39,7 +39,7 @@ end
 
 function initialize_youbot!(mechanism)
     
-    zero_velocity!(mechanism)
+    zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
 
     return

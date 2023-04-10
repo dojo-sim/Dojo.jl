@@ -116,7 +116,7 @@ function initialize_quadruped!(mechanism::Mechanism;
     body_position=[0, 0, 0], body_orientation=one(Quaternion),
     hip_angle=0, thigh_angle=pi/4, calf_angle=-pi/2)
 
-    zero_velocity!(mechanism)
+    zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
 
     body_position += [0, 0, 0.43]

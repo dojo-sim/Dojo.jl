@@ -49,7 +49,7 @@ end
 function initialize_dzhanibekov!(mechanism::Mechanism;
     linear_velocity=zeros(3), angular_velocity=[10.0; 0.01; 0.0])
 
-    zero_velocity!(mechanism)
+    zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
     
     joint = mechanism.joints[1]

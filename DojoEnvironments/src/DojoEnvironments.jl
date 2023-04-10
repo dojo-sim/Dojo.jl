@@ -12,23 +12,15 @@ using MeshCat
 using StaticArrays
 using Dojo
 
-import Dojo: string_to_symbol, add_limits, RotX, RotY, RotZ, build_robot, initialize!, set_minimal_coordinates_velocities!, velocity_index, vector_rotate, Prototype, rotation_vector, gray_light, zero_coordinates!
+import Dojo: string_to_symbol, add_limits, RotX, RotY, RotZ, rotation_vector
 
 export
     Environment,
-    dynamics,
-    dynamics_jacobian_state,
-    dynamics_jacobian_input,
     get_environment,
     get_mechanism,
-    get_observation,
-    cost,
-    is_done,
-    render,
-    seed,
-    close,
-    Space,
-    BoxSpace
+    step!,
+    get_state,
+    visualize
 
 include("mechanisms.jl")
 include("environments.jl")

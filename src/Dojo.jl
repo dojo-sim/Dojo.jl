@@ -220,7 +220,8 @@ export
     Mechanism,
     initialize!,
     set_floating_base,
-    zero_velocity!
+    zero_coordinates!,
+    zero_velocities!
 
 # Maximal
 export

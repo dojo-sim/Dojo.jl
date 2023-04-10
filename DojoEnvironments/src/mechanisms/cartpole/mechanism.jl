@@ -51,7 +51,7 @@ end
 function initialize_cartpole!(mechanism::Mechanism; 
     position=0, orientation=pi/4)
 
-    zero_velocity!(mechanism)
+    zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
     
     set_minimal_coordinates!(mechanism, mechanism.joints[1], [position])

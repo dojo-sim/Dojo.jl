@@ -73,17 +73,9 @@ function Dojo.step!(environment::QuadrupedSampling, state, input=nothing; k=1, r
     return
 end
 
-# function Dojo.simulate!(environment::QuadrupedSampling, controller!=(mechanism, k) -> nothing; kwargs...)
-#     simulate!(environment.mechanism, 1:length(environment.storage), environment.storage, controller!; kwargs...)
-# end
-
 function get_state(environment::QuadrupedSampling)
     state = get_minimal_state(environment.mechanism)
 
 	# x: floating base, FR (hip, thigh, calf), FL, RR, RL
     return state
-end
-
-function Dojo.visualize(environment::QuadrupedSampling; kwargs...)
-    Dojo.visualize(environment.mechanism, environment.storage; kwargs...)
 end

@@ -28,7 +28,7 @@ function get_twister(;
     joints = JointConstraint{T}[
         jointb1;
         [
-            JointConstraint(Prototype(joint_type, bodies[i - 1], bodies[i], axes[i%3+1]; 
+            JointConstraint(Dojo.Prototype(joint_type, bodies[i - 1], bodies[i], axes[i%3+1]; 
             parent_vertex=-X_AXIS*height/2, child_vertex=X_AXIS*height/2)) for i = 2:num_bodies
         ]
     ]
@@ -77,7 +77,7 @@ function initialize_twister!(mechanism::Mechanism;
     base_position=zeros(3), base_orientation=one(Quaternion),
     base_linear_velocity=zeros(3), base_angular_velocity=zeros(3))
 
-    zero_velocity!(mechanism)
+    zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
 
     set_minimal_coordinates!(mechanism, mechanism.joints[1], [base_position; rotation_vector(base_orientation)])

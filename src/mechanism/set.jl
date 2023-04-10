@@ -108,13 +108,13 @@ end
 
 # velocity
 """ 
-    zero_velocity!(mechanism) 
+    zero_velocities!(mechanism) 
 
     set all mechanism body velocities to zero 
 
     mechanism: Mechanism 
 """
-function zero_velocity!(mechanism::Mechanism)
+function zero_velocities!(mechanism::Mechanism)
     for (i, body) in enumerate(mechanism.bodies)
         try
             set_maximal_velocities!(body, v=zeros(3), ω=zeros(3))

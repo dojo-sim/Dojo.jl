@@ -76,7 +76,7 @@ end
 function initialize_block!(mechanism::Mechanism;
     position = [0;0;1], orientation=one(Quaternion), velocity=zeros(3), angular_velocity=randn(3))
 
-    zero_velocity!(mechanism)
+    zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
     
     body = mechanism.bodies[1]

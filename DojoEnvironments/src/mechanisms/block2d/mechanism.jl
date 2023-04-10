@@ -71,7 +71,7 @@ end
 function initialize_block2d!(mechanism::Mechanism;
     position = [0;1], orientation=0, velocity=zeros(2), angular_velocity=randn())
 
-    zero_velocity!(mechanism)
+    zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
     
     body = mechanism.bodies[1]

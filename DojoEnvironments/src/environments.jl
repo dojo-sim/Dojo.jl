@@ -6,10 +6,7 @@
     mechanism: Mechanism
     storage:   Storage
 """
-mutable struct Environment{T,N}
-    mechanism::Mechanism{T}
-    storage::Storage{T,N}
-end
+abstract type Environment{T,N} end
 
 function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, environment::Environment)
     summary(io, environment)
@@ -75,9 +72,18 @@ function Dojo.step!(environment::Environment, x, u=nothing; k=1, record=false, o
     return
 end
 
-# function Dojo.simulate!(environment::Environment, controller! = (mechanism, k) -> nothing; kwargs...)
-#     simulate!(environment.mechanism, 1:length(environment.storage), environment.storage, controller!; kwargs...)
-# end
+"""
+    simulate!(environment, controller! = (mechanism, k) -> nothing; kwargs...)
+
+    simulates the mechanism of the environment
+
+    environment: Environment
+    controller!: Control function
+    kwargs:      same as for Dojo.simulate 
+"""
+function Dojo.simulate!(environment::Environment, controller! = (mechanism, k) -> nothing; kwargs...)
+    simulate!(environment.mechanism, 1:length(environment.storage), environment.storage, controller!; kwargs...)
+end
 
 """
     get_state(environment)
@@ -99,5 +105,5 @@ end
     kwargs:      same as for Dojo.visualize 
 """
 function Dojo.visualize(environment::Environment; kwargs...)
-    Dojo.visualize(environment.mechanism, environment.storage; kwargs...)
+    visualize(environment.mechanism, environment.storage; kwargs...)
 end

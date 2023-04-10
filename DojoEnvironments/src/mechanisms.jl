@@ -21,7 +21,7 @@ end
     model: name of mechanism 
     kwargs: mechanism specific parameters
 """
-function initialize!(mechanism::Mechanism, model; kwargs...)
+function Dojo.initialize!(mechanism::Mechanism, model; kwargs...)
     eval(Symbol(:initialize, :_, string_to_symbol(model), :!))(mechanism; kwargs...)
 end
 

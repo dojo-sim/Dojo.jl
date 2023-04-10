@@ -97,7 +97,7 @@ end
 function initialize_ant!(mechanism::Mechanism; 
     body_position=0.5*Z_AXIS, body_orientation=one(Quaternion), ankle_angle=0.25)
     
-    zero_velocity!(mechanism)
+    zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
     
     set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base), [body_position; rotation_vector(body_orientation)])

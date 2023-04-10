@@ -76,10 +76,6 @@ function Dojo.step!(environment::AntARS, state, input=nothing; k=1, record=false
     return
 end
 
-# function Dojo.simulate!(environment::AntARS, controller! = (mechanism, k) -> nothing; kwargs...)
-#     simulate!(environment.mechanism, 1:length(environment.storage), environment.storage, controller!; kwargs...)
-# end
-
 function get_state(environment::AntARS{T}) where T
     contact_force = T[]
     for contact in environment.mechanism.contacts
@@ -88,8 +84,4 @@ function get_state(environment::AntARS{T}) where T
     state = [get_minimal_state(environment.mechanism); contact_force]
 
     return state
-end
-
-function Dojo.visualize(environment::AntARS; kwargs...)
-    Dojo.visualize(environment.mechanism, environment.storage; kwargs...)
 end

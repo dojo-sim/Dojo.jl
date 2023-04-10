@@ -50,7 +50,7 @@ function initialize_panda!(mechanism::Mechanism;
     joint_angles=[0;0.5;0;-0.5;0;0.5;0; zeros(input_dimension(mechanism)-7)],
     joint_velocities=zeros(input_dimension(mechanism)))
 
-    zero_velocity!(mechanism)
+    zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
 
     nu = input_dimension(mechanism)

@@ -49,7 +49,7 @@ end
 function initialize_nslider!(mechanism::Mechanism; 
     position=mechanism.bodies[1].shape.rh[2], velocity=0)
 
-    zero_velocity!(mechanism)
+    zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
 
     set_minimal_coordinates!(mechanism, mechanism.joints[1], [position])

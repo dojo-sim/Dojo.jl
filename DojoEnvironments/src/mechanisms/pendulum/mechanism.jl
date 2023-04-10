@@ -50,7 +50,7 @@ end
 function initialize_pendulum!(mechanism::Mechanism;
     angle=pi/4, angular_velocity=0)
 
-    zero_velocity!(mechanism)
+    zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
     
     set_minimal_coordinates!(mechanism, mechanism.joints[1], [angle])

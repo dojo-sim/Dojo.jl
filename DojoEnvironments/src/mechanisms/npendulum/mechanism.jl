@@ -20,13 +20,13 @@ function get_npendulum(;
 
     bodies = [Box(0.05, 0.05, length, mass; color) for i = 1:num_bodies]
 
-    jointb1 = JointConstraint(Prototype(base_joint_type, origin, bodies[1], X_AXIS;
+    jointb1 = JointConstraint(Dojo.Prototype(base_joint_type, origin, bodies[1], X_AXIS;
         parent_vertex=Z_AXIS*num_bodies + [0;0;0.2], child_vertex=Z_AXIS*length/2))
 
     joints = JointConstraint{T}[
         jointb1;
         [
-            JointConstraint(Prototype(rest_joint_type, bodies[i - 1], bodies[i], X_AXIS;
+            JointConstraint(Dojo.Prototype(rest_joint_type, bodies[i - 1], bodies[i], X_AXIS;
             parent_vertex=-Z_AXIS*length/2, child_vertex=Z_AXIS*length/2)) for i = 2:num_bodies
         ]
     ]
@@ -56,7 +56,7 @@ end
 function initialize_npendulum!(mechanism::Mechanism;
     base_angle=π/4)
     
-    zero_velocity!(mechanism)
+    zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
     
     set_minimal_coordinates!(mechanism, mechanism.joints[1], [base_angle])
