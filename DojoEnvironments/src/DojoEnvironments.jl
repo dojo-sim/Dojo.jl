@@ -32,9 +32,8 @@ export
 
 include("mechanisms.jl")
 include("environments.jl")
-include("dynamics.jl")
 include("utilities.jl")
-include("../mechanisms/include.jl")
-include("../environments/include.jl")
+include("mechanisms/include.jl")
+include("environments/include.jl")
 
 end # module
