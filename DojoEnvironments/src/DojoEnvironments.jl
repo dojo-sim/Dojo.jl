@@ -14,6 +14,12 @@ using Dojo
 
 import Dojo: string_to_symbol, add_limits, RotX, RotY, RotZ, rotation_vector
 
+include("mechanisms.jl")
+include("environments.jl")
+include("utilities.jl")
+include("mechanisms/include.jl")
+include("environments/include.jl")
+
 # Mechanism
 export
     get_mechanism,
@@ -22,7 +28,7 @@ export
     set_limits,
     X_AXIS,
     Y_AXIS,
-    Z_AXIS,
+    Z_AXIS
 
 # Environment
 export
@@ -31,11 +37,5 @@ export
     step!,
     get_state,
     visualize
-
-include("mechanisms.jl")
-include("environments.jl")
-include("utilities.jl")
-include("mechanisms/include.jl")
-include("environments/include.jl")
 
 end # module

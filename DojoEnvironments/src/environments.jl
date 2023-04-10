@@ -1,10 +1,7 @@
 """
-    Environment{T} 
+    Environment{T,N} 
 
-    simulation object containing a mechanism and a storage
-
-    mechanism: Mechanism
-    storage:   Storage
+    abstract type for an environment consisting of a mechanism and a storage
 """
 abstract type Environment{T,N} end
 
