@@ -1,27 +1,16 @@
 environments = [
-    :ant,
-    :atlas,
-    :block,
-    :block2d,
-    :cartpole,
-    :halfcheetah,
-    :hopper,
-    :panda,
-    :pendulum,
-    :quadruped,
-    :raiberthopper,
-    :rexhopper,
-    :walker,
+    :ant_ars,
+    :cartpole_dqn,
+    :quadruped_sampling,
 ]
 
-throw_envs = [
-    ]
-
-@testset "$name" for name in environments
-    env = get_environment(name)
-    if !(name in throw_envs)
-        @test size(reset(env)) == (env.observation_space.n,)
-        o, r, d, i = step(env, clamp.(DojoEnvironments.sample(env.input_space), -0.1, 0.1))
-        @test size(o) == (env.observation_space.n,)
-    end
+for name in environments 
+    env = get_environment(name) 
+    x = get_state(env)
+    u = input_map(env, nothing)
+    step!(env, x)
+    step!(env, x, u)
+    simulate!(env, 0.5; record=true)
+    visualize(env)
+    @test true
 end

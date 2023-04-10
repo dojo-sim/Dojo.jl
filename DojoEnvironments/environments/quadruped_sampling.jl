@@ -1,6 +1,6 @@
-mutable struct QuadrupedSampling 
-    mechanism
-    storage
+mutable struct QuadrupedSampling{T,N} <: Environment{T,N}
+    mechanism::Mechanism{T}
+    storage::Storage{T,N}
 end
 
 function quadruped_sampling(;
@@ -47,23 +47,27 @@ function quadruped_sampling(;
 
     storage = Storage(horizon, length(mechanism.bodies))
 
-    return QuadrupedSampling(mechanism, storage)
+    return QuadrupedSampling{T,horizon}(mechanism, storage)
 end
 
-function state_map(::QuadrupedSampling, x)
-    return x
+function state_map(::QuadrupedSampling, state)
+    return state
 end
 
-function input_map(::QuadrupedSampling, u)
-    u = [zeros(6);u] # trunk not actuated
-
-    return u
+function input_map(::QuadrupedSampling, input)
+    input = [zeros(6);input] # trunk not actuated
+    return input
 end
 
-function Dojo.step!(environment::QuadrupedSampling, x, u; k=1, record=false, opts=SolverOptions())
-    x = state_map(environment, x)
-    u = input_map(environment, u)
-    Dojo.step_minimal_coordinates!(environment.mechanism, x, u; opts)
+function input_map(::QuadrupedSampling, ::Nothing)
+    input = zeros(18)
+    return input
+end
+
+function Dojo.step!(environment::QuadrupedSampling, state, input=nothing; k=1, record=false, opts=SolverOptions())
+    state = state_map(environment, state)
+    input = input_map(environment, input)
+    Dojo.step_minimal_coordinates!(environment.mechanism, state, input; opts)
     record && Dojo.save_to_storage!(environment.mechanism, environment.storage, k)
 
     return
@@ -74,10 +78,10 @@ end
 # end
 
 function get_state(environment::QuadrupedSampling)
-    x = get_minimal_state(environment.mechanism)
+    state = get_minimal_state(environment.mechanism)
 
 	# x: floating base, FR (hip, thigh, calf), FL, RR, RL
-    return x
+    return state
 end
 
 function Dojo.visualize(environment::QuadrupedSampling; kwargs...)

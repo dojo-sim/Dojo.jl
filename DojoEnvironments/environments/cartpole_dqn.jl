@@ -1,6 +1,6 @@
-mutable struct CartpoleDQN 
-    mechanism
-    storage
+mutable struct CartpoleDQN{T,N} <: Environment{T,N}
+    mechanism::Mechanism{T}
+    storage::Storage{T,N}
 end
 
 function cartpole_dqn(;
@@ -39,23 +39,27 @@ function cartpole_dqn(;
 
     storage = Storage(horizon, length(mechanism.bodies))
 
-    return CartpoleDQN(mechanism, storage)
+    return CartpoleDQN{T,horizon}(mechanism, storage)
 end
 
-function state_map(::CartpoleDQN, x)
-    return x
+function state_map(::CartpoleDQN, state)
+    return state
 end
 
-function input_map(::CartpoleDQN, u)
-    u = [u;0] # only the cart is actuated
-
-    return u
+function input_map(::CartpoleDQN, input)
+    input = [input;0] # only the cart is actuated
+    return input
 end
 
-function Dojo.step!(environment::CartpoleDQN, x, u; k=1, record=false, opts=SolverOptions())
-    x = state_map(environment, x)
-    u = input_map(environment, u)
-    Dojo.step_minimal_coordinates!(environment.mechanism, x, u; opts)
+function input_map(::CartpoleDQN, ::Nothing)
+    input = zeros(2)
+    return input
+end
+
+function Dojo.step!(environment::CartpoleDQN, state, input=nothing; k=1, record=false, opts=SolverOptions())
+    state = state_map(environment, state)
+    input = input_map(environment, input)
+    Dojo.step_minimal_coordinates!(environment.mechanism, state, input; opts)
     record && Dojo.save_to_storage!(environment.mechanism, environment.storage, k)
 
     return
@@ -66,9 +70,8 @@ end
 # end
 
 function get_state(environment::CartpoleDQN)
-    x = get_minimal_state(environment.mechanism)
-
-    return x
+    state = get_minimal_state(environment.mechanism)
+    return state
 end
 
 function Dojo.visualize(environment::CartpoleDQN; kwargs...)
