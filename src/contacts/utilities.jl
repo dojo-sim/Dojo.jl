@@ -53,7 +53,7 @@ function contact_location(mechanism::Mechanism)
     return [contact_location(mech, contact) for contact in mechanism.contacts]
 end
 
-"""
+#="""
     string_location(contact, x, q)
 
     location of the attach point of the string in world coordinates
@@ -61,7 +61,7 @@ end
     collision: StringCollision
     x: body position
     q: body orientation
-"""
+"""=#
 function string_location(collision::StringCollision, x::AbstractVector{T},
     q::Quaternion{T}; relative::Symbol=:parent) where T
     origin = (relative == :parent) ? collision.origin_parent : collision.origin_child

@@ -1,5 +1,8 @@
 # Trajectory Optimization
 
+!!! info 
+    The trajectory optimization examples are outdated and currently not available.
+
 Dojo provides dynamics constraints and Jacobians in order to perform trajectory optimization using [iterative LQR](https://github.com/thowell/IterativeLQR.jl). 
 
 ## [Quadruped](https://github.com/dojo-sim/Dojo.jl/blob/main/examples/trajectory_optimization/quadruped_min.jl)

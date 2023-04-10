@@ -3,14 +3,14 @@ push!(LOAD_PATH, "../src/")
 using Documenter, Dojo
 
 # copy animations to docs/src/assets/animations
-path_assets_animations = joinpath(@__DIR__, "src/assets/animations")
-!isdir(path_assets_animations) && mkdir(path_assets_animations)
-path_animations = joinpath(@__DIR__, "../examples/animations")
-files = readdir(path_animations)
-filter!(x -> endswith(x, ".gif"), files)
-for file in files 
-    cp(joinpath(path_animations, file), joinpath(path_assets_animations, file), force=true)
-end
+# path_assets_animations = joinpath(@__DIR__, "src/assets/animations")
+# !isdir(path_assets_animations) && mkdir(path_assets_animations)
+# path_animations = joinpath(@__DIR__, "../examples/animations")
+# files = readdir(path_animations)
+# filter!(x -> endswith(x, ".gif"), files)
+# for file in files 
+#     cp(joinpath(path_animations, file), joinpath(path_assets_animations, file), force=true)
+# end
 
 makedocs(
     modules = [Dojo],
@@ -22,54 +22,51 @@ makedocs(
         ##############################################
         "index.md",
 
+        "Examples" => [
+            "examples/simulation.md",
+            "examples/reinforcement_learning.md",
+            "examples/system_identification.md",
+            "examples/trajectory_optimization.md",
+           ],
+
         "Creating a Mechanism" => [
-            "define_mechanism.md",
-            "load_mechanism.md",
+            "creating_mechanism/overview.md",
+            "creating_mechanism/mechanism_directly.md",
+            "creating_mechanism/mechanism_existing.md",
+            "creating_mechanism/environment_existing.md",
+            "creating_mechanism/tippetop.md",
+            "creating_mechanism/quadruped.md",
            ],
 
         "Creating a Simulation" => [
-            "define_simulation.md",
-            "define_controller.md",
-            "simulation_with_gradients.md",
+            "creating_simulation/define_simulation.md",
+            "creating_simulation/define_controller.md",
+            "creating_simulation/simulation_with_gradients.md",
            ],
 
         "Environments" => [
-            "load_environment.md",
-            "define_environment.md",
-            "environment_simulation_gradients.md",
+            "environments/overview.md",
         ],
 
-        "Gradients from Simulator" => [
-            "simulation_with_gradients.md",
-            "gradients.md",
-           ],
-
-        "Examples" => [
-            "simulation.md",
-            "trajectory_optimization.md",
-            "reinforcement_learning.md",
-            "system_identification.md",
-           ],
-
-        "State Representations" => [
-            "maximal_representation.md",
-            "minimal_representation.md",
+        "Background: Contact Models" => [
+            "background_contact/contact_models.md",
+            "background_contact/impact.md",
+            "background_contact/nonlinear_friction.md",
+            "background_contact/linearized_friction.md",
+            "background_contact/collisions.md",
         ],
 
-        "Contact Models" => [
-            "contact_models.md",
-            "impact.md",
-            "nonlinear_friction.md",
-            "linearized_friction.md",
-            "collisions.md",
+        "Background: Representations" => [
+            "background_representations/maximal_representation.md",
+            "background_representations/minimal_representation.md",
+            "background_representations/gradients.md",
         ],
 
-        "Interior-Point Solver" => [
-            "interior_point.md",
-            "solver_options.md",
+        "Background: Solver" => [
+            "background_solver/interior_point.md",
+            "background_solver/solver_options.md",
         ],
 
-        "faq.md",
         "api.md",
         "contributing.md",
         "citing.md"

@@ -1,4 +1,4 @@
-# Background
+# Background on Gradients
 
 ## Implicit Function Theorem
 An implicit function, ``r : \mathbf{R}^{n_w} \times \mathbf{R}^{n_\theta} \rightarrow \mathbf{R}^{n_w}``, is defined as
@@ -34,7 +34,7 @@ In many robotics scenarios, we are interested in gradient information through co
 ## Gradient Comparison
 
 ```@raw html
-<img src="./assets/gradient_comparison.png" width="500"/>
+<img src="../assets/gradient_comparison.png" width="500"/>
 ```
 
 Gradient comparison between randomized smoothing and Dojo's smooth gradients. The dynamics for a box in the ``XY`` plane that is resting on a flat surface and displaced an amount ``\Delta`` by an input ``F`` (top left). Its corresponding exact gradients are shown in black. Gradient bundles (right column) are computed using sampling schemes with varying covariances ``\Sigma`` and ``500`` samples. Dojo's gradients (middle column) are computed for different values of ``\kappa``, corresponding to the smoothness of the contact model. Compared to the 500-sample gradient bundle, Dojo's gradients are not noisy and are a 100 times faster to compute with a single worker.

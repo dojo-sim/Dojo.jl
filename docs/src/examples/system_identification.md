@@ -5,7 +5,7 @@ A [real-world dataset](https://github.com/DAIRLab/contact-nets/tree/main/data) i
 ## Geometry 
 
 ```@raw html
-<img src="./assets/animations/box_learning.gif" width="300"/>
+<img src="../assets/animations/box_learning.gif" width="300"/>
 ```
 
 The eight locations of the block's corners relative to its center of mass are learned.
@@ -13,7 +13,7 @@ The eight locations of the block's corners relative to its center of mass are le
 ## Friction 
 
 ```@raw html
-<img src="./assets/animations/cone_learning.gif" width="200"/>
+<img src="../assets/animations/cone_learning.gif" width="200"/>
 ```
 
 A friction coefficient, describing a friction cone, is learned for all of the contact points.
@@ -21,7 +21,7 @@ A friction coefficient, describing a friction cone, is learned for all of the co
 ## Real-To-Sim 
 
 ```@raw html
-<img src="./assets/animations/box_toss.gif" width="300"/>
+<img src="../assets/animations/box_toss.gif" width="300"/>
 ```
 
 The system parameters are learned to within a ``\pm 5 \%`` error from their ground-truth values. These parameters are then compared to the ground-truth system in simulation.

@@ -1,4 +1,4 @@
-"""
+#="""
     StringCollision
 
     string collision between contact points
@@ -6,7 +6,7 @@
     origin_parent: position of contact on parent body relative to center of mass
     origin_child: position of contact on parent body relative to center of mass
     length: maximum distance between contact point
-"""
+"""=#
 mutable struct StringCollision{T,O,I,OI} <: Collision{T,O,I,OI}
     origin_parent::SVector{I,T}
     origin_child::SVector{I,T}
