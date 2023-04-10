@@ -69,6 +69,10 @@ function Dojo.step!(environment::QuadrupedSampling, x, u; k=1, record=false, opt
     return
 end
 
+# function Dojo.simulate!(environment::QuadrupedSampling, controller!=(mechanism, k) -> nothing; kwargs...)
+#     simulate!(environment.mechanism, 1:length(environment.storage), environment.storage, controller!; kwargs...)
+# end
+
 function get_state(environment::QuadrupedSampling)
     x = get_minimal_state(environment.mechanism)
 

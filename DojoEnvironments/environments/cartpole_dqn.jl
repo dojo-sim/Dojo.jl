@@ -61,6 +61,10 @@ function Dojo.step!(environment::CartpoleDQN, x, u; k=1, record=false, opts=Solv
     return
 end
 
+# function Dojo.simulate!(environment::CartpoleDQN, controller!=(mechanism, k) -> nothing; kwargs...)
+#     simulate!(environment.mechanism, 1:length(environment.storage), environment.storage, controller!; kwargs...)
+# end
+
 function get_state(environment::CartpoleDQN)
     x = get_minimal_state(environment.mechanism)
 

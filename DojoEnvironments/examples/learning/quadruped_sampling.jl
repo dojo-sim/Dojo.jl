@@ -1,21 +1,24 @@
+# ## Setup
 using Dojo
 using DojoEnvironments
 using Random
 using LinearAlgebra
 
+# ## Parameters
 rng = MersenneTwister(1)
-N = 2500
-M = 50
-paramcontainer = [[0.1; 0; 1; 0; -1.5]]
+N = 2000
+M = 20
+paramcontainer = [[0.1; 0; 1; 0; -1.5]] # [[0.3604389380437305, 0.15854285262309512, 0.9575825661369068, -0.325769852046206, -1.4824537456751052]]
 paramstorage = [[0.1; 0; 1; 0; -1.5]]
 bias = zeros(5)
 distance = 0.0
 explore_factor = 0.1
 distancestorage = zeros(M)
 
-env = get_environment(:quadruped_sampling; horizon=N, timestep=0.002, limits=false, gravity=-9.81, contact_body=false)
+# ## Mechanism
+env = get_environment(:quadruped_sampling; horizon=N, timestep=0.001, limits=false, gravity=-9.81, contact_body=false)
 
-
+# ## Controller
 legmovement(k,a,b,c,offset) = a*cos(k*b*0.01*2*pi+offset)+c
 Kp = [100;80;60]
 Kd = [5;4;3]
@@ -50,6 +53,7 @@ function controller!(x, k)
     return u
 end
 
+# ## Reset and rollout functions
 function reset_state!(env)
     initialize!(env.mechanism, :quadruped; body_position=[0;0;-0.43], hip_angle=0, thigh_angle=paramcontainer[1][3], calf_angle=paramcontainer[1][5]) 
 
@@ -62,17 +66,19 @@ end
 function rollout(env; record=false)
     for k=1:N
         x = DojoEnvironments.get_state(env)
-        if x[3] < 0 || !all(isfinite.(x))
-            display("  failed")
-            break
+        if x[3] < 0 || !all(isfinite.(x)) || abs(x[1]) > 1000 # upsidedown || failed || "exploding"
+            println("  failed")
+            return 1
         end
         u = controller!(x, k)
         DojoEnvironments.step!(env, x, u; k, record)
     end
+    return 0
 end
 
+# ## Learning routine
 for i=1:M
-    display("run: $i")
+    println("run: $i")
 
     if bias == zeros(5)
         paramcontainer[1] += randn!(rng, zeros(5))*explore_factor
@@ -83,37 +89,39 @@ for i=1:M
     reset_state!(env)
     x0 = DojoEnvironments.get_state(env)[1]
 
+    res = 0
     try
-        rollout(env)
+        res = rollout(env)
     catch
-        display("  errored")
-        paramcontainer[1] = paramstorage[end]
-        bias = zeros(5)
-        explore_factor *= 0.9
+        res = 1
+    end
+    if res == 1
+        println("  errored")
     end
 
     new_state = DojoEnvironments.get_state(env)
     distancenew = new_state[1] - x0
 
-    if !all(isfinite.(new_state)) || distancenew <= distance
-        display("  unsuccessful")
-        !all(isfinite.(new_state)) && display("  nans")
+    if res == 1 || distancenew <= distance
+        println("  unsuccessful")
+        !all(isfinite.(new_state)) && println("  nans")
         paramcontainer[1] = paramstorage[end]
         bias = zeros(5)
         explore_factor *= 0.9
     else
-        display("  successful")
+        println("  successful")
         distance = distancenew
         push!(paramstorage,paramcontainer[1])
         bias = paramstorage[end]-paramstorage[end-1]
         explore_factor = 0.1
     end
 
-    display("  distance: $distancenew")
+    println("  distance: $distancenew")
     distancestorage[i] = distance
 end
 
+# ## Visualize learned behavior
 reset_state!(env)
-rollout(env; record=true)
+simulate!(env, controller!; record=true)
 
-visualize(env.mechanism, env.storage)
+visualize(env)
