@@ -45,7 +45,7 @@ end
             timestep,
             parse_springs=false,
 			parse_dampers=false,
-            dampers=1.0)
+            dampers=0.0)
         Dojo.initialize!(mech, :fourbar,
             inner_angle=0.25)
         loopjoints = mech.joints[end:end]

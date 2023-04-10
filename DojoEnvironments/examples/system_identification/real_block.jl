@@ -12,7 +12,7 @@ using ForwardDiff
 using LinearAlgebra
 
 # ## Include methods
-include("utils.jl")
+include("utilities.jl")
 
 
 # ## Parameters

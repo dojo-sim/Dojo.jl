@@ -14,10 +14,17 @@ using Dojo
 
 import Dojo: string_to_symbol, add_limits, RotX, RotY, RotZ, rotation_vector
 
+# Mechanism
+export
+    get_mechanism,
+    set_springs!,
+    set_dampers!,
+    set_limits
+
+# Environment
 export
     Environment,
     get_environment,
-    get_mechanism,
     step!,
     get_state,
     visualize

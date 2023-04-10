@@ -7,7 +7,7 @@
     sphere = Dojo.Sphere(1.0)
     pyramid = Dojo.Pyramid(1.0, 1.0)
     frame = Dojo.FrameShape()
-    mesh = Dojo.Mesh(joinpath(dirname(pathof(DojoEnvironments)), "../mechanisms/atlas/dependencies/mesh/head.obj"))
+    mesh = Dojo.Mesh(joinpath(dirname(pathof(DojoEnvironments)), "mechanisms/atlas/dependencies/mesh/head.obj"))
 
     # convert
     box_geom = Dojo.convert_shape(box)
