@@ -63,7 +63,7 @@ function initialize_sphere!(mechanism::Mechanism;
 
     position += Z_AXIS*mechanism.bodies[1].shape.r
 
-    set_minimal_coordinates!(mechanism, mechanism.joints[1], [position; rotation_vector(orientation)])
+    set_minimal_coordinates!(mechanism, mechanism.joints[1], [position; Dojo.rotation_vector(orientation)])
     set_minimal_velocities!(mechanism, mechanism.joints[1], [velocity; angular_velocity])
 
     return

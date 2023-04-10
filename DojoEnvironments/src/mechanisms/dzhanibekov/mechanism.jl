@@ -15,7 +15,7 @@ function get_dzhanibekov(;
     main_body = Capsule(0.1, 1, 1; color, name=:main)
     main_body.inertia = Diagonal([3e-2, 1e-3, 1e-1])
     side_body = Capsule(0.5 * 0.1, 0.35 * 1, 0.5 * 1;
-        orientation_offset=RotY(0.5 * π),
+        orientation_offset=Dojo.RotY(0.5 * π),
         color=color, name=:side)
     bodies = [main_body, side_body]
 

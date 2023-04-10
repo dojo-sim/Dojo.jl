@@ -117,7 +117,7 @@ function initialize_atlas!(mechanism::Mechanism;
     zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
     
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base), [body_position; rotation_vector(body_orientation)])
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base), [body_position; Dojo.rotation_vector(body_orientation)])
 
     return
 end

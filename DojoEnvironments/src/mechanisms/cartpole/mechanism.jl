@@ -17,7 +17,7 @@ function get_cartpole(;
     # mechanism
     origin = Origin{Float64}()
     slider = Capsule(1.5 * radius, 1, slider_mass; 
-        orientation_offset=RotX(0.5 * π), color)
+        orientation_offset=Dojo.RotX(0.5 * π), color)
     pendulum = Capsule(radius, pendulum_length, pendulum_mass; color)
     bodies = [slider, pendulum]
     

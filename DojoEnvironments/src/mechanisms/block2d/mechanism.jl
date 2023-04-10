@@ -87,7 +87,7 @@ function initialize_block2d!(mechanism::Mechanism;
     height = edge_length + offset
 
     set_maximal_configurations!(body,
-        x=[0;position] + Z_AXIS*height, q=RotX(orientation))
+        x=[0;position] + Z_AXIS*height, q=Dojo.RotX(orientation))
     set_maximal_velocities!(body,
         v=[0;velocity], ω=[angular_velocity;0;0])
 

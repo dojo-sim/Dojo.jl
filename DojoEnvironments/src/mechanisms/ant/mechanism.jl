@@ -100,7 +100,7 @@ function initialize_ant!(mechanism::Mechanism;
     zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
     
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base), [body_position; rotation_vector(body_orientation)])
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base), [body_position; Dojo.rotation_vector(body_orientation)])
 
     for i in [1, 4]
         set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol("hip_$i")), [0])

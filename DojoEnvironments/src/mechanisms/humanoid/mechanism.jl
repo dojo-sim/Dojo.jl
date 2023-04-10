@@ -75,7 +75,7 @@ function initialize_humanoid!(mechanism::Mechanism;
     zero_coordinates!(mechanism)
     
     set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base), 
-        [body_position; rotation_vector(body_orientation)])
+        [body_position; Dojo.rotation_vector(body_orientation)])
 
     return
 end

@@ -80,7 +80,7 @@ function initialize_twister!(mechanism::Mechanism;
     zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
 
-    set_minimal_coordinates!(mechanism, mechanism.joints[1], [base_position; rotation_vector(base_orientation)])
+    set_minimal_coordinates!(mechanism, mechanism.joints[1], [base_position; Dojo.rotation_vector(base_orientation)])
     set_minimal_velocities!(mechanism, mechanism.joints[1], [base_linear_velocity; base_angular_velocity])
 
     return

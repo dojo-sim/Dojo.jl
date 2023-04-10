@@ -120,7 +120,7 @@ function initialize_quadruped!(mechanism::Mechanism;
     zero_coordinates!(mechanism)
 
     body_position += [0, 0, 0.43]
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base), [body_position; rotation_vector(body_orientation)])
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base), [body_position; Dojo.rotation_vector(body_orientation)])
     for group in [:FR, :FL, :RR, :RL]
         set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol(group, :_hip_joint)), [hip_angle])
         set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol(group, :_thigh_joint)), [thigh_angle])

@@ -19,7 +19,10 @@ export
     get_mechanism,
     set_springs!,
     set_dampers!,
-    set_limits
+    set_limits,
+    X_AXIS,
+    Y_AXIS,
+    Z_AXIS,
 
 # Environment
 export

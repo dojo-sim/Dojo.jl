@@ -75,6 +75,6 @@ function initialize_tippetop!(mechanism::Mechanism{T};
     zero_coordinates!(mechanism)
 
     floating_joint = mechanism.joints[1]
-    set_minimal_coordinates!(mechanism, floating_joint, [body_position; rotation_vector(body_orientation)])
+    set_minimal_coordinates!(mechanism, floating_joint, [body_position; Dojo.rotation_vector(body_orientation)])
     set_minimal_velocities!(mechanism, floating_joint, [body_linear_velocity; body_angular_velocity])
 end
