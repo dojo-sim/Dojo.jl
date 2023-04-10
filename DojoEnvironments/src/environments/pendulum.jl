@@ -19,7 +19,7 @@ function pendulum(;
     orientation_offset=one(Quaternion),
     T=Float64)
 
-    mechanism = get_cartpole(;
+    mechanism = get_pendulum(;
         timestep,
         input_scaling, 
         gravity,
@@ -35,7 +35,7 @@ function pendulum(;
         T
     )
 
-    storage = Storage(horizon, length(mechanism.bodies))
+    storage = Storage(horizon, Base.length(mechanism.bodies))
 
     return Pendulum{T,horizon}(mechanism, storage)
 end
@@ -49,7 +49,7 @@ function input_map(::Pendulum, input)
 end
 
 function input_map(::Pendulum, ::Nothing)
-    return input
+    return zeros(1)
 end
 
 function Dojo.step!(environment::Pendulum, state, input=nothing; k=1, record=false, opts=SolverOptions())

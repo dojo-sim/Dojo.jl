@@ -1,6 +1,7 @@
 environments = [
     :ant_ars,
     :cartpole_dqn,
+    :pendulum,
     :quadruped_sampling,
 ]
 
