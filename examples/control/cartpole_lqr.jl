@@ -1,17 +1,14 @@
-# using Pkg
-# Pkg.activate(joinpath(@__DIR__, ".."))
-# Pkg.instantiate()
-
-# ## Setup
+# ### Setup
+# PKG_SETUP
 using Dojo
 using DojoEnvironments
 using ControlSystemsBase
 using LinearAlgebra
 
-# ## Mechanism
+# ### Mechanism
 mechanism = get_mechanism(:cartpole)
 
-# ## Controller
+# ### Controller
 x0 = zeros(4)
 u0 = zeros(2)
 A, B = get_minimal_gradients!(mechanism, x0, u0)
@@ -31,10 +28,12 @@ function controller!(mechanism, k)
     set_input!(mechanism, [u;0]) # input only to cart
 end
 
+# ### Simulate 
 initialize!(mechanism, :cartpole; position=0, orientation=pi/4)
             
 storage = simulate!(mechanism, 10.0, controller!, record=true)
 
     
-# ## Visualize
-visualize(mechanism, storage)
+# ### Visualize
+vis = visualize(mechanism, storage)
+render(vis)

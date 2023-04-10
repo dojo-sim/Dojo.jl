@@ -1,6 +1,9 @@
 # Running from within Dojo repo does not work somehow; create temp environment
+
 # Copied from https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl/blob/main/src/ReinforcementLearningEnvironments/src/environments/examples/CartPoleEnv.jl
 
+# ### Setup
+# PKG_SETUP
 using ReinforcementLearning # v0.10.2
 using Random
 using ClosedIntervals
@@ -11,7 +14,7 @@ using Flux.Losses: huber_loss
 using Dojo
 using DojoEnvironments
 
-# ##### BEGIN Redefinition because of breaking changes in ReinforcementLearning.jl repo
+# ### BEGIN Redefinition because of breaking changes in ReinforcementLearning.jl repo
 function RLBase.update!(learner::BasicDQNLearner, batch::NamedTuple{SARTS})
 
     Q = learner.approximator
@@ -37,7 +40,7 @@ end
 
 RLBase.update!(app::NeuralNetworkApproximator, gs) =
     Flux.Optimise.update!(app.optimizer, params(app), gs)
-# ##### END Redefinition because of breaking changes in ReinforcementLearning.jl repo
+# ### END Redefinition because of breaking changes in ReinforcementLearning.jl repo
 
 
 struct CartPoleEnvParams{T}
@@ -96,26 +99,10 @@ mutable struct CartPoleEnv{T,ACT} <: AbstractEnv
     rng::AbstractRNG
 end
 
-"""
-    CartPoleEnv(;kwargs...)
-# Keyword arguments
-- `T = Float64`
-- `continuous = false`
-- `rng = Random.GLOBAL_RNG`
-- `gravity = T(9.8)`
-- `masscart = T(1.0)`
-- `masspole = T(0.1)`
-- `halflength = T(0.5)`
-- `forcemag = T(10.0)`
-- `max_steps = 200`
-- `dt = 0.02`
-- `thetathreshold = 12.0 # degrees`
-- `xthreshold` = 2.4`
-"""
 function CartPoleEnv(; T=Float64, record=false, continuous=false, rng=Random.GLOBAL_RNG, kwargs...)
     params = CartPoleEnvParams{T}(; kwargs...)
 
-    # create Dojo Environment
+    ## create Dojo Environment
     dojo_env = DojoEnvironments.get_environment(:cartpole_dqn;
         horizon=params.max_steps+1,
         timestep = params.dt,
@@ -170,7 +157,8 @@ end
 function _step!(env::CartPoleEnv, a)
     env.t += 1
     force = a * env.params.forcemag
-    #= Remove ReinforcementLearningEnvironments dynamics
+    #= 
+    Remove ReinforcementLearningEnvironments dynamics
     x, xdot, theta, thetadot = env.state
     costheta = cos(theta)
     sintheta = sin(theta)
@@ -187,7 +175,7 @@ function _step!(env::CartPoleEnv, a)
     env.state[4] += env.params.dt * thetaacc
     =#
 
-    # Use Dojo dynamics
+    ## Use Dojo dynamics
     DojoEnvironments.step!(env.dojo_env, env.state, force; k=env.t, env.record)
     env.state = DojoEnvironments.get_state(env.dojo_env)
     
@@ -233,9 +221,9 @@ policy = Agent(
         capacity = 1000,
         state = Vector{Float32} => (ns,),
     ),
-)
+);
 
-# Train policy
+# ## Train policy
 run(
         policy,
         CartPoleEnv(),
@@ -243,7 +231,7 @@ run(
         TotalRewardPerEpisode()
     )
 
-# Rollout policy once and record (record=true in env)
+# ## Rollout policy once and record (record=true in env)
 run(
         policy,
         env,
@@ -251,4 +239,6 @@ run(
         TotalRewardPerEpisode()
     )
 
-visualize(env.dojo_env; visualize_floor=false)
+# ### Visualize trained cartpole
+vis = visualize(env.dojo_env)
+render(vis)

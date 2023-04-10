@@ -1,15 +1,13 @@
-# ## Setup
+# ### Setup
+# PKG_SETUP
 using Dojo
 using DojoEnvironments
 using Random
-using LinearAlgebra 
-using JLD2
-
+using LinearAlgebra
 using Statistics
-
 import LinearAlgebra.normalize
 
-# ## Parameters
+# ### Parameters and structs
 rng = MersenneTwister(1)
 
 Base.@kwdef struct HyperParameters{T}
@@ -21,7 +19,15 @@ Base.@kwdef struct HyperParameters{T}
     noise::T = 0.1
 end
 
-# ## Observation filter
+mutable struct Policy{T}
+    hp::HyperParameters{T}
+    θ::Matrix{T}
+
+    function Policy(input_size::Int, output_size::Int, hp::HyperParameters{T}; scale=0.2) where T
+        new{T}(hp, scale * randn(output_size, input_size))
+    end
+end
+
 mutable struct Normalizer{T}
     n::Vector{T}
     mean::Vector{T}
@@ -37,6 +43,7 @@ mutable struct Normalizer{T}
     end
 end
 
+# ### Oberservation functions
 function normalize(normalizer, inputs)
     obs_std = sqrt.(normalizer.var)
     return (inputs .- normalizer.mean) ./ obs_std
@@ -51,7 +58,7 @@ function observe!(normalizer, inputs)
 end
 
 
-# ## Mechanism
+# ### Environment
 env = get_environment(:ant_ars;
     horizon=100,
     gravity=-9.81, 
@@ -62,7 +69,7 @@ env = get_environment(:ant_ars;
     contact_feet=true, 
     contact_body=true);
 
-# ## Reset and rollout functions
+# ### Reset and rollout functions
 function reset_state!(env)
     initialize!(env.mechanism, :ant)
     return
@@ -72,14 +79,17 @@ function rollout_policy(θ::Matrix, env, normalizer::Normalizer, parameters::Hyp
     reset_state!(env)
     rewards = 0.0
     for k=1:parameters.horizon
+        ## get state
         state = DojoEnvironments.get_state(env)
         x = state[1:28] # minimal state without contacts
         observe!(normalizer, state)
         state = normalize(normalizer, state)
         action = θ * state
 
-        
+        ## single step
         step!(env, x, action; record, k)
+
+        ## get reward
         state_after = DojoEnvironments.get_state(env)
         x_pos_before = x[1]
         x_pos_after = state_after[1]
@@ -92,31 +102,20 @@ function rollout_policy(θ::Matrix, env, normalizer::Normalizer, parameters::Hyp
         survive_reward = 0.05
 
         reward = forward_reward - control_cost - contact_cost + survive_reward
-        # reward = max(min(reward, 1), -1)
         rewards += reward
 
+        ## check for failure
         if !(all(isfinite.(state_after)) && (state_after[3] >= 0.2) && (state_after[3] <= 1))
             println("  failed")
             break
         end
     end
 
-    println("  x_pos: "*string(DojoEnvironments.get_state(env)[1]))
-
     return rewards
 end
 
 
-# ## Training functions
-mutable struct Policy{T}
-    hp::HyperParameters{T}
-    θ::Matrix{T}
-
-    function Policy(input_size::Int, output_size::Int, hp::HyperParameters{T}; scale=0.2) where T
-        new{T}(hp, scale * randn(output_size, input_size))
-    end
-end
-
+# ### Training functions
 function sample_policy(policy::Policy{T}) where T
     δ = [randn(size(policy.θ)) for i = 1:policy.hp.n_directions]
     θp = [policy.θ + policy.hp.noise .* δ[i] for i = 1:policy.hp.n_directions]
@@ -137,42 +136,40 @@ function train(env, policy::Policy{T}, normalizer::Normalizer{T}, hp::HyperParam
 
     println("Training linear policy with Augmented Random Search (ARS)\n ")
 
-    # pre-allocate for rewards
+    ## pre-allocate for rewards
     rewards = zeros(2 * hp.n_directions)
 
     for episode = 1:hp.main_loop_size
-        # initialize deltas and rewards
+        ## initialize deltas and rewards
         θs, δs = sample_policy(policy)
 
-        # evaluate policies
+        ## evaluate policies
         roll_time = @elapsed begin
             for k = 1:(2 * hp.n_directions)
                 rewards[k] = rollout_policy(θs[k], env, normalizer, hp)
             end
         end
-        # reward evaluation
+        ## reward evaluation
         r_max = [max(rewards[k], rewards[hp.n_directions + k]) for k = 1:hp.n_directions]
         σ_r = std(rewards)
         order = sortperm(r_max, rev = true)[1:hp.b]
         rollouts = [(rewards[k], rewards[hp.n_directions + k], δs[k]) for k = order]
 
-        # policy update
+        ## policy update
         update!(policy, rollouts, σ_r)
 
-        # finish, print:
+        ## finish, print:
         println("episode $episode reward_evaluation $(mean(rewards)). Took $(roll_time) seconds")
-        rollout_policy(policy.θ, env, normalizer, hp; record=true)
-        visualize(env)
     end
 
     return nothing
 end
 
-# ## Training
+# ### Training
 train_times = Float64[]
 rewards = Float64[]
 policies = Matrix{Float64}[]
-N = 1
+N = 2
 for i = 1:N
     ## Random policy
     hp = HyperParameters(
@@ -199,48 +196,29 @@ for i = 1:N
 end
 
 
-# ## Training statistics
-N_best = 1
-max_idx = sortperm(rewards, 
-    lt=Base.isgreater)
-train_time_best = (train_times[max_idx])[1:N_best]
-rewards_best = (rewards[max_idx])[1:N_best]
-policies_best = (policies[max_idx])[1:N_best]
+# ### Training results
+max_idx = sortperm(rewards, lt=Base.isgreater)
+train_time_best = (train_times[max_idx])[1]
+rewards_best = (rewards[max_idx])[1]
+policies_best = (policies[max_idx])[1];
 
-@show rewards
-@show mean(train_time_best)
-@show std(train_time_best)
-@show mean(rewards)
-@show std(rewards)
-
-# ## Save/Load policy
-# θ = policy.θ
-# @save joinpath(@__DIR__, "ant_policy.jld2") θ
-# @load joinpath(@__DIR__, "ant_policy.jld2") θ
-
-# ## Recover policy
-hp = HyperParameters(
-        main_loop_size=20, 
-        horizon=100, 
-        n_directions=6, 
-        b=6, 
-        step_size=0.05)
+# ### Controller with best policy
+θ = policies_best
 input_size = 37
-output_size = 8
 normalizer = Normalizer(input_size)
-θ = policies_best[1] 
-
 
 function controller!(mechanism, k)
     state = DojoEnvironments.get_state(env)
     observe!(normalizer, state)
     state = normalize(normalizer, state)
+
     action = θ * state
-    set_input!(mechanism, [zeros(6);action])
+
+    set_input!(mechanism, DojoEnvironments.input_map(env,action))
 end
 
-# # ## Visualize policy
+# ### Visualize policy
 reset_state!(env)
-storage = simulate!(env.mechanism, 5, controller!; record=true)
-rollout_policy(θ, env, normalizer, hp; record=true)
-visualize(env.mechanism, storage)
+simulate!(env, controller!; record=true)
+vis = visualize(env)
+render(vis)

@@ -1,13 +1,11 @@
-# using Pkg
-# Pkg.activate(joinpath(@__DIR__, ".."))
-# Pkg.instantiate()
-
-# ## Setup
+# ### Setup
+# PKG_SETUP_2
 using Dojo 
 using DojoEnvironments
 using Plots
 using LinearAlgebra
 
+# ### Define gradient functions
 function get_gradients(mechanism::Mechanism, F, mode; 
     rtol=1e-10, btol=1e-10, 
     undercut=1.0, no_progress_undercut=1.0)
@@ -38,19 +36,19 @@ function get_gradients(mechanism::Mechanism, F, mode;
     return Δx, ∂x∂F
 end
 
-# ## scale system for nice plots
+# ### Gravity = Friction = 1 for nice plots
 mech = get_mechanism(:block2d; 
     timestep=0.1, gravity=-1.0, 
     friction_coefficient=1.0, contact=true)
 
-# ## inputs
+# ### Force range
 F_ref = 0.5:0.01:1.5
 tolerances = [1e-4, 1e-6, 1e-8, 1e-10]
 
-# ## Gradients
-gradient_plot = plot(layout=(2,2), size=(800,600), legend=:topleft)
+# ### Gradient plots
+gradient_plot = plot(layout=(2,2), size=(800,600), legend=:topleft);
 
-# ## Impact
+# ### Impact plots
 for btol in tolerances
     gradients = [get_gradients(mech, F, :impact; btol) for F = F_ref]
     x = [r[1] for r in gradients]
@@ -59,10 +57,9 @@ for btol in tolerances
         label="Dojo btol ="*Dojo.scn(btol))
     plot!(gradient_plot[2,1], F_ref, ∇x, xlabel="Fz", ylabel="∇z", linewidth=3.0, linestyle=:dot,
         label="Dojo btol ="*Dojo.scn(btol)[2:end])
-    display(gradient_plot)
 end
 
-# ## Friction
+# ### Friction plots
 for btol in tolerances
     gradients = [get_gradients(mech, F, :friction; btol) for F = F_ref]
     x = [r[1] for r in gradients]
@@ -71,5 +68,7 @@ for btol in tolerances
         label="Dojo btol ="*Dojo.scn(btol))
     plot!(gradient_plot[2,2], F_ref, ∇x, xlabel="Fx", ylabel="∇x", linewidth=3.0, linestyle=:dot,
         label="Dojo btol ="*Dojo.scn(btol)[2:end])
-    display(gradient_plot)
 end
+
+# ### Show plots
+display(gradient_plot)

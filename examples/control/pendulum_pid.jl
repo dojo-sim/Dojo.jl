@@ -1,17 +1,14 @@
-# using Pkg
-# Pkg.activate(joinpath(@__DIR__, ".."))
-# Pkg.instantiate()
-
-# ## Setup
+# ### Setup
+# PKG_SETUP
 using Dojo
 using DojoEnvironments
 
-# ## Mechanism
+# ### Mechanism
 mechanism = get_mechanism(:pendulum)
 
-summed_error = 0
+# ### Controller
+summed_error = 0 # for integral part
 
-# ## Controller
 function controller!(mechanism, k)
     ## Target state
     x_goal = [π/2; 0.0]
@@ -27,16 +24,17 @@ function controller!(mechanism, k)
     Ki = 50
     Kd = 5
 
-    # Control inputs
+    ## Control inputs
     u = Kp*error[1] + Ki*summed_error + Kd*error[2]
     set_input!(mechanism, [u])
 end
 
-# ##Simulate
+# ### Simulate
 initialize!(mechanism, :pendulum,
-    angle=0.0, angular_velocity=0.0);
+    angle=0.0, angular_velocity=0.0)
 
-storage = simulate!(mechanism, 5.0, controller!, record=true);
+storage = simulate!(mechanism, 5.0, controller!, record=true)
 
-# ## Visualize
-visualize(mechanism, storage);
+# ### Visualize
+vis = visualize(mechanism, storage)
+render(vis)

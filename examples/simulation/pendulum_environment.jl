@@ -1,16 +1,17 @@
-# ## Setup
+# ### Setup
+# PKG_SETUP
 using Dojo
 using DojoEnvironments
 
-# ## Get mechanism (check DojoEnvironment/environments files for kwargs)
+# ### Get environment (check DojoEnvironment/environments files for kwargs)
 environment = get_environment(:pendulum; timestep=0.01, horizon=200) 
 
-# ## Initialize mechanism (check DojoEnvironment/mechanisms files for kwargs)
+# ### Initialize mechanism (check DojoEnvironment/mechanisms files for kwargs)
 initialize!(environment.mechanism, :pendulum; angle=-0.3)
 
-# ## Simulate mechanism
+# ### Simulate environment
 simulate!(environment, record=true)
     
-# ## Visualize mechanism
-visualize(environment)
+# ### Visualize environment
+vis = visualize(environment)
 render(vis)

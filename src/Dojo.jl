@@ -287,6 +287,7 @@ export
 export
     Visualizer,
     visualize,
+    render,
     set_background!,
     set_floor!,
     set_surface!,

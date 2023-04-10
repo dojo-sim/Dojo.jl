@@ -1,24 +1,25 @@
-# ## Setup
+# ### Setup
+# PKG_SETUP
 using Dojo
 using DojoEnvironments
 using Random
 using LinearAlgebra
 
-# ## Parameters
+# ### Parameters
 rng = MersenneTwister(1)
 N = 2000
 M = 20
-paramcontainer = [[0.1; 0; 1; 0; -1.5]] # [[0.3604389380437305, 0.15854285262309512, 0.9575825661369068, -0.325769852046206, -1.4824537456751052]]
+paramcontainer = [[0.1; 0; 1; 0; -1.5]] # result: [[0.3604389380437305, 0.15854285262309512, 0.9575825661369068, -0.325769852046206, -1.4824537456751052]]
 paramstorage = [[0.1; 0; 1; 0; -1.5]]
 bias = zeros(5)
 distance = 0.0
 explore_factor = 0.1
-distancestorage = zeros(M)
+distancestorage = zeros(M);
 
-# ## Mechanism
+# ### Environment
 env = get_environment(:quadruped_sampling; horizon=N, timestep=0.001, limits=false, gravity=-9.81, contact_body=false)
 
-# ## Controller
+# ### Controller
 legmovement(k,a,b,c,offset) = a*cos(k*b*0.01*2*pi+offset)+c
 Kp = [100;80;60]
 Kd = [5;4;3]
@@ -53,7 +54,7 @@ function controller!(x, k)
     return u
 end
 
-# ## Reset and rollout functions
+# ### Reset and rollout functions
 function reset_state!(env)
     initialize!(env.mechanism, :quadruped; body_position=[0;0;-0.43], hip_angle=0, thigh_angle=paramcontainer[1][3], calf_angle=paramcontainer[1][5]) 
 
@@ -76,7 +77,7 @@ function rollout(env; record=false)
     return 0
 end
 
-# ## Learning routine
+# ### Learning routine
 for i=1:M
     println("run: $i")
 
@@ -120,8 +121,17 @@ for i=1:M
     distancestorage[i] = distance
 end
 
-# ## Visualize learned behavior
-reset_state!(env)
-simulate!(env, controller!; record=true)
+# ### Controller for best parameter set
+paramcontainer[1] = paramstorage[end]
+function environment_controller!(mechanism, k)
+    x = DojoEnvironments.get_state(env)
 
-visualize(env)
+    u = controller!(x, k)
+    set_input!(mechanism, DojoEnvironments.input_map(env,u))
+end
+
+# ### Visualize learned behavior
+reset_state!(env)
+simulate!(env, environment_controller!; record=true)
+vis = visualize(env)
+render(vis)

@@ -7,9 +7,6 @@ abstract type Environment{T,N} end
 
 function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, environment::Environment)
     summary(io, environment)
-    println(io, "")
-    println(io, " mechanism: "*string(environment.mechanism))
-    println(io, " storage:   "*string(environment.storage))
 end
 
 """
@@ -20,7 +17,7 @@ end
     model: name of of environment 
     kwargs: environment specific parameters
 """
-function get_environment(model; horizon=100, kwargs...)
+function get_environment(model; kwargs...)
     return eval(string_to_symbol(model))(; string_to_symbol(kwargs)...)
 end
 
@@ -78,8 +75,8 @@ end
     controller!: Control function
     kwargs:      same as for Dojo.simulate 
 """
-function Dojo.simulate!(environment::Environment, controller! = (mechanism, k) -> nothing; kwargs...)
-    simulate!(environment.mechanism, 1:length(environment.storage), environment.storage, controller!; kwargs...)
+function Dojo.simulate!(environment::Environment{T,N}, controller! = (mechanism, k) -> nothing; kwargs...) where {T,N}
+    simulate!(environment.mechanism, 1:N, environment.storage, controller!; kwargs...)
 end
 
 """
