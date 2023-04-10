@@ -13,7 +13,7 @@
     no_progress_undercut: undercut scaling factor (target_new ← target_current / no_progress_undercut); defaults to 10
     verbose: flag for printing the status of the solver during the solve; defaults to false
 """
-@with_kw mutable struct SolverOptions{T}
+Base.@kwdef mutable struct SolverOptions{T}
     rtol::T=1.0e-6
     btol::T=1.0e-4
     ls_scale::T=0.5

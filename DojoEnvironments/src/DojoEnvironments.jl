@@ -8,11 +8,8 @@ global const Z_AXIS = [0;0;1]
 using LinearAlgebra
 using Random
 
-using MeshCat
-using StaticArrays
 using Dojo
-
-import Dojo: string_to_symbol, add_limits, RotX, RotY, RotZ, rotation_vector
+import Dojo: string_to_symbol, add_limits, RotX, RotY, RotZ, rotation_vector, SVector
 
 include("mechanisms.jl")
 include("environments.jl")

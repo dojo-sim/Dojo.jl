@@ -12,7 +12,6 @@ using StaticArrays
 using SparseArrays
 using StaticArrays: SUnitRange
 using Quaternions
-using Parameters
 using Statistics
 
 using Colors
@@ -24,10 +23,8 @@ import MeshCat: render
 using Meshing
 using GeometryBasics
 using GraphBasedSystems
-
 using CoordinateTransformations
 
-using JLD2
 using DocStringExtensions
 
 # Utilities
