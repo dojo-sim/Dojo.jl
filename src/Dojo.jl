@@ -1,7 +1,7 @@
 module Dojo
 
 # constants
-global REG = 1.0e-10::Float64
+global const REG = 1.0e-10::Float64
 
 #TODO: remove
 using FiniteDiff
@@ -12,7 +12,6 @@ using StaticArrays
 using SparseArrays
 using StaticArrays: SUnitRange
 using Quaternions
-using Parameters
 using Statistics
 
 using Colors
@@ -24,10 +23,8 @@ import MeshCat: render
 using Meshing
 using GeometryBasics
 using GraphBasedSystems
-
 using CoordinateTransformations
 
-using JLD2
 using DocStringExtensions
 
 # Utilities
@@ -140,6 +137,7 @@ include(joinpath("visuals", "colors.jl"))
 include(joinpath("mechanism", "data.jl"))
 
 # Gradients
+include(joinpath("gradients", "contact.jl"))
 include(joinpath("gradients", "finite_difference.jl"))
 include(joinpath("gradients", "state.jl"))
 include(joinpath("gradients", "data.jl"))
@@ -219,7 +217,8 @@ export
     Mechanism,
     initialize!,
     set_floating_base,
-    zero_velocity!
+    zero_coordinates!,
+    zero_velocities!
 
 # Maximal
 export
@@ -288,6 +287,7 @@ export
 export
     Visualizer,
     visualize,
+    render,
     set_background!,
     set_floor!,
     set_surface!,
@@ -306,7 +306,6 @@ export
 
 # Utilities
 export
-    Storage,
-    normalize
+    Storage
 
 end

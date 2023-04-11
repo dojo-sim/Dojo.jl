@@ -1,13 +1,12 @@
 function velocity_index(mechanism::Mechanism{T,Nn,Ne}) where {T,Nn,Ne}
     ind = []
     off = 0
-	for id in mechanism.root_to_leaves
-        (id > Ne) && continue # only treat joints
-        joint = mechanism.joints[id]
+    for joint in mechanism.joints
         nu = input_dimension(joint)
         push!(ind, Vector(off + nu .+ (1:nu)))
         off += 2nu
     end
+    
     return vcat(ind...)
 end
 
@@ -51,13 +50,30 @@ maximal_dimension(mechanism::Mechanism{T,Nn,Ne,Nb}; attjac::Bool=false) where {T
 
     mechanism: Mechanism
 """
-function input_dimension(mechanism::Mechanism{T,Nn,Ne,Nb,Ni};
-    ignore_floating_base::Bool=false) where {T,Nn,Ne,Nb,Ni}
+function input_dimension(mechanism::Mechanism; ignore_floating_base::Bool=false)
     nu = 0
     for joint in mechanism.joints
-        nu += input_dimension(joint, ignore_floating_base=ignore_floating_base)
+        nu += input_dimension(joint; ignore_floating_base)
     end
+    
     return nu
+end
+
+"""
+    input_dimensions(mechanism)
+
+    return an array with the input dimensions of all joints
+
+    mechanism: Mechanism
+"""
+function input_dimensions(mechanism::Mechanism; ignore_floating_base::Bool=false)
+    nus = Int64[]
+    
+    for joint in mechanism.joints
+        push!(nus,input_dimension(joint; ignore_floating_base))
+    end
+
+    return nus
 end
 
 """

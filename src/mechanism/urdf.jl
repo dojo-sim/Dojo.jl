@@ -215,7 +215,7 @@ function joint_selector(joint_type, pbody, cbody, T;
         axis = SA{T}[1;0;0], parent_vertex = szeros(T,3), child_vertex = szeros(T,3), orientation_offset = one(Quaternion{T}), name = Symbol("joint_" * randstring(4)), damper = zero(T))
 
     # TODO @warn "this is not great"
-    axis = vector_rotate(axis, orientation_offset) # inv(orientation_offset) * axis
+    # axis = vector_rotate(axis, orientation_offset) # inv(orientation_offset) * axis
 
     # TODO limits for revolute joint?
     if joint_type == "revolute" || joint_type == "continuous"
@@ -249,18 +249,18 @@ function joint_selector(joint_type, pbody, cbody, T;
     return joint
 end
 
-function parse_joint(xjoint, plink, clink, T, parse_damper)
+function parse_joint(xjoint, plink, clink, T, parse_dampers)
     joint_type = attribute(xjoint, "type")
     x, q = parse_pose(find_element(xjoint, "origin"), T)
     axis = parse_vector(find_element(xjoint, "axis"), "xyz", T; default = "1 0 0")
     parent_vertex = x
     name = Symbol(attribute(xjoint, "name"))
-    parse_damper ? damper = parse_scalar(find_element(xjoint, "dynamics"), "damping", T; default = "0") : damper = 0
+    parse_dampers ? damper = parse_scalar(find_element(xjoint, "dynamics"), "damping", T; default = "0") : damper = 0
 
     return joint_selector(joint_type, plink, clink, T; axis, parent_vertex, orientation_offset = q, name, damper)
 end
 
-function parse_loop_joint(xjoint, pbody, cbody, T, parse_damper)
+function parse_loop_joint(xjoint, pbody, cbody, T, parse_dampers)
     find_element(xjoint, "link1")
     find_element(xjoint, "link2")
 
@@ -271,12 +271,12 @@ function parse_loop_joint(xjoint, pbody, cbody, T, parse_damper)
     parent_vertex = x1
     child_vertex = x2
     name = Symbol(attribute(xjoint, "name"))
-    parse_damper ? damper = parse_scalar(find_element(xjoint, "dynamics"), "damping", T; default = "0") : damper = 0
+    parse_dampers ? damper = parse_scalar(find_element(xjoint, "dynamics"), "damping", T; default = "0") : damper = 0
 
     return joint_selector(joint_type, pbody, cbody, T; axis, parent_vertex, child_vertex, orientation_offset = q1, name, damper)
 end
 
-function parse_joints(xjoints, ldict, floating, T, parse_damper)
+function parse_joints(xjoints, ldict, floating, T, parse_dampers)
     origins = Origin{T}[]
     links = Body{T}[]
     joints = JointConstraint{T}[]
@@ -317,10 +317,10 @@ function parse_joints(xjoints, ldict, floating, T, parse_damper)
         plink = ldict[Symbol(attribute(xplink, "link"))]
         if plink.id == origin.id
             plink = origin
-            joint = parse_joint(xjoint, plink, clink, T, parse_damper)
+            joint = parse_joint(xjoint, plink, clink, T, parse_dampers)
             joints = [joint; joints] # For proper parsing the first joint must be connected to the origin
         else
-            joint = parse_joint(xjoint, plink, clink, T, parse_damper)
+            joint = parse_joint(xjoint, plink, clink, T, parse_dampers)
             push!(joints, joint)
         end
     end
@@ -335,7 +335,7 @@ end
 
 # TODO This might be missing the detection of a direct loop, i.e., only two links connected by two joints
 # TODO Also only works for a single loop closure in a cycle (so no ladders)
-function parse_loop_joints(xloopjoints, origin, joints, ldict, T, parse_damper)
+function parse_loop_joints(xloopjoints, origin, joints, ldict, T, parse_dampers)
     loopjoints = JointConstraint{T}[]
 
     for xloopjoint in xloopjoints
@@ -345,7 +345,7 @@ function parse_loop_joints(xloopjoints, origin, joints, ldict, T, parse_damper)
         cbody = ldict[Symbol(attribute(xcbody, "link"))]
 
         predlist = Tuple{Int64,Int64}[]
-        jointlist = [(joints[i].id,joints[i].parent_id, joints[i].child_id) for i=1:length(joints)]
+        jointlist = [(joints[i].id,joints[i].parent_id, joints[i].child_id) for i in eachindex(joints)]
         linkid = pbody.id
 
         while true # create list of predecessor joints and parent links for pbody
@@ -362,7 +362,7 @@ function parse_loop_joints(xloopjoints, origin, joints, ldict, T, parse_damper)
             end
         end
 
-        jointlist = [(joints[i].id, joints[i].parent_id, joints[i].child_id) for i=1:length(joints)]
+        jointlist = [(joints[i].id, joints[i].parent_id, joints[i].child_id) for i in eachindex(joints)]
         linkid = cbody.id
         joint1id = 0
         joint2id = 0
@@ -387,14 +387,14 @@ function parse_loop_joints(xloopjoints, origin, joints, ldict, T, parse_damper)
             foundflag && break
         end
 
-        loopjoint = parse_loop_joint(xloopjoint, pbody, cbody, T, parse_damper)
+        loopjoint = parse_loop_joint(xloopjoint, pbody, cbody, T, parse_dampers)
         push!(loopjoints, loopjoint)
     end
 
     return joints, loopjoints
 end
 
-function parse_urdf(filename, floating, ::Type{T}, parse_damper) where T
+function parse_urdf(filename, floating, ::Type{T}, parse_dampers) where T
     xdoc = LightXML.parse_file(filename)
     xroot = LightXML.root(xdoc)
     @assert LightXML.name(xroot) == "robot"
@@ -405,9 +405,9 @@ function parse_urdf(filename, floating, ::Type{T}, parse_damper) where T
 
     materialdict = parse_robotmaterials(xroot, T)
     ldict = parse_links(xlinks, materialdict, T; path_prefix=dirname(filename))
-    origin, links, joints = parse_joints(xjoints, ldict, floating, T, parse_damper)
+    origin, links, joints = parse_joints(xjoints, ldict, floating, T, parse_dampers)
 
-    joints, loopjoints = parse_loop_joints(xloopjoints, origin, joints, ldict, T, parse_damper)
+    joints, loopjoints = parse_loop_joints(xloopjoints, origin, joints, ldict, T, parse_dampers)
 
     free(xdoc)
 
@@ -484,13 +484,13 @@ function set_parsed_values!(mechanism::Mechanism{T}, loopjoints) where T
         child_vertex = vector_rotate(-xbodylocal, inv(qbodylocal)) # in body frame (xbodylocal and qbodylocal are both relative to the same (joint) frame -> rotationg by inv(body.q) gives body frame)
         cjoint.translational.vertices = (parent_vertex, child_vertex)
 
-        V3 = vector_rotate(cjoint.rotational.axis_mask3', qjointlocal) # in parent's (parentbody) frame
-        V1 = (svd(skew(V3)).Vt)[1:1,:]
-        V2 = (svd(skew(V3)).Vt)[2:2,:]
+        # V3 = vector_rotate(cjoint.rotational.axis_mask3', qjointlocal) # in parent's (parentbody) frame
+        # V1 = (svd(skew(V3)).Vt)[1:1,:]
+        # V2 = (svd(skew(V3)).Vt)[2:2,:]
 
-        cjoint.rotational.axis_mask3 = SVector{3}(V3)'
-        cjoint.rotational.axis_mask1 = SVector{3}(V1)'
-        cjoint.rotational.axis_mask2 = SVector{3}(V2)'
+        # cjoint.rotational.axis_mask3 = SVector{3}(V3)'
+        # cjoint.rotational.axis_mask1 = SVector{3}(V1)'
+        # cjoint.rotational.axis_mask2 = SVector{3}(V2)'
         cjoint.rotational.orientation_offset = orientation_offset # in parent's (parentbody) frame
 
         # actual body properties

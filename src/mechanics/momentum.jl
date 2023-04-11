@@ -15,7 +15,7 @@ function momentum(mechanism::Mechanism, storage::Storage{T,N}) where {T,N}
 end
 
 function momentum(mechanism::Mechanism{T}, body::Body{T}) where T
-    timestep= mechanism.timestep
+    timestep = mechanism.timestep
     state = body.state
     mass = body.mass
     inertia = body.inertia

@@ -8,8 +8,8 @@
 """
 function get_mechanism(model; kwargs...)
     # convert potential strings to symbols    
-    mech = eval(Symbol(:get, :_, string_to_symbol(model)))(; string_to_symbol(kwargs)...)
-    return mech
+    mechanism = eval(Symbol(:get, :_, string_to_symbol(model)))(; string_to_symbol(kwargs)...)
+    return mechanism
 end
 
 """
@@ -21,7 +21,7 @@ end
     model: name of mechanism 
     kwargs: mechanism specific parameters
 """
-function initialize!(mechanism::Mechanism, model; kwargs...)
+function Dojo.initialize!(mechanism::Mechanism, model; kwargs...)
     eval(Symbol(:initialize, :_, string_to_symbol(model), :!))(mechanism; kwargs...)
 end
 

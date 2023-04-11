@@ -13,6 +13,11 @@ mutable struct SphereHalfSpaceCollision{T,O,I,OI} <: Collision{T,O,I,OI}
     contact_normal::Adjoint{T,SVector{I,T}}
     contact_origin::SVector{I,T}
     contact_radius::T
+
+    function SphereHalfSpaceCollision(contact_tangent::SMatrix{O,I,T0,OI}, contact_normal, contact_origin, contact_radius) where {O,I,T0,OI}
+        T = promote_type(eltype.((contact_tangent, contact_normal, contact_origin, contact_radius))...)
+        new{T,O,I,OI}(contact_tangent, contact_normal, contact_origin, contact_radius)
+    end
 end 
 
 # function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, collision::SphereHalfSpaceCollision)

@@ -18,7 +18,7 @@ function set_minimal_coordinates!(joint::JointConstraint, pnode::Node, cnode::No
     return nothing
 end
 
-function set_minimal_coordinates!(mechanism, joint::JointConstraint{T,N,Nc}, xθ; iter=true) where {T,N,Nc}
+function set_minimal_coordinates!(mechanism, joint::JointConstraint{T,N,Nc}, xθ; iter=true, exclude_ids=Int64[]) where {T,N,Nc}
     # bodies
     pbody = get_body(mechanism, joint.parent_id)
     cbody = get_body(mechanism, joint.child_id)
@@ -28,15 +28,16 @@ function set_minimal_coordinates!(mechanism, joint::JointConstraint{T,N,Nc}, xθ
     Δθ = xθ[SUnitRange(joint.minimal_index[2][1], joint.minimal_index[2][2])]
 
     # set
+    current_coordinates = get_minimal_coordinates(mechanism)
     set_minimal_coordinates!(joint, pbody, cbody, mechanism.timestep, Δx=Δx, Δθ=Δθ)
 
     # recursive update down the kinematic chain
     if iter
-        current = get_minimal_coordinates(mechanism)
         for id in recursivedirectchildren!(mechanism.system, joint.id)
+            id in exclude_ids && continue # skip loop joints
             node = get_node(mechanism, id)
             if node isa JointConstraint
-                set_minimal_coordinates!(mechanism, node, current[id])
+                set_minimal_coordinates!(mechanism, node, current_coordinates[id])
             end
         end
     end

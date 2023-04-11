@@ -145,12 +145,10 @@ function get_minimal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,N
 	x = []
 
 	mechanism = deepcopy(mechanism)
-	timestep= mechanism.timestep
+	timestep = mechanism.timestep
 
-	for id in mechanism.root_to_leaves
-		(id > Ne) && continue # only treat joints
-		joint = mechanism.joints[id]
-		c = zeros(T,0)
+    for joint in mechanism.joints
+        c = zeros(T,0)
 		v = zeros(T,0)
 		pbody = get_body(mechanism, joint.parent_id)
 		cbody = get_body(mechanism, joint.child_id)
@@ -161,8 +159,9 @@ function get_minimal_state(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}) where {T,Nn,Ne,N
 			push!(v, vel...)
 		end
 		push!(x, [c; v]...)
-	end
+    end
 	x = [x...]
+    
 	return x
 end
 

@@ -3,8 +3,10 @@
         timestep=0.05,
         gravity=-9.81,
         friction_coefficient=0.8,
-        damper=1000.0,
-        spring=30.0)
+        parse_springs=false,
+        parse_dampers=false,
+        dampers=1000.0,
+        springs=30.0)
 
     initialize!(mech, :quadruped)
 
@@ -40,11 +42,12 @@ end
 @testset "Four-bar linkage" begin
     for timestep in [0.10, 0.05, 0.01, 0.005]
         mech = get_mechanism(:fourbar;
-            model="fourbar",
             timestep,
-            damper=1.0)
+            parse_springs=false,
+			parse_dampers=false,
+            dampers=0.0)
         Dojo.initialize!(mech, :fourbar,
-            angle=0.25)
+            inner_angle=0.25)
         loopjoints = mech.joints[end:end]
         Dojo.root_to_leaves_ordering(mech) == [2, 7, 3, 6, 1, 8, 4, 9]
 
@@ -62,7 +65,7 @@ end
     end
 end
 
-@testset "Tennis racket" begin
+@testset "Dzhanibekov" begin
     # Simulation
     timestep=0.01
     gravity=0.0

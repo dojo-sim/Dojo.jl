@@ -459,8 +459,8 @@ function Prototype(joint_type::Symbol, pbody::Node{T}, cbody::Node{T}, axis;
         spring_type=:linear) where T
 
     N̄tra, N̄rot = nullspace_dimension(joint_type)
-    (tra_spring_offset == nothing) && (tra_spring_offset = szeros(T,N̄tra))
-    (rot_spring_offset == nothing) && (rot_spring_offset = szeros(T,N̄rot))
+    (tra_spring_offset === nothing) && (tra_spring_offset = szeros(T,N̄tra))
+    (rot_spring_offset === nothing) && (rot_spring_offset = szeros(T,N̄rot))
     (joint_type == :Fixed)            && (return            Fixed(pbody, cbody;       parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset=orientation_offset))
     (joint_type == :Prismatic)        && (return        Prismatic(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset=orientation_offset, spring=spring, damper=damper, tra_spring_offset=tra_spring_offset,                                      tra_joint_limits=tra_joint_limits))
     (joint_type == :Planar)           && (return           Planar(pbody, cbody, axis; parent_vertex=parent_vertex, child_vertex=child_vertex, orientation_offset=orientation_offset, spring=spring, damper=damper, tra_spring_offset=tra_spring_offset,                                      tra_joint_limits=tra_joint_limits))

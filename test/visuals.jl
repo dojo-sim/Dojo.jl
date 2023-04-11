@@ -26,16 +26,13 @@ end
 @testset "MeshCat mechanism" begin
     # create visualizer
     vis = Dojo.Visualizer();
-    # get environment and simulate
-    env = DojoEnvironments.get_environment("halfcheetah";
+    # get mechanism and simulate
+    mechanism = DojoEnvironments.get_mechanism(:halfcheetah;
         timestep=0.1)
-    reset(env)
-    storage = Dojo.simulate!(env.mechanism, 0.25, 
-        record=true, 
-        verbose=true);
+    storage = Dojo.simulate!(mechanism, 0.25;
+        record=true, verbose=true);
     # visualize simulation
-    Dojo.visualize(env.mechanism, storage, 
-        vis=vis)
+    Dojo.visualize(mechanism, storage; vis=vis)
 
     # test that methods don't fail
     @test true
@@ -44,19 +41,15 @@ end
 @testset "URDF mesh" begin
     # create visualizer
     vis = Dojo.Visualizer();
-    # get environment and simulate
-    env = DojoEnvironments.get_environment("quadruped"; timestep=0.1)
-    reset(env)
-    storage = Dojo.simulate!(env.mechanism, 0.25, 
-        record=true, 
-        verbose=false)
+    # get mechanism and simulate
+    mechanism = DojoEnvironments.get_mechanism(:quadruped; timestep=0.1)
+    storage = Dojo.simulate!(mechanism, 0.25;
+        record=true, verbose=false)
     # visualize simulation
-    Dojo.visualize(env.mechanism, storage, 
-        vis=vis)
+    Dojo.visualize(mechanism, storage; vis=vis)
     # visualize w/ contact
-    Dojo.visualize(env.mechanism, storage, 
-        vis=vis, 
-        show_contact=true)
+    Dojo.visualize(mechanism, storage; 
+        vis=vis, show_contact=true)
 
     # test that methods don't fail
     @test true

@@ -62,7 +62,7 @@ end
 """ 
     set_minimal_state(mechanism, y) 
 
-    set the maximal state of a mechanism 
+    set the minimal state of a mechanism 
 
     mechanism: Mechanism 
     y: state 
@@ -108,13 +108,13 @@ end
 
 # velocity
 """ 
-    zero_velocity!(mechanism) 
+    zero_velocities!(mechanism) 
 
     set all mechanism body velocities to zero 
 
     mechanism: Mechanism 
 """
-function zero_velocity!(mechanism::Mechanism)
+function zero_velocities!(mechanism::Mechanism)
     for (i, body) in enumerate(mechanism.bodies)
         try
             set_maximal_velocities!(body, v=zeros(3), ω=zeros(3))
@@ -128,12 +128,10 @@ end
 # springs + dampers
 function set_spring_offset!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVector) where {T,Nn,Ne,Nb,Ni}
 	off = 0
-	for id in mechanism.root_to_leaves
-		(id > Ne) && continue # only treat joints
-		joint = mechanism.joints[id]
+    for joint in mechanism.joints
         N̄ = 3 - length(joint)
         joint.spring_offset = x[off .+ (1:N̄)]
         off += 2N̄
-	end
-	return nothing
+    end
+	return
 end

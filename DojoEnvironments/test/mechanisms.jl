@@ -9,21 +9,24 @@ mechanisms = [
     :halfcheetah,
     :hopper, 
     :humanoid,
-    :orbital, 
+    :npendulum,
+    :nslider,
+    :panda,
     :pendulum,
     :quadruped,
     :raiberthopper,
-    :rexhopper, 
     :slider,
-    :snake, 
-    :tennisracket,
+    :snake,
+    :sphere,
     :tippetop,
     :twister, 
     :walker,
+    :youbot,
 ]
 
 for name in mechanisms 
     mech = get_mechanism(name) 
     initialize!(mech, name)
+    simulate!(mech, 0.5; record=true)
     @test true
 end

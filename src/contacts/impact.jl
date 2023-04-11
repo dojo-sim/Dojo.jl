@@ -17,7 +17,7 @@ end
 #     println(io, "collision:                 "*string(contact.collision))
 # end
 
-function ImpactContact(body::Body{T}, normal::AbstractVector{T}; 
+function ImpactContact(body::Body{T}, normal::AbstractVector; 
     contact_origin=szeros(T, 3), 
     contact_radius=0.0) where T
     
