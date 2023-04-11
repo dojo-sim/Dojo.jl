@@ -13,8 +13,8 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 BenchmarkTools = "<1.3.2, 1.3.2"
-FiniteDiff = "2.0, 2.17"
-ForwardDiff = "0.10.19, 0.10.33"
-Rotations = "1.3, 1.3"
+FiniteDiff = "2.0, 2.19"
+ForwardDiff = "0.10.19, 0.10.35"
+Rotations = "1.3, 1.4"
 SafeTestsets = "0.0.1, 0.0.1"
 StaticArrays = "1.2, 1.5"
