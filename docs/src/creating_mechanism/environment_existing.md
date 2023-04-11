@@ -1,5 +1,5 @@
 # Using an Existing Environment
-The following code uses a function defined in `DojoEnvironments` to create a pendulum `Environment`. This `Environment` is a wrapper around the `Mechanism` for easy interfacing with other packages. As with `Mechanism`s, you can use the existing templates as a starting point for your own `Environment`s.
+The following code uses a function defined in `DojoEnvironments` to create a pendulum `Environment`. This `Environment` is a wrapper around the [`Mechanism`](@ref) for easy interfacing with other packages. As with [`Mechanism`](@ref)s, you can use the existing templates as a starting point for your own `Environment`s.
 
 ```julia
 # ### Setup

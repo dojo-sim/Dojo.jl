@@ -29,13 +29,15 @@ function convert_video_to_gif(video_file_path::String, output_path::String="outp
     return output_path
 end
 
-function convert_frames_to_video_and_gif(filename, overwrite::Bool=true)
+function convert_frames_to_video_and_gif(filename, overwrite::Bool=true; load_path=homedir()*"/Downloads", save_path=homedir() * "/Documents/video")
     MeshCat.convert_frames_to_video(
-        homedir() * "/Downloads/$filename.tar",
-        homedir() * "/Documents/video/$filename.mp4", overwrite=overwrite)
+        joinpath(load_path, "$filename.tar"),
+        joinpath(save_path, "$filename.mp4"),
+        overwrite=overwrite)
 
     convert_video_to_gif(
-        homedir() * "/Documents/video/$filename.mp4",
-        homedir() * "/Documents/video/$filename.gif", overwrite=overwrite)
+        joinpath(save_path, "$filename.mp4"),
+        joinpath(save_path, "$filename.gif"),
+        overwrite=overwrite)
     return nothing
 end

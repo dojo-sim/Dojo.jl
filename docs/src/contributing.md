@@ -9,6 +9,7 @@ Contributions are always welcome!
 ## Potentially Useful Contributions 
 Here are a list of current to-do's that would make awesome contributions:
 
+- reduce allocations by using StaticArrays in functions
 - improved parsing of URDF files
     - joint limits, friction coefficients
 - improved collision detection 

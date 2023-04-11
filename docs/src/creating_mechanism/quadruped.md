@@ -3,7 +3,7 @@ Another way to build a mechanism is to directly load it from a URDF file. We ill
 
 ![quadruped](../assets/pictures/quadruped.png)
 
-Note that the `Mechanism` is created simply by passing the path to the URDF file to the constructor. Afterwards, additional features, such as contacts can be added. 
+Note that the [`Mechanism`](@ref) is created simply by passing the path to the URDF file to the constructor. Afterwards, additional features, such as contacts can be added. 
 
 ```julia
 function get_quadruped(;

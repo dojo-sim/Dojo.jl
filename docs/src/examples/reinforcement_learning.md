@@ -12,7 +12,7 @@ The insect-like robot has rewards on forward velocity and survival and costs on 
 
 ## Quadruped
 ```@raw html
-<img src="../assets/animations/quadruped_walking.gif" width="300"/>
+<img src="../assets/animations/quadruped.gif" width="300"/>
 ```
 A very basic random-sampling algorithm is used to find parameters for the periodic gait of a quadruped. 
 

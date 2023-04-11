@@ -1,5 +1,5 @@
 # Directly Build a Mechanism
-The following code builds a pendulum `Mechanism`, consisting of an `Origin`, a `body`, and a `JointConstraint`. Most `Mechanism`s consist of these three components, sometimes supplemented by `ContactConstraint`s. 
+The following code builds a pendulum [`Mechanism`](@ref), consisting of an [`Origin`](@ref), a [`Body`](@ref), and a [`JointConstraint`](@ref). Most [`Mechanism`](@ref)s consist of these three components, sometimes supplemented by [`ContactConstraint`](@ref)s. 
 
 ```julia
 # ### Setup

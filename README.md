@@ -11,9 +11,9 @@ A differentiable physics engine for robotics
 
 [![IMAGE ALT TEXT](https://i.ytimg.com/vi/TRtOESXJxJQ/hq720.jpg?sqp=-oaymwEcCOgCEMoBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLD1RdCHZ0Z1zSkv1N-PD0Ds79lDiA)](https://youtu.be/TRtOESXJxJQ "Dojo: A Differentiable Simulator for Robotics")
 
-# Update March 2023
-- We are no longer actively developing Dojo.
-- Due to a number of improvements/changes to the engine since we originally ran experiments, many of the examples (e.g., planning, policy optimization, system identication) are no longer up to date. However, basic simulation should work as expected.
+# Update April 2023
+- We are no longer actively developing Dojo, but pull requests are always welcome.
+- We have updated or removed examples to account for changes since the initial version of Dojo.
 - Additional developments on differentiable simulation:
   - Differentiable collision detection (Kevin Tracy): [capsules](https://arxiv.org/abs/2207.00202), [convex primitives](https://arxiv.org/abs/2207.00669) 
   - Single-level contact dynamics + collision detection (Simon Le Cleac'h): [Silico](https://arxiv.org/pdf/2212.06764.pdf)
@@ -21,63 +21,32 @@ A differentiable physics engine for robotics
 # Examples
 
 ## Simulation
+<p float="left">
+	<img src="docs/src/assets/animations/atlas_drop.gif" width="100"/>
+	<img src="docs/src/assets//animations/astronaut.gif" width="200"/>
+	<img src="docs/src/assets/animations/dzhanibekov.gif" width="150"/>
+	<img src="docs/src/assets/animations/tippetop.gif" width="150"/>
+</p>
 
-### Atlas drop
-<img src="examples/animations/atlas_drop.gif" width="100"/>
+## Learning and Control
 
-### REx Hopper drop
-<img src="examples/animations/rexhopper.gif" width="200"/>
+<img src="docs/src/assets/animations/quadruped.gif" width="200"/>
+<img src="docs/src/assets/animations/ant_ars.gif" width="300"/>
 
-### Astronaut
-<img src="examples/animations/astronaut.gif" width="200"/>
+## System Identification
+<p float="left">
+	<img src="docs/src/assets/animations/box_learning.gif" width="200"/>
+	<img src="docs/src/assets/animations/cone_learning.gif" width="200"/>
+</p>
+<img src="docs/src/assets/animations/box_toss.gif" width="300"/>
 
-### Friction-cone comparison
-<img src="examples/animations/cone_compare_mujoco.gif" height="150"/>
+## Interfacing Other Packages
+| [ReinforcementLearning.jl](https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl) | [ControlSystems.jl](https://github.com/JuliaControl/ControlSystems.jl) |
+| - | -|
+| <img src="docs/src/assets/animations/cartpole_rl.gif" width="200"/> | <img src="docs/src/assets/animations/cartpole_lqr.gif" width="200"/> |
 
-### Dzhanibekov effect
-<img src="examples/animations/dzhanibekov.gif" width="150"/>
 
-### Tippe top
-<img src="examples/animations/tippetop.gif" width="150"/>
 
-### Pendulum swing-up
-<img src="examples/animations/pendulum.gif" width="150"/>
-
-## Trajectory Optimization
-
-### Box
-<img src="examples/animations/box_right.gif" width="200"/>
-
-<img src="examples/animations/box_up.gif" width="95"/>
-
-### Hopper
-<img src="examples/animations/hopper_max.gif" width="100"/>
-
-### Quadruped
-<img src="examples/animations/quadruped_min.gif" width="200"/>
-
-### Atlas
-<img src="examples/animations/atlas_ilqr.gif" width="200"/>
-
-### Cart-pole
-<img src="examples/animations/cartpole_max.gif" width="200"/>
-
-## Reinforcement Learning
-
-### Half Cheetah
-<img src="examples/animations/halfcheetah_ars.gif" width="600"/>
-
-### Ant
-<img src="examples/animations/ant_ars_no_grid.gif" width="300"/>
-
-## Real-To-Sim
-
-### Learning
-<img src="examples/animations/box_learning.gif" width="200"/>
-<img src="examples/animations/cone_learning.gif" width="200"/>
-
-### Toss
-<img src="examples/animations/box_toss.gif" width="300"/>
 
 ## Installation
 
@@ -85,17 +54,16 @@ A differentiable physics engine for robotics
 ```julia
 pkg> add Dojo
 ```
-
-The latest version can be added by calling:
+For convenience mechanisms and environments, add `DojoEnvironments` additionally:
 ```julia
-pkg> add Dojo#main
+pkg> add DojoEnvironments
 ```
 
 ## Citing
 ```
 @article{howelllecleach2022,
 	title={Dojo: A Differentiable Simulator for Robotics},
-	author={Howell, Taylor and Le Cleac'h, Simon and Brüdigam, Jan and Kolter, Zico and Schwager, Mac and Manchester, Zachary},
+	author={Howell, Taylor and Le Cleac'h, Simon and Bruedigam, Jan and Kolter, Zico and Schwager, Mac and Manchester, Zachary},
 	journal={arXiv preprint arXiv:2203.00806},
 	url={https://arxiv.org/abs/2203.00806},
 	year={2022}
@@ -103,4 +71,5 @@ pkg> add Dojo#main
 ```
 
 ## How To Contribute
-Please submit a pull request, open an issue, or reach out to: thowell@stanford.edu (Taylor) or simonlc@stanford.edu (Simon)
+Please submit a pull request or open an issue.
+See the [docs](https://dojo-sim.github.io/Dojo.jl/dev/contributing.html) for contribution ideas.
