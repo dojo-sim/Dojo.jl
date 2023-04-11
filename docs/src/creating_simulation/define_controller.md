@@ -50,5 +50,5 @@ render(vis)
 
 By changing the parameters, you should be able to perform a swing up. You might need to be carful due to a possible sign-change in the top position. 
 ```@raw html
-<img src="../assets/pendulum.gif" width="300"/>
+<img src="../assets/animations/pendulum.gif" width="300"/>
 ```

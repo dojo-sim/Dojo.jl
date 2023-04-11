@@ -13,7 +13,7 @@ Dojo is able to simulate hard contact and prevent interpenetration of the robot'
 In comparison, when the same system is simulated in [MuJoCo](https://mujoco.org), **centimeters** of interpenetration occur.
 
 
-##[Friction Cone Comparison
+## Friction Cone Comparison
 
 ```@raw html
 <img src="../assets/animations/cone_compare_mujoco.gif" width="300"/>

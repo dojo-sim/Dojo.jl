@@ -5,7 +5,7 @@ We have implemented a few learning examples.
 ## Ant
 
 ```@raw html
-<img src="../assets/animations/ant_ars_no_grid.gif" width="300"/>
+<img src="../assets/animations/ant_ars.gif" width="300"/>
 ```
 Policy optimization is performed using the reinforcement-learning algorithm [augmented random search (ARS)](https://arxiv.org/abs/1803.07055) to optimize static linear policies for locomotion.
 The insect-like robot has rewards on forward velocity and survival and costs on control usage and contact forces.

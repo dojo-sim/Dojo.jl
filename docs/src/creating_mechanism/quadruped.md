@@ -1,7 +1,7 @@
 # Loading a Mechanism via URDF
 Another way to build a mechanism is to directly load it from a URDF file. We illustrate this with the A1 quadruped, defined in `DojoEnvironments`. 
 
-![quadruped](../assets/quadruped.png)
+![quadruped](../assets/pictures/quadruped.png)
 
 Note that the `Mechanism` is created simply by passing the path to the URDF file to the constructor. Afterwards, additional features, such as contacts can be added. 
 

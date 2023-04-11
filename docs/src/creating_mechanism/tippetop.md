@@ -5,7 +5,7 @@ We're going to build a tippe top:
 
 
 ```@raw html
-<img src="../assets/tippetop_real.gif" width="300"/>
+<img src="../assets/animations/tippetop_real.gif" width="300"/>
 ```
 
 ```@raw html

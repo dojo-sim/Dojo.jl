@@ -2,7 +2,7 @@
 Here, we explain how to simulate a dynamical system i.e., a [`Mechanism`](@ref) forward in time.
 The example that we are trying to replicate the Dzhanibekov effect shown below.
 
-![dzhanibekov](../assets/dzhanibekov_nasa.gif)
+![dzhanibekov](../assets/animations/dzhanibekov_nasa.gif)
 
 ```julia
 # ### Setup
