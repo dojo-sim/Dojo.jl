@@ -2,4 +2,4 @@ using BenchmarkTools
 
 SUITE = BenchmarkGroup()
 
-include("example_benchmark.jl")
+include("mechanisms_benchmark.jl")
