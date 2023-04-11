@@ -13,7 +13,7 @@ jobs:
           version: 1
       # - uses: julia-actions/julia-buildpkg@latest
       - name: Install dependencies
-        run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"'
+        run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"; pkg"dev . ./DojoEnvironments"'
       - name: Run benchmarks
         run: julia -e 'using BenchmarkCI; BenchmarkCI.judge(retune=true,baseline="origin/main")' # retune sometimes necessary to avoid counting compile-time 
       - name: Print judgement
