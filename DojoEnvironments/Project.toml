@@ -1,7 +1,7 @@
 name = "DojoEnvironments"
 uuid = "8728bab7-e8ae-46fd-a1b6-a8c4d00f608e"
 authors = ["simonlc <simonlc@stanford.edu>", "thowell <thowell@stanford.edu>", "Jan Bruedigam <jan.bruedigam@tum.de>", "rejuvyesh <mail@rejuvyesh.com>"]
-version = "0.3.0"
+version = "0.4.0"
 
 [deps]
 Dojo = "ac60b53e-8d92-4c83-b960-e78698fa1916"
