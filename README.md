@@ -22,28 +22,30 @@ A differentiable physics engine for robotics
 
 ## Simulation
 <p float="left">
-	<img src="docs/src/assets/animations/atlas_drop.gif" width="100"/>
-	<img src="docs/src/assets//animations/astronaut.gif" width="200"/>
-	<img src="docs/src/assets/animations/dzhanibekov.gif" width="150"/>
-	<img src="docs/src/assets/animations/tippetop.gif" width="150"/>
+	<img src="docs/src/assets/animations/atlas_drop.gif" width="120"/>
+	<img src="docs/src/assets//animations/astronaut.gif" width="210"/>
+	<img src="docs/src/assets/animations/dzhanibekov.gif" width="180"/>
+	<img src="docs/src/assets/animations/tippetop.gif" width="180"/>
 </p>
 
 ## Learning and Control
-
-<img src="docs/src/assets/animations/quadruped.gif" width="200"/>
-<img src="docs/src/assets/animations/ant_ars.gif" width="300"/>
+<p float="left">
+	<img src="docs/src/assets/animations/quadruped.gif" width="350"/>
+	<img src="docs/src/assets/animations/ant_ars.gif" width="350"/>
+</p>
 
 ## System Identification
 <p float="left">
 	<img src="docs/src/assets/animations/box_learning.gif" width="200"/>
 	<img src="docs/src/assets/animations/cone_learning.gif" width="200"/>
+	<img src="docs/src/assets/animations/box_toss.gif" width="300"/>
 </p>
-<img src="docs/src/assets/animations/box_toss.gif" width="300"/>
+
 
 ## Interfacing Other Packages
-| [ReinforcementLearning.jl](https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl) | [ControlSystems.jl](https://github.com/JuliaControl/ControlSystems.jl) |
+| [ReinforcementLearning.jl](https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl): DQN | [ControlSystems.jl](https://github.com/JuliaControl/ControlSystems.jl): LQR |
 | - | -|
-| <img src="docs/src/assets/animations/cartpole_rl.gif" width="200"/> | <img src="docs/src/assets/animations/cartpole_lqr.gif" width="200"/> |
+| <img src="docs/src/assets/animations/cartpole_rl.gif" width="250"/> | <img src="docs/src/assets/animations/cartpole_lqr.gif" width="250"/> |
 
 
 
