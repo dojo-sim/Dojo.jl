@@ -33,7 +33,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
 
     # Create animations
     framerate = Int64(round(1/mechanism.timestep))
-    (animation == nothing) && (animation =
+    (animation === nothing) && (animation =
         MeshCat.Animation(Dict{MeshCat.SceneTrees.Path,MeshCat.AnimationClip}(), framerate))
 
     # Bodies and Contacts

@@ -39,7 +39,7 @@ storages = []
 
 for timestep in timesteps
     mech, storage = simulation_loop(timestep, tsim)
-    visualize(mech, storage, visualize_floor=false)
+    ## visualize(mech, storage, visualize_floor=false)
     push!(storages, storage)
 end
 
@@ -58,7 +58,7 @@ for (i, energy) in enumerate(energies)
 end
 
 # ### Momentum
-momenta = [Dojo.momentum(mech, storage)[1:end] for storage in storages]
+momenta = [Dojo.momentum(mech, storage)[2:end] for storage in storages];
 
 # Linear
 momenta_linear = [[Vector(momentum_i)[1:3] for momentum_i in momentum] for momentum in momenta]

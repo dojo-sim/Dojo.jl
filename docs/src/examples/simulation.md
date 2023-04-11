@@ -33,7 +33,7 @@ Dojo simulates the [unstable rotational motion](https://en.wikipedia.org/wiki/Te
 <img src="../assets/animations/tippetop.gif" width="300"/>
 ```
 
-A spinning object osciallates between up and down configurations as a result of its mass distribution.
+A spinning object oscillates between up and down configurations as a result of its mass distribution.
 
 
 

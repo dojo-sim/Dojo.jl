@@ -1,7 +1,7 @@
 # Algorithm
 
 ### Overview
-To simulate the system forward in time, we need to solve a Nonlinear Complementarity Problem (NCP) at each time step. To efficiently and reliably satisfy the NCP, we developed a custom primal-dual interior-point solver for NCPs with cone constraints and quaternions. The algorithm is largely based upon Mehrotra's predictor-coorector algorithm, while borrowing practical numerical features from CVXOPT to handle cones and non-Euclidean optimization to handle quaternions. We also introduce heuristics that further improve reliability and overall performance of the solver for our simulation-step NCPs.
+To simulate the system forward in time, we need to solve a Nonlinear Complementarity Problem (NCP) at each time step. To efficiently and reliably satisfy the NCP, we developed a custom primal-dual interior-point solver for NCPs with cone constraints and quaternions. The algorithm is largely based upon Mehrotra's predictor-corrector algorithm, while borrowing practical numerical features from CVXOPT to handle cones and non-Euclidean optimization to handle quaternions. We also introduce heuristics that further improve reliability and overall performance of the solver for our simulation-step NCPs.
 
 The primary advantages of this algorithm are the correction to the classic Newton step, which can greatly reduce the iterations required by the solver (often halving the total number of iterations), and feedback on the problem's central-path parameter that helps avoid premature ill-conditioning and adaptively drives the complementarity violation to zero in order to reliably simulate hard contact.
 
@@ -45,7 +45,7 @@ The main loop of the solver performs Newton's method on the equality-constraint 
     The maximal number of Newton's iterations `max_iter` can be set via [`SolverOptions`](@ref).
 
 ### Line Search
-Newton's method provides a search direction, then we perform a line search along this direction to detemine the step length ``\alpha``. We use a backtracking line search that accepts the step whenever it decreases ``c_{\text{vio}}`` or ``b_{\text{vio}}``.
+Newton's method provides a search direction, then we perform a line search along this direction to determine the step length ``\alpha``. We use a backtracking line search that accepts the step whenever it decreases ``c_{\text{vio}}`` or ``b_{\text{vio}}``.
 The line search starts with a step ``\alpha=1``, if the step acceptance conditions are not met the step is decreased geometrically:
 ``\alpha \leftarrow s \cdot \alpha``. The line search takes at most `max_ls` backtracking steps.
 

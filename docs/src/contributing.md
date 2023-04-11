@@ -40,8 +40,8 @@ The code in this repository follows the naming and style conventions of [Julia B
 
 **Bad**: `if (a == b)` **Good**: `if a == b`
 ### Naming
-* Modules and Type names use capitilization and camel case, e.g. `module LinearAlgebra`, `struct ConvexSets`.
-* Functions are lowercase and use underscores to seperate words, e.g. `has_key(x)`, `is_valid(y)`.
+* Modules and Type names use capitalization and camel case, e.g. `module LinearAlgebra`, `struct ConvexSets`.
+* Functions are lowercase and use underscores to separate words, e.g. `has_key(x)`, `is_valid(y)`.
 * Normal variables are lowercase and use underscores like functions, e.g. `convex_set`
 * Constants are uppercase, e.g. `const MY_CONSTANT`
 * **Always** append `!` to names of functions that modify their arguments.

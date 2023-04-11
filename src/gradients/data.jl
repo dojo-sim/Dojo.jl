@@ -49,7 +49,7 @@ function body_constraint_jacobian_body_data(mechanism::Mechanism, body::Body{T})
            ∇rot_x2 ∇rot_q2]
     # @show ∇z2
     # TODO
-    # # constact constraints impulses contribution
+    # # contact constraints impulses contribution
     # @warn "000"
     return [∇m ∇J ∇15 0.0000000000*∇z2] #TODO not sure why we need to zero out this block, maybe finite diff is not correct and we try to match finite diff
 end
@@ -249,7 +249,7 @@ function indirect_link(id1, id2, nodes::Vector{S}) where {S<:Node}
     ids = zeros(Int, 0)
     for node in nodes
         parent_id = node.parent_id
-        (parent_id == nothing) && (parent_id = 0) #handle the origin's corner case
+        (parent_id === nothing) && (parent_id = 0) #handle the origin's corner case
         linked = (id1 == node.child_id) && (id2 == parent_id)
         linked |= (id2 == node.child_id) && (id1 == parent_id)
         linked && push!(ids, node.id)

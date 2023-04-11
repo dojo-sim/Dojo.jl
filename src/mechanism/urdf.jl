@@ -345,7 +345,7 @@ function parse_loop_joints(xloopjoints, origin, joints, ldict, T, parse_dampers)
         cbody = ldict[Symbol(attribute(xcbody, "link"))]
 
         predlist = Tuple{Int64,Int64}[]
-        jointlist = [(joints[i].id,joints[i].parent_id, joints[i].child_id) for i=1:length(joints)]
+        jointlist = [(joints[i].id,joints[i].parent_id, joints[i].child_id) for i in eachindex(joints)]
         linkid = pbody.id
 
         while true # create list of predecessor joints and parent links for pbody
@@ -362,7 +362,7 @@ function parse_loop_joints(xloopjoints, origin, joints, ldict, T, parse_dampers)
             end
         end
 
-        jointlist = [(joints[i].id, joints[i].parent_id, joints[i].child_id) for i=1:length(joints)]
+        jointlist = [(joints[i].id, joints[i].parent_id, joints[i].child_id) for i in eachindex(joints)]
         linkid = cbody.id
         joint1id = 0
         joint2id = 0

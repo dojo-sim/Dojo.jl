@@ -37,7 +37,7 @@ A block is moved to a goal location by applying forces to its center of mass. Th
 
 A hopping robot, inspired by the [Raibert Hopper](https://dspace.mit.edu/handle/1721.1/6820), is tasked with moving to a goal location. The optimizer finds a single hop trajectory to reach its goal pose.
 
-## Cart-pole
+## Cartpole
 
 ```@raw html
 <img src="../assets/animations/cartpole_max.gif" width="200"/>

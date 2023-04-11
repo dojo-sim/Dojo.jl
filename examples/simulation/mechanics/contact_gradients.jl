@@ -71,4 +71,4 @@ for btol in tolerances
 end
 
 # ### Show plots
-display(gradient_plot)
+display(gradient_plot) # left: Impact, right: Friction

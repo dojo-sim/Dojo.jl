@@ -55,7 +55,7 @@ end
 function f0(θ; storages=storages, timesteps=timesteps)
 	mechanism = get_mechanism(model; mech_kwargs...)
 	f = 0.0
-	for i = 1:length(storages)
+	for i in eachindex(storages)
 		fi = loss(mechanism, parameter_stack(θ), storages[i], timesteps; derivatives=false)
 		f += fi
 	end
@@ -69,7 +69,7 @@ function fgH0(θ; storages=storages, timesteps=timesteps)
 	g = zeros(nd)
 	H = zeros(nd,nd)
 
-	for i = 1:length(storages)
+	for i in eachindex(storages)
 		fi, gi, Hi = loss(mech, parameter_stack(θ), storages[i], timesteps; derivatives=true)
 		f += fi
 		g += gi
