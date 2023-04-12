@@ -11,7 +11,9 @@
     color: RGBA 
     name: unique identifier for mechanism
 """
-function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=Visualizer(),
+function visualize(mechanism::Mechanism, storage::Storage{T,N}; 
+    vis::Visualizer=Visualizer(),
+    framerate=60, # Inf for 1/timestep
     build::Bool=true, 
     show_joint=false,
     joint_radius=0.1,
@@ -32,7 +34,9 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
         vis, show_joint, show_contact, show_frame, color, name, visualize_floor)
 
     # Create animations
-    framerate = Int64(round(1/mechanism.timestep))
+    timestep_max = 1/framerate
+    time_factor = Int64(maximum([1;floor(timestep_max/mechanism.timestep)]))
+    framerate = Int64(round(1/(mechanism.timestep*time_factor)))
     (animation === nothing) && (animation =
         MeshCat.Animation(Dict{MeshCat.SceneTrees.Path,MeshCat.AnimationClip}(), framerate))
 
@@ -47,7 +51,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
             showshape = true
         end
 
-        animate_node!(storage, id, shape, animation, subvisshape, showshape)
+        animate_node!(storage, id, shape, animation, subvisshape, showshape, time_factor)
 
         if show_joint
             for (jd, joint) in enumerate(mechanism.joints)
@@ -63,7 +67,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
                         subvisshape = vis[name][:joints][Symbol(joint.name, "__id_$(jd)")]
                         showshape = true
                     end
-                    animate_node!(storage, id, joint_shape, animation, subvisshape, showshape)
+                    animate_node!(storage, id, joint_shape, animation, subvisshape, showshape, time_factor)
                 end
             end
         end
@@ -84,7 +88,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
                         subvisshape = vis[name][:contacts][Symbol(contact.name, "__id_$(jd)")]
                         showshape = true
                     end
-                    animate_node!(storage, id, contact_shape, animation, subvisshape, showshape)
+                    animate_node!(storage, id, contact_shape, animation, subvisshape, showshape, time_factor)
                 end
             end
         end
@@ -94,7 +98,7 @@ function visualize(mechanism::Mechanism, storage::Storage{T,N}; vis::Visualizer=
             visshape = convert_shape(frame_shape)
             subvisshape = vis[name][:frames][Symbol(body.name, "__id_$id")]
             showshape = true
-            animate_node!(storage, id, frame_shape, animation, subvisshape, showshape)
+            animate_node!(storage, id, frame_shape, animation, subvisshape, showshape, time_factor)
         end
     end
 
@@ -319,13 +323,15 @@ function set_node!(x, q, id, shape, shapevisualizer, showshape)
     return
 end
 
-function animate_node!(storage::Storage{T,N}, id, shape, animation, shapevisualizer, showshape) where {T,N}
-    for i=1:N
+function animate_node!(storage::Storage{T,N}, id, shape, animation, shapevisualizer, showshape, time_factor) where {T,N}
+    frame_id = 1
+    for i=1:time_factor:N
         x = storage.x[id][i]
         q = storage.q[id][i]
-        atframe(animation, i) do
+        atframe(animation, frame_id) do
             set_node!(x, q, id, shape, shapevisualizer, showshape)
         end
+        frame_id += 1
     end
     return
 end
