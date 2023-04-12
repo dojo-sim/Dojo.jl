@@ -96,3 +96,8 @@ function set_maximal_velocities!(pbody::Node, cbody::Body;
 
     return set_maximal_velocities!(cbody; v = v2, ω = ω2)
 end
+
+function set_external_force!(body::Body; force=zeros(3), torque=zeros(3))
+    body.state.Fext = force
+    body.state.τext = torque
+end

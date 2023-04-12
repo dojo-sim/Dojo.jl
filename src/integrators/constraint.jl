@@ -11,10 +11,10 @@ function constraint(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn
     x3, q3 = next_configuration(state, timestep)
 
     # dynamics
-    D1x = - 1.0 / timestep * mass * (x2 - x1) - 0.5 * timestep * mass * gravity
-    D2x =   1.0 / timestep * mass * (x3 - x2) - 0.5 * timestep * mass * gravity
-    D1q = -2.0 / timestep * LVᵀmat(q2)' * Lmat(q1) * Vᵀmat() * inertia * Vmat() * Lmat(q1)' * vector(q2)
-    D2q = -2.0 / timestep * LVᵀmat(q2)' * Tmat() * Rmat(q3)' * Vᵀmat() * inertia * Vmat() * Lmat(q2)' * vector(q3)
+    D1x = - 1.0 / timestep * mass * (x2 - x1) - 0.5 * timestep * (mass * mechanism.gravity + state.Fext)
+    D2x =   1.0 / timestep * mass * (x3 - x2) - 0.5 * timestep * (mass * mechanism.gravity + state.Fext)
+    D1q = -2.0 / timestep * LVᵀmat(q2)' * Lmat(q1) * Vᵀmat() * inertia * Vmat() * Lmat(q1)' * vector(q2) - 0.5 * timestep * state.τext
+    D2q = -2.0 / timestep * LVᵀmat(q2)' * Tmat() * Rmat(q3)' * Vᵀmat() * inertia * Vmat() * Lmat(q2)' * vector(q3) - 0.5 * timestep * state.τext
 
     dynT = D2x + D1x
     dynR = D2q + D1q

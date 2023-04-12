@@ -25,7 +25,20 @@ function controller!(mechanism, k)
 
     ## Control inputs
     u = -K * (x - x_goal)
-    set_input!(mechanism, [u;0]) # input only to cart
+
+    ## 3 ways to set input:
+
+    ## 1: get joint and set input
+    cart_joint = get_joint(mechanism, :cart_joint)
+    set_input!(cart_joint, u)
+
+    ## 2: set input for all joints at once
+    ## set_input!(mechanism, [u;0]) # need to know joint order
+
+    ## 3: direct external force on body
+    ## cart = get_body(mechanism, :cart)
+    ## set_external_force!(cart; force=[0;u;0])
+
 end
 
 # ### Simulate 
