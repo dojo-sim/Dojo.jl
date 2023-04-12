@@ -156,7 +156,8 @@ export
     Mesh,
     CombinedShapes,
     get_body,
-    get_node
+    get_node,
+    set_external_force!
 
 # Joints
 export

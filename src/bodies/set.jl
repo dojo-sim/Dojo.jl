@@ -96,3 +96,27 @@ function set_maximal_velocities!(pbody::Node, cbody::Body;
 
     return set_maximal_velocities!(cbody; v = v2, ω = ω2)
 end
+
+"""
+    set_external_force!(body; force, torque, vertex)
+
+    applies an external force on a body
+
+    body: Body 
+    force: force in body frame
+    torque: torque in local frame
+    vertex: point where force is applied in local frame
+"""
+function set_external_force!(body::Body; force=zeros(3), torque=zeros(3), vertex=zeros(3))
+    body.state.Fext = vector_rotate(force, body.state.q2)
+    body.state.τext = torque + cross(vertex, force)
+
+    return
+end
+
+function clear_external_force!(body::Body{T}) where T
+    body.state.Fext = szeros(T,3)
+    body.state.τext = szeros(T,3)
+
+    return
+end

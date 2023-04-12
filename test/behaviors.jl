@@ -39,6 +39,21 @@ end
     end
 end
 
+@testset "Box external force" begin
+    mech = get_mechanism(:block;gravity=0, contact=false, mass=1)
+    mech.bodies[1].inertia = diagm(ones(3))
+
+    controller!(mechanism, k) = (k<=50 ? set_external_force!(mechanism.bodies[1];force=[1;0;0],vertex=[0.5;0;0]) : nothing)
+    initialize!(mech, :block; position=zeros(3), orientation=Dojo.RotZ(pi/2), velocity=zeros(3), angular_velocity=zeros(3))    
+    storage = simulate!(mech, 1.0, controller!, record=true)
+    @test norm(mech.bodies[1].state.vsol[1][2] - 0.5) < 1.0e-3
+
+    controller!(mechanism, k) = (k<=50 ? set_external_force!(mechanism.bodies[1];torque=[1;0;0],vertex=[0.5;0;0]) : nothing)
+    initialize!(mech, :block; position=zeros(3), orientation=Dojo.RotZ(pi/2), velocity=zeros(3), angular_velocity=zeros(3))
+    storage = simulate!(mech, 1.0, controller!, record=true)
+    @test norm(mech.bodies[1].state.ωsol[1][1] - 0.5) < 1.0e-3
+end
+
 @testset "Four-bar linkage" begin
     for timestep in [0.10, 0.05, 0.01, 0.005]
         mech = get_mechanism(:fourbar;

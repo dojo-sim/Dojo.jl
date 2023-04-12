@@ -26,8 +26,8 @@ function momentum(mechanism::Mechanism{T}, body::Body{T}) where T
     v15 = body.state.vsol[2] # v1.5
     ω15 = body.state.ωsol[2] # ω1.5
 
-    D2x = 1 / timestep * mass * (x3 - x2) - 0.5 * timestep * mass * mechanism.gravity
-    D2q = -2.0 / timestep * LVᵀmat(q2)' * Tmat() * Rmat(q3)' * Vᵀmat() * inertia * Vmat() * Lmat(q2)' * vector(q3)
+    D2x = 1 / timestep * mass * (x3 - x2) - 0.5 * timestep * (mass * mechanism.gravity + state.Fext)
+    D2q = -2.0 / timestep * LVᵀmat(q2)' * Tmat() * Rmat(q3)' * Vᵀmat() * inertia * Vmat() * Lmat(q2)' * vector(q3) - 0.5 * timestep * state.τext
     p_linear_body = D2x - 0.5 * state.JF2
     p_angular_body = D2q - 0.5 * state.Jτ2
 

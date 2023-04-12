@@ -26,6 +26,7 @@ function simulate!(mechanism::Mechanism, steps::AbstractUnitRange, storage::Stor
         control!(mechanism, k)
         for joint in mechanism.joints input_impulse!(joint, mechanism) end
         status = mehrotra!(mechanism, opts=opts)
+        for body in mechanism.bodies clear_external_force!(body) end
         abort_upon_failure && (status == :failed) && break
         record && save_to_storage!(mechanism, storage, k)
         (k != steps[end]) && (for body in mechanism.bodies update_state!(body, mechanism.timestep) end)

@@ -13,6 +13,8 @@
     q2: orientation (Quaternion) at current time step 
     JF2: linear impulse (force * time step) applied at current time step 
     Jτ2: angular impulse (torque * timestep) applied at current time step 
+    Fext: external force applied at current time step 
+    τext: external torque applied at current time step 
 
     vsol: linear velocity at time step 2.5 (midpoint); contains current value (index 1) and candidate value (index 2)
     ωsol: angular velocity at time step 2.5 (midpoint); contains current value (index 1) and candidate value (index 2)
@@ -32,6 +34,8 @@ mutable struct State{T}
     q2::Quaternion{T}
     JF2::SVector{3,T}
     Jτ2::SVector{3,T}
+    Fext::SVector{3,T}
+    τext::SVector{3,T}
 
     # solution estimate [before step; after step]
     vsol::Vector{SVector{3,T}}
@@ -51,6 +55,8 @@ mutable struct State{T}
         q2 = one(Quaternion{T})
         JF2 = szeros(T, 3)
         Jτ2 = szeros(T, 3)
+        Fext = szeros(T, 3)
+        τext = szeros(T, 3)
 
         vsol = [szeros(T, 3) for i=1:2]
         ωsol = [szeros(T, 3) for i=1:2]
@@ -58,7 +64,7 @@ mutable struct State{T}
         d = szeros(T, 6)
         D = szeros(T, 6, 6)
 
-        new{T}(x1, q1, v15, ω15, x2, q2, JF2, Jτ2, vsol, ωsol, d, D)
+        new{T}(x1, q1, v15, ω15, x2, q2, JF2, Jτ2, Fext, τext, vsol, ωsol, d, D)
     end
 end
 
@@ -73,6 +79,8 @@ function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, state::State{T}) wh
     println(io, "q2:   "*string(state.q2))
     println(io, "JF2:   "*string(state.JF2))
     println(io, "Jτ2:   "*string(state.Jτ2))
+    println(io, "Fext: "*string(state.Fext))
+    println(io, "τext: "*string(state.τext))
     println(io, "vsol: "*string(state.vsol))
     println(io, "ωsol: "*string(state.ωsol))
     println(io, "d:    "*string(state.d))

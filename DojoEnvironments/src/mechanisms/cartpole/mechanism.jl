@@ -17,13 +17,13 @@ function get_cartpole(;
     # mechanism
     origin = Origin{Float64}()
     slider = Capsule(1.5 * radius, 1, slider_mass; 
-        orientation_offset=Dojo.RotX(0.5 * π), color)
-    pendulum = Capsule(radius, pendulum_length, pendulum_mass; color)
+        orientation_offset=Dojo.RotX(0.5 * π), color, name=:cart)
+    pendulum = Capsule(radius, pendulum_length, pendulum_mass; color, name=:pole)
     bodies = [slider, pendulum]
     
-    joint_origin_slider = JointConstraint(Prismatic(origin, slider, Y_AXIS))
+    joint_origin_slider = JointConstraint(Prismatic(origin, slider, Y_AXIS); name=:cart_joint)
     joint_slider_pendulum = JointConstraint(Revolute(slider, pendulum, X_AXIS; 
-        child_vertex=-0.5*pendulum_length*Z_AXIS))
+        child_vertex=-0.5*pendulum_length*Z_AXIS); name=:pole_joint)
     joints = [joint_origin_slider, joint_slider_pendulum]
 
     mechanism = Mechanism(origin, bodies, joints;
