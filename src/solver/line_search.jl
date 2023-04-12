@@ -2,7 +2,8 @@ function line_search!(mechanism::Mechanism, α, rvio, bvio, opts)
     scale = 0
     system = mechanism.system
 
-    rvio_cand, bvio_cand = Inf * ones(2)
+    rvio_cand = Inf
+    bvio_cand = Inf
     for n = Base.OneTo(opts.max_ls)
         for contact in mechanism.contacts
             candidate_step!(α, contact, get_entry(system, contact.id), scale)
@@ -86,14 +87,18 @@ function cone_line_search!(α, mechanism, joint::JointConstraint{T,N,Nc},
         vector_entry::Entry, τort, τsoc;
         scaling::Bool=false) where {T,N,Nc}
 
-    for (i, element) in enumerate((joint.translational, joint.rotational))
-        s, γ = split_impulses(element, joint.impulses[2][joint_impulse_index(joint,i)])
-        Δs, Δγ = split_impulses(element,  vector_entry.value[joint_impulse_index(joint,i)])
+    
+    s, γ = split_impulses(joint.translational, joint.impulses[2][joint_impulse_index(joint,1)])
+    Δs, Δγ = split_impulses(joint.translational,  vector_entry.value[joint_impulse_index(joint,1)])
+    αs_ort = positive_orthant_step_length(s, Δs, τ = τort)
+    αγ_ort = positive_orthant_step_length(γ, Δγ, τ = τort)
+    α = min(α, αs_ort, αγ_ort)
 
-        αs_ort = positive_orthant_step_length(s, Δs, τ = τort)
-        αγ_ort = positive_orthant_step_length(γ, Δγ, τ = τort)
-        α = min(α, αs_ort, αγ_ort)
-    end
+    s, γ = split_impulses(joint.rotational, joint.impulses[2][joint_impulse_index(joint,2)])
+    Δs, Δγ = split_impulses(joint.rotational,  vector_entry.value[joint_impulse_index(joint,2)])
+    αs_ort = positive_orthant_step_length(s, Δs, τ = τort)
+    αγ_ort = positive_orthant_step_length(γ, Δγ, τ = τort)
+    α = min(α, αs_ort, αγ_ort)
 
     return α
 end

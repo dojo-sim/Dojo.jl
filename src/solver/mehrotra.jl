@@ -6,7 +6,7 @@
     mechanism: Mechanism
     opts: SolverOptions
 """
-function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
+function mehrotra!(mechanism::Mechanism{T}; opts=SolverOptions{T}()) where T
 	reset!.(mechanism.contacts, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
 	reset!.(mechanism.joints,   scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
 
@@ -17,7 +17,7 @@ function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
     undercut = opts.undercut
     α = 1.0
 
-	initialize!.(mechanism.contacts) # TODO: redundant with resetVars--remove
+	initialize!.(mechanism.contacts)
     set_entries!(mechanism) # compute the residual
 
     bvio = bilinear_violation(mechanism) # does not require to apply set_entries!
@@ -27,7 +27,7 @@ function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
     for n = Base.OneTo(opts.max_iter)
         opts.verbose && solver_status(mechanism, α, rvio, bvio, n, μtarget, undercut)
 
-        ((rvio < opts.rtol) && (bvio < opts.btol)) && (status=:success; break)
+        (rvio < opts.rtol) && (bvio < opts.btol) && (status=:success; break)
 		(n == opts.max_iter) && (opts.verbose && (@warn "failed mehrotra"))
 
         # affine search direction

@@ -31,16 +31,24 @@ end
 
 function pull_residual!(mechanism::Mechanism)
 	for i in eachindex(mechanism.residual_entries)
-		mechanism.residual_entries[i].value = mechanism.system.vector_entries[i].value
+        pull_residual!(mechanism.residual_entries[i], mechanism.system.vector_entries[i])
 	end
 	return
 end
 
+function pull_residual!(residual_entry, vector_entry)
+    residual_entry.value = vector_entry.value
+end
+
 function push_residual!(mechanism::Mechanism)
 	for i in eachindex(mechanism.residual_entries)
-		mechanism.system.vector_entries[i].value = mechanism.residual_entries[i].value
+        push_residual!(mechanism.system.vector_entries[i], mechanism.residual_entries[i])
 	end
 	return
+end
+
+function push_residual!(vector_entry, residual_entry)
+    vector_entry.value = residual_entry.value
 end
 
 function update!(body::Body)

@@ -12,10 +12,10 @@ function input_impulse!(joint::Translational{T},
     input = joint.input * input_scaling
     Ta = impulse_transform(:parent, joint, xa, qa, xb, qb)
     Tb = impulse_transform(:child, joint, xa, qa, xb, qb)
-    JFaw = Ta[1:3,1:3] * input
-    Jτaa = Ta[4:6,1:3] * input
-    JFbw = Tb[1:3,1:3] * input
-    Jτbb = Tb[4:6,1:3] * input
+    JFaw = Ta[SA[1;2;3],SA[1;2;3]] * input
+    Jτaa = Ta[SA[4;5;6],SA[1;2;3]] * input
+    JFbw = Tb[SA[1;2;3],SA[1;2;3]] * input
+    Jτbb = Tb[SA[4;5;6],SA[1;2;3]] * input
 
     pbody.state.JF2 += JFaw
     pbody.state.Jτ2 += Jτaa/2

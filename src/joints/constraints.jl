@@ -99,16 +99,24 @@ function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, constraint::JointCo
 end
 
 # constraints
-@generated function constraint(mechanism, joint::JointConstraint)
-    pbody = :(get_body(mechanism, joint.parent_id))
-    cbody = :(get_body(mechanism, joint.child_id))
-    tra = :(constraint(joint.translational,
-        $pbody, $cbody,
-        joint.impulses[2][joint_impulse_index(joint,1)], mechanism.μ, mechanism.timestep))
-    rot = :(constraint(joint.rotational,
-        $pbody, $cbody,
-        joint.impulses[2][joint_impulse_index(joint,2)], mechanism.μ, mechanism.timestep))
-    return :(svcat($tra, $rot))
+# @generated function constraint(mechanism, joint::JointConstraint)
+#     pbody = :(get_body(mechanism, joint.parent_id))
+#     cbody = :(get_body(mechanism, joint.child_id))
+#     tra = :(constraint(joint.translational,
+#         $pbody, $cbody,
+#         joint.impulses[2][joint_impulse_index(joint,1)], mechanism.μ, mechanism.timestep))
+#     rot = :(constraint(joint.rotational,
+#         $pbody, $cbody,
+#         joint.impulses[2][joint_impulse_index(joint,2)], mechanism.μ, mechanism.timestep))
+#     return :(svcat($tra, $rot))
+# end
+
+function constraint(mechanism, joint::JointConstraint)
+    pbody = get_body(mechanism, joint.parent_id)
+    cbody = get_body(mechanism, joint.child_id)
+    tra = constraint(joint.translational, pbody, cbody, joint.impulses[2][joint_impulse_index(joint,1)], mechanism.μ, mechanism.timestep)
+    rot = constraint(joint.rotational, pbody, cbody, joint.impulses[2][joint_impulse_index(joint,2)], mechanism.μ, mechanism.timestep)
+    return svcat(tra, rot)
 end
 
 # # constraints Jacobians
