@@ -21,4 +21,4 @@ function complementarity(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where
     return vcat(γ[1] * s[1], cone_product(γ[@SVector [2,3,4]], s[@SVector [2,3,4]]))
 end
 
-complementarityμ(mechanism, contact::ContactConstraint; scaling=false) = complementarity(mechanism, contact, scaling=scaling) - mechanism.μ * neutral_vector(contact.model)
+complementarityμ(mechanism, contact::ContactConstraint) = complementarity(mechanism, contact) - mechanism.μ * neutral_vector(contact.model)

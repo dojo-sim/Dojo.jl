@@ -35,25 +35,23 @@ end
 
 function cone_line_search!(mechanism::Mechanism;
     τort::T=0.95,
-    τsoc::T=0.95,
-    scaling::Bool=false) where T
+    τsoc::T=0.95) where T
 
     system = mechanism.system
 
     α = 1.0
     for contact in mechanism.contacts
-        α = cone_line_search!(α, mechanism, contact, get_entry(system, contact.id), τort, τsoc; scaling = scaling)
+        α = cone_line_search!(α, mechanism, contact, get_entry(system, contact.id), τort, τsoc)
     end
     for joint in mechanism.joints
-        α = cone_line_search!(α, mechanism, joint, get_entry(system, joint.id), τort, τsoc; scaling = scaling)
+        α = cone_line_search!(α, mechanism, joint, get_entry(system, joint.id), τort, τsoc)
     end
 
     return α
 end
 
 function cone_line_search!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
-        vector_entry::Entry, τort, τsoc;
-        scaling::Bool=false) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
+        vector_entry::Entry, τort, τsoc) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
 
     s = contact.impulses_dual[2]
     γ = contact.impulses[2]
@@ -68,8 +66,7 @@ function cone_line_search!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N
 end
 
 function cone_line_search!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
-        vector_entry::Entry, τort, τsoc;
-        scaling::Bool=false) where {T,N,Nc,Cs<:Union{ImpactContact{T,N},LinearContact{T,N}},N½}
+        vector_entry::Entry, τort, τsoc) where {T,N,Nc,Cs<:Union{ImpactContact{T,N},LinearContact{T,N}},N½}
 
     s = contact.impulses_dual[2]
     γ = contact.impulses[2]
@@ -84,8 +81,7 @@ function cone_line_search!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N
 end
 
 function cone_line_search!(α, mechanism, joint::JointConstraint{T,N,Nc},
-        vector_entry::Entry, τort, τsoc;
-        scaling::Bool=false) where {T,N,Nc}
+        vector_entry::Entry, τort, τsoc) where {T,N,Nc}
 
     
     s, γ = split_impulses(joint.translational, joint.impulses[2][joint_impulse_index(joint,1)])
