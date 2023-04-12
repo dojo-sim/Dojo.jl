@@ -9,7 +9,6 @@
     contacts: list of ContactConstraint objects
     system: graph-based representation for mechanism
     residual_entries: containt entries for linear system residual
-    matrix_entries: contains entries for linear system matrix
 	data_matrix: contains parameter information that is fixed during simulation
 	root_to_leaves: list of node connections traversing from root node to leaves
     timestep: time discretization
@@ -25,7 +24,6 @@ mutable struct Mechanism{T,Nn,Ne,Nb,Ni}
 
     system::System{Nn}
     residual_entries::Vector{Entry}
-    matrix_entries::SparseMatrixCSC{Entry,Int64}
 
 	data_matrix::SparseMatrixCSC{Entry,Int64}
 	root_to_leaves::Vector{Int64}
@@ -70,7 +68,6 @@ function Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:
     # graph system
     system = create_system(origin, joints, bodies, contacts)
     residual_entries = deepcopy(system.vector_entries)
-    matrix_entries = deepcopy(system.matrix_entries)
 
 	# data gradient system
 	data_matrix = create_data_matrix(joints, bodies, contacts)
@@ -83,7 +80,7 @@ function Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:
             exclude_loop_joints=false)
 
     Mechanism{T,Nn,Ne,Nb,Ni}(origin, joints, bodies, contacts, system, residual_entries,
-		matrix_entries, data_matrix, root_to_leaves, timestep, input_scaling, get_gravity(gravity), 0.0)
+		data_matrix, root_to_leaves, timestep, input_scaling, get_gravity(gravity), 0.0)
 end
 
 Mechanism(origin::Origin{T}, bodies::Vector{Body{T}}, joints::Vector{<:JointConstraint{T}}; kwargs...) where T =

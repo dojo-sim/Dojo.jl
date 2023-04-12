@@ -34,7 +34,6 @@ function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
 		μ = 0.0
 		pull_residual!(mechanism)               # store the residual inside mechanism.residual_entries
         ldu_factorization!(mechanism.system)    # factorize system, modifies the matrix in place
-        pull_matrix!(mechanism)                 # store the factorized matrix inside mechanism.matrix_entries
         ldu_backsubstitution!(mechanism.system) # solve system, modifies the vector in place
 
 		αaff = cone_line_search!(mechanism; τort=0.95, τsoc=0.95, scaling=false) # uses system.vector_entries which holds the search drection
@@ -47,7 +46,6 @@ function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
 		correction!(mechanism) # update the residual in mechanism.residual_entries
 
 		push_residual!(mechanism)               # cache residual + correction
-        push_matrix!(mechanism)                 # restore the factorized matrix
         ldu_backsubstitution!(mechanism.system) # solve system
 
 		τ = max(0.95, 1 - max(rvio, bvio)^2) # τ = 0.95

@@ -43,16 +43,6 @@ function push_residual!(mechanism::Mechanism)
 	return
 end
 
-function pull_matrix!(mechanism::Mechanism)
-	mechanism.matrix_entries.nzval .= mechanism.system.matrix_entries.nzval #TODO: make allocation free
-	return
-end
-
-function push_matrix!(mechanism::Mechanism)
-	mechanism.system.matrix_entries.nzval .= mechanism.matrix_entries.nzval #TODO: make allocation free
-	return
-end
-
 function update!(body::Body)
     body.state.vsol[1] = body.state.vsol[2]
     body.state.ωsol[1] = body.state.ωsol[2]
