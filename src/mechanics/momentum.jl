@@ -32,20 +32,23 @@ function momentum(mechanism::Mechanism{T}, body::Body{T}) where T
     p_angular_body = D2q - 0.5 * state.Jτ2
 
     for joint in mechanism.joints
-        if body.id ∈ (joint.parent_id, joint.child_id)
-
-            f_joint = szeros(T,6)
-            (length(joint) > 0) && (f_joint += impulse_map(mechanism, joint, body) * joint.impulses[2]) # computed at t = 1.5
-
-            joint.spring && (f_joint += spring_impulses(mechanism, joint, body)) # computed at t = 1.5
-            joint.damper && (f_joint += damper_impulses(mechanism, joint, body)) # computed at t = 1.5
-
-            p_linear_body -= 0.5 * f_joint[1:3]
-            p_angular_body -= 0.5 * f_joint[4:6]
-        end
+        f_joint = joint_impulses(mechanism, joint, body)
+        p_linear_body -= 0.5 * f_joint[SA[1;2;3]]
+        p_angular_body -= 0.5 * f_joint[SA[4;5;6]]
     end
 
-    return [p_linear_body; rotation_matrix(q2) * p_angular_body]
+    return p_linear_body, vector_rotate(p_angular_body, q2)
+end
+
+function joint_impulses(mechanism, joint::JointConstraint{T,N}, body) where {T,N}
+    f_joint = szeros(T,6)
+    if body.id ∈ (joint.parent_id, joint.child_id)
+        (N > 0) && (f_joint += impulse_map(mechanism, joint, body) * joint.impulses[2]) # computed at t = 1.5
+
+        joint.spring && (f_joint += spring_impulses(mechanism, joint, body)) # computed at t = 1.5
+        joint.damper && (f_joint += damper_impulses(mechanism, joint, body)) # computed at t = 1.5
+    end
+    return f_joint
 end
 
 function momentum(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, storage::Storage{T,Ns}, t::Int) where {T,Nn,Ne,Nb,Ni,Ns}

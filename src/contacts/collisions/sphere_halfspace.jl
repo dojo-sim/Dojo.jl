@@ -63,7 +63,7 @@ end
 function ∂contact_point∂x(relative::Symbol, jacobian::Symbol, collision::SphereHalfSpaceCollision, xp, qp, xc, qc)
     if relative == :parent 
         if jacobian == :parent 
-            return 1.0 * I(3)
+            return 1.0 * sI(3)
         elseif jacobian == :child 
             return szeros(eltype(xp), 3, 3)
         end

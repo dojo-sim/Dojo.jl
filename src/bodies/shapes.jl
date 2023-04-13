@@ -326,7 +326,7 @@ mutable struct FrameShape{T} <: Shape{T}
             scale::AbstractVector=sones(3), 
             name::Symbol=Symbol("body_" * randstring(4)), color=RGBA(0.75, 0.75, 0.75))
         T = promote_type(quateltype.((m, position_offset, orientation_offset))...)
-        J = m * diagm([1;1;1])
+        J = m * sI(3)
         return Body(m, J; name=name, shape=new{T}(position_offset, orientation_offset, scale, color))
     end
 end

@@ -18,6 +18,9 @@ sones(N)= @SVector ones(N)
 
 srand(N)= @SVector rand(N)
 
+sI(::Type{T}, N) where T = SMatrix{N,N,T}(I)
+sI(N) = SMatrix{N,N,Float64}(I)
+
 # TODO: check StaticArray bug fix, then remove
 zerodimstaticadjoint(A) = A'
 zerodimstaticadjoint(::SMatrix{0,N,T,0}) where {T,N} = SMatrix{N,0,T,0}()

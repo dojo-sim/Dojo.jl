@@ -100,15 +100,15 @@ function set_data!(mechanism::Mechanism, data::AbstractVector)
 	c = 0
 	for joint in mechanism.joints
 		Nd = data_dim(joint)
-		set_data!(joint, data[c .+ (1:Nd)]); c += Nd
+		set_data!(joint, data[SUnitRange(c+1,c+Nd)]); c += Nd
 	end
 	for body in mechanism.bodies
 		Nd = data_dim(body, attjac=false)
-		set_data!(body, data[c .+ (1:Nd)], mechanism.timestep); c += Nd
+		set_data!(body, data[SUnitRange(c+1,c+Nd)], mechanism.timestep); c += Nd
 	end
 	for contact in mechanism.contacts
 		Nd = data_dim(contact)
-		set_data!(contact, data[c .+ (1:Nd)]); c += Nd
+		set_data!(contact, data[SUnitRange(c+1,c+Nd)]); c += Nd
 	end
 	for joint in mechanism.joints
 		input_impulse!(joint, mechanism, false)
@@ -160,27 +160,27 @@ end
 function set_data!(model::NonlinearContact, data::AbstractVector)
 	model.friction_coefficient = data[1]
     model.collision.contact_radius = data[2]
-    model.collision.contact_origin = data[SVector{3,Int}(3:5)]
+    model.collision.contact_origin = data[SA[3;4;5]]
     return nothing
 end
 
 function set_data!(model::LinearContact, data::AbstractVector)
 	model.friction_coefficient = data[1]
     model.collision.contact_radius = data[2]
-    model.collision.contact_origin = data[SVector{3,Int}(3:5)]
+    model.collision.contact_origin = data[SA[3;4;5]]
     return nothing
 end
 
 function set_data!(model::ImpactContact, data::AbstractVector)
     model.collision.contact_radius = data[1]
-    model.collision.contact_origin = data[SVector{3,Int}(2:4)]
+    model.collision.contact_origin = data[SA[2;3;4]]
     return nothing
 end
 
 function set_data!(contact::ContactConstraint, data::AbstractVector)
 	model = contact.model
 	N = data_dim(model)
-	set_data!(model, data[1:N])
+	set_data!(model, data[SUnitRange(1,N)])
     return nothing
 end
 
@@ -188,7 +188,7 @@ function set_data!(contacts::Vector{<:ContactConstraint}, data::AbstractVector)
 	c = 0
 	for contact in contacts
 		Nd = data_dim(contact)
-		set_data!(contact, data[c .+ (1:Nd)])
+		set_data!(contact, data[SUnitRange(c+1,c+Nd)])
 		c += Nd
 	end
 	return nothing

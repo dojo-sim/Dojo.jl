@@ -2,7 +2,8 @@ function line_search!(mechanism::Mechanism, α, rvio, bvio, opts)
     scale = 0
     system = mechanism.system
 
-    rvio_cand, bvio_cand = Inf * ones(2)
+    rvio_cand = Inf
+    bvio_cand = Inf
     for n = Base.OneTo(opts.max_ls)
         for contact in mechanism.contacts
             candidate_step!(α, contact, get_entry(system, contact.id), scale)
@@ -34,46 +35,43 @@ end
 
 function cone_line_search!(mechanism::Mechanism;
     τort::T=0.95,
-    τsoc::T=0.95,
-    scaling::Bool=false) where T
+    τsoc::T=0.95) where T
 
     system = mechanism.system
 
     α = 1.0
     for contact in mechanism.contacts
-        α = cone_line_search!(α, mechanism, contact, get_entry(system, contact.id), τort, τsoc; scaling = scaling)
+        α = cone_line_search!(α, mechanism, contact, get_entry(system, contact.id), τort, τsoc)
     end
     for joint in mechanism.joints
-        α = cone_line_search!(α, mechanism, joint, get_entry(system, joint.id), τort, τsoc; scaling = scaling)
+        α = cone_line_search!(α, mechanism, joint, get_entry(system, joint.id), τort, τsoc)
     end
 
     return α
 end
 
 function cone_line_search!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
-        vector_entry::Entry, τort, τsoc;
-        scaling::Bool=false) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
+        vector_entry::Entry, τort, τsoc) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
 
     s = contact.impulses_dual[2]
     γ = contact.impulses[2]
-    Δs = vector_entry.value[1:N½]
-    Δγ = vector_entry.value[N½ .+ (1:N½)]
-    αs_ort = positive_orthant_step_length(s[1:1], Δs[1:1], τ = τort)
-    αγ_ort = positive_orthant_step_length(γ[1:1], Δγ[1:1], τ = τort)
-    αs_soc = second_order_cone_step_length(s[2:4], Δs[2:4]; τ = τsoc)
-    αγ_soc = second_order_cone_step_length(γ[2:4], Δγ[2:4]; τ = τsoc)
+    Δs = vector_entry.value[SUnitRange(1,N½)]
+    Δγ = vector_entry.value[SUnitRange(N½+1,2*N½)]
+    αs_ort = positive_orthant_step_length(s[SA[1]], Δs[SA[1]], τ = τort)
+    αγ_ort = positive_orthant_step_length(γ[SA[1]], Δγ[SA[1]], τ = τort)
+    αs_soc = second_order_cone_step_length(s[SA[2;3;4]], Δs[SA[2;3;4]]; τ = τsoc)
+    αγ_soc = second_order_cone_step_length(γ[SA[2;3;4]], Δγ[SA[2;3;4]]; τ = τsoc)
 
     return min(α, αs_soc, αγ_soc, αs_ort, αγ_ort)
 end
 
 function cone_line_search!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½},
-        vector_entry::Entry, τort, τsoc;
-        scaling::Bool=false) where {T,N,Nc,Cs<:Union{ImpactContact{T,N},LinearContact{T,N}},N½}
+        vector_entry::Entry, τort, τsoc) where {T,N,Nc,Cs<:Union{ImpactContact{T,N},LinearContact{T,N}},N½}
 
     s = contact.impulses_dual[2]
     γ = contact.impulses[2]
-    Δs = vector_entry.value[1:N½]
-    Δγ = vector_entry.value[N½ .+ (1:N½)]
+    Δs = vector_entry.value[SUnitRange(1,N½)]
+    Δγ = vector_entry.value[SUnitRange(N½+1,2*N½)]
 
 
     αs_ort = positive_orthant_step_length(s, Δs, τ = τort)
@@ -83,17 +81,20 @@ function cone_line_search!(α, mechanism, contact::ContactConstraint{T,N,Nc,Cs,N
 end
 
 function cone_line_search!(α, mechanism, joint::JointConstraint{T,N,Nc},
-        vector_entry::Entry, τort, τsoc;
-        scaling::Bool=false) where {T,N,Nc}
+        vector_entry::Entry, τort, τsoc) where {T,N,Nc}
 
-    for (i, element) in enumerate((joint.translational, joint.rotational))
-        s, γ = split_impulses(element, joint.impulses[2][joint_impulse_index(joint,i)])
-        Δs, Δγ = split_impulses(element,  vector_entry.value[joint_impulse_index(joint,i)])
+    
+    s, γ = split_impulses(joint.translational, joint.impulses[2][joint_impulse_index(joint,1)])
+    Δs, Δγ = split_impulses(joint.translational,  vector_entry.value[joint_impulse_index(joint,1)])
+    αs_ort = positive_orthant_step_length(s, Δs, τ = τort)
+    αγ_ort = positive_orthant_step_length(γ, Δγ, τ = τort)
+    α = min(α, αs_ort, αγ_ort)
 
-        αs_ort = positive_orthant_step_length(s, Δs, τ = τort)
-        αγ_ort = positive_orthant_step_length(γ, Δγ, τ = τort)
-        α = min(α, αs_ort, αγ_ort)
-    end
+    s, γ = split_impulses(joint.rotational, joint.impulses[2][joint_impulse_index(joint,2)])
+    Δs, Δγ = split_impulses(joint.rotational,  vector_entry.value[joint_impulse_index(joint,2)])
+    αs_ort = positive_orthant_step_length(s, Δs, τ = τort)
+    αγ_ort = positive_orthant_step_length(γ, Δγ, τ = τort)
+    α = min(α, αs_ort, αγ_ort)
 
     return α
 end
@@ -117,17 +118,18 @@ function second_order_cone_step_length(λ::AbstractVector{T}, Δ::AbstractVector
 
     # check Section 8.2 CVXOPT
     λ0 = λ[1]
-    λ_λ = max(λ0^2 - λ[2:end]' * λ[2:end], 1e-25)
+    λ_2_end = λ[SUnitRange(2,end)]
+    λ_λ = max(λ0^2 - λ_2_end' * λ_2_end, 1e-25)
     if λ_λ < 0.0
         # @show λ_λ
         @warn "should always be positive"
     end
     λ_λ += ϵ
-    λ_Δ = λ0 * Δ[1] - λ[2:end]' * Δ[2:end] + ϵ
+    λ_Δ = λ0 * Δ[1] - λ_2_end' * Δ[SUnitRange(2,end)] + ϵ
 
     ρs = λ_Δ / λ_λ
-    ρv = Δ[2:end] / sqrt(λ_λ)
-    ρv -= (λ_Δ / sqrt(λ_λ) + Δ[1]) / (λ0 / sqrt(λ_λ) + 1) * λ[2:end] / λ_λ
+    ρv = Δ[SUnitRange(2,end)] / sqrt(λ_λ)
+    ρv -= (λ_Δ / sqrt(λ_λ) + Δ[1]) / (λ0 / sqrt(λ_λ) + 1) * λ_2_end / λ_λ
     α = 1.0
     if norm(ρv) - ρs > 0.0
         α = min(α, τ / (norm(ρv) - ρs))

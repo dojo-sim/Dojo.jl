@@ -13,11 +13,11 @@ function damper_force(relative::Symbol, joint::Rotational{T}, qa::Quaternion, ω
 
     velocity = minimal_velocities(joint, szeros(3), szeros(3), qa, ωa, szeros(3), szeros(3), qb, ωb, timestep)
     if relative == :parent
-        force = 1.0000 * damper * Aᵀ * velocity # currently assumes same damper constant in all directions
+        force = 1.0 * damper * Aᵀ * velocity # currently assumes same damper constant in all directions
         rotate && (force = vector_rotate(force, orientation_offset)) # rotate back to frame a
         return [szeros(T, 3); force]
     elseif relative == :child
-        force = - 1.0000 * damper * Aᵀ * velocity # currently assumes same damper constant in all directions
+        force = - 1.0 * damper * Aᵀ * velocity # currently assumes same damper constant in all directions
         rotate && (force = vector_rotate(force, inv(qb) * qa * orientation_offset)) # rotate back to frame b
         return [szeros(T, 3); force]
     end

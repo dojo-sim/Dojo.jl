@@ -6,7 +6,7 @@
     mechanism: Mechanism
     opts: SolverOptions
 """
-function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
+function mehrotra!(mechanism::Mechanism{T}; opts=SolverOptions{T}()) where T
 	reset!.(mechanism.contacts, scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
 	reset!.(mechanism.joints,   scale=1.0) # resets the values of s and γ to the scaled neutral vector; TODO: solver option
 
@@ -17,7 +17,7 @@ function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
     undercut = opts.undercut
     α = 1.0
 
-	initialize!.(mechanism.contacts) # TODO: redundant with resetVars--remove
+	initialize!.(mechanism.contacts)
     set_entries!(mechanism) # compute the residual
 
     bvio = bilinear_violation(mechanism) # does not require to apply set_entries!
@@ -27,17 +27,16 @@ function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
     for n = Base.OneTo(opts.max_iter)
         opts.verbose && solver_status(mechanism, α, rvio, bvio, n, μtarget, undercut)
 
-        ((rvio < opts.rtol) && (bvio < opts.btol)) && (status=:success; break)
+        (rvio < opts.rtol) && (bvio < opts.btol) && (status=:success; break)
 		(n == opts.max_iter) && (opts.verbose && (@warn "failed mehrotra"))
 
         # affine search direction
 		μ = 0.0
 		pull_residual!(mechanism)               # store the residual inside mechanism.residual_entries
         ldu_factorization!(mechanism.system)    # factorize system, modifies the matrix in place
-        pull_matrix!(mechanism)                 # store the factorized matrix inside mechanism.matrix_entries
         ldu_backsubstitution!(mechanism.system) # solve system, modifies the vector in place
 
-		αaff = cone_line_search!(mechanism; τort=0.95, τsoc=0.95, scaling=false) # uses system.vector_entries which holds the search drection
+		αaff = cone_line_search!(mechanism; τort=0.95, τsoc=0.95) # uses system.vector_entries which holds the search drection
 		ν, νaff = centering!(mechanism, αaff)
 		σcentering = clamp(νaff / (ν + 1e-20), 0.0, 1.0)^3
 
@@ -47,11 +46,10 @@ function mehrotra!(mechanism::Mechanism; opts=SolverOptions())
 		correction!(mechanism) # update the residual in mechanism.residual_entries
 
 		push_residual!(mechanism)               # cache residual + correction
-        push_matrix!(mechanism)                 # restore the factorized matrix
         ldu_backsubstitution!(mechanism.system) # solve system
 
 		τ = max(0.95, 1 - max(rvio, bvio)^2) # τ = 0.95
-		α = cone_line_search!(mechanism; τort=τ, τsoc=min(τ, 0.95), scaling=false) # uses system.vector_entries which holds the corrected search drection
+		α = cone_line_search!(mechanism; τort=τ, τsoc=min(τ, 0.95)) # uses system.vector_entries which holds the corrected search drection
 
 		# steps taken without making progress
 		rvio_, bvio_ = line_search!(mechanism, α, rvio, bvio, opts)

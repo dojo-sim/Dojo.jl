@@ -4,7 +4,7 @@ function cone_product(u::AbstractVector{T}, v::AbstractVector{T}) where {T}
 end
 
 function cone_product(u::SVector{N,T}, v::SVector{N,T}) where {N,T}
-    vcat(u' * v, u[1] * v[SVector{N-1}(2:end)] + v[1] * u[SVector{N-1}(2:end)])
+    vcat(u' * v, u[1] * v[SUnitRange(2,end)] + v[1] * u[SUnitRange(2,end)])
 end
 
 function cone_product_jacobian(u::SVector{3,T}) where T

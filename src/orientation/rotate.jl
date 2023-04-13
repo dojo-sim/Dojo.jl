@@ -7,9 +7,9 @@ vector_rotate(v::AbstractVector,q::Quaternion) = Vmat(quaternion_rotate(Quaterni
 
 # rotate matrix
 function matrix_rotate(A::AbstractMatrix,q::Quaternion)
-    c1 = vector_rotate(A[SVector{3}(1,2,3)], q)
-    c2 = vector_rotate(A[SVector{3}(4,5,6)], q)
-    c3 = vector_rotate(A[SVector{3}(7,8,9)], q)
+    c1 = vector_rotate(A[SA[1;2;3]], q)
+    c2 = vector_rotate(A[SA[4;5;6]], q)
+    c3 = vector_rotate(A[SA[7;8;9]], q)
 
     return [c1 c2 c3]
 end

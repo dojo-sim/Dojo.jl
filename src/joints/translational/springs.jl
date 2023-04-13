@@ -25,7 +25,7 @@ function spring_impulses(relative::Symbol, joint::Translational,
     xa::AbstractVector, qa::Quaternion,
     xb::AbstractVector, qb::Quaternion,
     timestep; unitary::Bool=false)
-    timestep * impulse_transform(relative, joint, xa, qa, xb, qb) * spring_force(relative, joint, xa, qa, xb, qb; unitary=unitary)[SVector{3,Int}(1,2,3)]
+    timestep * impulse_transform(relative, joint, xa, qa, xb, qb) * spring_force(relative, joint, xa, qa, xb, qb; unitary=unitary)[SA[1;2;3]]
 end
 
 spring_impulses(relative::Symbol, joint::Translational{T,3}, pbody::Node, cbody::Node, timestep; unitary::Bool=false) where T = szeros(T, 6)
@@ -52,7 +52,7 @@ function spring_jacobian_configuration(relative::Symbol, jacobian_relative::Symb
     unitary::Bool=false, 
     attjac=true) where T
 
-    force = spring_force(relative, joint, xa, qa, xb, qb, unitary=unitary)[SVector{3,Int}(1,2,3)]
+    force = spring_force(relative, joint, xa, qa, xb, qb, unitary=unitary)[SA[1;2;3]]
     
     J = impulse_transform(relative, joint, xa, qa, xb, qb) *
         spring_force_jacobian_configuration(jacobian_relative, joint, xa, qa, xb, qb, unitary=unitary, attjac=attjac)

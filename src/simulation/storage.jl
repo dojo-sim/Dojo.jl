@@ -55,11 +55,9 @@ function save_to_storage!(mechanism::Mechanism, storage::Storage, i::Int)
         storage.v[ind][i] = state.v15 # v1.5
         storage.ω[ind][i] = state.ω15 # ω1.5
         q2 = state.q2
-        p2 = momentum(mechanism, body) # p1 in world frame
-        px2 = p2[SVector{3,Int}(1,2,3)] # px1 in world frame
-        pq2 = p2[SVector{3,Int}(4,5,6)] # pq1 in world frame
-        v2 = px2 ./ body.mass # in world frame
-        ω2 = body.inertia \ (rotation_matrix(inv(q2)) * pq2) # in body frame, we rotate using the current quaternion q2 = state.q2
+        px2, pq2 = momentum(mechanism, body) # p in world frame
+        v2 = px2 / body.mass # in world frame
+        ω2 = body.inertia \ (vector_rotate(pq2, inv(q2))) # in body frame, we rotate using the current quaternion q2 = state.q2
         storage.px[ind][i] = px2 # px2
         storage.pq[ind][i] = pq2 # pq2
         storage.vl[ind][i] = v2 # v2
@@ -76,10 +74,10 @@ function generate_storage(mechanism::Mechanism, z)
     for t = 1:N
         off = 0
         for i = 1:M 
-            storage.x[i][t] = z[t][off .+ (1:3)]
-            storage.v[i][t] = z[t][off .+ (4:6)]
-            storage.q[i][t] = Quaternion(z[t][off .+ (7:10)]...)
-            storage.ω[i][t] = z[t][off .+ (11:13)]
+            storage.x[i][t] = z[t][SUnitRange(off+1,off+3)]
+            storage.v[i][t] = z[t][SUnitRange(off+4,off+6)]
+            storage.q[i][t] = Quaternion(z[t][SUnitRange(off+7,off+10)]...)
+            storage.ω[i][t] = z[t][SUnitRange(off+11,off+13)]
             off += 13
         end
     end
@@ -100,7 +98,7 @@ function get_maximal_state(storage::Storage{T,N}, i::Int) where {T,N}
 		q2 = storage.q[j][i]
 		v15 = storage.v[j][i]
 		ω15 = storage.ω[j][i]
-		z[13 * (j-1) .+ (1:13)] = [x2; v15; vector(q2); ω15]
+		z[SUnitRange((j-1)*13+1,j*13)] = [x2; v15; vector(q2); ω15]
 	end
 	return z
 end
