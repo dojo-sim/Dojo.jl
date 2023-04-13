@@ -79,9 +79,9 @@ function contact_point(relative::Symbol, collision::CapsuleCapsuleCollision, xp,
     # call mehrotra 
 
     if relative == :parent 
-        return collision.ip.z[0 .+ (1:3)]
+        return collision.ip.z[SA[1;2;3]]
     elseif relative == :child
-        return collision.ip.z[3 .+ (1:3)]
+        return collision.ip.z[SA[4;5;6]]
     end
 end
 

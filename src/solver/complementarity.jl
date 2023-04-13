@@ -18,7 +18,7 @@ complementarity(mechanism, contact::ContactConstraint) = contact.impulses[2] .* 
 function complementarity(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:NonlinearContact{T,N}}
     γ = contact.impulses[2]
     s = contact.impulses_dual[2]
-    return vcat(γ[1] * s[1], cone_product(γ[@SVector [2,3,4]], s[@SVector [2,3,4]]))
+    return vcat(γ[1] * s[1], cone_product(γ[SA[2,3,4]], s[SA[2,3,4]]))
 end
 
 complementarityμ(mechanism, contact::ContactConstraint) = complementarity(mechanism, contact) - mechanism.μ * neutral_vector(contact.model)

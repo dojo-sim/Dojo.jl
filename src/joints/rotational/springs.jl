@@ -64,11 +64,11 @@ function spring_jacobian_configuration(relative::Symbol, jacobian::Symbol, joint
             J1 = timestep * rotation_matrix(inv(qb) * qa * joint.orientation_offset) * -spring * zerodimstaticadjoint(nullspace_mask(joint)) * minimal_coordinates_jacobian_configuration(jacobian, joint, xa, qa, xb, qb, attjac=attjac)
 
             if jacobian == :parent
-                Q2 = timestep * ∂vector_rotate∂q(force[SVector{3,Int}(4,5,6)], inv(qb) * qa * joint.orientation_offset) * Rmat(joint.orientation_offset) * Lmat(inv(qb))
+                Q2 = timestep * ∂vector_rotate∂q(force[SA[4;5;6]], inv(qb) * qa * joint.orientation_offset) * Rmat(joint.orientation_offset) * Lmat(inv(qb))
                 attjac && (Q2 *= LVᵀmat(qa))
                 J2 = [X Q2]
             elseif jacobian == :child
-                Q2 = timestep * ∂vector_rotate∂q(force[SVector{3,Int}(4,5,6)], inv(qb) * qa * joint.orientation_offset) * Rmat(qa * joint.orientation_offset) * Tmat()
+                Q2 = timestep * ∂vector_rotate∂q(force[SA[4;5;6]], inv(qb) * qa * joint.orientation_offset) * Rmat(qa * joint.orientation_offset) * Tmat()
                 attjac && (Q2 *= LVᵀmat(qb))
                 J2 = [X Q2]
             end

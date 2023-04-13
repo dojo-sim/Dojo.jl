@@ -10,7 +10,7 @@
 function set_maximal_state!(mechanism::Mechanism, z::AbstractVector)
     off = 0
     for body in mechanism.bodies
-        x2, v15, q2, ω15 = unpack_data(z[off+1:end]); off += 13
+        x2, v15, q2, ω15 = unpack_data(z[SUnitRange(off+1,end)]); off += 13
         q2 = Quaternion(q2...)
         body.state.v15 = v15
         body.state.ω15 = ω15
@@ -43,7 +43,7 @@ function set_input!(mechanism::Mechanism{T}, u::AbstractVector) where T
 	off = 0
 	for joint in joints
 		nu = input_dimension(joint)
-		set_input!(joint, SVector{nu,T}(u[off .+ (1:nu)]))
+		set_input!(joint, SVector{nu,T}(u[SUnitRange(off+1,off+nu)]))
 		off += nu
 	end
 	# apply the controls to each body's state
@@ -130,7 +130,7 @@ function set_spring_offset!(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, x::AbstractVect
 	off = 0
     for joint in mechanism.joints
         N̄ = 3 - length(joint)
-        joint.spring_offset = x[off .+ (1:N̄)]
+        joint.spring_offset = x[SUnitRange(off+1,off+N̄)]
         off += 2N̄
     end
 	return

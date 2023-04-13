@@ -51,7 +51,7 @@ end
 function link_transform(start, goal)
     # transforms a vertical line of length 1 into a line between start and goal
     v1 = [0.0, 0.0, 1.0]
-    v2 = goal[1:3] - start[1:3]
+    v2 = goal[SA[1;2;3]] - start[SA[1;2;3]]
     normalize!(v2)
     ax = cross(v1, v2)
     ang = acos(v1' * v2)
@@ -95,12 +95,12 @@ end
 function set_loose_rope(vis::Visualizer, x_start, x_goal; N::Int=10,
         rope_length=2norm(x_goal - x_start), min_altitude=-Inf, a_guess=1.0, dx_guess=0.0, name::Symbol=:rope)
     v = x_goal - x_start
-    shadow_rope_length = norm(v[1:2])
+    shadow_rope_length = norm(v[SA[1;2]])
     θ = atan(v[2], v[1])
     R = rotationmatrix(RotZ(-θ))
     v̄ = R * v # rotated into the xz plane
 
-    a, dx, dy = catenary_parameters(zeros(2), v̄[[1,3]], rope_length, a_guess=a_guess, dx_guess=dx_guess)
+    a, dx, dy = catenary_parameters(zeros(2), v̄[SA[1;3]], rope_length, a_guess=a_guess, dx_guess=dx_guess)
     Λ = shadow_rope_length * range(0,1,length=N+1)
     x = []
     for i = 1:N+1

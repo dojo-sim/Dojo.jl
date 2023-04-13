@@ -11,8 +11,8 @@ end
 correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, node::Node) = nothing
 
 function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, ::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs,N½}
-	Δs = step_entry.value[1:N½]
-    Δγ = step_entry.value[N½ .+ (1:N½)]
+	Δs = step_entry.value[SUnitRange(1,N½)]
+    Δγ = step_entry.value[SUnitRange(N½+1,N)]
 	μ = mechanism.μ
 	residual_entry.value += [- Δs .* Δγ .+ μ; szeros(N½)]
     return
@@ -21,9 +21,9 @@ end
 function correction!(mechanism::Mechanism, residual_entry::Entry, step_entry::Entry, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
 	cont = contact.model
 	μ = mechanism.μ
-	Δs = step_entry.value[1:N½]
-    Δγ = step_entry.value[N½ .+ (1:N½)]
-	residual_entry.value += [[-Δs[1] * Δγ[1]; -cone_product(Δs[2:4], Δγ[2:4])] + μ * neutral_vector(cont); szeros(N½)]
+	Δs = step_entry.value[SUnitRange(1,N½)]
+    Δγ = step_entry.value[SUnitRange(N½+1,N)]
+	residual_entry.value += [[-Δs[1] * Δγ[1]; -cone_product(Δs[SA[2;3;4]], Δγ[SA[2;3;4]])] + μ * neutral_vector(cont); szeros(N½)]
     return
 end
 

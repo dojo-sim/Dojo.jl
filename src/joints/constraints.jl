@@ -411,7 +411,7 @@ function get_joint_impulses(joint::JointConstraint{T,N,Nc}, i::Int) where {T,N,N
     end
     n2 = n1 - 1 + impulses_length((joint.translational, joint.rotational)[i])
 
-    λi = SVector{n2-n1+1,T}(joint.impulses[2][n1:n2])
+    λi = SVector{n2-n1+1,T}(joint.impulses[2][SUnitRange(n1,n2)])
     return λi
 end
 

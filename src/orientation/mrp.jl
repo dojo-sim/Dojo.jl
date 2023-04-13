@@ -9,7 +9,7 @@ end
 
 function dmrpdq(q::AbstractVector)
     s = q[1]
-    v = q[2:4]
+    v = q[SA[2;3;4]]
 
     d1 = 1 / (s + 1)^2
     di = 1 / (s + 1)

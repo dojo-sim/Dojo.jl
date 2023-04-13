@@ -37,8 +37,8 @@ function input_jacobian_control(relative::Symbol,
     input_scaling)
 
     Ta = impulse_transform(relative, joint, xa, qa, xb, qb)
-    X = Ta[1:3,1:3]
-    Q = 0.5 * Ta[4:6,1:3]
+    X = Ta[SA[1;2;3],SA[1;2;3]]
+    Q = 0.5 * Ta[SA[4;5;6],SA[1;2;3]]
     return [X; Q] * input_scaling
 end
 
@@ -49,17 +49,17 @@ function input_jacobian_configuration(relative::Symbol,
 
     # d[Faw;2τaa]/d[xa,qa]
     ∇aa = impulse_transform_jacobian(:parent, relative, joint, xa, qa, xb, qb, joint.input)
-    FaXa = ∇aa[1:3, 1:3]
-    FaQa = ∇aa[1:3, 4:6]
-    τaXa = 0.5 * ∇aa[4:6, 1:3]
-    τaQa = 0.5 * ∇aa[4:6, 4:6]
+    FaXa = ∇aa[SA[1;2;3], SA[1;2;3]]
+    FaQa = ∇aa[SA[1;2;3], SA[4;5;6]]
+    τaXa = 0.5 * ∇aa[SA[4;5;6], SA[1;2;3]]
+    τaQa = 0.5 * ∇aa[SA[4;5;6], SA[4;5;6]]
 
     # d[Fbw;2τbb]/d[xa,qa]
     ∇ba = impulse_transform_jacobian(:child, relative, joint, xa, qa, xb, qb, joint.input)
-    FbXa = ∇ba[1:3,1:3]
-    FbQa = ∇ba[1:3,4:6]
-    τbXa = 0.5 * ∇ba[4:6,1:3]
-    τbQa = 0.5 * ∇ba[4:6,4:6]
+    FbXa = ∇ba[SA[1;2;3],SA[1;2;3]]
+    FbQa = ∇ba[SA[1;2;3],SA[4;5;6]]
+    τbXa = 0.5 * ∇ba[SA[4;5;6],SA[1;2;3]]
+    τbQa = 0.5 * ∇ba[SA[4;5;6],SA[4;5;6]]
 
     return FaXa, FaQa, τaXa, τaQa, FbXa, FbQa, τbXa, τbQa
 end

@@ -90,8 +90,8 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}) where 
     sγ = contact.impulses_dual[2][1]
     ψ = contact.impulses[2][2]
     sψ = contact.impulses_dual[2][2]
-    β = contact.impulses[2][@SVector [3,4,5,6]]
-    sβ = contact.impulses_dual[2][@SVector [3,4,5,6]]
+    β = contact.impulses[2][SA[3;4;5;6]]
+    sβ = contact.impulses_dual[2][SA[3;4;5;6]]
 
     SVector{N½,T}(
         d - sγ,

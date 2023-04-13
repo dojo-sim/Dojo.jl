@@ -134,8 +134,8 @@ limits_length(joint::Joint{T,Nλ,Nb}) where {T,Nλ,Nb} = Nb
 impulses_length(joint::Joint{T,Nλ,Nb,N}) where {T,Nλ,Nb,N} = N
 
 function split_impulses(joint::Joint{T,Nλ,Nb}, η) where {T,Nλ,Nb}
-    s = η[SVector{Nb,Int}(1:Nb)]
-    γ = η[SVector{Nb,Int}(Nb .+ (1:Nb))]
+    s = η[SUnitRange(1,Nb)]
+    γ = η[SUnitRange(Nb+1,2*Nb)]
     return s, γ
 end
 

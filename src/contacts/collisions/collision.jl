@@ -10,7 +10,7 @@ function contact_point_origin(x, q, k)
     x + vector_rotate(k, q)
 end
 
-∂contact_point_origin∂x(x, q, k) = 1.0 * I(3)
+∂contact_point_origin∂x(x, q, k) = 1.0 * sI(3)
 ∂contact_point_origin∂q(x, q, k) = ∂vector_rotate∂q(k, q)
 ∂contact_point_origin∂k(x, q, k) = rotation_matrix(q)
 

@@ -125,7 +125,7 @@ function impulse_map_jacobian(relative::Symbol, jacobian::Symbol, model::Contact
     end
 
     Qx = rotation_matrix(inv(q)) * skew(r) * Xx 
-    Qx -= rotation_matrix(inv(q)) * skew(X * λ) * (∂contact_point∂x(relative, jacobian, model.collision, xp, qp, xc, qc) - (relative == jacobian ? 1.0 : 0.0) * I(3)) 
+    Qx -= rotation_matrix(inv(q)) * skew(X * λ) * (∂contact_point∂x(relative, jacobian, model.collision, xp, qp, xc, qc) - (relative == jacobian ? 1.0 : 0.0) * sI(3)) 
    
     Qq = rotation_matrix(inv(q)) * skew(r) * Xq 
     Qq -= rotation_matrix(inv(q)) * skew(X * λ) * ∂contact_point∂q(relative, jacobian, model.collision, xp, qp, xc, qc) 

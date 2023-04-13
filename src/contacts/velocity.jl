@@ -12,7 +12,7 @@ function ∂contact_point_velocity∂q(model::Contact, x, q, v, ω, c)
 end
 
 function ∂contact_point_velocity∂v(model::Contact, x, q, v, ω, c)
-    return 1.0 * I(3)
+    return 1.0 * sI(3)
 end
 
 function ∂contact_point_velocity∂ω(model::Contact, x, q, v, ω, c)

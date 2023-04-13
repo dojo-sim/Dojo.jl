@@ -74,10 +74,10 @@ function generate_storage(mechanism::Mechanism, z)
     for t = 1:N
         off = 0
         for i = 1:M 
-            storage.x[i][t] = z[t][off .+ (1:3)]
-            storage.v[i][t] = z[t][off .+ (4:6)]
-            storage.q[i][t] = Quaternion(z[t][off .+ (7:10)]...)
-            storage.ω[i][t] = z[t][off .+ (11:13)]
+            storage.x[i][t] = z[t][SUnitRange(off+1,off+3)]
+            storage.v[i][t] = z[t][SUnitRange(off+4,off+6)]
+            storage.q[i][t] = Quaternion(z[t][SUnitRange(off+7,off+10)]...)
+            storage.ω[i][t] = z[t][SUnitRange(off+11,off+13)]
             off += 13
         end
     end
@@ -98,7 +98,7 @@ function get_maximal_state(storage::Storage{T,N}, i::Int) where {T,N}
 		q2 = storage.q[j][i]
 		v15 = storage.v[j][i]
 		ω15 = storage.ω[j][i]
-		z[13 * (j-1) .+ (1:13)] = [x2; v15; vector(q2); ω15]
+		z[SUnitRange((j-1)*13+1,j*13)] = [x2; v15; vector(q2); ω15]
 	end
 	return z
 end

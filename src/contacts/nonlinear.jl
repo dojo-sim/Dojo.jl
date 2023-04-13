@@ -71,7 +71,7 @@ function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}) where 
     SVector{N½,T}(
         d - s[1],
         model.friction_coefficient * γ[1] - γ[2],
-        (model.friction_parameterization * vt - s[@SVector [3,4]])...)
+        (model.friction_parameterization * vt - s[SA[3;4]])...)
 end
 
 function constraint_jacobian(contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}

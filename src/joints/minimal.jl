@@ -168,10 +168,10 @@ function set_minimal_coordinates_velocities!(joint::JointConstraint,
     Atra = zerodimstaticadjoint(nullspace_mask(tra))
 
     # parent state
-    xa = SVector{3}(zp[1:3])
-    va = SVector{3}(zp[3 .+ (1:3)])
-    qa = Quaternion(zp[6 .+ (1:4)]...)
-    ωa = SVector{3}(zp[10 .+ (1:3)])
+    xa = SVector{3}(zp[SA[1;2;3]])
+    va = SVector{3}(zp[SA[4;5;6]])
+    qa = Quaternion(zp[SA[7;8;9;10]]...)
+    ωa = SVector{3}(zp[SA[11;12;13]])
 
     # positions
     Δq = axis_angle_to_quaternion(Arot * Δθ)
@@ -236,7 +236,7 @@ function minimal_coordinates_velocities_jacobian_parent(joint::JointConstraint{T
 
     # Jacobians
 
-    ∂xb∂xa = 1.0 * I(3)
+    ∂xb∂xa = 1.0 * sI(3)
 
     ∂xb∂va = szeros(T, 3, 3)
 
@@ -255,7 +255,7 @@ function minimal_coordinates_velocities_jacobian_parent(joint::JointConstraint{T
 
     ∂vb∂xa = szeros(T, 3, 3)
 
-    ∂vb∂va = 1.0 * I(3)
+    ∂vb∂va = 1.0 * sI(3)
 
     ∂vb∂qa = 1.0 / timestep * ∂vector_rotate∂q(pa + Atra * Δx, qa)
     ∂vb∂qa -= 1.0 / timestep * ∂vector_rotate∂q(pb, qb) * Rmat(orientation_offset * Δq)
