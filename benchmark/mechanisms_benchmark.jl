@@ -6,6 +6,7 @@ mechanisms = [
     :atlas,
     :block, 
     :block2d,
+    :exoskeleton,
     :cartpole,
     :dzhanibekov,
     :fourbar, 

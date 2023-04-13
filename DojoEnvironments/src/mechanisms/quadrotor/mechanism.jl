@@ -36,8 +36,6 @@ function get_quadrotor(;
     # contacts 
     contacts = ContactConstraint{T}[]
 
-
-
     if contact_rotors
         # rotor contacts
         body_in_contact = get_body(mechanism, :base_link)

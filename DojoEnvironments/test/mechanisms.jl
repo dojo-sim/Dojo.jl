@@ -5,6 +5,7 @@ mechanisms = [
     :block2d,
     :cartpole,
     :dzhanibekov,
+    :exoskeleton,
     :fourbar, 
     :halfcheetah,
     :hopper, 
