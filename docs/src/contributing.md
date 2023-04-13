@@ -9,7 +9,7 @@ Contributions are always welcome!
 ## Potentially Useful Contributions 
 Here are a list of current to-do's that would make awesome contributions:
 
-- reduce allocations by using StaticArrays in functions
+- reduce allocations by using StaticArrays and https://docs.julialang.org/en/v1/manual/profile/#Line-by-Line-Allocation-Tracking
 - improved parsing of URDF files
     - joint limits, friction coefficients
 - improved collision detection 
