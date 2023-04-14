@@ -17,7 +17,7 @@ mechanisms = [
     :nslider,
     :panda,
     :pendulum,
-    :quadrotor
+    :quadrotor,
     :quadruped,
     :raiberthopper,
     :slider,
