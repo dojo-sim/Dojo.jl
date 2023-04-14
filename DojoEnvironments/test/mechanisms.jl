@@ -22,6 +22,7 @@ mechanisms = [
     :sphere,
     :tippetop,
     :twister, 
+    :uuv,
     :walker,
     :youbot,
 ]

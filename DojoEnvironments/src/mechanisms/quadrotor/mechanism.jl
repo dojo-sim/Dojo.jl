@@ -42,7 +42,7 @@ function get_quadrotor(;
         n = 4
         normals = fill(Z_AXIS,n)
         friction_coefficients = fill(friction_coefficient,n)
-        contact_radii = fill(0.07,4) # smaller than rotor size to allow for pitching close to ground
+        contact_radii = fill(0.07,n) # smaller than rotor size to allow for pitching close to ground
         contact_origins = [
             [0.21; 0; 0.045], 
             [-0.21; 0; 0.045], 
