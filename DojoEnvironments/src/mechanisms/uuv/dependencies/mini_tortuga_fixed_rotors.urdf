@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<robot name="mini_tortuga">
+  <link name="base_link">
+    <inertial>
+      <mass value="19.1834"/>
+      <!-- [kg] -->
+      <origin xyz="0 0 0"/>
+      <inertia
+            ixx="0.29874124659" ixy="-0.03211874071" ixz="0.00179507011"
+            iyy="0.50529405748" iyz="-0.00095289894"
+            izz="0.62284393213" />
+      </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="mesh/obsrov.obj" scale="1 1 1"/>
+      </geometry>
+    </visual>
+  </link>
+  <joint name="rotor_1_joint" type="fixed">
+    <origin rpy="0 0 -2.356194490192345" xyz="0.14 -0.09 0.059"/>
+    <parent link="base_link"/>
+    <child link="rotor_1"/>
+  </joint>
+  <link name="rotor_1">
+    <inertial>
+      <mass value="0.01"/>
+      <inertia ixx="1.94999922e-06" ixy="0.0" ixz="0.0" iyy="0.00013660827869" iyz="0.0" izz="0.00013840827797"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="mesh/red_propcw_minitortuga.obj" scale="1 1 1"/>
+      </geometry>
+    </visual>
+  </link>
+  <joint name="rotor_2_joint" type="fixed">
+    <origin rpy="0 0 2.356194490192345" xyz="0.14 0.09 0.059"/>
+    <parent link="base_link"/>
+    <child link="rotor_2"/>
+  </joint>
+  <link name="rotor_2">
+    <inertial>
+      <mass value="0.01"/>
+      <inertia ixx="1.94999922e-06" ixy="0.0" ixz="0.0" iyy="0.00013660827869" iyz="0.0" izz="0.00013840827797"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="mesh/red_propcw_minitortuga.obj" scale="1 1 1"/>
+      </geometry>
+    </visual>
+  </link>
+  <joint name="rotor_3_joint" type="fixed">
+    <origin rpy="0 0 -0.7853981633974483" xyz="-0.14 -0.09 0.059"/>
+    <parent link="base_link"/>
+    <child link="rotor_3"/>
+  </joint>
+  <link name="rotor_3">
+    <inertial>
+      <mass value="0.01"/>
+      <inertia ixx="1.94999922e-06" ixy="0.0" ixz="0.0" iyy="0.00013660827869" iyz="0.0" izz="0.00013840827797"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="mesh/red_propcw_minitortuga.obj" scale="1 1 1"/>
+      </geometry>
+    </visual>
+  </link>
+  <joint name="rotor_4_joint" type="fixed">
+    <origin rpy="0 0 0.7853981633974483" xyz="-0.14 0.09 0.059"/>
+    <parent link="base_link"/>
+    <child link="rotor_4"/>
+  </joint>
+  <link name="rotor_4">
+    <inertial>
+      <mass value="0.01"/>
+      <inertia ixx="1.94999922e-06" ixy="0.0" ixz="0.0" iyy="0.00013660827869" iyz="0.0" izz="0.00013840827797"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="mesh/red_propcw_minitortuga.obj" scale="1 1 1"/>
+      </geometry>
+    </visual>
+  </link>
+  <joint name="rotor_5_joint" type="fixed">
+    <origin rpy="0 -1.5707963267948966 0" xyz="0 -0.0855 0.165"/>
+    <parent link="base_link"/>
+    <child link="rotor_5"/>
+  </joint>
+  <link name="rotor_5">
+    <inertial>
+      <mass value="0.01"/>
+      <inertia ixx="1.94999922e-06" ixy="0.0" ixz="0.0" iyy="0.00013660827869" iyz="0.0" izz="0.00013840827797"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="mesh/silver_propcw_minitortuga.obj" scale="0.8 0.8 0.8"/>
+      </geometry>
+    </visual>
+  </link>
+  <joint name="rotor_6_joint" type="fixed">
+    <origin rpy="0 -1.5707963267948966 0" xyz="0 0.0855 0.165"/>
+    <parent link="base_link"/>
+    <child link="rotor_6"/>
+  </joint>
+  <link name="rotor_6">
+    <inertial>
+      <mass value="0.01"/>
+      <inertia ixx="1.94999922e-06" ixy="0.0" ixz="0.0" iyy="0.00013660827869" iyz="0.0" izz="0.00013840827797"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="mesh/silver_propcw_minitortuga.obj" scale="0.8 0.8 0.8"/>
+      </geometry>
+    </visual>
+  </link>
+</robot>
+

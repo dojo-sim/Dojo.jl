@@ -5,6 +5,7 @@ mechanisms = [
     :block2d,
     :cartpole,
     :dzhanibekov,
+    :exoskeleton,
     :fourbar, 
     :halfcheetah,
     :hopper, 
@@ -13,6 +14,7 @@ mechanisms = [
     :nslider,
     :panda,
     :pendulum,
+    :quadrotor,
     :quadruped,
     :raiberthopper,
     :slider,
@@ -20,6 +22,7 @@ mechanisms = [
     :sphere,
     :tippetop,
     :twister, 
+    :uuv,
     :walker,
     :youbot,
 ]

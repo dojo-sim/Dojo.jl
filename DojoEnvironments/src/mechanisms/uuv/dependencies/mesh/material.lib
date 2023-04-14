@@ -1,0 +1,13 @@
+newmtl Material__211
+	Ka 0.2 0.2 0.2
+	Kd 0.752941 0 0
+	d 1
+	Tr 0
+	illum 2
+
+newmtl Material__52
+	Ka 0.2 0.2 0.2
+	Kd 0.792157 0.819608 0.933333
+	d 1
+	Tr 0
+	illum 2

@@ -166,7 +166,7 @@ function reduce_fixed_joints(mechanism; kwargs...)
 end
 
 # TODO currently only for non-contact mechanisms
-function reduce_fixed_joints(origin, bodies, joints)
+function reduce_fixed_joints(origin, bodies, joints; merge_names=false)
     remaining_bodies = ones(Bool,length(bodies))
     remaining_joints = ones(Bool,length(joints))
 
@@ -202,7 +202,7 @@ function reduce_fixed_joints(origin, bodies, joints)
             end
 
             parent_body.shape = CombinedShapes([parent_body.shape;child_body.shape])
-            parent_body.name = Symbol(String(parent_body.name)*"_merged_with_"*String(child_body.name))
+            merge_names && (parent_body.name = Symbol(parent_body.name,"_merged_with_",child_body.name))
 
             for joint2 in joints
                 joint2 == joint && continue
