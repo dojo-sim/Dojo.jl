@@ -7,7 +7,6 @@ function get_exoskeleton(;
     dampers=0,
     parse_springs=true, 
     parse_dampers=true,
-    limits=true,
     joint_limits=Dict([
         (:sAA, [0, 90]*π/180),
         (:sFE, [0, 90]*π/180),
@@ -27,12 +26,9 @@ function get_exoskeleton(;
     !parse_dampers && set_dampers!(mechanism.joints, dampers)
 
     # joint limits    
-    if limits
-        joints = set_limits(mechanism, joint_limits)
-
-        mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
-            gravity, timestep, input_scaling)
-    end
+    joints = set_limits(mechanism, joint_limits)
+    mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
+        gravity, timestep, input_scaling)
 
     # zero configuration
     initialize_exoskeleton!(mechanism)

@@ -7,7 +7,6 @@ function get_fourbar(;
     dampers=0,
     parse_springs=true,
     parse_dampers=true,
-    limits=false,
     joint_limits=Dict(),
     keep_fixed_joints=false, 
     T=Float64)
@@ -22,13 +21,10 @@ function get_fourbar(;
     !parse_springs && set_springs!(mechanism.joints, springs)
     !parse_dampers && set_dampers!(mechanism.joints, dampers)
 
-    # joint limits
-    if limits
-        joints = set_limits(mechanism, joint_limits)
-
-        mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
-            gravity, timestep, input_scaling)
-    end
+    # joint limits    
+    joints = set_limits(mechanism, joint_limits)
+    mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
+        gravity, timestep, input_scaling)
 
     # zero configuration
     initialize_fourbar!(mechanism)

@@ -7,7 +7,6 @@ function get_youbot(;
     dampers=0,
     parse_springs=true, 
     parse_dampers=true,
-    limits=true,
     joint_limits=Dict([
         (:arm_joint_1, [-2.95,2.95]), 
         (:arm_joint_2, [-1.57,1.13]), 
@@ -30,13 +29,10 @@ function get_youbot(;
     !parse_springs && set_springs!(mechanism.joints, springs)
     !parse_dampers && set_dampers!(mechanism.joints, dampers)
 
-    # joint limits
-    if limits
-        joints = set_limits(mechanism, joint_limits)
-
-        mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
-            gravity, timestep, input_scaling)
-    end
+    # joint limits    
+    joints = set_limits(mechanism, joint_limits)
+    mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
+        gravity, timestep, input_scaling)
 
     # zero configuration
     initialize_youbot!(mechanism)
@@ -45,10 +41,17 @@ function get_youbot(;
     return mechanism
 end
 
-function initialize_youbot!(mechanism)
+function initialize_youbot!(mechanism;
+    body_position=zeros(2), body_orientation=0, arm_angles=zeros(5))
     
     zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
 
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :base_footprint_joint), [body_position;body_orientation])
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :arm_joint_1), [arm_angles[1]])
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :arm_joint_2), [arm_angles[2]])
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :arm_joint_3), [arm_angles[3]])
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :arm_joint_4), [arm_angles[4]])
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :arm_joint_5), [arm_angles[5]])
     return
 end

@@ -7,7 +7,6 @@ function get_sphere(;
     color=RGBA(0.9, 0.9, 0.9),
     springs=0,
     dampers=0, 
-    limits=false,
     joint_limits=Dict(),
     keep_fixed_joints=false, 
     friction_coefficient=0.8,
@@ -22,19 +21,16 @@ function get_sphere(;
     joints = [JointConstraint(Floating(origin, bodies[1]); name=:floating_joint)]
 
     mechanism = Mechanism(origin, bodies, joints;
-        timestep, gravity, input_scaling)
+        timestep, gravity, input_scaling, keep_fixed_joints)
 
     # springs and dampers
     set_springs!(mechanism.joints, springs)
     set_dampers!(mechanism.joints, dampers)
 
     # joint limits    
-    if limits
-        joints = set_limits(mechanism, joint_limits)
-
-        mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
-            gravity, timestep, input_scaling)
-    end
+    joints = set_limits(mechanism, joint_limits)
+    mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
+        gravity, timestep, input_scaling)
 
     # contacts
     contacts = ContactConstraint{T}[]

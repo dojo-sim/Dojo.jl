@@ -7,12 +7,11 @@ function get_hopper(;
     dampers=0,
     parse_springs=true, 
     parse_dampers=true,
-    limits=false,
     joint_limits=Dict([
         (:thigh, [0,150] * π / 180), 
         (:leg, [0,150] * π / 180), 
         (:foot, [-45,45] * π / 180)]),
-    keep_fixed_joints=true, 
+    keep_fixed_joints=false, 
     friction_coefficient=2,
     contact_foot=true,
     contact_body=true,
@@ -29,12 +28,9 @@ function get_hopper(;
     !parse_dampers && set_dampers!(mechanism.joints, dampers)
 
     # joint limits    
-    if limits
-        joints = set_limits(mechanism, joint_limits)
-
-        mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
-            gravity, timestep, input_scaling)
-    end
+    joints = set_limits(mechanism, joint_limits)
+    mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
+        gravity, timestep, input_scaling)
 
     # contacts
     contacts = ContactConstraint{T}[]

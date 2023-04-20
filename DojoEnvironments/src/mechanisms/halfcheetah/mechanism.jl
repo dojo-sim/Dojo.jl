@@ -7,7 +7,6 @@ function get_halfcheetah(;
     dampers=0,
     parse_springs=true,
     parse_dampers=true,
-    limits=true,
     joint_limits=Dict([
         (:bthigh, [-0.52,1.05]), 
         (:bshin, [-0.785,0.785]), 
@@ -15,7 +14,7 @@ function get_halfcheetah(;
         (:fthigh, [-1,0.7]), 
         (:fshin, [-1.20,0.87]), 
         (:ffoot, [-0.5,0.5])]),
-    keep_fixed_joints=true, 
+    keep_fixed_joints=false, 
     friction_coefficient=0.4,
     contact_feet=true,
     contact_body=true,
@@ -31,13 +30,10 @@ function get_halfcheetah(;
     !parse_springs && set_springs!(mechanism.joints, springs)
     !parse_dampers && set_dampers!(mechanism.joints, dampers)
 
-    # joint limits
-    if limits
-        joints = set_limits(mechanism, joint_limits)
-
-        mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
-            gravity, timestep, input_scaling)
-    end
+    # joint limits    
+    joints = set_limits(mechanism, joint_limits)
+    mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
+        gravity, timestep, input_scaling)
 
     # contacts
     contacts = ContactConstraint{T}[]

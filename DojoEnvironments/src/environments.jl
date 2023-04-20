@@ -30,19 +30,36 @@ end
     state:       provided state
 """
 function state_map(::Environment, state)
-    return x
+    return state
 end
 
 """
     input_map(environment, input)
 
-    maps the provided input to the environments internal input
+    maps the provided input to the environment's internal input
 
     environment: environment 
     input:       provided input
 """
-function input_map(::Environment, u)
-    return u
+function input_map(::Environment, input)
+    return input
+end
+
+function input_map(environment::Environment, ::Nothing)
+    return zeros(input_dimension(environment.mechanism))
+end
+
+"""
+    set_input!(environment, input)
+
+    sets the provided input to the environment's mechanism
+
+    environment: environment 
+    input:       provided input
+"""
+function Dojo.set_input!(environment::Environment, input)
+    set_input!(environment.mechanism, input_map(environment, input))
+    return
 end
 
 """
@@ -57,10 +74,10 @@ end
     record:      record step in storage
     opts:        SolverOptions
 """
-function Dojo.step!(environment::Environment, x, u=nothing; k=1, record=false, opts=SolverOptions())
-    x = state_map(environment, x)
-    u = input_map(environment, u)
-    Dojo.step_minimal_coordinates!(environment.mechanism, x, u; opts)
+function Dojo.step!(environment::Environment, state, input=nothing; k=1, record=false, opts=SolverOptions())
+    state = state_map(environment, state)
+    input = input_map(environment, input)
+    Dojo.step_minimal_coordinates!(environment.mechanism, state, input; opts)
     record && Dojo.save_to_storage!(environment.mechanism, environment.storage, k)
 
     return
@@ -75,8 +92,9 @@ end
     controller!: Control function
     kwargs:      same as for Dojo.simulate 
 """
-function Dojo.simulate!(environment::Environment{T,N}, controller! = (mechanism, k) -> nothing; kwargs...) where {T,N}
-    simulate!(environment.mechanism, 1:N, environment.storage, controller!; kwargs...)
+function Dojo.simulate!(environment::Environment{T,N}, controller! = (environment, k) -> nothing; kwargs...) where {T,N}
+    controller_wrapper!(mechanism, k) = controller!(environment, k)
+    simulate!(environment.mechanism, 1:N, environment.storage, controller_wrapper!; kwargs...)
 end
 
 """
@@ -88,6 +106,18 @@ end
 """
 function get_state(environment::Environment)
     return get_minimal_state(environment.mechanism)
+end
+
+"""
+    initialize!(environment; kwargs...)
+
+    initializes the environment's mechanism
+
+    environment: Environment
+    kwargs:      same as for DojoEnvironments' mechanisms 
+"""
+function Dojo.initialize!(environment::Environment, model; kwargs...)
+    eval(Symbol(:initialize, :_, string_to_symbol(model), :!))(environment.mechanism; kwargs...)
 end
 
 """

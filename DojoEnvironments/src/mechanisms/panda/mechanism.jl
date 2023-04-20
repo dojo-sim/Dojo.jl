@@ -7,7 +7,6 @@ function get_panda(;
     dampers=5,
     parse_springs=true, 
     parse_dampers=false,
-    limits=true,
     joint_limits=Dict([
         (:joint1, [-2.8973, 2.8973]),
         (:joint2, [-1.7628, 1.7628]),
@@ -32,12 +31,9 @@ function get_panda(;
     !parse_dampers && set_dampers!(mechanism.joints, dampers)
 
     # joint limits    
-    if limits
-        joints = set_limits(mechanism, joint_limits)
-
-        mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
-            gravity, timestep, input_scaling)
-    end
+    joints = set_limits(mechanism, joint_limits)
+    mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
+        gravity, timestep, input_scaling)
 
     # zero configuration
     initialize_panda!(mechanism)

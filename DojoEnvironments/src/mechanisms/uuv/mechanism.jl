@@ -7,7 +7,6 @@ function get_uuv(;
     dampers=0, 
     parse_springs=true, 
     parse_dampers=true, 
-    limits=true,
     joint_limits=Dict(),
     keep_fixed_joints=false, 
     friction_coefficient=0.5,
@@ -25,12 +24,9 @@ function get_uuv(;
     !parse_dampers && set_dampers!(mechanism.joints, dampers)
 
     # joint limits    
-    if limits
-        joints = set_limits(mechanism, joint_limits)
-
-        mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
-            gravity, timestep, input_scaling)
-    end
+    joints = set_limits(mechanism, joint_limits)
+    mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
+        gravity, timestep, input_scaling)
 
     # contacts 
     contacts = ContactConstraint{T}[]

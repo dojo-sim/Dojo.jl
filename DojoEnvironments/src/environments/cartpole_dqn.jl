@@ -15,7 +15,6 @@ function cartpole_dqn(;
     color=RGBA(0.7, 0.7, 0.7, 1),
     springs=0, 
     dampers=0,
-    limits=false,
     joint_limits=Dict(),
     keep_fixed_joints=false, 
     T=Float64)
@@ -31,7 +30,6 @@ function cartpole_dqn(;
         color,
         springs, 
         dampers,
-        limits,
         joint_limits,
         keep_fixed_joints, 
         T

@@ -7,7 +7,6 @@ function get_pendulum(;
     color=RGBA(1, 0, 0),
     springs=0,
     dampers=0,
-    limits=false,
     joint_limits=Dict(),
     spring_offset=szeros(1),
     orientation_offset=one(Quaternion),
@@ -32,13 +31,10 @@ function get_pendulum(;
     set_springs!(mechanism.joints, springs)
     set_dampers!(mechanism.joints, dampers)
 
-    # joint limits
-    if limits
-        joints = set_limits(mechanism, joint_limits)
-
-        mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
-            gravity, timestep, input_scaling)
-    end
+    # joint limits    
+    joints = set_limits(mechanism, joint_limits)
+    mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
+        gravity, timestep, input_scaling)
 
     # zero configuration
     initialize_pendulum!(mechanism)
