@@ -215,93 +215,6 @@ function build_robot(mechanism::Mechanism;
     return vis
 end
 
-"""
-    set_robot(vis, mechanism, z; show_contact, name)
-
-    visualze mechanism configuration from maximal representation 
-
-    vis: Visualizer 
-    mechanism: Mechanism 
-    z: maximal state 
-    show_contact: flag to show contact locations on mechanism 
-    name: unique identifier
-"""
-function set_robot(vis::Visualizer, mechanism::Mechanism, z::Vector{T};
-    show_joint::Bool=false,
-    joint_radius=0.1,
-    show_contact::Bool=true, 
-    name::Symbol=:robot) where {T}
-
-    (length(z) == minimal_dimension(mechanism)) && (z = minimal_to_maximal(mechanism, z))
-    bodies = mechanism.bodies
-    origin = mechanism.origin
-
-    # Bodies and Contacts
-    for (id, body) in enumerate(bodies)
-        x, _, q, _ = unpack_maximal_state(z, id)
-        shape = body.shape
-        visshape = convert_shape(shape)
-        subvisshape = nothing
-        showshape = false
-        if visshape !== nothing
-            subvisshape = vis[name][:bodies][Symbol(body.name, "__id_$id")]
-            showshape = true
-        end
-
-        set_node!(x, q, id, shape, subvisshape, showshape)
-
-        if show_joint
-            for (jd, joint) in enumerate(mechanism.joints)
-                if joint.child_id == body.id
-                    radius = joint_radius
-                    joint_shape = Sphere(radius,
-                        position_offset=joint.translational.vertices[2],
-                        color=RGBA(0.0, 0.0, 1.0, 0.5))
-                    visshape = convert_shape(joint_shape)
-                    subvisshape = nothing
-                    showshape = false
-                    if visshape !== nothing
-                        subvisshape = vis[name][:joints][Symbol(joint.name, "__id_$(jd)")]
-                        showshape = true
-                    end
-                    set_node!(x, q, id, joint_shape, subvisshape, showshape)
-                end
-            end
-        end
-
-        if show_contact
-            for (jd, contact) in enumerate(mechanism.contacts)
-                if contact.parent_id == body.id
-                    radius = abs(contact.model.collision.contact_radius)
-                    (radius == 0.0) && (radius = 0.01)
-                    contact_shape = Sphere(radius,
-                        position_offset=(contact.model.collision.contact_origin),
-                        orientation_offset=one(Quaternion), color=RGBA(1.0, 0.0, 0.0, 0.5))
-                    visshape = convert_shape(contact_shape)
-                    subvisshape = nothing
-                    showshape = false
-                    if visshape !== nothing
-                        subvisshape = vis[name][:contacts][Symbol(contact.name, "__id_$(jd)")]
-                        showshape = true
-                    end
-                    set_node!(x, q, id, contact_shape, subvisshape, showshape)
-                end
-            end
-        end
-    end
-
-    # Origin
-    id = origin.id
-    shape = origin.shape
-    visshape = convert_shape(shape)
-    if visshape !== nothing
-        subvisshape = vis[name][:bodies][Symbol(:origin, "_id")]
-        shapetransform = transform(szeros(T,3), one(Quaternion{T}), shape)
-        settransform!(subvisshape, shapetransform)
-    end
-    return vis
-end
-
 function transform(x, q, shape)
     scale_transform = MeshCat.LinearMap(diagm(shape.scale))
     x_transform = MeshCat.Translation(x + vector_rotate(shape.position_offset, q))
@@ -312,7 +225,7 @@ end
 MeshCat.js_scaling(s::AbstractVector) = s
 MeshCat.js_position(p::AbstractVector) = p
 
-function set_node!(x, q, id, shape, shapevisualizer, showshape)
+function set_node!(x, q, shape, shapevisualizer, showshape)
     if showshape
         # TODO currently setting props directly because MeshCat/Rotations doesn't convert scaled rotation properly.
         # If this changes, do similarily to origin
@@ -329,7 +242,7 @@ function animate_node!(storage::Storage{T,N}, id, shape, animation, shapevisuali
         x = storage.x[id][i]
         q = storage.q[id][i]
         atframe(animation, frame_id) do
-            set_node!(x, q, id, shape, shapevisualizer, showshape)
+            set_node!(x, q, shape, shapevisualizer, showshape)
         end
         frame_id += 1
     end

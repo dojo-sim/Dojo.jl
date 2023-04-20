@@ -288,6 +288,7 @@
 		<parent link="base_link"/>
 		<child link="arm_link_0"/>
 	</joint>
+	<!-- foot for arm-->
 	<link name="arm_link_0">
 		<inertial>
 			<!--<origin xyz="0.023 0 0.006" rpy="0 0 0"/>-->
@@ -313,7 +314,7 @@
 	</link>
 	<!-- joint between arm_0_link and arm_1_link -->
 	<joint name="arm_joint_1" type="revolute">
-		<origin rpy="0 0 2.9670597283903604" xyz="0.024 0 0.096"/>
+		<origin rpy="0 0 0" xyz="0.024 0 0.096"/>
 		<parent link="arm_link_0"/>
 		<child link="arm_link_1"/>
 		<axis xyz="0 0 -1"/>
@@ -343,7 +344,6 @@
 			<material name="youBot/Orange"/>
 		</visual>
 		<collision>
-			<!--<origin xyz="0 0 -0.003" rpy="0 0 0" />-->
 			<origin rpy="0 0 0" xyz="0 0 0"/>
 			<geometry>
 				<mesh filename="meshes/youbot_arm/arm1_convex.dae"/>
@@ -353,7 +353,7 @@
 	</link>
 	<!-- joint between arm_1_link and arm_2_link -->
 	<joint name="arm_joint_2" type="revolute">
-		<origin rpy="0 -1.1344640137963142 0" xyz="0.033 0 0.019"/>
+		<origin rpy="0 0 0" xyz="0.033 0 0.019"/>
 		<parent link="arm_link_1"/>
 		<child link="arm_link_2"/>
 		<axis xyz="0 1 0"/>
@@ -385,7 +385,7 @@
 	</link>
 	<!-- joint between arm_2_link and arm_3_link -->
 	<joint name="arm_joint_3" type="revolute">
-		<origin rpy="0 2.548180707911721 0" xyz="0.000 0.000 0.155"/>
+		<origin rpy="0 0 0" xyz="0.000 0.000 0.155"/>
 		<parent link="arm_link_2"/>
 		<child link="arm_link_3"/>
 		<axis xyz="0 1 0"/>
@@ -417,7 +417,7 @@
 	</link>
 	<!-- joint between arm_3_link and arm_4_link -->
 	<joint name="arm_joint_4" type="revolute">
-		<origin rpy="0 -1.7889624832941877 0" xyz="0.000 0.000 0.135"/>
+		<origin rpy="0 0 0" xyz="0.000 0.000 0.135"/>
 		<parent link="arm_link_3"/>
 		<child link="arm_link_4"/>
 		<axis xyz="0 1 0"/>
@@ -450,7 +450,7 @@
 	</link>
 	<!-- joint between arm_4_link and arm_5_link -->
 	<joint name="arm_joint_5" type="revolute">
-		<origin rpy="0 0 2.9234264970905017" xyz="-0.002 0 0.130"/>
+		<origin rpy="0 0 0" xyz="-0.002 0 0.130"/>
 		<parent link="arm_link_4"/>
 		<child link="arm_link_5"/>
 		<axis xyz="0 0 -1"/>

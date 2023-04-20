@@ -157,7 +157,8 @@ export
     CombinedShapes,
     get_body,
     get_node,
-    set_external_force!
+    set_external_force!,
+    add_external_force!
 
 # Joints
 export

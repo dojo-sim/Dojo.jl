@@ -7,8 +7,16 @@ function get_youbot(;
     dampers=0,
     parse_springs=true, 
     parse_dampers=true,
-    limits=false,
-    joint_limits=Dict(),
+    limits=true,
+    joint_limits=Dict([
+        (:arm_joint_1, [-2.95,2.95]), 
+        (:arm_joint_2, [-1.57,1.13]), 
+        (:arm_joint_3, [-2.55,2.55]), 
+        (:arm_joint_4, [-1.78,1.78]), 
+        (:arm_joint_5, [-2.92,2.92]), 
+        # (:gripper_finger_joint_l, [0,0.03]), 
+        # (:gripper_finger_joint_r, [-0.03,0]),
+    ]),
     keep_fixed_joints=false,
     T=Float64)
 

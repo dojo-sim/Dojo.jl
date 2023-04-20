@@ -40,6 +40,8 @@ zero_coordinates!
 zero_velocities!
 root_to_leaves_ordering
 set_floating_base
+set_external_force!
+add_external_force!
 ```
 
 ### Nodes
@@ -144,7 +146,6 @@ mehrotra!
 ```@docs
 visualize
 build_robot
-set_robot
 set_camera!
 set_light!
 set_surface!
