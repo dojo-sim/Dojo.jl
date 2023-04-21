@@ -10,7 +10,7 @@ function get_cartpole(;
     springs=0, 
     dampers=0,
     joint_limits=Dict(),
-    keep_fixed_joints=false, 
+    keep_fixed_joints=true, 
     T=Float64)
 
     # mechanism
@@ -26,7 +26,7 @@ function get_cartpole(;
     joints = [joint_origin_slider, joint_slider_pendulum]
 
     mechanism = Mechanism(origin, bodies, joints;
-        gravity, timestep, input_scaling, keep_fixed_joints)
+        gravity, timestep, input_scaling)
 
     # springs and dampers
     set_springs!(mechanism.joints, springs)

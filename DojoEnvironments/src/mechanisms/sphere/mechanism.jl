@@ -8,7 +8,7 @@ function get_sphere(;
     springs=0,
     dampers=0, 
     joint_limits=Dict(),
-    keep_fixed_joints=false, 
+    keep_fixed_joints=true, 
     friction_coefficient=0.8,
     contact=true,
     contact_type=:nonlinear,
@@ -21,7 +21,7 @@ function get_sphere(;
     joints = [JointConstraint(Floating(origin, bodies[1]); name=:floating_joint)]
 
     mechanism = Mechanism(origin, bodies, joints;
-        timestep, gravity, input_scaling, keep_fixed_joints)
+        timestep, gravity, input_scaling)
 
     # springs and dampers
     set_springs!(mechanism.joints, springs)

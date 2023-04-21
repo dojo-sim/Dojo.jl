@@ -10,7 +10,7 @@ function get_raiberthopper(;
     springs=[0;0], 
     dampers=[0;0.1],
     joint_limits=Dict(), 
-    keep_fixed_joints=false,
+    keep_fixed_joints=true,
     friction_coefficient=0.5,
     contact_foot=true, 
     contact_body=true,
@@ -29,7 +29,7 @@ function get_raiberthopper(;
     joints = [joint_origin_body, joint_body_foot]
 
     mechanism = Mechanism(origin, bodies, joints;
-        gravity, timestep, input_scaling, keep_fixed_joints)
+        gravity, timestep, input_scaling)
 
     # springs and dampers
     set_springs!(mechanism.joints, springs)

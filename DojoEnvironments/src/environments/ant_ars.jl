@@ -22,7 +22,7 @@ function ant_ars(;
         (:ankle_3, [-70,-30] * π / 180), 
         (:hip_4, [-30,30] * π / 180), 
         (:ankle_4, [30,70] * π / 180)]),
-    keep_fixed_joints=false, 
+    keep_fixed_joints=true, 
     friction_coefficient=0.5,
     contact_feet=true, 
     contact_body=true,

@@ -2,7 +2,7 @@ environments = [
     :ant_ars,
     :cartpole_dqn,
     :pendulum,
-    :quadruped_waypoint
+    :quadruped_waypoint,
     :quadruped_sampling,
     :quadrotor_waypoint,
     :uuv_waypoint,

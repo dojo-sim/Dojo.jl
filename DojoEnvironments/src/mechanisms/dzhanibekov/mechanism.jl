@@ -6,7 +6,7 @@ function get_dzhanibekov(;
     dampers=0, 
     color=RGBA(0.9,0.9,0.9,1),
     joint_limits=Dict(),
-    keep_fixed_joints=false, 
+    keep_fixed_joints=true, 
     T=Float64)
 
     # mechanism
@@ -24,7 +24,7 @@ function get_dzhanibekov(;
     joints = [joint_float, joint_fixed]
     
     mechanism = Mechanism(origin, bodies, joints;
-        gravity, timestep, input_scaling, keep_fixed_joints)
+        gravity, timestep, input_scaling)
 
     # springs and dampers
     set_springs!(mechanism.joints, springs)

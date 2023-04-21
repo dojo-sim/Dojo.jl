@@ -7,7 +7,7 @@ function get_nslider(;
     springs=0, 
     dampers=0,
     joint_limits=Dict(),
-    keep_fixed_joints=false, 
+    keep_fixed_joints=true, 
     T=Float64)
 
     # mechanism
@@ -24,7 +24,7 @@ function get_nslider(;
     ]
 
     mechanism = Mechanism(origin, bodies, joints;
-        gravity, timestep, input_scaling, keep_fixed_joints)
+        gravity, timestep, input_scaling)
 
     # springs and dampers
     set_springs!(mechanism.joints, springs)

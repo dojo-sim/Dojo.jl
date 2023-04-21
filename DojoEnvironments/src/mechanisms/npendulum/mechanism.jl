@@ -9,7 +9,7 @@ function get_npendulum(;
     springs=0,
     dampers=0,
     joint_limits=Dict(),
-    keep_fixed_joints=false, 
+    keep_fixed_joints=true, 
     base_joint_type=:Revolute,
     rest_joint_type=:Revolute,
     T=Float64)
@@ -31,7 +31,7 @@ function get_npendulum(;
     ]
 
     mechanism = Mechanism(origin, bodies, joints;
-        gravity, timestep, input_scaling, keep_fixed_joints)
+        gravity, timestep, input_scaling)
 
     # springs and dampers
     set_springs!(mechanism.joints, springs)

@@ -8,7 +8,7 @@ function get_block(;
     springs=0,
     dampers=0, 
     joint_limits=Dict(),
-    keep_fixed_joints=false, 
+    keep_fixed_joints=true, 
     friction_coefficient=0.8,
     contact=true,
     contact_radius=0,
@@ -25,7 +25,7 @@ function get_block(;
     joints = [joint]
 
     mechanism = Mechanism(origin, bodies, joints;
-        gravity, timestep, input_scaling, keep_fixed_joints)
+        gravity, timestep, input_scaling)
 
     # springs and dampers
     set_springs!(mechanism.joints, springs)
