@@ -136,7 +136,7 @@ function get_state(environment::YoubotWaypoint)
     return state
 end
 
-function Dojo.visualize(environment::YoubotWaypoint; kwargs...)
+function Dojo.visualize(environment::YoubotWaypoint; return_animation=false, kwargs...)
     vis, animation = visualize(environment.mechanism, environment.storage; return_animation=true, kwargs...)
 
     waypoints = [
@@ -155,5 +155,7 @@ function Dojo.visualize(environment::YoubotWaypoint; kwargs...)
         end
     end
     Dojo.setanimation!(vis,animation)
+
+    return_animation ? (return vis, animation) : (return vis)
 end
 

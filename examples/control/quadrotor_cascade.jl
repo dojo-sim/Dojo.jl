@@ -5,7 +5,7 @@ using DojoEnvironments
 using LinearAlgebra
 
 # ### Environment
-quadrotor_env = get_environment(:quadrotor_waypoint; horizon=1000)
+quadrotor_env = get_environment(:quadrotor_waypoint; horizon=200)
 
 # ### Controllers
 trans_z_mode = normalize([1;1;1;1])
@@ -33,4 +33,5 @@ end
 simulate!(quadrotor_env, controller!; record=true)
 
 # ### Visualize
-visualize(quadrotor_env)
+vis = visualize(quadrotor_env)
+render(vis)

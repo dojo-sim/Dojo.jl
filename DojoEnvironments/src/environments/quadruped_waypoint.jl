@@ -78,7 +78,7 @@ function get_state(environment::QuadrupedWaypoint)
     return state
 end
 
-function Dojo.visualize(environment::QuadrupedWaypoint; kwargs...)
+function Dojo.visualize(environment::QuadrupedWaypoint; return_animation=false, kwargs...)
     vis, animation = visualize(environment.mechanism, environment.storage; return_animation=true, kwargs...)
 
     waypoints = [
@@ -97,4 +97,6 @@ function Dojo.visualize(environment::QuadrupedWaypoint; kwargs...)
         end
     end
     Dojo.setanimation!(vis,animation)
+
+    return_animation ? (return vis, animation) : (return vis)
 end

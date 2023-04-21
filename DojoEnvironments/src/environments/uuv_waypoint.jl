@@ -107,7 +107,7 @@ function get_state(environment::UUVWaypoint)
     return state
 end
 
-function Dojo.visualize(environment::UUVWaypoint; kwargs...)
+function Dojo.visualize(environment::UUVWaypoint; return_animation=false, kwargs...)
     vis, animation = visualize(environment.mechanism, environment.storage; return_animation=true, kwargs...)
 
     waypoints = [
@@ -126,6 +126,8 @@ function Dojo.visualize(environment::UUVWaypoint; kwargs...)
         end
     end
     Dojo.setanimation!(vis,animation)
+
+    return_animation ? (return vis, animation) : (return vis)
 end
 
 # ## physics functions

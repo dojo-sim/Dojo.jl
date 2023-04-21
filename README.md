@@ -32,6 +32,7 @@ A differentiable physics engine for robotics
 <p float="left">
 	<img src="docs/src/assets/animations/quadruped.gif" width="350"/>
 	<img src="docs/src/assets/animations/ant_ars.gif" width="350"/>
+	<img src="docs/src/assets/animations/quadrotor.gif" width="150"/>
 </p>
 
 ## System Identification
