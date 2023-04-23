@@ -437,7 +437,7 @@ end
         springs=springs0,
         contact_feet=false,
         contact_body=false,
-        limits=false)
+        joint_limits=Dict())
 
     initialize!(mech, :quadruped)
     storage = simulate!(mech, 5.0;

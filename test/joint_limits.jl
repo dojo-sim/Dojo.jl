@@ -4,7 +4,6 @@
         gravity=-9.81, 
         springs=0.0, 
         dampers=0.0,
-        limits=true,
         joint_limits=Dict([
         (:joint, [0.25 * π, 1.0 * π]),])
     )

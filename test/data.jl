@@ -168,21 +168,21 @@ end
 			parse_dampers=false,
 			contact_feet=false,
 			contact_body=false,
-			limits=false)
+			joint_limits=Dict())
 		test_data_system(:walker; 
 			parse_springs=false,
 			parse_dampers=false,
 			springs, dampers,
 			contact_feet=false,
 			contact_body=false,
-			limits=false)
+			joint_limits=Dict())
 		test_data_system(:quadruped; 
 			parse_springs=false,
 			parse_dampers=false,
 			springs, dampers, 
 			contact_feet=false,
 			contact_body=false,
-			limits=false)
+			joint_limits=Dict())
 		for joint_type in joint_types
 			test_data_system(:snake;
 				num_bodies=5,
@@ -248,24 +248,21 @@ end
 			parse_springs=false,
 			parse_dampers=false,
 			contact_feet=true,
-			contact_body=true,
-			limits=true)
+			contact_body=true)
 		test_data_system(:walker;
 			parse_springs=false,
 			parse_dampers=false,
 			springs,
 			dampers,
 			contact_feet=true,
-			contact_body=true,
-			limits=true)
+			contact_body=true)
 		test_data_system(:quadruped;
 			parse_springs=false,
 			parse_dampers=false,
 			springs,
 			dampers,
 			contact_feet=true,
-			contact_body=true,
-			limits=true)
+			contact_body=true)
 		for joint_type in joint_types
 			test_data_system(:snake;
 				num_bodies=5,

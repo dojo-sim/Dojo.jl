@@ -17,7 +17,7 @@ explore_factor = 0.1
 distancestorage = zeros(M);
 
 # ### Environment
-env = get_environment(:quadruped_sampling; horizon=N, timestep=0.001, limits=false, gravity=-9.81, contact_body=false)
+env = get_environment(:quadruped_sampling; horizon=N, timestep=0.001, joint_limits=Dict(), gravity=-9.81, contact_body=false)
 
 # ### Controller
 legmovement(k,a,b,c,offset) = a*cos(k*b*0.01*2*pi+offset)+c
