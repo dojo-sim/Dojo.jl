@@ -3,7 +3,7 @@ function get_snake(;
     input_scaling=timestep, 
     gravity=-9.81,
     num_bodies=2,
-    length=1,
+    link_length=1,
     radius=0.05,
     color=RGBA(0.9, 0.9, 0.9),
     springs=0,
@@ -19,7 +19,7 @@ function get_snake(;
     # mechanism
     origin = Origin{T}()
 
-    bodies = [Box(length, 3 * radius, 2 * radius, length; color) for i = 1:num_bodies]
+    bodies = [Box(link_length, 3 * radius, 2 * radius, link_length; color) for i = 1:num_bodies]
 
     jointb1 = JointConstraint(Floating(origin, bodies[1]))
 
@@ -27,7 +27,7 @@ function get_snake(;
         jointb1;
         [
             JointConstraint(Dojo.Prototype(joint_type, bodies[i - 1], bodies[i], X_AXIS;
-            parent_vertex=-X_AXIS*length/2, child_vertex=X_AXIS*length/2)) for i = 2:num_bodies
+            parent_vertex=-X_AXIS*link_length/2, child_vertex=X_AXIS*link_length/2)) for i = 2:num_bodies
         ]
     ]
 
@@ -48,12 +48,12 @@ function get_snake(;
 
     if contact
         contact_bodies = [bodies;bodies] # we need to duplicate contacts for prismatic joint for instance
-        n = Base.length(contact_bodies)
+        n = length(contact_bodies)
         normals = fill(Z_AXIS,n)
         friction_coefficients = fill(friction_coefficient,n)
         contact_origins = [
-            fill(X_AXIS*length/2, Int64(n/2))
-            fill(-X_AXIS*length/2, Int64(n/2))
+            fill(X_AXIS*link_length/2, Int64(n/2))
+            fill(-X_AXIS*link_length/2, Int64(n/2))
         ]
         contacts = [contacts;contact_constraint(contact_bodies, normals; friction_coefficients, contact_origins, contact_type)]
     end

@@ -39,7 +39,7 @@ function youbot_waypoint(;
         T
     )
 
-    storage = Storage(horizon, Base.length(mechanism.bodies))
+    storage = Storage(horizon, length(mechanism.bodies))
 
     return YoubotWaypoint{T,horizon}(mechanism, storage)
 end

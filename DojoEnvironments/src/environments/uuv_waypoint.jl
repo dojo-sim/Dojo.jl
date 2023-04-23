@@ -37,7 +37,7 @@ function uuv_waypoint(;
         T
     )
 
-    storage = Storage(horizon, Base.length(mechanism.bodies))
+    storage = Storage(horizon, length(mechanism.bodies))
 
     return UUVWaypoint{T,horizon}(mechanism, storage, zeros(6))
 end

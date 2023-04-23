@@ -71,7 +71,7 @@ env = get_environment(:ant_ars;
 
 # ### Reset and rollout functions
 function reset_state!(env)
-    initialize!(env.mechanism, :ant)
+    initialize!(env, :ant)
     return
 end
 
@@ -207,14 +207,14 @@ policies_best = (policies[max_idx])[1];
 input_size = 37
 normalizer = Normalizer(input_size)
 
-function controller!(mechanism, k)
-    state = DojoEnvironments.get_state(env)
+function controller!(environment, k)
+    state = get_state(env)
     observe!(normalizer, state)
     state = normalize(normalizer, state)
 
     action = θ * state
 
-    set_input!(mechanism, DojoEnvironments.input_map(env,action))
+    set_input!(environment, action)
 end
 
 # ### Visualize policy

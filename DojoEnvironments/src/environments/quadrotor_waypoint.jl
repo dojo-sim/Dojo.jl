@@ -39,7 +39,7 @@ function quadrotor_waypoint(;
         T
     )
 
-    storage = Storage(horizon, Base.length(mechanism.bodies))
+    storage = Storage(horizon, length(mechanism.bodies))
 
     return QuadrotorWaypoint{T,horizon}(mechanism, storage, zeros(4))
 end

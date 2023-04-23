@@ -4,14 +4,14 @@ using Dojo
 
 # ### Parameters
 radius = 0.1
-length = 1
+link_length = 1
 mass = 1
 rotation_axis = [1;0;0] 
-connection = [0;0;length/2]
+connection = [0;0;link_length/2]
 
 # ### Mechanism components
 origin = Origin()
-body = Cylinder(radius, length, mass)
+body = Cylinder(radius, link_length, mass)
 joint = JointConstraint(Revolute(origin, body, rotation_axis; child_vertex=connection))
 
 # ### Construct Mechanism
