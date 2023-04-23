@@ -10,14 +10,13 @@ function cartpole_dqn(;
     gravity=-9.81, 
     slider_mass=1,
     pendulum_mass=1,
-    pendulum_length=1,
+    link_length=1,
     radius=0.075,
     color=RGBA(0.7, 0.7, 0.7, 1),
     springs=0, 
     dampers=0,
-    limits=false,
     joint_limits=Dict(),
-    keep_fixed_joints=false, 
+    keep_fixed_joints=true, 
     T=Float64)
 
     mechanism = get_cartpole(;
@@ -26,12 +25,11 @@ function cartpole_dqn(;
         gravity, 
         slider_mass,
         pendulum_mass,
-        pendulum_length,
+        link_length,
         radius,
         color,
         springs, 
         dampers,
-        limits,
         joint_limits,
         keep_fixed_joints, 
         T

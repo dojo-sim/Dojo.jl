@@ -17,7 +17,7 @@ explore_factor = 0.1
 distancestorage = zeros(M);
 
 # ### Environment
-env = get_environment(:quadruped_sampling; horizon=N, timestep=0.001, limits=false, gravity=-9.81, contact_body=false)
+env = get_environment(:quadruped_sampling; horizon=N, timestep=0.001, joint_limits=Dict(), gravity=-9.81, contact_body=false)
 
 # ### Controller
 legmovement(k,a,b,c,offset) = a*cos(k*b*0.01*2*pi+offset)+c
@@ -56,23 +56,23 @@ end
 
 # ### Reset and rollout functions
 function reset_state!(env)
-    initialize!(env.mechanism, :quadruped; body_position=[0;0;-0.43], hip_angle=0, thigh_angle=paramcontainer[1][3], calf_angle=paramcontainer[1][5]) 
+    initialize!(env, :quadruped; body_position=[0;0;-0.43], hip_angle=0, thigh_angle=paramcontainer[1][3], calf_angle=paramcontainer[1][5]) 
 
     calf_state = get_body(env.mechanism, :FR_calf).state
     position = get_sdf(get_contact(env.mechanism, :FR_calf_contact), Dojo.current_position(calf_state), Dojo.current_orientation(calf_state))
 
-    initialize!(env.mechanism, :quadruped; body_position=[0;0;-position-0.43], hip_angle=0, thigh_angle=paramcontainer[1][3], calf_angle=paramcontainer[1][5]) 
+    initialize!(env, :quadruped; body_position=[0;0;-position-0.43], hip_angle=0, thigh_angle=paramcontainer[1][3], calf_angle=paramcontainer[1][5]) 
 end
 
 function rollout(env; record=false)
     for k=1:N
-        x = DojoEnvironments.get_state(env)
+        x = get_state(env)
         if x[3] < 0 || !all(isfinite.(x)) || abs(x[1]) > 1000 # upsidedown || failed || "exploding"
             println("  failed")
             return 1
         end
         u = controller!(x, k)
-        DojoEnvironments.step!(env, x, u; k, record)
+        step!(env, x, u; k, record)
     end
     return 0
 end
@@ -123,11 +123,11 @@ end
 
 # ### Controller for best parameter set
 paramcontainer[1] = paramstorage[end]
-function environment_controller!(mechanism, k)
-    x = DojoEnvironments.get_state(env)
+function environment_controller!(environment, k)
+    x = get_state(env)
 
     u = controller!(x, k)
-    set_input!(mechanism, DojoEnvironments.input_map(env,u))
+    set_input!(environment, u)
 end
 
 # ### Visualize learned behavior

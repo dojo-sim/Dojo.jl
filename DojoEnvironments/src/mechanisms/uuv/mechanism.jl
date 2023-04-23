@@ -4,10 +4,9 @@ function get_uuv(;
     gravity=0, 
     urdf=:mini_tortuga_fixed_rotors,
     springs=0, 
-    dampers=[20], 
+    dampers=0, 
     parse_springs=true, 
     parse_dampers=true, 
-    limits=true,
     joint_limits=Dict(),
     keep_fixed_joints=false, 
     friction_coefficient=0.5,
@@ -16,7 +15,7 @@ function get_uuv(;
 
     # mechanism
     path = joinpath(@__DIR__, "dependencies/$(string(urdf)).urdf")
-    mechanism = Mechanism(path; floating=true, T,
+    mechanism = Mechanism(path; floating=false, T,
         gravity, timestep, input_scaling,
         parse_dampers, keep_fixed_joints)
 
@@ -25,12 +24,9 @@ function get_uuv(;
     !parse_dampers && set_dampers!(mechanism.joints, dampers)
 
     # joint limits    
-    if limits
-        joints = set_limits(mechanism, joint_limits)
-
-        mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
-            gravity, timestep, input_scaling)
-    end
+    joints = set_limits(mechanism, joint_limits)
+    mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
+        gravity, timestep, input_scaling)
 
     # contacts 
     contacts = ContactConstraint{T}[]
@@ -40,7 +36,7 @@ function get_uuv(;
         body_in_contact = get_body(mechanism, :base_link)
         n = 2
         normals = fill(Z_AXIS,n)
-        friction_coefficients = fill(0.5,n)
+        friction_coefficients = fill(friction_coefficient,n)
         contact_radii = fill(0.21,n)
         contact_origins = [
             [0.12; 0; 0.07], 

@@ -4,7 +4,7 @@ using Dojo
 using DojoEnvironments
 
 # ### Get mechanism (check DojoEnvironment/mechanisms files for kwargs)
-mechanism = get_mechanism(:pendulum; timestep=0.02, length=0.75) 
+mechanism = get_mechanism(:pendulum; timestep=0.02, link_length=0.75) 
 
 # ### Initialize mechanism (check DojoEnvironment/mechanisms files for kwargs)
 initialize!(mechanism, :pendulum; angle=-0.3)

@@ -9,11 +9,10 @@ function pendulum(;
     input_scaling=timestep, 
     gravity=-9.81,
     mass=1,
-    length=1,
+    link_length=1,
     color=RGBA(1, 0, 0),
     springs=0,
     dampers=0,
-    limits=false,
     joint_limits=Dict(),
     spring_offset=szeros(1),
     orientation_offset=one(Quaternion),
@@ -24,18 +23,17 @@ function pendulum(;
         input_scaling, 
         gravity,
         mass,
-        length,
+        link_length,
         color,
         springs,
         dampers,
-        limits,
         joint_limits,
         spring_offset,
         orientation_offset,
         T
     )
 
-    storage = Storage(horizon, Base.length(mechanism.bodies))
+    storage = Storage(horizon, length(mechanism.bodies))
 
     return Pendulum{T,horizon}(mechanism, storage)
 end

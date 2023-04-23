@@ -8,13 +8,12 @@ function get_quadruped(;
     parse_springs=true, 
     parse_dampers=true,
     spring_offset=true,
-    limits=true,
     joint_limits=Dict(vcat([[
         (Symbol(group,:_hip_joint), [-0.5,0.5]), 
         (Symbol(group,:_thigh_joint), [-0.5,1.5]), 
         (Symbol(group,:_calf_joint), [-2.5,-1])] 
         for group in [:FR, :FL, :RR, :RL]]...)),
-    keep_fixed_joints=true, 
+    keep_fixed_joints=false, 
     friction_coefficient=0.8,
     contact_feet=true,
     contact_body=true,
@@ -49,13 +48,10 @@ function get_quadruped(;
         get_node(mechanism, :RL_calf_joint).rotational.spring_offset=θ_calf*sones(1)
     end
 
-    # joint limits
-    if limits
-        joints = set_limits(mechanism, joint_limits)
-
-        mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
-            gravity, timestep, input_scaling)
-    end
+    # joint limits    
+    joints = set_limits(mechanism, joint_limits)
+    mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
+        gravity, timestep, input_scaling)
 
     # contacts
     contacts = ContactConstraint{T}[]

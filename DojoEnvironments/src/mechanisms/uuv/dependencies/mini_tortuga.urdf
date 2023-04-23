@@ -1,6 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <robot name="mini_tortuga">
+  <link name="origin">
+    <inertial>
+      <mass value="1"/>
+      <!-- [kg] -->
+      <origin xyz="0 0 0"/>
+      <inertia
+            ixx="1" ixy="0" ixz="0"
+            iyy="1" iyz="0"
+            izz="1" />
+      </inertial>
+  </link>
+  <joint name="floating_base" type="floating">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="origin"/>
+    <child link="base_link"/>
+    <dynamics damping="20.0"/>
+  </joint>
   <link name="base_link">
     <inertial>
       <mass value="19.1834"/>

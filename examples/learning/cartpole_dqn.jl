@@ -103,13 +103,13 @@ function CartPoleEnv(; T=Float64, record=false, continuous=false, rng=Random.GLO
     params = CartPoleEnvParams{T}(; kwargs...)
 
     ## create Dojo Environment
-    dojo_env = DojoEnvironments.get_environment(:cartpole_dqn;
+    dojo_env = get_environment(:cartpole_dqn;
         horizon=params.max_steps+1,
         timestep = params.dt,
         gravity = -params.gravity,
         slider_mass = params.masscart,
         pendulum_mass = params.masspole,
-        pendulum_length = params.halflength*2
+        link_length = params.halflength*2
     )
 
     env = CartPoleEnv(dojo_env, record, params, zeros(T, 4), continuous ? zero(T) : zero(Int), false, 0, rng)

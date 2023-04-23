@@ -7,7 +7,6 @@ function get_walker(;
     dampers=0,
     parse_springs=true, 
     parse_dampers=true,
-    limits=true,
     joint_limits=Dict([
         (:thigh, [0,150] * π / 180), 
         (:leg, [0,150] * π / 180), 
@@ -31,13 +30,10 @@ function get_walker(;
     !parse_springs && set_springs!(mechanism.joints, springs)
     !parse_dampers && set_dampers!(mechanism.joints, dampers)
 
-    # joint limits
-    if limits
-        joints = set_limits(mechanism, joint_limits)
-
-        mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
-            gravity, timestep, input_scaling)
-    end
+    # joint limits    
+    joints = set_limits(mechanism, joint_limits)
+    mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
+        gravity, timestep, input_scaling)
 
     # contacts
     contacts = ContactConstraint{T}[]

@@ -11,6 +11,7 @@ mechanisms = [
     :block2d,
     :cartpole,
     :dzhanibekov,
+    :exoskeleton,
     :fourbar, 
     :halfcheetah,
     :hopper, 
@@ -19,6 +20,7 @@ mechanisms = [
     :nslider,
     :panda,
     :pendulum,
+    :quadrotor,
     :quadruped,
     :raiberthopper,
     :slider,
@@ -26,6 +28,7 @@ mechanisms = [
     :sphere,
     :tippetop,
     :twister, 
+    :uuv,
     :walker,
     :youbot,
 ]
@@ -33,10 +36,10 @@ mechanisms = [
 # ### Select mechanism
 name = :ant
 
-# ### Get mechanism (check DojoEnvironment/mechanisms files for kwargs)
+# ### Get mechanism (check DojoEnvironments/src/mechanisms files for kwargs)
 mech = get_mechanism(name) 
 
-# ### Initialize mechanism (check DojoEnvironment/mechanisms files for kwargs)
+# ### Initialize mechanism (check DojoEnvironments/src/mechanisms files for kwargs)
 initialize!(mech, name)
 
 # ### Simulate mechanism

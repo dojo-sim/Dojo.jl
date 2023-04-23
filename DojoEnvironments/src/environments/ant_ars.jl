@@ -13,7 +13,6 @@ function ant_ars(;
     dampers=0, 
     parse_springs=true, 
     parse_dampers=true, 
-    limits=true,
     joint_limits=Dict([
         (:hip_1, [-30,30] * π / 180), 
         (:ankle_1, [30,70] * π / 180), 
@@ -38,7 +37,6 @@ function ant_ars(;
         dampers, 
         parse_springs, 
         parse_dampers, 
-        limits,
         joint_limits,
         keep_fixed_joints, 
         friction_coefficient,

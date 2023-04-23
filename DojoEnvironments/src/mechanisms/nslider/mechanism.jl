@@ -6,9 +6,8 @@ function get_nslider(;
     color=RGBA(1, 0, 0),
     springs=0, 
     dampers=0,
-    limits=false,
     joint_limits=Dict(),
-    keep_fixed_joints=false, 
+    keep_fixed_joints=true, 
     T=Float64)
 
     # mechanism
@@ -32,12 +31,9 @@ function get_nslider(;
     set_dampers!(mechanism.joints, dampers)
 
     # joint limits    
-    if limits
-        joints = set_limits(mechanism, joint_limits)
-
-        mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
-            gravity, timestep, input_scaling)
-    end
+    joints = set_limits(mechanism, joint_limits)
+    mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
+        gravity, timestep, input_scaling)
 
     # zero coordinates
     initialize_nslider!(mechanism)

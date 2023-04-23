@@ -8,10 +8,9 @@ function get_twister(;
     color=RGBA(1, 0, 0),
     springs=0, 
     dampers=0, 
-    limits=false,
     joint_limits=Dict(),
     joint_type=:Prismatic, 
-    keep_fixed_joints=false, 
+    keep_fixed_joints=true, 
     friction_coefficient=0.8,
     contact=true,
     contact_type=:nonlinear,  
@@ -41,12 +40,9 @@ function get_twister(;
     set_dampers!(mechanism.joints, dampers)
 
     # joint limits    
-    if limits
-        joints = set_limits(mechanism, joint_limits)
-
-        mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
-            gravity, timestep, input_scaling)
-    end
+    joints = set_limits(mechanism, joint_limits)
+    mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
+        gravity, timestep, input_scaling)
 
     # contacts
     contacts = ContactConstraint{T}[]

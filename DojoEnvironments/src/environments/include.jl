@@ -1,4 +1,8 @@
 include("ant_ars.jl")
 include("cartpole_dqn.jl")
 include("pendulum.jl")
+include("quadruped_waypoint.jl")
 include("quadruped_sampling.jl")
+include("quadrotor_waypoint.jl")
+include("uuv_waypoint.jl")
+include("youbot_waypoint.jl")
