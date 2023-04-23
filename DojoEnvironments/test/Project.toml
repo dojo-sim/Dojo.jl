@@ -4,5 +4,5 @@ SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-Dojo = "0.3.0, 0.4.0, 0.5.0, 0.6.0"
+Dojo = "0.3.0, 0.4.0, 0.5.0, 0.6.0, 0.7.0"
 SafeTestsets = "0.0.1, 0.0.1"
