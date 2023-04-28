@@ -42,12 +42,8 @@ function state_map(::Pendulum, state)
     return state
 end
 
-function input_map(::Pendulum, input)
+function input_map(::Pendulum, input::AbstractVector)
     return input
-end
-
-function input_map(::Pendulum, ::Nothing)
-    return zeros(1)
 end
 
 function Dojo.step!(environment::Pendulum, state, input=nothing; k=1, record=false, opts=SolverOptions())

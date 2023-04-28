@@ -124,7 +124,7 @@ end
 # ### Controller for best parameter set
 paramcontainer[1] = paramstorage[end]
 function environment_controller!(environment, k)
-    x = get_state(env)
+    x = get_state(environment)
 
     u = controller!(x, k)
     set_input!(environment, u)

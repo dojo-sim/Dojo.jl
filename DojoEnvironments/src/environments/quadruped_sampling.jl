@@ -52,13 +52,8 @@ function state_map(::QuadrupedSampling, state)
     return state
 end
 
-function input_map(::QuadrupedSampling, input)
+function input_map(::QuadrupedSampling, input::AbstractVector)
     input = [zeros(6);input] # trunk not actuated
-    return input
-end
-
-function input_map(::QuadrupedSampling, ::Nothing)
-    input = zeros(18)
     return input
 end
 
