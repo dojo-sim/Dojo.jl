@@ -47,11 +47,18 @@ function initialize_youbot!(mechanism;
     zero_velocities!(mechanism)
     zero_coordinates!(mechanism)
 
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :base_footprint_joint), [body_position;body_orientation])
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :arm_joint_1), [arm_angles[1]])
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :arm_joint_2), [arm_angles[2]])
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :arm_joint_3), [arm_angles[3]])
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :arm_joint_4), [arm_angles[4]])
-    set_minimal_coordinates!(mechanism, get_joint(mechanism, :arm_joint_5), [arm_angles[5]])
+    base_joint = get_joint(mechanism, :base_footprint_joint)
+    arm_joint_1 = get_joint(mechanism, :arm_joint_1)
+    arm_joint_2 = get_joint(mechanism, :arm_joint_2)
+    arm_joint_3 = get_joint(mechanism, :arm_joint_3)
+    arm_joint_4 = get_joint(mechanism, :arm_joint_4)
+    arm_joint_5 = get_joint(mechanism, :arm_joint_5)
+
+    base_joint !== nothing && set_minimal_coordinates!(mechanism, base_joint, [body_position;body_orientation])
+    arm_joint_1 !== nothing && set_minimal_coordinates!(mechanism, get_joint(mechanism, :arm_joint_1), [arm_angles[1]])
+    arm_joint_2 !== nothing && set_minimal_coordinates!(mechanism, get_joint(mechanism, :arm_joint_2), [arm_angles[2]])
+    arm_joint_3 !== nothing && set_minimal_coordinates!(mechanism, get_joint(mechanism, :arm_joint_3), [arm_angles[3]])
+    arm_joint_4 !== nothing && set_minimal_coordinates!(mechanism, get_joint(mechanism, :arm_joint_4), [arm_angles[4]])
+    arm_joint_5 !== nothing && set_minimal_coordinates!(mechanism, get_joint(mechanism, :arm_joint_5), [arm_angles[5]])
     return
 end

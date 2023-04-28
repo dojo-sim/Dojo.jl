@@ -47,7 +47,7 @@ function state_map(::UUVWaypoint, state)
     return state
 end
 
-function input_map(environment::UUVWaypoint, input)
+function input_map(environment::UUVWaypoint, input::AbstractVector)
     # Input is rotor rpm directly
     # Rotors are only visualized, dynamics are mapped here
     environment.rpms = input
@@ -60,10 +60,6 @@ function input_map(environment::UUVWaypoint, input)
     input = [force_torque;zeros(6)]
 
     return input
-end
-
-function input_map(::UUVWaypoint, ::Nothing)
-    return zeros(12)
 end
 
 function Dojo.step!(environment::UUVWaypoint, state, input=nothing; k=1, record=false, opts=SolverOptions())
@@ -107,22 +103,25 @@ function get_state(environment::UUVWaypoint)
     return state
 end
 
-function Dojo.visualize(environment::UUVWaypoint; return_animation=false, kwargs...)
+function Dojo.visualize(environment::UUVWaypoint;
+    waypoints=[
+        [1;1;0.3],
+        [2;0;0.3],
+        [1;-1;0.3],
+        [0;0;0.3],
+    ],
+    return_animation=false, 
+    kwargs...)
+    
     vis, animation = visualize(environment.mechanism, environment.storage; return_animation=true, kwargs...)
 
-    waypoints = [
-        [1;1;0.3;pi/4],
-        [2;0;0.3;-pi/4],
-        [1;-1;0.3;-3*pi/4],
-        [0;0;0.3;-5*pi/4],
-    ]
-    for i=1:4
+    for (i,waypoint) in enumerate(waypoints)
         waypoint_shape = Sphere(0.2;color=RGBA(0,0.25*i,0,0.3))
         visshape = Dojo.convert_shape(waypoint_shape)
         subvisshape = vis["waypoints"]["waypoint$i"]
         Dojo.setobject!(subvisshape, visshape, waypoint_shape)
         Dojo.atframe(animation, 1) do
-            Dojo.set_node!(waypoints[i][1:3], one(Quaternion), waypoint_shape, subvisshape, true)
+            Dojo.set_node!(waypoint, one(Quaternion), waypoint_shape, subvisshape, true)
         end
     end
     Dojo.setanimation!(vis,animation)

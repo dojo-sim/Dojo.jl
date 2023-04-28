@@ -44,13 +44,8 @@ function state_map(::CartpoleDQN, state)
     return state
 end
 
-function input_map(::CartpoleDQN, input)
+function input_map(::CartpoleDQN, input::AbstractVector)
     input = [input;0] # only the cart is actuated
-    return input
-end
-
-function input_map(::CartpoleDQN, ::Nothing)
-    input = zeros(2)
     return input
 end
 

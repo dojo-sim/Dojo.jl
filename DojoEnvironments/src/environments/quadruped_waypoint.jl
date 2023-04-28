@@ -52,13 +52,8 @@ function state_map(::QuadrupedWaypoint, state)
     return state
 end
 
-function input_map(::QuadrupedWaypoint, input)
+function input_map(::QuadrupedWaypoint, input::AbstractVector)
     input = [zeros(6);input] # trunk not actuated
-    return input
-end
-
-function input_map(::QuadrupedWaypoint, ::Nothing)
-    input = zeros(18)
     return input
 end
 
@@ -78,22 +73,25 @@ function get_state(environment::QuadrupedWaypoint)
     return state
 end
 
-function Dojo.visualize(environment::QuadrupedWaypoint; return_animation=false, kwargs...)
+function Dojo.visualize(environment::QuadrupedWaypoint;
+    waypoints=[
+        [0.5;0.5;0.3],
+        [1;0;0.3],
+        [0.5;-0.5;0.3],
+        [0;0;0.3],
+    ],
+    return_animation=false, 
+    kwargs...)
+    
     vis, animation = visualize(environment.mechanism, environment.storage; return_animation=true, kwargs...)
 
-    waypoints = [
-        [0.5;0.5;0.3;pi/4],
-        [1;0;0.3;-pi/4],
-        [0.5;-0.5;0.3;-3*pi/4],
-        [0;0;0.3;-5*pi/4],
-    ]
-    for i=1:4
+    for (i,waypoint) in enumerate(waypoints)
         waypoint_shape = Sphere(0.2;color=RGBA(0,0.25*i,0,0.3))
         visshape = Dojo.convert_shape(waypoint_shape)
         subvisshape = vis["waypoints"]["waypoint$i"]
         Dojo.setobject!(subvisshape, visshape, waypoint_shape)
         Dojo.atframe(animation, 1) do
-            Dojo.set_node!(waypoints[i][1:3], one(Quaternion), waypoint_shape, subvisshape, true)
+            Dojo.set_node!(waypoint, one(Quaternion), waypoint_shape, subvisshape, true)
         end
     end
     Dojo.setanimation!(vis,animation)

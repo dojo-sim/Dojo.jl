@@ -55,13 +55,8 @@ function state_map(::AntARS, state)
     return state
 end
 
-function input_map(::AntARS, input)
+function input_map(::AntARS, input::AbstractVector)
     input = [zeros(6);input] # floating base not actuated
-    return input
-end
-
-function input_map(::AntARS, ::Nothing)
-    input = zeros(14)
     return input
 end
 

@@ -19,8 +19,8 @@ function youbot_waypoint(;
         (:arm_joint_3, [-2.55,2.55]), 
         (:arm_joint_4, [-1.78,1.78]), 
         (:arm_joint_5, [-2.92,2.92]), 
-        (:gripper_finger_joint_l, [0,0.03]), 
-        (:gripper_finger_joint_r, [-0.03,0]),
+        # (:gripper_finger_joint_l, [0,0.03]), 
+        # (:gripper_finger_joint_r, [-0.03,0]),
     ]),
     keep_fixed_joints=false,
     T=Float64)
@@ -55,7 +55,7 @@ function state_map(::YoubotWaypoint, state)
     return state
 end
 
-function input_map(environment::YoubotWaypoint, input)
+function input_map(environment::YoubotWaypoint, input::AbstractVector)
     # Wheels are only for visualization and not actuated
     # so the wheel input must be mapped to the base
     l = 0.456
@@ -75,15 +75,11 @@ function input_map(environment::YoubotWaypoint, input)
     xy_minimal = Dojo.vector_rotate([xy;0],Dojo.RotZ(θz-pi/2))[1:2]
     base_input[1:2] = xy_minimal
     wheel_input = zeros(4)
-    arm_input = input[5:11] # joint1 to joint5 to fingerl to fingerr
+    arm_input = input[5:end] # joint1 to joint5 to fingerl to fingerr
 
     input = [base_input;wheel_input;arm_input]
 
     return input
-end
-
-function input_map(::YoubotWaypoint, ::Nothing)
-    return zeros(14)
 end
 
 function Dojo.step!(environment::YoubotWaypoint, state, input=nothing; k=1, record=false, opts=SolverOptions())
@@ -136,22 +132,25 @@ function get_state(environment::YoubotWaypoint)
     return state
 end
 
-function Dojo.visualize(environment::YoubotWaypoint; return_animation=false, kwargs...)
+function Dojo.visualize(environment::YoubotWaypoint; 
+    waypoints=[
+        [1;1;0.3],
+        [2;0;0.3],
+        [1;-1;0.3],
+        [0;0;0.3],
+    ],
+    return_animation=false, 
+    kwargs...)
+    
     vis, animation = visualize(environment.mechanism, environment.storage; return_animation=true, kwargs...)
 
-    waypoints = [
-        [1;1;0.3;pi/4],
-        [2;0;0.3;-pi/4],
-        [1;-1;0.3;-3*pi/4],
-        [0;0;0.3;-5*pi/4],
-    ]
-    for i=1:4
+    for (i,waypoint) in enumerate(waypoints)
         waypoint_shape = Sphere(0.2;color=RGBA(0,0.25*i,0,0.3))
         visshape = Dojo.convert_shape(waypoint_shape)
         subvisshape = vis["waypoints"]["waypoint$i"]
         Dojo.setobject!(subvisshape, visshape, waypoint_shape)
         Dojo.atframe(animation, 1) do
-            Dojo.set_node!(waypoints[i][1:3], one(Quaternion), waypoint_shape, subvisshape, true)
+            Dojo.set_node!(waypoint, one(Quaternion), waypoint_shape, subvisshape, true)
         end
     end
     Dojo.setanimation!(vis,animation)
