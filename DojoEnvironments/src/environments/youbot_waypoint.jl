@@ -52,6 +52,8 @@ function state_map(::YoubotWaypoint, state)
     state[1:2] = xy_minimal
     state[4:5] = vxy_minimal
 
+    state = [state[1:6]; zeros(8); state[7:end]]
+
     return state
 end
 
