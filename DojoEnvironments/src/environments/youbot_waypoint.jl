@@ -129,6 +129,8 @@ function get_state(environment::YoubotWaypoint)
     state[1:2] = xy
     state[4:5] = vxy
 
+    state = [state[1:6]; state[15:end]]
+
     return state
 end
 
