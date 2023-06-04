@@ -44,12 +44,12 @@ function quadrotor_waypoint(;
     return QuadrotorWaypoint{T,horizon}(mechanism, storage, zeros(4))
 end
 
-function state_map(::QuadrotorWaypoint, state)
+function DojoEnvironments.state_map(::QuadrotorWaypoint, state)
     state = [state;zeros(8)]
     return state
 end
 
-function input_map(environment::QuadrotorWaypoint, input::AbstractVector)
+function DojoEnvironments.input_map(environment::QuadrotorWaypoint, input::AbstractVector)
     # Input is rotor rpm directly
     # Rotors are only visualized, dynamics are mapped here
     environment.rpms = input
@@ -94,7 +94,7 @@ function Dojo.simulate!(environment::QuadrotorWaypoint{T,N}, controller! = (envi
     simulate!(environment.mechanism, 1:N, environment.storage, controller_wrapper!; kwargs...)
 end
 
-function get_state(environment::QuadrotorWaypoint)
+function DojoEnvironments.get_state(environment::QuadrotorWaypoint)
     state = get_minimal_state(environment.mechanism)[1:12]
     return state
 end

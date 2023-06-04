@@ -48,11 +48,11 @@ function quadruped_waypoint(;
     return QuadrupedWaypoint{T,horizon}(mechanism, storage)
 end
 
-function state_map(::QuadrupedWaypoint, state)
+function DojoEnvironments.state_map(::QuadrupedWaypoint, state)
     return state
 end
 
-function input_map(::QuadrupedWaypoint, input::AbstractVector)
+function DojoEnvironments.input_map(::QuadrupedWaypoint, input::AbstractVector)
     input = [zeros(6);input] # trunk not actuated
     return input
 end
@@ -66,7 +66,7 @@ function Dojo.step!(environment::QuadrupedWaypoint, state, input=nothing; k=1, r
     return
 end
 
-function get_state(environment::QuadrupedWaypoint)
+function DojoEnvironments.get_state(environment::QuadrupedWaypoint)
     state = get_minimal_state(environment.mechanism)
 
 	# x: floating base, FR (hip, thigh, calf), FL, RR, RL

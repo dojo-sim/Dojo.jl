@@ -44,7 +44,7 @@ function youbot_waypoint(;
     return YoubotWaypoint{T,horizon}(mechanism, storage)
 end
 
-function state_map(::YoubotWaypoint, state)
+function DojoEnvironments.state_map(::YoubotWaypoint, state)
     xy = state[1:2] # minimal coordinates are rotated for youbot
     vxy = state[4:5] # minimal coordinates are rotated for youbot
     xy_minimal = Dojo.vector_rotate([xy;0],Dojo.RotZ(-pi/2))[1:2]
@@ -57,7 +57,7 @@ function state_map(::YoubotWaypoint, state)
     return state
 end
 
-function input_map(environment::YoubotWaypoint, input::AbstractVector)
+function DojoEnvironments.input_map(environment::YoubotWaypoint, input::AbstractVector)
     # Wheels are only for visualization and not actuated
     # so the wheel input must be mapped to the base
     l = 0.456
@@ -122,7 +122,7 @@ function Dojo.simulate!(environment::YoubotWaypoint{T,N}, controller! = (environ
     simulate!(environment.mechanism, 1:N, environment.storage, controller_wrapper!; kwargs...)
 end
 
-function get_state(environment::YoubotWaypoint)
+function DojoEnvironments.get_state(environment::YoubotWaypoint)
     state = get_minimal_state(environment.mechanism)
     xy_minimal = state[1:2] # minimal coordinates are rotated for youbot
     vxy_minimal = state[4:5] # minimal coordinates are rotated for youbot

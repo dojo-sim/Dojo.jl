@@ -50,12 +50,12 @@ function ant_ars(;
     return AntARS{T,horizon}(mechanism, storage)
 end
 
-function state_map(::AntARS, state)
+function DojoEnvironments.state_map(::AntARS, state)
     state = state[1:28]
     return state
 end
 
-function input_map(::AntARS, input::AbstractVector)
+function DojoEnvironments.input_map(::AntARS, input::AbstractVector)
     input = [zeros(6);input] # floating base not actuated
     return input
 end
@@ -69,7 +69,7 @@ function Dojo.step!(environment::AntARS, state, input=nothing; k=1, record=false
     return
 end
 
-function get_state(environment::AntARS{T}) where T
+function DojoEnvironments.get_state(environment::AntARS{T}) where T
     contact_force = T[]
     for contact in environment.mechanism.contacts
         push!(contact_force, max(-1, min(1, contact.impulses[2][1])))

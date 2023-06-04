@@ -48,11 +48,11 @@ function quadruped_sampling(;
     return QuadrupedSampling{T,horizon}(mechanism, storage)
 end
 
-function state_map(::QuadrupedSampling, state)
+function DojoEnvironments.state_map(::QuadrupedSampling, state)
     return state
 end
 
-function input_map(::QuadrupedSampling, input::AbstractVector)
+function DojoEnvironments.input_map(::QuadrupedSampling, input::AbstractVector)
     input = [zeros(6);input] # trunk not actuated
     return input
 end
@@ -66,7 +66,7 @@ function Dojo.step!(environment::QuadrupedSampling, state, input=nothing; k=1, r
     return
 end
 
-function get_state(environment::QuadrupedSampling)
+function DojoEnvironments.get_state(environment::QuadrupedSampling)
     state = get_minimal_state(environment.mechanism)
 
 	# x: floating base, FR (hip, thigh, calf), FL, RR, RL

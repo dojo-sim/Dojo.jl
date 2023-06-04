@@ -40,11 +40,11 @@ function cartpole_dqn(;
     return CartpoleDQN{T,horizon}(mechanism, storage)
 end
 
-function state_map(::CartpoleDQN, state)
+function DojoEnvironments.state_map(::CartpoleDQN, state)
     return state
 end
 
-function input_map(::CartpoleDQN, input::AbstractVector)
+function DojoEnvironments.input_map(::CartpoleDQN, input::AbstractVector)
     input = [input;0] # only the cart is actuated
     return input
 end
@@ -58,7 +58,7 @@ function Dojo.step!(environment::CartpoleDQN, state, input=nothing; k=1, record=
     return
 end
 
-function get_state(environment::CartpoleDQN)
+function DojoEnvironments.get_state(environment::CartpoleDQN)
     state = get_minimal_state(environment.mechanism)
     return state
 end

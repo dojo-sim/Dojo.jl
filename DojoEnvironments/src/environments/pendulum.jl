@@ -38,11 +38,11 @@ function pendulum(;
     return Pendulum{T,horizon}(mechanism, storage)
 end
 
-function state_map(::Pendulum, state)
+function DojoEnvironments.state_map(::Pendulum, state)
     return state
 end
 
-function input_map(::Pendulum, input::AbstractVector)
+function DojoEnvironments.input_map(::Pendulum, input::AbstractVector)
     return input
 end
 
@@ -55,7 +55,7 @@ function Dojo.step!(environment::Pendulum, state, input=nothing; k=1, record=fal
     return
 end
 
-function get_state(environment::Pendulum)
+function DojoEnvironments.get_state(environment::Pendulum)
     state = get_minimal_state(environment.mechanism)
     return state
 end

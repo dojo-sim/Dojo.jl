@@ -42,12 +42,12 @@ function uuv_waypoint(;
     return UUVWaypoint{T,horizon}(mechanism, storage, zeros(6))
 end
 
-function state_map(::UUVWaypoint, state)
+function DojoEnvironments.state_map(::UUVWaypoint, state)
     state = [state;zeros(12)]
     return state
 end
 
-function input_map(environment::UUVWaypoint, input::AbstractVector)
+function DojoEnvironments.input_map(environment::UUVWaypoint, input::AbstractVector)
     # Input is rotor rpm directly
     # Rotors are only visualized, dynamics are mapped here
     environment.rpms = input
@@ -98,7 +98,7 @@ function Dojo.simulate!(environment::UUVWaypoint{T,N}, controller! = (environmen
     simulate!(environment.mechanism, 1:N, environment.storage, controller_wrapper!; kwargs...)
 end
 
-function get_state(environment::UUVWaypoint)
+function DojoEnvironments.get_state(environment::UUVWaypoint)
     state = get_minimal_state(environment.mechanism)[1:12]
     return state
 end
