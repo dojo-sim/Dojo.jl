@@ -68,7 +68,7 @@ end
 
 violations(mechanism) = [joint_residual_violation(mechanism, joint) for joint in mechanism.joints]
 
-function initialize_constraints!(mechanism::Mechanism{T}; fixedids = Int64[], freeids = Int64[], ε = 1e-5, newtonIter = 100, lineIter = 10, regularization = 1e-6) where T
+function initialize_constraints!(mechanism::Mechanism{T}; fixedids = Int64[], freeids = Int64[], ε = 1e-5, newtonIter = 100, lineIter = 10, regularization = 1e-6, debug=false) where T
     # Initialize the array of free bodies
     freebodies = Body[]
 
@@ -118,17 +118,22 @@ function initialize_constraints!(mechanism::Mechanism{T}; fixedids = Int64[], fr
 
             # If violation decreased, exit line search
             if norm1 < norm0 
-                println("exit line search, violation: "*string(norm1))
+                if debug
+                    println("exit line search, violation: "*string(norm1))
+                end
                 break
             end
         end
 
-        println("norm0: "*string(norm0)*", norm1: "*string(norm1))
+        if debug
+            println("norm0: "*string(norm0)*", norm1: "*string(norm1))
+        end
 
         # If violation is below threshold, exit Newton-Raphson iterations
         if norm1 < ε
             return
         elseif norm1 > norm0
+            # If violation increased, reset to previous step
             for body in freebodies
                 # Update body states
                 body.state.x2 = body.state.x1
@@ -136,11 +141,12 @@ function initialize_constraints!(mechanism::Mechanism{T}; fixedids = Int64[], fr
                 body.state.q2 = body.state.q1
             end
         else
+            # If violation decreased, update norm0
             norm0 = norm1
         end
     end
 
     # If we get here, the Newton-Raphson method did not converge
-    display("Constraint initialization did not converge! Tolerance: "*string(norm0))
+    display("Constraint initialization did not converge! Tolerance: "*string(norm1))
     return 
 end
