@@ -27,11 +27,11 @@ contact_origins = [
 normals = fill(Z_AXIS,8)
 friction_coefficients = fill(0.5,8)
 
-box_contacts = contact_constraint(pbody, normals; 
-    friction_coefficients, contact_origins, contact_type=:nonlinear)
+box_contacts = ContactConstraint(NonlinearContact(pbody, normals, 
+    friction_coefficients; contact_origins))
 
-sphere_contact = contact_constraint(cbody, Z_AXIS; 
-    friction_coefficient=0.5, contact_radius=0.5)
+sphere_contact = ContactConstraint(NonlinearContact(cbody, Z_AXIS, 
+    0.5; contact_radius=0.5))
 
 collision = SphereBoxCollision{Float64,2,3,6}(
     szeros(3), 1.0, 1.0, 2 * 1.0, 0.5

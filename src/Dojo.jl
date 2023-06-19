@@ -193,8 +193,7 @@ export
     get_contact,
     get_sdf,
     contact_location,
-    damper_impulses,
-    contact_constraint
+    damper_impulses
 
 # Collision
 export

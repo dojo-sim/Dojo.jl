@@ -33,7 +33,23 @@ function ImpactContact(body::Body{T}, normal::AbstractVector;
     # collision 
     collision = SphereHalfSpaceCollision(szeros(T, 0, 3), contact_normal, SVector{3}(contact_origin), contact_radius)
 
-    ImpactContact{Float64,2}(parameterization, collision)
+    ImpactContact{Float64,2}(parameterization, collision), body.id, 0
+end
+
+function ImpactContact(body::Body{T}, normals::AbstractVector{<:AbstractVector}; 
+    contact_origins::AbstractVector=[szeros(T, 3) for i=1:length(normals)],
+    contact_radii::AbstractVector=[0.0 for i=1:length(normals)]) where T
+
+    @assert length(normals) == length(contact_origins) == length(contact_radii)
+    [ImpactContact(body, normals[i]; contact_origin=contact_origins[i], contact_radius=contact_radii[i]) for i in eachindex(normals)]
+end
+
+function ImpactContact(bodies::AbstractVector{Body{T}}, normals::AbstractVector{<:AbstractVector}; 
+    contact_origins::AbstractVector=[szeros(T, 3) for i=1:length(normals)],
+    contact_radii::AbstractVector=[0.0 for i=1:length(normals)]) where T
+
+    @assert length(bodies) == length(normals) == length(contact_origins) == length(contact_radii)
+    [ImpactContact(bodies[i], normals[i]; contact_origin=contact_origins[i], contact_radius=contact_radii[i]) for i in eachindex(bodies)]
 end
 
 function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:ImpactContact{T,N}}

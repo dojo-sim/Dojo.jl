@@ -45,7 +45,7 @@ function get_quadrotor(;
             [0; 0.21; 0.045], 
             [0; -0.21; 0.045]
         ]
-        contacts = [contacts;contact_constraint(body_in_contact, normals; friction_coefficients, contact_radii, contact_origins)]
+        contacts = [contacts;ContactConstraint(NonlinearContact(body_in_contact, normals, friction_coefficients; contact_radii, contact_origins))]
     end
 
     if contact_body
@@ -60,7 +60,7 @@ function get_quadrotor(;
             [0; 0.11; -0.085], 
             [0; -0.11; -0.085]
         ]
-        contacts = [contacts;contact_constraint(body_in_contact, normals; friction_coefficients, contact_origins)]
+        contacts = [contacts;ContactConstraint(NonlinearContact(body_in_contact, normals, friction_coefficients; contact_origins))]
     end
 
     mechanism = Mechanism(mechanism.origin, mechanism.bodies, mechanism.joints, contacts; 

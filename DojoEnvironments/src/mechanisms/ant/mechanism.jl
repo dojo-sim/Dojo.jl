@@ -54,14 +54,14 @@ function get_ant(;
             [0.2; -0.2; 0]
         ]
         contact_radii = [body.shape.shapes[1].rh[1] for body in contact_bodies]
-        contacts = [contacts;contact_constraint(contact_bodies, normals; friction_coefficients, contact_origins, contact_radii)]
+        contacts = [contacts;ContactConstraint(NonlinearContact(contact_bodies, normals, friction_coefficients; contact_origins, contact_radii))]
     end
 
     if contact_body
         # torso contact
         torso = get_body(mechanism, :torso)
         contact_radius = torso.shape.r
-        contacts = [contacts;contact_constraint(torso, Z_AXIS; friction_coefficient, contact_radius)]
+        contacts = [contacts;ContactConstraint(NonlinearContact(torso, Z_AXIS, friction_coefficient; contact_radius))]
 
         # elbow contact
         body_names = [:aux_1, :aux_2, :aux_3, :aux_4]
@@ -76,7 +76,7 @@ function get_ant(;
             -[0.1; -0.1; 0]
         ]
         contact_radii = [body.shape.shapes[1].rh[1] for body in contact_bodies]
-        contacts = [contacts;contact_constraint(contact_bodies, normals; friction_coefficients, contact_origins, contact_radii)]
+        contacts = [contacts;ContactConstraint(NonlinearContact(contact_bodies, normals, friction_coefficients; contact_origins, contact_radii))]
     end
 
     mechanism = Mechanism(mechanism.origin, mechanism.bodies, mechanism.joints, contacts; 

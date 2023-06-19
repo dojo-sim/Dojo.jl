@@ -42,7 +42,7 @@ function get_uuv(;
             [0.12; 0; 0.07], 
             [-0.12; 0; 0.07], 
         ]
-        contacts = [contacts;contact_constraint(body_in_contact, normals; friction_coefficients, contact_radii, contact_origins)]
+        contacts = [contacts;ContactConstraint(NonlinearContact(body_in_contact, normals, friction_coefficients; contact_radii, contact_origins))]
     end
 
     mechanism = Mechanism(mechanism.origin, mechanism.bodies, mechanism.joints, contacts; 

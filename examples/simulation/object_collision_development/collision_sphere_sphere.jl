@@ -11,8 +11,7 @@ joint = JointConstraint(Fixed(origin, pbody))
 bodies = [pbody, cbody]
 joints = [joint]
 
-sphere_contact = contact_constraint(cbody, Z_AXIS, 
-    friction_coefficient=1.0, contact_radius=0.5)
+sphere_contact = ContactConstraint(NonlinearContact(cbody, Z_AXIS, 1.0; contact_radius=0.5))
 
 collision = SphereSphereCollision{Float64,2,3,6}(
         szeros(3), szeros(3), pbody.shape.r, cbody.shape.r)
