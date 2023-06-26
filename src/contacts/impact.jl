@@ -52,6 +52,35 @@ function ImpactContact(bodies::AbstractVector{Body{T}}, normals::AbstractVector{
     [ImpactContact(bodies[i], normals[i]; contact_origin=contact_origins[i], contact_radius=contact_radii[i]) for i in eachindex(bodies)]
 end
 
+function ImpactContact(body1::Body{T}, body2::Body{T}) where T
+    # friction parametrization
+    parameterization = szeros(T, 0, 2)
+
+    origin_parent = szeros(3)
+    origin_child = szeros(3)
+    radius_parent = 1
+    radius_child = 1
+    primitive1 = body1.shape.primitive
+    primitive2 = body2.shape.primitive
+    α = 0
+    intersection_point = szeros(3)
+
+    collision = GeneralCollision{T,0,3,0}(origin_parent,origin_child,radius_parent,radius_child,primitive1,primitive2,α,intersection_point)
+
+    ImpactContact{Float64,2}(parameterization, collision), body1.id, body2.id
+end
+
+function ImpactContact(bodies::AbstractVector{Body{T}}) where T
+    impacts = Tuple[]
+    for i=1:length(bodies)
+        for j=i+1:length(bodies)
+            impacts = [impacts;ImpactContact(bodies[i],bodies[j])]
+        end
+    end
+    
+    return impacts
+end
+
 function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs}) where {T,N,Nc,Cs<:ImpactContact{T,N}}
     # contact model
     model = contact.model
