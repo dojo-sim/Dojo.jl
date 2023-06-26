@@ -57,7 +57,7 @@ joint4 = JointConstraint(Floating(origin, body4))
 joints = [joint1;joint2;joint3;joint4]
 dojo_contacts = ContactConstraint(ImpactContact(bodies))
 
-mech = Mechanism(origin, bodies, joints, dojo_contacts; timestep=h, gravity=0)
+mech = Mechanism(origin, bodies, joints, dojo_contacts; timestep=h)
 
 # create the indexing named tuple
 N_bodies = length(bodies) 
