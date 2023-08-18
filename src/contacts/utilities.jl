@@ -50,7 +50,7 @@ function contact_location(mechanism::Mechanism, contact::ContactConstraint)
 end
 
 function contact_location(mechanism::Mechanism)
-    return [contact_location(mech, contact) for contact in mechanism.contacts]
+    return [contact_location(mechanism, contact) for contact in mechanism.contacts]
 end
 
 #="""
