@@ -51,7 +51,7 @@ function get_block2d(;
         ]
         contact_radii = fill(contact_radius,n)
 
-        contacts = [contacts;contact_constraint(block, normals; friction_coefficients, contact_origins, contact_radii, contact_type, names)]
+        contacts = [contacts;ContactConstraint(contact_type, block, normals; friction_coefficients, contact_origins, contact_radii, names)]
     end
 
     mechanism = Mechanism(mechanism.origin, mechanism.bodies, mechanism.joints, contacts;

@@ -56,7 +56,7 @@ function get_walker(;
             contact_bodies[3].shape.shapes[1].rh[1]
             contact_bodies[4].shape.shapes[1].rh[1]
         ]
-        contacts = [contacts;contact_constraint(contact_bodies, normals; friction_coefficients, contact_origins, contact_radii)]
+        contacts = [contacts;ContactConstraint(NonlinearContact(contact_bodies, normals, friction_coefficients; contact_origins, contact_radii))]
     end
     
     if contact_body
@@ -68,7 +68,7 @@ function get_walker(;
         friction_coefficients = fill(friction_coefficient,n)
         contact_origins = [[0;0; 0.5 * contact_bodies[i].shape.shapes[1].rh[2]] for i = 1:n]
         contact_radii = [contact_bodies[i].shape.shapes[1].rh[1] for i = 1:n]
-        contacts = [contacts;contact_constraint(contact_bodies, normals; friction_coefficients, contact_origins, contact_radii)]
+        contacts = [contacts;ContactConstraint(NonlinearContact(contact_bodies, normals, friction_coefficients; contact_origins, contact_radii))]
     end
 
     mechanism = Mechanism(mechanism.origin, mechanism.bodies, mechanism.joints, contacts; 

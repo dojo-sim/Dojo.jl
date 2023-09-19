@@ -52,7 +52,7 @@ function get_halfcheetah(;
             contact_bodies[1].shape.shapes[1].rh[1]
             contact_bodies[2].shape.shapes[1].rh[1]
         ]
-        contacts = [contacts;contact_constraint(contact_bodies, normals; friction_coefficients, contact_origins, contact_radii)]
+        contacts = [contacts;ContactConstraint(NonlinearContact(contact_bodies, normals, friction_coefficients; contact_origins, contact_radii))]
     end
 
     if contact_body
@@ -75,7 +75,7 @@ function get_halfcheetah(;
             contact_bodies[3].shape.shapes[1].shapes[1].rh[1]
             [contact_bodies[i].shape.shapes[1].rh[1] for i = 4:n]
         ]
-        contacts = [contacts;contact_constraint(contact_bodies, normals; friction_coefficients, contact_origins, contact_radii)]
+        contacts = [contacts;ContactConstraint(NonlinearContact(contact_bodies, normals, friction_coefficients; contact_origins, contact_radii))]
     end
 
     mechanism = Mechanism(mechanism.origin, mechanism.bodies, mechanism.joints, contacts; 

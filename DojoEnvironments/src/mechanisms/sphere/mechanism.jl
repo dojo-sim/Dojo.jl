@@ -37,7 +37,7 @@ function get_sphere(;
 
     if contact
         contact_radius = radius
-        contacts = [contacts;contact_constraint(sphere, Z_AXIS; friction_coefficient, contact_radius, contact_type)]
+        contacts = [contacts;ContactConstraint(contact_type, sphere, Z_AXIS; friction_coefficient, contact_radius)]
     end
 
     mechanism = Mechanism(mechanism.origin, mechanism.bodies, mechanism.joints, contacts;

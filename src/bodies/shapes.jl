@@ -65,6 +65,7 @@ end
     color: RGBA
 """
 mutable struct Box{T} <: Shape{T}
+    primitive::AbstractPrimitive
     position_offset::SVector{3,T}
     orientation_offset::Quaternion{T}
     xyz::SVector{3,T}
@@ -77,7 +78,7 @@ mutable struct Box{T} <: Shape{T}
             scale::AbstractVector=sones(3), 
             color=RGBA(0.75, 0.75, 0.75))
         T = promote_type(quateltype.((x, y, z, position_offset, orientation_offset))...)
-        new{T}(position_offset, orientation_offset, [x; y; z], scale, color)
+        new{T}(box_primitive(T(x),T(y),T(z)),position_offset, orientation_offset, [x; y; z], scale, color)
     end
 
     function Box(x::Real, y::Real, z::Real, m::Real;
@@ -88,7 +89,7 @@ mutable struct Box{T} <: Shape{T}
             color=RGBA(0.75, 0.75, 0.75))
         T = promote_type(quateltype.((x, y, z, m, position_offset, orientation_offset))...)
         J = 1 / 12 * m * diagm([y^2 + z^2; x^2 + z^2; x^2 + y^2])
-        return Body(m, J; name=name, shape=new{T}(position_offset, orientation_offset, [x;y;z], scale, color))
+        return Body(m, J; name=name, shape=new{T}(box_primitive(T(x),T(y),T(z)),position_offset, orientation_offset, [x;y;z], scale, color))
     end
 end
 
@@ -104,6 +105,7 @@ end
     color: RGBA
 """
 mutable struct Cylinder{T} <: Shape{T}
+    primitive::AbstractPrimitive
     position_offset::SVector{3,T}
     orientation_offset::Quaternion{T}
     rh::SVector{2,T}
@@ -117,7 +119,7 @@ mutable struct Cylinder{T} <: Shape{T}
             scale::AbstractVector=sones(3), 
             color=RGBA(0.75, 0.75, 0.75))
         T = promote_type(quateltype.((r, h, position_offset, orientation_offset))...)
-        new{T}(position_offset, orientation_offset, [r;h], scale, color)
+        new{T}(cylinder_primitive(T(r),T(h)),position_offset, orientation_offset, [r;h], scale, color)
     end
 
     function Cylinder(r::Real, h::Real, m::Real;
@@ -128,7 +130,7 @@ mutable struct Cylinder{T} <: Shape{T}
             color=RGBA(0.75, 0.75, 0.75))
         T = promote_type(quateltype.((r, h, m, position_offset, orientation_offset))...)
         J = 1 / 2 * m * diagm([r^2 + 1 / 6 * h^2; r^2 + 1 / 6 * h^2; r^2])
-        return Body(m, J; name=name, shape=new{T}(position_offset, orientation_offset, [r;h], scale, color))
+        return Body(m, J; name=name, shape=new{T}(cylinder_primitive(T(r),T(h)),position_offset, orientation_offset, [r;h], scale, color))
     end
 end
 
@@ -229,6 +231,7 @@ end
     color: RGBA
 """
 mutable struct Sphere{T} <: Shape{T}
+    primitive::AbstractPrimitive
     position_offset::SVector{3,T}
     orientation_offset::Quaternion{T}
     r::T
@@ -241,7 +244,7 @@ mutable struct Sphere{T} <: Shape{T}
             scale::AbstractVector=sones(3), 
             color=RGBA(0.75, 0.75, 0.75))
         T = promote_type(quateltype.((r, position_offset, orientation_offset))...)
-        new{T}(position_offset, orientation_offset, r, scale, color)
+        new{T}(sphere_primitive(T(r)),position_offset, orientation_offset, r, scale, color)
     end
 
     function Sphere(r::Real, m::Real;
@@ -252,7 +255,7 @@ mutable struct Sphere{T} <: Shape{T}
             color=RGBA(0.75, 0.75, 0.75))
         T = promote_type(quateltype.((r, m, position_offset, orientation_offset))...)
         J = 2 / 5 * m * diagm([r^2 for i = 1:3])
-        return Body(m, J; name=name, shape=new{T}(position_offset, orientation_offset, r, scale, color))
+        return Body(m, J; name=name, shape=new{T}(sphere_primitive(T(r)),position_offset, orientation_offset, r, scale, color))
     end
 end
 
@@ -268,6 +271,7 @@ end
     color: RGBA
 """
 mutable struct Pyramid{T} <: Shape{T}
+    primitive::AbstractPrimitive
     position_offset::SVector{3,T}
     orientation_offset::Quaternion{T}
     wh::SVector{2,T}
@@ -281,7 +285,7 @@ mutable struct Pyramid{T} <: Shape{T}
             scale::AbstractVector=sones(3), 
             color=RGBA(0.75, 0.75, 0.75))
         T = promote_type(quateltype.((w, h, position_offset, orientation_offset))...)
-        new{T}(position_offset, orientation_offset, [w;h], scale, color)
+        new{T}(pyramid_primitive(T(w),T(h)),position_offset, orientation_offset, [w;h], scale, color)
     end
 
     function Pyramid(w::Real, h::Real, m::Real;
@@ -291,7 +295,7 @@ mutable struct Pyramid{T} <: Shape{T}
             name::Symbol=Symbol("body_" * randstring(4)), color=RGBA(0.75, 0.75, 0.75))
         T = promote_type(quateltype.((w, h, m, position_offset, orientation_offset))...)
         J = 1/80 * m * diagm([4*w^2+3*h^2;4*w^2+3*h^2;8*w^2])
-        return Body(m, J; name=name, shape=new{T}(position_offset, orientation_offset, [w;h], scale, color))
+        return Body(m, J; name=name, shape=new{T}(pyramid_primitive(T(w),T(h)),position_offset, orientation_offset, [w;h], scale, color))
     end
 end
 
@@ -338,6 +342,42 @@ function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, shape::Shape)
     println(io," orientation_offset:     "*string(shape.orientation_offset))
     println(io," scale:           "*string(shape.scale))
     println(io," color:           "*string(shape.color))
+end
+
+# TODO position and orientation offset not accounted for
+function box_primitive(x,y,z)
+    A = SA[
+        1 0 0
+        0 1 0 
+        0 0 1
+        -1 0 0
+        0 -1 0
+        0 0 -1.0
+    ]
+    b = SA[x;y;z;x;y;z]/2
+
+    return DifferentiableCollisions.Polytope(A,b)
+end
+
+function cylinder_primitive(r,h)
+    return DifferentiableCollisions.Cylinder(r, h)
+end
+
+function sphere_primitive(r)
+    return DifferentiableCollisions.Sphere(r)
+end
+
+function pyramid_primitive(w,h)
+    A = SA[
+        1/(3/8*w)  0          1/(3/4*h)
+        0          1/(3/8*w)  1/(3/4*h)
+       -1/(3/8*w)  0          1/(3/4*h)
+        0         -1/(3/8*w)  1/(3/4*h)
+        0          0         -1/(1/4*h)
+    ]
+    b = SA[1;1;1;1;1.0]
+
+    return DifferentiableCollisions.Polytope(A,b)
 end
 
 function convert_shape(box::Box)

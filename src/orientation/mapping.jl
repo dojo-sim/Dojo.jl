@@ -8,7 +8,7 @@ function quaternion_map_jacobian(ω::SVector{3}, timestep)
 end
 
 function cayley(ω)
-    Quaternion(1.0 / sqrt(1.0 + ω' * ω) * [1.0; ω])
+    Quaternion(1.0 / sqrt(1.0 + ω' * ω) * [1.0; ω]...)
 end
 
 function cayley_jacobian(ω)

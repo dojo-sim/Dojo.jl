@@ -1,3 +1,20 @@
+# minimal
+@generated function minimal_coordinates(mechanism, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
+    pbody = :(get_body(mechanism, joint.parent_id))
+    cbody = :(get_body(mechanism, joint.child_id))
+    tra = :(minimal_coordinates(joint.translational, $pbody, $cbody))
+    rot = :(minimal_coordinates(joint.rotational, $pbody, $cbody))
+    return :(svcat($tra, $rot))
+end
+
+@generated function minimal_velocities(mechanism, joint::JointConstraint{T,N,Nc}) where {T,N,Nc}
+    pbody = :(get_body(mechanism, joint.parent_id))
+    cbody = :(get_body(mechanism, joint.child_id))
+    tra = :(minimal_velocities(joint.translational, $pbody, $cbody, mechanism.timestep))
+    rot = :(minimal_velocities(joint.rotational, $pbody, $cbody, mechanism.timestep))
+    return :(svcat($tra, $rot))
+end
+
 ################################################################################
 # Coordinates
 ################################################################################

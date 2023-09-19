@@ -51,7 +51,7 @@ function get_humanoid(;
             contact_bodies[4].shape.shapes[1].shapes[1].rh[1]
         ]
         
-        contacts = [contacts;contact_constraint(contact_bodies, normals; friction_coefficients, contact_origins, contact_radii)]
+        contacts = [contacts;ContactConstraint(NonlinearContact(contact_bodies, normals, friction_coefficients; contact_origins, contact_radii))]
     end
 
     mechanism = Mechanism(mechanism.origin, mechanism.bodies, mechanism.joints, contacts;

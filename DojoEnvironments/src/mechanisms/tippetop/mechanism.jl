@@ -50,7 +50,7 @@ function get_tippetop(;
         normals = fill(Z_AXIS,n)
         friction_coefficients = fill(friction_coefficient,n)
         contact_radii = [radius;radius*scale]
-        contacts = [contacts;contact_constraint(bodies, normals; friction_coefficients, contact_radii, contact_type)]
+        contacts = [contacts;ContactConstraint(contact_type, bodies, normals; friction_coefficients, contact_radii)]
     end
 
     mechanism = Mechanism(mechanism.origin, mechanism.bodies, mechanism.joints, contacts;

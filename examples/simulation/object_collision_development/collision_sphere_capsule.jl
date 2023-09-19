@@ -12,19 +12,16 @@ joint2 = JointConstraint(Floating(pbody, cbody))
 bodies = [pbody, cbody]
 joints = [joint1]
 
-capsule_contact1 = contact_constraint(pbody, Z_AXIS, 
-                    friction_coefficient=1.0, 
+capsule_contact1 = ContactConstraint(NonlinearContact(pbody, Z_AXIS, 1.0; 
                     contact_origin=Y_AXIS, 
-                    contact_radius=0.5)
+                    contact_radius=0.5))
 
-capsule_contact2 = contact_constraint(pbody, Z_AXIS, 
-    friction_coefficient=1.0, 
+capsule_contact2 = ContactConstraint(NonlinearContact(pbody, Z_AXIS, 1.0;
     contact_origin=-Y_AXIS, 
-    contact_radius=0.5)
+    contact_radius=0.5))
 
-sphere_contact = contact_constraint(cbody, Z_AXIS, 
-    friction_coefficient=1.0,
-    contact_radius=0.5)
+sphere_contact = ContactConstraint(NonlinearContact(cbody, Z_AXIS, 1.0;
+    contact_radius=0.5))
 
 collision = SphereCapsuleCollision{Float64,2,3,6}(
     szeros(3), Y_AXIS, -Y_AXIS, 0.5, 0.5,

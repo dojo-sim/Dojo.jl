@@ -56,7 +56,7 @@ function get_twister(;
             [X_AXIS*height/2]  
             fill(-X_AXIS*height/2,n-1)
         ]
-        contacts = [contacts;contact_constraint(contact_bodies, normals; friction_coefficients, contact_origins, contact_type)]
+        contacts = [contacts;ContactConstraint(contact_type, contact_bodies, normals; friction_coefficients, contact_origins)]
     end
 
     mechanism = Mechanism(mechanism.origin, mechanism.bodies, mechanism.joints, contacts;

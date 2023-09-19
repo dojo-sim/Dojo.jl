@@ -76,10 +76,10 @@ function constraint_jacobian_velocity(relative::Symbol, model::Contact,
     return [V Ω]
 end
 
-function impulse_map(relative::Symbol, model::Contact, pbody::Node, cbody::Node, timestep)
+function impulse_map(relative::Symbol, model::Contact, pbody::Node, cbody::Node)
     # configurations
-    xp, qp = next_configuration(pbody.state, timestep)
-    xc, qc = next_configuration(cbody.state, timestep)
+    xp, qp = current_configuration(pbody.state)
+    xc, qc = current_configuration(cbody.state)
 
     # mapping
     X = force_mapping(relative, model, xp, qp, xc, qc)
@@ -102,8 +102,8 @@ end
 function impulse_map_jacobian(relative::Symbol, jacobian::Symbol, model::Contact, pbody::Node, cbody::Node, λ, timestep)
 
     # configurations
-    xp, qp = next_configuration(pbody.state, timestep)
-    xc, qc = next_configuration(cbody.state, timestep)
+    xp, qp = current_configuration(pbody.state)
+    xc, qc = current_configuration(cbody.state)
 
     # mapping
     X = force_mapping(relative, model, xp, qp, xc, qc)

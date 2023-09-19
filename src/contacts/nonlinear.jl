@@ -43,7 +43,23 @@ function NonlinearContact(body::Body{T}, normal::AbstractVector, friction_coeffi
     # collision 
     collision = SphereHalfSpaceCollision(contact_tangent, contact_normal, SVector{3}(contact_origin), contact_radius)
     
-    NonlinearContact{T,8}(friction_coefficient, parameterization, collision)
+    NonlinearContact{T,8}(friction_coefficient, parameterization, collision), body.id, 0
+end
+
+function NonlinearContact(body::Body{T}, normals::AbstractVector{<:AbstractVector}, friction_coefficients::AbstractVector=ones(T,length(normals)); 
+    contact_origins::AbstractVector=[szeros(T, 3) for i=1:length(normals)],
+    contact_radii::AbstractVector=[0.0 for i=1:length(normals)]) where T
+
+    @assert length(normals) == length(friction_coefficients) == length(contact_origins) == length(contact_radii)
+    [NonlinearContact(body, normals[i], friction_coefficients[i]; contact_origin=contact_origins[i], contact_radius=contact_radii[i]) for i in eachindex(normals)]
+end
+
+function NonlinearContact(bodies::AbstractVector{Body{T}}, normals::AbstractVector{<:AbstractVector}, friction_coefficients::AbstractVector=ones(T,length(normals)); 
+    contact_origins::AbstractVector=[szeros(T, 3) for i=1:length(normals)],
+    contact_radii::AbstractVector=[0.0 for i=1:length(normals)]) where T
+
+    @assert length(bodies) == length(normals) == length(friction_coefficients) == length(contact_origins) == length(contact_radii)
+    [NonlinearContact(bodies[i], normals[i], friction_coefficients[i]; contact_origin=contact_origins[i], contact_radius=contact_radii[i]) for i in eachindex(bodies)]
 end
 
 function constraint(mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}

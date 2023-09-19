@@ -46,13 +46,13 @@ function get_raiberthopper(;
     if contact_foot
         # foot contact
         contact_radius = foot_radius
-        contacts = [contacts;contact_constraint(foot, Z_AXIS; friction_coefficient, contact_radius)]
+        contacts = [contacts;ContactConstraint(NonlinearContact(foot, Z_AXIS, friction_coefficient; contact_radius))]
     end
 
     if contact_body
         # body contact
         contact_radius = body_radius
-        contacts = [contacts;contact_constraint(body, Z_AXIS; friction_coefficient, contact_radius)]
+        contacts = [contacts;ContactConstraint(NonlinearContact(body, Z_AXIS, friction_coefficient; contact_radius))]
     end
 
     mechanism = Mechanism(mechanism.origin, mechanism.bodies, mechanism.joints, contacts; 
