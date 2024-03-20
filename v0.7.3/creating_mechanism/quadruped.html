@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Loading a Mechanism via URDF · Dojo</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../index.html">Dojo</a></span></div><form class="docs-search" action="../search.html"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../index.html">Get Started</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../examples/simulation.html">Simulation</a></li><li><a class="tocitem" href="../examples/reinforcement_learning.html">Reinforcement Learning</a></li><li><a class="tocitem" href="../examples/system_identification.html">System Identification</a></li><li><a class="tocitem" href="../examples/trajectory_optimization.html">Trajectory Optimization</a></li></ul></li><li><span class="tocitem">Creating a Mechanism</span><ul><li><a class="tocitem" href="overview.html">Overview</a></li><li><a class="tocitem" href="mechanism_directly.html">Directly Build a Mechanism</a></li><li><a class="tocitem" href="mechanism_existing.html">Using an Existing Mechanism</a></li><li><a class="tocitem" href="environment_existing.html">Using an Existing Environment</a></li><li><a class="tocitem" href="tippetop.html">Detailed Mechanism Definition</a></li><li class="is-active"><a class="tocitem" href="quadruped.html">Loading a Mechanism via URDF</a></li></ul></li><li><span class="tocitem">Creating a Simulation</span><ul><li><a class="tocitem" href="../creating_simulation/define_simulation.html">Defining a Simulation</a></li><li><a class="tocitem" href="../creating_simulation/define_controller.html">Defining a Controller</a></li><li><a class="tocitem" href="../creating_simulation/simulation_with_gradients.html">Gradients</a></li></ul></li><li><span class="tocitem">Environments</span><ul><li><a class="tocitem" href="../environments/overview.html">Overview</a></li></ul></li><li><span class="tocitem">Background: Contact Models</span><ul><li><a class="tocitem" href="../background_contact/contact_models.html">Overview</a></li><li><a class="tocitem" href="../background_contact/impact.html">Impact</a></li><li><a class="tocitem" href="../background_contact/nonlinear_friction.html">Nonlinear friction</a></li><li><a class="tocitem" href="../background_contact/linearized_friction.html">Linearized Friction</a></li><li><a class="tocitem" href="../background_contact/collisions.html">Collisions</a></li></ul></li><li><span class="tocitem">Background: Representations</span><ul><li><a class="tocitem" href="../background_representations/maximal_representation.html">Maximal Coordinates</a></li><li><a class="tocitem" href="../background_representations/minimal_representation.html">Minimal Coordinates</a></li><li><a class="tocitem" href="../background_representations/gradients.html">Background on Gradients</a></li></ul></li><li><span class="tocitem">Background: Solver</span><ul><li><a class="tocitem" href="../background_solver/interior_point.html">Algorithm</a></li><li><a class="tocitem" href="../background_solver/solver_options.html">Solver Options</a></li></ul></li><li><a class="tocitem" href="../api.html">API Documentation</a></li><li><a class="tocitem" href="../contributing.html">Contributing</a></li><li><a class="tocitem" href="../citing.html">Citing</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Creating a Mechanism</a></li><li class="is-active"><a href="quadruped.html">Loading a Mechanism via URDF</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href="quadruped.html">Loading a Mechanism via URDF</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/dojo-sim/Dojo.jl/blob/main/docs/src/creating_mechanism/quadruped.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Loading-a-Mechanism-via-URDF"><a class="docs-heading-anchor" href="#Loading-a-Mechanism-via-URDF">Loading a Mechanism via URDF</a><a id="Loading-a-Mechanism-via-URDF-1"></a><a class="docs-heading-anchor-permalink" href="#Loading-a-Mechanism-via-URDF" title="Permalink"></a></h1><p>Another way to build a mechanism is to directly load it from a URDF file. We illustrate this with the A1 quadruped, defined in <code>DojoEnvironments</code>. </p><p><img src="../assets/pictures/quadruped.png" alt="quadruped"/></p><p>Note that the <a href="../api.html#Dojo.Mechanism"><code>Mechanism</code></a> is created simply by passing the path to the URDF file to the constructor. Afterwards, additional features, such as contacts can be added. </p><pre><code class="language-julia hljs">function get_quadruped(;
+    timestep=0.01,
+    input_scaling=timestep, 
+    gravity=-9.81,
+    urdf=:gazebo_a1, 
+    springs=0,
+    dampers=0,
+    parse_springs=true, 
+    parse_dampers=true,
+    limits=true,
+    joint_limits=Dict(vcat([[
+        (Symbol(group,:_hip_joint), [-0.5,0.5]), 
+        (Symbol(group,:_thigh_joint), [-0.5,1.5]), 
+        (Symbol(group,:_calf_joint), [-2.5,-1])] 
+        for group in [:FR, :FL, :RR, :RL]]...)),
+    keep_fixed_joints=true, 
+    friction_coefficient=0.8,
+    contact_feet=true,
+    contact_body=true,
+    T=Float64)
+
+    # mechanism
+    path = joinpath(@__DIR__, &quot;dependencies/$(string(urdf)).urdf&quot;)
+    mechanism = Mechanism(path; floating=true, T,
+        gravity, timestep, input_scaling, 
+        parse_dampers, keep_fixed_joints)
+
+    # springs and dampers
+    !parse_springs &amp;&amp; set_springs!(mechanism.joints, springs)
+    !parse_dampers &amp;&amp; set_dampers!(mechanism.joints, dampers)
+
+    # joint limits
+    if limits
+        joints = set_limits(mechanism, joint_limits)
+
+        mechanism = Mechanism(mechanism.origin, mechanism.bodies, joints;
+            gravity, timestep, input_scaling)
+    end
+
+    # contacts
+    contacts = ContactConstraint{T}[]
+
+    if contact_feet
+        # feet contacts
+        body_names = [:FR_calf, :FL_calf, :RR_calf, :RL_calf]
+        names = [:FR_calf_contact, :FL_calf_contact, :RR_calf_contact, :RL_calf_contact]
+        contact_bodies = [get_body(mechanism, name) for name in body_names]
+        n = length(contact_bodies)
+        normals = fill(Z_AXIS,n)
+        friction_coefficients = fill(friction_coefficient,n)
+        contact_origins = fill([-0.006; 0; -0.092],n)
+        contact_radii = fill(0.021,n)
+        contacts = [contacts;contact_constraint(contact_bodies, normals; friction_coefficients, contact_origins, contact_radii, names)]
+    end
+
+    if contact_body
+        # thigh contacts
+        body_names = [:FR_thigh, :FL_thigh, :RR_thigh, :RL_thigh]
+        names = [:FR_thigh_contact, :FL_thigh_contact, :RR_thigh_contact, :RL_thigh_contact]
+        contact_bodies = [get_body(mechanism, name) for name in body_names]
+        n = length(contact_bodies)
+        normals = fill(Z_AXIS,n)
+        friction_coefficients = fill(friction_coefficient,n)
+        contact_origins = [
+            [-0.005; -0.023; -0.16],
+            [-0.005; 0.023; -0.16],
+            [-0.005; -0.023; -0.16],
+            [-0.005; 0.023; -0.16],
+        ]
+        contact_radii = fill(0.023,n)
+        contacts = [contacts;contact_constraint(contact_bodies, normals; friction_coefficients, contact_origins, contact_radii, names)]
+    
+        # hip contacts
+        body_names = [:FR_hip, :FL_hip, :RR_hip, :RL_hip]
+        names = [:FR_hip_contact, :FL_hip_contact, :RR_hip_contact, :RL_hip_contact]
+        contact_bodies = [get_body(mechanism, name) for name in body_names]
+        n = length(contact_bodies)
+        normals = fill(Z_AXIS,n)
+        friction_coefficients = fill(friction_coefficient,n)
+        contact_origins = fill([0; 0.05; 0],n)
+        contact_radii = fill(0.05,n)
+        contacts = [contacts;contact_constraint(contact_bodies, normals; friction_coefficients, contact_origins, contact_radii, names)]
+    end
+
+    mechanism = Mechanism(mechanism.origin, mechanism.bodies, mechanism.joints, contacts;
+        gravity, timestep, input_scaling)
+
+    # zero configuration
+    initialize_quadruped!(mechanism)
+
+    # construction finished
+    return mechanism
+end</code></pre><pre><code class="language-julia hljs">function initialize_quadruped!(mechanism::Mechanism;
+    body_position=[0, 0, 0], body_orientation=one(Quaternion),
+    hip_angle=0, thigh_angle=pi/4, calf_angle=-pi/2)
+
+    zero_velocities!(mechanism)
+    zero_coordinates!(mechanism)
+
+    body_position += [0, 0, 0.43]
+    set_minimal_coordinates!(mechanism, get_joint(mechanism, :floating_base), [body_position; Dojo.rotation_vector(body_orientation)])
+    for group in [:FR, :FL, :RR, :RL]
+        set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol(group, :_hip_joint)), [hip_angle])
+        set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol(group, :_thigh_joint)), [thigh_angle])
+        set_minimal_coordinates!(mechanism, get_joint(mechanism, Symbol(group, :_calf_joint)), [calf_angle])
+    end
+
+    return
+end
+</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="tippetop.html">« Detailed Mechanism Definition</a><a class="docs-footer-nextpage" href="../creating_simulation/define_simulation.html">Defining a Simulation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Wednesday 20 March 2024 10:36">Wednesday 20 March 2024</span>. Using Julia version 1.10.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
