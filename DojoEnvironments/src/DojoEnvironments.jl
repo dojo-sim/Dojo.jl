@@ -6,11 +6,16 @@ using Random
 using Dojo
 import Dojo: string_to_symbol, add_limits, RotX, RotY, RotZ, rotation_vector, SVector
 
+using PrecompileTools
+
 include("mechanisms.jl")
 include("environments.jl")
 include("utilities.jl")
 include("mechanisms/include.jl")
 include("environments/include.jl")
+
+# Precompilation
+include("precompile.jl")
 
 # Mechanism
 export

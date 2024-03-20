@@ -30,6 +30,7 @@ using GraphBasedSystems
 using CoordinateTransformations
 
 using DocStringExtensions
+using PrecompileTools
 
 # Utilities
 include(joinpath("utilities", "methods.jl"))
@@ -146,6 +147,9 @@ include(joinpath("gradients", "finite_difference.jl"))
 include(joinpath("gradients", "state.jl"))
 include(joinpath("gradients", "data.jl"))
 include(joinpath("gradients", "utilities.jl"))
+
+# Precompilation
+include("precompile.jl")
 
 
 # Bodies

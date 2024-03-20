@@ -6,8 +6,10 @@ version = "0.6.0"
 [deps]
 Dojo = "ac60b53e-8d92-4c83-b960-e78698fa1916"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [compat]
 Dojo = "0.3.0, 0.4.0, 0.5.0, 0.6.0, 0.7.0"
+PrecompileTools = "1.0, 1.2"
 julia = "1.6, 1.9"
