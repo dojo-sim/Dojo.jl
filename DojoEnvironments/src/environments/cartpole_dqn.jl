@@ -44,7 +44,7 @@ function DojoEnvironments.state_map(::CartpoleDQN, state)
     return state
 end
 
-function DojoEnvironments.input_map(::CartpoleDQN, input::AbstractVector)
+function DojoEnvironments.input_map(::CartpoleDQN, input::Real)
     input = [input;0] # only the cart is actuated
     return input
 end
