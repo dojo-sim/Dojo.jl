@@ -312,6 +312,9 @@ export
 
 # Utilities
 export
-    Storage
+    Storage,
+    X_AXIS,
+    Y_AXIS,
+    Z_AXIS
 
 end

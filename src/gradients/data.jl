@@ -149,85 +149,41 @@ function body_constraint_jacobian_joint_data(mechanism::Mechanism{T}, body::Body
     return [∇u ∇spring ∇damper]
 end
 
-# function body_constraint_jacobian_contact_data(mechanism::Mechanism, body::Body{T},
-#         contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
-#     Nd = data_dim(contact)
-#     model = contact.model
-#     contact_radius = model.collision.contact_radius
-#     offset = model.collision.contact_normal' * contact_radius
-#     xp3, qp3 = next_configuration(get_body(mechanism, contact.parent_id).state, mechanism.timestep)
-#     xc3, qc3 = next_configuration(get_body(mechanism, contact.child_id).state, mechanism.timestep)
-
-#     γ = contact.impulses[2]
-
-#     ∇friction_coefficient = szeros(T,3,1)
-
-#     X = force_mapping(:parent, model, xp3, qp3, xc3, qc3)
-#     ∇p = - ∂skew∂p(VRmat(qp3) * LᵀVᵀmat(qp3) * X * γ)
-#     ∇contact_radius = - ∂skew∂p(VRmat(qp3) * LᵀVᵀmat(qp3) * X * γ) * -rotation_matrix(inv(qp3)) * model.collision.contact_normal'
-
-#     ∇X = szeros(T,3,Nd)
-#     ∇Q = -[∇friction_coefficient ∇contact_radius ∇p]
-#     return [∇X; ∇Q]
-# end
-
-function body_constraint_jacobian_contact_data(mechanism::Mechanism, body::Body{T}, contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
-    Nd = Dojo.data_dim(contact)
+function body_constraint_jacobian_contact_data(mechanism::Mechanism, body::Body{T},
+        contact::ContactConstraint{T,N,Nc,Cs,N½}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
+    Nd = data_dim(contact)
     model = contact.model
-    xp3, qp3 = Dojo.next_configuration(get_body(mechanism, contact.parent_id).state, mechanism.timestep)
-    xc3, qc3 = Dojo.next_configuration(get_body(mechanism, contact.child_id).state, mechanism.timestep)
+    xp3, qp3 = next_configuration(get_body(mechanism, contact.parent_id).state, mechanism.timestep)
+    xc3, qc3 = next_configuration(get_body(mechanism, contact.child_id).state, mechanism.timestep)
 
     γ = contact.impulses[2]
 
     ∇friction_coefficient = szeros(T,3,1)
 
-    X = Dojo.force_mapping(:parent, model, xp3, qp3, xc3, qc3)
-    ∇p = - Dojo.∂skew∂p(Dojo.VRmat(qp3) * Dojo.LᵀVᵀmat(qp3) * X * γ)
-
+    X = force_mapping(:parent, model, xp3, qp3, xc3, qc3)
+    ∇p = -∂skew∂p(VRmat(qp3) * LᵀVᵀmat(qp3) * X * γ)
     cn = contact_normal(model.collision, xp3, qp3, xc3, qc3)
-    ∇contact_radius = - Dojo.∂skew∂p(Dojo.VRmat(qp3) * Dojo.LᵀVᵀmat(qp3) * X * γ) * -Dojo.rotation_matrix(inv(qp3)) * cn'
+    ∇contact_radius = - ∂skew∂p(VRmat(qp3) * LᵀVᵀmat(qp3) * X * γ) * -rotation_matrix(inv(qp3)) * cn'
 
     ∇X = szeros(T,3,Nd)
     ∇Q = -[∇friction_coefficient ∇contact_radius ∇p]
     return [∇X; ∇Q]
 end
 
-# function contact_constraint_jacobian_contact_data(mechanism::Mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}, body::Body{T}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
-#     Nd = data_dim(contact)
-#     model = contact.model
-
-#     xp3, vp25, qp3, ωp25 = next_configuration_velocity(get_body(mechanism, contact.parent_id).state, mechanism.timestep)
-#     xc3, vc25, qc3, ωc25 = next_configuration_velocity(get_body(mechanism, contact.child_id).state, mechanism.timestep)
-
-#     s = contact.impulses_dual[2]
-#     γ = contact.impulses[2]
-
-#     ∇friction_coefficient = SA[0,γ[1],0,0]
-#     ∇contact_radius = [-model.collision.contact_normal; szeros(T,1,3); -model.collision.contact_tangent * skew(vector_rotate(ωp25, qp3))] * model.collision.contact_normal'
-#     ∇p = [model.collision.contact_normal * rotation_matrix(qp3); szeros(T,1,3); model.collision.contact_tangent * skew(vector_rotate(ωp25, qp3)) * rotation_matrix(qp3)]
-
-#     ∇compμ = szeros(T,N½,Nd)
-#     ∇g = -[∇friction_coefficient ∇contact_radius ∇p]
-
-#     return [∇compμ; ∇g]
-# end
-
 function contact_constraint_jacobian_contact_data(mechanism::Mechanism, contact::ContactConstraint{T,N,Nc,Cs,N½}, body::Body{T}) where {T,N,Nc,Cs<:NonlinearContact{T,N},N½}
-    Nd = Dojo.data_dim(contact)
+    Nd = data_dim(contact)
     model = contact.model
+    xp3, vp25, qp3, ωp25 = next_configuration_velocity(get_body(mechanism, contact.parent_id).state, mechanism.timestep)
+    xc3, vc25, qc3, ωc25 = next_configuration_velocity(get_body(mechanism, contact.child_id).state, mechanism.timestep)
 
-    xp3, vp25, qp3, ωp25 = Dojo.next_configuration_velocity(get_body(mechanism, contact.parent_id).state, mechanism.timestep)
-    xc3, vc25, qc3, ωc25 = Dojo.next_configuration_velocity(get_body(mechanism, contact.child_id).state, mechanism.timestep)
-
-    cn = contact_normal(model.collision, xp3, qp3, xc3, qc3)
-    ct = contact_tangent(model.collision, xp3, qp3, xc3, qc3)
-
-    s = contact.impulses_dual[2]
     γ = contact.impulses[2]
 
     ∇friction_coefficient = SA[0,γ[1],0,0]
-    ∇contact_radius = [-cn; szeros(T,1,3); -ct * Dojo.skew(Dojo.vector_rotate(ωp25, qp3))] * cn'
-    ∇p = [cn * Dojo.rotation_matrix(qp3); szeros(T,1,3); ct * Dojo.skew(Dojo.vector_rotate(ωp25, qp3)) * Dojo.rotation_matrix(qp3)]
+
+    cn = contact_normal(model.collision, xp3, qp3, xc3, qc3)
+    ct = contact_tangent(model.collision, xp3, qp3, xc3, qc3)
+    ∇contact_radius = [-cn; szeros(T,1,3); -ct * skew(vector_rotate(ωp25, qp3))] * cn'
+    ∇p = [cn * rotation_matrix(qp3); szeros(T,1,3); ct * skew(vector_rotate(ωp25, qp3)) * rotation_matrix(qp3)]
 
     ∇compμ = szeros(T,N½,Nd)
     ∇g = -[∇friction_coefficient ∇contact_radius ∇p]
