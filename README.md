@@ -65,7 +65,7 @@ pkg> add DojoEnvironments
 ## Citing
 ```
 @article{howelllecleach2022,
-	title={Dojo: A Differentiable Simulator for Robotics},
+	title={Dojo: A Differentiable Physics Engine for Robotics},
 	author={Howell, Taylor and Le Cleac'h, Simon and Bruedigam, Jan and Kolter, Zico and Schwager, Mac and Manchester, Zachary},
 	journal={arXiv preprint arXiv:2203.00806},
 	url={https://arxiv.org/abs/2203.00806},
