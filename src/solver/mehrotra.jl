@@ -31,7 +31,7 @@ function mehrotra!(mechanism::Mechanism{T}; opts=SolverOptions{T}()) where T
 		(n == opts.max_iter) && (opts.verbose && (@warn "failed mehrotra"))
 
         # affine search direction
-		μ = 0.0
+		μ = 0.0 # TODO is this cause of a bug?
 		pull_residual!(mechanism)               # store the residual inside mechanism.residual_entries
         ldu_factorization!(mechanism.system)    # factorize system, modifies the matrix in place
         ldu_backsubstitution!(mechanism.system) # solve system, modifies the vector in place

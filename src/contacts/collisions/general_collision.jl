@@ -1,21 +1,26 @@
 """
-    SphereSphereCollision 
+    GeneralCollision 
 
-    collision between two spheres
+    collision between two objects using DifferentiableCollisions
 
     origin_parent: position of contact on parent body relative to center of mass 
     origin_child: position of contact on parent body relative to center of mass 
     radius_parent: radius of contact for parent body 
     radius_child: radius of contact for child body
 """
-mutable struct SphereSphereCollision{T,O,I,OI} <: Collision{T,O,I,OI}
+mutable struct GeneralCollision{T,O,I,OI} <: Collision{T,O,I,OI}
     origin_parent::SVector{I,T}
     origin_child::SVector{I,T}
     radius_parent::T
     radius_child::T
-end 
+    primitive1::AbstractPrimitive
+    primitive2::AbstractPrimitive
+    α::T
+    intersection_point::SVector{3,T}
+end
 
-# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, collision::SphereSphereCollision)
+
+# function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, collision::GeneralCollision)
 #     summary(io, collision)
 #     println(io, "")
 #     println(io, "origin_parent: "*string(collision.origin_parent))
@@ -24,20 +29,20 @@ end
 #     println(io, "radius_child:  "*string(collision.radius_child))
 # end
 
-# distance
-function distance(collision::SphereSphereCollision, xp, qp, xc, qc)
-    # contact origin points
-    cop = contact_point_origin(xp, qp, collision.origin_parent) 
-    coc = contact_point_origin(xc, qc, collision.origin_child)
+# not really the distance
+function distance(collision::GeneralCollision, xp, qp, xc, qc)
+    primitive1 = collision.primitive1
+    primitive2 = collision.primitive2
 
-    # distance between contact origins
-    d = norm(cop - coc, 2)
+    primitive1.r = xp
+    primitive1.q = Dojo.vector(qp)
+    primitive2.r = xc
+    primitive2.q = Dojo.vector(qc)
 
-    # minimum distance between spheres
-    return d - (collision.radius_parent + collision.radius_child)
+    return proximity(primitive1,primitive2)[1] - 1
 end
 
-function ∂distance∂x(gradient::Symbol, collision::SphereSphereCollision, xp, qp, xc, qc)
+function ∂distance∂x(gradient::Symbol, collision::GeneralCollision, xp, qp, xc, qc)
     # contact origin points
     cop = contact_point_origin(xp, qp, collision.origin_parent) 
     coc = contact_point_origin(xc, qc, collision.origin_child)
@@ -65,7 +70,7 @@ function ∂distance∂x(gradient::Symbol, collision::SphereSphereCollision, xp,
     return D
 end
 
-function ∂distance∂q(gradient::Symbol, collision::SphereSphereCollision, xp, qp, xc, qc)
+function ∂distance∂q(gradient::Symbol, collision::GeneralCollision, xp, qp, xc, qc)
     # contact origin points
     cop = contact_point_origin(xp, qp, collision.origin_parent) 
     coc = contact_point_origin(xc, qc, collision.origin_child)
@@ -93,24 +98,24 @@ function ∂distance∂q(gradient::Symbol, collision::SphereSphereCollision, xp,
 end
 
 # contact point in world frame
-function contact_point(relative::Symbol, collision::SphereSphereCollision, xp, qp, xc, qc) 
-    # contact origin points
-    cop = contact_point_origin(xp, qp, collision.origin_parent) 
-    coc = contact_point_origin(xc, qc, collision.origin_child)
+function contact_point(relative::Symbol, collision::GeneralCollision, xp, qp, xc, qc) 
+    primitive1 = collision.primitive1
+    primitive2 = collision.primitive2
 
-    # direction of minimum distance (child to parent)
-    d = cop - coc 
-    dir = normalize(d)
+    primitive1.r = xp
+    primitive1.q = Dojo.vector(qp)
+    primitive2.r = xc
+    primitive2.q = Dojo.vector(qc)
 
-    # contact point
+    α, intersection_point = proximity(primitive1,primitive2)
     if relative == :parent
-        return cop - collision.radius_parent * dir
+        return xp + (intersection_point - xp)/α
     elseif relative == :child 
-        return coc + collision.radius_child * dir
+        return xc + (intersection_point - xc)/α
     end
 end
 
-function ∂contact_point∂x(relative::Symbol, jacobian::Symbol, collision::SphereSphereCollision, xp, qp, xc, qc)
+function ∂contact_point∂x(relative::Symbol, jacobian::Symbol, collision::GeneralCollision, xp, qp, xc, qc)
     # contact origin points
     cop = contact_point_origin(xp, qp, collision.origin_parent) 
     coc = contact_point_origin(xc, qc, collision.origin_child)
@@ -151,7 +156,7 @@ function ∂contact_point∂x(relative::Symbol, jacobian::Symbol, collision::Sph
     return X
 end
 
-function ∂contact_point∂q(relative::Symbol, jacobian::Symbol, collision::SphereSphereCollision, xp, qp, xc, qc)
+function ∂contact_point∂q(relative::Symbol, jacobian::Symbol, collision::GeneralCollision, xp, qp, xc, qc)
     # contact origin points
     cop = contact_point_origin(xp, qp, collision.origin_parent) 
     coc = contact_point_origin(xc, qc, collision.origin_child)

@@ -28,6 +28,8 @@ using Meshing
 using GeometryBasics
 using GraphBasedSystems
 using CoordinateTransformations
+using DifferentiableCollisions
+using DifferentiableCollisions: proximity, AbstractPrimitive
 
 using DocStringExtensions
 using PrecompileTools
@@ -57,7 +59,7 @@ include(joinpath("bodies", "origin.jl"))
 include(joinpath("bodies", "set.jl"))
 
 # Mechanism
-include(joinpath("joints", "constraints.jl"))
+include(joinpath("joints", "constructor.jl"))
 include(joinpath("contacts", "constructor.jl"))
 include(joinpath("contacts", "contact.jl"))
 
@@ -81,6 +83,8 @@ include(joinpath("mechanics", "momentum.jl"))
 include(joinpath("mechanics", "energy.jl"))
 
 # Joints
+include(joinpath("joints", "constraints.jl"))
+include(joinpath("joints", "input.jl"))
 include(joinpath("joints", "orthogonal.jl"))
 include(joinpath("joints", "joint.jl"))
 include(joinpath("joints", "translational", "constructor.jl"))
@@ -104,13 +108,14 @@ include(joinpath("joints", "impulses.jl"))
 include(joinpath("contacts", "constraints.jl"))
 include(joinpath("contacts", "cone.jl"))
 include(joinpath("contacts", "collisions", "collision.jl"))
-include(joinpath("contacts", "collisions", "point_to_segment.jl"))
-include(joinpath("contacts", "collisions", "point_to_box_v2.jl"))
+# include(joinpath("contacts", "collisions", "point_to_segment.jl"))
+# include(joinpath("contacts", "collisions", "point_to_box_v2.jl"))
 include(joinpath("contacts", "collisions", "sphere_halfspace.jl"))
-include(joinpath("contacts", "collisions", "sphere_sphere.jl"))
-include(joinpath("contacts", "collisions", "sphere_capsule.jl"))
-include(joinpath("contacts", "collisions", "sphere_box.jl"))
-include(joinpath("contacts", "collisions", "string.jl"))
+# include(joinpath("contacts", "collisions", "sphere_sphere.jl"))
+include(joinpath("contacts", "collisions", "general_collision.jl"))
+# include(joinpath("contacts", "collisions", "sphere_capsule.jl"))
+# include(joinpath("contacts", "collisions", "sphere_box.jl"))
+# include(joinpath("contacts", "collisions", "string.jl"))
 include(joinpath("contacts", "velocity.jl"))
 include(joinpath("contacts", "impact.jl"))
 include(joinpath("contacts", "linear.jl"))
@@ -201,8 +206,7 @@ export
     get_contact,
     get_sdf,
     contact_location,
-    damper_impulses,
-    contact_constraint
+    damper_impulses
 
 # Collision
 export

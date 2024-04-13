@@ -23,11 +23,8 @@ function test_solmat(model;
             opts=SolverOptions(rtol=ϵ, btol=ϵ))
 
         # Set data
-        Nb = length(mechanism.bodies)
         data = Dojo.get_data(mechanism)
-        Dojo.set_data!(mechanism, data)
         sol = Dojo.get_solution(mechanism)
-        attjac = Dojo.attitude_jacobian(data, Nb)
 
         # IFT
         solmat = Dojo.full_matrix(mechanism.system)
@@ -46,9 +43,6 @@ function finite_difference_solution_matrix(mechanism::Mechanism, data::AbstractV
 
     nsol = length(sol)
     jac = zeros(nsol, nsol)
-
-    Dojo.set_data!(mechanism, data)
-    Dojo.set_solution!(mechanism, sol)
 
     for i = 1:nsol
         verbose && println("$i / $nsol")

@@ -37,7 +37,7 @@ function impulse_map(mechanism, contact::ContactConstraint, body::Body)
     relative = (body.id == contact.parent_id ? :parent : :child)
     pbody = get_body(mechanism, contact.parent_id) 
     cbody = get_body(mechanism, contact.child_id)
-    return impulse_map(relative, contact.model, pbody, cbody, mechanism.timestep)
+    return impulse_map(relative, contact.model, pbody, cbody)
 end
 
 function impulse_map_jacobian_configuration(mechanism, body::Body{T}, contact::ContactConstraint{T}) where T
@@ -52,7 +52,7 @@ end
 
 function impulses_jacobian_velocity!(mechanism, body::Body, contact::ContactConstraint)
     timestep = mechanism.timestep
-    body.state.D -= impulse_map_jacobian_configuration(mechanism, body, contact) * integrator_jacobian_velocity(body, timestep)
+    # body.state.D -= impulse_map_jacobian_configuration(mechanism, body, contact) * integrator_jacobian_velocity(body, timestep)
     return
 end
 

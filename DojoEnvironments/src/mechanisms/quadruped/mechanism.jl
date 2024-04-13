@@ -66,7 +66,7 @@ function get_quadruped(;
         friction_coefficients = fill(friction_coefficient,n)
         contact_origins = fill([-0.006; 0; -0.092],n)
         contact_radii = fill(0.021,n)
-        contacts = [contacts;contact_constraint(contact_bodies, normals; friction_coefficients, contact_origins, contact_radii, names)]
+        contacts = [contacts;ContactConstraint(NonlinearContact(contact_bodies, normals, friction_coefficients; contact_origins, contact_radii); names)]
     end
 
     if contact_body
@@ -84,7 +84,7 @@ function get_quadruped(;
             [-0.005; 0.023; -0.16],
         ]
         contact_radii = fill(0.023,n)
-        contacts = [contacts;contact_constraint(contact_bodies, normals; friction_coefficients, contact_origins, contact_radii, names)]
+        contacts = [contacts;ContactConstraint(NonlinearContact(contact_bodies, normals, friction_coefficients; contact_origins, contact_radii); names)]
     
         # hip contacts
         body_names = [:FR_hip, :FL_hip, :RR_hip, :RL_hip]
@@ -95,7 +95,7 @@ function get_quadruped(;
         friction_coefficients = fill(friction_coefficient,n)
         contact_origins = fill([0; 0.05; 0],n)
         contact_radii = fill(0.05,n)
-        contacts = [contacts;contact_constraint(contact_bodies, normals; friction_coefficients, contact_origins, contact_radii, names)]
+        contacts = [contacts;ContactConstraint(NonlinearContact(contact_bodies, normals, friction_coefficients; contact_origins, contact_radii); names)]
     end
 
     mechanism = Mechanism(mechanism.origin, mechanism.bodies, mechanism.joints, contacts;

@@ -27,7 +27,7 @@ function constraint(mechanism::Mechanism{T,Nn,Ne,Nb}, body::Body{T}) where {T,Nn
     # impulses
     for id in connections(mechanism.system, body.id)
         Ne < id <= Ne + Nb && continue # body
-        impulses!(mechanism, body, get_node(mechanism, id))
+        impulses!(mechanism, body, get_node(mechanism, id)) # TODO there is something off with the jacobians. Seems like some incorrect timesteps are used.
     end
 
     return state.d

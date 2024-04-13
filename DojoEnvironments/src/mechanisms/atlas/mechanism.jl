@@ -51,8 +51,8 @@ function get_atlas(;
         
         contacts = [
             contacts
-            contact_constraint(left_foot, normals; friction_coefficients, contact_origins, contact_radii, names=left_names)
-            contact_constraint(right_foot, normals; friction_coefficients, contact_origins, contact_radii, names=right_names)
+            ContactConstraint(NonlinearContact(left_foot, normals, friction_coefficients; contact_origins, contact_radii); names=left_names)
+            ContactConstraint(NonlinearContact(right_foot, normals, friction_coefficients; contact_origins, contact_radii); names=right_names)
         ]
     end
 
@@ -93,7 +93,7 @@ function get_atlas(;
         ]
         contacts = [
             contacts
-            contact_constraint(contact_bodies, normals; friction_coefficients, contact_origins, contact_radii, names)
+            ContactConstraint(NonlinearContact(contact_bodies, normals, friction_coefficients; contact_origins, contact_radii); names)
         ]
     end
 
