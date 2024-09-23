@@ -15,7 +15,7 @@ function minimal_to_maximal(mechanism::Mechanism{T,Nn,Ne,Nb,Ni}, y::AbstractVect
 		joint = temp_mechanism.joints[id]
 		nu = input_dimension(joint)
 		off = sum(nus[SUnitRange(1,id-1)])*2
-		set_minimal_coordinates_velocities!(temp_mechanism, joint, xmin=y[SUnitRange(off+1,off+2nu)]) # TODO does this actually set a state and not just convert min to max?
+		set_minimal_coordinates_velocities!(temp_mechanism, joint, xmin=y[SUnitRange(off+1,off+2nu)])
 	end
 
 	return get_maximal_state(temp_mechanism)

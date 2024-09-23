@@ -54,13 +54,13 @@ end
 
 # masks
 constraint_mask(::Joint{T,0}) where T = szeros(T,0,3)
-constraint_mask(joint::Joint{T,1}) where T = joint.axis_mask3
+constraint_mask(joint::Joint{T,1}) where T = SMatrix{1, 3, T}(joint.axis_mask3)
 constraint_mask(joint::Joint{T,2}) where T = [joint.axis_mask1; joint.axis_mask2]
 constraint_mask(::Joint{T,3}) where T = SMatrix{3,3,T,9}(I)
 
 nullspace_mask(::Joint{T,0}) where T = SMatrix{3,3,T,9}(I)
 nullspace_mask(joint::Joint{T,1}) where T = [joint.axis_mask1; joint.axis_mask2]
-nullspace_mask(joint::Joint{T,2}) where T = joint.axis_mask3
+nullspace_mask(joint::Joint{T,2}) where T = SMatrix{1, 3, T}(joint.axis_mask3)
 nullspace_mask(::Joint{T,3}) where T = szeros(T,0,3)
 
 # impulse maps

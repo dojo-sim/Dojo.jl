@@ -70,17 +70,19 @@ function contact_constraint(bodies::Vector{Body{T}},
         friction_coefficients::AbstractVector=ones(T,length(normals)),
         contact_origins::AbstractVector=[szeros(T, 3) for i=1:length(normals)],
         contact_radii::AbstractVector=[0.0 for i=1:length(normals)],
+        contact_offsets::AbstractVector=[szeros(T, 3)  for i=1:length(normals)],
         names::Vector{Symbol}=[Symbol("contact_" * randstring(4)) for i = 1:length(normals)],
         contact_type::Symbol=:nonlinear) where T
 
     n = length(normals)
-    @assert n == length(bodies) == length(normals) == length(friction_coefficients) == length(contact_origins) == length(contact_radii)
+    @assert n == length(bodies) == length(normals) == length(friction_coefficients) == length(contact_origins) == length(contact_radii) == length(contact_offsets)
     contacts = Vector{ContactConstraint}()
     for i = 1:n
         contact = contact_constraint(bodies[i], normals[i], 
             friction_coefficient=friction_coefficients[i], 
             contact_origin=contact_origins[i],
             contact_radius=contact_radii[i], 
+            contact_offset=contact_offsets[i],
             name=names[i], 
             contact_type=contact_type)
         push!(contacts, contact)
@@ -94,12 +96,13 @@ function contact_constraint(body::Body{T},
         friction_coefficients::AbstractVector=ones(T,length(normals)),
         contact_origins::AbstractVector=[szeros(T, 3) for i=1:length(normals)],
         contact_radii::AbstractVector=[0.0 for i=1:length(normals)],
+        contact_offsets::AbstractVector=[szeros(T, 3) for i=1:length(normals)],
         names::Vector{Symbol}=[Symbol("contact_" * randstring(4)) for i = 1:length(normals)],
         contact_type::Symbol=:nonlinear) where T
     n = length(normals)
     @assert n == length(normals) == length(friction_coefficients) == length(contact_origins) == length(contact_radii)
     return contact_constraint(fill(body, n), normals;
-        friction_coefficients, contact_origins, contact_radii, names, contact_type)
+        friction_coefficients, contact_origins, contact_radii, contact_offsets, names, contact_type)
 end
 
 function contact_constraint(body::Body{T},
@@ -107,18 +110,19 @@ function contact_constraint(body::Body{T},
         friction_coefficient=T(1),
         contact_origin::AbstractVector=szeros(T, 3),
         contact_radius=T(0),
+        contact_offset::AbstractVector=szeros(T, 3),
         name::Symbol=Symbol("contact_" * randstring(4)),
         contact_type::Symbol=:nonlinear) where T
 
     if contact_type == :nonlinear
         model = NonlinearContact(body, normal, friction_coefficient; 
-            contact_origin, contact_radius)
+            contact_origin, contact_radius, contact_offset)
     elseif contact_type == :linear
         model = LinearContact(body, normal, friction_coefficient; 
-            contact_origin, contact_radius)
+            contact_origin, contact_radius, contact_offset)
     elseif contact_type == :impact
         model = ImpactContact(body, normal; 
-            contact_origin, contact_radius)
+            contact_origin, contact_radius, contact_offset)
     else
         @warn "unknown contact_type"
     end

@@ -22,7 +22,8 @@ end
 
 function LinearContact(body::Body{T}, normal::AbstractVector, friction_coefficient; 
     contact_origin=szeros(T, 3), 
-    contact_radius=0.0) where T
+    contact_radius=0.0,
+    contact_offset=szeros(T, 3)) where T
 
     # contact directions
     V1, V2, V3 = orthogonal_columns(normal)
@@ -40,7 +41,7 @@ function LinearContact(body::Body{T}, normal::AbstractVector, friction_coefficie
     ]
 
     # collision 
-    collision = SphereHalfSpaceCollision(contact_tangent, contact_normal, SVector{3}(contact_origin), contact_radius)
+    collision = SphereHalfSpaceCollision(contact_tangent, contact_normal, SVector{3}(contact_origin), contact_radius, contact_offset)
     
     LinearContact{Float64,12}(friction_coefficient, parameterization, collision)
 end

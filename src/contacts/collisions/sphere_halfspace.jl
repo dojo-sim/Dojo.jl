@@ -13,10 +13,11 @@ mutable struct SphereHalfSpaceCollision{T,O,I,OI} <: Collision{T,O,I,OI}
     contact_normal::Adjoint{T,SVector{I,T}}
     contact_origin::SVector{I,T}
     contact_radius::T
+    contact_offset::SVector{I,T}
 
-    function SphereHalfSpaceCollision(contact_tangent::SMatrix{O,I,T0,OI}, contact_normal, contact_origin, contact_radius) where {O,I,T0,OI}
-        T = promote_type(eltype.((contact_tangent, contact_normal, contact_origin, contact_radius))...)
-        new{T,O,I,OI}(contact_tangent, contact_normal, contact_origin, contact_radius)
+    function SphereHalfSpaceCollision(contact_tangent::SMatrix{O,I,T0,OI}, contact_normal, contact_origin, contact_radius, contact_offset) where {O,I,T0,OI}
+        T = promote_type(eltype.((contact_tangent, contact_normal, contact_origin, contact_radius, contact_offset))...)
+        new{T,O,I,OI}(contact_tangent, contact_normal, contact_origin, contact_radius, contact_offset)
     end
 end 
 
@@ -31,7 +32,7 @@ end
 
 # distance
 function distance(collision::SphereHalfSpaceCollision, xp, qp, xc, qc)
-    collision.contact_normal * (xp + vector_rotate(collision.contact_origin, qp)) - collision.contact_radius
+    collision.contact_normal * (xp + vector_rotate(collision.contact_origin, qp) - collision.contact_offset) - collision.contact_radius
 end
 
 function ∂distance∂x(gradient::Symbol, collision::SphereHalfSpaceCollision, xp, qp, xc, qc)
@@ -53,10 +54,10 @@ end
 # contact point in world frame
 function contact_point(relative::Symbol, collision::SphereHalfSpaceCollision, xp, qp, xc, qc) 
     if relative == :parent
-        return xp + vector_rotate(collision.contact_origin, qp) - collision.contact_normal' * collision.contact_radius
+        return xp + vector_rotate(collision.contact_origin, qp) - collision.contact_offset - collision.contact_normal' * collision.contact_radius
     elseif relative == :child 
         projector = collision.contact_tangent' * collision.contact_tangent 
-        return projector * (xp + vector_rotate(collision.contact_origin, qp))
+        return projector * (xp + vector_rotate(collision.contact_origin, qp) - collision.contact_offset)
     end
 end
 
