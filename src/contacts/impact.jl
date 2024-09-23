@@ -19,7 +19,8 @@ end
 
 function ImpactContact(body::Body{T}, normal::AbstractVector; 
     contact_origin=szeros(T, 3), 
-    contact_radius=0.0) where T
+    contact_radius=0.0,
+    contact_offset=szeros(T, 3)) where T
     
     # contact directions
     V1, V2, V3 = orthogonal_columns(normal) #
@@ -31,7 +32,7 @@ function ImpactContact(body::Body{T}, normal::AbstractVector;
     parameterization = szeros(T, 0, 2)
 
     # collision 
-    collision = SphereHalfSpaceCollision(szeros(T, 0, 3), contact_normal, SVector{3}(contact_origin), contact_radius)
+    collision = SphereHalfSpaceCollision(szeros(T, 0, 3), contact_normal, SVector{3}(contact_origin), contact_radius, contact_offset)
 
     ImpactContact{Float64,2}(parameterization, collision)
 end
